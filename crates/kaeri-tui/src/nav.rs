@@ -140,13 +140,16 @@ pub enum StageView {
     /// A reading series' page: its header and its chapters. Reached from reading's Home and
     /// Search.
     Series(kaeri_core::books::WorkId),
+    /// The reader on a work, over the whole window. Reached from a Continue line and the series
+    /// page; Back returns there with the cursor where it was.
+    Reader(kaeri_core::books::WorkId),
 }
 
 impl StageView {
     /// Whether this view needs the rail out of the way.
     pub const fn wants_wide_stage(&self) -> bool {
         match self {
-            Self::Episodes(_) | Self::NowPlaying => true,
+            Self::Episodes(_) | Self::NowPlaying | Self::Reader(_) => true,
             Self::Section(s) => s.wants_wide_stage(),
             Self::Title(_)
             | Self::Series(_)
@@ -159,7 +162,7 @@ impl StageView {
 
     /// Whether the rail should be hidden entirely rather than merely collapsed.
     pub const fn hides_rail(&self) -> bool {
-        matches!(self, Self::NowPlaying)
+        matches!(self, Self::NowPlaying | Self::Reader(_))
     }
 }
 
@@ -435,6 +438,11 @@ impl Nav {
     pub fn current(&self) -> &StageView {
         // The stack is never emptied — `pop` refuses to remove the root.
         self.stage.last().unwrap_or(&StageView::Section(Section::Home))
+    }
+
+    /// The view under the one on top, which Back returns to.
+    pub fn under(&self) -> Option<&StageView> {
+        self.stage.len().checked_sub(2).and_then(|i| self.stage.get(i))
     }
 
     pub fn depth(&self) -> usize {

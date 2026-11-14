@@ -20,6 +20,21 @@ use crate::{
 use super::line;
 
 pub(super) fn render_header(buf: &mut Buffer, app: &App, geometry: &Frame) {
+    let chips = header_chips(app);
+    // Too narrow for the rail, nothing else says which section this is, so the title does.
+    let named = geometry.header.width < crate::layout::VERY_NARROW_WIDTH
+        && matches!(app.nav.current(), crate::nav::StageView::Section(_));
+    let title = if !named {
+        "Kaeri".to_owned() // i18n-skip: the product name
+    } else {
+        t::chrome_header_section(app.section_label(app.nav.section()))
+    };
+    Header::new(&app.palette, &title).chips(&chips).render(geometry.header, buf);
+}
+
+/// The header's chips, right-aligned: the sources and how they stand, the proxy, the metadata
+/// ladder when it is degraded, and each tracker with its queue.
+pub(super) fn header_chips(app: &App) -> Vec<(String, Role)> {
     let mut chips: Vec<(String, Role)> = Vec::new();
 
     // One chip per configured source, in failover order, each saying how it stands. The chip
@@ -80,15 +95,7 @@ pub(super) fn render_header(buf: &mut Buffer, app: &App, geometry: &Frame) {
         ));
     }
 
-    // Too narrow for the rail, nothing else says which section this is, so the title does.
-    let named = geometry.header.width < crate::layout::VERY_NARROW_WIDTH
-        && matches!(app.nav.current(), crate::nav::StageView::Section(_));
-    let title = if !named {
-        "Kaeri".to_owned() // i18n-skip: the product name
-    } else {
-        t::chrome_header_section(app.section_label(app.nav.section()))
-    };
-    Header::new(&app.palette, &title).chips(&chips).render(geometry.header, buf);
+    chips
 }
 
 /// The running jobs, newest first, each with how long it has taken, written into the status

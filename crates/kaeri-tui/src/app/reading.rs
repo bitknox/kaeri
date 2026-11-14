@@ -521,6 +521,7 @@ impl App {
             }
             ReadingEvent::Series(view) => self.take_series(*view),
             ReadingEvent::Chapters { work, edition, volumes, failure } => {
+                self.reader_chapters(&work, &volumes);
                 self.take_chapters(&work, edition, volumes, failure);
             }
             ReadingEvent::Tracking { work, rows } => self.take_tracking(&work, rows),
@@ -531,6 +532,9 @@ impl App {
                 if self.reading_only() || self.both() =>
             {
                 self.series_failed(&failure, false);
+            }
+            ReadingEvent::Failed { about: ReadingAbout::Reader, failure } => {
+                self.reader_failed(failure);
             }
             _ => {}
         }

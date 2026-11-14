@@ -131,7 +131,7 @@ impl App {
                 self.detail.as_ref().filter(|d| d.id == *id)
             }
             // A reading series is no show.
-            StageView::Series(_) => None,
+            StageView::Series(_) | StageView::Reader(_) => None,
             StageView::Section(_) => {
                 let row = self.selected_entry()?;
                 Some(self.detail.as_ref().filter(|d| d.id == row.id).unwrap_or(row))

@@ -193,6 +193,19 @@ impl ImageEngine {
         }
     }
 
+    /// An image protocol's engine that draws through halfblocks, for tests and goldens: the
+    /// screens lay pages out as a terminal with kitty, sixel or iTerm2 would, at a 10 by 20
+    /// cell, and the pictures land in the buffer as blocks a golden can hold.
+    #[doc(hidden)]
+    pub fn drawn_as_blocks() -> Self {
+        Self {
+            picker: Some(Picker::halfblocks()),
+            graphics: Graphics::Native,
+            cache_dir: PathBuf::new(),
+            font_size: (10, 20),
+        }
+    }
+
     pub fn with_cache_dir(mut self, dir: impl Into<PathBuf>) -> Self {
         self.cache_dir = dir.into();
         self
@@ -317,6 +330,17 @@ impl ImageStore {
         self.protocols.borrow().contains_key(url)
     }
 
+    /// Let go of one picture.
+    pub fn forget(&self, key: &str) {
+        self.protocols.borrow_mut().remove(key);
+    }
+
+    /// Let go of every picture whose key starts with `prefix`: a chapter's pages once it is
+    /// left, which are never drawn again under the same key.
+    pub fn forget_prefix(&self, prefix: &str) {
+        self.protocols.borrow_mut().retain(|key, _| !key.starts_with(prefix));
+    }
+
     pub fn len(&self) -> usize {
         self.protocols.borrow().len()
     }
@@ -353,6 +377,25 @@ impl ImageStore {
             buf,
             protocol,
         );
+        true
+    }
+
+    /// Draw a cached picture filling `area`, scaled up as well as down: a page, whose box the
+    /// reader has already sized to the page's shape.
+    pub fn render_scaled(
+        &self,
+        key: &str,
+        area: ratatui::layout::Rect,
+        buf: &mut ratatui::buffer::Buffer,
+    ) -> bool {
+        if area.width == 0 || area.height == 0 {
+            return false;
+        }
+        let Ok(mut protocols) = self.protocols.try_borrow_mut() else { return false };
+        let Some(protocol) = protocols.get_mut(key) else { return false };
+        let image =
+            ratatui_image::StatefulImage::default().resize(ratatui_image::Resize::Scale(None));
+        ratatui::widgets::StatefulWidget::render(image, area, buf, protocol);
         true
     }
 }

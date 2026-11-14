@@ -202,7 +202,7 @@ impl App {
             // A title page is one title, not a list, and Now Playing's keys belong to the
             // player. Moving on either moved the list behind it, so Back landed rows away from
             // where it was left.
-            StageView::Title(_) | StageView::NowPlaying => None,
+            StageView::Title(_) | StageView::NowPlaying | StageView::Reader(_) => None,
         }
     }
 

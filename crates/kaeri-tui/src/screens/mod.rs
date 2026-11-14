@@ -22,6 +22,7 @@ mod lists;
 mod overlays;
 mod playback;
 mod providers;
+mod reader;
 mod reading;
 mod series;
 mod settings;
@@ -102,6 +103,7 @@ pub fn render(frame: &mut TFrame<'_>, app: &App) -> FrameReport {
     let activity = app.activity(now);
     let geometry = layout::compute(area, app.nav.rail_width());
     let buf = frame.buffer_mut();
+    let reading = matches!(app.nav.current(), StageView::Reader(_));
 
     // Immersive mode paints its own ground; adaptive inherits the terminal's, which is what
     // lets Kaeri sit alongside the user's other tools.
@@ -111,6 +113,11 @@ pub fn render(frame: &mut TFrame<'_>, app: &App) -> FrameReport {
                 buf[(x, y)].set_bg(ground.to_ratatui());
             }
         }
+    }
+
+    // The reader takes the whole window, with chrome of its own.
+    if reading {
+        return reader::render_reader(buf, app, area);
     }
 
     render_header(buf, app, &geometry);
@@ -134,6 +141,7 @@ pub fn render(frame: &mut TFrame<'_>, app: &App) -> FrameReport {
     let report = FrameReport {
         episodes_offset: stage.episodes_offset,
         series_offset: stage.series_offset,
+        window: Some((area.width, area.height)),
         ..render_overlay(buf, app, area, &geometry)
     };
     // After the overlay, so it is not dimmed with the rest: while one is open the status line
@@ -169,6 +177,7 @@ fn render_stage(buf: &mut Buffer, app: &App, area: Rect) -> FrameReport {
         StageView::Store(id) => render_store(buf, app, inner, id),
         StageView::StoreMembers(id) => render_store_members(buf, app, inner, id),
         StageView::Devices => render_devices(buf, app, inner),
+        StageView::Reader(_) => {}
         StageView::Series(_) => {
             return FrameReport {
                 series_offset: series::render_series(buf, app, inner),

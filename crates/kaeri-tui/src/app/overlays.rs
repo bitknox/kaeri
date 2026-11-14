@@ -5,7 +5,7 @@ use kaeri_model::{catalog::LibrarySegment, command::Command};
 
 use super::{App, Field, cycle_search_filter, search_filter_labels};
 use crate::{
-    keymap::{Action, Context},
+    keymap::Action,
     nav::{Overlay, StageView},
 };
 
@@ -29,6 +29,8 @@ pub struct FrameReport {
     pub episodes_offset: Option<usize>,
     /// The first chapter a series page's window showed, when it was drawn.
     pub series_offset: Option<usize>,
+    /// The window's size in cells. The reader sends the engine a new surface when it changes.
+    pub window: Option<(u16, u16)>,
 }
 
 impl App {
@@ -324,7 +326,7 @@ impl App {
     /// set separately from the drawn set is how a palette ends up running the wrong entry.
     pub fn palette_matches(&self) -> Vec<(Action, String)> {
         // The keys the screen will read once the palette is closed, not the palette's own.
-        let context = if self.playing.is_some() { Context::Playing } else { Context::Browsing };
+        let context = self.screen_context();
         self.keymap
             .palette_entries(self.text(Field::Palette), context)
             .into_iter()
@@ -378,6 +380,9 @@ impl App {
         }
         if let Some(offset) = report.series_offset {
             self.cursors.chapters.offset = offset;
+        }
+        if let Some(window) = report.window {
+            self.reader_window(window);
         }
     }
 }

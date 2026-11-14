@@ -121,7 +121,7 @@ impl SeriesPage {
     }
 
     /// Where a chapter row is in the list.
-    fn position(&self, chapter: &ChapterId) -> Option<usize> {
+    pub(crate) fn position(&self, chapter: &ChapterId) -> Option<usize> {
         self.rows().iter().position(|row| row.id == *chapter)
     }
 }
@@ -290,20 +290,6 @@ impl App {
         Some(Command::Reading(ReadingCommand::LoadSeries { work }))
     }
 
-    /// Open the reader on `work`: at `chapter`, or where reading stopped when it is none.
-    ///
-    /// The one way into the reader, from a Continue line on Home and from the series page. The
-    /// reader part answers it with `ReaderCommand::Open { work, chapter, at: OpenAt::Resume,
-    /// surface }`; until then the terminal says the chapter opens in the apps.
-    pub(super) fn open_reader(
-        &mut self,
-        work: WorkId,
-        chapter: Option<ChapterId>,
-    ) -> Option<Command> {
-        let _ = (work, chapter);
-        None
-    }
-
     /// The header the engine sent for the page on screen.
     pub(super) fn take_series(&mut self, view: SeriesView) {
         let now = self.clock.now_instant();
@@ -326,7 +312,11 @@ impl App {
         failure: Option<ReadingFailure>,
     ) {
         let now = self.clock.now_instant();
-        let selected = self.series_selected().map(|row| row.id.clone());
+        // The page's own cursor, read under the reader too when it is open over the page.
+        let selected = (self.reading.series.as_ref())
+            .filter(|p| p.work == *work)
+            .and_then(|p| p.rows().get(self.cursors.chapters.selected))
+            .map(|row| row.id.clone());
         let Some(page) = self.reading.series.as_mut().filter(|p| p.work == *work) else {
             return;
         };
@@ -649,8 +639,17 @@ mod tests {
 
     #[test]
     fn enter_on_continue_reads_and_e_opens_the_series_page() {
+        use kaeri_model::reader::{OpenAt, ReaderCommand};
         let mut a = home();
-        assert_eq!(a.handle(Action::Open, 10), None, "the reader is the hook's to open");
+        let task = a.handle(Action::Open, 10);
+        assert!(
+            matches!(&task, Some(Command::Reader(ReaderCommand::Open { work, chapter: None, at: OpenAt::Resume, .. })) if work.0 == "a:1"),
+            "{task:?}"
+        );
+        assert_eq!(a.nav.current(), &StageView::Reader(WorkId::new("a:1")));
+        // q stops the open and goes back to Home.
+        let task = a.handle(Action::ReaderLeave, 10);
+        assert_eq!(task, Some(Command::Reader(ReaderCommand::Close { session: 0 })));
         assert!(matches!(a.nav.current(), StageView::Section(Section::Home)));
         let task = a.handle(Action::ShowEpisodes, 10);
         assert_eq!(
@@ -740,14 +739,20 @@ mod tests {
     }
 
     #[test]
-    fn enter_on_a_chapter_goes_to_the_reader_hook() {
+    fn enter_on_a_chapter_opens_it_in_the_reader() {
+        use kaeri_model::reader::{OpenAt, ReaderCommand};
         let mut a = home();
         a.handle(Action::Down, 10);
         a.handle(Action::Open, 10);
         answer(&mut a, "a:2");
         a.toasts.clear();
-        assert_eq!(a.handle(Action::Open, 10), None);
-        assert_eq!(a.nav.current(), &StageView::Series(WorkId::new("a:2")));
+        let task = a.handle(Action::Open, 10);
+        assert!(
+            matches!(&task, Some(Command::Reader(ReaderCommand::Open { work, chapter: Some(c), at: OpenAt::Resume, .. })) if work.0 == "a:2" && c.0 == "c2"),
+            "{task:?}"
+        );
+        assert_eq!(a.nav.current(), &StageView::Reader(WorkId::new("a:2")));
+        assert!(a.toasts.is_empty(), "nothing says it opens elsewhere");
     }
 
     #[test]

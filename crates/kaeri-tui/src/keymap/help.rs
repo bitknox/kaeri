@@ -73,6 +73,75 @@ impl Keymap {
     }
 }
 
+/// The reader's key reference, in the order its columns list them. Keys that only work in one
+/// state, Try again and Skip, are left out: the status line names them where they work.
+const READER_ROWS: &[Action] = &[
+    Action::ReaderNext,
+    Action::ReaderPrevious,
+    Action::ReaderLeft,
+    Action::ReaderRight,
+    Action::ReaderFirst,
+    Action::ReaderLast,
+    Action::ReaderNextChapter,
+    Action::ReaderPreviousChapter,
+    Action::ReaderChapters,
+    Action::ReaderBackToPage,
+    Action::ReaderMarkRead,
+    Action::ReaderDownload,
+    Action::ReaderBare,
+];
+
+const READER_VIEW_ROWS: &[Action] = &[Action::ReaderPages, Action::ReaderSettings];
+
+const READER_GLOBAL_ROWS: &[Action] = &[
+    Action::Help,
+    Action::CommandPalette,
+    Action::ReaderLeave,
+    Action::Quit,
+    Action::ShowLogs,
+];
+
+impl Keymap {
+    /// The reader's key reference: its own keys first, then how it shows pages, then the global
+    /// keys it keeps, each with the keys that reach it in the reader. Read off the live tables,
+    /// so a rebind shows; an action with no key is left out.
+    pub fn reader_help(&self) -> Vec<(&'static str, Vec<(String, &'static str)>)> {
+        let rows = |actions: &[Action]| -> Vec<(String, &'static str)> {
+            actions
+                .iter()
+                .filter_map(|action| {
+                    let mut keys = self.keys_in(*action, super::Context::Reading);
+                    if keys.is_empty() {
+                        return None;
+                    }
+                    keys.sort();
+                    // The arrow is the turn key; its letter is the vim alias.
+                    if matches!(action, Action::ReaderLeft | Action::ReaderRight) {
+                        keys.sort_by_key(|b| {
+                            !matches!(
+                                b.code,
+                                crossterm::event::KeyCode::Left
+                                    | crossterm::event::KeyCode::Right
+                            )
+                        });
+                    }
+                    let rendered =
+                        keys.iter().map(Binding::render).collect::<Vec<_>>().join(" / ");
+                    Some((rendered, action.label()))
+                })
+                .collect()
+        };
+        vec![
+            (Scope::Reader.heading(), rows(READER_ROWS)),
+            (Scope::ReaderView.heading(), rows(READER_VIEW_ROWS)),
+            (Scope::Global.heading(), rows(READER_GLOBAL_ROWS)),
+        ]
+        .into_iter()
+        .filter(|(_, rows)| !rows.is_empty())
+        .collect()
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -157,5 +226,24 @@ mod tests {
             assert!(scopes.contains(&expected), "{expected:?} missing from help");
         }
         assert!(help.iter().all(|(_, rows)| !rows.is_empty()));
+    }
+
+    #[test]
+    fn the_reader_s_reference_lists_its_keys_then_the_global_ones() {
+        let help = Keymap::new().reader_help();
+        let headings: Vec<&str> = help.iter().map(|(h, _)| *h).collect();
+        assert_eq!(
+            headings,
+            [Scope::Reader.heading(), Scope::ReaderView.heading(), Scope::Global.heading()]
+        );
+        let reader = &help[0].1;
+        assert_eq!(reader[0], ("space / pgdn".to_string(), Action::ReaderNext.label()));
+        assert_eq!(reader[1], ("backspace / pgup".to_string(), Action::ReaderPrevious.label()));
+        assert_eq!(reader[2], ("← / h".to_string(), Action::ReaderLeft.label()));
+        let global = &help[2].1;
+        assert!(global.contains(&("q / esc".to_string(), Action::ReaderLeave.label())));
+        assert!(global.contains(&("Q / ctrl+c".to_string(), Action::Quit.label())));
+        // Section digits and Tab do nothing in the reader, so its reference leaves them out.
+        assert!(!help.iter().flat_map(|(_, rows)| rows).any(|(k, _)| k == "tab"));
     }
 }

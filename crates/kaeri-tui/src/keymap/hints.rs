@@ -225,6 +225,8 @@ pub(crate) fn status_hints_paged(
     };
     let in_stage = app.nav.focus() == crate::nav::Focus::Stage;
     let wanted: Vec<(Action, &'static str)> = match app.nav.current() {
+        // The reader draws its own status line, with the keys for the open state.
+        V::Reader(_) => return crate::app::reader_hints(app, usize::MAX),
         // Now Playing has its own vocabulary, and it is the one view where the browsing
         // hints would be actively wrong.
         // Skip only while a skip is offered: at any other moment the key does nothing.

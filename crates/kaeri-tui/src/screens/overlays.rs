@@ -745,7 +745,8 @@ mod tests {
             report
         };
         let mut app = app_with(ContentList::Empty);
-        assert_eq!(draw(&app), FrameReport::default());
+        let window = Some((80, 24));
+        assert_eq!(draw(&app), FrameReport { window, ..FrameReport::default() });
         app.nav.open_overlay(Overlay::Help);
         let help = draw(&app);
         assert!(help.help_pages.is_some_and(|pages| pages > 1), "{help:?}");
@@ -754,7 +755,7 @@ mod tests {
         app.nav.open_overlay(Overlay::Logs);
         assert_eq!(
             draw(&app),
-            FrameReport { overlay_offset: Some(0), ..FrameReport::default() }
+            FrameReport { overlay_offset: Some(0), window, ..FrameReport::default() }
         );
     }
 
