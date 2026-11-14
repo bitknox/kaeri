@@ -242,8 +242,8 @@ mod unix {
     use super::*;
 
     pub(super) fn ask(ask: Ask) -> Answers {
-        let Ok(mut tty) = std::fs::OpenOptions::new().read(true).write(true).open("/dev/tty")
-        else {
+        let tty = std::fs::OpenOptions::new().read(true).write(true).open("/dev/tty"); // i18n-skip
+        let Ok(mut tty) = tty else {
             return Answers::default();
         };
         let (tmux, no_protocols) = environment();
