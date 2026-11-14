@@ -1,8 +1,8 @@
 // The reader's stuck states from the round 5 hunt, driven as a person drives them in the Fixtures
 // app: the hardware keys on iPad, Go to page from the keyboard and by touch, a novel's end page,
 // a strip scrolled to its top by the system rather than a finger, and a pinch cut off by the app
-// going to the background. Run with the Audit scheme on an iPad Simulator (the keys) or any
-// Simulator (the rest).
+// going to the background. Run them with apple/scripts/audit-reader.sh, which gives the Go to page
+// touch test the Simulator of its own it needs (see there).
 //
 // The keys here are the ones XCUITest delivers on iPadOS: arrows, Space and letters. Return,
 // Home, End, Page Up, Page Down and Esc from a hardware keyboard do not reach the app through
@@ -127,10 +127,10 @@ final class ReaderStuckTests: XCTestCase {
     // for the hardware keyboard's bar, and the keyboard keeps the pad's area for a while after:
     // Go never reads as hittable and the next tap never reaches the app. Once a key press has
     // reached a Simulator, its number pad stays below the screen in later runs too, so the touch
-    // test runs on a Simulator booted fresh for it. Let that Simulator settle first: once
-    // `simctl bootstatus` says it has booted, launch the Fixtures app on this scene once and wait
-    // for it to print KAERI_READY. A first launch on a Simulator that has just booted is slow
-    // enough under load that the reader's first page misses `page`'s wait.
+    // test runs on a Simulator booted fresh for it and settled: the Fixtures app launched once on
+    // this scene until it prints KAERI_READY. A first launch on a Simulator that has just booted
+    // is slow enough under load that the reader's first page misses `page`'s wait.
+    // apple/scripts/audit-reader.sh runs the class this way.
 
     /// G opens Go to page with its field taking the keys, the reader's own keys wait while it is
     /// up, and closing it gives the keys back.
