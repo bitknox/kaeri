@@ -85,7 +85,7 @@ zerotrie v0.2.4 yoke,zerofrom
 zerovec v0.11.6 derive,yoke
 zerovec-derive v0.11.3 (proc-macro) 
 zmij v1.0.23 
-.cargo/config.toml 193ffe573f22bc2b3052fea0d81d56d2d819d5ce
+.cargo/config.toml 7391d219afd1cbed7ac66d4010702810683140e3
 crates/kaeri-store-core/Cargo.toml 8c50d895e534dc0412ad0710c2d7e79f2290a889
 crates/kaeri-store-core/admin/.gitignore c2658d7d1b31848c3b71960543cb0368e56cd4c7
 crates/kaeri-store-core/admin/README.md 1ff288e9321189cf4d51b652b4767158229a781f
