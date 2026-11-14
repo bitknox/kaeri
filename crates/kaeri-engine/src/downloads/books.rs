@@ -114,10 +114,10 @@ const LOOK_AGAIN: Duration =
 const NETWORK_GRACE: Duration =
     if cfg!(test) { Duration::from_millis(300) } else { Duration::from_secs(6) };
 
-/// The waits before a chapter's opening or one of its pages is asked for again when the source
-/// did not answer, after the tries the source itself makes: three more asks, each through the
-/// source as any other, so its pacing holds. A source still not answering after them ends the
-/// fetch, which Try again starts over.
+/// The waits before one of a chapter's pages is asked for again when the source did not
+/// answer, after the tries the source itself makes: three more asks, each through the source as
+/// any other, so its pacing holds. A source still not answering after them ends the fetch,
+/// which Try again starts over. The chapter's opening is asked for once.
 const ASK_AGAIN: [Duration; 3] = if cfg!(test) {
     [Duration::from_millis(1), Duration::from_millis(2), Duration::from_millis(3)]
 } else {
@@ -1327,13 +1327,14 @@ impl BookDownloads {
         if !(job.wanted)() {
             return Err(Stop::Cancelled);
         }
-        let mut waits = ASK_AGAIN.iter();
-        let mut opened = loop {
-            match lent.sources.open(work, chapter, Some(&job.source_id), now).await {
-                Ok(opened) => break opened,
-                Err(failure) => self.wait_to_ask_again(job, &mut waits, failure).await?,
-            }
-        };
+        // The chapter's opening is asked for once: a source that let it time out is slow or
+        // down as a whole, and asking again would only stack more waits on it. Its pages are
+        // asked again, below, since one lost page should not end a whole chapter.
+        let mut opened = lent
+            .sources
+            .open(work, chapter, Some(&job.source_id), now)
+            .await
+            .map_err(Stop::Failed)?;
         if !(job.wanted)() {
             return Err(Stop::Cancelled);
         }
