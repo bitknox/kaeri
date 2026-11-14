@@ -94,13 +94,10 @@ final class ReaderLayoutTests: XCTestCase {
     /// Every text on screen with its frame, read from one snapshot of the app. Reading the texts
     /// one index at a time asks the app again for each, and a strip still placing its images
     /// can have fewer by the time the last index is asked for.
-    /// `any` takes every element with a label, such as a button whose text is its label.
-    private func texts(_ app: XCUIApplication, any: Bool = false) throws -> [(label: String, frame: CGRect, type: UInt)] {
-        var found: [(String, CGRect, UInt)] = []
+    private func texts(_ app: XCUIApplication) throws -> [(label: String, frame: CGRect)] {
+        var found: [(String, CGRect)] = []
         func walk(_ node: XCUIElementSnapshot) {
-            if node.elementType == .staticText || (any && !node.label.isEmpty) {
-                found.append((node.label, node.frame, node.elementType.rawValue))
-            }
+            if node.elementType == .staticText { found.append((node.label, node.frame)) }
             node.children.forEach(walk)
         }
         walk(try app.snapshot())
@@ -192,16 +189,19 @@ final class ReaderLayoutTests: XCTestCase {
         let narrowWindow = windowFrame(app)
         // Every page of the grid's first row is inside the window.
         let below = pagesSegment(app).frame.maxY
-        // The grid's first row, the one with page 1. A page's number can be its button's label,
-        // and the reader's bar under the panel has numbers of its own, such as the page count.
-        let labelled = try texts(app, any: true).filter { $0.frame.minY > below }
-        mark("p6-numbers", "\(labelled.prefix(40).map { "\($0.type) \($0.label) \($0.frame.origin)" })")
-        let numbers = labelled.filter { Int($0.label) != nil }
-        let first = try XCTUnwrap(numbers.first { $0.label == "1" }, "no page 1 in the grid")
-        let thumbs = numbers.filter { abs($0.frame.minY - first.frame.minY) < 4 }
-        XCTAssertGreaterThanOrEqual(thumbs.count, 3, "the grid's first row has \(thumbs.count) pages")
-        for thumb in thumbs {
-            XCTAssertTrue(narrowWindow.contains(CGPoint(x: thumb.frame.midX, y: thumb.frame.midY)), "page \(thumb.label) is outside the window")
+        // The grid's first row, the one with page 1. The pages are looked up by their numbers:
+        // the app's snapshot stops short of the panel's grid, which sits deep in the tree, and
+        // the reader's bar under the panel has numbers of its own, such as the page count.
+        func page(_ number: Int) -> CGRect? {
+            app.descendants(matching: .any).matching(NSPredicate(format: "label == %@", "\(number)"))
+                .allElementsBoundByIndex.map(\.frame).first { $0.minY > below }
+        }
+        let first = try XCTUnwrap(page(1), "no page 1 in the grid")
+        let row = (1...6).compactMap { n in page(n).map { (n, $0) } }.filter { abs($0.1.minY - first.minY) < 4 }
+        mark("p6-row", "\(row.map { "\($0.0) \($0.1)" })")
+        XCTAssertGreaterThanOrEqual(row.count, 3, "the grid's first row has \(row.count) pages")
+        for (number, frame) in row {
+            XCTAssertTrue(narrowWindow.contains(CGPoint(x: frame.midX, y: frame.midY)), "page \(number) is outside the window")
         }
     }
 
@@ -229,10 +229,13 @@ final class ReaderLayoutTests: XCTestCase {
         let chosen = app.staticTexts.matching(count).firstMatch.label
         mark("picks-start", "window \(windowFrame(app)) \(before), after All unread \(chosen)")
         XCTAssertNotEqual(chosen, before, "All unread chose the same chapters as the start, so the check proves nothing")
+        // A narrow window's bar has no room for the count, so there the check is that chapters
+        // are still being chosen; each wide window shows the count again.
         let steps: [(String, (XCUIApplication) -> Void)] = [
             ("narrow", { self.narrow($0, to: 375) }),
             ("wide", { self.widen($0) }),
             ("narrow again", { self.narrow($0, to: 375) }),
+            ("wide again", { self.widen($0) }),
         ]
         for (name, step) in steps {
             step(app)
@@ -245,7 +248,10 @@ final class ReaderLayoutTests: XCTestCase {
             XCTAssertEqual(app.state, .runningForeground, "\(name): the app ended")
             guard app.state == .runningForeground else { return }
             XCTAssertTrue(bar.exists, "\(name): Choose chapters is gone, the page or its picks were lost")
-            XCTAssertEqual(now.exists ? now.label : "none", chosen, "\(name): the chosen chapters changed")
+            XCTAssertTrue(app.buttons["Cancel"].firstMatch.exists, "\(name): no longer choosing chapters")
+            if window.width >= 600 {
+                XCTAssertEqual(now.exists ? now.label : "none", chosen, "\(name): the chosen chapters changed")
+            }
         }
     }
 
