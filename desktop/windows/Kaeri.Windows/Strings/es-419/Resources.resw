@@ -890,6 +890,15 @@
   <data name="ExportWaitsForWifi_other" xml:space="preserve">
     <value>{n} capítulos aún no están descargados, así que este envío espera al Wi-Fi y sigue por sí solo.</value>
   </data>
+  <data name="ExportPagesLeftOut_one" xml:space="preserve">
+    <value>Una página de {chapter} no se pudo leer y no está en los archivos.</value>
+  </data>
+  <data name="ExportPagesLeftOut_many" xml:space="preserve">
+    <value>{n} de páginas de {chapter} no se pudieron leer y no están en los archivos.</value>
+  </data>
+  <data name="ExportPagesLeftOut_other" xml:space="preserve">
+    <value>{n} páginas de {chapter} no se pudieron leer y no están en los archivos.</value>
+  </data>
   <data name="ReadingChapterTitled" xml:space="preserve">
     <value>Capítulo {chapter} · {title}</value>
   </data>

@@ -425,6 +425,7 @@ extension ReadingMsg {
         case .exportDeviceTablet: L.exportDeviceTablet
         case .exportChapter(let chapter): L.exportChapter(chapter: chapter)
         case .exportWaitsForWifi(let n): L.exportWaitsForWifi(n: Int(n))
+        case .exportPagesLeftOut(let n, let chapter): L.exportPagesLeftOut(n: Int(n), chapter: chapter)
         case .readingChapterTitled(let chapter, let title): L.readingChapterTitled(chapter: chapter, title: title)
         case .readingRowRead: L.readingRowRead
         case .readingRowNew: L.readingRowNew

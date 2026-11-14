@@ -323,6 +323,12 @@
         <item quantity="many">Do pobrania zostało %1$,d rozdziałów, więc wysyłanie poczeka na Wi-Fi i ruszy samo.</item>
         <item quantity="other">Do pobrania zostało %1$,d rozdziału, więc wysyłanie poczeka na Wi-Fi i ruszy samo.</item>
     </plurals>
+    <plurals name="export_pages_left_out">
+        <item quantity="one">Jednej strony z %2$s nie udało się odczytać i nie ma jej w plikach.</item>
+        <item quantity="few">%1$,d strony z %2$s nie udało się odczytać i nie ma ich w plikach.</item>
+        <item quantity="many">%1$,d stron z %2$s nie udało się odczytać i nie ma ich w plikach.</item>
+        <item quantity="other">%1$,d strony z %2$s nie udało się odczytać i nie ma ich w plikach.</item>
+    </plurals>
     <string name="reading_chapter_titled">Rozdział %1$s · %2$s</string>
     <string name="reading_row_read">Przeczytany</string>
     <string name="reading_row_new">Nowy</string>

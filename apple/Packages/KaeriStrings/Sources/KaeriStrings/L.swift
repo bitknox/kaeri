@@ -1106,6 +1106,11 @@ public enum L {
         Self.format("export-waits-for-wifi", fallback: "%1$lld chapters aren't downloaded yet, so this send waits for Wi-Fi and goes on by itself.", n)
     }
 
+    /// Send to e-reader, under the ready files: pages of one chapter that couldn't be read, as the reader shows them broken, so the files go without them. The chapter is its name as the series shows it, such as Chapter 12 or Volume 1. n is how many pages were left out.
+    public static func exportPagesLeftOut(n: Int, chapter: String) -> String {
+        Self.format("export-pages-left-out", fallback: "%1$lld pages of %2$@ couldn't be read and aren't in the files.", n, chapter)
+    }
+
     /// Under a This week cell: the chapter that came out that day, with its own title.
     public static func readingChapterTitled(chapter: String, title: String) -> String {
         Self.format("reading-chapter-titled", fallback: "Chapter %1$@ · %2$@", chapter, title)

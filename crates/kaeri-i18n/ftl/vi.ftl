@@ -819,6 +819,12 @@ export-waits-for-wifi =
        *[other] { $n } chương chưa được tải, nên lượt gửi này sẽ chờ Wi-Fi rồi tự chạy tiếp.
     }
 
+# Send to e-reader, under the ready files: pages of one chapter that couldn't be read, as the reader shows them broken, so the files go without them. The chapter is its name as the series shows it, such as Chapter 12 or Volume 1. n is how many pages were left out.
+export-pages-left-out =
+    { $n ->
+       *[other] { $n } trang của { $chapter } không đọc được và không có trong tệp.
+    }
+
 # Under a This week cell: the chapter that came out that day, with its own title.
 reading-chapter-titled = Chương { $chapter } · { $title }
 

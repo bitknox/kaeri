@@ -4553,7 +4553,7 @@ mod tests {
         /// How many pages the files of a finished send hold, by its job.
         fn pages_sent(seen: &[Event]) -> Option<(JobId, usize)> {
             seen.iter().find_map(|e| match e {
-                Event::Reading(ReadingEvent::ExportReady { job, files }) => {
+                Event::Reading(ReadingEvent::ExportReady { job, files, .. }) => {
                     let book = kaeri_books::open(
                         std::path::Path::new(&files[0].path),
                         &kaeri_books::Limits::default(),
@@ -4683,6 +4683,36 @@ mod tests {
             let seen = seen_until(&mut events, send_ended).await;
             assert_eq!(pages_sent(&seen), Some((job, 4)), "{seen:?}");
             assert!(!kept_waiting(&store));
+            engine.shutdown().await;
+        }
+
+        /// A send identical to one waiting for Wi-Fi joins it and is told it waits as well,
+        /// so the screen that asked shows the wait; on Wi-Fi both turn ready.
+        #[tokio::test]
+        async fn a_send_that_joins_one_waiting_for_wifi_is_told_it_waits() {
+            let dir = tempfile::tempdir().unwrap();
+            let (engine, mut events, _) = send_engine(dir.path(), None).await;
+            events.launch().await;
+            engine.send(network(true, false));
+            engine.send(send_of(&["1", "2"]));
+            let (first, _) = waiting(&mut events).await;
+
+            engine.send(send_of(&["1", "2"]));
+            let (second, seen) = waiting(&mut events).await;
+            assert_ne!(second, first, "the joining send is told it waits: {seen:?}");
+
+            engine.send(network(false, false));
+            let is_ready =
+                |e: &Event| matches!(e, Event::Reading(ReadingEvent::ExportReady { .. }));
+            let mut ready = std::collections::HashSet::new();
+            while ready.len() < 2 {
+                for e in seen_until(&mut events, is_ready).await {
+                    if let Event::Reading(ReadingEvent::ExportReady { job, .. }) = e {
+                        ready.insert(job);
+                    }
+                }
+            }
+            assert_eq!(ready, [first, second].into(), "both turn ready on Wi-Fi");
             engine.shutdown().await;
         }
 
@@ -4852,7 +4882,7 @@ mod tests {
             let ready = |seen: &[Event]| {
                 seen.iter()
                     .filter_map(|e| match e {
-                        Event::Reading(ReadingEvent::ExportReady { job, files }) => {
+                        Event::Reading(ReadingEvent::ExportReady { job, files, .. }) => {
                             Some((*job, files.clone()))
                         }
                         _ => None,
@@ -4910,7 +4940,7 @@ mod tests {
             let (job, path) = seen
                 .iter()
                 .find_map(|e| match e {
-                    Event::Reading(ReadingEvent::ExportReady { job, files }) => {
+                    Event::Reading(ReadingEvent::ExportReady { job, files, .. }) => {
                         Some((*job, files[0].path.clone()))
                     }
                     _ => None,
@@ -4978,6 +5008,7 @@ mod tests {
                 pages_sent(&[Event::Reading(ReadingEvent::ExportReady {
                     job,
                     files: again.clone(),
+                    skipped: Vec::new(),
                 })])
                 .map(|(_, pages)| pages),
                 Some(2)
@@ -5126,6 +5157,88 @@ mod tests {
                 let title = info.title.clone().unwrap_or_default();
                 assert!(title.starts_with(name) && !title.contains(id), "{title}");
             }
+            engine.shutdown().await;
+        }
+
+        /// R8-M3. A send of a folder series AniList does not match was named by its work id:
+        /// its file "l 37afcf98… 1-2.kepub.epub" and its title the id. It takes the folder
+        /// series' name.
+        #[tokio::test]
+        async fn a_send_of_an_unmatched_folder_series_is_named_by_the_folder() {
+            let dir = tempfile::tempdir().unwrap();
+            let store = kaeri_store::Store::open_in_memory().unwrap();
+            let now = kaeri_store::now();
+            let work = "l:m:37afcf98";
+            let folder = kaeri_store::book_sources::Folder {
+                id: "f1".into(),
+                path: Some(dir.path().display().to_string()),
+                added_at: 1,
+                available: true,
+                ..Default::default()
+            };
+            store.put_book_folder(&folder).unwrap();
+            let path = dir.path().join("Lantern Harbour v01.cbz");
+            comic_file(&path, 2);
+            let kept = path.display().to_string();
+            let series = kaeri_store::book_sources::LocalSeries {
+                id: "37afcf98:Lantern Harbour".into(),
+                folder: "f1".into(),
+                name: "Lantern Harbour".into(),
+                medium: "manga".into(),
+                work: Some(work.into()),
+                state: "unmatched".into(),
+                confidence: 0,
+                reason: None,
+            };
+            let file = kaeri_store::book_sources::LocalFile {
+                path: kept.clone(),
+                series: series.id.clone(),
+                volume: Some("1".into()),
+                label: "Lantern Harbour v01".into(),
+                number_milli: None,
+                format: "cbz".into(),
+                pages: Some(2),
+                size: 10,
+                mtime: 1,
+                comicinfo: None,
+            };
+            store.replace_book_scan("f1", &[(series, vec![file])], 2).unwrap();
+            store.set_book_match("srv-local", "s-0", work, 100, true, false, 1).unwrap();
+            let ask = kaeri_store::book_downloads::BookDownloadAsk {
+                work,
+                chapter: "1",
+                source_id: "srv-local",
+                version_label: None,
+                keep_ready: false,
+            };
+            store.queue_book_download(&ask, now).unwrap();
+            let id = store.book_downloads(Some(work)).unwrap()[0].id;
+            store.book_download_done(id, &kept, Some(2), 10, now).unwrap();
+            let (engine, mut events, _, _) = launch_engine(dir.path(), Some(store)).await;
+            events.launch().await;
+            engine.send(network(false, true));
+            engine.send(Command::Reading(ReadingCommand::Prepare {
+                work: WorkId::new(work),
+                pick: DownloadPick::Chapters { ids: vec![ChapterId::new("1")] },
+                target: "kobo".into(),
+                format: kaeri_model::reading::ExportFormat::Cbz,
+            }));
+            let seen = seen_until(&mut events, send_ended).await;
+            let files = seen.iter().find_map(|e| match e {
+                Event::Reading(ReadingEvent::ExportReady { files, .. }) => Some(files.clone()),
+                _ => None,
+            });
+            let files = files.unwrap_or_else(|| panic!("not sent: {seen:?}"));
+            assert!(files[0].name.starts_with("Lantern Harbour"), "{files:?}");
+            assert!(!files[0].name.contains("37afcf98"), "{files:?}");
+            let book = kaeri_books::open(
+                std::path::Path::new(&files[0].path),
+                &kaeri_books::Limits::default(),
+            )
+            .unwrap();
+            let kaeri_books::Book::Comic(comic) = book else { panic!("not a comic") };
+            let info = comic.info().expect("ComicInfo");
+            assert_eq!(info.series.as_deref(), Some("Lantern Harbour"));
             engine.shutdown().await;
         }
 

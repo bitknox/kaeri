@@ -10,6 +10,9 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import app.kaeri.design.KaeriTheme
 import app.kaeri.engine.model.ExportFile
+import app.kaeri.engine.model.ExportSkipped
+import app.kaeri.engine.model.Msg
+import app.kaeri.engine.model.ReadingMsg
 import app.kaeri.store.AppStore
 import app.kaeri.store.ExportJob
 import app.kaeri.store.ExportModel
@@ -58,7 +61,7 @@ class SendGoneTest {
     }
 
     /** The row for a ready send, its Share handing over only files still there, as the app's does. */
-    private fun row(files: List<ExportFile>): MutableList<List<ExportFile>> {
+    private fun row(files: List<ExportFile>, skipped: List<ExportSkipped> = emptyList()): MutableList<List<ExportFile>> {
         val offered = mutableListOf<List<ExportFile>>()
         val actions = AppActions(
             shareFiles = { shown ->
@@ -70,7 +73,7 @@ class SendGoneTest {
                 }
             },
         )
-        jobs(store.export).value = mapOf(7uL to ExportJob.Ready(7uL, "work-1", "eink-7", listOf("1", "2"), files))
+        jobs(store.export).value = mapOf(7uL to ExportJob.Ready(7uL, "work-1", "eink-7", listOf("1", "2"), files, skipped))
         compose.setContent {
             KaeriTheme {
                 CompositionLocalProvider(LocalAppStore provides store) { SendStatusRows(null, actions) }
@@ -99,6 +102,14 @@ class SendGoneTest {
         assertEquals(1, offered.size)
         compose.onNodeWithText("These files are gone. Prepared files are kept for a day.").assertDoesNotExist()
         assertTrue(store.export.wasShared(7uL))
+    }
+
+    /** R7L-5. A send that went without a broken page says how many, and of which volume. */
+    @Test
+    fun a_ready_send_says_which_pages_it_left_out() {
+        val line = Msg.Reading(ReadingMsg.ExportPagesLeftOut(1L, "Volume 1"))
+        row(listOf(file("Paper Kite Club 1.cbz", there = true)), listOf(ExportSkipped("Volume 1", 1u, line)))
+        compose.onNodeWithText("One page of Volume 1 couldn't be read and isn't in the files.", substring = true).assertExists()
     }
 
     @Suppress("UNCHECKED_CAST")

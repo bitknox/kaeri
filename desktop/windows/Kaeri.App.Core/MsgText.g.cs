@@ -423,6 +423,7 @@ public static class MsgText
         ReadingMsg.ExportDeviceTablet => T.ExportDeviceTablet,
         ReadingMsg.ExportChapter x => T.ExportChapter(x.Chapter),
         ReadingMsg.ExportWaitsForWifi x => T.ExportWaitsForWifi(x.N),
+        ReadingMsg.ExportPagesLeftOut x => T.ExportPagesLeftOut(x.N, x.Chapter),
         ReadingMsg.ReadingChapterTitled x => T.ReadingChapterTitled(x.Chapter, x.Title),
         ReadingMsg.ReadingRowRead => T.ReadingRowRead,
         ReadingMsg.ReadingRowNew => T.ReadingRowNew,

@@ -831,6 +831,13 @@ export-waits-for-wifi =
        *[other] { $n } Kapitel sind noch nicht heruntergeladen. Dieser Versand wartet daher auf Wi-Fi und läuft dann von selbst an.
     }
 
+# Send to e-reader, under the ready files: pages of one chapter that couldn't be read, as the reader shows them broken, so the files go without them. The chapter is its name as the series shows it, such as Chapter 12 or Volume 1. n is how many pages were left out.
+export-pages-left-out =
+    { $n ->
+        [one] Eine Seite von { $chapter } ließ sich nicht lesen und fehlt in den Dateien.
+       *[other] { $n } Seiten von { $chapter } ließen sich nicht lesen und fehlen in den Dateien.
+    }
+
 # Under a This week cell: the chapter that came out that day, with its own title.
 reading-chapter-titled = Kapitel { $chapter } · { $title }
 

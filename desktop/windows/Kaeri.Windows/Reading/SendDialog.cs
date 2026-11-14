@@ -369,6 +369,8 @@ static class SendDialog
                     dialog.DefaultButton = ContentDialogButton.Primary;
                     progressPart.Children.Clear();
                     progressPart.Children.Add(Ui.Text(T.SendReady(running.Files.Length), "BodyTextBlockStyle"));
+                    if (running.Line.Length > 0)
+                        progressPart.Children.Add(Ui.Text(running.Line, "HazeCaptionStyle"));
                     break;
                 case SendPhase.Failed:
                     dialog.PrimaryButtonText = running.FilesGone ? T.SendAgain : T.ActionTryAgain;
@@ -560,6 +562,8 @@ sealed partial class SendStatusRows : StackPanel
                 break;
             case SendPhase.Ready:
                 words.Children.Add(Ui.Text(T.SendReady(send.Files.Length), "HazeCaptionStyle", wrap: false));
+                if (send.Line.Length > 0)
+                    words.Children.Add(Ui.Text(send.Line, "HazeCaptionStyle"));
                 buttons.Children.Add(Ui.Label(T.ActionShare, async (_, _) =>
                 {
                     if (await SendFiles.Share(ctx, send, TitleOf(send)) || send.Phase != SendPhase.Ready)

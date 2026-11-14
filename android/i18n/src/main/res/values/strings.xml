@@ -584,6 +584,11 @@
         <item quantity="one">One chapter isn\'t downloaded yet, so this send waits for Wi-Fi and goes on by itself.</item>
         <item quantity="other">%1$,d chapters aren\'t downloaded yet, so this send waits for Wi-Fi and goes on by itself.</item>
     </plurals>
+    <!-- Send to e-reader, under the ready files: pages of one chapter that couldn't be read, as the reader shows them broken, so the files go without them. The chapter is its name as the series shows it, such as Chapter 12 or Volume 1. n is how many pages were left out. -->
+    <plurals name="export_pages_left_out">
+        <item quantity="one">One page of %2$s couldn\'t be read and isn\'t in the files.</item>
+        <item quantity="other">%1$,d pages of %2$s couldn\'t be read and aren\'t in the files.</item>
+    </plurals>
     <!-- Under a This week cell: the chapter that came out that day, with its own title. -->
     <string name="reading_chapter_titled">Chapter %1$s · %2$s</string>
     <!-- A chapter row's state: the person read it. -->

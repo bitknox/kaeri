@@ -311,6 +311,11 @@
         <item quantity="many">%1$,d capitoli non sono ancora scaricati, quindi questo invio aspetta il Wi-Fi e prosegue da solo.</item>
         <item quantity="other">%1$,d capitoli non sono ancora scaricati, quindi questo invio aspetta il Wi-Fi e prosegue da solo.</item>
     </plurals>
+    <plurals name="export_pages_left_out">
+        <item quantity="one">Una pagina di %2$s non si è potuta leggere e non è nei file.</item>
+        <item quantity="many">%1$,d di pagine di %2$s non si sono potute leggere e non sono nei file.</item>
+        <item quantity="other">%1$,d pagine di %2$s non si sono potute leggere e non sono nei file.</item>
+    </plurals>
     <string name="reading_chapter_titled">Capitolo %1$s · %2$s</string>
     <string name="reading_row_read">Letto</string>
     <string name="reading_row_new">Nuovo</string>

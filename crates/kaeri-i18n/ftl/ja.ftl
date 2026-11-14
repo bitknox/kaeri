@@ -819,6 +819,12 @@ export-waits-for-wifi =
        *[other] 未ダウンロードの章が{ $n }件あるため、Wi-Fi 接続を待ってから自動で送信します。
     }
 
+# Send to e-reader, under the ready files: pages of one chapter that couldn't be read, as the reader shows them broken, so the files go without them. The chapter is its name as the series shows it, such as Chapter 12 or Volume 1. n is how many pages were left out.
+export-pages-left-out =
+    { $n ->
+       *[other] { $chapter }の{ $n }ページを読み込めなかったため、ファイルに含まれていません。
+    }
+
 # Under a This week cell: the chapter that came out that day, with its own title.
 reading-chapter-titled = 第{ $chapter }話 · { $title }
 
