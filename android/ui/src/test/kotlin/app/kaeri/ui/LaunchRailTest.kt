@@ -15,11 +15,17 @@ import androidx.compose.ui.test.onRoot
 import app.kaeri.design.KaeriTheme
 import app.kaeri.eink.EinkLook
 import app.kaeri.engine.model.AppEdition
+import app.kaeri.engine.model.Entry
 import app.kaeri.engine.model.Event
+import app.kaeri.engine.model.HomeAction
 import app.kaeri.engine.model.HomePart
 import app.kaeri.engine.model.HomeView
 import app.kaeri.engine.model.KaeriIsFor
 import app.kaeri.engine.model.MediumView
+import app.kaeri.engine.model.Msg
+import app.kaeri.engine.model.Playable
+import app.kaeri.engine.model.Spotlight
+import app.kaeri.engine.model.SpotlightCase
 import app.kaeri.i18n.R
 import app.kaeri.store.AppStore
 import app.kaeri.store.HAS_TESTING_ENGINE
@@ -152,6 +158,14 @@ class LaunchRailTest {
             compose.mainClock.advanceTimeBy(16)
             assertTrue("the placeholders stay at frame $it", plateAt(400, 300))
         }
+        // The spotlight comes as the last part: its placeholder crossfades out, never cut first.
+        val entry = Entry(id = 900001u, title = "Stardust Wayfarer")
+        val spot = Spotlight(case = SpotlightCase.POPULAR, label = Msg.HomeThisSeason, entry = entry, episode = 1u, action = HomeAction.PLAY, playable = Playable.UNKNOWN)
+        compose.runOnUiThread { store.apply(Event.Home(HomeView(spotlight = spot))) }
+        compose.mainClock.advanceTimeBy(16)
+        assertTrue("the spotlight's placeholder is still going out", plateAt(400, 300))
+        compose.mainClock.advanceTimeBy(1_000)
+        shows("Stardust Wayfarer")
     }
 
     @Test

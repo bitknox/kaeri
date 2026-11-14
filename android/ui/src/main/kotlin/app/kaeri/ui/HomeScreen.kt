@@ -225,15 +225,18 @@ private fun HomeColumn(home: HomeView, h: HomeHandlers, gone: List<AnilistId>, t
         // only then, so a sources check or a mark inside it never flashes.
         item(key = "spotlight", contentType = "spotlight") {
             val spot = home.spotlight?.takeUnless { it.entry.id in goneSet }
+            // Whether its placeholder stands is part of the state, so the placeholder going out of
+            // the crossfade still draws when the spotlight comes in.
+            val waiting = spot == null && home.pending.isNotEmpty()
             Box(itemMotion()) {
                 AnimatedContent(
-                    targetState = spot,
-                    contentKey = { it?.let { s -> s.entry.id to s.case } },
+                    targetState = spot to waiting,
+                    contentKey = { (s, w) -> s?.let { it.entry.id to it.case } ?: w },
                     transitionSpec = { fadeIn(Motion.standard()) togetherWith fadeOut(Motion.standard()) },
                     label = "spotlight", // i18n-skip
-                ) { shown ->
+                ) { (shown, placeholder) ->
                     if (shown != null) SpotlightBlock(shown, h)
-                    else if (home.pending.isNotEmpty()) AfterWait(already = already) { SpotlightPlaceholder() }
+                    else if (placeholder) AfterWait(already = already) { SpotlightPlaceholder() }
                 }
             }
         }
