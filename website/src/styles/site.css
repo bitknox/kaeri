@@ -597,6 +597,24 @@ body.k-body {
 		}
 	}
 
+	/* With Reduce Motion the menu still fades, so it doesn't snap over the page, but it doesn't move. */
+	@media (prefers-reduced-motion: reduce) {
+		.bar-nav {
+			opacity: 0;
+			transition:
+				opacity 120ms var(--ease-out),
+				display 120ms allow-discrete;
+		}
+
+		.bar-nav.open {
+			opacity: 1;
+
+			@starting-style {
+				opacity: 0;
+			}
+		}
+	}
+
 	.bar-menu-docs .bar-menu {
 		display: none;
 	}
