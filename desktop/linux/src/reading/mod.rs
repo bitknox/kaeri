@@ -682,6 +682,8 @@ mod grid_tests {
                 cards
             };
             assert_eq!(cards.len(), 2);
+            // Showing the window already put the focus on the first card; start from none.
+            gtk::prelude::GtkWindowExt::set_focus(&window, gtk::Widget::NONE);
             assert!(window.child_focus(gtk::DirectionType::TabForward));
             pump(20);
             assert!(cards[0].is_focus(), "Tab lands on the first card");
