@@ -51,6 +51,7 @@ import app.kaeri.engine.model.ReadingCommand
 import app.kaeri.engine.model.ReadingEvent
 import app.kaeri.engine.model.ReadingFailure
 import app.kaeri.engine.model.ReadingHomeView
+import app.kaeri.engine.model.ReadingMsg
 import app.kaeri.engine.model.SeriesView
 import app.kaeri.engine.model.ServerStep
 import app.kaeri.engine.model.SettingScope
@@ -894,9 +895,21 @@ class ExportModel(private val send: (Command) -> ULong?) {
         send(Command.Reading(ReadingCommand.SetSendTarget(target)))
     }
 
+    /**
+     * A Fixtures shot's send held for Wi-Fi: [prepare] asks the engine for nothing and the send
+     * waits as one does on a phone network. The fixture scenes have no source to fetch from.
+     */
+    internal var holdShot = false
+
     /** Prepare [chapters] of [work] for [target] in [format]; the job, or `null` without an engine. */
     fun prepare(work: WorkId, chapters: List<ChapterId>, target: String, format: ExportFormat): ULong? {
         choose(target)
+        if (holdShot) {
+            val job = ULong.MAX_VALUE - _jobs.value.size.toULong()
+            val line = Msg.Reading(ReadingMsg.ExportWaitsForWifi(chapters.size.toLong()))
+            apply(ReadingEvent.ExportWaiting(job, work, target, line, chapters))
+            return job
+        }
         val job = send(Command.Reading(ReadingCommand.Prepare(work, DownloadPick.Chapters(chapters), target, format))) ?: return null
         asked[job] = Triple(work, target, chapters)
         _jobs.update { it + (job to ExportJob.Preparing(job, work, target, 0u, chapters.size.toUInt())) }
