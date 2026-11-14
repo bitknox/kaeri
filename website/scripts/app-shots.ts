@@ -49,6 +49,8 @@ const SHOTS: Record<string, Spec> = {
 	'ipad-continue': { from: 'ipad-watching.png', widths: TABLET },
 	'ipad-title': { from: 'ipad-watching-title-900001.png', widths: TABLET },
 	'ipad-reading': { from: 'ipad-reading-home.png', widths: TABLET },
+	'mac-reading-novel': { from: 'mac-reader-novel.png', widths: MAC },
+	'iphone-reading-look': { from: 'iphone-reader-novel-reader-settings.png', widths: PHONE },
 	'ipad-calendar': { from: 'ipad-watching-calendar.png', widths: TABLET },
 	'android-continue': { from: 'phone-watching-home.png', widths: PHONE },
 	'android-title': { from: 'phone-watching-title-900001.png', widths: PHONE },

@@ -38,6 +38,24 @@ const state = { y: 'available', d: 'development', n: 'none' } as const;
 		</div>
 	</section>
 
+	<section class="f-sect" aria-labelledby="read-h">
+		<div class="f-in">
+			<div class="band-head">
+				<h2 id="read-h">{t('features.read.title')}</h2>
+				<p><span class="lead">{t('features.read.lead')}</span> {t('features.read.text')}</p>
+			</div>
+			<figure class="f-fig">
+				<div class="f-pair">
+					<Pic name="mac-reading-novel" sizes="(min-width: 1264px) 1008px, 90vw" alt={t('features.read.novelAlt')} class="f-win" />
+					<div class="bezel f-phone">
+						<Pic name="iphone-reading-look" sizes="(min-width: 1264px) 264px, 22vw" alt={t('features.read.lookAlt')} />
+					</div>
+				</div>
+				<figcaption>{t('features.read.caption')}</figcaption>
+			</figure>
+		</div>
+	</section>
+
 	<section class="f-sect" aria-labelledby="find-h">
 		<div class="f-in">
 			<div class="band-head">
