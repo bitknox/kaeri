@@ -1045,6 +1045,22 @@ impl Reader {
         self.picture.set_paintable(gdk::Paintable::NONE);
         if let Some(novel) = self.novel.take() {
             self.stack.remove(&novel.widget);
+            #[cfg(feature = "fixtures")]
+            {
+                let weak = novel.widget.downgrade();
+                let rcs = Rc::strong_count(&novel);
+                drop(novel);
+                let refs = |w: &gtk::glib::WeakRef<gtk::Widget>| {
+                    w.upgrade().map(|v| {
+                        // SAFETY: a live object's count, read only.
+                        unsafe { (*v.as_ptr().cast::<gtk::glib::gobject_ffi::GObject>()).ref_count as i64 - 1 }
+                    })
+                };
+                tracing::info!("HUNT novel removed: rc={rcs} view refs after drop={:?}", refs(&weak));
+                gtk::glib::timeout_add_local_once(std::time::Duration::from_secs(2), move || {
+                    tracing::info!("HUNT novel 2 s after: view refs={:?}", refs(&weak));
+                });
+            }
         }
         self.end.forget();
         self.title.set_label("");
