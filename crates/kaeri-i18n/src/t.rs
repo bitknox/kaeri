@@ -7580,6 +7580,16 @@ pub fn tui_reader_start_over() -> String {
     text("tui-reader-start-over", &[])
 }
 
+/// Hint after the notice that the chapter moved to where another device read to: the key that goes back to the page this computer was on. Shown in lower case.
+pub fn tui_reader_go_back() -> String {
+    text("tui-reader-go-back", &[])
+}
+
+/// Hint after the notice that the reader guessed how this series reads: the key that opens the reader settings to change it. Shown in lower case.
+pub fn tui_reader_change() -> String {
+    text("tui-reader-change", &[])
+}
+
 /// Middle of the reader when the terminal was started with images turned off, and a chapter of manga or webtoon pages opens. The option is typed as it is on the command line.
 pub fn tui_reader_images_off() -> String {
     text("tui-reader-images-off", &[])

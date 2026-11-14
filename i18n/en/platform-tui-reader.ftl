@@ -132,6 +132,18 @@ tui-reader-blocks-notice = No image protocol here. Pages show as blocks.
 # @only tui
 tui-reader-start-over = Start over
 
+# Hint after the notice that the chapter moved to where another device read to: the key that
+# goes back to the page this computer was on. Shown in lower case.
+# @max 16
+# @only tui
+tui-reader-go-back = Go back
+
+# Hint after the notice that the reader guessed how this series reads: the key that opens the
+# reader settings to change it. Shown in lower case.
+# @max 16
+# @only tui
+tui-reader-change = Change
+
 # Middle of the reader when the terminal was started with images turned off, and a chapter of
 # manga or webtoon pages opens. The option is typed as it is on the command line.
 # @only tui

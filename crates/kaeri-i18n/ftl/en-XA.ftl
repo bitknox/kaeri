@@ -4805,6 +4805,12 @@ tui-reader-blocks-notice = [Ñö îɱàĝé þŕöţöçöļ ĥéŕé. Þàĝé�
 # Hint after "Resumed at page 8" on the reader's status rule: the key that starts the chapter from its first page. Shown in lower case.
 tui-reader-start-over = [Šţàŕţ öṽéŕ~~~]
 
+# Hint after the notice that the chapter moved to where another device read to: the key that goes back to the page this computer was on. Shown in lower case.
+tui-reader-go-back = [Ĝö ƀàçķ~~~]
+
+# Hint after the notice that the reader guessed how this series reads: the key that opens the reader settings to change it. Shown in lower case.
+tui-reader-change = [Çĥàñĝé~~]
+
 # Middle of the reader when the terminal was started with images turned off, and a chapter of manga or webtoon pages opens. The option is typed as it is on the command line.
 tui-reader-images-off = [Þàĝéš àŕé þîçţüŕéš, àñð Ķàéŕî šţàŕţéð ŵîţĥ --ñö-îɱàĝéš.~~~~~~~~~~~~~~~~~]
 
