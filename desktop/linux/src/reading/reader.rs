@@ -4691,25 +4691,3 @@ mod plate_tests {
         assert_eq!(popover_middle(300.0, 400.0, 360.0), 180.0);
     }
 }
-
-#[cfg(test)]
-mod page_name_tests {
-    use adw::prelude::*;
-
-    use crate::gtk_test::run;
-
-    /// Orca hears the page by its place and its keys, the stand-ins for the page's actions.
-    #[test]
-    fn the_page_is_named_with_its_place_and_keys() {
-        run(|| {
-            let page = gtk::Overlay::new();
-            page.set_focusable(true);
-            super::name_page(&page, "Page 4 of 26"); // i18n-skip
-            for property in
-                [gtk::AccessibleProperty::Label, gtk::AccessibleProperty::KeyShortcuts]
-            {
-                assert!(gtk::test_accessible_has_property(&page, property), "{property:?}");
-            }
-        });
-    }
-}

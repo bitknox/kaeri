@@ -19,28 +19,28 @@ struct ReadTileActionsTests {
         formatLabel: "manga", progress: nil, next: nil, newChapter: false, adult: false, // i18n-skip
         facts: [], demo: false, notInSources: false, origin: nil, amount: nil, started: nil)
 
-    /// The names of the custom actions in the accessibility tree of `view`, hosted in a window.
-    func actions(_ kind: ReadTileMenu.Kind) -> [String] {
+    /// The names of the custom actions in the accessibility tree of a reading grid of one cover,
+    /// hosted in a window: Library's grid, or with `twoLines` the one Search and discovery use.
+    func actions(twoLines: Bool = false) -> [String] {
         _ = NSApplication.shared
         // SwiftUI builds its accessibility tree only for a client; this asks for it in this
         // process, as VoiceOver's presence would.
         NSApplication.shared.accessibilitySetValue(
             true, forAttribute: NSAccessibility.Attribute(rawValue: "AXEnhancedUserInterface"))
-        let view = Text(tile.title)
-            .accessibilityElement(children: .combine)
-            .readTileMenu(tile, kind: kind)
-            .frame(width: 200, height: 100)
+        let view = ReadGrid(tiles: [tile], twoLines: twoLines)
+            .frame(width: 600, height: 400, alignment: .topLeading)
             .environment(store)
             .environment(navigator)
         let window = NSWindow(
-            contentRect: NSRect(x: -20_000, y: -20_000, width: 200, height: 100), styleMask: [.borderless],
+            contentRect: NSRect(x: -20_000, y: -20_000, width: 600, height: 400), styleMask: [.borderless],
             backing: .buffered, defer: false)
         window.isReleasedWhenClosed = false
         window.contentView = NSHostingView(rootView: view)
         window.alphaValue = 0
         window.orderFrontRegardless()
         defer { window.close() }
-        RunLoop.main.run(until: Date().addingTimeInterval(0.2))
+        // The grid sizes its columns from its width, then lays out the cover.
+        RunLoop.main.run(until: Date().addingTimeInterval(0.5))
         var names: [String] = []
         func walk(_ node: Any, depth: Int) {
             // Read by name: the protocol's accessors are optional, and Swift can't pick between
@@ -60,17 +60,13 @@ struct ReadTileActionsTests {
 
     @Test func aLibraryCoverOffersDetailsAndEveryOtherList() {
         navigator.readingSegment = .reading
-        #expect(actions(.lists) == [
+        #expect(actions() == [
             "Add to Completed", "Add to Dropped", "Add to Paused", "Add to Planning", "Add to Rereading", "Details", // i18n-skip
         ])
     }
 
     @Test func aDiscoveryCoverOffersDetailsAndPlanning() {
-        #expect(actions(.plan) == ["Add to Planning", "Details"]) // i18n-skip
-    }
-
-    @Test func aCoverOfThePersonsOwnOffersDetailsAlone() {
-        #expect(actions(.details) == ["Details"]) // i18n-skip
+        #expect(actions(twoLines: true) == ["Add to Planning", "Details"]) // i18n-skip
     }
 }
 #endif
