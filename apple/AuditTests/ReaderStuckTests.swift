@@ -127,7 +127,10 @@ final class ReaderStuckTests: XCTestCase {
     // for the hardware keyboard's bar, and the keyboard keeps the pad's area for a while after:
     // Go never reads as hittable and the next tap never reaches the app. Once a key press has
     // reached a Simulator, its number pad stays below the screen in later runs too, so the touch
-    // test runs on a Simulator booted fresh for it.
+    // test runs on a Simulator booted fresh for it. Let that Simulator settle first: once
+    // `simctl bootstatus` says it has booted, launch the Fixtures app on this scene once and wait
+    // for it to print KAERI_READY. A first launch on a Simulator that has just booted is slow
+    // enough under load that the reader's first page misses `page`'s wait.
 
     /// G opens Go to page with its field taking the keys, the reader's own keys wait while it is
     /// up, and closing it gives the keys back.
