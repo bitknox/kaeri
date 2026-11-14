@@ -219,7 +219,7 @@ const state = { y: 'available', d: 'development', n: 'none' } as const;
 							matrix.groups.map((group) => (
 								<>
 									<tr class="matrix-group">
-										<th scope="colgroup" colspan="9">{t(`features.matrix.group.${group.id}`)}</th>
+										<th scope="colgroup" colspan="9"><span>{t(`features.matrix.group.${group.id}`)}</span></th>
 									</tr>
 									{group.rows.map((row) => (
 										<tr>

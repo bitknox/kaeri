@@ -333,4 +333,11 @@
 		background: var(--ani-ground);
 		box-shadow: calc(var(--gutter) * -1) 0 0 var(--ani-ground);
 	}
+
+	/* A group spans the whole row, so its label sticks inside it instead. */
+	.matrix .matrix-group th span {
+		position: sticky;
+		left: 0;
+		display: inline-block;
+	}
 }
