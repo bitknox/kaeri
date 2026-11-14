@@ -473,6 +473,8 @@ fn build(
     shell.ctx.window.present();
     #[cfg(feature = "fixtures")]
     hunt::launch_mark("presented");
+    #[cfg(feature = "fixtures")]
+    hunt::watch_launch_frames(shell.ctx.window.upcast_ref());
     if let Some(dir) = &args.shots {
         let shots = shots::named(args.shot.as_deref());
         shots::run(Rc::clone(&shell), dir.clone(), args.prefix.clone(), shots);

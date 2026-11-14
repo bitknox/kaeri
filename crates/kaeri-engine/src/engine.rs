@@ -1027,9 +1027,16 @@ impl Actor {
                 }
                 message = self.commands.recv() => match message {
                     Some(Message::Command { job, command }) => {
+                        // QA r8: how long each command holds the actor, never merged.
+                        let kind: String = format!("{command:?}").chars().take(60).collect();
+                        let t0 = std::time::Instant::now();
                         let routed = panic::catch_unwind(AssertUnwindSafe(|| {
                             self.route(job, command)
                         }));
+                        let took = t0.elapsed().as_millis();
+                        if took >= 20 {
+                            tracing::warn!("HUNT actor {took} ms on {kind}");
+                        }
                         self.carry_on("a command", routed);
                     }
                     #[cfg(feature = "testing")]
@@ -1063,7 +1070,12 @@ impl Actor {
                 },
                 envelope = self.inbox.recv(), if !self.inbox.is_empty() => {
                     if let Some(envelope) = envelope {
+                        let t0 = std::time::Instant::now();
                         let acted = AssertUnwindSafe(self.act_on(envelope)).catch_unwind().await;
+                        let took = t0.elapsed().as_millis();
+                        if took >= 20 {
+                            tracing::warn!("HUNT actor {took} ms on the inbox");
+                        }
                         self.carry_on("the inbox", acted);
                     }
                 }

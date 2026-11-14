@@ -494,6 +494,7 @@ pub fn watch_stalls() {
     if WATCHING.with(|w| w.replace(true)) {
         return;
     }
+    sample_stalls();
     glib::timeout_add_local(Duration::from_millis(10), || {
         let now = std::time::Instant::now();
         GAP.with(|g| {
@@ -508,6 +509,89 @@ pub fn watch_stalls() {
             }
         });
         glib::ControlFlow::Continue
+    });
+}
+
+/// From launch: every frame whose work (before its paint to after it) passes 100 ms, by phase.
+pub fn watch_launch_frames(window: &gtk::Window) {
+    use std::cell::Cell;
+    let Some(clock) = window.frame_clock() else {
+        tracing::info!("HUNT launch frames: no frame clock yet");
+        return;
+    };
+    thread_local! {
+        static AT: Cell<Option<(std::time::Instant, std::time::Instant)>> = const { Cell::new(None) };
+    }
+    clock.connect_update(|_| {
+        let now = std::time::Instant::now();
+        AT.with(|a| a.set(Some((now, now))));
+    });
+    clock.connect_layout(|_| {
+        let now = std::time::Instant::now();
+        AT.with(|a| {
+            if let Some((u, _)) = a.get() {
+                a.set(Some((u, now)));
+            }
+        });
+    });
+    clock.connect_after_paint(|_| {
+        let now = std::time::Instant::now();
+        if let Some((u, l)) = AT.with(|a| a.take()) {
+            let all = now.duration_since(u).as_millis();
+            if all > 100 && since_launch() < 120_000 {
+                tracing::info!(
+                    "HUNT slow frame {all} ms at {} ms: update+layout {} ms, paint {} ms",
+                    since_launch(),
+                    l.duration_since(u).as_millis(),
+                    now.duration_since(l).as_millis()
+                );
+            }
+        }
+    });
+}
+
+/// From launch: a thread that looks at the main thread while the main loop has not ticked for
+/// 120 ms, and says per stall whether it was running, sleeping or waiting, and on what.
+fn sample_stalls() {
+    use std::sync::atomic::{AtomicU64, Ordering::Relaxed};
+    static TICK: AtomicU64 = AtomicU64::new(0);
+    glib::timeout_add_local(Duration::from_millis(10), || {
+        TICK.store(since_launch() as u64, Relaxed);
+        glib::ControlFlow::Continue
+    });
+    let pid = std::process::id();
+    std::thread::spawn(move || {
+        let stat = || std::fs::read_to_string(format!("/proc/self/task/{pid}/stat")).ok();
+        let wchan = || std::fs::read_to_string(format!("/proc/self/task/{pid}/wchan")).unwrap_or_default();
+        let parse = |s: &str| -> Option<(char, u64)> {
+            let rest = &s[s.rfind(')')? + 2..];
+            let f: Vec<&str> = rest.split(' ').collect();
+            let state = f.first()?.chars().next()?;
+            let cpu = f.get(11)?.parse::<u64>().ok()? + f.get(12)?.parse::<u64>().ok()?;
+            Some((state, cpu))
+        };
+        let mut open: Option<(u64, u64, std::collections::BTreeMap<String, u32>)> = None;
+        loop {
+            std::thread::sleep(Duration::from_millis(20));
+            let now = since_launch() as u64;
+            if now > 120_000 {
+                return;
+            }
+            let last = TICK.load(Relaxed);
+            let stalled = last > 0 && now.saturating_sub(last) > 120;
+            let Some((state, cpu)) = stat().as_deref().and_then(parse) else { continue };
+            if stalled {
+                let entry = open.get_or_insert_with(|| (now, cpu, Default::default()));
+                let what = if state == 'R' { "R".to_owned() } else { format!("{state}:{}", wchan()) };
+                *entry.2.entry(what).or_default() += 1;
+            } else if let Some((from, cpu0, seen)) = open.take() {
+                tracing::info!(
+                    "HUNT stall sample {from}..{now} ms: cpu {} ms, {:?}",
+                    (cpu - cpu0) * 10,
+                    seen
+                );
+            }
+        }
     });
 }
 
