@@ -117,4 +117,29 @@ struct NarrowTabsTests {
         #expect(navigator.section == .providers)
         #expect(navigator.phoneSettings == .root)
     }
+
+    /// A series page's chosen chapters and order live in Navigator while its page is open, so a
+    /// resize, which makes the tab view and the page again, keeps them; Back forgets them.
+    @MainActor @Test func aSeriesPageKeepsItsPicksWhileOpen() {
+        let navigator = Navigator()
+        navigator.paths[.read] = [TitleRoute(work: "a:1")]
+        navigator.seriesPages["a:1"] = SeriesPageState(choosing: ["c1", "c2"], newestFirst: false)
+        // Another tab's page opening or closing leaves it alone.
+        navigator.paths[.library] = [TitleRoute(work: "a:2")]
+        navigator.paths[.library] = []
+        #expect(navigator.seriesPages["a:1"] == SeriesPageState(choosing: ["c1", "c2"], newestFirst: false))
+        // Back from the page forgets it, so the page opens afresh.
+        navigator.paths[.read] = []
+        #expect(navigator.seriesPages["a:1"] == nil)
+    }
+
+    @MainActor @Test func theMacsSeriesPageKeepsItsPicksWhileOpen() {
+        let navigator = Navigator()
+        navigator.seriesOnMac = "a:1"
+        navigator.seriesPages["a:1"] = SeriesPageState(choosing: ["c1"])
+        navigator.paths[.home] = []
+        #expect(navigator.seriesPages["a:1"]?.choosing == ["c1"])
+        navigator.seriesOnMac = nil
+        #expect(navigator.seriesPages["a:1"] == nil)
+    }
 }

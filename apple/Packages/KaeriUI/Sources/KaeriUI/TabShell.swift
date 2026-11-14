@@ -14,25 +14,53 @@ struct TabShell: View {
     @Environment(\.horizontalSizeClass) private var sizeClass
 
     var body: some View {
+        @Bindable var navigator = navigator
         // The sidebar on a wide iPad; the system's own tab bar on iPhone and in a narrow iPad
         // window, with Search apart. The style goes by the width, so a resize makes the tab view
         // again: UIKit throws while it rebuilds the bar of one sidebar-adaptable tab view made
         // narrow or wide (NSRangeException in _tabs_rebuildTabBarItemsAnimated, iOS 27). No
         // customization: the bar's set is fixed, and the rest live in the sidebar only, so the
         // sidebar has no Edit button.
-        Group {
+        // What the pages hold lives above it, in Navigator: each tab's pushed pages and a series
+        // page's chosen chapters and order. The sheets and the notices are here, outside it, so a
+        // resize leaves an open sheet open.
+        return Group {
             if sizeClass == .regular {
                 tabs.tabViewStyle(.sidebarAdaptable)
             } else {
                 tabs
             }
         }
-        // Here, outside the tab view a resize makes again: a window made narrow keeps the place
-        // the person was on, pushed onto its tab; made wide again, that place is its own section
-        // again.
+        // A window made narrow keeps the place the person was on, pushed onto its tab; made wide
+        // again, that place is its own section again.
         .onChange(of: sizeClass) { _, now in
             if now == .compact { narrowed() } else { widened() }
         }
+        // At the foot, above the tab bar on iPhone and in a narrow window (Notices).
+        .overlay(alignment: .bottom) {
+            NoticeCapsule(here: navigator.phoneSettings == nil)
+                .padding(.horizontal, 16)
+                .padding(.bottom, sizeClass == .compact ? 64 : 16)
+        }
+        .sheet(isPresented: $navigator.messagesShown) {
+            MessagesView()
+        }
+        .sheet(item: $navigator.phoneSettings) { page in
+            PhoneSettingsSheet(start: page)
+        }
+        .sheet(item: Binding<ShowItem?>(
+            get: { navigator.showSettings.flatMap { store.titles[$0] }.map(ShowItem.init) },
+            set: { (item: ShowItem?) in navigator.showSettings = item?.entry.id }
+        )) { item in
+            PhoneShowSettingsSheet(entry: item.entry)
+                .presentationDetents([.medium, .large])
+        }
+        .moreAboutSheet(navigator)
+        .sourcePickerSheet(navigator)
+        .matchPickerSheet(navigator)
+        .openLinkSheet(navigator)
+        .surprisePicks()
+        .modifier(AppSheets())
     }
 
     private var tabs: some View {
@@ -118,31 +146,6 @@ struct TabShell: View {
         // The iPad's sidebar as the brief draws it (PadSidebarStyle). The bar is empty; it is
         // where the style reaches the sidebar from, and unlike a header it moves no row.
         .tabViewSidebarBottomBar { PadSidebarStyle(selection: navigator.section) }
-        // At the foot, above the tab bar on iPhone and in a narrow window (Notices).
-        .overlay(alignment: .bottom) {
-            NoticeCapsule(here: navigator.phoneSettings == nil)
-                .padding(.horizontal, 16)
-                .padding(.bottom, sizeClass == .compact ? 64 : 16)
-        }
-        .sheet(isPresented: $navigator.messagesShown) {
-            MessagesView()
-        }
-        .sheet(item: $navigator.phoneSettings) { page in
-            PhoneSettingsSheet(start: page)
-        }
-        .sheet(item: Binding<ShowItem?>(
-            get: { navigator.showSettings.flatMap { store.titles[$0] }.map(ShowItem.init) },
-            set: { (item: ShowItem?) in navigator.showSettings = item?.entry.id }
-        )) { item in
-            PhoneShowSettingsSheet(entry: item.entry)
-                .presentationDetents([.medium, .large])
-        }
-        .moreAboutSheet(navigator)
-        .sourcePickerSheet(navigator)
-        .matchPickerSheet(navigator)
-        .openLinkSheet(navigator)
-        .surprisePicks()
-        .modifier(AppSheets())
     }
 
     /// The sections with a tab, in the sidebar's order: Search has its own, and Downloads and
