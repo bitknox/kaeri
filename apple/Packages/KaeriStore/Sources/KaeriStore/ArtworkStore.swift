@@ -157,8 +157,7 @@ public final class ArtworkStore {
     /// Asked for now, and while the task runs, asked for again whenever it failed or the cache
     /// let it go.
     public func show(_ url: String, maxPixelSize: Int) async {
-        shown[url, default: 0] += 1
-        if held[url] == nil, let cached = cache.object(forKey: url as NSString) { held[url] = cached }
+        hold(url)
         defer { hide(url) }
         request(url, maxPixelSize: maxPixelSize)
         scheduleRetry(url)
@@ -250,8 +249,15 @@ public final class ArtworkStore {
         send(url)
     }
 
+    /// Keep `url`'s art until `hide(url)`: the cache's decode as of now, and each larger decode
+    /// that lands. What a screen showing it does, and the widget snapshot while it gathers.
+    func hold(_ url: String) {
+        shown[url, default: 0] += 1
+        if held[url] == nil, let cached = cache.object(forKey: url as NSString) { held[url] = cached }
+    }
+
     /// A screen showing `url` went.
-    private func hide(_ url: String) {
+    func hide(_ url: String) {
         guard let count = shown[url] else { return }
         if count > 1 {
             shown[url] = count - 1
