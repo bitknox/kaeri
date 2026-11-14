@@ -1,6 +1,7 @@
 // Keys in the long strip: Down and Up scroll a short step, Space, Shift-Space, Page Down and Page
 // Up a screen less a little overlap, Home and End go to the chapter's top and the foot of its last
 // image, and Left and Right do nothing. The strip has no pager, so a key sent to one moved nothing.
+// Escape with a bar button focused hides the bars and gives the focus back to the strip.
 
 package app.kaeri.reader
 
@@ -13,9 +14,13 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.input.InputMode
+import androidx.compose.ui.input.InputModeManager
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.input.key.KeyEvent as ComposeKeyEvent
+import androidx.compose.ui.platform.LocalInputModeManager
 import androidx.compose.ui.test.KeyInjectionScope
+import androidx.compose.ui.test.hasClickAction
 import androidx.compose.ui.test.isFocused
 import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
 import androidx.compose.ui.test.performKeyInput
@@ -47,12 +52,14 @@ class StripKeysTest {
     private val dir = kotlin.io.path.createTempDirectory("strip-keys").toFile()
     private val list = LazyListState()
     private val images = 5
+    private lateinit var inputMode: InputModeManager
 
     /** Five images twice as tall as wide, with a shape and no file, so nothing decodes. */
     private fun strip() {
         val tall = List(images) { Leaf(it.toUInt(), listOf(ReaderFixtures.part(it.toUInt()).copy(ratio = 0.5f)), false) } + Leaf(images.toUInt(), emptyList(), true)
         val state = TapZonesScenes.state(dir, mode = ReaderMode.STRIP).copy(leaves = tall)
         compose.setContent {
+            inputMode = LocalInputModeManager.current
             Box(Modifier.fillMaxSize().background(ObiSilk.Ground)) {
                 PhoneReader(session = ReaderSession {}, state = state, images = PageImages(), actions = PhoneReaderActions(onClose = {}), novel = { _, _ -> }, stripList = list)
             }
@@ -149,5 +156,17 @@ class StripKeysTest {
         repeat(3) { down(KeyEvent.KEYCODE_PAGE_DOWN, it) }
         up(KeyEvent.KEYCODE_PAGE_DOWN)
         assertEquals(held + screen, scrolled(), 2f)
+    }
+
+    @Test
+    fun escape_from_a_bar_button_hides_the_bars_and_down_still_scrolls() {
+        strip()
+        compose.runOnIdle { inputMode.requestInputMode(InputMode.Keyboard) }
+        keys { pressKey(Key.Enter) }
+        keys { pressKey(Key.Tab) }
+        compose.onNode(isFocused()).assert(hasClickAction())
+        keys { pressKey(Key.Escape) }
+        keys { pressKey(Key.DirectionDown) }
+        assertEquals(line, scrolled(), 2f)
     }
 }
