@@ -401,7 +401,7 @@ impl WorkGrid {
     fn build(&self, view: Option<View>) {
         let tiles = self.tiles.borrow();
         let from = self.built.get();
-        let more = cards_to_build(from, tiles.len(), view);
+        let more = per_turn(from, cards_to_build(from, tiles.len(), view));
         for tile in &tiles[from..from + more] {
             let card = work_card(&self.hub, tile, COVER_WIDTH);
             card.set_accessible_role(gtk::AccessibleRole::ListItem);
@@ -409,6 +409,12 @@ impl WorkGrid {
         }
         self.built.set(from + more);
     }
+}
+
+/// How many of the `wanted` cards one turn of the main loop builds, with `built` built.
+fn per_turn(built: usize, wanted: usize) -> usize {
+    let _ = built;
+    wanted
 }
 
 /// Where a scrolled view stands: its top, its height and the height of what it holds.
