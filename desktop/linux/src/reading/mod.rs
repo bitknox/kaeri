@@ -649,6 +649,14 @@ mod grid_tests {
         }
     }
 
+    /// The focus widget's type and accessible name, for a failure to say where the focus went.
+    fn focused(window: &gtk::Window) -> Option<String> {
+        gtk::prelude::GtkWindowExt::focus(window).map(|widget| {
+            let card = widget.ancestor(gtk::Button::static_type()).map(|b| b.widget_name());
+            format!("{} in {card:?}", widget.type_().name())
+        })
+    }
+
     /// Library's covers take the keyboard: Tab reaches the first, the arrows move along the row,
     /// and Return opens the series of the cover in focus.
     #[test]
@@ -686,10 +694,18 @@ mod grid_tests {
             gtk::prelude::GtkWindowExt::set_focus(&window, gtk::Widget::NONE);
             assert!(window.child_focus(gtk::DirectionType::TabForward));
             pump(20);
-            assert!(cards[0].is_focus(), "Tab lands on the first card");
+            assert!(
+                cards[0].is_focus(),
+                "Tab lands on the first card, not {:?}",
+                focused(&window)
+            );
             assert!(window.child_focus(gtk::DirectionType::Right));
             pump(20);
-            assert!(cards[1].is_focus(), "Right moves to the next card");
+            assert!(
+                cards[1].is_focus(),
+                "Right moves to the next card, not {:?}",
+                focused(&window)
+            );
             assert!(cards[1].activate(), "Return activates the card");
             pump(20);
             assert_eq!(*opened.borrow(), vec!["a:2".to_owned()]);
