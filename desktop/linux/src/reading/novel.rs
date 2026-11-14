@@ -309,6 +309,8 @@ impl NovelView {
         let (content, view) = view;
         let widget =
             view.clone().downcast::<gtk::Widget>().map_err(|_| "no widget".to_owned())?;
+        #[cfg(feature = "fixtures")]
+        view.add_weak_ref_notify_local(|| tracing::info!("HUNT novel view finalized"));
         widget.set_hexpand(true);
         widget.set_vexpand(true);
         let this = Rc::new(Self {
