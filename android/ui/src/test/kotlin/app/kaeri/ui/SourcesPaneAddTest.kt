@@ -12,12 +12,14 @@ import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithText
 import androidx.navigation.compose.rememberNavController
 import app.kaeri.design.KaeriTheme
+import app.kaeri.engine.model.AppEdition
 import app.kaeri.engine.model.BookFolderRow
 import app.kaeri.engine.model.BookFolderScan
 import app.kaeri.engine.model.BookSourceEvent
 import app.kaeri.engine.model.BookSourcesView
 import app.kaeri.engine.model.Event
 import app.kaeri.engine.model.KaeriIsFor
+import app.kaeri.engine.model.MediumView
 import app.kaeri.i18n.R
 import app.kaeri.store.AppStore
 import kotlinx.coroutines.CoroutineScope
@@ -35,10 +37,13 @@ class SourcesPaneAddTest {
     @get:Rule
     val compose = createAndroidComposeRule<ComponentActivity>()
 
-    private val store = AppStore(CoroutineScope(SupervisorJob() + Dispatchers.Main)).apply { medium.kept = KaeriIsFor.READ }
+    private val store = AppStore(CoroutineScope(SupervisorJob() + Dispatchers.Main))
+
+    /** Kaeri is for reading here, as the engine would say. */
+    private val reading = MediumView(answer = KaeriIsFor.READ, edition = AppEdition.FULL, fixed = false, readingAvailable = true, ask = null, account = null)
 
     private fun pane(view: BookSourcesView) {
-        compose.runOnUiThread { store.apply(listOf(Event.BookSources(BookSourceEvent.View(view)))) }
+        compose.runOnUiThread { store.apply(listOf(Event.Medium(reading), Event.BookSources(BookSourceEvent.View(view)))) }
         compose.setContent {
             KaeriTheme {
                 CompositionLocalProvider(
