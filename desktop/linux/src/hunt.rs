@@ -2523,6 +2523,26 @@ async fn run_plan(shell: &Rc<Shell>, plan: &str) {
                     series(shell, &work);
                 }
             }
+            // r9: download the chapters at these places in the last chapter list.
+            "dlidx" => {
+                let (work, ids) = LAST.with(|l| l.borrow().clone());
+                let pick: Vec<kaeri_core::books::ChapterId> = w[1..]
+                    .iter()
+                    .filter_map(|x| x.parse::<usize>().ok())
+                    .filter_map(|i| ids.get(i))
+                    .map(|c| kaeri_core::books::ChapterId::new(c.as_str()))
+                    .collect();
+                tracing::info!("HUNT do dlidx {} chapters of {} known", pick.len(), ids.len());
+                if !work.is_empty() && !pick.is_empty() {
+                    send(
+                        shell,
+                        kaeri_model::reading::ReadingCommand::Download {
+                            work: kaeri_core::books::WorkId::new(work),
+                            pick: kaeri_model::reading::DownloadPick::Chapters { ids: pick },
+                        },
+                    );
+                }
+            }
             "readlast" | "dllast" | "sendlast" | "serieslast" => {
                 let (work, ids) = LAST.with(|l| l.borrow().clone());
                 if work.is_empty() {
