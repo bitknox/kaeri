@@ -53,32 +53,17 @@ const bands = ['f1', 'f2', 'f3', 'f4'] as const;
 		</figure>
 	</section>
 
-	<section class="band" aria-labelledby="f1-h">
+	<section class="band band-rise" aria-labelledby="read-h">
 		<div class="band-in">
 			<div class="band-head">
-				<h2 id="f1-h">{t('home.f1.title')}</h2>
-				<p><span class="lead">{t('home.f1.lead')}</span> {t('home.f1.text')}</p>
-			</div>
-			<figure>
-				<div class="crop crop-a crop-continue" style="view-transition-name: shot-continue">
-					<Pic name="mac-continue" sizes="(min-width: 701px) min(1452px, 121vw), 227vw" alt={t('home.f1.alt')} />
-				</div>
-				<figcaption>{t('home.f1.caption')}</figcaption>
-			</figure>
-		</div>
-	</section>
-
-	<section class="band band-rise" aria-labelledby="f2-h">
-		<div class="band-in">
-			<div class="band-head">
-				<h2 id="f2-h">{t('home.f2.title')}</h2>
-				<p><span class="lead">{t('home.f2.lead')}</span> {t('home.f2.text')}</p>
+				<h2 id="read-h">{t('home.read.title')}</h2>
+				<p><span class="lead">{t('home.read.lead')}</span> {t('home.read.text')}</p>
 			</div>
 			<figure class="rise-fig">
-				<figcaption>{t('home.f2.caption')}</figcaption>
+				<figcaption>{t('home.read.caption')}</figcaption>
 				<div class="rise rise-ipad">
-					<div class="rise-device" style="view-transition-name: shot-title">
-						<Pic name="ipad-title" sizes="(min-width: 1100px) 1000px, 92vw" alt={t('home.f2.alt')} />
+					<div class="rise-device">
+						<Pic name="ipad-reading" sizes="(min-width: 1100px) 1000px, 92vw" alt={t('home.read.alt')} />
 					</div>
 				</div>
 			</figure>
@@ -100,19 +85,22 @@ const bands = ['f1', 'f2', 'f3', 'f4'] as const;
 		</div>
 	</section>
 
-	<section class="band band-rise" aria-labelledby="f4-h">
+	<section class="band" aria-labelledby="together-h">
 		<div class="band-in">
 			<div class="band-head">
-				<h2 id="f4-h">{t('home.f4.title')}</h2>
-				<p><span class="lead">{t('home.f4.lead')}</span> {t('home.f4.text')}</p>
+				<h2 id="together-h">{t('home.together.title')}</h2>
+				<p><span class="lead">{t('home.together.lead')}</span> {t('home.together.text')}</p>
 			</div>
-			<figure class="rise-fig">
-				<figcaption>{t('home.f4.caption')}</figcaption>
-				<div class="rise rise-mac">
-					<div class="rise-window" style="view-transition-name: shot-calendar">
-						<Pic name="mac-calendar" sizes="(min-width: 1264px) 1200px, (min-width: 701px) 95vw, 640px" alt={t('home.f4.alt')} />
+			<figure>
+				<div class="together">
+					<div class="player-bezel together-party">
+						<Pic name="android-party-chat" sizes="(min-width: 1100px) 900px, 92vw" alt={t('features.together.alt')} />
+					</div>
+					<div class="bezel together-remote">
+						<Pic name="iphone-tv-remote" sizes="(min-width: 1100px) 240px, 40vw" alt={t('features.tv.remoteAlt')} />
 					</div>
 				</div>
+				<figcaption set:html={t('home.together.caption', { source: DEMO_PART_1, licence: CC })} />
 			</figure>
 		</div>
 	</section>
@@ -145,6 +133,21 @@ const bands = ['f1', 'f2', 'f3', 'f4'] as const;
 				{t('home.more')}
 				<svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true"><path d="M4 2l4 4-4 4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"></path></svg>
 			</a></p>
+		</div>
+	</section>
+
+	<section class="band" aria-labelledby="f1-h">
+		<div class="band-in">
+			<div class="band-head">
+				<h2 id="f1-h">{t('home.f1.title')}</h2>
+				<p><span class="lead">{t('home.f1.lead')}</span> {t('home.f1.text')}</p>
+			</div>
+			<figure>
+				<div class="crop crop-a crop-continue" style="view-transition-name: shot-continue">
+					<Pic name="mac-continue" sizes="(min-width: 701px) min(1452px, 121vw), 227vw" alt={t('home.f1.alt')} />
+				</div>
+				<figcaption>{t('home.f1.caption')}</figcaption>
+			</figure>
 		</div>
 	</section>
 
