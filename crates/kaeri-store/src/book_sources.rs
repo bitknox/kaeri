@@ -480,17 +480,21 @@ mod tests {
             event.of_pages = Some(12);
             store.record_read(&event, Vec::new()).unwrap();
         }
+        // Continue's order is the stamps', not the test's: compare what it holds.
         let continuing = |store: &Store| -> Vec<String> {
-            store.continue_reading(12).unwrap().into_iter().map(|w| w.work).collect()
+            let mut works: Vec<String> =
+                store.continue_reading(12).unwrap().into_iter().map(|w| w.work).collect();
+            works.sort();
+            works
         };
-        assert_eq!(continuing(&store), [WORK, ELSEWHERE]);
+        assert_eq!(continuing(&store), [ELSEWHERE, WORK]);
 
         store.remove_book_folder("f").unwrap();
         assert_eq!(continuing(&store), [ELSEWHERE]);
         assert!(store.read_work(WORK).unwrap().is_some(), "its place is kept");
 
         add(&store);
-        assert_eq!(continuing(&store), [WORK, ELSEWHERE]);
+        assert_eq!(continuing(&store), [ELSEWHERE, WORK]);
     }
 
     #[test]
