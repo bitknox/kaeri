@@ -41,7 +41,10 @@ const MAP_COLUMNS: u16 = 13;
 pub(super) fn render_reader(buf: &mut Buffer, app: &App, area: Rect) -> FrameReport {
     let report =
         FrameReport { window: Some((area.width, area.height)), ..FrameReport::default() };
-    let (Some(reader), Some(screen)) = (app.reader_here(), app.reader_screen()) else {
+    // The screen follows the window this frame has, not the one the last frame had: a shrink
+    // between frames must not lay out the old size.
+    let window = (area.width, area.height);
+    let (Some(reader), Some(screen)) = (app.reader_here(), app.reader_screen_at(window)) else {
         return report;
     };
     if screen == ReaderScreen::TooSmall {
@@ -334,15 +337,30 @@ pub(super) fn status(buf: &mut Buffer, app: &App, area: Rect, left: &[(String, R
             + 3 * hints.len().saturating_sub(1);
     let mut room = (area.width as usize).saturating_sub(hints_width + 2);
     let mut x = area.x;
+    // Runs are never cut mid-word: one that doesn't fit keeps the sentences that do, or goes
+    // with every run after it.
     for (text, role) in left {
-        if room == 0 {
-            break;
-        }
-        let text = truncate(text, room);
+        let Some(text) = fitting_sentences(text, room) else { break };
         line(buf, x, area.y, &text, app.palette.style(*role));
         x += text.cells() as u16;
         room = room.saturating_sub(text.cells());
     }
+}
+
+/// `text` when it fits in `room` cells, else its leading whole sentences that do, else `None`.
+fn fitting_sentences(text: &str, room: usize) -> Option<String> {
+    if text.cells() <= room {
+        return Some(text.to_owned());
+    }
+    let mut kept = None;
+    for (i, _) in text.match_indices(". ") {
+        let head = &text[..=i];
+        if head.cells() > room {
+            break;
+        }
+        kept = Some(head.to_owned());
+    }
+    kept.filter(|k| !k.trim().is_empty())
 }
 
 /// The open on its way: nothing for 600 ms, then what it waits on, with the seconds from 4 s.
@@ -400,7 +418,7 @@ fn chapter_failed(buf: &mut Buffer, app: &App, reader: &Reader, stage: Rect) {
         buf,
         x + 1,
         y,
-        truncate(&heading, room - 1),
+        truncate(&heading, room.saturating_sub(1)),
         p.style(Role::Text).add_modifier(Modifier::BOLD),
     );
     line(buf, x + 3, y + 1, truncate(&reason, room.saturating_sub(3)), p.style(Role::TextDim));
@@ -1077,7 +1095,7 @@ fn too_small(buf: &mut Buffer, app: &App, reader: &Reader, area: Rect) {
         line(buf, area.x, area.y, "Kaeri", bold); // i18n-skip: the product name
         Hairline::new(p).render(Rect { y: area.y + 1, height: 1, ..area }, buf);
     }
-    let y = area.y + area.height / 2 - 1;
+    let y = area.y + (area.height / 2).saturating_sub(1);
     let lines = [
         (y, t::tui_reader_too_small(), bold),
         (
@@ -1092,9 +1110,10 @@ fn too_small(buf: &mut Buffer, app: &App, reader: &Reader, area: Rect) {
         line(buf, x, y, text, style);
     }
     if area.height >= 5 {
-        Hairline::new(p).render(Rect { y: area.bottom() - 2, height: 1, ..area }, buf);
+        Hairline::new(p)
+            .render(Rect { y: area.bottom().saturating_sub(2), height: 1, ..area }, buf);
         let left = page_count(reader).map(|c| vec![(c, Role::TextDim)]).unwrap_or_default();
-        status(buf, app, Rect { y: area.bottom() - 1, height: 1, ..area }, &left);
+        status(buf, app, Rect { y: area.bottom().saturating_sub(1), height: 1, ..area }, &left);
     }
 }
 
@@ -1185,10 +1204,25 @@ fn help(buf: &mut Buffer, app: &App, reader: &Reader, area: Rect) {
             y += 1;
         }
     }
-    Hairline::new(p).render(Rect { y: area.bottom() - 2, height: 1, ..area }, buf);
+    Hairline::new(p)
+        .render(Rect { y: area.bottom().saturating_sub(2), height: 1, ..area }, buf);
     let count =
         if reader.novel.is_some() { app.novel_status_words(false) } else { page_count(reader) };
     let left = count.map(|c| vec![(c, Role::TextDim)]).unwrap_or_default();
-    status(buf, app, Rect { y: area.bottom() - 1, height: 1, ..area }, &left);
+    status(buf, app, Rect { y: area.bottom().saturating_sub(1), height: 1, ..area }, &left);
     let _ = h;
+}
+
+#[cfg(test)]
+mod tests {
+    use super::fitting_sentences;
+
+    #[test]
+    fn a_status_run_keeps_whole_sentences_or_goes() {
+        let foot = "Changes apply at once. The place in the text stays.";
+        assert_eq!(fitting_sentences(foot, 80).as_deref(), Some(foot));
+        assert_eq!(fitting_sentences(foot, 30).as_deref(), Some("Changes apply at once."));
+        assert_eq!(fitting_sentences(foot, 10), None);
+        assert_eq!(fitting_sentences("  End of chapter 14", 6), None);
+    }
 }

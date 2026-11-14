@@ -443,8 +443,12 @@ impl App {
 
     /// Which of the reader's screens is up.
     pub fn reader_screen(&self) -> Option<ReaderScreen> {
+        self.reader_screen_at(self.window.unwrap_or((80, 24)))
+    }
+
+    /// Which of the reader's screens is up in a `w` by `h` window.
+    pub fn reader_screen_at(&self, (w, h): (u16, u16)) -> Option<ReaderScreen> {
         let reader = self.reader_here()?;
-        let (w, h) = self.window.unwrap_or((80, 24));
         Some(if w < MIN_COLUMNS || h < MIN_ROWS {
             ReaderScreen::TooSmall
         } else if reader.chapter_failure.is_some() {
@@ -590,6 +594,14 @@ impl App {
             }),
             zoom: reader.zoom.map_or(1.0, |z| z.level),
             text: true,
+        }
+    }
+
+    /// The terminal changed size. The reader takes the new window at once, before the next
+    /// frame, so its surface and its place follow the resize rather than the frame after it.
+    pub fn resized(&mut self, window: (u16, u16)) {
+        if self.reader_here().is_some() && self.window != Some(window) {
+            self.reader_window(window);
         }
     }
 
@@ -1614,6 +1626,13 @@ fn end_hints(
         }
     }
     if wide {
+        wanted.push((Action::Help, keys));
+    } else if width >= 72 {
+        // `? keys` is the way to every other key, so a narrower line gives up the chapters
+        // before it. The board's smallest end pages (64 columns) show neither.
+        if reader.end.next.is_some() {
+            wanted.retain(|(action, _)| *action != Action::ReaderChapters);
+        }
         wanted.push((Action::Help, keys));
     }
     wanted

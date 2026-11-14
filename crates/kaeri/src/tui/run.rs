@@ -333,6 +333,7 @@ pub async fn run(
                     Some(Ok(TermEvent::Resize(width, height))) => {
                         let area = ratatui::layout::Rect::new(0, 0, width, height);
                         app.fit_to(screens::visible_rows(area, app.nav.section()));
+                        app.resized((width, height));
                     }
                     Some(Err(e)) => break Err(anyhow::anyhow!(e)),
                     None => break Ok(()),

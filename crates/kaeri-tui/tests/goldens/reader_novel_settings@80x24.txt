@@ -21,7 +21,7 @@ Kaeri   Lantern Street Notes · Part 3                sources ● 3  ·  anilist
 
 
 ────────────────────────────────────────────────────────────────────────────────
-Changes apply at once. The place in the text…  ‹ › change   j k move   esc close
+Changes apply at once.                         ‹ › change   j k move   esc close
 === styles ===
 colours text=#e4e0d6 text-dim=#a8aec9 rule=#46464d obi=#f2a64b state=#7fc7d9 alert=#f59b85 ground=#1a1b26
 r00 c00-04 fg=text mod=BOLD
@@ -59,7 +59,7 @@ r14 c23-77 fg=rule
 r15 c04-71 fg=text-dim
 r16 c04-28 fg=text-dim
 r22 c00-79 fg=rule
-r23 c00-44 fg=text-dim
+r23 c00-21 fg=text-dim
 r23 c47-49 fg=text
 r23 c50-59 fg=text-dim
 r23 c60-62 fg=text

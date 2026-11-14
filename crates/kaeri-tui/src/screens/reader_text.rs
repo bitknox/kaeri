@@ -147,7 +147,8 @@ pub(super) fn settings_overlay(buf: &mut Buffer, app: &App, reader: &Reader, are
         preview_text(buf, app, reader, area);
     }
 
-    Hairline::new(p).render(Rect { y: area.bottom() - 2, height: 1, ..area }, buf);
+    Hairline::new(p)
+        .render(Rect { y: area.bottom().saturating_sub(2), height: 1, ..area }, buf);
     let foot = if novel {
         t::tui_reader_settings_novel_foot()
     } else {
@@ -156,7 +157,7 @@ pub(super) fn settings_overlay(buf: &mut Buffer, app: &App, reader: &Reader, are
     super::reader::status(
         buf,
         app,
-        Rect { y: area.bottom() - 1, height: 1, ..area },
+        Rect { y: area.bottom().saturating_sub(1), height: 1, ..area },
         &[(foot, Role::TextDim)],
     );
 }

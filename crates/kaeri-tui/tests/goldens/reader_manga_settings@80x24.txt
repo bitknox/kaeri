@@ -21,7 +21,7 @@ Kaeri   Harbor Light Recipes · Chapter 14            sources ● 3  ·  anilist
 
 
 ────────────────────────────────────────────────────────────────────────────────
-Changes apply at once. The p…  ‹ › change   j k move   d use default   esc close
+Changes apply at once.         ‹ › change   j k move   d use default   esc close
 === styles ===
 colours text=#e4e0d6 text-dim=#a8aec9 rule=#46464d obi=#f2a64b state=#7fc7d9 alert=#f59b85 ground=#1a1b26
 r00 c00-04 fg=text mod=BOLD
@@ -72,7 +72,7 @@ r17 c23-77 fg=rule
 r18 c04-70 fg=text-dim
 r19 c04-31 fg=text-dim
 r22 c00-79 fg=rule
-r23 c00-28 fg=text-dim
+r23 c00-21 fg=text-dim
 r23 c31-33 fg=text
 r23 c34-43 fg=text-dim
 r23 c44-46 fg=text

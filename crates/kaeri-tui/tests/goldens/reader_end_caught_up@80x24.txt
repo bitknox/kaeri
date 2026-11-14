@@ -21,7 +21,7 @@ Kaeri   Harbor Light Recipes · Chapter 17            sources ● 3  ·  anilist
 
 
 ────────────────────────────────────────────────────────────────────────────────
-██████████  End of chapter 17                               q back to the series
+██████████  End of chapter 17                      q back to the series   ? keys
 === styles ===
 colours text=#e4e0d6 text-dim=#a8aec9 rule=#46464d obi=#f2a64b state=#7fc7d9 alert=#f59b85 ground=#1a1b26
 r00 c00-04 fg=text mod=BOLD
@@ -43,5 +43,7 @@ r10 c04-21 fg=text-dim
 r22 c00-79 fg=rule
 r23 c00-09 fg=text
 r23 c10-28 fg=text-dim
-r23 c60-60 fg=text
-r23 c61-79 fg=text-dim
+r23 c51-51 fg=text
+r23 c52-73 fg=text-dim
+r23 c74-74 fg=text
+r23 c75-79 fg=text-dim

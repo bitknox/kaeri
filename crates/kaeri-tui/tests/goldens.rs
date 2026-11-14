@@ -464,6 +464,9 @@ macro_rules! scenarios {
     ($($name:ident),+ $(,)?) => {
         const SCENARIOS: &[&str] = &[$(stringify!($name)),+];
 
+        /// Every scenario with the function that sets it up.
+        const SCENARIO_FNS: &[(&str, fn(&mut Screen))] = &[$((stringify!($name), $name)),+];
+
         mod golden {
             $(
                 #[test]
@@ -653,6 +656,29 @@ fn reader_scenes_at_the_board_s_sizes() {
         let mut screen = Screen::new(*width, *height);
         scenario(&mut screen);
         golden(name, &screen.draw());
+    }
+}
+
+/// The window can shrink to almost nothing between frames. Every reader screen, set up at a
+/// normal size, then drawn at 1x1, 2x2 and just under the smallest it shows a page in, draws
+/// without a panic.
+#[test]
+fn reader_screens_draw_in_a_tiny_window() {
+    let scenes = SCENARIO_FNS
+        .iter()
+        .filter(|(name, _)| name.starts_with("reader_"))
+        .map(|(name, scenario)| (*name, *scenario))
+        .chain(reader_scenes::BOARD.iter().map(|(name, scenario, _)| (*name, *scenario)));
+    for (name, scenario) in scenes {
+        let mut screen = Screen::new(120, 34);
+        scenario(&mut screen);
+        for (width, height) in [(1, 1), (2, 2), (39, 11), (120, 34)] {
+            screen.width = width;
+            screen.height = height;
+            let drawn =
+                std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| screen.draw()));
+            assert!(drawn.is_ok(), "{name} panicked at {width}x{height}");
+        }
     }
 }
 
