@@ -46,7 +46,8 @@ public protocol ArtworkCache: AnyObject, Sendable {
 }
 
 /// An `NSCache`, which lets go of anything when the system wants memory or it is past its limit.
-public final class SystemArtworkCache: ArtworkCache {
+public final class SystemArtworkCache: ArtworkCache, @unchecked Sendable {
+    // NSCache is safe to use from any thread; the SDK does not mark it Sendable.
     private let cache = NSCache<NSString, Artwork>()
 
     public init() {}
