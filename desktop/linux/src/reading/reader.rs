@@ -1044,9 +1044,31 @@ impl Reader {
         self.trail.clear();
         self.picture.set_paintable(gdk::Paintable::NONE);
         if let Some(novel) = self.novel.take() {
+            #[cfg(feature = "fixtures")]
+            let socket = {
+                use gtk::prelude::AccessibleExt;
+                let first = novel.widget.first_accessible_child();
+                tracing::info!(
+                    "HUNT novel accessible child: {:?}",
+                    first.as_ref().map(|c| c.type_().name())
+                );
+                first.map(|c| c.upcast::<gtk::glib::Object>().downgrade())
+            };
             self.stack.remove(&novel.widget);
             #[cfg(feature = "fixtures")]
             {
+                let socket_now = |s: &Option<gtk::glib::WeakRef<gtk::glib::Object>>| {
+                    use gtk::prelude::AccessibleExt;
+                    s.as_ref().and_then(|w| w.upgrade()).map(|o| {
+                        // SAFETY: a live object's count, read only.
+                        let n = unsafe { (*o.as_ptr()).ref_count as i64 - 1 };
+                        let parent = o
+                            .downcast_ref::<gtk::Accessible>()
+                            .map(|a| a.accessible_parent().map(|p| p.type_().name().to_owned()));
+                        format!("alive refs={n} parent={parent:?}")
+                    })
+                };
+                tracing::info!("HUNT novel socket after remove: {:?}", socket_now(&socket));
                 let weak = novel.widget.downgrade();
                 let rcs = Rc::strong_count(&novel);
                 drop(novel);
@@ -1056,9 +1078,17 @@ impl Reader {
                         unsafe { (*v.as_ptr().cast::<gtk::glib::gobject_ffi::GObject>()).ref_count as i64 - 1 }
                     })
                 };
-                tracing::info!("HUNT novel removed: rc={rcs} view refs after drop={:?}", refs(&weak));
+                tracing::info!(
+                    "HUNT novel removed: rc={rcs} view refs after drop={:?} socket={:?}",
+                    refs(&weak),
+                    socket_now(&socket)
+                );
                 gtk::glib::timeout_add_local_once(std::time::Duration::from_secs(2), move || {
-                    tracing::info!("HUNT novel 2 s after: view refs={:?}", refs(&weak));
+                    tracing::info!(
+                        "HUNT novel 2 s after: view refs={:?} socket={:?}",
+                        refs(&weak),
+                        socket_now(&socket)
+                    );
                 });
             }
         }
