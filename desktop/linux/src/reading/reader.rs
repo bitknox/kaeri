@@ -4275,12 +4275,27 @@ fn tab_keys(walk: impl Fn(bool) -> bool + 'static) -> gtk::EventControllerKey {
     tabs
 }
 
-/// Go to page's field: Return commits what was typed and `go` gets the page, from 1.
+/// Go to page's field: Return commits what was typed and `go` gets the page, from 1. The spin
+/// button emits its own activate only when Return finds the value already committed, so a
+/// typed number would need a second Return; its text's activate comes with every Return.
 fn go_on_return(field: &gtk::SpinButton, go: impl Fn(usize) + 'static) {
-    field.connect_activate(move |field| {
+    let go = move |field: &gtk::SpinButton| {
         field.update();
         go(field.value().round() as usize);
-    });
+    };
+    match field.delegate().and_downcast::<gtk::Text>() {
+        Some(text) => {
+            let field = field.downgrade();
+            text.connect_activate(move |_| {
+                if let Some(field) = field.upgrade() {
+                    go(&field);
+                }
+            });
+        }
+        None => {
+            field.connect_activate(go);
+        }
+    }
 }
 
 /// The window's full screen from before the reader first changed it, until the reader closes.
@@ -4606,6 +4621,52 @@ mod tab_tests {
         run(|| {
             let tabs = tab_keys(|_| true);
             assert_eq!(tabs.propagation_phase(), gtk::PropagationPhase::Capture);
+        });
+    }
+}
+
+#[cfg(test)]
+mod go_to_tests {
+    use std::{cell::Cell, rc::Rc};
+
+    use adw::prelude::*;
+
+    use super::go_on_return;
+    use crate::gtk_test::{pump, run};
+
+    /// Go to page with a number typed over the page it shows: one Return goes there, and a number
+    /// past the end goes to the last page.
+    #[test]
+    fn one_return_goes_to_the_typed_page() {
+        run(|| {
+            let field = gtk::SpinButton::with_range(1.0, 20.0, 1.0);
+            field.set_numeric(true);
+            field.set_value(10.0);
+            let went = Rc::new(Cell::new(None));
+            go_on_return(&field, {
+                let went = Rc::clone(&went);
+                move |page| went.set(Some(page))
+            });
+            let window = gtk::Window::new();
+            window.set_child(Some(&field));
+            window.present();
+            field.grab_focus();
+            pump(50);
+            let text = field.delegate().and_downcast::<gtk::Text>().expect("the field's text");
+
+            field.set_text("5");
+            text.emit_activate();
+            pump(20);
+            assert_eq!(went.take(), Some(5));
+            field.set_text("999");
+            text.emit_activate();
+            pump(20);
+            assert_eq!(went.take(), Some(20));
+            // Return on the page already committed goes there too.
+            text.emit_activate();
+            pump(20);
+            assert_eq!(went.take(), Some(20));
+            window.destroy();
         });
     }
 }
