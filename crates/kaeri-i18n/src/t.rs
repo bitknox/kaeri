@@ -7470,6 +7470,81 @@ pub fn settings_note_token_storage() -> String {
     text("settings-note-token-storage", &[])
 }
 
+/// Under a series' title on the terminal's series page: the source its chapters are read from.
+pub fn tui_read_series_from(source: &str) -> String {
+    text("tui-read-series-from", &[("source", Arg::Text(source))])
+}
+
+/// After the source on the series page: the list the series is on and the trackers that keep that list, such as "Reading on AniList". The list is its name, such as "Reading" or "Planning"; the trackers are already joined.
+pub fn tui_read_series_list_on(list: &str, trackers: &str) -> String {
+    text("tui-read-series-list-on", &[("list", Arg::Text(list)), ("trackers", Arg::Text(trackers))])
+}
+
+/// After the source on the series page, when no tracker keeps the list: "On your Reading list".
+pub fn tui_read_series_list(list: &str) -> String {
+    text("tui-read-series-list", &[("list", Arg::Text(list))])
+}
+
+/// Beside the progress meter on the series page: how many of the chapters listed are read.
+pub fn tui_read_series_read(read: i64, total: i64) -> String {
+    text("tui-read-series-read", &[("read", Arg::Int(read)), ("total", Arg::Int(total))])
+}
+
+/// At the top of the series page while the computer is offline: the chapters listed are the ones kept from before, and only the downloaded ones open.
+pub fn tui_read_series_offline() -> String {
+    text("tui-read-series-offline", &[])
+}
+
+/// Left of the status line on the series page while the computer is offline.
+pub fn tui_read_status_offline() -> String {
+    text("tui-read-status-offline", &[])
+}
+
+/// Header chip on the series page while the computer is offline, in place of how many sources are on. The mark is a cross. Lower case, as the header's other chips are.
+pub fn tui_read_header_offline(mark: &str) -> String {
+    text("tui-read-header-offline", &[("mark", Arg::Text(mark))])
+}
+
+/// Hint in the status line on the series page: the key that marks the chapter under the cursor read, or unread when it is read. Shown in lower case. Also a row of the key reference.
+pub fn tui_read_read_unread() -> String {
+    text("tui-read-read-unread", &[])
+}
+
+/// Hint in the status line on the series page: the key that picks the list the series is on. Shown in lower case.
+pub fn tui_read_hint_status() -> String {
+    text("tui-read-hint-status", &[])
+}
+
+/// Hint in the status line on reading's Home, on a series in Continue: the key that opens the chapter where reading stopped. Shown in lower case.
+pub fn tui_read_hint_continue() -> String {
+    text("tui-read-hint-continue", &[])
+}
+
+/// Heading of the series page's keys in the key reference.
+pub fn tui_read_keys_series() -> String {
+    text("tui-read-keys-series", &[])
+}
+
+/// A row of the key reference: open the chapter under the cursor on the series page.
+pub fn tui_read_keys_read() -> String {
+    text("tui-read-keys-read", &[])
+}
+
+/// A row of the key reference: download the chapter under the cursor on the series page.
+pub fn tui_read_keys_download() -> String {
+    text("tui-read-keys-download", &[])
+}
+
+/// A row of the key reference: pick the list the series is on, such as Reading or Planning.
+pub fn tui_read_keys_status() -> String {
+    text("tui-read-keys-status", &[])
+}
+
+/// A row of the key reference on reading's Home: open a series' page with its chapters, from a series in Continue, where Enter opens the chapter itself.
+pub fn tui_read_keys_chapters() -> String {
+    text("tui-read-keys-chapters", &[])
+}
+
 /// AniList's name, in the line that says it is still being asked.
 pub fn tui_read_anilist() -> String {
     text("tui-read-anilist", &[])

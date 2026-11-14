@@ -4735,6 +4735,55 @@ settings-note-upload-limit = Caps all torrent upload, so seeding never slows pla
 # Note under the token storage row. The option is a command-line flag and is not translated.
 settings-note-token-storage = Use --token-to-file to move an existing token.
 
+# Under a series' title on the terminal's series page: the source its chapters are read from.
+tui-read-series-from = Reading from { $source }
+
+# After the source on the series page: the list the series is on and the trackers that keep that list, such as "Reading on AniList". The list is its name, such as "Reading" or "Planning"; the trackers are already joined.
+tui-read-series-list-on = { $list } on { $trackers }
+
+# After the source on the series page, when no tracker keeps the list: "On your Reading list".
+tui-read-series-list = On your { $list } list
+
+# Beside the progress meter on the series page: how many of the chapters listed are read.
+tui-read-series-read =
+    { $total ->
+        [one] { $read } of 1 chapter read
+       *[other] { $read } of { $total } chapters read
+    }
+
+# At the top of the series page while the computer is offline: the chapters listed are the ones kept from before, and only the downloaded ones open.
+tui-read-series-offline = Offline. Downloaded chapters still open.
+
+# Left of the status line on the series page while the computer is offline.
+tui-read-status-offline = Reading · offline
+
+# Header chip on the series page while the computer is offline, in place of how many sources are on. The mark is a cross. Lower case, as the header's other chips are.
+tui-read-header-offline = sources { $mark }
+
+# Hint in the status line on the series page: the key that marks the chapter under the cursor read, or unread when it is read. Shown in lower case. Also a row of the key reference.
+tui-read-read-unread = Read or unread
+
+# Hint in the status line on the series page: the key that picks the list the series is on. Shown in lower case.
+tui-read-hint-status = Status
+
+# Hint in the status line on reading's Home, on a series in Continue: the key that opens the chapter where reading stopped. Shown in lower case.
+tui-read-hint-continue = Continue
+
+# Heading of the series page's keys in the key reference.
+tui-read-keys-series = Series
+
+# A row of the key reference: open the chapter under the cursor on the series page.
+tui-read-keys-read = Read the chapter
+
+# A row of the key reference: download the chapter under the cursor on the series page.
+tui-read-keys-download = Download this chapter
+
+# A row of the key reference: pick the list the series is on, such as Reading or Planning.
+tui-read-keys-status = Set the list status
+
+# A row of the key reference on reading's Home: open a series' page with its chapters, from a series in Continue, where Enter opens the chapter itself.
+tui-read-keys-chapters = Open the series page
+
 # AniList's name, in the line that says it is still being asked.
 tui-read-anilist = AniList
 
