@@ -56,8 +56,8 @@ pub(crate) mod added;
 pub(crate) mod pictures;
 pub use added::RECHECK;
 
-/// The id the folders answer to in the registry.
-pub const FOLDERS: &str = "folders";
+/// The id the folders answer to in the registry, and that their series are matched under.
+pub const FOLDERS: &str = kaeri_store::reading::FOLDERS_SOURCE;
 /// How often at most a folder scan says how far it has got: four times a second.
 pub const PROGRESS_EVERY: std::time::Duration = std::time::Duration::from_millis(250);
 const META_ORDER: &str = "reading.book_order";
