@@ -36,7 +36,7 @@ rlimit = "0.11"
 clap.workspace = true
 crossterm.workspace = true
 futures.workspace = true
-image.workspace = true
+image = { workspace = true, features = ["gif"] }
 # Local dates in `--doctor`. Already in the tree, through kaeri-core.
 jiff.workspace = true
 ratatui.workspace = true

@@ -87,6 +87,8 @@ pub async fn run(
     // starting parties when asked, do without.
     options.every_play_a_party = true;
     options.reading = true;
+    // The terminal's own reader settings: the text width of a light novel, in columns.
+    options.terminal = true;
     let host = Arc::new(DesktopHost::new(&config, &paths));
     let (engine, mut from_engine) = Engine::start(options, host).await?;
     engine.send(network_at_launch());
@@ -154,6 +156,7 @@ pub async fn run(
     let mut ticker = tokio::time::interval(Duration::from_millis(100));
     // Covers come back from the blocking pool on this, decoded, to be handed to the app.
     let (covers_tx, mut covers_rx) = mpsc::unbounded_channel();
+    let (pages_tx, mut pages_rx) = mpsc::unbounded_channel();
 
     // Painting on change rather than on every tick: see `Repaint`. `idle_tick` is whether
     // nothing but the ticker woke this pass, the one case that may skip it.
@@ -214,6 +217,10 @@ pub async fn run(
         for task in app.take_commands() {
             engine.send(task);
         }
+        // Reader pages to decode, off the loop; each comes back on the arm below.
+        for job in app.take_page_jobs() {
+            tui::pages::spawn(job, &pages_tx);
+        }
 
         tokio::select! {
             // One at a time, each in the order the engine applied it, with the loop's own
@@ -262,6 +269,7 @@ pub async fn run(
                 }
             }
             Some(decoded) = covers_rx.recv() => covers::hand_over(&mut app, decoded),
+            Some(decoded) = pages_rx.recv() => tui::pages::hand_over(&mut app, decoded),
             // Asked to end from outside — a kill, the terminal closing — which leaves the way
             // Q does, so the player is closed rather than orphaned and playing on.
             signal = signals.recv() => {

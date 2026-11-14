@@ -254,7 +254,12 @@ impl PreviewRun {
                     Event::ArtworkReady { url, bytes } => {
                         covers::hand_over(app, covers::now(url, &bytes));
                     }
-                    update => app.apply(update),
+                    update => {
+                        app.apply(update);
+                        for job in app.take_page_jobs() {
+                            crate::tui::pages::hand_over(app, crate::tui::pages::now(job));
+                        }
+                    }
                 },
                 Ok(None) => anyhow::bail!("the engine stopped; the log says why"),
                 Err(_) if app.jobs.is_empty() => return Ok(()),
