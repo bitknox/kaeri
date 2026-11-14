@@ -857,6 +857,76 @@ async fn another_audio_track_loads_the_file_again_where_it_was_without_a_new_sta
     assert_eq!(receiver.heard("LOAD").len(), 2);
 }
 
+/// Cast a 60 s Matroska file with a dub to a fake, play a little, and pause it.
+async fn paused_with_a_dub() -> (CastPlayer, mpsc::UnboundedReceiver<PlaybackEvent>, FakeReceiver) {
+    let dub = FixtureAudio { language: "eng", ..FixtureAudio::aac() };
+    let file = Fixture {
+        seconds: 60,
+        audio: Some(FixtureAudio::aac()),
+        more_audio: vec![dub],
+        ..Fixture::default()
+    };
+    let base = serve(HashMap::from([("/episode.mkv".to_owned(), matroska(&file))])).await;
+    let receiver = FakeReceiver::start(FakeOptions::default()).await.unwrap();
+    let (player, mut events) = CastPlayer::connect(setup(
+        &receiver,
+        Arc::new(CastMemory::memory()),
+        Arc::new(NoEncoder),
+    ))
+    .await
+    .unwrap();
+    player.load(torrent(format!("{base}/episode.mkv")));
+    next(&mut events, |e| *e == PlaybackEvent::Loaded).await;
+    next(
+        &mut events,
+        |e| matches!(e, PlaybackEvent::Progress { position, .. } if *position >= 2.0),
+    )
+    .await;
+    player.set_paused(true).await.unwrap();
+    next(&mut events, |e| *e == PlaybackEvent::Paused(true)).await;
+    (player, events, receiver)
+}
+
+/// Whether the cast stays paused for a while, saying nothing of playing again.
+async fn stays_paused(player: &CastPlayer, events: &mut mpsc::UnboundedReceiver<PlaybackEvent>) {
+    let deadline = tokio::time::Instant::now() + Duration::from_secs(2);
+    while let Ok(Some(event)) = tokio::time::timeout_at(deadline, events.recv()).await {
+        assert_ne!(event, PlaybackEvent::Paused(false), "the TV started playing by itself");
+    }
+    assert_eq!(player.status().borrow().state, CastState::Paused);
+}
+
+#[tokio::test(flavor = "multi_thread", worker_threads = 4)]
+async fn another_audio_track_picked_while_paused_loads_paused() {
+    let (player, mut events, receiver) = paused_with_a_dub().await;
+    player.set_audio(1);
+    let deadline = tokio::time::Instant::now() + Duration::from_secs(15);
+    while receiver.heard("LOAD").len() < 2
+        || !player.status().borrow().audio.iter().any(|a| a.index == 1 && a.selected)
+        || player.status().borrow().step.is_some()
+    {
+        assert!(tokio::time::Instant::now() < deadline, "the dub loaded");
+        tokio::time::sleep(Duration::from_millis(20)).await;
+    }
+    let loads = receiver.heard("LOAD");
+    assert_eq!(loads[1]["autoplay"], false, "{:?}", loads[1]);
+    assert!(loads[1]["currentTime"].as_f64().unwrap_or(0.0) >= 2.0, "{:?}", loads[1]);
+    stays_paused(&player, &mut events).await;
+}
+
+#[tokio::test(flavor = "multi_thread", worker_threads = 4)]
+async fn a_late_subtitle_while_paused_loads_paused() {
+    let (player, mut events, receiver) = paused_with_a_dub().await;
+    let dir = tempfile::tempdir().unwrap();
+    let late = dir.path().join("late.vtt");
+    std::fs::write(&late, "WEBVTT\n\n00:00:01.000 --> 00:00:02.000\nHello\n").unwrap();
+    player.add_subtitle(&late, None, Some("en".into())).await.unwrap();
+    let loads = receiver.heard("LOAD");
+    assert_eq!(loads.len(), 2);
+    assert_eq!(loads[1]["autoplay"], false, "{:?}", loads[1]);
+    stays_paused(&player, &mut events).await;
+}
+
 #[tokio::test(flavor = "multi_thread", worker_threads = 4)]
 async fn a_fixtures_test_pattern_plays_on_a_fake_that_plays_what_it_cant_fetch() {
     let receiver = FakeReceiver::start(FakeOptions {
