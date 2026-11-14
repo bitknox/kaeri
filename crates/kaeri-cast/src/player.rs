@@ -1379,7 +1379,9 @@ async fn try_plan(inner: &Arc<Inner>, relayed: bool, cast: Load) -> Result<Tried
                     Some(_) => return Ok(refused(inner)),
                     None if last.position > from + 0.2 => return Ok(Tried::Played),
                     // Loaded paused, as asked: the TV took the file and waits.
-                    None if !cast.autoplay && last.state == "PAUSED" => return Ok(Tried::Played),
+                    None if !cast.autoplay && last.state == "PAUSED" => {
+                        return Ok(Tried::Played);
+                    }
                     None => {}
                 }
             }

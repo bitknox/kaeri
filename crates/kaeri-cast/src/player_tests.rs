@@ -858,7 +858,8 @@ async fn another_audio_track_loads_the_file_again_where_it_was_without_a_new_sta
 }
 
 /// Cast a 60 s Matroska file with a dub to a fake, play a little, and pause it.
-async fn paused_with_a_dub() -> (CastPlayer, mpsc::UnboundedReceiver<PlaybackEvent>, FakeReceiver) {
+async fn paused_with_a_dub()
+-> (CastPlayer, mpsc::UnboundedReceiver<PlaybackEvent>, FakeReceiver) {
     let dub = FixtureAudio { language: "eng", ..FixtureAudio::aac() };
     let file = Fixture {
         seconds: 60,
@@ -888,7 +889,10 @@ async fn paused_with_a_dub() -> (CastPlayer, mpsc::UnboundedReceiver<PlaybackEve
 }
 
 /// Whether the cast stays paused for a while, saying nothing of playing again.
-async fn stays_paused(player: &CastPlayer, events: &mut mpsc::UnboundedReceiver<PlaybackEvent>) {
+async fn stays_paused(
+    player: &CastPlayer,
+    events: &mut mpsc::UnboundedReceiver<PlaybackEvent>,
+) {
     let deadline = tokio::time::Instant::now() + Duration::from_secs(2);
     while let Ok(Some(event)) = tokio::time::timeout_at(deadline, events.recv()).await {
         assert_ne!(event, PlaybackEvent::Paused(false), "the TV started playing by itself");
