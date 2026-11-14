@@ -145,15 +145,24 @@ pub(crate) fn forget(store: &Store, key: &str) {
     }
 }
 
-/// The sends left under way, taken off the list: each is asked for again, and keeps itself
-/// once more as it goes.
-pub(crate) fn take(store: &Store) -> Vec<HeldSend> {
+/// Which send this is: the engine's mark and the job, so a send of this launch never takes
+/// the place of one an earlier launch left, whose job had the same number.
+pub(crate) fn key_of(mark: &str, job: u64) -> String {
+    format!("{mark}#{job}")
+}
+
+/// The sends an earlier launch left under way, taken off the list: each is asked for again,
+/// and keeps itself once more as it goes. Those of the engine marked `mark`, asked for since it
+/// started, stay on the list as they are.
+pub(crate) fn take(store: &Store, mark: &str) -> Vec<HeldSend> {
     let _list = LIST.lock().unwrap_or_else(|e| e.into_inner());
-    let list = read(store);
-    if !list.is_empty() {
-        write(store, &[]);
+    let (left, mine): (Vec<_>, Vec<_>) = read(store)
+        .into_iter()
+        .partition(|s| !s.key.strip_prefix(mark).is_some_and(|rest| rest.starts_with('#')));
+    if !left.is_empty() {
+        write(store, &mine);
     }
-    list
+    left
 }
 
 #[cfg(test)]
@@ -178,9 +187,14 @@ mod tests {
         keep(&store, send("1"));
         keep(&store, send("2"));
         forget(&store, "1");
-        let taken = take(&store);
+        // A send this launch asked for stays: it is under way, and keeps itself as it goes.
+        let now = send(&key_of("9.ab", 1));
+        keep(&store, now.clone());
+        let taken = take(&store, "9.ab");
         assert_eq!(taken, vec![send("2")]);
-        assert!(take(&store).is_empty(), "taken once");
+        assert!(take(&store, "9.ab").is_empty(), "taken once");
+        assert_eq!(read(&store), vec![now.clone()]);
+        assert_eq!(take(&store, "9.abc"), vec![now], "an earlier launch's");
         let ReadingCommand::Prepare { pick, format, target, .. } = taken[0].command() else {
             panic!("not a send")
         };
