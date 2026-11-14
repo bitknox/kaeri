@@ -825,6 +825,10 @@ object Strings {
     fun readingFailedBlocked(context: Context, source: String, reason: String): String =
         context.getString(R.string.reading_failed_blocked, source, reason)
 
+    /** Why a chapter or a list could not load: the source's plugin asked for a host its manifest doesn't list, so the request never left the device and the source refused nothing. An update to the plugin usually fixes it. */
+    fun readingFailedHostNotAllowed(context: Context, source: String): String =
+        context.getString(R.string.reading_failed_host_not_allowed, source)
+
     /** Why a chapter or a list could not load: the source answered with something Kaeri could not read. */
     fun readingFailedParse(context: Context, source: String): String =
         context.getString(R.string.reading_failed_parse, source)

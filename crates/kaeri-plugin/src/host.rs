@@ -184,7 +184,8 @@ impl Capabilities {
         if !sandbox::is_allowed(&request.url, &self.allowed_hosts) {
             let host = sandbox::host_of(&request.url).unwrap_or_else(|| "?".into());
             return Err(HostError::Denied(format!(
-                "{host:?} is not in {}'s allowed-hosts",
+                "{}: {host:?} is not in {}'s allowed-hosts",
+                kaeri_core::error::HOST_NOT_ALLOWED,
                 self.plugin_id
             )));
         }

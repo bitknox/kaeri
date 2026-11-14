@@ -158,6 +158,16 @@ impl ProviderError {
     }
 }
 
+/// How the reason of a [`ProviderError::Blocked`] starts when the host held the request back
+/// for a host outside the plugin's `allowed-hosts`. Only the host writes it.
+pub const HOST_NOT_ALLOWED: &str = "host not allowed";
+
+/// Whether a blocked request's reason says the host held it back for a host the plugin may not
+/// reach, rather than that the source refused it.
+pub fn says_host_not_allowed(reason: &str) -> bool {
+    reason.starts_with(HOST_NOT_ALLOWED)
+}
+
 /// Health of a single provider, as shown on the Providers screen.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
 pub enum Health {

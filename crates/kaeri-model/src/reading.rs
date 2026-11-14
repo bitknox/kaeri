@@ -1404,6 +1404,12 @@ impl ReadingFailure {
             }
             Self::NotFound => ReadingMsg::ReadingFailedNotFound,
             Self::NoSource => ReadingMsg::ReadingFailedNoSource,
+            // The host held the request back: the source never saw it, so nothing refused it.
+            Self::Blocked { source, reason }
+                if kaeri_core::error::says_host_not_allowed(reason) =>
+            {
+                ReadingMsg::ReadingFailedHostNotAllowed { source: source.clone() }
+            }
             Self::Blocked { source, reason } => ReadingMsg::ReadingFailedBlocked {
                 source: source.clone(),
                 reason: reason.clone(),

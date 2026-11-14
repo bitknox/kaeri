@@ -195,6 +195,8 @@ pub struct Session {
     leaves: Vec<Leaf>,
     cuts: Vec<StripPos>,
     pages_total: u32,
+    /// The credit pages the last layout left out, by where they are among the source's pages.
+    credit_pages: Vec<u32>,
     mode: ReaderMode,
     direction: ReadDirection,
     /// `Opened` went out for the open chapter.
@@ -593,7 +595,16 @@ impl Reader {
         // A demo work says its own medium: opened from Home or the first run before its page was
         // ever loaded, the catalogue has not fetched it, and its chapters come from the demo.
         let demo_work = kaeri_core::reading_demo::WORKS.iter().find(|w| w.work_id() == work);
-        let medium = match (kind.as_ref().map(|k| k.medium.as_str()), chapters.first()) {
+        // A work only a source lists, with nothing kept of it: a medium other than manga that
+        // its sources carry.
+        let held = kind
+            .is_none()
+            .then(|| cx.services.book_sources.held_medium(&work))
+            .flatten()
+            .filter(|m| *m != Medium::Manga)
+            .map(Medium::as_str);
+        let kept = kind.as_ref().map(|k| k.medium.as_str()).or(held);
+        let medium = match (kept, chapters.first()) {
             _ if demo_work.is_some() => demo_work.map_or(Medium::Manga, |w| w.medium()),
             (Some("novel"), _) => Medium::Novel,
             (None, Some(c)) if c.is_text() => Medium::Novel,
@@ -668,6 +679,7 @@ impl Reader {
             leaves: Vec::new(),
             cuts: Vec::new(),
             pages_total: 0,
+            credit_pages: Vec::new(),
             mode: ReaderMode::Paged,
             direction: ReadDirection::RightToLeft,
             opened: false,
@@ -1276,6 +1288,7 @@ impl Session {
         // the same point in this one.
         let skipped: Vec<u32> = laid.credits.iter().map(|c| c.page).collect();
         self.rescale_kept(laid.pages, &skipped);
+        self.credit_pages = skipped;
         self.clamp_start(laid.pages);
         let eink = self.eink();
         // A guess is kept for the series on this device, and said once.
@@ -2039,8 +2052,19 @@ impl Session {
         let Some(index) = self.chapters.iter().position(|c| c.id.as_str() == last) else {
             return;
         };
-        let mine = self.page().unwrap_or(0);
+        // Until the reader says a place, it is at the page the chapter opened at.
+        let mine = self.page_now();
+        // Their page at the same point of the chapter as laid out here, as the open's start
+        // was moved: a chapter split into more or fewer pages there (another source's, or with
+        // the credit pages kept) is not a page further on.
         let page = theirs.last_page.unwrap_or(0);
+        let page = theirs
+            .of_pages
+            .filter(|_| self.pages_total > 0)
+            .and_then(|of| {
+                kept_past_credits(page, None, of, (self.pages_total, &self.credit_pages))
+            })
+            .map_or(page, |(page, _)| page);
         let their_pos = theirs.novel_pos.as_deref().and_then(NovelPos::decode);
         let my_pos = self.place.as_ref().and_then(|p| p.novel.clone());
         let further_here = match (&their_pos, &my_pos) {

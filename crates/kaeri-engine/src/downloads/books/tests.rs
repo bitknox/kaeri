@@ -36,6 +36,9 @@ struct Shelf {
     broken: Mutex<Vec<String>>,
     /// Pages at these addresses are not reached at all.
     unreached: Mutex<Vec<String>>,
+    /// The next asks of these addresses, as many as each says, are lost on the way, as the
+    /// plugin host reports a request that timed out.
+    lost: Mutex<std::collections::HashMap<String, u32>>,
     /// The page at this address waits: see [`Held`].
     held: Mutex<Option<Held>>,
     /// The chapters whose pages were asked for, in order.
@@ -182,6 +185,12 @@ impl BookSource for Shelf {
         if self.unreached.lock().unwrap().contains(&page_ref.url) {
             return Err(PageError::Failed(ProviderError::Transport("not reached".into())));
         }
+        if let Some(left) = self.lost.lock().unwrap().get_mut(&page_ref.url)
+            && *left > 0
+        {
+            *left -= 1;
+            return Err(PageError::Failed(ProviderError::Other("timed out".into())));
+        }
         if page_ref.url.contains("/pictures/") {
             return Ok(crate::read_sources::pictures::ONE_PIXEL_PNG.to_vec());
         }
@@ -289,6 +298,7 @@ fn kit_in(chapters: &[&str], hosts: &[&str], store: Store, dir: Arc<tempfile::Te
         asked: Mutex::default(),
         broken: Mutex::default(),
         unreached: Mutex::default(),
+        lost: Mutex::default(),
         held: Mutex::default(),
         contents: Mutex::default(),
         gates: Mutex::default(),
@@ -316,6 +326,36 @@ fn kit_in(chapters: &[&str], hosts: &[&str], store: Store, dir: Arc<tempfile::Te
 
 fn ids(list: &[&str]) -> Vec<ChapterId> {
     list.iter().map(|c| ChapterId::new(*c)).collect()
+}
+
+/// A page whose request was lost on the way, as a dropped connection or a timeout loses one,
+/// is asked for again: the chapter still downloads whole.
+#[tokio::test]
+async fn a_page_lost_on_the_way_is_asked_for_again_and_the_chapter_downloads() {
+    let kit = kit(&["1"]);
+    let lost = "https://pages.example/1/2";
+    kit.shelf.lost.lock().unwrap().insert(lost.into(), 2);
+    kit.queue.download(&kit.lent, WorkId::new(WORK), DownloadPick::NextUnread { n: 1 }).await;
+    kit.settle().await;
+
+    assert_eq!(kit.states(), [("1".into(), ChapterDownloadState::Done)]);
+    assert_eq!(kit.shelf.times(lost), 3, "lost twice, then brought");
+    assert_eq!(kit.store().shelf(WORK).unwrap()[0].pages, Some(3));
+}
+
+/// A source that never brings a page ends the fetch after a few asks, with why, and Try
+/// again is left to the person.
+#[tokio::test]
+async fn a_page_the_source_never_brings_ends_the_fetch_after_a_few_asks() {
+    let kit = kit(&["1"]);
+    let lost = "https://pages.example/1/2";
+    kit.shelf.lost.lock().unwrap().insert(lost.into(), u32::MAX);
+    kit.queue.download(&kit.lent, WorkId::new(WORK), DownloadPick::NextUnread { n: 1 }).await;
+    kit.settle().await;
+
+    let down = ReadingFailure::SourceDown { source: "Shelf".into() };
+    assert_eq!(kit.states(), [("1".into(), ChapterDownloadState::Failed { failure: down })]);
+    assert_eq!(kit.shelf.times(lost), 4, "asked three times again, then no more");
 }
 
 #[tokio::test]
@@ -732,6 +772,7 @@ async fn a_chapter_listed_from_another_source_downloads_from_there() {
         asked: Mutex::default(),
         broken: Mutex::default(),
         unreached: Mutex::default(),
+        lost: Mutex::default(),
         held: Mutex::default(),
         contents: Mutex::default(),
         gates: Mutex::default(),

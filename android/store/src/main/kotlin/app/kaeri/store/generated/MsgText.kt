@@ -361,6 +361,7 @@ fun ReadingMsg.text(context: Context): String =
         is ReadingMsg.ReadingFailedNotFound -> Strings.readingFailedNotFound(context)
         is ReadingMsg.ReadingFailedNoSource -> Strings.readingFailedNoSource(context)
         is ReadingMsg.ReadingFailedBlocked -> Strings.readingFailedBlocked(context, this.source, this.reason)
+        is ReadingMsg.ReadingFailedHostNotAllowed -> Strings.readingFailedHostNotAllowed(context, this.source)
         is ReadingMsg.ReadingFailedParse -> Strings.readingFailedParse(context, this.source)
         is ReadingMsg.ReadingFailedPage -> Strings.readingFailedPage(context, this.status.toInt())
         is ReadingMsg.ReadingPictureFailed -> Strings.readingPictureFailed(context)

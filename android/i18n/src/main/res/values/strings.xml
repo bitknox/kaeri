@@ -437,6 +437,8 @@
     <string name="reading_failed_no_source">None of your sources has this series yet. Search for it by another name in Read from, or add a source in Your sources.</string>
     <!-- Why a chapter or a list could not load: the source refused. The reason comes from the source. -->
     <string name="reading_failed_blocked">%1$s refused the request. %2$s</string>
+    <!-- Why a chapter or a list could not load: the source's plugin asked for a host its manifest doesn't list, so the request never left the device and the source refused nothing. An update to the plugin usually fixes it. -->
+    <string name="reading_failed_host_not_allowed">The plugin for %1$s asked for a host it isn\'t allowed to reach. An update to the plugin may fix it.</string>
     <!-- Why a chapter or a list could not load: the source answered with something Kaeri could not read. -->
     <string name="reading_failed_parse">Kaeri couldn\'t read what %1$s sent. Its plugin may need an update.</string>
     <!-- Why one page did not load. The status is the server's HTTP status code, such as 404. -->

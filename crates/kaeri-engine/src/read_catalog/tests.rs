@@ -501,12 +501,23 @@ impl Shelf {
         kind: BookSourceKind,
         answer: Answer,
     ) -> Arc<Self> {
+        Self::put_carrying(kit, id, name, kind, vec![Medium::Manga, Medium::Novel], answer)
+    }
+
+    fn put_carrying(
+        kit: &Kit,
+        id: &str,
+        name: &str,
+        kind: BookSourceKind,
+        media: Vec<Medium>,
+        answer: Answer,
+    ) -> Arc<Self> {
         let manifest = BookSourceManifest {
             id: id.into(),
             name: name.into(),
             version: "1".into(),
             kind,
-            media: vec![Medium::Manga, Medium::Novel],
+            media,
             languages: vec!["en".into()],
             allowed_hosts: Vec::new(),
             capabilities: Vec::new(),
@@ -587,6 +598,54 @@ async fn part_until(
 
 fn state<'a>(part: &'a ReadSourceSearch, id: &str) -> &'a ReadSourceState {
     &part.groups.iter().find(|g| g.source_id == id).unwrap().state
+}
+
+/// A novel found in a source that only serves novels, with no AniList entry: its page says it
+/// is a novel and names it as the source does, so the reader reads it as one.
+#[tokio::test]
+async fn a_source_novel_no_catalogue_lists_opens_as_a_novel_with_its_name() {
+    let fake = FakeAniList::start().await;
+    let dir = tempfile::tempdir().unwrap();
+    let kit = kit(Some(&fake), dir.path());
+    let hits = vec![hit("n-1", "The Quiet Ferry Almanac", None)];
+    let novels = vec![Medium::Novel];
+    Shelf::put_carrying(
+        &kit,
+        "inkwell",
+        "Inkwell",
+        BookSourceKind::Native,
+        novels,
+        Answer::Now(hits),
+    );
+
+    let (tx, mut rx) = outbox();
+    search::search(&kit, ask(), query("quiet ferry"), 0, &tx);
+    let done = part_until(&mut rx, |p| p.done).await;
+    let group = done.groups.iter().find(|g| g.source_id == "inkwell").unwrap();
+    let tile = group.tiles.first().expect("the source's hit as a tile of its own").clone();
+    assert_eq!(tile.medium, Medium::Novel);
+
+    let view = crate::read_catalog::series::view(&kit, ask(), &tile.work, false);
+    assert_eq!(view.medium, Medium::Novel, "the page reads it as the novel it is");
+    assert_eq!(view.titles.display, "The Quiet Ferry Almanac", "and names it");
+    let kind = kit.store.book_work_kind(tile.work.as_str()).unwrap().unwrap();
+    assert_eq!(kind.medium, "novel", "the reader and Downloads read the same");
+}
+
+/// A work matched in a source that only serves novels before its name and medium were kept:
+/// the page still reads it as a novel, from what its source carries.
+#[tokio::test]
+async fn a_source_work_kept_before_reads_in_the_medium_its_source_carries() {
+    let dir = tempfile::tempdir().unwrap();
+    let kit = kit(None, dir.path());
+    let novels = vec![Medium::Novel];
+    let none = Answer::Now(Vec::new());
+    Shelf::put_carrying(&kit, "inkwell", "Inkwell", BookSourceKind::Native, novels, none);
+    let work = kaeri_core::books::WorkKey::local(Medium::Novel, "The Quiet Ferry Almanac").id();
+    kit.store.set_book_match("inkwell", "n-1", work.as_str(), 50, false, false, NOW).unwrap();
+
+    let view = crate::read_catalog::series::view(&kit, ask(), &work, false);
+    assert_eq!(view.medium, Medium::Novel);
 }
 
 #[tokio::test]

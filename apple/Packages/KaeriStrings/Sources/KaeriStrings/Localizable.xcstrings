@@ -234355,6 +234355,18 @@
         }
       }
     },
+    "reading-failed-host-not-allowed" : {
+      "comment" : "Why a chapter or a list could not load: the source's plugin asked for a host its manifest doesn't list, so the request never left the device and the source refused nothing. An update to the plugin usually fixes it. Argument 1: source (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The plugin for %1$@ asked for a host it isn't allowed to reach. An update to the plugin may fix it."
+          }
+        }
+      }
+    },
     "reading-failed-needs-newer" : {
       "comment" : "Why a book plugin could not be used: it was built for a newer Kaeri. The world is the plugin interface's name and version. Argument 1: world (Text).",
       "extractionState" : "manual",

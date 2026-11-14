@@ -546,11 +546,18 @@ pub(crate) fn medium_of(kit: &Kit, work: &WorkId) -> Medium {
         .map_or_else(|| local_medium(kit, work), |k| k.book.medium())
 }
 
+/// A work AniList does not list: its folder's medium, else the one kept from its source's
+/// search, else the one the sources holding it carry. Manga when none says.
 pub(crate) fn local_medium(kit: &Kit, work: &WorkId) -> Medium {
     kit.store
         .local_book_series()
         .ok()
         .and_then(|all| all.into_iter().find(|s| s.work.as_deref() == Some(work.as_str())))
         .and_then(|s| Medium::parse(&s.medium))
+        .or_else(|| {
+            let kind = kit.store.book_work_kind(work.as_str()).ok().flatten()?;
+            Medium::parse(&kind.medium)
+        })
+        .or_else(|| kit.sources.held_medium(work))
         .unwrap_or(Medium::Manga)
 }

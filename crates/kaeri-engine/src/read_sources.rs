@@ -299,6 +299,31 @@ impl BookSource for FolderSource {
 /// that said so.
 type EmptyList = (std::time::Instant, Option<u64>);
 
+/// A source's answer to a chapter-list ask, once it has come.
+type ListAnswer =
+    tokio::sync::watch::Receiver<Option<Result<Vec<SourceChapter>, ProviderError>>>;
+
+/// The chapter lists being asked for now, by source and series, each with the
+/// [`BookSources::source_mark`] of the source asked: see [`BookSources::ask_list`].
+type ListsAsked = Arc<Mutex<HashMap<(String, String), (Option<u64>, ListAnswer)>>>;
+
+/// One chapter-list ask on its way: it leaves [`ListsAsked`] when it ends or is dropped, unless
+/// a newer ask has taken its place.
+struct ListTurn {
+    asked: ListsAsked,
+    key: (String, String),
+    mine: ListAnswer,
+}
+
+impl Drop for ListTurn {
+    fn drop(&mut self) {
+        let mut asked = self.asked.lock().unwrap_or_else(|e| e.into_inner());
+        if asked.get(&self.key).is_some_and(|(_, answer)| answer.same_channel(&self.mine)) {
+            asked.remove(&self.key);
+        }
+    }
+}
+
 /// Everything the Sources screen and the reading commands share. Cheap to clone.
 #[derive(Clone)]
 pub struct BookSources {
@@ -326,6 +351,8 @@ pub struct BookSources {
     hint_lookups: Arc<Mutex<HashMap<(String, String), HintLookup>>>,
     /// The sources lately not reached: when several fail that way at once, it is the network.
     unreached: Unreached,
+    /// The chapter lists on their way from the sources: an ask of one meanwhile joins it.
+    lists_asked: ListsAsked,
     /// The series whose chapter list came back empty lately, by source and series, with the
     /// [`BookSources::source_mark`] of the source that said so: an empty answer is not kept, so
     /// this is what keeps a work from being read from it meanwhile.
@@ -383,6 +410,7 @@ impl BookSources {
             pending: Arc::default(),
             hint_lookups: Arc::default(),
             unreached: Unreached::default(),
+            lists_asked: Arc::default(),
             empty: Arc::default(),
             language: Arc::default(),
             show_volumes: Arc::default(),
@@ -2002,6 +2030,25 @@ impl BookSources {
         })
     }
 
+    /// The reading medium of a work no catalogue lists, as the sources that hold it declare:
+    /// the one it is read from first, then the person's order, the first that carries only
+    /// one. `None` when each carries more.
+    pub(crate) fn held_medium(&self, work: &WorkId) -> Option<Medium> {
+        let refs = self.store.book_refs_for_work(work.as_str()).unwrap_or_default();
+        let in_use = self.edition_of(work, None).map(|(source, _)| source);
+        let order = self.registry.ids();
+        let mut sources: Vec<String> = refs.into_iter().map(|(source, _)| source).collect();
+        sources.sort_by_key(|source| {
+            (Some(source) != in_use.as_ref(), order.iter().position(|id| id == source))
+        });
+        sources.into_iter().filter(|source| source != FOLDERS).find_map(|source| {
+            let manifest = self.registry.manifest(&source)?;
+            let mut reading = manifest.media.iter().copied().filter(|m| m.is_reading());
+            let first = reading.next()?;
+            reading.all(|m| m == first).then_some(first)
+        })
+    }
+
     /// Why asking `source` failed, naming it as the person knows it. A source switched off
     /// says so, rather than the sign-in its refusal would otherwise read as.
     pub(crate) fn failure(&self, source: &str, error: &ProviderError) -> ReadingFailure {
@@ -2365,9 +2412,7 @@ impl BookSources {
             })
             .collect();
         let fetches = unknown.iter().map(|(source, series)| async move {
-            if let Ok(list) =
-                self.registry.chapters(source, series, &BookHints::default(), now).await
-            {
+            if let Ok(list) = self.ask_list(source, series, now).await {
                 self.note_list(source, series, &list);
                 crate::read_catalog::chapters::keep(&self.store, source, series, &list, now);
             }
@@ -2444,6 +2489,52 @@ impl BookSources {
         Some((row, groups))
     }
 
+    /// Ask `source` for a series' whole chapter list. While an ask of the same list is on its
+    /// way, from the source as it stands, this one waits for that answer rather than asking
+    /// again: a page opening lists a series once, whichever of its parts asks first. One that
+    /// goes without an answer (its task dropped) leaves the next ask to the source.
+    pub(crate) async fn ask_list(
+        &self,
+        source: &str,
+        series: &str,
+        now: i64,
+    ) -> Result<Vec<SourceChapter>, ProviderError> {
+        let key = (source.to_owned(), series.to_owned());
+        loop {
+            let mark = self.source_mark(source);
+            let turn = {
+                let mut asked = self.lists_asked.lock().unwrap_or_else(|e| e.into_inner());
+                match asked.get(&key) {
+                    Some((said_by, answer)) if *said_by == mark => Err(answer.clone()),
+                    _ => {
+                        let (tell, answer) = tokio::sync::watch::channel(None);
+                        asked.insert(key.clone(), (mark, answer.clone()));
+                        Ok((tell, answer))
+                    }
+                }
+            };
+            match turn {
+                Ok((tell, mine)) => {
+                    let _turn =
+                        ListTurn { asked: self.lists_asked.clone(), key: key.clone(), mine };
+                    let answer = self
+                        .registry
+                        .chapters(source, series, &BookHints::default(), now)
+                        .await;
+                    tell.send_replace(Some(answer.clone()));
+                    return answer;
+                }
+                Err(mut answer) => {
+                    let came =
+                        answer.wait_for(Option::is_some).await.ok().and_then(|a| a.clone());
+                    if let Some(came) = came {
+                        return came;
+                    }
+                }
+            }
+        }
+    }
+
     /// Ask the source for a series' whole list, put it in reading order and keep it.
     async fn fetch_list(
         &self,
@@ -2452,7 +2543,7 @@ impl BookSources {
         now: i64,
     ) -> Result<Vec<SourceChapter>, ReadingFailure> {
         self.note_listing(source, series, Some(Asked::Asking), now);
-        let asked = self.registry.chapters(source, series, &BookHints::default(), now).await;
+        let asked = self.ask_list(source, series, now).await;
         let mut chapters = match asked {
             Ok(chapters) => chapters,
             Err(e) => {
@@ -3216,5 +3307,40 @@ mod reach_tests {
         // A source that answered with a refusal is no sign of the network.
         let other = sources.failure("loft", &ProviderError::NotFound);
         assert_eq!(other, ReadingFailure::NotFound);
+    }
+}
+
+#[cfg(test)]
+mod held_back_tests {
+    use kaeri_plugin::host::{Capabilities, HostError, Request};
+
+    use super::*;
+
+    /// A page on a host the plugin's manifest leaves out is held back on the device, so the
+    /// words say the plugin isn't allowed to reach it, never that the source refused it.
+    #[test]
+    fn a_host_the_plugin_may_not_reach_reads_as_not_allowed_rather_than_refused() {
+        let caps = Capabilities::new(
+            "inkwell",
+            vec!["inkwell.example".into()],
+            kaeri_plugin::Limits::default(),
+            None,
+        );
+        let page = Request {
+            method: "GET".into(),
+            url: "https://pages.example/1/1.jpg".into(),
+            headers: Vec::new(),
+            body: None,
+        };
+        let Err(HostError::Denied(reason)) = caps.authorise(&page) else {
+            panic!("an off-list host is denied");
+        };
+        let said = failure("Inkwell", &ProviderError::Blocked(reason)).msg().english();
+        assert!(said.contains("isn't allowed to reach"), "{said}");
+        assert!(!said.contains("refused"), "{said}");
+
+        let refused = ProviderError::Blocked("slow down".into());
+        let said = failure("Inkwell", &refused).msg().english();
+        assert!(said.contains("refused"), "a source's own refusal keeps its words: {said}");
     }
 }
