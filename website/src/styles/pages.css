@@ -101,6 +101,67 @@
 	height: auto;
 }
 
+/* The Continue row, close up: from the row's heading to the last caption, running off the window's
+   right edge as it does in the app. Two cards on a phone. */
+.crop-continue {
+	aspect-ratio: 1200 / 330;
+}
+
+.k-body .crop-continue img {
+	left: -21.2%;
+	top: -141.8%;
+	width: 121%;
+}
+
+/* A device or window standing on the next section's hairline: its top half shows, whole and
+   uncropped at the sides, and the section ends where it is cut. The caption comes first. */
+.band-rise {
+	padding-bottom: 0;
+}
+
+.rise-fig figcaption {
+	margin: 0 0 14px;
+}
+
+.rise {
+	overflow: hidden;
+}
+
+.rise-ipad {
+	aspect-ratio: 1000 / 372;
+	max-width: 1000px;
+}
+
+.rise-device {
+	padding: clamp(6px, 1.1vw, 13px);
+	border-radius: clamp(20px, 3.4vw, 40px) clamp(20px, 3.4vw, 40px) 0 0;
+	border: 1px solid var(--ani-bezel-edge);
+	border-bottom: 0;
+	background: var(--ani-bezel);
+}
+
+.rise-device img {
+	display: block;
+	width: 100%;
+	border-radius: clamp(14px, 2.4vw, 27px) clamp(14px, 2.4vw, 27px) 0 0;
+}
+
+.rise-mac {
+	aspect-ratio: 1200 / 390;
+}
+
+.rise-window {
+	overflow: hidden;
+	border-radius: 12px 12px 0 0;
+	border: 1px solid var(--ani-bezel-edge);
+	border-bottom: 0;
+}
+
+.rise-window img {
+	display: block;
+	width: 100%;
+}
+
 .band .player-fig {
 	max-width: 1040px;
 	margin-inline: auto;
@@ -545,6 +606,54 @@
 
 	.cap-narrow {
 		display: inline;
+	}
+
+	.crop-continue {
+		aspect-ratio: 2 / 1;
+	}
+
+	.k-body .crop-continue img {
+		left: -42%;
+		top: -146%;
+		width: 227%;
+	}
+
+	.rise-ipad {
+		aspect-ratio: 358 / 190;
+	}
+
+	/* The calendar keeps a readable size and runs off the right edge of the screen. */
+	.rise-mac {
+		aspect-ratio: auto;
+		height: 220px;
+		margin-right: calc(var(--gutter) * -1);
+	}
+
+	.rise-window {
+		width: 640px;
+		border-right: 0;
+	}
+
+	/* The other platforms sit side by side and scroll sideways, a little of the next one showing. */
+	.fx-grid {
+		display: flex;
+		gap: 12px;
+		margin-inline: calc(var(--gutter) * -1);
+		padding-inline: var(--gutter);
+		overflow-x: auto;
+		scroll-snap-type: x mandatory;
+		scroll-padding-inline: var(--gutter);
+		overscroll-behavior-x: contain;
+		scrollbar-width: none;
+	}
+
+	.fx-grid::-webkit-scrollbar {
+		display: none;
+	}
+
+	.fx-grid > figure {
+		flex: 0 0 72%;
+		scroll-snap-align: start;
 	}
 
 	.player-bezel {

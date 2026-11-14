@@ -60,25 +60,27 @@ const bands = ['f1', 'f2', 'f3', 'f4'] as const;
 				<p><span class="lead">{t('home.f1.lead')}</span> {t('home.f1.text')}</p>
 			</div>
 			<figure>
-				<div class="crop crop-a" style="aspect-ratio: 1200 / 540; view-transition-name: shot-continue">
-					<Pic name="mac-continue" sizes="min(1476px, 125vw)" style="left: -23%; top: -70%; width: 123%" alt={t('home.f1.alt')} />
+				<div class="crop crop-a crop-continue" style="view-transition-name: shot-continue">
+					<Pic name="mac-continue" sizes="(min-width: 701px) min(1452px, 121vw), 227vw" alt={t('home.f1.alt')} />
 				</div>
 				<figcaption>{t('home.f1.caption')}</figcaption>
 			</figure>
 		</div>
 	</section>
 
-	<section class="band" aria-labelledby="f2-h">
+	<section class="band band-rise" aria-labelledby="f2-h">
 		<div class="band-in">
 			<div class="band-head">
 				<h2 id="f2-h">{t('home.f2.title')}</h2>
 				<p><span class="lead">{t('home.f2.lead')}</span> {t('home.f2.text')}</p>
 			</div>
-			<figure>
-				<div class="crop crop-b" style="aspect-ratio: 1200 / 620; view-transition-name: shot-title">
-					<Pic name="ipad-title" sizes="min(1404px, 117vw)" style="left: -17.4%; top: -8.9%; width: 117%" alt={t('home.f2.alt')} />
-				</div>
+			<figure class="rise-fig">
 				<figcaption>{t('home.f2.caption')}</figcaption>
+				<div class="rise rise-ipad">
+					<div class="rise-device" style="view-transition-name: shot-title">
+						<Pic name="ipad-title" sizes="(min-width: 1100px) 1000px, 92vw" alt={t('home.f2.alt')} />
+					</div>
+				</div>
 			</figure>
 		</div>
 	</section>
@@ -98,17 +100,19 @@ const bands = ['f1', 'f2', 'f3', 'f4'] as const;
 		</div>
 	</section>
 
-	<section class="band" aria-labelledby="f4-h">
+	<section class="band band-rise" aria-labelledby="f4-h">
 		<div class="band-in">
 			<div class="band-head">
 				<h2 id="f4-h">{t('home.f4.title')}</h2>
 				<p><span class="lead">{t('home.f4.lead')}</span> {t('home.f4.text')}</p>
 			</div>
-			<figure>
-				<div class="crop crop-b" style="aspect-ratio: 1200 / 420; view-transition-name: shot-calendar">
-					<Pic name="mac-calendar" sizes="min(1464px, 122vw)" style="left: -21.9%; top: 0; width: 122%" alt={t('home.f4.alt')} />
-				</div>
+			<figure class="rise-fig">
 				<figcaption>{t('home.f4.caption')}</figcaption>
+				<div class="rise rise-mac">
+					<div class="rise-window" style="view-transition-name: shot-calendar">
+						<Pic name="mac-calendar" sizes="(min-width: 1264px) 1200px, (min-width: 701px) 95vw, 640px" alt={t('home.f4.alt')} />
+					</div>
+				</div>
 			</figure>
 		</div>
 	</section>
