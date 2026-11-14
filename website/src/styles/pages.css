@@ -339,13 +339,8 @@
 	border-top: 1px solid var(--ani-rule);
 }
 
-.k-body .dl-title {
-	text-align: center;
-}
-
 .dl-version {
 	margin: 16px 0 0;
-	text-align: center;
 	font-size: var(--fs-lede);
 	color: var(--ani-dim);
 }
@@ -354,23 +349,65 @@
 	color: var(--ani-text);
 }
 
+/* One row per platform between hairlines: the name, what it needs, and its button on the right, so
+   the seven read down one column. The next steps open across the row beneath them. */
 .dl-grid {
 	margin-top: var(--space-head);
-	display: grid;
-	grid-template-columns: repeat(auto-fit, minmax(min(250px, 100%), 1fr));
-	gap: 40px 32px;
+	border-top: 1px solid var(--ani-rule);
 }
 
-.dl-col {
-	border-top: 1px solid var(--ani-rule);
-	padding-top: 28px;
-	display: flex;
-	flex-direction: column;
-	gap: 44px;
+.dl-card {
+	display: grid;
+	grid-template-columns: minmax(0, 3fr) minmax(0, 6fr) minmax(0, 3fr);
+	column-gap: 40px;
+	align-items: start;
+	padding: 24px 0;
+	border-bottom: 1px solid var(--ani-rule);
+}
+
+.k-body .dl-card .dl-name {
+	grid-column: 1;
+	grid-row: 1 / span 3;
+	align-self: baseline;
+}
+
+.dl-needs,
+.dl-card pre {
+	grid-column: 2;
+	max-width: 36em;
+}
+
+.dl-card pre {
+	grid-row: 2;
+}
+
+.dl-card .dl-act {
+	grid-column: 3;
+	grid-row: 1;
+	justify-self: end;
+	margin: 0;
+}
+
+.dl-card .dl-suggested {
+	grid-column: 3;
+	grid-row: 2;
+	justify-self: end;
+	text-align: right;
+}
+
+.dl-card .dl-next {
+	grid-column: 2 / -1;
+	grid-row: 4;
+	margin-top: 0;
+}
+
+.dl-card .dl-next-body {
+	margin-top: 20px;
 }
 
 .dl-needs {
-	margin: 8px 0 0;
+	align-self: baseline;
+	margin: 2px 0 0;
 	font-size: var(--fs-small);
 	line-height: 1.5;
 	color: var(--ani-dim);
@@ -457,9 +494,8 @@
 }
 
 .dl-more {
-	margin-top: var(--space-head);
+	margin-top: 32px;
 	display: flex;
-	justify-content: center;
 	gap: 12px 32px;
 	flex-wrap: wrap;
 	font-size: 15px;
@@ -606,6 +642,21 @@
 
 	.cap-narrow {
 		display: inline;
+	}
+
+	.dl-card {
+		display: block;
+		padding: 20px 0 24px;
+	}
+
+	.dl-card .dl-act {
+		margin-top: 16px;
+		justify-self: start;
+	}
+
+	.dl-card .dl-suggested {
+		justify-self: start;
+		text-align: left;
 	}
 
 	.crop-continue {
