@@ -451,6 +451,18 @@ impl NovelView {
 
     fn receive(&self, text: &str, rtl: bool) {
         let Ok(json) = serde_json::from_str::<serde_json::Value>(text) else { return };
+        // QA r9 only: what the page says, without any of the book's text.
+        if std::env::var("HUNT").is_ok() {
+            tracing::info!(
+                "HUNT novelmsg type={} page={} pages={} pos={} how={} key={}",
+                json["type"],
+                json["page"],
+                json["pages"],
+                json["pos"],
+                json["how"],
+                json["key"]
+            );
+        }
         match json["type"].as_str() {
             Some("ready" | "page") => {
                 let (Some(page), Some(pages)) = (json["page"].as_u64(), json["pages"].as_u64())

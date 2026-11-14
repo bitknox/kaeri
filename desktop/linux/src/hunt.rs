@@ -221,6 +221,19 @@ impl BookSource for Tide {
             tokio::time::sleep(Duration::from_secs(5)).await;
         }
         match series {
+            // r9: chapters 10 to 12 have no pictures, and chapter 12 is very long.
+            "sr" if matches!(chapter, "c-10" | "c-11" | "c-12") => {
+                let n = if chapter == "c-12" { 6000 } else { 80 };
+                let mut body = format!("<h1>Letter {chapter}</h1>");
+                for i in 0..n {
+                    body.push_str(&format!(
+                        "<p>{i}. The <ruby>塩<rt>しお</rt></ruby> road ran past the lighthouse and \
+                         on to the sea, where the letters waited in a tin box under the step, and \
+                         the keeper wrote back each evening in a slow and careful hand.</p>"
+                    ));
+                }
+                Ok(ChapterContent::Text(body))
+            }
             "sr" => {
                 let mut body = String::from(
                     "<h1>Letter</h1><p>Pictures: quick, slow, missing, hanging, broken.</p>\
@@ -736,6 +749,7 @@ async fn drive(shell: &Rc<Shell>, name: &str) {
     }
     if name.starts_with("hunt-x-") || std::env::var("HUNT_XDO").is_ok() {
         serve_requests(shell);
+        serve_cmds(shell);
     }
     match name {
         "hunt-do" => do_steps(shell).await,
@@ -2240,6 +2254,38 @@ async fn do_steps(shell: &Rc<Shell>) {
     if std::env::var("HUNT_EVLOG").is_ok() {
         listen_all(shell);
     }
+    run_plan(shell, &plan).await;
+    tracing::info!("HUNT do done");
+}
+
+/// r9: plans the xdotool script hands over, by a file `cmd-<tag>` in the out folder, run one at
+/// a time; each ends with a `HUNT cmd done <tag>` line.
+fn serve_cmds(shell: &Rc<Shell>) {
+    let shell = Rc::clone(shell);
+    glib::spawn_future_local(async move {
+        loop {
+            wait_ms(250).await;
+            let Ok(dir) = std::fs::read_dir(out_dir()) else { continue };
+            let mut asks: Vec<String> = dir
+                .flatten()
+                .filter_map(|e| e.file_name().to_str().map(str::to_owned))
+                .filter(|n| n.starts_with("cmd-") && !n.ends_with(".tmp"))
+                .collect();
+            asks.sort();
+            for ask in asks {
+                let path = format!("{}/{ask}", out_dir());
+                let plan = std::fs::read_to_string(&path).unwrap_or_default();
+                let _ = std::fs::remove_file(&path);
+                let tag = ask.trim_start_matches("cmd-").to_owned();
+                tracing::info!("HUNT cmd start {tag}");
+                run_plan(&shell, &plan).await;
+                tracing::info!("HUNT cmd done {tag}");
+            }
+        }
+    });
+}
+
+async fn run_plan(shell: &Rc<Shell>, plan: &str) {
     let steps: Vec<String> =
         plan.split(';').map(|s| s.trim().to_owned()).filter(|s| !s.is_empty()).collect();
     let mut i = 0;
@@ -2555,7 +2601,6 @@ async fn do_steps(shell: &Rc<Shell>) {
         }
         i += 1;
     }
-    tracing::info!("HUNT do done");
 }
 
 
