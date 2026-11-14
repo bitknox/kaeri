@@ -401,7 +401,8 @@ impl PlayerLink for CastLink {
             tracing::debug!(error = %e, "the TV didn't take the stop");
         }
         // A cast that ended for good ends the casting; one parked for the next episode is
-        // not shut down.
+        // not shut down. Closed with no episode after it, the cast ends too, unless the card has
+        // gone on to another cast.
         if self.player.failure().is_some_and(|f| {
             matches!(
                 f,
@@ -409,6 +410,8 @@ impl PlayerLink for CastLink {
             )
         }) {
             self.hub.end();
+        } else {
+            self.hub.end_for(&self.player);
         }
     }
 }
@@ -567,6 +570,65 @@ mod tests {
         let levels = levels();
         assert!((levels[0] - 0.7).abs() < 1e-9, "{levels:?}");
         assert!((levels[1] - 0.5).abs() < 1e-9, "{levels:?}");
+    }
+
+    #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+    async fn a_cast_closed_with_no_episode_after_it_ends_the_casting() {
+        use kaeri_cast::{
+            CastMemory, NoEncoder, PlainHttp, Timings,
+            fake::{FakeOptions, FakeReceiver},
+        };
+
+        let receiver = FakeReceiver::start(FakeOptions::default()).await.unwrap();
+        let device = CastDevice {
+            instance: "Chromecast-test".into(),
+            id: "tv-1".into(),
+            name: "Living room".into(),
+            model: "Chromecast".into(),
+            address: receiver.address,
+            video: true,
+            group: false,
+        };
+        let hub = Arc::new(CastHub::with(None, Arc::new(PlainHttp), Timings::default()));
+        let link = |hub: &Arc<CastHub>| {
+            let hub = Arc::clone(hub);
+            let device = device.clone();
+            async move {
+                let (player, _events) = CastPlayer::connect(CastSetup {
+                    device,
+                    memory: Arc::new(CastMemory::memory()),
+                    upstream: Arc::new(PlainHttp),
+                    encoder: Arc::new(NoEncoder),
+                    timings: Timings::default(),
+                })
+                .await
+                .unwrap();
+                let player = Arc::new(player);
+                hub.attach(&player);
+                Box::new(CastLink {
+                    player,
+                    device: "tv-1".into(),
+                    name: "Living room".into(),
+                    hub,
+                    file: Mutex::new(None),
+                })
+            }
+        };
+
+        // The last episode ended: the session closes the player, and the card isn't left
+        // starting.
+        hub.begin(device.clone());
+        link(&hub).await.shutdown().await;
+        assert!(!hub.casting(), "the casting ended with the player");
+        assert!(hub.view().over);
+
+        // One closed after the viewer cast again leaves the new cast alone.
+        hub.begin(device.clone());
+        let old = link(&hub).await;
+        hub.begin(device.clone());
+        let _new = link(&hub).await;
+        old.shutdown().await;
+        assert!(hub.casting(), "the new cast goes on");
     }
 
     #[tokio::test]
