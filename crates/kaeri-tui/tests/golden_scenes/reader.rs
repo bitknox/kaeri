@@ -624,6 +624,34 @@ pub(super) fn reader_strip(s: &mut Screen) {
     web_opened(s, &work, "15", 64, Some(web_row("16", 58)));
     web_images(s, "15", 64);
     s.press(&["k", "k", "k", "k"]);
+    every_strip_image_fills_the_column(s);
+}
+
+/// Every row of the stage that shows a strip image shows it across the whole column, as the
+/// board draws it: 48 columns of 120 and 32 of 80, in the middle. The image above the divider is
+/// cut by the top of the window, and its box was shaped before its picture came.
+fn every_strip_image_fills_the_column(s: &mut Screen) {
+    let buf = s.draw();
+    let cols = match s.width {
+        120 => 48,
+        80 => 32,
+        other => panic!("no strip column known for {other} columns"),
+    };
+    let left = (s.width - cols) / 2;
+    let picture = |x: u16, y: u16| {
+        let cell = &buf[(x, y)];
+        matches!(cell.bg, ratatui::style::Color::Rgb(..))
+            && (matches!(cell.symbol(), "▀" | "▄") || cell.fg == cell.bg)
+    };
+    let mut rows = 0;
+    for y in 2..s.height - 2 {
+        let shown: Vec<u16> = (0..s.width).filter(|x| picture(*x, y)).collect();
+        if !shown.is_empty() {
+            assert_eq!(shown, (left..left + cols).collect::<Vec<_>>(), "row {y}");
+            rows += 1;
+        }
+    }
+    assert!(rows > 10, "the strip shows images above and below the divider");
 }
 
 /// The light novel's series.
