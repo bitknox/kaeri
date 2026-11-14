@@ -423,6 +423,9 @@ fn watch_stalls() {
             let (last, max) = g.get();
             let gap = last.map_or(0, |l| now.duration_since(l).as_millis());
             g.set((Some(now), max.max(gap)));
+            if gap > 50 {
+                LONG.with(|l| l.borrow_mut().push(gap));
+            }
         });
         glib::ControlFlow::Continue
     });
@@ -431,6 +434,9 @@ fn watch_stalls() {
 thread_local! {
     static FRAMES: std::cell::RefCell<Option<(glib::SignalHandlerId, Vec<std::time::Instant>)>> =
         const { std::cell::RefCell::new(None) };
+    static LONG: std::cell::RefCell<Vec<u128>> = const { std::cell::RefCell::new(Vec::new()) };
+    static WORK: std::cell::RefCell<(Option<std::time::Instant>, Vec<u128>, Option<glib::SignalHandlerId>)> =
+        const { std::cell::RefCell::new((None, Vec::new(), None)) };
 }
 
 /// `frames start` notes when each frame is painted; `frames stop` logs the gaps between them
@@ -443,10 +449,23 @@ fn frames(shell: &Rc<Shell>, what: &str) {
     };
     if what == "start" {
         take_stall();
+        LONG.with(|l| l.borrow_mut().clear());
+        // A frame's own work: from before its update to after its paint.
+        let before = clock.connect_before_paint(|_| {
+            WORK.with(|w| w.borrow_mut().0 = Some(std::time::Instant::now()));
+        });
+        WORK.with(|w| *w.borrow_mut() = (None, Vec::new(), Some(before)));
         let id = clock.connect_after_paint(|_| {
+            let now = std::time::Instant::now();
+            WORK.with(|w| {
+                let mut w = w.borrow_mut();
+                if let Some(at) = w.0.take() {
+                    w.1.push(now.duration_since(at).as_micros());
+                }
+            });
             FRAMES.with(|f| {
                 if let Some((_, times)) = f.borrow_mut().as_mut() {
-                    times.push(std::time::Instant::now());
+                    times.push(now);
                 }
             })
         });
@@ -456,6 +475,29 @@ fn frames(shell: &Rc<Shell>, what: &str) {
     }
     let Some((id, times)) = FRAMES.with(|f| f.borrow_mut().take()) else { return };
     clock.disconnect(id);
+    let (mut work, before) = WORK.with(|w| {
+        let mut w = w.borrow_mut();
+        (std::mem::take(&mut w.1), w.2.take())
+    });
+    if let Some(before) = before {
+        clock.disconnect(before);
+    }
+    work.sort_unstable();
+    let wq = |q: f64| work.get(((work.len() as f64 - 1.0) * q).round() as usize).map(|u| u / 1000);
+    let long = LONG.with(|l| std::mem::take(&mut *l.borrow_mut()));
+    tracing::info!(
+        "HUNT frames {what} work: frames={} work_p50_ms={:?} work_p95_ms={:?} work_max_ms={:?} \
+         work_over16={} work_over50={} stalls_over50={} stalls_over200={} stall_total_ms={}",
+        work.len(),
+        wq(0.5),
+        wq(0.95),
+        work.last().map(|u| u / 1000),
+        work.iter().filter(|u| **u > 16_000).count(),
+        work.iter().filter(|u| **u > 50_000).count(),
+        long.len(),
+        long.iter().filter(|g| **g > 200).count(),
+        long.iter().sum::<u128>(),
+    );
     let mut gaps: Vec<u128> = times.windows(2).map(|w| (w[1] - w[0]).as_millis()).collect();
     gaps.sort_unstable();
     let at = |q: f64| gaps.get(((gaps.len() as f64 - 1.0) * q).round() as usize).copied();
