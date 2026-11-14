@@ -3,18 +3,16 @@
 .nf {
 	max-width: 720px;
 	margin: 0 auto;
-	padding: 96px 32px 160px;
+	padding: var(--space-section) var(--gutter) calc(var(--space-section) * 1.25);
 }
 
 .nf h1 {
 	margin-top: 32px;
-	font-size: clamp(34px, 3vw + 16px, 48px);
-	line-height: 1.1;
 }
 
 .nf p {
 	margin: 16px 0 0;
-	font-size: 19px;
+	font-size: var(--fs-lede);
 	line-height: 1.55;
 	color: var(--ani-dim);
 }
@@ -43,8 +41,3 @@
 	100% { transform: scaleX(1); }
 }
 
-@media (max-width: 700px) {
-	.nf {
-		padding: 56px 16px 96px;
-	}
-}

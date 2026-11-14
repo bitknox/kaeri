@@ -1,7 +1,8 @@
 ---
-// The theme switch: a real button, the pixel sun or moon for the theme it switches to. The site is
-// light until the visitor picks dark, whatever the system's theme. Dark is kept under Starlight's
-// own key, so the docs and the other pages read one setting; picking light again clears it.
+// The theme switch: a real button, the pixel sun or moon for the theme it switches to. The site
+// follows the system's theme until the visitor picks one. The pick is kept under Starlight's own
+// key, so the docs and the other pages read one setting; picking the system's theme again clears it,
+// and the site follows the system from then on.
 import { useSite } from '../../i18n/site';
 
 const { t } = useSite(Astro);
@@ -30,9 +31,23 @@ const { t } = useSite(Astro);
 	const still = window.matchMedia('(prefers-reduced-motion: reduce)');
 
 	const current = () => (root.dataset.theme === 'dark' ? 'dark' : 'light');
-	const themeColor = document.querySelector<HTMLMetaElement>('meta[name="theme-color"]');
-	const paint = () => themeColor?.setAttribute('content', current() === 'dark' ? '#10131f' : '#f0ede4');
+	const system = window.matchMedia('(prefers-color-scheme: dark)');
+	const systemTheme = () => (system.matches ? 'dark' : 'light');
+	// Both theme-color tags carry the page's theme, so the browser bar matches it when it differs
+	// from the system's.
+	const themeColors = [...document.querySelectorAll<HTMLMetaElement>('meta[name="theme-color"]')];
+	const paint = () => {
+		for (const m of themeColors) m.content = current() === 'dark' ? '#10131f' : '#f0ede4';
+	};
 	paint();
+
+	const picked = () => {
+		try {
+			return localStorage.getItem(KEY);
+		} catch {
+			return null;
+		}
+	};
 
 	function label(button: HTMLElement) {
 		const text = current() === 'dark' ? button.dataset.toLight! : button.dataset.toDark!;
@@ -44,14 +59,23 @@ const { t } = useSite(Astro);
 		root.dataset.theme = theme;
 		paint();
 		try {
-			if (theme === 'dark') localStorage.setItem(KEY, theme);
-			else localStorage.removeItem(KEY);
+			if (theme === systemTheme()) localStorage.removeItem(KEY);
+			else localStorage.setItem(KEY, theme);
 		} catch {
 			// No storage here: the choice lasts for this page.
 		}
 	}
 
 	const buttons = [...document.querySelectorAll<HTMLElement>('[data-theme-toggle]')];
+
+	// Without a pick, the page changes with the system, at once and without the crossfade.
+	system.addEventListener('change', () => {
+		if (picked() === 'dark' || picked() === 'light') return;
+		root.dataset.theme = systemTheme();
+		paint();
+		for (const b of buttons) label(b);
+	});
+
 	for (const button of buttons) {
 		label(button);
 		button.addEventListener('click', () => {
