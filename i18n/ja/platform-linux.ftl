@@ -48,7 +48,7 @@ library-row-summary-linux = { $episodes ->
    *[other] { $series }シリーズ、{ $episodes }エピソード
  }
 library-page-watching-linux = 変更を監視中
-library-page-no-watch-linux = { -app-name }の起動時に再確認します
+library-page-no-watch-linux = { -app-name }の起動時に変更を確認します
 library-matched-linux = 一致済み
 library-best-guess-linux = 推定:{ $title }
 library-fix-count-mismatch-linux = { $episodes ->

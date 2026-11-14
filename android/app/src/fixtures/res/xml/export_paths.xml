@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Send to e-reader in the Fixtures app: its engines keep their data under the cache. -->
+<paths>
+    <files-path name="exports" path="kaeri/exports/" />
+    <cache-path name="fixture-exports" path="." />
+</paths>

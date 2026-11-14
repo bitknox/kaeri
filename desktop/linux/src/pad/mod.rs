@@ -417,7 +417,9 @@ impl Pad {
         if let Some(direction) = direction
             && matches!(
                 self.context(),
-                PadContext::Browse | PadContext::Player { controls_shown: true, .. }
+                PadContext::Browse
+                    | PadContext::Player { controls_shown: true, .. }
+                    | PadContext::Reader { settings_open: true }
             )
         {
             self.direction(direction, pressed);
@@ -613,6 +615,7 @@ impl Pad {
             PadAction::Panel(panel) => shell.player.pad_panel(panel),
             PadAction::Reveal(target) => shell.player.pad_reveal(target),
             PadAction::PlayPause => shell.player.pad_play_pause(),
+            PadAction::Reader(what) => shell.reader.pad(what),
             PadAction::HoldSpeed(on) => {
                 if on {
                     self.held_speed.set(Some(shell.player.pad_hold_speed()));
@@ -644,8 +647,9 @@ impl Pad {
     /// The previous or next section in the sidebar's order. Nothing wraps.
     fn section(&self, shell: &Rc<Shell>, by: i32) {
         let Some(now) = self.ctx.current_dest() else { return };
-        let at = Dest::ALL.iter().position(|d| *d == now).unwrap_or(0) as i32;
-        let Some(next) = usize::try_from(at + by).ok().and_then(|i| Dest::ALL.get(i)) else {
+        let sections = Dest::sections(crate::pages::answer());
+        let at = sections.iter().position(|d| *d == now.row()).unwrap_or(0) as i32;
+        let Some(next) = usize::try_from(at + by).ok().and_then(|i| sections.get(i)) else {
             return;
         };
         shell.go(*next);

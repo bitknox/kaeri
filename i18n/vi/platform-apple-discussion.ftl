@@ -16,7 +16,7 @@ discussion-apple-player-note = { $count ->
    *[other] { $count } bình luận · tạm dừng
  }
 settings-apple-discussions = Thảo luận tập
-settings-apple-discussions-note = Đọc bình luận trong chủ đề diễn đàn của AniList cho các tập bạn đã xem.
+settings-apple-discussions-note = Bình luận lấy từ chủ đề diễn đàn AniList, sau khi bạn đã xem tập đó.
 settings-apple-comment-images = Tải ảnh trong bình luận
 settings-apple-comment-images-note = Mỗi ảnh được tải từ trang lưu trữ ảnh, và trang đó sẽ thấy địa chỉ IP của bạn.
 discussion-apple-key-hint = ⌘Return gửi. Return thêm dòng.

@@ -364,6 +364,22 @@ pub fn run(shell: Rc<Shell>, dir: PathBuf, prefix: String, shots: Vec<String>) {
 
 /// Put the window in the state `shot` shows, and say how long to let it settle.
 fn stage(shell: &Rc<Shell>, shot: &str) -> f64 {
+    #[cfg(feature = "fixtures")]
+    if let Some(settle) = crate::shots_reading::stage(shell, shot) {
+        return settle;
+    }
+    #[cfg(feature = "fixtures")]
+    if let Some(settle) = crate::shots_read_discovery::stage(shell, shot) {
+        return settle;
+    }
+    #[cfg(feature = "fixtures")]
+    if let Some(settle) = crate::shots_reading_credits::stage(shell, shot) {
+        return settle;
+    }
+    #[cfg(feature = "fixtures")]
+    if let Some(settle) = crate::shots_prelaunch::stage(shell, shot) {
+        return settle;
+    }
     let window = &shell.ctx.window;
     match shot {
         "home" => {
@@ -1362,6 +1378,14 @@ fn start_state(shot: &str) -> Option<(kaeri_model::starting::StartingFixture, f6
 }
 
 fn unstage(shell: &Rc<Shell>, shot: &str) {
+    #[cfg(feature = "fixtures")]
+    crate::shots_reading::unstage(shell, shot);
+    #[cfg(feature = "fixtures")]
+    crate::shots_read_discovery::unstage(shell, shot);
+    #[cfg(feature = "fixtures")]
+    crate::shots_reading_credits::unstage(shell, shot);
+    #[cfg(feature = "fixtures")]
+    crate::shots_prelaunch::unstage(shell, shot);
     if shot.starts_with("start-") {
         shell.player.close();
     }
@@ -1985,8 +2009,14 @@ fn capture(
     // A popover is a surface of its own, which the window's drawing leaves out: drawn on top.
     if let Some((widget, x, y)) = over {
         let popover = gtk::WidgetPaintable::new(Some(&widget));
+        // The window draws its frame's bounds squeezed into its size: the popover goes through
+        // the same, so it lands where it sits over the window.
+        let frame = window
+            .compute_bounds(window)
+            .unwrap_or_else(|| gtk::graphene::Rect::new(0.0, 0.0, width as f32, height as f32));
         snapshot.save();
-        snapshot.translate(&gtk::graphene::Point::new(x, y));
+        snapshot.scale(width as f32 / frame.width(), height as f32 / frame.height());
+        snapshot.translate(&gtk::graphene::Point::new(x - frame.x(), y - frame.y()));
         popover.snapshot(&snapshot, f64::from(widget.width()), f64::from(widget.height()));
         snapshot.restore();
     }
@@ -2025,6 +2055,22 @@ async fn painted(shell: &Rc<Shell>, path: &std::path::Path, shot: &str) -> Resul
                     title_menu_popover(&window)
                 }
                 "trailer-preview" => crate::trailer::shot_preview(window.upcast_ref()),
+                #[cfg(feature = "fixtures")]
+                "read-library-filters"
+                | "read-search-filters"
+                | "read-paged-settings"
+                | "read-mode"
+                | "read-strip-mode"
+                | "read-chapters"
+                | "read-chapters-list"
+                | "read-chapters-long"
+                | "read-novel-paper" => open_popover(&window),
+                #[cfg(feature = "fixtures")]
+                "read-disc-poster-menu" | "read-disc-poster-menu-own" => context_menu(&window),
+                #[cfg(feature = "fixtures")]
+                "read-series-group-picker" => {
+                    crate::shots_reading_credits::shown_popover(&window)
+                }
                 party if party.starts_with("party-") => player.shot_party_popover(),
                 _ => None,
             };
@@ -2078,6 +2124,27 @@ pub fn named(list: Option<&str>) -> Vec<String> {
                 "cast" => CAST.iter().map(|p| (*p).to_owned()).collect(),
                 #[cfg(feature = "fixtures")]
                 "sync" => crate::sync::shots::NAMES.iter().map(|p| (*p).to_owned()).collect(),
+                #[cfg(feature = "fixtures")]
+                "reading" => {
+                    crate::shots_reading::NAMES.iter().map(|p| (*p).to_owned()).collect()
+                }
+                #[cfg(feature = "fixtures")]
+                "reading-credits" => crate::shots_reading_credits::NAMES
+                    .iter()
+                    .map(|p| (*p).to_owned())
+                    .collect(),
+                #[cfg(feature = "fixtures")]
+                "reading-discovery" => {
+                    crate::shots_read_discovery::NAMES.iter().map(|p| (*p).to_owned()).collect()
+                }
+                #[cfg(feature = "fixtures")]
+                "prelaunch" => {
+                    crate::shots_prelaunch::NAMES.iter().map(|p| (*p).to_owned()).collect()
+                }
+                #[cfg(feature = "fixtures")]
+                "prelaunch-demo" => {
+                    crate::shots_prelaunch::DEMO.iter().map(|p| (*p).to_owned()).collect()
+                }
                 "match" => MATCH.iter().map(|p| (*p).to_owned()).collect(),
                 one => vec![one.to_owned()],
             })
@@ -3254,6 +3321,67 @@ fn period_popover(window: &adw::ApplicationWindow) -> Option<(gtk::Widget, f32, 
     let width = popover.width() as f32;
     let x = (bounds.x() - 4.0).clamp(0.0, (window.width() as f32 - width).max(0.0));
     Some((popover.upcast(), x, bounds.y() + bounds.height()))
+}
+
+/// Whichever menu button has its popover open, the popover under it, over the window.
+#[cfg(feature = "fixtures")]
+fn open_popover(window: &adw::ApplicationWindow) -> Option<(gtk::Widget, f32, f32)> {
+    fn find(widget: &gtk::Widget) -> Option<gtk::MenuButton> {
+        if let Some(button) = widget.downcast_ref::<gtk::MenuButton>()
+            && button.is_mapped()
+            && button.popover().is_some_and(|p| p.is_visible())
+        {
+            return Some(button.clone());
+        }
+        let mut child = widget.first_child();
+        while let Some(next) = child {
+            if let Some(found) = find(&next) {
+                return Some(found);
+            }
+            child = next.next_sibling();
+        }
+        None
+    }
+    let button = find(window.upcast_ref())?;
+    let popover = button.popover()?;
+    let bounds = button.compute_bounds(window)?;
+    let width = popover.width() as f32;
+    let x = (bounds.x() + bounds.width() / 2.0 - width / 2.0)
+        .clamp(0.0, (window.width() as f32 - width).max(0.0));
+    // Under the button, or over it for one that opens upwards, as the reader's do: over the
+    // place the popover points at, when it points somewhere of its own.
+    let y = if button.direction() == gtk::ArrowType::Up {
+        let (aimed, at) = popover.pointing_to();
+        let top = if aimed { at.y() as f32 } else { 0.0 };
+        bounds.y() + top - popover.height() as f32
+    } else {
+        bounds.y() + bounds.height()
+    };
+    Some((popover.upcast(), x, y.max(0.0)))
+}
+
+/// A context menu open on a widget, as its key opens it: under the widget, from its start.
+#[cfg(feature = "fixtures")]
+fn context_menu(window: &adw::ApplicationWindow) -> Option<(gtk::Widget, f32, f32)> {
+    fn find(widget: &gtk::Widget) -> Option<gtk::PopoverMenu> {
+        if let Some(menu) = widget.downcast_ref::<gtk::PopoverMenu>()
+            && menu.is_visible()
+            && menu.parent().is_some_and(|p| p.is_mapped())
+        {
+            return Some(menu.clone());
+        }
+        let mut child = widget.first_child();
+        while let Some(next) = child {
+            if let Some(found) = find(&next) {
+                return Some(found);
+            }
+            child = next.next_sibling();
+        }
+        None
+    }
+    let menu = find(window.upcast_ref())?;
+    let bounds = menu.parent()?.compute_bounds(window)?;
+    Some((menu.upcast(), bounds.x(), bounds.y() + bounds.height()))
 }
 
 /// The first text field under `widget`.

@@ -336,20 +336,49 @@ pub async fn load_providers(
 /// because they were built for another major version of the plugin ABI.
 pub struct LoadedDir {
     pub providers: Vec<WasmProvider>,
+    /// The book sources, when they were asked for: see [`load_plugins_reporting`].
+    pub books: Vec<crate::book_source::WasmBookSource>,
     /// File names without the extension, in directory order.
     pub outdated: Vec<String>,
 }
 
 /// [`load_providers`], also saying which plugins were skipped for being built for an old ABI, so
-/// the app can tell the person to update them rather than leave a source silently missing.
+/// the app can tell the person to update them rather than leave a source silently missing. Book
+/// sources are left out without running them.
 pub async fn load_providers_reporting(
     host: &engine::PluginHost,
     dir: impl AsRef<std::path::Path>,
 ) -> LoadedDir {
-    let mut loaded = LoadedDir { providers: Vec::new(), outdated: Vec::new() };
-    for result in host.load_dir(dir).await {
+    load_plugins_reporting(host, dir, false).await
+}
+
+/// Every plugin in a directory: show sources, and book sources too when `books` is set (while
+/// reading is on). With it unset, a book source is told from its imports and skipped before it
+/// runs, as a 0.3 Kaeri skipped it.
+pub async fn load_plugins_reporting(
+    host: &engine::PluginHost,
+    dir: impl AsRef<std::path::Path>,
+    books: bool,
+) -> LoadedDir {
+    let mut loaded =
+        LoadedDir { providers: Vec::new(), books: Vec::new(), outdated: Vec::new() };
+    let results = if books {
+        host.load_dir_any(dir).await
+    } else {
+        host.load_dir(dir)
+            .await
+            .into_iter()
+            .map(|result| result.map(engine::AnyPlugin::Shows))
+            .collect()
+    };
+    for result in results {
         match result {
-            Ok(plugin) => loaded.providers.push(WasmProvider::new(plugin)),
+            Ok(engine::AnyPlugin::Shows(plugin)) => {
+                loaded.providers.push(WasmProvider::new(plugin))
+            }
+            Ok(engine::AnyPlugin::Books(plugin)) => {
+                loaded.books.push(crate::book_source::WasmBookSource::new(plugin))
+            }
             Err(engine::PluginError::OutdatedAbi { path, found }) => {
                 tracing::warn!(%path, %found, "skipping plugin built for another plugin ABI");
                 let name = std::path::Path::new(&path)
@@ -359,6 +388,9 @@ pub async fn load_providers_reporting(
             }
             Err(engine::PluginError::NeedsNewerKaeri { path, world }) => {
                 tracing::warn!(%path, %world, "skipping plugin made for a newer version of Kaeri");
+            }
+            Err(engine::PluginError::OtherKind { path, kind, .. }) => {
+                tracing::debug!(%path, %kind, "skipping a book source while reading is off");
             }
             Err(e) => tracing::warn!(error = %e, "skipping unloadable plugin"),
         }

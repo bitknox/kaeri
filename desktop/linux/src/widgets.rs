@@ -172,6 +172,36 @@ pub fn haze(text: &str, class: &str) -> gtk::Label {
     label
 }
 
+/// Sets markup with `<a>` links on a label and makes the links' accessibles as soon as the label
+/// is in a window.
+///
+/// GTK makes a label's link accessibles on first use. When a screen reader's walk is that first
+/// use, they are made while GTK registers the label, and each link registers the label a second
+/// time under a new path. The first path stays in GTK's cache after the label goes, and the next
+/// walk reads the freed label and aborts. Made here, before the label is registered, the links
+/// register it once. Not before the label is in a window: making them registers the label, and a
+/// registered label must not be given its role, which GTK does when it joins a window.
+pub fn set_link_markup(label: &gtk::Label, markup: &str) {
+    label.set_markup(markup);
+    if label.root().is_some() {
+        let _ = label.first_accessible_child();
+        return;
+    }
+    let handler = Rc::new(Cell::new(None));
+    let id = label.connect_notify_local(Some("root"), {
+        let handler = Rc::clone(&handler);
+        move |label, _| {
+            if label.root().is_some() {
+                let _ = label.first_accessible_child();
+                if let Some(id) = handler.take() {
+                    label.disconnect(id);
+                }
+            }
+        }
+    });
+    handler.set(Some(id));
+}
+
 /// A heading over a section of a page, in sentence case: "New this week".
 pub fn heading(text: &str) -> gtk::Label {
     let label = gtk::Label::new(Some(text));
@@ -205,7 +235,16 @@ thread_local! {
 /// The banner under a page's header bar that says the device is offline: shown on every page
 /// that has one while it is, and gone once the network is back.
 pub fn offline_banner() -> adw::Banner {
-    let banner = adw::Banner::new(&t::state_offline_line());
+    banner_saying(&t::state_offline_line())
+}
+
+/// The offline banner on Read's pages, which speaks of chapters.
+pub fn read_offline_banner() -> adw::Banner {
+    banner_saying(&t::read_state_offline_line())
+}
+
+fn banner_saying(line: &str) -> adw::Banner {
+    let banner = adw::Banner::new(line);
     banner.add_css_class("offline");
     banner.set_revealed(OFFLINE.get());
     BANNERS.with_borrow_mut(|banners| {
@@ -213,6 +252,11 @@ pub fn offline_banner() -> adw::Banner {
         banners.push(banner.downgrade());
     });
     banner
+}
+
+/// Whether the device is offline, as the engine last said.
+pub fn is_offline() -> bool {
+    OFFLINE.get()
 }
 
 /// Show or hide every offline banner.
@@ -232,9 +276,27 @@ pub fn content_page(
     header: &adw::HeaderBar,
     content: &impl IsA<gtk::Widget>,
 ) -> adw::NavigationPage {
+    page_with_banner(title, header, &offline_banner(), content)
+}
+
+/// A page of Read: its header bar and Read's offline banner over `content`.
+pub fn read_content_page(
+    title: &str,
+    header: &adw::HeaderBar,
+    content: &impl IsA<gtk::Widget>,
+) -> adw::NavigationPage {
+    page_with_banner(title, header, &read_offline_banner(), content)
+}
+
+fn page_with_banner(
+    title: &str,
+    header: &adw::HeaderBar,
+    banner: &adw::Banner,
+    content: &impl IsA<gtk::Widget>,
+) -> adw::NavigationPage {
     let view = adw::ToolbarView::new();
     view.add_top_bar(header);
-    view.add_top_bar(&offline_banner());
+    view.add_top_bar(banner);
     view.set_content(Some(content));
     adw::NavigationPage::builder().title(title).child(&view).build()
 }
@@ -590,7 +652,8 @@ pub fn context_menu(widget: &impl IsA<gtk::Widget>, menu: &gio::Menu) {
 }
 
 /// Surprise me, or Another: a flat header bar button with its word. It asks the engine for a pick
-/// from `pool` and opens it (or swaps the page on screen for it when `swap`), showing a spinner in
+/// from `pool` and opens it (or swaps the page on screen for it when `swap`; a book from reading's
+/// filters opens as a series, with no Another), showing a spinner in
 /// place of the glyph once the pick takes more than 600 ms. Pressed again while it waits, it does
 /// nothing. An empty pool or no connection is said by the engine's own notice.
 pub fn surprise_button(
@@ -601,15 +664,17 @@ pub fn surprise_button(
     pool: impl Fn() -> Option<kaeri_model::browsing::SurprisePool> + 'static,
 ) -> gtk::Button {
     use kaeri_model::{browsing::SurpriseOutcome, command::Command, event::Event};
-    let icon = gtk::Stack::new();
-    icon.add_named(&gtk::Image::from_icon_name("kaeri-dice-symbolic"), Some("dice"));
-    let spinner = adw::Spinner::new();
-    icon.add_named(&spinner, Some("wait"));
-    let face = gtk::Box::new(gtk::Orientation::Horizontal, 6);
-    face.append(&icon);
-    face.append(&gtk::Label::new(Some(label)));
+    let (face, icon, words) = surprise_face(label);
     let button = gtk::Button::builder().child(&face).tooltip_text(hint).build();
     button.add_css_class("flat");
+    ctx.on_size({
+        let words = words.downgrade();
+        move |size| {
+            if let Some(words) = words.upgrade() {
+                lay_surprise(&words, size);
+            }
+        }
+    });
     button.update_property(&[
         gtk::accessible::Property::Label(label),
         gtk::accessible::Property::Description(hint),
@@ -649,7 +714,13 @@ pub fn surprise_button(
             id.remove();
         }
         icon.set_visible_child_name("dice");
-        if let SurpriseOutcome::Picked { id, more } = outcome {
+        if let SurpriseOutcome::Picked { id, .. } = outcome
+            && matches!(pool, kaeri_model::browsing::SurprisePool::Reading { .. })
+        {
+            ctx.pick.replace(None);
+            let _ = button
+                .activate_action("win.open-series", Some(&format!("a:{id}").to_variant()));
+        } else if let SurpriseOutcome::Picked { id, more } = outcome {
             ctx.pick.replace(Some(crate::window::Pick {
                 id: *id,
                 pool: pool.clone(),
@@ -664,9 +735,92 @@ pub fn surprise_button(
     button
 }
 
+/// Surprise me's face: the dice, or a spinner while it picks, and its name.
+fn surprise_face(label: &str) -> (gtk::Box, gtk::Stack, gtk::Label) {
+    let icon = gtk::Stack::new();
+    icon.add_named(&gtk::Image::from_icon_name("kaeri-dice-symbolic"), Some("dice"));
+    icon.add_named(&adw::Spinner::new(), Some("wait"));
+    let face = gtk::Box::new(gtk::Orientation::Horizontal, 6);
+    face.append(&icon);
+    let words = gtk::Label::new(Some(label));
+    face.append(&words);
+    (face, icon, words)
+}
+
+/// A narrow window's header has room for the dice alone; the name stays in the tooltip and for
+/// screen readers.
+fn lay_surprise(words: &gtk::Label, size: crate::window::Size) {
+    words.set_visible(size != crate::window::Size::Narrow);
+}
+
+/// A ring of how far something has come, 16 px: a silk arc on the rule, with a stop square
+/// inside when it can be stopped.
+pub fn ring(fraction: f64) -> gtk::DrawingArea {
+    let area = gtk::DrawingArea::new();
+    area.set_content_width(16);
+    area.set_content_height(16);
+    area.set_valign(gtk::Align::Center);
+    area.set_margin_end(4);
+    area.set_draw_func(move |area, cr, width, height| {
+        let color = area.color();
+        let (r, g, b) =
+            (f64::from(color.red()), f64::from(color.green()), f64::from(color.blue()));
+        let (cx, cy) = (f64::from(width) / 2.0, f64::from(height) / 2.0);
+        let radius = cx.min(cy) - 1.0;
+        cr.set_line_width(2.0);
+        cr.set_source_rgba(r, g, b, 0.22);
+        cr.arc(cx, cy, radius, 0.0, std::f64::consts::TAU);
+        let _ = cr.stroke();
+        cr.set_source_rgb(r, g, b);
+        let start = -std::f64::consts::FRAC_PI_2;
+        cr.arc(cx, cy, radius, start, start + std::f64::consts::TAU * fraction.clamp(0.0, 1.0));
+        let _ = cr.stroke();
+        cr.rectangle(cx - 2.5, cy - 2.5, 5.0, 5.0);
+        let _ = cr.fill();
+    });
+    area
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::{
+        gtk_test::{pump, run},
+        window::Size,
+    };
+
+    /// Search's header in a 360 px window: the sidebar button, the title, the field's toggle,
+    /// Surprise me and the close button fit the 350 px the content has.
+    #[test]
+    fn the_search_header_fits_a_narrow_window() {
+        run(|| {
+            let header = adw::HeaderBar::new();
+            header.set_decoration_layout(Some(":close"));
+            header.pack_start(&gtk::Button::from_icon_name("sidebar-show-symbolic"));
+            header.set_title_widget(Some(&adw::WindowTitle::new("Search", "")));
+            header.pack_end(
+                &gtk::ToggleButton::builder().icon_name("edit-find-symbolic").build(),
+            );
+            let (face, _, words) = surprise_face("Surprise me");
+            header.pack_end(&gtk::Button::builder().child(&face).css_classes(["flat"]).build());
+            let window = adw::Window::builder().default_width(1280).default_height(800).build();
+            let view = adw::ToolbarView::new();
+            view.add_top_bar(&header);
+            window.set_content(Some(&view));
+            window.present();
+            let min_width = || header.measure(gtk::Orientation::Horizontal, -1).0;
+
+            lay_surprise(&words, Size::Wide);
+            pump(50);
+            let wide = min_width();
+            lay_surprise(&words, Size::Narrow);
+            pump(50);
+            let narrow = min_width();
+            assert!(narrow < wide, "the name still takes room: {narrow} px against {wide}");
+            assert!(narrow <= 330, "the header needs {narrow} px");
+            window.close();
+        });
+    }
 
     #[test]
     fn cover_colours_read_from_anilists_hex() {
@@ -680,5 +834,83 @@ mod tests {
     fn a_placeholder_is_its_cover_colour_at_half_over_raised() {
         assert_eq!(half_over_raised([0xFF, 0xFF, 0xFF]), [0x90, 0x92, 0x9B]);
         assert_eq!(half_over_raised(RAISED), RAISED);
+    }
+
+    /// Read's pages speak of chapters offline, the shows' pages of episodes, and both follow
+    /// the network.
+    #[test]
+    fn reads_offline_banner_speaks_of_chapters() {
+        crate::gtk_test::run(|| {
+            let shows = offline_banner();
+            let read = read_offline_banner();
+            assert_eq!(shows.title(), t::state_offline_line());
+            assert_eq!(read.title(), t::read_state_offline_line());
+            set_offline(true);
+            assert!(shows.is_revealed() && read.is_revealed());
+            set_offline(false);
+            assert!(!shows.is_revealed() && !read.is_revealed());
+        });
+    }
+}
+
+#[cfg(test)]
+mod link_markup_tests {
+    use std::path::Path;
+
+    /// Every `.rs` file under `dir`, with its text.
+    fn sources(dir: &Path, out: &mut Vec<(String, String)>) {
+        for entry in std::fs::read_dir(dir).unwrap().flatten() {
+            let path = entry.path();
+            if path.is_dir() {
+                sources(&path, out);
+            } else if path.extension().is_some_and(|e| e == "rs") {
+                out.push((path.display().to_string(), std::fs::read_to_string(&path).unwrap()));
+            }
+        }
+    }
+
+    /// The names that call `method` in `text`: `label` for `label.method(`.
+    fn callers(text: &str, method: &str) -> Vec<String> {
+        text.match_indices(method)
+            .map(|(at, _)| {
+                let before = &text[..at];
+                let start = before
+                    .rfind(|c: char| !(c.is_alphanumeric() || c == '_'))
+                    .map_or(0, |i| i + 1);
+                before[start..].to_string()
+            })
+            .filter(|name| !name.is_empty())
+            .collect()
+    }
+
+    /// A label whose links a screen reader can reach gets its markup through `set_link_markup`,
+    /// so a walk never makes the links while GTK registers the label (R9L-1).
+    #[test]
+    fn link_labels_set_their_markup_through_the_helper() {
+        let (link, markup) =
+            ([".connect", "_activate_link("].concat(), [".set", "_markup("].concat());
+        let mut files = Vec::new();
+        sources(&Path::new(env!("CARGO_MANIFEST_DIR")).join("src"), &mut files);
+        let mut direct = Vec::new();
+        for (path, text) in &files {
+            let mut function = String::new();
+            for line in text.lines().chain(["fn end"]) {
+                let head = line
+                    .trim_start()
+                    .trim_start_matches("pub(crate) ")
+                    .trim_start_matches("pub ");
+                if head.starts_with("fn ") {
+                    for name in callers(&function, &link) {
+                        if function.contains(&format!("{name}{markup}")) {
+                            direct.push(format!("{path}: {name}"));
+                        }
+                    }
+                    function.clear();
+                }
+                function.push_str(line);
+                function.push('\n');
+            }
+        }
+        assert!(direct.is_empty(), "link labels set without set_link_markup: {direct:?}");
     }
 }

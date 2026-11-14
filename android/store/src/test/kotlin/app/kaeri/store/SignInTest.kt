@@ -154,6 +154,8 @@ class AniListClientTest {
         val launch = EngineLaunch.app(EngineHome.sandbox(java.io.File("files"), java.io.File("cache")))
         assertEquals("54545", launch.record.anilistClientId)
         assertEquals("https://kaeri.app/auth/anilist", launch.record.anilistRedirectUri)
+        // Reading is on in the app.
+        assertEquals(true, launch.record.reading)
     }
 
     @Test

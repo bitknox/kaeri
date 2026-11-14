@@ -174,6 +174,10 @@ class NewEpisodesTest {
         val widgetOnly = EpisodeAlerts.Wanted.of(setting = false, switchedOn = 0u, widgets = true)
         assertTrue(widgetOnly.checks)
         assertFalse(widgetOnly.notifies)
+        // New chapters alone, for someone who only reads, keeps the check too.
+        val chapters = EpisodeAlerts.Wanted.of(setting = false, switchedOn = 0u, chapters = true)
+        assertTrue(chapters.checks)
+        assertTrue(chapters.notifies)
     }
 
     @Test

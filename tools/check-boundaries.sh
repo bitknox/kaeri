@@ -39,7 +39,20 @@ rules=(
   # engine, a player or an HTTP stack.
   "kaeri-party|$terminal"
   "kaeri-party|^(kaeri-engine|kaeri-player|kaeri-net|reqwest|hyper) "
+  # Book files as untrusted bytes: parsing only, so no network, no async runtime and no engine.
+  # Fetching books is kaeri-bookserver's and the engine's.
+  "kaeri-books|$terminal"
+  "kaeri-books|^(kaeri-engine|kaeri-net|reqwest|hyper|tokio) "
+  # Clients for book servers: the protocols and the core types, never the engine.
+  "kaeri-bookserver|$terminal"
+  "kaeri-bookserver|^kaeri-engine "
   "kaeri-tui|^kaeri-engine "
+  # The reader's image pipeline: pixels in, pixels out, run on the engine's prefetch worker.
+  # No runtime, socket, database or FFI, no thread pool of its own, and no other Kaeri crate.
+  # The page cache's files are the engine's; the sources check below keeps file and network
+  # calls out of the crate's own code.
+  "kaeri-pages|$terminal"
+  "kaeri-pages|^(kaeri-[a-z-]+|tokio|mio|socket2|reqwest|hyper|rusqlite|uniffi|rayon) "
 )
 
 members="$(cargo metadata --no-deps --format-version 1 | grep -o '"name":"kaeri[a-z-]*"' | cut -d'"' -f4)"
@@ -56,7 +69,8 @@ for rule in "${rules[@]}"; do
   fi
   tree="$(cargo tree --quiet --color never -p "$crate" -e normal --target all --prefix none |
     sed 's/ (\*)$//' | sort -u)"
-  found="$(grep -E "$pattern" <<<"$tree" || true)"
+  # The crate itself is in its tree; a pattern such as "any other Kaeri crate" must not match it.
+  found="$(grep -E "$pattern" <<<"$tree" | grep -v "^$crate " || true)"
   if [[ -n "$found" ]]; then
     echo "$crate must not depend on:" >&2
     sed 's/^/  /' <<<"$found" >&2
@@ -65,6 +79,18 @@ for rule in "${rules[@]}"; do
     echo "$crate: clean, $(wc -l <<<"$tree" | tr -d ' ') packages in its tree"
   fi
 done
+
+# kaeri-pages' own code: no files, sockets, processes, environment or clock. Its dependencies
+# are held by the rule above; this holds the crate's sources.
+found="$(grep -rnE 'std::(fs|net|process|env|time)\b|\b(File|TcpStream|UdpSocket|Command|Instant|SystemTime)::' \
+  crates/kaeri-pages/src --include='*.rs' || true)"
+if [[ -n "$found" ]]; then
+  echo "kaeri-pages must stay pure; its sources reach for I/O or the clock:" >&2
+  sed 's/^/  /' <<<"$found" >&2
+  status=1
+else
+  echo "kaeri-pages sources: no I/O or clock"
+fi
 
 # A native app's build: the engine and the FFI without the desktop feature, resolved for each
 # target on its own, since the keychain crate is left out by target on a phone and by feature

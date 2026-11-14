@@ -20,4 +20,4 @@ cast-card-stop = Übertragung beenden
 cast-settings-tvs = Fernseher mit eingebautem Chromecast anzeigen
 cast-settings-tvs-note = Sie erscheinen unter Chromecast. Dieses { -device } sendet ihnen die Folge.
 cast-settings-torrents = Torrents beim Übertragen
-cast-settings-torrents-note = Lässt einen Fernseher mit eingebautem Chromecast Torrents abspielen. Dieses { -device } sendet die Folge, solange sie läuft.
+cast-settings-torrents-note = Ein Fernseher mit eingebautem Chromecast kann dann Torrents abspielen. Dieses { -device } sendet die Folge, solange sie läuft.

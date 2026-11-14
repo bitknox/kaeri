@@ -110,6 +110,10 @@ settings-adult = Show adult titles
 # @arg tracker: text
 settings-adult-detail = Titles { $tracker } marks adult, in Search and Seasonal
 
+# Line under it when the app is for reading alone.
+# @arg tracker: text
+settings-adult-detail-read = Titles { $tracker } marks adult, in Search and Browse
+
 # Row: quality.
 settings-quality = Quality
 
@@ -223,6 +227,45 @@ settings-wifi-only-detail = Downloads wait for Wi-Fi
 # Row: torrents on a mobile connection.
 settings-torrents-cellular = Torrents on mobile data
 
+# Row: whether chapter downloads run on a mobile connection.
+settings-chapter-downloads-cellular = Chapter downloads on mobile data
+
+# Row: keep the next chapters of what you read downloaded.
+settings-keep-chapters-ready = Keep next chapters ready
+
+# Row: delete a downloaded chapter once it is read. Bookmarked chapters stay.
+settings-delete-after-reading = Delete chapters after reading
+
+# Row: group a series' chapters under volume headings. Off by default.
+settings-show-volumes = Show volumes
+
+# Row: whether a series' reader mode, direction and colour follow you to your other devices.
+settings-series-choices-follow = Series settings follow you
+
+# Row in Downloads: which series' new chapters download by themselves.
+settings-new-chapters-download = New chapters
+
+# Row: whether a series' own reader mode and direction follow you to your other devices.
+settings-mode-follows = Mode and direction
+
+# Row: whether a series' own look (colour or greys) follows you to your other devices.
+settings-look-follows = Look
+
+# Row: when chapter progress goes to the reading trackers.
+settings-send-progress-after = Send progress after
+
+# Row: which chapter progress wins when a tracker and this device disagree.
+settings-when-trackers-disagree = When { -tracker-pl } disagree
+
+# Row: whether a new chapter of a series on your Reading list sends a notification.
+settings-chapter-notifications = New chapters
+
+# Row: whether the app sends a notification when the chapters it was downloading are all done.
+settings-downloads-finished = Downloads finished
+
+# Row: which Home the app opens at while it is for watching and reading.
+settings-open-at = Open at
+
 # Row: seeding after watching.
 # @allow proceed
 settings-seed-after = Seed after watching
@@ -287,10 +330,10 @@ settings-artwork-detail = Attribution in the app's notices
 settings-new-episodes = New episodes
 
 # Line under it.
-settings-new-episodes-detail = For shows in your Watching list
+settings-new-episodes-detail = Shows on your Watching list
 
 # Line explaining what a notification says.
-settings-notify-detail = One notification when an episode of a show you follow comes out: the show and the episode's number, never its name. A show can turn its own off in its settings.
+settings-notify-detail = You get one notification when an episode of a show you follow comes out. It names the show and the episode's number, never the episode's title. A show can turn its own off in its settings.
 
 # Row: the coming-up digest.
 settings-coming-up = Coming up · next 7 days
@@ -302,7 +345,7 @@ settings-system-notifications = Notification settings
 settings-system-notifications-detail = Sound, vibration and the lock screen
 
 # Line under it on Apple.
-settings-system-notifications-apple = Opens System Settings, where the banner style, sound and badges are set.
+settings-system-notifications-apple = Opens System Settings, where you set the banner style, sound and badges.
 
 # Line when the system blocks notifications.
 settings-notifications-blocked = Off: the system isn't allowing notifications for { -app-name }
@@ -346,7 +389,7 @@ show-settings-never = Never
 show-settings-subs-remembered = Remembered from your last episode.
 
 # Line under the subtitles row, when nothing is remembered.
-show-settings-subs-follow = Chosen in the player. Following Settings › Playback.
+show-settings-subs-follow = Chosen in the player. Until then, Settings › Playback applies.
 
 # Row: the source for this show.
 show-settings-source = { -source-cap }
@@ -406,18 +449,18 @@ widget-connect-detail = Connect { -tracker }, or play an episode, to see it here
 widget-connect = Connect
 
 # Accessibility label of a widget row: continue an episode.
-# @arg episode: int
+# @arg episode: plain
 # @arg title: text
 # @allow proceed
 widget-resume-label = Resume episode { $episode } of { $title }
 
 # Accessibility label of a widget row: start an episode.
-# @arg episode: int
+# @arg episode: plain
 # @arg title: text
 widget-start-label = Play episode { $episode } of { $title }
 
 # Accessibility label of a widget row: continue a dubbed episode.
-# @arg episode: int
+# @arg episode: plain
 # @arg title: text
 # @allow proceed
 widget-resume-dubbed-label = Resume episode { $episode }, { -dubbed }, of { $title }
@@ -428,6 +471,14 @@ widget-resume-dubbed-label = Resume episode { $episode }, { -dubbed }, of { $tit
 accounts-changes-waiting = { $count ->
     [one] One change waiting to sync
    *[other] { $count } changes waiting to sync
+ }
+
+# Line under a signed-in account when nothing else waits but some changes can't go out yet:
+# the { -tracker } has no match for those titles. They go out by themselves once it has one.
+# @arg count: int
+accounts-changes-held = { $count ->
+    [one] One change can't sync yet
+   *[other] { $count } changes can't sync yet
  }
 
 # Choice for the download quality: larger files with more detail.
@@ -452,7 +503,7 @@ settings-label-hover-cards = Expand covers on hover
 
 # Note under the Expand covers on hover setting. The trailer plays only where the trailers setting lets it.
 # @max 110
-settings-hover-cards-note = Shows a larger card with the trailer when you rest the pointer on a cover.
+settings-hover-cards-note = Resting the pointer on a cover opens a larger card with its trailer.
 
 # Preview note under the upscaling frame for the natural look.
 settings-upscaling-note-natural = Faithful line work and texture, nothing restyled.
@@ -485,6 +536,12 @@ settings-upscaling-sharp = Sharp · Anime4K
 
 # Side note in Accounts.
 settings-aside-accounts = { -app-name } works without an account. Your watch history stays on this { -device } when you sign out.
+
+# Side note in Accounts when the app is for reading.
+settings-aside-accounts-read = { -app-name } works without an account. Your reading history stays on this { -device } when you sign out.
+
+# Side note in Accounts when the app is for watching and reading.
+settings-aside-accounts-both = { -app-name } works without an account. Your watch and reading history stays on this { -device } when you sign out.
 
 # Today, inside a line such as "Thursday 16:30".
 widget-day-today = today
@@ -658,3 +715,12 @@ settings-subs-styled-strip-detail = Every line shows as plain dialogue at the bo
 
 # Button that restores the default subtitle style.
 settings-subs-reset = Reset subtitle style
+
+# Row: whether this computer shares its downloads and folders as a catalogue that e-readers on the home network can browse.
+settings-opds-feed = Share on this network
+
+# Row: the password e-readers ask for before they browse the shared catalogue.
+settings-opds-password = Feed password
+
+# Row: the port the shared catalogue listens on. Empty picks a free one.
+settings-opds-port = Feed port

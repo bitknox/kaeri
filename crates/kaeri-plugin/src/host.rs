@@ -65,12 +65,54 @@ pub struct Capabilities {
     allowed_hosts: Vec<String>,
     limits: Limits,
     fetches: Arc<AtomicU32>,
+    /// What this call's fetches met, shared with whoever made the call.
+    reach: Reach,
     /// `None` in tests that exercise policy without a network.
     http: Option<crate::HttpClient>,
     /// This plugin's section of the user's configuration, served one key at a time through
     /// `config-get`. Read-only pairs the host does not interpret — how a login-gated source
     /// receives an API key without the guest gaining any filesystem access.
     settings: std::collections::BTreeMap<String, String>,
+}
+
+/// Whether one call's fetches got through to a server. A guest whose every request failed on
+/// the way out can only guess at why; the host knows it was the network.
+#[derive(Debug, Clone, Default)]
+pub struct Reach(Arc<Reached>);
+
+#[derive(Debug, Default)]
+struct Reached {
+    answered: AtomicU32,
+    unsent: AtomicU32,
+    /// Of `unsent`, the ones that failed for the device having no network.
+    no_network: AtomicU32,
+}
+
+impl Reach {
+    fn note(&self, sent: &Result<Response, HostError>) {
+        match sent {
+            Ok(_) => self.0.answered.fetch_add(1, Ordering::Relaxed),
+            Err(HostError::Transport(said)) => {
+                if said.starts_with(kaeri_core::error::NO_NETWORK) {
+                    self.0.no_network.fetch_add(1, Ordering::Relaxed);
+                }
+                self.0.unsent.fetch_add(1, Ordering::Relaxed)
+            }
+            Err(_) => return,
+        };
+    }
+
+    /// Whether no request reached a server and one failed for the device having no network.
+    pub fn no_network(&self) -> bool {
+        self.never_reached() && self.0.no_network.load(Ordering::Relaxed) > 0
+    }
+
+    /// Whether the call asked the network and no request reached a server: every fetch failed
+    /// on the way, as it does with no connection.
+    pub fn never_reached(&self) -> bool {
+        self.0.unsent.load(Ordering::Relaxed) > 0
+            && self.0.answered.load(Ordering::Relaxed) == 0
+    }
 }
 
 impl Capabilities {
@@ -85,6 +127,7 @@ impl Capabilities {
             allowed_hosts,
             limits,
             fetches: Arc::new(AtomicU32::new(0)),
+            reach: Reach::default(),
             http,
             settings: Default::default(),
         }
@@ -113,6 +156,11 @@ impl Capabilities {
         self.fetches.load(Ordering::Relaxed)
     }
 
+    /// What this call's fetches meet, readable after the call by whoever kept a copy.
+    pub fn reach(&self) -> Reach {
+        self.reach.clone()
+    }
+
     /// Check a request against policy without performing it.
     ///
     /// Separated from [`Self::fetch`] so the rules are testable without a network, and so the
@@ -136,7 +184,8 @@ impl Capabilities {
         if !sandbox::is_allowed(&request.url, &self.allowed_hosts) {
             let host = sandbox::host_of(&request.url).unwrap_or_else(|| "?".into());
             return Err(HostError::Denied(format!(
-                "{host:?} is not in {}'s allowed-hosts",
+                "{}: {host:?} is not in {}'s allowed-hosts",
+                kaeri_core::error::HOST_NOT_ALLOWED,
                 self.plugin_id
             )));
         }
@@ -158,10 +207,12 @@ impl Capabilities {
         self.authorise(&request)?;
         self.fetches.fetch_add(1, Ordering::Relaxed);
 
-        let Some(http) = &self.http else {
-            return Err(HostError::Transport("no http client in this host".into()));
+        let sent = match &self.http {
+            Some(http) => self.send(http, request).await,
+            None => Err(HostError::Transport("no http client in this host".into())),
         };
-        self.send(http, request).await
+        self.reach.note(&sent);
+        sent
     }
 
     /// Without `fetch` there is no client, so there is nothing to send with.
@@ -197,7 +248,7 @@ impl Capabilities {
         let response = tokio::time::timeout(self.limits.deadline, builder.send())
             .await
             .map_err(|_| HostError::Timeout)?
-            .map_err(|e| HostError::Transport(e.to_string()))?;
+            .map_err(|e| HostError::Transport(kaeri_net::reach::described(&e)))?;
 
         let status = response.status().as_u16();
         let headers = response
@@ -238,7 +289,7 @@ async fn read_capped(
     let mut body = Vec::with_capacity(declared.map_or(0, |n| n as usize));
     let mut chunks = response.bytes_stream();
     while let Some(chunk) = chunks.next().await {
-        let chunk = chunk.map_err(|e| HostError::Transport(e.to_string()))?;
+        let chunk = chunk.map_err(|e| HostError::Transport(kaeri_net::reach::described(&e)))?;
         if body.len() + chunk.len() > ceiling {
             return Err(too_large((body.len() + chunk.len()) as u64));
         }
@@ -294,6 +345,25 @@ pub fn regex_captures(pattern: &str, haystack: &str) -> Vec<Vec<String>> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    /// A call whose requests all failed for want of a network says so; one whose requests were
+    /// refused or timed out, or one that reached a server, does not.
+    #[test]
+    fn a_call_no_request_left_for_want_of_a_network_says_so() {
+        let unsent = |said: &str| Err(HostError::Transport(said.into()));
+        let reach = Reach::default();
+        reach.note(&unsent("no network: no route"));
+        assert!(reach.no_network());
+
+        let refused = Reach::default();
+        refused.note(&unsent("connection refused"));
+        assert!(refused.never_reached() && !refused.no_network());
+
+        let answered = Reach::default();
+        answered.note(&unsent("no network: no route"));
+        answered.note(&Ok(Response { status: 200, headers: Vec::new(), body: Vec::new() }));
+        assert!(!answered.no_network());
+    }
 
     /// A body with no length that never ends is refused once it passes the ceiling, rather than
     /// read until the client's timeout.

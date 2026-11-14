@@ -16,7 +16,6 @@ title-details = Chi tiết
 title-studio = Hãng sản xuất
 title-tags = Thẻ
 title-more-about = Xem thêm về tác phẩm này
-title-synopsis-hint = Hiển thị toàn bộ tóm tắt
 title-dubbed-to = { -dubbed-cap } đến tập { $episode }
 title-no-episodes = Chưa có tập nào
 title-episodes-load-failed = Không tải được danh sách tập

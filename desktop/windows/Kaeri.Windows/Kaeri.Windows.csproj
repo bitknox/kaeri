@@ -33,13 +33,25 @@
     <PackageReference Include="CommunityToolkit.WinUI.Controls.SettingsControls" Version="8.2.251219" />
   </ItemGroup>
   <!-- The pseudo-locale (qps-ploc), generated beside the strings, goes only into a testing build,
-       for the layout pass (the testing build run with the qps-ploc language). -->
+       for the layout pass (the testing build run with the qps-ploc language). With
+       EnableMsixTooling, as package.sh publishes, the MSIX tooling adds its own **/*.resw after
+       this file, which the Remove below cannot reach, so the folder is also kept out of every
+       default glob; otherwise that glob takes the pseudo strings into a release build and adds
+       them a second time to a testing one (NETSDK1022). -->
+  <PropertyGroup>
+    <DefaultItemExcludes>$(DefaultItemExcludes);Strings.Pseudo/**</DefaultItemExcludes>
+  </PropertyGroup>
   <ItemGroup>
     <PRIResource Remove="Strings.Pseudo/**" />
     <PRIResource Include="Strings.Pseudo/**/*.resw" Condition="'$(EngineFlavour)' == 'testing'" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="../Kaeri.App.Core/Kaeri.App.Core.csproj" />
+    <!-- Named here with the same flavour Kaeri.App.Core passes, so MSBuild builds the engine once.
+         The reference .NET adds on its own, through Kaeri.App.Core, has no EngineFlavour, which
+         makes a second instance of the project, and the two compile into the same obj folder at
+         once (CS2012). -->
+    <ProjectReference Include="../Kaeri.Engine/Kaeri.Engine.csproj" AdditionalProperties="EngineFlavour=$(EngineFlavour)" />
   </ItemGroup>
   <ItemGroup>
     <!-- Show titles: Zen Kaku Gothic New Bold, under the OFL (assets/mpv/licenses). -->

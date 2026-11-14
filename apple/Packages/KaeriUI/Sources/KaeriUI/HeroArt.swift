@@ -7,8 +7,12 @@ import KaeriStore
 import SwiftUI
 
 /// The wide art itself: the banner or the still filling the frame, faded in over the cover's
-/// colour once it arrives (T8), or that colour alone while the episodes load. With neither, the
-/// cover fills it (`CoverFill`). Nothing for `.compact`; the screen leaves the frame out.
+/// colour once it arrives (T8), or that colour alone while the episodes load, a moment at most.
+/// With neither, the cover fills it (`CoverFill`). Nothing for `.compact`; the screen leaves the
+/// frame out.
+///
+/// A still landing after the cover filled the frame fades in over the cover, which stays whole
+/// beneath: one crossfade, never through the plate.
 ///
 /// With `holds`, the art shown last stays while the next is on its way, a moment at most: the Mac's
 /// title page across a season switch, where the last season's banner crossfades to the next one's
@@ -21,25 +25,38 @@ struct HeroArtView: View {
     /// Whether a blurred cover carries the sharp cover too: not where the screen shows the cover
     /// over the frame itself, as a title page does.
     var sharpCover = true
+    /// The cover has filled the frame, so wide art after it comes in over it.
+    @State private var coverShown = false
 
     /// What a page about to open asks its wide art at: wider than a page shows it on most screens,
     /// and never more than the file has.
     static let prefetchPixels = 2560
 
     var body: some View {
+        let cover = art.isCover || (coverShown && art.url != nil)
         GeometryReader { proxy in
-            switch art {
-            case .banner, .still, .waiting:
-                ArtworkView(
-                    url: art.url, color: entry.plateColor,
-                    maxPixelSize: Int(max(proxy.size.width, proxy.size.height) * scale),
-                    holds: holds
-                )
-            case .cover:
-                CoverFill(entry: entry, sharpCover: sharpCover)
-            case .compact:
-                Color.clear
+            ZStack {
+                if cover {
+                    CoverFill(entry: entry, sharpCover: sharpCover)
+                }
+                switch art {
+                case .banner, .still, .waiting:
+                    ArtworkView(
+                        url: art.url, color: entry.plateColor,
+                        maxPixelSize: Int(max(proxy.size.width, proxy.size.height) * scale),
+                        // Over the cover, no plate of its own: the art fades in onto the cover.
+                        flat: cover ? Color.clear : nil,
+                        holds: holds
+                    )
+                    .transition(.opacity)
+                case .cover, .compact:
+                    EmptyView()
+                }
             }
+            .animation(.fadeIn, value: art.url)
+        }
+        .onChange(of: art, initial: true) { _, art in
+            if art.isCover { coverShown = true }
         }
     }
 }

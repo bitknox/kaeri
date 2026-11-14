@@ -20,6 +20,9 @@ class AppLinkTest {
         // The Updated notification's, back where the update was taken.
         AppLink.Section(Destination.Library),
         AppLink.Section(Destination.Home),
+        // A new chapter's: the series, and Read on the chapter.
+        AppLink.Series("a:900301"),
+        AppLink.Read("a:900301", "c:900301:13"),
     )
 
     @Test
@@ -53,6 +56,9 @@ class AppLinkTest {
             mapOf("open" to "download", "download" to "x"),
             mapOf("open" to "section"),
             mapOf("open" to "section", "section" to "settings"),
+            mapOf("open" to "series"),
+            mapOf("open" to "read", "work" to "a:900301"),
+            mapOf("open" to "read", "work" to "a:900301", "chapter" to " "),
         )
         for (fields in others) assertNull(fields.toString(), AppLink.of(fields::get))
     }

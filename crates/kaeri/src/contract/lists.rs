@@ -4,6 +4,7 @@
 //! is the contract: a caption sent before it, the calendar's window before it, the broadcast
 //! dates after it, and a metadata notice just ahead of whichever update it arrived with.
 
+use kaeri_core::ids::AnilistId;
 use kaeri_model::{
     catalog::{ContentFor, ContentList, LibrarySegment},
     command::Command,
@@ -752,6 +753,122 @@ async fn a_change_written_to_the_list_has_the_library_asked_for_again() {
     h.send(Command::LoadLibrary(LibrarySegment::Completed));
     h.settle().await;
     assert_eq!(library(&h), 2);
+}
+
+/// Each Library list in `updates`, by segment, as the titles it holds.
+fn library_lists(updates: &[Event]) -> Vec<(LibrarySegment, Vec<AnilistId>)> {
+    let mut lists: Vec<_> = updates
+        .iter()
+        .filter_map(|update| match update {
+            Event::Content { view: ContentFor::Library(segment), content } => {
+                Some((*segment, ids(content)))
+            }
+            _ => None,
+        })
+        .collect();
+    lists.sort_by_key(|(segment, _)| LibrarySegment::ALL.iter().position(|s| s == segment));
+    lists
+}
+
+/// Where `id`'s page says its first related title is on the list.
+async fn related_status(h: &mut Harness, id: AnilistId) -> Option<LibrarySegment> {
+    h.send(Command::LoadDetail(id));
+    h.settle()
+        .await
+        .into_iter()
+        .find_map(|update| match update {
+            Event::Detail(entry) => entry.detail.filter(|detail| !detail.partial),
+            _ => None,
+        })
+        .expect("the page")
+        .relations[0]
+        .list_status
+}
+
+#[tokio::test]
+async fn a_status_set_on_a_title_page_moves_it_between_the_library_lists_at_once() {
+    use LibrarySegment::{Completed, Dropped, Paused, Planning, Watching};
+    let mut h = Harness::with(Options {
+        config: Some(WITH_ANILIST.into()),
+        signed_in: vec!["anilist"],
+        ..Options::default()
+    })
+    .await;
+    for segment in LibrarySegment::ALL {
+        h.send(Command::LoadLibrary(segment));
+    }
+    h.settle().await;
+    let library = |h: &Harness| h.server().requests_for(Operation::Library).len();
+    assert_eq!(library(&h), 1);
+
+    // A title not on the list, put on Planning from its page. The page said Planning, and the
+    // Planning list shown before never had it: the change was only queued for the tracker.
+    h.send(Command::SetStatus { id: SEQUEL, status: Planning });
+    let updates = h.settle().await;
+    assert_eq!(
+        library_lists(&updates),
+        [
+            (Watching, vec![AIRING]),
+            (Planning, vec![MOVIE, SEQUEL]),
+            (Completed, vec![FINISHED]),
+            (Paused, vec![]),
+            (Dropped, vec![]),
+        ],
+        "every list again, the new title on Planning"
+    );
+    let planned = updates
+        .iter()
+        .find_map(|update| match update {
+            Event::Content {
+                view: ContentFor::Library(Planning),
+                content: ContentList::Entries(entries),
+            } => entries.iter().find(|e| e.id == SEQUEL).cloned(),
+            _ => None,
+        })
+        .expect("on Planning");
+    assert_eq!(planned.list_status, Some(Planning));
+
+    // A title on the list, moved: it leaves Watching for Paused.
+    h.send(Command::SetStatus { id: AIRING, status: Paused });
+    let lists = library_lists(&h.settle().await);
+    assert_eq!(lists[0], (Watching, vec![]));
+    assert_eq!(lists[3], (Paused, vec![AIRING]));
+
+    // And the statuses kept for other pages say the same: the sequel's page has its prequel
+    // dropped, where the tracker's list still has it completed.
+    assert_eq!(related_status(&mut h, SEQUEL).await, Some(Completed));
+    h.send(Command::SetStatus { id: FINISHED, status: Dropped });
+    let lists = library_lists(&h.settle().await);
+    assert_eq!(lists[2], (Completed, vec![]));
+    assert_eq!(lists[4], (Dropped, vec![FINISHED]));
+    assert_eq!(related_status(&mut h, SEQUEL).await, Some(Dropped));
+
+    // A list asked for again before the outbox drains says the same, from the same answer.
+    let job = h.send(Command::LoadLibrary(Planning));
+    let updates = h.settle().await;
+    assert_eq!(ids(content(&updates)), vec![MOVIE, SEQUEL]);
+    ends(&updates, job);
+    assert_eq!(h.server().requests_for(Operation::SaveEntry).len(), 0, "still queued");
+    assert_eq!(library(&h), 1);
+}
+
+#[tokio::test]
+async fn a_status_set_before_the_library_is_shown_sends_no_lists() {
+    let mut h = Harness::with(Options {
+        config: Some(WITH_ANILIST.into()),
+        signed_in: vec!["anilist"],
+        ..Options::default()
+    })
+    .await;
+    h.send(Command::SetStatus { id: SEQUEL, status: LibrarySegment::Planning });
+    let updates = h.settle().await;
+    assert!(library_lists(&updates).is_empty(), "{:?}", names(&updates));
+    assert_eq!(h.server().requests_for(Operation::Library).len(), 0);
+
+    // Shown afterwards, the list has it.
+    h.send(Command::LoadLibrary(LibrarySegment::Planning));
+    let updates = h.settle().await;
+    assert_eq!(ids(content(&updates)), vec![MOVIE, SEQUEL]);
 }
 
 #[tokio::test]

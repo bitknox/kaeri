@@ -22,12 +22,35 @@ pub trait Inspector: MaybeSendSync {
 /// Where a plugin's own description and a listing disagree, if they do.
 ///
 /// The listing is what the user was shown and agreed to. A plugin that declares a different id,
-/// version or set of hosts is not the thing they agreed to, whatever the cause.
+/// version, kind or set of hosts is not the thing they agreed to, whatever the cause. The kind
+/// is what keeps a book source listed as a show source, by a store from before book sources,
+/// from being installed as one.
 pub fn mismatch(info: &PluginInfo, entry: &IndexEntry) -> Option<String> {
+    if info.kind() != entry.kind() {
+        return Some(format!(
+            "{} is a source of {} but the store lists it as a source of {}",
+            entry.id,
+            info.kind(),
+            entry.kind()
+        ));
+    }
     differs(info, &entry.id, &entry.version, &entry.allowed_hosts)
 }
 
-/// Where two descriptions of the same plugin disagree, if they do.
+/// Where two descriptions of the same plugin disagree, if they do: what a plugin's manifest
+/// section says against what the plugin says when asked.
+pub fn disagrees(carried: &PluginInfo, asked: &PluginInfo) -> Option<String> {
+    if carried.kind() != asked.kind() {
+        return Some(format!(
+            "it says it is a source of {} but is a source of {}",
+            carried.kind(),
+            asked.kind()
+        ));
+    }
+    differs(carried, &asked.id, &asked.version, &asked.allowed_hosts)
+}
+
+/// Where two descriptions of the same plugin disagree on id, version or hosts, if they do.
 pub fn differs(info: &PluginInfo, id: &str, version: &str, hosts: &[String]) -> Option<String> {
     if info.id != id {
         return Some(format!("the plugin calls itself {} but the store lists {id}", info.id));
@@ -55,6 +78,20 @@ pub mod fake {
 
     use super::*;
 
+    /// Bytes standing in for a book source: the JSON of a manifest with its kind and media.
+    pub fn book_plugin(id: &str, version: &str, hosts: &[&str], media: &[&str]) -> Vec<u8> {
+        serde_json::json!({
+            "id": id,
+            "name": format!("{id} plugin"),
+            "version": version,
+            "hosts": hosts,
+            "kind": "books",
+            "media": media,
+        })
+        .to_string()
+        .into_bytes()
+    }
+
     /// Bytes standing in for a component: the JSON of a manifest.
     pub fn plugin(id: &str, version: &str, hosts: &[&str]) -> Vec<u8> {
         serde_json::json!({
@@ -76,15 +113,21 @@ pub mod fake {
             let value: serde_json::Value =
                 serde_json::from_slice(wasm).map_err(|_| "not a plugin".to_owned())?;
             let text = |key: &str| value[key].as_str().unwrap_or_default().to_owned();
+            let list = |key: &str| -> Vec<String> {
+                value[key]
+                    .as_array()
+                    .map(|a| a.iter().filter_map(|h| h.as_str().map(str::to_owned)).collect())
+                    .unwrap_or_default()
+            };
+            let kind = value["kind"].as_str().map(str::to_owned);
             Ok(PluginInfo {
                 id: text("id"),
                 name: text("name"),
                 version: text("version"),
-                allowed_hosts: value["hosts"]
-                    .as_array()
-                    .map(|a| a.iter().filter_map(|h| h.as_str().map(str::to_owned)).collect())
-                    .unwrap_or_default(),
-                translations: vec!["sub".into()],
+                allowed_hosts: list("hosts"),
+                translations: if kind.is_some() { Vec::new() } else { vec!["sub".into()] },
+                media: list("media"),
+                kind,
             })
         }
     }
@@ -104,6 +147,8 @@ mod tests {
             sha256: String::new(),
             size: 0,
             published_at: 0,
+            kind: None,
+            media: Vec::new(),
         }
     }
 
@@ -114,6 +159,8 @@ mod tests {
             version: version.into(),
             allowed_hosts: hosts.iter().map(|h| (*h).to_owned()).collect(),
             translations: Vec::new(),
+            kind: None,
+            media: Vec::new(),
         }
     }
 
@@ -132,6 +179,21 @@ mod tests {
         let found =
             mismatch(&info("example", "1.0.0", &["api.example", "else.example"]), &listed);
         assert!(found.unwrap().contains("else.example"));
+    }
+
+    #[test]
+    fn a_book_source_listed_as_a_show_source_is_a_mismatch() {
+        // What a store from before book sources would list, reading only the section's id,
+        // version and hosts.
+        let listed = entry(&["api.example"]);
+        let books = PluginInfo {
+            kind: Some("books".into()),
+            ..info("example", "1.0.0", &["api.example"])
+        };
+        assert!(mismatch(&books, &listed).unwrap().contains("books"));
+        let listed = IndexEntry { kind: Some("books".into()), ..listed };
+        assert_eq!(mismatch(&books, &listed), None);
+        assert!(mismatch(&info("example", "1.0.0", &["api.example"]), &listed).is_some());
     }
 
     #[test]

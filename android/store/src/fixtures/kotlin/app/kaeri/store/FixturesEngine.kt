@@ -60,6 +60,22 @@ private fun FixtureScene.ffi(): FfiScene = when (this) {
     FixtureScene.SYNC_CLOUD -> FfiScene.SyncCloud
     FixtureScene.SYNC_TV_PHONE_SIGN_IN -> FfiScene.SyncTvPhoneSignIn
     FixtureScene.PROFILES -> FfiScene.Profiles
+    FixtureScene.READING_FIRST_RUN -> FfiScene.ReadingFirstRun
+    FixtureScene.READING_DEMO -> FfiScene.ReadingDemo
+    FixtureScene.READING_UPDATE_SHEET -> FfiScene.ReadingUpdateSheet
+    FixtureScene.READING_JOIN_ASK -> FfiScene.ReadingJoinAsk
+    FixtureScene.READING_HOME -> FfiScene.ReadingHome
+    FixtureScene.READING_SERIES -> FfiScene.ReadingSeries
+    FixtureScene.READING_DOWNLOADS -> FfiScene.ReadingDownloads
+    FixtureScene.READER_MANGA_RTL -> FfiScene.ReaderMangaRtl
+    FixtureScene.READER_STRIP -> FfiScene.ReaderStrip
+    FixtureScene.READER_NOVEL -> FfiScene.ReaderNovel
+    FixtureScene.READER_MOVED -> FfiScene.ReaderMoved
+    FixtureScene.READER_LONG -> FfiScene.ReaderLong
+    FixtureScene.EINK_GREY -> FfiScene.EinkGrey
+    FixtureScene.EINK_KALEIDO_UNSURE -> FfiScene.EinkKaleidoUnsure
+    FixtureScene.EINK_LONG -> FfiScene.EinkLong
+    FixtureScene.READING_DARK -> FfiScene.ReadingDark
 }
 
 /** What the Playing scene streams, and Watching's when set: the fixtures' `media` extra, set at launch. */

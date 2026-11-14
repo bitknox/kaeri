@@ -141,6 +141,9 @@ class BoardShots {
     @Test
     @Config(qualifiers = PHONE)
     fun phone_first_launch_join() = shoot("phone-first-launch-join", FRESH, firstLaunch = true) {
+        // Welcome, then the join page's first way in.
+        open("Continue")
+        compose.waitForIdle()
         open("Set up from another device")
         kotlinx.coroutines.runBlocking { app.kaeri.store.FixtureSync.stage(it, "first-ok-join") }
     }
@@ -290,12 +293,19 @@ class BoardShots {
 
     @Test
     @Config(qualifiers = PHONE)
-    fun phone_first_launch_anilist() = shoot("phone-first-launch-anilist", FRESH, firstLaunch = true) { open("Continue") }
+    fun phone_first_launch_anilist() = shoot("phone-first-launch-anilist", FRESH, firstLaunch = true) {
+        open("Continue")
+        compose.mainClock.advanceTimeBy(1_000)
+        open("No, start here")
+    }
 
     @Test
     @Config(qualifiers = PHONE)
     fun phone_first_launch_sources() = shoot("phone-first-launch-sources", FRESH, firstLaunch = true) {
         open("Continue")
+        compose.mainClock.advanceTimeBy(1_000)
+        // Page 2 asks about another device first.
+        open("No, start here")
         compose.mainClock.advanceTimeBy(1_000)
         open("Not now")
     }
@@ -467,10 +477,20 @@ class BoardShots {
     @Config(qualifiers = TABLET, fontScale = 2.0f)
     fun tablet_home_large_text() = shoot("tablet-home-large-text", WATCHING)
 
-    /** Watching on a tablet is the same poster grid as the other lists. */
+    /**
+     * Watching on a tablet is the same poster grid as the other lists. Accounts and settings is on
+     * the rail alone, as on the other tabs, not again in the bar.
+     */
     @Test
     @Config(qualifiers = TABLET)
-    fun tablet_library() = shoot("tablet-library", WATCHING, start = Destination.Library)
+    fun tablet_library() {
+        shoot("tablet-library", WATCHING, start = Destination.Library)
+        val account = SemanticsMatcher("names accounts and settings") { node ->
+            node.config.getOrNull(androidx.compose.ui.semantics.SemanticsProperties.ContentDescription).orEmpty()
+                .any { it.contains("accounts and settings", ignoreCase = true) }
+        }
+        compose.onAllNodes(account, useUnmergedTree = true).assertCountEquals(1)
+    }
 
     @Test
     @Config(qualifiers = TABLET)

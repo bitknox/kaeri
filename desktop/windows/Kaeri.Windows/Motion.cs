@@ -103,6 +103,23 @@ static class Motion
     }
 
     /// <summary>
+    /// <see cref="FadeIn"/>, then <paramref name="done"/> once the element is fully on screen
+    /// (unless another fade took over), whether or not animation effects are on.
+    /// </summary>
+    public static void FadeInThen(UIElement element, Action done)
+    {
+        element.Visibility = Visibility.Visible;
+        Fade(element, 0, 1, FadeInTime, Curve.FadeIn, done);
+    }
+
+    /// <summary>
+    /// A fade out on the fade-out token, then <paramref name="done"/>, whether or not animation
+    /// effects are on: a state leaving over what is under it.
+    /// </summary>
+    public static void FadeOutThen(UIElement element, Action done) =>
+        Fade(element, element.Opacity, 0, FadeOutTime, Curve.FadeOut, done);
+
+    /// <summary>
     /// A trailer's video fading in over the banner (fade-in) or away again (fade-out), from where
     /// it stands. <paramref name="done"/> runs when the fade ends, unless another took over.
     /// </summary>

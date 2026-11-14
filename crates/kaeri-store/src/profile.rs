@@ -45,6 +45,24 @@ pub const PERSONAL_TABLES: &[&str] = &[
     "sync_peer",
     "sync_remote_download",
     "sync_note",
+    "read_event",
+    "read_adopt",
+    "read_reset",
+    "read_chapter",
+    "read_work",
+    "read_series_setting",
+    "read_status",
+    "read_bookmark",
+    "read_sent",
+    "read_outbox",
+    "read_track_map",
+    "read_notice",
+    "read_mark",
+    "read_unread",
+    "read_note",
+    "book_source_match",
+    "book_edition_pref",
+    "book_credit_keep",
 ];
 
 /// Tables that belong to the device and are shared by every profile.
@@ -66,6 +84,18 @@ pub const DEVICE_TABLES: &[&str] = &[
     "skip_prints",
     "skip_found",
     "skip_found_show",
+    "book_work",
+    "book_rhythm",
+    "book_chapter_cache",
+    "book_series_hint",
+    "book_folder",
+    "book_local_series",
+    "book_local_file",
+    "book_server",
+    "book_download",
+    "book_progress_outbox",
+    "book_progress_state",
+    "book_page_print",
 ];
 
 const FILE: &str = "profiles.json";
@@ -359,7 +389,7 @@ fn promote(main: &Path, from: &Path) -> Result<()> {
     schema::migrate(&conn)?;
     conn.execute("ATTACH DATABASE ?1 AS promoted", [from.to_string_lossy().as_ref()])?;
     let copied = (|| -> rusqlite::Result<()> {
-        let tx = conn.transaction()?;
+        let tx = crate::write_tx(&mut conn)?;
         for table in PERSONAL_TABLES {
             tx.execute(&format!("DELETE FROM main.{table}"), [])?;
             tx.execute(

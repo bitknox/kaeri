@@ -70,4 +70,4 @@ servers-needs-look = AniListと照合できていない作品: { $count }件
 servers-kind-films = 映画
 servers-error-certificate = { $host }は、この{ -device }が信頼していない証明書を使っています。信頼される証明書を持つ https:// のアドレスを使ってください。
 servers-row-signed-out-here = サインアウト済み
-servers-sign-out-line = この{ -device }のサーバーへのサインインを終了します。サーバーとダウンロードはそのまま残ります。
+servers-sign-out-line = サインアウトすると、この{ -device }のサーバー上のセッションが終了します。サーバーとダウンロードはそのまま残ります。

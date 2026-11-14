@@ -12,12 +12,12 @@ pad-help-next-section = Próxima seção
 pad-help-page-up = Subir uma página
 pad-help-page-down = Descer uma página
 pad-help-seek-back = { $seconds ->
-    [one] Voltar um segundo
+    [one] Voltar { $seconds } segundo
     [many] Voltar { $seconds } segundos
    *[other] Voltar { $seconds } segundos
  }
 pad-help-seek-forward = { $seconds ->
-    [one] Avançar um segundo
+    [one] Avançar { $seconds } segundo
     [many] Avançar { $seconds } segundos
    *[other] Avançar { $seconds } segundos
  }
@@ -45,3 +45,10 @@ pad-button-menu = Menu
 pad-button-view = Visualização
 pad-button-left-stick = Analógico esquerdo
 pad-button-right-stick = Analógico direito
+pad-help-turn-page = Virar a página
+pad-help-previous-chapter = Capítulo anterior
+pad-help-next-chapter = Capítulo seguinte
+pad-help-reader-bar = Mostrar ou ocultar a barra
+pad-help-reader-settings = Ajustes do leitor
+pad-help-close-reader = Fechar o leitor
+pad-help-reader = Leitor

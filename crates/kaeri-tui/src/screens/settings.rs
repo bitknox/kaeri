@@ -5,6 +5,7 @@ use ratatui::{buffer::Buffer, layout::Rect, style::Modifier, widgets::Widget};
 
 use crate::{
     app::App,
+    keymap::Action,
     theme::{Role, glyph},
     widgets::{Cells, Hairline, truncate, wrap},
 };
@@ -19,6 +20,8 @@ use super::chrome::mark_selected;
 /// One visual line of the Settings screen: rows grouped under category headings.
 enum SettingsLine {
     Blank,
+    /// What Kaeri is for on this computer, above the groups. Not a row the cursor stops on.
+    Medium,
     /// Category name at text weight, ruled to the right edge — the calendar's grammar.
     Heading(String),
     Row(usize),
@@ -36,7 +39,11 @@ pub(super) fn render_settings(buf: &mut Buffer, app: &App, area: Rect) {
     // Lay the list out as lines first: a heading every time the category changes. This is
     // a visual split, not tabs — Up/Down walk straight through every group, and Left/Right
     // keep cycling the selected value.
-    let mut lines = Vec::with_capacity(rows.len() + 12);
+    let mut lines = Vec::with_capacity(rows.len() + 14);
+    if app.medium_changeable() {
+        lines.push(SettingsLine::Medium);
+        lines.push(SettingsLine::Blank);
+    }
     let mut category = "";
     for (i, row) in rows.iter().enumerate() {
         if row.category != category {
@@ -78,6 +85,35 @@ pub(super) fn render_settings(buf: &mut Buffer, app: &App, area: Rect) {
         let y = area.top() + slot as u16;
         match line {
             SettingsLine::Blank => {}
+            SettingsLine::Medium => {
+                let answer = app.medium.as_ref().map_or_else(String::new, |view| {
+                    crate::app::medium::answer_words(view.answer)
+                });
+                buf.set_string(
+                    area.left() + 2,
+                    y,
+                    truncate(
+                        &kaeri_i18n::t::settings_kaeri_is_for(),
+                        (value_x - area.left()).saturating_sub(3) as usize,
+                    ),
+                    app.palette.style(Role::TextDim),
+                );
+                let room = area.right().saturating_sub(value_x) as usize;
+                let hint =
+                    kaeri_i18n::t::tui_medium_settings_hint(&app.key_for(Action::ChooseMedium));
+                let value = truncate(&answer, room);
+                buf.set_string(value_x, y, &value, app.palette.style(Role::Text));
+                let hint_x = value_x + value.cells() as u16 + 2;
+                let left = area.right().saturating_sub(hint_x) as usize;
+                if left > 0 {
+                    buf.set_string(
+                        hint_x,
+                        y,
+                        truncate(&hint, left),
+                        app.palette.style(Role::TextDim),
+                    );
+                }
+            }
             SettingsLine::Heading(name) => {
                 // Label at full text weight with the hairline running to the edge — the
                 // dim caps of the first cut sat at the same weight as a read-only value

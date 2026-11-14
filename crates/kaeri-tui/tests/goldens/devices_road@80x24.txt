@@ -10,8 +10,8 @@ Kaeri                                                  plugins ●  ·  anilist 
     else.
 
   Through a cloud folder
-    A cloud drive you already use, or your own server. Works while your
-    devices are apart, and keeps a backup.
+    A cloud drive you already use, or your own server. It works while your
+    devices are apart and keeps a backup.
 
   You can add the other way later. Most people use both.
 
@@ -54,11 +54,11 @@ r11 c00-01 fg=rule bg=ground
 r11 c02-23 fg=text bg=ground
 r11 c24-79 fg=rule bg=ground
 r12 c00-01 fg=rule bg=ground
-r12 c02-70 fg=text-dim bg=ground
-r12 c71-79 fg=rule bg=ground
+r12 c02-73 fg=text-dim bg=ground
+r12 c74-79 fg=rule bg=ground
 r13 c00-01 fg=rule bg=ground
-r13 c02-41 fg=text-dim bg=ground
-r13 c42-79 fg=rule bg=ground
+r13 c02-40 fg=text-dim bg=ground
+r13 c41-79 fg=rule bg=ground
 r14 c00-79 fg=rule bg=ground
 r15 c00-01 fg=rule bg=ground
 r15 c02-55 fg=text-dim bg=ground

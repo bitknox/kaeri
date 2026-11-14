@@ -1,7 +1,7 @@
 episode-short-dubbed = E{ $episode } · { -dubbed-cap }
 episode-long-dubbed = Episódio { $episode } · { -dubbed-cap }
 downloads-live-paused = { $count ->
-    [one] Um episódio pausado
+    [one] { $count } episódio pausado
     [many] { $count } episódios pausados
    *[other] { $count } episódios pausados
  }
@@ -22,14 +22,14 @@ settings-coming-up-switched-off = { $count ->
     [many] { $names } estão desativados nas próprias configurações.
    *[other] { $names } estão desativados nas próprias configurações.
  }
-settings-coming-up-opens = Um título abre as suas configurações.
+settings-coming-up-opens = Toque em um título para abrir as configurações dele.
 torrents-proxy-as = como { $user }
 title-facts-aired = Exibido em { $dates }
 title-facts-airing = Em exibição desde { $date }
 title-facts-airs = Estreia em { $date }
 media-dates-range = { $from } a { $to }
 title-also-on-more = { $more ->
-    [one] { $first } e mais um
+    [one] { $first } e mais { $more }
     [many] { $first } e mais { $more }
    *[other] { $first } e mais { $more }
  }
@@ -41,7 +41,7 @@ downloads-rate = { $size }/s
 downloads-uploaded = { $size } enviados
 downloads-ratio-of = { $ratio } de { $goal }
 downloads-group-summary = { $count ->
-    [one] Um episódio · { $size }
+    [one] { $count } episódio · { $size }
     [many] { $count } episódios · { $size }
    *[other] { $count } episódios · { $size }
  }
@@ -60,17 +60,17 @@ updates-closes-as-installs = { -app-name } fecha enquanto instala
 updates-open-release = Abrir página
 country-korea = Coreia do Sul
 search-genres-picked = { $count ->
-    [one] Um gênero
+    [one] { $count } gênero
     [many] { $count } gêneros
    *[other] { $count } gêneros
  }
 search-formats-picked = { $count ->
-    [one] Um formato
+    [one] { $count } formato
     [many] { $count } formatos
    *[other] { $count } formatos
  }
 search-statuses-picked = { $count ->
-    [one] Um status
+    [one] { $count } status
     [many] { $count } status
    *[other] { $count } status
  }
@@ -99,7 +99,7 @@ reason-source-turned-away = Recusou o pedido.
 reason-source-no-address = Não foi possível encontrar o endereço dela.
 reason-source-unreachable = Não foi possível conectar-se a ela.
 stores-updates-waiting = { $count ->
-    [one] Uma atualização
+    [one] { $count } atualização
     [many] { $count } atualizações
    *[other] { $count } atualizações
  }
@@ -119,7 +119,7 @@ accounts-signed-in-plain = Conectado
 settings-summary-notify-on = Novos episódios ativados
 settings-summary-notify-off = Novos episódios desativados
 settings-summary-sources = { $count ->
-    [one] Uma { -source }
+    [one] { $count } { -source }
     [many] { $count } { -source-pl }
    *[other] { $count } { -source-pl }
  }
@@ -147,16 +147,16 @@ settings-titles-note-english-missing = { $title } não tem título em inglês no
 settings-titles-note-english = Títulos em inglês como o AniList os lista, e romaji quando não houver.
 settings-titles-note-romaji = Títulos japoneses em letras latinas, como o AniList os lista.
 settings-stores-with-updates = { $stores } · { $updates }
-settings-seeding-best-effort = Melhor esforço neste { -device }: o compartilhamento só funciona enquanto o { -app-name } estiver aberto.
+settings-seeding-best-effort = Este { -device } só compartilha enquanto o { -app-name } estiver aberto.
 settings-downloads-count = { $count ->
-    [one] Um episódio
+    [one] { $count } episódio
     [many] { $count } episódios
    *[other] { $count } episódios
  }
 settings-anilist-footer = O progresso e as mudanças na lista são sincronizados com o AniList. { -library-cap } mostra suas listas do AniList.
 accounts-sign-in-again-button = Entrar de novo
 accounts-review-differences = { $count ->
-    [one] Revisar uma diferença
+    [one] Revisar { $count } diferença
     [many] Revisar { $count } diferenças
    *[other] Revisar { $count } diferenças
  }
@@ -166,7 +166,7 @@ settings-typefaces-value = Roboto Flex e Zen Kaku Gothic New, sob a SIL Open Fon
 settings-libraries-value = JNA e AndroidX, sob a Apache License 2.0
 settings-report-bug-value = Abre o GitHub no seu navegador
 downloads-storage-share-description = Os downloads ocupam { $size }
-settings-aside-notifications = Uma notificação quando sai um episódio de um título que você acompanha: o título e o número do episódio, nunca o nome dele. Um título pode desativar as próprias notificações nas configurações dele.
+settings-aside-notifications = Uma notificação quando sai um episódio de um título que você acompanha: o título e o número do episódio, nunca o nome dele. Você pode desativar as notificações de um título nas configurações dele.
 settings-aside-downloads = Os downloads ficam no espaço próprio do { -app-name } neste { -device }, que outros apps não conseguem ler. Remover o app remove também os downloads.
 settings-aside-sources = { -source-cap-pl } são testadas em ordem, de cima para baixo. Um título pode manter a própria { -source }, escolhida na página dele.
 settings-upscaling-description = A mesma imagem: a metade esquerda em 480p original, a direita com { $mode }
@@ -220,7 +220,7 @@ player-sheet-none = Nenhuma { -source } encontrada para este episódio.
 player-sheet-episodes-loading = A lista de episódios está a caminho.
 player-dual-audio = { -subbed-cap } e { -dubbed }
 notif-new-episodes = { $count ->
-    [one] Um episódio novo
+    [one] { $count } episódio novo
     [many] { $count } episódios novos
    *[other] { $count } episódios novos
  }

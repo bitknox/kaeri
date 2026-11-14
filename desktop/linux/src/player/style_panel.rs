@@ -79,8 +79,8 @@ pub fn button(ctx: &Rc<Ctx>) -> gtk::MenuButton {
     let more = gtk::Button::with_label(&t::player_subs_more());
     more.add_css_class("flat");
     more.set_halign(gtk::Align::Start);
-    more.set_action_name(Some("win.settings-pane"));
     more.set_action_target_value(Some(&"playback".to_variant()));
+    more.set_action_name(Some("win.settings-pane"));
     let reset = gtk::Button::with_label(&t::settings_subs_reset());
     reset.add_css_class("flat");
     reset.set_halign(gtk::Align::End);

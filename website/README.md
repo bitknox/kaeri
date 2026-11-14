@@ -1,49 +1,41 @@
-# Starlight Starter Kit: Basics
+# Kaeri website
 
-[![Built with Starlight](https://astro.badg.es/v2/built-with-starlight/tiny.svg)](https://starlight.astro.build)
+The site at [kaeri.app](https://kaeri.app): the home, features, download and legal pages, and the
+docs. It is built with Astro and Starlight, and it uses Bun with the committed `bun.lock`.
 
-```
-npm create astro@latest -- --template starlight
-```
-
-> 🧑‍🚀 **Seasoned astronaut?** Delete this file. Have fun!
-
-## 🚀 Project Structure
-
-Inside of your Astro + Starlight project, you'll see the following folders and files:
+## Layout
 
 ```
 .
-├── public/
+├── public/                 static files, served as they are
+├── scripts/                app shots, feature videos, icons and the pseudo-locale build
 ├── src/
-│   ├── assets/
+│   ├── components/         page sections and the Starlight overrides
 │   ├── content/
-│   │   └── docs/
-│   └── content.config.ts
+│   │   ├── docs/docs/      the docs, one Markdown or MDX file per page
+│   │   ├── i18n/en.json    the site's own strings
+│   │   └── legal/          the legal page
+│   ├── data/               the feature matrix, screenshot and video lists, site and version data
+│   ├── pages/              home, features, download, legal and 404
+│   └── styles/
 ├── astro.config.mjs
-├── package.json
-└── tsconfig.json
+└── package.json
 ```
 
-Starlight looks for `.md` or `.mdx` files in the `src/content/docs/` directory. Each file is exposed as a route based on its file name.
+Starlight turns each file under `src/content/docs/` into a route named after its path. Images
+can go in `src/assets/` and be linked relatively from Markdown.
 
-Images can be added to `src/assets/` and embedded in Markdown with a relative link.
+## Commands
 
-Static assets, like favicons, can be placed in the `public/` directory.
+Run these from `website/`:
 
-## 🧞 Commands
+| Command                          | What it does                                 |
+| :------------------------------- | :------------------------------------------- |
+| `bun install --frozen-lockfile`  | Installs the locked dependencies             |
+| `bun run dev`                    | Starts the dev server at `localhost:4321`    |
+| `bun run build`                  | Builds the site into `./dist/`               |
+| `bun run preview`                | Serves the production build locally          |
+| `bun run test`                   | Runs the unit tests under `src/`             |
+| `bun run build:pseudo`           | Builds a pseudo-locale copy to check strings |
 
-All commands are run from the root of the project, from a terminal:
-
-| Command                   | Action                                           |
-| :------------------------ | :----------------------------------------------- |
-| `npm install`             | Installs dependencies                            |
-| `npm run dev`             | Starts local dev server at `localhost:4321`      |
-| `npm run build`           | Build your production site to `./dist/`          |
-| `npm run preview`         | Preview your build locally, before deploying     |
-| `npm run astro ...`       | Run CLI commands like `astro add`, `astro check` |
-| `npm run astro -- --help` | Get help using the Astro CLI                     |
-
-## 👀 Want to learn more?
-
-Check out [Starlight’s docs](https://starlight.astro.build/), read [the Astro documentation](https://docs.astro.build), or jump into the [Astro Discord server](https://astro.build/chat).
+The copy follows [docs/writing.md](../docs/writing.md).

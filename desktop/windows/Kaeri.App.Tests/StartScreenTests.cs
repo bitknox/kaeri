@@ -37,6 +37,16 @@ public class StartScreenTests
     }
 
     [Fact]
+    public void APassedOverPinIsOnTheDetailLineOnceTheStreamsAreFound()
+    {
+        var start = Start(null);
+        Asking(start, "Alpha", 1, 3, Ms(700), pinned: true);
+        start.Step(new StartStep.PinMissed("Alpha"), null, Ms(2000));
+        Found(start, "Gamma", Ms(2000));
+        Assert.Contains("Alpha doesn't have episode 7 yet. Playing from the next source.", start.Frame(Ms(3000)).Detail);
+    }
+
+    [Fact]
     public void AStepAfterTheHoldShowsAtOnce()
     {
         var start = Start();

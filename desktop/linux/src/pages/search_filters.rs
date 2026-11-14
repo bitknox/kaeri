@@ -17,7 +17,10 @@ use kaeri_model::{
     },
 };
 
-use crate::say;
+use crate::{
+    say,
+    window::{Ctx, Size},
+};
 
 /// AniList's genres, until the engine says which it offers.
 const GENRES: [&str; 16] = [
@@ -70,7 +73,7 @@ pub struct Filters {
 }
 
 /// A menu button of the row: flat until it holds a choice.
-fn menu_button(label: &str) -> gtk::MenuButton {
+pub fn menu_button(label: &str) -> gtk::MenuButton {
     let button = gtk::MenuButton::builder().label(label).always_show_arrow(true).build();
     button.add_css_class("flat");
     button.add_css_class("filter");
@@ -85,32 +88,13 @@ impl Filters {
         let available = menu_button(&t::filter_linux_available());
         let format = menu_button(&t::filter_format());
         let status = menu_button(&t::filter_status());
-        let sort_label = gtk::Label::new(None);
-        let sort_line = gtk::Box::new(gtk::Orientation::Horizontal, 6);
-        sort_line.append(&gtk::Image::from_icon_name("view-sort-descending-symbolic"));
-        sort_line.append(&sort_label);
-        let sort = gtk::MenuButton::builder().child(&sort_line).always_show_arrow(true).build();
-        sort.add_css_class("flat");
-        sort.add_css_class("filter");
-
+        let (sort, sort_label) = sort_button();
         let capsules = gtk::Box::new(gtk::Orientation::Horizontal, 6);
         for button in [&genres, &year, &season, &available, &format, &status] {
             capsules.append(button);
         }
-        let row = gtk::Box::new(gtk::Orientation::Horizontal, 6);
-        row.set_margin_start(12);
-        row.set_margin_end(12);
-        row.append(&faded_scroll(&capsules));
-        row.append(&sort);
-
-        let chips = adw::WrapBox::builder()
-            .child_spacing(6)
-            .line_spacing(6)
-            .halign(gtk::Align::Start)
-            .build();
-        chips.set_margin_start(18);
-        chips.set_margin_end(18);
-        chips.set_visible(false);
+        let row = filter_row(&capsules, &sort);
+        let chips = chips_box();
 
         let actions = gio::SimpleActionGroup::new();
         row.insert_action_group("filter", Some(&actions));
@@ -273,7 +257,7 @@ impl Filters {
                 let had_focus = filters.chips.focus_child().is_some();
                 filters.edit(|q| q.without(&key));
                 if had_focus {
-                    filters.focus_chip(at as usize);
+                    focus_chip(&filters.chips, at as usize, &filters.genres);
                 }
             }
         });
@@ -529,73 +513,162 @@ impl Filters {
         };
         self.sort_label.set_label(&named);
         self.sort.set_tooltip_text(Some(&t::sort_label(&named)));
-        if query.sort.is_some() {
-            self.sort.remove_css_class("flat");
-        } else {
-            self.sort.add_css_class("flat");
-        }
-    }
-
-    fn focus_chip(&self, at: usize) {
-        let mut chips = Vec::new();
-        let mut child = self.chips.first_child();
-        while let Some(c) = child {
-            child = c.next_sibling();
-            chips.push(c);
-        }
-        let target = chips.get(at).or_else(|| at.checked_sub(1).and_then(|i| chips.get(i)));
-        match target {
-            Some(chip) => {
-                chip.grab_focus();
-            }
-            None => {
-                self.genres.grab_focus();
-            }
-        }
+        mark_set(&self.sort, query.sort.is_some());
     }
 
     fn show_chips(&self, active: &[ActiveFilter]) {
         let query = self.query.borrow().clone();
-        while let Some(child) = self.chips.first_child() {
-            self.chips.remove(&child);
-        }
-        for (at, filter) in active.iter().enumerate() {
-            let line = gtk::Box::new(gtk::Orientation::Horizontal, 6);
-            let label = gtk::Label::new(Some(&chip_label(&query, filter)));
-            label.set_ellipsize(gtk::pango::EllipsizeMode::End);
-            label.set_max_width_chars(28);
-            line.append(&label);
-            line.append(&gtk::Image::from_icon_name("window-close-symbolic"));
-            let chip = gtk::Button::builder().child(&line).build();
-            chip.add_css_class("pill");
-            chip.add_css_class("filter-chip");
-            chip.set_halign(gtk::Align::Start);
-            chip.set_tooltip_text(Some(&t::filter_remove(&chip_label(&query, filter))));
-            chip.update_property(&[gtk::accessible::Property::Label(&t::filter_remove(
-                &chip_label(&query, filter),
-            ))]);
-            chip.set_action_name(Some("filter.remove"));
-            chip.set_action_target_value(Some(&(at as u32).to_variant()));
-            self.chips.append(&chip);
-        }
-        if active.len() > 1 {
-            let clear = gtk::Button::with_label(&t::filter_linux_clear_all());
-            clear.add_css_class("flat");
-            clear.set_halign(gtk::Align::Start);
-            clear.set_action_name(Some("filter.clear"));
-            self.chips.append(&clear);
-        }
-        self.chips.set_visible(!active.is_empty());
+        let labels: Vec<String> = active.iter().map(|f| chip_label(&query, f)).collect();
+        show_chips(&self.chips, &labels, "filter.remove", "filter.clear");
     }
 }
 
 /// A button's words, and whether it holds a choice: flat until it does.
-fn set_label(button: &gtk::MenuButton, label: &str, set: bool) {
+pub fn set_label(button: &gtk::MenuButton, label: &str, set: bool) {
     button.set_label(label);
+    mark_set(button, set);
+}
+
+/// A capsule of the row, flat until it holds a choice.
+pub fn mark_set(widget: &impl IsA<gtk::Widget>, set: bool) {
     if set {
-        button.remove_css_class("flat");
+        widget.remove_css_class("flat");
     } else {
-        button.add_css_class("flat");
+        widget.add_css_class("flat");
+    }
+}
+
+/// The sort at the row's end: its glyph, the order's name and the arrow. Returns the button and
+/// the label that names the order.
+pub fn sort_button() -> (gtk::MenuButton, gtk::Label) {
+    let label = gtk::Label::new(None);
+    // Whole where there is room; a narrow window at a large text size shortens it rather than
+    // pushing the row past the edge.
+    label.set_ellipsize(gtk::pango::EllipsizeMode::End);
+    let line = gtk::Box::new(gtk::Orientation::Horizontal, 6);
+    line.append(&gtk::Image::from_icon_name("view-sort-descending-symbolic"));
+    line.append(&label);
+    let sort = gtk::MenuButton::builder().child(&line).always_show_arrow(true).build();
+    sort.add_css_class("flat");
+    sort.add_css_class("filter");
+    (sort, label)
+}
+
+/// The row under the field: `capsules` scrolling sideways, then the sort at its end.
+pub fn filter_row(capsules: &gtk::Box, sort: &gtk::MenuButton) -> gtk::Box {
+    let row = gtk::Box::new(gtk::Orientation::Horizontal, 6);
+    row.set_margin_start(12);
+    row.set_margin_end(12);
+    row.append(&faded_scroll(capsules));
+    row.append(sort);
+    row
+}
+
+/// The row with Shows or Reading at its start, where Library has it. A narrow window can't fit
+/// the two with the sort beside the filters, so there it sits on a line of its own over them.
+pub fn with_scope(ctx: &Rc<Ctx>, row: &gtk::Box, scope: &gtk::Widget) -> gtk::Box {
+    let holder = gtk::Box::new(gtk::Orientation::Vertical, 0);
+    let line = gtk::Box::new(gtk::Orientation::Horizontal, 0);
+    line.set_margin_start(12);
+    line.set_margin_end(12);
+    holder.append(&line);
+    holder.append(row);
+    row.prepend(scope);
+    ctx.on_size({
+        let (line, row, scope) = (line.downgrade(), row.downgrade(), scope.downgrade());
+        move |size| {
+            if let (Some(line), Some(row), Some(scope)) =
+                (line.upgrade(), row.upgrade(), scope.upgrade())
+            {
+                lay_scope(&line, &row, &scope, size);
+            }
+        }
+    });
+    holder
+}
+
+/// Shows or Reading in `row`, or on `line` over it in a narrow window.
+fn lay_scope(line: &gtk::Box, row: &gtk::Box, scope: &gtk::Widget, size: Size) {
+    let narrow = size == Size::Narrow;
+    let on_line = scope.parent().as_ref() == Some(line.upcast_ref());
+    if narrow && !on_line {
+        row.remove(scope);
+        line.append(scope);
+        // Under it, the row's own gap; hidden with it when only one medium is on.
+        scope.set_margin_bottom(6);
+    } else if !narrow && on_line {
+        line.remove(scope);
+        row.prepend(scope);
+        scope.set_margin_bottom(0);
+    }
+}
+
+/// Where the set filters stand as chips, under the row.
+pub fn chips_box() -> adw::WrapBox {
+    let chips = adw::WrapBox::builder()
+        .child_spacing(6)
+        .line_spacing(6)
+        .halign(gtk::Align::Start)
+        .build();
+    chips.set_margin_start(18);
+    chips.set_margin_end(18);
+    chips.set_visible(false);
+    chips
+}
+
+/// One set filter as a chip: its words and a cross, taken off by `action` with its index `at`.
+pub fn chip(label: &str, action: &str, at: u32) -> gtk::Button {
+    let line = gtk::Box::new(gtk::Orientation::Horizontal, 6);
+    let words = gtk::Label::new(Some(label));
+    words.set_ellipsize(gtk::pango::EllipsizeMode::End);
+    words.set_max_width_chars(28);
+    line.append(&words);
+    line.append(&gtk::Image::from_icon_name("window-close-symbolic"));
+    let chip = gtk::Button::builder().child(&line).build();
+    chip.add_css_class("pill");
+    chip.add_css_class("filter-chip");
+    chip.set_halign(gtk::Align::Start);
+    chip.set_tooltip_text(Some(&t::filter_remove(label)));
+    chip.update_property(&[gtk::accessible::Property::Label(&t::filter_remove(label))]);
+    chip.set_action_target_value(Some(&at.to_variant()));
+    chip.set_action_name(Some(action));
+    chip
+}
+
+/// The chips for `labels`, then Clear all when more than one is set.
+pub fn show_chips(chips: &adw::WrapBox, labels: &[String], remove: &str, clear: &str) {
+    while let Some(child) = chips.first_child() {
+        chips.remove(&child);
+    }
+    for (at, label) in labels.iter().enumerate() {
+        chips.append(&chip(label, remove, at as u32));
+    }
+    if labels.len() > 1 {
+        let all = gtk::Button::with_label(&t::filter_linux_clear_all());
+        all.add_css_class("flat");
+        all.set_halign(gtk::Align::Start);
+        all.set_action_name(Some(clear));
+        chips.append(&all);
+    }
+    chips.set_visible(!labels.is_empty());
+}
+
+/// A chip removed from the keyboard hands focus on: to the chip that takes its place, else the
+/// one before, else `first`.
+pub fn focus_chip(chips: &adw::WrapBox, at: usize, first: &impl IsA<gtk::Widget>) {
+    let mut all = Vec::new();
+    let mut child = chips.first_child();
+    while let Some(c) = child {
+        child = c.next_sibling();
+        all.push(c);
+    }
+    match all.get(at).or_else(|| at.checked_sub(1).and_then(|i| all.get(i))) {
+        Some(chip) => {
+            chip.grab_focus();
+        }
+        None => {
+            first.as_ref().grab_focus();
+        }
     }
 }
 
@@ -683,7 +756,7 @@ fn this_year() -> u32 {
 /// The menu buttons in a row that scrolls sideways, as the Mac draws it: the edge faded where
 /// more of it goes on, with an arrow there that scrolls to it, so a narrow window shows there is
 /// more to reach.
-fn faded_scroll(capsules: &gtk::Box) -> gtk::Overlay {
+pub fn faded_scroll(capsules: &gtk::Box) -> gtk::Overlay {
     let scroll = gtk::ScrolledWindow::builder()
         .hscrollbar_policy(gtk::PolicyType::External)
         .vscrollbar_policy(gtk::PolicyType::Never)
@@ -707,8 +780,9 @@ fn faded_scroll(capsules: &gtk::Box) -> gtk::Overlay {
         arrow.set_tooltip_text(Some(tip));
         // The row's buttons take the keyboard on their own: the arrow is for the pointer.
         arrow.set_focusable(false);
-        let adjustment = adjustment.clone();
+        let adjustment = adjustment.downgrade();
         arrow.connect_clicked(move |_| {
+            let Some(adjustment) = adjustment.upgrade() else { return };
             let to = adjustment.value() + by * adjustment.page_size() * 0.7;
             adjustment.set_value(to.clamp(0.0, adjustment.upper() - adjustment.page_size()));
         });
@@ -729,13 +803,23 @@ fn faded_scroll(capsules: &gtk::Box) -> gtk::Overlay {
     }
     overlay.add_overlay(&start_arrow);
     overlay.add_overlay(&end_arrow);
+    // The adjustment's own handlers run this, and each arrow's click holds the adjustment, so
+    // both hold the other side weakly: a strong hold both ways would keep the arrows, their fades
+    // and the adjustment alive after the row is dropped.
+    let edges: [glib::WeakRef<gtk::Widget>; 4] = [
+        start_fade.upcast_ref::<gtk::Widget>().downgrade(),
+        start_arrow.upcast_ref::<gtk::Widget>().downgrade(),
+        end_fade.upcast_ref::<gtk::Widget>().downgrade(),
+        end_arrow.upcast_ref::<gtk::Widget>().downgrade(),
+    ];
     let follow = move |a: &gtk::Adjustment| {
         let (value, room) = (a.value(), a.upper() - a.page_size());
         let (before, after) = (value > 1.0, room - value > 1.0);
-        start_fade.set_visible(before);
-        start_arrow.set_visible(before);
-        end_fade.set_visible(after);
-        end_arrow.set_visible(after);
+        for (edge, shown) in edges.iter().zip([before, before, after, after]) {
+            if let Some(edge) = edge.upgrade() {
+                edge.set_visible(shown);
+            }
+        }
     };
     follow(&adjustment);
     adjustment.connect_value_changed(follow.clone());
@@ -747,6 +831,64 @@ fn faded_scroll(capsules: &gtk::Box) -> gtk::Overlay {
 mod tests {
     use super::*;
 
+    /// Search's row in the smallest window, 350 px inside: the medium goes over the filters and
+    /// the sort, at twice the text size too, and back into the row in a wider one.
+    #[test]
+    fn the_row_fits_a_narrow_window_at_any_text_size() {
+        crate::gtk_test::run(|| {
+            use crate::gtk_test::pump;
+            let toggles = adw::ToggleGroup::new();
+            for (name, label) in
+                [("shows", t::library_scope_shows()), ("reading", t::library_scope_reading())]
+            {
+                toggles.add(adw::Toggle::builder().name(name).label(label).build());
+            }
+            toggles.add_css_class("round");
+            let scope: gtk::Widget = toggles.upcast();
+            let capsules = gtk::Box::new(gtk::Orientation::Horizontal, 6);
+            for words in ["Genres", "Status", "Started", "Format"] {
+                capsules.append(&gtk::MenuButton::builder().label(words).build());
+            }
+            let (sort, label) = sort_button();
+            label.set_label(&t::search_sort_favourites());
+            let row = filter_row(&capsules, &sort);
+            let holder = gtk::Box::new(gtk::Orientation::Vertical, 0);
+            let line = gtk::Box::new(gtk::Orientation::Horizontal, 0);
+            holder.append(&line);
+            holder.append(&row);
+            row.prepend(&scope);
+            let window = gtk::Window::builder().default_width(1280).default_height(800).build();
+            window.set_child(Some(&holder));
+            window.present();
+            pump(100);
+            assert_eq!(scope.parent().as_ref(), Some(row.upcast_ref::<gtk::Widget>()));
+
+            lay_scope(&line, &row, &scope, Size::Narrow);
+            pump(100);
+            let min_width = || holder.measure(gtk::Orientation::Horizontal, -1).0;
+            let normal = min_width();
+            let settings = gtk::Settings::default().expect("a display");
+            let dpi = settings.gtk_xft_dpi();
+            settings.set_gtk_xft_dpi(2 * 96 * 1024);
+            pump(150);
+            let large = min_width();
+            let parts = (
+                line.measure(gtk::Orientation::Horizontal, -1).0,
+                row.measure(gtk::Orientation::Horizontal, -1).0,
+                sort.measure(gtk::Orientation::Horizontal, -1).0,
+            );
+            settings.set_gtk_xft_dpi(dpi);
+            assert_eq!(scope.parent().as_ref(), Some(line.upcast_ref::<gtk::Widget>()));
+            lay_scope(&line, &row, &scope, Size::Medium);
+            pump(50);
+            assert_eq!(row.first_child().as_ref(), Some(&scope));
+            window.destroy();
+
+            assert!(normal <= 350, "the row needs {normal} px at the normal text size");
+            assert!(large <= 350, "the row needs {large} px at twice the size: {parts:?}");
+        });
+    }
+
     #[test]
     fn a_season_name_reads_back_as_its_season() {
         for season in SEASONS {
@@ -755,6 +897,56 @@ mod tests {
                 Some(season)
             );
         }
+    }
+
+    /// The row's arrows and its adjustment hold each other: a dropped row must free them all.
+    #[test]
+    fn a_dropped_filter_row_frees_its_arrows_and_adjustment() {
+        crate::gtk_test::run(|| {
+            let capsules = gtk::Box::new(gtk::Orientation::Horizontal, 6);
+            for name in ["Format", "Status", "Genres", "Year", "Season"] {
+                capsules.append(&menu_button(name));
+            }
+            let row = faded_scroll(&capsules);
+            let window = gtk::Window::builder().default_width(200).default_height(80).build();
+            window.set_child(Some(&row));
+            window.present();
+            crate::gtk_test::pump(200);
+            let mut held: Vec<(&str, glib::WeakRef<glib::Object>)> =
+                vec![("row", row.upcast_ref::<glib::Object>().downgrade())];
+            let mut child = row.first_child();
+            while let Some(widget) = child {
+                if let Some(scroll) = widget.downcast_ref::<gtk::ScrolledWindow>() {
+                    held.push((
+                        "adjustment",
+                        scroll.hadjustment().upcast::<glib::Object>().downgrade(),
+                    ));
+                } else if widget.is::<gtk::Button>() {
+                    held.push(("arrow", widget.upcast_ref::<glib::Object>().downgrade()));
+                }
+                child = widget.next_sibling();
+            }
+            assert_eq!(held.len(), 4, "the row, its adjustment and two arrows");
+            window.set_child(gtk::Widget::NONE);
+            drop((row, capsules));
+            window.destroy();
+            drop(window);
+            // GTK lets go of a widget it was laying out on a later turn of the loop.
+            let kept = || -> Vec<&str> {
+                held.iter()
+                    .filter(|(_, weak)| weak.upgrade().is_some())
+                    .map(|(name, _)| *name)
+                    .collect()
+            };
+            for _ in 0..40 {
+                if kept().is_empty() {
+                    break;
+                }
+                crate::gtk_test::pump(25);
+            }
+            let kept = kept();
+            assert!(kept.is_empty(), "kept after the row was dropped: {kept:?}");
+        });
     }
 
     #[test]

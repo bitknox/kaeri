@@ -14,13 +14,13 @@ stores-devices-count = { $count ->
    *[other] { $count } { -device }
  }
 stores-replace-by-hand-detail = { $version } từ { $store } thay thế bản đã thêm thủ công.
-stores-open-join-on-detail = Họ tham gia mà không cần nhập tên. Tắt sẽ ngừng liên kết; bật lại sẽ tạo liên kết mới.
-stores-open-join-off-detail = Chỉ những người được mời mới tham gia được. Khi bật, bất kỳ ai có liên kết đều tham gia, không cần tên.
+stores-open-join-on-detail = Mọi người tham gia mà không cần tên. Tắt mục này thì liên kết ngừng hoạt động. Bật lại để có liên kết mới.
+stores-open-join-off-detail = Chỉ những người bạn mời mới tham gia được. Bật mục này thì bất kỳ ai có liên kết đều tham gia được, không cần tên.
 stores-open-join-no-names = Không lưu tên nào.
 stores-open-join-keep-working = Chúng tiếp tục hoạt động cho đến khi bạn xóa chúng.
 stores-device-seen-at = Hoạt động lần cuối { $when }
-stores-device-not-seen = Không hoạt động từ
-stores-publish-offered = { -plugin-store-cap } đang cung cấp { $version }
+stores-device-not-seen = Chưa thấy lại từ khi tham gia
+stores-publish-offered = { -plugin-store-cap } có { $version }
 stores-publish-not-yet = Chưa có trong { -plugin-store }
 torrents-sheet-edit-proxy = Sửa proxy
 torrents-edit-proxy = Sửa proxy
@@ -52,8 +52,9 @@ tv-seen-just-now = vừa xong
 stores-link-send-once = Gửi liên kết này cho { $who }. Liên kết chỉ dùng được một lần, đến { $until }.
 stores-link-send-once-anyone = Gửi liên kết này cho người nhận. Liên kết chỉ dùng được một lần, đến { $until }.
 sources-remove-title = Xóa { $name }?
-sources-remove-detail-device = { -plugin-cap } bị xóa khỏi { -device } này. Một { -plugin-store } có thể cài đặt lại.
+sources-remove-detail-device = Nó sẽ bị xóa khỏi { -device } này. Bạn có thể cài lại từ một { -plugin-store }.
 library-matched-apple = Đã khớp
 servers-row-summary-apple = { $series ->
    *[other] { $series } bộ
  }
+book-picker-message = Chọn thư mục chứa sách của bạn.

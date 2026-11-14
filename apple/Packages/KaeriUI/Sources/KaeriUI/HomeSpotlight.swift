@@ -41,6 +41,8 @@ struct HomeSpotlightView: View {
         .task(id: entry.id) {
             store.probe(entry.id)
             if !store.titles.detailed.contains(entry.id) { store.loadDetail(entry.id) }
+            // With no banner and no still known, the episodes that might bring one, at once.
+            store.loadSpotlightEpisodes(entry)
         }
     }
 

@@ -41,6 +41,9 @@ async fn main() -> std::process::ExitCode {
         Command::Store(command) => kaeri_store_server::run(command, None).await,
         Command::Stamp(args) => kaeri_store_server::stamp(&args, None).await.map(|info| {
             println!("stamped {} {}", info.id, info.version);
+            if info.is_books() {
+                println!("  a source of   books ({})", info.media.join(", "));
+            }
         }),
     };
     match outcome {

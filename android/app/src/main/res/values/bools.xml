@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Whether downloads and the app's update run as a foreground service: below Android 14,
+         which has no user-initiated jobs (values-v34 turns it off). -->
+    <bool name="foreground_fallback">true</bool>
+</resources>

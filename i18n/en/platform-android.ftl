@@ -23,7 +23,7 @@ engine-down-title = { -app-name } stopped
 # Line under it when the engine stopped while the app was open, so lists would sit empty.
 # @only android
 # @max 120
-engine-down-stopped = The part that does the work has stopped. Try again, or quit and open the app once more.
+engine-down-stopped = Nothing new will load until it starts again. Try again, or quit and open the app once more.
 
 # Button on that screen that closes the app.
 # @only android

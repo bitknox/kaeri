@@ -180,6 +180,18 @@ public sealed class TrailerShelf<T>(int keep = 2) where T : class, IWarmPage
         return found;
     }
 
+    /// <summary>
+    /// Every kept page comes off the shelf into <paramref name="drop"/>, for the caller to close,
+    /// and the page with no video may load again: the window was minimised, Home was left, or
+    /// memory is short.
+    /// </summary>
+    public void Empty(List<T> drop)
+    {
+        drop.AddRange(idle);
+        idle.Clear();
+        Warmed = false;
+    }
+
     /// <summary>Take a page back. False when it is not kept (broken, already there, or no room), for the caller to close.</summary>
     public bool Give(T page)
     {

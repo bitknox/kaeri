@@ -76,6 +76,9 @@ pub struct EngineState {
     /// The network the device uses, as the front end last said: on cellular only what the
     /// settings let run there runs, and in Low Data Mode downloads and seeding wait.
     pub network: crate::phases::Network,
+    /// Whether the front end has said the network yet. Until it has, nothing waits on Wi-Fi
+    /// starts: the network may be cellular.
+    pub network_said: bool,
     /// What to ask for again once the network is back: see [`crate::connectivity`].
     pub missed: crate::connectivity::Missed,
     /// Once "Up next for you" has been asked for: the titles on Continue when it was last sent,
@@ -130,9 +133,18 @@ pub struct EngineState {
     /// The watch party going, if one is: see [`crate::party`].
     #[cfg(feature = "party")]
     pub party: Option<crate::party::Running>,
+    /// Whether reading is in this build, the edition, and the medium: see [`crate::reading`].
+    pub reading: crate::reading::ReadingState,
+    /// The open reader session and the page worker: see [`crate::reading::session`].
+    pub reader: crate::reading::Reader,
 }
 
 impl EngineState {
+    /// The network as the front end last said it, or `None` before it has said one.
+    pub fn said_network(&self) -> Option<crate::phases::Network> {
+        self.network_said.then_some(self.network)
+    }
+
     /// The engine side as it starts: on the config the app was launched with, and the file's,
     /// as given or as it is at `paths`. No torrent stack yet, and `arrivals` for it to report on
     /// when one is brought up.
@@ -157,6 +169,7 @@ impl EngineState {
             staging: Staging::default(),
             phase: Default::default(),
             network: Default::default(),
+            network_said: false,
             missed: Default::default(),
             up_next_queue: None,
             home: Default::default(),
@@ -178,6 +191,8 @@ impl EngineState {
             discussion: Default::default(),
             #[cfg(feature = "party")]
             party: None,
+            reading: Default::default(),
+            reader: Default::default(),
         }
     }
 

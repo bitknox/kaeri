@@ -1,7 +1,7 @@
 licensed-title = ライセンスサービス
 licensed-body = { -app-name }では、あなたが契約している配信サービスで作品を開けます。再生は{ -app-name }自体では行いません。リンクはAniListから取得します。
 licensed-region = 地域
-licensed-region-line = AniListが他の国向けとしているリンクを非表示にします。国が指定されていないリンクも多いので、利用中のサービスも選んでください。
+licensed-region-line = AniListが他の国向けとしているリンクは非表示になります。国が指定されていないリンクも多いので、利用中のサービスも選んでください。
 licensed-yours = 利用中のサービス
 licensed-show-all = { $count }件すべて表示
 licensed-region-system = この{ -device }に合わせる

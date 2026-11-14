@@ -46,6 +46,7 @@ use crate::{
         probe,
         up_next::{self, Pick},
     },
+    clock::Clock,
     data,
     dispatch::Lent,
     outbox::Outbox,
@@ -104,7 +105,13 @@ pub struct HomeAsk {
     pub listed: bool,
     /// Adult titles may be suggested.
     pub adult: bool,
+    /// The moment Home was asked for. Every send of one load reads the day, the season and
+    /// what is out at it, so the parts it asked for stay the ones it shows.
     pub now: i64,
+    /// The engine's clock, by which each send reads the sources check's answers as they stand.
+    /// A check answers after Home was asked for and is dated then, which is ahead of
+    /// [`HomeAsk::now`]: a part that lands after the answer still shows its mark.
+    pub clock: Clock,
     pub zone: jiff::tz::TimeZone,
     /// No network path: show what is kept, and ask nothing.
     pub offline: bool,
@@ -395,10 +402,10 @@ fn entries(meta: &Meta, store: &Store, ids: &[u32]) -> Vec<Entry> {
     meta.cached(&ids).iter().map(|m| data::entry_from(m, Some(store))).collect()
 }
 
-/// What the sources check last found for `id` that still holds with the sources as they stand:
-/// see [`probe::kept`].
+/// What the sources check last found for `id` that still holds now, with the sources as they
+/// stand: see [`probe::kept`] and [`HomeAsk::clock`].
 fn playable(store: &Store, id: AnilistId, ask: &HomeAsk) -> Playable {
-    probe::kept(store, id, &ask.usable, ask.now).unwrap_or(Playable::Unknown)
+    probe::kept(store, id, &ask.usable, ask.clock.now()).unwrap_or(Playable::Unknown)
 }
 
 /// The main action for a title that has not been started: play episode 1 when it is out and a
@@ -847,7 +854,7 @@ fn compose(
         if !items.is_empty() {
             sections.push(HomeSection {
                 kind: SectionKind::MoreGenre,
-                title: Msg::HomeMoreGenre { genre: rail.name.to_lowercase() },
+                title: kaeri_model::search::more_genre(&rail.name),
                 total: items.len() as u32,
                 items,
                 view_all: Some(HomeLink::Browse { query: genre_query(&rail.name) }),
@@ -1876,6 +1883,7 @@ mod tests {
             listed: true,
             adult: false,
             now: 1_000,
+            clock: Clock::default(),
             zone: jiff::tz::TimeZone::UTC,
             offline: false,
             refresh: false,
@@ -1911,10 +1919,13 @@ mod tests {
     fn home_marks_a_kept_miss_only_while_the_sources_it_was_asked_of_stand() {
         let store = Store::open_in_memory().unwrap();
         let id = AnilistId::new(900_302);
+        let clock = Clock::default();
+        clock.advance(1_000_000 - clock.now());
         let ask = |mark: u64| HomeAsk {
             listed: false,
             adult: false,
             now: 1_000_000,
+            clock: clock.clone(),
             zone: jiff::tz::TimeZone::UTC,
             offline: false,
             refresh: false,

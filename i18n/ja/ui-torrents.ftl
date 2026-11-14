@@ -43,6 +43,7 @@ opened-open = リンクまたはファイルを開く
 opened-paste-title = マグネットリンクまたはトレントファイルを開く
 opened-paste-placeholder = マグネットリンクまたはインフォハッシュ
 opened-choose-file = トレントファイルを選ぶ
+opened-unreadable = { -app-name }でそのリンクまたはファイルを読み取れませんでした。
 opened-confirm = { $title }の第{ $episode }話ですか?
 opened-confirm-title = { $title }ですか?エピソードを選んでください。
 opened-no-guess = { -app-name }では内容を判別できませんでした。作品を選ぶか、記録せずに再生してください。

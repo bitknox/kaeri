@@ -172,19 +172,35 @@ struct Meter: View {
 struct PrimaryCapsuleStyle: ButtonStyle {
     var height: CGFloat = 34
     var fontSize: CGFloat = 13
+    /// Whether off draws raised with silk text at 38%, as a choice that waits for an answer does,
+    /// instead of dimmed amber.
+    var offIsRaised = false
 
     func makeBody(configuration: Configuration) -> some View {
+        PrimaryCapsule(configuration: configuration, height: height, fontSize: fontSize, offIsRaised: offIsRaised)
+    }
+}
+
+private struct PrimaryCapsule: View {
+    @Environment(\.isEnabled) private var isEnabled
+    let configuration: ButtonStyleConfiguration
+    let height: CGFloat
+    let fontSize: CGFloat
+    let offIsRaised: Bool
+
+    var body: some View {
+        let raised = offIsRaised && !isEnabled
         configuration.label
             .font(.board(fontSize, weight: .semibold))
             .monospacedDigit()
-            .foregroundStyle(.ground)
+            .foregroundStyle(raised ? Palette.silk : Palette.ground)
             .modifier(CapsuleLines())
             .padding(.horizontal, height < 34 ? 14 : 18)
             .frame(minHeight: height)
-            .background(.amber.opacity(configuration.isPressed ? 0.85 : 1), in: .capsule)
+            .background(raised ? Palette.raised : Palette.amber.opacity(configuration.isPressed ? 0.85 : 1), in: .capsule)
             .contentShape(.capsule)
             .pointerLift()
-            .modifier(DimmedWhenDisabled())
+            .opacity(isEnabled ? 1 : raised ? 0.38 : 0.45)
     }
 }
 
@@ -374,6 +390,12 @@ struct SyncCapsule: View {
         }
         .accessibilityLabel(accessibilityLabel(summary))
         .accessibilityHint(L.shellSyncHint)
+        .onAppear {
+            // `sheet=sync-status`: the popover open, for its shot.
+            guard navigator.launchSheet == "sync-status" else { return }
+            navigator.launchSheet = nil
+            showing = true
+        }
         .popover(isPresented: $showing, arrowEdge: .bottom) {
             JobsPopover(openAccounts: {
                 showing = false
@@ -418,6 +440,7 @@ struct JobsPopover: View {
             Text(store.accounts.summary.text)
                 .font(.mac(13, weight: .semibold))
                 .foregroundStyle(.silk)
+            heldLines
             if store.jobs.running.isEmpty {
                 Text(L.shellNothingRunning)
                     .font(.mac(13))
@@ -459,6 +482,26 @@ struct JobsPopover: View {
         }
         .padding(16)
         .frame(width: 300, alignment: .leading)
+    }
+
+    /// Changes a tracker can't take yet, quiet under the status: they are not waiting on
+    /// anything the person can do, and go out by themselves once there is a match.
+    @ViewBuilder private var heldLines: some View {
+        let held = store.accounts.held
+        if !held.isEmpty {
+            VStack(alignment: .leading, spacing: 2) {
+                ForEach(held, id: \.tracker) { row in
+                    Text(L.shellSyncHeld(count: row.count, tracker: AccountsModel.name(row.tracker)))
+                        .font(.mac(13))
+                }
+                Text(L.shellSyncHeldDetail)
+                    .font(.mac(12))
+            }
+            .foregroundStyle(.haze)
+            .fixedSize(horizontal: false, vertical: true)
+            .accessibilityElement(children: .combine)
+            .padding(.top, 6)
+        }
     }
 
     /// The sync pass: whom it talks with and how long it has run.

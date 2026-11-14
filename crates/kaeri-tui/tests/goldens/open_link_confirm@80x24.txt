@@ -12,7 +12,7 @@ Kaeri                                                  plugins ●  ·  anilist 
             Yamabiko 1.4.0  may contact api.yamabiko.example · Installed
             Hotaru 0.3.0  may contact subs.example
   Anyone with the link can join.
-  You join without a name, and another device joins with the same link.
+  You join without a name. Any other device can join with the same link.
 
    │
    │
@@ -62,8 +62,8 @@ r13 c00-01 fg=rule bg=ground
 r13 c02-31 fg=text-dim bg=ground
 r13 c32-79 fg=rule bg=ground
 r14 c00-01 fg=rule bg=ground
-r14 c02-70 fg=text-dim bg=ground
-r14 c71-79 fg=rule bg=ground
+r14 c02-71 fg=text-dim bg=ground
+r14 c72-79 fg=rule bg=ground
 r15 c00-79 fg=rule bg=ground
 r16 c00-79 fg=rule
 r17 c00-79 fg=rule

@@ -5,5 +5,5 @@ release-seeders = { $count ->
  }
 trailer-failed = Der Trailer konnte nicht starten
 engine-down-title = { -app-name } wurde beendet
-engine-down-stopped = Der Teil, der die Arbeit erledigt, wurde beendet. Versuche es erneut oder beende die App und öffne sie noch einmal.
+engine-down-stopped = Bis es wieder läuft, lädt nichts Neues. Versuche es erneut oder beende die App und öffne sie noch einmal.
 engine-down-quit = Beenden

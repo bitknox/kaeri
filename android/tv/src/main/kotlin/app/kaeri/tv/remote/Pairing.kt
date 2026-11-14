@@ -26,6 +26,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.geometry.Offset
@@ -52,25 +53,28 @@ import app.kaeri.tv.ui.spelled
 import app.kaeri.tv.ui.spokenBlock
 
 /**
- * A QR code of [text], silk modules on ground with the engine's quiet zone, [size] square. The
- * engine makes the matrix (`qr_matrix`); this only draws it.
+ * A QR code of [text], silk modules on ground with the engine's quiet zone, [size] square; on a
+ * silk [plate] with ground modules, as first run's join step draws it. The engine makes the
+ * matrix (`qr_matrix`); this only draws it.
  */
 @Composable
-fun QrCode(text: String, modifier: Modifier = Modifier, size: Dp = 180.dp, label: String = stringResource(R.string.tv_qr_label_default)) {
+fun QrCode(text: String, modifier: Modifier = Modifier, size: Dp = 180.dp, label: String = stringResource(R.string.tv_qr_label_default), plate: Boolean = false) {
     val matrix = remember(text) { qrMatrix(text) }
+    val ink = if (plate) ObiSilk.Ground else ObiSilk.Silk
     DrawCanvas(
         modifier
             .size(size)
+            .then(if (plate) Modifier.clip(androidx.compose.foundation.shape.RoundedCornerShape(8.dp)) else Modifier)
             .semantics { contentDescription = label },
     ) {
-        drawRect(ObiSilk.Ground)
+        drawRect(if (plate) ObiSilk.Silk else ObiSilk.Ground)
         val side = matrix.size.toInt()
         val total = side + 2 * matrix.quietZone.toInt()
         val cell = this.size.width / total
         val zone = matrix.quietZone.toInt()
         for (y in 0 until side) {
             for (x in 0 until side) {
-                if (matrix.modules[y * side + x]) drawRect(ObiSilk.Silk, Offset((x + zone) * cell, (y + zone) * cell), Size(cell + 0.5f, cell + 0.5f))
+                if (matrix.modules[y * side + x]) drawRect(ink, Offset((x + zone) * cell, (y + zone) * cell), Size(cell + 0.5f, cell + 0.5f))
             }
         }
     }

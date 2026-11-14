@@ -31,8 +31,11 @@ The maintainer inspects every train before it merges, so keep trains few and com
 
    Set `[workspace.package] version` in `Cargo.toml` above the newest `v*` tag (with no tags yet,
    the version as it stands is the first release), run `cargo check --locked` so `Cargo.lock`
-   matches (fix it with `cargo update -w` if not), and commit `Release X.Y.Z` on the train. No
-   bot pushes to main, so this commit is the only place the version changes. A PR check fails a
+   matches (fix it with `cargo update -w` if not). The Linux app has its own lockfile, so also run
+   `cargo metadata --format-version 1 --offline` in `desktop/linux`, which bumps its path crates,
+   and confirm `cargo metadata --offline --locked` passes there. Commit `Release X.Y.Z` on the
+   train with both lockfiles. No bot pushes to main, so this commit is the only place the
+   version changes. A PR check fails a
    release that isn't newer than the newest tag.
 5. **PR.** Push the branch and open ONE PR against main. The PR title is the line stable users
    read in the weekly list, so it says what changed for them. The first paragraphs are the

@@ -2,15 +2,13 @@ import org.gradle.api.JavaVersion
 
 /** The levels every module builds at. */
 object KaeriSdk {
-    /** Android 15: edge to edge and predictive back on by default, which the design assumes. */
-    const val MIN = 35
-
     /**
-     * Android 11, for the TV app and the modules it shares with the phone (the engine, the store,
-     * the design system and the player): TV boxes stay on old releases, and Android TV 14 is the
-     * newest the Chromecast with Google TV has.
+     * Android 11, for every app and module: TV boxes stay on old releases (Android TV 14 is the
+     * newest the Chromecast with Google TV has), and e-ink readers ship Android 11 to 13. What
+     * newer releases add, such as edge to edge and predictive back by default, the phone app
+     * checks for at run time and falls back from.
      */
-    const val TV_MIN = 30
+    const val MIN = 30
 
     /** The newest SDK installed. */
     const val COMPILE = 37

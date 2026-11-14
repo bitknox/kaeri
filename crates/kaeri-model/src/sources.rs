@@ -374,6 +374,135 @@ pub struct DemoState {
     /// Part of the demo has been played, so Home's spotlight is back to its usual cases.
     #[cfg_attr(feature = "ffi", uniffi(default))]
     pub played: bool,
+    /// The demo's one row shows its episode: the demo is on and this device watches.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub watching: bool,
+    /// The demo's one row shows its comic and story: the demo is on and this device reads.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub reading: bool,
+    /// The reading demo is the only book source: Home and Search say how to add your own.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub only_books: bool,
+}
+
+/// One work of the reading demo and its credit, as its licence asks for it.
+#[derive(Debug, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "ffi", derive(uniffi::Record))]
+pub struct DemoWorkInfo {
+    /// The series id within the demo source.
+    pub id: String,
+    /// The series, as its maker writes it: "Pepper&Carrot".
+    pub series: String,
+    /// The chapter's own title.
+    pub chapter: String,
+    pub author: String,
+    /// "CC BY 4.0", or "Public domain" for the story.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub licence: Option<String>,
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub licence_url: Option<String>,
+    /// The maker's site, or where the text came from. Linked, never read from.
+    pub maker_url: String,
+    /// The Commons file page of its first page; `None` for the story, which comes with the app.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub file_page_url: Option<String>,
+    /// The credit in English: "Pepper&Carrot by David Revoy. Licensed CC BY 4.0." A front end
+    /// words it from the fields above in the person's language.
+    pub credit: String,
+    /// Read as text; else as pages.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub novel: bool,
+    /// Pages of the comic, nought for the story.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub pages: u32,
+    /// The work it opens as, from the first launch on: the engine matches the demo's series to
+    /// it before anything is searched.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub work: kaeri_core::books::WorkId,
+    /// A line written for the demo, for Home's spotlight and the series page.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub synopsis: String,
+    /// Its cover's address, fetched with `FetchArtwork` like any cover. The engine answers it
+    /// from the demo: the comic's checked first page, or the story's frontispiece, which comes
+    /// with the app and is never fetched.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub cover: Option<String>,
+    /// The credit of a cover that is not the work's own page: the story's frontispiece. About
+    /// the demo lists it beside the work's credit.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub cover_credit: Option<DemoCoverCredit>,
+}
+
+/// Who made a demo cover, and under what licence, for About the demo.
+#[derive(Debug, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "ffi", derive(uniffi::Record))]
+pub struct DemoCoverCredit {
+    /// The art's own caption, in English: "Blowing her breath upon him".
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub title: String,
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub artist: String,
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub year: u32,
+    /// "Public domain". Not translated, like the works' licences.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub licence: String,
+    /// The Commons file page, which names its licence and its maker. Linked, never read from.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub page_url: String,
+}
+
+/// The reading demo's works, credits and hosts, for the demo's series page and its credits.
+#[derive(Debug, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "ffi", derive(uniffi::Record))]
+pub struct ReadingDemoInfo {
+    /// The comic first, then the story.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub works: Vec<DemoWorkInfo>,
+    /// The only hosts the reading demo reaches.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub hosts: Vec<String>,
+}
+
+impl DemoWorkInfo {
+    pub fn of(work: &kaeri_core::reading_demo::DemoWork) -> Self {
+        Self {
+            id: work.id.into(),
+            series: work.series.into(),
+            chapter: work.chapter.into(),
+            author: work.author.into(),
+            licence: Some(work.licence.unwrap_or("Public domain").into()),
+            licence_url: work.licence_url.map(Into::into),
+            maker_url: work.maker_url.into(),
+            file_page_url: work.file_page_url.map(Into::into),
+            credit: work.credit.into(),
+            novel: work.novel,
+            pages: if work.novel {
+                0
+            } else {
+                kaeri_core::reading_demo::COMIC_PAGES.len() as u32
+            },
+            work: work.work_id(),
+            synopsis: work.synopsis.into(),
+            cover: work.cover().map(Into::into),
+            cover_credit: work.cover_art.map(|art| DemoCoverCredit {
+                title: art.title.into(),
+                artist: art.artist.into(),
+                year: art.year.into(),
+                licence: art.licence.into(),
+                page_url: art.page_url.into(),
+            }),
+        }
+    }
+}
+
+/// The reading demo's works and credits.
+pub fn reading_demo_info() -> ReadingDemoInfo {
+    use kaeri_core::reading_demo::WORKS;
+    ReadingDemoInfo {
+        works: WORKS.iter().map(DemoWorkInfo::of).collect(),
+        hosts: vec![kaeri_core::demo::DEMO_HOSTS[0].to_owned()],
+    }
 }
 
 /// What the credit block and the demo's About page show. The same constants the host guard
@@ -393,6 +522,10 @@ pub struct DemoInfo {
     /// The only hosts the demo reaches.
     #[cfg_attr(feature = "ffi", uniffi(default))]
     pub hosts: Vec<String>,
+    /// The show's art: the first part's still, the same address its title's cover is, fetched
+    /// with `FetchArtwork`. First run's Try it now shows it beside the comic after Both.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub art: Option<String>,
 }
 
 /// The demo's credit, licence and hosts.
@@ -405,6 +538,7 @@ pub fn demo_info() -> DemoInfo {
         maker_url: demo::DEMO_MAKER_URL.into(),
         file_page_url: demo::DEMO_FILE_PAGE_URL.into(),
         hosts: demo::DEMO_HOSTS.iter().map(|host| (*host).to_owned()).collect(),
+        art: demo::PARTS.first().map(|part| part.still_url.to_owned()),
     }
 }
 
@@ -757,5 +891,39 @@ mod section_tests {
             placed.iter().position(|e| e == "disk") < placed.iter().position(|e| e == "alpha"),
             "{placed:?}"
         );
+    }
+
+    #[test]
+    fn every_reading_demo_work_names_its_licence() {
+        let info = reading_demo_info();
+        assert_eq!(info.works.len(), 2);
+        assert!(info.works.iter().all(|w| w.licence.as_deref().is_some_and(|l| !l.is_empty())));
+        assert!(info.works.iter().any(|w| w.licence.as_deref() == Some("Public domain")));
+    }
+
+    #[test]
+    fn every_reading_demo_work_opens_as_its_own_work_with_its_own_cover() {
+        let info = reading_demo_info();
+        let (comic, story) = (&info.works[0], &info.works[1]);
+        assert_eq!(comic.work, kaeri_core::reading_demo::COMIC.work_id());
+        assert_eq!(story.work, kaeri_core::reading_demo::STORY.work_id());
+        assert_ne!(comic.work, story.work);
+        assert!(
+            comic
+                .cover
+                .as_deref()
+                .is_some_and(|c| c.starts_with("https://upload.wikimedia.org/"))
+        );
+        assert_eq!(
+            story.cover.as_deref(),
+            Some(kaeri_core::reading_demo::STORY_COVER.file_url)
+        );
+        assert_ne!(story.cover, comic.cover);
+        assert_eq!(comic.cover_credit, None);
+        let credit = story.cover_credit.as_ref().expect("the frontispiece is credited");
+        assert_eq!((credit.artist.as_str(), credit.year), ("Keishū Takénouchi", 1904));
+        assert_eq!(credit.licence, "Public domain");
+        assert!(credit.page_url.starts_with("https://commons.wikimedia.org/wiki/File:"));
+        assert!(!comic.synopsis.is_empty() && !story.synopsis.is_empty());
     }
 }

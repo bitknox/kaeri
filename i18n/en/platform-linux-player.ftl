@@ -15,9 +15,9 @@ party-choose-a-source = Choose a { -source }
 
 # Line when no source lists the watch party's episode. A plugin store adds plugins, which add sources.
 # @only linux
-# @arg episode: int
+# @arg episode: plain
 # @max 120
-party-sources-none-listed = No { -source } lists episode { $episode }. { -source-cap-pl } come from { -plugin-pl }, which a { -plugin-store } adds.
+party-sources-none-listed = No { -source } lists episode { $episode }. { -source-cap-pl } come from { -plugin-pl }, which you add from a { -plugin-store }.
 
 # Line above the list of sources that have the watch party's episode.
 # @only linux

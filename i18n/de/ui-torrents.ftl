@@ -43,6 +43,7 @@ opened-open = Link oder Datei öffnen
 opened-paste-title = Magnet-Link oder Torrent-Datei öffnen
 opened-paste-placeholder = Magnet-Link oder Info-Hash
 opened-choose-file = Torrent-Datei wählen
+opened-unreadable = { -app-name } konnte diesen Link oder diese Datei nicht lesen.
 opened-confirm = Ist das { $title }, Folge { $episode }?
 opened-confirm-title = Ist das { $title }? Wähle die Folge.
 opened-no-guess = { -app-name } konnte nicht erkennen, was das ist. Wähle den Titel aus oder spiele es ohne Tracking ab.

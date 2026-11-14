@@ -275,10 +275,14 @@ pub async fn resolve_for_playback(
     // back to the normal chain: refusing to play because a remembered choice is momentarily
     // unusable would be a worse answer than playing.
     let mut pinned_to = None;
+    // The source the show is pinned to, by its pin on the source or on a release of it, when it
+    // is in use. What a play from another source says it passed over.
+    let mut pin_holder = None;
     let chain = pick.is_none().then(|| {
         match crate::titles::episodes::pin_of(store, registry, id) {
             crate::titles::episodes::Pin::Held(name) => {
                 tracing::info!(provider = %name, "the series is pinned to a source");
+                pin_holder = Some(name.clone());
                 pinned_to = Some(name);
             }
             crate::titles::episodes::Pin::Unavailable(name) => {
@@ -289,6 +293,14 @@ pub async fn resolve_for_playback(
         crate::titles::episodes::chain_for(store, registry, id)
     });
     let registry = chain.as_ref().unwrap_or(registry);
+    if pin_holder.is_none() && pick.is_none() {
+        pin_holder = store
+            .release_preference(id)
+            .ok()
+            .flatten()
+            .map(|pin| pin.provider_id)
+            .filter(|provider| registry.usable_ids().contains(provider));
+    }
     let target = media.match_target();
 
     step(Msg::StatusSearchingSources { episode: episode.to_owned() });
@@ -418,6 +430,14 @@ pub async fn resolve_for_playback(
     // Then, within one quality, the servers that keep failing after the ones that play. Never a
     // release the user picked, which plays as it was picked.
     playback::health::order(store, &mut streams, playback.quality, pick.is_some(), now);
+    if let (Some(starting), Some(step)) = (
+        starting,
+        pin_missed(pin_holder.as_deref(), pick.is_some(), &streams, |provider| {
+            registry.get(provider).map(|s| s.manifest().display_name.clone())
+        }),
+    ) {
+        starting.step(step, None);
+    }
     if streams.is_empty() {
         tracing::warn!(
             elapsed_ms = began.elapsed().as_millis() as u64,
@@ -466,6 +486,23 @@ pub async fn resolve_for_playback(
         episode_total: media.episodes,
     };
     Ok((streams, context))
+}
+
+/// The step that tells the viewer a pinned source was passed over: the show is pinned to
+/// `holder` (a source id), nothing was picked by hand, and the first of `streams` comes from
+/// another source. `name_of` gives a source its display name.
+fn pin_missed(
+    holder: Option<&str>,
+    picked: bool,
+    streams: &[kaeri_core::stream::Stream],
+    name_of: impl Fn(&str) -> Option<String>,
+) -> Option<StartStep> {
+    let holder = holder.filter(|_| !picked)?;
+    let first = streams.first()?;
+    if first.provider_id == holder {
+        return None;
+    }
+    Some(StartStep::PinMissed { name: name_of(holder)? })
 }
 
 /// What an untracked play of an opened link is about: a name and nothing else, so it records
@@ -724,6 +761,28 @@ mod tests {
             media["nextAiringEpisode"] = serde_json::json!({ "episode": 6, "airingAt": now_epoch() + DAY, "timeUntilAiring": DAY });
         }
         media
+    }
+
+    #[test]
+    fn a_passed_over_pin_is_told_only_when_another_source_plays_a_pinned_show() {
+        use kaeri_core::stream::{Stream, StreamKind};
+        let from = |provider: &str| {
+            let mut stream = Stream::new("https://media.example/a.m3u8", StreamKind::Hls);
+            stream.provider_id = provider.to_owned();
+            vec![stream]
+        };
+        let name = |provider: &str| Some(provider.to_uppercase());
+        // The pinned source plays.
+        assert_eq!(pin_missed(Some("alpha"), false, &from("alpha"), name), None);
+        // The pinned source lacks the episode and the next plays.
+        assert_eq!(
+            pin_missed(Some("alpha"), false, &from("gamma"), name),
+            Some(StartStep::PinMissed { name: "ALPHA".into() })
+        );
+        // No pin.
+        assert_eq!(pin_missed(None, false, &from("gamma"), name), None);
+        // A release picked from the Sources overlay.
+        assert_eq!(pin_missed(Some("alpha"), true, &from("gamma"), name), None);
     }
 
     #[tokio::test]

@@ -1,4 +1,4 @@
-rkey-lock-linux = Você pode vê-la de novo em Configurações, { -device-cap-pl }, depois da senha da sua conta.
+rkey-lock-linux = Você pode vê-la de novo em Configurações, { -device-cap-pl }, depois de digitar a senha da sua conta.
 rkey-lock-reason = Mostrar a chave de recuperação do { -app-name }
 profiles-popover-name = Perfis
 profiles-add-row-action = Adicionar

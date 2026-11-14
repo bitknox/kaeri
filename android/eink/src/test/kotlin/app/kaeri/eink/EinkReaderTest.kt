@@ -1,0 +1,758 @@
+// The e-ink reader on made-up grey pages: the zone guide over the first chapter, turns at once by
+// the 40% forward zone and the upper page button, the folio in the margin, the bars on a middle
+// tap, the page between chapters in the flow, no full refresh until the person asks for one, Screen
+// mode set while the reader is open, and the reader's own settings and Contents, which Back closes
+// before it closes the reader, one step at a time, and which keys reach and leave without losing the
+// reader; with the bars up the D-pad moves between their controls and stays in them and in the
+// sheets, and the focus comes back to the control that opened a sheet. Tab from a novel's page
+// reaches the bars, and a chapter opened by Try again by key takes the keys. A chapter
+// asked for keeps its control pressed, then names itself loading, and is asked for once; the series
+// title shows over a first chapter that is slow to open.
+
+package app.kaeri.eink
+
+import android.content.ComponentName
+import androidx.activity.ComponentActivity
+import androidx.compose.runtime.collectAsState
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.viewinterop.AndroidView
+import androidx.compose.ui.test.click
+import androidx.compose.ui.test.hasText
+import androidx.compose.ui.input.key.Key
+import androidx.compose.ui.ExperimentalComposeUiApi
+import androidx.compose.ui.input.InputMode
+import androidx.compose.ui.input.InputModeManager
+import androidx.compose.foundation.focusable
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.size
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.platform.LocalInputModeManager
+import androidx.compose.ui.test.assertIsFocused
+import androidx.compose.ui.test.isFocused
+import androidx.compose.ui.test.requestFocus
+import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.SemanticsNodeInteraction
+import androidx.compose.ui.semantics.SemanticsNode
+import androidx.compose.ui.semantics.getOrNull
+import androidx.compose.ui.test.captureToImage
+import androidx.compose.ui.graphics.asAndroidBitmap
+import app.kaeri.engine.ffi.einkPaint
+import app.kaeri.engine.model.EinkPaint
+import app.kaeri.engine.model.ReadingAbout
+import app.kaeri.engine.model.ReadingFailure
+import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
+import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.onRoot
+import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performKeyInput
+import androidx.compose.ui.test.performTouchInput
+import androidx.compose.ui.test.pressKey
+import app.kaeri.engine.model.Command
+import app.kaeri.engine.model.Event
+import app.kaeri.engine.model.ReadingEvent
+import app.kaeri.engine.model.VolumeGroup
+import app.kaeri.reader.phone.ReaderLook
+import app.kaeri.engine.model.ReaderCommand
+import app.kaeri.engine.model.ReaderEvent
+import app.kaeri.engine.model.ReaderWait
+import app.kaeri.engine.model.Refresh
+import app.kaeri.engine.ffi.einkPolicyDefaults
+import app.kaeri.engine.model.EinkPanel
+import app.kaeri.engine.model.EinkPolicy
+import app.kaeri.engine.model.ReaderSettingKey
+import app.kaeri.engine.model.ReaderSettingRow
+import app.kaeri.engine.model.ReaderSettingsView
+import app.kaeri.engine.model.ReaderValue
+import app.kaeri.engine.model.SettingScope
+import app.kaeri.engine.core.Medium
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import app.kaeri.engine.model.TurnHow
+import app.kaeri.reader.PageImages
+import app.kaeri.reader.ReaderSession
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
+import org.junit.Rule
+import org.junit.Test
+import org.junit.rules.ExternalResource
+import org.junit.rules.RuleChain
+import org.junit.rules.TemporaryFolder
+import org.junit.runner.RunWith
+import org.robolectric.RobolectricTestRunner
+import org.robolectric.RuntimeEnvironment
+import org.robolectric.Shadows.shadowOf
+import org.robolectric.annotation.Config
+import org.robolectric.annotation.GraphicsMode
+
+@RunWith(RobolectricTestRunner::class)
+@GraphicsMode(GraphicsMode.Mode.NATIVE)
+@Config(sdk = [36], qualifiers = "w572dp-h772dp-port-xhdpi")
+class EinkReaderTest {
+    private val compose = createAndroidComposeRule<ComponentActivity>()
+    private val dir = TemporaryFolder()
+
+    @get:Rule
+    val rules: RuleChain = RuleChain.outerRule(dir).around(
+        object : ExternalResource() {
+            override fun before() {
+                val app = RuntimeEnvironment.getApplication()
+                shadowOf(app.packageManager).addActivityIfNotPresent(ComponentName(app, ComponentActivity::class.java))
+            }
+        },
+    ).around(compose)
+
+    private val sent = mutableListOf<ReaderCommand>()
+    private val session = ReaderSession { (it as? Command.Reader)?.let { reader -> sent += reader.v1 } }
+    private var fake = FakeRefresh()
+    private val paints = java.util.Collections.synchronizedList(mutableListOf<EinkPaint>())
+
+    /** Every full refresh turned on, as a person may in the Refresh rows. */
+    private val optedIn = einkPolicyDefaults(EinkPanel.GREY).copy(imageFull = true, textEvery = 6u, textEveryDark = 4u, listEvery = 3u)
+
+    private fun open(onBack: () -> Unit = {}, policy: EinkPolicy = einkPolicyDefaults(EinkPanel.GREY), mode: String? = null, zones: Boolean = true, behind: @Composable () -> Unit = {}) {
+        session.open(EinkFixtures.WORK, EinkFixtures.surface.copy(eink = true))
+        session.apply(ReaderEvent.Opened(EinkFixtures.view(start = 0u)))
+        session.apply(ReaderEvent.Leaves(EinkFixtures.SESSION, EinkFixtures.CHAPTER, EinkFixtures.leaves(3) { EinkFixtures.grey(dir.root, "$it.gray", 80, 80) }))
+        mode?.let {
+            val row = ReaderSettingRow(ReaderSettingKey.SCREEN_MODE, ReaderValue.Choice(it), SettingScope.DEVICE, false, false, emptyList())
+            session.apply(ReaderEvent.Settings(ReaderSettingsView(Medium.MANGA, EinkFixtures.WORK, listOf(row))))
+        }
+        val painter = EinkPainter(policy, fake) { using, counter, paint -> paints += paint; einkPaint(using, counter, paint) }
+        val actions = EinkReaderActions(onBack, {}, {})
+        val images = PageImages()
+        compose.setContent {
+            modes = LocalInputModeManager.current
+            EinkTheme {
+                behind()
+                val state = session.state.collectAsState().value
+                if (readerOn) EinkReader(session, state, images, painter, actions, showZones = zones)
+            }
+        }
+        compose.waitForIdle()
+        // The first page decodes off the main thread and paints once it is drawn: wait for it, so
+        // a test's own paints come after it.
+        compose.waitUntil(5_000) { paints.any { it is EinkPaint.ImagePage } }
+        compose.waitForIdle()
+    }
+
+    private var readerOn by mutableStateOf(true)
+    private var modes: InputModeManager? = null
+    private var behindFocused = false
+
+    private fun shown(): List<ReaderCommand.Shown> = sent.filterIsInstance<ReaderCommand.Shown>()
+
+    @Test
+    fun a_novel_chapter_that_never_shows_offers_try_again_and_back_within_the_wait() {
+        var back = 0
+        session.open(EinkFixtures.WORK, EinkFixtures.surface.copy(eink = true))
+        session.apply(ReaderEvent.Opened(EinkFixtures.view(start = 0u, medium = app.kaeri.engine.core.Medium.NOVEL)))
+        val painter = EinkPainter.defaults(app.kaeri.engine.model.EinkPanel.GREY, fake)
+        compose.mainClock.autoAdvance = false
+        compose.setContent {
+            EinkTheme {
+                val state = session.state.collectAsState().value
+                // A web view that never shows its first page.
+                EinkReader(session, state, PageImages(), painter, EinkReaderActions({ back++ }, {}, {}), novel = { _, _ -> })
+            }
+        }
+        compose.mainClock.advanceTimeBy(NOVEL_WAIT_LONG_MS - 1_000)
+        assertTrue(compose.onAllNodes(hasText("Try again")).fetchSemanticsNodes().isEmpty())
+        compose.mainClock.advanceTimeBy(2_000)
+        compose.onNodeWithText("This is taking a while.").assertIsDisplayed()
+        compose.onNodeWithText("Try again").performClick()
+        compose.mainClock.advanceTimeBy(100)
+        assertEquals(ReaderCommand.Retry(EinkFixtures.SESSION, EinkFixtures.CHAPTER, null), sent.filterIsInstance<ReaderCommand.Retry>().single())
+        // Try again counts the wait again from the start.
+        assertTrue(compose.onAllNodes(hasText("This is taking a while.")).fetchSemanticsNodes().isEmpty())
+        compose.mainClock.advanceTimeBy(NOVEL_WAIT_LONG_MS + 1_000)
+        compose.onNodeWithText("Back to the series").performClick()
+        assertEquals(1, back)
+    }
+
+    @Test
+    fun the_guide_shows_until_the_first_touch_which_still_turns() {
+        open()
+        compose.onNodeWithText("Tap, or swipe right").assertIsDisplayed()
+        assertEquals(ReaderCommand.Shown(EinkFixtures.SESSION, EinkFixtures.CHAPTER, 0u, TurnHow.PLACED), shown().first())
+        // Right to left: forward is the left 40%.
+        compose.onRoot().performTouchInput { click(androidx.compose.ui.geometry.Offset(width * 0.2f, height * 0.5f)) }
+        compose.waitForIdle()
+        assertTrue(compose.onAllNodes(hasText("Tap, or swipe right")).fetchSemanticsNodes().isEmpty())
+        assertEquals(1u, shown().last().leaf)
+        compose.onNodeWithText("2 of 3").assertIsDisplayed()
+    }
+
+    @Test
+    fun out_of_the_box_page_turns_ask_for_no_full_refresh() {
+        open()
+        // Each page is drawn before the next turn: a page turned away before its image came in
+        // asks for nothing.
+        imagePagesDrawn(Refresh.PARTIAL, 1)
+        repeat(2) { turn ->
+            compose.onRoot().performKeyInput { pressKey(Key.VolumeDown) }
+            compose.waitForIdle()
+            imagePagesDrawn(Refresh.PARTIAL, turn + 2)
+        }
+        assertTrue(fake.requests.none { it.refresh == Refresh.FULL })
+    }
+
+    @Test
+    fun screen_mode_is_set_while_the_reader_is_open_and_given_back_after() {
+        fake = FakeRefresh(modes = true)
+        open(mode = "regal")
+        assertEquals("regal", fake.modesSet.last())
+        readerOn = false
+        compose.waitForIdle()
+        assertEquals("device", fake.modesSet.last())
+    }
+
+    @Test
+    fun the_lower_volume_key_turns_forward_and_each_image_page_is_a_full_refresh_when_asked() {
+        open(policy = optedIn)
+        // Pages decode off the main thread: the refresh follows once the page is drawn, and a page
+        // turned away before then asks for none, so the first is drawn before the turn.
+        imagePagesDrawn(Refresh.FULL, 1)
+        // Down goes forward, as on the phone, until the phone's swap says otherwise.
+        compose.onRoot().performKeyInput { pressKey(Key.VolumeDown) }
+        compose.waitForIdle()
+        assertEquals(TurnHow.KEY, shown().last().how)
+        assertEquals(1u, shown().last().leaf)
+        imagePagesDrawn(Refresh.FULL, 2)
+    }
+
+    /** Waits until [count] refreshes of the kind [refresh] were asked for. */
+    private fun imagePagesDrawn(refresh: Refresh, count: Int) {
+        compose.waitUntil(5_000) { fake.requests.count { it.refresh == refresh } >= count }
+    }
+
+    /** Once the first page is drawn, with its refresh in, the log starts again. */
+    private fun drawn() {
+        compose.waitUntil(5_000) { fake.requests.any { it.refresh == Refresh.FULL || it.refresh == Refresh.PARTIAL } }
+        compose.waitForIdle()
+        fake.clear()
+    }
+
+    @Test
+    fun a_middle_tap_shows_the_bars() {
+        open(policy = optedIn)
+        drawn()
+        compose.onRoot().performTouchInput { click(androidx.compose.ui.geometry.Offset(width * 0.55f, height * 0.5f)) }
+        compose.waitForIdle()
+        compose.onNodeWithText("Page 1 of 3").assertIsDisplayed()
+        compose.onNodeWithText("2 pages left in chapter").assertIsDisplayed()
+        compose.onNodeWithText("Chapter 12 · The Long Stair").assertIsDisplayed()
+        // The touch that clears the guide is one refresh: full, since full refreshes on image pages are on.
+        assertEquals(listOf(Refresh.FULL), fake.requests.map { it.refresh })
+    }
+
+    @Test
+    fun without_full_refreshes_the_touch_that_clears_the_guide_is_its_own_refresh() {
+        open(policy = einkPolicyDefaults(EinkPanel.GREY).copy(imageFull = false))
+        drawn()
+        compose.onRoot().performTouchInput { click(androidx.compose.ui.geometry.Offset(width * 0.55f, height * 0.5f)) }
+        compose.waitForIdle()
+        compose.onNodeWithText("Page 1 of 3").assertIsDisplayed()
+        // The device decides: the bars' own fast refresh, and nothing for the guide.
+        assertEquals(listOf(Refresh.FAST), fake.requests.map { it.refresh })
+    }
+
+    @Test
+    fun taps_on_the_bars_never_turn_the_page_under_them() {
+        open(zones = false)
+        compose.onRoot().performTouchInput { click(androidx.compose.ui.geometry.Offset(width * 0.55f, height * 0.5f)) }
+        compose.waitForIdle()
+        val line = compose.onNodeWithText("Page 1 of 3").fetchSemanticsNode().boundsInRoot
+        val top = compose.onNodeWithText("Chapter 12 · The Long Stair").fetchSemanticsNode().boundsInRoot
+        // Right to left, the forward zone is the left 40%: the progress, the space beside the
+        // page line and the top bar beside the title all sit over it.
+        for (y in listOf(line.bottom + 24f, line.center.y, top.bottom + 4f)) {
+            compose.onRoot().performTouchInput { click(androidx.compose.ui.geometry.Offset(width * 0.3f, y)) }
+            compose.waitForIdle()
+        }
+        assertTrue(shown().none { it.leaf != 0u })
+        compose.onNodeWithText("Page 1 of 3").assertIsDisplayed()
+    }
+
+    @Test
+    fun the_page_between_chapters_is_in_the_flow() {
+        open()
+        repeat(3) {
+            compose.onRoot().performKeyInput { pressKey(Key.VolumeDown) }
+            compose.waitForIdle()
+        }
+        assertEquals(3u, shown().last().leaf)
+        compose.onNodeWithText("Continue to chapter 13").assertIsDisplayed()
+        compose.onNodeWithText("Turn the page to continue").assertIsDisplayed()
+        // The device decides: the chapter's end is a partial update until the person asks.
+        assertEquals(Refresh.PARTIAL, fake.requests.last().refresh)
+
+        // As it says: the next turn opens the next chapter.
+        compose.onRoot().performKeyInput { pressKey(Key.PageDown) }
+        compose.waitForIdle()
+        assertEquals(listOf(ReaderCommand.OpenChapter(EinkFixtures.SESSION, "local:lantern-stair/13")), sent.filterIsInstance<ReaderCommand.OpenChapter>())
+    }
+
+    @Test
+    fun the_phones_volume_swap_turns_the_e_ink_pages_too() {
+        val context = RuntimeEnvironment.getApplication()
+        ReaderLook.swapVolume(context, true)
+        try {
+            open()
+            compose.onRoot().performKeyInput { pressKey(Key.VolumeUp) }
+            compose.waitForIdle()
+            assertEquals(1u, shown().last().leaf)
+        } finally {
+            ReaderLook.swapVolume(context, false)
+        }
+    }
+
+    @Test
+    fun the_keys_turn_the_pages_of_contents_and_not_the_page_under_it() {
+        open()
+        compose.onRoot().performTouchInput { click(androidx.compose.ui.geometry.Offset(width * 0.55f, height * 0.5f)) }
+        compose.waitForIdle()
+        compose.onNodeWithText("Contents").performClick()
+        val rows = List(60) { EinkFixtures.chapter(id = "local:lantern-stair/${it + 1}", number = "${it + 1}", title = null) }
+        session.apply(Event.Reading(ReadingEvent.Chapters(EinkFixtures.WORK, null, listOf(VolumeGroup(null, null, rows, false)), null)))
+        compose.waitForIdle()
+        fun listPage(n: Int) = compose.onAllNodes(hasText("Page $n of", substring = true)).fetchSemanticsNodes().isNotEmpty()
+        // Contents opens on the page with the chapter being read, the 12th: the second.
+        assertTrue(listPage(2))
+        compose.onRoot().performKeyInput { pressKey(Key.VolumeDown) }
+        compose.waitForIdle()
+        assertTrue(listPage(3))
+        assertTrue(!listPage(2))
+        compose.onRoot().performKeyInput { pressKey(Key.PageUp) }
+        compose.waitForIdle()
+        assertTrue(listPage(2))
+        // The reader's page stayed where it was.
+        assertEquals(0u, shown().last().leaf)
+    }
+
+    @Test
+    fun settings_and_contents_are_the_readers_own_and_back_closes_them_first() {
+        var closed = 0
+        open(onBack = { closed++ })
+        middle()
+        compose.onNodeWithText("Settings").performClick()
+        compose.waitForIdle()
+        compose.onNodeWithText("Reader settings").assertIsDisplayed()
+        assertEquals(Refresh.REGION, fake.requests.last().refresh)
+        back()
+        assertTrue(compose.onAllNodes(hasText("Reader settings")).fetchSemanticsNodes().isEmpty())
+        // Back goes one step: the sheet to the bars, then the bars.
+        compose.onNodeWithText("Page 1 of 3").assertIsDisplayed()
+        assertEquals(Refresh.REGION, fake.requests.last().refresh)
+        back()
+        assertTrue(compose.onAllNodes(hasText("Page 1 of 3")).fetchSemanticsNodes().isEmpty())
+        assertEquals(0, closed)
+
+        middle()
+        compose.onNodeWithText("Contents").performClick()
+        compose.waitForIdle()
+        assertEquals(Refresh.FAST, fake.requests.last().refresh)
+        assertTrue(compose.onAllNodes(hasText("Page 1 of 3")).fetchSemanticsNodes().isEmpty())
+        back()
+        // Contents gives the page back under the bars it was opened from.
+        compose.onNodeWithText("Page 1 of 3").assertIsDisplayed()
+        assertEquals(Refresh.PARTIAL, fake.requests.last().refresh)
+        back()
+        assertTrue(compose.onAllNodes(hasText("Page 1 of 3")).fetchSemanticsNodes().isEmpty())
+        assertEquals(0, closed)
+
+        // With nothing over the page, Back closes the reader.
+        back()
+        assertEquals(1, closed)
+    }
+
+    private fun middle() {
+        compose.onRoot().performTouchInput { click(androidx.compose.ui.geometry.Offset(width * 0.55f, height * 0.5f)) }
+        compose.waitForIdle()
+    }
+
+    private fun key(key: Key) {
+        compose.onRoot().performKeyInput { pressKey(key) }
+        compose.waitForIdle()
+    }
+
+    private fun back() {
+        compose.runOnUiThread { compose.activity.onBackPressedDispatcher.onBackPressed() }
+        compose.waitForIdle()
+    }
+
+    private fun shows(words: String) = compose.onAllNodes(hasText(words)).fetchSemanticsNodes().isNotEmpty()
+
+    /** The one node with the focus. */
+    private fun focused(): SemanticsNode = compose.onAllNodes(isFocused()).fetchSemanticsNodes().single()
+
+    private fun focusedOn(words: String): Boolean = compose.onAllNodes(isFocused() and hasText(words)).fetchSemanticsNodes().isNotEmpty()
+
+    @OptIn(ExperimentalComposeUiApi::class)
+    private fun keyboard() = compose.runOnIdle { modes!!.requestInputMode(InputMode.Keyboard) }
+
+    @Test
+    fun keys_reach_the_settings_sheet_and_never_lose_the_reader() {
+        open()
+        // A sheet opened by touch leaves the keys with the reader: Escape closes it back to the bars,
+        // and then the bars.
+        middle()
+        compose.onNodeWithText("Settings").performClick()
+        compose.waitForIdle()
+        assertTrue(shows("Reader settings"))
+        key(Key.Escape)
+        assertTrue(!shows("Reader settings"))
+        assertTrue(shows("Page 1 of 3"))
+        key(Key.Escape)
+        assertTrue(!shows("Page 1 of 3"))
+
+        // With keys: Enter shows the bars, Enter on a focused Settings opens the sheet and the focus
+        // goes into it, Escape closes the sheet back to Settings, and Escape again the bars, leaving
+        // the keys with the reader.
+        key(Key.Enter)
+        assertTrue(shows("Page 1 of 3"))
+        keyboard()
+        compose.onNodeWithText("Settings").requestFocus().assertIsFocused()
+        key(Key.Enter)
+        assertTrue(shows("Reader settings"))
+        assertTrue(!focusedOn("Settings"))
+        assertTrue(focused().boundsInRoot.top >= compose.onNodeWithText("Reader settings").fetchSemanticsNode().boundsInRoot.top - 40f)
+        key(Key.Escape)
+        assertTrue(!shows("Reader settings"))
+        assertTrue(focusedOn("Settings"))
+        key(Key.Escape)
+        assertTrue(!shows("Page 1 of 3"))
+        key(Key.Enter)
+        assertTrue(shows("Page 1 of 3"))
+    }
+
+    @Test
+    fun with_the_bars_up_the_d_pad_moves_between_their_controls_and_turns_again_once_they_hide() {
+        open(zones = false)
+        keyboard()
+        val screen = compose.onRoot().fetchSemanticsNode().boundsInRoot
+
+        // Enter shows the bars with the focus on Contents, the top bar's first control that stays in the reader.
+        key(Key.Enter)
+        assertTrue(shows("Page 1 of 3"))
+        assertTrue(focusedOn("Contents"))
+        val contents = focused().boundsInRoot
+
+        // Down goes to the bottom bar and Up back to the top one; nothing turns.
+        key(Key.DirectionDown)
+        assertTrue(focused().boundsInRoot.top > screen.height / 2)
+        key(Key.DirectionUp)
+        assertTrue(focused().boundsInRoot.bottom < screen.height / 2)
+        // Left and Right go along the top bar: Contents and Back.
+        repeat(4) { if (!focusedOn("Contents")) key(Key.DirectionRight) }
+        assertTrue(focusedOn("Contents"))
+        key(Key.DirectionLeft)
+        assertTrue(focused().boundsInRoot.right <= contents.left)
+        assertTrue(focused().config.getOrNull(androidx.compose.ui.semantics.SemanticsProperties.ContentDescription).orEmpty().isNotEmpty())
+        // At the bars' edge the focus stays put, and the bars stay up.
+        val edge = focused().id
+        key(Key.DirectionLeft)
+        key(Key.DirectionUp)
+        assertEquals(edge, focused().id)
+        assertTrue(shows("Page 1 of 3"))
+        // Along the bottom bar to Settings, the sheet, and back to Settings. Left and Right never
+        // take the focus from one bar to the other.
+        key(Key.DirectionDown)
+        repeat(6) {
+            key(Key.DirectionLeft)
+            assertTrue(focused().boundsInRoot.top > screen.height / 2)
+        }
+        repeat(6) { if (!focusedOn("Settings")) key(Key.DirectionRight) }
+        repeat(6) { if (!focusedOn("Settings")) key(Key.DirectionLeft) }
+        assertTrue(focusedOn("Settings"))
+        assertTrue(shown().none { it.leaf != 0u })
+
+        // The sheet keeps the D-pad: no arrow takes the focus out of it or turns the page.
+        key(Key.Enter)
+        assertTrue(shows("Reader settings"))
+        val sheetTop = compose.onNodeWithText("Reader settings").fetchSemanticsNode().boundsInRoot.top - 40f
+        for (arrow in listOf(Key.DirectionUp, Key.DirectionUp, Key.DirectionLeft, Key.DirectionDown, Key.DirectionRight, Key.DirectionUp, Key.Tab)) {
+            key(arrow)
+            assertTrue("$arrow left the sheet", focused().boundsInRoot.top >= sheetTop)
+        }
+        assertTrue(shows("Reader settings"))
+        assertTrue(shown().none { it.leaf != 0u })
+        // Back closes the sheet back to the control that opened it.
+        back()
+        assertTrue(!shows("Reader settings"))
+        assertTrue(focusedOn("Settings"))
+
+        // Back hides the bars, and the D-pad turns the page again.
+        back()
+        assertTrue(!shows("Page 1 of 3"))
+        key(Key.DirectionDown)
+        assertEquals(1u, shown().last().leaf)
+    }
+
+    @OptIn(ExperimentalComposeUiApi::class)
+    @Test
+    fun bars_shown_by_touch_take_no_focus_until_an_arrow_comes() {
+        open(zones = false)
+        middle()
+        assertTrue(shows("Page 1 of 3"))
+        // Touch: no control has the focus, so no ring shows.
+        assertTrue(!focusedOn("Contents"))
+        assertTrue(!focusedOn("Settings"))
+        // The first arrow goes to Contents and turns nothing.
+        keyboard()
+        key(Key.DirectionDown)
+        assertTrue(focusedOn("Contents"))
+        assertTrue(shown().none { it.leaf != 0u })
+        // A middle tap hides the bars, and the arrows turn again.
+        middle()
+        assertTrue(!shows("Page 1 of 3"))
+        key(Key.DirectionDown)
+        assertEquals(1u, shown().last().leaf)
+    }
+
+    @Test
+    fun contents_keeps_the_d_pad_and_back_returns_the_focus_to_its_button() {
+        open(zones = false)
+        keyboard()
+        key(Key.Enter)
+        assertTrue(focusedOn("Contents"))
+        key(Key.Enter)
+        val rows = List(60) { EinkFixtures.chapter(id = "local:lantern-stair/${it + 1}", number = "${it + 1}", title = null) }
+        session.apply(Event.Reading(ReadingEvent.Chapters(EinkFixtures.WORK, null, listOf(VolumeGroup(null, null, rows, false)), null)))
+        compose.waitForIdle()
+        fun listPage(n: Int) = compose.onAllNodes(hasText("Page $n of", substring = true)).fetchSemanticsNodes().isNotEmpty()
+        assertTrue(listPage(2))
+        // The chapter being read has the focus, and the D-pad moves along the list without turning it.
+        assertTrue(focusedOn("Reading"))
+        val reading = focused().boundsInRoot
+        key(Key.DirectionDown)
+        assertTrue(focused().boundsInRoot.top > reading.top)
+        key(Key.DirectionUp)
+        key(Key.DirectionUp)
+        assertTrue(focused().boundsInRoot.top < reading.top)
+        assertTrue(listPage(2))
+        // A page key turns the list, and the focus goes to the new page's first chapter.
+        key(Key.PageDown)
+        assertTrue(listPage(3))
+        assertTrue(compose.onAllNodes(isFocused()).fetchSemanticsNodes().size == 1)
+        assertTrue(focused().config.getOrNull(androidx.compose.ui.semantics.SemanticsProperties.Text).orEmpty().isNotEmpty())
+        // Back returns to the bars with the focus on Contents, and the reader's page never moved.
+        back()
+        assertTrue(shows("Page 1 of 3"))
+        assertTrue(focusedOn("Contents"))
+        assertEquals(0u, shown().last().leaf)
+    }
+
+    @Test
+    fun slowFirstOpenNamesTheSeries() {
+        // A first open has no reader view yet: the title comes from the series the open came from.
+        session.open(EinkFixtures.WORK, EinkFixtures.surface.copy(eink = true), title = "The Lantern Stair") // i18n-skip
+        val first = EinkFixtures.chapter("local:lantern-stair/1", "1", "The First Landing", null).copy(volume = "1") // i18n-skip
+        session.apply(ReaderEvent.Opening(first, ReaderWait.ChapterPages("1", "alpha")))
+        compose.mainClock.autoAdvance = false
+        val painter = EinkPainter.defaults(app.kaeri.engine.model.EinkPanel.GREY, fake)
+        compose.setContent {
+            EinkTheme {
+                val state = session.state.collectAsState().value
+                EinkReader(session, state, PageImages(), painter, EinkReaderActions({}, {}, {}), showZones = false)
+            }
+        }
+        compose.mainClock.advanceTimeBy(11_000)
+        compose.waitForIdle()
+        compose.onNodeWithText("The Lantern Stair · volume 1").assertIsDisplayed() // i18n-skip
+    }
+
+    @Test
+    fun a_chapter_asked_for_that_is_slow_gets_the_slow_line_and_try_again_asks_it_again() {
+        open(zones = false)
+        toEndPage()
+        compose.mainClock.autoAdvance = false
+        compose.onNodeWithText("Continue to chapter 13").performClick()
+        session.apply(ReaderEvent.Opening(EinkFixtures.chapter("local:lantern-stair/13", "13", null), ReaderWait.ChapterPages("13", "alpha")))
+        compose.mainClock.advanceTimeBy(11_000)
+        compose.waitForIdle()
+        compose.onNodeWithText("hasn't answered in 10 seconds", substring = true).assertIsDisplayed()
+        compose.onNodeWithText("Try again").performClick()
+        compose.mainClock.advanceTimeBy(100)
+        assertEquals(List(2) { ReaderCommand.OpenChapter(EinkFixtures.SESSION, "local:lantern-stair/13") }, opens())
+    }
+
+    private fun opens(): List<ReaderCommand.OpenChapter> = sent.filterIsInstance<ReaderCommand.OpenChapter>()
+
+    /** Drawn inverted: paper where the solid button's ink was, beside its words. */
+    private fun paperAtStart(node: SemanticsNodeInteraction): Boolean {
+        val image = node.captureToImage().asAndroidBitmap()
+        val pixel = image.getPixel((image.width * 0.06f).toInt(), image.height / 2)
+        val darkest = minOf(android.graphics.Color.red(pixel), android.graphics.Color.green(pixel), android.graphics.Color.blue(pixel))
+        return darkest > 200
+    }
+
+    private fun toEndPage() {
+        repeat(3) {
+            compose.onRoot().performKeyInput { pressKey(Key.VolumeDown) }
+            compose.waitForIdle()
+        }
+    }
+
+    @Test
+    fun continue_stays_pressed_while_the_chapter_opens_then_names_it_and_asks_once() {
+        // Without the guide over the page, so the button's own pixels are read.
+        open(zones = false)
+        toEndPage()
+        val button = compose.onNodeWithText("Continue to chapter 13")
+        assertTrue(!paperAtStart(button))
+        paints.clear()
+        compose.mainClock.autoAdvance = false
+        button.performClick()
+        compose.mainClock.advanceTimeBy(32)
+        // The press is told to the policy before what it does, and drawn at once.
+        assertEquals(EinkPaint.Press, paints.first())
+        assertTrue(paperAtStart(button))
+        // Taps while it opens ask nothing more, and the press holds past its own short time.
+        button.performClick()
+        compose.mainClock.advanceTimeBy(300)
+        assertEquals(1, opens().size)
+        assertTrue(paperAtStart(button))
+        // Past the quiet time the page gives way to the one line naming the chapter.
+        compose.mainClock.advanceTimeBy(700)
+        compose.onNodeWithText("Loading chapter 13").assertIsDisplayed()
+        assertTrue(compose.onAllNodes(hasText("Continue to chapter 13")).fetchSemanticsNodes().isEmpty())
+        assertTrue(EinkPaint.Waiting in paints)
+        compose.mainClock.autoAdvance = true
+        // A forward turn meanwhile asks nothing either.
+        compose.onRoot().performKeyInput { pressKey(Key.PageDown) }
+        compose.waitForIdle()
+        assertEquals(1, opens().size)
+    }
+
+    @Test
+    fun a_chapter_that_fails_to_open_shows_why_and_try_again_opens_it_anew() {
+        open()
+        toEndPage()
+        compose.onNodeWithText("Continue to chapter 13").performClick()
+        compose.waitForIdle()
+        session.apply(Event.Reading(ReadingEvent.Failed(ReadingAbout.READER, ReadingFailure.Offline)))
+        compose.waitForIdle()
+        compose.onNodeWithText("Back to the series").assertIsDisplayed()
+        sent.clear()
+        compose.onNodeWithText("Try again").performClick()
+        compose.waitForIdle()
+        val again = sent.filterIsInstance<ReaderCommand.Open>().single()
+        assertEquals("local:lantern-stair/13", again.chapter)
+    }
+
+    @Test
+    fun after_try_again_by_key_the_chapter_it_opens_takes_the_keys() {
+        // A focusable on the screen behind the reader, as the series page is.
+        open(zones = false, behind = { Box(Modifier.size(8.dp).onFocusChanged { behindFocused = it.isFocused }.focusable()) })
+        toEndPage()
+        compose.onNodeWithText("Continue to chapter 13").performClick()
+        compose.waitForIdle()
+        session.apply(Event.Reading(ReadingEvent.Failed(ReadingAbout.READER, ReadingFailure.Offline)))
+        compose.waitForIdle()
+        // Try again by key, through the window as a keyboard's keys come: the focus is on it when
+        // the button goes.
+        keyboard()
+        compose.onNodeWithText("Try again").requestFocus().assertIsFocused()
+        sent.clear()
+        windowKey(android.view.KeyEvent.KEYCODE_ENTER)
+        assertEquals(1, sent.filterIsInstance<ReaderCommand.Open>().size)
+        session.apply(ReaderEvent.Opened(EinkFixtures.view(start = 0u)))
+        session.apply(ReaderEvent.Leaves(EinkFixtures.SESSION, EinkFixtures.CHAPTER, EinkFixtures.leaves(3) { EinkFixtures.grey(dir.root, "again-$it.gray", 80, 80) }))
+        compose.waitForIdle()
+        assertTrue(!shows("Try again"))
+        // The focus that went with the button is the reader's again, not the screen's behind it,
+        // with no touch to the bars.
+        assertTrue(!behindFocused)
+        sent.clear()
+        windowKey(android.view.KeyEvent.KEYCODE_PAGE_DOWN)
+        assertEquals(1u, shown().last().leaf)
+    }
+
+    /** A key down and up through the window, to whatever view holds the focus there. */
+    private fun windowKey(code: Int) {
+        compose.runOnUiThread {
+            val window = compose.activity.window
+            window.superDispatchKeyEvent(android.view.KeyEvent(android.view.KeyEvent.ACTION_DOWN, code))
+            window.superDispatchKeyEvent(android.view.KeyEvent(android.view.KeyEvent.ACTION_UP, code))
+        }
+        compose.waitForIdle()
+    }
+
+
+    @Test
+    fun in_a_novel_tab_from_the_page_reaches_the_bars() {
+        session.open(EinkFixtures.WORK, EinkFixtures.surface.copy(eink = true))
+        session.apply(ReaderEvent.Opened(EinkFixtures.view(start = 0u, medium = Medium.NOVEL)))
+        val painter = EinkPainter.defaults(EinkPanel.GREY, fake)
+        var page: android.view.View? = null
+        var controls: (() -> Unit)? = null
+        compose.setContent {
+            modes = LocalInputModeManager.current
+            EinkTheme {
+                val state = session.state.collectAsState().value
+                // A stand-in for the web view: it holds the focus and hands its keys to the reader.
+                EinkReader(session, state, PageImages(), painter, EinkReaderActions({}, {}, {}), novel = { place, onControls ->
+                    controls = onControls
+                    AndroidView(
+                        factory = { context ->
+                            android.view.View(context).apply {
+                                isFocusable = true
+                                isFocusableInTouchMode = true
+                                setOnKeyListener { _, _, event -> place.keys?.invoke(event) == true }
+                                page = this
+                            }
+                        },
+                        modifier = Modifier.fillMaxSize(),
+                    )
+                })
+            }
+        }
+        compose.waitForIdle()
+        keyboard()
+        // The bars shown by a middle tap on the page, with the page's web view keeping the focus.
+        compose.runOnUiThread { controls!!() }
+        compose.waitForIdle()
+        assertTrue(shows("Contents"))
+        compose.runOnUiThread { page!!.requestFocus() }
+        compose.waitForIdle()
+        assertTrue(page!!.isFocused)
+        assertTrue(!focusedOn("Contents"))
+        // Tab goes to the bars, not around the page.
+        compose.runOnUiThread {
+            page!!.dispatchKeyEvent(android.view.KeyEvent(android.view.KeyEvent.ACTION_DOWN, android.view.KeyEvent.KEYCODE_TAB))
+            page!!.dispatchKeyEvent(android.view.KeyEvent(android.view.KeyEvent.ACTION_UP, android.view.KeyEvent.KEYCODE_TAB))
+        }
+        compose.waitForIdle()
+        assertTrue(focusedOn("Contents"))
+    }
+
+    @Test
+    fun a_chapter_picked_in_contents_keeps_the_list_until_it_opens() {
+        open()
+        compose.onRoot().performTouchInput { click(androidx.compose.ui.geometry.Offset(width * 0.55f, height * 0.5f)) }
+        compose.waitForIdle()
+        compose.onNodeWithText("Contents").performClick()
+        val rows = List(20) { EinkFixtures.chapter(id = "local:lantern-stair/${it + 1}", number = "${it + 1}", title = null) }
+        session.apply(Event.Reading(ReadingEvent.Chapters(EinkFixtures.WORK, null, listOf(VolumeGroup(null, null, rows, false)), null)))
+        compose.waitForIdle()
+        paints.clear()
+        compose.mainClock.autoAdvance = false
+        compose.onNodeWithText("Chapter 14").performClick()
+        compose.mainClock.advanceTimeBy(300)
+        // The list stays, its row pressed, while the chapter opens.
+        compose.onNodeWithText("Chapter 14").assertIsDisplayed()
+        assertEquals(EinkPaint.Press, paints.first())
+        assertEquals(listOf(ReaderCommand.OpenChapter(EinkFixtures.SESSION, "local:lantern-stair/14")), opens())
+        // Opened: the list goes with the press, and the new chapter's line holds until its pages come.
+        session.apply(ReaderEvent.Opened(EinkFixtures.view(start = 0u).copy(chapter = EinkFixtures.chapter("local:lantern-stair/14", "14", null))))
+        compose.mainClock.advanceTimeBy(700)
+        compose.mainClock.autoAdvance = true
+        compose.waitForIdle()
+        assertTrue(compose.onAllNodes(hasText("Chapter 14")).fetchSemanticsNodes().isEmpty())
+        compose.onNodeWithText("Loading chapter 14").assertIsDisplayed()
+    }
+}

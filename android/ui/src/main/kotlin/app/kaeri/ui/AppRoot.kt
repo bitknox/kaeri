@@ -14,6 +14,10 @@ import androidx.compose.animation.ExitTransition
 import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.SharedTransitionLayout
 import androidx.compose.animation.fadeIn
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
@@ -93,6 +97,9 @@ import app.kaeri.engine.model.Command
 import app.kaeri.engine.model.PlayerCommand
 import app.kaeri.store.AppStore
 import app.kaeri.engine.core.AnilistId
+import app.kaeri.engine.core.ChapterId
+import app.kaeri.engine.core.WorkId
+import app.kaeri.engine.model.KaeriIsFor
 import app.kaeri.engine.model.NoticeHint
 import app.kaeri.engine.model.SearchQuery
 
@@ -102,7 +109,19 @@ enum class Destination(val route: String, @StringRes val label: Int, val icon: I
     Calendar("calendar", R.string.nav_calendar, Icons.Calendar, Icons.CalendarSelected),
     Seasonal("seasonal", R.string.nav_seasonal, Icons.Seasonal, Icons.SeasonalSelected),
     Library("library", R.string.nav_library, Icons.Library, Icons.LibrarySelected),
-    Search("search", R.string.nav_search, Icons.Search, Icons.SearchSelected);
+    Search("search", R.string.nav_search, Icons.Search, Icons.SearchSelected),
+
+    /** Reading's Home beside Watch's, with Both. With Read alone, [Home] is reading's Home. */
+    Read("read", R.string.nav_read, Icons.Read, Icons.ReadSelected),
+
+    /** New chapters of the series followed: a bar item with Read alone, Read's heading with Both. */
+    Updates("updates", R.string.nav_updates, Icons.Updates, Icons.UpdatesSelected),
+
+    /** The e-reader's Downloads tab: what is downloading and what is here, on paper. */
+    Downloads("shelf-downloads", R.string.downloads_title, Icons.Downloads, Icons.Downloads),
+
+    /** The e-reader's More tab: sources, trackers, sync, settings and About. */
+    More("more", R.string.eink_tab_more, Icons.More, Icons.More);
 
     companion object {
         /** The destination [name] names, by its route, case aside. */
@@ -110,6 +129,41 @@ enum class Destination(val route: String, @StringRes val label: Int, val icon: I
             // "continue" is what links and saved state called Home before it had its own name.
             if (name.equals("continue", ignoreCase = true)) Home else entries.firstOrNull { it.route.equals(name, ignoreCase = true) }
     }
+}
+
+/**
+ * The destinations the bar and rail show for what Kaeri is for: Watch alone keeps its five, Read
+ * alone has Home, Updates, Library and Search, and Both has Watch, Read, Library and Search, with
+ * Calendar, Seasonal and Updates opened from the headings on each Home.
+ */
+fun barDestinations(answer: KaeriIsFor): List<Destination> = when (answer) {
+    KaeriIsFor.WATCH -> listOf(Destination.Home, Destination.Calendar, Destination.Seasonal, Destination.Library, Destination.Search)
+    KaeriIsFor.READ -> listOf(Destination.Home, Destination.Updates, Destination.Library, Destination.Search)
+    KaeriIsFor.BOTH -> listOf(Destination.Home, Destination.Read, Destination.Library, Destination.Search)
+}
+
+/** The bar item that stands for [destination] when it has none of its own: Watch's or Read's. */
+internal fun barOwner(destination: Destination, answer: KaeriIsFor): Destination = when {
+    destination in barDestinations(answer) -> destination
+    destination == Destination.Updates && answer == KaeriIsFor.BOTH -> Destination.Read
+    destination == Destination.Read -> Destination.Home
+    else -> Destination.Home
+}
+
+/** The label [destination] has for [answer]: Home is Watch beside Read. */
+@StringRes
+internal fun Destination.labelFor(answer: KaeriIsFor): Int =
+    if (this == Destination.Home && answer == KaeriIsFor.BOTH) R.string.nav_watch else label
+
+/**
+ * What Kaeri is for on this device, as the screens read it: until the engine says, the answer kept
+ * from the last launch, or Watch.
+ */
+@Composable
+internal fun kaeriIsFor(): KaeriIsFor {
+    val medium = LocalAppStore.current.medium
+    val view by medium.view.collectAsStateWithLifecycle()
+    return view?.answer ?: medium.kept ?: KaeriIsFor.WATCH
 }
 
 /** What the screens' actions open, which later phases fill in. */
@@ -135,6 +189,16 @@ data class AppActions(
      * turns the setting itself, as the screenshots do.
      */
     val notifications: NotificationActions? = null,
+    /**
+     * Open the reader at [chapter] of [work], or where it was left. [cover] is the cover's art, and
+     * [from] the cover's place on screen when the reader grows out of it.
+     */
+    val openReader: (work: WorkId, chapter: ChapterId?, cover: String?, from: String?) -> Unit = { _, _, _, _ -> },
+    /**
+     * Hand prepared files to the share sheet, for Send to e-reader: true once it is up, false when
+     * a file is gone ([app.kaeri.ui.reading.ExportShare.gone]) and nothing was offered.
+     */
+    val shareFiles: (files: List<app.kaeri.engine.model.ExportFile>) -> Boolean = { true },
 )
 
 /** The app's side of the Notifications pane, and of a show's own New episodes switch. */
@@ -192,14 +256,110 @@ private fun AnimatedContentTransitionScope<NavBackStackEntry>.switching(): Boole
     return initialState.destinationOf() != targetState.destinationOf() || initialState.isPage || targetState.isPage
 }
 
+/** Whether the entry is a reading page pushed inside a destination: View all, e-ink's Browse. */
+private val NavBackStackEntry.isReadPage: Boolean get() = destination.route?.endsWith("/read/{page}") == true // i18n-skip
+
+/*
+ * Reading pages on M3's shared axis X, 300 ms emphasized, as a crossfade rather than a fade
+ * through: only the page on top fades, over a page underneath that stays whole until it is
+ * covered, so no frame shows the empty background. A push puts the new page on top; a pop keeps
+ * the leaving page on top.
+ */
+
+/** The page pushed on top: from [from] px along, fading in over the page underneath. */
+private fun readPageOver(from: Int): EnterTransition =
+    slideInHorizontally(tween(300, easing = EMPHASIZED)) { from } + fadeIn(tween(210))
+
+/** The page a push covers: [to] px along, whole until the new page is, then gone. */
+private fun readPageCovered(to: Int): ExitTransition =
+    slideOutHorizontally(tween(300, easing = EMPHASIZED)) { to } + fadeOut(tween(90, delayMillis = 210))
+
+/** The page a pop uncovers: from [from] px along, whole from the start under the leaving page. */
+private fun readPageUncovered(from: Int): EnterTransition =
+    slideInHorizontally(tween(300, easing = EMPHASIZED)) { from }
+
+/** The page a pop takes away: [to] px along, fading out over the page underneath. */
+private fun readPageAway(to: Int): ExitTransition =
+    slideOutHorizontally(tween(300, easing = EMPHASIZED)) { to } + fadeOut(tween(210))
+
+/*
+ * The same axis while a back swipe seeks it, linear so the pages follow the finger: the page
+ * underneath stays whole and the leaving page fades over it across the whole swipe, so a swipe
+ * held part way shows both and letting go finishes the crossfade. Every page that does not fly
+ * back into what it was opened from leaves this way on a swipe.
+ */
+private fun pageBackUncovered(from: Int): EnterTransition =
+    slideInHorizontally(tween(300, easing = LinearEasing)) { from }
+
+private fun pageBackAway(to: Int): ExitTransition =
+    slideOutHorizontally(tween(300, easing = LinearEasing)) { to } + fadeOut(tween(300, easing = LinearEasing))
+
+/** With Remove animations on, a swipe moves nothing: the leaving page fades over the one underneath. */
+private fun pageBackFaded(): ExitTransition = fadeOut(tween(300, easing = LinearEasing))
+
+/**
+ * Whether the entry flies back into what it was opened from as it leaves: a title page into its
+ * cover, a series page into its cover, the player into its banner. Its shared elements do the
+ * moving, over the page underneath, which stays whole; one opened from nowhere they can fly to
+ * fades over it instead (the page's flight bounds, unmatched, fade out).
+ */
+private fun NavBackStackEntry.fliesBack(player: PlayerSlot?): Boolean {
+    val route = destination.route ?: return false
+    if (route == PLAYER_ROUTE) return player?.title != null
+    return route.endsWith("/title/{id}") || route.endsWith("/series/{work}") // i18n-skip
+}
+
+/** The way a back swipe from [edge] moves a page: away from the edge the finger came from. */
+private fun swipeSign(edge: Int): Int = if (edge == androidx.activity.BackEventCompat.EDGE_RIGHT) -1 else 1
+
 /**
  * The frame. A switch between destinations fades the page through on the quick spring (T6); a
  * title page pushed inside one keeps the page underneath, and the shared elements do the moving
  * (T1), seeked by predictive back.
  */
-@OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
 fun AppRoot(
+    store: AppStore,
+    start: Destination = Destination.Home,
+    actions: AppActions = AppActions(),
+    /** A title page to open on [start] as the app starts: the fixtures' `title` extra. */
+    startTitle: AnilistId? = null,
+    /** A search to run on Search as the app starts: the fixtures' `query` and `genre` extras. */
+    startSearch: SearchQuery? = null,
+    /** A sheet to open on [start] as the app starts: the fixtures' `sheet` extra, `filters` on Search. */
+    startSheet: String? = null,
+    /** A page to open over [start] as the app starts, by its route: the fixtures' `page` extra. */
+    startPage: String? = null,
+    /** The player, which the frame shows over everything while it is up. */
+    player: PlayerSlot? = null,
+    /** The links the system opens the app on, followed as they come: shortcuts, notifications. */
+    links: Flow<AppLink> = emptyFlow(),
+    /** The destination on screen, each time it changes: where the Updated notification comes back to. */
+    onSection: (Destination) -> Unit = {},
+    /** Whether first launch's pages may show, until this device has been through them. */
+    firstLaunch: Boolean = false,
+) {
+    // On an e-ink panel every screen draws on paper, with no ripple and nothing moving.
+    EinkPaperTheme(app.kaeri.ui.reading.LocalEinkLayout.current) {
+        AppRootFrame(
+            store = store,
+            start = start,
+            actions = actions,
+            startTitle = startTitle,
+            startSearch = startSearch,
+            startSheet = startSheet,
+            startPage = startPage,
+            player = player,
+            links = links,
+            onSection = onSection,
+            firstLaunch = firstLaunch,
+        )
+    }
+}
+
+@OptIn(ExperimentalSharedTransitionApi::class)
+@Composable
+private fun AppRootFrame(
     store: AppStore,
     start: Destination = Destination.Home,
     actions: AppActions = AppActions(),
@@ -224,6 +384,8 @@ fun AppRoot(
     val navigator = remember(nav) { Navigator(nav, start) }
     // With Remove animations on, the page on screen is recorded, so Another can fade a still of it out.
     val removed = app.kaeri.design.rememberAnimationsRemoved()
+    // How far a reading page moves on the shared axis as it comes and goes: 30 dp.
+    val axis = with(androidx.compose.ui.platform.LocalDensity.current) { 30.dp.roundToPx() }
     val pageFade = app.kaeri.design.rememberStillFade()
     SideEffect { navigator.fade = pageFade }
     val sheets = remember { AppSheets() }
@@ -260,7 +422,14 @@ fun AppRoot(
     val scope = rememberCoroutineScope()
     val context = androidx.compose.ui.platform.LocalContext.current
     val snackbars = remember { Snackbars(SnackbarHostState(), scope, context) }
-    val wide = wideWindow()
+    val eink = app.kaeri.ui.reading.LocalEinkLayout.current != null
+    // An e-reader keeps the board's bottom tabs at every size, never the rail.
+    val wide = wideWindow() && !eink
+    val einkReader = eink && einkReaderShape()
+    val mediumView by store.medium.view.collectAsStateWithLifecycle()
+    val answer = mediumView?.answer ?: store.medium.kept ?: KaeriIsFor.WATCH
+    // Settings on a 10 inch e-reader keeps the bar, with More marked.
+    val settingsTab = if (eink && fullWindow) einkSettingsTab(answer, einkReader, app.kaeri.ui.reading.largePanel()) else null
 
     CompositionLocalProvider(
         LocalAppStore provides store,
@@ -294,6 +463,13 @@ fun AppRoot(
         androidx.compose.runtime.LaunchedEffect(startPage) {
             startPage?.let(navigator::open)
         }
+        // Add a source from the demo's last page: Your sources, with the choice over it.
+        val choosing by store.cameIn.choosing.collectAsStateWithLifecycle()
+        androidx.compose.runtime.LaunchedEffect(choosing) {
+            if (choosing && nav.currentBackStackEntry?.destination?.route != app.kaeri.ui.reading.BOOK_SOURCES_ROUTE) {
+                navigator.open(app.kaeri.ui.reading.BOOK_SOURCES_ROUTE)
+            }
+        }
         // The player comes up over whatever is on screen, and goes back to it as it closes.
         if (player != null) {
             androidx.compose.runtime.LaunchedEffect(player.presented) {
@@ -313,9 +489,10 @@ fun AppRoot(
             if (drivenTv != null && store.party.view.value == null) tvChoice = target else navigator.open(LOBBY_ROUTE)
         }
         tvChoice?.let { target ->
+            val tvCard by store.tv.card.collectAsStateWithLifecycle()
             PartyTvChoiceSheet(
                 target,
-                tvName = store.tv.card.value?.card?.tvName.orEmpty(),
+                tvName = tvCard?.card?.tvName.orEmpty(),
                 onTv = {
                     store.tv.send(app.kaeri.engine.ffi.FfiTvCommand.PartyJoin(target.server, target.room))
                     store.closePartyLobby()
@@ -357,12 +534,15 @@ fun AppRoot(
                     if (!onPlayer) CastNowPlayingBar()
                     // Watch together's bar, above the navigation bar while a party is on.
                     if (!onPlayer) PartyBar(hidden = entry?.destination?.route == LOBBY_ROUTE)
-                    if (!wide && !onPage && !onPlayer) PhoneBar(current ?: start, navigator::go)
+                    if (!wide && (!onPage || settingsTab != null) && !onPlayer && !sheets.barHidden) {
+                        // On an e-ink panel the bar is words on paper, as the e-ink boards draw it.
+                        if (eink) EinkTabBar(settingsTab ?: current ?: start, answer, einkReader, navigator::go) else PhoneBar(current ?: start, answer, navigator::go)
+                    }
                 }
             },
         ) { padding ->
             Row(Modifier.padding(padding).consumeWindowInsets(padding)) {
-                if (wide && !fullWindow && !onPlayer) Rail(current, entry?.destination?.route, navigator, routed)
+                if (wide && !fullWindow && !onPlayer) Rail(current, answer, entry?.destination?.route, navigator, routed)
                 SharedTransitionLayout(if (removed) Modifier.stillFade(pageFade) else Modifier) {
                     CompositionLocalProvider(
                         LocalSharedTransitions provides this,
@@ -371,10 +551,60 @@ fun AppRoot(
                         NavHost(
                             nav,
                             startDestination = graphRoute(start),
-                            enterTransition = { if (navigator.replacing) fadeIn(Motion.standard()) else if (switching()) fadeIn(Motion.quick()) else EnterTransition.None },
-                            exitTransition = { if (navigator.replacing) fadeOut(Motion.standard()) else if (switching()) fadeOut(Motion.quick()) else ExitTransition.KeepUntilTransitionsFinished },
-                            popEnterTransition = { if (switching()) fadeIn(Motion.quick()) else EnterTransition.None },
-                            popExitTransition = { if (switching()) fadeOut(Motion.quick()) else ExitTransition.KeepUntilTransitionsFinished },
+                            // A reading page (View all) pushes on M3's shared axis, which predictive back seeks.
+                            // E-ink: no fades between pages; the panel redraws the new one at once.
+                            enterTransition = {
+                                when {
+                                    eink -> EnterTransition.None
+                                    navigator.replacing -> fadeIn(Motion.standard())
+                                    switching() -> fadeIn(Motion.quick())
+                                    targetState.isReadPage -> readPageOver(axis)
+                                    else -> EnterTransition.None
+                                }
+                            },
+                            exitTransition = {
+                                when {
+                                    eink -> ExitTransition.None
+                                    navigator.replacing -> fadeOut(Motion.standard())
+                                    switching() -> fadeOut(Motion.quick())
+                                    targetState.isReadPage -> readPageCovered(-axis)
+                                    else -> ExitTransition.KeepUntilTransitionsFinished
+                                }
+                            },
+                            popEnterTransition = {
+                                when {
+                                    eink -> EnterTransition.None
+                                    switching() -> fadeIn(Motion.quick())
+                                    initialState.isReadPage -> readPageUncovered(-axis)
+                                    else -> EnterTransition.None
+                                }
+                            },
+                            popExitTransition = {
+                                when {
+                                    eink -> ExitTransition.None
+                                    switching() -> fadeOut(Motion.quick())
+                                    initialState.isReadPage -> readPageAway(axis)
+                                    else -> ExitTransition.KeepUntilTransitionsFinished
+                                }
+                            },
+                            // A back swipe seeks the app's own Back, never Navigation's default, which
+                            // scales the page to 0.7 and drops it at the end. A page that flew in flies
+                            // back as far as the finger goes (its shared elements seek); any other page
+                            // slides along the axis and fades over the page underneath, which stays whole.
+                            predictivePopEnterTransition = { edge ->
+                                when {
+                                    eink || removed || initialState.fliesBack(player) -> EnterTransition.None
+                                    else -> pageBackUncovered(-axis * swipeSign(edge))
+                                }
+                            },
+                            predictivePopExitTransition = { edge ->
+                                when {
+                                    eink -> ExitTransition.None
+                                    initialState.fliesBack(player) -> ExitTransition.KeepUntilTransitionsFinished
+                                    removed -> pageBackFaded()
+                                    else -> pageBackAway(axis * swipeSign(edge))
+                                }
+                            },
                         ) {
                             if (player != null) {
                                 composable(PLAYER_ROUTE) {
@@ -402,6 +632,24 @@ fun AppRoot(
                                             TitleScreen(id, routed)
                                         }
                                     }
+                                    composable(
+                                        seriesPattern(destination),
+                                        arguments = listOf(navArgument("work") { type = NavType.StringType }),
+                                    ) { page ->
+                                        val work = page.arguments?.getString("work")?.let(android.net.Uri::decode) ?: return@composable
+                                        CompositionLocalProvider(LocalPageAnimation provides this) {
+                                            app.kaeri.ui.reading.SeriesScreen(work, routed)
+                                        }
+                                    }
+                                    composable(
+                                        readPagePattern(destination),
+                                        arguments = listOf(navArgument("page") { type = NavType.StringType }),
+                                    ) { page ->
+                                        val name = page.arguments?.getString("page")?.let(android.net.Uri::decode) ?: return@composable
+                                        CompositionLocalProvider(LocalPageAnimation provides this) {
+                                            app.kaeri.ui.reading.ReadPage(name)
+                                        }
+                                    }
                                     // Watch together sits in Home's back stack, under its bar.
                                     if (destination == Destination.Home) {
                                         composable(TOGETHER_ROUTE) {
@@ -423,6 +671,7 @@ fun AppRoot(
             }
         }
         if (firstLaunch) FirstLaunch(onCover = { covered = it })
+        app.kaeri.ui.reading.ReadingAppHost(start, firstLaunch, covered)
         MatchPickerHost()
         SurpriseHost()
         EngineDown()
@@ -439,21 +688,38 @@ private fun DestinationScreen(
     searchOpened: () -> Unit,
 ) {
     val navigator = LocalNavigator.current
+    val answer = kaeriIsFor()
     when (destination) {
-        Destination.Home -> HomeScreen(actions)
+        Destination.Home -> if (answer == KaeriIsFor.READ) app.kaeri.ui.reading.ReadHomeScreen(actions) else HomeScreen(actions)
+        Destination.Read -> app.kaeri.ui.reading.ReadHomeScreen(actions)
+        Destination.Updates -> app.kaeri.ui.reading.UpdatesScreen(actions)
+        // The e-reader's own tabs, on paper; elsewhere Downloads is the app's own page.
+        Destination.Downloads -> if (app.kaeri.ui.reading.LocalEinkLayout.current != null) app.kaeri.ui.reading.EinkDownloadsPage() else DownloadsScreen(actions)
+        Destination.More -> app.kaeri.ui.reading.EinkMorePage()
         Destination.Calendar -> CalendarScreen()
         Destination.Seasonal -> SeasonalScreen()
         Destination.Library -> LibraryScreen(actions)
-        Destination.Search -> SearchScreen(startSearch, startFilters = startSheet == "filters", open = searchOpening, opened = searchOpened)
+        Destination.Search -> when {
+            // On an e-ink panel, reading's Search tab is the paper Search of the e-ink boards.
+            answer == KaeriIsFor.READ && app.kaeri.ui.reading.LocalEinkLayout.current != null -> app.kaeri.ui.reading.EinkSearchPage(tab = true)
+            else -> SearchScreen(startSearch, startFilters = startSheet == "filters", open = searchOpening, opened = searchOpened)
+        }
     }
 }
 
 /** The filled icons carry their own two colours; the rest take the item's. */
 @Composable
-private fun DestinationIcon(destination: Destination, selected: Boolean) {
-    val filled = selected && destination.selectedIcon != destination.icon
+private fun DestinationIcon(destination: Destination, selected: Boolean, answer: KaeriIsFor) {
+    // Home beside Read is Watch, and draws a screen; reading's own Home, with Read alone, a house.
+    val home = destination == Destination.Home
+    val (icon, selectedIcon) = when {
+        home && answer == KaeriIsFor.BOTH -> Icons.Watch to Icons.WatchSelected
+        home && answer == KaeriIsFor.READ -> Icons.House to Icons.HouseSelected
+        else -> destination.icon to destination.selectedIcon
+    }
+    val filled = selected && selectedIcon != icon
     Icon(
-        if (selected) destination.selectedIcon else destination.icon,
+        if (selected) selectedIcon else icon,
         contentDescription = null,
         tint = if (filled) Color.Unspecified else LocalContentColor.current,
     )
@@ -513,18 +779,19 @@ private data class BarLabelPlan(val size: androidx.compose.ui.unit.TextUnit, val
  */
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
-private fun PhoneBar(current: Destination, go: (Destination) -> Unit) {
+private fun PhoneBar(current: Destination, answer: KaeriIsFor, go: (Destination) -> Unit) {
     val colors = MaterialTheme.colorScheme
+    val owner = barOwner(current, answer)
     ShortNavigationBar(containerColor = colors.surfaceContainer) {
-        for (destination in Destination.entries) {
-            val selected = destination == current
+        for (destination in barDestinations(answer)) {
+            val selected = destination == owner
             ShortNavigationBarItem(
                 selected = selected,
                 onClick = { go(destination) },
-                icon = { DestinationIcon(destination, selected) },
+                icon = { DestinationIcon(destination, selected, answer) },
                 // Five labels share the width: each shrinks to fit one line, then breaks at a
                 // space and the bar grows.
-                label = { BarLabel(stringResource(destination.label)) },
+                label = { BarLabel(stringResource(destination.labelFor(answer))) },
                 colors = ShortNavigationBarItemDefaults.colors(
                     selectedIconColor = colors.onPrimaryContainer,
                     selectedTextColorTopIconPosition = colors.primary,
@@ -556,7 +823,7 @@ internal enum class DrawerPage(@StringRes val label: Int, val icon: ImageVector,
  */
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
-private fun Rail(current: Destination?, route: String?, navigator: Navigator, actions: AppActions) {
+private fun Rail(current: Destination?, answer: KaeriIsFor, route: String?, navigator: Navigator, actions: AppActions) {
     val colors = MaterialTheme.colorScheme
     val store = LocalAppStore.current
     val trackers by store.accounts.trackers.collectAsStateWithLifecycle()
@@ -593,16 +860,17 @@ private fun Rail(current: Destination?, route: String?, navigator: Navigator, ac
                 }
             },
         ) {
-            for (destination in Destination.entries) {
-                val selected = destination == current
+            val owner = current?.let { barOwner(it, answer) }
+            for (destination in barDestinations(answer)) {
+                val selected = destination == owner
                 WideNavigationRailItem(
                     selected = selected,
                     onClick = {
                         close()
                         navigator.go(destination)
                     },
-                    icon = { DestinationIcon(destination, selected) },
-                    label = { Text(stringResource(destination.label)) },
+                    icon = { DestinationIcon(destination, selected, answer) },
+                    label = { Text(stringResource(destination.labelFor(answer))) },
                     railExpanded = expanded,
                     colors = itemColors,
                 )
@@ -678,9 +946,9 @@ private fun RailAvatar(user: String?, size: Int) {
 internal fun crashPlaceOf(route: String?): app.kaeri.engine.model.CrashPlace = when {
     route == null -> app.kaeri.engine.model.CrashPlace.OTHER
     route == PLAYER_ROUTE -> app.kaeri.engine.model.CrashPlace.PLAYER
-    route.contains("/title/") -> app.kaeri.engine.model.CrashPlace.TITLE
+    route.contains("/title/") || route.contains("/series/") -> app.kaeri.engine.model.CrashPlace.TITLE
     route.startsWith("search") -> app.kaeri.engine.model.CrashPlace.SEARCH
     route.startsWith("settings") -> app.kaeri.engine.model.CrashPlace.SETTINGS
-    route.startsWith("continue") || route.startsWith("seasonal") || route.startsWith("calendar") || route.startsWith("library") -> app.kaeri.engine.model.CrashPlace.HOME
+    route.startsWith("continue") || route.startsWith("seasonal") || route.startsWith("calendar") || route.startsWith("library") || route.startsWith("read") || route.startsWith("updates") -> app.kaeri.engine.model.CrashPlace.HOME
     else -> app.kaeri.engine.model.CrashPlace.OTHER
 }

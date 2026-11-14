@@ -203,7 +203,11 @@ private struct HoverCardContent: View {
                 }
             }
             if let wide = hero.url {
-                ArtworkView(url: wide, color: entry.plateColor, maxPixelSize: Int(HoverCardSize.width * scale))
+                // A still has no plate of its own: one found while the card is up fades in over
+                // the cover rather than through a plate.
+                let still = if case .still = hero { entry.coverUrl != nil } else { false }
+                ArtworkView(url: wide, color: entry.plateColor, maxPixelSize: Int(HoverCardSize.width * scale),
+                            flat: still ? Color.clear : nil)
                     .frame(width: HoverCardSize.width, height: HoverCardSize.band)
                     .offset(bandOffset)
                     .opacity(artShown ? 1 : 0)

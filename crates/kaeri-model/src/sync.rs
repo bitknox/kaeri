@@ -36,12 +36,15 @@ pub struct SyncState {
     pub storage: Option<String>,
     #[cfg_attr(feature = "ffi", uniffi(default))]
     pub storage_degraded: bool,
-    /// Queued operations waiting to go out.
+    /// Queued operations on their way out: sent at the next drain the tracker answers. Not the
+    /// ones in `deferred`, which nothing sends until a mapping arrives.
     pub outbox: u32,
-    /// How many of those wait for an id mapping: titles this tracker cannot be told about
-    /// until the mapping datasets name them.
+    /// Operations held for an id mapping, besides `outbox`: titles this tracker cannot be told
+    /// about until the mapping datasets name them. Every mapping refresh tries them again.
     pub deferred: u32,
-    /// The tracker rejected our credentials; nothing but re-authorising helps.
+    /// The tracker rejected our credentials; nothing but re-authorising helps. Set from the
+    /// first state after a launch too, while the rejection stands, so the queue behind it is
+    /// not shown as waiting.
     #[cfg_attr(feature = "ffi", uniffi(default))]
     pub needs_reauth: bool,
     /// Most recent sync outcome, in words.

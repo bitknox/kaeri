@@ -6,8 +6,8 @@ settings-preview-source = { -source-cap } 480p
 settings-upscaling-note-off = La { -source } 480p, mise à l’échelle sans traitement.
 settings-caption-sample = La route aux lanternes passe la dernière ville.
 settings-caption-note = Les sous-titres simples s’affichent comme ceci, en { $language } quand un épisode en a. Les sous-titres stylisés gardent leur propre aspect.
-settings-notify-note-on = Une notification quand un épisode d’une série de votre liste En cours sort, à l’heure donnée par { $tracker }. Le réglage propre à une série passe avant.
-settings-notify-note-off = Désactivé. Seules les séries activées dans leurs propres réglages envoient une notification.
+settings-notify-note-on = Vous recevez une notification quand un épisode d’une série de votre liste En cours sort, à l’heure donnée par { $tracker }. Le réglage propre à une série passe avant celui-ci.
+settings-notify-note-off = Désactivé. Seules les séries que vous avez activées dans leurs propres réglages envoient une notification.
 settings-accounts-note = { -app-name } fonctionne sans compte. Votre historique de visionnage reste sur cet ordinateur quand vous vous déconnectez.
 settings-presence-note-on = Votre profil Discord affiche ce que vous regardez pendant la lecture d’un épisode.
 settings-presence-note-off = Désactivé. Une fois activé, votre profil Discord affiche ce que vous regardez pendant la lecture d’un épisode.
@@ -16,7 +16,7 @@ updates-view-version = Voir la version
 updates-progress-label = Progression de la mise à jour
 accounts-sync-detail = La progression et les changements de liste se synchronisent avec { $tracker }. { -library-cap } et la liste du calendrier affichent vos listes { $tracker }.
 accounts-changes-waiting-offline = { $count ->
-    [one] Un changement en attente de connexion
+    [one] { $count } changement en attente de connexion
     [many] { $count } changements en attente de connexion
    *[other] { $count } changements en attente de connexion
  }
@@ -35,4 +35,4 @@ controller-disconnected = Manette déconnectée
 controller-help-title = Manette
 controller-help-buttons = Boutons de la manette
 settings-note-cast-tvs-computer = Ils apparaissent sous Chromecast dans Lire sur la TV. Cet ordinateur leur envoie l’épisode.
-settings-note-torrents-while-casting-computer = Permet à une TV avec Chromecast intégré de lire des torrents. Cet ordinateur envoie l’épisode tant qu’il est en lecture.
+settings-note-torrents-while-casting-computer = Avec ce réglage, une TV avec Chromecast intégré peut lire des torrents. Cet ordinateur envoie l’épisode tant qu’il est en lecture.

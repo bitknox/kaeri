@@ -7,6 +7,7 @@
 //!                     [--scene <home scene>]
 //!                     [--shots <dir> [--shot <a,b,...>] [--prefix <name>]] [--size <w>x<h>]
 
+mod cards_layout;
 mod catalog;
 mod choices;
 mod crash_signal;
@@ -14,7 +15,11 @@ mod engine;
 mod fit;
 #[cfg(feature = "fixtures")]
 mod fixtures;
+#[cfg(feature = "fixtures")]
+mod fixtures_reading;
 mod flags;
+#[cfg(test)]
+mod gtk_test;
 mod hub;
 mod matching;
 mod motion;
@@ -27,8 +32,17 @@ mod party;
 mod player;
 mod portal;
 mod prefs;
+mod reading;
 mod say;
 mod shots;
+#[cfg(feature = "fixtures")]
+mod shots_prelaunch;
+#[cfg(feature = "fixtures")]
+mod shots_read_discovery;
+#[cfg(feature = "fixtures")]
+mod shots_reading;
+#[cfg(feature = "fixtures")]
+mod shots_reading_credits;
 #[cfg(feature = "fixtures")]
 mod showcase;
 mod squeeze;

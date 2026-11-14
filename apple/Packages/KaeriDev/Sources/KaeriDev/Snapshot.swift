@@ -3,6 +3,7 @@
 
 import AppKit
 import Darwin
+import WebKit
 
 enum Snapshot {
     enum Problem: Error, CustomStringConvertible {
@@ -61,7 +62,8 @@ enum Snapshot {
     @MainActor
     static func write(_ window: NSWindow, to url: URL) throws {
         // A locked screen's window server composites every window blank: AppKit draws it then.
-        if !screenLocked, let image = composited(window).flatMap({ withSheets($0, of: window) }), image.width > 1 {
+        // A page in a web view is drawn by WebKit alone, which the window server's picture can leave blank.
+        if !screenLocked, webPictures.isEmpty, let image = composited(window).flatMap({ withSheets($0, of: window) }), image.width > 1 {
             let bitmap = NSBitmapImageRep(cgImage: image)
             guard let png = bitmap.representation(using: .png, properties: [:]) else { throw Problem.noPNG }
             try FileManager.default.createDirectory(
@@ -157,6 +159,47 @@ enum Snapshot {
         return cached(view)
     }
 
+    /// What each web view in `window` shows, taken by WebKit itself: AppKit's own drawing leaves
+    /// a web view blank, so `cached` lays these over it. Awaited before every shot.
+    @MainActor
+    static func snapshotWebViews(in window: NSWindow) async {
+        webPictures = [:]
+        var found: [WKWebView] = []
+        func walk(_ view: NSView) {
+            if let web = view as? WKWebView { found.append(web) }
+            view.subviews.forEach(walk)
+        }
+        if let root = window.contentView { walk(root) }
+        for web in found where !web.isHidden && web.bounds.width > 1 {
+            // A locked screen can hand back an empty page at first: ask again until it has ink.
+            for _ in 0..<12 {
+                let config = WKSnapshotConfiguration()
+                if let picture = try? await web.takeSnapshot(configuration: config),
+                   let cg = picture.cgImage(forProposedRect: nil, context: nil, hints: nil) {
+                    webPictures[ObjectIdentifier(web)] = cg
+                    if hasInk(cg) { break }
+                }
+                try? await Task.sleep(for: .milliseconds(500))
+            }
+        }
+    }
+
+    /// Whether `image` holds dark pixels, text that is, sampled along a grid.
+    private static func hasInk(_ image: CGImage) -> Bool {
+        guard let data = image.dataProvider?.data, let bytes = CFDataGetBytePtr(data) else { return false }
+        let bpp = image.bitsPerPixel / 8
+        guard bpp >= 3 else { return false }
+        for y in stride(from: 0, to: image.height, by: 3) {
+            for x in stride(from: 0, to: image.width, by: 3) {
+                let o = y * image.bytesPerRow + x * bpp
+                if Int(bytes[o]) + Int(bytes[o + 1]) + Int(bytes[o + 2]) < 330 { return true }
+            }
+        }
+        return false
+    }
+
+    @MainActor private(set) static var webPictures: [ObjectIdentifier: CGImage] = [:]
+
     /// `view` as AppKit draws it, at its window's backing scale.
     @MainActor
     static func cached(_ view: NSView) -> CGImage? {
@@ -165,7 +208,75 @@ enum Snapshot {
         let bounds = view.bounds
         guard let bitmap = view.bitmapImageRepForCachingDisplay(in: bounds) else { return nil }
         view.cacheDisplay(in: bounds, to: bitmap)
-        return bitmap.cgImage
+        guard let base = bitmap.cgImage else { return nil }
+        return withWebViews(base, in: view)
+    }
+
+    /// `base`, the picture of `view`, with the web views' pictures drawn where they stand.
+    @MainActor
+    private static func withWebViews(_ base: CGImage, in view: NSView) -> CGImage {
+        var drawn: [(NSRect, CGImage)] = []
+        func walk(_ v: NSView) {
+            if let web = v as? WKWebView, let picture = webPictures[ObjectIdentifier(web)] {
+                drawn.append((web.convert(web.bounds, to: view), picture))
+            }
+            v.subviews.forEach(walk)
+        }
+        walk(view)
+        guard !drawn.isEmpty, let context = CGContext(
+            data: nil, width: base.width, height: base.height, bitsPerComponent: 8, bytesPerRow: 0,
+            space: CGColorSpace(name: CGColorSpace.sRGB)!, bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
+        ) else { return base }
+        let scale = CGFloat(base.width) / view.bounds.width
+        context.draw(base, in: CGRect(x: 0, y: 0, width: base.width, height: base.height))
+        // Multiplied, so what the page leaves paper-coloured keeps what AppKit drew over it.
+        context.setBlendMode(.multiply)
+        for (frame, picture) in drawn {
+            // `convert` gives AppKit's bottom-left coordinates when the view is not flipped.
+            let y = view.isFlipped ? view.bounds.height - frame.maxY : frame.minY
+            context.draw(picture, in: CGRect(x: frame.minX * scale, y: y * scale,
+                                            width: frame.width * scale, height: frame.height * scale))
+        }
+        restoreOverlays(of: base, in: context, frames: drawn.map { frame, _ in
+            let y = view.isFlipped ? view.bounds.height - frame.maxY : frame.minY
+            return CGRect(x: frame.minX * scale, y: y * scale, width: frame.width * scale, height: frame.height * scale)
+        })
+        return context.makeImage() ?? base
+    }
+
+    /// A web view sits under the reader's notices and chrome, but the multiplied page shows
+    /// through them. Where `base` differs from the flat colour AppKit left in a web view's
+    /// frame (read at its bottom leading corner), what AppKit drew is put back.
+    private static func restoreOverlays(of base: CGImage, in context: CGContext, frames: [CGRect]) {
+        let width = base.width, height = base.height
+        guard let basePixels = CGContext(
+            data: nil, width: width, height: height, bitsPerComponent: 8, bytesPerRow: width * 4,
+            space: CGColorSpace(name: CGColorSpace.sRGB)!, bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
+        ), let base8 = Optional(base) else { return }
+        basePixels.draw(base8, in: CGRect(x: 0, y: 0, width: width, height: height))
+        guard let src = basePixels.data?.assumingMemoryBound(to: UInt8.self),
+              let dst = context.data?.assumingMemoryBound(to: UInt8.self) else { return }
+        let dstRow = context.bytesPerRow
+        for frame in frames {
+            let x0 = max(0, Int(frame.minX)), x1 = min(width, Int(frame.maxX))
+            let y0 = max(0, Int(frame.minY)), y1 = min(height, Int(frame.maxY))
+            guard x1 - x0 > 8, y1 - y0 > 8 else { continue }
+            // Bitmap rows run top down in `data`; the frame's y is bottom up.
+            let rows = (top: height - y1, bottom: height - y0)
+            let flatAt = ((rows.bottom - 4) * width + x0 + 4) * 4
+            let flat = (src[flatAt], src[flatAt + 1], src[flatAt + 2])
+            for row in rows.top..<rows.bottom {
+                for x in x0..<x1 {
+                    let o = (row * width + x) * 4
+                    let near = abs(Int(src[o]) - Int(flat.0)) <= 3 && abs(Int(src[o + 1]) - Int(flat.1)) <= 3
+                        && abs(Int(src[o + 2]) - Int(flat.2)) <= 3
+                    if !near {
+                        let d = row * dstRow + x * 4
+                        dst[d] = src[o]; dst[d + 1] = src[o + 1]; dst[d + 2] = src[o + 2]; dst[d + 3] = src[o + 3]
+                    }
+                }
+            }
+        }
     }
 }
 
@@ -242,3 +353,4 @@ extension Snapshot {
         return context.makeImage()
     }
 }
+

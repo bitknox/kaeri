@@ -52,6 +52,12 @@ downloads-empty-title = No downloads
 # Line under the empty title.
 downloads-empty-detail = Downloaded episodes play without a connection.
 
+# Downloads' empty line for a person who only reads, under "No downloads".
+read-downloads-empty-detail = Downloaded chapters open without a connection.
+
+# Downloads' empty line for a person who watches and reads, under "No downloads".
+read-downloads-empty-both = Downloaded episodes and chapters open without a connection.
+
 # Title when the list could not be read.
 downloads-load-failed = Couldn't load downloads
 
@@ -62,7 +68,7 @@ downloads-folder-failed = Couldn't open the folder. Check that it still exists.
 ## Row
 
 # Name of a row.
-# @arg episode: int
+# @arg episode: plain
 downloads-episode-name = Episode { $episode }
 
 # Row caption: waiting for a free place.
@@ -136,7 +142,7 @@ downloads-pause-one = Pause download
 downloads-resume-one = Resume download
 
 # Accessibility label: play one downloaded episode.
-# @arg episode: int
+# @arg episode: plain
 downloads-play-episode = Play episode { $episode }
 
 ## Confirm delete
@@ -152,7 +158,7 @@ downloads-delete-detail = The file is removed from this { -device }.
 downloads-delete-one-title = Delete download
 
 # Line under it: what you lose.
-downloads-delete-one-detail = It plays again only with a connection, or once you download it again.
+downloads-delete-one-detail = After this, the episode needs a connection to play, unless you download it again.
 
 # Button on the settings page that removes watched files.
 downloads-delete-watched = Delete watched downloads
@@ -166,7 +172,7 @@ downloads-seeding-title = Seeding
 downloads-seeding-after-watching = Seeding after watching
 
 # Line under the seeding heading.
-downloads-seeding-note = Watched episodes are shared back while { -app-name } is open, until the ratio or the time limit set in Settings, under { -source-cap-pl }, is reached.
+downloads-seeding-note = Watched episodes are shared back while { -app-name } is open. Sharing stops at the ratio or time limit you set in Settings, under { -source-cap-pl }.
 
 # Line under the seeding heading where seeding cannot run in the background.
 # @only android
@@ -228,7 +234,7 @@ downloads-quality = Download quality
 ## Notifications of a download
 
 # Title of the notification when an episode finished.
-# @arg episode: int
+# @arg episode: plain
 downloads-notice-done = Episode { $episode } downloaded
 
 # Body of that notification.
@@ -243,7 +249,7 @@ downloads-notice-running = { $count ->
  }
 
 # Notification text: first line of one running download.
-# @arg episode: int
+# @arg episode: plain
 # @arg left: text
 downloads-notice-episode-left = Episode { $episode } · { $left } left
 
@@ -251,7 +257,7 @@ downloads-notice-episode-left = Episode { $episode } · { $left } left
 downloads-notice-starting = Starting
 
 # Button on a title page to download one episode.
-# @arg episode: int
+# @arg episode: plain
 episode-download-one = Download episode { $episode }
 
 # Line under that button while it waits.
@@ -272,5 +278,5 @@ episode-download-paused = Download paused at { $percent }
 episode-download-done = Downloaded
 
 # Line under that button after a failure.
-# @arg episode: int
+# @arg episode: plain
 episode-download-failed = Couldn't download episode { $episode }. Try again.

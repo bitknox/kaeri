@@ -55,10 +55,20 @@ public struct TitleSource: Hashable, Sendable {
 public struct TitleRoute: Hashable, Sendable {
     public let id: AnilistId
     public let source: TitleSource?
+    /// A series' page, by its work id, in place of a show's.
+    public let work: String?
 
     public init(id: AnilistId, from source: TitleSource? = nil) {
         self.id = id
         self.source = source
+        work = nil
+    }
+
+    /// A series' page.
+    public init(work: String) {
+        id = 0
+        source = nil
+        self.work = work
     }
 
     /// What the zoom grows out of: the element clicked, or with none nothing on screen, so the

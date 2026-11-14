@@ -22,7 +22,7 @@ settings-coming-up-switched-off = { $count ->
     [many] { $names } están desactivadas en sus propios ajustes.
    *[other] { $names } están desactivadas en sus propios ajustes.
  }
-settings-coming-up-opens = Una serie abre sus ajustes.
+settings-coming-up-opens = Toca una serie para abrir sus ajustes.
 torrents-proxy-as = como { $user }
 title-facts-aired = Emitida { $dates }
 title-facts-airing = En emisión desde { $date }
@@ -147,7 +147,7 @@ settings-titles-note-english-missing = { $title } no tiene título en inglés en
 settings-titles-note-english = Títulos en inglés como los lista AniList, y romaji cuando no hay.
 settings-titles-note-romaji = Títulos japoneses escritos con letras latinas, como los lista AniList.
 settings-stores-with-updates = { $stores } · { $updates }
-settings-seeding-best-effort = Compartir funciona a mejor esfuerzo en este { -device }: solo mientras { -app-name } está abierta.
+settings-seeding-best-effort = Este { -device } solo comparte mientras { -app-name } está abierta.
 settings-downloads-count = { $count ->
     [one] Un episodio
     [many] { $count } episodios
@@ -166,7 +166,7 @@ settings-typefaces-value = Roboto Flex y Zen Kaku Gothic New, bajo la SIL Open F
 settings-libraries-value = JNA y AndroidX, bajo la Apache License 2.0
 settings-report-bug-value = Abre GitHub en tu navegador
 downloads-storage-share-description = Las descargas ocupan { $size }
-settings-aside-notifications = Una notificación cuando sale un episodio de una serie que sigues: el nombre de la serie y el número del episodio, nunca el título del episodio. Una serie puede desactivar sus propios avisos en sus ajustes.
+settings-aside-notifications = Una notificación cuando sale un episodio de una serie que sigues: el nombre de la serie y el número del episodio, nunca el título del episodio. Puedes desactivar las notificaciones de una serie en sus ajustes.
 settings-aside-downloads = Las descargas se guardan en el espacio propio de { -app-name } en este { -device }, al que otras apps no pueden acceder. Al quitar la app, se borran.
 settings-aside-sources = { -source-cap-pl } se prueban en orden, de arriba abajo. Una serie puede conservar su propia { -source }, elegida desde su página.
 settings-upscaling-description = La misma imagen: la mitad izquierda es el 480p original, la derecha con { $mode }

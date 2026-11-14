@@ -82,7 +82,7 @@ media-aired-on = Aired { $date }
 media-hiatus-since = On hiatus since { $date }
 
 # Date line of a show that was cancelled: the last episode that aired.
-# @arg episode: int
+# @arg episode: plain
 media-cancelled-after = Cancelled after episode { $episode }
 
 ## Where a show can be watched officially
@@ -234,7 +234,7 @@ relation-line = { $relation } · { $format } · { $year }
 ## Rankings
 
 # Ranking line, such as "#4 Highest rated, Autumn 2026". The label is already worded.
-# @arg rank: int
+# @arg rank: plain
 # @arg label: text
 ranking-line = #{ $rank } { $label }
 

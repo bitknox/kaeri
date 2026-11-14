@@ -7,8 +7,8 @@ notice-sign-in-failed = Impossibile accedere a { $tracker }. Riprova. { $reason 
 notice-sign-in-stopped = L'accesso a { $tracker } si è interrotto prima di finire. Riprova. { $reason }
 notice-token-exchange-failed = Impossibile ottenere un token da { $tracker }. Prova ad accedere di nuovo. { $reason }
 notice-browser-not-opened = Impossibile aprire un browser per l'accesso. Controlla che ce ne sia uno installato e riprova. { $reason }
-notice-sign-in-not-waiting = Nessun accesso a { $tracker } è in attesa di questa risposta. Avvia di nuovo l'accesso.
-notice-sign-in-wrong-request = L'accesso a { $tracker } non corrisponde a questa richiesta. Avvia di nuovo l'accesso.
+notice-sign-in-not-waiting = È arrivata una risposta di accesso da { $tracker }, ma nessun accesso la stava aspettando. Avvia di nuovo l'accesso.
+notice-sign-in-wrong-request = La risposta di accesso da { $tracker } non corrisponde alla richiesta. Avvia di nuovo l'accesso.
 notice-sign-in-no-token = L'accesso a { $tracker } è tornato senza token. Riprova.
 notice-mal-client-missing-build = Impossibile completare l'accesso a MyAnimeList: questa build non ha un client per farlo.
 notice-kitsu-signs-in-on-accounts = Per Kitsu l'accesso avviene dalla schermata Account.
@@ -46,5 +46,5 @@ notice-episodes-aired = { $count ->
  }
 notice-update-available = È disponibile { $tag }. Esegui kaeri --update per installarla.
 cause-proxy-needs-address = Un proxy richiede un host e una porta.
-cause-proxy-address-unusable = L'indirizzo del proxy non è utilizzabile per un controllo.
+cause-proxy-address-unusable = Il controllo del proxy non può usare questo indirizzo.
 cause-server-unreachable = Impossibile raggiungere il server.

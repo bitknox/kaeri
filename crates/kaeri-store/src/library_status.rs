@@ -41,6 +41,27 @@ impl Store {
         })
     }
 
+    /// Put one title on `tracker`'s list as kept, ahead of the tracker's next answer: a status
+    /// set here and queued for it, as the tracker words it (`PLANNING`).
+    pub fn set_library_status(
+        &self,
+        tracker: &str,
+        id: AnilistId,
+        status: &str,
+        at: i64,
+    ) -> Result<()> {
+        self.with_personal(|c| {
+            c.execute(
+                "INSERT INTO library_status (anilist_id, status, tracker_id, updated_at)
+                 VALUES (?1, ?2, ?3, ?4)
+                 ON CONFLICT(anilist_id) DO UPDATE
+                    SET status = excluded.status, updated_at = excluded.updated_at",
+                rusqlite::params![id.get(), status, tracker, at],
+            )?;
+            Ok(())
+        })
+    }
+
     /// The shows being watched: on the list as watching or rewatching, when `listed` says the
     /// list is a signed-in tracker's, and watched here since `since`, unless the list has them
     /// dropped or paused, or they were taken off Continue. The most recently watched here
@@ -131,6 +152,24 @@ mod tests {
             .unwrap();
         assert_eq!(store.library_status(ONE).unwrap().as_deref(), Some("COMPLETED"));
         assert_eq!(store.library_status(TWO).unwrap().as_deref(), Some("PLANNING"));
+    }
+
+    #[test]
+    fn a_status_set_here_is_kept_over_the_lists_until_the_next_answer() {
+        let store = Store::open_in_memory().unwrap();
+        store.replace_library_statuses("anilist", &[(ONE, "CURRENT")], 10).unwrap();
+        // Over the tracker's word for a title on the list, and the sync register's below it.
+        store.set_synced_status(ONE.get(), Some("PLANNING")).unwrap();
+        assert_eq!(store.library_status(ONE).unwrap().as_deref(), Some("CURRENT"));
+        store.set_library_status("anilist", ONE, "PLANNING", 11).unwrap();
+        store.set_library_status("anilist", TWO, "PAUSED", 11).unwrap();
+        assert_eq!(store.library_status(ONE).unwrap().as_deref(), Some("PLANNING"));
+        assert_eq!(store.library_with_status("PAUSED").unwrap(), vec![TWO]);
+
+        // The tracker's next answer is the list again.
+        store.replace_library_statuses("anilist", &[(ONE, "COMPLETED")], 12).unwrap();
+        assert_eq!(store.library_status(ONE).unwrap().as_deref(), Some("COMPLETED"));
+        assert_eq!(store.library_status(TWO).unwrap(), None);
     }
 
     #[test]

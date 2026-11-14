@@ -16,7 +16,9 @@ import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import app.kaeri.engine.core.AnilistId
+import app.kaeri.engine.ffi.FfiCastBrowser
 import app.kaeri.engine.ffi.FfiCastCard
+import app.kaeri.engine.ffi.FfiCastSink
 import app.kaeri.engine.ffi.FfiCastRouteHint
 import app.kaeri.engine.ffi.FfiCastRow
 import app.kaeri.engine.ffi.FfiLinkPhase
@@ -215,5 +217,42 @@ class CastModelTest {
         link.cards.send(card(loading = false, volume = 41.0))
         advanceUntilIdle()
         assertEquals(41.0, cast.shown.value?.cast?.card?.now?.volume)
+    }
+
+    /** A Cast browse that counts how often it was asked to resolve what it found again. */
+    private class RelookingBrowser : FfiCastBrowser, NsdRelook {
+        var relooked = 0
+        override fun start(sink: FfiCastSink) {}
+        override fun stop() {}
+        override fun relook() {
+            relooked++
+        }
+    }
+
+    @Test
+    fun a_cast_that_was_lost_resolves_the_tvs_again() = runTest {
+        val link = ScriptedLink(card(loading = false))
+        val cast = model(link)
+        val browser = RelookingBrowser()
+        cast.attach(TvRemoteModel(CoroutineScope(StandardTestDispatcher(testScheduler))), browser)
+        cast.cast(row, request)
+        link.cards.send(card(loading = false))
+        advanceUntilIdle()
+        assertEquals(0, browser.relooked)
+        link.cards.send(card(loading = false, over = true, notice = Msg.NoticeCastLost("Living room")))
+        advanceUntilIdle()
+        assertEquals(1, browser.relooked)
+    }
+
+    @Test
+    fun a_cast_stopped_here_resolves_nothing_again() = runTest {
+        val link = ScriptedLink(card(loading = false))
+        val cast = model(link)
+        val browser = RelookingBrowser()
+        cast.attach(TvRemoteModel(CoroutineScope(StandardTestDispatcher(testScheduler))), browser)
+        cast.cast(row, request)
+        link.cards.send(card(loading = false, over = true))
+        advanceUntilIdle()
+        assertEquals(0, browser.relooked)
     }
 }

@@ -17,7 +17,7 @@ discussion-apple-player-note = { $count ->
    *[other] { $count } yorum · videoyu duraklatır
  }
 settings-apple-discussions = Bölüm tartışmaları
-settings-apple-discussions-note = İzlediğiniz bölümlerin AniList forum konusundaki yorumlarını okur.
+settings-apple-discussions-note = Yorumlar, bölümü izledikten sonra AniList forum konusundan gelir.
 settings-apple-comment-images = Yorumlardaki resimleri yükle
 settings-apple-comment-images-note = Her resim, IP adresinizi gören siteden yüklenir.
 discussion-apple-key-hint = ⌘Return gönderir. Return satır ekler.

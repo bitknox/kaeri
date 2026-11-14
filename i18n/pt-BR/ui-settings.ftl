@@ -61,7 +61,7 @@ settings-audio-detail = Cada série guarda o próprio áudio e as próprias lege
 settings-system-captions = Seguir o estilo de legenda do sistema
 settings-system-captions-detail = Legendas simples usam suas preferências de legenda em Acessibilidade. Legendas estilizadas mantêm o próprio visual.
 settings-overridden = { $count ->
-    [one] Alterado em uma série
+    [one] Alterado em { $count } série
     [many] Alterado em { $count } séries
    *[other] Alterado em { $count } séries
  }
@@ -73,6 +73,18 @@ settings-keep-seeding = Continuar compartilhando
 settings-wifi-only = Só no Wi-Fi
 settings-wifi-only-detail = Os downloads esperam o Wi-Fi
 settings-torrents-cellular = Torrents com dados móveis
+settings-chapter-downloads-cellular = Baixar capítulos com dados móveis
+settings-keep-chapters-ready = Manter os próximos capítulos prontos
+settings-delete-after-reading = Apagar capítulos depois de ler
+settings-series-choices-follow = Os ajustes da série seguem você
+settings-new-chapters-download = Capítulos novos
+settings-mode-follows = Modo e direção
+settings-look-follows = Aparência
+settings-send-progress-after = Enviar o progresso após
+settings-when-trackers-disagree = Quando { -tracker-pl } divergem
+settings-chapter-notifications = Capítulos novos
+settings-downloads-finished = Downloads concluídos
+settings-open-at = Abrir em
 settings-seed-after = Compartilhar depois de assistir
 settings-seed-for = Compartilhar por no máximo
 settings-upload-limit = Limite de envio
@@ -93,12 +105,12 @@ settings-notices = Avisos legais
 settings-artwork = Imagens sob CC BY-NC
 settings-artwork-detail = Atribuição nos avisos do app
 settings-new-episodes = Novos episódios
-settings-new-episodes-detail = Para séries na sua lista Assistindo
-settings-notify-detail = Uma notificação quando um episódio de uma série que você acompanha sai: o nome da série e o número do episódio, nunca o título dele. Cada série pode desligar o próprio aviso nas configurações dela.
+settings-new-episodes-detail = Aparece na sua lista Assistindo
+settings-notify-detail = Você recebe uma notificação quando sai um episódio de uma série que você acompanha. Ela traz o nome da série e o número do episódio, nunca o título dele. Cada série pode desligar o próprio aviso nas configurações dela.
 settings-coming-up = Próximos · 7 dias
 settings-system-notifications = Ajustes de notificação
 settings-system-notifications-detail = Som, vibração e tela de bloqueio
-settings-system-notifications-apple = Abre os ajustes do sistema, onde ficam o estilo do banner, o som e os selos.
+settings-system-notifications-apple = Abre os Ajustes do Sistema, onde você define o estilo do banner, o som e os selos.
 settings-notifications-blocked = Desligado: o sistema não permite notificações do { -app-name }
 settings-notifications-show-on = Ligado nas configurações desta série
 settings-notify-show = Quando um episódio desta série sai
@@ -112,7 +124,7 @@ show-settings-spoiler-detail = Embaça imagens e sinopses depois do { -up-next }
 show-settings-always = Sempre
 show-settings-never = Nunca
 show-settings-subs-remembered = Lembrado do seu último episódio.
-show-settings-subs-follow = Escolhido no player. Seguindo Configurações › Reprodução.
+show-settings-subs-follow = Escolhido no player. Até lá, vale Configurações › Reprodução.
 show-settings-source = { -source-cap }
 show-settings-source-detail = Automático testa suas { -source-pl } em ordem.
 show-settings-reset = Restaurar padrões
@@ -134,7 +146,7 @@ widget-resume-label = Continuar o episódio { $episode } de { $title }
 widget-start-label = Reproduzir o episódio { $episode } de { $title }
 widget-resume-dubbed-label = Continuar o episódio { $episode }, { -dubbed }, de { $title }
 accounts-changes-waiting = { $count ->
-    [one] Uma mudança aguardando sincronização
+    [one] { $count } mudança aguardando sincronização
     [many] { $count } mudanças aguardando sincronização
    *[other] { $count } mudanças aguardando sincronização
  }
@@ -143,7 +155,7 @@ settings-quality-standard = Padrão
 settings-upload-unlimited = Sem limite
 settings-upscaling-natural = Natural · ArtCNN
 settings-label-hover-cards = Ampliar capas ao passar o mouse
-settings-hover-cards-note = Mostra um cartão maior com o trailer quando você para o ponteiro sobre uma capa.
+settings-hover-cards-note = Deixar o ponteiro parado sobre uma capa abre um cartão maior com o trailer.
 settings-upscaling-note-natural = Traços e textura fiéis, sem alterar o visual.
 settings-upscaling-note-sharp = Traços mais nítidos e bordas mais fortes, com alguma perda de textura.
 settings-after-download = Depois de cada download
@@ -154,6 +166,8 @@ settings-presence-title = Presença mostra o título
 settings-signed-in = Conectado
 settings-upscaling-sharp = Nítido · Anime4K
 settings-aside-accounts = { -app-name } funciona sem conta. Seu histórico continua neste { -device } quando você se desconecta.
+settings-aside-accounts-read = O { -app-name } funciona sem conta. Seu histórico de leitura fica neste { -device } quando você sai.
+settings-aside-accounts-both = O { -app-name } funciona sem conta. Seu histórico de exibição e leitura fica neste { -device } quando você sai.
 widget-day-today = hoje
 widget-day-yesterday = ontem
 widget-line-start = Reproduzir { $episode }
@@ -206,3 +220,6 @@ settings-subs-styled-restyle-detail = Sua fonte, cor, borda e fundo valem també
 settings-subs-styled-strip = Remover todo estilo
 settings-subs-styled-strip-detail = Cada linha aparece como diálogo simples na parte de baixo, no seu estilo. Os letreiros perdem o lugar, e o karaokê e os efeitos somem.
 settings-subs-reset = Redefinir estilo das legendas
+settings-opds-feed = Compartilhar nesta rede
+settings-opds-password = Senha do feed
+settings-opds-port = Porta do feed

@@ -12,7 +12,7 @@ Kaeri                                                                           
 ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
   https://plugins.example/join/k3Vb9TqLwX2mPz8RfYc4Hn#Qe7Ga1Ud5Js0Lo6Wi2Ty9Rb3Np8
 
-  Copied to the clipboard where the terminal allows it, or select it to copy.
+  Copied, if this terminal allows it. If not, select the link to copy it.
   Works once. Expires in 6 days.
   Opening it in a browser shows how to join and does not use it up.
 
@@ -61,8 +61,8 @@ r12 c02-80 fg=text bg=ground mod=BOLD
 r12 c81-119 fg=rule bg=ground
 r13 c00-119 fg=rule bg=ground
 r14 c00-01 fg=rule bg=ground
-r14 c02-76 fg=text-dim bg=ground
-r14 c77-119 fg=rule bg=ground
+r14 c02-72 fg=text-dim bg=ground
+r14 c73-119 fg=rule bg=ground
 r15 c00-01 fg=rule bg=ground
 r15 c02-31 fg=text-dim bg=ground
 r15 c32-119 fg=rule bg=ground

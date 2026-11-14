@@ -1875,13 +1875,8 @@ impl PlayerView {
         } else {
             (0.0, FADE_OUT_MS, adw::Easing::EaseInCubic)
         };
-        let animation = adw::TimedAnimation::new(
-            &self.ui.page,
-            now,
-            to,
-            if reduced { 0 } else { ms },
-            target,
-        );
+        let animation =
+            crate::motion::timed(&self.ui.page, now, to, if reduced { 0 } else { ms }, target);
         animation.set_easing(easing);
         if !show {
             let weak = self.self_weak();
@@ -2945,7 +2940,7 @@ impl Card {
 fn fade(widget: &gtk::Box, show: bool) {
     let target = adw::PropertyAnimationTarget::new(widget, "opacity");
     let (from, to) = if show { (0.0, 1.0) } else { (widget.opacity(), 0.0) };
-    let animation = adw::TimedAnimation::new(widget, from, to, 300, target);
+    let animation = crate::motion::timed(widget, from, to, 300, target);
     if !show {
         let widget = widget.clone();
         animation.connect_done(move |_| widget.set_visible(false));

@@ -19,3 +19,4 @@ pair-enter-code = Inserisci un codice
 rkey-restores = Ripristina tutto se perdi ogni { -device }.
 sync-turn-off-button = Disattiva
 rkey-enter-line-generic = { $service } contiene la cronologia dei tuoi altri { -device-pl }. La chiave che hai salvato quando hai attivato la sincronizzazione la apre.
+pair-code-left = Questo codice vale ancora per { $left }.

@@ -49,7 +49,13 @@ pub async fn run(
 ) -> Result<()> {
     // The colour depth first: every colour the palette hands out is drawn at it.
     theme::set_depth(theme::detect_depth(|key| std::env::var(key).ok()));
-    let palette = theme::resolve(config.theme.mode);
+    // The terminal is asked everything at once, through one reader that keeps the keys typed
+    // meanwhile: they are the first the loop reads.
+    let answers = kaeri_tui::probe::ask(kaeri_tui::probe::Ask {
+        background: config.theme.mode == kaeri_core::config::ThemeMode::Adaptive,
+        graphics: images,
+    });
+    let palette = theme::resolve_answered(config.theme.mode, &answers);
 
     let mut keymap = Keymap::new();
     let keybinding_problems = keymap.apply_overrides(&config.keys);
@@ -57,8 +63,8 @@ pub async fn run(
         eprintln!("warning: keybinding: {problem}");
     }
 
-    let image_engine =
-        kaeri_tui::image::ImageEngine::detect(images).with_cache_dir(paths.image_cache());
+    let image_engine = kaeri_tui::image::ImageEngine::with_answers(images, &answers)
+        .with_cache_dir(paths.image_cache());
     tracing::info!(graphics = ?image_engine.graphics(), "image engine ready");
 
     // What the file says, as distinct from what is in effect: `--theme` changes only this
@@ -80,8 +86,11 @@ pub async fn run(
     // `syncplay.enabled` sends every play to the party: the terminal's way in, which the apps,
     // starting parties when asked, do without.
     options.every_play_a_party = true;
+    options.reading = true;
     let host = Arc::new(DesktopHost::new(&config, &paths));
     let (engine, mut from_engine) = Engine::start(options, host).await?;
+    engine.send(network_at_launch());
+    engine.send(medium_at_launch());
 
     // The settings as the engine starts on them, which it says again at launch.
     let settings = kaeri_model::settings::view(&config, &saved);
@@ -140,7 +149,8 @@ pub async fn run(
         app.apply(update);
     }
 
-    let mut events = EventStream::new();
+    let typed = answers.typed_events().into_iter().map(Ok::<TermEvent, io::Error>);
+    let mut events = futures::stream::iter(typed).chain(EventStream::new());
     let mut ticker = tokio::time::interval(Duration::from_millis(100));
     // Covers come back from the blocking pool on this, decoded, to be handed to the app.
     let (covers_tx, mut covers_rx) = mpsc::unbounded_channel();
@@ -411,6 +421,21 @@ fn setup_terminal() -> Result<Tui> {
 
 fn restore_terminal(terminal: &mut Tui) -> Result<()> {
     Ok(tui::terminal::restore(terminal.backend_mut())?)
+}
+
+/// What the terminal says of the network at launch: Wi-Fi. It has no network monitor, and a
+/// computer is rarely on a metered link. Until some front end says the network, the engine
+/// keeps what is kept to Wi-Fi waiting.
+pub(crate) fn network_at_launch() -> Command {
+    Command::NetworkPath { cellular: false, constrained: false, offline: false }
+}
+
+/// What the terminal asks the engine at launch, as the apps' stores do: what Kaeri is for on
+/// this computer. The answer fills the rail's Read and the Shows or reading key, and carries
+/// the question the engine holds: the first run's on a new install, the update's on a config
+/// from before reading.
+pub(crate) fn medium_at_launch() -> Command {
+    Command::Medium(kaeri_model::medium::MediumCommand::Load)
 }
 
 #[cfg(test)]

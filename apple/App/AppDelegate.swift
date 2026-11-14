@@ -201,6 +201,19 @@ final class AppDelegate: NSObject {
         #endif
     }
 
+    #if FIXTURES && os(macOS)
+    /// The main window in full screen, and the move there finished.
+    static func enterFullScreen() async {
+        guard let window = NSApp.windows.first(where: { $0.isVisible && $0.canBecomeMain }) else { return }
+        if !window.styleMask.contains(.fullScreen) { window.toggleFullScreen(nil) }
+        let deadline = ContinuousClock.now + .seconds(10)
+        while !window.styleMask.contains(.fullScreen), ContinuousClock.now < deadline {
+            try? await Task.sleep(for: .milliseconds(50))
+        }
+        try? await Task.sleep(for: .milliseconds(1500))
+    }
+    #endif
+
     /// Start the engine, once, however many windows ask.
     func start() async {
         guard !started else { return }
@@ -263,6 +276,35 @@ final class AppDelegate: NSObject {
         if let shot = PlayerShot.named(in: ProcessInfo.processInfo.arguments) {
             ready = await player.stage(shot, store: store)
         }
+        #if os(macOS)
+        // `-KaeriFullScreen before|after`: the main window in full screen before the reader
+        // scene's book opens, or after it has.
+        let fullScreen = ProcessInfo.processInfo.arguments.firstIndex(of: "-KaeriFullScreen").flatMap {
+            ProcessInfo.processInfo.arguments.indices.contains($0 + 1) ? ProcessInfo.processInfo.arguments[$0 + 1] : nil
+        }
+        if fullScreen == "before" { await Self.enterFullScreen() }
+        #endif
+        // A screenshot of the reader: the reading scene's work, open with its pages in.
+        if ReaderModel.shotWork(arguments: ProcessInfo.processInfo.arguments) != nil {
+            ready = await store.reader.stage() && ready
+        }
+        #if os(macOS)
+        if fullScreen == "after" { await Self.enterFullScreen() }
+        // `-KaeriLeaveFullScreen <seconds>`: out of full screen again that long after the shot.
+        if let at = ProcessInfo.processInfo.arguments.firstIndex(of: "-KaeriLeaveFullScreen"),
+           ProcessInfo.processInfo.arguments.indices.contains(at + 1),
+           let seconds = Double(ProcessInfo.processInfo.arguments[at + 1]) {
+            Task { @MainActor in
+                try? await Task.sleep(for: .seconds(seconds))
+                guard let window = NSApp.windows.first(where: { $0.styleMask.contains(.fullScreen) }) else { return }
+                window.toggleFullScreen(nil)
+                while window.styleMask.contains(.fullScreen) { try? await Task.sleep(for: .milliseconds(50)) }
+                try? await Task.sleep(for: .milliseconds(1200))
+                print("KAERI_LEFT_FULL_SCREEN")
+                fflush(stdout)
+            }
+        }
+        #endif
         // A screenshot of Play on TV: the scene the arguments name, on screen.
         if let scene = TVScene.named() {
             ready = await store.tv.reached(scene) && ready
@@ -270,6 +312,14 @@ final class AppDelegate: NSObject {
         // A screenshot of sync: the state the arguments name, on screen.
         if let scene = SyncScene.named() {
             ready = await store.sync.stage(scene, store: store) && ready
+        }
+        // A screenshot of a prelaunch state: what came in, the demo, or the first-run join.
+        if let scene = PrelaunchScene.named() {
+            store.cameIn.stage(scene)
+            store.sync.stage(prelaunch: scene)
+            if !scene.isJoin, !scene.isProgressLine { store.stagePrelaunchSources(scene) }
+            store.stagePrelaunchLine(scene)
+            store.playPrelaunchRow(scene)
         }
         // A screenshot of casting: the scene the arguments name, on screen.
         if let scene = CastScene.named() {

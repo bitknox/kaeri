@@ -2,21 +2,21 @@
 ## Never an episode's name: a notification can show on a lock screen.
 
 # Body of a new-episode notification when the viewer is caught up.
-# @arg episode: int
+# @arg episode: plain
 notice-out = Episode { $episode } is out.
 
 # Body of a new-episode notification for the dub the viewer watches the show in.
-# @arg episode: int
+# @arg episode: plain
 notice-out-dubbed = Episode { $episode } is out, { -dubbed }.
 
 # Body of a new-episode notification when the viewer is behind: the episode out and the one to watch next.
-# @arg episode: int
-# @arg next: int
+# @arg episode: plain
+# @arg next: plain
 notice-out-behind = Episode { $episode } is out. Next for you: episode { $next }.
 
 # Body of a new-episode notification for a dub when the viewer is behind.
-# @arg episode: int
-# @arg next: int
+# @arg episode: plain
+# @arg next: plain
 notice-out-dubbed-behind = Episode { $episode } is out, { -dubbed }. Next for you: episode { $next }.
 
 # What the system shows instead of the body when previews are hidden.
@@ -33,7 +33,7 @@ notice-dismiss = Dismiss
 accounts-code-expired-detail = This code has expired. Get a new one to sign in to { $tracker }.
 
 # Notice when a list could not be refreshed and the rows already on screen stay.
-list-refresh-failed = Couldn't refresh. Showing what was loaded.
+list-refresh-failed = Couldn't refresh. You're seeing what loaded last time.
 
 # Notice when the browser sign-in for a tracker failed, as opposed to being closed by the person.
 # @arg tracker: text

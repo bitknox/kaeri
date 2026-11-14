@@ -148,7 +148,7 @@ store-not-the-invited = { $url } is not the { -plugin-store } in the invite ({ $
 
 # Error: the token for a joined store could not be saved on this device. The reason comes from the system.
 # @arg reason: text
-store-token-not-kept = Couldn't keep the token for this { -plugin-store }. { $reason }
+store-token-not-kept = Couldn't save the token for this { -plugin-store }. { $reason }
 
 # Error: an invite that cannot be used any more.
 store-invite-unusable = That invite was already used, was cancelled or has expired. Ask for a new one.
@@ -212,6 +212,10 @@ plugin-publish-failed = Couldn't publish { $plugin }. { $reason }
 # @arg plugin: text
 plugin-missing-locally = { $plugin } is no longer in the { -plugin } folder.
 
+# Error: a book source cannot be published to a store whose server is too old to list book sources.
+# @arg store: text
+store-takes-no-books = { $store } doesn't list book { -source-pl } yet. Its owner can update the { -plugin-store } to add them.
+
 # Error: an invite for another device cannot be made from a device that joined with the open link.
 # @arg store: text
 store-invite-needs-link = This { -device } joined { $store } with its link. Paste the same link on the other { -device }.
@@ -237,7 +241,7 @@ store-open-join-unsupported = { $store }'s server is older and can't let anyone 
 
 # Toast after a source (plugin) is switched off. It is skipped when looking for episodes.
 # @arg name: text
-source-switched-off = { $name } is off. It is skipped when looking for episodes.
+source-switched-off = { $name } is off. { -app-name } skips it when looking for episodes.
 
 # Toast after a source (plugin) is switched on.
 # @arg name: text
@@ -249,7 +253,7 @@ plugin-not-loaded = { $id } isn't loaded. Check that it's installed under { -sou
 
 # Toast after a release is chosen for a title. The name is the release's title.
 # @arg name: text
-release-pinned = { $name } will be used for this title.
+release-pinned = This title now uses { $name }.
 
 # Toast when the chosen source or release for a title could not be saved. The reason comes from the database.
 # @arg reason: text

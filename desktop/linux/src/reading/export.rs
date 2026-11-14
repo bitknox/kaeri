@@ -1,0 +1,902 @@
+//! Send to e-reader, as the app board draws it: the e-readers under For, each with the format
+//! and screen it gets, the chapters under What, the line that says progress can't come back,
+//! and Prepare files. The engine makes the files; this saves them to a folder off the main
+//! thread and says where they went.
+
+use std::{cell::RefCell, rc::Rc};
+
+use adw::prelude::*;
+use gtk::{gio, glib};
+use kaeri_core::{
+    books::{ChapterId, WorkId},
+    media::Medium,
+};
+use kaeri_i18n::t;
+use kaeri_model::{
+    event::Event,
+    jobs::JobId,
+    reading::{
+        ChapterReadState, DownloadPick, ExportFile, ExportFormat, ExportSkipped, ExportTarget,
+        ReadingAbout, ReadingCommand, ReadingEvent, VolumeGroup,
+    },
+};
+
+use super::{listen, send};
+use crate::{widgets, window::Ctx};
+
+/// How many unread chapters the first choice sends.
+const NEXT: usize = 10;
+
+/// Where the dialog is.
+#[derive(Clone, Debug, PartialEq)]
+enum Phase {
+    Choosing,
+    Preparing {
+        done: u32,
+        total: u32,
+    },
+    Waiting(String),
+    Failed(String),
+    Ready(Vec<ExportFile>),
+    /// The send was ready and its files are gone: the engine keeps them for a day, and a send
+    /// put away loses them at once. Send again prepares them anew.
+    Gone,
+}
+
+/// The ready files to save, or [`Phase::Gone`] when any of them is no longer there, so
+/// nothing is copied in part and the failure says why.
+fn to_save(phase: &Phase) -> Result<Vec<ExportFile>, Phase> {
+    let Phase::Ready(files) = phase else { return Err(phase.clone()) };
+    if files.iter().all(|f| std::path::Path::new(&f.path).is_file()) {
+        Ok(files.clone())
+    } else {
+        Err(Phase::Gone)
+    }
+}
+
+struct Send {
+    targets: Vec<ExportTarget>,
+    chosen: Option<String>,
+    medium: Option<Medium>,
+    volumes: Vec<VolumeGroup>,
+    /// The next unread (0) or every unread chapter (1).
+    scope: u32,
+    /// Once ready, the chapters the send went without some pages of, a line each.
+    left_out: String,
+    job: Option<JobId>,
+    /// Prepare was asked and its job is not known yet.
+    asked: bool,
+    sent: Vec<ChapterId>,
+    phase: Phase,
+}
+
+impl Send {
+    fn target(&self) -> Option<&ExportTarget> {
+        self.targets.iter().find(|t| Some(&t.id) == self.chosen.as_ref())
+    }
+
+    /// The format a target gets for this series: the first it takes for pages or text.
+    fn format(&self, target: &ExportTarget) -> Option<ExportFormat> {
+        let novel = self.medium == Some(Medium::Novel);
+        let formats = if novel { &target.novel_formats } else { &target.manga_formats };
+        formats.first().or(target.formats.first()).copied()
+    }
+
+    /// The chapters the scope picks, in reading order, with their numbers: those not read yet.
+    fn chapters(&self) -> Vec<(ChapterId, String)> {
+        let unread = self
+            .volumes
+            .iter()
+            .flat_map(|v| &v.chapters)
+            .filter(|c| !matches!(c.state, ChapterReadState::Read))
+            .map(|c| (c.id.clone(), c.number.clone().unwrap_or_else(|| c.label.clone())));
+        if self.scope == 0 { unread.take(NEXT).collect() } else { unread.collect() }
+    }
+}
+
+fn format_name(format: ExportFormat) -> String {
+    match format {
+        ExportFormat::FixedEpub => t::send_format_fixed_epub(),
+        ExportFormat::Kepub => t::send_format_kepub(),
+        ExportFormat::Epub => t::send_format_epub(),
+        ExportFormat::Cbz => t::send_format_cbz(),
+    }
+}
+
+/// Whether the keyboard is in `area`.
+fn focus_within(area: &gtk::Widget) -> bool {
+    area.root()
+        .and_then(|root| root.focus())
+        .is_some_and(|focus| &focus == area || focus.is_ancestor(area))
+}
+
+/// Keep the keyboard in `area`: when what had it was hidden or greyed, the first of `next`
+/// that shows takes it, or `area` itself.
+fn keep_focus(area: &gtk::Widget, next: &[&gtk::Button]) {
+    let Some(root) = area.root() else { return };
+    let held = root.focus().is_some_and(|focus| {
+        (&focus == area || focus.is_ancestor(area)) && focus.is_mapped() && focus.is_sensitive()
+    });
+    if held {
+        return;
+    }
+    match next.iter().find(|b| b.is_visible() && b.is_sensitive()) {
+        Some(button) => {
+            button.grab_focus();
+        }
+        None => {
+            area.grab_focus();
+        }
+    }
+}
+
+fn heading(text: &str) -> gtk::Label {
+    let label = gtk::Label::new(Some(text));
+    label.add_css_class("heading");
+    label.set_xalign(0.0);
+    label.set_margin_top(6);
+    label
+}
+
+struct Parts {
+    targets: gtk::ListBox,
+    checks: RefCell<Vec<(String, gtk::Image)>>,
+    what: gtk::ListBox,
+    scope: adw::ComboRow,
+    ring_slot: gtk::Box,
+    state_line: gtk::Box,
+    state: gtk::Label,
+    under: gtk::Label,
+    prepare: gtk::Button,
+    again: gtk::Button,
+    cancel: gtk::Button,
+    save: gtk::Button,
+    send: RefCell<Send>,
+}
+
+impl Parts {
+    /// Whether the ready files are all still there; when any has gone the dialog says so,
+    /// with Send again, and false.
+    fn still_ready(&self) -> bool {
+        let gone = {
+            let mut s = self.send.borrow_mut();
+            match to_save(&s.phase) {
+                Ok(_) => return true,
+                Err(Phase::Gone) => {
+                    s.phase = Phase::Gone;
+                    true
+                }
+                Err(_) => false,
+            }
+        };
+        if gone {
+            self.draw();
+        }
+        false
+    }
+
+    /// Show what the state says.
+    fn draw(&self) {
+        let dialog = self.state_line.ancestor(adw::Dialog::static_type());
+        let had_keys = dialog.as_ref().is_some_and(focus_within);
+        self.draw_state();
+        // The keyboard stays in the dialog when what had it goes or greys, so Esc still closes
+        // it and Cancel send, Save to a folder or Try again is the next key's.
+        if had_keys && let Some(dialog) = dialog {
+            keep_focus(&dialog, &[&self.cancel, &self.save, &self.again, &self.prepare]);
+        }
+    }
+
+    fn draw_state(&self) {
+        let s = self.send.borrow();
+        let chapters = s.chapters();
+        self.scope.set_subtitle(&match (chapters.first(), chapters.last()) {
+            _ if s.volumes.is_empty() => String::new(),
+            (Some((_, one)), _) if chapters.len() == 1 => t::send_chapters_one(one),
+            (Some((_, first)), Some((_, last))) => t::send_chapters_range(first, last),
+            _ => t::linux_send_none_unread(),
+        });
+        let open = matches!(s.phase, Phase::Choosing | Phase::Failed(_) | Phase::Gone);
+        self.targets.set_sensitive(open);
+        self.what.set_sensitive(open);
+        self.prepare.set_visible(s.phase == Phase::Choosing);
+        self.prepare.set_sensitive(
+            s.target().is_some_and(|t| s.format(t).is_some()) && !chapters.is_empty(),
+        );
+        self.again.set_visible(matches!(s.phase, Phase::Failed(_) | Phase::Gone));
+        self.again.set_label(&if s.phase == Phase::Gone {
+            t::send_again()
+        } else {
+            t::reader_try_again()
+        });
+        self.cancel.set_visible(matches!(s.phase, Phase::Preparing { .. } | Phase::Waiting(_)));
+        self.save.set_visible(matches!(s.phase, Phase::Ready(_)));
+        while let Some(child) = self.ring_slot.first_child() {
+            self.ring_slot.remove(&child);
+        }
+        let device = s.target().map(|t| t.name.clone()).unwrap_or_default();
+        let (words, line) = match &s.phase {
+            Phase::Choosing => (String::new(), String::new()),
+            Phase::Preparing { done, total } => {
+                let fraction = f64::from(*done) / f64::from((*total).max(1));
+                self.ring_slot.append(&widgets::ring(fraction));
+                (
+                    t::send_preparing(i64::from(*done), i64::from((*total).max(1))),
+                    t::send_sized_for(&device),
+                )
+            }
+            Phase::Waiting(line) => (line.clone(), String::new()),
+            Phase::Failed(why) => (why.clone(), String::new()),
+            Phase::Gone => (t::send_files_gone(), String::new()),
+            Phase::Ready(files) => (t::send_ready(files.len() as i64), s.left_out.clone()),
+        };
+        self.state.set_label(&words);
+        self.state_line.set_visible(!words.is_empty());
+        self.under.set_label(&line);
+        self.under.set_visible(!line.is_empty());
+    }
+
+    /// The e-readers, each with the format and screen it gets and a check on the chosen one.
+    fn draw_targets(self: &Rc<Self>) {
+        while let Some(row) = self.targets.first_child() {
+            self.targets.remove(&row);
+        }
+        self.checks.borrow_mut().clear();
+        {
+            let s = self.send.borrow();
+            for target in &s.targets {
+                let format = s.format(target).map(format_name).unwrap_or_default();
+                let row = adw::ActionRow::builder()
+                    .title(&target.name)
+                    .subtitle(t::send_target_line(
+                        &format,
+                        &target.width_px.to_string(),
+                        &target.height_px.to_string(),
+                    ))
+                    .activatable(true)
+                    .build();
+                let check = gtk::Image::from_icon_name("object-select-symbolic");
+                row.add_suffix(&check);
+                let id = target.id.clone();
+                row.connect_activated({
+                    let this = Rc::downgrade(self);
+                    let id = id.clone();
+                    move |_| {
+                        let Some(this) = this.upgrade() else { return };
+                        this.send.borrow_mut().chosen = Some(id.clone());
+                        this.show_checks();
+                        this.draw();
+                    }
+                });
+                self.targets.append(&row);
+                self.checks.borrow_mut().push((id, check));
+            }
+        }
+        self.show_checks();
+        self.draw();
+    }
+
+    fn show_checks(&self) {
+        let chosen = self.send.borrow().chosen.clone();
+        for (id, check) in self.checks.borrow().iter() {
+            let on = chosen.as_ref() == Some(id);
+            check.set_opacity(if on { 1.0 } else { 0.0 });
+            if let Some(row) = check.ancestor(adw::ActionRow::static_type()) {
+                row.update_state(&[gtk::accessible::State::Checked(if on {
+                    gtk::AccessibleTristate::True
+                } else {
+                    gtk::AccessibleTristate::False
+                })]);
+            }
+        }
+    }
+}
+
+/// The dialog's body under its header: the choices scroll, and the foot with the state and the
+/// buttons stays at the bottom, so Prepare files and Save to a folder show in any window.
+fn frame(column: &gtk::Box, foot: &gtk::Box) -> adw::ToolbarView {
+    let scroll = gtk::ScrolledWindow::builder()
+        .hscrollbar_policy(gtk::PolicyType::Never)
+        .propagate_natural_height(true)
+        .max_content_height(620)
+        .child(column)
+        .build();
+    foot.set_margin_top(10);
+    foot.set_margin_bottom(18);
+    foot.set_margin_start(18);
+    foot.set_margin_end(18);
+    let toolbar = adw::ToolbarView::new();
+    toolbar.add_top_bar(&adw::HeaderBar::new());
+    toolbar.set_content(Some(&scroll));
+    toolbar.add_bottom_bar(foot);
+    toolbar
+}
+
+pub fn open(ctx: &Rc<Ctx>, work: &WorkId) {
+    let dialog = adw::Dialog::new();
+    dialog.set_title(&t::send_title());
+    // The dialog grows with the targets as they come in; the column's width holds it at 460.
+    dialog.set_follows_content_size(true);
+
+    let targets = widgets::boxed_list();
+    targets.set_selection_mode(gtk::SelectionMode::None);
+    let scope = adw::ComboRow::new();
+    scope.set_title(&t::send_chapters());
+    scope.set_model(Some(&gtk::StringList::new(&[
+        &t::linux_send_next(NEXT as i64),
+        &t::linux_send_all_unread(),
+    ])));
+    let what = widgets::boxed_list();
+    what.set_selection_mode(gtk::SelectionMode::None);
+    what.append(&scope);
+    let note = widgets::haze(&t::send_no_place(), "caption");
+    note.set_wrap(true);
+    note.set_xalign(0.0);
+
+    // The foot: Prepare files, then how far it is, then the files and Save to a folder.
+    let ring_slot = gtk::Box::new(gtk::Orientation::Horizontal, 0);
+    let state = gtk::Label::new(None);
+    state.set_wrap(true);
+    state.set_xalign(0.0);
+    state.set_hexpand(true);
+    let state_line = gtk::Box::new(gtk::Orientation::Horizontal, 10);
+    state_line.append(&ring_slot);
+    state_line.append(&state);
+    let under = widgets::haze("", "caption");
+    under.set_wrap(true);
+    under.set_xalign(0.0);
+    let pill = |label: &str, amber: bool| {
+        let button = gtk::Button::with_label(label);
+        button.add_css_class("pill");
+        if amber {
+            button.add_css_class("suggested-action");
+        }
+        button
+    };
+    let prepare = pill(&t::linux_send_prepare(), true);
+    let again = pill(&t::reader_try_again(), true);
+    let save = pill(&t::linux_send_save(), true);
+    let cancel = pill(&t::send_waiting_cancel(), false);
+    let buttons = gtk::Box::new(gtk::Orientation::Horizontal, 10);
+    buttons.set_halign(gtk::Align::Start);
+    for button in [&prepare, &again, &save, &cancel] {
+        buttons.append(button);
+    }
+    let foot = gtk::Box::new(gtk::Orientation::Vertical, 8);
+    foot.append(&state_line);
+    foot.append(&under);
+    foot.append(&buttons);
+
+    let column = gtk::Box::new(gtk::Orientation::Vertical, 10);
+    column.set_width_request(460 - 2 * 18);
+    column.set_margin_top(6);
+    column.set_margin_bottom(8);
+    column.set_margin_start(18);
+    column.set_margin_end(18);
+    column.append(&heading(&t::send_for()));
+    column.append(&targets);
+    column.append(&heading(&t::send_what()));
+    column.append(&what);
+    column.append(&note);
+    dialog.set_child(Some(&frame(&column, &foot)));
+
+    let parts = Rc::new(Parts {
+        targets,
+        checks: RefCell::default(),
+        what,
+        scope: scope.clone(),
+        ring_slot,
+        state_line,
+        state,
+        under,
+        prepare: prepare.clone(),
+        again: again.clone(),
+        cancel: cancel.clone(),
+        save: save.clone(),
+        send: RefCell::new(Send {
+            targets: Vec::new(),
+            chosen: None,
+            medium: None,
+            volumes: Vec::new(),
+            scope: 0,
+            left_out: String::new(),
+            job: None,
+            asked: false,
+            sent: Vec::new(),
+            phase: Phase::Choosing,
+        }),
+    });
+
+    scope.connect_selected_notify({
+        let parts = Rc::downgrade(&parts);
+        move |scope| {
+            let Some(parts) = parts.upgrade() else { return };
+            parts.send.borrow_mut().scope = scope.selected();
+            parts.draw();
+        }
+    });
+
+    let start: Rc<dyn Fn()> = Rc::new({
+        let (hub, work, parts) = (Rc::downgrade(&ctx.hub), work.clone(), Rc::downgrade(&parts));
+        move || {
+            let (Some(hub), Some(parts)) = (hub.upgrade(), parts.upgrade()) else { return };
+            let (ask, target) = {
+                let mut s = parts.send.borrow_mut();
+                let Some(target) = s.target().cloned() else { return };
+                let Some(format) = s.format(&target) else { return };
+                let ids: Vec<ChapterId> = s.chapters().into_iter().map(|(id, _)| id).collect();
+                if ids.is_empty() {
+                    return;
+                }
+                s.sent = ids.clone();
+                s.job = None;
+                s.asked = true;
+                s.phase = Phase::Preparing { done: 0, total: ids.len() as u32 };
+                let ask = ReadingCommand::Prepare {
+                    work: work.clone(),
+                    pick: DownloadPick::Chapters { ids },
+                    target: target.id.clone(),
+                    format,
+                };
+                (ask, target.id)
+            };
+            send(&hub, ReadingCommand::SetSendTarget { target });
+            send(&hub, ask);
+            parts.draw();
+        }
+    });
+    prepare.connect_clicked({
+        let start = Rc::clone(&start);
+        move |_| start()
+    });
+    again.connect_clicked(move |_| start());
+    cancel.connect_clicked({
+        let (hub, parts) = (Rc::downgrade(&ctx.hub), Rc::downgrade(&parts));
+        move |_| {
+            let Some(parts) = parts.upgrade() else { return };
+            let job = {
+                let mut s = parts.send.borrow_mut();
+                s.asked = false;
+                s.phase = Phase::Choosing;
+                s.job.take()
+            };
+            if let (Some(hub), Some(job)) = (hub.upgrade(), job) {
+                send(&hub, ReadingCommand::CancelPrepare { job });
+            }
+            parts.draw();
+        }
+    });
+    save.connect_clicked({
+        let (ctx, work, parts) = (Rc::downgrade(ctx), work.clone(), Rc::downgrade(&parts));
+        move |_| {
+            let (Some(ctx), Some(parts)) = (ctx.upgrade(), parts.upgrade()) else { return };
+            if !parts.still_ready() {
+                return;
+            }
+            let chooser = gtk::FileDialog::new();
+            let window = ctx.window.clone();
+            let work = work.clone();
+            let parts = Rc::downgrade(&parts);
+            chooser.select_folder(Some(&window), gio::Cancellable::NONE, move |result| {
+                let Ok(folder) = result else { return };
+                let Some(parts) = parts.upgrade() else { return };
+                // The files may have gone while the folder was being picked.
+                if !parts.still_ready() {
+                    return;
+                }
+                let (files, chapters, target) = {
+                    let s = parts.send.borrow();
+                    let Phase::Ready(files) = s.phase.clone() else { return };
+                    (files, s.sent.clone(), s.chosen.clone().unwrap_or_default())
+                };
+                let (ctx, work) = (Rc::clone(&ctx), work.clone());
+                glib::spawn_future_local(save_files(
+                    ctx, folder, files, work, chapters, target,
+                ));
+            });
+        }
+    });
+
+    // Closing while the files are being made stops them.
+    dialog.connect_closed({
+        let (hub, parts) = (Rc::downgrade(&ctx.hub), Rc::downgrade(&parts));
+        move |_| {
+            let (Some(hub), Some(parts)) = (hub.upgrade(), parts.upgrade()) else { return };
+            let s = parts.send.borrow();
+            if matches!(s.phase, Phase::Preparing { .. } | Phase::Waiting(_))
+                && let Some(job) = s.job
+            {
+                send(&hub, ReadingCommand::CancelPrepare { job });
+            }
+        }
+    });
+
+    listen(ctx, &dialog, {
+        let (work, parts) = (work.clone(), Rc::clone(&parts));
+        move |event| {
+            let Event::Reading(event) = event else { return };
+            // A job this dialog asked for: the first one seen after Prepare, then that one.
+            let ours = |job: &JobId| {
+                let mut s = parts.send.borrow_mut();
+                if s.asked && s.job.is_none() {
+                    s.job = Some(*job);
+                }
+                s.job.as_ref() == Some(job)
+            };
+            match event {
+                ReadingEvent::ExportTargets(found) => {
+                    {
+                        let mut s = parts.send.borrow_mut();
+                        s.chosen = found
+                            .iter()
+                            .find(|t| t.chosen)
+                            .or(found.first())
+                            .map(|t| t.id.clone());
+                        s.targets = found.clone();
+                    }
+                    parts.draw_targets();
+                    return;
+                }
+                ReadingEvent::Series(view) if view.work == work => {
+                    parts.send.borrow_mut().medium = Some(view.medium);
+                    parts.draw_targets();
+                    return;
+                }
+                ReadingEvent::Chapters { work: w, volumes, .. } if *w == work => {
+                    parts.send.borrow_mut().volumes = volumes.clone();
+                }
+                ReadingEvent::ExportProgress {
+                    job,
+                    done,
+                    total,
+                    chapters_done,
+                    chapters,
+                    ..
+                } if ours(job) => {
+                    let (done, total) = if *chapters > 0 {
+                        (*chapters_done, *chapters)
+                    } else {
+                        (*done, *total)
+                    };
+                    parts.send.borrow_mut().phase = Phase::Preparing { done, total };
+                }
+                ReadingEvent::ExportWaiting { job, line, .. } if ours(job) => {
+                    parts.send.borrow_mut().phase = Phase::Waiting(crate::say::msg(line));
+                }
+                ReadingEvent::ExportFailed { job, chapter, failure, .. } if ours(job) => {
+                    let cause = super::failure(failure);
+                    let words = match chapter {
+                        Some(chapter) => t::send_failed_chapter(chapter, &cause),
+                        None => t::send_failed(&cause),
+                    };
+                    let mut s = parts.send.borrow_mut();
+                    s.phase = Phase::Failed(words);
+                    s.job = None;
+                    s.asked = false;
+                }
+                ReadingEvent::Failed { about: ReadingAbout::Export, failure }
+                    if parts.send.borrow().asked =>
+                {
+                    let mut s = parts.send.borrow_mut();
+                    s.phase = Phase::Failed(t::send_failed(&super::failure(failure)));
+                    s.asked = false;
+                }
+                ReadingEvent::ExportReady { job, files, skipped } if ours(job) => {
+                    let mut s = parts.send.borrow_mut();
+                    s.phase = Phase::Ready(files.clone());
+                    s.left_out = left_out(skipped);
+                    s.asked = false;
+                }
+                _ => return,
+            }
+            parts.draw();
+        }
+    });
+    send(&ctx.hub, ReadingCommand::LoadExportTargets);
+    send(&ctx.hub, ReadingCommand::LoadSeries { work: work.clone() });
+    send(&ctx.hub, ReadingCommand::LoadChapters { work: work.clone(), edition: None });
+    parts.draw();
+    dialog.present(Some(&ctx.window));
+}
+
+/// The chapters a ready send went without some pages of, a line each in the engine's words.
+fn left_out(skipped: &[ExportSkipped]) -> String {
+    skipped.iter().map(|s| crate::say::msg(&s.line)).collect::<Vec<_>>().join("\n")
+}
+
+/// Copy the files into `folder` without holding the window, then say so with Show in Files,
+/// and tell the engine they went out so the series page can ask where reading stopped.
+async fn save_files(
+    ctx: Rc<Ctx>,
+    folder: gio::File,
+    files: Vec<ExportFile>,
+    work: WorkId,
+    chapters: Vec<ChapterId>,
+    target: String,
+) {
+    let mut saved = 0;
+    let mut failed = None;
+    for file in &files {
+        let from = gio::File::for_path(&file.path);
+        match save_one(&from, &folder.child(&file.name)).await {
+            Ok(()) => saved += 1,
+            Err(error) => {
+                tracing::warn!(%error, "a prepared file was not saved");
+                failed.get_or_insert(error);
+            }
+        }
+    }
+    if saved < files.len() {
+        ctx.alert(&save_failed(failed.as_ref()));
+        return;
+    }
+    send(&ctx.hub, ReadingCommand::Shared { work, chapters, target });
+    let words = t::linux_send_saved(saved as i64);
+    match folder.path() {
+        Some(path) => {
+            ctx.toast_to(
+                &words,
+                &t::settings_show_in_files(),
+                "win.show-folder",
+                &path.to_string_lossy(),
+            );
+        }
+        None => ctx.toast(&words),
+    }
+}
+
+/// Copy one prepared file to `to`, over a file already there. It is written under a hidden
+/// name beside `to`, synced, and only then renamed, so a copy cut off (a full disk) never leaves
+/// part of a book under the book's name, which an e-reader would list as the whole book. What
+/// was written is removed when the copy fails.
+async fn save_one(from: &gio::File, to: &gio::File) -> Result<(), glib::Error> {
+    let name = to.basename().map(|n| n.to_string_lossy().into_owned()).unwrap_or_default();
+    let Some(folder) = to.parent() else {
+        return Err(glib::Error::new(gio::IOErrorEnum::InvalidFilename, &name));
+    };
+    let temp = folder.child(format!(".{name}.part"));
+    let (copied, _progress) =
+        from.copy_future(&temp, gio::FileCopyFlags::OVERWRITE, glib::Priority::DEFAULT);
+    let mut done = copied.await;
+    if done.is_ok()
+        && let Some(path) = temp.path()
+    {
+        done = std::fs::OpenOptions::new()
+            .write(true)
+            .open(&path)
+            .and_then(|file| file.sync_all())
+            .map_err(|e| glib::Error::new(io_kind(&e), &e.to_string()));
+    }
+    if done.is_ok() {
+        // A rename within the folder: it takes no time to wait on.
+        done = temp.move_(to, gio::FileCopyFlags::OVERWRITE, gio::Cancellable::NONE, None);
+    }
+    if done.is_err() {
+        let _ = temp.delete_future(glib::Priority::DEFAULT).await;
+    }
+    done
+}
+
+/// The GIO error for a failed sync, so a full disk still reads as one.
+fn io_kind(e: &std::io::Error) -> gio::IOErrorEnum {
+    match e.raw_os_error() {
+        Some(libc::ENOSPC | libc::EDQUOT | libc::EFBIG) => gio::IOErrorEnum::NoSpace,
+        _ => gio::IOErrorEnum::Failed,
+    }
+}
+
+/// Words for a save that failed: a full disk says so.
+fn save_failed(error: Option<&glib::Error>) -> String {
+    if error.is_some_and(|e| e.matches(gio::IOErrorEnum::NoSpace)) {
+        t::reading_failed_disk_full()
+    } else {
+        t::linux_send_save_failed()
+    }
+}
+
+#[cfg(test)]
+mod focus_tests {
+    use adw::prelude::*;
+
+    use super::{focus_within, keep_focus};
+    use crate::gtk_test::{pump, run};
+
+    /// R7L-6. Prepare files had the keyboard and goes as the files are prepared: Cancel send
+    /// takes it, and once the send ends Save to a folder or Try again does, so the keyboard never
+    /// leaves the dialog and Esc still closes it.
+    #[test]
+    fn the_keyboard_stays_in_the_dialog_as_its_buttons_change() {
+        run(|| {
+            let rows = gtk::ListBox::new();
+            rows.append(&gtk::Label::new(Some("Made-up Reader")));
+            let prepare = gtk::Button::with_label("Prepare files");
+            let cancel = gtk::Button::with_label("Cancel send");
+            let save = gtk::Button::with_label("Save to a folder");
+            let again = gtk::Button::with_label("Try again");
+            let area = gtk::Box::new(gtk::Orientation::Vertical, 0);
+            area.append(&rows);
+            for button in [&prepare, &cancel, &save, &again] {
+                area.append(button);
+            }
+            let outside = gtk::Button::with_label("Behind");
+            let page = gtk::Box::new(gtk::Orientation::Vertical, 0);
+            page.append(&outside);
+            page.append(&area);
+            let window = gtk::Window::new();
+            window.set_child(Some(&page));
+            window.present();
+            cancel.set_visible(false);
+            save.set_visible(false);
+            again.set_visible(false);
+            prepare.grab_focus();
+            pump(100);
+            let area_w: gtk::Widget = area.clone().upcast();
+            let next = [&cancel, &save, &again, &prepare];
+            let focus = || gtk::prelude::GtkWindowExt::focus(&window);
+
+            // Preparing: Prepare files goes, the choices grey, Cancel send shows.
+            assert!(focus_within(&area_w));
+            prepare.set_visible(false);
+            rows.set_sensitive(false);
+            cancel.set_visible(true);
+            keep_focus(&area_w, &next);
+            assert_eq!(focus(), Some(cancel.clone().upcast()));
+
+            // Ready: Cancel send goes, Save to a folder shows.
+            cancel.set_visible(false);
+            save.set_visible(true);
+            keep_focus(&area_w, &next);
+            assert_eq!(focus(), Some(save.clone().upcast()));
+
+            // A shown button that has the keyboard keeps it.
+            save.set_visible(false);
+            again.set_visible(true);
+            rows.set_sensitive(true);
+            again.grab_focus();
+            keep_focus(&area_w, &next);
+            assert_eq!(focus(), Some(again.clone().upcast()));
+
+            // Focus outside the dialog is not the dialog's to move.
+            outside.grab_focus();
+            assert!(!focus_within(&area_w));
+            window.destroy();
+        });
+    }
+}
+
+#[cfg(test)]
+mod frame_tests {
+    use adw::prelude::*;
+
+    use super::frame;
+    use crate::gtk_test::{pump, run};
+
+    /// R7L-2. Seven targets in a short window: the choices scroll and the buttons stay in it.
+    #[test]
+    fn the_buttons_show_however_short_the_window() {
+        run(|| {
+            let column = gtk::Box::new(gtk::Orientation::Vertical, 10);
+            for n in 0..7 {
+                let row = gtk::Label::new(Some(&format!("Made-up Reader {n}")));
+                row.set_height_request(64);
+                column.append(&row);
+            }
+            let save = gtk::Button::with_label("Save to a folder");
+            let foot = gtk::Box::new(gtk::Orientation::Vertical, 8);
+            foot.append(&gtk::Label::new(Some("One file is ready.")));
+            foot.append(&save);
+            let window = gtk::Window::new();
+            window.set_default_size(460, 360);
+            window.set_child(Some(&frame(&column, &foot)));
+            window.present();
+            pump(300);
+            let height = window.height() as f32;
+            let bounds = save.compute_bounds(&window).expect("the button is laid out");
+            assert!(save.is_child_visible() && bounds.height() > 0.0);
+            assert!(
+                bounds.y() + bounds.height() <= height,
+                "Save to a folder ends at {} in a window {height} high",
+                bounds.y() + bounds.height()
+            );
+            assert!(save.ancestor(gtk::ScrolledWindow::static_type()).is_none());
+            window.destroy();
+        });
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn file(dir: &std::path::Path, name: &str) -> ExportFile {
+        ExportFile {
+            path: dir.join(name).to_string_lossy().into_owned(),
+            name: name.to_owned(),
+            bytes: 2,
+            part: None,
+        }
+    }
+
+    /// R8L-5. A save that ran out of space left part of the book under the book's name, which
+    /// an e-reader lists as the whole book. The full disk here is a cap on how much the process
+    /// may write to one file, so the test runs again as a child process with the cap set.
+    #[test]
+    fn a_save_cut_off_by_a_full_disk_leaves_nothing_under_the_books_name() {
+        const CHILD: &str = "KAERI_TEST_CAPPED_SAVE";
+        const NAME: &str = "a_save_cut_off_by_a_full_disk_leaves_nothing_under_the_books_name";
+        let Some(dir) = std::env::var_os(CHILD) else {
+            let dir = tempfile::tempdir().unwrap();
+            std::fs::write(dir.path().join("prepared.cbz"), vec![7_u8; 512 * 1024]).unwrap();
+            std::fs::create_dir(dir.path().join("folder")).unwrap();
+            let module = module_path!().split_once("::").map_or("", |(_, rest)| rest);
+            let status = std::process::Command::new(std::env::current_exe().unwrap())
+                .args(["--exact", &format!("{module}::{NAME}"), "--test-threads=1"])
+                .env(CHILD, dir.path())
+                .status()
+                .unwrap();
+            assert!(status.success(), "the capped save left something behind");
+            return;
+        };
+        // In the child: at most 64 KiB to any one file, with the signal that would end the
+        // process ignored, so a write past it fails as a full disk does.
+        // SAFETY: plain libc calls on this process, before anything else runs in it.
+        unsafe {
+            libc::signal(libc::SIGXFSZ, libc::SIG_IGN);
+            let mut cap = libc::rlimit { rlim_cur: 0, rlim_max: 0 };
+            assert_eq!(libc::getrlimit(libc::RLIMIT_FSIZE, &mut cap), 0);
+            cap.rlim_cur = 64 * 1024;
+            assert_eq!(libc::setrlimit(libc::RLIMIT_FSIZE, &cap), 0);
+        }
+        let dir = std::path::PathBuf::from(dir);
+        let from = gio::File::for_path(dir.join("prepared.cbz"));
+        let folder = dir.join("folder");
+        let to = gio::File::for_path(folder.join("The Lantern Ferry 13-15.cbz"));
+        let saved = glib::MainContext::default().block_on(save_one(&from, &to));
+        assert!(saved.is_err(), "the copy went past the cap");
+        let left: Vec<_> =
+            std::fs::read_dir(&folder).unwrap().map(|e| e.unwrap().file_name()).collect();
+        assert!(left.is_empty(), "left in the folder: {left:?}");
+    }
+
+    /// R5A-6. The engine keeps a ready send's files for a day; saving after they went says so,
+    /// with Send again, instead of copying some or none of them.
+    #[test]
+    fn saving_files_that_are_gone_says_they_are_gone() {
+        let dir = tempfile::tempdir().unwrap();
+        let (one, two) = (
+            file(dir.path(), "Made-up Series 1.cbz"),
+            file(dir.path(), "Made-up Series 2.cbz"),
+        );
+        std::fs::write(&one.path, b"pk").unwrap();
+        std::fs::write(&two.path, b"pk").unwrap();
+        let ready = Phase::Ready(vec![one.clone(), two.clone()]);
+        assert_eq!(to_save(&ready), Ok(vec![one.clone(), two.clone()]));
+
+        std::fs::remove_file(&two.path).unwrap();
+        assert_eq!(to_save(&ready), Err(Phase::Gone));
+        std::fs::remove_file(&one.path).unwrap();
+        assert_eq!(to_save(&ready), Err(Phase::Gone));
+
+        // Nothing ready, nothing to save, and the phase stays as it is.
+        assert_eq!(to_save(&Phase::Choosing), Err(Phase::Choosing));
+    }
+    /// R7L-5. A send that went without broken pages says how many, and of which chapters.
+    #[test]
+    fn a_ready_send_says_which_pages_it_left_out() {
+        use kaeri_model::{Msg, ReadingMsg};
+        let skipped = |chapter: &str, n: u32| ExportSkipped {
+            chapter: chapter.to_owned(),
+            pages: n,
+            line: Msg::Reading(ReadingMsg::ExportPagesLeftOut {
+                n: i64::from(n),
+                chapter: chapter.to_owned(),
+            }),
+        };
+        assert_eq!(left_out(&[]), "");
+        assert_eq!(
+            left_out(&[skipped("Volume 1", 1), skipped("Chapter 12", 3)]),
+            "One page of Volume 1 couldn't be read and isn't in the files.\n\
+             3 pages of Chapter 12 couldn't be read and aren't in the files."
+        );
+    }
+}

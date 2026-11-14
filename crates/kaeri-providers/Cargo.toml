@@ -23,6 +23,8 @@ serde.workspace = true
 serde_json.workspace = true
 tokio.workspace = true
 tracing.workspace = true
+# Checks the reading demo's pages against their pins.
+sha1.workspace = true
 librqbit = { version = "8.1.1", default-features = false, features = ["rust-tls"] }
 
 [features]

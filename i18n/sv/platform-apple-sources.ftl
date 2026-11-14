@@ -17,13 +17,13 @@ stores-devices-count = { $count ->
    *[other] { $count } { -device-pl }
  }
 stores-replace-by-hand-detail = Version { $version } från { $store } ersätter kopian som lades till för hand.
-stores-open-join-on-detail = De går med utan namn. Stänger du av det slutar länken fungera. Slår du på det igen skapas en ny.
+stores-open-join-on-detail = Folk går med utan namn. Stänger du av det slutar länken fungera. Slå på det igen för en ny länk.
 stores-open-join-off-detail = Bara personer du bjuder in kan gå med. Slår du på det kan alla med länken gå med, utan namn.
 stores-open-join-no-names = Inga namn sparas.
 stores-open-join-keep-working = De fortsätter fungera tills du tar bort dem.
 stores-device-seen-at = Sågs { $when }
-stores-device-not-seen = Inte sedd sedan
-stores-publish-offered = { -plugin-store }en erbjuder { $version }
+stores-device-not-seen = Inte sedd sedan den gick med
+stores-publish-offered = { -plugin-store-cap }en har { $version }
 stores-publish-not-yet = Inte i { -plugin-store }en än
 torrents-sheet-edit-proxy = Redigera proxy
 torrents-edit-proxy = Redigera proxy
@@ -55,9 +55,10 @@ tv-seen-just-now = just nu
 stores-link-send-once = Skicka länken till { $who }. Den fungerar en gång, till { $until }.
 stores-link-send-once-anyone = Skicka länken till personen den är till för. Den fungerar en gång, till { $until }.
 sources-remove-title = Ta bort { $name }?
-sources-remove-detail-device = Den raderas från den här { -device }en. En { -plugin-store } kan installera den igen.
+sources-remove-detail-device = Det raderas från den här { -device }en. Du kan installera det igen från en { -plugin-store }.
 library-matched-apple = Matchade
 servers-row-summary-apple = { $series ->
     [one] 1 serie
    *[other] { $series } serier
  }
+book-picker-message = Välj en mapp med dina böcker.

@@ -5,5 +5,5 @@ release-seeders = { $count ->
  }
 trailer-failed = Det gick inte att öppna trailern
 engine-down-title = { -app-name } har stannat
-engine-down-stopped = Delen som gör jobbet har stannat. Försök igen, eller avsluta och öppna appen en gång till.
+engine-down-stopped = Inget nytt laddas förrän den startar igen. Försök igen, eller avsluta och öppna appen en gång till.
 engine-down-quit = Avsluta

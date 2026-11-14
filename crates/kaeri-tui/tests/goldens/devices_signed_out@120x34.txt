@@ -28,8 +28,8 @@ Kaeri                                                                           
                             │
                             │
                             │  ───────────────────────────────────────────────────────────────────────────────────────
-                            │    Fills in while your devices are apart, and keeps a sealed backup. Only your devices
-                            │    can read it.
+                            │    The folder keeps your devices in step while they are apart, and holds a sealed
+                            │    backup. Only your devices can read it.
 ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
 plugins · Subbed · 1080p                                                                     ↵ sign in   q back   ? keys
 === styles ===
@@ -115,9 +115,9 @@ r28 c28-28 fg=rule
 r29 c28-28 fg=rule
 r29 c31-117 fg=rule
 r30 c28-28 fg=rule
-r30 c33-115 fg=text-dim
+r30 c33-110 fg=text-dim
 r31 c28-28 fg=rule
-r31 c33-44 fg=text-dim
+r31 c33-70 fg=text-dim
 r32 c00-119 fg=rule
 r33 c00-23 fg=text-dim
 r33 c93-93 fg=text

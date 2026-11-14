@@ -10,6 +10,9 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withTimeoutOrNull
 import app.kaeri.engine.core.AnilistId
+import app.kaeri.engine.core.ChapterId
+import app.kaeri.engine.core.WorkId
+import app.kaeri.engine.model.KaeriIsFor
 import app.kaeri.engine.model.DownloadState
 import app.kaeri.store.AppStore
 import app.kaeri.store.ContinueItem
@@ -47,6 +50,12 @@ sealed interface AppLink {
     /** A destination, as it was left: the Updated notification's, back where the update was taken. */
     data class Section(val destination: Destination) : AppLink
 
+    /** A series' page, over reading's Home: a new chapter's, or its finished downloads'. */
+    data class Series(val work: WorkId) : AppLink
+
+    /** The reader on [chapter], over the series' page: a new chapter's Read. */
+    data class Read(val work: WorkId, val chapter: ChapterId) : AppLink
+
     /** The link's fields, as an intent's extras carry them: what it opens, and what of. */
     val fields: Map<String, String>
         get() = when (this) {
@@ -59,15 +68,17 @@ sealed interface AppLink {
             is Play -> mapOf(OPEN to "play", SHOW to "$id", EPISODE to episode)
             is Download -> mapOf(OPEN to "download", DOWNLOAD to "$id")
             is Section -> mapOf(OPEN to "section", SECTION to destination.route)
+            is Series -> mapOf(OPEN to "series", WORK to work)
+            is Read -> mapOf(OPEN to "read", WORK to work, CHAPTER to chapter)
         }
 
     /** A key of the link's own, "play/900001/8": two links are one intent only when they are equal. */
-    val key: String get() = listOf(OPEN, SHOW, EPISODE, DOWNLOAD, SECTION).mapNotNull(fields::get).joinToString("/")
+    val key: String get() = listOf(OPEN, SHOW, EPISODE, DOWNLOAD, SECTION, WORK, CHAPTER).mapNotNull(fields::get).joinToString("/")
 
     companion object {
         /**
          * What the link opens: `search`, `downloads`, `calendar`, `accounts`, `title`, `continue`,
-         * `play`, `download` or `section`.
+         * `play`, `download`, `section`, `series` or `read`.
          */
         const val OPEN = "open"
 
@@ -83,6 +94,12 @@ sealed interface AppLink {
         /** The destination, by its route. */
         const val SECTION = "section"
 
+        /** The series, by its work id. */
+        const val WORK = "work"
+
+        /** The chapter, by its id. */
+        const val CHAPTER = "chapter"
+
         /** The link [field] spells out, or `null` when it is not one of the app's. */
         fun of(field: (String) -> String?): AppLink? {
             val show = field(SHOW)?.toUIntOrNull()
@@ -96,6 +113,8 @@ sealed interface AppLink {
                 "play" -> field(EPISODE)?.takeIf { it.isNotBlank() }?.let { episode -> show?.let { Play(it, episode) } }
                 "download" -> field(DOWNLOAD)?.toLongOrNull()?.let(::Download)
                 "section" -> field(SECTION)?.let(Destination::named)?.let(::Section)
+                "series" -> field(WORK)?.takeIf { it.isNotBlank() }?.let(::Series)
+                "read" -> field(WORK)?.takeIf { it.isNotBlank() }?.let { work -> field(CHAPTER)?.takeIf { it.isNotBlank() }?.let { Read(work, it) } }
                 else -> null
             }
         }
@@ -122,6 +141,11 @@ internal suspend fun Navigator.follow(link: AppLink, store: AppStore, actions: A
         is AppLink.Section -> go(link.destination)
         AppLink.Accounts -> openSettings(SettingsPane.Accounts)
         is AppLink.Title -> openTitleFromLink(link.id)
+        is AppLink.Series -> openSeriesFromLink(store, link.work)
+        is AppLink.Read -> {
+            openSeriesFromLink(store, link.work)
+            actions.openReader(link.work, link.chapter, null, null)
+        }
         is AppLink.Play -> {
             openTitleFromLink(link.id)
             actions.play(link.id, link.episode)
@@ -151,6 +175,16 @@ internal suspend fun Navigator.follow(link: AppLink, store: AppStore, actions: A
 private fun Navigator.openTitleFromLink(id: AnilistId) {
     go(Destination.Home)
     openTitle(id, from = "link")
+}
+
+/**
+ * A series' page over reading's Home: Read's tab with both media, Home's with reading alone. The
+ * medium is waited for, at most [LINK_WAIT_MILLIS], when the link starts the app.
+ */
+private suspend fun Navigator.openSeriesFromLink(store: AppStore, work: WorkId) {
+    val answer = withTimeoutOrNull(LINK_WAIT_MILLIS) { store.medium.view.filterNotNull().first() }?.answer
+    go(if (answer == KaeriIsFor.BOTH) Destination.Read else Destination.Home)
+    openSeries(work, from = "link")
 }
 
 /** How long a link to continue a title waits for the title's row before it only shows the page. */

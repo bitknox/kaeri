@@ -191,8 +191,8 @@ data class Words(val context: Context, val twentyFourHour: Boolean = true, val l
 
     /** When a record was made, for "Updated …": "yesterday", "Sunday", or "12 Oct" further back. */
     fun day(at: Instant, now: Instant, zone: ZoneId): String {
-        val day = LocalDate.ofInstant(at, zone)
-        val days = ChronoUnit.DAYS.between(day, LocalDate.ofInstant(now, zone))
+        val day = at.atZone(zone).toLocalDate()
+        val days = ChronoUnit.DAYS.between(day, now.atZone(zone).toLocalDate())
         return when {
             days <= 0L -> Strings.widgetDayToday(context)
             days == 1L -> Strings.widgetDayYesterday(context)
@@ -259,14 +259,14 @@ object WidgetModel {
 
     fun airing(record: Record?, now: Instant, zone: ZoneId, words: Words): AiringView {
         record ?: return AiringView.NoSchedule
-        val today = LocalDate.ofInstant(now, zone)
+        val today = now.atZone(zone).toLocalDate()
         val start = today.atStartOfDay(zone).toInstant()
         val end = today.plusDays(1).atStartOfDay(zone).toInstant()
         val rows = record.airing.filter { !it.airsAt.isBefore(start) && it.airsAt.isBefore(end) }.sortedBy { it.airsAt }
         if (rows.isEmpty()) {
             // The record holds the days from the one it was made on: past them it says nothing of
             // today, and within them nothing in it today means nothing airs.
-            val made = LocalDate.ofInstant(record.generatedAt, zone)
+            val made = record.generatedAt.atZone(zone).toLocalDate()
             val covered = !today.isBefore(made) && today.isBefore(made.plusDays(record.days.toLong()))
             return if (covered) AiringView.NothingToday(next(record, now)) else AiringView.NoSchedule
         }

@@ -73,6 +73,9 @@ impl Command {
                 format!("searching sources for \u{201c}{query}\u{201d}")
             }
             Self::Opened(command) => command.activity(),
+            Self::Reading(command) => return command.activity(),
+            Self::Reader(command) => return command.activity(),
+            Self::BookSources(command) => return command.activity(),
             Self::DownloadEpisode { episode, .. } => format!("queueing ep {episode}"),
             Self::DownloadMany { episodes, .. } => {
                 format!("queueing {}", crate::wording::plural(episodes.len(), "episode"))
@@ -84,6 +87,7 @@ impl Command {
             Self::JoinStore { .. } => "joining the store".into(),
             Self::LeaveStore { .. } => "leaving the store".into(),
             Self::InstallPlugin { plugin, .. } => format!("installing {plugin}"),
+            Self::InstallAllForReading { .. } => "installing plugins".into(),
             Self::CreateInvite { .. } => "making an invite".into(),
             Self::LoadMembers { .. } => "loading members".into(),
             Self::RemoveMember { .. } => "removing access".into(),
@@ -577,6 +581,15 @@ pub enum Command {
     Server(crate::servers::ServerCommand),
     // Your media on this computer; see `LocalCommand`.
     Local(crate::local::LocalCommand),
+    // Catalogue, series, library, updates, trackers, downloads, export, feed; see
+    // `ReadingCommand`.
+    Reading(crate::reading::ReadingCommand),
+    // One open reader session; see `ReaderCommand`.
+    Reader(crate::reader::ReaderCommand),
+    // Folders, servers and book plugins; see `BookSourceCommand`.
+    BookSources(crate::book_sources::BookSourceCommand),
+    // Watch, read or both; see `MediumCommand`.
+    Medium(crate::medium::MediumCommand),
     /// Open a URL in the system browser.
     OpenExternal {
         url: String,
@@ -859,6 +872,11 @@ pub enum Command {
     InstallPlugin {
         store: String,
         plugin: String,
+    },
+    /// Install every plugin for reading a store offers that is not installed yet: the joined
+    /// sheet's "Install all for reading". Answered with `Event::CameIn(Installed)`.
+    InstallAllForReading {
+        store: String,
     },
     /// Delete an installed plugin from this machine.
     RemovePlugin {

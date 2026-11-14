@@ -76,14 +76,14 @@ spoken-seconds = { $count ->
 
 # Continue row: nothing new to watch, and the next episode airs at a known time. The time is already worded: "in 2d 3h".
 # @only linux
-# @arg episode: int
+# @arg episode: plain
 # @arg when: text
 # @max 50
 continue-row-caught-up-airs = Caught up · E{ $episode } airs { $when }
 
 # Continue row: nothing new to watch, and the next episode has no date.
 # @only linux
-# @arg episode: int
+# @arg episode: plain
 # @max 50
 continue-row-caught-up-not-out = Caught up · E{ $episode } is not out yet
 
@@ -203,7 +203,7 @@ library-row-summary-linux = { $episodes ->
 library-page-watching-linux = Watched for changes
 
 # A folder page's line when changes are found only when the app starts or is asked.
-library-page-no-watch-linux = Looked at again when { -app-name } starts
+library-page-no-watch-linux = Checked for changes when { -app-name } starts
 
 # Heading over the matched series.
 library-matched-linux = Matched

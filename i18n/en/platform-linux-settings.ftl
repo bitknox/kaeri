@@ -40,11 +40,11 @@ settings-caption-note = Plain subtitles look like this, in { $language } when an
 # Preview note for new-episode notifications when they are on. The tracker is a name such as AniList.
 # @only linux
 # @arg tracker: text
-settings-notify-note-on = One notification when an episode of a show in your Watching list comes out, at the time { $tracker } gives. A show's own setting comes first.
+settings-notify-note-on = You get one notification when an episode of a show on your Watching list comes out, at the time { $tracker } gives. A show's own setting overrides this one.
 
 # Preview note for new-episode notifications when they are off.
 # @only linux
-settings-notify-note-off = Off. Only shows turned on in their own settings notify.
+settings-notify-note-off = Off. Only shows you turned on in their own settings send notifications.
 
 # Preview note beside the accounts settings.
 # @only linux
@@ -157,4 +157,4 @@ settings-note-cast-tvs-computer = They appear under Chromecast in Play on TV. Th
 
 # Note under the Torrents while casting setting, shown while torrents are on.
 # @only linux
-settings-note-torrents-while-casting-computer = Lets a TV with Chromecast built in play torrents. This computer sends the episode for as long as it plays.
+settings-note-torrents-while-casting-computer = With this on, a TV with Chromecast built in can play torrents. This computer sends the episode for as long as it plays.

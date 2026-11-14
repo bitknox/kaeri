@@ -44,7 +44,7 @@ sync-road-nearby-line = Pair with another { -device } on the same Wi-Fi. Nothing
 sync-road-cloud = Through a cloud folder
 
 # Road sheet row line. Names no service, since a build may hide some (decision 14).
-sync-road-cloud-line = A cloud drive you already use, or your own server. Works while your { -device-pl } are apart, and keeps a backup.
+sync-road-cloud-line = A cloud drive you already use, or your own server. It works while your { -device-pl } are apart and keeps a backup.
 
 # Road sheet footer.
 sync-road-later = You can add the other way later. Most people use both.
@@ -113,7 +113,7 @@ sync-turn-off-alert-line = This { $kind } stops sharing with your other { -devic
 cloud-group = Cloud folder
 
 # Group footer.
-cloud-foot = Fills in while your { -device-pl } are apart, and keeps a sealed backup. Only your { -device-pl } can read it.
+cloud-foot = The folder keeps your { -device-pl } in step while they are apart, and holds a sealed backup. Only your { -device-pl } can read it.
 
 # Row when only the nearby road is set.
 cloud-add = Add a cloud folder
@@ -401,7 +401,7 @@ pair-which-profile-line = This { $kind } syncs with that profile only. The other
 pair-also-sync-foot = { $device } already knows this phone from Play on TV, so syncing with it needs no new code.
 
 # Continue, for a day.
-# @arg n: int
+# @arg n: plain
 # @arg time: text
 # @arg device: text
 continue-from-device = Episode { $n } · stopped at { $time } on { $device }
@@ -422,7 +422,7 @@ sync-syncing-with = Syncing with { $device }
 sync-notes = Sync notes
 
 # Sync note.
-# @arg n: int
+# @arg n: plain
 # @arg title: text
 # @arg other: text
 # @arg device: text
@@ -497,7 +497,7 @@ profiles-picker = Who’s watching?
 profiles-ask-at-launch = Ask who’s watching at launch
 
 # iPad footer.
-profiles-ask-foot = Off by default. For an iPad the household shares. The account row switches profiles at any time.
+profiles-ask-foot = Off by default. Turn it on for an iPad the whole household shares. You can switch profiles from the account row at any time.
 
 # TV Settings.
 profiles-switch = Switch profile
@@ -578,10 +578,12 @@ profiles-avatar-desc = { $name }, switch profile
 # Heading over the pairing code the other device shows, over the field.
 pair-code-field = Pairing code
 
-## Words the sentences above take for this device: "this phone", "this tablet", "this TV".
+## Words the sentences above take for this device: "this phone", "this tablet", "this TV", and
+## "this device" on an e-reader, which is neither.
 device-kind-phone = phone
 device-kind-tablet = tablet
 device-kind-tv = TV
+device-kind-other = { -device }
 
 # TV welcome, text button.
 first-setup-phone = Set up from your phone

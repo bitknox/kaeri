@@ -1,5 +1,5 @@
 source-picker-seeders-linux = { $count ->
-    [one] Un partageur
+    [one] { $count } partageur
     [many] { $count } partageurs
    *[other] { $count } partageurs
  }
@@ -58,11 +58,11 @@ library-row-summary-linux = { $episodes ->
    *[other] { $episodes } épisodes de { $series } séries
  }
 library-page-watching-linux = Modifications suivies
-library-page-no-watch-linux = Réexaminé au démarrage de { -app-name }
+library-page-no-watch-linux = Changements vérifiés au démarrage de { -app-name }
 library-matched-linux = Associées
 library-best-guess-linux = Meilleure piste : { $title }
 library-fix-count-mismatch-linux = { $episodes ->
-    [one] A 1 épisode, ce dossier en a { $files }
+    [one] A { $episodes } épisode, ce dossier en a { $files }
     [many] A { $episodes } épisodes, ce dossier en a { $files }
    *[other] A { $episodes } épisodes, ce dossier en a { $files }
  }

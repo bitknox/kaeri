@@ -28,7 +28,7 @@ notice-cast-refused = { $name } не смог воспроизвести это�
 notice-cast-taken-over = Другое устройство запустило что-то на { $name }, поэтому трансляция остановлена.
 
 # This device isn't on the TV's network, or reaches it through a VPN. The name is the TV's own.
-notice-cast-not-same-network = Это устройство не в той сети, где { $name }, или подключается к ней через VPN. Для трансляции оба должны быть в одной сети.
+notice-cast-not-same-network = Это устройство не в той же сети, что { $name }, или подключается к ней через VPN. Для трансляции подключите оба к одной сети.
 
 # The TV stopped answering mid-cast. The name is the TV's own.
 notice-cast-lost = Связь с { $name } потеряна, трансляция остановлена.
@@ -156,8 +156,62 @@ home-trending = Сейчас в тренде
 # Heading over recommendations from one show the person finished and rated well. The title is that show.
 home-because = Потому что вы досмотрели { $title }
 
-# Heading over popular titles of the genre the person finished most of. The genre is lower case, such as "mecha".
+# Heading over popular titles of the genre the person finished most of, for a genre that has no heading of its own below. The genre is AniList's name as it writes it.
 home-more-genre = Ещё: { $genre }
+
+# Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language.
+home-more-genre-action = Ещё: экшен
+
+# Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language.
+home-more-genre-adventure = Ещё: приключения
+
+# Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language.
+home-more-genre-comedy = Ещё: комедия
+
+# Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language.
+home-more-genre-drama = Ещё: драма
+
+# Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language.
+home-more-genre-ecchi = Ещё: этти
+
+# Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language.
+home-more-genre-fantasy = Ещё: фэнтези
+
+# Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language.
+home-more-genre-horror = Ещё: ужасы
+
+# Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language.
+home-more-genre-mahou-shoujo = Ещё: махо-сёдзё
+
+# Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language.
+home-more-genre-mecha = Ещё: меха
+
+# Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language.
+home-more-genre-music = Ещё: музыка
+
+# Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language.
+home-more-genre-mystery = Ещё: детектив
+
+# Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language.
+home-more-genre-psychological = Ещё: психологическое
+
+# Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language.
+home-more-genre-romance = Ещё: романтика
+
+# Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language.
+home-more-genre-sci-fi = Ещё: фантастика
+
+# Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language.
+home-more-genre-slice-of-life = Ещё: повседневность
+
+# Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language.
+home-more-genre-sports = Ещё: спорт
+
+# Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language.
+home-more-genre-supernatural = Ещё: сверхъестественное
+
+# Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language.
+home-more-genre-thriller = Ещё: триллер
 
 # Line over the spotlight's title when it is the built-in demo.
 home-spotlight-demo = Демо, можно делиться
@@ -367,7 +421,7 @@ match-search-timed-out = Он не ответил вовремя.
 match-search-source-off = Он не включён.
 
 # Toast after the person picked a source for one title.
-notice-source-pinned = { $source } будет использоваться для этого названия.
+notice-source-pinned = Теперь этот тайтл воспроизводится из { $source }.
 
 # Toast after the person went back to automatic source selection for one title.
 notice-source-automatic = Снова автоматический выбор источника для этого названия.
@@ -510,6 +564,630 @@ party-left = Вы покинули совместный просмотр.
 # Message when a watch party's server could not be reached, in the lobby or when looking in.
 party-server-unreachable = Не удалось связаться с { $server }. Проверьте сервер или попробуйте ещё раз.
 
+# Under a cover: the chapter that is next to read. The chapter is its number, such as 44 or 10.5.
+reading-next-chapter = Глава { $chapter }
+
+# Under a cover or on a series page: when new chapters usually come out.
+reading-usually-mondays = Обычно по понедельникам
+
+# Under a cover or on a series page: when new chapters usually come out.
+reading-usually-tuesdays = Обычно по вторникам
+
+# Under a cover or on a series page: when new chapters usually come out.
+reading-usually-wednesdays = Обычно по средам
+
+# Under a cover or on a series page: when new chapters usually come out.
+reading-usually-thursdays = Обычно по четвергам
+
+# Under a cover or on a series page: when new chapters usually come out.
+reading-usually-fridays = Обычно по пятницам
+
+# Under a cover or on a series page: when new chapters usually come out.
+reading-usually-saturdays = Обычно по субботам
+
+# Under a cover or on a series page: when new chapters usually come out.
+reading-usually-sundays = Обычно по воскресеньям
+
+# Under a cover or on a series page: how often new chapters come out, in weeks.
+reading-about-every-weeks =
+    { $weeks ->
+        [one] Примерно раз в { $weeks } неделю
+        [few] Примерно раз в { $weeks } недели
+        [many] Примерно раз в { $weeks } недель
+       *[other] Примерно раз в { $weeks } недели
+    }
+
+# On a book's series page, when the same story is also a show. Shown only to someone who both watches and reads.
+reading-also-a-show = Есть и сериал
+
+# On a show's page, when the same story is also a manga or a novel. Shown only to someone who both watches and reads.
+reading-also-a-book = Есть и книга
+
+# Under a tracker on a series page, when the furthest chapter read is a half chapter. Trackers count whole chapters only. The chapter is its number, such as 10.5; whole is the number the tracker gets, such as 10.
+reading-split-chapter = Глава { $chapter } уходит в трекеры как { $whole }.
+
+# A notice over the page when a chapter opens where it was left. It offers Start over.
+reader-resumed = Продолжено со страницы { $page }
+
+# The same notice in a webtoon strip, which counts images rather than pages.
+reader-resumed-image = Открыто на картинке { $image }
+
+# A notice in the corner after jumping away with the scrubber or the page grid. Tapping it goes back to the page.
+reader-back-to-page = Назад на страницу { $page }
+
+# A notice when another device read further, so the reader moved on to where it stopped. It offers Go back. The chapter is its whole label, such as The Long Night or Episode 63, and the device is its name, such as Living room tablet. A chapter with only a number uses the next message.
+reader-moved = Переход к { $chapter }, страница { $page }: там остановилось { $device }
+
+# The same notice for a chapter known only by its number, such as 14 or 14.5.
+reader-moved-number = Переход к главе { $chapter }, страница { $page }: там остановилось { $device }
+
+# A notice the first time a series opens with its reading direction guessed. It offers Change.
+reader-detected-right-to-left = Похоже, справа налево
+
+# A notice the first time a series opens with its reading direction guessed. It offers Change.
+reader-detected-left-to-right = Похоже, слева направо
+
+# A notice the first time a series opens as one long strip, guessed from its pages. It offers Change.
+reader-detected-strip = Похоже, длинная лента
+
+# Why a chapter or a list could not load: there is no connection.
+reading-failed-offline = Нет подключения. Скачанные главы по-прежнему открываются.
+
+# Why a chapter or a list could not load: the source did not answer. The source is its name.
+reading-failed-source-down = { $source } не отвечает. Повторите попытку позже.
+
+# Why a chapter could not load: the source no longer has it.
+reading-failed-not-found = Этого больше нет в этом источнике. Попробуйте другой.
+
+# Why a chapter or a list could not load: the source refused. The reason comes from the source.
+reading-failed-blocked = { $source } отклонил запрос. { $reason }
+
+# Why a chapter or a list could not load: the source answered with something Kaeri could not read.
+reading-failed-parse = Kaeri не смог прочитать ответ { $source }. Возможно, нужно обновить плагин.
+
+# Why one page did not load. The status is the server's HTTP status code, such as 404.
+reading-failed-page = Страница не загрузилась (ошибка { $status }). Повторите попытку.
+
+# Why something could not load: a sign-in is needed. What is a server's or a tracker's name.
+reading-failed-sign-in = Войдите в { $what } снова, чтобы читать дальше.
+
+# Why a book could not open: its file or folder is gone, perhaps on a drive that is not connected. The path is the file's.
+reading-failed-file-missing = { $path } больше нет на месте. Если файл на диске, подключите его и повторите попытку.
+
+# Why a book could not open: the file is damaged or not what its name says. The format is a short name such as CBZ or EPUB.
+reading-failed-unreadable = Не удалось прочитать { $path } как { $format }. Возможно, файл повреждён.
+
+# Why a file was not added: Kaeri does not read its kind. The kind is a file extension such as .djvu.
+reading-failed-unsupported = Kaeri не читает файлы { $kind }.
+
+# Why a book could not open: it is copy-protected or encrypted.
+reading-failed-protected = Книга защищена от копирования, поэтому Kaeri не может её открыть.
+
+# Why a chapter could not be saved: the disk is full.
+reading-failed-disk-full = Не хватает места для сохранения. Освободите место и повторите попытку.
+
+# Why a novel could not open: the system's web view is too old. The version is its major version number, such as 80.
+reading-failed-webview = Для романов нужен более новый системный WebView, чем версия { $version }. Обновите Android System WebView и повторите попытку.
+
+# Why a book plugin could not be used: it was built for a newer Kaeri. The world is the plugin interface's name and version.
+reading-failed-needs-newer = Для этого плагина нужна более новая версия Kaeri ({ $world }). Обновите Kaeri, чтобы им пользоваться.
+
+# Why a reading request was refused: reading is not available in this build.
+reading-failed-off = В этой версии Kaeri чтение недоступно.
+
+# Why something about reading failed, for any other reason. The reason is as it came.
+reading-failed-other = Что-то пошло не так. { $reason }
+
+# Why Send to e-reader stopped before sending: the file it made is bigger than the e-reader or its service takes. File is the file's name, target the e-reader's name such as Kindle. Shown with Try again.
+reading-failed-send-too-large = { $file } весит { $size }, а { $target } принимает файлы до { $limit }. Отправляйте меньше глав за раз и попробуйте снова.
+
+# Why Send to e-reader stopped before sending: a part the book needs is not in the file Kaeri made. Part is a path inside the file, such as OEBPS/content.opf. Shown with Try again.
+reading-failed-send-missing = В { $file } отсутствует { $part }, поэтому файл не отправлен. Попробуйте снова.
+
+# Why Send to e-reader stopped before sending: a part of the file Kaeri made does not declare or use the UTF-8 text encoding. Part is a path inside the file. Shown with Try again.
+reading-failed-send-encoding = У части { $part } в { $file } неверная кодировка текста, поэтому файл не отправлен. Попробуйте снова.
+
+# Why Send to e-reader stopped before sending: a part of the file Kaeri made is not laid out as the book format requires. Part is a path inside the file. Shown with Try again.
+reading-failed-send-malformed = Часть { $part } в { $file } некорректна, поэтому файл не отправлен. Попробуйте снова.
+
+# Under a cover or on a series page: what kind of book it is. Manga is drawn in Japan.
+reading-kind-manga = Манга
+
+# Under a cover or on a series page: what kind of book it is. Manhwa is drawn in Korea.
+reading-kind-manhwa = Манхва
+
+# Under a cover or on a series page: what kind of book it is. Manhua is drawn in China or Taiwan.
+reading-kind-manhua = Маньхуа
+
+# Under a cover or on a series page: what kind of book it is. A webtoon is drawn as one long strip that scrolls down.
+reading-kind-webtoon = Вебтун
+
+# Under a cover or on a series page: what kind of book it is. A one-shot is a story told in a single chapter.
+reading-kind-one-shot = Ваншот
+
+# Under a cover or on a series page: what kind of book it is. A light novel is a novel from Japan.
+reading-kind-light-novel = Ранобэ
+
+# Under a cover or on a series page: what kind of book it is, for a novel from anywhere else.
+reading-kind-novel = Роман
+
+# Under a cover or on a series page: new chapters are still coming out.
+reading-status-releasing = Выходит
+
+# Under a cover or on a series page: the story is complete.
+reading-status-finished = Завершено
+
+# Under a cover or on a series page: new chapters have stopped for a while.
+reading-status-hiatus = Перерыв
+
+# Under a cover or on a series page: the story was stopped before it ended.
+reading-status-cancelled = Отменено
+
+# Under a cover or on a series page: the first chapter is not out yet.
+reading-status-not-yet = Ещё не вышло
+
+# Under a cover or on a series page: how many chapters the series has.
+reading-chapters =
+    { $count ->
+        [one] { $count } глава
+        [few] { $count } главы
+        [many] { $count } глав
+       *[other] { $count } главы
+    }
+
+# Under a cover or on a series page: how many volumes the series has.
+reading-volumes =
+    { $count ->
+        [one] { $count } том
+        [few] { $count } тома
+        [many] { $count } томов
+       *[other] { $count } тома
+    }
+
+# Under a cover: the series is on the person's Planning list.
+reading-on-planning = В вашем списке «Запланировано»
+
+# Above the big picture at the top of reading's Home, saying why this series is there: a new chapter came out in a series the person reads.
+reading-spotlight-new-chapter = Новая глава в серии, за которой вы следите
+
+# Above the big picture at the top of reading's Home: the series the person was reading last.
+reading-spotlight-continue = Читать дальше
+
+# Above the big picture at the top of reading's Home: the first series on the person's Planning list, or one like what they read.
+reading-spotlight-up-next = Далее для вас
+
+# Above the big picture at the top of reading's Home: a popular series that is still coming out, shown when the person has nothing of their own yet. It is not a pick for them.
+reading-spotlight-popular = Популярное, выходит сейчас
+
+# Under the big picture on reading's Home: a chapter that came out today. The chapter is its number, such as 88.
+reading-out-today = Глава { $chapter } вышла сегодня
+
+# Under the big picture on reading's Home: a chapter that came out today, with its title.
+reading-out-today-titled = Глава { $chapter }, { $title }, вышла сегодня
+
+# Under a cover or the big picture: the page the person stopped on in a chapter.
+reading-chapter-page = Глава { $chapter } · стр. { $page }
+
+# Under a cover or the big picture: how far into a novel's chapter the person is.
+reading-chapter-percent = Глава { $chapter } · { $percent }%
+
+# Under a cover: a chapter came out that the person has not read. The chapter is its number.
+reading-chapter-new = Вышла глава { $chapter }
+
+# Under a cover: a light novel's part, next to read or in progress. Light novels read in parts.
+reading-next-part = Часть { $part }
+
+# Under a cover or the big picture: how far into a light novel's part the person is.
+reading-part-percent = Часть { $part } · { $percent }%
+
+# Under a cover: a light novel's part came out that the person has not read.
+reading-part-new = Вышла часть { $part }
+
+# Under a cover or the big picture: how far into a light novel's part the person is, the part named in the source's own words ("Part 3", "Chapter 3"), as its row on the series page names it.
+reading-label-percent = { $label } · { $percent }%
+
+# Under a cover: a light novel's part came out that the person has not read, named in the source's own words ("Part 4", "Chapter 4").
+reading-label-new = Новое: { $label }
+
+# Under a This week cell: a light novel's part that came out that day, with its own title.
+reading-part-titled = Часть { $part } · { $title }
+
+# Under a This week cell: a light novel's part that came out that day, with its own title, the part named in the source's own words ("Part 4", "Chapter 4").
+reading-label-titled = { $label } · { $title }
+
+# Under the big picture on reading's Home: a light novel's part that came out today.
+reading-part-out-today = Часть { $part } вышла сегодня
+
+# Under the big picture on reading's Home: a light novel's part that came out today, named in the source's own words ("Part 4", "Chapter 4").
+reading-label-out-today = Сегодня вышло: { $label }
+
+# Under the big picture on reading's Home: a light novel's part that came out today, with its title.
+reading-part-out-today-titled = Часть { $part }, { $title }, вышла сегодня
+
+# Under the big picture on reading's Home: a light novel's part that came out today, with its title, the part named in the source's own words ("Part 4", "Chapter 4").
+reading-label-out-today-titled = Сегодня вышло: { $label }, { $title }
+
+# Under a Library cover: the chapter the person is at, and the newest chapter there is.
+reading-chapter-of = Глава { $chapter } из { $of }
+
+# Under a Library cover: the volume and part of a light novel the person is at.
+reading-volume-part = Том { $volume }, часть { $part }
+
+# Under a Library cover: the volume of a light novel the person is at, and the part in the source's own words ("Part 5", "Chapter 5").
+reading-volume-label = Том { $volume }, { $label }
+
+# A search filter: books from Japan.
+reading-origin-japan = Япония
+
+# A search filter: books from Korea.
+reading-origin-korea = Корея
+
+# A search filter: books from China.
+reading-origin-china = Китай
+
+# A search filter: books from Taiwan.
+reading-origin-taiwan = Тайвань
+
+# Send to e-reader: a device class with no brand, for e-readers not listed by name. Opens CBZ and EPUB.
+export-device-other = Другая читалка
+
+# Send to e-reader: a device class, a grey e-ink screen of about 6 inches.
+export-device-eink-6 = E-ink, 6 дюймов
+
+# Send to e-reader: a device class, a grey e-ink screen of about 7 or 8 inches.
+export-device-eink-7 = E-ink, 7 дюймов
+
+# Send to e-reader: a device class, a colour e-ink screen of about 7 inches.
+export-device-colour-eink = Цветной E-ink, 7 дюймов
+
+# Send to e-reader: a device class, a colour tablet.
+export-device-tablet = Планшет
+
+# A table of contents entry in a file sent to an e-reader. The chapter is its number, such as 44 or 10.5.
+export-chapter = Глава { $chapter }
+
+# Send to e-reader: a send that waits because chapters must be fetched and downloads are kept to Wi-Fi. A send makes its files from every chapter at once, so all of it waits. n is how many chapters it still has to fetch.
+export-waits-for-wifi =
+    { $n ->
+        [one] { $n } глава ещё не скачана, поэтому отправка дождётся Wi-Fi и продолжится сама.
+        [few] { $n } главы ещё не скачаны, поэтому отправка дождётся Wi-Fi и продолжится сама.
+        [many] { $n } глав ещё не скачано, поэтому отправка дождётся Wi-Fi и продолжится сама.
+       *[other] { $n } главы ещё не скачаны, поэтому отправка дождётся Wi-Fi и продолжится сама.
+    }
+
+# Send to e-reader, under the ready files: pages of one chapter that couldn't be read, as the reader shows them broken, so the files go without them. The chapter is its name as the series shows it, such as Chapter 12 or Volume 1. n is how many pages were left out.
+export-pages-left-out =
+    { $n ->
+        [one] { $n } страницу из { $chapter } не удалось прочитать, её нет в файлах.
+        [few] { $n } страницы из { $chapter } не удалось прочитать, их нет в файлах.
+        [many] { $n } страниц из { $chapter } не удалось прочитать, их нет в файлах.
+       *[other] { $n } страницы из { $chapter } не удалось прочитать, их нет в файлах.
+    }
+
+# Under a This week cell: the chapter that came out that day, with its own title.
+reading-chapter-titled = Глава { $chapter } · { $title }
+
+# A chapter row's state: the person read it.
+reading-row-read = Прочитано
+
+# A chapter row's state: it came out since the person last read and is not read.
+reading-row-new = Новая
+
+# A chapter row's state: it is kept on this device to read offline.
+reading-row-downloaded = Скачана
+
+# A chapter row's state: it is downloaded on this device, and the source no longer lists it. It still opens from the download.
+reading-row-gone-from-source = Источник удалил главу
+
+# A chapter row's state: it is read from the source and nothing of it is on this device.
+reading-row-not-downloaded = Не скачана
+
+# A chapter row's state: a file in one of the person's folders, or one already on the device.
+reading-row-on-device = Хранится здесь
+
+# A chapter row's state: it waits its turn to download.
+reading-row-queued = В очереди
+
+# A chapter row's state: it waits to download until the device is on Wi-Fi.
+reading-row-waits-wifi = В очереди · ждёт Wi-Fi
+
+# A chapter row's state while it downloads.
+reading-row-downloading = Скачивание · { $done } из { $total } стр.
+
+# A chapter row's state: the download failed. The reason follows as the next part.
+reading-row-failed = Не удалось скачать
+
+# A chapter row's state: the page the person stopped on, of how many.
+reading-row-page-of = Стр. { $page } из { $of }
+
+# A chapter row's state: the page the person stopped on, when the length isn't known.
+reading-row-page = Стр. { $page }
+
+# A novel's chapter row: how far into it the person is.
+reading-row-percent = { $percent }%
+
+# A novel's chapter row: the person opened it, and how far in is too little to say as a percent.
+reading-row-opened = Открыта
+
+# A chapter row's state: the person bookmarked it. Bookmarked chapters are kept when read downloads are cleared.
+reading-row-bookmarked = В закладках
+
+# A chapter row: how long its pages are, for a file on the device.
+reading-row-pages =
+    { $n ->
+        [one] { $n } страница
+        [few] { $n } страницы
+        [many] { $n } страниц
+       *[other] { $n } страницы
+    }
+
+# A chapter row: how many versions the person's sources have of it. The row's menu lists them.
+reading-row-versions =
+    { $n ->
+        [one] { $n } версия
+        [few] { $n } версии
+        [many] { $n } версий
+       *[other] { $n } версии
+    }
+
+# A chapter row: when it was read or came out, under a minute ago.
+reading-ago-now = только что
+
+# A chapter row: when it was read or came out, in minutes.
+reading-ago-minutes = { $minutes } мин назад
+
+# A chapter row: when it was read or came out, earlier today.
+reading-ago-today = сегодня
+
+# A chapter row: when it was read or came out, the day before today.
+reading-ago-yesterday = вчера
+
+# A chapter row: when it was read or came out, in days, under a week.
+reading-ago-days =
+    { $days ->
+        [one] { $days } день назад
+        [few] { $days } дня назад
+        [many] { $days } дней назад
+       *[other] { $days } дня назад
+    }
+
+# A chapter row: when it was read or came out, in weeks, under two months.
+reading-ago-weeks =
+    { $weeks ->
+        [one] { $weeks } неделю назад
+        [few] { $weeks } недели назад
+        [many] { $weeks } недель назад
+       *[other] { $weeks } недели назад
+    }
+
+# A chapter row: when it was read or came out, in months, under a year.
+reading-ago-months =
+    { $months ->
+        [one] { $months } месяц назад
+        [few] { $months } месяца назад
+        [many] { $months } месяцев назад
+       *[other] { $months } месяца назад
+    }
+
+# A chapter row: when it was read or came out, in years.
+reading-ago-years =
+    { $years ->
+        [one] { $years } год назад
+        [few] { $years } года назад
+        [many] { $years } лет назад
+       *[other] { $years } года назад
+    }
+
+# The tracker took the series off its list.
+reading-removed-from = Удалено из { $tracker }
+
+# The tracker's list did not hold the series, so there was nothing to remove.
+reading-removed-not-there = Не было в вашем списке { $tracker }
+
+# The app never learned which of the tracker's entries this series is, so it asked nothing.
+reading-removed-unmatched = Не сопоставлено в { $tracker }, поэтому там ничего не изменилось
+
+# The tracker could not take the series off. The reason follows.
+reading-removed-failed = По-прежнему в вашем списке { $tracker }
+
+# Why a removal failed: the tracker turned the sign-in away.
+reading-removed-sign-in = Войдите в { $tracker } снова и попробуйте ещё раз.
+
+# The source answered the search and has no series by the series' names.
+reading-miss-no-series = Нет серии с таким названием
+
+# The source has failed every ask since this time of day, in the person's zone.
+reading-miss-down-since = Не отвечает с { $time }
+
+# The source has failed every ask, since a time on another day or not known.
+reading-miss-down = Не отвечает
+
+# How many parts of a light novel are downloaded.
+reading-dl-parts =
+    { $count ->
+        [one] { $count } часть
+        [few] { $count } части
+        [many] { $count } частей
+       *[other] { $count } части
+    }
+
+# What the downloads take up on this device.
+reading-dl-size = { $size }
+
+# How many of the downloaded chapters are read, which Delete read clears.
+reading-dl-read = Прочитано: { $count }
+
+# The chapter downloading now.
+reading-dl-chapter = Глава { $chapter }
+
+# How far the chapter downloading now has come.
+reading-dl-pages = { $done } из { $total } стр.
+
+# Chapters waiting their turn after the one downloading.
+reading-dl-more-queued = Ещё в очереди: { $count }
+
+# Chapters waiting their turn, none downloaded yet.
+reading-dl-queued = В очереди: { $count }
+
+# Chapters that wait for Wi-Fi to download.
+reading-dl-waits-wifi = ждёт Wi-Fi
+
+# A chapter that failed. The reason follows as the next part.
+reading-dl-failed = Не удалось скачать главу { $chapter }
+
+# After "Chapter 2 couldn't download" when there was no network: the downloads banner says the rest.
+reading-dl-offline = Нет сети
+
+# How much the chosen chapters will take, from their pages and the size of pages downloaded before.
+reading-estimate-size = Около { $size }
+
+# The chapters download only on Wi-Fi, as the settings say.
+reading-estimate-wifi = по Wi-Fi
+
+# The device is on mobile data, and the settings let chapters download on it.
+reading-estimate-mobile = по мобильной сети
+
+# The device is on mobile data and the chapters wait until it's on Wi-Fi.
+reading-estimate-waits-wifi = ждёт Wi-Fi
+
+# The notification's title.
+reading-downloads-done-title = Загрузки завершены
+
+# The notification's text: one series' chapters are downloaded.
+reading-downloads-done-chapters =
+    { $count ->
+        [one] { $count } глава «{ $title }» готова для чтения офлайн.
+        [few] { $count } главы «{ $title }» готовы для чтения офлайн.
+        [many] { $count } глав «{ $title }» готовы для чтения офлайн.
+       *[other] { $count } главы «{ $title }» готовы для чтения офлайн.
+    }
+
+# The notification's text: one light novel's parts are downloaded.
+reading-downloads-done-parts =
+    { $count ->
+        [one] { $count } часть «{ $title }» готова для чтения офлайн.
+        [few] { $count } части «{ $title }» готовы для чтения офлайн.
+        [many] { $count } частей «{ $title }» готовы для чтения офлайн.
+       *[other] { $count } части «{ $title }» готовы для чтения офлайн.
+    }
+
+# The notification's text: chapters of several series are downloaded.
+reading-downloads-done-series = Главы { $count } серий готовы для чтения офлайн.
+
+# Row heading on reading's Home: manga that are trending on AniList now.
+read-home-trending-manga = Манга в тренде
+
+# Row heading on reading's Home: webtoons that are trending on AniList now.
+read-home-trending-webtoons = Вебтуны в тренде
+
+# Row heading on reading's Home: light novels that are trending on AniList now.
+read-home-trending-novels = Ранобэ в тренде
+
+# Row heading on reading's Home: the most popular manga that started in the last 12 months.
+read-home-new-manga = Новая манга
+
+# Row heading on reading's Home: the most popular webtoons that started in the last 12 months.
+read-home-new-webtoons = Новые вебтуны
+
+# Row heading on reading's Home: the most popular light novels that started in the last 12 months.
+read-home-new-novels = Новые ранобэ
+
+# Side text beside a New row's heading, in a quieter style: what the row covers.
+read-home-new-side = Последние 12 месяцев
+
+# Row heading on reading's Home: the most popular manga that have finished.
+read-home-finished-manga = Завершённая манга
+
+# Row heading on reading's Home: the most popular webtoons that have finished.
+read-home-finished-webtoons = Завершённые вебтуны
+
+# Row heading on reading's Home: the most popular light novels that have finished.
+read-home-finished-novels = Завершённые ранобэ
+
+# Side text beside a Finished row's heading, in a quieter style: how the row is sorted.
+read-home-finished-side = Самые популярные
+
+# A choice of reading Search's Started filter: series that started at any time.
+read-search-started-any = Любое время
+
+# A choice of reading Search's Started filter: series that started in the last 12 months.
+read-search-started-year = Последние 12 месяцев
+
+# A choice of reading Search's Started filter: series that started in the last 3 years.
+read-search-started-3-years = Последние 3 года
+
+# Under a source's hit in Search: the chapters it holds, from the first.
+read-hit-chapters = Главы с 1 по { $last }
+
+# Under a source's hit in Search: a web novel's episodes it holds, from the first.
+read-hit-episodes = Эпизоды с 1 по { $last }
+
+# Under a source's hit in Search: a light novel's parts it holds.
+read-hit-parts =
+    { $count ->
+        [one] { $count } часть
+        [few] { $count } части
+        [many] { $count } частей
+       *[other] { $count } части
+    }
+
+# Under a source's hit in Search: the book files it holds.
+read-hit-files =
+    { $count ->
+        [one] { $count } файл
+        [few] { $count } файла
+        [many] { $count } файлов
+       *[other] { $count } файла
+    }
+
+# Under a source's hit in Search: the book files it holds, all in one format ("CBZ").
+read-hit-files-format =
+    { $count ->
+        [one] { $count } файл · { $format }
+        [few] { $count } файла · { $format }
+        [many] { $count } файлов · { $format }
+       *[other] { $count } файла · { $format }
+    }
+
+# The name of the folders on this device, which read as one source: a Search group's heading, the source a series reads from, "In Folders" on a search result. It stands alone, with no word for its kind beside it.
+read-source-folders = Папки
+
+# On a cover in a New row, after the country: the month the series started, within the last 12 months, as in "Japan · since January".
+reading-since-january = с января
+
+# On a cover in a New row, after the country: the month the series started, within the last 12 months, as in "Japan · since February".
+reading-since-february = с февраля
+
+# On a cover in a New row, after the country: the month the series started, within the last 12 months, as in "Japan · since March".
+reading-since-march = с марта
+
+# On a cover in a New row, after the country: the month the series started, within the last 12 months, as in "Japan · since April".
+reading-since-april = с апреля
+
+# On a cover in a New row, after the country: the month the series started, within the last 12 months, as in "Japan · since May".
+reading-since-may = с мая
+
+# On a cover in a New row, after the country: the month the series started, within the last 12 months, as in "Japan · since June".
+reading-since-june = с июня
+
+# On a cover in a New row, after the country: the month the series started, within the last 12 months, as in "Japan · since July".
+reading-since-july = с июля
+
+# On a cover in a New row, after the country: the month the series started, within the last 12 months, as in "Japan · since August".
+reading-since-august = с августа
+
+# On a cover in a New row, after the country: the month the series started, within the last 12 months, as in "Japan · since September".
+reading-since-september = с сентября
+
+# On a cover in a New row, after the country: the month the series started, within the last 12 months, as in "Japan · since October".
+reading-since-october = с октября
+
+# On a cover in a New row, after the country: the month the series started, within the last 12 months, as in "Japan · since November".
+reading-since-november = с ноября
+
+# On a cover in a New row, after the country: the month the series started, within the last 12 months, as in "Japan · since December".
+reading-since-december = с декабря
+
 # Toast after joining a plugin store with an invite that names this device's owner.
 store-joined = Подключено к { $store } как { $member }.
 
@@ -531,7 +1209,7 @@ store-invite-cancelled = Приглашение отменено. Ссылка �
 # Toast after cancelling an invite that people joined with.
 store-invite-cancelled-kept =
     { $count ->
-        [one] Приглашение отменено. Присоединившийся человек остаётся участником.
+        [one] Приглашение отменено. { $count } присоединившийся человек остаётся участником.
         [few] Приглашение отменено. Присоединившиеся ({ $count }) остаются участниками.
         [many] Приглашение отменено. Присоединившиеся ({ $count }) остаются участниками.
        *[other] Приглашение отменено. Присоединившиеся ({ $count }) остаются участниками.
@@ -546,7 +1224,7 @@ store-open-join-off = Теперь подключиться могут толь�
 # Toast after a store owner turns off joining with the link, when some devices joined that way.
 store-open-join-off-devices =
     { $devices ->
-        [one] Теперь подключиться могут только приглашённые. устройство по ссылке продолжает работать, пока вы его не удалите.
+        [one] Теперь подключиться могут только приглашённые. { $devices } устройство по ссылке продолжает работать, пока вы его не удалите.
         [few] Теперь подключиться могут только приглашённые. устройства ({ $devices }), подключившиеся по ссылке, продолжают работать, пока вы их не удалите.
         [many] Теперь подключиться могут только приглашённые. устройства ({ $devices }), подключившиеся по ссылке, продолжают работать, пока вы их не удалите.
        *[other] Теперь подключиться могут только приглашённые. устройства ({ $devices }), подключившиеся по ссылке, продолжают работать, пока вы их не удалите.
@@ -631,7 +1309,7 @@ store-join-would-unname = Вы подключились к { $store } как { $
 store-not-the-invited = { $url }: это не тот магазин плагинов, что в приглашении ({ $reason }). Подключения не было.
 
 # Error: the token for a joined store could not be saved on this device. The reason comes from the system.
-store-token-not-kept = магазин плагинов: не удалось сохранить токен. { $reason }
+store-token-not-kept = Не удалось сохранить токен, который выдал магазин плагинов. { $reason }
 
 # Error: an invite that cannot be used any more.
 store-invite-unusable = Это приглашение уже использовано, отменено или истекло. Попросите новое.
@@ -675,6 +1353,9 @@ plugin-publish-failed = Не удалось опубликовать { $plugin }
 # Error: a plugin to publish is no longer in the plugin folder.
 plugin-missing-locally = Плагин { $plugin } больше не найден в папке.
 
+# Error: a book source cannot be published to a store whose server is too old to list book sources.
+store-takes-no-books = { $store } пока не показывает источники для книг. Его владелец может обновить магазин плагинов, чтобы добавить их.
+
 # Error: an invite for another device cannot be made from a device that joined with the open link.
 store-invite-needs-link = устройство подключилось к { $store } по ссылке. Вставьте ту же ссылку на другое устройство.
 
@@ -694,7 +1375,7 @@ store-admin-link-foreign = { $store } прислал ссылку админис
 store-open-join-unsupported = Сервер { $store } старой версии и не может принимать подключения по ссылке. Сначала обновите его.
 
 # Toast after a source (plugin) is switched off. It is skipped when looking for episodes.
-source-switched-off = Выключено: { $name }. При поиске эпизодов его пропускают.
+source-switched-off = Источник { $name } выключен. Kaeri пропускает его при поиске эпизодов.
 
 # Toast after a source (plugin) is switched on.
 source-switched-on = Включено: { $name }.
@@ -703,7 +1384,7 @@ source-switched-on = Включено: { $name }.
 plugin-not-loaded = { $id } не загружен. Проверьте, что он установлен, и перезагрузите Источники.
 
 # Toast after a release is chosen for a title. The name is the release's title.
-release-pinned = { $name } будет использоваться для этого тайтла.
+release-pinned = Теперь для этого тайтла используется { $name }.
 
 # Toast when the chosen source or release for a title could not be saved. The reason comes from the database.
 notice-choice-not-saved = Не удалось сохранить выбор. { $reason }
@@ -765,6 +1446,9 @@ stores-ready-demo-stays = { $store } готов. Демо остаётся по�
 # The page the browser shows after signing in to a cloud drive on a computer (Windows, Linux or the terminal), once Kaeri has caught the sign-in. The person goes back to the app by themselves.
 cloud-loopback-done = Можно закрыть эту вкладку и вернуться в Kaeri.
 
+# The error line under Sync on a device that another of the person's devices removed from sync. Joining again, with a code or the recovery key, or setting sync up again adds it as a new device.
+sync-device-removed = Другое устройство удалило это устройство из синхронизации. Подключите его снова, чтобы синхронизировать.
+
 # Toast after a tracker sign-in succeeded. The tracker is its name, such as AniList.
 notice-signed-in = Вы вошли в { $tracker }.
 
@@ -793,10 +1477,10 @@ notice-token-exchange-failed = Не удалось получить токен �
 notice-browser-not-opened = Не удалось открыть браузер для входа. Проверьте, что он установлен, и попробуйте ещё раз. { $reason }
 
 # Toast when a sign-in redirect arrives and no sign-in is waiting for it.
-notice-sign-in-not-waiting = Вход в { $tracker } сейчас не ожидает ответа. Начните вход заново.
+notice-sign-in-not-waiting = Пришёл ответ на вход из { $tracker }, но никакой вход его не ждал. Начните вход заново.
 
 # Toast when a sign-in redirect does not match the request that was made.
-notice-sign-in-wrong-request = Вход в { $tracker } не вернулся с этого запроса. Начните вход заново.
+notice-sign-in-wrong-request = Ответ на вход из { $tracker } не совпадает с запросом. Начните вход заново.
 
 # Toast when a tracker sent the person back without a token.
 notice-sign-in-no-token = Вход в { $tracker } вернулся без токена. Попробуйте ещё раз.
@@ -840,7 +1524,7 @@ notice-signed-out = Вы вышли из { $tracker }.
 # Toast after signing out of a tracker. The changes were not discarded: they are sent after the next sign-in.
 notice-signed-out-queue =
     { $count ->
-        [one] Вы вышли из { $tracker }. Одно изменение в очереди сохранено для следующего входа.
+        [one] Вы вышли из { $tracker }. { $count } изменение в очереди сохранено для следующего входа.
         [few] Вы вышли из { $tracker }. { $count } изменения в очереди сохранены для следующего входа.
         [many] Вы вышли из { $tracker }. { $count } изменений в очереди сохранены для следующего входа.
        *[other] Вы вышли из { $tracker }. { $count } изменения в очереди сохранены для следующего входа.
@@ -885,7 +1569,7 @@ notice-episode-aired = { $title }, серия { $episode }, вышла, пока
 # Toast, and desktop notification, for several episodes that aired while the app was closed.
 notice-episodes-aired =
     { $count ->
-        [one] Вышла новая серия тайтла, который вы смотрите. Она есть в календаре.
+        [one] Вышла { $count } новая серия тайтлов, которые вы смотрите. Календарь уже обновлён.
         [few] Вышли { $count } новые серии тайтлов, которые вы смотрите. Они есть в календаре.
         [many] Вышли { $count } новых серий тайтлов, которые вы смотрите. Они есть в календаре.
        *[other] Вышли { $count } новые серии тайтлов, которые вы смотрите. Они есть в календаре.
@@ -898,13 +1582,13 @@ notice-update-available = Вышла версия { $tag }. Чтобы уста�
 cause-proxy-needs-address = Для прокси нужны хост и порт.
 
 # The reason a proxy could not be checked: its address is not one the check can use.
-cause-proxy-address-unusable = Адрес прокси не подходит для проверки.
+cause-proxy-address-unusable = Проверка прокси не может использовать этот адрес.
 
 # The reason a request failed: it never reached the server.
 cause-server-unreachable = Не удалось связаться с сервером.
 
 # The legal line, shown in About beside Legal and contact. It exists once, so no translation can paraphrase it.
-legal-hosts-no-content = Kaeri не размещает никаких сериалов. Источники вы добавляете сами.
+legal-hosts-no-content = Kaeri не размещает ни сериалов, ни книг. Источники вы добавляете сами.
 
 # Toast after a setting is stored. The label is the setting's name.
 notice-saved = Сохранено: { $label }.
@@ -922,7 +1606,7 @@ notice-playback-failed = Ошибка воспроизведения. Попро
 notice-engine-fault = Внутри Kaeri что-то пошло не так. Работа продолжилась, но если экран завис, закройте приложение и откройте его снова.
 
 # Toast at launch when the database was damaged, so a fresh one was started. The path is where the damaged file was moved, kept for recovery. Watch history and downloads start over; what the trackers hold comes back with the next sync.
-notice-database-set-aside = База данных была повреждена, поэтому создана новая. Старый файл сохранён в { $path }. Ваши трекеры вернут сохранённые у них данные при следующей синхронизации.
+notice-database-set-aside = База данных была повреждена, поэтому Kaeri создал новую. Старый файл сохранён в { $path }. Данные, которые хранят ваши трекеры, вернутся при следующей синхронизации.
 
 # Message when Kaeri could not start because a folder could not be made. The path is the folder, the reason comes from the system.
 start-failed-folder = Не удалось создать папку { $path }. Проверьте, есть ли место на диске и можно ли писать в эту папку, и попробуйте снова. { $reason }
@@ -937,7 +1621,7 @@ config-reset-failed = Kaeri не удалось отодвинуть { $path }, 
 start-failed-database = Не удалось открыть базу данных { $path }. Если в этой папке открыто другое приложение Kaeri, закройте его и попробуйте снова. { $reason }
 
 # Message when Kaeri could not start its network connection from the network settings.
-start-failed-network = Не удалось настроить сетевое подключение по сетевым настройкам из config.toml. { $reason }
+start-failed-network = Kaeri не удалось подключиться с сетевыми настройками из config.toml. Проверьте их и попробуйте снова. { $reason }
 
 # Message when Kaeri itself could not start. The reason comes from the system or the engine.
 start-failed = Не удалось запустить Kaeri. Закройте и откройте его снова. { $reason }
@@ -951,7 +1635,7 @@ start-failed-player = Не удалось запустить плеер. { $reas
 # Toast after episodes are added to the download queue.
 notice-episodes-queued =
     { $count ->
-        [one] В очередь добавлен один эпизод.
+        [one] В очередь добавлен { $count } эпизод.
         [few] В очередь добавлены { $count } эпизода.
         [many] В очередь добавлены { $count } эпизодов.
        *[other] В очередь добавлены { $count } эпизодов.
@@ -973,10 +1657,10 @@ notice-surprise-empty-filters = Нет тайтлов, подходящих по
 notice-surprise-empty-planning = Список «В планах» пуст.
 
 # Toast: Surprise me on the filters while the device is offline; AniList is how a title is picked.
-notice-surprise-offline = Нет сети. Для случайного выбора в поиске нужен AniList.
+notice-surprise-offline = Нет подключения к сети. Чтобы «Удиви меня» выбрал тайтл, нужен AniList.
 
 # Toast: Surprise me on the filters, and AniList could not be asked.
-notice-surprise-failed = Сейчас не удалось выбрать тайтл. Попробуйте чуть позже.
+notice-surprise-failed = Не удалось обратиться к AniList, чтобы выбрать тайтл. Попробуйте чуть позже.
 
 # Title of the dialog that edits the proxy.
 torrents-linux-edit-proxy-title = Изменить прокси
@@ -1092,6 +1776,12 @@ title-linux-episode-watched = Эпизод { $episode } просмотрен
 # Line in a day's column when nothing airs that day.
 calendar-linux-day-empty = Ничего не выходит
 
+# Accessible name of the reading Library's list menu, the button that says the list on screen.
+linux-read-library-list = Список
+
+# Under No downloads on Downloads, Reading side.
+linux-read-downloads-empty = Скачанные главы открываются без подключения к сети.
+
 # Accessible label of the line that says how the watch party form is getting on.
 party-status = Совместный просмотр: состояние
 
@@ -1102,12 +1792,12 @@ party-members = Участники
 party-choose-a-source = Выберите источник
 
 # Line when no source lists the watch party's episode. A plugin store adds plugins, which add sources.
-party-sources-none-listed = Ни один источник не содержит эпизод { $episode }. Источники дают плагины, которые магазин плагинов добавляет.
+party-sources-none-listed = Ни один источник не содержит эпизод { $episode }. Источники дают плагины, а их добавляют через магазин плагинов.
 
 # Line above the list of sources that have the watch party's episode.
 party-sources-found-line =
     { $count ->
-        [one] Один источник содержит эпизод. Выбранный источник запускает совместный просмотр.
+        [one] { $count } источник содержит эпизод. Выбранный источник запускает совместный просмотр.
         [few] Источники с эпизодом: { $count }. Выбранный источник запускает совместный просмотр.
         [many] Источники с эпизодом: { $count }. Выбранный источник запускает совместный просмотр.
        *[other] Источники с эпизодом: { $count }. Выбранный источник запускает совместный просмотр.
@@ -1149,7 +1839,7 @@ player-channels-stereo = Стерео
 # Name of an audio track with some other number of channels.
 player-channels =
     { $count ->
-        [one] Один канал
+        [one] { $count } канал
         [few] { $count } канала
         [many] { $count } каналов
        *[other] { $count } канала
@@ -1182,6 +1872,276 @@ discussion-like-named =
        *[other] Нравится, отметок: { $count }
     }
 
+# Chip inside the invite field once an invite link is pasted: the invite's code, hidden but for its last four characters.
+linux-store-invite-chip = Приглашение ••••{ $last }
+
+# How many hosts a plugin may contact, filling { $hosts } in "Version 1.4 · may contact 2 hosts".
+linux-store-plugin-hosts =
+    { $count ->
+        [one] { $count } хосту
+        [few] { $count } хостам
+        [many] { $count } хостам
+       *[other] { $count } хоста
+    }
+
+# Beside a spinner in the plugin store form while the invite is spent, after 600 ms.
+linux-store-joining = Подключение…
+
+# The Install all button while the plugins install.
+linux-store-installing = Установка…
+
+# Third line of a book server's row in Your sources when its sign-in no longer works.
+linux-book-server-signed-out = Выполнен выход · войдите снова через «Изменить»
+
+# Switch on a book server's page: its series show in Kaeri while it is on.
+linux-book-server-use = Использовать этот сервер
+
+# Title of the dialog that asks before a book server is removed.
+linux-book-server-remove-title = Удалить { $host }?
+
+# First run's join page, paired: the line under "Kaeri is for" when the other device's answer is Watch.
+linux-join-medium-line-watch = Просмотр, как на { $device }
+
+# First run's join page, paired: the line under "Kaeri is for" when the other device's answer is Both.
+linux-join-medium-line-both = Просмотр и чтение, как на { $device }
+
+# Switch on a book plugin's page: its series show in Kaeri while it is on.
+linux-book-plugin-use = Использовать этот плагин
+
+# Tooltip of the reader toolbar's settings button.
+linux-reader-settings-open = Настройки чтения
+
+# Line shown while a chapter opens, after the first moment.
+linux-reader-opening = Открывается глава
+
+# End page heading when the next chapter is not out yet.
+linux-reader-end-not-out = Следующая глава ещё не вышла
+
+# End page heading at the end of a finished series.
+linux-reader-end-finished = Конец серии
+
+# End page heading when the next chapter is not downloaded and the device is offline.
+linux-reader-end-offline = Следующая глава не скачана
+
+# End page heading when no source has the next chapter.
+linux-reader-end-no-source = Ваши источники пока без следующей главы
+
+# Button on the end page that goes back to the series page.
+linux-reader-back-to-series = Назад к серии
+
+# Heading of the error when a chapter would not open.
+linux-reader-chapter-failed = Не удалось открыть главу
+
+# Names of the reader settings in its popover.
+linux-reader-reading-mode = Режим чтения
+
+linux-reader-fit = Масштаб
+
+linux-reader-crop-borders = Обрезать поля
+
+linux-reader-page-layout = Расположение страниц
+
+linux-reader-background = Фон
+
+linux-reader-look = Оформление
+
+linux-reader-font = Шрифт
+
+linux-reader-text-size = Размер текста
+
+linux-reader-margins = Поля
+
+linux-reader-line-spacing = Межстрочный интервал
+
+linux-reader-justify = Выровнять по ширине
+
+linux-reader-direction = Направление
+
+linux-reader-spreads = Широкие страницы
+
+linux-reader-strip-width = Ширина ленты
+
+linux-reader-strip-gap = Зазор между картинками
+
+# The fit that fills the window's height.
+linux-reader-fit-height = По высоте
+
+# Reading mode names.
+linux-reader-mode-paged = Листание
+
+linux-reader-mode-scrolled = Прокрутка
+
+# Title of the sheet that prepares chapters as files for an e-reader.
+linux-send-title = Отправить на ридер
+
+# Button that starts preparing the files.
+linux-send-prepare = Подготовить файлы
+
+# Line while the files are prepared.
+linux-send-progress = Подготовка: { $done } из { $total }
+
+# Button that copies the prepared files to a folder the person picks.
+linux-send-save = Сохранить в папку
+
+# Menu item of a series that opens that sheet.
+linux-send-menu = Отправить на ридер
+
+# Heading when the web view that shows a novel cannot start.
+linux-reader-novel-unavailable = Ранобэ здесь не открываются
+
+# Line under it: what a novel needs on this computer.
+linux-reader-novel-needs-webkit = Для ранобэ нужен WebKitGTK 6 с работающей песочницей.
+
+# The reader's scrubber as a screen reader says it: the page showing and how many there are.
+linux-reader-page-of = Страница { $page } из { $pages }
+
+# Tab of the reader's Chapters popover with the chapter's pages as small pictures; the other tab is the list of chapters.
+linux-reader-pages = Страницы
+
+# Line on the end page for a chapter that has not counted as read yet.
+linux-reader-end-not-read = Пока не отмечено прочитанным
+
+# The one amber button of the end page: opens the next chapter.
+linux-reader-continue = Читать дальше
+
+# End page text when the next chapter is not out yet.
+linux-reader-end-not-out-body = Kaeri проверяет новые главы в фоне и добавляет их в «Обновления».
+
+# End page text when the reader has caught up with the series.
+linux-reader-end-caught-up-body = Новые главы появятся в «Обновлениях», как только ваши источники их получат.
+
+# End page text at the end of a finished series.
+linux-reader-end-finished-body = Больше глав нет.
+
+# End page text when the next chapter is not downloaded and the computer is offline.
+linux-reader-end-offline-body = Вы не в сети. Глава откроется здесь, когда появится подключение.
+
+# Hint under a page's error: turning the page goes on past it.
+linux-reader-page-failed-hint = Переверните страницу, чтобы пропустить её.
+
+# Line while a chapter opens, once its number is known.
+linux-reader-opening-number = Открывается глава { $chapter }
+
+# Line while a chapter opens and a source is asked for the series' chapters.
+linux-reader-finding-source = Поиск: источник
+
+# Button on the Resumed notice.
+linux-reader-start-over = Сначала
+
+# Button on the Moved notice.
+linux-reader-go-back = Вернуться
+
+# Button on the mode detected notice: opens the reader settings.
+linux-reader-change = Изменить
+
+# Heading in the reader settings over what this series keeps for itself.
+linux-reader-this-series = Эта серия
+
+# Heading in the reader settings over what applies to every manga.
+linux-reader-all-manga = Вся манга
+
+# Heading in the reader settings over what applies to every manga on this computer.
+linux-reader-all-manga-here = Вся манга на этом компьютере
+
+# Heading in the reader settings over what applies to every webtoon.
+linux-reader-all-strips = Все вебтуны
+
+# Heading in the reader settings over what applies to every webtoon on this computer.
+linux-reader-all-strips-here = Все вебтуны на этом компьютере
+
+# Heading in the reader settings over what applies to every light novel.
+linux-reader-all-novels = Все ранобэ
+
+# The reading mode choice that follows the series' details.
+linux-reader-mode-auto = Авто
+
+# Under the reading mode when it was guessed.
+linux-reader-mode-detected = Определено по данным серии.
+
+# Button under the reading mode when the series has a choice of its own: drops it.
+linux-reader-use-default = Как по умолчанию
+
+# Row that opens the rest of the reader settings.
+linux-reader-more-settings = Другие настройки чтения
+
+# Line spacing choices.
+linux-reader-line-tight = Плотный
+
+linux-reader-line-normal = Обычный
+
+linux-reader-line-loose = Свободный
+
+# The margins choice between Narrow and Wide.
+linux-reader-margins-normal = Обычные
+
+# Accessible names of the two ends of the text size slider.
+linux-reader-text-smaller = Текст мельче
+
+linux-reader-text-larger = Текст крупнее
+
+# Title of the small popover that jumps to a page, and its shortcut's name.
+linux-reader-go-to-page = Перейти к странице
+
+# Placeholder of the Go to page field.
+linux-reader-go-to-page-field = от 1 до { $total }
+
+# Heading of the reader's keys in the keyboard shortcuts window.
+linux-shortcuts-reader = Читалка
+
+# Shortcut: turn the page.
+linux-shortcuts-turn = Перевернуть страницу
+
+# Shortcut: the first or last page.
+linux-shortcuts-first-last = Первая или последняя страница
+
+# Shortcut: a novel's text larger, smaller or back to its size.
+linux-shortcuts-text-size = Крупнее, мельче или исходный размер текста
+
+# Shortcut: back to the page before a jump, or out of the reader.
+linux-shortcuts-reader-back = Назад к странице до перехода
+
+# Shortcut: close the reader.
+linux-shortcuts-close-reader = Закрыть читалку
+
+# Two names joined, or a list's last name joined to the rest, in the end page's tracker line: "AniList and MangaUpdates".
+linux-reader-names-and = { $first } и { $last }
+
+# Heading when a chapter could not open. The chapter is its number, such as 13.
+linux-reader-open-failed = Не удалось открыть главу { $chapter }
+
+# Heading when a chapter with no number could not open.
+linux-reader-open-failed-plain = Не удалось открыть эту главу
+
+# Choice in Send to e-reader's Chapters row: the next unread chapters, as many as the number.
+linux-send-next =
+    { $n ->
+        [one] Следующая { $n } непрочитанная
+        [few] Следующие { $n } непрочитанные
+        [many] Следующие { $n } непрочитанных
+       *[other] Следующие { $n } непрочитанных
+    }
+
+# Choice in Send to e-reader's Chapters row: every chapter not read yet.
+linux-send-all-unread = Все непрочитанные
+
+# Under Send to e-reader's Chapters row when every chapter is read.
+linux-send-none-unread = Все главы прочитаны
+
+# Toast after the prepared files were saved to a folder.
+linux-send-saved =
+    { $n ->
+        [one] Сохранён { $n } файл
+        [few] Сохранено { $n } файла
+        [many] Сохранено { $n } файлов
+       *[other] Сохранено { $n } файла
+    }
+
+# Toast when the prepared files could not be written to the folder picked.
+linux-send-save-failed = Не удалось сохранить файлы в эту папку
+
+# Tooltip and spoken name of the button on Updates that looks for new chapters now.
+linux-updates-check = Проверить новые главы
+
 # Tooltip on the button that opens a setting's preview on a page of its own, and accessible name of the preview.
 settings-preview = Просмотр
 
@@ -1207,10 +2167,10 @@ settings-caption-sample = Фонарная дорога уходит дальш�
 settings-caption-note = Обычные субтитры выглядят так, если в серии есть такие, на языке «{ $language }». Субтитры с собственным оформлением сохраняют свой вид.
 
 # Preview note for new-episode notifications when they are on. The tracker is a name such as AniList.
-settings-notify-note-on = Одно уведомление, когда выходит новая серия сериала из списка «Смотрю». Время выхода берётся из { $tracker }. Сначала действует настройка самого сериала.
+settings-notify-note-on = Вы получаете одно уведомление, когда выходит эпизод тайтла из списка «Смотрю», в то время, которое указывает { $tracker }. Настройка самого тайтла важнее этой.
 
 # Preview note for new-episode notifications when they are off.
-settings-notify-note-off = Выключено. Уведомляют только сериалы, включённые в их собственных настройках.
+settings-notify-note-off = Выключено. Уведомления приходят только от тайтлов, для которых они включены в их собственных настройках.
 
 # Preview note beside the accounts settings.
 settings-accounts-note = Kaeri работает без аккаунта. История просмотра остаётся на этом компьютере после выхода из аккаунта.
@@ -1288,7 +2248,7 @@ controller-help-buttons = Кнопки контроллера
 settings-note-cast-tvs-computer = Они появятся в разделе Chromecast в «Смотреть на ТВ». Этот компьютер отправляет им эпизод.
 
 # Note under the Torrents while casting setting, shown while torrents are on.
-settings-note-torrents-while-casting-computer = Позволяет ТВ со встроенным Chromecast воспроизводить торренты. Этот компьютер передаёт эпизод, пока он идёт.
+settings-note-torrents-while-casting-computer = Когда это включено, ТВ со встроенным Chromecast может воспроизводить торренты. Этот компьютер передаёт эпизод, пока он идёт.
 
 # Button on a notice that asks to open the plugin stores.
 shell-open-stores = Открыть магазины
@@ -1311,7 +2271,7 @@ shell-connect-tracker = Подключить { $tracker }
 # Sidebar line under the account when changes wait to be sent to the tracker.
 shell-changes-waiting =
     { $count ->
-        [one] Одно изменение ждёт синхронизации
+        [one] { $count } изменение ждёт синхронизации
         [few] { $count } изменения ждут синхронизации
         [many] { $count } изменений ждут синхронизации
        *[other] { $count } изменения ждут синхронизации
@@ -1374,7 +2334,7 @@ close-stop-and-close = Остановить и закрыть
 # Body of the close question when episodes download.
 close-body-downloading =
     { $count ->
-        [one] Одна серия загружается или ждёт очереди. Продолжить загрузку после закрытия окна или остановить?
+        [one] { $count } серия загружается или ждёт очереди. Продолжить загрузку после закрытия окна или остановить?
         [few] { $count } серии загружаются или ждут очереди. Продолжить загрузку после закрытия окна или остановить их?
         [many] { $count } серий загружаются или ждут очереди. Продолжить загрузку после закрытия окна или остановить их?
        *[other] { $count } серии загружаются или ждут очереди. Продолжить загрузку после закрытия окна или остановить их?
@@ -1383,7 +2343,7 @@ close-body-downloading =
 # Body of the close question when episodes seed.
 close-body-seeding =
     { $count ->
-        [one] Одна серия раздаётся. Продолжить раздачу после закрытия окна или остановить её?
+        [one] { $count } серия раздаётся. Продолжить раздачу после закрытия окна или остановить её?
         [few] { $count } серии раздаются. Продолжить раздачу после закрытия окна или остановить их?
         [many] { $count } серий раздаются. Продолжить раздачу после закрытия окна или остановить их?
        *[other] { $count } серии раздаются. Продолжить раздачу после закрытия окна или остановить их?
@@ -1443,6 +2403,9 @@ tv-cast-inhibit-reason = Отправка эпизода на ТВ
 # The heading over the TVs running Kaeri in Play on TV, once TVs with Chromecast built in are listed below them.
 tv-network-group = В этой сети
 
+# The sidebar place that lists your own sources, under the Sources heading.
+linux-sidebar-your-sources = Ваши источники
+
 # Count of devices on a member's row in the members dialog, and after "Owner ·".
 stores-device-count =
     { $count ->
@@ -1471,7 +2434,7 @@ stores-owner-needs-connection = Магазин плагинов требует �
 stores-owner-needs-connection-detail = Повторите попытку, когда устройство снова будет в сети.
 
 # Red line in the invite dialog when this device is offline and a link cannot be made.
-stores-owner-link-offline = Для создания ссылки нужно, чтобы магазин плагинов был в сети.
+stores-owner-link-offline = Нельзя создать ссылку, пока это устройство не в сети.
 
 # Line over a new invite link made for a named person. The time is the one the link stops working.
 stores-send-link-until = Отправьте эту ссылку. Она работает один раз, до { $until }.
@@ -1480,7 +2443,7 @@ stores-send-link-until = Отправьте эту ссылку. Она рабо
 stores-open-on-detail = Они присоединяются без имени. Если выключить, ссылка перестанет работать. Если включить снова, появится новая.
 
 # Row subtitle in who-can-join while it is off.
-stores-open-off-detail = Присоединиться могут только приглашённые вами. Если включить, любой, у кого есть ссылка, присоединится без имени.
+stores-open-off-detail = Подключиться могут только те, кого вы пригласите. Если включить, подключиться сможет любой, у кого есть ссылка, без имени.
 
 # Line on the summary row of devices that joined with the link, when joining is on.
 stores-open-no-names = Имена не сохраняются.
@@ -1504,7 +2467,7 @@ stores-publish-none-hint = Здесь показывается плагин, к�
 stores-not-published = Ещё не опубликован
 
 # Line under a plugin in the publish dialog that the store has in another version.
-stores-store-offers = Магазин плагинов предлагает { $version }
+stores-store-offers = Магазин плагинов: { $version }
 
 # Line under a plugin in the publish dialog whose version the store already has.
 stores-published-current = Актуальная версия уже опубликована
@@ -1516,7 +2479,7 @@ stores-published-state = Опубликовано
 stores-publish-label = Опубликовать { $name } { $version }
 
 # Footnote on the recovery key dialog; the lock is the account password, asked through polkit.
-rkey-lock-linux = Увидеть его снова можно в настройках, в разделе «Устройства», после ввода пароля учётной записи.
+rkey-lock-linux = Его можно снова увидеть в настройках, в разделе «Устройства», после ввода пароля учётной записи.
 
 # Reason polkit shows when it asks for the account password before the recovery key.
 rkey-lock-reason = Показать ключ восстановления Kaeri
@@ -1687,7 +2650,7 @@ library-row-summary-linux =
 library-page-watching-linux = Изменения отслеживаются
 
 # A folder page's line when changes are found only when the app starts or is asked.
-library-page-no-watch-linux = Проверяется заново при запуске Kaeri
+library-page-no-watch-linux = Изменения проверяются при запуске Kaeri
 
 # Heading over the matched series.
 library-matched-linux = Сопоставлено
@@ -1855,7 +2818,7 @@ title-no-seasons = Связанных сезонов для этого тайт�
 title-pin-off-page = Откройте страницу тайтла, чтобы выбрать источник для него.
 
 # Toast when the { -source } picker is asked for and no { -source } is registered. They register a moment after launch.
-title-no-sources-yet = Источники пока не подключены. Попробуйте ещё раз через минуту.
+title-no-sources-yet = Источники ещё загружаются. Попробуйте чуть позже.
 
 # Toast when a list status or rating is asked for and no { -tracker } is signed in. The command is typed as it is.
 title-status-needs-tracker = Статус в списке хранится на трекере, но ни один не подключён. Чтобы войти, используйте :accounts.
@@ -2029,7 +2992,7 @@ episodes-empty-none-listed = Список эпизодов пуст
 episodes-empty-none-listed-hint = Источник не показал эпизоды для этого тайтла. Нажмите { $search }, чтобы найти нужное совпадение вручную, или { $pick }, чтобы выбрать другой источник.
 
 # Toast when an episode has no { -release } to pick from.
-episodes-no-releases = Для этого эпизода нет релизов для выбора.
+episodes-no-releases = Релизы для этого эпизода не найдены.
 
 # Toast when a download is asked for from a table listed from AniList alone. The key opens the { -source-pl } screen.
 episodes-add-source-to-download = Перед загрузкой добавьте источник. Нажмите { $key }, чтобы открыть экран «Источники».
@@ -2698,7 +3661,7 @@ downloads-column-progress = Прогресс
 downloads-empty-heading = Очередь пуста
 
 # Hint under the empty Downloads screen. The key is the one bound to downloading, as the key map draws it.
-downloads-empty-hint = Нажмите { $key } на тайтл или серию, чтобы поставить их в очередь на загрузку.
+downloads-empty-hint = Нажмите { $key } на тайтле или эпизоде, чтобы загрузить его.
 
 # A download's row: the episode number after the title. The title is cut before this is.
 downloads-row-episode = Серия { $episode }
@@ -2884,16 +3847,16 @@ accounts-row-queued =
     }
 
 # Part of an account's overlay row: changes waiting to be sent, and some of them held back until the title is matched to the { -tracker }'s own id.
-accounts-row-queued-held = { $queued } в очереди, { $held } ждут привязки к id трекера
+accounts-row-queued-held = { $queued } в очереди, { $held } ждут сопоставления
 
 # Action beside a sync difference in the overlay: Enter keeps the value on this device.
-accounts-conflict-keep-mine = Оставить моё
+accounts-conflict-keep-mine = Локальное
 
 # Action under a sync difference in the overlay: Enter keeps the { -tracker }'s value instead.
-accounts-conflict-keep-theirs = Взять из трекера
+accounts-conflict-keep-theirs = Трекер
 
 # A sync difference in the overlay: the title, the field that differs, then this device's value and the { -tracker }'s. The title is cut to 34 characters before it goes in.
-accounts-conflict-row = { $title }  ·  { $field }: у меня { $local } / у трекера { $remote }
+accounts-conflict-row = { $title }  ·  { $field }: локально { $local } / трекер { $remote }
 
 # Title of the Library screen, shown in the placeholder when the terminal is too small.
 lists-library-title = Библиотека
@@ -2926,7 +3889,7 @@ lists-empty-type-to-search = Введите запрос для поиска
 lists-empty-browse-filtered = Нажмите ↵, чтобы просмотреть с этими фильтрами.
 
 # Hint under the Search heading when no filter is set. ↵ is the Enter key.
-lists-empty-browse-popular = Нажмите ↵, чтобы посмотреть самые популярные.
+lists-empty-browse-popular = Нажмите ↵, чтобы посмотреть самые популярные тайтлы.
 
 # Heading when a search or a browse found nothing.
 lists-empty-no-matches = Ничего не найдено
@@ -3602,7 +4565,7 @@ settings-label-episode-discussions = Обсуждения эпизодов
 settings-label-comment-images = Картинки в комментариях
 
 # Settings row: whether Calendar shows only the shows on the person's list.
-settings-label-calendar-mine = В календаре только мой список
+settings-label-calendar-mine = В календаре только ваш список
 
 # Note under the titles row.
 settings-note-titles = По выбору AniList: язык следует за вашим аккаунтом, а без входа будет английский.
@@ -3659,13 +4622,13 @@ settings-note-update-check = Один кэшированный запрос в �
 settings-note-presence = Действует со следующего эпизода.
 
 # Note under the Discord presence row when no client ID is set. The address is a web address.
-settings-note-presence-needs-client = Нужен ID клиента. Зарегистрируйте приложение на discord.com/developers.
+settings-note-presence-needs-client = Сначала укажите ID клиента. Чтобы его получить, зарегистрируйте приложение на discord.com/developers.
 
 # Note under the presence title row. The quoted text is what Discord shows.
-settings-note-presence-title = При выключении показывается «Смотрю аниме» без названия тайтла.
+settings-note-presence-title = Если выключено, показывается «Смотрю аниме» без названия тайтла.
 
 # Note under the rich presence row.
-settings-note-presence-rich = Добавляет обложку, полосу прогресса и ссылку на AniList. Нужно, чтобы название было показано.
+settings-note-presence-rich = Добавляет обложку, полосу прогресса и ссылку на AniList, пока название показывается.
 
 # Note under the torrent playback row.
 settings-note-torrents = По умолчанию выключено. Действует сразу.
@@ -3824,13 +4787,13 @@ stores-footer-update-hosts = Обновление также хочет обра
 stores-footer-may-contact = Может обращаться к { $hosts }
 
 # Footer of a store's page on the row that makes a link for another of this person's computers.
-stores-footer-link-device = Одноразовая ссылка, которая присоединит другое ваше устройство от вашего имени
+stores-footer-link-device = Одноразовая ссылка, по которой другое ваше устройство подключится от вашего имени
 
 # Footer of a store's page on the row that makes an invite.
 stores-footer-invite = Одноразовая ссылка для нового человека
 
 # Footer of a store's page on the row that opens the members screen.
-stores-footer-members = Кто присоединился, и как отозвать доступ
+stores-footer-members = Посмотреть, кто присоединился, и отозвать чей-то доступ
 
 # Footer of a store's page on the row that changes who can join, while the store is open to anyone with its link. Enter is the key on this screen.
 stores-footer-close-join = ↵ Пускать только приглашённых и остановить ссылку
@@ -3845,7 +4808,7 @@ stores-footer-publish = Предложить плагин из папки пла
 stores-footer-admin = Управлять участниками, приглашениями и плагины в браузере
 
 # Footer of a store's page on the row that leaves the store.
-stores-footer-leave = Плагины, установленные из него, остаются на этом компьютере и перестают обновляться
+stores-footer-leave = Это устройство сохранит плагины, установленные из него, но они перестанут обновляться
 
 # Value beside the "who can join" row while anyone with the store's link can join. Takes the rest of the row.
 stores-who-open = Любой, у кого есть ссылка
@@ -4006,7 +4969,7 @@ stores-anonymous-never-seen = Ещё не появлялось
 # Row on the members screen that removes the single device that joined with the store's link, or all of them.
 stores-remove-devices =
     { $count ->
-        [one] Удалить его
+        [one] Удалить { $count } устройство
         [few] Удалить все { $count }
         [many] Удалить все { $count }
        *[other] Удалить все { $count }
@@ -4031,7 +4994,7 @@ stores-footer-remove-anonymous = ↵ Удалить это устройство,
 stores-footer-remove-all-anonymous = ↵ Удалить все устройства, которые присоединились по ссылке
 
 # Line in the store's link overlay, once the link was copied.
-stores-link-copied = Скопировано в буфер обмена, если терминал это позволяет, или выделите ссылку, чтобы скопировать.
+stores-link-copied = Скопировано, если терминал это позволяет. Если нет, выделите ссылку, чтобы скопировать её.
 
 # Line in a link overlay before the link was copied, or when the terminal cannot copy.
 stores-link-select = Выделите, чтобы скопировать.
@@ -4075,7 +5038,7 @@ stores-confirm-remove-device = Удалить это устройство?
 # Question in the heading of the confirmation to remove devices that joined with the store's link.
 stores-confirm-remove-devices =
     { $count ->
-        [one] Удалить устройство, присоединившееся по ссылке?
+        [one] Удалить { $count } устройство, присоединившееся по ссылке?
         [few] Удалить все { $count } устройства, присоединившиеся по ссылке?
         [many] Удалить все { $count } устройств, присоединившиеся по ссылке?
        *[other] Удалить все { $count } устройства, присоединившиеся по ссылке?
@@ -4106,7 +5069,7 @@ stores-key-matches-invite = { $fingerprint }  (совпадает с пригл�
 stores-join-open = Присоединиться может любой, у кого есть ссылка.
 
 # Line of the join confirmation when it is an open link, which keeps no name.
-stores-join-anonymous = Вы присоединитесь без имени, и другое устройство присоединится по той же ссылке.
+stores-join-anonymous = Вы подключитесь без имени. Любое другое устройство может подключиться по той же ссылке.
 
 # Line of the join confirmation when this device has already joined.
 stores-join-already = Уже присоединено. Повторное присоединение даст этому устройство новый токен.
@@ -4115,7 +5078,7 @@ stores-join-already = Уже присоединено. Повторное при
 stores-join-device-note = Владелец магазина видит это имя. Введите другое, чтобы изменить его.
 
 # Lines of the leave confirmation.
-stores-leave-plugins = Плагины, установленные из него, остаются на этом компьютере и перестают обновляться.
+stores-leave-plugins = Это устройство сохранит плагины, установленные из него, но они перестанут обновляться.
 
 # Lines of the leave confirmation.
 stores-leave-revoked = Доступ этого устройствоа к магазину отозван.
@@ -4123,14 +5086,14 @@ stores-leave-revoked = Доступ этого устройствоа к маг�
 # Line of the remove member confirmation.
 stores-remove-member-devices =
     { $count ->
-        [one] Их устройство перестанет работать с этим магазином сразу.
+        [one] Их { $count } устройство перестанет работать с этим магазином сразу.
         [few] Их { $count } устройства перестанут работать с этим магазином сразу.
         [many] Их { $count } устройств перестанут работать с этим магазином сразу.
        *[other] Их { $count } устройства перестанут работать с этим магазином сразу.
     }
 
 # Line of the remove member confirmation.
-stores-remove-member-plugins = Плагины, которые они уже установили, остаются на их компьютерах.
+stores-remove-member-plugins = Устройства участника сохранят уже установленные плагины.
 
 # Line of the cancel invite confirmation.
 stores-cancel-invite-link = Ссылка перестанет работать.
@@ -4190,7 +5153,7 @@ stores-choice-update = Обновить до { $version }
 stores-choice-replace = Заменить копию, добавленную вручную
 
 # Choice in the plugin overlay: delete the plugin from this machine.
-stores-choice-remove = Удалить с этого компьютера
+stores-choice-remove = Удалить отсюда
 
 # Choice in the plugin overlay: owners stop offering the plugin in the store.
 stores-choice-unpublish = Перестать предлагать в этом магазине
@@ -4232,7 +5195,7 @@ sync-tui-device-never = Ещё не синхронизировалось
 sync-tui-profile-in-use = Используется
 
 # The wait while the browser shows a cloud service's sign-in page. The service is a name such as Dropbox.
-sync-tui-browser-line = Браузер открыл страницу { $service }. Разрешите доступ там, и Kaeri продолжит сам.
+sync-tui-browser-line = В браузере открылась страница { $service }. Разрешите доступ там, и Kaeri продолжит сам.
 
 # Under Open the page again: the page's address follows on the next line, for a browser that did not open.
 sync-tui-browser-address = Или откройте этот адрес сами:
@@ -4289,13 +5252,13 @@ sync-tui-rkey-again = Увидеть его снова можно в настр�
 sync-tui-add-kids = Добавить как детский профиль
 
 # Said when the terminal closes to start again on another profile, and printed when it cannot start again by itself.
-sync-tui-profile-restart = Запустите Kaeri снова, чтобы использовать профиль: { $name }.
+sync-tui-profile-restart = Запустите Kaeri снова, чтобы открыть профиль «{ $name }».
 
 # A sync problem: the folder holds nothing to join.
 sync-tui-err-no-group = В этой папке нет истории, к которой можно присоединиться. Выберите другую папку.
 
 # A sync problem: a cloud service that this build can't sign in to. The service is a name such as Dropbox.
-sync-tui-err-unavailable = { $service } недоступен на этом устройстве.
+sync-tui-err-unavailable = Это устройство не поддерживает { $service }.
 
 # Status line hint: Enter removes the highlighted { -device } from sync, after a question.
 sync-tui-hint-remove = Удалить
@@ -4331,7 +5294,7 @@ party-no-source-still-in = { $reason } Вы остаётесь в совмест
 status-reloading-sources = Перезагружаем источники…
 
 # Toast when the { -source } pinned for a title can't be used and the others are tried instead.
-pin-unavailable = { $name } закреплён для этого тайтла, но недоступен, поэтому используются другие источники.
+pin-unavailable = { $name } закреплён для этого тайтла, но недоступен. Используются другие источники.
 
 # Name of the Together section in the terminal's rail, on the key 0.
 tui-together-section = Смотреть вместе
@@ -4347,6 +5310,15 @@ tui-together-not-a-link = Это не ссылка и не код комнаты
 
 # Second line of a recent room nobody else was in. The time is already formatted, such as Tuesday.
 tui-together-recent-alone = Эпизод { $episode } · { $when }
+
+# Line under the title of that page.
+tui-medium-read-line = В терминале нет читалки. Манга, вебтуны и ранобэ открываются в приложениях Kaeri, а синхронизация переносит ваш прогресс между ними.
+
+# Line under that page: the key that opens the choice of what { -app-name } is for. The key is the one bound to it, as the key map draws it.
+tui-medium-read-change = Нажмите { $key }, чтобы выбрать, для чего нужен Kaeri.
+
+# Hint beside the Kaeri is for line on the Settings screen. The key is the one bound to it, as the key map draws it.
+tui-medium-settings-hint = { $key }: изменить
 
 # Title of the about page.
 about-title = О программе
@@ -4460,13 +5432,13 @@ settings-group-crashes = Отчёты о сбоях
 settings-crash-save = Сохранять отчёты о сбоях на этом устройстве
 
 # Line under that switch.
-settings-crash-save-detail = Когда это включено, Kaeri хранит на этом устройстве краткую запись о каждом сбое без названий, адресов и имён, чтобы вы могли добавить её в отчёт об ошибке. Сами по себе они не отправляются.
+settings-crash-save-detail = Kaeri хранит на этом устройстве краткую запись о каждом сбое для «Сообщить об ошибке», убирая из неё названия, адреса и имена. Ничего не отправляется само по себе.
 
 # Switch that turns the notice after a crash on or off.
 settings-crash-ask = Спрашивать после сбоя
 
 # Line under that switch.
-settings-crash-ask-detail = При следующем запуске показывает уведомление с кнопкой «Сообщить…»
+settings-crash-ask-detail = При следующем запуске Kaeri покажет уведомление с кнопкой «Сообщить…».
 
 # Heading of crashes the system kept from before saving was turned on. The system is macOS, iOS, iPadOS or Android.
 settings-crash-os-heading = Сохранено системой { $system }
@@ -4496,7 +5468,7 @@ settings-crash-delete = Удалить
 settings-crash-delete-all = Удалить все
 
 # Footnote of the Crash reports group.
-settings-crash-footnote = Отчёты о сбоях остаются на этом устройстве. Kaeri ничего не отправляет сам. Отчёт уходит только тогда, когда вы открываете его на GitHub из окна «Сообщить об ошибке». Отчёты удаляются через 30 дней.
+settings-crash-footnote = Отчёты о сбоях остаются на этом устройстве, и Kaeri ничего не отправляет сам. Отчёт уходит, только когда вы открываете его на GitHub из «Сообщить об ошибке». Отчёты удаляются через 30 дней.
 
 # Button that shows the week before.
 calendar-previous-week = Предыдущая неделя
@@ -4622,13 +5594,13 @@ cast-tvs-note-iphone = Они появятся в разделе Chromecast в �
 cast-tvs-note-ipad = Они появятся в разделе Chromecast в «Смотреть на ТВ». Этот iPad отправляет им эпизод.
 
 # Note under the Settings row that lets a cast play torrents, on a Mac.
-cast-torrents-note-mac = Позволяет ТВ со встроенным Chromecast воспроизводить торренты. Этот Mac передаёт эпизод, пока он идёт.
+cast-torrents-note-mac = Тогда ТВ со встроенным Chromecast сможет воспроизводить торренты. Этот Mac передаёт эпизод, пока он идёт.
 
 # Note under the Settings row that lets a cast play torrents, on an iPhone.
-cast-torrents-note-iphone = Позволяет ТВ со встроенным Chromecast воспроизводить торренты. Этот iPhone передаёт эпизод, пока он идёт.
+cast-torrents-note-iphone = Тогда ТВ со встроенным Chromecast сможет воспроизводить торренты. Этот iPhone передаёт эпизод, пока он идёт.
 
 # Note under the Settings row that lets a cast play torrents, on an iPad.
-cast-torrents-note-ipad = Позволяет ТВ со встроенным Chromecast воспроизводить торренты. Этот iPad передаёт эпизод, пока он идёт.
+cast-torrents-note-ipad = Тогда ТВ со встроенным Chromecast сможет воспроизводить торренты. Этот iPad передаёт эпизод, пока он идёт.
 
 # Line on the casting card while the next episode counts down. The seconds are whole.
 cast-up-next-plays-in = Далее · воспроизведение через { $seconds } с
@@ -5047,6 +6019,27 @@ pad-button-left-stick = Левый стик
 # Name of the controller's right stick, in the controller help.
 pad-button-right-stick = Правый стик
 
+# Controller help: the D-pad in the reader turns the page, the way the book reads.
+pad-help-turn-page = Перевернуть страницу
+
+# Controller help: the left shoulder button in the reader.
+pad-help-previous-chapter = Предыдущая глава
+
+# Controller help: the right shoulder button in the reader.
+pad-help-next-chapter = Следующая глава
+
+# Controller help: the A button in the reader shows or hides the bar with the title and settings.
+pad-help-reader-bar = Показать или скрыть панель
+
+# Controller help: the menu button in the reader.
+pad-help-reader-settings = Настройки чтения
+
+# Controller help: the B button in the reader.
+pad-help-close-reader = Закрыть читалку
+
+# Heading in the controller help for the buttons in the reader.
+pad-help-reader = Читалка
+
 # Checkbox of the close question.
 close-dont-ask = Больше не спрашивать
 
@@ -5149,7 +6142,7 @@ discussion-title-episode = Обсуждение эпизода { $episode }
 # Quiet line under an episode that opens its discussion.
 discussion-row =
     { $count ->
-        [one] Обсуждение · один комментарий
+        [one] Обсуждение · { $count } комментарий
         [few] Обсуждение · { $count } комментария
         [many] Обсуждение · { $count } комментариев
        *[other] Обсуждение · { $count } комментария
@@ -5158,7 +6151,7 @@ discussion-row =
 # Count of comments in the header of the discussion.
 discussion-count =
     { $count ->
-        [one] Один комментарий
+        [one] { $count } комментарий
         [few] { $count } комментария
         [many] { $count } комментариев
        *[other] { $count } комментария
@@ -5173,7 +6166,7 @@ discussion-reply = Ответить
 # Line under a reply that has more replies folded in it. The line opens them.
 discussion-more-replies =
     { $count ->
-        [one] Ещё один ответ
+        [one] Ещё { $count } ответ
         [few] Ещё { $count } ответа
         [many] Ещё { $count } ответов
        *[other] Ещё { $count } ответа
@@ -5293,6 +6286,12 @@ downloads-empty-title = Нет загрузок
 # Line under the empty title.
 downloads-empty-detail = Скачанные эпизоды воспроизводятся без подключения к сети.
 
+# Downloads' empty line for a person who only reads, under "No downloads".
+read-downloads-empty-detail = Скачанные главы открываются без подключения к сети.
+
+# Downloads' empty line for a person who watches and reads, under "No downloads".
+read-downloads-empty-both = Скачанные эпизоды и главы открываются без подключения к сети.
+
 # Title when the list could not be read.
 downloads-load-failed = Не удалось открыть загрузки
 
@@ -5375,7 +6374,7 @@ downloads-delete-detail = Файл будет удалён. Это устрой�
 downloads-delete-one-title = Удалить загрузку
 
 # Line under it: what you lose.
-downloads-delete-one-detail = Воспроизвести снова получится только с подключением к сети или после новой загрузки.
+downloads-delete-one-detail = После этого для воспроизведения эпизода понадобится подключение к сети, если не загрузить его снова.
 
 # Button on the settings page that removes watched files.
 downloads-delete-watched = Удалить просмотренные загрузки
@@ -5387,7 +6386,7 @@ downloads-seeding-title = Раздача
 downloads-seeding-after-watching = Раздача после просмотра
 
 # Line under the seeding heading.
-downloads-seeding-note = Просмотренные эпизоды раздаются обратно, пока открыт Kaeri, до достижения коэффициента или лимита времени, заданных в разделе «Источники» настроек.
+downloads-seeding-note = Просмотренные эпизоды раздаются обратно, пока открыт Kaeri. Раздача останавливается при достижении коэффициента или лимита времени, заданных в настройках, в разделе «Источники».
 
 # Heading of the setting. Shown on desktop only.
 downloads-background-title = Когда окно закрывается во время загрузок
@@ -5431,7 +6430,7 @@ downloads-notice-done-detail = { $title } · можно смотреть без 
 # Notification text while several episodes download.
 downloads-notice-running =
     { $count ->
-        [one] Загружается один эпизод
+        [one] Загружается { $count } эпизод
         [few] Загружаются { $count } эпизода
         [many] Загружаются { $count } эпизодов
        *[other] Загружаются { $count } эпизодов
@@ -5463,6 +6462,63 @@ episode-download-done = Загружено
 
 # Line under that button after a failure.
 episode-download-failed = Не удалось скачать эпизод { $episode }. Попробуйте ещё раз.
+
+# First run, page 2 of 5.
+first-other-title = Есть другое устройство с Kaeri?
+
+# Under the title.
+first-other-line = Выполните сопряжение, и это устройство получит ваши источники, трекеры и историю, а остальная настройка пройдёт сама.
+
+# Line under the pair row.
+first-other-pair-line = Вы получите код, который нужно ввести на том устройстве. Оба должны быть в одной сети Wi-Fi.
+
+# Row that restores from a sync folder.
+first-other-restore = Восстановить из облачной папки
+
+# Line under it.
+first-other-restore-line = Используется сохранённый вами ключ восстановления
+
+# Primary action: go on with the first run on this device alone.
+first-other-no = Нет, начать здесь
+
+# Beside a spinner, after 600 ms.
+pair-waiting = Ожидание: другое устройство
+
+# After 30 seconds with nothing.
+pair-nothing-yet = Пока ничего? Оба устройства должны быть в одной сети Wi-Fi.
+
+# Group header for what the other device brings.
+first-join-group = От { $device }
+
+# Row while the rest arrives.
+first-join-looking = Смотрим, что есть на { $device }…
+
+# Row with a pop-up of Watch, Read and Both.
+first-join-medium = Kaeri для
+
+# Line under it when the other device reads.
+first-join-medium-line = Чтение, как на { $device }
+
+# Line under the sign-ins switch: the trackers the other device is signed in to, already joined.
+first-join-signins-line = { $trackers }
+
+# Switch, one per book server.
+first-join-server = Добавить { $host }
+
+# Line under a server's switch. The kind is Komga, Kavita or OPDS; the store is Keychain or Android Keystore.
+first-join-server-line = { $kind } · вход по ключу с { $device }, он хранится в { $store }
+
+# Note under the list.
+first-join-folders = Папки остаются на { $device }. Чтобы добавить папки отсюда, откройте «Ваши источники».
+
+# Note when the setup answered the remaining pages.
+first-join-steps-done = Списки и источники настроены, поэтому первый запуск завершён. Их можно изменить в настройках.
+
+# Row error when a plugin store refused this device.
+first-join-store-refused = { $store } не пустил это устройство. { $owner } может прислать вам приглашение.
+
+# Notice on Home, for 4 seconds.
+first-join-syncing = Синхронизация с { $device }
 
 # Name of the Home section in the sidebar, the tab bar and the window title.
 home-title = Главная
@@ -5531,7 +6587,7 @@ home-end-signed-out = Войдите в AniList, чтобы подтянуть �
 home-sign-in = Войти в AniList
 
 # The closing line at the end of Home when no { -source } is installed. Plugin stores is a link.
-home-end-no-sources = Добавьте источник, чтобы смотреть с главной. В разделе «Магазины плагинов» есть из чего выбрать.
+home-end-no-sources = Добавьте источник, чтобы смотреть с главной. Плагины берутся из раздела «Магазины плагинов».
 
 # Line on a title that no installed { -source } has. The main action becomes Add to Planning.
 home-not-found = Не найдено в ваших источники
@@ -5987,7 +7043,7 @@ library-picker-title = Выберите папку с вашими эпизод�
 library-remove-detail = Ваши файлы останутся на месте.
 
 # Why a group of files is not matched: AniList could not be asked.
-library-reason-offline = Не удалось обратиться к AniList. Повторим при следующем сканировании.
+library-reason-offline = Не удалось обратиться к AniList. При следующем сканировании будет новая попытка.
 
 # Button that opens the match picker for a group.
 library-choose-match = Выбрать совпадение
@@ -6020,7 +7076,7 @@ licensed-body = Kaeri может открывать тайтлы в стрими
 licensed-region = Регион
 
 # Line under the region menu.
-licensed-region-line = Скрывает ссылки, которые AniList отметил для других стран. У большинства ссылок страна не указана, поэтому выберите ещё и свои сервисы.
+licensed-region-line = Ссылки, которые AniList отметил для других стран, скрыты. У большинства ссылок страна не указана, поэтому выберите ещё и свои сервисы.
 
 # Heading over the services the viewer pays for.
 licensed-yours = Ваши сервисы
@@ -6464,7 +7520,7 @@ onboarding-own-heading = Есть свои медиафайлы?
 onboarding-invite-heading = Есть ссылка-приглашение?
 
 # Second line of that page. Explains that plugins come from plugin stores and that a store is joined with an invite link.
-onboarding-where-stores = Плагины берутся из магазинов плагинов. Магазин плагинов подписан и выдаёт каждому устройству отдельный токен, поэтому присоединиться к нему можно по ссылке-приглашению от его владельца.
+onboarding-where-stores = Плагины берутся из магазинов плагинов. Каждый из них подписан и выдаёт каждому устройству свой токен, поэтому подключиться к нему можно по ссылке-приглашению от владельца.
 
 # Heading above the Play the demo button on the welcome page.
 onboarding-demo-heading = Попробуйте сразу
@@ -6506,7 +7562,7 @@ party-leave = Покинуть
 party-leaving = Выходим…
 
 # Label of the button that marks you as ready.
-party-ready-action = Я готов
+party-ready-action = Отметить готовность
 
 # Button that copies the link to invite someone.
 party-copy-invite = Копировать приглашение
@@ -6521,7 +7577,7 @@ party-leave-and-close = Выйти и закрыть
 party-not-now = Не сейчас
 
 # Line while the form fetches its suggestions.
-party-getting-ready = Готовим…
+party-getting-ready = Загрузка предложений…
 
 # Label of the server field.
 party-server = Сервер
@@ -6554,7 +7610,7 @@ party-server-public = Публичный сервер, которым управ
 party-server-suggest = Нет своего сервера? Можно взять публичный { $server }, им управляет { $operator }.
 
 # Line under an invite's room when the server is not the public one.
-party-server-invited = Сервер выбрал тот, кто вас пригласил. Kaeri его не запускает.
+party-server-invited = Этот сервер выбрал тот, кто вас пригласил. Kaeri им не управляет.
 
 # Line when the server was typed in a shape that cannot be used.
 party-server-shape = Укажите сервер как хост и порт, например party.example:8999.
@@ -6573,6 +7629,9 @@ party-joining = Присоединяемся к комнате { $room } на { 
 
 # Line on the form when no episode is playing yet.
 party-form-nothing = Сейчас запущенное будет воспроизводиться в комнате.
+
+# Line on the form that starts a party with nothing picked yet.
+party-form-pick-later = Когда вы войдёте, нажмите «Воспроизвести» на любой серии, чтобы смотреть её вместе со всеми.
 
 # Line naming the episode of the form.
 party-form-episode-of = Серия { $episode }: { $title }
@@ -6727,6 +7786,9 @@ together-people-button = Смотреть вместе
 # Button that starts a watch party from the place. The one amber button there.
 together-start = Начать просмотр
 
+# Line under Start a party.
+together-start-line = Откройте комнату и пригласите друзей по ссылке или коду, затем нажмите «Воспроизвести» на том, что хотите смотреть.
+
 # Heading of the field that joins a watch party.
 together-join = Присоединиться
 
@@ -6761,7 +7823,7 @@ together-recent = Недавние комнаты
 together-recent-row = Эпизод { $episode } · с { $names } · { $when }
 
 # Line shown when no recent rooms are kept yet.
-together-recent-empty = Здесь появятся комнаты, в которые вы заходили, последние десять.
+together-recent-empty = Здесь появятся последние десять комнат, в которые вы зайдёте.
 
 # Button on a recent room that goes straight to its lobby with the next episode.
 together-rejoin = Вернуться
@@ -6850,7 +7912,7 @@ party-member-finding = Ищет источник
 # State of a member who is watching. The time is already formatted, such as 2:14.
 party-member-watching-from = Смотрит с { $time }
 
-# Label of the I'm ready button once you are ready.
+# Label of the Ready to watch button once you are ready.
 party-ready-on = Готов
 
 # Heading of the invite block in the lobby.
@@ -6939,6 +8001,9 @@ party-bar-line = В комнате: { $count } · готовы: { $ready }
 
 # Second line of the bar when nothing plays for you.
 party-bar-idle = В комнате · для вас ничего не играет
+
+# Second line of the bar while the room has nothing picked: a play anywhere in the app picks the episode for the room.
+party-bar-pick = Нажмите «Воспроизвести» на любой серии, чтобы смотреть её вместе со всеми
 
 # Notice in the player when someone pauses.
 party-paused-by = Пауза: { $name }
@@ -7039,7 +8104,7 @@ party-chat-wait = Ждите { $seconds } с
 # Spoken once when sending waits, for screen readers.
 party-chat-wait-spoken =
     { $seconds ->
-        [one] Подождите одну секунду
+        [one] Подождите { $seconds } секунду
         [few] Подождите { $seconds } секунды
         [many] Подождите { $seconds } секунд
        *[other] Подождите { $seconds } секунды
@@ -7067,7 +8132,7 @@ party-chat-show = Показать чат
 settings-hide-chat = Скрывать чат в совместных просмотрах
 
 # Line under that switch.
-settings-hide-chat-line = Сообщения, реакции и их метки на шкале перемотки не показываются на видео, а поле ввода пропадает. Список участников по-прежнему показывает, кто в комнате.
+settings-hide-chat-line = Сообщения чата, реакции и их метки на шкале перемотки не показываются поверх видео, а поле чата скрыто. Список участников по-прежнему показывает, кто в комнате.
 
 # Member menu item and accessibility action that hides a member's lines and reactions for this party.
 party-mute = Скрыть сообщения: { $name }
@@ -7197,6 +8262,9 @@ player-start-miss-no-match = У { $name } нет этого шоу
 
 # Detail line when a source has the show and not the episode. The episode is its label.
 player-start-miss-no-episode = У { $name } нет серии { $episode }
+
+# Detail line when the show is pinned to a source that does not have the episode yet, and the next source plays it.
+player-start-pin-missed = У { $name } пока нет серии { $episode }. Воспроизведение из следующего источник.
 
 # Detail line when a source failed and the next is asked.
 player-start-miss-failed = { $name } не ответил
@@ -7538,7 +8606,7 @@ player-still-watching = Вы ещё смотрите?
 # Line under the still-watching title.
 player-still-watching-detail =
     { $count ->
-        [one] Пауза после одного эпизода подряд.
+        [one] Пауза после { $count } эпизода подряд.
         [few] Пауза после { $count } эпизода подряд.
         [many] Пауза после { $count } эпизодов подряд.
        *[other] Пауза после { $count } эпизода подряд.
@@ -7674,10 +8742,10 @@ player-load-audio-file = Загрузить аудиофайл…
 player-file-picker-failed = Не удалось открыть выбор файла. Попробуйте ещё раз.
 
 # Notice when a chosen subtitle file could not be loaded.
-player-subtitle-file-failed = Не удалось загрузить этот файл субтитров. Проверьте, что это файл субтитров.
+player-subtitle-file-failed = Не удалось загрузить этот файл как субтитры. Выберите файл субтитров, например .srt или .ass.
 
 # Notice when a chosen audio file could not be loaded.
-player-audio-file-failed = Не удалось загрузить этот аудиофайл. Проверьте, что это аудиофайл.
+player-audio-file-failed = Не удалось загрузить этот файл как звук. Выберите аудиофайл, например .mka или .flac.
 
 # Name of a track that has no name or language.
 player-track-unnamed = Дорожка без названия
@@ -7748,6 +8816,1723 @@ player-subs-bg-box = Рамка
 # Button in the subtitles panel that opens Settings.
 player-subs-more = Больше в настройках…
 
+# Under a page that is still loading after four seconds.
+reader-page-loading = Загрузка страницы { $page }
+
+# On the plate of a page that is still loading.
+reader-page-plate = Страница { $page }
+
+# On the plate of a strip image that is still loading.
+reader-image-plate = Картинка { $image }
+
+# Under a strip image's number after four seconds.
+reader-image-loading = Загрузка картинки { $image }
+
+# Heading where a page could not be loaded.
+reader-page-failed = Не удалось загрузить страницу { $page }
+
+# Button that loads a failed page again.
+reader-try-again = Повторить
+
+# Closes the reader and goes back to the series.
+reader-close = Закрыть
+
+# Under the top line of the page between chapters, once the chapter counts as read.
+reader-end-read = Засчитано как прочитанная
+
+# Under the end of chapter line, naming the trackers the read went to.
+reader-end-tracker = Засчитано как прочитанная · обновлено: { $trackers }
+
+# Under the end of chapter line when the device is offline: the trackers hear of the read once it is back online.
+reader-end-tracker-offline = Засчитано как прочитанная · { $tracker } обновится, когда вы вернётесь в сеть
+
+# Small heading above the next chapter on the page between chapters.
+reader-end-next = Следующая
+
+# A reading mode, and a reading direction.
+reader-mode-rtl = Справа налево
+
+# A reading mode, and a reading direction.
+reader-mode-ltr = Слева направо
+
+# A reading mode: one long scroll of images.
+reader-mode-strip = Лента
+
+# A choice for how a page is fitted.
+reader-fit-screen = По экрану
+
+# A choice for how a page is fitted.
+reader-fit-width = По ширине
+
+# A choice of typeface.
+reader-font-serif = С засечками
+
+# A choice of typeface.
+reader-font-sans = Без засечек
+
+# A look for reading: warm paper.
+reader-look-paper = Бумага
+
+# A look for reading: a light page.
+reader-look-light = Светлая
+
+# A look for reading: a brown page.
+reader-look-sepia = Сепия
+
+# A look for reading: a dark page.
+reader-look-dark = Тёмная
+
+# A choice of margins.
+reader-margins-narrow = Узкие
+
+# A choice of margins.
+reader-margins-wide = Широкие
+
+# A choice for page layout.
+reader-layout-auto = Авто
+
+# A choice for page layout.
+reader-layout-single = Одна
+
+# A choice for page layout.
+reader-layout-double = Две
+
+# A choice for wide pages: cut in two.
+reader-spreads-split = Разделить
+
+# A choice for wide pages: turned to fill the screen.
+reader-spreads-rotate = Повернуть
+
+# A choice for wide pages: shown whole.
+reader-spreads-whole = Целиком
+
+# A choice for the reader's tap zones: taps near the left and right edges turn the page. Replaced by Sides; kept until every app has the new tap zones page.
+reader-tap-edges = Края
+
+# Tap zone layout: taps only show and hide the controls, and never turn the page.
+reader-tap-off = Выкл.
+
+# Name of the tap zone that turns to the next page, in the guide over the page and as a screen reader action.
+reader-zone-next = Следующая страница
+
+# Name of the tap zone that turns to the previous page, in the guide and as a screen reader action.
+reader-zone-previous = Предыдущая страница
+
+# Name of the tap zone that shows and hides the reader's controls, in the guide.
+reader-zone-controls = Управление
+
+# Button in the reader's controls that opens the chapters and the page grid.
+reader-chapters = Главы
+
+# Line in the margin of a novel's page.
+reader-pages-left =
+    { $count ->
+        [one] В этой главе осталась { $count } страница
+        [few] В этой главе остались { $count } страницы
+        [many] В этой главе осталось { $count } страниц
+       *[other] В этой главе остались { $count } страницы
+    }
+
+# Chapters sheet and the chapter list: the list is on its way.
+reader-chapters-loading = Загрузка глав
+
+# Background choice.
+reader-background-theme = Тема
+
+# Background choice.
+reader-background-black = Чёрный
+
+# Background choice.
+reader-background-white = Белый
+
+# Title of the end page when the series has no newer chapter.
+reader-end-caught-up = Вы всё прочитали
+
+# A choice for the gap between a strip's images: none at all.
+reader-gap-none = Нет
+
+# A choice for the gap between a strip's images: a small one.
+reader-gap-small = Малый
+
+# Look choice that follows the system's light or dark.
+reader-look-system = Как в системе
+
+# Top line of the page between chapters. The chapter is its number, such as 12.
+reader-end-of-chapter-number = Конец главы { $chapter }
+
+# The next chapter's facts on the page between chapters: its length and how it reads. The chapter is its number, such as 13; the facts are already written.
+reader-end-facts = Глава { $chapter } · { $facts }
+
+# The next chapter's length on the page between chapters.
+reader-end-pages =
+    { $count ->
+        [one] { $count } страница
+        [few] { $count } страницы
+        [many] { $count } страниц
+       *[other] { $count } страницы
+    }
+
+# Under the next chapter's title on the page between chapters, when nothing more is known of it than the source it came from.
+reader-end-from = Из { $source }
+
+# Under the series title in the reader's controls, and the title on a strip's marker into the next chapter. The chapter is its number, such as 12.
+reader-chapter-line = Глава { $chapter }
+
+# The next chapter's facts and where it came from: on the divider inside a strip, and under the next chapter's title on the page between chapters.
+reader-divider-facts-source = { $facts } · из { $source }
+
+# Line on the page between chapters, near its buttons: one more swipe opens the next chapter.
+reader-end-swipe = Смахните, чтобы читать дальше
+
+# The next episode's length on the divider inside a strip.
+reader-divider-images =
+    { $count ->
+        [one] { $count } картинка
+        [few] { $count } картинки
+        [many] { $count } картинок
+       *[other] { $count } картинки
+    }
+
+# Under the series title in the reader's controls, and the title on a strip's marker into the next chapter. The chapter is its number, such as 12.
+reader-chapter-line-titled = Глава { $chapter } · { $title }
+
+# Button in the first run that opens the reading demo.
+onboarding-read-demo = Открыть демо
+
+# Under the first run's demo heading when the device is for reading.
+onboarding-demo-books-detail = Один короткий комикс и один короткий рассказ, которыми их авторы делятся по лицензии Creative Commons.
+
+# Under the first run's demo heading when the device is for both.
+onboarding-demo-both-detail = Один короткий эпизод и один короткий комикс, которыми их авторы делятся по лицензии Creative Commons.
+
+# Home, under the spotlight, when the demo is the only thing to read.
+home-demo-only-books = Включено только демо. Добавьте папку, сервер или магазин плагинов, чтобы читать свои книги.
+
+# Primary action on Home's spotlight for a book.
+home-spotlight-read = Читать
+
+# The demo comic's facts line on its series page.
+demo-series-facts =
+    { $pages ->
+        [one] Демо · Комикс · { $pages } страница
+        [few] Демо · Комикс · { $pages } страницы
+        [many] Демо · Комикс · { $pages } страниц
+       *[other] Демо · Комикс · { $pages } страниц
+    }
+
+# The comic's credit on its series page and in About the demo. The licence is "CC BY 4.0".
+demo-credit-book = { $title }, автор: { $author }. Лицензия: { $licence }. Читается с Wikimedia Commons.
+
+# The story's credit in About the demo.
+demo-credit-story = { $title }, автор: { $author }. Общественное достояние. Входит в приложение.
+
+# The story's cover credit in About the demo, under the story's own credit. The title is the art's caption in English, "Blowing her breath upon him", and the year is 1904.
+demo-credit-cover = Обложка: «{ $title }», { $artist }, { $year }. Общественное достояние. Входит в приложение.
+
+# Credit capsule in the reader's top bar on page 1.
+reader-demo-credit = { $title } · { $author } · { $licence }
+
+# A demo result's line in Search.
+search-demo-reads = Демо · Можно читать сейчас
+
+# Search, under the demo results, when only the demo is on.
+search-demo-only-books = Включено только демо. Другие названия появятся, когда вы добавите источник.
+
+# Title of the card after the demo's last page.
+reader-demo-end = Это конец демо
+
+# Line under it.
+reader-demo-end-line = Чтобы читать свои книги, добавьте папку, сервер или магазин плагинов.
+
+# The card's primary action.
+reader-demo-add-source = Добавить источник
+
+# The card's secondary action, back to the first page.
+reader-demo-again = Вернуться к странице 1
+
+# The demo row's line in Your sources when reading is on.
+sources-demo-books-line = Комикс и рассказ · CC BY 4.0 и общественное достояние
+
+# About the demo, first line, when reading is on.
+sources-demo-books-what = Произведения, которыми их авторы делятся по лицензии Creative Commons, чтобы вы могли попробовать Kaeri до того, как добавите источник. Это не источник для постоянного использования.
+
+# About the demo, in place of sources-demo-private when reading is on.
+sources-demo-books-private = Демо нигде не входит в учётную запись и никогда не записывает данные в трекер.
+
+# Group on the demo's series page.
+demo-chapters = Главы
+
+# Group on the demo's series page: the other demo work.
+demo-also = Ещё в демо
+
+# Group in About the demo.
+demo-credits = Авторство
+
+# A chapter row's line on the demo's series page.
+demo-pages =
+    { $pages ->
+        [one] { $pages } страница
+        [few] { $pages } страницы
+        [many] { $pages } страниц
+       *[other] { $pages } страниц
+    }
+
+# The story's row on the demo's series page. The licence is "Public domain" as the engine says it.
+demo-story-row = Рассказ · { $author } · { $licence }
+
+# Primary action on the demo's series page.
+demo-read-chapter = Читать главу { $number }
+
+# Page between chapters, under the tracker line: the server has the progress.
+progress-server-saved = Сохранено на сервере { $server }
+
+# Same place, only after 600 ms without an answer.
+progress-server-sending = Отправка на сервер { $server }…
+
+# Same place, offline: the send waits in the queue.
+progress-server-offline = Отправится на сервер { $server }, когда вы снова будете в сети
+
+# Same place, the send failed for a reason that can pass.
+progress-server-retrying = Сервер { $server } не ответил. Kaeri попробует снова.
+
+# Same place, the server said no. Try again follows it.
+progress-server-failed = Не сохранено на сервере { $server }: { $reason }.
+
+# Reason: a Kavita key.
+progress-why-key = сервер не принял ключ
+
+# Reason: a Komga or OPDS password.
+progress-why-password = сервер не принял пароль
+
+# Reason.
+progress-why-gone = этой серии больше нет на сервере
+
+# Reason, after a day of retries.
+progress-why-gave-up = нет ответа в течение суток
+
+# Your sources, the server's row, second line.
+progress-row-saved = Прогресс сохранён { $ago }
+
+# The server's row, after 600 ms without an answer.
+progress-row-sending =
+    { $count ->
+        [one] Отправка { $count } главы…
+        [few] Отправка { $count } глав…
+        [many] Отправка { $count } глав…
+       *[other] Отправка { $count } главы…
+    }
+
+# The server's row, offline.
+progress-row-offline =
+    { $count ->
+        [one] { $count } глава отправится, когда вы снова будете в сети
+        [few] { $count } главы отправятся, когда вы снова будете в сети
+        [many] { $count } глав отправятся, когда вы снова будете в сети
+       *[other] { $count } главы отправятся, когда вы снова будете в сети
+    }
+
+# The server's row, the last try failed for a reason that can pass.
+progress-row-retrying =
+    { $count ->
+        [one] { $count } глава ждёт. Kaeri попробует снова.
+        [few] { $count } главы ждут. Kaeri попробует снова.
+        [many] { $count } глав ждут. Kaeri попробует снова.
+       *[other] { $count } главы ждут. Kaeri попробует снова.
+    }
+
+# The server's row, the server said no. Try again sits beside it.
+progress-row-failed =
+    { $count ->
+        [one] { $count } глава не сохранена: { $reason }
+        [few] { $count } главы не сохранены: { $reason }
+        [many] { $count } глав не сохранено: { $reason }
+       *[other] { $count } главы не сохранено: { $reason }
+    }
+
+# The server's row, when Send progress to the server is off. The kind is the device's own word, as in sync-turn-off: “Mac”, “iPhone”, “phone”.
+progress-row-off = Прогресс остаётся на этом устройстве ({ $kind })
+
+# Sidebar and tab label: the shows' Home when both media are on.
+nav-watch = Смотреть
+
+# Sidebar and tab label: reading's Home.
+nav-read = Читать
+
+# Sidebar and tab label: new chapters from followed series.
+nav-updates = Обновления
+
+# Shelf heading on Read: the series being read, each at its place.
+home-read-continue = Читать дальше
+
+# Shelf heading on Read: series releasing now.
+home-read-releasing = Выходит сейчас
+
+# Line under the spotlight of a popular series, when the engine gives no line of its own.
+home-read-checked-on-open = Проверяется при открытии Kaeri
+
+# Line at the end of Read, under the last shelf.
+home-read-end = На этом пока всё. Полные списки в «Обновления» и «Поиск».
+
+# Line at the end of Read with no book sources yet. A button to add one follows it.
+home-read-no-sources = Добавьте папку, сервер или магазин плагинов, чтобы читать с главной.
+
+# In place of Read's discovery rows on a first run with no connection: nothing was kept yet.
+read-home-offline-rows = Серии в тренде и новинки появятся, когда вы будете в сети.
+
+# E-ink: the one row on Read's Home that opens the list of discovery rows, and that page's title.
+read-home-browse = Каталог
+
+# E-ink: the line under Browse on Read's Home.
+read-home-browse-line = В тренде, новые и завершённые, по форматам
+
+# E-ink: a discovery row in the Browse list, naming its first two series and how many follow.
+read-home-browse-row = { $first }, { $second } и ещё { $more }
+
+# E-ink: the note on the Browse page. The rows are AniList's catalogue; sources are asked only when a series is opened.
+read-home-browse-note = Из AniList. Ваши источники опрашиваются, когда вы открываете серию.
+
+# E-ink: on the Browse page when AniList didn't answer. The time is when the lists were kept.
+read-home-browse-kept = Сохранённые списки ({ $time }) по-прежнему открываются.
+
+# Under a day in Read's week: what usually comes out that day, when the time isn't known.
+week-usually = Обычно
+
+# Under a day in Read's week with nothing due.
+week-nothing-usually = Обычно ничего
+
+# Line under Updates' title on iPhone and iPad.
+updates-checked = Проверено { $ago }
+
+# Line above Updates on the Mac: when it checked, and which series it checks.
+chapter-updates-checked-caught-up = Проверено { $ago } · серии, которые вы дочитали
+
+# Line while Updates asks every followed series now.
+chapter-updates-checking = Проверка новых глав…
+
+# Toolbar button: queue every unread chapter in Updates.
+updates-download-new = Скачать новые
+
+# Updates with nothing in it.
+updates-empty-title = Новых глав нет
+
+# Line under Updates' empty title.
+chapter-updates-empty-line = Kaeri несколько раз в день проверяет серии из вашего списка «Читаю», которые вы дочитали.
+
+# Day heading in Updates.
+chapter-updates-today = Сегодня
+
+# Day heading in Updates.
+chapter-updates-yesterday = Вчера
+
+# After a chapter on an Updates row, when several groups put it out.
+chapter-updates-versions =
+    { $n ->
+        [one] { $n } версия
+        [few] { $n } версии
+        [many] { $n } версий
+       *[other] { $n } версии
+    }
+
+# Accessibility label on an Updates row's cover, which opens the series.
+chapter-updates-open-series = Открыть: { $title }
+
+# Accessibility hint on an Updates row.
+chapter-updates-open-chapter-hint = Открывает главу
+
+# Context menu item on an Updates row.
+chapter-updates-open-series-menu = Открыть серию
+
+# The series page's main action, and the spotlight's.
+action-read-chapter = Читать главу { $n }
+
+# The main action when a chapter is part read.
+action-continue-chapter = Читать дальше: глава { $n } · стр. { $page }
+
+# The main action for a light novel part, part read.
+action-continue-part = Читать дальше: часть { $n } · { $percent }%
+
+# The main action for a light novel part, part read, when how far is not known.
+action-continue-part-plain = Читать дальше: часть { $n }
+
+# The main action for a light novel part the source calls a chapter, part read.
+action-continue-chapter-percent = Читать дальше: глава { $n } · { $percent }%
+
+# The main action for a light novel part the source calls a chapter, part read, when how far is not known.
+action-continue-chapter-plain = Читать дальше: глава { $n }
+
+# The main action for a light novel part not opened yet.
+action-read-part = Читать часть { $n }
+
+# The main action for a light novel part, part read, named in the source's own words ("Part 3", "Chapter 3") as its row is.
+action-continue-named = Читать дальше: { $label } · { $percent }%
+
+# The main action for a light novel part, part read, named in the source's own words, when how far is not known.
+action-continue-named-plain = Читать дальше: { $label }
+
+# The main action for a light novel part not opened yet, named in the source's own words, and for a chapter with no number, named by its own title ("Read Oneshot").
+action-read-named = Читать: { $label }
+
+# The main action when every chapter is read.
+action-read-again = Прочитать заново
+
+# Label of the source row on the series page.
+series-reading-from = Читается из
+
+# Button beside a row on the series page that opens its sheet.
+series-change = Изменить
+
+# After the source's name: how many other sources have the series.
+series-sources-more =
+    { $n ->
+        [one] ещё { $n }
+        [few] ещё { $n }
+        [many] ещё { $n }
+       *[other] ещё { $n }
+    }
+
+# Value of the trackers row while a tracker asks which series this is.
+series-tracker-ask = Какая это серия? Выбрать
+
+# Value of the group row: the chosen group is used for this series.
+series-preferred-group = Предпочитаемая группа
+
+# A tracker's progress in chapters, with the total.
+series-tracker-chapters-of =
+    { $total ->
+        [one] { $n } из { $total } главы
+        [few] { $n } из { $total } глав
+        [many] { $n } из { $total } глав
+       *[other] { $n } из { $total } глав
+    }
+
+# A tracker's progress in chapters, total unknown.
+series-tracker-chapters =
+    { $n ->
+        [one] { $n } глава
+        [few] { $n } главы
+        [many] { $n } глав
+       *[other] { $n } главы
+    }
+
+# A tracker's progress in chapters, then the volume.
+series-tracker-with-volume = { $chapters } · том { $volume }
+
+# A light novel tracker's progress in volumes.
+series-tracker-volumes = Том { $volume } из { $total }
+
+# Main place when the source can't be read from.
+series-read-from-another = Читать из другого источника
+
+# Status menu item: a score submenu.
+series-score = Оценка…
+
+# Status menu's label before the series is on a list.
+series-add-to-list = Добавить в список
+
+# Last item of a series' list menu: take the series off every tracker's list. Asks first.
+series-remove-from-lists = Убрать из списков…
+
+# Title of the question before a series is taken off the lists.
+series-remove-from-lists-title = Убрать «{ $title }» из ваших списков?
+
+# Line in that question.
+series-remove-from-lists-line = Серия исчезнет из списка в каждом подключённом трекере. Ваше место и прочитанные главы останутся в Kaeri.
+
+# Heading over what the removal came to, one line per tracker.
+series-removed-title = Ваши списки
+
+# Title while choosing chapters on a phone: how many are chosen.
+series-chosen =
+    { $n ->
+        [one] Выбрано глав: { $n }
+        [few] Выбрано глав: { $n }
+        [many] Выбрано глав: { $n }
+       *[other] Выбрано глав: { $n }
+    }
+
+# Button while choosing chapters on a phone: choose every unread chapter.
+series-choose-all-unread = Все непрочитанные
+
+# Heading in Read from over the sources searched without finding the series.
+read-from-not-found = Не найдено в
+
+# Button beside such a source: look for the series there by other words.
+read-from-search-there = Искать там
+
+# Placeholder of the field that looks for the series in one source.
+read-from-search-placeholder = Поиск в { $source }
+
+# Button that runs that search.
+read-from-search = Искать
+
+# Under the field when the source found nothing by those words.
+read-from-search-none = По этим словам ничего не найдено
+
+# The More menu: the Tracking sheet.
+series-tracking = Отслеживание
+
+# The More menu: the Read from sheet.
+series-read-from-menu = Сменить источник…
+
+# The More menu: start again from chapter 1.
+series-read-again-menu = Перечитать с начала…
+
+# Heading of the chapter list when the series has volumes.
+series-volumes = Тома
+
+# Heading of the chapter list.
+series-chapters = Главы
+
+# Accessibility label of the chapter order menu.
+series-order = Порядок
+
+# Chapter order.
+series-newest-first = Сначала новые
+
+# Chapter order.
+series-oldest-first = Сначала старые
+
+# A volume's heading in the chapter list.
+series-volume = Том { $n }
+
+# The heading for chapters that are in no volume yet.
+series-no-volume = Пока не в томе
+
+# After a volume's heading: which chapters it holds.
+series-chapter-range = главы с { $from } по { $to }
+
+# After a volume's heading when every chapter in it is read.
+series-volume-read = прочитан
+
+# Accessibility value of a volume heading.
+series-expanded = Развёрнуто
+
+# Accessibility value of a volume heading.
+series-collapsed = Свёрнуто
+
+# The chapter list when the source has none.
+series-no-chapters-title = В этом источнике пока нет глав
+
+# Line under it.
+series-no-chapters-line = Возможно, они есть в другом источнике.
+
+# The chapter list when the source failed. Downloaded chapters are listed under it.
+series-chapters-failed = Не удалось загрузить главы из { $source }.
+
+# A chapter row's title.
+series-chapter-number = Глава { $n }
+
+# Accessibility label of the bookmark mark on a chapter row.
+series-bookmarked = В закладках
+
+# Chapter menu and swipe action.
+series-mark-read = Отметить прочитанной
+
+# Chapter menu and swipe action.
+series-mark-unread = Отметить непрочитанной
+
+# Chapter menu item: every chapter before this one is read too.
+series-mark-read-up-to = Отметить прочитанными до этой
+
+# Chapter menu and swipe action.
+series-download = Скачать
+
+# Chapter menu item: open the chapter in the reader.
+series-read-chapter-menu = Читать
+
+# Chapter menu item.
+series-bookmark = В закладки
+
+# Chapter menu item.
+series-remove-bookmark = Убрать закладку
+
+# Menu of a chapter that several groups put out.
+series-versions =
+    { $n ->
+        [one] { $n } версия
+        [few] { $n } версии
+        [many] { $n } версий
+       *[other] { $n } версии
+    }
+
+# In that menu while the versions load.
+series-versions-loading = Ищем версии…
+
+# The version in use, in that menu.
+series-version-in-use = Используется: { $name }
+
+# Make another group the one used for this series.
+series-prefer-version = Предпочитать { $name } для этой серии
+
+# A downloaded chapter, after its state.
+chapter-state-downloaded = Скачана
+
+# A chapter waiting to download.
+chapter-state-queued = В очереди
+
+# A chapter waiting for Wi-Fi to download.
+chapter-state-wifi = В очереди · ждёт Wi-Fi
+
+# A chapter downloading.
+chapter-state-downloading = Скачивание · { $done } из { $total } стр.
+
+# A chapter that failed to download, with the reason.
+chapter-state-failed = Не удалось скачать. { $reason }
+
+# A part-read chapter.
+chapter-state-page-of = Стр. { $page } из { $of }
+
+# A part-read chapter whose length isn't known.
+chapter-state-page = Стр. { $page }
+
+# A read chapter.
+chapter-state-read = Прочитана
+
+# A chapter that came out since you last looked.
+chapter-state-new = Новая
+
+# Button: stop a chapter's download.
+chapter-download-stop = Остановить загрузку
+
+# Button: try a failed chapter's download again.
+chapter-retry = Повторить
+
+# Chapter menu item.
+chapter-download-delete = Удалить загрузку
+
+# Download menu item.
+download-next = Следующие непрочитанные: { $n }
+
+# Download menu item.
+download-unread = Все непрочитанные главы
+
+# Download menu item: a volume's chapters not yet downloaded.
+download-volume-count =
+    { $n ->
+        [one] { $volume } · { $n } глава
+        [few] { $volume } · { $n } главы
+        [many] { $volume } · { $n } глав
+       *[other] { $volume } · { $n } главы
+    }
+
+# Download menu item: turns on choosing chapters in the list.
+download-choose = Выбрать главы…
+
+# Download menu item.
+download-delete-series = Удалить загрузки этой серии
+
+# The amber button in the Choose chapters bar.
+download-chapters =
+    { $n ->
+        [one] Скачать { $n } главу
+        [few] Скачать { $n } главы
+        [many] Скачать { $n } глав
+       *[other] Скачать { $n } главы
+    }
+
+# Line above that button.
+download-over-wifi = По Wi-Fi
+
+# Title of the question before reading a series again.
+read-again-title = Перечитать «{ $title }» с начала?
+
+# What happens on each side.
+read-again-line = Ваше место вернётся к главе 1, и остальные устройства это подхватят. Ваши трекеры сохранят отметки о прочтении, а AniList засчитает перечитывание.
+
+# The confirming button.
+read-again-confirm = Перечитать
+
+# Title of the sheet that changes where a series' chapters come from.
+series-read-from-title = Читать из
+
+# While the sheet asks every source.
+series-read-from-asking = Опрашиваем ваши источники…
+
+# The sheet with no source that has the series.
+series-read-from-none-title = Ни один источник не содержит эту серию
+
+# Line under it.
+series-read-from-none-line = Добавьте папку, сервер или магазин плагинов в разделе «Ваши источники».
+
+# A source's chapters, first on its line.
+series-read-from-chapters = Главы с 1 по { $latest }
+
+# A source's chapters, after its kind on the line.
+series-read-from-chapters-later = главы с 1 по { $latest }
+
+# After a folder's chapters.
+series-read-from-on-device = на { $device }
+
+# Footnote of the Read from sheet.
+series-read-from-note = Отметки о прочтении принадлежат серии, поэтому при смене они сохраняются. Загрузки из прежнего источника остаются, пока вы их не удалите.
+
+# Heading for trackers that don't track this series.
+series-not-tracked = Здесь не отслеживается
+
+# A tracker that isn't connected.
+series-tracker-connect = Подключите в настройках, чтобы отслеживать эту серию
+
+# A tracker that has no such series.
+series-tracker-not-there = Нет совпадения в этом трекере
+
+# A tracker looking for the series.
+series-tracker-looking = Ищем эту серию…
+
+# A tracker that is behind, and catches up on the next sync.
+series-tracker-behind = Есть глава { $has }. При следующей синхронизации будет { $gets }.
+
+# A tracker ahead of Kaeri.
+series-tracker-ahead = Есть глава { $has }, это дальше, чем у Kaeri.
+
+# A tracker's score out of ten.
+series-tracker-score = { $score } / 10
+
+# Menu item on a tracker that differs.
+series-tracker-keep-kaeri = Оставить место из Kaeri
+
+# Menu item on a tracker that differs.
+series-tracker-take-theirs = Взять место из { $tracker }
+
+# Under a tracker's guesses for the series.
+series-tracker-none-of-these = Ничего из этого
+
+# AniList's list.
+read-list-reading = Читаю
+
+# AniList's list.
+read-list-planning = Запланировано
+
+# AniList's list.
+read-list-completed = Завершено
+
+# AniList's list.
+read-list-paused = Отложено
+
+# AniList's list.
+read-list-dropped = Брошено
+
+# AniList's list.
+read-list-rereading = Перечитываю
+
+# Series in folders and servers that are on no list.
+read-list-your-files = Ваши файлы
+
+# A choice.
+medium-watch = Смотреть
+
+# A choice.
+medium-read = Читать
+
+# A choice.
+medium-both = И то и другое
+
+# Line under the Watch choice.
+medium-watch-line = Сериалы и фильмы, которые дают ваши источники
+
+# Line under the Read choice.
+medium-read-line = Манга, вебтуны и ранобэ, которые дают ваши источники
+
+# Line under the Both choice.
+medium-both-line = Просмотр и чтение, каждое в своём месте
+
+# The answer, as the Settings row says it.
+medium-answer-watch = Смотрю
+
+# The answer, as the Settings row says it.
+medium-answer-read = Читаю
+
+# The answer, as the Settings row says it.
+medium-answer-both = Смотрю и читаю
+
+# Title of the sheet and the toolbar button.
+sources-add-title = Добавить источник
+
+# Line in the Add a source sheet.
+book-add-line = Книги, которые у вас уже есть, или плагины из магазина, владелец которого вас пригласил.
+
+# A kind in the Add a source sheet.
+book-add-folder = Папка
+
+# Line under it.
+book-add-folder-line = CBZ, EPUB, PDF и папки с картинками на { $device } или на диске
+
+# A kind in the Add a source sheet.
+book-add-server = Сервер
+
+# Line under it.
+book-add-server-line = Komga, Kavita или каталог OPDS, в который можно войти
+
+# A kind in the Add a source sheet.
+book-add-store = Магазин плагинов
+
+# Line under it.
+book-add-store-line = Вставьте приглашение от владельца магазина
+
+# Title of the Add a server sheet.
+book-add-server-title = Добавить сервер
+
+# The sheet's amber button.
+book-add-server-button = Добавить сервер
+
+# What the address answered, before the sign-in.
+sources-found-server = Найден сервер { $kind }
+
+# What the server held once signed in, when it said how many series it lists.
+sources-found-server-series =
+    { $n ->
+        [one] Найден сервер { $kind }, в нём { $n } серия
+        [few] Найден сервер { $kind }, в нём { $n } серии
+        [many] Найден сервер { $kind }, в нём { $n } серий
+       *[other] Найден сервер { $kind }, в нём { $n } серии
+    }
+
+# While the address is tried.
+book-server-looking = Проверяем этот адрес…
+
+# Line under the password.
+book-server-note = Kaeri отправляет ваш прогресс чтения обратно на этот сервер. Пароль хранится в связке ключей.
+
+# Heading in Your sources.
+book-sources-folders = Папки
+
+# Heading in Your sources.
+book-sources-servers = Серверы
+
+# Heading in Your sources.
+book-sources-plugins = Плагины
+
+# Under the plugins, before a link to the plugin stores.
+book-sources-plugins-footer = Плагины приходят из любого магазина, к которому вы присоединились.
+
+# How many series a folder or server holds.
+book-sources-series =
+    { $n ->
+        [one] { $n } серия
+        [few] { $n } серии
+        [many] { $n } серий
+       *[other] { $n } серии
+    }
+
+# A folder being looked through.
+book-sources-scanning = Просмотр · найдено: { $n }
+
+# A folder that can't be found, such as a drive that isn't plugged in.
+book-sources-missing = Не найдено. Диск подключён?
+
+# A source that is turned off.
+book-sources-off = Выкл.
+
+# On a server's line.
+book-sources-progress-back = прогресс возвращается на сервер
+
+# A server's kind.
+book-sources-opds = Каталог OPDS
+
+# A plugin's store.
+book-sources-from-store = Из { $store }
+
+# A plugin's version.
+book-sources-version = версия { $version }
+
+# Button on a folder: series whose match needs a look.
+book-sources-check-matches = Проверить совпадения · { $n }
+
+# Title of the Check matches sheet.
+book-sources-check-matches-title = Проверка совпадений
+
+# A folder menu item: look through the folders again.
+book-sources-scan = Просмотреть снова
+
+# A server menu switch.
+book-sources-report-progress = Отправлять прогресс на сервер
+
+# A server menu switch.
+book-sources-use = Использовать этот сервер
+
+# An address that answered but serves no books.
+book-sources-not-a-book-server = Адрес отвечает, но это не сервер книг.
+
+# A folder name with no match.
+book-sources-no-match = Нет совпадения
+
+# Button: keep the series as Your files, unmatched.
+book-sources-keep = Оставить без совпадения
+
+# Button: search for the match by hand.
+book-sources-find = Найти
+
+# Footnote of the Check matches sheet.
+book-sources-unmatched-note = Серии без совпадения можно читать из папки. Трекер не получает по ним прогресс, пока совпадение не найдено.
+
+# Accessibility label of the control that sets Shows or Reading in the Library and Search.
+library-scope-label = Сериалы или чтение
+
+# A side of that control.
+library-scope-shows = Сериалы
+
+# A side of that control.
+library-scope-reading = Чтение
+
+# The reading library's order: as the engine sends it, most recently read first.
+read-sort-last-read = Недавно читали
+
+# Accessibility value of the list menu: the list and how many series are on it.
+read-library-list-value =
+    { $n ->
+        [one] { $list }, { $n } серия
+        [few] { $list }, { $n } серии
+        [many] { $list }, { $n } серий
+       *[other] { $list }, { $n } серии
+    }
+
+# A reading list with nothing on it. A Search button follows.
+read-library-empty = В «{ $list }» пока ничего
+
+# Line under it.
+read-library-empty-line = Серии, добавленные из поиска или со страницы серии, появятся здесь.
+
+# Your files with nothing in it.
+read-library-files-empty-title = В ваших файлах пока ничего
+
+# Line under it.
+read-library-files-empty-line = Здесь появятся серии из ваших папок и серверов, которых нет ни в одном списке.
+
+# The button under it.
+read-library-files-add = Добавить папку или сервер
+
+# The search field's prompt while Search looks for reading.
+read-search-placeholder = Поиск по чтению
+
+# The last row of reading's results with both media on: matches in the other scope.
+search-other-scope =
+    { $n ->
+        [one] { $n } совпадение: { $scope }
+        [few] { $n } совпадения: { $scope }
+        [many] { $n } совпадений: { $scope }
+       *[other] { $n } совпадения: { $scope }
+    }
+
+# The button on that row, which switches the scope.
+search-show-them = Показать
+
+# The line over browsing: what is shown, and where the list comes from.
+read-search-browse-line = { $what } · из AniList
+
+# Over reading's results once every result is listed: how many series AniList found.
+read-search-total =
+    { $n ->
+        [one] { $n } серия из AniList
+        [few] { $n } серии из AniList
+        [many] { $n } серий из AniList
+       *[other] { $n } серии из AniList
+    }
+
+# Search couldn't ask AniList.
+read-search-failed = Не удалось выполнить поиск
+
+# No results for what was typed.
+read-search-nothing = По запросу { $query } ничего не найдено
+
+# No results while browsing with filters.
+read-search-nothing-browse = Ничего не подходит под эти фильтры
+
+# Line under no results.
+read-search-nothing-line = Попробуйте другие слова или название на другом языке.
+
+# Line under no results with filters set. A Clear filters button follows.
+read-search-nothing-filters-line = С меньшим числом фильтров может найтись больше.
+
+# The button under it.
+read-search-clear-filters = Сбросить фильтры
+
+# A sort of reading's Search, AniList's.
+read-sort-trending = В тренде
+
+# A sort of reading's Search, AniList's.
+read-sort-score = Оценка
+
+# A sort of reading's Search, AniList's.
+read-sort-newest = Новинки
+
+# A filter.
+read-filter-format = Формат
+
+# A filter.
+read-filter-origin = Происхождение
+
+# A filter.
+read-filter-status = Статус
+
+# A filter.
+read-filter-genres = Жанры
+
+# Title of the iPhone's filters sheet.
+read-filter-title = Фильтры
+
+# Button in that sheet that clears every filter.
+read-filter-reset = Сбросить
+
+# Accessibility value of a filter with nothing chosen.
+read-filter-any = Любой
+
+# A filter's name before its value, once set: "Origin: Korea".
+read-filter-set = { $name }:
+
+# A filter with several values: the first, then how many more.
+read-filter-many = { $first } и ещё { $more }
+
+# A genre left out.
+read-filter-not-genre = Без: { $genre }
+
+# How many genres are set.
+read-filter-genres-count =
+    { $n ->
+        [one] { $n } жанр
+        [few] { $n } жанра
+        [many] { $n } жанров
+       *[other] { $n } жанра
+    }
+
+# A genre's state: only series with it.
+read-filter-included = Включён
+
+# A genre's state: no series with it.
+read-filter-left-out = Исключён
+
+# A filter of reading's Search: when a series started.
+read-search-started = Начало выпуска
+
+# The filter bar's chip that searches only the person's own sources, leaving AniList out.
+read-search-sources-only = Только ваши источники
+
+# Search's section heading under AniList's results: one group per source of the person's.
+read-search-from-sources = Ваши источники
+
+# E-ink and the terminal: a source group still waiting for its answer. Also its screen reader label. The source is its name.
+read-search-asking = { $source }: ожидание ответа…
+
+# A source group whose source failed to answer. The reason and Try again follow.
+read-search-source-failed = { $source }: нет ответа.
+
+# The reason under it when the source gave no answer in time.
+read-search-source-timeout = Нет ответа за { $seconds } с.
+
+# One line at the end of the sources' groups for every source that found nothing. The sources are their names, joined as a list.
+read-search-source-nothing = Ничего не найдено в: { $sources }.
+
+# On an AniList result that one of the person's sources has. The source is its name.
+read-search-in-source = Есть в { $source }
+
+# On an AniList result that more than one of the person's sources has. Always 2 or more.
+read-search-in-sources =
+    { $n ->
+        [one] Ваши источники с этой серией: { $n }
+        [few] Ваши источники с этой серией: { $n }
+        [many] Ваши источники с этой серией: { $n }
+       *[other] Ваши источники с этой серией: { $n }
+    }
+
+# Search, when AniList found nothing but the person's sources did.
+read-search-anilist-nothing = AniList ничего не нашёл по этим словам.
+
+# Search, when AniList could not be reached.
+read-search-anilist-failed = AniList не ответил.
+
+# The line under it.
+read-search-anilist-failed-line = Ваши источники всё равно были опрошены.
+
+# Search, when nothing was found anywhere: under the line saying AniList found nothing.
+read-search-sources-nothing = Ваши источники тоже ничего не нашли.
+
+# Over reading's results while more pages are to come, so AniList's count is not known yet.
+read-search-total-unknown = Серии из AniList
+
+# The link under From your sources that shows the rest of AniList's results.
+read-search-more-anilist = Ещё из AniList
+
+# Beside More from AniList: how many of AniList's results show.
+read-search-shown = Показано { $shown } из { $total }
+
+# Beside More from AniList while AniList's count is not known yet: how many results show.
+read-search-shown-some = Показано: { $shown }
+
+# Beside a source's name in Search: the kind of source it is.
+read-search-source-kind-server = Сервер
+
+read-search-source-kind-folder = Папка
+
+read-search-source-kind-plugin = Плагин
+
+# The button of a source group with more than five hits.
+read-search-source-more = Показать ещё { $n }
+
+# Over a first-run page's title: which page of how many.
+onboarding-step = { $step } из { $total }
+
+# Line under "Welcome to Kaeri" on the first page, naming both media.
+onboarding-welcome-line = Следите за тем, что смотрите и читаете. Источники вы добавляете сами.
+
+# Note under the welcome line.
+onboarding-welcome-note = Ваши списки и прогресс остаются при вас. Трекеры и источники вы добавляете сами.
+
+# Title of the page that asks what Kaeri is for, and of the sheet after the update.
+onboarding-medium-title = Смотреть, читать или и то и другое?
+
+# Line under the title of the medium page.
+onboarding-medium-line = Kaeri показывает только то, что вы выберете. Это можно изменить в настройках.
+
+# Accessibility hint on Continue while nothing is chosen on the medium page.
+onboarding-medium-hint = Сначала выберите один из трёх вариантов
+
+# Title of the first-run page that offers AniList.
+onboarding-lists-title = Перенесите свои списки
+
+# Line on the AniList page after Watch.
+onboarding-lists-line-watch = Kaeri синхронизирует ваш просмотр с { $tracker }.
+
+# Line on the AniList page after Read.
+onboarding-lists-line-read = Kaeri синхронизирует ваше чтение с { $tracker }.
+
+# Line on the AniList page after Both.
+onboarding-lists-line-both = Kaeri синхронизирует ваши чтение и просмотр с { $tracker }.
+
+# Line under AniList's name on the first-run page.
+onboarding-lists-anilist-line = Списки, прогресс и рекомендации
+
+# Under AniList on the first-run page after Watch: the other trackers, for later.
+onboarding-lists-later-watch = MyAnimeList, Kitsu, Simkl и Trakt можно добавить позже в настройках, в разделе «Аккаунты».
+
+# Under AniList on the first-run page after Read: the other trackers, for later.
+onboarding-lists-later-read = MyAnimeList, Kitsu и MangaUpdates можно добавить позже в настройках, в разделе «Аккаунты».
+
+# Under AniList on the first-run page after Both: the other trackers, for later.
+onboarding-lists-later-both = MyAnimeList, Kitsu, MangaUpdates, Simkl и Trakt можно добавить позже в настройках, в разделе «Аккаунты».
+
+# The first-run page's main button: sign in to the tracker.
+onboarding-connect = Подключить { $tracker }
+
+# Title of the last first-run page after Read or Both.
+onboarding-books-title = Откуда берутся ваши книги
+
+# Line under the title of the books page.
+onboarding-books-line = Kaeri не содержит книг. Добавьте то, что у вас уже есть, или вступите в магазин плагинов по приглашению его владельца.
+
+# Row on the books page: add a folder of books.
+onboarding-books-folder = Добавить папку
+
+# Line under Add a folder on the books page.
+onboarding-books-folder-line = CBZ, EPUB, PDF и папки с картинками
+
+# Row on the books page: add a book server.
+onboarding-books-server = Добавить сервер
+
+# Line under Add a server on the books page.
+onboarding-books-server-line = Komga, Kavita или каталог OPDS
+
+# Heading over the invite field on the books page.
+onboarding-books-invite-heading = Приглашение в магазин плагинов
+
+# Placeholder of the invite field on the books page.
+onboarding-books-invite-placeholder = Вставьте приглашение
+
+# Line under the invite field: whose code a plugin is.
+onboarding-books-plugin-line = Плагины запускают код людей, которым вы доверяете. Вступайте только в магазины плагинов, владельцев которых знаете.
+
+# Title of the last first-run page after Both: where shows and books come from.
+onboarding-both-title = Откуда берутся ваши сериалы и книги
+
+# Line under the title of that page.
+onboarding-both-line = Kaeri не содержит ни сериалов, ни книг. Добавьте то, что у вас уже есть, или вступите в магазин плагинов по приглашению его владельца.
+
+# Heading over the shows' rows on that page.
+onboarding-both-shows = Сериалы
+
+# Heading over the books' rows on that page.
+onboarding-both-books = Книги
+
+# Line under Add a folder in the shows' part, on a computer.
+onboarding-both-shows-folder-line = Видеофайлы на { $device }
+
+# Line under Add a server in the shows' part.
+onboarding-both-shows-server-line = Ваш сервер Jellyfin
+
+# Accessibility value of a choice row: its place among the three.
+medium-choice-position = { $n } из { $total }
+
+# Under the choices in the sheet.
+medium-change-later = Это можно изменить в настройках.
+
+# Line of the sheet over Home after the update that brought reading.
+medium-update-line = Kaeri теперь умеет читать мангу, вебтуны и ранобэ из ваших источники. Выберите, для чего нужен Kaeri на { $device }.
+
+# Title of the sheet when the other devices answer Watch. The devices are their names, joined; n is how many there are.
+medium-join-title-watch =
+    { $n ->
+        [one] На { $devices } выбран просмотр
+        [few] На { $devices } выбран просмотр
+        [many] На { $devices } выбран просмотр
+       *[other] На { $devices } выбран просмотр
+    }
+
+# Title of the sheet when the other devices answer Read.
+medium-join-title-read =
+    { $n ->
+        [one] На { $devices } выбрано чтение
+        [few] На { $devices } выбрано чтение
+        [many] На { $devices } выбрано чтение
+       *[other] На { $devices } выбрано чтение
+    }
+
+# Title of the sheet when the other devices answer Both.
+medium-join-title-both =
+    { $n ->
+        [one] На { $devices } выбраны просмотр и чтение
+        [few] На { $devices } выбраны просмотр и чтение
+        [many] На { $devices } выбраны просмотр и чтение
+       *[other] На { $devices } выбраны просмотр и чтение
+    }
+
+# Line of the sheet on joining.
+medium-join-line = Выберите, для чего нужен Kaeri на { $device }. Каждое устройство хранит свой выбор.
+
+# Title of the confirmation before watching is turned off.
+medium-off-title-watch = Отключить просмотр?
+
+# Title of the confirmation before reading is turned off.
+medium-off-title-read = Отключить чтение?
+
+# What turning watching off does.
+medium-off-watch-body = «Календарь», «Сезон», Смотреть вместе и ваши сериалы исчезнут из Kaeri на { $device }. Список, прогресс и загрузки сохранятся и вернутся, если снова включить просмотр.
+
+# What turning reading off does.
+medium-off-read-body = «Обновления» и ваше чтение исчезнут из Kaeri на { $device }. Список, прогресс и загрузки сохранятся и вернутся, если снова включить чтение.
+
+# Switch in the confirmation, off by default.
+medium-off-delete-watch = Удалить скачанные серии
+
+# Switch in the confirmation, off by default.
+medium-off-delete-read = Удалить скачанные главы
+
+# Under the switch: how much the downloads take.
+medium-off-delete-size = { $size } на { $device }
+
+# The confirmation's main button.
+medium-off-confirm-watch = Отключить просмотр
+
+# The confirmation's main button.
+medium-off-confirm-read = Отключить чтение
+
+# Settings row and page: what Kaeri is for on this device.
+settings-kaeri-is-for = Для чего нужен Kaeri
+
+# Line under Kaeri is for on the Mac and iPad.
+settings-medium-note = Каждое устройство хранит свой выбор
+
+# Under the choices on the iPhone's page.
+settings-medium-footer = Каждое устройство хранит свой выбор. Если отключить режим, список, прогресс и загрузки сохранятся.
+
+# Line under Open at.
+settings-open-at-note = Какая главная открывается при запуске Kaeri
+
+# Settings pane and group: reading.
+settings-group-reading = Чтение
+
+# Downloads group with both media on: shows.
+settings-group-shows = Сериалы
+
+# The Reading pane's column beside it.
+settings-aside-reading = Настройки читалки по умолчанию задают начало для каждой серии. Серия, которую вы изменили в читалке, сохраняет свой выбор.
+
+# Group: how the reader opens each kind of book.
+settings-reader-defaults = Настройки читалки по умолчанию
+
+# Under the reader defaults.
+settings-reader-defaults-footer = Изменённая серия сохраняет свой режим, направление и оформление.
+
+# Row: manga's reader default.
+settings-reader-manga = Манга
+
+# Row: webtoons' reader default.
+settings-reader-webtoons = Вебтуны
+
+# Line under Webtoons.
+settings-reader-webtoons-note = Вебтуны всегда открываются длинной лентой
+
+# Row: light novels' reader default.
+settings-reader-novels = Ранобэ
+
+# A reader default: pages turned right to left.
+settings-reader-rtl = Страницы, справа налево
+
+# A reader default: pages turned left to right.
+settings-reader-ltr = Страницы, слева направо
+
+# A reader default: one long strip.
+settings-reader-strip = Длинная лента
+
+# A reader default for novels: pages.
+settings-reader-pages = Страницы
+
+# A reader default for novels: one scrolling column.
+settings-reader-scrolled = Прокрутка
+
+# Row: when a chapter counts as read.
+settings-counts-read = Засчитывается как прочитанная
+
+# Line under Counts as read.
+settings-counts-read-note = Короткая пауза на последней странице или переход к следующей главе
+
+# Value of Counts as read: a short stay on the last page, or moving on past it.
+settings-counts-read-value = После последней страницы
+
+# Value of Counts as read: only moving on past the last page, to the end or the next chapter.
+settings-counts-read-moving-on = При переходе дальше
+
+# Line under Counts as read when it is Moving on from it.
+settings-counts-read-moving-on-note = Перелистывание последней страницы или открытие следующей главы
+
+# Value of Counts as read: only the person's own marks; the reader marks nothing.
+settings-counts-read-marked = Когда вы отметите
+
+# Line under Counts as read when it is When you mark it.
+settings-counts-read-marked-note = «Читать дальше» и ваши трекеры следуют за вашими отметками
+
+# Group: series settings that follow you to your other devices.
+settings-follow-group = Настройки серий, которые следуют за вами
+
+# Row in that group.
+settings-follow-mode = Режим, направление и цвет
+
+# Line under that row.
+settings-follow-mode-note = Изменённая серия читается так же, остальные устройства это подхватят
+
+# Under the group: what stays on this device.
+settings-follow-footer = Размер текста, поля, зоны нажатия и обновление остаются на { $device }.
+
+# Line under Look in Series settings that follow you.
+settings-look-follows-note = Цветные страницы или серые для e-ink
+
+# Value of New chapters in Downloads: the series on the Reading list.
+settings-new-chapters-reading = Серии из «Читаю»
+
+# Line under New chapters in Downloads.
+settings-new-chapters-note = Для читаемой серии следующие главы тоже держатся наготове
+
+# Group in Accounts: how reading progress goes to the trackers.
+settings-progress-group = Прогресс
+
+# Value of Send progress after: as each chapter counts as read.
+settings-progress-chapter = Глава прочитана
+
+# Value of Send progress after: once, when the reader closes.
+settings-progress-close = Закрытие читалки
+
+# Value of When trackers disagree: the higher chapter wins.
+settings-disagree-furthest = Оставлять дальнейший
+
+# Value of When trackers disagree: the newest change wins, even a lower chapter.
+settings-disagree-latest = Последнее изменение
+
+# Line under When trackers disagree.
+settings-disagree-note = Статус и оценка следуют за последним изменением
+
+# Line under Keep next chapters ready.
+settings-keep-chapters-ready-note = Следующие главы серий из вашего списка «Читаю»
+
+# Line under Delete chapters after reading.
+settings-delete-after-reading-note = Главы с закладками сохраняются
+
+# Line under New chapters.
+settings-chapter-notifications-note = Серии из вашего списка «Читаю»
+
+# Line under Downloads finished.
+settings-downloads-finished-note = Когда все скачиваемые главы готовы
+
+# Under New chapters.
+settings-chapter-notifications-footer = У глав свой системный канал, поэтому их можно отключить, оставив остальные уведомления.
+
+# Credit under the trackers with reading on.
+accounts-mangaupdates-credit = Kaeri обращается к MangaUpdates через его публичный API.
+
+# Placeholder of the user name field when signing in to MangaUpdates.
+accounts-username = Имя пользователя
+
+# Beside the Reading heading in Downloads: how many chapters are kept and their size.
+read-downloads-total =
+    { $n ->
+        [one] { $n } глава · { $size }
+        [few] { $n } главы · { $size }
+        [many] { $n } глав · { $size }
+       *[other] { $n } главы · { $size }
+    }
+
+# A series' line in Downloads while a chapter downloads.
+read-downloads-active = { $chapter } · { $done } из { $total } стр.
+
+# After the chapter downloading: how many more wait.
+read-downloads-more-queued = ещё в очереди: { $n }
+
+# A series' line in Downloads when its chapters wait to start.
+read-downloads-queued =
+    { $n ->
+        [one] В очереди { $n } глава
+        [few] В очереди { $n } главы
+        [many] В очереди { $n } глав
+       *[other] В очереди { $n } главы
+    }
+
+# A series' line in Downloads when a chapter failed, with the reason.
+read-downloads-failed = { $chapter }: не удалось скачать. { $reason }
+
+# A series' line in Downloads: how many chapters are kept.
+read-downloads-kept =
+    { $n ->
+        [one] { $n } глава
+        [few] { $n } главы
+        [many] { $n } глав
+       *[other] { $n } главы
+    }
+
+# After the kept count: how many of them are read.
+read-downloads-read = прочитано: { $n }
+
+# Button on a series in Downloads: delete its read chapters, keeping bookmarked ones.
+read-downloads-delete-read = Удалить прочитанные
+
+# Title of the Send to e-reader sheet, the chapter menu's item and the Settings row.
+send-title = Отправить на ридер
+
+# Heading over the e-readers to choose from in the Send to e-reader sheet.
+send-for = Куда
+
+# Heading over what is being sent in the Send to e-reader sheet.
+send-what = Что
+
+# Row in the Send to e-reader sheet: the chapters being sent.
+send-chapters = Главы
+
+# The chapters being sent when there is one: its number or label.
+send-chapters-one = { $chapter }
+
+# The chapters being sent when there are several, from the first to the last.
+send-chapters-range = С { $first } по { $last }
+
+# Row in the Send to e-reader sheet: how big the files will be.
+send-size = Размер
+
+# The size of what is being sent, already sized (such as "64 MB"). It is a guess until the files are made.
+send-size-about = Около { $size }
+
+# Under the e-readers in the Send to e-reader sheet: what Kaeri cannot know after the files are sent.
+send-no-place = Kaeri не видит, докуда вы дочитали на этом ридере. Когда вы вернётесь, страница серии спросит об этом.
+
+# The one main button of the Send to e-reader sheet. It makes the files and then opens the share sheet.
+send-prepare = Подготовить и поделиться
+
+# While the files are made: which chapter of how many. The ring beside it shows how far along.
+send-preparing =
+    { $total ->
+        [one] Подготовка { $done } из { $total } главы
+        [few] Подготовка { $done } из { $total } глав
+        [many] Подготовка { $done } из { $total } глав
+       *[other] Подготовка { $done } из { $total } главы
+    }
+
+# Under the progress of a send to a device: what the pages are made for.
+send-sized-for = Страницы подогнаны под { $device }
+
+# Under the size in the Send sheet when the files are over what the e-reader takes in one file.
+send-in-parts = Больше { $size }, поэтому файлы будут разделены на части.
+
+# A send that failed on one chapter. The cause is the sentence that says why.
+send-failed-chapter = Не удалось подготовить главу { $chapter }. { $cause }
+
+# A send that failed before or after its chapters. The cause is the sentence that says why.
+send-failed = Не удалось подготовить файлы. { $cause }
+
+# Text of the Send sheet's Size row while the size is still being worked out.
+send-size-working = Вычисляется
+
+# Spoken value of the Chapters row in the Send sheet while its list is open.
+send-chapters-open = Развёрнуто
+
+# Spoken value of the Chapters row in the Send sheet while its list is closed.
+send-chapters-closed = Свёрнуто
+
+# Spoken value of the ring in a send under way. Already a number from 0 to 100.
+send-progress-spoken = { $percent } %
+
+# Spoken action on a chapter row of a series: sends that chapter to an e-reader.
+send-chapter-action = Отправить на ридер
+
+# Under an e-reader in the sheet when it takes files in parts: the size where a file is split.
+send-parts-over = частями, если больше { $size }
+
+# While a send waits for the network and the person can stop it. The engine's own line comes first.
+send-waiting-cancel = Отменить отправку
+
+# When the files are ready, over the button that opens the share sheet. The count is how many files.
+send-ready =
+    { $n ->
+        [one] { $n } файл готов.
+        [few] { $n } файла готовы.
+        [many] { $n } файлов готово.
+       *[other] { $n } файла готово.
+    }
+
+# Button in the Send to e-reader sheet that opens the share sheet again, after it was closed without sharing.
+send-share-again = Поделиться снова
+
+# A send in a list or banner that is under way, with a ring beside it. The device is the e-reader.
+send-banner = Отправка на { $device }
+
+# The format of the files an e-reader is sent: a manga as a fixed-layout EPUB.
+send-format-fixed-epub = EPUB с фиксированной вёрсткой
+
+# The format of the files an e-reader is sent: the Kobo form of EPUB.
+send-format-kepub = KEPUB
+
+# The format of the files an e-reader is sent: a plain EPUB.
+send-format-epub = EPUB
+
+# The format of the files an e-reader is sent: a comic book archive.
+send-format-cbz = CBZ
+
+# Line under an e-reader in the picker: the format the files will have, and the screen they are made for in pixels.
+send-target-line = { $format } · { $width } × { $height }
+
+# Title of the sheet that asks where you stopped reading on the e-reader.
+stop-title = Где вы остановились?
+
+# Note on a series page after chapters were sent: opens the question.
+stop-note = Вы отправили главы на { $device }. Где вы остановились?
+
+# Button in that note.
+stop-note-action = Указать место
+
+# First line of the sheet when one chapter was sent. The date is already written out (such as "2 November").
+stop-sent-one = Глава { $chapter } отправлена на { $device } { $date }.
+
+# First line of the sheet when several chapters were sent, from the first to the last.
+stop-sent-range = Главы с { $first } по { $last } отправлены на { $device } { $date }.
+
+# Switch in the sheet: the last chapter sent was read to its end.
+stop-finished = Глава { $chapter } дочитана
+
+# The main button of the sheet: keeps the chapter chosen as the place.
+stop-set = Указать место
+
+# The other button of the sheet: leaves the place as it is, with the place named.
+stop-keep = Оставить главу { $chapter } · стр. { $page }
+
+# The other button of the sheet when the place is not a page.
+stop-keep-plain = Оставить текущее место
+
+# Heading of the E-readers group in the Reading settings.
+ereaders-group = Ридеры
+
+# Row in the E-readers group: the e-reader Send to e-reader offers first. The value is the e-reader's name.
+ereaders-send-row = Отправить на ридер
+
+# Row in the E-readers group that opens the feed settings. The value is On or Off.
+ereaders-feed-row = Канал OPDS
+
+# Line under the Share on this network switch.
+opds-share-note = Каталог OPDS, который могут просматривать домашние ридеры
+
+# Footnote under the feed settings.
+opds-footer = Канал работает, только пока Kaeri открыт на этом устройстве ({ $device }). Прогресс на этих ридерах остаётся на них.
+
+# Row in the feed settings: the web address e-readers are given, with a button that copies it.
+opds-address = Адрес
+
+# Shown in place of the address while the feed is off or has no password.
+opds-address-off = Включите канал, чтобы получить его адрес.
+
+# Row in the feed settings: the password e-readers ask for.
+opds-password = Пароль
+
+# Line under the password row.
+opds-password-note = Ридеры спрашивают его один раз
+
+# Button in the feed settings that makes a new password. The e-readers ask for the new one.
+opds-new-password = Новый пароль
+
+# Row in the feed settings: the port the feed listens on.
+opds-port = Порт
+
+# Line under the port row when it is empty.
+opds-port-note = Оставьте пустым для любого свободного порта или выберите от 1024 до 65535
+
+# Line under the port row when the port asked for was taken and another is used.
+opds-port-moved = Порт { $wanted } был занят, поэтому канал использует { $port }.
+
+# Heading of the group that picks what the feed shares.
+opds-shares = Что доступно
+
+# Row in What it shares: the chapters downloaded on this device.
+opds-share-downloads = Загрузки
+
+# Line under that row.
+opds-share-downloads-count =
+    { $n ->
+        [one] { $n } глава
+        [few] { $n } главы
+        [many] { $n } глав
+       *[other] { $n } главы
+    }
+
+# Row in What it shares: the series in the manga and comic folders.
+opds-share-manga = Папка манги
+
+# Row in What it shares: the series in the novel folders.
+opds-share-novels = Папка ранобэ
+
+# Line under a folder row.
+opds-share-series-count =
+    { $n ->
+        [one] { $n } серия
+        [few] { $n } серии
+        [many] { $n } серий
+       *[other] { $n } серии
+    }
+
+# Heading of the list of e-readers that fetched files from the feed.
+opds-fetched-by = Скачивали
+
+# Line when no e-reader has fetched anything since the feed started.
+opds-fetched-none = Ни один ридер ещё ничего не скачал.
+
+# Shown in place of the address while the feed is switched on and starting to listen.
+opds-starting = Запуск…
+
+# Shown in place of the address while the feed is on but the Mac is on no local network.
+opds-paused-none = Приостановлено. Этот Mac не подключён к локальной сети.
+
+# Shown in place of the address while the feed is on but the only connection goes through a VPN.
+opds-paused-vpn = Приостановлено. Этот Mac подключён только через VPN.
+
+# Title of the question before a new feed password is made.
+opds-new-password-title = Создать новый пароль?
+
+# Text of that question.
+opds-new-password-warning = Ридеры, которые уже используют канал, перестанут работать, пока вы не введёте новый пароль на каждом из них.
+
+# Spoken value of the Fetched by list's rows when an e-reader's last request is given. The time is already written out.
+opds-fetched-time = Последний запрос { $time }
+
+# Line under an e-reader in that list: how many files it took.
+opds-fetched-files =
+    { $n ->
+        [one] { $n } файл
+        [few] { $n } файла
+        [many] { $n } файлов
+       *[other] { $n } файла
+    }
+
+# Name for an e-reader that did not give one.
+opds-reader-unnamed = Ридер по адресу { $address }
+
 # Button that shows the season before.
 seasonal-previous = Предыдущий сезон
 
@@ -7776,7 +10561,7 @@ seasonal-empty-format-detail = Попробуйте все форматы.
 seasonal-filter-in-search = Фильтровать в поиске
 
 # Tooltip of the Filter in Search button.
-seasonal-filter-help = Этот сезон в поиске, где каждый фильтр что-то сужает
+seasonal-filter-help = Открывает этот сезон в поиске, где работают все фильтры
 
 # Sort option on Seasonal and Search: most popular first.
 sort-popularity = Популярность
@@ -7803,7 +10588,7 @@ search-placeholder = Поиск тайтлов
 search-clear = Очистить поиск
 
 # Row under the field while a search runs. The query is what the person typed.
-search-searching = Ищем «{ $query }»
+search-searching = Поиск: «{ $query }»
 
 # Heading over the results of a search.
 search-results-for = Результаты по запросу «{ $query }»
@@ -7917,7 +10702,7 @@ filter-where-to-watch = Где смотреть
 filter-licensed-only = Только лицензионные
 
 # Filter name: how titles already on the person's list are treated.
-filter-my-list = Тайтлы из моего списка
+filter-my-list = Тайтлы из вашего списка
 
 # Value of a three-way filter: include the titles.
 filter-show = Показывать
@@ -8027,7 +10812,7 @@ search-line-service = В { $service }
 # The count line under a title in a list or on a card: how many episodes a finished show has.
 count-episodes =
     { $count ->
-        [one] Один эпизод
+        [one] { $count } эпизод
         [few] { $count } эпизода
         [many] { $count } эпизодов
        *[other] { $count } эпизода
@@ -8045,7 +10830,7 @@ count-out-of-short = { $out } из { $total }
 # The count line of a show that is airing and has no known total: episodes out so far.
 count-out =
     { $count ->
-        [one] Вышел один эпизод
+        [one] Вышел { $count } эпизод
         [few] Вышло { $count } эпизода
         [many] Вышло { $count } эпизодов
        *[other] Вышло { $count } эпизода
@@ -8072,7 +10857,7 @@ count-dub-through = Дубляж { $through }
 # What a screen reader says for a count line: the long form of a finished show.
 count-spoken-episodes =
     { $count ->
-        [one] Один эпизод
+        [one] { $count } эпизод
         [few] { $count } эпизода
         [many] { $count } эпизодов
        *[other] { $count } эпизода
@@ -8084,7 +10869,7 @@ count-spoken-out-of = Вышло эпизодов: { $out } из { $total }
 # What a screen reader says for a show that is airing with no known total.
 count-spoken-out =
     { $count ->
-        [one] Вышел один эпизод
+        [one] Вышел { $count } эпизод
         [few] Вышло { $count } эпизода
         [many] Вышло { $count } эпизодов
        *[other] Вышло { $count } эпизода
@@ -8433,7 +11218,7 @@ servers-error-certificate = { $host } использует сертификат,
 servers-row-signed-out-here = Вход не выполнен
 
 # Line under it: what signing out does.
-servers-sign-out-line = Завершает вход в приложении на сервере. Сам сервер и ваши загрузки остаются как есть.
+servers-sign-out-line = Выход завершает сеанс, который это устройство открыло на сервере. Сам сервер и ваши загрузки остаются как есть.
 
 # Settings group and row title for choosing a language.
 settings-language = Язык
@@ -8654,6 +11439,42 @@ settings-wifi-only-detail = Загрузки ждут Wi-Fi
 # Row: torrents on a mobile connection.
 settings-torrents-cellular = Торренты в мобильной сети
 
+# Row: whether chapter downloads run on a mobile connection.
+settings-chapter-downloads-cellular = Загрузка глав по мобильной сети
+
+# Row: keep the next chapters of what you read downloaded.
+settings-keep-chapters-ready = Держать следующие главы наготове
+
+# Row: delete a downloaded chapter once it is read. Bookmarked chapters stay.
+settings-delete-after-reading = Удалять главы после прочтения
+
+# Row: whether a series' reader mode, direction and colour follow you to your other devices.
+settings-series-choices-follow = Настройки серий следуют за вами
+
+# Row in Downloads: which series' new chapters download by themselves.
+settings-new-chapters-download = Новые главы
+
+# Row: whether a series' own reader mode and direction follow you to your other devices.
+settings-mode-follows = Режим и направление
+
+# Row: whether a series' own look (colour or greys) follows you to your other devices.
+settings-look-follows = Оформление
+
+# Row: when chapter progress goes to the reading trackers.
+settings-send-progress-after = Отправлять прогресс через
+
+# Row: which chapter progress wins when a tracker and this device disagree.
+settings-when-trackers-disagree = Если трекеры расходятся
+
+# Row: whether a new chapter of a series on your Reading list sends a notification.
+settings-chapter-notifications = Новые главы
+
+# Row: whether the app sends a notification when the chapters it was downloading are all done.
+settings-downloads-finished = Загрузки завершены
+
+# Row: which Home the app opens at while it is for watching and reading.
+settings-open-at = Открывать на
+
 # Row: seeding after watching.
 settings-seed-after = Раздавать после просмотра
 
@@ -8715,10 +11536,10 @@ settings-artwork-detail = Указание авторства в разделе 
 settings-new-episodes = Новые серии
 
 # Line under it.
-settings-new-episodes-detail = Для сериалов из списка «Смотрю»
+settings-new-episodes-detail = Серии из вашего списка «Смотрю»
 
 # Line explaining what a notification says.
-settings-notify-detail = Одно уведомление, когда выходит эпизод сериала, за которым вы следите: показываются сериал и номер эпизода, но не название. Для отдельного сериала его можно выключить в его настройках.
+settings-notify-detail = Вы получаете одно уведомление, когда выходит эпизод тайтла, за которым вы следите. В нём указаны тайтл и номер эпизода, но не название эпизода. Уведомления для тайтла можно выключить в его настройках.
 
 # Row: the coming-up digest.
 settings-coming-up = Скоро · ближайшие 7 дней
@@ -8772,7 +11593,7 @@ show-settings-never = Никогда
 show-settings-subs-remembered = Запомнено с вашей последней серии.
 
 # Line under the subtitles row, when nothing is remembered.
-show-settings-subs-follow = Выбирается в плеере. Следует разделу «Настройки › Воспроизведение».
+show-settings-subs-follow = Выбираются в плеере. До тех пор действует раздел «Настройки › Воспроизведение».
 
 # Row: the source for this show.
 show-settings-source = Источник
@@ -8859,7 +11680,7 @@ settings-upscaling-natural = Естественный · ArtCNN
 settings-label-hover-cards = Увеличивать при наведении
 
 # Note under the Expand covers on hover setting. The trailer plays only where the trailers setting lets it.
-settings-hover-cards-note = Показывает увеличенную карточку с трейлером, когда вы наводите указатель на обложку.
+settings-hover-cards-note = Если задержать указатель на обложке, откроется увеличенная карточка с трейлером.
 
 # Preview note under the upscaling frame for the natural look.
 settings-upscaling-note-natural = Точные линии и текстура, без изменения стиля.
@@ -8890,6 +11711,12 @@ settings-upscaling-sharp = Резкий · Anime4K
 
 # Side note in Accounts.
 settings-aside-accounts = Kaeri работает без аккаунта. История просмотра остаётся здесь, даже когда вы выходите из аккаунта.
+
+# Side note in Accounts when the app is for reading.
+settings-aside-accounts-read = Kaeri работает и без аккаунта. Когда вы выйдете, история чтения останется здесь.
+
+# Side note in Accounts when the app is for watching and reading.
+settings-aside-accounts-both = Kaeri работает и без аккаунта. Когда вы выйдете, история просмотра и чтения останется здесь.
 
 # Today, inside a line such as "Thursday 16:30".
 widget-day-today = сегодня
@@ -9046,6 +11873,273 @@ settings-subs-styled-strip-detail = Каждая строка показывае
 
 # Button that restores the default subtitle style.
 settings-subs-reset = Сбросить стиль субтитров
+
+# Row: whether this computer shares its downloads and folders as a catalogue that e-readers on the home network can browse.
+settings-opds-feed = Делиться в этой сети
+
+# Row: the password e-readers ask for before they browse the shared catalogue.
+settings-opds-password = Пароль ленты
+
+# Row: the port the shared catalogue listens on. Empty picks a free one.
+settings-opds-port = Порт ленты
+
+# Label of the address field in the Add a server sheet.
+book-server-address = Адрес
+
+# Note under the empty address field.
+book-server-address-hint = Адрес или вся ссылка OPDS из Kavita.
+
+# Note under the address field once a Kavita OPDS link is pasted.
+book-server-kavita-key = Это ссылка OPDS из Kavita. Ключ в ней служит для входа, поэтому пароль не нужен.
+
+# Under the key chip. The store is where the system keeps secrets: Keychain, or Android Keystore.
+book-server-key-kept = Kaeri хранит ключ в { $store } и показывает только его последние четыре символа.
+
+# Chip inside the address field, showing the key's last four characters after four dots.
+book-server-key = Ключ ••••{ $last }
+
+# Result title once the server signed in.
+book-server-found-title =
+    { $libraries ->
+        [one] Найдено серий: { $series }, библиотек: { $libraries }
+        [few] Найдено серий: { $series }, библиотек: { $libraries }
+        [many] Найдено серий: { $series }, библиотек: { $libraries }
+       *[other] Найдено серий: { $series }, библиотек: { $libraries }
+    }
+
+# Line under the result title. The kind is Komga, Kavita or OPDS.
+book-server-found-line = { $kind } на { $host }. Выберите библиотеки, которые нужно добавить.
+
+# A library row's line in the result.
+book-server-library-line = Серий: { $series }
+
+# Switch in the result, on to start with.
+book-server-sync-progress = Передавать прогресс на сервер
+
+# Line under the switch.
+book-server-sync-progress-line = Прочитанные здесь страницы попадают на { $host }, а его прогресс приходит сюда.
+
+# Field label.
+book-server-username = Имя пользователя
+
+# Field label.
+book-server-password = Пароль
+
+# Error title when the server could not be reached.
+book-server-err-unreachable = Не удалось подключиться к { $host }
+
+# Line under it.
+book-server-err-unreachable-line = Проверьте адрес, а также что сервер включён и доступен в этой сети.
+
+# Error title when the server turned the password down.
+book-server-err-password = { $host } не принял этот пароль
+
+# Line under it. The kind is Komga, Kavita or OPDS.
+book-server-err-password-line = Введите имя пользователя и пароль, которые вы используете для { $kind } в браузере.
+
+# Error title when Kavita turned the key in an OPDS link down.
+book-server-err-key = { $host } не принял этот ключ
+
+# Line under it.
+book-server-err-key-line = Ключ меняется, когда его сбрасывают в Kavita. Снова скопируйте ссылку OPDS из настроек своей учётной записи там.
+
+# Title when the server lets the account in and shows it no series.
+book-server-empty = { $host } не показывает для этой учётной записи ни одной серии
+
+# Line under it.
+book-server-empty-line = Вход выполнен, но сервер может ещё сканировать библиотеки, или у этой учётной записи нет доступа к его книгам.
+
+# Note under it.
+book-server-empty-recheck = Вы можете добавить его сейчас. Kaeri проверяет снова каждые 30 минут.
+
+# Line under an error when the address is not a book server.
+book-server-not-books-line = Kaeri читает каталоги Komga, Kavita и OPDS.
+
+# Folder result title.
+book-folder-found =
+    { $files ->
+        [one] Найдено серий: { $series }, файлов: { $files }
+        [few] Найдено серий: { $series }, файлов: { $files }
+        [many] Найдено серий: { $series }, файлов: { $files }
+       *[other] Найдено серий: { $series }, файлов: { $files }
+    }
+
+# Line under it: the folder's path, then how many series were matched by their own details.
+book-folder-found-line = { $path }. По их данным Kaeri сопоставил: { $matched }.
+
+# Row in the folder result: files that are books in formats Kaeri can't open.
+book-folder-unsupported =
+    { $count ->
+        [one] { $count } файл, который Kaeri не может открыть
+        [few] { $count } файла, которые Kaeri не может открыть
+        [many] { $count } файлов, которые Kaeri не может открыть
+       *[other] { $count } файла, которые Kaeri не может открыть
+    }
+
+# Line under it: the formats, already counted and joined, such as "14 MOBI, 6 AZW3".
+book-folder-unsupported-line = { $kinds }. Они остаются в папке как есть.
+
+# One item of that list: EPUB files locked with DRM or a password.
+book-folder-drm = Файлов EPUB с защитой DRM: { $count }
+
+# Note under the folder result.
+book-folder-opens = Kaeri открывает файлы CBZ, CBR, EPUB и PDF, а также папки с изображениями.
+
+# Row action that lists the files skipped.
+book-folder-show-files = Показать файлы
+
+# Primary action in the Add a folder sheet.
+book-folder-add = Добавить папку
+
+# Folder row action that picks another folder.
+book-folder-change = Изменить
+
+# Title when a folder holds nothing Kaeri can open.
+book-folder-empty = В папке { $folder } нет ничего, что Kaeri может открыть
+
+# Line under it.
+book-folder-empty-line =
+    { $files ->
+        [one] В ней { $files } файл, и это не CBZ, CBR, EPUB, PDF и не изображение.
+        [few] В ней { $files } файла, и ни один из них не CBZ, CBR, EPUB, PDF и не изображение.
+        [many] В ней { $files } файлов, и ни один из них не CBZ, CBR, EPUB, PDF и не изображение.
+       *[other] В ней { $files } файла, и ни один из них не CBZ, CBR, EPUB, PDF и не изображение.
+    }
+
+# Primary action after an empty folder.
+book-folder-choose-other = Выбрать другую папку
+
+# Title of the Join a plugin store sheet.
+store-join-title = Подключение: магазин плагинов
+
+# Label of the invite field.
+store-invite-field = Приглашение
+
+# Result title once a plugin store is joined.
+store-joined-title = Подключено: { $store }
+
+# Line under it. The owner is who runs the store.
+store-joined-line =
+    { $count ->
+        [one] { $owner } предлагает { $count } плагин. Подключение ничего не устанавливает: установите его здесь или позже.
+        [few] У { $owner } плагины: { $count }. Подключение ничего не устанавливает: выберите нужные здесь или позже.
+        [many] У { $owner } плагины: { $count }. Подключение ничего не устанавливает: выберите нужные здесь или позже.
+       *[other] У { $owner } плагины: { $count }. Подключение ничего не устанавливает: выберите нужные здесь или позже.
+    }
+
+# Group header in the joined store's list.
+store-group-reading = Для чтения
+
+# Group header in the joined store's list.
+store-group-watching = Для просмотра
+
+# Row action.
+store-install = Установить
+
+# Row state once installed.
+store-installed-row = Установлено
+
+# Primary action when two or more plugins are for reading.
+store-install-all-reading = Установить всё для чтения
+
+# Result after installing.
+store-installed =
+    { $count ->
+        [one] Установлен { $count } плагин. Он в разделе «Ваши источники».
+        [few] Установлено, плагины: { $count }. Они в разделе «Ваши источники».
+        [many] Установлено, плагины: { $count }. Они в разделе «Ваши источники».
+       *[other] Установлено, плагины: { $count }. Они в разделе «Ваши источники».
+    }
+
+# Info title when every plugin in a store is for watching, and watching is off here.
+store-other-medium = Каждый плагин в { $store } предназначен для просмотра
+
+# Line under it.
+store-other-medium-line = Это устройство: просмотр выключен, поэтому ни один из них не показан в списке «Ваши источники».
+
+# Secondary action under it.
+store-turn-on-watching = Включить просмотр
+
+# Info title when a store has no plugins.
+store-empty = { $store }: плагины пока нет
+
+# Line under it.
+store-empty-line = Вы участник, поэтому новые плагины появятся в разделе «Магазины плагинов», когда { $owner } их добавит.
+
+# Error title when the store doesn't answer.
+store-err-unreachable = Не удалось подключиться к { $host }
+
+# Line under it.
+store-err-unreachable-line = Приглашение выглядит верным, но магазин не отвечает. Повторите попытку позже или спросите у { $owner }, работает ли он.
+
+# Under the reading group: plugins for watching while watching is off here.
+store-other-medium-more =
+    { $count ->
+        [one] Ещё { $count } для просмотра. Это устройство: просмотр выключен.
+        [few] Ещё { $count } для просмотра. Это устройство: просмотр выключен.
+        [many] Ещё { $count } для просмотра. Это устройство: просмотр выключен.
+       *[other] Ещё { $count } для просмотра. Это устройство: просмотр выключен.
+    }
+
+# On a TV, under the list: plugins for reading, which a TV doesn't do.
+store-tv-reading-only =
+    { $count ->
+        [one] Ещё { $count } предназначен для чтения, а на этом телевизоре чтения нет.
+        [few] Ещё { $count } предназначены для чтения, а на этом телевизоре чтения нет.
+        [many] Ещё { $count } предназначены для чтения, а на этом телевизоре чтения нет.
+       *[other] Ещё { $count } предназначены для чтения, а на этом телевизоре чтения нет.
+    }
+
+# On a TV, info title when every plugin in a store is for reading.
+store-tv-all-reading = Все плагины в { $store } предназначены для чтения, а на этом телевизоре чтения нет.
+
+# Plugin row in an invite's result.
+store-plugin-row = Версия { $version } · может обращаться к { $hosts }
+
+# Notice after a server or folder is added, for 4 seconds.
+source-added = Добавлено: { $name } · серий: { $series }
+
+# Notice after Install all, for 4 seconds.
+source-added-plugins =
+    { $count ->
+        [one] Установлен { $count } плагин из { $store }
+        [few] Установлено из { $store }, плагины: { $count }
+        [many] Установлено из { $store }, плагины: { $count }
+       *[other] Установлено из { $store }, плагины: { $count }
+    }
+
+# A server's row in Your sources, just added. The kind is Komga, Kavita or OPDS; an OPDS catalogue is one library.
+source-row-server =
+    { $libraries ->
+        [one] { $kind } · серий: { $series } · библиотек: { $libraries } · добавлено только что
+        [few] { $kind } · серий: { $series } · библиотек: { $libraries } · добавлено только что
+        [many] { $kind } · серий: { $series } · библиотек: { $libraries } · добавлено только что
+       *[other] { $kind } · серий: { $series } · библиотек: { $libraries } · добавлено только что
+    }
+
+# A server's row in Your sources once it has settled. The kind is Komga, Kavita or OPDS; an OPDS catalogue is one library.
+source-row-server-series =
+    { $libraries ->
+        [one] { $kind } · серий: { $series } · библиотек: { $libraries }
+        [few] { $kind } · серий: { $series } · библиотек: { $libraries }
+        [many] { $kind } · серий: { $series } · библиотек: { $libraries }
+       *[other] { $kind } · серий: { $series } · библиотек: { $libraries }
+    }
+
+# A server's row in Your sources while it shows no series.
+source-row-server-empty = { $kind } · серий пока нет · проверка снова через 30 минут
+
+# A folder's row in Your sources.
+source-row-folder =
+    { $skipped ->
+        [one] { $path } · серий: { $series } · пропущено файлов: { $skipped }
+        [few] { $path } · серий: { $series } · пропущено файлов: { $skipped }
+        [many] { $path } · серий: { $series } · пропущено файлов: { $skipped }
+       *[other] { $path } · серий: { $series } · пропущено файлов: { $skipped }
+    }
+
+# A plugin's row in Your sources. The medium is "Reading" or "Watching".
+source-row-plugin = Из { $store } · { $medium } · версия { $version }
 
 # Title of the screen or section that lists sources.
 sources-title = Источники
@@ -9309,10 +12403,10 @@ match-similarity = { $similarity } совп.
 match-search-field = Искать на { $source }
 
 # While a search of the source runs.
-match-searching = Ищем на { $source } «{ $query }»
+match-searching = Поиск «{ $query }» на { $source }
 
 # A search of the source that found nothing.
-match-search-empty = На { $source } ничего нет по запросу «{ $query }».
+match-search-empty = На { $source } ничего не найдено по запросу «{ $query }».
 
 # Under match-search-empty: what to try.
 match-search-empty-hint = Попробуйте меньше слов или название на другом языке.
@@ -9372,7 +12466,7 @@ sources-add-server = Медиасервер…
 sources-add-store = Присоединиться к магазину плагинов…
 
 # Line under the empty state's title on a computer.
-sources-empty-body = Источники: то, откуда берутся эпизоды. Это папки на этом устройстве, ваш медиасервер и плагины из магазинов, к которым вы присоединились.
+sources-empty-body = Источники дают эпизоды: это папки на этом устройстве, ваш медиасервер и плагины из магазинов плагинов, к которым вы присоединились.
 
 # Line under the empty state's buttons. The link is "join a plugin store".
 sources-empty-more = Можно также { $join }.
@@ -9414,7 +12508,7 @@ sources-demo-link-commons = Wikimedia Commons
 sources-demo-link-maker = OPAP-JP
 
 # Line on the demo page that names the only two hosts the demo reaches.
-sources-demo-hosts = Обращается только к Wikimedia Commons: upload.wikimedia.org и commons.wikimedia.org.
+sources-demo-hosts = Демо обращается только к Wikimedia Commons: upload.wikimedia.org и commons.wikimedia.org.
 
 # Line on the demo page about accounts and trackers.
 sources-demo-private = Демо никуда не входит и ничего не записывает в AniList.
@@ -9483,7 +12577,7 @@ stores-not-from-app = Плагины приходят от владельца м
 stores-join-owner-responsible = { $owner } ведёт этот магазин плагинов и выбрал его плагины. Kaeri не создавал, не проверял и не одобрял их.
 
 # Line when the store has no plugins.
-stores-no-plugins = Этот магазин плагинов пока не предлагает плагины.
+stores-no-plugins = Этот магазин плагинов пока пуст: плагины ещё не добавлены.
 
 # Heading of the plugin list of a store.
 stores-plugins = Плагины
@@ -9519,7 +12613,7 @@ stores-access-ended-page = Этот магазин плагинов больше
 stores-no-longer-joined = Этот магазин плагинов больше не подключён.
 
 # Line when the store cannot be reached but a list was kept. The reason is a sentence fragment.
-stores-offline-last-list = Не в сети: { $reason }. Плагины ниже взяты из последнего проверенного списка.
+stores-offline-last-list = Нет сети: { $reason }. Показан последний список, который он прислал.
 
 # Line when offline, without a reason.
 stores-offline-last-list-plain = Не в сети. Показан последний полученный список.
@@ -9624,7 +12718,7 @@ stores-replace-label = Заменить копию { $name }, добавленн
 stores-remove-plugin-title = Удалить { $name }?
 
 # Line under it.
-stores-remove-plugin-detail = Он удаляется отсюда. Магазин плагинов сможет установить его снова.
+stores-remove-plugin-detail = Он будет удалён отсюда. Установить его снова можно через магазин плагинов.
 
 # Label before the hosts a new version also contacts.
 stores-newly-contacts = Новые серверы
@@ -9645,7 +12739,7 @@ stores-add-title = Добавить магазин плагинов
 stores-join-detail = Вставьте ссылку, которую прислал владелец магазина.
 
 # Line under the form title on desktop, where nothing happens before the check.
-stores-join-detail-desktop = Вставьте пригласительную ссылку, которую прислал владелец магазина. До подключения и установки вы увидите, что предлагает магазин плагинов.
+stores-join-detail-desktop = Вставьте ссылку-приглашение, которую вам прислал владелец. До подключения и установки вы увидите, что предлагает магазин плагинов.
 
 # Line under the field on a phone when a link was opened from another app.
 stores-join-detail-opened = Вставьте ссылку, которую прислал владелец магазина. Ссылка вида Kaeri://, открытая из «Сообщений», сразу заполнит этот лист.
@@ -9687,7 +12781,7 @@ stores-join-installs-nothing = Подключение ничего не уста
 stores-key-matches = Ключ { $key } совпадает с ключом магазина.
 
 # Line when the link is open to anyone.
-stores-anyone-note = Вы подключаетесь без имени. Другое устройство подключается по той же ссылке.
+stores-anyone-note = Вы подключаетесь без имени. Другое устройство может подключиться по той же ссылке.
 
 # Line when the device joined this store already.
 stores-already-joined-note = Это устройство уже подключено к этому магазину.
@@ -9841,7 +12935,7 @@ stores-invite-works-any = Присоединиться может любой, у
 stores-invite-works-any-forever = Присоединиться может любой, у кого есть эта ссылка, пока вы её не отмените.
 
 # Line under a single-use invite with an end date. Replaces stores-invite-once.
-stores-invite-once-until = Действует один раз, для того, кому вы её отправите. До { $until }.
+stores-invite-once-until = Действует один раз, для того, кому вы её отправите, до { $until }.
 
 # Line under a single-use invite with no end date.
 stores-invite-once-forever = Действует один раз, для того, кому вы её отправите, пока вы её не отмените.
@@ -9891,7 +12985,7 @@ stores-invite-joined = { $name } · присоединился { $when }
 # Detail of the confirmation that cancels an invite that was used.
 stores-cancel-invite-detail =
     { $count ->
-        [one] Больше никто не сможет присоединиться. Присоединившийся остаётся участником.
+        [one] Больше никто не сможет присоединиться. { $count } присоединившийся остаётся участником.
         [few] Больше никто не сможет присоединиться. Присоединившиеся ({ $count }) остаются участниками.
         [many] Больше никто не сможет присоединиться. Присоединившиеся ({ $count }) остаются участниками.
        *[other] Больше никто не сможет присоединиться. Присоединившиеся ({ $count }) остаются участниками.
@@ -9976,7 +13070,7 @@ stores-offers-plugins =
 notice-open-stores = Открыть магазины плагинов
 
 # Explainer on the empty plugin stores page.
-stores-what-is = Магазин плагинов представляет собой небольшой сервер, который хранит подписанные плагины и выдаёт каждому устройству отдельный токен. Он предлагает источники в виде плагины. Kaeri не ведёт магазинов плагинов и не составляет их списков, поэтому присоединиться можно по ссылке-приглашению от владельца.
+stores-what-is = Магазин плагинов представляет собой небольшой сервер, который хранит подписанные плагины и выдаёт каждому устройству свой токен. Его плагины добавляют источники. Kaeri не ведёт магазинов плагинов и не составляет их списков, поэтому подключиться к одному из них можно по ссылке-приглашению от владельца.
 
 # Button on the empty plugin stores page that opens the docs page in the browser.
 stores-what-is-link = Что такое магазин плагинов?
@@ -9997,10 +13091,13 @@ stores-qr-warning-device = Отсканируйте это на устройст
 stores-share = Поделиться…
 
 # Windows and Linux dialog line while the browser is open for a cloud sign-in.
-cloud-browser-line = Браузер открыл страницу { $service }. Разрешите доступ там, и Kaeri продолжит сам.
+cloud-browser-line = В браузере открылась страница { $service }. Разрешите доступ там, и Kaeri продолжит сам.
 
 # Windows and Linux dialog title while the browser is open for a cloud sign-in.
 cloud-browser-title = Войдите в { $service } в браузере
+
+# Windows and Linux dialog line under Connecting or Setting up the folder: the dialog's Close button leaves the work running.
+cloud-close-carries-on = Это окно можно закрыть. Kaeri продолжит работу и сам откроет следующий шаг, когда всё будет готово.
 
 # Word for this device in sentences such as “Turn off sync on this computer”.
 device-kind-computer = компьютер
@@ -10171,7 +13268,7 @@ sync-turn-off-alert-line = Это устройство ({ $kind }) перест�
 cloud-group = Облачная папка
 
 # Group footer.
-cloud-foot = Дополняет данные, пока ваши устройства далеко друг от друга, и хранит зашифрованную резервную копию. Прочитать её могут только ваши устройства.
+cloud-foot = Папка синхронизирует ваши устройства, пока они далеко друг от друга, и хранит зашифрованную резервную копию. Прочитать её могут только ваши устройства.
 
 # Row when only the nearby road is set.
 cloud-add = Добавить облачную папку
@@ -10516,7 +13613,7 @@ profiles-picker = Кто смотрит?
 profiles-ask-at-launch = Спрашивать, кто смотрит, при запуске
 
 # iPad footer.
-profiles-ask-foot = По умолчанию выключено. Для iPad, которым пользуется вся семья. Строка аккаунта позволяет сменить профиль в любой момент.
+profiles-ask-foot = По умолчанию выключено. Включите для iPad, которым пользуется вся семья. Сменить профиль можно в строке аккаунта в любой момент.
 
 # TV Settings.
 profiles-switch = Сменить профиль
@@ -10551,7 +13648,7 @@ cloud-app-password-note = Создайте его в Nextcloud, в раздел�
 # Devices row value while sync is off and TVs are paired for Play on TV. The row says "Sync off", then this.
 devices-tvs-for-play =
     { $count ->
-        [one] Один телевизор для «Смотреть на ТВ»
+        [one] { $count } телевизор для «Смотреть на ТВ»
         [few] { $count } телевизора для «Смотреть на ТВ»
         [many] { $count } телевизоров для «Смотреть на ТВ»
        *[other] { $count } телевизора для «Смотреть на ТВ»
@@ -10719,9 +13816,6 @@ title-tags = Теги
 # Button that opens the full page of facts about a show.
 title-more-about = Подробнее о тайтле
 
-# Accessibility hint of the button that expands a synopsis.
-title-synopsis-hint = Показывает весь синопсис
-
 # Label under a season: which episodes are dubbed so far.
 title-dubbed-to = С дубляжом до серии { $episode }
 
@@ -10809,7 +13903,7 @@ episode-range-label = Диапазон серий
 # One line that stands for the watched episodes at the top of a range. Opening it shows them.
 episode-fold =
     { $count ->
-        [one] Одна просмотренная серия
+        [one] { $count } просмотренная серия
         [few] { $count } просмотренные серии
         [many] { $count } просмотренных серий
        *[other] { $count } просмотренной серии
@@ -11121,6 +14215,9 @@ opened-paste-placeholder = Магнитная ссылка или инфохеш
 # Button: choose a torrent file from the device.
 opened-choose-file = Выбрать торрент-файл
 
+# Line under the field when the link or file could not be read, and the engine gave no reason.
+opened-unreadable = Kaeri не смог прочитать эту ссылку или файл.
+
 # The question once the link's name matched a title and an episode.
 opened-confirm = Это { $title }, эпизод { $episode }?
 
@@ -11171,6 +14268,27 @@ accounts-welcome-detail = Войдите в { $tracker }, чтобы синхр�
 
 # Line under a tracker that brings in lists.
 accounts-brings-lists = Импортирует ваши списки и заполняет «Продолжить просмотр» тем, что вы смотрите.
+
+# Line under AniList when Kaeri is for reading: what signing in brings.
+accounts-brings-lists-read = Подтягивает ваши списки и наполняет «Читать дальше» тем, что вы читаете.
+
+# Line under AniList when Kaeri is for watching and reading.
+accounts-brings-lists-both = Подтягивает ваши списки и наполняет «Продолжить» тем, что вы смотрите и читаете.
+
+# Line under a tracker that is not signed in: what it keeps in step.
+accounts-tracker-lists = Списки и прогресс
+
+# Line under MangaUpdates when it is not signed in.
+accounts-tracker-reading-lists = Списки чтения и прогресс
+
+# Line under a tracker with both media on: it serves shows and reading.
+accounts-tracker-serves-both = Сериалы и чтение
+
+# Line under a tracker with both media on: it serves reading only.
+accounts-tracker-serves-reading = Чтение
+
+# Line under a tracker with both media on: it serves shows only.
+accounts-tracker-serves-shows = Сериалы
 
 # Line under the accounts screen when the library needs a tracker.
 accounts-library-needs = Библиотека и синхронизация требуют аккаунт { $tracker }
@@ -11284,7 +14402,7 @@ accounts-tokens-keystore = Устройство хранит токены вхо
 accounts-form-title = Войти в { $tracker }
 
 # Line under the title: where the password goes.
-accounts-form-detail = Пароль уходит в { $tracker } один раз, а токен для входа хранит устройство.
+accounts-form-detail = Пароль уходит в { $tracker } один раз в обмен на токен, который хранит это устройство.
 
 # Label of the name field.
 accounts-user-or-email = Эл. почта или имя пользователя
@@ -11356,7 +14474,7 @@ accounts-open-on = Открыть в { $tracker }
 accounts-listed-by = Указано в { $tracker }
 
 # Line when the tracker did not answer.
-accounts-did-not-answer = { $tracker } не ответил.
+accounts-did-not-answer = { $tracker } не ответил. Попробуйте чуть позже.
 
 # Line when the tracker has nothing for the show.
 accounts-no-extras = У { $tracker } пока нет актёров, создателей и рекомендаций для этого аниме.
@@ -11419,7 +14537,7 @@ tv-pairing-code = Код подключения
 tv-open-on-tv = Откройте Kaeri на телевизоре. Он должен быть в той же сети Wi-Fi, что и это устройство.
 
 # Line telling what to type.
-tv-type-code = Введите шесть цифр, которые показывает { $name }. После этого это устройство подключится само.
+tv-type-code = Введите шесть цифр, которые показывает { $name }. После этого это устройство будет подключаться само.
 
 # Line while pairing is under way.
 tv-pairing-moment = Это займёт немного времени.
@@ -11719,7 +14837,7 @@ updates-saved-replace-plain = Версия { $version } сохранена в п
 updates-why-server = Загрузка остановлена: сервер отказал в запросе ({ $code }). Попробуйте позже.
 
 # The connection broke.
-updates-why-connection = Загрузка остановлена: соединение прервалось.
+updates-why-connection = Загрузка остановлена: соединение прервалось. Попробуйте ещё раз.
 
 # The file could not be saved. The reason is a sentence fragment.
 updates-why-save = Не удалось сохранить загрузку: { $reason }

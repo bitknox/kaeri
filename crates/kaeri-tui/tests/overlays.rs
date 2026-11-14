@@ -286,20 +286,20 @@ fn an_overlay_over_now_playing_takes_q_as_close_not_detach() {
 
 #[test]
 fn esc_cancels_the_palette_whatever_back_is_rebound_to() {
-    // `back = "W"` used to leave the palette with no way out: Esc no longer closed it, and W
+    // `back = "O"` used to leave the palette with no way out: Esc no longer closed it, and O
     // was typed into the query.
     let mut keymap = Keymap::new();
-    assert!(keymap.apply_overrides(&BTreeMap::from([("back".into(), "W".into())])).is_empty());
+    assert!(keymap.apply_overrides(&BTreeMap::from([("back".into(), "O".into())])).is_empty());
     kaeri_i18n::set_language("en");
     let mut a = App::new(SettingsView::default(), Palette::dark(), keymap);
-    press(&mut a, &[":", "W"]);
-    assert_eq!(a.text(Field::Palette), "W", "a letter is typed into the palette");
+    press(&mut a, &[":", "O"]);
+    assert_eq!(a.text(Field::Palette), "O", "a letter is typed into the palette");
     press(&mut a, &["esc"]);
     assert_eq!(a.nav.overlay(), None, "esc must still close the palette");
 
     // The same in a prompt.
     let mut a = at_episodes();
-    a.keymap.apply_overrides(&BTreeMap::from([("back".into(), "W".into())]));
+    a.keymap.apply_overrides(&BTreeMap::from([("back".into(), "O".into())]));
     press(&mut a, &["D", "esc"]);
     assert_eq!(a.nav.overlay(), None);
 }

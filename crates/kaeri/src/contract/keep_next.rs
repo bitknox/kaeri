@@ -264,6 +264,31 @@ async fn a_list_sync_or_the_new_episode_check_queues_nothing() {
 }
 
 #[tokio::test]
+async fn at_launch_nothing_is_kept_until_the_network_is_said_to_be_wifi() {
+    let mut h = keeping(Options {
+        config: keep(2),
+        before_start: Some(four_in),
+        network_unsaid: true,
+        ..Options::default()
+    })
+    .await;
+    // Nothing has said the network, which may be cellular: the show is asked for and waits.
+    starts(&mut h, FINISHED, "5");
+    h.settle().await;
+    assert!(queue(h.store(), FINISHED).is_empty(), "the network not said");
+
+    // Cellular keeps it waiting.
+    h.send(Command::NetworkPath { cellular: true, constrained: false, offline: false });
+    h.settle().await;
+    assert!(queue(h.store(), FINISHED).is_empty(), "Wi-Fi only");
+
+    // Wi-Fi tops it up.
+    h.send(Command::NetworkPath { cellular: false, constrained: false, offline: false });
+    h.settle().await;
+    assert_eq!(queue(h.store(), FINISHED), ["5 ahead", "6 ahead"]);
+}
+
+#[tokio::test]
 async fn nothing_is_kept_while_downloads_wait_on_cellular_or_off_screen() {
     let mut h = keeping(Options { config: keep(2), ..Options::default() }).await;
     h.send(Command::NetworkPath { cellular: true, constrained: false, offline: false });

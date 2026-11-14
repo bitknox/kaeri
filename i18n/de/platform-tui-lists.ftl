@@ -4,7 +4,7 @@ downloads-column-title = Titel
 downloads-column-state = Status
 downloads-column-progress = Fortschritt
 downloads-empty-heading = Nichts in der Warteschlange
-downloads-empty-hint = Drücke { $key } bei einem Titel oder einer Folge, um sie offline vorzumerken.
+downloads-empty-hint = Drücke { $key } bei einem Titel oder einer Folge, um sie herunterzuladen.
 downloads-row-episode = E{ $episode }
 downloads-row-episode-ahead = E{ $episode } · vorab
 downloads-note-sizes = { $downloaded } / { $total }
@@ -68,10 +68,10 @@ accounts-row-queued = { $count ->
     [one] { $count } ausstehend
    *[other] { $count } ausstehend
  }
-accounts-row-queued-held = { $queued } ausstehend, { $held } warten auf eine ID-Zuordnung
-accounts-conflict-keep-mine = Mein Wert
-accounts-conflict-keep-theirs = { -tracker }-Wert
-accounts-conflict-row = { $title }  ·  { $field }: hier { $local } / { -tracker } { $remote }
+accounts-row-queued-held = { $queued } ausstehend, { $held } warten auf eine Zuordnung
+accounts-conflict-keep-mine = Lokal nutzen
+accounts-conflict-keep-theirs = { -tracker } nutzen
+accounts-conflict-row = { $title }  ·  { $field }: lokal { $local } / { -tracker } { $remote }
 lists-library-title = { -library-cap }
 lists-remove-wrong-list = Titel lassen sich nur in der Liste { -continue-cap } ausblenden.
 lists-continue-removed = { $title } wurde aus { -continue-cap } ausgeblendet. Wenn du es wieder ansiehst, kommt es zurück.
@@ -82,7 +82,7 @@ lists-loading = Lädt…
 lists-empty-press-enter = Drücke ↵ zum Suchen
 lists-empty-type-to-search = Tippe, um zu suchen
 lists-empty-browse-filtered = Drücke ↵, um mit diesen Filtern zu stöbern.
-lists-empty-browse-popular = Drücke ↵, um die beliebtesten Titel zu sehen.
+lists-empty-browse-popular = Drücke ↵, um die beliebtesten Titel zu durchsuchen.
 lists-empty-no-matches = Keine Treffer
 lists-empty-fewer-filters = Versuche weniger Filter.
 lists-empty-shorter-query = Versuche eine kürzere Suche oder den Romaji-Titel.

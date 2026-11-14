@@ -3,11 +3,18 @@
 
 package app.kaeri.ui
 
+import android.annotation.SuppressLint
 import android.view.View
 import androidx.compose.animation.AnimatedVisibilityScope
+import androidx.compose.animation.BoundsTransform
 import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.SharedTransitionScope
 import androidx.compose.animation.fadeIn
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.Transition
+import androidx.compose.animation.core.VisibilityThreshold
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
 import androidx.compose.runtime.Composable
@@ -20,6 +27,7 @@ import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.isSpecified
 import androidx.compose.ui.layout.ContentScale
@@ -29,12 +37,22 @@ import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
 import app.kaeri.design.Motion
 import app.kaeri.engine.core.AnilistId
+import app.kaeri.engine.core.WorkId
 
 /** A title page's route inside [destination]'s back stack. */
 internal fun titleRoute(destination: Destination, id: AnilistId) = "${destination.route}/title/$id"
 
 /** The route pattern of the title page in [destination]'s back stack. */
 internal fun titlePattern(destination: Destination) = "${destination.route}/title/{id}"
+
+/** A reading series page's route inside [destination]'s back stack. */
+internal fun seriesRoute(destination: Destination, work: WorkId) = "${destination.route}/series/${android.net.Uri.encode(work)}"
+
+/** The route pattern of the series page in [destination]'s back stack. */
+internal fun seriesPattern(destination: Destination) = "${destination.route}/series/{work}"
+
+/** The route pattern of a reading page pushed onto [destination]'s back stack: View all, e-ink Browse. */
+internal fun readPagePattern(destination: Destination) = "${destination.route}/read/{page}"
 
 /** The graph that holds [destination]'s back stack. */
 internal fun graphRoute(destination: Destination) = "${destination.route}-tab"
@@ -72,10 +90,19 @@ class Navigator(private val nav: NavHostController, private val start: Destinati
     /** The destination on screen. */
     fun current(): Destination = nav.currentBackStackEntry?.destinationOf() ?: start
 
+    /** The tab whose own page lies right under the page on screen; null when another page does. */
+    fun under(): Destination? = nav.previousBackStackEntry?.destinationOf()
+
     /** Open [id]'s page in the current destination's back stack, flying from [from]. */
     fun openTitle(id: AnilistId, from: String) {
         source = "$from:$id"
         nav.navigate(titleRoute(current(), id))
+    }
+
+    /** Open a reading series' page in the current destination's back stack, its cover flying from [from]. */
+    fun openSeries(work: WorkId, from: String) {
+        source = "$from:$work"
+        nav.navigate(seriesRoute(current(), work))
     }
 
     /** Whether a title page is being swapped for another in place (Another): the pages crossfade. */
@@ -117,6 +144,15 @@ class Navigator(private val nav: NavHostController, private val start: Destinati
         }
     }
 
+    /**
+     * Switch to [destination] at its start, as a link into it from another destination opens it:
+     * the pages left open on it last time are closed.
+     */
+    fun goToStart(destination: Destination) {
+        go(destination)
+        nav.popBackStack(destination.route, inclusive = false)
+    }
+
     fun back() {
         nav.popBackStack()
     }
@@ -126,8 +162,18 @@ class Navigator(private val nav: NavHostController, private val start: Destinati
         nav.navigate(settingsRoute(pane)) { launchSingleTop = true }
     }
 
+    /** The destination the last page pushed with [open] was opened from: Downloads puts its medium first. */
+    var openedFrom: Destination? by mutableStateOf(null)
+        private set
+
     /** Push the page at [route] over whatever is on screen. */
+    /** Push a reading page ([page] names it) onto the current destination's back stack. */
+    internal fun openReadPage(page: String) {
+        nav.navigate("${current().route}/read/${android.net.Uri.encode(page)}")
+    }
+
     fun open(route: String) {
+        nav.currentBackStackEntry?.destinationOf()?.let { openedFrom = it }
         nav.navigate(route) { launchSingleTop = true }
     }
 }
@@ -180,14 +226,26 @@ enum class Shared(internal val prefix: String) {
  * the element is (`hero`, `season` …): it joins only when it is the one the page was opened from.
  * On the title page pass none.
  */
+@Composable
+fun Modifier.shared(shared: Shared, id: AnilistId, from: String? = null, ground: Color = Color.Unspecified): Modifier =
+    sharedKeyed(shared, id.toString(), from, ground)
+
+/** [shared] for a reading series, by its work id: its cover flies into the series page and back. */
+@Composable
+fun Modifier.sharedWork(shared: Shared, work: WorkId, from: String? = null, ground: Color = Color.Unspecified): Modifier =
+    sharedKeyed(shared, work, from, ground)
+
 @OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
-fun Modifier.shared(shared: Shared, id: AnilistId, from: String? = null, ground: Color = Color.Unspecified): Modifier {
+private fun Modifier.sharedKeyed(shared: Shared, id: String, from: String?, ground: Color): Modifier {
     val layout = LocalSharedTransitions.current
     val page = LocalPageAnimation.current
     val outside = LocalView.current !== LocalSharedTransitionsView.current
-    if (layout == null || page == null || outside) return if (ground.isSpecified) background(ground) else this
+    // On an e-ink panel nothing flies: the page is there at once, as its NavHost puts it.
+    val paper = app.kaeri.ui.reading.LocalEinkLayout.current != null
+    if (layout == null || page == null || outside || paper) return if (ground.isSpecified) background(ground) else this
     if (from != null && LocalNavigator.current.source != "$from:$id") return this
+    val bounds = flightBounds(page)
     return with(layout) {
         val state = rememberSharedContentState("${shared.prefix}-$id")
         when (shared) {
@@ -200,6 +258,7 @@ fun Modifier.shared(shared: Shared, id: AnilistId, from: String? = null, ground:
                 page,
                 enter = fadeIn(Motion.fadeIn()),
                 exit = fadeOut(Motion.fadeOut()),
+                boundsTransform = bounds,
                 resizeMode = SharedTransitionScope.ResizeMode.scaleToBounds(ContentScale.FillWidth, Alignment.TopCenter),
                 zIndexInOverlay = GROUND_Z,
             )
@@ -209,6 +268,7 @@ fun Modifier.shared(shared: Shared, id: AnilistId, from: String? = null, ground:
                     page,
                     enter = fadeIn(Motion.fadeIn()),
                     exit = fadeOut(Motion.fadeOut()),
+                    boundsTransform = bounds,
                     resizeMode = SharedTransitionScope.ResizeMode.scaleToBounds(ContentScale.FillWidth, Alignment.TopCenter),
                     zIndexInOverlay = if (from != null) SOURCE_Z else 0f,
                 )
@@ -217,14 +277,36 @@ fun Modifier.shared(shared: Shared, id: AnilistId, from: String? = null, ground:
                 page,
                 enter = fadeIn(Motion.fadeIn()),
                 exit = fadeOut(Motion.fadeOut()),
+                boundsTransform = bounds,
                 resizeMode = SharedTransitionScope.ResizeMode.scaleToBounds(ContentScale.FillWidth, Alignment.Center),
             )
-            Shared.Art -> sharedElement(state, page, zIndexInOverlay = ART_Z)
+            Shared.Art -> sharedElement(state, page, boundsTransform = bounds, zIndexInOverlay = ART_Z)
             // The poster overlaps the banner, so it draws above the flying art.
-            Shared.Cover -> sharedElement(state, page, zIndexInOverlay = COVER_Z)
+            Shared.Cover -> sharedElement(state, page, boundsTransform = bounds, zIndexInOverlay = COVER_Z)
         }
     }
 }
+
+/**
+ * How the elements fly: on the shared elements' own spring, or, while a back swipe seeks the
+ * flight, on a straight line in time, so the page shrinks toward its cover as far as the finger
+ * has gone rather than most of the way in the first part of the swipe.
+ */
+@OptIn(ExperimentalSharedTransitionApi::class)
+private fun flightBounds(page: AnimatedVisibilityScope) = BoundsTransform { _, _ ->
+    if (page.transition.seeking()) SEEKED_FLIGHT else FLIGHT
+}
+
+/** Whether a back swipe is seeking this transition or the NavHost's it belongs to. */
+// Compose keeps isSeeking to its own libraries and offers no public way to tell a seeked transition.
+@SuppressLint("RestrictedApi")
+private fun Transition<*>.seeking(): Boolean = isSeeking || parentTransition?.seeking() == true
+
+/** The shared elements' own spring, Compose's default for them. */
+private val FLIGHT = spring(stiffness = 400f, visibilityThreshold = Rect.VisibilityThreshold)
+
+/** A seeked flight, as long as a seeked page's slide (AppRoot's back swipe). */
+private val SEEKED_FLIGHT = tween<Rect>(300, easing = LinearEasing)
 
 /**
  * The page's own [ground] behind what this holds, except while the page flies: then the flight's

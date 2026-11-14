@@ -128,7 +128,11 @@ public struct MacPlayerView: View {
         .onAppear { focused = true }
         .onChange(of: model.fullScreen) { _, on in fullScreen(on) }
         .onChange(of: visible, initial: true) { _, on in titleBar(on) }
-        .onChange(of: window) { _, window in if let window { opened(window) } }
+        .onChange(of: window) { _, window in
+            if let window { opened(window) }
+            // Closing it stops the playback (`PlayerModel.hostWindow`).
+            model.hostWindow = window
+        }
         .onChange(of: model.backRequests) { back() }
         .onChange(of: model.menuRequests) { panel = model.requestedMenu }
         // A panel opens with its footer on the playing episode, whatever was pointed at last time.

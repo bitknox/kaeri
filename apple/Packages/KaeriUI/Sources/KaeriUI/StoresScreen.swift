@@ -480,8 +480,29 @@ struct JoinStoreSheet: View {
     @State var link: String
 
     var body: some View {
+        if let outcome = store.cameIn.outcome, StoreCameIn.tells(outcome) {
+            VStack(alignment: .leading, spacing: 0) {
+                StoreCameIn(outcome: outcome)
+                StoreCameIn.actions(outcome, store: store) {
+                    store.cameIn.reset()
+                    navigator.open(.pluginStores)
+                    dismiss()
+                }
+                .padding(.top, 20)
+            }
+            .padding(30)
+            .sheetWidth(600)
+            .background(.raised)
+            .transition(.opacity)
+            .onDisappear { store.cameIn.reset() }
+        } else {
+            form
+        }
+    }
+
+    private var form: some View {
         let working = store.stores.isWorking(.join)
-        VStack(alignment: .leading, spacing: 0) {
+        return VStack(alignment: .leading, spacing: 0) {
             Text(L.storesJoinTitle)
                 .font(.mac(15, weight: .semibold))
                 .foregroundStyle(.silk)
@@ -538,7 +559,11 @@ struct JoinStoreSheet: View {
             if InviteLinks.looksLikeInvite(link) { store.previewStore(link) } else { store.stores.clearPreview() }
         }
         .onChange(of: store.stores.joined) { _, joined in
-            if joined != nil {
+            // The store's own answer says what it brought; without one, on into the store.
+            guard joined != nil else { return }
+            Task {
+                try? await Task.sleep(for: .seconds(1.5))
+                guard !StoreCameIn.tells(store.cameIn.outcome) else { return }
                 navigator.open(.pluginStores)
                 dismiss()
             }

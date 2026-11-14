@@ -14,9 +14,11 @@ import Foundation
 ///     -KaeriGenre Fantasy       Search browses a genre, with any query's words
 ///     -KaeriAvailable here      Search's Available filter: here or services
 ///     -KaeriFilters set         Search with a row of filters and the sheet's set: Fantasy, 2024, Spring, TV,
-///                                   score 70% and Licensed only
+///                                   score 70% and Licensed only; with -KaeriReading 1, reading's: Fantasy,
+///                                   Manga, Japan and Releasing
 ///     -KaeriScroll 420          Search's results scrolled this many points once they are drawn; on
-///                                   iPhone the title page at its episodes, on the Mac at that episode
+///                                   iPhone the title page at its episodes, on the Mac at that episode;
+///                                   a series' page at its Group row
 ///     -KaeriLibrary planning    the Library's list
 ///     -KaeriPalette hoshi       the ⌘K palette, open on these words
 ///     -KaeriPane accounts       Settings' pane, or on iPhone the Settings sheet at its page
@@ -31,6 +33,8 @@ import Foundation
 ///     -KaeriCalendarMine 1      the calendar on My list (it opens on All airing)
 ///     -KaeriShowcase stores     invented rows beside the testing engine's: see `Showcase`
 ///     -KaeriCatalogue           Search's browse with the test kit's eight more titles beside the six
+///     -KaeriWork a:900301       a series' page by its work id, over the section
+///     -KaeriReading 1           the Library and Search on their reading side
 public struct LaunchRoute: Equatable, Sendable {
     public var section: AppSection = .home
     public var selected: AnilistId?
@@ -50,6 +54,10 @@ public struct LaunchRoute: Equatable, Sendable {
     public var day: Int?
     /// The calendar on My list.
     public var calendarMine = false
+    /// A series' page by its work id.
+    public var work: String?
+    /// The Library and Search on their reading side.
+    public var reading = false
 
     public init() {}
 
@@ -75,6 +83,8 @@ public struct LaunchRoute: Equatable, Sendable {
         source = value("-KaeriSource")
         day = value("-KaeriDay").flatMap { Int($0) }
         calendarMine = value("-KaeriCalendarMine") == "1"
+        work = value("-KaeriWork")
+        reading = value("-KaeriReading") == "1"
         library = value("-KaeriLibrary").flatMap { name in
             LibraryModelOrder.segments.first { "\($0)" == name }
         }

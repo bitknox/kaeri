@@ -10,14 +10,14 @@ calendar-later-failed-line = Impossible de charger les diffusions suivantes
 calendar-show-all-airing = Voir toutes les diffusions
 calendar-now-label = Maintenant, { $time }
 settings-discussions-label = Discussions des épisodes
-settings-discussions-note = Lit les commentaires du fil de discussion AniList pour les épisodes que vous avez regardés.
+settings-discussions-note = Vous pouvez lire les commentaires du fil de discussion AniList pour les épisodes que vous avez regardés.
 settings-discussion-images-label = Charger les images des commentaires
 settings-discussion-images-note = Chaque image se charge depuis le site qui l'héberge, qui voit votre adresse IP.
 discussion-waiting = En attente d'AniList · { $time }
 discussion-image-host = Image · { $host }
 discussion-video-host = Vidéo · { $host }
 player-more-discussion-note = { $count ->
-    [one] Un commentaire · met en pause
+    [one] { $count } commentaire · met en pause
     [many] { $count } commentaires · met en pause
    *[other] { $count } commentaires · met en pause
  }

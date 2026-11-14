@@ -34,6 +34,8 @@ pub fn picture(code: &str) -> Option<gtk::Widget> {
         .width_request(20)
         .height_request(15)
         .css_classes(["language-flag"])
+        // GTK's CSS has no overflow: the corners clip here.
+        .overflow(gtk::Overflow::Hidden)
         .build();
     let edge =
         gtk::Box::builder().css_classes(["language-flag-edge"]).can_target(false).build();

@@ -13,7 +13,7 @@ title-episodes-short = { $count ->
    *[other] { $count } bölüm
  }
 title-episode-row-unaired = { $title }. { $when }, henüz çıkmadı
-title-all-watched = Tüm bölümler izlendi
+title-all-watched = Tüm bölümleri izlediniz
 title-no-answer-short = AniList yanıt vermedi.
 title-episodes-all = Tümü
 title-episodes-unwatched = İzlenmemiş

@@ -322,6 +322,8 @@ fn local(id: &str, name: &str, version: &str, published: Option<&str>) -> LocalP
         version: version.into(),
         hosts: Vec::new(),
         published: published.map(Into::into),
+        books: false,
+        media: Vec::new(),
     }
 }
 
@@ -419,6 +421,8 @@ fn plugin(
         version: version.into(),
         hosts: hosts(at),
         status,
+        books: false,
+        media: Vec::new(),
     }
 }
 

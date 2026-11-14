@@ -10,7 +10,7 @@ Kaeri                                                  plugins ●  ·  anilist 
   The update adds img.kawasemi.example to what it may contact.
 
   Update to 2.1.0                                                          ↵
-▌ Remove from this machine
+▌ Remove from this device
   Stop offering it in this store
   Cancel
 
@@ -57,8 +57,8 @@ r11 c75-75 fg=text bg=ground
 r11 c76-79 fg=rule bg=ground
 r12 c00-00 fg=obi bg=ground
 r12 c01-01 fg=rule bg=ground
-r12 c02-25 fg=text bg=ground mod=BOLD
-r12 c26-79 fg=rule bg=ground
+r12 c02-24 fg=text bg=ground mod=BOLD
+r12 c25-79 fg=rule bg=ground
 r13 c00-01 fg=rule bg=ground
 r13 c02-31 fg=text-dim bg=ground
 r13 c32-79 fg=rule bg=ground

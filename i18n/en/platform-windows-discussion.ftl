@@ -12,7 +12,7 @@ discussion-comment-menu = More for this comment
 
 # Accessible name of the discussion pane.
 # @only windows
-# @arg episode: int
+# @arg episode: plain
 # @max 40
 discussion-pane-label = Episode { $episode } discussion
 

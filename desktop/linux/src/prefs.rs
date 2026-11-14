@@ -183,6 +183,17 @@ impl Prefs {
         self.save();
     }
 
+    /// Whether a screen shared by Shows and Reading (Library, Search, Downloads, Your sources)
+    /// was last left on Reading, kept for this device.
+    pub fn scope_reading(&self, screen: &str) -> bool {
+        self.keys.borrow().boolean("scope", screen).unwrap_or(false)
+    }
+
+    pub fn set_scope_reading(&self, screen: &str, reading: bool) {
+        self.keys.borrow().set_boolean("scope", screen, reading);
+        self.save();
+    }
+
     /// The searches made last, newest first.
     pub fn recent_searches(&self) -> Vec<String> {
         // One per line: a search is one line of the search entry.

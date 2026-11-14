@@ -98,8 +98,8 @@ pub fn translation_switch() -> gtk::Box {
     switch.set_margin_bottom(6);
     for (label, target) in [(t::audio_subbed(), "sub"), (t::audio_dubbed(), "dub")] {
         let toggle = gtk::ToggleButton::with_label(&label);
-        toggle.set_action_name(Some("player.translation"));
         toggle.set_action_target_value(Some(&target.to_variant()));
+        toggle.set_action_name(Some("player.translation"));
         switch.append(&toggle);
     }
     switch.update_property(&[gtk::accessible::Property::Label(&t::player_translation_label())]);

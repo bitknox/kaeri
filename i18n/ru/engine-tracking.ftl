@@ -7,8 +7,8 @@ notice-sign-in-failed = Не удалось войти в { $tracker }. Попр
 notice-sign-in-stopped = Вход в { $tracker } остановился до завершения. Попробуйте ещё раз. { $reason }
 notice-token-exchange-failed = Не удалось получить токен от { $tracker }. Попробуйте войти снова. { $reason }
 notice-browser-not-opened = Не удалось открыть браузер для входа. Проверьте, что он установлен, и попробуйте ещё раз. { $reason }
-notice-sign-in-not-waiting = Вход в { $tracker } сейчас не ожидает ответа. Начните вход заново.
-notice-sign-in-wrong-request = Вход в { $tracker } не вернулся с этого запроса. Начните вход заново.
+notice-sign-in-not-waiting = Пришёл ответ на вход из { $tracker }, но никакой вход его не ждал. Начните вход заново.
+notice-sign-in-wrong-request = Ответ на вход из { $tracker } не совпадает с запросом. Начните вход заново.
 notice-sign-in-no-token = Вход в { $tracker } вернулся без токена. Попробуйте ещё раз.
 notice-mal-client-missing-build = Не удалось завершить вход в MyAnimeList: в этой сборке нет клиента для него.
 notice-kitsu-signs-in-on-accounts = Kitsu входит через экран «Аккаунты».
@@ -23,7 +23,7 @@ notice-mal-no-refresh-token = MyAnimeList не выдал токен обнов�
 notice-client-id-missing = Сначала задайте { $setting } в файле настроек.
 notice-signed-out = Вы вышли из { $tracker }.
 notice-signed-out-queue = { $count ->
-    [one] Вы вышли из { $tracker }. Одно изменение в очереди сохранено для следующего входа.
+    [one] Вы вышли из { $tracker }. { $count } изменение в очереди сохранено для следующего входа.
     [few] Вы вышли из { $tracker }. { $count } изменения в очереди сохранены для следующего входа.
     [many] Вы вышли из { $tracker }. { $count } изменений в очереди сохранены для следующего входа.
    *[other] Вы вышли из { $tracker }. { $count } изменения в очереди сохранены для следующего входа.
@@ -41,12 +41,12 @@ notice-mapping-data-refreshed = Данные сопоставления обно
 notice-mapping-data-failed = Не удалось обновить данные сопоставления ({ $datasets }). Повтор через { $wait }. { $cause }
 notice-episode-aired = { $title }, серия { $episode }, вышла, пока вас не было.
 notice-episodes-aired = { $count ->
-    [one] Вышла новая серия тайтла, который вы смотрите. Она есть в календаре.
+    [one] Вышла { $count } новая серия тайтлов, которые вы смотрите. Календарь уже обновлён.
     [few] Вышли { $count } новые серии тайтлов, которые вы смотрите. Они есть в календаре.
     [many] Вышли { $count } новых серий тайтлов, которые вы смотрите. Они есть в календаре.
    *[other] Вышли { $count } новые серии тайтлов, которые вы смотрите. Они есть в календаре.
  }
 notice-update-available = Вышла версия { $tag }. Чтобы установить её, выполните kaeri --update.
 cause-proxy-needs-address = Для прокси нужны хост и порт.
-cause-proxy-address-unusable = Адрес прокси не подходит для проверки.
+cause-proxy-address-unusable = Проверка прокси не может использовать этот адрес.
 cause-server-unreachable = Не удалось связаться с сервером.

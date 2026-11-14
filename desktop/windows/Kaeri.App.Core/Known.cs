@@ -33,6 +33,28 @@ public sealed class Known
 
     public SettingsView? Settings { get; private set; }
 
+    /// <summary>Watch, Read or both, as the engine last said.</summary>
+    public MediumState Medium { get; } = new();
+
+    /// <summary>Reading's places, series and downloads, as the engine last said.</summary>
+    public ReadingStore Reading { get; } = new();
+
+    /// <summary>Book folders, servers and the sources of each series.</summary>
+    public BookSourcesState Books { get; } = new();
+
+    /// <summary>The open reader.</summary>
+    public ReaderSession Reader { get; } = new();
+
+    /// <summary>Where every reading model sends its commands: the window's sender.</summary>
+    public void SendReadingWith(Action<Command> send)
+    {
+        Medium.Send = send;
+        Reading.Send = send;
+        Books.Send = send;
+        Reader.Send = send;
+        Reading.Sending.Send = send;
+    }
+
     /// <summary>Each show's own settings sheet, as the engine last sent it, by AniList id.</summary>
     public Dictionary<uint, ShowSettingsView> ShowSheets { get; } = [];
 
@@ -350,6 +372,16 @@ public sealed class Known
         Jobs.Take(e, DateTimeOffset.UtcNow);
         switch (e)
         {
+            case Event.Medium medium:
+                Medium.Apply(medium.V1);
+                break;
+            case Event.Reading or Event.Reader:
+                Reading.Take(e);
+                Reader.Take(e);
+                break;
+            case Event.BookSources:
+                Books.Take(e);
+                break;
             case Event.Conflicts conflicts:
                 Conflicts.Clear();
                 Conflicts.AddRange(conflicts.V1);

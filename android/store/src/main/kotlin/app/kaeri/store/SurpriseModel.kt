@@ -46,7 +46,8 @@ class SurpriseModel {
         _asking.value = null
         if (outcome is SurpriseOutcome.Picked) {
             val pick = SurprisePick(outcome.id, pool, outcome.more, inPlace)
-            _visit.value = pick
+            // A book opens as a series, with no Another on its page.
+            _visit.value = pick.takeIf { pool !is SurprisePool.Reading }
             _picks.tryEmit(pick)
         }
     }

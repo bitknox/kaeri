@@ -175,10 +175,13 @@ struct TitlePage: View {
         // A season's stand-in, from its picker's card, knows no banner, and a cover or a banner
         // on its way would show as a plate first: the last art stays until the next is whole, or
         // until it is known there is none. With no banner and no still seen, the cover fills the
-        // band in its own colours, behind the header, as on every Mac screen with a hero.
+        // band in its own colours, behind the header, as on every Mac screen with a hero. A
+        // still found after the cover filled the band waits for its image over the cover, however
+        // long: the same title's art, so it crossfades in rather than through a plate.
         let next = ArtKey(id: entry.id, art: store.heroArt(entry))
         let shown = shownArt.flatMap { held in
-            held.key != next && !Self.artReady(next, in: store) && (artWaited != next.id || next.art == .waiting) ? held : nil
+            held.key != next && !Self.artReady(next, in: store)
+                && (artWaited != next.id || next.art == .waiting || held.key.id == next.id) ? held : nil
         } ?? ShownArt(key: next, entry: entry)
         let art = shown.key.art
         // A related title shown as its card knows no seasons and no related titles of its own:

@@ -135,13 +135,16 @@ sealed class AccountCard
         };
     }
 
-    /// <summary>How sync stands, as the Mac's account row says it: failed, waiting, or when it last synced.</summary>
+    /// <summary>How sync stands, as the Mac's account row says it: failed, waiting, held for a match, or when it last synced.</summary>
     string? Status(SyncState state)
     {
         if (state.PullError is { } error)
             return T.AccountsSyncFailed(FirstLine(error.Reason));
         if (state.Outbox > 0)
             return null;
+        // Held for a match: not waiting, and said apart, so the card is not stuck on a count.
+        if (state.Deferred > 0)
+            return T.AccountsChangesHeld((long)state.Deferred);
         if (ctx.Known.SyncedAt.TryGetValue(tracker, out var at))
             return T.DevicesRowSynced(Wording.Ago((long)(DateTimeOffset.UtcNow - at).TotalSeconds));
         return T.AccountsSyncDone;

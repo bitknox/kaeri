@@ -320,7 +320,7 @@ async fn a_pin_written_inline_is_what_the_next_task_reads() {
         ]
     );
     assert_eq!(kept_sources(&updates[0]), 1);
-    assert_eq!(toasts(&updates), ["info: alt will be used for this title."]);
+    assert_eq!(toasts(&updates), ["info: This title now plays from alt."]);
     // The show's sheet says the pin, for the sheet it was made from.
     assert!(
         matches!(&updates[2], Event::ShowSettings(sheet) if sheet.source.as_deref() == Some("alt"))

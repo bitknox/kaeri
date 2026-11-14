@@ -6,13 +6,13 @@
 home-title = Home
 
 # Main action for an episode part way through.
-# @arg episode: int
+# @arg episode: plain
 # @max 28
 # @allow proceed
 home-resume-episode = Resume episode { $episode }
 
 # Main action for an episode not started.
-# @arg episode: int
+# @arg episode: plain
 # @max 28
 home-play-episode = Play episode { $episode }
 
@@ -29,12 +29,12 @@ home-details = Details
 home-more = More
 
 # Action in the spotlight's More menu for a show part way through.
-# @arg episode: int
+# @arg episode: plain
 # @max 40
 home-mark-watched = Mark episode { $episode } as watched
 
 # Notice after the action above. It has an Undo button.
-# @arg episode: int
+# @arg episode: plain
 home-marked-watched = Episode { $episode } marked as watched
 
 # Action on a { -continue-cap } card and in the spotlight's More menu.
@@ -89,7 +89,7 @@ home-end-signed-out = Sign in to AniList to bring in your list and Planning.
 home-sign-in = Sign in to AniList
 
 # The closing line at the end of Home when no { -source } is installed. Plugin stores is a link.
-home-end-no-sources = Add a { -source } to play from Home. { -plugin-store-cap-pl } has some to choose from.
+home-end-no-sources = Add a { -source } to play from Home. { -plugin-cap-pl } come from { -plugin-store-cap-pl }.
 
 # Line on a title that no installed { -source } has. The main action becomes Add to Planning.
 # @max 36

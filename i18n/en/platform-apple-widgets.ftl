@@ -4,12 +4,12 @@
 ## Episode names
 
 # Short episode name in a widget.
-# @arg episode: int
+# @arg episode: plain
 # @max 12
 widget-episode-short = E{ $episode }
 
 # Long episode name in a widget.
-# @arg episode: int
+# @arg episode: plain
 # @max 24
 widget-episode-long = Episode { $episode }
 
@@ -23,13 +23,13 @@ widget-day-tomorrow = tomorrow
 # Under a widget: the next episode and when it airs.
 # @arg when: text
 # @arg title: text
-# @arg episode: int
+# @arg episode: plain
 widget-next-line = Next: { $when } · { $title } · Episode { $episode }
 
 # The same line, shorter, for the small size.
 # @arg when: text
 # @arg title: text
-# @arg episode: int
+# @arg episode: plain
 widget-next-line-short = Next: { $when }, { $title } E{ $episode }
 
 # Header detail on the large Airing today widget: when the next episode airs.
@@ -38,7 +38,7 @@ widget-next-time = Next { $time }
 
 # Small widget line: the show, its episode and the day it airs.
 # @arg title: text
-# @arg episode: int
+# @arg episode: plain
 # @arg day: text
 widget-airs-day = { $title } E{ $episode } airs { $day }.
 
@@ -134,7 +134,7 @@ widget-action-start = Play { $episode }
 ## Spoken by VoiceOver
 
 # VoiceOver, an episode in a Continue row: the episode number.
-# @arg episode: int
+# @arg episode: plain
 widget-a11y-episode = episode { $episode }
 
 # VoiceOver, an episode with its mark such as Dub. The first part is already worded.
@@ -161,7 +161,7 @@ widget-a11y-row = { $title }, { $what }
 
 # VoiceOver, an Airing today row: the show, episode and time.
 # @arg title: text
-# @arg episode: int
+# @arg episode: plain
 # @arg time: text
 widget-a11y-airing = { $title }, episode { $episode }, { $time }
 
@@ -192,13 +192,13 @@ widget-aired-at = Aired at { $time }
 
 # VoiceOver, the airing activity before the episode is out.
 # @arg title: text
-# @arg episode: int
+# @arg episode: plain
 # @arg time: text
 widget-a11y-airs-at = { $title }, episode { $episode }, airs at { $time }
 
 # VoiceOver, the airing activity once the episode is out.
 # @arg title: text
-# @arg episode: int
+# @arg episode: plain
 widget-a11y-out-now = { $title }, episode { $episode }, out now
 
 # Line of the downloads activity when an episode finished.

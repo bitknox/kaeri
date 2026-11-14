@@ -49,7 +49,7 @@ settings-aside-sources-apple = { -source-cap-pl } are tried in order, top to bot
 settings-aside-advanced = An option here can undo a Playback setting, such as upscaling or night mode. Most people never need this pane.
 
 # Note under the download quality row.
-settings-quality-detail = Higher takes the best version a { -source } offers, and more space.
+settings-quality-detail = Higher picks the best version a { -source } has. It takes more space.
 
 # Note under the merge subtitles row.
 settings-merge-subtitles-detail = Subtitles stay with the episode wherever the file goes.
@@ -92,6 +92,18 @@ settings-folder-default = Kept with the torrent cache
 # Legend of the storage bar: what downloads take for episodes not yet watched.
 settings-storage-unwatched = Not watched yet
 
+# Legend of the storage bar: what downloads take for chapters not read yet.
+settings-storage-unread = Not read yet
+
+# Legend of the storage bar: what downloads take for chapters already read.
+settings-storage-read = Read
+
+# Legend of the storage bar with both media on: episodes not watched and chapters not read.
+settings-storage-unseen-both = Not watched or read yet
+
+# Legend of the storage bar with both media on: episodes watched and chapters read.
+settings-storage-seen-both = Watched or read
+
 # Line under the storage bar: what downloads take.
 # @arg size: text
 settings-storage-used = { $size } in downloads.
@@ -111,6 +123,10 @@ settings-source-count = { $count ->
 # Footnote of the AniList group in Accounts.
 # @arg tracker: text
 settings-accounts-sync-note = Progress and list changes sync to { $tracker }. { -library-cap } and the Calendar's My list show your { $tracker } lists.
+
+# Footnote of the AniList group in Accounts when the app is for reading.
+# @arg tracker: text
+settings-accounts-sync-note-read = Progress and list changes sync to { $tracker }. { -library-cap } shows your { $tracker } lists.
 
 # Row title in Accounts: titles that differ between this device and the tracker.
 # @arg count: int
@@ -145,7 +161,7 @@ settings-read-online = Read online
 
 # Footnote of the Discord group.
 # @arg tracker: text
-settings-presence-note = Rich presence shows the cover, a progress bar and a link to the show on { $tracker }. Discord fetches the cover from { $tracker } itself. It needs the title shown.
+settings-presence-note = Rich presence shows the cover, a progress bar and a link to the show on { $tracker }. It works only while the title is shown. Discord loads the cover from { $tracker } itself.
 
 # Preview of the Discord presence: the label of the cover drawing.
 settings-presence-cover = Cover
@@ -158,12 +174,12 @@ settings-presence-button = View on { $tracker }
 settings-presence-nothing = Watching anime
 
 # Preview of the Discord presence: the episode line with the total.
-# @arg episode: int
-# @arg total: int
+# @arg episode: plain
+# @arg total: plain
 settings-presence-episode-of = Episode { $episode } of { $total }
 
 # Preview of the Discord presence: the episode line without a total.
-# @arg episode: int
+# @arg episode: plain
 settings-presence-episode = Episode { $episode }
 
 # Under the Discord preview while presence is on.
@@ -225,7 +241,7 @@ settings-when-day = { $day } { $time }
 
 # VoiceOver label of a row of the week: the show, the episode and when it airs.
 # @arg title: text
-# @arg episode: int
+# @arg episode: plain
 # @arg when: text
 settings-week-row-label = { $title }, episode { $episode }, { $when }
 
@@ -234,7 +250,7 @@ settings-week-row-hint = Opens this show's settings
 
 # Under the notification preview while New episodes is on.
 # @arg tracker: text
-settings-notify-explain-on = One notification when an episode of a show in your Watching list comes out, at the time { $tracker } gives. A show's own setting comes first.
+settings-notify-explain-on = You get one notification when an episode of a show in your Watching list comes out, at the time { $tracker } lists. A show's own setting comes first.
 
 # Under the notification preview while New episodes is off.
 settings-notify-explain-off = Off. Only shows turned on in their own settings notify.

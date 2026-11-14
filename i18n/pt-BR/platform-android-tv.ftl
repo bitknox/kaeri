@@ -41,7 +41,7 @@ tv-section-this-tv = Esta TV
 tv-info-from = De
 tv-info-state = Estado
 tv-store-revoked = Não deixa mais esta TV entrar
-tv-seeding-note = Melhor esforço nesta TV: o seeding só roda enquanto a { -app-name } estiver aberta.
+tv-seeding-note = Esta TV só compartilha enquanto o { -app-name } estiver aberto.
 tv-sign-out-title = Sair de { $name }?
 tv-account-not-signed-in = Não entrou
 tv-account-signed-in-as = Conectado como { $name }
@@ -116,12 +116,12 @@ tv-show-back-to-defaults = Voltar ao padrão
 tv-card-progress-spoken = { $percent } assistido
 tv-discussion-footer = Para responder, abra esta discussão no celular.
 tv-discussion-count-read-only = { $count ->
-    [one] Um comentário · Somente leitura
+    [one] { $count } comentário · Somente leitura
     [many] { $count } comentários · Somente leitura
    *[other] { $count } comentários · Somente leitura
  }
 tv-discussion-likes = { $count ->
-    [one] Uma curtida
+    [one] { $count } curtida
     [many] { $count } curtidas
    *[other] { $count } curtidas
  }

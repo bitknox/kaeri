@@ -19,3 +19,4 @@ pair-enter-code = Masukkan kode
 rkey-restores = Memulihkan semuanya jika Anda kehilangan semua { -device }.
 sync-turn-off-button = Matikan
 rkey-enter-line-generic = { $service } menyimpan riwayat dari { -device-pl } Anda yang lain. Kunci yang Anda simpan saat sinkronisasi diaktifkan akan membukanya.
+pair-code-left = Kode ini berlaku { $left } lagi.

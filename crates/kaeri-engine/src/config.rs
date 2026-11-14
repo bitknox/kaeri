@@ -32,6 +32,9 @@ pub struct ConfigState {
     /// The engine runs on a phone or a tablet: what the defaults that depend on the device go
     /// by, filled into both copies wherever the file leaves them unset.
     handheld: bool,
+    /// The engine runs on a phone, not a tablet: what the defaults that depend on the screen's
+    /// size go by.
+    phone: bool,
     /// The profile's own `profile.toml`, when a profile other than the first is in use: its
     /// shared keys are read over `config.toml`'s and written here instead of there.
     overlay: Option<std::path::PathBuf>,
@@ -55,6 +58,7 @@ impl ConfigState {
             overridden: Vec::new(),
             notify_switched_on: 0,
             handheld: false,
+            phone: false,
             overlay: None,
             sync: None,
             skip_find_paused: None,
@@ -68,6 +72,22 @@ impl ConfigState {
     pub fn set_handheld(&mut self, handheld: bool) {
         self.handheld = handheld;
         self.fill();
+    }
+
+    /// A phone or a tablet, as the app said.
+    pub fn handheld(&self) -> bool {
+        self.handheld
+    }
+
+    /// Whether the engine runs on a phone, not a tablet, for the defaults that depend on the
+    /// screen's size: novel text left-aligned there, justified elsewhere.
+    pub fn set_phone(&mut self, phone: bool) {
+        self.phone = phone;
+    }
+
+    /// A phone, as the app said.
+    pub fn phone(&self) -> bool {
+        self.phone
     }
 
     /// Tell `store`'s sync log of every shared setting written from here on.

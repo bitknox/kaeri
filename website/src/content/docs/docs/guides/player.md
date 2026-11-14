@@ -1,6 +1,6 @@
 ---
 title: The player
-description: Kaeri’s controls, skip button, Up next, menus and upscaling inside mpv, and the settings for each.
+description: Kaeri's controls, skip button, Up next, menus and upscaling inside mpv, and the settings for each.
 ---
 
 Kaeri plays everything in mpv and gives it the app's look: its own controls, seekbar
@@ -36,7 +36,7 @@ your mpv version, which interface is in use and where its files were written.
 
 ## Keys inside the player
 
-Keys are written the way the player’s `?` list writes them: `S` is the S key on its own, and
+Keys are written the way the player's `?` list writes them: `S` is the S key on its own, and
 `Shift+N` is N with Shift held.
 
 | Key | Action |
@@ -138,7 +138,7 @@ playback, and parts not downloaded yet show no thumbnail.
 ## Night mode
 
 Night mode evens out quiet dialogue and loud music, so a low volume stays usable and the
-opening isn’t suddenly loud. Turn it on in the menu or with `night_mode = true`.
+opening isn't suddenly loud. Turn it on in the menu or with `night_mode = true`.
 
 ## Trying it without a source
 

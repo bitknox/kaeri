@@ -96,4 +96,6 @@ if [[ "${1:-}" == --test ]]; then
   exit 0
 fi
 
-touched "$(tools/engine-sources.sh --crates)" "$@"
+# Assigned first, so a failed list stops this script instead of reading as no change.
+crates="$(tools/engine-sources.sh --crates)"
+touched "$crates" "$@"

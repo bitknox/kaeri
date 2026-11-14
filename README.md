@@ -8,7 +8,7 @@
   </picture>
 </a>
 
-<h3>Browse, watch, track and sync anime in one client.</h3>
+<h3>Watch anime and read manga, manhwa and light novels, from sources you add.</h3>
 
 <p>
 Native apps for Mac, iPhone, iPad, Android, Android TV, Windows and Linux, and one for the terminal.
@@ -41,9 +41,13 @@ Native apps for Mac, iPhone, iPad, Android, Android TV, Windows and Linux, and o
 
 <br>
 
-Kaeri browses AniList with no account, plays episodes in mpv, keeps your history on your
-device and syncs it to AniList, MyAnimeList, Kitsu, Simkl and Trakt. It is free, open source and
-non-commercial.
+Kaeri browses AniList without an account, plays episodes in mpv and keeps your history on your
+device. Connect AniList, MyAnimeList, Kitsu, Simkl or Trakt and your progress syncs there too.
+There is no Kaeri account to make. The project is free, open source and non-commercial.
+
+Books work the same way. Manga, manhwa and light novels open from your own folders, a Komga,
+Kavita or OPDS server you run, or a book plugin, in a paged, strip or novel reader. Your place in
+each one stays on your device and syncs to the trackers you connect.
 
 <table>
   <tr>
@@ -74,7 +78,7 @@ non-commercial.
 Also in the apps:
 
 - Skip the opening, and start the next episode from the credits.
-- Pick sub or dub once and each show remembers.
+- Pick subbed or dubbed once and each show remembers it.
 - Watch with friends in sync, on Mac, iPhone, iPad, Windows, Linux and in the terminal.
 - New-episode alerts, off until you turn them on for a show.
 - Home screen widgets, and Live Activities and Handoff on Apple devices.
@@ -85,7 +89,8 @@ The [features page](https://kaeri.app/features/) lists every feature and which a
 
 Each app is built with its platform's toolkit: SwiftUI on Apple, Jetpack Compose on Android,
 WinUI 3 on Windows, GTK 4 on Linux and Ratatui in the terminal. They share one engine, written in
-Rust.
+Rust. Five front ends are more work than one cross-platform shell, but it means the Mac app has a
+real menu bar and the TV app is built for a remote.
 
 <table>
   <tr>
@@ -120,7 +125,7 @@ Rust.
 ### The player
 
 Episodes play in mpv, upscaled by ArtCNN or Anime4K, with a skip button for the opening and Up
-Next at the end. The player menu has the episodes, sources, sub or dub, upscaling and tracks.
+Next at the end. The player menu has the episodes, sources, subbed or dubbed, upscaling and tracks.
 
 <img src="assets/screenshots/player-menu.webp" width="884" alt="The subtitles menu inside the player: tracks, then style choices such as size and outline">
 
@@ -142,7 +147,7 @@ terminals with image support.
 
 Every release on the [releases page](https://github.com/bitknox/kaeri/releases/latest) has the
 apps and the terminal app. Each file has a `.sha256` beside it. The apps are not in the App Store
-or on Google Play, so each one needs a one-time step the first time you open it. The
+or on Google Play, so each one needs one extra step the first time you open it. The
 [installation guide](https://kaeri.app/docs/getting-started/installation/) has the full steps.
 
 | Platform | File | First open |
@@ -198,7 +203,7 @@ source. The terminal app updates with `kaeri --update`.
 
 ## Where episodes come from
 
-Kaeri doesn't host any shows. Apart from a demo of Creative Commons works, it comes with no
+Kaeri doesn't host any shows or books. Apart from a demo of Creative Commons works, it comes with no
 sources, and it doesn't list, recommend or link to any. You add the sources you're entitled to use:
 your own files, your own media server, a stream you have the right to
 play, a licensed service, or a sandboxed WebAssembly plugin from a plugin store you joined. A plugin can only reach
@@ -239,7 +244,7 @@ cargo clippy --workspace --all-targets
   [docs/desktop-linux-app.md](docs/desktop-linux-app.md).
 - Plugins: `rustup target add wasm32-wasip2`, then see [docs/plugins.md](docs/plugins.md).
 - The website: `cd website && bun run dev`.
-- Claude Code setup and efficient workflows: [docs/claude-code.md](docs/claude-code.md).
+- Claude Code setup: [docs/claude-code.md](docs/claude-code.md).
 - Accessibility: what each app supports and how to report a barrier is in
   [ACCESSIBILITY.md](ACCESSIBILITY.md).
 

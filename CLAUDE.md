@@ -20,19 +20,20 @@ Folder guides: `crates/CLAUDE.md`, `apple/CLAUDE.md`, `android/CLAUDE.md`, `webs
 - `kaeri-store` is local watch history. The plugin store's server logic is
   `kaeri-store-core`, with native and WASM adapters.
 - Provider plugins under `plugins/` are separate builds outside the workspace. This repository
-  carries no plugins apart from the two references and two test fixtures.
+  carries no plugins apart from three references (`example-rust`, `example-ts`, `example-books`)
+  and three test fixtures (`test-hostile`, `test-hostile-books`, `test-torrent-source`).
 - `website/` uses Bun; the JS reference plugin uses npm and its `package-lock.json`.
 
 ## Rules that always apply
 
-- The legal line is "Kaeri doesn't host any shows. You add your own sources." The long form
+- The legal line is "Kaeri doesn't host any shows or books. You add your own sources." The long form
   is on the website's legal page. In the apps it shows only in About. Copy stays neutral and
   legal-first: Kaeri never supplies, promotes or curates sources (`i18n/lint.toml` lists the
   words it never uses).
 - No real show, site, fansub or release-group names in code, fixtures, tests or commits. Use
   made-up titles and `.example` hosts. CC-licensed media only for playback checks.
-- Copy and docs: plain sentences and headings, no em dashes, no "honestly", "deliberately" or
-  "concretely", no bold-label-then-dash list items, no asides about past bugs.
+- Copy and docs: legal-first (above) is the one hard rule. `docs/writing.md` is the guide for
+  everything else people read: app strings, READMEs, the website and the docs.
 - Never print secrets: the release keystore and its passwords (`~/.kaeri-signing`,
   `~/.gradle/gradle.properties`), the Mac signing certificate's `.p12` and its password
   (`~/.kaeri-signing/mac`), the Mac update key, tracker client secrets in config.

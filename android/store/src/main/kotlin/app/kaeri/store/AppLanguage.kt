@@ -62,6 +62,21 @@ object AppLanguage {
         return base.createConfigurationContext(config)
     }
 
+    /**
+     * Below Android 13, the app's own resources in the chosen language at once, or the system's
+     * again: what notifications, widgets and services read, which the system keeps in the
+     * per-app language from 13. Call after [choose].
+     */
+    fun applyToApp(app: Context) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) return
+        val tag = app.getSharedPreferences(PREFS, Context.MODE_PRIVATE).getString(KEY, null)
+        val locales = tag?.let { LocaleList(Locale.forLanguageTag(it)) } ?: android.content.res.Resources.getSystem().configuration.locales
+        Locale.setDefault(locales[0])
+        val config = Configuration(app.resources.configuration).apply { setLocales(locales) }
+        @Suppress("DEPRECATION")
+        app.resources.updateConfiguration(config, app.resources.displayMetrics)
+    }
+
     private fun match(tag: String): Language? {
         val wanted = Locale.forLanguageTag(tag)
         return shipped.firstOrNull { Locale.forLanguageTag(it.tag) == wanted }

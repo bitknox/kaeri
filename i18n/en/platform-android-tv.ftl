@@ -134,7 +134,7 @@ tv-search-space = Space
 
 # Title of the season picker on the TV once a year is chosen
 # @only android
-# @arg year: int
+# @arg year: plain
 tv-search-season-in = Season in { $year }
 
 # Under the genre list on the TV when it is offline and the genres have not loaded
@@ -182,7 +182,7 @@ tv-store-revoked = No longer lets this TV in
 
 # Note under the seeding rows in TV settings
 # @only android
-tv-seeding-note = Best effort on this TV: seeding runs only while { -app-name } is open.
+tv-seeding-note = This TV seeds only while { -app-name } is open.
 
 # Title of the TV sign-out confirmation
 # @only android

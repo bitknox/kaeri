@@ -1,7 +1,7 @@
 party-status = Status { -watch-party }
 party-members = Anggota
 party-choose-a-source = Pilih { -source }
-party-sources-none-listed = Tidak ada { -source } yang mencantumkan episode { $episode }. { -source-cap-pl } berasal dari { -plugin-pl } dari { -plugin-store }.
+party-sources-none-listed = Tidak ada { -source } dengan episode { $episode }. { -source-cap-pl } berasal dari { -plugin-pl } yang Anda tambahkan dari { -plugin-store }.
 party-sources-found-line = { $count ->
    *[other] { $count } { -source } memilikinya. Yang Anda pilih akan diputar dalam { -watch-party }.
  }

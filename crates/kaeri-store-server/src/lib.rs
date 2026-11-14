@@ -57,7 +57,8 @@ impl Inspector for WasmInspector {
         // not the plugin's id, which also keeps the host from granting it anyone's settings.
         let path = self.scratch.path().join(format!("{}.wasm", crypto::sha256_hex(wasm)));
         tokio::fs::write(&path, wasm).await.map_err(|e| e.to_string())?;
-        let loaded = self.host.load(&path).await;
+        // Either kind of source: the store lists both, and the manifest says which it is.
+        let loaded = self.host.load_any(&path).await;
         let _ = tokio::fs::remove_file(&path).await;
         // Said without the scratch path, which means nothing to whoever uploaded the plugin and
         // would tell a browser where this server keeps its files.
@@ -76,16 +77,53 @@ impl Inspector for WasmInspector {
             kaeri_plugin::PluginError::Deadline { .. } => {
                 "the plugin took too long to describe itself".to_owned()
             }
+            // `load_any` takes both kinds, so this is never said; kept so a new kind is a
+            // compile error here rather than a vague message.
+            kaeri_plugin::PluginError::OtherKind { kind, .. } => {
+                format!("the plugin is a source of {kind}, which this store does not take")
+            }
         })?;
-        let manifest = plugin.manifest();
-        Ok(PluginInfo {
-            id: manifest.id.trim().to_owned(),
-            name: manifest.display_name.clone(),
-            version: manifest.version.trim().to_owned(),
-            allowed_hosts: manifest.allowed_hosts.clone(),
-            translations: manifest.translation_types.clone(),
+        Ok(match plugin {
+            kaeri_plugin::AnyPlugin::Shows(plugin) => {
+                let manifest = plugin.manifest();
+                PluginInfo {
+                    id: manifest.id.trim().to_owned(),
+                    name: manifest.display_name.clone(),
+                    version: manifest.version.trim().to_owned(),
+                    allowed_hosts: manifest.allowed_hosts.clone(),
+                    translations: manifest.translation_types.clone(),
+                    kind: None,
+                    media: Vec::new(),
+                }
+            }
+            kaeri_plugin::AnyPlugin::Books(plugin) => {
+                let manifest = plugin.manifest();
+                PluginInfo {
+                    id: manifest.id.trim().to_owned(),
+                    name: manifest.display_name.clone(),
+                    version: manifest.version.trim().to_owned(),
+                    allowed_hosts: manifest.allowed_hosts.clone(),
+                    translations: Vec::new(),
+                    kind: Some(manifest::KIND_BOOKS.to_owned()),
+                    media: book_media(&manifest.media),
+                }
+            }
         })
     }
+}
+
+/// A book source's media, as the store lists them: trimmed, lower case, each once, in the order
+/// the plugin gave them. Values this version does not know are kept, so a newer Kaeri can still
+/// read them from the index.
+fn book_media(media: &[String]) -> Vec<String> {
+    let mut out: Vec<String> = Vec::new();
+    for medium in media {
+        let medium = medium.trim().to_ascii_lowercase();
+        if !medium.is_empty() && !out.contains(&medium) {
+            out.push(medium);
+        }
+    }
+    out
 }
 
 /// Where a store lives.
@@ -164,8 +202,8 @@ pub struct ServeArgs {
 pub enum StoreCommand {
     /// Serve a store, creating it on the first run.
     ///
-    /// Prints an owner invite until someone uses it. Everything after that — inviting people,
-    /// removing them, publishing — is done from the store's page in the app, or its admin page.
+    /// Prints an owner invite until someone uses it. After that, inviting people, removing them
+    /// and publishing happen on the store's page in the app, or on its admin page.
     Serve(ServeArgs),
     /// Print a one-time invite link.
     Invite {
@@ -281,7 +319,7 @@ fn behind_platform_proxy() -> bool {
 async fn open_existing(storage: &StorageArgs) -> Result<(AnyStore, String), String> {
     let storage = storage.storage()?;
     if !storage.exists() {
-        return Err(format!("{} is not a store — `serve` creates one", storage.describe()));
+        return Err(format!("{} is not a store; `serve` creates one", storage.describe()));
     }
     let store = server::open(&storage, None, None).await?;
     let base = store.url().await.ok_or_else(|| {
@@ -518,7 +556,7 @@ pub async fn admin(storage: &StorageArgs, owner: Option<&str>) -> Result<(), Str
     let (store, base) = open_existing(storage).await?;
     let found = store.owner_named(owner).await.map_err(|e| e.to_string())?;
     let owner = found.ok_or_else(|| match owner {
-        Some(name) => format!("no owner named {name} — the members list shows who owns it"),
+        Some(name) => format!("no owner named {name}; the members list shows who owns it"),
         None => {
             "nobody owns this store yet — join it with the owner invite `serve` printed".into()
         }
@@ -526,7 +564,7 @@ pub async fn admin(storage: &StorageArgs, owner: Option<&str>) -> Result<(), Str
     let (link, _) =
         store.create_admin_link(&owner.id, &base, now()).await.map_err(|e| e.to_string())?;
     println!("{link}");
-    eprintln!("signs in as {} — works once, for ten minutes", owner.name);
+    eprintln!("signs in as {}, once, within ten minutes", owner.name);
     Ok(())
 }
 
@@ -538,7 +576,7 @@ pub async fn publish(
 ) -> Result<(), String> {
     let storage = storage.storage()?;
     if !storage.exists() {
-        return Err(format!("{} is not a store — `serve` creates one", storage.describe()));
+        return Err(format!("{} is not a store; `serve` creates one", storage.describe()));
     }
     let store = server::open(&storage, None, None).await?;
     let bytes =

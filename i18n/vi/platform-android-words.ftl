@@ -16,7 +16,7 @@ settings-coming-up-dubbed = { $count ->
 settings-coming-up-switched-off = { $count ->
    *[other] { $names } đang tắt trong cài đặt riêng của tựa.
  }
-settings-coming-up-opens = Chạm vào một tựa để mở cài đặt riêng của tựa đó.
+settings-coming-up-opens = Chạm vào một tựa để mở cài đặt của tựa đó.
 torrents-proxy-as = với tên { $user }
 title-facts-aired = Phát sóng { $dates }
 title-facts-airing = Đang phát sóng từ { $date }
@@ -127,7 +127,7 @@ settings-titles-note-english-missing = { $title } không có tên tiếng Anh tr
 settings-titles-note-english = Tên tiếng Anh như AniList ghi, và romaji nếu không có tên tiếng Anh.
 settings-titles-note-romaji = Tên tiếng Nhật viết bằng chữ Latin, như AniList ghi.
 settings-stores-with-updates = { $stores } · { $updates }
-settings-seeding-best-effort = Cố gắng hết sức trên { -device } này: seed chỉ chạy khi { -app-name } đang mở.
+settings-seeding-best-effort = { -device-cap } này chỉ chia sẻ lại khi { -app-name } đang mở.
 settings-downloads-count = { $count ->
    *[other] { $count } tập
  }
@@ -142,7 +142,7 @@ settings-typefaces-value = Roboto Flex và Zen Kaku Gothic New, theo SIL Open Fo
 settings-libraries-value = JNA và AndroidX, theo Apache License 2.0
 settings-report-bug-value = Mở GitHub trong trình duyệt của bạn
 downloads-storage-share-description = Tải xuống chiếm { $size }
-settings-aside-notifications = Một thông báo khi có tập mới của tựa bạn theo dõi: tên tựa và số tập, không có tên tập. Mỗi tựa có thể tự tắt thông báo trong cài đặt của nó.
+settings-aside-notifications = Một thông báo khi có tập mới của tựa bạn theo dõi: tên tựa và số tập, không bao giờ có tên tập. Bạn có thể tắt thông báo của một tựa trong cài đặt của tựa đó.
 settings-aside-downloads = Bản tải xuống nằm trong không gian riêng của { -app-name } trên { -device } này, ứng dụng khác không đọc được. Gỡ ứng dụng sẽ xóa chúng.
 settings-aside-sources = { -source-cap-pl } được thử theo thứ tự từ trên xuống dưới. Một tựa có thể giữ { -source } riêng, chọn trong trang tựa.
 settings-upscaling-description = Cùng một khung hình: nửa trái là 480p gốc, nửa phải là { $mode }

@@ -38,12 +38,12 @@ calendar-empty-day = Nothing airs on { $day }.
 calendar-load-failed = Couldn't load the calendar
 
 # Row: episode number and the time it airs.
-# @arg episode: int
+# @arg episode: plain
 # @arg time: text
 calendar-row-time = E{ $episode } · { $time }
 
 # Row: episode number, dubbed, and the time it airs.
-# @arg episode: int
+# @arg episode: plain
 # @arg time: text
 calendar-row-time-dubbed = E{ $episode } { -dubbed } · { $time }
 
@@ -60,19 +60,19 @@ calendar-delayed = Delayed { $note }
 calendar-out = Out { $ago }
 
 # Row in a small widget: the episode is out.
-# @arg episode: int
+# @arg episode: plain
 calendar-episode-out = E{ $episode } out
 
 # Accessibility word for an aired episode that the person has not watched.
 calendar-out-unwatched = Out, not watched
 
 # Line saying when an episode airs. The time is already worded: "in 1h 30m", "Thursday 16:30".
-# @arg episode: int
+# @arg episode: plain
 # @arg when: text
 episode-airs = Episode { $episode } airs { $when }
 
 # Line for an episode that has not aired and has no date yet.
-# @arg episode: int
+# @arg episode: plain
 episode-not-out = Episode { $episode } is not out yet
 
 # Header of the list of episodes that air in the next seven days.

@@ -19,6 +19,8 @@ export interface StoreInfo {
 	contact?: string;
 	/** Whether invites can work more than once and for other lengths of time. */
 	invite_choices?: boolean;
+	/** Whether the store lists book sources as well as show sources. */
+	books?: boolean;
 }
 
 export interface IndexEntry {
@@ -30,6 +32,10 @@ export interface IndexEntry {
 	sha256: string;
 	size: number;
 	published_at: number;
+	/** `books` for a book source. Left out for a show source. */
+	kind?: string;
+	/** What a book source serves: `manga`, `novel`. Left out for a show source. */
+	media?: string[];
 }
 
 export interface DeviceRow {

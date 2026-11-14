@@ -69,6 +69,12 @@ pub struct StorePluginRow {
     #[cfg_attr(feature = "ffi", uniffi(default))]
     pub hosts: Vec<String>,
     pub status: StorePluginStatus,
+    /// A book source rather than a show source. Listed only where reading is available.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub books: bool,
+    /// What a book source serves. Empty for a show source.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub media: Vec<kaeri_core::media::Medium>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -341,6 +347,12 @@ pub struct LocalPluginRow {
     /// The version the store already offers, if it offers one.
     #[cfg_attr(feature = "ffi", uniffi(default))]
     pub published: Option<String>,
+    /// A book source rather than a show source. Listed only where reading is available.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub books: bool,
+    /// What a book source serves. Empty for a show source.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub media: Vec<kaeri_core::media::Medium>,
 }
 
 /// The host a store's URL names, lowercase, without a user, a port or a path: what the store

@@ -472,14 +472,17 @@ static partial class States
 /// </summary>
 public sealed partial class OfflineLine : StackPanel
 {
-    public OfflineLine()
+    public OfflineLine() : this(false) { }
+
+    /// <param name="reading">On a reading page: downloaded chapters, not episodes.</param>
+    public OfflineLine(bool reading)
     {
         Orientation = Orientation.Horizontal;
         Spacing = 8;
         Margin = new Thickness(0, 4, 0, 0);
         Visibility = Visibility.Collapsed;
         Children.Add(new FontIcon { Glyph = "", FontSize = 14, Foreground = Ui.Res<Brush>("HazeBrush"), VerticalAlignment = VerticalAlignment.Center });
-        Children.Add(Ui.Text(T.StateOfflineLine, "HazeBodyStyle", wrap: false));
+        Children.Add(Ui.Text(reading ? T.ReadStateOfflineLine : T.StateOfflineLine, "HazeBodyStyle", wrap: false));
         AutomationProperties.SetLiveSetting(this, AutomationLiveSetting.Polite);
         Loaded += (_, _) =>
         {

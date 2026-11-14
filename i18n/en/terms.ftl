@@ -70,6 +70,11 @@
 -continue = continue
 -continue-cap = Continue
 
+# The button that resumes a book, manga or webtoon: reading's own form of { -continue }. English says
+# continue for both; a language whose { -continue } means "continue watching" says "keep reading" here.
+-continue-reading = continue
+-continue-reading-cap = Continue
+
 # The button that goes on to the next step of a flow, such as setup. Not the button that resumes a
 # show; that is { -continue }.
 -proceed = continue

@@ -72,7 +72,7 @@ class ComingTest {
         )
         assertEquals(listOf(1u, 1u, 3u), ComingModel.listed(week).map { it.id })
         assertEquals(
-            "Summer Wind Relay notifies when its dub is out. Amber Forest is off in its own settings. A show opens its settings.",
+            "Summer Wind Relay notifies when its dub is out. Amber Forest is off in its own settings. Tap a show to open its settings.",
             ComingModel.footer(context, week),
         )
         assertEquals("Nothing airs this week for the shows you follow.", ComingModel.footer(context, UpcomingNotices(enabled = true, generatedAt = 0)))

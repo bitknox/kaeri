@@ -19,7 +19,7 @@ discussion-apple-player-note = { $count ->
    *[other] { $count } комментариев · ставит на паузу
  }
 settings-apple-discussions = Обсуждения серий
-settings-apple-discussions-note = Читает комментарии на форуме AniList для серий, которые вы посмотрели.
+settings-apple-discussions-note = Комментарии из темы на форуме AniList появляются, когда вы посмотрите серию.
 settings-apple-comment-images = Картинки в комментариях
 settings-apple-comment-images-note = Каждая картинка загружается с сайта, который её хранит и видит ваш IP-адрес.
 discussion-apple-key-hint = ⌘Return отправляет. Return добавляет строку.

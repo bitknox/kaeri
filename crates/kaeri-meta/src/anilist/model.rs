@@ -787,7 +787,7 @@ pub fn plain_run(raw: &str) -> String {
 /// `"\n<br>\n"` is one. Any other tag becomes a space where it separated words.
 ///
 /// The result keeps the breaks at its own ends, so the caller can place them between runs.
-fn plain_text(raw: &str) -> String {
+pub(crate) fn plain_text(raw: &str) -> String {
     const HARD: char = '\u{1}';
     let mut marked = String::with_capacity(raw.len());
     let mut tag: Option<String> = None;

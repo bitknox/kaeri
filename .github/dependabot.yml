@@ -48,7 +48,9 @@ updates:
     directories:
       - /
       - /plugins/example-rust
+      - /plugins/example-books
       - /plugins/test-hostile
+      - /plugins/test-hostile-books
       - /plugins/test-torrent-source
     multi-ecosystem-group: weekly
     patterns: ["*"]

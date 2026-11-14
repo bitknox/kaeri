@@ -1,6 +1,6 @@
 continue-menu-resume = { -continue-cap }
 continue-sync-waiting = { $count ->
-    [one] Одно изменение ждёт синхронизации
+    [one] { $count } изменение ждёт синхронизации
     [few] { $count } изменения ждут синхронизации
     [many] { $count } изменений ждут синхронизации
    *[other] { $count } изменения ждут синхронизации
@@ -20,6 +20,17 @@ library-list-count = { $list } { $count }
 search-sort-name = Сортировка
 filter-picked-two = { $first }, { $second }
 filter-picked-more = { $first } +{ $more }
+search-genre-left-out = Без: { $genre }
+search-filters-button-set = Фильтры, задано: { $count }
+shortcuts-search-filters = Фильтры поиска
+filter-hint-click = Щёлкните один раз, чтобы включить, дважды, чтобы исключить.
+search-pick-include = Включить
+search-pick-leave-out = Исключить
+search-range-from = От
+search-range-to = До
+search-minutes-unit = мин
+search-score-any = Любой
+search-suggest-filter = Добавить фильтр: { $name }
 title-season-when = { $season } · { $when }
 episode-download-text = Загрузить эпизод { $episode }
 episode-download-failed-text = Не удалось загрузить эпизод { $episode }. Попробуйте снова.
@@ -47,3 +58,4 @@ search-result-in-library = В вашей { -library }
 search-result-on-server = На { $server }
 search-result-on-service = В { $service }
 match-choice-line = { $parts } · совпадение { $percent }%
+search-rate-limit-enter = Поиск по мере ввода ненадолго приостановлен, чтобы не превысить лимиты AniList. Нажмите Enter, чтобы искать сейчас.

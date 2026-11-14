@@ -10,7 +10,7 @@
 
 mod preview;
 mod stage;
-mod webkit;
+pub(crate) mod webkit;
 mod window;
 
 use kaeri_model::{catalog::Entry, settings::SettingKey, trailer::trailer_may_autoplay};

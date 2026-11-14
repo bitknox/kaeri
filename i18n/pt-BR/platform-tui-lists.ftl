@@ -4,7 +4,7 @@ downloads-column-title = Título
 downloads-column-state = Estado
 downloads-column-progress = Progresso
 downloads-empty-heading = Nada na fila
-downloads-empty-hint = Pressione { $key } em um título ou episódio para baixá-lo offline.
+downloads-empty-hint = Pressione { $key } em um título ou episódio para baixá-lo.
 downloads-row-episode = E{ $episode }
 downloads-row-episode-ahead = E{ $episode } · adiantado
 downloads-note-sizes = { $downloaded } / { $total }
@@ -31,7 +31,7 @@ accounts-screen-title = Contas
 accounts-badge-sign-in = { $tracker } { $mark } entrar
 accounts-needs-sign-in = Entre de novo em { $tracker }. Pressione { $key } para abrir Contas.
 accounts-conflicts-found = { $count ->
-    [one] 1 diferença de sincronização encontrada. Pressione { $key } para revisar.
+    [one] { $count } diferença de sincronização encontrada. Pressione { $key } para revisar.
     [many] { $count } diferenças de sincronização encontradas. Pressione { $key } para revisá-las.
    *[other] { $count } diferenças de sincronização encontradas. Pressione { $key } para revisá-las.
  }
@@ -66,14 +66,14 @@ accounts-row-signed-in-as = Conectado como { $user }
 accounts-row-connected = Conectado
 accounts-row-not-connected = Não conectado
 accounts-row-queued = { $count ->
-    [one] 1 alteração na fila
+    [one] { $count } alteração na fila
     [many] { $count } alterações na fila
    *[other] { $count } alterações na fila
  }
-accounts-row-queued-held = { $queued } na fila, { $held } aguardando a correspondência de id
-accounts-conflict-keep-mine = Manter o meu
-accounts-conflict-keep-theirs = Manter o deles
-accounts-conflict-row = { $title }  ·  { $field }: aqui { $local } / no { -tracker } { $remote }
+accounts-row-queued-held = { $queued } na fila, { $held } aguardando correspondência
+accounts-conflict-keep-mine = Usar local
+accounts-conflict-keep-theirs = Usar o da conta
+accounts-conflict-row = { $title }  ·  { $field }: local { $local } / no { -tracker } { $remote }
 lists-library-title = { -library-cap }
 lists-remove-wrong-list = Você só pode ocultar títulos na lista { -continue-cap }.
 lists-continue-removed = { $title } oculto de { -continue-cap }. Assistir de novo o traz de volta.
@@ -84,7 +84,7 @@ lists-loading = Carregando…
 lists-empty-press-enter = Pressione ↵ para buscar
 lists-empty-type-to-search = Digite para buscar
 lists-empty-browse-filtered = Pressione ↵ para navegar com estes filtros.
-lists-empty-browse-popular = Pressione ↵ para navegar pelos mais populares.
+lists-empty-browse-popular = Pressione ↵ para ver os títulos mais populares.
 lists-empty-no-matches = Nada encontrado
 lists-empty-fewer-filters = Tente menos filtros.
 lists-empty-shorter-query = Tente uma busca mais curta ou o título em romaji.
@@ -136,7 +136,7 @@ lists-progress-aired = { $total ->
    *[other] { $done } de { $total } episódios saíram
  }
 lists-progress-watched = { $count ->
-    [one] 1 episódio assistido
+    [one] { $count } episódio assistido
     [many] { $count } episódios assistidos
    *[other] { $count } episódios assistidos
  }

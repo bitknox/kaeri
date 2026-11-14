@@ -1,7 +1,7 @@
 party-status = Status för { -watch-party }
 party-members = Deltagare
 party-choose-a-source = Välj en { -source }
-party-sources-none-listed = Ingen { -source } listar avsnitt { $episode }. { -source-cap-pl } kommer från { -plugin-pl } som en { -plugin-store } lägger till.
+party-sources-none-listed = Ingen { -source } listar avsnitt { $episode }. { -source-cap-pl } kommer från { -plugin-pl }, som du lägger till från en { -plugin-store }.
 party-sources-found-line = { $count ->
     [one] En { -source } har det. Den du väljer spelas med { -watch-party }.
    *[other] { $count } { -source-pl } har det. Den du väljer spelas med { -watch-party }.

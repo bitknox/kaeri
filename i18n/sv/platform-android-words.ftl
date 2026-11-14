@@ -19,7 +19,7 @@ settings-coming-up-switched-off = { $count ->
     [one] { $names } är avstängd i sina egna inställningar.
    *[other] { $names } är avstängda i sina egna inställningar.
  }
-settings-coming-up-opens = En serie öppnar sina inställningar.
+settings-coming-up-opens = Tryck på en serie för att öppna dess inställningar.
 torrents-proxy-as = som { $user }
 title-facts-aired = Sändes { $dates }
 title-facts-airing = Sänds sedan { $date }
@@ -137,7 +137,7 @@ settings-titles-note-english-missing = { $title } har ingen engelsk titel på An
 settings-titles-note-english = Engelska titlar som AniList anger, och romaji där det inte finns någon.
 settings-titles-note-romaji = Japanska titlar skrivna med latinska bokstäver, som AniList anger dem.
 settings-stores-with-updates = { $stores } · { $updates }
-settings-seeding-best-effort = Bästa möjliga på den här { -device }en: seeding körs bara medan { -app-name } är öppen.
+settings-seeding-best-effort = Den här { -device }en seedar bara medan { -app-name } är öppen.
 settings-downloads-count = { $count ->
     [one] Ett avsnitt
    *[other] { $count } avsnitt
@@ -154,7 +154,7 @@ settings-typefaces-value = Roboto Flex och Zen Kaku Gothic New, under SIL Open F
 settings-libraries-value = JNA och AndroidX, under Apache License 2.0
 settings-report-bug-value = Öppnar GitHub i din webbläsare
 downloads-storage-share-description = Nedladdningarna tar { $size }
-settings-aside-notifications = En avisering när ett avsnitt av en serie du följer kommer ut, med serien och avsnittsnumret men aldrig avsnittets titel. En serie kan stänga av sina egna i sina inställningar.
+settings-aside-notifications = En avisering när ett avsnitt av en serie du följer kommer ut: serien och avsnittets nummer, aldrig dess titel. Du kan stänga av en series aviseringar i dess inställningar.
 settings-aside-downloads = Nedladdningar ligger i { -app-name }s eget utrymme på den här { -device }en, som andra appar inte kan läsa. Tar du bort appen tas de bort.
 settings-aside-sources = { -source-cap-pl } testas i ordning, uppifrån och ned. En serie kan ha sin egen { -source }, vald från dess titelsida.
 settings-upscaling-description = Samma bild: vänstra halvan är originalet i 480p, högra halvan med { $mode }

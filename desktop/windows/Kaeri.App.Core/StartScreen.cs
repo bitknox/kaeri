@@ -85,6 +85,8 @@ public sealed class StartScreen(uint id, string episode, double? resume)
     readonly List<Seen> seen = [];
     List<string> resting = [];
     (string Name, SourceMiss Miss)? lastMiss;
+    /// <summary>The pinned source that did not have the episode, once another source answered.</summary>
+    string? pinMissed;
     uint? peers;
     ulong? rate;
     // Active with no name is "finding peers" with no source named.
@@ -185,6 +187,9 @@ public sealed class StartScreen(uint id, string episode, double? resume)
                 break;
             case StartStep.SourcesResting r:
                 resting = [.. r.Names];
+                break;
+            case StartStep.PinMissed pm:
+                pinMissed = pm.Name;
                 break;
             case StartStep.FindingPeers p:
                 findingPeers = (true, p.Name);
@@ -294,6 +299,8 @@ public sealed class StartScreen(uint id, string episode, double? resume)
                     facts.Add(T.PlayerStartFrom(from));
                 break;
             case StartPhase.Opening or StartPhase.Another or StartPhase.Buffering:
+                if (pinMissed is { } passedOver)
+                    facts.Add(T.PlayerStartPinMissed(passedOver, Episode));
                 if (noVideo)
                     facts.Add(T.PlayerStartNoVideo);
                 if (peers is { } p)

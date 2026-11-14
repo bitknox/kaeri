@@ -58,6 +58,11 @@ braces = Use { "{" }name{ "}" } here
 # @arg who: text
 # @arg what: text
 two-args = { $who } watched { $what }
+
+# A number that names something beside a count.
+# @arg episode: plain
+# @arg count: int
+episode-seen = Episode { $episode }, seen { $count } times
 "#;
 
 const ENGINE_EN: &str = r#"# Toast after a setting is stored.
@@ -249,6 +254,25 @@ fn plural_forms_and_arguments_come_out_right() {
     assert!(class.contains("public static string QueueLeft(long count, string title)"));
     // Apple: a plural with a text argument after the count.
     assert!(file(&files, "Localizable.xcstrings").contains("%1$lld episodes left in %2$@"));
+    // A count groups its digits on every platform; a plain number never does.
+    let en = file(&files, "values/strings.xml");
+    assert!(en.contains("Episode %1$d, seen %2$,d times"), "{en}");
+    assert!(en.contains("%1$,d episodes left in %2$s"));
+    let xc = file(&files, "Localizable.xcstrings");
+    assert!(xc.contains("Episode %1$@, seen %2$lld times"));
+    let swift = file(&files, "L.swift");
+    assert!(swift.contains("String(episode), count)"), "{swift}");
+    assert!(class.contains(
+        "(\"episode\", episode.ToString(System.Globalization.CultureInfo.CurrentCulture))"
+    ));
+    assert!(class.contains(
+        "(\"count\", count.ToString(\"N0\", System.Globalization.CultureInfo.CurrentCulture))"
+    ));
+    let t = file(&files, "src/t.rs");
+    assert!(
+        t.contains("(\"episode\", Arg::Plain(episode)), (\"count\", Arg::Int(count))"),
+        "{t}"
+    );
     // Rust: the typed function takes an i64 and a &str.
     assert!(
         file(&files, "src/t.rs")

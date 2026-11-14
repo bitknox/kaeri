@@ -52,3 +52,4 @@ shell-device-label = Linux-dator
 tv-cast-through-computer = Spelas via den här datorn
 tv-cast-inhibit-reason = Skickar ett avsnitt till en TV
 tv-network-group = På det här nätverket
+linux-sidebar-your-sources = Dina { -source-pl }

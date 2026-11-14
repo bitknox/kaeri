@@ -10,7 +10,7 @@ Kaeri                                                                  plugins �
 ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
 ▌ Accounts
 ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
-  AniList  ·  Signed in as tsubame_reads  ·  3 queued, 1 waiting for an id mapping  ·  pulled 214 titles    Sign out
+  AniList  ·  Signed in as tsubame_reads  ·  3 queued, 1 waiting for a match  ·  pulled 214 titles          Sign out
 ▌ Kitsu  ·  Not connected  ·  0600 file                                                                      Sign in
   MyAnimeList  ·  Signed in as hotaru_watches  ·  Fetching your list failed on 16 Oct at 17:28: the t… Sign in again
 
@@ -55,8 +55,8 @@ r10 c02-09 fg=text bg=ground mod=BOLD
 r10 c10-119 fg=rule bg=ground
 r11 c00-119 fg=rule bg=ground
 r12 c00-01 fg=rule bg=ground
-r12 c02-103 fg=text-dim bg=ground
-r12 c104-107 fg=rule bg=ground
+r12 c02-97 fg=text-dim bg=ground
+r12 c98-107 fg=rule bg=ground
 r12 c108-115 fg=text bg=ground
 r12 c116-119 fg=rule bg=ground
 r13 c00-00 fg=obi bg=ground

@@ -9,7 +9,7 @@ Kaeri                                                                           
 ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
 ▌ Waiting for Google Drive
 ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
-  Your browser opened Google Drive’s page. Allow access there, and Kaeri
+  Your browser opened Google Drive's page. Allow access there, and Kaeri
   carries on by itself.
 
   Open the page again                                                                                              ↵

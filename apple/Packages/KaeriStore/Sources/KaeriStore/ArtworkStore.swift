@@ -36,6 +36,36 @@ public final class Artwork: @unchecked Sendable {
     var cost: Int { image.bytesPerRow * image.height }
 }
 
+/// Where an `ArtworkStore` keeps decodes off screen. The app's is `SystemArtworkCache`; tests that
+/// read back art no screen shows pass one that lets go only past its limit.
+public protocol ArtworkCache: AnyObject, Sendable {
+    var totalCostLimit: Int { get set }
+    func object(forKey key: NSString) -> Artwork?
+    func setObject(_ artwork: Artwork, forKey key: NSString, cost: Int)
+    func removeObject(forKey key: NSString)
+}
+
+/// An `NSCache`, which lets go of anything when the system wants memory or it is past its limit.
+public final class SystemArtworkCache: ArtworkCache, @unchecked Sendable {
+    // NSCache is safe to use from any thread; the SDK does not mark it Sendable.
+    private let cache = NSCache<NSString, Artwork>()
+
+    public init() {}
+
+    public var totalCostLimit: Int {
+        get { cache.totalCostLimit }
+        set { cache.totalCostLimit = newValue }
+    }
+
+    public func object(forKey key: NSString) -> Artwork? { cache.object(forKey: key) }
+
+    public func setObject(_ artwork: Artwork, forKey key: NSString, cost: Int) {
+        cache.setObject(artwork, forKey: key, cost: cost)
+    }
+
+    public func removeObject(forKey key: NSString) { cache.removeObject(forKey: key) }
+}
+
 /// The artwork the screens show.
 ///
 /// A screen shows art with `show(_:maxPixelSize:)`, from a task that runs while the art is on
@@ -77,7 +107,7 @@ public final class ArtworkStore {
     }
 
     @ObservationIgnored private var arrivals: [String: Arrivals] = [:]
-    @ObservationIgnored private let cache: NSCache<NSString, Artwork>
+    @ObservationIgnored private let cache: any ArtworkCache
     /// The art on screen, by URL: held here as well as cached, so the cache letting go of it
     /// changes nothing a screen shows.
     @ObservationIgnored private var held: [String: Artwork] = [:]
@@ -102,14 +132,18 @@ public final class ArtworkStore {
     ///   - costLimit: how many bytes of decoded pixels to keep.
     ///   - backoff: the waits after each failure in a row (`ArtworkStore.backoff`).
     ///   - sleep: how a retry waits out its part of the backoff.
+    ///   - cache: where decodes are kept off screen, limited to `costLimit`. The app's is an `NSCache`,
+    ///     which lets go of everything when the system wants memory; tests that read back art no
+    ///     screen shows pass one that lets go only past its limit.
     public init(
         costLimit: Int = ArtworkStore.costLimit,
         backoff: [Duration] = ArtworkStore.backoff,
         now: @escaping @Sendable () -> ContinuousClock.Instant = { ContinuousClock.now },
         sleep: @escaping @Sendable (Duration) async throws -> Void = { try await Task.sleep(for: $0) },
+        cache: any ArtworkCache = SystemArtworkCache(),
         fetch: @escaping @MainActor (String) -> Bool
     ) {
-        cache = NSCache()
+        self.cache = cache
         cache.totalCostLimit = costLimit
         self.fetch = fetch
         self.now = now
@@ -158,8 +192,18 @@ public final class ArtworkStore {
         defer { hide(url) }
         request(url, maxPixelSize: maxPixelSize)
         scheduleRetry(url)
-        while !Task.isCancelled {
-            try? await Task.sleep(for: .seconds(3600))
+        await Self.untilCancelled()
+    }
+
+    /// Wait until the calling task is cancelled, with no timer: a long `Task.sleep` cancelled
+    /// early keeps its timer, and what the timer wakes, until its deadline, so each cover
+    /// scrolled past would hold on to them for that long.
+    nonisolated static func untilCancelled() async {
+        let (stream, ended) = AsyncStream<Never>.makeStream()
+        await withTaskCancellationHandler {
+            for await _ in stream {}
+        } onCancel: {
+            ended.finish()
         }
     }
 

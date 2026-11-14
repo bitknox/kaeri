@@ -29,6 +29,7 @@ pub fn apply_effects(
     }
     let paths = &services.paths;
     let (mut reordered, mut sources_changed, mut wrote) = (false, false, false);
+    let mut book_sources_changed = false;
     for Effect { kind, key, value } in effects {
         match kind.as_str() {
             kinds::SETTING => {
@@ -77,9 +78,25 @@ pub fn apply_effects(
                     wrote = true;
                 }
             }
+            kinds::MEDIUM_ACCOUNT => {
+                let answer = value.as_deref().and_then(kaeri_model::medium::KaeriIsFor::parse);
+                let writer = services.store.sync_reg_writer(&kind, &key).ok().flatten();
+                if engine.reading.account_received(answer, writer) {
+                    let _ = tx.send(Event::Medium(engine.reading.view()));
+                }
+            }
+            kinds::BOOK_SOURCE_ORDER | kinds::BOOK_SOURCE_OFF
+                if engine.reading.ignores_synced(&kind) => {}
+            kinds::BOOK_SOURCE_ORDER | kinds::BOOK_SOURCE_OFF => {
+                services.book_sources.apply_effect(&kind, &key, value.as_deref());
+                book_sources_changed = true;
+            }
             // Stores are read from the log when asked: see `stores_to_join`.
             _ => {}
         }
+    }
+    if book_sources_changed {
+        let _ = tx.internal(Internal::BookSourcesChanged);
     }
     if !wrote {
         return;

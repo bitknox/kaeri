@@ -100,6 +100,9 @@ pub struct Ctx {
     pub host: Arc<dyn Host>,
     pub stores: Stores,
     pub syncing: Arc<SyncHub>,
+    /// The book servers, whose sign-ins a paired device may ask for (see
+    /// [`crate::setup_from`]).
+    pub book_sources: crate::read_sources::BookSources,
     /// The sign-in clients this build ships with, for the cloud drives.
     pub clients: crate::options::AppClients,
     /// A fixture build: cloud sign-in goes to a fake service and the folder is kept in memory.
@@ -114,6 +117,7 @@ impl Ctx {
             host: services.host.clone(),
             stores: services.stores.clone(),
             syncing: services.syncing.clone(),
+            book_sources: services.book_sources.clone(),
             clients: services.app_clients.clone(),
             fixture: services.fixture_route,
         }
@@ -140,6 +144,11 @@ pub struct SyncHub {
     /// Plugin store invites a paired device handed over and this device has not spent: in
     /// memory only (see [`crate::store_join`]).
     pub(crate) store_invites: Mutex<Vec<crate::store_join::Held>>,
+    /// Book servers a paired device handed over with their sign-ins, not yet added: in memory
+    /// only (see [`crate::setup_from`]).
+    pub(crate) book_servers: Mutex<Vec<crate::setup_from::HeldServer>>,
+    /// This device's answer to Watch, read, or both, for a paired device that asks.
+    medium: Mutex<Option<kaeri_model::medium::KaeriIsFor>>,
 }
 
 fn locked<T>(m: &Mutex<T>) -> std::sync::MutexGuard<'_, T> {
@@ -158,6 +167,16 @@ impl SyncHub {
         std::mem::take(
             &mut *self.effects.lock().unwrap_or_else(std::sync::PoisonError::into_inner),
         )
+    }
+
+    /// This device's answer to Watch, read, or both, as it now stands.
+    pub fn set_medium(&self, answer: kaeri_model::medium::KaeriIsFor) {
+        *self.medium.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some(answer);
+    }
+
+    /// This device's answer, for a paired device that asks for its setup.
+    pub fn medium(&self) -> Option<kaeri_model::medium::KaeriIsFor> {
+        *self.medium.lock().unwrap_or_else(std::sync::PoisonError::into_inner)
     }
 
     pub fn set_language(&self, language: Option<String>) {
@@ -530,6 +549,7 @@ pub fn status(services: &Ctx) -> SyncStatus {
         error: store.sync_meta_get(ERROR).ok().flatten().filter(|e| !e.is_empty()),
         notes,
         stores_to_join: offers,
+        book_servers_to_add: crate::setup_from::offers(services),
         clouds,
         problem: saved_problem(services),
     }
@@ -1037,6 +1057,9 @@ fn carry_out(services: &Ctx, tx: &Outbox, report: FolderReport) {
             .extend(report.effects);
         let _ = tx.internal(Internal::SyncEffects);
     }
+    if !report.works.is_empty() {
+        let _ = tx.internal(Internal::ReadingSynced);
+    }
     if report.ops_applied > 0 {
         let _ = tx.send(Event::ProgressQueued);
     }
@@ -1062,6 +1085,7 @@ pub fn leave(services: &Ctx, tx: &Outbox) {
     let _ = services.store.sync_meta_clear(ROAD_META);
     crate::handoff::forget_all(&services.store);
     crate::store_join::forget_all(services);
+    crate::setup_from::forget_all(services);
     say_status(services, tx);
 }
 
@@ -1330,6 +1354,8 @@ async fn carry_out_peer(services: &Ctx, tx: &Outbox, report: &PeerReport) {
             ops_applied: report.applied.ops,
             effects: report.applied.effects.clone(),
             watches: report.applied.watches.clone(),
+            works: report.applied.works.clone(),
+            read_notes: report.applied.read_notes.clone(),
             ..FolderReport::default()
         },
     );

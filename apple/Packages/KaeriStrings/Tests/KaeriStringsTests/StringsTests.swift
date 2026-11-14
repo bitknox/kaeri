@@ -8,7 +8,7 @@ import Testing
     @Test func plainStringsComeFromTheCatalogue() {
         #expect(L.settingsLanguage == "Language")
         #expect(L.sourcesTitle == "Sources")
-        #expect(L.legalHostsNoContent == "Kaeri doesn't host any shows. You add your own sources.")
+        #expect(L.legalHostsNoContent == "Kaeri doesn't host any shows or books. You add your own sources.")
     }
 
     @Test func termsAreWrittenIn() {

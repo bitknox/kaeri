@@ -23,8 +23,12 @@ kaeri-providers.workspace = true
 kaeri-store.workspace = true
 # The local day a Home world is dated by.
 jiff.workspace = true
+# The reading scenes' drawn pages and their CBZ and EPUB archives.
+image.workspace = true
+zip.workspace = true
 serde_json.workspace = true
 tokio.workspace = true
+tracing.workspace = true
 
 [dev-dependencies]
 tokio = { workspace = true, features = ["rt-multi-thread", "macros"] }

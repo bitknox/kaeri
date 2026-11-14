@@ -1,0 +1,69 @@
+// Keys to reader actions, apart from any view so both readers and their tests share them. Taps
+// are the engine's: see TapZones.kt. Page buttons arrive as
+// the volume keys: the upper one forward on e-ink, volume down forward on a phone (a switch swaps
+// them). Home and End go to the first and last page, Escape
+// hides the chrome then closes, and G shows the scrubber.
+
+package app.kaeri.reader
+
+import android.view.KeyEvent
+import app.kaeri.engine.model.ReadDirection
+
+/**
+ * What a tap or a key asks of the reader. [FIRST] and [LAST] go to the chapter's first and last
+ * page; [ESCAPE] hides the chrome, or closes the reader when it is hidden; [GO_TO] shows the chrome
+ * with the scrubber.
+ */
+enum class ReaderAction { FORWARD, BACK, CONTROLS, CLEAN, FIRST, LAST, ESCAPE, GO_TO }
+
+/** Pages move leftwards to go on: forward is at the left of the screen. */
+val ReadDirection.rightToLeft: Boolean get() = this == ReadDirection.RIGHT_TO_LEFT
+
+/** How the reader reads keys: the setting's choices and whether a book is open. */
+data class ReaderKeyRules(
+    val direction: ReadDirection,
+    /** Volume keys turn pages; with a book open they are taken from the volume. */
+    val volumeTurns: Boolean = true,
+    /** Volume down goes forward and volume up back: a phone's default, where the thumb rests. */
+    val volumeDownForward: Boolean = false,
+    /** Holding the forward key cleans the screen (e-ink). */
+    val holdCleans: Boolean = false,
+)
+
+/**
+ * The action for a key press, or null for keys the reader leaves to the system. A repeat of a
+ * held forward key is [ReaderAction.CLEAN] once when [ReaderKeyRules.holdCleans], and otherwise
+ * taken without turning again, so a held button does not race through the chapter.
+ */
+fun ReaderKeyRules.action(keyCode: Int, shift: Boolean = false, repeat: Int = 0, longPress: Boolean = false): KeyAnswer? {
+    val forwardArrow = if (direction.rightToLeft) KeyEvent.KEYCODE_DPAD_LEFT else KeyEvent.KEYCODE_DPAD_RIGHT
+    val backArrow = if (direction.rightToLeft) KeyEvent.KEYCODE_DPAD_RIGHT else KeyEvent.KEYCODE_DPAD_LEFT
+    val action = when (keyCode) {
+        KeyEvent.KEYCODE_VOLUME_UP -> if (!volumeTurns) return null else if (volumeDownForward) ReaderAction.BACK else ReaderAction.FORWARD
+        KeyEvent.KEYCODE_VOLUME_DOWN -> if (!volumeTurns) return null else if (volumeDownForward) ReaderAction.FORWARD else ReaderAction.BACK
+        KeyEvent.KEYCODE_PAGE_DOWN, KeyEvent.KEYCODE_DPAD_DOWN, forwardArrow -> ReaderAction.FORWARD
+        KeyEvent.KEYCODE_PAGE_UP, KeyEvent.KEYCODE_DPAD_UP, backArrow -> ReaderAction.BACK
+        KeyEvent.KEYCODE_SPACE -> if (shift) ReaderAction.BACK else ReaderAction.FORWARD
+        KeyEvent.KEYCODE_MENU, KeyEvent.KEYCODE_ENTER, KeyEvent.KEYCODE_DPAD_CENTER -> ReaderAction.CONTROLS
+        KeyEvent.KEYCODE_MOVE_HOME -> ReaderAction.FIRST
+        KeyEvent.KEYCODE_MOVE_END -> ReaderAction.LAST
+        KeyEvent.KEYCODE_ESCAPE -> ReaderAction.ESCAPE
+        KeyEvent.KEYCODE_G -> ReaderAction.GO_TO
+        else -> return null
+    }
+    if (repeat > 0 || longPress) {
+        val cleans = holdCleans && action == ReaderAction.FORWARD && (longPress || repeat == 1)
+        return KeyAnswer(if (cleans) ReaderAction.CLEAN else null)
+    }
+    return KeyAnswer(action)
+}
+
+/** A key the reader takes: [action] is null for one it takes without acting, such as a repeat. */
+data class KeyAnswer(val action: ReaderAction?)
+
+/** The reader's answer to an Android key event, for any view or activity to call. */
+fun ReaderKeyRules.onKeyDown(event: KeyEvent): KeyAnswer? =
+    action(event.keyCode, event.isShiftPressed, event.repeatCount, event.isLongPress)
+
+/** A key up the reader takes too, so the system never sees half of a press. */
+fun ReaderKeyRules.takesKeyUp(keyCode: Int): Boolean = action(keyCode) != null

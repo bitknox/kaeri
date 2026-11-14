@@ -9,6 +9,7 @@ import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.util.Log
+import androidx.core.content.ContextCompat
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.withTimeoutOrNull
 import app.kaeri.engine.ffi.FfiChatFixture
@@ -248,7 +249,8 @@ object FixtureParty {
                 go = true
             }
         }
-        context.applicationContext.registerReceiver(receiver, IntentFilter(GO), Context.RECEIVER_EXPORTED)
+        // The shell sends it, so it is exported; Android 13 asks to be told so.
+        ContextCompat.registerReceiver(context.applicationContext, receiver, IntentFilter(GO), ContextCompat.RECEIVER_EXPORTED)
     }
 
     /** The lobby of the room an invite opened, joined, with its members and conversation. */

@@ -95,4 +95,8 @@
     <value>[{who} ŵàţçĥéð {what}~~~~~]</value>
     <comment>Order changes per language.</comment>
   </data>
+  <data name="EpisodeSeen" xml:space="preserve">
+    <value>[Éþîšöðé {episode}, šééñ {count} ţîɱéš~~~~~~~~~]</value>
+    <comment>A number that names something beside a count.</comment>
+  </data>
 </root>

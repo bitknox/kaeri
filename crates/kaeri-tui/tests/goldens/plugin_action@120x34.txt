@@ -14,7 +14,7 @@ Kaeri                                                                           
   The update adds img.kawasemi.example to what it may contact.
 
   Update to 2.1.0                                                                                                  ↵
-▌ Remove from this machine
+▌ Remove from this device
   Stop offering it in this store
   Cancel
 
@@ -72,8 +72,8 @@ r15 c115-115 fg=text bg=ground
 r15 c116-119 fg=rule bg=ground
 r16 c00-00 fg=obi bg=ground
 r16 c01-01 fg=rule bg=ground
-r16 c02-25 fg=text bg=ground mod=BOLD
-r16 c26-119 fg=rule bg=ground
+r16 c02-24 fg=text bg=ground mod=BOLD
+r16 c25-119 fg=rule bg=ground
 r17 c00-01 fg=rule bg=ground
 r17 c02-31 fg=text-dim bg=ground
 r17 c32-119 fg=rule bg=ground

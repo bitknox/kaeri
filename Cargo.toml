@@ -7,7 +7,7 @@ members = ["crates/*", "tools/i18n"]
 exclude = ["plugins/*"]
 
 [workspace.package]
-version = "0.3.7"
+version = "0.4.0"
 edition = "2024"
 rust-version = "1.98"
 license = "MIT"
@@ -19,6 +19,7 @@ kaeri-core = { path = "crates/kaeri-core" }
 kaeri-net = { path = "crates/kaeri-net" }
 kaeri-meta = { path = "crates/kaeri-meta" }
 kaeri-jellyfin = { path = "crates/kaeri-jellyfin" }
+kaeri-bookserver = { path = "crates/kaeri-bookserver" }
 kaeri-model = { path = "crates/kaeri-model" }
 # Without its defaults, so each crate says whether it wants the desktop's parts: the binary
 # does, and a phone's build of the FFI does not. See the engine's `desktop` feature.
@@ -46,6 +47,8 @@ kaeri-track = { path = "crates/kaeri-track", default-features = false }
 kaeri-testkit = { path = "crates/kaeri-testkit" }
 kaeri-tui = { path = "crates/kaeri-tui" }
 kaeri-i18n = { path = "crates/kaeri-i18n" }
+kaeri-pages = { path = "crates/kaeri-pages" }
+kaeri-books = { path = "crates/kaeri-books" }
 
 # --- async ---
 tokio = { version = "1.53", features = ["rt-multi-thread", "macros", "sync", "time", "fs", "process", "net", "io-util", "signal"] }
@@ -92,6 +95,8 @@ rusqlite = { version = "0.41.1", features = ["bundled", "chrono", "serde_json", 
 
 # --- tui ---
 ratatui = "0.30"
+unicode-normalization = "0.1"
+unicode-segmentation = "1.13"
 unicode-width = "0.2"
 # Local-timezone day boundaries for the calendar's rulings. Already in the tree via
 # rusqlite's feature, so this costs nothing new.
@@ -104,6 +109,34 @@ ratatui-image = { version = "11.0", default-features = false, features = ["cross
 crossterm = { version = "0.29", features = ["event-stream"] }
 image = { version = "0.25", default-features = false, features = ["jpeg", "png", "webp"] }
 terminal-colorsaurus = "1.0"
+
+# --- reading pages ---
+# kaeri-pages: SIMD resizing (NEON on phones and e-readers), and the real FFT behind the
+# rainbow filter. rustfft and realfft were already in the tree for the audio fingerprints.
+fast_image_resize = "6"
+rustfft = "6.4"
+realfft = "3.5"
+# 4-bit grey PNG export, which the image crate's encoder does not write. Already in the tree
+# through image.
+png = "0.18"
+# JPEG decoding at a half, quarter or eighth of the size inside the DCT, for scans far larger
+# than the screen. Without rayon: kaeri-pages keeps its own threads.
+jpeg-decoder = { version = "0.3", default-features = false }
+
+# --- book files ---
+# Readers for the formats kaeri-books opens, all pure Rust so every target reads them the same
+# way (spike S2). Each without its defaults: no encryption, no writers beyond what a test needs.
+zip = { version = "9.4", default-features = false, features = ["deflate-flate2"] }
+sevenz-rust2 = { version = "0.24", default-features = false }
+# CBR: the read side only. The defaults add the compressor, recovery and encryption.
+rars = { version = "0.12", default-features = false }
+# PDF pages. The embedded standard fonts and CMaps are kaeri-books' `pdf-fonts` feature.
+hayro = { version = "0.9", default-features = false }
+# The IDPF font obfuscation key in EPUBs.
+sha1 = "0.11"
+# Soft hyphens for novels on Windows and Linux, with only the languages the reading spec names
+# (about 350 KB of patterns; their licences are in assets/THIRD-PARTY.md).
+hypher = { version = "0.1.8", default-features = false, features = ["alloc", "english", "german", "french", "dutch", "spanish", "portuguese", "italian", "russian"] }
 
 # --- matching / parsing ---
 nucleo = "0.5"
@@ -159,6 +192,31 @@ opt-level = 3
 [profile.dev.package.rustfft]
 opt-level = 3
 [profile.dev.package.rubato]
+opt-level = 3
+# The reader's page pipeline decodes, resizes and filters pages of several megapixels in its
+# tests and in a dev build of an app; unoptimised, a page takes seconds.
+[profile.dev.package.fast_image_resize]
+opt-level = 3
+[profile.dev.package.zune-jpeg]
+opt-level = 3
+[profile.dev.package.realfft]
+opt-level = 3
+# The pipeline's own filters and the encoders behind a prepared page. The reader audit pushes 840
+# odd sizes through every panel into every screen: about 330 s on the PC's WSL unoptimised, 34 s
+# with these.
+[profile.dev.package.kaeri-pages]
+opt-level = 3
+[profile.dev.package.image]
+opt-level = 3
+[profile.dev.package.png]
+opt-level = 3
+[profile.dev.package.fdeflate]
+opt-level = 3
+[profile.dev.package.miniz_oxide]
+opt-level = 3
+[profile.dev.package.flate2]
+opt-level = 3
+[profile.dev.package.crc32fast]
 opt-level = 3
 
 # The engine as the Apple app links it while it is developed: apple/scripts/engine.sh builds every

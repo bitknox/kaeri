@@ -26,7 +26,13 @@ struct KaeriApp: App {
         // The one window: browsing, and the player in its place while it plays (M4).
         Window("Kaeri", id: "main") {
             content
-                .focusedSceneValue(\.playerInFront, delegate.player.inMainWindow)
+                .hostsReader(delegate.store.reader)
+                // The reader's end page reads the store and opens Add a source: the cover does
+                // not see what `content` sets inside.
+                .environment(delegate.store)
+                .environment(delegate.navigator)
+                // A book open over the player takes the keys.
+                .focusedSceneValue(\.playerInFront, delegate.player.inMainWindow && delegate.store.reader.request == nil)
         }
         // The Fixtures app keeps the exact 1280 by 800 the shot scripts rely on. The real app opens
         // at 80% of the display's usable area, centred; a remembered frame still wins over this.
@@ -56,6 +62,8 @@ struct KaeriApp: App {
             } playerWindowItems: {
                 PictureInPictureMenuItem(model: delegate.player)
             }
+            // The reader's Go menu: the reader takes the main window over.
+            ReaderMenu(model: delegate.store.reader)
         }
         // Play trailer: the trailer watched properly, in a window of its own.
         WindowGroup(L.titlePlayTrailer, id: TrailerRequest.windowId, for: TrailerRequest.self) { $request in
@@ -82,6 +90,11 @@ struct KaeriApp: App {
         #else
         WindowGroup {
             content
+                .hostsReader(delegate.store.reader)
+                // The reader's end page reads the store and opens Add a source: the cover does
+                // not see what `content` sets inside.
+                .environment(delegate.store)
+                .environment(delegate.navigator)
                 // The player covers the window it plays in, so it is in front while it shows.
                 .focusedSceneValue(\.playerInFront, delegate.player.isPresented)
         }
@@ -91,6 +104,8 @@ struct KaeriApp: App {
             } playerWindowItems: {
                 EmptyView()
             }
+            // The reader's keys, with a hardware keyboard on iPad and iPhone.
+            ReaderMenu(model: delegate.store.reader)
         }
         #endif
     }

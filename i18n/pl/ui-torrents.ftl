@@ -43,6 +43,7 @@ opened-open = Otwórz link lub plik
 opened-paste-title = Otwórz link magnet lub plik torrent
 opened-paste-placeholder = Link magnet lub hash info
 opened-choose-file = Wybierz plik torrent
+opened-unreadable = { -app-name } nie mógł odczytać tego linku ani pliku.
 opened-confirm = Czy to { $title }, odcinek { $episode }?
 opened-confirm-title = Czy to { $title }? Wybierz odcinek.
 opened-no-guess = { -app-name } nie rozpoznał, co to jest. Wybierz tytuł albo odtwórz bez śledzenia.

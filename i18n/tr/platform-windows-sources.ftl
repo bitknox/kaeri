@@ -22,7 +22,7 @@ sources-status-working = Hazır
 sources-version-ready = Versiyon { $version } hazır
 sources-use-this = Bu { -source } kullanılsın
 sources-use-name = { $name } açık
-sources-remove-detail = Bölümler için artık denenmez. Bunu { -plugin-store }ndan yeniden kurabilirsiniz.
+sources-remove-detail = { -app-name } artık bölümler için bunu denemez. Onu kendi { -plugin-store }ndan yeniden yükleyebilirsiniz.
 stores-updates-count = { $count ->
     [one] Bir güncelleme var
    *[other] { $count } güncelleme var

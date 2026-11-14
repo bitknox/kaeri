@@ -246,7 +246,7 @@ struct SyncProblemLine: View {
 
     var body: some View {
         HStack(alignment: .firstTextBaseline, spacing: 6) {
-            Image(systemName: "exclamationmark.circle.fill")
+            Image(systemName: "exclamationmark.triangle.fill")
                 .font(.plat(mac: 12, touch: 13))
                 .foregroundStyle(.vermilion)
                 .accessibilityHidden(true)

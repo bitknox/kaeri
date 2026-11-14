@@ -115,7 +115,7 @@ if ((on_windows)); then
   }
   export KAERI_LIBMPV_DIR="$(cygpath -w "$libmpv")"
   # And the Discord presence, as on the Mac and Linux: a desktop's engine publishes one.
-  features="${features:+$features,}mpv-host,presence"
+  features="${features:+$features,}mpv-host,presence,opds-feed"
 fi
 
 # Git for Windows has sha256sum on its PATH but keeps shasum among its Perl scripts.

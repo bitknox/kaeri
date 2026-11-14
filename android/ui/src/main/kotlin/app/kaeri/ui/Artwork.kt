@@ -43,7 +43,7 @@ val LocalAppStore = staticCompositionLocalOf<AppStore> { error("no AppStore in t
  * it when it arrives, never popping in. Asks for it at [maxPixelSize] pixels on its long side.
  */
 @Composable
-fun ArtworkImage(url: String?, plate: Color?, maxPixelSize: Int, modifier: Modifier = Modifier) {
+fun ArtworkImage(url: String?, plate: Color?, maxPixelSize: Int, modifier: Modifier = Modifier, softenTo: Int? = null) {
     val store = LocalAppStore.current
     // This URL's arrivals alone: another cover landing leaves this one be.
     val arrived = remember(url) { url?.let(store.artwork::arrivals) ?: NONE_ARRIVED }
@@ -62,7 +62,7 @@ fun ArtworkImage(url: String?, plate: Color?, maxPixelSize: Int, modifier: Modif
     Box(modifier) {
         CoverPlate(plate, Modifier.fillMaxSize())
         if (art != null) {
-            val bitmap = remember(art) { art.image.asImageBitmap() }
+            val bitmap = remember(art, softenTo) { (softenTo?.let(art.image::softened) ?: art.image).asImageBitmap() }
             Image(
                 bitmap,
                 contentDescription = null,
@@ -72,6 +72,22 @@ fun ArtworkImage(url: String?, plate: Color?, maxPixelSize: Int, modifier: Modif
         }
     }
 }
+
+/**
+ * A blur where Compose has none, below Android 12: [this] drawn [across] pixels wide, which the
+ * box's smooth scaling spreads into soft colour.
+ */
+internal fun android.graphics.Bitmap.softened(across: Int): android.graphics.Bitmap {
+    val w = across.coerceIn(1, width)
+    return android.graphics.Bitmap.createScaledBitmap(this, w, (height.toLong() * w / width).toInt().coerceAtLeast(1), true)
+}
+
+/**
+ * Whether Compose can blur, from Android 12 (RenderEffect); below, a blur draws nothing and
+ * art softens with [softened] instead.
+ */
+@get:androidx.annotation.ChecksSdkIntAtLeast(api = android.os.Build.VERSION_CODES.S)
+internal val canBlur: Boolean get() = android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.S
 
 /** The art a box last showed for its URL. */
 private class HeldArt { var art: Artwork? = null }

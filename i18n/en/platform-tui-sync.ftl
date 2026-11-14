@@ -24,7 +24,7 @@ sync-tui-profile-in-use = In use
 # The wait while the browser shows a cloud service's sign-in page. The service is a name such as Dropbox.
 # @arg service: text
 # @only tui
-sync-tui-browser-line = Your browser opened { $service }’s page. Allow access there, and { -app-name } carries on by itself.
+sync-tui-browser-line = Your browser opened { $service }'s page. Allow access there, and { -app-name } carries on by itself.
 
 # Under Open the page again: the page's address follows on the next line, for a browser that did not open.
 # @only tui
@@ -101,7 +101,7 @@ sync-tui-add-kids = Add as a kids profile
 # Said when the terminal closes to start again on another profile, and printed when it cannot start again by itself.
 # @arg name: text
 # @only tui
-sync-tui-profile-restart = Start { -app-name } again to use { $name }’s profile.
+sync-tui-profile-restart = Start { -app-name } again to use { $name }'s profile.
 
 # A sync problem: the folder holds nothing to join.
 # @only tui
@@ -110,7 +110,7 @@ sync-tui-err-no-group = This folder holds no history to join. Choose another fol
 # A sync problem: a cloud service that this build can't sign in to. The service is a name such as Dropbox.
 # @arg service: text
 # @only tui
-sync-tui-err-unavailable = { $service } isn’t available on this { -device }.
+sync-tui-err-unavailable = { $service } isn't available on this { -device }.
 
 # Status line hint: Enter removes the highlighted { -device } from sync, after a question.
 # @max 12

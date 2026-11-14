@@ -108,6 +108,7 @@ impl Store {
             set_meta(tx, "enabled", "1")?;
             if first {
                 backfill(tx, device_id, wall, &dismissed)?;
+                crate::reading::backfill(tx, device_id)?;
                 set_meta(tx, "backfilled", "1")?;
             }
             Ok(())
@@ -293,6 +294,20 @@ impl Store {
             Ok(stmt
                 .query_map([kind], |r| Ok((r.get(0)?, r.get(1)?)))?
                 .collect::<rusqlite::Result<_>>()?)
+        })
+    }
+
+    /// The name of the device that last set a register, or its id when it gave no name.
+    pub fn sync_reg_writer(&self, kind: &str, key: &str) -> Result<Option<String>> {
+        self.with_personal(|c| {
+            Ok(c.query_row(
+                "SELECT COALESCE(p.name, r.device) FROM sync_reg r
+                   LEFT JOIN sync_peer p ON p.device = r.device
+                  WHERE r.kind = ?1 AND r.key = ?2",
+                [kind, key],
+                |r| r.get(0),
+            )
+            .optional()?)
         })
     }
 

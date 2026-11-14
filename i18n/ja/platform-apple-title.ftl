@@ -12,7 +12,7 @@ title-episodes-short = { $count ->
    *[other] { $count }話
  }
 title-episode-row-unaired = { $title }。{ $when }、放送前
-title-all-watched = すべてのエピソードを視聴済みです
+title-all-watched = すべてのエピソードを視聴しました
 title-no-answer-short = AniListから応答がありませんでした。
 title-episodes-all = すべて
 title-episodes-unwatched = 未視聴

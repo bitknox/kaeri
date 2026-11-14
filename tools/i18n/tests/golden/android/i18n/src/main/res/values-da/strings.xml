@@ -5,6 +5,6 @@
     <string name="settings_language">Sprog</string>
     <plurals name="queue_left">
         <item quantity="one">Et afsnit tilbage i %2$s</item>
-        <item quantity="other">%1$d afsnit tilbage i %2$s</item>
+        <item quantity="other">%1$,d afsnit tilbage i %2$s</item>
     </plurals>
 </resources>

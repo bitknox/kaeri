@@ -1,5 +1,5 @@
 # The legal line, shown in About beside Legal and contact. It exists once, so no translation can paraphrase it.
-legal-hosts-no-content = { -app-name } doesn't host any shows. You add your own { -source-pl }.
+legal-hosts-no-content = { -app-name } doesn't host any shows or books. You add your own { -source-pl }.
 
 # Toast after a setting is stored. The label is the setting's name.
 # @arg label: text
@@ -8,6 +8,11 @@ notice-saved = Saved { $label }.
 # Toast when a setting could not be stored. The reason comes from the system.
 # @arg reason: text
 notice-not-saved = Couldn't save that setting. { $reason }
+
+# Toast when something the person did, such as a chapter marked read, a place in a book, a
+# watched episode or a list change, could not be stored. The reason comes from the system.
+# @arg reason: text
+notice-change-not-kept = Couldn't save that change. { $reason }
 
 # Toast when a title's details did not load.
 notice-title-load-failed = Couldn't load this title. Check your connection and try again.
@@ -23,7 +28,7 @@ notice-engine-fault = Something went wrong inside { -app-name }. It carried on, 
 # the damaged file was moved, kept for recovery. Watch history and downloads start over; what the
 # trackers hold comes back with the next sync.
 # @arg path: text
-notice-database-set-aside = The database was damaged, so { -app-name } started a new one. The old file is kept at { $path }. Your { -tracker-pl } bring back what they hold at the next sync.
+notice-database-set-aside = The database was damaged, so { -app-name } started a new one. The old file is kept at { $path }. What your { -tracker-pl } hold comes back at the next sync.
 
 # Message when Kaeri could not start because a folder could not be made. The path is the
 # folder, the reason comes from the system.
@@ -51,7 +56,7 @@ start-failed-database = { -app-name } couldn't open its database at { $path }. I
 
 # Message when Kaeri could not start its network connection from the network settings.
 # @arg reason: text
-start-failed-network = { -app-name } couldn't set up its network connection from the network settings in config.toml. { $reason }
+start-failed-network = { -app-name } couldn't connect with the network settings in config.toml. Check them, then try again. { $reason }
 
 # Message when Kaeri itself could not start. The reason comes from the system or the engine.
 # @arg reason: text
@@ -88,7 +93,7 @@ notice-surprise-empty-filters = No titles match these filters.
 notice-surprise-empty-planning = Planning is empty.
 
 # Toast: Surprise me on the filters while the device is offline; AniList is how a title is picked.
-notice-surprise-offline = Offline. Search picks need AniList.
+notice-surprise-offline = You're offline. Surprise me needs AniList to pick a title.
 
 # Toast: Surprise me on the filters, and AniList could not be asked.
-notice-surprise-failed = Couldn't pick a title right now. Try again in a moment.
+notice-surprise-failed = Couldn't reach AniList to pick a title. Try again in a moment.

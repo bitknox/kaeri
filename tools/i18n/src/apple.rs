@@ -42,6 +42,8 @@ fn format(parts: &[Part], args: &[Arg]) -> String {
     out
 }
 
+/// `%lld` groups a count's digits in the person's locale ("1,920"); a plain number goes in as
+/// the text `L` makes of it, so a year or an episode number keeps its digits together.
 fn specifier(n: usize, ty: Option<ArgType>) -> String {
     match ty {
         Some(ArgType::Int) => format!("%{n}$lld"),
@@ -143,9 +145,11 @@ fn swift(langs: &[Shipped]) -> String {
             let names: Vec<String> = m
                 .args
                 .iter()
-                .map(|a| a.name.clone())
-                .map(|n| camel(&n))
-                .map(|n| if KEYWORDS.contains(&n.as_str()) { format!("`{n}`") } else { n })
+                .map(|a| {
+                    let n = camel(&a.name);
+                    let n = if KEYWORDS.contains(&n.as_str()) { format!("`{n}`") } else { n };
+                    if a.ty == ArgType::Plain { format!("String({n})") } else { n }
+                })
                 .collect();
             out.push_str(&format!(
                 "    public static func {name}({}) -> String {{\n        Self.format(\"{}\", fallback: \"{}\", {})\n    }}\n\n",
@@ -239,7 +243,9 @@ fn msg_text(cat: &Catalogue) -> String {
                 .zip(&binds)
                 .map(|(a, b)| {
                     let value = match a.ty {
-                        ArgType::Int | ArgType::Timestamp => format!("Int({b})"),
+                        ArgType::Int | ArgType::Plain | ArgType::Timestamp => {
+                            format!("Int({b})")
+                        }
                         ArgType::Cause => format!("{b}.text"),
                         ArgType::Seconds => format!("spanText({b})"),
                         ArgType::Bytes => format!("sizeText({b})"),

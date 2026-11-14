@@ -14,6 +14,7 @@ player-start-place = { $place } sur { $total } { -source-pl }
 player-start-pinned = Votre choix pour cette série
 player-start-miss-no-match = { $name } n'a pas cette série
 player-start-miss-no-episode = { $name } n'a pas l'épisode { $episode }
+player-start-pin-missed = { $name } n'a pas encore l'épisode { $episode }. Lecture depuis la { -source } suivante.
 player-start-miss-failed = { $name } n'a pas répondu
 player-start-miss-timed-out = { $name } a mis trop de temps
 player-start-miss-skipped = Vous avez ignoré { $name }
@@ -22,7 +23,7 @@ player-start-from = Depuis { $name }
 player-start-no-video = Le premier n'affichait aucune vidéo
 player-start-stream-place = Flux { $next } sur { $total }
 player-start-peers = { $count ->
-    [one] Un pair
+    [one] { $count } pair
     [many] { $count } pairs
    *[other] { $count } pairs
  }
@@ -137,7 +138,7 @@ player-resumed-at = Reprise à { $clock }
 player-start-over = Recommencer
 player-still-watching = Toujours là ?
 player-still-watching-detail = { $count ->
-    [one] En pause après un épisode d’affilée.
+    [one] En pause après { $count } épisode d’affilée.
     [many] En pause après { $count } épisodes d’affilée.
    *[other] En pause après { $count } épisodes d’affilée.
  }
@@ -184,8 +185,8 @@ player-stats-copy-failed = Impossible de copier les statistiques. Réessayez.
 player-load-subtitle-file = Charger un fichier de sous-titres…
 player-load-audio-file = Charger un fichier audio…
 player-file-picker-failed = Impossible d’ouvrir le sélecteur de fichiers. Réessayez.
-player-subtitle-file-failed = Impossible de charger ce fichier de sous-titres. Vérifiez qu’il s’agit bien d’un fichier de sous-titres.
-player-audio-file-failed = Impossible de charger ce fichier audio. Vérifiez qu’il s’agit bien d’un fichier audio.
+player-subtitle-file-failed = Impossible de charger ce fichier comme sous-titres. Choisissez un fichier de sous-titres, par exemple .srt ou .ass.
+player-audio-file-failed = Impossible de charger ce fichier comme audio. Choisissez un fichier audio, par exemple .mka ou .flac.
 player-track-unnamed = Piste sans nom
 player-audio-track-n = Audio { $id }
 player-subtitle-track-n = Sous-titres { $id }

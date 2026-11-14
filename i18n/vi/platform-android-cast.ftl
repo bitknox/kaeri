@@ -20,4 +20,4 @@ cast-card-stop = Ngừng truyền
 cast-settings-tvs = Hiện TV tích hợp Chromecast
 cast-settings-tvs-note = Các TV này hiện dưới mục Chromecast trong Phát trên TV. { -device } này gửi tập phim đến chúng.
 cast-settings-torrents = Torrent khi đang truyền
-cast-settings-torrents-note = Cho phép TV tích hợp Chromecast phát torrent. { -device } này gửi tập phim trong suốt thời gian TV phát.
+cast-settings-torrents-note = Khi đó, TV có Chromecast tích hợp sẽ phát được torrent. { -device-cap } này gửi tập phim trong suốt thời gian phát.

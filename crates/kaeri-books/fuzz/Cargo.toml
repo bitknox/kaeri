@@ -1,0 +1,67 @@
+# Fuzz targets for the book readers, in cargo-fuzz's layout. A workspace of its own, so the main
+# build never compiles libFuzzer. See README.md for how to run them.
+[package]
+name = "kaeri-books-fuzz"
+version = "0.0.0"
+publish = false
+edition = "2024"
+license = "MIT"
+
+[package.metadata]
+cargo-fuzz = true
+
+[workspace]
+
+[dependencies]
+libfuzzer-sys = "0.4"
+kaeri-books = { path = "..", features = ["fuzzing", "pdf-fonts"] }
+zip = { version = "9.4", default-features = false, features = ["deflate-flate2"] }
+# The seeds binary writes the test suite's fixtures as a starting corpus.
+image = { version = "0.25", default-features = false, features = ["jpeg", "png"] }
+sevenz-rust2 = { version = "0.24", default-features = false, features = ["compress"] }
+sha1 = "0.11"
+
+[[bin]]
+name = "zip"
+path = "fuzz_targets/zip.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "rar"
+path = "fuzz_targets/rar.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "sevenz"
+path = "fuzz_targets/sevenz.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "epub"
+path = "fuzz_targets/epub.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "pdf"
+path = "fuzz_targets/pdf.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "seeds"
+path = "seeds.rs"
+test = false
+doc = false
+bench = false
+
+[profile.release]
+debug = 1

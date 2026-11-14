@@ -1,7 +1,7 @@
 party-status = { -watch-party-cap }の状態
 party-members = メンバー
 party-choose-a-source = { -source }を選択
-party-sources-none-listed = どの{ -source }にもエピソード{ $episode }がありません。{ -source-cap-pl }は{ -plugin-pl }が提供し、{ -plugin-pl }は{ -plugin-store }から追加されます。
+party-sources-none-listed = どの{ -source }にもエピソード{ $episode }がありません。{ -source-cap-pl }は{ -plugin-pl }から、{ -plugin-pl }は{ -plugin-store }から追加します。
 party-sources-found-line = { $count ->
    *[other] { $count }件の{ -source-pl }にあります。選んだ{ -source }が{ -watch-party }で再生されます。
  }

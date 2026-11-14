@@ -1,5 +1,6 @@
 cloud-browser-line = Browser Anda membuka halaman { $service }. Izinkan akses di sana, lalu { -app-name } berjalan dengan sendirinya.
 cloud-browser-title = Masuk ke { $service } di browser Anda
+cloud-close-carries-on = Anda boleh menutup ini. { -app-name } terus berjalan, dan membuka langkah selanjutnya sendiri saat siap.
 device-kind-computer = komputer
 devices-enter-code = Masukkan kode
 devices-show-key = Tampilkan

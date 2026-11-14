@@ -6,6 +6,9 @@ import KaeriStore
 import KaeriPlayer
 import KaeriStrings
 import Foundation
+#if os(macOS)
+import AppKit
+#endif
 import Testing
 
 @testable import KaeriPlayerUI
@@ -164,6 +167,87 @@ struct ClosingTests {
         #expect(rig.sent.count == sent)
         #expect(!rig.model.isPresented)
     }
+
+    @Test func nothingIsKeptOfAnMpvOnceItHasShutDown() async throws {
+        let rig = Rig()
+        for playback: PlaybackId in 1...3 {
+            try await rig.opened(playback)
+            rig.ops(playback, [.close])
+            try await until("mpv shut down") { rig.mpv.ended }
+            try await until("its shutdown let go") { rig.model.shuttingDown == 0 }
+        }
+    }
+
+    #if os(macOS)
+    @Test func closingThePlayersWindowStopsThePlaybackAndLetsMpvGo() async throws {
+        let rig = Rig()
+        try await rig.opened()
+        let window = Self.window()
+        rig.model.hostWindow = window
+        window.close()
+        #expect(rig.reports.suffix(2).map(\.1) == [.ended(reason: .quit), .closed])
+        #expect(!rig.model.isPresented)
+        #expect(rig.model.layer == nil)
+        try await until("mpv shut down") { rig.mpv.ended }
+    }
+
+    @Test func closingTheMainWindowWhileThePictureFloatsLeavesItPlaying() async throws {
+        let rig = Rig()
+        try await rig.opened()
+        let window = Self.window()
+        rig.model.hostWindow = window
+        rig.model.pictureInPicture = true
+        window.close()
+        #expect(rig.model.isPresented)
+        #expect(!rig.mpv.ended)
+        #expect(!rig.reports.contains { $0.1 == .closed })
+    }
+
+    @Test func commandWStopsThePlayerAndLeavesItsWindowOpen() async throws {
+        let rig = Rig()
+        try await rig.opened()
+        let window = Self.window()
+        rig.model.hostWindow = window
+        // Other keys, and ⌘W meant for another window, go on to the menus.
+        #expect(!rig.model.stopKey(Self.key("w", [.command, .shift]), in: window))
+        #expect(!rig.model.stopKey(Self.key("q", .command), in: window))
+        #expect(!rig.model.stopKey(Self.key("w", .command), in: Self.window()))
+        #expect(rig.model.isPresented)
+        // With the controls hidden too: the key is the model's, not the close button's.
+        #expect(rig.model.stopKey(Self.key("w", .command), in: window))
+        #expect(rig.reports.suffix(2).map(\.1) == [.ended(reason: .quit), .closed])
+        #expect(!rig.model.isPresented)
+        try await until("mpv shut down") { rig.mpv.ended }
+        // Nothing plays any more: ⌘W is the window's again.
+        #expect(!rig.model.stopKey(Self.key("w", .command), in: window))
+    }
+
+    @Test func commandWWhileThePictureFloatsIsTheMainWindows() async throws {
+        let rig = Rig()
+        try await rig.opened()
+        let window = Self.window()
+        rig.model.hostWindow = window
+        rig.model.pictureInPicture = true
+        #expect(!rig.model.stopKey(Self.key("w", .command), in: window))
+        #expect(rig.model.isPresented)
+    }
+
+    static func key(_ characters: String, _ modifiers: NSEvent.ModifierFlags) -> NSEvent {
+        NSEvent.keyEvent(
+            with: .keyDown, location: .zero, modifierFlags: modifiers, timestamp: 0, windowNumber: 0,
+            context: nil, characters: characters, charactersIgnoringModifiers: characters,
+            isARepeat: false, keyCode: characters == "w" ? 13 : 12)!
+    }
+
+    /// A window as the player's view finds it, which closing leaves for the test to let go.
+    static func window() -> NSWindow {
+        let window = NSWindow(
+            contentRect: NSRect(x: 0, y: 0, width: 640, height: 360), styleMask: [.titled, .closable],
+            backing: .buffered, defer: false)
+        window.isReleasedWhenClosed = false
+        return window
+    }
+    #endif
 
     @Test func backFromOutsideThePlayerAsksItsViewOrStopsPictureInPicture() async throws {
         let rig = Rig()

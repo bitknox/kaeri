@@ -32,7 +32,7 @@ use kaeri_plugin_store::{
     manifest,
     protocol::{
         self as wire, EndReason, Index, IndexEntry, InviteKind, InviteRequest, NO_END_DATE,
-        OpenState, PendingInvite, RESERVED_IDS, Role, host_set,
+        OpenState, PendingInvite, RESERVED_IDS, Role, SETUP_OWNER_NAME, host_set,
     },
 };
 use kaeri_track::secret::TokenStore;
@@ -58,6 +58,9 @@ pub struct Stores {
     /// What an invite join calls this device unless the person joining names it otherwise: the
     /// kind of device the app runs on, as [`Self::labelled`] sets it.
     device_label: Arc<str>,
+    /// Reading is available, so book sources are shown, installed and published. Without it a
+    /// store's book sources are left out, as Kaeri 0.3 leaves them out.
+    reading: bool,
 }
 
 /// A link the store would not join with, and how to reach whoever runs it: the store's contact,
@@ -128,6 +131,7 @@ impl Stores {
             lock: Arc::new(tokio::sync::Mutex::new(())),
             offline: Arc::new(Mutex::new(HashMap::new())),
             device_label: stores::COMPUTER.into(),
+            reading: false,
         })
     }
 
@@ -150,6 +154,12 @@ impl Stores {
     #[must_use]
     pub fn labelled(self, kind: &str) -> Self {
         Self { device_label: stores::device_label(Some(kind), stores::COMPUTER).into(), ..self }
+    }
+
+    /// These stores, with book sources shown when reading is available.
+    #[must_use]
+    pub fn reading(self, available: bool) -> Self {
+        Self { reading: available, ..self }
     }
 
     pub fn plugin_dir(&self) -> &Path {
@@ -210,7 +220,7 @@ impl Stores {
     pub fn rows(&self) -> Result<Vec<StoreRow>, Msg> {
         let state = self.load()?;
         let offline = self.offline.lock().unwrap_or_else(|e| e.into_inner()).clone();
-        Ok(rows(&state, &self.plugin_dir, &offline))
+        Ok(rows(&state, &self.plugin_dir, &offline, self.reading))
     }
 
     /// Where each plugin a store installed came from, and the newer version that store offers
@@ -374,10 +384,13 @@ impl Stores {
             host: kaeri_model::stores::host(&invite.base),
             fingerprint: invite.key.fingerprint(),
             already_joined: previous.is_some(),
-            owners: index.as_ref().map(|index| index.owners.clone()).unwrap_or_default(),
+            owners: index
+                .as_ref()
+                .map(|index| run_by(&index.owners, info.contact.as_deref()))
+                .unwrap_or_default(),
             plugins: index
                 .as_ref()
-                .map(|index| plugin_rows(&state, &id, index, &self.plugin_dir))
+                .map(|index| plugin_rows(&state, &id, index, &self.plugin_dir, self.reading))
                 .unwrap_or_default(),
             open: invite.open || index.as_ref().is_some_and(|index| index.open),
             anonymous: invite.open,
@@ -522,7 +535,9 @@ impl Stores {
         let (joined, token) = self.joined_with_token(store)?;
         let shown = joined.index.as_ref().and_then(|i| i.plugin(plugin)).cloned();
         let index = self.refresh_one(&joined, &token).await?;
-        let entry = index.plugin(plugin).cloned().ok_or_else(|| {
+        // A book source is not offered to a device without reading, whatever it asks for.
+        let offered = |entry: &&IndexEntry| self.reading || !entry.is_books();
+        let entry = index.plugin(plugin).filter(offered).cloned().ok_or_else(|| {
             Msg::Store(StoreMsg::StorePluginWithdrawn {
                 store: joined.name.clone(),
                 plugin: plugin.to_owned(),
@@ -846,12 +861,15 @@ impl Stores {
             .local_files(inspector.as_ref())
             .await
             .into_iter()
+            .filter(|(_, info)| self.reading || !info.is_books())
             .map(|(_, info)| LocalPluginRow {
                 published: joined
                     .index
                     .as_ref()
                     .and_then(|i| i.plugin(&info.id))
                     .map(|e| e.version.clone()),
+                books: info.is_books(),
+                media: reading_media(&info.media),
                 id: info.id,
                 name: info.name,
                 version: info.version,
@@ -911,6 +929,17 @@ impl Stores {
             .inspect(&bytes)
             .await
             .map_err(|e| publish_failed(plugin, Msg::verbatim(e)))?;
+        // A store from before book sources reads the manifest section and ignores the kind, so
+        // it would list a book source as a show source. Its info says whether it knows them.
+        if info.is_books() {
+            let takes_books = self.client.info(&joined.base).await.is_ok_and(|i| i.books);
+            if !takes_books {
+                return Err(publish_failed(
+                    plugin,
+                    Msg::Store(StoreMsg::StoreTakesNoBooks { store: joined.name.clone() }),
+                ));
+            }
+        }
         let stamped =
             manifest::stamp(&bytes, &info).map_err(|e| publish_failed(plugin, foreign(e)))?;
         let entry = self
@@ -1018,6 +1047,23 @@ fn until(expires_at: i64) -> Option<i64> {
     (expires_at < NO_END_DATE).then_some(expires_at)
 }
 
+/// Who runs a store, for "Run by …": its owners from its signed list, the longest-standing first.
+/// An owner who kept the name the store's setup gave them is named by the store's `contact` when
+/// there is one, and left out otherwise, so the line falls back to the store's host.
+fn run_by(owners: &[String], contact: Option<&str>) -> Vec<String> {
+    let contact = contact.map(str::trim).filter(|contact| !contact.is_empty());
+    let mut names: Vec<String> = Vec::new();
+    for owner in owners.iter().map(|owner| owner.trim()) {
+        let name = if owner == SETUP_OWNER_NAME { contact } else { Some(owner) };
+        if let Some(name) = name.filter(|name| !name.is_empty())
+            && !names.iter().any(|known| known == name)
+        {
+            names.push(name.to_owned());
+        }
+    }
+    names
+}
+
 /// The most owners an error names before it stops: "Ask Alex, Sam or Kim for a new one".
 const OWNERS_NAMED: usize = 3;
 
@@ -1032,7 +1078,7 @@ fn refused(error: ClientError, store: &str) -> Refused {
     let named: Vec<&str> = owners
         .iter()
         .map(|name| name.trim())
-        .filter(|name| !name.is_empty())
+        .filter(|name| !name.is_empty() && *name != SETUP_OWNER_NAME)
         .take(OWNERS_NAMED)
         .collect();
     let owners = match named.as_slice() {
@@ -1080,6 +1126,7 @@ pub fn rows(
     state: &LocalState,
     plugin_dir: &Path,
     offline: &HashMap<String, String>,
+    reading: bool,
 ) -> Vec<StoreRow> {
     state
         .stores
@@ -1105,9 +1152,13 @@ pub fn rows(
             plugins: joined
                 .index
                 .as_ref()
-                .map(|index| plugin_rows(state, &joined.id, index, plugin_dir))
+                .map(|index| plugin_rows(state, &joined.id, index, plugin_dir, reading))
                 .unwrap_or_default(),
-            owners: joined.index.as_ref().map(|index| index.owners.clone()).unwrap_or_default(),
+            owners: joined
+                .index
+                .as_ref()
+                .map(|index| run_by(&index.owners, None))
+                .unwrap_or_default(),
             open: joined.index.as_ref().is_some_and(|index| index.open),
             anonymous: joined.anonymous,
         })
@@ -1120,15 +1171,20 @@ fn plugin_rows(
     store: &str,
     index: &Index,
     plugin_dir: &Path,
+    reading: bool,
 ) -> Vec<StorePluginRow> {
     index
         .plugins
         .iter()
+        // Book sources only where reading is available, as for the install itself.
+        .filter(|entry| reading || !entry.is_books())
         .map(|entry| StorePluginRow {
             id: entry.id.clone(),
             name: entry.name.clone(),
             version: entry.version.clone(),
             hosts: entry.allowed_hosts.clone(),
+            books: entry.is_books(),
+            media: reading_media(&entry.media),
             status: match state.status(store, entry, plugin_dir) {
                 PluginStatus::Available => StorePluginStatus::Available,
                 PluginStatus::Installed => StorePluginStatus::Installed,
@@ -1142,6 +1198,18 @@ fn plugin_rows(
             },
         })
         .collect()
+}
+
+/// A book source's media as an index or a manifest names them: those this version reads, each
+/// once. A medium a newer Kaeri knows and this one does not is left out.
+fn reading_media(media: &[String]) -> Vec<kaeri_core::media::Medium> {
+    let mut out = Vec::new();
+    for medium in media.iter().filter_map(|m| kaeri_core::media::Medium::parse(m.trim())) {
+        if medium.is_reading() && !out.contains(&medium) {
+            out.push(medium);
+        }
+    }
+    out
 }
 
 /// [`Stores::origins`], from the state file read.
@@ -1188,6 +1256,27 @@ mod tests {
         protocol::{Member, PROTOCOL},
     };
 
+    #[test]
+    fn run_by_names_the_setup_owner_by_the_stores_contact_or_not_at_all() {
+        let names =
+            |owners: &[&str]| owners.iter().map(|o| (*o).to_owned()).collect::<Vec<_>>();
+        let contact = Some(" owner@store.example ");
+        assert_eq!(run_by(&names(&["Owner"]), contact), ["owner@store.example"]);
+        assert!(run_by(&names(&["Owner"]), None).is_empty(), "the host stands alone");
+        assert!(run_by(&names(&["Owner"]), Some("  ")).is_empty());
+        assert_eq!(
+            run_by(&names(&["Owner", "Ren"]), None),
+            ["Ren"],
+            "an owner who chose a name keeps it"
+        );
+        assert_eq!(run_by(&names(&["Ren", " ", "Sora"]), contact), ["Ren", "Sora"]);
+        assert_eq!(
+            run_by(&names(&["owner@store.example", "Owner"]), contact),
+            ["owner@store.example"],
+            "named once"
+        );
+    }
+
     fn entry(id: &str, version: &str) -> IndexEntry {
         IndexEntry {
             id: id.into(),
@@ -1198,6 +1287,8 @@ mod tests {
             sha256: String::new(),
             size: 0,
             published_at: 0,
+            kind: None,
+            media: Vec::new(),
         }
     }
 
@@ -1221,7 +1312,19 @@ mod tests {
                 key: key.encode(),
                 sequence: 1,
                 issued_at: 0,
-                plugins: vec![entry("new", "1.0.0"), entry("old", "2.0.0")],
+                plugins: vec![
+                    entry("new", "1.0.0"),
+                    entry("old", "2.0.0"),
+                    IndexEntry {
+                        kind: Some("books".into()),
+                        media: vec![
+                            "manga".into(),
+                            "comics-of-the-future".into(),
+                            "manga".into(),
+                        ],
+                        ..entry("pages", "1.0.0")
+                    },
+                ],
                 owners: vec!["Alex".into(), "Sam".into()],
                 open: true,
                 contact: None,
@@ -1241,7 +1344,7 @@ mod tests {
         );
 
         let offline = HashMap::from([("abc".to_owned(), "timed out".to_owned())]);
-        let rows = rows(&state, dir.path(), &offline);
+        let rows = rows(&state, dir.path(), &offline, false);
         assert_eq!(rows.len(), 1);
         let row = &rows[0];
         assert!(row.owner);
@@ -1261,6 +1364,14 @@ mod tests {
         assert_eq!(row.owners, ["Alex", "Sam"], "who runs it, from its signed list");
         assert!(row.open, "anyone can join it, from its signed list");
         assert!(!row.anonymous);
+        assert_eq!(row.plugins.len(), 2, "no book source without reading");
+        assert!(row.plugins.iter().all(|p| !p.books && p.media.is_empty()));
+
+        // With reading, the book source is listed as one, with the media this version reads.
+        let reading = super::rows(&state, dir.path(), &offline, true);
+        let pages = reading[0].plugins.iter().find(|p| p.id == "pages").unwrap();
+        assert!(pages.books);
+        assert_eq!(pages.media, [kaeri_core::media::Medium::Manga]);
 
         // What the Providers rows say of the plugin installed from it, and of its update.
         let store = ProviderOrigin::Store { id: "abc".into(), name: Some("Ours".into()) };

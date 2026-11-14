@@ -252,8 +252,8 @@ pub fn lines(ctx: &Rc<Ctx>, availability: &TitleAvailability) -> Vec<gtk::Widget
         button.add_css_class("flat");
         button.add_css_class("link");
         button.set_halign(gtk::Align::Start);
-        button.set_action_name(Some("win.licensed-open"));
         button.set_action_target_value(Some(&target(id, &link.service, &link.url, None)));
+        button.set_action_name(Some("win.licensed-open"));
         button.upcast::<gtk::Widget>()
     };
     match availability.case {

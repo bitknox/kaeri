@@ -12,6 +12,8 @@
 //! | `test-hostile` | Rust | Attacks the host: spins, allocates, tries to escape. |
 //! | `test-torrent-source` | Rust | A made-up source on `index.example` that lists torrents. |
 //!
+//! Book sources, the `kaeri:books` world, have their own suite in `book_conformance.rs`.
+//!
 //! [`assert_reference_behaviour`] is the load-bearing one: the *same* assertions run against the
 //! Rust and JavaScript components. Two guests sharing nothing but a `.wit` file, producing
 //! identical results, is what makes "providers are pluggable across languages" a demonstration
@@ -646,13 +648,15 @@ async fn a_plugin_built_for_the_old_abi_major_is_refused_with_a_clear_error() {
 
 #[tokio::test]
 async fn a_plugin_for_a_newer_kaeri_is_named_as_that_rather_than_broken() {
-    // A source for a world this host does not have, and one built for a later provider major:
-    // neither is broken, and neither needs a rebuild. This app needs an update.
+    // A source for a world this host does not have, one built for a later provider major and
+    // one for a later book source major: none is broken, and none needs a rebuild. This app
+    // needs an update.
     use wasm_encoder::{
         Component, ComponentImportSection, ComponentTypeRef, ComponentTypeSection, InstanceType,
     };
     for (import, world) in [
-        ("kaeri:books/host@1.0.0", "kaeri:books@1.0.0"),
+        ("kaeri:catalog/host@1.0.0", "kaeri:catalog@1.0.0"),
+        ("kaeri:books/host@2.0.0", "kaeri:books@2.0.0"),
         ("kaeri:provider/host@4.0.0", "kaeri:provider@4.0.0"),
     ] {
         let mut types = ComponentTypeSection::new();

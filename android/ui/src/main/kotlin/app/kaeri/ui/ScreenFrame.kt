@@ -9,13 +9,11 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.heightIn
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.CircularProgressIndicator
@@ -38,6 +36,7 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import app.kaeri.design.Motion
 import app.kaeri.i18n.R as I18nR
@@ -146,20 +145,24 @@ data class Account(
 )
 
 /** Accounts and settings: the user's initial on a raised circle, or the account glyph signed out. */
-/** Work running past 4 s, in words beside a small ring, read out once when it shows. */
+/**
+ * Work running past 4 s, in words beside a small ring, read out once when it shows. The ring
+ * stands in the account button's 48 dp, the words before it, so as one crossfades into the other
+ * the words never run under the button.
+ */
 @Composable
 private fun ActivityLabel(words: String) {
     val colors = MaterialTheme.colorScheme
     Row(
         Modifier
             .heightIn(min = 48.dp)
-            .padding(end = 16.dp)
             .semantics(mergeDescendants = true) { liveRegion = LiveRegionMode.Polite },
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
     ) {
-        CircularProgressIndicator(Modifier.size(14.dp), color = colors.onSurface, strokeWidth = 1.5.dp, trackColor = colors.outlineVariant)
-        Text(words, style = MaterialTheme.typography.bodyMedium, color = colors.onSurfaceVariant, maxLines = 1)
+        Text(words, style = MaterialTheme.typography.bodyMedium, color = colors.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis)
+        Box(Modifier.size(48.dp), contentAlignment = Alignment.Center) {
+            CircularProgressIndicator(Modifier.size(14.dp), color = colors.onSurface, strokeWidth = 1.5.dp, trackColor = colors.outlineVariant)
+        }
     }
 }
 

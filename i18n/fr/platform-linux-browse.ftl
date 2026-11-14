@@ -42,3 +42,5 @@ library-linux-list-count = { $list } { $count }
 title-linux-play-on-tv-help = Lire cet épisode sur une télévision avec { -app-name }
 title-linux-episode-watched = Épisode { $episode } vu
 calendar-linux-day-empty = Aucune diffusion
+linux-read-library-list = Liste
+linux-read-downloads-empty = Les chapitres téléchargés se lisent sans connexion.

@@ -5,12 +5,12 @@ party-start = Iniciar { -watch-party }
 party-join = Participar
 party-leave = Sair da { -watch-party }
 party-leaving = Saindo…
-party-ready-action = Estou pronto
+party-ready-action = Pronto para assistir
 party-copy-invite = Copiar link de convite
 party-stay = Continuar
 party-leave-and-close = Sair e fechar
 party-not-now = Agora não
-party-getting-ready = Preparando tudo…
+party-getting-ready = Carregando sugestões…
 party-server = Servidor
 party-server-hint = host:port
 party-recent-servers = Servidores recentes
@@ -21,13 +21,14 @@ party-room = Sala
 party-your-name = Seu nome na sala
 party-server-public = Um servidor público mantido por { $operator }, não pelo { -app-name }.
 party-server-suggest = Não tem um servidor próprio? { $server } é um servidor público, mantido por { $operator }.
-party-server-invited = Um servidor escolhido por quem convidou você. O { -app-name } não o mantém.
+party-server-invited = Quem convidou você escolheu este servidor. O { -app-name } não o mantém.
 party-server-shape = Escreva o servidor como um host e uma porta, como party.example:8999.
 party-privacy = O servidor vê o seu nome, a sala e quando alguém reproduz, pausa ou avança. Cada um de vocês reproduz o episódio pela própria { -source-pl }.
 party-room-hint = Quem souber o nome da sala pode entrar. O link de convite já o contém, então ninguém precisa ler em voz alta.
 party-invite-room = Sala { $room } em { $server }
 party-joining = Entrando na sala { $room } em { $server }…
 party-form-nothing = O que estiver tocando agora será reproduzido com a sala.
+party-form-pick-later = Quando você entrar, pressione Reproduzir em qualquer episódio para assistir com a sala.
 party-form-episode-of = Episódio { $episode } de { $title }
 party-form-episode = Episódio { $episode }
 party-ended-early = A { -watch-party } terminou antes de começar.
@@ -69,7 +70,7 @@ party-nosource-missing-detail = { $why }. { $what } será reproduzido com a sala
 party-nosource-unaired = Suas { -source-pl } não terão o episódio { $episode } antes da estreia.
 party-nosource-unaired-plain = Suas { -source-pl } não o terão antes disso. Ele será reproduzido com a sala assim que uma delas tiver.
 party-sources-found = { $count ->
-    [one] Uma { -source } tem o episódio
+    [one] { $count } { -source } tem o episódio
     [many] { $count } { -source-pl } têm o episódio
    *[other] { $count } { -source-pl } têm o episódio
  }
@@ -81,7 +82,7 @@ together-title = { -watch-together-cap }
 together-line = Cada pessoa reproduz o episódio a partir das próprias { -source-pl }. O servidor só mantém todo mundo em sincronia.
 together-people-button = { -watch-together-cap }
 together-start = Iniciar { -watch-party }
-together-start-line = Escolha algo que você está assistindo e convide amigos com um link ou um código.
+together-start-line = Abra uma sala e convide amigos com um link ou um código, depois pressione Reproduzir no que quiser assistir.
 together-join = Entrar numa { -watch-party }
 together-join-line = Cole o link de convite de um amigo ou digite o código que ele passou.
 together-join-field = Link ou código
@@ -93,7 +94,7 @@ together-open-lobby = Abrir sala de espera
 together-open-player = Abrir player
 together-recent = Salas recentes
 together-recent-row = Episódio { $episode } · com { $names } · { $when }
-together-recent-empty = As salas em que você entrar aparecem aqui, as últimas dez.
+together-recent-empty = As últimas dez salas em que você entrar aparecem aqui.
 together-rejoin = Voltar
 together-forget-room = Remover das salas recentes
 together-someone-here = { $count ->
@@ -105,7 +106,7 @@ together-nobody-here = Ninguém aqui agora
 together-servers = Servidores
 together-server-suggested = Sugerido · mantido por { $operator }
 together-server-used = { $count ->
-    [one] Usado em 1 sessão
+    [one] Usado em { $count } sessão
     [many] Usado em { $count } de sessões
    *[other] Usado em { $count } sessões
  }
@@ -157,6 +158,7 @@ party-code-other-server = Códigos funcionam em { $server }. Para outro servidor
 party-bar-title = { $title } · Episódio { $episode }
 party-bar-line = { $count } na sala · { $ready } prontos
 party-bar-idle = Na sala · nada reproduzindo para você
+party-bar-pick = Pressione Reproduzir em qualquer episódio para assistir com a sala
 party-paused-by = Pausado por { $name }
 party-played-by = Reproduzido por { $name }
 party-seeked-by = { $name } foi para { $time }
@@ -201,7 +203,7 @@ party-chat-hidden = O chat está oculto
 party-chat-hidden-line = Ocultar chat está ativado em Configurações, em Reprodução.
 party-chat-show = Mostrar chat
 settings-hide-chat = Ocultar chat nas { -watch-party-pl }
-settings-hide-chat-line = As mensagens, as reações e suas marcas na barra de progresso ficam fora do vídeo, e o campo some. A lista de pessoas continua mostrando quem está na sala.
+settings-hide-chat-line = As mensagens, as reações e suas marcas na barra de progresso ficam fora do vídeo, e o campo de chat some. A lista de pessoas continua mostrando quem está na sala.
 party-mute = Silenciar { $name }
 party-unmute = Reativar { $name }
 party-unmute-short = Reativar

@@ -31,7 +31,7 @@ with no account and no network, and trackers consume it through a durable outbox
 consulted for it.
 
 The metadata, mapping, player, tracker and plugin layers use documented public APIs. Only the
-source layer *chooses* a content source, it is off by default, and every source is a
+source layer *chooses* a content source. It is off by default, and every source is a
 config edit away from being removed. Two playback-side paths then fetch from whatever host a
 source named, sidecar subtitles and the HLS proxy, and both are source-agnostic. The proxy sends
 a stream's headers with every request and passes segments through unchanged.
@@ -53,7 +53,8 @@ a stream's headers with every request and passes segments through unchanged.
   on Android and Android TV, and WinUI 3 on Windows. It hands them the model's own commands and
   events through UniFFI, and takes links, notifications and the OS's secret store from the app.
   The Swift package that wraps it is in `apple/`. The Linux app, written in Rust, links the engine
-  itself.
+  itself. Each app is built with its platform's own toolkit, so it behaves like the other apps on
+  that device, and the engine underneath is the same Rust code everywhere.
 - `kaeri-testkit` is used only by tests: a fake AniList, fixture titles and golden files.
 
 The engine and the model use no terminal library, not even through a dependency, so a front end

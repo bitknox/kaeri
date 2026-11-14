@@ -1,4 +1,4 @@
-// The app module: Android 15 and up, built against and targeting the newest SDK.
+// The app module: Android 11 and up, built against and targeting the newest SDK.
 plugins {
     id("com.android.application")
 }

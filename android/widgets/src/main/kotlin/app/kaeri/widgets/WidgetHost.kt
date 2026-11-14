@@ -101,20 +101,42 @@ class WidgetArt(private val directory: File) {
             MessageDigest.getInstance("SHA-256").digest(url.toByteArray()).take(16).joinToString("") { "%02x".format(it) }
 
         /** [image] with its corners rounded to [radius] pixels, transparent outside them. */
-        fun rounded(image: Bitmap, radius: Float): Bitmap {
+        fun rounded(image: Bitmap, radius: Float, topOnly: Boolean = false): Bitmap {
             if (radius <= 0f) return image
             val out = Bitmap.createBitmap(image.width, image.height, Bitmap.Config.ARGB_8888)
             val paint = Paint(Paint.ANTI_ALIAS_FLAG).apply { shader = BitmapShader(image, Shader.TileMode.CLAMP, Shader.TileMode.CLAMP) }
-            Canvas(out).drawRoundRect(0f, 0f, image.width.toFloat(), image.height.toFloat(), radius, radius, paint)
+            Canvas(out).roundRect(out.width, out.height, radius, topOnly, paint)
             return out
         }
 
         /** A plate of [color], [width] × [height] with [radius] corners: art's stand-in. */
-        fun plate(color: Int, width: Int, height: Int, radius: Float): Bitmap {
+        fun plate(color: Int, width: Int, height: Int, radius: Float, topOnly: Boolean = false): Bitmap {
             val out = Bitmap.createBitmap(width.coerceAtLeast(1), height.coerceAtLeast(1), Bitmap.Config.ARGB_8888)
             val paint = Paint(Paint.ANTI_ALIAS_FLAG).apply { this.color = color }
-            Canvas(out).drawRoundRect(0f, 0f, out.width.toFloat(), out.height.toFloat(), radius, radius, paint)
+            Canvas(out).roundRect(out.width, out.height, radius, topOnly, paint)
             return out
+        }
+
+        /**
+         * A progress line [width] × [height]: [fill] up to [progress] over the [track], each with
+         * round ends.
+         */
+        fun bar(progress: Float, width: Int, height: Int, fill: Int, track: Int): Bitmap {
+            val out = Bitmap.createBitmap(width.coerceAtLeast(1), height.coerceAtLeast(1), Bitmap.Config.ARGB_8888)
+            val canvas = Canvas(out)
+            val (w, h) = out.width.toFloat() to out.height.toFloat()
+            val paint = Paint(Paint.ANTI_ALIAS_FLAG).apply { color = track }
+            canvas.drawRoundRect(0f, 0f, w, h, h / 2, h / 2, paint)
+            val done = w * progress.coerceIn(0f, 1f)
+            if (done > 0f) canvas.drawRoundRect(0f, 0f, done.coerceAtLeast(h), h, h / 2, h / 2, paint.apply { color = fill })
+            return out
+        }
+
+        /** [width] × [height] with [radius] corners, or only the top two rounded where [topOnly]. */
+        private fun Canvas.roundRect(width: Int, height: Int, radius: Float, topOnly: Boolean, paint: Paint) {
+            val (w, h) = width.toFloat() to height.toFloat()
+            drawRoundRect(0f, 0f, w, h, radius, radius, paint)
+            if (topOnly) drawRect(0f, minOf(radius, h), w, h, paint)
         }
 
         /** [image] scaled to cover [width] × [height] and cut to it from the middle. */

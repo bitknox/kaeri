@@ -221,6 +221,7 @@ fn home_ask(engine: &EngineState, services: &Services, refresh: bool) -> HomeAsk
         listed: downloads::ahead::listed(services),
         adult: engine.config.effective().meta.adult,
         now: services.clock.now(),
+        clock: services.clock.clone(),
         zone: services.clock.zone(),
         offline: engine.network.offline,
         refresh,
@@ -440,7 +441,9 @@ pub(crate) fn dispatch(
         Command::LoadDetail(id) => {
             // Another title's page: the episode names looked up for the one left stop.
             engine.names.leave_for(id);
-            spawn(job, services, tx, move |lent| load_detail(lent, id))
+            // "Also a book" shows only to someone who both watches and reads.
+            let both = engine.reading.answer() == kaeri_model::medium::KaeriIsFor::Both;
+            spawn(job, services, tx, move |lent| load_detail(lent, id, both))
         }
         Command::LoadCards { ids } => {
             spawn(job, services, tx, move |lent| crate::catalog::cards::load_cards(lent, ids))
@@ -454,6 +457,18 @@ pub(crate) fn dispatch(
         }
         Command::OpenExternal { url } => open_external(url, services, tx),
 
+        // Reading's catalogue and Fix this match for a book folder: see `read_catalog`. The
+        // rest of reading is further down.
+        Command::Reading(command) if crate::read_catalog::handles(&command) => {
+            crate::read_catalog::command(engine, services, command, tx)
+        }
+        Command::BookSources(kaeri_model::book_sources::BookSourceCommand::FindMatch {
+            group,
+            query,
+        }) if engine.reading.available => {
+            crate::read_catalog::find_match(engine, services, group, query, tx)
+        }
+
         // The licensed services: kept in the database, with no job.
         Command::Licensed(command) => licensed_command(command, services, tx),
         Command::Local(command) => {
@@ -464,6 +479,69 @@ pub(crate) fn dispatch(
             let order = engine.config.effective().providers.order.clone();
             crate::servers::command(command, services, order, tx)
         }
+
+        // Send to e-reader, where you stopped, and the feed: see `export`.
+        Command::Reading(command) if crate::export::handles(&command) => {
+            crate::export::command(engine, services, command, job, tx)
+        }
+
+        // Reading: refused in place when the engine was started with it off. See `reading`.
+        Command::Reading(kaeri_model::reading::ReadingCommand::LoadTracking { work })
+            if engine.reading.available =>
+        {
+            crate::read_tracking::load(services, work.clone(), tx);
+            crate::read_tracking::resolve_for(services, &work, tx);
+        }
+        Command::Reading(kaeri_model::reading::ReadingCommand::ChooseMapping {
+            work,
+            tracker,
+            tracker_id,
+        }) if engine.reading.available => {
+            crate::read_tracking::choose(services, work, &tracker, tracker_id, tx)
+        }
+        Command::Reading(kaeri_model::reading::ReadingCommand::ResolveConflict {
+            work,
+            tracker,
+            keep_local,
+        }) if engine.reading.available => {
+            crate::read_tracking::resolve(services, work, &tracker, keep_local, tx)
+        }
+        Command::Reading(kaeri_model::reading::ReadingCommand::RemoveFromLists { work })
+            if engine.reading.available =>
+        {
+            crate::read_tracking::remove_from_lists(services, work.clone(), tx);
+            let ask = crate::read_catalog::Ask::of(engine, services);
+            let kit = crate::read_catalog::Kit::of(services);
+            crate::read_catalog::series::header(&kit, ask, &work, tx);
+            crate::read_tracking::load(services, work, tx);
+        }
+        Command::Reading(kaeri_model::reading::ReadingCommand::ConnectMangaUpdates {
+            username,
+            password,
+        }) if engine.reading.available => {
+            crate::read_tracking::connect_mangaupdates(services, username, password.0, tx)
+        }
+        Command::Reading(command) => crate::reading::reading(engine, services, command, tx),
+        Command::Reader(command) => crate::reading::reader(engine, services, command, tx),
+        // Read from and "Not found in" search with the catalogue's names for the work.
+        Command::BookSources(
+            command @ (kaeri_model::book_sources::BookSourceCommand::LoadForWork { .. }
+            | kaeri_model::book_sources::BookSourceCommand::SearchSourceForWork {
+                ..
+            }
+            | kaeri_model::book_sources::BookSourceCommand::ChooseSourceSeries {
+                ..
+            }),
+        ) if engine.reading.available => crate::read_catalog::editions::command(
+            &crate::read_catalog::Kit::of(services),
+            crate::read_catalog::Ask::of(engine, services),
+            command,
+            tx,
+        ),
+        Command::BookSources(command) => {
+            crate::reading::book_sources(&engine.reading, services, command, tx)
+        }
+        Command::Medium(command) => crate::reading::medium(engine, services, command, tx),
 
         // An episode's discussion: off the loop, with no job, each answered with the
         // discussion whole. See `discussion`.
@@ -627,21 +705,41 @@ pub(crate) fn dispatch(
         Command::AppPhase { phase } => {
             services.sync.pulls.set_away(phase != kaeri_model::command::AppState::Foreground);
             crate::phases::app_phase(phase, engine);
+            if phase != kaeri_model::command::AppState::Foreground {
+                let EngineState { config, reader, .. } = engine;
+                let cx = reader.cx(config, services, tx);
+                reader.background(&cx);
+            }
             ahead::resume(engine, services, tx);
+            crate::downloads::books::resume(engine, services, tx);
         }
         Command::NetworkPath { cellular, constrained, offline } => {
             let network = crate::phases::Network { cellular, constrained, offline };
             let moved = engine.network.offline != offline;
             services.offline.store(offline, std::sync::atomic::Ordering::Relaxed);
             services.connection.send_replace(offline);
+            services.book_sources.write_back_network(offline, services.clock.now());
             crate::phases::network_path(network, engine, tx);
             ahead::resume(engine, services, tx);
+            crate::downloads::books::resume(engine, services, tx);
             // Home open says it is offline, and since when, or stops saying so, at once.
             if moved && engine.home.asked() {
                 let (ask, memory) = (home_ask(engine, services, false), engine.home.clone());
                 spawn(job, services, tx, move |lent| async move {
                     home::changed(&lent.meta, &lent.store, &lent.tx, &ask, &memory);
                 });
+            }
+            // Reading's Home the same, once opened.
+            if moved && engine.reading.available {
+                let kit = crate::read_catalog::Kit::of(services);
+                let ask = crate::read_catalog::Ask::of(engine, services);
+                crate::read_catalog::home::path_moved(&kit, ask, tx);
+            }
+            // The reader's open end page offers what opens with the connection as it is now.
+            if moved {
+                let EngineState { config, reader, .. } = &mut *engine;
+                let mut cx = reader.cx(config, services, tx);
+                reader.network_moved(&mut cx, !offline);
             }
         }
         Command::DeviceState {
@@ -863,6 +961,31 @@ pub(crate) fn dispatch(
                 crate::store_join::join_from(&ctx, &tx, device, stores, address).await;
             });
         }
+        Command::SyncGroup(kaeri_model::group::SyncCommand::AskSetupFrom {
+            device,
+            address,
+        }) => {
+            let (ctx, tx) = (Ctx::of(services), tx.clone());
+            tokio::spawn(async move {
+                let _job = job;
+                crate::setup_from::ask(&ctx, &tx, device, address).await;
+            });
+        }
+        Command::SyncGroup(kaeri_model::group::SyncCommand::AddBookServersFrom {
+            device,
+            servers,
+        }) => {
+            let ctx = Ctx::of(services);
+            crate::setup_from::add_from(&ctx, tx, &device, &servers, services.clock.now());
+            if engine.reading.available {
+                crate::reading::book_sources(
+                    &engine.reading,
+                    services,
+                    kaeri_model::book_sources::BookSourceCommand::Load,
+                    tx,
+                );
+            }
+        }
         Command::SyncGroup(kaeri_model::group::SyncCommand::ChangeSyncFolder { folder }) => {
             let (ctx, tx) = (Ctx::of(services), tx.clone());
             tokio::spawn(async move {
@@ -979,13 +1102,27 @@ pub(crate) fn dispatch(
         Command::ClearSkipMarks => crate::skip_marks::clear(services, tx),
 
         // Off the loop, with no job: covers report back on their own.
-        Command::FetchArtwork { url } => artwork::spawn_fetch(
-            url,
-            services.paths.image_cache(),
-            services.http.clone(),
-            services.artwork.clone(),
-            tx.clone(),
-        ),
+        // The reading demo's covers come from the demo: the comic's pinned first page, and the
+        // story's cover as the app bundles it, never fetched.
+        Command::FetchArtwork { url } => match kaeri_core::reading_demo::cover(&url) {
+            Some(kaeri_core::reading_demo::DemoCover::Bundled(bytes)) => {
+                let _ = tx.send(Event::ArtworkReady { url, bytes: bytes.to_vec() });
+            }
+            Some(kaeri_core::reading_demo::DemoCover::Page(page)) => artwork::spawn_demo_cover(
+                url,
+                page,
+                services.paths.image_cache(),
+                services.book_sources.demo.clone(),
+                tx.clone(),
+            ),
+            None => artwork::spawn_fetch(
+                url,
+                services.paths.image_cache(),
+                services.http.clone(),
+                services.artwork.clone(),
+                tx.clone(),
+            ),
+        },
 
         // What a native app shows outside itself: notifications, and its widgets. Off the loop,
         // with no job, each answered with one event.
@@ -1018,6 +1155,11 @@ pub(crate) fn dispatch(
         Command::InstallPlugin { store, plugin } => {
             store_task(job, engine, services, tx, move |context| {
                 context.install_plugin(store, plugin)
+            })
+        }
+        Command::InstallAllForReading { store } => {
+            store_task(job, engine, services, tx, move |context| {
+                context.install_all_for_reading(store)
             })
         }
         Command::RemovePlugin { plugin } => {
@@ -1141,8 +1283,46 @@ pub(crate) async fn handle_internal(
     }
     match message {
         // What runs on cellular may have changed with it.
-        Internal::SettingsSaved => crate::phases::settings_saved(engine, tx),
-        Internal::LetGo => ahead::let_go(engine, services, tx),
+        Internal::SettingsSaved => {
+            crate::phases::settings_saved(engine, tx);
+            crate::downloads::books::resume(engine, services, tx);
+            crate::export::apply_feed(engine, services, tx);
+        }
+        Internal::LetGo => {
+            ahead::let_go(engine, services, tx);
+            crate::downloads::books::launched(engine, services, tx);
+            if engine.reading.available {
+                services.book_sources.start_write_back(services.clock.clone());
+            }
+            crate::export::apply_feed(engine, services, tx);
+        }
+        Internal::Reader { session, wake } => {
+            let EngineState { config, reader, .. } = engine;
+            let mut cx = reader.cx(config, services, tx);
+            reader.wake(&mut cx, session, wake);
+        }
+        // A TV keeps reading entries in its log for the other devices and acts on none of them.
+        Internal::ReadingSynced if !engine.reading.takes_synced_reading() => {}
+        Internal::ReadingSynced => {
+            let EngineState { config, reader, .. } = engine;
+            let mut cx = reader.cx(config, services, tx);
+            reader.synced(&mut cx);
+            let lent = crate::downloads::books::Lent::of(services, tx);
+            services.book_sources.downloads.sweep(&lent, None);
+        }
+        Internal::BookSourcesChanged if engine.reading.available => {
+            crate::read_catalog::changed::sources_changed(
+                &crate::read_catalog::Kit::of(services),
+                crate::read_catalog::Ask::of(engine, services),
+                tx,
+            );
+            // A server signed in again: the downloads it failed go on by themselves.
+            let downloads = &services.book_sources.downloads;
+            if downloads.take_requeued() && engine.ahead.on() {
+                downloads.start(&crate::downloads::books::Lent::of(services, tx));
+            }
+        }
+        Internal::BookSourcesChanged => {}
         Internal::SyncEffects => {
             let effects = services.syncing.take_effects();
             crate::sync::apply_effects(effects, engine, services, tx);

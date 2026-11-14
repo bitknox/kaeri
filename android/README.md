@@ -2,10 +2,10 @@
 
 The Android app: Kotlin and Jetpack Compose on the Kaeri engine, which it reaches through the
 Kotlin bindings UniFFI generates from `crates/kaeri-ffi`. Phones, tablets and foldables,
-Android 15 (API 35) and up, built to the rules in `docs/native-ux.md` and the motion
+Android 11 (API 30) and up, built to the rules in `docs/native-ux.md` and the motion
 spec in `android/docs/motion-android.md`.
 
-Kaeri doesn't host any shows. You add your own sources.
+Kaeri doesn't host any shows or books. You add your own sources.
 
 ## Modules
 
@@ -74,7 +74,7 @@ says otherwise, `release` for a build to keep.
 
 ## The player
 
-The player is libmpv, built by us as LGPL with `android/scripts/mpv.sh` into `android/.mpv` (about
+The player is libmpv, built from source as LGPL by `android/scripts/mpv.sh` into `android/.mpv` (about
 6 minutes on an idle Mac; `--check` says whether it is current, which every build asks first). The
 JNI shim in `player/src/main/cpp` is built by CMake against it. `PlayerModel` lives for the
 process, in the application, so a rotation, a fold or Picture in Picture only lends mpv a new
@@ -157,10 +157,11 @@ phone set up with one has:
 3. On a title page, long-press an episode and pick Download. Downloads lists it as Queued, then
    running, with its speed and the time left.
 4. The download notification is up: on Android 16 a Live Update at the top of the shade and the
-   lock screen, a segment per episode and the time left in the status bar's chip; on Android 15 the
-   plain progress notification. Pause (Pause all), Resume and Cancel act on the queue; a queue
-   paused keeps the notification ten minutes for Resume. `adb shell dumpsys jobscheduler | grep -A4
-   app.kaeri.app` shows the job, user-initiated, running.
+   lock screen, a segment per episode and the time left in the status bar's chip; on Android 15 and
+   below the plain progress notification. Pause (Pause all), Resume and Cancel act on the queue; a
+   queue paused keeps the notification ten minutes for Resume. `adb shell dumpsys jobscheduler |
+   grep -A4 app.kaeri.app` shows the job, user-initiated, running; below Android 14 it is a
+   foreground service, `adb shell dumpsys activity services app.kaeri.app/.DownloadService`.
 5. Lock the phone for ten minutes, or switch to another app: the download goes on and the
    notification moves.
 6. With Wi-Fi only on (Settings › Downloads), turn Wi-Fi off: the download waits. Turn it on: it
@@ -234,12 +235,12 @@ Kaeri already on the phone, keeping its data, and opens it. It ends by printing 
 installed and the signing certificate's SHA-256, which is public. The first run builds the engine
 in the release profile, which takes a while; later runs reuse it.
 
-- **The phone:** turn on Developer options (Settings › About phone, tap Build number seven times),
+- On the phone, turn on Developer options (Settings › About phone, tap Build number seven times),
   then Settings › System › Developer options › USB debugging. Connect it by USB and accept "Allow
   USB debugging?" for this computer. The script takes the one phone `adb devices -l` lists,
   emulators aside; with several, `ANDROID_SERIAL=<serial>` picks one. `--apk <file>` installs an
   APK built already.
-- **The key:** the four `KAERI_RELEASE_*` properties in `~/.gradle/gradle.properties` name the
+- The four `KAERI_RELEASE_*` properties in `~/.gradle/gradle.properties` name the
   keystore, its alias and their passwords. Without them the release is unsigned, and the script
   stops before installing.
 - **Keep the release key backed up, somewhere other than this Mac.** An update installs only over

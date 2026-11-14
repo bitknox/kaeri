@@ -56,9 +56,20 @@ pub struct Sync {
     pub kitsu: Option<Arc<kaeri_track::KitsuTracker>>,
     /// Where a Kitsu sign-in and the Kitsu tracker go: Kitsu itself, or a fixture build's fake.
     pub kitsu_site: kaeri_track::kitsu::Site,
+    /// The MangaUpdates tracker as its concrete type: its session has no refresh, but a sign-in
+    /// hands it the token.
+    pub mangaupdates: Option<Arc<kaeri_track::MangaUpdatesTracker>>,
+    /// Where a MangaUpdates sign-in goes: the service, or a fixture build's fake.
+    pub mangaupdates_api: String,
+    /// The public lookups that match a work to tracker entries: asked only while a tracker that
+    /// needs the answer is signed in.
+    pub lookups: Arc<kaeri_track::lookup::Lookups>,
     /// The Simkl tracker as its concrete type, for the same reason: a sign-in through its
     /// OAuth 2.0 lasts a week, and the pair renewed mid-call has to be written back.
     pub simkl: Option<Arc<kaeri_track::SimklTracker>>,
+    /// The Trakt tracker as its concrete type, for the same reason: its access token runs out,
+    /// and the pair renewed mid-call has to be written back.
+    pub trakt: Option<Arc<kaeri_track::TraktTracker>>,
     pub tokens: TokenStore,
     pub store: Store,
     pub config: Config,
@@ -74,6 +85,9 @@ pub struct Sync {
     /// When the library was last pulled and whether the app is away: the 15-minute loop rests
     /// while it is, and Sync now does not pull again within [`PULL_COALESCE`] of a pull.
     pub pulls: Arc<PullGate>,
+    /// Whether a front end has asked for the Library this run: a status set then has the
+    /// Library's lists answered again, so the one on screen moves the title at once.
+    pub library_shown: Arc<std::sync::atomic::AtomicBool>,
     /// The sign-ins a native app's sheet is showing, each waiting for its redirect.
     pub pending: native::PendingSignIns,
     /// The device-code sign-ins running, one per tracker: see [`device`].
@@ -81,6 +95,9 @@ pub struct Sync {
     /// How titles are named, which under `anilist` follows what each pull's viewer says: see
     /// [`Self::with_titles`].
     pub titles: Option<kaeri_meta::titles::Titles>,
+    /// When trackers disagree on reading progress, the latest change wins rather than the
+    /// furthest: the setting as it stands, changed from Settings while the loops run.
+    pub latest_wins: Arc<std::sync::atomic::AtomicBool>,
 }
 
 impl Sync {
@@ -120,6 +137,10 @@ impl Sync {
         let mut mal = None;
         let mut kitsu = None;
         let mut simkl = None;
+        let mut trakt = None;
+        let mut mangaupdates = None;
+        let reads: Arc<dyn kaeri_track::read::ReadMapping> =
+            Arc::new(StoreReadMapping { store: store.clone() });
 
         if config.trackers.is_enabled("anilist") {
             let token = tokens.get("anilist").ok();
@@ -152,6 +173,7 @@ impl Sync {
                     Arc::new(StoreMapping { store: store.clone() }),
                     tokens_for_mal,
                 )
+                .with_read_mapping(reads.clone())
                 .with_token_store(tokens.clone()),
             );
             trackers.push(tracker.clone());
@@ -174,6 +196,20 @@ impl Sync {
             );
             trackers.push(tracker.clone());
             kitsu = Some(tracker);
+        }
+
+        // MangaUpdates needs no registration either: a form signs in with a name and password.
+        if config.trackers.is_enabled("mangaupdates") {
+            let tracker = Arc::new(
+                kaeri_track::MangaUpdatesTracker::new(
+                    http.plain().clone(),
+                    reads,
+                    tokens.get_pair("mangaupdates").ok(),
+                )
+                .with_token_store(tokens.clone()),
+            );
+            trackers.push(tracker.clone());
+            mangaupdates = Some(tracker);
         }
 
         // Simkl bridges through `mal_id`, which the mapping table already holds for MAL's sake —
@@ -200,12 +236,18 @@ impl Sync {
         if config.trackers.is_enabled("trakt")
             && let Some(client_id) = config.trackers.trakt.client_id.clone()
         {
-            trackers.push(Arc::new(kaeri_track::TraktTracker::new(
-                client_id,
-                http.plain().clone(),
-                Arc::new(StoreMapping { store: store.clone() }),
-                tokens.get_pair("trakt").ok(),
-            )));
+            let tracker = Arc::new(
+                kaeri_track::TraktTracker::new(
+                    client_id,
+                    http.plain().clone(),
+                    Arc::new(StoreMapping { store: store.clone() }),
+                    tokens.get_pair("trakt").ok(),
+                )
+                .with_client_secret(config.trackers.trakt.client_secret.clone())
+                .with_token_store(tokens.clone()),
+            );
+            trackers.push(tracker.clone());
+            trakt = Some(tracker);
         }
 
         Self {
@@ -214,17 +256,41 @@ impl Sync {
             mal,
             kitsu,
             kitsu_site: kaeri_track::kitsu::Site::default(),
+            mangaupdates,
+            mangaupdates_api: kaeri_track::mangaupdates::API.to_owned(),
+            lookups: Arc::new(kaeri_track::lookup::Lookups::new(http.plain().clone())),
             simkl,
+            trakt,
             tokens,
             store: store.clone(),
             config: config.clone(),
             http: http.clone(),
             pull_errors: Arc::default(),
             pulls: Arc::default(),
+            library_shown: Arc::default(),
             pending: native::PendingSignIns::default(),
             device: device::DeviceFlows::default(),
             titles: None,
+            latest_wins: Arc::new(std::sync::atomic::AtomicBool::new(
+                config.reading.when_trackers_disagree
+                    == kaeri_core::config::WhenTrackersDisagree::Latest,
+            )),
         }
+    }
+
+    /// How reading progress settles when a tracker disagrees, as the person set it.
+    pub fn read_rule(&self) -> kaeri_core::config::WhenTrackersDisagree {
+        if self.latest_wins.load(std::sync::atomic::Ordering::Relaxed) {
+            kaeri_core::config::WhenTrackersDisagree::Latest
+        } else {
+            kaeri_core::config::WhenTrackersDisagree::Furthest
+        }
+    }
+
+    /// The setting changed: pulls from now on settle progress by `rule`.
+    pub fn set_read_rule(&self, rule: kaeri_core::config::WhenTrackersDisagree) {
+        let latest = rule == kaeri_core::config::WhenTrackersDisagree::Latest;
+        self.latest_wins.store(latest, std::sync::atomic::Ordering::Relaxed);
     }
 
     /// Titles named as AniList's viewer reads them follow each pull's answer: every pull asks
@@ -265,6 +331,35 @@ impl Sync {
         self
     }
 
+    /// MangaUpdates at `api` in place of the service, its sign-in and its tracker alike: a
+    /// fixture build's fake, which no password typed into it leaves the machine for.
+    #[must_use]
+    pub fn with_mangaupdates_at(mut self, api: &str) -> Self {
+        if let Some(at) = self.trackers.iter().position(|t| t.id() == "mangaupdates") {
+            let pair = self.tokens.get_pair("mangaupdates").ok();
+            let tracker = Arc::new(
+                kaeri_track::MangaUpdatesTracker::new(
+                    self.http.plain().clone(),
+                    Arc::new(StoreReadMapping { store: self.store.clone() }),
+                    pair,
+                )
+                .with_api(api)
+                .with_token_store(self.tokens.clone()),
+            );
+            self.trackers[at] = tracker.clone();
+            self.mangaupdates = Some(tracker);
+        }
+        self.mangaupdates_api = api.to_owned();
+        self
+    }
+
+    /// The lookups answered by stand-ins: a test's.
+    #[must_use]
+    pub fn with_lookups(mut self, lookups: kaeri_track::lookup::Lookups) -> Self {
+        self.lookups = Arc::new(lookups);
+        self
+    }
+
     fn pull_error(&self, tracker_id: &str) -> Option<PullError> {
         self.pull_errors.lock().ok()?.get(tracker_id).cloned()
     }
@@ -278,10 +373,27 @@ impl Sync {
         }
     }
 
+    /// Whether Accounts lists a tracker for what Kaeri is for: MangaUpdates only with reading,
+    /// the watching-only trackers only with watching.
+    pub fn shown_for(tracker: &dyn Tracker, answer: kaeri_model::medium::KaeriIsFor) -> bool {
+        use kaeri_model::medium::KaeriIsFor as F;
+        match answer {
+            F::Both => true,
+            F::Read => tracker.serves_reading(),
+            F::Watch => tracker.serves_watching(),
+        }
+    }
+
     /// The initial state for each tracker, so the badge is right before any sync runs.
     pub fn initial_states(&self) -> Vec<SyncState> {
+        self.states_shown(kaeri_model::medium::KaeriIsFor::Both)
+    }
+
+    /// The states of the trackers Accounts lists for this answer.
+    pub fn states_shown(&self, answer: kaeri_model::medium::KaeriIsFor) -> Vec<SyncState> {
         self.trackers
             .iter()
+            .filter(|tracker| Self::shown_for(tracker.as_ref(), answer))
             .map(|tracker| {
                 let id = tracker.id();
                 let storage = self.tokens.storage_for(id);
@@ -291,9 +403,12 @@ impl Sync {
                     user: None,
                     storage: Some(storage.describe().to_owned()),
                     storage_degraded: storage.is_degraded(),
-                    outbox: self.store.outbox_depth(Some(id)).unwrap_or(0),
+                    outbox: self.store.outbox_waiting(id).unwrap_or(0),
                     deferred: self.store.outbox_deferred(id).unwrap_or(0),
-                    needs_reauth: false,
+                    // A credential rejected before this launch is still dead: said from the
+                    // first state, not after the first drain asks again.
+                    needs_reauth: tracker.is_authenticated()
+                        && sync::credential_rejected(&self.store, id),
                     last: None,
                     pull_error: self.pull_error(id),
                 }
@@ -315,9 +430,10 @@ impl Sync {
             user: None,
             storage: Some(storage.describe().to_owned()),
             storage_degraded: storage.is_degraded(),
-            outbox: self.store.outbox_depth(Some(id)).unwrap_or(0),
+            outbox: self.store.outbox_waiting(id).unwrap_or(0),
             deferred: self.store.outbox_deferred(id).unwrap_or(0),
-            needs_reauth,
+            needs_reauth: needs_reauth
+                || (tracker.is_authenticated() && sync::credential_rejected(&self.store, id)),
             last,
             pull_error: self.pull_error(id),
         }
@@ -332,7 +448,16 @@ impl Sync {
     pub fn state_after_enqueue(&self) -> Vec<SyncState> {
         self.trackers
             .iter()
-            .filter(|t| t.is_authenticated())
+            .filter(|t| t.is_authenticated() && t.serves_watching())
+            .map(|t| self.state_for(t.as_ref(), false, Some("queued".into())))
+            .collect()
+    }
+
+    /// The same after a reading change was queued: the trackers that keep a reading list.
+    pub fn state_after_read_enqueue(&self) -> Vec<SyncState> {
+        self.trackers
+            .iter()
+            .filter(|t| t.is_authenticated() && t.serves_reading())
             .map(|t| self.state_for(t.as_ref(), false, Some("queued".into())))
             .collect()
     }
@@ -435,8 +560,52 @@ fn kitsu_tracker(
             pair,
         )
         .at(site)
+        .with_read_mapping(Arc::new(StoreReadMapping { store: store.clone() }))
         .with_token_store(tokens.clone()),
     )
+}
+
+/// The reading side of the id mapping: a work's entry on each tracker, kept in `read_track_map`
+/// and looked up the other way for a pull. A work is `a:{anilist id}`.
+struct StoreReadMapping {
+    store: Store,
+}
+
+impl StoreReadMapping {
+    fn id(&self, anilist_id: AnilistId, tracker: &str) -> Option<String> {
+        self.store.track_map_id(&sync::read_work(anilist_id), tracker).ok().flatten()
+    }
+
+    fn work(&self, tracker: &str, tracker_id: &str) -> Option<AnilistId> {
+        let work = self.store.track_map_work(tracker, tracker_id).ok().flatten()?;
+        work.strip_prefix("a:")?.parse().ok().map(AnilistId::new)
+    }
+}
+
+impl kaeri_track::read::ReadMapping for StoreReadMapping {
+    fn mal_id(&self, anilist_id: AnilistId) -> Option<u32> {
+        self.id(anilist_id, "mal")?.parse().ok()
+    }
+
+    fn anilist_for_mal(&self, mal_id: u32) -> Option<AnilistId> {
+        self.work("mal", &mal_id.to_string())
+    }
+
+    fn kitsu_id(&self, anilist_id: AnilistId) -> Option<u32> {
+        self.id(anilist_id, "kitsu")?.parse().ok()
+    }
+
+    fn anilist_for_kitsu(&self, kitsu_id: u32) -> Option<AnilistId> {
+        self.work("kitsu", &kitsu_id.to_string())
+    }
+
+    fn mangaupdates_id(&self, anilist_id: AnilistId) -> Option<u64> {
+        self.id(anilist_id, "mangaupdates")?.parse().ok()
+    }
+
+    fn anilist_for_mangaupdates(&self, series_id: u64) -> Option<AnilistId> {
+        self.work("mangaupdates", &series_id.to_string())
+    }
 }
 
 impl kaeri_track::kitsu::IdMapping for StoreMapping {
@@ -456,44 +625,107 @@ impl kaeri_track::kitsu::IdMapping for StoreMapping {
 pub async fn load_library(
     sync: &Sync,
     store: &Store,
-    titles: &kaeri_meta::titles::Titles,
+    meta: &kaeri_meta::Meta,
     segment: LibrarySegment,
 ) -> Event {
+    sync.library_shown.store(true, std::sync::atomic::Ordering::Relaxed);
+    let mut answers = library_answers(sync, store, meta, &[segment]).await;
+    answers.pop().expect("one answer for each segment asked")
+}
+
+/// The Library's `segments`, each answered as [`load_library`] answers it, cut from one answer
+/// of the tracker's.
+///
+/// A status set here and still on its way to the tracker counts over what the tracker's list
+/// says: the list as it is once the outbox drains, and where the title page already has the
+/// title. Without that, a title put on Planning stayed off the Planning list until the drain
+/// sent it and the list was asked for again.
+pub async fn library_answers(
+    sync: &Sync,
+    store: &Store,
+    meta: &kaeri_meta::Meta,
+    segments: &[LibrarySegment],
+) -> Vec<Event> {
     use kaeri_model::catalog::ContentList;
 
     // Tagged with its segment: switching tabs while a pull is in flight must not show this one
     // under the next tab's heading.
-    let answer = |content| Event::Content { view: ContentFor::Library(segment), content };
+    let every = |content: ContentList| -> Vec<Event> {
+        segments
+            .iter()
+            .map(|&segment| Event::Content {
+                view: ContentFor::Library(segment),
+                content: content.clone(),
+            })
+            .collect()
+    };
 
     let Some(tracker) = sync.trackers.first() else {
-        return answer(ContentList::Entries(Vec::new()));
+        return every(ContentList::Entries(Vec::new()));
     };
     if !tracker.is_authenticated() {
         // Not a failure. The Library screen renders its own "no account" state, which explains
         // that history works regardless.
-        return answer(ContentList::Entries(Vec::new()));
+        return every(ContentList::Entries(Vec::new()));
     }
 
     // The concrete handle, kept alongside the trait object rather than reached by downcasting:
     // the trait returns only the syncable projection, but this screen needs covers and titles
     // too, and fetching those per title would cost a request each against thirty a minute.
     let Some(anilist) = sync.anilist.as_ref() else {
-        return answer(ContentList::Entries(Vec::new()));
+        return every(ContentList::Entries(Vec::new()));
     };
 
-    match anilist.library().await {
-        Ok(entries) => {
-            // The whole list, every segment's, kept for the cards that say "Watched".
-            let statuses: Vec<_> =
-                entries.iter().map(|e| (e.media.id, e.status.as_str())).collect();
-            if let Err(e) =
-                store.replace_library_statuses("anilist", &statuses, kaeri_store::now())
-            {
-                tracing::debug!(error = %e, "could not keep the library's statuses");
-            }
+    let entries = match anilist.library().await {
+        Ok(entries) => entries,
+        Err(kaeri_core::Error::Auth(_)) => {
+            return every(ContentList::Failed("sign in again on the Accounts screen".into()));
+        }
+        Err(e) => return every(ContentList::Failed(e.to_string())),
+    };
+
+    let pending = store.pending_statuses(tracker.id()).unwrap_or_else(|e| {
+        tracing::debug!(error = %e, "could not read the statuses on their way");
+        Default::default()
+    });
+    let status_of = |id: AnilistId, said: &str| -> String {
+        pending
+            .get(&id)
+            .map_or_else(|| said.to_owned(), |status| status_wire(*status).to_owned())
+    };
+    // Titles put on the list here that the tracker's list does not have yet, described from
+    // what the cache holds and asked for otherwise.
+    let mut added: Vec<AnilistId> = pending
+        .keys()
+        .filter(|id| !entries.iter().any(|e| e.media.id == **id))
+        .copied()
+        .collect();
+    added.sort_unstable_by_key(|id| std::cmp::Reverse(id.get()));
+    let mut added_media = meta.cached(&added);
+    let uncached: Vec<_> =
+        added.iter().filter(|id| !added_media.iter().any(|m| m.id == **id)).copied().collect();
+    if !uncached.is_empty() {
+        added_media.extend(meta.media_many(&uncached).await.unwrap_or_default());
+    }
+
+    // The whole list, every segment's, kept for the cards that say "Watched".
+    let statuses: Vec<(AnilistId, String)> = entries
+        .iter()
+        .map(|e| (e.media.id, status_of(e.media.id, &e.status)))
+        .chain(added.iter().map(|id| (*id, status_wire(pending[id]).to_owned())))
+        .collect();
+    let kept: Vec<_> = statuses.iter().map(|(id, status)| (*id, status.as_str())).collect();
+    if let Err(e) = store.replace_library_statuses(tracker.id(), &kept, kaeri_store::now()) {
+        tracing::debug!(error = %e, "could not keep the library's statuses");
+    }
+
+    let titles = meta.titles();
+    segments
+        .iter()
+        .map(|&segment| {
             let wanted = segment.wire();
             let mut rows = Vec::new();
-            for entry in entries.iter().filter(|e| e.status == wanted) {
+            for entry in entries.iter().filter(|e| status_of(e.media.id, &e.status) == wanted) {
                 let _ = store.remember_title(entry.media.id, titles.pick(&entry.media.title));
                 let mut row = crate::data::entry_from(&entry.media, Some(store));
                 // The tracker's progress, not the local projection: this screen is a view of
@@ -508,12 +740,39 @@ pub async fn load_library(
                 row.recount();
                 rows.push(row);
             }
-            answer(ContentList::Entries(rows))
-        }
-        Err(kaeri_core::Error::Auth(_)) => {
-            answer(ContentList::Failed("sign in again on the Accounts screen".into()))
-        }
-        Err(e) => answer(ContentList::Failed(e.to_string())),
+            for media in added_media.iter().filter(|m| status_wire(pending[&m.id]) == wanted) {
+                let _ = store.remember_title(media.id, titles.pick(&media.title));
+                let mut row = crate::data::entry_from(media, Some(store));
+                // What the tracker will say once the outbox drains: the progress queued for
+                // it, and none when nothing is.
+                let done =
+                    store.pending_progress(tracker.id(), media.id).ok().flatten().unwrap_or(0);
+                row.progress =
+                    Some(TitleProgress { done, next: next_after_progress(done, row.episodes) });
+                row.list_status = Some(segment);
+                row.recount();
+                rows.push(row);
+            }
+            Event::Content {
+                view: ContentFor::Library(segment),
+                content: ContentList::Entries(rows),
+            }
+        })
+        .collect()
+}
+
+/// A status as AniList words it, the way the Library's lists and the kept statuses say it.
+fn status_wire(status: kaeri_core::traits::WatchStatus) -> &'static str {
+    use kaeri_core::traits::WatchStatus as W;
+    match status {
+        W::Current => "CURRENT",
+        // Kept apart, as AniList's own list says it: keep next follows a rewatch from the
+        // episode rewatched, not from the last one ever watched.
+        W::Repeating => "REPEATING",
+        W::Planning => "PLANNING",
+        W::Completed => "COMPLETED",
+        W::Paused => "PAUSED",
+        W::Dropped => "DROPPED",
     }
 }
 
@@ -538,22 +797,12 @@ fn keep_statuses(
     remote: &[kaeri_core::traits::TrackedEntry],
     now: i64,
 ) {
-    use kaeri_core::traits::WatchStatus as W;
+    // A status set here and not sent yet counts over the list's, as the Library shows it.
+    let pending = store.pending_statuses(tracker).unwrap_or_default();
     let statuses: Vec<_> = remote
         .iter()
-        .map(|entry| {
-            let status = match entry.status {
-                W::Current => "CURRENT",
-                // Kept apart, as AniList's own list says it: keep next follows a rewatch from
-                // the episode rewatched, not from the last one ever watched.
-                W::Repeating => "REPEATING",
-                W::Planning => "PLANNING",
-                W::Completed => "COMPLETED",
-                W::Paused => "PAUSED",
-                W::Dropped => "DROPPED",
-            };
-            (entry.anilist_id, status)
-        })
+        .map(|entry| (entry.anilist_id, status_wire(entry.status)))
+        .chain(pending.iter().map(|(id, status)| (*id, status_wire(*status))))
         .collect();
     if let Err(e) = store.replace_library_statuses(tracker, &statuses, now) {
         tracing::debug!(error = %e, "could not keep the library's statuses");
@@ -694,6 +943,19 @@ async fn persist_renewed_tokens(sync: &Sync) {
             Err(e) => tracing::warn!(error = %e, "could not store the renewed simkl token"),
         }
     }
+    if let Some(trakt) = sync.trakt.as_ref()
+        && let Some(pair) = trakt.take_renewed().await
+    {
+        match sync.tokens.set_pair(
+            "trakt",
+            &pair.access,
+            pair.refresh.as_deref(),
+            pair.expires_at,
+        ) {
+            Ok(_) => tracing::info!("stored the renewed trakt token"),
+            Err(e) => tracing::warn!(error = %e, "could not store the renewed trakt token"),
+        }
+    }
 }
 
 /// A tracker's name as a person knows it. An id it has no name for is shown as it is.
@@ -702,6 +964,7 @@ pub(crate) fn tracker_name(id: &str) -> String {
         "anilist" => "AniList",
         "mal" => "MyAnimeList",
         "kitsu" => "Kitsu",
+        "mangaupdates" => "MangaUpdates",
         "simkl" => "Simkl",
         "trakt" => "Trakt",
         other => other,
@@ -753,6 +1016,10 @@ pub async fn drain_once(sync: &Sync, tx: &Outbox) {
     // is shared between them, and a progress update reaches all of them in the time the
     // slowest takes rather than the sum.
     let drains = sync.trackers.iter().map(|tracker| async move {
+        drain_reading(sync, tracker.as_ref(), now, tx).await;
+        if !tracker.serves_watching() {
+            return;
+        }
         match sync::drain(&sync.store, tracker.as_ref(), now).await {
             Ok(report) => {
                 let last = if report.ignored > 0 {
@@ -780,6 +1047,139 @@ pub async fn drain_once(sync: &Sync, tx: &Outbox) {
         }
     });
     futures::future::join_all(drains).await;
+    tell_dropped(sync, tx);
+}
+
+/// Say, once, which changes a tracker kept refusing until the outbox stopped sending them: one
+/// notice for each tracker, naming the title. Each is taken from the store as it is said, so it
+/// is never said again; one given up while no app was open is said by the first drain after
+/// launch.
+fn tell_dropped(sync: &Sync, tx: &Outbox) {
+    let dropped = match sync.store.take_untold_dropped_track_ops() {
+        Ok(dropped) => dropped,
+        Err(e) => {
+            tracing::warn!(error = %e, "could not read the changes the outbox gave up");
+            return;
+        }
+    };
+    let mut by_tracker: Vec<(String, Vec<&TrackOp>)> = Vec::new();
+    for d in &dropped {
+        let at = match by_tracker.iter().position(|(t, _)| *t == d.tracker_id) {
+            Some(at) => at,
+            None => {
+                by_tracker.push((d.tracker_id.clone(), Vec::new()));
+                by_tracker.len() - 1
+            }
+        };
+        let ops = &mut by_tracker[at].1;
+        if !ops.iter().any(|o| o.anilist_id() == d.op.anilist_id()) {
+            ops.push(&d.op);
+        }
+    }
+    for (tracker, ops) in by_tracker {
+        let tracker = tracker_name(&tracker);
+        let count = i64::try_from(ops.len()).unwrap_or(i64::MAX);
+        let msg = match ops.iter().find_map(|op| dropped_title(sync, op)) {
+            Some(title) if count == 1 => Msg::NoticeTrackerChangeRefused { tracker, title },
+            Some(title) => {
+                Msg::NoticeTrackerChangesRefused { tracker, title, others: count - 1 }
+            }
+            None => Msg::NoticeTrackerChangeRefusedUntitled { tracker, count },
+        };
+        let _ = tx.send(Event::Toast(Notice::alert(msg)));
+    }
+}
+
+/// The name of the title a given-up change was for, as the app names it: a reading series from
+/// the catalogue it was read from, anything else from the titles the trackers named.
+fn dropped_title(sync: &Sync, op: &TrackOp) -> Option<String> {
+    let id = op.anilist_id();
+    let reading = matches!(
+        op,
+        TrackOp::SetReadProgress { .. }
+            | TrackOp::SetReadStatus { .. }
+            | TrackOp::SetReadScore { .. }
+    );
+    let from_catalog = || {
+        let work = sync.store.book_work(&format!("a:{}", id.get())).ok().flatten()?;
+        let form = sync
+            .titles
+            .as_ref()
+            .map_or(kaeri_store::shelf::TitleForm::English, crate::data::title_form);
+        kaeri_store::shelf::BookTitles::parse(&work.titles).pick(form).map(str::to_owned)
+    };
+    reading.then(from_catalog).flatten().or_else(|| sync.store.cached_title(id).ok().flatten())
+}
+
+/// A tracker's reading outbox, drained to its manga and novel list.
+async fn drain_reading(sync: &Sync, tracker: &dyn Tracker, now: i64, tx: &Outbox) {
+    if !tracker.serves_reading() {
+        return;
+    }
+    match sync::drain_read(&sync.store, tracker, now).await {
+        Ok(report) => {
+            if !report.did_nothing() {
+                let last = (report.sent > 0).then(|| format!("sent {}", report.sent));
+                let state = sync.state_for(tracker, report.needs_reauth, last);
+                let _ = tx.send(Event::Sync(Box::new(state)));
+            }
+        }
+        Err(e) => tracing::warn!(tracker = tracker.id(), error = %e, "reading drain failed"),
+    }
+}
+
+/// A tracker's manga and novel list, pulled and merged with what was read here.
+async fn pull_reading(sync: &Sync, tracker: &dyn Tracker, now: i64, tx: &Outbox) {
+    if !tracker.serves_reading() || !tracker.is_authenticated() {
+        return;
+    }
+    let last_pull = sync
+        .store
+        .get_meta_i64(&format!("{}:read", pull_key(tracker.id())))
+        .unwrap_or(None)
+        .unwrap_or(0);
+    match sync::pull_read(&sync.store, tracker, now, last_pull, sync.read_rule()).await {
+        Ok(report) => {
+            let _ = sync.store.set_meta_i64(&format!("{}:read", pull_key(tracker.id())), now);
+            sync.note_pull(tracker.id(), None);
+            if !report.conflicts.is_empty() {
+                let rows = report
+                    .conflicts
+                    .iter()
+                    .map(|c| ConflictRow {
+                        anilist_id: c.anilist_id,
+                        title: sync
+                            .store
+                            .cached_title(c.anilist_id)
+                            .unwrap_or(None)
+                            .unwrap_or_else(|| format!("anilist {}", c.anilist_id.get())),
+                        field: c.field.label().to_owned(),
+                        local: c.local.clone(),
+                        remote: c.remote.clone(),
+                    })
+                    .collect();
+                let _ = tx.send(Event::Conflicts(rows));
+            }
+            for conflict in &report.conflicts {
+                crate::read_tracking::note_conflict(
+                    &sync.store,
+                    conflict.anilist_id,
+                    tracker.id(),
+                );
+            }
+            let state = sync.state_for(tracker, false, Some("pulled".into()));
+            let _ = tx.send(Event::Sync(Box::new(state)));
+        }
+        Err(kaeri_core::Error::Auth(_)) => {
+            let state = sync.state_for(tracker, true, Some("sign in again".into()));
+            let _ = tx.send(Event::Sync(Box::new(state)));
+        }
+        Err(e) => {
+            tracing::warn!(tracker = tracker.id(), error = %e, "reading pull failed");
+            sync.note_pull(tracker.id(), Some(PullError { reason: e.to_string(), at: now }));
+            let _ = tx.send(Event::Sync(Box::new(sync.state_for(tracker, false, None))));
+        }
+    }
 }
 
 /// One library pull across every tracker.
@@ -790,7 +1190,8 @@ pub async fn pull_once(sync: &Sync, tx: &Outbox) {
     // but merged one at a time in tracker order. Every merge reads and writes the same local
     // history, so merging in arrival order would let network timing decide which tracker's
     // disagreement is reported as the conflict.
-    let pulling: Vec<_> = sync.trackers.iter().filter(|t| t.is_authenticated()).collect();
+    let pulling: Vec<_> =
+        sync.trackers.iter().filter(|t| t.is_authenticated() && t.serves_watching()).collect();
     let libraries = futures::future::join_all(pulling.iter().map(|t| t.pull_library())).await;
     // AniList's answer carries the viewer, whose title language may have changed since.
     if let (Some(titles), Some(anilist)) = (&sync.titles, &sync.anilist)
@@ -816,6 +1217,7 @@ pub async fn pull_once(sync: &Sync, tx: &Outbox) {
             Ok(report) => {
                 sync.note_pull(tracker.id(), None);
                 let _ = sync.store.set_meta_i64(&pull_key(tracker.id()), now);
+                let _ = sync::credential_accepted(&sync.store, tracker.id());
                 // Said after every pull that went through, changed or not: the Accounts row's
                 // "Synced" time and Sync now's answer come from it, and a pull can move the
                 // list's statuses or the outbox without adopting a title.
@@ -849,7 +1251,15 @@ pub async fn pull_once(sync: &Sync, tx: &Outbox) {
                     let _ = tx.send(Event::Conflicts(rows));
                 }
             }
-            Err(kaeri_core::Error::Auth(_)) => {
+            Err(kaeri_core::Error::Auth(message)) => {
+                // Held as a rejected push is, so the drain stops presenting the same credential
+                // and the next launch still says to sign in again.
+                let _ = sync::note_rejected(&sync.store, tracker.id(), now);
+                tracing::warn!(
+                    tracker = tracker.id(),
+                    %message,
+                    "the tracker rejected the credential on a library pull"
+                );
                 let _ = tx.send(Event::Sync(Box::new(sync.state_for(
                     tracker.as_ref(),
                     true,
@@ -871,6 +1281,10 @@ pub async fn pull_once(sync: &Sync, tx: &Outbox) {
                 ))));
             }
         }
+    }
+
+    for tracker in &sync.trackers {
+        pull_reading(sync, tracker.as_ref(), now, tx).await;
     }
 }
 
@@ -1087,6 +1501,40 @@ pub async fn connect_kitsu(sync: Sync, username: String, password: String, tx: O
     }
 }
 
+/// Sign in to MangaUpdates from inside the app, with the name and password from the form.
+///
+/// The password goes to the login call once and is dropped when this returns, as Kitsu's does.
+pub async fn connect_mangaupdates(sync: Sync, username: String, password: String, tx: Outbox) {
+    let pair = match kaeri_track::mangaupdates::login(
+        sync.http.plain(),
+        &sync.mangaupdates_api,
+        &username,
+        &password,
+    )
+    .await
+    {
+        Ok(pair) => pair,
+        Err(e) => {
+            let _ = tx.send(Event::Toast(sign_in_failed("mangaupdates", &e)));
+            return;
+        }
+    };
+    match sync.tokens.set_pair(
+        "mangaupdates",
+        &pair.access,
+        pair.refresh.as_deref(),
+        pair.expires_at,
+    ) {
+        Ok(storage) => {
+            let _ = tx.send(Event::Toast(signed_in("mangaupdates", storage.is_degraded())));
+            activate(&sync, "mangaupdates", &pair, &tx).await;
+        }
+        Err(e) => {
+            let _ = tx.send(Event::Toast(token_not_saved(&e)));
+        }
+    }
+}
+
 /// Sign in to MyAnimeList from inside the app.
 ///
 /// There was no interactive flow at all — the Accounts screen answered "mal: no sign-in flow yet"
@@ -1197,6 +1645,7 @@ pub(crate) async fn activate(
     let _ = kaeri_track::sync::clear_reauth_hold(&sync.store, tracker_id);
     // Possibly another account: what was sent to the last one says nothing about this one.
     kaeri_track::sync::forget_pushed(&sync.store, tracker_id);
+    kaeri_track::sync::forget_pushed_read(&sync.store, tracker_id);
     for state in sync.initial_states() {
         let _ = tx.send(Event::Sync(Box::new(state)));
     }
@@ -1321,7 +1770,7 @@ pub fn disconnect(sync: &Sync, tracker_id: &str, tx: &Outbox) {
         // signing back in should send what accumulated.
         Ok(()) => {
             let tracker = tracker_name(tracker_id);
-            let count = sync.store.outbox_depth(Some(tracker_id)).unwrap_or(0);
+            let count = sync.store.outbox_waiting(tracker_id).unwrap_or(0);
             Event::Toast(Notice::info(if count == 0 {
                 Msg::NoticeSignedOut { tracker }
             } else {
@@ -1359,29 +1808,63 @@ pub fn disconnect(sync: &Sync, tracker_id: &str, tx: &Outbox) {
 /// account that may never exist would grow a badge nobody can act on. A tracker signed
 /// in but offline still queues — its credentials are present — which is the case the
 /// outbox exists for.
-pub fn set_status(sync: &Sync, id: AnilistId, status: LibrarySegment) {
+///
+/// The first change that could not be queued comes back, for the person to be told.
+pub fn set_status(
+    sync: &Sync,
+    id: AnilistId,
+    status: LibrarySegment,
+) -> Result<(), kaeri_store::StoreError> {
     let now = kaeri_store::now();
-    let op = TrackOp::SetStatus { anilist_id: id, status: segment_to_status(status), at: now };
-    for tracker in sync.trackers.iter().filter(|t| t.is_authenticated()) {
-        if let Err(e) = sync.store.enqueue(tracker.id(), &op, now) {
-            tracing::warn!(error = %e, "could not queue a status change");
+    let mut failed = Ok(());
+    let watch = segment_to_status(status);
+    let op = TrackOp::SetStatus { anilist_id: id, status: watch, at: now };
+    let library = sync.trackers.first().map(|t| t.id());
+    for tracker in sync.trackers.iter().filter(|t| t.is_authenticated() && t.serves_watching())
+    {
+        match sync.store.enqueue(tracker.id(), &op, now) {
+            // The Library's tracker's list as kept says it now, as the Library does: see
+            // `library_answers`. Its next answer replaces it.
+            Ok(Some(_)) if Some(tracker.id()) == library => {
+                if let Err(e) =
+                    sync.store.set_library_status(tracker.id(), id, status_wire(watch), now)
+                {
+                    tracing::debug!(error = %e, "could not keep the status set");
+                }
+            }
+            Ok(_) => {}
+            Err(e) => {
+                if failed.is_ok() {
+                    failed = Err(e);
+                }
+            }
         }
     }
+    failed
 }
 
 /// Queue a score for every tracker.
 ///
 /// Out of ten, because it is the one scale every connected service understands; each
 /// tracker converts on push if it stores something else.
-pub fn set_score(sync: &Sync, id: AnilistId, score: f32) {
+pub fn set_score(
+    sync: &Sync,
+    id: AnilistId,
+    score: f32,
+) -> Result<(), kaeri_store::StoreError> {
     let now = kaeri_store::now();
     let op = TrackOp::SetScore { anilist_id: id, score, at: now };
+    let mut failed = Ok(());
     // Signed-in only, for the same reason as `set_status`.
-    for tracker in sync.trackers.iter().filter(|t| t.is_authenticated()) {
-        if let Err(e) = sync.store.enqueue(tracker.id(), &op, now) {
-            tracing::warn!(error = %e, "could not queue a score");
+    for tracker in sync.trackers.iter().filter(|t| t.is_authenticated() && t.serves_watching())
+    {
+        if let Err(e) = sync.store.enqueue(tracker.id(), &op, now)
+            && failed.is_ok()
+        {
+            failed = Err(e);
         }
     }
+    failed
 }
 
 /// Settle a divergence.
@@ -1398,7 +1881,8 @@ pub fn resolve_conflict(sync: &Sync, id: AnilistId, keep_local: bool) {
         return;
     }
     let op = TrackOp::SetProgress { anilist_id: id, episode: episodes };
-    for tracker in sync.trackers.iter().filter(|t| t.is_authenticated()) {
+    for tracker in sync.trackers.iter().filter(|t| t.is_authenticated() && t.serves_watching())
+    {
         let _ = sync.store.enqueue(tracker.id(), &op, now);
     }
 }
@@ -1528,9 +2012,40 @@ mod tests {
         let dir = tempfile::tempdir().unwrap();
         let tokens = files_in(dir.path());
         let sync = Sync::with_tokens(&config, &store, &http, tokens);
-        assert_eq!(sync.trackers.len(), 1);
-        assert_eq!(sync.trackers[0].id(), "kitsu");
-        assert!(!sync.trackers[0].is_authenticated());
+        let ids: Vec<_> = sync.trackers.iter().map(|t| t.id()).collect();
+        assert_eq!(ids, ["kitsu", "mangaupdates"]);
+        assert!(sync.trackers.iter().all(|t| !t.is_authenticated()));
+    }
+
+    #[test]
+    fn accounts_lists_each_tracker_for_the_media_it_serves() {
+        use kaeri_model::medium::KaeriIsFor as F;
+        let config = Config::default();
+        let store = Store::open_in_memory().unwrap();
+        let http = kaeri_net::HttpClient::new(&config.network).unwrap();
+        let dir = tempfile::tempdir().unwrap();
+        let sync = Sync::with_tokens(&config, &store, &http, files_in(dir.path()));
+        let ids = |answer| -> Vec<String> {
+            sync.states_shown(answer).into_iter().map(|s| s.tracker).collect()
+        };
+        assert_eq!(ids(F::Watch), ["kitsu"]);
+        assert_eq!(ids(F::Read), ["kitsu", "mangaupdates"]);
+        assert_eq!(ids(F::Both), ["kitsu", "mangaupdates"]);
+    }
+
+    #[test]
+    fn the_reading_mapping_reads_the_store_both_ways() {
+        use kaeri_track::read::ReadMapping;
+        let store = Store::open_in_memory().unwrap();
+        store.set_track_map("a:7", "mangaupdates", Some("9000000001"), "hand", 1).unwrap();
+        store.set_track_map("a:7", "mal", Some("55"), "anilist", 1).unwrap();
+        let map = StoreReadMapping { store };
+        let id = AnilistId::new(7);
+        assert_eq!(map.mangaupdates_id(id), Some(9_000_000_001));
+        assert_eq!(map.anilist_for_mangaupdates(9_000_000_001), Some(id));
+        assert_eq!(map.mal_id(id), Some(55));
+        assert_eq!(map.anilist_for_mal(55), Some(id));
+        assert_eq!(map.kitsu_id(id), None);
     }
 
     #[test]
@@ -1558,8 +2073,8 @@ mod tests {
         let tokens = files_in(dir.path());
         let sync = Sync::with_tokens(&config, &store, &http, tokens);
 
-        set_status(&sync, AnilistId::new(1), LibrarySegment::Completed);
-        set_score(&sync, AnilistId::new(1), 8.0);
+        set_status(&sync, AnilistId::new(1), LibrarySegment::Completed).unwrap();
+        set_score(&sync, AnilistId::new(1), 8.0).unwrap();
         assert_eq!(store.outbox_depth(Some("kitsu")).unwrap(), 0);
     }
 
@@ -1622,6 +2137,184 @@ mod tests {
         let Some(Event::Sync(state)) = rx.try_recv().ok() else { panic!("no state sent") };
         assert_eq!(state.pull_error, None);
         assert_eq!(state.last.as_deref(), Some("pulled 0 titles"));
+    }
+
+    /// A signed-in tracker for the stuck-badge tests: it holds a token, may have no id for some
+    /// titles, and may reject the credential, as the test sets it.
+    struct Fake {
+        id: &'static str,
+        unmapped: Vec<AnilistId>,
+        rejects: std::sync::atomic::AtomicBool,
+    }
+
+    impl Fake {
+        fn new(id: &'static str, unmapped: Vec<AnilistId>, rejects: bool) -> Arc<Self> {
+            Arc::new(Self { id, unmapped, rejects: rejects.into() })
+        }
+
+        fn answer(&self) -> Result<(), kaeri_core::Error> {
+            if self.rejects.load(std::sync::atomic::Ordering::Relaxed) {
+                Err(kaeri_core::Error::Auth("401".into()))
+            } else {
+                Ok(())
+            }
+        }
+    }
+
+    #[async_trait::async_trait]
+    impl Tracker for Fake {
+        fn id(&self) -> &str {
+            self.id
+        }
+        fn is_authenticated(&self) -> bool {
+            true
+        }
+        fn can_address(&self, op: &TrackOp) -> bool {
+            !self.unmapped.contains(&op.anilist_id())
+        }
+        async fn pull_library(
+            &self,
+        ) -> Result<Vec<kaeri_core::traits::TrackedEntry>, kaeri_core::Error> {
+            self.answer().map(|()| Vec::new())
+        }
+        async fn push(&self, _: &[TrackOp]) -> Result<(), kaeri_core::Error> {
+            self.answer()
+        }
+    }
+
+    fn progress(id: u32) -> TrackOp {
+        TrackOp::SetProgress { anilist_id: AnilistId::new(id), episode: 3 }
+    }
+
+    /// The trackers of a library found stuck, in made-up titles: AniList clear; Kitsu with
+    /// three changes for titles it has no id for; Trakt with seven changes for titles it has no
+    /// id for either. The test goes on to break Trakt's credential and queue seven more.
+    fn stuck_library(store: &Store) -> (Arc<Fake>, Arc<Fake>, Arc<Fake>) {
+        let kitsu_unmapped: Vec<_> = (990_101..=990_103).map(AnilistId::new).collect();
+        let trakt_unmapped: Vec<_> = (990_201..=990_207).map(AnilistId::new).collect();
+        for id in &kitsu_unmapped {
+            store.enqueue("kitsu", &progress(id.get()), 1_000).unwrap();
+        }
+        for id in &trakt_unmapped {
+            store.enqueue("trakt", &progress(id.get()), 1_000).unwrap();
+        }
+        (
+            Fake::new("anilist", Vec::new(), false),
+            Fake::new("kitsu", kitsu_unmapped, false),
+            Fake::new("trakt", trakt_unmapped, false),
+        )
+    }
+
+    /// The old badge: every queued row of every signed-in tracker, as the apps summed it.
+    fn badge_before(store: &Store, states: &[SyncState]) -> u32 {
+        states
+            .iter()
+            .filter(|s| s.connected)
+            .map(|s| store.outbox_depth(Some(&s.tracker)).unwrap())
+            .sum()
+    }
+
+    /// What the apps sum now: what is on its way, from trackers whose credential stands.
+    fn badge_after(states: &[SyncState]) -> u32 {
+        states.iter().filter(|s| s.connected && !s.needs_reauth).map(|s| s.outbox).sum()
+    }
+
+    fn state<'a>(states: &'a [SyncState], tracker: &str) -> &'a SyncState {
+        states.iter().find(|s| s.tracker == tracker).expect("a state for every tracker")
+    }
+
+    #[tokio::test]
+    async fn a_held_change_and_a_rejected_credential_are_not_counted_as_waiting() {
+        // Seventeen changes "waiting to sync" for days: three a tracker had no id for, held until
+        // a mapping arrives, and fourteen behind a credential the tracker kept rejecting.
+        let mut config = Config::default();
+        config.trackers.enabled.clear();
+        let store = Store::open_in_memory().unwrap();
+        let http = kaeri_net::HttpClient::new(&config.network).unwrap();
+        let dir = tempfile::tempdir().unwrap();
+        let (anilist, kitsu, trakt) = stuck_library(&store);
+        let sync = Sync {
+            trackers: vec![anilist, kitsu, trakt.clone()],
+            ..Sync::with_tokens(&config, &store, &http, files_in(dir.path()))
+        };
+        let (tx, _rx) = tokio::sync::mpsc::unbounded_channel();
+        let tx = Outbox::from(tx);
+
+        // Trakt's credential worked once: its drain held the seven it has no id for.
+        drain_once(&sync, &tx).await;
+        assert_eq!(store.outbox_deferred("kitsu").unwrap(), 3);
+        assert_eq!(store.outbox_deferred("trakt").unwrap(), 7);
+        // Then it stopped working. Seven more episodes were watched behind it, and a mapping
+        // refresh woke the held seven.
+        trakt.rejects.store(true, std::sync::atomic::Ordering::Relaxed);
+        for id in 990_301..=990_307 {
+            store.enqueue("trakt", &progress(id), 2_000).unwrap();
+        }
+        drain_once(&sync, &tx).await;
+        store.wake_deferred().unwrap();
+        drain_once(&sync, &tx).await;
+        assert_eq!(store.outbox_depth(Some("trakt")).unwrap(), 14);
+        assert_eq!(
+            store.outbox_deferred("trakt").unwrap(),
+            0,
+            "woken, and never drained again"
+        );
+
+        let states = sync.initial_states();
+        assert_eq!(badge_before(&store, &states), 17, "the pill said 17 changes waiting");
+        assert_eq!(badge_after(&states), 0, "nothing is on its way");
+
+        let kitsu = state(&states, "kitsu");
+        assert_eq!((kitsu.outbox, kitsu.deferred, kitsu.needs_reauth), (0, 3, false));
+        let trakt_state = state(&states, "trakt");
+        assert!(
+            trakt_state.needs_reauth,
+            "the rejected credential is said from the first state"
+        );
+        assert_eq!(trakt_state.outbox, 14, "kept for when it is signed in again");
+
+        // Signing in again lifts it, and the queue is waiting again until the drain sends it.
+        trakt.rejects.store(false, std::sync::atomic::Ordering::Relaxed);
+        kaeri_track::sync::clear_reauth_hold(&store, "trakt").unwrap();
+        assert!(!state(&sync.initial_states(), "trakt").needs_reauth);
+        drain_once(&sync, &tx).await;
+        let states = sync.initial_states();
+        let trakt_state = state(&states, "trakt");
+        assert_eq!(
+            (trakt_state.outbox, trakt_state.deferred),
+            (0, 7),
+            "sent, or held for an id"
+        );
+    }
+
+    #[tokio::test]
+    async fn a_pull_the_tracker_rejects_holds_the_queue_and_one_that_goes_through_lifts_it() {
+        // A rejected pull only told the open window, so a restart forgot it and the queue behind
+        // it showed as waiting again.
+        let mut config = Config::default();
+        config.trackers.enabled.clear();
+        let store = Store::open_in_memory().unwrap();
+        let http = kaeri_net::HttpClient::new(&config.network).unwrap();
+        let dir = tempfile::tempdir().unwrap();
+        let trakt = Fake::new("trakt", Vec::new(), true);
+        let sync = Sync {
+            trackers: vec![trakt.clone()],
+            ..Sync::with_tokens(&config, &store, &http, files_in(dir.path()))
+        };
+        let (tx, mut rx) = tokio::sync::mpsc::unbounded_channel();
+        let tx = Outbox::from(tx);
+
+        pull_once(&sync, &tx).await;
+        let Some(Event::Sync(state)) = rx.try_recv().ok() else { panic!("no state sent") };
+        assert!(state.needs_reauth);
+        assert!(kaeri_track::sync::credential_rejected(&store, "trakt"));
+        assert!(sync.initial_states()[0].needs_reauth, "and a launch still knows");
+
+        // A tracker's passing trouble dressed as a rejection: the next pull goes through.
+        trakt.rejects.store(false, std::sync::atomic::Ordering::Relaxed);
+        pull_once(&sync, &tx).await;
+        assert!(!kaeri_track::sync::credential_rejected(&store, "trakt"));
+        assert!(!sync.initial_states()[0].needs_reauth);
     }
 
     #[test]
@@ -1716,5 +2409,56 @@ mod tests {
         let tx = Outbox::from(tx);
         disconnect(&sync, "anilist", &tx);
         assert_eq!(store.outbox_depth(Some("anilist")).unwrap(), 1);
+    }
+
+    /// The notices a drain sent, as their English text.
+    fn toasts(rx: &mut tokio::sync::mpsc::UnboundedReceiver<Event>) -> Vec<String> {
+        std::iter::from_fn(|| rx.try_recv().ok())
+            .filter_map(|event| match event {
+                Event::Toast(notice) => Some(notice.text),
+                _ => None,
+            })
+            .collect()
+    }
+
+    #[tokio::test]
+    async fn a_change_a_tracker_kept_refusing_is_said_once_even_across_a_restart() {
+        // The outbox gave up on a change after two days of refusals and said nothing: the
+        // tracker kept the old value while every app read as if it had the new one.
+        let mut config = Config::default();
+        config.trackers.enabled.clear();
+        let store = Store::open_in_memory().unwrap();
+        let http = kaeri_net::HttpClient::new(&config.network).unwrap();
+        let dir = tempfile::tempdir().unwrap();
+        let launch = || Sync {
+            trackers: Vec::new(),
+            ..Sync::with_tokens(&config, &store, &http, files_in(dir.path()))
+        };
+
+        // Given up by an engine that closed before it drained again: only the store has it.
+        store.remember_title(AnilistId::new(990_411), "Lanterns Over the Quiet Bay").unwrap();
+        let id = store.enqueue("anilist", &progress(990_411), 0).unwrap().unwrap();
+        let gave_up =
+            (1..=60).any(|attempt| store.fail(id, "Not Found.", attempt * 10_000).unwrap());
+        assert!(gave_up, "the outbox gives the change up");
+
+        let (tx, mut rx) = tokio::sync::mpsc::unbounded_channel();
+        let tx = Outbox::from(tx);
+        let sync = launch();
+        drain_once(&sync, &tx).await;
+        let said = toasts(&mut rx);
+        assert_eq!(said.len(), 1, "said once at launch: {said:?}");
+        assert!(
+            said[0].contains("AniList") && said[0].contains("Lanterns Over the Quiet Bay"),
+            "naming the tracker and the title: {}",
+            said[0]
+        );
+
+        drain_once(&sync, &tx).await;
+        assert_eq!(toasts(&mut rx), Vec::<String>::new(), "never again in this run");
+        drop(sync);
+        drain_once(&launch(), &tx).await;
+        assert_eq!(toasts(&mut rx), Vec::<String>::new(), "nor after a restart");
+        assert_eq!(store.dropped_track_ops().unwrap().len(), 1, "the record keeps it");
     }
 }

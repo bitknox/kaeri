@@ -7,8 +7,8 @@ notice-sign-in-failed = Không đăng nhập được vào { $tracker }. Hãy th
 notice-sign-in-stopped = Việc đăng nhập vào { $tracker } đã dừng trước khi xong. Hãy thử lại. { $reason }
 notice-token-exchange-failed = Không nhận được mã từ { $tracker }. Hãy thử đăng nhập lại. { $reason }
 notice-browser-not-opened = Không mở được trình duyệt để đăng nhập. Hãy kiểm tra xem đã cài trình duyệt chưa rồi thử lại. { $reason }
-notice-sign-in-not-waiting = Không có phiên đăng nhập vào { $tracker } nào đang chờ phản hồi này. Hãy bắt đầu đăng nhập lại.
-notice-sign-in-wrong-request = Phiên đăng nhập vào { $tracker } này không trả về từ yêu cầu đã gửi. Hãy bắt đầu đăng nhập lại.
+notice-sign-in-not-waiting = Đã nhận phản hồi đăng nhập từ { $tracker }, nhưng không có lần đăng nhập nào đang chờ. Hãy bắt đầu đăng nhập lại.
+notice-sign-in-wrong-request = Phản hồi đăng nhập từ { $tracker } không khớp với yêu cầu. Hãy bắt đầu đăng nhập lại.
 notice-sign-in-no-token = Phiên đăng nhập vào { $tracker } trả về mà không có mã. Hãy thử lại.
 notice-mal-client-missing-build = Không hoàn tất được đăng nhập MyAnimeList: bản dựng này chưa có thành phần kết nối cho dịch vụ đó.
 notice-kitsu-signs-in-on-accounts = Kitsu đăng nhập từ màn hình Tài khoản.
@@ -42,5 +42,5 @@ notice-episodes-aired = { $count ->
  }
 notice-update-available = Đã có bản { $tag }. Chạy kaeri --update để cài đặt.
 cause-proxy-needs-address = Proxy cần có máy chủ và cổng.
-cause-proxy-address-unusable = Không kiểm tra được địa chỉ proxy này.
+cause-proxy-address-unusable = Bước kiểm tra proxy không dùng được địa chỉ này.
 cause-server-unreachable = Không kết nối được tới máy chủ.

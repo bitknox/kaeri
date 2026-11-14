@@ -6,5 +6,5 @@ notice-hidden-preview = Nytt avsnitt
 notice-summary = %u fler nya avsnitt
 notice-dismiss = Avfärda
 accounts-code-expired-detail = Koden har gått ut. Hämta en ny för att logga in på { $tracker }.
-list-refresh-failed = Det gick inte att uppdatera. Det som redan visas finns kvar.
+list-refresh-failed = Det gick inte att uppdatera. Du ser det som laddades förra gången.
 sign-in-failed = Det gick inte att logga in på { $tracker }. Försök igen.

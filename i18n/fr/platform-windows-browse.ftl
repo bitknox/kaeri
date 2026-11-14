@@ -1,6 +1,6 @@
 continue-menu-resume = { -continue-cap }
 continue-sync-waiting = { $count ->
-    [one] Une modification en attente de synchronisation
+    [one] { $count } modification en attente de synchronisation
     [many] { $count } modifications en attente de synchronisation
    *[other] { $count } modifications en attente de synchronisation
  }
@@ -19,6 +19,17 @@ library-list-count = { $list } { $count }
 search-sort-name = Trier
 filter-picked-two = { $first }, { $second }
 filter-picked-more = { $first } +{ $more }
+search-genre-left-out = Sans { $genre }
+search-filters-button-set = Filtres actifs : { $count }
+shortcuts-search-filters = Filtres de recherche
+filter-hint-click = Cliquez une fois pour inclure, deux fois pour exclure.
+search-pick-include = Inclure
+search-pick-leave-out = Exclure
+search-range-from = De
+search-range-to = À
+search-minutes-unit = min
+search-score-any = Aucun
+search-suggest-filter = Filtrer par { $name }
 title-season-when = { $season } · { $when }
 episode-download-text = Télécharger l’épisode { $episode }
 episode-download-failed-text = Impossible de télécharger l’épisode { $episode }. Réessayez.
@@ -46,3 +57,4 @@ search-result-in-library = Dans votre { -library }
 search-result-on-server = Sur { $server }
 search-result-on-service = Sur { $service }
 match-choice-line = { $parts } · { $percent } % de correspondance
+search-rate-limit-enter = La recherche pendant la saisie est en pause un instant, pour respecter les limites d'AniList. Appuyez sur Entrée pour chercher maintenant.

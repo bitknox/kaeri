@@ -20,4 +20,4 @@ cast-card-stop = Hentikan transmisi
 cast-settings-tvs = Tampilkan TV dengan Chromecast bawaan
 cast-settings-tvs-note = Muncul di bawah Chromecast pada Putar di TV. { -device } ini mengirimkan episode ke TV tersebut.
 cast-settings-torrents = Torrent saat transmisi
-cast-settings-torrents-note = Memungkinkan TV dengan Chromecast bawaan memutar torrent. { -device } ini mengirim episode selama TV masih memutarnya.
+cast-settings-torrents-note = TV dengan Chromecast bawaan lalu bisa memutar torrent. { -device-cap } ini mengirim episode selama TV masih memutarnya.

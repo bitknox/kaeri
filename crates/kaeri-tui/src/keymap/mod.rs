@@ -46,7 +46,7 @@ pub(crate) fn said(text: String) -> &'static str {
 pub use action::{Action, Scope};
 pub use binding::Binding;
 pub use hints::status_hints;
-pub(crate) use hints::status_hints_paged;
+pub(crate) use hints::{hint_to_reading, reading_hints, status_hints_paged};
 
 /// The resolved binding table.
 #[derive(Debug, Clone)]
@@ -383,12 +383,12 @@ mod tests {
     fn two_rebinds_asking_for_one_key_both_lose_it() {
         let mut keymap = Keymap::new();
         let rejected = keymap.apply_overrides(&BTreeMap::from([
-            ("refresh".to_string(), "W".to_string()),
-            ("toggle_rail".to_string(), "W".to_string()),
+            ("refresh".to_string(), "U".to_string()),
+            ("toggle_rail".to_string(), "U".to_string()),
         ]));
         assert_eq!(rejected.len(), 1, "{rejected:?}");
         assert!(rejected[0].contains("is given to both"), "{rejected:?}");
-        assert_eq!(keymap.action_for(key('W'), Context::Browsing), None);
+        assert_eq!(keymap.action_for(key('U'), Context::Browsing), None);
         assert_eq!(keymap.action_for(key('r'), Context::Browsing), Some(Action::Refresh));
     }
 
@@ -417,7 +417,7 @@ mod tests {
         // typed into it: no way out at all.
         let mut keymap = Keymap::new();
         let rejected = keymap.apply_overrides(&BTreeMap::from([
-            ("back".to_string(), "W".to_string()),
+            ("back".to_string(), "U".to_string()),
             ("open".to_string(), "ctrl+o".to_string()),
             ("down".to_string(), "ctrl+n".to_string()),
         ]));
@@ -439,7 +439,7 @@ mod tests {
         let ctrl_c = KeyEvent::new(KeyCode::Char('c'), KeyModifiers::CONTROL);
         assert_eq!(keymap.action_for(ctrl_c, Context::Modal), Some(Action::Quit));
         // The rebinds still work in a modal too.
-        assert_eq!(keymap.action_for(key('W'), Context::Modal), Some(Action::Back));
+        assert_eq!(keymap.action_for(key('U'), Context::Modal), Some(Action::Back));
     }
 
     #[test]

@@ -29,11 +29,20 @@ use crate::{
 pub fn state(engine: &EngineState, services: &Services) -> DemoState {
     let on = engine.config.effective().sources.demo;
     let other_source = services.registry.usable_ids().iter().any(|id| id != DEMO_SOURCE_ID);
+    let answer = engine.reading.answer();
+    let reading = on && engine.reading.reads();
     DemoState {
         on,
         offer: !on,
         only: on && !other_source,
         played: services.store.progress(DEMO_ANILIST_ID).ok().flatten().is_some(),
+        watching: on && answer.watches(),
+        reading,
+        // Book plugins join the registry when a reading task first asks for them, but they count
+        // as the person's own sources from the moment they have loaded.
+        only_books: reading
+            && !services.book_sources.has_own()
+            && services.book_plugins.is_empty(),
     }
 }
 
@@ -67,6 +76,13 @@ pub fn set(on: bool, engine: &mut EngineState, services: &Services, tx: &Outbox)
     } else {
         registry.remove(DEMO_SOURCE_ID);
     }
+    // The reading demo goes with it: one switch for both works and the episode.
+    if on && engine.reading.available {
+        services.book_sources.put_demo(services.clock.now());
+    } else if !on {
+        services.book_sources.remove_demo();
+    }
+    let _ = tx.internal(Internal::BookSourcesChanged);
     crate::titles::refresh::sources_changed(engine, services, tx);
     let _ = tx.send(Event::Settings(engine.config.view()));
     let _ = tx.send(Event::Providers(data::provider_rows(registry, stores)));

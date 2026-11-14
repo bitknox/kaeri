@@ -39,3 +39,5 @@ library-linux-list-count = { $list } { $count }
 title-linux-play-on-tv-help = Bu bölümü { -app-name } ile bir TV'de oynat
 title-linux-episode-watched = Bölüm { $episode } izlendi
 calendar-linux-day-empty = Yayın yok
+linux-read-library-list = Liste
+linux-read-downloads-empty = İndirilen bölümler bağlantı olmadan açılır.

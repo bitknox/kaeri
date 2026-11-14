@@ -43,7 +43,7 @@ kaeri-store = { path = "../../crates/kaeri-store" }
 # Without the terminal's mpv child, as this app hosts its own player; with the Discord presence,
 # watch parties, the remote's sender side for Play on TV and casting to TVs with Chromecast built in.
 kaeri-i18n = { path = "../../crates/kaeri-i18n" }
-kaeri-engine = { path = "../../crates/kaeri-engine", default-features = false, features = ["presence", "party", "remote", "cast"] }
+kaeri-engine = { path = "../../crates/kaeri-engine", default-features = false, features = ["presence", "party", "remote", "cast", "opds-feed"] }
 kaeri-mpv-host = { path = "../../crates/kaeri-mpv-host", features = ["libmpv"] }
 
 kaeri-testkit = { path = "../../crates/kaeri-testkit", optional = true }

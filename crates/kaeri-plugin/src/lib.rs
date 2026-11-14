@@ -19,17 +19,26 @@
 //! | [`host`] | The four capabilities a guest can reach, and their enforcement. |
 //! | [`engine`] | wasmtime configuration: epoch interruption, memory limiter, empty WASI. |
 //! | [`provider`] | A loaded plugin as an ordinary `Provider`. Deliberately boring. |
+//! | [`books`] | The second world, `kaeri:books`: book sources, in the same sandbox. |
+//! | [`book_source`] | A loaded book plugin as an ordinary `BookSource`. |
+//!
+//! The kind of a plugin comes from the plugin: the names it imports say `kaeri:provider` or
+//! `kaeri:books`, and [`PluginHost::load_any`] loads either.
 //!
 //! `tests/conformance.rs` runs against two real compiled components — a reference plugin and a
 //! deliberately hostile one that spins forever, allocates without bound, and tries to reach a host
 //! it never declared.
 
+pub mod book_source;
+pub mod books;
 pub mod engine;
 pub mod host;
 pub mod provider;
 pub mod sandbox;
 
-pub use engine::{LoadedPlugin, PluginError, PluginHost};
+pub use book_source::WasmBookSource;
+pub use books::LoadedBookPlugin;
+pub use engine::{AnyPlugin, LoadedPlugin, PluginError, PluginHost, PluginKind};
 
 /// The HTTP client a host lends its plugins for `fetch`.
 #[cfg(feature = "fetch")]
@@ -41,5 +50,7 @@ pub type HttpClient = kaeri_net::HttpClient;
 #[cfg(not(feature = "fetch"))]
 #[derive(Debug, Clone)]
 pub enum HttpClient {}
-pub use provider::{LoadedDir, WasmProvider, load_providers, load_providers_reporting};
+pub use provider::{
+    LoadedDir, WasmProvider, load_plugins_reporting, load_providers, load_providers_reporting,
+};
 pub use sandbox::Limits;

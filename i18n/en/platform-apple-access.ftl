@@ -2,12 +2,12 @@
 ## written out ("2 hours", not "2h") and a screen's shorthand never stands in for them.
 
 # VoiceOver: a title that is up to date and whose next episode airs later. The time is already worded.
-# @arg episode: int
+# @arg episode: plain
 # @arg when: text
 access-caught-up-airs = Caught up, episode { $episode } airs { $when }
 
 # VoiceOver: a title that is up to date and whose next episode has no air time yet.
-# @arg episode: int
+# @arg episode: plain
 access-caught-up-unaired = Caught up, episode { $episode } is not out yet
 
 # VoiceOver: where a part-watched episode stopped. The time is a clock time.

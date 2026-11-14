@@ -142,6 +142,9 @@ dependencies {
     implementation(project(":ui"))
     implementation(project(":player-ui"))
     implementation(project(":widgets"))
+    // Reading's surface and the e-ink pieces: the screen's facts go to the engine from the start.
+    implementation(project(":reader"))
+    implementation(project(":eink"))
     implementation(libs.activity.compose)
     implementation(libs.core.ktx)
     implementation(libs.lifecycle.process)
@@ -155,6 +158,11 @@ dependencies {
     testImplementation(libs.robolectric)
     testImplementation(libs.coroutines.test)
     testImplementation(libs.work.testing)
+    // The reader's zoom out of a cover, composed as the app composes it.
+    testImplementation(platform(libs.compose.bom))
+    testImplementation(libs.compose.ui.test.junit4)
+    // The empty activity the compose tests start, in debug builds only.
+    debugImplementation(libs.compose.ui.test.manifest)
     // The scenes the engine recorded, for the settings it says.
     testImplementation(project(":testkit"))
 

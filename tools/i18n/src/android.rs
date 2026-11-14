@@ -75,8 +75,11 @@ fn text(parts: &[Part], args: &[Arg]) -> String {
             Part::Var(v) => {
                 flush(&mut literal, &mut out, &mut first);
                 let n = args.iter().position(|a| &a.name == v).map_or(1, |i| i + 1);
+                // `%,d` groups a count's digits in the app's locale; a plain number keeps them
+                // together.
                 out.push_str(&match args.get(n - 1).map(|a| a.ty) {
-                    Some(ArgType::Int) => format!("%{n}$d"),
+                    Some(ArgType::Int) => format!("%{n}$,d"),
+                    Some(ArgType::Plain) => format!("%{n}$d"),
                     _ => format!("%{n}$s"),
                 });
             }
@@ -253,7 +256,7 @@ fn msg_text(cat: &Catalogue) -> String {
         passed.extend(m.args.iter().map(|a| {
             let f = format!("this.{}", ident(&a.name));
             match a.ty {
-                ArgType::Int | ArgType::Timestamp => format!("{f}.toInt()"),
+                ArgType::Int | ArgType::Plain | ArgType::Timestamp => format!("{f}.toInt()"),
                 ArgType::Cause => format!("{f}.text(context)"),
                 ArgType::Seconds => format!("spanText(context, {f})"),
                 ArgType::Bytes => format!("sizeText(context, {f})"),

@@ -52,7 +52,7 @@ onboarding-own-heading = Have your own media?
 onboarding-invite-heading = Have an invite link?
 
 # Second line of that page. Explains that plugins come from plugin stores and that a store is joined with an invite link.
-onboarding-where-stores = { -plugin-cap-pl } come from { -plugin-store-pl }. A { -plugin-store } is signed and gives each { -device } its own token, so you join one with an invite link from its owner.
+onboarding-where-stores = { -plugin-cap-pl } come from { -plugin-store-pl }. Each one is signed and gives every { -device } its own token, which is why you join with an invite link from its owner.
 
 # Heading above the Play the demo button on the welcome page.
 onboarding-demo-heading = Try it now

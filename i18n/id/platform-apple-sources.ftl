@@ -14,13 +14,13 @@ stores-devices-count = { $count ->
    *[other] { $count } { -device }
  }
 stores-replace-by-hand-detail = Versi { $version } dari { $store } menggantikan salinan yang ditambahkan secara manual.
-stores-open-join-on-detail = Mereka bergabung tanpa nama. Jika dimatikan, tautan berhenti berfungsi. Jika dinyalakan lagi, tautan baru akan dibuat.
-stores-open-join-off-detail = Hanya orang yang Anda undang yang bisa bergabung. Jika dinyalakan, siapa pun dengan tautan bisa bergabung tanpa nama.
+stores-open-join-on-detail = Orang bergabung tanpa nama. Matikan ini dan tautan berhenti berfungsi. Nyalakan lagi untuk mendapat tautan baru.
+stores-open-join-off-detail = Hanya orang yang Anda undang yang bisa bergabung. Nyalakan ini dan siapa pun yang punya tautan bisa bergabung, tanpa nama.
 stores-open-join-no-names = Tidak ada nama yang disimpan.
 stores-open-join-keep-working = { -device-cap-pl } tetap berfungsi sampai Anda menghapusnya.
 stores-device-seen-at = Terakhir terlihat { $when }
-stores-device-not-seen = Tidak terlihat lagi sejak
-stores-publish-offered = { -plugin-store } menawarkan { $version }
+stores-device-not-seen = Tidak terlihat sejak bergabung
+stores-publish-offered = { -plugin-store-cap } punya { $version }
 stores-publish-not-yet = Belum ada di { -plugin-store }
 torrents-sheet-edit-proxy = Ubah proxy
 torrents-edit-proxy = Ubah proxy
@@ -52,8 +52,9 @@ tv-seen-just-now = baru saja
 stores-link-send-once = Kirim tautan ini ke { $who }. Tautan hanya bisa dipakai sekali, sampai { $until }.
 stores-link-send-once-anyone = Kirim tautan ini kepada orang yang dituju. Tautan hanya bisa dipakai sekali, sampai { $until }.
 sources-remove-title = Hapus { $name }?
-sources-remove-detail-device = Dihapus dari { -device } ini. { -plugin-store } bisa memasangnya lagi.
+sources-remove-detail-device = Dihapus dari { -device } ini. Anda bisa memasangnya lagi dari { -plugin-store }.
 library-matched-apple = Cocok
 servers-row-summary-apple = { $series ->
    *[other] { $series } serial
  }
+book-picker-message = Pilih folder berisi buku Anda.

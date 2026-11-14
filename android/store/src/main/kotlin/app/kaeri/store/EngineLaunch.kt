@@ -8,7 +8,9 @@ import java.io.File
 import app.kaeri.engine.ffi.FfiBackground
 import app.kaeri.engine.ffi.FfiDirs
 import app.kaeri.engine.ffi.FfiEngine
+import app.kaeri.engine.ffi.FfiFolderAccess
 import app.kaeri.engine.ffi.FfiHost
+import app.kaeri.engine.ffi.FfiPageDecoder
 import app.kaeri.engine.ffi.FfiPlatform
 import app.kaeri.engine.ffi.FfiStart
 import app.kaeri.engine.ffi.SecretsMode
@@ -73,6 +75,10 @@ data class EngineLaunch(
     val profile: String? = null,
     /** The player's libmpv carries the demuxer's audio tap and each of its cores has the engine's callback. */
     val audioTap: Boolean = true,
+    /** The platform's image decoder for page formats the engine cannot read, AVIF on e-ink. */
+    val pageDecoder: FfiPageDecoder? = PlatformPageDecoder(),
+    /** The way into book folders picked in the system folder picker: [PickedFolders] in the app. */
+    val folderAccess: FfiFolderAccess? = null,
 ) {
     /** Which engine. */
     sealed interface Engine {
@@ -86,7 +92,11 @@ data class EngineLaunch(
         data class Fixtures(val scene: FixtureScene) : Engine
     }
 
-    /** What the engine is told of the app. */
+    /**
+     * What the engine is told of the app. The app reads as well as watches, on a TV only
+     * watches (the engine fixes that from the platform); a Fixtures scene says for itself
+     * whether reading is in it.
+     */
     val record: FfiStart
         get() = FfiStart(
             theme = theme,
@@ -99,6 +109,9 @@ data class EngineLaunch(
             secrets = secrets,
             profile = profile,
             audioTap = audioTap,
+            reading = engine == Engine.App,
+            pageDecoder = pageDecoder,
+            folderAccess = folderAccess,
         )
 
     /** Stand the engine up. Blocks while it opens its files, so call it off the main thread. */
@@ -289,6 +302,57 @@ enum class FixtureScene {
 
     /** [WATCHING] with three profiles, one of them a kids profile. */
     PROFILES,
+
+    /** A first launch with reading on: Watch, read or both on page 2. */
+    READING_FIRST_RUN,
+
+    /** Reading on and set to Read with the demo on and nothing else: the demo's own places. */
+    READING_DEMO,
+
+    /** Reading on after an update: one sheet over Home asks, Watch chosen. */
+    READING_UPDATE_SHEET,
+
+    /** Reading on, this device set to Watch and the account to Read by Kim's iPad. */
+    READING_JOIN_ASK,
+
+    /** Reading on and set to Both, with a manga and a novel under way. */
+    READING_HOME,
+
+    /** [READING_HOME] with the manga right to left and a bookmark. */
+    READING_SERIES,
+
+    /**
+     * [READING_HOME] with Downloads filled: the manga's chapter 14 downloaded, 15 downloading and
+     * 16 and 17 queued, the novel's chapter 4 downloaded and the strip's chapter 2 failed.
+     */
+    READING_DOWNLOADS,
+
+    /** [READING_HOME] for a right-to-left manga in the reader. */
+    READER_MANGA_RTL,
+
+    /** [READING_HOME] with a strip series part way down a chapter. */
+    READER_STRIP,
+
+    /** [READING_HOME] for the novel in the reader. */
+    READER_NOVEL,
+
+    /** [READING_HOME] with the manga read further on Kim's iPad. */
+    READER_MOVED,
+
+    /** [READING_HOME] with the manga a long series, chapter 60 of 120 open. */
+    READER_LONG,
+
+    /** Reading on, set to Read, e-ink on and the screen in greys. */
+    EINK_GREY,
+
+    /** Reading on, set to Read, e-ink on and the colour question still to ask. */
+    EINK_KALEIDO_UNSURE,
+
+    /** [EINK_GREY] with [READER_LONG]'s history and long manga. */
+    EINK_LONG,
+
+    /** Reading off as in release builds, with Both kept: the medium is Watch. */
+    READING_DARK,
 
     /** [WATCHING] for Search's extras: dub counts on the cards, Surprise me's fixtures and a long franchise for ranges. */
     BROWSING;

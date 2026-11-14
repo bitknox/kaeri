@@ -151,7 +151,7 @@ pub async fn self_update(http: &HttpClient, beta: bool) -> Result<()> {
         .map(|byte| format!("{byte:02x}"))
         .collect::<String>();
     if actual != expected {
-        bail!("checksum mismatch — expected {expected}, got {actual}; not installing");
+        bail!("checksum mismatch: expected {expected}, got {actual}, so nothing was installed");
     }
     println!("checksum         ok");
 
@@ -179,7 +179,7 @@ pub async fn self_update(http: &HttpClient, beta: bool) -> Result<()> {
         .arg("-C")
         .arg(staging)
         .status()
-        .context("running tar — is it on PATH?")?;
+        .context("running tar (is it on PATH?)")?;
     if !status.success() {
         bail!("tar exited with {status}");
     }

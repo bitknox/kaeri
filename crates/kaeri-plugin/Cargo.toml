@@ -14,7 +14,9 @@ doctest = false
 default = ["fetch"]
 # Lend plugins the host's HTTP client. Off, a host can only ask plugins to describe
 # themselves — enough for a plugin store's server, without the network stack in its build.
-fetch = ["dep:kaeri-net", "dep:reqwest"]
+# With it, the check on page images a book plugin makes itself: the reader's own format sniffing
+# and header reading, so a plugin's page is held to what the reader would accept.
+fetch = ["dep:kaeri-net", "dep:reqwest", "dep:kaeri-pages"]
 # Run plugins in wasmtime's interpreter, Pulley, rather than as native code, on any platform, as
 # iOS always does: the conformance suite on the path an iPhone takes, run where it can be.
 interpret = ["wasmtime/pulley"]
@@ -23,6 +25,7 @@ interpret = ["wasmtime/pulley"]
 kaeri-core.workspace = true
 anyhow.workspace = true
 kaeri-net = { workspace = true, optional = true }
+kaeri-pages = { workspace = true, optional = true }
 # The fetch response, read a chunk at a time against the size ceiling.
 reqwest = { workspace = true, optional = true }
 async-trait.workspace = true
@@ -30,6 +33,8 @@ thiserror.workspace = true
 tokio.workspace = true
 futures.workspace = true
 tracing.workspace = true
+# A book chapter's publication date, RFC 3339 or a bare date.
+jiff.workspace = true
 # `cache` is what keeps plugin compilation off the critical path a second time: wasmtime manages
 # the on-disk artefact cache itself, so we get it without the `unsafe` that hand-rolling
 # `deserialize_file` would require in a crate whose entire job is running untrusted code.

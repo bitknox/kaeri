@@ -62,6 +62,24 @@ extension Msg {
         case .homeTrending: L.homeTrending
         case .homeBecause(let title): L.homeBecause(title: title)
         case .homeMoreGenre(let genre): L.homeMoreGenre(genre: genre)
+        case .homeMoreGenreAction: L.homeMoreGenreAction
+        case .homeMoreGenreAdventure: L.homeMoreGenreAdventure
+        case .homeMoreGenreComedy: L.homeMoreGenreComedy
+        case .homeMoreGenreDrama: L.homeMoreGenreDrama
+        case .homeMoreGenreEcchi: L.homeMoreGenreEcchi
+        case .homeMoreGenreFantasy: L.homeMoreGenreFantasy
+        case .homeMoreGenreHorror: L.homeMoreGenreHorror
+        case .homeMoreGenreMahouShoujo: L.homeMoreGenreMahouShoujo
+        case .homeMoreGenreMecha: L.homeMoreGenreMecha
+        case .homeMoreGenreMusic: L.homeMoreGenreMusic
+        case .homeMoreGenreMystery: L.homeMoreGenreMystery
+        case .homeMoreGenrePsychological: L.homeMoreGenrePsychological
+        case .homeMoreGenreRomance: L.homeMoreGenreRomance
+        case .homeMoreGenreSciFi: L.homeMoreGenreSciFi
+        case .homeMoreGenreSliceOfLife: L.homeMoreGenreSliceOfLife
+        case .homeMoreGenreSports: L.homeMoreGenreSports
+        case .homeMoreGenreSupernatural: L.homeMoreGenreSupernatural
+        case .homeMoreGenreThriller: L.homeMoreGenreThriller
         case .homeSpotlightDemo: L.homeSpotlightDemo
         case .licensedReturn(let episode, let service): L.licensedReturn(episode: Int(episode), service: service)
         case .licensedMarked(let episode): L.licensedMarked(episode: Int(episode))
@@ -173,6 +191,9 @@ extension Msg {
         case .noticeClientIdMissing(let setting): L.noticeClientIdMissing(setting: setting)
         case .noticeSignedOut(let tracker): L.noticeSignedOut(tracker: tracker)
         case .noticeSignedOutQueue(let tracker, let count): L.noticeSignedOutQueue(tracker: tracker, count: Int(count))
+        case .noticeTrackerChangeRefused(let tracker, let title): L.noticeTrackerChangeRefused(tracker: tracker, title: title)
+        case .noticeTrackerChangesRefused(let tracker, let title, let others): L.noticeTrackerChangesRefused(tracker: tracker, title: title, others: Int(others))
+        case .noticeTrackerChangeRefusedUntitled(let tracker, let count): L.noticeTrackerChangeRefusedUntitled(tracker: tracker, count: Int(count))
         case .noticeSignOutFailed(let tracker, let reason): L.noticeSignOutFailed(tracker: tracker, reason: reason)
         case .noticeNotSavedBecause(let cause): L.noticeNotSavedBecause(cause: cause.text)
         case .noticeProxySaved: L.noticeProxySaved
@@ -190,6 +211,7 @@ extension Msg {
         case .legalHostsNoContent: L.legalHostsNoContent
         case .noticeSaved(let label): L.noticeSaved(label: label)
         case .noticeNotSaved(let reason): L.noticeNotSaved(reason: reason)
+        case .noticeChangeNotKept(let reason): L.noticeChangeNotKept(reason: reason)
         case .noticeTitleLoadFailed: L.noticeTitleLoadFailed
         case .noticePlaybackFailed: L.noticePlaybackFailed
         case .noticeEngineFault: L.noticeEngineFault
@@ -211,6 +233,7 @@ extension Msg {
         case .noticeSurpriseOffline: L.noticeSurpriseOffline
         case .noticeSurpriseFailed: L.noticeSurpriseFailed
         case let .store(msg): msg.text
+        case let .reading(msg): msg.text
         case let .verbatim(text): text
         }
     }
@@ -267,6 +290,7 @@ extension StoreMsg {
         case .pluginInstallFailed(let plugin, let reason): L.pluginInstallFailed(plugin: plugin, reason: reason)
         case .pluginPublishFailed(let plugin, let reason): L.pluginPublishFailed(plugin: plugin, reason: reason)
         case .pluginMissingLocally(let plugin): L.pluginMissingLocally(plugin: plugin)
+        case .storeTakesNoBooks(let store): L.storeTakesNoBooks(store: store)
         case .storeInviteNeedsLink(let store): L.storeInviteNeedsLink(store: store)
         case .storeLinkMalformed(let reason): L.storeLinkMalformed(reason: reason)
         case .storeLinkWrongKey: L.storeLinkWrongKey
@@ -296,6 +320,224 @@ extension StoreMsg {
         case .noticePartyNotBuilt: L.noticePartyNotBuilt
         case .sourcesDemoRemoved: L.sourcesDemoRemoved
         case .storesReadyDemoStays(let store): L.storesReadyDemoStays(store: store)
+        }
+    }
+}
+
+extension ReadingMsg {
+    /// One of `Msg`'s nested messages in the person's language.
+    public var text: String {
+        switch self {
+        case .readingNextChapter(let chapter): L.readingNextChapter(chapter: chapter)
+        case .readingUsuallyMondays: L.readingUsuallyMondays
+        case .readingUsuallyTuesdays: L.readingUsuallyTuesdays
+        case .readingUsuallyWednesdays: L.readingUsuallyWednesdays
+        case .readingUsuallyThursdays: L.readingUsuallyThursdays
+        case .readingUsuallyFridays: L.readingUsuallyFridays
+        case .readingUsuallySaturdays: L.readingUsuallySaturdays
+        case .readingUsuallySundays: L.readingUsuallySundays
+        case .readingAboutEveryWeeks(let weeks): L.readingAboutEveryWeeks(weeks: Int(weeks))
+        case .readingAlsoAShow: L.readingAlsoAShow
+        case .readingAlsoABook: L.readingAlsoABook
+        case .readingSplitChapter(let chapter, let whole): L.readingSplitChapter(chapter: chapter, whole: whole)
+        case .readerResumed(let page): L.readerResumed(page: Int(page))
+        case .readerResumedImage(let image): L.readerResumedImage(image: Int(image))
+        case .readerBackToPage(let page): L.readerBackToPage(page: Int(page))
+        case .readerMoved(let chapter, let page, let device): L.readerMoved(chapter: chapter, page: Int(page), device: device)
+        case .readerMovedNumber(let chapter, let page, let device): L.readerMovedNumber(chapter: chapter, page: Int(page), device: device)
+        case .readerMovedElsewhere(let chapter, let page): L.readerMovedElsewhere(chapter: chapter, page: Int(page))
+        case .readerMovedNumberElsewhere(let chapter, let page): L.readerMovedNumberElsewhere(chapter: chapter, page: Int(page))
+        case .readerMovedImage(let chapter, let image, let device): L.readerMovedImage(chapter: chapter, image: Int(image), device: device)
+        case .readerMovedNumberImage(let chapter, let image, let device): L.readerMovedNumberImage(chapter: chapter, image: Int(image), device: device)
+        case .readerMovedElsewhereImage(let chapter, let image): L.readerMovedElsewhereImage(chapter: chapter, image: Int(image))
+        case .readerMovedNumberElsewhereImage(let chapter, let image): L.readerMovedNumberElsewhereImage(chapter: chapter, image: Int(image))
+        case .readerDetectedRightToLeft: L.readerDetectedRightToLeft
+        case .readerDetectedLeftToRight: L.readerDetectedLeftToRight
+        case .readerDetectedStrip: L.readerDetectedStrip
+        case .readingFailedOffline: L.readingFailedOffline
+        case .readingFailedSourceDown(let source): L.readingFailedSourceDown(source: source)
+        case .readingFailedSourceOff(let source): L.readingFailedSourceOff(source: source)
+        case .readingFailedNotFound: L.readingFailedNotFound
+        case .readingFailedNoSource: L.readingFailedNoSource
+        case .readingFailedBlocked(let source, let reason): L.readingFailedBlocked(source: source, reason: reason)
+        case .readingFailedHostNotAllowed(let source): L.readingFailedHostNotAllowed(source: source)
+        case .readingFailedParse(let source): L.readingFailedParse(source: source)
+        case .readingFailedPage(let status): L.readingFailedPage(status: Int(status))
+        case .readingPictureFailed: L.readingPictureFailed
+        case .readingFailedSignIn(let what): L.readingFailedSignIn(what: what)
+        case .readingFailedFileMissing(let path): L.readingFailedFileMissing(path: path)
+        case .readingFailedUnreadable(let path, let format): L.readingFailedUnreadable(path: path, format: format)
+        case .readingFailedUnsupported(let kind): L.readingFailedUnsupported(kind: kind)
+        case .readingFailedProtected: L.readingFailedProtected
+        case .readingFailedDiskFull: L.readingFailedDiskFull
+        case .readingFailedWriteName(let path): L.readingFailedWriteName(path: path)
+        case .readingFailedWriteDenied(let path): L.readingFailedWriteDenied(path: path)
+        case .readingFailedWrite(let path): L.readingFailedWrite(path: path)
+        case .readingFailedWebview(let version): L.readingFailedWebview(version: Int(version))
+        case .readingFailedNeedsNewer(let world): L.readingFailedNeedsNewer(world: world)
+        case .readingFailedOff: L.readingFailedOff
+        case .readingFailedOther(let reason): L.readingFailedOther(reason: reason)
+        case .readingFailedSendTooLarge(let file, let target, let size, let limit): L.readingFailedSendTooLarge(file: file, target: target, size: sizeText(size), limit: sizeText(limit))
+        case .readingFailedSendMissing(let file, let part): L.readingFailedSendMissing(file: file, part: part)
+        case .readingFailedSendEncoding(let file, let part): L.readingFailedSendEncoding(file: file, part: part)
+        case .readingFailedSendMalformed(let file, let part): L.readingFailedSendMalformed(file: file, part: part)
+        case .readingKindManga: L.readingKindManga
+        case .readingKindManhwa: L.readingKindManhwa
+        case .readingKindManhua: L.readingKindManhua
+        case .readingKindWebtoon: L.readingKindWebtoon
+        case .readingKindOneShot: L.readingKindOneShot
+        case .readingKindLightNovel: L.readingKindLightNovel
+        case .readingKindNovel: L.readingKindNovel
+        case .readingStatusReleasing: L.readingStatusReleasing
+        case .readingStatusFinished: L.readingStatusFinished
+        case .readingStatusHiatus: L.readingStatusHiatus
+        case .readingStatusCancelled: L.readingStatusCancelled
+        case .readingStatusNotYet: L.readingStatusNotYet
+        case .readingChapters(let count): L.readingChapters(count: Int(count))
+        case .readingVolumes(let count): L.readingVolumes(count: Int(count))
+        case .readingOnPlanning: L.readingOnPlanning
+        case .readingSpotlightNewChapter: L.readingSpotlightNewChapter
+        case .readingSpotlightContinue: L.readingSpotlightContinue
+        case .readingSpotlightUpNext: L.readingSpotlightUpNext
+        case .readingSpotlightPopular: L.readingSpotlightPopular
+        case .readingOutToday(let chapter): L.readingOutToday(chapter: chapter)
+        case .readingOutTodayTitled(let chapter, let title): L.readingOutTodayTitled(chapter: chapter, title: title)
+        case .readingChapterPage(let chapter, let page): L.readingChapterPage(chapter: chapter, page: Int(page))
+        case .readingChapterPercent(let chapter, let percent): L.readingChapterPercent(chapter: chapter, percent: Int(percent))
+        case .readingChapterNew(let chapter): L.readingChapterNew(chapter: chapter)
+        case .readingNextPart(let part): L.readingNextPart(part: part)
+        case .readingPartPercent(let part, let percent): L.readingPartPercent(part: part, percent: Int(percent))
+        case .readingPartNew(let part): L.readingPartNew(part: part)
+        case .readingLabelPercent(let label, let percent): L.readingLabelPercent(label: label, percent: Int(percent))
+        case .readingLabelNew(let label): L.readingLabelNew(label: label)
+        case .readingPartTitled(let part, let title): L.readingPartTitled(part: part, title: title)
+        case .readingLabelTitled(let label, let title): L.readingLabelTitled(label: label, title: title)
+        case .readingPartOutToday(let part): L.readingPartOutToday(part: part)
+        case .readingLabelOutToday(let label): L.readingLabelOutToday(label: label)
+        case .readingPartOutTodayTitled(let part, let title): L.readingPartOutTodayTitled(part: part, title: title)
+        case .readingLabelOutTodayTitled(let label, let title): L.readingLabelOutTodayTitled(label: label, title: title)
+        case .readingChapterOf(let chapter, let of): L.readingChapterOf(chapter: chapter, of: of)
+        case .readingVolumePart(let volume, let part): L.readingVolumePart(volume: volume, part: part)
+        case .readingVolumeLabel(let volume, let label): L.readingVolumeLabel(volume: volume, label: label)
+        case .readingOriginJapan: L.readingOriginJapan
+        case .readingOriginKorea: L.readingOriginKorea
+        case .readingOriginChina: L.readingOriginChina
+        case .readingOriginTaiwan: L.readingOriginTaiwan
+        case .exportDeviceOther: L.exportDeviceOther
+        case .exportDeviceEink6: L.exportDeviceEink6
+        case .exportDeviceEink7: L.exportDeviceEink7
+        case .exportDeviceColourEink: L.exportDeviceColourEink
+        case .exportDeviceTablet: L.exportDeviceTablet
+        case .exportChapter(let chapter): L.exportChapter(chapter: chapter)
+        case .exportWaitsForWifi(let n): L.exportWaitsForWifi(n: Int(n))
+        case .exportPagesLeftOut(let n, let chapter): L.exportPagesLeftOut(n: Int(n), chapter: chapter)
+        case .readingChapterTitled(let chapter, let title): L.readingChapterTitled(chapter: chapter, title: title)
+        case .readingRowRead: L.readingRowRead
+        case .readingRowNew: L.readingRowNew
+        case .readingRowDownloaded: L.readingRowDownloaded
+        case .readingRowGoneFromSource: L.readingRowGoneFromSource
+        case .readingRowNotDownloaded: L.readingRowNotDownloaded
+        case .readingRowOnDevice: L.readingRowOnDevice
+        case .readingRowQueued: L.readingRowQueued
+        case .readingRowWaitsWifi: L.readingRowWaitsWifi
+        case .readingRowDownloading(let done, let total): L.readingRowDownloading(done: Int(done), total: Int(total))
+        case .readingRowDownloadingPlain: L.readingRowDownloadingPlain
+        case .readingRowFailed: L.readingRowFailed
+        case .readingRowPageOf(let page, let of): L.readingRowPageOf(page: Int(page), of: Int(of))
+        case .readingRowPage(let page): L.readingRowPage(page: Int(page))
+        case .readingRowPercent(let percent): L.readingRowPercent(percent: Int(percent))
+        case .readingRowOpened: L.readingRowOpened
+        case .readingRowBookmarked: L.readingRowBookmarked
+        case .readingRowPages(let n): L.readingRowPages(n: Int(n))
+        case .readingRowVersions(let n): L.readingRowVersions(n: Int(n))
+        case .readingRowParts(let n): L.readingRowParts(n: Int(n))
+        case .readingRowFromGroup(let group): L.readingRowFromGroup(group: group)
+        case .readingRowFromGroupIn(let group, let language): L.readingRowFromGroupIn(group: group, language: language)
+        case .readingRowPartsOf(let have, let n): L.readingRowPartsOf(have: Int(have), n: Int(n))
+        case .readingRowPartMissing(let count, let part): L.readingRowPartMissing(count: Int(count), part: Int(part))
+        case .readingRowPartFromGroup(let part, let group): L.readingRowPartFromGroup(part: Int(part), group: group)
+        case .readingRowPartFromGroupIn(let part, let group, let language): L.readingRowPartFromGroupIn(part: Int(part), group: group, language: language)
+        case .readingRowFromSource(let source): L.readingRowFromSource(source: source)
+        case .readerCreditPagesSkipped(let count): L.readerCreditPagesSkipped(count: Int(count))
+        case .readingAgoNow: L.readingAgoNow
+        case .readingAgoMinutes(let minutes): L.readingAgoMinutes(minutes: Int(minutes))
+        case .readingAgoToday: L.readingAgoToday
+        case .readingAgoYesterday: L.readingAgoYesterday
+        case .readingAgoDays(let days): L.readingAgoDays(days: Int(days))
+        case .readingAgoWeeks(let weeks): L.readingAgoWeeks(weeks: Int(weeks))
+        case .readingAgoMonths(let months): L.readingAgoMonths(months: Int(months))
+        case .readingAgoYears(let years): L.readingAgoYears(years: Int(years))
+        case .readingRemovedFrom(let tracker): L.readingRemovedFrom(tracker: tracker)
+        case .readingRemovedNotThere(let tracker): L.readingRemovedNotThere(tracker: tracker)
+        case .readingRemovedUnmatched(let tracker): L.readingRemovedUnmatched(tracker: tracker)
+        case .readingRemovedFailed(let tracker): L.readingRemovedFailed(tracker: tracker)
+        case .readingRemovedSignIn(let tracker): L.readingRemovedSignIn(tracker: tracker)
+        case .readingMissNoSeries: L.readingMissNoSeries
+        case .readingMissDownSince(let time): L.readingMissDownSince(time: time)
+        case .readingMissDown: L.readingMissDown
+        case .readingMissPossible: L.readingMissPossible
+        case .readingDlParts(let count): L.readingDlParts(count: Int(count))
+        case .readingDlSize(let size): L.readingDlSize(size: sizeText(size))
+        case .readingDlRead(let count): L.readingDlRead(count: Int(count))
+        case .readingDlChapter(let chapter): L.readingDlChapter(chapter: chapter)
+        case .readingDlPages(let done, let total): L.readingDlPages(done: Int(done), total: Int(total))
+        case .readingDlMoreQueued(let count): L.readingDlMoreQueued(count: Int(count))
+        case .readingDlQueued(let count): L.readingDlQueued(count: Int(count))
+        case .readingDlWaitsWifi: L.readingDlWaitsWifi
+        case .readingDlFailed(let chapter): L.readingDlFailed(chapter: chapter)
+        case .readingDlOffline: L.readingDlOffline
+        case .readingEstimateSize(let size): L.readingEstimateSize(size: sizeText(size))
+        case .readingEstimateWifi: L.readingEstimateWifi
+        case .readingEstimateMobile: L.readingEstimateMobile
+        case .readingEstimateWaitsWifi: L.readingEstimateWaitsWifi
+        case .readingDownloadOnDevice: L.readingDownloadOnDevice
+        case .readingUntitledSeries: L.readingUntitledSeries
+        case .readingDownloadsDoneTitle: L.readingDownloadsDoneTitle
+        case .readingDownloadsDoneChapters(let title, let count): L.readingDownloadsDoneChapters(title: title, count: Int(count))
+        case .readingDownloadsDoneParts(let title, let count): L.readingDownloadsDoneParts(title: title, count: Int(count))
+        case .readingDownloadsDoneSeries(let count): L.readingDownloadsDoneSeries(count: Int(count))
+        case .readHomeTrendingManga: L.readHomeTrendingManga
+        case .readHomeTrendingWebtoons: L.readHomeTrendingWebtoons
+        case .readHomeTrendingNovels: L.readHomeTrendingNovels
+        case .readHomeNewManga: L.readHomeNewManga
+        case .readHomeNewWebtoons: L.readHomeNewWebtoons
+        case .readHomeNewNovels: L.readHomeNewNovels
+        case .readHomeNewSide: L.readHomeNewSide
+        case .readHomeFinishedManga: L.readHomeFinishedManga
+        case .readHomeFinishedWebtoons: L.readHomeFinishedWebtoons
+        case .readHomeFinishedNovels: L.readHomeFinishedNovels
+        case .readHomeFinishedSide: L.readHomeFinishedSide
+        case .readSearchStartedAny: L.readSearchStartedAny
+        case .readSearchStartedYear: L.readSearchStartedYear
+        case .readSearchStarted3Years: L.readSearchStarted3Years
+        case .readHitChapters(let last): L.readHitChapters(last: Int(last))
+        case .readHitEpisodes(let last): L.readHitEpisodes(last: Int(last))
+        case .readHitParts(let count): L.readHitParts(count: Int(count))
+        case .readHitFiles(let count): L.readHitFiles(count: Int(count))
+        case .readHitFilesFormat(let count, let format): L.readHitFilesFormat(count: Int(count), format: format)
+        case .readSourceFolders: L.readSourceFolders
+        case .readFeedDownloads: L.readFeedDownloads
+        case .readingSinceJanuary: L.readingSinceJanuary
+        case .readingSinceFebruary: L.readingSinceFebruary
+        case .readingSinceMarch: L.readingSinceMarch
+        case .readingSinceApril: L.readingSinceApril
+        case .readingSinceMay: L.readingSinceMay
+        case .readingSinceJune: L.readingSinceJune
+        case .readingSinceJuly: L.readingSinceJuly
+        case .readingSinceAugust: L.readingSinceAugust
+        case .readingSinceSeptember: L.readingSinceSeptember
+        case .readingSinceOctober: L.readingSinceOctober
+        case .readingSinceNovember: L.readingSinceNovember
+        case .readingSinceDecember: L.readingSinceDecember
+        case .readViewAllTrendingManga: L.readViewAllTrendingManga
+        case .readViewAllTrendingWebtoons: L.readViewAllTrendingWebtoons
+        case .readViewAllTrendingNovels: L.readViewAllTrendingNovels
+        case .readViewAllNewManga: L.readViewAllNewManga
+        case .readViewAllNewWebtoons: L.readViewAllNewWebtoons
+        case .readViewAllNewNovels: L.readViewAllNewNovels
+        case .readViewAllFinishedManga: L.readViewAllFinishedManga
+        case .readViewAllFinishedWebtoons: L.readViewAllFinishedWebtoons
+        case .readViewAllFinishedNovels: L.readViewAllFinishedNovels
         }
     }
 }

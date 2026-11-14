@@ -48,6 +48,19 @@ public final class AppStore {
     public let jobs: JobsModel
     public let notices: NoticesModel
     public let settings = SettingsModel()
+    /// The open reader: its session, pages and sheets.
+    public let reader = ReaderModel()
+    /// What Kaeri is for on this device: watch, read or both.
+    public let medium = MediumModel()
+    /// Reading's places.
+    public let reading = ReadingModel()
+    /// The reading screens ask again for what the reader changed.
+    /// Folders, servers and plugins that books come from.
+    public let bookSources = BookSourcesModel()
+    /// What came in after a server, folder or store was added.
+    public let cameIn = CameInModel()
+    /// Did my server get it: the reading progress sent back to book servers.
+    public let serverProgress = ServerProgressModel()
     public let showSettings = ShowSettingsModel()
     public let accounts = AccountsModel()
     public let providers = ProvidersModel()
@@ -107,8 +120,20 @@ public final class AppStore {
     @ObservationIgnored var lastApplied = ContinuousClock.now
     /// What the screens asked for before the engine was there, sent once it is.
     @ObservationIgnored private var early: [Command] = []
+    /// What the app last said of itself and the device, one command of each kind (`Standing`):
+    /// told first to every engine that attaches, so one started again after a failed start or a
+    /// stop knows where the app is, its network, what the device holds back and whether the
+    /// windows are on screen. Their tellers say them only when they change.
+    @ObservationIgnored private var standing: [Standing: Command] = [:]
     /// The titles whose episodes were asked for their stills.
     @ObservationIgnored private var stillsAsked: Set<AnilistId> = []
+    /// The spotlight's titles whose episodes were asked for its wide art (`loadSpotlightEpisodes`).
+    @ObservationIgnored private var spotlightAsked: Set<AnilistId> = []
+    /// When each title's wide art first waited on its plate (`heroArtWaited`).
+    @ObservationIgnored private var artWaitSince: [AnilistId: ContinuousClock.Instant] = [:]
+    /// The titles whose wide art has waited on its plate for `heroArtWait`: read where the art is
+    /// resolved, so a screen showing the plate draws what follows it when the wait ends.
+    public private(set) var artWaited: Set<AnilistId> = []
     /// When each cover's card and table data was last asked with its screen's (see `prepareCards`).
     @ObservationIgnored private var prepared: [AnilistId: ContinuousClock.Instant] = [:]
     /// The clock the asking rules read; tests move it.
@@ -118,7 +143,7 @@ public final class AppStore {
     /// When each question about a title last went out (see `ask`).
     @ObservationIgnored private var asked: [TitleQuestion: ContinuousClock.Instant] = [:]
     /// The kinds of the engine's events a showcase set aside, so its rows stay on screen.
-    @ObservationIgnored private var held: Set<String> = []
+    @ObservationIgnored var held: Set<String> = []
     /// Whether the engine is the testing one, which a showcase needs.
     @ObservationIgnored private var testing = false
     /// Called after each batch is applied: what a screenshot run waits on.
@@ -133,14 +158,17 @@ public final class AppStore {
     /// playback around them (KaeriPlayerUI's `PlayerModel.apply(_:)`).
     @ObservationIgnored public var onPlayback: (@MainActor (Event) -> Void)?
 
-    /// - Parameter artworkCostLimit: how many bytes of decoded art the cache keeps beside what is
-    ///   on screen; smaller in the dev harness, to see the page with the cache full.
+    /// - Parameters:
+    ///   - artworkCostLimit: how many bytes of decoded art the cache keeps beside what is on
+    ///     screen; smaller in the dev harness, to see the page with the cache full.
+    ///   - artworkCache: where that art is kept (`ArtworkStore.init`'s `cache`).
     public init(
         jobs: JobsModel = JobsModel(), notices: NoticesModel = NoticesModel(), widgets: WidgetFeed = WidgetFeed(),
         downloadsActivity: DownloadsActivityFeed = DownloadsActivityFeed(),
         playbackActivity: PlaybackActivityFeed = PlaybackActivityFeed(),
         airingActivity: AiringActivityFeed = AiringActivityFeed(),
-        artworkCostLimit: Int = ArtworkStore.costLimit
+        artworkCostLimit: Int = ArtworkStore.costLimit,
+        artworkCache: any ArtworkCache = SystemArtworkCache()
     ) {
         self.jobs = jobs
         self.notices = notices
@@ -148,12 +176,21 @@ public final class AppStore {
         self.downloadsActivity = downloadsActivity
         self.playbackActivity = playbackActivity
         self.airingActivity = airingActivity
-        artwork = ArtworkStore(costLimit: artworkCostLimit) { [weak self] url in
+        artwork = ArtworkStore(costLimit: artworkCostLimit, cache: artworkCache) { [weak self] url in
             guard let client = self?.client else { return false }
             client.send(.fetchArtwork(url: url))
             return true
         }
         continued.send = { [weak self] command in self?.send(command) }
+        reader.send = { [weak self] command in self?.send(command) }
+        medium.send = { [weak self] command in self?.send(command) }
+        reading.send = { [weak self] command in self?.send(command) }
+        bookSources.send = { [weak self] command in self?.send(command) }
+        cameIn.send = { [weak self] command in self?.send(command) }
+        serverProgress.send = { [weak self] command in self?.send(command) }
+        serverProgress.hostFor = { [weak self] work in self?.progressHost(work) }
+        serverProgress.quiet = { [weak self] in self?.settings.value(.sendProgressAfter) == "close" } // i18n-skip: the engine's value
+        reader.onClosed = { [weak self] in self?.serverProgress.clearLines() }
         updates.send = { [weak self] command in self?.send(command) }
         party.send = { [weak self] command in self?.send(command) }
         sync.send = { [weak self] command in self?.send(command) }
@@ -174,6 +211,9 @@ public final class AppStore {
 
     /// Start the engine `launch` describes with `host`, off the main thread, and read its events.
     public func start(_ launch: EngineLaunch, host: any FfiHost) async {
+        // An engine that stopped hears nothing more: what is asked while this one starts waits
+        // for it.
+        client = nil
         phase = .starting
         settingsUnusable = false
         launched = (launch, host)
@@ -303,15 +343,26 @@ public final class AppStore {
             }
         )
         phase = .running
+        reader.bookResource = { url in engine.bookResource(url: url) }
         attachTV(engine)
         // Typed-code pairing finds the device showing the code by DNS-SD.
         engine.setSyncNetwork(network: BonjourSyncNetwork())
+        // The app and the device as they stand, before anything asked waits on them: the book
+        // downloads hold until the network is said.
+        for kind in Standing.allCases {
+            if let command = standing[kind] { client?.send(command) }
+        }
         for command in early {
             client?.send(command)
         }
         early = []
         artwork.sendUnsent()
         sync.load()
+        // What Kaeri is for decides the places, so it is asked first; reading's sidebar count
+        // and its sources follow.
+        medium.load()
+        bookSources.load()
+        reading.loadUpdates()
     }
 
     /// The engine's sender for Play on TV, browsing the network with Bonjour; in the Fixtures
@@ -402,8 +453,11 @@ public final class AppStore {
         default:
             break
         }
+        let kind = Standing(command)
+        if let kind { standing[kind] = command }
         guard let client else {
-            if phase == .starting { early.append(command) }
+            // What stands is told to the engine as it attaches, whenever that is.
+            if phase == .starting, kind == nil { early.append(command) }
             return nil
         }
         let job = client.send(command)
@@ -412,6 +466,22 @@ public final class AppStore {
             send(then)
         }
         return job
+    }
+
+    /// The commands that say how the app and the device stand rather than ask for something:
+    /// the latest of each is told to every engine that attaches, in this order.
+    enum Standing: CaseIterable {
+        case networkPath, deviceState, appPhase, syncVisible
+
+        init?(_ command: Command) {
+            switch command {
+            case .networkPath: self = .networkPath
+            case .deviceState: self = .deviceState
+            case .appPhase: self = .appPhase
+            case .syncVisible: self = .syncVisible
+            default: return nil
+            }
+        }
     }
 
     /// Play `episode` of `id` from `position`, as a Handoff from another device asks: played as
@@ -710,6 +780,54 @@ public final class AppStore {
         return true
     }
 
+    /// The spotlight's episodes, for its wide art where neither a banner nor a seen still is
+    /// known: asked at once, at a page's priority rather than as the quiet stills, since the
+    /// spotlight is the first thing Home shows. Once a session per title.
+    public func loadSpotlightEpisodes(_ entry: Entry) {
+        guard entry.bannerUrl == nil, entry.seenStill == nil, titles.episodes[entry.id] == nil,
+              spotlightAsked.insert(entry.id).inserted
+        else { return }
+        loadEpisodes(entry.id)
+    }
+
+    /// Every title's episode table and wide art wait forgotten, and the episodes asked for them:
+    /// a motion demo's way to watch Home's wide art arrive as on a first launch. The testing
+    /// engine's flavour only; elsewhere it keeps what it has.
+    public func forgetArtForDemo() {
+        #if FIXTURES
+        titles.forgetEpisodesForDemo()
+        artWaitSince = [:]
+        artWaited = []
+        spotlightAsked = []
+        stillsAsked = []
+        prepared = [:]
+        asked = asked.filter { question, _ in
+            switch question {
+            case .episodes, .stills: false
+            case .detail, .dub: true
+            }
+        }
+        #endif
+    }
+
+    /// Whether `id`'s wide art has waited on its plate for `heroArtWait`: the wait starts the
+    /// first time it is asked, and ends once a session per title, so art that waited once does not
+    /// wait again.
+    func heroArtWaited(_ id: AnilistId) -> Bool {
+        if artWaited.contains(id) { return true }
+        let now = now()
+        guard let since = artWaitSince[id] else {
+            artWaitSince[id] = now
+            // What redraws the screens showing the plate; the clock decides.
+            Task { [weak self] in
+                try? await Task.sleep(for: Self.heroArtWait)
+                self?.artWaited.insert(id)
+            }
+            return false
+        }
+        return now - since >= Self.heroArtWait
+    }
+
     /// Every title is named another way now: the lists that have been shown are asked for again,
     /// so they name their titles the new way, and a title page asks again when it next opens.
     private func titlesChanged() {
@@ -894,6 +1012,16 @@ public final class AppStore {
     public func apply(_ event: Event) {
         if !held.isEmpty, let kind = event.showcaseKind, held.contains(kind) { return }
         notifications.observe(event)
+        reader.observe(event)
+        reading.observe(event)
+        // A download that fails before it starts has no row to say so on: a notice says why.
+        if case .reading(.failed(.downloads, let failure)) = event {
+            notices.post(Notice(kind: .alert, text: L.readDownloadNotStarted(reason: failure.words), hint: nil))
+        }
+        bookSources.observe(event)
+        cameIn.apply(event)
+        serverProgress.apply(event)
+        if case .medium(let view) = event { medium.apply(view) }
         sync.apply(event)
         if case .syncStatus = event { tv.setRemoteOff(sync.remoteOff) }
         if case .profileSwitch(let id) = event { onProfileSwitch?(id) }

@@ -23,6 +23,9 @@ mod imp {
         /// On its way to closed: its place goes once the spring ends.
         pub closing: Cell<bool>,
         pub running: RefCell<Option<adw::SpringAnimation>>,
+        /// A size held along the axis while what it holds changes, then eased to the child's.
+        pub held: Cell<Option<f64>>,
+        pub easing: RefCell<Option<adw::SpringAnimation>>,
     }
 
     impl Default for Squeeze {
@@ -33,6 +36,8 @@ mod imp {
                 along: Cell::new(gtk::Orientation::Horizontal),
                 closing: Cell::new(false),
                 running: RefCell::default(),
+                held: Cell::new(None),
+                easing: RefCell::default(),
             }
         }
     }
@@ -70,6 +75,10 @@ mod imp {
             let Some(child) = self.obj().first_child() else { return (0, 0, -1, -1) };
             let along = self.along.get();
             if orientation == along {
+                if let Some(held) = self.held.get() {
+                    let size = held.round().max(0.0) as i32;
+                    return (size, size, -1, -1);
+                }
                 let (_, natural, _, _) = child.measure(orientation, for_size);
                 let size = (f64::from(natural + self.gap.get()) * self.fraction.get()).round();
                 let size = size.max(0.0) as i32;
@@ -159,6 +168,62 @@ impl Squeeze {
     pub fn open(&self, done: impl Fn() + 'static) {
         self.imp().closing.set(false);
         self.run(1.0, done);
+    }
+
+    /// Keep the size it has now along its axis while its child changes, until [`Self::release`].
+    pub fn hold(&self) {
+        if let Some(old) = self.imp().easing.take() {
+            old.pause();
+        }
+        if self.imp().held.get().is_some() || !self.is_mapped() {
+            return;
+        }
+        let size = match self.imp().along.get() {
+            gtk::Orientation::Vertical => self.height(),
+            _ => self.width(),
+        };
+        self.imp().held.set(Some(f64::from(size)));
+    }
+
+    /// Ease from the held size to the child's own on the standard spring; at once under Reduce
+    /// Animation or off screen.
+    pub fn release(&self) {
+        let Some(from) = self.imp().held.get() else { return };
+        let to = self.child().map_or(0.0, |child| {
+            let along = self.imp().along.get();
+            let across = match along {
+                gtk::Orientation::Vertical => self.width(),
+                _ => self.height(),
+            };
+            let (_, natural, _, _) = child.measure(along, across.max(1));
+            f64::from(natural + self.imp().gap.get()) * self.imp().fraction.get()
+        });
+        if !self.is_mapped() || (from - to).abs() < 1.0 {
+            self.imp().held.set(None);
+            self.queue_resize();
+            return;
+        }
+        let target = adw::CallbackAnimationTarget::new({
+            let squeeze = self.downgrade();
+            move |value| {
+                if let Some(squeeze) = squeeze.upgrade() {
+                    squeeze.imp().held.set(Some(value.max(0.0)));
+                    squeeze.queue_resize();
+                }
+            }
+        });
+        let animation = motion::standard(self, from, to, target);
+        animation.connect_done({
+            let squeeze = self.downgrade();
+            move |_| {
+                if let Some(squeeze) = squeeze.upgrade() {
+                    squeeze.imp().held.set(None);
+                    squeeze.queue_resize();
+                }
+            }
+        });
+        animation.play();
+        self.imp().easing.replace(Some(animation));
     }
 
     fn run(&self, to: f64, done: impl Fn() + 'static) {

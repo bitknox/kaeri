@@ -13,7 +13,7 @@ settings-advanced-none = 追加のオプションはありません。プレー�
 settings-aside-check-title = プロキシの確認
 settings-aside-sources-apple = { -source-cap-pl }は上から順に試されます。作品ごとに、作品ページから専用の{ -source }を選ぶこともできます。
 settings-aside-advanced = ここでの設定は、アップスケールやナイトモードなど再生の設定を上書きする場合があります。ほとんどの方はこのパネルを使う必要はありません。
-settings-quality-detail = 「高」にすると、{ -source }が提供する最高の画質を選び、より多くの容量を使います。
+settings-quality-detail = 「高」では{ -source }にある最高の版を選びます。そのぶん容量を多く使います。
 settings-merge-subtitles-detail = ファイルをどこへ移動しても、字幕はエピソードと一緒に残ります。
 settings-keep-seeding-detail-mac = シードを続けるダウンロードは、ダウンロード先のフォルダではなく{ -app-name }のキャッシュに保存されます。
 settings-keep-seeding-detail = シードを続けるダウンロードは、{ -app-name }のキャッシュに保存されます。
@@ -26,12 +26,17 @@ settings-delete-watched-title = { $count ->
 settings-delete-watched-detail = この{ -device }からファイルが削除されます。まだ視聴していないエピソードは残ります。
 settings-folder-default = トレントのキャッシュに保存
 settings-storage-unwatched = 未視聴
+settings-storage-unread = 未読
+settings-storage-read = 既読
+settings-storage-unseen-both = 未視聴・未読
+settings-storage-seen-both = 視聴済み・既読
 settings-storage-used = ダウンロードで{ $size }を使用しています。
 settings-storage-used-free = ダウンロードで{ $size }を使用しています。この{ -device }の空きは{ $free }です。
 settings-source-count = { $count ->
    *[other] { $count }件の{ -source-pl }
  }
 settings-accounts-sync-note = 進捗とリストの変更は{ $tracker }に同期されます。{ -library-cap }とカレンダーの「マイリスト」には、{ $tracker }のリストが表示されます。
+settings-accounts-sync-note-read = 進捗とリストの変更は{ $tracker }に同期されます。{ -library-cap }には{ $tracker }のリストが表示されます。
 settings-conflicts = { $count ->
    *[other] { $count }件のタイトルが{ $tracker }と異なります
  }
@@ -43,7 +48,7 @@ settings-synced-just-now = たった今同期しました
 settings-synced-ago = { $ago }に同期しました
 settings-privacy-note = { -app-name }が送信する情報と、この{ -device }に残る情報
 settings-read-online = オンラインで読む
-settings-presence-note = リッチプレゼンスには、カバー画像、進捗バー、{ $tracker }での作品へのリンクが表示されます。Discordは{ $tracker }からカバー画像を直接取得します。タイトルを表示する設定が必要です。
+settings-presence-note = リッチプレゼンスには、カバー画像、進捗バー、{ $tracker }の作品へのリンクが表示されます。タイトルを表示しているときだけ機能します。カバー画像はDiscordが{ $tracker }から直接読み込みます。
 settings-presence-cover = カバー
 settings-presence-button = { $tracker }で見る
 settings-presence-nothing = アニメを視聴中
@@ -67,7 +72,7 @@ settings-when-tomorrow = 明日 { $time }
 settings-when-day = { $day } { $time }
 settings-week-row-label = { $title }、エピソード{ $episode }、{ $when }
 settings-week-row-hint = この作品の設定を開く
-settings-notify-explain-on = { $tracker }が伝える時刻に、「視聴中」リストの作品のエピソードが公開されると1件通知します。作品ごとの設定が優先されます。
+settings-notify-explain-on = 「視聴中」リストにある作品のエピソードが公開されると、{ $tracker }に載っている時刻に1件通知が届きます。作品ごとの設定が優先されます。
 settings-notify-explain-off = オフです。作品ごとの設定でオンにした作品だけが通知されます。
 settings-preview-show = 視聴中の作品
 settings-preview-words = エピソード9が公開されました。

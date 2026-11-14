@@ -55,6 +55,8 @@ impl App {
                 self.should_quit = true;
                 return None;
             }
+            // The first run's question has no Skip: it is answered.
+            Action::Back if self.medium_must_answer() => return None,
             Action::Back => {
                 self.nav.close_overlay();
                 return None;
@@ -188,12 +190,26 @@ impl App {
             Action::Open if len > 0 => return self.confirm_overlay(visible_rows),
             // The filters overlay edits in place: the vertical axis picks a row and the
             // horizontal one walks its values, the same grammar as the Settings screen.
+            Action::Left if *overlay == Overlay::SearchFilters && self.reading_section() => {
+                super::reading::cycle_read_filter(
+                    &mut self.reading.filter,
+                    self.cursors.overlay.selected,
+                    false,
+                );
+            }
             Action::Left if *overlay == Overlay::SearchFilters => {
                 cycle_search_filter(
                     &mut self.search_filter,
                     self.cursors.overlay.selected,
                     false,
                     &self.clock,
+                );
+            }
+            Action::Right if *overlay == Overlay::SearchFilters && self.reading_section() => {
+                super::reading::cycle_read_filter(
+                    &mut self.reading.filter,
+                    self.cursors.overlay.selected,
+                    true,
                 );
             }
             Action::Right if *overlay == Overlay::SearchFilters => {
@@ -254,6 +270,8 @@ impl App {
             Some(Overlay::PluginAction) => self.confirm_plugin_choice(),
             Some(Overlay::PublishPick) => self.confirm_publish(),
             Some(Overlay::BugReport) => self.confirm_bug_report(),
+            Some(Overlay::Medium) => self.confirm_medium(),
+            Some(Overlay::MediumOff) => self.confirm_medium_off(),
             _ => None,
         }
     }
@@ -263,6 +281,9 @@ impl App {
         match self.nav.overlay() {
             Some(Overlay::ListStatus) => LibrarySegment::ALL.len(),
             Some(Overlay::Rate) => 10,
+            Some(Overlay::SearchFilters) if self.reading_section() => {
+                super::reading::READ_FILTER_ROWS
+            }
             Some(Overlay::SearchFilters) => search_filter_labels().len(),
             Some(Overlay::Conflicts) => self.conflicts.len() * 2,
             Some(Overlay::Accounts) => self.sync.len(),
@@ -282,6 +303,8 @@ impl App {
             Some(Overlay::PluginAction) => self.plugin_choices().len(),
             Some(Overlay::PublishPick) => self.local_plugins.len(),
             Some(Overlay::BugReport) => 1 + self.crashes.len(),
+            Some(Overlay::Medium) => super::medium::CHOICES.len(),
+            Some(Overlay::MediumOff) => 2,
             Some(overlay) if overlay.is_devices() => self.devices_overlay_len(overlay),
             _ => 0,
         }

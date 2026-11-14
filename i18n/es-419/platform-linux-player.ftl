@@ -1,7 +1,7 @@
 party-status = Estado de la { -watch-party }
 party-members = Miembros
 party-choose-a-source = Elige una { -source }
-party-sources-none-listed = Ninguna { -source } lista el episodio { $episode }. Las { -source-pl } vienen de los { -plugin-pl } que agrega una { -plugin-store }.
+party-sources-none-listed = Ninguna { -source } tiene el episodio { $episode }. Las { -source-pl } vienen de { -plugin-pl } que agregas desde una { -plugin-store }.
 party-sources-found-line = { $count ->
     [one] Una { -source } lo tiene. La que elijas se reproduce con la { -watch-party }.
     [many] { $count } { -source-pl } lo tienen. La que elijas se reproduce con la { -watch-party }.

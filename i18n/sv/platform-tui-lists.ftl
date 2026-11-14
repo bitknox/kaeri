@@ -4,7 +4,7 @@ downloads-column-title = Titel
 downloads-column-state = Status
 downloads-column-progress = Förlopp
 downloads-empty-heading = Inget i kö
-downloads-empty-hint = Tryck { $key } på en titel eller ett avsnitt för att ladda ner offline.
+downloads-empty-hint = Tryck { $key } på en titel eller ett avsnitt för att ladda ner det.
 downloads-row-episode = Avsn. { $episode }
 downloads-row-episode-ahead = Avsn. { $episode } · tidig
 downloads-note-sizes = { $downloaded } / { $total }
@@ -68,10 +68,10 @@ accounts-row-queued = { $count ->
     [one] { $count } i kö
    *[other] { $count } i kö
  }
-accounts-row-queued-held = { $queued } i kö, { $held } väntar på id-koppling
-accounts-conflict-keep-mine = Behåll min
-accounts-conflict-keep-theirs = Behåll deras
-accounts-conflict-row = { $title }  ·  { $field }: min { $local } / deras { $remote }
+accounts-row-queued-held = { $queued } i kö, { $held } väntar på matchning
+accounts-conflict-keep-mine = Använd lokal
+accounts-conflict-keep-theirs = Använd { -tracker }
+accounts-conflict-row = { $title }  ·  { $field }: lokal { $local } / { -tracker } { $remote }
 lists-library-title = { -library-cap }
 lists-remove-wrong-list = Du kan bara dölja titlar i listan { -continue-cap }.
 lists-continue-removed = { $title } dold från { -continue-cap }. Om du tittar på den igen kommer den tillbaka.
@@ -82,7 +82,7 @@ lists-loading = Läser in…
 lists-empty-press-enter = Tryck ↵ för att söka
 lists-empty-type-to-search = Skriv för att söka
 lists-empty-browse-filtered = Tryck ↵ för att bläddra med de här filtren.
-lists-empty-browse-popular = Tryck ↵ för att bläddra bland de mest populära.
+lists-empty-browse-popular = Tryck ↵ för att bläddra bland de mest populära titlarna.
 lists-empty-no-matches = Inga träffar
 lists-empty-fewer-filters = Prova färre filter.
 lists-empty-shorter-query = Prova en kortare sökning eller romajititeln.

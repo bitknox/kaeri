@@ -20,4 +20,4 @@ cast-card-stop = Interrompi trasmissione
 cast-settings-tvs = Mostra le TV con Chromecast integrato
 cast-settings-tvs-note = Compaiono sotto Chromecast in Riproduci sulla TV. Questo { -device } invia loro l'episodio.
 cast-settings-torrents = Torrent durante la trasmissione
-cast-settings-torrents-note = Permette a una TV con Chromecast integrato di riprodurre i torrent. Questo { -device } invia l'episodio finché è in riproduzione.
+cast-settings-torrents-note = Così una TV con Chromecast integrato può riprodurre i torrent. Questo { -device } invia l'episodio finché è in riproduzione.

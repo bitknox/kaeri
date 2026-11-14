@@ -8,8 +8,10 @@
 //! and library. That is small enough that a careless screen refresh can exhaust it, which
 //! is why queries are wide (one round trip per screen) and responses are cached.
 
+pub mod books;
 pub mod model;
 pub mod query;
+pub mod readlist;
 pub mod threads;
 pub mod trends;
 
@@ -54,6 +56,12 @@ pub enum AniListError {
 
     #[error("authentication required")]
     Unauthenticated,
+
+    /// AniList's own trouble on a list write: a `5xx`, whatever its body says. Only list writes
+    /// answer with this, so the tracker outbox can wait it out rather than count it as a
+    /// refusal of the change. Every other ask reports a `5xx` as `Api` or `Decode`, as before.
+    #[error("anilist: HTTP {status}: {message}")]
+    Server { status: u16, message: String },
 }
 
 pub type Result<T> = std::result::Result<T, AniListError>;
@@ -584,6 +592,24 @@ impl AniList {
         document: &str,
         variables: serde_json::Value,
     ) -> Result<T> {
+        self.execute_as(document, variables, false).await
+    }
+
+    /// [`Self::execute`] for a list write, which answers a `5xx` as [`AniListError::Server`].
+    async fn execute_write<T: DeserializeOwned>(
+        &self,
+        document: &str,
+        variables: serde_json::Value,
+    ) -> Result<T> {
+        self.execute_as(document, variables, true).await
+    }
+
+    async fn execute_as<T: DeserializeOwned>(
+        &self,
+        document: &str,
+        variables: serde_json::Value,
+        write: bool,
+    ) -> Result<T> {
         let mut refused = 0;
         let lane = LANE.try_with(Clone::clone).ok();
         loop {
@@ -639,6 +665,15 @@ impl AniList {
 
             if status.as_u16() == 401 {
                 return Err(AniListError::Unauthenticated);
+            }
+
+            if write && status.is_server_error() {
+                let body: serde_json::Value = response.json().await.unwrap_or_default();
+                let message = body["errors"][0]["message"].as_str().unwrap_or_default();
+                return Err(AniListError::Server {
+                    status: status.as_u16(),
+                    message: message.chars().take(160).collect(),
+                });
             }
 
             let body: serde_json::Value =
@@ -1139,8 +1174,9 @@ impl AniList {
             variables.insert("scoreRaw".into(), ((score * 10.0).round() as u32).into());
         }
 
-        let data: serde_json::Value =
-            self.execute(query::SAVE_PROGRESS, serde_json::Value::Object(variables)).await?;
+        let data: serde_json::Value = self
+            .execute_write(query::SAVE_PROGRESS, serde_json::Value::Object(variables))
+            .await?;
         // The entry id, so a caller that needs to remove the entry again can. `None` is not a
         // failure — the mutation succeeded either way.
         Ok(data["SaveMediaListEntry"]["id"].as_u64().map(|id| id as u32))

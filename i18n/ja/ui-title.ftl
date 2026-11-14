@@ -16,7 +16,6 @@ title-details = 詳細
 title-studio = スタジオ
 title-tags = タグ
 title-more-about = 詳細を見る
-title-synopsis-hint = あらすじ全文を表示します
 title-dubbed-to = 第{ $episode }話まで{ -dubbed-cap }
 title-no-episodes = まだエピソードがありません
 title-episodes-load-failed = エピソードの一覧を取得できませんでした

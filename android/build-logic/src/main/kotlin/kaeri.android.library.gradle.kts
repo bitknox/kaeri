@@ -1,4 +1,4 @@
-// A library module of the app: Android 15 and up, built against the newest SDK.
+// A library module of the app: Android 11 and up, built against the newest SDK.
 plugins {
     id("com.android.library")
 }

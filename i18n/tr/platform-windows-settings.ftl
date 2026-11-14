@@ -3,10 +3,12 @@ settings-group-mpv = mpv
 settings-card-state = { $title }, { $state }
 settings-card-check = { $title }, { $word }, { $note }
 settings-closing-detail = İndirme sürerken { -app-name }, bitene kadar bildirim alanında kalır.
-settings-presence-rich-detail = Kapak, ilerleme çubuğu ve { $tracker } üzerindeki dizi bağlantısı. Başlık gösterilmelidir.
+settings-presence-rich-detail = Kapak, ilerleme çubuğu ve { $tracker } üzerindeki dizi bağlantısı. Yalnızca başlık gösterilirken çalışır.
 settings-another-tv = Bir TV daha
 settings-theme = Tema
 settings-motion = Hareket
+settings-smooth-scrolling = Yumuşak kaydırma
+settings-smooth-scrolling-detail = Fare tekerleği her döndüğünde sayfa yumuşakça yerine kayar. Dokunmatik yüzey ve dokunmatik ekranda kaydırma değişmez.
 settings-start-fullscreen = Tam ekranda başlat
 settings-player-interface = Oynatıcı arayüzü
 settings-token-storage = Belirteç depolama
@@ -43,4 +45,17 @@ settings-download-higher = Daha yüksek
 torrents-dialog-edit-proxy = Proxy'yi düzenle
 settings-note-trailers-windows = Fragmanlar YouTube'dan sessiz oynatılır ve YouTube IP adresinizi görür. Ölçümlü bağlantıda, animasyon efektleri kapalıyken, enerji tasarrufu modundayken ya da Anlatıcı çalışırken oynatılmaz.
 settings-note-cast-tvs-pc = Bunlar TV'de oynat bölümünde Chromecast başlığı altında görünür. Bölümü bu bilgisayar gönderir.
-settings-note-torrents-while-casting-pc = Chromecast özellikli bir TV'nin torrent oynatmasını sağlar. Oynattığı sürece bölümü bu bilgisayar gönderir.
+settings-note-torrents-while-casting-pc = Böylece yerleşik Chromecast'li bir TV torrent oynatabilir. Bölüm oynadığı sürece onu bu bilgisayar gönderir.
+settings-language-restart = Yeniden başlat
+settings-differences = { $count ->
+    [one] Bir başlık { $tracker } ile farklı
+   *[other] { $count } başlık { $tracker } ile farklı
+ }
+settings-differences-review = İncele
+settings-search = Ayarlarda ara
+settings-quality-detail-windows = Daha yüksek, bir { -source } içindeki en iyi seçeneği alır. Daha fazla yer kaplar.
+settings-merge-subtitles-detail-windows = Altyazılar, dosya nereye giderse gitsin bölümle birlikte kalır.
+settings-keep-seeding-detail-windows = Seed edilmeye açık tutulan bir indirme, indirme klasöründe değil, { -app-name }'nin önbelleğinde kalır.
+settings-discussions-note-windows = Yorumlar, bölümü izledikten sonra AniList forum konusundan gelir.
+settings-comment-images-note-windows = Her görsel, onu barındıran siteden yüklenir ve site IP adresinizi görür.
+settings-folder-browse = Gözat…

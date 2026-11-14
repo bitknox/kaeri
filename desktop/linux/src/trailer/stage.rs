@@ -227,7 +227,7 @@ impl Stage {
             (self.banner.opacity(), 0.0, 200, adw::Easing::EaseOutCubic)
         };
         let animation =
-            adw::TimedAnimation::new(&self.banner, from, to, ms, motion::opacity(&self.banner));
+            motion::timed(&self.banner, from, to, ms, motion::opacity(&self.banner));
         animation.set_easing(easing);
         animation.connect_done(move |_| then());
         animation.play();

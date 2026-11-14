@@ -93,4 +93,4 @@ cast-settings-torrents = Torrents while casting
 
 # Settings, Sources: under the row above.
 # @only android
-cast-settings-torrents-note = Lets a TV with Chromecast built in play torrents. This { -device } sends the episode for as long as it plays.
+cast-settings-torrents-note = A TV with Chromecast built in can then play torrents. This { -device } sends the episode for as long as it plays.

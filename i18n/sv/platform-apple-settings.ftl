@@ -13,7 +13,7 @@ settings-advanced-none = Inga extra alternativ. Spelaren använder { -app-name }
 settings-aside-check-title = Proxykontroll
 settings-aside-sources-apple = { -source-cap-pl } provas i ordning, uppifrån och ner. En titel kan ha en egen { -source }, som väljs på dess titelsida.
 settings-aside-advanced = Ett alternativ här kan ta över en inställning under Uppspelning, som uppskalning eller nattläge. De flesta behöver aldrig den här fliken.
-settings-quality-detail = Högre väljer den bästa versionen som en { -source } erbjuder, men tar mer utrymme.
+settings-quality-detail = Högre väljer den bästa versionen som en { -source } har. Det tar mer utrymme.
 settings-merge-subtitles-detail = Undertexterna följer med avsnittet vart filen än flyttas.
 settings-keep-seeding-detail-mac = En hämtning som fortsätter att delas sparas i { -app-name }s cache, inte i hämtningsmappen.
 settings-keep-seeding-detail = En hämtning som fortsätter att delas sparas i { -app-name }s cache.
@@ -27,6 +27,10 @@ settings-delete-watched-title = { $count ->
 settings-delete-watched-detail = Filerna tas bort från den här { -device }en. Avsnitt som inte har setts än finns kvar.
 settings-folder-default = Sparas med torrentcachen
 settings-storage-unwatched = Ännu inte sett
+settings-storage-unread = Inte läst än
+settings-storage-read = Läst
+settings-storage-unseen-both = Inte sett eller läst än
+settings-storage-seen-both = Sett eller läst
 settings-storage-used = { $size } i hämtningar.
 settings-storage-used-free = { $size } i hämtningar. { $free } lediga på den här { -device }en.
 settings-source-count = { $count ->
@@ -34,6 +38,7 @@ settings-source-count = { $count ->
    *[other] { $count } { -source-pl }
  }
 settings-accounts-sync-note = Framsteg och liständringar synkas till { $tracker }. { -library-cap } och kalenderns Min lista visar dina listor på { $tracker }.
+settings-accounts-sync-note-read = Förlopp och liständringar synkas till { $tracker }. { -library-cap } visar dina listor från { $tracker }.
 settings-conflicts = { $count ->
     [one] En titel skiljer sig från { $tracker }
    *[other] { $count } titlar skiljer sig från { $tracker }
@@ -47,7 +52,7 @@ settings-synced-just-now = Synkad just nu
 settings-synced-ago = Synkad { $ago }
 settings-privacy-note = Vad { -app-name } skickar, och vad som stannar på den här { -device }en.
 settings-read-online = Läs på webben
-settings-presence-note = Närvaro visar omslaget, en förloppsmätare och en länk till serien på { $tracker }. Discord hämtar omslaget från { $tracker } själv. Titeln måste visas.
+settings-presence-note = Utökad närvaro visar omslaget, en förloppsmätare och en länk till serien på { $tracker }. Det fungerar bara medan titeln visas. Discord hämtar omslaget direkt från { $tracker }.
 settings-presence-cover = Omslag
 settings-presence-button = Visa på { $tracker }
 settings-presence-nothing = Tittar på anime
@@ -71,7 +76,7 @@ settings-when-tomorrow = I morgon { $time }
 settings-when-day = { $day } { $time }
 settings-week-row-label = { $title }, avsnitt { $episode }, { $when }
 settings-week-row-hint = Öppnar seriens inställningar
-settings-notify-explain-on = En notis när ett avsnitt av en serie i listan Tittar på kommer, vid den tid { $tracker } anger. Seriens egen inställning går först.
+settings-notify-explain-on = Du får en notis när ett avsnitt av en serie i listan Tittar på kommer ut, vid den tid { $tracker } anger. Seriens egen inställning går före.
 settings-notify-explain-off = Av. Bara serier som slagits på i sina egna inställningar meddelar.
 settings-preview-show = En serie du följer
 settings-preview-words = Avsnitt 9 är ute.

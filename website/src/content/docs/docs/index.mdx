@@ -14,9 +14,10 @@ description: Kaeri browses AniList with no account, plays episodes in mpv, keeps
 
 ## The apps
 
-The apps have mpv built in and install from the releases on GitHub, as
-[installation](/docs/getting-started/installation/#the-apps) describes. On a Mac, the app and the
-terminal app share one history and one config.
+Each app is native to its platform: SwiftUI on Apple devices, Jetpack Compose on Android, WinUI 3
+on Windows and GTK on Linux, all on the same Rust engine. They have mpv built in and install from
+the releases on GitHub, as [installation](/docs/getting-started/installation/#the-apps) describes.
+On a Mac, the app and the terminal app share one history and one config.
 
 The Android TV app is made for the remote's arrow keys. The Mac, iPhone, iPad, Android, Windows and
 Linux apps can send an episode to it and act as its remote. The [features page](/features/#platforms)
@@ -39,7 +40,7 @@ shows what each app does.
 
 ## In development
 
-- More sources, as plugins. The [plugin system](/docs/plugins/authoring/) is the path for new
-  sources.
+- More of the [plugin interface](/docs/plugins/authoring/), for the people who write plugins.
+  Apart from the Creative Commons demo, Kaeri ships no sources and adds none.
 - Licensed services open in their own apps. Kaeri doesn't get round DRM, so a plugin can return a
   link that opens in that service instead of a stream for mpv.

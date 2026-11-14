@@ -1042,12 +1042,51 @@ pub const GENRES: [&str; 18] = [
 /// The genre AniList counts as adult, offered only when adult titles are shown.
 pub const ADULT_GENRE: &str = "Hentai";
 
+/// "More fantasy": the heading over popular titles of a genre, as each language writes the
+/// genre inside a sentence (German keeps its capital). A genre outside [`GENRES`] keeps
+/// AniList's own name.
+pub fn more_genre(genre: &str) -> crate::Msg {
+    use crate::Msg;
+    match genre {
+        "Action" => Msg::HomeMoreGenreAction,
+        "Adventure" => Msg::HomeMoreGenreAdventure,
+        "Comedy" => Msg::HomeMoreGenreComedy,
+        "Drama" => Msg::HomeMoreGenreDrama,
+        "Ecchi" => Msg::HomeMoreGenreEcchi,
+        "Fantasy" => Msg::HomeMoreGenreFantasy,
+        "Horror" => Msg::HomeMoreGenreHorror,
+        "Mahou Shoujo" => Msg::HomeMoreGenreMahouShoujo,
+        "Mecha" => Msg::HomeMoreGenreMecha,
+        "Music" => Msg::HomeMoreGenreMusic,
+        "Mystery" => Msg::HomeMoreGenreMystery,
+        "Psychological" => Msg::HomeMoreGenrePsychological,
+        "Romance" => Msg::HomeMoreGenreRomance,
+        "Sci-Fi" => Msg::HomeMoreGenreSciFi,
+        "Slice of Life" => Msg::HomeMoreGenreSliceOfLife,
+        "Sports" => Msg::HomeMoreGenreSports,
+        "Supernatural" => Msg::HomeMoreGenreSupernatural,
+        "Thriller" => Msg::HomeMoreGenreThriller,
+        other => Msg::HomeMoreGenre { genre: other.to_owned() },
+    }
+}
+
 /// The tag category AniList counts as adult.
 pub const ADULT_TAG_CATEGORY: &str = "Sexual Content";
 
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn every_genre_has_its_own_more_heading_in_sentence_case() {
+        for genre in GENRES {
+            let msg = more_genre(genre);
+            assert!(!matches!(msg, crate::Msg::HomeMoreGenre { .. }), "{genre}");
+            let english = msg.english();
+            assert_eq!(english, format!("More {}", genre.to_lowercase()), "{genre}");
+        }
+        assert_eq!(more_genre("Kaiju").english(), "More Kaiju");
+    }
 
     fn labels(query: &SearchQuery) -> Vec<String> {
         query.active().into_iter().map(|f| f.label).collect()

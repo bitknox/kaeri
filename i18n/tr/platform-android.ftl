@@ -5,5 +5,5 @@ release-seeders = { $count ->
  }
 trailer-failed = Fragman açılamadı
 engine-down-title = { -app-name } durdu
-engine-down-stopped = İşi yapan parça durdu. Yeniden deneyin veya uygulamayı kapatıp bir kez daha açın.
+engine-down-stopped = Yeniden başlayana kadar yeni bir şey yüklenmez. Yeniden deneyin ya da uygulamayı kapatıp bir kez daha açın.
 engine-down-quit = Kapat

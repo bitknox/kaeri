@@ -6,5 +6,5 @@ notice-hidden-preview = 新しいエピソード
 notice-summary = ほか%u件の新しいエピソード
 notice-dismiss = 消去
 accounts-code-expired-detail = このコードの有効期限が切れました。{ $tracker }にサインインするには、新しいコードを取得してください。
-list-refresh-failed = 更新できませんでした。読み込み済みの内容を表示しています。
+list-refresh-failed = 更新できませんでした。前回読み込んだ内容を表示しています。
 sign-in-failed = { $tracker }にサインインできませんでした。もう一度お試しください。

@@ -47,6 +47,7 @@ import app.kaeri.engine.model.SettingKey
 import app.kaeri.i18n.R
 import app.kaeri.i18n.Strings
 import app.kaeri.store.OpenedModel
+import app.kaeri.store.readAtMost
 import app.kaeri.store.text
 
 /** The largest torrent file read: they hold a list of pieces, not the media, and are small. */
@@ -78,7 +79,7 @@ private fun PasteStage(stage: OpenedModel.Stage.Paste) {
         scope.launch {
             val bytes = withContext(Dispatchers.IO) {
                 runCatching {
-                    context.contentResolver.openInputStream(uri)?.use { it.readNBytes(MAX_FILE_BYTES + 1) }
+                    context.contentResolver.openInputStream(uri)?.use { it.readAtMost(MAX_FILE_BYTES + 1) }
                 }.getOrNull()
             }
             if (bytes != null && bytes.size <= MAX_FILE_BYTES) store.openTorrentFile(bytes) else store.opened.unusable()

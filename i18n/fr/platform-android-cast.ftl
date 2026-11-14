@@ -20,4 +20,4 @@ cast-card-stop = Arrêter la diffusion
 cast-settings-tvs = Afficher les TV avec Chromecast intégré
 cast-settings-tvs-note = Ils apparaissent sous Chromecast dans Lire sur la TV. Cet { -device } leur envoie l’épisode.
 cast-settings-torrents = Torrents pendant la diffusion
-cast-settings-torrents-note = Permet à une TV avec Chromecast intégré de lire des torrents. Cet { -device } envoie l’épisode tant qu’il est en lecture.
+cast-settings-torrents-note = Une TV avec Chromecast intégré peut alors lire des torrents. Cet { -device } envoie l’épisode tant qu’il est en lecture.

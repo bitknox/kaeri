@@ -4,12 +4,12 @@ tray-open = Abrir o { -app-name }
 tray-quit = Sair
 close-title = Os downloads ainda estão em andamento
 close-downloading = { $count ->
-    [one] Um episódio está sendo baixado.
+    [one] { $count } episódio está sendo baixado.
     [many] { $count } episódios estão sendo baixados.
    *[other] { $count } episódios estão sendo baixados.
  }
 close-seeding = { $count ->
-    [one] Um episódio está compartilhando.
+    [one] { $count } episódio está compartilhando.
     [many] { $count } episódios estão compartilhando.
    *[other] { $count } episódios estão compartilhando.
  }
@@ -25,7 +25,7 @@ notify-episode-out-dubbed = O episódio { $episode } saiu, { -dubbed }.
 notify-next-for-you = A seguir para você: episódio { $episode }.
 notify-downloaded-one = Episódio { $episode } baixado.
 notify-downloaded = { $count ->
-    [one] Um episódio baixado.
+    [one] { $count } episódio baixado.
     [many] { $count } episódios baixados.
    *[other] { $count } episódios baixados.
  }
@@ -50,3 +50,15 @@ clipboard-busy = Não foi possível copiar: outro app está usando a área de tr
 start-failed-title = O { -app-name } não conseguiu iniciar
 start-failed-open-folder = Abrir a pasta
 start-failed-quit = Sair
+engine-stopped-title = { -app-name } parou de funcionar
+engine-stopped-detail = Os downloads e a sincronização pararam junto. Abra o { -app-name } de novo para continuar.
+engine-stopped-open-again = Abrir de novo
+titlebar-synced = { $tracker } sincronizado
+titlebar-not-synced = { $tracker } sem sincronizar
+titlebar-sign-in-again = Entre de novo em { $tracker }
+titlebar-status-hint = Mostra o que está em andamento
+titlebar-nothing-running = Nada em andamento.
+titlebar-open-devices = Abrir { -device-cap-pl }
+messages-title = Mensagens
+messages-none = Nenhuma mensagem ainda
+messages-alert = Problema

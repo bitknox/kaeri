@@ -20,7 +20,7 @@ default = ["desktop"]
 # notifications through osascript and notify-send, pmset's word on the battery, and the OS
 # keychain through `keyring`. Without it none of these is built, nor are `kaeri-player`,
 # `open` and `keyring`. The crate docs say what a front end without it gets instead.
-desktop = ["presence", "party", "dep:kaeri-player", "dep:open", "kaeri-track/keychain"]
+desktop = ["presence", "party", "opds-feed", "dep:kaeri-player", "dep:open", "kaeri-track/keychain"]
 # The Discord presence an episode shows while it plays, and nothing else of the desktop: the Mac
 # app turns it on beside `--no-default-features`, with no mpv child process. A phone's build
 # leaves it off, and its front end is told so (`SettingsView::presence_available`).
@@ -28,7 +28,7 @@ presence = ["dep:kaeri-discord"]
 # What a test stands the engine up with instead of what it builds, and what only a test wants to
 # hear from it: see `options::Parts` and `engine::Traced`. Never on in a build that ships: the
 # binary turns it on for its own tests alone, as a dev-dependency.
-testing = ["kaeri-party?/testing", "kaeri-sync/testing"]
+testing = ["kaeri-party?/testing", "kaeri-sync/testing", "kaeri-store/testing"]
 # Watch parties on a Syncplay server, played with whichever player a play has: see `party`. The
 # desktop apps turn it on beside `--no-default-features`; a phone's build leaves it off for now.
 party = ["dep:kaeri-party"]
@@ -38,6 +38,10 @@ remote = ["dep:kaeri-remote"]
 # Casting to TVs with Chromecast built in, from the remote's TV picker: see `cast` and
 # `playback::link::cast`. Rides on `remote`, whose sender the picker is.
 cast = ["remote", "dep:kaeri-cast"]
+# The OPDS feed: downloads and folders served to e-readers on the home network, off by default,
+# behind a password and only while Kaeri runs: see `export::feed`. The desktop apps turn it on (the
+# Mac beside `--no-default-features`, as it does `presence`); a phone's build leaves it off.
+opds-feed = ["dep:base64", "dep:network-interface"]
 
 [dependencies]
 kaeri-core.workspace = true
@@ -57,12 +61,20 @@ kaeri-plugin = { workspace = true, features = ["fetch"] }
 kaeri-plugin-store.workspace = true
 kaeri-store-server.workspace = true
 kaeri-providers.workspace = true
+kaeri-books.workspace = true
+kaeri-bookserver.workspace = true
 kaeri-remote = { workspace = true, optional = true }
 kaeri-cast = { workspace = true, optional = true }
 kaeri-store.workspace = true
 kaeri-sync.workspace = true
 hex = "0.4"
+# HTTP Basic for the OPDS feed.
+base64 = { version = "0.23", optional = true }
+network-interface = { version = "2", optional = true }
 kaeri-track.workspace = true
+# The reader: book files opened and pages processed on the page worker.
+kaeri-pages.workspace = true
+toml.workspace = true
 open = { workspace = true, optional = true }
 async-trait.workspace = true
 thiserror.workspace = true
@@ -84,8 +96,18 @@ reqwest.workspace = true
 [target.'cfg(unix)'.dependencies]
 rustix = { version = "1.1", features = ["fs"] }
 
+# Soft hyphens for novels where the web view has no hyphenation of its own (WebView2,
+# WebKitGTK). WebKit and Chrome hyphenate from the system.
+[target.'cfg(any(target_os = "windows", target_os = "linux"))'.dependencies]
+kaeri-books = { workspace = true, features = ["hyphenation"] }
+
 [dev-dependencies]
 tempfile = "3"
+# Comic archives of generated pages, for the reader's tests.
+zip.workspace = true
+image.workspace = true
+# Solid 7z comics, for the feed's page streaming tests.
+sevenz-rust2 = { workspace = true, features = ["compress"] }
 # A stopped clock, for the paced fills that wait seconds between titles and the start that
 # waits two minutes for a connection.
 tokio = { workspace = true, features = ["test-util"] }

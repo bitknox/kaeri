@@ -2,7 +2,7 @@
 
 # Footnote on the recovery key dialog; the lock is the account password, asked through polkit.
 # @only linux
-rkey-lock-linux = You can see it again in Settings, { -device-cap-pl }, after your account password.
+rkey-lock-linux = You can see it again in Settings, { -device-cap-pl }, once you enter your account password.
 
 # Reason polkit shows when it asks for the account password before the recovery key.
 # @only linux

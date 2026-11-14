@@ -4,7 +4,7 @@ downloads-column-title = Tên
 downloads-column-state = Trạng thái
 downloads-column-progress = Tiến độ
 downloads-empty-heading = Chưa có gì trong hàng chờ
-downloads-empty-hint = Nhấn { $key } trên một tựa hoặc tập để đưa vào hàng chờ tải xuống.
+downloads-empty-hint = Nhấn { $key } trên một tựa hoặc tập để tải xuống.
 downloads-row-episode = Tập { $episode }
 downloads-row-episode-ahead = Tập { $episode } · tải trước
 downloads-note-sizes = { $downloaded } / { $total }
@@ -66,10 +66,10 @@ accounts-row-not-connected = Chưa kết nối
 accounts-row-queued = { $count ->
    *[other] { $count } đang chờ
  }
-accounts-row-queued-held = { $queued } đang chờ, { $held } tạm giữ chờ ghép mã định danh
-accounts-conflict-keep-mine = Giữ bản này
-accounts-conflict-keep-theirs = Giữ bản kia
-accounts-conflict-row = { $title }  ·  { $field }: bản này { $local } / { -tracker } { $remote }
+accounts-row-queued-held = { $queued } trong hàng chờ, { $held } đang chờ khớp
+accounts-conflict-keep-mine = Dùng cục bộ
+accounts-conflict-keep-theirs = Dùng bản từ xa
+accounts-conflict-row = { $title }  ·  { $field }: cục bộ { $local } / { -tracker } { $remote }
 lists-library-title = { -library-cap }
 lists-remove-wrong-list = Chỉ có thể ẩn tựa trong danh sách { -continue-cap }.
 lists-continue-removed = Đã ẩn { $title } khỏi { -continue-cap }. Khi bạn xem lại, tựa này sẽ hiện trở lại.

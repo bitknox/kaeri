@@ -10,7 +10,7 @@
 //! is a walk over one source. Asking each source for a title under its own key is
 //! [`crate::resolve::first_answer`]'s work.
 
-use std::{sync::Arc, time::Instant};
+use std::sync::Arc;
 
 use kaeri_core::{
     Error,
@@ -422,10 +422,10 @@ impl ProviderRegistry {
                 Ok(()) => self.health.release(&id),
             }
 
-            let started = Instant::now();
+            let started = kaeri_store::instant_now();
             match call(provider).await {
                 Ok(value) => {
-                    self.health.record_success(&id, started.elapsed(), now);
+                    self.health.record_success(&id, kaeri_store::elapsed(started), now);
                     return Attempt::success(id, value, failures);
                 }
                 Err(error) => {
@@ -494,10 +494,10 @@ impl ProviderRegistry {
             if provider.is_available().is_err() {
                 return Vec::new();
             }
-            let started = Instant::now();
+            let started = kaeri_store::instant_now();
             match provider.sources(key, episode, translation).await {
                 Ok(candidates) => {
-                    self.health.record_success(&id, started.elapsed(), now);
+                    self.health.record_success(&id, kaeri_store::elapsed(started), now);
                     candidates
                 }
                 Err(error) => {
@@ -529,11 +529,11 @@ impl ProviderRegistry {
             .find(|p| p.manifest().id == provider_id)
             .ok_or(ProviderError::NotFound)?;
         provider.is_available()?;
-        let started = Instant::now();
+        let started = kaeri_store::instant_now();
         match provider.resolve_source(key, episode, translation, source_id).await {
             Ok(streams) if streams.is_empty() => Err(ProviderError::NotFound),
             Ok(streams) => {
-                self.health.record_success(provider_id, started.elapsed(), now);
+                self.health.record_success(provider_id, kaeri_store::elapsed(started), now);
                 Ok(streams)
             }
             Err(error) => {
@@ -579,9 +579,9 @@ impl ProviderRegistry {
                 self.health.record_failure(&id, &reason, now);
                 return;
             }
-            let started = Instant::now();
+            let started = kaeri_store::instant_now();
             match provider.health_check().await {
-                Ok(()) => self.health.record_success(&id, started.elapsed(), now),
+                Ok(()) => self.health.record_success(&id, kaeri_store::elapsed(started), now),
                 Err(e) => self.health.record_failure(&id, &e, now),
             }
         });

@@ -74,7 +74,7 @@ settings-apple-discussions = Episode discussions
 
 # Note under the switch for episode discussions.
 # @max 100
-settings-apple-discussions-note = Reads the comments on AniList's forum thread for episodes you have watched.
+settings-apple-discussions-note = Comments come from AniList's forum thread, once you've watched the episode.
 
 # Name of the Settings switch that loads images in comments.
 # @max 32

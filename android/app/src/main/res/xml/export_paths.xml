@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Send to e-reader: where the engine writes the files it prepared, under its data directory. -->
+<paths>
+    <files-path name="exports" path="kaeri/exports/" />
+</paths>

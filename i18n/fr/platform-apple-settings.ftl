@@ -13,7 +13,7 @@ settings-advanced-none = Aucune option supplémentaire. Le lecteur utilise les r
 settings-aside-check-title = Vérification du proxy
 settings-aside-sources-apple = { -source-cap-pl } sont essayées dans l’ordre, de haut en bas. Une série peut garder sa propre { -source }, choisie depuis sa page de présentation.
 settings-aside-advanced = Une option ici peut annuler un réglage de Lecture, comme la mise à l’échelle ou le mode nuit. La plupart des gens n’ont jamais besoin de ce volet.
-settings-quality-detail = La qualité élevée prend la meilleure version qu’une { -source } propose, et plus de place.
+settings-quality-detail = Élevée choisit la meilleure version dont dispose une { -source }. Elle prend plus de place.
 settings-merge-subtitles-detail = Les sous-titres restent avec l’épisode, où que le fichier soit déplacé.
 settings-keep-seeding-detail-mac = Un téléchargement qui continue d’être partagé reste dans le cache de { -app-name }, et non dans le dossier de téléchargement.
 settings-keep-seeding-detail = Un téléchargement qui continue d’être partagé reste dans le cache de { -app-name }.
@@ -21,29 +21,34 @@ settings-watched-downloads = Téléchargements regardés
 settings-watched-one = { $episodes } de { $title } · { $size }
 settings-watched-many = { $episodes } · { $size }
 settings-delete-watched-title = { $count ->
-    [one] Supprimer un téléchargement regardé ?
+    [one] Supprimer { $count } téléchargement regardé ?
     [many] Supprimer { $count } téléchargements regardés ?
    *[other] Supprimer { $count } téléchargements regardés ?
  }
 settings-delete-watched-detail = Les fichiers sont supprimés de cet { -device }. Les épisodes pas encore regardés restent.
 settings-folder-default = Conservé avec le cache des torrents
 settings-storage-unwatched = Pas encore regardés
+settings-storage-unread = Pas encore lu
+settings-storage-read = Lu
+settings-storage-unseen-both = Ni regardé ni lu
+settings-storage-seen-both = Regardé ou lu
 settings-storage-used = { $size } dans les téléchargements.
 settings-storage-used-free = { $size } dans les téléchargements. { $free } libres sur cet { -device }.
 settings-source-count = { $count ->
-    [one] Une { -source }
+    [one] { $count } { -source }
     [many] { $count } { -source-pl }
    *[other] { $count } { -source-pl }
  }
 settings-accounts-sync-note = La progression et les changements de liste se synchronisent avec { $tracker }. { -library-cap } et la liste du calendrier affichent vos listes { $tracker }.
+settings-accounts-sync-note-read = La progression et les changements de listes sont synchronisés avec { $tracker }. { -library-cap } affiche vos listes { $tracker }.
 settings-conflicts = { $count ->
-    [one] Un titre diffère de { $tracker }
+    [one] { $count } titre diffère de { $tracker }
     [many] { $count } titres diffèrent de { $tracker }
    *[other] { $count } titres diffèrent de { $tracker }
  }
 settings-review = Examiner
 settings-changes-waiting = { $count ->
-    [one] Un changement en attente de synchronisation
+    [one] { $count } changement en attente de synchronisation
     [many] { $count } changements en attente de synchronisation
    *[other] { $count } changements en attente de synchronisation
  }
@@ -51,7 +56,7 @@ settings-synced-just-now = Synchronisé à l’instant
 settings-synced-ago = Synchronisé { $ago }
 settings-privacy-note = Ce qu’{ -app-name } envoie, et ce qui reste sur cet { -device }
 settings-read-online = Lire en ligne
-settings-presence-note = L’activité enrichie affiche la jaquette, une barre de progression et un lien vers la série sur { $tracker }. Discord récupère la jaquette depuis { $tracker } lui-même. Le titre doit être affiché.
+settings-presence-note = L’activité enrichie affiche la jaquette, une barre de progression et un lien vers la série sur { $tracker }. Elle ne fonctionne que si le titre est affiché. Discord charge la jaquette directement depuis { $tracker }.
 settings-presence-cover = Jaquette
 settings-presence-button = Voir sur { $tracker }
 settings-presence-nothing = En train de regarder des animés
@@ -75,7 +80,7 @@ settings-when-tomorrow = Demain à { $time }
 settings-when-day = { $day } à { $time }
 settings-week-row-label = { $title }, épisode { $episode }, { $when }
 settings-week-row-hint = Ouvre les réglages de cette série
-settings-notify-explain-on = Une notification quand un épisode d’une série de votre liste En cours sort, à l’heure donnée par { $tracker }. Le réglage propre à une série passe avant.
+settings-notify-explain-on = Vous recevez une notification quand un épisode d’une série de votre liste En cours sort, à l’heure indiquée par { $tracker }. Le réglage propre à une série passe avant.
 settings-notify-explain-off = Désactivé. Seules les séries activées dans leurs propres réglages envoient une notification.
 settings-preview-show = Une série que vous suivez
 settings-preview-words = L’épisode 9 est sorti.
@@ -97,7 +102,7 @@ settings-torrents-value-on = Torrents activés
 settings-torrents-value-off = Torrents désactivés
 settings-seed-ratio-detail = Au mieux sur cet { -device } : seulement pendant que { -app-name } est ouvert
 settings-review-differences = { $count ->
-    [one] Examiner une différence
+    [one] Examiner { $count } différence
     [many] Examiner { $count } différences
    *[other] Examiner { $count } différences
  }

@@ -22,7 +22,7 @@ sources-status-working = 準備完了
 sources-version-ready = バージョン{ $version }の準備ができました
 sources-use-this = この{ -source }を使う
 sources-use-name = { $name }をオン
-sources-remove-detail = エピソードの検索に使われなくなります。{ -plugin-store }から再度インストールできます。
+sources-remove-detail = { -app-name }はエピソードを探すときにこれを使わなくなります。{ -plugin-store }から再びインストールできます。
 stores-updates-count = { $count ->
    *[other] { $count }件の更新があります
  }

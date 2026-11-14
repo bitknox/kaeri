@@ -10,8 +10,6 @@ plugins {
 
 android {
     namespace = "app.kaeri.store"
-    // Shared with the TV app.
-    defaultConfig { minSdk = KaeriSdk.TV_MIN }
     // The tests read the words the person would, from the catalogue.
     testOptions { unitTests.isIncludeAndroidResources = true }
 }
@@ -22,6 +20,9 @@ dependencies {
     api(project(":i18n"))
     api(libs.coroutines.android)
     implementation(libs.webkit)
+    // ContextCompat.registerReceiver with its exported flag, for the party fixture; webkit alone
+    // brings an older core without it.
+    "fixturesImplementation"(libs.core.ktx)
 
     testImplementation(libs.junit)
     testImplementation(libs.coroutines.test)
@@ -51,9 +52,18 @@ KaeriSdk.engines.forEach { (flavour, engine) ->
         environment("KAERI_TOKEN_STORAGE", "file")
         // Home's invented world, for the run that records its scenes.
         providers.environmentVariable("KAERI_FIXTURES_HOME_WORLD").orNull?.let { environment("KAERI_FIXTURES_HOME_WORLD", it) }
-        // android/scripts/scenes.sh: record the scenes into the test kit, every time it is run.
-        if (providers.gradleProperty("kaeri.scenes").isPresent) {
-            systemProperty("kaeri.scenes.out", rootDir.resolve("testkit/src/main/resources/app/kaeri/testkit/scenes").path)
+        // android/scripts/scenes.sh: record the scenes into the test kit, every time it is run, or
+        // into the directory the property names (-Pkaeri.scenes=/some/dir), to compare two runs.
+        providers.gradleProperty("kaeri.scenes").orNull?.let { into ->
+            val kit = rootDir.resolve("testkit/src/main/resources/app/kaeri/testkit/scenes")
+            systemProperty("kaeri.scenes.out", if (into.isBlank() || into == "true") kit.path else File(into).path)
+            // The engine's clock stopped at one moment, a Wednesday morning, so that every run
+            // records the same scenes whatever the day it runs on.
+            environment("KAERI_SCENES_AT", "1793782800")
+            // The device's region comes from the JVM's locale, which is the host's: en_DK on the
+            // Mac the scenes were first recorded on, none under a C locale on Linux. Pinned, so
+            // every host records the same region.
+            jvmArgs("-Duser.language=en", "-Duser.country=DK")
             outputs.upToDateWhen { false }
         }
         doFirst {

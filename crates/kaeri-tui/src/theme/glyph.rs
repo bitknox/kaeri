@@ -110,6 +110,16 @@ pub fn pulse(frame: u64) -> String {
         .collect()
 }
 
+/// One cell turning, for a source reading's search is still asking: a line of its own in a
+/// list of sources, where the three-cell pulse would push the source's words along. Frozen on
+/// its first cell while motion is off.
+pub const SPINNER: [char; 10] = ['⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏'];
+
+/// The spinner's cell at `frame`.
+pub fn spinner(frame: u64) -> char {
+    SPINNER[(frame as usize) % SPINNER.len()]
+}
+
 /// Join metadata fragments with the interpunct separator used across the UI.
 pub fn dotted(parts: &[&str]) -> String {
     parts.iter().filter(|p| !p.is_empty()).copied().collect::<Vec<_>>().join("  ·  ")

@@ -34,11 +34,13 @@ mod browsing;
 mod bug_report;
 mod crash;
 mod engine;
+mod folders;
 mod host;
 mod log;
 mod party;
 #[cfg(feature = "mpv-host")]
 mod player;
+mod reading;
 #[cfg(feature = "remote")]
 mod remote;
 #[cfg(feature = "testing")]
@@ -55,7 +57,8 @@ mod words;
 
 pub use bug_report::bug_report_url;
 pub use engine::FfiEngine;
-pub use host::FfiHost;
+pub use folders::{FfiFolderAccess, FfiFolderEntry, FfiOpenedFile};
+pub use host::{FfiDecodedImage, FfiHost, FfiPageDecoder};
 pub use log::{FfiLogLevel, log_line, start_log};
 #[cfg(all(feature = "party", feature = "testing"))]
 pub use party::{FfiChatFixture, FfiFakeParty};
@@ -269,6 +272,200 @@ mod tests {
     }
 
     #[test]
+    fn reading_commands_and_events_cross_intact() {
+        use kaeri_core::{
+            books::{ChapterId, WorkId},
+            media::Medium,
+        };
+        use kaeri_model::{
+            book_sources::{BookServerFailure, BookSourceCommand, BookSourceEvent, FolderRef},
+            eink::{
+                EinkCounter, EinkMatch, EinkPaint, EinkPanel, EinkPolicy, EinkProfile,
+                NovelSupport, VendorFamily,
+            },
+            medium::{AppEdition, KaeriIsFor, MediumAsk, MediumCommand, MediumView},
+            reader::{
+                Leaf, LeafPart, OpenAt, PageEncoding, PageFile, PageHalf, PageKind,
+                PixelFormat, ReadPlace, ReaderCommand, ReaderEvent, ReaderSettingKey,
+                ReaderSurface, ReaderValue, SettingScope, StripPos, UnitRect,
+            },
+            reading::{
+                DownloadPick, LibrarySegmentRead, ReadSearchQuery, ReadingAbout,
+                ReadingCommand, ReadingEvent, ReadingFailure,
+            },
+            servers::{ServerFailure, ServerStep},
+        };
+
+        let work = WorkId("a:900101".into());
+        let chapter = ChapterId("12".into());
+        let surface = ReaderSurface {
+            width_px: 1264,
+            height_px: 1680,
+            scale: 1.0,
+            eink: true,
+            two_pages: false,
+            dark: false,
+        };
+        let commands = [
+            Command::Medium(MediumCommand::Answer {
+                ask: MediumAsk::Joined {
+                    devices: vec!["Desk".into()],
+                    answer: KaeriIsFor::Both,
+                },
+                answer: KaeriIsFor::Both,
+            }),
+            Command::Reading(ReadingCommand::Search {
+                query: ReadSearchQuery {
+                    text: "lantern".into(),
+                    medium: Some(Medium::Manga),
+                    ..Default::default()
+                },
+            }),
+            Command::Reading(ReadingCommand::Download {
+                work: work.clone(),
+                pick: DownloadPick::NextUnread { n: 3 },
+            }),
+            Command::Reading(ReadingCommand::SetStatus {
+                work: work.clone(),
+                status: LibrarySegmentRead::Rereading,
+            }),
+            Command::Reader(ReaderCommand::Open {
+                work: work.clone(),
+                chapter: Some(chapter.clone()),
+                at: OpenAt::Page { page: 7 },
+                surface,
+            }),
+            Command::Reader(ReaderCommand::StripAt {
+                session: 1,
+                chapter: chapter.clone(),
+                at: StripPos { image: 3, offset: 0.5 },
+                foot_visible: false,
+            }),
+            Command::Reader(ReaderCommand::SetSetting {
+                session: None,
+                medium: Medium::Manga,
+                work: Some(work.clone()),
+                key: ReaderSettingKey::Direction,
+                scope: SettingScope::Series,
+                value: ReaderValue::Choice { name: "rtl".into() },
+            }),
+            Command::BookSources(BookSourceCommand::AddFolder {
+                folder: FolderRef {
+                    tree_uri: Some("content://books.example/tree/1".into()),
+                    ..Default::default()
+                },
+            }),
+        ];
+        for command in commands {
+            assert_eq!(crossed(command.clone()), command);
+        }
+
+        crosses_intact(Event::Medium(MediumView {
+            answer: KaeriIsFor::Watch,
+            edition: AppEdition::Full,
+            fixed: false,
+            reading_available: false,
+            ask: None,
+            account: None,
+        }));
+        crosses_intact(Event::Reading(ReadingEvent::Failed {
+            about: ReadingAbout::Home,
+            failure: ReadingFailure::ReadingOff,
+        }));
+        let half = LeafPart {
+            page: 3,
+            kind: PageKind::Spread,
+            file: None,
+            place: UnitRect::WHOLE,
+            rotate: false,
+            half: Some(PageHalf::Right),
+            ratio: Some(0.71),
+            strip: Some(StripPos { image: 2, offset: 0.25 }),
+        };
+        crosses_intact(Event::Reader(ReaderEvent::Leaves {
+            session: 7,
+            chapter: chapter.clone(),
+            leaves: vec![Leaf { index: 3, parts: vec![half], end_page: false }],
+        }));
+        crosses_intact(Event::Reader(ReaderEvent::PageReady {
+            session: 7,
+            chapter: chapter.clone(),
+            page: 3,
+            half: Some(PageHalf::Right),
+            file: PageFile {
+                path: "/cache/pages/a.raw".into(),
+                encoding: PageEncoding::Raw { format: PixelFormat::Gray8, stride: 1264 },
+                width: 1264,
+                height: 1680,
+                crop: None,
+                colour: false,
+                bytes: 1264 * 1680,
+            },
+        }));
+        crosses_intact(Event::Reader(ReaderEvent::NextPreview {
+            session: 7,
+            chapter: chapter.clone(),
+            file: PageFile {
+                path: "/cache/pages/p0.jpg".into(),
+                encoding: PageEncoding::Original { mime: "image/jpeg".into() },
+                width: 800,
+                height: 1200,
+                crop: None,
+                colour: true,
+                bytes: 4096,
+            },
+        }));
+        crosses_intact(Event::Reader(ReaderEvent::Opening {
+            chapter: None,
+            wait: Some(kaeri_model::reader::ReaderWait::FindingSource),
+        }));
+        crosses_intact(Event::Reader(ReaderEvent::Opening {
+            chapter: None,
+            wait: Some(kaeri_model::reader::ReaderWait::ChapterPages {
+                chapter: "12".into(),
+                source: "Slow Books".into(),
+            }),
+        }));
+        crosses_intact(Event::Reader(ReaderEvent::GoTo {
+            session: 7,
+            place: ReadPlace {
+                work: work.clone(),
+                chapter: chapter.clone(),
+                page: Some(7),
+                strip: None,
+                novel: None,
+            },
+        }));
+        crosses_intact(Event::Reading(ReadingEvent::Eink(EinkProfile {
+            eink: EinkMatch::Sure,
+            panel: EinkPanel::Kaleido3,
+            ppi: 300,
+            family: VendorFamily::Onyx,
+            refresh_hook: true,
+            panel_modes: true,
+            page_buttons: true,
+            colour_sure: true,
+            novels: NovelSupport::Full,
+            policy: Some(EinkPolicy::defaults(EinkPanel::Kaleido3)),
+        })));
+        crosses_intact(Event::Reader(ReaderEvent::ChapterRead {
+            work,
+            chapter,
+            trackers: vec!["AniList".into()],
+        }));
+        crosses_intact(Event::BookSources(BookSourceEvent::ServerFailed {
+            step: ServerStep::Address,
+            failure: BookServerFailure::Server { failure: ServerFailure::PlainHttp },
+        }));
+        let decision = crate::reading::eink_paint(
+            EinkPolicy::defaults(EinkPanel::Grey),
+            EinkCounter { partials: 5 },
+            EinkPaint::TextPage,
+        );
+        assert_eq!(crossed(decision), decision);
+    }
+
+    #[test]
     fn a_start_crosses_with_everything_the_app_says_of_itself() {
         let start = FfiStart {
             theme: Some(PlayerTheme {
@@ -296,8 +493,19 @@ mod tests {
             language: Some("da".into()),
             profile: Some("p2".into()),
             audio_tap: true,
+            reading: true,
+            edition: Some(kaeri_model::medium::AppEdition::ReadOnly),
+            page_decoder: None,
+            folder_access: None,
         };
         assert_eq!(crossed(start.clone()), start);
+        assert_eq!(start.edition(), kaeri_model::medium::AppEdition::ReadOnly);
+        let tv = FfiStart {
+            platform: Some(FfiPlatform::AndroidTv),
+            edition: Some(kaeri_model::medium::AppEdition::Full),
+            ..FfiStart::default()
+        };
+        assert_eq!(tv.edition(), kaeri_model::medium::AppEdition::WatchOnly);
         assert_eq!(crossed(FfiStart::default()), FfiStart::default());
         for platform in [
             FfiPlatform::MacOs,
@@ -1512,6 +1720,8 @@ mod tests {
                 version: "1.4.0".into(),
                 hosts: vec!["api.example".into()],
                 status: kaeri_model::stores::StorePluginStatus::OtherStore("Theirs".into()),
+                books: true,
+                media: vec![kaeri_core::media::Medium::Manga],
             }],
             open: true,
             anonymous: true,

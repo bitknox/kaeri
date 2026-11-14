@@ -98,6 +98,11 @@ const SET_ASIDE: [&str; 2] = ["DROPPED", "PAUSED"];
 /// for themselves; with none of those either, it asks nothing and forgets what it kept, so the
 /// first check after one is turned on again is a first check.
 pub(crate) fn check(engine: &EngineState, services: &Services, tx: &Outbox) {
+    // Someone who only reads is told of no episodes; what was kept stays for when they watch.
+    if !engine.reading.answer().watches() {
+        let _ = tx.send(Event::NewEpisodes(Vec::new()));
+        return;
+    }
     let check = Check {
         store: services.store.clone(),
         meta: services.meta.clone(),

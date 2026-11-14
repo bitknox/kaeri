@@ -175,6 +175,8 @@ pub struct Start {
     seen: Vec<Seen>,
     resting: Vec<String>,
     last_miss: Option<(String, SourceMiss)>,
+    /// The pinned source that did not have the episode, once another source answered.
+    pin_missed: Option<String>,
     peers: Option<u32>,
     finding_peers: Option<Option<String>>,
     found: Option<(Option<String>, Translation)>,
@@ -207,6 +209,7 @@ impl Start {
             seen: Vec::new(),
             resting: Vec::new(),
             last_miss: None,
+            pin_missed: None,
             peers: None,
             finding_peers: None,
             found: None,
@@ -309,6 +312,7 @@ impl Start {
                 self.last_miss = Some((name.clone(), *miss));
             }
             StartStep::SourcesResting { names } => self.resting = names.clone(),
+            StartStep::PinMissed { name } => self.pin_missed = Some(name.clone()),
             StartStep::FindingPeers { name } => {
                 self.finding_peers = Some(name.clone());
             }
@@ -436,6 +440,9 @@ impl Start {
                 }
             }
             Phase::Opening | Phase::Another | Phase::Buffering => {
+                if let Some(name) = &self.pin_missed {
+                    facts.push(t::player_start_pin_missed(name, &self.episode));
+                }
                 if self.no_video {
                     facts.push(t::player_start_no_video());
                 }
@@ -753,6 +760,25 @@ mod tests {
             Some(&Msg::StartAskingSource { name: name.into() }),
             at,
         );
+    }
+
+    #[test]
+    fn a_passed_over_pin_is_said_on_the_detail_line_once_the_streams_are_found() {
+        let mut s = start();
+        ask(&mut s, "Alpha", 1, 3, ms(0));
+        s.step(&S::PinMissed { name: "Alpha".into() }, None, ms(2_000));
+        s.step(
+            &S::Found {
+                count: 2,
+                source: Some("Gamma".into()),
+                quality: Some(1080),
+                translation: kaeri_core::media::Translation::Sub,
+            },
+            Some(&Msg::StartOpeningStream),
+            ms(2_000),
+        );
+        let lead = s.lead();
+        assert!(lead.contains(&t::player_start_pin_missed("Alpha", "7")), "{lead}");
     }
 
     fn actions(f: &Frame) -> Vec<Action> {

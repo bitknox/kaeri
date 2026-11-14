@@ -21,6 +21,11 @@
 //! Net effect: Trakt works correctly for roughly **3,600 titles** — the single-season ones — and
 //! declines the rest. It is worth having if you already live in Trakt. It is not a replacement for
 //! AniList, MAL or Simkl, all three of which cover 92% of the same corpus with no ambiguity.
+//!
+//! A sign-in comes with a refresh token, and its access token runs out. It is renewed an hour
+//! before then, and again when Trakt rejects it, kept in step with the other processes signed in
+//! through the same store: see [`crate::held`]. Only a renewal Trakt refuses asks for a new
+//! sign-in.
 
 use std::sync::Arc;
 
@@ -29,9 +34,16 @@ use kaeri_core::{
     traits::{TrackOp, TrackedEntry, Tracker, WatchStatus},
 };
 
-use crate::secret::TokenPair;
+use crate::{
+    device::{self, DeviceEndpoints},
+    held::{Held, Renews},
+    secret::{TokenPair, TokenStore},
+};
 
 const API: &str = "https://api.trakt.tv";
+/// How long before its access token runs out a sign-in is renewed. An access token can last as
+/// little as a day, which [`crate::held::MARGIN_SECS`] would renew on every call.
+const RENEW_MARGIN_SECS: i64 = 3_600;
 /// Trakt requires this header and rejects requests without it.
 const API_VERSION: &str = "2";
 
@@ -61,9 +73,17 @@ pub trait SeasonMapping: Send + Sync {
 
 pub struct TraktTracker {
     client_id: String,
+    /// Sent with a renewal by an app Trakt issued one to.
+    client_secret: Option<String>,
     http: reqwest::Client,
     mapping: Arc<dyn SeasonMapping>,
-    token: tokio::sync::RwLock<Option<TokenPair>>,
+    /// The pair, renewed before it runs out and kept in step with other processes: see
+    /// [`crate::held`].
+    held: Held,
+    /// Where a sign-in is renewed: [`device::TRAKT_RENEW`], except in tests.
+    endpoints: DeviceEndpoints,
+    /// [`API`], except in tests, which point it at a local server.
+    api: String,
 }
 
 impl TraktTracker {
@@ -75,31 +95,63 @@ impl TraktTracker {
     ) -> Self {
         Self {
             client_id: client_id.into(),
+            client_secret: None,
             http,
             mapping,
-            token: tokio::sync::RwLock::new(token),
+            held: Held::new("trakt", "trakt", token).with_margin(RENEW_MARGIN_SECS),
+            endpoints: device::TRAKT_RENEW,
+            api: API.to_owned(),
         }
     }
 
-    async fn request(
+    /// The app's secret, where Trakt issued one: its renewals send it.
+    #[must_use]
+    pub fn with_client_secret(mut self, secret: Option<String>) -> Self {
+        self.client_secret = secret.filter(|s| !s.trim().is_empty());
+        self
+    }
+
+    /// Kept in step with the other processes signed in through `store`. A renewal replaces the
+    /// refresh token too, so without this the terminal and the app would end each other's.
+    #[must_use]
+    pub fn with_token_store(mut self, store: TokenStore) -> Self {
+        self.held.share(store);
+        self
+    }
+
+    /// A renewed token pair the caller should write back, if a renewal happened and no store
+    /// was given, or the store did not take it.
+    pub async fn take_renewed(&self) -> Option<TokenPair> {
+        self.held.take_renewed().await
+    }
+
+    fn request(
         &self,
         method: reqwest::Method,
         path: &str,
-    ) -> Result<reqwest::RequestBuilder, kaeri_core::Error> {
-        let token = self
-            .token
-            .read()
-            .await
-            .as_ref()
-            .map(|pair| pair.access.clone())
-            .ok_or_else(|| kaeri_core::Error::Auth("trakt: not signed in".into()))?;
-        Ok(self
-            .http
-            .request(method, format!("{API}{path}"))
+        token: &str,
+    ) -> reqwest::RequestBuilder {
+        self.http
+            .request(method, format!("{}{path}", self.api))
             .header("trakt-api-key", &self.client_id)
             .header("trakt-api-version", API_VERSION)
             .header("authorization", format!("Bearer {token}"))
-            .header("content-type", "application/json"))
+            .header("content-type", "application/json")
+    }
+}
+
+impl Renews for TraktTracker {
+    async fn renew(&self, refresh: &str, now: i64) -> Result<TokenPair, kaeri_core::Error> {
+        device::refresh_token(
+            &self.http,
+            &self.endpoints,
+            &self.client_id,
+            self.client_secret.as_deref(),
+            refresh,
+            now,
+        )
+        .await
+        .map_err(|e| e.renewal("trakt"))
     }
 }
 
@@ -110,7 +162,7 @@ impl Tracker for TraktTracker {
     }
 
     fn is_authenticated(&self) -> bool {
-        self.token.try_read().map_or(true, |held| held.is_some())
+        self.held.is_held()
     }
 
     /// Progress needs a TVDB id and a season to put the episode in; both come from the
@@ -122,7 +174,11 @@ impl Tracker for TraktTracker {
                 self.mapping.tvdb_id(*anilist_id).is_some()
                     && self.mapping.season_episode(*anilist_id, *episode).is_some()
             }
-            TrackOp::SetStatus { .. } | TrackOp::SetScore { .. } => true,
+            TrackOp::SetStatus { .. }
+            | TrackOp::SetScore { .. }
+            | TrackOp::SetReadProgress { .. }
+            | TrackOp::SetReadStatus { .. }
+            | TrackOp::SetReadScore { .. } => true,
         }
     }
 
@@ -132,27 +188,27 @@ impl Tracker for TraktTracker {
         refresh: Option<&str>,
         expires_at: Option<i64>,
     ) {
-        *self.token.write().await = Some(TokenPair {
-            access: access.to_owned(),
-            refresh: refresh.map(str::to_owned),
-            expires_at,
-        });
+        self.held
+            .accept(TokenPair {
+                access: access.to_owned(),
+                refresh: refresh.map(str::to_owned),
+                expires_at,
+            })
+            .await;
     }
 
     async fn forget_credentials(&self) {
-        *self.token.write().await = None;
+        self.held.forget().await;
     }
 
     async fn pull_library(&self) -> Result<Vec<TrackedEntry>, kaeri_core::Error> {
+        let mut token = self.held.access(self, crate::now_epoch()).await?;
         let response = self
-            .request(reqwest::Method::GET, "/sync/watched/shows")
-            .await?
-            .send()
-            .await
-            .map_err(|e| kaeri_core::Error::Tracker {
-                tracker: "trakt".into(),
-                message: e.to_string(),
-            })?;
+            .held
+            .send(self, &mut token, |t| {
+                self.request(reqwest::Method::GET, "/sync/watched/shows", t)
+            })
+            .await?;
 
         let body = crate::page_json(response, "trakt", "trakt").await?;
 
@@ -236,27 +292,19 @@ impl Tracker for TraktTracker {
         if shows.is_empty() {
             return Ok(());
         }
+        let body = serde_json::json!({ "shows": shows });
+        let mut token = self.held.access(self, crate::now_epoch()).await?;
         let response = self
-            .request(reqwest::Method::POST, "/sync/history")
-            .await?
-            .json(&serde_json::json!({ "shows": shows }))
-            .send()
-            .await
-            .map_err(|e| kaeri_core::Error::Tracker {
-                tracker: "trakt".into(),
-                message: e.to_string(),
-            })?;
+            .held
+            .send(self, &mut token, |t| {
+                self.request(reqwest::Method::POST, "/sync/history", t).json(&body)
+            })
+            .await?;
 
-        let status = response.status();
-        if status.as_u16() == 401 {
-            return Err(kaeri_core::Error::Auth("trakt rejected the token".into()));
-        }
-        if !status.is_success() {
-            let body = response.text().await.unwrap_or_default();
-            return Err(kaeri_core::Error::Tracker {
-                tracker: "trakt".into(),
-                message: crate::said(status, &body),
-            });
+        // One request for the whole batch, so a refusal is the batch's: the drain then asks
+        // again title by title, and only the refused title's change fails.
+        if !response.status().is_success() {
+            return Err(crate::failed_answer(response, "trakt", "trakt").await);
         }
         Ok(())
     }
@@ -342,6 +390,99 @@ mod tests {
             status: WatchStatus::Completed,
             at: 0
         }));
+    }
+
+    use crate::simkl::tests::serve_with;
+
+    /// A tracker signed in with `pair`, its API and token endpoint on the fake server at `base`.
+    fn tracker_at(base: &str, pair: TokenPair) -> TraktTracker {
+        let token_url: &'static str = Box::leak(format!("{base}/oauth/token").into_boxed_str());
+        TraktTracker {
+            endpoints: DeviceEndpoints { token_url, ..device::TRAKT_RENEW },
+            api: base.to_owned(),
+            ..TraktTracker::new(
+                "id",
+                reqwest::Client::new(),
+                Arc::new(Fixed { tvdb: Some(1), offset: 0 }),
+                Some(pair),
+            )
+        }
+    }
+
+    fn pair(access: &str, expires_at: Option<i64>) -> TokenPair {
+        TokenPair { access: access.into(), refresh: Some("rt-1".into()), expires_at }
+    }
+
+    fn episode() -> [TrackOp; 1] {
+        [TrackOp::SetProgress { anilist_id: AnilistId::new(1), episode: 2 }]
+    }
+
+    const RENEWED: &str = r#"{"access_token":"new","token_type":"bearer","expires_in":86400,
+        "refresh_token":"rt-2","scope":"public","created_at":1}"#;
+
+    #[tokio::test]
+    async fn a_sign_in_that_ran_out_is_renewed_before_the_push_and_the_new_pair_kept() {
+        let (base, server) = serve_with(vec![(200, RENEWED), (201, "{}")]).await;
+        let dir = tempfile::tempdir().unwrap();
+        let store = TokenStore::with_backend(dir.path(), crate::secret::Backend::File);
+        let ran_out = pair("old", Some(1));
+        store
+            .set_pair("trakt", &ran_out.access, ran_out.refresh.as_deref(), ran_out.expires_at)
+            .unwrap();
+        let tracker = tracker_at(&base, ran_out).with_token_store(store.clone());
+
+        tracker.push(&episode()).await.unwrap();
+
+        let requests = server.await.unwrap();
+        assert!(requests[0].starts_with("POST /oauth/token"), "{}", requests[0]);
+        assert!(requests[0].contains(r#""refresh_token":"rt-1""#), "{}", requests[0]);
+        assert!(requests[1].starts_with("POST /sync/history"), "{}", requests[1]);
+        assert!(requests[1].contains("authorization: Bearer new"), "{}", requests[1]);
+        // Stored at once: the refresh token it replaced no longer works.
+        let stored = store.reread_pair("trakt").unwrap();
+        assert_eq!((stored.access.as_str(), stored.refresh.as_deref()), ("new", Some("rt-2")));
+        assert!(tracker.take_renewed().await.is_none(), "stored when it was renewed");
+    }
+
+    #[tokio::test]
+    async fn a_token_trakt_rejects_is_renewed_and_the_push_sent_once_more() {
+        let (base, server) = serve_with(vec![(401, "{}"), (200, RENEWED), (201, "{}")]).await;
+        let tracker = tracker_at(&base, pair("old", None));
+
+        tracker.push(&episode()).await.unwrap();
+
+        let requests = server.await.unwrap();
+        assert!(requests[0].contains("authorization: Bearer old"), "{}", requests[0]);
+        assert!(requests[1].starts_with("POST /oauth/token"), "{}", requests[1]);
+        assert!(requests[2].contains("authorization: Bearer new"), "{}", requests[2]);
+        let renewed = tracker.take_renewed().await.expect("the renewed pair, to store");
+        assert_eq!(renewed.refresh.as_deref(), Some("rt-2"));
+    }
+
+    #[tokio::test]
+    async fn only_a_renewal_trakt_refuses_asks_for_a_new_sign_in() {
+        let refused =
+            r#"{"error":"invalid_grant","error_description":"The refresh token is invalid."}"#;
+        let (base, server) = serve_with(vec![(401, "{}"), (400, refused)]).await;
+        let tracker = tracker_at(&base, pair("old", None));
+
+        let error = tracker.pull_library().await.unwrap_err();
+        assert!(matches!(error, kaeri_core::Error::Auth(_)), "got {error:?}");
+        assert_eq!(server.await.unwrap().len(), 2);
+    }
+
+    #[tokio::test]
+    async fn a_renewal_that_never_reached_trakt_is_tried_again_later() {
+        // A port with nothing behind it: the renewal cannot be sent at all.
+        let closed = tokio::net::TcpListener::bind(("127.0.0.1", 0)).await.unwrap();
+        let base = format!("http://{}", closed.local_addr().unwrap());
+        drop(closed);
+        let tracker = tracker_at(&base, pair("old", Some(1)));
+
+        let error = tracker.push(&episode()).await.unwrap_err();
+        // The network, never a refusal: the outbox waits it out without counting it.
+        assert!(matches!(error, kaeri_core::Error::Network(_)), "got {error:?}");
+        assert!(tracker.is_authenticated(), "still signed in, to try again");
     }
 
     #[tokio::test]

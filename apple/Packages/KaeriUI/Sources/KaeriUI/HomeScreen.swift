@@ -270,7 +270,7 @@ private struct HomeContent: View {
 
 /// Placeholders by the States rules: nothing for 600 ms, then the placeholders in the real layout,
 /// held at least 0.3 s, replaced in one crossfade, and past 4 s the activity line under them.
-private struct HomeWait<Placeholder: View>: View {
+struct HomeWait<Placeholder: View>: View {
     let active: Bool
     let activity: String
     @ViewBuilder let placeholder: () -> Placeholder

@@ -198,7 +198,7 @@ stores-footer-may-contact = May contact { $hosts }
 
 # Footer of a store's page on the row that makes a link for another of this person's computers.
 # @only tui
-stores-footer-link-device = A one-time link that joins another of your computers as you
+stores-footer-link-device = A one-time link that joins another of your { -device-pl } as you
 
 # Footer of a store's page on the row that makes an invite.
 # @only tui
@@ -206,7 +206,7 @@ stores-footer-invite = A one-time link for someone new
 
 # Footer of a store's page on the row that opens the members screen.
 # @only tui
-stores-footer-members = Who has joined, and removing someone's access
+stores-footer-members = See who has joined, and remove someone's access
 
 # Footer of a store's page on the row that changes who can join, while the store is open to anyone with its link. Enter is the key on this screen.
 # @only tui
@@ -226,7 +226,7 @@ stores-footer-admin = Manage members, invites and { -plugin-pl } in your browser
 
 # Footer of a store's page on the row that leaves the store.
 # @only tui
-stores-footer-leave = { -plugin-cap-pl } installed from it stay on this machine and stop updating
+stores-footer-leave = { -plugin-cap-pl } installed from it stay on this { -device } and stop updating
 
 # Value beside the "who can join" row while anyone with the store's link can join. Takes the rest of the row.
 # @only tui
@@ -465,7 +465,7 @@ stores-footer-remove-all-anonymous = ↵ Remove every { -device } that joined wi
 
 # Line in the store's link overlay, once the link was copied.
 # @only tui
-stores-link-copied = Copied to the clipboard where the terminal allows it, or select it to copy.
+stores-link-copied = Copied, if this terminal allows it. If not, select the link to copy it.
 
 # Line in a link overlay before the link was copied, or when the terminal cannot copy.
 # @only tui
@@ -571,7 +571,7 @@ stores-join-open = Anyone with the link can join.
 
 # Line of the join confirmation when it is an open link, which keeps no name.
 # @only tui
-stores-join-anonymous = You join without a name, and another { -device } joins with the same link.
+stores-join-anonymous = You join without a name. Any other { -device } can join with the same link.
 
 # Line of the join confirmation when this device has already joined.
 # @only tui
@@ -583,7 +583,7 @@ stores-join-device-note = The { -store }'s owner sees this name. Type to change 
 
 # Lines of the leave confirmation.
 # @only tui
-stores-leave-plugins = { -plugin-cap-pl } installed from it stay on this machine and stop updating.
+stores-leave-plugins = { -plugin-cap-pl } installed from it stay on this { -device } and stop updating.
 
 # Lines of the leave confirmation.
 # @only tui
@@ -599,7 +599,7 @@ stores-remove-member-devices = { $count ->
 
 # Line of the remove member confirmation.
 # @only tui
-stores-remove-member-plugins = { -plugin-cap-pl } they already installed stay on their machines.
+stores-remove-member-plugins = { -plugin-cap-pl } they already installed stay on their { -device-pl }.
 
 # Line of the cancel invite confirmation.
 # @only tui
@@ -685,7 +685,7 @@ stores-choice-replace = Replace the copy added by hand
 
 # Choice in the plugin overlay: delete the plugin from this machine.
 # @only tui
-stores-choice-remove = Remove from this machine
+stores-choice-remove = Remove from this { -device }
 
 # Choice in the plugin overlay: owners stop offering the plugin in the store.
 # @only tui

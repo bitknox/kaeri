@@ -36,3 +36,5 @@ library-linux-list-count = { $list }（{ $count }）
 title-linux-play-on-tv-help = { -app-name }が動作するテレビで、このエピソードを再生
 title-linux-episode-watched = エピソード{ $episode }、視聴済み
 calendar-linux-day-empty = 放送なし
+linux-read-library-list = リスト
+linux-read-downloads-empty = ダウンロードした章は、接続なしで開けます。

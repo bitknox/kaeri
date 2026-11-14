@@ -29,6 +29,39 @@ pub struct PluginInfo {
     pub allowed_hosts: Vec<String>,
     #[serde(default)]
     pub translations: Vec<String>,
+    /// What it is a source of: [`KIND_BOOKS`] for a `kaeri:books` plugin. Left out for a show
+    /// source, so a show source's section reads as it always did.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub kind: Option<String>,
+    /// The media a book source has, as its manifest names them: `manga`, `novel`. Left out
+    /// while empty, as it is for a show source.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub media: Vec<String>,
+}
+
+/// The kind of a show source, the kind of any plugin that names none.
+pub const KIND_SHOWS: &str = "shows";
+/// The kind of a book source.
+pub const KIND_BOOKS: &str = "books";
+
+impl PluginInfo {
+    /// The kind it says it is, [`KIND_SHOWS`] when it says none.
+    pub fn kind(&self) -> &str {
+        kind_name(self.kind.as_deref())
+    }
+
+    /// Whether it is a book source.
+    pub fn is_books(&self) -> bool {
+        self.kind() == KIND_BOOKS
+    }
+}
+
+/// A kind as an index entry or a manifest gives it, with none read as [`KIND_SHOWS`].
+pub fn kind_name(kind: Option<&str>) -> &str {
+    match kind.map(str::trim) {
+        None | Some("") => KIND_SHOWS,
+        Some(kind) => kind,
+    }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, thiserror::Error)]
@@ -175,6 +208,8 @@ mod tests {
             version: version.into(),
             allowed_hosts: vec!["api.example".into()],
             translations: vec!["sub".into()],
+            kind: None,
+            media: Vec::new(),
         }
     }
 
@@ -206,6 +241,34 @@ mod tests {
         let twice = stamp(&once, &info("2.0.0")).unwrap();
         assert_eq!(read(&twice).unwrap(), Some(info("2.0.0")));
         assert_eq!(twice.len(), once.len(), "one manifest section, not two");
+    }
+
+    #[test]
+    fn a_show_source_s_section_reads_as_it_always_did() {
+        // No `kind`, no `media`: a store from before book sources reads it, and signs the same
+        // bytes for its index entry.
+        let section = serde_json::to_string(&info("1.0.0")).unwrap();
+        assert!(!section.contains("kind") && !section.contains("media"), "{section}");
+        assert_eq!(info("1.0.0").kind(), KIND_SHOWS);
+    }
+
+    #[test]
+    fn a_book_source_s_section_says_so() {
+        let books = PluginInfo {
+            kind: Some(KIND_BOOKS.into()),
+            media: vec!["manga".into()],
+            translations: Vec::new(),
+            ..info("1.0.0")
+        };
+        let stamped = stamp(&component(), &books).unwrap();
+        let read = read(&stamped).unwrap().unwrap();
+        assert!(read.is_books());
+        assert_eq!(read.media, ["manga"]);
+        // A section from before kinds is a show source.
+        let old: PluginInfo =
+            serde_json::from_str(r#"{"id":"a","name":"A","version":"1","allowed_hosts":[]}"#)
+                .unwrap();
+        assert_eq!(old.kind(), KIND_SHOWS);
     }
 
     #[test]

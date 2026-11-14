@@ -43,6 +43,7 @@ opened-open = Öppna länk eller fil
 opened-paste-title = Öppna en magnetlänk eller torrentfil
 opened-paste-placeholder = Magnetlänk eller infohash
 opened-choose-file = Välj en torrentfil
+opened-unreadable = { -app-name } kunde inte läsa den länken eller filen.
 opened-confirm = Är det här { $title }, avsnitt { $episode }?
 opened-confirm-title = Är det här { $title }? Välj avsnitt.
 opened-no-guess = { -app-name } kunde inte avgöra vad det här är. Välj vilken titel det är, eller spela utan spårning.

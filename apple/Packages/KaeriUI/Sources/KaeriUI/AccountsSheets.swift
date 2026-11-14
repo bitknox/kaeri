@@ -9,27 +9,30 @@ import KaeriStrings
 import AuthenticationServices
 import SwiftUI
 
-/// Kitsu's sign-in: its user name or email and password, exchanged for a token by the engine.
+/// Kitsu's sign-in, and MangaUpdates': a user name or email and password, exchanged for a
+/// token by the engine.
 struct KitsuSheet: View {
     @Environment(AppStore.self) private var store
     @Environment(\.dismiss) private var dismiss
+    /// "kitsu" or "mangaupdates".
+    var tracker = "kitsu"
     @State private var username = ""
     @State private var password = ""
 
     var body: some View {
-        let working = store.accounts.isWorking("kitsu")
+        let working = store.accounts.isWorking(tracker)
         VStack(alignment: .leading, spacing: 16) {
             VStack(alignment: .leading, spacing: 4) {
-                Text(L.accountsSignInTo(tracker: AccountsModel.name("kitsu")))
+                Text(L.accountsSignInTo(tracker: AccountsModel.name(tracker)))
                     .font(.mac(15, weight: .semibold))
                     .foregroundStyle(.silk)
-                Text(L.accountsFormDetail(tracker: AccountsModel.name("kitsu")))
+                Text(L.accountsFormDetail(tracker: AccountsModel.name(tracker)))
                     .font(.mac(13))
                     .foregroundStyle(.haze)
                     .fixedSize(horizontal: false, vertical: true)
             }
             VStack(alignment: .leading, spacing: 10) {
-                TextField(L.accountsUserOrEmail, text: $username)
+                TextField(tracker == "mangaupdates" ? L.accountsUsername : L.accountsUserOrEmail, text: $username)
                     .textContentType(.username)
                     #if os(iOS)
                     .textInputAutocapitalization(.never)
@@ -56,14 +59,18 @@ struct KitsuSheet: View {
         .sheetWidth(420)
         .background(.raised)
         .holdsInput([username, password])
-        .onChange(of: store.accounts.tracker("kitsu")?.connected) { _, connected in
+        .onChange(of: store.accounts.tracker(tracker)?.connected) { _, connected in
             if connected == true { dismiss() }
         }
     }
 
     private func signIn() {
         guard !username.isEmpty, !password.isEmpty else { return }
-        store.connectKitsu(username: username, password: password)
+        if tracker == "mangaupdates" {
+            store.reading.connectMangaUpdates(username: username, password: password)
+        } else {
+            store.connectKitsu(username: username, password: password)
+        }
         password = ""
     }
 }

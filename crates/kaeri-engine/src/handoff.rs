@@ -8,7 +8,8 @@
 //! it. A device that receives the login of the folder the group uses, and has no folder yet,
 //! takes that folder, with the group's keys that came with it.
 //!
-//! Plugin store invites ride the same asks and answers: see [`crate::store_join`].
+//! Plugin store invites ride the same asks and answers: see [`crate::store_join`]. So does
+//! another device's whole setup, for a device that is new: see [`crate::setup_from`].
 
 use kaeri_model::{
     event::Event,
@@ -27,7 +28,7 @@ use serde::{Deserialize, Serialize};
 use crate::{
     cloud::{self, Ended, Service},
     outbox::Outbox,
-    store_join,
+    setup_from, store_join,
     syncing::{self, Ctx, KEYRING, PASSWORD, kind_name, kind_of},
     tracking,
 };
@@ -56,6 +57,24 @@ pub(crate) fn replace_store_asks(store: &Store, device: Option<&str>, asks: &[St
     let mut kept: Vec<String> =
         wants(store, key).into_iter().filter(|id| !store_join::is_store_ask(id)).collect();
     kept.extend(asks.iter().cloned());
+    set_wants(store, key, &kept);
+}
+
+/// Asks that ride beside the sign-ins, which Copy sign-ins leaves alone.
+fn rides_beside(id: &str) -> bool {
+    store_join::is_store_ask(id) || setup_from::is_setup_ask(id)
+}
+
+/// Ask `device` (or, with `None`, the next device to pair) for its setup: every plugin store, the
+/// setup itself, and its trackers' sign-ins.
+pub(crate) fn ask_setup(store: &Store, device: Option<&str>) {
+    let key = device.unwrap_or(NEXT);
+    let mut kept = wants(store, key);
+    for ask in [store_join::EVERY, setup_from::SETUP, TRACKERS] {
+        if !kept.iter().any(|k| k == ask) {
+            kept.push(ask.to_owned());
+        }
+    }
     set_wants(store, key, &kept);
 }
 
@@ -153,6 +172,9 @@ struct Bundle {
     stores: Vec<store_join::StoreGift>,
     #[serde(default)]
     store_refusals: Vec<store_join::StoreRefusal>,
+    /// The answering device's setup, when it was asked for.
+    #[serde(default)]
+    setup: Option<setup_from::SetupGift>,
 }
 
 /// The engine's side of the paired link's handoff.
@@ -160,11 +182,19 @@ pub struct EngineHandoff {
     store: Store,
     sync: tracking::Sync,
     stores: crate::plugin_stores::Stores,
+    syncing: std::sync::Arc<syncing::SyncHub>,
+    book_sources: crate::read_sources::BookSources,
 }
 
 impl EngineHandoff {
     pub fn of(ctx: &Ctx) -> Self {
-        Self { store: ctx.store.clone(), sync: ctx.sync.clone(), stores: ctx.stores.clone() }
+        Self {
+            store: ctx.store.clone(),
+            sync: ctx.sync.clone(),
+            stores: ctx.stores.clone(),
+            syncing: ctx.syncing.clone(),
+            book_sources: ctx.book_sources.clone(),
+        }
     }
 
     fn in_group(&self, device: &str) -> bool {
@@ -252,6 +282,10 @@ impl Handoff for EngineHandoff {
             (bundle.stores, bundle.store_refusals) =
                 store_join::answer(&self.stores, &store_asks).await;
         }
+        if asks.iter().any(|a| setup_from::is_setup_ask(a)) {
+            bundle.setup =
+                Some(setup_from::answer(&self.syncing, &self.book_sources, &self.sync));
+        }
         for ask in asks {
             if let Some(id) = ask.strip_prefix(TRACKER) {
                 let signed_in =
@@ -287,10 +321,11 @@ pub async fn copy_sign_ins(
     address: Option<String>,
 ) {
     let ids: Vec<String> = copy.iter().filter_map(copy_id).collect();
-    // The plugin store asks are kept: they are `JoinStoresFrom`'s.
+    // The plugin store and setup asks are kept: they are `JoinStoresFrom`'s and
+    // `AskSetupFrom`'s.
     let key = device.as_deref().unwrap_or(NEXT);
     let mut wanted: Vec<String> =
-        wants(&ctx.store, key).into_iter().filter(|id| store_join::is_store_ask(id)).collect();
+        wants(&ctx.store, key).into_iter().filter(|id| rides_beside(id)).collect();
     wanted.extend(ids.iter().cloned());
     set_wants(&ctx.store, key, &wanted);
     match (device, address) {
@@ -316,14 +351,19 @@ pub async fn take(ctx: &Ctx, tx: &Outbox, received: &Received) {
         lacking,
         stores,
         store_refusals,
+        setup,
     } = bundle;
+    let setup_asked = received.asked.iter().any(|a| setup_from::is_setup_ask(a));
     let store_asks: Vec<String> =
         received.asked.iter().filter(|a| store_join::is_store_ask(a)).cloned().collect();
     if !store_asks.is_empty() {
         store_join::take(ctx, tx, &from, &store_asks, stores, store_refusals).await;
     }
-    // Only plugin stores were asked: no sign-ins to say.
-    if received.asked.iter().all(|a| store_join::is_store_ask(a)) {
+    // Only plugin stores or the setup were asked: no sign-ins to say.
+    if received.asked.iter().all(|a| rides_beside(a)) {
+        if setup_asked {
+            setup_from::take(ctx, tx, &received.from, setup);
+        }
         return;
     }
     let mut trackers = Vec::new();
@@ -375,6 +415,10 @@ pub async fn take(ctx: &Ctx, tx: &Outbox, received: &Received) {
     syncing::announce_cloud(ctx);
     let lacking = lacking.iter().filter_map(|k| kind_of(k)).collect();
     let _ = tx.send(Event::SyncSignInsCopied { device: from, trackers, clouds, lacking });
+    // Said after the sign-ins were taken, so it can tell whether Lists is answered.
+    if setup_asked {
+        setup_from::take(ctx, tx, &received.from, setup);
+    }
 }
 
 /// Sync through the folder a paired device gave the login of, with the group keys it gave.

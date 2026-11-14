@@ -43,6 +43,9 @@ import app.kaeri.store.TvRemoteModel
  */
 @OptIn(UnstableApi::class)
 class TvRemoteService : MediaSessionService() {
+    // Its notification in the chosen language below Android 13, as the activity's.
+    override fun attachBaseContext(base: android.content.Context) = super.attachBaseContext(app.kaeri.store.AppLanguage.wrap(base))
+
     private var session: MediaSession? = null
     private val scope = MainScope()
 

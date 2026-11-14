@@ -1,0 +1,10 @@
+target
+corpus
+artifacts
+coverage
+crash-*
+leak-*
+oom-*
+slow-unit-*
+timeout-*
+Cargo.lock

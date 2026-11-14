@@ -871,6 +871,8 @@ mod tests {
             version: "1.4.0-beta.12+build.2026".into(),
             hosts: vec!["api.example".into(), "cdn.example".into()],
             status,
+            books: false,
+            media: Vec::new(),
         };
         let mut app = app_with(ContentList::Entries(Vec::new()));
         app.apply(kaeri_model::event::Event::Stores(vec![
@@ -992,6 +994,8 @@ mod tests {
             version: "2.0.0".into(),
             hosts: Vec::new(),
             published: Some("1.4.0".into()),
+            books: false,
+            media: Vec::new(),
         }];
         app.publish_for = Some("aaaa".into());
         app.set_text(Field::JoinLink, "https://plugins.example/join/".repeat(4));

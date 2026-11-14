@@ -327,7 +327,7 @@ mod tests {
     }
 
     fn demo_state(on: bool, only: bool, played: bool) -> kaeri_model::sources::DemoState {
-        kaeri_model::sources::DemoState { on, offer: !on, only, played }
+        kaeri_model::sources::DemoState { on, offer: !on, only, played, ..Default::default() }
     }
 
     #[test]

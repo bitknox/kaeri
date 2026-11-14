@@ -19,7 +19,7 @@ settings-coming-up-switched-off = { $count ->
     [one] { $names } ist in den eigenen Einstellungen ausgeschaltet.
    *[other] { $names } sind in den eigenen Einstellungen ausgeschaltet.
  }
-settings-coming-up-opens = Eine Serie öffnet ihre Einstellungen.
+settings-coming-up-opens = Tippe auf eine Serie, um ihre Einstellungen zu öffnen.
 torrents-proxy-as = als { $user }
 title-facts-aired = Ausgestrahlt { $dates }
 title-facts-airing = Läuft seit { $date }
@@ -137,7 +137,7 @@ settings-titles-note-english-missing = { $title } hat bei AniList keinen englisc
 settings-titles-note-english = Englische Titel, wie AniList sie führt, und Romaji, wenn es keinen gibt.
 settings-titles-note-romaji = Japanische Titel in lateinischen Buchstaben, wie AniList sie führt.
 settings-stores-with-updates = { $stores } · { $updates }
-settings-seeding-best-effort = Nach Möglichkeit auf diesem { -device }: Seeding läuft nur, solange { -app-name } geöffnet ist.
+settings-seeding-best-effort = Dieses { -device } seedet nur, solange { -app-name } geöffnet ist.
 settings-downloads-count = { $count ->
     [one] Eine Episode
    *[other] { $count } Episoden
@@ -154,7 +154,7 @@ settings-typefaces-value = Roboto Flex und Zen Kaku Gothic New, unter der SIL Op
 settings-libraries-value = JNA und AndroidX, unter der Apache License 2.0
 settings-report-bug-value = Öffnet GitHub im Browser
 downloads-storage-share-description = Downloads belegen { $size }
-settings-aside-notifications = Eine Benachrichtigung, wenn eine Episode einer Serie erscheint, der du folgst: die Serie und die Nummer der Episode, nie ihr Name. Eine Serie kann ihre eigenen in den Einstellungen abschalten.
+settings-aside-notifications = Eine Benachrichtigung, wenn eine Episode einer Serie erscheint, der du folgst: die Serie und die Nummer der Episode, nie ihr Name. Du kannst die Benachrichtigungen einer Serie in ihren Einstellungen abschalten.
 settings-aside-downloads = Downloads bleiben im eigenen Bereich von { -app-name } auf diesem { -device }, den andere Apps nicht lesen können. Wenn du die App entfernst, werden sie gelöscht.
 settings-aside-sources = { -source-cap-pl } werden der Reihe nach von oben nach unten probiert. Eine Serie kann ihre eigene { -source } behalten, die auf ihrer Titelseite gewählt wird.
 settings-upscaling-description = Dasselbe Standbild: die linke Hälfte im Original 480p, die rechte mit { $mode }

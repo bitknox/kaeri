@@ -32,7 +32,18 @@ use super::{
 };
 
 fn search_filter_rows(app: &App) -> Vec<(String, String)> {
-    use crate::app::{search_filter_labels, search_filter_value};
+    use crate::app::{
+        read_filter_labels, read_filter_value, search_filter_labels, search_filter_value,
+    };
+    if app.reads(crate::nav::Section::Search)
+        && app.nav.section() == crate::nav::Section::Search
+    {
+        return read_filter_labels()
+            .into_iter()
+            .enumerate()
+            .map(|(row, name)| (read_filter_value(&app.reading.filter, row), name))
+            .collect();
+    }
     search_filter_labels()
         .into_iter()
         .enumerate()
@@ -173,6 +184,8 @@ pub(super) fn render_overlay(
         Overlay::OpenLink => open_link_rows(app, link_width(area.width)),
         Overlay::PublishPick => publish_rows(app),
         Overlay::BugReport => bug_report_rows(app),
+        Overlay::Medium => medium_rows(app, text_width(area)).0,
+        Overlay::MediumOff => medium_off_rows(app, text_width(area)).0,
         Overlay::FirstRun => vec![
             (String::new(), t::onboarding_demo_heading()),
             (String::new(), t::onboarding_demo_detail()),
@@ -194,6 +207,12 @@ pub(super) fn render_overlay(
     let selected = match overlay {
         // The plugin overlay explains before it offers, so its choices start below the facts.
         Overlay::PluginAction => Some(plugin_action_rows(app).1 + app.cursors.overlay.selected),
+        Overlay::Medium => {
+            Some(medium_rows(app, text_width(area)).1 + app.cursors.overlay.selected)
+        }
+        Overlay::MediumOff => {
+            medium_off_rows(app, text_width(area)).1.get(app.cursors.overlay.selected).copied()
+        }
         // "Nothing logged yet" is a note, not a line that can be picked.
         Overlay::Logs if app.logs.is_empty() => None,
         _ if body.is_some() => body.as_ref().and_then(|body| body.selected),
@@ -489,10 +508,52 @@ pub(super) fn field_text(app: &App, field: Field) -> String {
 }
 
 fn help_rows(app: &App) -> Vec<(String, String)> {
+    use crate::keymap::{Action, Scope};
     let mut rows = Vec::new();
+    // Reading's own keys first, while Home or Search is reading's.
+    if app.reading_section() {
+        rows.push((String::new(), t::tui_read_keys_heading()));
+        for (action, label) in [
+            (Action::ToggleRail, t::tui_read_keys_next_section()),
+            (Action::ShowSources, t::tui_read_keys_sources_only()),
+            (Action::Refresh, t::tui_read_keys_try_again()),
+            (Action::Filter, t::tui_read_keys_filters()),
+            (Action::SetListStatus, t::tui_read_keys_planning()),
+        ] {
+            if let Some(key) = app.keymap.keys_for(action).first() {
+                rows.push((key.render(), format!("  {}", label)));
+            }
+        }
+    }
+    // While Kaeri is for reading alone, the keys that only act on a show stay out, and so do
+    // the rail's width (Tab no longer changes it here), the Calendar's days, subbed or dubbed and
+    // the medium switch.
+    let reading = app.reading_only();
+    let hidden: Vec<&str> = [
+        Action::ToggleRail,
+        Action::Today,
+        Action::PreviousDay,
+        Action::NextDay,
+        Action::SwitchMedium,
+        Action::ToggleTranslation,
+    ]
+    .iter()
+    .map(|action| action.label())
+    .collect();
     for (scope, entries) in app.keymap.help() {
+        if reading
+            && matches!(
+                scope,
+                Scope::Title | Scope::Episodes | Scope::Downloads | Scope::Playback
+            )
+        {
+            continue;
+        }
         rows.push((String::new(), scope.heading().to_string()));
         for (key, label) in entries {
+            if reading && hidden.contains(&label) {
+                continue;
+            }
             rows.push((key, format!("  {}", label)));
         }
     }
@@ -545,6 +606,105 @@ fn log_rows(app: &App) -> Vec<(String, String)> {
             (count, format!("{}  {}", marker, row.text))
         })
         .collect()
+}
+
+/// The question of what Kaeri is for: what it is about, then the three answers. Also how many rows
+/// come before the answers, which are the ones that can be picked.
+/// The width a wrapped line of a question's text has.
+fn text_width(area: Rect) -> usize {
+    area.width.saturating_sub(8) as usize
+}
+
+/// `text` as rows of its own, wrapped to `width`.
+fn wrapped(text: &str, width: usize) -> impl Iterator<Item = (String, String)> {
+    crate::widgets::wrap(text, width.max(10), 6).into_iter().map(|line| (String::new(), line))
+}
+
+fn medium_rows(app: &App, width: usize) -> (Vec<(String, String)>, usize) {
+    use crate::app::medium::{CHOICES, choice_line, choice_word};
+    use kaeri_model::medium::MediumAsk;
+    let device = t::sync_tui_kind();
+    let mut rows = Vec::new();
+    match app.medium_question() {
+        Some(MediumAsk::Updated) => {
+            rows.extend(wrapped(&t::medium_update_line(&device), width));
+        }
+        Some(MediumAsk::Joined { devices, answer }) => {
+            let names = devices.join(", ");
+            let n = devices.len() as i64;
+            rows.push((
+                String::new(),
+                match answer {
+                    kaeri_model::medium::KaeriIsFor::Watch => {
+                        t::medium_join_title_watch(&names, n)
+                    }
+                    kaeri_model::medium::KaeriIsFor::Read => {
+                        t::medium_join_title_read(&names, n)
+                    }
+                    kaeri_model::medium::KaeriIsFor::Both => {
+                        t::medium_join_title_both(&names, n)
+                    }
+                },
+            ));
+            rows.extend(wrapped(&t::medium_join_line(&device), width));
+        }
+        Some(MediumAsk::FirstRun) | None => {
+            rows.extend(wrapped(&t::onboarding_medium_line(), width));
+        }
+    }
+    rows.push((String::new(), String::new()));
+    let facts = rows.len();
+    for answer in CHOICES {
+        rows.push((
+            String::new(),
+            format!("{}  ·  {}", choice_word(answer), choice_line(answer)),
+        ));
+    }
+    rows.push((String::new(), String::new()));
+    rows.push((String::new(), t::medium_change_later()));
+    (rows, facts)
+}
+
+/// The confirmation before a medium is turned off: what happens, the switch for its downloads and
+/// the button. Also the rows of the two that can be picked.
+fn medium_off_rows(app: &App, width: usize) -> (Vec<(String, String)>, [usize; 2]) {
+    let device = t::sync_tui_kind();
+    let Some(off) = app.medium_off() else {
+        return (Vec::new(), [0, 0]);
+    };
+    let (title, body, delete, confirm) = if off.watching {
+        (
+            t::medium_off_title_watch(),
+            t::medium_off_watch_body(&device),
+            t::medium_off_delete_watch(),
+            t::medium_off_confirm_watch(),
+        )
+    } else {
+        (
+            t::medium_off_title_read(),
+            t::medium_off_read_body(&device),
+            t::medium_off_delete_read(),
+            t::medium_off_confirm_read(),
+        )
+    };
+    let mark = if off.delete { "[x]" } else { "[ ]" };
+    let mut rows = vec![(String::new(), title)];
+    rows.extend(wrapped(&body, width));
+    rows.push((String::new(), String::new()));
+    let switch = rows.len();
+    rows.push((String::new(), [mark, delete.as_str()].join(" ")));
+    // Under the switch, as in the apps: what the downloads take, once it is known.
+    let bytes = app.medium_off_bytes();
+    if bytes > 0 {
+        let size = super::downloads::bytes_text(bytes);
+        rows.push((
+            String::new(),
+            format!("    {}", t::medium_off_delete_size(&size, &device)),
+        ));
+    }
+    let button = rows.len();
+    rows.push((String::new(), confirm));
+    (rows, [switch, button])
 }
 
 #[cfg(test)]

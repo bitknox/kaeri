@@ -22,7 +22,7 @@ android {
     namespace = "app.kaeri.tv"
     ndkVersion = libs.versions.ndk.get()
     defaultConfig {
-        minSdk = KaeriSdk.TV_MIN
+        minSdk = KaeriSdk.MIN
         versionCode = providers.gradleProperty("KAERI_VERSION_CODE").map(String::toInt).getOrElse(1)
         versionName = providers.gradleProperty("KAERI_VERSION_NAME").getOrElse(workspaceVersion)
         // The feature videos' flow, src/androidTestFixtures (website/scripts/videos).

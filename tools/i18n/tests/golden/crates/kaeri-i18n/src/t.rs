@@ -70,3 +70,8 @@ pub fn two_args(who: &str, what: &str) -> String {
     text("two-args", &[("who", Arg::Text(who)), ("what", Arg::Text(what))])
 }
 
+/// A number that names something beside a count.
+pub fn episode_seen(episode: i64, count: i64) -> String {
+    text("episode-seen", &[("episode", Arg::Plain(episode)), ("count", Arg::Int(count))])
+}
+

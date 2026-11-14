@@ -10,7 +10,7 @@ Kaeri                                                                           
   ◎  Accounts               │
   ≡  Settings               │  Recent rooms
 ▌ ⇄  Together               │  ────────────────────────────────────
-                            │  Rooms you join show here, the last …
+                            │  The last ten rooms you join show he…
                             │
                             │
                             │

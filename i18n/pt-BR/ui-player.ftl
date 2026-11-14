@@ -14,6 +14,7 @@ player-start-place = { $place } de { $total } { -source-pl }
 player-start-pinned = Sua escolha para esta série
 player-start-miss-no-match = { $name } não tem esta série
 player-start-miss-no-episode = { $name } não tem o episódio { $episode }
+player-start-pin-missed = { $name } ainda não tem o episódio { $episode }. Reproduzindo da próxima { -source }.
 player-start-miss-failed = { $name } não respondeu
 player-start-miss-timed-out = { $name } demorou demais
 player-start-miss-skipped = Você pulou { $name }
@@ -137,7 +138,7 @@ player-resumed-at = Retomado em { $clock }
 player-start-over = Começar do início
 player-still-watching = Ainda está assistindo?
 player-still-watching-detail = { $count ->
-    [one] Pausado após um episódio seguido.
+    [one] Pausado após { $count } episódio seguido.
     [many] Pausado após { $count } episódios seguidos.
    *[other] Pausado após { $count } episódios seguidos.
  }
@@ -184,8 +185,8 @@ player-stats-copy-failed = Não foi possível copiar as estatísticas. Tente de 
 player-load-subtitle-file = Carregar arquivo de legenda…
 player-load-audio-file = Carregar arquivo de áudio…
 player-file-picker-failed = Não foi possível abrir o seletor de arquivos. Tente de novo.
-player-subtitle-file-failed = Não foi possível carregar esse arquivo de legenda. Confira se é um arquivo de legenda.
-player-audio-file-failed = Não foi possível carregar esse arquivo de áudio. Confira se é um arquivo de áudio.
+player-subtitle-file-failed = Não foi possível carregar esse arquivo como legenda. Escolha um arquivo de legenda, como .srt ou .ass.
+player-audio-file-failed = Não foi possível carregar esse arquivo como áudio. Escolha um arquivo de áudio, como .mka ou .flac.
 player-track-unnamed = Faixa sem nome
 player-audio-track-n = Áudio { $id }
 player-subtitle-track-n = Legendas { $id }

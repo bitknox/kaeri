@@ -67,11 +67,35 @@ pub fn set_setting(
             kaeri_core::settings::SettingValue::Int(now),
         );
     }
-    write_setting(table, file_key, value, engine, services, tx);
+    // The port is typed as text and kept as a number; empty is 0, which the config reads as
+    // "pick a free one".
+    let value = match (key, value) {
+        (SettingKey::OpdsPort, kaeri_core::settings::SettingValue::Str(port)) => {
+            kaeri_core::settings::SettingValue::Int(port.trim().parse().unwrap_or(0))
+        }
+        // The password goes to the secure store; the file keeps only that one is set.
+        (SettingKey::OpdsPassword, kaeri_core::settings::SettingValue::Str(password)) => {
+            let set = crate::export::keep_password(services, &password);
+            engine.config.effective_mut().reading.feed.password_set = set;
+            kaeri_core::settings::SettingValue::Bool(set)
+        }
+        (_, value) => value,
+    };
+    write_setting(table, file_key, settings::as_written(key, value), engine, services, tx);
     // The TV picker's Chromecast group comes and goes with its row.
     #[cfg(feature = "cast")]
     if key == SettingKey::CastTvs {
         services.casts.set_show_tvs(engine.config.effective().cast.show_tvs);
+    }
+    if key == SettingKey::ShowVolumes {
+        services.book_sources.set_show_volumes(engine.config.effective().reading.show_volumes);
+        // A series page already open groups its list again, as one opened next would.
+        let kit = crate::read_catalog::Kit::of(services);
+        let ask = crate::read_catalog::Ask::of(engine, services);
+        crate::read_catalog::changed::volumes_shown(&kit, ask, tx);
+    }
+    if key == SettingKey::WhenTrackersDisagree {
+        services.sync.set_read_rule(engine.config.effective().reading.when_trackers_disagree);
     }
     // What the file now holds, put in effect: titles are named the new way from here.
     if key == SettingKey::Titles {

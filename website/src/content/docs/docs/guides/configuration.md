@@ -100,8 +100,8 @@ keep_seeding = false       # whether a finished download keeps seeding
 ```
 
 `on_complete` is for refreshing a media library or renaming to a scheme of your own; a failure is
-logged, never fatal. A finished download stops seeding unless you ask otherwise: off by default to
-save upload; turn it on to give back to the swarm. What a watched episode does is set under
+logged, never fatal. A finished download stops seeding unless you turn on `keep_seeding`. It is
+off by default to save upload. What a watched episode does is set under
 [Seeding](/docs/guides/torrents/#seeding).
 
 :::caution
@@ -163,8 +163,8 @@ rich = false           # cover, progress bar and an AniList button; needs show_t
 
 [syncplay]
 server = ""            # host:port of a Syncplay server; none is set until you pick one
-room = "…"             # the room y joins
-name = "kaeri"     # the name the room sees
+room = "…"             # the room you join
+name = "kaeri"         # the name the room sees
 ```
 
 Presence is off until you turn it on, since it publishes what you watch to a third party.

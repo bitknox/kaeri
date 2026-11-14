@@ -289,7 +289,8 @@ pub(super) fn accounts_rows(app: &App) -> Vec<(String, String)> {
                 (None, false) => detail.push(t::accounts_row_not_connected()),
             }
             match (state.outbox, state.deferred) {
-                (0, _) => {}
+                (0, 0) => {}
+                (0, held) => detail.push(t::accounts_row_held(i64::from(held))),
                 (queued, 0) => detail.push(t::accounts_row_queued(i64::from(queued))),
                 (queued, held) => {
                     detail.push(t::accounts_row_queued_held(i64::from(queued), i64::from(held)))
@@ -388,7 +389,7 @@ mod tests {
             ..kaeri_model::sync::SyncState::new("mal")
         })));
         let (_, detail) = &accounts_rows(&app)[0];
-        assert!(detail.contains("3 queued, 2 waiting for an id mapping"), "{detail}");
+        assert!(detail.contains("3 queued, 2 waiting for a match"), "{detail}");
 
         app.apply(Event::Sync(Box::new(kaeri_model::sync::SyncState {
             connected: true,

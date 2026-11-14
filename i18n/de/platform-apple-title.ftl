@@ -13,7 +13,7 @@ title-episodes-short = { $count ->
    *[other] { $count } Folgen
  }
 title-episode-row-unaired = { $title }. { $when }, noch nicht erschienen
-title-all-watched = Alle Folgen sind gesehen
+title-all-watched = Du hast alle Folgen gesehen
 title-no-answer-short = AniList hat nicht geantwortet.
 title-episodes-all = Alle
 title-episodes-unwatched = Ungesehen

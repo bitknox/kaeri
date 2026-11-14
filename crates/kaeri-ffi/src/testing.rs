@@ -182,7 +182,8 @@ impl FfiEngine {
         let opened = Opened::open_as(&dirs, start.profile.as_deref())?;
         // The test's token files are the trackers' and the stores' own, so the host's keychain
         // is never asked.
-        let host = Adapter::new(host, SecretsMode::Host, &opened.config, &opened.paths);
+        let host = Adapter::new(host, SecretsMode::Host, &opened.config, &opened.paths)
+            .with_page_decoder(start.page_decoder.clone());
         let home = RemoteHome::of(&host, &opened.paths);
         let runtime = runtime()?;
         let started = runtime.block_on(async {

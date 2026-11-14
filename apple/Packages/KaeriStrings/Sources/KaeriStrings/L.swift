@@ -50,7 +50,7 @@ public enum L {
 
     /// This device isn't on the TV's network, or reaches it through a VPN. The name is the TV's own.
     public static func noticeCastNotSameNetwork(name: String) -> String {
-        Self.format("notice-cast-not-same-network", fallback: "This device isn't on the network %1$@ is on, or reaches it through a VPN. Casting needs both on the same network.", name)
+        Self.format("notice-cast-not-same-network", fallback: "This device isn't on the network %1$@ is on, or reaches it through a VPN. Connect both to the same network to cast.", name)
     }
 
     /// The TV stopped answering mid-cast. The name is the TV's own.
@@ -145,27 +145,27 @@ public enum L {
 
     /// Line under the spotlight's title, and under a { -continue-cap } card, for an episode part way through: the episode and the minutes left in it.
     public static func homeTimeLeft(episode: Int, minutes: Int) -> String {
-        Self.format("home-time-left", fallback: "Episode %1$lld · %2$lld min left", episode, minutes)
+        Self.format("home-time-left", fallback: "Episode %1$@ · %2$lld min left", String(episode), minutes)
     }
 
     /// Line under the spotlight's title, and under a { -continue-cap } card, for a show still airing whose next episode is its newest one out.
     public static func homeEpisodeOut(episode: Int) -> String {
-        Self.format("home-episode-out", fallback: "Episode %1$lld is out", episode)
+        Self.format("home-episode-out", fallback: "Episode %1$@ is out", String(episode))
     }
 
     /// Line under the spotlight's title, and under a { -continue-cap } card, for the next episode of a show part way through when it is not the newest one out, such as any episode of a show that finished airing.
     public static func homeEpisodeNext(episode: Int) -> String {
-        Self.format("home-episode-next", fallback: "Episode %1$lld next", episode)
+        Self.format("home-episode-next", fallback: "Episode %1$@ next", String(episode))
     }
 
     /// Line under a { -continue-cap } card whose next episode came out today.
     public static func homeEpisodeOutToday(episode: Int) -> String {
-        Self.format("home-episode-out-today", fallback: "Episode %1$lld · out today", episode)
+        Self.format("home-episode-out-today", fallback: "Episode %1$@ · out today", String(episode))
     }
 
     /// Line under a poster on This season: the newest episode out.
     public static func homeEpisodeOutShort(episode: Int) -> String {
-        Self.format("home-episode-out-short", fallback: "Episode %1$lld out", episode)
+        Self.format("home-episode-out-short", fallback: "Episode %1$@ out", String(episode))
     }
 
     /// Line under a This week or Airing today card whose episode is already out today. The time is worded as a span, such as 2h 5m.
@@ -217,22 +217,76 @@ public enum L {
         Self.format("home-because", fallback: "Because you finished %1$@", title)
     }
 
-    /// Heading over popular titles of the genre the person finished most of. The genre is lower case, such as "mecha".
+    /// Heading over popular titles of the genre the person finished most of, for a genre that has no heading of its own below. The genre is AniList's name as it writes it.
     public static func homeMoreGenre(genre: String) -> String {
         Self.format("home-more-genre", fallback: "More %1$@", genre)
     }
+
+    /// Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language.
+    public static var homeMoreGenreAction: String { string("home-more-genre-action", fallback: "More action") }
+
+    /// Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language.
+    public static var homeMoreGenreAdventure: String { string("home-more-genre-adventure", fallback: "More adventure") }
+
+    /// Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language.
+    public static var homeMoreGenreComedy: String { string("home-more-genre-comedy", fallback: "More comedy") }
+
+    /// Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language.
+    public static var homeMoreGenreDrama: String { string("home-more-genre-drama", fallback: "More drama") }
+
+    /// Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language.
+    public static var homeMoreGenreEcchi: String { string("home-more-genre-ecchi", fallback: "More ecchi") }
+
+    /// Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language.
+    public static var homeMoreGenreFantasy: String { string("home-more-genre-fantasy", fallback: "More fantasy") }
+
+    /// Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language.
+    public static var homeMoreGenreHorror: String { string("home-more-genre-horror", fallback: "More horror") }
+
+    /// Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language.
+    public static var homeMoreGenreMahouShoujo: String { string("home-more-genre-mahou-shoujo", fallback: "More mahou shoujo") }
+
+    /// Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language.
+    public static var homeMoreGenreMecha: String { string("home-more-genre-mecha", fallback: "More mecha") }
+
+    /// Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language.
+    public static var homeMoreGenreMusic: String { string("home-more-genre-music", fallback: "More music") }
+
+    /// Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language.
+    public static var homeMoreGenreMystery: String { string("home-more-genre-mystery", fallback: "More mystery") }
+
+    /// Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language.
+    public static var homeMoreGenrePsychological: String { string("home-more-genre-psychological", fallback: "More psychological") }
+
+    /// Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language.
+    public static var homeMoreGenreRomance: String { string("home-more-genre-romance", fallback: "More romance") }
+
+    /// Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language.
+    public static var homeMoreGenreSciFi: String { string("home-more-genre-sci-fi", fallback: "More sci-fi") }
+
+    /// Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language.
+    public static var homeMoreGenreSliceOfLife: String { string("home-more-genre-slice-of-life", fallback: "More slice of life") }
+
+    /// Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language.
+    public static var homeMoreGenreSports: String { string("home-more-genre-sports", fallback: "More sports") }
+
+    /// Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language.
+    public static var homeMoreGenreSupernatural: String { string("home-more-genre-supernatural", fallback: "More supernatural") }
+
+    /// Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language.
+    public static var homeMoreGenreThriller: String { string("home-more-genre-thriller", fallback: "More thriller") }
 
     /// Line over the spotlight's title when it is the built-in demo.
     public static var homeSpotlightDemo: String { string("home-spotlight-demo", fallback: "Demo, free to share") }
 
     /// Notice when the viewer comes back from a licensed service after long enough to have watched an episode. It holds Mark as watched for 8 seconds. The service is the one they opened, such as Hikari Library.
     public static func licensedReturn(episode: Int, service: String) -> String {
-        Self.format("licensed-return", fallback: "Watched episode %1$lld on %2$@?", episode, service)
+        Self.format("licensed-return", fallback: "Watched episode %1$@ on %2$@?", String(episode), service)
     }
 
     /// Notice after Mark as watched on the return notice. It holds Undo.
     public static func licensedMarked(episode: Int) -> String {
-        Self.format("licensed-marked", fallback: "Episode %1$lld marked as watched.", episode)
+        Self.format("licensed-marked", fallback: "Episode %1$@ marked as watched.", String(episode))
     }
 
     /// A reason on its own, as a toast or a failed play's explanation. The reason is one of the engine's own reasons, so it is translated.
@@ -248,12 +302,12 @@ public enum L {
 
     /// A play's explanation: the episode's broadcast is still ahead. The "when" says today, tomorrow or a date.
     public static func noticeNotAired(episode: Int, when: String) -> String {
-        Self.format("notice-not-aired", fallback: "Episode %1$lld airs %2$@.", episode, when)
+        Self.format("notice-not-aired", fallback: "Episode %1$@ airs %2$@.", String(episode), when)
     }
 
     /// A play's explanation: the episode is after the next one to air. The "when" says when that one airs.
     public static func noticeNotAiredYet(episode: Int, next: Int, when: String) -> String {
-        Self.format("notice-not-aired-yet", fallback: "Episode %1$lld hasn't aired yet. Episode %2$lld airs %3$@.", episode, next, when)
+        Self.format("notice-not-aired-yet", fallback: "Episode %1$@ hasn't aired yet. Episode %2$@ airs %3$@.", String(episode), String(next), when)
     }
 
     /// Part of an air time: the broadcast is later today. The time is the viewer's local time.
@@ -455,7 +509,7 @@ public enum L {
 
     /// Toast when a search of the sources for a title found nothing.
     public static func noticeSourceSearchEmpty(query: String) -> String {
-        Self.format("notice-source-search-empty", fallback: "Nothing found for “%1$@”. Try a different search.", query)
+        Self.format("notice-source-search-empty", fallback: "Nothing found for \"%1$@\". Try a different search.", query)
     }
 
     /// In the list of titles a source offers for a show, in place of how close a title is: it was ruled out because its format cannot be the show's, as an OVA for a TV series.
@@ -475,7 +529,7 @@ public enum L {
 
     /// Toast after the person picked a source for one title.
     public static func noticeSourcePinned(source: String) -> String {
-        Self.format("notice-source-pinned", fallback: "%1$@ will be used for this title.", source)
+        Self.format("notice-source-pinned", fallback: "This title now plays from %1$@.", source)
     }
 
     /// Toast after the person went back to automatic source selection for one title.
@@ -637,6 +691,840 @@ public enum L {
         Self.format("party-server-unreachable", fallback: "Couldn't reach %1$@. Check the server, or try again.", server)
     }
 
+    /// Under a cover: the chapter that is next to read. The chapter is its number, such as 44 or 10.5.
+    public static func readingNextChapter(chapter: String) -> String {
+        Self.format("reading-next-chapter", fallback: "Chapter %1$@", chapter)
+    }
+
+    /// Under a cover or on a series page: when new chapters usually come out.
+    public static var readingUsuallyMondays: String { string("reading-usually-mondays", fallback: "Usually Mondays") }
+
+    /// Under a cover or on a series page: when new chapters usually come out.
+    public static var readingUsuallyTuesdays: String { string("reading-usually-tuesdays", fallback: "Usually Tuesdays") }
+
+    /// Under a cover or on a series page: when new chapters usually come out.
+    public static var readingUsuallyWednesdays: String { string("reading-usually-wednesdays", fallback: "Usually Wednesdays") }
+
+    /// Under a cover or on a series page: when new chapters usually come out.
+    public static var readingUsuallyThursdays: String { string("reading-usually-thursdays", fallback: "Usually Thursdays") }
+
+    /// Under a cover or on a series page: when new chapters usually come out.
+    public static var readingUsuallyFridays: String { string("reading-usually-fridays", fallback: "Usually Fridays") }
+
+    /// Under a cover or on a series page: when new chapters usually come out.
+    public static var readingUsuallySaturdays: String { string("reading-usually-saturdays", fallback: "Usually Saturdays") }
+
+    /// Under a cover or on a series page: when new chapters usually come out.
+    public static var readingUsuallySundays: String { string("reading-usually-sundays", fallback: "Usually Sundays") }
+
+    /// Under a cover or on a series page: how often new chapters come out, in weeks.
+    public static func readingAboutEveryWeeks(weeks: Int) -> String {
+        Self.format("reading-about-every-weeks", fallback: "About every %1$lld weeks", weeks)
+    }
+
+    /// On a book's series page, when the same story is also a show. Shown only to someone who both watches and reads.
+    public static var readingAlsoAShow: String { string("reading-also-a-show", fallback: "Also a show") }
+
+    /// On a show's page, when the same story is also a manga or a novel. Shown only to someone who both watches and reads.
+    public static var readingAlsoABook: String { string("reading-also-a-book", fallback: "Also a book") }
+
+    /// Under a tracker on a series page, when the furthest chapter read is a half chapter. Trackers count whole chapters only. The chapter is its number, such as 10.5; whole is the number the tracker gets, such as 10.
+    public static func readingSplitChapter(chapter: String, whole: String) -> String {
+        Self.format("reading-split-chapter", fallback: "Chapter %1$@ goes to trackers as %2$@.", chapter, whole)
+    }
+
+    /// A notice over the page when a chapter opens where it was left. It offers Start over.
+    public static func readerResumed(page: Int) -> String {
+        Self.format("reader-resumed", fallback: "Resumed at page %1$@", String(page))
+    }
+
+    /// The same notice in a webtoon strip, which counts images rather than pages.
+    public static func readerResumedImage(image: Int) -> String {
+        Self.format("reader-resumed-image", fallback: "Resumed at image %1$lld", image)
+    }
+
+    /// A notice in the corner after jumping away with the scrubber or the page grid. Tapping it goes back to the page.
+    public static func readerBackToPage(page: Int) -> String {
+        Self.format("reader-back-to-page", fallback: "Back to page %1$@", String(page))
+    }
+
+    /// A notice when another device read further, so the reader moved on to where it stopped. It offers Go back. The chapter is its whole label, such as The Long Night or Episode 63, and the device is its name, such as Living room tablet. A chapter with only a number uses the next message.
+    public static func readerMoved(chapter: String, page: Int, device: String) -> String {
+        Self.format("reader-moved", fallback: "Moved to %1$@, page %2$@, where %3$@ stopped", chapter, String(page), device)
+    }
+
+    /// The same notice for a chapter known only by its number, such as 14 or 14.5.
+    public static func readerMovedNumber(chapter: String, page: Int, device: String) -> String {
+        Self.format("reader-moved-number", fallback: "Moved to chapter %1$@, page %2$@, where %3$@ stopped", chapter, String(page), device)
+    }
+
+    /// The notice when another device read further and its name is not known: a device removed from sync, or this one before a reinstall.
+    public static func readerMovedElsewhere(chapter: String, page: Int) -> String {
+        Self.format("reader-moved-elsewhere", fallback: "Moved to %1$@, page %2$@, where another device stopped", chapter, String(page))
+    }
+
+    /// The same notice for a chapter known only by its number, such as 14 or 14.5.
+    public static func readerMovedNumberElsewhere(chapter: String, page: Int) -> String {
+        Self.format("reader-moved-number-elsewhere", fallback: "Moved to chapter %1$@, page %2$@, where another device stopped", chapter, String(page))
+    }
+
+    /// The Moved notice in a webtoon strip, which counts images rather than pages. The chapter is its whole label, such as The Long Night.
+    public static func readerMovedImage(chapter: String, image: Int, device: String) -> String {
+        Self.format("reader-moved-image", fallback: "Moved to %1$@, image %2$@, where %3$@ stopped", chapter, String(image), device)
+    }
+
+    /// The same notice in a strip for a chapter known only by its number, such as 14 or 14.5.
+    public static func readerMovedNumberImage(chapter: String, image: Int, device: String) -> String {
+        Self.format("reader-moved-number-image", fallback: "Moved to chapter %1$@, image %2$@, where %3$@ stopped", chapter, String(image), device)
+    }
+
+    /// The notice in a strip when another device read further and its name is not known.
+    public static func readerMovedElsewhereImage(chapter: String, image: Int) -> String {
+        Self.format("reader-moved-elsewhere-image", fallback: "Moved to %1$@, image %2$@, where another device stopped", chapter, String(image))
+    }
+
+    /// The same notice in a strip for a chapter known only by its number, such as 14 or 14.5.
+    public static func readerMovedNumberElsewhereImage(chapter: String, image: Int) -> String {
+        Self.format("reader-moved-number-elsewhere-image", fallback: "Moved to chapter %1$@, image %2$@, where another device stopped", chapter, String(image))
+    }
+
+    /// A notice the first time a series opens with its reading direction guessed. It offers Change.
+    public static var readerDetectedRightToLeft: String { string("reader-detected-right-to-left", fallback: "Looks like right to left") }
+
+    /// A notice the first time a series opens with its reading direction guessed. It offers Change.
+    public static var readerDetectedLeftToRight: String { string("reader-detected-left-to-right", fallback: "Looks like left to right") }
+
+    /// A notice the first time a series opens as one long strip, guessed from its pages. It offers Change.
+    public static var readerDetectedStrip: String { string("reader-detected-strip", fallback: "Looks like a long strip") }
+
+    /// Why a chapter or a list could not load: there is no connection.
+    public static var readingFailedOffline: String { string("reading-failed-offline", fallback: "You're offline. Downloaded chapters still open.") }
+
+    /// Why a chapter or a list could not load: the source did not answer. The source is its name.
+    public static func readingFailedSourceDown(source: String) -> String {
+        Self.format("reading-failed-source-down", fallback: "%1$@ isn't answering. Try again later.", source)
+    }
+
+    /// Why something could not load: the source the series reads from is switched off in Your sources.
+    public static func readingFailedSourceOff(source: String) -> String {
+        Self.format("reading-failed-source-off", fallback: "%1$@ is switched off. Switch it on in Your sources, or read from another source.", source)
+    }
+
+    /// Why a chapter could not load: the source no longer has it.
+    public static var readingFailedNotFound: String { string("reading-failed-not-found", fallback: "This source doesn't have it anymore. Try another source.") }
+
+    /// Why a series has no chapters: none of the person's sources holds it, and none was ever picked.
+    public static var readingFailedNoSource: String { string("reading-failed-no-source", fallback: "None of your sources has this series yet. Search for it by another name in Read from, or add a source in Your sources.") }
+
+    /// Why a chapter or a list could not load: the source refused. The reason comes from the source.
+    public static func readingFailedBlocked(source: String, reason: String) -> String {
+        Self.format("reading-failed-blocked", fallback: "%1$@ refused the request. %2$@", source, reason)
+    }
+
+    /// Why a chapter or a list could not load: the source's plugin asked for a host its manifest doesn't list, so the request never left the device and the source refused nothing. An update to the plugin usually fixes it.
+    public static func readingFailedHostNotAllowed(source: String) -> String {
+        Self.format("reading-failed-host-not-allowed", fallback: "The plugin for %1$@ asked for a host it isn't allowed to reach. An update to the plugin may fix it.", source)
+    }
+
+    /// Why a chapter or a list could not load: the source answered with something Kaeri could not read.
+    public static func readingFailedParse(source: String) -> String {
+        Self.format("reading-failed-parse", fallback: "Kaeri couldn't read what %1$@ sent. Its plugin may need an update.", source)
+    }
+
+    /// Why one page did not load. The status is the server's HTTP status code, such as 404.
+    public static func readingFailedPage(status: Int) -> String {
+        Self.format("reading-failed-page", fallback: "This page didn't load (error %1$@). Try again.", String(status))
+    }
+
+    /// In the reader, in a novel's text, in the box where a picture from the source did not load. Try again sits under it.
+    public static var readingPictureFailed: String { string("reading-picture-failed", fallback: "Couldn't load picture") }
+
+    /// Why something could not load: a sign-in is needed. What is a server's or a tracker's name.
+    public static func readingFailedSignIn(what: String) -> String {
+        Self.format("reading-failed-sign-in", fallback: "Sign in to %1$@ again to keep reading.", what)
+    }
+
+    /// Why a book could not open: its file or folder is gone, perhaps on a drive that is not connected. The path is the file's.
+    public static func readingFailedFileMissing(path: String) -> String {
+        Self.format("reading-failed-file-missing", fallback: "%1$@ isn't there anymore. If it's on a drive, connect it and try again.", path)
+    }
+
+    /// Why a book could not open: the file is damaged or not what its name says. The format is a short name such as CBZ or EPUB.
+    public static func readingFailedUnreadable(path: String, format: String) -> String {
+        Self.format("reading-failed-unreadable", fallback: "%1$@ couldn't be read as %2$@. The file may be damaged.", path, format)
+    }
+
+    /// Why a file was not added: Kaeri does not read its kind. The kind is a file extension such as .djvu.
+    public static func readingFailedUnsupported(kind: String) -> String {
+        Self.format("reading-failed-unsupported", fallback: "Kaeri can't read %1$@ files.", kind)
+    }
+
+    /// Why a book could not open: it is copy-protected or encrypted.
+    public static var readingFailedProtected: String { string("reading-failed-protected", fallback: "This book is copy-protected, so Kaeri can't open it.") }
+
+    /// Why a chapter could not be saved: the disk is full.
+    public static var readingFailedDiskFull: String { string("reading-failed-disk-full", fallback: "There's no room left on this device. Free some space and try again.") }
+
+    /// Why a chapter or a file for an e-reader could not be saved: the storage refused the name, because it is too long or has characters the storage doesn't allow. The path is the file's or the folder's.
+    public static func readingFailedWriteName(path: String) -> String {
+        Self.format("reading-failed-write-name", fallback: "The storage doesn't take the name %1$@. It may be too long.", path)
+    }
+
+    /// Why a chapter or a file for an e-reader could not be saved: the storage is read-only, or Kaeri isn't allowed to write there. The path is the file's or the folder's.
+    public static func readingFailedWriteDenied(path: String) -> String {
+        Self.format("reading-failed-write-denied", fallback: "Kaeri isn't allowed to write %1$@. Check that the storage isn't read-only, then try again.", path)
+    }
+
+    /// Why a chapter or a file for an e-reader could not be saved, for another reason the system gave. The path is the file's or the folder's.
+    public static func readingFailedWrite(path: String) -> String {
+        Self.format("reading-failed-write", fallback: "Kaeri couldn't write %1$@. Try again.", path)
+    }
+
+    /// Why a novel could not open: the system's web view is too old. The version is its major version number, such as 80.
+    public static func readingFailedWebview(version: Int) -> String {
+        Self.format("reading-failed-webview", fallback: "Novels need a newer system WebView than version %1$@. Update Android System WebView and try again.", String(version))
+    }
+
+    /// Why a book plugin could not be used: it was built for a newer Kaeri. The world is the plugin interface's name and version.
+    public static func readingFailedNeedsNewer(world: String) -> String {
+        Self.format("reading-failed-needs-newer", fallback: "This plugin needs a newer Kaeri (%1$@). Update Kaeri to use it.", world)
+    }
+
+    /// Why a reading request was refused: reading is not available in this build.
+    public static var readingFailedOff: String { string("reading-failed-off", fallback: "Reading isn't available in this version of Kaeri.") }
+
+    /// Why something about reading failed, for any other reason. The reason is as it came.
+    public static func readingFailedOther(reason: String) -> String {
+        Self.format("reading-failed-other", fallback: "Something went wrong. %1$@", reason)
+    }
+
+    /// Why Send to e-reader stopped before sending: the file it made is bigger than the e-reader or its service takes. File is the file's name, target the e-reader's name such as Kindle. Shown with Try again.
+    public static func readingFailedSendTooLarge(file: String, target: String, size: String, limit: String) -> String {
+        Self.format("reading-failed-send-too-large", fallback: "%1$@ is %3$@, and %2$@ takes files up to %4$@. Send fewer chapters at a time and try again.", file, target, size, limit)
+    }
+
+    /// Why Send to e-reader stopped before sending: a part the book needs is not in the file Kaeri made. Part is a path inside the file, such as OEBPS/content.opf. Shown with Try again.
+    public static func readingFailedSendMissing(file: String, part: String) -> String {
+        Self.format("reading-failed-send-missing", fallback: "%1$@ is missing %2$@, so it wasn't sent. Try again.", file, part)
+    }
+
+    /// Why Send to e-reader stopped before sending: a part of the file Kaeri made does not declare or use the UTF-8 text encoding. Part is a path inside the file. Shown with Try again.
+    public static func readingFailedSendEncoding(file: String, part: String) -> String {
+        Self.format("reading-failed-send-encoding", fallback: "%2$@ in %1$@ has the wrong text encoding, so it wasn't sent. Try again.", file, part)
+    }
+
+    /// Why Send to e-reader stopped before sending: a part of the file Kaeri made is not laid out as the book format requires. Part is a path inside the file. Shown with Try again.
+    public static func readingFailedSendMalformed(file: String, part: String) -> String {
+        Self.format("reading-failed-send-malformed", fallback: "%2$@ in %1$@ isn't valid, so it wasn't sent. Try again.", file, part)
+    }
+
+    /// Under a cover or on a series page: what kind of book it is. Manga is drawn in Japan.
+    public static var readingKindManga: String { string("reading-kind-manga", fallback: "Manga") }
+
+    /// Under a cover or on a series page: what kind of book it is. Manhwa is drawn in Korea.
+    public static var readingKindManhwa: String { string("reading-kind-manhwa", fallback: "Manhwa") }
+
+    /// Under a cover or on a series page: what kind of book it is. Manhua is drawn in China or Taiwan.
+    public static var readingKindManhua: String { string("reading-kind-manhua", fallback: "Manhua") }
+
+    /// Under a cover or on a series page: what kind of book it is. A webtoon is drawn as one long strip that scrolls down.
+    public static var readingKindWebtoon: String { string("reading-kind-webtoon", fallback: "Webtoon") }
+
+    /// Under a cover or on a series page: what kind of book it is. A one-shot is a story told in a single chapter.
+    public static var readingKindOneShot: String { string("reading-kind-one-shot", fallback: "One-shot") }
+
+    /// Under a cover or on a series page: what kind of book it is. A light novel is a novel from Japan.
+    public static var readingKindLightNovel: String { string("reading-kind-light-novel", fallback: "Light novel") }
+
+    /// Under a cover or on a series page: what kind of book it is, for a novel from anywhere else.
+    public static var readingKindNovel: String { string("reading-kind-novel", fallback: "Novel") }
+
+    /// Under a cover or on a series page: new chapters are still coming out.
+    public static var readingStatusReleasing: String { string("reading-status-releasing", fallback: "Releasing") }
+
+    /// Under a cover or on a series page: the story is complete.
+    public static var readingStatusFinished: String { string("reading-status-finished", fallback: "Finished") }
+
+    /// Under a cover or on a series page: new chapters have stopped for a while.
+    public static var readingStatusHiatus: String { string("reading-status-hiatus", fallback: "On hiatus") }
+
+    /// Under a cover or on a series page: the story was stopped before it ended.
+    public static var readingStatusCancelled: String { string("reading-status-cancelled", fallback: "Cancelled") }
+
+    /// Under a cover or on a series page: the first chapter is not out yet.
+    public static var readingStatusNotYet: String { string("reading-status-not-yet", fallback: "Not out yet") }
+
+    /// Under a cover or on a series page: how many chapters the series has.
+    public static func readingChapters(count: Int) -> String {
+        Self.format("reading-chapters", fallback: "%1$lld chapters", count)
+    }
+
+    /// Under a cover or on a series page: how many volumes the series has.
+    public static func readingVolumes(count: Int) -> String {
+        Self.format("reading-volumes", fallback: "%1$lld volumes", count)
+    }
+
+    /// Under a cover: the series is on the person's Planning list.
+    public static var readingOnPlanning: String { string("reading-on-planning", fallback: "On your Planning list") }
+
+    /// Above the big picture at the top of reading's Home, saying why this series is there: a new chapter came out in a series the person reads.
+    public static var readingSpotlightNewChapter: String { string("reading-spotlight-new-chapter", fallback: "New chapter in a series you follow") }
+
+    /// Above the big picture at the top of reading's Home: the series the person was reading last.
+    public static var readingSpotlightContinue: String { string("reading-spotlight-continue", fallback: "Continue reading") }
+
+    /// Above the big picture at the top of reading's Home: the first series on the person's Planning list, or one like what they read.
+    public static var readingSpotlightUpNext: String { string("reading-spotlight-up-next", fallback: "Up next for you") }
+
+    /// Above the big picture at the top of reading's Home: a popular series that is still coming out, shown when the person has nothing of their own yet. It is not a pick for them.
+    public static var readingSpotlightPopular: String { string("reading-spotlight-popular", fallback: "Popular, releasing now") }
+
+    /// Under the big picture on reading's Home: a chapter that came out today. The chapter is its number, such as 88.
+    public static func readingOutToday(chapter: String) -> String {
+        Self.format("reading-out-today", fallback: "Chapter %1$@ is out today", chapter)
+    }
+
+    /// Under the big picture on reading's Home: a chapter that came out today, with its title.
+    public static func readingOutTodayTitled(chapter: String, title: String) -> String {
+        Self.format("reading-out-today-titled", fallback: "Chapter %1$@, %2$@, out today", chapter, title)
+    }
+
+    /// Under a cover or the big picture: the page the person stopped on in a chapter.
+    public static func readingChapterPage(chapter: String, page: Int) -> String {
+        Self.format("reading-chapter-page", fallback: "Chapter %1$@ · page %2$@", chapter, String(page))
+    }
+
+    /// Under a cover or the big picture: how far into a novel's chapter the person is.
+    public static func readingChapterPercent(chapter: String, percent: Int) -> String {
+        Self.format("reading-chapter-percent", fallback: "Chapter %1$@ · %2$lld%%", chapter, percent)
+    }
+
+    /// Under a cover: a chapter came out that the person has not read. The chapter is its number.
+    public static func readingChapterNew(chapter: String) -> String {
+        Self.format("reading-chapter-new", fallback: "Chapter %1$@ is new", chapter)
+    }
+
+    /// Under a cover: a light novel's part, next to read or in progress. Light novels read in parts.
+    public static func readingNextPart(part: String) -> String {
+        Self.format("reading-next-part", fallback: "Part %1$@", part)
+    }
+
+    /// Under a cover or the big picture: how far into a light novel's part the person is.
+    public static func readingPartPercent(part: String, percent: Int) -> String {
+        Self.format("reading-part-percent", fallback: "Part %1$@ · %2$lld%%", part, percent)
+    }
+
+    /// Under a cover: a light novel's part came out that the person has not read.
+    public static func readingPartNew(part: String) -> String {
+        Self.format("reading-part-new", fallback: "Part %1$@ is new", part)
+    }
+
+    /// Under a cover or the big picture: how far into a light novel's part the person is, the part named in the source's own words ("Part 3", "Chapter 3"), as its row on the series page names it.
+    public static func readingLabelPercent(label: String, percent: Int) -> String {
+        Self.format("reading-label-percent", fallback: "%1$@ · %2$lld%%", label, percent)
+    }
+
+    /// Under a cover: a light novel's part came out that the person has not read, named in the source's own words ("Part 4", "Chapter 4").
+    public static func readingLabelNew(label: String) -> String {
+        Self.format("reading-label-new", fallback: "%1$@ is new", label)
+    }
+
+    /// Under a This week cell: a light novel's part that came out that day, with its own title.
+    public static func readingPartTitled(part: String, title: String) -> String {
+        Self.format("reading-part-titled", fallback: "Part %1$@ · %2$@", part, title)
+    }
+
+    /// Under a This week cell: a light novel's part that came out that day, with its own title, the part named in the source's own words ("Part 4", "Chapter 4").
+    public static func readingLabelTitled(label: String, title: String) -> String {
+        Self.format("reading-label-titled", fallback: "%1$@ · %2$@", label, title)
+    }
+
+    /// Under the big picture on reading's Home: a light novel's part that came out today.
+    public static func readingPartOutToday(part: String) -> String {
+        Self.format("reading-part-out-today", fallback: "Part %1$@ is out today", part)
+    }
+
+    /// Under the big picture on reading's Home: a light novel's part that came out today, named in the source's own words ("Part 4", "Chapter 4").
+    public static func readingLabelOutToday(label: String) -> String {
+        Self.format("reading-label-out-today", fallback: "%1$@ is out today", label)
+    }
+
+    /// Under the big picture on reading's Home: a light novel's part that came out today, with its title.
+    public static func readingPartOutTodayTitled(part: String, title: String) -> String {
+        Self.format("reading-part-out-today-titled", fallback: "Part %1$@, %2$@, out today", part, title)
+    }
+
+    /// Under the big picture on reading's Home: a light novel's part that came out today, with its title, the part named in the source's own words ("Part 4", "Chapter 4").
+    public static func readingLabelOutTodayTitled(label: String, title: String) -> String {
+        Self.format("reading-label-out-today-titled", fallback: "%1$@, %2$@, out today", label, title)
+    }
+
+    /// Under a Library cover: the chapter the person is at, and the newest chapter there is.
+    public static func readingChapterOf(chapter: String, of: String) -> String {
+        Self.format("reading-chapter-of", fallback: "Chapter %1$@ of %2$@", chapter, of)
+    }
+
+    /// Under a Library cover: the volume and part of a light novel the person is at.
+    public static func readingVolumePart(volume: String, part: String) -> String {
+        Self.format("reading-volume-part", fallback: "Volume %1$@, part %2$@", volume, part)
+    }
+
+    /// Under a Library cover: the volume of a light novel the person is at, and the part in the source's own words ("Part 5", "Chapter 5").
+    public static func readingVolumeLabel(volume: String, label: String) -> String {
+        Self.format("reading-volume-label", fallback: "Volume %1$@, %2$@", volume, label)
+    }
+
+    /// A search filter: books from Japan.
+    public static var readingOriginJapan: String { string("reading-origin-japan", fallback: "Japan") }
+
+    /// A search filter: books from Korea.
+    public static var readingOriginKorea: String { string("reading-origin-korea", fallback: "Korea") }
+
+    /// A search filter: books from China.
+    public static var readingOriginChina: String { string("reading-origin-china", fallback: "China") }
+
+    /// A search filter: books from Taiwan.
+    public static var readingOriginTaiwan: String { string("reading-origin-taiwan", fallback: "Taiwan") }
+
+    /// Send to e-reader: a device class with no brand, for e-readers not listed by name. Opens CBZ and EPUB.
+    public static var exportDeviceOther: String { string("export-device-other", fallback: "Other e-reader") }
+
+    /// Send to e-reader: a device class, a grey e-ink screen of about 6 inches.
+    public static var exportDeviceEink6: String { string("export-device-eink-6", fallback: "E-ink, 6 inch") }
+
+    /// Send to e-reader: a device class, a grey e-ink screen of about 7 or 8 inches.
+    public static var exportDeviceEink7: String { string("export-device-eink-7", fallback: "E-ink, 7 inch") }
+
+    /// Send to e-reader: a device class, a colour e-ink screen of about 7 inches.
+    public static var exportDeviceColourEink: String { string("export-device-colour-eink", fallback: "Colour e-ink, 7 inch") }
+
+    /// Send to e-reader: a device class, a colour tablet.
+    public static var exportDeviceTablet: String { string("export-device-tablet", fallback: "Tablet") }
+
+    /// A table of contents entry in a file sent to an e-reader. The chapter is its number, such as 44 or 10.5.
+    public static func exportChapter(chapter: String) -> String {
+        Self.format("export-chapter", fallback: "Chapter %1$@", chapter)
+    }
+
+    /// Send to e-reader: a send that waits because chapters must be fetched and downloads are kept to Wi-Fi. A send makes its files from every chapter at once, so all of it waits. n is how many chapters it still has to fetch.
+    public static func exportWaitsForWifi(n: Int) -> String {
+        Self.format("export-waits-for-wifi", fallback: "%1$lld chapters aren't downloaded yet, so this send waits for Wi-Fi and goes on by itself.", n)
+    }
+
+    /// Send to e-reader, under the ready files: pages of one chapter that couldn't be read, as the reader shows them broken, so the files go without them. The chapter is its name as the series shows it, such as Chapter 12 or Volume 1. n is how many pages were left out.
+    public static func exportPagesLeftOut(n: Int, chapter: String) -> String {
+        Self.format("export-pages-left-out", fallback: "%1$lld pages of %2$@ couldn't be read and aren't in the files.", n, chapter)
+    }
+
+    /// Under a This week cell: the chapter that came out that day, with its own title.
+    public static func readingChapterTitled(chapter: String, title: String) -> String {
+        Self.format("reading-chapter-titled", fallback: "Chapter %1$@ · %2$@", chapter, title)
+    }
+
+    /// A chapter row's state: the person read it.
+    public static var readingRowRead: String { string("reading-row-read", fallback: "Read") }
+
+    /// A chapter row's state: it came out since the person last read and is not read.
+    public static var readingRowNew: String { string("reading-row-new", fallback: "New") }
+
+    /// A chapter row's state: it is kept on this device to read offline.
+    public static var readingRowDownloaded: String { string("reading-row-downloaded", fallback: "Downloaded") }
+
+    /// A chapter row's state: it is downloaded on this device, and the source no longer lists it. It still opens from the download.
+    public static var readingRowGoneFromSource: String { string("reading-row-gone-from-source", fallback: "Gone from the source") }
+
+    /// A chapter row's state: it is read from the source and nothing of it is on this device.
+    public static var readingRowNotDownloaded: String { string("reading-row-not-downloaded", fallback: "Not downloaded") }
+
+    /// A chapter row's state: a file in one of the person's folders, or one already on the device.
+    public static var readingRowOnDevice: String { string("reading-row-on-device", fallback: "On this device") }
+
+    /// A chapter row's state: it waits its turn to download.
+    public static var readingRowQueued: String { string("reading-row-queued", fallback: "Queued") }
+
+    /// A chapter row's state: it waits to download until the device is on Wi-Fi.
+    public static var readingRowWaitsWifi: String { string("reading-row-waits-wifi", fallback: "Queued · waits for Wi-Fi") }
+
+    /// A chapter row's state while it downloads.
+    public static func readingRowDownloading(done: Int, total: Int) -> String {
+        Self.format("reading-row-downloading", fallback: "Downloading · %1$lld of %2$lld pages", done, total)
+    }
+
+    /// A chapter row's state while it downloads, before its page count is known, and throughout for a novel's chapter, which has no pages to count.
+    public static var readingRowDownloadingPlain: String { string("reading-row-downloading-plain", fallback: "Downloading") }
+
+    /// A chapter row's state: the download failed. The reason follows as the next part.
+    public static var readingRowFailed: String { string("reading-row-failed", fallback: "Couldn't download") }
+
+    /// A chapter row's state: the page the person stopped on, of how many.
+    public static func readingRowPageOf(page: Int, of: Int) -> String {
+        Self.format("reading-row-page-of", fallback: "Page %1$@ of %2$@", String(page), String(of))
+    }
+
+    /// A chapter row's state: the page the person stopped on, when the length isn't known.
+    public static func readingRowPage(page: Int) -> String {
+        Self.format("reading-row-page", fallback: "Page %1$@", String(page))
+    }
+
+    /// A novel's chapter row: how far into it the person is.
+    public static func readingRowPercent(percent: Int) -> String {
+        Self.format("reading-row-percent", fallback: "%1$lld%%", percent)
+    }
+
+    /// A novel's chapter row: the person opened it, and how far in is too little to say as a percent.
+    public static var readingRowOpened: String { string("reading-row-opened", fallback: "Opened") }
+
+    /// A chapter row's state: the person bookmarked it. Bookmarked chapters are kept when read downloads are cleared.
+    public static var readingRowBookmarked: String { string("reading-row-bookmarked", fallback: "Bookmarked") }
+
+    /// A chapter row: how long its pages are, for a file on the device.
+    public static func readingRowPages(n: Int) -> String {
+        Self.format("reading-row-pages", fallback: "%1$lld pages", n)
+    }
+
+    /// A chapter row: how many versions the person's sources have of it. The row's menu lists them.
+    public static func readingRowVersions(n: Int) -> String {
+        Self.format("reading-row-versions", fallback: "%1$lld versions", n)
+    }
+
+    /// A chapter row: the source lists this chapter in parts, and the reader runs through them as one chapter. Shown beside the chapter's name: "Chapter 1, 2 parts".
+    public static func readingRowParts(n: Int) -> String {
+        Self.format("reading-row-parts", fallback: "%1$lld parts", n)
+    }
+
+    /// A chapter row: the group the series is listed from has not released this chapter, so it comes from another group, named here as the source names it. Lower case, as the line's other words; an app that starts a line with it capitalises the first letter.
+    public static func readingRowFromGroup(group: String) -> String {
+        Self.format("reading-row-from-group", fallback: "from %1$@", group)
+    }
+
+    /// A chapter row: the same, for a group in another language than the app's, named after the group. "from Saltmarsh Team, Spanish".
+    public static func readingRowFromGroupIn(group: String, language: String) -> String {
+        Self.format("reading-row-from-group-in", fallback: "from %1$@, %2$@", group, language)
+    }
+
+    /// A chapter row: a chapter in parts that is missing some, as no group has released them. The reader runs through the parts there are. Followed by the missing part: "2 of 3 parts".
+    public static func readingRowPartsOf(have: Int, n: Int) -> String {
+        Self.format("reading-row-parts-of", fallback: "%1$lld of %2$lld parts", have, n)
+    }
+
+    /// A chapter row, after the parts count: the part no group has released. With several, how many.
+    public static func readingRowPartMissing(count: Int, part: Int) -> String {
+        Self.format("reading-row-part-missing", fallback: "%1$lld parts missing", count, String(part))
+    }
+
+    /// A chapter row: one part of a chapter in parts comes from another group, as the group the series is read from lacks it. "part 2 from Saltmarsh Team".
+    public static func readingRowPartFromGroup(part: Int, group: String) -> String {
+        Self.format("reading-row-part-from-group", fallback: "part %1$@ from %2$@", String(part), group)
+    }
+
+    /// The same, for a group in another language than the app's. "part 2 from Saltmarsh Team, Spanish".
+    public static func readingRowPartFromGroupIn(part: Int, group: String, language: String) -> String {
+        Self.format("reading-row-part-from-group-in", fallback: "part %1$@ from %2$@, %3$@", String(part), group, language)
+    }
+
+    /// A chapter row: the version the series is read from lacks this chapter, and another of the person's sources has it. Its name follows; the chapter opens from there. Lower case, as the line's other words.
+    public static func readingRowFromSource(source: String) -> String {
+        Self.format("reading-row-from-source", fallback: "from %1$@", source)
+    }
+
+    /// A quiet line in the reader: pages a series repeats at the start or end of its chapters (a group's credits or notices) were left out of this chapter. Tapping it shows them.
+    public static func readerCreditPagesSkipped(count: Int) -> String {
+        Self.format("reader-credit-pages-skipped", fallback: "%1$lld credit pages skipped", count)
+    }
+
+    /// A chapter row: when it was read or came out, under a minute ago.
+    public static var readingAgoNow: String { string("reading-ago-now", fallback: "just now") }
+
+    /// A chapter row: when it was read or came out, in minutes.
+    public static func readingAgoMinutes(minutes: Int) -> String {
+        Self.format("reading-ago-minutes", fallback: "%1$lld min ago", minutes)
+    }
+
+    /// A chapter row: when it was read or came out, earlier today.
+    public static var readingAgoToday: String { string("reading-ago-today", fallback: "today") }
+
+    /// A chapter row: when it was read or came out, the day before today.
+    public static var readingAgoYesterday: String { string("reading-ago-yesterday", fallback: "yesterday") }
+
+    /// A chapter row: when it was read or came out, in days, under a week.
+    public static func readingAgoDays(days: Int) -> String {
+        Self.format("reading-ago-days", fallback: "%1$lld days ago", days)
+    }
+
+    /// A chapter row: when it was read or came out, in weeks, under two months.
+    public static func readingAgoWeeks(weeks: Int) -> String {
+        Self.format("reading-ago-weeks", fallback: "%1$lld weeks ago", weeks)
+    }
+
+    /// A chapter row: when it was read or came out, in months, under a year.
+    public static func readingAgoMonths(months: Int) -> String {
+        Self.format("reading-ago-months", fallback: "%1$lld months ago", months)
+    }
+
+    /// A chapter row: when it was read or came out, in years.
+    public static func readingAgoYears(years: Int) -> String {
+        Self.format("reading-ago-years", fallback: "%1$lld years ago", years)
+    }
+
+    /// The tracker took the series off its list.
+    public static func readingRemovedFrom(tracker: String) -> String {
+        Self.format("reading-removed-from", fallback: "Removed from %1$@", tracker)
+    }
+
+    /// The tracker's list did not hold the series, so there was nothing to remove.
+    public static func readingRemovedNotThere(tracker: String) -> String {
+        Self.format("reading-removed-not-there", fallback: "Wasn't on your %1$@ list", tracker)
+    }
+
+    /// The app never learned which of the tracker's entries this series is, so it asked nothing.
+    public static func readingRemovedUnmatched(tracker: String) -> String {
+        Self.format("reading-removed-unmatched", fallback: "Not matched on %1$@, so nothing changed there", tracker)
+    }
+
+    /// The tracker could not take the series off. The reason follows.
+    public static func readingRemovedFailed(tracker: String) -> String {
+        Self.format("reading-removed-failed", fallback: "Still on your %1$@ list", tracker)
+    }
+
+    /// Why a removal failed: the tracker turned the sign-in away.
+    public static func readingRemovedSignIn(tracker: String) -> String {
+        Self.format("reading-removed-sign-in", fallback: "Sign in to %1$@ again, then try once more.", tracker)
+    }
+
+    /// The source answered the search and has no series by the series' names.
+    public static var readingMissNoSeries: String { string("reading-miss-no-series", fallback: "No series with this name") }
+
+    /// The source has failed every ask since this time of day, in the person's zone.
+    public static func readingMissDownSince(time: String) -> String {
+        Self.format("reading-miss-down-since", fallback: "Not answering since %1$@", time)
+    }
+
+    /// The source has failed every ask, since a time on another day or not known.
+    public static var readingMissDown: String { string("reading-miss-down", fallback: "Not answering") }
+
+    /// The source has no series by the series' names, but has one that may be it in another edition, as a full-colour release. That series is shown under this line, and choosing it confirms it.
+    public static var readingMissPossible: String { string("reading-miss-possible", fallback: "Possible match") }
+
+    /// How many parts of a light novel are downloaded.
+    public static func readingDlParts(count: Int) -> String {
+        Self.format("reading-dl-parts", fallback: "%1$lld parts", count)
+    }
+
+    /// What the downloads take up on this device.
+    public static func readingDlSize(size: String) -> String {
+        Self.format("reading-dl-size", fallback: "%1$@", size)
+    }
+
+    /// How many of the downloaded chapters are read, which Delete read clears.
+    public static func readingDlRead(count: Int) -> String {
+        Self.format("reading-dl-read", fallback: "%1$lld read", count)
+    }
+
+    /// The chapter downloading now.
+    public static func readingDlChapter(chapter: String) -> String {
+        Self.format("reading-dl-chapter", fallback: "Chapter %1$@", chapter)
+    }
+
+    /// How far the chapter downloading now has come.
+    public static func readingDlPages(done: Int, total: Int) -> String {
+        Self.format("reading-dl-pages", fallback: "%1$lld of %2$lld pages", done, total)
+    }
+
+    /// Chapters waiting their turn after the one downloading.
+    public static func readingDlMoreQueued(count: Int) -> String {
+        Self.format("reading-dl-more-queued", fallback: "%1$lld more queued", count)
+    }
+
+    /// Chapters waiting their turn, none downloaded yet.
+    public static func readingDlQueued(count: Int) -> String {
+        Self.format("reading-dl-queued", fallback: "%1$lld queued", count)
+    }
+
+    /// Chapters that wait for Wi-Fi to download.
+    public static var readingDlWaitsWifi: String { string("reading-dl-waits-wifi", fallback: "waits for Wi-Fi") }
+
+    /// A chapter that failed. The reason follows as the next part.
+    public static func readingDlFailed(chapter: String) -> String {
+        Self.format("reading-dl-failed", fallback: "Chapter %1$@ couldn't download", chapter)
+    }
+
+    /// After "Chapter 2 couldn't download" when there was no network: the downloads banner says the rest.
+    public static var readingDlOffline: String { string("reading-dl-offline", fallback: "Offline") }
+
+    /// How much the chosen chapters will take, from their pages and the size of pages downloaded before.
+    public static func readingEstimateSize(size: String) -> String {
+        Self.format("reading-estimate-size", fallback: "About %1$@", size)
+    }
+
+    /// The chapters download only on Wi-Fi, as the settings say.
+    public static var readingEstimateWifi: String { string("reading-estimate-wifi", fallback: "over Wi-Fi") }
+
+    /// The device is on mobile data, and the settings let chapters download on it.
+    public static var readingEstimateMobile: String { string("reading-estimate-mobile", fallback: "over mobile data") }
+
+    /// The device is on mobile data and the chapters wait until it's on Wi-Fi.
+    public static var readingEstimateWaitsWifi: String { string("reading-estimate-waits-wifi", fallback: "waits for Wi-Fi") }
+
+    /// Notice after Download on chapters that are files in the person's own folders: they open from where they are, so nothing is downloaded.
+    public static var readingDownloadOnDevice: String { string("reading-download-on-device", fallback: "These are files on this device already. They read offline without a download.") }
+
+    /// A series' name where neither the catalogue nor its source gave one: on Downloads, in a sent file's name and in the e-reader's library.
+    public static var readingUntitledSeries: String { string("reading-untitled-series", fallback: "Untitled series") }
+
+    /// The notification's title.
+    public static var readingDownloadsDoneTitle: String { string("reading-downloads-done-title", fallback: "Downloads finished") }
+
+    /// The notification's text: one series' chapters are downloaded.
+    public static func readingDownloadsDoneChapters(title: String, count: Int) -> String {
+        Self.format("reading-downloads-done-chapters", fallback: "%2$lld chapters of %1$@ are ready to read offline.", title, count)
+    }
+
+    /// The notification's text: one light novel's parts are downloaded.
+    public static func readingDownloadsDoneParts(title: String, count: Int) -> String {
+        Self.format("reading-downloads-done-parts", fallback: "%2$lld parts of %1$@ are ready to read offline.", title, count)
+    }
+
+    /// The notification's text: chapters of several series are downloaded.
+    public static func readingDownloadsDoneSeries(count: Int) -> String {
+        Self.format("reading-downloads-done-series", fallback: "Chapters of %1$lld series are ready to read offline.", count)
+    }
+
+    /// Row heading on reading's Home: manga that are trending on AniList now.
+    public static var readHomeTrendingManga: String { string("read-home-trending-manga", fallback: "Trending manga") }
+
+    /// Row heading on reading's Home: webtoons that are trending on AniList now.
+    public static var readHomeTrendingWebtoons: String { string("read-home-trending-webtoons", fallback: "Trending webtoons") }
+
+    /// Row heading on reading's Home: light novels that are trending on AniList now.
+    public static var readHomeTrendingNovels: String { string("read-home-trending-novels", fallback: "Trending light novels") }
+
+    /// Row heading on reading's Home: the most popular manga that started in the last 12 months.
+    public static var readHomeNewManga: String { string("read-home-new-manga", fallback: "New manga") }
+
+    /// Row heading on reading's Home: the most popular webtoons that started in the last 12 months.
+    public static var readHomeNewWebtoons: String { string("read-home-new-webtoons", fallback: "New webtoons") }
+
+    /// Row heading on reading's Home: the most popular light novels that started in the last 12 months.
+    public static var readHomeNewNovels: String { string("read-home-new-novels", fallback: "New light novels") }
+
+    /// Side text beside a New row's heading, in a quieter style: what the row covers.
+    public static var readHomeNewSide: String { string("read-home-new-side", fallback: "Last 12 months") }
+
+    /// Row heading on reading's Home: the most popular manga that have finished.
+    public static var readHomeFinishedManga: String { string("read-home-finished-manga", fallback: "Finished manga") }
+
+    /// Row heading on reading's Home: the most popular webtoons that have finished.
+    public static var readHomeFinishedWebtoons: String { string("read-home-finished-webtoons", fallback: "Finished webtoons") }
+
+    /// Row heading on reading's Home: the most popular light novels that have finished.
+    public static var readHomeFinishedNovels: String { string("read-home-finished-novels", fallback: "Finished light novels") }
+
+    /// Side text beside a Finished row's heading, in a quieter style: how the row is sorted.
+    public static var readHomeFinishedSide: String { string("read-home-finished-side", fallback: "Most popular") }
+
+    /// A choice of reading Search's Started filter: series that started at any time.
+    public static var readSearchStartedAny: String { string("read-search-started-any", fallback: "Any time") }
+
+    /// A choice of reading Search's Started filter: series that started in the last 12 months.
+    public static var readSearchStartedYear: String { string("read-search-started-year", fallback: "Last 12 months") }
+
+    /// A choice of reading Search's Started filter: series that started in the last 3 years.
+    public static var readSearchStarted3Years: String { string("read-search-started-3-years", fallback: "Last 3 years") }
+
+    /// Under a source's hit in Search: the chapters it holds, from the first.
+    public static func readHitChapters(last: Int) -> String {
+        Self.format("read-hit-chapters", fallback: "Chapters 1 to %1$@", String(last))
+    }
+
+    /// Under a source's hit in Search: a web novel's episodes it holds, from the first.
+    public static func readHitEpisodes(last: Int) -> String {
+        Self.format("read-hit-episodes", fallback: "Episodes 1 to %1$@", String(last))
+    }
+
+    /// Under a source's hit in Search: a light novel's parts it holds.
+    public static func readHitParts(count: Int) -> String {
+        Self.format("read-hit-parts", fallback: "%1$lld parts", count)
+    }
+
+    /// Under a source's hit in Search: the book files it holds.
+    public static func readHitFiles(count: Int) -> String {
+        Self.format("read-hit-files", fallback: "%1$lld files", count)
+    }
+
+    /// Under a source's hit in Search: the book files it holds, all in one format ("CBZ").
+    public static func readHitFilesFormat(count: Int, format: String) -> String {
+        Self.format("read-hit-files-format", fallback: "%1$lld files · %2$@", count, format)
+    }
+
+    /// The name of the folders on this device, which read as one source: a Search group's heading, the source a series reads from, "In Folders" on a search result. It stands alone, with no word for its kind beside it.
+    public static var readSourceFolders: String { string("read-source-folders", fallback: "Folders") }
+
+    /// A section of the feed that e-readers fetch from: the chapters downloaded on this device.
+    public static var readFeedDownloads: String { string("read-feed-downloads", fallback: "Downloads") }
+
+    /// On a cover in a New row, after the country: the month the series started, within the last 12 months, as in "Japan · since January".
+    public static var readingSinceJanuary: String { string("reading-since-january", fallback: "since January") }
+
+    /// On a cover in a New row, after the country: the month the series started, within the last 12 months, as in "Japan · since February".
+    public static var readingSinceFebruary: String { string("reading-since-february", fallback: "since February") }
+
+    /// On a cover in a New row, after the country: the month the series started, within the last 12 months, as in "Japan · since March".
+    public static var readingSinceMarch: String { string("reading-since-march", fallback: "since March") }
+
+    /// On a cover in a New row, after the country: the month the series started, within the last 12 months, as in "Japan · since April".
+    public static var readingSinceApril: String { string("reading-since-april", fallback: "since April") }
+
+    /// On a cover in a New row, after the country: the month the series started, within the last 12 months, as in "Japan · since May".
+    public static var readingSinceMay: String { string("reading-since-may", fallback: "since May") }
+
+    /// On a cover in a New row, after the country: the month the series started, within the last 12 months, as in "Japan · since June".
+    public static var readingSinceJune: String { string("reading-since-june", fallback: "since June") }
+
+    /// On a cover in a New row, after the country: the month the series started, within the last 12 months, as in "Japan · since July".
+    public static var readingSinceJuly: String { string("reading-since-july", fallback: "since July") }
+
+    /// On a cover in a New row, after the country: the month the series started, within the last 12 months, as in "Japan · since August".
+    public static var readingSinceAugust: String { string("reading-since-august", fallback: "since August") }
+
+    /// On a cover in a New row, after the country: the month the series started, within the last 12 months, as in "Japan · since September".
+    public static var readingSinceSeptember: String { string("reading-since-september", fallback: "since September") }
+
+    /// On a cover in a New row, after the country: the month the series started, within the last 12 months, as in "Japan · since October".
+    public static var readingSinceOctober: String { string("reading-since-october", fallback: "since October") }
+
+    /// On a cover in a New row, after the country: the month the series started, within the last 12 months, as in "Japan · since November".
+    public static var readingSinceNovember: String { string("reading-since-november", fallback: "since November") }
+
+    /// On a cover in a New row, after the country: the month the series started, within the last 12 months, as in "Japan · since December".
+    public static var readingSinceDecember: String { string("reading-since-december", fallback: "since December") }
+
+    /// The line over Search's results opened by View all on a Trending row: the format and the order. The count follows it: "Manga, trending · 1,920 series from AniList".
+    public static var readViewAllTrendingManga: String { string("read-view-all-trending-manga", fallback: "Manga, trending") }
+
+    /// The line over Search's results opened by View all on a Trending row: the format and the order. The count follows it: "Webtoons, trending · 1,920 series from AniList".
+    public static var readViewAllTrendingWebtoons: String { string("read-view-all-trending-webtoons", fallback: "Webtoons, trending") }
+
+    /// The line over Search's results opened by View all on a Trending row: the format and the order. The count follows it: "Light novels, trending · 1,920 series from AniList".
+    public static var readViewAllTrendingNovels: String { string("read-view-all-trending-novels", fallback: "Light novels, trending") }
+
+    /// The line over Search's results opened by View all on a New row: the format and the filter. The count follows it: "Manga started in the last 12 months · 1,920 series from AniList".
+    public static var readViewAllNewManga: String { string("read-view-all-new-manga", fallback: "Manga started in the last 12 months") }
+
+    /// The line over Search's results opened by View all on a New row: the format and the filter. The count follows it: "Webtoons started in the last 12 months · 1,920 series from AniList".
+    public static var readViewAllNewWebtoons: String { string("read-view-all-new-webtoons", fallback: "Webtoons started in the last 12 months") }
+
+    /// The line over Search's results opened by View all on a New row: the format and the filter. The count follows it: "Light novels started in the last 12 months · 1,920 series from AniList".
+    public static var readViewAllNewNovels: String { string("read-view-all-new-novels", fallback: "Light novels started in the last 12 months") }
+
+    /// The line over Search's results opened by View all on a Finished row: the format and the order. The count follows it: "Finished manga, most popular · 1,920 series from AniList".
+    public static var readViewAllFinishedManga: String { string("read-view-all-finished-manga", fallback: "Finished manga, most popular") }
+
+    /// The line over Search's results opened by View all on a Finished row: the format and the order. The count follows it: "Finished webtoons, most popular · 1,920 series from AniList".
+    public static var readViewAllFinishedWebtoons: String { string("read-view-all-finished-webtoons", fallback: "Finished webtoons, most popular") }
+
+    /// The line over Search's results opened by View all on a Finished row: the format and the order. The count follows it: "Finished light novels, most popular · 1,920 series from AniList".
+    public static var readViewAllFinishedNovels: String { string("read-view-all-finished-novels", fallback: "Finished light novels, most popular") }
+
     /// Toast after joining a plugin store with an invite that names this device's owner.
     public static func storeJoined(store: String, member: String) -> String {
         Self.format("store-joined", fallback: "Joined %1$@ as %2$@.", store, member)
@@ -781,7 +1669,7 @@ public enum L {
 
     /// Error: the token for a joined store could not be saved on this device. The reason comes from the system.
     public static func storeTokenNotKept(reason: String) -> String {
-        Self.format("store-token-not-kept", fallback: "Couldn't keep the token for this plugin store. %1$@", reason)
+        Self.format("store-token-not-kept", fallback: "Couldn't save the token for this plugin store. %1$@", reason)
     }
 
     /// Error: an invite that cannot be used any more.
@@ -850,6 +1738,11 @@ public enum L {
         Self.format("plugin-missing-locally", fallback: "%1$@ is no longer in the plugin folder.", plugin)
     }
 
+    /// Error: a book source cannot be published to a store whose server is too old to list book sources.
+    public static func storeTakesNoBooks(store: String) -> String {
+        Self.format("store-takes-no-books", fallback: "%1$@ doesn't list book sources yet. Its owner can update the plugin store to add them.", store)
+    }
+
     /// Error: an invite for another device cannot be made from a device that joined with the open link.
     public static func storeInviteNeedsLink(store: String) -> String {
         Self.format("store-invite-needs-link", fallback: "This device joined %1$@ with its link. Paste the same link on the other device.", store)
@@ -880,7 +1773,7 @@ public enum L {
 
     /// Toast after a source (plugin) is switched off. It is skipped when looking for episodes.
     public static func sourceSwitchedOff(name: String) -> String {
-        Self.format("source-switched-off", fallback: "%1$@ is off. It is skipped when looking for episodes.", name)
+        Self.format("source-switched-off", fallback: "%1$@ is off. Kaeri skips it when looking for episodes.", name)
     }
 
     /// Toast after a source (plugin) is switched on.
@@ -895,7 +1788,7 @@ public enum L {
 
     /// Toast after a release is chosen for a title. The name is the release's title.
     public static func releasePinned(name: String) -> String {
-        Self.format("release-pinned", fallback: "%1$@ will be used for this title.", name)
+        Self.format("release-pinned", fallback: "This title now uses %1$@.", name)
     }
 
     /// Toast when the chosen source or release for a title could not be saved. The reason comes from the database.
@@ -1020,12 +1913,12 @@ public enum L {
 
     /// Toast when a sign-in redirect arrives and no sign-in is waiting for it.
     public static func noticeSignInNotWaiting(tracker: String) -> String {
-        Self.format("notice-sign-in-not-waiting", fallback: "No sign-in to %1$@ is waiting for that. Start the sign-in again.", tracker)
+        Self.format("notice-sign-in-not-waiting", fallback: "A sign-in reply from %1$@ arrived, but no sign-in was waiting for it. Start the sign-in again.", tracker)
     }
 
     /// Toast when a sign-in redirect does not match the request that was made.
     public static func noticeSignInWrongRequest(tracker: String) -> String {
-        Self.format("notice-sign-in-wrong-request", fallback: "That sign-in to %1$@ didn't come back from this request. Start the sign-in again.", tracker)
+        Self.format("notice-sign-in-wrong-request", fallback: "The sign-in reply from %1$@ doesn't match the request. Start the sign-in again.", tracker)
     }
 
     /// Toast when a tracker sent the person back without a token.
@@ -1090,6 +1983,21 @@ public enum L {
         Self.format("notice-signed-out-queue", fallback: "Signed out of %1$@. %2$lld queued changes are kept for the next sign-in.", tracker, count)
     }
 
+    /// Toast, shown once, when a tracker kept refusing a change to a title for about two days and the change stopped being sent. The change itself is still saved in the app. The tracker is its name, such as AniList; the title is a show's or a series' name.
+    public static func noticeTrackerChangeRefused(tracker: String, title: String) -> String {
+        Self.format("notice-tracker-change-refused", fallback: "%1$@ kept refusing a change to %2$@, so it stopped being sent. It's still saved in Kaeri.", tracker, title)
+    }
+
+    /// The same toast when changes to several titles stopped being sent to one tracker at once. The title is the first of them; others is how many more titles there are.
+    public static func noticeTrackerChangesRefused(tracker: String, title: String, others: Int) -> String {
+        Self.format("notice-tracker-changes-refused", fallback: "%1$@ kept refusing changes to %2$@ and %3$lld more titles, so they stopped being sent. They're still saved in Kaeri.", tracker, title, others)
+    }
+
+    /// The same toast when the app has no name for the titles. Count is how many titles.
+    public static func noticeTrackerChangeRefusedUntitled(tracker: String, count: Int) -> String {
+        Self.format("notice-tracker-change-refused-untitled", fallback: "%1$@ kept refusing changes to %2$lld titles, so they stopped being sent. They're still saved in Kaeri.", tracker, count)
+    }
+
     /// Toast when signing out of a tracker failed. The reason comes from the system.
     public static func noticeSignOutFailed(tracker: String, reason: String) -> String {
         Self.format("notice-sign-out-failed", fallback: "Couldn't sign out of %1$@. Try again. %2$@", tracker, reason)
@@ -1139,7 +2047,7 @@ public enum L {
 
     /// Toast, and desktop notification, for one episode that aired while the app was closed.
     public static func noticeEpisodeAired(title: String, episode: Int) -> String {
-        Self.format("notice-episode-aired", fallback: "%1$@, episode %2$lld, aired while you were away.", title, episode)
+        Self.format("notice-episode-aired", fallback: "%1$@, episode %2$@, aired while you were away.", title, String(episode))
     }
 
     /// Toast, and desktop notification, for several episodes that aired while the app was closed.
@@ -1156,13 +2064,13 @@ public enum L {
     public static var causeProxyNeedsAddress: String { string("cause-proxy-needs-address", fallback: "A proxy needs a host and a port.") }
 
     /// The reason a proxy could not be checked: its address is not one the check can use.
-    public static var causeProxyAddressUnusable: String { string("cause-proxy-address-unusable", fallback: "The proxy's address is not one a check can use.") }
+    public static var causeProxyAddressUnusable: String { string("cause-proxy-address-unusable", fallback: "The proxy check can't use this address.") }
 
     /// The reason a request failed: it never reached the server.
     public static var causeServerUnreachable: String { string("cause-server-unreachable", fallback: "The server couldn't be reached.") }
 
     /// The legal line, shown in About beside Legal and contact. It exists once, so no translation can paraphrase it.
-    public static var legalHostsNoContent: String { string("legal-hosts-no-content", fallback: "Kaeri doesn't host any shows. You add your own sources.") }
+    public static var legalHostsNoContent: String { string("legal-hosts-no-content", fallback: "Kaeri doesn't host any shows or books. You add your own sources.") }
 
     /// Toast after a setting is stored. The label is the setting's name.
     public static func noticeSaved(label: String) -> String {
@@ -1172,6 +2080,11 @@ public enum L {
     /// Toast when a setting could not be stored. The reason comes from the system.
     public static func noticeNotSaved(reason: String) -> String {
         Self.format("notice-not-saved", fallback: "Couldn't save that setting. %1$@", reason)
+    }
+
+    /// Toast when something the person did, such as a chapter marked read, a place in a book, a watched episode or a list change, could not be stored. The reason comes from the system.
+    public static func noticeChangeNotKept(reason: String) -> String {
+        Self.format("notice-change-not-kept", fallback: "Couldn't save that change. %1$@", reason)
     }
 
     /// Toast when a title's details did not load.
@@ -1185,7 +2098,7 @@ public enum L {
 
     /// Toast at launch when the database was damaged, so a fresh one was started. The path is where the damaged file was moved, kept for recovery. Watch history and downloads start over; what the trackers hold comes back with the next sync.
     public static func noticeDatabaseSetAside(path: String) -> String {
-        Self.format("notice-database-set-aside", fallback: "The database was damaged, so Kaeri started a new one. The old file is kept at %1$@. Your trackers bring back what they hold at the next sync.", path)
+        Self.format("notice-database-set-aside", fallback: "The database was damaged, so Kaeri started a new one. The old file is kept at %1$@. What your trackers hold comes back at the next sync.", path)
     }
 
     /// Message when Kaeri could not start because a folder could not be made. The path is the folder, the reason comes from the system.
@@ -1210,7 +2123,7 @@ public enum L {
 
     /// Message when Kaeri could not start its network connection from the network settings.
     public static func startFailedNetwork(reason: String) -> String {
-        Self.format("start-failed-network", fallback: "Kaeri couldn't set up its network connection from the network settings in config.toml. %1$@", reason)
+        Self.format("start-failed-network", fallback: "Kaeri couldn't connect with the network settings in config.toml. Check them, then try again. %1$@", reason)
     }
 
     /// Message when Kaeri itself could not start. The reason comes from the system or the engine.
@@ -1249,19 +2162,19 @@ public enum L {
     public static var noticeSurpriseEmptyPlanning: String { string("notice-surprise-empty-planning", fallback: "Planning is empty.") }
 
     /// Toast: Surprise me on the filters while the device is offline; AniList is how a title is picked.
-    public static var noticeSurpriseOffline: String { string("notice-surprise-offline", fallback: "Offline. Search picks need AniList.") }
+    public static var noticeSurpriseOffline: String { string("notice-surprise-offline", fallback: "You're offline. Surprise me needs AniList to pick a title.") }
 
     /// Toast: Surprise me on the filters, and AniList could not be asked.
-    public static var noticeSurpriseFailed: String { string("notice-surprise-failed", fallback: "Couldn't pick a title right now. Try again in a moment.") }
+    public static var noticeSurpriseFailed: String { string("notice-surprise-failed", fallback: "Couldn't reach AniList to pick a title. Try again in a moment.") }
 
     /// VoiceOver: a title that is up to date and whose next episode airs later. The time is already worded.
     public static func accessCaughtUpAirs(episode: Int, when: String) -> String {
-        Self.format("access-caught-up-airs", fallback: "Caught up, episode %1$lld airs %2$@", episode, when)
+        Self.format("access-caught-up-airs", fallback: "Caught up, episode %1$@ airs %2$@", String(episode), when)
     }
 
     /// VoiceOver: a title that is up to date and whose next episode has no air time yet.
     public static func accessCaughtUpUnaired(episode: Int) -> String {
-        Self.format("access-caught-up-unaired", fallback: "Caught up, episode %1$lld is not out yet", episode)
+        Self.format("access-caught-up-unaired", fallback: "Caught up, episode %1$@ is not out yet", String(episode))
     }
 
     /// VoiceOver: where a part-watched episode stopped. The time is a clock time.
@@ -1350,32 +2263,32 @@ public enum L {
 
     /// Short episode name for a dubbed episode, in a row or a widget.
     public static func titleEpisodeShortDubbed(episode: Int) -> String {
-        Self.format("title-episode-short-dubbed", fallback: "E%1$lld dubbed", episode)
+        Self.format("title-episode-short-dubbed", fallback: "E%1$@ dubbed", String(episode))
     }
 
     /// Long episode name for a dubbed episode, in a row or a widget.
     public static func titleEpisodeLongDubbed(episode: Int) -> String {
-        Self.format("title-episode-long-dubbed", fallback: "Episode %1$lld · Dubbed", episode)
+        Self.format("title-episode-long-dubbed", fallback: "Episode %1$@ · Dubbed", String(episode))
     }
 
     /// Row caption: an episode part-watched, with how long is left. The time left is already worded.
     public static func continueRowLeft(episode: Int, left: String) -> String {
-        Self.format("continue-row-left", fallback: "E%1$lld · %2$@", episode, left)
+        Self.format("continue-row-left", fallback: "E%1$@ · %2$@", String(episode), left)
     }
 
     /// Row caption: a dubbed episode part-watched, with how long is left. The time left is already worded.
     public static func continueRowLeftDubbed(episode: Int, left: String) -> String {
-        Self.format("continue-row-left-dubbed", fallback: "E%1$lld dubbed · %2$@", episode, left)
+        Self.format("continue-row-left-dubbed", fallback: "E%1$@ dubbed · %2$@", String(episode), left)
     }
 
     /// Widget action: carry on with an episode that was left part-way.
     public static func continueWidgetResume(episode: Int) -> String {
-        Self.format("continue-widget-resume", fallback: "Resume E%1$lld", episode)
+        Self.format("continue-widget-resume", fallback: "Resume E%1$@", String(episode))
     }
 
     /// Widget action: carry on with a dubbed episode that was left part-way.
     public static func continueWidgetResumeDubbed(episode: Int) -> String {
-        Self.format("continue-widget-resume-dubbed", fallback: "Resume E%1$lld dubbed", episode)
+        Self.format("continue-widget-resume-dubbed", fallback: "Resume E%1$@ dubbed", String(episode))
     }
 
     /// Title of the system window that keeps downloads going after the person leaves the app.
@@ -1419,22 +2332,22 @@ public enum L {
 
     /// Calendar row: an episode that has aired. The span is already worded, such as "1d 2h ago".
     public static func calendarLineOutApple(episode: Int, ago: String) -> String {
-        Self.format("calendar-line-out-apple", fallback: "E%1$lld out %2$@", episode, ago)
+        Self.format("calendar-line-out-apple", fallback: "E%1$@ out %2$@", String(episode), ago)
     }
 
     /// Calendar row: a dubbed episode that has aired. The span is already worded, such as "1d 2h ago".
     public static func calendarLineOutDubbed(episode: Int, ago: String) -> String {
-        Self.format("calendar-line-out-dubbed", fallback: "E%1$lld out %2$@ · Dubbed", episode, ago)
+        Self.format("calendar-line-out-dubbed", fallback: "E%1$@ out %2$@ · Dubbed", String(episode), ago)
     }
 
     /// Calendar row: an episode that airs soon. The span is already worded, such as "1h 30m".
     public static func calendarLineInApple(episode: Int, span: String) -> String {
-        Self.format("calendar-line-in-apple", fallback: "E%1$lld in %2$@", episode, span)
+        Self.format("calendar-line-in-apple", fallback: "E%1$@ in %2$@", String(episode), span)
     }
 
     /// Calendar row: a dubbed episode that airs soon. The span is already worded, such as "1h 30m".
     public static func calendarLineInDubbed(episode: Int, span: String) -> String {
-        Self.format("calendar-line-in-dubbed", fallback: "E%1$lld in %2$@ · Dubbed", episode, span)
+        Self.format("calendar-line-in-dubbed", fallback: "E%1$@ in %2$@ · Dubbed", String(episode), span)
     }
 
     /// Swipe action on an episode row that downloads it.
@@ -1442,7 +2355,7 @@ public enum L {
 
     /// Line under a title in Spotlight: the episode it plays next, out of how many there are.
     public static func titleEpisodeOf(episode: Int, total: Int) -> String {
-        Self.format("title-episode-of", fallback: "Episode %1$lld of %2$lld", episode, total)
+        Self.format("title-episode-of", fallback: "Episode %1$@ of %2$@", String(episode), String(total))
     }
 
     /// Title of the failure shown over a list of titles that could not load, when the screen has no name of its own for it.
@@ -1547,7 +2460,7 @@ public enum L {
     public static var settingsAppleDiscussions: String { string("settings-apple-discussions", fallback: "Episode discussions") }
 
     /// Note under the switch for episode discussions.
-    public static var settingsAppleDiscussionsNote: String { string("settings-apple-discussions-note", fallback: "Reads the comments on AniList's forum thread for episodes you have watched.") }
+    public static var settingsAppleDiscussionsNote: String { string("settings-apple-discussions-note", fallback: "Comments come from AniList's forum thread, once you've watched the episode.") }
 
     /// Name of the Settings switch that loads images in comments.
     public static var settingsAppleCommentImages: String { string("settings-apple-comment-images", fallback: "Load images in comments") }
@@ -1563,22 +2476,22 @@ public enum L {
 
     /// Body of a new-episode notification when the viewer is caught up.
     public static func noticeOut(episode: Int) -> String {
-        Self.format("notice-out", fallback: "Episode %1$lld is out.", episode)
+        Self.format("notice-out", fallback: "Episode %1$@ is out.", String(episode))
     }
 
     /// Body of a new-episode notification for the dub the viewer watches the show in.
     public static func noticeOutDubbed(episode: Int) -> String {
-        Self.format("notice-out-dubbed", fallback: "Episode %1$lld is out, dubbed.", episode)
+        Self.format("notice-out-dubbed", fallback: "Episode %1$@ is out, dubbed.", String(episode))
     }
 
     /// Body of a new-episode notification when the viewer is behind: the episode out and the one to watch next.
     public static func noticeOutBehind(episode: Int, next: Int) -> String {
-        Self.format("notice-out-behind", fallback: "Episode %1$lld is out. Next for you: episode %2$lld.", episode, next)
+        Self.format("notice-out-behind", fallback: "Episode %1$@ is out. Next for you: episode %2$@.", String(episode), String(next))
     }
 
     /// Body of a new-episode notification for a dub when the viewer is behind.
     public static func noticeOutDubbedBehind(episode: Int, next: Int) -> String {
-        Self.format("notice-out-dubbed-behind", fallback: "Episode %1$lld is out, dubbed. Next for you: episode %2$lld.", episode, next)
+        Self.format("notice-out-dubbed-behind", fallback: "Episode %1$@ is out, dubbed. Next for you: episode %2$@.", String(episode), String(next))
     }
 
     /// What the system shows instead of the body when previews are hidden.
@@ -1596,7 +2509,7 @@ public enum L {
     }
 
     /// Notice when a list could not be refreshed and the rows already on screen stay.
-    public static var listRefreshFailed: String { string("list-refresh-failed", fallback: "Couldn't refresh. Showing what was loaded.") }
+    public static var listRefreshFailed: String { string("list-refresh-failed", fallback: "Couldn't refresh. You're seeing what loaded last time.") }
 
     /// Notice when the browser sign-in for a tracker failed, as opposed to being closed by the person.
     public static func signInFailed(tracker: String) -> String {
@@ -1617,7 +2530,7 @@ public enum L {
 
     /// Line of the command palette when nothing matches. Return runs the search.
     public static func paletteSearchFor(query: String) -> String {
-        Self.format("palette-search-for", fallback: "Return searches for “%1$@”", query)
+        Self.format("palette-search-for", fallback: "Return searches for \"%1$@\"", query)
     }
 
     /// Hint at the foot of the command palette: what Return does.
@@ -1802,6 +2715,364 @@ public enum L {
     /// Playback menu item that opens the chat field in a watch party. Key C.
     public static var menuSaySomething: String { string("menu-say-something", fallback: "Say Something…") }
 
+    /// Button in the reader's control group that opens the reader's settings. Aa is the glyph.
+    public static var readerSettingsOpen: String { string("reader-settings-open", fallback: "Reader settings") }
+
+    /// Spoken label of a page in the reader.
+    public static func readerPageLabel(page: Int, total: Int, title: String) -> String {
+        Self.format("reader-page-label", fallback: "Page %1$@ of %2$@, %3$@", String(page), String(total), title)
+    }
+
+    /// The reader's scrubber, spoken.
+    public static var readerScrubber: String { string("reader-scrubber", fallback: "Page") }
+
+    /// The scrubber's value, spoken.
+    public static func readerScrubberValue(page: Int, total: Int) -> String {
+        Self.format("reader-scrubber-value", fallback: "Page %1$@ of %2$@", String(page), String(total))
+    }
+
+    /// Title of the row that picks the look: paper, light, sepia, dark or the system's.
+    public static var readerLook: String { string("reader-look", fallback: "Look") }
+
+    /// The settings button's label in the control group.
+    public static var readerTextLabel: String { string("reader-text-label", fallback: "Aa") }
+
+    /// The control group's line under the title. The chapter label comes from the source.
+    public static func readerGroupLine(chapter: String, page: Int, total: Int) -> String {
+        Self.format("reader-group-line", fallback: "%1$@ · page %2$@ of %3$@", chapter, String(page), String(total))
+    }
+
+    /// The control group's line on the end page, after the chapter's last page.
+    public static func readerGroupLineEnd(chapter: String) -> String {
+        Self.format("reader-group-line-end", fallback: "%1$@ · end of chapter", chapter)
+    }
+
+    /// The control group's line when a spread shows two pages.
+    public static func readerGroupLineSpread(chapter: String, first: Int, second: Int) -> String {
+        Self.format("reader-group-line-spread", fallback: "%1$@ · pages %2$@ and %3$@", chapter, String(first), String(second))
+    }
+
+    /// The control group's line for a strip.
+    public static func readerGroupLineStrip(chapter: String, image: Int, total: Int) -> String {
+        Self.format("reader-group-line-strip", fallback: "%1$@ · image %2$@ of %3$@", chapter, String(image), String(total))
+    }
+
+    /// The control group's line for a novel, paged.
+    public static func readerGroupLineNovel(chapter: String, page: Int, total: Int) -> String {
+        Self.format("reader-group-line-novel", fallback: "%1$@ · page %2$@ of %3$@", chapter, String(page), String(total))
+    }
+
+    /// The control group's line for a novel in one long scroll.
+    public static func readerGroupLineScroll(chapter: String, percent: Int) -> String {
+        Self.format("reader-group-line-scroll", fallback: "%1$@ · %2$lld%%", chapter, percent)
+    }
+
+    /// Link in the group that opens Go to page, and the field's label.
+    public static var readerGoToPage: String { string("reader-go-to-page", fallback: "Go to page") }
+
+    /// Placeholder of the Go to page field.
+    public static func readerGoToPageField(total: Int) -> String {
+        Self.format("reader-go-to-page-field", fallback: "1 to %1$lld", total)
+    }
+
+    /// Button beside the Go to page field that goes to the typed page.
+    public static var readerGoToPageSubmit: String { string("reader-go-to-page-submit", fallback: "Go") }
+
+    /// Line on the end page for a chapter that has not counted yet.
+    public static var readerEndNotRead: String { string("reader-end-not-read", fallback: "Not marked read yet") }
+
+    /// The one amber button of the end page: opens the next chapter.
+    public static var readerContinue: String { string("reader-continue", fallback: "Continue") }
+
+    /// Button on the end page that goes back to the series page.
+    public static var readerBackToSeries: String { string("reader-back-to-series", fallback: "Back to the series") }
+
+    /// End page heading when the next chapter is not out yet.
+    public static func readerEndNotOut(chapter: String) -> String {
+        Self.format("reader-end-not-out", fallback: "%1$@ isn't out yet", chapter)
+    }
+
+    /// End page text when the next chapter is not out yet.
+    public static var readerEndNotOutBody: String { string("reader-end-not-out-body", fallback: "Kaeri checks for new chapters in the background and adds them to Updates.") }
+
+    /// End page text when the reader has caught up with the series.
+    public static var readerEndCaughtUpBody: String { string("reader-end-caught-up-body", fallback: "New chapters show in Updates when your sources have them.") }
+
+    /// End page heading at the end of a finished series.
+    public static var readerEndFinished: String { string("reader-end-finished", fallback: "End of the series") }
+
+    /// End page text at the end of a finished series.
+    public static var readerEndFinishedBody: String { string("reader-end-finished-body", fallback: "There are no more chapters.") }
+
+    /// End page heading when no source has the next chapter.
+    public static func readerEndNoSource(chapter: String) -> String {
+        Self.format("reader-end-no-source", fallback: "No %1$@ in your sources yet", chapter)
+    }
+
+    /// End page heading when the next chapter is not downloaded and the device is offline.
+    public static func readerEndOffline(chapter: String) -> String {
+        Self.format("reader-end-offline", fallback: "%1$@ isn't downloaded", chapter)
+    }
+
+    /// End page text when the next chapter is not downloaded and the device is offline.
+    public static var readerEndOfflineBody: String { string("reader-end-offline-body", fallback: "You're offline. It opens here once you're connected.") }
+
+    /// Line on the page plate while a chapter opens. The chapter is its number, such as 12.
+    public static func readerOpening(chapter: String) -> String {
+        Self.format("reader-opening", fallback: "Opening chapter %1$@", chapter)
+    }
+
+    /// The opening line after a few seconds of waiting.
+    public static func readerOpeningSlow(seconds: Int) -> String {
+        Self.format("reader-opening-slow", fallback: "Finding a source · %1$lld s", seconds)
+    }
+
+    /// Hint under a page's error.
+    public static var readerPageFailedHint: String { string("reader-page-failed-hint", fallback: "Swipe to go on without it.") }
+
+    /// Heading of the error when a chapter would not open. The chapter is its number, such as 13.
+    public static func readerChapterFailed(chapter: String) -> String {
+        Self.format("reader-chapter-failed", fallback: "Couldn't open chapter %1$@", chapter)
+    }
+
+    /// Button of the error when a chapter would not open.
+    public static var readerChooseSource: String { string("reader-choose-source", fallback: "Choose source") }
+
+    /// Heading of the error when a chapter has no pages.
+    public static var readerNothingToRead: String { string("reader-nothing-to-read", fallback: "Nothing to read here") }
+
+    /// Notice over the page when the person's Focus turned Paper mode on.
+    public static var readerFocusPaper: String { string("reader-focus-paper", fallback: "Paper mode is on while your Focus is.") }
+
+    /// Button on the Resumed notice.
+    public static var readerStartOver: String { string("reader-start-over", fallback: "Start over") }
+
+    /// Button on the Moved notice.
+    public static var readerGoBack: String { string("reader-go-back", fallback: "Go back") }
+
+    /// Button on the mode detected notice.
+    public static var readerChange: String { string("reader-change", fallback: "Change") }
+
+    /// Heading of the settings that belong to one series.
+    public static var readerThisSeries: String { string("reader-this-series", fallback: "This series") }
+
+    /// Heading of the manga settings.
+    public static var readerAllManga: String { string("reader-all-manga", fallback: "All manga") }
+
+    /// Heading of the manga settings on a device: it names the device kind.
+    public static var readerAllMangaHere: String { string("reader-all-manga-here", fallback: "All manga on this device") }
+
+    /// Heading of the novel settings.
+    public static var readerAllNovels: String { string("reader-all-novels", fallback: "All light novels") }
+
+    /// Heading of the web comic settings.
+    public static var readerAllStrips: String { string("reader-all-strips", fallback: "All webtoons") }
+
+    /// Heading of the webtoon settings on a device: it names the device kind.
+    public static var readerAllStripsHere: String { string("reader-all-strips-here", fallback: "All webtoons on this device") }
+
+    /// Row: how the series reads.
+    public static var readerReadingMode: String { string("reader-reading-mode", fallback: "Reading mode") }
+
+    /// Reading mode value when it was guessed.
+    public static func readerModeAuto(mode: String) -> String {
+        Self.format("reader-mode-auto", fallback: "Auto · %1$@", mode)
+    }
+
+    /// Reading mode names.
+    public static var readerModePaged: String { string("reader-mode-paged", fallback: "Paged") }
+
+    public static var readerModeScrolled: String { string("reader-mode-scrolled", fallback: "Scroll") }
+
+    /// Under the reading mode picker for a guessed mode.
+    public static var readerModeDetectedNote: String { string("reader-mode-detected-note", fallback: "Detected from the series details.") }
+
+    /// Under the reading mode picker for a choice.
+    public static var readerModeChoiceNote: String { string("reader-mode-choice-note", fallback: "Your choice is saved for this series and follows it to your other devices.") }
+
+    /// Option of the reading mode picker that lets Kaeri guess again.
+    public static var readerModeAutoOption: String { string("reader-mode-auto-option", fallback: "Auto") }
+
+    /// Detail of the Auto option.
+    public static var readerModeAutoDetail: String { string("reader-mode-auto-detail", fallback: "Kaeri picks from the series details") }
+
+    /// Detail of the Strip option.
+    public static var readerModeStripDetail: String { string("reader-mode-strip-detail", fallback: "For webtoons and long images") }
+
+    /// Line under a series' own choice.
+    public static func readerModeOverrideNote(title: String) -> String {
+        Self.format("reader-mode-override-note", fallback: "Set for %1$@ on all your devices.", title)
+    }
+
+    /// Button that drops the series' own choice.
+    public static var readerUseDefault: String { string("reader-use-default", fallback: "Use default") }
+
+    /// Rows of the manga sheet.
+    public static var readerFit: String { string("reader-fit", fallback: "Fit") }
+
+    public static var readerCropBorders: String { string("reader-crop-borders", fallback: "Crop borders") }
+
+    public static var readerBackground: String { string("reader-background", fallback: "Background") }
+
+    public static var readerPaperMode: String { string("reader-paper-mode", fallback: "Paper mode") }
+
+    public static var readerMoreSettings: String { string("reader-more-settings", fallback: "More reader settings") }
+
+    public static var readerSearchSettings: String { string("reader-search-settings", fallback: "Search reader settings") }
+
+    /// Rows of the novel sheet.
+    public static var readerFont: String { string("reader-font", fallback: "Font") }
+
+    public static var readerLineSpacing: String { string("reader-line-spacing", fallback: "Line spacing") }
+
+    public static var readerLineTight: String { string("reader-line-tight", fallback: "Tight") }
+
+    public static var readerLineNormal: String { string("reader-line-normal", fallback: "Normal") }
+
+    public static var readerLineLoose: String { string("reader-line-loose", fallback: "Loose") }
+
+    public static var readerMargins: String { string("reader-margins", fallback: "Margins") }
+
+    public static var readerMarginsNormal: String { string("reader-margins-normal", fallback: "Normal") }
+
+    public static var readerPages: String { string("reader-pages", fallback: "Pages") }
+
+    public static var readerTextSize: String { string("reader-text-size", fallback: "Text size") }
+
+    public static var readerJustify: String { string("reader-justify", fallback: "Justify text") }
+
+    /// Rows of More reader settings.
+    public static var readerPageLayout: String { string("reader-page-layout", fallback: "Page layout") }
+
+    public static var readerSpreads: String { string("reader-spreads", fallback: "Wide pages") }
+
+    public static var readerTapZones: String { string("reader-tap-zones", fallback: "Tap zones") }
+
+    public static var readerVolumeKeys: String { string("reader-volume-keys", fallback: "Volume buttons turn pages") }
+
+    public static var readerStripWidth: String { string("reader-strip-width", fallback: "Width") }
+
+    public static var readerGreyscale: String { string("reader-greyscale", fallback: "Greyscale pages") }
+
+    public static var readerQuiet: String { string("reader-quiet", fallback: "Quiet the phone while reading") }
+
+    public static var readerFoot: String { string("reader-foot", fallback: "Show pages left") }
+
+    public static var readerFolio: String { string("reader-folio", fallback: "Show page numbers") }
+
+    public static var readerGroupLayout: String { string("reader-group-layout", fallback: "Layout") }
+
+    public static var readerGroupImages: String { string("reader-group-images", fallback: "Images") }
+
+    public static var readerGroupNavigation: String { string("reader-group-navigation", fallback: "Navigation") }
+
+    public static var readerGroupText: String { string("reader-group-text", fallback: "Text") }
+
+    public static var readerGroupPaper: String { string("reader-group-paper", fallback: "Paper mode") }
+
+    public static var readerOn: String { string("reader-on", fallback: "On") }
+
+    public static var readerOff: String { string("reader-off", fallback: "Off") }
+
+    /// Paper mode's page.
+    public static var readerPaperModeNote: String { string("reader-paper-mode-note", fallback: "Pages turn at once and nothing in the reader moves.") }
+
+    public static var readerPaperQuietNote: String { string("reader-paper-quiet-note", fallback: "iPhone quiets notifications with a Focus. Set one to turn on when Kaeri opens, and Kaeri switches to Paper mode while it is on.") }
+
+    public static var readerPaperQuietValue: String { string("reader-paper-quiet-value", fallback: "With a Focus") }
+
+    /// Title of the Focus filter in the system's Focus settings.
+    public static var readerFocusFilterTitle: String { string("reader-focus-filter-title", fallback: "Reading") }
+
+    /// Description of the Focus filter in the system's Focus settings.
+    public static var readerFocusFilterDescription: String { string("reader-focus-filter-description", fallback: "Turns on Paper mode in the reader while this Focus is on.") }
+
+    /// Parameter of the Focus filter.
+    public static var readerFocusFilterPaper: String { string("reader-focus-filter-paper", fallback: "Paper mode") }
+
+    /// Heading in the chapters sheet.
+    public static var readerPagesTab: String { string("reader-pages-tab", fallback: "Pages") }
+
+    public static var readerChaptersTab: String { string("reader-chapters-tab", fallback: "Chapters") }
+
+    /// A volume's heading in the chapter list.
+    public static func readerVolume(volume: String) -> String {
+        Self.format("reader-volume", fallback: "Volume %1$@", volume)
+    }
+
+    /// Chapters sheet: a chapter's state line.
+    public static func readerChapterInProgress(page: Int, total: Int) -> String {
+        Self.format("reader-chapter-in-progress", fallback: "Page %1$@ of %2$@", String(page), String(total))
+    }
+
+    public static var readerChapterRead: String { string("reader-chapter-read", fallback: "Read") }
+
+    public static var readerChapterNew: String { string("reader-chapter-new", fallback: "new") }
+
+    /// Chapters sheet: a chapter's length.
+    public static func readerChapterPages(pages: Int) -> String {
+        Self.format("reader-chapter-pages", fallback: "%1$lld pages", pages)
+    }
+
+    /// Chapters sheet: the offline line.
+    public static var readerOfflineLine: String { string("reader-offline-line", fallback: "Offline. Downloaded chapters still open.") }
+
+    /// The Go menu and its items, on the Mac and with a keyboard on iPad.
+    public static var readerMenuGo: String { string("reader-menu-go", fallback: "Go") }
+
+    public static var readerMenuNextPage: String { string("reader-menu-next-page", fallback: "Next Page") }
+
+    public static var readerMenuPreviousPage: String { string("reader-menu-previous-page", fallback: "Previous Page") }
+
+    public static var readerMenuNextChapter: String { string("reader-menu-next-chapter", fallback: "Next Chapter") }
+
+    public static var readerMenuPreviousChapter: String { string("reader-menu-previous-chapter", fallback: "Previous Chapter") }
+
+    public static var readerMenuGoToPage: String { string("reader-menu-go-to-page", fallback: "Go to Page…") }
+
+    public static var readerMenuChapters: String { string("reader-menu-chapters", fallback: "Chapters") }
+
+    public static var readerMenuSettings: String { string("reader-menu-settings", fallback: "Reader Settings…") }
+
+    public static var readerMenuZoomIn: String { string("reader-menu-zoom-in", fallback: "Zoom In") }
+
+    public static var readerMenuZoomOut: String { string("reader-menu-zoom-out", fallback: "Zoom Out") }
+
+    public static var readerMenuZoomFit: String { string("reader-menu-zoom-fit", fallback: "Fit to Window") }
+
+    public static var readerMenuFirstPage: String { string("reader-menu-first-page", fallback: "First Page") }
+
+    public static var readerMenuLastPage: String { string("reader-menu-last-page", fallback: "Last Page") }
+
+    /// Mac menu item: back to where the person was before a jump.
+    public static func readerMenuBackToPage(page: Int) -> String {
+        Self.format("reader-menu-back-to-page", fallback: "Back to Page %1$@", String(page))
+    }
+
+    /// Mac menu item when there is no place to go back to.
+    public static var readerMenuBack: String { string("reader-menu-back", fallback: "Back to Previous Page") }
+
+    /// Title of the Mac reader window.
+    public static var readerWindow: String { string("reader-window", fallback: "Reader") }
+
+    /// Keyboard step row on the Mac.
+    public static var readerKeyStep: String { string("reader-key-step", fallback: "Keyboard step") }
+
+    public static var readerKeyStepPanel: String { string("reader-key-step-panel", fallback: "Panel") }
+
+    public static var readerKeyStepScreen: String { string("reader-key-step-screen", fallback: "Screen") }
+
+    /// Gap between a strip's images.
+    public static var readerStripGap: String { string("reader-strip-gap", fallback: "Gap between images") }
+
+    /// A jump button above the page grid in the chapters sheet, for a band of pages.
+    public static func readerPagesRange(from: Int, to: Int) -> String {
+        Self.format("reader-pages-range", fallback: "%1$lld–%2$lld", from, to)
+    }
+
+    /// Why an e-reader send failed while offline, after "Couldn't prepare chapter 12."
+    public static var sendFailedOffline: String { string("send-failed-offline", fallback: "Try again when you're online.") }
+
     /// Line while results wait for the rate limit to recover, on a phone where a Search key runs the search.
     public static var searchRateLimitSearch: String { string("search-rate-limit-search", fallback: "Searching as you type is paused for a moment, to stay within AniList's limits. Press Search to search now.") }
 
@@ -1929,7 +3200,7 @@ public enum L {
     public static var settingsAsideAdvanced: String { string("settings-aside-advanced", fallback: "An option here can undo a Playback setting, such as upscaling or night mode. Most people never need this pane.") }
 
     /// Note under the download quality row.
-    public static var settingsQualityDetail: String { string("settings-quality-detail", fallback: "Higher takes the best version a source offers, and more space.") }
+    public static var settingsQualityDetail: String { string("settings-quality-detail", fallback: "Higher picks the best version a source has. It takes more space.") }
 
     /// Note under the merge subtitles row.
     public static var settingsMergeSubtitlesDetail: String { string("settings-merge-subtitles-detail", fallback: "Subtitles stay with the episode wherever the file goes.") }
@@ -1967,6 +3238,18 @@ public enum L {
     /// Legend of the storage bar: what downloads take for episodes not yet watched.
     public static var settingsStorageUnwatched: String { string("settings-storage-unwatched", fallback: "Not watched yet") }
 
+    /// Legend of the storage bar: what downloads take for chapters not read yet.
+    public static var settingsStorageUnread: String { string("settings-storage-unread", fallback: "Not read yet") }
+
+    /// Legend of the storage bar: what downloads take for chapters already read.
+    public static var settingsStorageRead: String { string("settings-storage-read", fallback: "Read") }
+
+    /// Legend of the storage bar with both media on: episodes not watched and chapters not read.
+    public static var settingsStorageUnseenBoth: String { string("settings-storage-unseen-both", fallback: "Not watched or read yet") }
+
+    /// Legend of the storage bar with both media on: episodes watched and chapters read.
+    public static var settingsStorageSeenBoth: String { string("settings-storage-seen-both", fallback: "Watched or read") }
+
     /// Line under the storage bar: what downloads take.
     public static func settingsStorageUsed(size: String) -> String {
         Self.format("settings-storage-used", fallback: "%1$@ in downloads.", size)
@@ -1985,6 +3268,11 @@ public enum L {
     /// Footnote of the AniList group in Accounts.
     public static func settingsAccountsSyncNote(tracker: String) -> String {
         Self.format("settings-accounts-sync-note", fallback: "Progress and list changes sync to %1$@. Library and the Calendar's My list show your %1$@ lists.", tracker)
+    }
+
+    /// Footnote of the AniList group in Accounts when the app is for reading.
+    public static func settingsAccountsSyncNoteRead(tracker: String) -> String {
+        Self.format("settings-accounts-sync-note-read", fallback: "Progress and list changes sync to %1$@. Library shows your %1$@ lists.", tracker)
     }
 
     /// Row title in Accounts: titles that differ between this device and the tracker.
@@ -2016,7 +3304,7 @@ public enum L {
 
     /// Footnote of the Discord group.
     public static func settingsPresenceNote(tracker: String) -> String {
-        Self.format("settings-presence-note", fallback: "Rich presence shows the cover, a progress bar and a link to the show on %1$@. Discord fetches the cover from %1$@ itself. It needs the title shown.", tracker)
+        Self.format("settings-presence-note", fallback: "Rich presence shows the cover, a progress bar and a link to the show on %1$@. It works only while the title is shown. Discord loads the cover from %1$@ itself.", tracker)
     }
 
     /// Preview of the Discord presence: the label of the cover drawing.
@@ -2032,12 +3320,12 @@ public enum L {
 
     /// Preview of the Discord presence: the episode line with the total.
     public static func settingsPresenceEpisodeOf(episode: Int, total: Int) -> String {
-        Self.format("settings-presence-episode-of", fallback: "Episode %1$lld of %2$lld", episode, total)
+        Self.format("settings-presence-episode-of", fallback: "Episode %1$@ of %2$@", String(episode), String(total))
     }
 
     /// Preview of the Discord presence: the episode line without a total.
     public static func settingsPresenceEpisode(episode: Int) -> String {
-        Self.format("settings-presence-episode", fallback: "Episode %1$lld", episode)
+        Self.format("settings-presence-episode", fallback: "Episode %1$@", String(episode))
     }
 
     /// Under the Discord preview while presence is on.
@@ -2106,7 +3394,7 @@ public enum L {
 
     /// VoiceOver label of a row of the week: the show, the episode and when it airs.
     public static func settingsWeekRowLabel(title: String, episode: Int, when: String) -> String {
-        Self.format("settings-week-row-label", fallback: "%1$@, episode %2$lld, %3$@", title, episode, when)
+        Self.format("settings-week-row-label", fallback: "%1$@, episode %2$@, %3$@", title, String(episode), when)
     }
 
     /// VoiceOver hint of a row of the week.
@@ -2114,7 +3402,7 @@ public enum L {
 
     /// Under the notification preview while New episodes is on.
     public static func settingsNotifyExplainOn(tracker: String) -> String {
-        Self.format("settings-notify-explain-on", fallback: "One notification when an episode of a show in your Watching list comes out, at the time %1$@ gives. A show's own setting comes first.", tracker)
+        Self.format("settings-notify-explain-on", fallback: "You get one notification when an episode of a show in your Watching list comes out, at the time %1$@ lists. A show's own setting comes first.", tracker)
     }
 
     /// Under the notification preview while New episodes is off.
@@ -2395,6 +3683,14 @@ public enum L {
     /// Line in the list of what the engine is doing, when it is doing nothing.
     public static var shellNothingRunning: String { string("shell-nothing-running", fallback: "Nothing is running.") }
 
+    /// Line in the sync status's popover: changes a { -tracker } can't take yet, because it has no match for those titles. They go out by themselves once it has one.
+    public static func shellSyncHeld(count: Int, tracker: String) -> String {
+        Self.format("shell-sync-held", fallback: "%1$lld changes can't sync to %2$@ yet", count, tracker)
+    }
+
+    /// Under the lines above in the sync status's popover: why those changes wait, and that nothing needs doing.
+    public static var shellSyncHeldDetail: String { string("shell-sync-held-detail", fallback: "No match for these titles yet. They sync once there is one.") }
+
     /// Placeholder of the search field while Settings is open.
     public static var shellSearchSettings: String { string("shell-search-settings", fallback: "Search settings") }
 
@@ -2416,11 +3712,11 @@ public enum L {
     }
 
     /// Error when a link that was pasted or opened is not a plugin store's invite.
-    public static var shellNotAStore: String { string("shell-not-a-store", fallback: "This link doesn't lead to a plugin store. Ask the plugin store's owner for a new invite.") }
+    public static var shellNotAStore: String { string("shell-not-a-store", fallback: "This link doesn't lead to a plugin store. Ask the person who sent it for a new invite.") }
 
     /// Context menu item that carries on with an episode that was left part-way.
     public static func shellResumeEpisode(episode: Int) -> String {
-        Self.format("shell-resume-episode", fallback: "Resume episode %1$lld", episode)
+        Self.format("shell-resume-episode", fallback: "Resume episode %1$@", String(episode))
     }
 
     /// Context menu item that opens the settings of one title.
@@ -2454,7 +3750,7 @@ public enum L {
     public static var shellEngineStopped: String { string("shell-engine-stopped", fallback: "Kaeri stopped working") }
 
     /// Plain line under the title of the page shown when the engine stopped while the app was open.
-    public static var shellEngineStoppedBody: String { string("shell-engine-stopped-body", fallback: "The part of the app that does the work has stopped. Start it again to carry on.") }
+    public static var shellEngineStoppedBody: String { string("shell-engine-stopped-body", fallback: "Downloads and sync stopped with it. Start Kaeri again to carry on.") }
 
     /// Title menu item that queues every unwatched episode that is not downloaded yet.
     public static var shellDownloadUnwatched: String { string("shell-download-unwatched", fallback: "Download unwatched") }
@@ -2506,10 +3802,10 @@ public enum L {
     }
 
     /// Line under the switch of the who-can-join sheet while anyone with the link can join.
-    public static var storesOpenJoinOnDetail: String { string("stores-open-join-on-detail", fallback: "They join without a name. Turning this off stops the link; turning it on again makes a new one.") }
+    public static var storesOpenJoinOnDetail: String { string("stores-open-join-on-detail", fallback: "People join without a name. Turn this off and the link stops working. Turn it on again for a new link.") }
 
     /// Line under the switch of the who-can-join sheet while only invited people can join.
-    public static var storesOpenJoinOffDetail: String { string("stores-open-join-off-detail", fallback: "Only people you invite can join. Turned on, anyone with the link joins, without a name.") }
+    public static var storesOpenJoinOffDetail: String { string("stores-open-join-off-detail", fallback: "Only people you invite can join. Turn this on and anyone with the link can join, without a name.") }
 
     /// Line under the count of devices that joined with the link, while the link is open.
     public static var storesOpenJoinNoNames: String { string("stores-open-join-no-names", fallback: "No names are kept.") }
@@ -2523,11 +3819,11 @@ public enum L {
     }
 
     /// Line of a device that joined with the link and was never seen again.
-    public static var storesDeviceNotSeen: String { string("stores-device-not-seen", fallback: "Not seen since") }
+    public static var storesDeviceNotSeen: String { string("stores-device-not-seen", fallback: "Not seen since joining") }
 
     /// Line of a plugin in the publish sheet: the version the plugin store offers.
     public static func storesPublishOffered(version: String) -> String {
-        Self.format("stores-publish-offered", fallback: "The plugin store offers %1$@", version)
+        Self.format("stores-publish-offered", fallback: "The plugin store has %1$@", version)
     }
 
     /// Line of a plugin in the publish sheet that the plugin store does not have yet.
@@ -2646,7 +3942,7 @@ public enum L {
     }
 
     /// Detail of the confirmation that removes a plugin.
-    public static var sourcesRemoveDetailDevice: String { string("sources-remove-detail-device", fallback: "It is deleted from this device. A plugin store can install it again.") }
+    public static var sourcesRemoveDetailDevice: String { string("sources-remove-detail-device", fallback: "It's deleted from this device. You can install it again from a plugin store.") }
 
     /// Heading of the list of matched file groups in a folder of Your media.
     public static var libraryMatchedApple: String { string("library-matched-apple", fallback: "Matched") }
@@ -2655,6 +3951,9 @@ public enum L {
     public static func serversRowSummaryApple(series: Int) -> String {
         Self.format("servers-row-summary-apple", fallback: "%1$lld series", series)
     }
+
+    /// Heading of the Mac's folder chooser for a folder of books: Reading's Add a source, the first launch's books step and a folder's Choose another.
+    public static var bookPickerMessage: String { string("book-picker-message", fallback: "Choose a folder with your books.") }
 
     /// Button on the recovery key sheet that opens the Files save panel on iPhone and iPad.
     public static var rkeySaveFiles: String { string("rkey-save-files", fallback: "Save to Files") }
@@ -2721,6 +4020,11 @@ public enum L {
         Self.format("rkey-enter-line-generic", fallback: "%1$@ holds history from your other devices. The key you saved when sync was turned on opens it.", service)
     }
 
+    /// Code screen: how long the code still works, as a countdown such as 1:58.
+    public static func pairCodeLeft(left: String) -> String {
+        Self.format("pair-code-left", fallback: "This code works for another %1$@.", left)
+    }
+
     /// Name of the fact on the title page that lists where else a show can be watched.
     public static var titleFactAlsoOn: String { string("title-fact-also-on", fallback: "Also on") }
 
@@ -2770,7 +4074,7 @@ public enum L {
     }
 
     /// Line in the episode list of a title when the list is filtered to unwatched episodes and there are none.
-    public static var titleAllWatched: String { string("title-all-watched", fallback: "Every episode is watched") }
+    public static var titleAllWatched: String { string("title-all-watched", fallback: "You've watched every episode") }
 
     /// Line on the title page when the detail did not arrive in time. A Try again button follows.
     public static var titleNoAnswerShort: String { string("title-no-answer-short", fallback: "AniList didn't answer.") }
@@ -2836,12 +4140,12 @@ public enum L {
 
     /// Short episode name in a widget.
     public static func widgetEpisodeShort(episode: Int) -> String {
-        Self.format("widget-episode-short", fallback: "E%1$lld", episode)
+        Self.format("widget-episode-short", fallback: "E%1$@", String(episode))
     }
 
     /// Long episode name in a widget.
     public static func widgetEpisodeLong(episode: Int) -> String {
-        Self.format("widget-episode-long", fallback: "Episode %1$lld", episode)
+        Self.format("widget-episode-long", fallback: "Episode %1$@", String(episode))
     }
 
     /// Tomorrow, inside a line.
@@ -2849,12 +4153,12 @@ public enum L {
 
     /// Under a widget: the next episode and when it airs.
     public static func widgetNextLine(when: String, title: String, episode: Int) -> String {
-        Self.format("widget-next-line", fallback: "Next: %1$@ · %2$@ · Episode %3$lld", when, title, episode)
+        Self.format("widget-next-line", fallback: "Next: %1$@ · %2$@ · Episode %3$@", when, title, String(episode))
     }
 
     /// The same line, shorter, for the small size.
     public static func widgetNextLineShort(when: String, title: String, episode: Int) -> String {
-        Self.format("widget-next-line-short", fallback: "Next: %1$@, %2$@ E%3$lld", when, title, episode)
+        Self.format("widget-next-line-short", fallback: "Next: %1$@, %2$@ E%3$@", when, title, String(episode))
     }
 
     /// Header detail on the large Airing today widget: when the next episode airs.
@@ -2864,7 +4168,7 @@ public enum L {
 
     /// Small widget line: the show, its episode and the day it airs.
     public static func widgetAirsDay(title: String, episode: Int, day: String) -> String {
-        Self.format("widget-airs-day", fallback: "%1$@ E%2$lld airs %3$@.", title, episode, day)
+        Self.format("widget-airs-day", fallback: "%1$@ E%2$@ airs %3$@.", title, String(episode), day)
     }
 
     /// Row state: an episode came out a while ago. The span is already worded, and counts up as time passes.
@@ -2957,7 +4261,7 @@ public enum L {
 
     /// VoiceOver, an episode in a Continue row: the episode number.
     public static func widgetA11yEpisode(episode: Int) -> String {
-        Self.format("widget-a11y-episode", fallback: "episode %1$lld", episode)
+        Self.format("widget-a11y-episode", fallback: "episode %1$@", String(episode))
     }
 
     /// VoiceOver, an episode with its mark such as Dub. The first part is already worded.
@@ -2982,7 +4286,7 @@ public enum L {
 
     /// VoiceOver, an Airing today row: the show, episode and time.
     public static func widgetA11yAiring(title: String, episode: Int, time: String) -> String {
-        Self.format("widget-a11y-airing", fallback: "%1$@, episode %2$lld, %3$@", title, episode, time)
+        Self.format("widget-a11y-airing", fallback: "%1$@, episode %2$@, %3$@", title, String(episode), time)
     }
 
     /// Added to an Airing today row that was watched.
@@ -3015,12 +4319,12 @@ public enum L {
 
     /// VoiceOver, the airing activity before the episode is out.
     public static func widgetA11yAirsAt(title: String, episode: Int, time: String) -> String {
-        Self.format("widget-a11y-airs-at", fallback: "%1$@, episode %2$lld, airs at %3$@", title, episode, time)
+        Self.format("widget-a11y-airs-at", fallback: "%1$@, episode %2$@, airs at %3$@", title, String(episode), time)
     }
 
     /// VoiceOver, the airing activity once the episode is out.
     public static func widgetA11yOutNow(title: String, episode: Int) -> String {
-        Self.format("widget-a11y-out-now", fallback: "%1$@, episode %2$lld, out now", title, episode)
+        Self.format("widget-a11y-out-now", fallback: "%1$@, episode %2$@, out now", title, String(episode))
     }
 
     /// Line of the downloads activity when an episode finished.
@@ -3258,13 +4562,13 @@ public enum L {
     public static var settingsCrashSave: String { string("settings-crash-save", fallback: "Save crash reports on this device") }
 
     /// Line under that switch.
-    public static var settingsCrashSaveDetail: String { string("settings-crash-save-detail", fallback: "When this is on, Kaeri keeps a short record of each crash on this device, with titles, addresses and names removed, so you can add it to Report a bug. Nothing is sent by itself.") }
+    public static var settingsCrashSaveDetail: String { string("settings-crash-save-detail", fallback: "Kaeri keeps a short record of each crash on this device for Report a bug, with titles, addresses and names removed. Nothing is sent by itself.") }
 
     /// Switch that turns the notice after a crash on or off.
     public static var settingsCrashAsk: String { string("settings-crash-ask", fallback: "Ask after a crash") }
 
     /// Line under that switch.
-    public static var settingsCrashAskDetail: String { string("settings-crash-ask-detail", fallback: "Shows a notice at the next launch with Report…") }
+    public static var settingsCrashAskDetail: String { string("settings-crash-ask-detail", fallback: "Kaeri shows a notice with Report… the next time it opens.") }
 
     /// Heading of crashes the system kept from before saving was turned on. The system is macOS, iOS, iPadOS or Android.
     public static func settingsCrashOsHeading(system: String) -> String {
@@ -3300,7 +4604,7 @@ public enum L {
     public static var settingsCrashDeleteAll: String { string("settings-crash-delete-all", fallback: "Delete all") }
 
     /// Footnote of the Crash reports group.
-    public static var settingsCrashFootnote: String { string("settings-crash-footnote", fallback: "Crash reports stay on this device. Kaeri sends nothing by itself. A report leaves only when you open it on GitHub from Report a bug. Reports are deleted after 30 days.") }
+    public static var settingsCrashFootnote: String { string("settings-crash-footnote", fallback: "Crash reports stay on this device, and Kaeri sends nothing by itself. A report leaves only when you open it on GitHub from Report a bug. Reports are deleted after 30 days.") }
 
     /// Button that shows the week before.
     public static var calendarPreviousWeek: String { string("calendar-previous-week", fallback: "Previous week") }
@@ -3344,12 +4648,12 @@ public enum L {
 
     /// Row: episode number and the time it airs.
     public static func calendarRowTime(episode: Int, time: String) -> String {
-        Self.format("calendar-row-time", fallback: "E%1$lld · %2$@", episode, time)
+        Self.format("calendar-row-time", fallback: "E%1$@ · %2$@", String(episode), time)
     }
 
     /// Row: episode number, dubbed, and the time it airs.
     public static func calendarRowTimeDubbed(episode: Int, time: String) -> String {
-        Self.format("calendar-row-time-dubbed", fallback: "E%1$lld dubbed · %2$@", episode, time)
+        Self.format("calendar-row-time-dubbed", fallback: "E%1$@ dubbed · %2$@", String(episode), time)
     }
 
     /// Note on a row whose episode moved to a later time.
@@ -3369,7 +4673,7 @@ public enum L {
 
     /// Row in a small widget: the episode is out.
     public static func calendarEpisodeOut(episode: Int) -> String {
-        Self.format("calendar-episode-out", fallback: "E%1$lld out", episode)
+        Self.format("calendar-episode-out", fallback: "E%1$@ out", String(episode))
     }
 
     /// Accessibility word for an aired episode that the person has not watched.
@@ -3377,12 +4681,12 @@ public enum L {
 
     /// Line saying when an episode airs. The time is already worded: "in 1h 30m", "Thursday 16:30".
     public static func episodeAirs(episode: Int, when: String) -> String {
-        Self.format("episode-airs", fallback: "Episode %1$lld airs %2$@", episode, when)
+        Self.format("episode-airs", fallback: "Episode %1$@ airs %2$@", String(episode), when)
     }
 
     /// Line for an episode that has not aired and has no date yet.
     public static func episodeNotOut(episode: Int) -> String {
-        Self.format("episode-not-out", fallback: "Episode %1$lld is not out yet", episode)
+        Self.format("episode-not-out", fallback: "Episode %1$@ is not out yet", String(episode))
     }
 
     /// Header of the list of episodes that air in the next seven days.
@@ -3448,13 +4752,13 @@ public enum L {
     public static var castTvsNoteIpad: String { string("cast-tvs-note-ipad", fallback: "They appear under Chromecast in Play on TV. This iPad sends them the episode.") }
 
     /// Note under the Settings row that lets a cast play torrents, on a Mac.
-    public static var castTorrentsNoteMac: String { string("cast-torrents-note-mac", fallback: "Lets a TV with Chromecast built in play torrents. This Mac sends the episode for as long as it plays.") }
+    public static var castTorrentsNoteMac: String { string("cast-torrents-note-mac", fallback: "A TV with Chromecast built in can then play torrents. This Mac sends the episode for as long as it plays.") }
 
     /// Note under the Settings row that lets a cast play torrents, on an iPhone.
-    public static var castTorrentsNoteIphone: String { string("cast-torrents-note-iphone", fallback: "Lets a TV with Chromecast built in play torrents. This iPhone sends the episode for as long as it plays.") }
+    public static var castTorrentsNoteIphone: String { string("cast-torrents-note-iphone", fallback: "A TV with Chromecast built in can then play torrents. This iPhone sends the episode for as long as it plays.") }
 
     /// Note under the Settings row that lets a cast play torrents, on an iPad.
-    public static var castTorrentsNoteIpad: String { string("cast-torrents-note-ipad", fallback: "Lets a TV with Chromecast built in play torrents. This iPad sends the episode for as long as it plays.") }
+    public static var castTorrentsNoteIpad: String { string("cast-torrents-note-ipad", fallback: "A TV with Chromecast built in can then play torrents. This iPad sends the episode for as long as it plays.") }
 
     /// Line on the casting card while the next episode counts down. The seconds are whole.
     public static func castUpNextPlaysIn(seconds: Int) -> String {
@@ -3911,6 +5215,27 @@ public enum L {
     /// Name of the controller's right stick, in the controller help.
     public static var padButtonRightStick: String { string("pad-button-right-stick", fallback: "Right stick") }
 
+    /// Controller help: the D-pad in the reader turns the page, the way the book reads.
+    public static var padHelpTurnPage: String { string("pad-help-turn-page", fallback: "Turn the page") }
+
+    /// Controller help: the left shoulder button in the reader.
+    public static var padHelpPreviousChapter: String { string("pad-help-previous-chapter", fallback: "Previous chapter") }
+
+    /// Controller help: the right shoulder button in the reader.
+    public static var padHelpNextChapter: String { string("pad-help-next-chapter", fallback: "Next chapter") }
+
+    /// Controller help: the A button in the reader shows or hides the bar with the title and settings.
+    public static var padHelpReaderBar: String { string("pad-help-reader-bar", fallback: "Show or hide the bar") }
+
+    /// Controller help: the menu button in the reader.
+    public static var padHelpReaderSettings: String { string("pad-help-reader-settings", fallback: "Reader settings") }
+
+    /// Controller help: the B button in the reader.
+    public static var padHelpCloseReader: String { string("pad-help-close-reader", fallback: "Close the reader") }
+
+    /// Heading in the controller help for the buttons in the reader.
+    public static var padHelpReader: String { string("pad-help-reader", fallback: "Reader") }
+
     /// Checkbox of the close question.
     public static var closeDontAsk: String { string("close-dont-ask", fallback: "Don't ask again") }
 
@@ -4019,7 +5344,7 @@ public enum L {
 
     /// Title of the discussion window or sheet when the thread has no title yet.
     public static func discussionTitleEpisode(episode: Int) -> String {
-        Self.format("discussion-title-episode", fallback: "Episode %1$lld discussion", episode)
+        Self.format("discussion-title-episode", fallback: "Episode %1$@ discussion", String(episode))
     }
 
     /// Quiet line under an episode that opens its discussion.
@@ -4164,6 +5489,12 @@ public enum L {
     /// Line under the empty title.
     public static var downloadsEmptyDetail: String { string("downloads-empty-detail", fallback: "Downloaded episodes play without a connection.") }
 
+    /// Downloads' empty line for a person who only reads, under "No downloads".
+    public static var readDownloadsEmptyDetail: String { string("read-downloads-empty-detail", fallback: "Downloaded chapters open without a connection.") }
+
+    /// Downloads' empty line for a person who watches and reads, under "No downloads".
+    public static var readDownloadsEmptyBoth: String { string("read-downloads-empty-both", fallback: "Downloaded episodes and chapters open without a connection.") }
+
     /// Title when the list could not be read.
     public static var downloadsLoadFailed: String { string("downloads-load-failed", fallback: "Couldn't load downloads") }
 
@@ -4172,7 +5503,7 @@ public enum L {
 
     /// Name of a row.
     public static func downloadsEpisodeName(episode: Int) -> String {
-        Self.format("downloads-episode-name", fallback: "Episode %1$lld", episode)
+        Self.format("downloads-episode-name", fallback: "Episode %1$@", String(episode))
     }
 
     /// Row caption: waiting for a free place.
@@ -4247,7 +5578,7 @@ public enum L {
 
     /// Accessibility label: play one downloaded episode.
     public static func downloadsPlayEpisode(episode: Int) -> String {
-        Self.format("downloads-play-episode", fallback: "Play episode %1$lld", episode)
+        Self.format("downloads-play-episode", fallback: "Play episode %1$@", String(episode))
     }
 
     /// Title of the confirmation.
@@ -4262,7 +5593,7 @@ public enum L {
     public static var downloadsDeleteOneTitle: String { string("downloads-delete-one-title", fallback: "Delete download") }
 
     /// Line under it: what you lose.
-    public static var downloadsDeleteOneDetail: String { string("downloads-delete-one-detail", fallback: "It plays again only with a connection, or once you download it again.") }
+    public static var downloadsDeleteOneDetail: String { string("downloads-delete-one-detail", fallback: "After this, the episode needs a connection to play, unless you download it again.") }
 
     /// Button on the settings page that removes watched files.
     public static var downloadsDeleteWatched: String { string("downloads-delete-watched", fallback: "Delete watched downloads") }
@@ -4274,7 +5605,7 @@ public enum L {
     public static var downloadsSeedingAfterWatching: String { string("downloads-seeding-after-watching", fallback: "Seeding after watching") }
 
     /// Line under the seeding heading.
-    public static var downloadsSeedingNote: String { string("downloads-seeding-note", fallback: "Watched episodes are shared back while Kaeri is open, until the ratio or the time limit set in Settings, under Sources, is reached.") }
+    public static var downloadsSeedingNote: String { string("downloads-seeding-note", fallback: "Watched episodes are shared back while Kaeri is open. Sharing stops at the ratio or time limit you set in Settings, under Sources.") }
 
     /// Heading of the setting. Shown on desktop only.
     public static var downloadsBackgroundTitle: String { string("downloads-background-title", fallback: "When the window closes with downloads running") }
@@ -4311,7 +5642,7 @@ public enum L {
 
     /// Title of the notification when an episode finished.
     public static func downloadsNoticeDone(episode: Int) -> String {
-        Self.format("downloads-notice-done", fallback: "Episode %1$lld downloaded", episode)
+        Self.format("downloads-notice-done", fallback: "Episode %1$@ downloaded", String(episode))
     }
 
     /// Body of that notification.
@@ -4326,7 +5657,7 @@ public enum L {
 
     /// Notification text: first line of one running download.
     public static func downloadsNoticeEpisodeLeft(episode: Int, left: String) -> String {
-        Self.format("downloads-notice-episode-left", fallback: "Episode %1$lld · %2$@ left", episode, left)
+        Self.format("downloads-notice-episode-left", fallback: "Episode %1$@ · %2$@ left", String(episode), left)
     }
 
     /// Notification text: a download is starting.
@@ -4334,7 +5665,7 @@ public enum L {
 
     /// Button on a title page to download one episode.
     public static func episodeDownloadOne(episode: Int) -> String {
-        Self.format("episode-download-one", fallback: "Download episode %1$lld", episode)
+        Self.format("episode-download-one", fallback: "Download episode %1$@", String(episode))
     }
 
     /// Line under that button while it waits.
@@ -4358,7 +5689,82 @@ public enum L {
 
     /// Line under that button after a failure.
     public static func episodeDownloadFailed(episode: Int) -> String {
-        Self.format("episode-download-failed", fallback: "Couldn't download episode %1$lld. Try again.", episode)
+        Self.format("episode-download-failed", fallback: "Couldn't download episode %1$@. Try again.", String(episode))
+    }
+
+    /// First run, page 2 of 5.
+    public static var firstOtherTitle: String { string("first-other-title", fallback: "Already use Kaeri on another device?") }
+
+    /// Under the title.
+    public static var firstOtherLine: String { string("first-other-line", fallback: "Pair with it and this device gets your sources, trackers and history, and the rest of setup is done for you.") }
+
+    /// Line under the pair row.
+    public static var firstOtherPairLine: String { string("first-other-pair-line", fallback: "You get a code to enter on that device. Both need the same Wi-Fi.") }
+
+    /// Row that restores from a sync folder.
+    public static var firstOtherRestore: String { string("first-other-restore", fallback: "Restore from a cloud folder") }
+
+    /// Line under it.
+    public static var firstOtherRestoreLine: String { string("first-other-restore-line", fallback: "Uses the recovery key you saved") }
+
+    /// Primary action: go on with the first run on this device alone.
+    public static var firstOtherNo: String { string("first-other-no", fallback: "No, start here") }
+
+    /// Beside a spinner, after 600 ms.
+    public static var pairWaiting: String { string("pair-waiting", fallback: "Waiting for your other device") }
+
+    /// After 30 seconds with nothing.
+    public static var pairNothingYet: String { string("pair-nothing-yet", fallback: "Nothing yet? Both devices need to be on the same Wi-Fi.") }
+
+    /// Group header for what the other device brings.
+    public static func firstJoinGroup(device: String) -> String {
+        Self.format("first-join-group", fallback: "From %1$@", device)
+    }
+
+    /// Row while the rest arrives.
+    public static func firstJoinLooking(device: String) -> String {
+        Self.format("first-join-looking", fallback: "Looking at what %1$@ has…", device)
+    }
+
+    /// Row with a pop-up of Watch, Read and Both.
+    public static var firstJoinMedium: String { string("first-join-medium", fallback: "Kaeri is for") }
+
+    /// Line under it when the other device reads.
+    public static func firstJoinMediumLine(device: String) -> String {
+        Self.format("first-join-medium-line", fallback: "Reading, as on %1$@", device)
+    }
+
+    /// Line under the sign-ins switch: the trackers the other device is signed in to, already joined.
+    public static func firstJoinSigninsLine(trackers: String) -> String {
+        Self.format("first-join-signins-line", fallback: "%1$@", trackers)
+    }
+
+    /// Switch, one per book server.
+    public static func firstJoinServer(host: String) -> String {
+        Self.format("first-join-server", fallback: "Add %1$@", host)
+    }
+
+    /// Line under a server's switch. The kind is Komga, Kavita or OPDS; the store is Keychain or Android Keystore.
+    public static func firstJoinServerLine(kind: String, device: String, store: String) -> String {
+        Self.format("first-join-server-line", fallback: "%1$@ · signs in with the key from %2$@, kept in %3$@", kind, device, store)
+    }
+
+    /// Note under the list.
+    public static func firstJoinFolders(device: String) -> String {
+        Self.format("first-join-folders", fallback: "Folders stay on %1$@. Add this device's own folders in Your sources.", device)
+    }
+
+    /// Note when the setup answered the remaining pages.
+    public static var firstJoinStepsDone: String { string("first-join-steps-done", fallback: "Lists and sources are set up, so first run ends here. You can change them in Settings.") }
+
+    /// Row error when a plugin store refused this device.
+    public static func firstJoinStoreRefused(store: String, owner: String) -> String {
+        Self.format("first-join-store-refused", fallback: "%1$@ didn't let this device in. %2$@ can send you an invite.", store, owner)
+    }
+
+    /// Notice on Home, for 4 seconds.
+    public static func firstJoinSyncing(device: String) -> String {
+        Self.format("first-join-syncing", fallback: "Syncing with %1$@", device)
     }
 
     /// Name of the Home section in the sidebar, the tab bar and the window title.
@@ -4366,12 +5772,12 @@ public enum L {
 
     /// Main action for an episode part way through.
     public static func homeResumeEpisode(episode: Int) -> String {
-        Self.format("home-resume-episode", fallback: "Resume episode %1$lld", episode)
+        Self.format("home-resume-episode", fallback: "Resume episode %1$@", String(episode))
     }
 
     /// Main action for an episode not started.
     public static func homePlayEpisode(episode: Int) -> String {
-        Self.format("home-play-episode", fallback: "Play episode %1$lld", episode)
+        Self.format("home-play-episode", fallback: "Play episode %1$@", String(episode))
     }
 
     /// Shown in place of Add to Planning while it saves, after a moment.
@@ -4385,12 +5791,12 @@ public enum L {
 
     /// Action in the spotlight's More menu for a show part way through.
     public static func homeMarkWatched(episode: Int) -> String {
-        Self.format("home-mark-watched", fallback: "Mark episode %1$lld as watched", episode)
+        Self.format("home-mark-watched", fallback: "Mark episode %1$@ as watched", String(episode))
     }
 
     /// Notice after the action above. It has an Undo button.
     public static func homeMarkedWatched(episode: Int) -> String {
-        Self.format("home-marked-watched", fallback: "Episode %1$lld marked as watched", episode)
+        Self.format("home-marked-watched", fallback: "Episode %1$@ marked as watched", String(episode))
     }
 
     /// Action on a { -continue-cap } card and in the spotlight's More menu.
@@ -4434,7 +5840,7 @@ public enum L {
     public static var homeSignIn: String { string("home-sign-in", fallback: "Sign in to AniList") }
 
     /// The closing line at the end of Home when no { -source } is installed. Plugin stores is a link.
-    public static var homeEndNoSources: String { string("home-end-no-sources", fallback: "Add a source to play from Home. Plugin stores has some to choose from.") }
+    public static var homeEndNoSources: String { string("home-end-no-sources", fallback: "Add a source to play from Home. Plugins come from Plugin stores.") }
 
     /// Line on a title that no installed { -source } has. The main action becomes Add to Planning.
     public static var homeNotFound: String { string("home-not-found", fallback: "Not found in your sources") }
@@ -4545,32 +5951,32 @@ public enum L {
 
     /// Row caption: resumes this episode where it stopped. The clock is the stored position.
     public static func continueRowResume(episode: Int, clock: String) -> String {
-        Self.format("continue-row-resume", fallback: "Resume E%1$lld · %2$@", episode, clock)
+        Self.format("continue-row-resume", fallback: "Resume E%1$@ · %2$@", String(episode), clock)
     }
 
     /// Row caption: resumes this episode where it stopped, dubbed.
     public static func continueRowResumeDubbed(episode: Int, clock: String) -> String {
-        Self.format("continue-row-resume-dubbed", fallback: "Resume E%1$lld dubbed · %2$@", episode, clock)
+        Self.format("continue-row-resume-dubbed", fallback: "Resume E%1$@ dubbed · %2$@", String(episode), clock)
     }
 
     /// Row caption: the next unwatched episode.
     public static func continueRowStart(episode: Int) -> String {
-        Self.format("continue-row-start", fallback: "Play E%1$lld", episode)
+        Self.format("continue-row-start", fallback: "Play E%1$@", String(episode))
     }
 
     /// Row caption: the next unwatched episode, dubbed.
     public static func continueRowStartDubbed(episode: Int) -> String {
-        Self.format("continue-row-start-dubbed", fallback: "Play E%1$lld dubbed", episode)
+        Self.format("continue-row-start-dubbed", fallback: "Play E%1$@ dubbed", String(episode))
     }
 
     /// Row caption: the next unwatched episode, which came out a while ago.
     public static func continueRowStartAired(episode: Int, ago: String) -> String {
-        Self.format("continue-row-start-aired", fallback: "Play E%1$lld · out %2$@", episode, ago)
+        Self.format("continue-row-start-aired", fallback: "Play E%1$@ · out %2$@", String(episode), ago)
     }
 
     /// Row caption: nothing new to watch. The time is when the next episode airs.
     public static func continueRowCaughtUp(episode: Int, when: String) -> String {
-        Self.format("continue-row-caught-up", fallback: "Caught up · E%1$lld %2$@", episode, when)
+        Self.format("continue-row-caught-up", fallback: "Caught up · E%1$@ %2$@", String(episode), when)
     }
 
     /// Row caption: nothing new to watch and no date for the next episode.
@@ -4584,12 +5990,12 @@ public enum L {
 
     /// Main button of the title page when the episode is part-watched. The time is where it stopped, already formatted.
     public static func titleButtonResume(episode: Int, time: String) -> String {
-        Self.format("title-button-resume", fallback: "Resume episode %1$lld · %2$@", episode, time)
+        Self.format("title-button-resume", fallback: "Resume episode %1$@ · %2$@", String(episode), time)
     }
 
     /// Main button of the title page otherwise: plays the next unwatched episode from the start.
     public static func titleButtonPlay(episode: Int) -> String {
-        Self.format("title-button-play", fallback: "Play episode %1$lld", episode)
+        Self.format("title-button-play", fallback: "Play episode %1$@", String(episode))
     }
 
     /// Main button of the title page when there is no { -source } to play from.
@@ -4671,17 +6077,17 @@ public enum L {
 
     /// Short progress under a show: the last episode watched out of the total.
     public static func progressEpisodesShort(done: Int, total: Int) -> String {
-        Self.format("progress-episodes-short", fallback: "E%1$lld of %2$lld", done, total)
+        Self.format("progress-episodes-short", fallback: "E%1$@ of %2$@", String(done), String(total))
     }
 
     /// Short progress under a show when the total is not known.
     public static func progressEpisodeShort(done: Int) -> String {
-        Self.format("progress-episode-short", fallback: "E%1$lld", done)
+        Self.format("progress-episode-short", fallback: "E%1$@", String(done))
     }
 
     /// Row caption: the next unwatched episode, dubbed, which came out a while ago.
     public static func continueRowStartAiredDubbed(episode: Int, ago: String) -> String {
-        Self.format("continue-row-start-aired-dubbed", fallback: "Play E%1$lld dubbed · out %2$@", episode, ago)
+        Self.format("continue-row-start-aired-dubbed", fallback: "Play E%1$@ dubbed · out %2$@", String(episode), ago)
     }
 
     /// Line on a suggestion that has not started airing. The date is written out already, such as "9 January".
@@ -4731,7 +6137,7 @@ public enum L {
 
     /// Line under a show that airs today: its episode, then the time or how long ago it came out. The time is worded already.
     public static func upNextBroadcast(episode: Int, when: String) -> String {
-        Self.format("up-next-broadcast", fallback: "Episode %1$lld · %2$@", episode, when)
+        Self.format("up-next-broadcast", fallback: "Episode %1$@ · %2$@", String(episode), when)
     }
 
     /// The time of an episode that came out earlier today. The span is already worded, such as "2h ago".
@@ -4930,7 +6336,7 @@ public enum L {
     public static var libraryRemoveDetail: String { string("library-remove-detail", fallback: "Your files stay where they are.") }
 
     /// Why a group of files is not matched: AniList could not be asked.
-    public static var libraryReasonOffline: String { string("library-reason-offline", fallback: "Couldn't ask AniList. It is tried again at the next scan.") }
+    public static var libraryReasonOffline: String { string("library-reason-offline", fallback: "Couldn't reach AniList. The next scan tries again.") }
 
     /// Button that opens the match picker for a group.
     public static var libraryChooseMatch: String { string("library-choose-match", fallback: "Choose the match") }
@@ -4967,7 +6373,7 @@ public enum L {
     public static var licensedRegion: String { string("licensed-region", fallback: "Region") }
 
     /// Line under the region menu.
-    public static var licensedRegionLine: String { string("licensed-region-line", fallback: "Hides links AniList marks for other countries. Most links name no country, so choose your services too.") }
+    public static var licensedRegionLine: String { string("licensed-region-line", fallback: "Links AniList marks for other countries are hidden. Most links name no country, so choose your services too.") }
 
     /// Heading over the services the viewer pays for.
     public static var licensedYours: String { string("licensed-yours", fallback: "Your services") }
@@ -5057,7 +6463,7 @@ public enum L {
 
     /// Line of a Continue card for a title watched on a service.
     public static func licensedContinueLine(episode: Int, service: String) -> String {
-        Self.format("licensed-continue-line", fallback: "Episode %1$lld · on %2$@", episode, service)
+        Self.format("licensed-continue-line", fallback: "Episode %1$@ · on %2$@", String(episode), service)
     }
 
     /// Line under a title's buttons naming services the viewer has not chosen that list the title.
@@ -5168,7 +6574,7 @@ public enum L {
 
     /// Date line of a show that was cancelled: the last episode that aired.
     public static func mediaCancelledAfter(episode: Int) -> String {
-        Self.format("media-cancelled-after", fallback: "Cancelled after episode %1$lld", episode)
+        Self.format("media-cancelled-after", fallback: "Cancelled after episode %1$@", String(episode))
     }
 
     /// Heading of the list of official services that stream a show, in the sheet of more about it.
@@ -5308,7 +6714,7 @@ public enum L {
 
     /// Ranking line, such as "#4 Highest rated, Autumn 2026". The label is already worded.
     public static func rankingLine(rank: Int, label: String) -> String {
-        Self.format("ranking-line", fallback: "#%1$lld %2$@", rank, label)
+        Self.format("ranking-line", fallback: "#%1$@ %2$@", String(rank), label)
     }
 
     /// Label of a ranking by score within a period.
@@ -5471,7 +6877,7 @@ public enum L {
     public static var onboardingInviteHeading: String { string("onboarding-invite-heading", fallback: "Have an invite link?") }
 
     /// Second line of that page. Explains that plugins come from plugin stores and that a store is joined with an invite link.
-    public static var onboardingWhereStores: String { string("onboarding-where-stores", fallback: "Plugins come from plugin stores. A plugin store is signed and gives each device its own token, so you join one with an invite link from its owner.") }
+    public static var onboardingWhereStores: String { string("onboarding-where-stores", fallback: "Plugins come from plugin stores. Each one is signed and gives every device its own token, which is why you join with an invite link from its owner.") }
 
     /// Heading above the Play the demo button on the welcome page.
     public static var onboardingDemoHeading: String { string("onboarding-demo-heading", fallback: "Try it now") }
@@ -5513,7 +6919,7 @@ public enum L {
     public static var partyLeaving: String { string("party-leaving", fallback: "Leaving…") }
 
     /// Label of the button that marks you as ready.
-    public static var partyReadyAction: String { string("party-ready-action", fallback: "I'm ready") }
+    public static var partyReadyAction: String { string("party-ready-action", fallback: "Ready to watch") }
 
     /// Button that copies the link to invite someone.
     public static var partyCopyInvite: String { string("party-copy-invite", fallback: "Copy invite link") }
@@ -5528,7 +6934,7 @@ public enum L {
     public static var partyNotNow: String { string("party-not-now", fallback: "Not now") }
 
     /// Line while the form fetches its suggestions.
-    public static var partyGettingReady: String { string("party-getting-ready", fallback: "Getting things ready…") }
+    public static var partyGettingReady: String { string("party-getting-ready", fallback: "Loading suggestions…") }
 
     /// Label of the server field.
     public static var partyServer: String { string("party-server", fallback: "Server") }
@@ -5567,7 +6973,7 @@ public enum L {
     }
 
     /// Line under an invite's room when the server is not the public one.
-    public static var partyServerInvited: String { string("party-server-invited", fallback: "A server the person who invited you chose. Kaeri doesn't run it.") }
+    public static var partyServerInvited: String { string("party-server-invited", fallback: "The person who invited you chose this server. Kaeri doesn't run it.") }
 
     /// Line when the server was typed in a shape that cannot be used.
     public static var partyServerShape: String { string("party-server-shape", fallback: "Write the server as a host and a port, like party.example:8999.") }
@@ -5596,12 +7002,12 @@ public enum L {
 
     /// Line naming the episode of the form.
     public static func partyFormEpisodeOf(episode: Int, title: String) -> String {
-        Self.format("party-form-episode-of", fallback: "Episode %1$lld of %2$@", episode, title)
+        Self.format("party-form-episode-of", fallback: "Episode %1$@ of %2$@", String(episode), title)
     }
 
     /// Line naming the episode of the form when the show has no name.
     public static func partyFormEpisode(episode: Int) -> String {
-        Self.format("party-form-episode", fallback: "Episode %1$lld", episode)
+        Self.format("party-form-episode", fallback: "Episode %1$@", String(episode))
     }
 
     /// Line on the form when the party could not begin.
@@ -5736,7 +7142,7 @@ public enum L {
 
     /// Line under a title that says the episode has not aired.
     public static func partyNosourceUnaired(episode: Int) -> String {
-        Self.format("party-nosource-unaired", fallback: "Your sources won't have episode %1$lld before it's out.", episode)
+        Self.format("party-nosource-unaired", fallback: "Your sources won't have episode %1$@ before it's out.", String(episode))
     }
 
     /// Line under a title that says the episode has not aired and no date is known.
@@ -5816,7 +7222,7 @@ public enum L {
     }
 
     /// Line shown when no recent rooms are kept yet.
-    public static var togetherRecentEmpty: String { string("together-recent-empty", fallback: "Rooms you join show here, the last ten.") }
+    public static var togetherRecentEmpty: String { string("together-recent-empty", fallback: "The last ten rooms you join show here.") }
 
     /// Button on a recent room that goes straight to its lobby with the next episode.
     public static var togetherRejoin: String { string("together-rejoin", fallback: "Rejoin") }
@@ -5909,7 +7315,7 @@ public enum L {
         Self.format("party-member-watching-from", fallback: "Watching from %1$@", time)
     }
 
-    /// Label of the I'm ready button once you are ready.
+    /// Label of the Ready to watch button once you are ready.
     public static var partyReadyOn: String { string("party-ready-on", fallback: "Ready") }
 
     /// Heading of the invite block in the lobby.
@@ -6179,7 +7585,7 @@ public enum L {
     public static var settingsHideChat: String { string("settings-hide-chat", fallback: "Hide chat in watch parties") }
 
     /// Line under that switch.
-    public static var settingsHideChatLine: String { string("settings-hide-chat-line", fallback: "Lines, reactions and their ticks on the seek bar stay off the video, and the field is gone. The people list still shows who is in the room.") }
+    public static var settingsHideChatLine: String { string("settings-hide-chat-line", fallback: "Chat lines, reactions and their ticks on the seek bar stay off the video, and the chat field is gone. The people list still shows who is in the room.") }
 
     /// Member menu item and accessibility action that hides a member's lines and reactions for this party.
     public static func partyMute(name: String) -> String {
@@ -6294,7 +7700,7 @@ public enum L {
 
     /// Line on the starting screen, from the moment the player is asked to play until the first frame.
     public static func playerStarting(episode: Int) -> String {
-        Self.format("player-starting", fallback: "Starting episode %1$lld", episode)
+        Self.format("player-starting", fallback: "Starting episode %1$@", String(episode))
     }
 
     /// Line on the starting screen after a few seconds: the app is looking for a stream.
@@ -6307,7 +7713,7 @@ public enum L {
 
     /// Title of the card shown when an episode could not play.
     public static func playerFailedTitle(episode: Int) -> String {
-        Self.format("player-failed-title", fallback: "Couldn't play episode %1$lld", episode)
+        Self.format("player-failed-title", fallback: "Couldn't play episode %1$@", String(episode))
     }
 
     /// Line under the failure title when every { -source } was tried.
@@ -6344,6 +7750,11 @@ public enum L {
     /// Detail line when a source has the show and not the episode. The episode is its label.
     public static func playerStartMissNoEpisode(name: String, episode: String) -> String {
         Self.format("player-start-miss-no-episode", fallback: "%1$@ doesn't have episode %2$@", name, episode)
+    }
+
+    /// Detail line when the show is pinned to a source that does not have the episode yet, and the next source plays it.
+    public static func playerStartPinMissed(name: String, episode: String) -> String {
+        Self.format("player-start-pin-missed", fallback: "%1$@ doesn't have episode %2$@ yet. Playing from the next source.", name, episode)
     }
 
     /// Detail line when a source failed and the next is asked.
@@ -6670,7 +8081,7 @@ public enum L {
 
     /// Line under that prompt, in a quieter colour. $episode is the episode's number.
     public static func playerFoundAskShare(episode: Int) -> String {
-        Self.format("player-found-ask-share", fallback: "Yes shares these times with AniSkip for episode %1$lld.", episode)
+        Self.format("player-found-ask-share", fallback: "Yes shares these times with AniSkip for episode %1$@.", String(episode))
     }
 
     /// Buttons of that prompt. Yes saves the found times as the person's own and shares them; Adjust opens the review with the edges to nudge.
@@ -6680,7 +8091,7 @@ public enum L {
 
     /// What the prompt says after Yes. $episode is the episode's number.
     public static func playerFoundSaved(episode: Int) -> String {
-        Self.format("player-found-saved", fallback: "Saved. AniSkip gets these times for episode %1$lld.", episode)
+        Self.format("player-found-saved", fallback: "Saved. AniSkip gets these times for episode %1$@.", String(episode))
     }
 
     /// What the prompt says after Don't ask again, with the line below it.
@@ -6882,22 +8293,22 @@ public enum L {
     public static var playerFilePickerFailed: String { string("player-file-picker-failed", fallback: "Couldn't open the file chooser. Try again.") }
 
     /// Notice when a chosen subtitle file could not be loaded.
-    public static var playerSubtitleFileFailed: String { string("player-subtitle-file-failed", fallback: "Couldn't load that subtitle file. Check that it is a subtitle file.") }
+    public static var playerSubtitleFileFailed: String { string("player-subtitle-file-failed", fallback: "Couldn't load that file as subtitles. Choose a subtitle file, such as .srt or .ass.") }
 
     /// Notice when a chosen audio file could not be loaded.
-    public static var playerAudioFileFailed: String { string("player-audio-file-failed", fallback: "Couldn't load that audio file. Check that it is an audio file.") }
+    public static var playerAudioFileFailed: String { string("player-audio-file-failed", fallback: "Couldn't load that file as audio. Choose an audio file, such as .mka or .flac.") }
 
     /// Name of a track that has no name or language.
     public static var playerTrackUnnamed: String { string("player-track-unnamed", fallback: "Unnamed track") }
 
     /// Name of an audio track the file does not describe.
     public static func playerAudioTrackN(id: Int) -> String {
-        Self.format("player-audio-track-n", fallback: "Audio %1$lld", id)
+        Self.format("player-audio-track-n", fallback: "Audio %1$@", String(id))
     }
 
     /// Name of a subtitle track the file does not describe.
     public static func playerSubtitleTrackN(id: Int) -> String {
-        Self.format("player-subtitle-track-n", fallback: "Subtitles %1$lld", id)
+        Self.format("player-subtitle-track-n", fallback: "Subtitles %1$@", String(id))
     }
 
     /// Line in the track list before the file has told which tracks it has.
@@ -6930,7 +8341,7 @@ public enum L {
 
     /// Name of an audio or subtitle track that has no language or title.
     public static func playerTrackN(id: Int) -> String {
-        Self.format("player-track-n", fallback: "Track %1$lld", id)
+        Self.format("player-track-n", fallback: "Track %1$@", String(id))
     }
 
     /// Line while an episode starts after a few seconds: what the wait is on, and for how long.
@@ -6968,6 +8379,2291 @@ public enum L {
     /// Button in the subtitles panel that opens Settings.
     public static var playerSubsMore: String { string("player-subs-more", fallback: "More in Settings…") }
 
+    /// Under a page that is still loading after four seconds.
+    public static func readerPageLoading(page: Int) -> String {
+        Self.format("reader-page-loading", fallback: "Loading page %1$@", String(page))
+    }
+
+    /// On the plate of a page that is still loading.
+    public static func readerPagePlate(page: Int) -> String {
+        Self.format("reader-page-plate", fallback: "Page %1$@", String(page))
+    }
+
+    /// On the plate of a strip image that is still loading.
+    public static func readerImagePlate(image: Int) -> String {
+        Self.format("reader-image-plate", fallback: "Image %1$@", String(image))
+    }
+
+    /// Under a strip image's number after four seconds.
+    public static func readerImageLoading(image: Int) -> String {
+        Self.format("reader-image-loading", fallback: "Loading image %1$@", String(image))
+    }
+
+    /// Under a strip image's number (Image 4) when it couldn't be loaded, above Try again.
+    public static var readerImageFailed: String { string("reader-image-failed", fallback: "Couldn't load") }
+
+    /// Heading where a page could not be loaded.
+    public static func readerPageFailed(page: Int) -> String {
+        Self.format("reader-page-failed", fallback: "Couldn't load page %1$@", String(page))
+    }
+
+    /// Button that loads a failed page again.
+    public static var readerTryAgain: String { string("reader-try-again", fallback: "Try again") }
+
+    /// Closes the reader and goes back to the series.
+    public static var readerClose: String { string("reader-close", fallback: "Close") }
+
+    /// Under the top line of the page between chapters, once the chapter counts as read.
+    public static var readerEndRead: String { string("reader-end-read", fallback: "Counted as read") }
+
+    /// Under the end of chapter line, naming the trackers the read went to.
+    public static func readerEndTracker(trackers: String) -> String {
+        Self.format("reader-end-tracker", fallback: "Counted as read · %1$@ updated", trackers)
+    }
+
+    /// Under the end of chapter line when the device is offline: the trackers hear of the read once it is back online.
+    public static func readerEndTrackerOffline(tracker: String) -> String {
+        Self.format("reader-end-tracker-offline", fallback: "Counted as read · %1$@ updates when you're back online", tracker)
+    }
+
+    /// Small heading above the next chapter on the page between chapters.
+    public static var readerEndNext: String { string("reader-end-next", fallback: "Next") }
+
+    /// A reading mode, and a reading direction.
+    public static var readerModeRtl: String { string("reader-mode-rtl", fallback: "Right to left") }
+
+    /// A reading mode, and a reading direction.
+    public static var readerModeLtr: String { string("reader-mode-ltr", fallback: "Left to right") }
+
+    /// A reading mode: one long scroll of images.
+    public static var readerModeStrip: String { string("reader-mode-strip", fallback: "Strip") }
+
+    /// A choice for how a page is fitted.
+    public static var readerFitScreen: String { string("reader-fit-screen", fallback: "Screen") }
+
+    /// A choice for how a page is fitted.
+    public static var readerFitWidth: String { string("reader-fit-width", fallback: "Width") }
+
+    /// A choice of typeface.
+    public static var readerFontSerif: String { string("reader-font-serif", fallback: "Serif") }
+
+    /// A choice of typeface.
+    public static var readerFontSans: String { string("reader-font-sans", fallback: "Sans") }
+
+    /// A look for reading: warm paper.
+    public static var readerLookPaper: String { string("reader-look-paper", fallback: "Paper") }
+
+    /// A look for reading: a light page.
+    public static var readerLookLight: String { string("reader-look-light", fallback: "Light") }
+
+    /// A look for reading: a brown page.
+    public static var readerLookSepia: String { string("reader-look-sepia", fallback: "Sepia") }
+
+    /// A look for reading: a dark page.
+    public static var readerLookDark: String { string("reader-look-dark", fallback: "Dark") }
+
+    /// A choice of margins.
+    public static var readerMarginsNarrow: String { string("reader-margins-narrow", fallback: "Narrow") }
+
+    /// A choice of margins.
+    public static var readerMarginsWide: String { string("reader-margins-wide", fallback: "Wide") }
+
+    /// A choice for page layout.
+    public static var readerLayoutAuto: String { string("reader-layout-auto", fallback: "Auto") }
+
+    /// A choice for page layout.
+    public static var readerLayoutSingle: String { string("reader-layout-single", fallback: "One") }
+
+    /// A choice for page layout.
+    public static var readerLayoutDouble: String { string("reader-layout-double", fallback: "Two") }
+
+    /// A choice for wide pages: cut in two.
+    public static var readerSpreadsSplit: String { string("reader-spreads-split", fallback: "Split") }
+
+    /// A choice for wide pages: turned to fill the screen.
+    public static var readerSpreadsRotate: String { string("reader-spreads-rotate", fallback: "Turn") }
+
+    /// A choice for wide pages: shown whole.
+    public static var readerSpreadsWhole: String { string("reader-spreads-whole", fallback: "Whole") }
+
+    /// A choice for the reader's tap zones: taps near the left and right edges turn the page. Replaced by Sides; kept until every app has the new tap zones page.
+    public static var readerTapEdges: String { string("reader-tap-edges", fallback: "Edges") }
+
+    /// Tap zone layout: Sides when pages turn sideways, L shape when they move downwards. The name under its tile.
+    public static var readerTapAuto: String { string("reader-tap-auto", fallback: "Auto") }
+
+    /// Tap zone layout: previous page on one side, next page on the other, controls in the middle.
+    public static var readerTapSides: String { string("reader-tap-sides", fallback: "Sides") }
+
+    /// Tap zone layout: previous page along the top and down one side, next page along the bottom and down the other side, in the shape of the letter L.
+    public static var readerTapLShape: String { string("reader-tap-l-shape", fallback: "L shape") }
+
+    /// Tap zone layout: controls along the top, a narrow column for previous page, and the rest of the page for next page.
+    public static var readerTapWideNext: String { string("reader-tap-wide-next", fallback: "Wide next") }
+
+    /// Tap zone layout: previous page across the top, next page across the bottom.
+    public static var readerTapTopBottom: String { string("reader-tap-top-bottom", fallback: "Top and bottom") }
+
+    /// Tap zone layout: next page down both the left and the right side, previous page in the bottom middle.
+    public static var readerTapBothNext: String { string("reader-tap-both-next", fallback: "Next on both sides") }
+
+    /// Tap zone layout: taps only show and hide the controls, and never turn the page.
+    public static var readerTapOff: String { string("reader-tap-off", fallback: "Off") }
+
+    /// Tap zones page: the choice for paged reading (pages that turn), one of two at the top.
+    public static var readerTapPaged: String { string("reader-tap-paged", fallback: "Paged") }
+
+    /// Tap zones page: the choice for strips and scrolled novels, one of two at the top.
+    public static var readerTapScrolling: String { string("reader-tap-scrolling", fallback: "Scrolling") }
+
+    /// Tap zones page: row that sets how wide the zones at the edges are.
+    public static var readerTapSize: String { string("reader-tap-size", fallback: "Zone size") }
+
+    /// Choice of Zone size: the edge zones are a third of the screen.
+    public static var readerTapStandard: String { string("reader-tap-standard", fallback: "Standard") }
+
+    /// Choice of Zone size: the edge zones are a quarter of the screen.
+    public static var readerTapSmall: String { string("reader-tap-small", fallback: "Small") }
+
+    /// Tap zones page: switch that swaps the left and right zones, for the left hand.
+    public static var readerTapFlipSides: String { string("reader-tap-flip-sides", fallback: "Flip left and right") }
+
+    /// Tap zones page: switch that swaps the top and bottom zones.
+    public static var readerTapFlipEnds: String { string("reader-tap-flip-ends", fallback: "Flip top and bottom") }
+
+    /// Tap zones page: button that shows the zones over the page.
+    public static var readerTapShow: String { string("reader-tap-show", fallback: "Show zones") }
+
+    /// Tap zones page, beside Show zones: the setting is not synced. The kind is the device's own word, as in sync-turn-off: “Mac”, “iPhone”, “phone”.
+    public static func readerTapHere(kind: String) -> String {
+        Self.format("reader-tap-here", fallback: "Stays on this %1$@", kind)
+    }
+
+    /// The reader's settings on a Mac, Windows or Linux: the row that opens the tap zones page, which is about clicks there.
+    public static var readerClickZones: String { string("reader-click-zones", fallback: "Click zones") }
+
+    /// Name of the tap zone that turns to the next page, in the guide over the page and as a screen reader action.
+    public static var readerZoneNext: String { string("reader-zone-next", fallback: "Next page") }
+
+    /// Name of the tap zone that turns to the previous page, in the guide and as a screen reader action.
+    public static var readerZonePrevious: String { string("reader-zone-previous", fallback: "Previous page") }
+
+    /// Name of the tap zone that shows and hides the reader's controls, in the guide.
+    public static var readerZoneControls: String { string("reader-zone-controls", fallback: "Controls") }
+
+    /// Screen reader action on the page that shows the reader's controls.
+    public static var readerZoneShowControls: String { string("reader-zone-show-controls", fallback: "Show controls") }
+
+    /// Name of the tap zone that scrolls a strip or a scrolled novel down, in the guide.
+    public static var readerZoneScrollDown: String { string("reader-zone-scroll-down", fallback: "Scroll down") }
+
+    /// Name of the tap zone that scrolls a strip or a scrolled novel up, in the guide.
+    public static var readerZoneScrollUp: String { string("reader-zone-scroll-up", fallback: "Scroll up") }
+
+    /// Under Controls in the tap zone guide: where the zones are changed.
+    public static var readerZoneChange: String { string("reader-zone-change", fallback: "Change in Reader settings") }
+
+    /// Tap zone layout Off in words, the accessibility value of its tile.
+    public static var readerTapOffAbout: String { string("reader-tap-off-about", fallback: "Taps show and hide the controls") }
+
+    /// Tap zone layout in words, the accessibility value of its tile: Sides, next page on the right.
+    public static var readerTapSidesRightAbout: String { string("reader-tap-sides-right-about", fallback: "Next page on the right side, previous page on the left side, controls in the middle") }
+
+    /// Tap zone layout in words, the accessibility value of its tile: Sides, next page on the left.
+    public static var readerTapSidesLeftAbout: String { string("reader-tap-sides-left-about", fallback: "Next page on the left side, previous page on the right side, controls in the middle") }
+
+    /// Tap zone layout in words, the accessibility value of its tile: L shape, next page low and on the right.
+    public static var readerTapLShapeBottomRightAbout: String { string("reader-tap-l-shape-bottom-right-about", fallback: "Next page along the bottom and on the right, previous page along the top and on the left, controls in the middle") }
+
+    /// Tap zone layout in words, the accessibility value of its tile: L shape, next page low and on the left.
+    public static var readerTapLShapeBottomLeftAbout: String { string("reader-tap-l-shape-bottom-left-about", fallback: "Next page along the bottom and on the left, previous page along the top and on the right, controls in the middle") }
+
+    /// Tap zone layout in words, the accessibility value of its tile: L shape flipped top and bottom, next page high and on the right.
+    public static var readerTapLShapeTopRightAbout: String { string("reader-tap-l-shape-top-right-about", fallback: "Next page along the top and on the right, previous page along the bottom and on the left, controls in the middle") }
+
+    /// Tap zone layout in words, the accessibility value of its tile: L shape flipped top and bottom, next page high and on the left.
+    public static var readerTapLShapeTopLeftAbout: String { string("reader-tap-l-shape-top-left-about", fallback: "Next page along the top and on the left, previous page along the bottom and on the right, controls in the middle") }
+
+    /// Tap zone layout in words, the accessibility value of its tile: Wide next, controls on top, previous page on the left.
+    public static var readerTapWideNextTopLeftAbout: String { string("reader-tap-wide-next-top-left-about", fallback: "Controls along the top, previous page in a narrow column on the left, next page everywhere else") }
+
+    /// Tap zone layout in words, the accessibility value of its tile: Wide next, controls on top, previous page on the right.
+    public static var readerTapWideNextTopRightAbout: String { string("reader-tap-wide-next-top-right-about", fallback: "Controls along the top, previous page in a narrow column on the right, next page everywhere else") }
+
+    /// Tap zone layout in words, the accessibility value of its tile: Wide next flipped top and bottom, previous page on the left.
+    public static var readerTapWideNextBottomLeftAbout: String { string("reader-tap-wide-next-bottom-left-about", fallback: "Controls along the bottom, previous page in a narrow column on the left, next page everywhere else") }
+
+    /// Tap zone layout in words, the accessibility value of its tile: Wide next flipped top and bottom, previous page on the right.
+    public static var readerTapWideNextBottomRightAbout: String { string("reader-tap-wide-next-bottom-right-about", fallback: "Controls along the bottom, previous page in a narrow column on the right, next page everywhere else") }
+
+    /// Tap zone layout in words, the accessibility value of its tile: Top and bottom.
+    public static var readerTapTopBottomAbout: String { string("reader-tap-top-bottom-about", fallback: "Next page across the bottom, previous page across the top, controls in the middle") }
+
+    /// Tap zone layout in words, the accessibility value of its tile: Top and bottom flipped.
+    public static var readerTapTopBottomFlippedAbout: String { string("reader-tap-top-bottom-flipped-about", fallback: "Next page across the top, previous page across the bottom, controls in the middle") }
+
+    /// Tap zone layout in words, the accessibility value of its tile: Next on both sides.
+    public static var readerTapBothNextAbout: String { string("reader-tap-both-next-about", fallback: "Next page down both sides, previous page at the bottom in the middle, controls above it") }
+
+    /// Tap zone layout in words, the accessibility value of its tile: Next on both sides flipped top and bottom.
+    public static var readerTapBothNextFlippedAbout: String { string("reader-tap-both-next-flipped-about", fallback: "Next page down both sides, previous page at the top in the middle, controls below it") }
+
+    /// Tap zone layout in words for a strip or a scrolled novel, the accessibility value of its tile: Sides, next page on the right.
+    public static var readerTapSidesRightScrollAbout: String { string("reader-tap-sides-right-scroll-about", fallback: "Scroll down on the right side, scroll up on the left side, controls in the middle") }
+
+    /// Tap zone layout in words for a strip or a scrolled novel, the accessibility value of its tile: Sides, next page on the left.
+    public static var readerTapSidesLeftScrollAbout: String { string("reader-tap-sides-left-scroll-about", fallback: "Scroll down on the left side, scroll up on the right side, controls in the middle") }
+
+    /// Tap zone layout in words for a strip or a scrolled novel, the accessibility value of its tile: L shape, next page low and on the right.
+    public static var readerTapLShapeBottomRightScrollAbout: String { string("reader-tap-l-shape-bottom-right-scroll-about", fallback: "Scroll down along the bottom and on the right, scroll up along the top and on the left, controls in the middle") }
+
+    /// Tap zone layout in words for a strip or a scrolled novel, the accessibility value of its tile: L shape, next page low and on the left.
+    public static var readerTapLShapeBottomLeftScrollAbout: String { string("reader-tap-l-shape-bottom-left-scroll-about", fallback: "Scroll down along the bottom and on the left, scroll up along the top and on the right, controls in the middle") }
+
+    /// Tap zone layout in words for a strip or a scrolled novel, the accessibility value of its tile: L shape flipped top and bottom, next page high and on the right.
+    public static var readerTapLShapeTopRightScrollAbout: String { string("reader-tap-l-shape-top-right-scroll-about", fallback: "Scroll down along the top and on the right, scroll up along the bottom and on the left, controls in the middle") }
+
+    /// Tap zone layout in words for a strip or a scrolled novel, the accessibility value of its tile: L shape flipped top and bottom, next page high and on the left.
+    public static var readerTapLShapeTopLeftScrollAbout: String { string("reader-tap-l-shape-top-left-scroll-about", fallback: "Scroll down along the top and on the left, scroll up along the bottom and on the right, controls in the middle") }
+
+    /// Tap zone layout in words for a strip or a scrolled novel, the accessibility value of its tile: Wide next, controls on top, previous page on the left.
+    public static var readerTapWideNextTopLeftScrollAbout: String { string("reader-tap-wide-next-top-left-scroll-about", fallback: "Controls along the top, scroll up in a narrow column on the left, scroll down everywhere else") }
+
+    /// Tap zone layout in words for a strip or a scrolled novel, the accessibility value of its tile: Wide next, controls on top, previous page on the right.
+    public static var readerTapWideNextTopRightScrollAbout: String { string("reader-tap-wide-next-top-right-scroll-about", fallback: "Controls along the top, scroll up in a narrow column on the right, scroll down everywhere else") }
+
+    /// Tap zone layout in words for a strip or a scrolled novel, the accessibility value of its tile: Wide next flipped top and bottom, previous page on the left.
+    public static var readerTapWideNextBottomLeftScrollAbout: String { string("reader-tap-wide-next-bottom-left-scroll-about", fallback: "Controls along the bottom, scroll up in a narrow column on the left, scroll down everywhere else") }
+
+    /// Tap zone layout in words for a strip or a scrolled novel, the accessibility value of its tile: Wide next flipped top and bottom, previous page on the right.
+    public static var readerTapWideNextBottomRightScrollAbout: String { string("reader-tap-wide-next-bottom-right-scroll-about", fallback: "Controls along the bottom, scroll up in a narrow column on the right, scroll down everywhere else") }
+
+    /// Tap zone layout in words for a strip or a scrolled novel, the accessibility value of its tile: Top and bottom.
+    public static var readerTapTopBottomScrollAbout: String { string("reader-tap-top-bottom-scroll-about", fallback: "Scroll down across the bottom, scroll up across the top, controls in the middle") }
+
+    /// Tap zone layout in words for a strip or a scrolled novel, the accessibility value of its tile: Top and bottom flipped.
+    public static var readerTapTopBottomFlippedScrollAbout: String { string("reader-tap-top-bottom-flipped-scroll-about", fallback: "Scroll down across the top, scroll up across the bottom, controls in the middle") }
+
+    /// Tap zone layout in words for a strip or a scrolled novel, the accessibility value of its tile: Next on both sides.
+    public static var readerTapBothNextScrollAbout: String { string("reader-tap-both-next-scroll-about", fallback: "Scroll down on both sides, scroll up at the bottom in the middle, controls above it") }
+
+    /// Tap zone layout in words for a strip or a scrolled novel, the accessibility value of its tile: Next on both sides flipped top and bottom.
+    public static var readerTapBothNextFlippedScrollAbout: String { string("reader-tap-both-next-flipped-scroll-about", fallback: "Scroll down on both sides, scroll up at the top in the middle, controls below it") }
+
+    /// Button in the reader's controls that opens the chapters and the page grid.
+    public static var readerChapters: String { string("reader-chapters", fallback: "Chapters") }
+
+    /// Line in the margin of a novel's page.
+    public static func readerPagesLeft(count: Int) -> String {
+        Self.format("reader-pages-left", fallback: "%1$lld pages left in this chapter", count)
+    }
+
+    /// Chapters sheet and the chapter list: the list is on its way.
+    public static var readerChaptersLoading: String { string("reader-chapters-loading", fallback: "Loading chapters") }
+
+    /// Background choice.
+    public static var readerBackgroundTheme: String { string("reader-background-theme", fallback: "Theme") }
+
+    /// Background choice.
+    public static var readerBackgroundBlack: String { string("reader-background-black", fallback: "Black") }
+
+    /// Background choice.
+    public static var readerBackgroundWhite: String { string("reader-background-white", fallback: "White") }
+
+    /// Title of the end page when the series has no newer chapter.
+    public static var readerEndCaughtUp: String { string("reader-end-caught-up", fallback: "You're caught up") }
+
+    /// A choice for the gap between a strip's images: none at all.
+    public static var readerGapNone: String { string("reader-gap-none", fallback: "None") }
+
+    /// A choice for the gap between a strip's images: a small one.
+    public static var readerGapSmall: String { string("reader-gap-small", fallback: "Small") }
+
+    /// Look choice that follows the system's light or dark.
+    public static var readerLookSystem: String { string("reader-look-system", fallback: "System") }
+
+    /// Top line of the page between chapters. The chapter is its number, such as 12.
+    public static func readerEndOfChapterNumber(chapter: String) -> String {
+        Self.format("reader-end-of-chapter-number", fallback: "End of chapter %1$@", chapter)
+    }
+
+    /// Top line of the page between chapters when the chapter has no number, such as a book in one file. The name is the chapter's or the book's own, such as Rooftop Lantern.
+    public static func readerEndOfNamed(name: String) -> String {
+        Self.format("reader-end-of-named", fallback: "End of %1$@", name)
+    }
+
+    /// The next chapter's facts on the page between chapters: its length and how it reads. The chapter is its number, such as 13; the facts are already written.
+    public static func readerEndFacts(chapter: String, facts: String) -> String {
+        Self.format("reader-end-facts", fallback: "Chapter %1$@ · %2$@", chapter, facts)
+    }
+
+    /// The next chapter's length on the page between chapters.
+    public static func readerEndPages(count: Int) -> String {
+        Self.format("reader-end-pages", fallback: "%1$lld pages", count)
+    }
+
+    /// Under the next chapter's title on the page between chapters, when nothing more is known of it than the source it came from.
+    public static func readerEndFrom(source: String) -> String {
+        Self.format("reader-end-from", fallback: "From %1$@", source)
+    }
+
+    /// Under the series title in the reader's controls, and the title on a strip's marker into the next chapter. The chapter is its number, such as 12.
+    public static func readerChapterLine(chapter: String) -> String {
+        Self.format("reader-chapter-line", fallback: "Chapter %1$@", chapter)
+    }
+
+    /// The next chapter's facts and where it came from: on the divider inside a strip, and under the next chapter's title on the page between chapters.
+    public static func readerDividerFactsSource(facts: String, source: String) -> String {
+        Self.format("reader-divider-facts-source", fallback: "%1$@ · from %2$@", facts, source)
+    }
+
+    /// Line on the page between chapters, near its buttons: one more swipe opens the next chapter.
+    public static var readerEndSwipe: String { string("reader-end-swipe", fallback: "Swipe to keep reading") }
+
+    /// Button beside Continue on the page between chapters, shown only when the next chapter is an extra (such as 16.5 between 16 and 17). It opens the chapter named, passing over the extras before it. The chapter is its number, such as 17.
+    public static func readerEndSkipTo(chapter: String) -> String {
+        Self.format("reader-end-skip-to", fallback: "Skip to chapter %1$@", chapter)
+    }
+
+    /// What a screen reader adds after "Skip to chapter 17": the extra it passes over stays unread in the chapter list. The chapter is the extra's number, such as 16.5.
+    public static func readerEndSkipHint(chapter: String) -> String {
+        Self.format("reader-end-skip-hint", fallback: "Chapter %1$@ stays unread.", chapter)
+    }
+
+    /// What a screen reader adds after "Skip to chapter 17" when it passes over more than one extra, or an extra with no number (such as an omake): those chapters stay unread in the chapter list.
+    public static var readerEndSkipHintExtras: String { string("reader-end-skip-hint-extras", fallback: "The extras before it stay unread.") }
+
+    /// The next episode's length on the divider inside a strip.
+    public static func readerDividerImages(count: Int) -> String {
+        Self.format("reader-divider-images", fallback: "%1$lld images", count)
+    }
+
+    /// Under the series title in the reader's controls, and the title on a strip's marker into the next chapter. The chapter is its number, such as 12.
+    public static func readerChapterLineTitled(chapter: String, title: String) -> String {
+        Self.format("reader-chapter-line-titled", fallback: "Chapter %1$@ · %2$@", chapter, title)
+    }
+
+    /// The reader's opening line while the series' source sends its chapter list.
+    public static func readerWaitChapterList(source: String) -> String {
+        Self.format("reader-wait-chapter-list", fallback: "Getting the chapter list from %1$@", source)
+    }
+
+    /// The reader's opening line while the source sends the chapter's pages or text.
+    public static func readerWaitChapterPages(chapter: String, source: String) -> String {
+        Self.format("reader-wait-chapter-pages", fallback: "Getting chapter %1$@ from %2$@", chapter, source)
+    }
+
+    /// The opening line after a few seconds, with how long it has waited so far.
+    public static func readerWaitSeconds(line: String, seconds: Int) -> String {
+        Self.format("reader-wait-seconds", fallback: "%1$@ · %2$lld s", line, seconds)
+    }
+
+    /// Under the opening line once the wait has gone on for a long time, above Read from another source and Go back.
+    public static var readerWaitLong: String { string("reader-wait-long", fallback: "This is taking a while.") }
+
+    /// Beside the line that says how many credit pages were skipped, on the end page and in a long strip. Tapping it shows them.
+    public static var readerCreditShow: String { string("reader-credit-show", fallback: "Show") }
+
+    /// Spoken hint of the line that says how many credit pages were skipped.
+    public static var readerCreditShowHint: String { string("reader-credit-show-hint", fallback: "Shows the page") }
+
+    /// Notice over a credit page shown again, and the caption above it in a long strip.
+    public static var readerCreditShown: String { string("reader-credit-shown", fallback: "Skipped as a credit page") }
+
+    /// The notice's action on a shown credit page: show this page from now on.
+    public static var readerCreditNot: String { string("reader-credit-not", fallback: "Not a credit page") }
+
+    /// Notice after Not a credit page, with Undo.
+    public static var readerCreditKept: String { string("reader-credit-kept", fallback: "This page will show from now on") }
+
+    /// In the reader's line in place of a page number, while a credit page shows: "Chapter 87 · credit page".
+    public static var readerCreditPage: String { string("reader-credit-page", fallback: "credit page") }
+
+    /// The same, when more than one credit page is shown: "credit page 1 of 2".
+    public static func readerCreditPageOf(n: Int, total: Int) -> String {
+        Self.format("reader-credit-page-of", fallback: "credit page %1$@ of %2$@", String(n), String(total))
+    }
+
+    /// The reader's line under the title while a credit page shows: the chapter, then "credit page" or "credit page 1 of 2".
+    public static func readerGroupLinePlace(chapter: String, place: String) -> String {
+        Self.format("reader-group-line-place", fallback: "%1$@ · %2$@", chapter, place)
+    }
+
+    /// Spoken name of a credit page shown again.
+    public static var readerCreditPageLabel: String { string("reader-credit-page-label", fallback: "Credit page") }
+
+    /// Notice when a skipped credit page's picture can't be read, so it can't be shown.
+    public static var readerCreditFailed: String { string("reader-credit-failed", fallback: "Couldn't load this credit page") }
+
+    /// The scrubber's preview on the first page of a chapter's later part.
+    public static func readerPartPreview(page: Int, part: Int) -> String {
+        Self.format("reader-part-preview", fallback: "Page %1$@ · part %2$@", String(page), String(part))
+    }
+
+    /// The same, when the part before it is missing from every group: "Page 14 · part 4 · part 3 missing".
+    public static func readerPartPreviewMissing(page: Int, part: Int, missing: Int) -> String {
+        Self.format("reader-part-preview-missing", fallback: "Page %1$@ · part %2$@ · part %3$@ missing", String(page), String(part), String(missing))
+    }
+
+    /// Spoken value of the scrubber on the first page of a chapter's later part.
+    public static func readerPartStarts(part: Int, page: Int) -> String {
+        Self.format("reader-part-starts", fallback: "Part %1$@ starts at page %2$@", String(part), String(page))
+    }
+
+    /// Button in the first run that opens the reading demo.
+    public static var onboardingReadDemo: String { string("onboarding-read-demo", fallback: "Read the demo") }
+
+    /// Under the first run's demo heading when the device is for reading.
+    public static var onboardingDemoBooksDetail: String { string("onboarding-demo-books-detail", fallback: "One short comic and one short story, shared by their makers under Creative Commons.") }
+
+    /// Under the first run's demo heading when the device is for both.
+    public static var onboardingDemoBothDetail: String { string("onboarding-demo-both-detail", fallback: "One short episode and one short comic, shared by their makers under Creative Commons.") }
+
+    /// Home, under the spotlight, when the demo is the only thing to read.
+    public static var homeDemoOnlyBooks: String { string("home-demo-only-books", fallback: "Only the demo is on. Add a folder, a server or a plugin store to read your own books.") }
+
+    /// Primary action on Home's spotlight for a book.
+    public static var homeSpotlightRead: String { string("home-spotlight-read", fallback: "Read") }
+
+    /// The demo comic's facts line on its series page.
+    public static func demoSeriesFacts(pages: Int) -> String {
+        Self.format("demo-series-facts", fallback: "Demo · Comic · %1$lld pages", pages)
+    }
+
+    /// The comic's credit on its series page and in About the demo. The licence is "CC BY 4.0".
+    public static func demoCreditBook(title: String, author: String, licence: String) -> String {
+        Self.format("demo-credit-book", fallback: "%1$@ by %2$@. Licensed %3$@. Read from Wikimedia Commons.", title, author, licence)
+    }
+
+    /// The story's credit in About the demo.
+    public static func demoCreditStory(title: String, author: String) -> String {
+        Self.format("demo-credit-story", fallback: "%1$@ by %2$@. Public domain. It comes with the app.", title, author)
+    }
+
+    /// The story's cover credit in About the demo, under the story's own credit. The title is the art's caption in English, "Blowing her breath upon him", and the year is 1904.
+    public static func demoCreditCover(title: String, artist: String, year: String) -> String {
+        Self.format("demo-credit-cover", fallback: "Cover: \"%1$@\" by %2$@, %3$@. Public domain. It comes with the app.", title, artist, year)
+    }
+
+    /// Credit capsule in the reader's top bar on page 1.
+    public static func readerDemoCredit(title: String, author: String, licence: String) -> String {
+        Self.format("reader-demo-credit", fallback: "%1$@ · %2$@ · %3$@", title, author, licence)
+    }
+
+    /// A demo result's line in Search.
+    public static var searchDemoReads: String { string("search-demo-reads", fallback: "Demo · Reads now") }
+
+    /// Search, under the demo results, when only the demo is on.
+    public static var searchDemoOnlyBooks: String { string("search-demo-only-books", fallback: "Only the demo is on. Other titles appear once you add a source.") }
+
+    /// Title of the card after the demo's last page.
+    public static var readerDemoEnd: String { string("reader-demo-end", fallback: "That's the end of the demo") }
+
+    /// Line under it.
+    public static var readerDemoEndLine: String { string("reader-demo-end-line", fallback: "To read your own books, add a folder, a server or a plugin store.") }
+
+    /// The card's primary action.
+    public static var readerDemoAddSource: String { string("reader-demo-add-source", fallback: "Add a source") }
+
+    /// The card's secondary action, back to the first page.
+    public static var readerDemoAgain: String { string("reader-demo-again", fallback: "Back to page 1") }
+
+    /// The demo row's line in Your sources when reading is on.
+    public static var sourcesDemoBooksLine: String { string("sources-demo-books-line", fallback: "A comic and a story · CC BY 4.0 and public domain") }
+
+    /// About the demo, first line, when reading is on.
+    public static var sourcesDemoBooksWhat: String { string("sources-demo-books-what", fallback: "Works their makers share under Creative Commons, so you can try Kaeri before adding a source. It isn't a source to keep.") }
+
+    /// About the demo, in place of sources-demo-private when reading is on.
+    public static var sourcesDemoBooksPrivate: String { string("sources-demo-books-private", fallback: "The demo never signs in anywhere and never writes to a tracker.") }
+
+    /// Group on the demo's series page.
+    public static var demoChapters: String { string("demo-chapters", fallback: "Chapters") }
+
+    /// Group on the demo's series page: the other demo work.
+    public static var demoAlso: String { string("demo-also", fallback: "Also in the demo") }
+
+    /// Group in About the demo.
+    public static var demoCredits: String { string("demo-credits", fallback: "Credits") }
+
+    /// A chapter row's line on the demo's series page.
+    public static func demoPages(pages: Int) -> String {
+        Self.format("demo-pages", fallback: "%1$lld pages", pages)
+    }
+
+    /// The story's row on the demo's series page. The licence is "Public domain" as the engine says it.
+    public static func demoStoryRow(author: String, licence: String) -> String {
+        Self.format("demo-story-row", fallback: "Story · %1$@ · %2$@", author, licence)
+    }
+
+    /// Primary action on the demo's series page.
+    public static func demoReadChapter(number: String) -> String {
+        Self.format("demo-read-chapter", fallback: "Read chapter %1$@", number)
+    }
+
+    /// Page between chapters, under the tracker line: the server has the progress.
+    public static func progressServerSaved(server: String) -> String {
+        Self.format("progress-server-saved", fallback: "Saved to %1$@", server)
+    }
+
+    /// Same place, only after 600 ms without an answer.
+    public static func progressServerSending(server: String) -> String {
+        Self.format("progress-server-sending", fallback: "Sending to %1$@…", server)
+    }
+
+    /// Same place, offline: the send waits in the queue.
+    public static func progressServerOffline(server: String) -> String {
+        Self.format("progress-server-offline", fallback: "Will send to %1$@ when you’re back online", server)
+    }
+
+    /// Same place, the send failed for a reason that can pass.
+    public static func progressServerRetrying(server: String) -> String {
+        Self.format("progress-server-retrying", fallback: "%1$@ didn’t answer. Kaeri will try again.", server)
+    }
+
+    /// Same place, the server said no. Try again follows it.
+    public static func progressServerFailed(server: String, reason: String) -> String {
+        Self.format("progress-server-failed", fallback: "Not saved to %1$@: %2$@.", server, reason)
+    }
+
+    /// Reason: a Kavita key.
+    public static var progressWhyKey: String { string("progress-why-key", fallback: "the server refused the key") }
+
+    /// Reason: a Komga or OPDS password.
+    public static var progressWhyPassword: String { string("progress-why-password", fallback: "the server refused the password") }
+
+    /// Reason.
+    public static var progressWhyGone: String { string("progress-why-gone", fallback: "this series isn’t on the server any more") }
+
+    /// Reason, after a day of retries.
+    public static var progressWhyGaveUp: String { string("progress-why-gave-up", fallback: "no answer for a day") }
+
+    /// Your sources, the server's row, second line.
+    public static func progressRowSaved(ago: String) -> String {
+        Self.format("progress-row-saved", fallback: "Progress saved %1$@", ago)
+    }
+
+    /// The server's row, after 600 ms without an answer.
+    public static func progressRowSending(count: Int) -> String {
+        Self.format("progress-row-sending", fallback: "Sending %1$lld chapters…", count)
+    }
+
+    /// The server's row, offline.
+    public static func progressRowOffline(count: Int) -> String {
+        Self.format("progress-row-offline", fallback: "%1$lld chapters will send when you’re back online", count)
+    }
+
+    /// The server's row, the last try failed for a reason that can pass.
+    public static func progressRowRetrying(count: Int) -> String {
+        Self.format("progress-row-retrying", fallback: "%1$lld chapters waiting. Kaeri will try again.", count)
+    }
+
+    /// The server's row, the server said no. Try again sits beside it.
+    public static func progressRowFailed(count: Int, reason: String) -> String {
+        Self.format("progress-row-failed", fallback: "%1$lld chapters not saved: %2$@", count, reason)
+    }
+
+    /// The server's row, when Send progress to the server is off. The kind is the device's own word, as in sync-turn-off: “Mac”, “iPhone”, “phone”.
+    public static func progressRowOff(kind: String) -> String {
+        Self.format("progress-row-off", fallback: "Progress stays on this %1$@", kind)
+    }
+
+    /// Sidebar and tab label: the shows' Home when both media are on.
+    public static var navWatch: String { string("nav-watch", fallback: "Watch") }
+
+    /// Sidebar and tab label: reading's Home.
+    public static var navRead: String { string("nav-read", fallback: "Read") }
+
+    /// Sidebar and tab label: new chapters from followed series.
+    public static var navUpdates: String { string("nav-updates", fallback: "Updates") }
+
+    /// Shelf heading on Read: the series being read, each at its place.
+    public static var homeReadContinue: String { string("home-read-continue", fallback: "Continue") }
+
+    /// Shelf heading on Read: series releasing now.
+    public static var homeReadReleasing: String { string("home-read-releasing", fallback: "Releasing now") }
+
+    /// Line under the spotlight of a popular series, when the engine gives no line of its own.
+    public static var homeReadCheckedOnOpen: String { string("home-read-checked-on-open", fallback: "Checked when you open Kaeri") }
+
+    /// Line at the end of Read, under the last shelf.
+    public static var homeReadEnd: String { string("home-read-end", fallback: "That's everything for now. Updates and Search have the full lists.") }
+
+    /// Line at the end of Read with no book sources yet. A button to add one follows it.
+    public static var homeReadNoSources: String { string("home-read-no-sources", fallback: "Add a folder, a server or a plugin store to read from Home.") }
+
+    /// In place of Read's discovery rows on a first run with no connection: nothing was kept yet.
+    public static var readHomeOfflineRows: String { string("read-home-offline-rows", fallback: "Trending and new series show once you're online.") }
+
+    /// E-ink: the one row on Read's Home that opens the list of discovery rows, and that page's title.
+    public static var readHomeBrowse: String { string("read-home-browse", fallback: "Browse") }
+
+    /// E-ink: the line under Browse on Read's Home.
+    public static var readHomeBrowseLine: String { string("read-home-browse-line", fallback: "Trending, new and finished, by format") }
+
+    /// E-ink: a discovery row in the Browse list, naming its first two series and how many follow.
+    public static func readHomeBrowseRow(first: String, second: String, more: Int) -> String {
+        Self.format("read-home-browse-row", fallback: "%1$@, %2$@ and %3$lld more", first, second, more)
+    }
+
+    /// E-ink: the note on the Browse page. The rows are AniList's catalogue; sources are asked only when a series is opened.
+    public static var readHomeBrowseNote: String { string("read-home-browse-note", fallback: "From AniList. Your sources are asked when you open a series.") }
+
+    /// E-ink: on the Browse page when AniList didn't answer. The time is when the lists were kept.
+    public static func readHomeBrowseKept(time: String) -> String {
+        Self.format("read-home-browse-kept", fallback: "Lists kept from %1$@ still open.", time)
+    }
+
+    /// Under a day in Read's week: what usually comes out that day, when the time isn't known.
+    public static var weekUsually: String { string("week-usually", fallback: "Usually") }
+
+    /// Under a day in Read's week with nothing due.
+    public static var weekNothingUsually: String { string("week-nothing-usually", fallback: "Nothing usually") }
+
+    /// Line under Updates' title on iPhone and iPad.
+    public static func updatesChecked(ago: String) -> String {
+        Self.format("updates-checked", fallback: "Checked %1$@", ago)
+    }
+
+    /// Line above Updates on the Mac: when it checked, and which series it checks.
+    public static func chapterUpdatesCheckedCaughtUp(ago: String) -> String {
+        Self.format("chapter-updates-checked-caught-up", fallback: "Checked %1$@ · series you are caught up on", ago)
+    }
+
+    /// Line while Updates asks every followed series now.
+    public static var chapterUpdatesChecking: String { string("chapter-updates-checking", fallback: "Checking for new chapters…") }
+
+    /// Toolbar button: queue every unread chapter in Updates.
+    public static var updatesDownloadNew: String { string("updates-download-new", fallback: "Download new") }
+
+    /// Updates with nothing in it.
+    public static var updatesEmptyTitle: String { string("updates-empty-title", fallback: "No new chapters") }
+
+    /// Line under Updates' empty title.
+    public static var chapterUpdatesEmptyLine: String { string("chapter-updates-empty-line", fallback: "Kaeri checks series on your Reading list that you are caught up on, a few times a day.") }
+
+    /// Day heading in Updates.
+    public static var chapterUpdatesToday: String { string("chapter-updates-today", fallback: "Today") }
+
+    /// Day heading in Updates.
+    public static var chapterUpdatesYesterday: String { string("chapter-updates-yesterday", fallback: "Yesterday") }
+
+    /// After a chapter on an Updates row, when several groups put it out.
+    public static func chapterUpdatesVersions(n: Int) -> String {
+        Self.format("chapter-updates-versions", fallback: "%1$lld versions", n)
+    }
+
+    /// Accessibility label on an Updates row's cover, which opens the series.
+    public static func chapterUpdatesOpenSeries(title: String) -> String {
+        Self.format("chapter-updates-open-series", fallback: "Open %1$@", title)
+    }
+
+    /// Accessibility hint on an Updates row.
+    public static var chapterUpdatesOpenChapterHint: String { string("chapter-updates-open-chapter-hint", fallback: "Opens the chapter") }
+
+    /// Context menu item on an Updates row.
+    public static var chapterUpdatesOpenSeriesMenu: String { string("chapter-updates-open-series-menu", fallback: "Open series") }
+
+    /// The series page's main action, and the spotlight's.
+    public static func actionReadChapter(n: String) -> String {
+        Self.format("action-read-chapter", fallback: "Read chapter %1$@", n)
+    }
+
+    /// The main action when a chapter is part read.
+    public static func actionContinueChapter(n: String, page: Int) -> String {
+        Self.format("action-continue-chapter", fallback: "Continue chapter %1$@ · page %2$@", n, String(page))
+    }
+
+    /// The main action for a light novel part, part read.
+    public static func actionContinuePart(n: String, percent: Int) -> String {
+        Self.format("action-continue-part", fallback: "Continue part %1$@ · %2$lld%%", n, percent)
+    }
+
+    /// The main action for a light novel part, part read, when how far is not known.
+    public static func actionContinuePartPlain(n: String) -> String {
+        Self.format("action-continue-part-plain", fallback: "Continue part %1$@", n)
+    }
+
+    /// The main action for a light novel part the source calls a chapter, part read.
+    public static func actionContinueChapterPercent(n: String, percent: Int) -> String {
+        Self.format("action-continue-chapter-percent", fallback: "Continue chapter %1$@ · %2$lld%%", n, percent)
+    }
+
+    /// The main action for a light novel part the source calls a chapter, part read, when how far is not known.
+    public static func actionContinueChapterPlain(n: String) -> String {
+        Self.format("action-continue-chapter-plain", fallback: "Continue chapter %1$@", n)
+    }
+
+    /// The main action for a light novel part not opened yet.
+    public static func actionReadPart(n: String) -> String {
+        Self.format("action-read-part", fallback: "Read part %1$@", n)
+    }
+
+    /// The main action for a light novel part, part read, named in the source's own words ("Part 3", "Chapter 3") as its row is.
+    public static func actionContinueNamed(label: String, percent: Int) -> String {
+        Self.format("action-continue-named", fallback: "Continue %1$@ · %2$lld%%", label, percent)
+    }
+
+    /// The main action for a light novel part, part read, named in the source's own words, when how far is not known.
+    public static func actionContinueNamedPlain(label: String) -> String {
+        Self.format("action-continue-named-plain", fallback: "Continue %1$@", label)
+    }
+
+    /// The main action for a chapter part read that has no number, named by its own title ("Oneshot", "Extra").
+    public static func actionContinueNamedPage(label: String, page: Int) -> String {
+        Self.format("action-continue-named-page", fallback: "Continue %1$@ · page %2$@", label, String(page))
+    }
+
+    /// The main action for a light novel part not opened yet, named in the source's own words, and for a chapter with no number, named by its own title ("Read Oneshot").
+    public static func actionReadNamed(label: String) -> String {
+        Self.format("action-read-named", fallback: "Read %1$@", label)
+    }
+
+    /// The main action when every chapter is read.
+    public static var actionReadAgain: String { string("action-read-again", fallback: "Read again") }
+
+    /// Label of the source row on the series page.
+    public static var seriesReadingFrom: String { string("series-reading-from", fallback: "Reading from") }
+
+    /// Button beside a row on the series page that opens its sheet.
+    public static var seriesChange: String { string("series-change", fallback: "Change") }
+
+    /// After the source's name: how many other sources have the series.
+    public static func seriesSourcesMore(n: Int) -> String {
+        Self.format("series-sources-more", fallback: "%1$lld more", n)
+    }
+
+    /// Value of the trackers row while a tracker asks which series this is.
+    public static var seriesTrackerAsk: String { string("series-tracker-ask", fallback: "Which series is this? Choose") }
+
+    /// Value of the group row: the chosen group is used for this series.
+    public static var seriesPreferredGroup: String { string("series-preferred-group", fallback: "Your preferred group here") }
+
+    /// Label of the series page's row for the group whose version of each chapter the series lists, inside the source in use. Its value is the group's name.
+    public static var seriesGroup: String { string("series-group", fallback: "Group") }
+
+    /// After the group's name on the Group row: it is in use because it has the most chapters.
+    public static var seriesGroupMost: String { string("series-group-most", fallback: "most chapters") }
+
+    /// After the group's name on the Group row: the person picked it.
+    public static var seriesGroupPicked: String { string("series-group-picked", fallback: "your pick") }
+
+    /// Spoken hint of the Group row's Change button.
+    public static var seriesGroupHint: String { string("series-group-hint", fallback: "Picks the group") }
+
+    /// Under the group picker's title: the source the groups are in.
+    public static func groupPickerIn(source: String) -> String {
+        Self.format("group-picker-in", fallback: "In %1$@", source)
+    }
+
+    /// The group picker's first choice: the group with the most chapters, whichever that is.
+    public static var groupPickerMost: String { string("group-picker-most", fallback: "Most chapters") }
+
+    /// Under Most chapters: the group that means today.
+    public static func groupPickerMostNow(group: String) -> String {
+        Self.format("group-picker-most-now", fallback: "Now %1$@", group)
+    }
+
+    /// A group in the picker: how many of the series' chapters it has released. Its language follows, after a middle dot.
+    public static func groupPickerCount(have: Int, total: Int) -> String {
+        Self.format("group-picker-count", fallback: "%1$lld of %2$lld chapters", have, total)
+    }
+
+    /// Under the group picker's choices.
+    public static var groupPickerFallback: String { string("group-picker-fallback", fallback: "Chapters a group doesn't have come from another group, and their rows say which.") }
+
+    /// A tracker's progress in chapters, with the total.
+    public static func seriesTrackerChaptersOf(n: Int, total: Int) -> String {
+        Self.format("series-tracker-chapters-of", fallback: "%1$lld of %2$lld chapters", n, total)
+    }
+
+    /// A tracker's progress in chapters, total unknown.
+    public static func seriesTrackerChapters(n: Int) -> String {
+        Self.format("series-tracker-chapters", fallback: "%1$lld chapters", n)
+    }
+
+    /// A tracker's progress when the person has read none of the series yet, in place of "0 chapters".
+    public static var seriesTrackerNotStarted: String { string("series-tracker-not-started", fallback: "Not started") }
+
+    /// A tracker's progress in chapters, then the volume.
+    public static func seriesTrackerWithVolume(chapters: String, volume: Int) -> String {
+        Self.format("series-tracker-with-volume", fallback: "%1$@ · volume %2$@", chapters, String(volume))
+    }
+
+    /// A light novel tracker's progress in volumes.
+    public static func seriesTrackerVolumes(volume: Int, total: Int) -> String {
+        Self.format("series-tracker-volumes", fallback: "Volume %1$@ of %2$@", String(volume), String(total))
+    }
+
+    /// Main place when the source can't be read from.
+    public static var seriesReadFromAnother: String { string("series-read-from-another", fallback: "Read from another source") }
+
+    /// Status menu item: a score submenu.
+    public static var seriesScore: String { string("series-score", fallback: "Score…") }
+
+    /// Status menu's label before the series is on a list.
+    public static var seriesAddToList: String { string("series-add-to-list", fallback: "Add to list") }
+
+    /// Last item of a series' list menu: take the series off every tracker's list. Asks first.
+    public static var seriesRemoveFromLists: String { string("series-remove-from-lists", fallback: "Remove from lists…") }
+
+    /// Title of the question before a series is taken off the lists.
+    public static func seriesRemoveFromListsTitle(title: String) -> String {
+        Self.format("series-remove-from-lists-title", fallback: "Remove %1$@ from your lists?", title)
+    }
+
+    /// Line in that question.
+    public static var seriesRemoveFromListsLine: String { string("series-remove-from-lists-line", fallback: "It comes off your list on each tracker you have connected. Your place and read chapters stay in Kaeri.") }
+
+    /// Heading over what the removal came to, one line per tracker.
+    public static var seriesRemovedTitle: String { string("series-removed-title", fallback: "Your lists") }
+
+    /// Title while choosing chapters on a phone: how many are chosen.
+    public static func seriesChosen(n: Int) -> String {
+        Self.format("series-chosen", fallback: "%1$lld chapters", n)
+    }
+
+    /// Button while choosing chapters on a phone: choose every unread chapter.
+    public static var seriesChooseAllUnread: String { string("series-choose-all-unread", fallback: "All unread") }
+
+    /// Heading in Read from over the sources searched without finding the series.
+    public static var readFromNotFound: String { string("read-from-not-found", fallback: "Not found in") }
+
+    /// Button beside such a source: look for the series there by other words.
+    public static var readFromSearchThere: String { string("read-from-search-there", fallback: "Search there") }
+
+    /// Placeholder of the field that looks for the series in one source.
+    public static func readFromSearchPlaceholder(source: String) -> String {
+        Self.format("read-from-search-placeholder", fallback: "Search %1$@", source)
+    }
+
+    /// Button that runs that search.
+    public static var readFromSearch: String { string("read-from-search", fallback: "Search") }
+
+    /// Under the field when the source found nothing by those words.
+    public static var readFromSearchNone: String { string("read-from-search-none", fallback: "Nothing found by these words") }
+
+    /// The More menu: the Tracking sheet.
+    public static var seriesTracking: String { string("series-tracking", fallback: "Tracking") }
+
+    /// The More menu: the Read from sheet.
+    public static var seriesReadFromMenu: String { string("series-read-from-menu", fallback: "Change source…") }
+
+    /// The More menu: start again from chapter 1.
+    public static var seriesReadAgainMenu: String { string("series-read-again-menu", fallback: "Read again from the start…") }
+
+    /// Heading of the chapter list when the series has volumes.
+    public static var seriesVolumes: String { string("series-volumes", fallback: "Volumes") }
+
+    /// Heading of the chapter list.
+    public static var seriesChapters: String { string("series-chapters", fallback: "Chapters") }
+
+    /// Accessibility label of the chapter order menu.
+    public static var seriesOrder: String { string("series-order", fallback: "Order") }
+
+    /// Chapter order.
+    public static var seriesNewestFirst: String { string("series-newest-first", fallback: "Newest first") }
+
+    /// Chapter order.
+    public static var seriesOldestFirst: String { string("series-oldest-first", fallback: "Oldest first") }
+
+    /// A volume's heading in the chapter list.
+    public static func seriesVolume(n: String) -> String {
+        Self.format("series-volume", fallback: "Volume %1$@", n)
+    }
+
+    /// The heading for chapters that are in no volume yet.
+    public static var seriesNoVolume: String { string("series-no-volume", fallback: "Not in a volume yet") }
+
+    /// After a volume's heading: which chapters it holds.
+    public static func seriesChapterRange(from: String, to: String) -> String {
+        Self.format("series-chapter-range", fallback: "chapters %1$@ to %2$@", from, to)
+    }
+
+    /// After a volume's heading when every chapter in it is read.
+    public static var seriesVolumeRead: String { string("series-volume-read", fallback: "read") }
+
+    /// Accessibility value of a volume heading.
+    public static var seriesExpanded: String { string("series-expanded", fallback: "Expanded") }
+
+    /// Accessibility value of a volume heading.
+    public static var seriesCollapsed: String { string("series-collapsed", fallback: "Collapsed") }
+
+    /// The chapter list when the source has none.
+    public static var seriesNoChaptersTitle: String { string("series-no-chapters-title", fallback: "No chapters in this source yet") }
+
+    /// Line under it.
+    public static var seriesNoChaptersLine: String { string("series-no-chapters-line", fallback: "Another source may have them.") }
+
+    /// The chapter list when none of the person's sources holds the series and none was picked: an empty state, not a failure. Its button opens Read from.
+    public static var seriesNoSourceTitle: String { string("series-no-source-title", fallback: "None of your sources has this series yet") }
+
+    /// Line under it.
+    public static var seriesNoSourceLine: String { string("series-no-source-line", fallback: "Search for it by another name, or add a source in Your sources.") }
+
+    /// Its button: opens Read from, where each source can be searched by another name.
+    public static var seriesNoSourceSearch: String { string("series-no-source-search", fallback: "Search by another name") }
+
+    /// The chapter list when the source failed. Downloaded chapters are listed under it.
+    public static func seriesChaptersFailed(source: String) -> String {
+        Self.format("series-chapters-failed", fallback: "Couldn't load chapters from %1$@.", source)
+    }
+
+    /// A chapter row's title.
+    public static func seriesChapterNumber(n: String) -> String {
+        Self.format("series-chapter-number", fallback: "Chapter %1$@", n)
+    }
+
+    /// Accessibility label of the bookmark mark on a chapter row.
+    public static var seriesBookmarked: String { string("series-bookmarked", fallback: "Bookmarked") }
+
+    /// Chapter menu and swipe action.
+    public static var seriesMarkRead: String { string("series-mark-read", fallback: "Mark read") }
+
+    /// Chapter menu and swipe action.
+    public static var seriesMarkUnread: String { string("series-mark-unread", fallback: "Mark unread") }
+
+    /// Chapter menu item: every chapter before this one is read too.
+    public static var seriesMarkReadUpTo: String { string("series-mark-read-up-to", fallback: "Mark read up to here") }
+
+    /// Chapter menu and swipe action.
+    public static var seriesDownload: String { string("series-download", fallback: "Download") }
+
+    /// Chapter menu item: open the chapter in the reader.
+    public static var seriesReadChapterMenu: String { string("series-read-chapter-menu", fallback: "Read") }
+
+    /// Chapter menu item.
+    public static var seriesBookmark: String { string("series-bookmark", fallback: "Bookmark") }
+
+    /// Chapter menu item.
+    public static var seriesRemoveBookmark: String { string("series-remove-bookmark", fallback: "Remove bookmark") }
+
+    /// Menu of a chapter that several groups put out.
+    public static func seriesVersions(n: Int) -> String {
+        Self.format("series-versions", fallback: "%1$lld versions", n)
+    }
+
+    /// In that menu while the versions load.
+    public static var seriesVersionsLoading: String { string("series-versions-loading", fallback: "Looking for versions…") }
+
+    /// The version in use, in that menu.
+    public static func seriesVersionInUse(name: String) -> String {
+        Self.format("series-version-in-use", fallback: "%1$@ in use", name)
+    }
+
+    /// Make another group the one used for this series.
+    public static func seriesPreferVersion(name: String) -> String {
+        Self.format("series-prefer-version", fallback: "Prefer %1$@ for this series", name)
+    }
+
+    /// A downloaded chapter, after its state.
+    public static var chapterStateDownloaded: String { string("chapter-state-downloaded", fallback: "Downloaded") }
+
+    /// A chapter waiting to download.
+    public static var chapterStateQueued: String { string("chapter-state-queued", fallback: "Queued") }
+
+    /// A chapter waiting for Wi-Fi to download.
+    public static var chapterStateWifi: String { string("chapter-state-wifi", fallback: "Queued · waits for Wi-Fi") }
+
+    /// A chapter downloading.
+    public static func chapterStateDownloading(done: Int, total: Int) -> String {
+        Self.format("chapter-state-downloading", fallback: "Downloading · %1$lld of %2$lld pages", done, total)
+    }
+
+    /// A chapter downloading before its page count is known, and throughout for a novel's chapter.
+    public static var chapterStateDownloadingPlain: String { string("chapter-state-downloading-plain", fallback: "Downloading") }
+
+    /// A chapter that failed to download, with the reason.
+    public static func chapterStateFailed(reason: String) -> String {
+        Self.format("chapter-state-failed", fallback: "Couldn't download. %1$@", reason)
+    }
+
+    /// A part-read chapter.
+    public static func chapterStatePageOf(page: Int, of: Int) -> String {
+        Self.format("chapter-state-page-of", fallback: "Page %1$@ of %2$@", String(page), String(of))
+    }
+
+    /// A part-read chapter whose length isn't known.
+    public static func chapterStatePage(page: Int) -> String {
+        Self.format("chapter-state-page", fallback: "Page %1$@", String(page))
+    }
+
+    /// A read chapter.
+    public static var chapterStateRead: String { string("chapter-state-read", fallback: "Read") }
+
+    /// A chapter that came out since you last looked.
+    public static var chapterStateNew: String { string("chapter-state-new", fallback: "New") }
+
+    /// Button: stop a chapter's download.
+    public static var chapterDownloadStop: String { string("chapter-download-stop", fallback: "Stop download") }
+
+    /// Button: try a failed chapter's download again.
+    public static var chapterRetry: String { string("chapter-retry", fallback: "Retry") }
+
+    /// Chapter menu item.
+    public static var chapterDownloadDelete: String { string("chapter-download-delete", fallback: "Delete download") }
+
+    /// Download menu item.
+    public static func downloadNext(n: Int) -> String {
+        Self.format("download-next", fallback: "Next %1$lld unread", n)
+    }
+
+    /// Download menu item.
+    public static var downloadUnread: String { string("download-unread", fallback: "Every unread chapter") }
+
+    /// Download menu item: a volume's chapters not yet downloaded.
+    public static func downloadVolumeCount(volume: String, n: Int) -> String {
+        Self.format("download-volume-count", fallback: "%1$@ · %2$lld chapters", volume, n)
+    }
+
+    /// Download menu item: turns on choosing chapters in the list.
+    public static var downloadChoose: String { string("download-choose", fallback: "Choose chapters…") }
+
+    /// Download menu item.
+    public static var downloadDeleteSeries: String { string("download-delete-series", fallback: "Delete downloads of this series") }
+
+    /// The amber button in the Choose chapters bar.
+    public static func downloadChapters(n: Int) -> String {
+        Self.format("download-chapters", fallback: "Download %1$lld chapters", n)
+    }
+
+    /// Line above that button.
+    public static var downloadOverWifi: String { string("download-over-wifi", fallback: "Over Wi-Fi") }
+
+    /// Title of the question before reading a series again.
+    public static func readAgainTitle(title: String) -> String {
+        Self.format("read-again-title", fallback: "Read %1$@ again from the start?", title)
+    }
+
+    /// What happens on each side.
+    public static var readAgainLine: String { string("read-again-line", fallback: "Your place goes back to chapter 1 on all your devices. Chapters stay marked read on your trackers, and AniList counts a reread.") }
+
+    /// The confirming button.
+    public static var readAgainConfirm: String { string("read-again-confirm", fallback: "Read again") }
+
+    /// Title of the sheet that changes where a series' chapters come from.
+    public static var seriesReadFromTitle: String { string("series-read-from-title", fallback: "Read from") }
+
+    /// While the sheet asks every source.
+    public static var seriesReadFromAsking: String { string("series-read-from-asking", fallback: "Asking your sources…") }
+
+    /// The sheet with no source that has the series.
+    public static var seriesReadFromNoneTitle: String { string("series-read-from-none-title", fallback: "No source has this series") }
+
+    /// Line under it.
+    public static var seriesReadFromNoneLine: String { string("series-read-from-none-line", fallback: "Add a folder, a server or a plugin store in Your sources.") }
+
+    /// A source's chapters, first on its line.
+    public static func seriesReadFromChapters(latest: String) -> String {
+        Self.format("series-read-from-chapters", fallback: "Chapters 1 to %1$@", latest)
+    }
+
+    /// A source's chapters, after its kind on the line.
+    public static func seriesReadFromChaptersLater(latest: String) -> String {
+        Self.format("series-read-from-chapters-later", fallback: "chapters 1 to %1$@", latest)
+    }
+
+    /// A source's line while it is asked for its chapter list, first on its line.
+    public static var seriesReadFromChecking: String { string("series-read-from-checking", fallback: "Checking chapters") }
+
+    /// The same, after its kind on the line.
+    public static var seriesReadFromCheckingLater: String { string("series-read-from-checking-later", fallback: "checking chapters") }
+
+    /// A source that answered with no chapters for this series, first on its line.
+    public static var seriesReadFromEmpty: String { string("series-read-from-empty", fallback: "No chapters here yet") }
+
+    /// The same, after its kind on the line.
+    public static var seriesReadFromEmptyLater: String { string("series-read-from-empty-later", fallback: "no chapters here yet") }
+
+    /// After a folder's chapters.
+    public static func seriesReadFromOnDevice(device: String) -> String {
+        Self.format("series-read-from-on-device", fallback: "on this %1$@", device)
+    }
+
+    /// Footnote of the Read from sheet.
+    public static var seriesReadFromNote: String { string("series-read-from-note", fallback: "Read marks belong to the series, so they carry over when you change. Downloads from the old source stay until you delete them.") }
+
+    /// Heading for trackers that don't track this series.
+    public static var seriesNotTracked: String { string("series-not-tracked", fallback: "Not tracked here") }
+
+    /// A tracker that isn't connected.
+    public static var seriesTrackerConnect: String { string("series-tracker-connect", fallback: "Connect in Settings to track this series") }
+
+    /// A tracker that has no such series.
+    public static var seriesTrackerNotThere: String { string("series-tracker-not-there", fallback: "No match on this tracker") }
+
+    /// A tracker looking for the series.
+    public static var seriesTrackerLooking: String { string("series-tracker-looking", fallback: "Looking for this series…") }
+
+    /// A tracker that is behind, and catches up on the next sync.
+    public static func seriesTrackerBehind(has: Int, gets: Int) -> String {
+        Self.format("series-tracker-behind", fallback: "Has chapter %1$@. Gets %2$@ on the next sync.", String(has), String(gets))
+    }
+
+    /// A tracker ahead of Kaeri.
+    public static func seriesTrackerAhead(has: Int) -> String {
+        Self.format("series-tracker-ahead", fallback: "Has chapter %1$@, further than Kaeri.", String(has))
+    }
+
+    /// A tracker's score out of ten.
+    public static func seriesTrackerScore(score: String) -> String {
+        Self.format("series-tracker-score", fallback: "%1$@ / 10", score)
+    }
+
+    /// Menu item on a tracker that differs.
+    public static var seriesTrackerKeepKaeri: String { string("series-tracker-keep-kaeri", fallback: "Keep Kaeri's place") }
+
+    /// Menu item on a tracker that differs.
+    public static func seriesTrackerTakeTheirs(tracker: String) -> String {
+        Self.format("series-tracker-take-theirs", fallback: "Use %1$@'s place", tracker)
+    }
+
+    /// Under a tracker's guesses for the series.
+    public static var seriesTrackerNoneOfThese: String { string("series-tracker-none-of-these", fallback: "None of these") }
+
+    /// AniList's list.
+    public static var readListReading: String { string("read-list-reading", fallback: "Reading") }
+
+    /// AniList's list.
+    public static var readListPlanning: String { string("read-list-planning", fallback: "Planning") }
+
+    /// AniList's list.
+    public static var readListCompleted: String { string("read-list-completed", fallback: "Completed") }
+
+    /// AniList's list.
+    public static var readListPaused: String { string("read-list-paused", fallback: "Paused") }
+
+    /// AniList's list.
+    public static var readListDropped: String { string("read-list-dropped", fallback: "Dropped") }
+
+    /// AniList's list.
+    public static var readListRereading: String { string("read-list-rereading", fallback: "Rereading") }
+
+    /// Series in folders and servers that are on no list.
+    public static var readListYourFiles: String { string("read-list-your-files", fallback: "Your files") }
+
+    /// A choice.
+    public static var mediumWatch: String { string("medium-watch", fallback: "Watch") }
+
+    /// A choice.
+    public static var mediumRead: String { string("medium-read", fallback: "Read") }
+
+    /// A choice.
+    public static var mediumBoth: String { string("medium-both", fallback: "Both") }
+
+    /// Line under the Watch choice.
+    public static var mediumWatchLine: String { string("medium-watch-line", fallback: "Shows and films from your sources") }
+
+    /// Line under the Read choice.
+    public static var mediumReadLine: String { string("medium-read-line", fallback: "Manga, webtoons and light novels from your sources") }
+
+    /// Line under the Both choice.
+    public static var mediumBothLine: String { string("medium-both-line", fallback: "Watching and reading, each in its own place") }
+
+    /// The answer, as the Settings row says it.
+    public static var mediumAnswerWatch: String { string("medium-answer-watch", fallback: "Watching") }
+
+    /// The answer, as the Settings row says it.
+    public static var mediumAnswerRead: String { string("medium-answer-read", fallback: "Reading") }
+
+    /// The answer, as the Settings row says it.
+    public static var mediumAnswerBoth: String { string("medium-answer-both", fallback: "Watching and reading") }
+
+    /// Title of the sheet and the toolbar button.
+    public static var sourcesAddTitle: String { string("sources-add-title", fallback: "Add a source") }
+
+    /// Line in the Add a source sheet.
+    public static var bookAddLine: String { string("book-add-line", fallback: "Books you already have, or plugins from a store whose owner invited you.") }
+
+    /// A kind in the Add a source sheet.
+    public static var bookAddFolder: String { string("book-add-folder", fallback: "A folder") }
+
+    /// Line under it.
+    public static func bookAddFolderLine(device: String) -> String {
+        Self.format("book-add-folder-line", fallback: "CBZ, EPUB, PDF and folders of images on this %1$@ or a drive", device)
+    }
+
+    /// A kind in the Add a source sheet.
+    public static var bookAddServer: String { string("book-add-server", fallback: "A server") }
+
+    /// Line under it.
+    public static var bookAddServerLine: String { string("book-add-server-line", fallback: "Komga, Kavita or an OPDS catalogue you can sign in to") }
+
+    /// A kind in the Add a source sheet.
+    public static var bookAddStore: String { string("book-add-store", fallback: "A plugin store") }
+
+    /// Line under it.
+    public static var bookAddStoreLine: String { string("book-add-store-line", fallback: "Paste an invite from the store's owner") }
+
+    /// Title of the Add a server sheet.
+    public static var bookAddServerTitle: String { string("book-add-server-title", fallback: "Add a server") }
+
+    /// The sheet's amber button.
+    public static var bookAddServerButton: String { string("book-add-server-button", fallback: "Add server") }
+
+    /// What the address answered, before the sign-in.
+    public static func sourcesFoundServer(kind: String) -> String {
+        Self.format("sources-found-server", fallback: "Found a %1$@ server", kind)
+    }
+
+    /// What the server held once signed in, when it said how many series it lists.
+    public static func sourcesFoundServerSeries(kind: String, n: Int) -> String {
+        Self.format("sources-found-server-series", fallback: "Found a %1$@ server with %2$lld series", kind, n)
+    }
+
+    /// While the address is tried.
+    public static var bookServerLooking: String { string("book-server-looking", fallback: "Looking at this address…") }
+
+    /// Line under the password.
+    public static var bookServerNote: String { string("book-server-note", fallback: "Kaeri sends your reading progress back to this server. The password stays in the Keychain.") }
+
+    /// Heading in Your sources.
+    public static var bookSourcesFolders: String { string("book-sources-folders", fallback: "Folders") }
+
+    /// Heading in Your sources.
+    public static var bookSourcesServers: String { string("book-sources-servers", fallback: "Servers") }
+
+    /// Heading in Your sources.
+    public static var bookSourcesPlugins: String { string("book-sources-plugins", fallback: "Plugins") }
+
+    /// Under the plugins, before a link to the plugin stores.
+    public static var bookSourcesPluginsFooter: String { string("book-sources-plugins-footer", fallback: "Plugins come from plugin stores you join.") }
+
+    /// How many series a folder or server holds.
+    public static func bookSourcesSeries(n: Int) -> String {
+        Self.format("book-sources-series", fallback: "%1$lld series", n)
+    }
+
+    /// A folder being looked through.
+    public static func bookSourcesScanning(n: Int) -> String {
+        Self.format("book-sources-scanning", fallback: "Looking through · %1$lld found", n)
+    }
+
+    /// A folder that can't be found, such as a drive that isn't plugged in.
+    public static var bookSourcesMissing: String { string("book-sources-missing", fallback: "Not found. Is the drive connected?") }
+
+    /// A source that is turned off.
+    public static var bookSourcesOff: String { string("book-sources-off", fallback: "Off") }
+
+    /// On a server's line.
+    public static var bookSourcesProgressBack: String { string("book-sources-progress-back", fallback: "progress goes back to the server") }
+
+    /// A server's kind.
+    public static var bookSourcesOpds: String { string("book-sources-opds", fallback: "OPDS catalogue") }
+
+    /// A plugin's store.
+    public static func bookSourcesFromStore(store: String) -> String {
+        Self.format("book-sources-from-store", fallback: "From %1$@", store)
+    }
+
+    /// A plugin's version.
+    public static func bookSourcesVersion(version: String) -> String {
+        Self.format("book-sources-version", fallback: "version %1$@", version)
+    }
+
+    /// Button on a folder: series whose match needs a look.
+    public static func bookSourcesCheckMatches(n: Int) -> String {
+        Self.format("book-sources-check-matches", fallback: "Check matches · %1$lld", n)
+    }
+
+    /// Title of the Check matches sheet.
+    public static var bookSourcesCheckMatchesTitle: String { string("book-sources-check-matches-title", fallback: "Check matches") }
+
+    /// A folder menu item: look through the folders again.
+    public static var bookSourcesScan: String { string("book-sources-scan", fallback: "Look again") }
+
+    /// A server menu switch.
+    public static var bookSourcesReportProgress: String { string("book-sources-report-progress", fallback: "Send progress to the server") }
+
+    /// A server menu switch.
+    public static var bookSourcesUse: String { string("book-sources-use", fallback: "Use this server") }
+
+    /// An address that answered but serves no books.
+    public static var bookSourcesNotABookServer: String { string("book-sources-not-a-book-server", fallback: "This address answers, but not as a book server.") }
+
+    /// A folder name with no match.
+    public static var bookSourcesNoMatch: String { string("book-sources-no-match", fallback: "No match") }
+
+    /// Button: keep the series as Your files, unmatched.
+    public static var bookSourcesKeep: String { string("book-sources-keep", fallback: "Keep unmatched") }
+
+    /// Button: search for the match by hand.
+    public static var bookSourcesFind: String { string("book-sources-find", fallback: "Find") }
+
+    /// Footnote of the Check matches sheet.
+    public static var bookSourcesUnmatchedNote: String { string("book-sources-unmatched-note", fallback: "You can still read unmatched series from the folder. They get no tracker progress until they're matched.") }
+
+    /// Accessibility label of the control that sets Shows or Reading in the Library and Search.
+    public static var libraryScopeLabel: String { string("library-scope-label", fallback: "Shows or Reading") }
+
+    /// A side of that control.
+    public static var libraryScopeShows: String { string("library-scope-shows", fallback: "Shows") }
+
+    /// A side of that control.
+    public static var libraryScopeReading: String { string("library-scope-reading", fallback: "Reading") }
+
+    /// The reading library's order: as the engine sends it, most recently read first.
+    public static var readSortLastRead: String { string("read-sort-last-read", fallback: "Last read") }
+
+    /// Accessibility value of the list menu: the list and how many series are on it.
+    public static func readLibraryListValue(list: String, n: Int) -> String {
+        Self.format("read-library-list-value", fallback: "%1$@, %2$lld series", list, n)
+    }
+
+    /// A reading list with nothing on it. A Search button follows.
+    public static func readLibraryEmpty(list: String) -> String {
+        Self.format("read-library-empty", fallback: "Nothing on %1$@ yet", list)
+    }
+
+    /// Line under it.
+    public static var readLibraryEmptyLine: String { string("read-library-empty-line", fallback: "Series you add from Search or a series page show here.") }
+
+    /// Your files with nothing in it.
+    public static var readLibraryFilesEmptyTitle: String { string("read-library-files-empty-title", fallback: "Nothing in your files yet") }
+
+    /// Line under it.
+    public static var readLibraryFilesEmptyLine: String { string("read-library-files-empty-line", fallback: "Series in your folders and servers that are on no list show here.") }
+
+    /// The button under it.
+    public static var readLibraryFilesAdd: String { string("read-library-files-add", fallback: "Add a folder or server") }
+
+    /// The search field's prompt while Search looks for reading.
+    public static var readSearchPlaceholder: String { string("read-search-placeholder", fallback: "Search reading") }
+
+    /// The last row of reading's results with both media on: matches in the other scope.
+    public static func searchOtherScope(n: Int, scope: String) -> String {
+        Self.format("search-other-scope", fallback: "%1$lld matches in %2$@", n, scope)
+    }
+
+    /// The button on that row, which switches the scope.
+    public static var searchShowThem: String { string("search-show-them", fallback: "Show them") }
+
+    /// The line over browsing: what is shown, and where the list comes from.
+    public static func readSearchBrowseLine(what: String) -> String {
+        Self.format("read-search-browse-line", fallback: "%1$@ · from AniList", what)
+    }
+
+    /// Over reading's results once every result is listed: how many series AniList found.
+    public static func readSearchTotal(n: Int) -> String {
+        Self.format("read-search-total", fallback: "%1$lld series from AniList", n)
+    }
+
+    /// Search couldn't ask AniList.
+    public static var readSearchFailed: String { string("read-search-failed", fallback: "Couldn't search") }
+
+    /// No results for what was typed.
+    public static func readSearchNothing(query: String) -> String {
+        Self.format("read-search-nothing", fallback: "Nothing found for %1$@", query)
+    }
+
+    /// No results while browsing with filters.
+    public static var readSearchNothingBrowse: String { string("read-search-nothing-browse", fallback: "Nothing matches these filters") }
+
+    /// Line under no results.
+    public static var readSearchNothingLine: String { string("read-search-nothing-line", fallback: "Try other words, or a title in another language.") }
+
+    /// Line under no results with filters set. A Clear filters button follows.
+    public static var readSearchNothingFiltersLine: String { string("read-search-nothing-filters-line", fallback: "Fewer filters may find more.") }
+
+    /// The button under it.
+    public static var readSearchClearFilters: String { string("read-search-clear-filters", fallback: "Clear filters") }
+
+    /// A sort of reading's Search, AniList's.
+    public static var readSortTrending: String { string("read-sort-trending", fallback: "Trending") }
+
+    /// A sort of reading's Search, AniList's.
+    public static var readSortScore: String { string("read-sort-score", fallback: "Score") }
+
+    /// A sort of reading's Search, AniList's.
+    public static var readSortNewest: String { string("read-sort-newest", fallback: "Newest") }
+
+    /// A filter.
+    public static var readFilterFormat: String { string("read-filter-format", fallback: "Format") }
+
+    /// A filter.
+    public static var readFilterOrigin: String { string("read-filter-origin", fallback: "Origin") }
+
+    /// The first choice of the Origin filter's menu in reading's Search once an origin is set: it takes them all off.
+    public static var readFilterAnyOrigin: String { string("read-filter-any-origin", fallback: "Any origin") }
+
+    /// A filter.
+    public static var readFilterStatus: String { string("read-filter-status", fallback: "Status") }
+
+    /// A filter.
+    public static var readFilterGenres: String { string("read-filter-genres", fallback: "Genres") }
+
+    /// Title of the iPhone's filters sheet.
+    public static var readFilterTitle: String { string("read-filter-title", fallback: "Filters") }
+
+    /// Button in that sheet that clears every filter.
+    public static var readFilterReset: String { string("read-filter-reset", fallback: "Reset") }
+
+    /// Accessibility value of a filter with nothing chosen.
+    public static var readFilterAny: String { string("read-filter-any", fallback: "Any") }
+
+    /// A filter's name before its value, once set: "Origin: Korea".
+    public static func readFilterSet(name: String) -> String {
+        Self.format("read-filter-set", fallback: "%1$@:", name)
+    }
+
+    /// A filter with several values: the first, then how many more.
+    public static func readFilterMany(first: String, more: Int) -> String {
+        Self.format("read-filter-many", fallback: "%1$@ and %2$lld more", first, more)
+    }
+
+    /// A genre left out.
+    public static func readFilterNotGenre(genre: String) -> String {
+        Self.format("read-filter-not-genre", fallback: "Not %1$@", genre)
+    }
+
+    /// How many genres are set.
+    public static func readFilterGenresCount(n: Int) -> String {
+        Self.format("read-filter-genres-count", fallback: "%1$lld genres", n)
+    }
+
+    /// A genre's state: only series with it.
+    public static var readFilterIncluded: String { string("read-filter-included", fallback: "Included") }
+
+    /// A genre's state: no series with it.
+    public static var readFilterLeftOut: String { string("read-filter-left-out", fallback: "Left out") }
+
+    /// The last entry of the Genres menu, which holds the genres the menu has no room for.
+    public static var readFilterMoreGenres: String { string("read-filter-more-genres", fallback: "More genres") }
+
+    /// A filter of reading's Search: when a series started.
+    public static var readSearchStarted: String { string("read-search-started", fallback: "Started") }
+
+    /// The filter bar's chip that searches only the person's own sources, leaving AniList out.
+    public static var readSearchSourcesOnly: String { string("read-search-sources-only", fallback: "Your sources only") }
+
+    /// Search's section heading under AniList's results: one group per source of the person's.
+    public static var readSearchFromSources: String { string("read-search-from-sources", fallback: "From your sources") }
+
+    /// E-ink and the terminal: a source group still waiting for its answer. Also its screen reader label. The source is its name.
+    public static func readSearchAsking(source: String) -> String {
+        Self.format("read-search-asking", fallback: "Asking %1$@…", source)
+    }
+
+    /// A source group whose source failed to answer. The reason and Try again follow.
+    public static func readSearchSourceFailed(source: String) -> String {
+        Self.format("read-search-source-failed", fallback: "%1$@ didn't answer.", source)
+    }
+
+    /// The reason under it when the source gave no answer in time.
+    public static func readSearchSourceTimeout(seconds: Int) -> String {
+        Self.format("read-search-source-timeout", fallback: "No answer in %1$lld s.", seconds)
+    }
+
+    /// One line at the end of the sources' groups for every source that found nothing. The sources are their names, joined as a list.
+    public static func readSearchSourceNothing(sources: String) -> String {
+        Self.format("read-search-source-nothing", fallback: "Nothing found in %1$@.", sources)
+    }
+
+    /// On an AniList result that one of the person's sources has. The source is its name.
+    public static func readSearchInSource(source: String) -> String {
+        Self.format("read-search-in-source", fallback: "In %1$@", source)
+    }
+
+    /// On an AniList result that the person's folders have. All their folders search as one source, so the line says they are the person's own, not a place called Folders.
+    public static var readSearchInFolders: String { string("read-search-in-folders", fallback: "In your folders") }
+
+    /// On an AniList result that more than one of the person's sources has. Always 2 or more.
+    public static func readSearchInSources(n: Int) -> String {
+        Self.format("read-search-in-sources", fallback: "In %1$lld of your sources", n)
+    }
+
+    /// Search, when AniList found nothing but the person's sources did.
+    public static var readSearchAnilistNothing: String { string("read-search-anilist-nothing", fallback: "AniList found nothing for these words.") }
+
+    /// Search, when AniList could not be reached.
+    public static var readSearchAnilistFailed: String { string("read-search-anilist-failed", fallback: "AniList didn't answer.") }
+
+    /// The line under it.
+    public static var readSearchAnilistFailedLine: String { string("read-search-anilist-failed-line", fallback: "Your sources were still asked.") }
+
+    /// Search, when nothing was found anywhere: under the line saying AniList found nothing.
+    public static var readSearchSourcesNothing: String { string("read-search-sources-nothing", fallback: "Nothing in your sources either.") }
+
+    /// Search with Your sources only on, when no source found anything. The line to try other words follows.
+    public static var readSearchSourcesOnlyNothing: String { string("read-search-sources-only-nothing", fallback: "Nothing found in your sources") }
+
+    /// Line under a reading page's title when the device has no connection.
+    public static var readStateOfflineLine: String { string("read-state-offline-line", fallback: "Offline. Downloaded chapters still open.") }
+
+    /// Over reading's results while more pages are to come, so AniList's count is not known yet.
+    public static var readSearchTotalUnknown: String { string("read-search-total-unknown", fallback: "Series from AniList") }
+
+    /// The link under From your sources that shows the rest of AniList's results.
+    public static var readSearchMoreAnilist: String { string("read-search-more-anilist", fallback: "More from AniList") }
+
+    /// Beside More from AniList: how many of AniList's results show.
+    public static func readSearchShown(shown: Int, total: Int) -> String {
+        Self.format("read-search-shown", fallback: "%1$lld of %2$lld shown", shown, total)
+    }
+
+    /// Beside More from AniList while AniList's count is not known yet: how many results show.
+    public static func readSearchShownSome(shown: Int) -> String {
+        Self.format("read-search-shown-some", fallback: "%1$lld shown", shown)
+    }
+
+    /// Beside a source's name in Search: the kind of source it is.
+    public static var readSearchSourceKindServer: String { string("read-search-source-kind-server", fallback: "Server") }
+
+    public static var readSearchSourceKindFolder: String { string("read-search-source-kind-folder", fallback: "Folder") }
+
+    public static var readSearchSourceKindPlugin: String { string("read-search-source-kind-plugin", fallback: "Plugin") }
+
+    /// The button of a source group with more than five hits.
+    public static func readSearchSourceMore(n: Int) -> String {
+        Self.format("read-search-source-more", fallback: "Show %1$lld more", n)
+    }
+
+    /// The line over browsing once every result is listed: the browse line, then the total. As in "Manga, trending · 1,204 series from AniList".
+    public static func readSearchLineTotal(line: String, total: String) -> String {
+        Self.format("read-search-line-total", fallback: "%1$@ · %2$@", line, total)
+    }
+
+    /// Joins the parts of the browse line, one more at a time. As in "Manga, Japan, Popular".
+    public static func readSearchBrowseParts(list: String, next: String) -> String {
+        Self.format("read-search-browse-parts", fallback: "%1$@, %2$@", list, next)
+    }
+
+    /// A tile's caption under its cover: two facts. As in "Manga · Japan" or "Manga · Releasing".
+    public static func readCaptionTwo(first: String, second: String) -> String {
+        Self.format("read-caption-two", fallback: "%1$@ · %2$@", first, second)
+    }
+
+    /// A filter's button once set, as shown: its name, then the value. As in "Format: Manga".
+    public static func readFilterShown(name: String, value: String) -> String {
+        Self.format("read-filter-shown", fallback: "%1$@: %2$@", name, value)
+    }
+
+    /// A cover tile: its title, then its caption. As in "Paper Lantern, Manga, Japan".
+    public static func readNameTile(title: String, line: String) -> String {
+        Self.format("read-name-tile", fallback: "%1$@, %2$@", title, line)
+    }
+
+    /// A cover tile a source already has: title, caption, then the source. As in "Paper Lantern, Manga, In Folders".
+    public static func readNameTilePlaced(title: String, line: String, placed: String) -> String {
+        Self.format("read-name-tile-placed", fallback: "%1$@, %2$@, %3$@", title, line, placed)
+    }
+
+    /// A tile with only its title and the source that has it. As in "Paper Lantern, In Folders".
+    public static func readNameTileOnlyPlaced(title: String, placed: String) -> String {
+        Self.format("read-name-tile-only-placed", fallback: "%1$@, %2$@", title, placed)
+    }
+
+    /// An Up next or This week tile: title, when, and the chapter. As in "Paper Lantern, Tuesday, Chapter 42".
+    public static func readNameWeekTile(title: String, time: String, chapter: String) -> String {
+        Self.format("read-name-week-tile", fallback: "%1$@, %2$@, %3$@", title, time, chapter)
+    }
+
+    /// An Up next or This week tile without a chapter. As in "Paper Lantern, Tuesday".
+    public static func readNameWeekTileTime(title: String, time: String) -> String {
+        Self.format("read-name-week-tile-time", fallback: "%1$@, %2$@", title, time)
+    }
+
+    /// The cover art of Home's spotlight, which opens the series. As in "Paper Lantern, Details".
+    public static func readNameSpotlightArt(title: String) -> String {
+        Self.format("read-name-spotlight-art", fallback: "%1$@, Details", title)
+    }
+
+    /// A row heading with its side words. As in "New manga, Last 12 months".
+    public static func readNameHeading(heading: String, side: String) -> String {
+        Self.format("read-name-heading", fallback: "%1$@, %2$@", heading, side)
+    }
+
+    /// A row or its heading while its covers load. As in "Trending manga, loading".
+    public static func readNameLoading(name: String) -> String {
+        Self.format("read-name-loading", fallback: "%1$@, loading", name)
+    }
+
+    /// A row heading with side words while its covers load. As in "New manga, Last 12 months, loading".
+    public static func readNameHeadingLoading(heading: String, side: String) -> String {
+        Self.format("read-name-heading-loading", fallback: "%1$@, %2$@, loading", heading, side)
+    }
+
+    /// A row's View all link. As in "View all, Trending manga".
+    public static func readNameViewAll(row: String) -> String {
+        Self.format("read-name-view-all", fallback: "View all, %1$@", row)
+    }
+
+    /// A filter button once set. As in "Format, Manga".
+    public static func readNameFilter(name: String, value: String) -> String {
+        Self.format("read-name-filter", fallback: "%1$@, %2$@", name, value)
+    }
+
+    /// A failure block: what failed, then why. As in "Folders didn't answer, No answer in 15 seconds".
+    public static func readNameFailure(line: String, reason: String) -> String {
+        Self.format("read-name-failure", fallback: "%1$@, %2$@", line, reason)
+    }
+
+    /// A source row's heading: the source's name, then what kind of source it is. As in "Home shelf, Folder".
+    public static func readNameSource(source: String, kind: String) -> String {
+        Self.format("read-name-source", fallback: "%1$@, %2$@", source, kind)
+    }
+
+    /// A source row's button for its other hits. As in "Show 12 more from Folders".
+    public static func readNameSourceMore(n: Int, source: String) -> String {
+        Self.format("read-name-source-more", fallback: "Show %1$lld more from %2$@", n, source)
+    }
+
+    /// Under the Your sources only switch in the iPhone and iPad Filters sheet.
+    public static var readSearchSourcesOnlyLine: String { string("read-search-sources-only-line", fallback: "AniList's results are hidden. The filters below apply to AniList's results only.") }
+
+    /// What a screen reader hears once, when AniList and every source have answered or run out of time. Sources that didn't answer follow it, each as its own sentence.
+    public static func readSearchDone(anilist: Int, sources: Int) -> String {
+        Self.format("read-search-done", fallback: "%1$lld from AniList, %2$lld from your sources.", anilist, sources)
+    }
+
+    /// A screen reader's label for a discovery row's heading on reading's Home while its covers are on their way. The row is its heading, such as "Trending manga".
+    public static func readHomeRowLoading(row: String) -> String {
+        Self.format("read-home-row-loading", fallback: "%1$@, loading", row)
+    }
+
+    /// Screen readers: the custom action on a discovery cover that puts the series on Planning.
+    public static var readTileAddPlanning: String { string("read-tile-add-planning", fallback: "Add to Planning") }
+
+    /// Said once by screen readers when Your sources only turns on.
+    public static var readSearchAnilistHidden: String { string("read-search-anilist-hidden", fallback: "AniList's results are hidden.") }
+
+    /// Said once by screen readers when every part of a search has answered: how many series AniList found. The sources' count and any source that didn't answer follow.
+    public static func readSearchSaidAnilist(n: Int) -> String {
+        Self.format("read-search-said-anilist", fallback: "%1$lld from AniList", n)
+    }
+
+    /// Said once by screen readers when every part of a search has answered: how many series the person's sources found that AniList did not list.
+    public static func readSearchSaidSources(n: Int) -> String {
+        Self.format("read-search-said-sources", fallback: "%1$lld from your sources", n)
+    }
+
+    /// Over a first-run page's title: which page of how many.
+    public static func onboardingStep(step: Int, total: Int) -> String {
+        Self.format("onboarding-step", fallback: "%1$lld of %2$lld", step, total)
+    }
+
+    /// Line under "Welcome to Kaeri" on the first page, naming both media.
+    public static var onboardingWelcomeLine: String { string("onboarding-welcome-line", fallback: "Keep track of what you watch and read, from your own sources.") }
+
+    /// Note under the welcome line.
+    public static var onboardingWelcomeNote: String { string("onboarding-welcome-note", fallback: "Your lists and progress stay on your devices. Trackers and sources are yours to add.") }
+
+    /// Title of the page that asks what Kaeri is for, and of the sheet after the update.
+    public static var onboardingMediumTitle: String { string("onboarding-medium-title", fallback: "Watch, read, or both?") }
+
+    /// Line under the title of the medium page.
+    public static var onboardingMediumLine: String { string("onboarding-medium-line", fallback: "Kaeri shows only what you pick. You can change it in Settings.") }
+
+    /// Accessibility hint on Continue while nothing is chosen on the medium page.
+    public static var onboardingMediumHint: String { string("onboarding-medium-hint", fallback: "Choose one of the three first") }
+
+    /// Title of the first-run page that offers AniList.
+    public static var onboardingListsTitle: String { string("onboarding-lists-title", fallback: "Bring in your lists") }
+
+    /// Line on the AniList page after Watch.
+    public static func onboardingListsLineWatch(tracker: String) -> String {
+        Self.format("onboarding-lists-line-watch", fallback: "Kaeri keeps your watching in step with %1$@.", tracker)
+    }
+
+    /// Line on the AniList page after Read.
+    public static func onboardingListsLineRead(tracker: String) -> String {
+        Self.format("onboarding-lists-line-read", fallback: "Kaeri keeps your reading in step with %1$@.", tracker)
+    }
+
+    /// Line on the AniList page after Both.
+    public static func onboardingListsLineBoth(tracker: String) -> String {
+        Self.format("onboarding-lists-line-both", fallback: "Kaeri keeps your reading and watching in step with %1$@.", tracker)
+    }
+
+    /// Line under AniList's name on the first-run page.
+    public static var onboardingListsAnilistLine: String { string("onboarding-lists-anilist-line", fallback: "Lists, progress and suggestions") }
+
+    /// Under AniList on the first-run page after Watch: the other trackers, for later.
+    public static var onboardingListsLaterWatch: String { string("onboarding-lists-later-watch", fallback: "You can add MyAnimeList, Kitsu, Simkl and Trakt later in Settings, under Accounts.") }
+
+    /// Under AniList on the first-run page after Read: the other trackers, for later.
+    public static var onboardingListsLaterRead: String { string("onboarding-lists-later-read", fallback: "You can add MyAnimeList, Kitsu and MangaUpdates later in Settings, under Accounts.") }
+
+    /// Under AniList on the first-run page after Both: the other trackers, for later.
+    public static var onboardingListsLaterBoth: String { string("onboarding-lists-later-both", fallback: "You can add MyAnimeList, Kitsu, MangaUpdates, Simkl and Trakt later in Settings, under Accounts.") }
+
+    /// The first-run page's main button: sign in to the tracker.
+    public static func onboardingConnect(tracker: String) -> String {
+        Self.format("onboarding-connect", fallback: "Connect %1$@", tracker)
+    }
+
+    /// Title of the last first-run page after Read or Both.
+    public static var onboardingBooksTitle: String { string("onboarding-books-title", fallback: "Where your books come from") }
+
+    /// Line under the title of the books page.
+    public static var onboardingBooksLine: String { string("onboarding-books-line", fallback: "Kaeri comes with no books. Add what you already have, or join a plugin store with an invite from its owner.") }
+
+    /// Row on the books page: add a folder of books.
+    public static var onboardingBooksFolder: String { string("onboarding-books-folder", fallback: "Add a folder") }
+
+    /// Line under Add a folder on the books page.
+    public static var onboardingBooksFolderLine: String { string("onboarding-books-folder-line", fallback: "CBZ, EPUB, PDF and folders of images") }
+
+    /// Row on the books page: add a book server.
+    public static var onboardingBooksServer: String { string("onboarding-books-server", fallback: "Add a server") }
+
+    /// Line under Add a server on the books page.
+    public static var onboardingBooksServerLine: String { string("onboarding-books-server-line", fallback: "Komga, Kavita or an OPDS catalogue") }
+
+    /// Heading over the invite field on the books page.
+    public static var onboardingBooksInviteHeading: String { string("onboarding-books-invite-heading", fallback: "Plugin store invite") }
+
+    /// Placeholder of the invite field on the books page.
+    public static var onboardingBooksInvitePlaceholder: String { string("onboarding-books-invite-placeholder", fallback: "Paste an invite") }
+
+    /// Line under the invite field: whose code a plugin is.
+    public static var onboardingBooksPluginLine: String { string("onboarding-books-plugin-line", fallback: "Plugins run code from people you trust. Only join plugin stores whose owner you know.") }
+
+    /// Title of the last first-run page after Both: where shows and books come from.
+    public static var onboardingBothTitle: String { string("onboarding-both-title", fallback: "Where your shows and books come from") }
+
+    /// Line under the title of that page.
+    public static var onboardingBothLine: String { string("onboarding-both-line", fallback: "Kaeri comes with no shows or books. Add what you already have, or join a plugin store with an invite from its owner.") }
+
+    /// Heading over the shows' rows on that page.
+    public static var onboardingBothShows: String { string("onboarding-both-shows", fallback: "Shows") }
+
+    /// Heading over the books' rows on that page.
+    public static var onboardingBothBooks: String { string("onboarding-both-books", fallback: "Books") }
+
+    /// Line under Add a folder in the shows' part, on a computer.
+    public static func onboardingBothShowsFolderLine(device: String) -> String {
+        Self.format("onboarding-both-shows-folder-line", fallback: "Video files on this %1$@", device)
+    }
+
+    /// Line under Add a server in the shows' part.
+    public static var onboardingBothShowsServerLine: String { string("onboarding-both-shows-server-line", fallback: "Your Jellyfin server") }
+
+    /// Accessibility value of a choice row: its place among the three.
+    public static func mediumChoicePosition(n: Int, total: Int) -> String {
+        Self.format("medium-choice-position", fallback: "%1$lld of %2$lld", n, total)
+    }
+
+    /// Under the choices in the sheet.
+    public static var mediumChangeLater: String { string("medium-change-later", fallback: "You can change it in Settings.") }
+
+    /// Line of the sheet over Home after the update that brought reading.
+    public static func mediumUpdateLine(device: String) -> String {
+        Self.format("medium-update-line", fallback: "Kaeri can now read manga, webtoons and light novels from your sources. Pick what Kaeri is for on this %1$@.", device)
+    }
+
+    /// Title of the sheet when the other devices answer Watch. The devices are their names, joined; n is how many there are.
+    public static func mediumJoinTitleWatch(devices: String, n: Int) -> String {
+        Self.format("medium-join-title-watch", fallback: "%1$@ are set to watching", devices, n)
+    }
+
+    /// Title of the sheet when the other devices answer Read.
+    public static func mediumJoinTitleRead(devices: String, n: Int) -> String {
+        Self.format("medium-join-title-read", fallback: "%1$@ are set to reading", devices, n)
+    }
+
+    /// Title of the sheet when the other devices answer Both.
+    public static func mediumJoinTitleBoth(devices: String, n: Int) -> String {
+        Self.format("medium-join-title-both", fallback: "%1$@ are set to watching and reading", devices, n)
+    }
+
+    /// Line of the sheet on joining.
+    public static func mediumJoinLine(device: String) -> String {
+        Self.format("medium-join-line", fallback: "Pick what Kaeri is for on this %1$@. Each device keeps its own answer.", device)
+    }
+
+    /// Title of the confirmation before watching is turned off.
+    public static var mediumOffTitleWatch: String { string("medium-off-title-watch", fallback: "Turn off watching?") }
+
+    /// Title of the confirmation before reading is turned off.
+    public static var mediumOffTitleRead: String { string("medium-off-title-read", fallback: "Turn off reading?") }
+
+    /// What turning watching off does.
+    public static func mediumOffWatchBody(device: String) -> String {
+        Self.format("medium-off-watch-body", fallback: "Calendar, Seasonal, Watch together and your shows leave Kaeri on this %1$@. Your list, progress and downloads stay, and come back if you turn watching on again.", device)
+    }
+
+    /// What turning reading off does.
+    public static func mediumOffReadBody(device: String) -> String {
+        Self.format("medium-off-read-body", fallback: "Updates and your reading leave Kaeri on this %1$@. Your list, progress and downloads stay, and come back if you turn reading on again.", device)
+    }
+
+    /// Switch in the confirmation, off by default.
+    public static var mediumOffDeleteWatch: String { string("medium-off-delete-watch", fallback: "Delete downloaded episodes") }
+
+    /// Switch in the confirmation, off by default.
+    public static var mediumOffDeleteRead: String { string("medium-off-delete-read", fallback: "Delete downloaded chapters") }
+
+    /// Under the switch: how much the downloads take.
+    public static func mediumOffDeleteSize(size: String, device: String) -> String {
+        Self.format("medium-off-delete-size", fallback: "%1$@ on this %2$@", size, device)
+    }
+
+    /// The confirmation's main button.
+    public static var mediumOffConfirmWatch: String { string("medium-off-confirm-watch", fallback: "Turn off watching") }
+
+    /// The confirmation's main button.
+    public static var mediumOffConfirmRead: String { string("medium-off-confirm-read", fallback: "Turn off reading") }
+
+    /// Settings row and page: what Kaeri is for on this device.
+    public static var settingsKaeriIsFor: String { string("settings-kaeri-is-for", fallback: "Kaeri is for") }
+
+    /// Line under Kaeri is for on the Mac and iPad.
+    public static var settingsMediumNote: String { string("settings-medium-note", fallback: "Each device keeps its own answer") }
+
+    /// Under the choices on the iPhone's page.
+    public static var settingsMediumFooter: String { string("settings-medium-footer", fallback: "Each device keeps its own answer. Turning one off keeps its list, progress and downloads.") }
+
+    /// Line under Open at.
+    public static var settingsOpenAtNote: String { string("settings-open-at-note", fallback: "Which Home Kaeri starts on") }
+
+    /// Settings pane and group: reading.
+    public static var settingsGroupReading: String { string("settings-group-reading", fallback: "Reading") }
+
+    /// Downloads group with both media on: shows.
+    public static var settingsGroupShows: String { string("settings-group-shows", fallback: "Shows") }
+
+    /// The Reading pane's column beside it.
+    public static var settingsAsideReading: String { string("settings-aside-reading", fallback: "Reader defaults are where every series starts. A series you change in the reader keeps its own choices.") }
+
+    /// Group: how the reader opens each kind of book.
+    public static var settingsReaderDefaults: String { string("settings-reader-defaults", fallback: "Reader defaults") }
+
+    /// Under the reader defaults.
+    public static var settingsReaderDefaultsFooter: String { string("settings-reader-defaults-footer", fallback: "A series you change keeps its own mode, direction and look.") }
+
+    /// Row: manga's reader default.
+    public static var settingsReaderManga: String { string("settings-reader-manga", fallback: "Manga") }
+
+    /// Row: webtoons' reader default.
+    public static var settingsReaderWebtoons: String { string("settings-reader-webtoons", fallback: "Webtoons") }
+
+    /// Line under Webtoons.
+    public static var settingsReaderWebtoonsNote: String { string("settings-reader-webtoons-note", fallback: "Webtoons always open as a long strip") }
+
+    /// Row: light novels' reader default.
+    public static var settingsReaderNovels: String { string("settings-reader-novels", fallback: "Light novels") }
+
+    /// A reader default: pages turned right to left.
+    public static var settingsReaderRtl: String { string("settings-reader-rtl", fallback: "Pages, right to left") }
+
+    /// A reader default: pages turned left to right.
+    public static var settingsReaderLtr: String { string("settings-reader-ltr", fallback: "Pages, left to right") }
+
+    /// A reader default: one long strip.
+    public static var settingsReaderStrip: String { string("settings-reader-strip", fallback: "Long strip") }
+
+    /// A reader default for novels: pages.
+    public static var settingsReaderPages: String { string("settings-reader-pages", fallback: "Pages") }
+
+    /// A reader default for novels: one scrolling column.
+    public static var settingsReaderScrolled: String { string("settings-reader-scrolled", fallback: "Scrolling") }
+
+    /// Row: when a chapter counts as read.
+    public static var settingsCountsRead: String { string("settings-counts-read", fallback: "Counts as read") }
+
+    /// Line under Counts as read.
+    public static var settingsCountsReadNote: String { string("settings-counts-read-note", fallback: "A short stay on the last page, or moving on to the next chapter") }
+
+    /// Value of Counts as read: a short stay on the last page, or moving on past it.
+    public static var settingsCountsReadValue: String { string("settings-counts-read-value", fallback: "After the last page") }
+
+    /// Value of Counts as read: only moving on past the last page, to the end or the next chapter.
+    public static var settingsCountsReadMovingOn: String { string("settings-counts-read-moving-on", fallback: "Moving on from it") }
+
+    /// Line under Counts as read when it is Moving on from it.
+    public static var settingsCountsReadMovingOnNote: String { string("settings-counts-read-moving-on-note", fallback: "Turning past the last page, or opening the next chapter") }
+
+    /// Value of Counts as read: only the person's own marks; the reader marks nothing.
+    public static var settingsCountsReadMarked: String { string("settings-counts-read-marked", fallback: "When you mark it") }
+
+    /// Reader default for manga: pages a group repeats at the start or end of its chapters are left out.
+    public static var settingsSkipCredits: String { string("settings-skip-credits", fallback: "Skip credit pages") }
+
+    /// Line under Skip credit pages.
+    public static var settingsSkipCreditsNote: String { string("settings-skip-credits-note", fallback: "Pages a group repeats at the start or end of its chapters") }
+
+    /// Line under Counts as read when it is When you mark it.
+    public static var settingsCountsReadMarkedNote: String { string("settings-counts-read-marked-note", fallback: "Continue and your trackers follow your marks") }
+
+    /// Group: series settings that follow you to your other devices.
+    public static var settingsFollowGroup: String { string("settings-follow-group", fallback: "Series settings that follow you") }
+
+    /// Row in that group.
+    public static var settingsFollowMode: String { string("settings-follow-mode", fallback: "Mode, direction and colour") }
+
+    /// Line under that row.
+    public static var settingsFollowModeNote: String { string("settings-follow-mode-note", fallback: "A series you change reads the same on your other devices") }
+
+    /// Under the group: what stays on this device.
+    public static func settingsFollowFooter(device: String) -> String {
+        Self.format("settings-follow-footer", fallback: "Text size, margins, tap zones and refresh stay on this %1$@.", device)
+    }
+
+    /// Line under Look in Series settings that follow you.
+    public static var settingsLookFollowsNote: String { string("settings-look-follows-note", fallback: "Colour pages or greys for e-ink") }
+
+    /// Value of New chapters in Downloads: the series on the Reading list.
+    public static var settingsNewChaptersReading: String { string("settings-new-chapters-reading", fallback: "Series on Reading") }
+
+    /// Line under New chapters in Downloads.
+    public static var settingsNewChaptersNote: String { string("settings-new-chapters-note", fallback: "A series being read also keeps its next chapters ready") }
+
+    /// Group in Accounts: how reading progress goes to the trackers.
+    public static var settingsProgressGroup: String { string("settings-progress-group", fallback: "Progress") }
+
+    /// Value of Send progress after: as each chapter counts as read.
+    public static var settingsProgressChapter: String { string("settings-progress-chapter", fallback: "A chapter is read") }
+
+    /// Value of Send progress after: once, when the reader closes.
+    public static var settingsProgressClose: String { string("settings-progress-close", fallback: "Closing the reader") }
+
+    /// Value of When trackers disagree: the higher chapter wins.
+    public static var settingsDisagreeFurthest: String { string("settings-disagree-furthest", fallback: "Keep the furthest") }
+
+    /// Value of When trackers disagree: the newest change wins, even a lower chapter.
+    public static var settingsDisagreeLatest: String { string("settings-disagree-latest", fallback: "The latest change") }
+
+    /// Line under When trackers disagree.
+    public static var settingsDisagreeNote: String { string("settings-disagree-note", fallback: "Status and score follow the latest change") }
+
+    /// Line under Keep next chapters ready.
+    public static var settingsKeepChaptersReadyNote: String { string("settings-keep-chapters-ready-note", fallback: "The next chapters of series on your Reading list") }
+
+    /// Line under Delete chapters after reading.
+    public static var settingsDeleteAfterReadingNote: String { string("settings-delete-after-reading-note", fallback: "Bookmarked chapters are kept") }
+
+    /// Line under Show volumes: the list is grouped only when most chapters have a volume.
+    public static var settingsShowVolumesNote: String { string("settings-show-volumes-note", fallback: "Grouped when most chapters have a volume") }
+
+    /// Line under New chapters.
+    public static var settingsChapterNotificationsNote: String { string("settings-chapter-notifications-note", fallback: "Series on your Reading list") }
+
+    /// Line under Downloads finished.
+    public static var settingsDownloadsFinishedNote: String { string("settings-downloads-finished-note", fallback: "When the chapters downloading are all done") }
+
+    /// Under New chapters.
+    public static var settingsChapterNotificationsFooter: String { string("settings-chapter-notifications-footer", fallback: "Chapters have their own system channel, so you can silence them and keep the rest.") }
+
+    /// Credit under the trackers with reading on.
+    public static var accountsMangaupdatesCredit: String { string("accounts-mangaupdates-credit", fallback: "Kaeri talks to MangaUpdates through its public API.") }
+
+    /// Placeholder of the user name field when signing in to MangaUpdates.
+    public static var accountsUsername: String { string("accounts-username", fallback: "User name") }
+
+    /// Beside the Reading heading in Downloads: how many chapters are kept and their size.
+    public static func readDownloadsTotal(n: Int, size: String) -> String {
+        Self.format("read-downloads-total", fallback: "%1$lld chapters · %2$@", n, size)
+    }
+
+    /// A series' line in Downloads while a chapter downloads.
+    public static func readDownloadsActive(chapter: String, done: Int, total: Int) -> String {
+        Self.format("read-downloads-active", fallback: "%1$@ · %2$lld of %3$lld pages", chapter, done, total)
+    }
+
+    /// After the chapter downloading: how many more wait.
+    public static func readDownloadsMoreQueued(n: Int) -> String {
+        Self.format("read-downloads-more-queued", fallback: "%1$lld more queued", n)
+    }
+
+    /// A series' line in Downloads when its chapters wait to start.
+    public static func readDownloadsQueued(n: Int) -> String {
+        Self.format("read-downloads-queued", fallback: "%1$lld chapters queued", n)
+    }
+
+    /// A series' line in Downloads when a chapter failed, with the reason.
+    public static func readDownloadsFailed(chapter: String, reason: String) -> String {
+        Self.format("read-downloads-failed", fallback: "%1$@ couldn't download. %2$@", chapter, reason)
+    }
+
+    /// Notice when a download couldn't start: the source couldn't list the chapters, or no longer has one. The reason follows.
+    public static func readDownloadNotStarted(reason: String) -> String {
+        Self.format("read-download-not-started", fallback: "The download didn't start. %1$@", reason)
+    }
+
+    /// A series' line in Downloads: how many chapters are kept.
+    public static func readDownloadsKept(n: Int) -> String {
+        Self.format("read-downloads-kept", fallback: "%1$lld chapters", n)
+    }
+
+    /// After the kept count: how many of them are read.
+    public static func readDownloadsRead(n: Int) -> String {
+        Self.format("read-downloads-read", fallback: "%1$lld read", n)
+    }
+
+    /// Button on a series in Downloads: delete its read chapters, keeping bookmarked ones.
+    public static var readDownloadsDeleteRead: String { string("read-downloads-delete-read", fallback: "Delete read") }
+
+    /// Title of the Send to e-reader sheet, the chapter menu's item and the Settings row.
+    public static var sendTitle: String { string("send-title", fallback: "Send to e-reader") }
+
+    /// Heading over the e-readers to choose from in the Send to e-reader sheet.
+    public static var sendFor: String { string("send-for", fallback: "For") }
+
+    /// Heading over what is being sent in the Send to e-reader sheet.
+    public static var sendWhat: String { string("send-what", fallback: "What") }
+
+    /// Row in the Send to e-reader sheet: the chapters being sent.
+    public static var sendChapters: String { string("send-chapters", fallback: "Chapters") }
+
+    /// The chapters being sent when there is one: its number or label.
+    public static func sendChaptersOne(chapter: String) -> String {
+        Self.format("send-chapters-one", fallback: "%1$@", chapter)
+    }
+
+    /// The chapters being sent when there are several, from the first to the last.
+    public static func sendChaptersRange(first: String, last: String) -> String {
+        Self.format("send-chapters-range", fallback: "%1$@ to %2$@", first, last)
+    }
+
+    /// Row in the Send to e-reader sheet: how big the files will be.
+    public static var sendSize: String { string("send-size", fallback: "Size") }
+
+    /// The size of what is being sent, already sized (such as "64 MB"). It is a guess until the files are made.
+    public static func sendSizeAbout(size: String) -> String {
+        Self.format("send-size-about", fallback: "About %1$@", size)
+    }
+
+    /// Under the e-readers in the Send to e-reader sheet: what Kaeri cannot know after the files are sent.
+    public static var sendNoPlace: String { string("send-no-place", fallback: "Kaeri can't see your place on this e-reader. When you come back, the series page asks where you stopped.") }
+
+    /// The one main button of the Send to e-reader sheet. It makes the files and then opens the share sheet.
+    public static var sendPrepare: String { string("send-prepare", fallback: "Prepare and share") }
+
+    /// While the files are made: which chapter of how many. The ring beside it shows how far along.
+    public static func sendPreparing(done: Int, total: Int) -> String {
+        Self.format("send-preparing", fallback: "Preparing %1$lld of %2$lld chapters", done, total)
+    }
+
+    /// Under the progress of a send to a device: what the pages are made for.
+    public static func sendSizedFor(device: String) -> String {
+        Self.format("send-sized-for", fallback: "Pages are sized for %1$@", device)
+    }
+
+    /// Under the size in the Send sheet when the files are over what the e-reader takes in one file.
+    public static func sendInParts(size: String) -> String {
+        Self.format("send-in-parts", fallback: "Over %1$@, so the files go in parts.", size)
+    }
+
+    /// A send that failed on one chapter. The cause is the sentence that says why.
+    public static func sendFailedChapter(chapter: String, cause: String) -> String {
+        Self.format("send-failed-chapter", fallback: "Couldn't prepare chapter %1$@. %2$@", chapter, cause)
+    }
+
+    /// A send that failed before or after its chapters. The cause is the sentence that says why.
+    public static func sendFailed(cause: String) -> String {
+        Self.format("send-failed", fallback: "Couldn't prepare the files. %1$@", cause)
+    }
+
+    /// Text of the Send sheet's Size row while the size is still being worked out.
+    public static var sendSizeWorking: String { string("send-size-working", fallback: "Working it out") }
+
+    /// Spoken value of the Chapters row in the Send sheet while its list is open.
+    public static var sendChaptersOpen: String { string("send-chapters-open", fallback: "Open") }
+
+    /// Spoken value of the Chapters row in the Send sheet while its list is closed.
+    public static var sendChaptersClosed: String { string("send-chapters-closed", fallback: "Closed") }
+
+    /// Spoken value of the ring in a send under way. Already a number from 0 to 100.
+    public static func sendProgressSpoken(percent: Int) -> String {
+        Self.format("send-progress-spoken", fallback: "%1$lld percent", percent)
+    }
+
+    /// Spoken action on a chapter row of a series: sends that chapter to an e-reader.
+    public static var sendChapterAction: String { string("send-chapter-action", fallback: "Send to e-reader") }
+
+    /// Under an e-reader in the sheet when it takes files in parts: the size where a file is split.
+    public static func sendPartsOver(size: String) -> String {
+        Self.format("send-parts-over", fallback: "in parts over %1$@", size)
+    }
+
+    /// While a send waits for the network and the person can stop it. The engine's own line comes first.
+    public static var sendWaitingCancel: String { string("send-waiting-cancel", fallback: "Cancel send") }
+
+    /// When the files are ready, over the button that opens the share sheet. The count is how many files.
+    public static func sendReady(n: Int) -> String {
+        Self.format("send-ready", fallback: "%1$lld files are ready.", n)
+    }
+
+    /// Button in the Send to e-reader sheet that opens the share sheet again, after it was closed without sharing.
+    public static var sendShareAgain: String { string("send-share-again", fallback: "Share again") }
+
+    /// A ready send whose files were cleared before they were shared or saved, in the Send to e-reader sheet and in the send's row. Prepared files are kept for a day.
+    public static var sendFilesGone: String { string("send-files-gone", fallback: "These files are gone. Prepared files are kept for a day.") }
+
+    /// Button on a send whose files are gone: prepares the same chapters for the same e-reader again.
+    public static var sendAgain: String { string("send-again", fallback: "Send again") }
+
+    /// A send in a list or banner that is under way, with a ring beside it. The device is the e-reader.
+    public static func sendBanner(device: String) -> String {
+        Self.format("send-banner", fallback: "Sending to %1$@", device)
+    }
+
+    /// The chapters a send holds, on its row under Sending to, when there are several: the first to the last, by their numbers or labels, such as 21 to 23.
+    public static func sendRowChapters(first: String, last: String) -> String {
+        Self.format("send-row-chapters", fallback: "Chapters %1$@ to %2$@", first, last)
+    }
+
+    /// A send's row under Sending to: the series' title, then the chapters the send holds, such as "Chapter 23" or "Chapters 21 to 23". Shown on one line.
+    public static func sendRowLine(title: String, chapters: String) -> String {
+        Self.format("send-row-line", fallback: "%1$@ · %2$@", title, chapters)
+    }
+
+    /// The format of the files an e-reader is sent: a manga as a fixed-layout EPUB.
+    public static var sendFormatFixedEpub: String { string("send-format-fixed-epub", fallback: "Fixed-layout EPUB") }
+
+    /// The format of the files an e-reader is sent: the Kobo form of EPUB.
+    public static var sendFormatKepub: String { string("send-format-kepub", fallback: "KEPUB") }
+
+    /// The format of the files an e-reader is sent: a plain EPUB.
+    public static var sendFormatEpub: String { string("send-format-epub", fallback: "EPUB") }
+
+    /// The format of the files an e-reader is sent: a comic book archive.
+    public static var sendFormatCbz: String { string("send-format-cbz", fallback: "CBZ") }
+
+    /// Line under an e-reader in the picker: the format the files will have, and the screen they are made for in pixels.
+    public static func sendTargetLine(format: String, width: String, height: String) -> String {
+        Self.format("send-target-line", fallback: "%1$@ · %2$@ × %3$@", format, width, height)
+    }
+
+    /// Title of the sheet that asks where you stopped reading on the e-reader.
+    public static var stopTitle: String { string("stop-title", fallback: "Where did you stop?") }
+
+    /// Note on a series page after chapters were sent: opens the question.
+    public static func stopNote(device: String) -> String {
+        Self.format("stop-note", fallback: "You sent chapters to %1$@. Where did you stop?", device)
+    }
+
+    /// Button in that note.
+    public static var stopNoteAction: String { string("stop-note-action", fallback: "Set your place") }
+
+    /// First line of the sheet when one chapter was sent. The date is already written out (such as "2 November").
+    public static func stopSentOne(chapter: String, device: String, date: String) -> String {
+        Self.format("stop-sent-one", fallback: "Chapter %1$@ went to %2$@ on %3$@.", chapter, device, date)
+    }
+
+    /// First line of the sheet when several chapters were sent, from the first to the last.
+    public static func stopSentRange(first: String, last: String, device: String, date: String) -> String {
+        Self.format("stop-sent-range", fallback: "Chapters %1$@ to %2$@ went to %3$@ on %4$@.", first, last, device, date)
+    }
+
+    /// Switch in the sheet: the last chapter sent was read to its end.
+    public static func stopFinished(chapter: String) -> String {
+        Self.format("stop-finished", fallback: "Finished chapter %1$@", chapter)
+    }
+
+    /// The main button of the sheet: keeps the chapter chosen as the place.
+    public static var stopSet: String { string("stop-set", fallback: "Set your place") }
+
+    /// The other button of the sheet: leaves the place as it is, with the place named.
+    public static func stopKeep(chapter: String, page: Int) -> String {
+        Self.format("stop-keep", fallback: "Keep chapter %1$@ · page %2$@", chapter, String(page))
+    }
+
+    /// The other button of the sheet when the place is not a page.
+    public static var stopKeepPlain: String { string("stop-keep-plain", fallback: "Keep current place") }
+
+    /// Heading of the E-readers group in the Reading settings.
+    public static var ereadersGroup: String { string("ereaders-group", fallback: "E-readers") }
+
+    /// Row in the E-readers group: the e-reader Send to e-reader offers first. The value is the e-reader's name.
+    public static var ereadersSendRow: String { string("ereaders-send-row", fallback: "Send to e-reader") }
+
+    /// Row in the E-readers group that opens the feed settings. The value is On or Off.
+    public static var ereadersFeedRow: String { string("ereaders-feed-row", fallback: "OPDS feed") }
+
+    /// Line under the Share on this network switch.
+    public static var opdsShareNote: String { string("opds-share-note", fallback: "An OPDS catalogue e-readers at home can browse") }
+
+    /// Footnote under the feed settings.
+    public static func opdsFooter(device: String) -> String {
+        Self.format("opds-footer", fallback: "The feed runs only while Kaeri is open on this %1$@. Progress on those e-readers stays there.", device)
+    }
+
+    /// Row in the feed settings: the web address e-readers are given, with a button that copies it.
+    public static var opdsAddress: String { string("opds-address", fallback: "Address") }
+
+    /// Shown in place of the address while the feed is off or has no password.
+    public static var opdsAddressOff: String { string("opds-address-off", fallback: "Turn the feed on to get its address.") }
+
+    /// Row in the feed settings: the password e-readers ask for.
+    public static var opdsPassword: String { string("opds-password", fallback: "Password") }
+
+    /// Line under the password row.
+    public static var opdsPasswordNote: String { string("opds-password-note", fallback: "E-readers ask for it once") }
+
+    /// Button in the feed settings that makes a new password. The e-readers ask for the new one.
+    public static var opdsNewPassword: String { string("opds-new-password", fallback: "New password") }
+
+    /// Row in the feed settings: the port the feed listens on.
+    public static var opdsPort: String { string("opds-port", fallback: "Port") }
+
+    /// Line under the port row when it is empty.
+    public static var opdsPortNote: String { string("opds-port-note", fallback: "Leave it empty for any free port, or pick one from 1024 to 65535") }
+
+    /// Line under the port row when the port asked for was taken and another is used.
+    public static func opdsPortMoved(wanted: Int, port: Int) -> String {
+        Self.format("opds-port-moved", fallback: "Port %1$@ was busy, so the feed uses %2$@.", String(wanted), String(port))
+    }
+
+    /// Heading of the group that picks what the feed shares.
+    public static var opdsShares: String { string("opds-shares", fallback: "What it shares") }
+
+    /// Row in What it shares: the chapters downloaded on this device.
+    public static var opdsShareDownloads: String { string("opds-share-downloads", fallback: "Downloads") }
+
+    /// Line under that row.
+    public static func opdsShareDownloadsCount(n: Int) -> String {
+        Self.format("opds-share-downloads-count", fallback: "%1$lld chapters", n)
+    }
+
+    /// Row in What it shares: the series in the manga and comic folders.
+    public static var opdsShareManga: String { string("opds-share-manga", fallback: "Manga folder") }
+
+    /// Row in What it shares: the series in the novel folders.
+    public static var opdsShareNovels: String { string("opds-share-novels", fallback: "Novel folder") }
+
+    /// Line under a folder row.
+    public static func opdsShareSeriesCount(n: Int) -> String {
+        Self.format("opds-share-series-count", fallback: "%1$lld series", n)
+    }
+
+    /// Heading of the list of e-readers that fetched files from the feed.
+    public static var opdsFetchedBy: String { string("opds-fetched-by", fallback: "Fetched by") }
+
+    /// Line when no e-reader has fetched anything since the feed started.
+    public static var opdsFetchedNone: String { string("opds-fetched-none", fallback: "No e-reader has fetched anything yet.") }
+
+    /// Shown in place of the address while the feed is switched on and starting to listen.
+    public static var opdsStarting: String { string("opds-starting", fallback: "Starting…") }
+
+    /// Shown in place of the address while the feed is on but the Mac is on no local network.
+    public static var opdsPausedNone: String { string("opds-paused-none", fallback: "Paused. This Mac isn't on a local network.") }
+
+    /// Shown in place of the address while the feed is on but the only connection goes through a VPN.
+    public static var opdsPausedVpn: String { string("opds-paused-vpn", fallback: "Paused. This Mac is only connected through a VPN.") }
+
+    /// Title of the question before a new feed password is made.
+    public static var opdsNewPasswordTitle: String { string("opds-new-password-title", fallback: "Make a new password?") }
+
+    /// Text of that question.
+    public static var opdsNewPasswordWarning: String { string("opds-new-password-warning", fallback: "E-readers that already use the feed stop working until you type the new password into each one.") }
+
+    /// Spoken value of the Fetched by list's rows when an e-reader's last request is given. The time is already written out.
+    public static func opdsFetchedTime(time: String) -> String {
+        Self.format("opds-fetched-time", fallback: "Last asked %1$@", time)
+    }
+
+    /// Line under an e-reader in that list: how many files it took.
+    public static func opdsFetchedFiles(n: Int) -> String {
+        Self.format("opds-fetched-files", fallback: "%1$lld files", n)
+    }
+
+    /// Name for an e-reader that did not give one.
+    public static func opdsReaderUnnamed(address: String) -> String {
+        Self.format("opds-reader-unnamed", fallback: "E-reader at %1$@", address)
+    }
+
     /// Button that shows the season before.
     public static var seasonalPrevious: String { string("seasonal-previous", fallback: "Previous season") }
 
@@ -6998,7 +10694,7 @@ public enum L {
     public static var seasonalFilterInSearch: String { string("seasonal-filter-in-search", fallback: "Filter in Search") }
 
     /// Tooltip of the Filter in Search button.
-    public static var seasonalFilterHelp: String { string("seasonal-filter-help", fallback: "This season in Search, where every filter narrows it") }
+    public static var seasonalFilterHelp: String { string("seasonal-filter-help", fallback: "Opens this season in Search, where every filter works") }
 
     /// Sort option on Seasonal and Search: most popular first.
     public static var sortPopularity: String { string("sort-popularity", fallback: "Popularity") }
@@ -7030,12 +10726,12 @@ public enum L {
 
     /// Row under the field while a search runs. The query is what the person typed.
     public static func searchSearching(query: String) -> String {
-        Self.format("search-searching", fallback: "Searching for “%1$@”", query)
+        Self.format("search-searching", fallback: "Searching for \"%1$@\"", query)
     }
 
     /// Heading over the results of a search.
     public static func searchResultsFor(query: String) -> String {
-        Self.format("search-results-for", fallback: "Results for “%1$@”", query)
+        Self.format("search-results-for", fallback: "Results for \"%1$@\"", query)
     }
 
     /// Heading over the titles shown when nothing was typed.
@@ -7043,7 +10739,7 @@ public enum L {
 
     /// Title of the state when a search finds nothing.
     public static func searchNothingFound(query: String) -> String {
-        Self.format("search-nothing-found", fallback: "Nothing found for “%1$@”", query)
+        Self.format("search-nothing-found", fallback: "Nothing found for \"%1$@\"", query)
     }
 
     /// Line under the title when a search finds nothing.
@@ -7054,7 +10750,7 @@ public enum L {
 
     /// Title of the state when a search and its filters leave nothing.
     public static func searchNothingFoundWithFilters(query: String) -> String {
-        Self.format("search-nothing-found-with-filters", fallback: "Nothing found for “%1$@” with these filters", query)
+        Self.format("search-nothing-found-with-filters", fallback: "Nothing found for \"%1$@\" with these filters", query)
     }
 
     /// Line under a state that filters emptied.
@@ -7155,7 +10851,7 @@ public enum L {
     public static var filterLicensedOnly: String { string("filter-licensed-only", fallback: "Licensed only") }
 
     /// Filter name: how titles already on the person's list are treated.
-    public static var filterMyList: String { string("filter-my-list", fallback: "Titles on my list") }
+    public static var filterMyList: String { string("filter-my-list", fallback: "Titles on your list") }
 
     /// Value of a three-way filter: include the titles.
     public static var filterShow: String { string("filter-show", fallback: "Show") }
@@ -7312,7 +11008,7 @@ public enum L {
 
     /// The count line of a show the viewer is part way through, in the library: the next episode and the total.
     public static func countNextOf(episode: Int, total: Int) -> String {
-        Self.format("count-next-of", fallback: "Ep %1$lld of %2$lld", episode, total)
+        Self.format("count-next-of", fallback: "Ep %1$@ of %2$@", String(episode), String(total))
     }
 
     /// The dub part of a count line when a source has a dub and does not say how far it goes.
@@ -7320,7 +11016,7 @@ public enum L {
 
     /// The dub part of a count line: the last episode the dub has.
     public static func countDubThrough(through: Int) -> String {
-        Self.format("count-dub-through", fallback: "Dub %1$lld", through)
+        Self.format("count-dub-through", fallback: "Dub %1$@", String(through))
     }
 
     /// What a screen reader says for a count line: the long form of a finished show.
@@ -7345,12 +11041,12 @@ public enum L {
 
     /// What a screen reader says for a show the viewer is part way through.
     public static func countSpokenNextOf(episode: Int, total: Int) -> String {
-        Self.format("count-spoken-next-of", fallback: "Episode %1$lld of %2$lld", episode, total)
+        Self.format("count-spoken-next-of", fallback: "Episode %1$@ of %2$@", String(episode), String(total))
     }
 
     /// What a screen reader says after the count when the dub goes to an episode.
     public static func countSpokenDubThrough(through: Int) -> String {
-        Self.format("count-spoken-dub-through", fallback: "dubbed to episode %1$lld", through)
+        Self.format("count-spoken-dub-through", fallback: "dubbed to episode %1$@", String(through))
     }
 
     /// What a screen reader says after the count when a source has a dub and does not say how far it goes.
@@ -7707,7 +11403,7 @@ public enum L {
     public static var serversRowSignedOutHere: String { string("servers-row-signed-out-here", fallback: "Signed out") }
 
     /// Line under it: what signing out does.
-    public static var serversSignOutLine: String { string("servers-sign-out-line", fallback: "Ends this device's sign-in on the server. The server and your downloads stay as they are.") }
+    public static var serversSignOutLine: String { string("servers-sign-out-line", fallback: "Signing out ends this device's session on the server. The server and your downloads stay as they are.") }
 
     /// Settings group and row title for choosing a language.
     public static var settingsLanguage: String { string("settings-language", fallback: "Language") }
@@ -7821,6 +11517,11 @@ public enum L {
         Self.format("settings-adult-detail", fallback: "Titles %1$@ marks adult, in Search and Seasonal", tracker)
     }
 
+    /// Line under it when the app is for reading alone.
+    public static func settingsAdultDetailRead(tracker: String) -> String {
+        Self.format("settings-adult-detail-read", fallback: "Titles %1$@ marks adult, in Search and Browse", tracker)
+    }
+
     /// Row: quality.
     public static var settingsQuality: String { string("settings-quality", fallback: "Quality") }
 
@@ -7928,6 +11629,45 @@ public enum L {
     /// Row: torrents on a mobile connection.
     public static var settingsTorrentsCellular: String { string("settings-torrents-cellular", fallback: "Torrents on mobile data") }
 
+    /// Row: whether chapter downloads run on a mobile connection.
+    public static var settingsChapterDownloadsCellular: String { string("settings-chapter-downloads-cellular", fallback: "Chapter downloads on mobile data") }
+
+    /// Row: keep the next chapters of what you read downloaded.
+    public static var settingsKeepChaptersReady: String { string("settings-keep-chapters-ready", fallback: "Keep next chapters ready") }
+
+    /// Row: delete a downloaded chapter once it is read. Bookmarked chapters stay.
+    public static var settingsDeleteAfterReading: String { string("settings-delete-after-reading", fallback: "Delete chapters after reading") }
+
+    /// Row: group a series' chapters under volume headings. Off by default.
+    public static var settingsShowVolumes: String { string("settings-show-volumes", fallback: "Show volumes") }
+
+    /// Row: whether a series' reader mode, direction and colour follow you to your other devices.
+    public static var settingsSeriesChoicesFollow: String { string("settings-series-choices-follow", fallback: "Series settings follow you") }
+
+    /// Row in Downloads: which series' new chapters download by themselves.
+    public static var settingsNewChaptersDownload: String { string("settings-new-chapters-download", fallback: "New chapters") }
+
+    /// Row: whether a series' own reader mode and direction follow you to your other devices.
+    public static var settingsModeFollows: String { string("settings-mode-follows", fallback: "Mode and direction") }
+
+    /// Row: whether a series' own look (colour or greys) follows you to your other devices.
+    public static var settingsLookFollows: String { string("settings-look-follows", fallback: "Look") }
+
+    /// Row: when chapter progress goes to the reading trackers.
+    public static var settingsSendProgressAfter: String { string("settings-send-progress-after", fallback: "Send progress after") }
+
+    /// Row: which chapter progress wins when a tracker and this device disagree.
+    public static var settingsWhenTrackersDisagree: String { string("settings-when-trackers-disagree", fallback: "When trackers disagree") }
+
+    /// Row: whether a new chapter of a series on your Reading list sends a notification.
+    public static var settingsChapterNotifications: String { string("settings-chapter-notifications", fallback: "New chapters") }
+
+    /// Row: whether the app sends a notification when the chapters it was downloading are all done.
+    public static var settingsDownloadsFinished: String { string("settings-downloads-finished", fallback: "Downloads finished") }
+
+    /// Row: which Home the app opens at while it is for watching and reading.
+    public static var settingsOpenAt: String { string("settings-open-at", fallback: "Open at") }
+
     /// Row: seeding after watching.
     public static var settingsSeedAfter: String { string("settings-seed-after", fallback: "Seed after watching") }
 
@@ -7989,10 +11729,10 @@ public enum L {
     public static var settingsNewEpisodes: String { string("settings-new-episodes", fallback: "New episodes") }
 
     /// Line under it.
-    public static var settingsNewEpisodesDetail: String { string("settings-new-episodes-detail", fallback: "For shows in your Watching list") }
+    public static var settingsNewEpisodesDetail: String { string("settings-new-episodes-detail", fallback: "Shows on your Watching list") }
 
     /// Line explaining what a notification says.
-    public static var settingsNotifyDetail: String { string("settings-notify-detail", fallback: "One notification when an episode of a show you follow comes out: the show and the episode's number, never its name. A show can turn its own off in its settings.") }
+    public static var settingsNotifyDetail: String { string("settings-notify-detail", fallback: "You get one notification when an episode of a show you follow comes out. It names the show and the episode's number, never the episode's title. A show can turn its own off in its settings.") }
 
     /// Row: the coming-up digest.
     public static var settingsComingUp: String { string("settings-coming-up", fallback: "Coming up · next 7 days") }
@@ -8004,7 +11744,7 @@ public enum L {
     public static var settingsSystemNotificationsDetail: String { string("settings-system-notifications-detail", fallback: "Sound, vibration and the lock screen") }
 
     /// Line under it on Apple.
-    public static var settingsSystemNotificationsApple: String { string("settings-system-notifications-apple", fallback: "Opens System Settings, where the banner style, sound and badges are set.") }
+    public static var settingsSystemNotificationsApple: String { string("settings-system-notifications-apple", fallback: "Opens System Settings, where you set the banner style, sound and badges.") }
 
     /// Line when the system blocks notifications.
     public static var settingsNotificationsBlocked: String { string("settings-notifications-blocked", fallback: "Off: the system isn't allowing notifications for Kaeri") }
@@ -8046,7 +11786,7 @@ public enum L {
     public static var showSettingsSubsRemembered: String { string("show-settings-subs-remembered", fallback: "Remembered from your last episode.") }
 
     /// Line under the subtitles row, when nothing is remembered.
-    public static var showSettingsSubsFollow: String { string("show-settings-subs-follow", fallback: "Chosen in the player. Following Settings › Playback.") }
+    public static var showSettingsSubsFollow: String { string("show-settings-subs-follow", fallback: "Chosen in the player. Until then, Settings › Playback applies.") }
 
     /// Row: the source for this show.
     public static var showSettingsSource: String { string("show-settings-source", fallback: "Source") }
@@ -8107,22 +11847,27 @@ public enum L {
 
     /// Accessibility label of a widget row: continue an episode.
     public static func widgetResumeLabel(episode: Int, title: String) -> String {
-        Self.format("widget-resume-label", fallback: "Resume episode %1$lld of %2$@", episode, title)
+        Self.format("widget-resume-label", fallback: "Resume episode %1$@ of %2$@", String(episode), title)
     }
 
     /// Accessibility label of a widget row: start an episode.
     public static func widgetStartLabel(episode: Int, title: String) -> String {
-        Self.format("widget-start-label", fallback: "Play episode %1$lld of %2$@", episode, title)
+        Self.format("widget-start-label", fallback: "Play episode %1$@ of %2$@", String(episode), title)
     }
 
     /// Accessibility label of a widget row: continue a dubbed episode.
     public static func widgetResumeDubbedLabel(episode: Int, title: String) -> String {
-        Self.format("widget-resume-dubbed-label", fallback: "Resume episode %1$lld, dubbed, of %2$@", episode, title)
+        Self.format("widget-resume-dubbed-label", fallback: "Resume episode %1$@, dubbed, of %2$@", String(episode), title)
     }
 
     /// Line under a signed-in account while changes wait to be sent.
     public static func accountsChangesWaiting(count: Int) -> String {
         Self.format("accounts-changes-waiting", fallback: "%1$lld changes waiting to sync", count)
+    }
+
+    /// Line under a signed-in account when nothing else waits but some changes can't go out yet: the { -tracker } has no match for those titles. They go out by themselves once it has one.
+    public static func accountsChangesHeld(count: Int) -> String {
+        Self.format("accounts-changes-held", fallback: "%1$lld changes can't sync yet", count)
     }
 
     /// Choice for the download quality: larger files with more detail.
@@ -8141,7 +11886,7 @@ public enum L {
     public static var settingsLabelHoverCards: String { string("settings-label-hover-cards", fallback: "Expand covers on hover") }
 
     /// Note under the Expand covers on hover setting. The trailer plays only where the trailers setting lets it.
-    public static var settingsHoverCardsNote: String { string("settings-hover-cards-note", fallback: "Shows a larger card with the trailer when you rest the pointer on a cover.") }
+    public static var settingsHoverCardsNote: String { string("settings-hover-cards-note", fallback: "Resting the pointer on a cover opens a larger card with its trailer.") }
 
     /// Preview note under the upscaling frame for the natural look.
     public static var settingsUpscalingNoteNatural: String { string("settings-upscaling-note-natural", fallback: "Faithful line work and texture, nothing restyled.") }
@@ -8172,6 +11917,12 @@ public enum L {
 
     /// Side note in Accounts.
     public static var settingsAsideAccounts: String { string("settings-aside-accounts", fallback: "Kaeri works without an account. Your watch history stays on this device when you sign out.") }
+
+    /// Side note in Accounts when the app is for reading.
+    public static var settingsAsideAccountsRead: String { string("settings-aside-accounts-read", fallback: "Kaeri works without an account. Your reading history stays on this device when you sign out.") }
+
+    /// Side note in Accounts when the app is for watching and reading.
+    public static var settingsAsideAccountsBoth: String { string("settings-aside-accounts-both", fallback: "Kaeri works without an account. Your watch and reading history stays on this device when you sign out.") }
 
     /// Today, inside a line such as "Thursday 16:30".
     public static var widgetDayToday: String { string("widget-day-today", fallback: "today") }
@@ -8336,6 +12087,293 @@ public enum L {
 
     /// Button that restores the default subtitle style.
     public static var settingsSubsReset: String { string("settings-subs-reset", fallback: "Reset subtitle style") }
+
+    /// Row: whether this computer shares its downloads and folders as a catalogue that e-readers on the home network can browse.
+    public static var settingsOpdsFeed: String { string("settings-opds-feed", fallback: "Share on this network") }
+
+    /// Row: the password e-readers ask for before they browse the shared catalogue.
+    public static var settingsOpdsPassword: String { string("settings-opds-password", fallback: "Feed password") }
+
+    /// Row: the port the shared catalogue listens on. Empty picks a free one.
+    public static var settingsOpdsPort: String { string("settings-opds-port", fallback: "Feed port") }
+
+    /// Label of the address field in the Add a server sheet.
+    public static var bookServerAddress: String { string("book-server-address", fallback: "Address") }
+
+    /// Note under the empty address field.
+    public static var bookServerAddressHint: String { string("book-server-address-hint", fallback: "An address, or the whole OPDS link from Kavita.") }
+
+    /// Note under the address field once a Kavita OPDS link is pasted.
+    public static var bookServerKavitaKey: String { string("book-server-kavita-key", fallback: "This is a Kavita OPDS link. Its key signs you in, so no password is needed.") }
+
+    /// Under the key chip. The store is where the system keeps secrets: Keychain, or Android Keystore.
+    public static func bookServerKeyKept(store: String) -> String {
+        Self.format("book-server-key-kept", fallback: "Kaeri keeps the key in %1$@ and shows only its last four characters.", store)
+    }
+
+    /// Chip inside the address field, showing the key's last four characters after four dots.
+    public static func bookServerKey(last: String) -> String {
+        Self.format("book-server-key", fallback: "Key ••••%1$@", last)
+    }
+
+    /// Result title once the server signed in.
+    public static func bookServerFoundTitle(series: Int, libraries: Int) -> String {
+        Self.format("book-server-found-title", fallback: "Found %1$lld series in %2$lld libraries", series, libraries)
+    }
+
+    /// Line under the result title. The kind is Komga, Kavita or OPDS.
+    public static func bookServerFoundLine(kind: String, host: String) -> String {
+        Self.format("book-server-found-line", fallback: "%1$@ at %2$@. Pick the libraries to add.", kind, host)
+    }
+
+    /// A library row's line in the result.
+    public static func bookServerLibraryLine(series: Int) -> String {
+        Self.format("book-server-library-line", fallback: "%1$lld series", series)
+    }
+
+    /// Switch in the result, on to start with.
+    public static var bookServerSyncProgress: String { string("book-server-sync-progress", fallback: "Send progress to the server") }
+
+    /// Line under the switch.
+    public static func bookServerSyncProgressLine(host: String) -> String {
+        Self.format("book-server-sync-progress-line", fallback: "Pages you read here go back to %1$@, and its progress comes here.", host)
+    }
+
+    /// Field label.
+    public static var bookServerUsername: String { string("book-server-username", fallback: "Username") }
+
+    /// Field label.
+    public static var bookServerPassword: String { string("book-server-password", fallback: "Password") }
+
+    /// Error title when the server could not be reached.
+    public static func bookServerErrUnreachable(host: String) -> String {
+        Self.format("book-server-err-unreachable", fallback: "Couldn't reach %1$@", host)
+    }
+
+    /// Line under it.
+    public static var bookServerErrUnreachableLine: String { string("book-server-err-unreachable-line", fallback: "Check the address, and that the server is on and on this network.") }
+
+    /// Error title when the server turned the password down.
+    public static func bookServerErrPassword(host: String) -> String {
+        Self.format("book-server-err-password", fallback: "%1$@ didn't accept that password", host)
+    }
+
+    /// Line under it. The kind is Komga, Kavita or OPDS.
+    public static func bookServerErrPasswordLine(kind: String) -> String {
+        Self.format("book-server-err-password-line", fallback: "Use the username and password you use for %1$@ in a browser.", kind)
+    }
+
+    /// Error title when Kavita turned the key in an OPDS link down.
+    public static func bookServerErrKey(host: String) -> String {
+        Self.format("book-server-err-key", fallback: "%1$@ didn't accept that key", host)
+    }
+
+    /// Line under it.
+    public static var bookServerErrKeyLine: String { string("book-server-err-key-line", fallback: "The key changes when it's reset in Kavita. Copy the OPDS link again from your account settings there.") }
+
+    /// Title when the server lets the account in and shows it no series.
+    public static func bookServerEmpty(host: String) -> String {
+        Self.format("book-server-empty", fallback: "%1$@ shows this account no series", host)
+    }
+
+    /// Line under it.
+    public static var bookServerEmptyLine: String { string("book-server-empty-line", fallback: "It lets you in, but the server may still be scanning, or this account may not have access to its books.") }
+
+    /// Note under it.
+    public static var bookServerEmptyRecheck: String { string("book-server-empty-recheck", fallback: "You can add it now. Kaeri looks again every 30 minutes.") }
+
+    /// Line under an error when the address is not a book server.
+    public static var bookServerNotBooksLine: String { string("book-server-not-books-line", fallback: "Kaeri reads from Komga, Kavita and OPDS catalogues.") }
+
+    /// Folder result title.
+    public static func bookFolderFound(series: Int, files: Int) -> String {
+        Self.format("book-folder-found", fallback: "Found %1$lld series in %2$lld files", series, files)
+    }
+
+    /// Line under it: the folder's path, then how many series were matched by their own details.
+    public static func bookFolderFoundLine(path: String, matched: Int) -> String {
+        Self.format("book-folder-found-line", fallback: "%1$@. Kaeri matched %2$lld of them by their details.", path, matched)
+    }
+
+    /// Row in the folder result: files that are books in formats Kaeri can't open.
+    public static func bookFolderUnsupported(count: Int) -> String {
+        Self.format("book-folder-unsupported", fallback: "%1$lld files Kaeri can't open", count)
+    }
+
+    /// Line under it: the formats, already counted and joined, such as "14 MOBI, 6 AZW3".
+    public static func bookFolderUnsupportedLine(kinds: String) -> String {
+        Self.format("book-folder-unsupported-line", fallback: "%1$@. They stay in the folder as they are.", kinds)
+    }
+
+    /// One item of that list: EPUB files locked with DRM or a password.
+    public static func bookFolderDrm(count: Int) -> String {
+        Self.format("book-folder-drm", fallback: "%1$lld EPUB locked with DRM", count)
+    }
+
+    /// Note under the folder result.
+    public static var bookFolderOpens: String { string("book-folder-opens", fallback: "Kaeri opens CBZ, CBR, EPUB and PDF files, and folders of images.") }
+
+    /// Row action that lists the files skipped.
+    public static var bookFolderShowFiles: String { string("book-folder-show-files", fallback: "Show files") }
+
+    /// Primary action in the Add a folder sheet.
+    public static var bookFolderAdd: String { string("book-folder-add", fallback: "Add folder") }
+
+    /// Folder row action that picks another folder.
+    public static var bookFolderChange: String { string("book-folder-change", fallback: "Change") }
+
+    /// Title when a folder holds nothing Kaeri can open.
+    public static func bookFolderEmpty(folder: String) -> String {
+        Self.format("book-folder-empty", fallback: "Nothing in %1$@ that Kaeri can open", folder)
+    }
+
+    /// Line under it.
+    public static func bookFolderEmptyLine(files: Int) -> String {
+        Self.format("book-folder-empty-line", fallback: "It holds %1$lld files, none of them CBZ, CBR, EPUB, PDF or images.", files)
+    }
+
+    /// Primary action after an empty folder.
+    public static var bookFolderChooseOther: String { string("book-folder-choose-other", fallback: "Choose another folder") }
+
+    /// Folder result title when the picked folder is already a source. It was scanned again.
+    public static func bookFolderAlready(folder: String) -> String {
+        Self.format("book-folder-already", fallback: "%1$@ is already in your sources", folder)
+    }
+
+    /// Line under it: what the new scan found. Closing the sheet keeps the folder.
+    public static func bookFolderAlreadyLine(series: Int) -> String {
+        Self.format("book-folder-already-line", fallback: "Kaeri looked through it again and found %1$lld series. It stays as it is.", series)
+    }
+
+    /// Title when a folder could not be read: the look through it could not start, or stopped.
+    public static func bookFolderUnreadable(folder: String) -> String {
+        Self.format("book-folder-unreadable", fallback: "Couldn't read %1$@", folder)
+    }
+
+    /// Line under it.
+    public static var bookFolderUnreadableLine: String { string("book-folder-unreadable-line", fallback: "It may have moved, or Kaeri no longer has access to it.") }
+
+    /// Title of the Join a plugin store sheet.
+    public static var storeJoinTitle: String { string("store-join-title", fallback: "Join a plugin store") }
+
+    /// Label of the invite field.
+    public static var storeInviteField: String { string("store-invite-field", fallback: "Invite") }
+
+    /// Result title once a plugin store is joined.
+    public static func storeJoinedTitle(store: String) -> String {
+        Self.format("store-joined-title", fallback: "Joined %1$@", store)
+    }
+
+    /// Line under it. The owner is who runs the store.
+    public static func storeJoinedLine(owner: String, count: Int) -> String {
+        Self.format("store-joined-line", fallback: "%1$@ offers %2$lld plugins. Joining installs nothing; pick the ones you want here or later.", owner, count)
+    }
+
+    /// Group header in the joined store's list.
+    public static var storeGroupReading: String { string("store-group-reading", fallback: "For reading") }
+
+    /// Group header in the joined store's list.
+    public static var storeGroupWatching: String { string("store-group-watching", fallback: "For watching") }
+
+    /// Row action.
+    public static var storeInstall: String { string("store-install", fallback: "Install") }
+
+    /// Row state once installed.
+    public static var storeInstalledRow: String { string("store-installed-row", fallback: "Installed") }
+
+    /// Primary action when two or more plugins are for reading.
+    public static var storeInstallAllReading: String { string("store-install-all-reading", fallback: "Install all for reading") }
+
+    /// Result after installing.
+    public static func storeInstalled(count: Int) -> String {
+        Self.format("store-installed", fallback: "%1$lld plugins installed. They're in Your sources.", count)
+    }
+
+    /// Info title when every plugin in a store is for watching, and watching is off here.
+    public static func storeOtherMedium(store: String) -> String {
+        Self.format("store-other-medium", fallback: "Every plugin in %1$@ is for watching", store)
+    }
+
+    /// Line under it.
+    public static var storeOtherMediumLine: String { string("store-other-medium-line", fallback: "Watching is off on this device, so none of them show in Your sources.") }
+
+    /// Secondary action under it.
+    public static var storeTurnOnWatching: String { string("store-turn-on-watching", fallback: "Turn on watching") }
+
+    /// Info title when a store has no plugins.
+    public static func storeEmpty(store: String) -> String {
+        Self.format("store-empty", fallback: "%1$@ has no plugins yet", store)
+    }
+
+    /// Line under it.
+    public static func storeEmptyLine(owner: String) -> String {
+        Self.format("store-empty-line", fallback: "You're a member, so new plugins show in Plugin stores when %1$@ adds them.", owner)
+    }
+
+    /// Error title when the store doesn't answer.
+    public static func storeErrUnreachable(host: String) -> String {
+        Self.format("store-err-unreachable", fallback: "Couldn't reach %1$@", host)
+    }
+
+    /// Line under it.
+    public static func storeErrUnreachableLine(owner: String) -> String {
+        Self.format("store-err-unreachable-line", fallback: "The invite looks right, but the store isn't answering. Try again later, or ask %1$@ if it's running.", owner)
+    }
+
+    /// Under the reading group: plugins for watching while watching is off here.
+    public static func storeOtherMediumMore(count: Int) -> String {
+        Self.format("store-other-medium-more", fallback: "%1$lld more are for watching, which is off on this device.", count)
+    }
+
+    /// On a TV, under the list: plugins for reading, which a TV doesn't do.
+    public static func storeTvReadingOnly(count: Int) -> String {
+        Self.format("store-tv-reading-only", fallback: "%1$lld more are for reading, which this TV doesn't do.", count)
+    }
+
+    /// On a TV, info title when every plugin in a store is for reading.
+    public static func storeTvAllReading(store: String) -> String {
+        Self.format("store-tv-all-reading", fallback: "Every plugin in %1$@ is for reading, which this TV doesn't do.", store)
+    }
+
+    /// Plugin row in an invite's result.
+    public static func storePluginRow(version: String, hosts: String) -> String {
+        Self.format("store-plugin-row", fallback: "Version %1$@ · may contact %2$@", version, hosts)
+    }
+
+    /// Notice after a server or folder is added, for 4 seconds.
+    public static func sourceAdded(name: String, series: Int) -> String {
+        Self.format("source-added", fallback: "Added %1$@ · %2$lld series", name, series)
+    }
+
+    /// Notice after Install all, for 4 seconds.
+    public static func sourceAddedPlugins(count: Int, store: String) -> String {
+        Self.format("source-added-plugins", fallback: "Installed %1$lld plugins from %2$@", count, store)
+    }
+
+    /// A server's row in Your sources, just added. The kind is Komga, Kavita or OPDS; an OPDS catalogue is one library.
+    public static func sourceRowServer(kind: String, series: Int, libraries: Int) -> String {
+        Self.format("source-row-server", fallback: "%1$@ · %2$lld series in %3$lld libraries · added just now", kind, series, libraries)
+    }
+
+    /// A server's row in Your sources once it has settled. The kind is Komga, Kavita or OPDS; an OPDS catalogue is one library.
+    public static func sourceRowServerSeries(kind: String, series: Int, libraries: Int) -> String {
+        Self.format("source-row-server-series", fallback: "%1$@ · %2$lld series in %3$lld libraries", kind, series, libraries)
+    }
+
+    /// A server's row in Your sources while it shows no series.
+    public static func sourceRowServerEmpty(kind: String) -> String {
+        Self.format("source-row-server-empty", fallback: "%1$@ · no series yet · looks again in 30 minutes", kind)
+    }
+
+    /// A folder's row in Your sources.
+    public static func sourceRowFolder(path: String, series: Int, skipped: Int) -> String {
+        Self.format("source-row-folder", fallback: "%1$@ · %2$lld series · %3$lld files skipped", path, series, skipped)
+    }
+
+    /// A plugin's row in Your sources. The medium is "Reading" or "Watching".
+    public static func sourceRowPlugin(store: String, medium: String, version: String) -> String {
+        Self.format("source-row-plugin", fallback: "From %1$@ · %2$@ · version %3$@", store, medium, version)
+    }
 
     /// Title of the screen or section that lists sources.
     public static var sourcesTitle: String { string("sources-title", fallback: "Sources") }
@@ -8559,7 +12597,7 @@ public enum L {
     public static var sourcesTorrentsNote: String { string("sources-torrents-note", fallback: "Torrents are part of Kaeri, not a plugin. The proxy and seeding are set in Settings, under Sources.") }
 
     /// Over the { -source } list while the { -source-pl } are set up again after a change.
-    public static var sourcesRebuilding: String { string("sources-rebuilding", fallback: "Sources are being set up again") }
+    public static var sourcesRebuilding: String { string("sources-rebuilding", fallback: "Setting up sources again") }
 
     /// Value of a plugin's response time, in milliseconds.
     public static func sourcesResponseMs(ms: Int) -> String {
@@ -8616,12 +12654,12 @@ public enum L {
 
     /// While a search of the source runs.
     public static func matchSearching(source: String, query: String) -> String {
-        Self.format("match-searching", fallback: "Searching %1$@ for “%2$@”", source, query)
+        Self.format("match-searching", fallback: "Searching %1$@ for \"%2$@\"", source, query)
     }
 
     /// A search of the source that found nothing.
     public static func matchSearchEmpty(source: String, query: String) -> String {
-        Self.format("match-search-empty", fallback: "Nothing on %1$@ for “%2$@”.", source, query)
+        Self.format("match-search-empty", fallback: "Nothing on %1$@ for \"%2$@\".", source, query)
     }
 
     /// Under match-search-empty: what to try.
@@ -8690,7 +12728,7 @@ public enum L {
     public static var sourcesAddStore: String { string("sources-add-store", fallback: "Join a plugin store…") }
 
     /// Line under the empty state's title on a computer.
-    public static var sourcesEmptyBody: String { string("sources-empty-body", fallback: "Sources are where episodes come from: folders on this device, your media server, and plugins from stores you join.") }
+    public static var sourcesEmptyBody: String { string("sources-empty-body", fallback: "Sources are where episodes come from: folders on this device, your media server, and plugins from plugin stores you join.") }
 
     /// Line under the empty state's buttons. The link is "join a plugin store".
     public static func sourcesEmptyMore(join: String) -> String {
@@ -8736,7 +12774,7 @@ public enum L {
     public static var sourcesDemoLinkMaker: String { string("sources-demo-link-maker", fallback: "OPAP-JP") }
 
     /// Line on the demo page that names the only two hosts the demo reaches.
-    public static var sourcesDemoHosts: String { string("sources-demo-hosts", fallback: "Reaches Wikimedia Commons only: upload.wikimedia.org and commons.wikimedia.org.") }
+    public static var sourcesDemoHosts: String { string("sources-demo-hosts", fallback: "The demo reaches only Wikimedia Commons: upload.wikimedia.org and commons.wikimedia.org.") }
 
     /// Line on the demo page about accounts and trackers.
     public static var sourcesDemoPrivate: String { string("sources-demo-private", fallback: "The demo never signs in anywhere and never writes to AniList.") }
@@ -8811,7 +12849,7 @@ public enum L {
     }
 
     /// Line when the store has no plugins.
-    public static var storesNoPlugins: String { string("stores-no-plugins", fallback: "This plugin store offers no plugins yet.") }
+    public static var storesNoPlugins: String { string("stores-no-plugins", fallback: "This plugin store has no plugins yet.") }
 
     /// Heading of the plugin list of a store.
     public static var storesPlugins: String { string("stores-plugins", fallback: "Plugins") }
@@ -8852,7 +12890,7 @@ public enum L {
 
     /// Line when the store cannot be reached but a list was kept. The reason is a sentence fragment.
     public static func storesOfflineLastList(reason: String) -> String {
-        Self.format("stores-offline-last-list", fallback: "Offline: %1$@. The plugins below are the last list that was checked.", reason)
+        Self.format("stores-offline-last-list", fallback: "Offline: %1$@. Showing the last list it sent.", reason)
     }
 
     /// Line when offline, without a reason.
@@ -8980,7 +13018,7 @@ public enum L {
     }
 
     /// Line under it.
-    public static var storesRemovePluginDetail: String { string("stores-remove-plugin-detail", fallback: "It is deleted from this device. The plugin store can install it again.") }
+    public static var storesRemovePluginDetail: String { string("stores-remove-plugin-detail", fallback: "It's deleted from this device. You can install it again from the plugin store.") }
 
     /// Label before the hosts a new version also contacts.
     public static var storesNewlyContacts: String { string("stores-newly-contacts", fallback: "Newly contacts") }
@@ -9005,7 +13043,7 @@ public enum L {
     public static var storesJoinDetail: String { string("stores-join-detail", fallback: "Paste the link the plugin store's owner sent you.") }
 
     /// Line under the form title on desktop, where nothing happens before the check.
-    public static var storesJoinDetailDesktop: String { string("stores-join-detail-desktop", fallback: "Paste the invite link a plugin store's owner sent you. You see what the plugin store offers before anything is joined or installed.") }
+    public static var storesJoinDetailDesktop: String { string("stores-join-detail-desktop", fallback: "Paste the invite link a plugin store's owner sent you. You see what the plugin store has before you join or install anything.") }
 
     /// Line under the field on a phone when a link was opened from another app.
     public static var storesJoinDetailOpened: String { string("stores-join-detail-opened", fallback: "Paste the link the plugin store's owner sent you. A Kaeri:// invite link opened from Messages fills this sheet in directly.") }
@@ -9051,7 +13089,7 @@ public enum L {
     }
 
     /// Line when the link is open to anyone.
-    public static var storesAnyoneNote: String { string("stores-anyone-note", fallback: "You join without a name. Another device joins with the same link.") }
+    public static var storesAnyoneNote: String { string("stores-anyone-note", fallback: "You join without a name. Another device can join with the same link.") }
 
     /// Line when the device joined this store already.
     public static var storesAlreadyJoinedNote: String { string("stores-already-joined-note", fallback: "This device has joined this plugin store already.") }
@@ -9220,7 +13258,7 @@ public enum L {
 
     /// Line under a single-use invite with an end date. Replaces stores-invite-once.
     public static func storesInviteOnceUntil(until: String) -> String {
-        Self.format("stores-invite-once-until", fallback: "Works once, for the person you send it to. Until %1$@.", until)
+        Self.format("stores-invite-once-until", fallback: "Works once, for the person you send it to, until %1$@.", until)
     }
 
     /// Line under a single-use invite with no end date.
@@ -9364,7 +13402,7 @@ public enum L {
     public static var noticeOpenStores: String { string("notice-open-stores", fallback: "Open plugin stores") }
 
     /// Explainer on the empty plugin stores page.
-    public static var storesWhatIs: String { string("stores-what-is", fallback: "A plugin store is a small server that holds signed plugins and gives each device its own token. It offers sources as plugins. Kaeri runs no plugin stores and lists none, so you join one with an invite link from its owner.") }
+    public static var storesWhatIs: String { string("stores-what-is", fallback: "A plugin store is a small server that holds signed plugins and gives each device its own token. Its plugins add sources. Kaeri runs no plugin stores and lists none, so you join one with an invite link from its owner.") }
 
     /// Button on the empty plugin stores page that opens the docs page in the browser.
     public static var storesWhatIsLink: String { string("stores-what-is-link", fallback: "What is a plugin store?") }
@@ -9386,7 +13424,7 @@ public enum L {
 
     /// Windows and Linux dialog line while the browser is open for a cloud sign-in.
     public static func cloudBrowserLine(service: String) -> String {
-        Self.format("cloud-browser-line", fallback: "Your browser opened %1$@’s page. Allow access there, and Kaeri carries on by itself.", service)
+        Self.format("cloud-browser-line", fallback: "Your browser opened %1$@'s page. Allow access there, and Kaeri carries on by itself.", service)
     }
 
     /// Windows and Linux dialog title while the browser is open for a cloud sign-in.
@@ -9395,7 +13433,7 @@ public enum L {
     }
 
     /// Windows and Linux dialog line under Connecting or Setting up the folder: the dialog's Close button leaves the work running.
-    public static var cloudCloseCarriesOn: String { string("cloud-close-carries-on", fallback: "You can close this. Kaeri carries on, and opens the next step by itself when it’s ready.") }
+    public static var cloudCloseCarriesOn: String { string("cloud-close-carries-on", fallback: "You can close this. Kaeri carries on, and opens the next step by itself when it's ready.") }
 
     /// Word for this device in sentences such as “Turn off sync on this computer”.
     public static var deviceKindComputer: String { string("device-kind-computer", fallback: "computer") }
@@ -9518,7 +13556,7 @@ public enum L {
     public static var syncRoadCloud: String { string("sync-road-cloud", fallback: "Through a cloud folder") }
 
     /// Road sheet row line. Names no service, since a build may hide some (decision 14).
-    public static var syncRoadCloudLine: String { string("sync-road-cloud-line", fallback: "A cloud drive you already use, or your own server. Works while your devices are apart, and keeps a backup.") }
+    public static var syncRoadCloudLine: String { string("sync-road-cloud-line", fallback: "A cloud drive you already use, or your own server. It works while your devices are apart and keeps a backup.") }
 
     /// Road sheet footer.
     public static var syncRoadLater: String { string("sync-road-later", fallback: "You can add the other way later. Most people use both.") }
@@ -9594,7 +13632,7 @@ public enum L {
     public static var cloudGroup: String { string("cloud-group", fallback: "Cloud folder") }
 
     /// Group footer.
-    public static var cloudFoot: String { string("cloud-foot", fallback: "Fills in while your devices are apart, and keeps a sealed backup. Only your devices can read it.") }
+    public static var cloudFoot: String { string("cloud-foot", fallback: "The folder keeps your devices in step while they are apart, and holds a sealed backup. Only your devices can read it.") }
 
     /// Row when only the nearby road is set.
     public static var cloudAdd: String { string("cloud-add", fallback: "Add a cloud folder") }
@@ -9902,7 +13940,7 @@ public enum L {
 
     /// Continue, for a day.
     public static func continueFromDevice(n: Int, time: String, device: String) -> String {
-        Self.format("continue-from-device", fallback: "Episode %1$lld · stopped at %2$@ on %3$@", n, time, device)
+        Self.format("continue-from-device", fallback: "Episode %1$@ · stopped at %2$@ on %3$@", String(n), time, device)
     }
 
     /// Player, 6 s, with Start over.
@@ -9923,7 +13961,7 @@ public enum L {
 
     /// Sync note.
     public static func syncNoteKeptWatched(n: Int, title: String, other: String, device: String) -> String {
-        Self.format("sync-note-kept-watched", fallback: "Episode %1$lld of %2$@ stays watched. %3$@ marked it unwatched without knowing %4$@ had finished it.", n, title, other, device)
+        Self.format("sync-note-kept-watched", fallback: "Episode %1$@ of %2$@ stays watched. %3$@ marked it unwatched without knowing %4$@ had finished it.", String(n), title, other, device)
     }
 
     /// Sync note action.
@@ -9997,7 +14035,7 @@ public enum L {
     public static var profilesAskAtLaunch: String { string("profiles-ask-at-launch", fallback: "Ask who’s watching at launch") }
 
     /// iPad footer.
-    public static var profilesAskFoot: String { string("profiles-ask-foot", fallback: "Off by default. For an iPad the household shares. The account row switches profiles at any time.") }
+    public static var profilesAskFoot: String { string("profiles-ask-foot", fallback: "Off by default. Turn it on for an iPad the whole household shares. You can switch profiles from the account row at any time.") }
 
     /// TV Settings.
     public static var profilesSwitch: String { string("profiles-switch", fallback: "Switch profile") }
@@ -10085,6 +14123,8 @@ public enum L {
     public static var deviceKindTablet: String { string("device-kind-tablet", fallback: "tablet") }
 
     public static var deviceKindTv: String { string("device-kind-tv", fallback: "TV") }
+
+    public static var deviceKindOther: String { string("device-kind-other", fallback: "device") }
 
     /// TV welcome, text button.
     public static var firstSetupPhone: String { string("first-setup-phone", fallback: "Set up from your phone") }
@@ -10211,7 +14251,7 @@ public enum L {
 
     /// Name of one season of a show, such as "Season 2".
     public static func seasonNumber(number: Int) -> String {
-        Self.format("season-number", fallback: "Season %1$lld", number)
+        Self.format("season-number", fallback: "Season %1$@", String(number))
     }
 
     /// Heading of the list of episodes.
@@ -10232,12 +14272,12 @@ public enum L {
     /// Button that opens the full page of facts about a show.
     public static var titleMoreAbout: String { string("title-more-about", fallback: "More about this show") }
 
-    /// Accessibility hint of the button that expands a synopsis.
-    public static var titleSynopsisHint: String { string("title-synopsis-hint", fallback: "Shows the whole synopsis") }
+    /// Accessible name of the More at the end of a cut synopsis, which shows the rest of it. The page's menu of extra actions is called More too, so this one says what it does.
+    public static var titleSynopsisMore: String { string("title-synopsis-more", fallback: "Show the whole synopsis") }
 
     /// Label under a season: which episodes are dubbed so far.
     public static func titleDubbedTo(episode: Int) -> String {
-        Self.format("title-dubbed-to", fallback: "Dubbed to episode %1$lld", episode)
+        Self.format("title-dubbed-to", fallback: "Dubbed to episode %1$@", String(episode))
     }
 
     /// State of a title with no episodes listed yet.
@@ -10263,27 +14303,27 @@ public enum L {
 
     /// Row that stands for several watched episodes in a row, such as "Episodes 1 to 5 watched".
     public static func titleWatchedRange(first: Int, last: Int) -> String {
-        Self.format("title-watched-range", fallback: "Episodes %1$lld to %2$lld watched", first, last)
+        Self.format("title-watched-range", fallback: "Episodes %1$@ to %2$@ watched", String(first), String(last))
     }
 
     /// Name of an episode, such as "Episode 7".
     public static func episodeNumber(number: Int) -> String {
-        Self.format("episode-number", fallback: "Episode %1$lld", number)
+        Self.format("episode-number", fallback: "Episode %1$@", String(number))
     }
 
     /// Short name of an episode, for tight spaces.
     public static func episodeNumberShort(number: Int) -> String {
-        Self.format("episode-number-short", fallback: "E%1$lld", number)
+        Self.format("episode-number-short", fallback: "E%1$@", String(number))
     }
 
     /// An episode and its name.
     public static func episodeWithTitle(number: Int, title: String) -> String {
-        Self.format("episode-with-title", fallback: "Episode %1$lld · %2$@", number, title)
+        Self.format("episode-with-title", fallback: "Episode %1$@ · %2$@", String(number), title)
     }
 
     /// An episode, dubbed, and its name.
     public static func episodeWithTitleDubbed(number: Int, title: String) -> String {
-        Self.format("episode-with-title-dubbed", fallback: "Episode %1$lld · Dubbed · %2$@", number, title)
+        Self.format("episode-with-title-dubbed", fallback: "Episode %1$@ · Dubbed · %2$@", String(number), title)
     }
 
     /// Badge on an episode the person has watched.
@@ -10329,17 +14369,17 @@ public enum L {
 
     /// One line in the list where spoiler protection starts, on desktops. The episode is the last one not hidden.
     public static func episodeProtectionLine(episode: Int) -> String {
-        Self.format("episode-protection-line", fallback: "Spoiler protection hides what comes after episode %1$lld.", episode)
+        Self.format("episode-protection-line", fallback: "Spoiler protection hides what comes after episode %1$@.", String(episode))
     }
 
     /// The same line on phones.
     public static func episodeProtectionLineShort(episode: Int) -> String {
-        Self.format("episode-protection-line-short", fallback: "Hidden after episode %1$lld", episode)
+        Self.format("episode-protection-line-short", fallback: "Hidden after episode %1$@", String(episode))
     }
 
     /// Label of an episode range of a long series, in the range menu.
     public static func episodeRange(from: Int, to: Int) -> String {
-        Self.format("episode-range", fallback: "Episodes %1$lld to %2$lld", from, to)
+        Self.format("episode-range", fallback: "Episodes %1$@ to %2$@", String(from), String(to))
     }
 
     /// Label of the control that picks an episode range.
@@ -10352,7 +14392,7 @@ public enum L {
 
     /// An episode's number in a facts line on phones and in narrow desktop windows.
     public static func episodeShort(episode: Int) -> String {
-        Self.format("episode-short", fallback: "E%1$lld", episode)
+        Self.format("episode-short", fallback: "E%1$@", String(episode))
     }
 
     /// Part of an episode's facts line: when it aired. The date is already formatted.
@@ -10373,12 +14413,12 @@ public enum L {
 
     /// The line where spoiler protection starts, once the rows after it are shown.
     public static func episodeProtectionShown(episode: Int) -> String {
-        Self.format("episode-protection-shown", fallback: "Showing what comes after episode %1$lld.", episode)
+        Self.format("episode-protection-shown", fallback: "Showing what comes after episode %1$@.", String(episode))
     }
 
     /// The same line on phones.
     public static func episodeProtectionShownShort(episode: Int) -> String {
-        Self.format("episode-protection-shown-short", fallback: "Showing after episode %1$lld", episode)
+        Self.format("episode-protection-shown-short", fallback: "Showing after episode %1$@", String(episode))
     }
 
     /// An episode range in the range menu: the first and the last episode.
@@ -10405,22 +14445,22 @@ public enum L {
 
     /// Menu item that marks every episode up to a given one as watched.
     public static func episodeMarkUpTo(episode: Int) -> String {
-        Self.format("episode-mark-up-to", fallback: "Mark watched up to episode %1$lld", episode)
+        Self.format("episode-mark-up-to", fallback: "Mark watched up to episode %1$@", String(episode))
     }
 
     /// Menu item that marks one numbered episode as watched.
     public static func episodeMarkNWatched(episode: Int) -> String {
-        Self.format("episode-mark-n-watched", fallback: "Mark episode %1$lld watched", episode)
+        Self.format("episode-mark-n-watched", fallback: "Mark episode %1$@ watched", String(episode))
     }
 
     /// Menu item that marks one numbered episode as not watched.
     public static func episodeMarkNUnwatched(episode: Int) -> String {
-        Self.format("episode-mark-n-unwatched", fallback: "Mark episode %1$lld unwatched", episode)
+        Self.format("episode-mark-n-unwatched", fallback: "Mark episode %1$@ unwatched", String(episode))
     }
 
     /// Notice after an episode was marked watched.
     public static func episodeMarkedWatched(episode: Int) -> String {
-        Self.format("episode-marked-watched", fallback: "Marked episode %1$lld watched.", episode)
+        Self.format("episode-marked-watched", fallback: "Marked episode %1$@ watched.", String(episode))
     }
 
     /// Menu item that starts an episode from the beginning.
@@ -10428,7 +14468,7 @@ public enum L {
 
     /// Menu item that downloads one numbered episode.
     public static func episodeDownloadN(episode: Int) -> String {
-        Self.format("episode-download-n", fallback: "Download episode %1$lld", episode)
+        Self.format("episode-download-n", fallback: "Download episode %1$@", String(episode))
     }
 
     /// Menu item that downloads every episode not yet watched.
@@ -10498,12 +14538,12 @@ public enum L {
 
     /// Main button of the title page for a dubbed episode that has not been started.
     public static func titleButtonPlayDubbed(episode: Int) -> String {
-        Self.format("title-button-play-dubbed", fallback: "Play episode %1$lld · Dubbed", episode)
+        Self.format("title-button-play-dubbed", fallback: "Play episode %1$@ · Dubbed", String(episode))
     }
 
     /// Main button of the title page when a dubbed episode is part-watched. The time is where it stopped, already formatted.
     public static func titleButtonResumeDubbed(episode: Int, time: String) -> String {
-        Self.format("title-button-resume-dubbed", fallback: "Resume episode %1$lld · Dubbed · %2$@", episode, time)
+        Self.format("title-button-resume-dubbed", fallback: "Resume episode %1$@ · Dubbed · %2$@", String(episode), time)
     }
 
     /// Label of a fact: the genres, joined in its value.
@@ -10522,7 +14562,7 @@ public enum L {
 
     /// Value of the fact on a cancelled show: the last episode that aired.
     public static func titleFactAfter(episode: Int) -> String {
-        Self.format("title-fact-after", fallback: "After episode %1$lld", episode)
+        Self.format("title-fact-after", fallback: "After episode %1$@", String(episode))
     }
 
     /// Value of the fact on a show that is airing and has no known start.
@@ -10547,22 +14587,22 @@ public enum L {
 
     /// Placeholder of the Go to episode field: the first and last episode of the show.
     public static func episodeGoToHint(first: Int, last: Int) -> String {
-        Self.format("episode-go-to-hint", fallback: "%1$lld to %2$lld", first, last)
+        Self.format("episode-go-to-hint", fallback: "%1$@ to %2$@", String(first), String(last))
     }
 
     /// Accessibility label of the Go to episode field.
     public static func episodeGoToLabel(first: Int, last: Int) -> String {
-        Self.format("episode-go-to-label", fallback: "Episode, %1$lld to %2$lld", first, last)
+        Self.format("episode-go-to-label", fallback: "Episode, %1$@ to %2$@", String(first), String(last))
     }
 
     /// Shown when the number typed is not an episode of the show.
     public static func episodeGoToNone(number: Int, last: Int) -> String {
-        Self.format("episode-go-to-none", fallback: "No episode %1$lld. This show has %2$lld.", number, last)
+        Self.format("episode-go-to-none", fallback: "No episode %1$@. This show has %2$@.", String(number), String(last))
     }
 
     /// Shown when the number typed is an episode with no date that has not come out.
     public static func episodeGoToNotOut(number: Int, latest: Int) -> String {
-        Self.format("episode-go-to-not-out", fallback: "Episode %1$lld isn't out yet. The latest is %2$lld.", number, latest)
+        Self.format("episode-go-to-not-out", fallback: "Episode %1$@ isn't out yet. The latest is %2$@.", String(number), String(latest))
     }
 
     /// Title of the settings group and the screen.
@@ -10770,6 +14810,27 @@ public enum L {
     /// Line under a tracker that brings in lists.
     public static var accountsBringsLists: String { string("accounts-brings-lists", fallback: "Brings in your lists and fills Continue with what you are watching.") }
 
+    /// Line under AniList when Kaeri is for reading: what signing in brings.
+    public static var accountsBringsListsRead: String { string("accounts-brings-lists-read", fallback: "Brings in your lists and fills Continue with what you are reading.") }
+
+    /// Line under AniList when Kaeri is for watching and reading.
+    public static var accountsBringsListsBoth: String { string("accounts-brings-lists-both", fallback: "Brings in your lists and fills Continue with what you are watching and reading.") }
+
+    /// Line under a tracker that is not signed in: what it keeps in step.
+    public static var accountsTrackerLists: String { string("accounts-tracker-lists", fallback: "Lists and progress") }
+
+    /// Line under MangaUpdates when it is not signed in.
+    public static var accountsTrackerReadingLists: String { string("accounts-tracker-reading-lists", fallback: "Reading lists and progress") }
+
+    /// Line under a tracker with both media on: it serves shows and reading.
+    public static var accountsTrackerServesBoth: String { string("accounts-tracker-serves-both", fallback: "Shows and reading") }
+
+    /// Line under a tracker with both media on: it serves reading only.
+    public static var accountsTrackerServesReading: String { string("accounts-tracker-serves-reading", fallback: "Reading") }
+
+    /// Line under a tracker with both media on: it serves shows only.
+    public static var accountsTrackerServesShows: String { string("accounts-tracker-serves-shows", fallback: "Shows") }
+
     /// Line under the accounts screen when the library needs a tracker.
     public static func accountsLibraryNeeds(tracker: String) -> String {
         Self.format("accounts-library-needs", fallback: "Library and sync need your %1$@ account", tracker)
@@ -10905,7 +14966,7 @@ public enum L {
 
     /// Line under the title: where the password goes.
     public static func accountsFormDetail(tracker: String) -> String {
-        Self.format("accounts-form-detail", fallback: "Your password goes to %1$@ once, for a token kept on this device.", tracker)
+        Self.format("accounts-form-detail", fallback: "Your password goes to %1$@ once, in exchange for a token that stays on this device.", tracker)
     }
 
     /// Label of the name field.
@@ -11007,7 +15068,7 @@ public enum L {
 
     /// Line when the tracker did not answer.
     public static func accountsDidNotAnswer(tracker: String) -> String {
-        Self.format("accounts-did-not-answer", fallback: "%1$@ didn't answer.", tracker)
+        Self.format("accounts-did-not-answer", fallback: "%1$@ didn't answer. Try again in a moment.", tracker)
     }
 
     /// Line when the tracker has nothing for the show.
@@ -11090,7 +15151,7 @@ public enum L {
 
     /// Line telling what to type.
     public static func tvTypeCode(name: String) -> String {
-        Self.format("tv-type-code", fallback: "Type the six digits %1$@ shows. After this, this device connects by itself.", name)
+        Self.format("tv-type-code", fallback: "Type the six digits %1$@ shows. From then on, this device connects by itself.", name)
     }
 
     /// Line while pairing is under way.
@@ -11205,7 +15266,7 @@ public enum L {
 
     /// Name of a track that has no name.
     public static func tvTrackN(id: Int) -> String {
-        Self.format("tv-track-n", fallback: "Track %1$lld", id)
+        Self.format("tv-track-n", fallback: "Track %1$@", String(id))
     }
 
     /// Title of the screen on the TV that waits for a phone.
@@ -11473,11 +15534,11 @@ public enum L {
 
     /// The server refused. The code is a number.
     public static func updatesWhyServer(code: Int) -> String {
-        Self.format("updates-why-server", fallback: "The download stopped: the server refused it (%1$lld). Try again later.", code)
+        Self.format("updates-why-server", fallback: "The download stopped: the server refused it (%1$@). Try again later.", String(code))
     }
 
     /// The connection broke.
-    public static var updatesWhyConnection: String { string("updates-why-connection", fallback: "The download stopped: the connection was lost.") }
+    public static var updatesWhyConnection: String { string("updates-why-connection", fallback: "The download stopped: the connection was lost. Try again.") }
 
     /// The file could not be saved. The reason is a sentence fragment.
     public static func updatesWhySave(reason: String) -> String {

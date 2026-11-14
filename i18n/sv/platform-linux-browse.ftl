@@ -39,3 +39,5 @@ library-linux-list-count = { $list } { $count }
 title-linux-play-on-tv-help = Spela upp det här avsnittet på en TV med { -app-name }
 title-linux-episode-watched = Avsnitt { $episode } sett
 calendar-linux-day-empty = Inget sänds
+linux-read-library-list = Lista
+linux-read-downloads-empty = Nedladdade kapitel öppnas utan anslutning.

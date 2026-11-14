@@ -64,7 +64,7 @@ settings-discussions-label = Episode discussions
 # Note under the Episode discussions setting.
 # @only android
 # @max 120
-settings-discussions-note = Reads the comments on AniList's forum thread for episodes you have watched.
+settings-discussions-note = You can read the comments on AniList's forum thread for episodes you have watched.
 
 # Settings row: whether images in comments load inline.
 # @only android

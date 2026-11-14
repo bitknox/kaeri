@@ -87,6 +87,16 @@ android_abis=(
   "arm64-v8a aarch64-linux-android aarch64-linux-android"
   "armeabi-v7a armv7-linux-androideabi armv7a-linux-androideabi"
 )
+# KAERI_ANDROID_ABIS (say arm64-v8a) narrows a testing build to those ABIs, for local checks on an
+# arm64 emulator or phone. A release build always has every ABI, since the TV needs the 32-bit one.
+if [[ "$flavour" == testing && -n "${KAERI_ANDROID_ABIS:-}" ]]; then
+  wanted=()
+  for spec in "${android_abis[@]}"; do
+    [[ ",$KAERI_ANDROID_ABIS," == *",${spec%% *},"* ]] && wanted+=("$spec")
+  done
+  (( ${#wanted[@]} )) || { echo "error: KAERI_ANDROID_ABIS names no ABI this script builds" >&2; exit 2; }
+  android_abis=("${wanted[@]}")
+fi
 # Shared by every worktree that builds the Android app's engine, since disk is what runs out.
 # Incremental compilation only adds to it, for builds that are mostly of dependencies.
 export CARGO_TARGET_DIR="${CARGO_TARGET_DIR:-$HOME/kaeri-target-android}"
@@ -147,7 +157,7 @@ if (( check )); then
   elif [[ "$built_abis" == none && "$abis" != none ]]; then
     echo "error: the $flavour engine was built before the NDK was installed, so it has no Android libraries." >&2
   elif [[ -n "$built_abis" && "$built_abis" != "$abis" ]]; then
-    echo "error: the $flavour engine was built for $built_abis, and this build needs $abis." >&2
+    echo "error: the $flavour engine was built for $built_abis, and this build needs $abis (KAERI_ANDROID_ABIS picks a testing build's)." >&2
   else
     echo "error: the $flavour engine is missing or older than the Rust sources." >&2
   fi

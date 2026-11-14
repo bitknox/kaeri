@@ -108,18 +108,38 @@ struct LibraryScreen: View {
         Group {
             if embedded {
                 grid
+            } else if ReadLibraryScope.reading(store: store, navigator: navigator) {
+                ScrollView {
+                    ReadLibraryView(scope: store.medium.both)
+                        .padding(EdgeInsets(top: 8, leading: 16, bottom: 24, trailing: 16))
+                }
+                .scrollIndicators(.never)
+                .transition(.opacity)
             } else if store.accounts.summary.state == .signedOut {
-                SignedOutLibrary()
+                VStack(alignment: .leading, spacing: 0) {
+                    if store.medium.both {
+                        LibraryScopePicker().padding(EdgeInsets(top: 8, leading: 16, bottom: 0, trailing: 16))
+                    }
+                    SignedOutLibrary()
+                }
             } else {
                 ScrollView {
-                    grid.padding(EdgeInsets(top: 8, leading: 12, bottom: 24, trailing: 16))
+                    VStack(alignment: .leading, spacing: 16) {
+                        if store.medium.both {
+                            LibraryScopePicker().padding(.leading, 4)
+                        }
+                        grid
+                    }
+                    .padding(EdgeInsets(top: 8, leading: 12, bottom: 24, trailing: 16))
                 }
                 .scrollIndicators(.never)
                 #if os(macOS)
                 .hoverCards()
                 #endif
+                .transition(.opacity)
             }
         }
+        .animation(.standard, value: ReadLibraryScope.reading(store: store, navigator: navigator))
         .task {
             for segment in LibraryModel.order where store.library.segment(segment).state == .idle {
                 store.loadLibrary(segment)

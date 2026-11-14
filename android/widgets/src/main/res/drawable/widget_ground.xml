@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The widget's ground on Android 11, which has no system corners: Android 12's default
+     radius, drawn rather than clipped. -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">
+    <solid android:color="#161A2E" />
+    <corners android:radius="16dp" />
+</shape>

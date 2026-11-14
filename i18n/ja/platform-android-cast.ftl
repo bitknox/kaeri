@@ -20,4 +20,4 @@ cast-card-stop = キャストを停止
 cast-settings-tvs = Chromecast内蔵のテレビを表示
 cast-settings-tvs-note = 「テレビで再生」のChromecastの下に表示されます。この{ -device }がエピソードを送信します。
 cast-settings-torrents = キャスト中のトレント
-cast-settings-torrents-note = Chromecast内蔵のテレビでトレントを再生できるようにします。再生中はこの{ -device }がエピソードを送信します。
+cast-settings-torrents-note = これで、Chromecast内蔵のテレビでトレントを再生できます。再生中はこの{ -device }がエピソードを送信します。

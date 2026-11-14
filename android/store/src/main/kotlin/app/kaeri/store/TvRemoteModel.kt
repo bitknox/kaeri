@@ -27,6 +27,7 @@ import app.kaeri.engine.ffi.FfiTvCommand
 import app.kaeri.engine.ffi.FfiTvException
 import app.kaeri.engine.ffi.FfiTvLink
 import app.kaeri.engine.ffi.FfiTvPairing
+import app.kaeri.engine.ffi.FfiTvProblem
 import app.kaeri.engine.ffi.FfiTvRow
 import app.kaeri.engine.ffi.FfiTvRowKind
 import app.kaeri.engine.ffi.FfiTvSender
@@ -369,6 +370,7 @@ class TvRemoteModel(
     }
 
     private fun fail(error: FfiTvException) {
+        relookAfter(error, browser)
         if (_pairing.value == null) return
         _pairing.update { it?.copy(working = false, problem = words(error)) }
     }
@@ -422,6 +424,9 @@ class TvRemoteModel(
             else -> null
         }
         _card.value = TvCard(next, if (same) held!!.at else now, lostAt)
+        // The link was lost: the TV may be at another address, which a browse below Android 14
+        // finds only by resolving it again.
+        if (next.phase == FfiLinkPhase.RETRYING && held?.card?.phase != FfiLinkPhase.RETRYING) (browser as? NsdRelook)?.relook()
         val request = _starting.value
         val playing = next.now
         if (next.over || (request != null && playing != null && playing.id == request.id && playing.episode == request.episode)) {
@@ -554,6 +559,15 @@ class TvRemoteModel(
         /** The engine's words for a failure. */
         fun words(error: FfiTvException): String = when (error) {
             is FfiTvException.Failed -> error.reason
+        }
+
+        /**
+         * After [error], [browser] resolves what it found again where the TV could not be reached
+         * or was not where it was found: it may have moved, which only Android 14 and up say.
+         */
+        internal fun relookAfter(error: FfiTvException, browser: Any?) {
+            val problem = (error as? FfiTvException.Failed)?.problem ?: return
+            if (problem == FfiTvProblem.UNREACHABLE || problem == FfiTvProblem.GONE) (browser as? NsdRelook)?.relook()
         }
     }
 }

@@ -47,14 +47,14 @@ stores-plugin-added-by-hand = Добавлен вручную
 stores-plugin-from-another-store = Из другого { -store }а
 stores-footer-update-hosts = Обновление также хочет обращаться к { $hosts }
 stores-footer-may-contact = Может обращаться к { $hosts }
-stores-footer-link-device = Одноразовая ссылка, которая присоединит другое ваше { -device } от вашего имени
+stores-footer-link-device = Одноразовая ссылка, по которой другое ваше { -device } подключится от вашего имени
 stores-footer-invite = Одноразовая ссылка для нового человека
-stores-footer-members = Кто присоединился, и как отозвать доступ
+stores-footer-members = Посмотреть, кто присоединился, и отозвать чей-то доступ
 stores-footer-close-join = ↵ Пускать только приглашённых и остановить ссылку
 stores-footer-open-join = ↵ Разрешить присоединиться без имени любому, у кого есть ссылка { -store }а
 stores-footer-publish = Предложить { -plugin } из папки { -plugin }ов на этом компьютере
 stores-footer-admin = Управлять участниками, приглашениями и { -plugin-pl } в браузере
-stores-footer-leave = { -plugin-cap-pl }, установленные из него, остаются на этом компьютере и перестают обновляться
+stores-footer-leave = Это { -device } сохранит { -plugin-pl }, установленные из него, но они перестанут обновляться
 stores-who-open = Любой, у кого есть ссылка
 stores-who-invite-only = Только приглашённые вами
 stores-label-offers = Предлагает
@@ -123,7 +123,7 @@ stores-anonymous-joined = Присоединилось { $when }
 stores-anonymous-seen = Последний раз в сети { $when }
 stores-anonymous-never-seen = Ещё не появлялось
 stores-remove-devices = { $count ->
-    [one] Удалить его
+    [one] Удалить { $count } { -device }
     [few] Удалить все { $count }
     [many] Удалить все { $count }
    *[other] Удалить все { $count }
@@ -134,7 +134,7 @@ stores-footer-cancel-invite = ↵ Отменить это приглашение
 stores-footer-show-link = ↵ Показать ссылку, чтобы скопировать и отправить
 stores-footer-remove-anonymous = ↵ Удалить это { -device }, известное только по времени присоединения
 stores-footer-remove-all-anonymous = ↵ Удалить все { -device-pl }, которые присоединились по ссылке
-stores-link-copied = Скопировано в буфер обмена, если терминал это позволяет, или выделите ссылку, чтобы скопировать.
+stores-link-copied = Скопировано, если терминал это позволяет. Если нет, выделите ссылку, чтобы скопировать её.
 stores-link-select = Выделите, чтобы скопировать.
 stores-open-link-warning = Любой, у кого она есть, может присоединиться без имени, сколько угодно раз.
 stores-open-link-lasts = Работает, пока { -store } снова не откроется только для приглашённых.
@@ -149,7 +149,7 @@ stores-confirm-open = Разрешить любому, у кого есть сс
 stores-confirm-close = Пускать в { $name } только приглашённых?
 stores-confirm-remove-device = Удалить это { -device }?
 stores-confirm-remove-devices = { $count ->
-    [one] Удалить { -device }, присоединившееся по ссылке?
+    [one] Удалить { $count } { -device }, присоединившееся по ссылке?
     [few] Удалить все { $count } { -device-pl }, присоединившиеся по ссылке?
     [many] Удалить все { $count } устройств, присоединившиеся по ссылке?
    *[other] Удалить все { $count } { -device-pl }, присоединившиеся по ссылке?
@@ -162,18 +162,18 @@ stores-label-device = { -device-cap }
 stores-key-matches-link = { $fingerprint }  (совпадает со ссылкой)
 stores-key-matches-invite = { $fingerprint }  (совпадает с приглашением)
 stores-join-open = Присоединиться может любой, у кого есть ссылка.
-stores-join-anonymous = Вы присоединитесь без имени, и другое { -device } присоединится по той же ссылке.
+stores-join-anonymous = Вы подключитесь без имени. Любое другое { -device } может подключиться по той же ссылке.
 stores-join-already = Уже присоединено. Повторное присоединение даст этому { -device } новый токен.
 stores-join-device-note = Владелец { -store }а видит это имя. Введите другое, чтобы изменить его.
-stores-leave-plugins = { -plugin-cap-pl }, установленные из него, остаются на этом компьютере и перестают обновляться.
+stores-leave-plugins = Это { -device } сохранит { -plugin-pl }, установленные из него, но они перестанут обновляться.
 stores-leave-revoked = Доступ этого { -device }а к { -store }у отозван.
 stores-remove-member-devices = { $count ->
-    [one] Их { -device } перестанет работать с этим { -store }ом сразу.
+    [one] Их { $count } { -device } перестанет работать с этим { -store }ом сразу.
     [few] Их { $count } { -device-pl } перестанут работать с этим { -store }ом сразу.
     [many] Их { $count } устройств перестанут работать с этим { -store }ом сразу.
    *[other] Их { $count } { -device-pl } перестанут работать с этим { -store }ом сразу.
  }
-stores-remove-member-plugins = { -plugin-cap-pl }, которые они уже установили, остаются на их компьютерах.
+stores-remove-member-plugins = { -device-cap-pl } участника сохранят уже установленные { -plugin-pl }.
 stores-cancel-invite-link = Ссылка перестанет работать.
 stores-unpublish-members = Участники, которые его установили, сохранят его, и он перестанет обновляться.
 stores-open-anyone = Любой, у кого есть ссылка { -store }а, сможет присоединиться без имени.
@@ -193,7 +193,7 @@ stores-plugin-other-store-note = Установлен из другого { -sto
 stores-choice-install = Установить
 stores-choice-update = Обновить до { $version }
 stores-choice-replace = Заменить копию, добавленную вручную
-stores-choice-remove = Удалить с этого компьютера
+stores-choice-remove = Удалить отсюда
 stores-choice-unpublish = Перестать предлагать в этом { -store }е
 stores-choice-cancel = Отмена
 stores-publish-new = Новый

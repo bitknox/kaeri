@@ -12,13 +12,13 @@ cause-no-sources = No { -source-pl } are set up. Add one on the { -source-cap-pl
 cause-no-connection = No connection. Try again when you're back online.
 
 # A play's explanation: the episode's broadcast is still ahead. The "when" says today, tomorrow or a date.
-# @arg episode: int
+# @arg episode: plain
 # @arg when: cause
 notice-not-aired = Episode { $episode } airs { $when }.
 
 # A play's explanation: the episode is after the next one to air. The "when" says when that one airs.
-# @arg episode: int
-# @arg next: int
+# @arg episode: plain
+# @arg next: plain
 # @arg when: cause
 notice-not-aired-yet = Episode { $episode } hasn't aired yet. Episode { $next } airs { $when }.
 
@@ -213,7 +213,7 @@ notice-match-did-not-stick = That match didn't stick. The { -source } may have c
 
 # Toast when a search of the sources for a title found nothing.
 # @arg query: text
-notice-source-search-empty = Nothing found for “{ $query }”. Try a different search.
+notice-source-search-empty = Nothing found for "{ $query }". Try a different search.
 
 # In the list of titles a source offers for a show, in place of how close a title is: it was
 # ruled out because its format cannot be the show's, as an OVA for a TV series.
@@ -239,7 +239,7 @@ match-search-source-off = It isn't switched on.
 
 # Toast after the person picked a source for one title.
 # @arg source: text
-notice-source-pinned = { $source } will be used for this title.
+notice-source-pinned = This title now plays from { $source }.
 
 # Toast after the person went back to automatic source selection for one title.
 notice-source-automatic = Back to automatic { -source } selection.

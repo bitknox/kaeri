@@ -20,4 +20,4 @@ cast-card-stop = Остановить трансляцию
 cast-settings-tvs = Показывать ТВ со встроенным Chromecast
 cast-settings-tvs-note = Они появятся в разделе Chromecast в «Смотреть на ТВ». Это { -device } отправляет им эпизод.
 cast-settings-torrents = Торренты при трансляции
-cast-settings-torrents-note = Позволяет ТВ со встроенным Chromecast воспроизводить торренты. Это { -device } передаёт эпизод, пока он идёт.
+cast-settings-torrents-note = Тогда ТВ со встроенным Chromecast сможет воспроизводить торренты. Это { -device } передаёт эпизод, пока он идёт.

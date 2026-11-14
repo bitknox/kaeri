@@ -9,5 +9,8 @@
   },
   "devDependencies": {
     "@bytecodealliance/jco": "^1.39.0"
+  },
+  "overrides": {
+    "minimatch": "11.0.1"
   }
 }

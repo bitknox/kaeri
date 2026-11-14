@@ -16,7 +16,7 @@ settings-coming-up-dubbed = { $count ->
 settings-coming-up-switched-off = { $count ->
    *[other] { $names } dimatikan di pengaturannya sendiri.
  }
-settings-coming-up-opens = Tayangan membuka pengaturannya.
+settings-coming-up-opens = Ketuk tayangan untuk membuka pengaturannya.
 torrents-proxy-as = sebagai { $user }
 title-facts-aired = Ditayangkan { $dates }
 title-facts-airing = Tayang sejak { $date }
@@ -127,7 +127,7 @@ settings-titles-note-english-missing = { $title } tidak punya judul Inggris di A
 settings-titles-note-english = Judul Inggris sebagaimana tercantum di AniList, dan romaji jika tidak ada.
 settings-titles-note-romaji = Judul Jepang dalam huruf Latin, sebagaimana tercantum di AniList.
 settings-stores-with-updates = { $stores } · { $updates }
-settings-seeding-best-effort = Sebisa mungkin di { -device } ini: seeding hanya berjalan selama { -app-name } terbuka.
+settings-seeding-best-effort = { -device-cap } ini hanya melakukan seeding selama { -app-name } terbuka.
 settings-downloads-count = { $count ->
    *[other] { $count } episode
  }
@@ -142,7 +142,7 @@ settings-typefaces-value = Roboto Flex dan Zen Kaku Gothic New, di bawah SIL Ope
 settings-libraries-value = JNA dan AndroidX, di bawah Apache License 2.0
 settings-report-bug-value = Membuka GitHub di peramban Anda
 downloads-storage-share-description = Unduhan memakan { $size }
-settings-aside-notifications = Satu notifikasi saat episode dari tayangan yang Anda ikuti keluar: nama tayangan dan nomor episodenya, tidak pernah judul episodenya. Sebuah tayangan bisa mematikan notifikasinya sendiri di pengaturannya.
+settings-aside-notifications = Satu notifikasi saat episode dari tayangan yang Anda ikuti keluar: nama tayangan dan nomor episodenya, tidak pernah judul episodenya. Anda bisa mematikan notifikasi sebuah tayangan di pengaturannya.
 settings-aside-downloads = Unduhan disimpan di ruang milik { -app-name } pada { -device } ini, yang tidak bisa dibaca aplikasi lain. Menghapus aplikasi juga menghapusnya.
 settings-aside-sources = { -source-cap-pl } dicoba berurutan, dari atas ke bawah. Sebuah tayangan bisa memakai { -source } sendiri, yang dipilih dari halaman judulnya.
 settings-upscaling-description = Gambar yang sama, setengah kiri sebagai 480p asli, setengah kanan dengan { $mode }

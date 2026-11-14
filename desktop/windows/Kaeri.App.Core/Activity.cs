@@ -115,11 +115,14 @@ public static class Summary
         if ((signedIn.FirstOrDefault(s => s.Tracker == "anilist") ?? signedIn.OrderBy(s => s.Tracker, StringComparer.Ordinal).FirstOrDefault()) is not { } main)
             return new(T.AccountsStateSignedOut, SyncDot.SignedOut, null);
         var name = Engine.Ffi.KaeriFfiMethods.TrackerName(main.Tracker);
-        var pending = signedIn.Sum(s => (long)s.Outbox);
+        // What is on its way: the engine leaves changes held for a match out of Outbox, and a
+        // tracker that rejected its credential sends nothing until it is signed in again.
+        var pending = signedIn.Where(s => !s.NeedsReauth).Sum(s => (long)s.Outbox);
         if (offline)
             return new(pending > 0 ? T.AccountsChangesWaiting(pending) : T.StoresStatusOffline, SyncDot.Waiting, main.Tracker);
-        if (main.NeedsReauth)
-            return new(T.TitlebarSignInAgain(name), SyncDot.Problem, main.Tracker);
+        // AniList's first, then any other signed in: each is a sign-in only the person can do.
+        if ((main.NeedsReauth ? main : signedIn.FirstOrDefault(s => s.NeedsReauth)) is { } expired)
+            return new(T.TitlebarSignInAgain(Engine.Ffi.KaeriFfiMethods.TrackerName(expired.Tracker)), SyncDot.Problem, expired.Tracker);
         if (pending > 0)
             return new(T.AccountsChangesWaiting(pending), SyncDot.Waiting, main.Tracker);
         if (main.PullError is not null)

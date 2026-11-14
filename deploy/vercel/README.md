@@ -38,7 +38,7 @@ Kaeri. Add it under Settings, Environment Variables, and redeploy.
 1. Open `https://<your-project>.vercel.app/admin/` in a browser. Use the address listed under the
    project's Domains. The longer address of each single deployment is kept behind a Vercel login.
 2. Enter the setup code. The page answers with an owner invite link.
-3. In Kaeri, go to Providers, press Enter to open plugin stores, choose join a store and paste
+3. In Kaeri, go to Sources, press Enter to open plugin stores, choose join a store and paste
    the link.
 
 The device that joins with that link becomes the owner. From then on you invite people, publish

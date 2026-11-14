@@ -473,6 +473,8 @@ mod tests {
             version: "1".into(),
             hosts: vec!["films.example".into()],
             status: StorePluginStatus::AddedByHand,
+            books: false,
+            media: Vec::new(),
         };
         assert_eq!(plugin_line(&by_hand), "Added by hand · Contacts films.example");
     }

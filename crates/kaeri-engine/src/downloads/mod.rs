@@ -16,6 +16,7 @@
 //! to pass like any other torrent.
 
 pub mod ahead;
+pub mod books;
 pub mod commands;
 
 use std::{path::PathBuf, sync::Arc, time::Duration};
@@ -65,9 +66,9 @@ pub fn spawn(
         // the database and there is no torrent for it in this process, so without this it would sit
         // at "downloading" forever with nothing behind it.
         //
-        // This assumes one app at a time on a data folder. The Mac app and the terminal app
-        // share one, as do the Linux app and the terminal, and nothing locks it: a second app
-        // opened while the first downloads takes those rows back and starts them again.
+        // Another app on the same data folder (the Mac or Linux app beside the terminal) may be
+        // running some of them: the store leaves a download alone while the engine that records
+        // its progress still does, and puts it back only once that engine has stopped.
         if let Ok(pending) = store.pending_downloads() {
             for row in pending.iter().filter(|d| d.state == DownloadState::Active) {
                 let _ = store.set_download_state(row.id, DownloadState::Queued);
@@ -336,6 +337,11 @@ async fn start_queued(
     running: &mut Vec<Running>,
     starting: &mut Starting,
 ) {
+    // A torrent being added can take a while: the claims on the rows it starts are renewed, so
+    // another engine on the data folder does not start them too.
+    for (_, id) in &starting.rows {
+        let _ = store.claim_download(*id);
+    }
     let Ok(pending) = store.pending_downloads() else { return };
     // A download asked to start now, with every place taken: the one that would have been last
     // to start goes back to waiting, behind it, as "Start now" says.
@@ -373,6 +379,10 @@ async fn start_queued(
             continue;
         }
         if row.state != DownloadState::Queued {
+            continue;
+        }
+        // Another engine on the data folder starts it.
+        if !store.claim_download(row.id).unwrap_or(true) {
             continue;
         }
         starting.start(session, row);

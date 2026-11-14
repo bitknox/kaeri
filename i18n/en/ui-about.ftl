@@ -129,13 +129,13 @@ settings-group-crashes = Crash reports
 settings-crash-save = Save crash reports on this { -device }
 
 # Line under that switch.
-settings-crash-save-detail = When this is on, { -app-name } keeps a short record of each crash on this { -device }, with titles, addresses and names removed, so you can add it to Report a bug. Nothing is sent by itself.
+settings-crash-save-detail = { -app-name } keeps a short record of each crash on this { -device } for Report a bug, with titles, addresses and names removed. Nothing is sent by itself.
 
 # Switch that turns the notice after a crash on or off.
 settings-crash-ask = Ask after a crash
 
 # Line under that switch.
-settings-crash-ask-detail = Shows a notice at the next launch with Report…
+settings-crash-ask-detail = { -app-name } shows a notice with Report… the next time it opens.
 
 # Heading of crashes the system kept from before saving was turned on. The system is macOS, iOS, iPadOS or Android.
 # @arg system: text
@@ -169,4 +169,4 @@ settings-crash-delete = Delete
 settings-crash-delete-all = Delete all
 
 # Footnote of the Crash reports group.
-settings-crash-footnote = Crash reports stay on this { -device }. { -app-name } sends nothing by itself. A report leaves only when you open it on GitHub from Report a bug. Reports are deleted after 30 days.
+settings-crash-footnote = Crash reports stay on this { -device }, and { -app-name } sends nothing by itself. A report leaves only when you open it on GitHub from Report a bug. Reports are deleted after 30 days.

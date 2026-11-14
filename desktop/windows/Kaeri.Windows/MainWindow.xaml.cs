@@ -43,6 +43,8 @@ public sealed partial class MainWindow : Window
         ["stores"] = typeof(StoresPage),
         ["search"] = typeof(SearchPage),
         ["settings"] = typeof(SettingsPage),
+        ["read"] = typeof(ReadHomePage),
+        ["updates"] = typeof(ReadUpdatesPage),
     };
 
     readonly Options options;
@@ -67,9 +69,8 @@ public sealed partial class MainWindow : Window
         InitializeComponent();
         Title = T.AppName;
         // Each destination's tooltip names its shortcut: Ctrl+1 to Ctrl+9, in the sidebar's order.
-        string[] names = [T.HomeTitle, T.NavCalendar, T.NavSeasonal, T.NavSearch, T.NavLibrary, T.NavDownloads, T.TogetherTitle, T.SourcesTitle, T.NavPluginStores];
-        foreach (var (item, n) in Nav.MenuItems.OfType<NavigationViewItem>().Select((item, i) => (item, i)))
-            ToolTipService.SetToolTip(item, T.TooltipWithKey(names[n], $"Ctrl+{n + 1}"));
+        // Reading's places come and go with what Kaeri is for; ApplyMedium sets them and the tips.
+        ApplyMedium();
         // The built-in Settings item reads the system language, so it takes the catalogue's word.
         Nav.Loaded += (_, _) =>
         {
@@ -96,6 +97,7 @@ public sealed partial class MainWindow : Window
         Player.ShaderCache = Path.Combine(dirs.Cache, "player");
         ChatSetting.Load(dirs.Config);
         SmoothScrolling.Load(dirs.Config);
+        FeedFirewall.Load(dirs.Config);
 #if KAERI_TESTING
         fixtureInvite = options.Scene == "store-invited" ? engine.TestingStoreInvite() : null;
 #endif
@@ -116,6 +118,9 @@ public sealed partial class MainWindow : Window
         };
         ctx = new Ctx { Session = session, Art = art, Window = this, Options = options, Updater = updater, Tv = tv };
         Ctx.Current = ctx;
+        session.Known.SendReadingWith(command => ctx.Send(command));
+        session.Known.Reader.BookResource = url => engine.BookResource(url);
+        StartReading();
         // Where sync stands and what is running, at the title bar's end.
         status = new ShellStatus(ctx, () => ShowSettings("accounts"), () => ShowSettings("devices"), ShowMessages);
         AppTitleBar.RightHeader = status;
@@ -253,7 +258,18 @@ public sealed partial class MainWindow : Window
         };
         Closed += (_, _) => Shutdown();
         // Hidden or minimised, the tracker pull rests and one pull runs on return; downloads and torrents go on.
-        VisibilityChanged += (_, e) => ctx.Send(new Command.SyncVisible(e.Visible));
+        // Minimised, the kept trailer pages close and an open novel's web view rests.
+        VisibilityChanged += (_, e) =>
+        {
+            ctx.Send(new Command.SyncVisible(e.Visible));
+            ReaderLayer.WindowHidden(!e.Visible);
+            if (!e.Visible)
+            {
+                TrailerHub.StopAll();
+                TrailerPool.Empty();
+            }
+        };
+        WatchMemory();
         Root.Loaded += (_, _) => FirstPage();
         Root.SizeChanged += (_, e) => FitTitleBar(e.NewSize.Width);
     }
@@ -386,6 +402,20 @@ public sealed partial class MainWindow : Window
                 "crash-saved" => new FfiScene.CrashSaved(),
                 "crash-held" => new FfiScene.CrashHeld(),
                 "profiles" => new FfiScene.Profiles(),
+                "reading-first-run" => new FfiScene.ReadingFirstRun(),
+                "reading-update-sheet" => new FfiScene.ReadingUpdateSheet(),
+                "reading-join-ask" => new FfiScene.ReadingJoinAsk(),
+                "reading-home" => new FfiScene.ReadingHome(),
+                "reading-series" => new FfiScene.ReadingSeries(),
+                "reader-manga-rtl" => new FfiScene.ReaderMangaRtl(),
+                "reader-strip" => new FfiScene.ReaderStrip(),
+                "reader-novel" => new FfiScene.ReaderNovel(),
+                "reading-downloads" => new FfiScene.ReadingDownloads(),
+                "reader-moved" => new FfiScene.ReaderMoved(),
+                "reading-dark" => new FfiScene.ReadingDark(),
+                "reading-demo" => new FfiScene.ReadingDemo(),
+                "reading-source-failed" => new FfiScene.ReadingSourceFailed(),
+                "reading-anilist-failed" => new FfiScene.ReadingAnilistFailed(),
                 _ => new FfiScene.Watching(),
             };
             return (FfiEngine.StartScene(scratch, host, scene, EngineSession.AppStart(signIn: false)), scratch);
@@ -474,12 +504,51 @@ public sealed partial class MainWindow : Window
                 OpenLink(opens);
             });
         var page = options.Page ?? "home";
-        if (options.Query is not null)
+#if KAERI_TESTING
+        // Shots: Library or Search on the Reading side, with both media on.
+        if (page is "library-reading" or "search-reading")
+        {
+            page = page[..page.IndexOf('-')];
+            if (page == "library")
+                LibraryReading = true;
+            else
+                SearchReading = true;
+        }
+#endif
+        if (options.Query is not null && PageFor("search") == typeof(ReadSearchPage))
+            OpenReadSearch(options.Query);
+        else if (options.Query is not null)
             ShowSearch(options.Query);
         else
             Navigate(page, options.Pane);
         if (options.Title is { } id)
             OpenTitle(id);
+#if KAERI_TESTING
+        // --show=series-group or series-group-picker: a source with several groups, its picker open for the second.
+        if (options.Show is "series-group" or "series-group-picker")
+        {
+            GroupsStage.Stage(ctx.Known.Reading);
+            SeriesPage.ShotGroupPicker = options.Show == "series-group-picker";
+        }
+        // After the first page, so the series or reader opens over it rather than under it.
+        if (options.Work is { } work)
+            ui.TryEnqueue(DispatcherQueuePriority.Low, () => OpenSeries(work));
+        if (options.Read is { } read)
+        {
+            var parts = read.Split(',', 2);
+            ui.TryEnqueue(DispatcherQueuePriority.Low, async () =>
+            {
+                await Task.Delay(400);
+                OpenReader(parts[0], parts.Length > 1 ? parts[1] : null);
+                // --show=reader-aa, reader-chapters, reader-scrub or reader-end, once pages are in.
+                if (options.Show is { } show && show.StartsWith("reader-", StringComparison.Ordinal))
+                {
+                    await Task.Delay(3000);
+                    ReaderLayer.Shot(show);
+                }
+            });
+        }
+#endif
         // --show=opened: Open link or file with the fixture's made-up magnet link, for a screenshot.
         if (options.Show == "opened")
             ui.TryEnqueue(DispatcherQueuePriority.Low, async () =>
@@ -691,6 +760,14 @@ public sealed partial class MainWindow : Window
                     ShowAddServer();
                 else if (welcome.Then == "pair")
                     Sync.SyncDialogs.PairShow(Sync.Origin.FirstLaunch);
+                else if (welcome.Then == "restore")
+                    Sync.SyncDialogs.Picker();
+                else if (welcome.Then == "book-folder")
+                    await CameInDesk.PickFolder(ctx);
+                else if (welcome.Then == "book-server")
+                    await new BookServerDialog(ctx, Root.XamlRoot).ShowAsync();
+                else if (welcome.Then == "read-demo")
+                    Navigate("read");
             });
     }
 
@@ -996,7 +1073,7 @@ public sealed partial class MainWindow : Window
 
     void Navigate(string tag, object? parameter = null)
     {
-        if (!Destinations.TryGetValue(tag, out var page))
+        if (PageFor(tag) is not { } page)
             return;
         if (ContentFrame.CurrentSourcePageType == page && parameter is null && tag != "search")
             return;
@@ -1156,6 +1233,33 @@ public sealed partial class MainWindow : Window
         timer.Start();
     }
 
+    /// <summary>
+    /// Memory runs short: the kept trailer pages close, as they are only there to start the next
+    /// hover sooner. Windows may not say so for an app outside a package, which then keeps them.
+    /// </summary>
+    void WatchMemory()
+    {
+        void Short() => DispatcherQueue.TryEnqueue(TrailerPool.Empty);
+        try
+        {
+            global::Windows.System.MemoryManager.AppMemoryUsageIncreased += (_, _) =>
+            {
+                if (global::Windows.System.MemoryManager.AppMemoryUsageLevel
+                    is global::Windows.System.AppMemoryUsageLevel.High or global::Windows.System.AppMemoryUsageLevel.OverLimit)
+                    Short();
+            };
+            global::Windows.System.MemoryManager.AppMemoryUsageLimitChanging += (_, e) =>
+            {
+                if (e.NewLimit < global::Windows.System.MemoryManager.AppMemoryUsage)
+                    Short();
+            };
+        }
+        catch (Exception)
+        {
+            // Not offered to this app.
+        }
+    }
+
     void RememberWhere()
     {
         var page = ContentFrame.CurrentSourcePageType;
@@ -1171,6 +1275,7 @@ public sealed partial class MainWindow : Window
 
     void OnFrameNavigated(object sender, NavigationEventArgs e)
     {
+        SearchPrompt();
 #if KAERI_TESTING
         // For Kaeri.Drive: when a navigation is done, and when the new page has been laid out.
         Probe.Mark($"navigated {e.SourcePageType.Name}");
@@ -1187,6 +1292,9 @@ public sealed partial class MainWindow : Window
         RememberWhere();
         if (framePage != e.Content)
             ctx.Left(framePage);
+        // Home left for another place, not a title opened from it: the kept trailer pages close.
+        if (framePage is HomePage && e.Content is not HomePage and not TitlePage)
+            TrailerPool.Empty();
         framePage = e.Content;
         HoverPreview.Close();
         AppTitleBar.IsBackButtonEnabled = ContentFrame.CanGoBack;
@@ -1195,7 +1303,7 @@ public sealed partial class MainWindow : Window
             Nav.SelectedItem = e.Parameter as string == "accounts" ? AccountItem : Nav.SettingsItem;
         else if (e.SourcePageType == typeof(FolderPage) || e.SourcePageType == typeof(ServerPage) || e.SourcePageType == typeof(LicensedPage))
             Nav.SelectedItem = Nav.MenuItems.OfType<NavigationViewItem>().FirstOrDefault(i => (string?)i.Tag == "providers");
-        else if (Destinations.FirstOrDefault(d => d.Value == e.SourcePageType).Key is { } tag)
+        else if (TagOf(e.SourcePageType) is { } tag)
             Nav.SelectedItem = Nav.MenuItems.OfType<NavigationViewItem>().FirstOrDefault(i => (string?)i.Tag == tag);
         else
             Nav.SelectedItem = null;
@@ -1274,7 +1382,9 @@ public sealed partial class MainWindow : Window
 
     void GoBack()
     {
-        if (Player.Showing)
+        if (ReaderLayer.Showing)
+            ReaderLayer.Close();
+        else if (Player.Showing)
             Player.Close();
         else if (ContentFrame.CanGoBack)
             // Back crossfades as the page came in.
@@ -1295,7 +1405,8 @@ public sealed partial class MainWindow : Window
         if (args.Reason != AutoSuggestionBoxTextChangeReason.UserInput)
             return;
         var text = sender.Text.Trim();
-        if (text.Length < 2)
+        // On reading, the box offers nothing: the words search reading as they are typed.
+        if (text.Length < 2 || PageFor("search") == typeof(ReadSearchPage))
         {
             sender.ItemsSource = null;
             return;
@@ -1344,6 +1455,16 @@ public sealed partial class MainWindow : Window
                 SearchPage.Want(f.Tag, f.Name);
                 ContentFrame.Navigate(typeof(SearchPage), null, new SuppressNavigationTransitionInfo());
             }
+        }
+        else if (PageFor("search") == typeof(ReadSearchPage))
+        {
+            // Reading's Search takes the words when Search is on reading: in place when it is up.
+            if (Player.Showing)
+                Player.Close();
+            if (ContentFrame.Content is ReadSearchPage reading)
+                reading.Take(args.QueryText);
+            else
+                ContentFrame.Navigate(typeof(ReadSearchPage), args.QueryText.Trim(), new SuppressNavigationTransitionInfo());
         }
         else
             ShowSearch(args.QueryText.Trim());
@@ -1591,6 +1712,8 @@ public sealed partial class MainWindow : Window
         Activated += (_, e) =>
         {
             inFront = e.WindowActivationState != WindowActivationState.Deactivated;
+            // A reader notice's time runs only while the window is in front.
+            ctx.Known.Reader.WindowActive(inFront);
             // Back in front: the keys go to the dialog that is up, not the page under it.
             if (inFront)
                 DispatcherQueue.TryEnqueue(DispatcherQueuePriority.Low, Dialogs.Refocus);
@@ -1885,11 +2008,15 @@ public sealed partial class MainWindow : Window
     void Keys()
     {
         // Ctrl+1 to Ctrl+9 in the sidebar's order, as Command+1 to 9 on the Mac.
-        string[] tags = ["home", "calendar", "seasonal", "search", "library", "downloads", "together", "providers", "stores"];
-        for (var i = 0; i < tags.Length; i++)
+        // The places shown change with what Kaeri is for, so the key looks the place up when pressed.
+        for (var i = 0; i < 9; i++)
         {
-            var tag = tags[i];
-            Key(VirtualKey.Number1 + i, VirtualKeyModifiers.Control, () => Go(tag));
+            var n = i;
+            Key(VirtualKey.Number1 + i, VirtualKeyModifiers.Control, () =>
+            {
+                if (Places().ElementAtOrDefault(n) is { Tag: string tag })
+                    Go(tag);
+            });
         }
         Key(VirtualKey.Left, VirtualKeyModifiers.Menu, GoBack, inPlayer: true);
         Key((VirtualKey)0xBC, VirtualKeyModifiers.Control, () => Navigate("settings"));
@@ -1919,7 +2046,7 @@ public sealed partial class MainWindow : Window
         var accelerator = new KeyboardAccelerator { Key = key, Modifiers = modifiers };
         accelerator.Invoked += (_, args) =>
         {
-            if (Player.Showing && !inPlayer)
+            if ((Player.Showing || ReaderLayer.Showing) && !inPlayer)
                 return;
             if (!typing && FocusManager.GetFocusedElement(Root.XamlRoot) is TextBox or AutoSuggestBox or PasswordBox)
                 return;
@@ -1937,7 +2064,15 @@ public sealed partial class MainWindow : Window
             page.ToggleFilters();
             return;
         }
-        SearchPage.FiltersOnArrival = true;
+        if (ContentFrame.Content is ReadSearchPage reading)
+        {
+            reading.ToggleFilters();
+            return;
+        }
+        if (PageFor("search") == typeof(ReadSearchPage))
+            ReadSearchPage.FiltersOnArrival = true;
+        else
+            SearchPage.FiltersOnArrival = true;
         var query = SearchBox.Text.Trim();
         Navigate("search", query.Length > 0 ? query : null);
     }

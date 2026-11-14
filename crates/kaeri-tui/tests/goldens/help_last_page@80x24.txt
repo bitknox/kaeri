@@ -3,6 +3,8 @@ Kaeri                                                  plugins ●  ·  anilist 
 ────────────────────────────────────────────────────────────────────────────────
 ▌ Keys                                                             Page 3 of 3
 ────────────────────────────────────────────────────────────────────────────────
+    Forward 5 seconds              →
+    Back 30 seconds                H
     Forward 30 seconds             L
     Next episode                   n
     Previous episode               N
@@ -14,8 +16,6 @@ Kaeri                                                  plugins ●  ·  anilist 
     Full screen                    F
     Leave player running           q
     Stop playback                  x
-
-
 
 
 
@@ -40,18 +40,18 @@ r03 c67-77 fg=text-dim bg=ground
 r03 c78-79 fg=rule bg=ground
 r04 c00-79 fg=rule bg=ground
 r05 c00-01 fg=rule bg=ground
-r05 c02-21 fg=text-dim bg=ground
-r05 c22-34 fg=rule bg=ground
+r05 c02-20 fg=text-dim bg=ground
+r05 c21-34 fg=rule bg=ground
 r05 c35-35 fg=text bg=ground
 r05 c36-79 fg=rule bg=ground
 r06 c00-01 fg=rule bg=ground
-r06 c02-15 fg=text-dim bg=ground
-r06 c16-34 fg=rule bg=ground
+r06 c02-18 fg=text-dim bg=ground
+r06 c19-34 fg=rule bg=ground
 r06 c35-35 fg=text bg=ground
 r06 c36-79 fg=rule bg=ground
 r07 c00-01 fg=rule bg=ground
-r07 c02-19 fg=text-dim bg=ground
-r07 c20-34 fg=rule bg=ground
+r07 c02-21 fg=text-dim bg=ground
+r07 c22-34 fg=rule bg=ground
 r07 c35-35 fg=text bg=ground
 r07 c36-79 fg=rule bg=ground
 r08 c00-01 fg=rule bg=ground
@@ -60,23 +60,23 @@ r08 c16-34 fg=rule bg=ground
 r08 c35-35 fg=text bg=ground
 r08 c36-79 fg=rule bg=ground
 r09 c00-01 fg=rule bg=ground
-r09 c02-09 fg=text-dim bg=ground
-r09 c10-34 fg=rule bg=ground
+r09 c02-19 fg=text-dim bg=ground
+r09 c20-34 fg=rule bg=ground
 r09 c35-35 fg=text bg=ground
 r09 c36-79 fg=rule bg=ground
 r10 c00-01 fg=rule bg=ground
-r10 c02-09 fg=text-dim bg=ground
-r10 c10-34 fg=rule bg=ground
+r10 c02-15 fg=text-dim bg=ground
+r10 c16-34 fg=rule bg=ground
 r10 c35-35 fg=text bg=ground
 r10 c36-79 fg=rule bg=ground
 r11 c00-01 fg=rule bg=ground
-r11 c02-14 fg=text-dim bg=ground
-r11 c15-34 fg=rule bg=ground
+r11 c02-09 fg=text-dim bg=ground
+r11 c10-34 fg=rule bg=ground
 r11 c35-35 fg=text bg=ground
 r11 c36-79 fg=rule bg=ground
 r12 c00-01 fg=rule bg=ground
-r12 c02-12 fg=text-dim bg=ground
-r12 c13-34 fg=rule bg=ground
+r12 c02-09 fg=text-dim bg=ground
+r12 c10-34 fg=rule bg=ground
 r12 c35-35 fg=text bg=ground
 r12 c36-79 fg=rule bg=ground
 r13 c00-01 fg=rule bg=ground
@@ -85,17 +85,25 @@ r13 c15-34 fg=rule bg=ground
 r13 c35-35 fg=text bg=ground
 r13 c36-79 fg=rule bg=ground
 r14 c00-01 fg=rule bg=ground
-r14 c02-23 fg=text-dim bg=ground
-r14 c24-34 fg=rule bg=ground
+r14 c02-12 fg=text-dim bg=ground
+r14 c13-34 fg=rule bg=ground
 r14 c35-35 fg=text bg=ground
 r14 c36-79 fg=rule bg=ground
 r15 c00-01 fg=rule bg=ground
-r15 c02-16 fg=text-dim bg=ground
-r15 c17-34 fg=rule bg=ground
+r15 c02-14 fg=text-dim bg=ground
+r15 c15-34 fg=rule bg=ground
 r15 c35-35 fg=text bg=ground
 r15 c36-79 fg=rule bg=ground
-r16 c00-79 fg=rule bg=ground
-r17 c00-79 fg=rule bg=ground
+r16 c00-01 fg=rule bg=ground
+r16 c02-23 fg=text-dim bg=ground
+r16 c24-34 fg=rule bg=ground
+r16 c35-35 fg=text bg=ground
+r16 c36-79 fg=rule bg=ground
+r17 c00-01 fg=rule bg=ground
+r17 c02-16 fg=text-dim bg=ground
+r17 c17-34 fg=rule bg=ground
+r17 c35-35 fg=text bg=ground
+r17 c36-79 fg=rule bg=ground
 r18 c00-79 fg=rule bg=ground
 r19 c00-79 fg=rule bg=ground
 r20 c00-79 fg=rule bg=ground

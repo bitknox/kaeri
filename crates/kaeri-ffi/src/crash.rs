@@ -6,7 +6,9 @@
 use kaeri_engine::crash;
 use kaeri_model::crash::{CrashRecord, CrashSummary};
 use kaeri_model::qr::{QrMatrix, qr_half_blocks as half_blocks, qr_matrix as matrix};
-use kaeri_model::sources::{DemoInfo, demo_info as info};
+use kaeri_model::sources::{
+    DemoInfo, ReadingDemoInfo, demo_info as info, reading_demo_info as reading_info,
+};
 use kaeri_model::subtitle_style::{
     MpvOption, SubtitleStyle, SystemCaptionStyle, mpv_subtitle_options as mpv_options,
     terminal_subtitle_options as terminal_options,
@@ -29,6 +31,13 @@ pub fn qr_half_blocks(text: String) -> Vec<String> {
 #[uniffi::export]
 pub fn demo_info() -> DemoInfo {
     info()
+}
+
+/// The reading demo's two works, each with its credit and licence, for About the demo and the
+/// reader's credit capsule.
+#[uniffi::export]
+pub fn reading_demo_info() -> ReadingDemoInfo {
+    reading_info()
 }
 
 /// The player options that draw subtitles in `style`. `system` is the platform's caption style

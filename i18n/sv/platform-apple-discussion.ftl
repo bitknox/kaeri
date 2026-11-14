@@ -17,7 +17,7 @@ discussion-apple-player-note = { $count ->
    *[other] { $count } kommentarer · pausar
  }
 settings-apple-discussions = Avsnittsdiskussioner
-settings-apple-discussions-note = Läser kommentarerna i AniLists forumtråd för avsnitt du har sett.
+settings-apple-discussions-note = Kommentarerna kommer från AniLists forumtråd när du har sett avsnittet.
 settings-apple-comment-images = Läs in bilder i kommentarer
 settings-apple-comment-images-note = Varje bild läses in från webbplatsen som är värd för den, och den ser din IP-adress.
 discussion-apple-key-hint = ⌘Return skickar. Return lägger till en rad.

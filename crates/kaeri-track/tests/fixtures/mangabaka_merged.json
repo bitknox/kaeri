@@ -1,0 +1,1 @@
+{"status":200,"data":{"source_response":null,"series":[{"id":9002,"state":"merged","merged_with":9001,"canonical_url":"https://mangabaka.example/manga/9002/Lantern-Road-Old","title":"Lantern Road Old","source":{"anilist":{"id":8,"rating":null,"rating_normalized":null},"kitsu":{"id":1},"manga_updates":{"id":"abc123x"}}}]}}

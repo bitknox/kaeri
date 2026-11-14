@@ -12,7 +12,7 @@ sync-road-title = Comment vos { -device-pl } doivent-ils partager ?
 sync-road-nearby = Avec un { -device } à proximité
 sync-road-nearby-line = Appairez un autre { -device } sur le même Wi-Fi. Rien n’est stocké ailleurs.
 sync-road-cloud = Via un dossier cloud
-sync-road-cloud-line = Un espace cloud que vous utilisez déjà, ou votre propre serveur. Fonctionne même quand vos { -device-pl } sont éloignés, et garde une sauvegarde.
+sync-road-cloud-line = Un espace cloud que vous utilisez déjà, ou votre propre serveur. Il fonctionne même quand vos { -device-pl } sont éloignés, et garde une sauvegarde.
 sync-road-later = Vous pourrez ajouter l’autre voie plus tard. La plupart des gens utilisent les deux.
 devices-yours = Vos { -device-pl }
 devices-only-this = Seulement cet { -device }
@@ -32,7 +32,7 @@ sync-turn-off = Désactiver la synchronisation sur cet { $kind }
 sync-turn-off-alert = Désactiver la synchronisation sur { $device } ?
 sync-turn-off-alert-line = Cet { $kind } arrête de partager avec vos autres { -device-pl }. Tout ce qu’il a reste ici.
 cloud-group = Dossier cloud
-cloud-foot = Se remplit quand vos { -device-pl } sont éloignés, et garde une sauvegarde scellée. Seuls vos { -device-pl } peuvent la lire.
+cloud-foot = Le dossier garde vos { -device-pl } à jour quand ils sont éloignés, et conserve une sauvegarde scellée. Seuls vos { -device-pl } peuvent la lire.
 cloud-add = Ajouter un dossier cloud
 cloud-pick-title = Choisir un dossier cloud
 cloud-google-line = Un dossier { -app-name } caché dans votre Drive
@@ -149,7 +149,7 @@ profiles-delete-alert = Supprimer le profil de { $name } ?
 profiles-delete-alert-line = L’historique et les connexions de { $name } sur cet { -device } sont supprimés. Les { -device-pl } qui se synchronisent avec { $name } gardent les leurs.
 profiles-picker = Qui regarde ?
 profiles-ask-at-launch = Demander qui regarde au lancement
-profiles-ask-foot = Désactivé par défaut. Pour un iPad que le foyer partage. La ligne du compte change de profil à tout moment.
+profiles-ask-foot = Désactivé par défaut. Activez-le sur un iPad que tout le foyer partage. Vous pouvez changer de profil depuis la ligne du compte à tout moment.
 profiles-switch = Changer de profil
 profiles-manage = Gérer les profils
 first-setup-other = Configurer depuis un autre { -device }
@@ -161,7 +161,7 @@ first-join-store-line = { $device } fait de cet { $kind } sa propre invitation
 cloud-folder = Un dossier sur cet { $kind }
 cloud-app-password-note = Créez-en un dans Nextcloud, sous Réglages, Sécurité. Il est gardé sur cet { $kind }.
 devices-tvs-for-play = { $count ->
-    [one] Une TV pour Lire sur la TV
+    [one] { $count } TV pour Lire sur la TV
     [many] { $count } TV pour Lire sur la TV
    *[other] { $count } TV pour Lire sur la TV
  }

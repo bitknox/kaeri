@@ -7,7 +7,7 @@ use kaeri_store_core::{
     blobs::{Blobs, SqlBlobs},
     crypto,
     db::Database,
-    inspect::fake::{FakeInspector, plugin},
+    inspect::fake::{FakeInspector, book_plugin, plugin},
     invite::Invite,
     protocol::{EndReason, InviteFacts, NO_END_DATE, Role},
     sql,
@@ -381,6 +381,54 @@ async fn plugins_with_unsafe_or_reserved_ids_are_refused() {
     }
     let result = store.publish(b"not a plugin", Some(&FakeInspector), NOW).await;
     assert!(matches!(result, Err(StoreError::InvalidPlugin(_))));
+}
+
+#[tokio::test]
+async fn a_book_source_is_listed_with_its_kind_and_media() {
+    use crate::client::verify_index;
+    let (_dir, store) = open().await;
+    assert!(store.info().await.books, "this store says it takes book sources");
+    store.publish(&plugin("shows", "1.0.0", &[]), Some(&FakeInspector), NOW).await.unwrap();
+    let wasm = book_plugin("lanterns", "1.0.0", &["books.example"], &["manga", "novel"]);
+    let entry = store.publish(&wasm, Some(&FakeInspector), NOW).await.unwrap();
+    assert!(entry.is_books());
+    assert_eq!(entry.media, ["manga", "novel"]);
+    assert!(entry.translations.is_empty());
+
+    let index =
+        verify_index(&store.signed_index().await.unwrap(), &store.public_key(), 0).unwrap();
+    let kinds: Vec<_> = index.plugins.iter().map(|p| (p.id.as_str(), p.kind())).collect();
+    assert_eq!(kinds, [("lanterns", "books"), ("shows", "shows")]);
+    assert_eq!(index.plugin("lanterns"), Some(&entry));
+    assert_eq!(store.plugin("lanterns").await.unwrap(), Some(entry));
+}
+
+#[tokio::test]
+async fn a_plugin_keeps_its_kind_from_version_to_version() {
+    let (_dir, store) = open().await;
+    store.publish(&plugin("example", "1.0.0", &[]), Some(&FakeInspector), NOW).await.unwrap();
+    let books = book_plugin("example", "1.1.0", &[], &["manga"]);
+    let refused = store.publish(&books, Some(&FakeInspector), NOW).await.unwrap_err();
+    assert!(matches!(refused, StoreError::InvalidPlugin(_)), "{refused:?}");
+    assert!(refused.to_string().contains("another id"), "{refused}");
+    assert_eq!(store.plugin("example").await.unwrap().unwrap().version, "1.0.0");
+}
+
+#[tokio::test]
+async fn a_kind_this_store_does_not_know_is_refused() {
+    let (_dir, store) = open().await;
+    let wasm = serde_json::json!({
+        "id": "future", "name": "Future", "version": "1.0.0", "hosts": [], "kind": "podcasts",
+    })
+    .to_string()
+    .into_bytes();
+    let refused = store.publish(&wasm, Some(&FakeInspector), NOW).await.unwrap_err();
+    assert!(refused.to_string().contains("podcasts"), "{refused}");
+    for id in ["folders", "servers"] {
+        let wasm = book_plugin(id, "1.0.0", &[], &["manga"]);
+        let result = store.publish(&wasm, Some(&FakeInspector), NOW).await;
+        assert!(matches!(result, Err(StoreError::InvalidPlugin(_))), "{id}");
+    }
 }
 
 #[tokio::test]

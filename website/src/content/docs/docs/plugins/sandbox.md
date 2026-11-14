@@ -1,16 +1,16 @@
 ---
 title: The plugin sandbox
-description: Plugins get no sockets and reach only the hosts they declare, through the host’s fetch and within fixed limits.
+description: Plugins get no sockets and reach only the hosts they declare, through the host's fetch and within fixed limits.
 ---
 
-A plugin has no sockets. It asks the host to make each request, through `fetch`.
+A plugin is code someone else wrote, so it runs with as little as Kaeri can give it. It has no
+sockets. It asks the host to make each request, through `fetch`.
 
-The host makes every request, so a plugin carries no networking code of its own: it says what to
-request, and the host makes the request. Requests go only to the
-hosts the plugin declares, because the host checks the allowlist before each one. A plugin can
-still send what it is given, such as your search terms and its own settings, to those hosts, so
-`kaeri --plugins` and a store's page show them before you rely on a plugin.
-Regex matching and per-plugin settings are lent for the same reason.
+A plugin carries no networking code of its own: it says what to request, and the host makes the
+request. Requests go only to the hosts the plugin declares, because the host checks the allowlist
+before each one. A plugin can still send what it is given, such as your search terms and its own
+settings, to those hosts, so `kaeri --plugins` and a store's page show them before you rely on a
+plugin. Regex matching and per-plugin settings come from the host too.
 
 ## The limits
 

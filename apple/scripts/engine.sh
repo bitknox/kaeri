@@ -275,7 +275,7 @@ for slice in "${slices[@]}"; do
   if [[ "$slice" == macos ]]; then
     # The library and the bindings generator in one build, so the generator reads the very
     # library the slice ships, and turning `cli` on rebuilds nothing beneath it.
-    cargo_clean "" build -p kaeri-ffi --no-default-features --features "$(feature_list cli,presence)" \
+    cargo_clean "" build -p kaeri-ffi --no-default-features --features "$(feature_list cli,presence,opds-feed)" \
       --lib --bin uniffi-bindgen --target "$target" --profile "$profile"
     # Library mode: the interface is read from the built library, here the dynamic one, which
     # carries the same interface as the static one at a fraction of its size.

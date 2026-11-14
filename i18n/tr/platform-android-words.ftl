@@ -19,7 +19,7 @@ settings-coming-up-switched-off = { $count ->
     [one] { $names } kendi ayarında kapalı.
    *[other] { $names } kendi ayarlarında kapalı.
  }
-settings-coming-up-opens = Bir gösteri ayarlarını açar.
+settings-coming-up-opens = Ayarlarını açmak için bir diziye dokunun.
 torrents-proxy-as = { $user } olarak
 title-facts-aired = Yayınlandı { $dates }
 title-facts-airing = { $date } tarihinden beri yayında
@@ -137,7 +137,7 @@ settings-titles-note-english-missing = { $title }, AniList'te İngilizce adı ol
 settings-titles-note-english = AniList'te listelendiği gibi İngilizce adlar. Yoksa romaji.
 settings-titles-note-romaji = AniList'te listelendiği gibi, Latin harflerle yazılmış Japonca adlar.
 settings-stores-with-updates = { $stores } · { $updates }
-settings-seeding-best-effort = Bu { -device }da en iyi çaba: paylaşım yalnızca { -app-name } açıkken çalışır.
+settings-seeding-best-effort = Bu { -device } yalnızca { -app-name } açıkken paylaşım yapar.
 settings-downloads-count = { $count ->
     [one] Bir bölüm
    *[other] { $count } bölüm
@@ -154,7 +154,7 @@ settings-typefaces-value = Roboto Flex ve Zen Kaku Gothic New, SIL Open Font Lic
 settings-libraries-value = JNA ve AndroidX, Apache License 2.0 altında
 settings-report-bug-value = GitHub'ı tarayıcınızda açar
 downloads-storage-share-description = İndirmeler { $size } yer kaplıyor
-settings-aside-notifications = Takip ettiğiniz bir gösterinin yeni bölümü çıktığında tek bildirim: gösterinin adı ve bölüm numarası, bölümün adı değil. Bir gösteri bunu kendi ayarlarından kapatabilir.
+settings-aside-notifications = Takip ettiğiniz bir dizinin bölümü çıktığında tek bildirim: dizinin adı ve bölüm numarası, bölümün adı hiçbir zaman yer almaz. Bir dizinin bildirimlerini kendi ayarlarından kapatabilirsiniz.
 settings-aside-downloads = İndirmeler, bu { -device }da { -app-name }'in kendi alanında durur ve başka uygulamalar okuyamaz. Uygulamayı kaldırmak onları da siler.
 settings-aside-sources = { -source-cap-pl } sırayla, yukarıdan aşağıya denenir. Bir gösteri, başlık sayfasından kendine özgü bir { -source } seçebilir.
 settings-upscaling-description = Aynı kare. Soldaki yarısı özgün 480p, sağdaki yarısı { $mode } ile.

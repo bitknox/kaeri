@@ -47,3 +47,6 @@ braces = Use { "{" }name{ "}" } here
 # Order changes per language.
 two-args = { $who } watched { $what }
 
+# A number that names something beside a count.
+episode-seen = Episode { $episode }, seen { $count } times
+

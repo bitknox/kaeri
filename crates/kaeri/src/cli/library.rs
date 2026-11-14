@@ -102,7 +102,7 @@ pub fn random_cli(store: &Store, json: bool) -> Result<()> {
     } else {
         let name = title.unwrap_or_else(|| format!("anilist {}", id.get()));
         match progress {
-            Some(p) => println!("{name} — next up: episode {}", p.episodes_done + 1),
+            Some(p) => println!("{name} · next up: episode {}", p.episodes_done + 1),
             None => println!("{name}"),
         }
     }

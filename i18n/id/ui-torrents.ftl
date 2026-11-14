@@ -43,6 +43,7 @@ opened-open = Buka tautan atau berkas
 opened-paste-title = Buka tautan magnet atau berkas torrent
 opened-paste-placeholder = Tautan magnet atau info hash
 opened-choose-file = Pilih berkas torrent
+opened-unreadable = { -app-name } tidak bisa membaca tautan atau berkas itu.
 opened-confirm = Apakah ini { $title }, episode { $episode }?
 opened-confirm-title = Apakah ini { $title }? Pilih episodenya.
 opened-no-guess = { -app-name } tidak bisa mengenali ini. Pilih judulnya, atau putar tanpa pencatatan.

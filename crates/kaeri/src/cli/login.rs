@@ -46,8 +46,8 @@ pub fn print_login_url(config: &Config, tracker: &str) -> Result<()> {
 fn print_setup_help(auth: &kaeri_core::config::AniListAuthConfig) {
     println!("AniList credentials are not configured.");
     println!();
-    println!("AniList supports only the authorization code grant — the implicit grant returns");
-    println!("`unsupported_grant_type` and PKCE is ignored — so a client secret is required.");
+    println!("AniList supports only the authorization code grant. The implicit grant returns");
+    println!("`unsupported_grant_type` and PKCE is ignored, so a client secret is required.");
     println!("Kaeri ships no credentials of its own, because a secret inside an");
     println!("open-source binary is not a secret. Register your own client instead:");
     println!();
@@ -152,7 +152,7 @@ pub async fn login(
                 println!("Opening your browser to authorise Kaeri…");
                 println!("  {url}");
                 if let Err(e) = open::that_detached(&url) {
-                    println!("(could not open it automatically: {e} — open the URL above)");
+                    println!("(could not open it automatically: {e}; open the URL above)");
                 }
                 println!();
                 println!("Waiting for the redirect on 127.0.0.1:{} …", auth.redirect_port);
@@ -188,7 +188,7 @@ pub async fn login(
     let store = tracking::token_store(config, paths);
     lift_reauth_hold(tracker);
     let storage = store.set(tracker, &token)?;
-    println!("● signed in — token stored in the {}", storage.describe());
+    println!("● signed in, token stored in the {}", storage.describe());
     if let Some(exp) = kaeri_track::auth::token_expiry(&token) {
         // Read out of the token rather than assumed, so "sign in again around then" is a fact.
         let days = (exp - kaeri_store::now()) / 86_400;
@@ -247,7 +247,7 @@ async fn login_device(
     println!();
     println!("waiting for approval (expires in {}s)…", code.expires_in);
     if open::that_detached(&code.verification_url).is_err() {
-        println!("(could not open a browser for you — the URL above is the whole of it)");
+        println!("(could not open a browser; open the URL above, it is all you need)");
     }
     // Flushed explicitly, because this is the one place in the app where *unflushed output is a
     // broken feature*. Rust block-buffers stdout when it is not a terminal, so piping this command
@@ -269,7 +269,7 @@ async fn login_device(
     let storage = tokens
         .set_pair(tracker, &pair.access, pair.refresh.as_deref(), pair.expires_at)
         .with_context(|| format!("storing the {tracker} token"))?;
-    println!("signed in to {tracker} — token in the {}", storage.describe());
+    println!("signed in to {tracker}, token in the {}", storage.describe());
     match (&pair.refresh, pair.expires_at) {
         // Simkl's OAuth 2.0 tokens last a week, and its tracker renews them before then.
         (Some(_), Some(_)) if tracker == "simkl" => {
@@ -325,7 +325,7 @@ async fn login_mal(config: &Config, paths: &Paths, http: &HttpClient) -> Result<
     println!("Opening your browser to authorise Kaeri on MyAnimeList…");
     println!("  {url}");
     if let Err(e) = open::that_detached(&url) {
-        println!("(could not open it automatically: {e} — open the URL above)");
+        println!("(could not open it automatically: {e}; open the URL above)");
     }
     println!();
     println!("Waiting for the redirect on 127.0.0.1:{} …", auth.redirect_port);
@@ -346,7 +346,7 @@ async fn login_mal(config: &Config, paths: &Paths, http: &HttpClient) -> Result<
     lift_reauth_hold("mal");
     let storage =
         store.set_pair("mal", &pair.access, pair.refresh.as_deref(), pair.expires_at)?;
-    println!("● signed in to MyAnimeList — token stored in the {}", storage.describe());
+    println!("● signed in to MyAnimeList, token stored in the {}", storage.describe());
     if let Some(expires_at) = pair.expires_at {
         let days = (expires_at - kaeri_store::now()) / 86_400;
         println!("  valid for about {days} days, and renewed automatically before it lapses");
@@ -368,7 +368,7 @@ async fn login_mal(config: &Config, paths: &Paths, http: &HttpClient) -> Result<
 /// grant bare. The password's only journey is stdin → the token exchange — it is never
 /// written anywhere, and what lands in the keychain is the usual access/refresh pair.
 async fn login_kitsu(config: &Config, paths: &Paths, http: &HttpClient) -> Result<()> {
-    println!("Kitsu signs in with your account credentials — no app registration exists.");
+    println!("Kitsu signs in with your username and password. There is no app to register.");
     println!("The password is exchanged for a token and dropped; only the token is stored.");
     println!();
     let username = read_line("email or username: ")?;
@@ -395,7 +395,7 @@ async fn login_kitsu(config: &Config, paths: &Paths, http: &HttpClient) -> Resul
     lift_reauth_hold("kitsu");
     let storage =
         store.set_pair("kitsu", &pair.access, pair.refresh.as_deref(), pair.expires_at)?;
-    println!("● signed in to Kitsu — token stored in the {}", storage.describe());
+    println!("● signed in to Kitsu, token stored in the {}", storage.describe());
     if let Some(expires_at) = pair.expires_at {
         let days = (expires_at - kaeri_store::now()) / 86_400;
         println!("  valid for about {days} days, and renewed automatically before it lapses");
@@ -472,7 +472,7 @@ pub fn migrate_token(config: &Config, paths: &Paths, tracker: &str) -> Result<()
             Ok(())
         }
         Err(kaeri_track::secret::SecretError::Missing(_)) => {
-            println!("No {tracker} token found in the keychain — nothing to move.");
+            println!("No {tracker} token in the keychain, so there is nothing to move.");
             println!("Sign in with: kaeri --login");
             Ok(())
         }

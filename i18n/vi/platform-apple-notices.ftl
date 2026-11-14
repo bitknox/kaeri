@@ -6,5 +6,5 @@ notice-hidden-preview = Tập mới
 notice-summary = %u tập mới khác
 notice-dismiss = Bỏ qua
 accounts-code-expired-detail = Mã này đã hết hạn. Lấy mã mới để đăng nhập vào { $tracker }.
-list-refresh-failed = Không làm mới được. Đang hiện những gì đã tải.
+list-refresh-failed = Không làm mới được. Đang hiện những gì đã tải lần trước.
 sign-in-failed = Không đăng nhập được vào { $tracker }. Thử lại.

@@ -22,7 +22,7 @@ sources-status-working = Bereit
 sources-version-ready = Version { $version } ist bereit
 sources-use-this = Diese { -source } verwenden
 sources-use-name = { $name } an
-sources-remove-detail = Es wird nicht mehr für Folgen ausprobiert. Du kannst es über seinen { -plugin-store } erneut installieren.
+sources-remove-detail = { -app-name } nutzt es nicht mehr für Folgen. Du kannst es über seinen { -plugin-store } wieder installieren.
 stores-updates-count = { $count ->
     [one] Ein Update
    *[other] { $count } Updates

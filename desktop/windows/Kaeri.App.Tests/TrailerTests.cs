@@ -187,6 +187,22 @@ public class TrailerTests
     }
 
     [Fact]
+    public void EmptyingTheShelfLetsEveryPageGoAndWarmsAgain()
+    {
+        var shelf = new TrailerShelf<Page>();
+        Assert.True(shelf.Warm());
+        var (a, b) = (new Page(EmbedStyle.Banner), new Page(EmbedStyle.Full));
+        shelf.Give(a);
+        shelf.Give(b);
+        var drop = new List<Page>();
+        shelf.Empty(drop);
+        Assert.Equal([a, b], drop);
+        Assert.Empty(shelf.Idle);
+        Assert.False(shelf.Warmed);
+        Assert.True(shelf.Warm());
+    }
+
+    [Fact]
     public void ThePagesOfAnotherSubtitleLanguageOrBrokenOnesAreLetGo()
     {
         var shelf = new TrailerShelf<Page>();

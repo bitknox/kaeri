@@ -14,6 +14,7 @@ player-start-place = { -source } { $place } из { $total }
 player-start-pinned = Ваш выбор для этого шоу
 player-start-miss-no-match = У { $name } нет этого шоу
 player-start-miss-no-episode = У { $name } нет серии { $episode }
+player-start-pin-missed = У { $name } пока нет серии { $episode }. Воспроизведение из следующего { -source }.
 player-start-miss-failed = { $name } не ответил
 player-start-miss-timed-out = { $name } отвечал слишком долго
 player-start-miss-skipped = Вы пропустили { $name }
@@ -138,7 +139,7 @@ player-resumed-at = Продолжено с { $clock }
 player-start-over = Начать сначала
 player-still-watching = Вы ещё смотрите?
 player-still-watching-detail = { $count ->
-    [one] Пауза после одного эпизода подряд.
+    [one] Пауза после { $count } эпизода подряд.
     [few] Пауза после { $count } эпизода подряд.
     [many] Пауза после { $count } эпизодов подряд.
    *[other] Пауза после { $count } эпизода подряд.
@@ -186,8 +187,8 @@ player-stats-copy-failed = Не удалось скопировать стати
 player-load-subtitle-file = Загрузить файл субтитров…
 player-load-audio-file = Загрузить аудиофайл…
 player-file-picker-failed = Не удалось открыть выбор файла. Попробуйте ещё раз.
-player-subtitle-file-failed = Не удалось загрузить этот файл субтитров. Проверьте, что это файл субтитров.
-player-audio-file-failed = Не удалось загрузить этот аудиофайл. Проверьте, что это аудиофайл.
+player-subtitle-file-failed = Не удалось загрузить этот файл как субтитры. Выберите файл субтитров, например .srt или .ass.
+player-audio-file-failed = Не удалось загрузить этот файл как звук. Выберите аудиофайл, например .mka или .flac.
 player-track-unnamed = Дорожка без названия
 player-audio-track-n = Аудио { $id }
 player-subtitle-track-n = Субтитры { $id }

@@ -13,7 +13,7 @@ settings-advanced-none = Keine zusätzlichen Optionen. Der Player läuft mit den
 settings-aside-check-title = Proxy-Prüfung
 settings-aside-sources-apple = { -source-cap-pl } werden der Reihe nach von oben nach unten versucht. Eine Serie kann eine eigene { -source } behalten, die auf ihrer Titelseite gewählt wird.
 settings-aside-advanced = Eine Option hier kann eine Einstellung bei der Wiedergabe aufheben, etwa Hochskalierung oder Nachtmodus. Die meisten brauchen diesen Bereich nie.
-settings-quality-detail = Höher nimmt die beste Version, die eine { -source } anbietet, und braucht mehr Speicher.
+settings-quality-detail = Höher wählt die beste Version, die eine { -source } hat. Sie braucht mehr Speicher.
 settings-merge-subtitles-detail = Untertitel bleiben bei der Episode, wohin die Datei auch verschoben wird.
 settings-keep-seeding-detail-mac = Ein Download, der weiter seedet, bleibt im Cache von { -app-name } und nicht im Downloadordner.
 settings-keep-seeding-detail = Ein Download, der weiter seedet, bleibt im Cache von { -app-name }.
@@ -27,6 +27,10 @@ settings-delete-watched-title = { $count ->
 settings-delete-watched-detail = Die Dateien werden von diesem { -device } gelöscht. Noch nicht gesehene Folgen bleiben erhalten.
 settings-folder-default = Im Torrent-Cache gespeichert
 settings-storage-unwatched = Noch nicht gesehen
+settings-storage-unread = Noch nicht gelesen
+settings-storage-read = Gelesen
+settings-storage-unseen-both = Noch nicht geschaut oder gelesen
+settings-storage-seen-both = Geschaut oder gelesen
 settings-storage-used = { $size } für Downloads.
 settings-storage-used-free = { $size } für Downloads. { $free } frei auf diesem { -device }.
 settings-source-count = { $count ->
@@ -34,6 +38,7 @@ settings-source-count = { $count ->
    *[other] { $count } { -source-pl }
  }
 settings-accounts-sync-note = Fortschritt und Änderungen an Listen werden mit { $tracker } abgeglichen. { -library-cap } und „Meine Liste“ im Kalender zeigen deine { $tracker }-Listen.
+settings-accounts-sync-note-read = Fortschritt und Listenänderungen werden mit { $tracker } abgeglichen. In der { -library-cap } siehst du deine Listen von { $tracker }.
 settings-conflicts = { $count ->
     [one] Ein Titel weicht von { $tracker } ab
    *[other] { $count } Titel weichen von { $tracker } ab
@@ -47,7 +52,7 @@ settings-synced-just-now = Gerade eben abgeglichen
 settings-synced-ago = Abgeglichen { $ago }
 settings-privacy-note = Was { -app-name } sendet und was auf diesem { -device } bleibt
 settings-read-online = Online lesen
-settings-presence-note = Rich Presence zeigt das Cover, einen Fortschrittsbalken und einen Link zur Serie bei { $tracker }. Discord lädt das Cover selbst von { $tracker }. Dafür muss der Titel angezeigt werden.
+settings-presence-note = Rich Presence zeigt das Cover, einen Fortschrittsbalken und einen Link zur Serie bei { $tracker }. Das funktioniert nur, wenn der Titel angezeigt wird. Discord lädt das Cover selbst von { $tracker }.
 settings-presence-cover = Cover
 settings-presence-button = Bei { $tracker } ansehen
 settings-presence-nothing = Schaut gerade Anime
@@ -71,7 +76,7 @@ settings-when-tomorrow = Morgen { $time }
 settings-when-day = { $day } { $time }
 settings-week-row-label = { $title }, Folge { $episode }, { $when }
 settings-week-row-hint = Öffnet die Einstellungen dieser Serie
-settings-notify-explain-on = Eine Benachrichtigung, wenn eine Folge einer Serie aus deiner Liste „Wird geschaut“ erscheint, zu der Zeit, die { $tracker } angibt. Die eigene Einstellung einer Serie hat Vorrang.
+settings-notify-explain-on = Du bekommst eine Benachrichtigung, wenn eine Folge einer Serie aus deiner Liste „Wird geschaut“ erscheint, zu der Zeit, die { $tracker } angibt. Die eigene Einstellung einer Serie hat Vorrang.
 settings-notify-explain-off = Aus. Nur Serien, die in ihren eigenen Einstellungen eingeschaltet sind, benachrichtigen.
 settings-preview-show = Eine Serie, die du schaust
 settings-preview-words = Folge 9 ist da.

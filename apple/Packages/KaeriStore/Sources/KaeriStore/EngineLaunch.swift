@@ -101,7 +101,8 @@ public struct EngineLaunch: Sendable {
     )
 
     /// What the engine is told of the app. The sign-ins redirect to the app's own scheme,
-    /// `kaeri://auth/<tracker>`, so the redirect fields stay unset.
+    /// `kaeri://auth/<tracker>`, so the redirect fields stay unset. The app reads as well as
+    /// watches; a Fixtures scene says for itself whether reading is in it.
     public var record: FfiStart {
         FfiStart(
             theme: theme,
@@ -112,7 +113,8 @@ public struct EngineLaunch: Sendable {
             traktClientId: traktClientID,
             secrets: secrets,
             profile: profile,
-            audioTap: true
+            audioTap: true,
+            reading: engine == .app
         )
     }
 

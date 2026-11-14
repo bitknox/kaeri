@@ -50,6 +50,11 @@ import Foundation
 ///                                                     Reduce Motion on (its own moves only);
 ///                                                     last, as AppKit would otherwise read the
 ///                                                     path after it as a file to open
+///     swift run KaeriDev --scene readingseries -KaeriWork a:900301 --snapshot shot.png \
+///         --frames 0,33,66 --scroll-path 0:0,1200:300,2400:0
+///                                                     the page in the middle of the window scrolled
+///                                                     through these offsets (ms:points, eased
+///                                                     between), shot as it moves
 ///     swift run KaeriDev --home <dir>             keep the files in <dir> instead
 ///     swift run KaeriDev --real                   the app's own engine, real sources and
 ///                                                     AniList, in a new temporary home
@@ -77,6 +82,9 @@ struct Options {
     /// The milliseconds after the launch's motion demo (`-KaeriMotion`) to snapshot at, each
     /// to the snapshot's name with `-<ms>` before its extension.
     var frames: [Int] = []
+    /// Where the page's scroll view is at each time, in milliseconds and points from its top,
+    /// moved there frame by frame between them while `frames` are taken.
+    var scrollPath: [(ms: Int, y: Double)] = []
     /// Where to click before the snapshot, in points from the window's top left, to open a menu
     /// the snapshot then shows over the window.
     var openMenu: CGPoint?
@@ -107,6 +115,7 @@ struct Options {
                             [--media <file>] [--full-screen <times>] [--art-trouble <fails>[,<ms>]]
                             [--art-cache <MB>] [--episodes-delay <ms>] [--search-delay <ms>]
                             [--detail-delay <ms>] [--list-delay <ms>] [--visit <id>,…] [--open-menu <x>,<y>]
+                            [--frames <ms>,… [--scroll-path <ms>:<points>,…]]
                             [--reduce-motion]
         the player's states: \(PlayerShot.allCases.map(\.rawValue).joined(separator: ", "))
         """
@@ -157,6 +166,14 @@ struct Options {
                 let list = try value(flag)
                 frames = list.split(separator: ",").compactMap { Int($0) }
                 guard !frames.isEmpty else { throw Problem.bad(flag, list) }
+            case "--scroll-path":
+                let spec = try value(flag)
+                scrollPath = spec.split(separator: ",").compactMap { stop in
+                    let parts = stop.split(separator: ":")
+                    guard parts.count == 2, let ms = Int(parts[0]), let y = Double(parts[1]) else { return nil }
+                    return (ms, y)
+                }
+                guard scrollPath.count >= 2 else { throw Problem.bad(flag, spec) }
             case "--player-shot":
                 let name = try value(flag)
                 guard let shot = PlayerShot(rawValue: name) else { throw Problem.bad(flag, name) }

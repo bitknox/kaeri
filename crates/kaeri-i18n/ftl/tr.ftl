@@ -28,7 +28,7 @@ notice-cast-refused = { $name } bu yayını oynatmanın bütün yollarını dene
 notice-cast-taken-over = Başka bir cihaz { $name } üzerinde bir şey başlattı, bu yüzden yayınlama durdu.
 
 # This device isn't on the TV's network, or reaches it through a VPN. The name is the TV's own.
-notice-cast-not-same-network = Bu cihaz, { $name } ile aynı ağda değil ya da VPN üzerinden bağlanıyor. Yayınlamak için ikisinin de aynı ağda olması gerekir.
+notice-cast-not-same-network = Bu cihaz, { $name } ile aynı ağda değil ya da ona VPN üzerinden ulaşıyor. Yayınlamak için ikisini de aynı ağa bağlayın.
 
 # The TV stopped answering mid-cast. The name is the TV's own.
 notice-cast-lost = { $name } ile bağlantı koptu, bu yüzden yayınlama durdu.
@@ -156,8 +156,62 @@ home-trending = Şu an öne çıkanlar
 # Heading over recommendations from one show the person finished and rated well. The title is that show.
 home-because = Bitirdiğiniz { $title } yüzünden
 
-# Heading over popular titles of the genre the person finished most of. The genre is lower case, such as "mecha".
+# Heading over popular titles of the genre the person finished most of, for a genre that has no heading of its own below. The genre is AniList's name as it writes it.
 home-more-genre = Daha fazla { $genre }
+
+# Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language.
+home-more-genre-action = Daha fazla aksiyon
+
+# Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language.
+home-more-genre-adventure = Daha fazla macera
+
+# Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language.
+home-more-genre-comedy = Daha fazla komedi
+
+# Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language.
+home-more-genre-drama = Daha fazla dram
+
+# Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language.
+home-more-genre-ecchi = Daha fazla ecchi
+
+# Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language.
+home-more-genre-fantasy = Daha fazla fantastik
+
+# Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language.
+home-more-genre-horror = Daha fazla korku
+
+# Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language.
+home-more-genre-mahou-shoujo = Daha fazla mahou shoujo
+
+# Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language.
+home-more-genre-mecha = Daha fazla mecha
+
+# Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language.
+home-more-genre-music = Daha fazla müzik
+
+# Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language.
+home-more-genre-mystery = Daha fazla gizem
+
+# Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language.
+home-more-genre-psychological = Daha fazla psikolojik
+
+# Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language.
+home-more-genre-romance = Daha fazla romantik
+
+# Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language.
+home-more-genre-sci-fi = Daha fazla bilim kurgu
+
+# Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language.
+home-more-genre-slice-of-life = Daha fazla günlük yaşam
+
+# Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language.
+home-more-genre-sports = Daha fazla spor
+
+# Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language.
+home-more-genre-supernatural = Daha fazla doğaüstü
+
+# Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language.
+home-more-genre-thriller = Daha fazla gerilim
 
 # Line over the spotlight's title when it is the built-in demo.
 home-spotlight-demo = Demo, paylaşmak serbest
@@ -343,7 +397,7 @@ notice-match-save-failed = Bu eşleşme kaydedilemedi. { $reason }
 notice-match-did-not-stick = Bu eşleşme tutmadı. Bu kaynak değişmiş olabilir. Eşleşmeyi yeniden seçmeyi deneyin.
 
 # Toast when a search of the sources for a title found nothing.
-notice-source-search-empty = “{ $query }” için sonuç bulunamadı. Farklı bir arama deneyin.
+notice-source-search-empty = “{ $query }” için bir şey bulunamadı. Farklı bir arama deneyin.
 
 # In the list of titles a source offers for a show, in place of how close a title is: it was ruled out because its format cannot be the show's, as an OVA for a TV series.
 match-ruled-out-format = Farklı biçim
@@ -361,7 +415,7 @@ match-search-timed-out = Yanıt vermesi çok uzun sürdü.
 match-search-source-off = Açık değil.
 
 # Toast after the person picked a source for one title.
-notice-source-pinned = { $source } bu başlık için kullanılacak.
+notice-source-pinned = Bu başlık artık { $source } üzerinden oynatılır.
 
 # Toast after the person went back to automatic source selection for one title.
 notice-source-automatic = Otomatik kaynak seçimine dönüldü.
@@ -493,6 +547,596 @@ party-left = Birlikte izlemeden ayrıldı.
 
 # Message when a watch party's server could not be reached, in the lobby or when looking in.
 party-server-unreachable = { $server } sunucusuna ulaşılamadı. Sunucuyu kontrol edin ya da yeniden deneyin.
+
+# Under a cover: the chapter that is next to read. The chapter is its number, such as 44 or 10.5.
+reading-next-chapter = Bölüm { $chapter }
+
+# Under a cover or on a series page: when new chapters usually come out.
+reading-usually-mondays = Genelde pazartesi
+
+# Under a cover or on a series page: when new chapters usually come out.
+reading-usually-tuesdays = Genelde salı
+
+# Under a cover or on a series page: when new chapters usually come out.
+reading-usually-wednesdays = Genelde çarşamba
+
+# Under a cover or on a series page: when new chapters usually come out.
+reading-usually-thursdays = Genelde perşembe
+
+# Under a cover or on a series page: when new chapters usually come out.
+reading-usually-fridays = Genelde cuma
+
+# Under a cover or on a series page: when new chapters usually come out.
+reading-usually-saturdays = Genelde cumartesi
+
+# Under a cover or on a series page: when new chapters usually come out.
+reading-usually-sundays = Genelde pazar
+
+# Under a cover or on a series page: how often new chapters come out, in weeks.
+reading-about-every-weeks =
+    { $weeks ->
+        [one] Yaklaşık haftada bir
+       *[other] Yaklaşık { $weeks } haftada bir
+    }
+
+# On a book's series page, when the same story is also a show. Shown only to someone who both watches and reads.
+reading-also-a-show = Aynı zamanda dizi
+
+# On a show's page, when the same story is also a manga or a novel. Shown only to someone who both watches and reads.
+reading-also-a-book = Aynı zamanda kitap
+
+# Under a tracker on a series page, when the furthest chapter read is a half chapter. Trackers count whole chapters only. The chapter is its number, such as 10.5; whole is the number the tracker gets, such as 10.
+reading-split-chapter = Bölüm { $chapter }, takip hizmetlerine { $whole } olarak bildirilir.
+
+# A notice over the page when a chapter opens where it was left. It offers Start over.
+reader-resumed = { $page }. sayfadan açıldı
+
+# The same notice in a webtoon strip, which counts images rather than pages.
+reader-resumed-image = { $image }. görselden açıldı
+
+# A notice in the corner after jumping away with the scrubber or the page grid. Tapping it goes back to the page.
+reader-back-to-page = { $page }. sayfaya dön
+
+# A notice when another device read further, so the reader moved on to where it stopped. It offers Go back. The chapter is its whole label, such as The Long Night or Episode 63, and the device is its name, such as Living room tablet. A chapter with only a number uses the next message.
+reader-moved = { $chapter }, sayfa { $page } konumuna geçildi: { $device } burada kaldı
+
+# The same notice for a chapter known only by its number, such as 14 or 14.5.
+reader-moved-number = Bölüm { $chapter }, sayfa { $page } konumuna geçildi: { $device } burada kaldı
+
+# A notice the first time a series opens with its reading direction guessed. It offers Change.
+reader-detected-right-to-left = Sağdan sola gibi görünüyor
+
+# A notice the first time a series opens with its reading direction guessed. It offers Change.
+reader-detected-left-to-right = Soldan sağa gibi görünüyor
+
+# A notice the first time a series opens as one long strip, guessed from its pages. It offers Change.
+reader-detected-strip = Uzun şerit gibi görünüyor
+
+# Why a chapter or a list could not load: there is no connection.
+reading-failed-offline = Çevrimdışısınız. İndirilen bölümler yine de açılır.
+
+# Why a chapter or a list could not load: the source did not answer. The source is its name.
+reading-failed-source-down = { $source } yanıt vermiyor. Daha sonra tekrar deneyin.
+
+# Why a chapter could not load: the source no longer has it.
+reading-failed-not-found = Bu kaynak artık bunu içermiyor. Başka bir kaynak deneyin.
+
+# Why a chapter or a list could not load: the source refused. The reason comes from the source.
+reading-failed-blocked = { $source } isteği reddetti. { $reason }
+
+# Why a chapter or a list could not load: the source answered with something Kaeri could not read.
+reading-failed-parse = Kaeri, { $source } tarafından gönderileni okuyamadı. eklentinin güncellenmesi gerekebilir.
+
+# Why one page did not load. The status is the server's HTTP status code, such as 404.
+reading-failed-page = Bu sayfa yüklenmedi (hata { $status }). Tekrar deneyin.
+
+# Why something could not load: a sign-in is needed. What is a server's or a tracker's name.
+reading-failed-sign-in = Okumayı sürdürmek için yeniden oturum açın: { $what }.
+
+# Why a book could not open: its file or folder is gone, perhaps on a drive that is not connected. The path is the file's.
+reading-failed-file-missing = { $path } artık yok. Bir sürücüdeyse bağlayıp tekrar deneyin.
+
+# Why a book could not open: the file is damaged or not what its name says. The format is a short name such as CBZ or EPUB.
+reading-failed-unreadable = { $path }, { $format } olarak okunamadı. Dosya hasarlı olabilir.
+
+# Why a file was not added: Kaeri does not read its kind. The kind is a file extension such as .djvu.
+reading-failed-unsupported = Kaeri, { $kind } dosyalarını okuyamıyor.
+
+# Why a book could not open: it is copy-protected or encrypted.
+reading-failed-protected = Bu kitap kopya korumalı olduğu için Kaeri açamıyor.
+
+# Why a chapter could not be saved: the disk is full.
+reading-failed-disk-full = Bu cihazda yer kalmadı. Yer açıp tekrar deneyin.
+
+# Why a novel could not open: the system's web view is too old. The version is its major version number, such as 80.
+reading-failed-webview = Romanlar için { $version } üzerinde bir sistem WebView'ı gerekir. Android System WebView'ı güncelleyip tekrar deneyin.
+
+# Why a book plugin could not be used: it was built for a newer Kaeri. The world is the plugin interface's name and version.
+reading-failed-needs-newer = Bu eklenti, daha yeni bir Kaeri gerektiriyor ({ $world }). Kullanmak için Kaeri uygulamasını güncelleyin.
+
+# Why a reading request was refused: reading is not available in this build.
+reading-failed-off = Okuma, Kaeri uygulamasının bu yapısında kullanılamıyor.
+
+# Why something about reading failed, for any other reason. The reason is as it came.
+reading-failed-other = Bir şeyler ters gitti. { $reason }
+
+# Why Send to e-reader stopped before sending: the file it made is bigger than the e-reader or its service takes. File is the file's name, target the e-reader's name such as Kindle. Shown with Try again.
+reading-failed-send-too-large = { $file } { $size } boyutunda, { $target } ise en fazla { $limit } boyutunda dosya alıyor. Tek seferde daha az bölüm gönderip yeniden deneyin.
+
+# Why Send to e-reader stopped before sending: a part the book needs is not in the file Kaeri made. Part is a path inside the file, such as OEBPS/content.opf. Shown with Try again.
+reading-failed-send-missing = { $file } içinde { $part } eksik, bu yüzden dosya gönderilmedi. Yeniden deneyin.
+
+# Why Send to e-reader stopped before sending: a part of the file Kaeri made does not declare or use the UTF-8 text encoding. Part is a path inside the file. Shown with Try again.
+reading-failed-send-encoding = { $file } içindeki { $part } yanlış metin kodlaması kullanıyor, bu yüzden dosya gönderilmedi. Yeniden deneyin.
+
+# Why Send to e-reader stopped before sending: a part of the file Kaeri made is not laid out as the book format requires. Part is a path inside the file. Shown with Try again.
+reading-failed-send-malformed = { $file } içindeki { $part } geçerli değil, bu yüzden dosya gönderilmedi. Yeniden deneyin.
+
+# Under a cover or on a series page: what kind of book it is. Manga is drawn in Japan.
+reading-kind-manga = Manga
+
+# Under a cover or on a series page: what kind of book it is. Manhwa is drawn in Korea.
+reading-kind-manhwa = Manhwa
+
+# Under a cover or on a series page: what kind of book it is. Manhua is drawn in China or Taiwan.
+reading-kind-manhua = Manhua
+
+# Under a cover or on a series page: what kind of book it is. A webtoon is drawn as one long strip that scrolls down.
+reading-kind-webtoon = Webtoon
+
+# Under a cover or on a series page: what kind of book it is. A one-shot is a story told in a single chapter.
+reading-kind-one-shot = Tek bölümlük
+
+# Under a cover or on a series page: what kind of book it is. A light novel is a novel from Japan.
+reading-kind-light-novel = Hafif roman
+
+# Under a cover or on a series page: what kind of book it is, for a novel from anywhere else.
+reading-kind-novel = Roman
+
+# Under a cover or on a series page: new chapters are still coming out.
+reading-status-releasing = Yayında
+
+# Under a cover or on a series page: the story is complete.
+reading-status-finished = Tamamlandı
+
+# Under a cover or on a series page: new chapters have stopped for a while.
+reading-status-hiatus = Ara verildi
+
+# Under a cover or on a series page: the story was stopped before it ended.
+reading-status-cancelled = İptal edildi
+
+# Under a cover or on a series page: the first chapter is not out yet.
+reading-status-not-yet = Henüz çıkmadı
+
+# Under a cover or on a series page: how many chapters the series has.
+reading-chapters =
+    { $count ->
+        [one] 1 bölüm
+       *[other] { $count } bölüm
+    }
+
+# Under a cover or on a series page: how many volumes the series has.
+reading-volumes =
+    { $count ->
+        [one] 1 cilt
+       *[other] { $count } cilt
+    }
+
+# Under a cover: the series is on the person's Planning list.
+reading-on-planning = Planlananlar listenizde
+
+# Above the big picture at the top of reading's Home, saying why this series is there: a new chapter came out in a series the person reads.
+reading-spotlight-new-chapter = Takip ettiğiniz bir seride yeni bölüm
+
+# Above the big picture at the top of reading's Home: the series the person was reading last.
+reading-spotlight-continue = Okumayı sürdür
+
+# Above the big picture at the top of reading's Home: the first series on the person's Planning list, or one like what they read.
+reading-spotlight-up-next = Senin için sıradaki
+
+# Above the big picture at the top of reading's Home: a popular series that is still coming out, shown when the person has nothing of their own yet. It is not a pick for them.
+reading-spotlight-popular = Popüler, şu an çıkıyor
+
+# Under the big picture on reading's Home: a chapter that came out today. The chapter is its number, such as 88.
+reading-out-today = Bölüm { $chapter } bugün çıktı
+
+# Under the big picture on reading's Home: a chapter that came out today, with its title.
+reading-out-today-titled = Bölüm { $chapter }, { $title }, bugün çıktı
+
+# Under a cover or the big picture: the page the person stopped on in a chapter.
+reading-chapter-page = Bölüm { $chapter } · sayfa { $page }
+
+# Under a cover or the big picture: how far into a novel's chapter the person is.
+reading-chapter-percent = Bölüm { $chapter } · %{ $percent }
+
+# Under a cover: a chapter came out that the person has not read. The chapter is its number.
+reading-chapter-new = Bölüm { $chapter } yeni
+
+# Under a cover: a light novel's part, next to read or in progress. Light novels read in parts.
+reading-next-part = Kısım { $part }
+
+# Under a cover or the big picture: how far into a light novel's part the person is.
+reading-part-percent = Kısım { $part } · %{ $percent }
+
+# Under a cover: a light novel's part came out that the person has not read.
+reading-part-new = Kısım { $part } yeni
+
+# Under a cover or the big picture: how far into a light novel's part the person is, the part named in the source's own words ("Part 3", "Chapter 3"), as its row on the series page names it.
+reading-label-percent = { $label } · %{ $percent }
+
+# Under a cover: a light novel's part came out that the person has not read, named in the source's own words ("Part 4", "Chapter 4").
+reading-label-new = { $label } yeni
+
+# Under a This week cell: a light novel's part that came out that day, with its own title.
+reading-part-titled = Kısım { $part } · { $title }
+
+# Under a This week cell: a light novel's part that came out that day, with its own title, the part named in the source's own words ("Part 4", "Chapter 4").
+reading-label-titled = { $label } · { $title }
+
+# Under the big picture on reading's Home: a light novel's part that came out today.
+reading-part-out-today = Kısım { $part } bugün çıktı
+
+# Under the big picture on reading's Home: a light novel's part that came out today, named in the source's own words ("Part 4", "Chapter 4").
+reading-label-out-today = { $label } bugün çıktı
+
+# Under the big picture on reading's Home: a light novel's part that came out today, with its title.
+reading-part-out-today-titled = Kısım { $part }, { $title }, bugün çıktı
+
+# Under the big picture on reading's Home: a light novel's part that came out today, with its title, the part named in the source's own words ("Part 4", "Chapter 4").
+reading-label-out-today-titled = { $label }, { $title }, bugün çıktı
+
+# Under a Library cover: the chapter the person is at, and the newest chapter there is.
+reading-chapter-of = Bölüm { $chapter } / { $of }
+
+# Under a Library cover: the volume and part of a light novel the person is at.
+reading-volume-part = Cilt { $volume }, kısım { $part }
+
+# Under a Library cover: the volume of a light novel the person is at, and the part in the source's own words ("Part 5", "Chapter 5").
+reading-volume-label = Cilt { $volume }, { $label }
+
+# A search filter: books from Japan.
+reading-origin-japan = Japonya
+
+# A search filter: books from Korea.
+reading-origin-korea = Kore
+
+# A search filter: books from China.
+reading-origin-china = Çin
+
+# A search filter: books from Taiwan.
+reading-origin-taiwan = Tayvan
+
+# Send to e-reader: a device class with no brand, for e-readers not listed by name. Opens CBZ and EPUB.
+export-device-other = Diğer e-okuyucu
+
+# Send to e-reader: a device class, a grey e-ink screen of about 6 inches.
+export-device-eink-6 = E-ink, 6 inç
+
+# Send to e-reader: a device class, a grey e-ink screen of about 7 or 8 inches.
+export-device-eink-7 = E-ink, 7 inç
+
+# Send to e-reader: a device class, a colour e-ink screen of about 7 inches.
+export-device-colour-eink = Renkli e-ink, 7 inç
+
+# Send to e-reader: a device class, a colour tablet.
+export-device-tablet = Tablet
+
+# A table of contents entry in a file sent to an e-reader. The chapter is its number, such as 44 or 10.5.
+export-chapter = Bölüm { $chapter }
+
+# Send to e-reader: a send that waits because chapters must be fetched and downloads are kept to Wi-Fi. A send makes its files from every chapter at once, so all of it waits. n is how many chapters it still has to fetch.
+export-waits-for-wifi =
+    { $n ->
+        [one] Bir bölüm henüz indirilmedi, bu yüzden gönderim Wi-Fi'yi bekler ve sonra kendiliğinden sürer.
+       *[other] { $n } bölüm henüz indirilmedi, bu yüzden gönderim Wi-Fi'yi bekler ve sonra kendiliğinden sürer.
+    }
+
+# Send to e-reader, under the ready files: pages of one chapter that couldn't be read, as the reader shows them broken, so the files go without them. The chapter is its name as the series shows it, such as Chapter 12 or Volume 1. n is how many pages were left out.
+export-pages-left-out =
+    { $n ->
+        [one] { $chapter } içindeki bir sayfa okunamadı ve dosyalarda yok.
+       *[other] { $chapter } içindeki { $n } sayfa okunamadı ve dosyalarda yok.
+    }
+
+# Under a This week cell: the chapter that came out that day, with its own title.
+reading-chapter-titled = Bölüm { $chapter } · { $title }
+
+# A chapter row's state: the person read it.
+reading-row-read = Okundu
+
+# A chapter row's state: it came out since the person last read and is not read.
+reading-row-new = Yeni
+
+# A chapter row's state: it is kept on this device to read offline.
+reading-row-downloaded = İndirildi
+
+# A chapter row's state: it is downloaded on this device, and the source no longer lists it. It still opens from the download.
+reading-row-gone-from-source = Kaynak artık listelemiyor
+
+# A chapter row's state: it is read from the source and nothing of it is on this device.
+reading-row-not-downloaded = İndirilmedi
+
+# A chapter row's state: a file in one of the person's folders, or one already on the device.
+reading-row-on-device = Bu cihazda
+
+# A chapter row's state: it waits its turn to download.
+reading-row-queued = Sırada
+
+# A chapter row's state: it waits to download until the device is on Wi-Fi.
+reading-row-waits-wifi = Sırada · Wi-Fi bekliyor
+
+# A chapter row's state while it downloads.
+reading-row-downloading = İndiriliyor · { $done } / { $total } sayfa
+
+# A chapter row's state: the download failed. The reason follows as the next part.
+reading-row-failed = İndirilemedi
+
+# A chapter row's state: the page the person stopped on, of how many.
+reading-row-page-of = Sayfa { $page } / { $of }
+
+# A chapter row's state: the page the person stopped on, when the length isn't known.
+reading-row-page = Sayfa { $page }
+
+# A novel's chapter row: how far into it the person is.
+reading-row-percent = %{ $percent }
+
+# A novel's chapter row: the person opened it, and how far in is too little to say as a percent.
+reading-row-opened = Açıldı
+
+# A chapter row's state: the person bookmarked it. Bookmarked chapters are kept when read downloads are cleared.
+reading-row-bookmarked = Yer imi eklendi
+
+# A chapter row: how long its pages are, for a file on the device.
+reading-row-pages =
+    { $n ->
+        [one] 1 sayfa
+       *[other] { $n } sayfa
+    }
+
+# A chapter row: how many versions the person's sources have of it. The row's menu lists them.
+reading-row-versions =
+    { $n ->
+        [one] 1 kopya
+       *[other] { $n } kopya
+    }
+
+# A chapter row: when it was read or came out, under a minute ago.
+reading-ago-now = az önce
+
+# A chapter row: when it was read or came out, in minutes.
+reading-ago-minutes = { $minutes } dk önce
+
+# A chapter row: when it was read or came out, earlier today.
+reading-ago-today = bugün
+
+# A chapter row: when it was read or came out, the day before today.
+reading-ago-yesterday = dün
+
+# A chapter row: when it was read or came out, in days, under a week.
+reading-ago-days =
+    { $days ->
+        [one] 1 gün önce
+       *[other] { $days } gün önce
+    }
+
+# A chapter row: when it was read or came out, in weeks, under two months.
+reading-ago-weeks =
+    { $weeks ->
+        [one] 1 hafta önce
+       *[other] { $weeks } hafta önce
+    }
+
+# A chapter row: when it was read or came out, in months, under a year.
+reading-ago-months =
+    { $months ->
+        [one] 1 ay önce
+       *[other] { $months } ay önce
+    }
+
+# A chapter row: when it was read or came out, in years.
+reading-ago-years =
+    { $years ->
+        [one] 1 yıl önce
+       *[other] { $years } yıl önce
+    }
+
+# The tracker took the series off its list.
+reading-removed-from = Kaldırıldı: { $tracker }
+
+# The tracker's list did not hold the series, so there was nothing to remove.
+reading-removed-not-there = Listede yoktu: { $tracker }
+
+# The app never learned which of the tracker's entries this series is, so it asked nothing.
+reading-removed-unmatched = Eşleşme yok ({ $tracker }), orada hiçbir şey değişmedi
+
+# The tracker could not take the series off. The reason follows.
+reading-removed-failed = Hâlâ listede: { $tracker }
+
+# Why a removal failed: the tracker turned the sign-in away.
+reading-removed-sign-in = { $tracker } için yeniden oturum açıp tekrar deneyin.
+
+# The source answered the search and has no series by the series' names.
+reading-miss-no-series = Bu adla bir seri yok
+
+# The source has failed every ask since this time of day, in the person's zone.
+reading-miss-down-since = Yanıt yok, şu saatten beri: { $time }
+
+# The source has failed every ask, since a time on another day or not known.
+reading-miss-down = Yanıt vermiyor
+
+# How many parts of a light novel are downloaded.
+reading-dl-parts =
+    { $count ->
+        [one] 1 kısım
+       *[other] { $count } kısım
+    }
+
+# What the downloads take up on this device.
+reading-dl-size = { $size }
+
+# How many of the downloaded chapters are read, which Delete read clears.
+reading-dl-read = { $count } okundu
+
+# The chapter downloading now.
+reading-dl-chapter = Bölüm { $chapter }
+
+# How far the chapter downloading now has come.
+reading-dl-pages = { $done } / { $total } sayfa
+
+# Chapters waiting their turn after the one downloading.
+reading-dl-more-queued = { $count } tane daha sırada
+
+# Chapters waiting their turn, none downloaded yet.
+reading-dl-queued = { $count } sırada
+
+# Chapters that wait for Wi-Fi to download.
+reading-dl-waits-wifi = Wi-Fi bekliyor
+
+# A chapter that failed. The reason follows as the next part.
+reading-dl-failed = Bölüm { $chapter } indirilemedi
+
+# After "Chapter 2 couldn't download" when there was no network: the downloads banner says the rest.
+reading-dl-offline = Çevrimdışı
+
+# How much the chosen chapters will take, from their pages and the size of pages downloaded before.
+reading-estimate-size = Yaklaşık { $size }
+
+# The chapters download only on Wi-Fi, as the settings say.
+reading-estimate-wifi = Wi-Fi ile
+
+# The device is on mobile data, and the settings let chapters download on it.
+reading-estimate-mobile = mobil veriyle
+
+# The device is on mobile data and the chapters wait until it's on Wi-Fi.
+reading-estimate-waits-wifi = Wi-Fi bekliyor
+
+# The notification's title.
+reading-downloads-done-title = İndirmeler tamamlandı
+
+# The notification's text: one series' chapters are downloaded.
+reading-downloads-done-chapters =
+    { $count ->
+        [one] { $title }: bir bölüm çevrimdışı okumaya hazır.
+       *[other] { $title }: { $count } bölüm çevrimdışı okumaya hazır.
+    }
+
+# The notification's text: one light novel's parts are downloaded.
+reading-downloads-done-parts =
+    { $count ->
+        [one] { $title }: bir kısım çevrimdışı okumaya hazır.
+       *[other] { $title }: { $count } kısım çevrimdışı okumaya hazır.
+    }
+
+# The notification's text: chapters of several series are downloaded.
+reading-downloads-done-series = { $count } seriden bölümler çevrimdışı okumaya hazır.
+
+# Row heading on reading's Home: manga that are trending on AniList now.
+read-home-trending-manga = Gündemdeki mangalar
+
+# Row heading on reading's Home: webtoons that are trending on AniList now.
+read-home-trending-webtoons = Gündemdeki webtoonlar
+
+# Row heading on reading's Home: light novels that are trending on AniList now.
+read-home-trending-novels = Gündemdeki hafif romanlar
+
+# Row heading on reading's Home: the most popular manga that started in the last 12 months.
+read-home-new-manga = Yeni mangalar
+
+# Row heading on reading's Home: the most popular webtoons that started in the last 12 months.
+read-home-new-webtoons = Yeni webtoonlar
+
+# Row heading on reading's Home: the most popular light novels that started in the last 12 months.
+read-home-new-novels = Yeni hafif romanlar
+
+# Side text beside a New row's heading, in a quieter style: what the row covers.
+read-home-new-side = Son 12 ay
+
+# Row heading on reading's Home: the most popular manga that have finished.
+read-home-finished-manga = Tamamlanan mangalar
+
+# Row heading on reading's Home: the most popular webtoons that have finished.
+read-home-finished-webtoons = Tamamlanan webtoonlar
+
+# Row heading on reading's Home: the most popular light novels that have finished.
+read-home-finished-novels = Tamamlanan hafif romanlar
+
+# Side text beside a Finished row's heading, in a quieter style: how the row is sorted.
+read-home-finished-side = En popüler
+
+# A choice of reading Search's Started filter: series that started at any time.
+read-search-started-any = Tüm zamanlar
+
+# A choice of reading Search's Started filter: series that started in the last 12 months.
+read-search-started-year = Son 12 ay
+
+# A choice of reading Search's Started filter: series that started in the last 3 years.
+read-search-started-3-years = Son 3 yıl
+
+# Under a source's hit in Search: the chapters it holds, from the first.
+read-hit-chapters = Bölüm 1 - { $last }
+
+# Under a source's hit in Search: a web novel's episodes it holds, from the first.
+read-hit-episodes = Bölüm 1 - { $last }
+
+# Under a source's hit in Search: a light novel's parts it holds.
+read-hit-parts =
+    { $count ->
+        [one] 1 kısım
+       *[other] { $count } kısım
+    }
+
+# Under a source's hit in Search: the book files it holds.
+read-hit-files =
+    { $count ->
+        [one] 1 dosya
+       *[other] { $count } dosya
+    }
+
+# Under a source's hit in Search: the book files it holds, all in one format ("CBZ").
+read-hit-files-format =
+    { $count ->
+        [one] 1 dosya · { $format }
+       *[other] { $count } dosya · { $format }
+    }
+
+# The name of the folders on this device, which read as one source: a Search group's heading, the source a series reads from, "In Folders" on a search result. It stands alone, with no word for its kind beside it.
+read-source-folders = Klasörler
+
+# On a cover in a New row, after the country: the month the series started, within the last 12 months, as in "Japan · since January".
+reading-since-january = Ocak'tan beri
+
+# On a cover in a New row, after the country: the month the series started, within the last 12 months, as in "Japan · since February".
+reading-since-february = Şubat'tan beri
+
+# On a cover in a New row, after the country: the month the series started, within the last 12 months, as in "Japan · since March".
+reading-since-march = Mart'tan beri
+
+# On a cover in a New row, after the country: the month the series started, within the last 12 months, as in "Japan · since April".
+reading-since-april = Nisan'dan beri
+
+# On a cover in a New row, after the country: the month the series started, within the last 12 months, as in "Japan · since May".
+reading-since-may = Mayıs'tan beri
+
+# On a cover in a New row, after the country: the month the series started, within the last 12 months, as in "Japan · since June".
+reading-since-june = Haziran'dan beri
+
+# On a cover in a New row, after the country: the month the series started, within the last 12 months, as in "Japan · since July".
+reading-since-july = Temmuz'dan beri
+
+# On a cover in a New row, after the country: the month the series started, within the last 12 months, as in "Japan · since August".
+reading-since-august = Ağustos'tan beri
+
+# On a cover in a New row, after the country: the month the series started, within the last 12 months, as in "Japan · since September".
+reading-since-september = Eylül'den beri
+
+# On a cover in a New row, after the country: the month the series started, within the last 12 months, as in "Japan · since October".
+reading-since-october = Ekim'den beri
+
+# On a cover in a New row, after the country: the month the series started, within the last 12 months, as in "Japan · since November".
+reading-since-november = Kasım'dan beri
+
+# On a cover in a New row, after the country: the month the series started, within the last 12 months, as in "Japan · since December".
+reading-since-december = Aralık'tan beri
 
 # Toast after joining a plugin store with an invite that names this device's owner.
 store-joined = { $store }: { $member } olarak katıldınız.
@@ -651,6 +1295,9 @@ plugin-publish-failed = { $plugin } yayımlanamadı. { $reason }
 # Error: a plugin to publish is no longer in the plugin folder.
 plugin-missing-locally = { $plugin } artık eklenti klasöründe yok.
 
+# Error: a book source cannot be published to a store whose server is too old to list book sources.
+store-takes-no-books = { $store } henüz kitap kaynaklar listelemiyor. Sahibi bunları eklemek için eklenti mağazasını güncelleyebilir.
+
 # Error: an invite for another device cannot be made from a device that joined with the open link.
 store-invite-needs-link = Bu cihaz bağlantıyla { $store } listesine katıldı. Aynı bağlantıyı diğer cihazda yapıştırın.
 
@@ -670,7 +1317,7 @@ store-admin-link-foreign = { $store } başka bir adresi gösteren bir yönetici 
 store-open-join-unsupported = { $store } sunucusu daha eski, bu yüzden bağlantıyla kimse katılamaz. Önce güncelleyin.
 
 # Toast after a source (plugin) is switched off. It is skipped when looking for episodes.
-source-switched-off = { $name } kapatıldı. Bölüm ararken atlanır.
+source-switched-off = { $name } kapalı. Kaeri bölüm ararken onu atlar.
 
 # Toast after a source (plugin) is switched on.
 source-switched-on = { $name } açıldı.
@@ -679,7 +1326,7 @@ source-switched-on = { $name } açıldı.
 plugin-not-loaded = { $id } yüklenmedi. Kaynaklar altında kurulu olduğunu kontrol edin.
 
 # Toast after a release is chosen for a title. The name is the release's title.
-release-pinned = { $name } bu başlık için kullanılacak.
+release-pinned = Bu başlıkta artık { $name } kullanılıyor.
 
 # Toast when the chosen source or release for a title could not be saved. The reason comes from the database.
 notice-choice-not-saved = Bu seçim kaydedilemedi. { $reason }
@@ -741,6 +1388,9 @@ stores-ready-demo-stays = { $store } hazır. Demo, Kaynaklarınızın sonunda ka
 # The page the browser shows after signing in to a cloud drive on a computer (Windows, Linux or the terminal), once Kaeri has caught the sign-in. The person goes back to the app by themselves.
 cloud-loopback-done = Bu sekmeyi kapatıp Kaeri'ye dönebilirsiniz.
 
+# The error line under Sync on a device that another of the person's devices removed from sync. Joining again, with a code or the recovery key, or setting sync up again adds it as a new device.
+sync-device-removed = Bu cihaz başka bir cihaz üzerinden eşitlemeden çıkarıldı. Eşitlemek için yeniden katılın.
+
 # Toast after a tracker sign-in succeeded. The tracker is its name, such as AniList.
 notice-signed-in = Oturum açıldı: { $tracker }.
 
@@ -769,10 +1419,10 @@ notice-token-exchange-failed = Jeton alınamadı: { $tracker }. Yeniden oturum a
 notice-browser-not-opened = Oturum açma için tarayıcı açılamadı. Bir tarayıcının kurulu olup olmadığını denetleyin ve yeniden deneyin. { $reason }
 
 # Toast when a sign-in redirect arrives and no sign-in is waiting for it.
-notice-sign-in-not-waiting = Bunu bekleyen bir oturum açma işlemi yok ({ $tracker }). Oturum açmayı yeniden başlatın.
+notice-sign-in-not-waiting = { $tracker } hizmetinden bir oturum açma yanıtı geldi, ama onu bekleyen bir oturum açma yoktu. Oturum açmayı yeniden başlatın.
 
 # Toast when a sign-in redirect does not match the request that was made.
-notice-sign-in-wrong-request = Bu oturum açma ({ $tracker }) bu istekten dönmedi. Oturum açmayı yeniden başlatın.
+notice-sign-in-wrong-request = { $tracker } hizmetinden gelen oturum açma yanıtı istekle eşleşmiyor. Oturum açmayı yeniden başlatın.
 
 # Toast when a tracker sent the person back without a token.
 notice-sign-in-no-token = Oturum açma ({ $tracker }) jetonsuz döndü. Yeniden deneyin.
@@ -870,13 +1520,13 @@ notice-update-available = { $tag } çıktı. Kurmak için kaeri --update komutun
 cause-proxy-needs-address = Vekil sunucu için bir ana makine ve bir bağlantı noktası gerekir.
 
 # The reason a proxy could not be checked: its address is not one the check can use.
-cause-proxy-address-unusable = Vekil sunucunun adresi denetim için kullanılamıyor.
+cause-proxy-address-unusable = Vekil sunucu denetimi bu adresi kullanamıyor.
 
 # The reason a request failed: it never reached the server.
 cause-server-unreachable = Sunucuya ulaşılamadı.
 
 # The legal line, shown in About beside Legal and contact. It exists once, so no translation can paraphrase it.
-legal-hosts-no-content = Kaeri hiçbir dizi barındırmaz. Kaynaklar sizin eklediklerinizdir.
+legal-hosts-no-content = Kaeri hiçbir dizi veya kitap barındırmaz. Kaynaklar sizin eklediklerinizdir.
 
 # Toast after a setting is stored. The label is the setting's name.
 notice-saved = Kaydedildi: { $label }.
@@ -894,7 +1544,7 @@ notice-playback-failed = Oynatma başarısız oldu. Başka bir kaynak deneyin.
 notice-engine-fault = Kaeri içinde bir sorun oluştu. Uygulama çalışmaya devam etti, ama bir ekran donmuş görünüyorsa çıkıp uygulamayı yeniden açın.
 
 # Toast at launch when the database was damaged, so a fresh one was started. The path is where the damaged file was moved, kept for recovery. Watch history and downloads start over; what the trackers hold comes back with the next sync.
-notice-database-set-aside = Veritabanı bozulduğu için Kaeri yenisini başlattı. Eski dosya { $path } konumunda saklanıyor. takip hizmetlerinde tutulanlar bir sonraki eşitlemede geri gelir.
+notice-database-set-aside = Veritabanı bozulmuştu, bu yüzden Kaeri yenisini başlattı. Eski dosya { $path } konumunda saklanıyor. takip hizmetlerinizde tutulanlar bir sonraki eşitlemede geri gelir.
 
 # Message when Kaeri could not start because a folder could not be made. The path is the folder, the reason comes from the system.
 start-failed-folder = Kaeri { $path } klasörünü oluşturamadı. Diskte yer olduğunu ve klasöre yazılabildiğini denetleyin, sonra yeniden deneyin. { $reason }
@@ -909,7 +1559,7 @@ config-reset-failed = Ayarları sıfırlamak için yapılandırma dosyası ({ $p
 start-failed-database = Kaeri veritabanı dosyasını açamadı ({ $path }). Bu klasörde başka bir Kaeri uygulaması açıksa onu kapatıp yeniden deneyin. { $reason }
 
 # Message when Kaeri could not start its network connection from the network settings.
-start-failed-network = Kaeri, config.toml dosyasındaki ağ ayarlarıyla ağ bağlantısını kuramadı. { $reason }
+start-failed-network = Kaeri, config.toml dosyasındaki ağ ayarlarıyla bağlanamadı. Ayarları kontrol edip yeniden deneyin. { $reason }
 
 # Message when Kaeri itself could not start. The reason comes from the system or the engine.
 start-failed = Kaeri başlatılamadı. Çıkın ve yeniden açın. { $reason }
@@ -943,10 +1593,10 @@ notice-surprise-empty-filters = Bu filtrelere uyan başlık yok.
 notice-surprise-empty-planning = Planlama boş.
 
 # Toast: Surprise me on the filters while the device is offline; AniList is how a title is picked.
-notice-surprise-offline = Çevrimdışısınız. Arama seçimleri için AniList gerekir.
+notice-surprise-offline = Çevrimdışısınız. Beni şaşırt, başlık seçmek için AniList'e ihtiyaç duyar.
 
 # Toast: Surprise me on the filters, and AniList could not be asked.
-notice-surprise-failed = Şu an bir başlık seçilemedi. Biraz sonra yeniden deneyin.
+notice-surprise-failed = Başlık seçmek için AniList'e ulaşılamadı. Biraz sonra yeniden deneyin.
 
 # Title of the dialog that edits the proxy.
 torrents-linux-edit-proxy-title = Proxy'yi düzenle
@@ -1056,6 +1706,12 @@ title-linux-episode-watched = Bölüm { $episode } izlendi
 # Line in a day's column when nothing airs that day.
 calendar-linux-day-empty = Yayın yok
 
+# Accessible name of the reading Library's list menu, the button that says the list on screen.
+linux-read-library-list = Liste
+
+# Under No downloads on Downloads, Reading side.
+linux-read-downloads-empty = İndirilen bölümler bağlantı olmadan açılır.
+
 # Accessible label of the line that says how the watch party form is getting on.
 party-status = Birlikte izleme durumu
 
@@ -1066,7 +1722,7 @@ party-members = Katılımcılar
 party-choose-a-source = Bir kaynak seçin
 
 # Line when no source lists the watch party's episode. A plugin store adds plugins, which add sources.
-party-sources-none-listed = { $episode }. bölümü hiçbir kaynak listelemiyor. Kaynaklar, bir eklenti mağazası tarafından eklenen eklentilerden gelir.
+party-sources-none-listed = Hiçbir kaynak { $episode }. bölümü listelemiyor. Kaynaklar, bir eklenti mağazasından eklediğiniz eklentilerden gelir.
 
 # Line above the list of sources that have the watch party's episode.
 party-sources-found-line =
@@ -1140,6 +1796,270 @@ discussion-like-named =
        *[other] Beğen, { $count } beğeni
     }
 
+# Chip inside the invite field once an invite link is pasted: the invite's code, hidden but for its last four characters.
+linux-store-invite-chip = Davet ••••{ $last }
+
+# How many hosts a plugin may contact, filling { $hosts } in "Version 1.4 · may contact 2 hosts".
+linux-store-plugin-hosts =
+    { $count ->
+        [one] { $count } sunucu
+       *[other] { $count } sunucu
+    }
+
+# Beside a spinner in the plugin store form while the invite is spent, after 600 ms.
+linux-store-joining = Katılınıyor…
+
+# The Install all button while the plugins install.
+linux-store-installing = Yükleniyor…
+
+# Third line of a book server's row in Your sources when its sign-in no longer works.
+linux-book-server-signed-out = Oturum kapandı · Düzenle'den yeniden oturum açın
+
+# Switch on a book server's page: its series show in Kaeri while it is on.
+linux-book-server-use = Bu sunucuyu kullan
+
+# Title of the dialog that asks before a book server is removed.
+linux-book-server-remove-title = { $host } kaldırılsın mı?
+
+# First run's join page, paired: the line under "Kaeri is for" when the other device's answer is Watch.
+linux-join-medium-line-watch = { $device } gibi izleme
+
+# First run's join page, paired: the line under "Kaeri is for" when the other device's answer is Both.
+linux-join-medium-line-both = { $device } gibi izleme ve okuma
+
+# Switch on a book plugin's page: its series show in Kaeri while it is on.
+linux-book-plugin-use = Bu eklentiyi kullan
+
+# Tooltip of the reader toolbar's settings button.
+linux-reader-settings-open = Okuyucu ayarları
+
+# Line shown while a chapter opens, after the first moment.
+linux-reader-opening = Bölüm açılıyor
+
+# End page heading when the next chapter is not out yet.
+linux-reader-end-not-out = Sonraki bölüm henüz çıkmadı
+
+# End page heading at the end of a finished series.
+linux-reader-end-finished = Serinin sonu
+
+# End page heading when the next chapter is not downloaded and the device is offline.
+linux-reader-end-offline = Sonraki bölüm indirilmedi
+
+# End page heading when no source has the next chapter.
+linux-reader-end-no-source = Kaynaklarınızda henüz sonraki bölüm yok
+
+# Button on the end page that goes back to the series page.
+linux-reader-back-to-series = Seriye dön
+
+# Heading of the error when a chapter would not open.
+linux-reader-chapter-failed = Bölüm açılamadı
+
+# Names of the reader settings in its popover.
+linux-reader-reading-mode = Okuma modu
+
+linux-reader-fit = Sığdır
+
+linux-reader-crop-borders = Kenarları kırp
+
+linux-reader-page-layout = Sayfa düzeni
+
+linux-reader-background = Arka plan
+
+linux-reader-look = Görünüm
+
+linux-reader-font = Yazı tipi
+
+linux-reader-text-size = Yazı boyutu
+
+linux-reader-margins = Kenar boşlukları
+
+linux-reader-line-spacing = Satır aralığı
+
+linux-reader-justify = Metni iki yana yasla
+
+linux-reader-direction = Yön
+
+linux-reader-spreads = Geniş sayfalar
+
+linux-reader-strip-width = Şerit genişliği
+
+linux-reader-strip-gap = Görseller arası boşluk
+
+# The fit that fills the window's height.
+linux-reader-fit-height = Yükseklik
+
+# Reading mode names.
+linux-reader-mode-paged = Sayfalı
+
+linux-reader-mode-scrolled = Kaydırmalı
+
+# Title of the sheet that prepares chapters as files for an e-reader.
+linux-send-title = E-okuyucuya gönder
+
+# Button that starts preparing the files.
+linux-send-prepare = Dosyaları hazırla
+
+# Line while the files are prepared.
+linux-send-progress = { $done } / { $total } hazırlanıyor
+
+# Button that copies the prepared files to a folder the person picks.
+linux-send-save = Bir klasöre kaydet
+
+# Menu item of a series that opens that sheet.
+linux-send-menu = E-okuyucuya gönder
+
+# Heading when the web view that shows a novel cannot start.
+linux-reader-novel-unavailable = Romanlar burada açılamıyor
+
+# Line under it: what a novel needs on this computer.
+linux-reader-novel-needs-webkit = Romanlar için korumalı alanı çalışan WebKitGTK 6 gerekir.
+
+# The reader's scrubber as a screen reader says it: the page showing and how many there are.
+linux-reader-page-of = Sayfa { $page } / { $pages }
+
+# Tab of the reader's Chapters popover with the chapter's pages as small pictures; the other tab is the list of chapters.
+linux-reader-pages = Sayfalar
+
+# Line on the end page for a chapter that has not counted as read yet.
+linux-reader-end-not-read = Henüz okundu işaretlenmedi
+
+# The one amber button of the end page: opens the next chapter.
+linux-reader-continue = Okumayı sürdür
+
+# End page text when the next chapter is not out yet.
+linux-reader-end-not-out-body = Kaeri yeni bölümleri arka planda arar ve Güncellemeler'e ekler.
+
+# End page text when the reader has caught up with the series.
+linux-reader-end-caught-up-body = Yeni bölümler kaynaklarınızda çıktığında Güncellemeler'de görünür.
+
+# End page text at the end of a finished series.
+linux-reader-end-finished-body = Başka bölüm yok.
+
+# End page text when the next chapter is not downloaded and the computer is offline.
+linux-reader-end-offline-body = Çevrimdışısınız. Bağlandığınızda burada açılır.
+
+# Hint under a page's error: turning the page goes on past it.
+linux-reader-page-failed-hint = Onsuz ilerlemek için sayfayı çevirin.
+
+# Line while a chapter opens, once its number is known.
+linux-reader-opening-number = Bölüm { $chapter } açılıyor
+
+# Line while a chapter opens and a source is asked for the series' chapters.
+linux-reader-finding-source = Kaynak aranıyor
+
+# Button on the Resumed notice.
+linux-reader-start-over = Baştan başla
+
+# Button on the Moved notice.
+linux-reader-go-back = Geri dön
+
+# Button on the mode detected notice: opens the reader settings.
+linux-reader-change = Değiştir
+
+# Heading in the reader settings over what this series keeps for itself.
+linux-reader-this-series = Bu seri
+
+# Heading in the reader settings over what applies to every manga.
+linux-reader-all-manga = Tüm mangalar
+
+# Heading in the reader settings over what applies to every manga on this computer.
+linux-reader-all-manga-here = Bu bilgisayardaki tüm mangalar
+
+# Heading in the reader settings over what applies to every webtoon.
+linux-reader-all-strips = Tüm webtoonlar
+
+# Heading in the reader settings over what applies to every webtoon on this computer.
+linux-reader-all-strips-here = Bu bilgisayardaki tüm webtoonlar
+
+# Heading in the reader settings over what applies to every light novel.
+linux-reader-all-novels = Tüm hafif romanlar
+
+# The reading mode choice that follows the series' details.
+linux-reader-mode-auto = Otomatik
+
+# Under the reading mode when it was guessed.
+linux-reader-mode-detected = Seri ayrıntılarından algılandı.
+
+# Button under the reading mode when the series has a choice of its own: drops it.
+linux-reader-use-default = Varsayılanı kullan
+
+# Row that opens the rest of the reader settings.
+linux-reader-more-settings = Diğer okuyucu ayarları
+
+# Line spacing choices.
+linux-reader-line-tight = Sıkı
+
+linux-reader-line-normal = Normal
+
+linux-reader-line-loose = Geniş
+
+# The margins choice between Narrow and Wide.
+linux-reader-margins-normal = Normal
+
+# Accessible names of the two ends of the text size slider.
+linux-reader-text-smaller = Daha küçük metin
+
+linux-reader-text-larger = Daha büyük metin
+
+# Title of the small popover that jumps to a page, and its shortcut's name.
+linux-reader-go-to-page = Sayfaya git
+
+# Placeholder of the Go to page field.
+linux-reader-go-to-page-field = 1 - { $total }
+
+# Heading of the reader's keys in the keyboard shortcuts window.
+linux-shortcuts-reader = Okuyucu
+
+# Shortcut: turn the page.
+linux-shortcuts-turn = Sayfayı çevir
+
+# Shortcut: the first or last page.
+linux-shortcuts-first-last = İlk ya da son sayfa
+
+# Shortcut: a novel's text larger, smaller or back to its size.
+linux-shortcuts-text-size = Metni büyüt, küçült ya da varsayılana döndür
+
+# Shortcut: back to the page before a jump, or out of the reader.
+linux-shortcuts-reader-back = Atlamadan önceki sayfaya dön
+
+# Shortcut: close the reader.
+linux-shortcuts-close-reader = Okuyucuyu kapat
+
+# Two names joined, or a list's last name joined to the rest, in the end page's tracker line: "AniList and MangaUpdates".
+linux-reader-names-and = { $first } ve { $last }
+
+# Heading when a chapter could not open. The chapter is its number, such as 13.
+linux-reader-open-failed = Bölüm { $chapter } açılamadı
+
+# Heading when a chapter with no number could not open.
+linux-reader-open-failed-plain = Bu bölüm açılamadı
+
+# Choice in Send to e-reader's Chapters row: the next unread chapters, as many as the number.
+linux-send-next =
+    { $n ->
+        [one] Sonraki okunmamış bölüm
+       *[other] Sonraki { $n } okunmamış
+    }
+
+# Choice in Send to e-reader's Chapters row: every chapter not read yet.
+linux-send-all-unread = Tüm okunmamışlar
+
+# Under Send to e-reader's Chapters row when every chapter is read.
+linux-send-none-unread = Tüm bölümler okundu
+
+# Toast after the prepared files were saved to a folder.
+linux-send-saved =
+    { $n ->
+        [one] Dosya kaydedildi
+       *[other] { $n } dosya kaydedildi
+    }
+
+# Toast when the prepared files could not be written to the folder picked.
+linux-send-save-failed = Dosyalar bu klasöre kaydedilemedi
+
+# Tooltip and spoken name of the button on Updates that looks for new chapters now.
+linux-updates-check = Yeni bölümleri kontrol et
+
 # Tooltip on the button that opens a setting's preview on a page of its own, and accessible name of the preview.
 settings-preview = Önizleme
 
@@ -1165,10 +2085,10 @@ settings-caption-sample = Fener yolu son kasabanın ötesinden devam eder.
 settings-caption-note = Düz altyazılar, bölümde varsa { $language } dilinde böyle görünür. Biçimli altyazılar kendi görünümünü korur.
 
 # Preview note for new-episode notifications when they are on. The tracker is a name such as AniList.
-settings-notify-note-on = İzlediklerim listenizdeki bir dizinin yeni bölümü yayınlandığında, { $tracker } hizmetinin verdiği saatte tek bildirim gelir. Dizinin kendi ayarı önceliklidir.
+settings-notify-note-on = İzleniyor listenizdeki bir dizinin bölümü çıktığında, { $tracker } üzerinde verilen saatte tek bildirim alırsınız. Dizinin kendi ayarı bu ayarın önüne geçer.
 
 # Preview note for new-episode notifications when they are off.
-settings-notify-note-off = Kapalı. Yalnızca kendi ayarında açılmış diziler bildirim gönderir.
+settings-notify-note-off = Kapalı. Yalnızca kendi ayarlarında açtığınız diziler bildirim gönderir.
 
 # Preview note beside the accounts settings.
 settings-accounts-note = Kaeri hesap olmadan çalışır. Oturumu kapattığınızda izleme geçmişiniz bu bilgisayarda kalır.
@@ -1244,7 +2164,7 @@ controller-help-buttons = Denetleyici düğmeleri
 settings-note-cast-tvs-computer = Bunlar, TV'de oynat grubunda Chromecast altında görünür. Bölümü bu bilgisayar onlara gönderir.
 
 # Note under the Torrents while casting setting, shown while torrents are on.
-settings-note-torrents-while-casting-computer = Yerleşik Chromecast özelliği olan bir TV'nin torrent oynatmasını sağlar. Bu bilgisayar, TV oynattığı sürece bölümü gönderir.
+settings-note-torrents-while-casting-computer = Bu açıkken yerleşik Chromecast'li bir TV torrent oynatabilir. Bölüm oynadığı sürece onu bu bilgisayar gönderir.
 
 # Button on a notice that asks to open the plugin stores.
 shell-open-stores = Eklenti mağazalarını aç
@@ -1393,6 +2313,9 @@ tv-cast-inhibit-reason = Bir TV'ye bölüm gönderiliyor
 # The heading over the TVs running Kaeri in Play on TV, once TVs with Chromecast built in are listed below them.
 tv-network-group = Bu ağdaki TV'ler
 
+# The sidebar place that lists your own sources, under the Sources heading.
+linux-sidebar-your-sources = Kaynaklarınız
+
 # Count of devices on a member's row in the members dialog, and after "Owner ·".
 stores-device-count =
     { $count ->
@@ -1419,7 +2342,7 @@ stores-owner-needs-connection = Eklenti mağazası bağlantı gerektiriyor
 stores-owner-needs-connection-detail = Bu cihaz çevrimiçi olunca yeniden deneyin.
 
 # Red line in the invite dialog when this device is offline and a link cannot be made.
-stores-owner-link-offline = Bağlantı oluşturmak için eklenti mağazasına bağlanmanız gerekir.
+stores-owner-link-offline = Bu cihaz çevrimdışıyken bağlantı oluşturulamaz.
 
 # Line over a new invite link made for a named person. The time is the one the link stops working.
 stores-send-link-until = Bu bağlantıyı gönderin. Bir kez çalışır ve { $until } kadar geçerli.
@@ -1428,7 +2351,7 @@ stores-send-link-until = Bu bağlantıyı gönderin. Bir kez çalışır ve { $u
 stores-open-on-detail = Ad girmeden katılırlar. Bunu kapatmak bağlantıyı durdurur; yeniden açmak yeni bir bağlantı oluşturur.
 
 # Row subtitle in who-can-join while it is off.
-stores-open-off-detail = Yalnızca davet ettiğiniz kişiler katılabilir. Açıldığında bağlantısı olan herkes, ad girmeden katılır.
+stores-open-off-detail = Yalnızca davet ettiğiniz kişiler katılabilir. Bunu açarsanız bağlantısı olan herkes ad vermeden katılabilir.
 
 # Line on the summary row of devices that joined with the link, when joining is on.
 stores-open-no-names = Hiçbir ad tutulmaz.
@@ -1452,7 +2375,7 @@ stores-publish-none-hint = Oluşturduğunuz ya da kurduğunuz bir eklenti burada
 stores-not-published = Eklenti mağazasında henüz yok
 
 # Line under a plugin in the publish dialog that the store has in another version.
-stores-store-offers = Eklenti mağazasında { $version } var.
+stores-store-offers = Bu eklenti mağazasında { $version } var
 
 # Line under a plugin in the publish dialog whose version the store already has.
 stores-published-current = Eklenti mağazasında güncel
@@ -1464,7 +2387,7 @@ stores-published-state = Yayımlandı
 stores-publish-label = { $name } { $version } yayımla
 
 # Footnote on the recovery key dialog; the lock is the account password, asked through polkit.
-rkey-lock-linux = Hesap parolanızdan sonra Ayarlar'da, Cihazlar bölümünde yeniden görebilirsiniz.
+rkey-lock-linux = Hesap parolanızı girdikten sonra Ayarlar'da, Cihazlar bölümünde yeniden görebilirsiniz.
 
 # Reason polkit shows when it asks for the account password before the recovery key.
 rkey-lock-reason = Kaeri kurtarma anahtarını göster
@@ -1625,7 +2548,7 @@ library-row-summary-linux =
 library-page-watching-linux = Değişiklikler izleniyor
 
 # A folder page's line when changes are found only when the app starts or is asked.
-library-page-no-watch-linux = Kaeri açılırken yeniden bakılır
+library-page-no-watch-linux = Kaeri açılırken değişiklikler denetlenir
 
 # Heading over the matched series.
 library-matched-linux = Eşleşenler
@@ -1791,7 +2714,7 @@ title-no-seasons = Bu başlık için bilinen bağlantılı sezon yok.
 title-pin-off-page = Bir kaynak seçmek için başlığın sayfasını açın.
 
 # Toast when the { -source } picker is asked for and no { -source } is registered. They register a moment after launch.
-title-no-sources-yet = Henüz kayıtlı kaynaklar yok. Birazdan yeniden deneyin.
+title-no-sources-yet = Şu an kaynaklar yükleniyor. Birazdan yeniden deneyin.
 
 # Toast when a list status or rating is asked for and no { -tracker } is signed in. The command is typed as it is.
 title-status-needs-tracker = Liste durumunuz bir takip hizmeti üzerinde tutulur, ama hiçbirinde oturum açık değil. Oturum açmak için :accounts yazın.
@@ -2465,7 +3388,7 @@ keys-where-elsewhere = başka bir ekranda
 keys-where-surprise = Arama'nın göz atma ekranında ve Planlama'da
 
 # Names a command that has no key, inside a sentence such as "Press … to confirm". The action is its label in lower case.
-keys-unbound = komut paletindeki “{ $action }”
+keys-unbound = paletteki “{ $action }”
 
 # Config problem shown at start-up: a [keys] entry names an action that does not exist. The action is the name as typed.
 keys-error-unknown-action = Bilinmeyen eylem “{ $action }”.
@@ -2477,7 +3400,7 @@ keys-error-bad-key = { $action } için “{ $key }” tuşu okunamıyor.
 keys-error-key-twice = “{ $key }” tuşu hem { $first } hem de { $second } için verilmiş.
 
 # Config problem shown at start-up: a [keys] entry asks for a key another action keeps.
-keys-error-key-taken = “{ $key }” tuşu { $action } için zaten { $holder } tarafından kullanılıyor.
+keys-error-key-taken = { $action } için “{ $key }” tuşu zaten { $holder } eylemine atanmış.
 
 # Label of the one help row that stands for every section jump key.
 keys-help-jump-section = Bölüme git
@@ -2630,7 +3553,7 @@ downloads-column-progress = İlerleme
 downloads-empty-heading = Kuyrukta bir şey yok
 
 # Hint under the empty Downloads screen. The key is the one bound to downloading, as the key map draws it.
-downloads-empty-hint = Çevrimdışı izlemek için bir başlık ya da bölümde { $key } tuşuna basın.
+downloads-empty-hint = İndirmek için bir başlık ya da bölümde { $key } tuşuna basın.
 
 # A download's row: the episode number after the title. The title is cut before this is.
 downloads-row-episode = B{ $episode }
@@ -2812,16 +3735,16 @@ accounts-row-queued =
     }
 
 # Part of an account's overlay row: changes waiting to be sent, and some of them held back until the title is matched to the { -tracker }'s own id.
-accounts-row-queued-held = { $queued } değişiklik bekliyor, { $held } tanesi kimlik eşleştirmesi bekliyor
+accounts-row-queued-held = { $queued } sırada, { $held } tanesi eşleşme bekliyor
 
 # Action beside a sync difference in the overlay: Enter keeps the value on this device.
-accounts-conflict-keep-mine = Bende kalsın
+accounts-conflict-keep-mine = Yerel kalsın
 
 # Action under a sync difference in the overlay: Enter keeps the { -tracker }'s value instead.
-accounts-conflict-keep-theirs = Onlarınkini tut
+accounts-conflict-keep-theirs = Uzaktaki kalsın
 
 # A sync difference in the overlay: the title, the field that differs, then this device's value and the { -tracker }'s. The title is cut to 34 characters before it goes in.
-accounts-conflict-row = { $title }  ·  { $field }: bende { $local } / onlarda { $remote }
+accounts-conflict-row = { $title }  ·  { $field }: yerel { $local } / takip hizmeti { $remote }
 
 # Title of the Library screen, shown in the placeholder when the terminal is too small.
 lists-library-title = Kitaplık
@@ -2854,7 +3777,7 @@ lists-empty-type-to-search = Aramak için yazın
 lists-empty-browse-filtered = Bu filtrelerle göz atmak için ↵ tuşuna basın.
 
 # Hint under the Search heading when no filter is set. ↵ is the Enter key.
-lists-empty-browse-popular = En popülerlere göz atmak için ↵ tuşuna basın.
+lists-empty-browse-popular = En popüler başlıklara göz atmak için ↵ tuşuna basın.
 
 # Heading when a search or a browse found nothing.
 lists-empty-no-matches = Eşleşme yok
@@ -3522,7 +4445,7 @@ settings-label-episode-discussions = Bölüm tartışmaları
 settings-label-comment-images = Yorumlardaki görselleri yükle
 
 # Settings row: whether Calendar shows only the shows on the person's list.
-settings-label-calendar-mine = Takvim yalnızca listemdekileri gösterir
+settings-label-calendar-mine = Takvim yalnızca listenizi gösterir
 
 # Note under the titles row.
 settings-note-titles = AniList'in seçimi, AniList hesabınızı izler. Oturum kapalıyken İngilizce kullanılır.
@@ -3579,13 +4502,13 @@ settings-note-update-check = Başlangıçta günde bir kez, önbelleğe alınmı
 settings-note-presence = Bir sonraki bölümde geçerli olur.
 
 # Note under the Discord presence row when no client ID is set. The address is a web address.
-settings-note-presence-needs-client = İstemci kimliği gerekir. discord.com/developers adresinde bir uygulama kaydedin.
+settings-note-presence-needs-client = Önce bir istemci kimliği girin. Kimlik almak için discord.com/developers adresinde bir uygulama kaydedin.
 
 # Note under the presence title row. The quoted text is what Discord shows.
-settings-note-presence-title = Kapalıyken dizinin adı yerine “Anime izleniyor” gösterilir.
+settings-note-presence-title = Kapalıyken dizinin adı verilmeden “Anime izleniyor” gösterilir.
 
 # Note under the rich presence row.
-settings-note-presence-rich = Kapak, ilerleme çubuğu ve bir AniList bağlantısı ekler. Başlığın gösterilmesi gerekir.
+settings-note-presence-rich = Başlık gösterildiği sürece kapak, ilerleme çubuğu ve bir AniList bağlantısı ekler.
 
 # Note under the torrent playback row.
 settings-note-torrents = Varsayılan olarak kapalı. Hemen uygulanır.
@@ -3742,13 +4665,13 @@ stores-footer-update-hosts = Güncelleme ayrıca { $hosts } ile iletişim kurmak
 stores-footer-may-contact = Şunlarla iletişim kurabilir: { $hosts }
 
 # Footer of a store's page on the row that makes a link for another of this person's computers.
-stores-footer-link-device = Başka bir bilgisayarınıza sizin olarak katılan tek kullanımlık bağlantı
+stores-footer-link-device = Diğer cihazlarınızdan birinin sizin olarak katılmasını sağlayan tek kullanımlık bağlantı
 
 # Footer of a store's page on the row that makes an invite.
 stores-footer-invite = Yeni biri için tek kullanımlık bağlantı
 
 # Footer of a store's page on the row that opens the members screen.
-stores-footer-members = Kimlerin katıldığı ve birinin erişimini kaldırma
+stores-footer-members = Kimlerin katıldığını görün ve birinin erişimini kaldırın
 
 # Footer of a store's page on the row that changes who can join, while the store is open to anyone with its link. Enter is the key on this screen.
 stores-footer-close-join = ↵ Yalnızca davet ettiğiniz kişilerin katılmasına izin ver ve bağlantıyı durdur
@@ -3763,7 +4686,7 @@ stores-footer-publish = Bu bilgisayarın eklenti klasöründen bir eklenti sun
 stores-footer-admin = Üyeleri, davetleri ve eklentiler tarayıcınızda yönetin
 
 # Footer of a store's page on the row that leaves the store.
-stores-footer-leave = Eklentiler, bu mağazadan yüklenenler, bu bilgisayarda kalır ve güncellenmeyi durdurur.
+stores-footer-leave = Buradan yüklenen eklentiler bu cihazda kalır ve artık güncellenmez
 
 # Value beside the "who can join" row while anyone with the store's link can join. Takes the rest of the row.
 stores-who-open = Bağlantısı olan herkes
@@ -3937,7 +4860,7 @@ stores-footer-remove-anonymous = ↵ Bu cihazı kaldır; yalnızca katıldığı
 stores-footer-remove-all-anonymous = ↵ Bağlantıyla katılan bütün cihazları kaldır
 
 # Line in the store's link overlay, once the link was copied.
-stores-link-copied = Terminal izin verdiğinde panoya kopyalandı. Kopyalamak için seçin.
+stores-link-copied = Terminal izin veriyorsa kopyalandı. Vermiyorsa bağlantıyı seçip kopyalayın.
 
 # Line in a link overlay before the link was copied, or when the terminal cannot copy.
 stores-link-select = Kopyalamak için seçin.
@@ -4010,7 +4933,7 @@ stores-key-matches-invite = { $fingerprint }  (davetle eşleşiyor)
 stores-join-open = Bağlantısı olan herkes katılabilir.
 
 # Line of the join confirmation when it is an open link, which keeps no name.
-stores-join-anonymous = Adınızı vermeden katılırsınız ve aynı bağlantıyla başka bir cihaz katılır.
+stores-join-anonymous = Ad vermeden katılırsınız. Başka herhangi bir cihaz aynı bağlantıyla katılabilir.
 
 # Line of the join confirmation when this device has already joined.
 stores-join-already = Zaten katıldınız. Yeniden katılmak, bu cihaza yeni bir belirteç verir.
@@ -4019,7 +4942,7 @@ stores-join-already = Zaten katıldınız. Yeniden katılmak, bu cihaza yeni bir
 stores-join-device-note = mağazanın sahibi bu adı görür. Değiştirmek için yazın.
 
 # Lines of the leave confirmation.
-stores-leave-plugins = Eklentiler, bu bilgisayarda kalır ve güncellenmeyi durdurur.
+stores-leave-plugins = Buradan yüklenen eklentiler bu cihazda kalır ve artık güncellenmez.
 
 # Lines of the leave confirmation.
 stores-leave-revoked = Bu cihazın mağazaya erişimi kaldırıldı.
@@ -4032,7 +4955,7 @@ stores-remove-member-devices =
     }
 
 # Line of the remove member confirmation.
-stores-remove-member-plugins = Eklentiler, zaten yükledikleri, kendi bilgisayarlarında kalır.
+stores-remove-member-plugins = Daha önce yükledikleri eklentiler kendi cihazlarında kalır.
 
 # Line of the cancel invite confirmation.
 stores-cancel-invite-link = Bağlantı çalışmayı durdurur.
@@ -4092,7 +5015,7 @@ stores-choice-update = { $version } sürümüne güncelle
 stores-choice-replace = Elle eklenen kopyayı değiştir
 
 # Choice in the plugin overlay: delete the plugin from this machine.
-stores-choice-remove = Bu bilgisayardan kaldır
+stores-choice-remove = Bu cihazdan kaldır
 
 # Choice in the plugin overlay: owners stop offering the plugin in the store.
 stores-choice-unpublish = Bu mağazada sunmayı durdur
@@ -4197,7 +5120,7 @@ sync-tui-profile-restart = { $name } profilini kullanmak için Kaeri uygulaması
 sync-tui-err-no-group = Bu klasörde katılınacak geçmiş yok. Başka bir klasör seçin.
 
 # A sync problem: a cloud service that this build can't sign in to. The service is a name such as Dropbox.
-sync-tui-err-unavailable = { $service }, bu cihaz cihazda kullanılamıyor.
+sync-tui-err-unavailable = { $service } bu cihazda kullanılamıyor.
 
 # Status line hint: Enter removes the highlighted { -device } from sync, after a question.
 sync-tui-hint-remove = Kaldır
@@ -4233,7 +5156,7 @@ party-no-source-still-in = { $reason } Hâlâ birlikte izlemedesiniz.
 status-reloading-sources = kaynaklar yeniden yükleniyor…
 
 # Toast when the { -source } pinned for a title can't be used and the others are tried instead.
-pin-unavailable = Bu başlık için sabitlenen { $name } kullanılamıyor. Bunun yerine diğer kaynaklar deneniyor.
+pin-unavailable = { $name } bu başlık için sabitlendi ama kullanılamıyor. Diğer kaynaklar deneniyor.
 
 # Name of the Together section in the terminal's rail, on the key 0.
 tui-together-section = Birlikte
@@ -4249,6 +5172,15 @@ tui-together-not-a-link = Bu bir parti bağlantısı ya da kodu değil.
 
 # Second line of a recent room nobody else was in. The time is already formatted, such as Tuesday.
 tui-together-recent-alone = { $episode }. bölüm · { $when }
+
+# Line under the title of that page.
+tui-medium-read-line = Terminalde okuyucu yok. Manga, webtoon ve hafif romanlar Kaeri uygulamalarında açılır; eşitleme ilerlemenizi her yerde aynı tutar.
+
+# Line under that page: the key that opens the choice of what { -app-name } is for. The key is the one bound to it, as the key map draws it.
+tui-medium-read-change = Kaeri uygulamasının ne için kullanılacağını değiştirmek için { $key } tuşuna basın.
+
+# Hint beside the Kaeri is for line on the Settings screen. The key is the one bound to it, as the key map draws it.
+tui-medium-settings-hint = Değiştirmek için { $key }
 
 # Title of the about page.
 about-title = Hakkında
@@ -4362,13 +5294,13 @@ settings-group-crashes = Çökme raporları
 settings-crash-save = Çökme raporlarını bu cihaz üzerinde sakla
 
 # Line under that switch.
-settings-crash-save-detail = Bu açıkken Kaeri, her çökmenin kısa bir kaydını bu cihaz üzerinde tutar. Başlıklar, adresler ve adlar kaldırılır; böylece kaydı Hata bildir'e ekleyebilirsiniz. Kendiliğinden hiçbir şey gönderilmez.
+settings-crash-save-detail = Kaeri, Hata bildir için her çökmenin kısa bir kaydını bu cihazda tutar; başlıklar, adresler ve adlar çıkarılır. Kendiliğinden hiçbir şey gönderilmez.
 
 # Switch that turns the notice after a crash on or off.
 settings-crash-ask = Çökmeden sonra sor
 
 # Line under that switch.
-settings-crash-ask-detail = Bir sonraki açılışta Bildir… ile bir bildirim gösterir.
+settings-crash-ask-detail = Kaeri bir sonraki açılışında Bildir… düğmesiyle bir uyarı gösterir.
 
 # Heading of crashes the system kept from before saving was turned on. The system is macOS, iOS, iPadOS or Android.
 settings-crash-os-heading = { $system } tarafından tutulanlar
@@ -4398,7 +5330,7 @@ settings-crash-delete = Sil
 settings-crash-delete-all = Tümünü sil
 
 # Footnote of the Crash reports group.
-settings-crash-footnote = Çökme raporları bu cihaz üzerinde kalır. Kaeri kendiliğinden hiçbir şey göndermez. Bir rapor yalnızca Hata bildir'den GitHub'da açtığında çıkar. Raporlar 30 gün sonra silinir.
+settings-crash-footnote = Çökme raporları bu cihazda kalır ve Kaeri kendiliğinden hiçbir şey göndermez. Bir rapor yalnızca Hata bildir'den GitHub'da açtığınızda dışarı çıkar. Raporlar 30 gün sonra silinir.
 
 # Button that shows the week before.
 calendar-previous-week = Önceki hafta
@@ -4524,13 +5456,13 @@ cast-tvs-note-iphone = Chromecast bölümünde, TV'de oynat altında görünürl
 cast-tvs-note-ipad = Chromecast bölümünde, TV'de oynat altında görünürler. Bölümü bu iPad gönderir.
 
 # Note under the Settings row that lets a cast play torrents, on a Mac.
-cast-torrents-note-mac = Chromecast özellikli TV'lerin torrent oynatmasına izin verir. Oynatma sürdüğü sürece bölümü bu Mac gönderir.
+cast-torrents-note-mac = Böylece yerleşik Chromecast'li bir TV torrent oynatabilir. Bölüm oynadığı sürece onu bu Mac gönderir.
 
 # Note under the Settings row that lets a cast play torrents, on an iPhone.
-cast-torrents-note-iphone = Chromecast özellikli TV'lerin torrent oynatmasına izin verir. Oynatma sürdüğü sürece bölümü bu iPhone gönderir.
+cast-torrents-note-iphone = Böylece yerleşik Chromecast'li bir TV torrent oynatabilir. Bölüm oynadığı sürece onu bu iPhone gönderir.
 
 # Note under the Settings row that lets a cast play torrents, on an iPad.
-cast-torrents-note-ipad = Chromecast özellikli TV'lerin torrent oynatmasına izin verir. Oynatma sürdüğü sürece bölümü bu iPad gönderir.
+cast-torrents-note-ipad = Böylece yerleşik Chromecast'li bir TV torrent oynatabilir. Bölüm oynadığı sürece onu bu iPad gönderir.
 
 # Line on the casting card while the next episode counts down. The seconds are whole.
 cast-up-next-plays-in = Sıradaki · { $seconds } sn içinde oynatılır
@@ -4945,6 +5877,27 @@ pad-button-left-stick = Sol analog çubuk
 # Name of the controller's right stick, in the controller help.
 pad-button-right-stick = Sağ analog çubuk
 
+# Controller help: the D-pad in the reader turns the page, the way the book reads.
+pad-help-turn-page = Sayfayı çevir
+
+# Controller help: the left shoulder button in the reader.
+pad-help-previous-chapter = Önceki bölüm
+
+# Controller help: the right shoulder button in the reader.
+pad-help-next-chapter = Sonraki bölüm
+
+# Controller help: the A button in the reader shows or hides the bar with the title and settings.
+pad-help-reader-bar = Çubuğu göster veya gizle
+
+# Controller help: the menu button in the reader.
+pad-help-reader-settings = Okuyucu ayarları
+
+# Controller help: the B button in the reader.
+pad-help-close-reader = Okuyucuyu kapat
+
+# Heading in the controller help for the buttons in the reader.
+pad-help-reader = Okuyucu
+
 # Checkbox of the close question.
 close-dont-ask = Bir daha sorma
 
@@ -5185,6 +6138,12 @@ downloads-empty-title = Henüz indirme yok
 # Line under the empty title.
 downloads-empty-detail = İndirilen bölümler bağlantı olmadan oynatılır.
 
+# Downloads' empty line for a person who only reads, under "No downloads".
+read-downloads-empty-detail = İndirilen bölümler bağlantı olmadan açılır.
+
+# Downloads' empty line for a person who watches and reads, under "No downloads".
+read-downloads-empty-both = İzlemek ve okumak için indirilen bölümler bağlantı olmadan açılır.
+
 # Title when the list could not be read.
 downloads-load-failed = İndirmeler yüklenemedi
 
@@ -5267,7 +6226,7 @@ downloads-delete-detail = Dosya bu cihazdan kaldırılır.
 downloads-delete-one-title = İndirmeyi sil
 
 # Line under it: what you lose.
-downloads-delete-one-detail = Yalnızca bağlantıyla ya da yeniden indirdiğinizde tekrar oynatılır.
+downloads-delete-one-detail = Bundan sonra bölümü yeniden indirmezseniz oynatmak için bağlantı gerekir.
 
 # Button on the settings page that removes watched files.
 downloads-delete-watched = İzlenen indirmeleri sil
@@ -5279,7 +6238,7 @@ downloads-seeding-title = Paylaşım
 downloads-seeding-after-watching = İzledikten sonra paylaşım
 
 # Line under the seeding heading.
-downloads-seeding-note = İzlenen bölümler, Kaeri açıkken ve Kaynaklar altında belirlenen oran ya da süre sınırına ulaşılana kadar paylaşılır.
+downloads-seeding-note = İzlenen bölümler Kaeri açıkken geri paylaşılır. Paylaşım, Ayarlar'da Kaynaklar altında belirlediğiniz oran ya da süre sınırında durur.
 
 # Heading of the setting. Shown on desktop only.
 downloads-background-title = Pencere kapanırken indirmeler sürüyorsa
@@ -5354,6 +6313,63 @@ episode-download-done = İndirildi
 # Line under that button after a failure.
 episode-download-failed = Bölüm { $episode } indirilemedi. Yeniden deneyin.
 
+# First run, page 2 of 5.
+first-other-title = Başka bir cihazda Kaeri kullanıyor musunuz?
+
+# Under the title.
+first-other-line = Onunla eşleştirin; bu cihaz kaynaklarınızı, takip hizmetlerinizi ve geçmişinizi alır, kurulumun geri kalanı da sizin için yapılır.
+
+# Line under the pair row.
+first-other-pair-line = O cihazda girmeniz için bir kod alırsınız. İkisi de aynı Wi-Fi ağında olmalı.
+
+# Row that restores from a sync folder.
+first-other-restore = Bulut klasöründen geri yükle
+
+# Line under it.
+first-other-restore-line = Kaydettiğiniz kurtarma anahtarını kullanır
+
+# Primary action: go on with the first run on this device alone.
+first-other-no = Hayır, burada başla
+
+# Beside a spinner, after 600 ms.
+pair-waiting = Diğer cihaz bekleniyor
+
+# After 30 seconds with nothing.
+pair-nothing-yet = Henüz bir şey yok mu? Her iki cihazlar da aynı Wi-Fi ağında olmalı.
+
+# Group header for what the other device brings.
+first-join-group = { $device } üzerinden
+
+# Row while the rest arrives.
+first-join-looking = { $device } üzerinde olanlara bakılıyor…
+
+# Row with a pop-up of Watch, Read and Both.
+first-join-medium = Kaeri şunun için
+
+# Line under it when the other device reads.
+first-join-medium-line = { $device } gibi okuma
+
+# Line under the sign-ins switch: the trackers the other device is signed in to, already joined.
+first-join-signins-line = { $trackers }
+
+# Switch, one per book server.
+first-join-server = { $host } ekle
+
+# Line under a server's switch. The kind is Komga, Kavita or OPDS; the store is Keychain or Android Keystore.
+first-join-server-line = { $kind } · { $device } üzerindeki anahtarla giriş yapar, { $store } içinde saklanır
+
+# Note under the list.
+first-join-folders = Klasörler { $device } üzerinde kalır. Bu cihazın kendi klasörlerini “Kaynaklarınız” bölümünde ekleyin.
+
+# Note when the setup answered the remaining pages.
+first-join-steps-done = Listeler ve kaynaklar ayarlandı, bu yüzden ilk çalıştırma burada biter. Bunları Ayarlar’dan değiştirebilirsiniz.
+
+# Row error when a plugin store refused this device.
+first-join-store-refused = { $store } bu cihazı içeri almadı. { $owner } size bir davet gönderebilir.
+
+# Notice on Home, for 4 seconds.
+first-join-syncing = { $device } ile eşitleniyor
+
 # Name of the Home section in the sidebar, the tab bar and the window title.
 home-title = Ana sayfa
 
@@ -5419,7 +6435,7 @@ home-end-signed-out = Listenizi ve Planlama'yı almak için AniList'e giriş yap
 home-sign-in = AniList'e giriş yap
 
 # The closing line at the end of Home when no { -source } is installed. Plugin stores is a link.
-home-end-no-sources = Ana sayfadan oynatmak için bir kaynak ekleyin. Eklenti mağazalarında seçebileceğiniz birkaç tane var.
+home-end-no-sources = Ana sayfadan oynatmak için bir kaynak ekleyin. Eklentiler, Eklenti mağazalarından gelir.
 
 # Line on a title that no installed { -source } has. The main action becomes Add to Planning.
 home-not-found = Kaynaklarınızda bulunamadı
@@ -5857,7 +6873,7 @@ library-picker-title = Bölümlerinizin olduğu bir klasör seçin.
 library-remove-detail = Dosyalarınız olduğu yerde kalır.
 
 # Why a group of files is not matched: AniList could not be asked.
-library-reason-offline = AniList'e sorulamadı. Sonraki taramada yeniden denenir.
+library-reason-offline = AniList'e ulaşılamadı. Sonraki tarama yeniden dener.
 
 # Button that opens the match picker for a group.
 library-choose-match = Eşleşmeyi seç
@@ -5890,7 +6906,7 @@ licensed-body = Kaeri, ücretini ödediğiniz yayın hizmetlerindeki başlıklar
 licensed-region = Bölge
 
 # Line under the region menu.
-licensed-region-line = AniList'in başka ülkeler için işaretlediği bağlantıları gizler. Çoğu bağlantı bir ülke belirtmez, bu yüzden hizmetlerinizi de seçin.
+licensed-region-line = AniList'in başka ülkeler için işaretlediği bağlantılar gizlenir. Çoğu bağlantı bir ülke belirtmez, bu yüzden hizmetlerinizi de seçin.
 
 # Heading over the services the viewer pays for.
 licensed-yours = Hizmetleriniz
@@ -6334,7 +7350,7 @@ onboarding-own-heading = Kendi medyanız var mı?
 onboarding-invite-heading = Davet bağlantınız var mı?
 
 # Second line of that page. Explains that plugins come from plugin stores and that a store is joined with an invite link.
-onboarding-where-stores = Eklentiler, eklenti mağazaları üzerinden gelir. Bir eklenti mağazası imzalıdır ve her cihaz için ayrı bir belirteç verir; bu yüzden sahibinden aldığınız davet bağlantısıyla katılırsınız.
+onboarding-where-stores = Eklentiler, eklenti mağazaları üzerinden gelir. Her biri imzalıdır ve her cihaza kendi belirtecini verir; bu yüzden sahibinden aldığınız bir davet bağlantısıyla katılırsınız.
 
 # Heading above the Play the demo button on the welcome page.
 onboarding-demo-heading = Şimdi deneyin
@@ -6376,7 +7392,7 @@ party-leave = Birlikte izlemeden ayrıl
 party-leaving = Ayrılıyor…
 
 # Label of the button that marks you as ready.
-party-ready-action = Hazırım
+party-ready-action = İzlemeye hazır
 
 # Button that copies the link to invite someone.
 party-copy-invite = Davet bağlantısını kopyala
@@ -6391,7 +7407,7 @@ party-leave-and-close = Ayrıl ve kapat
 party-not-now = Şimdi değil
 
 # Line while the form fetches its suggestions.
-party-getting-ready = Hazırlanıyor…
+party-getting-ready = Öneriler yükleniyor…
 
 # Label of the server field.
 party-server = Sunucu
@@ -6424,7 +7440,7 @@ party-server-public = { $operator } tarafından işletilen herkese açık bir su
 party-server-suggest = Kendi sunucunuz yok mu? { $server } herkese açık bir sunucudur ve { $operator } tarafından işletilir.
 
 # Line under an invite's room when the server is not the public one.
-party-server-invited = Sizi davet eden kişinin seçtiği bir sunucu. Kaeri bu sunucuyu işletmez.
+party-server-invited = Bu sunucuyu sizi davet eden kişi seçti. Kaeri bu sunucuyu işletmez.
 
 # Line when the server was typed in a shape that cannot be used.
 party-server-shape = Sunucuyu bir ana makine ve bir port olarak yazın, örneğin party.example:8999.
@@ -6443,6 +7459,9 @@ party-joining = { $room } odasına, { $server } sunucusunda katılınıyor…
 
 # Line on the form when no episode is playing yet.
 party-form-nothing = Şu an oynatılan, odayla birlikte oynatılır.
+
+# Line on the form that starts a party with nothing picked yet.
+party-form-pick-later = İçeri girince, odayla birlikte izlemek için herhangi bir bölümde Oynat'a basın.
 
 # Line naming the episode of the form.
 party-form-episode-of = { $title }, { $episode }. bölüm
@@ -6595,6 +7614,9 @@ together-people-button = Birlikte izle
 # Button that starts a watch party from the place. The one amber button there.
 together-start = Oda aç
 
+# Line under Start a party.
+together-start-line = Bir oda açın, arkadaşlarınızı bağlantı ya da kodla davet edin, sonra izlemek istediğinizi Oynat ile başlatın.
+
 # Heading of the field that joins a watch party.
 together-join = Odaya katıl
 
@@ -6629,7 +7651,7 @@ together-recent = Son odalar
 together-recent-row = { $episode }. bölüm · { $names } ile · { $when }
 
 # Line shown when no recent rooms are kept yet.
-together-recent-empty = Katıldığınız odalar burada görünür, son on tanesi.
+together-recent-empty = Katıldığınız son on oda burada görünür.
 
 # Button on a recent room that goes straight to its lobby with the next episode.
 together-rejoin = Yeniden katıl
@@ -6714,7 +7736,7 @@ party-member-finding = Bir kaynak buluyor
 # State of a member who is watching. The time is already formatted, such as 2:14.
 party-member-watching-from = { $time } noktasından izliyor
 
-# Label of the I'm ready button once you are ready.
+# Label of the Ready to watch button once you are ready.
 party-ready-on = Hazır
 
 # Heading of the invite block in the lobby.
@@ -6803,6 +7825,9 @@ party-bar-line = Odada { $count } kişi · { $ready } hazır
 
 # Second line of the bar when nothing plays for you.
 party-bar-idle = Odada · sizin için oynatılan yok
+
+# Second line of the bar while the room has nothing picked: a play anywhere in the app picks the episode for the room.
+party-bar-pick = Odayla izlemek için herhangi bir bölümde Oynat'a basın
 
 # Notice in the player when someone pauses.
 party-paused-by = { $name } duraklattı
@@ -6929,7 +7954,7 @@ party-chat-show = Sohbeti göster
 settings-hide-chat = Birlikte izlemeler içinde sohbeti gizle
 
 # Line under that switch.
-settings-hide-chat-line = Satırlar, tepkiler ve bunların arama çubuğundaki işaretleri videoda görünmez, alan da kalkar. Kişi listesi odada kimlerin olduğunu yine gösterir.
+settings-hide-chat-line = Sohbet satırları, tepkiler ve bunların arama çubuğundaki işaretleri videoda görünmez, sohbet alanı da kalkar. Kişi listesi odada kimlerin olduğunu yine gösterir.
 
 # Member menu item and accessibility action that hides a member's lines and reactions for this party.
 party-mute = { $name } kişisini sustur
@@ -7057,6 +8082,9 @@ player-start-miss-no-match = { $name } bu diziye sahip değil
 
 # Detail line when a source has the show and not the episode. The episode is its label.
 player-start-miss-no-episode = { $name } bölüm { $episode } için yok
+
+# Detail line when the show is pinned to a source that does not have the episode yet, and the next source plays it.
+player-start-pin-missed = { $name } henüz { $episode }. bölüme sahip değil. Başka bir kaynak ile oynatılıyor.
 
 # Detail line when a source failed and the next is asked.
 player-start-miss-failed = { $name } yanıt vermedi
@@ -7530,10 +8558,10 @@ player-load-audio-file = Ses dosyası yükle…
 player-file-picker-failed = Dosya seçici açılamadı. Yeniden deneyin.
 
 # Notice when a chosen subtitle file could not be loaded.
-player-subtitle-file-failed = Bu altyazı dosyası yüklenemedi. Bunun bir altyazı dosyası olduğunu kontrol edin.
+player-subtitle-file-failed = Bu dosya altyazı olarak yüklenemedi. .srt ya da .ass gibi bir altyazı dosyası seçin.
 
 # Notice when a chosen audio file could not be loaded.
-player-audio-file-failed = Bu ses dosyası yüklenemedi. Bunun bir ses dosyası olduğunu kontrol edin.
+player-audio-file-failed = Bu dosya ses olarak yüklenemedi. .mka ya da .flac gibi bir ses dosyası seçin.
 
 # Name of a track that has no name or language.
 player-track-unnamed = Adsız parça
@@ -7604,6 +8632,1653 @@ player-subs-bg-box = Kutu
 # Button in the subtitles panel that opens Settings.
 player-subs-more = Ayarlar'da daha fazlası…
 
+# Under a page that is still loading after four seconds.
+reader-page-loading = Sayfa { $page } yükleniyor
+
+# On the plate of a page that is still loading.
+reader-page-plate = Sayfa { $page }
+
+# On the plate of a strip image that is still loading.
+reader-image-plate = Görsel { $image }
+
+# Under a strip image's number after four seconds.
+reader-image-loading = Görsel { $image } yükleniyor
+
+# Heading where a page could not be loaded.
+reader-page-failed = Sayfa { $page } yüklenemedi
+
+# Button that loads a failed page again.
+reader-try-again = Tekrar dene
+
+# Closes the reader and goes back to the series.
+reader-close = Kapat
+
+# Under the top line of the page between chapters, once the chapter counts as read.
+reader-end-read = Okundu sayıldı
+
+# Under the end of chapter line, naming the trackers the read went to.
+reader-end-tracker = Okundu sayıldı · { $trackers } güncellendi
+
+# Under the end of chapter line when the device is offline: the trackers hear of the read once it is back online.
+reader-end-tracker-offline = Okundu sayıldı · çevrimiçi olunca { $tracker } güncellenir
+
+# Small heading above the next chapter on the page between chapters.
+reader-end-next = Sonraki
+
+# A reading mode, and a reading direction.
+reader-mode-rtl = Sağdan sola
+
+# A reading mode, and a reading direction.
+reader-mode-ltr = Soldan sağa
+
+# A reading mode: one long scroll of images.
+reader-mode-strip = Şerit
+
+# A choice for how a page is fitted.
+reader-fit-screen = Ekran
+
+# A choice for how a page is fitted.
+reader-fit-width = Genişlik
+
+# A choice of typeface.
+reader-font-serif = Tırnaklı
+
+# A choice of typeface.
+reader-font-sans = Tırnaksız
+
+# A look for reading: warm paper.
+reader-look-paper = Kâğıt
+
+# A look for reading: a light page.
+reader-look-light = Açık
+
+# A look for reading: a brown page.
+reader-look-sepia = Sepya
+
+# A look for reading: a dark page.
+reader-look-dark = Koyu
+
+# A choice of margins.
+reader-margins-narrow = Dar
+
+# A choice of margins.
+reader-margins-wide = Geniş
+
+# A choice for page layout.
+reader-layout-auto = Otomatik
+
+# A choice for page layout.
+reader-layout-single = Bir
+
+# A choice for page layout.
+reader-layout-double = İki
+
+# A choice for wide pages: cut in two.
+reader-spreads-split = Böl
+
+# A choice for wide pages: turned to fill the screen.
+reader-spreads-rotate = Çevir
+
+# A choice for wide pages: shown whole.
+reader-spreads-whole = Bütün
+
+# A choice for the reader's tap zones: taps near the left and right edges turn the page. Replaced by Sides; kept until every app has the new tap zones page.
+reader-tap-edges = Kenarlar
+
+# Tap zone layout: taps only show and hide the controls, and never turn the page.
+reader-tap-off = Kapalı
+
+# Name of the tap zone that turns to the next page, in the guide over the page and as a screen reader action.
+reader-zone-next = Sonraki sayfa
+
+# Name of the tap zone that turns to the previous page, in the guide and as a screen reader action.
+reader-zone-previous = Önceki sayfa
+
+# Name of the tap zone that shows and hides the reader's controls, in the guide.
+reader-zone-controls = Kontroller
+
+# Button in the reader's controls that opens the chapters and the page grid.
+reader-chapters = Bölümler
+
+# Line in the margin of a novel's page.
+reader-pages-left =
+    { $count ->
+        [one] Bu bölümde bir sayfa kaldı
+       *[other] Bu bölümde { $count } sayfa kaldı
+    }
+
+# Chapters sheet and the chapter list: the list is on its way.
+reader-chapters-loading = Bölümler yükleniyor
+
+# Background choice.
+reader-background-theme = Tema
+
+# Background choice.
+reader-background-black = Siyah
+
+# Background choice.
+reader-background-white = Beyaz
+
+# Title of the end page when the series has no newer chapter.
+reader-end-caught-up = Güncelsiniz
+
+# A choice for the gap between a strip's images: none at all.
+reader-gap-none = Yok
+
+# A choice for the gap between a strip's images: a small one.
+reader-gap-small = Küçük
+
+# Look choice that follows the system's light or dark.
+reader-look-system = Sistem
+
+# Top line of the page between chapters. The chapter is its number, such as 12.
+reader-end-of-chapter-number = Bölüm { $chapter } sona erdi
+
+# The next chapter's facts on the page between chapters: its length and how it reads. The chapter is its number, such as 13; the facts are already written.
+reader-end-facts = Bölüm { $chapter } · { $facts }
+
+# The next chapter's length on the page between chapters.
+reader-end-pages =
+    { $count ->
+        [one] Bir sayfa
+       *[other] { $count } sayfa
+    }
+
+# Under the next chapter's title on the page between chapters, when nothing more is known of it than the source it came from.
+reader-end-from = Şuradan: { $source }
+
+# Under the series title in the reader's controls, and the title on a strip's marker into the next chapter. The chapter is its number, such as 12.
+reader-chapter-line = Bölüm { $chapter }
+
+# The next chapter's facts and where it came from: on the divider inside a strip, and under the next chapter's title on the page between chapters.
+reader-divider-facts-source = { $facts } · şuradan: { $source }
+
+# Line on the page between chapters, near its buttons: one more swipe opens the next chapter.
+reader-end-swipe = Sürdürmek için kaydırın
+
+# The next episode's length on the divider inside a strip.
+reader-divider-images =
+    { $count ->
+        [one] Bir görsel
+       *[other] { $count } görsel
+    }
+
+# Under the series title in the reader's controls, and the title on a strip's marker into the next chapter. The chapter is its number, such as 12.
+reader-chapter-line-titled = Bölüm { $chapter } · { $title }
+
+# Button in the first run that opens the reading demo.
+onboarding-read-demo = Demoyu oku
+
+# Under the first run's demo heading when the device is for reading.
+onboarding-demo-books-detail = Yapımcılarının Creative Commons altında paylaştığı kısa bir çizgi roman ve kısa bir öykü.
+
+# Under the first run's demo heading when the device is for both.
+onboarding-demo-both-detail = Yapımcılarının Creative Commons altında paylaştığı kısa bir bölüm ve kısa bir çizgi roman.
+
+# Home, under the spotlight, when the demo is the only thing to read.
+home-demo-only-books = Yalnızca demo açık. Kendi kitaplarınızı okumak için bir klasör, bir sunucu veya bir eklenti mağazası ekleyin.
+
+# Primary action on Home's spotlight for a book.
+home-spotlight-read = Oku
+
+# The demo comic's facts line on its series page.
+demo-series-facts =
+    { $pages ->
+        [one] Demo · Çizgi roman · bir sayfa
+       *[other] Demo · Çizgi roman · { $pages } sayfa
+    }
+
+# The comic's credit on its series page and in About the demo. The licence is "CC BY 4.0".
+demo-credit-book = { $title }, { $author }. Lisans: { $licence }. Wikimedia Commons üzerinden okunur.
+
+# The story's credit in About the demo.
+demo-credit-story = { $title }, { $author }. Kamu malı. Uygulamayla birlikte gelir.
+
+# The story's cover credit in About the demo, under the story's own credit. The title is the art's caption in English, "Blowing her breath upon him", and the year is 1904.
+demo-credit-cover = Kapak: “{ $title }”, { $artist }, { $year }. Kamu malı. Uygulamayla birlikte gelir.
+
+# Credit capsule in the reader's top bar on page 1.
+reader-demo-credit = { $title } · { $author } · { $licence }
+
+# A demo result's line in Search.
+search-demo-reads = Demo · Şimdi okunabilir
+
+# Search, under the demo results, when only the demo is on.
+search-demo-only-books = Yalnızca demo açık. Başka başlıklar bir kaynak eklediğinizde görünür.
+
+# Title of the card after the demo's last page.
+reader-demo-end = Demo burada bitti
+
+# Line under it.
+reader-demo-end-line = Kendi kitaplarınızı okumak için bir klasör, bir sunucu veya bir eklenti mağazası ekleyin.
+
+# The card's primary action.
+reader-demo-add-source = Bir kaynak ekle
+
+# The card's secondary action, back to the first page.
+reader-demo-again = 1. sayfaya dön
+
+# The demo row's line in Your sources when reading is on.
+sources-demo-books-line = Bir çizgi roman ve bir hikâye · CC BY 4.0 ve kamu malı
+
+# About the demo, first line, when reading is on.
+sources-demo-books-what = Yapımcılarının Creative Commons altında paylaştığı eserler; böylece bir kaynak eklemeden önce Kaeri uygulamasını deneyebilirsiniz. Kalıcı bir kaynak değildir.
+
+# About the demo, in place of sources-demo-private when reading is on.
+sources-demo-books-private = Demo hiçbir yerde oturum açmaz, hiçbir takip hizmeti kaydı da yazmaz.
+
+# Group on the demo's series page.
+demo-chapters = Bölümler
+
+# Group on the demo's series page: the other demo work.
+demo-also = Demoda ayrıca
+
+# Group in About the demo.
+demo-credits = Künye
+
+# A chapter row's line on the demo's series page.
+demo-pages =
+    { $pages ->
+        [one] Bir sayfa
+       *[other] { $pages } sayfa
+    }
+
+# The story's row on the demo's series page. The licence is "Public domain" as the engine says it.
+demo-story-row = Hikâye · { $author } · { $licence }
+
+# Primary action on the demo's series page.
+demo-read-chapter = { $number }. bölümü oku
+
+# Page between chapters, under the tracker line: the server has the progress.
+progress-server-saved = { $server } sunucusuna kaydedildi
+
+# Same place, only after 600 ms without an answer.
+progress-server-sending = { $server } sunucusuna gönderiliyor…
+
+# Same place, offline: the send waits in the queue.
+progress-server-offline = Yeniden çevrimiçi olduğunuzda { $server } sunucusuna gönderilecek
+
+# Same place, the send failed for a reason that can pass.
+progress-server-retrying = { $server } yanıt vermedi. Kaeri yeniden deneyecek.
+
+# Same place, the server said no. Try again follows it.
+progress-server-failed = { $server } sunucusuna kaydedilmedi: { $reason }.
+
+# Reason: a Kavita key.
+progress-why-key = sunucu anahtarı reddetti
+
+# Reason: a Komga or OPDS password.
+progress-why-password = sunucu parolayı reddetti
+
+# Reason.
+progress-why-gone = bu seri artık sunucuda yok
+
+# Reason, after a day of retries.
+progress-why-gave-up = bir gündür yanıt yok
+
+# Your sources, the server's row, second line.
+progress-row-saved = İlerleme { $ago } kaydedildi
+
+# The server's row, after 600 ms without an answer.
+progress-row-sending =
+    { $count ->
+        [one] 1 bölüm gönderiliyor…
+       *[other] { $count } bölüm gönderiliyor…
+    }
+
+# The server's row, offline.
+progress-row-offline =
+    { $count ->
+        [one] 1 bölüm, yeniden çevrimiçi olduğunuzda gönderilecek
+       *[other] { $count } bölüm, yeniden çevrimiçi olduğunuzda gönderilecek
+    }
+
+# The server's row, the last try failed for a reason that can pass.
+progress-row-retrying =
+    { $count ->
+        [one] 1 bölüm bekliyor. Kaeri yeniden deneyecek.
+       *[other] { $count } bölüm bekliyor. Kaeri yeniden deneyecek.
+    }
+
+# The server's row, the server said no. Try again sits beside it.
+progress-row-failed =
+    { $count ->
+        [one] 1 bölüm kaydedilmedi: { $reason }
+       *[other] { $count } bölüm kaydedilmedi: { $reason }
+    }
+
+# The server's row, when Send progress to the server is off. The kind is the device's own word, as in sync-turn-off: “Mac”, “iPhone”, “phone”.
+progress-row-off = İlerleme bu { $kind } üzerinde kalır
+
+# Sidebar and tab label: the shows' Home when both media are on.
+nav-watch = İzle
+
+# Sidebar and tab label: reading's Home.
+nav-read = Oku
+
+# Sidebar and tab label: new chapters from followed series.
+nav-updates = Güncellemeler
+
+# Shelf heading on Read: the series being read, each at its place.
+home-read-continue = Okumayı sürdür
+
+# Shelf heading on Read: series releasing now.
+home-read-releasing = Şu an yayında
+
+# Line under the spotlight of a popular series, when the engine gives no line of its own.
+home-read-checked-on-open = Kaeri açıldığında kontrol edilir
+
+# Line at the end of Read, under the last shelf.
+home-read-end = Şimdilik hepsi bu. Tam listeler Güncellemeler ve Arama'da.
+
+# Line at the end of Read with no book sources yet. A button to add one follows it.
+home-read-no-sources = Ana sayfadan okumak için bir klasör, bir sunucu veya bir eklenti mağazası ekleyin.
+
+# In place of Read's discovery rows on a first run with no connection: nothing was kept yet.
+read-home-offline-rows = Gündemdeki ve yeni seriler çevrimiçi olduğunuzda görünür.
+
+# E-ink: the one row on Read's Home that opens the list of discovery rows, and that page's title.
+read-home-browse = Göz at
+
+# E-ink: the line under Browse on Read's Home.
+read-home-browse-line = Biçime göre gündemdeki, yeni ve tamamlanan
+
+# E-ink: a discovery row in the Browse list, naming its first two series and how many follow.
+read-home-browse-row = { $first }, { $second } ve { $more } seri daha
+
+# E-ink: the note on the Browse page. The rows are AniList's catalogue; sources are asked only when a series is opened.
+read-home-browse-note = AniList'ten. Bir seriyi açtığınızda kaynaklarınıza sorulur.
+
+# E-ink: on the Browse page when AniList didn't answer. The time is when the lists were kept.
+read-home-browse-kept = { $time } itibarıyla saklanan listeler yine de açılır.
+
+# Under a day in Read's week: what usually comes out that day, when the time isn't known.
+week-usually = Genelde
+
+# Under a day in Read's week with nothing due.
+week-nothing-usually = Genelde hiçbir şey
+
+# Line under Updates' title on iPhone and iPad.
+updates-checked = Kontrol edildi: { $ago }
+
+# Line above Updates on the Mac: when it checked, and which series it checks.
+chapter-updates-checked-caught-up = Kontrol edildi: { $ago } · güncel olduğunuz seriler
+
+# Line while Updates asks every followed series now.
+chapter-updates-checking = Yeni bölümler kontrol ediliyor…
+
+# Toolbar button: queue every unread chapter in Updates.
+updates-download-new = Yenileri indir
+
+# Updates with nothing in it.
+updates-empty-title = Yeni bölüm yok
+
+# Line under Updates' empty title.
+chapter-updates-empty-line = Kaeri, Okuma listenizdeki ve güncel olduğunuz serileri günde birkaç kez kontrol eder.
+
+# Day heading in Updates.
+chapter-updates-today = Bugün
+
+# Day heading in Updates.
+chapter-updates-yesterday = Dün
+
+# After a chapter on an Updates row, when several groups put it out.
+chapter-updates-versions =
+    { $n ->
+        [one] 1 kopya
+       *[other] { $n } kopya
+    }
+
+# Accessibility label on an Updates row's cover, which opens the series.
+chapter-updates-open-series = { $title } aç
+
+# Accessibility hint on an Updates row.
+chapter-updates-open-chapter-hint = Bölümü açar
+
+# Context menu item on an Updates row.
+chapter-updates-open-series-menu = Seriyi aç
+
+# The series page's main action, and the spotlight's.
+action-read-chapter = Bölüm { $n } oku
+
+# The main action when a chapter is part read.
+action-continue-chapter = Okumayı sürdür: bölüm { $n } · sayfa { $page }
+
+# The main action for a light novel part, part read.
+action-continue-part = Okumayı sürdür: kısım { $n } · %{ $percent }
+
+# The main action for a light novel part, part read, when how far is not known.
+action-continue-part-plain = Okumayı sürdür: kısım { $n }
+
+# The main action for a light novel part the source calls a chapter, part read.
+action-continue-chapter-percent = Okumayı sürdür: bölüm { $n } · %{ $percent }
+
+# The main action for a light novel part the source calls a chapter, part read, when how far is not known.
+action-continue-chapter-plain = Okumayı sürdür: bölüm { $n }
+
+# The main action for a light novel part not opened yet.
+action-read-part = Kısım { $n } oku
+
+# The main action for a light novel part, part read, named in the source's own words ("Part 3", "Chapter 3") as its row is.
+action-continue-named = Okumayı sürdür: { $label } · %{ $percent }
+
+# The main action for a light novel part, part read, named in the source's own words, when how far is not known.
+action-continue-named-plain = Okumayı sürdür: { $label }
+
+# The main action for a light novel part not opened yet, named in the source's own words, and for a chapter with no number, named by its own title ("Read Oneshot").
+action-read-named = { $label } oku
+
+# The main action when every chapter is read.
+action-read-again = Yeniden oku
+
+# Label of the source row on the series page.
+series-reading-from = Okunduğu yer
+
+# Button beside a row on the series page that opens its sheet.
+series-change = Değiştir
+
+# After the source's name: how many other sources have the series.
+series-sources-more =
+    { $n ->
+        [one] 1 tane daha
+       *[other] { $n } tane daha
+    }
+
+# Value of the trackers row while a tracker asks which series this is.
+series-tracker-ask = Hangi seri bu? Seçin
+
+# Value of the group row: the chosen group is used for this series.
+series-preferred-group = Burada tercih ettiğiniz grup
+
+# A tracker's progress in chapters, with the total.
+series-tracker-chapters-of =
+    { $total ->
+        [one] { $n } / { $total } bölüm
+       *[other] { $n } / { $total } bölüm
+    }
+
+# A tracker's progress in chapters, total unknown.
+series-tracker-chapters =
+    { $n ->
+        [one] 1 bölüm
+       *[other] { $n } bölüm
+    }
+
+# A tracker's progress in chapters, then the volume.
+series-tracker-with-volume = { $chapters } · cilt { $volume }
+
+# A light novel tracker's progress in volumes.
+series-tracker-volumes = Cilt { $volume } / { $total }
+
+# Main place when the source can't be read from.
+series-read-from-another = Başka bir kaynak üzerinden oku
+
+# Status menu item: a score submenu.
+series-score = Puan…
+
+# Status menu's label before the series is on a list.
+series-add-to-list = Listeye ekle
+
+# Last item of a series' list menu: take the series off every tracker's list. Asks first.
+series-remove-from-lists = Listelerden kaldır…
+
+# Title of the question before a series is taken off the lists.
+series-remove-from-lists-title = { $title } listelerinizden kaldırılsın mı?
+
+# Line in that question.
+series-remove-from-lists-line = Bağladığınız her takip hizmeti listesinden çıkar. Yeriniz ve okunan bölümler Kaeri içinde kalır.
+
+# Heading over what the removal came to, one line per tracker.
+series-removed-title = Listeleriniz
+
+# Title while choosing chapters on a phone: how many are chosen.
+series-chosen =
+    { $n ->
+        [one] 1 bölüm
+       *[other] { $n } bölüm
+    }
+
+# Button while choosing chapters on a phone: choose every unread chapter.
+series-choose-all-unread = Tüm okunmamışlar
+
+# Heading in Read from over the sources searched without finding the series.
+read-from-not-found = Şurada bulunamadı
+
+# Button beside such a source: look for the series there by other words.
+read-from-search-there = Orada ara
+
+# Placeholder of the field that looks for the series in one source.
+read-from-search-placeholder = { $source } içinde ara
+
+# Button that runs that search.
+read-from-search = Ara
+
+# Under the field when the source found nothing by those words.
+read-from-search-none = Bu sözcüklerle bir şey bulunamadı
+
+# The More menu: the Tracking sheet.
+series-tracking = Takip
+
+# The More menu: the Read from sheet.
+series-read-from-menu = Kaynak değiştir…
+
+# The More menu: start again from chapter 1.
+series-read-again-menu = Baştan yeniden oku…
+
+# Heading of the chapter list when the series has volumes.
+series-volumes = Ciltler
+
+# Heading of the chapter list.
+series-chapters = Bölümler
+
+# Accessibility label of the chapter order menu.
+series-order = Sıralama
+
+# Chapter order.
+series-newest-first = Önce en yeni
+
+# Chapter order.
+series-oldest-first = Önce en eski
+
+# A volume's heading in the chapter list.
+series-volume = Cilt { $n }
+
+# The heading for chapters that are in no volume yet.
+series-no-volume = Henüz bir ciltte değil
+
+# After a volume's heading: which chapters it holds.
+series-chapter-range = bölüm { $from } - { $to }
+
+# After a volume's heading when every chapter in it is read.
+series-volume-read = okundu
+
+# Accessibility value of a volume heading.
+series-expanded = Genişletildi
+
+# Accessibility value of a volume heading.
+series-collapsed = Daraltıldı
+
+# The chapter list when the source has none.
+series-no-chapters-title = Bu kaynakta henüz bölüm yok
+
+# Line under it.
+series-no-chapters-line = Bölümler başka bir kaynak içinde olabilir.
+
+# The chapter list when the source failed. Downloaded chapters are listed under it.
+series-chapters-failed = { $source } üzerinden bölümler yüklenemedi.
+
+# A chapter row's title.
+series-chapter-number = Bölüm { $n }
+
+# Accessibility label of the bookmark mark on a chapter row.
+series-bookmarked = Yer imli
+
+# Chapter menu and swipe action.
+series-mark-read = Okundu işaretle
+
+# Chapter menu and swipe action.
+series-mark-unread = Okunmadı işaretle
+
+# Chapter menu item: every chapter before this one is read too.
+series-mark-read-up-to = Buraya kadar okundu işaretle
+
+# Chapter menu and swipe action.
+series-download = İndir
+
+# Chapter menu item: open the chapter in the reader.
+series-read-chapter-menu = Oku
+
+# Chapter menu item.
+series-bookmark = Yer imi ekle
+
+# Chapter menu item.
+series-remove-bookmark = Yer imini kaldır
+
+# Menu of a chapter that several groups put out.
+series-versions =
+    { $n ->
+        [one] 1 kopya
+       *[other] { $n } kopya
+    }
+
+# In that menu while the versions load.
+series-versions-loading = Kopyalar aranıyor…
+
+# The version in use, in that menu.
+series-version-in-use = { $name } kullanılıyor
+
+# Make another group the one used for this series.
+series-prefer-version = Bu seri için { $name } tercih edilsin
+
+# A downloaded chapter, after its state.
+chapter-state-downloaded = İndirildi
+
+# A chapter waiting to download.
+chapter-state-queued = Sırada
+
+# A chapter waiting for Wi-Fi to download.
+chapter-state-wifi = Sırada · Wi-Fi bekliyor
+
+# A chapter downloading.
+chapter-state-downloading = İndiriliyor · { $done } / { $total } sayfa
+
+# A chapter that failed to download, with the reason.
+chapter-state-failed = İndirilemedi. { $reason }
+
+# A part-read chapter.
+chapter-state-page-of = Sayfa { $page } / { $of }
+
+# A part-read chapter whose length isn't known.
+chapter-state-page = Sayfa { $page }
+
+# A read chapter.
+chapter-state-read = Okundu
+
+# A chapter that came out since you last looked.
+chapter-state-new = Yeni
+
+# Button: stop a chapter's download.
+chapter-download-stop = İndirmeyi durdur
+
+# Button: try a failed chapter's download again.
+chapter-retry = Yeniden dene
+
+# Chapter menu item.
+chapter-download-delete = İndirmeyi sil
+
+# Download menu item.
+download-next = Sonraki { $n } okunmamış
+
+# Download menu item.
+download-unread = Tüm okunmamış bölümler
+
+# Download menu item: a volume's chapters not yet downloaded.
+download-volume-count =
+    { $n ->
+        [one] { $volume } · 1 bölüm
+       *[other] { $volume } · { $n } bölüm
+    }
+
+# Download menu item: turns on choosing chapters in the list.
+download-choose = Bölüm seç…
+
+# Download menu item.
+download-delete-series = Bu serinin indirmelerini sil
+
+# The amber button in the Choose chapters bar.
+download-chapters =
+    { $n ->
+        [one] 1 bölümü indir
+       *[other] { $n } bölümü indir
+    }
+
+# Line above that button.
+download-over-wifi = Wi-Fi ile
+
+# Title of the question before reading a series again.
+read-again-title = { $title } baştan okunsun mu?
+
+# What happens on each side.
+read-again-line = Yeriniz tüm cihazlarınızda 1. bölüme döner. Bölümler takip hizmetleriinizde okundu olarak kalır ve AniList yeniden okumayı sayar.
+
+# The confirming button.
+read-again-confirm = Yeniden oku
+
+# Title of the sheet that changes where a series' chapters come from.
+series-read-from-title = Şuradan oku
+
+# While the sheet asks every source.
+series-read-from-asking = Kaynaklarınıza soruluyor…
+
+# The sheet with no source that has the series.
+series-read-from-none-title = Bu seri hiçbir kaynakta yok
+
+# Line under it.
+series-read-from-none-line = Kaynaklarınız içinde bir klasör, sunucu veya eklenti mağazası ekleyin.
+
+# A source's chapters, first on its line.
+series-read-from-chapters = Bölüm 1 - { $latest }
+
+# A source's chapters, after its kind on the line.
+series-read-from-chapters-later = bölüm 1 - { $latest }
+
+# After a folder's chapters.
+series-read-from-on-device = bu { $device } üzerinde
+
+# Footnote of the Read from sheet.
+series-read-from-note = Okundu işaretleri seriye aittir, bu yüzden değiştirdiğinizde taşınır. Eski kaynak indirmeleri siz silene kadar kalır.
+
+# Heading for trackers that don't track this series.
+series-not-tracked = Burada takip edilmiyor
+
+# A tracker that isn't connected.
+series-tracker-connect = Bu seriyi takip etmek için Ayarlar'dan bağlanın
+
+# A tracker that has no such series.
+series-tracker-not-there = Bu takip hizmetinde eşleşme yok
+
+# A tracker looking for the series.
+series-tracker-looking = Bu seri aranıyor…
+
+# A tracker that is behind, and catches up on the next sync.
+series-tracker-behind = Bölüm { $has } kayıtlı. Sonraki eşitlemede { $gets } olur.
+
+# A tracker ahead of Kaeri.
+series-tracker-ahead = Bölüm { $has } kayıtlı, Kaeri'den ilerde.
+
+# A tracker's score out of ten.
+series-tracker-score = { $score } / 10
+
+# Menu item on a tracker that differs.
+series-tracker-keep-kaeri = Kaeri'nin yerini koru
+
+# Menu item on a tracker that differs.
+series-tracker-take-theirs = { $tracker } yerini kullan
+
+# Under a tracker's guesses for the series.
+series-tracker-none-of-these = Hiçbiri
+
+# AniList's list.
+read-list-reading = Okunan
+
+# AniList's list.
+read-list-planning = Planlanan
+
+# AniList's list.
+read-list-completed = Tamamlanan
+
+# AniList's list.
+read-list-paused = Duraklatılan
+
+# AniList's list.
+read-list-dropped = Bırakılan
+
+# AniList's list.
+read-list-rereading = Yeniden okunan
+
+# Series in folders and servers that are on no list.
+read-list-your-files = Dosyalarınız
+
+# A choice.
+medium-watch = İzle
+
+# A choice.
+medium-read = Oku
+
+# A choice.
+medium-both = İkisi de
+
+# Line under the Watch choice.
+medium-watch-line = Kaynaklarınızdan diziler ve filmler
+
+# Line under the Read choice.
+medium-read-line = Kaynaklarınızdan manga, webtoon ve hafif romanlar
+
+# Line under the Both choice.
+medium-both-line = İzleme ve okuma, her biri kendi yerinde
+
+# The answer, as the Settings row says it.
+medium-answer-watch = İzleme
+
+# The answer, as the Settings row says it.
+medium-answer-read = Okuma
+
+# The answer, as the Settings row says it.
+medium-answer-both = İzleme ve okuma
+
+# Title of the sheet and the toolbar button.
+sources-add-title = Kaynak ekle
+
+# Line in the Add a source sheet.
+book-add-line = Elinizdeki kitaplar ya da sahibinin sizi davet ettiği bir mağazadan eklentiler.
+
+# A kind in the Add a source sheet.
+book-add-folder = Bir klasör
+
+# Line under it.
+book-add-folder-line = Bu { $device } veya bir sürücüdeki CBZ, EPUB, PDF ve görsel klasörleri
+
+# A kind in the Add a source sheet.
+book-add-server = Bir sunucu
+
+# Line under it.
+book-add-server-line = Komga, Kavita veya oturum açabildiğiniz bir OPDS kataloğu
+
+# A kind in the Add a source sheet.
+book-add-store = Bir eklenti mağazası
+
+# Line under it.
+book-add-store-line = Mağaza sahibinin davetini yapıştırın
+
+# Title of the Add a server sheet.
+book-add-server-title = Sunucu ekle
+
+# The sheet's amber button.
+book-add-server-button = Sunucuyu ekle
+
+# What the address answered, before the sign-in.
+sources-found-server = { $kind } sunucusu bulundu
+
+# What the server held once signed in, when it said how many series it lists.
+sources-found-server-series =
+    { $n ->
+        [one] 1 serili bir { $kind } sunucusu bulundu
+       *[other] { $n } serili bir { $kind } sunucusu bulundu
+    }
+
+# While the address is tried.
+book-server-looking = Bu adrese bakılıyor…
+
+# Line under the password.
+book-server-note = Kaeri okuma ilerlemenizi bu sunucuya geri gönderir. Parola Anahtar Zinciri'nde kalır.
+
+# Heading in Your sources.
+book-sources-folders = Klasörler
+
+# Heading in Your sources.
+book-sources-servers = Sunucular
+
+# Heading in Your sources.
+book-sources-plugins = Eklentiler
+
+# Under the plugins, before a link to the plugin stores.
+book-sources-plugins-footer = Eklentiler, katıldığınız eklenti mağazaları üzerinden gelir.
+
+# How many series a folder or server holds.
+book-sources-series =
+    { $n ->
+        [one] 1 seri
+       *[other] { $n } seri
+    }
+
+# A folder being looked through.
+book-sources-scanning = Taranıyor · { $n } bulundu
+
+# A folder that can't be found, such as a drive that isn't plugged in.
+book-sources-missing = Bulunamadı. Sürücü bağlı mı?
+
+# A source that is turned off.
+book-sources-off = Kapalı
+
+# On a server's line.
+book-sources-progress-back = ilerleme sunucuya geri gider
+
+# A server's kind.
+book-sources-opds = OPDS kataloğu
+
+# A plugin's store.
+book-sources-from-store = Şuradan: { $store }
+
+# A plugin's version.
+book-sources-version = v{ $version }
+
+# Button on a folder: series whose match needs a look.
+book-sources-check-matches = Eşleşmeleri kontrol et · { $n }
+
+# Title of the Check matches sheet.
+book-sources-check-matches-title = Eşleşmeleri kontrol et
+
+# A folder menu item: look through the folders again.
+book-sources-scan = Yeniden tara
+
+# A server menu switch.
+book-sources-report-progress = İlerlemeyi sunucuya gönder
+
+# A server menu switch.
+book-sources-use = Bu sunucuyu kullan
+
+# An address that answered but serves no books.
+book-sources-not-a-book-server = Bu adres yanıt veriyor ama bir kitap sunucusu değil.
+
+# A folder name with no match.
+book-sources-no-match = Eşleşme yok
+
+# Button: keep the series as Your files, unmatched.
+book-sources-keep = Eşleşmeyenleri koru
+
+# Button: search for the match by hand.
+book-sources-find = Bul
+
+# Footnote of the Check matches sheet.
+book-sources-unmatched-note = Eşleşmeyen serileri yine klasörden okuyabilirsiniz. Eşleşene kadar ilerlemeleri takip hizmetine gitmez.
+
+# Accessibility label of the control that sets Shows or Reading in the Library and Search.
+library-scope-label = Diziler veya Okuma
+
+# A side of that control.
+library-scope-shows = Diziler
+
+# A side of that control.
+library-scope-reading = Okuma
+
+# The reading library's order: as the engine sends it, most recently read first.
+read-sort-last-read = Son okunan
+
+# Accessibility value of the list menu: the list and how many series are on it.
+read-library-list-value =
+    { $n ->
+        [one] { $list }, 1 seri
+       *[other] { $list }, { $n } seri
+    }
+
+# A reading list with nothing on it. A Search button follows.
+read-library-empty = Henüz boş: { $list }
+
+# Line under it.
+read-library-empty-line = Arama'dan ya da seri sayfasından eklediğiniz seriler burada görünür.
+
+# Your files with nothing in it.
+read-library-files-empty-title = Dosyalarınızda henüz bir şey yok
+
+# Line under it.
+read-library-files-empty-line = Klasörlerinizdeki ve sunucularınızdaki, hiçbir listede olmayan seriler burada görünür.
+
+# The button under it.
+read-library-files-add = Klasör veya sunucu ekle
+
+# The search field's prompt while Search looks for reading.
+read-search-placeholder = Okumada ara
+
+# The last row of reading's results with both media on: matches in the other scope.
+search-other-scope =
+    { $n ->
+        [one] 1 eşleşme: { $scope }
+       *[other] { $n } eşleşme: { $scope }
+    }
+
+# The button on that row, which switches the scope.
+search-show-them = Göster
+
+# The line over browsing: what is shown, and where the list comes from.
+read-search-browse-line = { $what } · AniList'ten
+
+# Over reading's results once every result is listed: how many series AniList found.
+read-search-total =
+    { $n ->
+        [one] AniList'te 1 seri bulundu
+       *[other] AniList'te { $n } seri bulundu
+    }
+
+# Search couldn't ask AniList.
+read-search-failed = Aranamadı
+
+# No results for what was typed.
+read-search-nothing = { $query } için bir şey bulunamadı
+
+# No results while browsing with filters.
+read-search-nothing-browse = Bu filtrelere uyan bir şey yok
+
+# Line under no results.
+read-search-nothing-line = Başka sözcükler ya da başka dilde bir başlık deneyin.
+
+# Line under no results with filters set. A Clear filters button follows.
+read-search-nothing-filters-line = Daha az filtre daha çok sonuç verebilir.
+
+# The button under it.
+read-search-clear-filters = Filtreleri temizle
+
+# A sort of reading's Search, AniList's.
+read-sort-trending = Trend
+
+# A sort of reading's Search, AniList's.
+read-sort-score = Puan
+
+# A sort of reading's Search, AniList's.
+read-sort-newest = En yeni
+
+# A filter.
+read-filter-format = Format
+
+# A filter.
+read-filter-origin = Köken
+
+# A filter.
+read-filter-status = Durum
+
+# A filter.
+read-filter-genres = Türler
+
+# Title of the iPhone's filters sheet.
+read-filter-title = Filtreler
+
+# Button in that sheet that clears every filter.
+read-filter-reset = Sıfırla
+
+# Accessibility value of a filter with nothing chosen.
+read-filter-any = Fark etmez
+
+# A filter's name before its value, once set: "Origin: Korea".
+read-filter-set = { $name }:
+
+# A filter with several values: the first, then how many more.
+read-filter-many = { $first } ve { $more } tane daha
+
+# A genre left out.
+read-filter-not-genre = { $genre } hariç
+
+# How many genres are set.
+read-filter-genres-count =
+    { $n ->
+        [one] 1 tür
+       *[other] { $n } tür
+    }
+
+# A genre's state: only series with it.
+read-filter-included = Dahil
+
+# A genre's state: no series with it.
+read-filter-left-out = Hariç
+
+# A filter of reading's Search: when a series started.
+read-search-started = Başlangıç
+
+# The filter bar's chip that searches only the person's own sources, leaving AniList out.
+read-search-sources-only = Yalnızca kaynaklarınız
+
+# Search's section heading under AniList's results: one group per source of the person's.
+read-search-from-sources = Kaynaklarınızdan
+
+# E-ink and the terminal: a source group still waiting for its answer. Also its screen reader label. The source is its name.
+read-search-asking = { $source } bekleniyor…
+
+# A source group whose source failed to answer. The reason and Try again follow.
+read-search-source-failed = { $source } yanıt vermedi.
+
+# The reason under it when the source gave no answer in time.
+read-search-source-timeout = { $seconds } sn içinde yanıt yok.
+
+# One line at the end of the sources' groups for every source that found nothing. The sources are their names, joined as a list.
+read-search-source-nothing = Şunlarda bir şey bulunamadı: { $sources }.
+
+# On an AniList result that one of the person's sources has. The source is its name.
+read-search-in-source = { $source } içinde
+
+# On an AniList result that more than one of the person's sources has. Always 2 or more.
+read-search-in-sources =
+    { $n ->
+        [one] Kaynaklarınızın { $n } tanesinde
+       *[other] Kaynaklarınızın { $n } tanesinde
+    }
+
+# Search, when AniList found nothing but the person's sources did.
+read-search-anilist-nothing = AniList bu sözcüklerle bir şey bulamadı.
+
+# Search, when AniList could not be reached.
+read-search-anilist-failed = AniList yanıt vermedi.
+
+# The line under it.
+read-search-anilist-failed-line = Kaynaklarınıza yine de soruldu.
+
+# Search, when nothing was found anywhere: under the line saying AniList found nothing.
+read-search-sources-nothing = Kaynaklarınızda da bir şey yok.
+
+# Over reading's results while more pages are to come, so AniList's count is not known yet.
+read-search-total-unknown = AniList'ten seriler
+
+# The link under From your sources that shows the rest of AniList's results.
+read-search-more-anilist = AniList'ten daha fazlası
+
+# Beside More from AniList: how many of AniList's results show.
+read-search-shown = { $shown } / { $total } gösteriliyor
+
+# Beside More from AniList while AniList's count is not known yet: how many results show.
+read-search-shown-some = { $shown } gösteriliyor
+
+# Beside a source's name in Search: the kind of source it is.
+read-search-source-kind-server = Sunucu
+
+read-search-source-kind-folder = Klasör
+
+read-search-source-kind-plugin = Eklenti
+
+# The button of a source group with more than five hits.
+read-search-source-more = { $n } tane daha göster
+
+# Over a first-run page's title: which page of how many.
+onboarding-step = { $step } / { $total }
+
+# Line under "Welcome to Kaeri" on the first page, naming both media.
+onboarding-welcome-line = Kendi kaynaklarınızdan izlediklerinizi ve okuduklarınızı takip edin.
+
+# Note under the welcome line.
+onboarding-welcome-note = Listeleriniz ve ilerlemeniz cihazlarınızda kalır. Takip hizmetleri ve kaynaklar eklemek size kalmış.
+
+# Title of the page that asks what Kaeri is for, and of the sheet after the update.
+onboarding-medium-title = İzle, oku veya ikisi de?
+
+# Line under the title of the medium page.
+onboarding-medium-line = Kaeri yalnızca seçtiğinizi gösterir. Bunu Ayarlar'dan değiştirebilirsiniz.
+
+# Accessibility hint on Continue while nothing is chosen on the medium page.
+onboarding-medium-hint = Önce üçünden birini seçin
+
+# Title of the first-run page that offers AniList.
+onboarding-lists-title = Listelerinizi getirin
+
+# Line on the AniList page after Watch.
+onboarding-lists-line-watch = Kaeri, izlediklerinizi { $tracker } ile eşit tutar.
+
+# Line on the AniList page after Read.
+onboarding-lists-line-read = Kaeri, okuduklarınızı { $tracker } ile eşit tutar.
+
+# Line on the AniList page after Both.
+onboarding-lists-line-both = Kaeri, okuduklarınızı ve izlediklerinizi { $tracker } ile eşit tutar.
+
+# Line under AniList's name on the first-run page.
+onboarding-lists-anilist-line = Listeler, ilerleme ve öneriler
+
+# Under AniList on the first-run page after Watch: the other trackers, for later.
+onboarding-lists-later-watch = MyAnimeList, Kitsu, Simkl ve Trakt'ı daha sonra Ayarlar'da Hesaplar altından ekleyebilirsiniz.
+
+# Under AniList on the first-run page after Read: the other trackers, for later.
+onboarding-lists-later-read = MyAnimeList, Kitsu ve MangaUpdates'i daha sonra Ayarlar'da Hesaplar altından ekleyebilirsiniz.
+
+# Under AniList on the first-run page after Both: the other trackers, for later.
+onboarding-lists-later-both = MyAnimeList, Kitsu, MangaUpdates, Simkl ve Trakt'ı daha sonra Ayarlar'da Hesaplar altından ekleyebilirsiniz.
+
+# The first-run page's main button: sign in to the tracker.
+onboarding-connect = { $tracker } bağla
+
+# Title of the last first-run page after Read or Both.
+onboarding-books-title = Kitaplarınız nereden gelir
+
+# Line under the title of the books page.
+onboarding-books-line = Kaeri kitapsız gelir. Elinizdekileri ekleyin ya da sahibinin davetiyle bir eklenti mağazasına katılın.
+
+# Row on the books page: add a folder of books.
+onboarding-books-folder = Klasör ekle
+
+# Line under Add a folder on the books page.
+onboarding-books-folder-line = CBZ, EPUB, PDF ve görsel klasörleri
+
+# Row on the books page: add a book server.
+onboarding-books-server = Sunucu ekle
+
+# Line under Add a server on the books page.
+onboarding-books-server-line = Komga, Kavita veya bir OPDS kataloğu
+
+# Heading over the invite field on the books page.
+onboarding-books-invite-heading = Eklenti mağazası daveti
+
+# Placeholder of the invite field on the books page.
+onboarding-books-invite-placeholder = Davet yapıştırın
+
+# Line under the invite field: whose code a plugin is.
+onboarding-books-plugin-line = Eklentiler, güvendiğiniz kişilerin kodunu çalıştırır. Yalnızca sahibini tanıdığınız eklenti mağazalarına katılın.
+
+# Title of the last first-run page after Both: where shows and books come from.
+onboarding-both-title = Dizileriniz ve kitaplarınız nereden gelir
+
+# Line under the title of that page.
+onboarding-both-line = Kaeri dizisiz ve kitapsız gelir. Elinizdekileri ekleyin ya da sahibinin davetiyle bir eklenti mağazasına katılın.
+
+# Heading over the shows' rows on that page.
+onboarding-both-shows = Diziler
+
+# Heading over the books' rows on that page.
+onboarding-both-books = Kitaplar
+
+# Line under Add a folder in the shows' part, on a computer.
+onboarding-both-shows-folder-line = Bu { $device } üzerindeki video dosyaları
+
+# Line under Add a server in the shows' part.
+onboarding-both-shows-server-line = Jellyfin sunucunuz
+
+# Accessibility value of a choice row: its place among the three.
+medium-choice-position = { $n } / { $total }
+
+# Under the choices in the sheet.
+medium-change-later = Bunu Ayarlar'dan değiştirebilirsiniz.
+
+# Line of the sheet over Home after the update that brought reading.
+medium-update-line = Kaeri artık kaynaklarınızdan manga, webtoon ve hafif roman okuyabilir. Bu { $device } üzerinde Kaeri uygulamasının ne için kullanılacağını seçin.
+
+# Title of the sheet when the other devices answer Watch. The devices are their names, joined; n is how many there are.
+medium-join-title-watch =
+    { $n ->
+        [one] { $devices } izleme için ayarlı
+       *[other] { $devices } izleme için ayarlı
+    }
+
+# Title of the sheet when the other devices answer Read.
+medium-join-title-read =
+    { $n ->
+        [one] { $devices } okuma için ayarlı
+       *[other] { $devices } okuma için ayarlı
+    }
+
+# Title of the sheet when the other devices answer Both.
+medium-join-title-both =
+    { $n ->
+        [one] { $devices } izleme ve okuma için ayarlı
+       *[other] { $devices } izleme ve okuma için ayarlı
+    }
+
+# Line of the sheet on joining.
+medium-join-line = Bu { $device } üzerinde Kaeri uygulamasının ne için kullanılacağını seçin. Her cihaz kendi yanıtını tutar.
+
+# Title of the confirmation before watching is turned off.
+medium-off-title-watch = İzleme kapatılsın mı?
+
+# Title of the confirmation before reading is turned off.
+medium-off-title-read = Okuma kapatılsın mı?
+
+# What turning watching off does.
+medium-off-watch-body = Takvim, Sezon, Birlikte izle ve dizileriniz bu { $device } üzerinde Kaeri içinden kalkar. Listeniz, ilerlemeniz ve indirmeleriniz kalır; izlemeyi yeniden açarsanız geri gelir.
+
+# What turning reading off does.
+medium-off-read-body = Güncellemeler ve okuduklarınız bu { $device } üzerinde Kaeri içinden kalkar. Listeniz, ilerlemeniz ve indirmeleriniz kalır; okumayı yeniden açarsanız geri gelir.
+
+# Switch in the confirmation, off by default.
+medium-off-delete-watch = İndirilen bölümleri sil
+
+# Switch in the confirmation, off by default.
+medium-off-delete-read = İndirilen bölümleri sil
+
+# Under the switch: how much the downloads take.
+medium-off-delete-size = Bu { $device } üzerinde { $size }
+
+# The confirmation's main button.
+medium-off-confirm-watch = İzlemeyi kapat
+
+# The confirmation's main button.
+medium-off-confirm-read = Okumayı kapat
+
+# Settings row and page: what Kaeri is for on this device.
+settings-kaeri-is-for = Kaeri şunun için
+
+# Line under Kaeri is for on the Mac and iPad.
+settings-medium-note = Her cihaz kendi yanıtını tutar
+
+# Under the choices on the iPhone's page.
+settings-medium-footer = Her cihaz kendi yanıtını tutar. Birini kapatmak listesini, ilerlemesini ve indirmelerini korur.
+
+# Line under Open at.
+settings-open-at-note = Kaeri hangi ana sayfayla açılır
+
+# Settings pane and group: reading.
+settings-group-reading = Okuma
+
+# Downloads group with both media on: shows.
+settings-group-shows = Diziler
+
+# The Reading pane's column beside it.
+settings-aside-reading = Okuyucu varsayılanları her serinin başlangıç noktasıdır. Okuyucuda değiştirdiğiniz seri kendi seçimlerini korur.
+
+# Group: how the reader opens each kind of book.
+settings-reader-defaults = Okuyucu varsayılanları
+
+# Under the reader defaults.
+settings-reader-defaults-footer = Değiştirdiğiniz seri kendi modunu, yönünü ve görünümünü korur.
+
+# Row: manga's reader default.
+settings-reader-manga = Manga
+
+# Row: webtoons' reader default.
+settings-reader-webtoons = Webtoonlar
+
+# Line under Webtoons.
+settings-reader-webtoons-note = Webtoonlar her zaman uzun şerit olarak açılır
+
+# Row: light novels' reader default.
+settings-reader-novels = Hafif romanlar
+
+# A reader default: pages turned right to left.
+settings-reader-rtl = Sayfalar, sağdan sola
+
+# A reader default: pages turned left to right.
+settings-reader-ltr = Sayfalar, soldan sağa
+
+# A reader default: one long strip.
+settings-reader-strip = Uzun şerit
+
+# A reader default for novels: pages.
+settings-reader-pages = Sayfalar
+
+# A reader default for novels: one scrolling column.
+settings-reader-scrolled = Kaydırma
+
+# Row: when a chapter counts as read.
+settings-counts-read = Okundu sayılma
+
+# Line under Counts as read.
+settings-counts-read-note = Son sayfada kısa bir bekleme ya da sonraki bölüme geçiş
+
+# Value of Counts as read: a short stay on the last page, or moving on past it.
+settings-counts-read-value = Son sayfadan sonra
+
+# Value of Counts as read: only moving on past the last page, to the end or the next chapter.
+settings-counts-read-moving-on = Ondan ilerleyince
+
+# Line under Counts as read when it is Moving on from it.
+settings-counts-read-moving-on-note = Son sayfayı çevirmek ya da sonraki bölümü açmak
+
+# Value of Counts as read: only the person's own marks; the reader marks nothing.
+settings-counts-read-marked = Siz işaretleyince
+
+# Line under Counts as read when it is When you mark it.
+settings-counts-read-marked-note = Okumayı sürdür ve takip hizmetleri işaretlerinizi izler
+
+# Group: series settings that follow you to your other devices.
+settings-follow-group = Size eşlik eden seri ayarları
+
+# Row in that group.
+settings-follow-mode = Mod, yön ve renk
+
+# Line under that row.
+settings-follow-mode-note = Değiştirdiğiniz seri diğer cihazlarınızda da aynı okunur
+
+# Under the group: what stays on this device.
+settings-follow-footer = Yazı boyutu, kenar boşlukları, dokunma bölgeleri ve yenileme bu { $device } üzerinde kalır.
+
+# Line under Look in Series settings that follow you.
+settings-look-follows-note = Renkli sayfalar ya da e-ink için gri
+
+# Value of New chapters in Downloads: the series on the Reading list.
+settings-new-chapters-reading = Okuma listesindeki seriler
+
+# Line under New chapters in Downloads.
+settings-new-chapters-note = Okunan bir serinin sonraki bölümleri de hazır tutulur
+
+# Group in Accounts: how reading progress goes to the trackers.
+settings-progress-group = İlerleme
+
+# Value of Send progress after: as each chapter counts as read.
+settings-progress-chapter = Bir bölüm okunduğunda
+
+# Value of Send progress after: once, when the reader closes.
+settings-progress-close = Okuyucu kapanınca
+
+# Value of When trackers disagree: the higher chapter wins.
+settings-disagree-furthest = En ilerideki kalsın
+
+# Value of When trackers disagree: the newest change wins, even a lower chapter.
+settings-disagree-latest = Son değişiklik
+
+# Line under When trackers disagree.
+settings-disagree-note = Durum ve puan son değişikliği izler
+
+# Line under Keep next chapters ready.
+settings-keep-chapters-ready-note = Okuma listenizdeki serilerin sonraki bölümleri
+
+# Line under Delete chapters after reading.
+settings-delete-after-reading-note = Yer imli bölümler saklanır
+
+# Line under New chapters.
+settings-chapter-notifications-note = Okuma listenizdeki seriler
+
+# Line under Downloads finished.
+settings-downloads-finished-note = İndirilen tüm bölümler bitince
+
+# Under New chapters.
+settings-chapter-notifications-footer = Bölümlerin kendi sistem kanalı vardır; böylece onları sessize alıp gerisini açık tutabilirsiniz.
+
+# Credit under the trackers with reading on.
+accounts-mangaupdates-credit = Kaeri, MangaUpdates ile herkese açık API'si üzerinden iletişim kurar.
+
+# Placeholder of the user name field when signing in to MangaUpdates.
+accounts-username = Kullanıcı adı
+
+# Beside the Reading heading in Downloads: how many chapters are kept and their size.
+read-downloads-total =
+    { $n ->
+        [one] { $n } bölüm · { $size }
+       *[other] { $n } bölüm · { $size }
+    }
+
+# A series' line in Downloads while a chapter downloads.
+read-downloads-active = { $chapter } · { $done } / { $total } sayfa
+
+# After the chapter downloading: how many more wait.
+read-downloads-more-queued = { $n } tane daha sırada
+
+# A series' line in Downloads when its chapters wait to start.
+read-downloads-queued =
+    { $n ->
+        [one] { $n } bölüm sırada
+       *[other] { $n } bölüm sırada
+    }
+
+# A series' line in Downloads when a chapter failed, with the reason.
+read-downloads-failed = { $chapter } indirilemedi. { $reason }
+
+# A series' line in Downloads: how many chapters are kept.
+read-downloads-kept =
+    { $n ->
+        [one] { $n } bölüm
+       *[other] { $n } bölüm
+    }
+
+# After the kept count: how many of them are read.
+read-downloads-read = { $n } okundu
+
+# Button on a series in Downloads: delete its read chapters, keeping bookmarked ones.
+read-downloads-delete-read = Okunanları sil
+
+# Title of the Send to e-reader sheet, the chapter menu's item and the Settings row.
+send-title = E-okuyucuya gönder
+
+# Heading over the e-readers to choose from in the Send to e-reader sheet.
+send-for = Hedef
+
+# Heading over what is being sent in the Send to e-reader sheet.
+send-what = İçerik
+
+# Row in the Send to e-reader sheet: the chapters being sent.
+send-chapters = Bölümler
+
+# The chapters being sent when there is one: its number or label.
+send-chapters-one = { $chapter }
+
+# The chapters being sent when there are several, from the first to the last.
+send-chapters-range = { $first } ile { $last } arası
+
+# Row in the Send to e-reader sheet: how big the files will be.
+send-size = Boyut
+
+# The size of what is being sent, already sized (such as "64 MB"). It is a guess until the files are made.
+send-size-about = Yaklaşık { $size }
+
+# Under the e-readers in the Send to e-reader sheet: what Kaeri cannot know after the files are sent.
+send-no-place = Kaeri bu e-okuyucudaki yerinizi göremez. Döndüğünüzde seri sayfası nerede kaldığınızı sorar.
+
+# The one main button of the Send to e-reader sheet. It makes the files and then opens the share sheet.
+send-prepare = Hazırla ve paylaş
+
+# While the files are made: which chapter of how many. The ring beside it shows how far along.
+send-preparing =
+    { $total ->
+        [one] Bölüm hazırlanıyor
+       *[other] { $done } / { $total } bölüm hazırlanıyor
+    }
+
+# Under the progress of a send to a device: what the pages are made for.
+send-sized-for = Sayfalar { $device } için boyutlandırıldı
+
+# Under the size in the Send sheet when the files are over what the e-reader takes in one file.
+send-in-parts = { $size } boyutunu aşıyor, bu yüzden dosyalar parça parça gider.
+
+# A send that failed on one chapter. The cause is the sentence that says why.
+send-failed-chapter = Bölüm { $chapter } hazırlanamadı. { $cause }
+
+# A send that failed before or after its chapters. The cause is the sentence that says why.
+send-failed = Dosyalar hazırlanamadı. { $cause }
+
+# Text of the Send sheet's Size row while the size is still being worked out.
+send-size-working = Hesaplanıyor
+
+# Spoken value of the Chapters row in the Send sheet while its list is open.
+send-chapters-open = Açık
+
+# Spoken value of the Chapters row in the Send sheet while its list is closed.
+send-chapters-closed = Kapalı
+
+# Spoken value of the ring in a send under way. Already a number from 0 to 100.
+send-progress-spoken = Yüzde { $percent }
+
+# Spoken action on a chapter row of a series: sends that chapter to an e-reader.
+send-chapter-action = E-okuyucuya gönder
+
+# Under an e-reader in the sheet when it takes files in parts: the size where a file is split.
+send-parts-over = { $size } üzerindeyse parçalara bölünür
+
+# While a send waits for the network and the person can stop it. The engine's own line comes first.
+send-waiting-cancel = Gönderimi iptal et
+
+# When the files are ready, over the button that opens the share sheet. The count is how many files.
+send-ready =
+    { $n ->
+        [one] Bir dosya hazır.
+       *[other] { $n } dosya hazır.
+    }
+
+# Button in the Send to e-reader sheet that opens the share sheet again, after it was closed without sharing.
+send-share-again = Yeniden paylaş
+
+# A send in a list or banner that is under way, with a ring beside it. The device is the e-reader.
+send-banner = Gönderiliyor: { $device }
+
+# The format of the files an e-reader is sent: a manga as a fixed-layout EPUB.
+send-format-fixed-epub = Sabit düzenli EPUB
+
+# The format of the files an e-reader is sent: the Kobo form of EPUB.
+send-format-kepub = KEPUB
+
+# The format of the files an e-reader is sent: a plain EPUB.
+send-format-epub = EPUB
+
+# The format of the files an e-reader is sent: a comic book archive.
+send-format-cbz = CBZ
+
+# Line under an e-reader in the picker: the format the files will have, and the screen they are made for in pixels.
+send-target-line = { $format } · { $width } × { $height }
+
+# Title of the sheet that asks where you stopped reading on the e-reader.
+stop-title = Nerede kaldınız?
+
+# Note on a series page after chapters were sent: opens the question.
+stop-note = Bölümleri { $device } e-okuyucusuna gönderdiniz. Nerede kaldınız?
+
+# Button in that note.
+stop-note-action = Yerinizi belirleyin
+
+# First line of the sheet when one chapter was sent. The date is already written out (such as "2 November").
+stop-sent-one = Bölüm { $chapter }, { $date } tarihinde { $device } e-okuyucusuna gönderildi.
+
+# First line of the sheet when several chapters were sent, from the first to the last.
+stop-sent-range = { $first } ile { $last } arasındaki bölümler { $date } tarihinde { $device } e-okuyucusuna gönderildi.
+
+# Switch in the sheet: the last chapter sent was read to its end.
+stop-finished = Bölüm { $chapter } bitirildi
+
+# The main button of the sheet: keeps the chapter chosen as the place.
+stop-set = Yerinizi belirleyin
+
+# The other button of the sheet: leaves the place as it is, with the place named.
+stop-keep = Bölüm { $chapter } · sayfa { $page } kalsın
+
+# The other button of the sheet when the place is not a page.
+stop-keep-plain = Mevcut yeri koru
+
+# Heading of the E-readers group in the Reading settings.
+ereaders-group = E-okuyucular
+
+# Row in the E-readers group: the e-reader Send to e-reader offers first. The value is the e-reader's name.
+ereaders-send-row = E-okuyucuya gönder
+
+# Row in the E-readers group that opens the feed settings. The value is On or Off.
+ereaders-feed-row = OPDS akışı
+
+# Line under the Share on this network switch.
+opds-share-note = Evdeki e-okuyucuların göz atabileceği bir OPDS kataloğu
+
+# Footnote under the feed settings.
+opds-footer = Akış yalnızca Kaeri bu { $device } üzerinde açıkken çalışır. O e-okuyuculardaki ilerleme orada kalır.
+
+# Row in the feed settings: the web address e-readers are given, with a button that copies it.
+opds-address = Adres
+
+# Shown in place of the address while the feed is off or has no password.
+opds-address-off = Adresini almak için akışı açın.
+
+# Row in the feed settings: the password e-readers ask for.
+opds-password = Parola
+
+# Line under the password row.
+opds-password-note = E-okuyucular bunu bir kez sorar
+
+# Button in the feed settings that makes a new password. The e-readers ask for the new one.
+opds-new-password = Yeni parola
+
+# Row in the feed settings: the port the feed listens on.
+opds-port = Port
+
+# Line under the port row when it is empty.
+opds-port-note = Herhangi bir boş port için boş bırakın ya da 1024 ile 65535 arasından birini seçin
+
+# Line under the port row when the port asked for was taken and another is used.
+opds-port-moved = Port { $wanted } doluydu, bu yüzden akış { $port } portunu kullanıyor.
+
+# Heading of the group that picks what the feed shares.
+opds-shares = Neleri paylaşır
+
+# Row in What it shares: the chapters downloaded on this device.
+opds-share-downloads = İndirilenler
+
+# Line under that row.
+opds-share-downloads-count =
+    { $n ->
+        [one] Bir bölüm
+       *[other] { $n } bölüm
+    }
+
+# Row in What it shares: the series in the manga and comic folders.
+opds-share-manga = Manga klasörü
+
+# Row in What it shares: the series in the novel folders.
+opds-share-novels = Roman klasörü
+
+# Line under a folder row.
+opds-share-series-count =
+    { $n ->
+        [one] Bir seri
+       *[other] { $n } seri
+    }
+
+# Heading of the list of e-readers that fetched files from the feed.
+opds-fetched-by = Alan e-okuyucular
+
+# Line when no e-reader has fetched anything since the feed started.
+opds-fetched-none = Henüz hiçbir e-okuyucu bir şey almadı.
+
+# Shown in place of the address while the feed is switched on and starting to listen.
+opds-starting = Başlatılıyor…
+
+# Shown in place of the address while the feed is on but the Mac is on no local network.
+opds-paused-none = Duraklatıldı. Bu Mac yerel bir ağda değil.
+
+# Shown in place of the address while the feed is on but the only connection goes through a VPN.
+opds-paused-vpn = Duraklatıldı. Bu Mac yalnızca bir VPN üzerinden bağlı.
+
+# Title of the question before a new feed password is made.
+opds-new-password-title = Yeni parola oluşturulsun mu?
+
+# Text of that question.
+opds-new-password-warning = Akışı zaten kullanan e-okuyucular, yeni parolayı her birine yazana kadar çalışmaz.
+
+# Spoken value of the Fetched by list's rows when an e-reader's last request is given. The time is already written out.
+opds-fetched-time = Son istek: { $time }
+
+# Line under an e-reader in that list: how many files it took.
+opds-fetched-files =
+    { $n ->
+        [one] Bir dosya
+       *[other] { $n } dosya
+    }
+
+# Name for an e-reader that did not give one.
+opds-reader-unnamed = { $address } adresindeki e-okuyucu
+
 # Button that shows the season before.
 seasonal-previous = Önceki sezon
 
@@ -7632,7 +10307,7 @@ seasonal-empty-format-detail = Tüm biçimleri deneyin.
 seasonal-filter-in-search = Aramada filtrele
 
 # Tooltip of the Filter in Search button.
-seasonal-filter-help = Bu sezon Arama'da. Her filtre sonuçları daraltır.
+seasonal-filter-help = Bu sezonu, her filtrenin çalıştığı Arama'da açar
 
 # Sort option on Seasonal and Search: most popular first.
 sort-popularity = Popülerlik
@@ -7773,7 +10448,7 @@ filter-where-to-watch = Nerede izlenir
 filter-licensed-only = Yalnızca lisanslı
 
 # Filter name: how titles already on the person's list are treated.
-filter-my-list = Listemdeki başlıklar
+filter-my-list = Listenizdeki başlıklar
 
 # Value of a three-way filter: include the titles.
 filter-show = Göster
@@ -8275,7 +10950,7 @@ servers-error-certificate = { $host }, bu cihazın güvenmediği bir sertifika k
 servers-row-signed-out-here = Oturum kapalı
 
 # Line under it: what signing out does.
-servers-sign-out-line = Bu cihazın sunucudaki oturumunu sonlandırır. Sunucu ve indirmeleriniz olduğu gibi kalır.
+servers-sign-out-line = Oturumu kapatmak, bu cihazın sunucudaki oturumunu sonlandırır. Sunucu ve indirmeleriniz olduğu gibi kalır.
 
 # Settings group and row title for choosing a language.
 settings-language = Dil
@@ -8494,6 +11169,42 @@ settings-wifi-only-detail = İndirmeler Wi-Fi'yi bekler
 # Row: torrents on a mobile connection.
 settings-torrents-cellular = Mobil veride torrent'ler
 
+# Row: whether chapter downloads run on a mobile connection.
+settings-chapter-downloads-cellular = Mobil veriyle bölüm indirme
+
+# Row: keep the next chapters of what you read downloaded.
+settings-keep-chapters-ready = Sonraki bölümleri hazır tut
+
+# Row: delete a downloaded chapter once it is read. Bookmarked chapters stay.
+settings-delete-after-reading = Okuduktan sonra bölümleri sil
+
+# Row: whether a series' reader mode, direction and colour follow you to your other devices.
+settings-series-choices-follow = Seri ayarları cihazlarınıza taşınır
+
+# Row in Downloads: which series' new chapters download by themselves.
+settings-new-chapters-download = Yeni bölümler
+
+# Row: whether a series' own reader mode and direction follow you to your other devices.
+settings-mode-follows = Mod ve yön
+
+# Row: whether a series' own look (colour or greys) follows you to your other devices.
+settings-look-follows = Görünüm
+
+# Row: when chapter progress goes to the reading trackers.
+settings-send-progress-after = İlerlemeyi şundan sonra gönder
+
+# Row: which chapter progress wins when a tracker and this device disagree.
+settings-when-trackers-disagree = Takip hizmetleri uyuşmadığında
+
+# Row: whether a new chapter of a series on your Reading list sends a notification.
+settings-chapter-notifications = Yeni bölümler
+
+# Row: whether the app sends a notification when the chapters it was downloading are all done.
+settings-downloads-finished = İndirmeler tamamlandı
+
+# Row: which Home the app opens at while it is for watching and reading.
+settings-open-at = Açılış ekranı
+
 # Row: seeding after watching.
 settings-seed-after = İzledikten sonra da paylaşmaya devam et
 
@@ -8555,10 +11266,10 @@ settings-artwork-detail = Atıf, uygulamanın yasal notlarında
 settings-new-episodes = Yeni bölümler
 
 # Line under it.
-settings-new-episodes-detail = İzleme listenizdeki diziler için
+settings-new-episodes-detail = İzleme listenizdeki diziler
 
 # Line explaining what a notification says.
-settings-notify-detail = İzlediğiniz bir dizinin yeni bölümü çıktığında tek bildirim: dizi ve bölüm numarası, bölümün adı değil. Bir dizi bunu kendi ayarlarında kapatabilir.
+settings-notify-detail = Takip ettiğiniz bir dizinin bölümü çıktığında tek bildirim alırsınız. Bildirim diziyi ve bölüm numarasını belirtir, bölümün adını hiçbir zaman belirtmez. Bir dizinin bildirimlerini kendi ayarlarından kapatabilirsiniz.
 
 # Row: the coming-up digest.
 settings-coming-up = Yaklaşanlar · sonraki 7 gün
@@ -8570,7 +11281,7 @@ settings-system-notifications = Bildirim ayarları
 settings-system-notifications-detail = Ses, titreşim ve kilit ekranı
 
 # Line under it on Apple.
-settings-system-notifications-apple = Sistem Ayarları'nı açar. Afiş stili, ses ve rozetler orada ayarlanır.
+settings-system-notifications-apple = Afiş stilini, sesi ve rozetleri ayarladığınız Sistem Ayarları'nı açar.
 
 # Line when the system blocks notifications.
 settings-notifications-blocked = Kapalı: sistem Kaeri için bildirimlere izin vermiyor
@@ -8612,7 +11323,7 @@ show-settings-never = Hiçbir zaman
 show-settings-subs-remembered = Son bölümünüzden hatırlandı.
 
 # Line under the subtitles row, when nothing is remembered.
-show-settings-subs-follow = Oynatıcıda seçilir. Ayarlar › Oynatma ayarlarını izler.
+show-settings-subs-follow = Oynatıcıda seçilir. O zamana kadar Ayarlar › Oynatma geçerlidir.
 
 # Row: the source for this show.
 show-settings-source = Kaynak
@@ -8697,7 +11408,7 @@ settings-upscaling-natural = Doğal · ArtCNN
 settings-label-hover-cards = Üzerine gelince kapağı büyüt
 
 # Note under the Expand covers on hover setting. The trailer plays only where the trailers setting lets it.
-settings-hover-cards-note = İmleç bir kapağın üzerinde durunca fragmanlı büyük bir kart gösterilir.
+settings-hover-cards-note = İmleç bir kapağın üzerinde durunca fragmanıyla daha büyük bir kart açılır.
 
 # Preview note under the upscaling frame for the natural look.
 settings-upscaling-note-natural = Çizgiler ve doku olduğu gibi korunur, hiçbir şey yeniden çizilmez.
@@ -8728,6 +11439,12 @@ settings-upscaling-sharp = Keskin · Anime4K
 
 # Side note in Accounts.
 settings-aside-accounts = Kaeri hesap olmadan çalışır. Oturumu kapattığınızda izleme geçmişiniz bu cihazda kalır.
+
+# Side note in Accounts when the app is for reading.
+settings-aside-accounts-read = Kaeri hesapsız çalışır. Oturumu kapattığınızda okuma geçmişiniz bu cihazda kalır.
+
+# Side note in Accounts when the app is for watching and reading.
+settings-aside-accounts-both = Kaeri hesapsız çalışır. Oturumu kapattığınızda izleme ve okuma geçmişiniz bu cihazda kalır.
 
 # Today, inside a line such as "Thursday 16:30".
 widget-day-today = bugün
@@ -8884,6 +11601,249 @@ settings-subs-styled-strip-detail = Her satır altta, sizin stilinizde düz diya
 
 # Button that restores the default subtitle style.
 settings-subs-reset = Altyazı stilini sıfırla
+
+# Row: whether this computer shares its downloads and folders as a catalogue that e-readers on the home network can browse.
+settings-opds-feed = Bu ağda paylaş
+
+# Row: the password e-readers ask for before they browse the shared catalogue.
+settings-opds-password = Akış parolası
+
+# Row: the port the shared catalogue listens on. Empty picks a free one.
+settings-opds-port = Akış portu
+
+# Label of the address field in the Add a server sheet.
+book-server-address = Adres
+
+# Note under the empty address field.
+book-server-address-hint = Bir adres veya Kavita’daki OPDS bağlantısının tamamı.
+
+# Note under the address field once a Kavita OPDS link is pasted.
+book-server-kavita-key = Bu bir Kavita OPDS bağlantısı. Anahtarı oturum açmayı sağlar, bu yüzden parola gerekmez.
+
+# Under the key chip. The store is where the system keeps secrets: Keychain, or Android Keystore.
+book-server-key-kept = Kaeri anahtarı { $store } içinde saklar ve yalnızca son dört karakterini gösterir.
+
+# Chip inside the address field, showing the key's last four characters after four dots.
+book-server-key = Anahtar ••••{ $last }
+
+# Result title once the server signed in.
+book-server-found-title =
+    { $libraries ->
+        [one] { $series } seri bulundu
+       *[other] { $libraries } kitaplıkta { $series } seri bulundu
+    }
+
+# Line under the result title. The kind is Komga, Kavita or OPDS.
+book-server-found-line = { $host } adresinde { $kind } bulundu. Eklenecek kitaplıkları seçin.
+
+# A library row's line in the result.
+book-server-library-line = { $series } seri
+
+# Switch in the result, on to start with.
+book-server-sync-progress = İlerlemeyi sunucuya gönder
+
+# Line under the switch.
+book-server-sync-progress-line = Burada okuduğunuz sayfalar { $host } adresine gider, oradaki ilerleme de buraya gelir.
+
+# Field label.
+book-server-username = Kullanıcı adı
+
+# Field label.
+book-server-password = Parola
+
+# Error title when the server could not be reached.
+book-server-err-unreachable = { $host } adresine ulaşılamadı
+
+# Line under it.
+book-server-err-unreachable-line = Adresi ve sunucunun açık olup bu ağda bulunduğunu kontrol edin.
+
+# Error title when the server turned the password down.
+book-server-err-password = { $host } bu parolayı kabul etmedi
+
+# Line under it. The kind is Komga, Kavita or OPDS.
+book-server-err-password-line = { $kind } için tarayıcıda kullandığınız kullanıcı adı ve parolayı girin.
+
+# Error title when Kavita turned the key in an OPDS link down.
+book-server-err-key = { $host } bu anahtarı kabul etmedi
+
+# Line under it.
+book-server-err-key-line = Anahtar, Kavita'da sıfırlandığında değişir. OPDS bağlantısını oradaki hesap ayarlarınızdan yeniden kopyalayın.
+
+# Title when the server lets the account in and shows it no series.
+book-server-empty = { $host } bu hesaba hiç seri göstermiyor
+
+# Line under it.
+book-server-empty-line = Giriş yapılıyor, ama sunucu hâlâ tarıyor olabilir veya bu hesabın kitaplara erişimi olmayabilir.
+
+# Note under it.
+book-server-empty-recheck = Şimdi ekleyebilirsiniz. Kaeri her 30 dakikada bir yeniden bakar.
+
+# Line under an error when the address is not a book server.
+book-server-not-books-line = Kaeri Komga, Kavita ve OPDS kataloglarından okur.
+
+# Folder result title.
+book-folder-found =
+    { $files ->
+        [one] Bir dosyada { $series } seri bulundu
+       *[other] { $files } dosyada { $series } seri bulundu
+    }
+
+# Line under it: the folder's path, then how many series were matched by their own details.
+book-folder-found-line = { $path }. Kaeri bunlardan { $matched } tanesini ayrıntılarına göre eşleştirdi.
+
+# Row in the folder result: files that are books in formats Kaeri can't open.
+book-folder-unsupported =
+    { $count ->
+        [one] Kaeri uygulamasının açamadığı bir dosya
+       *[other] Kaeri uygulamasının açamadığı { $count } dosya
+    }
+
+# Line under it: the formats, already counted and joined, such as "14 MOBI, 6 AZW3".
+book-folder-unsupported-line = { $kinds }. Klasörde olduğu gibi kalırlar.
+
+# One item of that list: EPUB files locked with DRM or a password.
+book-folder-drm = DRM ile kilitli { $count } EPUB
+
+# Note under the folder result.
+book-folder-opens = Kaeri CBZ, CBR, EPUB ve PDF dosyalarını ve görsel klasörlerini açar.
+
+# Row action that lists the files skipped.
+book-folder-show-files = Dosyaları göster
+
+# Primary action in the Add a folder sheet.
+book-folder-add = Klasör ekle
+
+# Folder row action that picks another folder.
+book-folder-change = Değiştir
+
+# Title when a folder holds nothing Kaeri can open.
+book-folder-empty = { $folder } içinde Kaeri uygulamasının açabileceği bir şey yok
+
+# Line under it.
+book-folder-empty-line =
+    { $files ->
+        [one] İçinde bir dosya var, ama CBZ, CBR, EPUB, PDF veya görsel değil.
+       *[other] İçinde { $files } dosya var, hiçbiri CBZ, CBR, EPUB, PDF veya görsel değil.
+    }
+
+# Primary action after an empty folder.
+book-folder-choose-other = Başka bir klasör seçin
+
+# Title of the Join a plugin store sheet.
+store-join-title = Bir eklenti mağazasına katılın
+
+# Label of the invite field.
+store-invite-field = Davet
+
+# Result title once a plugin store is joined.
+store-joined-title = Katıldınız: { $store }
+
+# Line under it. The owner is who runs the store.
+store-joined-line =
+    { $count ->
+        [one] { $owner } bir eklenti sunuyor. Katılmak hiçbir şey yüklemez; buradan veya daha sonra yükleyin.
+       *[other] { $owner } tarafından sunulan eklentiler: { $count }. Katılmak hiçbir şey yüklemez; istediklerinizi buradan veya daha sonra seçin.
+    }
+
+# Group header in the joined store's list.
+store-group-reading = Okumak için
+
+# Group header in the joined store's list.
+store-group-watching = İzlemek için
+
+# Row action.
+store-install = Yükle
+
+# Row state once installed.
+store-installed-row = Yüklendi
+
+# Primary action when two or more plugins are for reading.
+store-install-all-reading = Okuma için hepsini yükle
+
+# Result after installing.
+store-installed =
+    { $count ->
+        [one] Bir eklenti yüklendi. “Kaynaklarınız” bölümünde.
+       *[other] { $count } eklenti yüklendi. Hepsi “Kaynaklarınız” bölümünde.
+    }
+
+# Info title when every plugin in a store is for watching, and watching is off here.
+store-other-medium = { $store } içindeki her eklenti izlemek için
+
+# Line under it.
+store-other-medium-line = Bu cihazda izleme kapalı, bu yüzden hiçbiri “kaynaklar” bölümünde görünmez.
+
+# Secondary action under it.
+store-turn-on-watching = İzlemeyi aç
+
+# Info title when a store has no plugins.
+store-empty = { $store } içinde henüz eklentiler yok
+
+# Line under it.
+store-empty-line = Üyesiniz, bu yüzden { $owner } yeni eklentiler eklediğinde bunlar Eklenti mağazaları içinde görünür.
+
+# Error title when the store doesn't answer.
+store-err-unreachable = { $host } adresine ulaşılamadı
+
+# Line under it.
+store-err-unreachable-line = Davet doğru görünüyor, ama mağaza yanıt vermiyor. Daha sonra yeniden deneyin ya da çalışıp çalışmadığını { $owner } kişisine sorun.
+
+# Under the reading group: plugins for watching while watching is off here.
+store-other-medium-more =
+    { $count ->
+        [one] Bir tane daha izlemek için, ama izleme bu cihazda kapalı.
+       *[other] { $count } tane daha izlemek için, ama izleme bu cihazda kapalı.
+    }
+
+# On a TV, under the list: plugins for reading, which a TV doesn't do.
+store-tv-reading-only =
+    { $count ->
+        [one] Bir tane daha okuma için; bu TV okuma yapmaz.
+       *[other] { $count } tane daha okuma için; bu TV okuma yapmaz.
+    }
+
+# On a TV, info title when every plugin in a store is for reading.
+store-tv-all-reading = { $store } içindeki her eklenti okuma için; bu TV okuma yapmaz.
+
+# Plugin row in an invite's result.
+store-plugin-row = Sürüm { $version } · { $hosts } ile iletişim kurabilir
+
+# Notice after a server or folder is added, for 4 seconds.
+source-added = { $name } eklendi · { $series } seri
+
+# Notice after Install all, for 4 seconds.
+source-added-plugins =
+    { $count ->
+        [one] { $store } içinden bir eklenti yüklendi
+       *[other] { $store } içinden yüklenen eklentiler: { $count }
+    }
+
+# A server's row in Your sources, just added. The kind is Komga, Kavita or OPDS; an OPDS catalogue is one library.
+source-row-server =
+    { $libraries ->
+        [one] { $kind } · { $libraries } kitaplıkta { $series } seri · az önce eklendi
+       *[other] { $kind } · { $libraries } kitaplıkta { $series } seri · az önce eklendi
+    }
+
+# A server's row in Your sources once it has settled. The kind is Komga, Kavita or OPDS; an OPDS catalogue is one library.
+source-row-server-series =
+    { $libraries ->
+        [one] { $kind } · { $libraries } kitaplıkta { $series } seri
+       *[other] { $kind } · { $libraries } kitaplıkta { $series } seri
+    }
+
+# A server's row in Your sources while it shows no series.
+source-row-server-empty = { $kind } · henüz seri yok · 30 dakika sonra yeniden bakar
+
+# A folder's row in Your sources.
+source-row-folder =
+    { $skipped ->
+        [one] { $path } · { $series } seri · bir dosya atlandı
+       *[other] { $path } · { $series } seri · { $skipped } dosya atlandı
+    }
+
+# A plugin's row in Your sources. The medium is "Reading" or "Watching".
+source-row-plugin = { $store } içinden · { $medium } · sürüm { $version }
 
 # Title of the screen or section that lists sources.
 sources-title = Kaynaklar
@@ -9202,7 +12162,7 @@ sources-add-server = Medya sunucusu…
 sources-add-store = Bir eklenti mağazasına katıl…
 
 # Line under the empty state's title on a computer.
-sources-empty-body = Kaynaklar, bölümlerin geldiği yerlerdir: bu cihaz üzerindeki klasörler, medya sunucunuz ve katıldığınız mağazalardan gelen eklentiler.
+sources-empty-body = Kaynaklar, bölümlerin geldiği yerlerdir: bu cihazdaki klasörler, medya sunucunuz ve katıldığınız eklenti mağazalarından gelen eklentiler.
 
 # Line under the empty state's buttons. The link is "join a plugin store".
 sources-empty-more = Ya da { $join }.
@@ -9244,7 +12204,7 @@ sources-demo-link-commons = Wikimedia Commons
 sources-demo-link-maker = OPAP-JP
 
 # Line on the demo page that names the only two hosts the demo reaches.
-sources-demo-hosts = Yalnızca Wikimedia Commons'a erişir: upload.wikimedia.org ve commons.wikimedia.org.
+sources-demo-hosts = Demo yalnızca Wikimedia Commons'a erişir: upload.wikimedia.org ve commons.wikimedia.org.
 
 # Line on the demo page about accounts and trackers.
 sources-demo-private = Demo hiçbir yerde oturum açmaz ve AniList'e hiçbir şey yazmaz.
@@ -9313,7 +12273,7 @@ stores-not-from-app = Eklentiler eklenti mağazasının sahibinden gelir, Kaeri'
 stores-join-owner-responsible = Bu eklenti mağazası sahibi { $owner } tarafından işletiliyor ve eklentiler onun tarafından seçildi. Kaeri bunları yapmadı, incelemedi ya da onaylamadı.
 
 # Line when the store has no plugins.
-stores-no-plugins = Bu eklenti mağazası henüz eklentiler sunmuyor.
+stores-no-plugins = Bu eklenti mağazasında henüz eklentiler yok.
 
 # Heading of the plugin list of a store.
 stores-plugins = Eklentiler
@@ -9349,7 +12309,7 @@ stores-access-ended-page = Bu eklenti mağazası artık bu cihazı kabul etmiyor
 stores-no-longer-joined = Bu eklenti mağazası artık katılınmış değil.
 
 # Line when the store cannot be reached but a list was kept. The reason is a sentence fragment.
-stores-offline-last-list = Çevrimdışı: { $reason }. Aşağıdaki eklentiler, kontrol edilen son listedir.
+stores-offline-last-list = Çevrimdışı: { $reason }. Gönderdiği son liste gösteriliyor.
 
 # Line when offline, without a reason.
 stores-offline-last-list-plain = Çevrimdışı. Gönderdiği son liste gösteriliyor.
@@ -9454,7 +12414,7 @@ stores-replace-label = Elle eklenen { $name } kopyasını değiştir
 stores-remove-plugin-title = { $name } kaldırılsın mı?
 
 # Line under it.
-stores-remove-plugin-detail = Bu cihazdan silinir. Eklenti mağazası onu yeniden yükleyebilir.
+stores-remove-plugin-detail = Bu cihazdan silinir. eklenti mağazasından yeniden yükleyebilirsiniz.
 
 # Label before the hosts a new version also contacts.
 stores-newly-contacts = Yeni bağlanılanlar
@@ -9475,7 +12435,7 @@ stores-add-title = Eklenti mağazası ekle
 stores-join-detail = eklenti mağazasının sahibinin gönderdiği davet bağlantısını yapıştırın.
 
 # Line under the form title on desktop, where nothing happens before the check.
-stores-join-detail-desktop = eklenti mağazasının sahibinin gönderdiği davet bağlantısını yapıştırın. Hiçbir şey katılmadan ya da yüklenmeden önce eklenti mağazasının sunduklarını görürsünüz.
+stores-join-detail-desktop = Bir eklenti mağazasının sahibinin size gönderdiği davet bağlantısını yapıştırın. Katılmadan ya da bir şey yüklemeden önce eklenti mağazasının neler sunduğunu görürsünüz.
 
 # Line under the field on a phone when a link was opened from another app.
 stores-join-detail-opened = eklenti mağazasının sahibinin gönderdiği bağlantıyı yapıştırın. Mesajlar'dan açılan bir Kaeri:// davet bağlantısı bu sayfayı doğrudan doldurur.
@@ -9669,7 +12629,7 @@ stores-invite-works-any = Bu bağlantıya sahip herkes { $until } tarihine kadar
 stores-invite-works-any-forever = Bu bağlantıya sahip herkes siz iptal edene kadar katılabilir.
 
 # Line under a single-use invite with an end date. Replaces stores-invite-once.
-stores-invite-once-until = Gönderdiğiniz kişi için bir kez geçerli. { $until } tarihine kadar.
+stores-invite-once-until = Gönderdiğiniz kişi için { $until } tarihine kadar bir kez çalışır.
 
 # Line under a single-use invite with no end date.
 stores-invite-once-forever = Gönderdiğiniz kişi için bir kez geçerli, siz iptal edene kadar.
@@ -9796,7 +12756,7 @@ stores-offers-plugins =
 notice-open-stores = eklenti mağazalarını aç
 
 # Explainer on the empty plugin stores page.
-stores-what-is = Bir eklenti mağazası, imzalı eklentiler tutan ve her cihaz için ayrı bir belirteç veren küçük bir sunucudur. kaynaklar eklentiler olarak sunar. Kaeri hiçbir eklenti mağazası işletmez ve listelemez; bu yüzden sahibinden aldığınız davet bağlantısıyla katılırsınız.
+stores-what-is = Bir eklenti mağazası, imzalı eklentiler tutan ve her cihaza kendi belirtecini veren küçük bir sunucudur. İçindeki eklentiler kaynaklar ekler. Kaeri eklenti mağazaları işletmez ve hiçbirini listelemez; bu yüzden sahibinden aldığınız bir davet bağlantısıyla birine katılırsınız.
 
 # Button on the empty plugin stores page that opens the docs page in the browser.
 stores-what-is-link = eklenti mağazası nedir?
@@ -9821,6 +12781,9 @@ cloud-browser-line = Tarayıcınız { $service } sayfasını açtı. Orada eriş
 
 # Windows and Linux dialog title while the browser is open for a cloud sign-in.
 cloud-browser-title = Tarayıcınızda { $service } hesabına giriş yapın
+
+# Windows and Linux dialog line under Connecting or Setting up the folder: the dialog's Close button leaves the work running.
+cloud-close-carries-on = Bunu kapatabilirsiniz. Kaeri çalışmayı sürdürür ve hazır olunca sonraki adımı kendiliğinden açar.
 
 # Word for this device in sentences such as “Turn off sync on this computer”.
 device-kind-computer = bilgisayar
@@ -9931,7 +12894,7 @@ sync-road-nearby-line = Aynı Wi-Fi'deki başka bir cihaz ile eşleştirin. Baş
 sync-road-cloud = Bir bulut klasörü üzerinden
 
 # Road sheet row line. Names no service, since a build may hide some (decision 14).
-sync-road-cloud-line = Zaten kullandığınız bir bulut sürücüsü ya da kendi sunucunuz. cihazlar birbirinden uzaktayken de çalışır ve yedek tutar.
+sync-road-cloud-line = Zaten kullandığınız bir bulut sürücüsü ya da kendi sunucunuz. cihazlarınız birbirinden uzaktayken de çalışır ve bir yedek tutar.
 
 # Road sheet footer.
 sync-road-later = Diğer yolu sonradan ekleyebilirsiniz. Çoğu kişi ikisini birden kullanır.
@@ -9991,7 +12954,7 @@ sync-turn-off-alert-line = Bu { $kind }, diğer cihazlar ile paylaşmayı bırak
 cloud-group = Bulut klasörü
 
 # Group footer.
-cloud-foot = cihazlar birbirinden uzaktayken devreye girer ve mühürlü bir yedek tutar. Yalnızca cihazlar okuyabilir.
+cloud-foot = Klasör, cihazlarınızı birbirinden uzaktayken eşitler ve mühürlü bir yedek saklar. Onu yalnızca cihazlarınız okuyabilir.
 
 # Row when only the nearby road is set.
 cloud-add = Bulut klasörü ekle
@@ -10334,7 +13297,7 @@ profiles-picker = Kim izliyor?
 profiles-ask-at-launch = Açılışta kimin izlediğini sor
 
 # iPad footer.
-profiles-ask-foot = Varsayılan olarak kapalı. Evin paylaştığı bir iPad için. Hesap satırı profilleri istediğiniz zaman değiştirir.
+profiles-ask-foot = Varsayılan olarak kapalıdır. Tüm evin paylaştığı bir iPad için açın. Profilleri istediğiniz zaman hesap satırından değiştirebilirsiniz.
 
 # TV Settings.
 profiles-switch = Profil değiştir
@@ -10534,9 +13497,6 @@ title-tags = Etiketler
 
 # Button that opens the full page of facts about a show.
 title-more-about = Bu dizi hakkında daha fazla
-
-# Accessibility hint of the button that expands a synopsis.
-title-synopsis-hint = Özetin tamamını gösterir
 
 # Label under a season: which episodes are dubbed so far.
 title-dubbed-to = Dublajlı, { $episode }. bölüme kadar
@@ -10933,6 +13893,9 @@ opened-paste-placeholder = Magnet bağlantısı ya da bilgi karması
 # Button: choose a torrent file from the device.
 opened-choose-file = Torrent dosyası seç
 
+# Line under the field when the link or file could not be read, and the engine gave no reason.
+opened-unreadable = Kaeri bu bağlantıyı veya dosyayı okuyamadı.
+
 # The question once the link's name matched a title and an episode.
 opened-confirm = Bu { $title }, { $episode }. bölüm mü?
 
@@ -10983,6 +13946,27 @@ accounts-welcome-detail = Listenizi ve kaldığınız yeri eşitlemek için { $t
 
 # Line under a tracker that brings in lists.
 accounts-brings-lists = Listelerinizi getirir ve izlediklerinizle İzlemeye devam et satırını doldurur.
+
+# Line under AniList when Kaeri is for reading: what signing in brings.
+accounts-brings-lists-read = Listelerinizi getirir ve Okumayı sürdür bölümünü okuduklarınızla doldurur.
+
+# Line under AniList when Kaeri is for watching and reading.
+accounts-brings-lists-both = Listelerinizi getirir ve İzlemeye devam et bölümünü izlediğiniz ve okuduğunuz şeylerle doldurur.
+
+# Line under a tracker that is not signed in: what it keeps in step.
+accounts-tracker-lists = Listeler ve ilerleme
+
+# Line under MangaUpdates when it is not signed in.
+accounts-tracker-reading-lists = Okuma listeleri ve ilerleme
+
+# Line under a tracker with both media on: it serves shows and reading.
+accounts-tracker-serves-both = Diziler ve okuma
+
+# Line under a tracker with both media on: it serves reading only.
+accounts-tracker-serves-reading = Okuma
+
+# Line under a tracker with both media on: it serves shows only.
+accounts-tracker-serves-shows = Diziler
 
 # Line under the accounts screen when the library needs a tracker.
 accounts-library-needs = Kitaplık ve eşitleme için { $tracker } hesabı gerekir.
@@ -11094,7 +14078,7 @@ accounts-tokens-keystore = Oturum anahtarları bu cihazda tutulur ve cihazın an
 accounts-form-title = Oturum aç: { $tracker }
 
 # Line under the title: where the password goes.
-accounts-form-detail = Parolanız yalnızca bir kez { $tracker } hizmetine gönderilir. Oturum anahtarı bu cihazda tutulur.
+accounts-form-detail = Parolanız bir kez { $tracker } hizmetine gider; karşılığında bu cihazda kalan bir belirteç alınır.
 
 # Label of the name field.
 accounts-user-or-email = E-posta veya kullanıcı adı
@@ -11166,7 +14150,7 @@ accounts-open-on = { $tracker } üzerinde aç
 accounts-listed-by = { $tracker } tarafından listelendi
 
 # Line when the tracker did not answer.
-accounts-did-not-answer = { $tracker } yanıt vermedi.
+accounts-did-not-answer = { $tracker } yanıt vermedi. Biraz sonra yeniden deneyin.
 
 # Line when the tracker has nothing for the show.
 accounts-no-extras = { $tracker } bu dizi için henüz kadro, ekip ya da öneri içermiyor.
@@ -11529,7 +14513,7 @@ updates-saved-replace-plain = { $version } sürümü İndirilenler klasörüne k
 updates-why-server = İndirme durdu: sunucu reddetti ({ $code }). Daha sonra yeniden deneyin.
 
 # The connection broke.
-updates-why-connection = İndirme durdu: bağlantı koptu.
+updates-why-connection = İndirme durdu: bağlantı koptu. Yeniden deneyin.
 
 # The file could not be saved. The reason is a sentence fragment.
 updates-why-save = İndirme kaydedilemedi: { $reason }

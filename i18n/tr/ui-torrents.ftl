@@ -43,6 +43,7 @@ opened-open = Bağlantı ya da dosya aç
 opened-paste-title = Magnet bağlantısı ya da torrent dosyası aç
 opened-paste-placeholder = Magnet bağlantısı ya da bilgi karması
 opened-choose-file = Torrent dosyası seç
+opened-unreadable = { -app-name } bu bağlantıyı veya dosyayı okuyamadı.
 opened-confirm = Bu { $title }, { $episode }. bölüm mü?
 opened-confirm-title = Bu { $title } mi? Bölümü seçin.
 opened-no-guess = { -app-name } bunun ne olduğunu anlayamadı. Hangi başlık olduğunu seçin ya da takipsiz oynatın.

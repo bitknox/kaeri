@@ -23,6 +23,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeout
 import app.kaeri.engine.core.AnilistId
 import app.kaeri.store.BackgroundEngine
+import app.kaeri.store.ChapterCheck
 import app.kaeri.store.EpisodeCheck
 
 /** What the work and the action need of the application. */
@@ -31,6 +32,12 @@ interface NewEpisodesHost {
     val episodeCheck: EpisodeCheck?
 
     val episodeNotifier: EpisodeNotifier
+
+    /** The check for new chapters, or `null` where reading has none. */
+    val chapterCheck: ChapterCheck? get() = null
+
+    /** Posts the new chapters the check finds, or `null` where reading has none. */
+    val readingNotifier: ReadingNotifier? get() = null
 
     /** Mark [episode] of [id] watched, on the app's engine or one started for it. */
     suspend fun markWatched(id: AnilistId, episode: UInt)
@@ -79,32 +86,58 @@ object NewEpisodesSchedule {
 
 /**
  * One check: ask the engine for the episodes that aired since the last one, and post them, then
- * keep the widgets' record. Nothing is asked of the check while a notification could not show, so
- * no episode is spent on a check that cannot say it: only the widgets' record is made then. With
- * nothing notifying, the engine's check says nothing, and a run only keeps the widgets' record. A
- * check that fails is tried again later, three times at most.
+ * keep the widgets' record; and for the chapters out since the last check of the Reading list,
+ * and post them. Nothing is asked of a check while its notification could not show, so no
+ * episode or chapter is spent on a check that cannot say it: only the widgets' record is made
+ * then. With nothing notifying, the engine's check says nothing, and a run only keeps the widgets'
+ * record. A check that fails is tried again later, three times at most.
  */
 class NewEpisodesWorker(context: Context, params: WorkerParameters) : CoroutineWorker(context, params) {
     override suspend fun doWork(): Result {
         val host = applicationContext as? NewEpisodesHost ?: return Result.failure()
-        val check = host.episodeCheck ?: return Result.success()
-        if (!host.episodeNotifier.canPost) {
-            runCatching { host.recordWidgets() }.onFailure { if (it is CancellationException) throw it }
-            return Result.success()
+        var failed = false
+        val episodes = host.episodeCheck
+        if (episodes != null) {
+            if (!host.episodeNotifier.canPost) {
+                runCatching { host.recordWidgets() }.onFailure { if (it is CancellationException) throw it }
+            } else {
+                when (val outcome = attempt("episodes") { episodes.newEpisodes() }) {
+                    is Outcome.Done -> host.episodeNotifier.post(outcome.value)
+                    Outcome.Yielded -> return Result.retry()
+                    Outcome.Failed -> failed = true
+                }
+            }
         }
-        val episodes = try {
-            check.newEpisodes()
-        } catch (e: BackgroundEngine.Yielded) {
-            // The app started as it ran: the next run asks the app's engine.
-            return Result.retry()
-        } catch (e: CancellationException) {
-            throw e
-        } catch (e: Exception) {
-            Log.w(KaeriApp.TAG, "the check for new episodes failed: ${e.message}")
-            return if (runAttemptCount < RETRIES) Result.retry() else Result.success()
+        val chapters = host.chapterCheck
+        val reading = host.readingNotifier
+        if (chapters != null && reading != null && reading.canPost(ReadingNotifier.CHAPTERS)) {
+            when (val outcome = attempt("chapters") { chapters.newChapters() }) {
+                is Outcome.Done -> reading.chapters(outcome.value)
+                Outcome.Yielded -> return Result.retry()
+                Outcome.Failed -> failed = true
+            }
         }
-        host.episodeNotifier.post(episodes)
-        return Result.success()
+        return if (failed && runAttemptCount < RETRIES) Result.retry() else Result.success()
+    }
+
+    private sealed interface Outcome<out T> {
+        data class Done<T>(val value: T) : Outcome<T>
+
+        /** The app started as it ran: the next run asks the app's engine. */
+        data object Yielded : Outcome<Nothing>
+
+        data object Failed : Outcome<Nothing>
+    }
+
+    private suspend fun <T> attempt(what: String, check: suspend () -> T): Outcome<T> = try {
+        Outcome.Done(check())
+    } catch (e: BackgroundEngine.Yielded) {
+        Outcome.Yielded
+    } catch (e: CancellationException) {
+        throw e
+    } catch (e: Exception) {
+        Log.w(KaeriApp.TAG, "the check for new $what failed: ${e.message}")
+        Outcome.Failed
     }
 
     companion object {

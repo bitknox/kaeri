@@ -16,7 +16,7 @@ discussion-apple-player-note = { $count ->
    *[other] { $count } komentar · menjeda video
  }
 settings-apple-discussions = Diskusi episode
-settings-apple-discussions-note = Membaca komentar di utas forum AniList untuk episode yang sudah Anda tonton.
+settings-apple-discussions-note = Komentar diambil dari utas forum AniList, setelah Anda menonton episodenya.
 settings-apple-comment-images = Muat gambar di komentar
 settings-apple-comment-images-note = Setiap gambar dimuat dari situs yang menyimpannya, yang dapat melihat alamat IP Anda.
 discussion-apple-key-hint = ⌘Return mengirim. Return menambah baris.

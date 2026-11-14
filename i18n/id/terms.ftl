@@ -43,7 +43,6 @@
 -watch-together-cap = Nonton bareng
 
 # Where releases are looked up.
-
 # One downloadable file in a torrent index. Not a place episodes come from.
 -release = rilis
 -release-cap = Rilis
@@ -63,6 +62,10 @@
 # The button that resumes the show.
 -continue = lanjutkan menonton
 -continue-cap = Lanjutkan menonton
+
+# The button that resumes a book, manga or webtoon: reading's own form of { -continue }. English says continue for both; a language whose { -continue } means "continue watching" says "keep reading" here.
+-continue-reading = melanjutkan membaca
+-continue-reading-cap = Lanjutkan membaca
 
 # The button that goes on to the next step of a flow, such as setup. Not the button that resumes a
 # show; that is { -continue }.

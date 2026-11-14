@@ -46,6 +46,11 @@ pub enum StartStep {
     /// peer count is not known until the metadata arrives, so the screen counts the time
     /// itself.
     FindingPeers { name: Option<String> },
+    /// The show is pinned to this source and the episode comes from another: the pinned source
+    /// does not have it yet. Said once, before [`StartStep::Found`], and never for a release the
+    /// viewer picked or a show with no pin. The screen puts "`name` doesn't have episode N yet.
+    /// Playing from the next source." on its detail line (`player-start-pin-missed`).
+    PinMissed { name: String },
     /// The sources answered. `count` streams, the first of them from `source` (none for a link
     /// the viewer opened) at `quality` (its height in pixels, when it states one), in
     /// `translation`.

@@ -588,26 +588,14 @@ public sealed partial class SearchPage : Page
             Motion.Hide(ClearButton);
         else
             Motion.Show(ClearButton);
-        var count = filters.AdvancedCount();
-        FiltersBadge.Value = (int)count;
-        FiltersBadge.Visibility = count > 0 ? Visibility.Visible : Visibility.Collapsed;
-        Microsoft.UI.Xaml.Automation.AutomationProperties.SetName(FiltersButton, count > 0 ? T.SearchFiltersButtonSet(count) : T.FiltersTitle);
+        SearchParts.Badge(FiltersButton, FiltersBadge, filters.AdvancedCount());
         ShowChips();
         if (panelOpen)
             panel.Show(filters);
     }
 
-    /// <summary>A filter's words, set only when they change, and its spoken name: the filter, then what it has.</summary>
-    static void Say(DropDownButton button, string name, string text, bool set)
-    {
-        if (button.Content as string != text)
-            button.Content = text;
-        Microsoft.UI.Xaml.Automation.AutomationProperties.SetName(button, set ? $"{name}, {text}" : name);
-        if (set)
-            button.Foreground = (Microsoft.UI.Xaml.Media.Brush)Application.Current.Resources["AccentTextFillColorTertiaryBrush"];
-        else
-            button.ClearValue(Control.ForegroundProperty);
-    }
+    /// <summary>A filter's words and spoken name, as both Searches say them.</summary>
+    static void Say(DropDownButton button, string name, string text, bool set) => SearchParts.Say(button, name, text, set);
 
     // The chips.
 
@@ -635,31 +623,7 @@ public sealed partial class SearchPage : Page
             FiltersButton.Focus(FocusState.Keyboard);
     }
 
-    Button Chip(FilterKey key, string label)
-    {
-        var chip = new Button
-        {
-            Content = new StackPanel
-            {
-                Orientation = Orientation.Horizontal,
-                Spacing = 6,
-                Children =
-                {
-                    new TextBlock { Text = label, FontSize = 12, MaxLines = 1, TextTrimming = TextTrimming.CharacterEllipsis, MaxWidth = 280 },
-                    new FontIcon { Glyph = "", FontSize = 9 },
-                },
-            },
-            CornerRadius = new CornerRadius(12),
-            Padding = new Thickness(10, 3, 10, 4),
-            MinHeight = 26,
-            Background = Ui.Res<Microsoft.UI.Xaml.Media.Brush>("RaisedBrush"),
-            BorderBrush = Ui.Res<Microsoft.UI.Xaml.Media.Brush>("EdgeBrush"),
-            BorderThickness = new Thickness(1),
-        };
-        Microsoft.UI.Xaml.Automation.AutomationProperties.SetName(chip, T.FilterRemove(label));
-        chip.Click += (_, _) => Change(filters.Without(key));
-        return chip;
-    }
+    Button Chip(FilterKey key, string label) => SearchParts.Chip(label, () => Change(filters.Without(key)));
 
     // The panel.
 

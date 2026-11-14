@@ -244,10 +244,16 @@ fn class(langs: &[Shipped]) -> Result<String> {
             .iter()
             .map(|a| {
                 let var = lower_first(&pascal(&a.name));
-                let value = if a.ty.is_int() {
-                    format!("{var}.ToString(System.Globalization.CultureInfo.CurrentCulture)")
-                } else {
-                    var
+                // N0 groups a count's digits in the current culture; a plain number keeps them
+                // together.
+                let value = match a.ty {
+                    ArgType::Int => {
+                        format!("{var}.ToString(\"N0\", System.Globalization.CultureInfo.CurrentCulture)")
+                    }
+                    ArgType::Plain => {
+                        format!("{var}.ToString(System.Globalization.CultureInfo.CurrentCulture)")
+                    }
+                    _ => var,
                 };
                 format!("(\"{}\", {value})", a.name)
             })
@@ -419,7 +425,7 @@ fn msg_text(cat: &Catalogue) -> String {
                     }
                     let v = format!("x.{field}");
                     match a.ty {
-                        ArgType::Int => v,
+                        ArgType::Int | ArgType::Plain => v,
                         ArgType::Text => v,
                         ArgType::Cause => format!("{v}.Text()"),
                         ArgType::Seconds => format!("Wording.Span({v})"),

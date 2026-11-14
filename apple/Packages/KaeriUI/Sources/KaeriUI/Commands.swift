@@ -45,6 +45,10 @@ public struct KaeriCommands<Playback: View, PlayerWindowItems: View>: Commands {
         self.playerWindowItems = playerWindowItems()
     }
 
+    /// A book is open: ⌘[, ⌘T and ⌘L belong to the Go menu. AppKit stops at the first item with
+    /// a key, enabled or not, and these come before the Go menu.
+    private var reading: Bool { store.reader.request != nil }
+
     public var body: some Commands {
         CommandGroup(replacing: .appSettings) {
             Button(L.menuSettings) { navigator.openSettings(navigator.settingsPane) }
@@ -90,7 +94,7 @@ public struct KaeriCommands<Playback: View, PlayerWindowItems: View>: Commands {
                     withAnimationIfPossible { navigator.back() }
                 }
             }
-            .keyboardShortcut("[", modifiers: .command)
+            .keyboardShortcut(reading ? nil : KeyboardShortcut("[", modifiers: .command))
             .disabled(!navigator.canGoBack && playerBack?.isUp() != true)
             Button(L.menuSyncNow) { store.send(.syncNow) }
                 .keyboardShortcut("r", modifiers: .command)
@@ -143,7 +147,7 @@ public struct KaeriCommands<Playback: View, PlayerWindowItems: View>: Commands {
             let week = navigator.calendarWeek
             let here = navigator.section == .calendar && navigator.titleOnMac == nil
             Button(L.menuGoToToday) { navigator.showCalendarWeek(0) }
-                .keyboardShortcut("t", modifiers: .command)
+                .keyboardShortcut(reading ? nil : KeyboardShortcut("t", modifiers: .command))
                 .disabled(!here || week == 0)
             // In a text field, such as the command palette's over the calendar, the keys keep
             // moving the caret to the line's ends.
@@ -173,7 +177,7 @@ public struct KaeriCommands<Playback: View, PlayerWindowItems: View>: Commands {
                 .keyboardShortcut("]", modifiers: [.command, .shift])
                 .disabled(ranges?.hasNext != true)
             Button(L.episodeGoTo) { navigator.goToAsked += 1 }
-                .keyboardShortcut("l", modifiers: .command)
+                .keyboardShortcut(reading ? nil : KeyboardShortcut("l", modifiers: .command))
                 .disabled(navigator.goToShown == nil)
         }
 
@@ -213,7 +217,9 @@ extension KaeriCommands where Playback == DimmedPlayback, PlayerWindowItems == E
 public struct DimmedPlayback: View {
     public var body: some View {
         Group {
-            Button(L.actionPlay) {}.keyboardShortcut(.space, modifiers: [])
+            // No Space here: a dimmed item with a key still takes it, from the reader and from
+            // every field.
+            Button(L.actionPlay) {}
             Button(L.menuSkipForward) {}
             Button(L.menuSkipBack) {}
             Button(L.menuNextEpisode) {}

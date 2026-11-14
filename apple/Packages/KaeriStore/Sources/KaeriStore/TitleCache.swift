@@ -23,6 +23,11 @@ public final class TitleCache {
 
     public init() {}
 
+    /// Every episode table forgotten: a motion demo's way to watch the wide art arrive again.
+    func forgetEpisodesForDemo() {
+        episodes = [:]
+    }
+
     public subscript(id: AnilistId) -> Entry? {
         entries[id]
     }
@@ -40,7 +45,7 @@ public final class TitleCache {
             let related = kept.related, recommended = kept.recommended
             let trailer = kept.trailerUrl, availableOn = kept.availableOn, detail = kept.detail
             let status = kept.listStatus, lastAired = kept.lastAired
-            let watched = kept.progress, resume = kept.resume
+            let watched = kept.progress, resume = kept.resume, still = kept.seenStill
             kept = entry
             if !local {
                 kept.progress = watched
@@ -56,6 +61,8 @@ public final class TitleCache {
             kept.listStatus = entry.listStatus ?? status
             // A list arrives ahead of the broadcast line its own follow-up brings.
             kept.lastAired = entry.lastAired ?? lastAired
+            // A list fresh from AniList carries no stills; the one known stays in a banner's place.
+            kept.seenStill = entry.seenStill ?? still
             entries[entry.id] = kept
         }
     }
@@ -76,6 +83,7 @@ public final class TitleCache {
         if let kept = entries[entry.id] {
             entry.listStatus = entry.listStatus ?? kept.listStatus
             entry.lastAired = entry.lastAired ?? kept.lastAired
+            entry.seenStill = entry.seenStill ?? kept.seenStill
         }
         entries[entry.id] = entry
         if partial {

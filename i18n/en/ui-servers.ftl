@@ -246,4 +246,4 @@ servers-error-certificate = { $host } uses a certificate this { -device } doesn'
 servers-row-signed-out-here = Signed out
 
 # Line under it: what signing out does.
-servers-sign-out-line = Ends this { -device }'s sign-in on the server. The server and your downloads stay as they are.
+servers-sign-out-line = Signing out ends this { -device }'s session on the server. The server and your downloads stay as they are.

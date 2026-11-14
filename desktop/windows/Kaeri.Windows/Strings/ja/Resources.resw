@@ -63,7 +63,7 @@
     <value>別のデバイスが{name}で再生を始めたため、キャストを終了しました。</value>
   </data>
   <data name="NoticeCastNotSameNetwork" xml:space="preserve">
-    <value>このデバイスは{name}と同じネットワークにないか、VPN経由で接続しています。キャストには同じネットワークが必要です。</value>
+    <value>このデバイスは{name}と同じネットワークにないか、VPN経由で接続しています。キャストするには両方を同じネットワークに接続してください。</value>
   </data>
   <data name="NoticeCastLost" xml:space="preserve">
     <value>{name}との接続が切れたため、キャストを終了しました。</value>
@@ -193,6 +193,60 @@
   </data>
   <data name="HomeMoreGenre" xml:space="preserve">
     <value>もっと見る:{genre}</value>
+  </data>
+  <data name="HomeMoreGenreAction" xml:space="preserve">
+    <value>もっと見る:アクション</value>
+  </data>
+  <data name="HomeMoreGenreAdventure" xml:space="preserve">
+    <value>もっと見る:アドベンチャー</value>
+  </data>
+  <data name="HomeMoreGenreComedy" xml:space="preserve">
+    <value>もっと見る:コメディ</value>
+  </data>
+  <data name="HomeMoreGenreDrama" xml:space="preserve">
+    <value>もっと見る:ドラマ</value>
+  </data>
+  <data name="HomeMoreGenreEcchi" xml:space="preserve">
+    <value>もっと見る:お色気</value>
+  </data>
+  <data name="HomeMoreGenreFantasy" xml:space="preserve">
+    <value>もっと見る:ファンタジー</value>
+  </data>
+  <data name="HomeMoreGenreHorror" xml:space="preserve">
+    <value>もっと見る:ホラー</value>
+  </data>
+  <data name="HomeMoreGenreMahouShoujo" xml:space="preserve">
+    <value>もっと見る:魔法少女</value>
+  </data>
+  <data name="HomeMoreGenreMecha" xml:space="preserve">
+    <value>もっと見る:メカ</value>
+  </data>
+  <data name="HomeMoreGenreMusic" xml:space="preserve">
+    <value>もっと見る:音楽</value>
+  </data>
+  <data name="HomeMoreGenreMystery" xml:space="preserve">
+    <value>もっと見る:ミステリー</value>
+  </data>
+  <data name="HomeMoreGenrePsychological" xml:space="preserve">
+    <value>もっと見る:心理</value>
+  </data>
+  <data name="HomeMoreGenreRomance" xml:space="preserve">
+    <value>もっと見る:恋愛</value>
+  </data>
+  <data name="HomeMoreGenreSciFi" xml:space="preserve">
+    <value>もっと見る:SF</value>
+  </data>
+  <data name="HomeMoreGenreSliceOfLife" xml:space="preserve">
+    <value>もっと見る:日常</value>
+  </data>
+  <data name="HomeMoreGenreSports" xml:space="preserve">
+    <value>もっと見る:スポーツ</value>
+  </data>
+  <data name="HomeMoreGenreSupernatural" xml:space="preserve">
+    <value>もっと見る:超自然</value>
+  </data>
+  <data name="HomeMoreGenreThriller" xml:space="preserve">
+    <value>もっと見る:スリラー</value>
   </data>
   <data name="HomeSpotlightDemo" xml:space="preserve">
     <value>デモ版(自由に共有OK)</value>
@@ -384,7 +438,7 @@
     <value>オンになっていません。</value>
   </data>
   <data name="NoticeSourcePinned" xml:space="preserve">
-    <value>このタイトルには{source}を使います。</value>
+    <value>このタイトルは今後{source}から再生します。</value>
   </data>
   <data name="NoticeSourceAutomatic" xml:space="preserve">
     <value>ソースの自動選択に戻しました。</value>
@@ -496,6 +550,528 @@
   </data>
   <data name="PartyServerUnreachable" xml:space="preserve">
     <value>{server}に接続できません。サーバーを確認するか、もう一度お試しください。</value>
+  </data>
+  <data name="ReadingNextChapter" xml:space="preserve">
+    <value>第{chapter}話</value>
+  </data>
+  <data name="ReadingUsuallyMondays" xml:space="preserve">
+    <value>たいてい月曜更新</value>
+  </data>
+  <data name="ReadingUsuallyTuesdays" xml:space="preserve">
+    <value>たいてい火曜更新</value>
+  </data>
+  <data name="ReadingUsuallyWednesdays" xml:space="preserve">
+    <value>たいてい水曜更新</value>
+  </data>
+  <data name="ReadingUsuallyThursdays" xml:space="preserve">
+    <value>たいてい木曜更新</value>
+  </data>
+  <data name="ReadingUsuallyFridays" xml:space="preserve">
+    <value>たいてい金曜更新</value>
+  </data>
+  <data name="ReadingUsuallySaturdays" xml:space="preserve">
+    <value>たいてい土曜更新</value>
+  </data>
+  <data name="ReadingUsuallySundays" xml:space="preserve">
+    <value>たいてい日曜更新</value>
+  </data>
+  <data name="ReadingAboutEveryWeeks_other" xml:space="preserve">
+    <value>約{weeks}週間ごと</value>
+  </data>
+  <data name="ReadingAlsoAShow" xml:space="preserve">
+    <value>アニメ版もあります</value>
+  </data>
+  <data name="ReadingAlsoABook" xml:space="preserve">
+    <value>原作もあります</value>
+  </data>
+  <data name="ReadingSplitChapter" xml:space="preserve">
+    <value>第{chapter}話は 連携サービス には {whole} として送られます。</value>
+  </data>
+  <data name="ReaderResumed" xml:space="preserve">
+    <value>{page}ページから再開しました</value>
+  </data>
+  <data name="ReaderResumedImage" xml:space="preserve">
+    <value>{image}枚目の画像から再開しました</value>
+  </data>
+  <data name="ReaderBackToPage" xml:space="preserve">
+    <value>{page}ページに戻る</value>
+  </data>
+  <data name="ReaderMoved" xml:space="preserve">
+    <value>{device}が止まった第{chapter}話の{page}ページに移動しました</value>
+  </data>
+  <data name="ReaderMovedNumber" xml:space="preserve">
+    <value>{device}が止まった第{chapter}話の{page}ページに移動しました</value>
+  </data>
+  <data name="ReaderDetectedRightToLeft" xml:space="preserve">
+    <value>右から左のようです</value>
+  </data>
+  <data name="ReaderDetectedLeftToRight" xml:space="preserve">
+    <value>左から右のようです</value>
+  </data>
+  <data name="ReaderDetectedStrip" xml:space="preserve">
+    <value>縦スクロールのようです</value>
+  </data>
+  <data name="ReadingFailedOffline" xml:space="preserve">
+    <value>オフラインです。ダウンロード済みの章は開けます。</value>
+  </data>
+  <data name="ReadingFailedSourceDown" xml:space="preserve">
+    <value>{source}から応答がありません。しばらくしてからもう一度お試しください。</value>
+  </data>
+  <data name="ReadingFailedNotFound" xml:space="preserve">
+    <value>このソースにはもうありません。別のソースをお試しください。</value>
+  </data>
+  <data name="ReadingFailedBlocked" xml:space="preserve">
+    <value>{source}がリクエストを拒否しました。{reason}</value>
+  </data>
+  <data name="ReadingFailedParse" xml:space="preserve">
+    <value>{source}から届いた内容をKaeriで読み取れませんでした。そのプラグインの更新が必要かもしれません。</value>
+  </data>
+  <data name="ReadingFailedPage" xml:space="preserve">
+    <value>このページを読み込めませんでした(エラー {status})。もう一度お試しください。</value>
+  </data>
+  <data name="ReadingFailedSignIn" xml:space="preserve">
+    <value>先を読むには、{what}にもう一度サインインしてください。</value>
+  </data>
+  <data name="ReadingFailedFileMissing" xml:space="preserve">
+    <value>{path}が見つかりません。ドライブにある場合は、接続してからもう一度お試しください。</value>
+  </data>
+  <data name="ReadingFailedUnreadable" xml:space="preserve">
+    <value>{path}を{format}として読み取れませんでした。ファイルが壊れている可能性があります。</value>
+  </data>
+  <data name="ReadingFailedUnsupported" xml:space="preserve">
+    <value>Kaeriは{kind}ファイルを読み取れません。</value>
+  </data>
+  <data name="ReadingFailedProtected" xml:space="preserve">
+    <value>この本はコピー防止がかかっているため、Kaeriでは開けません。</value>
+  </data>
+  <data name="ReadingFailedDiskFull" xml:space="preserve">
+    <value>このデバイスに空き容量がありません。容量を空けてからもう一度お試しください。</value>
+  </data>
+  <data name="ReadingFailedWebview" xml:space="preserve">
+    <value>小説の表示にはバージョン {version} より新しいシステム WebView が必要です。Android System WebView を更新してからもう一度お試しください。</value>
+  </data>
+  <data name="ReadingFailedNeedsNewer" xml:space="preserve">
+    <value>このプラグインには、より新しいKaeri({world})が必要です。使うにはKaeriを更新してください。</value>
+  </data>
+  <data name="ReadingFailedOff" xml:space="preserve">
+    <value>このバージョンのKaeriでは読書機能を使えません。</value>
+  </data>
+  <data name="ReadingFailedOther" xml:space="preserve">
+    <value>問題が発生しました。{reason}</value>
+  </data>
+  <data name="ReadingFailedSendTooLarge" xml:space="preserve">
+    <value>{file}は{size}ですが、{target}で扱えるファイルは{limit}までです。一度に送る章を減らして、もう一度お試しください。</value>
+  </data>
+  <data name="ReadingFailedSendMissing" xml:space="preserve">
+    <value>{file}に{part}がないため、送信しませんでした。もう一度お試しください。</value>
+  </data>
+  <data name="ReadingFailedSendEncoding" xml:space="preserve">
+    <value>{file}の{part}の文字コードが正しくないため、送信しませんでした。もう一度お試しください。</value>
+  </data>
+  <data name="ReadingFailedSendMalformed" xml:space="preserve">
+    <value>{file}の{part}が無効なため、送信しませんでした。もう一度お試しください。</value>
+  </data>
+  <data name="ReadingKindManga" xml:space="preserve">
+    <value>マンガ</value>
+  </data>
+  <data name="ReadingKindManhwa" xml:space="preserve">
+    <value>マンファ</value>
+  </data>
+  <data name="ReadingKindManhua" xml:space="preserve">
+    <value>マンホア</value>
+  </data>
+  <data name="ReadingKindWebtoon" xml:space="preserve">
+    <value>ウェブトゥーン</value>
+  </data>
+  <data name="ReadingKindOneShot" xml:space="preserve">
+    <value>読み切り</value>
+  </data>
+  <data name="ReadingKindLightNovel" xml:space="preserve">
+    <value>ライトノベル</value>
+  </data>
+  <data name="ReadingKindNovel" xml:space="preserve">
+    <value>小説</value>
+  </data>
+  <data name="ReadingStatusReleasing" xml:space="preserve">
+    <value>連載中</value>
+  </data>
+  <data name="ReadingStatusFinished" xml:space="preserve">
+    <value>完結</value>
+  </data>
+  <data name="ReadingStatusHiatus" xml:space="preserve">
+    <value>休載中</value>
+  </data>
+  <data name="ReadingStatusCancelled" xml:space="preserve">
+    <value>打ち切り</value>
+  </data>
+  <data name="ReadingStatusNotYet" xml:space="preserve">
+    <value>未公開</value>
+  </data>
+  <data name="ReadingChapters_other" xml:space="preserve">
+    <value>{count}話</value>
+  </data>
+  <data name="ReadingVolumes_other" xml:space="preserve">
+    <value>{count}巻</value>
+  </data>
+  <data name="ReadingOnPlanning" xml:space="preserve">
+    <value>「予定」リストに入っています</value>
+  </data>
+  <data name="ReadingSpotlightNewChapter" xml:space="preserve">
+    <value>フォロー中の作品に新しい話があります</value>
+  </data>
+  <data name="ReadingSpotlightContinue" xml:space="preserve">
+    <value>続きを読む</value>
+  </data>
+  <data name="ReadingSpotlightUpNext" xml:space="preserve">
+    <value>次に読む作品</value>
+  </data>
+  <data name="ReadingSpotlightPopular" xml:space="preserve">
+    <value>人気の連載中作品</value>
+  </data>
+  <data name="ReadingOutToday" xml:space="preserve">
+    <value>第{chapter}話が今日公開</value>
+  </data>
+  <data name="ReadingOutTodayTitled" xml:space="preserve">
+    <value>第{chapter}話「{title}」が今日公開</value>
+  </data>
+  <data name="ReadingChapterPage" xml:space="preserve">
+    <value>第{chapter}話 · {page}ページ</value>
+  </data>
+  <data name="ReadingChapterPercent" xml:space="preserve">
+    <value>第{chapter}話 · {percent}%</value>
+  </data>
+  <data name="ReadingChapterNew" xml:space="preserve">
+    <value>第{chapter}話が新着</value>
+  </data>
+  <data name="ReadingNextPart" xml:space="preserve">
+    <value>パート{part}</value>
+  </data>
+  <data name="ReadingPartPercent" xml:space="preserve">
+    <value>パート{part} · {percent}%</value>
+  </data>
+  <data name="ReadingPartNew" xml:space="preserve">
+    <value>パート{part}が新着</value>
+  </data>
+  <data name="ReadingLabelPercent" xml:space="preserve">
+    <value>{label} · {percent}%</value>
+  </data>
+  <data name="ReadingLabelNew" xml:space="preserve">
+    <value>{label}が公開されました</value>
+  </data>
+  <data name="ReadingPartTitled" xml:space="preserve">
+    <value>パート{part} · {title}</value>
+  </data>
+  <data name="ReadingLabelTitled" xml:space="preserve">
+    <value>{label} · {title}</value>
+  </data>
+  <data name="ReadingPartOutToday" xml:space="preserve">
+    <value>パート{part}が今日公開</value>
+  </data>
+  <data name="ReadingLabelOutToday" xml:space="preserve">
+    <value>{label}が今日公開</value>
+  </data>
+  <data name="ReadingPartOutTodayTitled" xml:space="preserve">
+    <value>パート{part}「{title}」が今日公開</value>
+  </data>
+  <data name="ReadingLabelOutTodayTitled" xml:space="preserve">
+    <value>{label}「{title}」が今日公開</value>
+  </data>
+  <data name="ReadingChapterOf" xml:space="preserve">
+    <value>第{chapter}話 / 最新 第{of}話</value>
+  </data>
+  <data name="ReadingVolumePart" xml:space="preserve">
+    <value>{volume}巻 パート{part}</value>
+  </data>
+  <data name="ReadingVolumeLabel" xml:space="preserve">
+    <value>{volume}巻、{label}</value>
+  </data>
+  <data name="ReadingOriginJapan" xml:space="preserve">
+    <value>日本</value>
+  </data>
+  <data name="ReadingOriginKorea" xml:space="preserve">
+    <value>韓国</value>
+  </data>
+  <data name="ReadingOriginChina" xml:space="preserve">
+    <value>中国</value>
+  </data>
+  <data name="ReadingOriginTaiwan" xml:space="preserve">
+    <value>台湾</value>
+  </data>
+  <data name="ExportDeviceOther" xml:space="preserve">
+    <value>その他の電子書籍リーダー</value>
+  </data>
+  <data name="ExportDeviceEink6" xml:space="preserve">
+    <value>E Ink 6インチ</value>
+  </data>
+  <data name="ExportDeviceEink7" xml:space="preserve">
+    <value>E Ink 7インチ</value>
+  </data>
+  <data name="ExportDeviceColourEink" xml:space="preserve">
+    <value>カラー E Ink 7インチ</value>
+  </data>
+  <data name="ExportDeviceTablet" xml:space="preserve">
+    <value>タブレット</value>
+  </data>
+  <data name="ExportChapter" xml:space="preserve">
+    <value>第{chapter}話</value>
+  </data>
+  <data name="ExportWaitsForWifi_other" xml:space="preserve">
+    <value>未ダウンロードの章が{n}件あるため、Wi-Fi 接続を待ってから自動で送信します。</value>
+  </data>
+  <data name="ExportPagesLeftOut_other" xml:space="preserve">
+    <value>{chapter}の{n}ページを読み込めなかったため、ファイルに含まれていません。</value>
+  </data>
+  <data name="ReadingChapterTitled" xml:space="preserve">
+    <value>第{chapter}話 · {title}</value>
+  </data>
+  <data name="ReadingRowRead" xml:space="preserve">
+    <value>既読</value>
+  </data>
+  <data name="ReadingRowNew" xml:space="preserve">
+    <value>新着</value>
+  </data>
+  <data name="ReadingRowDownloaded" xml:space="preserve">
+    <value>ダウンロード済み</value>
+  </data>
+  <data name="ReadingRowGoneFromSource" xml:space="preserve">
+    <value>ソースから削除済み</value>
+  </data>
+  <data name="ReadingRowNotDownloaded" xml:space="preserve">
+    <value>未ダウンロード</value>
+  </data>
+  <data name="ReadingRowOnDevice" xml:space="preserve">
+    <value>このデバイス内</value>
+  </data>
+  <data name="ReadingRowQueued" xml:space="preserve">
+    <value>待機中</value>
+  </data>
+  <data name="ReadingRowWaitsWifi" xml:space="preserve">
+    <value>待機中 · Wi-Fi待ち</value>
+  </data>
+  <data name="ReadingRowDownloading" xml:space="preserve">
+    <value>ダウンロード中 · {done}/{total}ページ</value>
+  </data>
+  <data name="ReadingRowFailed" xml:space="preserve">
+    <value>ダウンロード失敗</value>
+  </data>
+  <data name="ReadingRowPageOf" xml:space="preserve">
+    <value>{page}/{of}ページ</value>
+  </data>
+  <data name="ReadingRowPage" xml:space="preserve">
+    <value>{page}ページ</value>
+  </data>
+  <data name="ReadingRowPercent" xml:space="preserve">
+    <value>{percent}%</value>
+  </data>
+  <data name="ReadingRowOpened" xml:space="preserve">
+    <value>読みかけ</value>
+  </data>
+  <data name="ReadingRowBookmarked" xml:space="preserve">
+    <value>しおり付き</value>
+  </data>
+  <data name="ReadingRowPages_other" xml:space="preserve">
+    <value>{n}ページ</value>
+  </data>
+  <data name="ReadingRowVersions_other" xml:space="preserve">
+    <value>{n}バージョン</value>
+  </data>
+  <data name="ReadingAgoNow" xml:space="preserve">
+    <value>たった今</value>
+  </data>
+  <data name="ReadingAgoMinutes" xml:space="preserve">
+    <value>{minutes}分前</value>
+  </data>
+  <data name="ReadingAgoToday" xml:space="preserve">
+    <value>今日</value>
+  </data>
+  <data name="ReadingAgoYesterday" xml:space="preserve">
+    <value>昨日</value>
+  </data>
+  <data name="ReadingAgoDays_other" xml:space="preserve">
+    <value>{days}日前</value>
+  </data>
+  <data name="ReadingAgoWeeks_other" xml:space="preserve">
+    <value>{weeks}週間前</value>
+  </data>
+  <data name="ReadingAgoMonths_other" xml:space="preserve">
+    <value>{months}か月前</value>
+  </data>
+  <data name="ReadingAgoYears_other" xml:space="preserve">
+    <value>{years}年前</value>
+  </data>
+  <data name="ReadingRemovedFrom" xml:space="preserve">
+    <value>{tracker}から削除しました</value>
+  </data>
+  <data name="ReadingRemovedNotThere" xml:space="preserve">
+    <value>{tracker}のリストにありませんでした</value>
+  </data>
+  <data name="ReadingRemovedUnmatched" xml:space="preserve">
+    <value>{tracker}で照合できていないため、何も変更していません</value>
+  </data>
+  <data name="ReadingRemovedFailed" xml:space="preserve">
+    <value>{tracker}のリストに残っています</value>
+  </data>
+  <data name="ReadingRemovedSignIn" xml:space="preserve">
+    <value>{tracker}にもう一度サインインしてから、やり直してください。</value>
+  </data>
+  <data name="ReadingMissNoSeries" xml:space="preserve">
+    <value>この名前の作品はありません</value>
+  </data>
+  <data name="ReadingMissDownSince" xml:space="preserve">
+    <value>{time}から応答なし</value>
+  </data>
+  <data name="ReadingMissDown" xml:space="preserve">
+    <value>応答なし</value>
+  </data>
+  <data name="ReadingDlParts_other" xml:space="preserve">
+    <value>{count}パート</value>
+  </data>
+  <data name="ReadingDlSize" xml:space="preserve">
+    <value>{size}</value>
+  </data>
+  <data name="ReadingDlRead" xml:space="preserve">
+    <value>既読 {count}件</value>
+  </data>
+  <data name="ReadingDlChapter" xml:space="preserve">
+    <value>第{chapter}話</value>
+  </data>
+  <data name="ReadingDlPages" xml:space="preserve">
+    <value>{done}/{total}ページ</value>
+  </data>
+  <data name="ReadingDlMoreQueued" xml:space="preserve">
+    <value>ほか{count}件が待機中</value>
+  </data>
+  <data name="ReadingDlQueued" xml:space="preserve">
+    <value>{count}件が待機中</value>
+  </data>
+  <data name="ReadingDlWaitsWifi" xml:space="preserve">
+    <value>Wi-Fi待ち</value>
+  </data>
+  <data name="ReadingDlFailed" xml:space="preserve">
+    <value>第{chapter}話をダウンロードできませんでした</value>
+  </data>
+  <data name="ReadingDlOffline" xml:space="preserve">
+    <value>オフライン</value>
+  </data>
+  <data name="ReadingEstimateSize" xml:space="preserve">
+    <value>約{size}</value>
+  </data>
+  <data name="ReadingEstimateWifi" xml:space="preserve">
+    <value>Wi-Fi経由</value>
+  </data>
+  <data name="ReadingEstimateMobile" xml:space="preserve">
+    <value>モバイルデータ経由</value>
+  </data>
+  <data name="ReadingEstimateWaitsWifi" xml:space="preserve">
+    <value>Wi-Fi待ち</value>
+  </data>
+  <data name="ReadingDownloadsDoneTitle" xml:space="preserve">
+    <value>ダウンロードが完了しました</value>
+  </data>
+  <data name="ReadingDownloadsDoneChapters_other" xml:space="preserve">
+    <value>{title}の{count}話をオフラインで読めます。</value>
+  </data>
+  <data name="ReadingDownloadsDoneParts_other" xml:space="preserve">
+    <value>{title}の{count}パートをオフラインで読めます。</value>
+  </data>
+  <data name="ReadingDownloadsDoneSeries" xml:space="preserve">
+    <value>{count}作品の章をオフラインで読めます。</value>
+  </data>
+  <data name="ReadHomeTrendingManga" xml:space="preserve">
+    <value>話題のマンガ</value>
+  </data>
+  <data name="ReadHomeTrendingWebtoons" xml:space="preserve">
+    <value>話題のウェブトゥーン</value>
+  </data>
+  <data name="ReadHomeTrendingNovels" xml:space="preserve">
+    <value>話題のライトノベル</value>
+  </data>
+  <data name="ReadHomeNewManga" xml:space="preserve">
+    <value>新作マンガ</value>
+  </data>
+  <data name="ReadHomeNewWebtoons" xml:space="preserve">
+    <value>新作ウェブトゥーン</value>
+  </data>
+  <data name="ReadHomeNewNovels" xml:space="preserve">
+    <value>新作ライトノベル</value>
+  </data>
+  <data name="ReadHomeNewSide" xml:space="preserve">
+    <value>過去12か月</value>
+  </data>
+  <data name="ReadHomeFinishedManga" xml:space="preserve">
+    <value>完結したマンガ</value>
+  </data>
+  <data name="ReadHomeFinishedWebtoons" xml:space="preserve">
+    <value>完結したウェブトゥーン</value>
+  </data>
+  <data name="ReadHomeFinishedNovels" xml:space="preserve">
+    <value>完結したライトノベル</value>
+  </data>
+  <data name="ReadHomeFinishedSide" xml:space="preserve">
+    <value>人気順</value>
+  </data>
+  <data name="ReadSearchStartedAny" xml:space="preserve">
+    <value>指定なし</value>
+  </data>
+  <data name="ReadSearchStartedYear" xml:space="preserve">
+    <value>過去12か月</value>
+  </data>
+  <data name="ReadSearchStarted3Years" xml:space="preserve">
+    <value>過去3年</value>
+  </data>
+  <data name="ReadHitChapters" xml:space="preserve">
+    <value>第1話〜第{last}話</value>
+  </data>
+  <data name="ReadHitEpisodes" xml:space="preserve">
+    <value>第1話〜第{last}話</value>
+  </data>
+  <data name="ReadHitParts_other" xml:space="preserve">
+    <value>{count}部</value>
+  </data>
+  <data name="ReadHitFiles_other" xml:space="preserve">
+    <value>ファイル{count}件</value>
+  </data>
+  <data name="ReadHitFilesFormat_other" xml:space="preserve">
+    <value>ファイル{count}件 · {format}</value>
+  </data>
+  <data name="ReadSourceFolders" xml:space="preserve">
+    <value>フォルダ</value>
+  </data>
+  <data name="ReadingSinceJanuary" xml:space="preserve">
+    <value>1月から</value>
+  </data>
+  <data name="ReadingSinceFebruary" xml:space="preserve">
+    <value>2月から</value>
+  </data>
+  <data name="ReadingSinceMarch" xml:space="preserve">
+    <value>3月から</value>
+  </data>
+  <data name="ReadingSinceApril" xml:space="preserve">
+    <value>4月から</value>
+  </data>
+  <data name="ReadingSinceMay" xml:space="preserve">
+    <value>5月から</value>
+  </data>
+  <data name="ReadingSinceJune" xml:space="preserve">
+    <value>6月から</value>
+  </data>
+  <data name="ReadingSinceJuly" xml:space="preserve">
+    <value>7月から</value>
+  </data>
+  <data name="ReadingSinceAugust" xml:space="preserve">
+    <value>8月から</value>
+  </data>
+  <data name="ReadingSinceSeptember" xml:space="preserve">
+    <value>9月から</value>
+  </data>
+  <data name="ReadingSinceOctober" xml:space="preserve">
+    <value>10月から</value>
+  </data>
+  <data name="ReadingSinceNovember" xml:space="preserve">
+    <value>11月から</value>
+  </data>
+  <data name="ReadingSinceDecember" xml:space="preserve">
+    <value>12月から</value>
   </data>
   <data name="StoreJoined" xml:space="preserve">
     <value>{store}に{member}として参加しました。</value>
@@ -638,6 +1214,9 @@
   <data name="PluginMissingLocally" xml:space="preserve">
     <value>{plugin}はプラグインフォルダーにもうありません。</value>
   </data>
+  <data name="StoreTakesNoBooks" xml:space="preserve">
+    <value>{store}はまだ本のソースを掲載できません。管理者がプラグインストアを更新すると追加できます。</value>
+  </data>
   <data name="StoreInviteNeedsLink" xml:space="preserve">
     <value>このデバイスは、リンクで{store}に参加しています。もう一方のデバイスには、同じリンクを貼り付けてください。</value>
   </data>
@@ -657,7 +1236,7 @@
     <value>{store}のサーバーは古く、リンクで誰でも参加できるようにはできません。先に更新してください。</value>
   </data>
   <data name="SourceSwitchedOff" xml:space="preserve">
-    <value>{name}をオフにしました。エピソードを探すときは飛ばされます。</value>
+    <value>{name}をオフにしました。Kaeriはエピソードを探すときにこれを飛ばします。</value>
   </data>
   <data name="SourceSwitchedOn" xml:space="preserve">
     <value>{name}をオンにしました。</value>
@@ -666,7 +1245,7 @@
     <value>{id}は読み込まれていません。ソースの下にインストールされているか確認してください。</value>
   </data>
   <data name="ReleasePinned" xml:space="preserve">
-    <value>このタイトルには{name}を使います。</value>
+    <value>このタイトルは今後{name}を使います。</value>
   </data>
   <data name="NoticeChoiceNotSaved" xml:space="preserve">
     <value>その選択を保存できませんでした。{reason}</value>
@@ -728,6 +1307,9 @@
   <data name="CloudLoopbackDone" xml:space="preserve">
     <value>このタブを閉じて Kaeri に戻ってください。</value>
   </data>
+  <data name="SyncDeviceRemoved" xml:space="preserve">
+    <value>このデバイスは、別のデバイスで同期から削除されました。同期するには、もう一度参加してください。</value>
+  </data>
   <data name="NoticeSignedIn" xml:space="preserve">
     <value>{tracker}にサインインしました。</value>
   </data>
@@ -756,10 +1338,10 @@
     <value>サインイン用のブラウザを開けませんでした。ブラウザがインストールされているか確認して、もう一度試してください。{reason}</value>
   </data>
   <data name="NoticeSignInNotWaiting" xml:space="preserve">
-    <value>待機中の{tracker}のサインインはありません。サインインを最初からやり直してください。</value>
+    <value>{tracker}からサインインの応答が届きましたが、待機中のサインインはありません。サインインを最初からやり直してください。</value>
   </data>
   <data name="NoticeSignInWrongRequest" xml:space="preserve">
-    <value>{tracker}から戻ったサインイン情報が、今回の要求のものではありません。サインインを最初からやり直してください。</value>
+    <value>{tracker}からのサインインの応答が、要求と一致しません。サインインを最初からやり直してください。</value>
   </data>
   <data name="NoticeSignInNoToken" xml:space="preserve">
     <value>{tracker}へのサインインがトークンなしで戻ってきました。もう一度試してください。</value>
@@ -849,13 +1431,13 @@
     <value>プロキシにはホストとポートが必要です。</value>
   </data>
   <data name="CauseProxyAddressUnusable" xml:space="preserve">
-    <value>プロキシのアドレスは、確認に使えないアドレスです。</value>
+    <value>プロキシの確認では、このアドレスを使えません。</value>
   </data>
   <data name="CauseServerUnreachable" xml:space="preserve">
     <value>サーバーに接続できませんでした。</value>
   </data>
   <data name="LegalHostsNoContent" xml:space="preserve">
-    <value>Kaeriは作品をホストしていません。ソースはご自身で追加します。</value>
+    <value>Kaeriは作品も本もホストしていません。ソースはご自身で追加します。</value>
   </data>
   <data name="NoticeSaved" xml:space="preserve">
     <value>{label}を保存しました。</value>
@@ -873,7 +1455,7 @@
     <value>Kaeriの内部で問題が発生しました。処理は続行されましたが、画面が止まっているように見える場合は、終了してから開き直してください。</value>
   </data>
   <data name="NoticeDatabaseSetAside" xml:space="preserve">
-    <value>データベースが破損していたため、Kaeriは新しいデータベースを作成しました。古いファイルは{path}に残されています。連携サービスの情報は、次回の同期で戻ります。</value>
+    <value>データベースが破損していたため、Kaeriは新しいデータベースを作成しました。古いファイルは{path}に残っています。連携サービスにある情報は、次回の同期で戻ります。</value>
   </data>
   <data name="StartFailedFolder" xml:space="preserve">
     <value>Kaeriはフォルダ {path}を作成できませんでした。ディスクに空きがあり、フォルダに書き込めることを確認してから、もう一度お試しください。{reason}</value>
@@ -888,7 +1470,7 @@
     <value>Kaeriは{path}のデータベースを開けませんでした。同じフォルダで別のKaeriアプリが開いている場合は、終了してからもう一度お試しください。{reason}</value>
   </data>
   <data name="StartFailedNetwork" xml:space="preserve">
-    <value>Kaeriは、config.tomlのネットワーク設定から接続を設定できませんでした。{reason}</value>
+    <value>Kaeriは、config.tomlのネットワーク設定で接続できませんでした。設定を確認してから、もう一度お試しください。{reason}</value>
   </data>
   <data name="StartFailed" xml:space="preserve">
     <value>Kaeriを起動できませんでした。一度終了してから、開き直してください。{reason}</value>
@@ -918,10 +1500,10 @@
     <value>「計画中」リストが空です。</value>
   </data>
   <data name="NoticeSurpriseOffline" xml:space="preserve">
-    <value>オフラインです。検索からのおまかせにはAniListが必要です。</value>
+    <value>オフラインです。おまかせで作品を選ぶにはAniListが必要です。</value>
   </data>
   <data name="NoticeSurpriseFailed" xml:space="preserve">
-    <value>いまは作品を選べませんでした。しばらくしてからもう一度お試しください。</value>
+    <value>AniListに接続できず、作品を選べませんでした。しばらくしてからもう一度お試しください。</value>
   </data>
   <data name="ContinueMenuResume" xml:space="preserve">
     <value>続きを見る</value>
@@ -973,6 +1555,39 @@
   </data>
   <data name="FilterPickedMore" xml:space="preserve">
     <value>{first} +{more}</value>
+  </data>
+  <data name="SearchGenreLeftOut" xml:space="preserve">
+    <value>{genre}を除く</value>
+  </data>
+  <data name="SearchFiltersButtonSet" xml:space="preserve">
+    <value>フィルター、{count}件設定</value>
+  </data>
+  <data name="ShortcutsSearchFilters" xml:space="preserve">
+    <value>検索のフィルター</value>
+  </data>
+  <data name="FilterHintClick" xml:space="preserve">
+    <value>1回クリックで含め、2回クリックで除外します。</value>
+  </data>
+  <data name="SearchPickInclude" xml:space="preserve">
+    <value>含める</value>
+  </data>
+  <data name="SearchPickLeaveOut" xml:space="preserve">
+    <value>除外</value>
+  </data>
+  <data name="SearchRangeFrom" xml:space="preserve">
+    <value>最小</value>
+  </data>
+  <data name="SearchRangeTo" xml:space="preserve">
+    <value>最大</value>
+  </data>
+  <data name="SearchMinutesUnit" xml:space="preserve">
+    <value>分</value>
+  </data>
+  <data name="SearchScoreAny" xml:space="preserve">
+    <value>指定なし</value>
+  </data>
+  <data name="SearchSuggestFilter" xml:space="preserve">
+    <value>{name}で絞り込む</value>
   </data>
   <data name="TitleSeasonWhen" xml:space="preserve">
     <value>{season} · {when}</value>
@@ -1055,6 +1670,9 @@
   <data name="MatchChoiceLine" xml:space="preserve">
     <value>{parts} · {percent}%一致</value>
   </data>
+  <data name="SearchRateLimitEnter" xml:space="preserve">
+    <value>AniList の制限内に収めるため、入力中の検索を少し止めています。今すぐ検索するには Enter を押してください。</value>
+  </data>
   <data name="DiscussionEditing" xml:space="preserve">
     <value>コメントを編集中</value>
   </data>
@@ -1124,6 +1742,270 @@
   <data name="AccountsPaneName" xml:space="preserve">
     <value>アカウント、{state}</value>
   </data>
+  <data name="WindowsReaderSettingsOpen" xml:space="preserve">
+    <value>リーダーの設定</value>
+  </data>
+  <data name="WindowsReaderOpening" xml:space="preserve">
+    <value>{chapter}を開いています</value>
+  </data>
+  <data name="WindowsReaderOpeningSlow" xml:space="preserve">
+    <value>ソースを探しています · {seconds}秒</value>
+  </data>
+  <data name="WindowsReaderChapterFailed" xml:space="preserve">
+    <value>{chapter}を開けませんでした</value>
+  </data>
+  <data name="WindowsReaderChooseSource" xml:space="preserve">
+    <value>ソースを選ぶ</value>
+  </data>
+  <data name="WindowsReaderPageFailedHint" xml:space="preserve">
+    <value>ページをめくると、このページを飛ばして進みます。</value>
+  </data>
+  <data name="WindowsReaderEndOfChapter" xml:space="preserve">
+    <value>{chapter}の終わり</value>
+  </data>
+  <data name="WindowsReaderEndNotRead" xml:space="preserve">
+    <value>まだ既読になっていません</value>
+  </data>
+  <data name="WindowsReaderEndTracker" xml:space="preserve">
+    <value>既読 · {trackers}を更新しました</value>
+  </data>
+  <data name="WindowsReaderEndTrackersTwo" xml:space="preserve">
+    <value>{first}と{second}</value>
+  </data>
+  <data name="WindowsReaderContinue" xml:space="preserve">
+    <value>次の章へ</value>
+  </data>
+  <data name="WindowsReaderBackToSeries" xml:space="preserve">
+    <value>作品に戻る</value>
+  </data>
+  <data name="WindowsReaderEndNotOut" xml:space="preserve">
+    <value>{chapter}はまだ公開されていません</value>
+  </data>
+  <data name="WindowsReaderEndNotOutBody" xml:space="preserve">
+    <value>Kaeriはバックグラウンドで新しい章を確認し、「更新」に追加します。</value>
+  </data>
+  <data name="WindowsReaderEndCaughtUpBody" xml:space="preserve">
+    <value>ソースに新しい章が出ると、「更新」に表示されます。</value>
+  </data>
+  <data name="WindowsReaderEndFinished" xml:space="preserve">
+    <value>作品の終わり</value>
+  </data>
+  <data name="WindowsReaderEndFinishedBody" xml:space="preserve">
+    <value>これ以上の章はありません。</value>
+  </data>
+  <data name="WindowsReaderEndNoSource" xml:space="preserve">
+    <value>ソースに{chapter}はまだありません</value>
+  </data>
+  <data name="WindowsReaderEndOffline" xml:space="preserve">
+    <value>{chapter}はダウンロードされていません</value>
+  </data>
+  <data name="WindowsReaderEndOfflineBody" xml:space="preserve">
+    <value>オフラインです。接続すると、ここで開けます。</value>
+  </data>
+  <data name="WindowsReaderGroupLine" xml:space="preserve">
+    <value>{chapter} · {page}/{total}ページ</value>
+  </data>
+  <data name="WindowsReaderGroupLineSpread" xml:space="preserve">
+    <value>{chapter} · {first}・{second}ページ</value>
+  </data>
+  <data name="WindowsReaderGroupLineStrip" xml:space="preserve">
+    <value>{chapter} · 画像{image}/{total}</value>
+  </data>
+  <data name="WindowsReaderGroupLineScroll" xml:space="preserve">
+    <value>{chapter} · {percent}%</value>
+  </data>
+  <data name="WindowsReaderPageLabel" xml:space="preserve">
+    <value>{total}ページ中{page}ページ目</value>
+  </data>
+  <data name="WindowsReaderPagesLabel" xml:space="preserve">
+    <value>{total}ページ中{first}ページ目と{second}ページ目</value>
+  </data>
+  <data name="WindowsReaderScrubber" xml:space="preserve">
+    <value>ページ</value>
+  </data>
+  <data name="WindowsReaderStartOver" xml:space="preserve">
+    <value>最初から</value>
+  </data>
+  <data name="WindowsReaderGoBack" xml:space="preserve">
+    <value>戻る</value>
+  </data>
+  <data name="WindowsReaderChange" xml:space="preserve">
+    <value>変更</value>
+  </data>
+  <data name="WindowsReaderThisSeries" xml:space="preserve">
+    <value>この作品</value>
+  </data>
+  <data name="WindowsReaderAllMangaPc" xml:space="preserve">
+    <value>このPCのすべてのマンガ</value>
+  </data>
+  <data name="WindowsReaderAllStripsPc" xml:space="preserve">
+    <value>このPCのすべてのウェブトゥーン</value>
+  </data>
+  <data name="WindowsReaderAllNovels" xml:space="preserve">
+    <value>すべてのライトノベル</value>
+  </data>
+  <data name="WindowsReaderReadingMode" xml:space="preserve">
+    <value>表示モード</value>
+  </data>
+  <data name="WindowsReaderModeAuto" xml:space="preserve">
+    <value>自動 · {mode}</value>
+  </data>
+  <data name="WindowsReaderModeAutoOption" xml:space="preserve">
+    <value>自動</value>
+  </data>
+  <data name="WindowsReaderModeRtlLower" xml:space="preserve">
+    <value>右から左</value>
+  </data>
+  <data name="WindowsReaderModeLtrLower" xml:space="preserve">
+    <value>左から右</value>
+  </data>
+  <data name="WindowsReaderModeStripLower" xml:space="preserve">
+    <value>縦スクロール</value>
+  </data>
+  <data name="WindowsReaderModeDetectedNote" xml:space="preserve">
+    <value>作品情報から判定しました。</value>
+  </data>
+  <data name="WindowsReaderModeChoiceNote" xml:space="preserve">
+    <value>選んだ設定はこの作品用に保存され、ほかのデバイスにも引き継がれます。</value>
+  </data>
+  <data name="WindowsReaderUseDefault" xml:space="preserve">
+    <value>既定に戻す</value>
+  </data>
+  <data name="WindowsReaderModePaged" xml:space="preserve">
+    <value>ページ送り</value>
+  </data>
+  <data name="WindowsReaderModeScrolled" xml:space="preserve">
+    <value>スクロール</value>
+  </data>
+  <data name="WindowsReaderPageLayout" xml:space="preserve">
+    <value>ページレイアウト</value>
+  </data>
+  <data name="WindowsReaderFit" xml:space="preserve">
+    <value>フィット</value>
+  </data>
+  <data name="WindowsReaderFitHeight" xml:space="preserve">
+    <value>高さ</value>
+  </data>
+  <data name="WindowsReaderCropBorders" xml:space="preserve">
+    <value>余白を切り取る</value>
+  </data>
+  <data name="WindowsReaderGap" xml:space="preserve">
+    <value>画像の間隔</value>
+  </data>
+  <data name="WindowsReaderBackground" xml:space="preserve">
+    <value>背景</value>
+  </data>
+  <data name="WindowsReaderMoreSettings" xml:space="preserve">
+    <value>リーダーのその他の設定</value>
+  </data>
+  <data name="WindowsReaderPaperMode" xml:space="preserve">
+    <value>ペーパーモード</value>
+  </data>
+  <data name="WindowsReaderPaperModeNote" xml:space="preserve">
+    <value>紙のような配色になり、ページは即座にめくれ、リーダー内の動きはなくなります。</value>
+  </data>
+  <data name="WindowsReaderFont" xml:space="preserve">
+    <value>フォント</value>
+  </data>
+  <data name="WindowsReaderTextSize" xml:space="preserve">
+    <value>文字サイズ</value>
+  </data>
+  <data name="WindowsReaderLineSpacing" xml:space="preserve">
+    <value>行間</value>
+  </data>
+  <data name="WindowsReaderLineTight" xml:space="preserve">
+    <value>狭い</value>
+  </data>
+  <data name="WindowsReaderLineNormal" xml:space="preserve">
+    <value>標準</value>
+  </data>
+  <data name="WindowsReaderLineLoose" xml:space="preserve">
+    <value>広い</value>
+  </data>
+  <data name="WindowsReaderMargins" xml:space="preserve">
+    <value>余白</value>
+  </data>
+  <data name="WindowsReaderJustify" xml:space="preserve">
+    <value>両端揃え</value>
+  </data>
+  <data name="WindowsReaderLook" xml:space="preserve">
+    <value>表示色</value>
+  </data>
+  <data name="WindowsReaderPercent" xml:space="preserve">
+    <value>{percent}%</value>
+  </data>
+  <data name="WindowsReaderSmaller" xml:space="preserve">
+    <value>文字を小さく</value>
+  </data>
+  <data name="WindowsReaderLarger" xml:space="preserve">
+    <value>文字を大きく</value>
+  </data>
+  <data name="WindowsReaderPagesTab" xml:space="preserve">
+    <value>ページ</value>
+  </data>
+  <data name="WindowsReaderChaptersTab" xml:space="preserve">
+    <value>章</value>
+  </data>
+  <data name="WindowsReaderVolume" xml:space="preserve">
+    <value>{volume}巻</value>
+  </data>
+  <data name="WindowsReaderChapterPages_other" xml:space="preserve">
+    <value>{pages}ページ</value>
+  </data>
+  <data name="WindowsReaderGridPage" xml:space="preserve">
+    <value>{page}ページ</value>
+  </data>
+  <data name="WindowsReaderImageLabel" xml:space="preserve">
+    <value>画像{count}枚中{image}枚目</value>
+  </data>
+  <data name="WindowsReaderNoteClose" xml:space="preserve">
+    <value>注釈を閉じる</value>
+  </data>
+  <data name="WindowsReaderBack" xml:space="preserve">
+    <value>戻る</value>
+  </data>
+  <data name="WindowsReaderModeVertical" xml:space="preserve">
+    <value>縦並びページ</value>
+  </data>
+  <data name="WindowsReaderModeVerticalLower" xml:space="preserve">
+    <value>縦並びページ</value>
+  </data>
+  <data name="WindowsReaderModeAutoLine" xml:space="preserve">
+    <value>{way}(作品情報から判定)</value>
+  </data>
+  <data name="WindowsReaderModeVerticalLine" xml:space="preserve">
+    <value>ページを縦に並べて表示</value>
+  </data>
+  <data name="WindowsReaderModeStripLine" xml:space="preserve">
+    <value>ウェブトゥーンや縦長の画像向け</value>
+  </data>
+  <data name="WindowsReadDownloadsEmptyDetail" xml:space="preserve">
+    <value>ダウンロードした章は、接続なしで開けます。</value>
+  </data>
+  <data name="SeriesReadAgainDoneWindows" xml:space="preserve">
+    <value>{title}を最初から読み直しています</value>
+  </data>
+  <data name="SendSaveFilesWindows" xml:space="preserve">
+    <value>ファイルを保存</value>
+  </data>
+  <data name="SendSavedWindows_other" xml:space="preserve">
+    <value>{n}件のファイルを保存しました</value>
+  </data>
+  <data name="SendSaveFailedWindows" xml:space="preserve">
+    <value>そのフォルダにファイルを保存できませんでした。別のフォルダをお試しください。</value>
+  </data>
+  <data name="OpdsPausedNoneWindows" xml:space="preserve">
+    <value>一時停止中。このPCはローカルネットワークに接続していません。</value>
+  </data>
+  <data name="OpdsPausedVpnWindows" xml:space="preserve">
+    <value>一時停止中。このPCはVPN経由でのみ接続しています。</value>
+  </data>
+  <data name="FeedFirewallTitleWindows" xml:space="preserve">
+    <value>Windowsからネットワークについて確認があります</value>
+  </data>
+  <data name="FeedFirewallBodyWindows" xml:space="preserve">
+    <value>家の電子書籍リーダーからフィードにアクセスできるよう、Kaeriはプライベートネットワークでのみ許可してください。パブリックネットワークのチェックは外したままにしてください。</value>
+  </data>
   <data name="SettingsLoading" xml:space="preserve">
     <value>設定を読み込んでいます</value>
   </data>
@@ -1140,7 +2022,7 @@
     <value>ダウンロードを続ける場合、完了するまでKaeriは通知領域に残ります。</value>
   </data>
   <data name="SettingsPresenceRichDetail" xml:space="preserve">
-    <value>カバー画像、進捗バー、{tracker}の作品ページへのリンクを表示します。作品名を表示する設定が必要です。</value>
+    <value>カバー画像、進捗バー、{tracker}の作品ページへのリンクです。タイトルを表示しているときだけ機能します。</value>
   </data>
   <data name="SettingsAnotherTv" xml:space="preserve">
     <value>別のテレビ</value>
@@ -1150,6 +2032,12 @@
   </data>
   <data name="SettingsMotion" xml:space="preserve">
     <value>アニメーション</value>
+  </data>
+  <data name="SettingsSmoothScrolling" xml:space="preserve">
+    <value>スムーズスクロール</value>
+  </data>
+  <data name="SettingsSmoothScrollingDetail" xml:space="preserve">
+    <value>マウスホイールを回すたびに、ページが滑らかに移動します。タッチパッドやタッチ操作のスクロールは変わりません。</value>
   </data>
   <data name="SettingsStartFullscreen" xml:space="preserve">
     <value>全画面で開始</value>
@@ -1251,7 +2139,37 @@
     <value>「テレビで再生」のChromecastの下に表示されます。このPCがエピソードを送信します。</value>
   </data>
   <data name="SettingsNoteTorrentsWhileCastingPc" xml:space="preserve">
-    <value>Chromecast内蔵のテレビでトレントを再生できるようにします。再生中はこのPCがエピソードを送信します。</value>
+    <value>Chromecast内蔵のテレビでもトレントを再生できるようになります。再生中はこのPCがエピソードを送信します。</value>
+  </data>
+  <data name="SettingsLanguageRestart" xml:space="preserve">
+    <value>再起動</value>
+  </data>
+  <data name="SettingsDifferences_other" xml:space="preserve">
+    <value>{tracker}と異なるタイトルが{count}件あります</value>
+  </data>
+  <data name="SettingsDifferencesReview" xml:space="preserve">
+    <value>確認</value>
+  </data>
+  <data name="SettingsSearch" xml:space="preserve">
+    <value>設定を検索</value>
+  </data>
+  <data name="SettingsQualityDetailWindows" xml:space="preserve">
+    <value>「高」ではソースにある最高の版を選びます。そのぶん容量を多く使います。</value>
+  </data>
+  <data name="SettingsMergeSubtitlesDetailWindows" xml:space="preserve">
+    <value>ファイルを移動しても、字幕はエピソードと一緒に残ります。</value>
+  </data>
+  <data name="SettingsKeepSeedingDetailWindows" xml:space="preserve">
+    <value>シードを続けるダウンロードは、保存フォルダではなくKaeriのキャッシュに置かれます。</value>
+  </data>
+  <data name="SettingsDiscussionsNoteWindows" xml:space="preserve">
+    <value>エピソードを視聴すると、AniListのフォーラムスレッドのコメントが表示されます。</value>
+  </data>
+  <data name="SettingsCommentImagesNoteWindows" xml:space="preserve">
+    <value>画像は配信元のサイトから読み込まれ、そのサイトにIPアドレスが伝わります。</value>
+  </data>
+  <data name="SettingsFolderBrowse" xml:space="preserve">
+    <value>参照…</value>
   </data>
   <data name="TrayStillDownloading" xml:space="preserve">
     <value>Kaeriはダウンロードを続けています</value>
@@ -1373,6 +2291,42 @@
   <data name="StartFailedQuit" xml:space="preserve">
     <value>終了</value>
   </data>
+  <data name="EngineStoppedTitle" xml:space="preserve">
+    <value>Kaeriが停止しました</value>
+  </data>
+  <data name="EngineStoppedDetail" xml:space="preserve">
+    <value>ダウンロードと同期も止まりました。Kaeriをもう一度開くと続けられます。</value>
+  </data>
+  <data name="EngineStoppedOpenAgain" xml:space="preserve">
+    <value>開き直す</value>
+  </data>
+  <data name="TitlebarSynced" xml:space="preserve">
+    <value>{tracker}:同期済み</value>
+  </data>
+  <data name="TitlebarNotSynced" xml:space="preserve">
+    <value>{tracker}:未同期</value>
+  </data>
+  <data name="TitlebarSignInAgain" xml:space="preserve">
+    <value>{tracker}に再サインイン</value>
+  </data>
+  <data name="TitlebarStatusHint" xml:space="preserve">
+    <value>実行中の処理を表示します</value>
+  </data>
+  <data name="TitlebarNothingRunning" xml:space="preserve">
+    <value>実行中の処理はありません。</value>
+  </data>
+  <data name="TitlebarOpenDevices" xml:space="preserve">
+    <value>デバイスを開く</value>
+  </data>
+  <data name="MessagesTitle" xml:space="preserve">
+    <value>メッセージ</value>
+  </data>
+  <data name="MessagesNone" xml:space="preserve">
+    <value>メッセージはまだありません</value>
+  </data>
+  <data name="MessagesAlert" xml:space="preserve">
+    <value>問題</value>
+  </data>
   <data name="TvPickerEpisodeOf" xml:space="preserve">
     <value>{title}、第{episode}話</value>
   </data>
@@ -1446,7 +2400,7 @@
     <value>{name}をオン</value>
   </data>
   <data name="SourcesRemoveDetail" xml:space="preserve">
-    <value>エピソードの検索に使われなくなります。プラグインストアから再度インストールできます。</value>
+    <value>Kaeriはエピソードを探すときにこれを使わなくなります。プラグインストアから再びインストールできます。</value>
   </data>
   <data name="StoresUpdatesCount_other" xml:space="preserve">
     <value>{count}件の更新があります</value>
@@ -1635,13 +2589,13 @@
     <value>このデバイスにクラッシュレポートを保存</value>
   </data>
   <data name="SettingsCrashSaveDetail" xml:space="preserve">
-    <value>オンにすると、Kaeriはクラッシュのたびに、タイトル、アドレス、名前を除いた短い記録をこのデバイスに保存します。バグ報告に追加できます。自動では何も送信されません。</value>
+    <value>Kaeriはバグ報告用に、クラッシュのたびにタイトル、アドレス、名前を除いた短い記録をこのデバイスに保存します。自動では何も送信されません。</value>
   </data>
   <data name="SettingsCrashAsk" xml:space="preserve">
     <value>クラッシュ後に確認する</value>
   </data>
   <data name="SettingsCrashAskDetail" xml:space="preserve">
-    <value>次回の起動時に「報告…」付きの通知を表示します。</value>
+    <value>次にKaeriを開いたとき、「報告…」付きの通知を表示します。</value>
   </data>
   <data name="SettingsCrashOsHeading" xml:space="preserve">
     <value>{system}が保持</value>
@@ -1671,7 +2625,7 @@
     <value>すべて削除</value>
   </data>
   <data name="SettingsCrashFootnote" xml:space="preserve">
-    <value>クラッシュレポートはこのデバイスに残ります。Kaeriが自動で送信することはありません。バグ報告からGitHubで開いたときだけ、レポートが外部に送られます。レポートは30日後に削除されます。</value>
+    <value>クラッシュレポートはこのデバイスに残り、Kaeriが自動で送信することはありません。バグ報告からGitHubで開いたときだけ、レポートが外部に送られます。レポートは30日後に削除されます。</value>
   </data>
   <data name="CalendarPreviousWeek" xml:space="preserve">
     <value>前の週</value>
@@ -1797,13 +2751,13 @@
     <value>「テレビで再生」のChromecastの下に表示されます。このiPadがエピソードを送信します。</value>
   </data>
   <data name="CastTorrentsNoteMac" xml:space="preserve">
-    <value>Chromecast内蔵のテレビでトレントを再生できるようにします。再生中はこのMacがエピソードを送信します。</value>
+    <value>これで、Chromecast内蔵のテレビでトレントを再生できます。再生中はこのMacがエピソードを送信します。</value>
   </data>
   <data name="CastTorrentsNoteIphone" xml:space="preserve">
-    <value>Chromecast内蔵のテレビでトレントを再生できるようにします。再生中はこのiPhoneがエピソードを送信します。</value>
+    <value>これで、Chromecast内蔵のテレビでトレントを再生できます。再生中はこのiPhoneがエピソードを送信します。</value>
   </data>
   <data name="CastTorrentsNoteIpad" xml:space="preserve">
-    <value>Chromecast内蔵のテレビでトレントを再生できるようにします。再生中はこのiPadがエピソードを送信します。</value>
+    <value>これで、Chromecast内蔵のテレビでトレントを再生できます。再生中はこのiPadがエピソードを送信します。</value>
   </data>
   <data name="CastUpNextPlaysIn" xml:space="preserve">
     <value>次のエピソード · {seconds}秒後に再生</value>
@@ -2210,6 +3164,27 @@
   <data name="PadButtonRightStick" xml:space="preserve">
     <value>右スティック</value>
   </data>
+  <data name="PadHelpTurnPage" xml:space="preserve">
+    <value>ページをめくる</value>
+  </data>
+  <data name="PadHelpPreviousChapter" xml:space="preserve">
+    <value>前の章</value>
+  </data>
+  <data name="PadHelpNextChapter" xml:space="preserve">
+    <value>次の章</value>
+  </data>
+  <data name="PadHelpReaderBar" xml:space="preserve">
+    <value>バーの表示・非表示</value>
+  </data>
+  <data name="PadHelpReaderSettings" xml:space="preserve">
+    <value>リーダーの設定</value>
+  </data>
+  <data name="PadHelpCloseReader" xml:space="preserve">
+    <value>リーダーを閉じる</value>
+  </data>
+  <data name="PadHelpReader" xml:space="preserve">
+    <value>リーダー</value>
+  </data>
   <data name="CloseDontAsk" xml:space="preserve">
     <value>今後は確認しない</value>
   </data>
@@ -2435,6 +3410,12 @@
   <data name="DownloadsEmptyDetail" xml:space="preserve">
     <value>ダウンロードしたエピソードは、接続しなくても再生できます。</value>
   </data>
+  <data name="ReadDownloadsEmptyDetail" xml:space="preserve">
+    <value>ダウンロードした章は、接続なしで開けます。</value>
+  </data>
+  <data name="ReadDownloadsEmptyBoth" xml:space="preserve">
+    <value>ダウンロードしたエピソードと章は、接続なしで開けます。</value>
+  </data>
   <data name="DownloadsLoadFailed" xml:space="preserve">
     <value>ダウンロードを読み込めませんでした</value>
   </data>
@@ -2517,7 +3498,7 @@
     <value>ダウンロードを削除</value>
   </data>
   <data name="DownloadsDeleteOneDetail" xml:space="preserve">
-    <value>再び再生するには、接続するか、もう一度ダウンロードしてください。</value>
+    <value>削除後は、もう一度ダウンロードしない限り、再生には接続が必要です。</value>
   </data>
   <data name="DownloadsDeleteWatched" xml:space="preserve">
     <value>視聴済みのダウンロードを削除</value>
@@ -2529,7 +3510,7 @@
     <value>視聴後のシーディング</value>
   </data>
   <data name="DownloadsSeedingNote" xml:space="preserve">
-    <value>視聴済みのエピソードは、Kaeriを開いている間に共有されます。設定のソースで指定した比率か時間の上限に達するまで続きます。</value>
+    <value>視聴済みのエピソードは、Kaeriを開いている間に共有されます。設定のソースで指定した比率か時間の上限に達すると、共有は止まります。</value>
   </data>
   <data name="DownloadsBackgroundTitle" xml:space="preserve">
     <value>ウィンドウを閉じるときにダウンロード中の場合</value>
@@ -2600,6 +3581,63 @@
   <data name="EpisodeDownloadFailed" xml:space="preserve">
     <value>第{episode}話をダウンロードできませんでした。もう一度お試しください。</value>
   </data>
+  <data name="FirstOtherTitle" xml:space="preserve">
+    <value>ほかのデバイスですでにKaeriを使っていますか？</value>
+  </data>
+  <data name="FirstOtherLine" xml:space="preserve">
+    <value>ペアリングすると、このデバイスにソース、連携サービス、履歴が引き継がれ、残りの設定も完了します。</value>
+  </data>
+  <data name="FirstOtherPairLine" xml:space="preserve">
+    <value>そのデバイスに入力するコードが表示されます。どちらも同じWi-Fiに接続している必要があります。</value>
+  </data>
+  <data name="FirstOtherRestore" xml:space="preserve">
+    <value>クラウドフォルダーから復元</value>
+  </data>
+  <data name="FirstOtherRestoreLine" xml:space="preserve">
+    <value>保存した復元キーを使います</value>
+  </data>
+  <data name="FirstOtherNo" xml:space="preserve">
+    <value>いいえ、ここから始める</value>
+  </data>
+  <data name="PairWaiting" xml:space="preserve">
+    <value>もう一方のデバイスを待っています</value>
+  </data>
+  <data name="PairNothingYet" xml:space="preserve">
+    <value>まだ何も表示されませんか？2台のデバイスが同じWi-Fiに接続されている必要があります。</value>
+  </data>
+  <data name="FirstJoinGroup" xml:space="preserve">
+    <value>{device}から</value>
+  </data>
+  <data name="FirstJoinLooking" xml:space="preserve">
+    <value>{device}の内容を確認しています…</value>
+  </data>
+  <data name="FirstJoinMedium" xml:space="preserve">
+    <value>Kaeriの用途</value>
+  </data>
+  <data name="FirstJoinMediumLine" xml:space="preserve">
+    <value>{device}と同じ、読書</value>
+  </data>
+  <data name="FirstJoinSigninsLine" xml:space="preserve">
+    <value>{trackers}</value>
+  </data>
+  <data name="FirstJoinServer" xml:space="preserve">
+    <value>{host}を追加</value>
+  </data>
+  <data name="FirstJoinServerLine" xml:space="preserve">
+    <value>{kind} · {device}のキーでサインイン、{store}に保存</value>
+  </data>
+  <data name="FirstJoinFolders" xml:space="preserve">
+    <value>フォルダーは{device}に残ります。このデバイスのフォルダーはソースで追加してください。</value>
+  </data>
+  <data name="FirstJoinStepsDone" xml:space="preserve">
+    <value>リストとソースは設定済みなので、初回設定はここで終わりです。設定から変更できます。</value>
+  </data>
+  <data name="FirstJoinStoreRefused" xml:space="preserve">
+    <value>{store}はこのデバイスの参加を許可しませんでした。{owner}が招待を送れます。</value>
+  </data>
+  <data name="FirstJoinSyncing" xml:space="preserve">
+    <value>{device}と同期中</value>
+  </data>
   <data name="HomeTitle" xml:space="preserve">
     <value>ホーム</value>
   </data>
@@ -2661,7 +3699,7 @@
     <value>AniListにサインイン</value>
   </data>
   <data name="HomeEndNoSources" xml:space="preserve">
-    <value>ホームから再生するにはソースを追加してください。プラグインストアから選べます。</value>
+    <value>ホームから再生するにはソースを追加してください。プラグインはプラグインストアから入手します。</value>
   </data>
   <data name="HomeNotFound" xml:space="preserve">
     <value>あなたのソースには見つかりません</value>
@@ -3063,7 +4101,7 @@
     <value>ファイルは元の場所に残ります。</value>
   </data>
   <data name="LibraryReasonOffline" xml:space="preserve">
-    <value>AniListに問い合わせられませんでした。次回のスキャンで再試行します。</value>
+    <value>AniListに接続できませんでした。次回のスキャンで再試行します。</value>
   </data>
   <data name="LibraryChooseMatch" xml:space="preserve">
     <value>照合先を選ぶ</value>
@@ -3096,7 +4134,7 @@
     <value>地域</value>
   </data>
   <data name="LicensedRegionLine" xml:space="preserve">
-    <value>AniListが他の国向けとしているリンクを非表示にします。国が指定されていないリンクも多いので、利用中のサービスも選んでください。</value>
+    <value>AniListが他の国向けとしているリンクは非表示になります。国が指定されていないリンクも多いので、利用中のサービスも選んでください。</value>
   </data>
   <data name="LicensedYours" xml:space="preserve">
     <value>利用中のサービス</value>
@@ -3540,7 +4578,7 @@
     <value>招待リンクをお持ちですか?</value>
   </data>
   <data name="OnboardingWhereStores" xml:space="preserve">
-    <value>プラグインはプラグインストアから入手します。プラグインストアは署名付きで、デバイスごとに専用のトークンを発行します。参加するには、運営者からの招待リンクを使います。</value>
+    <value>プラグインはプラグインストアから入手します。どれも署名付きで、デバイスごとに専用のトークンを発行します。そのため、参加には運営者からの招待リンクが必要です。</value>
   </data>
   <data name="OnboardingDemoHeading" xml:space="preserve">
     <value>今すぐ試す</value>
@@ -3597,7 +4635,7 @@
     <value>今はしない</value>
   </data>
   <data name="PartyGettingReady" xml:space="preserve">
-    <value>準備しています…</value>
+    <value>候補を読み込んでいます…</value>
   </data>
   <data name="PartyServer" xml:space="preserve">
     <value>サーバー</value>
@@ -3649,6 +4687,9 @@
   </data>
   <data name="PartyFormNothing" xml:space="preserve">
     <value>いま再生しているものが、ルームと一緒に再生されます。</value>
+  </data>
+  <data name="PartyFormPickLater" xml:space="preserve">
+    <value>入室したら、好きなエピソードの再生を押すと、ルームのみんなで視聴できます。</value>
   </data>
   <data name="PartyFormEpisodeOf" xml:space="preserve">
     <value>{title}の第{episode}話</value>
@@ -3797,6 +4838,9 @@
   <data name="TogetherStart" xml:space="preserve">
     <value>同時視聴を始める</value>
   </data>
+  <data name="TogetherStartLine" xml:space="preserve">
+    <value>ルームを開き、リンクかコードで友だちを招待してから、見たい作品の再生を押します。</value>
+  </data>
   <data name="TogetherJoin" xml:space="preserve">
     <value>同時視聴に参加</value>
   </data>
@@ -3831,7 +4875,7 @@
     <value>エピソード {episode} · {names}と · {when}</value>
   </data>
   <data name="TogetherRecentEmpty" xml:space="preserve">
-    <value>参加したルームが直近10件ここに表示されます。</value>
+    <value>参加したルームのうち、直近10件がここに表示されます。</value>
   </data>
   <data name="TogetherRejoin" xml:space="preserve">
     <value>再参加</value>
@@ -3998,6 +5042,9 @@
   <data name="PartyBarIdle" xml:space="preserve">
     <value>ルーム内 · あなたは再生していません</value>
   </data>
+  <data name="PartyBarPick" xml:space="preserve">
+    <value>好きなエピソードの再生を押すと、ルームで視聴できます</value>
+  </data>
   <data name="PartyPausedBy" xml:space="preserve">
     <value>{name}さんが一時停止</value>
   </data>
@@ -4119,7 +5166,7 @@
     <value>同時視聴でチャットを非表示</value>
   </data>
   <data name="SettingsHideChatLine" xml:space="preserve">
-    <value>メッセージ、リアクション、シークバー上の目印は映像に表示されず、入力欄もなくなります。メンバー一覧では、ルームにいる人を確認できます。</value>
+    <value>チャットのメッセージ、リアクション、シークバー上の目印は映像に表示されず、チャットの入力欄もなくなります。メンバー一覧では、ルームにいる人を確認できます。</value>
   </data>
   <data name="PartyMute" xml:space="preserve">
     <value>{name}をミュート</value>
@@ -4243,6 +5290,9 @@
   </data>
   <data name="PlayerStartMissNoEpisode" xml:space="preserve">
     <value>{name}にはエピソード {episode} がありません</value>
+  </data>
+  <data name="PlayerStartPinMissed" xml:space="preserve">
+    <value>{name}にはまだエピソード {episode} がありません。次のソースから再生します。</value>
   </data>
   <data name="PlayerStartMissFailed" xml:space="preserve">
     <value>{name}から応答がありませんでした</value>
@@ -4731,10 +5781,10 @@
     <value>ファイル選択を開けませんでした。もう一度お試しください。</value>
   </data>
   <data name="PlayerSubtitleFileFailed" xml:space="preserve">
-    <value>その字幕ファイルを読み込めませんでした。字幕ファイルかどうか確認してください。</value>
+    <value>そのファイルを字幕として読み込めませんでした。.srtや.assなどの字幕ファイルを選んでください。</value>
   </data>
   <data name="PlayerAudioFileFailed" xml:space="preserve">
-    <value>その音声ファイルを読み込めませんでした。音声ファイルかどうか確認してください。</value>
+    <value>そのファイルを音声として読み込めませんでした。.mkaや.flacなどの音声ファイルを選んでください。</value>
   </data>
   <data name="PlayerTrackUnnamed" xml:space="preserve">
     <value>名称なしのトラック</value>
@@ -4805,6 +5855,1515 @@
   <data name="PlayerSubsMore" xml:space="preserve">
     <value>設定でさらに表示…</value>
   </data>
+  <data name="ReaderPageLoading" xml:space="preserve">
+    <value>{page}ページを読み込み中</value>
+  </data>
+  <data name="ReaderPagePlate" xml:space="preserve">
+    <value>{page}ページ</value>
+  </data>
+  <data name="ReaderImagePlate" xml:space="preserve">
+    <value>画像 {image}</value>
+  </data>
+  <data name="ReaderImageLoading" xml:space="preserve">
+    <value>画像 {image} を読み込み中</value>
+  </data>
+  <data name="ReaderPageFailed" xml:space="preserve">
+    <value>{page}ページを読み込めませんでした</value>
+  </data>
+  <data name="ReaderTryAgain" xml:space="preserve">
+    <value>もう一度試す</value>
+  </data>
+  <data name="ReaderClose" xml:space="preserve">
+    <value>閉じる</value>
+  </data>
+  <data name="ReaderEndRead" xml:space="preserve">
+    <value>既読になりました</value>
+  </data>
+  <data name="ReaderEndTracker" xml:space="preserve">
+    <value>既読になりました · {trackers}を更新しました</value>
+  </data>
+  <data name="ReaderEndTrackerOffline" xml:space="preserve">
+    <value>既読になりました · {tracker}はオンラインに戻ると更新されます</value>
+  </data>
+  <data name="ReaderEndNext" xml:space="preserve">
+    <value>次の章</value>
+  </data>
+  <data name="ReaderModeRtl" xml:space="preserve">
+    <value>右から左</value>
+  </data>
+  <data name="ReaderModeLtr" xml:space="preserve">
+    <value>左から右</value>
+  </data>
+  <data name="ReaderModeStrip" xml:space="preserve">
+    <value>縦スクロール</value>
+  </data>
+  <data name="ReaderFitScreen" xml:space="preserve">
+    <value>画面</value>
+  </data>
+  <data name="ReaderFitWidth" xml:space="preserve">
+    <value>幅</value>
+  </data>
+  <data name="ReaderFontSerif" xml:space="preserve">
+    <value>明朝体</value>
+  </data>
+  <data name="ReaderFontSans" xml:space="preserve">
+    <value>ゴシック体</value>
+  </data>
+  <data name="ReaderLookPaper" xml:space="preserve">
+    <value>紙</value>
+  </data>
+  <data name="ReaderLookLight" xml:space="preserve">
+    <value>ライト</value>
+  </data>
+  <data name="ReaderLookSepia" xml:space="preserve">
+    <value>セピア</value>
+  </data>
+  <data name="ReaderLookDark" xml:space="preserve">
+    <value>ダーク</value>
+  </data>
+  <data name="ReaderMarginsNarrow" xml:space="preserve">
+    <value>狭い</value>
+  </data>
+  <data name="ReaderMarginsWide" xml:space="preserve">
+    <value>広い</value>
+  </data>
+  <data name="ReaderLayoutAuto" xml:space="preserve">
+    <value>自動</value>
+  </data>
+  <data name="ReaderLayoutSingle" xml:space="preserve">
+    <value>1ページ</value>
+  </data>
+  <data name="ReaderLayoutDouble" xml:space="preserve">
+    <value>2ページ</value>
+  </data>
+  <data name="ReaderSpreadsSplit" xml:space="preserve">
+    <value>分割</value>
+  </data>
+  <data name="ReaderSpreadsRotate" xml:space="preserve">
+    <value>回転</value>
+  </data>
+  <data name="ReaderSpreadsWhole" xml:space="preserve">
+    <value>そのまま</value>
+  </data>
+  <data name="ReaderTapEdges" xml:space="preserve">
+    <value>端</value>
+  </data>
+  <data name="ReaderTapOff" xml:space="preserve">
+    <value>オフ</value>
+  </data>
+  <data name="ReaderZoneNext" xml:space="preserve">
+    <value>次のページ</value>
+  </data>
+  <data name="ReaderZonePrevious" xml:space="preserve">
+    <value>前のページ</value>
+  </data>
+  <data name="ReaderZoneControls" xml:space="preserve">
+    <value>操作パネル</value>
+  </data>
+  <data name="ReaderChapters" xml:space="preserve">
+    <value>章一覧</value>
+  </data>
+  <data name="ReaderPagesLeft_other" xml:space="preserve">
+    <value>この章はあと{count}ページ</value>
+  </data>
+  <data name="ReaderChaptersLoading" xml:space="preserve">
+    <value>章を読み込み中</value>
+  </data>
+  <data name="ReaderBackgroundTheme" xml:space="preserve">
+    <value>テーマに合わせる</value>
+  </data>
+  <data name="ReaderBackgroundBlack" xml:space="preserve">
+    <value>黒</value>
+  </data>
+  <data name="ReaderBackgroundWhite" xml:space="preserve">
+    <value>白</value>
+  </data>
+  <data name="ReaderEndCaughtUp" xml:space="preserve">
+    <value>最新話まで読みました</value>
+  </data>
+  <data name="ReaderGapNone" xml:space="preserve">
+    <value>なし</value>
+  </data>
+  <data name="ReaderGapSmall" xml:space="preserve">
+    <value>小</value>
+  </data>
+  <data name="ReaderLookSystem" xml:space="preserve">
+    <value>システム</value>
+  </data>
+  <data name="ReaderEndOfChapterNumber" xml:space="preserve">
+    <value>第{chapter}話の終わり</value>
+  </data>
+  <data name="ReaderEndFacts" xml:space="preserve">
+    <value>第{chapter}話 · {facts}</value>
+  </data>
+  <data name="ReaderEndPages_other" xml:space="preserve">
+    <value>{count}ページ</value>
+  </data>
+  <data name="ReaderEndFrom" xml:space="preserve">
+    <value>{source}から</value>
+  </data>
+  <data name="ReaderChapterLine" xml:space="preserve">
+    <value>第{chapter}話</value>
+  </data>
+  <data name="ReaderDividerFactsSource" xml:space="preserve">
+    <value>{facts} · {source}から</value>
+  </data>
+  <data name="ReaderEndSwipe" xml:space="preserve">
+    <value>スワイプして読み進める</value>
+  </data>
+  <data name="ReaderDividerImages_other" xml:space="preserve">
+    <value>{count}枚の画像</value>
+  </data>
+  <data name="ReaderChapterLineTitled" xml:space="preserve">
+    <value>第{chapter}話 · {title}</value>
+  </data>
+  <data name="OnboardingReadDemo" xml:space="preserve">
+    <value>デモを読む</value>
+  </data>
+  <data name="OnboardingDemoBooksDetail" xml:space="preserve">
+    <value>短いコミックと短い物語が1つずつ。作者がCreative Commonsで共有しています。</value>
+  </data>
+  <data name="OnboardingDemoBothDetail" xml:space="preserve">
+    <value>作者がCreative Commonsで共有している、短いエピソードと短いコミックが1つずつあります。</value>
+  </data>
+  <data name="HomeDemoOnlyBooks" xml:space="preserve">
+    <value>デモだけがオンです。自分の本を読むには、フォルダー、サーバー、またはプラグインストアを追加してください。</value>
+  </data>
+  <data name="HomeSpotlightRead" xml:space="preserve">
+    <value>読む</value>
+  </data>
+  <data name="DemoSeriesFacts_other" xml:space="preserve">
+    <value>デモ · コミック · {pages}ページ</value>
+  </data>
+  <data name="DemoCreditBook" xml:space="preserve">
+    <value>{author}「{title}」。ライセンス: {licence}。Wikimedia Commonsから読み込んでいます。</value>
+  </data>
+  <data name="DemoCreditStory" xml:space="preserve">
+    <value>{author}「{title}」。パブリックドメイン。アプリに付属しています。</value>
+  </data>
+  <data name="DemoCreditCover" xml:space="preserve">
+    <value>表紙：{artist}「{title}」（{year}年）。パブリックドメイン。アプリに付属しています。</value>
+  </data>
+  <data name="ReaderDemoCredit" xml:space="preserve">
+    <value>{title} · {author} · {licence}</value>
+  </data>
+  <data name="SearchDemoReads" xml:space="preserve">
+    <value>デモ · 今すぐ読めます</value>
+  </data>
+  <data name="SearchDemoOnlyBooks" xml:space="preserve">
+    <value>デモだけがオンです。ソースを追加すると、ほかのタイトルが表示されます。</value>
+  </data>
+  <data name="ReaderDemoEnd" xml:space="preserve">
+    <value>デモはここまでです</value>
+  </data>
+  <data name="ReaderDemoEndLine" xml:space="preserve">
+    <value>自分の本を読むには、フォルダー、サーバー、またはプラグインストアを追加してください。</value>
+  </data>
+  <data name="ReaderDemoAddSource" xml:space="preserve">
+    <value>ソースを追加</value>
+  </data>
+  <data name="ReaderDemoAgain" xml:space="preserve">
+    <value>1ページ目に戻る</value>
+  </data>
+  <data name="SourcesDemoBooksLine" xml:space="preserve">
+    <value>コミックと物語 · CC BY 4.0とパブリックドメイン</value>
+  </data>
+  <data name="SourcesDemoBooksWhat" xml:space="preserve">
+    <value>作者がCreative Commonsで共有している作品なので、ソースを追加する前にKaeriを試せます。保存しておくソースではありません。</value>
+  </data>
+  <data name="SourcesDemoBooksPrivate" xml:space="preserve">
+    <value>デモはどこにもサインインせず、連携サービスにも書き込みません。</value>
+  </data>
+  <data name="DemoChapters" xml:space="preserve">
+    <value>章</value>
+  </data>
+  <data name="DemoAlso" xml:space="preserve">
+    <value>デモ内のほかの作品</value>
+  </data>
+  <data name="DemoCredits" xml:space="preserve">
+    <value>クレジット</value>
+  </data>
+  <data name="DemoPages_other" xml:space="preserve">
+    <value>{pages}ページ</value>
+  </data>
+  <data name="DemoStoryRow" xml:space="preserve">
+    <value>物語 · {author} · {licence}</value>
+  </data>
+  <data name="DemoReadChapter" xml:space="preserve">
+    <value>第{number}章を読む</value>
+  </data>
+  <data name="ProgressServerSaved" xml:space="preserve">
+    <value>{server}に保存しました</value>
+  </data>
+  <data name="ProgressServerSending" xml:space="preserve">
+    <value>{server}に送信中…</value>
+  </data>
+  <data name="ProgressServerOffline" xml:space="preserve">
+    <value>オンラインに戻ると{server}に送信します</value>
+  </data>
+  <data name="ProgressServerRetrying" xml:space="preserve">
+    <value>{server}から応答がありません。Kaeriが再試行します。</value>
+  </data>
+  <data name="ProgressServerFailed" xml:space="preserve">
+    <value>{server}に保存できませんでした：{reason}。</value>
+  </data>
+  <data name="ProgressWhyKey" xml:space="preserve">
+    <value>サーバーがキーを受け付けませんでした</value>
+  </data>
+  <data name="ProgressWhyPassword" xml:space="preserve">
+    <value>サーバーがパスワードを受け付けませんでした</value>
+  </data>
+  <data name="ProgressWhyGone" xml:space="preserve">
+    <value>この作品はもうサーバーにありません</value>
+  </data>
+  <data name="ProgressWhyGaveUp" xml:space="preserve">
+    <value>1日応答がありませんでした</value>
+  </data>
+  <data name="ProgressRowSaved" xml:space="preserve">
+    <value>{ago}に進捗を保存しました</value>
+  </data>
+  <data name="ProgressRowSending_other" xml:space="preserve">
+    <value>{count}話を送信中…</value>
+  </data>
+  <data name="ProgressRowOffline_other" xml:space="preserve">
+    <value>{count}話はオンラインに戻ると送信されます</value>
+  </data>
+  <data name="ProgressRowRetrying_other" xml:space="preserve">
+    <value>{count}話が待機中です。Kaeriが再試行します。</value>
+  </data>
+  <data name="ProgressRowFailed_other" xml:space="preserve">
+    <value>{count}話を保存できませんでした：{reason}</value>
+  </data>
+  <data name="ProgressRowOff" xml:space="preserve">
+    <value>進捗はこの{kind}に残ります</value>
+  </data>
+  <data name="NavWatch" xml:space="preserve">
+    <value>視聴</value>
+  </data>
+  <data name="NavRead" xml:space="preserve">
+    <value>読書</value>
+  </data>
+  <data name="NavUpdates" xml:space="preserve">
+    <value>更新</value>
+  </data>
+  <data name="HomeReadContinue" xml:space="preserve">
+    <value>続きを読む</value>
+  </data>
+  <data name="HomeReadReleasing" xml:space="preserve">
+    <value>連載中</value>
+  </data>
+  <data name="HomeReadCheckedOnOpen" xml:space="preserve">
+    <value>Kaeriを開いたときに確認します</value>
+  </data>
+  <data name="HomeReadEnd" xml:space="preserve">
+    <value>今はここまでです。全件は「更新」と検索で確認できます。</value>
+  </data>
+  <data name="HomeReadNoSources" xml:space="preserve">
+    <value>フォルダ、サーバー、またはプラグインストアを追加すると、ホームから読めます。</value>
+  </data>
+  <data name="ReadHomeOfflineRows" xml:space="preserve">
+    <value>話題の作品や新作は、オンラインになると表示されます。</value>
+  </data>
+  <data name="ReadHomeBrowse" xml:space="preserve">
+    <value>ブラウズ</value>
+  </data>
+  <data name="ReadHomeBrowseLine" xml:space="preserve">
+    <value>形式別の話題作・新作・完結作</value>
+  </data>
+  <data name="ReadHomeBrowseRow" xml:space="preserve">
+    <value>{first}、{second}ほか{more}作品</value>
+  </data>
+  <data name="ReadHomeBrowseNote" xml:space="preserve">
+    <value>AniListの情報です。ソースには、作品を開いたときに問い合わせます。</value>
+  </data>
+  <data name="ReadHomeBrowseKept" xml:space="preserve">
+    <value>{time}に保存したリストは引き続き開けます。</value>
+  </data>
+  <data name="WeekUsually" xml:space="preserve">
+    <value>たいてい</value>
+  </data>
+  <data name="WeekNothingUsually" xml:space="preserve">
+    <value>更新なし</value>
+  </data>
+  <data name="UpdatesChecked" xml:space="preserve">
+    <value>{ago}に確認</value>
+  </data>
+  <data name="ChapterUpdatesCheckedCaughtUp" xml:space="preserve">
+    <value>{ago}に確認 · 最新話まで読んだ作品</value>
+  </data>
+  <data name="ChapterUpdatesChecking" xml:space="preserve">
+    <value>新しい章を確認中…</value>
+  </data>
+  <data name="UpdatesDownloadNew" xml:space="preserve">
+    <value>新着をダウンロード</value>
+  </data>
+  <data name="UpdatesEmptyTitle" xml:space="preserve">
+    <value>新しい章はありません</value>
+  </data>
+  <data name="ChapterUpdatesEmptyLine" xml:space="preserve">
+    <value>Kaeriは、「読書中」リストにある最新話まで読んだ作品を、1日に数回確認します。</value>
+  </data>
+  <data name="ChapterUpdatesToday" xml:space="preserve">
+    <value>今日</value>
+  </data>
+  <data name="ChapterUpdatesYesterday" xml:space="preserve">
+    <value>昨日</value>
+  </data>
+  <data name="ChapterUpdatesVersions_other" xml:space="preserve">
+    <value>{n}バージョン</value>
+  </data>
+  <data name="ChapterUpdatesOpenSeries" xml:space="preserve">
+    <value>{title}を開く</value>
+  </data>
+  <data name="ChapterUpdatesOpenChapterHint" xml:space="preserve">
+    <value>この章を開きます</value>
+  </data>
+  <data name="ChapterUpdatesOpenSeriesMenu" xml:space="preserve">
+    <value>作品を開く</value>
+  </data>
+  <data name="ActionReadChapter" xml:space="preserve">
+    <value>第{n}話を読む</value>
+  </data>
+  <data name="ActionContinueChapter" xml:space="preserve">
+    <value>続きを読む 第{n}話 · {page}ページ</value>
+  </data>
+  <data name="ActionContinuePart" xml:space="preserve">
+    <value>続きを読む パート{n} · {percent}%</value>
+  </data>
+  <data name="ActionContinuePartPlain" xml:space="preserve">
+    <value>続きを読む パート{n}</value>
+  </data>
+  <data name="ActionContinueChapterPercent" xml:space="preserve">
+    <value>続きを読む 第{n}話 · {percent}%</value>
+  </data>
+  <data name="ActionContinueChapterPlain" xml:space="preserve">
+    <value>続きを読む 第{n}話</value>
+  </data>
+  <data name="ActionReadPart" xml:space="preserve">
+    <value>パート{n}を読む</value>
+  </data>
+  <data name="ActionContinueNamed" xml:space="preserve">
+    <value>続きを読む {label} · {percent}%</value>
+  </data>
+  <data name="ActionContinueNamedPlain" xml:space="preserve">
+    <value>続きを読む {label}</value>
+  </data>
+  <data name="ActionReadNamed" xml:space="preserve">
+    <value>{label}を読む</value>
+  </data>
+  <data name="ActionReadAgain" xml:space="preserve">
+    <value>もう一度読む</value>
+  </data>
+  <data name="SeriesReadingFrom" xml:space="preserve">
+    <value>読み込み元</value>
+  </data>
+  <data name="SeriesChange" xml:space="preserve">
+    <value>変更</value>
+  </data>
+  <data name="SeriesSourcesMore_other" xml:space="preserve">
+    <value>ほか{n}件</value>
+  </data>
+  <data name="SeriesTrackerAsk" xml:space="preserve">
+    <value>どの作品ですか?選択してください</value>
+  </data>
+  <data name="SeriesPreferredGroup" xml:space="preserve">
+    <value>ここで優先するグループ</value>
+  </data>
+  <data name="SeriesTrackerChaptersOf_other" xml:space="preserve">
+    <value>{n}/{total}話</value>
+  </data>
+  <data name="SeriesTrackerChapters_other" xml:space="preserve">
+    <value>{n}話</value>
+  </data>
+  <data name="SeriesTrackerWithVolume" xml:space="preserve">
+    <value>{chapters} · {volume}巻</value>
+  </data>
+  <data name="SeriesTrackerVolumes" xml:space="preserve">
+    <value>{volume}/{total}巻</value>
+  </data>
+  <data name="SeriesReadFromAnother" xml:space="preserve">
+    <value>別のソースで読む</value>
+  </data>
+  <data name="SeriesScore" xml:space="preserve">
+    <value>スコア…</value>
+  </data>
+  <data name="SeriesAddToList" xml:space="preserve">
+    <value>リストに追加</value>
+  </data>
+  <data name="SeriesRemoveFromLists" xml:space="preserve">
+    <value>リストから削除…</value>
+  </data>
+  <data name="SeriesRemoveFromListsTitle" xml:space="preserve">
+    <value>{title}をリストから削除しますか?</value>
+  </data>
+  <data name="SeriesRemoveFromListsLine" xml:space="preserve">
+    <value>接続している各連携サービスのリストから外れます。読んだ位置と既読の章はKaeriに残ります。</value>
+  </data>
+  <data name="SeriesRemovedTitle" xml:space="preserve">
+    <value>あなたのリスト</value>
+  </data>
+  <data name="SeriesChosen_other" xml:space="preserve">
+    <value>{n}話を選択中</value>
+  </data>
+  <data name="SeriesChooseAllUnread" xml:space="preserve">
+    <value>未読をすべて選択</value>
+  </data>
+  <data name="ReadFromNotFound" xml:space="preserve">
+    <value>見つからなかった場所</value>
+  </data>
+  <data name="ReadFromSearchThere" xml:space="preserve">
+    <value>そこで検索</value>
+  </data>
+  <data name="ReadFromSearchPlaceholder" xml:space="preserve">
+    <value>{source}を検索</value>
+  </data>
+  <data name="ReadFromSearch" xml:space="preserve">
+    <value>検索</value>
+  </data>
+  <data name="ReadFromSearchNone" xml:space="preserve">
+    <value>この言葉では見つかりませんでした</value>
+  </data>
+  <data name="SeriesTracking" xml:space="preserve">
+    <value>連携</value>
+  </data>
+  <data name="SeriesReadFromMenu" xml:space="preserve">
+    <value>ソースを変更…</value>
+  </data>
+  <data name="SeriesReadAgainMenu" xml:space="preserve">
+    <value>最初から読み直す…</value>
+  </data>
+  <data name="SeriesVolumes" xml:space="preserve">
+    <value>巻</value>
+  </data>
+  <data name="SeriesChapters" xml:space="preserve">
+    <value>章</value>
+  </data>
+  <data name="SeriesOrder" xml:space="preserve">
+    <value>並び順</value>
+  </data>
+  <data name="SeriesNewestFirst" xml:space="preserve">
+    <value>新しい順</value>
+  </data>
+  <data name="SeriesOldestFirst" xml:space="preserve">
+    <value>古い順</value>
+  </data>
+  <data name="SeriesVolume" xml:space="preserve">
+    <value>{n}巻</value>
+  </data>
+  <data name="SeriesNoVolume" xml:space="preserve">
+    <value>巻にまだ入っていない章</value>
+  </data>
+  <data name="SeriesChapterRange" xml:space="preserve">
+    <value>第{from}話〜第{to}話</value>
+  </data>
+  <data name="SeriesVolumeRead" xml:space="preserve">
+    <value>既読</value>
+  </data>
+  <data name="SeriesExpanded" xml:space="preserve">
+    <value>展開中</value>
+  </data>
+  <data name="SeriesCollapsed" xml:space="preserve">
+    <value>折りたたみ中</value>
+  </data>
+  <data name="SeriesNoChaptersTitle" xml:space="preserve">
+    <value>このソースにはまだ章がありません</value>
+  </data>
+  <data name="SeriesNoChaptersLine" xml:space="preserve">
+    <value>別のソースにあるかもしれません。</value>
+  </data>
+  <data name="SeriesChaptersFailed" xml:space="preserve">
+    <value>{source}から章を読み込めませんでした。</value>
+  </data>
+  <data name="SeriesChapterNumber" xml:space="preserve">
+    <value>第{n}話</value>
+  </data>
+  <data name="SeriesBookmarked" xml:space="preserve">
+    <value>しおり付き</value>
+  </data>
+  <data name="SeriesMarkRead" xml:space="preserve">
+    <value>既読にする</value>
+  </data>
+  <data name="SeriesMarkUnread" xml:space="preserve">
+    <value>未読にする</value>
+  </data>
+  <data name="SeriesMarkReadUpTo" xml:space="preserve">
+    <value>ここまで既読にする</value>
+  </data>
+  <data name="SeriesDownload" xml:space="preserve">
+    <value>ダウンロード</value>
+  </data>
+  <data name="SeriesReadChapterMenu" xml:space="preserve">
+    <value>読む</value>
+  </data>
+  <data name="SeriesBookmark" xml:space="preserve">
+    <value>しおりを付ける</value>
+  </data>
+  <data name="SeriesRemoveBookmark" xml:space="preserve">
+    <value>しおりを外す</value>
+  </data>
+  <data name="SeriesVersions_other" xml:space="preserve">
+    <value>{n}バージョン</value>
+  </data>
+  <data name="SeriesVersionsLoading" xml:space="preserve">
+    <value>バージョンを探しています…</value>
+  </data>
+  <data name="SeriesVersionInUse" xml:space="preserve">
+    <value>{name}を使用中</value>
+  </data>
+  <data name="SeriesPreferVersion" xml:space="preserve">
+    <value>この作品では{name}を優先</value>
+  </data>
+  <data name="ChapterStateDownloaded" xml:space="preserve">
+    <value>ダウンロード済み</value>
+  </data>
+  <data name="ChapterStateQueued" xml:space="preserve">
+    <value>待機中</value>
+  </data>
+  <data name="ChapterStateWifi" xml:space="preserve">
+    <value>待機中 · Wi-Fi待ち</value>
+  </data>
+  <data name="ChapterStateDownloading" xml:space="preserve">
+    <value>ダウンロード中 · {done}/{total}ページ</value>
+  </data>
+  <data name="ChapterStateFailed" xml:space="preserve">
+    <value>ダウンロードできませんでした。{reason}</value>
+  </data>
+  <data name="ChapterStatePageOf" xml:space="preserve">
+    <value>{page}/{of}ページ</value>
+  </data>
+  <data name="ChapterStatePage" xml:space="preserve">
+    <value>{page}ページ</value>
+  </data>
+  <data name="ChapterStateRead" xml:space="preserve">
+    <value>既読</value>
+  </data>
+  <data name="ChapterStateNew" xml:space="preserve">
+    <value>新着</value>
+  </data>
+  <data name="ChapterDownloadStop" xml:space="preserve">
+    <value>ダウンロードを中止</value>
+  </data>
+  <data name="ChapterRetry" xml:space="preserve">
+    <value>再試行</value>
+  </data>
+  <data name="ChapterDownloadDelete" xml:space="preserve">
+    <value>ダウンロードを削除</value>
+  </data>
+  <data name="DownloadNext" xml:space="preserve">
+    <value>次の未読{n}話</value>
+  </data>
+  <data name="DownloadUnread" xml:space="preserve">
+    <value>未読の章をすべて</value>
+  </data>
+  <data name="DownloadVolumeCount_other" xml:space="preserve">
+    <value>{volume} · {n}話</value>
+  </data>
+  <data name="DownloadChoose" xml:space="preserve">
+    <value>章を選ぶ…</value>
+  </data>
+  <data name="DownloadDeleteSeries" xml:space="preserve">
+    <value>この作品のダウンロードを削除</value>
+  </data>
+  <data name="DownloadChapters_other" xml:space="preserve">
+    <value>{n}話をダウンロード</value>
+  </data>
+  <data name="DownloadOverWifi" xml:space="preserve">
+    <value>Wi-Fi経由</value>
+  </data>
+  <data name="ReadAgainTitle" xml:space="preserve">
+    <value>{title}を最初から読み直しますか?</value>
+  </data>
+  <data name="ReadAgainLine" xml:space="preserve">
+    <value>すべてのデバイスで、読んだ位置が第1話に戻ります。連携サービスでは章が既読のまま残り、AniList は再読として数えます。</value>
+  </data>
+  <data name="ReadAgainConfirm" xml:space="preserve">
+    <value>もう一度読む</value>
+  </data>
+  <data name="SeriesReadFromTitle" xml:space="preserve">
+    <value>読み込み元</value>
+  </data>
+  <data name="SeriesReadFromAsking" xml:space="preserve">
+    <value>ソースに問い合わせています…</value>
+  </data>
+  <data name="SeriesReadFromNoneTitle" xml:space="preserve">
+    <value>この作品を持つソースがありません</value>
+  </data>
+  <data name="SeriesReadFromNoneLine" xml:space="preserve">
+    <value>「あなたのソース」でフォルダ、サーバー、またはプラグインストアを追加してください。</value>
+  </data>
+  <data name="SeriesReadFromChapters" xml:space="preserve">
+    <value>第1話〜第{latest}話</value>
+  </data>
+  <data name="SeriesReadFromChaptersLater" xml:space="preserve">
+    <value>第1話〜第{latest}話</value>
+  </data>
+  <data name="SeriesReadFromOnDevice" xml:space="preserve">
+    <value>この{device}内</value>
+  </data>
+  <data name="SeriesReadFromNote" xml:space="preserve">
+    <value>既読の記録は作品に紐づくため、変更しても引き継がれます。以前のソースからのダウンロードは、削除するまで残ります。</value>
+  </data>
+  <data name="SeriesNotTracked" xml:space="preserve">
+    <value>ここでは連携していません</value>
+  </data>
+  <data name="SeriesTrackerConnect" xml:space="preserve">
+    <value>この作品を連携するには、設定で接続してください</value>
+  </data>
+  <data name="SeriesTrackerNotThere" xml:space="preserve">
+    <value>この連携サービスに一致する作品がありません</value>
+  </data>
+  <data name="SeriesTrackerLooking" xml:space="preserve">
+    <value>この作品を探しています…</value>
+  </data>
+  <data name="SeriesTrackerBehind" xml:space="preserve">
+    <value>第{has}話まで。次の同期で第{gets}話になります。</value>
+  </data>
+  <data name="SeriesTrackerAhead" xml:space="preserve">
+    <value>第{has}話まで。Kaeriより先に進んでいます。</value>
+  </data>
+  <data name="SeriesTrackerScore" xml:space="preserve">
+    <value>{score} / 10</value>
+  </data>
+  <data name="SeriesTrackerKeepKaeri" xml:space="preserve">
+    <value>Kaeriの位置を残す</value>
+  </data>
+  <data name="SeriesTrackerTakeTheirs" xml:space="preserve">
+    <value>{tracker}の位置を使う</value>
+  </data>
+  <data name="SeriesTrackerNoneOfThese" xml:space="preserve">
+    <value>どれでもない</value>
+  </data>
+  <data name="ReadListReading" xml:space="preserve">
+    <value>読書中</value>
+  </data>
+  <data name="ReadListPlanning" xml:space="preserve">
+    <value>予定</value>
+  </data>
+  <data name="ReadListCompleted" xml:space="preserve">
+    <value>読了</value>
+  </data>
+  <data name="ReadListPaused" xml:space="preserve">
+    <value>一時停止</value>
+  </data>
+  <data name="ReadListDropped" xml:space="preserve">
+    <value>中断</value>
+  </data>
+  <data name="ReadListRereading" xml:space="preserve">
+    <value>再読中</value>
+  </data>
+  <data name="ReadListYourFiles" xml:space="preserve">
+    <value>あなたのファイル</value>
+  </data>
+  <data name="MediumWatch" xml:space="preserve">
+    <value>視聴</value>
+  </data>
+  <data name="MediumRead" xml:space="preserve">
+    <value>読書</value>
+  </data>
+  <data name="MediumBoth" xml:space="preserve">
+    <value>両方</value>
+  </data>
+  <data name="MediumWatchLine" xml:space="preserve">
+    <value>ソースのアニメや映画</value>
+  </data>
+  <data name="MediumReadLine" xml:space="preserve">
+    <value>ソースのマンガ、ウェブトゥーン、ライトノベル</value>
+  </data>
+  <data name="MediumBothLine" xml:space="preserve">
+    <value>視聴と読書を、それぞれ別の場所で</value>
+  </data>
+  <data name="MediumAnswerWatch" xml:space="preserve">
+    <value>視聴</value>
+  </data>
+  <data name="MediumAnswerRead" xml:space="preserve">
+    <value>読書</value>
+  </data>
+  <data name="MediumAnswerBoth" xml:space="preserve">
+    <value>視聴と読書</value>
+  </data>
+  <data name="SourcesAddTitle" xml:space="preserve">
+    <value>ソースを追加</value>
+  </data>
+  <data name="BookAddLine" xml:space="preserve">
+    <value>お持ちの本や、招待を受けたストアのプラグインを追加します。</value>
+  </data>
+  <data name="BookAddFolder" xml:space="preserve">
+    <value>フォルダ</value>
+  </data>
+  <data name="BookAddFolderLine" xml:space="preserve">
+    <value>この{device}やドライブにある CBZ、EPUB、PDF、画像フォルダ</value>
+  </data>
+  <data name="BookAddServer" xml:space="preserve">
+    <value>サーバー</value>
+  </data>
+  <data name="BookAddServerLine" xml:space="preserve">
+    <value>Komga、Kavita、またはサインインできる OPDS カタログ</value>
+  </data>
+  <data name="BookAddStore" xml:space="preserve">
+    <value>プラグインストア</value>
+  </data>
+  <data name="BookAddStoreLine" xml:space="preserve">
+    <value>ストアの管理者からの招待を貼り付けます</value>
+  </data>
+  <data name="BookAddServerTitle" xml:space="preserve">
+    <value>サーバーを追加</value>
+  </data>
+  <data name="BookAddServerButton" xml:space="preserve">
+    <value>サーバーを追加</value>
+  </data>
+  <data name="SourcesFoundServer" xml:space="preserve">
+    <value>{kind}サーバーが見つかりました</value>
+  </data>
+  <data name="SourcesFoundServerSeries_other" xml:space="preserve">
+    <value>{kind}サーバーが見つかりました(作品{n}件)</value>
+  </data>
+  <data name="BookServerLooking" xml:space="preserve">
+    <value>このアドレスを確認中…</value>
+  </data>
+  <data name="BookServerNote" xml:space="preserve">
+    <value>Kaeriは読書の進捗をこのサーバーに送り返します。パスワードはキーチェーンに保存されます。</value>
+  </data>
+  <data name="BookSourcesFolders" xml:space="preserve">
+    <value>フォルダ</value>
+  </data>
+  <data name="BookSourcesServers" xml:space="preserve">
+    <value>サーバー</value>
+  </data>
+  <data name="BookSourcesPlugins" xml:space="preserve">
+    <value>プラグイン</value>
+  </data>
+  <data name="BookSourcesPluginsFooter" xml:space="preserve">
+    <value>プラグインは、参加したプラグインストアから届きます。</value>
+  </data>
+  <data name="BookSourcesSeries_other" xml:space="preserve">
+    <value>{n}作品</value>
+  </data>
+  <data name="BookSourcesScanning" xml:space="preserve">
+    <value>検索中 · {n}件見つかりました</value>
+  </data>
+  <data name="BookSourcesMissing" xml:space="preserve">
+    <value>見つかりません。ドライブは接続されていますか?</value>
+  </data>
+  <data name="BookSourcesOff" xml:space="preserve">
+    <value>オフ</value>
+  </data>
+  <data name="BookSourcesProgressBack" xml:space="preserve">
+    <value>進捗はサーバーに戻ります</value>
+  </data>
+  <data name="BookSourcesOpds" xml:space="preserve">
+    <value>OPDS カタログ</value>
+  </data>
+  <data name="BookSourcesFromStore" xml:space="preserve">
+    <value>{store}から</value>
+  </data>
+  <data name="BookSourcesVersion" xml:space="preserve">
+    <value>バージョン {version}</value>
+  </data>
+  <data name="BookSourcesCheckMatches" xml:space="preserve">
+    <value>一致を確認 · {n}</value>
+  </data>
+  <data name="BookSourcesCheckMatchesTitle" xml:space="preserve">
+    <value>一致を確認</value>
+  </data>
+  <data name="BookSourcesScan" xml:space="preserve">
+    <value>再検索</value>
+  </data>
+  <data name="BookSourcesReportProgress" xml:space="preserve">
+    <value>進捗をサーバーに送る</value>
+  </data>
+  <data name="BookSourcesUse" xml:space="preserve">
+    <value>このサーバーを使う</value>
+  </data>
+  <data name="BookSourcesNotABookServer" xml:space="preserve">
+    <value>このアドレスは応答しますが、本のサーバーではありません。</value>
+  </data>
+  <data name="BookSourcesNoMatch" xml:space="preserve">
+    <value>一致なし</value>
+  </data>
+  <data name="BookSourcesKeep" xml:space="preserve">
+    <value>未一致のまま残す</value>
+  </data>
+  <data name="BookSourcesFind" xml:space="preserve">
+    <value>探す</value>
+  </data>
+  <data name="BookSourcesUnmatchedNote" xml:space="preserve">
+    <value>未一致の作品もフォルダから読めます。一致するまで、連携サービスの進捗は記録されません。</value>
+  </data>
+  <data name="LibraryScopeLabel" xml:space="preserve">
+    <value>視聴か読書か</value>
+  </data>
+  <data name="LibraryScopeShows" xml:space="preserve">
+    <value>視聴</value>
+  </data>
+  <data name="LibraryScopeReading" xml:space="preserve">
+    <value>読書</value>
+  </data>
+  <data name="ReadSortLastRead" xml:space="preserve">
+    <value>最後に読んだ順</value>
+  </data>
+  <data name="ReadLibraryListValue_other" xml:space="preserve">
+    <value>{list}、{n}作品</value>
+  </data>
+  <data name="ReadLibraryEmpty" xml:space="preserve">
+    <value>{list}にはまだ何もありません</value>
+  </data>
+  <data name="ReadLibraryEmptyLine" xml:space="preserve">
+    <value>検索や作品ページから追加した作品がここに表示されます。</value>
+  </data>
+  <data name="ReadLibraryFilesEmptyTitle" xml:space="preserve">
+    <value>ファイルにはまだ何もありません</value>
+  </data>
+  <data name="ReadLibraryFilesEmptyLine" xml:space="preserve">
+    <value>フォルダやサーバーにある、どのリストにも入っていない作品がここに表示されます。</value>
+  </data>
+  <data name="ReadLibraryFilesAdd" xml:space="preserve">
+    <value>フォルダまたはサーバーを追加</value>
+  </data>
+  <data name="ReadSearchPlaceholder" xml:space="preserve">
+    <value>読書を検索</value>
+  </data>
+  <data name="SearchOtherScope_other" xml:space="preserve">
+    <value>{scope}に{n}件一致</value>
+  </data>
+  <data name="SearchShowThem" xml:space="preserve">
+    <value>表示する</value>
+  </data>
+  <data name="ReadSearchBrowseLine" xml:space="preserve">
+    <value>{what} · AniList より</value>
+  </data>
+  <data name="ReadSearchTotal_other" xml:space="preserve">
+    <value>AniList で{n}作品</value>
+  </data>
+  <data name="ReadSearchFailed" xml:space="preserve">
+    <value>検索できませんでした</value>
+  </data>
+  <data name="ReadSearchNothing" xml:space="preserve">
+    <value>「{query}」は見つかりませんでした</value>
+  </data>
+  <data name="ReadSearchNothingBrowse" xml:space="preserve">
+    <value>この条件に合う作品はありません</value>
+  </data>
+  <data name="ReadSearchNothingLine" xml:space="preserve">
+    <value>別の言葉や、ほかの言語のタイトルをお試しください。</value>
+  </data>
+  <data name="ReadSearchNothingFiltersLine" xml:space="preserve">
+    <value>条件を減らすと見つかるかもしれません。</value>
+  </data>
+  <data name="ReadSearchClearFilters" xml:space="preserve">
+    <value>条件をクリア</value>
+  </data>
+  <data name="ReadSortTrending" xml:space="preserve">
+    <value>急上昇</value>
+  </data>
+  <data name="ReadSortScore" xml:space="preserve">
+    <value>スコア順</value>
+  </data>
+  <data name="ReadSortNewest" xml:space="preserve">
+    <value>新着順</value>
+  </data>
+  <data name="ReadFilterFormat" xml:space="preserve">
+    <value>形式</value>
+  </data>
+  <data name="ReadFilterOrigin" xml:space="preserve">
+    <value>出身</value>
+  </data>
+  <data name="ReadFilterStatus" xml:space="preserve">
+    <value>状態</value>
+  </data>
+  <data name="ReadFilterGenres" xml:space="preserve">
+    <value>ジャンル</value>
+  </data>
+  <data name="ReadFilterTitle" xml:space="preserve">
+    <value>絞り込み</value>
+  </data>
+  <data name="ReadFilterReset" xml:space="preserve">
+    <value>リセット</value>
+  </data>
+  <data name="ReadFilterAny" xml:space="preserve">
+    <value>指定なし</value>
+  </data>
+  <data name="ReadFilterSet" xml:space="preserve">
+    <value>{name}:</value>
+  </data>
+  <data name="ReadFilterMany" xml:space="preserve">
+    <value>{first}ほか{more}件</value>
+  </data>
+  <data name="ReadFilterNotGenre" xml:space="preserve">
+    <value>{genre}を除く</value>
+  </data>
+  <data name="ReadFilterGenresCount_other" xml:space="preserve">
+    <value>{n}ジャンル</value>
+  </data>
+  <data name="ReadFilterIncluded" xml:space="preserve">
+    <value>含める</value>
+  </data>
+  <data name="ReadFilterLeftOut" xml:space="preserve">
+    <value>除外</value>
+  </data>
+  <data name="ReadSearchStarted" xml:space="preserve">
+    <value>開始時期</value>
+  </data>
+  <data name="ReadSearchSourcesOnly" xml:space="preserve">
+    <value>ソースのみ</value>
+  </data>
+  <data name="ReadSearchFromSources" xml:space="preserve">
+    <value>ソースから</value>
+  </data>
+  <data name="ReadSearchAsking" xml:space="preserve">
+    <value>{source}に問い合わせています…</value>
+  </data>
+  <data name="ReadSearchSourceFailed" xml:space="preserve">
+    <value>{source}から応答がありませんでした。</value>
+  </data>
+  <data name="ReadSearchSourceTimeout" xml:space="preserve">
+    <value>{seconds}秒以内に応答がありませんでした。</value>
+  </data>
+  <data name="ReadSearchSourceNothing" xml:space="preserve">
+    <value>{sources}では見つかりませんでした。</value>
+  </data>
+  <data name="ReadSearchInSource" xml:space="preserve">
+    <value>{source}にあり</value>
+  </data>
+  <data name="ReadSearchInSources_other" xml:space="preserve">
+    <value>ソースのうち{n}件にあり</value>
+  </data>
+  <data name="ReadSearchAnilistNothing" xml:space="preserve">
+    <value>AniListではこの言葉に一致する作品が見つかりませんでした。</value>
+  </data>
+  <data name="ReadSearchAnilistFailed" xml:space="preserve">
+    <value>AniListからの応答がありませんでした。</value>
+  </data>
+  <data name="ReadSearchAnilistFailedLine" xml:space="preserve">
+    <value>ソースには問い合わせ済みです。</value>
+  </data>
+  <data name="ReadSearchSourcesNothing" xml:space="preserve">
+    <value>ソースにも見つかりませんでした。</value>
+  </data>
+  <data name="ReadSearchTotalUnknown" xml:space="preserve">
+    <value>AniListの作品</value>
+  </data>
+  <data name="ReadSearchMoreAnilist" xml:space="preserve">
+    <value>AniListの結果をさらに表示</value>
+  </data>
+  <data name="ReadSearchShown" xml:space="preserve">
+    <value>{total}件中{shown}件を表示</value>
+  </data>
+  <data name="ReadSearchShownSome" xml:space="preserve">
+    <value>{shown}件を表示</value>
+  </data>
+  <data name="ReadSearchSourceKindServer" xml:space="preserve">
+    <value>サーバー</value>
+  </data>
+  <data name="ReadSearchSourceKindFolder" xml:space="preserve">
+    <value>フォルダ</value>
+  </data>
+  <data name="ReadSearchSourceKindPlugin" xml:space="preserve">
+    <value>プラグイン</value>
+  </data>
+  <data name="ReadSearchSourceMore" xml:space="preserve">
+    <value>さらに{n}件を表示</value>
+  </data>
+  <data name="OnboardingStep" xml:space="preserve">
+    <value>{step}/{total}</value>
+  </data>
+  <data name="OnboardingWelcomeLine" xml:space="preserve">
+    <value>自分のソースで、視聴も読書も記録できます。</value>
+  </data>
+  <data name="OnboardingWelcomeNote" xml:space="preserve">
+    <value>リストと進捗はあなたのデバイスに残ります。連携サービスとソースは、ご自分で追加します。</value>
+  </data>
+  <data name="OnboardingMediumTitle" xml:space="preserve">
+    <value>視聴、読書、それとも両方?</value>
+  </data>
+  <data name="OnboardingMediumLine" xml:space="preserve">
+    <value>Kaeriには選んだものだけが表示されます。あとから設定で変更できます。</value>
+  </data>
+  <data name="OnboardingMediumHint" xml:space="preserve">
+    <value>まず3つのうち1つを選んでください</value>
+  </data>
+  <data name="OnboardingListsTitle" xml:space="preserve">
+    <value>リストを取り込む</value>
+  </data>
+  <data name="OnboardingListsLineWatch" xml:space="preserve">
+    <value>Kaeriは視聴の記録を{tracker}と揃えます。</value>
+  </data>
+  <data name="OnboardingListsLineRead" xml:space="preserve">
+    <value>Kaeriは読書の記録を{tracker}と揃えます。</value>
+  </data>
+  <data name="OnboardingListsLineBoth" xml:space="preserve">
+    <value>Kaeriは読書と視聴の記録を{tracker}と揃えます。</value>
+  </data>
+  <data name="OnboardingListsAnilistLine" xml:space="preserve">
+    <value>リスト、進捗、おすすめ</value>
+  </data>
+  <data name="OnboardingListsLaterWatch" xml:space="preserve">
+    <value>MyAnimeList、Kitsu、Simkl、Trakt は、あとから「設定」の「アカウント」で追加できます。</value>
+  </data>
+  <data name="OnboardingListsLaterRead" xml:space="preserve">
+    <value>MyAnimeList、Kitsu、MangaUpdates は、あとから「設定」の「アカウント」で追加できます。</value>
+  </data>
+  <data name="OnboardingListsLaterBoth" xml:space="preserve">
+    <value>MyAnimeList、Kitsu、MangaUpdates、Simkl、Trakt は、あとから「設定」の「アカウント」で追加できます。</value>
+  </data>
+  <data name="OnboardingConnect" xml:space="preserve">
+    <value>{tracker}に接続</value>
+  </data>
+  <data name="OnboardingBooksTitle" xml:space="preserve">
+    <value>本の入手元</value>
+  </data>
+  <data name="OnboardingBooksLine" xml:space="preserve">
+    <value>Kaeriには本が付属していません。お持ちの本を追加するか、管理者から受け取った招待でプラグインストアに参加してください。</value>
+  </data>
+  <data name="OnboardingBooksFolder" xml:space="preserve">
+    <value>フォルダを追加</value>
+  </data>
+  <data name="OnboardingBooksFolderLine" xml:space="preserve">
+    <value>CBZ、EPUB、PDF、画像のフォルダ</value>
+  </data>
+  <data name="OnboardingBooksServer" xml:space="preserve">
+    <value>サーバーを追加</value>
+  </data>
+  <data name="OnboardingBooksServerLine" xml:space="preserve">
+    <value>Komga、Kavita、または OPDS カタログ</value>
+  </data>
+  <data name="OnboardingBooksInviteHeading" xml:space="preserve">
+    <value>プラグインストアの招待</value>
+  </data>
+  <data name="OnboardingBooksInvitePlaceholder" xml:space="preserve">
+    <value>招待を貼り付け</value>
+  </data>
+  <data name="OnboardingBooksPluginLine" xml:space="preserve">
+    <value>プラグインは信頼できる人のコードを実行します。管理者を知っているプラグインストアにだけ参加してください。</value>
+  </data>
+  <data name="OnboardingBothTitle" xml:space="preserve">
+    <value>作品と本の入手元</value>
+  </data>
+  <data name="OnboardingBothLine" xml:space="preserve">
+    <value>Kaeriには作品も本も付属していません。お持ちのものを追加するか、管理者から受け取った招待でプラグインストアに参加してください。</value>
+  </data>
+  <data name="OnboardingBothShows" xml:space="preserve">
+    <value>視聴</value>
+  </data>
+  <data name="OnboardingBothBooks" xml:space="preserve">
+    <value>本</value>
+  </data>
+  <data name="OnboardingBothShowsFolderLine" xml:space="preserve">
+    <value>この{device}にある動画ファイル</value>
+  </data>
+  <data name="OnboardingBothShowsServerLine" xml:space="preserve">
+    <value>お使いの Jellyfin サーバー</value>
+  </data>
+  <data name="MediumChoicePosition" xml:space="preserve">
+    <value>{n}/{total}</value>
+  </data>
+  <data name="MediumChangeLater" xml:space="preserve">
+    <value>あとから設定で変更できます。</value>
+  </data>
+  <data name="MediumUpdateLine" xml:space="preserve">
+    <value>Kaeriで、ソースのマンガ、ウェブトゥーン、ライトノベルも読めるようになりました。この{device}での使い方を選んでください。</value>
+  </data>
+  <data name="MediumJoinTitleWatch_other" xml:space="preserve">
+    <value>{devices}は視聴用に設定されています</value>
+  </data>
+  <data name="MediumJoinTitleRead_other" xml:space="preserve">
+    <value>{devices}は読書用に設定されています</value>
+  </data>
+  <data name="MediumJoinTitleBoth_other" xml:space="preserve">
+    <value>{devices}は視聴と読書用に設定されています</value>
+  </data>
+  <data name="MediumJoinLine" xml:space="preserve">
+    <value>この{device}での使い方を選んでください。選択はデバイスごとに保存されます。</value>
+  </data>
+  <data name="MediumOffTitleWatch" xml:space="preserve">
+    <value>視聴をオフにしますか?</value>
+  </data>
+  <data name="MediumOffTitleRead" xml:space="preserve">
+    <value>読書をオフにしますか?</value>
+  </data>
+  <data name="MediumOffWatchBody" xml:space="preserve">
+    <value>この{device}のKaeriから、カレンダー、シーズン、一緒に見る、作品が表示されなくなります。リスト、進捗、ダウンロードは残り、視聴をオンに戻すと復活します。</value>
+  </data>
+  <data name="MediumOffReadBody" xml:space="preserve">
+    <value>この{device}のKaeriから、更新と読書が表示されなくなります。リスト、進捗、ダウンロードは残り、読書をオンに戻すと復活します。</value>
+  </data>
+  <data name="MediumOffDeleteWatch" xml:space="preserve">
+    <value>ダウンロード済みのエピソードを削除</value>
+  </data>
+  <data name="MediumOffDeleteRead" xml:space="preserve">
+    <value>ダウンロード済みの章を削除</value>
+  </data>
+  <data name="MediumOffDeleteSize" xml:space="preserve">
+    <value>この{device}で{size}</value>
+  </data>
+  <data name="MediumOffConfirmWatch" xml:space="preserve">
+    <value>視聴をオフにする</value>
+  </data>
+  <data name="MediumOffConfirmRead" xml:space="preserve">
+    <value>読書をオフにする</value>
+  </data>
+  <data name="SettingsKaeriIsFor" xml:space="preserve">
+    <value>Kaeriの用途</value>
+  </data>
+  <data name="SettingsMediumNote" xml:space="preserve">
+    <value>選択はデバイスごとに保存されます</value>
+  </data>
+  <data name="SettingsMediumFooter" xml:space="preserve">
+    <value>選択はデバイスごとに保存されます。オフにしても、リスト、進捗、ダウンロードは残ります。</value>
+  </data>
+  <data name="SettingsOpenAtNote" xml:space="preserve">
+    <value>Kaeriが最初に開くホーム</value>
+  </data>
+  <data name="SettingsGroupReading" xml:space="preserve">
+    <value>読書</value>
+  </data>
+  <data name="SettingsGroupShows" xml:space="preserve">
+    <value>視聴</value>
+  </data>
+  <data name="SettingsAsideReading" xml:space="preserve">
+    <value>リーダーの既定は、すべての作品の出発点です。リーダーで変更した作品は、その設定を保ちます。</value>
+  </data>
+  <data name="SettingsReaderDefaults" xml:space="preserve">
+    <value>リーダーの既定</value>
+  </data>
+  <data name="SettingsReaderDefaultsFooter" xml:space="preserve">
+    <value>変更した作品は、独自の表示モード、読む向き、表示色を保ちます。</value>
+  </data>
+  <data name="SettingsReaderManga" xml:space="preserve">
+    <value>マンガ</value>
+  </data>
+  <data name="SettingsReaderWebtoons" xml:space="preserve">
+    <value>ウェブトゥーン</value>
+  </data>
+  <data name="SettingsReaderWebtoonsNote" xml:space="preserve">
+    <value>ウェブトゥーンは常に縦スクロールで開きます</value>
+  </data>
+  <data name="SettingsReaderNovels" xml:space="preserve">
+    <value>ライトノベル</value>
+  </data>
+  <data name="SettingsReaderRtl" xml:space="preserve">
+    <value>ページ、右から左</value>
+  </data>
+  <data name="SettingsReaderLtr" xml:space="preserve">
+    <value>ページ、左から右</value>
+  </data>
+  <data name="SettingsReaderStrip" xml:space="preserve">
+    <value>縦スクロール</value>
+  </data>
+  <data name="SettingsReaderPages" xml:space="preserve">
+    <value>ページ送り</value>
+  </data>
+  <data name="SettingsReaderScrolled" xml:space="preserve">
+    <value>スクロール</value>
+  </data>
+  <data name="SettingsCountsRead" xml:space="preserve">
+    <value>既読にするタイミング</value>
+  </data>
+  <data name="SettingsCountsReadNote" xml:space="preserve">
+    <value>最後のページにしばらくいた場合、または次の章に進んだ場合</value>
+  </data>
+  <data name="SettingsCountsReadValue" xml:space="preserve">
+    <value>最後のページのあと</value>
+  </data>
+  <data name="SettingsCountsReadMovingOn" xml:space="preserve">
+    <value>先へ進んだとき</value>
+  </data>
+  <data name="SettingsCountsReadMovingOnNote" xml:space="preserve">
+    <value>最後のページをめくったとき、または次の章を開いたとき</value>
+  </data>
+  <data name="SettingsCountsReadMarked" xml:space="preserve">
+    <value>自分で付けたとき</value>
+  </data>
+  <data name="SettingsCountsReadMarkedNote" xml:space="preserve">
+    <value>続きを読むと連携サービスは、あなたが付けた記録に従います</value>
+  </data>
+  <data name="SettingsFollowGroup" xml:space="preserve">
+    <value>引き継がれる作品設定</value>
+  </data>
+  <data name="SettingsFollowMode" xml:space="preserve">
+    <value>表示モード、読む向き、色</value>
+  </data>
+  <data name="SettingsFollowModeNote" xml:space="preserve">
+    <value>変更した作品は、ほかのデバイスでも同じ読み方になります</value>
+  </data>
+  <data name="SettingsFollowFooter" xml:space="preserve">
+    <value>文字サイズ、余白、タップ領域、画面更新はこの{device}に残ります。</value>
+  </data>
+  <data name="SettingsLookFollowsNote" xml:space="preserve">
+    <value>カラーページか、電子ペーパー向けのグレーか</value>
+  </data>
+  <data name="SettingsNewChaptersReading" xml:space="preserve">
+    <value>「読書中」の作品</value>
+  </data>
+  <data name="SettingsNewChaptersNote" xml:space="preserve">
+    <value>読んでいる作品は、次の章も先にダウンロードされます</value>
+  </data>
+  <data name="SettingsProgressGroup" xml:space="preserve">
+    <value>進捗</value>
+  </data>
+  <data name="SettingsProgressChapter" xml:space="preserve">
+    <value>章を読み終えたとき</value>
+  </data>
+  <data name="SettingsProgressClose" xml:space="preserve">
+    <value>リーダーを閉じたとき</value>
+  </data>
+  <data name="SettingsDisagreeFurthest" xml:space="preserve">
+    <value>進んでいるほうを残す</value>
+  </data>
+  <data name="SettingsDisagreeLatest" xml:space="preserve">
+    <value>最後の変更を優先</value>
+  </data>
+  <data name="SettingsDisagreeNote" xml:space="preserve">
+    <value>状態とスコアは最後の変更に従います</value>
+  </data>
+  <data name="SettingsKeepChaptersReadyNote" xml:space="preserve">
+    <value>「読書中」リストの作品の次の章</value>
+  </data>
+  <data name="SettingsDeleteAfterReadingNote" xml:space="preserve">
+    <value>しおり付きの章は残ります</value>
+  </data>
+  <data name="SettingsChapterNotificationsNote" xml:space="preserve">
+    <value>「読書中」リストの作品</value>
+  </data>
+  <data name="SettingsDownloadsFinishedNote" xml:space="preserve">
+    <value>ダウンロード中の章がすべて終わったとき</value>
+  </data>
+  <data name="SettingsChapterNotificationsFooter" xml:space="preserve">
+    <value>章の通知は独自のシステムチャンネルを使うため、ほかの通知はそのままで章だけを消音できます。</value>
+  </data>
+  <data name="AccountsMangaupdatesCredit" xml:space="preserve">
+    <value>Kaeriは公開APIでMangaUpdatesに接続します。</value>
+  </data>
+  <data name="AccountsUsername" xml:space="preserve">
+    <value>ユーザー名</value>
+  </data>
+  <data name="ReadDownloadsTotal_other" xml:space="preserve">
+    <value>{n}話 · {size}</value>
+  </data>
+  <data name="ReadDownloadsActive" xml:space="preserve">
+    <value>{chapter} · {done}/{total}ページ</value>
+  </data>
+  <data name="ReadDownloadsMoreQueued" xml:space="preserve">
+    <value>ほか{n}件が待機中</value>
+  </data>
+  <data name="ReadDownloadsQueued_other" xml:space="preserve">
+    <value>{n}話が待機中</value>
+  </data>
+  <data name="ReadDownloadsFailed" xml:space="preserve">
+    <value>{chapter}をダウンロードできませんでした。{reason}</value>
+  </data>
+  <data name="ReadDownloadsKept_other" xml:space="preserve">
+    <value>{n}話</value>
+  </data>
+  <data name="ReadDownloadsRead" xml:space="preserve">
+    <value>既読 {n}話</value>
+  </data>
+  <data name="ReadDownloadsDeleteRead" xml:space="preserve">
+    <value>既読を削除</value>
+  </data>
+  <data name="SendTitle" xml:space="preserve">
+    <value>電子書籍リーダーに送る</value>
+  </data>
+  <data name="SendFor" xml:space="preserve">
+    <value>送信先</value>
+  </data>
+  <data name="SendWhat" xml:space="preserve">
+    <value>内容</value>
+  </data>
+  <data name="SendChapters" xml:space="preserve">
+    <value>章</value>
+  </data>
+  <data name="SendChaptersOne" xml:space="preserve">
+    <value>{chapter}</value>
+  </data>
+  <data name="SendChaptersRange" xml:space="preserve">
+    <value>{first}〜{last}</value>
+  </data>
+  <data name="SendSize" xml:space="preserve">
+    <value>サイズ</value>
+  </data>
+  <data name="SendSizeAbout" xml:space="preserve">
+    <value>約{size}</value>
+  </data>
+  <data name="SendNoPlace" xml:space="preserve">
+    <value>Kaeriからは、この電子書籍リーダーで読んだ位置がわかりません。戻ってきたときに、作品ページでどこまで読んだかを尋ねます。</value>
+  </data>
+  <data name="SendPrepare" xml:space="preserve">
+    <value>準備して共有</value>
+  </data>
+  <data name="SendPreparing_other" xml:space="preserve">
+    <value>{total}話中{done}話目を準備中</value>
+  </data>
+  <data name="SendSizedFor" xml:space="preserve">
+    <value>ページは{device}向けのサイズです</value>
+  </data>
+  <data name="SendInParts" xml:space="preserve">
+    <value>{size}を超えるため、ファイルを分割します。</value>
+  </data>
+  <data name="SendFailedChapter" xml:space="preserve">
+    <value>第{chapter}話を準備できませんでした。{cause}</value>
+  </data>
+  <data name="SendFailed" xml:space="preserve">
+    <value>ファイルを準備できませんでした。{cause}</value>
+  </data>
+  <data name="SendSizeWorking" xml:space="preserve">
+    <value>計算中</value>
+  </data>
+  <data name="SendChaptersOpen" xml:space="preserve">
+    <value>開いています</value>
+  </data>
+  <data name="SendChaptersClosed" xml:space="preserve">
+    <value>閉じています</value>
+  </data>
+  <data name="SendProgressSpoken" xml:space="preserve">
+    <value>{percent}パーセント</value>
+  </data>
+  <data name="SendChapterAction" xml:space="preserve">
+    <value>電子書籍リーダーに送る</value>
+  </data>
+  <data name="SendPartsOver" xml:space="preserve">
+    <value>{size}を超えると分割</value>
+  </data>
+  <data name="SendWaitingCancel" xml:space="preserve">
+    <value>送信をキャンセル</value>
+  </data>
+  <data name="SendReady_other" xml:space="preserve">
+    <value>{n}件のファイルの準備ができました。</value>
+  </data>
+  <data name="SendShareAgain" xml:space="preserve">
+    <value>もう一度共有</value>
+  </data>
+  <data name="SendBanner" xml:space="preserve">
+    <value>{device}に送信中</value>
+  </data>
+  <data name="SendFormatFixedEpub" xml:space="preserve">
+    <value>固定レイアウトEPUB</value>
+  </data>
+  <data name="SendFormatKepub" xml:space="preserve">
+    <value>KEPUB</value>
+  </data>
+  <data name="SendFormatEpub" xml:space="preserve">
+    <value>EPUB</value>
+  </data>
+  <data name="SendFormatCbz" xml:space="preserve">
+    <value>CBZ</value>
+  </data>
+  <data name="SendTargetLine" xml:space="preserve">
+    <value>{format} · {width} × {height}</value>
+  </data>
+  <data name="StopTitle" xml:space="preserve">
+    <value>どこまで読みましたか?</value>
+  </data>
+  <data name="StopNote" xml:space="preserve">
+    <value>{device}に章を送りました。どこまで読みましたか?</value>
+  </data>
+  <data name="StopNoteAction" xml:space="preserve">
+    <value>読んだ位置を設定</value>
+  </data>
+  <data name="StopSentOne" xml:space="preserve">
+    <value>{date}に第{chapter}話を{device}に送りました。</value>
+  </data>
+  <data name="StopSentRange" xml:space="preserve">
+    <value>{date}に第{first}話〜第{last}話を{device}に送りました。</value>
+  </data>
+  <data name="StopFinished" xml:space="preserve">
+    <value>第{chapter}話を読み終えた</value>
+  </data>
+  <data name="StopSet" xml:space="preserve">
+    <value>読んだ位置を設定</value>
+  </data>
+  <data name="StopKeep" xml:space="preserve">
+    <value>第{chapter}話 · {page}ページのままにする</value>
+  </data>
+  <data name="StopKeepPlain" xml:space="preserve">
+    <value>現在の位置のままにする</value>
+  </data>
+  <data name="EreadersGroup" xml:space="preserve">
+    <value>電子書籍リーダー</value>
+  </data>
+  <data name="EreadersSendRow" xml:space="preserve">
+    <value>電子書籍リーダーに送る</value>
+  </data>
+  <data name="EreadersFeedRow" xml:space="preserve">
+    <value>OPDSフィード</value>
+  </data>
+  <data name="OpdsShareNote" xml:space="preserve">
+    <value>家庭内の電子書籍リーダーから閲覧できるOPDSカタログ</value>
+  </data>
+  <data name="OpdsFooter" xml:space="preserve">
+    <value>フィードは、この{device}でKaeriを開いている間だけ動作します。それらの電子書籍リーダーでの進捗は、そちらに残ります。</value>
+  </data>
+  <data name="OpdsAddress" xml:space="preserve">
+    <value>アドレス</value>
+  </data>
+  <data name="OpdsAddressOff" xml:space="preserve">
+    <value>アドレスを取得するには、フィードをオンにしてください。</value>
+  </data>
+  <data name="OpdsPassword" xml:space="preserve">
+    <value>パスワード</value>
+  </data>
+  <data name="OpdsPasswordNote" xml:space="preserve">
+    <value>電子書籍リーダーで一度だけ入力します</value>
+  </data>
+  <data name="OpdsNewPassword" xml:space="preserve">
+    <value>新しいパスワード</value>
+  </data>
+  <data name="OpdsPort" xml:space="preserve">
+    <value>ポート</value>
+  </data>
+  <data name="OpdsPortNote" xml:space="preserve">
+    <value>空欄なら空いているポートを使います。指定する場合は1024〜65535から選んでください</value>
+  </data>
+  <data name="OpdsPortMoved" xml:space="preserve">
+    <value>ポート{wanted}は使用中だったため、フィードは{port}を使っています。</value>
+  </data>
+  <data name="OpdsShares" xml:space="preserve">
+    <value>共有する内容</value>
+  </data>
+  <data name="OpdsShareDownloads" xml:space="preserve">
+    <value>ダウンロード</value>
+  </data>
+  <data name="OpdsShareDownloadsCount_other" xml:space="preserve">
+    <value>{n}話</value>
+  </data>
+  <data name="OpdsShareManga" xml:space="preserve">
+    <value>マンガのフォルダ</value>
+  </data>
+  <data name="OpdsShareNovels" xml:space="preserve">
+    <value>ライトノベルのフォルダ</value>
+  </data>
+  <data name="OpdsShareSeriesCount_other" xml:space="preserve">
+    <value>{n}シリーズ</value>
+  </data>
+  <data name="OpdsFetchedBy" xml:space="preserve">
+    <value>取得した電子書籍リーダー</value>
+  </data>
+  <data name="OpdsFetchedNone" xml:space="preserve">
+    <value>まだどの電子書籍リーダーも取得していません。</value>
+  </data>
+  <data name="OpdsStarting" xml:space="preserve">
+    <value>起動しています…</value>
+  </data>
+  <data name="OpdsPausedNone" xml:space="preserve">
+    <value>一時停止中。このMacはローカルネットワークに接続していません。</value>
+  </data>
+  <data name="OpdsPausedVpn" xml:space="preserve">
+    <value>一時停止中。このMacはVPN経由でのみ接続しています。</value>
+  </data>
+  <data name="OpdsNewPasswordTitle" xml:space="preserve">
+    <value>新しいパスワードを作成しますか?</value>
+  </data>
+  <data name="OpdsNewPasswordWarning" xml:space="preserve">
+    <value>すでにフィードを使っている電子書籍リーダーは、それぞれに新しいパスワードを入力するまで使えなくなります。</value>
+  </data>
+  <data name="OpdsFetchedTime" xml:space="preserve">
+    <value>最終リクエスト：{time}</value>
+  </data>
+  <data name="OpdsFetchedFiles_other" xml:space="preserve">
+    <value>{n}件のファイル</value>
+  </data>
+  <data name="OpdsReaderUnnamed" xml:space="preserve">
+    <value>{address}の電子書籍リーダー</value>
+  </data>
   <data name="SeasonalPrevious" xml:space="preserve">
     <value>前のシーズン</value>
   </data>
@@ -4833,7 +7392,7 @@
     <value>検索で絞り込む</value>
   </data>
   <data name="SeasonalFilterHelp" xml:space="preserve">
-    <value>このシーズンを検索で開き、どのフィルターでも絞り込めます。</value>
+    <value>このシーズンを検索で開き、すべてのフィルターを使えます</value>
   </data>
   <data name="SortPopularity" xml:space="preserve">
     <value>人気</value>
@@ -4974,7 +7533,7 @@
     <value>正規ライセンスのみ</value>
   </data>
   <data name="FilterMyList" xml:space="preserve">
-    <value>マイリストの作品</value>
+    <value>自分のリストにある作品</value>
   </data>
   <data name="FilterShow" xml:space="preserve">
     <value>表示</value>
@@ -5448,7 +8007,7 @@
     <value>サインアウト済み</value>
   </data>
   <data name="ServersSignOutLine" xml:space="preserve">
-    <value>このデバイスのサーバーへのサインインを終了します。サーバーとダウンロードはそのまま残ります。</value>
+    <value>サインアウトすると、このデバイスのサーバー上のセッションが終了します。サーバーとダウンロードはそのまま残ります。</value>
   </data>
   <data name="SettingsLanguage" xml:space="preserve">
     <value>言語</value>
@@ -5663,6 +8222,42 @@
   <data name="SettingsTorrentsCellular" xml:space="preserve">
     <value>モバイルデータ通信でトレント</value>
   </data>
+  <data name="SettingsChapterDownloadsCellular" xml:space="preserve">
+    <value>モバイルデータでの章のダウンロード</value>
+  </data>
+  <data name="SettingsKeepChaptersReady" xml:space="preserve">
+    <value>次の章を先にダウンロード</value>
+  </data>
+  <data name="SettingsDeleteAfterReading" xml:space="preserve">
+    <value>読んだ章を削除</value>
+  </data>
+  <data name="SettingsSeriesChoicesFollow" xml:space="preserve">
+    <value>作品ごとの設定を引き継ぐ</value>
+  </data>
+  <data name="SettingsNewChaptersDownload" xml:space="preserve">
+    <value>新しい章</value>
+  </data>
+  <data name="SettingsModeFollows" xml:space="preserve">
+    <value>表示モードと読む向き</value>
+  </data>
+  <data name="SettingsLookFollows" xml:space="preserve">
+    <value>色合い</value>
+  </data>
+  <data name="SettingsSendProgressAfter" xml:space="preserve">
+    <value>進捗を送るタイミング</value>
+  </data>
+  <data name="SettingsWhenTrackersDisagree" xml:space="preserve">
+    <value>連携サービスと食い違うとき</value>
+  </data>
+  <data name="SettingsChapterNotifications" xml:space="preserve">
+    <value>新しい章</value>
+  </data>
+  <data name="SettingsDownloadsFinished" xml:space="preserve">
+    <value>ダウンロード完了</value>
+  </data>
+  <data name="SettingsOpenAt" xml:space="preserve">
+    <value>起動時に開く画面</value>
+  </data>
   <data name="SettingsSeedAfter" xml:space="preserve">
     <value>視聴後にシーディング</value>
   </data>
@@ -5724,10 +8319,10 @@
     <value>新しいエピソード</value>
   </data>
   <data name="SettingsNewEpisodesDetail" xml:space="preserve">
-    <value>視聴リストに入っている作品が対象です。</value>
+    <value>「視聴中」リストの作品が対象です</value>
   </data>
   <data name="SettingsNotifyDetail" xml:space="preserve">
-    <value>フォローしている作品のエピソードが公開されると、作品名とエピソード番号を一度通知します。エピソード名は表示しません。作品の設定でオフにできます。</value>
+    <value>フォローしている作品のエピソードが公開されると、1件通知が届きます。通知には作品名とエピソード番号だけが表示され、エピソード名は表示されません。作品ごとの設定でオフにできます。</value>
   </data>
   <data name="SettingsComingUp" xml:space="preserve">
     <value>今後7日間の放送</value>
@@ -5739,7 +8334,7 @@
     <value>サウンド、バイブレーション、ロック画面</value>
   </data>
   <data name="SettingsSystemNotificationsApple" xml:space="preserve">
-    <value>システム設定を開きます。バナーの表示、サウンド、バッジの設定はそこで行います。</value>
+    <value>システム設定を開きます。バナーのスタイル、サウンド、バッジはそこで設定します。</value>
   </data>
   <data name="SettingsNotificationsBlocked" xml:space="preserve">
     <value>オフ：システムでKaeriの通知が許可されていません</value>
@@ -5781,7 +8376,7 @@
     <value>最後に見たエピソードの設定を記憶しています。</value>
   </data>
   <data name="ShowSettingsSubsFollow" xml:space="preserve">
-    <value>プレーヤーで選択します。設定 › 再生に従います。</value>
+    <value>プレーヤーで選びます。それまでは 設定 › 再生 が適用されます。</value>
   </data>
   <data name="ShowSettingsSource" xml:space="preserve">
     <value>ソース</value>
@@ -5862,7 +8457,7 @@
     <value>ホバーでカバーを拡大</value>
   </data>
   <data name="SettingsHoverCardsNote" xml:space="preserve">
-    <value>カバーにポインターを重ねると、予告編付きの大きなカードを表示します。</value>
+    <value>カバーにポインターを置くと、予告編付きの大きなカードが開きます。</value>
   </data>
   <data name="SettingsUpscalingNoteNatural" xml:space="preserve">
     <value>線と質感を忠実に保ち、見た目は変えません。</value>
@@ -5893,6 +8488,12 @@
   </data>
   <data name="SettingsAsideAccounts" xml:space="preserve">
     <value>Kaeriはアカウントなしで使えます。サインアウトしても、視聴履歴はこのデバイスに残ります。</value>
+  </data>
+  <data name="SettingsAsideAccountsRead" xml:space="preserve">
+    <value>Kaeriはアカウントなしで使えます。サインアウトしても、読書履歴はこのデバイスに残ります。</value>
+  </data>
+  <data name="SettingsAsideAccountsBoth" xml:space="preserve">
+    <value>Kaeriはアカウントなしで使えます。サインアウトしても、視聴履歴と読書履歴はこのデバイスに残ります。</value>
   </data>
   <data name="WidgetDayToday" xml:space="preserve">
     <value>今日</value>
@@ -6049,6 +8650,201 @@
   </data>
   <data name="SettingsSubsReset" xml:space="preserve">
     <value>字幕スタイルをリセット</value>
+  </data>
+  <data name="SettingsOpdsFeed" xml:space="preserve">
+    <value>このネットワークで共有</value>
+  </data>
+  <data name="SettingsOpdsPassword" xml:space="preserve">
+    <value>フィードのパスワード</value>
+  </data>
+  <data name="SettingsOpdsPort" xml:space="preserve">
+    <value>フィードのポート</value>
+  </data>
+  <data name="BookServerAddress" xml:space="preserve">
+    <value>アドレス</value>
+  </data>
+  <data name="BookServerAddressHint" xml:space="preserve">
+    <value>アドレス、またはKavitaのOPDSリンク全体を入力します。</value>
+  </data>
+  <data name="BookServerKavitaKey" xml:space="preserve">
+    <value>これはKavitaのOPDSリンクです。キーでサインインするため、パスワードは不要です。</value>
+  </data>
+  <data name="BookServerKeyKept" xml:space="preserve">
+    <value>Kaeriはキーを{store}に保存し、末尾4文字だけを表示します。</value>
+  </data>
+  <data name="BookServerKey" xml:space="preserve">
+    <value>キー ••••{last}</value>
+  </data>
+  <data name="BookServerFoundTitle_other" xml:space="preserve">
+    <value>{libraries}件のライブラリで{series}シリーズが見つかりました</value>
+  </data>
+  <data name="BookServerFoundLine" xml:space="preserve">
+    <value>{host}の{kind}です。追加するライブラリを選んでください。</value>
+  </data>
+  <data name="BookServerLibraryLine" xml:space="preserve">
+    <value>{series}シリーズ</value>
+  </data>
+  <data name="BookServerSyncProgress" xml:space="preserve">
+    <value>サーバーに進捗を送る</value>
+  </data>
+  <data name="BookServerSyncProgressLine" xml:space="preserve">
+    <value>ここで読んだページは{host}に送られ、{host}の進捗がここに反映されます。</value>
+  </data>
+  <data name="BookServerUsername" xml:space="preserve">
+    <value>ユーザー名</value>
+  </data>
+  <data name="BookServerPassword" xml:space="preserve">
+    <value>パスワード</value>
+  </data>
+  <data name="BookServerErrUnreachable" xml:space="preserve">
+    <value>{host}に接続できませんでした</value>
+  </data>
+  <data name="BookServerErrUnreachableLine" xml:space="preserve">
+    <value>アドレスと、サーバーが起動していてこのネットワーク上にあるかを確認してください。</value>
+  </data>
+  <data name="BookServerErrPassword" xml:space="preserve">
+    <value>{host}はそのパスワードを受け付けませんでした</value>
+  </data>
+  <data name="BookServerErrPasswordLine" xml:space="preserve">
+    <value>ブラウザーで{kind}に使っているユーザー名とパスワードを入力してください。</value>
+  </data>
+  <data name="BookServerErrKey" xml:space="preserve">
+    <value>{host}はそのキーを受け付けませんでした</value>
+  </data>
+  <data name="BookServerErrKeyLine" xml:space="preserve">
+    <value>キーはKavitaでリセットすると変わります。Kavitaのアカウント設定からOPDSリンクをもう一度コピーしてください。</value>
+  </data>
+  <data name="BookServerEmpty" xml:space="preserve">
+    <value>{host}には、このアカウントで表示できるシリーズがありません</value>
+  </data>
+  <data name="BookServerEmptyLine" xml:space="preserve">
+    <value>サーバーには入れますが、サーバーがまだスキャン中か、このアカウントに本へのアクセス権がない可能性があります。</value>
+  </data>
+  <data name="BookServerEmptyRecheck" xml:space="preserve">
+    <value>今すぐ追加できます。Kaeriは30分ごとに再確認します。</value>
+  </data>
+  <data name="BookServerNotBooksLine" xml:space="preserve">
+    <value>Kaeriは、Komga、Kavita、OPDSのカタログから読み込みます。</value>
+  </data>
+  <data name="BookFolderFound_other" xml:space="preserve">
+    <value>{files}個のファイルに{series}シリーズが見つかりました</value>
+  </data>
+  <data name="BookFolderFoundLine" xml:space="preserve">
+    <value>{path}。Kaeriは、そのうち{matched}シリーズを詳細情報で照合しました。</value>
+  </data>
+  <data name="BookFolderUnsupported_other" xml:space="preserve">
+    <value>Kaeriで開けないファイルが{count}個</value>
+  </data>
+  <data name="BookFolderUnsupportedLine" xml:space="preserve">
+    <value>{kinds}。これらはフォルダー内にそのまま残ります。</value>
+  </data>
+  <data name="BookFolderDrm" xml:space="preserve">
+    <value>DRMで保護されたEPUBが{count}個</value>
+  </data>
+  <data name="BookFolderOpens" xml:space="preserve">
+    <value>Kaeriは、CBZ、CBR、EPUB、PDFファイルと、画像のフォルダーを開けます。</value>
+  </data>
+  <data name="BookFolderShowFiles" xml:space="preserve">
+    <value>ファイルを表示</value>
+  </data>
+  <data name="BookFolderAdd" xml:space="preserve">
+    <value>フォルダーを追加</value>
+  </data>
+  <data name="BookFolderChange" xml:space="preserve">
+    <value>変更</value>
+  </data>
+  <data name="BookFolderEmpty" xml:space="preserve">
+    <value>{folder}にKaeriで開けるものはありません</value>
+  </data>
+  <data name="BookFolderEmptyLine_other" xml:space="preserve">
+    <value>{files}個のファイルがありますが、CBZ、CBR、EPUB、PDF、画像のいずれでもありません。</value>
+  </data>
+  <data name="BookFolderChooseOther" xml:space="preserve">
+    <value>別のフォルダーを選ぶ</value>
+  </data>
+  <data name="StoreJoinTitle" xml:space="preserve">
+    <value>プラグインストアに参加</value>
+  </data>
+  <data name="StoreInviteField" xml:space="preserve">
+    <value>招待</value>
+  </data>
+  <data name="StoreJoinedTitle" xml:space="preserve">
+    <value>{store}に参加しました</value>
+  </data>
+  <data name="StoreJoinedLine_other" xml:space="preserve">
+    <value>{owner}がプラグインを{count}個提供しています。参加してもインストールはされません。ここで、または後で選んでインストールできます。</value>
+  </data>
+  <data name="StoreGroupReading" xml:space="preserve">
+    <value>読書用</value>
+  </data>
+  <data name="StoreGroupWatching" xml:space="preserve">
+    <value>視聴用</value>
+  </data>
+  <data name="StoreInstall" xml:space="preserve">
+    <value>インストール</value>
+  </data>
+  <data name="StoreInstalledRow" xml:space="preserve">
+    <value>インストール済み</value>
+  </data>
+  <data name="StoreInstallAllReading" xml:space="preserve">
+    <value>読書用をすべてインストール</value>
+  </data>
+  <data name="StoreInstalled_other" xml:space="preserve">
+    <value>プラグインを{count}個インストールしました。ソースに入っています。</value>
+  </data>
+  <data name="StoreOtherMedium" xml:space="preserve">
+    <value>{store}のプラグインはすべて視聴用です</value>
+  </data>
+  <data name="StoreOtherMediumLine" xml:space="preserve">
+    <value>このデバイスでは視聴がオフなので、ソースには表示されません。</value>
+  </data>
+  <data name="StoreTurnOnWatching" xml:space="preserve">
+    <value>視聴をオンにする</value>
+  </data>
+  <data name="StoreEmpty" xml:space="preserve">
+    <value>{store}にはまだプラグインがありません</value>
+  </data>
+  <data name="StoreEmptyLine" xml:space="preserve">
+    <value>メンバーなので、{owner}が追加すると、新しいプラグインがプラグインストアに表示されます。</value>
+  </data>
+  <data name="StoreErrUnreachable" xml:space="preserve">
+    <value>{host}に接続できませんでした</value>
+  </data>
+  <data name="StoreErrUnreachableLine" xml:space="preserve">
+    <value>招待は正しいようですが、ストアが応答していません。しばらくしてからもう一度試すか、稼働しているか{owner}に確認してください。</value>
+  </data>
+  <data name="StoreOtherMediumMore_other" xml:space="preserve">
+    <value>ほかに{count}個は視聴用ですが、このデバイスでは視聴がオフです。</value>
+  </data>
+  <data name="StoreTvReadingOnly_other" xml:space="preserve">
+    <value>ほかに{count}個は読書用ですが、このTVでは読書できません。</value>
+  </data>
+  <data name="StoreTvAllReading" xml:space="preserve">
+    <value>{store}のプラグインはすべて読書用ですが、このTVでは読書できません。</value>
+  </data>
+  <data name="StorePluginRow" xml:space="preserve">
+    <value>バージョン{version} · {hosts}に接続する場合があります</value>
+  </data>
+  <data name="SourceAdded" xml:space="preserve">
+    <value>{name}を追加しました · {series}シリーズ</value>
+  </data>
+  <data name="SourceAddedPlugins_other" xml:space="preserve">
+    <value>{store}からプラグインを{count}個インストールしました</value>
+  </data>
+  <data name="SourceRowServer_other" xml:space="preserve">
+    <value>{kind} · {libraries}件のライブラリに{series}シリーズ · 追加したばかり</value>
+  </data>
+  <data name="SourceRowServerSeries_other" xml:space="preserve">
+    <value>{kind} · {libraries}件のライブラリに{series}シリーズ</value>
+  </data>
+  <data name="SourceRowServerEmpty" xml:space="preserve">
+    <value>{kind} · シリーズはまだありません · 30分後に再確認します</value>
+  </data>
+  <data name="SourceRowFolder_other" xml:space="preserve">
+    <value>{path} · {series}シリーズ · {skipped}個のファイルをスキップ</value>
+  </data>
+  <data name="SourceRowPlugin" xml:space="preserve">
+    <value>{store}から · {medium} · バージョン{version}</value>
   </data>
   <data name="SourcesTitle" xml:space="preserve">
     <value>ソース</value>
@@ -6393,7 +9189,7 @@
     <value>OPAP-JP</value>
   </data>
   <data name="SourcesDemoHosts" xml:space="preserve">
-    <value>接続先はWikimedia Commonsのみです(upload.wikimedia.org と commons.wikimedia.org)。</value>
+    <value>デモの接続先はWikimedia Commonsだけです(upload.wikimedia.org と commons.wikimedia.org)。</value>
   </data>
   <data name="SourcesDemoPrivate" xml:space="preserve">
     <value>デモはどこにもサインインせず、AniListに書き込むこともありません。</value>
@@ -6498,7 +9294,7 @@
     <value>このプラグインストアには、もう参加していません。</value>
   </data>
   <data name="StoresOfflineLastList" xml:space="preserve">
-    <value>オフラインです（{reason}）。下のプラグインは、最後に確認できた一覧です。</value>
+    <value>オフラインです（{reason}）。最後に送られてきた一覧を表示しています。</value>
   </data>
   <data name="StoresOfflineLastListPlain" xml:space="preserve">
     <value>オフラインです。最後に受け取った一覧を表示しています。</value>
@@ -6603,7 +9399,7 @@
     <value>{name}を削除しますか？</value>
   </data>
   <data name="StoresRemovePluginDetail" xml:space="preserve">
-    <value>このデバイスから削除されます。プラグインストアからは再びインストールできます。</value>
+    <value>このデバイスから削除されます。プラグインストアからもう一度インストールできます。</value>
   </data>
   <data name="StoresNewlyContacts" xml:space="preserve">
     <value>新たに接続するホスト</value>
@@ -6624,7 +9420,7 @@
     <value>プラグインストアの運営者から届いたリンクを貼り付けてください。</value>
   </data>
   <data name="StoresJoinDetailDesktop" xml:space="preserve">
-    <value>プラグインストアの運営者から届いた招待リンクを貼り付けてください。参加やインストールの前に、プラグインストアが提供する内容を確認できます。</value>
+    <value>プラグインストアの運営者から届いた招待リンクを貼り付けます。参加やインストールの前に、プラグインストアの内容を確認できます。</value>
   </data>
   <data name="StoresJoinDetailOpened" xml:space="preserve">
     <value>プラグインストアの運営者から届いたリンクを貼り付けてください。メッセージアプリから開いたKaeri://の招待リンクは、このシートに直接入力されます。</value>
@@ -6819,7 +9615,7 @@
     <value>このリンクを持っている人は、取り消すまで誰でも参加できます。</value>
   </data>
   <data name="StoresInviteOnceUntil" xml:space="preserve">
-    <value>送った相手1人が1回だけ使えます。{until}まで。</value>
+    <value>送った相手1人が{until}まで1回だけ使えます。</value>
   </data>
   <data name="StoresInviteOnceForever" xml:space="preserve">
     <value>送った相手1人が1回だけ使えます。取り消すまで有効です。</value>
@@ -6930,7 +9726,7 @@
     <value>プラグインストアを開く</value>
   </data>
   <data name="StoresWhatIs" xml:space="preserve">
-    <value>プラグインストアは、署名付きのプラグインを保管し、デバイスごとに専用のトークンを発行する小さなサーバーです。ソースをプラグインとして提供します。Kaeriはプラグインストアを運営せず、一覧も載せません。所有者からの招待リンクで参加してください。</value>
+    <value>プラグインストアは、署名付きのプラグインを保管し、デバイスごとに専用のトークンを発行する小さなサーバーです。そのプラグインがソースを追加します。Kaeriはプラグインストアを運営せず、一覧も載せません。所有者からの招待リンクで参加します。</value>
   </data>
   <data name="StoresWhatIsLink" xml:space="preserve">
     <value>プラグインストアとは?</value>
@@ -6955,6 +9751,9 @@
   </data>
   <data name="CloudBrowserTitle" xml:space="preserve">
     <value>ブラウザで{service}にサインイン</value>
+  </data>
+  <data name="CloudCloseCarriesOn" xml:space="preserve">
+    <value>このウィンドウは閉じて構いません。Kaeriは処理を続け、準備ができたら次のステップを自動で開きます。</value>
   </data>
   <data name="DeviceKindComputer" xml:space="preserve">
     <value>コンピュータ</value>
@@ -7065,7 +9864,7 @@
     <value>クラウドフォルダ経由</value>
   </data>
   <data name="SyncRoadCloudLine" xml:space="preserve">
-    <value>すでに使っているクラウドドライブか、自分のサーバーを使います。デバイスが離れていても使え、バックアップも残ります。</value>
+    <value>すでに使っているクラウドドライブか、自分のサーバーを使います。デバイスが離れていても動作し、バックアップも残ります。</value>
   </data>
   <data name="SyncRoadLater" xml:space="preserve">
     <value>もう一方の方法は、あとから追加できます。ほとんどの人は両方使っています。</value>
@@ -7125,7 +9924,7 @@
     <value>クラウドフォルダ</value>
   </data>
   <data name="CloudFoot" xml:space="preserve">
-    <value>デバイスが離れている間の同期を補い、封印したバックアップを保管します。読み取れるのは、あなたのデバイスだけです。</value>
+    <value>このフォルダーが、離れている間もデバイスの状態をそろえ、封印したバックアップを保管します。読み取れるのは、あなたのデバイスだけです。</value>
   </data>
   <data name="CloudAdd" xml:space="preserve">
     <value>クラウドフォルダを追加</value>
@@ -7464,7 +10263,7 @@
     <value>起動時に「誰が見ますか?」を表示</value>
   </data>
   <data name="ProfilesAskFoot" xml:space="preserve">
-    <value>初期設定ではオフです。家族で共有するiPad向けです。アカウントの行から、いつでもプロファイルを切り替えられます。</value>
+    <value>初期設定ではオフです。家族全員で共有するiPadではオンにしてください。プロファイルは、アカウントの行からいつでも切り替えられます。</value>
   </data>
   <data name="ProfilesSwitch" xml:space="preserve">
     <value>プロファイルを切り替え</value>
@@ -7663,9 +10462,6 @@
   </data>
   <data name="TitleMoreAbout" xml:space="preserve">
     <value>詳細を見る</value>
-  </data>
-  <data name="TitleSynopsisHint" xml:space="preserve">
-    <value>あらすじ全文を表示します</value>
   </data>
   <data name="TitleDubbedTo" xml:space="preserve">
     <value>第{episode}話まで吹替版</value>
@@ -8054,6 +10850,9 @@
   <data name="OpenedChooseFile" xml:space="preserve">
     <value>トレントファイルを選ぶ</value>
   </data>
+  <data name="OpenedUnreadable" xml:space="preserve">
+    <value>Kaeriでそのリンクまたはファイルを読み取れませんでした。</value>
+  </data>
   <data name="OpenedConfirm" xml:space="preserve">
     <value>{title}の第{episode}話ですか?</value>
   </data>
@@ -8104,6 +10903,27 @@
   </data>
   <data name="AccountsBringsLists" xml:space="preserve">
     <value>リストを読み込み、続きを見るに視聴中の作品を表示します。</value>
+  </data>
+  <data name="AccountsBringsListsRead" xml:space="preserve">
+    <value>リストを取り込み、読んでいる作品を続きを読むに表示します。</value>
+  </data>
+  <data name="AccountsBringsListsBoth" xml:space="preserve">
+    <value>リストを取り込み、視聴中と読書中の作品を続きを見るに表示します。</value>
+  </data>
+  <data name="AccountsTrackerLists" xml:space="preserve">
+    <value>リストと進捗</value>
+  </data>
+  <data name="AccountsTrackerReadingLists" xml:space="preserve">
+    <value>読書リストと進捗</value>
+  </data>
+  <data name="AccountsTrackerServesBoth" xml:space="preserve">
+    <value>作品の視聴と読書</value>
+  </data>
+  <data name="AccountsTrackerServesReading" xml:space="preserve">
+    <value>読書</value>
+  </data>
+  <data name="AccountsTrackerServesShows" xml:space="preserve">
+    <value>視聴</value>
   </data>
   <data name="AccountsLibraryNeeds" xml:space="preserve">
     <value>ライブラリと同期には{tracker}のアカウントが必要です</value>
@@ -8211,7 +11031,7 @@
     <value>{tracker}にサインイン</value>
   </data>
   <data name="AccountsFormDetail" xml:space="preserve">
-    <value>パスワードは一度だけ{tracker}に送信され、トークンがこのデバイスに保存されます。</value>
+    <value>パスワードは一度だけ{tracker}に送信され、代わりに受け取るトークンがこのデバイスに残ります。</value>
   </data>
   <data name="AccountsUserOrEmail" xml:space="preserve">
     <value>メールアドレスまたはユーザー名</value>
@@ -8283,7 +11103,7 @@
     <value>{tracker}に掲載</value>
   </data>
   <data name="AccountsDidNotAnswer" xml:space="preserve">
-    <value>{tracker}から応答がありませんでした。</value>
+    <value>{tracker}から応答がありませんでした。少し待ってからもう一度お試しください。</value>
   </data>
   <data name="AccountsNoExtras" xml:space="preserve">
     <value>{tracker}には、この作品のキャスト、スタッフ、おすすめがまだありません。</value>
@@ -8346,7 +11166,7 @@
     <value>テレビでKaeriを開いてください。このデバイスと同じWi-Fiに接続しておく必要があります。</value>
   </data>
   <data name="TvTypeCode" xml:space="preserve">
-    <value>{name}に表示される6桁の数字を入力してください。その後、このデバイスは自動で接続されます。</value>
+    <value>{name}に表示される6桁の数字を入力してください。以後、このデバイスは自動で接続されます。</value>
   </data>
   <data name="TvPairingMoment" xml:space="preserve">
     <value>少し時間がかかります。</value>
@@ -8646,7 +11466,7 @@
     <value>サーバーがダウンロードを拒否したため、中断されました（{code}）。しばらくしてからもう一度お試しください。</value>
   </data>
   <data name="UpdatesWhyConnection" xml:space="preserve">
-    <value>ダウンロードが中断されました。接続が切れました。</value>
+    <value>ダウンロードが中断されました。接続が切れました。もう一度お試しください。</value>
   </data>
   <data name="UpdatesWhySave" xml:space="preserve">
     <value>ダウンロードを保存できませんでした: {reason}</value>

@@ -24,7 +24,7 @@ pub async fn doctor(config: &Config, paths: &Paths, store: &Store, images: bool)
     println!("config");
     match Config::read(paths) {
         Ok(_) if !paths.config_file.exists() => {
-            println!("  file        none yet — every setting at its default")
+            println!("  file        none yet, so every setting is at its default")
         }
         Ok(_) => println!("  file        {}", paths.config_file.display()),
         Err(problem) => {
@@ -124,7 +124,7 @@ pub async fn doctor(config: &Config, paths: &Paths, store: &Store, images: bool)
     match kaeri_player::Bundle::materialize(&paths.cache_dir) {
         Ok(bundle) => println!("  bundle      {}", bundle.root().display()),
         Err(e) => {
-            println!("  bundle      ✕ could not be written: {e} — mpv's own look is used")
+            println!("  bundle      ✕ could not be written: {e}; mpv uses its own look")
         }
     }
     // With the user's scripts loaded, another script can take keys or tracks ours expect.
@@ -138,7 +138,7 @@ pub async fn doctor(config: &Config, paths: &Paths, store: &Store, images: bool)
             entries.flatten().map(|e| e.file_name().to_string_lossy().into_owned()).collect();
         names.sort();
         if !names.is_empty() {
-            println!("  scripts     {} — {}", dir.display(), names.join(", "));
+            println!("  scripts     {}: {}", dir.display(), names.join(", "));
         }
     }
 

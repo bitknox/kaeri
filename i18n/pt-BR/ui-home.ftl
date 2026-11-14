@@ -8,7 +8,7 @@ home-mark-watched = Marcar episódio { $episode } como assistido
 home-marked-watched = Episódio { $episode } marcado como assistido
 home-remove-continue = Remover de { -continue-cap }
 home-continue-count = { $count ->
-    [one] 1 título
+    [one] { $count } título
     [many] { $count } de títulos
    *[other] { $count } títulos
  }
@@ -22,7 +22,7 @@ home-search = Buscar
 home-end = Isso é tudo por enquanto. Temporada e Calendário têm as listas completas.
 home-end-signed-out = Entre no AniList para trazer sua lista e os planejados.
 home-sign-in = Entrar no AniList
-home-end-no-sources = Adicione uma { -source } para reproduzir a partir do Início. As { -plugin-store-cap-pl } têm algumas para escolher.
+home-end-no-sources = Adicione uma { -source } para reproduzir a partir do Início. { -plugin-cap-pl } vêm das { -plugin-store-cap-pl }.
 home-not-found = Não está nas suas { -source-pl }
 home-failed = Não foi possível carregar as sugestões
 home-try-again = Tentar de novo

@@ -1,4 +1,4 @@
-rkey-lock-linux = Du kan se den igen i Inställningar, { -device-cap-pl }, efter ditt kontolösenord.
+rkey-lock-linux = Du kan se den igen i Inställningar, { -device-cap-pl }, när du har angett ditt kontolösenord.
 rkey-lock-reason = Visa återställningsnyckeln för { -app-name }
 profiles-popover-name = Profiler
 profiles-add-row-action = Lägg till

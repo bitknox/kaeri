@@ -26,12 +26,14 @@ import com.github.takahirom.roborazzi.roborazziSystemPropertyOutputDirectory
 import java.io.File
 import java.nio.file.Files
 import java.time.Clock
+import java.util.Locale
 import kotlin.math.roundToInt
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withTimeout
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
@@ -42,6 +44,7 @@ import org.robolectric.annotation.Config
 import org.robolectric.annotation.GraphicsMode
 import org.robolectric.Shadows.shadowOf
 import app.kaeri.engine.model.WidgetData
+import app.kaeri.i18n.Strings
 import app.kaeri.store.AppClock
 import app.kaeri.testkit.FixtureArt
 import app.kaeri.ui.AppLink
@@ -229,6 +232,59 @@ class WidgetShots {
         Unit
     }
 
+    // The picker's preview images, which Android 11 to 14 show where 15 shows the previews the app
+    // generates: each widget at its picker size, drawn from the fixtures, in every shipped
+    // language. `KAERI_WIDGET_PREVIEWS=write ./gradlew :widgets:testFixturesDebugUnitTest --tests
+    // '*WidgetShots.the_pickers_preview_images*'` writes them to src/main/res; without it, the test
+    // checks that each one there is still the size the widget draws at.
+
+    @Test
+    fun the_pickers_preview_images_are_the_widgets_drawn() {
+        val write = System.getenv("KAERI_WIDGET_PREVIEWS") == "write"
+        val previews = listOf(
+            "continue_small" to (ContinueWidget { Host(Fixtures.record()) } to SMALL),
+            "continue_wide" to (ContinueWidget { Host(Fixtures.record()) } to WIDE),
+            "airing_small" to (AiringWidget { Host(Fixtures.record()) } to SMALL),
+            "airing_wide" to (AiringWidget { Host(Fixtures.record()) } to WIDE),
+        )
+        val system = Locale.getDefault()
+        try {
+            for (language in Strings.languages) {
+                val folder = if (language.tag == "en") "drawable-nodpi" else "drawable-${qualifier(language.tag)}-nodpi"
+                RuntimeEnvironment.setQualifiers("+${qualifier(language.tag)}")
+                Locale.setDefault(Locale.forLanguageTag(language.tag))
+                for ((name, preview) in previews) {
+                    val image = preview(preview.first, preview.second)
+                    val file = File("src/main/res/$folder/widget_preview_$name.webp")
+                    if (write) {
+                        file.parentFile.mkdirs()
+                        file.outputStream().use { image.compress(Bitmap.CompressFormat.WEBP_LOSSY, PREVIEW_QUALITY, it) }
+                    } else {
+                        val kept = BitmapFactory.decodeFile(file.path)
+                        assertNotNull("${file.path} is missing: write the previews again", kept)
+                        assertEquals(file.path, image.width to image.height, kept.width to kept.height)
+                    }
+                }
+            }
+        } finally {
+            Locale.setDefault(system)
+        }
+    }
+
+    /** A language tag as Android's resource folders name it: `b+es+419` for `es-419`. */
+    private fun qualifier(tag: String) = if ('-' in tag) "b+" + tag.replace('-', '+') else tag
+
+    /** The widget at [size] as the picker shows it: its own rounded corners, nothing around them. */
+    private fun preview(widget: GlanceAppWidget, size: DpSize): Bitmap {
+        val frame = drawn(widget, size)
+        val image = Bitmap.createBitmap(frame.width, frame.height, Bitmap.Config.ARGB_8888)
+        val canvas = Canvas(image)
+        val radius = 16 * context.resources.displayMetrics.density
+        canvas.clipPath(Path().apply { addRoundRect(RectF(0f, 0f, frame.width.toFloat(), frame.height.toFloat()), radius, radius, Path.Direction.CW) })
+        frame.draw(canvas)
+        return image
+    }
+
     @OptIn(ExperimentalGlanceApi::class)
     private fun drawn(widget: GlanceAppWidget, size: DpSize): FrameLayout {
         val views = runBlocking { widget.compose(context, size = size) }
@@ -272,5 +328,8 @@ class WidgetShots {
         /** The boards' 2 × 2 and 4 × 2, on a 412 dp phone. */
         val SMALL = DpSize(160.dp, 176.dp)
         val WIDE = DpSize(344.dp, 176.dp)
+
+        /** WebP's lossy quality for the picker's previews: the art's grain stays, the files small. */
+        const val PREVIEW_QUALITY = 88
     }
 }

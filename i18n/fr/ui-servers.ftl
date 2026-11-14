@@ -30,17 +30,17 @@ servers-report-line = Les points de reprise et les marques de visionnage suivent
 servers-add = Ajouter
 servers-row-matching = Association · { $done } sur { $total } séries
 servers-row-summary = { $libraries ->
-    [one] 1 { -library } · { $series } séries
+    [one] { $libraries } { -library } · { $series } séries
     [many] { $libraries } bibliothèques · { $series } séries
    *[other] { $libraries } bibliothèques · { $series } séries
  }
 servers-row-libraries = { $count ->
-    [one] 1 { -library }
+    [one] { $count } { -library }
     [many] { $count } bibliothèques
    *[other] { $count } bibliothèques
  }
 servers-row-series = { $count ->
-    [one] 1 série
+    [one] { $count } série
     [many] { $count } séries
    *[other] { $count } séries
  }
@@ -76,4 +76,4 @@ servers-needs-look = { $count } non associées à AniList
 servers-kind-films = Films
 servers-error-certificate = { $host } utilise un certificat auquel cet { -device } ne fait pas confiance. Utilisez une adresse https:// avec un certificat de confiance.
 servers-row-signed-out-here = Déconnecté
-servers-sign-out-line = Met fin à la connexion de cet { -device } sur le serveur. Le serveur et vos téléchargements restent tels quels.
+servers-sign-out-line = Se déconnecter met fin à la session de cet { -device } sur le serveur. Le serveur et vos téléchargements restent tels quels.

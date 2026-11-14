@@ -23,4 +23,4 @@ Check a download against its `.sha256` before running it.
 Every package carries the licences of what it is built from in a `third-party` folder, the Rust
 crates' among them, and `kaeri-@VERSION@-rust-licences.txt` has those for all four builds.
 
-Kaeri doesn't host any shows. You add your own sources. See https://kaeri.app/legal/.
+Kaeri doesn't host any shows or books. You add your own sources. See https://kaeri.app/legal/.

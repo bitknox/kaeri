@@ -395,6 +395,32 @@ struct PhoneJoinStoreSheet: View {
     @State var link: String
 
     var body: some View {
+        if let outcome = store.cameIn.outcome, StoreCameIn.tells(outcome) {
+            NavigationStack {
+                ScrollView {
+                    StoreCameIn(outcome: outcome).padding(.horizontal, 20).padding(.vertical, 12)
+                }
+                .background(.raised)
+                .navigationTitle(L.storesJoinTitle)
+                .navigationBarTitleDisplayMode(.inline)
+                .safeAreaInset(edge: .bottom) {
+                    StoreCameIn.actions(outcome, store: store) {
+                        store.cameIn.reset()
+                        dismiss()
+                    }
+                    .padding(.horizontal, 16).padding(.bottom, 8)
+                }
+            }
+            .tint(.silk)
+            .presentationBackground(.raised)
+            .transition(.opacity)
+            .onDisappear { store.cameIn.reset() }
+        } else {
+            form
+        }
+    }
+
+    private var form: some View {
         NavigationStack {
             PhoneList {
                 Section {
@@ -459,7 +485,11 @@ struct PhoneJoinStoreSheet: View {
             if InviteLinks.looksLikeInvite(link) { store.previewStore(link) } else { store.stores.clearPreview() }
         }
         .onChange(of: store.stores.joined) { _, joined in
-            if joined != nil { dismiss() }
+            guard joined != nil else { return }
+            Task {
+                try? await Task.sleep(for: .seconds(1.5))
+                if !StoreCameIn.tells(store.cameIn.outcome) { dismiss() }
+            }
         }
         .onDisappear { store.stores.clearPreview() }
         .holdsInput(link)

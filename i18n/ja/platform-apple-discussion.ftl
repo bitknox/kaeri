@@ -16,7 +16,7 @@ discussion-apple-player-note = { $count ->
    *[other] { $count }件のコメント · 一時停止します
  }
 settings-apple-discussions = エピソードのディスカッション
-settings-apple-discussions-note = 視聴済みのエピソードについて、AniListのフォーラムにあるコメントを読み込みます。
+settings-apple-discussions-note = エピソードを視聴すると、AniListのフォーラムスレッドのコメントが表示されます。
 settings-apple-comment-images = コメントの画像を読み込む
 settings-apple-comment-images-note = 画像は、それをホストしているサイトから読み込まれ、そのサイトにはIPアドレスが見えます。
 discussion-apple-key-hint = ⌘Returnで投稿、Returnで改行します。

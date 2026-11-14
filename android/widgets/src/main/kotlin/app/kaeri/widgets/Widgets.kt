@@ -5,6 +5,7 @@ package app.kaeri.widgets
 
 import android.content.Context
 import android.content.SharedPreferences
+import android.os.Build
 import android.util.Log
 import androidx.glance.appwidget.GlanceAppWidgetManager
 import androidx.glance.appwidget.GlanceAppWidgetReceiver
@@ -86,7 +87,7 @@ object Widgets {
      * broadcast of today's airing, Continue's record turning a day old, or the next midnight.
      */
     fun nextRedraw(record: Record?, now: Instant, zone: ZoneId): Instant {
-        val midnight = LocalDate.ofInstant(now, zone).plusDays(1).atStartOfDay(zone).toInstant()
+        val midnight = now.atZone(zone).toLocalDate().plusDays(1).atStartOfDay(zone).toInstant()
         val moments = buildList {
             add(midnight)
             record?.generatedAt?.plusSeconds(WidgetModel.CONTINUE_FRESH_SECS + 1)?.let(::add)
@@ -97,9 +98,12 @@ object Widgets {
 
     /**
      * Make the picker's previews again from the record, at most once a day: they show the
-     * viewer's own titles once there is a record, and the sign-in step before.
+     * viewer's own titles once there is a record, and the sign-in step before. Generated
+     * previews are Android 15's; before it the picker shows previewImage, the widgets drawn
+     * from made-up titles.
      */
     suspend fun publishPreviews(context: Context, preferences: SharedPreferences = context.getSharedPreferences("widgets", Context.MODE_PRIVATE)) {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.VANILLA_ICE_CREAM) return
         val now = System.currentTimeMillis()
         if (now - preferences.getLong("previews_at", 0) < PREVIEWS_EVERY_MILLIS) return
         val manager = GlanceAppWidgetManager(context)

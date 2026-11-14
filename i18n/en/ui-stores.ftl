@@ -21,7 +21,7 @@ stores-not-from-app = { -plugin-cap-pl } come from the { -plugin-store }'s owner
 stores-join-owner-responsible = { $owner } runs this { -plugin-store } and chose its { -plugin-pl }. { -app-name } did not make, review or approve them.
 
 # Line when the store has no plugins.
-stores-no-plugins = This { -plugin-store } offers no { -plugin-pl } yet.
+stores-no-plugins = This { -plugin-store } has no { -plugin-pl } yet.
 
 # Heading of the plugin list of a store.
 stores-plugins = { -plugin-cap-pl }
@@ -64,7 +64,7 @@ stores-no-longer-joined = This { -plugin-store } is no longer joined.
 
 # Line when the store cannot be reached but a list was kept. The reason is a sentence fragment.
 # @arg reason: cause
-stores-offline-last-list = Offline: { $reason }. The { -plugin-pl } below are the last list that was checked.
+stores-offline-last-list = Offline: { $reason }. Showing the last list it sent.
 
 # Line when offline, without a reason.
 stores-offline-last-list-plain = Offline. Showing the last list it sent.
@@ -191,7 +191,7 @@ stores-replace-label = Replace the copy of { $name } added by hand
 stores-remove-plugin-title = Remove { $name }?
 
 # Line under it.
-stores-remove-plugin-detail = It is deleted from this { -device }. The { -plugin-store } can install it again.
+stores-remove-plugin-detail = It's deleted from this { -device }. You can install it again from the { -plugin-store }.
 
 # Label before the hosts a new version also contacts.
 stores-newly-contacts = Newly contacts
@@ -217,7 +217,7 @@ stores-add-title = Add a { -plugin-store }
 stores-join-detail = Paste the link the { -plugin-store }'s owner sent you.
 
 # Line under the form title on desktop, where nothing happens before the check.
-stores-join-detail-desktop = Paste the invite link a { -plugin-store }'s owner sent you. You see what the { -plugin-store } offers before anything is joined or installed.
+stores-join-detail-desktop = Paste the invite link a { -plugin-store }'s owner sent you. You see what the { -plugin-store } has before you join or install anything.
 
 # Line under the field on a phone when a link was opened from another app.
 stores-join-detail-opened = Paste the link the { -plugin-store }'s owner sent you. A { -app-name }:// invite link opened from Messages fills this sheet in directly.
@@ -264,7 +264,7 @@ stores-join-installs-nothing = Joining installs nothing. You choose which { -plu
 stores-key-matches = Key { $key } matches the { -plugin-store }.
 
 # Line when the link is open to anyone.
-stores-anyone-note = You join without a name. Another { -device } joins with the same link.
+stores-anyone-note = You join without a name. Another { -device } can join with the same link.
 
 # Line when the device joined this store already.
 stores-already-joined-note = This { -device } has joined this { -plugin-store } already.
@@ -426,7 +426,7 @@ stores-invite-works-any-forever = Anyone who has this link can join until you ca
 
 # Line under a single-use invite with an end date. Replaces stores-invite-once.
 # @arg until: text
-stores-invite-once-until = Works once, for the person you send it to. Until { $until }.
+stores-invite-once-until = Works once, for the person you send it to, until { $until }.
 
 # Line under a single-use invite with no end date.
 stores-invite-once-forever = Works once, for the person you send it to, until you cancel it.
@@ -569,11 +569,16 @@ stores-offers-plugins = { $count ->
    *[other] { $count } { -plugin-pl }
  }
 
+# Heading over the store's plugins in the join dialog on a large e-ink panel. The count sits beside it.
+# @only android
+# @max 32
+stores-preview-plugins = { -plugin-cap-pl } in this { -store }
+
 # Button of a notice that opens the plugin stores page.
 notice-open-stores = Open { -plugin-store-pl }
 
 # Explainer on the empty plugin stores page.
-stores-what-is = A { -plugin-store } is a small server that holds signed { -plugin-pl } and gives each { -device } its own token. It offers { -source-pl } as { -plugin-pl }. { -app-name } runs no { -plugin-store-pl } and lists none, so you join one with an invite link from its owner.
+stores-what-is = A { -plugin-store } is a small server that holds signed { -plugin-pl } and gives each { -device } its own token. Its { -plugin-pl } add { -source-pl }. { -app-name } runs no { -plugin-store-pl } and lists none, so you join one with an invite link from its owner.
 
 # Button on the empty plugin stores page that opens the docs page in the browser.
 # @max 32

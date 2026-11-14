@@ -6,7 +6,7 @@ Kaeri                                      plugins ●  Metadata ▲  ·  anilis
  / │  ────────────────────────────────────────────────────────────────────────
  ▥ │    yamabiko            Plugin      Ready           182 ms
  ↓ │  ▌ tsubame             Plugin      failing
-▌◇ │    kawasemi            Plugin      Ready           1204 ms
+▌◇ │    kawasemi            Plugin      Ready           1,204 ms
  ◎ │
  ≡ │  ────────────────────────────────────────────────────────────────────────
  ⇄ │    tsubame: search timed out after 8 s
@@ -65,7 +65,7 @@ r08 c03-03 fg=rule
 r08 c08-15 fg=text
 r08 c28-33 fg=text-dim
 r08 c40-44 fg=state
-r08 c56-62 fg=text-dim
+r08 c56-63 fg=text-dim
 r09 c01-01 fg=text-dim
 r09 c03-03 fg=rule
 r10 c01-01 fg=text-dim

@@ -49,6 +49,15 @@ struct MacShell: View {
                         .environment(\.playerZoomAside, navigator.pageSettled ? nil : "page")
                         .environment(\.titleAwaited, navigator.awaited)
                 }
+                if let work = navigator.seriesOnMac, navigator.titleOnMac == nil {
+                    // A series' page crossfades over the section as a show's does.
+                    SeriesPage(work: work)
+                        .id(work)
+                        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+                        .background(.ground)
+                        .transition(.opacity)
+                        .zIndex(1)
+                }
                 if let flight = navigator.flight {
                     TitleFlyer(flight: flight, space: titleSpace)
                         // Each flight its own flyer, so one started while the last is still in
@@ -61,13 +70,32 @@ struct MacShell: View {
             .environment(\.titleSpace, titleSpace)
             .onChange(of: reduceMotion, initial: true) { _, reduced in navigator.motionReduced = reduced }
             // Downloads says its own, with the storage meter beside the line (MacDownloads).
-            .navigationTitle(navigator.titleOnMac == nil && navigator.section != .downloads ? navigator.section.title : "")
+            .navigationTitle(macTitle)
             .navigationSubtitle(navigator.section == .downloads ? "" : subtitle)
             .toolbar {
                 if let id = navigator.titleOnMac {
                     TitleToolbar(store: store, navigator: navigator, id: id)
                 } else {
-                    if navigator.section == .downloads {
+                    if navigator.seriesOnMac != nil {
+                        ToolbarItem(placement: .navigation) {
+                            Button(L.actionBack, systemImage: "chevron.left") { navigator.closeSeries() }
+                                .keyboardShortcut("[", modifiers: .command)
+                        }
+                    }
+                    if navigator.section == .providers, navigator.bookSourcePage != nil {
+                        ToolbarItem(placement: .navigation) {
+                            Button(L.actionBack, systemImage: "chevron.left") { navigator.bookSourcePage = nil }
+                                .keyboardShortcut("[", modifiers: .command)
+                        }
+                    }
+                    // Search opened by a Home row's View all: Back returns to Home where it was.
+                    if navigator.section == .search, navigator.seriesOnMac == nil, navigator.readSearchBack != nil {
+                        ToolbarItem(placement: .navigation) {
+                            Button(L.actionBack, systemImage: "chevron.left") { navigator.closeReadSearch() }
+                                .keyboardShortcut("[", modifiers: .command)
+                        }
+                    }
+                    if navigator.section == .downloads, navigator.seriesOnMac == nil {
                         // The title on the toolbar itself, as a title is, not in a glass capsule.
                         ToolbarItem(placement: .navigation) { DownloadsTitle() }
                             .sharedBackgroundVisibility(.hidden)
@@ -77,7 +105,10 @@ struct MacShell: View {
                     }
                     // What has run past 600 ms, quietly, beside the section's own items.
                     ToolbarItem(placement: .primaryAction) { ActivityIndicator() }
-                    SectionToolbar(section: navigator.section)
+                    // A book source's page has no Add a source: Back is all its toolbar adds.
+                    if navigator.seriesOnMac == nil, navigator.bookSourcePage == nil {
+                        SectionToolbar(section: navigator.section)
+                    }
                     if store.tv.connected != nil {
                         ToolbarItem(placement: .primaryAction) { TVNowPlayingButton() }
                     }
@@ -86,13 +117,19 @@ struct MacShell: View {
                     }
                 }
             }
-            .toolbarBackgroundVisibility(navigator.titleOnMac == nil ? .automatic : .hidden, for: .windowToolbar)
+            // A page over the section clears the toolbar's own background. Left automatic, macOS
+            // draws the section's scroll into the title bar, over the page.
+            .toolbarBackgroundVisibility(
+                navigator.titleOnMac == nil && navigator.seriesOnMac == nil ? .automatic : .hidden,
+                for: .windowToolbar)
             .titleSearchField(
                 text: navigator.section == .settings ? $navigator.settingsQuery : $navigator.query,
-                titles: navigator.section != .settings,
+                titles: navigator.section != .settings && !ReadSearchScope.active(store: store, navigator: navigator),
                 placement: .toolbar,
-                prompt: navigator.section == .settings ? L.shellSearchSettings : L.searchPlaceholder
+                prompt: navigator.section == .settings ? L.shellSearchSettings
+                    : ReadSearchScope.active(store: store, navigator: navigator) ? L.readSearchPlaceholder : L.searchPlaceholder
             )
+            .modifier(ReadSearchTyping())
         }
         .containerBackground(Palette.ground, for: .window)
         .overlay {
@@ -122,9 +159,17 @@ struct MacShell: View {
         .surprisePicks()
     }
 
+    /// The toolbar's title: the section's, a series' over it, none under a show's page.
+    private var macTitle: String {
+        guard navigator.titleOnMac == nil else { return "" }
+        if let work = navigator.seriesOnMac { return store.reading.series[work]?.titles.display ?? "" }
+        if navigator.section == .providers, let page = navigator.bookSourcePage { return page.title(store) }
+        return navigator.section == .downloads ? "" : navigator.section.title
+    }
+
     /// What the toolbar says under the section's name.
     private var subtitle: String {
-        guard navigator.titleOnMac == nil else { return "" }
+        guard navigator.titleOnMac == nil, navigator.seriesOnMac == nil else { return "" }
         switch navigator.section {
         case .home:
             // Offline is said once, in the sync capsule (`AppStore.homeOfflineLine`).
@@ -135,6 +180,10 @@ struct MacShell: View {
             return store.seasonName ?? ""
         case .search:
             // The search as a job past 600 ms, then what is asked (Running jobs, native-ux.md).
+            if ReadSearchScope.active(store: store, navigator: navigator) {
+                let search = store.reading.search
+                return search.query.atStart ? "" : ReadFilterWords.headline(search.query, filters: store.reading.filters)
+            }
             return store.search.searchingLine ?? (store.search.atStart ? "" : store.search.query.headline())
         case .downloads:
             return downloadsSubtitle(store)
@@ -153,25 +202,51 @@ struct SectionToolbar: ToolbarContent {
         case .calendar:
             ToolbarItem(placement: .primaryAction) { CalendarToolbar() }
         case .library:
-            ToolbarItem(placement: .primaryAction) {
-                HStack(spacing: 8) {
-                    LibrarySegments()
-                    SurpriseButton()
-                    LibraryMenus()
-                }
-            }
+            ToolbarItem(placement: .primaryAction) { LibraryToolbar() }
+        case .updates:
+            ToolbarItem(placement: .primaryAction) { UpdatesDownloadNew() }
         case .search:
             ToolbarItem(placement: .primaryAction) { SurpriseButton() }
         case .seasonal:
             ToolbarItem(placement: .primaryAction) { SeasonalToolbar() }
         case .providers:
-            ToolbarItem(placement: .primaryAction) { ProvidersToolbar() }
+            ToolbarItem(placement: .primaryAction) { SourcesToolbar() }
         case .pluginStores:
             ToolbarItem(placement: .primaryAction) { StoresToolbar() }
         case .downloads:
             ToolbarItem(placement: .primaryAction) { DownloadsToolbar() }
         default:
             ToolbarItem(placement: .primaryAction) { EmptyView() }
+        }
+    }
+}
+
+/// Library's toolbar: the shows' segments and menus, or none for the reading library, whose
+/// lists are in the content.
+struct LibraryToolbar: View {
+    @Environment(AppStore.self) private var store
+    @Environment(Navigator.self) private var navigator
+
+    var body: some View {
+        if !ReadLibraryScope.reading(store: store, navigator: navigator) {
+            HStack(spacing: 8) {
+                LibrarySegments()
+                SurpriseButton()
+                LibraryMenus()
+            }
+        }
+    }
+}
+
+/// Your sources' toolbar: Add a source with reading on and a source listed, beside the stores'
+/// check with shows.
+struct SourcesToolbar: View {
+    @Environment(AppStore.self) private var store
+
+    var body: some View {
+        HStack(spacing: 8) {
+            if store.medium.answer != .read { ProvidersToolbar() }
+            if BookSourcesToolbar.shows(store) { BookSourcesToolbar() }
         }
     }
 }
@@ -208,7 +283,10 @@ struct DownloadsToolbar: View {
         let running = store.downloads.rows.contains { $0.state == .active || $0.state == .queued }
         let paused = store.downloads.rows.contains { $0.state == .paused }
         HStack(spacing: 8) {
-            if running || !paused {
+            // Episodes only: chapters stop one series at a time, from their ring.
+            if !store.medium.watches || store.downloads.rows.isEmpty {
+                EmptyView()
+            } else if running || !paused {
                 Button(L.downloadsPauseAll) { store.pauseAllDownloads() }
                     .disabled(!running)
             } else {
@@ -285,8 +363,9 @@ struct LibraryMenus: View {
 }
 
 /// The sidebar: the sections, then Sources, then Settings alone at the foot. Its rows draw
-/// their own selection, the amber tint under an amber label and icon, which the brief asks of
-/// every selection and which a system list draws grey whenever the window is not key.
+/// their own selection, silk on the raised selected fill as the reading board decided (amber
+/// stays on the one main action), which a system list would draw grey whenever the window is
+/// not key.
 struct Sidebar: View {
     @Binding var selection: AppSection
     @FocusState private var focused: Bool
@@ -295,7 +374,11 @@ struct Sidebar: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 2) {
-            ForEach(AppSection.browse) { row($0) }
+            // A 12 pt gap between the groups, with no headings: Watch and Read name them.
+            ForEach(Array(AppSection.groups(store.medium.answer).enumerated()), id: \.offset) { index, group in
+                if index > 0 { Color.clear.frame(height: 12) }
+                ForEach(group) { row($0) }
+            }
             Text(L.sourcesTitle)
                 .font(.mac(11, weight: .semibold))
                 .foregroundStyle(.haze)
@@ -360,20 +443,30 @@ struct Sidebar: View {
             var instant = Transaction()
             instant.disablesAnimations = true
             withTransaction(instant) { selection = section }
+            // The section already chosen, under a series' page: its own first screen again, as a
+            // tab chosen twice goes back to its top.
+            if selected, navigator.seriesOnMac != nil { navigator.closeSeries() }
         } label: {
             HStack(spacing: 10) {
                 Image(systemName: section.symbol)
                     .font(.mac(14))
-                    .foregroundStyle(selected ? .amber : .haze)
+                    .foregroundStyle(selected ? .silk : .haze)
                     .frame(width: 16)
                 Text(section.title)
                     .font(.mac(13, weight: selected ? .medium : .regular))
-                    .foregroundStyle(selected ? .amber : .silk)
+                    .foregroundStyle(.silk)
                 Spacer(minLength: 0)
+                // Unread chapters beside Updates, in haze: a count, not a badge.
+                if section == .updates, store.reading.unread > 0 {
+                    Text(store.reading.unread, format: .number)
+                        .font(.mac(12))
+                        .monospacedDigit()
+                        .foregroundStyle(.haze)
+                }
             }
             .padding(.horizontal, 10)
             .frame(height: 30)
-            .background(selected ? Palette.selection : .clear, in: .rect(cornerRadius: 8))
+            .background(selected ? Palette.raisedSelected : .clear, in: .rect(cornerRadius: 8))
             .contentShape(.rect(cornerRadius: 8))
         }
         .buttonStyle(.plain)
@@ -382,7 +475,7 @@ struct Sidebar: View {
     }
 
     private func step(_ delta: Int) -> KeyPress.Result {
-        let order = AppSection.browse + AppSection.sources + [.settings]
+        let order = AppSection.groups(store.medium.answer).flatMap { $0 } + AppSection.sources + [.settings]
         let index = order.firstIndex(of: selection) ?? 0
         selection = order[min(max(index + delta, 0), order.count - 1)]
         return .handled
@@ -391,19 +484,25 @@ struct Sidebar: View {
 
 /// The section on screen.
 struct SectionView: View {
+    @Environment(AppStore.self) private var store
+    @Environment(Navigator.self) private var navigator
     let section: AppSection
 
     var body: some View {
         switch section {
         case .home: HomeScreen()
+        case .read: ReadHomeScreen()
+        case .updates: UpdatesScreen()
         case .calendar: CalendarScreen()
         case .seasonal: SeasonalScreen()
-        case .search: SearchScreen()
+        case .search:
+            // One screen for both scopes: reading's Search is drawn inside it.
+            SearchScreen()
         case .library: LibraryScreen()
         case .settings: SettingsScreen()
         case .downloads: DownloadsScreen()
         case .together: TogetherScreen()
-        case .providers: ProvidersScreen()
+        case .providers: SourcesScreen()
         case .pluginStores: PluginStoresScreen()
         }
     }

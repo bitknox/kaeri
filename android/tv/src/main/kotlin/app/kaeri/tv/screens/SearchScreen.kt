@@ -127,6 +127,7 @@ import app.kaeri.tv.ui.planSheet
 import app.kaeri.tv.ui.remembered
 import app.kaeri.tv.ui.tryFocus
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalResources
 
 /** Our keyboard's keys and what each does to the text. */
 object SearchKeys {
@@ -589,6 +590,7 @@ private fun FilterChips(store: AppStore, query: SearchQuery, status: app.kaeri.s
         }
         val sort = query.sortInEffect()
         val context = LocalContext.current
+        val resources = LocalResources.current
         TvTab(
             Strings.sortButton(context, SearchWords.sort(context, sort)),
             selected = query.sort != null,
@@ -675,7 +677,7 @@ private fun FilterChips(store: AppStore, query: SearchQuery, status: app.kaeri.s
             onSelect = {
                 actions?.open(
                     ActionSheet(
-                        context.getString(R.string.search_available),
+                        resources.getString(R.string.search_available),
                         availableChoices.mapIndexed { index, each -> CardAction(availableWords[index], selected = each == available) { filter { it.copy(available = each) } } },
                     ),
                 )

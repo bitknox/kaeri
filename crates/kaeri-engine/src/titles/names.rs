@@ -63,7 +63,7 @@ pub const NAMES_WITHIN: Duration = Duration::from_secs(30);
 /// How many sources are searched for the title before the lookup gives up on finding one.
 pub const TRIED: usize = 2;
 
-/// How many answers are kept before the stale ones are let go.
+/// How many answers are kept: past it the stale ones go, then those due to go soonest.
 const KEPT: usize = 512;
 
 /// What another source calls a title's episodes, and their stills, by AniList's numbers.
@@ -374,11 +374,22 @@ impl Names {
             Looked::Unsaid => Borrowed::default(),
         };
         let mut inner = self.lock();
-        // A session opens a few hundred pages at most; past that, what has gone stale goes.
-        if inner.kept.len() >= KEPT {
+        let key = (id, route);
+        // A session opens a few hundred pages at most; past that, what has gone stale goes, and
+        // then what is due to go soonest, so a session that opens more keeps no more.
+        if !inner.kept.contains_key(&key) && inner.kept.len() >= KEPT {
             inner.kept.retain(|_, kept| kept.until > now);
+            while inner.kept.len() >= KEPT {
+                let soonest = inner
+                    .kept
+                    .iter()
+                    .min_by_key(|(_, kept)| kept.until)
+                    .map(|(key, _)| key.clone());
+                let Some(soonest) = soonest else { break };
+                inner.kept.remove(&soonest);
+            }
         }
-        inner.kept.insert((id, route), Kept { borrowed: borrowed.clone(), until });
+        inner.kept.insert(key, Kept { borrowed: borrowed.clone(), until });
         borrowed
     }
 }
@@ -1144,6 +1155,24 @@ mod tests {
         let borrowed = Borrowed::from_listing(&listed, &media(false), 0);
         assert_eq!(borrowed.stills.keys().collect::<Vec<_>>(), [&1]);
         assert_eq!(borrowed.titles.len(), 3);
+    }
+
+    #[test]
+    fn what_is_kept_stays_within_its_bound_however_many_pages_open() {
+        let names = Names::default();
+        let looked = || Looked::Said { borrowed: Borrowed::default(), airing: false };
+        // Every answer still fresh, so none goes for being stale.
+        for n in 0..KEPT as u32 * 3 {
+            names.keep(AnilistId::new(910_000 + n), "shelf".into(), looked(), i64::from(n));
+        }
+        assert_eq!(names.lock().kept.len(), KEPT);
+        // What goes first is what was due to go soonest: the newest pages are still there.
+        let last = AnilistId::new(910_000 + KEPT as u32 * 3 - 1);
+        assert!(names.kept(last, "shelf", 0).is_some());
+        assert!(names.kept(AnilistId::new(910_000), "shelf", 0).is_none());
+        // Kept again, a page already there pushes nothing out.
+        names.keep(last, "shelf".into(), looked(), 0);
+        assert_eq!(names.lock().kept.len(), KEPT);
     }
 
     #[test]

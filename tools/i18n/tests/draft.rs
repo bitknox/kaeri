@@ -46,7 +46,7 @@ library-left = { $count ->
 library-add = Add { -source }
 "#;
 const SETTINGS: &str = "# Row.\nsettings-language = Language\n";
-const LEGAL: &str = "# Legal line.\nlegal-hosts-no-content = { -app-name } doesn't host any shows. You add your own { -source-pl }.\n";
+const LEGAL: &str = "# Legal line.\nlegal-hosts-no-content = { -app-name } doesn't host any shows or books. You add your own { -source-pl }.\n";
 
 fn put(root: &Path, path: &str, text: &str) {
     let full = root.join("i18n").join(path);

@@ -1194,7 +1194,7 @@ impl Sheet {
                     .collect(),
             ))
         };
-        label.set_markup(&inline_markup(&segs, &shown.borrow()));
+        crate::widgets::set_link_markup(&label, &inline_markup(&segs, &shown.borrow()));
         label.connect_activate_link({
             let weak = Rc::downgrade(self);
             let segs = Rc::clone(&segs);
@@ -1220,10 +1220,13 @@ impl Sheet {
                             (label.clone(), Rc::clone(&segs), Rc::clone(&shown));
                         adw::CallbackAnimationTarget::new(move |value| {
                             shown.borrow_mut().insert(at, value);
-                            label.set_markup(&inline_markup(&segs, &shown.borrow()));
+                            crate::widgets::set_link_markup(
+                                &label,
+                                &inline_markup(&segs, &shown.borrow()),
+                            );
                         })
                     };
-                    let animation = adw::TimedAnimation::new(
+                    let animation = crate::motion::timed(
                         label,
                         from,
                         if open { 1.0 } else { 0.0 },

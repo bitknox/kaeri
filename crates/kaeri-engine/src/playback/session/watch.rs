@@ -15,7 +15,7 @@ impl Run<'_> {
     pub(super) async fn apply_track(&self, action: TrackAction, link: &dyn PlayerLink) {
         if let TrackAction::Remember(memory) = action {
             let key = (self.context.anilist_id, self.context.translation);
-            remember_tracks(self.store, self.settings.remember_tracks, key, memory);
+            remember_tracks(self.store, self.settings.remember_tracks, key, memory).await;
             return;
         }
         if let Some((name, value)) = action.property() {
@@ -140,7 +140,7 @@ impl Run<'_> {
         let id = self.context.anilist_id;
         // Blocking sqlite calls: off the async worker so a slow disk cannot stall the event
         // stream.
-        let _ = tokio::task::spawn_blocking(move || {
+        let written = tokio::task::spawn_blocking(move || {
             store_handle.record_event_queued(
                 &watch,
                 if queue_now { trackers.clone() } else { Vec::new() },
@@ -156,15 +156,28 @@ impl Run<'_> {
             Ok::<_, kaeri_store::StoreError>(())
         })
         .await;
+        if let Ok(Err(e)) = written {
+            if queue_now {
+                // Not committed after all: the next record tries the finish, and its trackers,
+                // again.
+                *committed = false;
+            }
+            if completed {
+                self.tx.not_kept("a watched episode", &e);
+            } else {
+                // The next position written replaces this one, so it is only logged.
+                tracing::warn!(error = %e, "a watch position was not kept");
+            }
+        }
 
-        if queue_now {
+        if queue_now && *committed {
             let _ = self.tx.send(Event::ProgressQueued);
         }
     }
 }
 
 /// Store a series' track memory, off the async worker.
-pub(super) fn remember_tracks(
+pub(super) async fn remember_tracks(
     store: &Store,
     enabled: bool,
     (id, translation): (AnilistId, Translation),
@@ -174,9 +187,12 @@ pub(super) fn remember_tracks(
         return;
     }
     let store = store.clone();
-    tokio::task::spawn_blocking(move || {
+    // Waited for, so one write lands before the next is asked for: left to run on their own,
+    // a choice and the delay after it could land the other way round and keep the older.
+    let write = tokio::task::spawn_blocking(move || {
         if let Err(e) = store.remember_tracks(id, translation, &memory) {
             tracing::warn!(error = %e, "could not remember track choices");
         }
     });
+    let _ = write.await;
 }

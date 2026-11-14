@@ -98,6 +98,7 @@ static class TrailerPool
         Close(drop);
         if (page is null)
             return;
+        page.Wake();
         primed = true;
         priming = page;
         var began = Environment.TickCount64;
@@ -136,7 +137,9 @@ static class TrailerPool
         page.Control(TrailerControl.Pause);
         // Ends the chrome script's count of what YouTube's frame fetched, which has no one to tell here.
         page.Run(KaeriFfiMethods.TrailerBytesScript());
-        if (!shelf.Give(page))
+        if (shelf.Give(page))
+            page.Sleep();
+        else
             page.Close();
     }
 
@@ -157,6 +160,7 @@ static class TrailerPool
         Close(drop);
         if (page is not null)
         {
+            page.Wake();
             page.MoveTo(host, index);
             page.Run(script);
             warm = true;
@@ -183,8 +187,27 @@ static class TrailerPool
         Rest(page);
         page.Control(TrailerControl.Mute);
         page.Control(TrailerControl.Pause);
-        if (!shelf.Give(page))
+        if (shelf.Give(page))
+            page.Sleep();
+        else
             page.Close();
+    }
+
+    /// <summary>
+    /// Every kept page is closed, and the next visit to Home loads one again: the window was
+    /// minimised, Home was left for another place, or memory is short. A page playing in a card
+    /// is not kept, so it stays until the card lets it go.
+    /// </summary>
+    public static void Empty()
+    {
+        EndPrime();
+        var drop = new List<TrailerPage>();
+        shelf.Empty(drop);
+        if (drop.Count == 0)
+            return;
+        primed = false;
+        Close(drop);
+        Log($"let go of {drop.Count} kept trailer page(s)");
     }
 
     /// <summary>The view as it waits in the dock: the preview's size, seen whole once it is moved under a card's art.</summary>

@@ -1,4 +1,4 @@
-rkey-lock-linux = Увидеть его снова можно в настройках, в разделе «{ -device-cap-pl }», после ввода пароля учётной записи.
+rkey-lock-linux = Его можно снова увидеть в настройках, в разделе «{ -device-cap-pl }», после ввода пароля учётной записи.
 rkey-lock-reason = Показать ключ восстановления { -app-name }
 profiles-popover-name = Профили
 profiles-add-row-action = Добавить

@@ -849,7 +849,7 @@ fn stats_for_nerds_are_read_while_open_worded_by_the_engine_and_copied_without_a
     assert!(sync.warn && sync.value == "+0.250 s", "{sync:?}");
     // Asked again a second on, and not before.
     let asked = Instant::now();
-    app.op("the figures asked for again", |op| matches!(op, PlayerOp::Sample { .. }));
+    app.op("the figures asked for again", panel_figures);
     assert!(asked.elapsed() > Duration::from_millis(400), "{:?}", asked.elapsed());
 
     app.aim(
