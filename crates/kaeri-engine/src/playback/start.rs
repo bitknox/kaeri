@@ -230,7 +230,7 @@ fn stage(
     });
     let (id, episode) = (played.id, played.episode.clone());
     // What the player starts at when it remembers a speed, and Now Playing until it says.
-    let speed = engine.config.effective().playback.persisted_speed.unwrap_or(1.0);
+    let speed = engine.config.effective().playback.carried_speed().unwrap_or(1.0);
     match opener.target() {
         PlayerTarget::Local => {
             Event::PlaybackStaged { id, title, episode, episode_title, speed, resume }
@@ -504,7 +504,7 @@ pub fn play_local(
             // A local file's real length is knowable, but the hint only serves
             // the aniskip fallback and a lie would filter its answers.
             runtime_secs: None,
-            speed: playback.persist_speed.then_some(playback.persisted_speed).flatten(),
+            speed: playback.carried_speed(),
             volume: playback.persist_volume.then_some(playback.persisted_volume).flatten(),
             next,
             episodes,
