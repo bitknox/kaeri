@@ -31,11 +31,10 @@ private struct ReaderHost: ViewModifier {
         }
         #else
         // The window under the reader stays as it is, so going back finds it where it was. The
-        // reader crossfades in over it and out again.
-        // The covered window leaves the accessibility tree while the reader is up, and the reader
-        // is modal, so VoiceOver stays in the book.
+        // reader crossfades in over it and out again. The reader is modal, so VoiceOver stays in
+        // the book. The window isn't hidden from accessibility here: `accessibilityHidden(false)`
+        // on it would bring back every view its own code hides, the player's faded controls too.
         content
-            .accessibilityHidden(model.request != nil)
             .toolbarVisibility(model.request != nil ? .hidden : .automatic, for: .windowToolbar)
             // In full screen the toolbar's strip stays at the top, drawn over the page in the
             // window's own colours even with nothing in it. While a book is open it comes with the
