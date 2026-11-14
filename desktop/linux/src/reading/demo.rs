@@ -79,7 +79,7 @@ fn credit_label(ctx: &Rc<Ctx>, demo: &DemoWorkInfo) -> gtk::Label {
         ));
     }
     let label = gtk::Label::new(None);
-    crate::widgets::set_link_markup(&label, &markup);
+    label.set_markup(&markup);
     label.add_css_class("haze");
     label.add_css_class("demo-credit-line");
     label.set_wrap(true);

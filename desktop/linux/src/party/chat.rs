@@ -538,14 +538,11 @@ fn quiet_row(text: &str) -> gtk::Widget {
 /// so it reads and wraps as a sentence; the action is a link, reachable with Tab.
 fn action_row(line: &str, action: &str, act: impl Fn() + 'static) -> gtk::Label {
     let label = crate::widgets::haze("", "chat-link");
-    crate::widgets::set_link_markup(
-        &label,
-        &format!(
-            "{} \u{b7} <a href=\"act\">{}</a>", // i18n-skip
-            gtk::glib::markup_escape_text(line),
-            gtk::glib::markup_escape_text(action)
-        ),
-    );
+    label.set_markup(&format!(
+        "{} \u{b7} <a href=\"act\">{}</a>", // i18n-skip
+        gtk::glib::markup_escape_text(line),
+        gtk::glib::markup_escape_text(action)
+    ));
     label.set_xalign(0.0);
     label.set_wrap(true);
     label.set_wrap_mode(gtk::pango::WrapMode::WordChar);
