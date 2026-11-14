@@ -840,6 +840,35 @@ mod tests {
     }
 
     #[test]
+    fn a_change_given_up_is_handed_out_to_be_said_once() {
+        let store = Store::open_in_memory().unwrap();
+        let id = store.enqueue("anilist", &progress(7), 0).unwrap().unwrap();
+        let read = TrackOp::SetReadProgress {
+            anilist_id: AnilistId::new(8),
+            chapter: 3,
+            volume: None,
+        };
+        let read_id = store.enqueue("mal", &read, 0).unwrap().unwrap();
+        for attempt in 0..MAX_ATTEMPTS {
+            store.fail(id, "Not Found.", i64::from(attempt)).unwrap();
+            store.fail_read(read_id, "refused", i64::from(attempt)).unwrap();
+        }
+
+        let untold: Vec<_> = store
+            .take_untold_dropped_track_ops()
+            .unwrap()
+            .into_iter()
+            .map(|d| (d.tracker_id, d.op))
+            .collect();
+        assert_eq!(untold, [("anilist".to_owned(), progress(7)), ("mal".to_owned(), read)]);
+        assert!(
+            store.take_untold_dropped_track_ops().unwrap().is_empty(),
+            "taken once, by whichever engine asked first"
+        );
+        assert_eq!(store.dropped_track_ops().unwrap().len(), 2, "the record keeps both");
+    }
+
+    #[test]
     fn a_reading_op_given_up_is_kept_and_the_record_stays_bounded() {
         let store = Store::open_in_memory().unwrap();
         for n in 0..(DROPPED_KEPT as u32 + 5) {

@@ -16,6 +16,28 @@ use kaeri_store::{Download, DownloadState, MappingInput, SkipMark, Store, WatchE
 
 use crate::{fixtures, sources};
 
+/// The environment variable that gives a scene a change AniList kept refusing until the outbox
+/// gave it up, set to `1` when the scene starts: the first drain then says it once, for the
+/// notice's shots. Read by the scenes of the apps' Fixtures builds and by Linux's.
+pub const DROPPED_CHANGE_VAR: &str = "KAERI_FIXTURES_DROPPED";
+
+/// Whether the environment asks for [`dropped_change`].
+pub fn dropped_change_asked() -> bool {
+    std::env::var(DROPPED_CHANGE_VAR).is_ok_and(|v| v == "1")
+}
+
+/// A progress change to `id`, named `title`, that AniList refused until the outbox gave it up,
+/// as if the app had closed before saying so. Refused through the store's own outbox, so the
+/// change is recorded exactly as a real one is.
+pub fn dropped_change(store: &Store, id: AnilistId, title: &str, at: i64) {
+    store.remember_title(id, title).expect("seed: remember the title");
+    let op = kaeri_core::traits::TrackOp::SetProgress { anilist_id: id, episode: 12 };
+    let row = store.enqueue("anilist", &op, at).expect("seed: queue").expect("seed: queued");
+    let given_up =
+        (0..1_000).any(|n| store.fail(row, "Not Found.", at + n).expect("seed: refuse"));
+    assert!(given_up, "seed: the outbox gives the change up");
+}
+
 /// The size every seeded download claims: 350 MiB.
 pub const DOWNLOAD_BYTES: u64 = 350 * 1024 * 1024;
 
