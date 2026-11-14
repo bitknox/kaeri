@@ -397,7 +397,8 @@ impl WorkGrid {
         self.build(None);
     }
 
-    /// Builds the cards the view at `view` wants next, as `cards_to_build` counts them.
+    /// Builds the cards the view at `view` wants next, as `cards_to_build` counts them, as many as
+    /// `per_turn` allows.
     fn build(&self, view: Option<View>) {
         let tiles = self.tiles.borrow();
         let from = self.built.get();
@@ -411,10 +412,12 @@ impl WorkGrid {
     }
 }
 
-/// How many of the `wanted` cards one turn of the main loop builds, with `built` built.
+/// How many of the `wanted` cards one turn of the main loop builds, with `built` built: the first
+/// screens at once, then a few at a time. The cards a turn adds are laid out in the next frame,
+/// so a few keep that frame short; the view asks again after it while it still wants more.
 fn per_turn(built: usize, wanted: usize) -> usize {
-    let _ = built;
-    wanted
+    const STEP: usize = 8;
+    if built == 0 { wanted } else { wanted.min(STEP) }
 }
 
 /// Where a scrolled view stands: its top, its height and the height of what it holds.
@@ -689,7 +692,17 @@ mod label_tests {
 
 #[cfg(test)]
 mod build_tests {
-    use super::{View, cards_to_build};
+    use super::{View, cards_to_build, per_turn};
+
+    /// The first screens come at once; later cards a few per turn, so no frame lays out many.
+    #[test]
+    fn later_cards_come_a_few_per_turn() {
+        assert_eq!(per_turn(0, 48), 48);
+        let later = per_turn(48, 48);
+        assert!(later > 0 && later <= 8, "{later} cards in one turn");
+        assert_eq!(per_turn(48, 3), 3);
+        assert_eq!(per_turn(48, 0), 0);
+    }
 
     /// A long list opens with a few screens of cards, not all of them, and adds a batch as the
     /// view comes near the end of what is built, never past the list.
