@@ -323,6 +323,12 @@
         <item quantity="many">%1$,d глав ещё не скачано, поэтому отправка дождётся Wi-Fi и продолжится сама.</item>
         <item quantity="other">%1$,d главы ещё не скачаны, поэтому отправка дождётся Wi-Fi и продолжится сама.</item>
     </plurals>
+    <plurals name="export_pages_left_out">
+        <item quantity="one">%1$,d страницу из %2$s не удалось прочитать, её нет в файлах.</item>
+        <item quantity="few">%1$,d страницы из %2$s не удалось прочитать, их нет в файлах.</item>
+        <item quantity="many">%1$,d страниц из %2$s не удалось прочитать, их нет в файлах.</item>
+        <item quantity="other">%1$,d страницы из %2$s не удалось прочитать, их нет в файлах.</item>
+    </plurals>
     <string name="reading_chapter_titled">Глава %1$s · %2$s</string>
     <string name="reading_row_read">Прочитано</string>
     <string name="reading_row_new">Новая</string>

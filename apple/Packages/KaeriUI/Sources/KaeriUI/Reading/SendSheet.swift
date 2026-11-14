@@ -493,6 +493,12 @@ struct SendProgress: View {
                 Text(L.sendReady(n: files.count))
                     .font(.plat(mac: 13, touch: 17))
                     .foregroundStyle(.silk)
+                if !send.leftOut.isEmpty {
+                    Text(send.leftOut.joined(separator: "\n"))
+                        .font(.plat(mac: 12, touch: 13))
+                        .foregroundStyle(.haze)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
                 #if os(iOS)
                 Button(action: share) {
                     Text(L.sendShareAgain).frame(maxWidth: .infinity)
@@ -674,7 +680,10 @@ private struct SendStatusRow: View {
             case .gone:
                 FailedLine(L.sendFilesGone)
             case .ready(let files):
-                Text(L.sendReady(n: files.count)).font(.plat(mac: 12, touch: 15)).foregroundStyle(.haze)
+                Text(([L.sendReady(n: files.count)] + send.leftOut).joined(separator: "\n"))
+                    .font(.plat(mac: 12, touch: 15))
+                    .foregroundStyle(.haze)
+                    .fixedSize(horizontal: false, vertical: true)
             case .preparing:
                 EmptyView()
             }

@@ -818,6 +818,9 @@
   <data name="ExportWaitsForWifi_other" xml:space="preserve">
     <value>未ダウンロードの章が{n}件あるため、Wi-Fi 接続を待ってから自動で送信します。</value>
   </data>
+  <data name="ExportPagesLeftOut_other" xml:space="preserve">
+    <value>{chapter}の{n}ページを読み込めなかったため、ファイルに含まれていません。</value>
+  </data>
   <data name="ReadingChapterTitled" xml:space="preserve">
     <value>第{chapter}話 · {title}</value>
   </data>

@@ -99,6 +99,10 @@ export-waits-for-wifi = { $n ->
     [one] Bir bölüm henüz indirilmedi, bu yüzden gönderim Wi-Fi'yi bekler ve sonra kendiliğinden sürer.
    *[other] { $n } bölüm henüz indirilmedi, bu yüzden gönderim Wi-Fi'yi bekler ve sonra kendiliğinden sürer.
  }
+export-pages-left-out = { $n ->
+    [one] { $chapter } içindeki bir sayfa okunamadı ve dosyalarda yok.
+   *[other] { $chapter } içindeki { $n } sayfa okunamadı ve dosyalarda yok.
+ }
 reading-chapter-titled = Bölüm { $chapter } · { $title }
 reading-row-read = Okundu
 reading-row-new = Yeni

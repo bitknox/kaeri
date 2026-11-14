@@ -2026,6 +2026,68 @@ mod tests {
         }
     }
 
+    /// R8-M2. A folder series' page was titled with its id ("aea788afd31b:Lantern Harbour",
+    /// with ":novel:" in it for a novel), and a book whose label already named the series was
+    /// named twice. The page takes the series' name and each book names it once.
+    #[tokio::test]
+    async fn a_folder_series_page_is_titled_by_its_name_not_its_id() {
+        let s = shelf();
+        let folder = kaeri_store::book_sources::Folder {
+            id: "f1".into(),
+            path: Some(s._dir.path().display().to_string()),
+            added_at: 1,
+            available: true,
+            ..Default::default()
+        };
+        s.store.put_book_folder(&folder).unwrap();
+        let shows = [
+            ("aea788afd31b:Lantern Harbour", "Lantern Harbour", "manga", "Ch."),
+            ("aea788afd31b:novel:Quiet Ferry Almanac", "Quiet Ferry Almanac", "novel", "Vol."),
+        ];
+        let mut scan = Vec::new();
+        for (id, name, medium, unit) in shows {
+            let series = kaeri_store::book_sources::LocalSeries {
+                id: id.into(),
+                folder: "f1".into(),
+                name: name.into(),
+                medium: medium.into(),
+                work: None,
+                state: "unmatched".into(),
+                confidence: 0,
+                reason: None,
+            };
+            // The first label names the series already, the second does not.
+            let files = [format!("{name} {unit} 1"), format!("{unit} 2")]
+                .into_iter()
+                .enumerate()
+                .map(|(n, label)| kaeri_store::book_sources::LocalFile {
+                    path: s._dir.path().join(format!("{medium}-{n}.cbz")).display().to_string(),
+                    series: id.into(),
+                    volume: None,
+                    label,
+                    number_milli: None,
+                    format: "cbz".into(),
+                    pages: Some(3),
+                    size: 100,
+                    mtime: 50,
+                    comicinfo: None,
+                })
+                .collect();
+            scan.push((series, files));
+        }
+        s.store.replace_book_scan("f1", &scan, 2).unwrap();
+        for (id, name, _, unit) in shows {
+            let page = feed_at(&s, &format!("/opds/folders/{}", encode(id))).await;
+            assert_eq!(page.title, name, "{id}");
+            let titles: Vec<&str> = page.entries.iter().map(|e| e.title.as_str()).collect();
+            assert_eq!(
+                titles,
+                [format!("{name} {unit} 1"), format!("{name} {unit} 2")],
+                "{id}"
+            );
+        }
+    }
+
     /// R7E-12. This feed added as a book server in another Kaeri answered every search with
     /// nothing: it served no search. Its search finds series by name, whatever the case, accents
     /// or letter width, CJK included, and each hit opens to its books.

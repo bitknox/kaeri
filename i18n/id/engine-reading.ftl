@@ -95,6 +95,9 @@ export-chapter = Bab { $chapter }
 export-waits-for-wifi = { $n ->
    *[other] { $n } bab belum diunduh, jadi pengiriman ini menunggu Wi-Fi dan lanjut sendiri.
  }
+export-pages-left-out = { $n ->
+   *[other] { $n } halaman dari { $chapter } tidak bisa dibaca dan tidak ada di file.
+ }
 reading-chapter-titled = Bab { $chapter } · { $title }
 reading-row-read = Dibaca
 reading-row-new = Baru

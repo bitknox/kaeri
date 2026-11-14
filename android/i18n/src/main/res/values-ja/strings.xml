@@ -287,6 +287,9 @@
     <plurals name="export_waits_for_wifi">
         <item quantity="other">未ダウンロードの章が%1$,d件あるため、Wi-Fi 接続を待ってから自動で送信します。</item>
     </plurals>
+    <plurals name="export_pages_left_out">
+        <item quantity="other">%2$sの%1$,dページを読み込めなかったため、ファイルに含まれていません。</item>
+    </plurals>
     <string name="reading_chapter_titled">第%1$s話 · %2$s</string>
     <string name="reading_row_read">既読</string>
     <string name="reading_row_new">新着</string>

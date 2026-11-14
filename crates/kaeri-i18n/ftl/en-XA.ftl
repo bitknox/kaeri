@@ -867,6 +867,13 @@ export-waits-for-wifi =
        *[other] [{ $n } çĥàþţéŕš àŕéñ'ţ ðöŵñļöàðéð ýéţ, šö ţĥîš šéñð ŵàîţš ƒöŕ Ŵî-Ƒî àñð ĝöéš öñ ƀý îţšéļƒ.~~~~~~~~~~~~~~~~~~~~~~~~~~~]
     }
 
+# Send to e-reader, under the ready files: pages of one chapter that couldn't be read, as the reader shows them broken, so the files go without them. The chapter is its name as the series shows it, such as Chapter 12 or Volume 1. n is how many pages were left out.
+export-pages-left-out =
+    { $n ->
+        [one] [Öñé þàĝé öƒ { $chapter } çöüļðñ'ţ ƀé ŕéàð àñð îšñ'ţ îñ ţĥé ƒîļéš.~~~~~~~~~~~~~~~~~]
+       *[other] [{ $n } þàĝéš öƒ { $chapter } çöüļðñ'ţ ƀé ŕéàð àñð àŕéñ'ţ îñ ţĥé ƒîļéš.~~~~~~~~~~~~~~~~~~]
+    }
+
 # Under a This week cell: the chapter that came out that day, with its own title.
 reading-chapter-titled = [Çĥàþţéŕ { $chapter } · { $title }~~~~~~]
 

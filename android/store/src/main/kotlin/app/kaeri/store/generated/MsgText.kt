@@ -426,6 +426,7 @@ fun ReadingMsg.text(context: Context): String =
         is ReadingMsg.ExportDeviceTablet -> Strings.exportDeviceTablet(context)
         is ReadingMsg.ExportChapter -> Strings.exportChapter(context, this.chapter)
         is ReadingMsg.ExportWaitsForWifi -> Strings.exportWaitsForWifi(context, this.n.toInt())
+        is ReadingMsg.ExportPagesLeftOut -> Strings.exportPagesLeftOut(context, this.n.toInt(), this.chapter)
         is ReadingMsg.ReadingChapterTitled -> Strings.readingChapterTitled(context, this.chapter, this.title)
         is ReadingMsg.ReadingRowRead -> Strings.readingRowRead(context)
         is ReadingMsg.ReadingRowNew -> Strings.readingRowNew(context)

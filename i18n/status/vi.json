@@ -6789,6 +6789,15 @@
     "by": "agent",
     "at": "2026-11-07"
   },
+  "export-pages-left-out": {
+    "source": "a4ba40fe7e1d",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-13",
+    "flags": [
+      "Machine draft of a new Send to e-reader line (2026-11-13). Johan reviews this translation before it is marked reviewed."
+    ]
+  },
   "export-waits-for-wifi": {
     "source": "5c75b5abd78d",
     "state": "draft",

@@ -1461,6 +1461,8 @@ pub enum ReadingMsg {
     ExportChapter { chapter: String },
     /// Send to e-reader: a send that waits because chapters must be fetched and downloads are kept to Wi-Fi. A send makes its files from every chapter at once, so all of it waits. n is how many chapters it still has to fetch.
     ExportWaitsForWifi { n: i64 },
+    /// Send to e-reader, under the ready files: pages of one chapter that couldn't be read, as the reader shows them broken, so the files go without them. The chapter is its name as the series shows it, such as Chapter 12 or Volume 1. n is how many pages were left out.
+    ExportPagesLeftOut { n: i64, chapter: String },
     /// Under a This week cell: the chapter that came out that day, with its own title.
     ReadingChapterTitled { chapter: String, title: String },
     /// A chapter row's state: the person read it.
@@ -1782,6 +1784,7 @@ impl ReadingMsg {
             Self::ExportDeviceTablet => "export-device-tablet",
             Self::ExportChapter { .. } => "export-chapter",
             Self::ExportWaitsForWifi { .. } => "export-waits-for-wifi",
+            Self::ExportPagesLeftOut { .. } => "export-pages-left-out",
             Self::ReadingChapterTitled { .. } => "reading-chapter-titled",
             Self::ReadingRowRead => "reading-row-read",
             Self::ReadingRowNew => "reading-row-new",
@@ -1996,6 +1999,7 @@ impl ReadingMsg {
             Self::ExportDeviceTablet => Vec::new(),
             Self::ExportChapter { chapter } => vec![("chapter", Value::Text(chapter.clone()))],
             Self::ExportWaitsForWifi { n } => vec![("n", Value::Int(*n))],
+            Self::ExportPagesLeftOut { n, chapter } => vec![("n", Value::Int(*n)), ("chapter", Value::Text(chapter.clone()))],
             Self::ReadingChapterTitled { chapter, title } => vec![("chapter", Value::Text(chapter.clone())), ("title", Value::Text(title.clone()))],
             Self::ReadingRowRead => Vec::new(),
             Self::ReadingRowNew => Vec::new(),

@@ -489,3 +489,69 @@ fn the_e_ink_layout_switch_takes_at_once_off_and_on_again() {
     assert_eq!(eink_after(&engine, answer(false)).eink, EinkMatch::No);
     engine.shutdown();
 }
+
+/// The series scene on a phone network: chapters in the manga's folder are on the device and go
+/// at once, and chapters it lists without a file, which no source can fetch, fail rather than
+/// wait. So no send in the scene waits for Wi-Fi, and the shots of a held send stage it.
+#[test]
+fn the_series_scene_sends_its_folder_chapters_at_once_and_fails_the_rest() {
+    use kaeri_core::books::{ChapterId, WorkId};
+    use kaeri_model::reading::{DownloadPick, ExportFormat};
+    let (_root, engine) = start(FfiScene::ReadingSeries);
+    let work = WorkId::new("a:900301");
+    engine.send(Command::Reading(ReadingCommand::LoadChapters {
+        work: work.clone(),
+        edition: None,
+    }));
+    let read = read_until(&engine, |event| {
+        matches!(event, Event::Reading(ReadingEvent::Chapters { .. }))
+    });
+    let volumes = read
+        .into_iter()
+        .find_map(|event| match event {
+            Event::Reading(ReadingEvent::Chapters { volumes, .. }) => Some(volumes),
+            _ => None,
+        })
+        .expect("the chapters");
+    // Every row of a folder series reads as on the device; only 12 to 15 have files.
+    let listed: Vec<&str> =
+        volumes.iter().flat_map(|v| v.chapters.iter()).map(|r| r.id.as_str()).collect();
+    assert!(listed.starts_with(&["1", "2", "3"]), "{listed:?}");
+    assert!(listed.ends_with(&["13", "14", "15"]), "{listed:?}");
+    let ids =
+        |list: &[&str]| -> Vec<ChapterId> { list.iter().map(|c| ChapterId::new(*c)).collect() };
+    let (here, missing) = (ids(&["13", "14", "15"]), ids(&["1", "2", "3"]));
+    engine.send(Command::NetworkPath { cellular: true, constrained: false, offline: false });
+    let send = |ids: Vec<_>| {
+        engine.send(Command::Reading(ReadingCommand::Prepare {
+            work: work.clone(),
+            pick: DownloadPick::Chapters { ids },
+            target: "kobo".into(),
+            format: ExportFormat::Cbz,
+        }));
+        read_until(&engine, |event| {
+            matches!(
+                event,
+                Event::Reading(
+                    ReadingEvent::ExportWaiting { .. }
+                        | ReadingEvent::ExportReady { .. }
+                        | ReadingEvent::ExportFailed { .. }
+                        | ReadingEvent::Failed { .. }
+                )
+            )
+        })
+    };
+    let waits = |read: &[Event]| {
+        read.iter().any(|e| matches!(e, Event::Reading(ReadingEvent::ExportWaiting { .. })))
+    };
+    let ready = |read: &[Event]| {
+        read.iter().any(|e| matches!(e, Event::Reading(ReadingEvent::ExportReady { .. })))
+    };
+    let read = send(here.clone());
+    assert!(ready(&read) && !waits(&read), "{here:?} go at once: {read:?}");
+    let read = send(missing.clone());
+    let failed =
+        read.iter().any(|e| matches!(e, Event::Reading(ReadingEvent::ExportFailed { .. })));
+    assert!(failed && !waits(&read), "{missing:?} fail: {read:?}");
+    engine.shutdown();
+}

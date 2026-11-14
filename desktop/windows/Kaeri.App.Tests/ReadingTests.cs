@@ -60,6 +60,20 @@ public class ReadingTests
         Assert.Empty(sending.Sends);
     }
 
+    /// <summary>R7L-5. A send that went without a broken page says how many, and of which volume.</summary>
+    [Fact]
+    public void AReadySendSaysWhichPagesItLeftOut()
+    {
+        var sending = new SendState { Send = _ => { } };
+        var id = sending.Begin("a:900301", ["v1", "v2"], Kobo(), novel: false)!.Value;
+        sending.Apply(new ReadingEvent.ExportWaiting(7, "a:900301", "kobo", new Msg.Reading(new ReadingMsg.ExportWaitsForWifi(1))));
+        var line = new Msg.Reading(new ReadingMsg.ExportPagesLeftOut(1, "Volume 1"));
+        sending.Apply(new ReadingEvent.ExportReady(7, [], [new ExportSkipped("Volume 1", 1, line)]));
+        var send = sending.Get(id)!;
+        Assert.Equal(SendPhase.Ready, send.Phase);
+        Assert.Equal("One page of Volume 1 couldn't be read and isn't in the files.", send.Line);
+    }
+
     [Fact]
     public void AReadySendWhoseFilesWentFailsForSendAgain()
     {
