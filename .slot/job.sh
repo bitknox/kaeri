@@ -1,0 +1,1 @@
+cargo test -p kaeri-engine --features cast --lib 2>&1 | grep -E "FAILED|test result|panicked|^error"; cargo clippy -p kaeri-engine --features cast --all-targets -- -D warnings 2>&1 | grep -E "^(warning|error)|Finished" | head -20; cargo fmt --all -- --check >/dev/null && echo "fmt ok" || echo "fmt FAILED"
