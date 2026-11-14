@@ -94,13 +94,14 @@ async fn read_request(stream: &mut tokio::net::TcpStream) -> Option<String> {
     Some(String::from_utf8_lossy(&data).into_owned())
 }
 
-/// A Kavita that takes `jwt.one` until it is renewed as `plan` says, or a Komga that takes no
+/// A Kavita that takes no JWT the source kept until it is renewed as `plan` says, or a Komga that takes no
 /// session at all.
 async fn serve(plan: Plan) -> Fake {
     let listener = TcpListener::bind("127.0.0.1:0").await.unwrap();
     let address = format!("http://{}", listener.local_addr().unwrap());
     let seen: Arc<Mutex<Vec<Request>>> = Arc::default();
-    let accepted = Arc::new(Mutex::new("jwt.one".to_owned()));
+    // The JWT the source keeps, `jwt.one`, has lapsed: the server takes none until a renewal.
+    let accepted = Arc::new(Mutex::new("jwt.current".to_owned()));
     let log = seen.clone();
     tokio::spawn(async move {
         loop {
