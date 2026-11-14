@@ -428,6 +428,65 @@ fn watch_stalls() {
     });
 }
 
+thread_local! {
+    static FRAMES: std::cell::RefCell<Option<(glib::SignalHandlerId, Vec<std::time::Instant>)>> =
+        const { std::cell::RefCell::new(None) };
+}
+
+/// `frames start` notes when each frame is painted; `frames stop` logs the gaps between them
+/// (median, 95th percentile, longest, how many over 50 ms) and the widgets and pictures mapped.
+fn frames(shell: &Rc<Shell>, what: &str) {
+    let window = shell.ctx.window.clone();
+    let Some(clock) = window.frame_clock() else {
+        tracing::warn!("HUNT frames: no frame clock");
+        return;
+    };
+    if what == "start" {
+        take_stall();
+        let id = clock.connect_after_paint(|_| {
+            FRAMES.with(|f| {
+                if let Some((_, times)) = f.borrow_mut().as_mut() {
+                    times.push(std::time::Instant::now());
+                }
+            })
+        });
+        FRAMES.with(|f| *f.borrow_mut() = Some((id, Vec::new())));
+        tracing::info!("HUNT frames start");
+        return;
+    }
+    let Some((id, times)) = FRAMES.with(|f| f.borrow_mut().take()) else { return };
+    clock.disconnect(id);
+    let mut gaps: Vec<u128> = times.windows(2).map(|w| (w[1] - w[0]).as_millis()).collect();
+    gaps.sort_unstable();
+    let at = |q: f64| gaps.get(((gaps.len() as f64 - 1.0) * q).round() as usize).copied();
+    let (mut widgets, mut pictures) = (0, 0);
+    fn walk(w: &gtk::Widget, widgets: &mut u32, pictures: &mut u32) {
+        if !w.is_mapped() {
+            return;
+        }
+        *widgets += 1;
+        if w.is::<gtk::Picture>() {
+            *pictures += 1;
+        }
+        let mut c = w.first_child();
+        while let Some(n) = c {
+            walk(&n, widgets, pictures);
+            c = n.next_sibling();
+        }
+    }
+    walk(window.upcast_ref(), &mut widgets, &mut pictures);
+    tracing::info!(
+        "HUNT frames {what}: frames={} p50_ms={:?} p95_ms={:?} max_ms={:?} over50={} \
+         max_stall_ms={} mapped_widgets={widgets} mapped_pictures={pictures}",
+        times.len(),
+        at(0.5),
+        at(0.95),
+        gaps.last(),
+        gaps.iter().filter(|g| **g > 50).count(),
+        take_stall(),
+    );
+}
+
 fn take_stall() -> u128 {
     GAP.with(|g| {
         let (last, max) = g.get();
@@ -2168,6 +2227,7 @@ async fn do_steps(shell: &Rc<Shell>) {
                 "sources" => Dest::ReadSources,
                 "search" => Dest::ReadSearch,
                 "updates" => Dest::Updates,
+                "calendar" => Dest::Calendar,
                 "settings" => Dest::Settings,
                 _ => Dest::Read,
             }),
@@ -2189,6 +2249,7 @@ async fn do_steps(shell: &Rc<Shell>) {
             "text" => tracing::info!("HUNT text {}: {}", arg(1), screen_text(shell)),
             "shot" => shot(shell, arg(1)).await,
             "width" => width_need(shell, arg(1)),
+            "frames" => frames(shell, arg(1)),
             "key" => {
                 let n = num(2, 1);
                 for _ in 0..n {
@@ -2277,4 +2338,80 @@ async fn do_steps(shell: &Rc<Shell>) {
         i += 1;
     }
     tracing::info!("HUNT do done");
+}
+
+/// A made-up library of `HUNT_BIGLIB` series (default none), kept as AniList-shaped book works
+/// from the fixture template with new ids and invented titles, spread over the reading lists,
+/// with a place in every seventh.
+pub fn biglib(store: &kaeri_store::Store, art: &str, now: i64) {
+    let Some(n) = std::env::var("HUNT_BIGLIB").ok().and_then(|v| v.parse::<u32>().ok()) else {
+        return;
+    };
+    let templates = kaeri_testkit::fixtures::books();
+    let words = [
+        "Lantern", "Harbor", "Willow", "Copper", "Meadow", "Quiet", "Ember", "Salt", "Paper",
+        "Tide", "Glass", "Moss", "Cinder", "Hollow", "Silver", "Kite",
+    ];
+    let lists = ["reading", "planning", "completed", "paused", "dropped", "rereading"];
+    let t0 = std::time::Instant::now();
+    for i in 0..n {
+        let template = &templates[(i as usize) % templates.len()];
+        let mut v = template.clone();
+        let id = 9_100_000 + i as i64;
+        let name = format!(
+            "{} {} of the {} {}",
+            words[(i % 16) as usize],
+            words[((i / 16) % 16) as usize],
+            words[((i / 256) % 16) as usize],
+            i
+        );
+        v["id"] = serde_json::json!(id);
+        v["idMal"] = serde_json::Value::Null;
+        v["title"] = serde_json::json!({ "romaji": name, "english": name, "native": null });
+        v["synonyms"] = serde_json::json!([]);
+        let json = v.to_string().replace(kaeri_testkit::fixtures::ART_HOST, art);
+        let Ok(book) = serde_json::from_str::<kaeri_meta::anilist::books::Book>(&json) else {
+            tracing::warn!("HUNT biglib {i}: the template did not decode");
+            continue;
+        };
+        let work = format!("a:{id}");
+        let titles = serde_json::json!({
+            "romaji": book.title.romaji, "english": book.title.english,
+            "native": book.title.native, "synonyms": book.synonyms,
+        });
+        let row = kaeri_store::book_catalog::BookWork {
+            work: work.clone(),
+            anilist_id: Some(book.id.get()),
+            medium: book.medium().as_str().to_owned(),
+            format: Some(book.reading_format().as_str().to_owned()),
+            origin: book.origin().map(|o| o.code().to_owned()),
+            titles: titles.to_string(),
+            cover: book.cover_image.best().map(str::to_owned),
+            status: book
+                .status
+                .and_then(|s| serde_json::to_value(s).ok())
+                .and_then(|v| v.as_str().map(str::to_owned)),
+            chapters_total: book.chapters,
+            volumes_total: book.volumes,
+            meta: Some(serde_json::json!({ "book": book, "detail_at": null }).to_string()),
+            fetched_at: now,
+        };
+        if let Err(e) = store.put_book_work(&row) {
+            tracing::warn!("HUNT biglib put {i}: {e}");
+            continue;
+        }
+        let list = lists[(i as usize * 7 + i as usize / 3) % lists.len()];
+        if let Err(e) = store.set_read_status(&work, Some(list), now - i64::from(i)) {
+            tracing::warn!("HUNT biglib status {i}: {e}");
+        }
+        if i % 7 == 0 {
+            let mut ev = kaeri_store::reading::ReadEvent::new(&work, format!("{}", 1 + i % 40), now - i64::from(i) * 60);
+            ev.page = Some(3);
+            ev.of_pages = Some(20);
+            if let Err(e) = store.record_read(&ev, Vec::new()) {
+                tracing::warn!("HUNT biglib read {i}: {e}");
+            }
+        }
+    }
+    tracing::info!("HUNT biglib kept {n} series in {}ms", t0.elapsed().as_millis());
 }
