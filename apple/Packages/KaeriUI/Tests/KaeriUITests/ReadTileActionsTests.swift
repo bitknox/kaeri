@@ -22,6 +22,10 @@ struct ReadTileActionsTests {
     /// The names of the custom actions in the accessibility tree of `view`, hosted in a window.
     func actions(_ kind: ReadTileMenu.Kind) -> [String] {
         _ = NSApplication.shared
+        // SwiftUI builds its accessibility tree only for a client; this asks for it in this
+        // process, as VoiceOver's presence would.
+        NSApplication.shared.accessibilitySetValue(
+            true, forAttribute: NSAccessibility.Attribute(rawValue: "AXEnhancedUserInterface"))
         let view = Text(tile.title)
             .accessibilityElement(children: .combine)
             .readTileMenu(tile, kind: kind)
@@ -50,18 +54,19 @@ struct ReadTileActionsTests {
             for child in read("accessibilityChildren") as? [Any] ?? [] { walk(child, depth: depth + 1) }
         }
         walk(window.contentView as Any, depth: 0)
-        return names
+        // The tree lists them in its own order, not the menu's.
+        return names.sorted()
     }
 
     @Test func aLibraryCoverOffersDetailsAndEveryOtherList() {
         navigator.readingSegment = .reading
         #expect(actions(.lists) == [
-            "Details", "Add to Planning", "Add to Completed", "Add to Paused", "Add to Dropped", "Add to Rereading", // i18n-skip
+            "Add to Completed", "Add to Dropped", "Add to Paused", "Add to Planning", "Add to Rereading", "Details", // i18n-skip
         ])
     }
 
     @Test func aDiscoveryCoverOffersDetailsAndPlanning() {
-        #expect(actions(.plan) == ["Details", "Add to Planning"]) // i18n-skip
+        #expect(actions(.plan) == ["Add to Planning", "Details"]) // i18n-skip
     }
 
     @Test func aCoverOfThePersonsOwnOffersDetailsAlone() {
