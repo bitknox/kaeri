@@ -442,6 +442,186 @@ pub(super) fn reader_too_small(s: &mut Screen) {
     reader_one_page(s);
 }
 
+/// A page in bands, so the part of it in view shows in the golden: a colour a band, darker on
+/// one half, from its seed.
+fn banded(seed: u32, (width, height): (u32, u32)) -> DynamicImage {
+    let bands = 8;
+    DynamicImage::ImageRgb8(RgbImage::from_fn(width, height, |x, y| {
+        let band = seed + y * bands / height;
+        let shade = if x < width / 2 { 0 } else { 40 };
+        Rgb([
+            (40 + band * 37 % 160 + shade) as u8,
+            (60 + band * 53 % 140 + shade) as u8,
+            (50 + band * 23 % 150 + shade) as u8,
+        ])
+    }))
+}
+
+/// Decode every page file handed out as a banded page, `size` for each key.
+fn decode_banded(s: &mut Screen, size: impl Fn(&str) -> (u32, u32)) {
+    for job in s.app.take_page_jobs() {
+        let seed = job.key.bytes().map(u32::from).sum::<u32>() % 17;
+        let picture = banded(seed, size(&job.key));
+        s.app.page_decoded(&job.key, Some(picture));
+    }
+    s.draw();
+}
+
+/// Chapter 14 open at page 8, one page at a time, its banded pages in.
+fn reading_one(s: &mut Screen) -> WorkId {
+    let work = open(s, ImageEngine::drawn_as_blocks(), 0);
+    opened(s, &work, "14", 7);
+    leaves(s, "14", false);
+    for page in 0..PAGES {
+        page_ready(s, page);
+    }
+    decode_banded(s, |_| (60, 90));
+    work
+}
+
+/// `f`: page 8 at fit width, from its top, with the bar on the right.
+pub(super) fn reader_fit_width(s: &mut Screen) {
+    reading_one(s);
+    s.press(&["f"]);
+}
+
+/// `z` and `+` on page 9: 300%, moved to its left edge and a third of the way down, with the
+/// map at the right.
+pub(super) fn reader_zoom(s: &mut Screen) {
+    reading_one(s);
+    s.press(&["left", "z", "+", "h"]);
+    for _ in 0..10 {
+        s.press(&["j"]);
+    }
+}
+
+/// Two pages in a wide terminal, with `v` to keep one.
+pub(super) fn reader_two_pages_wide(s: &mut Screen) {
+    reading(s, ImageEngine::drawn_as_blocks());
+}
+
+/// Page 8 printed as a spread, whole across both slots, and Enter for a bare page.
+pub(super) fn reader_spread_bare(s: &mut Screen) {
+    let work = open(s, ImageEngine::drawn_as_blocks(), 0);
+    opened(s, &work, "14", 7);
+    let mut leaves: Vec<Leaf> = (0..PAGES)
+        .map(|page| {
+            let mut part = part(page, 0.0, 1.0);
+            if page == 7 {
+                part.kind = PageKind::Spread;
+                part.ratio = Some(4.0 / 3.0);
+            }
+            Leaf { index: page, parts: vec![part], end_page: false }
+        })
+        .collect();
+    leaves.push(Leaf { index: PAGES, parts: Vec::new(), end_page: true });
+    s.apply(Event::Reader(ReaderEvent::Leaves {
+        session: SESSION,
+        chapter: ChapterId("c14".into()),
+        leaves,
+    }));
+    for page in 0..PAGES {
+        page_ready(s, page);
+    }
+    decode_banded(s, |key| if key.ends_with("/7") { (120, 90) } else { (60, 90) });
+    s.press(&["enter"]);
+}
+
+/// The webtoon's title, and the chapters a strip runs through.
+const WEBTOON: &str = "Lanterns Upriver";
+
+fn web_row(n: &str, images: u32) -> ChapterRow {
+    let mut row = row(n, images, false);
+    row.title = match n {
+        "14" => Some("Paper Boats".into()),
+        "15" => Some("The Ferry at Dusk".into()),
+        _ => None,
+    };
+    row
+}
+
+/// The engine's word that webtoon chapter `n` opened as a strip, with `next` after it.
+fn web_opened(s: &mut Screen, work: &WorkId, n: &str, images: u32, next: Option<ChapterRow>) {
+    let view = ReaderView {
+        session: SESSION,
+        work: work.clone(),
+        title: WEBTOON.into(),
+        medium: Medium::Manga,
+        chapter: web_row(n, images),
+        mode: ReaderMode::Strip,
+        direction: ReadDirection::TopToBottom,
+        start: ReadPlace {
+            work: work.clone(),
+            chapter: ChapterId(format!("c{n}")),
+            page: None,
+            strip: None,
+            novel: None,
+        },
+        next,
+        previous: None,
+        settings: None,
+        demo_credit: None,
+        progress_host: None,
+    };
+    s.apply(Event::Reader(ReaderEvent::Opened(Box::new(view))));
+}
+
+/// A strip chapter's images, one to a leaf, then the end page; and each image's file.
+fn web_images(s: &mut Screen, n: &str, images: u32) {
+    let chapter = ChapterId(format!("c{n}"));
+    let mut leaves: Vec<Leaf> = (0..images)
+        .map(|image| {
+            let mut part = part(image, 0.0, 1.0);
+            part.ratio = Some(0.6);
+            Leaf { index: image, parts: vec![part], end_page: false }
+        })
+        .collect();
+    leaves.push(Leaf { index: images, parts: Vec::new(), end_page: true });
+    s.apply(Event::Reader(ReaderEvent::Leaves {
+        session: SESSION,
+        chapter: chapter.clone(),
+        leaves,
+    }));
+    for page in 0..images {
+        let mut file = file(page);
+        file.path = format!("/pages/{}/{page}.png", chapter.0);
+        s.apply(Event::Reader(ReaderEvent::PageReady {
+            session: SESSION,
+            chapter: chapter.clone(),
+            page,
+            half: None,
+            file,
+        }));
+    }
+    decode_banded(s, |_| (60, 100));
+}
+
+/// A webtoon run on from chapter 14 into 15: the foot of 14's last image above the divider, 15's
+/// first image under it, and the status rule saying 14 was counted.
+pub(super) fn reader_strip(s: &mut Screen) {
+    let work = open(s, ImageEngine::drawn_as_blocks(), 0);
+    let next = web_row("15", 64);
+    web_opened(s, &work, "14", 6, Some(next.clone()));
+    s.apply(Event::Reader(ReaderEvent::EndPage {
+        session: SESSION,
+        next: Some(next),
+        why_none: None,
+        next_source: Some("Northwind".into()),
+        skip_to: None,
+        extras: 0,
+    }));
+    web_images(s, "14", 6);
+    s.press(&["n"]);
+    s.apply(Event::Reader(ReaderEvent::ChapterRead {
+        work: work.clone(),
+        chapter: ChapterId("c14".into()),
+        trackers: vec!["AniList".into()],
+    }));
+    web_opened(s, &work, "15", 64, Some(web_row("16", 58)));
+    web_images(s, "15", 64);
+    s.press(&["k", "k", "k", "k"]);
+}
+
 /// A scene, by name, at a size of its own.
 pub(super) type BoardScene = (&'static str, fn(&mut Screen), (u16, u16));
 
@@ -454,4 +634,6 @@ pub(super) const BOARD: &[BoardScene] = &[
     ("reader_end_finished", reader_end_finished, (64, 15)),
     ("reader_small_page", reader_small_page, (60, 18)),
     ("reader_too_small", reader_too_small, (36, 10)),
+    ("reader_two_pages_wide", reader_two_pages_wide, (200, 50)),
+    ("reader_spread_bare", reader_spread_bare, (200, 50)),
 ];

@@ -1,0 +1,166 @@
+Kaeri   Harbor Light Recipes · Chapter 14            sources ● 3  ·  anilist ⇅ 2
+────────────────────────────────────────────────────────────────────────────────
+
+                                                                   ▀▀▀▀▀▀▀▀▀▀▀▀
+ ▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄  ▀▀▀▀▀▀▀▀▀▀▀▀
+                                                                   ▀▀▀▀▀▀▀▀▀▀▀▀
+                                                                   ▀▀▀▀▀▀▀▀▀▀▀▀
+                                                                   ▀▀▀▀▀▀▀▀▀▀▀▀
+                                                                   ▀▀▀▀▀▀▀▀▀▀▀▀
+                                                                   ▀▀▀▀▀▀▀▀▀▀▀▀
+                                                                   ▀▀▀▀▀▀▀▀▀▀▀▀
+ ▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀  ▀▀▀▀▀▀▀▀▀▀▀▀
+ ▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀
+                                                                   Page 9
+
+
+
+
+
+ ▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄
+
+
+────────────────────────────────────────────────────────────────────────────────
+Zoom 300% · Page 9 of 22         h j k l move   + - zoom   z leave zoom   ? keys
+=== styles ===
+colours text=#e4e0d6 text-dim=#a8aec9 rule=#46464d obi=#f2a64b state=#7fc7d9 alert=#f59b85 ground=#1a1b26
+r00 c00-04 fg=text mod=BOLD
+r00 c08-27 fg=text
+r00 c28-40 fg=text-dim
+r00 c53-63 fg=state
+r00 c64-65 fg=text-dim
+r00 c66-66 fg=rule
+r00 c67-68 fg=text-dim
+r00 c69-79 fg=state
+r01 c00-79 fg=rule
+r02 c01-39 fg=#6662bc bg=#6662bc
+r02 c40-40 fg=#6b67c1 bg=#6b67c1
+r02 c41-41 fg=#8985df bg=#8985df
+r02 c42-64 fg=#8e8ae4 bg=#8e8ae4
+r03 c01-39 fg=#6662bc bg=#6662bc
+r03 c40-40 fg=#6b67c1 bg=#6b67c1
+r03 c41-41 fg=#8985df bg=#8985df
+r03 c42-64 fg=#8e8ae4 bg=#8e8ae4
+r03 c67-71 fg=#2d4226 bg=#2d4226
+r03 c72-72 fg=#2f4428 bg=#2f4428
+r03 c73-73 fg=#3b5034 bg=#3b5034
+r03 c74-78 fg=#3d5236 bg=#3d5236
+r04 c01-39 fg=#7f8666 bg=#6763b9
+r04 c40-40 fg=#848b6b bg=#6c68be
+r04 c41-41 fg=#a2a989 bg=#8a86dc
+r04 c42-64 fg=#a7ae8e bg=#8f8be1
+r04 c67-71 fg=#362d2c bg=#3c1f2f
+r04 c72-72 fg=#382f2e bg=#3e2131
+r04 c73-73 fg=#443b3a bg=#4a2d3d
+r04 c74-78 fg=#463d3c bg=#4c2f3f
+r05 c01-39 fg=#8b973d bg=#8b973d
+r05 c40-40 fg=#909c42 bg=#909c42
+r05 c41-41 fg=#aeba60 bg=#aeba60
+r05 c42-64 fg=#b3bf65 bg=#b3bf65
+r05 c67-71 fg=#422833 bg=#4b3438
+r05 c72-72 fg=#442a35 bg=#4d363a
+r05 c73-73 fg=#503641 bg=#594246
+r05 c74-78 fg=#523843 bg=#5b4448
+r06 c01-39 fg=#8b973d bg=#8b973d
+r06 c40-40 fg=#909c42 bg=#909c42
+r06 c41-41 fg=#aeba60 bg=#aeba60
+r06 c42-64 fg=#b3bf65 bg=#b3bf65
+r06 c67-71 fg=#3f3a3b bg=#1c4941
+r06 c72-72 fg=#413c3c bg=#1e4b43
+r06 c73-73 fg=#4d4849 bg=#2a574f
+r06 c74-78 fg=#4f4a4b bg=#2c5951
+r07 c01-39 fg=#8b973d bg=#8b973d
+r07 c40-40 fg=#909c42 bg=#909c42
+r07 c41-41 fg=#aeba60 bg=#aeba60
+r07 c42-64 fg=#b3bf65 bg=#b3bf65
+r07 c67-71 fg=#1b4643 bg=#272b4a
+r07 c72-72 fg=#1d4745 bg=#282d4c
+r07 c73-73 fg=#2a5451 bg=#353958
+r07 c74-78 fg=#2b5653 bg=#373b5a
+r08 c01-39 fg=#8b973d bg=#8b973d
+r08 c40-40 fg=#909c42 bg=#909c42
+r08 c41-41 fg=#aeba60 bg=#aeba60
+r08 c42-64 fg=#b3bf65 bg=#b3bf65
+r08 c67-71 fg=#6662bc bg=#7c8270
+r08 c72-72 fg=#6b67c1 bg=#818775
+r08 c73-73 fg=#8985df bg=#9fa593
+r08 c74-76 fg=#8e8ae4 bg=#a4aa98
+r08 c77-78 fg=#38375b bg=#41443c
+r09 c01-39 fg=#8b973d bg=#8b973d
+r09 c40-40 fg=#909c42 bg=#909c42
+r09 c41-41 fg=#aeba60 bg=#aeba60
+r09 c42-64 fg=#b3bf65 bg=#b3bf65
+r09 c67-71 fg=#8b973d bg=#9a7446
+r09 c72-72 fg=#909c42 bg=#9f794b
+r09 c73-73 fg=#aeba60 bg=#bd9769
+r09 c74-76 fg=#b3bf65 bg=#c29c6e
+r09 c77-78 fg=#474c28 bg=#4d3e2c
+r10 c01-39 fg=#8b973d bg=#8b973d
+r10 c40-40 fg=#909c42 bg=#909c42
+r10 c41-41 fg=#aeba60 bg=#aeba60
+r10 c42-64 fg=#b3bf65 bg=#b3bf65
+r10 c67-71 fg=#b04054 bg=#924d5a
+r10 c72-72 fg=#b54559 bg=#97525e
+r10 c73-73 fg=#d36377 bg=#b6707d
+r10 c74-76 fg=#d8687c bg=#ba7582
+r10 c77-78 fg=#562931 bg=#4a2e34
+r11 c01-39 fg=#8b973d bg=#908c40
+r11 c40-40 fg=#909c42 bg=#959145
+r11 c41-41 fg=#aeba60 bg=#b3af63
+r11 c42-64 fg=#b3bf65 bg=#b8b468
+r11 c67-71 fg=#3a736a bg=#152e2a
+r11 c72-72 fg=#3f786f bg=#17302c
+r11 c73-73 fg=#5d968d bg=#233c38
+r11 c74-76 fg=#629b92 bg=#253e3a
+r11 c77-78 fg=#273e3a bg=#253e3a
+r12 c01-39 fg=#ab4b51 bg=#b04054
+r12 c40-40 fg=#b05056 bg=#b54559
+r12 c41-41 fg=#ce6e74 bg=#d36377
+r12 c42-64 fg=#d37379 bg=#d8687c
+r13 c01-39 fg=#b04054 bg=#b04054
+r13 c40-40 fg=#b54559 bg=#b54559
+r13 c41-41 fg=#d36377 bg=#d36377
+r13 c42-64 fg=#d8687c bg=#d8687c
+r13 c67-72 fg=text-dim
+r14 c01-39 fg=#b04054 bg=#b04054
+r14 c40-40 fg=#b54559 bg=#b54559
+r14 c41-41 fg=#d36377 bg=#d36377
+r14 c42-64 fg=#d8687c bg=#d8687c
+r15 c01-39 fg=#b04054 bg=#b04054
+r15 c40-40 fg=#b54559 bg=#b54559
+r15 c41-41 fg=#d36377 bg=#d36377
+r15 c42-64 fg=#d8687c bg=#d8687c
+r16 c01-39 fg=#b04054 bg=#b04054
+r16 c40-40 fg=#b54559 bg=#b54559
+r16 c41-41 fg=#d36377 bg=#d36377
+r16 c42-64 fg=#d8687c bg=#d8687c
+r17 c01-39 fg=#b04054 bg=#b04054
+r17 c40-40 fg=#b54559 bg=#b54559
+r17 c41-41 fg=#d36377 bg=#d36377
+r17 c42-64 fg=#d8687c bg=#d8687c
+r18 c01-39 fg=#b04054 bg=#b04054
+r18 c40-40 fg=#b54559 bg=#b54559
+r18 c41-41 fg=#d36377 bg=#d36377
+r18 c42-64 fg=#d8687c bg=#d8687c
+r19 c01-39 fg=#37746b bg=#89515b
+r19 c40-40 fg=#3c7970 bg=#8e5660
+r19 c41-41 fg=#5a978e bg=#ac747e
+r19 c42-64 fg=#5f9c93 bg=#b17983
+r20 c01-39 fg=#35756b bg=#35756b
+r20 c40-40 fg=#3a7a70 bg=#3a7a70
+r20 c41-41 fg=#58988e bg=#58988e
+r20 c42-64 fg=#5d9d93 bg=#5d9d93
+r21 c01-39 fg=#35756b bg=#35756b
+r21 c40-40 fg=#3a7a70 bg=#3a7a70
+r21 c41-41 fg=#58988e bg=#58988e
+r21 c42-64 fg=#5d9d93 bg=#5d9d93
+r22 c00-79 fg=rule
+r23 c00-23 fg=text-dim
+r23 c33-39 fg=text
+r23 c40-47 fg=text-dim
+r23 c48-50 fg=text
+r23 c51-58 fg=text-dim
+r23 c59-59 fg=text
+r23 c60-73 fg=text-dim
+r23 c74-74 fg=text
+r23 c75-79 fg=text-dim

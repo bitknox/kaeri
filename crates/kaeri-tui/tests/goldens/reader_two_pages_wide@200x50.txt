@@ -1,0 +1,168 @@
+Kaeri   Harbor Light Recipes · Chapter 14 · Tide Tables                                                                                                                      sources ● 3  ·  anilist ⇅ 2
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                                       ▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+░░░░░░░░░░░░░░░█████████  Pages 8 and 9 of 22 · Right to left                                                                            ← next   → back   v one page   e chapters   , settings   ? keys
+=== styles ===
+colours text=#e4e0d6 text-dim=#a8aec9 rule=#46464d obi=#f2a64b state=#7fc7d9 alert=#f59b85 ground=#1a1b26
+r00 c00-04 fg=text mod=BOLD
+r00 c08-27 fg=text
+r00 c28-54 fg=text-dim
+r00 c173-183 fg=state
+r00 c184-185 fg=text-dim
+r00 c186-186 fg=rule
+r00 c187-188 fg=text-dim
+r00 c189-199 fg=state
+r01 c00-199 fg=rule
+r02 c39-99 fg=#8d6d4f bg=#8d6d4f
+r02 c100-160 fg=#68ceec bg=#68ceec
+r03 c39-99 fg=#8d6d4f bg=#8d6d4f
+r03 c100-160 fg=#68ceec bg=#68ceec
+r04 c39-99 fg=#8d6d4f bg=#8d6d4f
+r04 c100-160 fg=#68ceec bg=#68ceec
+r05 c39-99 fg=#8d6d4f bg=#8d6d4f
+r05 c100-160 fg=#68ceec bg=#68ceec
+r06 c39-99 fg=#8d6d4f bg=#8d6d4f
+r06 c100-160 fg=#68ceec bg=#68ceec
+r07 c39-99 fg=#8d6d4f bg=#8d6d4f
+r07 c100-160 fg=#68ceec bg=#68ceec
+r08 c39-99 fg=#8d6d4f bg=#8d6d4f
+r08 c100-160 fg=#68ceec bg=#68ceec
+r09 c39-99 fg=#8d6d4f bg=#8d6d4f
+r09 c100-160 fg=#68ceec bg=#68ceec
+r10 c39-99 fg=#8d6d4f bg=#8d6d4f
+r10 c100-160 fg=#68ceec bg=#68ceec
+r11 c39-99 fg=#8d6d4f bg=#8d6d4f
+r11 c100-160 fg=#68ceec bg=#68ceec
+r12 c39-99 fg=#8d6d4f bg=#8d6d4f
+r12 c100-160 fg=#68ceec bg=#68ceec
+r13 c39-99 fg=#8d6d4f bg=#8d6d4f
+r13 c100-160 fg=#68ceec bg=#68ceec
+r14 c39-99 fg=#8d6d4f bg=#8d6d4f
+r14 c100-160 fg=#68ceec bg=#68ceec
+r15 c39-99 fg=#8d6d4f bg=#8d6d4f
+r15 c100-160 fg=#68ceec bg=#68ceec
+r16 c39-99 fg=#8d6d4f bg=#8d6d4f
+r16 c100-160 fg=#68ceec bg=#68ceec
+r17 c39-99 fg=#8d6d4f bg=#8d6d4f
+r17 c100-160 fg=#68ceec bg=#68ceec
+r18 c39-99 fg=#8d6d4f bg=#8d6d4f
+r18 c100-160 fg=#68ceec bg=#68ceec
+r19 c39-99 fg=#8d6d4f bg=#8d6d4f
+r19 c100-160 fg=#68ceec bg=#68ceec
+r20 c39-99 fg=#8d6d4f bg=#8d6d4f
+r20 c100-160 fg=#68ceec bg=#68ceec
+r21 c39-99 fg=#8d6d4f bg=#8d6d4f
+r21 c100-160 fg=#68ceec bg=#68ceec
+r22 c39-99 fg=#8d6d4f bg=#8d6d4f
+r22 c100-160 fg=#68ceec bg=#68ceec
+r23 c39-99 fg=#8d6d4f bg=#8d6d4f
+r23 c100-160 fg=#68ceec bg=#68ceec
+r24 c39-99 fg=#8d6d4f bg=#8d6d4f
+r24 c100-160 fg=#68ceec bg=#68ceec
+r25 c39-99 fg=#8d6d4f bg=#8d6d4f
+r25 c100-160 fg=#68ceec bg=#68ceec
+r26 c39-99 fg=#8d6d4f bg=#8d6d4f
+r26 c100-160 fg=#68ceec bg=#68ceec
+r27 c39-99 fg=#8d6d4f bg=#8d6d4f
+r27 c100-160 fg=#68ceec bg=#68ceec
+r28 c39-99 fg=#8d6d4f bg=#8d6d4f
+r28 c100-160 fg=#68ceec bg=#68ceec
+r29 c39-99 fg=#8d6d4f bg=#8d6d4f
+r29 c100-160 fg=#68ceec bg=#68ceec
+r30 c39-99 fg=#8d6d4f bg=#8d6d4f
+r30 c100-160 fg=#68ceec bg=#68ceec
+r31 c39-99 fg=#8d6d4f bg=#8d6d4f
+r31 c100-160 fg=#68ceec bg=#68ceec
+r32 c39-99 fg=#8d6d4f bg=#8d6d4f
+r32 c100-160 fg=#68ceec bg=#68ceec
+r33 c39-99 fg=#8d6d4f bg=#8d6d4f
+r33 c100-160 fg=#68ceec bg=#68ceec
+r34 c39-99 fg=#8d6d4f bg=#8d6d4f
+r34 c100-160 fg=#68ceec bg=#68ceec
+r35 c39-99 fg=#8d6d4f bg=#8d6d4f
+r35 c100-160 fg=#68ceec bg=#68ceec
+r36 c39-99 fg=#8d6d4f bg=#8d6d4f
+r36 c100-160 fg=#68ceec bg=#68ceec
+r37 c39-99 fg=#8d6d4f bg=#8d6d4f
+r37 c100-160 fg=#68ceec bg=#68ceec
+r38 c39-99 fg=#8d6d4f bg=#8d6d4f
+r38 c100-160 fg=#68ceec bg=#68ceec
+r39 c39-99 fg=#8d6d4f bg=#8d6d4f
+r39 c100-160 fg=#68ceec bg=#68ceec
+r40 c39-99 fg=#8d6d4f bg=#8d6d4f
+r40 c100-160 fg=#68ceec bg=#68ceec
+r41 c39-99 fg=#8d6d4f bg=#8d6d4f
+r41 c100-160 fg=#68ceec bg=#68ceec
+r42 c39-99 fg=#8d6d4f bg=#8d6d4f
+r42 c100-160 fg=#68ceec bg=#68ceec
+r43 c39-99 fg=#8d6d4f bg=#8d6d4f
+r43 c100-160 fg=#68ceec bg=#68ceec
+r44 c39-99 fg=#8d6d4f bg=#8d6d4f
+r44 c100-160 fg=#68ceec bg=#68ceec
+r45 c39-99 fg=#8d6d4f bg=#8d6d4f
+r45 c100-160 fg=#68ceec bg=#68ceec
+r46 c39-99 fg=#8d6d4f bg=#8d6d4f
+r46 c100-160 fg=#68ceec bg=#68ceec
+r47 c39-99 fg=#8d6d4f bg=#513e2d
+r47 c100-160 fg=#68ceec bg=#3b7687
+r48 c00-199 fg=rule
+r49 c00-23 fg=text
+r49 c24-60 fg=text-dim
+r49 c137-137 fg=text
+r49 c138-145 fg=text-dim
+r49 c146-146 fg=text
+r49 c147-154 fg=text-dim
+r49 c155-155 fg=text
+r49 c156-167 fg=text-dim
+r49 c168-168 fg=text
+r49 c169-180 fg=text-dim
+r49 c181-181 fg=text
+r49 c182-193 fg=text-dim
+r49 c194-194 fg=text
+r49 c195-199 fg=text-dim
