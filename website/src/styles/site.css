@@ -1,7 +1,8 @@
 /* Kaeri's site: tokens, type, the top bar, the footer and the parts every page shares. The two themes
-   are `:root`, light, which every visitor gets until they pick dark (and before a theme is known, and
-   without a script), and `[data-theme='dark']`. The docs' own variables are mapped onto these in
-   docs.css, so Starlight and the custom pages read one setting. */
+   are `:root`, light, for a system in light mode (and before a theme is known, and without a
+   script), and `[data-theme='dark']`, for a system in dark mode or a visitor who picked dark. The
+   docs' own variables are mapped onto these in docs.css, so Starlight and the custom pages read one
+   setting. */
 
 /* Only the headings use Zen, at 500 and in Latin and Cyrillic; the Japanese subsets would add
    240 font faces to every page's stylesheet. */
