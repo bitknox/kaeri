@@ -2325,6 +2325,20 @@ async fn run_plan(shell: &Rc<Shell>, plan: &str) {
             "text" => tracing::info!("HUNT text {}: {}", arg(1), screen_text(shell)),
             "shot" => shot(shell, arg(1)).await,
             "width" => width_need(shell, arg(1)),
+            "js" => {
+                // QA r9: ask the page what it holds, or turn it, and say any error.
+                let post = "window.webkit.messageHandlers.kaeri.postMessage(JSON.stringify(m))";
+                let body = match arg(1) {
+                    "next" => "var r = window.kaeriReader.next('key'); m = {type: 'jsnext', why: r === null ? 'null' : 'page ' + (r && r.page)};",
+                    "goto" => "var r = window.kaeriReader.goTo(2, 'jump'); m = {type: 'jsgoto', why: 'page ' + (r && r.page)};",
+                    _ => "m = window.kaeriReader ? window.kaeriReader.state() : {why: 'no kaeriReader'}; m.type = 'jsstate'; m.why = (m.why || '') + ' href=' + location.protocol + ' sw=' + document.scrollingElement.scrollWidth + ' cw=' + document.documentElement.clientWidth + ' sx=' + window.scrollX + ' ov=' + getComputedStyle(document.documentElement).overflow + '/' + getComputedStyle(document.body).overflow;",
+                };
+                let script = format!(
+                    "(function () {{ var m; try {{ {body} }} catch (e) {{ m = {{type: 'jserr', why: String(e).slice(0, 150)}}; }} try {{ {post}; }} catch (e) {{}} }})()"
+                );
+                shell.reader.hunt_js(&script);
+                wait_ms(500).await;
+            }
             "key" => {
                 let n = num(2, 1);
                 for _ in 0..n {

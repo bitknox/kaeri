@@ -442,6 +442,12 @@ impl NovelView {
         }
     }
 
+    /// QA r9 only: a probe script from the hunt drive.
+    #[cfg(feature = "fixtures")]
+    pub fn hunt_call(&self, script: &str) {
+        self.call(script);
+    }
+
     pub fn turn(&self, forward: bool) {
         self.call(&format!(
             "window.kaeriReader && window.kaeriReader.{}('key')", // i18n-skip
@@ -454,13 +460,14 @@ impl NovelView {
         // QA r9 only: what the page says, without any of the book's text.
         if std::env::var("HUNT").is_ok() {
             tracing::info!(
-                "HUNT novelmsg type={} page={} pages={} pos={} how={} key={}",
+                "HUNT novelmsg type={} page={} pages={} pos={} how={} key={} why={:.160}",
                 json["type"],
                 json["page"],
                 json["pages"],
                 json["pos"],
                 json["how"],
-                json["key"]
+                json["key"],
+                json["why"].to_string()
             );
         }
         match json["type"].as_str() {

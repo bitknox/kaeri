@@ -1293,6 +1293,16 @@ impl Reader {
         self.take_key(key, gdk::ModifierType::empty());
     }
 
+    /// Hunt only (QA r9): run a probe script in the open novel's page.
+    #[cfg(feature = "fixtures")]
+    pub fn hunt_js(&self, script: &str) {
+        if let Some(view) = self.novel.borrow().as_ref() {
+            view.hunt_call(script);
+        } else {
+            tracing::info!("HUNT js: no novel view");
+        }
+    }
+
     /// Hunt only: pick a mode in the open reader's settings, as the sheet does.
     #[cfg(feature = "fixtures")]
     pub fn hunt_mode(&self, which: &str) {
