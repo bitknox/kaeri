@@ -118,7 +118,11 @@ class ReadSeriesShots : ReadingShotHarness() {
     @Config(qualifiers = ReadingShotHarness.PHONE)
     fun phone_read_series_status() = series("phone-read-series-status", open = "status")
 
-    /** On a phone network with chapters kept to Wi-Fi, the send holds until Wi-Fi. */
+    /**
+     * On a phone network with chapters kept to Wi-Fi, a send of chapters to fetch holds until
+     * Wi-Fi. The manga's folder chapters are on the device and would go at once, so the sheet
+     * starts on chapters that are not.
+     */
     @Test
     @Config(qualifiers = ReadingShotHarness.PHONE)
     fun phone_read_series_send_waits() = shoot(
@@ -129,7 +133,7 @@ class ReadSeriesShots : ReadingShotHarness() {
         screen = true,
         then = {
             it.networkPath(cellular = true, constrained = false)
-            SeriesShots.open = "send"
+            SeriesShots.open = "send-fetch"
         },
         act = { compose.onNodeWithText(Strings.sendPrepare(compose.activity)).performClick() },
         acted = { store -> store.export.jobs.value.values.any { it is ExportJob.Waiting } },
@@ -151,7 +155,7 @@ class ReadSeriesShots : ReadingShotHarness() {
             screen = true,
             then = {
                 it.networkPath(cellular = true, constrained = false)
-                SeriesShots.open = "send"
+                SeriesShots.open = "send-fetch"
             },
             act = {
                 compose.onNodeWithText(Strings.sendPrepare(compose.activity)).performClick()

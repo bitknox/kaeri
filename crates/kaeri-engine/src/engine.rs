@@ -4678,6 +4678,36 @@ mod tests {
             engine.shutdown().await;
         }
 
+        /// A send identical to one waiting for Wi-Fi joins it and is told it waits as well,
+        /// so the screen that asked shows the wait; on Wi-Fi both turn ready.
+        #[tokio::test]
+        async fn a_send_that_joins_one_waiting_for_wifi_is_told_it_waits() {
+            let dir = tempfile::tempdir().unwrap();
+            let (engine, mut events, _) = send_engine(dir.path(), None).await;
+            events.launch().await;
+            engine.send(network(true, false));
+            engine.send(send_of(&["1", "2"]));
+            let (first, _) = waiting(&mut events).await;
+
+            engine.send(send_of(&["1", "2"]));
+            let (second, seen) = waiting(&mut events).await;
+            assert_ne!(second, first, "the joining send is told it waits: {seen:?}");
+
+            engine.send(network(false, false));
+            let is_ready =
+                |e: &Event| matches!(e, Event::Reading(ReadingEvent::ExportReady { .. }));
+            let mut ready = std::collections::HashSet::new();
+            while ready.len() < 2 {
+                for e in seen_until(&mut events, is_ready).await {
+                    if let Event::Reading(ReadingEvent::ExportReady { job, .. }) = e {
+                        ready.insert(job);
+                    }
+                }
+            }
+            assert_eq!(ready, [first, second].into(), "both turn ready on Wi-Fi");
+            engine.shutdown().await;
+        }
+
         /// A made-up one-chapter novel.
         fn novel_file(path: &std::path::Path) {
             use kaeri_books::write::{BookMeta, EpubFlavor, EpubWriter};

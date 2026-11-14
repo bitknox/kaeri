@@ -489,3 +489,66 @@ fn the_e_ink_layout_switch_takes_at_once_off_and_on_again() {
     assert_eq!(eink_after(&engine, answer(false)).eink, EinkMatch::No);
     engine.shutdown();
 }
+
+/// The series scene on a phone network, as the Android shots send from it: chapters in the
+/// manga's folder are on the device and go at once, while chapters to fetch wait for Wi-Fi.
+#[test]
+fn the_series_scene_sends_its_folder_chapters_at_once_and_waits_to_fetch_the_rest() {
+    use kaeri_core::books::WorkId;
+    use kaeri_model::reading::{DownloadPick, ExportFormat};
+    let (_root, engine) = start(FfiScene::ReadingSeries);
+    let work = WorkId::new("a:900301");
+    engine.send(Command::Reading(ReadingCommand::LoadChapters {
+        work: work.clone(),
+        edition: None,
+    }));
+    let read = read_until(&engine, |event| {
+        matches!(event, Event::Reading(ReadingEvent::Chapters { .. }))
+    });
+    let volumes = read
+        .into_iter()
+        .find_map(|event| match event {
+            Event::Reading(ReadingEvent::Chapters { volumes, .. }) => Some(volumes),
+            _ => None,
+        })
+        .expect("the chapters");
+    let rows: Vec<_> = volumes.iter().flat_map(|v| v.chapters.iter()).collect();
+    let (here, to_fetch): (Vec<_>, Vec<_>) = rows.iter().partition(|r| r.on_device);
+    let ids = |rows: &[&&kaeri_model::reading::ChapterRow]| -> Vec<_> {
+        rows.iter().take(3).map(|r| r.id.clone()).collect()
+    };
+    let (here, to_fetch) = (ids(&here), ids(&to_fetch));
+    assert_eq!(here.len(), 3, "the folder holds chapters 12 to 15: {rows:?}");
+    assert_eq!(to_fetch.len(), 3, "chapters 1 to 11 are to fetch: {rows:?}");
+    engine.send(Command::NetworkPath { cellular: true, constrained: false, offline: false });
+    let send = |ids: Vec<_>| {
+        engine.send(Command::Reading(ReadingCommand::Prepare {
+            work: work.clone(),
+            pick: DownloadPick::Chapters { ids },
+            target: "kobo".into(),
+            format: ExportFormat::Cbz,
+        }));
+        read_until(&engine, |event| {
+            matches!(
+                event,
+                Event::Reading(
+                    ReadingEvent::ExportWaiting { .. }
+                        | ReadingEvent::ExportReady { .. }
+                        | ReadingEvent::ExportFailed { .. }
+                        | ReadingEvent::Failed { .. }
+                )
+            )
+        })
+    };
+    let waits = |read: &[Event]| {
+        read.iter().any(|e| matches!(e, Event::Reading(ReadingEvent::ExportWaiting { .. })))
+    };
+    let ready = |read: &[Event]| {
+        read.iter().any(|e| matches!(e, Event::Reading(ReadingEvent::ExportReady { .. })))
+    };
+    let read = send(here.clone());
+    assert!(ready(&read) && !waits(&read), "{here:?} go at once: {read:?}");
+    let read = send(to_fetch.clone());
+    assert!(waits(&read), "{to_fetch:?} wait for Wi-Fi: {read:?}");
+    engine.shutdown();
+}
