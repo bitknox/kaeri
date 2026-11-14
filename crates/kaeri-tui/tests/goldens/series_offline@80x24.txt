@@ -1,0 +1,105 @@
+Kaeri                                                  sources ✕  ·  anilist ⇅ 2
+────────────────────────────────────────────────────────────────────────────────
+▌▸ │    Offline. Downloaded chapters still open.
+ / │
+ ▥ │    Harbor Light Recipes
+ ↓ │    Manga · Japan · Releasing · 17 chapters · Usually Fridays
+ ◇ │
+ ◎ │    Chapters  ───────────────────────────────────────────────────────────
+ ≡ │    Chapter 17 · Salt and Paper                           New · yesterday
+   │    Chapter 16 · The Lantern Fair                        New · 6 days ago
+   │    Chapter 15 · The Night Market                              Downloaded
+   │  ▌ Chapter 14 · Tide Tables                    Page 8 of 22 · Downloaded
+   │    Chapter 13 · A Kettle for Two          Read · 4 days ago · Downloaded
+   │    Chapter 12 · Borrowed Knives                        Read · 1 week ago
+   │    Chapter 11 · Low Tide                              Read · 2 weeks ago
+   │    Chapter 10 · Rain on the Pier                      Read · 3 weeks ago
+   │    Chapter 9 · What the Gulls Took                    Read · 4 weeks ago
+   │    Chapter 8 · Shore Leave                            Read · 5 weeks ago
+   │    Chapter 7 · The Keeper's Ledger                    Read · 6 weeks ago
+   │    Chapter 6 · Brine and Butter                       Read · 7 weeks ago
+   │    Chapter 5 · A Map of Small Fires                   Read · 8 weeks ago
+   │    Chapter 4 · Galley Hours                           Read · 9 weeks ago
+────────────────────────────────────────────────────────────────────────────────
+Reading · offline                  ↵ read   u read or unread   a status   ? keys
+=== styles ===
+colours text=#e4e0d6 text-dim=#a8aec9 rule=#46464d obi=#f2a64b state=#7fc7d9 alert=#f59b85 ground=#1a1b26
+r00 c00-04 fg=text mod=BOLD
+r00 c55-63 fg=alert
+r00 c64-65 fg=text-dim
+r00 c66-66 fg=rule
+r00 c67-68 fg=text-dim
+r00 c69-79 fg=state
+r01 c00-79 fg=rule
+r02 c00-00 fg=text-dim
+r02 c01-01 fg=text mod=BOLD
+r02 c03-03 fg=rule
+r02 c08-47 fg=text-dim
+r03 c01-01 fg=text-dim
+r03 c03-03 fg=rule
+r04 c01-01 fg=text-dim
+r04 c03-03 fg=rule
+r04 c08-27 fg=text mod=BOLD
+r05 c01-01 fg=text-dim
+r05 c03-03 fg=rule
+r05 c08-64 fg=text-dim
+r06 c01-01 fg=text-dim
+r06 c03-03 fg=rule
+r07 c01-01 fg=text-dim
+r07 c03-03 fg=rule
+r07 c08-15 fg=text-dim
+r07 c18-76 fg=rule
+r08 c01-01 fg=text-dim
+r08 c03-03 fg=rule
+r08 c08-34 fg=text-dim
+r08 c62-76 fg=text-dim
+r09 c03-03 fg=rule
+r09 c08-36 fg=text-dim
+r09 c61-76 fg=text-dim
+r10 c03-03 fg=rule
+r10 c08-36 fg=text
+r10 c67-76 fg=text-dim
+r11 c03-03 fg=rule
+r11 c06-06 fg=obi
+r11 c08-31 fg=text mod=BOLD
+r11 c52-76 fg=state
+r12 c03-03 fg=rule
+r12 c08-36 fg=text
+r12 c47-76 fg=text-dim
+r13 c03-03 fg=rule
+r13 c08-35 fg=text-dim
+r13 c60-76 fg=text-dim
+r14 c03-03 fg=rule
+r14 c08-28 fg=text-dim
+r14 c59-76 fg=text-dim
+r15 c03-03 fg=rule
+r15 c08-36 fg=text-dim
+r15 c59-76 fg=text-dim
+r16 c03-03 fg=rule
+r16 c08-38 fg=text-dim
+r16 c59-76 fg=text-dim
+r17 c03-03 fg=rule
+r17 c08-30 fg=text-dim
+r17 c59-76 fg=text-dim
+r18 c03-03 fg=rule
+r18 c08-38 fg=text-dim
+r18 c59-76 fg=text-dim
+r19 c03-03 fg=rule
+r19 c08-35 fg=text-dim
+r19 c59-76 fg=text-dim
+r20 c03-03 fg=rule
+r20 c08-39 fg=text-dim
+r20 c59-76 fg=text-dim
+r21 c03-03 fg=rule
+r21 c08-31 fg=text-dim
+r21 c59-76 fg=text-dim
+r22 c00-79 fg=rule
+r23 c00-16 fg=text-dim
+r23 c35-35 fg=text
+r23 c36-43 fg=text-dim
+r23 c44-44 fg=text
+r23 c45-62 fg=text-dim
+r23 c63-63 fg=text
+r23 c64-73 fg=text-dim
+r23 c74-74 fg=text
+r23 c75-79 fg=text-dim

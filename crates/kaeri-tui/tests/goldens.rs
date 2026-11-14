@@ -445,6 +445,10 @@ fn modifiers(set: Modifier) -> String {
 }
 
 /// Every scenario, by name: a test each, and the list the stale-file check reads.
+#[path = "golden_scenes/series.rs"]
+mod series_scenes;
+use series_scenes::{series_chapters_loading, series_failed, series_offline, series_page};
+
 macro_rules! scenarios {
     ($($name:ident),+ $(,)?) => {
         const SCENARIOS: &[&str] = &[$(stringify!($name)),+];
@@ -474,6 +478,10 @@ scenarios! {
     read_search_nothing,
     read_search_filters,
     read_keys,
+    series_page,
+    series_offline,
+    series_chapters_loading,
+    series_failed,
     both_home_shows,
     both_home_reading,
     medium_first_run,
