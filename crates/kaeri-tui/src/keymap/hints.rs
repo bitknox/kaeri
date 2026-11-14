@@ -286,6 +286,21 @@ pub(crate) fn status_hints_paged(
         V::Stores | V::Store(_) | V::StoreMembers(_) => {
             vec![(Action::Open, Action::Open.hint()), (Action::Back, Action::Back.hint())]
         }
+        // A series' page: its chapter's keys. Offline nothing downloads, so `d` is left out.
+        V::Series(_) => {
+            let mut wanted = Vec::new();
+            if app.series_selected().is_some() {
+                wanted.push((Action::Open, said(t::series_read_chapter_menu())));
+                wanted.push((Action::ToggleWatched, said(t::tui_read_read_unread())));
+                if !app.series_offline() {
+                    wanted.push((Action::Download, said(t::series_download())));
+                }
+            }
+            if app.series_here().is_some_and(|page| page.view.is_some()) {
+                wanted.push((Action::SetListStatus, said(t::tui_read_hint_status())));
+            }
+            wanted
+        }
         // Focus is on the rail: the arrows walk it, which is exactly the thing nobody could
         // discover when they did not.
         V::Section(_) if !in_stage => {
@@ -481,8 +496,16 @@ pub(crate) fn reading_hints(
     let items = app.read_items();
     let search = app.nav.section() == Section::Search;
     let mut wanted: Vec<(Action, &'static str)> = Vec::new();
-    if !items.is_empty() {
+    let continues =
+        matches!(app.read_selected(), Some(crate::app::ReadLine::Work { continues: true, .. }));
+    if continues {
+        // A title in Continue reads on where it stopped; its page is a key away.
+        wanted.push((Action::Open, said(t::tui_read_hint_continue())));
+        wanted.push((Action::ShowEpisodes, said(t::series_chapters())));
+    } else if !items.is_empty() {
         wanted.push((Action::Open, hint_open()));
+    }
+    if !items.is_empty() {
         let parts = items.windows(2).any(|pair| pair[0].part() != pair[1].part());
         if parts {
             wanted.push((

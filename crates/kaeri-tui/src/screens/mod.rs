@@ -23,6 +23,7 @@ mod overlays;
 mod playback;
 mod providers;
 mod reading;
+mod series;
 mod settings;
 mod stores;
 mod title;
@@ -126,11 +127,15 @@ pub fn render(frame: &mut TFrame<'_>, app: &App) -> FrameReport {
         Divider::new(&app.palette).render(geometry.divider, buf);
     }
 
-    let episodes_offset = render_stage(buf, app, geometry.stage);
+    let stage = render_stage(buf, app, geometry.stage);
 
     Hairline::new(&app.palette).render(geometry.status_rule, buf);
     let caption_end = render_activity(buf, app, &activity, geometry.status_rule, now);
-    let report = FrameReport { episodes_offset, ..render_overlay(buf, app, area, &geometry) };
+    let report = FrameReport {
+        episodes_offset: stage.episodes_offset,
+        series_offset: stage.series_offset,
+        ..render_overlay(buf, app, area, &geometry)
+    };
     // After the overlay, so it is not dimmed with the rest: while one is open the status line
     // carries that overlay's own keys, which are no use faded into the scrim — and the overlay
     // has to be laid out before its hints can say whether it pages, which is this frame's word
@@ -145,21 +150,31 @@ pub fn render(frame: &mut TFrame<'_>, app: &App) -> FrameReport {
     report
 }
 
-/// The stage's view. Returns the first row the episode table drew, when it is the view.
-fn render_stage(buf: &mut Buffer, app: &App, area: Rect) -> Option<usize> {
+/// The stage's view. Says the first row the episode table or a series' chapters drew, when one
+/// is the view.
+fn render_stage(buf: &mut Buffer, app: &App, area: Rect) -> FrameReport {
+    let none = FrameReport::default();
     if area.width == 0 || area.height == 0 {
-        return None;
+        return none;
     }
     let inner = layout::inset(area, 2, 0);
 
     match app.nav.current() {
         StageView::Title(_) => render_title(buf, app, inner),
-        StageView::Episodes(_) => return render_episodes(buf, app, inner),
+        StageView::Episodes(_) => {
+            return FrameReport { episodes_offset: render_episodes(buf, app, inner), ..none };
+        }
         StageView::NowPlaying => render_now_playing(buf, app, inner),
         StageView::Stores => render_stores(buf, app, inner),
         StageView::Store(id) => render_store(buf, app, inner, id),
         StageView::StoreMembers(id) => render_store_members(buf, app, inner, id),
         StageView::Devices => render_devices(buf, app, inner),
+        StageView::Series(_) => {
+            return FrameReport {
+                series_offset: series::render_series(buf, app, inner),
+                ..none
+            };
+        }
         StageView::Section(section) => match section {
             Section::Home | Section::Search | Section::Read if app.reading_section() => {
                 reading::render_reading(buf, app, inner)
@@ -177,7 +192,7 @@ fn render_stage(buf: &mut Buffer, app: &App, area: Rect) -> Option<usize> {
             Section::Read => {}
         },
     }
-    None
+    none
 }
 
 /// Rows a table-shaped screen needs before it can draw anything.

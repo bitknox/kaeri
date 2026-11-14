@@ -28,7 +28,10 @@ pub(super) fn render_header(buf: &mut Buffer, app: &App, geometry: &Frame) {
     // alert colour. Off is a choice and is said quietly; only a source that is failing alerts.
     // While Kaeri is for reading alone, the shows' sources say nothing about it: one chip says
     // how many of the person's book sources are on.
-    if app.reading_only() {
+    if app.reading_only() && app.series_offline() {
+        // Offline on a series page: no source can be asked.
+        chips.push((t::tui_read_header_offline(&glyph::STATE_DOWN.to_string()), Role::Alert));
+    } else if app.reading_only() {
         let on = app.read_sources_on();
         let (mark, role) = if on > 0 {
             (glyph::STATE_READY, Role::State)
@@ -164,7 +167,7 @@ pub(super) fn render_activity(
 }
 
 /// A short wait as the language writes it: `7s`, then `1m 05s`.
-fn clock(span: std::time::Duration) -> String {
+pub(super) fn clock(span: std::time::Duration) -> String {
     let secs = span.as_secs().max(1);
     if secs < 60 {
         t::duration_seconds(secs as i64)
@@ -210,6 +213,17 @@ pub(super) fn render_status(buf: &mut Buffer, app: &App, geometry: &Frame, help_
         return;
     }
     let wide = buf.area().width >= crate::layout::NARROW_WIDTH;
+    // A series page says it is reading's, or that it is offline, with its chapter's keys.
+    if app.status.is_empty() && app.series_here().is_some() {
+        let state = if app.series_offline() {
+            t::tui_read_status_offline()
+        } else {
+            app.read_status(wide)
+        };
+        let hints = status_hints_paged(app, help_pages);
+        StatusLine::new(&app.palette, &state).hints(&hints).render(geometry.status, buf);
+        return;
+    }
     if app.status.is_empty() && app.reading_here() {
         let state = app.read_status(wide);
         let hints = crate::keymap::reading_hints(app, wide)

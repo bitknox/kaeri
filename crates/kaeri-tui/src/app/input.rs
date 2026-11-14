@@ -147,6 +147,10 @@ impl App {
             return task;
         }
 
+        // A reading series' page: Enter, `u`, `d`, `a` and `r` act on its chapters.
+        if let Some(task) = self.series_key(action) {
+            return task;
+        }
         // Reading's Home and Search: Enter, Your sources only, Tab, `r` and `f` are theirs.
         if let Some(task) = self.reading_key(action) {
             return task;

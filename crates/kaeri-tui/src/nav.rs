@@ -137,6 +137,9 @@ pub enum StageView {
     /// This device, the others it syncs with, the cloud folder, and the profiles when there are
     /// two or more. Reached from Settings.
     Devices,
+    /// A reading series' page: its header and its chapters. Reached from reading's Home and
+    /// Search.
+    Series(kaeri_core::books::WorkId),
 }
 
 impl StageView {
@@ -146,6 +149,7 @@ impl StageView {
             Self::Episodes(_) | Self::NowPlaying => true,
             Self::Section(s) => s.wants_wide_stage(),
             Self::Title(_)
+            | Self::Series(_)
             | Self::Stores
             | Self::Store(_)
             | Self::StoreMembers(_)

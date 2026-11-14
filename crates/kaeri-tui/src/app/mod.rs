@@ -53,6 +53,7 @@ mod overlays;
 mod playback;
 mod providers;
 mod reading;
+mod series;
 mod settings;
 mod stores;
 mod text;
@@ -77,8 +78,12 @@ pub use self::{
     playback::NowPlaying,
     providers::proxy_badge,
     reading::{
-        AnilistState, GROUP_HITS, Part, ReadLine, Reading, read_filter_labels,
-        read_filter_summary, read_filter_value, read_query_blank,
+        AnilistState, GROUP_HITS, LOADING_LINE_AFTER, Part, ReadLine, Reading,
+        read_filter_labels, read_filter_summary, read_filter_value, read_query_blank,
+    },
+    series::{
+        READ_LISTS, SeriesPage, action_words, chapter_line, chapter_name, downloaded,
+        read_list_name, series_facts,
     },
     settings::SettingLine,
     stores::{MemberLine, PluginChoice, StoreConfirm, StoreLine},

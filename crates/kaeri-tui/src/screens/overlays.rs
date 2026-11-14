@@ -510,8 +510,22 @@ pub(super) fn field_text(app: &App, field: Field) -> String {
 fn help_rows(app: &App) -> Vec<(String, String)> {
     use crate::keymap::{Action, Scope};
     let mut rows = Vec::new();
-    // Reading's own keys first, while Home or Search is reading's.
-    if app.reading_section() {
+    // A series page's own keys first.
+    if app.series_here().is_some() {
+        rows.push((String::new(), t::tui_read_keys_series()));
+        for (action, label) in [
+            (Action::Open, t::tui_read_keys_read()),
+            (Action::ToggleWatched, t::tui_read_read_unread()),
+            (Action::Download, t::tui_read_keys_download()),
+            (Action::SetListStatus, t::tui_read_keys_status()),
+            (Action::Refresh, t::tui_read_keys_try_again()),
+        ] {
+            if let Some(key) = app.keymap.keys_for(action).first() {
+                rows.push((key.render(), format!("  {}", label)));
+            }
+        }
+    } else if app.reading_section() {
+        // Reading's own keys, while Home or Search is reading's.
         rows.push((String::new(), t::tui_read_keys_heading()));
         for (action, label) in [
             (Action::ToggleRail, t::tui_read_keys_next_section()),
@@ -519,6 +533,7 @@ fn help_rows(app: &App) -> Vec<(String, String)> {
             (Action::Refresh, t::tui_read_keys_try_again()),
             (Action::Filter, t::tui_read_keys_filters()),
             (Action::SetListStatus, t::tui_read_keys_planning()),
+            (Action::ShowEpisodes, t::tui_read_keys_chapters()),
         ] {
             if let Some(key) = app.keymap.keys_for(action).first() {
                 rows.push((key.render(), format!("  {}", label)));

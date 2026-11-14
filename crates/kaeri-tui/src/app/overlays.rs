@@ -27,6 +27,8 @@ pub struct FrameReport {
     pub help_pages: Option<usize>,
     /// The first row the episode table's window showed, when it was drawn.
     pub episodes_offset: Option<usize>,
+    /// The first chapter a series page's window showed, when it was drawn.
+    pub series_offset: Option<usize>,
 }
 
 impl App {
@@ -256,6 +258,9 @@ impl App {
         match self.nav.overlay() {
             Some(Overlay::CommandPalette) => self.run_palette_pick(visible_rows),
             Some(Overlay::Logs) => None,
+            Some(Overlay::ListStatus) if self.series_here().is_some() => {
+                self.confirm_read_status()
+            }
             Some(Overlay::ListStatus) => self.confirm_list_status(),
             Some(Overlay::SearchFilters) => self.confirm_search_filters(),
             Some(Overlay::Rate) => self.confirm_rating(),
@@ -279,6 +284,9 @@ impl App {
     /// Rows the currently-open overlay is listing, so movement can be bounded.
     fn overlay_len(&self) -> usize {
         match self.nav.overlay() {
+            Some(Overlay::ListStatus) if self.series_here().is_some() => {
+                crate::app::READ_LISTS.len()
+            }
             Some(Overlay::ListStatus) => LibrarySegment::ALL.len(),
             Some(Overlay::Rate) => 10,
             Some(Overlay::SearchFilters) if self.reading_section() => {
@@ -367,6 +375,9 @@ impl App {
         if let Some(offset) = report.episodes_offset {
             self.cursors.episodes.offset = offset;
             self.episodes_jumped = false;
+        }
+        if let Some(offset) = report.series_offset {
+            self.cursors.chapters.offset = offset;
         }
     }
 }
