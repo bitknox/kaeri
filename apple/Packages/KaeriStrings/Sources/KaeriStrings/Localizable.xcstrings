@@ -133111,6 +133111,86 @@
         }
       }
     },
+    "notice-tracker-change-refused" : {
+      "comment" : "Toast, shown once, when a tracker kept refusing a change to a title for about two days and the change stopped being sent. The change itself is still saved in the app. The tracker is its name, such as AniList; the title is a show's or a series' name. Argument 1: tracker (Text). Argument 2: title (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ kept refusing a change to %2$@, so it stopped being sent. It's still saved in Kaeri."
+          }
+        }
+      }
+    },
+    "notice-tracker-change-refused-untitled" : {
+      "comment" : "The same toast when the app has no name for the titles. Count is how many titles. Argument 1: tracker (Text). Argument 2: count (Int).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%#@count@"
+          },
+          "substitutions" : {
+            "count" : {
+              "argNum" : 2,
+              "formatSpecifier" : "lld",
+              "variations" : {
+                "plural" : {
+                  "one" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%1$@ kept refusing a change, so it stopped being sent. It's still saved in Kaeri."
+                    }
+                  },
+                  "other" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%1$@ kept refusing changes to %2$lld titles, so they stopped being sent. They're still saved in Kaeri."
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "notice-tracker-changes-refused" : {
+      "comment" : "The same toast when changes to several titles stopped being sent to one tracker at once. The title is the first of them; others is how many more titles there are. Argument 1: tracker (Text). Argument 2: title (Text). Argument 3: others (Int).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%#@others@"
+          },
+          "substitutions" : {
+            "others" : {
+              "argNum" : 3,
+              "formatSpecifier" : "lld",
+              "variations" : {
+                "plural" : {
+                  "one" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%1$@ kept refusing changes to %2$@ and one more title, so they stopped being sent. They're still saved in Kaeri."
+                    }
+                  },
+                  "other" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%1$@ kept refusing changes to %2$@ and %3$lld more titles, so they stopped being sent. They're still saved in Kaeri."
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "notice-trailer-failed" : {
       "comment" : "Toast when a trailer could not be opened. The reason comes from the system. Argument 1: reason (Text).",
       "extractionState" : "manual",

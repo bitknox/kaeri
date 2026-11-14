@@ -2091,6 +2091,26 @@
     <value>[Šîĝñéð öüţ öƒ {tracker}. {count} ƣüéüéð çĥàñĝéš àŕé ķéþţ ƒöŕ ţĥé ñéẋţ šîĝñ-îñ.~~~~~~~~~~~~~~~~~~~~~]</value>
     <comment>Toast after signing out of a tracker. The changes were not discarded: they are sent after the next sign-in.</comment>
   </data>
+  <data name="NoticeTrackerChangeRefused" xml:space="preserve">
+    <value>[{tracker} ķéþţ ŕéƒüšîñĝ à çĥàñĝé ţö {title}, šö îţ šţöþþéð ƀéîñĝ šéñţ. Îţ'š šţîļļ šàṽéð îñ Ķàéŕî.~~~~~~~~~~~~~~~~~~~~~~~~~~~]</value>
+    <comment>Toast, shown once, when a tracker kept refusing a change to a title for about two days and the change stopped being sent. The change itself is still saved in the app. The tracker is its name, such as AniList; the title is a show's or a series' name.</comment>
+  </data>
+  <data name="NoticeTrackerChangesRefused_one" xml:space="preserve">
+    <value>[{tracker} ķéþţ ŕéƒüšîñĝ çĥàñĝéš ţö {title} àñð öñé ɱöŕé ţîţļé, šö ţĥéý šţöþþéð ƀéîñĝ šéñţ. Ţĥéý'ŕé šţîļļ šàṽéð îñ Ķàéŕî.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]</value>
+    <comment>The same toast when changes to several titles stopped being sent to one tracker at once. The title is the first of them; others is how many more titles there are.</comment>
+  </data>
+  <data name="NoticeTrackerChangesRefused_other" xml:space="preserve">
+    <value>[{tracker} ķéþţ ŕéƒüšîñĝ çĥàñĝéš ţö {title} àñð {others} ɱöŕé ţîţļéš, šö ţĥéý šţöþþéð ƀéîñĝ šéñţ. Ţĥéý'ŕé šţîļļ šàṽéð îñ Ķàéŕî.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]</value>
+    <comment>The same toast when changes to several titles stopped being sent to one tracker at once. The title is the first of them; others is how many more titles there are.</comment>
+  </data>
+  <data name="NoticeTrackerChangeRefusedUntitled_one" xml:space="preserve">
+    <value>[{tracker} ķéþţ ŕéƒüšîñĝ à çĥàñĝé, šö îţ šţöþþéð ƀéîñĝ šéñţ. Îţ'š šţîļļ šàṽéð îñ Ķàéŕî.~~~~~~~~~~~~~~~~~~~~~~~~]</value>
+    <comment>The same toast when the app has no name for the titles. Count is how many titles.</comment>
+  </data>
+  <data name="NoticeTrackerChangeRefusedUntitled_other" xml:space="preserve">
+    <value>[{tracker} ķéþţ ŕéƒüšîñĝ çĥàñĝéš ţö {count} ţîţļéš, šö ţĥéý šţöþþéð ƀéîñĝ šéñţ. Ţĥéý'ŕé šţîļļ šàṽéð îñ Ķàéŕî.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]</value>
+    <comment>The same toast when the app has no name for the titles. Count is how many titles.</comment>
+  </data>
   <data name="NoticeSignOutFailed" xml:space="preserve">
     <value>[Çöüļðñ'ţ šîĝñ öüţ öƒ {tracker}. Ţŕý àĝàîñ. {reason}~~~~~~~~~~~~]</value>
     <comment>Toast when signing out of a tracker failed. The reason comes from the system.</comment>

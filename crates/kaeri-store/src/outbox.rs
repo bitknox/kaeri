@@ -47,6 +47,10 @@ const DROPPED_KEPT: usize = 100;
 /// Where the abandoned operations are remembered, in `app_state`.
 const DROPPED_KEY: &str = "outbox_dropped";
 
+/// Where the abandoned operations nobody has been told about yet wait, in `app_state`: kept
+/// apart from the record so that saying one, once, takes it out of here and leaves the record.
+const UNTOLD_KEY: &str = "outbox_dropped_untold";
+
 /// An operation the outbox gave up on: the change, and the tracker's last word on it.
 #[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
 pub struct DroppedOp {
@@ -119,27 +123,41 @@ fn refuse_in(
     c.execute(&format!("DELETE FROM {table} WHERE id = ?1"), [id])?;
     // Kept, so the change is not gone without a word: the app can say which change the
     // tracker would not take, and why.
+    // It also waits to be said, once, by whichever engine drains next: this one, or the next
+    // launch when the app closes first.
     if let Ok(op) = serde_json::from_str::<TrackOp>(&op) {
-        let mut kept = dropped_in(c)?;
-        kept.push(DroppedOp { tracker_id, op, error: error.to_owned(), at: now });
-        let over = kept.len().saturating_sub(DROPPED_KEPT);
-        kept.drain(..over);
-        let json = serde_json::to_string(&kept)
-            .map_err(|source| StoreError::Encode { what: "dropped outbox ops", source })?;
-        c.execute(
-            "INSERT INTO app_state (key, value) VALUES (?1, ?2)
-             ON CONFLICT(key) DO UPDATE SET value = excluded.value",
-            rusqlite::params![DROPPED_KEY, json],
-        )?;
+        let dropped = DroppedOp { tracker_id, op, error: error.to_owned(), at: now };
+        for key in [DROPPED_KEY, UNTOLD_KEY] {
+            let mut kept = dropped_ops_in(c, key)?;
+            kept.push(dropped.clone());
+            let over = kept.len().saturating_sub(DROPPED_KEPT);
+            kept.drain(..over);
+            put_dropped_ops(c, key, &kept)?;
+        }
     }
     Ok(true)
 }
 
 fn dropped_in(c: &rusqlite::Connection) -> Result<Vec<DroppedOp>> {
+    dropped_ops_in(c, DROPPED_KEY)
+}
+
+fn dropped_ops_in(c: &rusqlite::Connection, key: &str) -> Result<Vec<DroppedOp>> {
     let json: Option<String> = c
-        .query_row("SELECT value FROM app_state WHERE key = ?1", [DROPPED_KEY], |r| r.get(0))
+        .query_row("SELECT value FROM app_state WHERE key = ?1", [key], |r| r.get(0))
         .optional()?;
     Ok(json.and_then(|json| serde_json::from_str(&json).ok()).unwrap_or_default())
+}
+
+fn put_dropped_ops(c: &rusqlite::Connection, key: &str, ops: &[DroppedOp]) -> Result<()> {
+    let json = serde_json::to_string(ops)
+        .map_err(|source| StoreError::Encode { what: "dropped outbox ops", source })?;
+    c.execute(
+        "INSERT INTO app_state (key, value) VALUES (?1, ?2)
+         ON CONFLICT(key) DO UPDATE SET value = excluded.value",
+        rusqlite::params![key, json],
+    )?;
+    Ok(())
 }
 
 /// `next_retry` for an op held until the id mappings change.
@@ -541,6 +559,19 @@ impl Store {
     /// a tracker refused until the outbox stopped asking.
     pub fn dropped_track_ops(&self) -> Result<Vec<DroppedOp>> {
         self.with_personal(dropped_in)
+    }
+
+    /// The operations given up since the app last said so, oldest first, taken: each is
+    /// returned once, by one call, however many engines share the library. A change given up
+    /// while no app was open waits here for the next launch.
+    pub fn take_untold_dropped_track_ops(&self) -> Result<Vec<DroppedOp>> {
+        self.with_personal_tx(|c| {
+            let untold = dropped_ops_in(c, UNTOLD_KEY)?;
+            if !untold.is_empty() {
+                c.execute("DELETE FROM app_state WHERE key = ?1", [UNTOLD_KEY])?;
+            }
+            Ok(untold)
+        })
     }
 
     /// Hold an op until the id mappings change.

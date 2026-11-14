@@ -375,6 +375,12 @@ pub enum Msg {
     NoticeSignedOut { tracker: String },
     /// Toast after signing out of a tracker. The changes were not discarded: they are sent after the next sign-in.
     NoticeSignedOutQueue { tracker: String, count: i64 },
+    /// Toast, shown once, when a tracker kept refusing a change to a title for about two days and the change stopped being sent. The change itself is still saved in the app. The tracker is its name, such as AniList; the title is a show's or a series' name.
+    NoticeTrackerChangeRefused { tracker: String, title: String },
+    /// The same toast when changes to several titles stopped being sent to one tracker at once. The title is the first of them; others is how many more titles there are.
+    NoticeTrackerChangesRefused { tracker: String, title: String, others: i64 },
+    /// The same toast when the app has no name for the titles. Count is how many titles.
+    NoticeTrackerChangeRefusedUntitled { tracker: String, count: i64 },
     /// Toast when signing out of a tracker failed. The reason comes from the system.
     NoticeSignOutFailed { tracker: String, reason: String },
     /// Toast when a setting could not be stored. The cause says why and what to do.
@@ -645,6 +651,9 @@ impl Msg {
             Self::NoticeClientIdMissing { .. } => "notice-client-id-missing",
             Self::NoticeSignedOut { .. } => "notice-signed-out",
             Self::NoticeSignedOutQueue { .. } => "notice-signed-out-queue",
+            Self::NoticeTrackerChangeRefused { .. } => "notice-tracker-change-refused",
+            Self::NoticeTrackerChangesRefused { .. } => "notice-tracker-changes-refused",
+            Self::NoticeTrackerChangeRefusedUntitled { .. } => "notice-tracker-change-refused-untitled",
             Self::NoticeSignOutFailed { .. } => "notice-sign-out-failed",
             Self::NoticeNotSavedBecause { .. } => "notice-not-saved-because",
             Self::NoticeProxySaved => "notice-proxy-saved",
@@ -874,6 +883,9 @@ impl Msg {
             Self::NoticeClientIdMissing { setting } => vec![("setting", Value::Text(setting.clone()))],
             Self::NoticeSignedOut { tracker } => vec![("tracker", Value::Text(tracker.clone()))],
             Self::NoticeSignedOutQueue { tracker, count } => vec![("tracker", Value::Text(tracker.clone())), ("count", Value::Int(*count))],
+            Self::NoticeTrackerChangeRefused { tracker, title } => vec![("tracker", Value::Text(tracker.clone())), ("title", Value::Text(title.clone()))],
+            Self::NoticeTrackerChangesRefused { tracker, title, others } => vec![("tracker", Value::Text(tracker.clone())), ("title", Value::Text(title.clone())), ("others", Value::Int(*others))],
+            Self::NoticeTrackerChangeRefusedUntitled { tracker, count } => vec![("tracker", Value::Text(tracker.clone())), ("count", Value::Int(*count))],
             Self::NoticeSignOutFailed { tracker, reason } => vec![("tracker", Value::Text(tracker.clone())), ("reason", Value::Text(reason.clone()))],
             Self::NoticeNotSavedBecause { cause } => vec![("cause", Value::Cause(cause.clone()))],
             Self::NoticeProxySaved => Vec::new(),

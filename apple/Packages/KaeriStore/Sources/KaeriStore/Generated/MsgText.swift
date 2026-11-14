@@ -191,6 +191,9 @@ extension Msg {
         case .noticeClientIdMissing(let setting): L.noticeClientIdMissing(setting: setting)
         case .noticeSignedOut(let tracker): L.noticeSignedOut(tracker: tracker)
         case .noticeSignedOutQueue(let tracker, let count): L.noticeSignedOutQueue(tracker: tracker, count: Int(count))
+        case .noticeTrackerChangeRefused(let tracker, let title): L.noticeTrackerChangeRefused(tracker: tracker, title: title)
+        case .noticeTrackerChangesRefused(let tracker, let title, let others): L.noticeTrackerChangesRefused(tracker: tracker, title: title, others: Int(others))
+        case .noticeTrackerChangeRefusedUntitled(let tracker, let count): L.noticeTrackerChangeRefusedUntitled(tracker: tracker, count: Int(count))
         case .noticeSignOutFailed(let tracker, let reason): L.noticeSignOutFailed(tracker: tracker, reason: reason)
         case .noticeNotSavedBecause(let cause): L.noticeNotSavedBecause(cause: cause.text)
         case .noticeProxySaved: L.noticeProxySaved
