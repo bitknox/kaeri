@@ -606,7 +606,7 @@ impl BookSource for KavitaSource {
                     .then_some(c.range.as_str());
                 let mut chapter = chapter_of(&c.id.to_string(), &title, number);
                 chapter.page_count = crate::pages_stated(c.pages);
-                chapter.published = c.release_date.as_deref().and_then(crate::names::date);
+                chapter.dated(c.release_date.as_deref());
                 chapter
             })
             .collect())

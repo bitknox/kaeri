@@ -776,8 +776,12 @@ pub struct SourceChapter {
     pub version_label: Option<String>,
     /// BCP 47.
     pub language: Option<String>,
-    /// When it came out, Unix seconds.
+    /// When it came out, Unix seconds. For a chapter dated by its day this is that day's
+    /// midnight in UTC, which only orders it: [`Self::published_day`] is its day.
     pub published: Option<i64>,
+    /// The day it came out, when the source wrote a day rather than a moment (see
+    /// [`Published`]): its day wherever the person is.
+    pub published_day: Option<jiff::civil::Date>,
     pub page_count: Option<u32>,
 }
 
@@ -794,8 +798,17 @@ impl SourceChapter {
             version_label: None,
             language: None,
             published: None,
+            published_day: None,
             page_count: None,
         }
+    }
+
+    /// Dates it from what the source wrote, as [`Published::read`] reads it; anything else
+    /// leaves it undated.
+    pub fn dated(&mut self, text: Option<&str>) {
+        let published = text.and_then(Published::read);
+        self.published = published.map(|p| p.at);
+        self.published_day = published.and_then(|p| p.day);
     }
 
     /// A chapter built from the parts a folder or a server knows: its volume, its number as
@@ -833,6 +846,45 @@ impl SourceChapter {
             (Some(range), _) => ChapterKey::numbered(range),
             (None, volume) => ChapterKey::unnumbered(volume, &self.number_raw),
         }
+    }
+}
+
+/// When a chapter came out, as a source wrote it.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct Published {
+    /// Unix seconds. A day alone is its midnight in UTC, and a time with no offset is read as
+    /// UTC: enough to order chapters, never to say which day one came out where the person is.
+    pub at: i64,
+    /// The day it came out, when the source wrote a day rather than a moment: a date alone, a
+    /// date and time with no offset, or midnight in the date's own offset (a day a server keeps
+    /// as a timestamp). That day is the same wherever the person is; read as an instant, it would
+    /// fall on the day before west of the offset. A moment in the day keeps no day here: it is
+    /// read where the person is, the day it became theirs to read.
+    pub day: Option<jiff::civil::Date>,
+}
+
+impl Published {
+    /// RFC 3339, a date and time with no offset, or a date (`2026-01-02`), as the WIT `chapter`
+    /// allows. Text that only starts with a date is read as that day. A date before 1970 is no
+    /// date: servers write the least date they can hold (`0001-01-01T00:00:00`) for a chapter
+    /// with none, and no chapter came out then.
+    pub fn read(text: &str) -> Option<Self> {
+        use jiff::{civil::Time, fmt::temporal::Pieces, tz::Offset};
+        let text = text.trim();
+        let (date, time, offset) = match Pieces::parse(text) {
+            Ok(pieces) => (
+                pieces.date(),
+                pieces.time().unwrap_or(Time::midnight()),
+                pieces.to_numeric_offset(),
+            ),
+            Err(_) => (text.get(..10)?.parse().ok()?, Time::midnight(), None),
+        };
+        let at = offset.unwrap_or(Offset::UTC).to_timestamp(date.to_datetime(time)).ok()?;
+        if at < jiff::Timestamp::UNIX_EPOCH {
+            return None;
+        }
+        let day = (offset.is_none() || time == Time::midnight()).then_some(date);
+        Some(Self { at: at.as_second(), day })
     }
 }
 
@@ -1041,5 +1093,45 @@ mod tests {
         }
         assert_eq!(BookSourceKind::Folder.tier(), 0);
         assert!(BookIds::default().is_empty());
+    }
+
+    #[test]
+    fn a_written_day_stays_that_day_and_a_moment_stays_a_moment() {
+        let day = |y, m, d| Some(jiff::civil::date(y, m, d));
+        let read = |text: &str| Published::read(text).map(|p| (p.at, p.day));
+        // Friday 2026-10-23, midnight in UTC.
+        const FRIDAY: i64 = 1_792_713_600;
+        assert_eq!(read("2026-10-23"), Some((FRIDAY, day(2026, 10, 23))));
+        // A server's day kept as a timestamp with no offset, or as midnight in its own offset.
+        assert_eq!(read("2026-10-23T00:00:00"), Some((FRIDAY, day(2026, 10, 23))));
+        assert_eq!(read("2026-10-23T00:00:00Z"), Some((FRIDAY, day(2026, 10, 23))));
+        assert_eq!(
+            read("2026-10-23T00:00:00-04:00"),
+            Some((FRIDAY + 4 * 3_600, day(2026, 10, 23))),
+            "midnight in its own offset is its own day"
+        );
+        // A moment keeps its offset and no day: it is read where the person is.
+        assert_eq!(
+            read("2026-10-23T22:30:00-04:00"),
+            Some((FRIDAY + 26 * 3_600 + 1_800, None))
+        );
+        assert_eq!(read(" 2026-10-23T10:00:00+02:00 "), Some((FRIDAY + 8 * 3_600, None)));
+        // Text that only starts with a date is that day.
+        assert_eq!(read("2026-10-23 at the shop"), Some((FRIDAY, day(2026, 10, 23))));
+        assert_eq!(read("nope"), None);
+        // A server's least date stands for none, and so does any day before 1970.
+        assert_eq!(read("0001-01-01T00:00:00"), None);
+        assert_eq!(read("0001-01-01T00:00:00Z"), None);
+        assert_eq!(read("1969-12-31"), None);
+        assert_eq!(read("1970-01-01"), Some((0, day(1970, 1, 1))));
+
+        let mut chapter = SourceChapter::new("1", "1");
+        chapter.dated(Some("2026-10-23"));
+        assert_eq!(
+            (chapter.published, chapter.published_day),
+            (Some(FRIDAY), day(2026, 10, 23))
+        );
+        chapter.dated(None);
+        assert_eq!((chapter.published, chapter.published_day), (None, None));
     }
 }

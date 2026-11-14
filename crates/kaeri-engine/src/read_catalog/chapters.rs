@@ -33,6 +33,10 @@ pub struct Kept {
     pub language: Option<String>,
     #[serde(default)]
     pub published: Option<i64>,
+    /// The day it came out, when the source wrote a day rather than a moment; see
+    /// [`kaeri_core::books::Published`].
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub published_day: Option<jiff::civil::Date>,
     #[serde(default)]
     pub pages: Option<u32>,
     /// When a later answer first listed it. `None` for what the first answer listed.
@@ -48,6 +52,16 @@ impl Kept {
     /// When it came out, or when it was first seen.
     pub fn out_at(&self) -> Option<i64> {
         self.published.or(self.seen_at)
+    }
+
+    /// When it came out where the person is, for the calendar: a chapter dated by its day
+    /// starts that day in `zone`, as the day the source wrote is that day everywhere; one dated
+    /// by a moment, or first seen, is that moment.
+    pub fn out_at_in(&self, zone: &jiff::tz::TimeZone) -> Option<i64> {
+        match self.published_day {
+            Some(day) => day.to_zoned(zone.clone()).ok().map(|z| z.timestamp().as_second()),
+            None => self.out_at(),
+        }
     }
 
     pub fn range(&self) -> Option<ChapterRange> {
@@ -70,6 +84,7 @@ impl Kept {
             version_label: self.version_label.clone(),
             language: self.language.clone(),
             published: self.published,
+            published_day: self.published_day,
             page_count: self.pages,
         }
     }
@@ -344,6 +359,7 @@ pub fn keep(
             version_label: c.version_label.clone(),
             language: c.language.clone(),
             published: c.published,
+            published_day: c.published_day,
             pages: plausible_pages(c.page_count),
             seen_at,
             part: arranged.parts[i],
@@ -883,17 +899,30 @@ pub fn chosen_group(store: &Store, work: &str, source: &str) -> Option<String> {
         .and_then(|p| p.version_label)
 }
 
+/// The longest gap between two chapters that still says how often a series comes out.
+const LONGEST_GAP_DAYS: i64 = 366;
+
 /// How a series comes out, learnt from the dates of its newest chapters: a weekday when most of
-/// them came out on one day about a week apart, and the usual days between two chapters.
+/// them came out on one day about a week apart, and the usual days between two chapters. A
+/// chapter dated by its day counts on that day wherever the person is ([`Kept::out_at_in`]).
+/// Undated chapters, dates before 1970 and gaps of more than a year say nothing of a rhythm.
 pub fn rhythm(list: &[Kept], zone: &jiff::tz::TimeZone, now: i64) -> Option<BookRhythm> {
-    let mut dates: Vec<i64> = list.iter().filter_map(Kept::out_at).collect();
+    let mut dates: Vec<i64> =
+        list.iter().filter_map(|c| c.out_at_in(zone)).filter(|at| *at >= 0).collect();
     dates.sort_unstable();
     dates.dedup_by(|a, b| (*a - *b).abs() < 6 * 3_600);
     let newest: Vec<i64> = dates.iter().rev().take(8).copied().collect();
     if newest.len() < 3 {
         return None;
     }
-    let mut gaps: Vec<i64> = newest.windows(2).map(|w| (w[0] - w[1]) / 86_400).collect();
+    let mut gaps: Vec<i64> = newest
+        .windows(2)
+        .map(|w| (w[0] - w[1]) / 86_400)
+        .filter(|days| *days <= LONGEST_GAP_DAYS)
+        .collect();
+    if gaps.is_empty() {
+        return None;
+    }
     gaps.sort_unstable();
     let every = gaps[gaps.len() / 2].max(1);
     let weekdays: Vec<u8> = newest.iter().filter_map(|at| weekday(*at, zone)).collect();
@@ -985,6 +1014,7 @@ mod tests {
             version_label: None,
             language: None,
             published: None,
+            published_day: None,
             pages: None,
             seen_at: None,
             part: None,
@@ -1067,6 +1097,7 @@ mod tests {
                 version_label: None,
                 language: None,
                 published: Some(FRIDAY - (4 - n) * 7 * DAY),
+                published_day: None,
                 pages: None,
                 seen_at: None,
                 part: None,
@@ -1085,6 +1116,44 @@ mod tests {
         assert_eq!(found.weekday, None);
         assert_eq!(rhythm_words(&found).unwrap().english(), "About every 2 weeks");
         assert_eq!(rhythm(&weekly[..2], &zone, FRIDAY), None);
+    }
+
+    #[test]
+    fn undated_chapters_and_gaps_past_belief_teach_no_rhythm() {
+        let zone = jiff::tz::TimeZone::UTC;
+        let dated = |published: &[i64]| -> Vec<Kept> {
+            published
+                .iter()
+                .enumerate()
+                .map(|(n, at)| Kept {
+                    id: n.to_string(),
+                    source_ref: n.to_string(),
+                    label: n.to_string(),
+                    number: None,
+                    volume: None,
+                    title: None,
+                    version_label: None,
+                    language: None,
+                    published: Some(*at),
+                    published_day: None,
+                    pages: None,
+                    seen_at: None,
+                    part: None,
+                })
+                .collect()
+        };
+        // Three chapters a server marked with its least date (0001-01-01), as a list kept before
+        // such dates were read as none still holds them, then two real ones.
+        const LEAST: i64 = -62_135_596_800;
+        let marked = dated(&[LEAST, LEAST, LEAST, FRIDAY - 3 * DAY, FRIDAY]);
+        assert_eq!(rhythm(&marked, &zone, FRIDAY), None, "two dates teach nothing");
+        // Years between chapters are no rhythm either.
+        let years = dated(&[FRIDAY - 2_000 * DAY, FRIDAY - 1_000 * DAY, FRIDAY]);
+        assert_eq!(rhythm(&years, &zone, FRIDAY), None);
+        // One long pause among weekly chapters leaves the week.
+        let paused = dated(&[FRIDAY - 800 * DAY, FRIDAY - 14 * DAY, FRIDAY - 7 * DAY, FRIDAY]);
+        let found = rhythm(&paused, &zone, FRIDAY).unwrap();
+        assert_eq!((found.weekday, found.every_days), (Some(4), Some(7)));
     }
 
     #[test]

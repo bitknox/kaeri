@@ -19,27 +19,6 @@ pub fn chapter_of(id: &str, title: &str, number: Option<&str>) -> SourceChapter 
     SourceChapter::of(id, named.volume.as_deref(), chapter.as_deref(), Some(&tidy), title)
 }
 
-/// Unix seconds for the start of a `YYYY-MM-DD` day, optionally followed by a time.
-pub fn date(text: &str) -> Option<i64> {
-    let day = text.get(..10)?;
-    let mut parts = day.split('-');
-    let (y, m, d) = (
-        parts.next()?.parse::<i64>().ok()?,
-        parts.next()?.parse::<i64>().ok()?,
-        parts.next()?.parse::<i64>().ok()?,
-    );
-    if !(1..=12).contains(&m) || !(1..=31).contains(&d) {
-        return None;
-    }
-    // Days from civil, after Howard Hinnant.
-    let y = if m <= 2 { y - 1 } else { y };
-    let era = y.div_euclid(400);
-    let yoe = y - era * 400;
-    let doy = (153 * (m + if m > 2 { -3 } else { 9 }) + 2) / 5 + d - 1;
-    let doe = yoe * 365 + yoe / 4 - yoe / 100 + doy;
-    Some((era * 146_097 + doe - 719_468) * 86_400)
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -57,12 +36,5 @@ mod tests {
         let none = chapter_of("4", "Scan Final", None);
         assert_eq!(none.number, None);
         assert_eq!(none.number_raw, "Scan Final");
-    }
-
-    #[test]
-    fn dates_are_unix_days() {
-        assert_eq!(date("1970-01-01"), Some(0));
-        assert_eq!(date("2000-03-01T10:00:00Z"), Some(951_868_800));
-        assert_eq!(date("nope"), None);
     }
 }

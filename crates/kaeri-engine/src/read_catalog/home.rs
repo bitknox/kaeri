@@ -14,7 +14,11 @@ use std::{
     sync::atomic::Ordering,
 };
 
-use kaeri_core::{books::ChapterId, ids::AnilistId, media::Medium};
+use kaeri_core::{
+    books::ChapterId,
+    ids::AnilistId,
+    media::{MediaStatus, Medium},
+};
 use kaeri_meta::{
     KeptBook, Meta,
     anilist::books::{Book, BookAsk},
@@ -817,7 +821,9 @@ impl Home {
     }
 
     /// This week, today first: each followed series on the day its chapters usually come
-    /// out, or on today when one came out today.
+    /// out, or on today when one came out today. A series whose rhythm no longer says when the
+    /// next comes ([`still_coming`]) is only on today, when one came out today; Library and its
+    /// page still say its rhythm.
     fn week(&self, followed: &[KeptBook]) -> Vec<ReadWeekDay> {
         let now = self.ask.now;
         let Some(today) = chapters::day_start(now, &self.zone) else { return Vec::new() };
@@ -833,17 +839,20 @@ impl Home {
             let work = tiles::work_of(kept.book.id);
             let rhythm = self.store.book_rhythm(work.as_str()).ok().flatten();
             let list = chapters::of_work(&self.sources, &self.store, &work).map(|(_, _, l)| l);
+            // A chapter dated by its day counts on that day where the person is.
             let newest_chapter =
-                list.as_deref().and_then(|l| l.iter().max_by_key(|c| c.out_at()));
+                list.as_deref().and_then(|l| l.iter().max_by_key(|c| c.out_at_in(&self.zone)));
             let newest = newest_chapter
-                .and_then(chapters::Kept::out_at)
+                .and_then(|c| c.out_at_in(&self.zone))
                 .or(rhythm.and_then(|r| r.last_published));
             let mut tile = self.tile(kept);
             let out_today = newest.filter(|at| *at >= today && *at <= now);
             let due = match (out_today, rhythm) {
                 (Some(at), _) => Some((0usize, Some(at), false)),
-                (None, Some(r)) => self.due_day(&r, &days).map(|i| (i, None, true)),
-                (None, None) => None,
+                (None, Some(r)) if still_coming(&r, newest, kept.book.status, now) => {
+                    self.due_day(&r, newest, &days).map(|i| (i, None, true))
+                }
+                (None, _) => None,
             };
             let Some((index, out_at, usually)) = due else { continue };
             if usually && let Some(words) = rhythm.as_ref().and_then(chapters::rhythm_words) {
@@ -892,24 +901,30 @@ impl Home {
         days
     }
 
-    /// The day of this week a series' rhythm says its next chapter comes.
+    /// The day of this week a series' rhythm says its next chapter comes: its weekday, or
+    /// whole days on from `newest` (its newest chapter's date) by the calendar, so a change of
+    /// clocks between them moves no day.
     fn due_day(
         &self,
         rhythm: &kaeri_store::book_catalog::BookRhythm,
+        newest: Option<i64>,
         days: &[ReadWeekDay],
     ) -> Option<usize> {
+        let date = |at: i64| {
+            jiff::Timestamp::from_second(at).ok().map(|t| t.to_zoned(self.zone.clone()).date())
+        };
         if let Some(weekday) = rhythm.weekday {
             return days
                 .iter()
                 .position(|d| chapters::weekday(d.day + DAY / 2, &self.zone) == Some(weekday));
         }
-        let every = i64::from(rhythm.every_days?).max(1);
-        let mut next = rhythm.last_published? + every * DAY;
-        while next < days.first()?.day {
-            next += every * DAY;
+        let every = jiff::Span::new().days(i64::from(rhythm.every_days?).max(1));
+        let first = date(days.first()?.day + DAY / 2)?;
+        let mut next = date(newest.or(rhythm.last_published)?)?.checked_add(every).ok()?;
+        while next < first {
+            next = next.checked_add(every).ok()?;
         }
-        let start = chapters::day_start(next, &self.zone)?;
-        days.iter().position(|d| d.day == start)
+        days.iter().position(|d| date(d.day + DAY / 2) == Some(next))
     }
 
     /// The series at the top: a new chapter in one followed, the one in progress, the first of
@@ -934,7 +949,7 @@ impl Home {
             let Some(next) = read.new_for_you(&list) else { continue };
             let number = next.number.clone().unwrap_or_else(|| next.label.clone());
             let medium = kept.book.medium();
-            let today_out = next.out_at().is_some_and(|at| at >= today);
+            let today_out = next.out_at_in(&self.zone).is_some_and(|at| at >= today);
             // A light novel's part goes by the source's own name for it where it has one, as
             // the button below and its row do.
             let named = words::part_named(&next.label, next.number.as_deref())
@@ -1072,6 +1087,31 @@ impl Home {
     }
 }
 
+/// Whether a series' rhythm still says when its next chapter comes, for This week. The anime
+/// week lists only broadcasts still scheduled, so a show that ended or paused leaves it; here
+/// a work AniList calls finished, cancelled or on hiatus leaves once its newest chapter is two
+/// steps of its rhythm behind (a translation can trail a finished original by a step or so),
+/// and any work once it is four steps behind, at least two weeks: chapters that stopped coming.
+fn still_coming(
+    rhythm: &kaeri_store::book_catalog::BookRhythm,
+    newest: Option<i64>,
+    status: Option<MediaStatus>,
+    now: i64,
+) -> bool {
+    let every = match (rhythm.every_days, rhythm.weekday) {
+        (Some(days), _) => i64::from(days.max(1)),
+        (None, Some(_)) => 7,
+        (None, None) => return false,
+    };
+    let Some(newest) = newest else { return false };
+    let ended = matches!(
+        status,
+        Some(MediaStatus::Finished | MediaStatus::Cancelled | MediaStatus::Hiatus)
+    );
+    let steps = if ended { 2 } else { 4 };
+    now - newest <= (steps * every).max(14) * DAY
+}
+
 /// The source's name for a part not listed yet, numbered `number`, after the way it names the
 /// newest it lists: "Chapter 13" after "Chapter 12". None when it names them by number alone.
 fn named_like(list: &[chapters::Kept], number: &str) -> Option<String> {
@@ -1142,6 +1182,7 @@ mod tests {
             version_label: None,
             language: None,
             published: Some(at),
+            published_day: None,
             pages: None,
             seen_at: None,
             part: None,
@@ -1173,6 +1214,10 @@ mod tests {
     const NOW: i64 = 1_700_000_000 - 1_700_000_000 % DAY + 12 * 3_600;
 
     fn kit(dir: &std::path::Path) -> Kit {
+        kit_in(dir, jiff::tz::TimeZone::UTC)
+    }
+
+    fn kit_in(dir: &std::path::Path, zone: jiff::tz::TimeZone) -> Kit {
         let store = Store::open_in_memory().unwrap();
         let paths = Paths {
             config_file: dir.join("config.toml"),
@@ -1194,7 +1239,7 @@ mod tests {
             store,
             sources,
             plugins: crate::book_plugins::BookPlugins::default(),
-            clock: crate::clock::Clock::in_zone(jiff::tz::TimeZone::UTC),
+            clock: crate::clock::Clock::in_zone(zone),
             offline: Arc::new(AtomicBool::new(false)),
         }
     }
@@ -1450,5 +1495,254 @@ mod tests {
         kit.plugins.arrivals_done();
         assert_eq!(home(&kit).spot.unwrap().action, None);
         assert!(!kit.plugins.take_leaned());
+    }
+
+    // This week where the person is. Each test pins the engine's clock (`now` and the zone) and
+    // the dates the fake source gives, so nothing reads the machine's clock or zone.
+
+    /// Friday 2026-10-23, 10:00 UTC: early Friday in New York, Saturday already in Kiritimati.
+    const FRIDAY_10_UTC: i64 = 1_792_749_600;
+
+    fn zones() -> [(&'static str, jiff::tz::TimeZone); 4] {
+        use jiff::tz::TimeZone;
+        [
+            ("New York", TimeZone::posix("EST5EDT,M3.2.0,M11.1.0").unwrap()),
+            ("UTC", TimeZone::UTC),
+            ("Copenhagen", TimeZone::posix("CET-1CEST,M3.5.0,M10.5.0/3").unwrap()),
+            ("Kiritimati", TimeZone::posix("<+14>-14").unwrap()),
+        ]
+    }
+
+    /// A series on Reading, "The Quiet Orchard", whose source dates its chapters as `dates`
+    /// (day-only dates, as a book server or plugin writes them), with its rhythm learnt where the
+    /// person is, as Updates learns it. `status` is AniList's.
+    fn dated_series(kit: &Kit, dates: &[&str], status: &str, now: i64) {
+        let store = &kit.store;
+        let meta = format!(
+            r#"{{"book":{{"id":900301,"status":"{status}","title":{{"romaji":"The Quiet Orchard"}}}}}}"#
+        );
+        let work = BookWork {
+            work: WORK.into(),
+            anilist_id: Some(900_301),
+            medium: "manga".into(),
+            titles: "{}".into(),
+            status: Some(status.into()),
+            meta: Some(meta),
+            fetched_at: now,
+            ..BookWork::default()
+        };
+        store.put_book_work(&work).unwrap();
+        store.set_book_match("shelf", "s-1", WORK, 100, true, false, 1).unwrap();
+        let pref =
+            EditionPref { source_id: "shelf".into(), version_label: None, language: None };
+        store.set_edition_pref(WORK, Some(&pref)).unwrap();
+        store.set_read_status(WORK, Some("reading"), 2).unwrap();
+        let list: Vec<SourceChapter> = dates
+            .iter()
+            .enumerate()
+            .map(|(i, date)| {
+                let mut c = SourceChapter::new(format!("c-{}", i + 1), (i + 1).to_string());
+                c.dated(Some(date));
+                c
+            })
+            .collect();
+        chapters::keep(store, "shelf", "s-1", &list, now - 3_600);
+        let (kept, _) = chapters::kept(store, "shelf", "s-1").unwrap();
+        let rhythm = chapters::rhythm(&kept, &kit.clock.zone(), now).unwrap();
+        store.set_book_rhythm(WORK, &rhythm).unwrap();
+    }
+
+    /// The days of This week with the series on them, as dates where the person is, each with
+    /// whether it is only expected and the tile's first fact ("Usually Fridays").
+    fn week_at(kit: &Kit, now: i64) -> Vec<(String, bool, Option<String>)> {
+        let ask = Ask { answer: KaeriIsFor::Both, adult: false, chapter_notices: false, now };
+        let zone = kit.clock.zone();
+        Home::of(kit, ask)
+            .view()
+            .week
+            .iter()
+            .flat_map(|d| {
+                let date = jiff::Timestamp::from_second(d.day)
+                    .unwrap()
+                    .to_zoned(zone.clone())
+                    .date()
+                    .to_string();
+                d.entries.iter().map(move |e| {
+                    let fact = e.usually.then(|| e.tile.facts.first().map(Msg::english));
+                    (date.clone(), e.usually, fact.flatten())
+                })
+            })
+            .collect()
+    }
+
+    fn week_in(
+        zone: jiff::tz::TimeZone,
+        dates: &[&str],
+        status: &str,
+        now: i64,
+    ) -> Vec<(String, bool, Option<String>)> {
+        let dir = tempfile::tempdir().unwrap();
+        let kit = kit_in(dir.path(), zone);
+        install_shelf(&kit);
+        dated_series(&kit, dates, status, now);
+        week_at(&kit, now)
+    }
+
+    fn usually(date: &str, words: &str) -> Vec<(String, bool, Option<String>)> {
+        vec![(date.to_owned(), true, Some(words.to_owned()))]
+    }
+
+    /// A series whose source dates its chapters by day alone comes out on that day wherever the
+    /// person is: west of UTC it is not read as the evening before.
+    #[test]
+    fn a_day_dated_series_is_due_on_its_own_weekday_in_every_zone() {
+        let fridays = [
+            "2026-09-04",
+            "2026-09-11",
+            "2026-09-18",
+            "2026-09-25",
+            "2026-10-02",
+            "2026-10-09",
+            "2026-10-16",
+        ];
+        for (name, zone) in zones() {
+            let week = week_in(zone, &fridays, "RELEASING", FRIDAY_10_UTC);
+            // Friday is today everywhere but Kiritimati, where Saturday has begun.
+            let friday = if name == "Kiritimati" { "2026-10-30" } else { "2026-10-23" };
+            assert_eq!(week, usually(friday, "Usually Fridays"), "{name}");
+        }
+    }
+
+    /// A chapter dated today is out today, in any zone where that day is today.
+    #[test]
+    fn a_chapter_dated_today_lands_on_today() {
+        let fridays = ["2026-10-02", "2026-10-09", "2026-10-16", "2026-10-23"];
+        for (name, zone) in zones() {
+            let week = week_in(zone.clone(), &fridays, "RELEASING", FRIDAY_10_UTC);
+            if name == "Kiritimati" {
+                // Its Friday was yesterday: the next is due next Friday.
+                assert_eq!(week, usually("2026-10-30", "Usually Fridays"), "{name}");
+            } else {
+                assert_eq!(week, vec![("2026-10-23".to_owned(), false, None)], "{name}");
+            }
+        }
+        // Out today from the start of the day where the person is.
+        let dir = tempfile::tempdir().unwrap();
+        let new_york = zones()[0].1.clone();
+        let kit = kit_in(dir.path(), new_york.clone());
+        install_shelf(&kit);
+        // Chapters 1 to 3 listed a week ago and read, so chapter 4 is new to the person.
+        let first: Vec<SourceChapter> = fridays[..3]
+            .iter()
+            .enumerate()
+            .map(|(i, date)| {
+                let mut c = SourceChapter::new(format!("c-{}", i + 1), (i + 1).to_string());
+                c.dated(Some(date));
+                c
+            })
+            .collect();
+        chapters::keep(&kit.store, "shelf", "s-1", &first, FRIDAY_10_UTC - 7 * DAY);
+        dated_series(&kit, &fridays, "RELEASING", FRIDAY_10_UTC);
+        kit.store.adopt_read(WORK, "3", None, FRIDAY_10_UTC - 2 * DAY).unwrap();
+        let ask = Ask {
+            answer: KaeriIsFor::Both,
+            adult: false,
+            chapter_notices: false,
+            now: FRIDAY_10_UTC,
+        };
+        let view = Home::of(&kit, ask).view();
+        let start = jiff::civil::date(2026, 10, 23).to_zoned(new_york).unwrap().timestamp();
+        assert_eq!(view.week[0].entries[0].out_at, Some(start.as_second()));
+        assert_eq!(
+            view.spot.map(|s| s.line),
+            Some(reading(ReadingMsg::ReadingOutToday { chapter: "4".into() })),
+            "the spotlight says so too"
+        );
+    }
+
+    /// Late Sunday in New York is Monday in UTC: a Monday series is due tomorrow there, and
+    /// today everywhere Monday has begun. A server that keeps a day as midnight in its own
+    /// offset says the same day.
+    #[test]
+    fn a_monday_series_is_due_on_monday_across_the_sunday_night_boundary() {
+        // Monday 2026-10-26, 02:00 UTC: Sunday 22:00 in New York, the day after Copenhagen's
+        // clocks went back.
+        const MONDAY_02_UTC: i64 = 1_792_980_000;
+        let mondays = [
+            "2026-09-28",
+            "2026-10-05T00:00:00",
+            "2026-10-12T00:00:00+09:00",
+            "2026-10-19T00:00:00-05:00",
+        ];
+        for (name, zone) in zones() {
+            let week = week_in(zone, &mondays, "RELEASING", MONDAY_02_UTC);
+            assert_eq!(week, usually("2026-10-26", "Usually Mondays"), "{name}");
+        }
+    }
+
+    /// A series that comes out every two weeks is due whole calendar days after its newest
+    /// chapter, across a change of clocks: Copenhagen's on 25 October, New York's on 1 November.
+    #[test]
+    fn a_fortnightly_series_is_due_on_the_right_day_across_a_change_of_clocks() {
+        let mondays = ["2026-08-31", "2026-09-14", "2026-09-28", "2026-10-12"];
+        for (name, zone) in zones() {
+            let week = week_in(zone, &mondays, "RELEASING", FRIDAY_10_UTC);
+            assert_eq!(week, usually("2026-10-26", "About every 2 weeks"), "{name}");
+        }
+        // Friday 2026-10-30, 10:00 UTC.
+        let later = FRIDAY_10_UTC + 7 * DAY;
+        let mondays = ["2026-09-07", "2026-09-21", "2026-10-05", "2026-10-19"];
+        for (name, zone) in zones() {
+            let week = week_in(zone, &mondays, "RELEASING", later);
+            assert_eq!(week, usually("2026-11-02", "About every 2 weeks"), "{name}");
+        }
+    }
+
+    /// A series whose chapters stopped coming leaves This week: ten weeks since the last
+    /// weekly one, whether AniList says it is on hiatus or still releasing, and ten weeks since
+    /// the last of a fortnightly one. One that missed a week or two stays.
+    #[test]
+    fn a_series_whose_chapters_stopped_leaves_this_week() {
+        let utc = jiff::tz::TimeZone::UTC;
+        // Tuesdays, the last ten weeks before Tuesday 2026-10-20.
+        let quiet = ["2026-07-21", "2026-07-28", "2026-08-04", "2026-08-11"];
+        for status in ["RELEASING", "HIATUS"] {
+            assert_eq!(week_in(utc.clone(), &quiet, status, FRIDAY_10_UTC), [], "{status}");
+        }
+        let fortnightly = ["2026-07-06", "2026-07-20", "2026-08-03", "2026-08-17"];
+        assert_eq!(week_in(utc.clone(), &fortnightly, "RELEASING", FRIDAY_10_UTC), []);
+        // Two weeks missed: still expected.
+        let missed = ["2026-09-08", "2026-09-15", "2026-09-22", "2026-09-29", "2026-10-06"];
+        assert_eq!(
+            week_in(utc.clone(), &missed, "RELEASING", FRIDAY_10_UTC),
+            usually("2026-10-27", "Usually Tuesdays")
+        );
+        let late = ["2026-08-17", "2026-08-31", "2026-09-14", "2026-09-28"];
+        assert_eq!(
+            week_in(utc, &late, "RELEASING", FRIDAY_10_UTC),
+            usually("2026-10-26", "About every 2 weeks")
+        );
+    }
+
+    /// A finished or cancelled work leaves This week once its newest chapter is two steps
+    /// behind; a translation still trailing it by a week stays.
+    #[test]
+    fn a_finished_series_leaves_this_week() {
+        let utc = jiff::tz::TimeZone::UTC;
+        // Mondays, the last nearly four weeks before Friday 2026-10-23.
+        let ended = ["2026-09-07", "2026-09-14", "2026-09-21", "2026-09-28"];
+        for status in ["FINISHED", "CANCELLED"] {
+            assert_eq!(week_in(utc.clone(), &ended, status, FRIDAY_10_UTC), [], "{status}");
+        }
+        // Still releasing, the same dates are three weeks missed, not yet stopped.
+        assert_eq!(
+            week_in(utc.clone(), &ended, "RELEASING", FRIDAY_10_UTC),
+            usually("2026-10-26", "Usually Mondays")
+        );
+        let trailing = ["2026-09-28", "2026-10-05", "2026-10-12", "2026-10-19"];
+        assert_eq!(
+            week_in(utc, &trailing, "FINISHED", FRIDAY_10_UTC),
+            usually("2026-10-26", "Usually Mondays")
+        );
     }
 }

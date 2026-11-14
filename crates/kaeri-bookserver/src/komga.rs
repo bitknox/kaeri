@@ -479,8 +479,7 @@ impl BookSource for KomgaSource {
                     if b.metadata.title.is_empty() { &b.name } else { &b.metadata.title };
                 let mut chapter = chapter_of(&b.id, title, Some(&b.metadata.number));
                 chapter.page_count = crate::pages_stated(b.media.pages);
-                chapter.published =
-                    b.metadata.release_date.as_deref().and_then(crate::names::date);
+                chapter.dated(b.metadata.release_date.as_deref());
                 chapter
             })
             .collect())
