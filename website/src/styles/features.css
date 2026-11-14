@@ -211,6 +211,7 @@
 .matrix-scroll {
 	margin-top: 32px;
 	overflow-x: auto;
+	overscroll-behavior-x: contain;
 }
 
 .matrix {
@@ -227,7 +228,7 @@
 
 .matrix thead th {
 	padding: 0 8px 12px;
-	font-size: 14px;
+	font-size: var(--fs-caption);
 	font-weight: 600;
 	width: 9%;
 	border-bottom-color: var(--ani-rule);
@@ -237,6 +238,10 @@
 .matrix tbody th[scope='row'] {
 	text-align: left;
 	width: auto;
+}
+
+.matrix thead th:first-child {
+	padding-left: 0;
 }
 
 .matrix tbody th[scope='row'] {
@@ -252,7 +257,7 @@
 .matrix .matrix-group th {
 	padding: 28px 0 10px;
 	text-align: left;
-	font-size: 13px;
+	font-size: var(--fs-caption);
 	font-weight: 600;
 	color: var(--ani-dim);
 	border-bottom-color: var(--ani-rule);
@@ -313,7 +318,19 @@
 	}
 
 	.matrix-scroll {
-		margin-inline: -16px;
-		padding-inline: 16px;
+		margin-inline: calc(var(--gutter) * -1);
+		padding-inline: var(--gutter);
+	}
+
+	/* The feature names stay put while the platforms scroll under them; the solid edge to their
+	   left covers the gutter, so nothing shows beside a name. */
+	.matrix thead th:first-child,
+	.matrix tbody th[scope='row'] {
+		position: sticky;
+		left: 0;
+		z-index: 1;
+		width: 10.5rem;
+		background: var(--ani-ground);
+		box-shadow: calc(var(--gutter) * -1) 0 0 var(--ani-ground);
 	}
 }
