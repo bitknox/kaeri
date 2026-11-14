@@ -1335,10 +1335,21 @@ fn week_name(days: &[glib::DateTime], month_first: bool) -> (String, String) {
     (title, year)
 }
 
-/// The header's title and Today as the window's width at `size` has room for them.
+/// The header's title and Today as the window's width at `size` has room for them: on a narrow
+/// window the agenda's headings name each day, so the week's title gives way and Today is an
+/// icon, keeping its name for the tooltip and screen readers.
 fn lay_steps(title: &adw::WindowTitle, today: &gtk::Button, size: Size) {
-    let _ = (title, size);
-    today.set_label(&t::calendar_today());
+    let narrow = size == Size::Narrow;
+    let words = t::calendar_today();
+    title.set_visible(!narrow);
+    if narrow {
+        today.set_icon_name("x-office-calendar-symbolic");
+        today.set_tooltip_text(Some(&words));
+    } else {
+        today.set_label(&words);
+        today.set_tooltip_text(None);
+    }
+    today.update_property(&[gtk::accessible::Property::Label(&words)]);
 }
 
 #[cfg(test)]
@@ -1439,5 +1450,32 @@ mod tests {
         // A sub is the plain case: no mark.
         broadcast.entry.airing_translation = Some(Translation::Sub);
         assert!(!broadcast.line().contains("Sub"));
+    }
+}
+
+#[cfg(test)]
+mod narrow_tests {
+    use adw::prelude::*;
+
+    use super::lay_steps;
+    use crate::{gtk_test::run, window::Size};
+
+    /// A 360 px window has room for the week's arrows and Today only with Today as an icon and
+    /// without the week's title.
+    #[test]
+    fn the_header_gives_way_when_narrow() {
+        run(|| {
+            let title = adw::WindowTitle::new("November", "2026"); // i18n-skip
+            let today = gtk::Button::new();
+            let arrow = gtk::Button::from_icon_name("go-next-symbolic");
+            let width =
+                |button: &gtk::Button| button.measure(gtk::Orientation::Horizontal, -1).0;
+            lay_steps(&title, &today, Size::Narrow);
+            assert!(!title.is_visible());
+            assert!(width(&today) <= width(&arrow), "{} px when narrow", width(&today));
+            lay_steps(&title, &today, Size::Medium);
+            assert!(title.is_visible());
+            assert!(width(&today) > width(&arrow));
+        });
     }
 }

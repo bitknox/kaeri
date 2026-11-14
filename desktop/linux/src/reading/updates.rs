@@ -159,8 +159,39 @@ fn draw(ctx: &Rc<Ctx>, column: &gtk::Box, view: &UpdatesView) {
     let _ = say::msg;
 }
 
-/// Download new as the header has room for it at `size`.
+/// Download new as the header has room for it at `size`: on a narrow window an icon, keeping
+/// its name for the tooltip and screen readers, so the header fits beside the window's buttons.
 fn lay_download(download: &gtk::Button, size: Size) {
-    let _ = size;
-    download.set_label(&t::updates_download_new());
+    let words = t::updates_download_new();
+    if size == Size::Narrow {
+        download.set_icon_name("folder-download-symbolic");
+        download.set_tooltip_text(Some(&words));
+    } else {
+        download.set_label(&words);
+        download.set_tooltip_text(None);
+    }
+    download.update_property(&[gtk::accessible::Property::Label(&words)]);
+}
+
+#[cfg(test)]
+mod narrow_tests {
+    use adw::prelude::*;
+
+    use super::lay_download;
+    use crate::{gtk_test::run, window::Size};
+
+    /// A 360 px window has room for Download new only as an icon beside Check now.
+    #[test]
+    fn download_new_takes_an_icons_room_when_narrow() {
+        run(|| {
+            let download = gtk::Button::new();
+            let check = gtk::Button::from_icon_name("view-refresh-symbolic");
+            let width =
+                |button: &gtk::Button| button.measure(gtk::Orientation::Horizontal, -1).0;
+            lay_download(&download, Size::Narrow);
+            assert!(width(&download) <= width(&check), "{} px when narrow", width(&download));
+            lay_download(&download, Size::Medium);
+            assert!(width(&download) > width(&check));
+        });
+    }
 }
