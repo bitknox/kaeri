@@ -1037,7 +1037,10 @@ impl Reader {
             let snap = std::rc::Rc::new(hunt_snapshot(self.widget.upcast_ref()));
             tracing::info!("HUNT ctx snapshot at reset: {} accessibles", snap.len());
             let s2 = snap.clone();
-            glib::idle_add_local_once(move || hunt_check("idle", &s2));
+            glib::idle_add_local_once(move || {
+                hunt_check("idle", &s2);
+                crate::hunt::a11y_cache_check("reset idle");
+            });
             glib::timeout_add_local_once(std::time::Duration::from_millis(900), move || {
                 hunt_check("900ms", &snap)
             });

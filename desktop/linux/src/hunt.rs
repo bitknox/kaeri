@@ -2864,7 +2864,58 @@ static A11Y_REALIZE: std::sync::OnceLock<unsafe extern "C" fn(*mut std::ffi::c_v
 static A11Y_UNREALIZE: std::sync::OnceLock<unsafe extern "C" fn(*mut std::ffi::c_void)> =
     std::sync::OnceLock::new();
 static A11Y_PATH: std::sync::OnceLock<usize> = std::sync::OnceLock::new();
-static A11Y_TYPES: std::sync::Mutex<Vec<(usize, String)>> = std::sync::Mutex::new(Vec::new());
+type A11yLife = std::collections::HashMap<usize, (String, &'static str)>;
+static A11Y_LIFE: std::sync::LazyLock<std::sync::Mutex<A11yLife>> =
+    std::sync::LazyLock::new(Default::default);
+
+fn a11y_mark(ctx: usize, name: Option<String>, state: &'static str) {
+    if let Ok(mut m) = A11Y_LIFE.lock() {
+        let e = m.entry(ctx).or_insert_with(|| ("realized before the hooks".into(), state));
+        if let Some(n) = name {
+            e.0 = n;
+        }
+        e.1 = state;
+    }
+}
+
+/// QA: every entry in GTK's AT-SPI cache whose context is not realized and alive, by the
+/// type it was realized or unrealized for. Offsets are GTK 4.22's private structs.
+pub fn a11y_cache_check(when: &str) {
+    use gtk::glib::{ffi as gf, gobject_ffi as g, translate::ToGlibPtr};
+    let Some(display) = gtk::gdk::Display::default() else { return };
+    // SAFETY: QA only; reads GTK's root and cache, which live as long as the display.
+    unsafe {
+        let d: *mut gtk::gdk::ffi::GdkDisplay = display.to_glib_none().0;
+        let root = g::g_object_get_data(d.cast(), c"-gtk-atspi-root".as_ptr()).cast::<u8>();
+        if root.is_null() {
+            return;
+        }
+        let cache = *root.add(112).cast::<*const u8>();
+        if cache.is_null() {
+            return;
+        }
+        let table = *cache.add(40).cast::<*mut gf::GHashTable>();
+        let mut iter: gf::GHashTableIter = std::mem::zeroed();
+        gf::g_hash_table_iter_init(&mut iter, table);
+        let (mut k, mut v) = (std::ptr::null_mut(), std::ptr::null_mut());
+        let (mut total, mut early) = (0, 0);
+        let life = A11Y_LIFE.lock().map(|m| m.clone()).unwrap_or_default();
+        while gf::g_hash_table_iter_next(&mut iter, &mut k, &mut v) != 0 {
+            total += 1;
+            match life.get(&(v as usize)) {
+                None => early += 1,
+                Some((_, "realized")) => {}
+                Some((name, state)) => tracing::warn!(
+                    "HUNT a11y cache {when}: stale {name} ({state}) at {}",
+                    std::ffi::CStr::from_ptr(k.cast()).to_string_lossy()
+                ),
+            }
+        }
+        tracing::info!(
+            "HUNT a11y cache {when}: {total} entries, {early} from before the hooks"
+        );
+    }
+}
 
 fn a11y_hooks() {
     use gtk::glib::gobject_ffi as g;
@@ -2891,6 +2942,10 @@ fn a11y_hooks() {
             (*class).realize = Some(a11y_realize);
             (*class).unrealize = Some(a11y_unrealize);
             tracing::info!("HUNT a11y hooks on, path at {path}");
+            gtk::glib::timeout_add_local(std::time::Duration::from_millis(500), || {
+                a11y_cache_check("tick");
+                gtk::glib::ControlFlow::Continue
+            });
             for sig in [libc::SIGSEGV, libc::SIGABRT] {
                 let mut act: libc::sigaction = std::mem::zeroed();
                 act.sa_sigaction = hunt_fatal as usize;
@@ -2942,22 +2997,16 @@ unsafe extern "C" fn a11y_realize(ctx: *mut std::ffi::c_void) {
         if let Some(f) = A11Y_REALIZE.get() {
             f(ctx);
         }
-        let name = a11y_type_of(ctx);
-        if let Ok(mut v) = A11Y_TYPES.lock() {
-            v.retain(|(p, _)| *p != ctx as usize);
-            v.push((ctx as usize, name));
-        }
+        a11y_mark(ctx as usize, Some(a11y_type_of(ctx)), "realized");
     }
 }
 
 unsafe extern "C" fn a11y_unrealize(ctx: *mut std::ffi::c_void) {
     // SAFETY: GTK calls this with a live context.
     unsafe {
+        a11y_mark(ctx as usize, Some(a11y_type_of(ctx)), "unrealized");
         if let Some(f) = A11Y_UNREALIZE.get() {
             f(ctx);
-        }
-        if let Ok(mut v) = A11Y_TYPES.lock() {
-            v.retain(|(p, _)| *p != ctx as usize);
         }
     }
 }
@@ -2968,10 +3017,10 @@ unsafe extern "C" fn a11y_finalize(obj: *mut gtk::glib::gobject_ffi::GObject) {
         if let Some(off) = A11Y_PATH.get() {
             let path = *obj.cast::<u8>().add(*off).cast::<*const std::ffi::c_char>();
             if !path.is_null() {
-                let name = A11Y_TYPES.lock().ok().and_then(|mut v| {
-                    let i = v.iter().position(|(p, _)| *p == obj as usize)?;
-                    Some(v.remove(i).1)
-                });
+                let name = A11Y_LIFE
+                    .lock()
+                    .ok()
+                    .and_then(|m| m.get(&(obj as usize)).map(|e| e.0.clone()));
                 tracing::warn!(
                     "HUNT a11y context freed while registered: {} at {}",
                     name.as_deref().unwrap_or("realized before the hooks"),
@@ -2979,6 +3028,7 @@ unsafe extern "C" fn a11y_finalize(obj: *mut gtk::glib::gobject_ffi::GObject) {
                 );
             }
         }
+        a11y_mark(obj as usize, None, "freed");
         if let Some(f) = A11Y_FINALIZE.get() {
             f(obj);
         }
