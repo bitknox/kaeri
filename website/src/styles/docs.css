@@ -48,7 +48,7 @@
    centred grid whose edges line up with the bar's. */
 .page {
 	flex-direction: column;
-	min-height: 100vh;
+	min-height: 100svh;
 }
 
 .page > .header {

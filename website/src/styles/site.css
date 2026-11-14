@@ -110,7 +110,8 @@ summary,
 
 body.k-body {
 	margin: 0;
-	min-height: 100vh;
+	/* The small viewport, so a short page fits with the phone's address bar showing. */
+	min-height: 100svh;
 	display: flex;
 	flex-direction: column;
 	background: var(--ani-ground);
