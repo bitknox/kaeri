@@ -11,10 +11,12 @@ use ratatui::{buffer::Buffer, layout::Rect, style::Modifier, widgets::Widget};
 use super::{chrome::header_chips, line, overlays::render_overlay};
 use crate::{
     app::{
-        App, CHROME_ROWS, FrameReport, MIN_COLUMNS, MIN_ROWS, PLATE_AFTER, PartKey, Reader,
-        ReaderScreen, SECONDS_AFTER, chapter_name, reader_hints, say,
+        App, CanvasBox, FrameReport, MIN_COLUMNS, MIN_ROWS, PLATE_AFTER, PartKey, Piece,
+        Reader, ReaderScreen, SECONDS_AFTER, Viewport, ZOOM_PANEL, chapter_name, reader_hints,
+        say, stage_of,
     },
     image::Graphics,
+    image::PixelCrop,
     keymap::{Action, said},
     layout,
     nav::{Overlay, RailWidth},
@@ -30,6 +32,11 @@ const WIDE: u16 = 100;
 const ROOMY: u16 = 72;
 /// The end page's column at full size, and the width its Next heading rules to.
 const END_WIDTH: u16 = 60;
+/// From this width the meter is 24 cells long.
+const VERY_WIDE: u16 = 160;
+/// The zoom's map at most this many rows tall, and this many columns wide.
+const MAP_ROWS: u16 = 9;
+const MAP_COLUMNS: u16 = 13;
 
 /// Paint the reader over the whole window, and say the window's size for the surface.
 pub(super) fn render_reader(buf: &mut Buffer, app: &App, area: Rect) -> FrameReport {
@@ -48,11 +55,7 @@ pub(super) fn render_reader(buf: &mut Buffer, app: &App, area: Rect) -> FrameRep
     }
     let now = app.clock.now_instant();
     let bare = reader.bare && matches!(screen, ReaderScreen::Pages);
-    let stage = if bare {
-        area
-    } else {
-        Rect { y: area.y + 2, height: area.height.saturating_sub(CHROME_ROWS), ..area }
-    };
+    let stage = stage_of(area, bare);
     match screen {
         ReaderScreen::Opening => opening(buf, app, reader, stage, now),
         ReaderScreen::ChapterFailed => chapter_failed(buf, app, reader, stage),
@@ -117,10 +120,10 @@ fn header(buf: &mut Buffer, app: &App, reader: &Reader, screen: ReaderScreen, ar
         }
     };
     let rest =
-        if chapter_words.is_empty() { String::new() } else { format!(" · {chapter_words}") };
+        if chapter_words.is_empty() { String::new() } else { format!(" · {chapter_words}") }; // i18n-skip: layout
     // Opening, and in a small window, the whole title is quiet.
     let strong = w >= ROOMY && screen != ReaderScreen::Opening;
-    let whole = format!("{series}{rest}");
+    let whole = format!("{series}{rest}"); // i18n-skip: layout
     let room = room as usize;
     if strong && whole.cells() <= room {
         let x = TITLE_X + series.cells() as u16;
@@ -214,6 +217,31 @@ fn status_left(
             ));
             runs
         }
+        ReaderScreen::Pages if reader.strips() => strip_status(app, reader, w),
+        ReaderScreen::Pages if reader.zoom.is_some() => {
+            let level = reader.zoom.map_or(1.0, |z| z.level);
+            let percent = (level * 100.0).round() as i64;
+            let page = zoom_page(app, reader).map_or_else(String::new, |page| {
+                t::tui_reader_page_of(i64::from(page) + 1, i64::from(reader.story_pages()))
+            });
+            let mut words = t::tui_reader_zoom(percent);
+            if !page.is_empty() {
+                words.push_str(&format!(" · {page}")); // i18n-skip: layout
+            }
+            vec![(blocks_said(app, words), Role::TextDim)]
+        }
+        ReaderScreen::Pages if reader.fits_width() => {
+            let Some(count) = count else { return Vec::new() };
+            let words = format!("{count} · {}", t::tui_reader_fit_width()); // i18n-skip: layout
+            if w < WIDE {
+                return vec![(blocks_said(app, words), Role::TextDim)];
+            }
+            let pages = reader.story_pages().max(1);
+            let last = reader.pages_in_view().map_or(0, |(a, b)| b.unwrap_or(a));
+            let mut runs = meter(reader, f64::from(last) / f64::from(pages), w);
+            runs.push((blocks_said(app, format!("  {words}")), Role::TextDim)); // i18n-skip: layout
+            runs
+        }
         ReaderScreen::Pages => {
             let Some(count) = count else { return Vec::new() };
             if w < ROOMY {
@@ -222,7 +250,7 @@ fn status_left(
             let pages = reader.story_pages().max(1);
             let last = reader.pages_in_view().map_or(0, |(a, b)| b.unwrap_or(a));
             let mut runs = meter(reader, f64::from(last) / f64::from(pages), w);
-            let mut words = format!("  {count}");
+            let mut words = format!("  {count}"); // i18n-skip: layout
             if w >= WIDE && reader.rtl() {
                 words.push_str(&format!(" · {}", t::reader_mode_rtl()));
             }
@@ -251,7 +279,13 @@ fn page_count(reader: &Reader) -> Option<String> {
 /// The meter, 16 cells wide in a wide window and 10 in a classic one, filling from the right in a
 /// right-to-left chapter, as the page moves.
 fn meter(reader: &Reader, fraction: f64, w: u16) -> Vec<(String, Role)> {
-    let width = if w >= WIDE { 16 } else { 10 };
+    let width = if w >= VERY_WIDE {
+        24
+    } else if w >= WIDE {
+        16
+    } else {
+        10
+    };
     let full = ((fraction.clamp(0.0, 1.0)) * f64::from(width as u32)) as usize;
     let mut cells = "█".repeat(full) + &"░".repeat(width - full); // i18n-skip: the meter
     if reader.rtl() {
@@ -302,7 +336,7 @@ fn opening(buf: &mut Buffer, app: &App, reader: &Reader, stage: Rect, now: Insta
         words
     };
     let pulse = glyph::pulse(app.pulse_frame());
-    let text = format!("  {words}");
+    let text = format!("  {words}"); // i18n-skip: layout
     let width = pulse.cells() + text.cells();
     let room = stage.width.saturating_sub(4) as usize;
     let x = stage.x + (stage.width.saturating_sub(width.min(room) as u16)) / 2;
@@ -360,11 +394,28 @@ fn images_off(buf: &mut Buffer, app: &App, stage: Rect) {
 /// The leaf in view: each part in its box, the picture once decoded, else a plate the size of
 /// the page that says it is loading from 600 ms, or why it failed.
 fn pages(buf: &mut Buffer, app: &App, reader: &Reader, stage: Rect, now: Instant) {
+    if reader.strips() {
+        strip(buf, app, reader, stage, now);
+        return;
+    }
+    if let Some(view) = app.zoom_view(reader, stage) {
+        viewport(buf, app, reader, &view, now);
+        zoom_map(buf, app, &view, stage);
+        return;
+    }
+    if reader.fits_width()
+        && let Some(view) = app.fit_view(reader, stage)
+    {
+        viewport(buf, app, reader, &view, now);
+        scroll_bar(buf, app, &view, stage);
+        return;
+    }
     let Some(leaf) = reader.leaf() else { return };
     let waited = now.saturating_duration_since(reader.shown_at);
     for (part, rect) in leaf_boxes(app, reader, leaf, stage) {
         let key = PartKey { page: part.page, half: part.half };
-        if reader.pictures.contains_key(&key)
+        // A picture from an older file shows until the new one is decoded.
+        if app.images.has(&reader.picture_key(key))
             && app.images.render_scaled(&reader.picture_key(key), rect, buf)
         {
             continue;
@@ -416,6 +467,276 @@ fn leaf_boxes<'a>(
         .collect()
 }
 
+/// A box on a canvas drawn where the view shows it, from the same part of its picture, or a
+/// plate that says the page is loading or why it failed.
+fn canvas_box(
+    buf: &mut Buffer,
+    app: &App,
+    reader: &Reader,
+    item: &CanvasBox,
+    view: &Viewport,
+    now: Instant,
+) {
+    let Some((rect, crop)) = box_in_view(app, item, view) else { return };
+    if crop.is_some() && app.images.render_part(&item.key, crop, rect, buf) {
+        return;
+    }
+    plate(buf, app, rect);
+    let Some(part) = item.part else { return };
+    if let Some(failure) = reader.failures.get(&part.page) {
+        page_failed(buf, app, rect, part.page, failure);
+    } else if now.saturating_duration_since(reader.shown_at) >= PLATE_AFTER {
+        page_loading(buf, app, rect, part.page);
+    }
+}
+
+/// Where a box shows in the view, and the part of its picture there, once the picture is kept.
+fn box_in_view(
+    app: &App,
+    item: &CanvasBox,
+    view: &Viewport,
+) -> Option<(Rect, Option<PixelCrop>)> {
+    let area = view.area;
+    let (vx0, vy0) = (view.x, view.y);
+    let (vx1, vy1) = (vx0 + i32::from(area.width), vy0 + i32::from(area.height));
+    let (bx1, by1) = (item.x + item.width as i32, item.y + item.height as i32);
+    let (x0, x1) = (item.x.max(vx0), bx1.min(vx1));
+    let (y0, y1) = (item.y.max(vy0), by1.min(vy1));
+    if x0 >= x1 || y0 >= y1 {
+        return None;
+    }
+    let rect = Rect {
+        x: area.x + (x0 - vx0) as u16,
+        y: area.y + (y0 - vy0) as u16,
+        width: (x1 - x0) as u16,
+        height: (y1 - y0) as u16,
+    };
+    let crop = app.images.page_size(&item.key).map(|(pw, ph)| {
+        let across = |c: i32| {
+            (f64::from(c - item.x) / f64::from(item.width.max(1)) * f64::from(pw)).round()
+                as u32
+        };
+        let down = |r: i32| {
+            (f64::from(r - item.y) / f64::from(item.height.max(1)) * f64::from(ph)).round()
+                as u32
+        };
+        PixelCrop {
+            x: across(x0),
+            y: down(y0),
+            width: across(x1).saturating_sub(across(x0)).max(1),
+            height: down(y1).saturating_sub(down(y0)).max(1),
+        }
+    });
+    Some((rect, crop))
+}
+
+/// The part of a canvas in view: a page at fit width, or zoomed in.
+fn viewport(buf: &mut Buffer, app: &App, reader: &Reader, view: &Viewport, now: Instant) {
+    for item in &view.boxes {
+        canvas_box(buf, app, reader, item, view, now);
+    }
+}
+
+/// The bar at the right at fit width: the rule's line the page's height, and the thumb the
+/// part in view.
+fn scroll_bar(buf: &mut Buffer, app: &App, view: &Viewport, stage: Rect) {
+    let x = stage.right().saturating_sub(2);
+    let rows = u32::from(stage.height);
+    let total = view.height.max(1);
+    let (thumb, at) = if total <= rows {
+        (rows, 0)
+    } else {
+        let thumb =
+            ((f64::from(rows) * f64::from(rows) / f64::from(total)).round() as u32).max(1);
+        let at = (f64::from(view.y.max(0) as u32) * f64::from(rows) / f64::from(total)).round()
+            as u32;
+        (thumb, at.min(rows - thumb))
+    };
+    for y in 0..rows {
+        let (mark, role) =
+            if y >= at && y < at + thumb { ("┃", Role::Text) } else { ("│", Role::Rule) }; // i18n-skip: the bar
+        line(buf, x, stage.y + y as u16, mark, app.palette.style(role));
+    }
+}
+
+/// The box under the middle of the view, or the nearest to it.
+fn centre_box(view: &Viewport) -> Option<&CanvasBox> {
+    let cx = view.x + i32::from(view.area.width) / 2;
+    view.boxes.iter().min_by_key(|b| {
+        if cx < b.x { b.x - cx } else { (cx - (b.x + b.width as i32 - 1)).max(0) }
+    })
+}
+
+/// The page under the middle of the zoomed view.
+fn zoom_page(app: &App, reader: &Reader) -> Option<u32> {
+    let stage = app.reader_stage()?;
+    let view = app.zoom_view(reader, stage)?;
+    centre_box(&view).and_then(|b| b.part).map(|p| p.page)
+}
+
+/// The zoom's map at the right: the page in halfblocks, the part in view bright and the rest
+/// dimmed, and the page under it.
+fn zoom_map(buf: &mut Buffer, app: &App, view: &Viewport, stage: Rect) {
+    let Some(item) = centre_box(view) else { return };
+    let (cw, ch) = app.images.engine().font_size();
+    let ratio = (item.width as f32 * f32::from(cw.max(1)))
+        / (item.height.max(1) as f32 * f32::from(ch.max(1)));
+    let rows = MAP_ROWS.min(stage.height / 2).max(1);
+    let room = ZOOM_PANEL.saturating_sub(3).min(MAP_COLUMNS);
+    let cols = ((f32::from(rows) * ratio * f32::from(ch.max(1)) / f32::from(cw.max(1))).round()
+        as u16)
+        .clamp(1, room);
+    let x = view.area.right() + 2;
+    let y = stage.y + 1;
+    if x + cols > stage.right() {
+        return;
+    }
+    // The view on the page, in the map's pixels: two to a cell, one over the other.
+    let px = |c: i32, size: u32, n: u16| f64::from(c) / f64::from(size.max(1)) * f64::from(n);
+    let vx0 = px(view.x - item.x, item.width, cols).floor() as i32;
+    let vx1 = (px(view.x + i32::from(view.area.width) - item.x, item.width, cols) + 0.5) as i32;
+    let vy0 = px(view.y - item.y, item.height, rows * 2).floor() as i32;
+    let vy1 =
+        (px(view.y + i32::from(view.area.height) - item.y, item.height, rows * 2) + 0.5) as i32;
+    match app.images.thumbnail(&item.key, (cols, rows)) {
+        Some(thumb) => {
+            let colour = |cx: u32, py: u32| {
+                let [r, g, b] = thumb.get_pixel(cx, py).0;
+                let inside =
+                    (vx0..vx1).contains(&(cx as i32)) && (vy0..vy1).contains(&(py as i32));
+                let dim = |v: u8| if inside { v } else { (u16::from(v) * 2 / 5) as u8 };
+                ratatui::style::Color::Rgb(dim(r), dim(g), dim(b))
+            };
+            for cy in 0..rows {
+                for cx in 0..cols {
+                    let cell = &mut buf[(x + cx, y + cy)];
+                    cell.set_symbol("▀"); // i18n-skip: a halfblock
+                    cell.set_fg(colour(u32::from(cx), u32::from(cy) * 2));
+                    cell.set_bg(colour(u32::from(cx), u32::from(cy) * 2 + 1));
+                }
+            }
+        }
+        None => plate(buf, app, Rect { x, y, width: cols, height: rows }),
+    }
+    if let Some(part) = item.part {
+        let words = t::tui_reader_zoom_page(i64::from(part.page) + 1);
+        let room = stage.right().saturating_sub(x) as usize;
+        line(buf, x, y + rows + 1, truncate(&words, room), app.palette.style(Role::TextDim));
+    }
+}
+
+/// A strip: a column of images from the chapters it ran on from, the open chapter and the
+/// next chapter's first image, with a divider naming each chapter between them.
+fn strip(buf: &mut Buffer, app: &App, reader: &Reader, stage: Rect, now: Instant) {
+    let cols = crate::app::strip_cols(reader, stage.width);
+    let layout = app.strip_layout(reader, cols);
+    let x = stage.x + (stage.width - cols) / 2;
+    let top = reader.strip.top;
+    let bottom = top + u32::from(stage.height);
+    let view = Viewport {
+        boxes: Vec::new(),
+        width: u32::from(cols),
+        height: layout.total,
+        x: 0,
+        y: top as i32,
+        area: Rect { x, width: cols, ..stage },
+    };
+    let p = &app.palette;
+    let width = cols as usize;
+    for item in &layout.items {
+        if item.top + item.rows <= top || item.top >= bottom {
+            continue;
+        }
+        let row = |r: u32| {
+            let at = item.top + r;
+            (at >= top && at < bottom).then(|| stage.y + (at - top) as u16)
+        };
+        let centred = |buf: &mut Buffer, y: u16, text: &str, style| {
+            let text = truncate(text, width);
+            let left = x + (cols.saturating_sub(text.cells() as u16)) / 2;
+            line(buf, left, y, text, style);
+        };
+        match &item.piece {
+            Piece::Image { key, part, .. } => {
+                let shown = CanvasBox {
+                    key: key.clone(),
+                    part: *part,
+                    x: 0,
+                    y: item.top as i32,
+                    width: u32::from(cols),
+                    height: item.rows,
+                };
+                canvas_box(buf, app, reader, &shown, &view, now);
+            }
+            Piece::Divider { next, source } => {
+                if let Some(y) = row(1) {
+                    let bold = p.style(Role::Text).add_modifier(Modifier::BOLD);
+                    centred(buf, y, &chapter_name(next), bold);
+                }
+                if let Some(y) = row(2) {
+                    centred(
+                        buf,
+                        y,
+                        &divider_facts(next, source.as_ref()),
+                        p.style(Role::TextDim),
+                    );
+                }
+            }
+            Piece::Foot => {
+                let Some((heading, words)) = why_none_words(reader) else { continue };
+                if let Some(y) = row(1) {
+                    let bold = p.style(Role::Text).add_modifier(Modifier::BOLD);
+                    centred(buf, y, &heading, bold);
+                }
+                for (i, text) in wrap(&words, width.max(1), 3).iter().enumerate() {
+                    if let Some(y) = row(2 + i as u32) {
+                        centred(buf, y, text, p.style(Role::TextDim));
+                    }
+                }
+            }
+        }
+    }
+}
+
+/// The divider's facts: the next chapter's images and its source.
+fn divider_facts(next: &kaeri_model::reading::ChapterRow, source: Option<&String>) -> String {
+    let images = next.pages.filter(|p| *p > 0).map(|p| t::reader_divider_images(i64::from(p)));
+    match (images, source) {
+        (Some(images), Some(source)) => t::reader_divider_facts_source(&images, source),
+        (Some(images), None) => images,
+        (None, Some(source)) => t::reader_end_from(source),
+        (None, None) => String::new(),
+    }
+}
+
+/// A strip's status: the meter in a wide window, the chapter and the image at the top.
+fn strip_status(app: &App, reader: &Reader, w: u16) -> Vec<(String, Role)> {
+    let images = reader.leaves.iter().filter(|l| !l.end_page).count() as i64;
+    let number = reader.chapter_number().unwrap_or_default();
+    let mode = t::reader_mode_strip();
+    let at = (reader.at as i64 + 1).min(images);
+    let words = if images > 0 {
+        format!("{} · {mode}", t::tui_reader_strip_at(&number, at, images)) // i18n-skip: layout
+    } else {
+        format!("{} · {mode}", t::reader_chapter_line(&number)) // i18n-skip: layout
+    };
+    if w < WIDE {
+        return vec![(blocks_said(app, words), Role::TextDim)];
+    }
+    let fraction = if images > 0 { at as f64 / images as f64 } else { 0.0 };
+    let mut runs = meter(reader, fraction, w);
+    runs.push((blocks_said(app, format!("  {words}")), Role::TextDim)); // i18n-skip: layout
+    runs
+}
+
+/// The status words, with Blocks after them when pages show as blocks.
+fn blocks_said(app: &App, mut words: String) -> String {
+    if app.images.engine().graphics() == Graphics::Halfblocks {
+        words.push_str(&format!(" · {}", t::tui_reader_blocks()));
+    }
+    words
+}
+
 /// A page's place before its picture lands, in the rule's weight.
 fn plate(buf: &mut Buffer, app: &App, rect: Rect) {
     let row = "░".repeat(rect.width as usize); // i18n-skip: the plate
@@ -455,7 +776,7 @@ fn page_failed(
     let width = (heading.cells() + 2).max(wrap_at + 2).min(room);
     let pad = |text: &str| {
         let text = truncate(text, width.saturating_sub(1));
-        format!(" {text}{}", " ".repeat(width.saturating_sub(1 + text.cells())))
+        format!(" {text}{}", " ".repeat(width.saturating_sub(1 + text.cells()))) // i18n-skip: layout
     };
     let x = rect.x + 2.min(rect.width / 4);
     let y = middle(rect).saturating_sub(1);
@@ -664,6 +985,21 @@ fn next_compact(
 /// Why there is no next chapter, and what happens next.
 fn why_none(buf: &mut Buffer, app: &App, reader: &Reader, x: u16, y: u16, width: usize) {
     let p = &app.palette;
+    let Some((heading, words)) = why_none_words(reader) else { return };
+    line(
+        buf,
+        x,
+        y,
+        truncate(&heading, width),
+        p.style(Role::Text).add_modifier(Modifier::BOLD),
+    );
+    for (i, text) in wrap(&words, width.max(1), 3).iter().enumerate() {
+        line(buf, x, y + 1 + i as u16, text, p.style(Role::TextDim));
+    }
+}
+
+/// Why there is no next chapter: a heading and a line.
+fn why_none_words(reader: &Reader) -> Option<(String, String)> {
     let next_number = reader
         .chapter()
         .and_then(|c| c.number.as_deref())
@@ -691,18 +1027,9 @@ fn why_none(buf: &mut Buffer, app: &App, reader: &Reader, x: u16, y: u16, width:
         Some(NoNext::CaughtUp) | None => {
             (t::reader_end_caught_up(), t::tui_reader_end_caught_up_line())
         }
-        Some(NoNext::Finished) => return,
+        Some(NoNext::Finished) => return None,
     };
-    line(
-        buf,
-        x,
-        y,
-        truncate(&heading, width),
-        p.style(Role::Text).add_modifier(Modifier::BOLD),
-    );
-    for (i, text) in wrap(&words, width.max(1), 3).iter().enumerate() {
-        line(buf, x, y + 1 + i as u16, text, p.style(Role::TextDim));
-    }
+    Some((heading, words))
 }
 
 /// Below 40 by 12: what size the reader needs. The place is kept for when the window grows.

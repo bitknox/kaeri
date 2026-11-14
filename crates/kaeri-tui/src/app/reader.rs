@@ -22,17 +22,22 @@ use kaeri_model::{
     command::Command,
     notice::NoticeKind,
     reader::{
-        Leaf, NoNext, OpenAt, PageEncoding, PageFile, PageFormats, PageHalf, ReadDirection,
-        ReaderAction, ReaderCommand, ReaderEvent, ReaderNotice, ReaderSettingKey,
-        ReaderSettingsView, ReaderSurface, ReaderValue, ReaderView, ReaderWait, SettingScope,
-        TurnHow, reader_notice_hold,
+        Leaf, NoNext, OpenAt, PageEncoding, PageFile, PageFormats, PageHalf, PixelRect,
+        ReadDirection, ReaderAction, ReaderCommand, ReaderEvent, ReaderNotice,
+        ReaderSettingKey, ReaderSettingsView, ReaderSurface, ReaderValue, ReaderView,
+        ReaderWait, SettingScope, TurnHow, reader_notice_hold,
     },
     reading::{
         ChapterReadState, ChapterRow, DownloadPick, ReadingCommand, ReadingFailure, VolumeGroup,
     },
 };
 
-use super::{App, info, say, series::downloaded};
+use super::{
+    App, info,
+    reader_view::{Strip, Zoom},
+    say,
+    series::downloaded,
+};
 use crate::{
     image::Graphics,
     keymap::{Action, Binding, Context, said},
@@ -54,6 +59,9 @@ pub const SECONDS_AFTER: Duration = Duration::from_secs(4);
 const NOTICE_MS: u32 = 5_000;
 /// The width of a page before its picture is known, over its height.
 const PAGE_RATIO: f32 = 2.0 / 3.0;
+
+/// A decode handed out: the part, and the file's path and crop it was made from.
+type Decoding = (PartKey, String, Option<PixelRect>);
 
 /// One part of a leaf, as its file is kept: a page, or one half of a split spread.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
@@ -126,8 +134,9 @@ pub struct Reader {
     files: HashMap<PartKey, PageFile>,
     /// Decoded pictures in the image store, with their size once cropped and turned.
     pub pictures: HashMap<PartKey, (u32, u32)>,
-    /// Keys handed out for decoding, with the part each is for; `None` is the next preview.
-    decoding: HashMap<String, Option<PartKey>>,
+    /// Keys handed out for decoding, with the part and the file each is for; `None` is the
+    /// next preview.
+    decoding: HashMap<String, Option<Decoding>>,
     asked_pages: HashSet<u32>,
     /// Files that failed to decode and were asked for once more.
     asked_again: HashSet<String>,
@@ -151,6 +160,16 @@ pub struct Reader {
     pub offline: bool,
     /// The series' chapters, oldest first, for `r` after the last one and `e`.
     pub chapters: Vec<ChapterRow>,
+    /// At fit width, the row of the page at the top of the stage.
+    pub scroll: u32,
+    /// The page zoomed in, while it is.
+    pub zoom: Option<Zoom>,
+    /// A strip's place and the chapters it ran on from.
+    pub strip: Strip,
+    /// The chapter a strip ran on into, until its leaves come.
+    pub flowing: Option<ChapterId>,
+    /// The page to keep in view when the mode changed, for the engine's next layout.
+    pub switched: Option<u32>,
 }
 
 impl Reader {
@@ -186,7 +205,20 @@ impl Reader {
             settings_asked: false,
             offline: false,
             chapters: Vec::new(),
+            scroll: 0,
+            zoom: None,
+            strip: Strip::default(),
+            flowing: None,
+            switched: None,
         }
+    }
+
+    /// The open chapter's pages put away when a strip runs on into the next chapter: its
+    /// pictures stay for the trail above, and the next chapter's come in their place.
+    pub(super) fn forget_pages(&mut self) {
+        self.leaves.clear();
+        self.at = 0;
+        self.held_page = None;
     }
 
     /// The chapter open, or the one opening.
@@ -216,7 +248,9 @@ impl Reader {
 
     /// Still opening: nothing laid out to show yet and nothing failed.
     pub fn is_opening(&self) -> bool {
-        self.chapter_failure.is_none() && (self.view.is_none() || self.leaves.is_empty())
+        self.chapter_failure.is_none()
+            && self.flowing.is_none()
+            && (self.view.is_none() || self.leaves.is_empty())
     }
 
     /// The leaf in view is the page between chapters.
@@ -320,6 +354,9 @@ impl Reader {
     /// The leaves to have pages for around `index`: it, two on and one back.
     fn wanted(&self, index: usize) -> Vec<usize> {
         let count = self.leaves.len();
+        if self.strips() && !self.strip.near.is_empty() {
+            return self.strip.near.iter().copied().filter(|i| *i < count).collect();
+        }
         let ahead = index..(index + 3).min(count);
         ahead.chain(index.checked_sub(1).filter(|i| *i < count)).collect()
     }
@@ -369,7 +406,7 @@ impl App {
         }
     }
 
-    fn reader_mut(&mut self) -> Option<&mut Reader> {
+    pub(super) fn reader_mut(&mut self) -> Option<&mut Reader> {
         match self.nav.current() {
             StageView::Reader(work) => {
                 let work = work.clone();
@@ -485,7 +522,10 @@ impl App {
             // Halfblocks put two pixels in a cell, one over the other.
             Graphics::Halfblocks | Graphics::Disabled => (u32::from(w), u32::from(rows) * 2),
         };
+        // A strip and a page at fit width show one page across.
         let two_pages = rows >= TWO_PAGE_ROWS
+            && !reader.strips()
+            && reader.choice(ReaderSettingKey::Fit) != Some("width") // i18n-skip: a value
             && 2.0 * height_px as f32 * reader.page_ratio() <= width_px as f32;
         ReaderSurface {
             width_px,
@@ -501,7 +541,7 @@ impl App {
                 gif: true,
                 avif: false,
             }),
-            zoom: 1.0,
+            zoom: reader.zoom.map_or(1.0, |z| z.level),
             text: true,
         }
     }
@@ -509,13 +549,14 @@ impl App {
     /// The window the last frame was drawn in. In the reader, a new surface goes to the engine
     /// when it changes the stage, so the chapter is laid out again at the same place.
     pub(super) fn reader_window(&mut self, window: (u16, u16)) {
+        self.keep_strip_place(window);
         self.window = Some(window);
         self.send_surface();
     }
 
     /// Send the surface again when it changed: a resize, the chrome hidden or shown, one page
     /// or two. Nothing goes while the window is too small; the place is kept for when it grows.
-    fn send_surface(&mut self) {
+    pub(super) fn send_surface(&mut self) {
         let Some(reader) = self.reader_here() else { return };
         let Some(surface) = self.surface_for(reader) else { return };
         if reader.surface.as_ref() == Some(&surface) {
@@ -553,12 +594,22 @@ impl App {
             ReaderEvent::Opened(view) => {
                 let fresh = reader.session != view.session
                     || reader.view.as_ref().is_none_or(|v| v.chapter.id != view.chapter.id);
-                if fresh {
+                // A strip that ran on into this chapter keeps the pictures of the one above.
+                let flowed = reader.flowing.as_ref() == Some(&view.chapter.id);
+                if fresh && !flowed {
                     images.forget_prefix("reader/"); // i18n-skip: a key prefix
+                    reader.strip = Strip::default();
+                    reader.zoom = None;
+                    reader.scroll = 0;
+                    reader.flowing = None;
+                }
+                if fresh {
                     reader.leaves.clear();
                     reader.files.clear();
                     reader.pictures.clear();
-                    reader.decoding.clear();
+                    if !flowed {
+                        reader.decoding.clear();
+                    }
                     reader.asked_pages.clear();
                     reader.asked_again.clear();
                     reader.failures.clear();
@@ -612,9 +663,9 @@ impl App {
                 if current(reader, &chapter) {
                     let key = PartKey { page, half };
                     let old = reader.files.insert(key, file.clone());
+                    // The picture from the old file shows until the new one is decoded.
                     if old.is_some_and(|old| old.path != file.path || old.crop != file.crop) {
                         reader.pictures.remove(&key);
-                        images.forget(&reader.picture_key(key));
                     }
                     reader.failures.remove(&page);
                     self.decode_in_view();
@@ -639,10 +690,16 @@ impl App {
             }
             ReaderEvent::ChapterRead { work, chapter, trackers } => {
                 if reader.work == work && current(reader, &chapter) {
-                    reader.end.read = Some(trackers);
+                    reader.end.read = Some(trackers.clone());
                     if let Some(view) = reader.view.as_mut() {
                         view.chapter.state = ChapterReadState::Read;
                     }
+                }
+                if reader.work == work {
+                    if let Some(row) = reader.chapters.iter_mut().find(|c| c.id == chapter) {
+                        row.state = ChapterReadState::Read;
+                    }
+                    self.strip_read(&chapter, &trackers);
                 }
             }
             ReaderEvent::ProgressSent { work, chapter, host, result, .. } => {
@@ -677,6 +734,7 @@ impl App {
             }
             ReaderEvent::Settings(view) if reader.medium().is_none_or(|m| m == view.medium) => {
                 reader.settings = Some(view);
+                self.follow_settings();
             }
             _ => {}
         }
@@ -746,23 +804,32 @@ impl App {
 
     /// The chapter's leaves, first or laid out again: the page in view stays in view.
     fn take_leaves(&mut self, leaves: Vec<Leaf>) {
+        // A strip's place, from the layout before this one.
+        let strip_place = self.strip_place();
         let Some(reader) = self.reader.as_mut() else { return };
         for part in leaves.iter().flat_map(|l| &l.parts) {
             if let Some(file) = &part.file {
                 let key = PartKey { page: part.page, half: part.half };
                 let old = reader.files.insert(key, file.clone());
+                // The picture from the old file shows until the new one is decoded.
                 if old.is_some_and(|old| old.path != file.path || old.crop != file.crop) {
                     reader.pictures.remove(&key);
-                    let key = reader.picture_key(key);
-                    self.images.forget(&key);
                 }
             }
         }
         let first = reader.leaves.is_empty();
+        let switched = reader.switched.take();
+        if reader.strips() {
+            reader.leaves = leaves;
+            let kept = switched.map(|page| (page, 0.0)).or(strip_place);
+            self.place_strip(first, kept);
+            self.send_surface();
+            return;
+        }
         let start = if first {
             reader.view.as_ref().and_then(|v| v.start.page)
         } else {
-            reader.kept_page()
+            switched.or(reader.kept_page())
         };
         let index = start
             .and_then(|p| leaves.iter().position(|l| l.parts.iter().any(|part| part.page == p)))
@@ -784,7 +851,6 @@ impl App {
     /// Put leaf `index` in view: its pages asked for and decoded, and the engine told.
     fn show_leaf(&mut self, index: usize, how: TurnHow) -> Option<Command> {
         let now = self.clock.now_instant();
-        let images_on = self.images.engine().is_enabled();
         let reader = self.reader.as_mut()?;
         if index >= reader.leaves.len() {
             return None;
@@ -792,13 +858,32 @@ impl App {
         if reader.at != index {
             reader.held_page = None;
             reader.shown_at = now;
+            reader.scroll = 0;
         }
         reader.at = index;
         let session = reader.session;
         let chapter = reader.view.as_ref()?.chapter.id.clone();
-        if images_on {
-            let pages: Vec<u32> = reader
-                .wanted(index)
+        let wanted = reader.wanted(index);
+        self.ask_pages(wanted);
+        self.decode_in_view();
+        Some(Command::Reader(ReaderCommand::Shown {
+            session,
+            chapter,
+            leaf: index as u32,
+            how,
+        }))
+    }
+
+    /// Ask the engine for the pages of `leaves` it has not sent, once each.
+    pub(super) fn ask_pages(&mut self, leaves: Vec<usize>) {
+        if !self.images.engine().is_enabled() {
+            return;
+        }
+        let Some(reader) = self.reader.as_mut() else { return };
+        let session = reader.session;
+        let Some(chapter) = reader.view.as_ref().map(|v| v.chapter.id.clone()) else { return };
+        {
+            let pages: Vec<u32> = leaves
                 .into_iter()
                 .filter_map(|i| reader.leaves.get(i))
                 .flat_map(|l| l.parts.iter())
@@ -818,17 +903,10 @@ impl App {
                 }));
             }
         }
-        self.decode_in_view();
-        Some(Command::Reader(ReaderCommand::Shown {
-            session,
-            chapter,
-            leaf: index as u32,
-            how,
-        }))
     }
 
     /// Hand the files of the leaves around the one in view to be decoded, once each.
-    fn decode_in_view(&mut self) {
+    pub(super) fn decode_in_view(&mut self) {
         if !self.images.engine().is_enabled() {
             return;
         }
@@ -846,10 +924,13 @@ impl App {
             }
             let Some(file) = reader.files.get(&key).cloned() else { continue };
             let image_key = reader.picture_key(key);
+            // One decode of a picture at a time; one of an older file asks again when it lands.
             if reader.decoding.contains_key(&image_key) {
                 continue;
             }
-            reader.decoding.insert(image_key.clone(), Some(key));
+            reader
+                .decoding
+                .insert(image_key.clone(), Some((key, file.path.clone(), file.crop)));
             self.page_jobs.push(PageJob { key: image_key, file, rotate, half: key.half });
         }
     }
@@ -864,21 +945,38 @@ impl App {
     pub fn page_decoded(&mut self, key: &str, image: Option<image::DynamicImage>) {
         let Some(reader) = self.reader.as_mut() else { return };
         let Some(part) = reader.decoding.remove(key) else { return };
+        // A picture of a chapter the strip ran on from goes on showing in the trail.
+        if let Some((part, _, _)) = part
+            && reader.picture_key(part) != key
+        {
+            if let Some(image) = image {
+                self.images.insert_page(key, image);
+            }
+            return;
+        }
         match (part, image) {
             (None, Some(image)) => {
                 let size = (image.width(), image.height());
-                self.images.insert(key, image);
+                self.images.insert_page(key, image);
                 let next = reader.end.next.as_ref().map(|n| n.id.clone());
                 if let Some(next) = next.filter(|n| reader.preview_key(n) == key) {
                     reader.end.preview = Some((next, size));
                 }
             }
             (None, None) => {}
-            (Some(part), Some(image)) => {
-                reader.pictures.insert(part, (image.width(), image.height()));
-                self.images.insert(key, image);
+            (Some((part, path, crop)), Some(image)) => {
+                let size = (image.width(), image.height());
+                self.images.insert_page(key, image);
+                // Decoded from a file since replaced, at another zoom: shown until the new one is.
+                let stale =
+                    reader.files.get(&part).is_some_and(|f| f.path != path || f.crop != crop);
+                if stale {
+                    self.decode_in_view();
+                } else {
+                    reader.pictures.insert(part, size);
+                }
             }
-            (Some(part), None) => {
+            (Some((part, _, _)), None) => {
                 let path = reader.files.get(&part).map(|f| f.path.clone()).unwrap_or_default();
                 let session = reader.session;
                 let chapter = reader.view.as_ref().map(|v| v.chapter.id.clone());
@@ -923,6 +1021,9 @@ impl App {
         // The keys the reader keeps from the rest of the app: help, the palette, logs, quit.
         if Action::IN_READER.contains(&action) {
             return None;
+        }
+        if let Some(task) = self.mode_key(screen, action) {
+            return Some(task);
         }
         let rtl = self.reader_here()?.rtl();
         Some(match (screen, action) {
@@ -976,6 +1077,11 @@ impl App {
                 None
             }
             (_, Action::ReaderPages) => self.switch_pages(),
+            (_, Action::ReaderMode) => self.switch_mode(),
+            (ReaderScreen::Pages, Action::ReaderFit) => self.switch_fit(),
+            (ReaderScreen::Pages, Action::ReaderZoom) => self.toggle_zoom(),
+            (ReaderScreen::Pages, Action::ReaderZoomIn) => self.step_zoom(true),
+            (ReaderScreen::Pages, Action::ReaderZoomOut) => self.step_zoom(false),
             (_, Action::ReaderSettings) => self.open_reader_settings(),
             (ReaderScreen::End, Action::ReaderAgain) => self.read_again(),
             (_, Action::ReaderAgain) => self.retry_page(),
@@ -989,7 +1095,7 @@ impl App {
 
     /// One leaf on or back. Forward from the end page goes on to the next chapter; back from
     /// the first page goes to the chapter before, as the engine decides.
-    fn turn(&mut self, forward: bool) -> Option<Command> {
+    pub(super) fn turn(&mut self, forward: bool) -> Option<Command> {
         let reader = self.reader_here()?;
         if reader.leaves.is_empty() {
             return None;
@@ -1150,11 +1256,11 @@ impl App {
         let layout = reader.page_layout();
         let two_now = layout == "double" || (layout == "auto" && surface_two); // i18n-skip
         let name = if two_now {
-            "single"
+            "single" // i18n-skip: setting values
         } else if surface_two {
-            "auto"
+            "auto" // i18n-skip: setting values
         } else {
-            "double"
+            "double" // i18n-skip: setting values
         }; // i18n-skip: setting values
         Some(Command::Reader(ReaderCommand::SetSetting {
             session: Some(reader.session),
@@ -1182,6 +1288,7 @@ impl App {
         let Some(reader) = self.reader_here() else { return false };
         let now = self.clock.now_instant();
         reader.opening.is_some()
+            || reader.strip.report.is_some()
             || reader.notice.as_ref().is_some_and(|n| n.until.is_none_or(|u| u > now))
             || (self.images.engine().is_enabled()
                 && reader.leaf().is_some_and(|l| {
@@ -1197,6 +1304,14 @@ impl App {
     pub fn reader_notice(&self) -> Option<&ShownNotice> {
         let now = self.clock.now_instant();
         self.reader_here()?.notice.as_ref().filter(|n| n.until.is_none_or(|u| u > now))
+    }
+
+    /// The letter that runs `action` in the reader, for hints that pair keys up: `j k`.
+    pub fn reader_letter(&self, action: Action) -> Option<String> {
+        let mut keys = self.keymap.keys_in(action, Context::Reading);
+        keys.sort();
+        let letter = keys.iter().find(|b| matches!(b.code, crossterm::event::KeyCode::Char(_)));
+        letter.or(keys.first()).map(Binding::render)
     }
 
     /// The key that runs `action` in the reader, as its hint names it: the arrow for the turn
@@ -1251,10 +1366,28 @@ pub(crate) fn reader_hints(app: &App, width: usize) -> Vec<(String, &'static str
             let failed = reader
                 .leaf()
                 .is_some_and(|l| l.parts.iter().any(|p| reader.failures.contains_key(&p.page)));
+            if !failed && let Some(hints) = mode_hints(app, reader, width, forward, back) {
+                return hints;
+            }
             if failed {
                 vec![
                     (Action::ReaderAgain, said(t::reader_try_again())),
                     (forward, said(t::tui_reader_hint_without())),
+                    (Action::Help, keys),
+                ]
+            } else if width >= 140 {
+                // A wide window has room to say one page or two.
+                let pages = if reader.shows_two() {
+                    said(t::tui_reader_hint_one_page())
+                } else {
+                    said(t::tui_reader_hint_two_pages())
+                };
+                vec![
+                    (forward, next),
+                    (back, back_word),
+                    (Action::ReaderPages, pages),
+                    (Action::ReaderChapters, chapters),
+                    (Action::ReaderSettings, said(t::tui_reader_hint_settings())),
                     (Action::Help, keys),
                 ]
             } else if width >= 100 {
@@ -1277,6 +1410,79 @@ pub(crate) fn reader_hints(app: &App, width: usize) -> Vec<(String, &'static str
         .into_iter()
         .filter_map(|(action, label)| Some((app.reader_key_name(action)?, label)))
         .collect()
+}
+
+/// The hints at fit width, zoomed and in a strip, where keys pair up as the board writes them:
+/// "j k scroll", "h j k l move". `None` for a page fitted to the window.
+fn mode_hints(
+    app: &App,
+    reader: &Reader,
+    width: usize,
+    forward: Action,
+    back: Action,
+) -> Option<Vec<(String, &'static str)>> {
+    let one = |action: Action| app.reader_key_name(action);
+    let letters = |actions: &[Action]| {
+        let keys: Option<Vec<String>> = actions.iter().map(|a| app.reader_letter(*a)).collect();
+        keys.map(|k| k.join(" "))
+    };
+    let scroll = (
+        letters(&[Action::ReaderScrollDown, Action::ReaderScrollUp]),
+        said(t::tui_reader_hint_scroll()),
+    );
+    let keys = (one(Action::Help), said(t::keys_hint_keys()));
+    let wanted: Vec<(Option<String>, &'static str)> = if reader.strips() {
+        let mut wanted = vec![
+            scroll,
+            (app.reader_letter(Action::ReaderNext), said(t::tui_reader_hint_next_screen())),
+        ];
+        if width >= 100 && reader.end.next.is_some() {
+            wanted.push((
+                one(Action::ReaderNextChapter),
+                said(t::tui_reader_hint_next_chapter()),
+            ));
+        }
+        wanted.push(keys);
+        wanted
+    } else if reader.zoom.is_some() {
+        vec![
+            (
+                letters(&[
+                    Action::ReaderLeft,
+                    Action::ReaderScrollDown,
+                    Action::ReaderScrollUp,
+                    Action::ReaderRight,
+                ]),
+                said(t::tui_reader_hint_move()),
+            ),
+            (
+                letters(&[Action::ReaderZoomIn, Action::ReaderZoomOut]),
+                said(t::tui_reader_hint_zoom()),
+            ),
+            (one(Action::ReaderZoom), said(t::tui_reader_hint_leave_zoom())),
+            keys,
+        ]
+    } else if reader.fits_width() {
+        let next = (one(forward), said(t::tui_reader_hint_next()));
+        let fit = (one(Action::ReaderFit), said(t::tui_reader_hint_fit_screen()));
+        if width >= 100 {
+            vec![
+                scroll,
+                next,
+                (one(back), said(t::tui_reader_hint_back())),
+                fit,
+                (one(Action::ReaderSettings), said(t::tui_reader_hint_settings())),
+                keys,
+            ]
+        } else if width >= 72 {
+            vec![scroll, next, fit, keys]
+        } else {
+            vec![scroll, next, keys]
+        }
+    } else {
+        return None;
+    };
+    Some(wanted.into_iter().filter_map(|(key, label)| Some((key?, label))).collect())
 }
 
 /// The end page's hints: Continue and the next chapter when there is one, else what can be done
@@ -1317,6 +1523,15 @@ fn end_hints(
         wanted.push((Action::Help, keys));
     }
     wanted
+}
+
+/// The terminal's own notice on the status rule, for as long as the short ones stay.
+pub(super) fn own_notice(text: String, now: Instant) -> Option<ShownNotice> {
+    Some(ShownNotice {
+        text,
+        action: None,
+        until: Some(now + Duration::from_millis(u64::from(NOTICE_MS))),
+    })
 }
 
 /// The engine's notice as the status rule shows it, for as long as the engine says.
@@ -1362,7 +1577,7 @@ fn server_line(result: &WriteBackResult, host: &str) -> Option<String> {
 }
 
 #[cfg(test)]
-mod tests {
+pub(super) mod tests {
     use kaeri_model::{
         reader::{LeafPart, PageKind, ReadPlace, ReaderMode, UnitRect},
         reading::ChapterRow,
@@ -1371,9 +1586,9 @@ mod tests {
     use super::*;
     use crate::app::fixtures::*;
 
-    const SESSION: u64 = 7;
+    pub(in crate::app) const SESSION: u64 = 7;
 
-    fn row(n: u32) -> ChapterRow {
+    pub(in crate::app) fn row(n: u32) -> ChapterRow {
         ChapterRow {
             id: ChapterId(format!("c{n}")),
             label: format!("Chapter {n}"),
@@ -1401,7 +1616,7 @@ mod tests {
         }
     }
 
-    fn view(direction: ReadDirection) -> ReaderView {
+    pub(in crate::app) fn view(direction: ReadDirection) -> ReaderView {
         let work = WorkId::new("a:1");
         ReaderView {
             session: SESSION,
@@ -1427,7 +1642,7 @@ mod tests {
     }
 
     /// Four pages, one to a leaf, then the end page.
-    fn leaves() -> Vec<Leaf> {
+    pub(in crate::app) fn leaves() -> Vec<Leaf> {
         let mut leaves: Vec<Leaf> = (0..4)
             .map(|page| Leaf {
                 index: page,
@@ -1450,7 +1665,7 @@ mod tests {
 
     /// The reader open on chapter 14 at its second page, in a window `w` by `h` drawn with
     /// halfblocks.
-    fn reading(direction: ReadDirection, w: u16, h: u16) -> App {
+    pub(in crate::app) fn reading(direction: ReadDirection, w: u16, h: u16) -> App {
         kaeri_i18n::set_language("en");
         let engine = crate::image::ImageEngine::halfblocks();
         let mut a =
@@ -1476,7 +1691,7 @@ mod tests {
         }))
     }
 
-    fn key(code: KeyCode) -> KeyEvent {
+    pub(in crate::app) fn key(code: KeyCode) -> KeyEvent {
         KeyEvent::new(code, KeyModifiers::NONE)
     }
 

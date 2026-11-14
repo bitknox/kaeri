@@ -53,6 +53,7 @@ mod overlays;
 mod playback;
 mod providers;
 mod reader;
+mod reader_view;
 mod reading;
 mod series;
 mod settings;
@@ -81,6 +82,10 @@ pub use self::{
     reader::{
         CHROME_ROWS, EndFacts, MIN_COLUMNS, MIN_ROWS, PLATE_AFTER, PageJob, PartKey, Reader,
         ReaderScreen, SECONDS_AFTER, ShownNotice, TWO_PAGE_ROWS,
+    },
+    reader_view::{
+        CanvasBox, DIVIDER_ROWS, FIT_MARGIN, Piece, StripItem, StripLayout, Viewport,
+        ZOOM_PANEL, Zoom, stage_of, strip_cols,
     },
     reading::{
         AnilistState, GROUP_HITS, LOADING_LINE_AFTER, Part, ReadLine, Reading,

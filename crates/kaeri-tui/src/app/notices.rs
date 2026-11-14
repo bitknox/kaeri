@@ -259,6 +259,7 @@ impl App {
         self.toasts.retain(|t| t.ttl > 0);
         self.tick_pending_reload();
         self.pay_blocks();
+        self.tick_strip();
         // A placeholder held past its answer gives way on a tick: the cursor stays on its line.
         self.settle_reading_cursor();
         // The loading pulse rides this tick rather than getting one of its own. The idle ticker
