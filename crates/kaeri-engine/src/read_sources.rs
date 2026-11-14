@@ -58,6 +58,8 @@ pub use added::RECHECK;
 
 /// The id the folders answer to in the registry.
 pub const FOLDERS: &str = "folders";
+/// How often at most a folder scan says how far it has got: four times a second.
+pub const PROGRESS_EVERY: std::time::Duration = std::time::Duration::from_millis(250);
 const META_ORDER: &str = "reading.book_order";
 /// How long a source's word on how a series reads is kept before it is asked again.
 const HINT_KEPT: i64 = 7 * 24 * 3600;
@@ -101,6 +103,34 @@ fn kind_of(kind: Kind) -> BookServerKind {
         Kind::Komga => BookServerKind::Komga,
         Kind::Kavita => BookServerKind::Kavita,
         Kind::Opds => BookServerKind::Opds,
+    }
+}
+
+/// Keeps what a server's source learns about its sign-in while it runs.
+struct ServerKeeper {
+    id: String,
+    tokens: TokenStore,
+    store: Store,
+    write_back: crate::write_back::WriteBack,
+}
+
+impl kaeri_bookserver::Keeper for ServerKeeper {
+    fn renewed(&self, credential: &str) {
+        // A server removed while its source renewed has no sign-in to keep any more.
+        if !matches!(self.store.book_server(&self.id), Ok(Some(_))) {
+            return;
+        }
+        if let Err(e) = self.tokens.set(&secret_key(&self.id), credential) {
+            tracing::warn!(error = %e, "a book server's renewed sign-in was not kept");
+        }
+    }
+
+    fn refused(&self) {
+        match self.store.set_book_server_signed_out(&self.id, true) {
+            Ok(true) => self.write_back.publish(),
+            Ok(false) => {}
+            Err(e) => tracing::warn!(error = %e, "a book server's refusal was not kept"),
+        }
     }
 }
 
@@ -273,6 +303,11 @@ pub struct BookSources {
     keep: PathBuf,
     flags: Arc<Mutex<HashMap<String, Arc<AtomicBool>>>>,
     scanning: Arc<Mutex<HashMap<String, Arc<AtomicU32>>>>,
+    /// The view as last built: a scan's progress is said on it, with only its counts changed.
+    shown: Arc<Mutex<Option<BookSourcesView>>>,
+    /// Folders whose scan stopped as they were removed, with whether that scan was to say what
+    /// came in: an undo scans them again.
+    stopped: Arc<Mutex<HashMap<String, Option<bool>>>>,
     removed: Arc<RwLock<HashSet<String>>>,
     undo: Arc<Mutex<HashMap<String, tokio::task::AbortHandle>>>,
     /// Servers signed in to and not added yet, with their sign-ins: in memory only.
@@ -333,6 +368,8 @@ impl BookSources {
             keep: paths.cache_dir.join("books"),
             flags: Arc::default(),
             scanning: Arc::default(),
+            shown: Arc::default(),
+            stopped: Arc::default(),
             removed: Arc::default(),
             undo: Arc::default(),
             pending: Arc::default(),
@@ -463,9 +500,29 @@ impl BookSources {
         }
     }
 
-    /// Ask `server` once more after it refused the sign-in.
+    /// Ask `server` once more after it refused the sign-in. Its row says signed in again while
+    /// it is asked, and says signed out again if it refuses once more.
     pub(crate) fn forget_refusal(&self, server: &str) {
         self.flag(server).store(false, Ordering::Relaxed);
+        if self.registry.get(server).is_some()
+            && let Err(e) = self.store.set_book_server_signed_out(server, false)
+        {
+            tracing::warn!(error = %e, "a book server's sign-in was not marked as tried again");
+        }
+    }
+
+    /// The sign-in state of `server`, with what its source tells about it kept: a renewed
+    /// sign-in goes to the secure store, a refusal to the server's row.
+    fn gate(&self, server: &str) -> kaeri_bookserver::Gate {
+        kaeri_bookserver::Gate::new(
+            self.flag(server),
+            Arc::new(ServerKeeper {
+                id: server.to_owned(),
+                tokens: self.tokens.clone(),
+                store: self.store.clone(),
+                write_back: self.write_back.clone(),
+            }),
+        )
     }
 
     fn put_server(&self, server: &BookServer) {
@@ -475,8 +532,10 @@ impl BookSources {
                 self.store.put_book_server(&BookServer { signed_out: true, ..server.clone() });
             return;
         };
-        let flag = self.flag(&server.id);
-        flag.store(server.signed_out, Ordering::Relaxed);
+        self.flag(&server.id).store(server.signed_out, Ordering::Relaxed);
+        if !server.signed_out {
+            self.downloads.signed_in(&self.store, &server.id, kaeri_store::now());
+        }
         let libraries = self.server_meta(&server.id).libraries;
         let built = kaeri_bookserver::source_with(
             &self.servers,
@@ -489,7 +548,7 @@ impl BookSources {
             },
             &libraries,
             self.keep.clone(),
-            flag,
+            self.gate(&server.id),
         );
         if let Some(source) = built {
             self.registry.put(source);
@@ -554,6 +613,7 @@ impl BookSources {
         let removed = self.removed.read().unwrap_or_else(|e| e.into_inner()).clone();
         let scanning = self.scanning.lock().unwrap_or_else(|e| e.into_inner()).clone();
         let series = self.store.local_book_series().unwrap_or_default();
+        let files = self.store.local_book_file_counts().unwrap_or_default();
         let folders = self
             .store
             .book_folders()
@@ -591,8 +651,7 @@ impl BookSources {
                 medium: Medium::parse(&s.medium).unwrap_or(Medium::Manga),
                 work: s.work.clone().map(kaeri_core::books::WorkId::new),
                 matched_title: None,
-                files: u32::try_from(self.store.local_book_files(&s.id).map_or(0, |f| f.len()))
-                    .unwrap_or(u32::MAX),
+                files: files.get(&s.id).copied().unwrap_or(0),
                 kept: s.state == "kept",
             })
             .collect();
@@ -631,13 +690,28 @@ impl BookSources {
         for row in &mut plugin_rows {
             row.off = self.registry.is_off(&row.id);
         }
-        BookSourcesView {
+        let view = BookSourcesView {
             folders,
             groups,
             servers,
             plugins: plugin_rows,
             order: self.registry.ids(),
+        };
+        *self.shown.lock().unwrap_or_else(|e| e.into_inner()) = Some(view.clone());
+        view
+    }
+
+    /// The view as last built, with each folder being scanned showing what it has found so far:
+    /// what a scan's progress says, without building the view again. `None` before any view.
+    pub fn scan_progress(&self) -> Option<BookSourcesView> {
+        let mut view = self.shown.lock().unwrap_or_else(|e| e.into_inner()).clone()?;
+        let scanning = self.scanning.lock().unwrap_or_else(|e| e.into_inner());
+        for row in &mut view.folders {
+            if let Some(found) = scanning.get(&row.id) {
+                row.scan = BookFolderScan::Scanning { found: found.load(Ordering::Relaxed) };
+            }
         }
+        Some(view)
     }
 
     // -----------------------------------------------------------------------------------------
@@ -675,37 +749,71 @@ impl BookSources {
             available: usable,
         };
         self.store.put_book_folder(&row).ok()?;
+        self.stopped.lock().unwrap_or_else(|e| e.into_inner()).remove(&id);
         self.removed.write().unwrap_or_else(|e| e.into_inner()).remove(&id);
         Some((id, before.is_some() && !leaving))
     }
 
-    /// Scan one folder on a blocking thread, telling `progress` what it has found.
+    fn is_removed(&self, id: &str) -> bool {
+        self.removed.read().unwrap_or_else(|e| e.into_inner()).contains(id)
+    }
+
+    /// Scan one folder on a blocking thread. While it runs, `progress` is told when more has
+    /// been found, at most every [`PROGRESS_EVERY`] and never on the scan's own thread. A folder
+    /// removed meanwhile stops its scan, and nothing of it is kept.
     pub async fn scan_folder(
         &self,
         folder: Folder,
         now: i64,
         progress: impl Fn() + Send + 'static,
-    ) -> Option<kaeri_model::came_in::FolderReport> {
+    ) -> ScanEnd {
         let Some(path) = reach(folder.path.as_deref(), folder.tree_uri.as_deref()) else {
             tracing::info!("a book folder has no path and nothing opens it");
             let _ = self.store.set_book_folder_available(&folder.id, false);
-            return None;
+            return ScanEnd::Unread;
         };
         let found = Arc::new(AtomicU32::new(0));
         self.scanning
             .lock()
             .unwrap_or_else(|e| e.into_inner())
             .insert(folder.id.clone(), found.clone());
-        let counter = found.clone();
-        let scanned = tokio::task::spawn_blocking(move || {
-            library::scan(&path, &Nothing, &Limits::default(), &mut |n| {
-                counter.store(n, Ordering::Relaxed);
-                progress();
+        let ticker = {
+            let found = found.clone();
+            tokio::spawn(async move {
+                let mut every = tokio::time::interval(PROGRESS_EVERY);
+                every.set_missed_tick_behavior(tokio::time::MissedTickBehavior::Delay);
+                every.tick().await;
+                let mut said = 0;
+                loop {
+                    every.tick().await;
+                    let now = found.load(Ordering::Relaxed);
+                    if now != said {
+                        said = now;
+                        progress();
+                    }
+                }
             })
+        };
+        let counter = found.clone();
+        let (removed, id) = (self.removed.clone(), folder.id.clone());
+        let scanned = tokio::task::spawn_blocking(move || {
+            let stop = || removed.read().unwrap_or_else(|e| e.into_inner()).contains(&id);
+            library::scan_until(
+                &path,
+                &Nothing,
+                &Limits::default(),
+                &mut |n| counter.store(n, Ordering::Relaxed),
+                &stop,
+            )
         })
         .await;
+        // Stopped for good before the scan is said done, so no late count follows it.
+        ticker.abort();
+        let _ = ticker.await;
         self.scanning.lock().unwrap_or_else(|e| e.into_inner()).remove(&folder.id);
         match scanned {
+            Ok(Err(e)) if e.kind() == std::io::ErrorKind::Interrupted => ScanEnd::Stopped,
+            Ok(Ok(_)) if self.is_removed(&folder.id) => ScanEnd::Stopped,
             Ok(Ok(scan)) => {
                 let report = added::folder_report(&folder, &scan);
                 self.keep_folder_meta(&report);
@@ -736,16 +844,16 @@ impl BookSources {
                         }
                     }
                 }
-                Some(report)
+                ScanEnd::Read(report)
             }
             Ok(Err(e)) => {
                 tracing::info!(error = %e, "a book folder could not be read");
                 let _ = self.store.set_book_folder_available(&folder.id, false);
-                None
+                ScanEnd::Unread
             }
             Err(e) => {
                 tracing::warn!(error = %e, "the folder scan stopped");
-                None
+                ScanEnd::Unread
             }
         }
     }
@@ -840,6 +948,17 @@ pub(crate) fn demo_tile(work: &kaeri_core::reading_demo::DemoWork) -> WorkTile {
         amount: None,
         started: None,
     }
+}
+
+/// How a folder's scan ended.
+#[derive(Debug)]
+pub enum ScanEnd {
+    /// What came in from it.
+    Read(kaeri_model::came_in::FolderReport),
+    /// It could not be read.
+    Unread,
+    /// It was removed while it was scanned: nothing of it was kept.
+    Stopped,
 }
 
 /// A scanned series as the store keeps it.
@@ -979,6 +1098,7 @@ pub fn command(
                     keeper.removed.write().unwrap_or_else(|e| e.into_inner()).remove(&forget);
                 if gone {
                     let _ = keeper.store.remove_book_folder(&forget);
+                    keeper.stopped.lock().unwrap_or_else(|e| e.into_inner()).remove(&forget);
                     changed(&tx);
                 }
                 keeper.undo.lock().unwrap_or_else(|e| e.into_inner()).remove(&forget);
@@ -994,8 +1114,17 @@ pub fn command(
             {
                 timer.abort();
             }
-            this.removed.write().unwrap_or_else(|e| e.into_inner()).remove(&id);
+            // Taken out of the removed under the lock a stopping scan holds as it looks, so a
+            // scan that stopped for the removal is either kept here or scans again by itself.
+            let stopped = {
+                let mut stopped = this.stopped.lock().unwrap_or_else(|e| e.into_inner());
+                this.removed.write().unwrap_or_else(|e| e.into_inner()).remove(&id);
+                stopped.remove(&id)
+            };
             publish();
+            if let Some(answer) = stopped {
+                rescan(this, Some(id), now, publish, tx, answer);
+            }
         }
         BookSourceCommand::FindMatch { group, query } => {
             // Matching needs the manga catalogue, which is not on this device yet.
@@ -1133,11 +1262,38 @@ fn rescan(
             .collect();
         let scanned = !folders.is_empty();
         for folder in folders {
-            let tick = publish.clone();
+            let tick = {
+                let (this, tx, publish) = (this.clone(), tx.clone(), publish.clone());
+                move || match this.scan_progress() {
+                    Some(view) => {
+                        let _ = tx.send(Event::BookSources(BookSourceEvent::View(view)));
+                    }
+                    None => publish(),
+                }
+            };
             // What is said when the scan can't start or stops: the folder, and nothing found.
             let mut unread =
                 added::folder_report(&folder, &kaeri_books::library::Scan::default());
-            let found = this.scan_folder(folder, now, tick).await;
+            let found = loop {
+                match this.scan_folder(folder.clone(), now, tick.clone()).await {
+                    ScanEnd::Read(report) => break Some(Some(report)),
+                    ScanEnd::Unread => break Some(None),
+                    ScanEnd::Stopped => {
+                        let mut stopped =
+                            this.stopped.lock().unwrap_or_else(|e| e.into_inner());
+                        if this.is_removed(&folder.id) {
+                            // Nothing is said of a folder that was removed; an undo scans it.
+                            stopped.insert(folder.id.clone(), answer);
+                            break None;
+                        }
+                        // Brought back as the scan stopped: it is scanned again.
+                    }
+                }
+            };
+            let Some(found) = found else {
+                publish();
+                continue;
+            };
             if let Some(already) = answer {
                 let came = match found {
                     Some(mut found) => {

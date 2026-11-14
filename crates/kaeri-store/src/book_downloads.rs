@@ -305,6 +305,19 @@ impl Store {
         })
     }
 
+    /// Put back in the queue every fetch from `source` that failed for want of a sign-in, as
+    /// a retry would, once the source is signed in again. Returns how many.
+    pub fn book_downloads_signed_in(&self, source: &str, now: i64) -> Result<usize> {
+        self.with_conn(|c| {
+            Ok(c.execute(
+                "UPDATE book_download SET state = 'queued', path = NULL, pages_done = 0,
+                        pages_total = NULL, bytes = 0, error = NULL, updated_at = ?2
+                  WHERE source_id = ?1 AND state = 'failed' AND substr(error, 1, 8) = 'sign_in:'",
+                params![source, now],
+            )?)
+        })
+    }
+
     /// Put a fetch back in the queue, as when the network went away under it.
     pub fn book_download_requeue(&self, id: i64, now: i64) -> Result<()> {
         self.with_conn(|c| {

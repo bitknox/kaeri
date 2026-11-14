@@ -25,6 +25,14 @@ chrono.workspace = true
 terminal-colorsaurus.workspace = true
 tracing.workspace = true
 
+[target.'cfg(unix)'.dependencies]
+# The start-up queries' one reader: raw input and a wait with a deadline.
+rustix = { version = "1.1", features = ["event", "termios"] }
+
+[target.'cfg(unix)'.dev-dependencies]
+# A pseudo-terminal for the start-up queries' test.
+rustix = { version = "1.1", features = ["event", "termios", "pty", "fs"] }
+
 [features]
 # Opt in for a better no-graphics fallback. Requires chafa to be installed.
 chafa = ["ratatui-image/chafa-dyn"]

@@ -28,7 +28,7 @@ use crate::{
     error::{Result, ServerError},
     http::{Auth, Http, basic},
     kept::keep_path,
-    komga::encode,
+    komga::segment,
     names::chapter_of,
 };
 
@@ -314,7 +314,7 @@ pub struct OpdsSource {
     manifest: BookSourceManifest,
     http: Http,
     keep: PathBuf,
-    signed_out: Arc<AtomicBool>,
+    signed_out: crate::Gate,
 }
 
 /// How a series hit's id points back into the catalogue.
@@ -348,7 +348,7 @@ impl OpdsSource {
         name: &str,
         http: Http,
         keep: PathBuf,
-        signed_out: Arc<AtomicBool>,
+        signed_out: impl Into<crate::Gate>,
     ) -> Self {
         Self {
             manifest: BookSourceManifest {
@@ -363,7 +363,7 @@ impl OpdsSource {
             },
             http,
             keep,
-            signed_out,
+            signed_out: signed_out.into(),
         }
     }
 
@@ -675,7 +675,7 @@ fn fill_search(template: &str, term: &str) -> String {
         let name = &rest[open + 1..close];
         let local = name.rsplit(':').next().unwrap_or(name);
         match local {
-            "searchTerms" => out.push_str(&encode(term)),
+            "searchTerms" => out.push_str(&segment(term)),
             "startPage" | "startIndex" => out.push('1'),
             _ => {}
         }
@@ -1014,7 +1014,7 @@ mod tests {
         );
         assert_eq!(
             fill_search(&template, "Lantern & Moth"),
-            "http://shelf.example/opds/search?q=Lantern+%26+Moth&page=&n="
+            "http://shelf.example/opds/search?q=Lantern%20%26%20Moth&page=&n="
         );
         assert_eq!(fill_search("/s?q={searchTerms}&p={os:startPage}", "a"), "/s?q=a&p=1");
         assert_eq!(opensearch_template(ROOT, "http://shelf.example/opds"), None);

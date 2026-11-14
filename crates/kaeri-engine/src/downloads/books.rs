@@ -248,6 +248,9 @@ struct Inner {
     titles: std::sync::OnceLock<kaeri_meta::titles::Titles>,
     /// The pages of the chapters being fetched, for a reader that opens one meanwhile.
     shares: shared::Shares,
+    /// Fetches went back in the queue as their source was signed in again, and the queue has
+    /// not been started for them yet.
+    requeued: std::sync::atomic::AtomicBool,
 }
 
 impl std::fmt::Debug for BookDownloads {
@@ -296,7 +299,27 @@ impl BookDownloads {
             told: Mutex::new(None),
             titles: std::sync::OnceLock::new(),
             shares: shared::Shares::default(),
+            requeued: std::sync::atomic::AtomicBool::new(false),
         }))
+    }
+
+    /// Put back in the queue the fetches from `source` that failed for want of a sign-in, now
+    /// that it is signed in again. The queue starts for them with the next change of sources:
+    /// see [`Self::take_requeued`].
+    pub(crate) fn signed_in(&self, store: &Store, source: &str, now: i64) {
+        match store.book_downloads_signed_in(source, now) {
+            Ok(0) => {}
+            Ok(n) => {
+                tracing::info!(n, "downloads that wanted a sign-in are queued again");
+                self.0.requeued.store(true, std::sync::atomic::Ordering::Relaxed);
+            }
+            Err(e) => tracing::warn!(error = %e, "downloads that wanted a sign-in stay failed"),
+        }
+    }
+
+    /// Whether fetches went back in the queue since this was last asked.
+    pub(crate) fn take_requeued(&self) -> bool {
+        self.0.requeued.swap(false, std::sync::atomic::Ordering::Relaxed)
     }
 
     /// Name series in the title language `titles` follows.

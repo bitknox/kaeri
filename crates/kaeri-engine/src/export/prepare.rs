@@ -82,7 +82,7 @@ impl From<ReadingFailure> for Stop {
 
 fn unreadable(path: &Path, format: &str) -> Stop {
     Stop::Failed(ReadingFailure::Unreadable {
-        path: path.display().to_string(),
+        path: crate::reading::pages::book_name(path),
         format: format.into(),
     })
 }

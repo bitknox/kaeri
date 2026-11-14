@@ -413,11 +413,12 @@ impl BookSources {
             }
             let Some(kind) = Kind::parse(&server.kind) else { continue };
             let Ok(credential) = self.tokens.get(&secret_key(&server.id)) else { continue };
-            let counted = kaeri_bookserver::count_series(
+            let counted = kaeri_bookserver::count_series_kept(
                 &self.servers,
                 &server.address,
                 kind,
                 &credential,
+                &self.gate(&server.id),
             )
             .await;
             meta.checked_at = Some(now);

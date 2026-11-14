@@ -131,7 +131,7 @@ impl WriteBack {
         *self.0.publish.lock().unwrap_or_else(|e| e.into_inner()) = Some(publish);
     }
 
-    fn publish(&self) {
+    pub(crate) fn publish(&self) {
         let publish = self.0.publish.lock().unwrap_or_else(|e| e.into_inner()).clone();
         if let Some(publish) = publish {
             publish();

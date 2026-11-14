@@ -49,7 +49,13 @@ pub async fn run(
 ) -> Result<()> {
     // The colour depth first: every colour the palette hands out is drawn at it.
     theme::set_depth(theme::detect_depth(|key| std::env::var(key).ok()));
-    let palette = theme::resolve(config.theme.mode);
+    // The terminal is asked everything at once, through one reader that keeps the keys typed
+    // meanwhile: they are the first the loop reads.
+    let answers = kaeri_tui::probe::ask(kaeri_tui::probe::Ask {
+        background: config.theme.mode == kaeri_core::config::ThemeMode::Adaptive,
+        graphics: images,
+    });
+    let palette = theme::resolve_answered(config.theme.mode, &answers);
 
     let mut keymap = Keymap::new();
     let keybinding_problems = keymap.apply_overrides(&config.keys);
@@ -57,8 +63,8 @@ pub async fn run(
         eprintln!("warning: keybinding: {problem}");
     }
 
-    let image_engine =
-        kaeri_tui::image::ImageEngine::detect(images).with_cache_dir(paths.image_cache());
+    let image_engine = kaeri_tui::image::ImageEngine::with_answers(images, &answers)
+        .with_cache_dir(paths.image_cache());
     tracing::info!(graphics = ?image_engine.graphics(), "image engine ready");
 
     // What the file says, as distinct from what is in effect: `--theme` changes only this
@@ -143,7 +149,8 @@ pub async fn run(
         app.apply(update);
     }
 
-    let mut events = EventStream::new();
+    let typed = answers.typed_events().into_iter().map(Ok::<TermEvent, io::Error>);
+    let mut events = futures::stream::iter(typed).chain(EventStream::new());
     let mut ticker = tokio::time::interval(Duration::from_millis(100));
     // Covers come back from the blocking pool on this, decoded, to be handed to the app.
     let (covers_tx, mut covers_rx) = mpsc::unbounded_channel();

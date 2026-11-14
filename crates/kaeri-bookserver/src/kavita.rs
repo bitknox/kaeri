@@ -1,13 +1,11 @@
 //! Kavita: its REST API, as a book source.
 //!
 //! Sign-in is `POST /api/Account/login`, which answers a JWT, a refresh token and the account's
-//! API key. The JWT signs API calls and is refreshed with the refresh token when it lapses; the
-//! API key goes in page image addresses, which an image view fetches without headers.
+//! API key. The JWT signs API calls and is renewed when the server refuses it: with the refresh
+//! token, and failing that with the API key, the way a key sign-in works. The API key goes in
+//! page image addresses, which an image view fetches without headers.
 
-use std::{
-    path::PathBuf,
-    sync::{Arc, Mutex, atomic::AtomicBool},
-};
+use std::{future::Future, path::PathBuf, sync::Mutex};
 
 use async_trait::async_trait;
 use kaeri_core::{
@@ -22,11 +20,11 @@ use kaeri_core::{
 use serde::{Deserialize, Serialize};
 
 use crate::{
-    SignedIn,
+    Gate, SignedIn,
     error::{Result, ServerError},
     http::{Auth, Http},
     kept::keep_path,
-    komga::encode,
+    komga::{encode, segment},
     names::chapter_of,
 };
 
@@ -217,14 +215,79 @@ pub async fn sign_in_with_key(
     address: &str,
     key: &str,
 ) -> Result<SignedIn> {
-    let http = Http::new(client, address, Auth::None);
+    let login = key_login(&Http::new(client, address, Auth::None), key).await?;
+    described(client, address, login).await
+}
+
+/// Kavita's plugin sign-in with `key`, on a server asked without a sign-in.
+async fn key_login(http: &Http, key: &str) -> Result<Login> {
     let path = format!("api/Plugin/authenticate?apiKey={}&pluginName=Kaeri", encode(key));
     let request = http.request(reqwest::Method::POST, &path);
     let mut login: Login = crate::http::read_json(http.send(request).await?).await?;
     if login.api_key.is_empty() {
         login.api_key = key.to_owned();
     }
-    described(client, address, login).await
+    Ok(login)
+}
+
+/// What `api/Account/refresh-token` answers.
+#[derive(Deserialize)]
+struct Refreshed {
+    #[serde(default)]
+    token: String,
+    #[serde(rename = "refreshToken", default)]
+    refresh: String,
+}
+
+/// Whether a failed renewal step is the server turning it down, so the next way is tried,
+/// rather than a server that could not answer now.
+const fn turned_down(error: &ServerError) -> bool {
+    match error {
+        ServerError::Unauthorized | ServerError::NotFound | ServerError::Parse(_) => true,
+        ServerError::Status(status) => *status < 500,
+        _ => false,
+    }
+}
+
+/// New tokens for ones the server stopped taking: the refresh token first, then the API key.
+/// `base` is the server, asked without a sign-in. [`ServerError::Unauthorized`] when neither
+/// is taken; a server that cannot answer now says so with its own error instead, as that is
+/// not a refusal.
+pub(crate) async fn renew(base: &Http, held: &Tokens) -> Result<Tokens> {
+    if !held.refresh.is_empty() {
+        let request = base
+            .request(reqwest::Method::POST, "api/Account/refresh-token")
+            .json(&serde_json::json!({ "token": held.token, "refreshToken": held.refresh }));
+        let answer = match base.send(request).await {
+            Ok(response) => crate::http::read_json::<Refreshed>(response).await,
+            Err(e) => Err(e),
+        };
+        match answer {
+            Ok(fresh) if !fresh.token.is_empty() => {
+                let refresh =
+                    if fresh.refresh.is_empty() { held.refresh.clone() } else { fresh.refresh };
+                return Ok(Tokens {
+                    token: fresh.token,
+                    refresh,
+                    api_key: held.api_key.clone(),
+                });
+            }
+            Ok(_) => {}
+            Err(e) if turned_down(&e) => {}
+            Err(e) => return Err(e),
+        }
+    }
+    if held.api_key.is_empty() {
+        return Err(ServerError::Unauthorized);
+    }
+    match key_login(base, &held.api_key).await {
+        Ok(login) if !login.token.is_empty() => {
+            Ok(Tokens { token: login.token, refresh: login.refresh, api_key: login.api_key })
+        }
+        Ok(_) => Err(ServerError::Unauthorized),
+        Err(e) if turned_down(&e) => Err(ServerError::Unauthorized),
+        Err(e) => Err(e),
+    }
 }
 
 /// The server as it describes itself to an account that has just signed in.
@@ -256,11 +319,14 @@ pub struct KavitaSource {
     manifest: BookSourceManifest,
     /// The libraries asked, by id; every one when empty.
     libraries: Vec<String>,
+    /// The server, asked without a sign-in: each call adds the JWT held when it starts.
     http: Http,
-    api_key: String,
-    refresh: Mutex<String>,
+    /// The tokens held now. A renewal replaces them.
+    tokens: Mutex<Tokens>,
+    /// Held while the tokens are renewed, so calls refused at once share one renewal.
+    renewing: tokio::sync::Mutex<()>,
     keep: PathBuf,
-    signed_out: Arc<AtomicBool>,
+    signed_out: Gate,
 }
 
 impl KavitaSource {
@@ -270,7 +336,7 @@ impl KavitaSource {
         http: Http,
         tokens: &Tokens,
         keep: PathBuf,
-        signed_out: Arc<AtomicBool>,
+        signed_out: impl Into<Gate>,
     ) -> Self {
         Self {
             manifest: BookSourceManifest {
@@ -284,11 +350,11 @@ impl KavitaSource {
                 capabilities: vec!["progress".into()],
             },
             libraries: Vec::new(),
-            http,
-            api_key: tokens.api_key.clone(),
-            refresh: Mutex::new(tokens.refresh.clone()),
+            http: http.with_auth(Auth::None),
+            tokens: Mutex::new(tokens.clone()),
+            renewing: tokio::sync::Mutex::new(()),
             keep,
-            signed_out,
+            signed_out: signed_out.into(),
         }
     }
 
@@ -306,7 +372,65 @@ impl KavitaSource {
 
     /// The refresh token currently held, for a caller that wants to keep it.
     pub fn refresh_token(&self) -> String {
-        self.refresh.lock().map(|r| r.clone()).unwrap_or_default()
+        self.held().refresh
+    }
+
+    fn held(&self) -> Tokens {
+        self.tokens.lock().unwrap_or_else(|e| e.into_inner()).clone()
+    }
+
+    /// The server signed with the JWT held now, and that JWT.
+    fn signed_now(&self) -> (Http, String) {
+        let token = self.held().token;
+        (self.http.with_auth(Auth::Bearer(token.clone())), token)
+    }
+
+    fn api_key(&self) -> String {
+        self.held().api_key
+    }
+
+    /// Run `call` signed with the JWT held. Refused, the tokens are renewed once and `call`
+    /// runs again with the new JWT; a refusal that renewing cannot get past comes back.
+    async fn signed<T, F, Fut>(&self, call: F) -> Result<T>
+    where
+        F: Fn(Http) -> Fut,
+        Fut: Future<Output = Result<T>>,
+    {
+        let (http, used) = self.signed_now();
+        match call(http).await {
+            Err(ServerError::Unauthorized) => {
+                self.renew(&used).await?;
+                call(self.signed_now().0).await
+            }
+            done => done,
+        }
+    }
+
+    /// Renew the tokens after the server refused `used`. Calls refused together share one
+    /// renewal: a call that waited for another's finds the JWT already new and asks nothing.
+    /// New tokens are handed to the keeper; a renewal turned down signs the source out.
+    async fn renew(&self, used: &str) -> Result<()> {
+        let _turn = self.renewing.lock().await;
+        if self.signed_out.is_signed_out() {
+            return Err(ServerError::Unauthorized);
+        }
+        let held = self.held();
+        if held.token != used {
+            return Ok(());
+        }
+        match renew(&self.http, &held).await {
+            Ok(fresh) => {
+                tracing::debug!(source = %self.manifest.id, "the Kavita sign-in was renewed");
+                let kept = fresh.kept();
+                *self.tokens.lock().unwrap_or_else(|e| e.into_inner()) = fresh;
+                self.signed_out.renewed(&kept);
+                Ok(())
+            }
+            Err(error) => {
+                crate::note_sign_in(&self.signed_out, &error);
+                Err(error)
+            }
+        }
     }
 
     fn chapters_of(detail: Detail) -> Vec<ChapterRow> {
@@ -338,10 +462,9 @@ impl KavitaSource {
     /// What `chapter` is made of. A whole file is downloaded only with `files`; without, such a
     /// chapter is `None`.
     async fn content_of(&self, chapter: &str, files: bool) -> Result<Option<ChapterContent>> {
-        let info: serde_json::Value = self
-            .http
-            .json(&format!("api/Reader/chapter-info?chapterId={}", encode(chapter)))
-            .await?;
+        let path = &format!("api/Reader/chapter-info?chapterId={}", encode(chapter));
+        let info: serde_json::Value =
+            self.signed(|http| async move { http.json(path).await }).await?;
         let pages = info.get("pages").and_then(serde_json::Value::as_u64).unwrap_or(0);
         let is_book = info.get("isEpub").and_then(serde_json::Value::as_bool).unwrap_or(false)
             || info.get("fileFormat").and_then(serde_json::Value::as_u64) == Some(3);
@@ -356,16 +479,16 @@ impl KavitaSource {
                 chapter,
                 if is_pdf { "book.pdf" } else { "book.epub" },
             );
-            self.http
-                .download(
-                    &format!("api/Download/chapter?chapterId={}", encode(chapter)),
-                    &to,
-                    8 * 1024 * 1024 * 1024,
-                )
-                .await?;
+            let path = &format!("api/Download/chapter?chapterId={}", encode(chapter));
+            let dest = &to;
+            self.signed(|http| async move {
+                http.download(path, dest, 8 * 1024 * 1024 * 1024).await
+            })
+            .await?;
             return Ok(Some(ChapterContent::Book(BookFile { path: to, temporary: true })));
         }
         let pages = crate::pages_stated(pages).ok_or_else(|| crate::too_many_pages(pages))?;
+        let key = encode(&self.api_key());
         Ok(Some(ChapterContent::Images(
             (0..pages)
                 .map(|n| {
@@ -373,7 +496,7 @@ impl KavitaSource {
                         "{}?chapterId={}&page={n}&apiKey={}",
                         self.http.url("api/Reader/image"),
                         encode(chapter),
-                        encode(&self.api_key)
+                        key
                     ))
                 })
                 .collect(),
@@ -392,11 +515,12 @@ impl BookSource for KavitaSource {
         query: &str,
         _hints: &BookHints,
     ) -> std::result::Result<Vec<SeriesHit>, ProviderError> {
+        let path = &format!("api/Search/search?queryString={}", encode(query));
         let found: Search = self
-            .http
-            .json(&format!("api/Search/search?queryString={}", encode(query)))
+            .signed(|http| async move { http.json(path).await })
             .await
             .map_err(|e| self.aim(e))?;
+        let key = encode(&self.api_key());
         Ok(found
             .series
             .into_iter()
@@ -414,7 +538,7 @@ impl BookSource for KavitaSource {
                     "{}?seriesId={}&apiKey={}",
                     self.http.url("api/Image/series-cover"),
                     s.id,
-                    encode(&self.api_key)
+                    key
                 ));
                 hit
             })
@@ -426,18 +550,17 @@ impl BookSource for KavitaSource {
         id: &str,
         _hints: &BookHints,
     ) -> std::result::Result<SeriesDetail, ProviderError> {
+        let path = &format!("api/Series/{}", segment(id));
         let row: serde_json::Value = self
-            .http
-            .json(&format!("api/Series/{}", encode(id)))
+            .signed(|http| async move { http.json(path).await })
             .await
             .map_err(|e| self.aim(e))?;
         let name = row.get("name").and_then(|v| v.as_str()).unwrap_or(id);
         // Kavita keeps no reading direction of a series' own, so it gives no hint.
         let mut detail = SeriesDetail::new(id, name);
-        if let Ok(meta) = self
-            .http
-            .json::<serde_json::Value>(&format!("api/Series/metadata?seriesId={}", encode(id)))
-            .await
+        let path = &format!("api/Series/metadata?seriesId={}", encode(id));
+        if let Ok(meta) =
+            self.signed(|http| async move { http.json::<serde_json::Value>(path).await }).await
         {
             detail.description = meta
                 .get("summary")
@@ -466,9 +589,9 @@ impl BookSource for KavitaSource {
         id: &str,
         _hints: &BookHints,
     ) -> std::result::Result<Vec<SourceChapter>, ProviderError> {
+        let path = &format!("api/Series/series-detail?seriesId={}", encode(id));
         let detail: Detail = self
-            .http
-            .json(&format!("api/Series/series-detail?seriesId={}", encode(id)))
+            .signed(|http| async move { http.json(path).await })
             .await
             .map_err(|e| self.aim(e))?;
         Ok(Self::chapters_of(detail)
@@ -527,16 +650,25 @@ impl BookSource for KavitaSource {
         let (Ok(series), Ok(chapter)) = (series.parse::<i64>(), chapter.parse::<i64>()) else {
             return Err(ProviderError::NotFound);
         };
-        let request = self.http.request(reqwest::Method::POST, path).json(&serde_json::json!({
+        let body = serde_json::json!({
             "seriesId": series,
             "volumeIds": [],
             "chapterIds": [chapter],
-        }));
-        self.http.send(request).await.map(drop).map_err(|e| self.aim(e))
+        });
+        let body = &body;
+        self.signed(|http| async move {
+            http.send(http.request(reqwest::Method::POST, path).json(body)).await
+        })
+        .await
+        .map(drop)
+        .map_err(|e| self.aim(e))
     }
 
     async fn health_check(&self) -> std::result::Result<(), ProviderError> {
-        self.http.get("api/Account").await.map(drop).map_err(|e| self.aim(e))
+        self.signed(|http| async move { http.get("api/Account").await })
+            .await
+            .map(drop)
+            .map_err(|e| self.aim(e))
     }
 
     fn is_available(&self) -> std::result::Result<(), ProviderError> {
@@ -544,7 +676,20 @@ impl BookSource for KavitaSource {
     }
 
     async fn fetch_page(&self, page: &PageRef) -> std::result::Result<Vec<u8>, PageError> {
-        crate::fetch_with(&self.http, page).await
+        let (http, used) = self.signed_now();
+        match crate::fetch_with(&http, page).await {
+            Err(PageError::Status(401 | 403)) => {
+                self.renew(&used).await.map_err(|e| PageError::Failed(self.aim(e)))?;
+                match crate::fetch_with(&self.signed_now().0, page).await {
+                    // Refused with a JWT just handed out: renewing again would not help.
+                    Err(PageError::Status(401 | 403)) => {
+                        Err(PageError::Failed(self.aim(ServerError::Unauthorized)))
+                    }
+                    done => done,
+                }
+            }
+            done => done,
+        }
     }
 }
 

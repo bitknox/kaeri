@@ -4,11 +4,12 @@
 //! asked for one (`X-Auth-Token` with an empty value) and the token is what is kept; an older
 //! one gets the Basic credential kept instead. Either way the password itself is not written
 //! anywhere readable: what is kept goes to the secure store, never the database.
+//!
+//! A session token lapses when the server ends the session, and nothing kept can start a new
+//! one without the password. A refused sign-in signs the source out, once, and it waits for
+//! the person to sign in again.
 
-use std::{
-    path::PathBuf,
-    sync::{Arc, atomic::AtomicBool},
-};
+use std::path::PathBuf;
 
 use async_trait::async_trait;
 use kaeri_core::{
@@ -23,7 +24,7 @@ use kaeri_core::{
 use serde::Deserialize;
 
 use crate::{
-    SignedIn,
+    Gate, SignedIn,
     error::{Result, ServerError},
     http::{Auth, Http, basic},
     kept::keep_path,
@@ -253,7 +254,7 @@ pub struct KomgaSource {
     libraries: Vec<String>,
     http: Http,
     keep: PathBuf,
-    signed_out: Arc<AtomicBool>,
+    signed_out: Gate,
 }
 
 impl KomgaSource {
@@ -262,7 +263,7 @@ impl KomgaSource {
         name: &str,
         http: Http,
         keep: PathBuf,
-        signed_out: Arc<AtomicBool>,
+        signed_out: impl Into<Gate>,
     ) -> Self {
         Self {
             manifest: BookSourceManifest {
@@ -278,7 +279,7 @@ impl KomgaSource {
             libraries: Vec::new(),
             http,
             keep,
-            signed_out,
+            signed_out: signed_out.into(),
         }
     }
 
@@ -328,14 +329,14 @@ impl KomgaSource {
 
     async fn books(&self, series: &str) -> Result<Vec<Book>> {
         let page: Page<Book> =
-            self.page(&format!("api/v1/series/{}/books?unpaged=true", encode(series))).await?;
+            self.page(&format!("api/v1/series/{}/books?unpaged=true", segment(series))).await?;
         Ok(page.content)
     }
 
     /// What `book` is made of. A whole file is downloaded only with `files`; without, such a
     /// book is `None`.
     async fn content_of(&self, book: &str, files: bool) -> Result<Option<ChapterContent>> {
-        let info: Book = self.http.json(&format!("api/v1/books/{}", encode(book))).await?;
+        let info: Book = self.http.json(&format!("api/v1/books/{}", segment(book))).await?;
         let file_book = matches!(
             info.media.media_type.as_str(),
             "application/epub+zip" | "application/pdf"
@@ -354,7 +355,7 @@ impl KomgaSource {
             let to = keep_path(&self.keep, &self.manifest.id, book, &name);
             self.http
                 .download(
-                    &format!("api/v1/books/{}/file", encode(book)),
+                    &format!("api/v1/books/{}/file", segment(book)),
                     &to,
                     8 * 1024 * 1024 * 1024,
                 )
@@ -362,7 +363,7 @@ impl KomgaSource {
             return Ok(Some(ChapterContent::Book(BookFile { path: to, temporary: true })));
         }
         let pages: Vec<PageInfo> =
-            self.http.json(&format!("api/v1/books/{}/pages", encode(book))).await?;
+            self.http.json(&format!("api/v1/books/{}/pages", segment(book))).await?;
         if pages.len() > crate::MOST_PAGES as usize {
             return Err(crate::too_many_pages(pages.len()));
         }
@@ -373,7 +374,7 @@ impl KomgaSource {
                 .map(|p| PageRef {
                     url: self.http.url(&format!(
                         "api/v1/books/{}/pages/{}",
-                        encode(book),
+                        segment(book),
                         p.number
                     )),
                     headers: Vec::new(),
@@ -397,8 +398,24 @@ fn file_name(book: &Book) -> String {
     format!("{}.{extension}", book.id)
 }
 
+/// A value for a query string, form-encoded: a space is `+`.
 pub(crate) fn encode(id: &str) -> String {
     url::form_urlencoded::byte_serialize(id.as_bytes()).collect()
+}
+
+/// An id as one segment of a URL path: every byte but the unreserved ones is percent-encoded,
+/// so a space is `%20` and a `/` stays inside the segment.
+pub(crate) fn segment(id: &str) -> String {
+    use std::fmt::Write;
+    let mut out = String::with_capacity(id.len());
+    for byte in id.bytes() {
+        if byte.is_ascii_alphanumeric() || matches!(byte, b'-' | b'.' | b'_' | b'~') {
+            out.push(char::from(byte));
+        } else {
+            let _ = write!(out, "%{byte:02X}");
+        }
+    }
+    out
 }
 
 #[async_trait]
@@ -443,7 +460,7 @@ impl BookSource for KomgaSource {
     ) -> std::result::Result<SeriesDetail, ProviderError> {
         let series: Series = self
             .http
-            .json(&format!("api/v1/series/{}", encode(id)))
+            .json(&format!("api/v1/series/{}", segment(id)))
             .await
             .map_err(|e| self.aim(e))?;
         Ok(Self::detail(series))
@@ -499,7 +516,7 @@ impl BookSource for KomgaSource {
         chapter: &str,
         read: bool,
     ) -> std::result::Result<(), ProviderError> {
-        let path = format!("api/v1/books/{}/read-progress", encode(chapter));
+        let path = format!("api/v1/books/{}/read-progress", segment(chapter));
         let request = if read {
             self.http
                 .request(reqwest::Method::PATCH, &path)

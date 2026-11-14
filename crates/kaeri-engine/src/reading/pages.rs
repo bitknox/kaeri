@@ -598,7 +598,8 @@ impl Worker {
         }
         touch(&dir);
         evict(&self.cache, &dir);
-        let path = job.path.display().to_string();
+        // A failure names the book by its file, never by its full path.
+        let path = book_name(&job.path);
         // A feed's pages are the ones landed so far; a book is opened.
         let book = match &job.feed {
             Some(_) => None,
@@ -951,7 +952,8 @@ fn wished(leaves: Vec<u32>, queue: &VecDeque<u32>, asked: &HashSet<u32>) -> VecD
 fn open_book(path: &Path, opening: &Arc<AtomicBool>) -> Result<Book, ReadingFailure> {
     let shown = path.display().to_string();
     let format = path.extension().and_then(|e| e.to_str()).unwrap_or("").to_ascii_uppercase();
-    let slow = || ReadingFailure::Unreadable { path: shown.clone(), format: format.clone() };
+    let name = book_name(path);
+    let slow = || ReadingFailure::Unreadable { path: name.clone(), format: format.clone() };
     let since = Instant::now();
     // A book still opening from before holds the slot: wait for it within the same budget.
     while opening.swap(true, Ordering::AcqRel) {
@@ -1038,6 +1040,12 @@ fn pdf_pages(
     Ok(pages)
 }
 
+/// A book as a failure names it: its file's name, never the folders it sits in.
+pub(crate) fn book_name(path: &Path) -> String {
+    path.file_name()
+        .map_or_else(|| path.display().to_string(), |n| n.to_string_lossy().into_owned())
+}
+
 pub(crate) fn failure_of(
     e: &kaeri_books::BookError,
     path: String,
@@ -1051,7 +1059,9 @@ pub(crate) fn failure_of(
         K::Unsupported => {
             ReadingFailure::Unsupported { extension: format.to_ascii_lowercase() }
         }
-        K::Unreadable => ReadingFailure::Unreadable { path, format },
+        K::Unreadable => {
+            ReadingFailure::Unreadable { path: book_name(Path::new(&path)), format }
+        }
     }
 }
 
@@ -1289,7 +1299,7 @@ impl Chapter {
 
     fn unreadable(&self) -> ReadingFailure {
         ReadingFailure::Unreadable {
-            path: self.source.display().to_string(),
+            path: book_name(&self.source),
             format: self
                 .source
                 .extension()
@@ -2267,6 +2277,36 @@ mod tests {
         let (aspect, made_aspect) =
             (40_000.0 / 720.0, f64::from(file.height) / f64::from(file.width));
         assert!((aspect - made_aspect).abs() < 0.2, "{file:?}");
+    }
+
+    /// A book that does not open says so by its file's name, not by the folders it sits in.
+    #[test]
+    fn a_book_that_cannot_be_read_is_named_by_its_file() {
+        let dir = tempfile::tempdir().unwrap();
+        let book = dir.path().join("Private Shelf").join("Broken Bell.epub");
+        std::fs::create_dir_all(book.parent().unwrap()).unwrap();
+        std::fs::write(&book, b"PK\x03\x04 cut short").unwrap();
+        let failure = open_book(&book, &Arc::new(AtomicBool::new(false))).err().unwrap();
+        assert_eq!(
+            failure,
+            ReadingFailure::Unreadable {
+                path: "Broken Bell.epub".into(),
+                format: "EPUB".into()
+            }
+        );
+        let opening = crate::reading::novel::Opening {
+            session: 0,
+            soft_hyphens: false,
+            dir: dir.path().join("cache"),
+            eink: None,
+            limits: Limits::default(),
+        };
+        let opened = crate::reading::novel::open_epub(&book, opening);
+        assert!(
+            matches!(&opened, Err(ReadingFailure::Unreadable { path, .. }) if path == "Broken Bell.epub"),
+            "{:?}",
+            opened.err()
+        );
     }
 
     #[test]

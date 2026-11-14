@@ -229,6 +229,17 @@ impl Store {
         })
     }
 
+    /// How many files each scanned series holds, by series id, in one look.
+    pub fn local_book_file_counts(&self) -> Result<std::collections::HashMap<String, u32>> {
+        self.with_conn(|c| {
+            let mut stmt =
+                c.prepare("SELECT series, COUNT(*) FROM book_local_file GROUP BY series")?;
+            let rows =
+                stmt.query_map([], |r| Ok((r.get::<_, String>(0)?, r.get::<_, u32>(1)?)))?;
+            Ok(rows.collect::<std::result::Result<_, _>>()?)
+        })
+    }
+
     pub fn local_book_files(&self, series: &str) -> Result<Vec<LocalFile>> {
         self.with_conn(|c| {
             let mut stmt = c.prepare(
@@ -318,6 +329,18 @@ impl Store {
                 })
             })?;
             Ok(rows.collect::<std::result::Result<_, _>>()?)
+        })
+    }
+
+    /// Say whether a server's sign-in is refused, on its row only: a server that is not kept
+    /// is not added. Whether a row changed.
+    pub fn set_book_server_signed_out(&self, id: &str, signed_out: bool) -> Result<bool> {
+        self.with_conn(|c| {
+            let changed = c.execute(
+                "UPDATE book_server SET signed_out = ?2 WHERE id = ?1 AND signed_out != ?2",
+                params![id, signed_out],
+            )?;
+            Ok(changed > 0)
         })
     }
 
@@ -421,6 +444,7 @@ mod tests {
         assert_eq!(all.len(), 1);
         assert_eq!((all[0].work.as_deref(), all[0].state.as_str()), (Some("a:1"), "matched"));
         assert_eq!(store.local_book_files("a").unwrap().len(), 1);
+        assert_eq!(store.local_book_file_counts().unwrap(), [("a".to_owned(), 1)].into());
         assert_eq!(store.book_folders().unwrap()[0].last_scan, Some(20));
         store.remove_book_folder("f").unwrap();
         assert!(store.local_book_series().unwrap().is_empty());
@@ -450,5 +474,29 @@ mod tests {
         store.remove_book_server("s").unwrap();
         assert!(store.book_servers().unwrap().is_empty());
         assert!(store.book_refs_for_work("l:abc").unwrap().is_empty());
+    }
+
+    #[test]
+    fn a_refused_sign_in_changes_only_a_kept_server() {
+        let store = Store::open_in_memory().unwrap();
+        let server = BookServer {
+            id: "s".into(),
+            kind: "kavita".into(),
+            name: "Shelf".into(),
+            address: "http://shelf.example".into(),
+            user: Some("me".into()),
+            report_progress: true,
+            signed_out: false,
+            last_seen: Some(5),
+        };
+        store.put_book_server(&server).unwrap();
+        assert!(store.set_book_server_signed_out("s", true).unwrap());
+        assert!(!store.set_book_server_signed_out("s", true).unwrap(), "already said");
+        let kept = store.book_server("s").unwrap().unwrap();
+        assert_eq!(kept, BookServer { signed_out: true, ..server });
+        assert!(store.set_book_server_signed_out("s", false).unwrap());
+        // A server removed while its source was asked is not brought back.
+        assert!(!store.set_book_server_signed_out("gone", true).unwrap());
+        assert!(store.book_server("gone").unwrap().is_none());
     }
 }
