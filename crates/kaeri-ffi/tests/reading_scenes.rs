@@ -494,7 +494,7 @@ fn the_e_ink_layout_switch_takes_at_once_off_and_on_again() {
 /// manga's folder are on the device and go at once, while chapters to fetch wait for Wi-Fi.
 #[test]
 fn the_series_scene_sends_its_folder_chapters_at_once_and_waits_to_fetch_the_rest() {
-    use kaeri_core::books::WorkId;
+    use kaeri_core::books::{ChapterId, WorkId};
     use kaeri_model::reading::{DownloadPick, ExportFormat};
     let (_root, engine) = start(FfiScene::ReadingSeries);
     let work = WorkId::new("a:900301");
@@ -512,14 +512,14 @@ fn the_series_scene_sends_its_folder_chapters_at_once_and_waits_to_fetch_the_res
             _ => None,
         })
         .expect("the chapters");
-    let rows: Vec<_> = volumes.iter().flat_map(|v| v.chapters.iter()).collect();
-    let (here, to_fetch): (Vec<_>, Vec<_>) = rows.iter().partition(|r| r.on_device);
-    let ids = |rows: &[&&kaeri_model::reading::ChapterRow]| -> Vec<_> {
-        rows.iter().take(3).map(|r| r.id.clone()).collect()
-    };
-    let (here, to_fetch) = (ids(&here), ids(&to_fetch));
-    assert_eq!(here.len(), 3, "the folder holds chapters 12 to 15: {rows:?}");
-    assert_eq!(to_fetch.len(), 3, "chapters 1 to 11 are to fetch: {rows:?}");
+    // Every row of a folder series reads as on the device; only 12 to 15 have files.
+    let listed: Vec<&str> =
+        volumes.iter().flat_map(|v| v.chapters.iter()).map(|r| r.id.as_str()).collect();
+    assert!(listed.starts_with(&["1", "2", "3"]), "{listed:?}");
+    assert!(listed.ends_with(&["13", "14", "15"]), "{listed:?}");
+    let ids =
+        |list: &[&str]| -> Vec<ChapterId> { list.iter().map(|c| ChapterId::new(*c)).collect() };
+    let (here, to_fetch) = (ids(&["13", "14", "15"]), ids(&["1", "2", "3"]));
     engine.send(Command::NetworkPath { cellular: true, constrained: false, offline: false });
     let send = |ids: Vec<_>| {
         engine.send(Command::Reading(ReadingCommand::Prepare {

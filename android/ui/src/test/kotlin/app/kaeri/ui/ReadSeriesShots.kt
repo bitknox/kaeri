@@ -120,8 +120,8 @@ class ReadSeriesShots : ReadingShotHarness() {
 
     /**
      * On a phone network with chapters kept to Wi-Fi, a send of chapters to fetch holds until
-     * Wi-Fi. The manga's folder chapters are on the device and would go at once, so the sheet
-     * starts on chapters that are not.
+     * Wi-Fi. The manga's folder has files for its last chapters, which would go at once, so the
+     * sheet starts on its first chapters, which it has no files for.
      */
     @Test
     @Config(qualifiers = ReadingShotHarness.PHONE)
