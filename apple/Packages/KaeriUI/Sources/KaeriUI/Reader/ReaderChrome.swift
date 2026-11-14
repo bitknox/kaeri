@@ -301,13 +301,10 @@ private struct GoToPagePrompt: View {
     @State private var text = ""
     @FocusState private var focused: Bool
 
-    private var total: Int { model.novel != nil || model.view?.mode == .strip ? max(model.position.count, 1) : max(model.pageCount, 1) }
+    private var total: Int { model.goToPageTotal }
 
     /// The number typed, when it is a page there is.
-    private var target: Int? {
-        guard let number = Int(text.trimmingCharacters(in: .whitespaces)), (1...total).contains(number) else { return nil }
-        return number
-    }
+    private var target: Int? { model.goToPageTarget(text) }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
@@ -346,9 +343,7 @@ private struct GoToPagePrompt: View {
     }
 
     private func submit() {
-        guard let page = target else { return }
-        model.askingPage = false
-        model.requestJump(model.novel != nil || model.view?.mode == .strip ? page - 1 : model.leaf(ofPage: page))
+        model.goToPage(typed: text)
     }
 }
 
