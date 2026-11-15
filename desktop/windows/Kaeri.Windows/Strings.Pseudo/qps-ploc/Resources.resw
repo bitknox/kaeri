@@ -4077,6 +4077,46 @@
     <value>[Šéţ öñ ţĥé ŢṼ~~~~]</value>
     <comment>Line under TV volume on the card, for a TV whose volume only its own remote sets.</comment>
   </data>
+  <data name="CastButtonConnecting" xml:space="preserve">
+    <value>[Çöññéçţîñĝ ţö {name}~~~~~~]</value>
+    <comment>The cast button's label and tooltip while it connects to a TV. The name is the TV's own, such as Living room.</comment>
+  </data>
+  <data name="CastButtonConnected" xml:space="preserve">
+    <value>[Çöññéçţéð ţö {name}~~~~~]</value>
+    <comment>The cast button's label and tooltip while a TV is connected, said once as it connects.</comment>
+  </data>
+  <data name="CastPlaysOn" xml:space="preserve">
+    <value>[Þļàýš öñ {name}~~~~]</value>
+    <comment>Under the main action of a title page while a TV is connected: where the episode plays.</comment>
+  </data>
+  <data name="CastIdle" xml:space="preserve">
+    <value>[Ñöţĥîñĝ þļàýîñĝ ýéţ~~~~~~]</value>
+    <comment>The connected TV's dialog while the TV shows the app and nothing is loaded.</comment>
+  </data>
+  <data name="CastStatusPaused" xml:space="preserve">
+    <value>[Þàüšéð öñ {name}~~~~]</value>
+    <comment>The controller's status line while the episode is paused on the TV.</comment>
+  </data>
+  <data name="CastOpenShow" xml:space="preserve">
+    <value>[Öþéñ {title}~~~]</value>
+    <comment>Screen reader hint and tooltip on the show's name and cover in the controller, which open the show's page.</comment>
+  </data>
+  <data name="CastControllerClose" xml:space="preserve">
+    <value>[Çļöšé~~]</value>
+    <comment>The chevron that puts the full controller back into the mini player.</comment>
+  </data>
+  <data name="CastMiniOpens" xml:space="preserve">
+    <value>[Öþéñš ţĥé çöñţŕöļš~~~~~~]</value>
+    <comment>Screen reader hint on the mini player over the navigation bar.</comment>
+  </data>
+  <data name="CastPlayNextOn" xml:space="preserve">
+    <value>[Þļàý ñéẋţ öñ {name}~~~~~]</value>
+    <comment>Long-press menu of an episode while a TV plays: queues the episode after the one playing.</comment>
+  </data>
+  <data name="CastNotificationLine" xml:space="preserve">
+    <value>[Çàšţîñĝ ţö {name}~~~~~]</value>
+    <comment>The system's media notification and Now Playing: the line naming the TV that plays.</comment>
+  </data>
   <data name="ActionTryAgain" xml:space="preserve">
     <value>[Ţŕý àĝàîñ~~~]</value>
     <comment>Button that runs a failed action again.</comment>

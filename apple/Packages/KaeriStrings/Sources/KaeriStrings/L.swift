@@ -4782,6 +4782,50 @@ public enum L {
     /// Line under TV volume on the card, for a TV whose volume only its own remote sets.
     public static var castVolumeFixed: String { string("cast-volume-fixed", fallback: "Set on the TV") }
 
+    /// The cast button's label and tooltip while it connects to a TV. The name is the TV's own, such as Living room.
+    public static func castButtonConnecting(name: String) -> String {
+        Self.format("cast-button-connecting", fallback: "Connecting to %1$@", name)
+    }
+
+    /// The cast button's label and tooltip while a TV is connected, said once as it connects.
+    public static func castButtonConnected(name: String) -> String {
+        Self.format("cast-button-connected", fallback: "Connected to %1$@", name)
+    }
+
+    /// Under the main action of a title page while a TV is connected: where the episode plays.
+    public static func castPlaysOn(name: String) -> String {
+        Self.format("cast-plays-on", fallback: "Plays on %1$@", name)
+    }
+
+    /// The connected TV's dialog while the TV shows the app and nothing is loaded.
+    public static var castIdle: String { string("cast-idle", fallback: "Nothing playing yet") }
+
+    /// The controller's status line while the episode is paused on the TV.
+    public static func castStatusPaused(name: String) -> String {
+        Self.format("cast-status-paused", fallback: "Paused on %1$@", name)
+    }
+
+    /// Screen reader hint and tooltip on the show's name and cover in the controller, which open the show's page.
+    public static func castOpenShow(title: String) -> String {
+        Self.format("cast-open-show", fallback: "Open %1$@", title)
+    }
+
+    /// The chevron that puts the full controller back into the mini player.
+    public static var castControllerClose: String { string("cast-controller-close", fallback: "Close") }
+
+    /// Screen reader hint on the mini player over the navigation bar.
+    public static var castMiniOpens: String { string("cast-mini-opens", fallback: "Opens the controls") }
+
+    /// Long-press menu of an episode while a TV plays: queues the episode after the one playing.
+    public static func castPlayNextOn(name: String) -> String {
+        Self.format("cast-play-next-on", fallback: "Play next on %1$@", name)
+    }
+
+    /// The system's media notification and Now Playing: the line naming the TV that plays.
+    public static func castNotificationLine(name: String) -> String {
+        Self.format("cast-notification-line", fallback: "Casting to %1$@", name)
+    }
+
     /// Button that runs a failed action again.
     public static var actionTryAgain: String { string("action-try-again", fallback: "Try again") }
 

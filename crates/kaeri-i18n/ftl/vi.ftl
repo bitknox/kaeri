@@ -5413,6 +5413,36 @@ cast-stop = Dừng chiếu
 # Line under TV volume on the card, for a TV whose volume only its own remote sets.
 cast-volume-fixed = Đặt trên TV
 
+# The cast button's label and tooltip while it connects to a TV. The name is the TV's own, such as Living room.
+cast-button-connecting = Đang kết nối tới { $name }
+
+# The cast button's label and tooltip while a TV is connected, said once as it connects.
+cast-button-connected = Đã kết nối tới { $name }
+
+# Under the main action of a title page while a TV is connected: where the episode plays.
+cast-plays-on = Phát trên { $name }
+
+# The connected TV's dialog while the TV shows the app and nothing is loaded.
+cast-idle = Chưa phát gì
+
+# The controller's status line while the episode is paused on the TV.
+cast-status-paused = Đã tạm dừng trên { $name }
+
+# Screen reader hint and tooltip on the show's name and cover in the controller, which open the show's page.
+cast-open-show = Mở { $title }
+
+# The chevron that puts the full controller back into the mini player.
+cast-controller-close = Đóng
+
+# Screen reader hint on the mini player over the navigation bar.
+cast-mini-opens = Mở bảng điều khiển
+
+# Long-press menu of an episode while a TV plays: queues the episode after the one playing.
+cast-play-next-on = Phát sau tập này trên { $name }
+
+# The system's media notification and Now Playing: the line naming the TV that plays.
+cast-notification-line = Đang chiếu tới { $name }
+
 # Button that runs a failed action again.
 action-try-again = Thử lại
 

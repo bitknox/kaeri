@@ -5551,6 +5551,36 @@ cast-stop = Arrêter la diffusion
 # Line under TV volume on the card, for a TV whose volume only its own remote sets.
 cast-volume-fixed = Réglé sur la TV
 
+# The cast button's label and tooltip while it connects to a TV. The name is the TV's own, such as Living room.
+cast-button-connecting = Connexion à { $name }
+
+# The cast button's label and tooltip while a TV is connected, said once as it connects.
+cast-button-connected = Connecté à { $name }
+
+# Under the main action of a title page while a TV is connected: where the episode plays.
+cast-plays-on = Lecture sur { $name }
+
+# The connected TV's dialog while the TV shows the app and nothing is loaded.
+cast-idle = Rien en lecture pour l’instant
+
+# The controller's status line while the episode is paused on the TV.
+cast-status-paused = En pause sur { $name }
+
+# Screen reader hint and tooltip on the show's name and cover in the controller, which open the show's page.
+cast-open-show = Ouvrir { $title }
+
+# The chevron that puts the full controller back into the mini player.
+cast-controller-close = Fermer
+
+# Screen reader hint on the mini player over the navigation bar.
+cast-mini-opens = Ouvre les commandes
+
+# Long-press menu of an episode while a TV plays: queues the episode after the one playing.
+cast-play-next-on = Lire ensuite sur { $name }
+
+# The system's media notification and Now Playing: the line naming the TV that plays.
+cast-notification-line = Diffusion sur { $name }
+
 # Button that runs a failed action again.
 action-try-again = Réessayer
 

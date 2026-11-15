@@ -131,6 +131,7 @@ fun HomeScreen(actions: AppActions) {
 
     ScreenFrame(
         title = stringResource(R.string.home_title),
+        cast = true,
         // Wide windows have the account at the foot of the rail already.
         account = if (wideWindow()) null else profileAccount(user, actions.openSettings),
         actions = { PeopleAction() },

@@ -2295,6 +2295,18 @@
     "by": "agent",
     "at": "2026-10-31"
   },
+  "cast-button-connected": {
+    "source": "97783949259c",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
+  },
+  "cast-button-connecting": {
+    "source": "bf4a0f3f08b4",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
+  },
   "cast-card-failed": {
     "source": "1988cf43151a",
     "state": "draft",
@@ -2385,6 +2397,12 @@
     "by": "agent",
     "at": "2026-10-31"
   },
+  "cast-controller-close": {
+    "source": "5e8250fb85d6",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
+  },
   "cast-couldnt-start": {
     "source": "1988cf43151a",
     "state": "draft",
@@ -2403,6 +2421,12 @@
     "by": "agent",
     "at": "2026-10-31"
   },
+  "cast-idle": {
+    "source": "4bc2f20b82f6",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
+  },
   "cast-keep-open": {
     "source": "794b6a21c977",
     "state": "draft",
@@ -2415,11 +2439,29 @@
     "by": "agent",
     "at": "2026-10-31"
   },
+  "cast-mini-opens": {
+    "source": "0dc6b47564fe",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
+  },
   "cast-none-found-extra": {
     "source": "5a3f97ad4c01",
     "state": "draft",
     "by": "agent",
     "at": "2026-10-31"
+  },
+  "cast-notification-line": {
+    "source": "5c8791e59c96",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
+  },
+  "cast-open-show": {
+    "source": "26438065e499",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
   },
   "cast-phase-preparing": {
     "source": "57c2de08efc4",
@@ -2450,6 +2492,18 @@
     "state": "draft",
     "by": "agent",
     "at": "2026-10-31"
+  },
+  "cast-play-next-on": {
+    "source": "dd6053549121",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
+  },
+  "cast-plays-on": {
+    "source": "27e57a7fa563",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
   },
   "cast-row-through": {
     "source": "731ed5afc7d5",
@@ -2510,6 +2564,12 @@
     "state": "draft",
     "by": "agent",
     "at": "2026-10-31"
+  },
+  "cast-status-paused": {
+    "source": "66fdb12de866",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
   },
   "cast-stop": {
     "source": "0ac3c517d62e",

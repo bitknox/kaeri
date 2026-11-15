@@ -1397,6 +1397,16 @@
     <string name="cast_play_here">Lire ici</string>
     <string name="cast_stop">Arrêter la diffusion</string>
     <string name="cast_volume_fixed">Réglé sur la TV</string>
+    <string name="cast_button_connecting">Connexion à %1$s</string>
+    <string name="cast_button_connected">Connecté à %1$s</string>
+    <string name="cast_plays_on">Lecture sur %1$s</string>
+    <string name="cast_idle">Rien en lecture pour l’instant</string>
+    <string name="cast_status_paused">En pause sur %1$s</string>
+    <string name="cast_open_show">Ouvrir %1$s</string>
+    <string name="cast_controller_close">Fermer</string>
+    <string name="cast_mini_opens">Ouvre les commandes</string>
+    <string name="cast_play_next_on">Lire ensuite sur %1$s</string>
+    <string name="cast_notification_line">Diffusion sur %1$s</string>
     <string name="action_try_again">Réessayer</string>
     <string name="action_cancel">Annuler</string>
     <string name="action_go">Aller</string>

@@ -5413,6 +5413,36 @@ cast-stop = キャストを停止
 # Line under TV volume on the card, for a TV whose volume only its own remote sets.
 cast-volume-fixed = テレビ側で設定
 
+# The cast button's label and tooltip while it connects to a TV. The name is the TV's own, such as Living room.
+cast-button-connecting = { $name }に接続中
+
+# The cast button's label and tooltip while a TV is connected, said once as it connects.
+cast-button-connected = { $name }に接続済み
+
+# Under the main action of a title page while a TV is connected: where the episode plays.
+cast-plays-on = { $name }で再生
+
+# The connected TV's dialog while the TV shows the app and nothing is loaded.
+cast-idle = まだ何も再生していません
+
+# The controller's status line while the episode is paused on the TV.
+cast-status-paused = { $name }で一時停止中
+
+# Screen reader hint and tooltip on the show's name and cover in the controller, which open the show's page.
+cast-open-show = { $title }を開く
+
+# The chevron that puts the full controller back into the mini player.
+cast-controller-close = 閉じる
+
+# Screen reader hint on the mini player over the navigation bar.
+cast-mini-opens = 操作画面を開きます
+
+# Long-press menu of an episode while a TV plays: queues the episode after the one playing.
+cast-play-next-on = { $name }で次に再生
+
+# The system's media notification and Now Playing: the line naming the TV that plays.
+cast-notification-line = { $name }にキャスト中
+
 # Button that runs a failed action again.
 action-try-again = 再試行
 

@@ -1335,6 +1335,16 @@
     <string name="cast_play_here">Hier abspielen</string>
     <string name="cast_stop">Übertragung beenden</string>
     <string name="cast_volume_fixed">Am Fernseher eingestellt</string>
+    <string name="cast_button_connecting">Verbindung mit %1$s wird hergestellt</string>
+    <string name="cast_button_connected">Verbunden mit %1$s</string>
+    <string name="cast_plays_on">Wird auf %1$s abgespielt</string>
+    <string name="cast_idle">Noch wird nichts abgespielt</string>
+    <string name="cast_status_paused">Auf %1$s pausiert</string>
+    <string name="cast_open_show">%1$s öffnen</string>
+    <string name="cast_controller_close">Schließen</string>
+    <string name="cast_mini_opens">Öffnet die Steuerung</string>
+    <string name="cast_play_next_on">Danach auf %1$s abspielen</string>
+    <string name="cast_notification_line">Wird auf %1$s übertragen</string>
     <string name="action_try_again">Erneut versuchen</string>
     <string name="action_cancel">Abbrechen</string>
     <string name="action_go">Los</string>

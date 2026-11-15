@@ -1,6 +1,6 @@
 // The cast running now, kept through the background: a media-style notification with the title,
-// pause, Next and Stop, the TV's volume on the volume keys when it takes a level, and the Wi-Fi
-// and the processor kept awake while the stream goes through this device.
+// back 10, pause, forward 10, Next and Stop, the TV's volume on the volume keys when it takes a
+// level, and the Wi-Fi and the processor kept awake while the stream goes through this device.
 
 package app.kaeri.app.tv
 
@@ -33,7 +33,6 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import app.kaeri.app.KaeriApp
 import app.kaeri.app.R
@@ -64,15 +63,25 @@ class CastService : MediaSessionService() {
             ?.putExtra(EXTRA_CAST, true)
             ?.let { PendingIntent.getActivity(this, CAST_REQUEST, it, PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT) }
         val buttons = listOf(
+            CommandButton.Builder(CommandButton.ICON_SKIP_BACK_10)
+                .setDisplayName(Strings.playerBack10(this))
+                .setPlayerCommand(Player.COMMAND_SEEK_BACK)
+                .setSlots(CommandButton.SLOT_BACK)
+                .build(),
+            CommandButton.Builder(CommandButton.ICON_SKIP_FORWARD_10)
+                .setDisplayName(Strings.playerForward10(this))
+                .setPlayerCommand(Player.COMMAND_SEEK_FORWARD)
+                .setSlots(CommandButton.SLOT_FORWARD)
+                .build(),
             CommandButton.Builder(CommandButton.ICON_NEXT)
                 .setDisplayName(Strings.playerNextEpisode(this))
                 .setPlayerCommand(Player.COMMAND_SEEK_TO_NEXT)
-                .setSlots(CommandButton.SLOT_FORWARD)
+                .setSlots(CommandButton.SLOT_FORWARD_SECONDARY, CommandButton.SLOT_OVERFLOW)
                 .build(),
             CommandButton.Builder(CommandButton.ICON_STOP)
                 .setDisplayName(Strings.castCardStop(this))
                 .setPlayerCommand(Player.COMMAND_STOP)
-                .setSlots(CommandButton.SLOT_FORWARD_SECONDARY, CommandButton.SLOT_OVERFLOW)
+                .setSlots(CommandButton.SLOT_OVERFLOW)
                 .build(),
         )
         session = MediaSession.Builder(this, player)
@@ -85,6 +94,7 @@ class CastService : MediaSessionService() {
         )
         holdAwake()
         scope.launch { cast.shown.collect { player.changed() } }
+        scope.launch { cast.session.collect { player.changed() } }
         Log.i(KaeriApp.TAG, "the cast's session is up")
     }
 
@@ -148,9 +158,11 @@ class CastSessionPlayer(private val context: Context, private val cast: CastMode
 
     override fun getState(): State {
         val shown = cast.shown.value
-        val level = shown?.level == true
+        val session = cast.session.value
+        val level = shown?.level == true || (session.held && session.levelControl)
         val commands = Player.Commands.Builder().addAll(
             Player.COMMAND_PLAY_PAUSE, Player.COMMAND_SEEK_IN_CURRENT_MEDIA_ITEM,
+            Player.COMMAND_SEEK_BACK, Player.COMMAND_SEEK_FORWARD,
             Player.COMMAND_SEEK_TO_NEXT, Player.COMMAND_STOP,
             Player.COMMAND_GET_CURRENT_MEDIA_ITEM, Player.COMMAND_GET_METADATA,
             Player.COMMAND_GET_TIMELINE, Player.COMMAND_RELEASE,
@@ -168,19 +180,22 @@ class CastSessionPlayer(private val context: Context, private val cast: CastMode
             .setDeviceInfo(if (level) LEVEL else FIXED)
             .setDeviceVolume(now?.volume?.toInt()?.coerceIn(0, 100) ?: 0)
             .setPlayWhenReady(now?.paused == false, Player.PLAY_WHEN_READY_CHANGE_REASON_REMOTE)
+            .setSeekBackIncrementMs(STEP_MS)
+            .setSeekForwardIncrementMs(STEP_MS)
         if (shown == null || now == null) return state.setPlaybackState(Player.STATE_IDLE).build()
         val starting = shown.stage == CastStage.Starting
-        val line = if (starting || now.episodeLine.isEmpty()) {
-            Strings.tvSessionStarting(context, shown.tvName)
-        } else {
-            Strings.tvSessionLine(context, now.episodeLine, shown.tvName)
-        }
+        // The episode under the title, and which TV it casts to on the line the system shows under them.
+        val episode = if (starting || now.episodeLine.isEmpty()) Strings.tvSessionStarting(context, shown.tvName) else now.episodeLine
+        val casting = Strings.castNotificationLine(context, shown.tvName)
         val metadata = MediaMetadata.Builder()
             .setTitle(now.title)
-            .setArtist(line)
+            .setArtist(episode)
             .setDisplayTitle(now.title)
-            .setSubtitle(line)
+            .setSubtitle(episode)
+            .setDescription(casting)
+            .setStation(casting)
             .setMediaType(MediaMetadata.MEDIA_TYPE_TV_SHOW)
+            .apply { session.item?.image?.let { setArtworkUri(android.net.Uri.parse(it)) } }
             .build()
         val id = "${now.id}-${now.episode}"
         val duration = now.duration
@@ -207,6 +222,8 @@ class CastSessionPlayer(private val context: Context, private val cast: CastMode
     override fun handleSeek(mediaItemIndex: Int, positionMs: Long, seekCommand: Int): ListenableFuture<*> {
         when (seekCommand) {
             Player.COMMAND_SEEK_TO_NEXT, Player.COMMAND_SEEK_TO_NEXT_MEDIA_ITEM -> cast.send(FfiTvCommand.Next)
+            Player.COMMAND_SEEK_BACK -> cast.send(FfiTvCommand.Seek(-STEP_MS / 1000.0))
+            Player.COMMAND_SEEK_FORWARD -> cast.send(FfiTvCommand.Seek(STEP_MS / 1000.0))
             else -> cast.send(FfiTvCommand.SeekTo(positionMs / 1000.0))
         }
         return Futures.immediateVoidFuture()
@@ -236,6 +253,9 @@ class CastSessionPlayer(private val context: Context, private val cast: CastMode
     override fun handleRelease(): ListenableFuture<*> = Futures.immediateVoidFuture()
 
     private companion object {
+        /** Back 10 and forward 10. */
+        const val STEP_MS = 10_000L
+
         val LEVEL = DeviceInfo.Builder(DeviceInfo.PLAYBACK_TYPE_REMOTE).setMaxVolume(100).build()
 
         /** The TV's own volume is in charge: nothing for the volume keys to move. */
@@ -243,15 +263,19 @@ class CastSessionPlayer(private val context: Context, private val cast: CastMode
     }
 }
 
-/** Keeps [CastService] up while a cast starts or plays, and lets it go once the cast is over. */
+/**
+ * Keeps [CastService] up while a cast starts or plays, closed app and locked phone included, and
+ * lets it go once nothing plays on the TV.
+ */
 @OptIn(UnstableApi::class)
 class CastKeeper(private val context: Context, cast: CastModel, scope: CoroutineScope) {
     private var controller: ListenableFuture<MediaController>? = null
 
     init {
         scope.launch {
-            cast.shown
-                .map { it?.stage == CastStage.Starting || it?.stage == CastStage.Playing }
+            kotlinx.coroutines.flow.combine(cast.shown, cast.session) { shown, session ->
+                shown?.stage == CastStage.Starting || shown?.stage == CastStage.Playing || session.state == app.kaeri.store.CastSessionState.Playing
+            }
                 .distinctUntilChanged()
                 .collect { held -> if (held) bind() else unbind() }
         }

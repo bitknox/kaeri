@@ -2831,6 +2831,26 @@
     <string name="cast_stop">Stop casting</string>
     <!-- Line under TV volume on the card, for a TV whose volume only its own remote sets. -->
     <string name="cast_volume_fixed">Set on the TV</string>
+    <!-- The cast button's label and tooltip while it connects to a TV. The name is the TV's own, such as Living room. -->
+    <string name="cast_button_connecting">Connecting to %1$s</string>
+    <!-- The cast button's label and tooltip while a TV is connected, said once as it connects. -->
+    <string name="cast_button_connected">Connected to %1$s</string>
+    <!-- Under the main action of a title page while a TV is connected: where the episode plays. -->
+    <string name="cast_plays_on">Plays on %1$s</string>
+    <!-- The connected TV's dialog while the TV shows the app and nothing is loaded. -->
+    <string name="cast_idle">Nothing playing yet</string>
+    <!-- The controller's status line while the episode is paused on the TV. -->
+    <string name="cast_status_paused">Paused on %1$s</string>
+    <!-- Screen reader hint and tooltip on the show's name and cover in the controller, which open the show's page. -->
+    <string name="cast_open_show">Open %1$s</string>
+    <!-- The chevron that puts the full controller back into the mini player. -->
+    <string name="cast_controller_close">Close</string>
+    <!-- Screen reader hint on the mini player over the navigation bar. -->
+    <string name="cast_mini_opens">Opens the controls</string>
+    <!-- Long-press menu of an episode while a TV plays: queues the episode after the one playing. -->
+    <string name="cast_play_next_on">Play next on %1$s</string>
+    <!-- The system's media notification and Now Playing: the line naming the TV that plays. -->
+    <string name="cast_notification_line">Casting to %1$s</string>
     <!-- Button that runs a failed action again. -->
     <string name="action_try_again">Try again</string>
     <!-- Button that closes a dialog without doing what it offered. -->

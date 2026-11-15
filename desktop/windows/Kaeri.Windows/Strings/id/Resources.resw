@@ -2777,6 +2777,36 @@
   <data name="CastVolumeFixed" xml:space="preserve">
     <value>Diatur di TV</value>
   </data>
+  <data name="CastButtonConnecting" xml:space="preserve">
+    <value>Menghubungkan ke {name}</value>
+  </data>
+  <data name="CastButtonConnected" xml:space="preserve">
+    <value>Terhubung ke {name}</value>
+  </data>
+  <data name="CastPlaysOn" xml:space="preserve">
+    <value>Diputar di {name}</value>
+  </data>
+  <data name="CastIdle" xml:space="preserve">
+    <value>Belum ada yang diputar</value>
+  </data>
+  <data name="CastStatusPaused" xml:space="preserve">
+    <value>Dijeda di {name}</value>
+  </data>
+  <data name="CastOpenShow" xml:space="preserve">
+    <value>Buka {title}</value>
+  </data>
+  <data name="CastControllerClose" xml:space="preserve">
+    <value>Tutup</value>
+  </data>
+  <data name="CastMiniOpens" xml:space="preserve">
+    <value>Membuka kontrol</value>
+  </data>
+  <data name="CastPlayNextOn" xml:space="preserve">
+    <value>Putar setelah ini di {name}</value>
+  </data>
+  <data name="CastNotificationLine" xml:space="preserve">
+    <value>Casting ke {name}</value>
+  </data>
   <data name="ActionTryAgain" xml:space="preserve">
     <value>Coba lagi</value>
   </data>

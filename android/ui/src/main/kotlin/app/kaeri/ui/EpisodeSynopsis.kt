@@ -776,7 +776,15 @@ internal fun episodeActions(entry: Entry, row: EpisodeRow, actions: AppActions, 
             close()
             store.downloadEpisode(entry.id, row.number)
         }
-        if (store.tv.available) {
+        // While a TV plays, the episode can wait its turn there.
+        val session = store.cast.session.collectAsStateWithLifecycle().value
+        if (store.cast.canQueue && session.state == app.kaeri.store.CastSessionState.Playing) {
+            list += SheetAction(stringResource(R.string.cast_play_next_on, session.deviceName.orEmpty()), Icons.PlayRow) {
+                close()
+                store.cast.queueNext(entry.id, row.number)
+            }
+        }
+        if (store.tv.available && !session.held) {
             list += SheetAction(stringResource(R.string.tv_play_on), Icons.Tv) {
                 close()
                 store.tv.offer(app.kaeri.store.TvPlayRequest(entry.id, entry.showTitle, row.number))

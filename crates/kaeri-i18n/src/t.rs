@@ -9170,6 +9170,56 @@ pub fn cast_volume_fixed() -> String {
     text("cast-volume-fixed", &[])
 }
 
+/// The cast button's label and tooltip while it connects to a TV. The name is the TV's own, such as Living room.
+pub fn cast_button_connecting(name: &str) -> String {
+    text("cast-button-connecting", &[("name", Arg::Text(name))])
+}
+
+/// The cast button's label and tooltip while a TV is connected, said once as it connects.
+pub fn cast_button_connected(name: &str) -> String {
+    text("cast-button-connected", &[("name", Arg::Text(name))])
+}
+
+/// Under the main action of a title page while a TV is connected: where the episode plays.
+pub fn cast_plays_on(name: &str) -> String {
+    text("cast-plays-on", &[("name", Arg::Text(name))])
+}
+
+/// The connected TV's dialog while the TV shows the app and nothing is loaded.
+pub fn cast_idle() -> String {
+    text("cast-idle", &[])
+}
+
+/// The controller's status line while the episode is paused on the TV.
+pub fn cast_status_paused(name: &str) -> String {
+    text("cast-status-paused", &[("name", Arg::Text(name))])
+}
+
+/// Screen reader hint and tooltip on the show's name and cover in the controller, which open the show's page.
+pub fn cast_open_show(title: &str) -> String {
+    text("cast-open-show", &[("title", Arg::Text(title))])
+}
+
+/// The chevron that puts the full controller back into the mini player.
+pub fn cast_controller_close() -> String {
+    text("cast-controller-close", &[])
+}
+
+/// Screen reader hint on the mini player over the navigation bar.
+pub fn cast_mini_opens() -> String {
+    text("cast-mini-opens", &[])
+}
+
+/// Long-press menu of an episode while a TV plays: queues the episode after the one playing.
+pub fn cast_play_next_on(name: &str) -> String {
+    text("cast-play-next-on", &[("name", Arg::Text(name))])
+}
+
+/// The system's media notification and Now Playing: the line naming the TV that plays.
+pub fn cast_notification_line(name: &str) -> String {
+    text("cast-notification-line", &[("name", Arg::Text(name))])
+}
+
 /// Button that runs a failed action again.
 pub fn action_try_again() -> String {
     text("action-try-again", &[])

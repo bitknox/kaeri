@@ -1273,6 +1273,16 @@
     <string name="cast_play_here">Putar di sini</string>
     <string name="cast_stop">Hentikan casting</string>
     <string name="cast_volume_fixed">Diatur di TV</string>
+    <string name="cast_button_connecting">Menghubungkan ke %1$s</string>
+    <string name="cast_button_connected">Terhubung ke %1$s</string>
+    <string name="cast_plays_on">Diputar di %1$s</string>
+    <string name="cast_idle">Belum ada yang diputar</string>
+    <string name="cast_status_paused">Dijeda di %1$s</string>
+    <string name="cast_open_show">Buka %1$s</string>
+    <string name="cast_controller_close">Tutup</string>
+    <string name="cast_mini_opens">Membuka kontrol</string>
+    <string name="cast_play_next_on">Putar setelah ini di %1$s</string>
+    <string name="cast_notification_line">Casting ke %1$s</string>
     <string name="action_try_again">Coba lagi</string>
     <string name="action_cancel">Batal</string>
     <string name="action_go">Ke</string>

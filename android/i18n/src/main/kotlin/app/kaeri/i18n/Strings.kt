@@ -5229,6 +5229,46 @@ object Strings {
     fun castVolumeFixed(context: Context): String =
         context.getString(R.string.cast_volume_fixed)
 
+    /** The cast button's label and tooltip while it connects to a TV. The name is the TV's own, such as Living room. */
+    fun castButtonConnecting(context: Context, name: String): String =
+        context.getString(R.string.cast_button_connecting, name)
+
+    /** The cast button's label and tooltip while a TV is connected, said once as it connects. */
+    fun castButtonConnected(context: Context, name: String): String =
+        context.getString(R.string.cast_button_connected, name)
+
+    /** Under the main action of a title page while a TV is connected: where the episode plays. */
+    fun castPlaysOn(context: Context, name: String): String =
+        context.getString(R.string.cast_plays_on, name)
+
+    /** The connected TV's dialog while the TV shows the app and nothing is loaded. */
+    fun castIdle(context: Context): String =
+        context.getString(R.string.cast_idle)
+
+    /** The controller's status line while the episode is paused on the TV. */
+    fun castStatusPaused(context: Context, name: String): String =
+        context.getString(R.string.cast_status_paused, name)
+
+    /** Screen reader hint and tooltip on the show's name and cover in the controller, which open the show's page. */
+    fun castOpenShow(context: Context, title: String): String =
+        context.getString(R.string.cast_open_show, title)
+
+    /** The chevron that puts the full controller back into the mini player. */
+    fun castControllerClose(context: Context): String =
+        context.getString(R.string.cast_controller_close)
+
+    /** Screen reader hint on the mini player over the navigation bar. */
+    fun castMiniOpens(context: Context): String =
+        context.getString(R.string.cast_mini_opens)
+
+    /** Long-press menu of an episode while a TV plays: queues the episode after the one playing. */
+    fun castPlayNextOn(context: Context, name: String): String =
+        context.getString(R.string.cast_play_next_on, name)
+
+    /** The system's media notification and Now Playing: the line naming the TV that plays. */
+    fun castNotificationLine(context: Context, name: String): String =
+        context.getString(R.string.cast_notification_line, name)
+
     /** Button that runs a failed action again. */
     fun actionTryAgain(context: Context): String =
         context.getString(R.string.action_try_again)

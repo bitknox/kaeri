@@ -3182,6 +3182,36 @@
   <data name="CastVolumeFixed" xml:space="preserve">
     <value>Ustawiane na telewizorze</value>
   </data>
+  <data name="CastButtonConnecting" xml:space="preserve">
+    <value>Łączenie z {name}</value>
+  </data>
+  <data name="CastButtonConnected" xml:space="preserve">
+    <value>Połączono z {name}</value>
+  </data>
+  <data name="CastPlaysOn" xml:space="preserve">
+    <value>Odtwarzanie w {name}</value>
+  </data>
+  <data name="CastIdle" xml:space="preserve">
+    <value>Jeszcze nic nie jest odtwarzane</value>
+  </data>
+  <data name="CastStatusPaused" xml:space="preserve">
+    <value>Wstrzymano w {name}</value>
+  </data>
+  <data name="CastOpenShow" xml:space="preserve">
+    <value>Otwórz {title}</value>
+  </data>
+  <data name="CastControllerClose" xml:space="preserve">
+    <value>Zamknij</value>
+  </data>
+  <data name="CastMiniOpens" xml:space="preserve">
+    <value>Otwiera sterowanie</value>
+  </data>
+  <data name="CastPlayNextOn" xml:space="preserve">
+    <value>Odtwórz jako następne w {name}</value>
+  </data>
+  <data name="CastNotificationLine" xml:space="preserve">
+    <value>Przesyłanie do {name}</value>
+  </data>
   <data name="ActionTryAgain" xml:space="preserve">
     <value>Spróbuj ponownie</value>
   </data>

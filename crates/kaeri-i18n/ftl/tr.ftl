@@ -5482,6 +5482,36 @@ cast-stop = Yayını durdur
 # Line under TV volume on the card, for a TV whose volume only its own remote sets.
 cast-volume-fixed = TV'den ayarlanır
 
+# The cast button's label and tooltip while it connects to a TV. The name is the TV's own, such as Living room.
+cast-button-connecting = { $name } cihazına bağlanılıyor
+
+# The cast button's label and tooltip while a TV is connected, said once as it connects.
+cast-button-connected = { $name } cihazına bağlı
+
+# Under the main action of a title page while a TV is connected: where the episode plays.
+cast-plays-on = { $name } üzerinde oynatılır
+
+# The connected TV's dialog while the TV shows the app and nothing is loaded.
+cast-idle = Henüz bir şey oynatılmıyor
+
+# The controller's status line while the episode is paused on the TV.
+cast-status-paused = { $name } üzerinde duraklatıldı
+
+# Screen reader hint and tooltip on the show's name and cover in the controller, which open the show's page.
+cast-open-show = { $title } sayfasını aç
+
+# The chevron that puts the full controller back into the mini player.
+cast-controller-close = Kapat
+
+# Screen reader hint on the mini player over the navigation bar.
+cast-mini-opens = Kontrolleri açar
+
+# Long-press menu of an episode while a TV plays: queues the episode after the one playing.
+cast-play-next-on = { $name } üzerinde sırada oynat
+
+# The system's media notification and Now Playing: the line naming the TV that plays.
+cast-notification-line = { $name } cihazına yayınlanıyor
+
 # Button that runs a failed action again.
 action-try-again = Yeniden dene
 

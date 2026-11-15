@@ -2912,6 +2912,36 @@
   <data name="CastVolumeFixed" xml:space="preserve">
     <value>TV'den ayarlanır</value>
   </data>
+  <data name="CastButtonConnecting" xml:space="preserve">
+    <value>{name} cihazına bağlanılıyor</value>
+  </data>
+  <data name="CastButtonConnected" xml:space="preserve">
+    <value>{name} cihazına bağlı</value>
+  </data>
+  <data name="CastPlaysOn" xml:space="preserve">
+    <value>{name} üzerinde oynatılır</value>
+  </data>
+  <data name="CastIdle" xml:space="preserve">
+    <value>Henüz bir şey oynatılmıyor</value>
+  </data>
+  <data name="CastStatusPaused" xml:space="preserve">
+    <value>{name} üzerinde duraklatıldı</value>
+  </data>
+  <data name="CastOpenShow" xml:space="preserve">
+    <value>{title} sayfasını aç</value>
+  </data>
+  <data name="CastControllerClose" xml:space="preserve">
+    <value>Kapat</value>
+  </data>
+  <data name="CastMiniOpens" xml:space="preserve">
+    <value>Kontrolleri açar</value>
+  </data>
+  <data name="CastPlayNextOn" xml:space="preserve">
+    <value>{name} üzerinde sırada oynat</value>
+  </data>
+  <data name="CastNotificationLine" xml:space="preserve">
+    <value>{name} cihazına yayınlanıyor</value>
+  </data>
   <data name="ActionTryAgain" xml:space="preserve">
     <value>Yeniden dene</value>
   </data>

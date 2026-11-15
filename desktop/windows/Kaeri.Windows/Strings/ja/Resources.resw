@@ -2777,6 +2777,36 @@
   <data name="CastVolumeFixed" xml:space="preserve">
     <value>テレビ側で設定</value>
   </data>
+  <data name="CastButtonConnecting" xml:space="preserve">
+    <value>{name}に接続中</value>
+  </data>
+  <data name="CastButtonConnected" xml:space="preserve">
+    <value>{name}に接続済み</value>
+  </data>
+  <data name="CastPlaysOn" xml:space="preserve">
+    <value>{name}で再生</value>
+  </data>
+  <data name="CastIdle" xml:space="preserve">
+    <value>まだ何も再生していません</value>
+  </data>
+  <data name="CastStatusPaused" xml:space="preserve">
+    <value>{name}で一時停止中</value>
+  </data>
+  <data name="CastOpenShow" xml:space="preserve">
+    <value>{title}を開く</value>
+  </data>
+  <data name="CastControllerClose" xml:space="preserve">
+    <value>閉じる</value>
+  </data>
+  <data name="CastMiniOpens" xml:space="preserve">
+    <value>操作画面を開きます</value>
+  </data>
+  <data name="CastPlayNextOn" xml:space="preserve">
+    <value>{name}で次に再生</value>
+  </data>
+  <data name="CastNotificationLine" xml:space="preserve">
+    <value>{name}にキャスト中</value>
+  </data>
   <data name="ActionTryAgain" xml:space="preserve">
     <value>再試行</value>
   </data>

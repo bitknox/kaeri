@@ -1459,6 +1459,16 @@
     <string name="cast_play_here">Odtwarzaj tutaj</string>
     <string name="cast_stop">Zatrzymaj przesyłanie</string>
     <string name="cast_volume_fixed">Ustawiane na telewizorze</string>
+    <string name="cast_button_connecting">Łączenie z %1$s</string>
+    <string name="cast_button_connected">Połączono z %1$s</string>
+    <string name="cast_plays_on">Odtwarzanie w %1$s</string>
+    <string name="cast_idle">Jeszcze nic nie jest odtwarzane</string>
+    <string name="cast_status_paused">Wstrzymano w %1$s</string>
+    <string name="cast_open_show">Otwórz %1$s</string>
+    <string name="cast_controller_close">Zamknij</string>
+    <string name="cast_mini_opens">Otwiera sterowanie</string>
+    <string name="cast_play_next_on">Odtwórz jako następne w %1$s</string>
+    <string name="cast_notification_line">Przesyłanie do %1$s</string>
     <string name="action_try_again">Spróbuj ponownie</string>
     <string name="action_cancel">Anuluj</string>
     <string name="action_go">Idź</string>

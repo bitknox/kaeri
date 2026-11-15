@@ -2892,6 +2892,36 @@ public static partial class T
     /// <summary>Line under TV volume on the card, for a TV whose volume only its own remote sets.</summary>
     public static string CastVolumeFixed => Get("CastVolumeFixed");
 
+    /// <summary>The cast button's label and tooltip while it connects to a TV. The name is the TV's own, such as Living room.</summary>
+    public static string CastButtonConnecting(string name) => Fill(Get("CastButtonConnecting"), ("name", name));
+
+    /// <summary>The cast button's label and tooltip while a TV is connected, said once as it connects.</summary>
+    public static string CastButtonConnected(string name) => Fill(Get("CastButtonConnected"), ("name", name));
+
+    /// <summary>Under the main action of a title page while a TV is connected: where the episode plays.</summary>
+    public static string CastPlaysOn(string name) => Fill(Get("CastPlaysOn"), ("name", name));
+
+    /// <summary>The connected TV's dialog while the TV shows the app and nothing is loaded.</summary>
+    public static string CastIdle => Get("CastIdle");
+
+    /// <summary>The controller's status line while the episode is paused on the TV.</summary>
+    public static string CastStatusPaused(string name) => Fill(Get("CastStatusPaused"), ("name", name));
+
+    /// <summary>Screen reader hint and tooltip on the show's name and cover in the controller, which open the show's page.</summary>
+    public static string CastOpenShow(string title) => Fill(Get("CastOpenShow"), ("title", title));
+
+    /// <summary>The chevron that puts the full controller back into the mini player.</summary>
+    public static string CastControllerClose => Get("CastControllerClose");
+
+    /// <summary>Screen reader hint on the mini player over the navigation bar.</summary>
+    public static string CastMiniOpens => Get("CastMiniOpens");
+
+    /// <summary>Long-press menu of an episode while a TV plays: queues the episode after the one playing.</summary>
+    public static string CastPlayNextOn(string name) => Fill(Get("CastPlayNextOn"), ("name", name));
+
+    /// <summary>The system's media notification and Now Playing: the line naming the TV that plays.</summary>
+    public static string CastNotificationLine(string name) => Fill(Get("CastNotificationLine"), ("name", name));
+
     /// <summary>Button that runs a failed action again.</summary>
     public static string ActionTryAgain => Get("ActionTryAgain");
 
@@ -13067,6 +13097,16 @@ public static partial class T
         ["CastPlayHere"] = "Play here",
         ["CastStop"] = "Stop casting",
         ["CastVolumeFixed"] = "Set on the TV",
+        ["CastButtonConnecting"] = "Connecting to {name}",
+        ["CastButtonConnected"] = "Connected to {name}",
+        ["CastPlaysOn"] = "Plays on {name}",
+        ["CastIdle"] = "Nothing playing yet",
+        ["CastStatusPaused"] = "Paused on {name}",
+        ["CastOpenShow"] = "Open {title}",
+        ["CastControllerClose"] = "Close",
+        ["CastMiniOpens"] = "Opens the controls",
+        ["CastPlayNextOn"] = "Play next on {name}",
+        ["CastNotificationLine"] = "Casting to {name}",
         ["ActionTryAgain"] = "Try again",
         ["ActionCancel"] = "Cancel",
         ["ActionGo"] = "Go",

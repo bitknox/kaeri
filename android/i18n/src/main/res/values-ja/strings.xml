@@ -1273,6 +1273,16 @@
     <string name="cast_play_here">ここで再生</string>
     <string name="cast_stop">キャストを停止</string>
     <string name="cast_volume_fixed">テレビ側で設定</string>
+    <string name="cast_button_connecting">%1$sに接続中</string>
+    <string name="cast_button_connected">%1$sに接続済み</string>
+    <string name="cast_plays_on">%1$sで再生</string>
+    <string name="cast_idle">まだ何も再生していません</string>
+    <string name="cast_status_paused">%1$sで一時停止中</string>
+    <string name="cast_open_show">%1$sを開く</string>
+    <string name="cast_controller_close">閉じる</string>
+    <string name="cast_mini_opens">操作画面を開きます</string>
+    <string name="cast_play_next_on">%1$sで次に再生</string>
+    <string name="cast_notification_line">%1$sにキャスト中</string>
     <string name="action_try_again">再試行</string>
     <string name="action_cancel">キャンセル</string>
     <string name="action_go">移動</string>

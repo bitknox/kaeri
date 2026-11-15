@@ -56,14 +56,31 @@ import app.kaeri.i18n.Strings
  *     audio      Living room's card loading again after an audio change
  *     lost       Living room's card after the TV dropped off
  *     taken      Library, after someone else took Living room: the notice with Play here
- *     bar        Library while Living room plays, the card closed: the bar over the navigation
+ *     bar        Library while Living room plays, the card closed: the mini over the navigation
+ *
+ * The cast session's scenes, through the scripted session that holds Living room:
+ *
+ *     chooser    the cast button's Play on TV dialog
+ *     connecting Living room connecting, its waves pulsing
+ *     connected  Living room held, nothing playing
+ *     dialog     Living room's dialog: Nothing playing yet, its volume, Stop casting
+ *     opening    the controller as episode 7 starts on Living room
+ *     playing    the controller with episode 7 playing at 12:34
+ *     paused     the same, paused
+ *     waiting    the same, the TV waiting for the stream 6 s
+ *     mini       the mini over the navigation bar while episode 7 plays
+ *     joining    the mini while the session left on Living room is joined again
  */
 enum class CastScene {
     PICKER, SEARCHING, NONE, BLOCKED, STARTING, PREPARING, FIXED, LEVEL, FAILED, NEVER, NETWORK, CODEC, DEEPLINK,
-    UPNEXT, UNDO, AUDIO, LOST, TAKEN, BAR;
+    UPNEXT, UNDO, AUDIO, LOST, TAKEN, BAR,
+    CHOOSER, CONNECTING, CONNECTED, DIALOG, OPENING, PLAYING, PAUSED, WAITING, MINI, JOINING;
 
     /** No TV of either kind answers in this scene. */
     val empty: Boolean get() = this == SEARCHING || this == NONE
+
+    /** The scene runs on the cast session rather than a one-off cast from the picker. */
+    val session: Boolean get() = ordinal >= CHOOSER.ordinal
 
     companion object {
         fun named(name: String?): CastScene? = entries.firstOrNull { it.name.equals(name, ignoreCase = true) }
@@ -114,6 +131,9 @@ class FixtureCastLink(
     private val undo: FfiCastUndo? = null,
 ) : CastLink {
     private val changes = MutableStateFlow(0L)
+
+    /** Counts each change, for the scripted session to follow without taking the card's turn. */
+    val changed: kotlinx.coroutines.flow.StateFlow<Long> get() = changes
     private var seen = 0L
     private var loading = true
     private var paused = false
@@ -296,6 +316,98 @@ object FixtureCasts {
     /** The scene the launch asked for, read as Play on TV starts: which TVs its browses find. */
     var scene: CastScene? = null
 
+    /** How long a play on the scripted session takes to start; `null` never starts. */
+    var sessionStartsAfter: Long? = 1_500
+
+    /** Where a play on the scripted session starts when nothing was watched: 12:34. */
+    var sessionFrom = 754.0
+
+    /** The scripted session the fixtures flavour casts through, in the engine's place. */
+    fun session(context: Context, store: AppStore, scope: CoroutineScope): FixtureCastSession {
+        val episodeTitle = { id: app.kaeri.engine.core.AnilistId, episode: String ->
+            store.titles.episodes.value[id]?.firstOrNull { it.number == episode }?.title
+        }
+        return FixtureCastSession(
+            scope,
+            link = { name, level, asked ->
+                val line = episodeTitle(asked.id, asked.episode)?.let { Strings.castEpisodeTitled(context, asked.episode, it) } ?: Strings.castEpisode(context, asked.episode)
+                FixtureCastLink(
+                    tvName = name,
+                    scope = scope,
+                    now = FfiNowCard(
+                        id = asked.id, title = asked.title.ifEmpty { store.titles[asked.id]?.showTitle.orEmpty() }, episode = asked.episode,
+                        episodeLine = line, loading = true, position = 0.0, duration = 1440.0, paused = false, speed = 1.0, volume = null,
+                        audio = emptyList(), subtitles = emptyList(), subtitlesOff = false, skip = null,
+                    ),
+                    control = if (level) FfiVolumeControl.LEVEL else FfiVolumeControl.MUTE_ONLY,
+                    startsAfter = sessionStartsAfter,
+                    from = asked.from?.takeIf { it > 0 } ?: sessionFrom,
+                    skipLabel = null,
+                )
+            },
+            episodeTitle = episodeTitle,
+        )
+    }
+
+    /** A session scene: Living room held through the scripted session, then the scene's own step. */
+    private suspend fun stageSession(store: AppStore, scene: CastScene, request: TvPlayRequest) {
+        val cast = store.cast
+        val session = cast.sessions as? FixtureCastSession ?: return
+        val row = waitForRow(store, "Living room") ?: return
+        when (scene) {
+            CastScene.CHOOSER -> {
+                cast.pressButton()
+                return
+            }
+            CastScene.JOINING -> {
+                cast.takeSession(
+                    CastSession.IDLE.copy(
+                        state = CastSessionState.Playing,
+                        deviceKey = row.key,
+                        deviceName = row.name,
+                        item = CastItem(
+                            id = request.id,
+                            title = request.title,
+                            episode = request.episode,
+                            episodeTitle = store.titles.episodes.value[request.id]?.firstOrNull { it.number == request.episode }?.title,
+                            image = null,
+                            position = 754.0,
+                            duration = 1440.0,
+                            paused = false,
+                            loading = false,
+                            waiting = null,
+                        ),
+                    ),
+                )
+                session.left = row.key
+                cast.takeSession(CastSession.IDLE)
+                cast.refresh()
+                return
+            }
+            CastScene.CONNECTING -> session.connectAfter = null
+            else -> session.connectAfter = 400
+        }
+        cast.connect(row)
+        if (scene == CastScene.CONNECTING) return
+        while (cast.session.value.state != CastSessionState.Connected) delay(50)
+        when (scene) {
+            CastScene.DIALOG -> cast.pressButton()
+            CastScene.OPENING, CastScene.PLAYING, CastScene.PAUSED, CastScene.WAITING, CastScene.MINI -> {
+                sessionStartsAfter = if (scene == CastScene.OPENING) null else 300
+                cast.playOnTv(request)
+                if (scene == CastScene.OPENING) return
+                while (cast.shown.value?.stage != CastStage.Playing) delay(50)
+                when (scene) {
+                    CastScene.PAUSED -> cast.send(FfiTvCommand.TogglePause)
+                    CastScene.WAITING -> session.waiting = 6
+                    CastScene.MINI -> cast.closeCard()
+                    else -> Unit
+                }
+            }
+            else -> Unit
+        }
+    }
+
     /** The browse for TVs with Chromecast built in, for [scene]. */
     fun browser(): FfiCastBrowser = FixtureCastBrowser(found = scene?.empty != true)
 
@@ -321,6 +433,10 @@ object FixtureCasts {
         val episodeTitle = store.titles.episodes.value[id]?.firstOrNull { it.number == episode }?.title
         val line = episodeTitle?.let { Strings.castEpisodeTitled(context, episode, it) } ?: Strings.castEpisode(context, episode)
         val request = TvPlayRequest(id, title, episode)
+        if (scene.session) {
+            stageSession(store, scene, request)
+            return
+        }
         val now = FfiNowCard(
             id = id, title = title, episode = episode, episodeLine = line, loading = true, position = 0.0,
             duration = 1420.0, paused = false, speed = 1.0, volume = null, audio = emptyList(), subtitles = emptyList(),
@@ -445,6 +561,16 @@ object FixtureCasts {
             CastScene.LOST -> shown?.stage == CastStage.Lost
             CastScene.TAKEN -> shown == null
             CastScene.BAR -> shown?.stage == CastStage.Playing && !store.cast.open.value
+            CastScene.CHOOSER -> store.cast.dialog.value == CastDialog.Chooser && store.cast.rows.value.size == 2
+            CastScene.CONNECTING -> store.cast.button.value == CastButtonState.Connecting
+            CastScene.CONNECTED -> store.cast.session.value.state == CastSessionState.Connected && store.cast.dialog.value == null
+            CastScene.DIALOG -> store.cast.dialog.value == CastDialog.Connected
+            CastScene.OPENING -> shown?.stage == CastStage.Starting && store.cast.open.value && store.cast.startingSeconds() >= 1
+            CastScene.PLAYING -> shown?.stage == CastStage.Playing && store.cast.open.value
+            CastScene.PAUSED -> shown?.cast?.card?.now?.paused == true
+            CastScene.WAITING -> store.cast.session.value.item?.waiting == 6L
+            CastScene.MINI -> shown?.stage == CastStage.Playing && !store.cast.open.value
+            CastScene.JOINING -> store.cast.joining.value != null
         }
     }
 }
