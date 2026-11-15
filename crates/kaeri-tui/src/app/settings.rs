@@ -827,4 +827,20 @@ mod tests {
         assert_ne!(a.settings.translation, before);
         assert!(a.toasts[0].notice.text.contains("dub"));
     }
+
+    #[test]
+    fn the_preload_note_names_torrents_while_torrent_playback_is_on() {
+        let note = |config: &Config| {
+            let rows = app_on(config).setting_rows();
+            let row = rows.into_iter().find(|row| row.key == SettingKey::PreloadMetered);
+            row.and_then(|row| row.note).expect("the Preload row's note")
+        };
+        let off = note(&Config::default());
+        assert!(!off.contains("Torrents"), "{off}");
+
+        let mut config = Config::default();
+        config.providers.torrent.enabled = true;
+        let on = note(&config);
+        assert!(on.ends_with(" Torrents load their first pieces the same way."), "{on}");
+    }
 }

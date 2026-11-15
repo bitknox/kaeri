@@ -134,18 +134,3 @@ async fn preload_on_metered_waits_on_auto_play_next() {
     assert!(!row.dimmed && row.editable);
     assert!(!row.note.unwrap().starts_with("Needs"));
 }
-
-#[tokio::test]
-async fn the_note_names_torrents_while_torrent_playback_is_on() {
-    let mut off = Harness::new().await;
-    off.settle().await;
-    let note = preload_row(&off).note.unwrap();
-    assert!(!note.contains("Torrents"), "{note}");
-
-    let config = "[providers.torrent]\nenabled = true\n";
-    let mut on =
-        Harness::with(Options { config: Some(config.into()), ..Options::default() }).await;
-    on.settle().await;
-    let note = preload_row(&on).note.unwrap();
-    assert!(note.ends_with(" Torrents load their first pieces the same way."), "{note}");
-}
