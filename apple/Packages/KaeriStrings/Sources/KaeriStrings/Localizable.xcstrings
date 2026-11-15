@@ -126411,6 +126411,174 @@
         }
       }
     },
+    "notice-failed-over" : {
+      "comment" : "Quiet toast in the player when the stream playing broke off with an error mid-episode and a stream from another source took over at the same second, with the same audio and subtitles. The source is its own name. Argument 1: source (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Der Stream ist abgebrochen. %1$@ hat an derselben Stelle übernommen."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The stream broke off. %1$@ took over at the same point."
+          }
+        },
+        "es-419" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La transmisión se cortó. %1$@ siguió desde el mismo punto."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Le flux s'est interrompu. %1$@ a pris le relais au même endroit."
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Stream terputus. %1$@ melanjutkan dari titik yang sama."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lo stream si è interrotto. %1$@ ha ripreso dallo stesso punto."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ストリームが途切れました。%1$@が同じ位置から引き継ぎました。"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Strumień się przerwał. %1$@ przejmuje od tego samego miejsca."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "O stream foi interrompido. %1$@ assumiu do mesmo ponto."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Поток оборвался. %1$@ продолжает с того же места."
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Strömmen bröts. %1$@ tog över på samma ställe."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Akış kesildi. %1$@ aynı yerden devraldı."
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Luồng bị ngắt. %1$@ đã tiếp quản tại cùng vị trí."
+          }
+        }
+      }
+    },
+    "notice-failed-over-same-source" : {
+      "comment" : "Quiet toast in the player when the stream playing broke off with an error mid-episode and another stream from the same source took over at the same second, with the same audio and subtitles. The source is its own name. Argument 1: source (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Der Stream ist abgebrochen. Ein anderer Stream von %1$@ hat an derselben Stelle übernommen."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The stream broke off. Another stream from %1$@ took over at the same point."
+          }
+        },
+        "es-419" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La transmisión se cortó. Otra transmisión de %1$@ siguió desde el mismo punto."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Le flux s'est interrompu. Un autre flux de %1$@ a pris le relais au même endroit."
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Stream terputus. Stream lain dari %1$@ melanjutkan dari titik yang sama."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lo stream si è interrotto. Un altro stream di %1$@ ha ripreso dallo stesso punto."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ストリームが途切れました。%1$@の別のストリームが同じ位置から引き継ぎました。"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Strumień się przerwał. Inny strumień z %1$@ przejmuje od tego samego miejsca."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "O stream foi interrompido. Outro stream de %1$@ assumiu do mesmo ponto."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Поток оборвался. Другой поток из %1$@ продолжает с того же места."
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Strömmen bröts. En annan ström från %1$@ tog över på samma ställe."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Akış kesildi. %1$@ üzerinden başka bir akış aynı yerden devraldı."
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Luồng bị ngắt. Một luồng khác từ %1$@ đã tiếp quản tại cùng vị trí."
+          }
+        }
+      }
+    },
     "notice-filler-skipped" : {
       "comment" : "Toast when the next episode is not the one after this because filler was skipped. Argument 1: episode (Text).",
       "extractionState" : "manual",

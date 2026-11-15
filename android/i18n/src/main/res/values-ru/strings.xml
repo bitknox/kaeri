@@ -123,6 +123,8 @@
     <string name="status_searching_sources">Запрашиваем источники об эпизоде %1$s…</string>
     <string name="notice_player_failed_to_start">Не удалось запустить mpv. Проверьте, что mpv запускается сам по себе. (%1$s)</string>
     <string name="notice_stream_no_video">Из этого потока не пришёл ни один кадр. Пробуем поток %1$,d из %2$,d.</string>
+    <string name="notice_failed_over">Поток оборвался. %1$s продолжает с того же места.</string>
+    <string name="notice_failed_over_same_source">Поток оборвался. Другой поток из %1$s продолжает с того же места.</string>
     <string name="notice_player_could_not_play">mpv не смог воспроизвести это. %1$s</string>
     <string name="notice_player_exited_silently">mpv закрылся без воспроизведения и без объяснения причины. Попробуйте другой источник.</string>
     <string name="notice_player_not_playing">mpv не начал воспроизведение через %1$,d с. У источника может не быть данных. Проверьте, что mpv сам воспроизводит файлы.</string>

@@ -421,6 +421,16 @@ public enum L {
         Self.format("notice-stream-no-video", fallback: "No video from that stream. Trying %1$lld of %2$lld.", next, total)
     }
 
+    /// Quiet toast in the player when the stream playing broke off with an error mid-episode and a stream from another source took over at the same second, with the same audio and subtitles. The source is its own name.
+    public static func noticeFailedOver(source: String) -> String {
+        Self.format("notice-failed-over", fallback: "The stream broke off. %1$@ took over at the same point.", source)
+    }
+
+    /// Quiet toast in the player when the stream playing broke off with an error mid-episode and another stream from the same source took over at the same second, with the same audio and subtitles. The source is its own name.
+    public static func noticeFailedOverSameSource(source: String) -> String {
+        Self.format("notice-failed-over-same-source", fallback: "The stream broke off. Another stream from %1$@ took over at the same point.", source)
+    }
+
     /// Toast when mpv gave up on a file. The reason is mpv's own line.
     public static func noticePlayerCouldNotPlay(reason: String) -> String {
         Self.format("notice-player-could-not-play", fallback: "mpv couldn't play this. %1$@", reason)

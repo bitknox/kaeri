@@ -362,6 +362,12 @@
   <data name="NoticeStreamNoVideo" xml:space="preserve">
     <value>Ingen bild från strömmen. Provar {next} av {total}.</value>
   </data>
+  <data name="NoticeFailedOver" xml:space="preserve">
+    <value>Strömmen bröts. {source} tog över på samma ställe.</value>
+  </data>
+  <data name="NoticeFailedOverSameSource" xml:space="preserve">
+    <value>Strömmen bröts. En annan ström från {source} tog över på samma ställe.</value>
+  </data>
   <data name="NoticePlayerCouldNotPlay" xml:space="preserve">
     <value>mpv kunde inte spela upp det här. {reason}</value>
   </data>

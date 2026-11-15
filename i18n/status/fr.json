@@ -13045,6 +13045,18 @@
     ],
     "back": "one: { $count } episode added to the queue, then the adding stopped. { $reason } | many: { $count } episodes added to the queue, then the adding stopped. { $reason } | other: { $count } episodes added to the queue, then the adding stopped. { $reason }"
   },
+  "notice-failed-over": {
+    "source": "83ab54856bbe",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
+  },
+  "notice-failed-over-same-source": {
+    "source": "003d5d9a3e27",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
+  },
   "notice-filler-skipped": {
     "source": "5b84ca7f31b4",
     "state": "draft",

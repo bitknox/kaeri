@@ -333,6 +333,12 @@ public static partial class T
     /// <summary>Toast when a stream never showed a frame and the next one is tried.</summary>
     public static string NoticeStreamNoVideo(long next, long total) => Fill(Get("NoticeStreamNoVideo"), ("next", next.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)), ("total", total.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
+    /// <summary>Quiet toast in the player when the stream playing broke off with an error mid-episode and a stream from another source took over at the same second, with the same audio and subtitles. The source is its own name.</summary>
+    public static string NoticeFailedOver(string source) => Fill(Get("NoticeFailedOver"), ("source", source));
+
+    /// <summary>Quiet toast in the player when the stream playing broke off with an error mid-episode and another stream from the same source took over at the same second, with the same audio and subtitles. The source is its own name.</summary>
+    public static string NoticeFailedOverSameSource(string source) => Fill(Get("NoticeFailedOverSameSource"), ("source", source));
+
     /// <summary>Toast when mpv gave up on a file. The reason is mpv's own line.</summary>
     public static string NoticePlayerCouldNotPlay(string reason) => Fill(Get("NoticePlayerCouldNotPlay"), ("reason", reason));
 
@@ -12164,6 +12170,8 @@ public static partial class T
         ["StatusSearchingSources"] = "Searching sources for episode {episode}…",
         ["NoticePlayerFailedToStart"] = "Couldn't start mpv. Check that it runs on its own. ({reason})",
         ["NoticeStreamNoVideo"] = "No video from that stream. Trying {next} of {total}.",
+        ["NoticeFailedOver"] = "The stream broke off. {source} took over at the same point.",
+        ["NoticeFailedOverSameSource"] = "The stream broke off. Another stream from {source} took over at the same point.",
         ["NoticePlayerCouldNotPlay"] = "mpv couldn't play this. {reason}",
         ["NoticePlayerExitedSilently"] = "mpv exited without playing anything and gave no reason. Try another source.",
         ["NoticePlayerNotPlaying"] = "mpv hasn't started playing after {seconds} s. The source may have no data. Check that mpv plays a file on its own.",

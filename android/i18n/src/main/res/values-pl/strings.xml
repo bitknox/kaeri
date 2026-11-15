@@ -123,6 +123,8 @@
     <string name="status_searching_sources">Źródła są przeszukiwane w poszukiwaniu odcinka %1$s…</string>
     <string name="notice_player_failed_to_start">Nie udało się uruchomić mpv. Sprawdź, czy działa samodzielnie. (%1$s)</string>
     <string name="notice_stream_no_video">Brak obrazu z tego strumienia. Sprawdzany jest strumień %1$,d z %2$,d.</string>
+    <string name="notice_failed_over">Strumień się przerwał. %1$s przejmuje od tego samego miejsca.</string>
+    <string name="notice_failed_over_same_source">Strumień się przerwał. Inny strumień z %1$s przejmuje od tego samego miejsca.</string>
     <string name="notice_player_could_not_play">mpv nie mógł tego odtworzyć. %1$s</string>
     <string name="notice_player_exited_silently">mpv zakończył pracę bez odtwarzania i nie podał przyczyny. Spróbuj inne źródło.</string>
     <string name="notice_player_not_playing">mpv nie zaczął odtwarzać po %1$,d s. Źródło może nie mieć danych. Sprawdź, czy mpv odtwarza plik samodzielnie.</string>

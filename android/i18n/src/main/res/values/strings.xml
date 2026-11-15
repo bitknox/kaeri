@@ -223,6 +223,10 @@
     <string name="notice_player_failed_to_start">Couldn\'t start mpv. Check that it runs on its own. (%1$s)</string>
     <!-- Toast when a stream never showed a frame and the next one is tried. -->
     <string name="notice_stream_no_video">No video from that stream. Trying %1$,d of %2$,d.</string>
+    <!-- Quiet toast in the player when the stream playing broke off with an error mid-episode and a stream from another source took over at the same second, with the same audio and subtitles. The source is its own name. -->
+    <string name="notice_failed_over">The stream broke off. %1$s took over at the same point.</string>
+    <!-- Quiet toast in the player when the stream playing broke off with an error mid-episode and another stream from the same source took over at the same second, with the same audio and subtitles. The source is its own name. -->
+    <string name="notice_failed_over_same_source">The stream broke off. Another stream from %1$s took over at the same point.</string>
     <!-- Toast when mpv gave up on a file. The reason is mpv's own line. -->
     <string name="notice_player_could_not_play">mpv couldn\'t play this. %1$s</string>
     <!-- Toast when mpv closed without playing and without saying why. -->

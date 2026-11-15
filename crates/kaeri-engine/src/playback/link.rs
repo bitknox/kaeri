@@ -115,6 +115,13 @@ pub trait PlayerLink: Send + Sync {
         None
     }
 
+    /// Whether the player ended the file it ended last with an error, rather than at its end,
+    /// on a quit or for the next file. A file that broke off mid-episode this way fails over to
+    /// another stream. `false` for a player that cannot tell.
+    fn ended_in_error(&self) -> bool {
+        false
+    }
+
     /// Open `url` in place of whatever is playing, with `options` that belong to that file
     /// alone, as mpv's per-file options: the headers, the resume point, the title and the
     /// track languages.

@@ -362,6 +362,12 @@
   <data name="NoticeStreamNoVideo" xml:space="preserve">
     <value>Kein Bild aus diesem Stream. Versuche {next} von {total}.</value>
   </data>
+  <data name="NoticeFailedOver" xml:space="preserve">
+    <value>Der Stream ist abgebrochen. {source} hat an derselben Stelle übernommen.</value>
+  </data>
+  <data name="NoticeFailedOverSameSource" xml:space="preserve">
+    <value>Der Stream ist abgebrochen. Ein anderer Stream von {source} hat an derselben Stelle übernommen.</value>
+  </data>
   <data name="NoticePlayerCouldNotPlay" xml:space="preserve">
     <value>mpv konnte das nicht abspielen. {reason}</value>
   </data>

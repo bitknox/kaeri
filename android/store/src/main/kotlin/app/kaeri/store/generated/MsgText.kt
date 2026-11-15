@@ -105,6 +105,8 @@ fun Msg.text(context: Context): String =
         is Msg.StatusSearchingSources -> Strings.statusSearchingSources(context, this.episode)
         is Msg.NoticePlayerFailedToStart -> Strings.noticePlayerFailedToStart(context, this.reason)
         is Msg.NoticeStreamNoVideo -> Strings.noticeStreamNoVideo(context, this.next.toInt(), this.total.toInt())
+        is Msg.NoticeFailedOver -> Strings.noticeFailedOver(context, this.source)
+        is Msg.NoticeFailedOverSameSource -> Strings.noticeFailedOverSameSource(context, this.source)
         is Msg.NoticePlayerCouldNotPlay -> Strings.noticePlayerCouldNotPlay(context, this.reason)
         is Msg.NoticePlayerExitedSilently -> Strings.noticePlayerExitedSilently(context)
         is Msg.NoticePlayerNotPlaying -> Strings.noticePlayerNotPlaying(context, this.seconds.toInt())

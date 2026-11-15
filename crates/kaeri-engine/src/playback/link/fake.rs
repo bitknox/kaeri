@@ -69,8 +69,9 @@ pub(crate) enum Call {
 /// Every call made on the windows one opener opened, in order.
 pub(crate) type Calls = Arc<Mutex<Vec<Call>>>;
 
-/// The files still to be loaded, each what it reports once it is.
-type Files = Arc<Mutex<VecDeque<Vec<PlaybackEvent>>>>;
+/// The files still to be loaded, each what it reports once it is, and whether the player ends
+/// it in an error.
+type Files = Arc<Mutex<VecDeque<(Vec<PlaybackEvent>, bool)>>>;
 
 /// A window that writes down every call made on it, and is alive until it is shut down.
 pub(crate) struct RecordingLink {
@@ -81,6 +82,8 @@ pub(crate) struct RecordingLink {
     events: mpsc::UnboundedSender<PlaybackEvent>,
     alive: AtomicBool,
     quit: AtomicBool,
+    /// Whether the file loaded last ends in an error, as its script said.
+    errored: AtomicBool,
 }
 
 impl RecordingLink {
@@ -98,7 +101,9 @@ impl RecordingLink {
 impl PlayerLink for RecordingLink {
     async fn load(&self, url: &str, options: Vec<(String, String)>) -> Result<(), LinkError> {
         self.note(Call::Load { url: url.to_owned(), options })?;
-        for event in self.files.lock().unwrap().pop_front().unwrap_or_default() {
+        let (events, errored) = self.files.lock().unwrap().pop_front().unwrap_or_default();
+        self.errored.store(errored, Ordering::Relaxed);
+        for event in events {
             let _ = self.events.send(event);
         }
         Ok(())
@@ -175,6 +180,10 @@ impl PlayerLink for RecordingLink {
         self.quit.load(Ordering::Relaxed)
     }
 
+    fn ended_in_error(&self) -> bool {
+        self.errored.load(Ordering::Relaxed)
+    }
+
     async fn diagnostics(&self) -> Option<String> {
         None
     }
@@ -201,12 +210,21 @@ impl ScriptedOpener {
     /// `scratch`.
     pub(crate) fn new(scratch: &Path, files: Vec<Vec<PlaybackEvent>>) -> Self {
         Self {
-            files: Arc::new(Mutex::new(files.into())),
+            files: Arc::new(Mutex::new(files.into_iter().map(|f| (f, false)).collect())),
             calls: Calls::default(),
             window: Mutex::default(),
             scratch: scratch.to_owned(),
             opens: true,
         }
+    }
+
+    /// The same, with the files at `which`, counted from 0 in the order they load, ended by the
+    /// player in an error rather than for an unknown reason.
+    pub(crate) fn failing(self, which: &[usize]) -> Self {
+        for (i, file) in self.files.lock().unwrap().iter_mut().enumerate() {
+            file.1 = which.contains(&i);
+        }
+        self
     }
 
     /// An opener whose windows never open, as an mpv that is not installed.
@@ -241,6 +259,7 @@ impl PlayerOpener for ScriptedOpener {
             events,
             alive: AtomicBool::new(true),
             quit: AtomicBool::new(false),
+            errored: AtomicBool::new(false),
         };
         Ok((Box::new(link), rx))
     }

@@ -102,6 +102,8 @@ public static class MsgText
         Msg.StatusSearchingSources x => T.StatusSearchingSources(x.Episode),
         Msg.NoticePlayerFailedToStart x => T.NoticePlayerFailedToStart(x.Reason),
         Msg.NoticeStreamNoVideo x => T.NoticeStreamNoVideo(x.Next, x.Total),
+        Msg.NoticeFailedOver x => T.NoticeFailedOver(x.Source),
+        Msg.NoticeFailedOverSameSource x => T.NoticeFailedOverSameSource(x.Source),
         Msg.NoticePlayerCouldNotPlay x => T.NoticePlayerCouldNotPlay(x.Reason),
         Msg.NoticePlayerExitedSilently => T.NoticePlayerExitedSilently,
         Msg.NoticePlayerNotPlaying x => T.NoticePlayerNotPlaying(x.Seconds),

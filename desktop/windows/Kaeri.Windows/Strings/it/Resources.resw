@@ -371,6 +371,12 @@
   <data name="NoticeStreamNoVideo" xml:space="preserve">
     <value>Nessun video da questo flusso. Provo il flusso {next} di {total}.</value>
   </data>
+  <data name="NoticeFailedOver" xml:space="preserve">
+    <value>Lo stream si è interrotto. {source} ha ripreso dallo stesso punto.</value>
+  </data>
+  <data name="NoticeFailedOverSameSource" xml:space="preserve">
+    <value>Lo stream si è interrotto. Un altro stream di {source} ha ripreso dallo stesso punto.</value>
+  </data>
   <data name="NoticePlayerCouldNotPlay" xml:space="preserve">
     <value>mpv non è riuscito a riprodurre questo file. {reason}</value>
   </data>

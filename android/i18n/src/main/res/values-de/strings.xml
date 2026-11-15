@@ -117,6 +117,8 @@
     <string name="status_searching_sources">Quellen werden nach Folge %1$s durchsucht…</string>
     <string name="notice_player_failed_to_start">mpv konnte nicht gestartet werden. Prüfe, ob es allein läuft. (%1$s)</string>
     <string name="notice_stream_no_video">Kein Bild aus diesem Stream. Versuche %1$,d von %2$,d.</string>
+    <string name="notice_failed_over">Der Stream ist abgebrochen. %1$s hat an derselben Stelle übernommen.</string>
+    <string name="notice_failed_over_same_source">Der Stream ist abgebrochen. Ein anderer Stream von %1$s hat an derselben Stelle übernommen.</string>
     <string name="notice_player_could_not_play">mpv konnte das nicht abspielen. %1$s</string>
     <string name="notice_player_exited_silently">mpv wurde beendet, ohne etwas abzuspielen und ohne Grund. Probiere eine andere Quelle.</string>
     <string name="notice_player_not_playing">mpv hat nach %1$,d s noch nicht mit der Wiedergabe begonnen. Die Quelle hat vielleicht keine Daten. Prüfe, ob mpv allein eine Datei abspielt.</string>

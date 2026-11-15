@@ -327,6 +327,12 @@ notice-player-failed-to-start = Tidak bisa memulai mpv. Pastikan mpv bisa berjal
 # Toast when a stream never showed a frame and the next one is tried.
 notice-stream-no-video = Tidak ada video dari aliran itu. Mencoba { $next } dari { $total }.
 
+# Quiet toast in the player when the stream playing broke off with an error mid-episode and a stream from another source took over at the same second, with the same audio and subtitles. The source is its own name.
+notice-failed-over = Stream terputus. { $source } melanjutkan dari titik yang sama.
+
+# Quiet toast in the player when the stream playing broke off with an error mid-episode and another stream from the same source took over at the same second, with the same audio and subtitles. The source is its own name.
+notice-failed-over-same-source = Stream terputus. Stream lain dari { $source } melanjutkan dari titik yang sama.
+
 # Toast when mpv gave up on a file. The reason is mpv's own line.
 notice-player-could-not-play = mpv tidak bisa memutar ini. { $reason }
 

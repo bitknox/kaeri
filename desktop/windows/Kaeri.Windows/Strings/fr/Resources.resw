@@ -371,6 +371,12 @@
   <data name="NoticeStreamNoVideo" xml:space="preserve">
     <value>Aucune image sur ce flux. Essai {next} sur {total}.</value>
   </data>
+  <data name="NoticeFailedOver" xml:space="preserve">
+    <value>Le flux s'est interrompu. {source} a pris le relais au même endroit.</value>
+  </data>
+  <data name="NoticeFailedOverSameSource" xml:space="preserve">
+    <value>Le flux s'est interrompu. Un autre flux de {source} a pris le relais au même endroit.</value>
+  </data>
   <data name="NoticePlayerCouldNotPlay" xml:space="preserve">
     <value>mpv n'a pas pu lire ce fichier. {reason}</value>
   </data>

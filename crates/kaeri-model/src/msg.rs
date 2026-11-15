@@ -189,6 +189,10 @@ pub enum Msg {
     NoticePlayerFailedToStart { reason: String },
     /// Toast when a stream never showed a frame and the next one is tried.
     NoticeStreamNoVideo { next: i64, total: i64 },
+    /// Quiet toast in the player when the stream playing broke off with an error mid-episode and a stream from another source took over at the same second, with the same audio and subtitles. The source is its own name.
+    NoticeFailedOver { source: String },
+    /// Quiet toast in the player when the stream playing broke off with an error mid-episode and another stream from the same source took over at the same second, with the same audio and subtitles. The source is its own name.
+    NoticeFailedOverSameSource { source: String },
     /// Toast when mpv gave up on a file. The reason is mpv's own line.
     NoticePlayerCouldNotPlay { reason: String },
     /// Toast when mpv closed without playing and without saying why.
@@ -558,6 +562,8 @@ impl Msg {
             Self::StatusSearchingSources { .. } => "status-searching-sources",
             Self::NoticePlayerFailedToStart { .. } => "notice-player-failed-to-start",
             Self::NoticeStreamNoVideo { .. } => "notice-stream-no-video",
+            Self::NoticeFailedOver { .. } => "notice-failed-over",
+            Self::NoticeFailedOverSameSource { .. } => "notice-failed-over-same-source",
             Self::NoticePlayerCouldNotPlay { .. } => "notice-player-could-not-play",
             Self::NoticePlayerExitedSilently => "notice-player-exited-silently",
             Self::NoticePlayerNotPlaying { .. } => "notice-player-not-playing",
@@ -790,6 +796,8 @@ impl Msg {
             Self::StatusSearchingSources { episode } => vec![("episode", Value::Text(episode.clone()))],
             Self::NoticePlayerFailedToStart { reason } => vec![("reason", Value::Text(reason.clone()))],
             Self::NoticeStreamNoVideo { next, total } => vec![("next", Value::Int(*next)), ("total", Value::Int(*total))],
+            Self::NoticeFailedOver { source } => vec![("source", Value::Text(source.clone()))],
+            Self::NoticeFailedOverSameSource { source } => vec![("source", Value::Text(source.clone()))],
             Self::NoticePlayerCouldNotPlay { reason } => vec![("reason", Value::Text(reason.clone()))],
             Self::NoticePlayerExitedSilently => Vec::new(),
             Self::NoticePlayerNotPlaying { seconds } => vec![("seconds", Value::Int(*seconds))],

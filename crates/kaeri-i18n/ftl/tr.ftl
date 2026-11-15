@@ -330,6 +330,12 @@ notice-player-failed-to-start = mpv başlatılamadı. Tek başına çalışıp �
 # Toast when a stream never showed a frame and the next one is tried.
 notice-stream-no-video = Bu akıştan görüntü gelmedi. Bir sonraki akış deneniyor ({ $next }/{ $total }).
 
+# Quiet toast in the player when the stream playing broke off with an error mid-episode and a stream from another source took over at the same second, with the same audio and subtitles. The source is its own name.
+notice-failed-over = Akış kesildi. { $source } aynı yerden devraldı.
+
+# Quiet toast in the player when the stream playing broke off with an error mid-episode and another stream from the same source took over at the same second, with the same audio and subtitles. The source is its own name.
+notice-failed-over-same-source = Akış kesildi. { $source } üzerinden başka bir akış aynı yerden devraldı.
+
 # Toast when mpv gave up on a file. The reason is mpv's own line.
 notice-player-could-not-play = mpv bunu oynatamadı. { $reason }
 

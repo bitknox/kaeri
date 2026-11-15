@@ -117,6 +117,8 @@
     <string name="status_searching_sources">Söker i källor efter avsnitt %1$s…</string>
     <string name="notice_player_failed_to_start">Det gick inte att starta mpv. Kontrollera att den startar på egen hand. (%1$s)</string>
     <string name="notice_stream_no_video">Ingen bild från strömmen. Provar %1$,d av %2$,d.</string>
+    <string name="notice_failed_over">Strömmen bröts. %1$s tog över på samma ställe.</string>
+    <string name="notice_failed_over_same_source">Strömmen bröts. En annan ström från %1$s tog över på samma ställe.</string>
     <string name="notice_player_could_not_play">mpv kunde inte spela upp det här. %1$s</string>
     <string name="notice_player_exited_silently">mpv stängdes utan att spela något och utan att säga varför. Prova en annan källa.</string>
     <string name="notice_player_not_playing">mpv har inte börjat spela efter %1$,d s. Den här källan kan sakna data. Kontrollera att mpv spelar upp en fil på egen hand.</string>

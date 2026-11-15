@@ -120,6 +120,8 @@
     <string name="status_searching_sources">Recherche dans les sources de l\'épisode %1$s…</string>
     <string name="notice_player_failed_to_start">Impossible de lancer mpv. Vérifiez qu\'il démarre seul. (%1$s)</string>
     <string name="notice_stream_no_video">Aucune image sur ce flux. Essai %1$,d sur %2$,d.</string>
+    <string name="notice_failed_over">Le flux s\'est interrompu. %1$s a pris le relais au même endroit.</string>
+    <string name="notice_failed_over_same_source">Le flux s\'est interrompu. Un autre flux de %1$s a pris le relais au même endroit.</string>
     <string name="notice_player_could_not_play">mpv n\'a pas pu lire ce fichier. %1$s</string>
     <string name="notice_player_exited_silently">mpv s\'est fermé sans rien lire et sans donner de raison. Essayez une autre source.</string>
     <string name="notice_player_not_playing">mpv n\'a pas commencé la lecture après %1$,d s. La source n\'a peut-être pas de données. Vérifiez que mpv lit un fichier tout seul.</string>

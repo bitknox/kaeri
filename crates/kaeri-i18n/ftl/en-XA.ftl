@@ -330,6 +330,12 @@ notice-player-failed-to-start = [Çöüļðñ'ţ šţàŕţ ɱþṽ. Çĥéçķ 
 # Toast when a stream never showed a frame and the next one is tried.
 notice-stream-no-video = [Ñö ṽîðéö ƒŕöɱ ţĥàţ šţŕéàɱ. Ţŕýîñĝ { $next } öƒ { $total }.~~~~~~~~~~~~~~]
 
+# Quiet toast in the player when the stream playing broke off with an error mid-episode and a stream from another source took over at the same second, with the same audio and subtitles. The source is its own name.
+notice-failed-over = [Ţĥé šţŕéàɱ ƀŕöķé öƒƒ. { $source } ţööķ öṽéŕ àţ ţĥé šàɱé þöîñţ.~~~~~~~~~~~~~~~~~]
+
+# Quiet toast in the player when the stream playing broke off with an error mid-episode and another stream from the same source took over at the same second, with the same audio and subtitles. The source is its own name.
+notice-failed-over-same-source = [Ţĥé šţŕéàɱ ƀŕöķé öƒƒ. Åñöţĥéŕ šţŕéàɱ ƒŕöɱ { $source } ţööķ öṽéŕ àţ ţĥé šàɱé þöîñţ.~~~~~~~~~~~~~~~~~~~~~~~]
+
 # Toast when mpv gave up on a file. The reason is mpv's own line.
 notice-player-could-not-play = [ɱþṽ çöüļðñ'ţ þļàý ţĥîš. { $reason }~~~~~~~~~]
 

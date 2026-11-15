@@ -98,6 +98,8 @@ extension Msg {
         case .statusSearchingSources(let episode): L.statusSearchingSources(episode: episode)
         case .noticePlayerFailedToStart(let reason): L.noticePlayerFailedToStart(reason: reason)
         case .noticeStreamNoVideo(let next, let total): L.noticeStreamNoVideo(next: Int(next), total: Int(total))
+        case .noticeFailedOver(let source): L.noticeFailedOver(source: source)
+        case .noticeFailedOverSameSource(let source): L.noticeFailedOverSameSource(source: source)
         case .noticePlayerCouldNotPlay(let reason): L.noticePlayerCouldNotPlay(reason: reason)
         case .noticePlayerExitedSilently: L.noticePlayerExitedSilently
         case .noticePlayerNotPlaying(let seconds): L.noticePlayerNotPlaying(seconds: Int(seconds))

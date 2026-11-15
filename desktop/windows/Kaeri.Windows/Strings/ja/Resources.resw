@@ -353,6 +353,12 @@
   <data name="NoticeStreamNoVideo" xml:space="preserve">
     <value>そのストリームから映像が届きませんでした。{total}件中{next}件目を試しています。</value>
   </data>
+  <data name="NoticeFailedOver" xml:space="preserve">
+    <value>ストリームが途切れました。{source}が同じ位置から引き継ぎました。</value>
+  </data>
+  <data name="NoticeFailedOverSameSource" xml:space="preserve">
+    <value>ストリームが途切れました。{source}の別のストリームが同じ位置から引き継ぎました。</value>
+  </data>
   <data name="NoticePlayerCouldNotPlay" xml:space="preserve">
     <value>mpvでこのファイルを再生できませんでした。{reason}</value>
   </data>

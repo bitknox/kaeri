@@ -120,6 +120,8 @@
     <string name="status_searching_sources">Buscando o episódio %1$s em fontes…</string>
     <string name="notice_player_failed_to_start">Não foi possível iniciar o mpv. Verifique se ele roda sozinho. (%1$s)</string>
     <string name="notice_stream_no_video">Nenhum vídeo nesta transmissão. Tentando a transmissão %1$,d de %2$,d.</string>
+    <string name="notice_failed_over">O stream foi interrompido. %1$s assumiu do mesmo ponto.</string>
+    <string name="notice_failed_over_same_source">O stream foi interrompido. Outro stream de %1$s assumiu do mesmo ponto.</string>
     <string name="notice_player_could_not_play">O mpv não conseguiu reproduzir isto. %1$s</string>
     <string name="notice_player_exited_silently">O mpv fechou sem reproduzir nada e sem informar o motivo. Tente outra fonte.</string>
     <string name="notice_player_not_playing">O mpv ainda não começou a reproduzir depois de %1$,d s. A fonte pode não ter dados. Verifique se o mpv reproduz um arquivo sozinho.</string>

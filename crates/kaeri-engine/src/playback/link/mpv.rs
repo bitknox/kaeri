@@ -156,6 +156,10 @@ impl PlayerLink for MpvSession {
         MpvSession::has_quit(self)
     }
 
+    fn ended_in_error(&self) -> bool {
+        MpvSession::ended_in_error(self)
+    }
+
     async fn diagnostics(&self) -> Option<String> {
         MpvSession::diagnostics(self).most_relevant().await
     }
