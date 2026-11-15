@@ -1,7 +1,8 @@
 import { describe, expect, test } from 'bun:test';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { classify, codecPart, refusedOf } from './errors';
+import { CLEAR, IDLE, cadence, drift, momentAt, skyStyle, stepOf, windowLevel } from './city';
+import { classify, codecLabel, codecPart, refusedOf } from './errors';
 import { FrameClock, BEHIND_SECONDS } from './frame-clock';
 import { Strings, loadStrings, pickLanguage, type Index, type Pack } from './i18n';
 import { asDevice, deviceFromAgent, message, readExtras, typesetFiles } from './protocol';
@@ -221,5 +222,70 @@ describe('protocol', () => {
 		expect(deviceFromAgent('Mozilla/5.0 (iPad; CPU OS 26_0)')).toBe('ipad');
 		expect(deviceFromAgent('Mozilla/5.0 (Linux; Android 16)')).toBe('phone');
 		expect(deviceFromAgent('Mozilla/5.0 (Windows NT 10.0)')).toBe('computer');
+	});
+});
+
+describe('codec names', () => {
+	test('the ids the receiver reports get names people know', () => {
+		expect(codecLabel('mp2v')).toBe('MPEG-2');
+		expect(codecLabel('video:mpeg2')).toBe('MPEG-2');
+		expect(codecLabel('hev1.1.6.L93.B0')).toBe('HEVC');
+		expect(codecLabel('hvc1')).toBe('HEVC');
+		expect(codecLabel('av01.0.05M.08')).toBe('AV1');
+		expect(codecLabel('video:h.264 high 10')).toBe('H.264 High 10');
+		expect(codecLabel('avc1.6e001f')).toBe('H.264 High 10');
+		expect(codecLabel('ac-3')).toBe('Dolby Digital');
+		expect(codecLabel('ec-3')).toBe('Dolby Digital Plus');
+		expect(codecLabel('truehd')).toBe('Dolby TrueHD');
+	});
+	test('an id without a name leaves the line out', () => {
+		expect(codecLabel('video:qx9')).toBeNull();
+		expect(codecLabel(null)).toBeNull();
+		expect(codecLabel('')).toBeNull();
+	});
+});
+
+describe('city at dusk', () => {
+	test('the drift goes 36 px out and back over 24 min in whole pixels', () => {
+		expect(drift(0)).toEqual([0, 0]);
+		expect(drift(360)).toEqual([36, -18]);
+		expect(drift(720)).toEqual([0, -36]);
+		expect(drift(1440)).toEqual([0, 0]);
+		const [x, y] = drift(100);
+		expect(Number.isInteger(x) && Number.isInteger(y)).toBe(true);
+	});
+	test('dusk turns to night over the ten minutes and the windows go out in the last 30 s', () => {
+		expect(momentAt(0, false).dusk).toBe(0);
+		expect(momentAt(IDLE, false).dusk).toBe(1);
+		expect(momentAt(560, false).out).toBe(0);
+		expect(momentAt(IDLE - 4, false).out).toBe(1);
+		let lit = 0;
+		let litAtEnd = 0;
+		for (let id = 1; id < 400; id++) {
+			if (windowLevel(id, 300, momentAt(300, false)) > 0) lit++;
+			if (windowLevel(id, IDLE - 4, momentAt(IDLE - 4, false)) > 0) litAtEnd++;
+		}
+		expect(lit).toBeGreaterThan(100);
+		expect(litAtEnd).toBe(0);
+	});
+	test('no window lights before the launch reveals it', () => {
+		for (let id = 1; id < 200; id++) expect(windowLevel(id, 0, { reveal: 0, out: 0 })).toBe(0);
+	});
+	test('the sky is three CSS backgrounds with the last light gone by night', () => {
+		expect(skyStyle(0).match(/gradient\(/g)?.length).toBe(3);
+		expect(skyStyle(1)).toContain('rgba(242,166,75,0)');
+	});
+	test('the city is drawn a step at a time: every 5 s, every 2 min under Reduce Motion', () => {
+		expect(cadence(100, false).every).toBe(5);
+		expect(cadence(100, true)).toEqual({ every: 120, fade: 0.36 });
+		expect(stepOf(123.4, false)).toBe(120);
+		expect(stepOf(239, true)).toBe(120);
+		expect(cadence(580, false).every).toBe(2);
+	});
+	test('the clear area holds the name and the ready line with their drift', () => {
+		// The text sits at 96, 84 and drifts up to 36 px each way.
+		expect(CLEAR.x0).toBeLessThanOrEqual(96 - 36);
+		expect(CLEAR.y0).toBeLessThanOrEqual(84 - 36);
+		expect(CLEAR.y1).toBeGreaterThanOrEqual(84 + 80 + 18 + 34 + 18);
 	});
 });

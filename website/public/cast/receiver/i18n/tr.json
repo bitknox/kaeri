@@ -1,10 +1,53 @@
 {
   "messages": {
+    "receiver-closing-computer": [
+      {
+        "arg": "seconds"
+      },
+      " sn sonra kapanıyor. Açık kalması için bilgisayarda bir bölüm seçin."
+    ],
+    "receiver-closing-ipad": [
+      {
+        "arg": "seconds"
+      },
+      " sn sonra kapanıyor. Açık kalması için iPad'de bir bölüm seçin."
+    ],
+    "receiver-closing-iphone": [
+      {
+        "arg": "seconds"
+      },
+      " sn sonra kapanıyor. Açık kalması için iPhone'da bir bölüm seçin."
+    ],
+    "receiver-closing-mac": [
+      {
+        "arg": "seconds"
+      },
+      " sn sonra kapanıyor. Açık kalması için Mac'te bir bölüm seçin."
+    ],
+    "receiver-closing-phone": [
+      {
+        "arg": "seconds"
+      },
+      " sn sonra kapanıyor. Açık kalması için telefonda bir bölüm seçin."
+    ],
+    "receiver-closing-tablet": [
+      {
+        "arg": "seconds"
+      },
+      " sn sonra kapanıyor. Açık kalması için tablette bir bölüm seçin."
+    ],
     "receiver-error": [
       {
         "arg": "episode"
       },
       ". bölüm oynatılamadı"
+    ],
+    "receiver-error-audio-codec": [
+      "Bu TV ",
+      {
+        "arg": "codec"
+      },
+      " sesini oynatamıyor."
     ],
     "receiver-error-hint-computer": [
       "Bilgisayarda başka bir kaynak seçin."
@@ -26,6 +69,13 @@
     ],
     "receiver-error-unnumbered": [
       "Bu bölüm oynatılamadı"
+    ],
+    "receiver-error-video-codec": [
+      "Bu TV ",
+      {
+        "arg": "codec"
+      },
+      " videosunu oynatamıyor."
     ],
     "receiver-finished": [
       {

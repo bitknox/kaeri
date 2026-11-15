@@ -1,10 +1,59 @@
 {
   "messages": {
+    "receiver-closing-computer": [
+      "Zamknięcie za ",
+      {
+        "arg": "seconds"
+      },
+      " s. Wybierz odcinek na komputerze, aby zostać."
+    ],
+    "receiver-closing-ipad": [
+      "Zamknięcie za ",
+      {
+        "arg": "seconds"
+      },
+      " s. Wybierz odcinek na iPadzie, aby zostać."
+    ],
+    "receiver-closing-iphone": [
+      "Zamknięcie za ",
+      {
+        "arg": "seconds"
+      },
+      " s. Wybierz odcinek na iPhonie, aby zostać."
+    ],
+    "receiver-closing-mac": [
+      "Zamknięcie za ",
+      {
+        "arg": "seconds"
+      },
+      " s. Wybierz odcinek na Macu, aby zostać."
+    ],
+    "receiver-closing-phone": [
+      "Zamknięcie za ",
+      {
+        "arg": "seconds"
+      },
+      " s. Wybierz odcinek na telefonie, aby zostać."
+    ],
+    "receiver-closing-tablet": [
+      "Zamknięcie za ",
+      {
+        "arg": "seconds"
+      },
+      " s. Wybierz odcinek na tablecie, aby zostać."
+    ],
     "receiver-error": [
       "Nie udało się odtworzyć odcinka ",
       {
         "arg": "episode"
       }
+    ],
+    "receiver-error-audio-codec": [
+      "Ten telewizor nie może odtworzyć dźwięku ",
+      {
+        "arg": "codec"
+      },
+      "."
     ],
     "receiver-error-hint-computer": [
       "Wybierz inne źródło na komputerze."
@@ -26,6 +75,13 @@
     ],
     "receiver-error-unnumbered": [
       "Nie udało się odtworzyć tego odcinka"
+    ],
+    "receiver-error-video-codec": [
+      "Ten telewizor nie może odtworzyć wideo ",
+      {
+        "arg": "codec"
+      },
+      "."
     ],
     "receiver-finished": [
       "Koniec odcinka ",

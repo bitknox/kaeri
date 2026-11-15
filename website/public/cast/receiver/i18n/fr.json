@@ -1,10 +1,59 @@
 {
   "messages": {
+    "receiver-closing-computer": [
+      "Ferme dans ",
+      {
+        "arg": "seconds"
+      },
+      " s. Choisissez un épisode sur l'ordinateur pour rester."
+    ],
+    "receiver-closing-ipad": [
+      "Ferme dans ",
+      {
+        "arg": "seconds"
+      },
+      " s. Choisissez un épisode sur l'iPad pour rester."
+    ],
+    "receiver-closing-iphone": [
+      "Ferme dans ",
+      {
+        "arg": "seconds"
+      },
+      " s. Choisissez un épisode sur l'iPhone pour rester."
+    ],
+    "receiver-closing-mac": [
+      "Ferme dans ",
+      {
+        "arg": "seconds"
+      },
+      " s. Choisissez un épisode sur le Mac pour rester."
+    ],
+    "receiver-closing-phone": [
+      "Ferme dans ",
+      {
+        "arg": "seconds"
+      },
+      " s. Choisissez un épisode sur le téléphone pour rester."
+    ],
+    "receiver-closing-tablet": [
+      "Ferme dans ",
+      {
+        "arg": "seconds"
+      },
+      " s. Choisissez un épisode sur la tablette pour rester."
+    ],
     "receiver-error": [
       "Impossible de lire l'épisode ",
       {
         "arg": "episode"
       }
+    ],
+    "receiver-error-audio-codec": [
+      "Ce téléviseur ne peut pas lire l'audio ",
+      {
+        "arg": "codec"
+      },
+      "."
     ],
     "receiver-error-hint-computer": [
       "Choisissez une autre source sur l'ordinateur."
@@ -26,6 +75,13 @@
     ],
     "receiver-error-unnumbered": [
       "Impossible de lire cet épisode"
+    ],
+    "receiver-error-video-codec": [
+      "Ce téléviseur ne peut pas lire la vidéo ",
+      {
+        "arg": "codec"
+      },
+      "."
     ],
     "receiver-finished": [
       "Épisode ",

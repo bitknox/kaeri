@@ -1,11 +1,60 @@
 {
   "messages": {
+    "receiver-closing-computer": [
+      "Schließt in ",
+      {
+        "arg": "seconds"
+      },
+      " s. Wähle eine Folge auf dem Computer, um zu bleiben."
+    ],
+    "receiver-closing-ipad": [
+      "Schließt in ",
+      {
+        "arg": "seconds"
+      },
+      " s. Wähle eine Folge auf dem iPad, um zu bleiben."
+    ],
+    "receiver-closing-iphone": [
+      "Schließt in ",
+      {
+        "arg": "seconds"
+      },
+      " s. Wähle eine Folge auf dem iPhone, um zu bleiben."
+    ],
+    "receiver-closing-mac": [
+      "Schließt in ",
+      {
+        "arg": "seconds"
+      },
+      " s. Wähle eine Folge auf dem Mac, um zu bleiben."
+    ],
+    "receiver-closing-phone": [
+      "Schließt in ",
+      {
+        "arg": "seconds"
+      },
+      " s. Wähle eine Folge auf dem Smartphone, um zu bleiben."
+    ],
+    "receiver-closing-tablet": [
+      "Schließt in ",
+      {
+        "arg": "seconds"
+      },
+      " s. Wähle eine Folge auf dem Tablet, um zu bleiben."
+    ],
     "receiver-error": [
       "Folge ",
       {
         "arg": "episode"
       },
       " ließ sich nicht abspielen"
+    ],
+    "receiver-error-audio-codec": [
+      "Dieser TV kann ",
+      {
+        "arg": "codec"
+      },
+      "-Audio nicht abspielen."
     ],
     "receiver-error-hint-computer": [
       "Wähle auf dem Computer eine andere Quelle."
@@ -27,6 +76,13 @@
     ],
     "receiver-error-unnumbered": [
       "Diese Folge ließ sich nicht abspielen"
+    ],
+    "receiver-error-video-codec": [
+      "Dieser TV kann ",
+      {
+        "arg": "codec"
+      },
+      "-Video nicht abspielen."
     ],
     "receiver-finished": [
       "Folge ",

@@ -1,10 +1,59 @@
 {
   "messages": {
+    "receiver-closing-computer": [
+      "Se cierra en ",
+      {
+        "arg": "seconds"
+      },
+      " s. Elige un episodio en la computadora para seguir."
+    ],
+    "receiver-closing-ipad": [
+      "Se cierra en ",
+      {
+        "arg": "seconds"
+      },
+      " s. Elige un episodio en el iPad para seguir."
+    ],
+    "receiver-closing-iphone": [
+      "Se cierra en ",
+      {
+        "arg": "seconds"
+      },
+      " s. Elige un episodio en el iPhone para seguir."
+    ],
+    "receiver-closing-mac": [
+      "Se cierra en ",
+      {
+        "arg": "seconds"
+      },
+      " s. Elige un episodio en la Mac para seguir."
+    ],
+    "receiver-closing-phone": [
+      "Se cierra en ",
+      {
+        "arg": "seconds"
+      },
+      " s. Elige un episodio en el teléfono para seguir."
+    ],
+    "receiver-closing-tablet": [
+      "Se cierra en ",
+      {
+        "arg": "seconds"
+      },
+      " s. Elige un episodio en la tableta para seguir."
+    ],
     "receiver-error": [
       "No se pudo reproducir el episodio ",
       {
         "arg": "episode"
       }
+    ],
+    "receiver-error-audio-codec": [
+      "Esta TV no puede reproducir audio ",
+      {
+        "arg": "codec"
+      },
+      "."
     ],
     "receiver-error-hint-computer": [
       "Elige otra fuente en la computadora."
@@ -26,6 +75,13 @@
     ],
     "receiver-error-unnumbered": [
       "No se pudo reproducir este episodio"
+    ],
+    "receiver-error-video-codec": [
+      "Esta TV no puede reproducir video ",
+      {
+        "arg": "codec"
+      },
+      "."
     ],
     "receiver-finished": [
       "Terminó el episodio ",

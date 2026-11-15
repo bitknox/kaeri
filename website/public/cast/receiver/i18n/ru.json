@@ -1,10 +1,59 @@
 {
   "messages": {
+    "receiver-closing-computer": [
+      "Закрытие через ",
+      {
+        "arg": "seconds"
+      },
+      " с. Выберите эпизод на компьютере, чтобы остаться."
+    ],
+    "receiver-closing-ipad": [
+      "Закрытие через ",
+      {
+        "arg": "seconds"
+      },
+      " с. Выберите эпизод на iPad, чтобы остаться."
+    ],
+    "receiver-closing-iphone": [
+      "Закрытие через ",
+      {
+        "arg": "seconds"
+      },
+      " с. Выберите эпизод на iPhone, чтобы остаться."
+    ],
+    "receiver-closing-mac": [
+      "Закрытие через ",
+      {
+        "arg": "seconds"
+      },
+      " с. Выберите эпизод на Mac, чтобы остаться."
+    ],
+    "receiver-closing-phone": [
+      "Закрытие через ",
+      {
+        "arg": "seconds"
+      },
+      " с. Выберите эпизод на телефоне, чтобы остаться."
+    ],
+    "receiver-closing-tablet": [
+      "Закрытие через ",
+      {
+        "arg": "seconds"
+      },
+      " с. Выберите эпизод на планшете, чтобы остаться."
+    ],
     "receiver-error": [
       "Не удалось воспроизвести эпизод ",
       {
         "arg": "episode"
       }
+    ],
+    "receiver-error-audio-codec": [
+      "Этот телевизор не может воспроизвести аудио ",
+      {
+        "arg": "codec"
+      },
+      "."
     ],
     "receiver-error-hint-computer": [
       "Выберите другой источник на компьютере."
@@ -26,6 +75,13 @@
     ],
     "receiver-error-unnumbered": [
       "Не удалось воспроизвести этот эпизод"
+    ],
+    "receiver-error-video-codec": [
+      "Этот телевизор не может воспроизвести видео ",
+      {
+        "arg": "codec"
+      },
+      "."
     ],
     "receiver-finished": [
       "Эпизод ",

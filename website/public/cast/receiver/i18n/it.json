@@ -1,10 +1,59 @@
 {
   "messages": {
+    "receiver-closing-computer": [
+      "Chiusura tra ",
+      {
+        "arg": "seconds"
+      },
+      " s. Scegli un episodio sul computer per restare."
+    ],
+    "receiver-closing-ipad": [
+      "Chiusura tra ",
+      {
+        "arg": "seconds"
+      },
+      " s. Scegli un episodio sull'iPad per restare."
+    ],
+    "receiver-closing-iphone": [
+      "Chiusura tra ",
+      {
+        "arg": "seconds"
+      },
+      " s. Scegli un episodio sull'iPhone per restare."
+    ],
+    "receiver-closing-mac": [
+      "Chiusura tra ",
+      {
+        "arg": "seconds"
+      },
+      " s. Scegli un episodio sul Mac per restare."
+    ],
+    "receiver-closing-phone": [
+      "Chiusura tra ",
+      {
+        "arg": "seconds"
+      },
+      " s. Scegli un episodio sul telefono per restare."
+    ],
+    "receiver-closing-tablet": [
+      "Chiusura tra ",
+      {
+        "arg": "seconds"
+      },
+      " s. Scegli un episodio sul tablet per restare."
+    ],
     "receiver-error": [
       "Impossibile riprodurre l'episodio ",
       {
         "arg": "episode"
       }
+    ],
+    "receiver-error-audio-codec": [
+      "Questa TV non può riprodurre audio ",
+      {
+        "arg": "codec"
+      },
+      "."
     ],
     "receiver-error-hint-computer": [
       "Scegli un'altra fonte sul computer."
@@ -26,6 +75,13 @@
     ],
     "receiver-error-unnumbered": [
       "Impossibile riprodurre questo episodio"
+    ],
+    "receiver-error-video-codec": [
+      "Questa TV non può riprodurre video ",
+      {
+        "arg": "codec"
+      },
+      "."
     ],
     "receiver-finished": [
       "Episodio ",
