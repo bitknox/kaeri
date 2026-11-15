@@ -5151,6 +5151,27 @@ tui-reader-value-height = [Ĥéîĝĥţ~~]
 # After the page count in the reader's status line while the page fills the window's height and moves sideways.
 tui-reader-fit-height = [Ƒîţ ĥéîĝĥţ~~~]
 
+# A row of the command palette in the reader: a field for a page's number, then the jump to that page. Also the field's title.
+tui-reader-action-go-to-page = [Ĝö ţö þàĝé~~~]
+
+# Under the Go to page field: the pages it can go to.
+tui-reader-go-to-pages = [Þàĝéš 1 ţö { $total }~~~~~]
+
+# Under the Go to page field in a strip, where each image counts as a page: the images it can go to.
+tui-reader-go-to-images = [Îɱàĝéš 1 ţö { $total }~~~~~]
+
+# Hint in the Go to page field's footer: Enter goes to the page typed. Shown in lower case.
+tui-reader-hint-go = [ĝö~]
+
+# In the reader, on a page that couldn't load, under "Couldn't load page 9": the server of the source answered with an HTTP error. The status is its code, such as 503.
+tui-reader-page-failed-status = [Ţĥé šöüŕçé àñšŵéŕéð ŵîţĥ àñ éŕŕöŕ, { $status }.~~~~~~~~~~~~]
+
+# In the reader, under "Couldn't open chapter 16": the source didn't answer the request. The source is its name.
+tui-reader-no-answer = [{ $source } ðîðñ'ţ àñšŵéŕ.~~~~~~]
+
+# In the reader, under "Couldn't open chapter 16": the source didn't answer, after a wait of some seconds. The source is its name; "s" is the short unit for seconds.
+tui-reader-no-answer-in = [{ $source } ðîðñ'ţ àñšŵéŕ. Ñö àñšŵéŕ îñ { $seconds } š.~~~~~~~~~~~~]
+
 # AniList's name, in the line that says it is still being asked.
 tui-read-anilist = [ÅñîĻîšţ~~~]
 

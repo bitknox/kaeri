@@ -8150,6 +8150,41 @@ pub fn tui_reader_fit_height() -> String {
     text("tui-reader-fit-height", &[])
 }
 
+/// A row of the command palette in the reader: a field for a page's number, then the jump to that page. Also the field's title.
+pub fn tui_reader_action_go_to_page() -> String {
+    text("tui-reader-action-go-to-page", &[])
+}
+
+/// Under the Go to page field: the pages it can go to.
+pub fn tui_reader_go_to_pages(total: i64) -> String {
+    text("tui-reader-go-to-pages", &[("total", Arg::Int(total))])
+}
+
+/// Under the Go to page field in a strip, where each image counts as a page: the images it can go to.
+pub fn tui_reader_go_to_images(total: i64) -> String {
+    text("tui-reader-go-to-images", &[("total", Arg::Int(total))])
+}
+
+/// Hint in the Go to page field's footer: Enter goes to the page typed. Shown in lower case.
+pub fn tui_reader_hint_go() -> String {
+    text("tui-reader-hint-go", &[])
+}
+
+/// In the reader, on a page that couldn't load, under "Couldn't load page 9": the server of the source answered with an HTTP error. The status is its code, such as 503.
+pub fn tui_reader_page_failed_status(status: i64) -> String {
+    text("tui-reader-page-failed-status", &[("status", Arg::Plain(status))])
+}
+
+/// In the reader, under "Couldn't open chapter 16": the source didn't answer the request. The source is its name.
+pub fn tui_reader_no_answer(source: &str) -> String {
+    text("tui-reader-no-answer", &[("source", Arg::Text(source))])
+}
+
+/// In the reader, under "Couldn't open chapter 16": the source didn't answer, after a wait of some seconds. The source is its name; "s" is the short unit for seconds.
+pub fn tui_reader_no_answer_in(source: &str, seconds: i64) -> String {
+    text("tui-reader-no-answer-in", &[("source", Arg::Text(source)), ("seconds", Arg::Int(seconds))])
+}
+
 /// AniList's name, in the line that says it is still being asked.
 pub fn tui_read_anilist() -> String {
     text("tui-read-anilist", &[])

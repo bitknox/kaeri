@@ -745,3 +745,51 @@ tui-reader-value-height = Height
 # @max 16
 # @only tui
 tui-reader-fit-height = Fit height
+
+## Reader board fixes
+
+# A row of the command palette in the reader: a field for a page's number, then the jump to that
+# page. Also the field's title.
+# @max 30
+# @only tui
+tui-reader-action-go-to-page = Go to page
+
+# Under the Go to page field: the pages it can go to.
+# @arg total: int
+# @max 40
+# @only tui
+tui-reader-go-to-pages = Pages 1 to { $total }
+
+# Under the Go to page field in a strip, where each image counts as a page: the images it can go
+# to.
+# @arg total: int
+# @max 40
+# @only tui
+tui-reader-go-to-images = Images 1 to { $total }
+
+# Hint in the Go to page field's footer: Enter goes to the page typed. Shown in lower case.
+# @max 12
+# @only tui
+tui-reader-hint-go = go
+
+# In the reader, on a page that couldn't load, under "Couldn't load page 9": the server of the
+# source answered with an HTTP error. The status is its code, such as 503.
+# @arg status: plain
+# @max 60
+# @only tui
+tui-reader-page-failed-status = The { -source } answered with an error, { $status }.
+
+# In the reader, under "Couldn't open chapter 16": the source didn't answer the request. The
+# source is its name.
+# @arg source: text
+# @max 60
+# @only tui
+tui-reader-no-answer = { $source } didn't answer.
+
+# In the reader, under "Couldn't open chapter 16": the source didn't answer, after a wait of some
+# seconds. The source is its name; "s" is the short unit for seconds.
+# @arg source: text
+# @arg seconds: int
+# @max 60
+# @only tui
+tui-reader-no-answer-in = { $source } didn't answer. No answer in { $seconds } s.
