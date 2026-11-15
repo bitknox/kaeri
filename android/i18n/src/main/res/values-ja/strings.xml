@@ -114,6 +114,8 @@
     <string name="status_searching_sources">ソースでエピソード%1$sを検索しています…</string>
     <string name="notice_player_failed_to_start">mpvを起動できませんでした。mpvが単独で起動するか確認してください。（%1$s）</string>
     <string name="notice_stream_no_video">そのストリームから映像が届きませんでした。%2$,d件中%1$,d件目を試しています。</string>
+    <string name="notice_failed_over">ストリームが途切れました。%1$sが同じ位置から引き継ぎました。</string>
+    <string name="notice_failed_over_same_source">ストリームが途切れました。%1$sの別のストリームが同じ位置から引き継ぎました。</string>
     <string name="notice_player_could_not_play">mpvでこのファイルを再生できませんでした。%1$s</string>
     <string name="notice_player_exited_silently">mpvは何も再生せず、理由も表示されないまま終了しました。別のソースを試してください。</string>
     <string name="notice_player_not_playing">%1$,d秒経っても、mpvで再生が始まりません。ソースにデータがない可能性があります。mpvが単独でファイルを再生できるか確認してください。</string>

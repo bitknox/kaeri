@@ -380,6 +380,12 @@
   <data name="NoticeStreamNoVideo" xml:space="preserve">
     <value>Из этого потока не пришёл ни один кадр. Пробуем поток {next} из {total}.</value>
   </data>
+  <data name="NoticeFailedOver" xml:space="preserve">
+    <value>Поток оборвался. {source} продолжает с того же места.</value>
+  </data>
+  <data name="NoticeFailedOverSameSource" xml:space="preserve">
+    <value>Поток оборвался. Другой поток из {source} продолжает с того же места.</value>
+  </data>
   <data name="NoticePlayerCouldNotPlay" xml:space="preserve">
     <value>mpv не смог воспроизвести это. {reason}</value>
   </data>

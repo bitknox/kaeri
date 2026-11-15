@@ -131,6 +131,14 @@ notice-player-failed-to-start = Couldn't start mpv. Check that it runs on its ow
 # @arg total: int
 notice-stream-no-video = No video from that stream. Trying { $next } of { $total }.
 
+# Quiet toast in the player when the stream playing broke off with an error mid-episode and a stream from another source took over at the same second, with the same audio and subtitles. The source is its own name.
+# @arg source: text
+notice-failed-over = The stream broke off. { $source } took over at the same point.
+
+# Quiet toast in the player when the stream playing broke off with an error mid-episode and another stream from the same source took over at the same second, with the same audio and subtitles. The source is its own name.
+# @arg source: text
+notice-failed-over-same-source = The stream broke off. Another stream from { $source } took over at the same point.
+
 # Toast when mpv gave up on a file. The reason is mpv's own line.
 # @arg reason: text
 notice-player-could-not-play = mpv couldn't play this. { $reason }

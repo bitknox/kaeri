@@ -333,6 +333,12 @@ notice-player-failed-to-start = Não foi possível iniciar o mpv. Verifique se e
 # Toast when a stream never showed a frame and the next one is tried.
 notice-stream-no-video = Nenhum vídeo nesta transmissão. Tentando a transmissão { $next } de { $total }.
 
+# Quiet toast in the player when the stream playing broke off with an error mid-episode and a stream from another source took over at the same second, with the same audio and subtitles. The source is its own name.
+notice-failed-over = O stream foi interrompido. { $source } assumiu do mesmo ponto.
+
+# Quiet toast in the player when the stream playing broke off with an error mid-episode and another stream from the same source took over at the same second, with the same audio and subtitles. The source is its own name.
+notice-failed-over-same-source = O stream foi interrompido. Outro stream de { $source } assumiu do mesmo ponto.
+
 # Toast when mpv gave up on a file. The reason is mpv's own line.
 notice-player-could-not-play = O mpv não conseguiu reproduzir isto. { $reason }
 

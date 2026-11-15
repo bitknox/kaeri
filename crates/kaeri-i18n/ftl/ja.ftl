@@ -327,6 +327,12 @@ notice-player-failed-to-start = mpvを起動できませんでした。mpvが単
 # Toast when a stream never showed a frame and the next one is tried.
 notice-stream-no-video = そのストリームから映像が届きませんでした。{ $total }件中{ $next }件目を試しています。
 
+# Quiet toast in the player when the stream playing broke off with an error mid-episode and a stream from another source took over at the same second, with the same audio and subtitles. The source is its own name.
+notice-failed-over = ストリームが途切れました。{ $source }が同じ位置から引き継ぎました。
+
+# Quiet toast in the player when the stream playing broke off with an error mid-episode and another stream from the same source took over at the same second, with the same audio and subtitles. The source is its own name.
+notice-failed-over-same-source = ストリームが途切れました。{ $source }の別のストリームが同じ位置から引き継ぎました。
+
 # Toast when mpv gave up on a file. The reason is mpv's own line.
 notice-player-could-not-play = mpvでこのファイルを再生できませんでした。{ $reason }
 

@@ -203,6 +203,9 @@ impl Run<'_> {
                         stopped,
                         quit: link.has_quit(),
                         no_frames: !ever_played,
+                        errored: false,
+                        at: tracker.position(),
+                        duration: tracker.duration(),
                     },
                 },
                 // Only armed until the first frame arrives, so this cannot fire mid-episode
@@ -640,10 +643,7 @@ impl Run<'_> {
                         ScriptEvent::StallSwitch if streams.len() > 1 => {
                             let stalled = ServerFailure::Stalled;
                             self.servers.failed(self.store, &streams[index], stalled);
-                            break FileOutcome::Switch {
-                                to: (index + 1) % streams.len(),
-                                at: tracker.position(),
-                            };
+                            break FileOutcome::Stalled { at: tracker.position() };
                         }
                         _ => {}
                     }
@@ -712,6 +712,16 @@ impl Run<'_> {
                         ever_played = true;
                         let _ = link.overlay(Overlay::Playing).await;
                         self.servers.served(self.store, &streams[index]);
+                        // A stream that took over from one that broke off says so as it lands.
+                        if let Some(from) = self.failed_over_from.take() {
+                            let source = stream.provider_id.clone();
+                            let said = if from == source {
+                                Msg::NoticeFailedOverSameSource { source }
+                            } else {
+                                Msg::NoticeFailedOver { source }
+                            };
+                            let _ = tx.send(Event::Toast(Notice::info(said)));
+                        }
                     }
                     // Mirror position to the UI so Now Playing can render without querying mpv —
                     // but only when the rendered value would actually change. mpv reports
@@ -866,6 +876,9 @@ impl Run<'_> {
                     stopped,
                     quit: link.has_quit(),
                     no_frames: !ever_played,
+                    errored: link.ended_in_error(),
+                    at: tracker.position(),
+                    duration: tracker.duration(),
                 };
             }
         };

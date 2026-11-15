@@ -114,6 +114,8 @@
     <string name="status_searching_sources">Đang tìm trong các nguồn tập %1$s…</string>
     <string name="notice_player_failed_to_start">Không khởi chạy được mpv. Hãy kiểm tra mpv chạy được khi mở riêng. (%1$s)</string>
     <string name="notice_stream_no_video">Luồng này không có hình. Đang thử %1$,d trên %2$,d.</string>
+    <string name="notice_failed_over">Luồng bị ngắt. %1$s đã tiếp quản tại cùng vị trí.</string>
+    <string name="notice_failed_over_same_source">Luồng bị ngắt. Một luồng khác từ %1$s đã tiếp quản tại cùng vị trí.</string>
     <string name="notice_player_could_not_play">mpv không phát được tệp này. %1$s</string>
     <string name="notice_player_exited_silently">mpv đã đóng mà không phát gì và không nêu lý do. Hãy thử nguồn khác.</string>
     <string name="notice_player_not_playing">mpv chưa bắt đầu phát sau %1$,d giây. Nguồn có thể không có dữ liệu. Hãy kiểm tra mpv có phát được một tệp khi chạy riêng không.</string>

@@ -362,6 +362,12 @@
   <data name="NoticeStreamNoVideo" xml:space="preserve">
     <value>Bu akıştan görüntü gelmedi. Bir sonraki akış deneniyor ({next}/{total}).</value>
   </data>
+  <data name="NoticeFailedOver" xml:space="preserve">
+    <value>Akış kesildi. {source} aynı yerden devraldı.</value>
+  </data>
+  <data name="NoticeFailedOverSameSource" xml:space="preserve">
+    <value>Akış kesildi. {source} üzerinden başka bir akış aynı yerden devraldı.</value>
+  </data>
   <data name="NoticePlayerCouldNotPlay" xml:space="preserve">
     <value>mpv bunu oynatamadı. {reason}</value>
   </data>

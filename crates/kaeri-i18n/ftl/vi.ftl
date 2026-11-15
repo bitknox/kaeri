@@ -327,6 +327,12 @@ notice-player-failed-to-start = Không khởi chạy được mpv. Hãy kiểm t
 # Toast when a stream never showed a frame and the next one is tried.
 notice-stream-no-video = Luồng này không có hình. Đang thử { $next } trên { $total }.
 
+# Quiet toast in the player when the stream playing broke off with an error mid-episode and a stream from another source took over at the same second, with the same audio and subtitles. The source is its own name.
+notice-failed-over = Luồng bị ngắt. { $source } đã tiếp quản tại cùng vị trí.
+
+# Quiet toast in the player when the stream playing broke off with an error mid-episode and another stream from the same source took over at the same second, with the same audio and subtitles. The source is its own name.
+notice-failed-over-same-source = Luồng bị ngắt. Một luồng khác từ { $source } đã tiếp quản tại cùng vị trí.
+
 # Toast when mpv gave up on a file. The reason is mpv's own line.
 notice-player-could-not-play = mpv không phát được tệp này. { $reason }
 

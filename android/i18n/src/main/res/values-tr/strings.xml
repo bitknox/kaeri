@@ -117,6 +117,8 @@
     <string name="status_searching_sources">Bölüm %1$s için kaynaklar aranıyor…</string>
     <string name="notice_player_failed_to_start">mpv başlatılamadı. Tek başına çalışıp çalışmadığını kontrol edin. (%1$s)</string>
     <string name="notice_stream_no_video">Bu akıştan görüntü gelmedi. Bir sonraki akış deneniyor (%1$,d/%2$,d).</string>
+    <string name="notice_failed_over">Akış kesildi. %1$s aynı yerden devraldı.</string>
+    <string name="notice_failed_over_same_source">Akış kesildi. %1$s üzerinden başka bir akış aynı yerden devraldı.</string>
     <string name="notice_player_could_not_play">mpv bunu oynatamadı. %1$s</string>
     <string name="notice_player_exited_silently">mpv bir şey oynatmadan ve neden belirtmeden kapandı. Başka bir kaynak deneyin.</string>
     <string name="notice_player_not_playing">mpv %1$,d sn geçmesine rağmen oynatmaya başlamadı. Bu kaynak veri içermiyor olabilir. mpv\'nin bir dosyayı tek başına oynatıp oynatmadığını kontrol edin.</string>

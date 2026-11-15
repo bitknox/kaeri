@@ -535,6 +535,16 @@ pub fn notice_stream_no_video(next: i64, total: i64) -> String {
     text("notice-stream-no-video", &[("next", Arg::Int(next)), ("total", Arg::Int(total))])
 }
 
+/// Quiet toast in the player when the stream playing broke off with an error mid-episode and a stream from another source took over at the same second, with the same audio and subtitles. The source is its own name.
+pub fn notice_failed_over(source: &str) -> String {
+    text("notice-failed-over", &[("source", Arg::Text(source))])
+}
+
+/// Quiet toast in the player when the stream playing broke off with an error mid-episode and another stream from the same source took over at the same second, with the same audio and subtitles. The source is its own name.
+pub fn notice_failed_over_same_source(source: &str) -> String {
+    text("notice-failed-over-same-source", &[("source", Arg::Text(source))])
+}
+
 /// Toast when mpv gave up on a file. The reason is mpv's own line.
 pub fn notice_player_could_not_play(reason: &str) -> String {
     text("notice-player-could-not-play", &[("reason", Arg::Text(reason))])

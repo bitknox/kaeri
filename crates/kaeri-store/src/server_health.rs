@@ -100,6 +100,8 @@ pub enum ServerFailure {
     NoFrames,
     /// It stalled mid-episode, and the viewer took another stream.
     Stalled,
+    /// It played, then ended in an error mid-episode.
+    BrokeOff,
 }
 
 impl ServerFailure {
@@ -110,6 +112,7 @@ impl ServerFailure {
             Self::Load => "load".into(),
             Self::NoFrames => "no-frames".into(),
             Self::Stalled => "stalled".into(),
+            Self::BrokeOff => "broke-off".into(),
         }
     }
 
@@ -119,6 +122,7 @@ impl ServerFailure {
             "load" => Self::Load,
             "no-frames" => Self::NoFrames,
             "stalled" => Self::Stalled,
+            "broke-off" => Self::BrokeOff,
             other => Self::Http(other.strip_prefix("http-")?.parse().ok()?),
         })
     }
@@ -131,6 +135,7 @@ impl fmt::Display for ServerFailure {
             Self::Load => f.write_str("load error"),
             Self::NoFrames => f.write_str("no frames"),
             Self::Stalled => f.write_str("stalled"),
+            Self::BrokeOff => f.write_str("broke off mid-episode"),
         }
     }
 }
@@ -394,6 +399,7 @@ mod tests {
             ServerFailure::Load,
             ServerFailure::NoFrames,
             ServerFailure::Stalled,
+            ServerFailure::BrokeOff,
         ] {
             assert_eq!(ServerFailure::from_code(&failure.code()), Some(failure));
         }

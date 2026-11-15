@@ -433,6 +433,14 @@ object Strings {
     fun noticeStreamNoVideo(context: Context, next: Int, total: Int): String =
         context.getString(R.string.notice_stream_no_video, next, total)
 
+    /** Quiet toast in the player when the stream playing broke off with an error mid-episode and a stream from another source took over at the same second, with the same audio and subtitles. The source is its own name. */
+    fun noticeFailedOver(context: Context, source: String): String =
+        context.getString(R.string.notice_failed_over, source)
+
+    /** Quiet toast in the player when the stream playing broke off with an error mid-episode and another stream from the same source took over at the same second, with the same audio and subtitles. The source is its own name. */
+    fun noticeFailedOverSameSource(context: Context, source: String): String =
+        context.getString(R.string.notice_failed_over_same_source, source)
+
     /** Toast when mpv gave up on a file. The reason is mpv's own line. */
     fun noticePlayerCouldNotPlay(context: Context, reason: String): String =
         context.getString(R.string.notice_player_could_not_play, reason)

@@ -76,6 +76,8 @@ struct Window {
     closed: AtomicBool,
     /// The player said the file ended because it was told to quit, or the viewer closed it.
     quit: AtomicBool,
+    /// The player said the file it ended last ended in an error.
+    errored: AtomicBool,
     /// The numeric properties as the player last reported them, `speed` among them: what a
     /// property is multiplied from, since the host's player is told values, not mpv commands.
     numbers: Mutex<HashMap<String, f64>>,
@@ -173,6 +175,10 @@ impl Window {
                 // Before the ending is read, so whoever reads it knows the window goes with it.
                 if reason == EndReason::Quit {
                     self.quit.store(true, Ordering::Relaxed);
+                }
+                // A file replaced by the next `Load` says nothing of how it played.
+                if reason != EndReason::Stop {
+                    self.errored.store(reason == EndReason::Error, Ordering::Relaxed);
                 }
                 self.read(protocol::Event::EndFile(reason))
             }
@@ -368,6 +374,10 @@ impl PlayerLink for HostedLink {
 
     fn has_quit(&self) -> bool {
         self.window.quit.load(Ordering::Relaxed)
+    }
+
+    fn ended_in_error(&self) -> bool {
+        self.window.errored.load(Ordering::Relaxed)
     }
 
     async fn diagnostics(&self) -> Option<String> {
@@ -617,6 +627,26 @@ mod tests {
             ops,
             [PlayerOp::Set { property: "speed".into(), value: MpvValue::Double(2.5) }]
         );
+    }
+
+    #[tokio::test]
+    async fn a_file_the_player_ended_in_an_error_is_told_apart() {
+        let players = HostedPlayers::new("scratch", Arc::default());
+        let (link, mut events) = players.open(&PlaybackRequest::default()).await.unwrap();
+        let (tx, _said) = mpsc::unbounded_channel();
+        link.attach(&tx.into());
+        let playback = PlaybackId::new(0);
+        let ended = |reason| PlayerReport::Ended { reason };
+
+        players.report(playback, ended(PlayerEnd::Error));
+        assert_eq!(events.recv().await, Some(PlaybackEvent::Ended { complete: false }));
+        assert!(link.ended_in_error());
+        assert!(link.is_alive() && !link.has_quit(), "the window stays for another stream");
+        // The next file replacing it says nothing of how the last one played.
+        players.report(playback, ended(PlayerEnd::Stop));
+        assert!(link.ended_in_error());
+        players.report(playback, ended(PlayerEnd::Eof));
+        assert!(!link.ended_in_error());
     }
 
     #[tokio::test]

@@ -43,7 +43,7 @@ use kaeri_net::HttpClient;
 use kaeri_playback::{
     AniSkipTime, MarkedSkip, SkipInterval, TrackAction, TrackPreferences, companion,
 };
-use kaeri_store::Store;
+use kaeri_store::{ServerFailure, Store};
 use tokio::sync::mpsc;
 
 use crate::{
@@ -64,6 +64,7 @@ use crate::{
 mod companion_state;
 mod controls;
 mod events;
+mod failover;
 mod found;
 mod marking;
 mod presence;
@@ -238,9 +239,16 @@ enum FileOutcome {
         quit: bool,
         /// Nothing was ever shown.
         no_frames: bool,
+        /// The player ended the file in an error, rather than at its end or on a quit.
+        errored: bool,
+        /// Where the file was when it ended, and how long it is, when known.
+        at: f64,
+        duration: Option<f64>,
     },
-    /// The viewer picked another stream from the menu, or accepted the stall prompt's offer.
+    /// The viewer picked another stream from the menu, or asked for the same one again.
     Switch { to: usize, at: f64 },
+    /// The viewer accepted the stall prompt's offer of another stream.
+    Stalled { at: f64 },
     /// A newer playback is taking over this window, for this.
     Handover(Successor),
 }
@@ -250,8 +258,10 @@ enum FileOutcome {
 /// `streams` is ordered best-first. A stream that dies without ever producing a frame is not
 /// the end: the next one is tried, in the same window, because a provider can only rank what it
 /// cannot verify — whether segments actually decode is knowable only here, in front of a player.
-/// A stream that *played* and then ended never falls over to another, which would replay what
-/// was watched.
+/// A stream that *played* and then ended falls over to another only when the player ended it in
+/// an error short of the credits, and then at the second it reached, with the viewer's audio,
+/// subtitles and delay: anything else would replay what was watched, or override a viewer who
+/// closed it. The stream that takes over is the one most like it ([`failover::next_like`]).
 ///
 /// The window is borrowed rather than owned. It comes from the machine's slot when the previous
 /// episode left one open, and goes back there when this episode ends with a successor expected
@@ -347,10 +357,14 @@ pub async fn play(
         servers: Servers::load(&store, &streams).await,
         seat: None,
         in_party: false,
+        failed_over_from: None,
     };
 
     // Read once: every stream this playback tries is the same series in the same translation.
-    let memory = if settings.remember_tracks {
+    // After the first file it is what the viewer chose in the last one, so another stream of
+    // the episode starts from their choices, kept for the episode even when Remember tracks
+    // keeps nothing for the series.
+    let mut memory = if settings.remember_tracks {
         let (store, id, translation) = (store.clone(), context.anilist_id, context.translation);
         tokio::task::spawn_blocking(move || store.track_memory(id, translation))
             .await
@@ -374,6 +388,9 @@ pub async fn play(
     let mut attempt = 0;
     let mut resume_at = context.resume_at;
     let mut player: Option<Player> = None;
+    // The quality of the stream the viewer last picked by hand from the sources menu, which a
+    // failover keeps to; until then, the quality of the stream that failed.
+    let mut target: Option<u32> = None;
 
     loop {
         tried[index] = true;
@@ -499,7 +516,8 @@ pub async fn play(
                 }
                 Err(e) => {
                     tracing::warn!(error = %e, "mpv would not start; trying the next stream");
-                    index = next_untried(&tried, index);
+                    index =
+                        failover::next_like(&streams, &tried, index, target).unwrap_or(index);
                     continue;
                 }
             }
@@ -577,14 +595,40 @@ pub async fn play(
             )
             .await;
 
+        // What the viewer chose in this file is where the next file of the episode starts.
+        let (carried, owed) = current.tracks.carried();
+        for action in owed {
+            run.apply_track(action, current.link.as_ref()).await;
+        }
+        memory = Some(carried);
+
         match outcome {
             FileOutcome::Switch { to, at } => {
                 tracing::info!(from = index, to, at, "switching stream in place");
                 index = to;
                 resume_at = Some(at);
+                // A stream picked by hand sets the quality later failovers keep to.
+                target = streams[to].quality;
+                run.failed_over_from = None;
                 // A switch the viewer asked for is a fresh start for failover: the stream they
                 // left may be the one to come back to.
                 tried = vec![false; total];
+            }
+            FileOutcome::Stalled { at } => {
+                // Another stream like this one, one not tried yet where there is one. Once
+                // every stream has been tried the viewer is still asking for another, so the
+                // pool starts again from this one.
+                let to = failover::next_like(&streams, &tried, index, target).or_else(|| {
+                    tried = vec![false; total];
+                    tried[index] = true;
+                    failover::next_like(&streams, &tried, index, target)
+                });
+                // A pool of one has no stall prompt to switch from; were it asked, the same
+                // stream opens again where it was.
+                let to = to.unwrap_or(index);
+                tracing::info!(from = index, to, at, "switching away from a stall");
+                index = to;
+                resume_at = Some(at);
             }
             FileOutcome::Handover(successor) => {
                 // The playback taking the window takes the seat too.
@@ -621,7 +665,17 @@ pub async fn play(
                 run.servers.settle().await;
                 return;
             }
-            FileOutcome::Ended { watched, complete, exited, stopped, quit, no_frames } => {
+            FileOutcome::Ended {
+                watched,
+                complete,
+                exited,
+                stopped,
+                quit,
+                no_frames,
+                errored,
+                at,
+                duration,
+            } => {
                 let reported = match (&player, no_frames) {
                     (Some(p), true) => p.link.diagnostics().await,
                     _ => None,
@@ -652,8 +706,47 @@ pub async fn play(
                         },
                         Some(Msg::StartTryingAnotherStream),
                     );
-                    index = next_untried(&tried, index);
+                    index =
+                        failover::next_like(&streams, &tried, index, target).unwrap_or(index);
                     continue;
+                }
+
+                // A stream that played and then broke off in an error, in the same window and
+                // short of the credits, is a failure of the stream and not the end of the
+                // episode: another stream like it takes over at the same second, once per
+                // stream, with the viewer's audio, subtitles and delay carried over.
+                let broke_off = errored
+                    && !no_frames
+                    && !complete
+                    && !stopped
+                    && !quit
+                    && !exited
+                    && duration.is_none_or(|d| at < d - failover::FAILOVER_TAIL);
+                if broke_off {
+                    run.servers.failed(&store, &streams[index], ServerFailure::BrokeOff);
+                    if let Some(to) = failover::next_like(&streams, &tried, index, target) {
+                        tracing::warn!(
+                            from = %crate::logged::address(&streams[index].url),
+                            to = %crate::logged::address(&streams[to].url),
+                            at,
+                            "the stream broke off; failing over"
+                        );
+                        say(
+                            StartStep::TryingAnotherStream {
+                                next: u32::try_from(attempt + 1).unwrap_or(u32::MAX),
+                                total: u32::try_from(total).unwrap_or(u32::MAX),
+                            },
+                            Some(Msg::StartTryingAnotherStream),
+                        );
+                        // Said once the stream that takes over shows a frame.
+                        if run.failed_over_from.is_none() {
+                            run.failed_over_from = Some(streams[index].provider_id.clone());
+                        }
+                        index = to;
+                        resume_at = Some(at);
+                        continue;
+                    }
+                    tracing::warn!(at, "the stream broke off, and no other is left to try");
                 }
 
                 // Keep the window for the next episode when one is coming: auto-next is on, the
@@ -785,14 +878,6 @@ async fn load(
     link.load(&stream.url, options).await
 }
 
-/// The next stream not yet tried, wrapping around; the current one when all have been.
-fn next_untried(tried: &[bool], current: usize) -> usize {
-    (1..=tried.len())
-        .map(|step| (current + step) % tried.len())
-        .find(|&i| !tried[i])
-        .unwrap_or(current)
-}
-
 /// What a party is answered with where this build has no watch parties: see the `party`
 /// feature.
 pub const NO_PARTY: Msg = Msg::NoticeNoParty;
@@ -846,6 +931,9 @@ struct Run<'a> {
     /// Whether this playback plays with a party now: what it writes down and whether it rolls
     /// on go by it.
     in_party: bool,
+    /// The source of the stream that broke off, while another is failing over for it: the
+    /// notice naming the stream that took over is said once that one shows a frame.
+    failed_over_from: Option<String>,
 }
 
 #[cfg(all(test, feature = "cast"))]

@@ -114,6 +114,8 @@
     <string name="status_searching_sources">Mencari sumber-sumber untuk episode %1$s…</string>
     <string name="notice_player_failed_to_start">Tidak bisa memulai mpv. Pastikan mpv bisa berjalan sendiri. (%1$s)</string>
     <string name="notice_stream_no_video">Tidak ada video dari aliran itu. Mencoba %1$,d dari %2$,d.</string>
+    <string name="notice_failed_over">Stream terputus. %1$s melanjutkan dari titik yang sama.</string>
+    <string name="notice_failed_over_same_source">Stream terputus. Stream lain dari %1$s melanjutkan dari titik yang sama.</string>
     <string name="notice_player_could_not_play">mpv tidak bisa memutar ini. %1$s</string>
     <string name="notice_player_exited_silently">mpv ditutup tanpa memutar apa pun dan tanpa memberi alasan. Coba sumber lain.</string>
     <string name="notice_player_not_playing">mpv belum mulai memutar setelah %1$,d dtk. sumber ini mungkin tidak punya data. Pastikan mpv bisa memutar file sendiri.</string>

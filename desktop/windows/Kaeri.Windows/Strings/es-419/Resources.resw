@@ -371,6 +371,12 @@
   <data name="NoticeStreamNoVideo" xml:space="preserve">
     <value>Esa transmisión no muestra video. Probando la transmisión {next} de {total}.</value>
   </data>
+  <data name="NoticeFailedOver" xml:space="preserve">
+    <value>La transmisión se cortó. {source} siguió desde el mismo punto.</value>
+  </data>
+  <data name="NoticeFailedOverSameSource" xml:space="preserve">
+    <value>La transmisión se cortó. Otra transmisión de {source} siguió desde el mismo punto.</value>
+  </data>
   <data name="NoticePlayerCouldNotPlay" xml:space="preserve">
     <value>mpv no pudo reproducir esto. {reason}</value>
   </data>
