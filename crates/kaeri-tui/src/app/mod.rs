@@ -60,6 +60,7 @@ mod title;
 mod together;
 
 pub(crate) use self::lists::air_date;
+pub(crate) use self::notices::LOG_ROW;
 use self::title::TitleFrame;
 pub use self::{
     accounts::sync_badge,
@@ -72,7 +73,10 @@ pub use self::{
     lists::{
         cycle_search_filter, search_filter_labels, search_filter_summary, search_filter_value,
     },
-    notices::{ACTIVITY_DELAY, Job, LOG_CAPACITY, LogRow, Toast, alert, info, say, worded},
+    notices::{
+        ACTIVITY_DELAY, Job, LOG_CAPACITY, LogRow, PlayerLogRow, Toast, alert, info, say,
+        worded,
+    },
     overlays::{FrameReport, PALETTE_ROWS},
     playback::NowPlaying,
     providers::proxy_badge,
@@ -202,6 +206,10 @@ pub struct App {
     pub crashes: Vec<kaeri_model::crash::CrashRecord>,
     /// Crash reports the person deleted in Report a bug, for the host to remove from disk.
     deleted_crashes: Vec<String>,
+    /// Report a bug's Save player log row: what the host said of the log and where a save went.
+    pub player_log: PlayerLogRow,
+    /// The last playback could not play, so a report opened now is about a playback error.
+    playback_failed: bool,
     /// The metadata ladder's rungs, for the Providers screen and the header chip.
     pub meta_status: Vec<MetaSourceRow>,
     /// The source pinned for the title on screen. `None` means automatic.
@@ -482,6 +490,8 @@ impl App {
             medium_asked: None,
             crashes: Vec::new(),
             deleted_crashes: Vec::new(),
+            player_log: PlayerLogRow::default(),
+            playback_failed: false,
             meta_status: Vec::new(),
             provider_preference: None,
             source_options: Vec::new(),
@@ -743,6 +753,7 @@ impl App {
             Event::ActiveProvider(provider) => self.active_provider = Some(provider),
             Event::PlaybackKept => self.apply_playback_kept(),
             Event::PlaybackStaged { id, title, episode, episode_title, speed, .. } => {
+                self.playback_failed = false;
                 self.take_staged(id, title, episode, episode_title, speed);
             }
             // The terminal has no starting screen; it keeps the notice a stream with no video
@@ -807,7 +818,10 @@ impl App {
             // the next episode, so the two cannot disagree into a window left waiting for an
             // episode nobody starts.
             Event::PlaybackEnded { rolling_on: true, .. } => self.rolling = true,
-            Event::PlaybackEnded { ending, .. } => self.apply_playback_ended(ending),
+            Event::PlaybackEnded { ending, .. } => {
+                self.playback_failed = ending == kaeri_model::playback::Ending::Failed;
+                self.apply_playback_ended(ending)
+            }
             Event::Sync(state) => self.apply_sync(*state),
             Event::JobStarted { job, activity } => self.start_job(job, activity),
             Event::JobNote { job, note, wait } => self.apply_job_note(job, say(&note), wait),

@@ -222,6 +222,10 @@ impl App {
             }
             _ => {}
         }
+        if *overlay == Overlay::BugReport {
+            let down = matches!(action, Action::Down | Action::PageDown | Action::Bottom);
+            self.step_off_empty_log(down);
+        }
         None
     }
 
@@ -302,7 +306,7 @@ impl App {
             Some(Overlay::Recommendations) => self.target().map_or(0, |e| e.recommended.len()),
             Some(Overlay::PluginAction) => self.plugin_choices().len(),
             Some(Overlay::PublishPick) => self.local_plugins.len(),
-            Some(Overlay::BugReport) => 1 + self.crashes.len(),
+            Some(Overlay::BugReport) => super::notices::FIRST_CRASH_ROW + self.crashes.len(),
             Some(Overlay::Medium) => super::medium::CHOICES.len(),
             Some(Overlay::MediumOff) => 2,
             Some(overlay) if overlay.is_devices() => self.devices_overlay_len(overlay),

@@ -573,13 +573,24 @@ fn overlay_hints(
         O::MediumOff => {
             vec![hint("↑↓", hint_move()), hint("↵", hint_choose()), hint(ESC, hint_cancel())]
         }
-        O::BugReport => vec![
-            hint("↑↓", hint_move()),
-            hint("↵", super::said(kaeri_i18n::t::report_open_github())),
-            hint("C", super::said(kaeri_i18n::t::report_copy())),
-            hint("E", super::said(kaeri_i18n::t::settings_crash_delete())),
-            hint(ESC, hint_close()),
-        ],
+        O::BugReport => {
+            // On Save player log, Enter saves it; once saved there is nothing more for it to do.
+            let open = if app.cursors.overlay.selected != crate::app::LOG_ROW {
+                Some(kaeri_i18n::t::report_open_github())
+            } else if app.player_log.saved.is_none() && app.player_log.stats.playbacks > 0 {
+                Some(kaeri_i18n::t::report_player_log_save_here())
+            } else {
+                None
+            };
+            let mut hints = vec![hint("↑↓", hint_move())];
+            hints.extend(open.map(|open| hint("↵", super::said(open))));
+            hints.extend([
+                hint("C", super::said(kaeri_i18n::t::report_copy())),
+                hint("E", super::said(kaeri_i18n::t::settings_crash_delete())),
+                hint(ESC, hint_close()),
+            ]);
+            hints
+        }
         O::Logs if app.logs.is_empty() => vec![hint(ESC, hint_close())],
         O::Logs => vec![hint("↑↓", hint_move()), hint(ESC, hint_close())],
         O::SearchFilters => {

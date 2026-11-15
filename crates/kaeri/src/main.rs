@@ -430,20 +430,25 @@ fn describe_graphics(graphics: kaeri_tui::image::Graphics) -> &'static str {
 /// Anything written to stdout would corrupt the alternate screen, so diagnostics go to disk
 /// and the Logs overlay reads them back.
 fn init_logging(paths: &Paths) {
-    use tracing_subscriber::{EnvFilter, fmt};
+    use tracing_subscriber::{
+        EnvFilter, Layer, fmt, layer::SubscriberExt, util::SubscriberInitExt,
+    };
 
     let dir = paths.cache_dir.join("logs");
     if std::fs::create_dir_all(&dir).is_err() {
         return;
     }
     let appender = tracing_appender::rolling::daily(&dir, "kaeri.log");
-    let _ = fmt()
-        .with_writer(appender)
-        .with_ansi(false)
-        .with_env_filter(
-            EnvFilter::try_from_env("KAERI_LOG").unwrap_or_else(|_| EnvFilter::new("info")),
-        )
+    // Each layer filters for itself: the player log keeps its playback lines at info whatever
+    // `KAERI_LOG` asks of the file.
+    let file = fmt::layer().with_writer(appender).with_ansi(false).with_filter(
+        EnvFilter::try_from_env("KAERI_LOG").unwrap_or_else(|_| EnvFilter::new("info")),
+    );
+    let _ = tracing_subscriber::registry()
+        .with(file)
+        .with(kaeri_engine::player_log::layer())
         .try_init();
+    kaeri_engine::player_log::mirror_to(&dir);
 }
 
 #[cfg(test)]
