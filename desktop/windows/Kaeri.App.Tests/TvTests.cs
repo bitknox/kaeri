@@ -306,7 +306,9 @@ public class TvRemoteTests
             Assert.Equal(TvSheet.Cast, remote.Sheet);
             Assert.True(remote.Casting);
             Assert.Null(remote.Request);
-            await Until(() => remote.Stage == CastStage.Playing, "the cast playing", () => remote.CastCard);
+            // The card reads Playing a moment before the same TakeCast says it was served and handed
+            // off: here the cast's cards come in on a pool thread, with no window to bring them back.
+            await Until(() => remote.Stage == CastStage.Playing && served > 0 && handedOff > 0, "the cast playing", () => remote.CastCard);
             Assert.Equal(1, served);
             Assert.True(remote.CastServed);
             Assert.Equal(1, handedOff);
