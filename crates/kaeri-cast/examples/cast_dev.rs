@@ -59,6 +59,8 @@ struct Args {
     seconds: u64,
     out: Option<PathBuf>,
     media_base: String,
+    /// Run the matrix on whatever receiver launched: a check of the runner itself.
+    any_receiver: bool,
 }
 
 fn args() -> Result<Args, String> {
@@ -73,6 +75,7 @@ fn args() -> Result<Args, String> {
         seconds: 8,
         out: None,
         media_base: "http://127.0.0.1:8787/media/".into(),
+        any_receiver: false,
     };
     let mut it = std::env::args().skip(1).peekable();
     while let Some(arg) = it.next() {
@@ -92,6 +95,7 @@ fn args() -> Result<Args, String> {
             }
             "--out" => args.out = Some(value("--out")?.into()),
             "--media-base" => args.media_base = value("--media-base")?,
+            "--any-receiver" => args.any_receiver = true,
             "--matrix" => {
                 let next = it.peek().filter(|n| !n.starts_with("--")).cloned();
                 if next.is_some() {
@@ -624,7 +628,7 @@ async fn main() {
     );
 
     let mut code = 0;
-    if args.matrix.is_some() && app != args.app {
+    if args.matrix.is_some() && app != args.app && !args.any_receiver {
         // A table of the Default Media Receiver would read as the dev receiver's.
         say!(
             "matrix not run: {} isn't running (an unpublished app launches only on a test device, after a restart)",
