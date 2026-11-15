@@ -70,7 +70,7 @@ public final class TVRemoteModel {
     /// The sheet up, if any.
     public var sheet: Sheet?
     /// What choosing a TV plays. Nil when the picker was opened to pair or connect only.
-    public private(set) var request: TVPlayRequest?
+    public internal(set) var request: TVPlayRequest?
     public private(set) var rows: [FfiTvRow] = []
     public private(set) var paired: [FfiPairedTv] = []
     public private(set) var browsing = false
