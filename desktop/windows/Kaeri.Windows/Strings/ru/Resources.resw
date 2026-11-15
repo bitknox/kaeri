@@ -3479,6 +3479,9 @@
   <data name="StateLoading" xml:space="preserve">
     <value>Загрузка</value>
   </data>
+  <data name="NoticeDismiss" xml:space="preserve">
+    <value>Закрыть</value>
+  </data>
   <data name="PadHelpMove" xml:space="preserve">
     <value>Перемещение фокуса</value>
   </data>

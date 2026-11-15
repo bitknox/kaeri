@@ -6127,6 +6127,9 @@ state-working = Sedang memproses
 # Short placeholder while something loads.
 state-loading = Memuat
 
+# Accessibility action of a notice that dismisses it (VoiceOver, TalkBack).
+notice-dismiss = Tutup
+
 # Controller help: the D-pad and left stick move focus between items.
 pad-help-move = Pindah fokus
 

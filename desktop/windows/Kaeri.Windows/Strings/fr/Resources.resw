@@ -3338,6 +3338,9 @@
   <data name="StateLoading" xml:space="preserve">
     <value>Chargement</value>
   </data>
+  <data name="NoticeDismiss" xml:space="preserve">
+    <value>Ignorer</value>
+  </data>
   <data name="PadHelpMove" xml:space="preserve">
     <value>Déplacer la sélection</value>
   </data>

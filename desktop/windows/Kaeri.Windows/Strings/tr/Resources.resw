@@ -3197,6 +3197,9 @@
   <data name="StateLoading" xml:space="preserve">
     <value>Yükleniyor</value>
   </data>
+  <data name="NoticeDismiss" xml:space="preserve">
+    <value>Bildirimi kapat</value>
+  </data>
   <data name="PadHelpMove" xml:space="preserve">
     <value>Odağı taşı</value>
   </data>

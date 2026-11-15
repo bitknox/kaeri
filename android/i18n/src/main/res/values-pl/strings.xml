@@ -1562,6 +1562,7 @@
     <string name="error_label">Problem</string>
     <string name="state_working">W toku</string>
     <string name="state_loading">Wczytywanie</string>
+    <string name="notice_dismiss">Odrzuć</string>
     <string name="pad_help_move">Przesuwanie fokusu</string>
     <string name="pad_help_select">Wybór</string>
     <string name="pad_help_back">Wstecz</string>

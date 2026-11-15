@@ -25,9 +25,6 @@ notice-hidden-preview = New episode
 # What the system shows under a group of new-episode notifications. The system fills in the count at %u.
 notice-summary = %u more new episodes
 
-# VoiceOver action of a notice that dismisses it.
-notice-dismiss = Dismiss
-
 # Line of the device sign-in sheet when the code ran out.
 # @arg tracker: text
 accounts-code-expired-detail = This code has expired. Get a new one to sign in to { $tracker }.

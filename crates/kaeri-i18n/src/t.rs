@@ -10320,6 +10320,11 @@ pub fn state_loading() -> String {
     text("state-loading", &[])
 }
 
+/// Accessibility action of a notice that dismisses it (VoiceOver, TalkBack).
+pub fn notice_dismiss() -> String {
+    text("notice-dismiss", &[])
+}
+
 /// Controller help: the D-pad and left stick move focus between items.
 pub fn pad_help_move() -> String {
     text("pad-help-move", &[])

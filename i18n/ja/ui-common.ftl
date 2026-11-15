@@ -88,3 +88,4 @@ error-sign-in-expired = サインインの有効期限が切れました。ア�
 error-label = 問題
 state-working = 処理中
 state-loading = 読み込み中
+notice-dismiss = 消去

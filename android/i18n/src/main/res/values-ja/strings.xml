@@ -1370,6 +1370,7 @@
     <string name="error_label">問題</string>
     <string name="state_working">処理中</string>
     <string name="state_loading">読み込み中</string>
+    <string name="notice_dismiss">消去</string>
     <string name="pad_help_move">フォーカスを移動</string>
     <string name="pad_help_select">選択</string>
     <string name="pad_help_back">戻る</string>

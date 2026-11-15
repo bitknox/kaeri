@@ -6127,6 +6127,9 @@ state-working = Đang xử lý
 # Short placeholder while something loads.
 state-loading = Đang tải
 
+# Accessibility action of a notice that dismisses it (VoiceOver, TalkBack).
+notice-dismiss = Bỏ qua
+
 # Controller help: the D-pad and left stick move focus between items.
 pad-help-move = Di chuyển tiêu điểm
 

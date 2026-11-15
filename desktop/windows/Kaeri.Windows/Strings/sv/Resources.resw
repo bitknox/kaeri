@@ -3197,6 +3197,9 @@
   <data name="StateLoading" xml:space="preserve">
     <value>Läser in</value>
   </data>
+  <data name="NoticeDismiss" xml:space="preserve">
+    <value>Avfärda</value>
+  </data>
   <data name="PadHelpMove" xml:space="preserve">
     <value>Flytta fokus</value>
   </data>

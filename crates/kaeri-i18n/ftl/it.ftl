@@ -6273,6 +6273,9 @@ state-working = In corso
 # Short placeholder while something loads.
 state-loading = Caricamento
 
+# Accessibility action of a notice that dismisses it (VoiceOver, TalkBack).
+notice-dismiss = Chiudi
+
 # Controller help: the D-pad and left stick move focus between items.
 pad-help-move = Sposta il focus
 

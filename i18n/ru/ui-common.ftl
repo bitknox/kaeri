@@ -88,3 +88,4 @@ error-sign-in-expired = Срок входа истёк. Войдите снов�
 error-label = Ошибка
 state-working = Выполняется
 state-loading = Загрузка
+notice-dismiss = Закрыть

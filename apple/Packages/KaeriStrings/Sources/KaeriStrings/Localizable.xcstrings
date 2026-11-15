@@ -122416,7 +122416,7 @@
       }
     },
     "notice-dismiss" : {
-      "comment" : "VoiceOver action of a notice that dismisses it.",
+      "comment" : "Accessibility action of a notice that dismisses it (VoiceOver, TalkBack).",
       "extractionState" : "manual",
       "localizations" : {
         "de" : {

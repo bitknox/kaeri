@@ -88,3 +88,4 @@ error-sign-in-expired = Oturumunuzun süresi doldu. Hesaplar bölümünden yenid
 error-label = Sorun
 state-working = Çalışıyor
 state-loading = Yükleniyor
+notice-dismiss = Bildirimi kapat

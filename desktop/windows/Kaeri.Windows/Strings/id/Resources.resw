@@ -3056,6 +3056,9 @@
   <data name="StateLoading" xml:space="preserve">
     <value>Memuat</value>
   </data>
+  <data name="NoticeDismiss" xml:space="preserve">
+    <value>Tutup</value>
+  </data>
   <data name="PadHelpMove" xml:space="preserve">
     <value>Pindah fokus</value>
   </data>

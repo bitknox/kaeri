@@ -6200,6 +6200,9 @@ state-working = Wird verarbeitet
 # Short placeholder while something loads.
 state-loading = Wird geladen
 
+# Accessibility action of a notice that dismisses it (VoiceOver, TalkBack).
+notice-dismiss = Schließen
+
 # Controller help: the D-pad and left stick move focus between items.
 pad-help-move = Fokus bewegen
 

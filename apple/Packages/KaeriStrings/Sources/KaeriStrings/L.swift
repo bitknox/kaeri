@@ -2500,9 +2500,6 @@ public enum L {
     /// What the system shows under a group of new-episode notifications. The system fills in the count at %u.
     public static var noticeSummary: String { string("notice-summary", fallback: "%u more new episodes") }
 
-    /// VoiceOver action of a notice that dismisses it.
-    public static var noticeDismiss: String { string("notice-dismiss", fallback: "Dismiss") }
-
     /// Line of the device sign-in sheet when the code ran out.
     public static func accountsCodeExpiredDetail(tracker: String) -> String {
         Self.format("accounts-code-expired-detail", fallback: "This code has expired. Get a new one to sign in to %1$@.", tracker)
@@ -5093,6 +5090,9 @@ public enum L {
 
     /// Short placeholder while something loads.
     public static var stateLoading: String { string("state-loading", fallback: "Loading") }
+
+    /// Accessibility action of a notice that dismisses it (VoiceOver, TalkBack).
+    public static var noticeDismiss: String { string("notice-dismiss", fallback: "Dismiss") }
 
     /// Controller help: the D-pad and left stick move focus between items.
     public static var padHelpMove: String { string("pad-help-move", fallback: "Move focus") }

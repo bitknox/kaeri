@@ -1498,6 +1498,7 @@
     <string name="error_label">Problema</string>
     <string name="state_working">In corso</string>
     <string name="state_loading">Caricamento</string>
+    <string name="notice_dismiss">Chiudi</string>
     <string name="pad_help_move">Sposta il focus</string>
     <string name="pad_help_select">Seleziona</string>
     <string name="pad_help_back">Indietro</string>

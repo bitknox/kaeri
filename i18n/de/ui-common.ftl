@@ -88,3 +88,4 @@ error-sign-in-expired = Deine Anmeldung ist abgelaufen. Melde dich unter Konten 
 error-label = Problem
 state-working = Wird verarbeitet
 state-loading = Wird geladen
+notice-dismiss = Schließen

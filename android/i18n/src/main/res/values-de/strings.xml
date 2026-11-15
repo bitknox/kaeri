@@ -1434,6 +1434,7 @@
     <string name="error_label">Problem</string>
     <string name="state_working">Wird verarbeitet</string>
     <string name="state_loading">Wird geladen</string>
+    <string name="notice_dismiss">Schließen</string>
     <string name="pad_help_move">Fokus bewegen</string>
     <string name="pad_help_select">Auswählen</string>
     <string name="pad_help_back">Zurück</string>

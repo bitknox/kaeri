@@ -88,3 +88,4 @@ error-sign-in-expired = Votre connexion a expiré. Reconnectez-vous dans Comptes
 error-label = Problème
 state-working = En cours
 state-loading = Chargement
+notice-dismiss = Ignorer

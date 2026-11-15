@@ -1370,6 +1370,7 @@
     <string name="error_label">Lỗi</string>
     <string name="state_working">Đang xử lý</string>
     <string name="state_loading">Đang tải</string>
+    <string name="notice_dismiss">Bỏ qua</string>
     <string name="pad_help_move">Di chuyển tiêu điểm</string>
     <string name="pad_help_select">Chọn</string>
     <string name="pad_help_back">Quay lại</string>

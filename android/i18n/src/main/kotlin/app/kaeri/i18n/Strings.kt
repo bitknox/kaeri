@@ -5589,6 +5589,10 @@ object Strings {
     fun stateLoading(context: Context): String =
         context.getString(R.string.state_loading)
 
+    /** Accessibility action of a notice that dismisses it (VoiceOver, TalkBack). */
+    fun noticeDismiss(context: Context): String =
+        context.getString(R.string.notice_dismiss)
+
     /** Controller help: the D-pad and left stick move focus between items. */
     fun padHelpMove(context: Context): String =
         context.getString(R.string.pad_help_move)

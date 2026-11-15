@@ -88,3 +88,4 @@ error-sign-in-expired = L'accesso è scaduto. Accedi di nuovo da Account.
 error-label = Problema
 state-working = In corso
 state-loading = Caricamento
+notice-dismiss = Chiudi

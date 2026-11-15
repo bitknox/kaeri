@@ -6200,6 +6200,9 @@ state-working = Arbetar
 # Short placeholder while something loads.
 state-loading = Läser in
 
+# Accessibility action of a notice that dismisses it (VoiceOver, TalkBack).
+notice-dismiss = Avfärda
+
 # Controller help: the D-pad and left stick move focus between items.
 pad-help-move = Flytta fokus
 

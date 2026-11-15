@@ -4,7 +4,6 @@ notice-out-behind = Episode { $episode } ist da. { -up-next-cap } für dich: Epi
 notice-out-dubbed-behind = Episode { $episode } ist da, { -dubbed }. { -up-next-cap } für dich: Episode { $next }.
 notice-hidden-preview = Neue Episode
 notice-summary = %u weitere neue Episoden
-notice-dismiss = Schließen
 accounts-code-expired-detail = Dieser Code ist abgelaufen. Hol dir einen neuen, um dich bei { $tracker } anzumelden.
 list-refresh-failed = Aktualisieren fehlgeschlagen. Du siehst, was zuletzt geladen wurde.
 sign-in-failed = Die Anmeldung bei { $tracker } ist fehlgeschlagen. Versuch es erneut.

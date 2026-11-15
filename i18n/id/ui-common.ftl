@@ -88,3 +88,4 @@ error-sign-in-expired = Masuk Anda sudah kedaluwarsa. Masuk lagi di Akun.
 error-label = Masalah
 state-working = Sedang memproses
 state-loading = Memuat
+notice-dismiss = Tutup

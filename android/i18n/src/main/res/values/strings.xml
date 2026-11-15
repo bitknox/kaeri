@@ -3011,6 +3011,8 @@
     <string name="state_working">Working</string>
     <!-- Short placeholder while something loads. -->
     <string name="state_loading">Loading</string>
+    <!-- Accessibility action of a notice that dismisses it (VoiceOver, TalkBack). -->
+    <string name="notice_dismiss">Dismiss</string>
     <!-- Controller help: the D-pad and left stick move focus between items. -->
     <string name="pad_help_move">Move focus</string>
     <!-- Controller help: the A button on a list, a button or a switch. -->

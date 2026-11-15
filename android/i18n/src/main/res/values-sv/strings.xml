@@ -1434,6 +1434,7 @@
     <string name="error_label">Problem</string>
     <string name="state_working">Arbetar</string>
     <string name="state_loading">Läser in</string>
+    <string name="notice_dismiss">Avfärda</string>
     <string name="pad_help_move">Flytta fokus</string>
     <string name="pad_help_select">Välj</string>
     <string name="pad_help_back">Tillbaka</string>

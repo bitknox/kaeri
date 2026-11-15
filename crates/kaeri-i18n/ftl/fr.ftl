@@ -6273,6 +6273,9 @@ state-working = En cours
 # Short placeholder while something loads.
 state-loading = Chargement
 
+# Accessibility action of a notice that dismisses it (VoiceOver, TalkBack).
+notice-dismiss = Ignorer
+
 # Controller help: the D-pad and left stick move focus between items.
 pad-help-move = Déplacer la sélection
 

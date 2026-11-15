@@ -1498,6 +1498,7 @@
     <string name="error_label">Problème</string>
     <string name="state_working">En cours</string>
     <string name="state_loading">Chargement</string>
+    <string name="notice_dismiss">Ignorer</string>
     <string name="pad_help_move">Déplacer la sélection</string>
     <string name="pad_help_select">Sélectionner</string>
     <string name="pad_help_back">Retour</string>

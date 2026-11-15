@@ -3056,6 +3056,9 @@
   <data name="StateLoading" xml:space="preserve">
     <value>Đang tải</value>
   </data>
+  <data name="NoticeDismiss" xml:space="preserve">
+    <value>Bỏ qua</value>
+  </data>
   <data name="PadHelpMove" xml:space="preserve">
     <value>Di chuyển tiêu điểm</value>
   </data>
