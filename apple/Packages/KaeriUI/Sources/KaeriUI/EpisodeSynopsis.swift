@@ -26,6 +26,16 @@ struct EpisodeMetrics: Equatable {
     /// The row's height where it holds none: a protected row, and a show with no synopses coming.
     /// The same as `tall` where the text sits beside the still, which is as tall either way.
     let short: CGFloat
+    /// Whether a hairline ends each row, `pad` under its text and `pad` over the next still, so
+    /// each episode reads as one unit where the text sits under the still. The heights include
+    /// the rule.
+    var ruled = false
+
+    /// The room over the still, and under the text of a ruled row.
+    var pad: CGFloat { ruled ? 16 : 8 }
+
+    /// The hairline's own height.
+    static let rule: CGFloat = 1
 
     /// The Mac with a list 560 pt wide or more: a 178 x 100 still, three lines beside it.
     static let macWide = EpisodeMetrics(text: .beside, still: CGSize(width: 178, height: 100), tall: 120, short: 120)
@@ -33,8 +43,11 @@ struct EpisodeMetrics: Equatable {
     static let macNarrow = EpisodeMetrics(text: .under, still: CGSize(width: 144, height: 81), tall: 164, short: 100)
     /// An iPad at regular width: the Mac's row at touch sizes, a 192 x 108 still.
     static let pad = EpisodeMetrics(text: .beside, still: CGSize(width: 192, height: 108), tall: 128, short: 128)
-    /// An iPhone, and an iPad at compact width.
-    static let phone = EpisodeMetrics(text: .under, still: CGSize(width: 144, height: 81), tall: 172, short: 100)
+    /// An iPhone, and an iPad at compact width: 16 over the still, the still, three lines of
+    /// text, 16 under them and the rule (182), or the still alone between them (114).
+    static let phone = EpisodeMetrics(
+        text: .under, still: CGSize(width: 144, height: 81), tall: 182, short: 114, ruled: true
+    )
 
     /// The Mac's list is wide enough for text beside the still from this width.
     static let wideFrom: CGFloat = 560
@@ -47,6 +60,21 @@ struct EpisodeMetrics: Equatable {
     /// The row's height: tall where the table has room kept for text and this row can show it.
     func height(room: Bool, protected: Bool) -> CGFloat {
         room && !protected ? tall : short
+    }
+
+    /// The least a row is laid out at. A ruled row keeps `height`'s room only while a lookup may
+    /// still bring its text (`pending`), so nothing moves as the details load; once they are
+    /// known it fits what it holds: `short` for the still, title and facts, and the synopsis's own
+    /// lines under them, up to `tall`'s three. Other rows keep `height` either way.
+    func least(room: Bool, protected: Bool, pending: Bool) -> CGFloat {
+        ruled && !pending ? short : height(room: room, protected: protected)
+    }
+
+    /// Whether a row lays out its synopsis's place: where it has room, and on a ruled row only
+    /// while text may still come or once it has, so a row with none ends at its facts.
+    func holdsText(room: Bool, protected: Bool, pending: Bool, text: String?) -> Bool {
+        guard room && !protected else { return false }
+        return !ruled || pending || !(text ?? "").isEmpty
     }
 }
 

@@ -54,13 +54,14 @@ extension Navigator {
 }
 
 /// The row that opens and closes the fold: plain text and a chevron, in the list's own rhythm,
-/// starting where the rows' stills do.
+/// starting where the rows' stills do. On a phone it has its line to itself, under the Episodes
+/// heading, and a hairline ends it as one ends each row.
 struct WatchedFoldRow: View {
     let fold: WatchedFold
     let shown: Bool
     let phone: Bool
     /// The title's dub line, where the page has no Episodes header to carry it: on this row's own
-    /// line, so its arrival moves nothing.
+    /// line, so its arrival moves nothing. The phone's heading carries it.
     var dub: String?
     /// The marks of the folded rows, in the column the rows keep for theirs; nil when the table
     /// has none. Open, the rows carry their own.
@@ -91,9 +92,13 @@ struct WatchedFoldRow: View {
             .animation(.fadeIn, value: dub)
             .font(phone ? .ui(15) : .mac(13))
             .foregroundStyle(.haze)
-            // Where the stills start: the number's column and the gap after it.
-            .padding(.leading, phone ? 34 : 44)
+            // Where the stills start: on the Mac and the iPad, after the number's column and the
+            // gap after it; on a phone, which has no number column, at the list's edge.
+            .padding(.leading, phone ? 0 : 44)
             .frame(minHeight: phone ? 44 : 36)
+            .overlay(alignment: .bottom) {
+                if phone { Rectangle().fill(.faintRule).frame(height: EpisodeMetrics.rule) }
+            }
             .contentShape(.rect)
         }
         .buttonStyle(.plain)

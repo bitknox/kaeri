@@ -121,17 +121,30 @@ struct HomeScreen: View {
 
     private var wide: Bool { layout.wide }
 
+    /// The Continue shelf's id in Home's scroll, for a screenshot's launch scroll.
+    static let continueShelf = "home-continue"
+
     var body: some View {
         let layout = self.layout
         let margin = layout.margin
-        ScrollView {
-            VStack(alignment: .leading, spacing: layout.shelfGap) {
-                HomeContent(contentWidth: max(0, width - margin * 2))
+        ScrollViewReader { reader in
+            ScrollView {
+                VStack(alignment: .leading, spacing: layout.shelfGap) {
+                    HomeContent(contentWidth: max(0, width - margin * 2))
+                }
+                .padding(.horizontal, margin)
+                .padding(.top, 8)
+                .padding(.bottom, 32)
+                .frame(maxWidth: .infinity, alignment: .topLeading)
             }
-            .padding(.horizontal, margin)
-            .padding(.top, 8)
-            .padding(.bottom, 32)
-            .frame(maxWidth: .infinity, alignment: .topLeading)
+            // A screenshot's `-KaeriScroll` on a phone: the Continue shelf brought into view,
+            // which scrolls itself to the card asked for (HomeSectionView).
+            .task {
+                guard !wide, navigator.section == .home, navigator.paths[.home]?.isEmpty ?? true,
+                      navigator.launchScroll != nil else { return }
+                try? await Task.sleep(for: .milliseconds(1_500))
+                reader.scrollTo(Self.continueShelf, anchor: .center)
+            }
         }
         .scrollIndicators(.never)
         .environment(\.homeLayout, layout)
