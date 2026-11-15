@@ -335,7 +335,7 @@ object FixtureCasts {
                     tvName = name,
                     scope = scope,
                     now = FfiNowCard(
-                        id = asked.id, title = asked.title.ifEmpty { store.titles[asked.id]?.showTitle.orEmpty() }, episode = asked.episode,
+                        id = asked.id, title = asked.title.ifEmpty { store.titles[asked.id]?.title.orEmpty() }, episode = asked.episode,
                         episodeLine = line, loading = true, position = 0.0, duration = 1440.0, paused = false, speed = 1.0, volume = null,
                         audio = emptyList(), subtitles = emptyList(), subtitlesOff = false, skip = null,
                     ),
