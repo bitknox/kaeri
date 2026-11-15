@@ -119,6 +119,53 @@ class PhoneBoardLayoutTest {
         compose.onNodeWithText(filler, substring = true, useUnmergedTree = true).fetchSemanticsNode()
     }
 
+    /**
+     * Johan's change to direction A: a row keeps the tall room while its text may still come, then
+     * fits its details once they land: short with no synopsis, else the synopsis's own lines.
+     */
+    @Test
+    fun rows_keep_the_tall_room_until_their_details_land_then_fit_them() {
+        val pending = row(null, emptyList()).copy(description = null, synopsisPending = true)
+        val landed = mapOf(
+            114 to pending.copy(synopsisPending = false),
+            142 to pending.copy(synopsisPending = false, description = "Rain on the glass."),
+            182 to pending.copy(
+                synopsisPending = false,
+                description = "The gardener walks the long way round to the far greenhouse, counting the panes that the storm cracked, " +
+                    "and finds a door that was never on the plans, with a lamp still lit behind it and a name on the frame.",
+            ),
+        )
+        val shown = androidx.compose.runtime.mutableStateOf(pending)
+        compose.setContent {
+            KaeriTheme {
+                CompositionLocalProvider(LocalAppStore provides store) {
+                    Box(Modifier.width(412.dp).testTag("row")) {
+                        EpisodeCard(
+                            entry, shown.value, current = false, unaired = false, hidden = false,
+                            form = rowForm(app.kaeri.engine.model.EpisodeText.EXPECTED, protectedRow = false, textless = textless(shown.value)),
+                            onPlay = {}, onMenu = {}, onShow = {},
+                        )
+                    }
+                }
+            }
+        }
+        fun height() = compose.onNodeWithTag("row").fetchSemanticsNode().size.height
+        fun px(dp: Int) = with(compose.density) { dp.dp.roundToPx() }
+        for ((dp, row) in landed) {
+            compose.runOnIdle { shown.value = pending }
+            compose.mainClock.advanceTimeBy(1_000)
+            compose.waitForIdle()
+            assertNear("tall while the text may come", px(182), height())
+            compose.runOnIdle { shown.value = row }
+            compose.mainClock.advanceTimeBy(1_000)
+            compose.waitForIdle()
+            assertNear("$dp dp once the details land", px(dp), height())
+        }
+    }
+
+    private fun assertNear(message: String, expected: Int, actual: Int) =
+        assertTrue("$message: $actual px, not $expected", kotlin.math.abs(expected - actual) <= 1)
+
     /** The card's art, 208 by 117, as a Continue card has it, once it settles. */
     private fun art(entry: Entry, until: (androidx.compose.ui.graphics.PixelMap) -> Boolean = { true }): androidx.compose.ui.graphics.PixelMap {
         compose.setContent {

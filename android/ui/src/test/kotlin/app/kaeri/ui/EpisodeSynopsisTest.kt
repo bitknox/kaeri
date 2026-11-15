@@ -45,6 +45,23 @@ class EpisodeSynopsisTest {
     }
 
     @Test
+    fun a_row_fits_its_details_once_they_are_known() {
+        val lines = { text: String -> text.length / 10 }
+        // Text may still come: the whole room.
+        assertEquals(3, bandLines(null, pending = true, cap = 3, measured = lines))
+        // Known, with none: no room, and the short form.
+        assertEquals(0, bandLines(null, pending = false, cap = 3, measured = lines))
+        assertTrue(textless(row(1)))
+        assertFalse(textless(row(1, pending = true)))
+        assertEquals(RowForm.SHORT, rowForm(EpisodeText.PRESENT, protectedRow = false, textless = true))
+        assertEquals(RowForm.TALL, rowForm(EpisodeText.EXPECTED, protectedRow = false, textless = false))
+        // Its own lines, at least one and up to the cap.
+        assertEquals(1, bandLines("Short.", pending = false, cap = 3, measured = lines))
+        assertEquals(2, bandLines("x".repeat(20), pending = false, cap = 3, measured = lines))
+        assertEquals(3, bandLines("x".repeat(90), pending = false, cap = 3, measured = lines))
+    }
+
+    @Test
     fun the_outlook_comes_from_the_table() {
         assertEquals(EpisodeText.NONE, episodeText(listOf(row(1), row(2))))
         assertEquals(EpisodeText.EXPECTED, episodeText(listOf(row(1, pending = true), row(2))))

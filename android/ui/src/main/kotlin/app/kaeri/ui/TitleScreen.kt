@@ -2212,7 +2212,7 @@ private fun EpisodeRowView(entry: Entry, row: EpisodeRow, next: UInt, actions: A
                 current = current,
                 unaired = unaired,
                 hidden = hidden,
-                form = rowForm(page.outlook, hidden, unaired),
+                form = rowForm(page.outlook, hidden, unaired, textless = textless(row)),
                 onPlay = play,
                 onMenu = { sheet = true },
                 onShow = { reveals.show(row.number) },
