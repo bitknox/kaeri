@@ -1,0 +1,141 @@
+{
+  "messages": {
+    "receiver-error": [
+      "Det gick inte att spela avsnitt ",
+      {
+        "arg": "episode"
+      }
+    ],
+    "receiver-error-hint-computer": [
+      "Välj en annan källa på datorn."
+    ],
+    "receiver-error-hint-ipad": [
+      "Välj en annan källa på iPaden."
+    ],
+    "receiver-error-hint-iphone": [
+      "Välj en annan källa på iPhonen."
+    ],
+    "receiver-error-hint-mac": [
+      "Välj en annan källa på Macen."
+    ],
+    "receiver-error-hint-phone": [
+      "Välj en annan källa på telefonen."
+    ],
+    "receiver-error-hint-tablet": [
+      "Välj en annan källa på surfplattan."
+    ],
+    "receiver-error-unnumbered": [
+      "Det gick inte att spela avsnittet"
+    ],
+    "receiver-finished": [
+      "Avsnitt ",
+      {
+        "arg": "episode"
+      },
+      " är slut"
+    ],
+    "receiver-finished-unnumbered": [
+      "Slut"
+    ],
+    "receiver-paused": [
+      "Pausad"
+    ],
+    "receiver-plain-subs": [
+      "Undertexter visas som vanlig text på den här tv:n."
+    ],
+    "receiver-ready-computer": [
+      "Redo. Välj ett avsnitt på datorn."
+    ],
+    "receiver-ready-ipad": [
+      "Redo. Välj ett avsnitt på iPaden."
+    ],
+    "receiver-ready-iphone": [
+      "Redo. Välj ett avsnitt på iPhonen."
+    ],
+    "receiver-ready-mac": [
+      "Redo. Välj ett avsnitt på Macen."
+    ],
+    "receiver-ready-phone": [
+      "Redo. Välj ett avsnitt på telefonen."
+    ],
+    "receiver-ready-tablet": [
+      "Redo. Välj ett avsnitt på surfplattan."
+    ],
+    "receiver-sender-gone-computer": [
+      "Väntar på datorn"
+    ],
+    "receiver-sender-gone-hint-computer": [
+      "Öppna Kaeri på datorn för att titta vidare."
+    ],
+    "receiver-sender-gone-hint-ipad": [
+      "Öppna Kaeri på iPaden för att titta vidare."
+    ],
+    "receiver-sender-gone-hint-iphone": [
+      "Öppna Kaeri på iPhonen för att titta vidare."
+    ],
+    "receiver-sender-gone-hint-mac": [
+      "Öppna Kaeri på Macen för att titta vidare."
+    ],
+    "receiver-sender-gone-hint-phone": [
+      "Öppna Kaeri på telefonen för att titta vidare."
+    ],
+    "receiver-sender-gone-hint-tablet": [
+      "Öppna Kaeri på surfplattan för att titta vidare."
+    ],
+    "receiver-sender-gone-ipad": [
+      "Väntar på iPaden"
+    ],
+    "receiver-sender-gone-iphone": [
+      "Väntar på iPhonen"
+    ],
+    "receiver-sender-gone-mac": [
+      "Väntar på Macen"
+    ],
+    "receiver-sender-gone-phone": [
+      "Väntar på telefonen"
+    ],
+    "receiver-sender-gone-tablet": [
+      "Väntar på surfplattan"
+    ],
+    "receiver-skipped-ending": [
+      "Outro hoppades över"
+    ],
+    "receiver-skipped-opening": [
+      "Intro hoppades över"
+    ],
+    "receiver-starting": [
+      "Startar"
+    ],
+    "receiver-up-next": [
+      "Nästa · spelas om ",
+      {
+        "arg": "seconds"
+      },
+      " s"
+    ],
+    "receiver-up-next-numbered": [
+      "Avsnitt ",
+      {
+        "arg": "episode"
+      }
+    ],
+    "receiver-up-next-titled": [
+      "Avsnitt ",
+      {
+        "arg": "episode"
+      },
+      " · ",
+      {
+        "arg": "title"
+      }
+    ],
+    "receiver-waiting": [
+      "Väntar på strömmen · ",
+      {
+        "arg": "seconds"
+      },
+      " s"
+    ]
+  },
+  "tag": "sv"
+}

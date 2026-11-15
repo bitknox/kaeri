@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Kaeri</title>
+<!-- Kaeri's Cast receiver. Source: website/src/cast-receiver/, built by website/scripts/cast-receiver.ts. -->
+<link rel="stylesheet" href="fonts/fonts.css">
+<link rel="stylesheet" href="receiver.css">
+<script src="https://www.gstatic.com/cast/sdk/libs/caf_receiver/v3/cast_receiver_framework.js"></script>
+<script type="module" src="app.js"></script>
+</head>
+<body>
+<div id="stage"><video id="video" playsinline></video></div>
+<canvas id="still" aria-hidden="true"></canvas>
+<div id="ui" data-phase="idle">
+	<div id="art" class="layer"><img alt=""></div>
+	<div id="dim" class="layer"></div>
+
+	<div id="ready" class="drift">
+		<div class="wm">Kaeri</div>
+		<div class="line" id="ready-line"></div>
+	</div>
+
+	<div id="ov" class="layer">
+		<div class="scrim"></div>
+		<div class="ov">
+			<div class="tt" id="ov-show"></div>
+			<div class="el" id="ov-episode"></div>
+			<div class="rsk" id="ov-bar"><i></i></div>
+			<div class="rtimes" id="ov-times"><span id="ov-at"></span><span id="ov-left"></span></div>
+			<div class="mark" id="starting"><span class="rspin"></span><span id="starting-text"></span></div>
+		</div>
+	</div>
+
+	<div class="mark" id="paused">
+		<svg width="30" height="30" viewBox="0 0 16 16" aria-hidden="true"><rect x="3.4" y="2.4" width="3.2" height="11.2" rx="1" fill="currentColor"/><rect x="9.4" y="2.4" width="3.2" height="11.2" rx="1" fill="currentColor"/></svg>
+		<span id="paused-text"></span>
+	</div>
+
+	<span class="rspin" id="spin"></span>
+	<div class="mark" id="waiting"></div>
+
+	<div class="card" id="upnext">
+		<div class="still"><img alt=""></div>
+		<div class="count" id="upnext-count"></div>
+		<div class="tt" id="upnext-title"></div>
+	</div>
+
+	<div class="card" id="skipped">
+		<svg width="26" height="26" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 8.5 L6.5 12 L13 4.5"/></svg>
+		<span id="skipped-text"></span>
+	</div>
+
+	<div class="card" id="plain"></div>
+
+	<div class="card drift" id="gone">
+		<div class="tt" id="gone-title"></div>
+		<div class="hint" id="gone-hint"></div>
+	</div>
+
+	<div class="card drift" id="error">
+		<div class="tt" id="error-title"></div>
+		<div class="show" id="error-show"></div>
+		<div class="hint" id="error-hint"></div>
+	</div>
+
+	<div id="finished">
+		<div class="still"><img alt=""></div>
+		<div class="text">
+			<div class="tt" id="finished-show"></div>
+			<div class="line" id="finished-line"></div>
+		</div>
+		<div class="mark wm">Kaeri</div>
+	</div>
+</div>
+</body>
+</html>
