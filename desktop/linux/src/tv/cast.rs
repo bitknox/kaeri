@@ -99,9 +99,11 @@ pub struct CastRun {
 }
 
 /// Whether the TV shows a picture: the engine has said what plays, and the TV has loaded it.
+/// `loading` is a start or a reload only; the length is not asked for, since a TV's status
+/// after a pause, play or seek can leave it out, and the card must not flip back to starting.
 fn playing(card: &CastCard) -> bool {
     card.card.phase == LinkPhase::Connected
-        && card.card.now.as_ref().is_some_and(|n| !n.loading && n.duration.is_some())
+        && card.card.now.as_ref().is_some_and(|n| !n.loading)
 }
 
 pub fn stage_of(card: &CastCard) -> Stage {
@@ -568,5 +570,55 @@ mod tests {
             offers_for(&Msg::NoticeCastLost { name: name() }),
             vec![PlayHere, ChooseAnother]
         );
+    }
+
+    fn card(loading: bool, duration: Option<f64>, paused: bool) -> CastCard {
+        use kaeri_engine::remote::{protocol::state::Screen, sender::RemoteCard};
+        CastCard {
+            card: RemoteCard {
+                tv_name: "Living room".into(),
+                phase: LinkPhase::Connected,
+                phase_line: None,
+                screen: Screen::Home,
+                now: Some(NowCard {
+                    id: AnilistId(1),
+                    title: "Glasswing Ferry".into(),
+                    episode: "7".into(),
+                    episode_line: "Episode 7".into(),
+                    loading,
+                    position: 754.0,
+                    duration,
+                    paused,
+                    speed: 1.0,
+                    volume: None,
+                    audio: Vec::new(),
+                    subtitles: Vec::new(),
+                    subtitles_off: false,
+                    skip: None,
+                }),
+                party: None,
+                rev: 0,
+                over: false,
+                reached: true,
+            },
+            volume_control: VolumeControl::Level,
+            muted: None,
+            notice: None,
+            phase_line: None,
+            up_next: None,
+            undo: None,
+            route: None,
+            waiting: None,
+        }
+    }
+
+    #[test]
+    fn a_tv_echo_without_the_length_keeps_the_card_playing() {
+        assert_eq!(stage_of(&card(false, Some(1440.0), false)), Stage::Playing);
+        // A pause's echo, a seek's or a buffering change's can come without the media object.
+        assert_eq!(stage_of(&card(false, None, true)), Stage::Playing);
+        assert_eq!(stage_of(&card(false, None, false)), Stage::Playing);
+        // Only a start or a reload is starting.
+        assert_eq!(stage_of(&card(true, Some(1440.0), false)), Stage::Starting);
     }
 }

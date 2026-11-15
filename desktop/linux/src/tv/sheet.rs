@@ -1706,12 +1706,19 @@ impl Remote {
         };
         let faded = self.shown_status.borrow().1 != mark;
         if *self.shown_status.borrow() != (line.clone(), mark) {
-            while let Some(child) = self.status.first_child() {
-                self.status.remove(&child);
-            }
-            let standing = widgets::standing(&line, mark);
-            self.status.append(&standing);
-            // The line crossfades as the cast moves on; only its seconds change in place.
+            // One status line, changed in place: a TV's echo never takes it down and puts it
+            // back. It fades only when the cast moves on to another stage.
+            let standing = match self.status.first_child().and_downcast::<gtk::Box>() {
+                Some(standing) => {
+                    widgets::restand(&standing, &line, mark);
+                    standing
+                }
+                None => {
+                    let standing = widgets::standing(&line, mark);
+                    self.status.append(&standing);
+                    standing
+                }
+            };
             if faded && !came {
                 crate::motion::fade_in(&standing);
             }
