@@ -60,6 +60,7 @@ import app.kaeri.engine.model.TrackerReadRow
 import app.kaeri.engine.model.UpdatesView
 import app.kaeri.engine.model.VolumeGroup
 import app.kaeri.engine.model.WorkTile
+import app.kaeri.engine.model.readHomeWithoutContinue
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
@@ -487,7 +488,11 @@ class ReadingModel(private val send: (Command) -> Unit) {
         reloadChapters(work)
     }
 
-    fun hideFromContinue(work: WorkId) = reading(ReadingCommand.HideFromContinue(work))
+    /** Take a series off Continue: the cover goes at once, nothing else on Home moves, and the engine keeps it hidden. */
+    fun hideFromContinue(work: WorkId) {
+        _home.update { home -> home?.let { readHomeWithoutContinue(it, work) } }
+        reading(ReadingCommand.HideFromContinue(work))
+    }
 
     fun setStatus(work: WorkId, status: LibrarySegmentRead) {
         reading(ReadingCommand.SetStatus(work, status))
