@@ -63,6 +63,22 @@ pub use self::exports::kaeri::provider::provider::{
 };
 use self::kaeri::provider::host::{HostError as GuestHostError, HttpRequest, HttpResponse};
 
+/// The optional world: `plugin` and the `relay` export, for a plugin that transforms parts of
+/// its streams on their way to the player. Its `host` is the one above, so one linker serves
+/// both worlds.
+mod with_relay {
+    wasmtime::component::bindgen!({
+        path: "../../wit/kaeri-provider.wit",
+        world: "plugin-with-relay",
+        imports: { default: async | trappable },
+        exports: { default: async },
+        with: { "kaeri:provider/host": super::kaeri::provider::host },
+    });
+}
+
+/// The export a plugin built for `plugin-with-relay` has and one built for `plugin` does not.
+const RELAY_EXPORT: &str = "kaeri:provider/relay@";
+
 /// Whether plugins run in wasmtime's interpreter here, rather than as native code: always on iOS
 /// and on 32-bit machines, and anywhere with the `interpret` feature.
 ///
@@ -690,10 +706,15 @@ impl PluginHost {
         let display = path.display().to_string();
         let fail = |message: String| PluginError::Load { path: display.clone(), message };
         let linker = self.linker(&display, PluginKind::Shows)?;
+        let relays = component
+            .component_type()
+            .exports(&self.engine)
+            .any(|(name, _)| name.starts_with(RELAY_EXPORT));
 
         let plugin = LoadedPlugin {
             engine: self.engine.clone(),
             linker,
+            relays,
             component,
             // Filled in below; a plugin cannot be trusted to be asked about itself twice and
             // answer the same way, so the answer is captured once.
@@ -871,6 +892,8 @@ impl AnyPlugin {
 pub struct LoadedPlugin {
     engine: wasmtime::Engine,
     linker: wasmtime::component::Linker<PluginState>,
+    /// Whether it was built for `plugin-with-relay`: see [`LoadedPlugin::relays`].
+    relays: bool,
     component: wasmtime::component::Component,
     manifest: Manifest,
     limits: Limits,
@@ -890,6 +913,7 @@ impl std::fmt::Debug for LoadedPlugin {
             .field("version", &self.manifest.version)
             .field("allowed_hosts", &self.manifest.allowed_hosts)
             .field("limits", &self.limits)
+            .field("relays", &self.relays)
             .finish_non_exhaustive()
     }
 }
@@ -897,6 +921,12 @@ impl std::fmt::Debug for LoadedPlugin {
 impl LoadedPlugin {
     pub fn manifest(&self) -> &Manifest {
         &self.manifest
+    }
+
+    /// Whether this plugin was built for `plugin-with-relay`, and so has a `transform` to ask.
+    /// Told from its exports at load.
+    pub fn relays(&self) -> bool {
+        self.relays
     }
 
     pub fn limits(&self) -> Limits {
@@ -1031,6 +1061,40 @@ impl LoadedPlugin {
         instance
             .kaeri_provider_provider()
             .call_resolve_source(&mut store, id, episode, translation, source_id)
+            .await
+            .map_err(|e| PluginError::from_call(&self.manifest.id, self.limits.deadline, &e))
+    }
+
+    /// The bytes the player gets for one part of this plugin's stream, from `relay`'s
+    /// `transform`, under the same limits as every other call. A plugin built for `plugin`
+    /// answers `body` as it came, without a call.
+    pub async fn transform(
+        &self,
+        part: &str,
+        url: &str,
+        headers: &[(String, String)],
+        body: Vec<u8>,
+    ) -> Result<Result<Vec<u8>, String>, PluginError> {
+        if !self.relays {
+            return Ok(Ok(body));
+        }
+        let mut store = self.store(self.capabilities());
+        let instance = with_relay::PluginWithRelay::instantiate_async(
+            &mut store,
+            &self.component,
+            &self.linker,
+        )
+        .await
+        .map_err(|e| PluginError::from_call(&self.manifest.id, self.limits.deadline, &e))?;
+        let relayed = with_relay::exports::kaeri::provider::relay::Relayed {
+            part: part.to_owned(),
+            url: url.to_owned(),
+            headers: headers.to_vec(),
+            body,
+        };
+        instance
+            .kaeri_provider_relay()
+            .call_transform(&mut store, &relayed)
             .await
             .map_err(|e| PluginError::from_call(&self.manifest.id, self.limits.deadline, &e))
     }

@@ -29,7 +29,9 @@ pub use error::{Error, ProviderError, Result};
 pub use ids::{AnidbId, AnilistId, ExternalIds, KitsuId, MalId, ProviderKey, TmdbId, TvdbId};
 pub use media::{Episode, EpisodeNumber, MediaFormat, MediaStatus, SearchHit, Translation};
 pub use stream::{Stream, StreamKind, Subtitle};
-pub use traits::{Player, Provider, ProviderKind, ProviderManifest, Tracker};
+pub use traits::{
+    Player, Provider, ProviderKind, ProviderManifest, StreamPart, StreamTransforms, Tracker,
+};
 
 // What the UniFFI conversions of the types the model carries register with, under the `ffi`
 // feature only. It compiles under the workspace's `unsafe_code = "forbid"`, as the model's does:

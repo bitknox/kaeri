@@ -2,6 +2,7 @@
 //! names back through the proxy with every other byte kept, and reading the order of its
 //! segments.
 
+use kaeri_core::traits::StreamPart;
 use kaeri_playback::hls::playlist_start;
 
 /// A media playlist with every fetchable URI pointed back at this proxy.
@@ -65,6 +66,33 @@ pub(super) fn subtitle_uris(body: &str, base: &str) -> Vec<String> {
             let start = line.find("URI=\"")? + 5;
             let end = start + line[start..].find('"')?;
             Some(resolve_url(base, &line[start..end]))
+        })
+        .collect()
+}
+
+/// The keys and segments a playlist names, as absolute URLs: the files its `#EXT-X-KEY` and
+/// `#EXT-X-SESSION-KEY` tags name, and the initialisation segments of its `#EXT-X-MAP` tags and
+/// the segments it lists when it is a media playlist. A master playlist's bare lines are
+/// playlists, not segments, and are left out.
+pub(super) fn part_uris(body: &str, base: &str) -> Vec<(StreamPart, String)> {
+    let media = body.contains("#EXTINF");
+    body.lines()
+        .map(str::trim)
+        .filter(|line| !line.is_empty())
+        .filter_map(|line| {
+            let part =
+                if line.starts_with("#EXT-X-KEY:") || line.starts_with("#EXT-X-SESSION-KEY:") {
+                    StreamPart::Key
+                } else if line.starts_with("#EXT-X-MAP:") {
+                    StreamPart::Segment
+                } else if !line.starts_with('#') && media {
+                    return Some((StreamPart::Segment, resolve_url(base, line)));
+                } else {
+                    return None;
+                };
+            let start = line.find("URI=\"")? + 5;
+            let end = start + line[start..].find('"')?;
+            Some((part, resolve_url(base, &line[start..end])))
         })
         .collect()
 }
@@ -185,6 +213,37 @@ mod tests {
         assert!(out.contains("METHOD=AES-128"), "{out}");
         assert!(out.contains("IV=0x00"), "{out}");
         assert!(out.contains("#EXTINF:10.0,"), "{out}");
+    }
+
+    #[test]
+    fn the_keys_and_segments_a_playlist_names_are_told_apart() {
+        let media = "#EXTM3U\n\
+             #EXT-X-KEY:METHOD=EXAMPLE,URI=\"/k/1.bin\"\n\
+             #EXT-X-MAP:URI=\"init.mp4\"\n\
+             #EXTINF:4.0,\n\
+             seg-1.ts\n\
+             #EXTINF:4.0,\n\
+             https://cdn.example/seg-2.ts\n";
+        let parts = part_uris(media, "https://media.example/show/index.m3u8");
+        assert_eq!(
+            parts,
+            [
+                (StreamPart::Key, "https://media.example/k/1.bin".to_owned()),
+                (StreamPart::Segment, "https://media.example/show/init.mp4".to_owned()),
+                (StreamPart::Segment, "https://media.example/show/seg-1.ts".to_owned()),
+                (StreamPart::Segment, "https://cdn.example/seg-2.ts".to_owned()),
+            ]
+        );
+
+        let master = "#EXTM3U\n\
+             #EXT-X-SESSION-KEY:METHOD=EXAMPLE,URI=\"session.bin\"\n\
+             #EXT-X-STREAM-INF:BANDWIDTH=1\n\
+             720/index.m3u8\n";
+        let parts = part_uris(master, "https://media.example/show/master.m3u8");
+        assert_eq!(
+            parts,
+            [(StreamPart::Key, "https://media.example/show/session.bin".to_owned())]
+        );
     }
 
     #[test]

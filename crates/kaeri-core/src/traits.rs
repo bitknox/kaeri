@@ -134,6 +134,48 @@ pub struct SourceCandidate {
     pub auto_pick: bool,
 }
 
+/// A part of an HLS stream that the stream proxy relays to the player, other than a playlist.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub enum StreamPart {
+    /// A file an `#EXT-X-KEY` names.
+    Key,
+    /// A media segment, or the initialisation segment an `#EXT-X-MAP` names.
+    Segment,
+}
+
+impl StreamPart {
+    /// The name the plugin interface gives this part: `key` or `segment`.
+    pub const fn as_str(self) -> &'static str {
+        match self {
+            Self::Key => "key",
+            Self::Segment => "segment",
+        }
+    }
+}
+
+/// Which parts of its HLS streams a source transforms on their way to the player. None by
+/// default: the proxy serves every part as the host sent it.
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
+pub struct StreamTransforms {
+    pub keys: bool,
+    pub segments: bool,
+}
+
+impl StreamTransforms {
+    /// Whether this source transforms `part`.
+    pub const fn covers(self, part: StreamPart) -> bool {
+        match part {
+            StreamPart::Key => self.keys,
+            StreamPart::Segment => self.segments,
+        }
+    }
+
+    /// Whether this source transforms any part at all.
+    pub const fn any(self) -> bool {
+        self.keys || self.segments
+    }
+}
+
 /// A source of episodes and streams.
 #[async_trait]
 pub trait Provider: Send + Sync {
@@ -221,6 +263,26 @@ pub trait Provider: Send + Sync {
     /// resolution entirely.
     fn is_available(&self) -> Result<(), ProviderError> {
         Ok(())
+    }
+
+    /// The parts of this source's HLS streams it transforms on their way to the player. A
+    /// plugin opts in with the `relay` interface and a capability per part; every other source
+    /// transforms nothing.
+    fn stream_transforms(&self) -> StreamTransforms {
+        StreamTransforms::default()
+    }
+
+    /// The bytes to serve the player for one part of this source's stream: `body`, as fetched
+    /// from `url` with the stream's `headers`, transformed by the source. Asked only for the
+    /// parts [`Self::stream_transforms`] covers. The default serves the body as it came.
+    async fn transform(
+        &self,
+        _part: StreamPart,
+        _url: &str,
+        _headers: &[(String, String)],
+        body: Vec<u8>,
+    ) -> Result<Vec<u8>, ProviderError> {
+        Ok(body)
     }
 }
 
