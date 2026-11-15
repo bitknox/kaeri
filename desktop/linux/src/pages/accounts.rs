@@ -52,6 +52,8 @@ pub fn fill(ctx: &Rc<Ctx>, page: &adw::PreferencesPage, rebuild: Rc<dyn Fn()>) {
         let row = row(ctx, &shown, &rebuild);
         if tracker == "anilist" { anilist.add(&row) } else { others.add(&row) }
     }
+    // Private mode first, as it sits with the account on every platform.
+    page.add(&crate::private::settings_group(ctx));
     page.add(&anilist);
     page.add(&others);
 

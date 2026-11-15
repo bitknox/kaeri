@@ -23,6 +23,7 @@ use kaeri_model::{
     licensed::{LicensedView, TitleAvailability},
     local::{LocalEvent, LocalView},
     party::{PartyForm, PartyMember, PartyView},
+    private::{PrivateMode, PrivateTitle},
     servers::{ServerEvent, ServerRow},
     settings::{SettingKey, SettingRow, SettingsView},
     sources::{ProviderOrigin, ProviderRow, ProxyStatus, SourceOption},
@@ -132,6 +133,12 @@ pub struct Known {
     /// The pins the engine could not use that were said, by title and source, so each is told
     /// once until the title's source is chosen again.
     pin_said: std::collections::HashSet<(u32, String)>,
+    /// Private mode, as the engine last said it: off at every launch.
+    pub private: bool,
+    /// What is known of each title's own flag on this device: always private, or not.
+    pub always_private: HashMap<PrivateTitle, bool>,
+    /// The shows whose place is held in memory until the app quits, by their last standing.
+    pub kept: std::collections::HashSet<u32>,
 }
 
 impl Known {
@@ -242,6 +249,33 @@ impl Known {
         self.providers.iter().any(|p| p.usable)
     }
 
+    /// Whether `title` is always private on this device, as far as the engine has said.
+    pub fn always(&self, title: &PrivateTitle) -> bool {
+        self.always_private.get(title).copied().unwrap_or(false)
+    }
+
+    /// Whether what is watched of show `id` is held now: the mode, or the show's own flag. What
+    /// the media controls are told follows it.
+    pub fn holds_show(&self, id: AnilistId) -> bool {
+        self.private || self.always(&PrivateTitle::Show { id })
+    }
+
+    /// The line under show `id`'s main action, when it has one: the show's own flag first, then
+    /// the mode, and whether its place is held in memory.
+    pub fn show_line(&self, id: AnilistId) -> Option<(PrivateMode, bool)> {
+        let own = self.always(&PrivateTitle::Show { id }).then_some(PrivateMode::Always);
+        let mode = PrivateMode::shown(own, self.private)?;
+        Some((mode, self.kept.contains(&id.get())))
+    }
+
+    /// The line under a series' main action: its own flag first, then the mode, with whether
+    /// its page is held in memory as its view last said.
+    pub fn series_line(&self, work: &str, kept: bool) -> Option<(PrivateMode, bool)> {
+        let title = PrivateTitle::Series { work: kaeri_core::books::WorkId::new(work) };
+        let own = self.always(&title).then_some(PrivateMode::Always);
+        Some((PrivateMode::shown(own, self.private)?, kept))
+    }
+
     fn take(&mut self, event: &Event) {
         self.matches.take(event);
         match event {
@@ -271,11 +305,37 @@ impl Known {
                         .or_insert_with(|| with_fixture_trailer(card.clone()));
                 }
             }
-            Event::Progress { id, progress, resume, .. } => {
+            Event::Progress { id, progress, resume, private, kept, .. } => {
                 if let Some(entry) = self.entries.get_mut(&id.get()) {
                     entry.progress = *progress;
                     entry.resume = *resume;
                 }
+                self.always_private.insert(
+                    PrivateTitle::Show { id: *id },
+                    *private == Some(PrivateMode::Always),
+                );
+                if *kept {
+                    self.kept.insert(id.get());
+                } else {
+                    self.kept.remove(&id.get());
+                }
+            }
+            Event::Private(on) => self.private = *on,
+            Event::AlwaysPrivate { title, on } => {
+                self.always_private.insert(title.clone(), *on);
+            }
+            Event::ShowSettings(view) => {
+                self.always_private
+                    .insert(PrivateTitle::Show { id: view.id }, view.always_private);
+            }
+            Event::PlaybackStaged { id, always_private, .. } => {
+                self.always_private.insert(PrivateTitle::Show { id: *id }, *always_private);
+            }
+            Event::Reading(kaeri_model::reading::ReadingEvent::Series(view)) => {
+                self.always_private.insert(
+                    PrivateTitle::Series { work: view.work.clone() },
+                    view.private == Some(PrivateMode::Always),
+                );
             }
             Event::LastAired(aired) => {
                 for title in aired {
@@ -930,6 +990,8 @@ mod tests {
             progress: Some(TitleProgress { done: 3, next: 4 }),
             resume: Some(ResumePoint { position: 60.0, fraction: None }),
             episodes: Vec::new(),
+            private: None,
+            kept: false,
         });
         let entry = &known.entries[&7];
         assert_eq!(entry.progress, Some(TitleProgress { done: 3, next: 4 }));
@@ -1068,6 +1130,7 @@ mod tests {
             error: None,
             path: None,
             ahead: false,
+            private: false,
         };
         let mut known = Known::default();
         known.take(&Event::Downloads(vec![

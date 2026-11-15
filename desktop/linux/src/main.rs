@@ -32,11 +32,14 @@ mod party;
 mod player;
 mod portal;
 mod prefs;
+mod private;
 mod reading;
 mod say;
 mod shots;
 #[cfg(feature = "fixtures")]
 mod shots_prelaunch;
+#[cfg(feature = "fixtures")]
+mod shots_private;
 #[cfg(feature = "fixtures")]
 mod shots_read_discovery;
 #[cfg(feature = "fixtures")]

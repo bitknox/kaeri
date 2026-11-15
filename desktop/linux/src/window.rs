@@ -91,6 +91,8 @@ pub struct Ctx {
     pub read_view_all_from: RefCell<Option<glib::WeakRef<gtk::Widget>>>,
     /// Reading's Search field open with the caret in it, as the shows' `SearchPage::focus`.
     pub read_search_focus: RefCell<Option<Rc<dyn Fn()>>>,
+    /// Private mode's notice and what a screen reader last heard of it.
+    pub private: crate::private::Private,
 }
 
 /// Opens reading's Search on a query.
@@ -161,12 +163,12 @@ impl Ctx {
 
     /// A notice of the app's own: information, for 4 s or longer as its words run on.
     pub fn toast(&self, text: &str) {
-        self.show_notice(text, false, None);
+        self.show_notice(text, false, None, None);
     }
 
     /// A notice of the app's own that something went wrong: it stays 8 s.
     pub fn alert(&self, text: &str) {
-        self.show_notice(text, true, None);
+        self.show_notice(text, true, None, None);
     }
 
     /// One of the engine's notices: an alert stays 8 s, its hint is the button, and clicking
@@ -200,7 +202,7 @@ impl Ctx {
         });
         let button =
             button.as_ref().map(|(label, action, target)| (label.as_str(), *action, *target));
-        self.show_notice(&text, matches!(notice.kind, NoticeKind::Alert), button);
+        self.show_notice(&text, matches!(notice.kind, NoticeKind::Alert), button, None);
     }
 
     /// Have the engine's alerts go to `claim` first, until [`Ctx::release_alerts`]: for a dialog
@@ -221,12 +223,24 @@ impl Ctx {
 
     /// A notice of the app's own with a button: `label`, running the window's `action`.
     pub fn toast_with(&self, text: &str, label: &str, action: &str) -> adw::Toast {
-        self.show_notice(text, false, Some((label, action, None)))
+        self.show_notice(text, false, Some((label, action, None)), None)
     }
 
     /// A notice of the app's own with a button running the window's `action` on `target`.
     pub fn toast_to(&self, text: &str, label: &str, action: &str, target: &str) -> adw::Toast {
-        self.show_notice(text, false, Some((label, action, Some(target))))
+        self.show_notice(text, false, Some((label, action, Some(target))), None)
+    }
+
+    /// A notice with a button that still goes by itself after `seconds`, twice that while a
+    /// screen reader runs: the private mode notice, timed by the board.
+    pub fn toast_held(
+        &self,
+        text: &str,
+        label: &str,
+        action: &str,
+        seconds: u32,
+    ) -> adw::Toast {
+        self.show_notice(text, false, Some((label, action, None)), Some(seconds))
     }
 
     fn show_notice(
@@ -234,6 +248,7 @@ impl Ctx {
         text: &str,
         alert: bool,
         button: Option<(&str, &str, Option<&str>)>,
+        held: Option<u32>,
     ) -> adw::Toast {
         let toast = adw::Toast::new(text);
         // The words as the toast's own title, so a click on them dismisses it.
@@ -281,12 +296,11 @@ impl Ctx {
         if alert {
             toast.set_priority(adw::ToastPriority::High);
         }
-        toast.set_timeout(say::notice_seconds(
-            text,
-            alert,
-            button.is_some(),
-            screen_reader_running(),
-        ));
+        toast.set_timeout(match held {
+            Some(seconds) if screen_reader_running() => seconds * 2,
+            Some(seconds) => seconds,
+            None => say::notice_seconds(text, alert, button.is_some(), screen_reader_running()),
+        });
         self.notices.add(&toast);
         // The custom title may not reach a screen reader as the toast's text, so say it too.
         self.notices.overlay().upcast_ref::<gtk::Widget>().announce(
@@ -408,6 +422,7 @@ impl Shell {
             read_view_all_from: RefCell::default(),
             read_search_focus: RefCell::default(),
             read_from_home: Cell::new(false),
+            private: crate::private::Private::default(),
         });
 
         // The monitor that says where the network stands is not watched under fixtures. The
@@ -1256,6 +1271,15 @@ impl Shell {
             }),
         );
         add("sync", None, Box::new(|s, _| s.ctx.hub.send(Command::SyncNow)));
+        // The main menu's check item and Ctrl+Shift+N: the state follows the engine's word.
+        let private = gio::SimpleAction::new_stateful(
+            "private",
+            None,
+            &self.ctx.hub.known.borrow().private.to_variant(),
+        );
+        private.connect_activate(with(Box::new(|s, _| crate::private::toggle(&s.ctx))));
+        window.add_action(&private);
+        add("private-off", None, Box::new(|s, _| crate::private::set(&s.ctx, false)));
         add("about", None, Box::new(|s, _| pages::settings::about(&s.ctx)));
         add(
             "release-page",
@@ -1406,6 +1430,7 @@ impl Shell {
         app.set_accels_for_action("win.go::settings", &["<Control>comma"]);
         app.set_accels_for_action("win.search", &["<Control>f"]);
         app.set_accels_for_action("win.sync", &["<Control>r"]);
+        app.set_accels_for_action("win.private", &[crate::private::ACCEL]);
         app.set_accels_for_action("win.back", &["<Alt>Left"]);
         app.set_accels_for_action("win.shortcuts", &["<Control>question"]);
         app.set_accels_for_action("win.close", &["<Control>w"]);
@@ -1507,6 +1532,7 @@ impl Shell {
             if let Event::Update(status) = event {
                 shell.ctx.updater.heard(status);
             }
+            crate::private::heard(&shell.ctx, event);
             match event {
                 // The starting screen says why a start failed, and what it is doing instead
                 // of a notice over it.
@@ -1933,6 +1959,7 @@ fn sidebar(ctx: &Rc<Ctx>) -> (adw::NavigationPage, gtk::ListBox, gtk::ListBox) {
     let menu = gio::Menu::new();
     let first = gio::Menu::new();
     first.append(Some(&t::accounts_sync_now()), Some("win.sync"));
+    first.append(Some(&t::private_mode()), Some("win.private"));
     first.append(Some(&t::opened_open()), Some("win.open-link"));
     first.append(Some(&t::stores_join_menu()), Some("win.join-store"));
     menu.append_section(None, &first);

@@ -888,6 +888,7 @@ mod tests {
             error: None,
             path: None,
             ahead: false,
+            private: false,
         }
     }
 

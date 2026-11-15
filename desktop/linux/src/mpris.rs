@@ -9,6 +9,7 @@ use std::{
 };
 
 use gtk::{gio, glib, prelude::*};
+use kaeri_i18n::t;
 
 pub const NAME: &str = "org.mpris.MediaPlayer2.kaeri";
 const PATH: &str = "/org/mpris/MediaPlayer2";
@@ -109,6 +110,9 @@ pub struct Media {
     /// Whether there is an episode after the one playing, and one before it.
     pub has_next: bool,
     pub has_previous: bool,
+    /// Private mode is on, or the show playing is always private: the controls say only
+    /// "Playing in Kaeri", with no show, episode or art.
+    pub private: bool,
 }
 
 impl Media {
@@ -134,13 +138,17 @@ impl Media {
             let id = glib::variant::ObjectPath::try_from(self.track_id())
                 .expect("a track id is an object path");
             dict.insert_value("mpris:trackid", &id.to_variant());
-            dict.insert_value("xesam:title", &track.title.to_variant());
-            dict.insert_value("xesam:artist", &vec![track.show.clone()].to_variant());
-            dict.insert_value("xesam:album", &track.show.to_variant());
+            if self.private {
+                dict.insert_value("xesam:title", &t::now_playing_private().to_variant());
+            } else {
+                dict.insert_value("xesam:title", &track.title.to_variant());
+                dict.insert_value("xesam:artist", &vec![track.show.clone()].to_variant());
+                dict.insert_value("xesam:album", &track.show.to_variant());
+            }
             if let Some(length) = self.length {
                 dict.insert_value("mpris:length", &micros(length).to_variant());
             }
-            if let Some(art) = &track.art {
+            if let Some(art) = track.art.as_ref().filter(|_| !self.private) {
                 dict.insert_value("mpris:artUrl", &art.to_variant());
             }
         }
@@ -407,6 +415,23 @@ impl Mpris {
         self.changed(&["CanGoNext", "CanGoPrevious"]); // i18n-skip
     }
 
+    /// Private mode or the show's own flag holds what plays, or no longer does: the controls
+    /// say "Playing in Kaeri" and nothing of the show, or the episode again. Set before a track
+    /// starts, so its name never reaches the bus.
+    pub fn private(&self, on: bool) {
+        {
+            let mut media = self.media.borrow_mut();
+            if media.private == on {
+                return;
+            }
+            media.private = on;
+            if media.track.is_none() {
+                return;
+            }
+        }
+        self.changed(&["Metadata"]); // i18n-skip
+    }
+
     /// Nothing plays any more.
     pub fn stopped(&self) {
         let was = self.media.borrow_mut().track.take();
@@ -472,7 +497,22 @@ mod tests {
             rate: 1.0,
             has_next: true,
             has_previous: false,
+            private: false,
         }
+    }
+
+    #[test]
+    fn while_private_the_controls_say_only_playing_in_kaeri() {
+        let metadata = Media { private: true, ..playing() }.metadata();
+        let dict = glib::VariantDict::new(Some(&metadata));
+        let title: String = dict.lookup("xesam:title").unwrap().unwrap();
+        assert_eq!(title, "Playing in Kaeri");
+        for hidden in ["xesam:artist", "xesam:album", "mpris:artUrl"] {
+            assert!(!dict.contains(hidden), "{hidden} while private");
+        }
+        // The controls keep working: the track and its length are still there.
+        assert!(dict.contains("mpris:trackid"));
+        assert!(dict.contains("mpris:length"));
     }
 
     #[test]
@@ -532,5 +572,25 @@ mod tests {
         assert_eq!(mpris.media().length, None);
         mpris.stopped();
         assert_eq!(mpris.media().status(), "Stopped");
+    }
+
+    #[test]
+    fn turning_private_on_mid_episode_keeps_the_track_and_hides_its_name() {
+        let mpris = Mpris {
+            connection: RefCell::default(),
+            media: RefCell::new(Media::default()),
+            owner: Cell::new(None),
+        };
+        mpris.track(playing().track.unwrap());
+        mpris.private(true);
+        assert_eq!(mpris.media().serial, 1, "the same track, renamed");
+        let dict = glib::VariantDict::new(Some(&mpris.media().metadata()));
+        assert_eq!(dict.lookup::<String>("xesam:title").unwrap().unwrap(), "Playing in Kaeri");
+        mpris.private(false);
+        let dict = glib::VariantDict::new(Some(&mpris.media().metadata()));
+        assert_eq!(
+            dict.lookup::<String>("xesam:title").unwrap().unwrap(),
+            "Episode 7 · Night Market"
+        );
     }
 }
