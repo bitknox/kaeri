@@ -183,7 +183,9 @@ sealed class CastLayer
             controller.UpdateLayout();
         }
         Run(open: true);
-        controller.Play.Focus(FocusState.Programmatic);
+        // Into the controller: play or pause, or the chevron down while it starts.
+        if (!controller.Play.Focus(FocusState.Programmatic))
+            controller.Collapse.Focus(FocusState.Programmatic);
     }
 
     public void Collapse() => Close(at: false);

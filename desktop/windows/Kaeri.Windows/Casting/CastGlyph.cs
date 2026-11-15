@@ -17,7 +17,7 @@ namespace Kaeri.Windows.Casting;
 /// after the one before. With animation effects off the connecting glyph holds one frame: the
 /// dot lit, the waves faint.
 /// </summary>
-sealed class CastGlyph : Viewbox
+sealed class CastGlyph : Grid
 {
     const double Weight = 1.5;
     readonly Path outline, filled, wide, near;
@@ -58,7 +58,7 @@ sealed class CastGlyph : Viewbox
         Canvas.SetLeft(dot, 3.9 - 1.6);
         Canvas.SetTop(dot, 18.3 - 1.6);
         canvas.Children.Add(dot);
-        Child = canvas;
+        Children.Add(new Viewbox { Child = canvas });
         AutomationProperties.SetAccessibilityView(this, AccessibilityView.Raw);
         Wave(dot, 0);
         Wave(near, 0.2);
