@@ -197,7 +197,16 @@ impl Page {
         let m = &self.missing;
         let shown = m.shown.borrow().clone();
         match (shown, computed) {
-            (shown, Some(computed)) => {
+            (shown, Some(mut computed)) => {
+                // A check lists the title afresh, and the sources that answer first send a table
+                // short of the rest: the episode before stays playable until the check answers.
+                if m.asked.get().is_some()
+                    && computed.previous.is_none()
+                    && let Some(shown) =
+                        shown.as_ref().filter(|s| s.episode == computed.episode)
+                {
+                    computed.previous = shown.previous;
+                }
                 if shown.as_ref().map(|s| s.episode) != Some(computed.episode) {
                     m.answer.set(None);
                     m.status_from.replace(None);
