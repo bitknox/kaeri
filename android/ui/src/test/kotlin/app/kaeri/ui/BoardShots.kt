@@ -930,6 +930,46 @@ class BoardShots {
     @Config(qualifiers = PHONE)
     fun phone_title_synopsis() = shoot("phone-title", WATCHING, title = 900001u, episodes = SynopsisFixtures::withSynopses, party = protectionOff) { toEpisodes() }
 
+    // The phone episodes board, direction A: the "Episodes" heading with the dub line beside it,
+    // the fold row on its own line, a faint rule ending each row, the follower on the still and
+    // filler in the facts.
+
+    /** Episode 8 as filler, over the synopses. */
+    private val fillerEight: (AnilistId, List<EpisodeRow>) -> List<EpisodeRow> = { id, rows ->
+        SynopsisFixtures.withSynopses(id, rows).map { if (it.number == "8") it.copy(kind = app.kaeri.engine.model.EpisodeKind.FILLER) else it }
+    }
+
+    /** 900001 dubbed to episode 6. */
+    private val dubbedToSix: List<Event> = listOf(Event.TitleDub(900001u, app.kaeri.engine.model.DubExtent(through = 6u, complete = false)))
+
+    /** The title page scrolled so the list's heading stands at the top. */
+    private fun toHeading() {
+        compose.onNode(hasScrollToKeyAction() and hasAnyDescendant(hasText("More about this show")))
+            .performScrollToKey("episodes-heading")
+        compose.waitForIdle()
+    }
+
+    @Test
+    @Config(qualifiers = PHONE)
+    fun phone_board_episodes_dub() = shoot("phone-board-episodes-dub", FOLLOWING, title = 900001u, episodes = fillerEight, party = protectionOff + dubbedToSix) { toHeading() }
+
+    @Test
+    @Config(qualifiers = PHONE)
+    fun phone_board_episodes() = shoot("phone-board-episodes", FOLLOWING, title = 900001u, episodes = fillerEight, party = protectionOff) { toHeading() }
+
+    @Test
+    @Config(qualifiers = PHONE)
+    fun phone_board_unfolded() = shoot("phone-board-unfolded", FOLLOWING, title = 900001u, episodes = fillerEight, party = protectionOff + dubbedToSix) {
+        toHeading()
+        compose.onNodeWithText("watched", substring = true).performClick()
+        compose.waitForIdle()
+        toHeading()
+    }
+
+    @Test
+    @Config(qualifiers = PHONE)
+    fun phone_board_spoiler() = shoot("phone-board-spoiler", FOLLOWING, title = 900001u, episodes = fillerEight, party = dubbedToSix) { toProtection() }
+
     /** Protection on: facts and a blurred still after the next episode, under the line where it starts. */
     @Test
     @Config(qualifiers = PHONE)
