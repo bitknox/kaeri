@@ -189,6 +189,8 @@ pub struct FakeReceiver {
 enum Control {
     TakeOver,
     Silence,
+    /// This connection only: the TV goes on and answers the next.
+    Drop,
     Buffering(bool),
     Say(Value),
 }
@@ -285,10 +287,17 @@ impl FakeReceiver {
                 // One sender at a time, as the tests have it; the next connection takes over.
                 let mut current: Option<JoinHandle<()>> = None;
                 let mut forward: Option<mpsc::UnboundedSender<Control>> = None;
+                // Gone silent, the TV answers no connection again: the socket is held unread.
+                let mut gone = false;
+                let mut held = Vec::new();
                 loop {
                     tokio::select! {
                         accepted = listener.accept() => {
                             let Ok((socket, _)) = accepted else { return };
+                            if gone {
+                                held.push(socket);
+                                continue;
+                            }
                             let acceptor = acceptor.clone();
                             let (heard, fetched, options, kept) = (
                                 Arc::clone(&heard),
@@ -308,6 +317,7 @@ impl FakeReceiver {
                             }));
                         }
                         Some(control) = controls.recv() => {
+                            gone |= matches!(control, Control::Silence);
                             if let Some(forward) = &forward {
                                 let _ = forward.send(control);
                             }
@@ -338,9 +348,15 @@ impl FakeReceiver {
     }
 
     /// Say nothing more and read nothing more, with the connection left open: a TV switched
-    /// off at the wall, or gone from the Wi-Fi, which sends no FIN.
+    /// off at the wall, or gone from the Wi-Fi, which sends no FIN. It answers no connection again.
     pub fn go_silent(&self) {
         let _ = self.control.send(Control::Silence);
+    }
+
+    /// The connection this sender holds goes dead, unanswered and with no FIN, while the TV plays
+    /// on and answers the next one: a phone whose Wi-Fi naps with the screen off.
+    pub fn drop_connection(&self) {
+        let _ = self.control.send(Control::Drop);
     }
 
     /// Wait for data, or stop waiting, and say so as the receiver's Shaka player does:
@@ -432,7 +448,7 @@ async fn serve(
                     playing = None;
                     send("receiver-0", "*", NS_RECEIVER, receiver_status(&app, 0, level, muted));
                 }
-                Control::Silence => {
+                Control::Silence | Control::Drop => {
                     // Holding the socket, the writer and all, and never touching it again.
                     let _held = (&read, &tx);
                     std::future::pending::<()>().await;

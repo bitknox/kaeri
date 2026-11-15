@@ -91,6 +91,9 @@ pub struct Timings {
     /// How long Kaeri's receiver has to say `ready` once launched, before the Default Media
     /// Receiver takes its place.
     pub ready: Duration,
+    /// How long a dropped connection is tried again before the cast counts as lost: the
+    /// receiver keeps playing meanwhile, and a new connection joins its session.
+    pub reconnect: Duration,
 }
 
 impl Default for Timings {
@@ -104,6 +107,7 @@ impl Default for Timings {
             patience: Duration::from_secs(60),
             silence: crate::channel::SILENCE,
             ready: Duration::from_secs(8),
+            reconnect: Duration::from_secs(20),
         }
     }
 }
@@ -389,6 +393,8 @@ struct State {
     muted: Option<bool>,
     control: VolumeControl,
     ended: bool,
+    /// The connection to the TV dropped and is being made again: the session waits on it.
+    reconnecting: bool,
     closed: bool,
     quit: bool,
     failure: Option<CastFailure>,
@@ -498,7 +504,8 @@ impl State {
 
 struct Inner {
     setup: CastSetup,
-    device: Device,
+    /// The connection to the TV: replaced when it dropped and was made again.
+    device: Mutex<Device>,
     relay: Relay,
     resources: Arc<Resources>,
     /// The media session in force. Read without waiting, so a control never queues behind a
@@ -583,7 +590,7 @@ impl Inner {
             let app = match receiver {
                 Some(receiver) if receiver != DEFAULT_MEDIA_RECEIVER => {
                     inner.ready.send_replace(None);
-                    match inner.device.launch(&receiver).await {
+                    match inner.device().launch(&receiver).await {
                         // The receiver answers `hello` with `ready`, and also says it to each
                         // sender that connects, so neither order of the two loses it.
                         Ok(app) => match inner.hello(&app).wait_ready(&app).await {
@@ -599,17 +606,17 @@ impl Inner {
                                 if let Err(e) = inner.setup.memory.own_receiver_failed(tv) {
                                     tracing::warn!(error = %e, "couldn't note the TV");
                                 }
-                                inner.device.launch(DEFAULT_MEDIA_RECEIVER).await?
+                                inner.device().launch(DEFAULT_MEDIA_RECEIVER).await?
                             }
                         },
                         Err(e) => {
                             tracing::info!(error = %e, "Kaeri's receiver didn't launch; the Default Media Receiver plays");
                             lock(&inner.state).fallen_back = true;
-                            inner.device.launch(DEFAULT_MEDIA_RECEIVER).await?
+                            inner.device().launch(DEFAULT_MEDIA_RECEIVER).await?
                         }
                     }
                 }
-                _ => inner.device.launch(DEFAULT_MEDIA_RECEIVER).await?,
+                _ => inner.device().launch(DEFAULT_MEDIA_RECEIVER).await?,
             };
             {
                 // Under the state's lock, so a quit either sees this media or is seen here.
@@ -618,13 +625,13 @@ impl Inner {
                     state.played_in_app = false;
                     state.launched = Some(Instant::now());
                     state.app = Some(app.clone());
-                    let fresh = Media::new(inner.device.channel.clone(), app);
+                    let fresh = Media::new(inner.device().channel.clone(), app);
                     *lock(&inner.media) = Some(fresh.clone());
                     return Ok(fresh);
                 }
             }
             tracing::info!("the receiver came up after the stop; closing it");
-            let _ = tokio::time::timeout(CONTROL_WAIT, inner.device.stop(&app)).await;
+            let _ = tokio::time::timeout(CONTROL_WAIT, inner.device().stop(&app)).await;
             Err(CastError::Closed)
         });
         launch.await.unwrap_or(Err(CastError::Closed))
@@ -666,6 +673,11 @@ impl Inner {
         lock(&self.media).clone()
     }
 
+    /// The connection to the TV in force.
+    fn device(&self) -> Device {
+        lock(&self.device).clone()
+    }
+
     /// Wait for Kaeri's receiver `app` to say `ready`, up to [`Timings::ready`]. `None`: the
     /// page never loaded, or isn't Kaeri's.
     async fn wait_ready(&self, app: &App) -> Option<Value> {
@@ -688,7 +700,7 @@ impl Inner {
         };
         let hello = json!({"type": "hello", "version": KAERI_PROTOCOL,
                            "language": language, "device": device});
-        if let Err(e) = self.device.channel.send(&app.transport_id, NS_KAERI, &hello) {
+        if let Err(e) = self.device().channel.send(&app.transport_id, NS_KAERI, &hello) {
             tracing::debug!(error = %e, "couldn't greet Kaeri's receiver");
         }
         self
@@ -699,7 +711,7 @@ impl Inner {
         let app = lock(&self.state).app.clone();
         let Some(app) = app.filter(|a| a.app_id != DEFAULT_MEDIA_RECEIVER) else { return };
         message["version"] = json!(KAERI_PROTOCOL);
-        if let Err(e) = self.device.channel.send(&app.transport_id, NS_KAERI, &message) {
+        if let Err(e) = self.device().channel.send(&app.transport_id, NS_KAERI, &message) {
             tracing::debug!(error = %e, "couldn't tell Kaeri's receiver");
         }
     }
@@ -847,7 +859,7 @@ impl CastPlayer {
         let (status, _) = watch::channel(state.status());
         let inner = Arc::new(Inner {
             setup,
-            device,
+            device: Mutex::new(device),
             relay,
             resources,
             media: Mutex::new(None),
@@ -927,13 +939,13 @@ impl CastPlayer {
     ) -> Result<Option<(Self, mpsc::UnboundedReceiver<PlaybackEvent>)>, CastFailure> {
         let (player, events) = Self::connect(setup).await?;
         let lost = |e: CastError| CastFailure::Lost(e.to_string());
-        let receiver = player.inner.device.status().await.map_err(lost)?;
+        let receiver = player.inner.device().status().await.map_err(lost)?;
         let Some(app) = receiver.app.filter(|app| app.session_id == session) else {
             player.inner.relay.close();
             return Ok(None);
         };
-        player.inner.device.channel.connect_to(&app.transport_id).map_err(lost)?;
-        let mut media = Media::new(player.inner.device.channel.clone(), app.clone());
+        player.inner.device().channel.connect_to(&app.transport_id).map_err(lost)?;
+        let mut media = Media::new(player.inner.device().channel.clone(), app.clone());
         {
             let mut state = lock(&player.inner.state);
             state.app = Some(app);
@@ -1224,7 +1236,7 @@ impl CastPlayer {
         if lock(&self.inner.state).control == VolumeControl::MuteOnly {
             return Ok(());
         }
-        let device = self.inner.device.clone();
+        let device = self.inner.device();
         let level = (level / 100.0).clamp(0.0, 1.0);
         self.inner.want(|want| want.level = Some((level, Instant::now())));
         let result = answered(async move { device.set_volume(Some(level), None).await }).await;
@@ -1244,7 +1256,7 @@ impl CastPlayer {
     }
 
     pub async fn set_muted(&self, muted: bool) -> Result<(), CastError> {
-        let device = self.inner.device.clone();
+        let device = self.inner.device();
         self.inner.want(|want| want.muted = Some((muted, Instant::now())));
         let result = answered(async move { device.set_volume(None, Some(muted)).await }).await;
         if result.is_err() {
@@ -1306,7 +1318,7 @@ impl CastPlayer {
 
     pub fn is_alive(&self) -> bool {
         let state = lock(&self.inner.state);
-        self.inner.device.channel.is_open() && !state.closed && !state.quit
+        (state.reconnecting || self.inner.device().channel.is_open()) && !state.closed && !state.quit
     }
 
     pub fn has_quit(&self) -> bool {
@@ -1351,7 +1363,7 @@ async fn close(inner: &Inner) -> Result<(), CastError> {
     let media = lock(&inner.media).take();
     let Some(media) = media else { return Ok(()) };
     lock(&inner.state).app = None;
-    let device = inner.device.clone();
+    let device = inner.device();
     answered(async move {
         if media.media_session_id.is_some() {
             let _ = media.stop().await;
@@ -2488,20 +2500,31 @@ fn volume(inner: &Inner, state: &mut State, level: Option<f64>, muted: Option<bo
     }
 }
 
-/// Read what the receiver says into the session's events.
+/// Read what the receiver says into the session's events. A connection that drops while the
+/// receiver plays on is made again, within [`Timings::reconnect`], and the session goes on.
 async fn pump(mut incoming: mpsc::UnboundedReceiver<Incoming>, inner: std::sync::Weak<Inner>) {
-    while let Some(message) = incoming.recv().await {
+    loop {
+        while let Some(message) = incoming.recv().await {
+            let Some(inner) = inner.upgrade() else { return };
+            receive(&inner, &message);
+            inner.publish();
+        }
         let Some(inner) = inner.upgrade() else { return };
-        receive(&inner, &message);
-        inner.publish();
-    }
-    // The channel closed: the TV went away.
-    if let Some(inner) = inner.upgrade() {
+        let failure = match reconnect(&inner).await {
+            Ok(next) => {
+                incoming = next;
+                inner.publish();
+                continue;
+            }
+            Err(failure) => failure,
+        };
+        // The TV went away, or what ran on it did.
         let mut state = lock(&inner.state);
         if !state.closed && !state.quit {
+            tracing::info!(%failure, "cast ended");
             inner.relay.close();
             state.closed = true;
-            state.failure.get_or_insert(CastFailure::Lost("the connection closed".into()));
+            state.failure.get_or_insert(failure);
             if !state.ended {
                 state.ended = true;
                 inner.say_locked(&state, PlaybackEvent::Ended { complete: false });
@@ -2509,7 +2532,91 @@ async fn pump(mut incoming: mpsc::UnboundedReceiver<Incoming>, inner: std::sync:
         }
         drop(state);
         inner.publish();
+        return;
     }
+}
+
+/// Why one try at connecting again didn't take.
+enum Rejoin {
+    /// The TV didn't answer: the next try may.
+    Again(CastError),
+    /// The TV answered, without the app this session ran: there is nothing to go back to.
+    Over(CastFailure),
+}
+
+/// Connect to the TV again after the connection dropped, and join the receiver app this session
+/// ran if it still runs: a phone's Wi-Fi napping with the screen off drops it while the TV
+/// plays on. Tries until [`Timings::reconnect`] runs out; the stream returned is the new
+/// connection's.
+async fn reconnect(inner: &Inner) -> Result<mpsc::UnboundedReceiver<Incoming>, CastFailure> {
+    let dropped = || CastFailure::Lost("the connection closed".into());
+    let budget = inner.setup.timings.reconnect;
+    {
+        let mut state = lock(&inner.state);
+        if state.closed || state.quit || budget.is_zero() {
+            return Err(dropped());
+        }
+        state.reconnecting = true;
+    }
+    tracing::info!("the connection to the TV dropped; connecting again");
+    let deadline = Instant::now() + budget;
+    let mut wait = Duration::from_millis(250);
+    let result = loop {
+        if lock(&inner.state).quit {
+            break Err(dropped());
+        }
+        let left = deadline.saturating_duration_since(Instant::now());
+        let tried = tokio::time::timeout(left.min(inner.setup.timings.silence), rejoin(inner));
+        match tried.await {
+            Ok(Ok(incoming)) => break Ok(incoming),
+            Ok(Err(Rejoin::Over(failure))) => break Err(failure),
+            Ok(Err(Rejoin::Again(e))) => tracing::debug!(error = %e, "the TV didn't answer yet"),
+            Err(_) => tracing::debug!("the TV didn't answer in time"),
+        }
+        if Instant::now() + wait >= deadline {
+            break Err(dropped());
+        }
+        tokio::time::sleep(wait).await;
+        wait = (wait * 2).min(Duration::from_secs(2));
+    };
+    lock(&inner.state).reconnecting = false;
+    match &result {
+        Ok(_) => tracing::info!("connected to the TV again"),
+        Err(failure) => tracing::info!(%failure, "couldn't connect to the TV again"),
+    }
+    result
+}
+
+/// One try at [`reconnect`].
+async fn rejoin(inner: &Inner) -> Result<mpsc::UnboundedReceiver<Incoming>, Rejoin> {
+    let (device, incoming) =
+        Device::connect(inner.setup.device.address, inner.setup.timings.silence)
+            .await
+            .map_err(Rejoin::Again)?;
+    let receiver = device.status().await.map_err(Rejoin::Again)?;
+    let ours = lock(&inner.state).app.clone();
+    if let Some(ours) = &ours {
+        match receiver.app {
+            Some(app) if app.session_id == ours.session_id => {}
+            Some(_) => return Err(Rejoin::Over(CastFailure::TakenOver)),
+            None => return Err(Rejoin::Over(CastFailure::Lost("the TV closed the app".into()))),
+        }
+        device.channel.connect_to(&ours.transport_id).map_err(Rejoin::Again)?;
+    }
+    if let Some(media) = lock(&inner.media).as_mut() {
+        media.channel = device.channel.clone();
+    }
+    *lock(&inner.device) = device;
+    // Kaeri's receiver shows the sender back, and the first poll says where the TV is.
+    if let Some(app) = ours.filter(|a| a.app_id != DEFAULT_MEDIA_RECEIVER) {
+        inner.hello(&app);
+    }
+    if let Some(media) = inner.media()
+        && let Err(e) = media.poll()
+    {
+        tracing::debug!(error = %e, "couldn't ask the TV what plays");
+    }
+    Ok(incoming)
 }
 
 fn receive(inner: &Inner, message: &Incoming) {
@@ -2750,11 +2857,11 @@ async fn poll(inner: std::sync::Weak<Inner>) {
             inner.publish();
             return;
         }
-        let media = inner.media();
-        if let Some(media) = media
-            && media.poll().is_err()
+        // A poll that can't go out waits for the connection made again, or the end above.
+        if let Some(media) = inner.media()
+            && let Err(e) = media.poll()
         {
-            return;
+            tracing::trace!(error = %e, "couldn't ask the TV what plays");
         }
     }
 }

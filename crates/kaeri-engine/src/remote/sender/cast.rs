@@ -908,7 +908,11 @@ mod tests {
     async fn a_tv_gone_from_the_network_ends_the_card_with_a_notice() {
         let receiver = FakeReceiver::start(FakeOptions::default()).await.unwrap();
         let (sender, _, _sent) = sender();
-        let timings = Timings { silence: Duration::from_secs(1), ..Timings::default() };
+        let timings = Timings {
+            silence: Duration::from_secs(1),
+            reconnect: Duration::from_secs(1),
+            ..Timings::default()
+        };
         let hub = Arc::new(CastHub::with(None, Arc::new(PlainHttp), timings));
         let (engine, _sent) = RemoteSender::recording();
         sender.attach_casting(Arc::clone(&hub), engine);

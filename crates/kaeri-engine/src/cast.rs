@@ -477,7 +477,7 @@ impl CastHub {
                     if let (Some(hub), Some(player)) = (hub.upgrade(), held.upgrade()) {
                         let lost = matches!(now.failure, Some(CastFailure::Lost(_)));
                         let failure = now.failure.filter(|_| busy || !lost);
-                        hub.session_ended(&player, failure, lost);
+                        hub.session_ended(&player, failure, lost, busy);
                     }
                     return;
                 }
@@ -494,13 +494,15 @@ impl CastHub {
     }
 
     /// The TV ended the session `player` held: closed the receiver, went away, or someone else
-    /// took it over. A connection `lost` may have left the receiver up, so the next launch
-    /// still looks for it.
+    /// took it over. A connection `lost` mid-episode, after the player's own tries to connect
+    /// again, may have left the receiver playing, so the TV found again joins it; an idle one is
+    /// let go.
     fn session_ended(
         &self,
         player: &Arc<CastPlayer>,
         failure: Option<CastFailure>,
         lost: bool,
+        busy: bool,
     ) {
         {
             let mut session = lock(&self.session);
@@ -514,7 +516,7 @@ impl CastHub {
             }
             session.failure = failure;
         }
-        if !lost {
+        if !lost || !busy {
             self.forget_left();
         }
         self.end();
@@ -763,12 +765,12 @@ impl CastHub {
     }
 
     /// Join the session left running on `device`, when its receiver still runs and no session
-    /// is held: the browse found that TV again. Nothing otherwise.
+    /// is held, one that ended lost included: the browse found that TV again. Nothing otherwise.
     pub fn rejoin(self: &Arc<Self>, device: &CastDevice) {
         let Some(left) = self.left().filter(|left| left.device == device.id) else { return };
         let generation = {
             let mut session = lock(&self.session);
-            if session.device.is_some() {
+            if session.connecting || session.player.is_some() {
                 return;
             }
             let generation = session.generation + 1;

@@ -96,20 +96,21 @@ impl Rig {
     /// A TV cast to through the Default Media Receiver, as `cast.receiver` can name it: the
     /// relay's conversions and the encoder are what it plays with.
     async fn standard(encoder: bool) -> Self {
-        Self::on(encoder, FakeOptions { speed: 8.0, ..FakeOptions::default() }, true).await
+        Self::on(encoder, FakeOptions { speed: 8.0, ..FakeOptions::default() }, true, timings())
+            .await
     }
 
     async fn with(encoder: bool, options: FakeOptions) -> Self {
-        Self::on(encoder, options, false).await
+        Self::on(encoder, options, false, timings()).await
     }
 
-    async fn on(encoder: bool, options: FakeOptions, standard: bool) -> Self {
+    async fn on(encoder: bool, options: FakeOptions, standard: bool, timings: Timings) -> Self {
         let receiver = FakeReceiver::start(options).await.unwrap();
         let dir = tempfile::tempdir().unwrap();
         let hub = Arc::new(CastHub::with(
             Some(dir.path().to_owned()),
             Arc::new(PlainHttp),
-            timings(),
+            timings,
         ));
         if standard {
             hub.set_receiver(Some(DEFAULT_MEDIA_RECEIVER.into()));
@@ -408,4 +409,75 @@ async fn a_session_left_running_is_joined_again_once_its_tv_is_found() {
         timings(),
     ));
     assert_eq!(again.left_on(), None);
+}
+
+/// A TV whose silence is noticed after a second, and connected to again for six.
+fn quick_to_notice() -> Timings {
+    Timings { silence: Duration::from_secs(1), reconnect: Duration::from_secs(6), ..timings() }
+}
+
+#[tokio::test(flavor = "multi_thread", worker_threads = 4)]
+async fn a_held_tv_whose_connection_drops_is_connected_to_again_and_stays_held() {
+    let options = FakeOptions { remembers: true, ..FakeOptions::default() };
+    let rig = Rig::on(true, options, false, quick_to_notice()).await;
+    rig.hub.connect(rig.device());
+    session_until(&rig.hub, |v| v.state == SessionState::Connected).await;
+    let connects = rig.receiver.heard("CONNECT").len();
+
+    // The phone is locked and its Wi-Fi naps: the connection dies, the receiver stays up.
+    rig.receiver.drop_connection();
+    let deadline = tokio::time::Instant::now() + Duration::from_secs(8);
+    while rig.receiver.heard("CONNECT").len() <= connects + 1 {
+        assert!(tokio::time::Instant::now() < deadline, "connected again in time");
+        tokio::time::sleep(Duration::from_millis(50)).await;
+    }
+    tokio::time::sleep(Duration::from_millis(1500)).await;
+    let view = rig.hub.session();
+    assert_eq!(view.state, SessionState::Connected, "{view:?}");
+    assert_eq!(view.notice, None);
+    assert_eq!(rig.receiver.heard("LAUNCH").len(), 1, "joined, not launched again");
+    assert!(rig.hub.disconnect());
+}
+
+#[tokio::test(flavor = "multi_thread", worker_threads = 4)]
+async fn an_idle_held_tv_that_closed_the_receiver_meanwhile_is_let_go_quietly() {
+    let rig = Rig::on(true, FakeOptions::default(), false, quick_to_notice()).await;
+    rig.hub.connect(rig.device());
+    session_until(&rig.hub, |v| v.state == SessionState::Connected).await;
+    // A TV that forgets between connections: the receiver is gone on the next one.
+    rig.receiver.drop_connection();
+    let view = session_until(&rig.hub, |v| v.state == SessionState::Idle).await;
+    assert_eq!(view.notice, None);
+    assert_eq!(rig.hub.left_on(), None, "nothing left to join");
+}
+
+#[tokio::test(flavor = "multi_thread", worker_threads = 4)]
+async fn a_held_tv_lost_mid_episode_says_so_and_is_looked_for_once_found_again() {
+    let options = FakeOptions { duration: 600.0, ..FakeOptions::default() };
+    let rig = Arc::new(Rig::on(true, options, false, quick_to_notice()).await);
+    rig.hub.connect(rig.device());
+    session_until(&rig.hub, |v| v.state == SessionState::Connected).await;
+    let file = rig.file("1.mkv", &Fixture::default());
+    let playing = {
+        let rig = Arc::clone(&rig);
+        tokio::spawn(async move { rig.play(vec![file], context("1", None)).await })
+    };
+    session_until(&rig.hub, |v| {
+        v.state == SessionState::Playing && v.item.as_ref().is_some_and(|i| !i.loading)
+    })
+    .await;
+
+    // The connection drops and the TV that answers next has closed the receiver.
+    rig.receiver.drop_connection();
+    let view = session_until(&rig.hub, |v| v.state == SessionState::Error).await;
+    assert_eq!(view.notice, Some(Msg::NoticeCastLost { name: "Living room".into() }));
+    assert!(rig.hub.session_device().is_none(), "plays open here again");
+    let events = playing.await.unwrap();
+    assert_ne!(ending(&events), Some(Ending::Complete { next: None }), "{events:?}");
+    assert_eq!(rig.hub.left_on().as_deref(), Some("tv-1"), "it may still play there");
+
+    // Found again: the session ended lost is looked for, and let go as its receiver is gone.
+    rig.hub.rejoin(&rig.device());
+    session_until(&rig.hub, |v| v.state == SessionState::Idle).await;
+    assert_eq!(rig.hub.left_on(), None);
 }
