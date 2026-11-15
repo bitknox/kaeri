@@ -555,7 +555,7 @@ impl Meta {
             Ok(_) => {
                 self.note_anilist(None);
                 self.reset("anilist");
-                self.answered();
+                self.reached();
             }
             // Over the limit is AniList asking for patience, not failing: no strike for the
             // breaker, so it is never skipped for it. This call falls to what is kept.
@@ -564,14 +564,14 @@ impl Meta {
             // is up.
             Err(_) => {
                 self.reset("anilist");
-                self.answered();
+                self.reached();
             }
         }
         result
     }
 
     /// AniList answered: no failure is left to weigh.
-    fn answered(&self) {
+    fn reached(&self) {
         if let Ok(mut fault) = self.fault.lock() {
             *fault = None;
         }
