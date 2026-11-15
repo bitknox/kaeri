@@ -661,6 +661,17 @@ async fn fetch_like_a_receiver(
     }
     let mut url = url.to_owned();
     let mut text = String::from_utf8_lossy(&body).into_owned();
+    // The audio rendition its player plays: the default one, as a receiver with nothing else
+    // to go by picks.
+    if let Some(audio) = text.lines().find_map(|l| {
+        let at = l.find("URI=\"")? + 5;
+        (l.starts_with("#EXT-X-MEDIA:")
+            && l.contains("TYPE=AUDIO")
+            && l.contains("DEFAULT=YES"))
+        .then(|| l[at..].split('"').next().map(str::to_owned))?
+    }) {
+        note(get(resolve(&url, &audio)).await?, false)?;
+    }
     if let Some(variant) = text
         .lines()
         .skip_while(|l| !l.starts_with("#EXT-X-STREAM-INF"))

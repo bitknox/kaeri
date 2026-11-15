@@ -145,6 +145,7 @@ fn torrent(url: String) -> CastLoad {
         subtitle: None,
         audio_language: Some("ja".into()),
         audio_track: None,
+        audio_memory: None,
     }
 }
 
@@ -1319,4 +1320,139 @@ async fn a_session_left_running_is_joined_with_what_it_plays() {
     .await
     .unwrap();
     assert!(gone.is_none(), "a session that ended isn't joined");
+}
+
+/// An HLS master with the original and a dub as audio renditions beside one picture, the
+/// original the default, behind headers so the relay serves it.
+async fn hls_with_a_dub() -> CastLoad {
+    let master = "#EXTM3U\n\
+        #EXT-X-MEDIA:TYPE=AUDIO,GROUP-ID=\"aud\",LANGUAGE=\"ja\",NAME=\"Japanese\",DEFAULT=YES,AUTOSELECT=YES,URI=\"ja/index.m3u8\"\n\
+        #EXT-X-MEDIA:TYPE=AUDIO,GROUP-ID=\"aud\",LANGUAGE=\"en\",NAME=\"English\",DEFAULT=NO,AUTOSELECT=YES,URI=\"en/index.m3u8\"\n\
+        #EXT-X-STREAM-INF:BANDWIDTH=900000,RESOLUTION=1280x720,CODECS=\"avc1.64001f,mp4a.40.2\",AUDIO=\"aud\"\n\
+        v/index.m3u8\n";
+    let media = |name: &str| {
+        let mut text = String::from("#EXTM3U\n#EXT-X-TARGETDURATION:4\n");
+        for i in 0..15 {
+            text.push_str(&format!("#EXTINF:4.0,\n{name}{i}.ts\n"));
+        }
+        text.push_str("#EXT-X-ENDLIST\n");
+        text.into_bytes()
+    };
+    let mut files = HashMap::from([
+        ("/a/master.m3u8".to_owned(), master.as_bytes().to_vec()),
+        ("/a/v/index.m3u8".to_owned(), media("v")),
+        ("/a/ja/index.m3u8".to_owned(), media("a")),
+        ("/a/en/index.m3u8".to_owned(), media("a")),
+    ]);
+    for dir in ["v", "ja", "en"] {
+        for i in 0..15 {
+            let name = if dir == "v" { "v" } else { "a" };
+            files.insert(format!("/a/{dir}/{name}{i}.ts"), ts_segment());
+        }
+    }
+    let base = serve(files).await;
+    let url = format!("{base}/a/master.m3u8");
+    CastLoad {
+        source: CastSource {
+            url: url.clone(),
+            kind: SourceKind::Hls,
+            headers: vec![("Referer".into(), "https://player.example/".into())],
+        },
+        ..torrent(url)
+    }
+}
+
+/// Which audio renditions the fake fetched, by their folder.
+fn renditions_fetched(receiver: &FakeReceiver) -> Vec<&'static str> {
+    let fetched = receiver.fetched();
+    ["ja", "en"]
+        .into_iter()
+        .filter(|lang| {
+            fetched.iter().any(|f| f.url.contains(&format!("%2F{lang}%2Findex.m3u8")))
+        })
+        .collect()
+}
+
+#[tokio::test(flavor = "multi_thread", worker_threads = 4)]
+async fn the_tv_gets_the_remembered_dub_alone_and_the_card_switches_it() {
+    let receiver = FakeReceiver::start(FakeOptions::default()).await.unwrap();
+    let (player, mut events) = CastPlayer::connect(setup(
+        &receiver,
+        Arc::new(CastMemory::memory()),
+        Arc::new(NoEncoder),
+    ))
+    .await
+    .unwrap();
+    // A sub watcher's language, but the series remembers the dub: the dub plays, as in the app.
+    let load = CastLoad {
+        audio_language: Some("ja".into()),
+        audio_memory: Some(TrackPrint { lang: Some("eng".into()), ..TrackPrint::default() }),
+        ..hls_with_a_dub().await
+    };
+    player.load(load);
+    next(&mut events, |e| *e == PlaybackEvent::Loaded).await;
+    let loads = receiver.heard("LOAD");
+    let content = loads[0]["media"]["contentId"].as_str().unwrap().to_owned();
+    assert!(content.ends_with("/x/h/master.m3u8"), "{content}");
+    assert_eq!(renditions_fetched(&receiver), ["en"], "{:?}", receiver.fetched());
+    let playing = player.status().borrow().clone();
+    let audio: Vec<_> = playing
+        .audio
+        .iter()
+        .map(|a| (a.index, a.language.as_deref(), a.title.as_deref(), a.selected))
+        .collect();
+    assert_eq!(audio, [(0, Some("ja"), None, false), (1, Some("en"), None, true)]);
+
+    // The original, picked on the card, loads where the file was.
+    next(
+        &mut events,
+        |e| matches!(e, PlaybackEvent::Progress { position, .. } if *position >= 2.0),
+    )
+    .await;
+    let before = receiver.fetched().len();
+    player.set_audio(0);
+    let deadline = tokio::time::Instant::now() + Duration::from_secs(15);
+    while receiver.heard("LOAD").len() < 2
+        || !player.status().borrow().audio.iter().any(|a| a.index == 0 && a.selected)
+        || player.status().borrow().step.is_some()
+    {
+        assert!(tokio::time::Instant::now() < deadline, "the original loaded");
+        tokio::time::sleep(Duration::from_millis(20)).await;
+    }
+    let loads = receiver.heard("LOAD");
+    assert!(loads[1]["currentTime"].as_f64().unwrap_or(0.0) >= 2.0, "{:?}", loads[1]);
+    let after: Vec<_> = receiver.fetched()[before..].iter().map(|f| f.url.clone()).collect();
+    assert!(after.iter().any(|u| u.contains("%2Fja%2Findex.m3u8")), "{after:?}");
+    assert!(!after.iter().any(|u| u.contains("%2Fen%2Findex.m3u8")), "{after:?}");
+}
+
+#[test]
+fn the_cast_picks_audio_as_the_app_does() {
+    let track = |language: &str, name: &str, default| AudioTrack {
+        language: Some(language.into()),
+        name: Some(name.into()),
+        default,
+        ..AudioTrack::default()
+    };
+    let info = MediaInfo {
+        audio: vec![
+            track("ja", "Japanese", true),
+            track("en", "English Commentary", false),
+            track("en", "English", false),
+        ],
+        renditions: true,
+        ..MediaInfo::default()
+    };
+    let load = |language: Option<&str>| CastLoad {
+        audio_language: language.map(str::to_owned),
+        ..torrent("https://cdn.example/a/master.m3u8".into())
+    };
+    // A dub watcher gets the programme in their language, not the commentary.
+    assert_eq!(app_pick(&info, &load(Some("eng"))), Some(2));
+    assert_eq!(app_pick(&info, &load(Some("ja"))), Some(0));
+    // A language the stream lacks: its default.
+    assert_eq!(app_pick(&info, &load(Some("fr"))), Some(0));
+    // The card names a rendition only when the name says more than the language.
+    assert_eq!(audio_title(&info.audio[0]), None);
+    assert_eq!(audio_title(&info.audio[1]).as_deref(), Some("English Commentary"));
 }

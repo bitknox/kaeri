@@ -76,6 +76,9 @@ pub struct FileFacts {
     pub image: Option<String>,
     pub subtitle_language: Option<String>,
     pub dub: bool,
+    /// The audio track the series remembers, for a player that picks the audio itself, as a
+    /// TV does from an HLS master's renditions.
+    pub audio_memory: Option<kaeri_playback::tracks::TrackPrint>,
 }
 
 /// What the session does to the player a playback runs in.

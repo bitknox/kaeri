@@ -38,7 +38,10 @@ use std::{
     time::{Duration, Instant},
 };
 
-use kaeri_playback::PlaybackEvent;
+use kaeri_playback::{
+    PlaybackEvent,
+    tracks::{Track, TrackKind, TrackPrint, choose_audio, language_matches},
+};
 use serde_json::{Value, json};
 use tokio::{
     sync::{Mutex as AsyncMutex, broadcast, mpsc, watch},
@@ -56,12 +59,13 @@ use crate::{
     device::{CastDevice, local_address_towards, same_network},
     fetch::{RangeFile, Upstream},
     formats::{
-        AudioPlan, CastPlan, CastRoute, CastSource, Delivery, MediaInfo, SourceKind,
-        Uncastable, cast_plans,
+        AudioPlan, AudioTrack, CastPlan, CastRoute, CastSource, Delivery, MediaInfo,
+        SourceKind, Uncastable, cast_plans,
     },
+    master,
     memory::CastMemory,
     probe,
-    relay::{Dynamic, Made, Relay},
+    relay::{Dynamic, Made, Relay, rewrite_playlist},
     remux::{AudioMode, RemuxOptions, Remuxer, Source},
     vtt,
 };
@@ -141,6 +145,9 @@ pub struct CastLoad {
     pub audio_language: Option<String>,
     /// The audio track the viewer picked, by its place among the file's, over the language.
     pub audio_track: Option<usize>,
+    /// The audio track the series remembers, found again by what it is, as the app's player
+    /// finds it: ahead of the language.
+    pub audio_memory: Option<TrackPrint>,
 }
 
 /// Why a cast didn't play, or stopped.
@@ -199,6 +206,8 @@ pub struct CastAudio {
     /// Its place among the file's audio tracks: what [`CastPlayer::set_audio`] takes.
     pub index: usize,
     pub language: Option<String>,
+    /// Its own name, when it says more than its language: "Commentary", "English 5.1".
+    pub title: Option<String>,
     pub codec: Option<String>,
     pub channels: u16,
     pub selected: bool,
@@ -304,18 +313,27 @@ fn lock<T>(mutex: &Mutex<T>) -> std::sync::MutexGuard<'_, T> {
     mutex.lock().unwrap_or_else(std::sync::PoisonError::into_inner)
 }
 
-/// What the relay makes on request for one cast: the remuxed stream and the text tracks.
+/// What the relay makes on request for one cast: the remuxed stream, the text tracks, and an
+/// HLS master with the chosen audio alone.
 #[derive(Default)]
 struct Resources {
     remuxer: Mutex<Option<Arc<Remuxer>>>,
     texts: Mutex<HashMap<String, Arc<Vec<u8>>>>,
+    master: Mutex<Option<Arc<Vec<u8>>>>,
 }
+
+/// Where the relay serves [`Resources::master`].
+const MASTER: &str = "h/master.m3u8";
 
 impl Dynamic for Resources {
     fn get<'a>(&'a self, path: &'a str) -> Made<'a> {
         Box::pin(async move {
             if let Some(text) = lock(&self.texts).get(path).cloned() {
                 return Some(("text/vtt".into(), text.to_vec()));
+            }
+            if path == MASTER {
+                let master = lock(&self.master).clone()?;
+                return Some(("application/vnd.apple.mpegurl".into(), master.to_vec()));
             }
             let remuxer = lock(&self.remuxer).clone()?;
             match path {
@@ -1341,11 +1359,69 @@ async fn media_info(setup: &CastSetup, load: &CastLoad) -> (MediaInfo, probe::Co
         }
         SourceKind::DeepLink => MediaInfo::default(),
     };
-    info.choose_language(load.audio_language.as_deref());
     if let Some(index) = load.audio_track.filter(|i| *i < info.audio.len()) {
+        info.audio_choice = index;
+    } else if let Some(index) = app_pick(&info, load) {
         info.audio_choice = index;
     }
     (info, probe)
+}
+
+/// The audio track of `info` the app's player would pick: the series' remembered track, then
+/// the programme in the language asked for. `None` leaves the stream's own choice.
+fn app_pick(info: &MediaInfo, load: &CastLoad) -> Option<usize> {
+    if info.audio.len() < 2 {
+        return None;
+    }
+    let tracks: Vec<Track> = info
+        .audio
+        .iter()
+        .zip(0i64..)
+        .map(|(audio, id)| Track {
+            id,
+            kind: TrackKind::Audio,
+            lang: audio.language.clone(),
+            title: audio.name.clone(),
+            default: audio.default,
+            forced: false,
+            hearing_impaired: false,
+            visual_impaired: false,
+            external: false,
+            external_filename: None,
+            codec: None,
+            selected: false,
+            main_selection: None,
+        })
+        .collect();
+    let refs: Vec<&Track> = tracks.iter().collect();
+    let picked =
+        choose_audio(&refs, load.audio_language.as_deref(), load.audio_memory.as_ref())?;
+    usize::try_from(picked.id).ok()
+}
+
+/// A rendition's name for the card, when it says more than its language: "English" beside
+/// English says nothing.
+fn audio_title(track: &AudioTrack) -> Option<String> {
+    let name = track.name.clone().filter(|n| !n.trim().is_empty())?;
+    let Some(language) = track.language.as_deref() else { return Some(name) };
+    let alone = Track {
+        id: 0,
+        kind: TrackKind::Audio,
+        lang: None,
+        title: Some(name.clone()),
+        default: false,
+        forced: false,
+        hearing_impaired: false,
+        visual_impaired: false,
+        external: false,
+        external_filename: None,
+        codec: None,
+        selected: false,
+        main_selection: None,
+    };
+    let only_language = name.split_whitespace().count() == 1
+        && alone.language().is_some_and(|l| language_matches(&l, language));
+    (!only_language).then_some(name)
 }
 
 /// A subtitle file as a WebVTT track the relay serves.
@@ -1542,15 +1618,17 @@ fn step(inner: &Inner, step: CastStep) {
     }
 }
 
-/// The audio tracks of `info` the card offers, each one the TV could be given: only a file the
-/// relay remuxes can change its audio, and only when it has more than one.
+/// The audio tracks of `info` the card offers, each one the TV could be given, when there is
+/// more than one: a file the relay remuxes, or an HLS master's renditions, which the TV is
+/// handed one at a time.
 fn audio_choices(
     setup: &CastSetup,
     load: &CastLoad,
     info: &MediaInfo,
     cors: &probe::CorsProbe,
 ) -> Vec<CastAudio> {
-    if info.container != Some(Delivery::Mkv) || info.audio.len() < 2 {
+    let remuxed = info.container == Some(Delivery::Mkv);
+    if !(remuxed || info.renditions) || info.audio.len() < 2 {
         return Vec::new();
     }
     let caps = setup.memory.caps(&setup.device.id);
@@ -1560,12 +1638,16 @@ fn audio_choices(
         .filter(|(index, _)| {
             let info = MediaInfo { audio_choice: *index, ..info.clone() };
             cast_plans(&load.source, &info, &caps, cors, setup.encoder.as_ref()).is_ok_and(
-                |plans| plans.iter().any(|p| p.route == CastRoute::Relayed { remux: true }),
+                |plans| {
+                    !remuxed
+                        || plans.iter().any(|p| p.route == CastRoute::Relayed { remux: true })
+                },
             )
         })
         .map(|(index, track)| CastAudio {
             index,
             language: track.language.clone(),
+            title: audio_title(track),
             codec: track.codec.as_ref().map(ToString::to_string),
             channels: track.channels,
             selected: index == info.audio_choice,
@@ -1633,9 +1715,15 @@ async fn stage(
 ) -> Option<(String, String)> {
     let relay = &inner.relay;
     *lock(&inner.resources.remuxer) = None;
+    *lock(&inner.resources.master) = None;
     let content_type = plan.delivery.content_type().to_owned();
     match &plan.route {
-        CastRoute::Direct { url } => Some((url.clone(), content_type)),
+        CastRoute::Direct { url } => {
+            if let Some(master) = chosen_master(inner, info, plan, url, &[], false).await {
+                return Some((master, content_type));
+            }
+            Some((url.clone(), content_type))
+        }
         CastRoute::Relayed { remux: true } => {
             let options = RemuxOptions {
                 audio_track: info.audio_choice,
@@ -1678,9 +1766,57 @@ async fn stage(
                 return Some((relay.share_file(Path::new(path)), content_type));
             }
             relay.set_headers(load.headers.clone());
+            if let Some(master) =
+                chosen_master(inner, info, plan, &load.url, &load.headers, true).await
+            {
+                return Some((master, content_type));
+            }
             Some((relay.upstream_url(&load.url), content_type))
         }
     }
+}
+
+/// For an HLS master with audio renditions, the master with the chosen one alone, served by
+/// the relay: its addresses point back through the relay when `relayed`, and otherwise straight
+/// at the source, so the TV still fetches the stream itself. `None` when there is no choice to
+/// make or the master can't be read: then the TV is handed the address as it is.
+async fn chosen_master(
+    inner: &Inner,
+    info: &MediaInfo,
+    plan: &CastPlan,
+    url: &str,
+    headers: &[(String, String)],
+    relayed: bool,
+) -> Option<String> {
+    if !info.renditions || !plan.delivery.is_hls() {
+        return None;
+    }
+    let chosen = info.chosen_audio()?;
+    let response = inner.setup.upstream.get(url, headers).await.ok()?;
+    if !(200..300).contains(&response.status) {
+        return None;
+    }
+    let landed = response.url.clone().unwrap_or_else(|| url.to_owned());
+    let body = response.bytes(4 << 20).await.ok()?;
+    let text = String::from_utf8_lossy(&body);
+    let Some(kept) =
+        master::keep_audio(&text, chosen.language.as_deref(), chosen.name.as_deref())
+    else {
+        tracing::info!("the master's audio couldn't be chosen; handing it over as it is");
+        return None;
+    };
+    let rewritten = if relayed {
+        inner.relay.relay_playlist(&kept, &landed)
+    } else {
+        rewrite_playlist(&kept, &landed, &str::to_owned)
+    };
+    tracing::info!(
+        language = chosen.language.as_deref().unwrap_or("none"),
+        relayed,
+        "handing the TV the master with one audio rendition"
+    );
+    *lock(&inner.resources.master) = Some(Arc::new(rewritten.into_bytes()));
+    Some(inner.relay.dynamic_url(MASTER))
 }
 
 /// Whether what the TV did says anything about the format: it was served media, in good time,
