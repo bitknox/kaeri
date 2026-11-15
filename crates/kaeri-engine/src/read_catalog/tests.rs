@@ -240,8 +240,9 @@ async fn a_cold_home_asks_four_times_and_a_warm_one_not_at_all() {
     assert_eq!(warm.rows, cold.rows);
 }
 
-/// Remove from Continue: the app has dropped the cover already, so the hide sends nothing and
-/// nothing else on Home moves. The next Home keeps both hidden and brings a new spotlight.
+/// Remove from Continue: the app has dropped the cover already, and the spotlight with it when
+/// it showed the series, so the hide sends nothing and nothing under Continue moves. The next
+/// Home keeps both hidden and brings a new spotlight.
 #[tokio::test]
 async fn remove_from_continue_sends_nothing_and_the_next_home_keeps_it_hidden() {
     let fake = FakeAniList::start().await;

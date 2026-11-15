@@ -581,13 +581,16 @@ pub struct ReadingHomeView {
 }
 
 impl ReadingHomeView {
-    /// Remove from Continue as the screen shows it at once: the cover leaves Continue and
-    /// nothing else on Home moves, the spotlight included, so nothing above or below the shelf
-    /// shifts. The engine keeps the series hidden without sending Home again, as watching's
-    /// Continue does, and the next Home brings a new spotlight. When Continue empties, its gap
-    /// closes.
+    /// Remove from Continue as the screen shows it at once: the cover leaves Continue, and a
+    /// spotlight on the same series leaves with it. Nothing else on Home moves. The engine keeps
+    /// the series hidden without sending Home again, as watching's Continue does, and the next
+    /// Home brings a new spotlight. When Continue empties, its gap closes.
     pub fn without_continue(mut self, work: &WorkId) -> Self {
         self.continue_reading.retain(|tile| &tile.work != work);
+        if self.spotlight.as_ref().is_some_and(|tile| &tile.work == work) {
+            self.spotlight = None;
+            self.spot = None;
+        }
         self
     }
 }
@@ -2177,7 +2180,7 @@ mod tests {
 
         let empty = one_left.clone().without_continue(&WorkId("a:1".into()));
         assert!(empty.continue_reading.is_empty(), "the last cover empties Continue");
-        assert_eq!(empty.spotlight, home.spotlight, "the spotlight stays until the next Home");
+        assert_eq!((empty.spotlight, empty.spot), (None, None), "its spotlight leaves with it");
         assert_eq!(empty.up_next, home.up_next);
         assert_eq!(empty.rows, home.rows);
 
