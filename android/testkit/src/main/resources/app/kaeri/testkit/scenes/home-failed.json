@@ -560,6 +560,15 @@
       }
      },
      {
+      "key": "SHOW_FOLLOWING",
+      "value": "on",
+      "change": {
+       "@type": "Steps",
+       "back": true,
+       "forward": false
+      }
+     },
+     {
       "key": "COMMENT_IMAGES",
       "value": "off",
       "change": {
@@ -1464,10 +1473,10 @@
           "done": "7",
           "next": "8"
          },
-         "airingIn": "131400",
+         "airingIn": "135000",
          "airingEpisode": null,
          "nextEpisode": "8",
-         "nextAiringIn": "131400",
+         "nextAiringIn": "135000",
          "lastAired": null,
          "resume": null,
          "related": [],
@@ -1529,7 +1538,7 @@
         "resume": null,
         "progress": null,
         "new": false,
-        "airsAt": "1793914200",
+        "airsAt": "1793917800",
         "day": "1",
         "reason": null,
         "starts": null,
@@ -1661,10 +1670,10 @@
           "done": "5",
           "next": "6"
          },
-         "airingIn": "219600",
+         "airingIn": "223200",
          "airingEpisode": null,
          "nextEpisode": "6",
-         "nextAiringIn": "219600",
+         "nextAiringIn": "223200",
          "lastAired": null,
          "resume": null,
          "related": [],
@@ -1726,7 +1735,7 @@
         "resume": null,
         "progress": null,
         "new": false,
-        "airsAt": "1794002400",
+        "airsAt": "1794006000",
         "day": "2",
         "reason": null,
         "starts": null,
@@ -1759,10 +1768,10 @@
           "done": "6",
           "next": "7"
          },
-         "airingIn": "457200",
+         "airingIn": "460800",
          "airingEpisode": null,
          "nextEpisode": "7",
-         "nextAiringIn": "457200",
+         "nextAiringIn": "460800",
          "lastAired": null,
          "resume": null,
          "related": [],
@@ -1824,7 +1833,7 @@
         "resume": null,
         "progress": null,
         "new": false,
-        "airsAt": "1794240000",
+        "airsAt": "1794243600",
         "day": "5",
         "reason": null,
         "starts": null,
@@ -1964,10 +1973,10 @@
          "availableOn": [],
          "availableAt": null,
          "progress": null,
-         "airingIn": "208800",
+         "airingIn": "212400",
          "airingEpisode": null,
          "nextEpisode": "5",
-         "nextAiringIn": "208800",
+         "nextAiringIn": "212400",
          "lastAired": null,
          "resume": null,
          "related": [],
@@ -2066,10 +2075,10 @@
          "availableOn": [],
          "availableAt": null,
          "progress": null,
-         "airingIn": "374400",
+         "airingIn": "378000",
          "airingEpisode": null,
          "nextEpisode": "5",
-         "nextAiringIn": "374400",
+         "nextAiringIn": "378000",
          "lastAired": null,
          "resume": null,
          "related": [],
@@ -2280,10 +2289,10 @@
          "availableOn": [],
          "availableAt": null,
          "progress": null,
-         "airingIn": "552600",
+         "airingIn": "556200",
          "airingEpisode": null,
          "nextEpisode": "4",
-         "nextAiringIn": "552600",
+         "nextAiringIn": "556200",
          "lastAired": null,
          "resume": null,
          "related": [],
@@ -2377,10 +2386,10 @@
          "availableOn": [],
          "availableAt": null,
          "progress": null,
-         "airingIn": "5659200",
+         "airingIn": "5662800",
          "airingEpisode": null,
          "nextEpisode": "1",
-         "nextAiringIn": "5659200",
+         "nextAiringIn": "5662800",
          "lastAired": null,
          "resume": null,
          "related": [],
@@ -3846,10 +3855,10 @@
        "done": "7",
        "next": "8"
       },
-      "airingIn": "131400",
+      "airingIn": "135000",
       "airingEpisode": null,
       "nextEpisode": "8",
-      "nextAiringIn": "131400",
+      "nextAiringIn": "135000",
       "lastAired": null,
       "resume": null,
       "related": [],
@@ -3929,10 +3938,10 @@
        "done": "5",
        "next": "6"
       },
-      "airingIn": "219600",
+      "airingIn": "223200",
       "airingEpisode": null,
       "nextEpisode": "6",
-      "nextAiringIn": "219600",
+      "nextAiringIn": "223200",
       "lastAired": null,
       "resume": null,
       "related": [],
@@ -4012,10 +4021,10 @@
        "done": "6",
        "next": "7"
       },
-      "airingIn": "457200",
+      "airingIn": "460800",
       "airingEpisode": null,
       "nextEpisode": "7",
-      "nextAiringIn": "457200",
+      "nextAiringIn": "460800",
       "lastAired": null,
       "resume": null,
       "related": [],
@@ -4207,10 +4216,10 @@
        "done": "0",
        "next": "1"
       },
-      "airingIn": "552600",
+      "airingIn": "556200",
       "airingEpisode": null,
       "nextEpisode": "4",
-      "nextAiringIn": "552600",
+      "nextAiringIn": "556200",
       "lastAired": null,
       "resume": null,
       "related": [],
@@ -4290,10 +4299,10 @@
        "done": "0",
        "next": "1"
       },
-      "airingIn": "5659200",
+      "airingIn": "5662800",
       "airingEpisode": null,
       "nextEpisode": "1",
-      "nextAiringIn": "5659200",
+      "nextAiringIn": "5662800",
       "lastAired": null,
       "resume": null,
       "related": [],
@@ -5084,7 +5093,8 @@
      "unsourced": false,
      "pastProgress": false,
      "spoilerAhead": false,
-     "synopsisPending": false
+     "synopsisPending": false,
+     "followed": []
     },
     {
      "number": "2",
@@ -5103,7 +5113,8 @@
      "unsourced": false,
      "pastProgress": false,
      "spoilerAhead": false,
-     "synopsisPending": false
+     "synopsisPending": false,
+     "followed": []
     },
     {
      "number": "3",
@@ -5122,7 +5133,8 @@
      "unsourced": false,
      "pastProgress": false,
      "spoilerAhead": false,
-     "synopsisPending": false
+     "synopsisPending": false,
+     "followed": []
     },
     {
      "number": "4",
@@ -5141,7 +5153,8 @@
      "unsourced": false,
      "pastProgress": false,
      "spoilerAhead": false,
-     "synopsisPending": false
+     "synopsisPending": false,
+     "followed": []
     },
     {
      "number": "5",
@@ -5160,7 +5173,8 @@
      "unsourced": false,
      "pastProgress": false,
      "spoilerAhead": false,
-     "synopsisPending": false
+     "synopsisPending": false,
+     "followed": []
     },
     {
      "number": "6",
@@ -5179,7 +5193,8 @@
      "unsourced": false,
      "pastProgress": false,
      "spoilerAhead": false,
-     "synopsisPending": false
+     "synopsisPending": false,
+     "followed": []
     },
     {
      "number": "7",
@@ -5198,7 +5213,8 @@
      "unsourced": false,
      "pastProgress": true,
      "spoilerAhead": false,
-     "synopsisPending": false
+     "synopsisPending": false,
+     "followed": []
     },
     {
      "number": "8",
@@ -5217,7 +5233,8 @@
      "unsourced": false,
      "pastProgress": true,
      "spoilerAhead": true,
-     "synopsisPending": false
+     "synopsisPending": false,
+     "followed": []
     },
     {
      "number": "9",
@@ -5236,7 +5253,8 @@
      "unsourced": false,
      "pastProgress": true,
      "spoilerAhead": true,
-     "synopsisPending": false
+     "synopsisPending": false,
+     "followed": []
     },
     {
      "number": "10",
@@ -5255,7 +5273,8 @@
      "unsourced": false,
      "pastProgress": true,
      "spoilerAhead": true,
-     "synopsisPending": false
+     "synopsisPending": false,
+     "followed": []
     },
     {
      "number": "11",
@@ -5274,7 +5293,8 @@
      "unsourced": false,
      "pastProgress": true,
      "spoilerAhead": true,
-     "synopsisPending": false
+     "synopsisPending": false,
+     "followed": []
     },
     {
      "number": "12",
@@ -5293,7 +5313,8 @@
      "unsourced": false,
      "pastProgress": true,
      "spoilerAhead": true,
-     "synopsisPending": false
+     "synopsisPending": false,
+     "followed": []
     }
    ],
    "failed": null
@@ -5527,7 +5548,8 @@
      "unsourced": false,
      "pastProgress": false,
      "spoilerAhead": false,
-     "synopsisPending": false
+     "synopsisPending": false,
+     "followed": []
     },
     {
      "number": "2",
@@ -5546,7 +5568,8 @@
      "unsourced": false,
      "pastProgress": false,
      "spoilerAhead": false,
-     "synopsisPending": false
+     "synopsisPending": false,
+     "followed": []
     },
     {
      "number": "3",
@@ -5565,7 +5588,8 @@
      "unsourced": false,
      "pastProgress": false,
      "spoilerAhead": false,
-     "synopsisPending": false
+     "synopsisPending": false,
+     "followed": []
     },
     {
      "number": "4",
@@ -5584,7 +5608,8 @@
      "unsourced": false,
      "pastProgress": true,
      "spoilerAhead": false,
-     "synopsisPending": false
+     "synopsisPending": false,
+     "followed": []
     },
     {
      "number": "5",
@@ -5603,7 +5628,8 @@
      "unsourced": false,
      "pastProgress": true,
      "spoilerAhead": true,
-     "synopsisPending": false
+     "synopsisPending": false,
+     "followed": []
     }
    ],
    "failed": null
@@ -5836,7 +5862,8 @@
      "unsourced": false,
      "pastProgress": true,
      "spoilerAhead": false,
-     "synopsisPending": false
+     "synopsisPending": false,
+     "followed": []
     }
    ],
    "failed": null
@@ -6076,7 +6103,8 @@
      "unsourced": false,
      "pastProgress": true,
      "spoilerAhead": false,
-     "synopsisPending": false
+     "synopsisPending": false,
+     "followed": []
     },
     {
      "number": "2",
@@ -6095,7 +6123,8 @@
      "unsourced": false,
      "pastProgress": true,
      "spoilerAhead": true,
-     "synopsisPending": false
+     "synopsisPending": false,
+     "followed": []
     },
     {
      "number": "3",
@@ -6114,7 +6143,8 @@
      "unsourced": false,
      "pastProgress": true,
      "spoilerAhead": true,
-     "synopsisPending": false
+     "synopsisPending": false,
+     "followed": []
     },
     {
      "number": "4",
@@ -6133,7 +6163,8 @@
      "unsourced": false,
      "pastProgress": true,
      "spoilerAhead": true,
-     "synopsisPending": false
+     "synopsisPending": false,
+     "followed": []
     },
     {
      "number": "5",
@@ -6152,7 +6183,8 @@
      "unsourced": false,
      "pastProgress": true,
      "spoilerAhead": true,
-     "synopsisPending": false
+     "synopsisPending": false,
+     "followed": []
     },
     {
      "number": "6",
@@ -6171,7 +6203,8 @@
      "unsourced": false,
      "pastProgress": true,
      "spoilerAhead": true,
-     "synopsisPending": false
+     "synopsisPending": false,
+     "followed": []
     },
     {
      "number": "7",
@@ -6190,7 +6223,8 @@
      "unsourced": false,
      "pastProgress": true,
      "spoilerAhead": true,
-     "synopsisPending": false
+     "synopsisPending": false,
+     "followed": []
     },
     {
      "number": "8",
@@ -6209,7 +6243,8 @@
      "unsourced": false,
      "pastProgress": true,
      "spoilerAhead": true,
-     "synopsisPending": false
+     "synopsisPending": false,
+     "followed": []
     },
     {
      "number": "9",
@@ -6228,7 +6263,8 @@
      "unsourced": false,
      "pastProgress": true,
      "spoilerAhead": true,
-     "synopsisPending": false
+     "synopsisPending": false,
+     "followed": []
     },
     {
      "number": "10",
@@ -6247,7 +6283,8 @@
      "unsourced": false,
      "pastProgress": true,
      "spoilerAhead": true,
-     "synopsisPending": false
+     "synopsisPending": false,
+     "followed": []
     },
     {
      "number": "11",
@@ -6266,7 +6303,8 @@
      "unsourced": false,
      "pastProgress": true,
      "spoilerAhead": true,
-     "synopsisPending": false
+     "synopsisPending": false,
+     "followed": []
     },
     {
      "number": "12",
@@ -6285,7 +6323,8 @@
      "unsourced": false,
      "pastProgress": true,
      "spoilerAhead": true,
-     "synopsisPending": false
+     "synopsisPending": false,
+     "followed": []
     }
    ],
    "failed": null
@@ -6525,7 +6564,8 @@
      "unsourced": false,
      "pastProgress": false,
      "spoilerAhead": false,
-     "synopsisPending": false
+     "synopsisPending": false,
+     "followed": []
     },
     {
      "number": "2",
@@ -6544,7 +6584,8 @@
      "unsourced": false,
      "pastProgress": true,
      "spoilerAhead": false,
-     "synopsisPending": false
+     "synopsisPending": false,
+     "followed": []
     },
     {
      "number": "3",
@@ -6563,7 +6604,8 @@
      "unsourced": false,
      "pastProgress": true,
      "spoilerAhead": true,
-     "synopsisPending": false
+     "synopsisPending": false,
+     "followed": []
     },
     {
      "number": "4",
@@ -6582,7 +6624,8 @@
      "unsourced": false,
      "pastProgress": true,
      "spoilerAhead": true,
-     "synopsisPending": false
+     "synopsisPending": false,
+     "followed": []
     },
     {
      "number": "5",
@@ -6601,7 +6644,8 @@
      "unsourced": false,
      "pastProgress": true,
      "spoilerAhead": true,
-     "synopsisPending": false
+     "synopsisPending": false,
+     "followed": []
     },
     {
      "number": "6",
@@ -6620,7 +6664,8 @@
      "unsourced": false,
      "pastProgress": true,
      "spoilerAhead": true,
-     "synopsisPending": false
+     "synopsisPending": false,
+     "followed": []
     },
     {
      "number": "7",
@@ -6639,7 +6684,8 @@
      "unsourced": false,
      "pastProgress": true,
      "spoilerAhead": true,
-     "synopsisPending": false
+     "synopsisPending": false,
+     "followed": []
     },
     {
      "number": "8",
@@ -6658,7 +6704,8 @@
      "unsourced": false,
      "pastProgress": true,
      "spoilerAhead": true,
-     "synopsisPending": false
+     "synopsisPending": false,
+     "followed": []
     },
     {
      "number": "9",
@@ -6677,7 +6724,8 @@
      "unsourced": false,
      "pastProgress": true,
      "spoilerAhead": true,
-     "synopsisPending": false
+     "synopsisPending": false,
+     "followed": []
     },
     {
      "number": "10",
@@ -6696,7 +6744,8 @@
      "unsourced": false,
      "pastProgress": true,
      "spoilerAhead": true,
-     "synopsisPending": false
+     "synopsisPending": false,
+     "followed": []
     }
    ],
    "failed": null
@@ -6929,7 +6978,8 @@
      "unsourced": false,
      "pastProgress": false,
      "spoilerAhead": false,
-     "synopsisPending": false
+     "synopsisPending": false,
+     "followed": []
     },
     {
      "number": "2",
@@ -6948,7 +6998,8 @@
      "unsourced": false,
      "pastProgress": false,
      "spoilerAhead": false,
-     "synopsisPending": false
+     "synopsisPending": false,
+     "followed": []
     },
     {
      "number": "3",
@@ -6967,7 +7018,8 @@
      "unsourced": false,
      "pastProgress": false,
      "spoilerAhead": false,
-     "synopsisPending": false
+     "synopsisPending": false,
+     "followed": []
     },
     {
      "number": "4",
@@ -6986,7 +7038,8 @@
      "unsourced": false,
      "pastProgress": false,
      "spoilerAhead": false,
-     "synopsisPending": false
+     "synopsisPending": false,
+     "followed": []
     },
     {
      "number": "5",
@@ -7005,7 +7058,8 @@
      "unsourced": false,
      "pastProgress": false,
      "spoilerAhead": false,
-     "synopsisPending": false
+     "synopsisPending": false,
+     "followed": []
     },
     {
      "number": "6",
@@ -7024,7 +7078,8 @@
      "unsourced": false,
      "pastProgress": false,
      "spoilerAhead": false,
-     "synopsisPending": false
+     "synopsisPending": false,
+     "followed": []
     },
     {
      "number": "7",
@@ -7043,7 +7098,8 @@
      "unsourced": false,
      "pastProgress": false,
      "spoilerAhead": false,
-     "synopsisPending": false
+     "synopsisPending": false,
+     "followed": []
     },
     {
      "number": "8",
@@ -7062,7 +7118,8 @@
      "unsourced": false,
      "pastProgress": true,
      "spoilerAhead": false,
-     "synopsisPending": false
+     "synopsisPending": false,
+     "followed": []
     }
    ],
    "failed": null

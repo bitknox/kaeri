@@ -851,6 +851,13 @@ internal fun AccountsPane(actions: AppActions) {
                 })
             },
         )
+        // People you follow, per device, only while AniList is signed in; the footer says the
+        // viewer's own list is set on AniList.
+        if (anilist?.connected == true) SettingsGroup(
+            rows = listOf(
+                { place -> SettingSwitch(place, SettingKey.SHOW_FOLLOWING, stringResource(R.string.settings_anilist_following), note = stringResource(R.string.settings_anilist_following_footer)) },
+            ),
+        )
         // Discussions are about episodes: with reading alone they are gone.
         if (answer.watches) SettingsGroup(
             title = stringResource(R.string.discussion_settings_group),

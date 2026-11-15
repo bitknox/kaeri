@@ -560,6 +560,15 @@
       }
      },
      {
+      "key": "SHOW_FOLLOWING",
+      "value": "on",
+      "change": {
+       "@type": "Steps",
+       "back": true,
+       "forward": false
+      }
+     },
+     {
       "key": "COMMENT_IMAGES",
       "value": "off",
       "change": {
@@ -7715,7 +7724,8 @@
      "unsourced": false,
      "pastProgress": true,
      "spoilerAhead": false,
-     "synopsisPending": false
+     "synopsisPending": false,
+     "followed": []
     },
     {
      "number": "2",
@@ -7734,7 +7744,8 @@
      "unsourced": false,
      "pastProgress": true,
      "spoilerAhead": true,
-     "synopsisPending": false
+     "synopsisPending": false,
+     "followed": []
     },
     {
      "number": "3",
@@ -7753,7 +7764,8 @@
      "unsourced": false,
      "pastProgress": true,
      "spoilerAhead": true,
-     "synopsisPending": false
+     "synopsisPending": false,
+     "followed": []
     },
     {
      "number": "4",
@@ -7772,7 +7784,8 @@
      "unsourced": false,
      "pastProgress": true,
      "spoilerAhead": true,
-     "synopsisPending": false
+     "synopsisPending": false,
+     "followed": []
     },
     {
      "number": "5",
@@ -7791,7 +7804,8 @@
      "unsourced": false,
      "pastProgress": true,
      "spoilerAhead": true,
-     "synopsisPending": false
+     "synopsisPending": false,
+     "followed": []
     },
     {
      "number": "6",
@@ -7810,7 +7824,8 @@
      "unsourced": false,
      "pastProgress": true,
      "spoilerAhead": true,
-     "synopsisPending": false
+     "synopsisPending": false,
+     "followed": []
     },
     {
      "number": "7",
@@ -7829,7 +7844,8 @@
      "unsourced": false,
      "pastProgress": true,
      "spoilerAhead": true,
-     "synopsisPending": false
+     "synopsisPending": false,
+     "followed": []
     },
     {
      "number": "8",
@@ -7848,7 +7864,8 @@
      "unsourced": false,
      "pastProgress": true,
      "spoilerAhead": true,
-     "synopsisPending": false
+     "synopsisPending": false,
+     "followed": []
     },
     {
      "number": "9",
@@ -7867,7 +7884,8 @@
      "unsourced": false,
      "pastProgress": true,
      "spoilerAhead": true,
-     "synopsisPending": false
+     "synopsisPending": false,
+     "followed": []
     },
     {
      "number": "10",
@@ -7886,7 +7904,8 @@
      "unsourced": false,
      "pastProgress": true,
      "spoilerAhead": true,
-     "synopsisPending": false
+     "synopsisPending": false,
+     "followed": []
     },
     {
      "number": "11",
@@ -7905,7 +7924,8 @@
      "unsourced": false,
      "pastProgress": true,
      "spoilerAhead": true,
-     "synopsisPending": false
+     "synopsisPending": false,
+     "followed": []
     },
     {
      "number": "12",
@@ -7924,7 +7944,8 @@
      "unsourced": false,
      "pastProgress": true,
      "spoilerAhead": true,
-     "synopsisPending": false
+     "synopsisPending": false,
+     "followed": []
     }
    ],
    "failed": null
@@ -8325,7 +8346,8 @@
      "unsourced": false,
      "pastProgress": true,
      "spoilerAhead": false,
-     "synopsisPending": false
+     "synopsisPending": false,
+     "followed": []
     },
     {
      "number": "2",
@@ -8344,7 +8366,8 @@
      "unsourced": false,
      "pastProgress": true,
      "spoilerAhead": true,
-     "synopsisPending": false
+     "synopsisPending": false,
+     "followed": []
     },
     {
      "number": "3",
@@ -8363,7 +8386,8 @@
      "unsourced": false,
      "pastProgress": true,
      "spoilerAhead": true,
-     "synopsisPending": false
+     "synopsisPending": false,
+     "followed": []
     },
     {
      "number": "4",
@@ -8382,7 +8406,8 @@
      "unsourced": false,
      "pastProgress": true,
      "spoilerAhead": true,
-     "synopsisPending": false
+     "synopsisPending": false,
+     "followed": []
     },
     {
      "number": "5",
@@ -8401,7 +8426,8 @@
      "unsourced": false,
      "pastProgress": true,
      "spoilerAhead": true,
-     "synopsisPending": false
+     "synopsisPending": false,
+     "followed": []
     },
     {
      "number": "6",
@@ -8420,7 +8446,8 @@
      "unsourced": false,
      "pastProgress": true,
      "spoilerAhead": true,
-     "synopsisPending": false
+     "synopsisPending": false,
+     "followed": []
     }
    ],
    "failed": null
@@ -8697,7 +8724,8 @@
      "unsourced": false,
      "pastProgress": true,
      "spoilerAhead": false,
-     "synopsisPending": false
+     "synopsisPending": false,
+     "followed": []
     }
    ],
    "failed": null
@@ -9250,7 +9278,8 @@
      "unsourced": false,
      "pastProgress": true,
      "spoilerAhead": false,
-     "synopsisPending": false
+     "synopsisPending": false,
+     "followed": []
     },
     {
      "number": "2",
@@ -9269,7 +9298,8 @@
      "unsourced": false,
      "pastProgress": true,
      "spoilerAhead": true,
-     "synopsisPending": false
+     "synopsisPending": false,
+     "followed": []
     },
     {
      "number": "3",
@@ -9288,7 +9318,8 @@
      "unsourced": false,
      "pastProgress": true,
      "spoilerAhead": true,
-     "synopsisPending": false
+     "synopsisPending": false,
+     "followed": []
     },
     {
      "number": "4",
@@ -9307,7 +9338,8 @@
      "unsourced": false,
      "pastProgress": true,
      "spoilerAhead": true,
-     "synopsisPending": false
+     "synopsisPending": false,
+     "followed": []
     },
     {
      "number": "5",
@@ -9326,7 +9358,8 @@
      "unsourced": false,
      "pastProgress": true,
      "spoilerAhead": true,
-     "synopsisPending": false
+     "synopsisPending": false,
+     "followed": []
     },
     {
      "number": "6",
@@ -9345,7 +9378,8 @@
      "unsourced": false,
      "pastProgress": true,
      "spoilerAhead": true,
-     "synopsisPending": false
+     "synopsisPending": false,
+     "followed": []
     },
     {
      "number": "7",
@@ -9364,7 +9398,8 @@
      "unsourced": false,
      "pastProgress": true,
      "spoilerAhead": true,
-     "synopsisPending": false
+     "synopsisPending": false,
+     "followed": []
     },
     {
      "number": "8",
@@ -9383,7 +9418,8 @@
      "unsourced": false,
      "pastProgress": true,
      "spoilerAhead": true,
-     "synopsisPending": false
+     "synopsisPending": false,
+     "followed": []
     },
     {
      "number": "9",
@@ -9402,7 +9438,8 @@
      "unsourced": false,
      "pastProgress": true,
      "spoilerAhead": true,
-     "synopsisPending": false
+     "synopsisPending": false,
+     "followed": []
     },
     {
      "number": "10",
@@ -9421,7 +9458,8 @@
      "unsourced": false,
      "pastProgress": true,
      "spoilerAhead": true,
-     "synopsisPending": false
+     "synopsisPending": false,
+     "followed": []
     },
     {
      "number": "11",
@@ -9440,7 +9478,8 @@
      "unsourced": false,
      "pastProgress": true,
      "spoilerAhead": true,
-     "synopsisPending": false
+     "synopsisPending": false,
+     "followed": []
     },
     {
      "number": "12",
@@ -9459,7 +9498,8 @@
      "unsourced": false,
      "pastProgress": true,
      "spoilerAhead": true,
-     "synopsisPending": false
+     "synopsisPending": false,
+     "followed": []
     }
    ],
    "failed": null
@@ -9703,7 +9743,8 @@
      "unsourced": false,
      "pastProgress": true,
      "spoilerAhead": false,
-     "synopsisPending": false
+     "synopsisPending": false,
+     "followed": []
     },
     {
      "number": "2",
@@ -9722,7 +9763,8 @@
      "unsourced": false,
      "pastProgress": true,
      "spoilerAhead": true,
-     "synopsisPending": false
+     "synopsisPending": false,
+     "followed": []
     },
     {
      "number": "3",
@@ -9741,7 +9783,8 @@
      "unsourced": false,
      "pastProgress": true,
      "spoilerAhead": true,
-     "synopsisPending": false
+     "synopsisPending": false,
+     "followed": []
     },
     {
      "number": "4",
@@ -9760,7 +9803,8 @@
      "unsourced": false,
      "pastProgress": true,
      "spoilerAhead": true,
-     "synopsisPending": false
+     "synopsisPending": false,
+     "followed": []
     },
     {
      "number": "5",
@@ -9779,7 +9823,8 @@
      "unsourced": false,
      "pastProgress": true,
      "spoilerAhead": true,
-     "synopsisPending": false
+     "synopsisPending": false,
+     "followed": []
     },
     {
      "number": "6",
@@ -9798,7 +9843,8 @@
      "unsourced": false,
      "pastProgress": true,
      "spoilerAhead": true,
-     "synopsisPending": false
+     "synopsisPending": false,
+     "followed": []
     },
     {
      "number": "7",
@@ -9817,7 +9863,8 @@
      "unsourced": false,
      "pastProgress": true,
      "spoilerAhead": true,
-     "synopsisPending": false
+     "synopsisPending": false,
+     "followed": []
     },
     {
      "number": "8",
@@ -9836,7 +9883,8 @@
      "unsourced": false,
      "pastProgress": true,
      "spoilerAhead": true,
-     "synopsisPending": false
+     "synopsisPending": false,
+     "followed": []
     },
     {
      "number": "9",
@@ -9855,7 +9903,8 @@
      "unsourced": false,
      "pastProgress": true,
      "spoilerAhead": true,
-     "synopsisPending": false
+     "synopsisPending": false,
+     "followed": []
     },
     {
      "number": "10",
@@ -9874,7 +9923,8 @@
      "unsourced": false,
      "pastProgress": true,
      "spoilerAhead": true,
-     "synopsisPending": false
+     "synopsisPending": false,
+     "followed": []
     }
    ],
    "failed": null
@@ -10143,7 +10193,8 @@
      "unsourced": false,
      "pastProgress": true,
      "spoilerAhead": false,
-     "synopsisPending": false
+     "synopsisPending": false,
+     "followed": []
     },
     {
      "number": "2",
@@ -10162,7 +10213,8 @@
      "unsourced": false,
      "pastProgress": true,
      "spoilerAhead": true,
-     "synopsisPending": false
+     "synopsisPending": false,
+     "followed": []
     },
     {
      "number": "3",
@@ -10181,7 +10233,8 @@
      "unsourced": false,
      "pastProgress": true,
      "spoilerAhead": true,
-     "synopsisPending": false
+     "synopsisPending": false,
+     "followed": []
     },
     {
      "number": "4",
@@ -10200,7 +10253,8 @@
      "unsourced": false,
      "pastProgress": true,
      "spoilerAhead": true,
-     "synopsisPending": false
+     "synopsisPending": false,
+     "followed": []
     },
     {
      "number": "5",
@@ -10219,7 +10273,8 @@
      "unsourced": false,
      "pastProgress": true,
      "spoilerAhead": true,
-     "synopsisPending": false
+     "synopsisPending": false,
+     "followed": []
     },
     {
      "number": "6",
@@ -10238,7 +10293,8 @@
      "unsourced": false,
      "pastProgress": true,
      "spoilerAhead": true,
-     "synopsisPending": false
+     "synopsisPending": false,
+     "followed": []
     },
     {
      "number": "7",
@@ -10257,7 +10313,8 @@
      "unsourced": false,
      "pastProgress": true,
      "spoilerAhead": true,
-     "synopsisPending": false
+     "synopsisPending": false,
+     "followed": []
     },
     {
      "number": "8",
@@ -10276,7 +10333,8 @@
      "unsourced": false,
      "pastProgress": true,
      "spoilerAhead": true,
-     "synopsisPending": false
+     "synopsisPending": false,
+     "followed": []
     },
     {
      "number": "9",
@@ -10295,7 +10353,8 @@
      "unsourced": false,
      "pastProgress": true,
      "spoilerAhead": true,
-     "synopsisPending": false
+     "synopsisPending": false,
+     "followed": []
     }
    ],
    "failed": null
@@ -11945,7 +12004,8 @@
      "unsourced": false,
      "pastProgress": true,
      "spoilerAhead": false,
-     "synopsisPending": false
+     "synopsisPending": false,
+     "followed": []
     },
     {
      "number": "2",
@@ -11964,7 +12024,8 @@
      "unsourced": false,
      "pastProgress": true,
      "spoilerAhead": true,
-     "synopsisPending": false
+     "synopsisPending": false,
+     "followed": []
     },
     {
      "number": "3",
@@ -11983,7 +12044,8 @@
      "unsourced": false,
      "pastProgress": true,
      "spoilerAhead": true,
-     "synopsisPending": false
+     "synopsisPending": false,
+     "followed": []
     },
     {
      "number": "4",
@@ -12002,7 +12064,8 @@
      "unsourced": false,
      "pastProgress": true,
      "spoilerAhead": true,
-     "synopsisPending": false
+     "synopsisPending": false,
+     "followed": []
     },
     {
      "number": "5",
@@ -12021,7 +12084,8 @@
      "unsourced": false,
      "pastProgress": true,
      "spoilerAhead": true,
-     "synopsisPending": false
+     "synopsisPending": false,
+     "followed": []
     },
     {
      "number": "6",
@@ -12040,7 +12104,8 @@
      "unsourced": false,
      "pastProgress": true,
      "spoilerAhead": true,
-     "synopsisPending": false
+     "synopsisPending": false,
+     "followed": []
     },
     {
      "number": "7",
@@ -12059,7 +12124,8 @@
      "unsourced": false,
      "pastProgress": true,
      "spoilerAhead": true,
-     "synopsisPending": false
+     "synopsisPending": false,
+     "followed": []
     },
     {
      "number": "8",
@@ -12078,7 +12144,8 @@
      "unsourced": false,
      "pastProgress": true,
      "spoilerAhead": true,
-     "synopsisPending": false
+     "synopsisPending": false,
+     "followed": []
     },
     {
      "number": "9",
@@ -12097,7 +12164,8 @@
      "unsourced": false,
      "pastProgress": true,
      "spoilerAhead": true,
-     "synopsisPending": false
+     "synopsisPending": false,
+     "followed": []
     },
     {
      "number": "10",
@@ -12116,7 +12184,8 @@
      "unsourced": false,
      "pastProgress": true,
      "spoilerAhead": true,
-     "synopsisPending": false
+     "synopsisPending": false,
+     "followed": []
     },
     {
      "number": "11",
@@ -12135,7 +12204,8 @@
      "unsourced": false,
      "pastProgress": true,
      "spoilerAhead": true,
-     "synopsisPending": false
+     "synopsisPending": false,
+     "followed": []
     },
     {
      "number": "12",
@@ -12154,7 +12224,8 @@
      "unsourced": false,
      "pastProgress": true,
      "spoilerAhead": true,
-     "synopsisPending": false
+     "synopsisPending": false,
+     "followed": []
     }
    ],
    "failed": null
@@ -14029,7 +14100,8 @@
      "unsourced": false,
      "pastProgress": true,
      "spoilerAhead": false,
-     "synopsisPending": false
+     "synopsisPending": false,
+     "followed": []
     },
     {
      "number": "2",
@@ -14048,7 +14120,8 @@
      "unsourced": false,
      "pastProgress": true,
      "spoilerAhead": true,
-     "synopsisPending": false
+     "synopsisPending": false,
+     "followed": []
     },
     {
      "number": "3",
@@ -14067,7 +14140,8 @@
      "unsourced": false,
      "pastProgress": true,
      "spoilerAhead": true,
-     "synopsisPending": false
+     "synopsisPending": false,
+     "followed": []
     },
     {
      "number": "4",
@@ -14086,7 +14160,8 @@
      "unsourced": false,
      "pastProgress": true,
      "spoilerAhead": true,
-     "synopsisPending": false
+     "synopsisPending": false,
+     "followed": []
     },
     {
      "number": "5",
@@ -14105,7 +14180,8 @@
      "unsourced": false,
      "pastProgress": true,
      "spoilerAhead": true,
-     "synopsisPending": false
+     "synopsisPending": false,
+     "followed": []
     },
     {
      "number": "6",
@@ -14124,7 +14200,8 @@
      "unsourced": false,
      "pastProgress": true,
      "spoilerAhead": true,
-     "synopsisPending": false
+     "synopsisPending": false,
+     "followed": []
     },
     {
      "number": "7",
@@ -14143,7 +14220,8 @@
      "unsourced": false,
      "pastProgress": true,
      "spoilerAhead": true,
-     "synopsisPending": false
+     "synopsisPending": false,
+     "followed": []
     },
     {
      "number": "8",
@@ -14162,7 +14240,8 @@
      "unsourced": false,
      "pastProgress": true,
      "spoilerAhead": true,
-     "synopsisPending": false
+     "synopsisPending": false,
+     "followed": []
     },
     {
      "number": "9",
@@ -14181,7 +14260,8 @@
      "unsourced": false,
      "pastProgress": true,
      "spoilerAhead": true,
-     "synopsisPending": false
+     "synopsisPending": false,
+     "followed": []
     },
     {
      "number": "10",
@@ -14200,7 +14280,8 @@
      "unsourced": false,
      "pastProgress": true,
      "spoilerAhead": true,
-     "synopsisPending": false
+     "synopsisPending": false,
+     "followed": []
     },
     {
      "number": "11",
@@ -14219,7 +14300,8 @@
      "unsourced": false,
      "pastProgress": true,
      "spoilerAhead": true,
-     "synopsisPending": false
+     "synopsisPending": false,
+     "followed": []
     },
     {
      "number": "12",
@@ -14238,7 +14320,8 @@
      "unsourced": false,
      "pastProgress": true,
      "spoilerAhead": true,
-     "synopsisPending": false
+     "synopsisPending": false,
+     "followed": []
     }
    ],
    "failed": null
@@ -16106,7 +16189,8 @@
      "unsourced": false,
      "pastProgress": true,
      "spoilerAhead": false,
-     "synopsisPending": false
+     "synopsisPending": false,
+     "followed": []
     },
     {
      "number": "2",
@@ -16125,7 +16209,8 @@
      "unsourced": false,
      "pastProgress": true,
      "spoilerAhead": true,
-     "synopsisPending": false
+     "synopsisPending": false,
+     "followed": []
     },
     {
      "number": "3",
@@ -16144,7 +16229,8 @@
      "unsourced": false,
      "pastProgress": true,
      "spoilerAhead": true,
-     "synopsisPending": false
+     "synopsisPending": false,
+     "followed": []
     },
     {
      "number": "4",
@@ -16163,7 +16249,8 @@
      "unsourced": false,
      "pastProgress": true,
      "spoilerAhead": true,
-     "synopsisPending": false
+     "synopsisPending": false,
+     "followed": []
     },
     {
      "number": "5",
@@ -16182,7 +16269,8 @@
      "unsourced": false,
      "pastProgress": true,
      "spoilerAhead": true,
-     "synopsisPending": false
+     "synopsisPending": false,
+     "followed": []
     },
     {
      "number": "6",
@@ -16201,7 +16289,8 @@
      "unsourced": false,
      "pastProgress": true,
      "spoilerAhead": true,
-     "synopsisPending": false
+     "synopsisPending": false,
+     "followed": []
     },
     {
      "number": "7",
@@ -16220,7 +16309,8 @@
      "unsourced": false,
      "pastProgress": true,
      "spoilerAhead": true,
-     "synopsisPending": false
+     "synopsisPending": false,
+     "followed": []
     },
     {
      "number": "8",
@@ -16239,7 +16329,8 @@
      "unsourced": false,
      "pastProgress": true,
      "spoilerAhead": true,
-     "synopsisPending": false
+     "synopsisPending": false,
+     "followed": []
     },
     {
      "number": "9",
@@ -16258,7 +16349,8 @@
      "unsourced": false,
      "pastProgress": true,
      "spoilerAhead": true,
-     "synopsisPending": false
+     "synopsisPending": false,
+     "followed": []
     },
     {
      "number": "10",
@@ -16277,7 +16369,8 @@
      "unsourced": false,
      "pastProgress": true,
      "spoilerAhead": true,
-     "synopsisPending": false
+     "synopsisPending": false,
+     "followed": []
     },
     {
      "number": "11",
@@ -16296,7 +16389,8 @@
      "unsourced": false,
      "pastProgress": true,
      "spoilerAhead": true,
-     "synopsisPending": false
+     "synopsisPending": false,
+     "followed": []
     },
     {
      "number": "12",
@@ -16315,7 +16409,8 @@
      "unsourced": false,
      "pastProgress": true,
      "spoilerAhead": true,
-     "synopsisPending": false
+     "synopsisPending": false,
+     "followed": []
     }
    ],
    "failed": null
@@ -18176,7 +18271,8 @@
      "unsourced": false,
      "pastProgress": true,
      "spoilerAhead": false,
-     "synopsisPending": false
+     "synopsisPending": false,
+     "followed": []
     },
     {
      "number": "2",
@@ -18195,7 +18291,8 @@
      "unsourced": false,
      "pastProgress": true,
      "spoilerAhead": true,
-     "synopsisPending": false
+     "synopsisPending": false,
+     "followed": []
     },
     {
      "number": "3",
@@ -18214,7 +18311,8 @@
      "unsourced": false,
      "pastProgress": true,
      "spoilerAhead": true,
-     "synopsisPending": false
+     "synopsisPending": false,
+     "followed": []
     },
     {
      "number": "4",
@@ -18233,7 +18331,8 @@
      "unsourced": false,
      "pastProgress": true,
      "spoilerAhead": true,
-     "synopsisPending": false
+     "synopsisPending": false,
+     "followed": []
     },
     {
      "number": "5",
@@ -18252,7 +18351,8 @@
      "unsourced": false,
      "pastProgress": true,
      "spoilerAhead": true,
-     "synopsisPending": false
+     "synopsisPending": false,
+     "followed": []
     },
     {
      "number": "6",
@@ -18271,7 +18371,8 @@
      "unsourced": false,
      "pastProgress": true,
      "spoilerAhead": true,
-     "synopsisPending": false
+     "synopsisPending": false,
+     "followed": []
     },
     {
      "number": "7",
@@ -18290,7 +18391,8 @@
      "unsourced": false,
      "pastProgress": true,
      "spoilerAhead": true,
-     "synopsisPending": false
+     "synopsisPending": false,
+     "followed": []
     },
     {
      "number": "8",
@@ -18309,7 +18411,8 @@
      "unsourced": false,
      "pastProgress": true,
      "spoilerAhead": true,
-     "synopsisPending": false
+     "synopsisPending": false,
+     "followed": []
     },
     {
      "number": "9",
@@ -18328,7 +18431,8 @@
      "unsourced": false,
      "pastProgress": true,
      "spoilerAhead": true,
-     "synopsisPending": false
+     "synopsisPending": false,
+     "followed": []
     },
     {
      "number": "10",
@@ -18347,7 +18451,8 @@
      "unsourced": false,
      "pastProgress": true,
      "spoilerAhead": true,
-     "synopsisPending": false
+     "synopsisPending": false,
+     "followed": []
     },
     {
      "number": "11",
@@ -18366,7 +18471,8 @@
      "unsourced": false,
      "pastProgress": true,
      "spoilerAhead": true,
-     "synopsisPending": false
+     "synopsisPending": false,
+     "followed": []
     },
     {
      "number": "12",
@@ -18385,7 +18491,8 @@
      "unsourced": false,
      "pastProgress": true,
      "spoilerAhead": true,
-     "synopsisPending": false
+     "synopsisPending": false,
+     "followed": []
     },
     {
      "number": "13",
@@ -18404,7 +18511,8 @@
      "unsourced": false,
      "pastProgress": true,
      "spoilerAhead": true,
-     "synopsisPending": false
+     "synopsisPending": false,
+     "followed": []
     }
    ],
    "failed": null
@@ -20258,7 +20366,8 @@
      "unsourced": false,
      "pastProgress": true,
      "spoilerAhead": false,
-     "synopsisPending": false
+     "synopsisPending": false,
+     "followed": []
     },
     {
      "number": "2",
@@ -20277,7 +20386,8 @@
      "unsourced": false,
      "pastProgress": true,
      "spoilerAhead": true,
-     "synopsisPending": false
+     "synopsisPending": false,
+     "followed": []
     },
     {
      "number": "3",
@@ -20296,7 +20406,8 @@
      "unsourced": false,
      "pastProgress": true,
      "spoilerAhead": true,
-     "synopsisPending": false
+     "synopsisPending": false,
+     "followed": []
     },
     {
      "number": "4",
@@ -20315,7 +20426,8 @@
      "unsourced": false,
      "pastProgress": true,
      "spoilerAhead": true,
-     "synopsisPending": false
+     "synopsisPending": false,
+     "followed": []
     },
     {
      "number": "5",
@@ -20334,7 +20446,8 @@
      "unsourced": false,
      "pastProgress": true,
      "spoilerAhead": true,
-     "synopsisPending": false
+     "synopsisPending": false,
+     "followed": []
     },
     {
      "number": "6",
@@ -20353,7 +20466,8 @@
      "unsourced": false,
      "pastProgress": true,
      "spoilerAhead": true,
-     "synopsisPending": false
+     "synopsisPending": false,
+     "followed": []
     },
     {
      "number": "7",
@@ -20372,7 +20486,8 @@
      "unsourced": false,
      "pastProgress": true,
      "spoilerAhead": true,
-     "synopsisPending": false
+     "synopsisPending": false,
+     "followed": []
     },
     {
      "number": "8",
@@ -20391,7 +20506,8 @@
      "unsourced": false,
      "pastProgress": true,
      "spoilerAhead": true,
-     "synopsisPending": false
+     "synopsisPending": false,
+     "followed": []
     },
     {
      "number": "9",
@@ -20410,7 +20526,8 @@
      "unsourced": false,
      "pastProgress": true,
      "spoilerAhead": true,
-     "synopsisPending": false
+     "synopsisPending": false,
+     "followed": []
     },
     {
      "number": "10",
@@ -20429,7 +20546,8 @@
      "unsourced": false,
      "pastProgress": true,
      "spoilerAhead": true,
-     "synopsisPending": false
+     "synopsisPending": false,
+     "followed": []
     },
     {
      "number": "11",
@@ -20448,7 +20566,8 @@
      "unsourced": false,
      "pastProgress": true,
      "spoilerAhead": true,
-     "synopsisPending": false
+     "synopsisPending": false,
+     "followed": []
     },
     {
      "number": "12",
@@ -20467,7 +20586,8 @@
      "unsourced": false,
      "pastProgress": true,
      "spoilerAhead": true,
-     "synopsisPending": false
+     "synopsisPending": false,
+     "followed": []
     }
    ],
    "failed": null
@@ -22280,7 +22400,8 @@
      "unsourced": false,
      "pastProgress": true,
      "spoilerAhead": false,
-     "synopsisPending": false
+     "synopsisPending": false,
+     "followed": []
     },
     {
      "number": "2",
@@ -22299,7 +22420,8 @@
      "unsourced": false,
      "pastProgress": true,
      "spoilerAhead": true,
-     "synopsisPending": false
+     "synopsisPending": false,
+     "followed": []
     },
     {
      "number": "3",
@@ -22318,7 +22440,8 @@
      "unsourced": false,
      "pastProgress": true,
      "spoilerAhead": true,
-     "synopsisPending": false
+     "synopsisPending": false,
+     "followed": []
     },
     {
      "number": "4",
@@ -22337,7 +22460,8 @@
      "unsourced": false,
      "pastProgress": true,
      "spoilerAhead": true,
-     "synopsisPending": false
+     "synopsisPending": false,
+     "followed": []
     },
     {
      "number": "5",
@@ -22356,7 +22480,8 @@
      "unsourced": false,
      "pastProgress": true,
      "spoilerAhead": true,
-     "synopsisPending": false
+     "synopsisPending": false,
+     "followed": []
     },
     {
      "number": "6",
@@ -22375,7 +22500,8 @@
      "unsourced": false,
      "pastProgress": true,
      "spoilerAhead": true,
-     "synopsisPending": false
+     "synopsisPending": false,
+     "followed": []
     },
     {
      "number": "7",
@@ -22394,7 +22520,8 @@
      "unsourced": false,
      "pastProgress": true,
      "spoilerAhead": true,
-     "synopsisPending": false
+     "synopsisPending": false,
+     "followed": []
     },
     {
      "number": "8",
@@ -22413,7 +22540,8 @@
      "unsourced": false,
      "pastProgress": true,
      "spoilerAhead": true,
-     "synopsisPending": false
+     "synopsisPending": false,
+     "followed": []
     },
     {
      "number": "9",
@@ -22432,7 +22560,8 @@
      "unsourced": false,
      "pastProgress": true,
      "spoilerAhead": true,
-     "synopsisPending": false
+     "synopsisPending": false,
+     "followed": []
     },
     {
      "number": "10",
@@ -22451,7 +22580,8 @@
      "unsourced": false,
      "pastProgress": true,
      "spoilerAhead": true,
-     "synopsisPending": false
+     "synopsisPending": false,
+     "followed": []
     },
     {
      "number": "11",
@@ -22470,7 +22600,8 @@
      "unsourced": false,
      "pastProgress": true,
      "spoilerAhead": true,
-     "synopsisPending": false
+     "synopsisPending": false,
+     "followed": []
     },
     {
      "number": "12",
@@ -22489,7 +22620,8 @@
      "unsourced": false,
      "pastProgress": true,
      "spoilerAhead": true,
-     "synopsisPending": false
+     "synopsisPending": false,
+     "followed": []
     },
     {
      "number": "13",
@@ -22508,7 +22640,8 @@
      "unsourced": false,
      "pastProgress": true,
      "spoilerAhead": true,
-     "synopsisPending": false
+     "synopsisPending": false,
+     "followed": []
     }
    ],
    "failed": null

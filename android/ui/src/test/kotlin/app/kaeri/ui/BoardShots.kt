@@ -318,6 +318,57 @@ class BoardShots {
     @Config(qualifiers = PHONE)
     fun phone_title() = shoot("phone-title", WATCHING, title = 900001u)
 
+    // People you follow: the row under the list button, its sheet, the marks on the episodes,
+    // and the switch under the AniList account.
+
+    @Test
+    @Config(qualifiers = PHONE)
+    fun phone_title_following() = shoot("phone-title-following", FOLLOWING, title = 900001u)
+
+    @Test
+    @Config(qualifiers = PHONE)
+    fun phone_following_sheet() = shoot("phone-following-sheet", FOLLOWING, title = 900001u, screen = true) {
+        compose.onNodeWithContentDescription("People you follow", substring = true).performClick()
+    }
+
+    /** The marks on the episodes, and what a screen reader hears of them: names, never scores. */
+    @Test
+    @Config(qualifiers = PHONE)
+    fun phone_title_following_episodes() = shoot("phone-title-following-episodes", FOLLOWING, title = 900001u) {
+        toEpisodes()
+        // The row as TalkBack reads it: its descendants merged into it.
+        val row = compose.onNode(hasClickAction() and hasText("E8 \u00b7", substring = true))
+        row.assert(SemanticsMatcher("says who stopped here") { node ->
+            val said = node.config.getOrNull(SemanticsProperties.ContentDescription).orEmpty().joinToString(" ")
+            "watched up to here." in said && "Lumi" in said && "Score" !in said
+        })
+    }
+
+    @Test
+    @Config(qualifiers = PHONE)
+    fun phone_settings_following() = shoot("phone-settings-following", FOLLOWING, page = "settings/accounts", screen = true)
+
+    @Test
+    @Config(qualifiers = TABLET)
+    fun tablet_title_following() = shoot("tablet-title-following", FOLLOWING, title = 900001u)
+
+    /** With the switch off the page is today's: no row and no marks. */
+    @Test
+    @Config(qualifiers = PHONE)
+    fun following_off_leaves_the_page_as_it_was() = shoot("phone-title-following-off", FOLLOWING, title = 900001u) { store ->
+        val entry = checkNotNull(store.titles[900001u])
+        val rows = checkNotNull(store.titles.episodes.value[900001u])
+        compose.runOnUiThread {
+            store.apply(listOf(Event.Detail(entry.copy(detail = entry.detail?.copy(following = emptyList())))))
+            store.apply(listOf(Event.Episodes(900001u, rows.map { it.copy(followed = emptyList()) })))
+        }
+        compose.mainClock.advanceTimeBy(1_000)
+        compose.waitForIdle()
+        compose.onAllNodes(SemanticsMatcher("People you follow") { node ->
+            node.config.getOrNull(SemanticsProperties.ContentDescription).orEmpty().any { "People you follow" in it || "watched up to here" in it }
+        }).assertCountEquals(0)
+    }
+
     @Test
     @Config(qualifiers = PHONE)
     fun phone_calendar() = shoot("phone-calendar", WATCHING, start = Destination.Calendar)
@@ -1331,6 +1382,9 @@ class BoardShots {
         fun seasonalList(event: Event) = event is Event.Content && event.view == ContentFor.Seasonal
 
         const val WATCHING = "watching"
+
+        /** Watching, signed in, with people followed on 900001 and 900002. */
+        const val FOLLOWING = "following"
         const val BROWSING = "browsing"
 
         const val HOME_WATCHING = "home-watching"

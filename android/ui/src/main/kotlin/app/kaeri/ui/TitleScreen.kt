@@ -94,6 +94,7 @@ import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
+import app.kaeri.store.FollowingWords
 import app.kaeri.store.text
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kotlin.math.roundToInt
@@ -703,8 +704,25 @@ private fun HeldRows(
 /** The season picker's key in a page's list. */
 private const val SEASONS = "seasons"
 
-/** Where the season picker stands in [entry]'s page: after the head, the actions, the synopsis if any, the facts and More about. */
-private fun seasonsIndex(entry: Entry): Int = if (synopsisWithoutSpoilers(entry.synopsis).isNotEmpty()) 5 else 4
+/**
+ * Where the season picker stands in [entry]'s page: after the head, the actions, People you follow
+ * if anyone has it, the synopsis if any, the facts and More about.
+ */
+private fun seasonsIndex(entry: Entry): Int =
+    4 + (if (synopsisWithoutSpoilers(entry.synopsis).isNotEmpty()) 1 else 0) + (if (entry.detail?.following.isNullOrEmpty()) 0 else 1)
+
+/**
+ * People you follow, under the list button, while anyone followed has the show: it fades in on
+ * the fade-in token as the people arrive, the items under it gliding on standard to make room,
+ * and fades out over 0.3 s when the switch goes off.
+ */
+private fun LazyListScope.followingItem(entry: Entry) {
+    val people = entry.detail?.following.orEmpty()
+    if (people.isEmpty()) return
+    item(key = "following", contentType = "following") {
+        FollowingRow(people, Modifier.animateItem(fadeInSpec = Motion.fadeIn(), placementSpec = Motion.standard(), fadeOutSpec = Motion.fadeOut()))
+    }
+}
 
 /**
  * A page's prefetch: the lazy list's own while it scrolls, and, while the page waits off screen,
@@ -848,6 +866,7 @@ private fun SeasonPage(
             if (loaded) {
                 val unlisted = episodes?.firstOrNull()?.metadataOnly == true
                 item(key = "actions", contentType = "actions") { Box(itemMotion()) { TitleActions(entry, actions, unlisted) } }
+                followingItem(entry)
                 val synopsis = synopsisWithoutSpoilers(entry.synopsis)
                 if (synopsis.isNotEmpty()) item(key = "synopsis", contentType = "synopsis") { Box(itemMotion()) { Synopsis(synopsis) } }
                 if (entry.isDemo) item(key = "demo-credit", contentType = "demo-credit") { Box(itemMotion()) { DemoCredit(Modifier.padding(horizontal = 16.dp, vertical = 8.dp)) } }
@@ -1858,7 +1877,7 @@ private fun LazyListScope.episodeRows(
     }
     if (folded.isNotEmpty()) {
         val anchor = page.key(entry.id, inRange[folded.size])
-        item(key = watchedFold(entry.id), contentType = "fold") { WatchedFoldRow(folded, unfolded, itemMotion().padding(horizontal = 16.dp), dub = rangeDub) { onFold(anchor) } }
+        item(key = watchedFold(entry.id), contentType = "fold") { WatchedFoldRow(folded, unfolded, itemMotion().padding(horizontal = 16.dp), dub = rangeDub, marked = page.marked) { onFold(anchor) } }
     }
     if (folded.isEmpty() && rangeDub != null) {
         item(key = "dub-line", contentType = "dub-line") {
@@ -1943,6 +1962,11 @@ internal class SynopsisPage(
     val arrived: () -> Unit = {},
     /** Whether the Go to episode dialog is open, so the page is recorded for the crossfade after it. */
     val asking: Boolean = false,
+    /**
+     * Whether the rows keep a column for the marks: once anyone followed stopped at one of the
+     * episodes, for as long as the page is open, so marks leaving fade out and move nothing.
+     */
+    val marked: Boolean = false,
 ) {
     /** The rows shown: the selected range's, or all of a short series. */
     val rows: List<EpisodeRow> = if (ranges.isEmpty()) listed else rangeRows(listed, ranges[selected])
@@ -2012,7 +2036,9 @@ private fun rememberSynopsisPage(entry: Entry, episodes: List<EpisodeRow>?, befo
             }
         })
     }
-    return SynopsisPage(listed, ranges, selected, { picked = it; landed = null }, outlook, protect, reveals, foldCount, { asking = true }, landed, goal, { goal = null }, asking)
+    var marked by remember(entry.id) { mutableStateOf(false) }
+    if (!marked && listed.any { it.followed.isNotEmpty() }) marked = true
+    return SynopsisPage(listed, ranges, selected, { picked = it; landed = null }, outlook, protect, reveals, foldCount, { asking = true }, landed, goal, { goal = null }, asking, marked)
 }
 
 /**
@@ -2092,7 +2118,15 @@ private fun rememberEpisodeFold(id: AnilistId, grid: androidx.compose.foundation
  * quiet one-line row with a chevron, not a button.
  */
 @Composable
-private fun WatchedFoldRow(folded: List<EpisodeRow>, unfolded: Boolean, modifier: Modifier = Modifier, dub: String? = null, onToggle: () -> Unit) {
+private fun WatchedFoldRow(
+    folded: List<EpisodeRow>,
+    unfolded: Boolean,
+    modifier: Modifier = Modifier,
+    dub: String? = null,
+    /** Whether the table's rows keep the marks' column, so this row keeps it too. */
+    marked: Boolean = false,
+    onToggle: () -> Unit,
+) {
     val colors = MaterialTheme.colorScheme
     val turn by androidx.compose.animation.core.animateFloatAsState(if (unfolded) 180f else 0f, Motion.quick(), label = "fold") // i18n-skip
     val hide = stringResource(R.string.title_hide_watched)
@@ -2117,6 +2151,8 @@ private fun WatchedFoldRow(folded: List<EpisodeRow>, unfolded: Boolean, modifier
         androidx.compose.animation.AnimatedVisibility(dub != null, enter = fadeIn(Motion.fadeIn()), exit = ExitTransition.None) {
             Text(dub.orEmpty(), style = MaterialTheme.typography.bodyMedium, color = colors.onSurfaceVariant, maxLines = 1, modifier = Modifier.padding(end = 12.dp))
         }
+        // Folded, the row carries the marks of the episodes inside it; unfolded, those rows carry their own.
+        if (marked) MarkSlot(if (unfolded) emptyList() else FollowingWords.folded(folded), Modifier.padding(end = 8.dp))
         Icon(Icons.Down, contentDescription = null, tint = colors.onSurfaceVariant, modifier = Modifier.graphicsLayer { rotationZ = turn })
     }
 }
@@ -2178,6 +2214,7 @@ private fun EpisodeRowView(entry: Entry, row: EpisodeRow, next: UInt, actions: A
                 onShow = { reveals.show(row.number) },
                 opensService = link != null && !unaired,
                 beside = beside,
+                followed = if (page.marked) row.followed else null,
             )
         } else {
             EpisodeLine(
@@ -2358,7 +2395,7 @@ private fun TabletTitle(
                         val anchor = page.key(entry.id, page.rows[folded.size])
                         fullWidth(watchedFold(entry.id)) {
                             // In a Box, which lets the row be narrower than the grid's cell.
-                            Box(itemMotion()) { WatchedFoldRow(folded, entry.id in unfolded, Modifier.widthIn(max = BesideDims.MaxWidth).padding(start = 16.dp)) { fold(anchor) } }
+                            Box(itemMotion()) { WatchedFoldRow(folded, entry.id in unfolded, Modifier.widthIn(max = BesideDims.MaxWidth).padding(start = 16.dp), marked = page.marked) { fold(anchor) } }
                         }
                     }
                     val shown = if (folded.isNotEmpty() && entry.id !in unfolded) page.rows.drop(folded.size) else page.rows
@@ -2560,5 +2597,16 @@ private fun TitleFacts(entry: Entry, modifier: Modifier = Modifier, onMore: () -
             Text(it, style = MaterialTheme.typography.bodyMedium, color = colors.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.padding(top = 12.dp))
         }
         FilledTonalButton(onClick = onMore, modifier = Modifier.padding(top = 12.dp)) { Text(stringResource(R.string.title_more_about)) }
+        // People you follow, after More about as wide screens place them: the phone's row and
+        // sheet, fading in as they arrive while the column grows on standard.
+        val people = entry.detail?.following.orEmpty()
+        var kept by remember { mutableStateOf(people) }
+        if (people.isNotEmpty()) kept = people
+        androidx.compose.animation.AnimatedVisibility(
+            people.isNotEmpty(),
+            enter = fadeIn(Motion.fadeIn()) + androidx.compose.animation.expandVertically(Motion.standard()),
+            exit = androidx.compose.animation.fadeOut(Motion.fadeOut()) + androidx.compose.animation.shrinkVertically(Motion.standard()),
+            label = "following", // i18n-skip
+        ) { FollowingRow(kept, inset = 0.dp) }
     }
 }
