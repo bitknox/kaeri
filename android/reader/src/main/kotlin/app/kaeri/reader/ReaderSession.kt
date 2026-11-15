@@ -44,6 +44,8 @@ import app.kaeri.engine.model.StripPos
 import app.kaeri.engine.model.TapMap
 import app.kaeri.engine.model.TurnHow
 import app.kaeri.store.AppStore
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -305,7 +307,12 @@ class ReaderSession(private val send: (Command) -> Unit) {
      * on its way, the session hears on until the engine answers the close, so an Opened sent
      * before it is closed too.
      */
+    /** Private mode and each series' own flag, from the store this session is bound to. */
+    var privacy by androidx.compose.runtime.mutableStateOf<app.kaeri.store.PrivacyModel?>(null)
+        private set
+
     fun bind(store: AppStore): () -> Unit {
+        privacy = store.privacy
         val unbind = store.listenToReading(::apply)
         return {
             if (closedUnnamed) unbindLater = unbind else unbind()

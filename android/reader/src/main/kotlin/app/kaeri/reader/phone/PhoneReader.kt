@@ -109,6 +109,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -740,6 +741,7 @@ fun PhoneReader(
                     ChromeGroup(
                         state = state,
                         title = view.title,
+                        privately = session.readsPrivately(view.work),
                         line = when {
                             novelOpen -> novelLine(context, state)
                             // A credit page shows in place of a number until it is kept: "Chapter 87 · credit page".
@@ -956,6 +958,8 @@ private fun actionWords(context: Context, notice: ShownNotice): String? = when (
 private fun ChromeGroup(
     state: ReaderState,
     title: String,
+    /** Private mode is on, or the series is always private: " · Private" after the line. */
+    privately: Boolean,
     line: String,
     scrubber: (@Composable () -> Unit)?,
     backTo: UInt?,
@@ -1005,7 +1009,12 @@ private fun ChromeGroup(
             }
             Column(Modifier.weight(1f).padding(horizontal = 6.dp)) {
                 Text(title, color = Chrome.text, fontFamily = robotoFlex(FontWeight.Bold, 14.sp), fontSize = 14.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                SwapFade(line, animationSpec = Motion.fadeIn()) { Text(it, color = Chrome.faint, fontSize = 12.sp, maxLines = 1, overflow = TextOverflow.Ellipsis) }
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Box(Modifier.weight(1f, fill = false)) {
+                        SwapFade(line, animationSpec = Motion.fadeIn()) { Text(it, color = Chrome.faint, fontSize = 12.sp, maxLines = 1, overflow = TextOverflow.Ellipsis) }
+                    }
+                    if (privately) PrivateMark()
+                }
             }
             IconButton(
                 onClick = onChapters,
@@ -1688,4 +1697,28 @@ private fun CreditCapsule(demo: app.kaeri.engine.model.DemoWorkInfo) {
         GlyphIcon(Glyph.Info, Chrome.faint, size = 13.dp)
         Text(words, color = Chrome.text, fontSize = 13.sp, lineHeight = 18.sp, maxLines = 2, overflow = TextOverflow.Ellipsis)
     }
+}
+
+/** " · Private" after the chrome's line, the eye-slash before the word, in the line's colour. */
+@Composable
+private fun PrivateMark() {
+    Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.semantics(mergeDescendants = true) {}) {
+        Text(" · ", color = Chrome.faint, fontSize = 12.sp, maxLines = 1) // i18n-skip
+        androidx.compose.foundation.Image(
+            app.kaeri.design.PrivateGlyph.EyeSlash,
+            contentDescription = null,
+            colorFilter = androidx.compose.ui.graphics.ColorFilter.tint(Chrome.faint),
+            modifier = Modifier.size(14.dp),
+        )
+        Text(Strings.privateBadge(LocalContext.current), color = Chrome.faint, fontSize = 12.sp, maxLines = 1, modifier = Modifier.padding(start = 4.dp))
+    }
+}
+
+/** Whether this session's series is read privately now: the mode, or the series' own flag. */
+@Composable
+internal fun ReaderSession.readsPrivately(work: app.kaeri.engine.core.WorkId?): Boolean {
+    val privacy = privacy ?: return false
+    val on by privacy.on.collectAsState()
+    val always by privacy.always.collectAsState()
+    return on || (work != null && app.kaeri.engine.model.PrivateTitle.Series(work) in always)
 }
