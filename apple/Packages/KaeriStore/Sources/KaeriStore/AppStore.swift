@@ -910,7 +910,7 @@ public final class AppStore {
                 case .detail(let entry): entry.detail?.partial != true
                 case .availability: true
                 // The page's job ends after its page, not before it.
-                case .jobDone(let job): detailJobs[job] != nil
+                case .jobDone(let job): self.detailJobs[job] != nil
                 default: false
                 }
             }
