@@ -984,7 +984,11 @@ mod tests {
         });
         let dir = tempfile::tempdir().unwrap();
         let files = vec![file(dir.path(), "Made-up Series 3.kepub.epub")];
-        held.take(&ReadingEvent::ExportReady { job, files: files.clone(), skipped: Vec::new() });
+        held.take(&ReadingEvent::ExportReady {
+            job,
+            files: files.clone(),
+            skipped: Vec::new(),
+        });
 
         assert!(held.take_for(&other).is_none(), "another series' dialog leaves it");
         let (taken, send) = held.take_for(&work).expect("held for its series");
@@ -1008,6 +1012,8 @@ mod tests {
             job: JobId::new(42),
             chapter: None,
             failure: kaeri_model::reading::ReadingFailure::Offline,
+            work: None,
+            target: None,
         });
         assert!(held.take_for(&work).is_none());
     }
