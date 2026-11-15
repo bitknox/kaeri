@@ -118,10 +118,11 @@ struct SettingsScreen: View {
                 }
                 .scrollIndicators(.never)
                 .task {
-                    // A launch scroll brings the find row into view, for the Fixtures shots.
-                    guard navigator.launchScroll != nil else { return }
+                    // A launch scroll brings the find row into view, for the Fixtures shots;
+                    // `-KaeriScroll 2` the Picture in Picture row.
+                    guard let scroll = navigator.launchScroll else { return }
                     try? await Task.sleep(for: .milliseconds(800))
-                    proxy.scrollTo("findSkips", anchor: .center)
+                    proxy.scrollTo(scroll == 2 ? "pictureInPictureOnLeave" : "findSkips", anchor: .center)
                 }
             }
         }
@@ -575,6 +576,7 @@ struct PlaybackPane: View {
                 SettingSwitch(key: .pictureInPictureOnLeave)
             }
             .accessibilityHint(pictureInPictureFootnote ?? "")
+            .id("pictureInPictureOnLeave")
             #if os(macOS)
             SettingsRow(title: SettingKey.fullscreen.title) { SettingSwitch(key: .fullscreen) }
             #endif
