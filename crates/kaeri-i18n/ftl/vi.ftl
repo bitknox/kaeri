@@ -4519,6 +4519,21 @@ settings-note-upload-limit = Giới hạn toàn bộ tải lên torrent, để c
 # Note under the token storage row. The option is a command-line flag and is not translated.
 settings-note-token-storage = Dùng --token-to-file để chuyển token hiện có.
 
+# Header chip while private mode is on, in the state colour, lower case.
+tui-private-chip = riêng tư
+
+# Footer hint for Ctrl+P, lower case to match the header chip.
+keys-hint-private = riêng tư
+
+# Command palette entry that turns private mode on or off; its state shows beside it.
+palette-private-mode = Chế độ riêng tư
+
+# Command palette entry on a title page: keep the show private on this device.
+palette-always-private = Luôn riêng tư cho phim này
+
+# Help for the --private flag.
+cli-private-help = Khởi động ở chế độ riêng tư. Không có gì được lưu hay đồng bộ cho đến khi Kaeri thoát.
+
 # Under a series' title on the terminal's series page: the source its chapters are read from.
 tui-read-series-from = Đọc từ { $source }
 
@@ -9106,6 +9121,54 @@ player-subs-bg-box = Khung
 
 # Button in the subtitles panel that opens Settings.
 player-subs-more = Thêm trong Cài đặt…
+
+# The private mode switch: under the account card on phones, first in Settings › Accounts on the desktops and the TV, and a check item in the Linux main menu.
+private-mode = Chế độ riêng tư
+
+# The switch's description: the footer on Apple, supporting text on Android and the TV, the SettingsCard description on Windows, the AdwSwitchRow subtitle on Linux.
+private-mode-detail = Những gì bạn xem hoặc đọc sẽ không được lưu hay đồng bộ cho đến khi bạn tắt chế độ này hoặc thoát Kaeri.
+
+# Second line under the switch. Private mode only stops what the app keeps; it hides nothing from anyone else.
+private-mode-limits = các nguồn và các buổi xem chung của bạn vẫn thấy những gì bạn mở.
+
+# Notice after the menu item or the shortcut turns private mode on, and the words of the badge's popover, flyout and TV dialog. Also the badge's screen reader hint.
+private-mode-on-notice = Chế độ riêng tư đang bật. Không có gì được lưu hay đồng bộ cho đến khi Kaeri thoát.
+
+# Button in the notice, the badge's popover and flyout, and the TV dialog: turns private mode off.
+action-turn-off = Tắt
+
+# Under the switch on the desktops. The keys are the platform's own: ⇧⌘N on the Mac, Ctrl+Shift+N on Windows and Linux.
+private-mode-shortcut-hint = Phím tắt: { $keys }
+
+# The badge while private mode is on, the player label, and the head of the title page line.
+private-badge = Riêng tư
+
+# Screen reader label of the badge.
+private-badge-label = Chế độ riêng tư đang bật
+
+# Line under a title or series page's main action, after "Private" or "Always private".
+private-line-not-saved = Không lưu hay đồng bộ
+
+# Line under a title or series page's main action when a place is held in memory, after "Private".
+private-line-kept = Vị trí của bạn được giữ cho đến khi Kaeri thoát
+
+# A title kept private on this device: the More menu item with a check, the switch in the show's settings, and the head of the title page line.
+title-always-private = Luôn riêng tư
+
+# Under the Always private switch in a show's settings.
+show-always-private-detail = Không có gì từ bộ phim này được lưu hay đồng bộ trên thiết bị này. Những gì đã lưu vẫn được giữ.
+
+# Under the Always private switch in a series page's settings.
+series-always-private-detail = Không có gì từ bộ truyện này được lưu hay đồng bộ trên thiết bị này. Những gì đã lưu vẫn được giữ.
+
+# What the system's media controls, the lock screen, the media card and the player window show while private: no show, episode, artist or artwork.
+now-playing-private = Đang phát trong Kaeri
+
+# Announced to screen readers once when private mode turns on.
+private-mode-on-announcement = Đã bật chế độ riêng tư
+
+# Announced to screen readers once when private mode turns off.
+private-mode-off-announcement = Đã tắt chế độ riêng tư
 
 # Under a page that is still loading after four seconds.
 reader-page-loading = Đang tải trang { $page }

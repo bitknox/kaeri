@@ -1,0 +1,17 @@
+private-mode = Tryb prywatny
+private-mode-detail = Nic, co oglądasz lub czytasz, nie jest zapisywane ani synchronizowane, dopóki go nie wyłączysz lub nie zamkniesz { -app-name }.
+private-mode-limits = Twoje { -source-pl } i { -watch-party-pl } nadal widzą, co otwierasz.
+private-mode-on-notice = Tryb prywatny jest włączony. Nic nie jest zapisywane ani synchronizowane do zamknięcia { -app-name }.
+action-turn-off = Wyłącz
+private-mode-shortcut-hint = Skrót: { $keys }
+private-badge = Prywatnie
+private-badge-label = Tryb prywatny jest włączony
+private-line-not-saved = Nie jest zapisywane ani synchronizowane
+private-line-kept = Miejsce jest pamiętane do zamknięcia { -app-name }
+title-always-private = Zawsze prywatnie
+show-always-private-detail = To { -device } nie zapisuje ani nie synchronizuje niczego z tego tytułu. To, co już zapisane, zostaje.
+series-always-private-detail = To { -device } nie zapisuje ani nie synchronizuje niczego z tej serii. To, co już zapisane, zostaje.
+now-playing-private = Odtwarzanie w { -app-name }
+private-download-line = Pobieranie w { -app-name }
+private-mode-on-announcement = Tryb prywatny włączony
+private-mode-off-announcement = Tryb prywatny wyłączony

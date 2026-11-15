@@ -4519,6 +4519,21 @@ settings-note-upload-limit = Membatasi semua unggahan torrent, agar seeding tida
 # Note under the token storage row. The option is a command-line flag and is not translated.
 settings-note-token-storage = Pakai --token-to-file untuk memindahkan token yang sudah ada.
 
+# Header chip while private mode is on, in the state colour, lower case.
+tui-private-chip = pribadi
+
+# Footer hint for Ctrl+P, lower case to match the header chip.
+keys-hint-private = pribadi
+
+# Command palette entry that turns private mode on or off; its state shows beside it.
+palette-private-mode = Mode pribadi
+
+# Command palette entry on a title page: keep the show private on this device.
+palette-always-private = Selalu pribadi untuk judul ini
+
+# Help for the --private flag.
+cli-private-help = Mulai dalam mode pribadi. Tidak ada yang disimpan atau disinkronkan sampai Kaeri ditutup.
+
 # Under a series' title on the terminal's series page: the source its chapters are read from.
 tui-read-series-from = Membaca dari { $source }
 
@@ -9106,6 +9121,54 @@ player-subs-bg-box = Kotak
 
 # Button in the subtitles panel that opens Settings.
 player-subs-more = Selengkapnya di Pengaturan…
+
+# The private mode switch: under the account card on phones, first in Settings › Accounts on the desktops and the TV, and a check item in the Linux main menu.
+private-mode = Mode pribadi
+
+# The switch's description: the footer on Apple, supporting text on Android and the TV, the SettingsCard description on Windows, the AdwSwitchRow subtitle on Linux.
+private-mode-detail = Apa pun yang Anda tonton atau baca tidak disimpan atau disinkronkan sampai mode ini dimatikan atau Kaeri ditutup.
+
+# Second line under the switch. Private mode only stops what the app keeps; it hides nothing from anyone else.
+private-mode-limits = sumber-sumber dan nonton bareng Anda tetap melihat apa yang Anda buka.
+
+# Notice after the menu item or the shortcut turns private mode on, and the words of the badge's popover, flyout and TV dialog. Also the badge's screen reader hint.
+private-mode-on-notice = Mode pribadi aktif. Tidak ada yang disimpan atau disinkronkan sampai Kaeri ditutup.
+
+# Button in the notice, the badge's popover and flyout, and the TV dialog: turns private mode off.
+action-turn-off = Matikan
+
+# Under the switch on the desktops. The keys are the platform's own: ⇧⌘N on the Mac, Ctrl+Shift+N on Windows and Linux.
+private-mode-shortcut-hint = Pintasan: { $keys }
+
+# The badge while private mode is on, the player label, and the head of the title page line.
+private-badge = Pribadi
+
+# Screen reader label of the badge.
+private-badge-label = Mode pribadi aktif
+
+# Line under a title or series page's main action, after "Private" or "Always private".
+private-line-not-saved = Tidak disimpan atau disinkronkan
+
+# Line under a title or series page's main action when a place is held in memory, after "Private".
+private-line-kept = Posisi Anda diingat sampai Kaeri ditutup
+
+# A title kept private on this device: the More menu item with a check, the switch in the show's settings, and the head of the title page line.
+title-always-private = Selalu pribadi
+
+# Under the Always private switch in a show's settings.
+show-always-private-detail = Tidak ada dari judul ini yang disimpan atau disinkronkan di perangkat ini. Yang sudah tersimpan tetap ada.
+
+# Under the Always private switch in a series page's settings.
+series-always-private-detail = Tidak ada dari seri ini yang disimpan atau disinkronkan di perangkat ini. Yang sudah tersimpan tetap ada.
+
+# What the system's media controls, the lock screen, the media card and the player window show while private: no show, episode, artist or artwork.
+now-playing-private = Diputar di Kaeri
+
+# Announced to screen readers once when private mode turns on.
+private-mode-on-announcement = Mode pribadi aktif
+
+# Announced to screen readers once when private mode turns off.
+private-mode-off-announcement = Mode pribadi nonaktif
 
 # Under a page that is still loading after four seconds.
 reader-page-loading = Memuat halaman { $page }

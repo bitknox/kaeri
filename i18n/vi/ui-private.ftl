@@ -1,0 +1,17 @@
+private-mode = Chế độ riêng tư
+private-mode-detail = Những gì bạn xem hoặc đọc sẽ không được lưu hay đồng bộ cho đến khi bạn tắt chế độ này hoặc thoát { -app-name }.
+private-mode-limits = { -source-pl } và { -watch-party-pl } của bạn vẫn thấy những gì bạn mở.
+private-mode-on-notice = Chế độ riêng tư đang bật. Không có gì được lưu hay đồng bộ cho đến khi { -app-name } thoát.
+action-turn-off = Tắt
+private-mode-shortcut-hint = Phím tắt: { $keys }
+private-badge = Riêng tư
+private-badge-label = Chế độ riêng tư đang bật
+private-line-not-saved = Không lưu hay đồng bộ
+private-line-kept = Vị trí của bạn được giữ cho đến khi { -app-name } thoát
+title-always-private = Luôn riêng tư
+show-always-private-detail = Không có gì từ bộ phim này được lưu hay đồng bộ trên { -device } này. Những gì đã lưu vẫn được giữ.
+series-always-private-detail = Không có gì từ bộ truyện này được lưu hay đồng bộ trên { -device } này. Những gì đã lưu vẫn được giữ.
+now-playing-private = Đang phát trong { -app-name }
+private-download-line = Đang tải về trong { -app-name }
+private-mode-on-announcement = Đã bật chế độ riêng tư
+private-mode-off-announcement = Đã tắt chế độ riêng tư

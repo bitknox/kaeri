@@ -6608,6 +6608,54 @@
   <data name="PlayerSubsMore" xml:space="preserve">
     <value>Więcej w Ustawieniach…</value>
   </data>
+  <data name="PrivateMode" xml:space="preserve">
+    <value>Tryb prywatny</value>
+  </data>
+  <data name="PrivateModeDetail" xml:space="preserve">
+    <value>Nic, co oglądasz lub czytasz, nie jest zapisywane ani synchronizowane, dopóki go nie wyłączysz lub nie zamkniesz Kaeri.</value>
+  </data>
+  <data name="PrivateModeLimits" xml:space="preserve">
+    <value>Twoje źródła i wspólne oglądania nadal widzą, co otwierasz.</value>
+  </data>
+  <data name="PrivateModeOnNotice" xml:space="preserve">
+    <value>Tryb prywatny jest włączony. Nic nie jest zapisywane ani synchronizowane do zamknięcia Kaeri.</value>
+  </data>
+  <data name="ActionTurnOff" xml:space="preserve">
+    <value>Wyłącz</value>
+  </data>
+  <data name="PrivateModeShortcutHint" xml:space="preserve">
+    <value>Skrót: {keys}</value>
+  </data>
+  <data name="PrivateBadge" xml:space="preserve">
+    <value>Prywatnie</value>
+  </data>
+  <data name="PrivateBadgeLabel" xml:space="preserve">
+    <value>Tryb prywatny jest włączony</value>
+  </data>
+  <data name="PrivateLineNotSaved" xml:space="preserve">
+    <value>Nie jest zapisywane ani synchronizowane</value>
+  </data>
+  <data name="PrivateLineKept" xml:space="preserve">
+    <value>Miejsce jest pamiętane do zamknięcia Kaeri</value>
+  </data>
+  <data name="TitleAlwaysPrivate" xml:space="preserve">
+    <value>Zawsze prywatnie</value>
+  </data>
+  <data name="ShowAlwaysPrivateDetail" xml:space="preserve">
+    <value>To urządzenie nie zapisuje ani nie synchronizuje niczego z tego tytułu. To, co już zapisane, zostaje.</value>
+  </data>
+  <data name="SeriesAlwaysPrivateDetail" xml:space="preserve">
+    <value>To urządzenie nie zapisuje ani nie synchronizuje niczego z tej serii. To, co już zapisane, zostaje.</value>
+  </data>
+  <data name="NowPlayingPrivate" xml:space="preserve">
+    <value>Odtwarzanie w Kaeri</value>
+  </data>
+  <data name="PrivateModeOnAnnouncement" xml:space="preserve">
+    <value>Tryb prywatny włączony</value>
+  </data>
+  <data name="PrivateModeOffAnnouncement" xml:space="preserve">
+    <value>Tryb prywatny wyłączony</value>
+  </data>
   <data name="ReaderPageLoading" xml:space="preserve">
     <value>Wczytywanie strony {page}</value>
   </data>

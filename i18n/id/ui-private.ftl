@@ -1,0 +1,17 @@
+private-mode = Mode pribadi
+private-mode-detail = Apa pun yang Anda tonton atau baca tidak disimpan atau disinkronkan sampai mode ini dimatikan atau { -app-name } ditutup.
+private-mode-limits = { -source-pl } dan { -watch-party-pl } Anda tetap melihat apa yang Anda buka.
+private-mode-on-notice = Mode pribadi aktif. Tidak ada yang disimpan atau disinkronkan sampai { -app-name } ditutup.
+action-turn-off = Matikan
+private-mode-shortcut-hint = Pintasan: { $keys }
+private-badge = Pribadi
+private-badge-label = Mode pribadi aktif
+private-line-not-saved = Tidak disimpan atau disinkronkan
+private-line-kept = Posisi Anda diingat sampai { -app-name } ditutup
+title-always-private = Selalu pribadi
+show-always-private-detail = Tidak ada dari judul ini yang disimpan atau disinkronkan di { -device } ini. Yang sudah tersimpan tetap ada.
+series-always-private-detail = Tidak ada dari seri ini yang disimpan atau disinkronkan di { -device } ini. Yang sudah tersimpan tetap ada.
+now-playing-private = Diputar di { -app-name }
+private-download-line = Mengunduh di { -app-name }
+private-mode-on-announcement = Mode pribadi aktif
+private-mode-off-announcement = Mode pribadi nonaktif

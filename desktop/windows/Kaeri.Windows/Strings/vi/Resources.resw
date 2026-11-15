@@ -5960,6 +5960,54 @@
   <data name="PlayerSubsMore" xml:space="preserve">
     <value>Thêm trong Cài đặt…</value>
   </data>
+  <data name="PrivateMode" xml:space="preserve">
+    <value>Chế độ riêng tư</value>
+  </data>
+  <data name="PrivateModeDetail" xml:space="preserve">
+    <value>Những gì bạn xem hoặc đọc sẽ không được lưu hay đồng bộ cho đến khi bạn tắt chế độ này hoặc thoát Kaeri.</value>
+  </data>
+  <data name="PrivateModeLimits" xml:space="preserve">
+    <value>các nguồn và các buổi xem chung của bạn vẫn thấy những gì bạn mở.</value>
+  </data>
+  <data name="PrivateModeOnNotice" xml:space="preserve">
+    <value>Chế độ riêng tư đang bật. Không có gì được lưu hay đồng bộ cho đến khi Kaeri thoát.</value>
+  </data>
+  <data name="ActionTurnOff" xml:space="preserve">
+    <value>Tắt</value>
+  </data>
+  <data name="PrivateModeShortcutHint" xml:space="preserve">
+    <value>Phím tắt: {keys}</value>
+  </data>
+  <data name="PrivateBadge" xml:space="preserve">
+    <value>Riêng tư</value>
+  </data>
+  <data name="PrivateBadgeLabel" xml:space="preserve">
+    <value>Chế độ riêng tư đang bật</value>
+  </data>
+  <data name="PrivateLineNotSaved" xml:space="preserve">
+    <value>Không lưu hay đồng bộ</value>
+  </data>
+  <data name="PrivateLineKept" xml:space="preserve">
+    <value>Vị trí của bạn được giữ cho đến khi Kaeri thoát</value>
+  </data>
+  <data name="TitleAlwaysPrivate" xml:space="preserve">
+    <value>Luôn riêng tư</value>
+  </data>
+  <data name="ShowAlwaysPrivateDetail" xml:space="preserve">
+    <value>Không có gì từ bộ phim này được lưu hay đồng bộ trên thiết bị này. Những gì đã lưu vẫn được giữ.</value>
+  </data>
+  <data name="SeriesAlwaysPrivateDetail" xml:space="preserve">
+    <value>Không có gì từ bộ truyện này được lưu hay đồng bộ trên thiết bị này. Những gì đã lưu vẫn được giữ.</value>
+  </data>
+  <data name="NowPlayingPrivate" xml:space="preserve">
+    <value>Đang phát trong Kaeri</value>
+  </data>
+  <data name="PrivateModeOnAnnouncement" xml:space="preserve">
+    <value>Đã bật chế độ riêng tư</value>
+  </data>
+  <data name="PrivateModeOffAnnouncement" xml:space="preserve">
+    <value>Đã tắt chế độ riêng tư</value>
+  </data>
   <data name="ReaderPageLoading" xml:space="preserve">
     <value>Đang tải trang {page}</value>
   </data>

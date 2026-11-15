@@ -6176,6 +6176,54 @@
   <data name="PlayerSubsMore" xml:space="preserve">
     <value>Ayarlar'da daha fazlası…</value>
   </data>
+  <data name="PrivateMode" xml:space="preserve">
+    <value>Gizli mod</value>
+  </data>
+  <data name="PrivateModeDetail" xml:space="preserve">
+    <value>İzlediğiniz veya okuduğunuz hiçbir şey, modu kapatana ya da Kaeri uygulamasından çıkana kadar kaydedilmez veya eşitlenmez.</value>
+  </data>
+  <data name="PrivateModeLimits" xml:space="preserve">
+    <value>kaynaklarınız ve birlikte izlemeleriniz açtığınız şeyleri yine de görür.</value>
+  </data>
+  <data name="PrivateModeOnNotice" xml:space="preserve">
+    <value>Gizli mod açık. Kaeri kapanana kadar hiçbir şey kaydedilmez veya eşitlenmez.</value>
+  </data>
+  <data name="ActionTurnOff" xml:space="preserve">
+    <value>Kapat</value>
+  </data>
+  <data name="PrivateModeShortcutHint" xml:space="preserve">
+    <value>Kısayol: {keys}</value>
+  </data>
+  <data name="PrivateBadge" xml:space="preserve">
+    <value>Gizli</value>
+  </data>
+  <data name="PrivateBadgeLabel" xml:space="preserve">
+    <value>Gizli mod açık</value>
+  </data>
+  <data name="PrivateLineNotSaved" xml:space="preserve">
+    <value>Kaydedilmez veya eşitlenmez</value>
+  </data>
+  <data name="PrivateLineKept" xml:space="preserve">
+    <value>Kaldığınız yer, Kaeri kapanana kadar hatırlanır</value>
+  </data>
+  <data name="TitleAlwaysPrivate" xml:space="preserve">
+    <value>Her zaman gizli</value>
+  </data>
+  <data name="ShowAlwaysPrivateDetail" xml:space="preserve">
+    <value>Bu diziden hiçbir şey bu cihazda kaydedilmez veya eşitlenmez. Önceden kaydedilenler kalır.</value>
+  </data>
+  <data name="SeriesAlwaysPrivateDetail" xml:space="preserve">
+    <value>Bu seriden hiçbir şey bu cihazda kaydedilmez veya eşitlenmez. Önceden kaydedilenler kalır.</value>
+  </data>
+  <data name="NowPlayingPrivate" xml:space="preserve">
+    <value>Kaeri içinde oynatılıyor</value>
+  </data>
+  <data name="PrivateModeOnAnnouncement" xml:space="preserve">
+    <value>Gizli mod açık</value>
+  </data>
+  <data name="PrivateModeOffAnnouncement" xml:space="preserve">
+    <value>Gizli mod kapalı</value>
+  </data>
   <data name="ReaderPageLoading" xml:space="preserve">
     <value>Sayfa {page} yükleniyor</value>
   </data>

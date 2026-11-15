@@ -1,0 +1,17 @@
+private-mode = プライベートモード
+private-mode-detail = オフにするか{ -app-name }を終了するまで、視聴や閲覧の記録は保存も同期もされません。
+private-mode-limits = { -source-pl }や{ -watch-party-pl }には、開いたものが引き続き見えます。
+private-mode-on-notice = プライベートモードがオンです。{ -app-name }が終了するまで、保存も同期もされません。
+action-turn-off = オフにする
+private-mode-shortcut-hint = ショートカット: { $keys }
+private-badge = プライベート
+private-badge-label = プライベートモードがオンです
+private-line-not-saved = 保存も同期もされません
+private-line-kept = { -app-name }が終了するまで位置を保持します
+title-always-private = 常にプライベート
+show-always-private-detail = この作品の記録は、この{ -device }では保存も同期もされません。保存済みの記録はそのまま残ります。
+series-always-private-detail = このシリーズの記録は、この{ -device }では保存も同期もされません。保存済みの記録はそのまま残ります。
+now-playing-private = { -app-name }で再生中
+private-download-line = { -app-name }でダウンロード中
+private-mode-on-announcement = プライベートモードオン
+private-mode-off-announcement = プライベートモードオフ

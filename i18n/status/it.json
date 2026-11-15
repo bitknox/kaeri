@@ -1355,6 +1355,12 @@
     "by": "haiku",
     "at": "2026-10-31"
   },
+  "action-turn-off": {
+    "source": "de736af382a4",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
+  },
   "action-undo": {
     "source": "8f4be9f086eb",
     "state": "draft",
@@ -2976,6 +2982,12 @@
     "state": "draft",
     "by": "haiku",
     "at": "2026-10-31"
+  },
+  "cli-private-help": {
+    "source": "8b5c63a628c3",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
   },
   "clipboard-busy": {
     "source": "ea242645bd6e",
@@ -9136,6 +9148,12 @@
     "by": "haiku",
     "at": "2026-10-31"
   },
+  "keys-hint-private": {
+    "source": "c5a11c2dd9ab",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
+  },
   "keys-hint-publish": {
     "source": "0843b2fcef33",
     "state": "draft",
@@ -11896,6 +11914,12 @@
     "by": "agent",
     "at": "2026-11-07"
   },
+  "menu-always-private": {
+    "source": "8e32e3f277fb",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
+  },
   "menu-check-for-updates": {
     "source": "0c2d622bae70",
     "state": "draft",
@@ -12099,6 +12123,12 @@
     "state": "draft",
     "by": "agent",
     "at": "2026-11-01"
+  },
+  "menu-private-mode": {
+    "source": "c59fc6910f33",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
   },
   "menu-report-bug": {
     "source": "d236c2d1050a",
@@ -13652,6 +13682,12 @@
     "by": "haiku",
     "at": "2026-10-31"
   },
+  "now-playing-private": {
+    "source": "9d36f904d764",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
+  },
   "onboarding-books-folder": {
     "source": "552d12f3b085",
     "state": "draft",
@@ -14882,6 +14918,12 @@
     "by": "agent",
     "at": "2026-11-05"
   },
+  "palette-always-private": {
+    "source": "7db424a7cfaa",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
+  },
   "palette-commands": {
     "source": "ebf4dcb09995",
     "state": "draft",
@@ -14899,6 +14941,12 @@
     "state": "draft",
     "by": "haiku",
     "at": "2026-10-31"
+  },
+  "palette-private-mode": {
+    "source": "46b1c79828a3",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
   },
   "palette-progress-kept": {
     "source": "3114bc9ce815",
@@ -18109,6 +18157,78 @@
     "state": "draft",
     "by": "agent",
     "at": "2026-11-01"
+  },
+  "private-badge": {
+    "source": "e7bee6e9a9b5",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
+  },
+  "private-badge-label": {
+    "source": "5ee7390d0622",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
+  },
+  "private-download-line": {
+    "source": "b6129cdc82ca",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
+  },
+  "private-line-kept": {
+    "source": "5601c1b3b6ac",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
+  },
+  "private-line-not-saved": {
+    "source": "654ca8aa557f",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
+  },
+  "private-mode": {
+    "source": "46b1c79828a3",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
+  },
+  "private-mode-detail": {
+    "source": "4e4c146f1a66",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
+  },
+  "private-mode-limits": {
+    "source": "f7e7acb82167",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
+  },
+  "private-mode-off-announcement": {
+    "source": "fa2fc591d2cf",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
+  },
+  "private-mode-on-announcement": {
+    "source": "de78108cfcf4",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
+  },
+  "private-mode-on-notice": {
+    "source": "d5a0dd84c92b",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
+  },
+  "private-mode-shortcut-hint": {
+    "source": "c2bc72202320",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
   },
   "profiles-add": {
     "source": "1c6b9f8833ca",
@@ -23506,6 +23626,12 @@
     "by": "agent",
     "at": "2026-11-07"
   },
+  "series-always-private-detail": {
+    "source": "66c4373e9a10",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
+  },
   "series-bookmark": {
     "source": "dbacf34fc010",
     "state": "draft",
@@ -28274,6 +28400,12 @@
     "state": "draft",
     "by": "haiku",
     "at": "2026-10-31"
+  },
+  "show-always-private-detail": {
+    "source": "8de1867eae57",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
   },
   "show-settings-always": {
     "source": "314a4f7685c8",
@@ -33091,6 +33223,12 @@
     "by": "agent",
     "at": "2026-11-01"
   },
+  "title-always-private": {
+    "source": "1d527bc05921",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
+  },
   "title-available-on": {
     "source": "9e4ac82da79b",
     "state": "draft",
@@ -34542,6 +34680,12 @@
     "state": "draft",
     "by": "opus",
     "at": "2026-11-08"
+  },
+  "tui-private-chip": {
+    "source": "c5a11c2dd9ab",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
   },
   "tui-read-header-offline": {
     "source": "156948a12a89",
