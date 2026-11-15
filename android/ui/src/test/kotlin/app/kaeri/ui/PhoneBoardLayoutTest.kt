@@ -44,6 +44,7 @@ import app.kaeri.store.HAS_TESTING_ENGINE
  * the still, filler is in the facts, and a card with no banner fills its frame with the cover, or
  * with a plate in the cover's colour when there is none.
  */
+@OptIn(androidx.compose.foundation.ExperimentalFoundationApi::class)
 @RunWith(RobolectricTestRunner::class)
 @GraphicsMode(GraphicsMode.Mode.NATIVE)
 @Config(sdk = [36], qualifiers = "w412dp-h915dp-port-420dpi")
