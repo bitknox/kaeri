@@ -243,8 +243,8 @@ sealed class CastLayer
         }
         var visual = ElementCompositionPreview.GetElementVisual(controller);
         var compositor = visual.Compositor;
-        clip ??= compositor.CreateRectangleClip();
-        visual.Clip = clip;
+        var edges = clip ??= compositor.CreateRectangleClip();
+        visual.Clip = edges;
         var height = pane.ActualHeight;
         var width = pane.ActualWidth;
         var miniTop = Math.Max(0, height - Math.Max(mini.ActualHeight, 76));
@@ -253,10 +253,15 @@ sealed class CastLayer
         var to = open ? 1.0 : 0.0;
         var miniFrom = mini.Opacity;
         var controlsFrom = controller.Faded.First().Opacity;
-        clip.Left = 0;
-        clip.Right = (float)width;
-        clip.Bottom = (float)height;
-        clip.Top = (float)(miniTop * (1 - from));
+        edges.Left = 0;
+        edges.Right = (float)width;
+        edges.Bottom = (float)height;
+        edges.Top = (float)(miniTop * (1 - from));
+        // The mini's row fades over the container as it grows from it, and comes back over it as
+        // it shrinks; clicks meanwhile go to the container, to turn the morph round.
+        Canvas.SetZIndex(mini, 2);
+        Canvas.SetZIndex(controller, 1);
+        mini.IsHitTestVisible = false;
 
         Fly(open);
         var clock = System.Diagnostics.Stopwatch.StartNew();
@@ -266,9 +271,9 @@ sealed class CastLayer
             var t = clock.Elapsed.TotalSeconds;
             var k = SpringRaw(t);
             var g = edge = from + (to - from) * k;
-            clip.Top = (float)(miniTop * (1 - g));
-            clip.Right = (float)pane.ActualWidth;
-            clip.Bottom = (float)pane.ActualHeight;
+            edges.Top = (float)(miniTop * (1 - g));
+            edges.Right = (float)pane.ActualWidth;
+            edges.Bottom = (float)pane.ActualHeight;
             // Opening: the mini out in 100 ms, the controls in from 100 to 300 ms. Closing: the
             // controls out in 100 ms, the mini back from 100 to 300 ms.
             var miniNow = open ? Ramp(miniFrom, 0, t, 0, 0.1) : Ramp(miniFrom, 1, t, 0.1, 0.2);
@@ -359,6 +364,10 @@ sealed class CastLayer
     /// <summary>With animation effects off: the controller and the mini crossfade in place, no art in flight.</summary>
     void Crossfade(bool open)
     {
+        edge = open ? 1 : 0;
+        Canvas.SetZIndex(mini, 0);
+        Canvas.SetZIndex(controller, 1);
+        mini.IsHitTestVisible = !open;
         controller.Art.Root.Opacity = 1;
         foreach (var faded in controller.Faded)
             faded.Opacity = 1;
@@ -407,6 +416,9 @@ sealed class CastLayer
         mini.Opacity = open ? 0 : 1;
         edge = open ? 1 : 0;
         Touchable(true);
+        // Open, the controller covers the pane and the mini under it takes no clicks.
+        Canvas.SetZIndex(mini, open ? 0 : 2);
+        mini.IsHitTestVisible = !open;
         if (!open)
             controller.Visibility = Visibility.Collapsed;
     }

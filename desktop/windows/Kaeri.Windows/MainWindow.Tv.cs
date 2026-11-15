@@ -212,19 +212,23 @@ public sealed partial class MainWindow
     /// The keyboard's volume keys while a TV is held: the TV's volume moves too. Windows still
     /// moves this PC's own, as it does for every app.
     /// </summary>
+    // The keyboard's volume keys, which VirtualKey has no names for.
+    const global::Windows.System.VirtualKey VolumeMuteKey = (global::Windows.System.VirtualKey)0xAD,
+        VolumeDownKey = (global::Windows.System.VirtualKey)0xAE, VolumeUpKey = (global::Windows.System.VirtualKey)0xAF;
+
     void CastVolumeKeys(object sender, Microsoft.UI.Xaml.Input.KeyRoutedEventArgs e)
     {
         if (!tv.SessionHeld)
             return;
         switch (e.Key)
         {
-            case global::Windows.System.VirtualKey.VolumeUp:
+            case VolumeUpKey:
                 tv.SessionCommand(new FfiTvCommand.Volume(5));
                 break;
-            case global::Windows.System.VirtualKey.VolumeDown:
+            case VolumeDownKey:
                 tv.SessionCommand(new FfiTvCommand.Volume(-5));
                 break;
-            case global::Windows.System.VirtualKey.VolumeMute:
+            case VolumeMuteKey:
                 tv.SessionCommand(new FfiTvCommand.Mute(!(tv.Session?.Muted ?? false)));
                 break;
         }
