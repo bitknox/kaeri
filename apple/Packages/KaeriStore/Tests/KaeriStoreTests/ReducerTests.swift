@@ -189,10 +189,12 @@ struct ReducerTests {
         let store = AppStore()
         store.apply(.detail(entry(900_001, "Stardust Wayfarer") {
             $0.availableOn = ["Lantern Library"]
+            $0.trailer = Trailer(host: .youTube, id: "standin900001")
             $0.trailerUrl = "https://video.example/trailer"
         }))
         store.apply(.content(view: .seasonal, content: .entries([entry(900_001, "Stardust Wayfarer")])))
         #expect(store.titles[900_001]?.availableOn == ["Lantern Library"])
+        #expect(store.titles[900_001]?.trailer?.id == "standin900001")
         #expect(store.titles[900_001]?.trailerUrl == "https://video.example/trailer")
     }
 

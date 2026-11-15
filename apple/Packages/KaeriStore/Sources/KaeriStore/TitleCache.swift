@@ -43,7 +43,7 @@ public final class TitleCache {
                 continue
             }
             let related = kept.related, recommended = kept.recommended
-            let trailer = kept.trailerUrl, availableOn = kept.availableOn, detail = kept.detail
+            let trailer = kept.trailer, trailerUrl = kept.trailerUrl, availableOn = kept.availableOn, detail = kept.detail
             let status = kept.listStatus, lastAired = kept.lastAired
             let watched = kept.progress, resume = kept.resume, still = kept.seenStill
             kept = entry
@@ -54,7 +54,10 @@ public final class TitleCache {
             if detailed.contains(entry.id) || headed.contains(entry.id) {
                 kept.related = related
                 kept.recommended = recommended
-                kept.trailerUrl = trailer
+                // A list row carries no trailer: the page's own stays, so the page keeps the room
+                // it made for one.
+                kept.trailer = entry.trailer ?? trailer
+                kept.trailerUrl = trailerUrl
                 kept.availableOn = availableOn
                 kept.detail = detail
             }
