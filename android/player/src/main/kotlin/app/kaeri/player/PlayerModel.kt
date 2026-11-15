@@ -391,6 +391,20 @@ class PlayerModel(
         private set
     private var rollPending = false
 
+    /** PlayNext went, or the engine rolled on by itself: the next staged play is a roll-on. */
+    private var rollingOn = false
+
+    /**
+     * A roll-on's start: until here only the ground shows and the starting screen waits, so a next
+     * episode warmed during the ending goes from the ground straight to its picture (the waiting
+     * rule). Null for every other start, which shows the starting screen at once.
+     */
+    var rollOnQuietUntil by mutableStateOf<Long?>(null)
+        private set
+
+    /** The model's clock, for the starting screen's waits. */
+    internal fun elapsed(): Long = now()
+
     /**
      * TalkBack or Switch Access is on: the controls stay up, Up Next waits for the viewer rather
      * than counting down, and the skip stays at full strength (T4, T5).
@@ -465,13 +479,20 @@ class PlayerModel(
                 titleOnScreen = event.id
                 // Said again for a play already starting, it changes nothing.
                 val again = progress?.let { it.id == event.id && it.episode == event.episode } == true
-                if (!again) progress = StartProgress(event.id, event.episode, now(), event.resume)
+                if (!again) {
+                    progress = StartProgress(event.id, event.episode, now(), event.resume)
+                    rollOnQuietUntil = if (rollingOn) now() + RollOnStart.QUIET else null
+                }
+                rollingOn = false
                 present()
                 changed()
             }
             is Event.PlaybackEnded -> when {
                 // Not when the viewer sought into the ending: someone was there.
-                event.rollingOn -> rollPending = upNext?.sought != true
+                event.rollingOn -> {
+                    rollPending = upNext?.sought != true
+                    rollingOn = true
+                }
                 mpv == null && event.ending == Ending.Failed && isPresented && startingEpisode != null -> {
                     // It never played: no stream was found, or none showed a frame. Say so where the
                     // viewer is looking, with another source to choose, rather than vanish.
@@ -501,6 +522,7 @@ class PlayerModel(
             Event.PlaybackKept -> {
                 starting = null
                 progress = null
+                rollingOn = false
             }
             is Event.StartingStep -> progress = progress?.takeIf { it.id == event.id && it.episode == event.episode }?.heard(event.step, event.line, now()) ?: progress
             is Event.Connectivity -> offline = event.offline
@@ -932,6 +954,8 @@ class PlayerModel(
         fullScreen = false
         staged = null
         starting = null
+        rollingOn = false
+        rollOnQuietUntil = null
         titleOnScreen = null
         progress = null
         episode = null
@@ -1070,6 +1094,8 @@ class PlayerModel(
         val starting = starting
         if (starting != null && (current?.let { it >= starting.playback } != false)) this.starting = null
         progress = null
+        // The roll-on's start is over: a later wait in this episode shows the starting screen at once.
+        rollOnQuietUntil = null
         if (stillWatchingAfter > 0 && rolledOn >= stillWatchingAfter && !stillWatching) {
             stillWatching = true
             if (!paused) control(PlayerCommand.TogglePause)
@@ -1141,6 +1167,7 @@ class PlayerModel(
                 // Asked for by someone there when they sought into the ending: not one in a row with
                 // nobody watching.
                 rollPending = !card.sought
+                rollingOn = true
                 control(PlayerCommand.PlayNext)
             }
         }
@@ -1720,6 +1747,7 @@ class PlayerModel(
         val card = upNext ?: return
         if (card.played) return
         upNext = card.copy(played = true)
+        rollingOn = true
         control(PlayerCommand.PlayNext)
     }
 
