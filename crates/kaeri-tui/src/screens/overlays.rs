@@ -662,7 +662,7 @@ fn player_log_row(app: &App) -> (String, Option<String>, Option<Role>) {
     let mut chars = detail.chars();
     let detail: String =
         chars.next().into_iter().flat_map(char::to_lowercase).chain(chars).collect();
-    (t::report_player_log_save_here(), Some(format!("  ·  {detail}")), None)
+    (t::report_player_log_save_here(), Some(format!("  ·  {detail}")), None) // i18n-skip: layout
 }
 
 fn log_rows(app: &App) -> Vec<(String, String)> {
