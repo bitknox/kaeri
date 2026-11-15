@@ -168,6 +168,7 @@ pub(super) fn render_overlay(
         }
         Overlay::KitsuPassword => vec![(String::new(), t::overlays_hint_kitsu_password())],
         Overlay::DownloadRange => vec![(String::new(), t::overlays_hint_download_range())],
+        Overlay::ReaderGoTo => vec![(String::new(), go_to_reach(app))],
         // The footer names the keys; the body names what is being changed.
         Overlay::EditSetting => app
             .edit_target
@@ -335,6 +336,7 @@ pub(super) fn render_overlay(
         Overlay::CommandPalette => typed(Field::Palette),
         Overlay::ManualQuery => typed(Field::ManualQuery),
         Overlay::DownloadRange => typed(Field::Range),
+        Overlay::ReaderGoTo => typed(Field::Page),
         Overlay::EditSetting => typed(Field::Setting),
         Overlay::KitsuUsername => typed(Field::KitsuUser),
         // A link is longer than the band, and the end is where the cursor is, so the end is
@@ -510,8 +512,23 @@ pub(super) fn field_text(app: &App, field: Field) -> String {
 fn help_rows(app: &App) -> Vec<(String, String)> {
     use crate::keymap::{Action, Scope};
     let mut rows = Vec::new();
-    // Reading's own keys first, while Home or Search is reading's.
-    if app.reading_section() {
+    // A series page's own keys first.
+    if app.series_here().is_some() {
+        rows.push((String::new(), t::tui_read_keys_series()));
+        for (action, label) in [
+            (Action::Open, t::tui_read_keys_read()),
+            (Action::ShowEpisodes, t::tui_read_keys_next()),
+            (Action::ToggleWatched, t::tui_read_read_unread()),
+            (Action::Download, t::tui_read_keys_download()),
+            (Action::SetListStatus, t::tui_read_keys_status()),
+            (Action::Refresh, t::tui_read_keys_try_again()),
+        ] {
+            if let Some(key) = app.keymap.keys_for(action).first() {
+                rows.push((key.render(), format!("  {}", label)));
+            }
+        }
+    } else if app.reading_section() {
+        // Reading's own keys, while Home or Search is reading's.
         rows.push((String::new(), t::tui_read_keys_heading()));
         for (action, label) in [
             (Action::ToggleRail, t::tui_read_keys_next_section()),
@@ -519,6 +536,7 @@ fn help_rows(app: &App) -> Vec<(String, String)> {
             (Action::Refresh, t::tui_read_keys_try_again()),
             (Action::Filter, t::tui_read_keys_filters()),
             (Action::SetListStatus, t::tui_read_keys_planning()),
+            (Action::ShowEpisodes, t::tui_read_keys_chapters()),
         ] {
             if let Some(key) = app.keymap.keys_for(action).first() {
                 rows.push((key.render(), format!("  {}", label)));
@@ -567,6 +585,16 @@ fn palette_rows(app: &App) -> Vec<(String, String)> {
         .into_iter()
         .map(|(action, key)| (key, action.label().to_string()))
         .collect()
+}
+
+/// Under Go to page: the pages it reaches, or a strip's images.
+fn go_to_reach(app: &App) -> String {
+    let count = i64::from(app.go_to_count());
+    if app.reader_here().is_some_and(|r| r.strips()) {
+        t::tui_reader_go_to_images(count)
+    } else {
+        t::tui_reader_go_to_pages(count)
+    }
 }
 
 /// Recent errors and notices, newest first.
@@ -730,7 +758,8 @@ mod tests {
             report
         };
         let mut app = app_with(ContentList::Empty);
-        assert_eq!(draw(&app), FrameReport::default());
+        let window = Some((80, 24));
+        assert_eq!(draw(&app), FrameReport { window, ..FrameReport::default() });
         app.nav.open_overlay(Overlay::Help);
         let help = draw(&app);
         assert!(help.help_pages.is_some_and(|pages| pages > 1), "{help:?}");
@@ -739,7 +768,7 @@ mod tests {
         app.nav.open_overlay(Overlay::Logs);
         assert_eq!(
             draw(&app),
-            FrameReport { overlay_offset: Some(0), ..FrameReport::default() }
+            FrameReport { overlay_offset: Some(0), window, ..FrameReport::default() }
         );
     }
 

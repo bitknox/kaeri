@@ -50,6 +50,7 @@ import androidx.compose.foundation.background
 import androidx.compose.ui.semantics.customActions
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.heading
@@ -59,7 +60,6 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.composable
-import java.util.Locale
 import app.kaeri.design.ShowTitle
 import app.kaeri.design.tabular
 import app.kaeri.engine.model.DownloadRow
@@ -625,10 +625,11 @@ private fun SeedItem(row: SeedRow) {
     Column(Modifier.fillMaxWidth().heightIn(min = 72.dp).padding(horizontal = 16.dp, vertical = 8.dp), verticalArrangement = Arrangement.Center) {
         Text(row.name, style = MaterialTheme.typography.titleMedium, maxLines = 1, overflow = TextOverflow.Ellipsis)
         val context = LocalContext.current
+        val locale = LocalConfiguration.current.locales[0]
         Text(
             listOfNotNull(
                 row.ratio.takeIf { it >= 0.01 }?.let { Wording.bytes(context, (row.uploadedBytes.toDouble() / it).toLong()) },
-                Strings.downloadsRatioOf(context, String.format(Locale.getDefault(), "%.1f", row.ratio), String.format(Locale.getDefault(), "%.1f", row.goal)),
+                Strings.downloadsRatioOf(context, String.format(locale, "%.1f", row.ratio), String.format(locale, "%.1f", row.goal)),
                 Strings.downloadsTimeLeft(context, Wording.countdown(context, row.leftSecs.toLong())),
                 Strings.downloadsUploaded(context, Wording.bytes(context, row.uploadedBytes.toLong())),
             ).joinToString(" · "), // i18n-skip

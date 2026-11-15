@@ -91,7 +91,7 @@ search-available-here = Lisible ici
 search-available-services = Sur vos services
 search-line-service = Sur { $service }
 count-episodes = { $count ->
-    [one] Un épisode
+    [one] { $count } épisode
     [many] { $count } épisodes
    *[other] { $count } épisodes
  }
@@ -99,7 +99,7 @@ count-episodes-short = { $count } ép.
 count-out-of = { $out } sur { $total } sortis
 count-out-of-short = { $out } sur { $total }
 count-out = { $count ->
-    [one] Un épisode sorti
+    [one] { $count } épisode sorti
     [many] { $count } épisodes sortis
    *[other] { $count } épisodes sortis
  }
@@ -110,13 +110,13 @@ count-next-of = Ép. { $episode } sur { $total }
 count-dub = VF
 count-dub-through = VF { $through }
 count-spoken-episodes = { $count ->
-    [one] Un épisode
+    [one] { $count } épisode
     [many] { $count } épisodes
    *[other] { $count } épisodes
  }
 count-spoken-out-of = { $out } épisodes sortis sur { $total }
 count-spoken-out = { $count ->
-    [one] Un épisode sorti
+    [one] { $count } épisode sorti
     [many] { $count } épisodes sortis
    *[other] { $count } épisodes sortis
  }

@@ -375,6 +375,12 @@ pub enum Msg {
     NoticeSignedOut { tracker: String },
     /// Toast after signing out of a tracker. The changes were not discarded: they are sent after the next sign-in.
     NoticeSignedOutQueue { tracker: String, count: i64 },
+    /// Toast, shown once, when a tracker kept refusing a change to a title for about two days and the change stopped being sent. The change itself is still saved in the app. The tracker is its name, such as AniList; the title is a show's or a series' name. The notice capsule holds two lines on a phone, so keep it about as short as the English.
+    NoticeTrackerChangeRefused { tracker: String, title: String },
+    /// The same toast when changes to several titles stopped being sent to one tracker at once. The title is the first of them; others is how many more titles there are.
+    NoticeTrackerChangesRefused { tracker: String, title: String, others: i64 },
+    /// The same toast when the app has no name for the titles. Count is how many titles.
+    NoticeTrackerChangeRefusedUntitled { tracker: String, count: i64 },
     /// Toast when signing out of a tracker failed. The reason comes from the system.
     NoticeSignOutFailed { tracker: String, reason: String },
     /// Toast when a setting could not be stored. The cause says why and what to do.
@@ -409,6 +415,8 @@ pub enum Msg {
     NoticeSaved { label: String },
     /// Toast when a setting could not be stored. The reason comes from the system.
     NoticeNotSaved { reason: String },
+    /// Toast when something the person did, such as a chapter marked read, a place in a book, a watched episode or a list change, could not be stored. The reason comes from the system.
+    NoticeChangeNotKept { reason: String },
     /// Toast when a title's details did not load.
     NoticeTitleLoadFailed,
     /// Toast when playback stops with an error.
@@ -643,6 +651,9 @@ impl Msg {
             Self::NoticeClientIdMissing { .. } => "notice-client-id-missing",
             Self::NoticeSignedOut { .. } => "notice-signed-out",
             Self::NoticeSignedOutQueue { .. } => "notice-signed-out-queue",
+            Self::NoticeTrackerChangeRefused { .. } => "notice-tracker-change-refused",
+            Self::NoticeTrackerChangesRefused { .. } => "notice-tracker-changes-refused",
+            Self::NoticeTrackerChangeRefusedUntitled { .. } => "notice-tracker-change-refused-untitled",
             Self::NoticeSignOutFailed { .. } => "notice-sign-out-failed",
             Self::NoticeNotSavedBecause { .. } => "notice-not-saved-because",
             Self::NoticeProxySaved => "notice-proxy-saved",
@@ -660,6 +671,7 @@ impl Msg {
             Self::LegalHostsNoContent => "legal-hosts-no-content",
             Self::NoticeSaved { .. } => "notice-saved",
             Self::NoticeNotSaved { .. } => "notice-not-saved",
+            Self::NoticeChangeNotKept { .. } => "notice-change-not-kept",
             Self::NoticeTitleLoadFailed => "notice-title-load-failed",
             Self::NoticePlaybackFailed => "notice-playback-failed",
             Self::NoticeEngineFault => "notice-engine-fault",
@@ -871,6 +883,9 @@ impl Msg {
             Self::NoticeClientIdMissing { setting } => vec![("setting", Value::Text(setting.clone()))],
             Self::NoticeSignedOut { tracker } => vec![("tracker", Value::Text(tracker.clone()))],
             Self::NoticeSignedOutQueue { tracker, count } => vec![("tracker", Value::Text(tracker.clone())), ("count", Value::Int(*count))],
+            Self::NoticeTrackerChangeRefused { tracker, title } => vec![("tracker", Value::Text(tracker.clone())), ("title", Value::Text(title.clone()))],
+            Self::NoticeTrackerChangesRefused { tracker, title, others } => vec![("tracker", Value::Text(tracker.clone())), ("title", Value::Text(title.clone())), ("others", Value::Int(*others))],
+            Self::NoticeTrackerChangeRefusedUntitled { tracker, count } => vec![("tracker", Value::Text(tracker.clone())), ("count", Value::Int(*count))],
             Self::NoticeSignOutFailed { tracker, reason } => vec![("tracker", Value::Text(tracker.clone())), ("reason", Value::Text(reason.clone()))],
             Self::NoticeNotSavedBecause { cause } => vec![("cause", Value::Cause(cause.clone()))],
             Self::NoticeProxySaved => Vec::new(),
@@ -888,6 +903,7 @@ impl Msg {
             Self::LegalHostsNoContent => Vec::new(),
             Self::NoticeSaved { label } => vec![("label", Value::Text(label.clone()))],
             Self::NoticeNotSaved { reason } => vec![("reason", Value::Text(reason.clone()))],
+            Self::NoticeChangeNotKept { reason } => vec![("reason", Value::Text(reason.clone()))],
             Self::NoticeTitleLoadFailed => Vec::new(),
             Self::NoticePlaybackFailed => Vec::new(),
             Self::NoticeEngineFault => Vec::new(),
@@ -1323,6 +1339,8 @@ pub enum ReadingMsg {
     ReadingFailedNoSource,
     /// Why a chapter or a list could not load: the source refused. The reason comes from the source.
     ReadingFailedBlocked { source: String, reason: String },
+    /// Why a chapter or a list could not load: the source's plugin asked for a host its manifest doesn't list, so the request never left the device and the source refused nothing. An update to the plugin usually fixes it.
+    ReadingFailedHostNotAllowed { source: String },
     /// Why a chapter or a list could not load: the source answered with something Kaeri could not read.
     ReadingFailedParse { source: String },
     /// Why one page did not load. The status is the server's HTTP status code, such as 404.
@@ -1461,6 +1479,8 @@ pub enum ReadingMsg {
     ExportChapter { chapter: String },
     /// Send to e-reader: a send that waits because chapters must be fetched and downloads are kept to Wi-Fi. A send makes its files from every chapter at once, so all of it waits. n is how many chapters it still has to fetch.
     ExportWaitsForWifi { n: i64 },
+    /// Send to e-reader, under the ready files: pages of one chapter that couldn't be read, as the reader shows them broken, so the files go without them. The chapter is its name as the series shows it, such as Chapter 12 or Volume 1. n is how many pages were left out.
+    ExportPagesLeftOut { n: i64, chapter: String },
     /// Under a This week cell: the chapter that came out that day, with its own title.
     ReadingChapterTitled { chapter: String, title: String },
     /// A chapter row's state: the person read it.
@@ -1579,6 +1599,10 @@ pub enum ReadingMsg {
     ReadingEstimateMobile,
     /// The device is on mobile data and the chapters wait until it's on Wi-Fi.
     ReadingEstimateWaitsWifi,
+    /// Notice after Download on chapters that are files in the person's own folders: they open from where they are, so nothing is downloaded.
+    ReadingDownloadOnDevice,
+    /// A series' name where neither the catalogue nor its source gave one: on Downloads, in a sent file's name and in the e-reader's library.
+    ReadingUntitledSeries,
     /// The notification's title.
     ReadingDownloadsDoneTitle,
     /// The notification's text: one series' chapters are downloaded.
@@ -1709,6 +1733,7 @@ impl ReadingMsg {
             Self::ReadingFailedNotFound => "reading-failed-not-found",
             Self::ReadingFailedNoSource => "reading-failed-no-source",
             Self::ReadingFailedBlocked { .. } => "reading-failed-blocked",
+            Self::ReadingFailedHostNotAllowed { .. } => "reading-failed-host-not-allowed",
             Self::ReadingFailedParse { .. } => "reading-failed-parse",
             Self::ReadingFailedPage { .. } => "reading-failed-page",
             Self::ReadingPictureFailed => "reading-picture-failed",
@@ -1778,6 +1803,7 @@ impl ReadingMsg {
             Self::ExportDeviceTablet => "export-device-tablet",
             Self::ExportChapter { .. } => "export-chapter",
             Self::ExportWaitsForWifi { .. } => "export-waits-for-wifi",
+            Self::ExportPagesLeftOut { .. } => "export-pages-left-out",
             Self::ReadingChapterTitled { .. } => "reading-chapter-titled",
             Self::ReadingRowRead => "reading-row-read",
             Self::ReadingRowNew => "reading-row-new",
@@ -1837,6 +1863,8 @@ impl ReadingMsg {
             Self::ReadingEstimateWifi => "reading-estimate-wifi",
             Self::ReadingEstimateMobile => "reading-estimate-mobile",
             Self::ReadingEstimateWaitsWifi => "reading-estimate-waits-wifi",
+            Self::ReadingDownloadOnDevice => "reading-download-on-device",
+            Self::ReadingUntitledSeries => "reading-untitled-series",
             Self::ReadingDownloadsDoneTitle => "reading-downloads-done-title",
             Self::ReadingDownloadsDoneChapters { .. } => "reading-downloads-done-chapters",
             Self::ReadingDownloadsDoneParts { .. } => "reading-downloads-done-parts",
@@ -1921,6 +1949,7 @@ impl ReadingMsg {
             Self::ReadingFailedNotFound => Vec::new(),
             Self::ReadingFailedNoSource => Vec::new(),
             Self::ReadingFailedBlocked { source, reason } => vec![("source", Value::Text(source.clone())), ("reason", Value::Text(reason.clone()))],
+            Self::ReadingFailedHostNotAllowed { source } => vec![("source", Value::Text(source.clone()))],
             Self::ReadingFailedParse { source } => vec![("source", Value::Text(source.clone()))],
             Self::ReadingFailedPage { status } => vec![("status", Value::Plain(*status))],
             Self::ReadingPictureFailed => Vec::new(),
@@ -1990,6 +2019,7 @@ impl ReadingMsg {
             Self::ExportDeviceTablet => Vec::new(),
             Self::ExportChapter { chapter } => vec![("chapter", Value::Text(chapter.clone()))],
             Self::ExportWaitsForWifi { n } => vec![("n", Value::Int(*n))],
+            Self::ExportPagesLeftOut { n, chapter } => vec![("n", Value::Int(*n)), ("chapter", Value::Text(chapter.clone()))],
             Self::ReadingChapterTitled { chapter, title } => vec![("chapter", Value::Text(chapter.clone())), ("title", Value::Text(title.clone()))],
             Self::ReadingRowRead => Vec::new(),
             Self::ReadingRowNew => Vec::new(),
@@ -2049,6 +2079,8 @@ impl ReadingMsg {
             Self::ReadingEstimateWifi => Vec::new(),
             Self::ReadingEstimateMobile => Vec::new(),
             Self::ReadingEstimateWaitsWifi => Vec::new(),
+            Self::ReadingDownloadOnDevice => Vec::new(),
+            Self::ReadingUntitledSeries => Vec::new(),
             Self::ReadingDownloadsDoneTitle => Vec::new(),
             Self::ReadingDownloadsDoneChapters { title, count } => vec![("title", Value::Text(title.clone())), ("count", Value::Int(*count))],
             Self::ReadingDownloadsDoneParts { title, count } => vec![("title", Value::Text(title.clone())), ("count", Value::Int(*count))],

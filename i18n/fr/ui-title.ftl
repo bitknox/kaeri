@@ -45,7 +45,7 @@ episode-protection-line-short = Masqué après l’épisode { $episode }
 episode-range = Épisodes { $from } à { $to }
 episode-range-label = Plage d’épisodes
 episode-fold = { $count ->
-    [one] Un épisode vu
+    [one] { $count } épisode vu
     [many] { $count } épisodes vus
    *[other] { $count } épisodes vus
  }
@@ -86,7 +86,7 @@ more-empty = AniList n'a pas encore de distribution, d'équipe ni de recommandat
 more-spoiler = Spoiler
 more-hide-spoiler-tags = Masquer les mots-clés spoilers
 more-show-spoiler-tags = { $count ->
-    [one] Afficher un mot-clé spoiler
+    [one] Afficher { $count } mot-clé spoiler
     [many] Afficher { $count } mots-clés spoilers
    *[other] Afficher { $count } mots-clés spoilers
  }

@@ -155,7 +155,7 @@ struct SettleTests {
     @Test func aStoreSettlesOnceContinueHasLoadedAndTheArtHasArrived() async throws {
         let root = temporaryRoot()
         defer { try? FileManager.default.removeItem(at: root) }
-        let store = AppStore()
+        let store = AppStore(artworkCache: KeptCache())
         await store.start(
             EngineLaunch(engine: .fixtures(.watching), home: .override(root: root), platform: .macOs, secrets: .host),
             host: quietHost()
@@ -253,5 +253,90 @@ struct ResetSettingsTests {
         #expect(!store.settingsUnusable)
         await store.resetSettings()
         #expect(store.phase == .starting, "nothing started, nothing reset")
+    }
+}
+
+/// Try again on the start-failed and engine-stopped screens: the engine started again is told
+/// how the app and the device stand, though their tellers say them only when they change.
+@MainActor
+@Suite(.timeLimit(.minutes(1)))
+struct StartAgainTests {
+    /// A store whose system phases send through it, as the app wires them, and every
+    /// connectivity event it applied.
+    func wired() -> (AppStore, SystemPhases, Box<[Bool]>) {
+        let store = AppStore()
+        let heard = Box<[Bool]>([])
+        store.onApplied = { events in
+            for case .connectivity(let offline) in events { heard.value.append(offline) }
+        }
+        let phases = SystemPhases(send: { [weak store] in store?.send($0) }, playing: { false })
+        return (store, phases, heard)
+    }
+
+    func launch(_ root: URL) -> EngineLaunch {
+        EngineLaunch(engine: .fixtures(.fresh), home: .override(root: root), platform: .macOs, secrets: .host)
+    }
+
+    @Test func anEngineStartedAgainAfterAFailedStartIsToldTheNetwork() async throws {
+        let root = temporaryRoot()
+        defer { try? FileManager.default.removeItem(at: root) }
+        let config = root.appending(path: "config", directoryHint: .isDirectory)
+        try FileManager.default.createDirectory(at: config, withIntermediateDirectories: true)
+        let file = config.appending(path: "config.toml")
+        try "[playback]\nquality = \"lots\"\n".write(to: file, atomically: true, encoding: .utf8)
+
+        let (store, phases, heard) = wired()
+        // Said as the app starts the engine, and not again: the path does not change.
+        phases.scene(.active)
+        phases.network(expensive: false, constrained: false, offline: true)
+        await store.start(launch(root), host: quietHost())
+        guard case .failed = store.phase else {
+            Issue.record("the start fails on the config: \(store.phase)")
+            return
+        }
+
+        // The cause goes away, and Try again starts an engine that has heard nothing yet.
+        try FileManager.default.removeItem(at: file)
+        await store.restart()
+        defer { store.shutdown() }
+        try #require(store.phase == .running, "\(store.phase)")
+        try await waitFor({ heard.value.contains(true) }, within: .seconds(30))
+    }
+
+    @Test func anEngineStartedAgainAfterItStoppedIsToldTheNetwork() async throws {
+        let root = temporaryRoot()
+        defer { try? FileManager.default.removeItem(at: root) }
+        let (store, phases, heard) = wired()
+        phases.network(expensive: false, constrained: false, offline: true)
+        await store.start(launch(root), host: quietHost())
+        try #require(store.phase == .running, "\(store.phase)")
+        try await waitFor({ heard.value == [true] }, within: .seconds(30))
+        store.shutdown()
+        try await waitFor { store.phase == .stopped }
+
+        heard.value = []
+        await store.restart()
+        defer { store.shutdown() }
+        try #require(store.phase == .running, "\(store.phase)")
+        try await waitFor({ heard.value == [true] }, within: .seconds(30))
+    }
+
+    @Test func whatIsAskedForWhileTheEngineStartsAgainReachesTheNewOne() async throws {
+        let root = temporaryRoot()
+        defer { try? FileManager.default.removeItem(at: root) }
+        let store = AppStore()
+        await store.start(launch(root), host: quietHost())
+        try #require(store.phase == .running, "\(store.phase)")
+        store.shutdown()
+        try await waitFor { store.phase == .stopped }
+
+        let again = Task { await store.restart() }
+        for _ in 0..<1000 where store.phase != .starting { await Task.yield() }
+        try #require(store.phase == .starting, "\(store.phase)")
+        store.loadContinue(force: true)
+        await again.value
+        defer { store.shutdown() }
+        try #require(store.phase == .running, "\(store.phase)")
+        try await waitFor({ store.continuing.list.state == .empty }, within: .seconds(30))
     }
 }

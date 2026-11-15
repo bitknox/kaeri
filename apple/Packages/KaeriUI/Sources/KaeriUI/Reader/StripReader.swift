@@ -174,7 +174,8 @@ struct StripReader: View {
             add("\(past.id)>", .marker(next: past.next, source: past.nextSource, chapter: past.id), markerHeight(past.id), n)
         }
         if waiting {
-            add("lead", .lead, leadHeight, nil) // i18n-skip: a row id
+            let into = model.flowing ?? model.trail.chapters.last?.next.id
+            add(Self.leadId(into), .lead, leadHeight, nil)
             return rows
         }
         guard !parts.isEmpty else { return rows }
@@ -185,11 +186,18 @@ struct StripReader: View {
             add("\(chapter)!", .foot, max(size.height * 0.8, 420, markerHeight(chapter) + leadHeight), nil)
         } else if let next {
             add("\(chapter)>", .marker(next: next, source: model.end?.nextSource, chapter: chapter), markerHeight(chapter), nil)
-            add("lead", .lead, leadHeight, nil) // i18n-skip: a row id
+            add(Self.leadId(next.id), .lead, leadHeight, nil)
         } else {
             add("\(chapter)!", .foot, max(size.height * 0.8, 420), nil)
         }
         return rows
+    }
+
+    /// The lead under the marker into `chapter`. Keyed by that chapter, so the room the strip
+    /// waits in while it opens and the lead under its own marker after it are two rows, never one
+    /// row that moves down past the chapter's images when they come.
+    static func leadId(_ chapter: ChapterId?) -> String {
+        "lead \(chapter ?? "")" // i18n-skip: a row id
     }
 
     /// A chapter's credit pages by the image they sat before; those at the end under the count.
@@ -261,12 +269,13 @@ struct StripReader: View {
             self.phase = phase
             if phase == .interacting { restoring = false; model.hideChrome() }
         }
+        #if FIXTURES
+        .overlay(alignment: .topLeading) { StripZoomProbe(zoom: zoom * pinch) }
+        #endif
         #if os(iOS)
         .scaleEffect(pinch, anchor: UnitPoint(x: pinchAt.x / max(size.width, 1), y: pinchAt.y / max(size.height, 1)))
-        .simultaneousGesture(
-            SpatialTapGesture(count: 2).onEnded { tap in zoomByTap(at: tap.location) }
-                .exclusively(before: SpatialTapGesture().onEnded { _ in onTap() })
-        )
+        // A tap on a control in the strip, a failed page's Try again, is the control's alone.
+        .readerTaps(double: { zoomByTap(at: $0) }) { _ in onTap() }
         .simultaneousGesture(
             MagnifyGesture()
                 .updating($magnifying) { _, live, _ in live = true }
@@ -290,7 +299,7 @@ struct StripReader: View {
             settle(to: zoom * pinch, at: pinchAt)
         }
         #else
-        .simultaneousGesture(SpatialTapGesture().onEnded { _ in onTap() })
+        .readerTaps { _ in onTap() }
         #endif
         .frame(width: size.width, height: size.height)
         // A screen reader has no zones and no guide, and the images are no elements of their own:
@@ -328,6 +337,12 @@ struct StripReader: View {
             position.scrollTo(y: 0)
         }
         .onChange(of: next.flatMap { model.previews[$0.id] }?.path) { _, _ in keepLead() }
+        // Cmd-0: back to the column, at once, keeping the place in the middle of the screen.
+        .onChange(of: model.stripFitAsked) { _, _ in
+            pinching = false
+            guard zoom != 1 || pinch != 1 else { return }
+            settle(to: 1, at: CGPoint(x: size.width / 2, y: size.height / 2))
+        }
         .onChange(of: model.stripRestore) { _, at in
             guard at != nil else { return }
             restoring = true
@@ -685,6 +700,22 @@ private final class Ahead {
 }
 
 /// One image of the strip: the plate holds its place until the image has faded in over it.
+#if FIXTURES
+/// The strip's zoom for the Audit tests, in the Fixtures app only: the strip's images are no
+/// elements of their own to a screen reader, so nothing else tells a test how wide they are.
+private struct StripZoomProbe: View {
+    let zoom: CGFloat
+
+    var body: some View {
+        Color.clear
+            .frame(width: 1, height: 1)
+            .accessibilityElement()
+            .accessibilityIdentifier("strip-zoom")
+            .accessibilityValue(String(format: "%.2f", zoom))
+    }
+}
+#endif
+
 private struct StripImage: View {
     let model: ReaderModel
     let chapter: String
@@ -701,7 +732,7 @@ private struct StripImage: View {
                 if !painted { PagePlate(page: Int(part.page) + 1, theme: theme, image: true) }
                 PageImage(file: file, longest: longest, tone: tone) { painted = true }
             } else if let failure = model.failure(of: part, chapter: chapter) {
-                PageFailed(page: Int(part.page) + 1, failure: failure, theme: theme) { model.retry(page: part.page) }
+                PageFailed(page: Int(part.page) + 1, failure: failure, theme: theme, strip: true) { model.retry(page: part.page) }
             } else {
                 PagePlate(page: Int(part.page) + 1, theme: theme, image: true)
             }

@@ -68,7 +68,7 @@ windows-reader-pages-tab = Páginas
 windows-reader-chapters-tab = Capítulos
 windows-reader-volume = Volume { $volume }
 windows-reader-chapter-pages = { $pages ->
-    [one] 1 página
+    [one] { $pages } página
     [many] { $pages } de páginas
    *[other] { $pages } páginas
  }

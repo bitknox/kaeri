@@ -25,6 +25,13 @@ notice-signed-out = { $tracker }からサインアウトしました。
 notice-signed-out-queue = { $count ->
    *[other] { $tracker }からサインアウトしました。送信待ちの変更が{ $count }件あり、次回のサインイン後に送信されます。
  }
+notice-tracker-change-refused = { $tracker }が「{ $title }」への変更を何度も拒否したため、変更は{ -app-name }にのみ残ります。
+notice-tracker-changes-refused = { $others ->
+   *[other] { $tracker }が「{ $title }」とほか{ $others }件のタイトルへの変更を何度も拒否したため、変更は{ -app-name }にのみ残ります。
+ }
+notice-tracker-change-refused-untitled = { $count ->
+   *[other] { $tracker }が{ $count }件のタイトルへの変更を何度も拒否したため、変更は{ -app-name }にのみ残ります。
+ }
 notice-sign-out-failed = { $tracker }からサインアウトできませんでした。もう一度試してください。{ $reason }
 notice-not-saved-because = その設定を保存できませんでした。{ $cause }
 notice-proxy-saved = トレントの通信がプロキシ経由になりました。

@@ -14,14 +14,53 @@ struct TabShell: View {
     @Environment(\.horizontalSizeClass) private var sizeClass
 
     var body: some View {
-        // The sidebar on a wide iPad; on iPhone the system's own tab bar, with Search apart.
-        if sizeClass == .regular {
-            // No customization: the bar's set is fixed, and the rest live in the sidebar only, so
-            // the sidebar has no Edit button.
-            tabs.tabViewStyle(.sidebarAdaptable)
-        } else {
-            tabs
+        @Bindable var navigator = navigator
+        // The sidebar on a wide iPad; the system's own tab bar on iPhone and in a narrow iPad
+        // window, with Search apart. The style goes by the width, so a resize makes the tab view
+        // again: UIKit throws while it rebuilds the bar of one sidebar-adaptable tab view made
+        // narrow or wide (NSRangeException in _tabs_rebuildTabBarItemsAnimated, iOS 27). No
+        // customization: the bar's set is fixed, and the rest live in the sidebar only, so the
+        // sidebar has no Edit button.
+        // What the pages hold lives above it, in Navigator: each tab's pushed pages and a series
+        // page's chosen chapters and order. The sheets and the notices are here, outside it, so a
+        // resize leaves an open sheet open.
+        return Group {
+            if sizeClass == .regular {
+                tabs.tabViewStyle(.sidebarAdaptable)
+            } else {
+                tabs
+            }
         }
+        // A window made narrow keeps the place the person was on, pushed onto its tab; made wide
+        // again, that place is its own section again.
+        .onChange(of: sizeClass) { _, now in
+            if now == .compact { narrowed() } else { widened() }
+        }
+        // At the foot, above the tab bar on iPhone and in a narrow window (Notices).
+        .overlay(alignment: .bottom) {
+            NoticeCapsule(here: navigator.phoneSettings == nil)
+                .padding(.horizontal, 16)
+                .padding(.bottom, sizeClass == .compact ? 64 : 16)
+        }
+        .sheet(isPresented: $navigator.messagesShown) {
+            MessagesView()
+        }
+        .sheet(item: $navigator.phoneSettings) { page in
+            PhoneSettingsSheet(start: page)
+        }
+        .sheet(item: Binding<ShowItem?>(
+            get: { navigator.showSettings.flatMap { store.titles[$0] }.map(ShowItem.init) },
+            set: { (item: ShowItem?) in navigator.showSettings = item?.entry.id }
+        )) { item in
+            PhoneShowSettingsSheet(entry: item.entry)
+                .presentationDetents([.medium, .large])
+        }
+        .moreAboutSheet(navigator)
+        .sourcePickerSheet(navigator)
+        .matchPickerSheet(navigator)
+        .openLinkSheet(navigator)
+        .surprisePicks()
+        .modifier(AppSheets())
     }
 
     private var tabs: some View {
@@ -95,11 +134,7 @@ struct TabShell: View {
         .tabBarMinimizeBehavior(.onScrollDown)
         // A place with no tab here goes onto the tab that leads to it, as the headings on each
         // Home do.
-        .onChange(of: navigator.section, initial: true) { _, now in
-            guard sizeClass == .compact, let parent = Self.parent(of: now, store.medium.answer) else { return }
-            navigator.placePushed = now
-            navigator.section = parent
-        }
+        .onChange(of: navigator.section, initial: true) { _, _ in narrowed() }
         // Watch together has no tab on iPhone and in a narrow window: Home's people button
         // pushes it there.
         .onChange(of: navigator.section == .together && sizeClass == .compact, initial: true) { _, narrow in
@@ -111,31 +146,6 @@ struct TabShell: View {
         // The iPad's sidebar as the brief draws it (PadSidebarStyle). The bar is empty; it is
         // where the style reaches the sidebar from, and unlike a header it moves no row.
         .tabViewSidebarBottomBar { PadSidebarStyle(selection: navigator.section) }
-        // At the foot, above the tab bar on iPhone and in a narrow window (Notices).
-        .overlay(alignment: .bottom) {
-            NoticeCapsule(here: navigator.phoneSettings == nil)
-                .padding(.horizontal, 16)
-                .padding(.bottom, sizeClass == .compact ? 64 : 16)
-        }
-        .sheet(isPresented: $navigator.messagesShown) {
-            MessagesView()
-        }
-        .sheet(item: $navigator.phoneSettings) { page in
-            PhoneSettingsSheet(start: page)
-        }
-        .sheet(item: Binding<ShowItem?>(
-            get: { navigator.showSettings.flatMap { store.titles[$0] }.map(ShowItem.init) },
-            set: { (item: ShowItem?) in navigator.showSettings = item?.entry.id }
-        )) { item in
-            PhoneShowSettingsSheet(entry: item.entry)
-                .presentationDetents([.medium, .large])
-        }
-        .moreAboutSheet(navigator)
-        .sourcePickerSheet(navigator)
-        .matchPickerSheet(navigator)
-        .openLinkSheet(navigator)
-        .surprisePicks()
-        .modifier(AppSheets())
     }
 
     /// The sections with a tab, in the sidebar's order: Search has its own, and Downloads and
@@ -144,13 +154,20 @@ struct TabShell: View {
         AppSection.groups(answer).flatMap { $0 }.filter { ![.search, .downloads, .together].contains($0) }
     }
 
-    /// The tab a place with no tab of its own is pushed onto, on iPhone and in a narrow window.
-    static func parent(of section: AppSection, _ answer: KaeriIsFor) -> AppSection? {
-        guard [.calendar, .seasonal, .updates].contains(section), !barTabs(answer).contains(section) else { return nil }
-        return section == .updates ? .read : .home
+    /// A place with no tab of its own in a narrow window goes onto the tab that leads to it.
+    private func narrowed() {
+        guard sizeClass == .compact else { return }
+        NarrowTabs.narrow(navigator, store.medium.answer)
     }
 
-    /// The tabs the iPhone's bar shows.
+    private static var pad: Bool { UIDevice.current.userInterfaceIdiom == .pad }
+
+    /// The place pushed for a narrow window is its own section again in a wide iPad window.
+    private func widened() {
+        guard Self.pad else { return }
+        NarrowTabs.widen(navigator, store.medium.answer)
+    }
+
     /// A place as a tab: Home's and Read's identity carries the answer they are named for.
     struct NamedPlace: Identifiable {
         let section: AppSection
@@ -158,13 +175,7 @@ struct TabShell: View {
         var id: String { [.home, .read].contains(section) ? "\(section.rawValue).\(answer)" : section.rawValue }
     }
 
-    static func barTabs(_ answer: KaeriIsFor) -> [AppSection] {
-        switch answer {
-        case .watch: [.home, .calendar, .seasonal, .library]
-        case .read: [.read, .updates, .library]
-        case .both: [.home, .read, .library]
-        }
-    }
+    static func barTabs(_ answer: KaeriIsFor) -> [AppSection] { NarrowTabs.barTabs(answer) }
 
     @ViewBuilder
     private func screen(_ section: AppSection) -> some View {
@@ -213,13 +224,21 @@ struct PadTitleToolbar: ToolbarContent {
     }
 }
 
-/// Sources' toolbar on iPad: check the stores for plugin updates.
+/// Sources' toolbar on iPad: check the stores for plugin updates, and Add a source with reading on.
 struct IPadProvidersToolbar: ToolbarContent {
     @Environment(AppStore.self) private var store
 
     var body: some ToolbarContent {
-        ToolbarItem(placement: .topBarTrailing) {
-            Button(L.settingsCheckUpdates) { store.loadStores() }
+        // As on the Mac: the stores' check with shows, Add a source with reading on, so a
+        // second book source can be added once the list has one. With none, the empty state's
+        // button is the one Add a source.
+        if store.medium.answer != .read {
+            ToolbarItem(placement: .topBarTrailing) {
+                Button(L.settingsCheckUpdates) { store.loadStores() }
+            }
+        }
+        if BookSourcesToolbar.shows(store) {
+            ToolbarItem(placement: .topBarTrailing) { BookSourcesToolbar() }
         }
     }
 }

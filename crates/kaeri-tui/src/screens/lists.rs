@@ -13,7 +13,7 @@ use ratatui::{buffer::Buffer, layout::Rect, style::Modifier, widgets::Widget};
 
 use crate::{
     app::{App, Field, air_date},
-    clock::Clock,
+    clock::{Clock, month_short},
     layout,
     nav::{Focus, Section},
     theme::{Role, glyph},
@@ -387,7 +387,7 @@ fn score_text(entry: &Entry) -> Option<String> {
 fn episodes_count(entry: &Entry) -> String {
     use kaeri_model::catalog::{AiringStatus, FuzzyDate};
     let not_out = |start: Option<FuzzyDate>| match start {
-        Some(FuzzyDate { month: Some(month), day: Some(day), .. }) => month_short(month)
+        Some(FuzzyDate { month: Some(month), day: Some(day), .. }) => month_short(month.into())
             .map_or_else(t::lists_count_soon, |month| {
                 t::lists_count_starts(i64::from(day), &month)
             }),
@@ -423,25 +423,6 @@ fn dub_count(entry: &Entry, columned: bool) -> Option<String> {
         Some(through) if through > 0 && !movie && columned => through.to_string(),
         Some(through) if through > 0 && !movie => t::lists_count_dub_through(through.into()),
         _ => t::lists_count_dub(),
-    })
-}
-
-/// A month's short name, "Jan".
-fn month_short(month: u8) -> Option<String> {
-    Some(match month {
-        1 => t::date_month_jan_short(),
-        2 => t::date_month_feb_short(),
-        3 => t::date_month_mar_short(),
-        4 => t::date_month_apr_short(),
-        5 => t::date_month_may_short(),
-        6 => t::date_month_jun_short(),
-        7 => t::date_month_jul_short(),
-        8 => t::date_month_aug_short(),
-        9 => t::date_month_sep_short(),
-        10 => t::date_month_oct_short(),
-        11 => t::date_month_nov_short(),
-        12 => t::date_month_dec_short(),
-        _ => return None,
     })
 }
 

@@ -10,6 +10,5 @@ tui-together-join-prompt = ссылка или код
 tui-together-chat-hidden-line = Сообщения и реакции не показываются в плеере ни в одном совместном просмотре.
 tui-together-not-a-link = Это не ссылка и не код комнаты.
 tui-together-recent-alone = Эпизод { $episode } · { $when }
-tui-medium-read-line = В терминале нет читалки. Манга, вебтуны и ранобэ открываются в приложениях { -app-name }, а синхронизация переносит ваш прогресс между ними.
 tui-medium-read-change = Нажмите { $key }, чтобы выбрать, для чего нужен { -app-name }.
 tui-medium-settings-hint = { $key }: изменить

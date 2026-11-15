@@ -301,16 +301,10 @@ impl Tracker for TraktTracker {
             })
             .await?;
 
-        let status = response.status();
-        if status.as_u16() == 401 {
-            return Err(kaeri_core::Error::Auth("trakt rejected the token".into()));
-        }
-        if !status.is_success() {
-            let body = response.text().await.unwrap_or_default();
-            return Err(kaeri_core::Error::Tracker {
-                tracker: "trakt".into(),
-                message: crate::said(status, &body),
-            });
+        // One request for the whole batch, so a refusal is the batch's: the drain then asks
+        // again title by title, and only the refused title's change fails.
+        if !response.status().is_success() {
+            return Err(crate::failed_answer(response, "trakt", "trakt").await);
         }
         Ok(())
     }
@@ -486,7 +480,8 @@ mod tests {
         let tracker = tracker_at(&base, pair("old", Some(1)));
 
         let error = tracker.push(&episode()).await.unwrap_err();
-        assert!(matches!(error, kaeri_core::Error::Tracker { .. }), "got {error:?}");
+        // The network, never a refusal: the outbox waits it out without counting it.
+        assert!(matches!(error, kaeri_core::Error::Network(_)), "got {error:?}");
         assert!(tracker.is_authenticated(), "still signed in, to try again");
     }
 

@@ -20,6 +20,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
@@ -124,6 +125,7 @@ internal fun LicensedReturnNotice() {
     val store = LocalAppStore.current
     val snackbars = LocalSnackbars.current
     val context = LocalContext.current
+    val resources = LocalResources.current
     val owner = LocalLifecycleOwner.current
     DisposableEffect(owner) {
         val observer = LifecycleEventObserver { _, event -> if (event == Lifecycle.Event.ON_START) store.returnedToApp() }
@@ -134,9 +136,9 @@ internal fun LicensedReturnNotice() {
     LaunchedEffect(returned) {
         val said = returned ?: return@LaunchedEffect
         store.licensed.returnedShown(said)
-        snackbars.show(said.prompt.text(context), context.getString(R.string.licensed_mark_watched)) {
+        snackbars.show(said.prompt.text(context), resources.getString(R.string.licensed_mark_watched)) {
             store.setWatched(said.id, listOf(said.episode.toString()), true)
-            snackbars.show(said.done.text(context), context.getString(R.string.action_undo)) {
+            snackbars.show(said.done.text(context), resources.getString(R.string.action_undo)) {
                 store.setWatched(said.id, listOf(said.episode.toString()), false)
             }
         }

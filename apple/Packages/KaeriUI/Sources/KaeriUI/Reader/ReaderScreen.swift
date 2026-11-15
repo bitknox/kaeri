@@ -93,6 +93,9 @@ public struct ReaderScreen: View {
         .onKeyPress(phases: [.down, .repeat]) { press in
             take(press.key, press.modifiers, repeated: press.phase == .repeat) ? .handled : .ignored
         }
+        // Tab stays in the book: the window under it is covered, and its controls aren't the
+        // reader's to reach.
+        .onKeyPress(keys: [.tab, Self.backTab], phases: [.down, .repeat]) { _ in .handled }
         .onAppear { holdsKeys = true }
         .onChange(of: model.sheet == nil) { _, closed in if closed { holdsKeys = true } }
         .onChange(of: model.askingPage) { _, asking in if !asking { holdsKeys = true } }
@@ -106,6 +109,9 @@ public struct ReaderScreen: View {
         }
         #endif
         .onChange(of: model.sheet) { _, sheet in if sheet != nil { model.chromeShown = true } }
+        // A chapter starting to open, or one that would not open, puts the group away, so the
+        // chapter opened, or Try again's open, starts without it.
+        .onChange(of: ReaderChrome.ready(model)) { _, ready in if !ready { model.hideChrome() } }
         .onChange(of: model.held?.tick) { _, _ in heldShown = 1 }
         .onChange(of: model.held?.landed == true) { _, landed in if landed { letHeldGo() } }
         #if os(iOS)
@@ -194,6 +200,9 @@ public struct ReaderScreen: View {
         model.surfaceChanged(surface)
     }
 
+    /// Shift-Tab, as AppKit names it.
+    static let backTab = KeyEquivalent("\u{19}")
+
     // MARK: Chrome
 
     /// A tap at the horizontal fraction `x`. The middle third shows the chrome; the next tap hides it.
@@ -213,6 +222,8 @@ public struct ReaderScreen: View {
 
     #if os(macOS)
     private func pointerMoved() {
+        // The group stays away from a chapter opening or failed, and so does the pointer's hiding.
+        guard ReaderChrome.ready(model) else { hideTask?.cancel(); return }
         model.chromeShown = true
         hideTask?.cancel()
         hideTask = Task {
@@ -346,7 +357,7 @@ extension ReaderActions {
             canGoBack: model.backToPage != nil, backPage: model.backToPage,
             turn: { forward, line in model.requestTurn(forward: forward, line: line) },
             chapter: { next in
-                if let row = next ? model.view?.next : model.view?.previous { model.openChapter(row.id) }
+                if let row = model.chapterStep(next: next) { model.openChapter(row.id) }
             },
             back: { model.back() },
             askPage: { model.chromeShown = true; model.askingPage = true },
@@ -390,7 +401,7 @@ extension ReaderActions {
         model.requestJump(first ? 0 : last)
     }
 
-    @MainActor private static func zoom(_ model: ReaderModel, _ step: Int) {
+    @MainActor static func zoom(_ model: ReaderModel, _ step: Int) {
         if model.medium == .novel {
             let now = model.amount(.textSize) ?? 1
             let next = step == 0 ? 1 : min(3, max(0.5, now + Double(step) * 0.1))
@@ -399,6 +410,12 @@ extension ReaderActions {
             let now = model.amount(.stripWidth) ?? 0.6
             let next = step == 0 ? 0.6 : min(1, max(0.3, now + Double(step) * 0.1))
             model.set(.stripWidth, .amount(value: next))
+            // Fit undoes a pinch's zoom too, whatever cut the pinch off.
+            if step == 0 { model.fitStrip() }
+        } else {
+            // Pages zoom the page on screen, as a pinch does: in and out about the middle of the
+            // screen, and Fit to Window back to fitted.
+            model.zoomPage(step)
         }
     }
 
@@ -415,6 +432,15 @@ extension ReaderActions {
 }
 
 // MARK: Opening and failing
+
+#if DEBUG
+/// The chapter the opening plate last named, for the tests of which chapter the reader is on.
+/// Debug builds only.
+@MainActor
+enum OpeningNamed {
+    static var chapter: String?
+}
+#endif
 
 struct ReaderOpening: View {
     let model: ReaderModel
@@ -439,16 +465,24 @@ struct ReaderOpening: View {
 
     /// What the open waits on, in words: the stage the engine named, else the chapter.
     static func stage(_ wait: ReaderWait?, chapter label: String) -> String {
-        switch wait {
+        #if DEBUG
+        OpeningNamed.chapter = label
+        #endif
+        return switch wait {
         case .chapterList(let source)?: L.readerWaitChapterList(source: source)
         case .chapterPages(let chapter, let source)?: L.readerWaitChapterPages(chapter: chapter, source: source)
         case .findingSource?, nil: L.readerOpening(chapter: label)
         }
     }
 
+    /// The chapter the opening and the failure name: the one asked for, not the one left, which
+    /// stays the model's view until the new one opens.
+    static func label(_ model: ReaderModel) -> String {
+        model.chapterHere.map { $0.number ?? $0.label } ?? ""
+    }
+
     var body: some View {
-        let chapter = model.view?.chapter
-        let label = chapter.map { $0.number ?? $0.label } ?? ""
+        let label = Self.label(model)
         let stage = Self.stage(model.openingWait, chapter: label)
         ZStack {
             if model.medium != .novel {
@@ -516,13 +550,12 @@ struct ReaderChapterFailed: View {
     @Environment(\.dynamicTypeSize) private var type
 
     var body: some View {
-        let chapter = model.view?.chapter
         VStack(alignment: .leading, spacing: 0) {
             Spacer(minLength: 120).frame(maxHeight: 240)
             HStack(alignment: .firstTextBaseline, spacing: 10) {
                 Image(systemName: "exclamationmark.triangle.fill").foregroundStyle(theme.vermilion)
                     .accessibilityHidden(true)
-                Text(L.readerChapterFailed(chapter: chapter.map { $0.number ?? $0.label } ?? ""))
+                Text(L.readerChapterFailed(chapter: ReaderOpening.label(model)))
                     .foregroundStyle(theme.silk)
                     .fixedSize(horizontal: false, vertical: true)
             }

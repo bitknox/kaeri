@@ -138,8 +138,8 @@ static class SeriesWords
     /// </summary>
     public static string ChapterLine(ChapterRow row, string? preferred)
     {
-        if (row.Line is { Length: > 0 } line)
-            return line.Joined();
+        if (row.Line is { Length: > 0 })
+            return ReadingLines.Row(row);
         var parts = new List<string>();
         if (State(row) is { } state)
             parts.Add(state);

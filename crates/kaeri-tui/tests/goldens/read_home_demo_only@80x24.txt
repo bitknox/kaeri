@@ -17,9 +17,9 @@ Kaeri                                                sources ○ 0  ·  anilist 
    │
    │    Folders, servers and plugin stores are added in the Kaeri apps.
    │
-   │    The terminal has no reader. Manga, webtoons and light novels open in
-   │    the Kaeri apps, and sync keeps your progress in step.
    │    Press I to change what Kaeri is for.
+   │
+   │
 ────────────────────────────────────────────────────────────────────────────────
 Reading                                            ↵ open   tab section   ? keys
 === styles ===
@@ -82,11 +82,9 @@ r17 c03-03 fg=rule
 r17 c08-70 fg=text-dim
 r18 c03-03 fg=rule
 r19 c03-03 fg=rule
-r19 c08-75 fg=text-dim
+r19 c08-43 fg=text-dim
 r20 c03-03 fg=rule
-r20 c08-60 fg=text-dim
 r21 c03-03 fg=rule
-r21 c08-43 fg=text-dim
 r22 c00-79 fg=rule
 r23 c00-06 fg=text-dim
 r23 c51-51 fg=text

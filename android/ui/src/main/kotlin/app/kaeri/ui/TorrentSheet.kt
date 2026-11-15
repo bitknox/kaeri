@@ -30,6 +30,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.res.stringResource
 import app.kaeri.i18n.R
 import androidx.compose.ui.Modifier
@@ -56,6 +57,7 @@ internal fun TorrentSheet(onDismiss: () -> Unit) {
     val store = LocalAppStore.current
     val snackbars = LocalSnackbars.current
     val context = LocalContext.current
+    val resources = LocalResources.current
     val view by store.settings.view.collectAsStateWithLifecycle()
     val saved = view?.torrent?.proxy
     var host by rememberSaveable { mutableStateOf(saved?.host.orEmpty()) }
@@ -67,7 +69,7 @@ internal fun TorrentSheet(onDismiss: () -> Unit) {
     val check = proxyCheck(details) { checked ->
         store.setTorrentProxy(checked)
         password = ""
-        snackbars.show(context.getString(TorrentWords.SAID_PROXY))
+        snackbars.show(resources.getString(TorrentWords.SAID_PROXY))
         onDismiss()
     }
     val editing = saved != null

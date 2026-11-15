@@ -12,7 +12,12 @@ use kaeri_model::{
 };
 
 use super::{Place, day_label, listen, place, send};
-use crate::{say, states::Shape, widgets, window::Ctx};
+use crate::{
+    say,
+    states::Shape,
+    widgets,
+    window::{Ctx, Size},
+};
 
 pub fn build(ctx: &Rc<Ctx>) -> adw::NavigationPage {
     let empty =
@@ -25,7 +30,11 @@ pub fn build(ctx: &Rc<Ctx>) -> adw::NavigationPage {
         &t::error_generic(),
         false,
     );
-    let download = gtk::Button::with_label(&t::updates_download_new());
+    let download = gtk::Button::new();
+    ctx.on_size({
+        let download = download.clone();
+        move |size| lay_download(&download, size)
+    });
     download.connect_clicked({
         let hub = Rc::downgrade(&ctx.hub);
         move |_| {
@@ -148,4 +157,41 @@ fn draw(ctx: &Rc<Ctx>, column: &gtk::Box, view: &UpdatesView) {
         column.append(&widgets::haze(&format!("{} \u{b7} {line}", failure.title), "caption")); // i18n-skip
     }
     let _ = say::msg;
+}
+
+/// Download new as the header has room for it at `size`: on a narrow window an icon, keeping
+/// its name for the tooltip and screen readers, so the header fits beside the window's buttons.
+fn lay_download(download: &gtk::Button, size: Size) {
+    let words = t::updates_download_new();
+    if size == Size::Narrow {
+        download.set_icon_name("folder-download-symbolic");
+        download.set_tooltip_text(Some(&words));
+    } else {
+        download.set_label(&words);
+        download.set_tooltip_text(None);
+    }
+    download.update_property(&[gtk::accessible::Property::Label(&words)]);
+}
+
+#[cfg(test)]
+mod narrow_tests {
+    use adw::prelude::*;
+
+    use super::lay_download;
+    use crate::{gtk_test::run, window::Size};
+
+    /// A 360 px window has room for Download new only as an icon beside Check now.
+    #[test]
+    fn download_new_takes_an_icons_room_when_narrow() {
+        run(|| {
+            let download = gtk::Button::new();
+            let check = gtk::Button::from_icon_name("view-refresh-symbolic");
+            let width =
+                |button: &gtk::Button| button.measure(gtk::Orientation::Horizontal, -1).0;
+            lay_download(&download, Size::Narrow);
+            assert!(width(&download) <= width(&check), "{} px when narrow", width(&download));
+            lay_download(&download, Size::Medium);
+            assert!(width(&download) > width(&check));
+        });
+    }
 }

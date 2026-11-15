@@ -1,0 +1,23 @@
+[package]
+name = "kaeri-alloc"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+description = "The Apple apps' allocator for the engine: large blocks kept while the reader works and given back to the system when it closes"
+publish = false
+
+[lib]
+doctest = false
+
+[dependencies]
+
+# Not the workspace's: it forbids unsafe code, and an allocator is unsafe by its nature.
+# Unsafe is denied everywhere else in the crate and allowed only in `blocks`.
+[lints.rust]
+unsafe_code = "deny"
+unsafe_op_in_unsafe_fn = "deny"
+
+[lints.clippy]
+all = { level = "warn", priority = -1 }
+undocumented_unsafe_blocks = "warn"

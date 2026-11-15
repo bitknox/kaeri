@@ -548,6 +548,9 @@ impl FfiEngine {
         let world = home_world.then(|| HomeWorld::at(HomeClock::in_zone(now, &clock.zone())));
         seed_scene(&opened.store, &scene, now);
         seed_books(&opened.store, &opened.paths.data_dir, &scene, now);
+        if seed::dropped_change_asked() {
+            seed::dropped_change(&opened.store, FINISHED, "Stardust Wayfarer", now);
+        }
         if let Some(sync) = scene.sync() {
             let tokens =
                 TokenStore::with_backend(opened.paths.data_dir.join("tokens"), Backend::File);
@@ -653,6 +656,11 @@ impl FfiEngine {
                     input: FIXTURE_OPENED_LINK.to_owned(),
                 },
             ));
+        }
+        if seed::dropped_change_asked() {
+            // The app's own drain runs at launch, and a scene's engine runs none of its loops,
+            // so the drain that says the given-up change is asked for, as Sync now asks.
+            engine.send(kaeri_model::command::Command::SyncNow);
         }
         Ok(engine)
     }

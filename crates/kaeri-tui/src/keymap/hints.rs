@@ -5,7 +5,7 @@
 use kaeri_i18n::t;
 
 use super::{Action, Binding, Keymap, said};
-use crate::nav::Section;
+use crate::{app::SeriesPage, nav::Section};
 
 /// Two keys drawn as one hint.
 fn pair(first: &str, second: &str) -> String {
@@ -225,6 +225,8 @@ pub(crate) fn status_hints_paged(
     };
     let in_stage = app.nav.focus() == crate::nav::Focus::Stage;
     let wanted: Vec<(Action, &'static str)> = match app.nav.current() {
+        // The reader draws its own status line, with the keys for the open state.
+        V::Reader(_) => return crate::app::reader_hints(app, usize::MAX),
         // Now Playing has its own vocabulary, and it is the one view where the browsing
         // hints would be actively wrong.
         // Skip only while a skip is offered: at any other moment the key does nothing.
@@ -285,6 +287,31 @@ pub(crate) fn status_hints_paged(
         .collect(),
         V::Stores | V::Store(_) | V::StoreMembers(_) => {
             vec![(Action::Open, Action::Open.hint()), (Action::Back, Action::Back.hint())]
+        }
+        // A series' page: its chapter's keys. Offline, as the board has it, Enter and the way
+        // back to the chapter to read next: only downloaded chapters open, and nothing
+        // downloads.
+        V::Series(_) if app.series_offline() => {
+            let mut wanted = Vec::new();
+            if app.series_selected().is_some() {
+                wanted.push((Action::Open, said(t::series_read_chapter_menu())));
+            }
+            if app.series_here().and_then(SeriesPage::next_up).is_some() {
+                wanted.push((Action::ShowEpisodes, said(t::series_chapters())));
+            }
+            wanted
+        }
+        V::Series(_) => {
+            let mut wanted = Vec::new();
+            if app.series_selected().is_some() {
+                wanted.push((Action::Open, said(t::series_read_chapter_menu())));
+                wanted.push((Action::ToggleWatched, said(t::tui_read_read_unread())));
+                wanted.push((Action::Download, said(t::series_download())));
+            }
+            if app.series_here().is_some_and(|page| page.view.is_some()) {
+                wanted.push((Action::SetListStatus, said(t::tui_read_hint_status())));
+            }
+            wanted
         }
         // Focus is on the rail: the arrows walk it, which is exactly the thing nobody could
         // discover when they did not.
@@ -481,8 +508,16 @@ pub(crate) fn reading_hints(
     let items = app.read_items();
     let search = app.nav.section() == Section::Search;
     let mut wanted: Vec<(Action, &'static str)> = Vec::new();
-    if !items.is_empty() {
+    let continues =
+        matches!(app.read_selected(), Some(crate::app::ReadLine::Work { continues: true, .. }));
+    if continues {
+        // A title in Continue reads on where it stopped; its page is a key away.
+        wanted.push((Action::Open, said(t::tui_read_hint_continue())));
+        wanted.push((Action::ShowEpisodes, said(t::series_chapters())));
+    } else if !items.is_empty() {
         wanted.push((Action::Open, hint_open()));
+    }
+    if !items.is_empty() {
         let parts = items.windows(2).any(|pair| pair[0].part() != pair[1].part());
         if parts {
             wanted.push((
@@ -625,6 +660,7 @@ fn overlay_hints(
                 O::StoreConfirm => hint_confirm(),
                 O::ManualQuery => hint_search(),
                 O::DownloadRange => hint_queue(),
+                O::ReaderGoTo => said(t::tui_reader_hint_go()),
                 O::EditSetting => hint_save(),
                 O::KitsuUsername => hint_next(),
                 O::KitsuPassword => hint_sign_in(),

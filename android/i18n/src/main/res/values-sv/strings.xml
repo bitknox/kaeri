@@ -299,6 +299,10 @@
         <item quantity="one">Ett kapitel är inte nedladdat än, så den här sändningen väntar på Wi-Fi och fortsätter av sig själv.</item>
         <item quantity="other">%1$,d kapitel är inte nedladdade än, så den här sändningen väntar på Wi-Fi och fortsätter av sig själv.</item>
     </plurals>
+    <plurals name="export_pages_left_out">
+        <item quantity="one">En sida i %2$s gick inte att läsa och finns inte med i filerna.</item>
+        <item quantity="other">%1$,d sidor i %2$s gick inte att läsa och finns inte med i filerna.</item>
+    </plurals>
     <string name="reading_chapter_titled">Kapitel %1$s · %2$s</string>
     <string name="reading_row_read">Läst</string>
     <string name="reading_row_new">Ny</string>
@@ -537,6 +541,15 @@
     <plurals name="notice_signed_out_queue">
         <item quantity="one">Utloggad från %1$s. En köad ändring sparas till nästa inloggning.</item>
         <item quantity="other">Utloggad från %1$s. %2$,d köade ändringar sparas till nästa inloggning.</item>
+    </plurals>
+    <string name="notice_tracker_change_refused">%1$s avvisade en ändring av %2$s gång på gång, så den finns bara kvar i Kaeri.</string>
+    <plurals name="notice_tracker_changes_refused">
+        <item quantity="one">%1$s avvisade ändringar av %2$s och en titel till gång på gång, så de finns bara kvar i Kaeri.</item>
+        <item quantity="other">%1$s avvisade ändringar av %2$s och %3$,d titlar till gång på gång, så de finns bara kvar i Kaeri.</item>
+    </plurals>
+    <plurals name="notice_tracker_change_refused_untitled">
+        <item quantity="one">%1$s avvisade en ändring gång på gång, så den finns bara kvar i Kaeri.</item>
+        <item quantity="other">%1$s avvisade ändringar av %2$,d titlar gång på gång, så de finns bara kvar i Kaeri.</item>
     </plurals>
     <string name="notice_sign_out_failed">Det gick inte att logga ut från %1$s. Försök igen. %2$s</string>
     <string name="notice_not_saved_because">Det gick inte att spara inställningen. %1$s</string>
@@ -838,8 +851,6 @@
         <item quantity="one">Ett nedladdat kapitel går fortfarande att öppna.</item>
         <item quantity="other">%1$,d nedladdade kapitel går fortfarande att öppna.</item>
     </plurals>
-    <string name="read_downloads_empty_detail">Nedladdade kapitel öppnas utan anslutning.</string>
-    <string name="read_downloads_empty_both">Nedladdade avsnitt och kapitel öppnas utan anslutning.</string>
     <string name="settings_summary_chapters_on">Nya kapitel på</string>
     <string name="settings_summary_chapters_off">Nya kapitel av</string>
     <plurals name="settings_summary_book_folders">
@@ -1559,6 +1570,8 @@
     <string name="downloads_space_label">Utrymme som används av nedladdningar</string>
     <string name="downloads_empty_title">Inga nedladdningar</string>
     <string name="downloads_empty_detail">Nedladdade avsnitt spelas upp utan anslutning.</string>
+    <string name="read_downloads_empty_detail">Nedladdade kapitel öppnas utan anslutning.</string>
+    <string name="read_downloads_empty_both">Nedladdade avsnitt och kapitel öppnas utan anslutning.</string>
     <string name="downloads_load_failed">Det gick inte att läsa nedladdningarna</string>
     <string name="downloads_folder_failed">Det gick inte att öppna mappen. Kontrollera att den finns kvar.</string>
     <string name="downloads_episode_name">Avsnitt %1$d</string>

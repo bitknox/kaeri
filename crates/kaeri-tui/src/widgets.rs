@@ -5,6 +5,8 @@
 //! Getting them right matters more than in a bordered layout, because there is nothing else
 //! holding the composition together.
 
+use std::borrow::Cow;
+
 use ratatui::{
     buffer::Buffer,
     layout::Rect,
@@ -13,7 +15,8 @@ use ratatui::{
     widgets::Widget,
 };
 
-use unicode_width::{UnicodeWidthChar, UnicodeWidthStr};
+use unicode_segmentation::UnicodeSegmentation;
+use unicode_width::UnicodeWidthStr;
 
 use crate::{
     nav::{Focus, RailWidth, Section},
@@ -565,55 +568,76 @@ pub fn wrap_meta(meta: &str, width: usize, lines: usize) -> Vec<String> {
 }
 
 /// The cells text takes on screen, rather than its characters or bytes: a Japanese title takes
-/// two cells a character, and a cut must never split one.
+/// two cells a character, an emoji with its selector or joiners takes two, and a cut must never
+/// split one. Each grapheme cluster is measured on its own, the way the terminal buffer draws it.
 pub trait Cells {
     fn cells(&self) -> usize;
 }
 
 impl Cells for str {
     fn cells(&self) -> usize {
-        UnicodeWidthStr::width(self)
+        if self.bytes().all(|b| (0x20..0x7f).contains(&b)) {
+            return self.len();
+        }
+        self.graphemes(true).map(cluster_cells).sum()
     }
 }
 
-/// As much of `text` from its start as fits in `max` cells, never half a wide character.
-fn leading(text: &str, max: usize) -> String {
-    let mut used = 0;
-    text.chars()
-        .take_while(|c| {
-            used += c.width().unwrap_or(0);
-            used <= max
-        })
-        .collect()
+/// The cells one grapheme cluster takes. Every cut measures with this, so a cut and `cells`
+/// always agree.
+fn cluster_cells(cluster: &str) -> usize {
+    UnicodeWidthStr::width(cluster)
 }
 
-/// Truncate to a cell budget with an ellipsis.
+/// Text as it is drawn: a tab takes one cell as a space, since the buffer does not expand it.
+fn drawn(text: &str) -> Cow<'_, str> {
+    if text.contains('\t') { Cow::Owned(text.replace('\t', " ")) } else { Cow::Borrowed(text) }
+}
+
+/// As much of `text` from its start as fits in `max` cells, in whole grapheme clusters.
+fn leading(text: &str, max: usize) -> &str {
+    let mut used = 0;
+    for (at, cluster) in text.grapheme_indices(true) {
+        used += cluster_cells(cluster);
+        if used > max {
+            return &text[..at];
+        }
+    }
+    text
+}
+
+/// Truncate to a cell budget with an ellipsis. The result never takes more than `max` cells.
 pub fn truncate(text: &str, max: usize) -> String {
+    let text = drawn(text);
     if text.cells() <= max {
-        return text.to_owned();
+        return text.into_owned();
     }
     if max == 0 {
         return String::new();
     }
-    leading(text, max - 1) + "…"
+    format!("{}…", leading(&text, max - 1))
 }
 
-/// The last `room` cells of `text`, with an ellipsis in front when that is not all of it.
+/// The last `room` cells of `text`, with an ellipsis in front when that is not all of it. The
+/// result never takes more than `room` cells.
 pub fn tail(text: &str, room: usize) -> String {
-    if text.cells() <= room || room < 2 {
-        return text.to_owned();
+    let text = drawn(text);
+    if text.cells() <= room {
+        return text.into_owned();
+    }
+    if room == 0 {
+        return String::new();
     }
     let mut used = 0;
-    let mut kept: Vec<char> = text
-        .chars()
-        .rev()
-        .take_while(|c| {
-            used += c.width().unwrap_or(0);
-            used < room
-        })
-        .collect();
-    kept.reverse();
-    format!("…{}", kept.into_iter().collect::<String>())
+    let mut start = text.len();
+    for (at, cluster) in text.grapheme_indices(true).rev() {
+        used += cluster_cells(cluster);
+        if used > room - 1 {
+            break;
+        }
+        start = at;
+    }
+    format!("…{}", &text[start..])
 }
 
 /// Wrap text to a width, breaking on whitespace. A newline in the text starts a new line and a
@@ -953,6 +977,104 @@ mod tests {
         let lines = wrap("星屑の 旅人 です 終わり", 7, 2);
         assert!(lines.iter().all(|l| l.cells() <= 7), "{lines:?}");
         assert_eq!(lines.len(), 2, "{lines:?}");
+    }
+
+    /// Titles whose characters, measured one by one, disagree with the cells they are drawn in:
+    /// emoji with a presentation selector, joined emoji, flags, skin tones, stacked combining
+    /// marks, wide characters, a zero-width space, a tab and decomposed Hangul.
+    const AWKWARD: &[&str] = &[
+        "Heart \u{2764}\u{FE0F} Kettle \u{2764}\u{FE0F}\u{2764}\u{FE0F}\u{2764}\u{FE0F}",
+        "Family \u{1F468}\u{200D}\u{1F469}\u{200D}\u{1F467} Ferry and more words here",
+        "Flag \u{1F1EF}\u{1F1F5}\u{1F1E9}\u{1F1F0} Harbor and more words here",
+        "Skin \u{1F44B}\u{1F3FD} Moth \u{1F44B}\u{1F3FD} more words here",
+        "Combining e\u{301}\u{301}\u{301} Signal and more words here",
+        "\u{706F}\u{53F0}\u{306E}\u{821F}\u{706F}\u{53F0}\u{306E}\u{821F}\u{706F}\u{53F0}",
+        "Zero\u{200B}Width Ferry and more words here",
+        "Tab\there Kite and more words here",
+        "Hangul \u{1112}\u{1161}\u{11AB} decomposed and more",
+    ];
+
+    #[test]
+    fn every_cut_fits_its_room() {
+        let mut bad = Vec::new();
+        for title in AWKWARD {
+            for room in 0..title.cells() + 2 {
+                for (how, cut) in
+                    [("truncate", truncate(title, room)), ("tail", tail(title, room))]
+                {
+                    if cut.cells() > room {
+                        bad.push(format!(
+                            "{how}({title:?}, {room}) = {cut:?} takes {}",
+                            cut.cells()
+                        ));
+                    }
+                }
+            }
+        }
+        assert!(bad.is_empty(), "{bad:#?}");
+    }
+
+    #[test]
+    fn a_cut_keeps_as_much_as_fits() {
+        // The ellipsis takes one cell and a wide cluster that does not fit leaves one more, so
+        // anything shorter than two cells under the room dropped text that would have fit.
+        let mut short = Vec::new();
+        for title in AWKWARD {
+            for room in 4..title.cells() {
+                for (how, cut) in
+                    [("truncate", truncate(title, room)), ("tail", tail(title, room))]
+                {
+                    if cut.cells() + 2 < room {
+                        short.push(format!(
+                            "{how}({title:?}, {room}) = {cut:?} takes {}",
+                            cut.cells()
+                        ));
+                    }
+                }
+            }
+        }
+        assert!(short.is_empty(), "{short:#?}");
+    }
+
+    #[test]
+    fn a_cluster_is_kept_or_dropped_whole() {
+        let family = "\u{1F468}\u{200D}\u{1F469}\u{200D}\u{1F467}";
+        let title = format!("Ferry {family} night");
+        assert_eq!(family.cells(), 2);
+        assert_eq!(truncate(&title, 9), format!("Ferry {family}…"));
+        assert_eq!(truncate(&title, 8), "Ferry …");
+        assert_eq!(tail(&title, 9), format!("…{family} night"));
+        assert_eq!(tail(&title, 8), "… night");
+        let wave = "\u{1F44B}\u{1F3FD}";
+        assert_eq!(truncate(&format!("Wave {wave} more"), 8), format!("Wave {wave}…"));
+        let (japan, denmark) = ("\u{1F1EF}\u{1F1F5}", "\u{1F1E9}\u{1F1F0}");
+        let flags = format!("Flag {japan}{denmark} Harbor");
+        assert_eq!(truncate(&flags, 8), format!("Flag {japan}…"));
+        assert_eq!(tail(&flags, 10), format!("…{denmark} Harbor"));
+        let heart = "\u{2764}\u{FE0F}";
+        assert_eq!(truncate(&format!("Kettle {heart}{heart}"), 9), "Kettle …");
+        let accent = "e\u{301}\u{301}\u{301}";
+        assert_eq!(
+            truncate(&format!("Combining {accent} Signal"), 12),
+            format!("Combining {accent}…")
+        );
+    }
+
+    #[test]
+    fn a_tab_is_drawn_as_one_space() {
+        assert_eq!("Tab\there".cells(), "Tab here".cells());
+        assert_eq!(truncate("Tab\there", 20), "Tab here");
+        assert_eq!(truncate("Tab\there", 5), "Tab …");
+        assert_eq!(tail("Tab\there", 20), "Tab here");
+        assert_eq!(tail("Tab\there", 6), "… here");
+    }
+
+    #[test]
+    fn a_tail_with_no_room_for_text_keeps_within_it() {
+        assert_eq!(tail("abcdef", 0), "");
+        assert_eq!(tail("abcdef", 1), "…");
+        assert_eq!(tail("星屑", 2), "…");
+        assert_eq!(tail("星屑", 3), "…屑");
     }
 
     #[test]

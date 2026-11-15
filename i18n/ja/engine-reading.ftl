@@ -95,6 +95,9 @@ export-chapter = 第{ $chapter }話
 export-waits-for-wifi = { $n ->
    *[other] 未ダウンロードの章が{ $n }件あるため、Wi-Fi 接続を待ってから自動で送信します。
  }
+export-pages-left-out = { $n ->
+   *[other] { $chapter }の{ $n }ページを読み込めなかったため、ファイルに含まれていません。
+ }
 reading-chapter-titled = 第{ $chapter }話 · { $title }
 reading-row-read = 既読
 reading-row-new = 新着

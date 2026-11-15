@@ -437,6 +437,8 @@
     <string name="reading_failed_no_source">None of your sources has this series yet. Search for it by another name in Read from, or add a source in Your sources.</string>
     <!-- Why a chapter or a list could not load: the source refused. The reason comes from the source. -->
     <string name="reading_failed_blocked">%1$s refused the request. %2$s</string>
+    <!-- Why a chapter or a list could not load: the source's plugin asked for a host its manifest doesn't list, so the request never left the device and the source refused nothing. An update to the plugin usually fixes it. -->
+    <string name="reading_failed_host_not_allowed">The plugin for %1$s asked for a host it isn\'t allowed to reach. An update to the plugin may fix it.</string>
     <!-- Why a chapter or a list could not load: the source answered with something Kaeri could not read. -->
     <string name="reading_failed_parse">Kaeri couldn\'t read what %1$s sent. Its plugin may need an update.</string>
     <!-- Why one page did not load. The status is the server's HTTP status code, such as 404. -->
@@ -583,6 +585,11 @@
     <plurals name="export_waits_for_wifi">
         <item quantity="one">One chapter isn\'t downloaded yet, so this send waits for Wi-Fi and goes on by itself.</item>
         <item quantity="other">%1$,d chapters aren\'t downloaded yet, so this send waits for Wi-Fi and goes on by itself.</item>
+    </plurals>
+    <!-- Send to e-reader, under the ready files: pages of one chapter that couldn't be read, as the reader shows them broken, so the files go without them. The chapter is its name as the series shows it, such as Chapter 12 or Volume 1. n is how many pages were left out. -->
+    <plurals name="export_pages_left_out">
+        <item quantity="one">One page of %2$s couldn\'t be read and isn\'t in the files.</item>
+        <item quantity="other">%1$,d pages of %2$s couldn\'t be read and aren\'t in the files.</item>
     </plurals>
     <!-- Under a This week cell: the chapter that came out that day, with its own title. -->
     <string name="reading_chapter_titled">Chapter %1$s · %2$s</string>
@@ -732,6 +739,10 @@
     <string name="reading_estimate_mobile">over mobile data</string>
     <!-- The device is on mobile data and the chapters wait until it's on Wi-Fi. -->
     <string name="reading_estimate_waits_wifi">waits for Wi-Fi</string>
+    <!-- Notice after Download on chapters that are files in the person's own folders: they open from where they are, so nothing is downloaded. -->
+    <string name="reading_download_on_device">These are files on this device already. They read offline without a download.</string>
+    <!-- A series' name where neither the catalogue nor its source gave one: on Downloads, in a sent file's name and in the e-reader's library. -->
+    <string name="reading_untitled_series">Untitled series</string>
     <!-- The notification's title. -->
     <string name="reading_downloads_done_title">Downloads finished</string>
     <!-- The notification's text: one series' chapters are downloaded. -->
@@ -1062,6 +1073,18 @@
         <item quantity="one">Signed out of %1$s. One queued change is kept for the next sign-in.</item>
         <item quantity="other">Signed out of %1$s. %2$,d queued changes are kept for the next sign-in.</item>
     </plurals>
+    <!-- Toast, shown once, when a tracker kept refusing a change to a title for about two days and the change stopped being sent. The change itself is still saved in the app. The tracker is its name, such as AniList; the title is a show's or a series' name. The notice capsule holds two lines on a phone, so keep it about as short as the English. -->
+    <string name="notice_tracker_change_refused">%1$s kept refusing a change to %2$s, so it stays in Kaeri only.</string>
+    <!-- The same toast when changes to several titles stopped being sent to one tracker at once. The title is the first of them; others is how many more titles there are. -->
+    <plurals name="notice_tracker_changes_refused">
+        <item quantity="one">%1$s kept refusing changes to %2$s and one more title, so they stay in Kaeri only.</item>
+        <item quantity="other">%1$s kept refusing changes to %2$s and %3$,d more titles, so they stay in Kaeri only.</item>
+    </plurals>
+    <!-- The same toast when the app has no name for the titles. Count is how many titles. -->
+    <plurals name="notice_tracker_change_refused_untitled">
+        <item quantity="one">%1$s kept refusing a change, so it stays in Kaeri only.</item>
+        <item quantity="other">%1$s kept refusing changes to %2$,d titles, so they stay in Kaeri only.</item>
+    </plurals>
     <!-- Toast when signing out of a tracker failed. The reason comes from the system. -->
     <string name="notice_sign_out_failed">Couldn\'t sign out of %1$s. Try again. %2$s</string>
     <!-- Toast when a setting could not be stored. The cause says why and what to do. -->
@@ -1105,6 +1128,8 @@
     <string name="notice_saved">Saved %1$s.</string>
     <!-- Toast when a setting could not be stored. The reason comes from the system. -->
     <string name="notice_not_saved">Couldn\'t save that setting. %1$s</string>
+    <!-- Toast when something the person did, such as a chapter marked read, a place in a book, a watched episode or a list change, could not be stored. The reason comes from the system. -->
+    <string name="notice_change_not_kept">Couldn\'t save that change. %1$s</string>
     <!-- Toast when a title's details did not load. -->
     <string name="notice_title_load_failed">Couldn\'t load this title. Check your connection and try again.</string>
     <!-- Toast when playback stops with an error. -->
@@ -1870,10 +1895,6 @@
         <item quantity="one">One downloaded chapter still opens.</item>
         <item quantity="other">%1$,d downloaded chapters still open.</item>
     </plurals>
-    <!-- Downloads' empty line for a person who only reads, under "No downloads". -->
-    <string name="read_downloads_empty_detail">Downloaded chapters open without a connection.</string>
-    <!-- Downloads' empty line for a person who watches and reads, under "No downloads". -->
-    <string name="read_downloads_empty_both">Downloaded episodes and chapters open without a connection.</string>
     <!-- The head of the group menu on a large screen, over its choices: the source the groups are in. -->
     <string name="group_menu_in">Group in %1$s</string>
     <!-- What TalkBack says the Group row does, after "Double-tap to": an imperative, as Android's click labels are. -->
@@ -3247,6 +3268,10 @@
     <string name="downloads_empty_title">No downloads</string>
     <!-- Line under the empty title. -->
     <string name="downloads_empty_detail">Downloaded episodes play without a connection.</string>
+    <!-- Downloads' empty line for a person who only reads, under "No downloads". -->
+    <string name="read_downloads_empty_detail">Downloaded chapters open without a connection.</string>
+    <!-- Downloads' empty line for a person who watches and reads, under "No downloads". -->
+    <string name="read_downloads_empty_both">Downloaded episodes and chapters open without a connection.</string>
     <!-- Title when the list could not be read. -->
     <string name="downloads_load_failed">Couldn\'t load downloads</string>
     <!-- Line when the folder could not be opened. Shown on desktop only. -->
@@ -5528,6 +5553,8 @@
     <string name="download_unread">Every unread chapter</string>
     <!-- Short note after Next 5 or Next 10 unread when those chapters are all on this device already. -->
     <string name="download_already">Already downloaded</string>
+    <!-- Short note on a series page when a download it asked for couldn't start, such as when the source isn't answering and no chapter list is kept. The reason is a full sentence. -->
+    <string name="download_not_started">Couldn\'t start the download. %1$s</string>
     <!-- Download menu item: a volume's chapters not yet downloaded. -->
     <plurals name="download_volume_count">
         <item quantity="one">%1$s · 1 chapter</item>
@@ -6198,6 +6225,10 @@
     <string name="send_again">Send again</string>
     <!-- A send in a list or banner that is under way, with a ring beside it. The device is the e-reader. -->
     <string name="send_banner">Sending to %1$s</string>
+    <!-- The chapters a send holds, on its row under Sending to, when there are several: the first to the last, by their numbers or labels, such as 21 to 23. -->
+    <string name="send_row_chapters">Chapters %1$s to %2$s</string>
+    <!-- A send's row under Sending to: the series' title, then the chapters the send holds, such as "Chapter 23" or "Chapters 21 to 23". Shown on one line. -->
+    <string name="send_row_line">%1$s · %2$s</string>
     <!-- The format of the files an e-reader is sent: a manga as a fixed-layout EPUB. -->
     <string name="send_format_fixed_epub">Fixed-layout EPUB</string>
     <!-- The format of the files an e-reader is sent: the Kobo form of EPUB. -->

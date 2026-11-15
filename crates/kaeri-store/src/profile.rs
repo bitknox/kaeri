@@ -389,7 +389,7 @@ fn promote(main: &Path, from: &Path) -> Result<()> {
     schema::migrate(&conn)?;
     conn.execute("ATTACH DATABASE ?1 AS promoted", [from.to_string_lossy().as_ref()])?;
     let copied = (|| -> rusqlite::Result<()> {
-        let tx = conn.transaction()?;
+        let tx = crate::write_tx(&mut conn)?;
         for table in PERSONAL_TABLES {
             tx.execute(&format!("DELETE FROM main.{table}"), [])?;
             tx.execute(

@@ -59,6 +59,17 @@ pub struct Keymap {
     /// *pause* in the player, `q` is *back* and *detach*, the arrows move a selection and seek.
     /// Resolving by context is the only way both sets can have the obvious key.
     playback: BTreeMap<Binding, Action>,
+    /// Bindings while the reader has the window: the page keys, read before the global keys in
+    /// [`Action::IN_READER`] and nothing else.
+    reader: BTreeMap<Binding, Action>,
+}
+
+/// One of the [`Keymap`]'s tables, for a rebind to land back in the one it came from.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum Table {
+    Browsing,
+    Playback,
+    Reader,
 }
 
 /// Which binding table a keystroke resolves against.
@@ -71,6 +82,8 @@ pub enum Context {
     /// open over Now Playing answers `q` by closing, not by detaching the player under it — and
     /// a few keys mean the same thing whatever `[keys]` says; see [`modal_action`].
     Modal,
+    /// The reader has the window: its table, then the few global keys it leaves alone.
+    Reading,
 }
 
 impl Default for Keymap {
@@ -80,6 +93,22 @@ impl Default for Keymap {
 }
 
 impl Keymap {
+    fn table(&self, table: Table) -> &BTreeMap<Binding, Action> {
+        match table {
+            Table::Browsing => &self.bindings,
+            Table::Playback => &self.playback,
+            Table::Reader => &self.reader,
+        }
+    }
+
+    fn table_mut(&mut self, table: Table) -> &mut BTreeMap<Binding, Action> {
+        match table {
+            Table::Browsing => &mut self.bindings,
+            Table::Playback => &mut self.playback,
+            Table::Reader => &mut self.reader,
+        }
+    }
+
     /// Apply `[keys]` overrides from config.
     ///
     /// Returns the specs it refused, so a typo is reported rather than silently leaving the
@@ -90,19 +119,20 @@ impl Keymap {
     pub fn apply_overrides(&mut self, overrides: &BTreeMap<String, String>) -> Vec<String> {
         // Playback actions are rebindable too, and each has to land back in the table it came
         // from — putting `pause` in the browsing table would break `Space` in every list.
-        let by_key: BTreeMap<String, (Action, bool)> = self
+        let by_key: BTreeMap<String, (Action, Table)> = self
             .bindings
             .values()
-            .map(|a| (a.config_key(), (*a, false)))
-            .chain(self.playback.values().map(|a| (a.config_key(), (*a, true))))
+            .map(|a| (a.config_key(), (*a, Table::Browsing)))
+            .chain(self.playback.values().map(|a| (a.config_key(), (*a, Table::Playback))))
+            .chain(self.reader.values().map(|a| (a.config_key(), (*a, Table::Reader))))
             .collect();
 
         let mut rejected = Vec::new();
         // Every rebind is read before any is applied: whether a key is free depends on the
         // others, since a key one rebind takes may be one another rebind moves away from.
-        let mut wanted: Vec<(&str, Action, bool, Binding, &str)> = Vec::new();
+        let mut wanted: Vec<(&str, Action, Table, Binding, &str)> = Vec::new();
         for (action_name, spec) in overrides {
-            let Some((action, is_playback)) = by_key.get(action_name) else {
+            let Some((action, table)) = by_key.get(action_name) else {
                 rejected.push(kaeri_i18n::t::keys_error_unknown_action(action_name));
                 continue;
             };
@@ -110,7 +140,7 @@ impl Keymap {
                 rejected.push(kaeri_i18n::t::keys_error_bad_key(spec, action_name));
                 continue;
             };
-            wanted.push((action_name, *action, *is_playback, binding, spec));
+            wanted.push((action_name, *action, *table, binding, spec));
         }
 
         let mut accepted = vec![true; wanted.len()];
@@ -134,12 +164,13 @@ impl Keymap {
         loop {
             let mut changed = false;
             for i in 0..wanted.len() {
-                let (name, action, is_playback, binding, spec) = wanted[i];
+                let (name, action, table, binding, spec) = wanted[i];
                 if !accepted[i] {
                     continue;
                 }
-                let table = if is_playback { &self.playback } else { &self.bindings };
-                let Some(holder) = table.get(&binding).copied().filter(|h| *h != action) else {
+                let Some(holder) =
+                    self.table(table).get(&binding).copied().filter(|h| *h != action)
+                else {
                     continue;
                 };
                 let holder_moves =
@@ -162,15 +193,13 @@ impl Keymap {
         // Release first, then bind: a swap only works if neither side's new key is cleared by
         // the other's release.
         let moving: Vec<_> = wanted.iter().zip(&accepted).filter(|(_, ok)| **ok).collect();
-        for ((_, action, is_playback, _, _), _) in &moving {
-            let table = if *is_playback { &mut self.playback } else { &mut self.bindings };
+        for ((_, action, table, _, _), _) in &moving {
             // Drop the action's previous bindings so a rebind moves it rather than
             // adding a second key.
-            table.retain(|_, a| a != action);
+            self.table_mut(*table).retain(|_, a| a != action);
         }
-        for ((_, action, is_playback, binding, _), _) in moving {
-            let table = if *is_playback { &mut self.playback } else { &mut self.bindings };
-            table.insert(*binding, *action);
+        for ((_, action, table, binding, _), _) in moving {
+            self.table_mut(*table).insert(*binding, *action);
         }
         rejected
     }
@@ -181,6 +210,16 @@ impl Keymap {
     /// `?`, `:` and `Esc` keep working while an episode plays.
     pub fn action_for(&self, event: KeyEvent, context: Context) -> Option<Action> {
         let binding = Binding::from_event(event);
+        if context == Context::Reading {
+            if let Some(action) = self.reader.get(&binding) {
+                return Some(*action);
+            }
+            return self
+                .bindings
+                .get(&binding)
+                .copied()
+                .filter(|a| Action::IN_READER.contains(a));
+        }
         if context == Context::Modal
             && let Some(action) = modal_action(binding)
         {
@@ -199,6 +238,7 @@ impl Keymap {
         self.bindings
             .iter()
             .chain(self.playback.iter())
+            .chain(self.reader.iter())
             .filter(|(_, a)| **a == action)
             .map(|(b, _)| *b)
             .collect()
@@ -223,8 +263,14 @@ impl Keymap {
     pub fn keys_in(&self, action: Action, context: Context) -> Vec<Binding> {
         self.keys_for(action)
             .into_iter()
-            .filter(|b| {
-                context != Context::Playing || self.playback.get(b).is_none_or(|a| *a == action)
+            .filter(|b| match context {
+                Context::Playing => self.playback.get(b).is_none_or(|a| *a == action),
+                // The reader's own keys, and a global key the reader's table leaves alone.
+                Context::Reading => match self.reader.get(b) {
+                    Some(a) => *a == action,
+                    None => Action::IN_READER.contains(&action),
+                },
+                _ => true,
             })
             .collect()
     }

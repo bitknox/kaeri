@@ -34,6 +34,11 @@ struct Shelf {
     asked: Mutex<Vec<String>>,
     /// Pages at these addresses answer 404.
     broken: Mutex<Vec<String>>,
+    /// Pages at these addresses are not reached at all.
+    unreached: Mutex<Vec<String>>,
+    /// The next asks of these addresses, as many as each says, are lost on the way, as the
+    /// plugin host reports a request that timed out.
+    lost: Mutex<std::collections::HashMap<String, u32>>,
     /// The page at this address waits: see [`Held`].
     held: Mutex<Option<Held>>,
     /// The chapters whose pages were asked for, in order.
@@ -168,13 +173,23 @@ impl BookSource for Shelf {
                 return Err(PageError::Status(404));
             }
         }
-        let held = self.held.lock().unwrap().clone();
-        if let Some((_, asked, answer)) = held.filter(|(url, ..)| *url == page_ref.url) {
+        // Only the first fetch waits: a retry of the held page goes on as any other fetch does.
+        let held = self.held.lock().unwrap().take_if(|(url, ..)| *url == page_ref.url);
+        if let Some((_, asked, answer)) = held {
             asked.notify_one();
             answer.notified().await;
         }
         if self.broken.lock().unwrap().contains(&page_ref.url) {
             return Err(PageError::Status(404));
+        }
+        if self.unreached.lock().unwrap().contains(&page_ref.url) {
+            return Err(PageError::Failed(ProviderError::Transport("not reached".into())));
+        }
+        if let Some(left) = self.lost.lock().unwrap().get_mut(&page_ref.url)
+            && *left > 0
+        {
+            *left -= 1;
+            return Err(PageError::Failed(ProviderError::Other("timed out".into())));
         }
         if page_ref.url.contains("/pictures/") {
             return Ok(crate::read_sources::pictures::ONE_PIXEL_PNG.to_vec());
@@ -188,7 +203,7 @@ struct Kit {
     shelf: Arc<Shelf>,
     queue: BookDownloads,
     events: mpsc::UnboundedReceiver<Event>,
-    _dir: tempfile::TempDir,
+    _dir: Arc<tempfile::TempDir>,
 }
 
 impl Kit {
@@ -200,14 +215,14 @@ impl Kit {
         self.queue.configure(setup);
     }
 
+    /// Waits until the queue stops running. The deadline is far beyond any loaded test lane, so
+    /// only a queue that never stops reaches it.
     async fn settle(&self) {
-        for _ in 0..500 {
-            if !*self.queue.0.running.lock().unwrap() {
-                return;
-            }
+        let deadline = std::time::Instant::now() + Duration::from_secs(60);
+        while *self.queue.0.running.lock().unwrap() {
+            assert!(std::time::Instant::now() < deadline, "the queue did not settle");
             tokio::time::sleep(Duration::from_millis(10)).await;
         }
-        panic!("the queue did not settle");
     }
 
     fn states(&self) -> Vec<(String, ChapterDownloadState)> {
@@ -238,15 +253,33 @@ fn kit(chapters: &[&str]) -> Kit {
 }
 
 fn kit_of(chapters: &[&str], hosts: &[&str]) -> Kit {
-    let dir = tempfile::tempdir().unwrap();
     let store = Store::open_in_memory().unwrap();
+    kit_in(chapters, hosts, store, Arc::new(tempfile::tempdir().unwrap()))
+}
+
+/// Two engines on one data folder and one database, as an app and the terminal: each with its
+/// own store and its own copy of the source, to count what each fetches.
+fn two_engines(chapters: &[&str]) -> (Kit, Kit) {
+    let dir = Arc::new(tempfile::tempdir().unwrap());
+    let db = dir.path().join("kaeri.db");
+    let first = kit_in(chapters, &[], Store::open(&db).unwrap(), dir.clone());
+    let second = kit_in(chapters, &[], Store::open(&db).unwrap(), dir);
+    (first, second)
+}
+
+fn kit_in(chapters: &[&str], hosts: &[&str], store: Store, dir: Arc<tempfile::TempDir>) -> Kit {
     let paths = Paths {
         config_file: dir.path().join("config.toml"),
         data_dir: dir.path().join("data"),
         cache_dir: dir.path().join("cache"),
     };
     let tokens = kaeri_track::TokenStore::new(dir.path().join("tokens"));
-    let sources = BookSources::new(store.clone(), tokens, reqwest::Client::new(), &paths);
+    let sources = BookSources::new(
+        store.clone(),
+        tokens,
+        &kaeri_net::HttpClient::new(&Default::default()).unwrap(),
+        &paths,
+    );
     let manifest = BookSourceManifest {
         id: "shelf".into(),
         name: "Shelf".into(),
@@ -264,6 +297,8 @@ fn kit_of(chapters: &[&str], hosts: &[&str]) -> Kit {
         fetched: Mutex::new(0),
         asked: Mutex::default(),
         broken: Mutex::default(),
+        unreached: Mutex::default(),
+        lost: Mutex::default(),
         held: Mutex::default(),
         contents: Mutex::default(),
         gates: Mutex::default(),
@@ -291,6 +326,36 @@ fn kit_of(chapters: &[&str], hosts: &[&str]) -> Kit {
 
 fn ids(list: &[&str]) -> Vec<ChapterId> {
     list.iter().map(|c| ChapterId::new(*c)).collect()
+}
+
+/// A page whose request was lost on the way, as a dropped connection or a timeout loses one,
+/// is asked for again: the chapter still downloads whole.
+#[tokio::test]
+async fn a_page_lost_on_the_way_is_asked_for_again_and_the_chapter_downloads() {
+    let kit = kit(&["1"]);
+    let lost = "https://pages.example/1/2";
+    kit.shelf.lost.lock().unwrap().insert(lost.into(), 2);
+    kit.queue.download(&kit.lent, WorkId::new(WORK), DownloadPick::NextUnread { n: 1 }).await;
+    kit.settle().await;
+
+    assert_eq!(kit.states(), [("1".into(), ChapterDownloadState::Done)]);
+    assert_eq!(kit.shelf.times(lost), 3, "lost twice, then brought");
+    assert_eq!(kit.store().shelf(WORK).unwrap()[0].pages, Some(3));
+}
+
+/// A source that never brings a page ends the fetch after a few asks, with why, and Try
+/// again is left to the person.
+#[tokio::test]
+async fn a_page_the_source_never_brings_ends_the_fetch_after_a_few_asks() {
+    let kit = kit(&["1"]);
+    let lost = "https://pages.example/1/2";
+    kit.shelf.lost.lock().unwrap().insert(lost.into(), u32::MAX);
+    kit.queue.download(&kit.lent, WorkId::new(WORK), DownloadPick::NextUnread { n: 1 }).await;
+    kit.settle().await;
+
+    let down = ReadingFailure::SourceDown { source: "Shelf".into() };
+    assert_eq!(kit.states(), [("1".into(), ChapterDownloadState::Failed { failure: down })]);
+    assert_eq!(kit.shelf.times(lost), 4, "asked three times again, then no more");
 }
 
 #[tokio::test]
@@ -541,6 +606,57 @@ async fn nothing_is_fetched_on_cellular_and_rows_wait_for_wifi_until_it_returns(
     assert!(kit.states().iter().all(|(_, s)| *s == ChapterDownloadState::Done));
 }
 
+/// The network going while a page is fetched holds the chapter rather than failing it: the
+/// page the source could not give for want of a network is fetched once the network is back.
+#[tokio::test]
+async fn a_page_that_fails_as_the_network_goes_holds_the_chapter_until_it_returns() {
+    let kit = kit(&["1"]);
+    let (asked, answer) =
+        (Arc::new(tokio::sync::Notify::new()), Arc::new(tokio::sync::Notify::new()));
+    let page = "https://pages.example/1/2".to_owned();
+    *kit.shelf.held.lock().unwrap() = Some((page.clone(), asked.clone(), answer.clone()));
+    kit.queue.download(&kit.lent, WorkId::new(WORK), DownloadPick::Unread).await;
+    asked.notified().await;
+    kit.setup(Setup { hold: true, offline: true, ..Setup::default() });
+    kit.shelf.broken.lock().unwrap().push(page);
+    answer.notify_one();
+    kit.settle().await;
+    assert_eq!(kit.states(), [("1".into(), ChapterDownloadState::Queued)]);
+
+    kit.shelf.broken.lock().unwrap().clear();
+    *kit.shelf.held.lock().unwrap() = None;
+    assert!(kit.queue.configure(Setup::default()));
+    kit.queue.start(&kit.lent);
+    kit.settle().await;
+    assert_eq!(kit.states(), [("1".into(), ChapterDownloadState::Done)]);
+}
+
+/// A chapter kept as failed offline goes back in the queue when the network returns, and one
+/// that failed for another reason stays failed.
+#[tokio::test]
+async fn chapters_that_failed_offline_go_on_once_the_network_is_back() {
+    let kit = kit(&["1", "2"]);
+    kit.setup(Setup { hold: true, offline: true, ..Setup::default() });
+    let work = WorkId::new(WORK);
+    kit.queue.download(&kit.lent, work.clone(), DownloadPick::Unread).await;
+    let rows = kit.store().book_downloads(Some(WORK)).unwrap();
+    let id = |chapter: &str| rows.iter().find(|r| r.chapter == chapter).unwrap().id;
+    kit.store().book_download_failed(id("1"), "offline", 10).unwrap();
+    kit.store().book_download_failed(id("2"), "not_found", 10).unwrap();
+    assert!(kit.queue.network_back(kit.store(), 20));
+    assert!(!kit.queue.network_back(kit.store(), 21), "only once");
+    assert!(kit.queue.configure(Setup::default()));
+    kit.queue.start(&kit.lent);
+    kit.settle().await;
+    assert_eq!(
+        kit.states(),
+        [
+            ("1".into(), ChapterDownloadState::Done),
+            ("2".into(), ChapterDownloadState::Failed { failure: ReadingFailure::NotFound }),
+        ]
+    );
+}
+
 #[test]
 fn setup_follows_the_network_the_config_and_the_edition() {
     let mut config = Config::default();
@@ -706,6 +822,8 @@ async fn a_chapter_listed_from_another_source_downloads_from_there() {
         fetched: Mutex::new(0),
         asked: Mutex::default(),
         broken: Mutex::default(),
+        unreached: Mutex::default(),
+        lost: Mutex::default(),
         held: Mutex::default(),
         contents: Mutex::default(),
         gates: Mutex::default(),
@@ -1015,6 +1133,174 @@ fn a_name_the_storage_refuses_is_said_as_such_not_as_a_missing_file() {
     assert_eq!(io_failure(&full, &long), ReadingFailure::DiskFull);
 }
 
+/// R6K-2. A whole book that can't be read names the book, never the copy being written.
+#[test]
+fn a_book_copy_that_cannot_read_its_book_names_the_book() {
+    let dir = tempfile::tempdir().unwrap();
+    let gone = dir.path().join("The Long Ferry.epub");
+    let part = dir.path().join("x.part");
+    let Err(Stop::Failed(failure)) = copy_book(&gone, &part) else { panic!("copied") };
+    assert_eq!(failure, ReadingFailure::FileMissing { path: gone.display().to_string() });
+
+    std::fs::write(&gone, b"made-up book").unwrap();
+    assert!(copy_book(&gone, &part).is_ok());
+    assert_eq!(std::fs::read(&part).unwrap(), b"made-up book");
+}
+
+/// R6K-2. Download on a book in the person's folders fetches nothing and says it opens from
+/// where it is.
+#[tokio::test]
+async fn download_on_a_book_in_a_folder_says_it_needs_none() {
+    let mut kit = kit(&[]);
+    let books = kit._dir.path().join("books");
+    std::fs::create_dir_all(&books).unwrap();
+    let path = books.join("The Long Ferry.epub");
+    std::fs::write(&path, b"made-up book").unwrap();
+    let series = kaeri_store::shelf::LocalSeries {
+        id: "books:ferry".into(),
+        folder: books.display().to_string(),
+        name: "The Long Ferry".into(),
+        medium: "manga".into(),
+        work: Some(WORK.into()),
+        state: "matched".into(),
+    };
+    kit.store().put_local_series(&series).unwrap();
+    let file = kaeri_store::shelf::ShelfFile {
+        path: path.display().to_string(),
+        chapter: None,
+        label: "The Long Ferry".into(),
+        volume: None,
+        number_milli: None,
+        format: "epub".into(),
+        pages: None,
+        comicinfo: None,
+        source: None,
+    };
+    kit.store().put_local_file("books:ferry", &file, 1, 1).unwrap();
+    kit.store().set_book_match("shelf", "s-1", WORK, 0, false, false, 1).unwrap();
+    kit.store()
+        .set_book_match(crate::read_sources::FOLDERS, "books:ferry", WORK, 100, true, false, 1)
+        .unwrap();
+
+    kit.queue.download(&kit.lent, WorkId::new(WORK), DownloadPick::Unread).await;
+    kit.settle().await;
+
+    assert!(kit.states().is_empty(), "nothing is queued: {:?}", kit.states());
+    let mut said = Vec::new();
+    while let Ok(event) = kit.events.try_recv() {
+        if let Event::Toast(notice) = event {
+            said.extend(notice.msg.map(|m| m.id()));
+        }
+    }
+    assert_eq!(said, ["reading-download-on-device"]);
+    assert_eq!(std::fs::read(&path).unwrap(), b"made-up book", "the book is left as it was");
+}
+
+/// R7E-4. A book server's series no catalogue lists (Komga, Kavita or OPDS alike) is named as
+/// its source names it on Downloads and in what a send calls its file and its ComicInfo, which
+/// take the same name; never by the work's id. One with no name at all is an untitled series.
+#[tokio::test]
+async fn a_work_no_catalogue_lists_is_named_on_downloads_and_sends() {
+    let kit = kit(&["1"]);
+    let form = kaeri_store::shelf::TitleForm::English;
+    let mut named = Vec::new();
+    for (source, series, title) in [
+        ("srv-komga", "k-1", "The Paper Lantern"),
+        ("srv-kavita", "v-1", "Harbour Signal Club"),
+        ("srv-opds", "o-1", "A Ferry at Dawn"),
+    ] {
+        let hit = SeriesHit::new(series, title);
+        let tile = kit.lent.sources.hit_tile(source, hit, Some(Medium::Manga), &[], 1).unwrap();
+        assert!(tile.work.as_str().starts_with("l:"), "{tile:?}");
+        let wanted = Wanted { chapter: ChapterId::new("1"), version_label: None };
+        kit.setup(Setup { hold: true, ..Setup::default() });
+        assert_eq!(kit.queue.queue(kit.store(), &tile.work, "shelf", &[wanted], false, 1), 1);
+        let send = crate::read_catalog::tiles::title_of(kit.store(), tile.work.as_str(), form);
+        assert_eq!(send, title, "the send's file and ComicInfo are named by this");
+        named.push(title.to_owned());
+    }
+    let unnamed = WorkId::new("l:m:9f0e1d2c");
+    let wanted = Wanted { chapter: ChapterId::new("1"), version_label: None };
+    assert_eq!(kit.queue.queue(kit.store(), &unnamed, "shelf", &[wanted], false, 1), 1);
+    named.push("Untitled series".to_owned());
+
+    let view = kit.queue.view(kit.store());
+    let mut rows: Vec<String> = view.rows.iter().map(|r| r.title.clone()).collect();
+    let mut series: Vec<String> = view.series.iter().map(|s| s.title.clone()).collect();
+    named.sort();
+    rows.sort();
+    series.sort();
+    assert_eq!((rows, series), (named.clone(), named));
+}
+
+/// R7E-4. At launch a work no catalogue lists that was read before names were kept is named by
+/// asking its source once.
+#[tokio::test]
+async fn a_work_read_before_names_were_kept_is_named_by_its_source() {
+    let kit = kit(&["1"]);
+    let work = "l:m:5a6b7c8d";
+    kit.store().set_book_match("shelf", "s-7", work, 50, false, false, 1).unwrap();
+    kit.store().set_read_status(work, Some("reading"), 1).unwrap();
+    assert_eq!(kit.lent.sources.name_unnamed(2).await, 1);
+    let form = kaeri_store::shelf::TitleForm::English;
+    let title = crate::read_catalog::tiles::title_of(kit.store(), work, form);
+    assert_eq!(title, "The Lantern Ferry");
+    assert_eq!(kit.lent.sources.name_unnamed(3).await, 0, "asked once");
+}
+
+/// R6-M3. A download of a folder series AniList does not list is named by the folder's name,
+/// in its row and its series line, never by the work's id.
+#[tokio::test]
+async fn a_folder_series_download_is_named_by_its_folder() {
+    let kit = kit(&["1"]);
+    kit.setup(Setup { hold: true, ..Setup::default() });
+    let work =
+        kaeri_core::books::WorkKey::local(Medium::Manga, "Rooftop Paper Club").to_string();
+    let series = kaeri_store::shelf::LocalSeries {
+        id: "books:rooftop".into(),
+        folder: kit._dir.path().join("books").display().to_string(),
+        name: "Rooftop Paper Club".into(),
+        medium: "manga".into(),
+        work: Some(work.clone()),
+        state: "unmatched".into(),
+    };
+    kit.store().put_local_series(&series).unwrap();
+    let wanted = Wanted { chapter: ChapterId::new("1"), version_label: None };
+    let queued = kit.queue.queue(kit.store(), &WorkId::new(work), "shelf", &[wanted], false, 1);
+    assert_eq!(queued, 1);
+    let view = kit.queue.view(kit.store());
+    assert_eq!(view.rows[0].title, "Rooftop Paper Club");
+    assert_eq!(view.series[0].title, "Rooftop Paper Club");
+}
+
+/// R6-M6. A page fetch that fails as the network goes, before the app hears it went, goes back in
+/// the queue as a held fetch does and downloads once the network is back, never failing.
+#[tokio::test]
+async fn a_fetch_cut_off_as_the_network_goes_resumes_when_it_is_back() {
+    let kit = kit(&["1"]);
+    let page = "https://pages.example/1/1".to_owned();
+    kit.shelf.unreached.lock().unwrap().push(page.clone());
+    let (asked, answer) =
+        (Arc::new(tokio::sync::Notify::new()), Arc::new(tokio::sync::Notify::new()));
+    *kit.shelf.held.lock().unwrap() = Some((page, asked.clone(), answer.clone()));
+    kit.queue
+        .download(&kit.lent, WorkId::new(WORK), DownloadPick::Chapters { ids: ids(&["1"]) })
+        .await;
+    asked.notified().await;
+    answer.notify_one();
+    tokio::time::sleep(Duration::from_millis(20)).await;
+    kit.setup(Setup { hold: true, offline: true, ..Setup::default() });
+    kit.settle().await;
+    assert_eq!(kit.states(), [("1".into(), ChapterDownloadState::Queued)], "held, not failed");
+
+    kit.shelf.unreached.lock().unwrap().clear();
+    *kit.shelf.held.lock().unwrap() = None;
+    kit.setup(Setup::default());
+    kit.queue.start(&kit.lent);
+    kit.settle().await;
+    assert_eq!(kit.states(), [("1".into(), ChapterDownloadState::Done)]);
+}
+
 fn msg_ids(parts: &[kaeri_model::Msg]) -> Vec<&'static str> {
     parts.iter().map(kaeri_model::Msg::id).collect()
 }
@@ -1147,6 +1433,159 @@ async fn the_estimate_counts_pages_at_the_size_past_pages_took_and_names_the_net
     let nothing = kit.queue.estimate(kit.store(), &work, none, &rows, Some("shelf"));
     assert_eq!((nothing.chapters, nothing.bytes, nothing.line.len()), (0, 0, 0));
     assert_eq!(nothing.all_bytes, done.bytes, "a downloaded chapter still has its size");
+}
+
+/// R6-7. The estimate takes a file in the person's folders as on this device: nothing of it
+/// downloads, and a send of it comes to what the file takes, rather than a size never known.
+#[tokio::test]
+async fn the_estimate_takes_a_file_in_a_folder_as_it_is_here() {
+    let kit = kit(&[]);
+    let books = kit._dir.path().join("books");
+    std::fs::create_dir_all(&books).unwrap();
+    let path = books.join("Chapter 7.cbz");
+    std::fs::write(&path, b"a made-up comic of a few bytes").unwrap();
+    let series = kaeri_store::shelf::LocalSeries {
+        id: "books:ferry".into(),
+        folder: books.display().to_string(),
+        name: "The Long Ferry".into(),
+        medium: "manga".into(),
+        work: Some(WORK.into()),
+        state: "matched".into(),
+    };
+    kit.store().put_local_series(&series).unwrap();
+    let file = kaeri_store::shelf::ShelfFile {
+        path: path.display().to_string(),
+        chapter: None,
+        label: "Chapter 7".into(),
+        volume: None,
+        number_milli: Some(7000),
+        format: "cbz".into(),
+        pages: None,
+        comicinfo: None,
+        source: None,
+    };
+    kit.store().put_local_file("books:ferry", &file, 1, 1).unwrap();
+    // R6W-1. Chapter 8 is a folder of pages: it takes what its pages do.
+    let pages = pages_folder(&books.join("Chapter 8"), &[("1.png", 10), ("2.png", 20)]);
+    let folder = kaeri_store::shelf::ShelfFile {
+        path: books.join("Chapter 8").display().to_string(),
+        label: "Chapter 8".into(),
+        number_milli: Some(8000),
+        format: "folder".into(),
+        ..file
+    };
+    kit.store().put_local_file("books:ferry", &folder, 1, 1).unwrap();
+    kit.setup(Setup { mobile: true, ..Setup::default() });
+
+    let work = WorkId::new(WORK);
+    let rows = [listed("7", None), listed("8", None)];
+    let pick = DownloadPick::Chapters { ids: ids(&["7", "8"]) };
+    let folders = Some(crate::read_sources::FOLDERS);
+    let estimate = kit.queue.estimate(kit.store(), &work, pick, &rows, folders);
+    assert_eq!((estimate.chapters, estimate.bytes), (0, 0));
+    assert!(estimate.line.is_empty(), "nothing to download: {:?}", estimate.line);
+    assert_eq!(estimate.all_bytes, std::fs::metadata(&path).unwrap().len() + pages);
+}
+
+/// A folder of made-up pages, each `(name, shade)`; says what the pages take.
+fn pages_folder(dir: &Path, pages: &[(&str, u8)]) -> u64 {
+    std::fs::create_dir_all(dir).unwrap();
+    pages
+        .iter()
+        .map(|(name, shade)| {
+            let path = dir.join(name);
+            image::GrayImage::from_pixel(4, 6, image::Luma([*shade])).save(&path).unwrap();
+            std::fs::metadata(&path).unwrap().len()
+        })
+        .sum()
+}
+
+/// A folder the platform opens that treats folders as Windows does: a folder's own size is 0,
+/// and opening one as a file is refused as if Kaeri could not write there.
+struct WindowsLike {
+    scheme: String,
+    root: PathBuf,
+}
+
+impl WindowsLike {
+    fn path_of(&self, reference: &str) -> std::io::Result<PathBuf> {
+        let rest = reference
+            .strip_prefix(&self.scheme)
+            .ok_or_else(|| std::io::Error::from(std::io::ErrorKind::NotFound))?;
+        Ok(self.root.join(rest))
+    }
+
+    fn describe(&self, path: &Path) -> std::io::Result<kaeri_books::tree::TreeEntry> {
+        let meta = std::fs::metadata(path)?;
+        let rest = path.strip_prefix(&self.root).unwrap_or(path).to_string_lossy();
+        Ok(kaeri_books::tree::TreeEntry {
+            reference: format!("{}{rest}", self.scheme),
+            name: path.file_name().unwrap_or_default().to_string_lossy().into_owned(),
+            folder: meta.is_dir(),
+            size: if meta.is_dir() { 0 } else { meta.len() },
+            modified: 0,
+        })
+    }
+}
+
+impl kaeri_books::tree::Tree for WindowsLike {
+    fn claims(&self, reference: &str) -> bool {
+        reference.starts_with(&self.scheme)
+    }
+
+    fn entries(&self, reference: &str) -> std::io::Result<Vec<kaeri_books::tree::TreeEntry>> {
+        let mut out = Vec::new();
+        for entry in std::fs::read_dir(self.path_of(reference)?)? {
+            out.push(self.describe(&entry?.path())?);
+        }
+        Ok(out)
+    }
+
+    fn entry(&self, reference: &str) -> std::io::Result<kaeri_books::tree::TreeEntry> {
+        self.describe(&self.path_of(reference)?)
+    }
+
+    fn open(&self, reference: &str) -> std::io::Result<Box<dyn kaeri_books::Source>> {
+        let path = self.path_of(reference)?;
+        if path.is_dir() {
+            return Err(std::io::Error::from(std::io::ErrorKind::PermissionDenied));
+        }
+        Ok(Box::new(File::open(path)?))
+    }
+}
+
+/// R6W-1. A chapter that is a folder of pages is packed as a CBZ, its pages in their natural
+/// order, and never opened as a file, which Windows refuses as if Kaeri could not write. Its
+/// size is what its pages take, as the folder's own size is 0 there.
+#[test]
+fn a_folder_of_pages_is_packed_and_sized_by_its_pages() {
+    let dir = tempfile::tempdir().unwrap();
+    let chapter = dir.path().join("Chapter 01");
+    let pages = pages_folder(&chapter, &[("10.png", 30), ("2.png", 20), ("1.png", 10)]);
+    let tree = Arc::new(WindowsLike {
+        scheme: format!("winlike-{}://", std::process::id()),
+        root: dir.path().to_owned(),
+    });
+    let _held = kaeri_books::tree::register(tree.clone());
+    let reference = PathBuf::from(format!("{}Chapter 01", tree.scheme));
+    assert_eq!(kaeri_books::tree::stat(&reference).unwrap().size, 0);
+    let refused = kaeri_books::tree::open_file(&reference).err().map(|e| e.kind());
+    assert_eq!(refused, Some(std::io::ErrorKind::PermissionDenied));
+
+    for from in [chapter, reference.clone()] {
+        let packed = dir.path().join("packed.cbz");
+        assert!(keep_book(&from, &packed).unwrap(), "{} was copied", from.display());
+        let book = kaeri_books::open(&packed, &kaeri_books::Limits::default()).unwrap();
+        let kaeri_books::Book::Comic(mut comic) = book else { panic!("not a comic") };
+        let shades: Vec<u8> = (0..comic.pages().len())
+            .map(|i| {
+                let bytes = comic.read_page(i).unwrap();
+                image::load_from_memory(&bytes).unwrap().to_luma8().get_pixel(0, 0)[0]
+            })
+            .collect();
+        assert_eq!(shades, [10, 20, 30], "in natural order");
+    }
+    assert_eq!(Here::Folder { path: reference }.bytes(), Some(pages));
 }
 
 #[tokio::test]
@@ -1584,4 +2023,105 @@ async fn a_chapter_taken_out_of_the_queue_as_it_starts_is_not_asked_for() {
     assert!(!kit.queue.reader_fetches(kit.store(), &kit.lent.tx, reader, 5), "started");
     let state = kit.store().book_download(WORK, "2").unwrap().unwrap().state;
     assert_eq!(state, BookDownloadState::Downloading);
+}
+
+/// What `kit`'s copy of the source was asked for chapter `chapter`.
+fn asked_for(kit: &Kit, chapter: &str) -> usize {
+    let prefix = format!("https://pages.example/{chapter}/");
+    kit.shelf.asked.lock().unwrap().iter().filter(|a| a.starts_with(&prefix)).count()
+}
+
+#[tokio::test]
+async fn a_second_engine_on_the_data_folder_leaves_a_running_download_alone() {
+    let (a, b) = two_engines(&["1", "2"]);
+    let mut gate = a.shelf.gate("https://pages.example/1/2", 1);
+    a.queue
+        .download(&a.lent, WorkId::new(WORK), DownloadPick::Chapters { ids: ids(&["1", "2"]) })
+        .await;
+    a.shelf.until(|s| s.times("https://pages.example/1/2") == 1).await;
+    for _ in 0..500 {
+        if !kept_pages(&a, "1").is_empty() {
+            break;
+        }
+        tokio::time::sleep(Duration::from_millis(10)).await;
+    }
+    let kept_before = kept_pages(&a, "1");
+    assert!(!kept_before.is_empty(), "a page is kept");
+
+    // The second engine launches meanwhile and starts its queue.
+    b.queue.recover(b.store(), b.lent.clock.now());
+    assert_eq!(kept_pages(&b, "1"), kept_before, "the pages being fetched stay");
+    assert!(matches!(b.states()[0].1, ChapterDownloadState::Downloading { .. }));
+    b.queue.start(&b.lent);
+    b.shelf.until(|s| s.times("https://pages.example/2/3") == 1).await;
+    tokio::time::sleep(Duration::from_millis(100)).await;
+    assert_eq!(
+        asked_for(&b, "1"),
+        0,
+        "the second engine never fetches the first one's chapter"
+    );
+
+    gate.remove(0).send(true).unwrap();
+    a.settle().await;
+    b.settle().await;
+    let done: [(String, ChapterDownloadState); 2] =
+        [("1".into(), ChapterDownloadState::Done), ("2".into(), ChapterDownloadState::Done)];
+    assert_eq!(a.states(), done);
+    assert_eq!(b.states(), done);
+    assert_eq!(asked_for(&a, "1"), 3, "each page of chapter 1 once");
+    assert_eq!(asked_for(&a, "2") + asked_for(&b, "2"), 3, "each page of chapter 2 once");
+    assert_eq!(asked_for(&b, "1"), 0);
+}
+
+#[tokio::test]
+async fn a_download_whose_engine_was_killed_is_taken_over_once_its_claim_lapses() {
+    let (a, b) = two_engines(&["1"]);
+    b.setup(Setup { hold: true, ..Setup::default() });
+    b.queue
+        .download(&b.lent, WorkId::new(WORK), DownloadPick::Chapters { ids: ids(&["1"]) })
+        .await;
+    // The first engine claimed the chapter, wrote half of it and was killed.
+    let claimed = a.store().claim_book_download(a.lent.clock.now()).unwrap().unwrap();
+    drop(a);
+    let dir = b.queue.dir().join(safe(WORK));
+    std::fs::create_dir_all(&dir).unwrap();
+    std::fs::write(part_of(&dir.join(safe("1"))), b"half").unwrap();
+
+    // While its claim lasts, the second engine's launch and queue leave it alone.
+    b.queue.recover(b.store(), b.lent.clock.now());
+    assert!(part_of(&dir.join(safe("1"))).exists());
+    b.setup(Setup::default());
+    b.queue.start(&b.lent);
+    tokio::time::sleep(Duration::from_millis(150)).await;
+    assert_eq!(*b.shelf.fetched.lock().unwrap(), 0);
+    assert!(matches!(b.states()[0].1, ChapterDownloadState::Downloading { .. }));
+
+    // Nothing renews it: once it lapses, the second engine fetches the chapter.
+    b.lent.clock.advance(kaeri_store::book_downloads::LEASE_SECS + 1);
+    b.settle().await;
+    assert_eq!(b.states(), [("1".into(), ChapterDownloadState::Done)]);
+    assert_eq!(asked_for(&b, "1"), 3);
+    let row = b.store().book_download(WORK, "1").unwrap().unwrap();
+    assert_eq!(row.id, claimed.id);
+}
+
+#[tokio::test]
+async fn a_failed_download_whose_whole_file_is_there_is_done_at_launch() {
+    let kit = kit(&["1"]);
+    kit.setup(Setup { hold: true, ..Setup::default() });
+    kit.queue
+        .download(&kit.lent, WorkId::new(WORK), DownloadPick::Chapters { ids: ids(&["1"]) })
+        .await;
+    let row = kit.store().next_book_download().unwrap().unwrap();
+    // Another engine finished the file as this one failed the row.
+    let file = kit.queue.dir().join(safe(WORK)).join(safe("1")).with_extension("cbz");
+    std::fs::create_dir_all(file.parent().unwrap()).unwrap();
+    std::fs::write(&file, b"a whole chapter").unwrap();
+    kit.store().book_download_failed(row.id, &encode(&ReadingFailure::Offline), 5).unwrap();
+
+    kit.queue.recover(kit.store(), 6);
+    assert_eq!(kit.states(), [("1".into(), ChapterDownloadState::Done)]);
+    let row = kit.store().book_download(WORK, "1").unwrap().unwrap();
+    assert!(row.path.is_some_and(|p| p.ends_with("1.cbz")), "the row keeps the file");
+    assert_eq!(row.bytes, 15);
 }

@@ -31,7 +31,7 @@ accounts-screen-title = Comptes
 accounts-badge-sign-in = { $tracker } { $mark } reconnexion
 accounts-needs-sign-in = { $tracker } demande une nouvelle connexion. Appuyez sur { $key } pour ouvrir Comptes.
 accounts-conflicts-found = { $count ->
-    [one] 1 différence de synchronisation trouvée. Appuyez sur { $key } pour la consulter.
+    [one] { $count } différence de synchronisation trouvée. Appuyez sur { $key } pour la consulter.
     [many] { $count } différences de synchronisation trouvées. Appuyez sur { $key } pour les consulter.
    *[other] { $count } différences de synchronisation trouvées. Appuyez sur { $key } pour les consulter.
  }
@@ -136,7 +136,7 @@ lists-progress-aired = { $total ->
    *[other] { $done } sur { $total } épisodes diffusés
  }
 lists-progress-watched = { $count ->
-    [one] 1 épisode visionné
+    [one] { $count } épisode visionné
     [many] { $count } épisodes visionnés
    *[other] { $count } épisodes visionnés
  }

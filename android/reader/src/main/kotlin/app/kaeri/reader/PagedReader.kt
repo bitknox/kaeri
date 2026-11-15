@@ -702,7 +702,15 @@ private fun held(frame: Array<HeldFrame?>, showing: Leaf?, drawnLeaf: Leaf?, sta
  * gets the failed page with Try again. In a [strip] the plate is the strip's own.
  */
 @Composable
-fun CreditPageView(credit: CreditPage, images: PageImages, ground: Color, modifier: Modifier = Modifier, strip: Boolean = false) {
+fun CreditPageView(
+    credit: CreditPage,
+    images: PageImages,
+    ground: Color,
+    modifier: Modifier = Modifier,
+    strip: Boolean = false,
+    /** Hears whether the picture has decoded, as it changes: null while it loads, false when it failed. */
+    onDecoded: (Boolean?) -> Unit = {},
+) {
     val context = LocalContext.current
     var tries by remember(credit.file) { mutableStateOf(0) }
     val first = remember(credit.file) { images.cached(credit.file) }
@@ -713,6 +721,12 @@ fun CreditPageView(credit: CreditPage, images: PageImages, ground: Color, modifi
     }
     val alpha = remember(credit.file) { Animatable(if (first != null) 1f else 0f) }
     val decoded = result as? PageDecodeResult.Decoded
+    val loaded = when (result) {
+        null -> null
+        is PageDecodeResult.Decoded -> true
+        else -> false
+    }
+    LaunchedEffect(loaded) { onDecoded(loaded) }
     LaunchedEffect(decoded != null) {
         if (decoded != null && alpha.value < 1f) atFullSpeed { alpha.animateTo(1f, Motion.fadeIn()) }
     }

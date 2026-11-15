@@ -17,9 +17,9 @@ Kaeri                                                                           
                             │
                             │    Folders, servers and plugin stores are added in the Kaeri apps.
                             │
-                            │    The terminal has no reader. Manga, webtoons and light novels open in the Kaeri apps,
-                            │    and sync keeps your progress in step.
                             │    Press I to change what Kaeri is for.
+                            │
+                            │
                             │
                             │
                             │
@@ -99,11 +99,9 @@ r17 c28-28 fg=rule
 r17 c33-95 fg=text-dim
 r18 c28-28 fg=rule
 r19 c28-28 fg=rule
-r19 c33-116 fg=text-dim
+r19 c33-68 fg=text-dim
 r20 c28-28 fg=rule
-r20 c33-69 fg=text-dim
 r21 c28-28 fg=rule
-r21 c33-68 fg=text-dim
 r22 c28-28 fg=rule
 r23 c28-28 fg=rule
 r24 c28-28 fg=rule

@@ -14,7 +14,7 @@ start-failed = { -app-name } n’a pas pu démarrer. Quittez-le et ouvrez-le à 
 start-failed-remote = La télécommande n’a pas pu démarrer. { $reason }
 start-failed-player = Le lecteur n’a pas pu démarrer. { $reason }
 notice-episodes-queued = { $count ->
-    [one] Un épisode ajouté à la file.
+    [one] { $count } épisode ajouté à la file.
     [many] { $count } épisodes ajoutés à la file.
    *[other] { $count } épisodes ajoutés à la file.
  }

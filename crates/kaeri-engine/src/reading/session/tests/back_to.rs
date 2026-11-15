@@ -168,6 +168,38 @@ async fn another_devices_place_and_going_back_from_it_offer_nothing() {
     assert_eq!(offers(&h.drain()), []);
 }
 
+/// Another device's place in a copy of the chapter with fewer pages is moved to the same point
+/// of the chapter here, as the open's start is: opened there, the reader is not moved back to
+/// the other copy's page number.
+#[tokio::test(start_paused = true)]
+async fn another_devices_place_in_a_shorter_copy_opens_there_with_no_move_back() {
+    let mine = Store::open_in_memory().unwrap();
+    mine.sync_enable("phone").unwrap();
+    let desk = Store::open_in_memory().unwrap();
+    desk.set_sync_clock(|| 4_000_000_000_000);
+    desk.sync_enable("desk").unwrap();
+    mine.sync_device_add("desk", "Desk", "").unwrap();
+    // Page 3 of 4 there is page 9 of the 12 here.
+    let mut there = ReadEvent::new(WORK, "1", 2);
+    there.page = Some(2);
+    there.of_pages = Some(4);
+    desk.record_read(&there, Vec::new()).unwrap();
+    let ops = desk.ops_after(&mine.version_vector().unwrap(), usize::MAX).unwrap();
+    mine.apply_ops(ops).unwrap();
+    let mut h = twelve_pages_in(mine, "paged");
+    let work = WorkId::new(WORK);
+    let chapter = Some(ChapterId::new("1"));
+    h.send(ReaderCommand::Open { work, chapter, at: OpenAt::Resume, surface: surface() });
+    h.until(|e| matches!(e, ReaderEvent::Leaves { .. }).then_some(())).await;
+    let start = h.reader.session.as_ref().unwrap().start.page;
+    assert_eq!(start, Some(6), "the other copy's page 3 of 4, here");
+    let said = h.drain();
+    assert!(
+        !said.iter().any(|e| matches!(e, ReaderEvent::GoTo { .. } | ReaderEvent::Moved { .. })),
+        "{said:?}"
+    );
+}
+
 /// In a strip the Moved notice counts images, as every other line there does.
 #[tokio::test(start_paused = true)]
 async fn another_devices_place_in_a_strip_is_an_image() {

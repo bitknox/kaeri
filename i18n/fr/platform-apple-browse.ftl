@@ -6,7 +6,7 @@ continue-widget-resume = { -continue-cap } ép. { $episode }
 continue-widget-resume-dubbed = { -continue-cap } ép. { $episode } { -dubbed }
 downloads-continued-title = Téléchargement des épisodes
 downloads-continued-left = { $count ->
-    [one] Un épisode restant
+    [one] { $count } épisode restant
     [many] { $count } épisodes restants
    *[other] { $count } épisodes restants
  }

@@ -138,6 +138,7 @@ pub struct FakeReceiver {
 enum Control {
     TakeOver,
     Silence,
+    Buffering(bool),
 }
 
 impl Drop for FakeReceiver {
@@ -161,21 +162,26 @@ struct Playing {
     tracks: Vec<u64>,
     since: Instant,
     stalled: bool,
+    /// Waiting for data, as [`FakeReceiver::buffer`] says.
+    buffering: bool,
 }
 
 impl Playing {
     fn advance(&mut self, speed: f64) {
-        if self.state == "PLAYING" && !self.stalled {
+        if self.state == "PLAYING" && !self.stalled && !self.buffering {
             self.position += self.since.elapsed().as_secs_f64() * self.rate * speed;
         }
         self.since = Instant::now();
     }
 
     fn status(&self, idle_reason: Option<&str>, volume: &Value) -> Value {
+        let playing = if self.buffering { "BUFFERING" } else { self.state };
         let mut status = json!({
             "mediaSessionId": self.session,
-            "playbackRate": self.rate,
-            "playerState": if idle_reason.is_some() { "IDLE" } else { self.state },
+            // Shaka holds the video element's rate at 0 while it buffers, and the receiver
+            // reports the element's rate.
+            "playbackRate": if self.buffering { 0.0 } else { self.rate },
+            "playerState": if idle_reason.is_some() { "IDLE" } else { playing },
             "currentTime": self.position.min(self.duration),
             "supportedMediaCommands": 12303,
             "volume": volume,
@@ -266,6 +272,12 @@ impl FakeReceiver {
     pub fn go_silent(&self) {
         let _ = self.control.send(Control::Silence);
     }
+
+    /// Wait for data, or stop waiting, and say so as the receiver's Shaka player does:
+    /// `BUFFERING` with a `playbackRate` of 0, then the rate it plays at again.
+    pub fn buffer(&self, waiting: bool) {
+        let _ = self.control.send(Control::Buffering(waiting));
+    }
 }
 
 #[allow(clippy::too_many_lines)]
@@ -331,6 +343,14 @@ async fn serve(
                     // Holding the socket, the writer and all, and never touching it again.
                     let _held = (&read, &tx);
                     std::future::pending::<()>().await;
+                }
+                Control::Buffering(waiting) => {
+                    if let Some(p) = playing.as_mut() {
+                        p.advance(options.speed);
+                        p.buffering = waiting;
+                        send(&transport, "*", NS_MEDIA, json!({"type": "MEDIA_STATUS", "requestId": 0,
+                            "status": [p.status(None, &volume(level, muted))]}));
+                    }
                 }
             },
             frame = read_frame(&mut read) => {
@@ -417,6 +437,7 @@ async fn serve(
                             tracks: payload["activeTrackIds"].as_array().map(|a| a.iter().filter_map(Value::as_u64).collect()).unwrap_or_default(),
                             since: Instant::now(),
                             stalled: refused == Some(Refusal::Stall),
+                            buffering: false,
                         };
                         send(&transport, &sender, NS_MEDIA, json!({"type": "MEDIA_STATUS", "requestId": request, "status": [p.status(None, &volume(level, muted))]}));
                         if refused == Some(Refusal::Error) {
@@ -494,19 +515,28 @@ async fn fetch_like_a_receiver(
         let response = PlainHttp.get(&url, &headers).await.map_err(|_| 502u16)?;
         let (status, cors) =
             (response.status, response.header("access-control-allow-origin").is_some());
+        let kind = response.header("content-type").map(str::to_owned);
         let body = response.prefix(4 << 20).await.map_err(|_| 502u16)?;
-        Ok::<_, u16>((url, status, cors, body))
+        Ok::<_, u16>((url, status, cors, kind, body))
     };
     let mut all = Vec::new();
-    let mut note = |(url, status, cors, body): (String, u16, bool, Vec<u8>)| {
-        lock(fetched).push(Fetched { url, status, bytes: body.len(), cors });
-        if !(200..300).contains(&status) || (hls && !cors) {
-            return Err(status);
-        }
-        all.extend_from_slice(&body);
-        Ok(body)
-    };
-    let body = note(get(url.to_owned()).await?)?;
+    // A segment's type is believed, as the receiver's player believes it: one named as an
+    // image is refused, whatever its bytes are.
+    let mut note =
+        |(url, status, cors, kind, body): (String, u16, bool, Option<String>, Vec<u8>),
+         segment: bool| {
+            lock(fetched).push(Fetched { url, status, bytes: body.len(), cors });
+            if !(200..300).contains(&status) || (hls && !cors) {
+                return Err(status);
+            }
+            if segment && kind.as_deref().is_some_and(|kind| !crate::probe::read_as_media(kind))
+            {
+                return Err(415);
+            }
+            all.extend_from_slice(&body);
+            Ok(body)
+        };
+    let body = note(get(url.to_owned()).await?, false)?;
     if !hls {
         return Ok((None, all));
     }
@@ -518,7 +548,7 @@ async fn fetch_like_a_receiver(
         .find(|l| !l.starts_with('#') && !l.trim().is_empty())
     {
         url = resolve(&url, variant.trim());
-        let body = note(get(url.clone()).await?)?;
+        let body = note(get(url.clone()).await?, false)?;
         text = String::from_utf8_lossy(&body).into_owned();
     }
     let duration: f64 = text
@@ -530,10 +560,10 @@ async fn fetch_like_a_receiver(
         let at = l.find("URI=\"")? + 5;
         l.starts_with("#EXT-X-MAP").then(|| l[at..].split('"').next().map(str::to_owned))?
     }) {
-        note(get(resolve(&url, &map)).await?)?;
+        note(get(resolve(&url, &map)).await?, true)?;
     }
     if let Some(first) = text.lines().find(|l| !l.starts_with('#') && !l.trim().is_empty()) {
-        note(get(resolve(&url, first.trim())).await?)?;
+        note(get(resolve(&url, first.trim())).await?, true)?;
     }
     Ok(((duration > 0.0).then_some(duration), all))
 }

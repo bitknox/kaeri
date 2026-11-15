@@ -95,7 +95,7 @@ reader-chapter-in-progress = Página { $page } de { $total }
 reader-chapter-read = Lido
 reader-chapter-new = novo
 reader-chapter-pages = { $pages ->
-    [one] 1 página
+    [one] { $pages } página
     [many] { $pages } de páginas
    *[other] { $pages } páginas
  }

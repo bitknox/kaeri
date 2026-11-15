@@ -1,0 +1,20 @@
+Kaeri
+────────────────────────────────────
+
+
+      Needs a larger terminal
+         At least 40 by 12
+
+
+────────────────────────────────────
+Page 8 of 22                  q back
+=== styles ===
+colours text=#e4e0d6 text-dim=#a8aec9 rule=#46464d obi=#f2a64b state=#7fc7d9 alert=#f59b85 ground=#1a1b26
+r00 c00-04 fg=text mod=BOLD
+r01 c00-35 fg=rule
+r04 c06-28 fg=text mod=BOLD
+r05 c09-25 fg=text-dim
+r08 c00-35 fg=rule
+r09 c00-11 fg=text-dim
+r09 c30-30 fg=text
+r09 c31-35 fg=text-dim

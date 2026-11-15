@@ -16,7 +16,14 @@ impl Keymap {
         // Driven off `Action::ALL`, not the binding table: an action with no key — Accounts and
         // Conflicts deliberately have none — must still be reachable, and the palette is the
         // only place it can be reached from.
-        let mut ranked: Vec<(u32, usize, Action)> = Action::ALL
+        // In the reader, its own actions and the global ones it keeps; elsewhere every action
+        // but the reader's, which have no page to turn there.
+        let offered: Vec<Action> = if context == Context::Reading {
+            Action::READER.iter().chain(Action::IN_READER).copied().collect()
+        } else {
+            Action::ALL.to_vec()
+        };
+        let mut ranked: Vec<(u32, usize, Action)> = offered
             .iter()
             .enumerate()
             .filter_map(|(order, action)| {
@@ -110,6 +117,18 @@ mod tests {
             assert!(listed.contains(action), "{action:?} is unreachable from the palette");
         }
         assert_eq!(listed.len(), Action::ALL.len(), "the palette listed something twice");
+    }
+
+    #[test]
+    fn the_reader_s_palette_lists_its_actions_and_the_global_ones_it_keeps() {
+        let keymap = Keymap::new();
+        let listed: Vec<(Action, String)> = keymap.palette_entries("", Context::Reading);
+        for action in Action::READER.iter().chain(Action::IN_READER) {
+            assert!(listed.iter().any(|(a, _)| a == action), "{action:?} is not offered");
+        }
+        assert!(!listed.iter().any(|(a, _)| *a == Action::JumpSection(1)));
+        assert!(listed.contains(&(Action::ReaderLeave, "q".into())), "{listed:?}");
+        assert!(listed.contains(&(Action::Help, "?".into())), "{listed:?}");
     }
 
     #[test]

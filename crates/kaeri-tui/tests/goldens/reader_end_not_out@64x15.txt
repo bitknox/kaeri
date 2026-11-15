@@ -1,0 +1,27 @@
+Kaeri   Harbor Light Recipes · Chapter 17
+────────────────────────────────────────────────────────────────
+
+    End of chapter 17
+
+    Chapter 18 isn't out yet
+    Kaeri checks for new chapters in the
+    background. New ones show on Home.
+
+
+
+
+
+────────────────────────────────────────────────────────────────
+                                            q back to the series
+=== styles ===
+colours text=#e4e0d6 text-dim=#a8aec9 rule=#46464d obi=#f2a64b state=#7fc7d9 alert=#f59b85 ground=#1a1b26
+r00 c00-04 fg=text mod=BOLD
+r00 c08-40 fg=text-dim
+r01 c00-63 fg=rule
+r03 c04-20 fg=text mod=BOLD
+r05 c04-27 fg=text mod=BOLD
+r06 c04-39 fg=text-dim
+r07 c04-37 fg=text-dim
+r13 c00-63 fg=rule
+r14 c44-44 fg=text
+r14 c45-63 fg=text-dim

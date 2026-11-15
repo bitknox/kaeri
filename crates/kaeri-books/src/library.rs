@@ -144,6 +144,11 @@ impl Known for Nothing {
     }
 }
 
+/// What a scan that was told to stop ends with.
+fn stopped() -> std::io::Error {
+    std::io::Error::new(std::io::ErrorKind::Interrupted, "the scan was stopped")
+}
+
 fn mtime_of(meta: &fs::Metadata) -> i64 {
     meta.modified()
         .ok()
@@ -151,8 +156,18 @@ fn mtime_of(meta: &fs::Metadata) -> i64 {
         .map_or(0, |d| i64::try_from(d.as_secs()).unwrap_or(0))
 }
 
+/// A path as a scan says it: with Windows' separators as `/`. Elsewhere a backslash is part of
+/// a name and stays.
 fn slash(path: &Path) -> String {
-    path.to_string_lossy().replace('\\', "/")
+    let text = path.to_string_lossy();
+    if cfg!(windows) { text.replace('\\', "/") } else { text.into_owned() }
+}
+
+/// A path as the store keeps it, to open the file by again: as [`slash`] says it, or `None` for
+/// a name that is not UTF-8, which a text path could not open again.
+fn stored_path(path: &Path) -> Option<String> {
+    let text = path.to_str()?;
+    Some(if cfg!(windows) { text.replace('\\', "/") } else { text.to_owned() })
 }
 
 fn extension(path: &Path) -> Option<String> {
@@ -238,11 +253,11 @@ impl Place<'_> {
         Ok(nodes)
     }
 
-    /// What a book at `node` is stored as.
-    fn stored(self, node: &Node) -> String {
+    /// What a book at `node` is stored as, or `None` when no text path would open it again.
+    fn stored(self, node: &Node) -> Option<String> {
         match self {
-            Place::Disk => slash(&node.at),
-            Place::Tree(_) => node.at.to_string_lossy().into_owned(),
+            Place::Disk => stored_path(&node.at),
+            Place::Tree(_) => Some(node.at.to_string_lossy().into_owned()),
         }
     }
 }
@@ -255,6 +270,18 @@ pub fn scan(
     known: &dyn Known,
     limits: &Limits,
     found: &mut dyn FnMut(u32),
+) -> std::io::Result<Scan> {
+    scan_until(root, known, limits, found, &|| false)
+}
+
+/// [`scan`], asking `stop` before each thing it looks at: once it says yes, the scan ends with
+/// an [`std::io::ErrorKind::Interrupted`] error and keeps nothing.
+pub fn scan_until(
+    root: &Path,
+    known: &dyn Known,
+    limits: &Limits,
+    found: &mut dyn FnMut(u32),
+    stop: &dyn Fn() -> bool,
 ) -> std::io::Result<Scan> {
     let tree = crate::tree::claiming(root);
     let (place, top) = match &tree {
@@ -308,6 +335,7 @@ pub fn scan(
         0,
         known,
         limits,
+        stop,
         &mut |group, file, name| {
             count += 1;
             found(count);
@@ -322,6 +350,10 @@ pub fn scan(
         &mut out,
         &top.path,
     )?;
+    // A stop met in a subfolder ends only that folder's walk: the scan as a whole ends here.
+    if stop() {
+        return Err(stopped());
+    }
     for (key, files) in groups {
         out.series.push(series_of(key, files));
     }
@@ -345,10 +377,14 @@ fn walk(
     depth: usize,
     known: &dyn Known,
     limits: &Limits,
+    stop: &dyn Fn() -> bool,
     emit: &mut dyn FnMut(String, ScannedFile, String),
     out: &mut Scan,
     root: &Path,
 ) -> std::io::Result<()> {
+    if stop() {
+        return Err(stopped());
+    }
     let entries = place.list(dir)?;
     let has = |kinds: &[&str]| {
         entries
@@ -369,6 +405,9 @@ fn walk(
         return Ok(());
     }
     for entry in entries {
+        if stop() {
+            return Err(stopped());
+        }
         let name = entry.name();
         if hidden(&name) || entry.link {
             continue;
@@ -376,7 +415,7 @@ fn walk(
         if entry.dir {
             if depth < MAX_DEPTH {
                 // An unreadable subfolder is skipped, not fatal to the rest.
-                let _ = walk(place, &entry, depth + 1, known, limits, emit, out, root);
+                let _ = walk(place, &entry, depth + 1, known, limits, stop, emit, out, root);
             }
         } else if extension(&entry.path)
             .is_some_and(|x| naming::BOOK_EXTENSIONS.contains(&x.as_str()))
@@ -442,7 +481,7 @@ fn scan_file(
     if !folder && !node.file {
         return None;
     }
-    let text = place.stored(node);
+    let text = place.stored(node)?;
     if !folder && node.size == 0 {
         // An empty file is a download that never finished, not a book.
         return None;
@@ -567,6 +606,9 @@ fn open_into(file: &mut ScannedFile, path: &Path, limits: &Limits) {
         Err(error) => {
             file.locked = matches!(error, crate::BookError::Protected);
             file.broken = Some(error.to_string());
+            // A book that does not open is still the kind its name says, so it is filed and
+            // opened as one and says it can't be read there.
+            file.novel = file.format == "epub";
         }
     }
 }
@@ -748,6 +790,74 @@ mod tests {
                 (None, None) => f.label.clone(),
             })
             .collect()
+    }
+
+    /// An EPUB cut short is still a novel: filed on its own, not with the comics beside it.
+    #[test]
+    fn an_epub_that_does_not_open_is_filed_as_a_novel() {
+        let dir = tempfile::tempdir().unwrap();
+        cbz(&dir.path().join("Shelf/Shelf Ch. 1.cbz"), 1, None);
+        fs::write(dir.path().join("Shelf/Broken Bell.epub"), b"PK\x03\x04 cut short").unwrap();
+        let scan = scan_dir(dir.path());
+        let novel = scan.series.iter().find(|s| s.key.starts_with("novel:")).expect("a novel");
+        assert_eq!(novel.key, "novel:Broken Bell");
+        assert!(novel.novel && novel.files[0].novel);
+        assert!(novel.files[0].broken.is_some());
+        assert!(!series(&scan, "Shelf").novel);
+        assert_eq!(series(&scan, "Shelf").files.len(), 1);
+    }
+
+    #[test]
+    fn a_scan_told_to_stop_ends_without_a_result() {
+        let dir = tempfile::tempdir().unwrap();
+        for s in ["Reed Lamp", "Salt Kite", "Moss Bell"] {
+            for c in 1..=3 {
+                cbz(&dir.path().join(format!("{s}/{s} Ch. {c}.cbz")), 1, None);
+            }
+        }
+        let seen = std::cell::Cell::new(0u32);
+        let stop = || seen.get() >= 4;
+        let ended =
+            scan_until(dir.path(), &Nothing, &Limits::default(), &mut |n| seen.set(n), &stop);
+        assert_eq!(ended.unwrap_err().kind(), std::io::ErrorKind::Interrupted);
+        assert_eq!(seen.get(), 4, "nothing is looked at once it is told to stop");
+        assert_eq!(scan_dir(dir.path()).series.len(), 3);
+    }
+
+    /// A backslash is part of a name outside Windows: the book is kept by its real path.
+    #[cfg(unix)]
+    #[test]
+    fn a_backslash_in_a_name_is_kept_and_the_book_opens_by_it() {
+        let dir = tempfile::tempdir().unwrap();
+        let book = dir.path().join("back\\slash").join("back\\slash Ch. 1.cbz");
+        cbz(&book, 2, None);
+        let scan = scan_dir(dir.path());
+        assert_eq!(scan.series.len(), 1);
+        let s = &scan.series[0];
+        assert_eq!(s.files.len(), 1);
+        assert_eq!(Path::new(&s.files[0].path), book);
+        assert!(path_of(&s.files[0]).is_file());
+        assert_eq!(s.files[0].pages, Some(2));
+    }
+
+    /// A name that is not UTF-8 could not be opened again by a text path, so it is passed over
+    /// as a file Kaeri doesn't read, and the books beside it come in as usual. macOS keeps no
+    /// such names.
+    #[cfg(target_os = "linux")]
+    #[test]
+    fn a_name_that_is_not_utf8_is_passed_over_and_its_neighbours_come_in() {
+        use std::os::unix::ffi::OsStrExt;
+        let dir = tempfile::tempdir().unwrap();
+        let shelf = dir.path().join("Glass Ferry");
+        cbz(&shelf.join("Glass Ferry Ch. 1.cbz"), 1, None);
+        cbz(&shelf.join(std::ffi::OsStr::from_bytes(b"Glass Ferry Ch. 2 \xff.cbz")), 1, None);
+        let odd = dir.path().join(std::ffi::OsStr::from_bytes(b"Odd \xfe Folder"));
+        cbz(&odd.join("Odd Ch. 1.cbz"), 1, None);
+        let scan = scan_dir(dir.path());
+        assert_eq!(numbers(series(&scan, "Glass Ferry")), ["c1"]);
+        assert_eq!(scan.ignored, 2);
+        let files = scan.series.iter().flat_map(|s| &s.files);
+        assert!(files.clone().count() == 1 && files.clone().all(|f| path_of(f).is_file()));
     }
 
     #[test]

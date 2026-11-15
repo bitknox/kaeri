@@ -314,7 +314,7 @@ struct FirstLaunch: View {
                 .padding(.top, 20)
             HStack(spacing: 8) {
                 if devicePicksFolders {
-                    Button { FolderPicker.choose { store.addFolder($0); finish(nil) } } label: {
+                    Button { FolderPicker.choose(message: L.libraryPickerMessage) { store.addFolder($0); finish(nil) } } label: {
                         Text(L.sourcesAddFolderButton).touchFill()
                     }
                     .buttonStyle(SecondaryCapsuleStyle(height: buttonHeight, fontSize: buttonFont))
@@ -699,7 +699,7 @@ struct FirstLaunch: View {
                 rows {
                     if devicePicksFolders {
                         bookRow(L.onboardingBooksFolder, L.onboardingBothShowsFolderLine(device: Device.name)) {
-                            FolderPicker.choose { store.addFolder($0) }
+                            FolderPicker.choose(message: L.libraryPickerMessage) { store.addFolder($0) }
                         }
                         rowRule
                     }

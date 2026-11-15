@@ -228,7 +228,8 @@ impl App {
 
     /// Whether something on screen counts down by the second: the pairing code's time.
     pub fn is_ticking(&self) -> bool {
-        self.nav.overlay() == Some(&Overlay::SyncPairShow) && self.devices.invite.is_some()
+        (self.nav.overlay() == Some(&Overlay::SyncPairShow) && self.devices.invite.is_some())
+            || self.reader_ticking()
     }
 
     /// Whoever runs the app copied the text it was handed, or could not: the store's open

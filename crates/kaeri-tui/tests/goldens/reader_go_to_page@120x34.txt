@@ -1,0 +1,151 @@
+Kaeri   Harbor Light Recipes · Chapter 14 · Tide Tables                                      sources ● 3  ·  anilist ⇅ 2
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+
+
+
+
+
+
+
+
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+▌ Go to page   15▏
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+  Pages 1 to 22
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+░░░░░░░░░░██████  Pages 8 and 9 of 22 · Right to left                                                  ↵ go   esc cancel
+=== styles ===
+colours text=#e4e0d6 text-dim=#a8aec9 rule=#46464d obi=#f2a64b state=#7fc7d9 alert=#f59b85 ground=#1a1b26
+r00 c00-04 fg=rule mod=BOLD
+r00 c05-119 fg=rule
+r01 c00-119 fg=rule
+r02 c00-19 fg=rule
+r02 c20-59 fg=rule bg=#8d6d4f
+r02 c60-99 fg=rule bg=#68ceec
+r02 c100-119 fg=rule
+r03 c00-19 fg=rule
+r03 c20-59 fg=rule bg=#8d6d4f
+r03 c60-99 fg=rule bg=#68ceec
+r03 c100-119 fg=rule
+r04 c00-19 fg=rule
+r04 c20-59 fg=rule bg=#8d6d4f
+r04 c60-99 fg=rule bg=#68ceec
+r04 c100-119 fg=rule
+r05 c00-19 fg=rule
+r05 c20-59 fg=rule bg=#8d6d4f
+r05 c60-99 fg=rule bg=#68ceec
+r05 c100-119 fg=rule
+r06 c00-19 fg=rule
+r06 c20-59 fg=rule bg=#8d6d4f
+r06 c60-99 fg=rule bg=#68ceec
+r06 c100-119 fg=rule
+r07 c00-19 fg=rule
+r07 c20-59 fg=rule bg=#8d6d4f
+r07 c60-99 fg=rule bg=#68ceec
+r07 c100-119 fg=rule
+r08 c00-19 fg=rule
+r08 c20-59 fg=rule bg=#8d6d4f
+r08 c60-99 fg=rule bg=#68ceec
+r08 c100-119 fg=rule
+r09 c00-19 fg=rule
+r09 c20-59 fg=rule bg=#8d6d4f
+r09 c60-99 fg=rule bg=#68ceec
+r09 c100-119 fg=rule
+r10 c00-119 fg=rule bg=ground
+r11 c00-00 fg=obi bg=ground
+r11 c01-01 fg=rule bg=ground
+r11 c02-17 fg=text bg=ground mod=BOLD
+r11 c18-119 fg=rule bg=ground
+r12 c00-119 fg=rule bg=ground
+r13 c00-01 fg=rule bg=ground
+r13 c02-14 fg=text-dim bg=ground
+r13 c15-119 fg=rule bg=ground
+r14 c00-119 fg=rule bg=ground
+r15 c00-19 fg=rule
+r15 c20-59 fg=rule bg=#8d6d4f
+r15 c60-99 fg=rule bg=#68ceec
+r15 c100-119 fg=rule
+r16 c00-19 fg=rule
+r16 c20-59 fg=rule bg=#8d6d4f
+r16 c60-99 fg=rule bg=#68ceec
+r16 c100-119 fg=rule
+r17 c00-19 fg=rule
+r17 c20-59 fg=rule bg=#8d6d4f
+r17 c60-99 fg=rule bg=#68ceec
+r17 c100-119 fg=rule
+r18 c00-19 fg=rule
+r18 c20-59 fg=rule bg=#8d6d4f
+r18 c60-99 fg=rule bg=#68ceec
+r18 c100-119 fg=rule
+r19 c00-19 fg=rule
+r19 c20-59 fg=rule bg=#8d6d4f
+r19 c60-99 fg=rule bg=#68ceec
+r19 c100-119 fg=rule
+r20 c00-19 fg=rule
+r20 c20-59 fg=rule bg=#8d6d4f
+r20 c60-99 fg=rule bg=#68ceec
+r20 c100-119 fg=rule
+r21 c00-19 fg=rule
+r21 c20-59 fg=rule bg=#8d6d4f
+r21 c60-99 fg=rule bg=#68ceec
+r21 c100-119 fg=rule
+r22 c00-19 fg=rule
+r22 c20-59 fg=rule bg=#8d6d4f
+r22 c60-99 fg=rule bg=#68ceec
+r22 c100-119 fg=rule
+r23 c00-19 fg=rule
+r23 c20-59 fg=rule bg=#8d6d4f
+r23 c60-99 fg=rule bg=#68ceec
+r23 c100-119 fg=rule
+r24 c00-19 fg=rule
+r24 c20-59 fg=rule bg=#8d6d4f
+r24 c60-99 fg=rule bg=#68ceec
+r24 c100-119 fg=rule
+r25 c00-19 fg=rule
+r25 c20-59 fg=rule bg=#8d6d4f
+r25 c60-99 fg=rule bg=#68ceec
+r25 c100-119 fg=rule
+r26 c00-19 fg=rule
+r26 c20-59 fg=rule bg=#8d6d4f
+r26 c60-99 fg=rule bg=#68ceec
+r26 c100-119 fg=rule
+r27 c00-19 fg=rule
+r27 c20-59 fg=rule bg=#8d6d4f
+r27 c60-99 fg=rule bg=#68ceec
+r27 c100-119 fg=rule
+r28 c00-19 fg=rule
+r28 c20-59 fg=rule bg=#8d6d4f
+r28 c60-99 fg=rule bg=#68ceec
+r28 c100-119 fg=rule
+r29 c00-19 fg=rule
+r29 c20-59 fg=rule bg=#8d6d4f
+r29 c60-99 fg=rule bg=#68ceec
+r29 c100-119 fg=rule
+r30 c00-19 fg=rule
+r30 c20-59 fg=rule bg=#8d6d4f
+r30 c60-99 fg=rule bg=#68ceec
+r30 c100-119 fg=rule
+r31 c00-19 fg=rule
+r31 c20-59 fg=rule bg=#8d6d4f
+r31 c60-99 fg=rule bg=#68ceec
+r31 c100-119 fg=rule
+r32 c00-119 fg=rule
+r33 c00-119 fg=rule

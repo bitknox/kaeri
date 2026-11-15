@@ -94,7 +94,7 @@ stores-members-of = Membros de { $name }
 stores-members = Membros
 stores-owner-devices = Dono · { $devices }
 stores-member-devices = { $count ->
-    [one] Um { -device }
+    [one] { $count } { -device }
     [many] { $count } { -device-pl }
    *[other] { $count } { -device-pl }
  }
@@ -134,7 +134,7 @@ stores-invite-owner-once = Convites de dono valem uma vez.
 stores-invite-links = Links de convite
 stores-invite-not-used = Ainda não usado
 stores-invite-used = { $used ->
-    [one] Usado uma vez
+    [one] Usado { $used } vez
     [many] Usado { $used } de vezes
    *[other] Usado { $used } vezes
  }
@@ -146,7 +146,7 @@ stores-invite-cancelled-on = Cancelado { $when }
 stores-invite-show-uses = Usos
 stores-invite-joined = { $name } · entrou { $when }
 stores-cancel-invite-detail = { $count ->
-    [one] Ninguém mais pode entrar com ele. A pessoa que entrou continua como membro.
+    [one] Ninguém mais pode entrar com ele. { $count } pessoa que entrou continua como membro.
     [many] Ninguém mais pode entrar com ele. As { $count } de pessoas que entraram continuam como membros.
    *[other] Ninguém mais pode entrar com ele. As { $count } pessoas que entraram continuam como membros.
  }
@@ -160,7 +160,7 @@ stores-who-can-join-title = Quem pode entrar em { $name }
 stores-anyone-with-store-link = Qualquer pessoa com o link da { -plugin-store }
 stores-only-invited = Somente pessoas que você convidar
 stores-devices-joined = { $count ->
-    [one] Um { -device } entrou com o link
+    [one] { $count } { -device } entrou com o link
     [many] { $count } { -device-pl } entraram com o link
    *[other] { $count } { -device-pl } entraram com o link
  }
@@ -175,7 +175,7 @@ stores-plugin-name-version = { $name } { $version }
 stores-remove-all = Remover todos
 stores-copy-link = Copiar link
 stores-offers-plugins = { $count ->
-    [one] Um { -plugin }
+    [one] { $count } { -plugin }
     [many] { $count } { -plugin-pl }
    *[other] { $count } { -plugin-pl }
  }

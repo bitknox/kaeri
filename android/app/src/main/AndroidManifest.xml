@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
 
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
@@ -176,12 +177,14 @@
             android:name=".DownloadJob"
             android:exported="false"
             android:permission="android.permission.BIND_JOB_SERVICE" />
-        <!-- The same below Android 14, as a foreground service: enabled only there. -->
+        <!-- The same below Android 14, as a foreground service: enabled only there, so the
+             FOREGROUND_SERVICE_DATA_SYNC permission lint asks for, Android 14's, never applies. -->
         <service
             android:name=".DownloadService"
             android:enabled="@bool/foreground_fallback"
             android:exported="false"
-            android:foregroundServiceType="dataSync" />
+            android:foregroundServiceType="dataSync"
+            tools:ignore="ForegroundServicePermission" />
         <!-- The app's own update: its download, a user-initiated job as the episodes' is, and what
              the installer says of the session it was handed in, with the notification's Cancel.
              Only the app flavour asks to install packages (src/app/AndroidManifest.xml). -->
@@ -189,11 +192,13 @@
             android:name=".UpdateJob"
             android:exported="false"
             android:permission="android.permission.BIND_JOB_SERVICE" />
+        <!-- Below Android 14 only, as DownloadService, so its data sync permission never applies. -->
         <service
             android:name=".UpdateService"
             android:enabled="@bool/foreground_fallback"
             android:exported="false"
-            android:foregroundServiceType="dataSync" />
+            android:foregroundServiceType="dataSync"
+            tools:ignore="ForegroundServicePermission" />
         <receiver
             android:name=".UpdateReceiver"
             android:exported="false" />

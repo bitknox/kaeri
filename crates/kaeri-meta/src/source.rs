@@ -250,7 +250,8 @@ pub struct Meta {
     titles: crate::titles::Titles,
     anilist: AniList,
     tenrai: Option<std::sync::Arc<Tenrai>>,
-    /// The per-title synopsis fill, when switched on: see [`crate::episode_text`].
+    /// The per-title episode fill (synopses, titles, stills), when switched on: see
+    /// [`crate::episode_text`].
     episode_text: Option<Arc<crate::episode_text::EpisodeText>>,
     store: Store,
     rung: std::sync::Arc<AtomicU8>,

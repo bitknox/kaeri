@@ -35,6 +35,8 @@ pub struct ConfigState {
     /// The engine runs on a phone, not a tablet: what the defaults that depend on the screen's
     /// size go by.
     phone: bool,
+    /// The front end is the terminal app, whose reader settings differ from the apps'.
+    terminal: bool,
     /// The profile's own `profile.toml`, when a profile other than the first is in use: its
     /// shared keys are read over `config.toml`'s and written here instead of there.
     overlay: Option<std::path::PathBuf>,
@@ -59,6 +61,7 @@ impl ConfigState {
             notify_switched_on: 0,
             handheld: false,
             phone: false,
+            terminal: false,
             overlay: None,
             sync: None,
             skip_find_paused: None,
@@ -88,6 +91,16 @@ impl ConfigState {
     /// A phone, as the app said.
     pub fn phone(&self) -> bool {
         self.phone
+    }
+
+    /// Whether the front end is the terminal app, for the reader settings only it shows.
+    pub fn set_terminal(&mut self, terminal: bool) {
+        self.terminal = terminal;
+    }
+
+    /// The terminal app, as the front end said.
+    pub fn terminal(&self) -> bool {
+        self.terminal
     }
 
     /// Tell `store`'s sync log of every shared setting written from here on.

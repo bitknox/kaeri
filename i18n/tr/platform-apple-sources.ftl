@@ -61,3 +61,4 @@ servers-row-summary-apple = { $series ->
     [one] 1 dizi
    *[other] { $series } dizi
  }
+book-picker-message = Kitaplarınızın olduğu bir klasör seçin.

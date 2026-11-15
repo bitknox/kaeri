@@ -1,0 +1,65 @@
+Kaeri   Harbor Light Recipes · Chapter 16            sources ● 3  ·  anilist ⇅ 2
+────────────────────────────────────────────────────────────────────────────────
+
+          End of chapter 16
+          Chapter 16 · The Lantern Fair · 22 pages
+
+
+
+
+          Next  ──────────────────────────────────────────────────────
+
+          ░░░░░░░░░░░░░ ▌ Chapter 16.5 · Side story
+          ░░░░░░░░░░░░░   9 pages · From Home library
+          ░░░░░░░░░░░░░
+          ░░░░░░░░░░░░░   ↵ continue
+          ░░░░░░░░░░░░░
+          ░░░░░░░░░░░░░   Chapter 17 stays unread if skipped.
+          ░░░░░░░░░░░░░
+          ░░░░░░░░░░░░░
+          ░░░░░░░░░░░░░   First page of chapter 16.5
+          ░░░░░░░░░░░░░
+
+────────────────────────────────────────────────────────────────────────────────
+██████████  End of chapter 16         ↵ continue   s skip to chapter 17   ? keys
+=== styles ===
+colours text=#e4e0d6 text-dim=#a8aec9 rule=#46464d obi=#f2a64b state=#7fc7d9 alert=#f59b85 ground=#1a1b26
+r00 c00-04 fg=text mod=BOLD
+r00 c08-27 fg=text
+r00 c28-40 fg=text-dim
+r00 c53-63 fg=state
+r00 c64-65 fg=text-dim
+r00 c66-66 fg=rule
+r00 c67-68 fg=text-dim
+r00 c69-79 fg=state
+r01 c00-79 fg=rule
+r03 c10-26 fg=text mod=BOLD
+r04 c10-49 fg=text-dim
+r09 c10-13 fg=text-dim
+r09 c16-69 fg=rule
+r11 c10-22 fg=rule
+r11 c24-24 fg=obi
+r11 c26-50 fg=text mod=BOLD
+r12 c10-22 fg=rule
+r12 c26-52 fg=text-dim
+r13 c10-22 fg=rule
+r14 c10-22 fg=rule
+r14 c26-26 fg=text
+r14 c27-35 fg=text-dim
+r15 c10-22 fg=rule
+r16 c10-22 fg=rule
+r16 c26-60 fg=text-dim
+r17 c10-22 fg=rule
+r18 c10-22 fg=rule
+r19 c10-22 fg=rule
+r19 c26-51 fg=text-dim
+r20 c10-22 fg=rule
+r22 c00-79 fg=rule
+r23 c00-09 fg=text
+r23 c10-28 fg=text-dim
+r23 c38-38 fg=text
+r23 c39-50 fg=text-dim
+r23 c51-51 fg=text
+r23 c52-73 fg=text-dim
+r23 c74-74 fg=text
+r23 c75-79 fg=text-dim

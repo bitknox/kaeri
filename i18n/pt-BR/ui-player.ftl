@@ -138,7 +138,7 @@ player-resumed-at = Retomado em { $clock }
 player-start-over = Começar do início
 player-still-watching = Ainda está assistindo?
 player-still-watching-detail = { $count ->
-    [one] Pausado após um episódio seguido.
+    [one] Pausado após { $count } episódio seguido.
     [many] Pausado após { $count } episódios seguidos.
    *[other] Pausado após { $count } episódios seguidos.
  }

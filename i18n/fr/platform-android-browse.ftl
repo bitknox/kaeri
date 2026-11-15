@@ -17,7 +17,7 @@ discussion-waiting = En attente d'AniList · { $time }
 discussion-image-host = Image · { $host }
 discussion-video-host = Vidéo · { $host }
 player-more-discussion-note = { $count ->
-    [one] Un commentaire · met en pause
+    [one] { $count } commentaire · met en pause
     [many] { $count } commentaires · met en pause
    *[other] { $count } commentaires · met en pause
  }

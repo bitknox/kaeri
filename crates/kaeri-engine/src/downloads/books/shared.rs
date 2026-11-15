@@ -46,6 +46,8 @@ struct Fetching {
 pub(crate) struct SharedPages {
     /// How many pages the chapter has.
     total: u32,
+    /// Which chapter they are, from which source and series: see [`kept_for`].
+    of: String,
     state: Mutex<Sharing>,
     /// Told when a page lands or a fetch of one ends.
     changed: tokio::sync::Notify,
@@ -355,6 +357,24 @@ fn before_removing(dir: &Path) {
     }
 }
 
+/// What a chapter's kept pages are of: its source, its series there and the source's entries
+/// for it (each part's, for a chapter in parts). Pages are used again only for the same, so a
+/// folder another fetch left, of another series or another source's copy with as many pages,
+/// is never taken into this one. The page addresses are left out: they expire, and a fetch cut
+/// short goes on from its pages whatever addresses it is given next.
+fn kept_for(opened: &Opened) -> String {
+    let mut of = format!("{}\n{}", opened.source_id, opened.series_ref);
+    if opened.parts.is_empty() {
+        of.push('\n');
+        of.push_str(&opened.chapter.id);
+    }
+    for part in &opened.parts {
+        of.push('\n');
+        of.push_str(&part.chapter.id);
+    }
+    of
+}
+
 /// Page `index` did not come, and no other reason is known.
 fn unfetched(index: u32) -> ReadingFailure {
     ReadingFailure::Other { reason: format!("page {index} was not fetched") }
@@ -408,11 +428,12 @@ impl Shares {
         total: u32,
         opened: Opened,
     ) -> std::io::Result<Downloading> {
+        let of = kept_for(&opened);
         let mut list = lock(&self.0);
         list.retain(|(_, p)| p.strong_count() > 0);
         if let Some(live) = find(&list, dir) {
             let mut state = live.state();
-            if live.total == total {
+            if live.total == total && live.of == of {
                 state.let_go = false;
                 state.opened = opened;
                 state.downloads += 1;
@@ -425,7 +446,7 @@ impl Shares {
             drop(state);
             list.retain(|(d, _)| d != dir);
         }
-        let kept = KeptPages::open(dir, total)?;
+        let kept = KeptPages::open(dir, total, &of)?;
         if kept.len() > 0 {
             tracing::info!(kept = kept.len(), total, "a chapter fetch picks up its pages");
         }
@@ -442,6 +463,7 @@ impl Shares {
         };
         let pages = Arc::new(SharedPages {
             total,
+            of,
             state: Mutex::new(state),
             changed: tokio::sync::Notify::new(),
             shares: Arc::clone(&self.0),

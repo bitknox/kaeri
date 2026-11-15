@@ -29,7 +29,7 @@ settings-trackers = { -tracker-cap-pl }
 settings-sync = Synchronisation
 settings-sync-detail = Envoie les changements faits ici et récupère ceux faits ailleurs.
 settings-signed-in-waiting = { $count ->
-    [one] Connecté · un changement en attente
+    [one] Connecté · { $count } changement en attente
     [many] Connecté · { $count } changements en attente
    *[other] Connecté · { $count } changements en attente
  }
@@ -49,7 +49,7 @@ settings-note-cast-tvs-pc = Ils apparaissent sous Chromecast dans Lire sur la TV
 settings-note-torrents-while-casting-pc = Une TV avec Chromecast intégré peut alors lire des torrents. Ce PC envoie l’épisode tant qu’il est en lecture.
 settings-language-restart = Redémarrer
 settings-differences = { $count ->
-    [one] Un titre diffère de { $tracker }
+    [one] { $count } titre diffère de { $tracker }
     [many] { $count } titres diffèrent de { $tracker }
    *[other] { $count } titres diffèrent de { $tracker }
  }

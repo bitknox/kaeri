@@ -21,7 +21,7 @@ settings-watched-downloads = Downloads assistidos
 settings-watched-one = { $episodes } de { $title } · { $size }
 settings-watched-many = { $episodes } · { $size }
 settings-delete-watched-title = { $count ->
-    [one] Excluir um download assistido?
+    [one] Excluir { $count } download assistido?
     [many] Excluir { $count } downloads assistidos?
    *[other] Excluir { $count } downloads assistidos?
  }
@@ -35,20 +35,20 @@ settings-storage-seen-both = Vistos ou lidos
 settings-storage-used = { $size } em downloads.
 settings-storage-used-free = { $size } em downloads. { $free } livres neste { -device }.
 settings-source-count = { $count ->
-    [one] Uma { -source }
+    [one] { $count } { -source }
     [many] { $count } { -source-pl }
    *[other] { $count } { -source-pl }
  }
 settings-accounts-sync-note = O progresso e as mudanças de lista são sincronizados com { $tracker }. A { -library-cap } e a Minha lista do Calendário mostram suas listas de { $tracker }.
 settings-accounts-sync-note-read = O progresso e as mudanças nas listas são sincronizados com { $tracker }. A { -library-cap } mostra suas listas de { $tracker }.
 settings-conflicts = { $count ->
-    [one] Um título difere de { $tracker }
+    [one] { $count } título difere de { $tracker }
     [many] { $count } títulos diferem de { $tracker }
    *[other] { $count } títulos diferem de { $tracker }
  }
 settings-review = Revisar
 settings-changes-waiting = { $count ->
-    [one] Uma mudança aguardando sincronização
+    [one] { $count } mudança aguardando sincronização
     [many] { $count } mudanças aguardando sincronização
    *[other] { $count } mudanças aguardando sincronização
  }
@@ -102,7 +102,7 @@ settings-torrents-value-on = Torrents ligados
 settings-torrents-value-off = Torrents desligados
 settings-seed-ratio-detail = Melhor esforço neste { -device }: só enquanto o { -app-name } estiver aberto
 settings-review-differences = { $count ->
-    [one] Revisar uma diferença
+    [one] Revisar { $count } diferença
     [many] Revisar { $count } diferenças
    *[other] Revisar { $count } diferenças
  }
