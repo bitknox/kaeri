@@ -57,7 +57,7 @@ public sealed partial class SettingsPage : Page
         new("playback", "",
         [
             ("watching", [K.Trailers, K.Translation, K.Quality, K.Subtitles, K.CommitThreshold]),
-            ("player", [K.AutoNext, K.UpNextCountdown, K.SkipOpening, K.SkipRecap, K.SkipFiller, K.MarkChapters, K.SkipButton, K.FindSkipTimes, K.AskWasOpening, K.ShareSkipTimes, K.Fullscreen]),
+            ("player", [K.AutoNext, K.UpNextCountdown, K.PreloadMetered, K.SkipOpening, K.SkipRecap, K.SkipFiller, K.MarkChapters, K.SkipButton, K.FindSkipTimes, K.AskWasOpening, K.ShareSkipTimes, K.Fullscreen]),
             ("picture", [K.Upscaling, K.NightMode, K.SpoilerProtection, K.Motion]),
             // Laid out by SubtitleSettings: the preview and its ten rows.
             ("subtitles", [K.SubtitleSize]),
@@ -155,6 +155,7 @@ public sealed partial class SettingsPage : Page
         K.UpdateBeta => T.UpdatesBeta,
         K.SourceOrder => T.SettingsSourceOrder,
         K.UpNextCountdown => T.SettingsUpNextCountdown,
+        K.PreloadMetered => T.SettingsPreloadMetered,
         K.SpoilerProtection => T.SettingsSpoiler,
         K.ShowFollowing => T.SettingsAnilistFollowing,
         K.DownloadQuality => T.DownloadsQuality,
@@ -1356,7 +1357,11 @@ public sealed partial class SettingsPage : Page
                     card.ClearValue(SettingsCard.DescriptionProperty);
             }
             // A row whose switch is off waits, greyed, as Windows Settings shows a dependent row.
-            card.IsEnabled = SettingsCatalog.Needs(key).All(k => SettingsCatalog.IsOn(ctx.Known.Setting(k)));
+            var needs = SettingsCatalog.Needs(key);
+            card.IsEnabled = needs.All(k => SettingsCatalog.IsOn(ctx.Known.Setting(k)));
+            // Greyed under Auto-play next, the row says what it waits on: its control is the focus stop.
+            if (needs.Contains(K.AutoNext))
+                AutomationProperties.SetHelpText(control, card.IsEnabled ? "" : T.SettingsPreloadA11yDimmed);
         }
         Apply(row);
         refresh.Add(() =>
@@ -1440,6 +1445,9 @@ public sealed partial class SettingsPage : Page
             description = T.SettingsShareSkipsDetail;
         if (row.Key == K.CastTvs)
             description = T.SettingsNoteCastTvsPc;
+        // What warms during the ending, and with torrent playback on, that torrents do the same.
+        if (row.Key == K.PreloadMetered)
+            description = SettingsCatalog.PreloadLine(SettingsCatalog.IsOn(ctx.Known.Setting(K.Torrents)));
         if (row.Key == K.TorrentsWhileCasting)
             description = T.SettingsNoteTorrentsWhileCastingPc;
         // Torrents: where traffic goes while they are on.
