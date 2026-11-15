@@ -452,6 +452,7 @@ public sealed partial class TitlePage : Page, IPageKeys
     protected override void OnNavigatedTo(NavigationEventArgs e)
     {
         base.OnNavigatedTo(e);
+        ctx.Tv.Changed += CastChanged;
         id = openedWith = (uint)e.Parameter;
         var known = ctx.Known.Entry(id) is not null;
         if (!known)
@@ -595,6 +596,7 @@ public sealed partial class TitlePage : Page, IPageKeys
     protected override void OnNavigatedFrom(NavigationEventArgs e)
     {
         base.OnNavigatedFrom(e);
+        ctx.Tv.Changed -= CastChanged;
         // A season picked here changed the title in place: once the frame has put this page on
         // its back stack, its entry is made to say that season, so Back comes to it.
         if (e.NavigationMode != NavigationMode.New || id == openedWith || Frame is not { } frame)
@@ -1021,13 +1023,16 @@ public sealed partial class TitlePage : Page, IPageKeys
             WaitingLine.Visibility = Visibility.Visible;
             PartyItem.IsEnabled = false;
             TvAction.Visibility = Visibility.Collapsed;
+            actionWords = null;
+            CastLineRow.Visibility = Visibility.Collapsed;
             return;
         }
         if (ctx.Known.Episodes.ContainsKey(id))
             AskAvailability(action is { Playable: true });
         // The demo plays in parts: "Play part 1".
         var words = entry.IsDemo && action.Button is not null ? T.TitlePlayPart(action.Episode.ToString()) : action.Button;
-        if (PrimaryAction.Content as string != words)
+        actionWords = words;
+        if (!CastHeld && PrimaryAction.Content as string != words)
             PrimaryAction.Content = words;
         PrimaryAction.Visibility = action.Button is not null ? Visibility.Visible : Visibility.Collapsed;
         WaitingLine.Text = action.Waiting ?? "";
@@ -1040,7 +1045,7 @@ public sealed partial class TitlePage : Page, IPageKeys
         DownloadItem.IsEnabled = table is { } listed && EpisodeSources.Downloadable(listed).Length > 0;
         MarkPreviousItem.IsEnabled = table is { } all && all.Any(r => uint.TryParse(r.Number, out var n) && n < action.Episode && !r.Completed);
         // Play on TV comes and goes with a fade, not a snap of the buttons beside it.
-        var tv = action is { Playable: true } && ctx.Tv.Available;
+        var tv = action is { Playable: true } && ctx.Tv.Available && !CastHeld;
         if (tv != (TvAction.Visibility == Visibility.Visible))
         {
             if (tv)
@@ -1060,6 +1065,62 @@ public sealed partial class TitlePage : Page, IPageKeys
         else
             PrimaryAction.ClearValue(Microsoft.UI.Xaml.Automation.AutomationProperties.NameProperty);
         ShowAvailability();
+        ShowCast();
+    }
+
+    /// <summary>The play words as the action last said them, for the cast glyph to lead.</summary>
+    string? actionWords;
+
+    sealed record CastWords(string Words);
+
+    /// <summary>A TV is held and this plays: the play goes there.</summary>
+    bool CastHeld => ctx.Tv.SessionHeld && action is { Playable: true };
+
+    /// <summary>
+    /// While a TV is held, the main button leads with the cast glyph and the line under the
+    /// actions says where it plays; Play on TV steps aside, as every play goes there.
+    /// </summary>
+    void ShowCast()
+    {
+        var held = CastHeld && actionWords is not null && PrimaryAction.Content is string or StackPanel { Tag: CastWords };
+        if (held)
+        {
+            if (PrimaryAction.Content is not StackPanel { Tag: CastWords said } || said.Words != actionWords)
+            {
+                var label = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 8, Tag = new CastWords(actionWords!) };
+                var glyph = new Casting.CastGlyph(16, Ui.Res<Microsoft.UI.Xaml.Media.Brush>("AccentButtonForeground"));
+                glyph.Show(Kaeri.App.CastButtonState.Connected);
+                label.Children.Add(glyph);
+                label.Children.Add(new TextBlock { Text = actionWords });
+                PrimaryAction.Content = label;
+                Microsoft.UI.Xaml.Automation.AutomationProperties.SetName(PrimaryAction, actionWords);
+            }
+            var line = T.CastPlaysOn(ctx.Tv.SessionName);
+            if (CastLineText.Text != line)
+                CastLineText.Text = line;
+            CastLineRow.Visibility = Visibility.Visible;
+            if (TvAction.Visibility == Visibility.Visible)
+                Motion.Hide(TvAction);
+            return;
+        }
+        if (PrimaryAction.Content is StackPanel { Tag: CastWords })
+        {
+            PrimaryAction.Content = actionWords;
+            PrimaryAction.ClearValue(Microsoft.UI.Xaml.Automation.AutomationProperties.NameProperty);
+        }
+        CastLineRow.Visibility = Visibility.Collapsed;
+        if (actionWords is null)
+            return;
+        var tv = action is { Playable: true } && ctx.Tv.Available;
+        if (tv && TvAction.Visibility == Visibility.Collapsed && PrimaryAction.Visibility == Visibility.Visible)
+            Motion.Show(TvAction);
+    }
+
+    /// <summary>The TV was held or let go: the action follows.</summary>
+    void CastChanged()
+    {
+        if (action is not null)
+            ShowCast();
     }
 
     static StackPanel ExternalLabel(string text, string service)

@@ -109,10 +109,13 @@
           </StackPanel>
         </NavigationViewItem>
       </NavigationView.FooterMenuItems>
-      <Grid>
+      <!-- The page pane. The cast's mini takes the last row while something plays on the TV, on
+           every page; its controller grows from it over the whole pane (Casting/CastLayer). -->
+      <Grid x:Name="PaneGrid">
         <Grid.RowDefinitions>
           <RowDefinition Height="Auto" />
           <RowDefinition Height="*" />
+          <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
         <!-- While in a party: where it is and a way back to it, above every page but Together. -->
         <Grid x:Name="PartyBar" Visibility="Collapsed" Background="{ThemeResource RaisedBrush}" Padding="20,8,20,8" ColumnSpacing="12"

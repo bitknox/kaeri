@@ -1578,7 +1578,38 @@ public sealed partial class MainWindow : Window
             return;
         }
         if (HoldForDownloads())
+        {
             args.Cancel = true;
+            return;
+        }
+        // The TV plays on with the window closed: Kaeri waits in the notification area.
+        if (CastKeepsGoing)
+        {
+            args.Cancel = true;
+            KeepGoingHidden();
+        }
+    }
+
+    /// <summary>Something plays on the TV this PC holds: closing the window keeps it going.</summary>
+    bool CastKeepsGoing => tv.SessionLoaded && tv.Session?.Item is not null;
+
+    /// <summary>
+    /// The icon's Quit: while the TV plays, asked first, as quitting stops it there; otherwise at
+    /// once.
+    /// </summary>
+    async void QuitFromTray()
+    {
+        if (!CastKeepsGoing)
+        {
+            CloseNow();
+            return;
+        }
+        ShowAgain();
+        var title = tv.Drawn()?.Title is { Length: > 0 } shown ? shown : tv.SessionPlay?.Title ?? "";
+        if (!await Ui.Confirm(Root.XamlRoot, T.CastQuitTitle, T.CastQuitBody(title, tv.SessionName), T.CastQuitAction))
+            return;
+        tv.DisconnectCast();
+        CloseNow();
     }
 
     /// <summary>
@@ -1665,12 +1696,15 @@ public sealed partial class MainWindow : Window
             Open = () => ui.TryEnqueue(ShowAgain),
             PauseAll = () => ui.TryEnqueue(() => trayPaused.UnionWith(ctx.PauseAllDownloads())),
             ResumeAll = () => ui.TryEnqueue(ctx.ResumeAllDownloads),
-            Quit = () => ui.TryEnqueue(CloseNow),
+            Quit = () => ui.TryEnqueue(QuitFromTray),
             AnyRunning = () => ctx.Known.Downloads.Any(r => r.State is DownloadState.Active or DownloadState.Queued),
             AnyPaused = () => ctx.Known.Downloads.Any(r => r.State is DownloadState.Paused),
         };
-        var told = Path.Combine(dirs.Config, "windows-told-tray");
-        tray.Show(tell: !File.Exists(told));
+        // Told once for downloads and once for a cast, each in its own words.
+        var casting = CastKeepsGoing;
+        var told = Path.Combine(dirs.Config, casting ? "windows-told-tray-cast" : "windows-told-tray");
+        tray.Show(tell: !File.Exists(told), casting ? T.CastNotificationLine(tv.SessionName) : null);
+        BrowseForButton(false);
         // Told again next time when it can't be kept: harmless.
         SmallFiles.Write(told, "");
         keepGoing?.Stop();
@@ -1681,7 +1715,7 @@ public sealed partial class MainWindow : Window
             var (d, s) = ctx.Known.Running();
             // Paused from the icon: still there to resume, so Kaeri stays for them.
             trayPaused.IntersectWith(ctx.Known.Downloads.Where(r => r.State is DownloadState.Paused or DownloadState.Active or DownloadState.Queued).Select(r => r.Id));
-            if (d + s == 0 && !ctx.Known.Downloads.Any(r => r.State is DownloadState.Paused && trayPaused.Contains(r.Id)))
+            if (d + s == 0 && !ctx.Known.Downloads.Any(r => r.State is DownloadState.Paused && trayPaused.Contains(r.Id)) && !CastKeepsGoing)
                 CloseNow();
         };
         keepGoing.Start();
@@ -1926,6 +1960,8 @@ public sealed partial class MainWindow : Window
         tray?.Hide();
         AppWindow.Show(true);
         Activate();
+        if (tvSender is not null)
+            BrowseForButton(true);
     }
 
     internal void CloseNow()

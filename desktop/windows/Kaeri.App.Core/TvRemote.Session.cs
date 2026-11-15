@@ -223,6 +223,17 @@ public sealed partial class TvRemote
         Say();
     }
 
+    /// <summary>
+    /// A TV running Kaeri chosen from the title bar's menu: what the player here plays goes to
+    /// it, as Play on TV would send it; a TV not paired yet starts pairing.
+    /// </summary>
+    public void ChooseTv(FfiTvRow row)
+    {
+        Request ??= PlayingHere?.Invoke();
+        Problem = null;
+        Choose(row);
+    }
+
     /// <summary>Stop casting: what plays on the TV stops, and the TV is let go.</summary>
     public void DisconnectCast()
     {
