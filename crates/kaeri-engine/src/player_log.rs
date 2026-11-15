@@ -434,6 +434,19 @@ impl PlayerLog {
         }
     }
 
+    /// Forget every playback, here and in the mirror.
+    #[cfg(any(test, feature = "testing"))]
+    fn clear(&self, now_ms: i64) {
+        let mut state = self.state();
+        state.load(now_ms);
+        state.ring = Ring::default();
+        state.changes += 1;
+        let State { ring, mirror, .. } = &mut *state;
+        if let Some(mirror) = mirror.as_mut().filter(|mirror| !mirror.broken) {
+            mirror.rewrite(ring);
+        }
+    }
+
     /// Remember strings the engine has seen to be private, for the text to remove.
     pub fn remember(&self, private: impl IntoIterator<Item = String>) {
         let mut state = self.state();
@@ -603,6 +616,69 @@ pub fn stats() -> PlayerLogStats {
             file_name: file_name(now_ms(), &TimeZone::system()),
             ..Default::default()
         },
+    }
+}
+
+/// For the Fixtures apps: the process's log holds `playbacks` made-up playbacks of Stardust
+/// Wayfarer, about 100 kB each, the newest ending in a playback error, and nothing else. Zero
+/// leaves it empty, as before anything has played. Installs the log when no layer has.
+#[cfg(any(test, feature = "testing"))]
+pub fn seed_fixture(playbacks: u32) {
+    let log = LOG.get_or_init(Arc::default);
+    let now = now_ms();
+    log.clear(now);
+    fixture_into(log, playbacks, now);
+}
+
+#[cfg(any(test, feature = "testing"))]
+fn fixture_into(log: &PlayerLog, playbacks: u32, now: i64) {
+    const STATUS_LINES: i64 = 1_000;
+    for n in 0..i64::from(playbacks) {
+        let episode = (n + 1).to_string();
+        // Two hours apart, the newest ending a few minutes ago.
+        let start = now - (i64::from(playbacks) - n) * 7_200_000;
+        log.begin(&episode, &["Stardust Wayfarer".to_owned()], start);
+        let at = |second: i64| start + second * 1_000;
+        let info = Severity::Info;
+        log.line(at(0), info, "player", &format!("staging episode {episode}"));
+        log.line(
+            at(1),
+            info,
+            "resolve",
+            "picked a 1080p release from fixtures.example, 3 found",
+        );
+        log.line(at(1), info, "proxy", "serving the stream at http://127.0.0.1:41234/stream");
+        log.line(at(2), info, "mpv", "video: h264 1920x1080 23.976 fps");
+        log.line(at(2), info, "mpv", "audio: aac 2ch 48000 Hz, Japanese");
+        log.line(at(2), info, "mpv", "subtitles: ass, English");
+        for second in 0..STATUS_LINES {
+            let clock = format!("{:02}:{:02}", second / 60, second % 60);
+            let cache = 20 + second % 11;
+            log.line(
+                at(3 + second),
+                info,
+                "mpv",
+                &format!(
+                    "AV: 00:{clock} / 00:23:40 ({}%) A-V: 0.000 Dropped: 0 Cache: {cache}s/{}MB                      speed 1.00x",
+                    second * 100 / 1_420,
+                    cache + 6,
+                ),
+            );
+            if second % 250 == 249 {
+                log.line(
+                    at(3 + second),
+                    Severity::Warn,
+                    "mpv",
+                    "cache ran dry, buffering 1.4s",
+                );
+            }
+        }
+        let end = at(4 + STATUS_LINES);
+        if n + 1 == i64::from(playbacks) {
+            log.line(end, Severity::Error, "player", "the stream stopped: connection reset");
+        } else {
+            log.line(end, info, "player", "played to the end");
+        }
     }
 }
 
@@ -1085,5 +1161,21 @@ mod tests {
         assert_eq!(first.bytes, log.text(&BugReport::default(), &utc(), T0).len() as u64);
         line(&log, T0, "two");
         assert!(log.stats(&utc(), T0).bytes > first.bytes);
+    }
+
+    #[test]
+    fn the_fixture_fills_the_row_and_says_the_title_nowhere() {
+        let log = PlayerLog::new();
+        fixture_into(&log, 3, T0);
+        let stats = log.stats(&utc(), T0);
+        assert_eq!(stats.playbacks, 3);
+        assert!((200_000..600_000).contains(&stats.bytes), "{}", stats.bytes);
+        let text = log.text(&BugReport::default(), &utc(), T0);
+        assert!(!text.contains("Stardust"), "titles are removed");
+        assert!(!text.contains("127.0.0.1"), "addresses are cut");
+        assert!(text.contains("── Playback 1 of 3 · Episode 3"), "newest first");
+        assert!(text.contains("the stream stopped"));
+        log.clear(T0);
+        assert_eq!(log.stats(&utc(), T0).playbacks, 0, "zero is the empty state");
     }
 }
