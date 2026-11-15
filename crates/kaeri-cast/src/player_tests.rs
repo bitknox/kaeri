@@ -165,13 +165,17 @@ async fn next(
     want: impl Fn(&PlaybackEvent) -> bool,
 ) -> PlaybackEvent {
     let deadline = tokio::time::Instant::now() + Duration::from_secs(15);
+    let mut seen = Vec::new();
     loop {
         let event = tokio::time::timeout_at(deadline, rx.recv())
             .await
-            .expect("the event in time")
+            .unwrap_or_else(|_| panic!("the event in time; heard only {seen:?}"))
             .expect("the player still there");
         if want(&event) {
             return event;
+        }
+        if !matches!(event, PlaybackEvent::Progress { .. }) {
+            seen.push(event);
         }
     }
 }
@@ -1145,8 +1149,10 @@ async fn controls_show_at_once_and_the_duration_outlives_statuses_without_the_me
     pause.await.unwrap();
     next(&mut events, |e| *e == PlaybackEvent::Paused(true)).await;
 
-    player.seek(120.0, true).await.unwrap();
-    assert!((player.current().position - 120.0).abs() < 2.0);
+    // Inside the 20 s file the remuxed playlist describes, with time to spare after it resumes:
+    // past its end, the resume could hear the file finish before it plays.
+    player.seek(8.0, true).await.unwrap();
+    assert!((player.current().position - 8.0).abs() < 2.0);
     receiver.buffer(true);
     next(&mut events, |e| *e == PlaybackEvent::Buffering(true)).await;
     receiver.buffer(false);
@@ -1158,8 +1164,9 @@ async fn controls_show_at_once_and_the_duration_outlives_statuses_without_the_me
     assert_eq!(now.metadata.map(|m| m.series).as_deref(), Some("A Made-up Show"));
     watching.abort();
     player.quit().await.unwrap();
+    // The watch keeps only the newest status, so a busy machine sees fewer of them.
     let seen = lock(&seen).clone();
-    assert!(seen.len() >= 4, "{seen:?}");
+    assert!(!seen.is_empty(), "{seen:?}");
     let playing = seen.iter().filter(|(state, ..)| {
         matches!(state, CastState::Playing | CastState::Paused | CastState::Buffering)
     });
