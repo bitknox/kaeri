@@ -1323,7 +1323,6 @@
     <string name="engine_down_stopped">Nada novo vai carregar até ele voltar a funcionar. Tente de novo ou feche e abra o app mais uma vez.</string>
     <string name="engine_down_quit">Sair</string>
     <string name="settings_picture_in_picture_system_off">Desativado no Android</string>
-    <string name="settings_trailers_note_android">Os trailers tocam sem som pelo YouTube, que vê seu endereço IP. Eles não tocam com a Economia de dados ou a Economia de bateria ativada, nem com as animações removidas.</string>
     <string name="about_title">Sobre</string>
     <string name="about_title_app">Sobre o Kaeri</string>
     <string name="about_version">Versão %1$s</string>

@@ -34,8 +34,3 @@ engine-down-quit = Quit
 # @only android
 # @max 32
 settings-picture-in-picture-system-off = Off in Android settings
-
-# Note under the Play trailers setting on Android: what the trailers are and when they do not play.
-# @only android
-# @max 240
-settings-trailers-note-android = Trailers play muted from YouTube, which sees your IP address. They don't play with Data Saver or Battery Saver on, or with animations removed.

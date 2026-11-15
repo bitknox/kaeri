@@ -4433,7 +4433,7 @@ settings-label-calendar-mine = カレンダーにあなたのリストの作品�
 settings-note-titles = AniListの選択は、AniListアカウントの設定に従います。サインアウト中は英語になります。
 
 # Note under the trailers row. The terminal never plays trailers by itself; the setting is shared with the apps.
-settings-note-trailers = アプリでは作品ページとホバー時のプレビューで予告編をミュート再生します。ターミナルは設定を保持しますが、再生はしません。
+settings-note-trailers = デスクトップアプリでは、ホバープレビューで予告編をミュートで再生します。ターミナルでは設定を保持しますが、予告編は再生しません。
 
 # Note under the subtitles row.
 settings-note-subtitles = Enterキーを押すと言語コードを入力できます。選択肢が多いため、順に切り替えることはできません。

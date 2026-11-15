@@ -1193,7 +1193,6 @@
     <string name="engine_down_stopped">Tidak ada yang baru dimuat sampai aplikasi berjalan lagi. Coba lagi, atau tutup dan buka aplikasi sekali lagi.</string>
     <string name="engine_down_quit">Tutup</string>
     <string name="settings_picture_in_picture_system_off">Nonaktif di setelan Android</string>
-    <string name="settings_trailers_note_android">Trailer diputar tanpa suara dari YouTube, yang melihat alamat IP kamu. Trailer tidak diputar saat Penghemat Data atau Penghemat Baterai aktif, atau saat animasi dihapus.</string>
     <string name="about_title">Tentang</string>
     <string name="about_title_app">Tentang Kaeri</string>
     <string name="about_version">Versi %1$s</string>

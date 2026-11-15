@@ -1258,7 +1258,6 @@
     <string name="engine_down_stopped">Bis es wieder läuft, lädt nichts Neues. Versuche es erneut oder beende die App und öffne sie noch einmal.</string>
     <string name="engine_down_quit">Beenden</string>
     <string name="settings_picture_in_picture_system_off">In den Android-Einstellungen aus</string>
-    <string name="settings_trailers_note_android">Trailer laufen stumm von YouTube, das deine IP-Adresse sieht. Mit Datensparmodus, Energiesparmodus oder entfernten Animationen laufen sie nicht.</string>
     <string name="about_title">Über</string>
     <string name="about_title_app">Über Kaeri</string>
     <string name="about_version">Version %1$s</string>

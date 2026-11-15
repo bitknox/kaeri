@@ -4559,7 +4559,7 @@ settings-label-calendar-mine = Il calendario mostra solo la tua lista
 settings-note-titles = La scelta di AniList segue il tuo account AniList. Senza accesso, è l'inglese.
 
 # Note under the trailers row. The terminal never plays trailers by itself; the setting is shared with the apps.
-settings-note-trailers = Le app riproducono i trailer senza audio nelle pagine dei titoli e nelle anteprime al passaggio del puntatore. Il terminale conserva l'impostazione e non ne riproduce nessuno.
+settings-note-trailers = Le app desktop riproducono i trailer senza audio nelle anteprime al passaggio del mouse. Il terminale conserva l'impostazione e non ne riproduce nessuno.
 
 # Note under the subtitles row.
 settings-note-subtitles = Premi Invio per digitare un codice lingua. Ci sono troppi valori da scorrere.

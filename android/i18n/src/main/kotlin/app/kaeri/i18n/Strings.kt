@@ -4877,10 +4877,6 @@ object Strings {
     fun settingsPictureInPictureSystemOff(context: Context): String =
         context.getString(R.string.settings_picture_in_picture_system_off)
 
-    /** Note under the Play trailers setting on Android: what the trailers are and when they do not play. */
-    fun settingsTrailersNoteAndroid(context: Context): String =
-        context.getString(R.string.settings_trailers_note_android)
-
     /** Title of the about page. */
     fun aboutTitle(context: Context): String =
         context.getString(R.string.about_title)

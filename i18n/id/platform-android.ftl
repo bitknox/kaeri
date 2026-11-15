@@ -7,4 +7,3 @@ engine-down-title = { -app-name } berhenti
 engine-down-stopped = Tidak ada yang baru dimuat sampai aplikasi berjalan lagi. Coba lagi, atau tutup dan buka aplikasi sekali lagi.
 engine-down-quit = Tutup
 settings-picture-in-picture-system-off = Nonaktif di setelan Android
-settings-trailers-note-android = Trailer diputar tanpa suara dari YouTube, yang melihat alamat IP kamu. Trailer tidak diputar saat Penghemat Data atau Penghemat Baterai aktif, atau saat animasi dihapus.

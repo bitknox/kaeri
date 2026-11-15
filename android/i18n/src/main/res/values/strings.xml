@@ -2661,8 +2661,6 @@
     <string name="engine_down_quit">Quit</string>
     <!-- Words in place of the Picture in picture when leaving the app switch, when Android's own per-app Picture in picture permission is off. An Open settings button sits beside it. -->
     <string name="settings_picture_in_picture_system_off">Off in Android settings</string>
-    <!-- Note under the Play trailers setting on Android: what the trailers are and when they do not play. -->
-    <string name="settings_trailers_note_android">Trailers play muted from YouTube, which sees your IP address. They don\'t play with Data Saver or Battery Saver on, or with animations removed.</string>
     <!-- Title of the about page. -->
     <string name="about_title">About</string>
     <!-- Title of the about page on desktop. -->

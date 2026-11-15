@@ -1193,7 +1193,6 @@
     <string name="engine_down_stopped">再び動き出すまで、新しい内容は読み込まれません。もう一度試すか、アプリを終了してから開き直してください。</string>
     <string name="engine_down_quit">終了</string>
     <string name="settings_picture_in_picture_system_off">Android の設定でオフ</string>
-    <string name="settings_trailers_note_android">予告編は YouTube からミュートで再生され、YouTube には IP アドレスが見えます。データセーバーやバッテリー セーバーがオンのとき、アニメーションを削除しているときは再生されません。</string>
     <string name="about_title">概要</string>
     <string name="about_title_app">Kaeriについて</string>
     <string name="about_version">バージョン %1$s</string>

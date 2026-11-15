@@ -1321,7 +1321,6 @@
     <string name="engine_down_stopped">Non si carica nulla di nuovo finché non riparte. Riprova, oppure chiudi e riapri l\'app.</string>
     <string name="engine_down_quit">Chiudi</string>
     <string name="settings_picture_in_picture_system_off">Disattivato in Android</string>
-    <string name="settings_trailers_note_android">I trailer vengono riprodotti senza audio da YouTube, che vede il tuo indirizzo IP. Non partono con Risparmio dati o Risparmio energetico attivi, o con le animazioni rimosse.</string>
     <string name="about_title">Info</string>
     <string name="about_title_app">Info su Kaeri</string>
     <string name="about_version">Versione %1$s</string>

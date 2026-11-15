@@ -4496,7 +4496,7 @@ settings-label-calendar-mine = Kalendern visar bara din lista
 settings-note-titles = AniLists val följer ditt AniList-konto och är engelska när du är utloggad.
 
 # Note under the trailers row. The terminal never plays trailers by itself; the setting is shared with the apps.
-settings-note-trailers = Apparna spelar trailrar utan ljud på titelsidor och i förhandsvisningar när pekaren vilar. Terminalen behåller inställningen och spelar inga.
+settings-note-trailers = Skrivbordsapparna spelar trailers utan ljud i förhandsvisningar när du pekar på en titel. Terminalen sparar inställningen men spelar inga.
 
 # Note under the subtitles row.
 settings-note-subtitles = Tryck på Enter för att skriva en språkkod. Det finns för många värden att bläddra i.
