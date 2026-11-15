@@ -364,8 +364,10 @@ impl CastHub {
         *lock(&self.receiver) = receiver.filter(|r| !r.trim().is_empty());
     }
 
+    /// The receiver app to launch in place of Kaeri's own: `KAERI_CAST_RECEIVER_APP` in a
+    /// build that honours it ([`dev_receiver`]), else the config's `cast.receiver`.
     pub fn receiver(&self) -> Option<String> {
-        lock(&self.receiver).clone()
+        dev_receiver().or_else(|| lock(&self.receiver).clone())
     }
 
     /// What a cast to `device` is set up with.
@@ -1302,5 +1304,54 @@ impl Upstream for HttpUpstream {
             .bytes_stream()
             .map(|chunk| chunk.map(|bytes| bytes.to_vec()).map_err(io::Error::other));
         Ok(UpstreamResponse { status, headers, body: Box::pin(body), url: landed })
+    }
+}
+
+/// The environment variable that names a development receiver app (the "Kaeri test" receiver on
+/// the tunnel) in place of Kaeri's own.
+pub const DEV_RECEIVER_ENV: &str = "KAERI_CAST_RECEIVER_APP";
+
+/// `KAERI_CAST_RECEIVER_APP`, in the builds that honour it: the engine's tests and the Fixtures
+/// and QA apps (`testing`), and the terminal (`dev-receiver`). A release app build never reads
+/// it, so nothing on a viewer's machine can point their TV at another page.
+#[cfg(any(feature = "testing", feature = "dev-receiver"))]
+pub fn dev_receiver() -> Option<String> {
+    dev_receiver_from(std::env::var(DEV_RECEIVER_ENV).ok())
+}
+
+/// Release app builds: never.
+#[cfg(not(any(feature = "testing", feature = "dev-receiver")))]
+pub fn dev_receiver() -> Option<String> {
+    None
+}
+
+/// A Cast app ID as the variable gives it: eight hex digits, upper case. Anything else is
+/// ignored, with a warning, so a typo falls back to Kaeri's own receiver.
+#[cfg_attr(not(any(test, feature = "testing", feature = "dev-receiver")), allow(dead_code))]
+fn dev_receiver_from(value: Option<String>) -> Option<String> {
+    let value = value?.trim().to_ascii_uppercase();
+    if value.is_empty() {
+        return None;
+    }
+    if value.len() == 8 && value.chars().all(|c| c.is_ascii_hexdigit()) {
+        tracing::info!(receiver = %value, "launching the receiver {DEV_RECEIVER_ENV} names");
+        Some(value)
+    } else {
+        tracing::warn!("{DEV_RECEIVER_ENV} is no Cast app ID; Kaeri's own receiver launches");
+        None
+    }
+}
+
+#[cfg(test)]
+mod dev_receiver_tests {
+    use super::dev_receiver_from;
+
+    #[test]
+    fn takes_an_app_id_and_ignores_anything_else() {
+        assert_eq!(dev_receiver_from(Some(" 0a1b2c3d ".into())).as_deref(), Some("0A1B2C3D"));
+        assert_eq!(dev_receiver_from(None), None);
+        assert_eq!(dev_receiver_from(Some(String::new())), None);
+        assert_eq!(dev_receiver_from(Some("https://receiver.example/".into())), None);
+        assert_eq!(dev_receiver_from(Some("0A1B2C3".into())), None);
     }
 }
