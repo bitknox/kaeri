@@ -334,6 +334,9 @@ struct State {
     stats: Option<(u64, PlayerLogStats)>,
     /// Counts every change to what the stats are worked out from.
     changes: u64,
+    /// A private playback is under way: nothing is kept until a playback that is not private
+    /// begins. Never written to the mirror.
+    held: bool,
 }
 
 impl State {
@@ -408,6 +411,7 @@ impl PlayerLog {
             titles.iter().map(|t| flat(t.trim())).filter(|t| !t.is_empty()).collect();
         let episode = flat(episode.trim());
         let record = begin_record(now_ms, &episode, &titles);
+        state.held = false;
         state.ring.begin(now_ms, episode, titles);
         state.changes += 1;
         let State { ring, mirror, .. } = &mut *state;
@@ -416,10 +420,19 @@ impl PlayerLog {
         }
     }
 
+    /// A private playback starts: it is not kept, its titles go nowhere, and no line is kept
+    /// until a playback that is not private begins.
+    pub fn hold(&self) {
+        self.state().held = true;
+    }
+
     /// Keep one line, its addresses cut, under the playback under way. Nothing is kept before
-    /// the first playback.
+    /// the first playback, nor while a private one plays.
     fn line(&self, at_ms: i64, severity: Severity, source: &str, text: &str) {
         let mut state = self.state();
+        if state.held {
+            return;
+        }
         state.load(at_ms);
         let text: String = cut_addresses(text).chars().take(LINE_CHARS).collect();
         let line = Line { at_ms, severity, source: source.to_owned(), text };
@@ -590,8 +603,20 @@ pub fn mirror_to(dir: &Path) {
     }
 }
 
-/// A playback of `episode` of `title` starts, with the episode's own name when it has one.
-pub fn begin(episode: &str, title: &str, episode_title: Option<&str>) {
+/// A playback of `episode` of `title` starts, with the episode's own name when it has one. A
+/// `private` one is held: see [`PlayerLog::hold`]. Its names are also left out of every log
+/// from now on, before any line of it is written.
+pub fn begin(episode: &str, title: &str, episode_title: Option<&str>, private: bool) {
+    if private {
+        crate::private::redact::word(title);
+        if let Some(episode_title) = episode_title {
+            crate::private::redact::word(episode_title);
+        }
+        if let Some(log) = LOG.get() {
+            log.hold();
+        }
+        return;
+    }
     if let Some(log) = LOG.get() {
         let titles: Vec<String> =
             std::iter::once(title).chain(episode_title).map(str::to_owned).collect();
@@ -872,7 +897,14 @@ impl<S: Subscriber> Layer<S> for Keeper {
             },
             target => source_of(target),
         };
-        self.log.line(now_ms(), severity, source, &said.text());
+        // Private mode's redaction first, as the file and stderr layers have it: nothing while a
+        // private play or read is open, and the private words and ids learnt taken out of the
+        // rest.
+        if crate::private::redact::active() {
+            return;
+        }
+        let text = crate::private::redact::line(&said.text());
+        self.log.line(now_ms(), severity, source, &text);
     }
 }
 
@@ -1068,6 +1100,48 @@ mod tests {
         assert_eq!(log.stats(&utc(), T0).playbacks, 0);
         let file = std::fs::read_to_string(dir.path().join(FILE)).unwrap();
         assert_eq!(file, format!("{HEADER}\n"));
+    }
+
+    #[test]
+    fn a_private_playback_keeps_neither_its_title_nor_its_lines() {
+        let dir = tempfile::tempdir().expect("a temporary directory");
+        let log = PlayerLog::new();
+        log.mirror_to(dir.path(), T0);
+        log.begin("3", &["Moonlit Harbor".into()], T0);
+        line(&log, T0 + 1, "opened in 40 ms");
+        // The private playback: held, as the free `begin` holds it.
+        log.hold();
+        line(&log, T0 + 2_000, "Playing: /media/Hidden Lantern Garden/02.mkv");
+        line(&log, T0 + 2_001, "title=Hidden Lantern Garden");
+        let kept = texts(&log);
+        assert_eq!(kept.len(), 1, "the private playback is not kept");
+        assert_eq!(kept[0].lines.len(), 1);
+        let report = BugReport::default();
+        let text = log.text(&report, &utc(), T0 + 3_000);
+        assert!(!text.contains("Hidden Lantern Garden"), "{text}");
+        let file = std::fs::read_to_string(dir.path().join(FILE)).unwrap_or_default();
+        assert!(!file.contains("Hidden Lantern Garden"), "{file}");
+        // The next playback that is not private is kept again.
+        log.begin("4", &["Moonlit Harbor".into()], T0 + 4_000);
+        line(&log, T0 + 4_001, "opened in 35 ms");
+        assert_eq!(texts(&log).len(), 2);
+    }
+
+    #[test]
+    fn the_layer_takes_out_what_private_mode_has_learnt() {
+        // A word only this test teaches the process's redactor.
+        crate::private::redact::word("Quiet Bellflower Annex");
+        let log = Arc::new(PlayerLog::new());
+        let subscriber = tracing_subscriber::registry()
+            .with(Keeper { log: Arc::clone(&log) }.with_filter(filter_fn(wanted)));
+        tracing::subscriber::with_default(subscriber, || {
+            log.begin("2", &[], T0);
+            tracing::info!(target: "app", source = "mpv", "[cplayer] title: Quiet Bellflower Annex 02");
+        });
+        let kept = &texts(&log)[0];
+        assert_eq!(kept.lines.len(), 1);
+        assert!(!kept.lines[0].message.contains("Bellflower"), "{}", kept.lines[0].message);
+        assert!(kept.lines[0].message.contains(crate::private::redact::HIDDEN));
     }
 
     #[test]
