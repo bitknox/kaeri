@@ -1,0 +1,141 @@
+{
+  "messages": {
+    "receiver-error": [
+      "Tidak dapat memutar episode ",
+      {
+        "arg": "episode"
+      }
+    ],
+    "receiver-error-hint-computer": [
+      "Pilih sumber lain di komputer."
+    ],
+    "receiver-error-hint-ipad": [
+      "Pilih sumber lain di iPad."
+    ],
+    "receiver-error-hint-iphone": [
+      "Pilih sumber lain di iPhone."
+    ],
+    "receiver-error-hint-mac": [
+      "Pilih sumber lain di Mac."
+    ],
+    "receiver-error-hint-phone": [
+      "Pilih sumber lain di ponsel."
+    ],
+    "receiver-error-hint-tablet": [
+      "Pilih sumber lain di tablet."
+    ],
+    "receiver-error-unnumbered": [
+      "Tidak dapat memutar episode ini"
+    ],
+    "receiver-finished": [
+      "Episode ",
+      {
+        "arg": "episode"
+      },
+      " selesai"
+    ],
+    "receiver-finished-unnumbered": [
+      "Selesai"
+    ],
+    "receiver-paused": [
+      "Dijeda"
+    ],
+    "receiver-plain-subs": [
+      "Subtitel tampil sebagai teks biasa di TV ini."
+    ],
+    "receiver-ready-computer": [
+      "Siap. Pilih episode di komputer."
+    ],
+    "receiver-ready-ipad": [
+      "Siap. Pilih episode di iPad."
+    ],
+    "receiver-ready-iphone": [
+      "Siap. Pilih episode di iPhone."
+    ],
+    "receiver-ready-mac": [
+      "Siap. Pilih episode di Mac."
+    ],
+    "receiver-ready-phone": [
+      "Siap. Pilih episode di ponsel."
+    ],
+    "receiver-ready-tablet": [
+      "Siap. Pilih episode di tablet."
+    ],
+    "receiver-sender-gone-computer": [
+      "Menunggu komputer"
+    ],
+    "receiver-sender-gone-hint-computer": [
+      "Buka Kaeri di komputer untuk lanjut menonton."
+    ],
+    "receiver-sender-gone-hint-ipad": [
+      "Buka Kaeri di iPad untuk lanjut menonton."
+    ],
+    "receiver-sender-gone-hint-iphone": [
+      "Buka Kaeri di iPhone untuk lanjut menonton."
+    ],
+    "receiver-sender-gone-hint-mac": [
+      "Buka Kaeri di Mac untuk lanjut menonton."
+    ],
+    "receiver-sender-gone-hint-phone": [
+      "Buka Kaeri di ponsel untuk lanjut menonton."
+    ],
+    "receiver-sender-gone-hint-tablet": [
+      "Buka Kaeri di tablet untuk lanjut menonton."
+    ],
+    "receiver-sender-gone-ipad": [
+      "Menunggu iPad"
+    ],
+    "receiver-sender-gone-iphone": [
+      "Menunggu iPhone"
+    ],
+    "receiver-sender-gone-mac": [
+      "Menunggu Mac"
+    ],
+    "receiver-sender-gone-phone": [
+      "Menunggu ponsel"
+    ],
+    "receiver-sender-gone-tablet": [
+      "Menunggu tablet"
+    ],
+    "receiver-skipped-ending": [
+      "Penutup dilewati"
+    ],
+    "receiver-skipped-opening": [
+      "Pembukaan dilewati"
+    ],
+    "receiver-starting": [
+      "Memulai"
+    ],
+    "receiver-up-next": [
+      "Berikutnya · diputar dalam ",
+      {
+        "arg": "seconds"
+      },
+      " dtk"
+    ],
+    "receiver-up-next-numbered": [
+      "Episode ",
+      {
+        "arg": "episode"
+      }
+    ],
+    "receiver-up-next-titled": [
+      "Episode ",
+      {
+        "arg": "episode"
+      },
+      " · ",
+      {
+        "arg": "title"
+      }
+    ],
+    "receiver-waiting": [
+      "Menunggu stream · ",
+      {
+        "arg": "seconds"
+      },
+      " dtk"
+    ]
+  },
+  "tag": "id"
+}

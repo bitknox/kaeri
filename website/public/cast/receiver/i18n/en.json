@@ -1,0 +1,140 @@
+{
+  "messages": {
+    "receiver-error": [
+      "Couldn't play episode ",
+      {
+        "arg": "episode"
+      }
+    ],
+    "receiver-error-hint-computer": [
+      "Choose another source on the computer."
+    ],
+    "receiver-error-hint-ipad": [
+      "Choose another source on the iPad."
+    ],
+    "receiver-error-hint-iphone": [
+      "Choose another source on the iPhone."
+    ],
+    "receiver-error-hint-mac": [
+      "Choose another source on the Mac."
+    ],
+    "receiver-error-hint-phone": [
+      "Choose another source on the phone."
+    ],
+    "receiver-error-hint-tablet": [
+      "Choose another source on the tablet."
+    ],
+    "receiver-error-unnumbered": [
+      "Couldn't play this episode"
+    ],
+    "receiver-finished": [
+      "Finished episode ",
+      {
+        "arg": "episode"
+      }
+    ],
+    "receiver-finished-unnumbered": [
+      "Finished"
+    ],
+    "receiver-paused": [
+      "Paused"
+    ],
+    "receiver-plain-subs": [
+      "Subtitles show as plain text on this TV."
+    ],
+    "receiver-ready-computer": [
+      "Ready. Choose an episode on the computer."
+    ],
+    "receiver-ready-ipad": [
+      "Ready. Choose an episode on the iPad."
+    ],
+    "receiver-ready-iphone": [
+      "Ready. Choose an episode on the iPhone."
+    ],
+    "receiver-ready-mac": [
+      "Ready. Choose an episode on the Mac."
+    ],
+    "receiver-ready-phone": [
+      "Ready. Choose an episode on the phone."
+    ],
+    "receiver-ready-tablet": [
+      "Ready. Choose an episode on the tablet."
+    ],
+    "receiver-sender-gone-computer": [
+      "Waiting for the computer"
+    ],
+    "receiver-sender-gone-hint-computer": [
+      "Open Kaeri on the computer to keep watching."
+    ],
+    "receiver-sender-gone-hint-ipad": [
+      "Open Kaeri on the iPad to keep watching."
+    ],
+    "receiver-sender-gone-hint-iphone": [
+      "Open Kaeri on the iPhone to keep watching."
+    ],
+    "receiver-sender-gone-hint-mac": [
+      "Open Kaeri on the Mac to keep watching."
+    ],
+    "receiver-sender-gone-hint-phone": [
+      "Open Kaeri on the phone to keep watching."
+    ],
+    "receiver-sender-gone-hint-tablet": [
+      "Open Kaeri on the tablet to keep watching."
+    ],
+    "receiver-sender-gone-ipad": [
+      "Waiting for the iPad"
+    ],
+    "receiver-sender-gone-iphone": [
+      "Waiting for the iPhone"
+    ],
+    "receiver-sender-gone-mac": [
+      "Waiting for the Mac"
+    ],
+    "receiver-sender-gone-phone": [
+      "Waiting for the phone"
+    ],
+    "receiver-sender-gone-tablet": [
+      "Waiting for the tablet"
+    ],
+    "receiver-skipped-ending": [
+      "Skipped ending"
+    ],
+    "receiver-skipped-opening": [
+      "Skipped opening"
+    ],
+    "receiver-starting": [
+      "Starting"
+    ],
+    "receiver-up-next": [
+      "Up next · plays in ",
+      {
+        "arg": "seconds"
+      },
+      " s"
+    ],
+    "receiver-up-next-numbered": [
+      "Episode ",
+      {
+        "arg": "episode"
+      }
+    ],
+    "receiver-up-next-titled": [
+      "Episode ",
+      {
+        "arg": "episode"
+      },
+      " · ",
+      {
+        "arg": "title"
+      }
+    ],
+    "receiver-waiting": [
+      "Waiting for the stream · ",
+      {
+        "arg": "seconds"
+      },
+      " s"
+    ]
+  },
+  "tag": "en"
+}

@@ -1,0 +1,141 @@
+{
+  "messages": {
+    "receiver-error": [
+      "Erro ao reproduzir o episódio ",
+      {
+        "arg": "episode"
+      }
+    ],
+    "receiver-error-hint-computer": [
+      "Escolha outra fonte no computador."
+    ],
+    "receiver-error-hint-ipad": [
+      "Escolha outra fonte no iPad."
+    ],
+    "receiver-error-hint-iphone": [
+      "Escolha outra fonte no iPhone."
+    ],
+    "receiver-error-hint-mac": [
+      "Escolha outra fonte no Mac."
+    ],
+    "receiver-error-hint-phone": [
+      "Escolha outra fonte no celular."
+    ],
+    "receiver-error-hint-tablet": [
+      "Escolha outra fonte no tablet."
+    ],
+    "receiver-error-unnumbered": [
+      "Erro ao reproduzir este episódio"
+    ],
+    "receiver-finished": [
+      "Episódio ",
+      {
+        "arg": "episode"
+      },
+      " terminado"
+    ],
+    "receiver-finished-unnumbered": [
+      "Terminado"
+    ],
+    "receiver-paused": [
+      "Pausado"
+    ],
+    "receiver-plain-subs": [
+      "As legendas aparecem como texto simples nesta TV."
+    ],
+    "receiver-ready-computer": [
+      "Pronto. Escolha um episódio no computador."
+    ],
+    "receiver-ready-ipad": [
+      "Pronto. Escolha um episódio no iPad."
+    ],
+    "receiver-ready-iphone": [
+      "Pronto. Escolha um episódio no iPhone."
+    ],
+    "receiver-ready-mac": [
+      "Pronto. Escolha um episódio no Mac."
+    ],
+    "receiver-ready-phone": [
+      "Pronto. Escolha um episódio no celular."
+    ],
+    "receiver-ready-tablet": [
+      "Pronto. Escolha um episódio no tablet."
+    ],
+    "receiver-sender-gone-computer": [
+      "Aguardando o computador"
+    ],
+    "receiver-sender-gone-hint-computer": [
+      "Abra o Kaeri no computador para voltar a assistir."
+    ],
+    "receiver-sender-gone-hint-ipad": [
+      "Abra o Kaeri no iPad para voltar a assistir."
+    ],
+    "receiver-sender-gone-hint-iphone": [
+      "Abra o Kaeri no iPhone para voltar a assistir."
+    ],
+    "receiver-sender-gone-hint-mac": [
+      "Abra o Kaeri no Mac para voltar a assistir."
+    ],
+    "receiver-sender-gone-hint-phone": [
+      "Abra o Kaeri no celular para voltar a assistir."
+    ],
+    "receiver-sender-gone-hint-tablet": [
+      "Abra o Kaeri no tablet para voltar a assistir."
+    ],
+    "receiver-sender-gone-ipad": [
+      "Aguardando o iPad"
+    ],
+    "receiver-sender-gone-iphone": [
+      "Aguardando o iPhone"
+    ],
+    "receiver-sender-gone-mac": [
+      "Aguardando o Mac"
+    ],
+    "receiver-sender-gone-phone": [
+      "Aguardando o celular"
+    ],
+    "receiver-sender-gone-tablet": [
+      "Aguardando o tablet"
+    ],
+    "receiver-skipped-ending": [
+      "Encerramento pulado"
+    ],
+    "receiver-skipped-opening": [
+      "Abertura pulada"
+    ],
+    "receiver-starting": [
+      "Iniciando"
+    ],
+    "receiver-up-next": [
+      "Próximo · começa em ",
+      {
+        "arg": "seconds"
+      },
+      " s"
+    ],
+    "receiver-up-next-numbered": [
+      "Episódio ",
+      {
+        "arg": "episode"
+      }
+    ],
+    "receiver-up-next-titled": [
+      "Episódio ",
+      {
+        "arg": "episode"
+      },
+      " · ",
+      {
+        "arg": "title"
+      }
+    ],
+    "receiver-waiting": [
+      "Aguardando a transmissão · ",
+      {
+        "arg": "seconds"
+      },
+      " s"
+    ]
+  },
+  "tag": "pt-BR"
+}

@@ -1,0 +1,140 @@
+{
+  "messages": {
+    "receiver-error": [
+      "Nie udało się odtworzyć odcinka ",
+      {
+        "arg": "episode"
+      }
+    ],
+    "receiver-error-hint-computer": [
+      "Wybierz inne źródło na komputerze."
+    ],
+    "receiver-error-hint-ipad": [
+      "Wybierz inne źródło na iPadzie."
+    ],
+    "receiver-error-hint-iphone": [
+      "Wybierz inne źródło na iPhonie."
+    ],
+    "receiver-error-hint-mac": [
+      "Wybierz inne źródło na Macu."
+    ],
+    "receiver-error-hint-phone": [
+      "Wybierz inne źródło na telefonie."
+    ],
+    "receiver-error-hint-tablet": [
+      "Wybierz inne źródło na tablecie."
+    ],
+    "receiver-error-unnumbered": [
+      "Nie udało się odtworzyć tego odcinka"
+    ],
+    "receiver-finished": [
+      "Koniec odcinka ",
+      {
+        "arg": "episode"
+      }
+    ],
+    "receiver-finished-unnumbered": [
+      "Koniec"
+    ],
+    "receiver-paused": [
+      "Wstrzymano"
+    ],
+    "receiver-plain-subs": [
+      "Napisy na tym telewizorze są wyświetlane jako zwykły tekst."
+    ],
+    "receiver-ready-computer": [
+      "Gotowe. Wybierz odcinek na komputerze."
+    ],
+    "receiver-ready-ipad": [
+      "Gotowe. Wybierz odcinek na iPadzie."
+    ],
+    "receiver-ready-iphone": [
+      "Gotowe. Wybierz odcinek na iPhonie."
+    ],
+    "receiver-ready-mac": [
+      "Gotowe. Wybierz odcinek na Macu."
+    ],
+    "receiver-ready-phone": [
+      "Gotowe. Wybierz odcinek na telefonie."
+    ],
+    "receiver-ready-tablet": [
+      "Gotowe. Wybierz odcinek na tablecie."
+    ],
+    "receiver-sender-gone-computer": [
+      "Oczekiwanie na komputer"
+    ],
+    "receiver-sender-gone-hint-computer": [
+      "Otwórz Kaeri na komputerze, aby wznowić oglądanie."
+    ],
+    "receiver-sender-gone-hint-ipad": [
+      "Otwórz Kaeri na iPadzie, aby wznowić oglądanie."
+    ],
+    "receiver-sender-gone-hint-iphone": [
+      "Otwórz Kaeri na iPhonie, aby wznowić oglądanie."
+    ],
+    "receiver-sender-gone-hint-mac": [
+      "Otwórz Kaeri na Macu, aby wznowić oglądanie."
+    ],
+    "receiver-sender-gone-hint-phone": [
+      "Otwórz Kaeri na telefonie, aby wznowić oglądanie."
+    ],
+    "receiver-sender-gone-hint-tablet": [
+      "Otwórz Kaeri na tablecie, aby wznowić oglądanie."
+    ],
+    "receiver-sender-gone-ipad": [
+      "Oczekiwanie na iPada"
+    ],
+    "receiver-sender-gone-iphone": [
+      "Oczekiwanie na iPhone’a"
+    ],
+    "receiver-sender-gone-mac": [
+      "Oczekiwanie na Maca"
+    ],
+    "receiver-sender-gone-phone": [
+      "Oczekiwanie na telefon"
+    ],
+    "receiver-sender-gone-tablet": [
+      "Oczekiwanie na tablet"
+    ],
+    "receiver-skipped-ending": [
+      "Pominięto zakończenie"
+    ],
+    "receiver-skipped-opening": [
+      "Pominięto czołówkę"
+    ],
+    "receiver-starting": [
+      "Uruchamianie"
+    ],
+    "receiver-up-next": [
+      "Następny · start za ",
+      {
+        "arg": "seconds"
+      },
+      " s"
+    ],
+    "receiver-up-next-numbered": [
+      "Odcinek ",
+      {
+        "arg": "episode"
+      }
+    ],
+    "receiver-up-next-titled": [
+      "Odcinek ",
+      {
+        "arg": "episode"
+      },
+      " · ",
+      {
+        "arg": "title"
+      }
+    ],
+    "receiver-waiting": [
+      "Oczekiwanie na strumień · ",
+      {
+        "arg": "seconds"
+      },
+      " s"
+    ]
+  },
+  "tag": "pl"
+}

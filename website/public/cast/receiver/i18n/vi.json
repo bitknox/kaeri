@@ -1,0 +1,140 @@
+{
+  "messages": {
+    "receiver-error": [
+      "Không phát được tập ",
+      {
+        "arg": "episode"
+      }
+    ],
+    "receiver-error-hint-computer": [
+      "Hãy chọn nguồn khác trên máy tính."
+    ],
+    "receiver-error-hint-ipad": [
+      "Hãy chọn nguồn khác trên iPad."
+    ],
+    "receiver-error-hint-iphone": [
+      "Hãy chọn nguồn khác trên iPhone."
+    ],
+    "receiver-error-hint-mac": [
+      "Hãy chọn nguồn khác trên Mac."
+    ],
+    "receiver-error-hint-phone": [
+      "Hãy chọn nguồn khác trên điện thoại."
+    ],
+    "receiver-error-hint-tablet": [
+      "Hãy chọn nguồn khác trên máy tính bảng."
+    ],
+    "receiver-error-unnumbered": [
+      "Không phát được tập này"
+    ],
+    "receiver-finished": [
+      "Đã xem xong tập ",
+      {
+        "arg": "episode"
+      }
+    ],
+    "receiver-finished-unnumbered": [
+      "Đã xong"
+    ],
+    "receiver-paused": [
+      "Đã tạm dừng"
+    ],
+    "receiver-plain-subs": [
+      "Phụ đề hiện dưới dạng văn bản thường trên TV này."
+    ],
+    "receiver-ready-computer": [
+      "Đã sẵn sàng. Hãy chọn một tập trên máy tính."
+    ],
+    "receiver-ready-ipad": [
+      "Đã sẵn sàng. Hãy chọn một tập trên iPad."
+    ],
+    "receiver-ready-iphone": [
+      "Đã sẵn sàng. Hãy chọn một tập trên iPhone."
+    ],
+    "receiver-ready-mac": [
+      "Đã sẵn sàng. Hãy chọn một tập trên Mac."
+    ],
+    "receiver-ready-phone": [
+      "Đã sẵn sàng. Hãy chọn một tập trên điện thoại."
+    ],
+    "receiver-ready-tablet": [
+      "Đã sẵn sàng. Hãy chọn một tập trên máy tính bảng."
+    ],
+    "receiver-sender-gone-computer": [
+      "Đang chờ máy tính"
+    ],
+    "receiver-sender-gone-hint-computer": [
+      "Mở Kaeri trên máy tính để xem nốt."
+    ],
+    "receiver-sender-gone-hint-ipad": [
+      "Mở Kaeri trên iPad để xem nốt."
+    ],
+    "receiver-sender-gone-hint-iphone": [
+      "Mở Kaeri trên iPhone để xem nốt."
+    ],
+    "receiver-sender-gone-hint-mac": [
+      "Mở Kaeri trên Mac để xem nốt."
+    ],
+    "receiver-sender-gone-hint-phone": [
+      "Mở Kaeri trên điện thoại để xem nốt."
+    ],
+    "receiver-sender-gone-hint-tablet": [
+      "Mở Kaeri trên máy tính bảng để xem nốt."
+    ],
+    "receiver-sender-gone-ipad": [
+      "Đang chờ iPad"
+    ],
+    "receiver-sender-gone-iphone": [
+      "Đang chờ iPhone"
+    ],
+    "receiver-sender-gone-mac": [
+      "Đang chờ Mac"
+    ],
+    "receiver-sender-gone-phone": [
+      "Đang chờ điện thoại"
+    ],
+    "receiver-sender-gone-tablet": [
+      "Đang chờ máy tính bảng"
+    ],
+    "receiver-skipped-ending": [
+      "Đã bỏ qua phần kết"
+    ],
+    "receiver-skipped-opening": [
+      "Đã bỏ qua phần mở đầu"
+    ],
+    "receiver-starting": [
+      "Đang bắt đầu"
+    ],
+    "receiver-up-next": [
+      "Tiếp theo · phát sau ",
+      {
+        "arg": "seconds"
+      },
+      " giây"
+    ],
+    "receiver-up-next-numbered": [
+      "Tập ",
+      {
+        "arg": "episode"
+      }
+    ],
+    "receiver-up-next-titled": [
+      "Tập ",
+      {
+        "arg": "episode"
+      },
+      " · ",
+      {
+        "arg": "title"
+      }
+    ],
+    "receiver-waiting": [
+      "Đang chờ luồng phát · ",
+      {
+        "arg": "seconds"
+      },
+      " giây"
+    ]
+  },
+  "tag": "vi"
+}

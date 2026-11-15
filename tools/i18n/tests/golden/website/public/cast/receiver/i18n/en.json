@@ -1,0 +1,15 @@
+{
+  "messages": {
+    "receiver-error-hint": [
+      "Choose another source."
+    ],
+    "receiver-waiting": [
+      "Waiting for the stream · ",
+      {
+        "arg": "seconds"
+      },
+      " s"
+    ]
+  },
+  "tag": "en"
+}

@@ -20,9 +20,13 @@ pub enum Platform {
     Windows,
     Linux,
     Tui,
+    /// The Cast receiver page on the website. Its messages live in `receiver-*.ftl` and reach no
+    /// app.
+    Receiver,
 }
 
 impl Platform {
+    /// The apps, whose code `lint-code` scans.
     pub const ALL: [Platform; 5] =
         [Platform::Apple, Platform::Android, Platform::Windows, Platform::Linux, Platform::Tui];
 
@@ -33,11 +37,12 @@ impl Platform {
             Platform::Windows => "windows",
             Platform::Linux => "linux",
             Platform::Tui => "tui",
+            Platform::Receiver => "receiver",
         }
     }
 
     pub fn parse(text: &str) -> Option<Platform> {
-        Platform::ALL.into_iter().find(|p| p.name() == text)
+        Platform::ALL.into_iter().chain([Platform::Receiver]).find(|p| p.name() == text)
     }
 }
 
@@ -566,7 +571,9 @@ pub fn parse_file(
         // `platform-tui.ftl`, or `platform-tui-stores.ftl` when one platform's strings are split by screen.
         .map(|p| p.split('-').next().unwrap_or(p))
         .map(|p| Platform::parse(p).ok_or_else(|| anyhow!("{group}.ftl: no platform {p}")))
-        .transpose()?;
+        .transpose()?
+        // `receiver-cast.ftl`: the Cast receiver page's strings, which no app shows.
+        .or_else(|| group.starts_with("receiver-").then_some(Platform::Receiver));
     for entry in &resource.body {
         match entry {
             ast::Entry::Message(m) => {

@@ -1,0 +1,430 @@
+/* Kaeri's Cast receiver. Drawn at 1280 x 720 CSS px, the viewport a 1080p TV gives the page;
+   #ui is scaled to other viewports. Dark by design: the TV is the only light in the room. */
+
+:root {
+	--ground: #0e1022;
+	--text: #e4e0d6;
+	--muted: #a3a9c4;
+	--card: rgba(34, 38, 56, 0.94);
+	--card-edge: rgba(228, 224, 214, 0.08);
+	--accent: #7fc7d9;
+	--shade: 10, 12, 26;
+	--ui: 'Inter Variable', Inter, 'Zen Kaku Gothic New', system-ui, sans-serif;
+	--show: 'Zen Kaku Gothic New', 'Inter Variable', sans-serif;
+	--in: 200ms cubic-bezier(0, 0, 0.58, 1);
+	--out: 300ms cubic-bezier(0.42, 0, 1, 1);
+	--s: 1;
+	color-scheme: dark;
+}
+
+html,
+body {
+	margin: 0;
+	height: 100%;
+	overflow: hidden;
+	background: var(--ground);
+	color: var(--text);
+	font-family: var(--ui);
+	-webkit-font-smoothing: antialiased;
+	cursor: none;
+}
+
+#stage {
+	position: fixed;
+	top: 0;
+	right: 0;
+	bottom: 0;
+	left: 0;
+	background: #000;
+	opacity: 0;
+	transition: opacity var(--out);
+}
+#stage.on {
+	opacity: 1;
+	transition: opacity var(--in);
+}
+#video {
+	position: absolute;
+	top: 0;
+	right: 0;
+	bottom: 0;
+	left: 0;
+	width: 100%;
+	height: 100%;
+	object-fit: contain;
+	background: #000;
+}
+/* JASSUB draws on the canvas it puts after the video; the WebVTT twin stays loaded but hidden. */
+html.typeset #video::cue {
+	visibility: hidden;
+}
+#still {
+	position: fixed;
+	top: 0;
+	right: 0;
+	bottom: 0;
+	left: 0;
+	width: 100%;
+	height: 100%;
+	object-fit: contain;
+	display: none;
+}
+#still.on {
+	display: block;
+}
+
+#ui {
+	position: fixed;
+	left: 0;
+	top: 0;
+	width: 1280px;
+	height: 720px;
+	transform-origin: 0 0;
+	transform: translate(var(--x, 0), var(--y, 0)) scale(var(--s));
+	pointer-events: none;
+}
+
+/* Everything that comes and goes crossfades. */
+#ui > * {
+	opacity: 0;
+	transition: opacity var(--out);
+}
+#ui > .on {
+	opacity: 1;
+	transition: opacity var(--in);
+}
+.layer {
+	position: absolute;
+	top: 0;
+	right: 0;
+	bottom: 0;
+	left: 0;
+}
+
+#art img {
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+	display: block;
+}
+#art.on {
+	opacity: var(--art, 0.4);
+}
+
+#dim {
+	background: rgba(var(--shade), var(--dim, 0.45));
+}
+
+.wm {
+	font-family: var(--show);
+	font-weight: 700;
+	letter-spacing: 0.02em;
+	color: var(--text);
+}
+.tt {
+	font-family: var(--show);
+	font-weight: 700;
+	font-size: 40px;
+	line-height: 48px;
+	overflow-wrap: anywhere;
+}
+.mark {
+	position: absolute;
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	font-size: 20px;
+	line-height: 26px;
+	color: var(--muted);
+}
+.card {
+	position: absolute;
+	border-radius: 16px;
+	background: var(--card);
+	box-shadow: inset 0 0 0 1px var(--card-edge);
+}
+.rspin {
+	box-sizing: border-box;
+	display: block;
+	width: 40px;
+	height: 40px;
+	border-radius: 50%;
+	border: 4px solid rgba(228, 224, 214, 0.18);
+	border-top-color: var(--text);
+	animation: spin 0.9s linear infinite;
+}
+@keyframes spin {
+	to {
+		transform: rotate(360deg);
+	}
+}
+
+/* Ready: the wordmark and one line, drifting a few pixels a minute against burn-in. */
+#ready {
+	position: absolute;
+	left: 0;
+	right: 0;
+	top: 300px;
+	text-align: center;
+}
+#ready .wm {
+	font-size: 72px;
+	line-height: 84px;
+}
+#ready .line {
+	margin-top: 18px;
+	font-size: 26px;
+	line-height: 34px;
+	color: var(--muted);
+	opacity: 0;
+	transition: opacity var(--in);
+}
+#ready .line.on {
+	opacity: 1;
+}
+.drift {
+	animation: drift 1440s linear infinite;
+}
+@keyframes drift {
+	0% { transform: translate(0, 0); }
+	25% { transform: translate(36px, -18px); }
+	50% { transform: translate(0, -36px); }
+	75% { transform: translate(-36px, -18px); }
+	100% { transform: translate(0, 0); }
+}
+
+/* The overlay: the show, the episode, the seek line and times. While starting, the line and
+   times give way to Starting. */
+#ov .scrim {
+	position: absolute;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	height: 300px;
+	background: linear-gradient(to top, rgba(var(--shade), 0.88), rgba(var(--shade), 0));
+}
+#ov .ov {
+	position: absolute;
+	left: 64px;
+	right: 64px;
+	bottom: 48px;
+	display: flex;
+	flex-direction: column;
+	gap: 10px;
+}
+#ov .el {
+	font-size: 22px;
+	line-height: 30px;
+	color: var(--muted);
+}
+#ov .rsk {
+	position: relative;
+	height: 6px;
+	border-radius: 3px;
+	background: rgba(228, 224, 214, 0.22);
+	margin-top: 14px;
+}
+#ov .rsk i {
+	position: absolute;
+	left: 0;
+	top: 0;
+	bottom: 0;
+	border-radius: 3px;
+	background: var(--text);
+	width: 0;
+}
+#ov .rtimes {
+	display: flex;
+	justify-content: space-between;
+	font-size: 20px;
+	line-height: 26px;
+	color: var(--muted);
+	font-variant-numeric: tabular-nums;
+}
+#starting {
+	position: static;
+	margin-top: 18px;
+	opacity: 0;
+	transition: opacity var(--in);
+}
+#starting .rspin {
+	width: 28px;
+	height: 28px;
+	border-width: 3px;
+}
+#starting.on {
+	opacity: 1;
+}
+#ui[data-phase='loading'] #ov-bar,
+#ui[data-phase='loading'] #ov-times {
+	display: none;
+}
+#ui:not([data-phase='loading']) #starting {
+	display: none;
+}
+
+#paused {
+	left: 64px;
+	top: 48px;
+	color: var(--text);
+	font-size: 26px;
+	line-height: 34px;
+	gap: 14px;
+}
+
+#spin {
+	position: absolute;
+	left: 612px;
+	top: 332px;
+	width: 56px;
+	height: 56px;
+}
+#waiting {
+	left: 64px;
+	bottom: 48px;
+	font-size: 24px;
+	line-height: 30px;
+}
+
+#upnext {
+	right: 64px;
+	bottom: 56px;
+	width: 404px;
+	padding: 18px;
+	display: flex;
+	flex-direction: column;
+	gap: 14px;
+}
+#upnext .still,
+#finished .still {
+	overflow: hidden;
+	background: rgba(228, 224, 214, 0.06);
+}
+#upnext .still {
+	width: 404px;
+	height: 227px;
+	border-radius: 10px;
+}
+.still img {
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+	display: block;
+}
+.still img:not([src]),
+.still img[src=''] {
+	visibility: hidden;
+}
+#upnext .count {
+	font-size: 22px;
+	line-height: 28px;
+	color: var(--accent);
+	font-variant-numeric: tabular-nums;
+}
+#upnext .tt {
+	font-size: 30px;
+	line-height: 38px;
+}
+
+#skipped {
+	right: 64px;
+	top: 48px;
+	padding: 14px 22px;
+	display: flex;
+	align-items: center;
+	gap: 12px;
+	font-size: 24px;
+	line-height: 30px;
+}
+
+#plain {
+	left: 64px;
+	top: 48px;
+	padding: 14px 22px;
+	font-size: 22px;
+	line-height: 28px;
+	color: var(--muted);
+}
+
+#gone {
+	left: 290px;
+	right: 290px;
+	top: 250px;
+	padding: 36px 44px;
+	display: flex;
+	flex-direction: column;
+	gap: 12px;
+	align-items: center;
+	text-align: center;
+}
+#gone .tt {
+	font-family: var(--ui);
+	font-weight: 600;
+	font-size: 36px;
+	line-height: 44px;
+}
+#gone .hint,
+#error .show,
+#error .hint {
+	font-size: 24px;
+	line-height: 32px;
+}
+#gone .hint,
+#error .show {
+	color: var(--muted);
+}
+
+#error {
+	left: 240px;
+	right: 240px;
+	top: 230px;
+	padding: 40px 44px;
+	display: flex;
+	flex-direction: column;
+	gap: 14px;
+}
+#error .tt {
+	font-size: 36px;
+	line-height: 44px;
+}
+
+#finished {
+	position: absolute;
+	top: 0;
+	right: 0;
+	bottom: 0;
+	left: 0;
+}
+#finished .still {
+	position: absolute;
+	left: 96px;
+	top: 200px;
+	width: 560px;
+	height: 315px;
+	border-radius: 14px;
+}
+#finished .text {
+	position: absolute;
+	left: 700px;
+	top: 250px;
+	right: 96px;
+	display: flex;
+	flex-direction: column;
+	gap: 12px;
+}
+#finished .line {
+	font-size: 28px;
+	line-height: 36px;
+}
+#finished .mark {
+	right: 56px;
+	bottom: 40px;
+	font-size: 28px;
+	line-height: 34px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.rspin {
+		animation-duration: 2.4s;
+	}
+}

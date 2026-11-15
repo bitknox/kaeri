@@ -10,6 +10,7 @@ pub mod lint;
 pub mod msg;
 pub mod plural;
 pub mod pseudo;
+pub mod receiver;
 pub mod rust;
 pub mod ship;
 pub mod util;
@@ -32,6 +33,7 @@ pub fn generate_all(cat: &Catalogue, mode: Mode) -> Result<Files> {
     files.extend(windows::generate(cat, mode)?);
     files.extend(rust::generate(cat, mode)?);
     files.extend(msg::generate(cat)?);
+    files.extend(receiver::generate(cat, mode)?);
     Ok(files)
 }
 
@@ -64,6 +66,7 @@ pub fn owned_on_disk(root: &Path) -> Vec<String> {
         p.file_name().is_some_and(|n| n == "Resources.resw")
     });
     visit("crates/kaeri-i18n/ftl", &|p| p.extension().is_some_and(|e| e == "ftl"));
+    visit(receiver::DIR, &|p| p.extension().is_some_and(|e| e == "json"));
     found
 }
 
