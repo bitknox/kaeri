@@ -373,10 +373,14 @@ pub fn open(ctx: &Rc<Ctx>) {
     dialog.present(Some(&ctx.window));
 }
 
+/// Puts the open sheet's Player log in a shot's state.
+#[cfg(feature = "fixtures")]
+type Stager = Box<dyn Fn(&str)>;
+
 #[cfg(feature = "fixtures")]
 thread_local! {
     /// The open sheet's Player log, for the shots to put in a state.
-    static STAGE: RefCell<Option<Box<dyn Fn(&str)>>> = RefCell::new(None);
+    static STAGE: RefCell<Option<Stager>> = RefCell::new(None);
 }
 
 /// For the shots: tick the open sheet's Player log and put it in `state`: `ticked`, `sent`
