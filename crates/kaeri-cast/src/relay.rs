@@ -263,6 +263,12 @@ impl Relay {
         format!("{}/u/{}", self.shared.base, encode(upstream))
     }
 
+    /// `text`, a playlist fetched from `base`, with its addresses pointed back through the
+    /// relay; their origins are allowed from now.
+    pub fn relay_playlist(&self, text: &str, base: &str) -> String {
+        rewrite_playlist(text, base, &|u| self.upstream_url(u))
+    }
+
     /// The headers every upstream request carries from now on.
     pub fn set_headers(&self, headers: Vec<(String, String)>) {
         *lock(&self.shared.headers) = headers;

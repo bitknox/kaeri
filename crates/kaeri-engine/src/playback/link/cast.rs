@@ -247,6 +247,7 @@ impl PlayerLink for CastLink {
                         Some("ja".to_owned())
                     },
                     audio_track: None,
+                    audio_memory: file.audio_memory.clone(),
                 }
             }
             // Not told what it is: played as a stream from its address alone.
@@ -260,6 +261,7 @@ impl PlayerLink for CastLink {
                 subtitle: None,
                 audio_language: None,
                 audio_track: None,
+                audio_memory: None,
             },
         };
         self.player.load(load);
@@ -487,6 +489,7 @@ mod tests {
             image: None,
             subtitle_language: None,
             dub: false,
+            audio_memory: None,
         };
         assert_eq!(episode_line(&file, None), "Episode 4");
         file.episode_title = Some(String::new());
@@ -711,6 +714,7 @@ mod tests {
             image: None,
             subtitle_language: None,
             dub: false,
+            audio_memory: None,
         };
         assert_eq!(episode_line(&file, None), "Episode 3 · Low Tide");
         // A language the build lacks reads as English rather than failing.
