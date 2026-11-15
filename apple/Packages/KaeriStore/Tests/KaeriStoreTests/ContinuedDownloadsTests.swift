@@ -244,9 +244,11 @@ private final class Harness {
         let window = FakeWindow()
         h.continued.update(chapters: chapters(.queued).rows)
         h.continued.began(window, rows: [])
+        // The window says the queued chapter as it opens; its failure closes it without another word.
+        let said = window.reports.count
         h.continued.update(chapters: chapters(.failed(failure: .offline)).rows)
         #expect(window.ended == true)
-        #expect(window.reports.isEmpty, "closed rather than reported")
+        #expect(window.reports.count == said, "closed rather than reported")
     }
 
     @Test func theStoreHandsTheEnginesChapterDownloadsToTheWindow() {
