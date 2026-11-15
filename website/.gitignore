@@ -31,3 +31,7 @@ dist-pseudo/
 public/cast/receiver/app.js
 public/cast/receiver/vendor/
 public/cast/receiver/fonts/
+public/cast/receiver/pcm/worker.js
+public/cast/receiver/pcm/worklet.js
+# Test media for the receiver's formats check, made by scripts/cast-receiver/test-media.ts
+.cast-media/

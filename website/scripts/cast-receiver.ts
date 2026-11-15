@@ -5,6 +5,10 @@
 //   app.js           the receiver, from src/cast-receiver/
 //   vendor/jassub/   JASSUB for typeset subtitles, as separate files with their notices
 //   fonts/           Inter and Zen Kaku Gothic New, self-served, with fonts.css
+//   pcm/worker.js    the audio decoders' worker and the AudioWorklet, from src/cast-receiver/formats/
+//   pcm/worklet.js
+// The audio decoders themselves (pcm/<family>.js and .wasm, FFmpeg's under the LGPL) are committed:
+// scripts/cast-receiver/pcm/build.sh makes them with Emscripten, which the site build doesn't have.
 // `bun run build` and `bun run dev` run it first.
 import { execSync } from 'node:child_process';
 import { copyFileSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
@@ -60,6 +64,13 @@ async function receiver() {
 	});
 }
 
+async function pcm() {
+	const dir = join(out, 'pcm');
+	mkdirSync(dir, { recursive: true });
+	await bundle(join(site, 'src/cast-receiver/formats/pcm-worker.ts'), join(dir, 'worker.js'));
+	await bundle(join(site, 'src/cast-receiver/formats/pcm-worklet.ts'), join(dir, 'worklet.js'));
+}
+
 async function jassub() {
 	const pkg = join(modules, 'jassub');
 	const dir = join(out, 'vendor/jassub');
@@ -102,6 +113,7 @@ function fonts() {
 
 mkdirSync(out, { recursive: true });
 await receiver();
+await pcm();
 await jassub();
 fonts();
 console.log(`cast receiver built into ${out}`);

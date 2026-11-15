@@ -12,7 +12,8 @@
     "test": "bun test src",
     "build:pseudo": "bun scripts/pseudo.ts && SITE_PSEUDO=1 astro build --outDir dist-pseudo",
     "cast-receiver": "bun scripts/cast-receiver.ts",
-    "cast-receiver:check": "bun scripts/cast-receiver-check.ts"
+    "cast-receiver:check": "bun scripts/cast-receiver-check.ts",
+    "cast-receiver:formats": "bun scripts/cast-receiver.ts && bun scripts/cast-receiver-formats-check.ts"
   },
   "dependencies": {
     "@astrojs/starlight": "^0.42.6",
