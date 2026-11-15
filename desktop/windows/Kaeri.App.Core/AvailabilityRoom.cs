@@ -35,14 +35,44 @@ public static class AvailabilityLine
     };
 
     /// <summary>
-    /// What the room shows <paramref name="waited"/> after the wait started, with the answer the
-    /// page has for the title, if any. An answer on screen stays while the title is asked again.
+    /// Whether the episodes say no source plays the title: their first row is AniList's alone.
+    /// Null rows, not yet known, say nothing.
     /// </summary>
-    public static AvailabilityRoom Room(TitleAvailability? answer, TimeSpan waited) => answer switch
+    public static bool Unlisted(EpisodeRow[]? rows) => rows is [{ MetadataOnly: true }, ..];
+
+    /// <summary>Whether an answer is for a title some source plays here.</summary>
+    public static bool PlaysHere(TitleAvailability answer) =>
+        answer.Case is AvailabilityCase.PlaysHere or AvailabilityCase.PlaysAlsoOn;
+
+    /// <summary>
+    /// The answer that counts: one for what the page knows of its sources, <paramref name="playsHere"/>
+    /// (null while the episodes are not known), or after <see cref="WaitFor"/> whatever answer there
+    /// is. An answer for what the page no longer holds true, kept from before, does not count.
+    /// </summary>
+    public static TitleAvailability? Counted(TitleAvailability? answer, bool? playsHere, TimeSpan waited) => answer switch
+    {
+        null => null,
+        _ when waited >= WaitFor => answer,
+        _ when playsHere is { } here && PlaysHere(answer) == here => answer,
+        _ => null,
+    };
+
+    /// <summary>
+    /// What the room shows <paramref name="waited"/> after the wait started, with the answer that
+    /// counts (<see cref="Counted"/>), if any.
+    /// </summary>
+    public static AvailabilityRoom Room(TitleAvailability? counted, TimeSpan waited) => counted switch
     {
         null when waited < WaitFor => AvailabilityRoom.Held,
         null => AvailabilityRoom.Closed,
-        _ when Has(answer) => AvailabilityRoom.Line,
+        _ when Has(counted) => AvailabilityRoom.Line,
         _ => AvailabilityRoom.Closed,
     };
+
+    /// <summary>
+    /// The placeholder's rows: two while the episodes say no source plays the title, as its answer
+    /// is then the listed-on sentence with the Choose your services link under it, and one
+    /// otherwise, for Also on.
+    /// </summary>
+    public static int HeldRows(EpisodeRow[]? rows) => Unlisted(rows) ? 2 : 1;
 }

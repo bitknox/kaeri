@@ -510,7 +510,7 @@ public sealed partial class TitlePage : Page, IPageKeys
         bars.Children.Add(States.Plate(200, 14, 3));
         bars.Children.Add(States.Plate(150, 40, 6));
         if (Avail is null)
-            bars.Children.Add(AvailPlate());
+            bars.Children.Add(AvailPlate(AvailabilityLine.HeldRows(ctx.Known.Episodes.GetValueOrDefault(id))));
         head.Children.Add(bars);
         main.Children.Add(head);
         main.Children.Add(SynopsisPlates());
@@ -1284,13 +1284,24 @@ public sealed partial class TitlePage : Page, IPageKeys
     /// <summary>Case A and C lines, the Case B action and the More menu's Watch on items.</summary>
     void ShowAvailability()
     {
-        var key = Drawn.Fingerprint(Avail);
+        // The answer counts once it is for what the page asked of its sources, which it asks once
+        // the episodes are known, or whatever it is after the 2 s wait.
+        var waited = DateTimeOffset.UtcNow - availSince;
+        var counted = AvailabilityLine.Counted(Avail, askedPlaysHere, waited);
+        var room = AvailabilityLine.Room(counted, waited);
+        // One that does not count leaves what stands: the placeholder, or the last answer's line
+        // while the title is asked again.
+        if (counted is null && room == AvailabilityRoom.Held && availRoom is AvailabilityRoom.Line or AvailabilityRoom.Closed)
+            return;
+        var key = Drawn.Fingerprint(counted);
         if (key != availKey)
         {
             availKey = key;
-            DrawAvailability(Avail);
+            DrawAvailability(counted);
         }
-        ShowAvailRoom(AvailabilityLine.Room(Avail, DateTimeOffset.UtcNow - availSince));
+        if (room == AvailabilityRoom.Held)
+            HoldAvailRows(AvailabilityLine.HeldRows(ctx.Known.Episodes.GetValueOrDefault(id)));
+        ShowAvailRoom(room);
     }
 
     void DrawAvailability(TitleAvailability? avail)
@@ -1362,8 +1373,46 @@ public sealed partial class TitlePage : Page, IPageKeys
         ShowAvailability();
     }
 
-    /// <summary>The placeholder line: one line of the links' height, as wide as a short line.</summary>
-    static Grid AvailPlate() => States.Lines(1, 240, lineHeight: 24);
+    /// <summary>The placeholder's rows as built in <see cref="AvailHeld"/>.</summary>
+    int availHeldRows;
+
+    /// <summary>The placeholder in the room the answer will take, rebuilt when the episodes change that.</summary>
+    void HoldAvailRows(int rows)
+    {
+        if (AvailHeld.Child is not null && rows == availHeldRows)
+            return;
+        availHeldRows = rows;
+        AvailHeld.Child = AvailPlate(rows);
+    }
+
+    /// <summary>
+    /// The placeholder: one line of the links' height for Also on, or, while the episodes say no
+    /// source plays the title, the listed-on sentence and the Choose your services link under it,
+    /// each drawn unseen with its real words and a made-up service and covered by a plate, so the
+    /// room is what the answer takes at any width.
+    /// </summary>
+    FrameworkElement AvailPlate(int rows)
+    {
+        if (rows < 2)
+            return States.Lines(1, 240, lineHeight: 24);
+        var stack = new StackPanel { Spacing = AvailLine.Spacing };
+        var sentence = new TextBlock { Text = T.TitleListedOn("Lantern Library"), Style = Ui.Res<Style>("HazeBodyStyle"), TextWrapping = TextWrapping.WrapWholeWords };
+        stack.Children.Add(Redacted(sentence, 4));
+        var link = new HyperlinkButton { Content = T.TitleChooseServices, Style = Ui.Res<Style>("SilkLinkStyle"), IsTabStop = false, IsHitTestVisible = false };
+        stack.Children.Add(Redacted(link, 6));
+        AutomationProperties.SetAccessibilityView(stack, Microsoft.UI.Xaml.Automation.Peers.AccessibilityView.Raw);
+        return stack;
+
+        static Grid Redacted(FrameworkElement real, double inset)
+        {
+            real.Opacity = 0;
+            AutomationProperties.SetAccessibilityView(real, Microsoft.UI.Xaml.Automation.Peers.AccessibilityView.Raw);
+            var plate = new Grid { HorizontalAlignment = HorizontalAlignment.Left };
+            plate.Children.Add(real);
+            plate.Children.Add(new Border { Margin = new Thickness(0, inset, 0, inset), CornerRadius = new CornerRadius(3), Background = Ui.Res<Brush>("RaisedBrush") });
+            return plate;
+        }
+    }
 
     /// <summary>
     /// The availability line's room: a placeholder line while the answer is not known, the line,
@@ -1380,7 +1429,8 @@ public sealed partial class TitlePage : Page, IPageKeys
         StopAvailClosing();
         if (room == AvailabilityRoom.Held)
         {
-            AvailHeld.Child ??= AvailPlate();
+            if (AvailHeld.Child is null)
+                HoldAvailRows(1);
             Motion.Set(AvailHeld, true);
             Motion.Set(AvailLine, false);
             AvailRoom.Visibility = Visibility.Visible;

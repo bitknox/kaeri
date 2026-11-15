@@ -1,5 +1,7 @@
 // The title page's availability line: a placeholder keeps its room until the answer, which keeps
-// the room for a line and closes it for none, and the wait ends after 2 s with no answer.
+// the room for a line and closes it for none, and the wait ends after 2 s with no answer. An
+// answer counts once it is for what the episodes say of the sources, and while they say none
+// plays the title the placeholder holds two rows.
 
 using Kaeri.App;
 using Kaeri.Engine.Model;
@@ -49,5 +51,40 @@ public class AvailabilityRoomTests
         Assert.Equal(AvailabilityLine.WaitFor, TimeSpan.FromSeconds(2));
         Assert.Equal(AvailabilityRoom.Closed, AvailabilityLine.Room(null, Ms(2000)));
         Assert.Equal(AvailabilityRoom.Closed, AvailabilityLine.Room(null, Ms(9000)));
+    }
+
+    [Fact]
+    public void AnAnswerCountsOnlyForWhatTheEpisodesSayOfTheSources()
+    {
+        var plays = Answer(AvailabilityCase.PlaysAlsoOn, alsoOn: [Lumen]);
+        var listed = Answer(AvailabilityCase.NotInSources, others: ["Lantern Library"]);
+        // Before the episodes, no answer counts: the placeholder stands.
+        Assert.Null(AvailabilityLine.Counted(plays, null, Ms(300)));
+        Assert.Equal(AvailabilityRoom.Held, AvailabilityLine.Room(AvailabilityLine.Counted(plays, null, Ms(300)), Ms(300)));
+        // Once they are known, the answer for what they say counts, and one kept from before does not.
+        Assert.Same(plays, AvailabilityLine.Counted(plays, true, Ms(300)));
+        Assert.Null(AvailabilityLine.Counted(plays, false, Ms(300)));
+        Assert.Same(listed, AvailabilityLine.Counted(listed, false, Ms(300)));
+        Assert.Null(AvailabilityLine.Counted(listed, true, Ms(300)));
+        Assert.True(AvailabilityLine.PlaysHere(Answer(AvailabilityCase.PlaysHere)));
+        Assert.False(AvailabilityLine.PlaysHere(Answer(AvailabilityCase.OnService, main: Lumen)));
+        // After the 2 s cap, whatever answer there is counts.
+        Assert.Same(plays, AvailabilityLine.Counted(plays, null, Ms(2000)));
+        Assert.Same(plays, AvailabilityLine.Counted(plays, false, Ms(2000)));
+        Assert.Null(AvailabilityLine.Counted(null, true, Ms(2000)));
+    }
+
+    [Fact]
+    public void ThePlaceholderHoldsTwoRowsWhileNoSourcePlaysTheTitle()
+    {
+        EpisodeRow[] unlisted = [new EpisodeRow("1", MetadataOnly: true), new EpisodeRow("2", MetadataOnly: true)];
+        EpisodeRow[] listed = [new EpisodeRow("1"), new EpisodeRow("2", Unsourced: true)];
+        Assert.True(AvailabilityLine.Unlisted(unlisted));
+        Assert.Equal(2, AvailabilityLine.HeldRows(unlisted));
+        Assert.False(AvailabilityLine.Unlisted(listed));
+        Assert.Equal(1, AvailabilityLine.HeldRows(listed));
+        // Episodes not yet known, or none at all: the one row of Also on.
+        Assert.Equal(1, AvailabilityLine.HeldRows(null));
+        Assert.Equal(1, AvailabilityLine.HeldRows([]));
     }
 }
