@@ -7,6 +7,7 @@ use std::{
     cell::{Cell, RefCell},
     collections::HashSet,
     rc::{Rc, Weak},
+    time::Duration,
 };
 
 use adw::prelude::*;
@@ -40,6 +41,10 @@ const BAND: i32 = 328;
 
 /// How far a watched episode's still dims.
 const WATCHED: f64 = 0.55;
+
+/// How long the availability line's room waits for where the title is listed. The engine says
+/// nothing when it cannot find out, as offline, so past this the room closes.
+const OFFERS_WAIT_FOR: Duration = Duration::from_secs(2);
 
 /// An episode row as drawn, kept so a mark changes it in place: focus stays where it was, and
 /// the still dims on the quick token.
@@ -156,6 +161,10 @@ struct Page {
     protection: RefCell<Option<Protection>>,
     /// Whether the engine has answered for the episodes, so no table means none.
     listed: Cell<bool>,
+    /// The availability line's room waited its longest for an answer.
+    offers_waited: Cell<bool>,
+    /// What the availability line's room last showed, once the head was drawn.
+    offers: Cell<Option<OffersRoom>>,
     columns: gtk::Box,
     rows: Rc<RefCell<Vec<EpisodeRow>>>,
     /// The page's status action, its state the list the title is on.
@@ -398,6 +407,8 @@ pub fn page(ctx: &Rc<Ctx>, id: AnilistId) -> adw::NavigationPage {
         drawn: RefCell::default(),
         protection: RefCell::default(),
         listed: Cell::new(false),
+        offers_waited: Cell::new(false),
+        offers: Cell::new(None),
         columns,
         rows: Rc::default(),
         listening: RefCell::default(),
@@ -461,6 +472,18 @@ pub fn page(ctx: &Rc<Ctx>, id: AnilistId) -> adw::NavigationPage {
     page.keys(&view);
     ctx.hub.known.borrow_mut().visit(id);
     page.people.wait();
+    // Where the title is listed has its room until the engine says, or until it waited long
+    // enough that no answer is coming.
+    glib::timeout_add_local_once(OFFERS_WAIT_FOR, {
+        let weak = Rc::downgrade(&page);
+        move || {
+            let Some(page) = weak.upgrade() else { return };
+            page.offers_waited.set(true);
+            if page.availability().is_none() {
+                page.redraw_head();
+            }
+        }
+    });
     match &entry {
         Some(entry) => page.fill(entry),
         None => page.hold(),
@@ -663,11 +686,26 @@ impl Page {
         self.columns.set_margin_end(margin);
         self.head.set_margin_start(margin);
         self.head.set_margin_end(margin);
+        self.redraw_head();
+        self.draw_episodes();
+    }
+
+    /// The head and the side column again, or their placeholders while nothing is known.
+    fn redraw_head(&self) {
         match self.ctx.hub.entry(self.id) {
             Some(entry) => self.fill(&entry),
             None => self.hold(),
         }
-        self.draw_episodes();
+    }
+
+    /// What stands in the availability line's room, and the answer's lines when it has them.
+    fn offers_room(
+        &self,
+        availability: Option<&TitleAvailability>,
+    ) -> (OffersRoom, Vec<gtk::Widget>) {
+        let lines = availability.map(|a| licensed::lines(&self.ctx, a));
+        let room = offers_room(lines.as_ref().map(Vec::len), self.offers_waited.get());
+        (room, lines.unwrap_or_default())
     }
 
     /// The page's own actions: the status menu and More.
@@ -871,7 +909,8 @@ impl Page {
             self.banner.append(&fit);
         }
         // The head lands over its placeholders, where they stood.
-        if self.held.head.replace(false) {
+        let head_lands = self.held.head.replace(false);
+        if head_lands {
             motion::crossfade_in(&self.banner);
             motion::crossfade_in(&self.head);
         }
@@ -1131,17 +1170,26 @@ impl Page {
             menus.append(&more);
             text.append(&menus);
         }
-        if let Some(availability) = &availability {
-            let lines = licensed::lines(&self.ctx, availability);
-            if !lines.is_empty() {
+        // Where the title is listed: a placeholder line keeps its room until the engine says,
+        // then the answer's lines replace it in one crossfade, or the room closes when the
+        // answer has none or none came. A newer answer asked for replaces the last in place.
+        let (room, lines) = self.offers_room(availability.as_ref());
+        let mut landed = None;
+        match room {
+            OffersRoom::Held => text.append(&offers_placeholder()),
+            OffersRoom::Lines => {
                 let under = gtk::Box::new(gtk::Orientation::Vertical, 0);
                 under.set_margin_top(4);
                 for line in lines {
                     under.append(&line);
                 }
                 text.append(&under);
+                landed = Some(under);
             }
+            OffersRoom::Closed => {}
         }
+        let before = self.offers.replace(Some(room));
+        let fades = matches!(before, Some(OffersRoom::Held | OffersRoom::Closed));
 
         let line = gtk::Box::new(gtk::Orientation::Horizontal, 20);
         line.set_margin_top(18);
@@ -1150,6 +1198,13 @@ impl Page {
         }
         line.append(&text);
         self.head.append(&line);
+        if let Some(under) = landed.filter(|_| fades && !head_lands) {
+            under.set_opacity(0.0);
+            let fading = under.clone();
+            motion::once_mapped(&under, move || {
+                motion::crossfade_in(&fading);
+            });
+        }
         self.apply_missing();
         self.restore_focus(had_focus);
 
@@ -1172,7 +1227,9 @@ impl Page {
             BAND,
         ));
         clear(&self.head);
-        self.head.append(&head_placeholder(size == Size::Narrow));
+        // The availability line's room too, unless it is known to close.
+        let (room, _) = self.offers_room(self.availability().as_ref());
+        self.head.append(&head_placeholder(size == Size::Narrow, room != OffersRoom::Closed));
         self.held.head.set(true);
         clear(&self.synopsis);
         self.synopsis.append(&synopsis_placeholder());
@@ -2732,9 +2789,40 @@ fn text_bar(width: i32, height: i32, room: i32) -> gtk::Box {
     bar
 }
 
+/// What stands in the availability line's room under the head's actions.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum OffersRoom {
+    /// Where the title is listed is not known yet: a placeholder line keeps the room.
+    Held,
+    /// The answer's lines.
+    Lines,
+    /// The answer has no line, or none came in time: the room closes.
+    Closed,
+}
+
+/// The availability line's room, from how many lines the engine's answer has (none until it
+/// answers) and whether the page waited its longest for it. An answer already known, as the last
+/// one while a newer one is asked for, stands until the newer one replaces it.
+fn offers_room(lines: Option<usize>, waited: bool) -> OffersRoom {
+    match lines {
+        Some(0) => OffersRoom::Closed,
+        Some(_) => OffersRoom::Lines,
+        None if waited => OffersRoom::Closed,
+        None => OffersRoom::Held,
+    }
+}
+
+/// The availability line's room while it is on its way: one line of text, under the actions.
+fn offers_placeholder() -> gtk::Box {
+    let line = holding(gtk::Orientation::Vertical, 0);
+    line.set_margin_top(4);
+    line.append(&text_bar(200, 12, 21));
+    line
+}
+
 /// The head's room while nothing of the title is known: the cover, the title, its line and the
-/// actions.
-fn head_placeholder(narrow: bool) -> gtk::Box {
+/// actions, and the availability line's room while `offers` waits.
+fn head_placeholder(narrow: bool, offers: bool) -> gtk::Box {
     let line = holding(gtk::Orientation::Horizontal, 20);
     line.set_margin_top(18);
     if !narrow {
@@ -2756,6 +2844,9 @@ fn head_placeholder(narrow: bool) -> gtk::Box {
         actions.append(&states::plate(34, 34, "round"));
     }
     text.append(&actions);
+    if offers {
+        text.append(&offers_placeholder());
+    }
     line.append(&text);
     line
 }
@@ -3023,6 +3114,34 @@ mod waiting_tests {
         let alone = with_detail(row(""), false, Some(vec![season(910_002)]));
         assert!(!in_family([&alone], id));
         assert!(!in_family([&row("")], id));
+    }
+
+    #[test]
+    fn the_availability_line_keeps_its_room_until_the_answer() {
+        // Before the answer, the room is held from the first frame.
+        assert_eq!(offers_room(None, false), OffersRoom::Held);
+        // An answer with a line takes the room; one without closes it.
+        assert_eq!(offers_room(Some(1), false), OffersRoom::Lines);
+        assert_eq!(offers_room(Some(2), true), OffersRoom::Lines);
+        assert_eq!(offers_room(Some(0), false), OffersRoom::Closed);
+        // No answer within 2 s, as offline: the room closes.
+        assert_eq!(offers_room(None, true), OffersRoom::Closed);
+        assert_eq!(OFFERS_WAIT_FOR, Duration::from_secs(2));
+    }
+
+    /// The availability line's room is one line of text with the line's own spacing, and the
+    /// head's placeholder keeps it while the answer is on its way.
+    #[test]
+    fn the_availability_line_has_its_room_at_once() {
+        crate::gtk_test::run(|| {
+            let line = offers_placeholder().measure(gtk::Orientation::Vertical, 600).1;
+            assert!((4 + 21..=30).contains(&line), "the line's room takes {line} px");
+            // Narrow, where no cover beside the text sets the head's height.
+            let with = head_placeholder(true, true).measure(gtk::Orientation::Vertical, 400).1;
+            let without =
+                head_placeholder(true, false).measure(gtk::Orientation::Vertical, 400).1;
+            assert!(with >= without + line, "the head keeps {with} px against {without} px");
+        });
     }
 
     /// The episode area has the placeholders' room on the page's first frame.
