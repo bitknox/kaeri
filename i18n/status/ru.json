@@ -21742,6 +21742,228 @@
     "by": "haiku",
     "at": "2026-10-31"
   },
+  "receiver-error": {
+    "source": "a8a69b36195c",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
+  },
+  "receiver-error-hint-computer": {
+    "source": "e378e62b70a9",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
+  },
+  "receiver-error-hint-ipad": {
+    "source": "f34b703fe0ce",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
+  },
+  "receiver-error-hint-iphone": {
+    "source": "497951e2ad59",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
+  },
+  "receiver-error-hint-mac": {
+    "source": "16951e456fd4",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
+  },
+  "receiver-error-hint-phone": {
+    "source": "9769175f9b7d",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
+  },
+  "receiver-error-hint-tablet": {
+    "source": "7aaeba8fcf83",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
+  },
+  "receiver-error-unnumbered": {
+    "source": "6de4abde1981",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
+  },
+  "receiver-finished": {
+    "source": "3e6a55ebb668",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
+  },
+  "receiver-finished-unnumbered": {
+    "source": "bb99d4ec27fb",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
+  },
+  "receiver-paused": {
+    "source": "95bc8722b270",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
+  },
+  "receiver-plain-subs": {
+    "source": "e2e38b14ad94",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
+  },
+  "receiver-ready-computer": {
+    "source": "ac91401d97fe",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
+  },
+  "receiver-ready-ipad": {
+    "source": "5786673fd38b",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
+  },
+  "receiver-ready-iphone": {
+    "source": "f92773820131",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
+  },
+  "receiver-ready-mac": {
+    "source": "575e9fb10c15",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
+  },
+  "receiver-ready-phone": {
+    "source": "b1f6c6676a81",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
+  },
+  "receiver-ready-tablet": {
+    "source": "6200a3fc1778",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
+  },
+  "receiver-sender-gone-computer": {
+    "source": "6a6f8cba801c",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
+  },
+  "receiver-sender-gone-hint-computer": {
+    "source": "c81338dae1e0",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
+  },
+  "receiver-sender-gone-hint-ipad": {
+    "source": "03259f491df0",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
+  },
+  "receiver-sender-gone-hint-iphone": {
+    "source": "8e6c66fb9d21",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
+  },
+  "receiver-sender-gone-hint-mac": {
+    "source": "3a2e9e501c49",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
+  },
+  "receiver-sender-gone-hint-phone": {
+    "source": "cc84de53cbb5",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
+  },
+  "receiver-sender-gone-hint-tablet": {
+    "source": "96154cac625f",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
+  },
+  "receiver-sender-gone-ipad": {
+    "source": "a0c7de11da17",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
+  },
+  "receiver-sender-gone-iphone": {
+    "source": "a7cd95bb12ba",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
+  },
+  "receiver-sender-gone-mac": {
+    "source": "7b4026e16334",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
+  },
+  "receiver-sender-gone-phone": {
+    "source": "a0438070aba2",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
+  },
+  "receiver-sender-gone-tablet": {
+    "source": "73caae62f70d",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
+  },
+  "receiver-skipped-ending": {
+    "source": "15b3cc252aed",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
+  },
+  "receiver-skipped-opening": {
+    "source": "2db42bdb3bed",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
+  },
+  "receiver-starting": {
+    "source": "4c60317e4731",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
+  },
+  "receiver-up-next": {
+    "source": "2467f13c3f6d",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
+  },
+  "receiver-up-next-numbered": {
+    "source": "e26aba3836f5",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
+  },
+  "receiver-up-next-titled": {
+    "source": "159b786e5c9c",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
+  },
+  "receiver-waiting": {
+    "source": "01a567ff47c0",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
+  },
   "relation-adaptation": {
     "source": "1854bd18b83f",
     "state": "draft",
