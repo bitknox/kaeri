@@ -62,7 +62,6 @@ import androidx.compose.ui.input.key.onPreviewKeyEvent
 import androidx.compose.ui.input.key.type
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import app.kaeri.i18n.Strings
@@ -120,6 +119,8 @@ import app.kaeri.tv.ui.EnterFocus
 import app.kaeri.tv.ui.FocusMemory
 import app.kaeri.tv.ui.HeldScroll
 import app.kaeri.tv.ui.HeroHeader
+import app.kaeri.store.MissingWords
+import androidx.compose.ui.graphics.graphicsLayer
 import app.kaeri.tv.ui.LocalActions
 import app.kaeri.tv.ui.LocalAppStore
 import app.kaeri.tv.ui.PosterCard
@@ -338,6 +339,8 @@ private fun Header(
         val availability = store.licensed.availability.collectAsStateWithLifecycle().value[entry.id]
         val remoteHost = LocalRemoteHost.current
         val onService = availability?.main?.takeIf { availability.case == AvailabilityCase.ON_SERVICE }
+        val missing = rememberMissingView(entry, rows)
+        Announcer(missing.said)
         Row(verticalAlignment = Alignment.CenterVertically) {
             if (onService != null) {
                 AmberButton(
@@ -347,6 +350,15 @@ private fun Header(
                 ) { ButtonLabel(stringResource(R.string.title_watch_on, onService.service)) }
             } else if (noSources) {
                 AmberButton(onClick = onAddStore, icon = null, modifier = Modifier.firstFocus(memory, "play")) { ButtonLabel(stringResource(R.string.tv_add_store_to_play)) }
+            } else if (action.playable || missing.shown != null) {
+                // The next episode aired and no source lists it: Check again and the one before lead.
+                MissingLead(entry, missing, memory, onPlay = { onPlay(entry.id, it) }) {
+                    AmberButton(
+                        onClick = { onPlay(entry.id, action.episode) },
+                        enabled = action.playable,
+                        modifier = Modifier.firstFocus(memory, "play"),
+                    ) { ButtonLabel(action.label(context)) }
+                }
             } else {
                 AmberButton(
                     onClick = { onPlay(entry.id, action.episode) },
@@ -407,6 +419,7 @@ private fun Header(
                 SurprisePill(pick.pool, Modifier.remembered(memory, "another"), another = true)
             }
         }
+        if (onService == null && !noSources) MissingLine(missing)
         ServiceLine(availability, memory)
     }
 }
@@ -705,9 +718,18 @@ private fun EpisodeCard(
     var focused by remember { mutableStateOf(false) }
     val title = row.title?.takeIf { it.isNotBlank() } ?: Strings.episodeNumber(context, row.number.toInt())
     val aired = row.airsAt?.takeIf { it <= System.currentTimeMillis() / 1000 }?.let { airedDate(context, it) }
-    val facts = listOfNotNull(Strings.episodeLineDetail(context, row.number.toInt(), line ?: ""), aired)
-        .joinToString(" · ") // i18n-skip
-        .replace(Regex(" · $"), "")
+    // One that aired and no source lists yet says how long ago, turned on the minute: "Aired 25 min ago · Not in your sources yet".
+    val missing = if (row.unsourced) MissingWords.unsourcedLine(context, row.airsAt, rememberMinute()) else null
+    val facts = if (missing != null) {
+        Strings.episodeLineDetail(context, row.number.toInt(), missing)
+    } else {
+        listOfNotNull(Strings.episodeLineDetail(context, row.number.toInt(), line ?: ""), aired)
+            .joinToString(" · ") // i18n-skip
+            .replace(Regex(" · $"), "")
+    }
+    // Lifted to full strength when a source lists it, on the reveal token.
+    val strength by androidx.compose.animation.core.animateFloatAsState(if (row.unsourced) 0.45f else 1f, app.kaeri.design.Motion.reveal(), label = "sourced") // i18n-skip
+    val titleColor by androidx.compose.animation.animateColorAsState(if (row.unsourced) ObiSilk.Haze else ObiSilk.Silk, app.kaeri.design.Motion.reveal(), label = "sourced-title") // i18n-skip
     val synopsis = row.description?.takeIf { it.isNotBlank() && !covered }
     val hiddenWord = stringResource(R.string.episode_synopsis_hidden)
     // The card reads as one: number, title, facts, then the synopsis last, or that it is hidden.
@@ -721,7 +743,7 @@ private fun EpisodeCard(
                 row.thumbnail ?: entry.bannerUrl,
                 CoverPlate.parse(entry.coverColor),
                 pixels(EpisodeCardDims.Width),
-                Modifier.fillMaxSize().alpha(if (row.unsourced) 0.45f else 1f),
+                Modifier.fillMaxSize().graphicsLayer { alpha = strength },
                 spoiler = spoiler,
             )
             // The eye struck through, as phones draw it, on a still spoiler protection covers.
@@ -742,19 +764,21 @@ private fun EpisodeCard(
         Text(
             title,
             style = MaterialTheme.typography.titleSmall,
-            color = if (row.unsourced) ObiSilk.Haze else ObiSilk.Silk,
+            color = titleColor,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
             modifier = Modifier.clearAndSetSemantics {},
         )
-        Text(
-            facts,
-            style = MaterialTheme.typography.bodySmall,
-            color = ObiSilk.Haze,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-            modifier = Modifier.padding(top = 2.dp).clearAndSetSemantics {},
-        )
+        // A found episode's line crossfades to its length and date.
+        androidx.compose.animation.Crossfade(facts, Modifier.padding(top = 2.dp).clearAndSetSemantics {}, animationSpec = app.kaeri.design.Motion.reveal(), label = "facts") { words -> // i18n-skip
+            Text(
+                words,
+                style = MaterialTheme.typography.bodySmall,
+                color = ObiSilk.Haze,
+                maxLines = if (missing != null) 2 else 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+        }
         if (band) {
             // The room for text: it fades in on the fade-in token, and the focused card's goes from haze to silk.
             val room = with(density) { (EpisodeCardDims.BodyLine * EpisodeCardDims.Lines).toDp() }

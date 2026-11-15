@@ -76,6 +76,7 @@ private fun FixtureScene.ffi(): FfiScene = when (this) {
     FixtureScene.EINK_KALEIDO_UNSURE -> FfiScene.EinkKaleidoUnsure
     FixtureScene.EINK_LONG -> FfiScene.EinkLong
     FixtureScene.READING_DARK -> FfiScene.ReadingDark
+    FixtureScene.MISSING_EPISODE -> FfiScene.MissingEpisode
 }
 
 /** What the Playing scene streams, and Watching's when set: the fixtures' `media` extra, set at launch. */
