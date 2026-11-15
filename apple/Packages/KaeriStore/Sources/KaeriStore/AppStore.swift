@@ -684,7 +684,16 @@ public final class AppStore {
     /// A title's page. `force` asks again however recently it was asked: Try Again.
     public func loadDetail(_ id: AnilistId, force: Bool = false) {
         guard ask(.detail(id)) || force else { return }
-        send(.loadDetail(id))
+        if let job = send(.loadDetail(id)) { detailFetched(id, by: job) }
+    }
+
+    /// Each title page's fetch by the job that carries it, to tell an answer from none.
+    @ObservationIgnored private var detailJobs: [JobId: AnilistId] = [:]
+
+    /// `id`'s page asked for by `job`: its end without the page says AniList did not answer.
+    func detailFetched(_ id: AnilistId, by job: JobId) {
+        titles.detailAsked(id)
+        detailJobs[job] = id
     }
 
     /// The data a hover card shows for `ids`: from what the lists brought, else one batched lookup
@@ -900,6 +909,8 @@ public final class AppStore {
                 switch event {
                 case .detail(let entry): entry.detail?.partial != true
                 case .availability: true
+                // The page's job ends after its page, not before it.
+                case .jobDone(let job): detailJobs[job] != nil
                 default: false
                 }
             }
@@ -1063,6 +1074,7 @@ public final class AppStore {
             jobs.note(job, note: note.text, wait: wait)
         case .jobDone(let job):
             jobs.done(job)
+            if let id = detailJobs.removeValue(forKey: job) { titles.detailEnded(id) }
             stores.done(job)
             accounts.done(job)
 

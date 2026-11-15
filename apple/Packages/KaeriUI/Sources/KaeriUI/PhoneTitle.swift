@@ -35,7 +35,8 @@ struct PhoneTitle: View {
         let art = store.heroArt(entry)
         let episodes = entry.episodeTable(store.titles.episodes[id] ?? [])
         let plan = EpisodePlan(rows: episodes, picked: navigator.episodeRange[id])
-        let loaded = store.titles.episodes[id] != nil
+        let held = TitlePage.held(id, in: store)
+        let loaded = !held && store.titles.episodes[id] != nil
         // A list, so the episodes take their swipes (native-ux), drawn as the scroll view was.
         ScrollViewReader { reader in
         List {
@@ -168,99 +169,114 @@ struct PhoneTitle: View {
                             .accessibilityLabel(L.tvPlayOn)
                         }
                     }
-                    // People you follow, under the list: fades in when AniList answers, and what
-                    // is below glides down on standard (fades only with Reduce Motion).
-                    if !(entry.detail?.following ?? []).isEmpty {
-                        FollowingPhoneRow(entry: entry)
-                            .transition(.asymmetric(insertion: .opacity.animation(.fadeIn), removal: .opacity.animation(.fadeOut)))
-                    }
-                    CastPlaysOnLine(touch: true)
-                        .animation(.fadeIn, value: store.tv.cast.connected)
-                    LicensedLines(id: entry.id, font: .ui(14))
-
-                    VStack(alignment: .leading, spacing: 12) {
-                        if !entry.shownSynopsis.isEmpty {
-                            // Two lines, and "More" shows the rest in place.
-                            InlineMoreText(text: entry.shownSynopsis, lines: 2, font: .ui(15))
-                                .id(entry.id)
-                                // Read after the episodes: title, metadata, the main button,
-                                // progress, episodes, then the synopsis.
-                                .accessibilitySortPriority(-1)
-                        }
-                        if entry.isDemo { DemoCredit() }
-                        // The facts and the top tags, a line each, cut at the end.
-                        VStack(alignment: .leading, spacing: 4) {
-                            if let facts = entry.factsLine() {
-                                Text(facts).lineLimit(1)
-                            }
-                            if !entry.topTags.isEmpty {
-                                Text(entry.topTags.joined(separator: " · ")).lineLimit(1)
-                            }
-                        }
-                        .font(.ui(15))
-                        .foregroundStyle(.haze)
-                        MoreAboutRow(entry: entry)
-                    }
-
-                    let family = TitleFamily(entry)
-                    if !family.seasons.isEmpty {
-                        // The season on screen in the middle as the page opens, so a long
-                        // franchise's later seasons open with their own chip in view.
-                        ScrollViewReader { proxy in
-                            ScrollView(.horizontal) {
-                                HStack(spacing: 8) {
-                                    ForEach(Array(family.seasons.enumerated()), id: \.element.id) { index, season in
-                                        seasonChip(index: index, season: season, entry: entry).id(season.id)
-                                    }
+                    // Opened from a list, the page has the list's row: its head and its actions.
+                    // What only its page brings (people you follow, the facts, the tags, the
+                    // seasons, Related) waits under placeholders that show with the page from the
+                    // first frame, and the page replaces them in one crossfade where they stand
+                    // the moment it lands, with no wait and no hold (T8's title page exception).
+                    ZStack(alignment: .topLeading) {
+                        if held {
+                            PhoneDetailsPlaceholder(entry: entry)
+                                .transition(.opacity)
+                        } else {
+                            VStack(alignment: .leading, spacing: 16) {
+                                // People you follow, under the list: fades in when AniList answers, and what
+                                // is below glides down on standard (fades only with Reduce Motion).
+                                if !(entry.detail?.following ?? []).isEmpty {
+                                    FollowingPhoneRow(entry: entry)
+                                        .transition(.asymmetric(insertion: .opacity.animation(.fadeIn), removal: .opacity.animation(.fadeOut)))
                                 }
-                                .padding(.horizontal, 16)
-                            }
-                            .scrollIndicators(.never)
-                            .padding(.horizontal, -16)
-                            .onAppear { proxy.scrollTo(entry.id, anchor: .center) }
-                        }
-                    }
-                    if entry.detail != nil {
-                        let cards = entry.relatedCards(excluding: family.picked)
-                        if !cards.isEmpty {
-                            VStack(alignment: .leading, spacing: 6) {
-                                Text(L.titleRelated).font(.ui(15)).foregroundStyle(.haze)
-                                    .accessibilityAddTraits(.isHeader)
-                                ScrollView(.horizontal) {
-                                    HStack(spacing: 4) {
-                                        ForEach(cards, id: \.id) { linked in
-                                            RelatedCard(linked: linked, cover: CGSize(width: 40, height: 60), phone: true)
+                                CastPlaysOnLine(touch: true)
+                                    .animation(.fadeIn, value: store.tv.cast.connected)
+                                LicensedLines(id: entry.id, font: .ui(14))
+
+                                VStack(alignment: .leading, spacing: 12) {
+                                    if !entry.shownSynopsis.isEmpty {
+                                        // Two lines, and "More" shows the rest in place.
+                                        InlineMoreText(text: entry.shownSynopsis, lines: 2, font: .ui(15))
+                                            .id(entry.id)
+                                            // Read after the episodes: title, metadata, the main button,
+                                            // progress, episodes, then the synopsis.
+                                            .accessibilitySortPriority(-1)
+                                    }
+                                    if entry.isDemo { DemoCredit() }
+                                    // The facts and the top tags, a line each, cut at the end.
+                                    VStack(alignment: .leading, spacing: 4) {
+                                        if let facts = entry.factsLine() {
+                                            Text(facts).lineLimit(1)
+                                        }
+                                        if !entry.topTags.isEmpty {
+                                            Text(entry.topTags.joined(separator: " · ")).lineLimit(1)
                                         }
                                     }
-                                    .padding(.horizontal, 12)
-                                }
-                                .scrollIndicators(.never)
-                                .padding(.horizontal, -16)
-                            }
-                        }
-                    } else if !family.related.isEmpty {
-                        HStack(spacing: 8) {
-                            Text(L.titleRelated).font(.ui(13)).foregroundStyle(.haze)
-                            ForEach(family.related, id: \.id) { related in
-                                Button {
-                                    navigator.openTitle(related.id)
-                                } label: {
-                                    HStack(spacing: 6) {
-                                        Text(related.format.map(TitleWords.format) ?? related.title)
-                                            .fontWeight(.medium)
-                                            .foregroundStyle(.silk)
-                                        Text(related.relation.capitalizedSentence).foregroundStyle(.haze)
-                                    }
                                     .font(.ui(15))
-                                    .padding(.horizontal, 14)
-                                    .padding(.vertical, 4)
-                                    .frame(minHeight: 32)
-                                    .overlay(Capsule().strokeBorder(.faintRule))
-                                    .contentShape(.capsule)
+                                    .foregroundStyle(.haze)
+                                    MoreAboutRow(entry: entry)
                                 }
-                                .buttonStyle(.plain)
-                                .pointerHover()
+
+                                let family = TitleFamily(entry)
+                                if !family.seasons.isEmpty {
+                                    // The season on screen in the middle as the page opens, so a long
+                                    // franchise's later seasons open with their own chip in view.
+                                    ScrollViewReader { proxy in
+                                        ScrollView(.horizontal) {
+                                            HStack(spacing: 8) {
+                                                ForEach(Array(family.seasons.enumerated()), id: \.element.id) { index, season in
+                                                    seasonChip(index: index, season: season, entry: entry).id(season.id)
+                                                }
+                                            }
+                                            .padding(.horizontal, 16)
+                                        }
+                                        .scrollIndicators(.never)
+                                        .padding(.horizontal, -16)
+                                        .onAppear { proxy.scrollTo(entry.id, anchor: .center) }
+                                    }
+                                }
+                                if entry.detail != nil {
+                                    let cards = entry.relatedCards(excluding: family.picked)
+                                    if !cards.isEmpty {
+                                        VStack(alignment: .leading, spacing: 6) {
+                                            Text(L.titleRelated).font(.ui(15)).foregroundStyle(.haze)
+                                                .accessibilityAddTraits(.isHeader)
+                                            ScrollView(.horizontal) {
+                                                HStack(spacing: 4) {
+                                                    ForEach(cards, id: \.id) { linked in
+                                                        RelatedCard(linked: linked, cover: CGSize(width: 40, height: 60), phone: true)
+                                                    }
+                                                }
+                                                .padding(.horizontal, 12)
+                                            }
+                                            .scrollIndicators(.never)
+                                            .padding(.horizontal, -16)
+                                        }
+                                    }
+                                } else if !family.related.isEmpty {
+                                    HStack(spacing: 8) {
+                                        Text(L.titleRelated).font(.ui(13)).foregroundStyle(.haze)
+                                        ForEach(family.related, id: \.id) { related in
+                                            Button {
+                                                navigator.openTitle(related.id)
+                                            } label: {
+                                                HStack(spacing: 6) {
+                                                    Text(related.format.map(TitleWords.format) ?? related.title)
+                                                        .fontWeight(.medium)
+                                                        .foregroundStyle(.silk)
+                                                    Text(related.relation.capitalizedSentence).foregroundStyle(.haze)
+                                                }
+                                                .font(.ui(15))
+                                                .padding(.horizontal, 14)
+                                                .padding(.vertical, 4)
+                                                .frame(minHeight: 32)
+                                                .overlay(Capsule().strokeBorder(.faintRule))
+                                                .contentShape(.capsule)
+                                            }
+                                            .buttonStyle(.plain)
+                                            .pointerHover()
+                                        }
+                                    }
+                                }
                             }
+                            .transition(.opacity)
                         }
                     }
                 }
@@ -275,7 +291,7 @@ struct PhoneTitle: View {
             Color.clear.frame(height: 0).bareRow().id("episodes")
             PhoneEpisodes(
                 entry: entry, spoilers: store.spoilerProtection(for: id), rotor: rotor,
-                room: room.room, rows: episodes, plan: plan, pickers: pickers
+                room: room.room, rows: episodes, plan: plan, pickers: pickers, held: held
             )
             Color.clear.frame(height: 32).bareRow()
         }
@@ -283,6 +299,7 @@ struct PhoneTitle: View {
         // The placeholders give way to the rows in one fade (T8), and a range switch crossfades
         // its rows in place.
         .animation(.standard, value: loaded)
+        .animation(.standard, value: held)
         .animation(.standard, value: plan.index)
         // The room for text is settled when the rows are first laid out, and again each time the
         // page comes back or a range is picked: text that turned up meanwhile waits for that.
@@ -446,13 +463,15 @@ struct PhoneEpisodes: View {
     let plan: EpisodePlan
     /// Where the range menu's row last stood, for the page.
     var pickers: PickersPlace? = nil
+    /// Whether the page holds its rows under placeholders until it lands (`TitlePage.held`).
+    var held = false
     /// Go to episode's alert, from the range menu's last item.
     @State private var goToOpen = false
     @State private var typed = ""
     @State private var goToError: String?
 
     var body: some View {
-        let loaded = store.titles.episodes[entry.id] != nil
+        let loaded = !held && store.titles.episodes[entry.id] != nil
         // Rows of the page's list, each with its swipes; the folded run is one row, which opens
         // in place.
         let inset = EdgeInsets(top: 0, leading: 16, bottom: 0, trailing: 16)
@@ -527,6 +546,36 @@ struct PhoneEpisodes: View {
                 EpisodePlaceholders(count: entry.episodes, metrics: .phone)
                     .bareRow(inset)
             }
+        }
+    }
+}
+
+/// What only the iPhone's page brings, while it is on its way: the list's synopsis where it will
+/// stand, then the facts' two lines and More about this show's row as placeholders.
+struct PhoneDetailsPlaceholder: View {
+    let entry: Entry
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            if !entry.shownSynopsis.isEmpty {
+                InlineMoreText(text: entry.shownSynopsis, lines: 2, font: .ui(15))
+                    .accessibilitySortPriority(-1)
+            }
+            VStack(alignment: .leading, spacing: 12) {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("TV · 12 episodes · Spring 2026") // i18n-skip
+                    Text("Adventure, Fantasy, Drama") // i18n-skip
+                }
+                .font(.ui(15))
+                .foregroundStyle(.haze)
+                HStack {
+                    Text("More about the lantern road").font(.ui(17, weight: .semibold)).foregroundStyle(.silk) // i18n-skip
+                    Spacer()
+                }
+                .frame(minHeight: 44)
+            }
+            .redacted(reason: .placeholder)
+            .accessibilityHidden(true)
         }
     }
 }

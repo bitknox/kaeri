@@ -16,6 +16,11 @@ public final class TitleCache {
     /// franchise's season (`TitleDetail.partial`). Its title, art, facts, synopsis and seasons
     /// are known; the rest of the page is still on its way.
     public private(set) var headed: Set<AnilistId> = []
+    /// The titles whose page was asked for and did not come: their page lets the list's row stand
+    /// rather than holding the rest under placeholders for good.
+    public private(set) var failed: Set<AnilistId> = []
+    /// The titles whose whole page was asked for and has not come yet.
+    @ObservationIgnored private var pending: Set<AnilistId> = []
     /// Each title's episode table, as last loaded.
     public private(set) var episodes: [AnilistId: [EpisodeRow]] = [:]
     /// Each title's line on its dub ("Dub to episode 6"), where the source could say one.
@@ -91,7 +96,21 @@ public final class TitleCache {
         } else {
             detailed.insert(entry.id)
             headed.remove(entry.id)
+            pending.remove(entry.id)
+            if failed.contains(entry.id) { failed.remove(entry.id) }
         }
+    }
+
+    /// A title's page was asked for.
+    func detailAsked(_ id: AnilistId) {
+        pending.insert(id)
+        if failed.contains(id) { failed.remove(id) }
+    }
+
+    /// A page's fetch ended: without the whole page, AniList did not answer, whatever header
+    /// came first.
+    func detailEnded(_ id: AnilistId) {
+        if pending.remove(id) != nil { failed.insert(id) }
     }
 
     /// Whether `id`'s page can show its top: its header or the whole page is here.
