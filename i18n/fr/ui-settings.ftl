@@ -223,3 +223,4 @@ settings-subs-reset = Réinitialiser le style des sous-titres
 settings-opds-feed = Partager sur ce réseau
 settings-opds-password = Mot de passe du flux
 settings-opds-port = Port du flux
+settings-label-picture-in-picture-on-leave = Picture-in-picture en quittant l'app

@@ -4610,7 +4610,7 @@ settings-label-calendar-mine = В календаре только ваш спи�
 settings-note-titles = По выбору AniList: язык следует за вашим аккаунтом, а без входа будет английский.
 
 # Note under the trailers row. The terminal never plays trailers by itself; the setting is shared with the apps.
-settings-note-trailers = Приложения для компьютера воспроизводят трейлеры без звука в превью при наведении. В терминале настройка сохраняется, но трейлеры не воспроизводятся.
+settings-note-trailers = Приложения воспроизводят трейлеры без звука на страницах тайтлов и в превью при наведении. Терминал хранит настройку и ничего не воспроизводит.
 
 # Note under the subtitles row.
 settings-note-subtitles = Нажмите Enter, чтобы ввести код языка. Вариантов слишком много, чтобы перебирать.
@@ -12359,6 +12359,9 @@ settings-opds-password = Пароль ленты
 
 # Row: the port the shared catalogue listens on. Empty picks a free one.
 settings-opds-port = Порт ленты
+
+# Settings row: whether leaving the app while an episode plays opens the system's floating window. The engine's label, and the Android row's. Sentence case, as Android writes it.
+settings-label-picture-in-picture-on-leave = «Картинка в картинке» при выходе из приложения
 
 # Label of the address field in the Add a server sheet.
 book-server-address = Адрес

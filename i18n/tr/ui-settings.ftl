@@ -221,3 +221,4 @@ settings-subs-reset = Altyazı stilini sıfırla
 settings-opds-feed = Bu ağda paylaş
 settings-opds-password = Akış parolası
 settings-opds-port = Akış portu
+settings-label-picture-in-picture-on-leave = Uygulamadan çıkarken pencere içinde pencere

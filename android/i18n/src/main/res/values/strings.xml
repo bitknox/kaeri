@@ -2192,6 +2192,10 @@
     <string name="updates_unknown_sources_path">Settings › Apps › Security &amp; restrictions › Unknown sources</string>
     <!-- Name a TV gives itself to phones when the system has none set. -->
     <string name="tv_remote_default_name">Kaeri TV</string>
+    <!-- Row in the TV player's Info panel, under the Stats for nerds lines: puts the full stats over the picture, updated once a second. -->
+    <string name="player_stats_show_live">Show live stats</string>
+    <!-- The same row while the live stats are up. -->
+    <string name="player_stats_hide_live">Hide live stats</string>
     <!-- The episode in a short form for a title last watched dubbed. -->
     <string name="episode_short_dubbed">E%1$d · Dubbed</string>
     <!-- The episode in its long form for a title last watched dubbed. -->
@@ -2649,6 +2653,10 @@
     <string name="engine_down_stopped">Nothing new will load until it starts again. Try again, or quit and open the app once more.</string>
     <!-- Button on that screen that closes the app. -->
     <string name="engine_down_quit">Quit</string>
+    <!-- Words in place of the Picture in picture when leaving the app switch, when Android's own per-app Picture in picture permission is off. An Open settings button sits beside it. -->
+    <string name="settings_picture_in_picture_system_off">Off in Android settings</string>
+    <!-- Note under the Play trailers setting on Android: what the trailers are and when they do not play. -->
+    <string name="settings_trailers_note_android">Trailers play muted from YouTube, which sees your IP address. They don\'t play with Data Saver or Battery Saver on, or with animations removed.</string>
     <!-- Title of the about page. -->
     <string name="about_title">About</string>
     <!-- Title of the about page on desktop. -->
@@ -7242,6 +7250,8 @@
     <string name="settings_opds_password">Feed password</string>
     <!-- Row: the port the shared catalogue listens on. Empty picks a free one. -->
     <string name="settings_opds_port">Feed port</string>
+    <!-- Settings row: whether leaving the app while an episode plays opens the system's floating window. The engine's label, and the Android row's. Sentence case, as Android writes it. -->
+    <string name="settings_label_picture_in_picture_on_leave">Picture in picture when leaving the app</string>
     <!-- Label of the address field in the Add a server sheet. -->
     <string name="book_server_address">Address</string>
     <!-- Note under the empty address field. -->

@@ -1107,6 +1107,8 @@
     <string name="tv_discussion_select_spoiler">Нажмите OK, чтобы показать спойлер</string>
     <string name="updates_unknown_sources_path">Настройки › Приложения › Безопасность и ограничения › Неизвестные источники</string>
     <string name="tv_remote_default_name">Телевизор Kaeri</string>
+    <string name="player_stats_show_live">Показать живую статистику</string>
+    <string name="player_stats_hide_live">Скрыть живую статистику</string>
     <string name="episode_short_dubbed">Эп. %1$d · С дубляжом</string>
     <string name="episode_long_dubbed">Эпизод %1$d · С дубляжом</string>
     <plurals name="downloads_live_paused">
@@ -1382,6 +1384,8 @@
     <string name="engine_down_title">Kaeri остановлен</string>
     <string name="engine_down_stopped">Ничего нового не загрузится, пока он не запустится снова. Попробуйте ещё раз или закройте и снова откройте приложение.</string>
     <string name="engine_down_quit">Закрыть</string>
+    <string name="settings_picture_in_picture_system_off">Отключено в настройках Android</string>
+    <string name="settings_trailers_note_android">Трейлеры воспроизводятся без звука с YouTube, который видит ваш IP-адрес. Они не воспроизводятся при включённой экономии трафика или энергосбережении, а также при отключённой анимации.</string>
     <string name="about_title">О программе</string>
     <string name="about_title_app">О Kaeri</string>
     <string name="about_version">Версия %1$s</string>
@@ -3780,6 +3784,7 @@
     <string name="settings_opds_feed">Делиться в этой сети</string>
     <string name="settings_opds_password">Пароль ленты</string>
     <string name="settings_opds_port">Порт ленты</string>
+    <string name="settings_label_picture_in_picture_on_leave">«Картинка в картинке» при выходе из приложения</string>
     <string name="book_server_address">Адрес</string>
     <string name="book_server_address_hint">Адрес или вся ссылка OPDS из Kavita.</string>
     <string name="book_server_kavita_key">Это ссылка OPDS из Kavita. Ключ в ней служит для входа, поэтому пароль не нужен.</string>

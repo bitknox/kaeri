@@ -1056,6 +1056,8 @@
     <string name="tv_discussion_select_spoiler">Selecciona para mostrar el spoiler</string>
     <string name="updates_unknown_sources_path">Configuración › Apps › Seguridad y restricciones › Orígenes desconocidos</string>
     <string name="tv_remote_default_name">Televisor Kaeri</string>
+    <string name="player_stats_show_live">Mostrar estadísticas en vivo</string>
+    <string name="player_stats_hide_live">Ocultar estadísticas en vivo</string>
     <string name="episode_short_dubbed">E%1$d · Doblado</string>
     <string name="episode_long_dubbed">Episodio %1$d · Doblado</string>
     <plurals name="downloads_live_paused">
@@ -1317,6 +1319,8 @@
     <string name="engine_down_title">Kaeri se detuvo</string>
     <string name="engine_down_stopped">No se cargará nada nuevo hasta que vuelva a funcionar. Inténtalo de nuevo o cierra la app y ábrela otra vez.</string>
     <string name="engine_down_quit">Salir</string>
+    <string name="settings_picture_in_picture_system_off">Desactivado en Android</string>
+    <string name="settings_trailers_note_android">Los tráileres se reproducen sin sonido desde YouTube, que ve tu dirección IP. No se reproducen con Ahorro de datos o Ahorro de batería activados, ni con las animaciones quitadas.</string>
     <string name="about_title">Acerca de</string>
     <string name="about_title_app">Acerca de Kaeri</string>
     <string name="about_version">Versión %1$s</string>
@@ -3648,6 +3652,7 @@
     <string name="settings_opds_feed">Compartir en esta red</string>
     <string name="settings_opds_password">Contraseña del catálogo</string>
     <string name="settings_opds_port">Puerto del catálogo</string>
+    <string name="settings_label_picture_in_picture_on_leave">Imagen en imagen al salir de la app</string>
     <string name="book_server_address">Dirección</string>
     <string name="book_server_address_hint">Una dirección, o el enlace OPDS completo de Kavita.</string>
     <string name="book_server_kavita_key">Este es un enlace OPDS de Kavita. Su clave inicia tu sesión, así que no hace falta contraseña.</string>

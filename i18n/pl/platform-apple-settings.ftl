@@ -131,3 +131,6 @@ settings-trailers-row = Odtwarzaj zwiastuny
 settings-trailers-note-apple = Zwiastuny są odtwarzane bez dźwięku z YouTube, który widzi twój adres IP. Nie działają w trybie niskiej transmisji danych, przy włączonym ograniczeniu ruchu ani w trybie niskiego poboru energii.
 language-restart = Uruchom ponownie
 language-next-open-note = { -app-name } użyje nowego języka przy następnym uruchomieniu.
+settings-picture-in-picture-on-leave-apple = Obraz w obrazie po wyjściu z aplikacji
+settings-picture-in-picture-on-leave-mac = Włącza się po zminimalizowaniu okna lub ukryciu aplikacji { -app-name }.
+settings-picture-in-picture-on-leave-ios = Wymaga też opcji Uruchamiaj PiP automatycznie w Ustawienia > Ogólne > Obraz w obrazie.

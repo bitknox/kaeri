@@ -20335,6 +20335,11 @@ pub fn settings_opds_port() -> String {
     text("settings-opds-port", &[])
 }
 
+/// Settings row: whether leaving the app while an episode plays opens the system's floating window. The engine's label, and the Android row's. Sentence case, as Android writes it.
+pub fn settings_label_picture_in_picture_on_leave() -> String {
+    text("settings-label-picture-in-picture-on-leave", &[])
+}
+
 /// Label of the address field in the Add a server sheet.
 pub fn book_server_address() -> String {
     text("book-server-address", &[])

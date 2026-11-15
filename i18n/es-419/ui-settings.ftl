@@ -223,3 +223,4 @@ settings-subs-reset = Restablecer estilo de subtítulos
 settings-opds-feed = Compartir en esta red
 settings-opds-password = Contraseña del catálogo
 settings-opds-port = Puerto del catálogo
+settings-label-picture-in-picture-on-leave = Imagen en imagen al salir de la app

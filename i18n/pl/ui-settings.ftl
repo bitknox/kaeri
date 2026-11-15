@@ -225,3 +225,4 @@ settings-subs-reset = Zresetuj styl napisów
 settings-opds-feed = Udostępniaj w tej sieci
 settings-opds-password = Hasło kanału
 settings-opds-port = Port kanału
+settings-label-picture-in-picture-on-leave = Obraz w obrazie po wyjściu z aplikacji

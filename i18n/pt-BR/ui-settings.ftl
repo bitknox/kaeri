@@ -223,3 +223,4 @@ settings-subs-reset = Redefinir estilo das legendas
 settings-opds-feed = Compartilhar nesta rede
 settings-opds-password = Senha do feed
 settings-opds-port = Porta do feed
+settings-label-picture-in-picture-on-leave = Picture-in-picture ao sair do app

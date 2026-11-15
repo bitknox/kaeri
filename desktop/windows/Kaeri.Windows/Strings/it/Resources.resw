@@ -9374,6 +9374,9 @@
   <data name="SettingsOpdsPort" xml:space="preserve">
     <value>Porta del feed</value>
   </data>
+  <data name="SettingsLabelPictureInPictureOnLeave" xml:space="preserve">
+    <value>Picture in picture all'uscita dall'app</value>
+  </data>
   <data name="BookServerAddress" xml:space="preserve">
     <value>Indirizzo</value>
   </data>

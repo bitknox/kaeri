@@ -1214,6 +1214,11 @@ pub struct PlaybackConfig {
     /// default, and a show can say otherwise. The native apps draw it; the terminal shows no
     /// stills.
     pub spoiler_protection: bool,
+    /// Open the system's floating window when the person leaves the app while an episode
+    /// plays: on iPhone, iPad and Android on leaving, on the Mac on minimising or hiding. On by
+    /// default. This device's own: it never syncs. The terminal, the TV and the desktop apps
+    /// have no floating window and show no row.
+    pub picture_in_picture: bool,
     /// Put the opening and ending on the seek bar as chapter markers, where the stream carries
     /// no chapters of its own.
     ///
@@ -1294,6 +1299,7 @@ impl Default for PlaybackConfig {
             skip_filler: false,
             up_next_countdown: 10,
             spoiler_protection: true,
+            picture_in_picture: true,
             fullscreen: false,
             players: vec!["mpv".into(), "external".into()],
             mpv_binary: "mpv".into(),
@@ -1828,6 +1834,7 @@ mod tests {
         let cfg = Config::default();
         assert_eq!(cfg.playback.up_next_countdown, 10, "Up Next counts down from ten");
         assert!(cfg.playback.spoiler_protection, "on by default");
+        assert!(cfg.playback.picture_in_picture, "floats on leaving by default");
         assert_eq!(cfg.downloads.quality, DownloadQuality::Standard);
         assert_eq!(cfg.downloads.keep_next, 0, "nothing kept unasked");
         assert!(!cfg.downloads.on_cellular && !cfg.providers.torrent.on_cellular);

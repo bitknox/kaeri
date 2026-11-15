@@ -219,3 +219,4 @@ settings-subs-reset = Atur ulang gaya subtitle
 settings-opds-feed = Bagikan di jaringan ini
 settings-opds-password = Kata sandi feed
 settings-opds-port = Port feed
+settings-label-picture-in-picture-on-leave = Gambar dalam gambar saat keluar dari aplikasi

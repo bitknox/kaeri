@@ -4484,7 +4484,7 @@ settings-label-calendar-mine = Takvim yalnızca listenizi gösterir
 settings-note-titles = AniList'in seçimi, AniList hesabınızı izler. Oturum kapalıyken İngilizce kullanılır.
 
 # Note under the trailers row. The terminal never plays trailers by itself; the setting is shared with the apps.
-settings-note-trailers = Masaüstü uygulamaları, üzerine gelince açılan önizlemelerde fragmanları sessiz oynatır. Terminal ayarı saklar ama hiçbir fragman oynatmaz.
+settings-note-trailers = Uygulamalar fragmanları başlık sayfalarında ve imleçle önizlemelerde sessiz oynatır. Terminal ayarı saklar ve hiçbirini oynatmaz.
 
 # Note under the subtitles row.
 settings-note-subtitles = Bir dil kodu yazmak için Enter tuşuna basın. Değerler tek tek dolaşılamayacak kadar çok.
@@ -12077,6 +12077,9 @@ settings-opds-password = Akış parolası
 
 # Row: the port the shared catalogue listens on. Empty picks a free one.
 settings-opds-port = Akış portu
+
+# Settings row: whether leaving the app while an episode plays opens the system's floating window. The engine's label, and the Android row's. Sentence case, as Android writes it.
+settings-label-picture-in-picture-on-leave = Uygulamadan çıkarken pencere içinde pencere
 
 # Label of the address field in the Add a server sheet.
 book-server-address = Adres

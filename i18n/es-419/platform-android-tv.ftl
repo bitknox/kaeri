@@ -128,3 +128,5 @@ tv-discussion-likes = { $count ->
 tv-discussion-select-spoiler = Selecciona para mostrar el spoiler
 updates-unknown-sources-path = Configuración › Apps › Seguridad y restricciones › Orígenes desconocidos
 tv-remote-default-name = Televisor { -app-name }
+player-stats-show-live = Mostrar estadísticas en vivo
+player-stats-hide-live = Ocultar estadísticas en vivo

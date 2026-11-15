@@ -8684,6 +8684,9 @@
   <data name="SettingsOpdsPort" xml:space="preserve">
     <value>フィードのポート</value>
   </data>
+  <data name="SettingsLabelPictureInPictureOnLeave" xml:space="preserve">
+    <value>アプリを離れるときにピクチャー イン ピクチャー</value>
+  </data>
   <data name="BookServerAddress" xml:space="preserve">
     <value>アドレス</value>
   </data>

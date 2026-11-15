@@ -8684,6 +8684,9 @@
   <data name="SettingsOpdsPort" xml:space="preserve">
     <value>Port feed</value>
   </data>
+  <data name="SettingsLabelPictureInPictureOnLeave" xml:space="preserve">
+    <value>Gambar dalam gambar saat keluar dari aplikasi</value>
+  </data>
   <data name="BookServerAddress" xml:space="preserve">
     <value>Alamat</value>
   </data>

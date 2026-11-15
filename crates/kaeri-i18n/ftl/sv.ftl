@@ -4484,7 +4484,7 @@ settings-label-calendar-mine = Kalendern visar bara din lista
 settings-note-titles = AniLists val följer ditt AniList-konto och är engelska när du är utloggad.
 
 # Note under the trailers row. The terminal never plays trailers by itself; the setting is shared with the apps.
-settings-note-trailers = Skrivbordsapparna spelar trailers utan ljud i förhandsvisningar när du pekar på en titel. Terminalen sparar inställningen men spelar inga.
+settings-note-trailers = Apparna spelar trailrar utan ljud på titelsidor och i förhandsvisningar när pekaren vilar. Terminalen behåller inställningen och spelar inga.
 
 # Note under the subtitles row.
 settings-note-subtitles = Tryck på Enter för att skriva en språkkod. Det finns för många värden att bläddra i.
@@ -12077,6 +12077,9 @@ settings-opds-password = Flödeslösenord
 
 # Row: the port the shared catalogue listens on. Empty picks a free one.
 settings-opds-port = Flödesport
+
+# Settings row: whether leaving the app while an episode plays opens the system's floating window. The engine's label, and the Android row's. Sentence case, as Android writes it.
+settings-label-picture-in-picture-on-leave = Bild-i-bild när du lämnar appen
 
 # Label of the address field in the Add a server sheet.
 book-server-address = Adress

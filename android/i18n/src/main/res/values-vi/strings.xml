@@ -954,6 +954,8 @@
     <string name="tv_discussion_select_spoiler">Chọn để hiện nội dung tiết lộ</string>
     <string name="updates_unknown_sources_path">Cài đặt › Ứng dụng › Bảo mật &amp; hạn chế › Nguồn không xác định</string>
     <string name="tv_remote_default_name">Kaeri TV</string>
+    <string name="player_stats_show_live">Hiện số liệu trực tiếp</string>
+    <string name="player_stats_hide_live">Ẩn số liệu trực tiếp</string>
     <string name="episode_short_dubbed">E%1$d · Lồng tiếng</string>
     <string name="episode_long_dubbed">Tập %1$d · Lồng tiếng</string>
     <plurals name="downloads_live_paused">
@@ -1187,6 +1189,8 @@
     <string name="engine_down_title">Kaeri đã dừng</string>
     <string name="engine_down_stopped">Sẽ không tải thêm gì mới cho đến khi nó chạy lại. Hãy thử lại, hoặc thoát rồi mở lại ứng dụng.</string>
     <string name="engine_down_quit">Thoát</string>
+    <string name="settings_picture_in_picture_system_off">Đã tắt trong cài đặt Android</string>
+    <string name="settings_trailers_note_android">Trailer phát không tiếng từ YouTube, nơi thấy địa chỉ IP của bạn. Trailer không phát khi bật Trình tiết kiệm dữ liệu hoặc Trình tiết kiệm pin, hay khi đã xóa hiệu ứng động.</string>
     <string name="about_title">Giới thiệu</string>
     <string name="about_title_app">Giới thiệu về Kaeri</string>
     <string name="about_version">Phiên bản %1$s</string>
@@ -3384,6 +3388,7 @@
     <string name="settings_opds_feed">Chia sẻ trong mạng này</string>
     <string name="settings_opds_password">Mật khẩu của feed</string>
     <string name="settings_opds_port">Cổng của feed</string>
+    <string name="settings_label_picture_in_picture_on_leave">Hình trong hình khi rời ứng dụng</string>
     <string name="book_server_address">Địa chỉ</string>
     <string name="book_server_address_hint">Một địa chỉ, hoặc toàn bộ liên kết OPDS từ Kavita.</string>
     <string name="book_server_kavita_key">Đây là liên kết OPDS của Kavita. Khóa trong đó dùng để đăng nhập, nên không cần mật khẩu.</string>

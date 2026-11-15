@@ -19100,12 +19100,24 @@
     "at": "2026-10-31",
     "back": "Statistics"
   },
+  "player-stats-hide-live": {
+    "source": "0fd70596cd2a",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
+  },
   "player-stats-row": {
     "source": "a9107ae742d8",
     "state": "draft",
     "by": "haiku",
     "at": "2026-10-31",
     "back": "{ $label }: { $value }"
+  },
+  "player-stats-show-live": {
+    "source": "0e29c7058555",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
   },
   "player-stats-waiting": {
     "source": "b957afa89c9a",
@@ -26866,6 +26878,12 @@
     "at": "2026-10-31",
     "back": "Night mode"
   },
+  "settings-label-picture-in-picture-on-leave": {
+    "source": "cf11b1da5086",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
+  },
   "settings-label-player-ui": {
     "source": "2e38d6fd4da0",
     "state": "draft",
@@ -27481,10 +27499,10 @@
     "at": "2026-11-07"
   },
   "settings-note-trailers": {
-    "source": "b83a10eb6e6c",
+    "source": "d13eb76d28dc",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-01"
+    "at": "2026-11-15"
   },
   "settings-note-trailers-linux": {
     "source": "54fcf4340ab7",
@@ -27734,6 +27752,30 @@
     "by": "haiku",
     "at": "2026-10-31",
     "back": "Settings panels"
+  },
+  "settings-picture-in-picture-on-leave-apple": {
+    "source": "31768d93f1d6",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
+  },
+  "settings-picture-in-picture-on-leave-ios": {
+    "source": "e5d34b6d8a3f",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
+  },
+  "settings-picture-in-picture-on-leave-mac": {
+    "source": "54e8b94d3d1e",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
+  },
+  "settings-picture-in-picture-system-off": {
+    "source": "8b2c61535738",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
   },
   "settings-player-interface": {
     "source": "2e38d6fd4da0",
@@ -29098,6 +29140,12 @@
     "by": "haiku",
     "at": "2026-10-31",
     "back": "Always"
+  },
+  "settings-trailers-note-android": {
+    "source": "f24c6c651111",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
   },
   "settings-trailers-note-apple": {
     "source": "b21582da2a10",

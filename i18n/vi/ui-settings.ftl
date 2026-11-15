@@ -219,3 +219,4 @@ settings-subs-reset = Đặt lại kiểu phụ đề
 settings-opds-feed = Chia sẻ trong mạng này
 settings-opds-password = Mật khẩu của feed
 settings-opds-port = Cổng của feed
+settings-label-picture-in-picture-on-leave = Hình trong hình khi rời ứng dụng

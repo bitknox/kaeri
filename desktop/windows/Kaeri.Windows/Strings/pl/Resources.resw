@@ -9719,6 +9719,9 @@
   <data name="SettingsOpdsPort" xml:space="preserve">
     <value>Port kanału</value>
   </data>
+  <data name="SettingsLabelPictureInPictureOnLeave" xml:space="preserve">
+    <value>Obraz w obrazie po wyjściu z aplikacji</value>
+  </data>
   <data name="BookServerAddress" xml:space="preserve">
     <value>Adres</value>
   </data>

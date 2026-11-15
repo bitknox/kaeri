@@ -4029,6 +4029,14 @@ object Strings {
     fun tvRemoteDefaultName(context: Context): String =
         context.getString(R.string.tv_remote_default_name)
 
+    /** Row in the TV player's Info panel, under the Stats for nerds lines: puts the full stats over the picture, updated once a second. */
+    fun playerStatsShowLive(context: Context): String =
+        context.getString(R.string.player_stats_show_live)
+
+    /** The same row while the live stats are up. */
+    fun playerStatsHideLive(context: Context): String =
+        context.getString(R.string.player_stats_hide_live)
+
     /** The episode in a short form for a title last watched dubbed. */
     fun episodeShortDubbed(context: Context, episode: Int): String =
         context.getString(R.string.episode_short_dubbed, episode)
@@ -4852,6 +4860,14 @@ object Strings {
     /** Button on that screen that closes the app. */
     fun engineDownQuit(context: Context): String =
         context.getString(R.string.engine_down_quit)
+
+    /** Words in place of the Picture in picture when leaving the app switch, when Android's own per-app Picture in picture permission is off. An Open settings button sits beside it. */
+    fun settingsPictureInPictureSystemOff(context: Context): String =
+        context.getString(R.string.settings_picture_in_picture_system_off)
+
+    /** Note under the Play trailers setting on Android: what the trailers are and when they do not play. */
+    fun settingsTrailersNoteAndroid(context: Context): String =
+        context.getString(R.string.settings_trailers_note_android)
 
     /** Title of the about page. */
     fun aboutTitle(context: Context): String =
@@ -13631,6 +13647,10 @@ object Strings {
     /** Row: the port the shared catalogue listens on. Empty picks a free one. */
     fun settingsOpdsPort(context: Context): String =
         context.getString(R.string.settings_opds_port)
+
+    /** Settings row: whether leaving the app while an episode plays opens the system's floating window. The engine's label, and the Android row's. Sentence case, as Android writes it. */
+    fun settingsLabelPictureInPictureOnLeave(context: Context): String =
+        context.getString(R.string.settings_label_picture_in_picture_on_leave)
 
     /** Label of the address field in the Add a server sheet. */
     fun bookServerAddress(context: Context): String =

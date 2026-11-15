@@ -225,3 +225,4 @@ settings-subs-reset = Сбросить стиль субтитров
 settings-opds-feed = Делиться в этой сети
 settings-opds-password = Пароль ленты
 settings-opds-port = Порт ленты
+settings-label-picture-in-picture-on-leave = «Картинка в картинке» при выходе из приложения

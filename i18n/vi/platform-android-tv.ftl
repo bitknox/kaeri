@@ -118,3 +118,5 @@ tv-discussion-likes = { $count ->
 tv-discussion-select-spoiler = Chọn để hiện nội dung tiết lộ
 updates-unknown-sources-path = Cài đặt › Ứng dụng › Bảo mật & hạn chế › { -source-cap } không xác định
 tv-remote-default-name = { -app-name } TV
+player-stats-show-live = Hiện số liệu trực tiếp
+player-stats-hide-live = Ẩn số liệu trực tiếp

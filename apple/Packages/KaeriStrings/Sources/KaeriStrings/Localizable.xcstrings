@@ -285369,6 +285369,90 @@
         }
       }
     },
+    "settings-label-picture-in-picture-on-leave" : {
+      "comment" : "Settings row: whether leaving the app while an episode plays opens the system's floating window. The engine's label, and the Android row's. Sentence case, as Android writes it.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bild-im-Bild beim Verlassen der App"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Picture in picture when leaving the app"
+          }
+        },
+        "es-419" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Imagen en imagen al salir de la app"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Picture-in-picture en quittant l'app"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gambar dalam gambar saat keluar dari aplikasi"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Picture in picture all'uscita dall'app"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "アプリを離れるときにピクチャー イン ピクチャー"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Obraz w obrazie po wyjściu z aplikacji"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Picture-in-picture ao sair do app"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "«Картинка в картинке» при выходе из приложения"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bild-i-bild när du lämnar appen"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Uygulamadan çıkarken pencere içinde pencere"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hình trong hình khi rời ứng dụng"
+          }
+        }
+      }
+    },
     "settings-label-torrents-while-casting" : {
       "comment" : "Settings row: whether a cast to a TV plays from torrents, which this device serves meanwhile.",
       "extractionState" : "manual",
@@ -289881,6 +289965,258 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Các mục cài đặt"
+          }
+        }
+      }
+    },
+    "settings-picture-in-picture-on-leave-apple" : {
+      "comment" : "Settings row on the Mac, iPhone and iPad: whether leaving the app while an episode plays opens Picture in Picture. \"Picture in Picture\" in the system's own capitals.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bild-in-Bild beim Verlassen der App"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Picture in Picture when leaving the app"
+          }
+        },
+        "es-419" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Imagen dentro de imagen al salir de la app"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Image dans l'image en quittant l'app"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gambar dalam Gambar saat keluar dari aplikasi"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Picture in Picture all'uscita dall'app"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "アプリを離れるときにピクチャ・イン・ピクチャ"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Obraz w obrazie po wyjściu z aplikacji"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Picture in Picture ao sair do app"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "«Картинка в картинке» при выходе из приложения"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bild-i-bild när du lämnar appen"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Uygulamadan çıkarken Resim İçinde Resim"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hình trong hình khi rời ứng dụng"
+          }
+        }
+      }
+    },
+    "settings-picture-in-picture-on-leave-ios" : {
+      "comment" : "Footnote under the iPhone and iPad group that holds that row: the system's own switch, which wins over the app's. Name the switch and the path as iOS names them in this language.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Braucht auch „PiP automatisch starten“ unter Einstellungen > Allgemein > Bild-in-Bild."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Also needs Start PiP Automatically in Settings > General > Picture in Picture."
+          }
+        },
+        "es-419" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "También necesita Iniciar PiP automáticamente en Configuración > General > Imagen dentro de imagen."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nécessite aussi Démarrer PiP automatiquement dans Réglages > Général > Image dans l'image."
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Juga perlu Mulai PiP Secara Otomatis di Pengaturan > Umum > Gambar dalam Gambar."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Serve anche Avvia PiP automaticamente in Impostazioni > Generali > Picture in Picture."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "「設定」>「一般」>「ピクチャ・イン・ピクチャ」の「PiPを自動的に開始」もオンにする必要があります。"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wymaga też opcji Uruchamiaj PiP automatycznie w Ustawienia > Ogólne > Obraz w obrazie."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Também precisa de Iniciar PiP Automaticamente em Ajustes > Geral > Picture in Picture."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Также нужен параметр «Запускать PiP автоматически» в Настройки > Основные > Картинка в картинке."
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kräver också Starta BiB automatiskt i Inställningar > Allmänt > Bild-i-bild."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ayarlar > Genel > Resim İçinde Resim altındaki PiP'yi Otomatik Olarak Başlat da açık olmalı."
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cũng cần bật Tự động bắt đầu PiP trong Cài đặt > Cài đặt chung > Hình trong hình."
+          }
+        }
+      }
+    },
+    "settings-picture-in-picture-on-leave-mac" : {
+      "comment" : "Note under that row on the Mac: when the Mac counts as leaving.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Startet, wenn das Fenster minimiert oder Kaeri ausgeblendet wird."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Starts when the window is minimised or Kaeri is hidden."
+          }
+        },
+        "es-419" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Se inicia al minimizar la ventana o al ocultar Kaeri."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Démarre quand la fenêtre est réduite ou que Kaeri est masqué."
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dimulai saat jendela diperkecil atau Kaeri disembunyikan."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Si avvia quando la finestra è ridotta a icona o Kaeri è nascosta."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ウインドウをしまうか、Kaeriを非表示にすると開始します。"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Włącza się po zminimalizowaniu okna lub ukryciu aplikacji Kaeri."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Começa quando a janela é minimizada ou o Kaeri é ocultado."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Включается, когда окно свёрнуто или Kaeri скрыт."
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Startar när fönstret minimeras eller Kaeri göms."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pencere küçültüldüğünde veya Kaeri gizlendiğinde başlar."
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bắt đầu khi cửa sổ được thu nhỏ hoặc Kaeri bị ẩn."
           }
         }
       }

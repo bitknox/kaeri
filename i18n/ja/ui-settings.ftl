@@ -219,3 +219,4 @@ settings-subs-reset = 字幕スタイルをリセット
 settings-opds-feed = このネットワークで共有
 settings-opds-password = フィードのパスワード
 settings-opds-port = フィードのポート
+settings-label-picture-in-picture-on-leave = アプリを離れるときにピクチャー イン ピクチャー

@@ -954,6 +954,8 @@
     <string name="tv_discussion_select_spoiler">Pilih untuk menampilkan spoiler</string>
     <string name="updates_unknown_sources_path">Setelan › Aplikasi › Keamanan &amp; pembatasan › Sumber tidak dikenal</string>
     <string name="tv_remote_default_name">Kaeri TV</string>
+    <string name="player_stats_show_live">Tampilkan statistik langsung</string>
+    <string name="player_stats_hide_live">Sembunyikan statistik langsung</string>
     <string name="episode_short_dubbed">E%1$d · Berdubbing</string>
     <string name="episode_long_dubbed">Episode %1$d · Berdubbing</string>
     <plurals name="downloads_live_paused">
@@ -1187,6 +1189,8 @@
     <string name="engine_down_title">Kaeri berhenti</string>
     <string name="engine_down_stopped">Tidak ada yang baru dimuat sampai aplikasi berjalan lagi. Coba lagi, atau tutup dan buka aplikasi sekali lagi.</string>
     <string name="engine_down_quit">Tutup</string>
+    <string name="settings_picture_in_picture_system_off">Nonaktif di setelan Android</string>
+    <string name="settings_trailers_note_android">Trailer diputar tanpa suara dari YouTube, yang melihat alamat IP kamu. Trailer tidak diputar saat Penghemat Data atau Penghemat Baterai aktif, atau saat animasi dihapus.</string>
     <string name="about_title">Tentang</string>
     <string name="about_title_app">Tentang Kaeri</string>
     <string name="about_version">Versi %1$s</string>
@@ -3384,6 +3388,7 @@
     <string name="settings_opds_feed">Bagikan di jaringan ini</string>
     <string name="settings_opds_password">Kata sandi feed</string>
     <string name="settings_opds_port">Port feed</string>
+    <string name="settings_label_picture_in_picture_on_leave">Gambar dalam gambar saat keluar dari aplikasi</string>
     <string name="book_server_address">Alamat</string>
     <string name="book_server_address_hint">Sebuah alamat, atau seluruh tautan OPDS dari Kavita.</string>
     <string name="book_server_kavita_key">Ini tautan OPDS Kavita. Kuncinya dipakai untuk masuk, jadi tidak perlu kata sandi.</string>

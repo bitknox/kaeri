@@ -9158,6 +9158,9 @@ public static partial class T
     /// <summary>Row: the port the shared catalogue listens on. Empty picks a free one.</summary>
     public static string SettingsOpdsPort => Get("SettingsOpdsPort");
 
+    /// <summary>Settings row: whether leaving the app while an episode plays opens the system's floating window. The engine's label, and the Android row's. Sentence case, as Android writes it.</summary>
+    public static string SettingsLabelPictureInPictureOnLeave => Get("SettingsLabelPictureInPictureOnLeave");
+
     /// <summary>Label of the address field in the Add a server sheet.</summary>
     public static string BookServerAddress => Get("BookServerAddress");
 
@@ -15252,6 +15255,7 @@ public static partial class T
         ["SettingsOpdsFeed"] = "Share on this network",
         ["SettingsOpdsPassword"] = "Feed password",
         ["SettingsOpdsPort"] = "Feed port",
+        ["SettingsLabelPictureInPictureOnLeave"] = "Picture in picture when leaving the app",
         ["BookServerAddress"] = "Address",
         ["BookServerAddressHint"] = "An address, or the whole OPDS link from Kavita.",
         ["BookServerKavitaKey"] = "This is a Kavita OPDS link. Its key signs you in, so no password is needed.",

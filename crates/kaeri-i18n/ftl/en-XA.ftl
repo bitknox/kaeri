@@ -4674,7 +4674,7 @@ settings-label-calendar-mine = [Çàļéñðàŕ šĥöŵš öñļý ýöüŕ ļ
 settings-note-titles = [ÅñîĻîšţ'š çĥöîçé ƒöļļöŵš ýöüŕ ÅñîĻîšţ àççöüñţ, àñð îš Éñĝļîšĥ ŵĥéñ ýöü'ŕé šîĝñéð öüţ.~~~~~~~~~~~~~~~~~~~~~~~~~~]
 
 # Note under the trailers row. The terminal never plays trailers by itself; the setting is shared with the apps.
-settings-note-trailers = [Ţĥé ðéšķţöþ àþþš þļàý ţŕàîļéŕš ɱüţéð îñ ĥöṽéŕ þŕéṽîéŵš. Ţĥé ţéŕɱîñàļ ķééþš ţĥé šéţţîñĝ àñð þļàýš ñöñé.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]
+settings-note-trailers = [Ţĥé àþþš þļàý ţŕàîļéŕš ɱüţéð öñ ţîţļé þàĝéš àñð îñ ĥöṽéŕ þŕéṽîéŵš. Ţĥé ţéŕɱîñàļ ķééþš ţĥé šéţţîñĝ àñð þļàýš ñöñé.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]
 
 # Note under the subtitles row.
 settings-note-subtitles = [Þŕéšš Éñţéŕ ţö ţýþé à ļàñĝüàĝé çöðé. Ţĥéŕé àŕé ţöö ɱàñý ṽàļüéš ţö çýçļé ţĥŕöüĝĥ.~~~~~~~~~~~~~~~~~~~~~~~~]
@@ -12783,6 +12783,9 @@ settings-opds-password = [Ƒééð þàššŵöŕð~~~~]
 
 # Row: the port the shared catalogue listens on. Empty picks a free one.
 settings-opds-port = [Ƒééð þöŕţ~~~]
+
+# Settings row: whether leaving the app while an episode plays opens the system's floating window. The engine's label, and the Android row's. Sentence case, as Android writes it.
+settings-label-picture-in-picture-on-leave = [Þîçţüŕé îñ þîçţüŕé ŵĥéñ ļéàṽîñĝ ţĥé àþþ~~~~~~~~~~~~]
 
 # Label of the address field in the Add a server sheet.
 book-server-address = [Åððŕéšš~~~]
