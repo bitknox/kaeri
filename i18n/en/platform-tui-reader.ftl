@@ -713,7 +713,7 @@ tui-read-row-date = { $day } { $month }
 # @arg day: plain
 # @arg month: text
 # @arg year: plain
-# @max 16
+# @max 20
 # @only tui
 tui-read-row-date-year = { $day } { $month } { $year }
 
