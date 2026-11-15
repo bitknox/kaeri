@@ -159,9 +159,14 @@
           </Grid>
 
           <StackPanel>
-            <TextBlock x:Name="Synopsis" Style="{StaticResource BodyTextBlockStyle}" TextWrapping="WrapWholeWords" MaxLines="8"
-                       TextTrimming="WordEllipsis" MaxWidth="720" HorizontalAlignment="Left"
-                       IsTextTrimmedChanged="OnSynopsisTrimmed" />
+            <!-- The synopsis, and its room as plates while only the title's own page brings it: the
+                 two share a cell, so the text crossfades over them where they stand. -->
+            <Grid>
+              <TextBlock x:Name="Synopsis" Style="{StaticResource BodyTextBlockStyle}" TextWrapping="WrapWholeWords" MaxLines="8"
+                         TextTrimming="WordEllipsis" MaxWidth="720" HorizontalAlignment="Left"
+                         IsTextTrimmedChanged="OnSynopsisTrimmed" />
+              <Border x:Name="SynopsisHeld" Visibility="Collapsed" AutomationProperties.AccessibilityView="Raw" />
+            </Grid>
             <HyperlinkButton x:Name="SynopsisMore" Style="{StaticResource SilkLinkLeadingStyle}" Visibility="Collapsed" Click="OnSynopsisMore"
                              Content="{x:Bind s:T.ActionMore}" AutomationProperties.Name="{x:Bind s:T.TitleSynopsisMore}" />
             <!-- The demo's credit block, wherever the work shows as a title. -->

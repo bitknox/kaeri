@@ -418,7 +418,7 @@ public sealed partial class TitlePage : Page, IPageKeys
     public TitlePage()
     {
         InitializeComponent();
-        following = new FollowingSection(ctx, DispatcherQueue);
+        following = new FollowingSection(ctx, DispatcherQueue, PlaceholderTiming.TitlePage);
         foreach (var (segment, name) in new[]
         {
             (LibrarySegment.Watching, T.LibraryStatusWatching), (LibrarySegment.Planning, T.LibraryStatusPlanning),
@@ -439,8 +439,12 @@ public sealed partial class TitlePage : Page, IPageKeys
         }
         SourceItem.Text = T.SourcePickerTitle;
         EpisodeList.ItemTemplateSelector = (DataTemplateSelector)EpisodeList.Resources["Templates"];
+        // What the page has yet to load stands as placeholders in its room from the first frame,
+        // and gives way the moment it lands, with no 600 ms wait and no hold.
+        State.Timing = PlaceholderTiming.TitlePage;
         State.Placeholders = Placeholders;
         State.ActivityText = T.TitleLoading;
+        EpisodesState.Timing = PlaceholderTiming.TitlePage;
         EpisodesState.Placeholders = EpisodePlaceholders;
         EpisodesState.ActivityText = T.TitleLoading;
         var settings = new Microsoft.UI.Xaml.Input.KeyboardAccelerator { Key = global::Windows.System.VirtualKey.I, Modifiers = global::Windows.System.VirtualKeyModifiers.Control };
@@ -483,26 +487,106 @@ public sealed partial class TitlePage : Page, IPageKeys
         Columns.Padding = new Thickness(36, band - 120, 36, 24);
     }
 
-    /// <summary>The page's own layout as raised plates: banner, cover and title, then episode rows.</summary>
+    /// <summary>
+    /// The page's own layout as raised plates, for a title not yet known at all: the band, the
+    /// cover and title where they will stand on it, the synopsis, the episode rows, and the
+    /// details beside them or under them, each in the room the page gives it. The page crossfades
+    /// over them where they stand, with its own plates for what is still to come.
+    /// </summary>
     UIElement Placeholders()
     {
-        // The band as tall as the real one, and the cover and title where they will stand on it.
         var band = double.IsNaN(Banner.Height) ? 220 : Banner.Height;
-        var page = new StackPanel { Spacing = 20 };
-        page.Children.Add(new Border { Height = band, Background = Ui.Res<Brush>("RaisedBrush") });
-        var head = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 20, Margin = new Thickness(36, -120 - 20, 36, 0) };
+        var wide = Wide;
+        var page = new Grid();
+        page.Children.Add(new Border { Height = band, VerticalAlignment = VerticalAlignment.Top, Background = Ui.Res<Brush>("RaisedBrush") });
+        var columns = new Grid { Padding = Columns.Padding, ColumnSpacing = Columns.ColumnSpacing };
+        columns.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+        columns.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(wide ? 260 : 0) });
+        var main = new StackPanel { Spacing = Main.Spacing };
+        var head = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 20 };
         head.Children.Add(States.Plate(120, 180, Kaeri.Windows.Art.Radius(120)));
         var bars = new StackPanel { Spacing = 10, VerticalAlignment = VerticalAlignment.Bottom };
         bars.Children.Add(States.Plate(320, 28, 4));
         bars.Children.Add(States.Plate(200, 14, 3));
         bars.Children.Add(States.Plate(150, 40, 6));
         head.Children.Add(bars);
-        page.Children.Add(head);
-        var rows = States.Rows(4, 192, 108);
-        if (rows is FrameworkElement f)
-            f.Margin = new Thickness(36, 8, 36, 0);
-        page.Children.Add(rows);
+        main.Children.Add(head);
+        main.Children.Add(SynopsisPlates());
+        var episodes = new StackPanel { Spacing = 4 };
+        var heading = States.Plate(90, 14, 3);
+        heading.VerticalAlignment = VerticalAlignment.Center;
+        episodes.Children.Add(new Border { MinHeight = 36, Child = heading });
+        episodes.Children.Add(EpisodePlaceholders());
+        main.Children.Add(episodes);
+        columns.Children.Add(main);
+        var details = new StackPanel { Spacing = 16 };
+        AddDetailPlates(details);
+        if (wide)
+        {
+            details.Margin = Side.Margin;
+            Grid.SetColumn(details, 1);
+            columns.Children.Add(details);
+        }
+        else
+            main.Children.Add(details);
+        page.Children.Add(columns);
+        AutomationProperties.SetAccessibilityView(page, Microsoft.UI.Xaml.Automation.Peers.AccessibilityView.Raw);
         return page;
+    }
+
+    /// <summary>
+    /// Whether the details stand in the side column: the content is wide enough, or not yet
+    /// measured. Before the page has a size of its own, in its first frame, the frame's width
+    /// stands in, so the placeholders take the side the page will.
+    /// </summary>
+    bool Wide => PageWidth is 0 or >= SideWidth;
+
+    double PageWidth => Scroll.ActualWidth > 0 ? Scroll.ActualWidth : Frame?.ActualWidth ?? 0;
+
+    /// <summary>The synopsis's room while only the title's own page brings it: six lines of body text.</summary>
+    static Grid SynopsisPlates() => States.Lines(6, 720);
+
+    /// <summary>
+    /// The details column's room while the title's own page is on its way, in its layout: three
+    /// facts, a label and its value each, the More about button, and Related with two titles.
+    /// People you follow keep their own placeholders after them.
+    /// </summary>
+    static void AddDetailPlates(Panel host)
+    {
+        var facts = new Grid { ColumnSpacing = 12, RowSpacing = 6 };
+        facts.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(72) });
+        facts.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+        for (var i = 0; i < 3; i++)
+        {
+            facts.RowDefinitions.Add(new RowDefinition { Height = new GridLength(20) });
+            var label = States.Plate(52, 10, 3);
+            label.VerticalAlignment = VerticalAlignment.Center;
+            var value = States.Lines(1, i == 2 ? 150 : 120);
+            value.VerticalAlignment = VerticalAlignment.Center;
+            Grid.SetRow(label, i);
+            Grid.SetRow(value, i);
+            Grid.SetColumn(value, 1);
+            facts.Children.Add(label);
+            facts.Children.Add(value);
+        }
+        host.Children.Add(facts);
+        host.Children.Add(new Border { Height = 32, CornerRadius = new CornerRadius(4), Background = Ui.Res<Brush>("RaisedBrush") });
+        var related = new StackPanel { Spacing = 6 };
+        related.Children.Add(new Border { Height = 20, Child = Centred(States.Plate(64, 12, 3)) });
+        for (var i = 0; i < 2; i++)
+        {
+            var link = new StackPanel { Spacing = 6, Padding = new Thickness(0, 5, 0, 5) };
+            link.Children.Add(States.Plate(i == 0 ? 170 : 140, 14, 3));
+            link.Children.Add(States.Plate(90, 10, 3));
+            related.Children.Add(link);
+        }
+        host.Children.Add(related);
+
+        static Border Centred(Border plate)
+        {
+            plate.VerticalAlignment = VerticalAlignment.Center;
+            return plate;
+        }
     }
 
     /// <summary>
@@ -513,7 +597,8 @@ public sealed partial class TitlePage : Page, IPageKeys
     UIElement EpisodePlaceholders()
     {
         var count = (int)Math.Clamp(ctx.Known.Entry(id)?.Episodes ?? 4, 1, 12);
-        var narrow = Scroll.ActualWidth is > 0 and < global::Kaeri.App.Synopsis.NarrowBelow;
+        // Before the page has a size of its own, in its first frame, the frame's width stands in.
+        var narrow = PageWidth is > 0 and < global::Kaeri.App.Synopsis.NarrowBelow;
         var still = narrow ? global::Kaeri.App.Synopsis.StillNarrow : global::Kaeri.App.Synopsis.StillWide;
         var rows = States.Rows(count, still, Math.Round(still * 9 / 16), rowHeight: global::Kaeri.App.Synopsis.RowHeight(narrow, true) + 4, spacing: 0);
         if (rows is FrameworkElement f)
@@ -527,9 +612,11 @@ public sealed partial class TitlePage : Page, IPageKeys
         ctx.Tv.Changed += CastChanged;
         id = openedWith = (uint)e.Parameter;
         var known = ctx.Known.Entry(id) is not null;
+        // The band's size first, so the placeholders take the room the page will.
+        Layout();
         if (!known)
             State.Wait();
-        // Episodes not yet known: nothing for 600 ms, then plates in the rows' place.
+        // Episodes not yet known: plates in the rows' place from the first frame.
         if (!ctx.Known.Episodes.ContainsKey(id))
             EpisodesState.Wait();
         following.Reset();
@@ -625,7 +712,8 @@ public sealed partial class TitlePage : Page, IPageKeys
     /// <summary>Asks for what the title's page shows and draws what is known of it now.</summary>
     void Load()
     {
-        ctx.Send(new Command.LoadDetail(id));
+        detailJob = ctx.Send(new Command.LoadDetail(id));
+        fetchEnded = false;
         ctx.Send(new Command.LoadEpisodes(id));
         // The queue, for each row's download cell.
         ctx.Send(new Command.LoadDownloads());
@@ -663,10 +751,11 @@ public sealed partial class TitlePage : Page, IPageKeys
             detailsKey = null;
             availKey = null;
             shownSynopsis = null;
+            landed = false;
             following.Reset();
             ForgetMissing();
-            // The new season's words wait 600 ms over what stood, then plates; its rows, when
-            // not yet known, are plates at once, so no row of the last season is clicked for this one.
+            // The new season's words and rows, when not yet known, are plates at once, under the
+            // crossfade, so no row of the last season is clicked for this one.
             if (ctx.Known.Entry(id) is null)
                 State.WaitKeeping(true);
             if (!ctx.Known.Episodes.ContainsKey(id))
@@ -914,6 +1003,15 @@ public sealed partial class TitlePage : Page, IPageKeys
                 case Event.Detail d when d.V1.Id == id:
                     Show();
                     break;
+                case Event.JobDone done when detailJob is { } job && done.V1 == job:
+                    // The page's fetch is over: what has come stands, and nothing waits on it any more.
+                    detailJob = null;
+                    fetchEnded = true;
+                    if (Current() is null)
+                        State.Failed("the title's page ended without the title", Load);
+                    else
+                        Show();
+                    break;
                 case Event.Private:
                 case Event.AlwaysPrivate { Title: PrivateTitle.Show shown } when shown.Id == id:
                 case Event.ShowSettings sheet when sheet.V1.Id == id:
@@ -973,7 +1071,7 @@ public sealed partial class TitlePage : Page, IPageKeys
                 case Event.Settings:
                     ShowSpoilers();
                     // The switch went off: the people fade away until the page is said again without them.
-                    following.Update(Current());
+                    following.Update(Current(), !Waits());
                     break;
                 case Event.ShowSettings sheet when sheet.V1.Id == id:
                     ShowSpoilers();
@@ -1082,6 +1180,7 @@ public sealed partial class TitlePage : Page, IPageKeys
             SynopsisMore.Visibility = Visibility.Collapsed;
             Synopsis.Text = entry.Synopsis;
         }
+        ShowSynopsisHeld(string.IsNullOrEmpty(entry.Synopsis) && Waits());
         DemoCredit.Visibility = entry.IsDemo ? Visibility.Visible : Visibility.Collapsed;
         DemoCredit.Content = entry.IsDemo ? DemoHome.Credit(KaeriFfiMethods.DemoInfo()) : null;
 
@@ -1092,7 +1191,53 @@ public sealed partial class TitlePage : Page, IPageKeys
 
         ShowSeasons(entry);
         ShowDetails(entry);
-        following.Update(entry);
+        following.Update(entry, !Waits());
+    }
+
+    /// <summary>The job of the page's own fetch, until it ends.</summary>
+    ulong? detailJob;
+
+    /// <summary>The page's fetch ended, whether or not the whole page came.</summary>
+    bool fetchEnded;
+
+    /// <summary>The whole page is here, or no more of it is coming: for this title, for good.</summary>
+    bool landed;
+
+    /// <summary>
+    /// Whether the parts only the title's own page brings (the synopsis a list did not have, the
+    /// facts, More about, Related, people you follow) still wait under placeholders in their room.
+    /// </summary>
+    bool Waits()
+    {
+        if (!landed && !PlaceholderTiming.TitleWaits(Current(), fetchEnded))
+            landed = true;
+        return !landed;
+    }
+
+    /// <summary>
+    /// The synopsis's plates while the list had no synopsis and the page has not brought it; when
+    /// it comes, the text crossfades over them where they stand, on the standard token.
+    /// </summary>
+    void ShowSynopsisHeld(bool held)
+    {
+        var showing = SynopsisHeld.Visibility == Visibility.Visible && SynopsisHeld.Opacity > 0;
+        if (held)
+        {
+            if (showing)
+                return;
+            SynopsisHeld.Child ??= SynopsisPlates();
+            Motion.Set(SynopsisHeld, true);
+            Synopsis.Opacity = 0;
+            return;
+        }
+        if (!showing)
+        {
+            Motion.Set(SynopsisHeld, false);
+            Synopsis.Opacity = 1;
+            return;
+        }
+        Motion.Reveal(Synopsis, 1);
+        Motion.Reveal(SynopsisHeld, 0, () => SynopsisHeld.Visibility = Visibility.Collapsed);
     }
 
     /// <summary>
@@ -1336,21 +1481,44 @@ public sealed partial class TitlePage : Page, IPageKeys
 
     void ShowDetails(Entry entry)
     {
-        var wide = Scroll.ActualWidth == 0 || Scroll.ActualWidth >= SideWidth;
+        var wide = Wide;
         var related = Kaeri.App.TitleSeasons.Related(entry);
-        var key = $"{wide}|{entry.Id}|{entry.Source}|{Drawn.Fingerprint(entry.Airing)}|{TitleFacts.Country(entry)}|{string.Join(",", entry.Genres ?? [])}|{BroadcastLine(entry)}|"
+        // Until the whole page is here the column is its placeholders, and the page replaces them
+        // in one crossfade, so its facts, Related and the people never land one after another.
+        var held = Waits();
+        var key = held ? $"{wide}|held"
+            : $"{wide}|{entry.Id}|{entry.Source}|{Drawn.Fingerprint(entry.Airing)}|{TitleFacts.Country(entry)}|{string.Join(",", entry.Genres ?? [])}|{BroadcastLine(entry)}|"
             + string.Join(";", related.Take(8).Select(r => $"{r.Id},{r.Title},{r.Relation},{r.Format}"));
         if (key == detailsKey)
             return;
         // On the same side, the column changes as a whole, crossfaded in its place.
         var same = detailsKey is not null && detailsKey.StartsWith($"{wide}|", StringComparison.Ordinal);
         detailsKey = key;
+        void Lay()
+        {
+            if (held)
+                LayHeldDetails(wide);
+            else
+                LayDetails(entry, wide, related);
+        }
         if (same && Motion.Enabled && (wide ? Side : DetailsBelow).ActualHeight > 0)
         {
-            Crossfade.Swap(wide ? Side : DetailsBelow, () => LayDetails(entry, wide, related));
+            Crossfade.Swap(wide ? Side : DetailsBelow, Lay);
             return;
         }
-        LayDetails(entry, wide, related);
+        Lay();
+    }
+
+    /// <summary>The details column as plates in its own room, where the page will lay it.</summary>
+    void LayHeldDetails(bool wide)
+    {
+        SideColumn.Width = wide ? new GridLength(260) : new GridLength(0);
+        Side.Visibility = wide ? Visibility.Visible : Visibility.Collapsed;
+        var host = wide ? Side : DetailsBelow;
+        Side.Children.Clear();
+        DetailsBelow.Children.Clear();
+        AddDetailPlates(host);
+        host.Children.Add(following.Root);
     }
 
     /// <summary>What the side column was last laid from, and where.</summary>
