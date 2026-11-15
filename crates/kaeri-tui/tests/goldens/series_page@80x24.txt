@@ -12,14 +12,14 @@ Kaeri                                                sources ● 3  ·  anilist 
    │    Continue chapter 14 · page 8
    │
    │    Chapters  ───────────────────────────────────────────────────────────
-   │    Chapter 17 · Salt and Paper                         ● New · yesterday
-   │    Chapter 16 · The Lantern Fair                        New · 6 days ago
+   │    Chapter 17 · Salt and Paper        ● New · yesterday · Not downloaded
+   │    Chapter 16 · The Lantern Fair       New · 6 days ago · Not downloaded
    │    Chapter 15 · The Night Market                              Downloaded
    │  ▌ Chapter 14 · Tide Tables                    Page 8 of 22 · Downloaded
    │    Chapter 13 · A Kettle for Two          Read · 4 days ago · Downloaded
-   │    Chapter 12 · Borrowed Knives                        Read · 1 week ago
-   │    Chapter 11 · Low Tide                              Read · 2 weeks ago
-   │    Chapter 10 · Rain on the Pier                      Read · 3 weeks ago
+   │    Chapter 12 · Borrowed Knives                             Read · 8 Oct
+   │    Chapter 11 · Low Tide                                    Read · 1 Oct
+   │    Chapter 10 · Rain on the Pier                           Read · 24 Sep
 ────────────────────────────────────────────────────────────────────────────────
 Reading               ↵ read   u read or unread   d download   a status   ? keys
 === styles ===
@@ -64,10 +64,10 @@ r13 c08-15 fg=text-dim
 r13 c18-76 fg=rule
 r14 c03-03 fg=rule
 r14 c08-34 fg=text
-r14 c60-76 fg=state
+r14 c43-76 fg=state
 r15 c03-03 fg=rule
 r15 c08-36 fg=text
-r15 c61-76 fg=text-dim
+r15 c44-76 fg=text-dim
 r16 c03-03 fg=rule
 r16 c08-36 fg=text
 r16 c67-76 fg=text-dim
@@ -80,13 +80,13 @@ r18 c08-36 fg=text-dim
 r18 c47-76 fg=text-dim
 r19 c03-03 fg=rule
 r19 c08-35 fg=text-dim
-r19 c60-76 fg=text-dim
+r19 c65-76 fg=text-dim
 r20 c03-03 fg=rule
 r20 c08-28 fg=text-dim
-r20 c59-76 fg=text-dim
+r20 c65-76 fg=text-dim
 r21 c03-03 fg=rule
 r21 c08-36 fg=text-dim
-r21 c59-76 fg=text-dim
+r21 c64-76 fg=text-dim
 r22 c00-79 fg=rule
 r23 c00-06 fg=text-dim
 r23 c22-22 fg=text

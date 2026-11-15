@@ -123,12 +123,12 @@ fn chapter(n: usize, title: &str, kept: bool) -> ChapterRow {
             _ => ReadingMsg::ReadingAgoWeeks { weeks: days / 7 },
         })
     };
+    // Chapter 13 read 4 days ago, and one a week before each of the others.
+    let read_days = 4 + 7 * (13 - n as i64);
     let (state, new_chapter, mut line) = match n {
-        1..=13 => (
-            ChapterReadState::Read,
-            false,
-            vec![r(ReadingMsg::ReadingRowRead), ago(4 + 7 * (13 - n as i64))],
-        ),
+        1..=13 => {
+            (ChapterReadState::Read, false, vec![r(ReadingMsg::ReadingRowRead), ago(read_days)])
+        }
         14 => (
             ChapterReadState::InProgress { page: 8, of: Some(22) },
             false,
@@ -157,7 +157,7 @@ fn chapter(n: usize, title: &str, kept: bool) -> ChapterRow {
         versions: 1,
         bookmarked: false,
         version_label: None,
-        read_at: None,
+        read_at: (n <= 13).then(|| super::NOW - DAY * read_days),
         line,
         gone_from_source: false,
         parts: 0,

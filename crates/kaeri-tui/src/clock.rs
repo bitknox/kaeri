@@ -125,6 +125,26 @@ impl Clock {
     }
 }
 
+/// A month's short name, "Jan", from its number counted from 1.
+pub fn month_short(month: u32) -> Option<String> {
+    use kaeri_i18n::t;
+    Some(match month {
+        1 => t::date_month_jan_short(),
+        2 => t::date_month_feb_short(),
+        3 => t::date_month_mar_short(),
+        4 => t::date_month_apr_short(),
+        5 => t::date_month_may_short(),
+        6 => t::date_month_jun_short(),
+        7 => t::date_month_jul_short(),
+        8 => t::date_month_aug_short(),
+        9 => t::date_month_sep_short(),
+        10 => t::date_month_oct_short(),
+        11 => t::date_month_nov_short(),
+        12 => t::date_month_dec_short(),
+        _ => return None,
+    })
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

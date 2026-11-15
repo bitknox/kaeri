@@ -5,6 +5,7 @@
 //! the chapters once a source does. The chapter under the cursor is what Enter reads, `u` marks
 //! read or unread, `d` downloads; `a` picks the list the series is on.
 
+use chrono::Datelike;
 use kaeri_core::books::{ChapterId, WorkId};
 use kaeri_i18n::t;
 use kaeri_model::{
@@ -19,6 +20,7 @@ use kaeri_model::{
 
 use super::{App, alert, info, reading::Wait, say};
 use crate::{
+    clock::{Clock, month_short},
     keymap::Action,
     nav::{Overlay, StageView},
 };
@@ -217,9 +219,18 @@ pub fn series_facts(view: &SeriesView, listed: usize) -> String {
 }
 
 /// A chapter's line: the engine's words, joined, or its state when the engine sent none.
-pub fn chapter_line(row: &ChapterRow) -> String {
+///
+/// Three things differ from the engine's words, as the terminal's board has them. A new chapter
+/// that isn't on this computer says so: "New · yesterday · Not downloaded". A read or a release
+/// a week or more ago is its date, "Read · 9 Nov", from the row's own time. Offline, a new
+/// chapter's "New" and when step aside, as its mark does, and the line says what opens.
+pub fn chapter_line(row: &ChapterRow, clock: &Clock, offline: bool) -> String {
     if !row.line.is_empty() {
-        return row.line.iter().map(say).collect::<Vec<_>>().join(" · "); // i18n-skip
+        return line_words(row, offline)
+            .iter()
+            .map(|msg| dated(row, msg, clock).unwrap_or_else(|| say(msg)))
+            .collect::<Vec<_>>()
+            .join(" · "); // i18n-skip
     }
     let mut parts: Vec<String> = Vec::new();
     match row.state {
@@ -236,6 +247,67 @@ pub fn chapter_line(row: &ChapterRow) -> String {
         parts.push(t::chapter_state_downloaded());
     }
     parts.join(" · ") // i18n-skip
+}
+
+/// The engine's words for a row, with "Not downloaded" after a new chapter's when where the
+/// engine leaves it out (it says it only of a plain unread row), and offline without the "New".
+fn line_words(row: &ChapterRow, offline: bool) -> Vec<Msg> {
+    let r = Msg::Reading;
+    let mut words = row.line.clone();
+    let new =
+        row.state == ChapterReadState::Unread && words.contains(&r(ReadingMsg::ReadingRowNew));
+    if !new {
+        return words;
+    }
+    let not_here = row.download.is_none() && !row.on_device;
+    if not_here && !words.contains(&r(ReadingMsg::ReadingRowNotDownloaded)) {
+        let at = words
+            .iter()
+            .rposition(|msg| msg == &r(ReadingMsg::ReadingRowNew) || ago(msg).is_some())
+            .map_or(0, |at| at + 1);
+        words.insert(at, r(ReadingMsg::ReadingRowNotDownloaded));
+    }
+    if offline {
+        words.retain(|msg| msg != &r(ReadingMsg::ReadingRowNew) && ago(msg).is_none());
+    }
+    words
+}
+
+/// When `msg` is the engine's "4 days ago": whether that is a week or more.
+fn ago(msg: &Msg) -> Option<bool> {
+    match msg {
+        Msg::Reading(
+            ReadingMsg::ReadingAgoNow
+            | ReadingMsg::ReadingAgoMinutes { .. }
+            | ReadingMsg::ReadingAgoToday
+            | ReadingMsg::ReadingAgoYesterday
+            | ReadingMsg::ReadingAgoDays { .. },
+        ) => Some(false),
+        Msg::Reading(
+            ReadingMsg::ReadingAgoWeeks { .. }
+            | ReadingMsg::ReadingAgoMonths { .. }
+            | ReadingMsg::ReadingAgoYears { .. },
+        ) => Some(true),
+        _ => None,
+    }
+}
+
+/// The date in place of the engine's "3 weeks ago": "9 Nov", or "9 Nov 2025" in another year.
+/// The time is the row's: when it was read, or when it came out. `None` keeps the engine's
+/// words, for a nearer time or a row that carries no time.
+fn dated(row: &ChapterRow, msg: &Msg, clock: &Clock) -> Option<String> {
+    if ago(msg) != Some(true) {
+        return None;
+    }
+    let at = if row.state == ChapterReadState::Read { row.read_at } else { row.published };
+    let date = clock.date_of(at?)?;
+    let month = month_short(date.month())?;
+    let day = i64::from(date.day());
+    Some(if date.year() == clock.today().year() {
+        t::tui_read_row_date(day, &month)
+    } else {
+        t::tui_read_row_date_year(day, &month, i64::from(date.year()))
+    })
 }
 
 /// A chapter's label with its title: "Chapter 14 · Tide Tables".
@@ -836,5 +908,87 @@ mod tests {
             failure: None,
         }));
         assert_eq!(a.series_selected().map(|r| r.id.0.as_str()), Some("c2"));
+    }
+
+    /// 2026-10-19 12:00 UTC, a Monday, read in UTC.
+    const MONDAY: i64 = 1_792_411_200;
+    const DAY: i64 = 86_400;
+
+    fn line_of(row: &ChapterRow, offline: bool) -> String {
+        chapter_line(row, &Clock::fixed(MONDAY, crate::clock::Zone::utc()), offline)
+    }
+
+    fn worded(n: u32, state: ChapterReadState, line: Vec<ReadingMsg>) -> ChapterRow {
+        ChapterRow { line: line.into_iter().map(Msg::Reading).collect(), ..chapter(n, state) }
+    }
+
+    #[test]
+    fn a_new_chapter_not_on_this_computer_says_so_after_its_when() {
+        let new = worded(
+            17,
+            ChapterReadState::Unread,
+            vec![ReadingMsg::ReadingRowNew, ReadingMsg::ReadingAgoYesterday],
+        );
+        assert_eq!(line_of(&new, false), "New · yesterday · Not downloaded");
+        // Offline, only whether it opens.
+        assert_eq!(line_of(&new, true), "Not downloaded");
+        let kept = ChapterRow {
+            download: Some(ChapterDownloadState::Done),
+            line: [
+                ReadingMsg::ReadingRowNew,
+                ReadingMsg::ReadingAgoToday,
+                ReadingMsg::ReadingRowDownloaded,
+            ]
+            .map(Msg::Reading)
+            .to_vec(),
+            ..new.clone()
+        };
+        assert_eq!(line_of(&kept, false), "New · today · Downloaded");
+        assert_eq!(line_of(&kept, true), "Downloaded");
+        // A file in the person's folders has nothing to download.
+        let file = ChapterRow { on_device: true, ..new.clone() };
+        assert_eq!(line_of(&file, false), "New · yesterday");
+        let queued = ChapterRow {
+            download: Some(ChapterDownloadState::Queued),
+            line: [ReadingMsg::ReadingRowNew, ReadingMsg::ReadingRowQueued]
+                .map(Msg::Reading)
+                .to_vec(),
+            ..new
+        };
+        assert_eq!(line_of(&queued, false), "New · Queued");
+    }
+
+    #[test]
+    fn a_read_a_week_or_more_ago_is_its_date() {
+        let read = |days: i64, ago: ReadingMsg| ChapterRow {
+            read_at: Some(MONDAY - DAY * days),
+            ..worded(3, ChapterReadState::Read, vec![ReadingMsg::ReadingRowRead, ago])
+        };
+        assert_eq!(
+            line_of(&read(4, ReadingMsg::ReadingAgoDays { days: 4 }), false),
+            "Read · 4 days ago"
+        );
+        assert_eq!(
+            line_of(&read(11, ReadingMsg::ReadingAgoWeeks { weeks: 1 }), false),
+            "Read · 8 Oct"
+        );
+        assert_eq!(
+            line_of(&read(300, ReadingMsg::ReadingAgoMonths { months: 10 }), false),
+            "Read · 23 Dec 2025"
+        );
+        // With no time on the row, the engine's words stay.
+        let unknown =
+            ChapterRow { read_at: None, ..read(11, ReadingMsg::ReadingAgoWeeks { weeks: 1 }) };
+        assert_eq!(line_of(&unknown, false), "Read · 1 week ago");
+        // A new chapter's release is dated from when it came out.
+        let out = ChapterRow {
+            published: Some(MONDAY - DAY * 9),
+            ..worded(
+                4,
+                ChapterReadState::Unread,
+                vec![ReadingMsg::ReadingRowNew, ReadingMsg::ReadingAgoWeeks { weeks: 1 }],
+            )
+        };
+        assert_eq!(line_of(&out, false), "New · 10 Oct · Not downloaded");
     }
 }

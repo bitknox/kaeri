@@ -8120,6 +8120,16 @@ pub fn tui_reader_downloading(chapter: &str) -> String {
     text("tui-reader-downloading", &[("chapter", Arg::Text(chapter))])
 }
 
+/// On a series page's chapter row, when the chapter was read or came out a week or more ago this year: the day and the month, as in "Read · 9 Nov". The month is the short month name.
+pub fn tui_read_row_date(day: i64, month: &str) -> String {
+    text("tui-read-row-date", &[("day", Arg::Plain(day)), ("month", Arg::Text(month))])
+}
+
+/// On a series page's chapter row, when the chapter was read or came out in an earlier year: the day, the short month name and the year, as in "Read · 9 Nov 2025".
+pub fn tui_read_row_date_year(day: i64, month: &str, year: i64) -> String {
+    text("tui-read-row-date-year", &[("day", Arg::Plain(day)), ("month", Arg::Text(month)), ("year", Arg::Plain(year))])
+}
+
 /// AniList's name, in the line that says it is still being asked.
 pub fn tui_read_anilist() -> String {
     text("tui-read-anilist", &[])

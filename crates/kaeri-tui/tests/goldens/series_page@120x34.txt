@@ -11,23 +11,23 @@ Kaeri                                                                           
                             │    ███████████████▎░░░░  13 of 17 chapters read   Continue chapter 14 · page 8
                             │
                             │    Chapters  ──────────────────────────────────────────────────────────────────────────
-                            │    Chapter 17 · Salt and Paper                                        ● New · yesterday
-                            │    Chapter 16 · The Lantern Fair                                       New · 6 days ago
+                            │    Chapter 17 · Salt and Paper                       ● New · yesterday · Not downloaded
+                            │    Chapter 16 · The Lantern Fair                      New · 6 days ago · Not downloaded
                             │    Chapter 15 · The Night Market                                             Downloaded
                             │  ▌ Chapter 14 · Tide Tables                                   Page 8 of 22 · Downloaded
                             │    Chapter 13 · A Kettle for Two                         Read · 4 days ago · Downloaded
-                            │    Chapter 12 · Borrowed Knives                                       Read · 1 week ago
-                            │    Chapter 11 · Low Tide                                             Read · 2 weeks ago
-                            │    Chapter 10 · Rain on the Pier                                     Read · 3 weeks ago
-                            │    Chapter 9 · What the Gulls Took                                   Read · 4 weeks ago
-                            │    Chapter 8 · Shore Leave                                           Read · 5 weeks ago
-                            │    Chapter 7 · The Keeper's Ledger                                   Read · 6 weeks ago
-                            │    Chapter 6 · Brine and Butter                                      Read · 7 weeks ago
-                            │    Chapter 5 · A Map of Small Fires                                  Read · 8 weeks ago
-                            │    Chapter 4 · Galley Hours                                          Read · 9 weeks ago
-                            │    Chapter 3 · Bread for the Fog                                    Read · 10 weeks ago
-                            │    Chapter 2 · The First Lamp                                       Read · 11 weeks ago
-                            │    Chapter 1 · Driftwood Stock                                      Read · 12 weeks ago
+                            │    Chapter 12 · Borrowed Knives                                            Read · 8 Oct
+                            │    Chapter 11 · Low Tide                                                   Read · 1 Oct
+                            │    Chapter 10 · Rain on the Pier                                          Read · 24 Sep
+                            │    Chapter 9 · What the Gulls Took                                        Read · 17 Sep
+                            │    Chapter 8 · Shore Leave                                                Read · 10 Sep
+                            │    Chapter 7 · The Keeper's Ledger                                         Read · 3 Sep
+                            │    Chapter 6 · Brine and Butter                                           Read · 27 Aug
+                            │    Chapter 5 · A Map of Small Fires                                       Read · 20 Aug
+                            │    Chapter 4 · Galley Hours                                               Read · 13 Aug
+                            │    Chapter 3 · Bread for the Fog                                           Read · 6 Aug
+                            │    Chapter 2 · The First Lamp                                             Read · 30 Jul
+                            │    Chapter 1 · Driftwood Stock                                            Read · 23 Jul
                             │
                             │
 ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
@@ -80,10 +80,10 @@ r12 c33-40 fg=text-dim
 r12 c43-116 fg=rule
 r13 c28-28 fg=rule
 r13 c33-59 fg=text
-r13 c100-116 fg=state
+r13 c83-116 fg=state
 r14 c28-28 fg=rule
 r14 c33-61 fg=text
-r14 c101-116 fg=text-dim
+r14 c84-116 fg=text-dim
 r15 c28-28 fg=rule
 r15 c33-61 fg=text
 r15 c107-116 fg=text-dim
@@ -96,40 +96,40 @@ r17 c33-61 fg=text-dim
 r17 c87-116 fg=text-dim
 r18 c28-28 fg=rule
 r18 c33-60 fg=text-dim
-r18 c100-116 fg=text-dim
+r18 c105-116 fg=text-dim
 r19 c28-28 fg=rule
 r19 c33-53 fg=text-dim
-r19 c99-116 fg=text-dim
+r19 c105-116 fg=text-dim
 r20 c28-28 fg=rule
 r20 c33-61 fg=text-dim
-r20 c99-116 fg=text-dim
+r20 c104-116 fg=text-dim
 r21 c28-28 fg=rule
 r21 c33-63 fg=text-dim
-r21 c99-116 fg=text-dim
+r21 c104-116 fg=text-dim
 r22 c28-28 fg=rule
 r22 c33-55 fg=text-dim
-r22 c99-116 fg=text-dim
+r22 c104-116 fg=text-dim
 r23 c28-28 fg=rule
 r23 c33-63 fg=text-dim
-r23 c99-116 fg=text-dim
+r23 c105-116 fg=text-dim
 r24 c28-28 fg=rule
 r24 c33-60 fg=text-dim
-r24 c99-116 fg=text-dim
+r24 c104-116 fg=text-dim
 r25 c28-28 fg=rule
 r25 c33-64 fg=text-dim
-r25 c99-116 fg=text-dim
+r25 c104-116 fg=text-dim
 r26 c28-28 fg=rule
 r26 c33-56 fg=text-dim
-r26 c99-116 fg=text-dim
+r26 c104-116 fg=text-dim
 r27 c28-28 fg=rule
 r27 c33-61 fg=text-dim
-r27 c98-116 fg=text-dim
+r27 c105-116 fg=text-dim
 r28 c28-28 fg=rule
 r28 c33-58 fg=text-dim
-r28 c98-116 fg=text-dim
+r28 c104-116 fg=text-dim
 r29 c28-28 fg=rule
 r29 c33-59 fg=text-dim
-r29 c98-116 fg=text-dim
+r29 c104-116 fg=text-dim
 r30 c28-28 fg=rule
 r31 c28-28 fg=rule
 r32 c00-119 fg=rule

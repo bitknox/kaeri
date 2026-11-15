@@ -702,3 +702,22 @@ tui-reader-marked-unread = Chapter { $chapter } marked unread
 # @max 40
 # @only tui
 tui-reader-downloading = Downloading chapter { $chapter }
+
+## Series page board fixes
+
+# On a series page's chapter row, when the chapter was read or came out a week or more ago this
+# year: the day and the month, as in "Read · 9 Nov". The month is the short month name.
+# @arg day: plain
+# @arg month: text
+# @max 12
+# @only tui
+tui-read-row-date = { $day } { $month }
+
+# On a series page's chapter row, when the chapter was read or came out in an earlier year: the
+# day, the short month name and the year, as in "Read · 9 Nov 2025".
+# @arg day: plain
+# @arg month: text
+# @arg year: plain
+# @max 16
+# @only tui
+tui-read-row-date-year = { $day } { $month } { $year }

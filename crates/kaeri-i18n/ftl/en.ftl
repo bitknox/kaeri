@@ -5133,6 +5133,12 @@ tui-reader-marked-unread = Chapter { $chapter } marked unread
 # A short notice on the reader's status rule after the key that downloads the open chapter. The download runs in the background. The chapter is its number, such as 12.
 tui-reader-downloading = Downloading chapter { $chapter }
 
+# On a series page's chapter row, when the chapter was read or came out a week or more ago this year: the day and the month, as in "Read · 9 Nov". The month is the short month name.
+tui-read-row-date = { $day } { $month }
+
+# On a series page's chapter row, when the chapter was read or came out in an earlier year: the day, the short month name and the year, as in "Read · 9 Nov 2025".
+tui-read-row-date-year = { $day } { $month } { $year }
+
 # AniList's name, in the line that says it is still being asked.
 tui-read-anilist = AniList
 

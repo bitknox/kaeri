@@ -242,7 +242,7 @@ fn chapter(
     }
     let in_progress = matches!(row.state, ChapterReadState::InProgress { .. });
     let fresh = row.new_chapter && !offline;
-    let mut trailing = chapter_line(row);
+    let mut trailing = chapter_line(row, &app.clock, offline);
     if fresh && !trailing.is_empty() {
         trailing = format!("{} {trailing}", glyph::STATE_READY); // i18n-skip
     }
