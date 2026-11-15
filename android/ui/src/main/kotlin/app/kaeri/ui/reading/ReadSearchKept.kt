@@ -81,10 +81,11 @@ internal fun KeepReadSearch() {
     val store = LocalAppStore.current
     val kept = rememberSaveable(saver = remember(store) { keptSaver(store) }) { KeptReadSearch() }
     // Restored: the scope and the query as they were, before anything reads them. A process that
-    // kept its search has it already.
+    // kept its search has it already. The block runs once for each kept search and hands it back.
     remember(kept) {
         kept.reading?.let { ReadPlaces.searchReading = it }
         kept.query?.let { store.reading.restoreQuery(it) }
+        kept
     }
     // A new process asks again for what was there.
     LaunchedEffect(kept) {
