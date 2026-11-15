@@ -89,7 +89,11 @@ impl Run<'_> {
             }
             // Held here, for this playback only: the next one starts with Up Next as the
             // settings have it, however this episode was left.
-            ScriptEvent::CancelNext => self.cancel_next = true,
+            ScriptEvent::CancelNext => {
+                self.cancel_next = true;
+                // Nothing rolls on now, so nothing is kept ready for it.
+                self.settings.ahead.cancelled();
+            }
             ScriptEvent::Skip => {
                 if let Some((kind, to)) = tracker
                     .offered_skip()

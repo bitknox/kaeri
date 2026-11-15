@@ -159,6 +159,7 @@ pub(super) fn settings() -> PlaySettings {
         untracked: false,
         swarm: Default::default(),
         begin: Default::default(),
+        ahead: Default::default(),
     }
 }
 

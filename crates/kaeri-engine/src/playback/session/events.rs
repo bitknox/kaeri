@@ -712,6 +712,8 @@ impl Run<'_> {
                         ever_played = true;
                         let _ = link.overlay(Overlay::Playing).await;
                         self.servers.served(self.store, &streams[index]);
+                        // Beside the server's first frame, the time from the roll-on.
+                        self.settings.ahead.landed();
                         // A stream that took over from one that broke off says so as it lands.
                         if let Some(from) = self.failed_over_from.take() {
                             let source = stream.provider_id.clone();
