@@ -98,6 +98,11 @@ public final class AppStore {
     public let demo = DemoModel()
     /// The crash reports kept on this device.
     public let crash = CrashModel()
+    /// The last playback's failure, until another starts: a report started from a menu takes it
+    /// as its last error, so Player log starts ticked.
+    @ObservationIgnored public internal(set) var playbackFailure: (context: BugContext, at: Date)?
+    /// The title of the playback staged last, which a report removes wherever it appears.
+    @ObservationIgnored var stagedTitle: String?
     /// Says a line over the video, when the player is up: what the app's player shows.
     @ObservationIgnored public var playerSays: (@MainActor (String, NoticeKind) -> Void)?
     /// The week's ask, waiting a moment in case more ask at once.
@@ -1184,13 +1189,19 @@ public final class AppStore {
         case .imageFailed(let url, _):
             artwork.failed(url: url)
 
-        case .playbackStaged(let id, _, let episode, _, _, _):
+        case .playbackStaged(let id, let title, let episode, _, _, _):
             if startAt?.staged(id: id, episode: episode) == false { startAt = nil }
+            playbackFailure = nil
+            stagedTitle = title
             let after = playSent.map { " \(AppLog.ms(since: $0)) ms after play" } ?? ""
             AppLog.info("store", "staged \(id) episode \(episode)\(after)")
             onPlayback?(event)
-        case .playbackEnded(let watched, let ending, let rollingOn, _):
+        case .playbackEnded(let watched, let ending, let rollingOn, let failure):
             AppLog.info("store", "playback ended: \(ending), watched \(watched), rolling on \(rollingOn)")
+            if ending == .failed, !rollingOn {
+                let message = failure?.text.text ?? L.noticePlaybackFailed
+                playbackFailure = (BugContext(kind: BugReports.playbackError, message: message, title: stagedTitle), .now)
+            }
             onPlayback?(event)
             widgetsChanged()
         case .sources:
