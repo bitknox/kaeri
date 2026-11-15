@@ -31,8 +31,8 @@ use crossterm::event::{Event, EventStream, KeyCode, KeyEvent, KeyEventKind, KeyM
 use futures::StreamExt;
 use kaeri_cast::{
     CastDevice, CastLoad, CastMemory, CastPlayer, CastRoute, CastSetup, CastSource, CastStatus,
-    CastSubtitle, Metadata, NoEncoder, PlainHttp, SourceKind, Timings, Upstream, VolumeControl,
-    player::FromReceiver,
+    CastSubtitle, Device, Metadata, NoEncoder, PlainHttp, SourceKind, Timings, Upstream,
+    VolumeControl, player::FromReceiver,
 };
 use kaeri_playback::PlaybackEvent;
 use tokio::sync::{broadcast, mpsc};
@@ -61,6 +61,10 @@ struct Args {
     media_base: String,
     /// Run the matrix on whatever receiver launched: a check of the runner itself.
     any_receiver: bool,
+    /// Cast even when another app already runs on the TV.
+    take_over: bool,
+    /// Only launch the receiver, say whether it came up, and close it.
+    probe: bool,
 }
 
 fn args() -> Result<Args, String> {
@@ -76,6 +80,8 @@ fn args() -> Result<Args, String> {
         out: None,
         media_base: "http://127.0.0.1:8787/media/".into(),
         any_receiver: false,
+        take_over: false,
+        probe: false,
     };
     let mut it = std::env::args().skip(1).peekable();
     while let Some(arg) = it.next() {
@@ -96,6 +102,8 @@ fn args() -> Result<Args, String> {
             "--out" => args.out = Some(value("--out")?.into()),
             "--media-base" => args.media_base = value("--media-base")?,
             "--any-receiver" => args.any_receiver = true,
+            "--take-over" => args.take_over = true,
+            "--probe" => args.probe = true,
             "--matrix" => {
                 let next = it.peek().filter(|n| !n.starts_with("--")).cloned();
                 if next.is_some() {
@@ -122,7 +130,7 @@ fn args() -> Result<Args, String> {
     if !(0.0..=0.3).contains(&args.volume) {
         return Err("--volume stays between 0 and 0.3".into());
     }
-    if args.matrix.is_none() && args.target.is_none() {
+    if args.matrix.is_none() && args.target.is_none() && !args.probe {
         return Err("name a file or URL, or --matrix".into());
     }
     Ok(args)
@@ -169,6 +177,40 @@ async fn the_tv(
         video: true,
         group: false,
     })
+}
+
+/// Launch `app` alone, with no fallback, and close it again: whether the TV knows the app.
+async fn probe(address: SocketAddr, app: &str) -> i32 {
+    let launched = async {
+        let (device, _incoming) = Device::connect(address, Duration::from_secs(10))
+            .await
+            .map_err(|e| e.to_string())?;
+        let running = device.launch(app).await.map_err(|e| e.to_string())?;
+        let _ = device.stop(&running).await;
+        Ok::<_, String>(running.app_id)
+    };
+    match tokio::time::timeout(Duration::from_secs(30), launched).await {
+        Ok(Ok(id)) => {
+            say!("probe: {id} launched and closed again");
+            0
+        }
+        Ok(Err(e)) => {
+            say!("probe: {app} didn't launch: {e}");
+            1
+        }
+        Err(_) => {
+            say!("probe: {app} didn't answer in 30 s");
+            1
+        }
+    }
+}
+
+/// The app in the TV's foreground, other than its idle screen.
+async fn busy(address: SocketAddr) -> Result<Option<String>, String> {
+    let (device, _incoming) =
+        Device::connect(address, Duration::from_secs(10)).await.map_err(|e| e.to_string())?;
+    let status = device.status().await.map_err(|e| e.to_string())?;
+    Ok(status.app.map(|app| app.app_id))
 }
 
 fn load_of(target: &str, sub: Option<&Path>) -> CastLoad {
@@ -600,6 +642,23 @@ async fn main() {
         device.address,
         args.app
     );
+    // One session on the TV at a time: another sender's app is left alone.
+    match busy(device.address).await {
+        Ok(Some(app)) if !args.take_over => {
+            eprintln!(
+                "cast_dev: the TV runs app {app} already; one session at a time (--take-over to replace it)"
+            );
+            std::process::exit(3);
+        }
+        Ok(_) => {}
+        Err(e) => {
+            eprintln!("cast_dev: couldn't ask the TV what it runs: {e}");
+            std::process::exit(1);
+        }
+    }
+    if args.probe {
+        std::process::exit(probe(device.address, &args.app).await);
+    }
     let setup = CastSetup {
         device,
         memory: Arc::new(CastMemory::memory()),
