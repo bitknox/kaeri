@@ -606,6 +606,8 @@ fn write_config(file: &Path, demo: bool, home: HomeScene) -> Result<(), String> 
                         HomeScene::ReadingDownloads => {
                             "\n[reading]\nkaeri_is_for = \"both\"\nkeep_chapters_ready = true\n"
                         }
+                        // Watching only, as answered: the page with nothing over it.
+                        HomeScene::MissingEpisode => "\n[reading]\nkaeri_is_for = \"watch\"\n",
                         _ => "",
                     }
                 ),

@@ -85,7 +85,7 @@ pub(super) struct Parts {
     miss: gtk::Box,
     play: Option<gtk::Button>,
     /// The status line, and the words it had while they crossfade.
-    line: gtk::Box,
+    line: gtk::Overlay,
     label: gtk::Label,
     label_from: Option<gtk::Label>,
     /// The status's frame while Play comes in, which closes its height.
@@ -558,18 +558,22 @@ impl Page {
         // On the first line of 20 px.
         dot.set_valign(gtk::Align::Start);
         dot.set_margin_top(6);
+        // The words lead the line and give it its size, the dot sits before them on the first
+        // line, and the words they had lie over them while they crossfade: an overlay asks each
+        // for its height at the width it gets, where a row of boxes would not.
         let label = status_label(&status);
-        let words = gtk::Grid::new();
-        words.set_hexpand(true);
-        words.attach(&label, 0, 0, 1, 1);
+        label.set_margin_start(16);
+        let line = gtk::Overlay::new();
+        line.set_child(Some(&label));
+        dot.set_halign(gtk::Align::Start);
+        line.add_overlay(&dot);
         let label_from = self.missing.status_from.borrow().as_ref().map(|before| {
             let old = status_label(before);
-            words.attach(&old, 0, 0, 1, 1);
+            old.set_margin_start(16);
+            line.add_overlay(&old);
+            line.set_measure_overlay(&old, true);
             old
         });
-        let line = gtk::Box::new(gtk::Orientation::Horizontal, 8);
-        line.append(&dot);
-        line.append(&words);
         // In the clip, so its height closes with the line's.
         line.set_margin_top(10);
         let clip = found.map(|_| clipping(&line, gtk::Orientation::Vertical));

@@ -197,7 +197,7 @@ mod tests {
         let m = missing(Some(25 * 60));
         assert_eq!(
             said(&m, None, false),
-            "Episode 6 aired 25 min ago. Your sources don’t have it yet. Kaeri looks again \
+            "Episode 6 aired 25 min ago. Your sources don't have it yet. Kaeri looks again \
              every 15 minutes."
         );
         let s = status(&m, None, false, NOW, date);
@@ -208,9 +208,9 @@ mod tests {
     #[test]
     fn an_asked_check_turns_yet_into_still_or_no_answer() {
         let m = missing(Some(40 * 60));
-        assert!(said(&m, Some(CheckOutcome::Missing), false).contains("still don’t have it"));
+        assert!(said(&m, Some(CheckOutcome::Missing), false).contains("still don't have it"));
         assert!(said(&m, Some(CheckOutcome::Missing), false).ends_with("every 15 minutes."));
-        assert!(said(&m, Some(CheckOutcome::NoAnswer), false).contains("didn’t answer"));
+        assert!(said(&m, Some(CheckOutcome::NoAnswer), false).contains("didn't answer"));
     }
 
     #[test]
@@ -220,13 +220,13 @@ mod tests {
         let after = missing(Some(RECHECK_FOR_SECS + 60));
         assert_eq!(
             said(&after, None, false),
-            "Episode 6 aired 6 h ago. Your sources still don’t have it."
+            "Episode 6 aired 6 h ago. Your sources still don't have it."
         );
         assert!(check_help(&after).is_none(), "the hint goes with the quiet window");
         let dated = missing(Some(2 * DAY));
         assert_eq!(
             said(&dated, None, false),
-            "Episode 6 aired on 7 Nov 2026. Your sources still don’t have it."
+            "Episode 6 aired on 7 Nov 2026. Your sources still don't have it."
         );
         let long = missing(Some(LONG_AGO_SECS + DAY));
         assert_eq!(
@@ -240,12 +240,12 @@ mod tests {
         let quiet = missing(Some(25 * 60));
         assert_eq!(
             said(&quiet, None, true),
-            "Episode 6 aired 25 min ago. Kaeri looks for it when you’re back online."
+            "Episode 6 aired 25 min ago. Kaeri looks for it when you're back online."
         );
         assert_eq!(said(&quiet, Some(CheckOutcome::Offline), false), said(&quiet, None, true));
         let after = missing(Some(RECHECK_FOR_SECS + 60));
         assert!(
-            said(&after, Some(CheckOutcome::NoAnswer), true).ends_with("still don’t have it.")
+            said(&after, Some(CheckOutcome::NoAnswer), true).ends_with("still don't have it.")
         );
     }
 

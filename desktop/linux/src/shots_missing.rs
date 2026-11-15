@@ -93,6 +93,10 @@ pub fn unstage(shell: &Rc<Shell>, shot: &str) {
 
 fn open_title(shell: &Rc<Shell>) {
     shell.ctx.notices.dismiss_each();
+    // Anything a first launch asks, out of the way.
+    if let Some(dialog) = shell.ctx.window.visible_dialog() {
+        dialog.force_close();
+    }
     shell.go(Dest::Home);
     let _ = WidgetExt::activate_action(
         &shell.ctx.window,

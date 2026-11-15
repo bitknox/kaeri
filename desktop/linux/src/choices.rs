@@ -188,7 +188,11 @@ pub fn queue_item(entry: &Entry, rows: Option<&[EpisodeRow]>) -> (QueueItem, boo
     let target = next(entry, rows);
     let own = entry.progress.map_or(1, |p| p.next.max(1));
     if target.episode == own && !target.unsourced {
-        return (QueueItem::of(entry, Casing::Sentence), false);
+        let item = QueueItem::of(entry, Casing::Sentence);
+        // A source that lists the episode shows it is out, even while the title's schedule
+        // still names it as the one to air next.
+        let listed = rows.into_iter().flatten().any(|r| number(r) == Some(own) && playable(r));
+        return (QueueItem { playable: item.playable || listed, ..item }, false);
     }
     if target.unsourced {
         let item = QueueItem { playable: false, ..QueueItem::of(entry, Casing::Sentence) };
