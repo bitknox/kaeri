@@ -794,6 +794,7 @@ fn stage(shell: &Rc<Shell>, shot: &str) -> f64 {
                     media: kaeri_core::ids::AnilistId::new(TITLE),
                     episode: 1,
                     comments: 214,
+                    url: "https://talk.example/thread/1".into(),
                 }]);
             });
             4.0
