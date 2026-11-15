@@ -663,10 +663,18 @@ fn stage(shell: &Rc<Shell>, shot: &str) -> f64 {
         }
         trailer if trailer.starts_with("title-trailer-") => {
             // The title page opens; its fixture clip plays 0.7 s after the page has settled,
-            // for ten seconds.
+            // for ten seconds. A fresh profile's first question goes first, as a dialog over the
+            // page lets the trailer go.
+            close_dialogs(window);
             shell.go(Dest::Home);
             let _ =
                 WidgetExt::activate_action(window, "win.open-title", Some(&TITLE.to_variant()));
+            {
+                let window = window.clone();
+                glib::timeout_add_local_once(Duration::from_millis(250), move || {
+                    close_dialogs(&window);
+                });
+            }
             let scroll_at = |ms: u64, to: f64| {
                 let ctx = Rc::clone(&shell.ctx);
                 glib::timeout_add_local_once(Duration::from_millis(ms), move || {
