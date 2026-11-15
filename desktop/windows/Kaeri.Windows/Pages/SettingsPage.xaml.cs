@@ -156,6 +156,7 @@ public sealed partial class SettingsPage : Page
         K.SourceOrder => T.SettingsSourceOrder,
         K.UpNextCountdown => T.SettingsUpNextCountdown,
         K.SpoilerProtection => T.SettingsSpoiler,
+        K.ShowFollowing => T.SettingsAnilistFollowing,
         K.DownloadQuality => T.DownloadsQuality,
         K.KeepNextEpisodes => T.SettingsKeepNext,
         K.DownloadsOnCellular => T.SettingsDownloadsCellular,
@@ -416,8 +417,9 @@ public sealed partial class SettingsPage : Page
     /// <summary>What decides which cards the pane has, and for Accounts and Devices what they say.</summary>
     string Shape() => pane.Name switch
     {
-        // Its cards keep themselves current, so the pane itself never changes shape.
-        "accounts" => "accounts",
+        // Its cards keep themselves current, so the pane changes shape only when the engine first
+        // gives Show people you follow.
+        "accounts" => $"accounts|{ctx.Known.Setting(K.ShowFollowing) is not null}",
         "devices" => DevicesKey(),
         "profiles" => Drawn.Fingerprint(ctx.Known.Profiles),
         "reading" => ReadingShape(),
@@ -1454,6 +1456,7 @@ public sealed partial class SettingsPage : Page
         K.CommitThreshold => T.SettingsCountsWatchedDetail,
         K.SkipButton => T.SettingsSkipButtonDetail,
         K.SpoilerProtection => T.SettingsSpoilerDetail,
+        K.ShowFollowing => T.SettingsAnilistFollowingFooter,
         K.DownloadQuality => T.SettingsQualityDetailWindows,
         K.MergeSubtitles => T.SettingsMergeSubtitlesDetailWindows,
         K.KeepNextEpisodes => T.SettingsKeepNextDetail,
@@ -1474,6 +1477,8 @@ public sealed partial class SettingsPage : Page
             // What the last pull found different from AniList, under its card, with Review.
             if (tracker == "anilist")
             {
+                if (ctx.Known.Setting(K.ShowFollowing) is { } following)
+                    Cards.Children.Add(FollowingCard(following));
                 var review = new Button { Content = T.SettingsDifferencesReview };
                 review.Click += async (_, _) =>
                 {
@@ -1490,6 +1495,36 @@ public sealed partial class SettingsPage : Page
         sync.Click += (_, _) => ctx.Send(new Command.SyncNow());
         Cards.Children.Add(Heading(T.SettingsSync));
         Cards.Children.Add(CardFrame(T.AccountsSyncAll, T.SettingsSyncDetail, sync));
+    }
+
+    /// <summary>
+    /// Show people you follow, with its footer, under AniList's card: this device's switch, shown
+    /// only while AniList is signed in, as the AniList card says.
+    /// </summary>
+    FrameworkElement FollowingCard(SettingRow row)
+    {
+        var card = Card(row);
+        void Signed()
+        {
+            var shown = Following.SignedIn(ctx.Known) ? Visibility.Visible : Visibility.Collapsed;
+            if (card.Visibility != shown)
+                card.Visibility = shown;
+        }
+        void Heard(IReadOnlyList<Event> batch)
+        {
+            if (batch.Any(e => e is Event.Sync))
+                Signed();
+        }
+        Signed();
+        refresh.Add(Signed);
+        card.Loaded += (_, _) =>
+        {
+            ctx.Batch -= Heard;
+            ctx.Batch += Heard;
+            Signed();
+        };
+        card.Unloaded += (_, _) => ctx.Batch -= Heard;
+        return card;
     }
 
     /// <summary>A setting found by Search settings: its row's name and the pane it is on.</summary>
@@ -1516,7 +1551,8 @@ public sealed partial class SettingsPage : Page
                 "playback" => [T.SettingsClearSkips, T.SettingsHideChat, T.SettingsSmoothScrolling],
                 "downloads" => [T.DownloadsBackgroundTitle],
                 "sources" => [T.TorrentsProxyRoute],
-                "accounts" => [.. new[] { "anilist", "mal", "kitsu", "simkl", "trakt" }.Select(KaeriFfiMethods.TrackerName), T.AccountsSyncAll],
+                "accounts" => [.. new[] { "anilist", "mal", "kitsu", "simkl", "trakt" }.Select(KaeriFfiMethods.TrackerName), T.AccountsSyncAll,
+                    .. Following.SignedIn(ctx.Known) && ctx.Known.Setting(K.ShowFollowing) is not null ? [T.SettingsAnilistFollowing] : Array.Empty<string>()],
                 "devices" => [T.DevicesName, T.CloudGroup, T.TvPlayOn],
                 "integrations" => [T.SettingsDiscord],
                 "about" => [T.AboutReportBug, T.SettingsGroupCrashes, T.SettingsCrashSave, T.UpdatesTitle],

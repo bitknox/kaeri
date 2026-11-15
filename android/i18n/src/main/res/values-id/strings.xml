@@ -4134,7 +4134,6 @@
     <string name="title_fact_after">Setelah episode %1$d</string>
     <string name="title_fact_now">Sedang tayang</string>
     <string name="title_fact_tba">Akan diumumkan</string>
-    <string name="more_following_line">%1$s · %2$,d/10</string>
     <string name="episode_go_to">Ke episode…</string>
     <string name="episode_go_to_title">Ke episode</string>
     <string name="episode_go_to_go">Ke</string>

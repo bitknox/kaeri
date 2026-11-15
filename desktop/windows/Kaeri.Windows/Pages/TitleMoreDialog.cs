@@ -11,10 +11,10 @@ using Microsoft.UI.Xaml.Media.Imaging;
 namespace Kaeri.Windows.Pages;
 
 /// <summary>
-/// More about this show: who the viewer follows who has it, its rankings and cast on the left;
-/// where it streams, its staff and tags on the right; similar shows under both. Close is the
-/// only button, and a click outside or Esc closes it too (an <see cref="InfoCard"/>). Spoiler tags
-/// stay folded away until the viewer opens them.
+/// More about this show: its rankings and cast on the left; where it streams, its staff and tags
+/// on the right; similar shows under both. Close is the only button, and a click outside or Esc
+/// closes it too (an <see cref="InfoCard"/>). Spoiler tags stay folded away until the viewer
+/// opens them. The people the viewer follows are on the page itself (<see cref="FollowingSection"/>).
 /// </summary>
 sealed class TitleMoreDialog
 {
@@ -50,8 +50,6 @@ sealed class TitleMoreDialog
         var left = new StackPanel { Spacing = 20 };
         var right = new StackPanel { Spacing = 20 };
 
-        if (detail is { Following.Length: > 0 } && Follows(detail) is { } follows)
-            left.Children.Add(follows);
         if (detail is { Rankings.Length: > 0 })
         {
             var rankings = Section(T.MoreRankings);
@@ -109,33 +107,6 @@ sealed class TitleMoreDialog
         s.Children.Add(Heading(heading));
         return s;
     }
-
-    UIElement? Follows(TitleDetail detail)
-    {
-        var section = Section(T.MoreFollowing);
-        section.Children.Add(Ui.Text(T.MoreFollowingNote, "HazeCaptionStyle"));
-        foreach (var f in detail.Following)
-        {
-            var row = new Grid { ColumnSpacing = 12 };
-            row.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
-            row.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
-            row.Children.Add(Ui.Text(f.Name, wrap: false));
-            var line = Ui.Haze(TitleFacts.Follow(f, Status), wrap: false);
-            Grid.SetColumn(line, 1);
-            row.Children.Add(line);
-            section.Children.Add(row);
-        }
-        return section;
-    }
-
-    static string Status(LibrarySegment status) => status switch
-    {
-        LibrarySegment.Watching => T.LibraryStatusWatching,
-        LibrarySegment.Planning => T.LibraryStatusPlanning,
-        LibrarySegment.Completed => T.LibraryStatusCompleted,
-        LibrarySegment.Paused => T.LibraryStatusPaused,
-        _ => T.LibraryStatusDropped,
-    };
 
     UIElement Cast(CastMember[] cast)
     {

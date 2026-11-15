@@ -105,7 +105,6 @@ title-fact-range = { $from }～{ $to }
 title-fact-after = 第{ $episode }話まで放送
 title-fact-now = 放送中
 title-fact-tba = 未定
-more-following-line = { $status } · { $score }/10
 episode-go-to = エピソードへ移動…
 episode-go-to-title = エピソードへ移動
 episode-go-to-go = 移動

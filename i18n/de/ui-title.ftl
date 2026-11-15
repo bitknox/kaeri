@@ -108,7 +108,6 @@ title-fact-range = { $from } bis { $to }
 title-fact-after = Nach Folge { $episode }
 title-fact-now = Jetzt
 title-fact-tba = Noch nicht angekündigt
-more-following-line = { $status } · { $score }/10
 episode-go-to = Zu Folge…
 episode-go-to-title = Zu Folge
 episode-go-to-go = Los

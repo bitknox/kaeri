@@ -114,7 +114,6 @@ title-fact-range = с { $from } по { $to }
 title-fact-after = После серии { $episode }
 title-fact-now = Сейчас
 title-fact-tba = Дата не объявлена
-more-following-line = { $status } · { $score }/10
 episode-go-to = Перейти к эпизоду…
 episode-go-to-title = Перейти к эпизоду
 episode-go-to-go = Перейти

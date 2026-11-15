@@ -15619,10 +15619,6 @@
     <value>To be announced</value>
     <comment>Value of the fact on a show with no announced start.</comment>
   </data>
-  <data name="MoreFollowingLine" xml:space="preserve">
-    <value>{status} · {score}/10</value>
-    <comment>A followed person's status and score, such as "Completed · 9/10". The status is already worded.</comment>
-  </data>
   <data name="EpisodeGoTo" xml:space="preserve">
     <value>Go to episode…</value>
     <comment>Item of the episode range menu, and the title of its number field. The ellipsis marks that it asks for a number.</comment>

@@ -108,7 +108,6 @@ title-fact-range = { $from } – { $to }
 title-fact-after = { $episode }. bölümden sonra
 title-fact-now = Şimdi
 title-fact-tba = Açıklanacak
-more-following-line = { $status } · { $score }/10
 episode-go-to = Bölüme git…
 episode-go-to-title = Bölüme git
 episode-go-to-go = Git

@@ -166,8 +166,10 @@
                                 Visibility="{x:Bind LineShown}" AutomationProperties.AccessibilityView="Raw" />
                       <TextBlock Grid.Column="1" Text="{x:Bind Line, Mode=OneWay}" Style="{StaticResource HazeCaptionStyle}" TextWrapping="Wrap"
                                  VerticalAlignment="Center" Visibility="{x:Bind LineShown}" />
+                      <!-- A fold carries the marks of the watched rows inside it, before its action. -->
+                      <local:FollowMarks Grid.Column="1" Set="{x:Bind Marks, Mode=OneWay}" Height="36" HorizontalAlignment="Right" VerticalAlignment="Center" />
                       <HyperlinkButton Grid.Column="2" Content="{x:Bind Action, Mode=OneWay}" Click="OnNote" Tag="{x:Bind}" Style="{StaticResource SilkLinkStyle}"
-                                       VerticalAlignment="Center" Padding="8,4" />
+                                       AutomationProperties.Name="{x:Bind Spoken, Mode=OneWay}" VerticalAlignment="Center" Padding="8,4" />
                     </Grid>
                   </DataTemplate>
                   <DataTemplate x:Key="EpisodeTemplate" x:DataType="local:EpisodeItem">
@@ -242,6 +244,9 @@
                         </TextBlock.OpacityTransition>
                       </TextBlock>
                       <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="4" VerticalAlignment="Top">
+                      <!-- Who of the people followed stopped here: three pictures, then +N. Its tooltip says
+                           every name; the row's name says it to Narrator. No slot while no row has marks. -->
+                      <local:FollowMarks Set="{x:Bind Marks, Mode=OneWay}" Height="36" Margin="0,0,8,0" />
                       <!-- The episode's download: Download on hover or focus, then how far, then a check.
                            The cell keeps its width in every state, so the row never moves. -->
                       <Button Width="36" Height="36" Padding="0" Style="{StaticResource SubtleButtonStyle}"

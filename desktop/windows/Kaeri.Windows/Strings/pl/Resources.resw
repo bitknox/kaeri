@@ -12029,9 +12029,6 @@
   <data name="TitleFactTba" xml:space="preserve">
     <value>Do ogłoszenia</value>
   </data>
-  <data name="MoreFollowingLine" xml:space="preserve">
-    <value>{status} · {score}/10</value>
-  </data>
   <data name="EpisodeGoTo" xml:space="preserve">
     <value>Przejdź do odcinka…</value>
   </data>

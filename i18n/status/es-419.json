@@ -13207,13 +13207,6 @@
     "at": "2026-10-31",
     "back": "People you follow"
   },
-  "more-following-line": {
-    "source": "87fbdc6253ff",
-    "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31",
-    "back": "{ $status } · { $score }/10"
-  },
   "more-following-note": {
     "source": "51ebda4ffae7",
     "state": "draft",

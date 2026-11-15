@@ -11606,9 +11606,6 @@
   <data name="TitleFactTba" xml:space="preserve">
     <value>Por anunciar</value>
   </data>
-  <data name="MoreFollowingLine" xml:space="preserve">
-    <value>{status} · {score}/10</value>
-  </data>
   <data name="EpisodeGoTo" xml:space="preserve">
     <value>Ir al episodio…</value>
   </data>

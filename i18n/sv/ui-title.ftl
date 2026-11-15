@@ -108,7 +108,6 @@ title-fact-range = { $from } till { $to }
 title-fact-after = Efter avsnitt { $episode }
 title-fact-now = Nu
 title-fact-tba = Datum tillkännages
-more-following-line = { $status } · { $score }/10
 episode-go-to = Gå till avsnitt…
 episode-go-to-title = Gå till avsnitt
 episode-go-to-go = Gå

@@ -105,7 +105,6 @@ title-fact-range = { $from } sampai { $to }
 title-fact-after = Setelah episode { $episode }
 title-fact-now = Sedang tayang
 title-fact-tba = Akan diumumkan
-more-following-line = { $status } · { $score }/10
 episode-go-to = Ke episode…
 episode-go-to-title = Ke episode
 episode-go-to-go = Ke

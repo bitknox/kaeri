@@ -14587,9 +14587,6 @@ title-fact-now = Сейчас
 # Value of the fact on a show with no announced start.
 title-fact-tba = Дата не объявлена
 
-# A followed person's status and score, such as "Completed · 9/10". The status is already worded.
-more-following-line = { $status } · { $score }/10
-
 # Item of the episode range menu, and the title of its number field. The ellipsis marks that it asks for a number.
 episode-go-to = Перейти к эпизоду…
 

@@ -411,6 +411,8 @@ public sealed partial class MainWindow : Window
                 "crash-saved" => new FfiScene.CrashSaved(),
                 "crash-held" => new FfiScene.CrashHeld(),
                 "profiles" => new FfiScene.Profiles(),
+                "following" => new FfiScene.Following(),
+                "following-slow" => new FfiScene.FollowingSlow(),
                 "reading-first-run" => new FfiScene.ReadingFirstRun(),
                 "reading-update-sheet" => new FfiScene.ReadingUpdateSheet(),
                 "reading-join-ask" => new FfiScene.ReadingJoinAsk(),

@@ -11183,9 +11183,6 @@
   <data name="TitleFactTba" xml:space="preserve">
     <value>Açıklanacak</value>
   </data>
-  <data name="MoreFollowingLine" xml:space="preserve">
-    <value>{status} · {score}/10</value>
-  </data>
   <data name="EpisodeGoTo" xml:space="preserve">
     <value>Bölüme git…</value>
   </data>

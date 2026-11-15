@@ -16443,10 +16443,6 @@ object Strings {
     fun titleFactTba(context: Context): String =
         context.getString(R.string.title_fact_tba)
 
-    /** A followed person's status and score, such as "Completed · 9/10". The status is already worded. */
-    fun moreFollowingLine(context: Context, status: String, score: Int): String =
-        context.getString(R.string.more_following_line, status, score)
-
     /** Item of the episode range menu, and the title of its number field. The ellipsis marks that it asks for a number. */
     fun episodeGoTo(context: Context): String =
         context.getString(R.string.episode_go_to)

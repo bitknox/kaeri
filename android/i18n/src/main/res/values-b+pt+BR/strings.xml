@@ -4450,7 +4450,6 @@
     <string name="title_fact_after">Após o episódio %1$d</string>
     <string name="title_fact_now">Em exibição</string>
     <string name="title_fact_tba">A anunciar</string>
-    <string name="more_following_line">%1$s · %2$,d/10</string>
     <string name="episode_go_to">Ir para o episódio…</string>
     <string name="episode_go_to_title">Ir para o episódio</string>
     <string name="episode_go_to_go">Ir</string>
