@@ -591,7 +591,16 @@ private fun Chrome(
         // Top left, the show and the episode; top right, the clock and when it ends.
         Column(Modifier.align(Alignment.TopStart).padding(start = 48.dp, top = 27.dp).width(560.dp)) {
             Text(model.showTitle, style = TvTitle.player, color = ObiSilk.Silk, maxLines = 1, overflow = TextOverflow.Ellipsis)
-            Text(model.episodeLine(LocalContext.current), style = MaterialTheme.typography.bodyLarge, color = ObiSilk.Haze, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                Text(model.episodeLine(LocalContext.current), style = MaterialTheme.typography.bodyLarge, color = ObiSilk.Haze, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f, fill = false))
+                // Private, beside the episode: this playback is not saved or synced.
+                if (model.playsPrivately) {
+                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                        androidx.tv.material3.Icon(app.kaeri.design.PrivateGlyph.EyeSlash, contentDescription = null, tint = ObiSilk.HazeHighContrast, modifier = Modifier.size(18.dp))
+                        Text(androidx.compose.ui.res.stringResource(app.kaeri.i18n.R.string.private_badge), style = MaterialTheme.typography.bodyLarge, color = ObiSilk.HazeHighContrast, maxLines = 1)
+                    }
+                }
+            }
         }
         Column(Modifier.align(Alignment.TopEnd).padding(end = 48.dp, top = 27.dp), horizontalAlignment = Alignment.End) {
             // Read afresh each time; the minute's turn only makes sure that happens while paused.

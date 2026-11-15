@@ -100,6 +100,8 @@ internal fun ScreenFrame(
                 actions = {
                     actions()
                     if (cast) CastButton()
+                    // The private mode badge, before the avatar on the screens the bar leads to.
+                    if (onBack == null) PrivateChip()
                     AnimatedContent(
                         targetState = activity,
                         transitionSpec = {

@@ -179,21 +179,40 @@ private fun TopBar(
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
             )
-            // Into the next episode, the line crossfades on standard (T5).
-            androidx.compose.animation.AnimatedContent(
-                model.episodeLine(LocalContext.current),
-                transitionSpec = {
-                    androidx.compose.animation.fadeIn(Motion.standard()) togetherWith androidx.compose.animation.fadeOut(Motion.standard())
-                },
-                label = "episode line", // i18n-skip
-            ) { line ->
-                Text(
-                    line,
-                    style = MaterialTheme.typography.bodyMedium.copy(shadow = ControlShadow),
-                    color = ObiSilk.Silk,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                )
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                // Into the next episode, the line crossfades on standard (T5).
+                androidx.compose.animation.AnimatedContent(
+                    model.episodeLine(LocalContext.current),
+                    transitionSpec = {
+                        androidx.compose.animation.fadeIn(Motion.standard()) togetherWith androidx.compose.animation.fadeOut(Motion.standard())
+                    },
+                    label = "episode line", // i18n-skip
+                    modifier = Modifier.weight(1f, fill = false),
+                ) { line ->
+                    Text(
+                        line,
+                        style = MaterialTheme.typography.bodyMedium.copy(shadow = ControlShadow),
+                        color = ObiSilk.Silk,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                }
+                // Private, beside the episode: this playback is not saved or synced.
+                androidx.compose.animation.AnimatedVisibility(
+                    model.playsPrivately,
+                    enter = androidx.compose.animation.fadeIn(Motion.fadeIn()),
+                    exit = androidx.compose.animation.fadeOut(Motion.fadeOut()),
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                        Icon(app.kaeri.design.PrivateGlyph.EyeSlash, contentDescription = null, tint = ObiSilk.HazeHighContrast, modifier = Modifier.size(16.dp))
+                        Text(
+                            stringResource(R.string.private_badge),
+                            style = MaterialTheme.typography.bodyMedium.copy(shadow = ControlShadow),
+                            color = ObiSilk.HazeHighContrast,
+                            maxLines = 1,
+                        )
+                    }
+                }
             }
         }
         onPlayOnTv?.let { ControlButton(PlayerIcons.Tv, stringResource(R.string.tv_play_on), onClick = it) }

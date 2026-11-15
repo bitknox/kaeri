@@ -66,6 +66,7 @@ import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.res.stringResource
 import app.kaeri.i18n.R
+import app.kaeri.engine.model.PrivateTitle
 import app.kaeri.engine.model.AvailabilityCase
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -1256,6 +1257,7 @@ private fun TitleTopBar(entry: Entry, pick: SurprisePick?, onBack: () -> Unit, m
                         showSettings = true
                     },
                 )
+                AlwaysPrivateItem(PrivateTitle.Show(entry.id)) { more = false }
                 DropdownMenuItem(
                     text = { Text(stringResource(R.string.source_picker_title)) },
                     leadingIcon = { Icon(Icons.Providers, null) },
@@ -1350,6 +1352,8 @@ private fun TitleActions(entry: Entry, actions: AppActions, unlisted: Boolean) {
             // Caught up: when the next one airs, in the action's place, and no amber on the page.
             CaughtUp(action, Modifier.heightIn(min = 56.dp))
         }
+        // Private: under the main action, while private mode is on or the show is always private.
+        PrivatePageLine(privateLine(PrivateTitle.Show(entry.id)))
         Row(Modifier.padding(top = 4.dp).heightIn(min = 48.dp), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
             var open by remember { mutableStateOf(false) }
             Box(Modifier.weight(1f)) {
@@ -2490,6 +2494,7 @@ private fun TabletActions(entry: Entry, actions: AppActions, unlisted: Boolean, 
         }
     }
     if (action.playable && onService == null && !asking && !unlisted) CastPlaysOn(Modifier.padding(top = 8.dp))
+    PrivatePageLine(privateLine(PrivateTitle.Show(entry.id)))
     ServiceLines(availability, entry)
     }
 }

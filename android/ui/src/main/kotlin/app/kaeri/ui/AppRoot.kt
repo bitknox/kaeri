@@ -458,6 +458,7 @@ private fun AppRootFrame(
         LocalNotificationActions provides actions.notifications,
     ) {
         EngineNotices(onHint = routed.hint)
+        PrivateModeAnnouncer()
         SourcePinNotice()
         StoreJoinNotices()
         LicensedReturnNotice()

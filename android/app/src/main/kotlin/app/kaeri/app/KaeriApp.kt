@@ -345,6 +345,8 @@ class KaeriApp : Application(), PlayerHost, NewEpisodesHost, WidgetHost {
                 if (event != Lifecycle.Event.ON_STOP) return@LifecycleEventObserver
                 scope.launch {
                     if (!Widgets.placed(this@KaeriApp)) return@launch
+                    // Private mode: the widgets stay as they were; the engine makes no record now.
+                    if (store.privacy.on.value) return@launch
                     runCatching { makeWidgetRecord() }.onFailure { Log.w(TAG, "the widgets' record was not made: ${it.message}") }
                 }
             },

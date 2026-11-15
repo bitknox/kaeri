@@ -5,6 +5,8 @@
 
 package app.kaeri.tv.screens
 
+import app.kaeri.engine.model.PrivateTitle
+import app.kaeri.tv.ui.PrivateTitleLine
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import app.kaeri.i18n.R
@@ -163,6 +165,8 @@ fun TitleScreen(
         store.loadDetail(id)
         store.loadEpisodesForPage(id)
         store.loadDub(id)
+        // Its own settings, which say whether it is always private on this device.
+        store.loadShowSettings(id)
     }
     val entries by store.titles.entries.collectAsStateWithLifecycle()
     val tables by store.titles.episodes.collectAsStateWithLifecycle()
@@ -420,6 +424,8 @@ private fun Header(
             }
         }
         if (onService == null && !noSources) MissingLine(missing)
+        // Private: under the actions, while private mode is on or the show is always private.
+        PrivateTitleLine(PrivateTitle.Show(entry.id))
         ServiceLine(availability, memory)
         FollowingLine(entry, memory)
     }
@@ -1029,6 +1035,11 @@ fun titleSheet(context: Context, store: AppStore, entry: Entry, rows: List<Episo
         listOfNotNull(
             CardAction(Strings.showSettingsTitle(context), then = showSettingsSheet(context, store, entry.id, entry.title)),
             CardAction(sourcesLabel, then = sourcePickerSheet(store, entry, sourcesLabel)),
+            // Always private, a switch: the panel stays open as it turns.
+            CardAction(
+                Strings.titleAlwaysPrivate(context),
+                switch = { PrivateTitle.Show(entry.id) in store.privacy.always.collectAsStateWithLifecycle().value },
+            ) { store.setAlwaysPrivate(PrivateTitle.Show(entry.id), !store.privacy.isAlways(PrivateTitle.Show(entry.id))) },
             if (store.match.canFix(store.providers.rows.value)) {
                 CardAction(Strings.matchFix(context), then = matchPanel(context, store, entry, fromMenu = true, host = host))
             } else {
