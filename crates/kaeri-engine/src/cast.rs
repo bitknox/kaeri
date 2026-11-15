@@ -436,9 +436,9 @@ impl CastHub {
                 let now = status.borrow_and_update().clone();
                 if now.state == CastState::Ended {
                     if let (Some(hub), Some(player)) = (hub.upgrade(), held.upgrade()) {
-                        let failure =
-                            now.failure.filter(|f| busy || !matches!(f, CastFailure::Lost(_)));
-                        hub.session_ended(&player, failure);
+                        let lost = matches!(now.failure, Some(CastFailure::Lost(_)));
+                        let failure = now.failure.filter(|_| busy || !lost);
+                        hub.session_ended(&player, failure, lost);
                     }
                     return;
                 }
@@ -455,8 +455,14 @@ impl CastHub {
     }
 
     /// The TV ended the session `player` held: closed the receiver, went away, or someone else
-    /// took it over.
-    fn session_ended(&self, player: &Arc<CastPlayer>, failure: Option<CastFailure>) {
+    /// took it over. A connection `lost` may have left the receiver up, so the next launch
+    /// still looks for it.
+    fn session_ended(
+        &self,
+        player: &Arc<CastPlayer>,
+        failure: Option<CastFailure>,
+        lost: bool,
+    ) {
         {
             let mut session = lock(&self.session);
             if !session.player.as_ref().is_some_and(|p| Arc::ptr_eq(p, player)) {
@@ -469,7 +475,9 @@ impl CastHub {
             }
             session.failure = failure;
         }
-        self.forget_left();
+        if !lost {
+            self.forget_left();
+        }
         self.end();
     }
 
@@ -568,7 +576,7 @@ impl CastHub {
         let view = self.view();
         let status = player.as_ref().map(|p| p.current());
         let now = view.state.as_ref().and_then(|s| s.now_playing.clone());
-        let item = match (&now, &status) {
+        let item = match (&now, status.as_ref()) {
             (Some(now), status) => Some(SessionItem {
                 id: Some(now.id),
                 title: now.title.clone(),

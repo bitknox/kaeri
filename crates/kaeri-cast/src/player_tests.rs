@@ -11,7 +11,7 @@ use super::*;
 use crate::{
     aac::{FakeEncoder, NoEncoder},
     fake::{
-        FakeOptions, FakeReceiver, Refusal, Refuse,
+        CustomReceiver, FakeOptions, FakeReceiver, Refusal, Refuse,
         matroska::{Fixture, FixtureAudio, matroska},
     },
     fetch::PlainHttp,
@@ -1078,4 +1078,195 @@ fn a_fixtures_advert_reads_as_a_tv_with_a_screen() {
     let device = CastDevice::from_txt("Chromecast-fake-1", address, &txt).unwrap();
     assert_eq!((device.name.as_str(), device.id.as_str()), ("Living room", "fake-1"));
     assert!(device.shown());
+}
+
+fn media_status(state: &str, position: f64) -> MediaStatus {
+    MediaStatus {
+        media_session_id: 1,
+        state: state.into(),
+        idle_reason: None,
+        position,
+        duration: None,
+        rate: 1.0,
+        active_tracks: Vec::new(),
+        volume: None,
+        muted: None,
+        content: None,
+        metadata: None,
+        has_media: false,
+    }
+}
+
+#[test]
+fn what_was_asked_holds_until_a_status_agrees_or_a_while_has_passed() {
+    let now = Instant::now();
+    let mut want = Wanted {
+        paused: Some((true, now)),
+        position: Some((300.0, now)),
+        level: Some((0.2, now)),
+        ..Wanted::default()
+    };
+    // A poll answered before the pause and the seek landed.
+    let mut before = media_status("PLAYING", 12.0);
+    before.volume = Some(0.4);
+    want.media(&before);
+    assert!(want.paused.is_some() && want.position.is_some() && want.level.is_some());
+    let mut after = media_status("PAUSED", 300.4);
+    after.volume = Some(0.2);
+    want.media(&after);
+    assert!(want.paused.is_none() && want.position.is_none() && want.level.is_none());
+
+    let long_ago = Instant::now().checked_sub(CONFIRM).unwrap();
+    let mut want = Wanted { paused: Some((true, long_ago)), ..Wanted::default() };
+    want.media(&media_status("PLAYING", 12.0));
+    assert!(want.paused.is_none(), "a TV that kept playing wins in the end");
+
+    let mut want = Wanted { paused: Some((false, now)), ..Wanted::default() };
+    want.media(&media_status("IDLE", 0.0));
+    assert!(want.paused.is_none(), "nothing to play or pause once the file ended");
+}
+
+#[tokio::test(flavor = "multi_thread", worker_threads = 4)]
+async fn controls_show_at_once_and_the_duration_outlives_statuses_without_the_media() {
+    let receiver =
+        FakeReceiver::start(FakeOptions { duration: 600.0, ..FakeOptions::default() })
+            .await
+            .unwrap();
+    let (player, mut events) = playing(&receiver).await;
+    let seen: Arc<Mutex<Vec<(CastState, Option<f64>, bool)>>> = Arc::default();
+    let watching = tokio::spawn({
+        let (mut status, seen) = (player.status(), Arc::clone(&seen));
+        async move {
+            while status.changed().await.is_ok() {
+                let now = status.borrow_and_update().clone();
+                lock(&seen).push((now.state, now.duration, now.metadata.is_some()));
+            }
+        }
+    });
+    assert_eq!(player.current().duration, Some(600.0));
+
+    let pause = player.set_paused(true);
+    tokio::pin!(pause);
+    // Polled once: the request is out and the TV hasn't answered.
+    let _ = futures::poll!(&mut pause);
+    assert_eq!(player.current().state, CastState::Paused, "paused on the tap");
+    pause.await.unwrap();
+    next(&mut events, |e| *e == PlaybackEvent::Paused(true)).await;
+
+    player.seek(120.0, true).await.unwrap();
+    assert!((player.current().position - 120.0).abs() < 2.0);
+    receiver.buffer(true);
+    next(&mut events, |e| *e == PlaybackEvent::Buffering(true)).await;
+    receiver.buffer(false);
+    player.set_paused(false).await.unwrap();
+    next(&mut events, |e| *e == PlaybackEvent::Paused(false)).await;
+
+    let now = player.current();
+    assert_eq!(now.duration, Some(600.0), "{now:?}");
+    assert_eq!(now.metadata.map(|m| m.series).as_deref(), Some("A Made-up Show"));
+    watching.abort();
+    player.quit().await.unwrap();
+    let seen = lock(&seen).clone();
+    assert!(seen.len() >= 4, "{seen:?}");
+    let playing = seen.iter().filter(|(state, ..)| {
+        matches!(state, CastState::Playing | CastState::Paused | CastState::Buffering)
+    });
+    for (state, duration, metadata) in playing {
+        assert!(duration.is_some() && *metadata, "{state:?} without the media: {seen:?}");
+    }
+}
+
+/// A fake whose own receiver does `custom`, and a cast to it of a short file, playing.
+async fn cast_with_own_receiver(custom: CustomReceiver) -> (FakeReceiver, CastPlayer) {
+    let receiver =
+        FakeReceiver::start(FakeOptions { custom, ..FakeOptions::default() }).await.unwrap();
+    let file = matroska(&Fixture::default());
+    let base = serve(HashMap::from([("/episode.mkv".to_owned(), file)])).await;
+    let (player, mut events) = CastPlayer::connect(setup(
+        &receiver,
+        Arc::new(CastMemory::memory()),
+        Arc::new(FakeEncoder::default()),
+    ))
+    .await
+    .unwrap();
+    player.use_receiver(Some("0A1B2C3D".into()));
+    player.load(torrent(format!("{base}/episode.mkv")));
+    next(&mut events, |e| *e == PlaybackEvent::Loaded).await;
+    (receiver, player)
+}
+
+fn launched(receiver: &FakeReceiver) -> Vec<String> {
+    receiver.heard("LAUNCH").iter().map(|m| m["appId"].as_str().unwrap().to_owned()).collect()
+}
+
+#[tokio::test(flavor = "multi_thread", worker_threads = 4)]
+async fn kaeris_own_receiver_plays_where_it_runs() {
+    let (receiver, player) = cast_with_own_receiver(CustomReceiver::Runs).await;
+    assert_eq!(launched(&receiver), ["0A1B2C3D"]);
+    assert_eq!(player.current().receiver.as_deref(), Some("0A1B2C3D"));
+    player.quit().await.unwrap();
+}
+
+#[tokio::test(flavor = "multi_thread", worker_threads = 4)]
+async fn a_tv_that_refuses_kaeris_receiver_plays_on_the_default_one() {
+    let (receiver, player) = cast_with_own_receiver(CustomReceiver::Unknown).await;
+    assert_eq!(launched(&receiver), ["0A1B2C3D", DEFAULT_MEDIA_RECEIVER]);
+    assert_eq!(player.current().receiver.as_deref(), Some(DEFAULT_MEDIA_RECEIVER));
+    assert_eq!(player.failure(), None);
+    player.quit().await.unwrap();
+}
+
+#[tokio::test(flavor = "multi_thread", worker_threads = 4)]
+async fn kaeris_receiver_closing_at_its_first_load_hands_over_to_the_default_one() {
+    let (receiver, player) = cast_with_own_receiver(CustomReceiver::ClosesAtLoad).await;
+    assert_eq!(launched(&receiver), ["0A1B2C3D", DEFAULT_MEDIA_RECEIVER]);
+    assert_eq!(player.current().receiver.as_deref(), Some(DEFAULT_MEDIA_RECEIVER));
+    assert_eq!(player.failure(), None);
+    player.quit().await.unwrap();
+}
+
+#[tokio::test(flavor = "multi_thread", worker_threads = 4)]
+async fn kaeris_receiver_that_never_answers_a_load_hands_over_to_the_default_one() {
+    let (receiver, player) = cast_with_own_receiver(CustomReceiver::Silent).await;
+    assert_eq!(launched(&receiver), ["0A1B2C3D", DEFAULT_MEDIA_RECEIVER]);
+    assert_eq!(player.current().receiver.as_deref(), Some(DEFAULT_MEDIA_RECEIVER));
+    assert_eq!(player.failure(), None);
+    player.quit().await.unwrap();
+}
+
+#[tokio::test(flavor = "multi_thread", worker_threads = 4)]
+async fn a_session_left_running_is_joined_with_what_it_plays() {
+    let receiver = FakeReceiver::start(FakeOptions {
+        duration: 600.0,
+        remembers: true,
+        ..FakeOptions::default()
+    })
+    .await
+    .unwrap();
+    let (player, _events) = playing(&receiver).await;
+    let session = player.receiver().unwrap().session_id;
+    // The app is closed with the cast running: the TV keeps playing.
+    drop(player);
+    let joined = CastPlayer::join(
+        setup(&receiver, Arc::new(CastMemory::memory()), Arc::new(FakeEncoder::default())),
+        &session,
+    )
+    .await
+    .unwrap();
+    let (player, _events) = joined.expect("the receiver still runs");
+    let now = player.current();
+    assert_eq!(now.state, CastState::Playing, "{now:?}");
+    assert_eq!(now.duration, Some(600.0));
+    assert_eq!(now.metadata.map(|m| m.title).as_deref(), Some("Episode 1"));
+    player.set_paused(true).await.unwrap();
+    assert_eq!(receiver.heard("PAUSE").len(), 1, "controls reach the joined receiver");
+    player.quit().await.unwrap();
+
+    let gone = CastPlayer::join(
+        setup(&receiver, Arc::new(CastMemory::memory()), Arc::new(FakeEncoder::default())),
+        &session,
+    )
+    .await
+    .unwrap();
+    assert!(gone.is_none(), "a session that ended isn't joined");
 }

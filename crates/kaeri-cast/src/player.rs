@@ -386,6 +386,8 @@ struct State {
     relaunch_idle: bool,
     /// The receiver app running played a file.
     played_in_app: bool,
+    /// When the receiver app running came up.
+    launched: Option<Instant>,
 }
 
 impl State {
@@ -530,6 +532,7 @@ impl Inner {
                 let mut state = lock(&inner.state);
                 if !state.quit {
                     state.played_in_app = false;
+                    state.launched = Some(Instant::now());
                     state.app = Some(app.clone());
                     let fresh = Media::new(inner.device.channel.clone(), app);
                     *lock(&inner.media) = Some(fresh.clone());
@@ -1850,12 +1853,21 @@ fn receive(inner: &Inner, message: &Incoming) {
     }
 }
 
+/// Kaeri's receiver closing this soon after it came up, with nothing loading, is a receiver
+/// page that failed: a closed one later was closed on the TV.
+const OWN_RECEIVER_FAILS: Duration = Duration::from_secs(15);
+
 /// Kaeri's receiver closed before it played anything: the Default Media Receiver takes its
 /// place, launched by the next load, and the cast goes on. `false` for any other app, or one
 /// that played: its closing ends the cast.
 fn falls_back(inner: &Inner, state: &mut State) -> bool {
     let custom = state.app.as_ref().is_some_and(|app| app.app_id != DEFAULT_MEDIA_RECEIVER);
     if !custom || state.played_in_app || state.fallen_back {
+        return false;
+    }
+    // Idle a while, it was closed on the TV, as any receiver is: the session ends.
+    let failed = state.launched.is_some_and(|at| at.elapsed() < OWN_RECEIVER_FAILS);
+    if !state.trying && !failed {
         return false;
     }
     tracing::info!(

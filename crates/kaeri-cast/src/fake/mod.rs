@@ -107,6 +107,20 @@ pub struct FakeOptions {
     pub plays_unfetched: bool,
     /// What an app other than the Default Media Receiver does.
     pub custom: CustomReceiver,
+    /// Keeps the receiver app, what it plays and the volume from one sender connection to the
+    /// next, as a TV does: for a sender that comes back to a cast it left running.
+    pub remembers: bool,
+}
+
+/// What a TV that [`FakeOptions::remembers`] keeps between sender connections.
+#[derive(Debug, Clone)]
+struct Kept {
+    transport: String,
+    app: Option<(String, String)>,
+    playing: Option<Playing>,
+    next_session: i64,
+    level: f64,
+    muted: bool,
 }
 
 impl Default for FakeOptions {
@@ -120,6 +134,7 @@ impl Default for FakeOptions {
             launch: Duration::ZERO,
             plays_unfetched: false,
             custom: CustomReceiver::default(),
+            remembers: false,
         }
     }
 }
@@ -241,6 +256,7 @@ impl FakeReceiver {
         let heard: Arc<Mutex<Vec<(String, Value)>>> = Arc::default();
         let fetched: Arc<Mutex<Vec<Fetched>>> = Arc::default();
         let (control, mut controls) = mpsc::unbounded_channel();
+        let kept: Arc<Mutex<Option<Kept>>> = Arc::default();
         let task = {
             let (heard, fetched) = (Arc::clone(&heard), Arc::clone(&fetched));
             tokio::spawn(async move {
@@ -252,8 +268,12 @@ impl FakeReceiver {
                         accepted = listener.accept() => {
                             let Ok((socket, _)) = accepted else { return };
                             let acceptor = acceptor.clone();
-                            let (heard, fetched, options) =
-                                (Arc::clone(&heard), Arc::clone(&fetched), options.clone());
+                            let (heard, fetched, options, kept) = (
+                                Arc::clone(&heard),
+                                Arc::clone(&fetched),
+                                options.clone(),
+                                Arc::clone(&kept),
+                            );
                             let (tx, rx) = mpsc::unbounded_channel();
                             forward = Some(tx);
                             if let Some(previous) = current.take() {
@@ -261,7 +281,7 @@ impl FakeReceiver {
                             }
                             current = Some(tokio::spawn(async move {
                                 if let Ok(tls) = acceptor.accept(socket).await {
-                                    let _ = serve(tls, heard, fetched, options, rx).await;
+                                    let _ = serve(tls, heard, fetched, options, rx, kept).await;
                                 }
                             }));
                         }
@@ -315,6 +335,7 @@ async fn serve(
     fetched: Arc<Mutex<Vec<Fetched>>>,
     options: FakeOptions,
     mut controls: mpsc::UnboundedReceiver<Control>,
+    kept: Arc<Mutex<Option<Kept>>>,
 ) -> std::io::Result<()> {
     let (mut read, mut write) = tokio::io::split(tls);
     let (tx, mut rx) = mpsc::unbounded_channel::<CastMessage>();
@@ -348,8 +369,25 @@ async fn serve(
         json!({"type": "RECEIVER_STATUS", "requestId": request, "status": {
             "applications": applications, "volume": volume(level, muted)}})
     };
+    if options.remembers
+        && let Some(was) = lock(&kept).clone()
+    {
+        (transport, app, playing, next_session, level, muted) =
+            (was.transport, was.app, was.playing, was.next_session, was.level, was.muted);
+    }
     let mut sender = String::from("*");
     loop {
+        // Kept before each wait: a connection ends only there, when the next one takes over.
+        if options.remembers {
+            *lock(&kept) = Some(Kept {
+                transport: transport.clone(),
+                app: app.clone(),
+                playing: playing.clone(),
+                next_session,
+                level,
+                muted,
+            });
+        }
         tokio::select! {
             _ = ticker.tick() => {
                 if let Some(p) = playing.as_mut() {
