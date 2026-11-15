@@ -597,7 +597,7 @@ pub(crate) fn dispatch(
             engine.names.forget(id);
             set_provider_preference(id, provider, engine, services, tx);
             // The pin applies to what is on screen now, not the next time it opens.
-            crate::titles::refresh::relist(id, true, engine, services, tx);
+            crate::titles::refresh::pinned(id, engine, services, tx);
         }
 
         // Playback.

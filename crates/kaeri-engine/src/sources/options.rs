@@ -213,5 +213,5 @@ pub fn pin_release(
     };
     let _ = tx.send(Event::Toast(toast));
     crate::show_settings::load_show_settings(id, engine, services, tx);
-    crate::titles::refresh::relist(id, true, engine, services, tx);
+    crate::titles::refresh::pinned(id, engine, services, tx);
 }
