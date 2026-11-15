@@ -91,10 +91,11 @@ struct PhoneList<Content: View>: View {
                 .listRowBackground(Palette.raised)
                 .environment(\.defaultMinListRowHeight, 48)
                 .task {
-                    // A launch scroll brings the find row into view, for the Fixtures shots.
-                    guard navigator.launchScroll != nil else { return }
+                    // A launch scroll brings the find row into view, for the Fixtures shots;
+                    // `-KaeriScroll 2` the Picture in Picture row.
+                    guard let scroll = navigator.launchScroll else { return }
                     try? await Task.sleep(for: .milliseconds(800))
-                    proxy.scrollTo("findSkips", anchor: .center)
+                    proxy.scrollTo(scroll == 2 ? "pictureInPictureOnLeave" : "findSkips", anchor: .center)
                 }
         }
     }
@@ -434,6 +435,7 @@ struct PhonePlaybackPage: View {
                 // names it, and VoiceOver reads it after the value.
                 PhoneSettingSwitch(key: .pictureInPictureOnLeave)
                     .accessibilityHint(L.settingsPictureInPictureOnLeaveIos)
+                    .id("pictureInPictureOnLeave")
             } header: {
                 PhoneSectionHeader(L.playerPictureAndSound)
             } footer: {
