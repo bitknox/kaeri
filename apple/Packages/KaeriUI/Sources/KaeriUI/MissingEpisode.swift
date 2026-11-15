@@ -165,6 +165,9 @@ private struct MissingSlotBody<Found: View, Trailing: View>: View {
     @State private var settle = 0.0
     /// Raised at each find, so the end of an older crossfade lets a newer one be.
     @State private var finds = 0
+    /// The episode before, kept while a check runs: the title's table comes back during it, and
+    /// until its sources answer again that episode reads as unsourced.
+    @State private var heldPrevious: (episode: UInt32, previous: UInt32)?
     @FocusState private var focus: SlotFocus?
     @AccessibilityFocusState private var spokenFocus: SlotFocus?
 
@@ -242,7 +245,7 @@ private struct MissingSlotBody<Found: View, Trailing: View>: View {
                     .focused($focus, equals: .check)
                     .accessibilityFocused($spokenFocus, equals: .check)
             }
-            if let previous = missing.previous {
+            if let previous = missing.previous ?? held(missing) {
                 Button {
                     store.send(.play(id: entry.id, episode: String(previous)))
                 } label: {
@@ -261,7 +264,18 @@ private struct MissingSlotBody<Found: View, Trailing: View>: View {
         }
     }
 
+    private func held(_ missing: MissingEpisode) -> UInt32? {
+        guard let heldPrevious, heldPrevious.episode == missing.episode, store.missing.isRunning(entry.id) else {
+            return nil
+        }
+        return heldPrevious.previous
+    }
+
     private func changed(from old: MissingKey, to new: MissingKey) {
+        if old.id != new.id { heldPrevious = nil }
+        if let episode = new.missing, let previous = episode.previous {
+            heldPrevious = (episode.episode, previous)
+        }
         if let episode = new.missing {
             kept = episode
             keptFor = new.id
