@@ -108,6 +108,8 @@ impl PlayerOpener for CastOpener {
                 return Err(LinkError(failure.to_string()));
             }
         };
+        // The receiver `cast.receiver` names, as a held session uses.
+        player.use_receiver(self.hub.receiver());
         let player = Arc::new(player);
         self.hub.attach(&player);
         if let Some(speed) = request.speed.filter(|s| (*s - 1.0).abs() > f64::EPSILON) {
