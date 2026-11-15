@@ -199,12 +199,10 @@ fn progress(
 ) -> u16 {
     let style = |role: Role| app.palette.style(role);
     let (read, _) = page.read_count();
-    let (filled, track) = glyph::meter_parts(read as f64 / total as f64, METER_WIDTH);
-    let mut at = x;
-    line(buf, at, y, &filled, style(Role::Text));
-    at += filled.cells() as u16;
-    line(buf, at, y, &track, style(Role::Rule));
-    at += track.cells() as u16;
+    // Whole cells in the text role, as the reader's meter: a chapter is read or it isn't.
+    let meter = glyph::meter_whole(read as f64 / total as f64, METER_WIDTH);
+    line(buf, x, y, &meter, style(Role::Text));
+    let mut at = x + meter.cells() as u16;
     let count = format!("  {}", t::tui_read_series_read(read as i64, total as i64)); // i18n-skip
     line(buf, at, y, &count, style(Role::TextDim));
     at += count.cells() as u16;

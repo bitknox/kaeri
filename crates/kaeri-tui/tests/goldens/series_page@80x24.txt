@@ -8,7 +8,7 @@ Kaeri                                                sources ● 3  ·  anilist 
  ◎ │
  ≡ │    Reading from Home library  ·  Reading on AniList
    │
-   │    ███████████████▎░░░░  13 of 17 chapters read
+   │    ███████████████░░░░░  13 of 17 chapters read
    │    Continue chapter 14 · page 8
    │
    │    Chapters  ───────────────────────────────────────────────────────────
@@ -53,8 +53,7 @@ r08 c03-03 fg=rule
 r08 c08-55 fg=text-dim
 r09 c03-03 fg=rule
 r10 c03-03 fg=rule
-r10 c08-23 fg=text
-r10 c24-27 fg=rule
+r10 c08-27 fg=text
 r10 c28-51 fg=text-dim
 r11 c03-03 fg=rule
 r11 c08-35 fg=text

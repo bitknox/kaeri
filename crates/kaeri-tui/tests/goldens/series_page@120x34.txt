@@ -8,7 +8,7 @@ Kaeri                                                                           
   ◎  Accounts               │
   ≡  Settings               │    Reading from Home library  ·  Reading on AniList
                             │
-                            │    ███████████████▎░░░░  13 of 17 chapters read   Continue chapter 14 · page 8
+                            │    ███████████████░░░░░  13 of 17 chapters read   Continue chapter 14 · page 8
                             │
                             │    Chapters  ──────────────────────────────────────────────────────────────────────────
                             │    Chapter 17 · Salt and Paper                       ● New · yesterday · Not downloaded
@@ -70,8 +70,7 @@ r08 c28-28 fg=rule
 r08 c33-80 fg=text-dim
 r09 c28-28 fg=rule
 r10 c28-28 fg=rule
-r10 c33-48 fg=text
-r10 c49-52 fg=rule
+r10 c33-52 fg=text
 r10 c53-76 fg=text-dim
 r10 c77-107 fg=text
 r11 c28-28 fg=rule
