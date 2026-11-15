@@ -49,8 +49,13 @@ struct NoticeCapsule: View {
                     Button {
                         withAnimation(.fadeOut) { store.notices.dismiss(item) }
                     } label: {
-                        HStack(spacing: 8) {
-                            if item.isAlert {
+                        HStack(alignment: larger ? .firstTextBaseline : .center, spacing: 8) {
+                            if item.isAlert, larger {
+                                // The dot on the first line, where the words start, once they
+                                // can run to more than two lines.
+                                Text(verbatim: "X").font(.mac(13)).hidden().frame(width: 6)
+                                    .overlay { Circle().fill(.vermilion).frame(width: 6, height: 6) }
+                            } else if item.isAlert {
                                 Circle().fill(.vermilion).frame(width: 6, height: 6)
                             }
                             Text(item.notice.words.firstCapitalized)
@@ -61,8 +66,8 @@ struct NoticeCapsule: View {
                         }
                         .padding(.leading, 16)
                         .padding(.trailing, !stacked && (item.notice.hint != nil || item.action != nil || item.isAlert || playsHere(item)) ? 8 : 16)
-                        .padding(.top, stacked ? 14 : typeSize > .large ? 6 : 0)
-                        .padding(.bottom, stacked ? 10 : typeSize > .large ? 6 : 0)
+                        .padding(.top, stacked ? 14 : larger ? 8 : 0)
+                        .padding(.bottom, stacked ? 10 : larger ? 8 : 0)
                         .frame(minHeight: 36)
                         .contentShape(.rect)
                     }
@@ -93,7 +98,7 @@ struct NoticeCapsule: View {
                     // accessibility sizes.
                     .padding(stacked ? EdgeInsets(top: 0, leading: 16, bottom: 14, trailing: 16) : EdgeInsets(top: 0, leading: 0, bottom: 0, trailing: 6))
                 }
-                .chromeGlass(in: stacked ? AnyShape(RoundedRectangle(cornerRadius: 24)) : AnyShape(Capsule()))
+                .chromeGlass(in: larger ? AnyShape(RoundedRectangle(cornerRadius: 24)) : AnyShape(Capsule()))
                 .frame(maxWidth: 520)
                 .offset(y: pull)
                 .opacity(1 - min(pull / 80, 0.6))
@@ -134,8 +139,14 @@ struct NoticeCapsule: View {
         .modifier(NoticeAnnouncer(enabled: here))
     }
 
+    /// Whether the text is larger than the default size, where the words can run past two
+    /// lines: the capsule becomes a rounded rectangle, which keeps its corners off the words.
+    private var larger: Bool {
+        typeSize > .large
+    }
+
     /// Whether the button goes under the words: at accessibility sizes, where beside them it
-    /// would leave the words a few letters a line. The capsule becomes a rounded rectangle there.
+    /// would leave the words a few letters a line.
     private var stacked: Bool {
         typeSize.isAccessibilitySize
     }
