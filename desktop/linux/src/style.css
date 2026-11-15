@@ -107,6 +107,10 @@ row levelbar.horizontal trough { min-width: 60px; }
 row.failed .subtitle { color: var(--haze); }
 /* The source picker: a source with a note in place of a count reads quieter. */
 row.noted .title { color: var(--haze); }
+/* Report a bug: the Player log row's saved line reads in full, a failed save in the alert colour. */
+row.report-log-saved .subtitle { opacity: 1; color: var(--silk); }
+row.report-log-failed .subtitle { opacity: 1; color: var(--error-color); }
+.report-log-text { background: none; }
 levelbar block.filled { background: var(--water); }
 levelbar block.empty { background: var(--edge); }
 

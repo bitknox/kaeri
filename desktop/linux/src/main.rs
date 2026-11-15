@@ -136,11 +136,11 @@ fn main() -> glib::ExitCode {
     {
         use tracing_subscriber::{Layer, layer::SubscriberExt, util::SubscriberInitExt};
         // Each layer filters for itself: the player log for Report a bug keeps the engine's
-        // playback lines at info, where stderr has only its warnings. The engine mirrors the log
-        // to the cache once it starts.
+        // playback lines and mpv's at info, where stderr has only their warnings. The engine
+        // mirrors the log to the cache once it starts.
         let stderr = tracing_subscriber::fmt::layer().with_writer(std::io::stderr).with_filter(
             tracing_subscriber::EnvFilter::try_from_default_env()
-                .unwrap_or_else(|_| "info,kaeri_engine=warn".into()),
+                .unwrap_or_else(|_| "info,kaeri_engine=warn,mpv=warn".into()),
         );
         tracing_subscriber::registry()
             .with(stderr)
@@ -217,6 +217,9 @@ fn main() -> glib::ExitCode {
         hwdec: args.hwdec.clone().unwrap_or_else(|| "auto-safe".into()),
         cache_dir: Some(cache_dir.join("mpv").display().to_string()),
         audio_output: args.audio_output.clone(),
+        // mpv's lines at info, for the player log in Report a bug: the layer keeps them while a
+        // playback runs, and stderr still shows only mpv's warnings.
+        log_level: "info".into(),
         ..PlayerOptions::default()
     };
     crash_signal::set_dir(paths.data_dir.clone());
