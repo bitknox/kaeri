@@ -72,6 +72,7 @@ impl Further {
     }
 
     /// See [`Lookup::after`]. Nothing to ask is a failure with nobody asked.
+    #[allow(clippy::result_large_err)]
     pub(crate) async fn after(
         &self,
         streams: &[Stream],
