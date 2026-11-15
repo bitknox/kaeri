@@ -17,8 +17,8 @@ Kaeri                                                                           
   Expand synopsis                                                                                                  i
   Show keys                                                                                                        ?
   Open the privacy page
+  Private mode                                                                                           off  ctrl+p
   Move up                                                                                                          k
-  Page up                                                                                                     ctrl+u
 
                             │                                                     ▏ Continue E4 at 5:00 (21%)
                             │                                                     █████░░░░░░░░░░░░░░░░░░░

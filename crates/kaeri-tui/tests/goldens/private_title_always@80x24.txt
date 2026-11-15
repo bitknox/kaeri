@@ -14,12 +14,12 @@ Kaeri                                                  plugins ●  ·  anilist 
    │
    │  Available on Hikari Library
    │
-   │  A postwoman in a hill town reads the wind for letters nobody sent. When
-   │  one arrives addressed to her in her own hand, dated ten years from now,…
+   │  A postwoman in a hill town reads the wind for letters nobody sent. When…
    │
    │  Drama  ·  Romance
    │
    │  █████░░░░░░░░░░░░░░░  6 of 24 episodes   Up next: episode 7
+   │  ◌ Always private · Not saved or synced
 ────────────────────────────────────────────────────────────────────────────────
 plugins · Subbed · 1080p          space play next   ↵ episodes   q back   ? keys
 === styles ===
@@ -67,17 +67,18 @@ r14 c03-03 fg=rule
 r14 c06-32 fg=text-dim
 r15 c03-03 fg=rule
 r16 c03-03 fg=rule
-r16 c06-76 fg=text-dim
+r16 c06-77 fg=text-dim
 r17 c03-03 fg=rule
-r17 c06-77 fg=text-dim
 r18 c03-03 fg=rule
+r18 c06-22 fg=text-dim
 r19 c03-03 fg=rule
-r19 c06-22 fg=text-dim
 r20 c03-03 fg=rule
+r20 c06-10 fg=text
+r20 c11-25 fg=rule
+r20 c28-64 fg=text-dim
 r21 c03-03 fg=rule
-r21 c06-10 fg=text
-r21 c11-25 fg=rule
-r21 c28-64 fg=text-dim
+r21 c06-21 fg=state mod=BOLD
+r21 c22-43 fg=text-dim
 r22 c00-79 fg=rule
 r23 c00-23 fg=text-dim
 r23 c34-38 fg=text
