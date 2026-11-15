@@ -239,13 +239,37 @@ impl EpisodeText {
         }
         let body: serde_json::Value = serde_json::from_slice(&bytes)
             .map_err(|error| EpisodeTextError::Failed(error.to_string()))?;
-        Ok((fill_in(&body), false))
+        // An answer of another shape is kept as briefly as an unknown title, and changes nothing.
+        let shaped = body.get("episodes").is_some_and(serde_json::Value::is_object);
+        if !shaped {
+            tracing::info!(%id, "episode text: an answer without an episodes map");
+        }
+        Ok((fill_in(&body), !shaped))
     }
 }
 
 /// What an answer says by whole episode number: the synopsis from `overview`, else `summary`;
 /// the title in English, else in romaji; and the still from `image` when it is an `https`
 /// address.
+///
+/// The service publishes no schema, terms or versions, so this is the whole of the shape relied
+/// on, read field by field from untyped JSON, every field optional and the rest ignored:
+///
+/// ```text
+/// { "episodes": {
+///     "<whole number>": {
+///       "overview": "<text>",            // the synopsis, else
+///       "summary": "<text>",             // this one
+///       "title": { "en": "<text>",       // the title, else
+///                  "x-jat": "<text>" },  // its romaji
+///       "image": "https://<still>"       // the still
+///     }, ...
+/// } }
+/// ```
+///
+/// A key that is not a whole number, an episode that is not an object, and a field of another
+/// type or empty are skipped, and the rest of the answer is still read. An answer with no
+/// `episodes` object says nothing, and the rows stay as the sources left them.
 pub fn fill_in(body: &serde_json::Value) -> Fill {
     let mut fill = Fill::default();
     let Some(episodes) = body.get("episodes").and_then(|e| e.as_object()) else {
@@ -323,6 +347,29 @@ mod tests {
             Some("https://img.episodes.example/1.jpg")
         );
         assert_eq!(found.stills.len(), 1);
+    }
+
+    #[test]
+    fn an_answer_of_another_shape_is_read_where_it_can_be_and_skipped_where_not() {
+        let body = serde_json::json!({ "episodes": {
+            "1": "not an episode",
+            "2": { "overview": 7, "title": "The Plain Title", "image": ["https://img.episodes.example/2.jpg"] },
+            "3": { "overview": "Still read.", "title": { "en": null, "x-jat": 3 }, "extra": { "new": true } },
+            "-4": { "overview": "Negative." },
+        }});
+        let fill = fill_in(&body);
+        assert_eq!(fill.texts.len(), 1);
+        assert_eq!(fill.texts.get(&3).map(String::as_str), Some("Still read."));
+        assert!(fill.titles.is_empty() && fill.stills.is_empty());
+
+        for body in [
+            serde_json::json!({ "episodes": [1, 2] }),
+            serde_json::json!({ "items": {} }),
+            serde_json::json!([]),
+            serde_json::json!(null),
+        ] {
+            assert_eq!(fill_in(&body), Fill::default());
+        }
     }
 
     #[test]

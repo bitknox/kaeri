@@ -927,6 +927,25 @@ mod tests {
     }
 
     #[tokio::test]
+    async fn an_answer_of_another_shape_leaves_the_rows_as_the_sources_left_them() {
+        for body in ["<html>moved</html>", r#"{"episodes":["a","b"]}"#, r#"{"items":{}}"#] {
+            let (base, count) = stand_in(200, body).await;
+            let shelf = catalogue("shelf", catalogued(1..=2, "img.shelf.example"));
+            let mut page = Page::new(registry(vec![torrent(), shelf]), false).with_fill(base);
+            page.load(bare(1..=12), false);
+            let _ = page.table().await;
+            let named = page.table().await;
+            assert_eq!(
+                &titles(&named)[..3],
+                [Some("Verse 1"), Some("Verse 2"), None],
+                "{body}"
+            );
+            assert!(named.iter().all(|row| row.description.is_none() && !row.synopsis_pending));
+            assert_eq!(calls(&count), 1);
+        }
+    }
+
+    #[tokio::test]
     async fn a_refusal_leaves_the_rows_bare_ends_the_wait_and_rests_the_service() {
         let (base, count) = stand_in(429, "{}").await;
         let mut page = Page::new(registry(vec![torrent()]), false).with_fill(base);
