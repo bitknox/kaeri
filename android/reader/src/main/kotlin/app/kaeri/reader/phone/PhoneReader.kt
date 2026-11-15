@@ -488,7 +488,7 @@ fun PhoneReader(
     val endLift by animateDpAsState(
         targetValue = if (shown) with(density) { scrub.groupHeight.toDp() } else 0.dp,
         animationSpec = if (!fades) snap() else if (shown) Motion.fadeIn() else Motion.fadeOut(),
-        label = "end page lift",
+        label = "end page lift", // i18n-skip
     )
 
     CompositionLocalProvider(LocalChrome provides colours, LocalPageTone provides tone) {
