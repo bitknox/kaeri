@@ -543,6 +543,19 @@ struct PhoneEpisodes: View {
                         .onDisappear { pickers?.onScreen.remove(row.number) }
                 }
             } else {
+                // The row above the episodes, where the list already says it will be there: the
+                // watched run folds away from three episodes watched, and a long series has its
+                // range menu.
+                if (entry.progress?.done ?? 0) >= 3 || (entry.episodes ?? 0) > 100 {
+                    Text("Episodes 1 to 2 watched") // i18n-skip
+                        .font(.ui(15))
+                        .foregroundStyle(.haze)
+                        .redacted(reason: .placeholder)
+                        .accessibilityHidden(true)
+                        .padding(.leading, 34)
+                        .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
+                        .bareRow(inset)
+                }
                 EpisodePlaceholders(count: entry.episodes, metrics: .phone)
                     .bareRow(inset)
             }
@@ -550,32 +563,37 @@ struct PhoneEpisodes: View {
     }
 }
 
-/// What only the iPhone's page brings, while it is on its way: the list's synopsis where it will
-/// stand, then the facts' two lines and More about this show's row as placeholders.
+/// What only the iPhone's page brings, while it is on its way: the services line where it will
+/// stand, the list's synopsis, then the facts' two lines and More about this show's row as
+/// placeholders.
 struct PhoneDetailsPlaceholder: View {
     let entry: Entry
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            if !entry.shownSynopsis.isEmpty {
-                InlineMoreText(text: entry.shownSynopsis, lines: 2, font: .ui(15))
-                    .accessibilitySortPriority(-1)
-            }
+        VStack(alignment: .leading, spacing: 16) {
+            // The same line as the page's, so its room and its answer carry over unchanged.
+            LicensedLines(id: entry.id, font: .ui(14))
             VStack(alignment: .leading, spacing: 12) {
-                VStack(alignment: .leading, spacing: 4) {
-                    Text("TV · 12 episodes · Spring 2026") // i18n-skip
-                    Text("Adventure, Fantasy, Drama") // i18n-skip
+                if !entry.shownSynopsis.isEmpty {
+                    InlineMoreText(text: entry.shownSynopsis, lines: 2, font: .ui(15))
+                        .accessibilitySortPriority(-1)
                 }
-                .font(.ui(15))
-                .foregroundStyle(.haze)
-                HStack {
-                    Text("More about the lantern road").font(.ui(17, weight: .semibold)).foregroundStyle(.silk) // i18n-skip
-                    Spacer()
+                VStack(alignment: .leading, spacing: 12) {
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("TV · 12 episodes · Spring 2026") // i18n-skip
+                        Text("Adventure, Fantasy, Drama") // i18n-skip
+                    }
+                    .font(.ui(15))
+                    .foregroundStyle(.haze)
+                    HStack {
+                        Text("More about the lantern road").font(.ui(17, weight: .semibold)).foregroundStyle(.silk) // i18n-skip
+                        Spacer()
+                    }
+                    .frame(minHeight: 44)
                 }
-                .frame(minHeight: 44)
+                .redacted(reason: .placeholder)
+                .accessibilityHidden(true)
             }
-            .redacted(reason: .placeholder)
-            .accessibilityHidden(true)
         }
     }
 }

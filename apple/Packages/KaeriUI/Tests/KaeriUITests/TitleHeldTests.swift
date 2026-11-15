@@ -27,4 +27,13 @@ struct TitleHeldTests {
     @Test func aTitleNothingIsKnownOfHoldsToo() {
         #expect(TitlePage.held(900_003, in: AppStore()))
     }
+
+    /// The services line keeps its room until the answer, then shows it in that room, or closes
+    /// the room when the answer has nothing to say.
+    @Test func theServicesLineClosesOnlyForAnAnswerWithNothingToSay() {
+        #expect(!LicensedLines.hasLines(TitleAvailability(id: 900_001, case: .playsHere)))
+        #expect(LicensedLines.hasLines(TitleAvailability(id: 900_001, case: .playsHere, others: ["Lantern Library"]))) // i18n-skip
+        #expect(LicensedLines.hasLines(TitleAvailability(id: 900_001, case: .notInSources, chooseServices: true)))
+        #expect(!LicensedLines.hasLines(TitleAvailability(id: 900_001, case: .playsAlsoOn)))
+    }
 }
