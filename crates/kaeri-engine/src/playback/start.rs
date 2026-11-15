@@ -234,10 +234,11 @@ fn stage(
     resume: Option<f64>,
     opener: &dyn PlayerOpener,
     engine: &mut EngineState,
+    private: bool,
 ) -> Event {
     engine.cache.announce(played.id, title.clone());
-    // The player log's lines go under this playback from now on.
-    crate::player_log::begin(&played.episode, &title, episode_title.as_deref());
+    // The player log's lines go under this playback from now on; a private one keeps none.
+    crate::player_log::begin(&played.episode, &title, episode_title.as_deref(), private);
     engine.staging.staged(Staged {
         serial: played.serial,
         id: played.id,
@@ -384,7 +385,8 @@ fn play_staged(
     let resume = (!from_start && id != kaeri_model::opened::UNTRACKED)
         .then(|| resume_of(services, id, &episode))
         .flatten();
-    let staged = stage(&played, title, episode_title, resume, opener.as_ref(), engine);
+    let private = services.privacy.holds_show(played.id);
+    let staged = stage(&played, title, episode_title, resume, opener.as_ref(), engine, private);
     // What the show sets for itself, over the config in effect: sub or dub, quality, what is
     // skipped.
     let for_show = show_settings::for_show(engine.config.effective(), store, id);
@@ -483,7 +485,9 @@ pub fn play_local(
     // Named by the download it plays: the Downloads screen says what its rows are called.
     let episode_title = engine.cache.episode_title(id, &episode);
     let resume = resume_of(services, id, &episode);
-    let staged = stage(&played, title.clone(), episode_title, resume, opener.as_ref(), engine);
+    let private = services.privacy.holds_show(played.id);
+    let staged =
+        stage(&played, title.clone(), episode_title, resume, opener.as_ref(), engine, private);
     let _ = tx.send(staged);
     let EngineState { player_tx, finding, skipping, beginning, .. } = engine;
     // Nothing to find: it opens at once, and a Stop is its session's from the start.
