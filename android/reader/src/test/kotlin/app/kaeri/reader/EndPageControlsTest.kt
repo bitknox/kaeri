@@ -10,6 +10,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.test.SemanticsMatcher
@@ -64,6 +65,16 @@ class EndPageControlsTest {
             bounds(SemanticsMatcher.keyIsDefined(SemanticsActions.SetProgress))
         ).minOf { it.top }
 
+    /**
+     * A tap in the middle of the page that no button takes: halfway between the top of the page's
+     * middle third and the highest button. A tablet's end page sits at the centre, so a tap there
+     * would land on Back to the series.
+     */
+    private fun tapClearOfTheButtons() {
+        val highest = buttons().minOf { it.top }
+        compose.onRoot().performTouchInput { click(Offset(centerX, (height / 3f + highest) / 2f)) }
+    }
+
     private fun endPageWithControls() {
         var shown: NovelPlace? = null
         compose.setContent {
@@ -84,14 +95,14 @@ class EndPageControlsTest {
         assertTrue("the end page shows its buttons", atFoot.isNotEmpty())
 
         // A tap in the middle brings the controls back over the end page.
-        compose.onRoot().performTouchInput { click(center) }
+        tapClearOfTheButtons()
         compose.mainClock.advanceTimeBy(1_000)
         compose.waitForIdle()
         val top = groupTop()
         for (button in buttons()) assertTrue("a button ends at ${button.bottom}, the controls start at $top", button.bottom <= top)
 
         // Another hides them, and the buttons are back where they were.
-        compose.onRoot().performTouchInput { click(center) }
+        tapClearOfTheButtons()
         compose.mainClock.advanceTimeBy(1_000)
         compose.waitForIdle()
         val back = buttons()
