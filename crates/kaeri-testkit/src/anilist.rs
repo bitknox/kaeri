@@ -205,7 +205,8 @@ pub struct Request {
 
 /// A failure the fake answers with instead of the fixtures, for the failure paths.
 ///
-/// Applies to GraphQL requests only: the empty Tenrai keeps answering, so a test of the
+/// Applies to GraphQL requests only, unless [`FakeAniList::fail_operation`] names
+/// [`Operation::Tenrai`]: the empty Tenrai keeps answering, so a test of the
 /// fallback ladder can fail AniList and watch the rungs below it.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Failure {
@@ -1003,6 +1004,9 @@ fn answer(state: &Mutex<State>, head: &Head, body: &[u8]) -> Reply {
             at: std::time::Instant::now(),
             refused: false,
         });
+        if let Some(failure) = lock(state).failing.get(&Operation::Tenrai).cloned() {
+            return fail(failure);
+        }
         return tenrai(rest);
     }
 

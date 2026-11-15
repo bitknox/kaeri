@@ -722,6 +722,8 @@ pub(crate) fn dispatch(
             let moved = engine.network.offline != offline;
             services.offline.store(offline, std::sync::atomic::Ordering::Relaxed);
             services.connection.send_replace(offline);
+            // The metadata ladder blames no source for a path that is gone.
+            services.meta.path(offline);
             services.book_sources.write_back_network(offline, services.clock.now());
             crate::phases::network_path(network, engine, tx);
             ahead::resume(engine, services, tx);

@@ -27,6 +27,8 @@ pub struct HttpClient {
     /// The host names an offline client was asked to resolve and refused, in order; `None` on a
     /// client that resolves.
     refused: Option<Refused>,
+    /// What requests through this client found of their hosts: see [`crate::reach::Ledger`].
+    reach: crate::reach::Ledger,
 }
 
 type Refused = std::sync::Arc<std::sync::Mutex<Vec<String>>>;
@@ -46,7 +48,7 @@ impl HttpClient {
             .redirect(reqwest::redirect::Policy::none())
             .build()
             .map_err(|e| NetError::Build(format!("sources client: {e}")))?;
-        Ok(Self { plain, sources, refused: None })
+        Ok(Self { plain, sources, refused: None, reach: Default::default() })
     }
 
     /// A client that can reach no host by name, for tests that stand the app up whole.
@@ -74,7 +76,7 @@ impl HttpClient {
         let sources = offline(builder(config).redirect(reqwest::redirect::Policy::none()))
             .build()
             .map_err(|e| NetError::Build(format!("sources client: {e}")))?;
-        Ok(Self { plain, sources, refused: Some(refused) })
+        Ok(Self { plain, sources, refused: Some(refused), reach: Default::default() })
     }
 
     /// The client for Kaeri's own requests: AniList, artwork, trackers, stores, datasets.
@@ -89,6 +91,12 @@ impl HttpClient {
     /// against the plugin's hosts again before anything reaches it.
     pub fn sources(&self) -> &reqwest::Client {
         &self.sources
+    }
+
+    /// What the requests through this client and its clones found of their hosts lately, and
+    /// what the platform says of the path. The callers that weigh a failure note their own.
+    pub fn reach(&self) -> &crate::reach::Ledger {
+        &self.reach
     }
 
     /// The host names this offline client was asked for and refused, oldest first: empty on a

@@ -241,9 +241,30 @@ struct Breakers {
     tenrai: Breaker,
 }
 
+/// What a skipped request says instead of asking, after the source's name.
+const SKIPPED: &str = "skipped after repeated failures";
+
 /// What a skipped request says instead of asking.
 fn skipped(source: &str, wait: Duration) -> String {
-    format!("{source} skipped after repeated failures; next try in {}s", wait.as_secs().max(1))
+    format!("{source} {SKIPPED}; next try in {}s", wait.as_secs().max(1))
+}
+
+/// AniList's latest failure to be reached, and whose it was: see [`Meta::anilists_fault`].
+#[derive(Debug, Clone, Copy)]
+struct Fault {
+    /// Just before the request that failed went out: what the other hosts did after it is
+    /// the evidence.
+    since: kaeri_net::reach::Mark,
+    blame: Option<Blame>,
+}
+
+/// Who a failure to reach AniList is down to.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum Blame {
+    /// The device lost its path: the platform said so, or every host failed together.
+    Device,
+    /// AniList alone: another host answered meanwhile, or AniList answered with its own error.
+    Anilist,
 }
 
 /// The metadata source the application talks to, in place of any one service.
@@ -261,6 +282,8 @@ pub struct Meta {
     notice: std::sync::Arc<Mutex<Option<String>>>,
     weather: std::sync::Arc<Mutex<Weather>>,
     breakers: std::sync::Arc<Mutex<Breakers>>,
+    /// AniList's latest failure to be reached, until it answers again.
+    fault: Arc<Mutex<Option<Fault>>>,
     recent: Arc<Mutex<Recent>>,
     /// How long one of AniList's answers for a title is used again: [`REUSE_FOR`].
     reuse_for: Duration,
@@ -363,6 +386,7 @@ impl Meta {
             notice: std::sync::Arc::new(Mutex::new(None)),
             weather: std::sync::Arc::new(Mutex::new(Weather::default())),
             breakers: std::sync::Arc::new(Mutex::new(Breakers::default())),
+            fault: Arc::default(),
             recent: Arc::default(),
             reuse_for: REUSE_FOR,
             relations: Arc::default(),
@@ -520,24 +544,106 @@ impl Meta {
         if let Some(wait) = self.skip("anilist") {
             return Err(AniListError::Network(skipped("anilist", wait)));
         }
+        let since = self.anilist.reach().0.mark();
         let result = call.await;
         match &result {
             Err(e) if Self::outage(e) => {
                 self.note_anilist(Some(e.to_string()));
                 self.trip("anilist");
+                self.faulted(since, e);
             }
             Ok(_) => {
                 self.note_anilist(None);
                 self.reset("anilist");
+                self.answered();
             }
             // Over the limit is AniList asking for patience, not failing: no strike for the
             // breaker, so it is never skipped for it. This call falls to what is kept.
             Err(AniListError::RateLimited { .. }) => {}
             // An answer: not found, or GraphQL refusing this request. Either says the service
             // is up.
-            Err(_) => self.reset("anilist"),
+            Err(_) => {
+                self.reset("anilist");
+                self.answered();
+            }
         }
         result
+    }
+
+    /// AniList answered: no failure is left to weigh.
+    fn answered(&self) {
+        if let Ok(mut fault) = self.fault.lock() {
+            *fault = None;
+        }
+    }
+
+    /// AniList could not be reached by the request that went out at `since`. Whose that is
+    /// down to is weighed now, with what the other hosts did meanwhile, and again when the
+    /// ladder falls ([`Self::anilists_fault`]), by when the rung below has been asked too.
+    fn faulted(&self, since: kaeri_net::reach::Mark, error: &AniListError) {
+        let blame = match error {
+            AniListError::Network(said) if said.starts_with(kaeri_core::error::NO_NETWORK) => {
+                Some(Blame::Device)
+            }
+            AniListError::Network(_) => self.judge(since, false),
+            _ => Some(Blame::Anilist),
+        };
+        if let Ok(mut fault) = self.fault.lock() {
+            // With no other host asked meanwhile, the failure before it stands: AniList has not
+            // answered since, so the path is as it was found then.
+            let blame = blame.or(fault.and_then(|before| before.blame));
+            *fault = Some(Fault { since, blame });
+        }
+    }
+
+    /// Whose a failure to reach AniList after `since` is, from what the platform says of the
+    /// path and what the other hosts did after it, or `None` with no other host asked. With
+    /// `first`, only the first of them counts: weighed long after, what came later may be the
+    /// path coming back.
+    fn judge(&self, since: kaeri_net::reach::Mark, first: bool) -> Option<Blame> {
+        let (ledger, anilist) = self.anilist.reach();
+        if ledger.offline() {
+            return Some(Blame::Device);
+        }
+        let others = ledger.others(anilist, since);
+        let answered = if first {
+            others.first_answered?
+        } else if others.answered || others.failed {
+            others.answered
+        } else {
+            return None;
+        };
+        Some(if answered { Blame::Anilist } else { Blame::Device })
+    }
+
+    /// Whether a failure to reach AniList (`cause`) is AniList's, rather than the device's: a
+    /// device that lost its path (the platform says so, or every host failed together) is not
+    /// AniList being down, and the app's offline state says that instead.
+    ///
+    /// AniList's own errors are its own. A fresh failure is weighed with everything the other
+    /// hosts did since it went out, the rung below included. A skip is weighed as the failure
+    /// that last reached the network was, or, never weighed, by the first host asked after it.
+    /// With nothing to go on it is AniList's, as it always was.
+    fn anilists_fault(&self, cause: &AniListError) -> bool {
+        let AniListError::Network(said) = cause else { return true };
+        if said.starts_with(kaeri_core::error::NO_NETWORK) || self.anilist.reach().0.offline() {
+            return false;
+        }
+        let skip = said.starts_with("anilist ") && said.contains(SKIPPED);
+        let Ok(mut fault) = self.fault.lock() else { return true };
+        let Some(fault) = fault.as_mut() else { return true };
+        if !skip {
+            fault.blame = self.judge(fault.since, false).or(fault.blame);
+        } else if fault.blame.is_none() {
+            fault.blame = self.judge(fault.since, true);
+        }
+        if fault.blame == Some(Blame::Device) {
+            tracing::debug!(
+                "anilist and the other hosts failed together; the connection is down"
+            );
+            return false;
+        }
+        true
     }
 
     /// Ask Tenrai, on the same terms as [`Self::ask_anilist`]. Its weather is noted by the
@@ -597,6 +703,12 @@ impl Meta {
         MetaError::Exhausted { anilist, fallback }
     }
 
+    /// The platform says whether it has a usable path, each time that changes. While it has
+    /// none, AniList failing is not said to be AniList's: see [`Self::anilists_fault`].
+    pub fn path(&self, offline: bool) {
+        self.anilist.reach().0.path(offline);
+    }
+
     /// The AniList client itself, for the calls that have no fallback semantics.
     pub fn anilist(&self) -> &AniList {
         &self.anilist
@@ -627,8 +739,12 @@ impl Meta {
     /// own asks are answered, unless AniList keeps failing long enough to be skipped. A
     /// background request's failure is not what the screen shows, and the ladder is one for
     /// every lane: moved by it, the next screen answer would move it back, a toast each way.
+    ///
+    /// A device without a path fails every host together, and that is not AniList being down:
+    /// the app's offline state says it, and the ladder stays and says nothing, so nothing has to
+    /// be taken back once the path returns. See [`Self::anilists_fault`].
     fn fell(&self, rung: u8, cause: &AniListError) {
-        if !Self::outage(cause) {
+        if !Self::outage(cause) || !self.anilists_fault(cause) {
             return;
         }
         if crate::anilist::is_background() && !self.resting("anilist") {
