@@ -3312,7 +3312,16 @@ fn cast_stage(shell: &Rc<Shell>, shot: &str) -> f64 {
             open();
             pick(LIVING_ROOM, 1800);
             let closing = Rc::clone(&tv);
-            later(9500, Box::new(move || closing.sheet_closed()));
+            let window = shell.ctx.window.clone();
+            // The first launch's question and the picker go first: only the bar is left.
+            later(
+                9500,
+                Box::new(move || {
+                    close_dialogs(&window);
+                    closing.sheet_closed();
+                    close_dialogs(&window);
+                }),
+            );
             let (open_name, close_name) = if shot == "cast-morph" {
                 ("cast-morph/open", "cast-morph/close")
             } else {
