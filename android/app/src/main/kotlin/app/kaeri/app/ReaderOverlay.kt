@@ -8,6 +8,12 @@ import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.SharedTransitionLayout
 import androidx.compose.animation.SharedTransitionScope
 import androidx.compose.animation.core.Animatable
+import androidx.compose.foundation.focusGroup
+import androidx.compose.ui.ExperimentalComposeUiApi
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusProperties
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.width
@@ -57,6 +63,7 @@ import app.kaeri.eink.EinkReader
 import app.kaeri.eink.EinkReaderActions
 import app.kaeri.eink.RefreshControllers
 import app.kaeri.engine.model.OpenAt
+import app.kaeri.reader.LocalReaderLeaving
 import app.kaeri.reader.LocalServerLines
 import app.kaeri.reader.PageImages
 import app.kaeri.reader.ReaderBackHandler
@@ -103,13 +110,40 @@ fun ReaderHost(store: AppStore, eink: EinkModel, app: @Composable () -> Unit) {
             LocalReaderTransitionsView provides view,
             LocalReaderZoomOpen provides zoomed,
         ) {
-            app()
+            // Covered by the reader, the app is out of reach of the keys and of a screen reader.
+            val open by ReaderLauncher.request.collectAsState()
+            Box(Modifier.underReader(open != null)) { app() }
         }
         // The cover it grows out of loads as the app's covers do.
         CompositionLocalProvider(LocalAppStore provides store, LocalServerLines provides store.serverLines) {
             ReaderOverlay(store, eink, this, zoomed) { zoomed = it }
         }
     }
+}
+
+/**
+ * The app under an open reader: while [open] nothing in it takes the focus, so Tab and the arrows
+ * stay in the reader and Enter never acts on a page no one sees, and a screen reader does not find
+ * it. The control that held the focus as the reader opened has it again once the reader closes.
+ */
+@OptIn(ExperimentalComposeUiApi::class)
+@Composable
+internal fun Modifier.underReader(open: Boolean): Modifier {
+    val group = remember { FocusRequester() }
+    val held = remember { booleanArrayOf(false) }
+    LaunchedEffect(open) {
+        if (open) {
+            held[0] = group.saveFocusedChild()
+        } else if (held[0]) {
+            held[0] = false
+            group.restoreFocusedChild()
+        }
+    }
+    return this
+        .focusRequester(group)
+        .focusProperties { onEnter = { if (open) cancelFocusChange() } }
+        .focusGroup()
+        .then(if (open) Modifier.clearAndSetSemantics {} else Modifier)
 }
 
 /**
@@ -315,53 +349,77 @@ private fun OpenReader(
     // Back closes the reader wherever its screens have no Back of their own, such as the e-ink
     // questions; the app under it takes none while it is open.
     ReaderBackHandler(enabled = !leaving) { ReaderLauncher.close() }
-    Box(
-        Modifier
-            .fillMaxSize()
-            .readerSurface(density, eink = request.eink, dark = true) { surface ->
-                if (!opened[0]) {
-                    opened[0] = true
-                    val title = store.reading.series.value[request.work]?.titles?.display
-                    // The chapter as the screen that asked lists it, named while it opens and if it fails.
-                    if (back != null) {
-                        session.open(request.work, surface, back.chapter, OpenAt.Place(back), title, store.reading.chapterRow(request.work, back.chapter))
+    // Closing, the reader keeps the focus from coming back to it: the app under it takes it again.
+    CompositionLocalProvider(LocalReaderLeaving provides leaving) {
+        Box(
+            Modifier
+                .fillMaxSize()
+                .readerSurface(density, eink = request.eink, dark = true) { surface ->
+                    if (!opened[0]) {
+                        opened[0] = true
+                        val title = store.reading.series.value[request.work]?.titles?.display
+                        // The chapter as the screen that asked lists it, named while it opens and if it fails.
+                        if (back != null) {
+                            session.open(request.work, surface, back.chapter, OpenAt.Place(back), title, store.reading.chapterRow(request.work, back.chapter))
+                        } else {
+                            session.open(request.work, surface, request.chapter, title = title, row = store.reading.chapterRow(request.work, request.chapter))
+                        }
                     } else {
-                        session.open(request.work, surface, request.chapter, title = title, row = store.reading.chapterRow(request.work, request.chapter))
+                        session.surface(surface)
                     }
+                },
+        ) {
+            val close = { ReaderLauncher.close() }
+            // The demo's last page: the reader closes and Your sources opens with Add a source.
+            val addSource = {
+                ReaderLauncher.close()
+                store.cameIn.choose()
+            }
+            if (request.eink) {
+                val profile by einkModel.state.collectAsState()
+                // The panel's questions come first when the engine is unsure of it.
+                if (profile.question != null) {
+                    EinkQuestions(profile, einkModel)
                 } else {
-                    session.surface(surface)
+                    val painter = remember(profile.profile?.family, profile.profile?.panel) {
+                        EinkPainter.forProfile(profile.profile) { RefreshControllers.of(it, context) }
+                    }
+                    // The Refresh settings, sent again when the person changes one.
+                    SideEffect { painter.policy = EinkPainter.policyOf(profile.profile) }
+                    EinkReader(
+                        session = session,
+                        state = state,
+                        images = images,
+                        painter = painter,
+                        actions = EinkReaderActions(
+                            onBack = close,
+                            onSeries = close,
+                            onDownloads = close,
+                            onAddSource = addSource,
+                            onDownload = { chapter -> store.reading.download(state.view?.work ?: request.work, app.kaeri.engine.model.DownloadPick.Chapters(listOf(chapter.id))) },
+                        ),
+                        novel = { place, onControls ->
+                            NovelScreen(
+                                session = session,
+                                state = state,
+                                place = place,
+                                assets = remember { store.novelAssets() },
+                                resource = store::bookResource,
+                                onControls = onControls,
+                            )
+                        },
+                    )
                 }
-            },
-    ) {
-        val close = { ReaderLauncher.close() }
-        // The demo's last page: the reader closes and Your sources opens with Add a source.
-        val addSource = {
-            ReaderLauncher.close()
-            store.cameIn.choose()
-        }
-        if (request.eink) {
-            val profile by einkModel.state.collectAsState()
-            // The panel's questions come first when the engine is unsure of it.
-            if (profile.question != null) {
-                EinkQuestions(profile, einkModel)
             } else {
-                val painter = remember(profile.profile?.family, profile.profile?.panel) {
-                    EinkPainter.forProfile(profile.profile) { RefreshControllers.of(it, context) }
-                }
-                // The Refresh settings, sent again when the person changes one.
-                SideEffect { painter.policy = EinkPainter.policyOf(profile.profile) }
-                EinkReader(
+                // Opened by work alone (a notification, a widget, a link), the reader looks the cover up.
+                val series by store.reading.series.collectAsState()
+                LaunchedEffect(request.work) { if (request.cover == null) store.reading.loadSeriesInfo(request.work) }
+                PhoneReader(
                     session = session,
                     state = state,
                     images = images,
-                    painter = painter,
-                    actions = EinkReaderActions(
-                        onBack = close,
-                        onSeries = close,
-                        onDownloads = close,
-                        onAddSource = addSource,
-                        onDownload = { chapter -> store.reading.download(state.view?.work ?: request.work, app.kaeri.engine.model.DownloadPick.Chapters(listOf(chapter.id))) },
-                    ),
+                    actions = PhoneReaderActions(onClose = close, onAddSource = addSource),
+                    quiet = quiet,
                     novel = { place, onControls ->
                         NovelScreen(
                             session = session,
@@ -372,36 +430,15 @@ private fun OpenReader(
                             onControls = onControls,
                         )
                     },
+                    cover = (request.cover ?: series[request.work]?.cover)?.let { url ->
+                        { modifier -> ArtworkImage(url, plate = null, maxPixelSize = 1200, modifier = modifier) }
+                    },
+                    settingsAsked = settingsAsked,
+                    onSettingsShown = ReaderLauncher::settingsShown,
+                    // Leaving, it no longer answers touches.
+                    enabled = !leaving,
                 )
             }
-        } else {
-            // Opened by work alone (a notification, a widget, a link), the reader looks the cover up.
-            val series by store.reading.series.collectAsState()
-            LaunchedEffect(request.work) { if (request.cover == null) store.reading.loadSeriesInfo(request.work) }
-            PhoneReader(
-                session = session,
-                state = state,
-                images = images,
-                actions = PhoneReaderActions(onClose = close, onAddSource = addSource),
-                quiet = quiet,
-                novel = { place, onControls ->
-                    NovelScreen(
-                        session = session,
-                        state = state,
-                        place = place,
-                        assets = remember { store.novelAssets() },
-                        resource = store::bookResource,
-                        onControls = onControls,
-                    )
-                },
-                cover = (request.cover ?: series[request.work]?.cover)?.let { url ->
-                    { modifier -> ArtworkImage(url, plate = null, maxPixelSize = 1200, modifier = modifier) }
-                },
-                settingsAsked = settingsAsked,
-                onSettingsShown = ReaderLauncher::settingsShown,
-                // Leaving, it no longer answers touches.
-                enabled = !leaving,
-            )
         }
     }
 }

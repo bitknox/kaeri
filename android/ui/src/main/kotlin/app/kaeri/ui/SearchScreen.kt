@@ -4,6 +4,7 @@
 
 package app.kaeri.ui
 
+import android.content.res.Configuration
 import app.kaeri.engine.model.KaeriIsFor
 import app.kaeri.ui.reading.ReadPlaces
 import app.kaeri.ui.reading.ReadSearchScreen
@@ -89,7 +90,15 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.material3.SearchBarValue
+import androidx.compose.runtime.withFrameNanos
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.ui.input.InputMode
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalInputModeManager
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.semantics.contentDescription
@@ -105,7 +114,9 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.drop
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withTimeoutOrNull
 import app.kaeri.design.Motion
 import app.kaeri.design.SwapFade
 import app.kaeri.design.rememberAnimationsRemoved
@@ -334,8 +345,41 @@ private fun ShowsSearch(start: SearchQuery?, startFilters: Boolean, open: Boolea
         }
     }
 
+    // With a keyboard, Enter leaves the focus in the field, as reading's Search does: the docked
+    // field takes it once the full-screen one has gone, rather than nothing or the first control
+    // on screen. An attached keyboard counts even while the window is in touch mode, as it stays
+    // when the on-screen keyboard handles the keys; the window then leaves touch mode first, since
+    // a docked field focused by touch opens the search view again. Touch alone keeps the old way.
+    val dockedField = remember { FocusRequester() }
+    val inputMode = LocalInputModeManager.current
+    val configuration = LocalConfiguration.current
+    val keyboardAttached = configuration.keyboard == Configuration.KEYBOARD_QWERTY &&
+        configuration.hardKeyboardHidden != Configuration.HARDKEYBOARDHIDDEN_YES
+    var refocus by remember { mutableStateOf(false) }
+    var fieldFocused by remember { mutableStateOf(false) }
+    LaunchedEffect(refocus, bar.currentValue) {
+        if (!refocus || bar.currentValue != SearchBarValue.Collapsed) return@LaunchedEffect
+        // Cleared once done: a key changed while the effect waits would cancel it.
+        try {
+            withFrameNanos {}
+            if (inputMode.inputMode != InputMode.Keyboard) {
+                inputMode.requestInputMode(InputMode.Keyboard)
+                withTimeoutOrNull(500) { snapshotFlow { inputMode.inputMode }.first { it == InputMode.Keyboard } }
+                    ?: return@LaunchedEffect
+            }
+            // A field still focused from the tap that opened the search view loses the focus a
+            // moment after the bar collapses, when the bar clears it, and the window then gives it
+            // to its first control. The field asks once that is done.
+            if (fieldFocused) withTimeoutOrNull(1_000) { snapshotFlow { fieldFocused }.first { !it } }
+            dockedField.requestFocus()
+        } finally {
+            refocus = false
+        }
+    }
+
     fun submit() {
         store.search(text.text.toString())
+        refocus = inputMode.inputMode == InputMode.Keyboard || keyboardAttached
         scope.launch { bar.animateToCollapsed() }
     }
 
@@ -383,7 +427,7 @@ private fun ShowsSearch(start: SearchQuery?, startFilters: Boolean, open: Boolea
     Column(Modifier.semantics { paneTitle = searchTitle }) {
         SearchTop(
             phone, scrolledUnder, both, reading = false,
-            field = { SearchBar(state = bar, inputField = input, colors = colors, modifier = SearchFieldPlace) },
+            field = { SearchBar(state = bar, inputField = input, colors = colors, modifier = SearchFieldPlace.focusRequester(dockedField).onFocusChanged { fieldFocused = it.hasFocus }) },
             row = { FilterRow(status.query, phone, rowScroll, onFilters = { filtersShown = true }) },
         )
         // While the demo is the only source: other titles play once a plugin store is joined.
