@@ -234,17 +234,29 @@ fn stage(
     // What the player starts at when it remembers a speed, and Now Playing until it says.
     let speed = engine.config.effective().playback.carried_speed().unwrap_or(1.0);
     match opener.target() {
-        PlayerTarget::Local => {
-            Event::PlaybackStaged { id, title, episode, episode_title, speed, resume }
-        }
+        PlayerTarget::Local => Event::PlaybackStaged {
+            id,
+            title,
+            episode,
+            episode_title,
+            speed,
+            resume,
+            always_private: false,
+        },
         PlayerTarget::Cast(_) => Event::CastStaged { id, title, episode, episode_title, speed },
     }
 }
 
 /// Where `episode` of title `id` was left, when it was: best-effort, as every read of the
 /// resume point is, since a database hiccup must not stop an episode from playing.
-fn resume_of(store: &kaeri_store::Store, id: AnilistId, episode: &str) -> Option<f64> {
-    store
+///
+/// A place a private play held in memory comes first: it is the newer.
+fn resume_of(services: &Services, id: AnilistId, episode: &str) -> Option<f64> {
+    if let Some(kept) = services.privacy.resume_kept(id, episode) {
+        return Some(kept);
+    }
+    services
+        .store
         .resume_position(id, episode)
         .inspect_err(|e| tracing::warn!(error = %e, "could not read resume position"))
         .unwrap_or(None)
@@ -355,7 +367,7 @@ fn play_staged(
     // Where the episode was left, for the starting screen to say it resumes there. Not for a
     // play from the beginning, or one that records nothing.
     let resume = (!from_start && id != kaeri_model::opened::UNTRACKED)
-        .then(|| resume_of(store, id, &episode))
+        .then(|| resume_of(services, id, &episode))
         .flatten();
     let staged = stage(&played, title, episode_title, resume, opener.as_ref(), engine);
     // What the show sets for itself, over the config in effect: sub or dub, quality, what is
@@ -453,7 +465,7 @@ pub fn play_local(
         engine.cache.hints(id, &episode, for_show.playback.skip_filler, PlayKind::Staged);
     // Named by the download it plays: the Downloads screen says what its rows are called.
     let episode_title = engine.cache.episode_title(id, &episode);
-    let resume = resume_of(store, id, &episode);
+    let resume = resume_of(services, id, &episode);
     let staged = stage(&played, title.clone(), episode_title, resume, opener.as_ref(), engine);
     let _ = tx.send(staged);
     let EngineState { player_tx, finding, skipping, beginning, .. } = engine;
@@ -733,8 +745,11 @@ fn spawn_playback(
         prefetched
     };
     let reports = services.servers.reports();
-    // An untracked play is of no show whose episodes could be compared.
-    let find = !untracked && services.skip_find.runs(config);
+    // An untracked play is of no show whose episodes could be compared, and a private one keeps
+    // no prints of what it played.
+    let find =
+        !untracked && !services.privacy.holds_show(id) && services.skip_find.runs(config);
+    let privacy = services.privacy.clone();
     let mut link = services.connection.subscribe();
     let torrents = services.registry.torrents().clone();
     let (config, meta, store, registry, http, machine, slot, tx) = (
@@ -892,6 +907,9 @@ fn spawn_playback(
         // says it resumed, and the history it writes as it plays is where it is left next.
         if from_start {
             context.resume_at = None;
+        } else if let Some(kept) = privacy.resume_kept(id, &context.episode) {
+            // Where a private play left it, held in memory: newer than any row.
+            context.resume_at = Some(kept);
         }
         let PlayHints { next, episodes, cover_url, banner_url, episode_total, .. } = hints;
         (context.next, context.episodes) = (next, episodes);
@@ -916,6 +934,7 @@ fn spawn_playback(
             find_skip_times: find,
             swarm: crate::playback::starting::Swarm::of(torrents),
             begin,
+            privacy: privacy.gate(id),
             ..play_settings(&config, tracker_ids, hub)
         };
         let settings = if untracked { settings.untracked() } else { settings };
@@ -973,6 +992,7 @@ pub fn play_settings(
         untracked: false,
         swarm: Default::default(),
         begin: Default::default(),
+        privacy: Default::default(),
     }
 }
 

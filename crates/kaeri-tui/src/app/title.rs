@@ -1056,6 +1056,8 @@ mod tests {
                 completed: true,
                 spoiler_ahead: false,
             }],
+            kept: false,
+            private: Default::default(),
         };
         // The child's progress is not the parent's, however its episodes are numbered.
         a.apply(said(child, "2"));

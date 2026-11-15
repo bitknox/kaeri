@@ -515,6 +515,7 @@ fn enter_is_named_for_what_it_does() {
         error: None,
         path: Some("/downloads/title-1.mkv".into()),
         ahead: false,
+        private: false,
     }]));
     assert_eq!(hint(&a, "↵"), Some("Play"));
     assert_eq!(hint(&a, "c"), Some("Clear finished"));

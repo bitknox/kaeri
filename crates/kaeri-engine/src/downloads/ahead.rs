@@ -287,6 +287,16 @@ fn top_up_shows(
     services: &Services,
     tx: &Outbox,
 ) {
+    // Private: queuing the next episodes says what is being watched. Paused while the mode is
+    // on, and never for a show kept always private.
+    if services.privacy.is_on() {
+        return;
+    }
+    let shows: HashSet<AnilistId> =
+        shows.into_iter().filter(|id| !services.privacy.show_always(*id)).collect();
+    if shows.is_empty() {
+        return;
+    }
     // With no source set up there is nothing to download from, and every show's episodes are
     // AniList's alone.
     if services.registry.is_empty() && !services.registry.is_arriving() {

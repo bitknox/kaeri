@@ -45,11 +45,15 @@ pub fn start_log(cache: String) -> bool {
     }
     let (writer, guard) =
         tracing_appender::non_blocking(tracing_appender::rolling::daily(&dir, "app.log"));
+    // What is private is taken out of each file line: see `kaeri_engine::private::redact`.
     // Each layer filters for itself: `KAERI_LOG` is the file's, and the player log keeps the
     // player's info lines whatever it says.
-    let file = fmt::layer().with_writer(writer).with_ansi(false).with_filter(
-        EnvFilter::try_from_env("KAERI_LOG").unwrap_or_else(|_| EnvFilter::new("info")),
-    );
+    let file = fmt::layer()
+        .with_writer(move || kaeri_engine::private::redact::Redacting(writer.clone()))
+        .with_ansi(false)
+        .with_filter(
+            EnvFilter::try_from_env("KAERI_LOG").unwrap_or_else(|_| EnvFilter::new("info")),
+        );
     let started = tracing_subscriber::registry()
         .with(file)
         .with(kaeri_engine::player_log::layer())

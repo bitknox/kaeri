@@ -346,6 +346,7 @@ pub fn action(
     work: &WorkId,
     medium: kaeri_core::media::Medium,
     plugins: &crate::book_plugins::BookPlugins,
+    kept: Option<&kaeri_store::reading::ReadEvent>,
 ) -> SeriesAction {
     let edition = sources
         .edition_of(work, None)
@@ -353,7 +354,7 @@ pub fn action(
     let Some((source, series)) = edition else {
         return SeriesAction::NoSource;
     };
-    let read = Read::of(store, work.as_str());
+    let read = Read::of(store, work.as_str()).with_kept(kept);
     let list = chapters::kept(store, &source, &series).map(|(l, _)| l);
     if let Some((chapter, page, of)) = read.in_progress.clone() {
         let label = number_of(list.as_deref(), &chapter);

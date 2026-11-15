@@ -667,6 +667,10 @@ impl Run<'_> {
 
     /// Queue `requests` for AniSkip and ask for them to be sent.
     fn send(&self, requests: &[Request]) {
+        // Private: a vote or a time says what was watched, so nothing goes to AniSkip.
+        if self.settings.privacy.holds() {
+            return;
+        }
         let episode = self.context.episode.trim();
         crate::aniskip::queue(
             &self.http,

@@ -441,7 +441,7 @@ fn init_logging(paths: &Paths) {
     let appender = tracing_appender::rolling::daily(&dir, "kaeri.log");
     // Each layer filters for itself: the player log keeps its playback lines at info whatever
     // `KAERI_LOG` asks of the file.
-    let file = fmt::layer().with_writer(appender).with_ansi(false).with_filter(
+    let file = fmt::layer().with_writer(Redacted(appender)).with_ansi(false).with_filter(
         EnvFilter::try_from_env("KAERI_LOG").unwrap_or_else(|_| EnvFilter::new("info")),
     );
     let _ = tracing_subscriber::registry()
@@ -449,6 +449,20 @@ fn init_logging(paths: &Paths) {
         .with(kaeri_engine::player_log::layer())
         .try_init();
     kaeri_engine::player_log::mirror_to(&dir);
+}
+
+/// The log's writer with what is private taken out of each line: see
+/// [`kaeri_engine::private::redact`].
+struct Redacted<M>(M);
+
+impl<'a, M: tracing_subscriber::fmt::MakeWriter<'a>> tracing_subscriber::fmt::MakeWriter<'a>
+    for Redacted<M>
+{
+    type Writer = kaeri_engine::private::redact::Redacting<M::Writer>;
+
+    fn make_writer(&'a self) -> Self::Writer {
+        kaeri_engine::private::redact::Redacting(self.0.make_writer())
+    }
 }
 
 #[cfg(test)]

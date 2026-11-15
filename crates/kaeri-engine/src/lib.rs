@@ -134,6 +134,7 @@ pub mod phases;
 pub mod playback;
 pub mod player_log;
 pub mod plugin_stores;
+pub mod private;
 pub mod profile;
 pub mod proxy;
 pub mod read_catalog;

@@ -181,6 +181,13 @@ pub enum Event {
     Medium(crate::medium::MediumView),
     /// The recent searches, newest first: at launch when asked, and after each change.
     RecentSearches(Vec<SearchQuery>),
+    // Whether private mode is on: at launch and on every change. See `crate::private`.
+    Private(bool),
+    // A show or series made always private on this device, or not.
+    AlwaysPrivate {
+        title: crate::private::PrivateTitle,
+        on: bool,
+    },
     Detail(Box<Entry>),
     /// The titles a [`Command::LoadCards`](crate::command::Command::LoadCards) asked for, as a
     /// list row has them (synopsis, trailer, airing facts) and without a page's fields. A front
@@ -393,6 +400,10 @@ pub enum Event {
         /// for an episode played from the beginning or never watched.
         #[cfg_attr(feature = "ffi", uniffi(default))]
         resume: Option<f64>,
+        // The title is always private: Now Playing says only "Playing in Kaeri", with no art,
+        // as it does for every play while private mode is on.
+        #[cfg_attr(feature = "ffi", uniffi(default))]
+        always_private: bool,
     },
     // A step of a start the engine is making, as the starting screen shows it: which source
     // is being asked, one coming up empty, a torrent finding peers, the streams found, the
@@ -562,6 +573,12 @@ pub enum Event {
         progress: Option<TitleProgress>,
         resume: Option<ResumePoint>,
         episodes: Vec<EpisodeProgress>,
+        // Private when sent: see `crate::private`. `kept` says `progress.next` and `resume`
+        // come from a place held in memory until the app quits.
+        #[cfg_attr(feature = "ffi", uniffi(default))]
+        private: Option<crate::private::PrivateMode>,
+        #[cfg_attr(feature = "ffi", uniffi(default))]
+        kept: bool,
     },
     /// The torrent proxy's check changed, or `None`: torrent playback is off.
     TorrentProxy(Option<ProxyStatus>),

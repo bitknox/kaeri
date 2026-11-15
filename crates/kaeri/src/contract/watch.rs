@@ -89,7 +89,7 @@ async fn a_mark_sent_before_anything_loaded_says_where_the_title_now_stands() {
     let mut h = Harness::new().await;
     h.send(mark(&["1", "2"], true));
     let updates = h.settle().await;
-    let [Event::Progress { id, progress, resume, episodes }] = &updates[..] else {
+    let [Event::Progress { id, progress, resume, episodes, .. }] = &updates[..] else {
         panic!("the title's standing alone: {:?}", names(&updates))
     };
     assert_eq!(*id, FINISHED);

@@ -586,7 +586,9 @@ impl App {
             Event::LiveSearch { .. }
             | Event::Browse(_)
             | Event::Facets(_)
-            | Event::RecentSearches(_) => {}
+            | Event::RecentSearches(_)
+            | Event::Private(_)
+            | Event::AlwaysPrivate { .. } => {}
             // The periods' rail is the native apps'; the terminal has them in the Sort row.
             Event::Trending { .. } => {}
             Event::Surprise { pool, outcome } => self.apply_surprise(pool, outcome),
@@ -831,7 +833,7 @@ impl App {
             Event::Resumed { position } => self.apply_resumed(position),
             Event::TorrentProxy(status) => self.apply_proxy(status),
             Event::Episodes { id, rows, .. } => self.apply_episodes(id, rows),
-            Event::Progress { id, progress, resume, episodes } => {
+            Event::Progress { id, progress, resume, episodes, .. } => {
                 self.apply_progress(id, progress, resume, episodes)
             }
             Event::SyncPairFailed { problem, device } => {

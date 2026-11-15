@@ -138,10 +138,13 @@ fn main() -> glib::ExitCode {
         // Each layer filters for itself: the player log for Report a bug keeps the engine's
         // playback lines at info, where stderr has only its warnings. The engine mirrors the log
         // to the cache once it starts.
-        let stderr = tracing_subscriber::fmt::layer().with_writer(std::io::stderr).with_filter(
-            tracing_subscriber::EnvFilter::try_from_default_env()
-                .unwrap_or_else(|_| "info,kaeri_engine=warn".into()),
-        );
+        // What is private is taken out of each stderr line: see `kaeri_engine::private::redact`.
+        let stderr = tracing_subscriber::fmt::layer()
+            .with_writer(|| kaeri_engine::private::redact::Redacting(std::io::stderr()))
+            .with_filter(
+                tracing_subscriber::EnvFilter::try_from_default_env()
+                    .unwrap_or_else(|_| "info,kaeri_engine=warn".into()),
+            );
         tracing_subscriber::registry()
             .with(stderr)
             .with(kaeri_engine::player_log::layer())

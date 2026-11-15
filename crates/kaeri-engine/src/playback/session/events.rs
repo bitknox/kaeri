@@ -94,7 +94,7 @@ impl Run<'_> {
         // long as something is playing, and holding a socket open while idle would claim a
         // session that is not happening. `None` covers both "turned off" and "Discord is not
         // running", which need no distinction.
-        let mut rpc = Rpc::start(&settings.presence, context).await;
+        let mut rpc = Rpc::start(&settings.presence, context, settings.privacy.holds()).await;
         // Told to a media server, when this stream is one's.
         let mut report = settings.reports.open(stream);
 
@@ -729,17 +729,19 @@ impl Run<'_> {
                         // Rides the same whole-second throttle, and the presence paces itself
                         // beyond it: Discord rate-limits updates, and a bar that is still right
                         // needs none.
-                        if let Some(report) = report.as_mut() {
+                        // Private, a media server is told nothing of it, as a tracker is not.
+                        let held = settings.privacy.holds();
+                        if let Some(report) = report.as_mut().filter(|_| !held) {
                             report.observe(*position, tracker.is_paused());
                         }
-                        rpc.observe(Playhead {
+                        let head = Playhead {
                             position: *position,
                             duration: *duration,
                             speed: tracker.speed(),
                             paused: tracker.is_paused(),
                             buffering,
-                        })
-                        .await;
+                        };
+                        rpc.observe(head, held).await;
                     }
                 }
                 _ => {}
@@ -820,14 +822,14 @@ impl Run<'_> {
                     | PlaybackEvent::Speed(_)
                     | PlaybackEvent::Buffering(_)
             ) {
-                rpc.observe(Playhead {
+                let head = Playhead {
                     position: tracker.position(),
                     duration: tracker.duration(),
                     speed: tracker.speed(),
                     paused: tracker.is_paused(),
                     buffering,
-                })
-                .await;
+                };
+                rpc.observe(head, settings.privacy.holds()).await;
             }
 
             // The file's own chapters arrive once it is playing, and outrank aniskip's times.
@@ -876,7 +878,7 @@ impl Run<'_> {
         self.seat = seat;
         // Cleared before anything else, so quitting never leaves a stale "watching" up.
         rpc.finish().await;
-        if let Some(report) = report {
+        if let Some(report) = report.filter(|_| !settings.privacy.holds()) {
             report.finish(tracker.position());
         }
         let _ = link.overlay(Overlay::SkipCleared).await;

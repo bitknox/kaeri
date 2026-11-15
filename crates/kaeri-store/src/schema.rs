@@ -1147,6 +1147,17 @@ const MIGRATIONS: &[(&str, &str)] = &[
     ALTER TABLE download ADD COLUMN lease_until INTEGER NOT NULL DEFAULT 0;
     "#,
     ),
+    (
+        "0038_private_title",
+        r#"
+    -- Shows and series kept always private on this device, as `show:<id>` or `series:<work>`.
+    -- Never synced and never exported: a list of hidden titles would itself say what is hidden.
+    CREATE TABLE private_title (
+        title      TEXT    PRIMARY KEY,
+        updated_at INTEGER NOT NULL
+    ) WITHOUT ROWID;
+    "#,
+    ),
 ];
 
 /// How long a statement waits for a lock another connection or process holds before it fails.
@@ -1318,6 +1329,7 @@ mod tests {
             "book_work",
             "book_rhythm",
             "book_chapter_cache",
+            "private_title",
             "book_series_hint",
             "book_source_match",
             "book_edition_pref",

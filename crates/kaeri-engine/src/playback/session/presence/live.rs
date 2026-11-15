@@ -134,23 +134,25 @@ pub(in crate::playback) struct Rpc {
     inner: Option<Presence>,
     plan: Plan,
     sent: Option<Sent>,
+    config: kaeri_core::config::PresenceConfig,
+    /// A connection was tried: Discord not running is not asked again every tick.
+    tried: bool,
 }
 
 impl Rpc {
+    /// The presence for a playback, connected unless `held`: private, it names nothing.
     pub(in crate::playback) async fn start(
         config: &kaeri_core::config::PresenceConfig,
         context: &PlaybackContext,
+        held: bool,
     ) -> Self {
         let plan = Plan::new(config, context, kaeri_store::now());
-        let inner = match (config.enabled, config.resolved_client_id()) {
-            (true, Some(client_id)) => Presence::connect(client_id).await,
-            (true, None) => {
-                tracing::info!("presence enabled but no client id is configured; skipping");
-                None
-            }
-            _ => None,
-        };
-        let mut rpc = Self { inner, plan, sent: None };
+        let mut rpc =
+            Self { inner: None, plan, sent: None, config: config.clone(), tried: false };
+        if held {
+            return rpc;
+        }
+        rpc.connect().await;
         // The file is loading: the episode is named, with no bar to draw yet.
         let head = Playhead {
             position: context.resume_at.unwrap_or(0.0),
@@ -163,9 +165,33 @@ impl Rpc {
         rpc
     }
 
+    async fn connect(&mut self) {
+        self.tried = true;
+        self.inner = match (self.config.enabled, self.config.resolved_client_id()) {
+            (true, Some(client_id)) => Presence::connect(client_id).await,
+            (true, None) => {
+                tracing::info!("presence enabled but no client id is configured; skipping");
+                None
+            }
+            _ => None,
+        };
+    }
+
     /// The player as it is now: sent when its state changed, or the bar is wrong and enough time
-    /// has passed to say so.
-    pub(in crate::playback) async fn observe(&mut self, head: Playhead) {
+    /// has passed to say so. While `held` the presence is cleared and says nothing; once it is
+    /// not, it connects again.
+    pub(in crate::playback) async fn observe(&mut self, head: Playhead, held: bool) {
+        if held {
+            if self.inner.is_some() {
+                self.finish().await;
+            }
+            self.tried = false;
+            return;
+        }
+        if self.inner.is_none() && !self.tried {
+            self.connect().await;
+            self.sent = None;
+        }
         if self.inner.is_none() {
             return;
         }
