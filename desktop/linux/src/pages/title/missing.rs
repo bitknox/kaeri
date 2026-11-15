@@ -69,7 +69,7 @@ pub(super) struct Missing {
     status_run: RefCell<Option<adw::TimedAnimation>>,
     found_run: RefCell<Option<adw::TimedAnimation>>,
     /// The widgets the head has now.
-    parts: RefCell<Option<Parts>>,
+    pub(super) parts: RefCell<Option<Parts>>,
 }
 
 /// The head's widgets for a missing episode, as last built.
@@ -640,8 +640,6 @@ impl Page {
             let by = m.busy.get();
             idle.set_opacity(1.0 - by);
             busy.set_opacity(by);
-            // Not drawn while clear, so its spinner does not turn unseen; still measured.
-            busy.set_child_visible(by > 0.0);
         }
         if let Some(old) = &p.label_from {
             let by = m.status_mix.get();
@@ -703,10 +701,14 @@ impl Page {
     /// Every few seconds: the time since airing on the minute, with no motion and nothing said,
     /// and new words once the quiet window or the week is over.
     pub(super) fn tick(&self) {
-        // The rows that say how long ago their episode aired.
+        // The rows that say how long ago their episode aired, or that it is not in the sources
+        // yet, which they say for a week.
+        let at = now();
         for line in self.lines.borrow().iter() {
             let row = line.shown.borrow().clone();
-            if row.unsourced {
+            let recent =
+                row.airs_at.is_some_and(|aired| aired <= at && at - aired < 8 * 86_400);
+            if row.unsourced && recent {
                 self.dress(line, &row, false);
             }
         }
