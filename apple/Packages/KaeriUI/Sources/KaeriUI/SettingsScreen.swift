@@ -240,7 +240,7 @@ struct SettingsResults: View {
         (L.settingsReaderDefaults, .reading), (L.settingsFollowGroup, .reading), (L.ereadersGroup, .reading), (L.ereadersSendRow, .reading),
         (L.settingsChapterNotifications, .notifications),
         (L.settingsAudio, .playback), (L.playerSubtitles, .playback), (L.settingsQuality, .playback),
-        (L.settingsAutoPlay, .playback), (L.settingsUpNextCountdown, .playback),
+        (L.settingsAutoPlay, .playback), (L.settingsUpNextCountdown, .playback), (SettingKey.preloadMetered.title, .playback),
         (L.settingsSkipOpening, .playback), (L.settingsSkipRecap, .playback), (L.settingsAskWasOpening, .playback),
         (L.settingsFindSkips, .playback), (L.settingsShareSkips, .playback), (L.settingsClearSkips, .playback), (L.settingsSkipFiller, .playback),
         (L.settingsMarkOpening, .playback), (L.settingsCountsWatched, .playback),
@@ -507,6 +507,7 @@ struct PlaybackPane: View {
             SettingsRow(title: SettingKey.upNextCountdown.title) { SettingMenu(key: .upNextCountdown) }
                 .disabled(!store.settings.isOn(.autoNext))
                 .opacity(store.settings.isOn(.autoNext) ? 1 : 0.45)
+            PreloadRow()
             SettingsRow(title: SettingKey.skipOpening.title, note: overridden(.skipOpening)) { SettingSwitch(key: .skipOpening) }
             SettingsRow(title: SettingKey.skipRecap.title) { SettingSwitch(key: .skipRecap) }
             SettingsRow(title: SettingKey.skipFiller.title, note: overridden(.skipFiller)) { SettingSwitch(key: .skipFiller) }

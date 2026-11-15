@@ -162,6 +162,16 @@ public final class PlayerModel {
     public private(set) var walk: StartingWalk?
     /// The task that shows the step line waiting out its hold.
     @ObservationIgnored private var holdRelease: Task<Void, Never>?
+    /// On a roll-on, the starting screen keeps to the ground until 600 ms from the roll-on, so a
+    /// warmed next episode goes from the ground straight to its picture.
+    public private(set) var startingQuiet = false
+    /// A roll-on's starting screen that showed stays up its 0.6 s past the first frame.
+    public private(set) var startingHeld = false
+    /// When the app sent Play next or the engine rolled on by itself, until a playback is staged.
+    @ObservationIgnored private var rollOnAt: ContinuousClock.Instant?
+    /// When the staged roll-on's starting screen may show, until its first frame.
+    @ObservationIgnored private var rollOnShowsAt: ContinuousClock.Instant?
+    @ObservationIgnored private var rollOnTimer: Task<Void, Never>?
     public private(set) var episode: EpisodeOnScreen?
     public private(set) var menus: PlayerMenus?
     public private(set) var skip: SkipOffer?
@@ -399,6 +409,7 @@ public final class PlayerModel {
             if walk?.id != id || walk?.episode != episode {
                 walk = StartingWalk(id: id, episode: episode, resume: resume, at: since ?? time.now())
                 holdRelease?.cancel()
+                stagedRollOn(at: since ?? time.now())
             }
             closedByViewer = false
             stagedAhead = true
@@ -417,6 +428,7 @@ public final class PlayerModel {
             if rollingOn {
                 // Not when the viewer sought into the ending: someone was there.
                 rollPending = !(upNext?.sought ?? false)
+                rolledOn(at: time.now())
             } else if backend == nil, ending == .failed, isPresented, !partySaysWhy, let episode = startingEpisode {
                 // It never played: no stream was found, or none showed a frame. Say so where the
                 // viewer is looking, with another source to choose, rather than vanish.
@@ -909,6 +921,11 @@ public final class PlayerModel {
         starting = nil
         walk = nil
         holdRelease?.cancel()
+        rollOnAt = nil
+        rollOnShowsAt = nil
+        rollOnTimer?.cancel()
+        startingQuiet = false
+        startingHeld = false
         episode = nil
         menus = nil
         skip = nil
@@ -1026,6 +1043,7 @@ public final class PlayerModel {
         if let starting, current.map({ $0 >= starting.playback }) ?? true {
             self.starting = nil
         }
+        rollOnPictured(at: time.now())
         if stillWatchingAfter > 0, rolledOn >= stillWatchingAfter, !stillWatching {
             stillWatching = true
             if !paused { control(.togglePause) }
@@ -1103,6 +1121,7 @@ public final class PlayerModel {
             // Asked for by someone there when they sought into the ending: not one in a row
             // with nobody watching.
             rollPending = !card.sought
+            rolledOn(at: time.now())
             control(.playNext)
         }
         if var note = undo {
@@ -1516,6 +1535,64 @@ public final class PlayerModel {
         walk?.choseTranslation(translation)
     }
 
+    // MARK: Rolling on
+
+    /// A roll-on began: the end of Up next's countdown or Play now, or the engine's own at the end.
+    private func rolledOn(at now: ContinuousClock.Instant) {
+        if let at = rollOnAt, now - at < PlayerTiming.rollOnLapses { return }
+        rollOnAt = now
+    }
+
+    /// A playback was staged: after a roll-on the starting screen waits out the quiet from the
+    /// roll-on, and any other start shows it at once.
+    private func stagedRollOn(at now: ContinuousClock.Instant) {
+        rollOnTimer?.cancel()
+        startingHeld = false
+        defer { rollOnAt = nil }
+        guard let at = rollOnAt, now - at < PlayerTiming.rollOnLapses else {
+            rollOnShowsAt = nil
+            startingQuiet = false
+            return
+        }
+        let showsAt = max(at + PlayerTiming.rollOnQuiet, now)
+        rollOnShowsAt = showsAt
+        startingQuiet = showsAt > now
+        guard startingQuiet else { return }
+        rollOnTimer = Task { @MainActor [weak self, time] in
+            let wait = showsAt - time.now()
+            if wait > .zero { try? await time.sleep(wait) }
+            guard !Task.isCancelled, let self else { return }
+            self.startingQuiet = false
+        }
+    }
+
+    /// The rolled-on episode's first frame. Inside the quiet the ground goes straight to the
+    /// picture; once the starting screen has shown it stays up its 0.6 s.
+    private func rollOnPictured(at now: ContinuousClock.Instant) {
+        guard let showsAt = rollOnShowsAt else { return }
+        rollOnShowsAt = nil
+        rollOnTimer?.cancel()
+        if startingQuiet {
+            // It stays quiet while the ground fades to the picture, then a later start, such as
+            // a change of source, shows its starting screen at once again.
+            rollOnTimer = Task { @MainActor [weak self, time] in
+                try? await time.sleep(PlayerTiming.rollOnPictureFades)
+                guard !Task.isCancelled, let self else { return }
+                self.startingQuiet = false
+            }
+            return
+        }
+        let until = showsAt + PlayerTiming.rollOnScreenHolds
+        guard until > now else { return }
+        startingHeld = true
+        rollOnTimer = Task { @MainActor [weak self, time] in
+            let wait = until - time.now()
+            if wait > .zero { try? await time.sleep(wait) }
+            guard !Task.isCancelled, let self else { return }
+            self.startingHeld = false
+        }
+    }
+
     /// Give the step line its turn once its hold is over.
     private func holdLine() {
         holdRelease?.cancel()
@@ -1808,6 +1885,7 @@ public final class PlayerModel {
         guard var card = upNext, !card.played else { return }
         card.played = true
         upNext = card
+        rolledOn(at: time.now())
         control(.playNext)
     }
 
