@@ -1126,6 +1126,9 @@ fn what_was_asked_holds_until_a_status_agrees_or_a_while_has_passed() {
     assert!(want.paused.is_none(), "nothing to play or pause once the file ended");
 }
 
+/// Each status seen: its state, its duration, and whether it had the media's description.
+type Seen = Arc<Mutex<Vec<(CastState, Option<f64>, bool)>>>;
+
 #[tokio::test(flavor = "multi_thread", worker_threads = 4)]
 async fn controls_show_at_once_and_the_duration_outlives_statuses_without_the_media() {
     let receiver =
@@ -1133,7 +1136,7 @@ async fn controls_show_at_once_and_the_duration_outlives_statuses_without_the_me
             .await
             .unwrap();
     let (player, mut events) = playing(&receiver).await;
-    let seen: Arc<Mutex<Vec<(CastState, Option<f64>, bool)>>> = Arc::default();
+    let seen: Seen = Arc::default();
     let watching = tokio::spawn({
         let (mut status, seen) = (player.status(), Arc::clone(&seen));
         async move {
@@ -1143,7 +1146,9 @@ async fn controls_show_at_once_and_the_duration_outlives_statuses_without_the_me
             }
         }
     });
-    assert_eq!(player.current().duration, Some(600.0));
+    // The remuxed playlist gives the file's own length.
+    let duration = player.current().duration;
+    assert!(duration.is_some_and(|d| d > 0.0));
 
     let pause = player.set_paused(true);
     tokio::pin!(pause);
@@ -1162,7 +1167,7 @@ async fn controls_show_at_once_and_the_duration_outlives_statuses_without_the_me
     next(&mut events, |e| *e == PlaybackEvent::Paused(false)).await;
 
     let now = player.current();
-    assert_eq!(now.duration, Some(600.0), "{now:?}");
+    assert_eq!(now.duration, duration, "{now:?}");
     assert_eq!(now.metadata.map(|m| m.series).as_deref(), Some("A Made-up Show"));
     watching.abort();
     player.quit().await.unwrap();
@@ -1177,22 +1182,24 @@ async fn controls_show_at_once_and_the_duration_outlives_statuses_without_the_me
 }
 
 /// A fake whose own receiver does `custom`, and a cast to it of a short file, playing.
-async fn cast_with_own_receiver(custom: CustomReceiver) -> (FakeReceiver, CastPlayer) {
+async fn cast_with_own_receiver(
+    custom: CustomReceiver,
+) -> (FakeReceiver, CastPlayer, mpsc::UnboundedReceiver<PlaybackEvent>) {
     let receiver =
         FakeReceiver::start(FakeOptions { custom, ..FakeOptions::default() }).await.unwrap();
     let file = matroska(&Fixture::default());
     let base = serve(HashMap::from([("/episode.mkv".to_owned(), file)])).await;
-    let (player, mut events) = CastPlayer::connect(setup(
+    let mut setup = setup(
         &receiver,
         Arc::new(CastMemory::memory()),
         Arc::new(FakeEncoder::default()),
-    ))
-    .await
-    .unwrap();
+    );
+    setup.timings.ready = Duration::from_millis(800);
+    let (player, mut events) = CastPlayer::connect(setup).await.unwrap();
     player.use_receiver(Some("0A1B2C3D".into()));
     player.load(torrent(format!("{base}/episode.mkv")));
     next(&mut events, |e| *e == PlaybackEvent::Loaded).await;
-    (receiver, player)
+    (receiver, player, events)
 }
 
 fn launched(receiver: &FakeReceiver) -> Vec<String> {
@@ -1201,7 +1208,7 @@ fn launched(receiver: &FakeReceiver) -> Vec<String> {
 
 #[tokio::test(flavor = "multi_thread", worker_threads = 4)]
 async fn kaeris_own_receiver_plays_where_it_runs() {
-    let (receiver, player) = cast_with_own_receiver(CustomReceiver::Runs).await;
+    let (receiver, player, _events) = cast_with_own_receiver(CustomReceiver::Runs).await;
     assert_eq!(launched(&receiver), ["0A1B2C3D"]);
     assert_eq!(player.current().receiver.as_deref(), Some("0A1B2C3D"));
     player.quit().await.unwrap();
@@ -1209,7 +1216,7 @@ async fn kaeris_own_receiver_plays_where_it_runs() {
 
 #[tokio::test(flavor = "multi_thread", worker_threads = 4)]
 async fn a_tv_that_refuses_kaeris_receiver_plays_on_the_default_one() {
-    let (receiver, player) = cast_with_own_receiver(CustomReceiver::Unknown).await;
+    let (receiver, player, _events) = cast_with_own_receiver(CustomReceiver::Unknown).await;
     assert_eq!(launched(&receiver), ["0A1B2C3D", DEFAULT_MEDIA_RECEIVER]);
     assert_eq!(player.current().receiver.as_deref(), Some(DEFAULT_MEDIA_RECEIVER));
     assert_eq!(player.failure(), None);
@@ -1218,7 +1225,7 @@ async fn a_tv_that_refuses_kaeris_receiver_plays_on_the_default_one() {
 
 #[tokio::test(flavor = "multi_thread", worker_threads = 4)]
 async fn kaeris_receiver_closing_at_its_first_load_hands_over_to_the_default_one() {
-    let (receiver, player) = cast_with_own_receiver(CustomReceiver::ClosesAtLoad).await;
+    let (receiver, player, _events) = cast_with_own_receiver(CustomReceiver::ClosesAtLoad).await;
     assert_eq!(launched(&receiver), ["0A1B2C3D", DEFAULT_MEDIA_RECEIVER]);
     assert_eq!(player.current().receiver.as_deref(), Some(DEFAULT_MEDIA_RECEIVER));
     assert_eq!(player.failure(), None);
@@ -1226,12 +1233,54 @@ async fn kaeris_receiver_closing_at_its_first_load_hands_over_to_the_default_one
 }
 
 #[tokio::test(flavor = "multi_thread", worker_threads = 4)]
-async fn kaeris_receiver_that_never_answers_a_load_hands_over_to_the_default_one() {
-    let (receiver, player) = cast_with_own_receiver(CustomReceiver::Silent).await;
+async fn kaeris_receiver_that_never_says_ready_hands_over_to_the_default_one() {
+    let (receiver, player, _events) = cast_with_own_receiver(CustomReceiver::Silent).await;
     assert_eq!(launched(&receiver), ["0A1B2C3D", DEFAULT_MEDIA_RECEIVER]);
     assert_eq!(player.current().receiver.as_deref(), Some(DEFAULT_MEDIA_RECEIVER));
     assert_eq!(player.failure(), None);
+    assert!(receiver.heard("hello").len() == 1, "greeted once, never on the standard one");
     player.quit().await.unwrap();
+}
+
+#[tokio::test(flavor = "multi_thread", worker_threads = 4)]
+async fn kaeris_receiver_is_greeted_and_its_messages_are_heard() {
+    let (receiver, player, mut events) = cast_with_own_receiver(CustomReceiver::Runs).await;
+    let hello = receiver.heard("hello");
+    assert_eq!(hello.len(), 1);
+    assert_eq!(hello[0]["version"], KAERI_PROTOCOL);
+    let mut heard = player.heard();
+    player.set_greeting(Some("sv".into()), Some("phone".into()));
+    assert_eq!(receiver_heard_soon(&receiver, "hello", 2).await[1]["device"], "phone");
+
+    receiver.say(serde_json::json!({"type": "subtitles-plain", "version": 1}));
+    assert_eq!(heard.recv().await.unwrap(), FromReceiver::SubtitlesPlain);
+    receiver.say(serde_json::json!({"type": "up-next", "version": 1, "action": "play"}));
+    assert_eq!(heard.recv().await.unwrap(), FromReceiver::UpNext { play: true });
+    receiver.say(serde_json::json!({"type": "something-new", "version": 2}));
+    // A subtitle that didn't load leaves the episode playing.
+    receiver.say(serde_json::json!({"type": "error", "part": "subtitle", "status": 404}));
+    let FromReceiver::Error(error) = heard.recv().await.unwrap() else { panic!() };
+    assert_eq!((error.part.as_str(), error.status), ("subtitle", Some(404)));
+    assert_eq!(player.failure(), None);
+
+    // A segment the source didn't give ends the episode with the one sentence for it.
+    receiver.say(serde_json::json!({"type": "error", "part": "segment", "status": 503}));
+    next(&mut events, |e| matches!(e, PlaybackEvent::Ended { complete: false })).await;
+    assert_eq!(player.failure(), Some(CastFailure::Segment));
+    assert!(player.is_alive(), "the receiver stays up for the next play");
+    player.quit().await.unwrap();
+}
+
+/// The messages of `kind` the fake heard, once there are `count`.
+async fn receiver_heard_soon(receiver: &FakeReceiver, kind: &str, count: usize) -> Vec<Value> {
+    for _ in 0..50 {
+        let heard = receiver.heard(kind);
+        if heard.len() >= count {
+            return heard;
+        }
+        tokio::time::sleep(Duration::from_millis(20)).await;
+    }
+    panic!("never heard {count} {kind}");
 }
 
 #[tokio::test(flavor = "multi_thread", worker_threads = 4)]
@@ -1244,6 +1293,7 @@ async fn a_session_left_running_is_joined_with_what_it_plays() {
     .await
     .unwrap();
     let (player, _events) = playing(&receiver).await;
+    let duration = player.current().duration;
     let session = player.receiver().unwrap().session_id;
     // The app is closed with the cast running: the TV keeps playing.
     drop(player);
@@ -1256,7 +1306,7 @@ async fn a_session_left_running_is_joined_with_what_it_plays() {
     let (player, _events) = joined.expect("the receiver still runs");
     let now = player.current();
     assert_eq!(now.state, CastState::Playing, "{now:?}");
-    assert_eq!(now.duration, Some(600.0));
+    assert_eq!(now.duration, duration);
     assert_eq!(now.metadata.map(|m| m.title).as_deref(), Some("Episode 1"));
     player.set_paused(true).await.unwrap();
     assert_eq!(receiver.heard("PAUSE").len(), 1, "controls reach the joined receiver");

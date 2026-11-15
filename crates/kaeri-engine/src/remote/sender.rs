@@ -36,8 +36,8 @@ use tokio::{sync::watch, task::JoinHandle, time::Instant};
 mod cast;
 #[cfg(feature = "cast")]
 pub use cast::{
-    CastBrowser, CastCard, CastRouteHint, CastRow, CastSession, CastSink, CastUndo, CastUpNext,
-    FoundCast,
+    CastBrowser, CastCard, CastFrom, CastRouteHint, CastRow, CastSession, CastSink, CastUndo,
+    CastUpNext, FoundCast,
 };
 
 /// How long Play on TV waits for the TV to start the episode before it gives up carrying the

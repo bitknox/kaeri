@@ -33,6 +33,15 @@ notice-cast-not-same-network = Thiết bị này không ở cùng mạng với {
 # The TV stopped answering mid-cast. The name is the TV's own.
 notice-cast-lost = Mất kết nối với { $name }, nên việc chiếu đã dừng.
 
+# Kaeri's receiver on the TV couldn't get part of the episode from the source mid-play, so the cast stopped. The card offers Choose source and Play here. The name is the TV's own.
+notice-cast-segment = { $name } không còn nhận được luồng phát: nguồn không phản hồi cho một phần của tập. Hãy thử nguồn khác.
+
+# The TV stopped reaching this device, which hands it the stream, mid-episode. The card offers Try again and Play here. The name is the TV's own.
+notice-cast-lost-stream = { $name } mất luồng phát từ thiết bị này. Hãy kiểm tra cả hai có cùng một mạng không.
+
+# Shown once per TV, the first time it can't keep up with styled subtitles and switches to plain ones. Nothing else changes and the episode plays on. The name is the TV's own.
+notice-cast-subtitles-plain = Phụ đề trên { $name } hiển thị dạng văn bản thường. Phụ đề có định dạng quá nặng với TV này.
+
 # The TV picked to cast to has left the network.
 notice-cast-no-device = TV đã chọn không còn trong mạng nữa.
 

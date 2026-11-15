@@ -40,8 +40,8 @@ pub use aac::{
 };
 pub use channel::{CastError, Channel, Incoming};
 pub use client::{
-    App, DEFAULT_MEDIA_RECEIVER, Device, KAERI_RECEIVER, Load, Media, MediaStatus, Metadata,
-    ReceiverStatus, TextStyle, TextTrack, VolumeControl,
+    App, DEFAULT_MEDIA_RECEIVER, Device, KAERI_PROTOCOL, KAERI_RECEIVER, Load, Media,
+    MediaStatus, Metadata, NS_KAERI, ReceiverStatus, TextStyle, TextTrack, VolumeControl,
 };
 pub use device::{CastDevice, local_address_towards, same_network};
 pub use fetch::{PlainHttp, Upstream, UpstreamResponse};
@@ -52,7 +52,7 @@ pub use formats::{
 pub use memory::{CastCaps, CastMemory, FormatAnswer};
 pub use player::{
     CastAudio, CastFailure, CastLoad, CastPlayer, CastSetup, CastState, CastStatus, CastStep,
-    CastSubtitle, CastText, Timings,
+    CastSubtitle, CastText, FromReceiver, ReceiverError, Timings, UpNextCard,
 };
 pub use probe::CorsProbe;
 pub use relay::Relay;

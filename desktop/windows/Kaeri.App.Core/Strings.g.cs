@@ -48,6 +48,15 @@ public static partial class T
     /// <summary>The TV stopped answering mid-cast. The name is the TV's own.</summary>
     public static string NoticeCastLost(string name) => Fill(Get("NoticeCastLost"), ("name", name));
 
+    /// <summary>Kaeri's receiver on the TV couldn't get part of the episode from the source mid-play, so the cast stopped. The card offers Choose source and Play here. The name is the TV's own.</summary>
+    public static string NoticeCastSegment(string name) => Fill(Get("NoticeCastSegment"), ("name", name));
+
+    /// <summary>The TV stopped reaching this device, which hands it the stream, mid-episode. The card offers Try again and Play here. The name is the TV's own.</summary>
+    public static string NoticeCastLostStream(string name) => Fill(Get("NoticeCastLostStream"), ("name", name));
+
+    /// <summary>Shown once per TV, the first time it can't keep up with styled subtitles and switches to plain ones. Nothing else changes and the episode plays on. The name is the TV's own.</summary>
+    public static string NoticeCastSubtitlesPlain(string name) => Fill(Get("NoticeCastSubtitlesPlain"), ("name", name));
+
     /// <summary>The TV picked to cast to has left the network.</summary>
     public static string NoticeCastNoDevice => Get("NoticeCastNoDevice");
 
@@ -12066,6 +12075,9 @@ public static partial class T
         ["NoticeCastTakenOver"] = "Another device started something on {name}, so casting stopped.",
         ["NoticeCastNotSameNetwork"] = "This device isn't on the network {name} is on, or reaches it through a VPN. Connect both to the same network to cast.",
         ["NoticeCastLost"] = "Lost {name}, so casting stopped.",
+        ["NoticeCastSegment"] = "{name} stopped getting the stream: the source didn't answer for part of the episode. Try another source.",
+        ["NoticeCastLostStream"] = "{name} lost the stream from this device. Check that both are on the same network.",
+        ["NoticeCastSubtitlesPlain"] = "Subtitles on {name} show as plain text. Typeset subtitles were too much for it.",
         ["NoticeCastNoDevice"] = "That TV is no longer on the network.",
         ["NoticeCastUnavailable"] = "This version of Kaeri can't cast to TVs.",
         ["CastPhaseStarting"] = "Starting on {name}",

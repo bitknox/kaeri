@@ -18,6 +18,10 @@ use crate::{client::VolumeControl, formats::CastPlan};
 /// How long a refusal is believed, in seconds.
 pub const REFUSAL_KEPT: i64 = 30 * 24 * 60 * 60;
 
+/// How long a TV starts with the Default Media Receiver after Kaeri's own failed on it, in
+/// seconds: a day, or until its firmware changes.
+pub const OWN_RECEIVER_SKIPPED: i64 = 24 * 60 * 60;
+
 /// How refusals are judged, raised when the rules for blaming a format change, so a refusal
 /// the new rules would not have blamed is not kept for 30 days.
 ///
@@ -54,6 +58,13 @@ pub struct CastCaps {
     /// The [`JUDGEMENT`] its refusals were noted under; 0 in a file from before there was one.
     #[serde(default)]
     pub judgement: u32,
+    /// When Kaeri's receiver last failed to come up on it, in Unix seconds: casts start with
+    /// the Default Media Receiver for [`OWN_RECEIVER_SKIPPED`].
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub own_receiver_failed: Option<i64>,
+    /// The viewer was told that Kaeri's receiver shows plain subtitles on it: once per TV.
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    pub told_subtitles_plain: bool,
 }
 
 impl CastCaps {
@@ -106,6 +117,14 @@ impl CastCaps {
     /// Drop the refusals older than [`REFUSAL_KEPT`].
     fn expire(&mut self, now: i64) {
         self.formats.retain(|_, answer| answer.played || now - answer.at < REFUSAL_KEPT);
+        self.own_receiver_failed =
+            self.own_receiver_failed.filter(|at| now - at < OWN_RECEIVER_SKIPPED);
+    }
+
+    /// Whether casts to it start with the Default Media Receiver, Kaeri's own having failed on
+    /// it lately.
+    pub fn skips_own_receiver(&self) -> bool {
+        self.own_receiver_failed.is_some()
     }
 }
 
@@ -214,6 +233,7 @@ impl CastMemory {
                 if caps.firmware.as_deref().is_some_and(|known| known != firmware) {
                     tracing::info!(tv = %caps.name, "new firmware; forgetting what it refused");
                     caps.formats.retain(|_, answer| answer.played);
+                    caps.own_receiver_failed = None;
                 }
                 caps.firmware = Some(firmware.to_owned());
             }
@@ -250,6 +270,30 @@ impl CastMemory {
             self.save()?;
         }
         Ok(blamed)
+    }
+
+    /// Kaeri's receiver didn't come up on the TV `id`: the next day's casts start with the
+    /// Default Media Receiver.
+    pub fn own_receiver_failed(&self, id: &str) -> Result<(), MemoryError> {
+        let now = (self.clock)();
+        self.lock()
+            .entry(id.to_owned())
+            .or_insert_with(|| CastCaps::blank(id))
+            .own_receiver_failed = Some(now);
+        self.save()
+    }
+
+    /// Note that the viewer heard TV `id` shows subtitles as plain text. `true` the first time.
+    pub fn told_subtitles_plain(&self, id: &str) -> Result<bool, MemoryError> {
+        let first = {
+            let mut all = self.lock();
+            let caps = all.entry(id.to_owned()).or_insert_with(|| CastCaps::blank(id));
+            !std::mem::replace(&mut caps.told_subtitles_plain, true)
+        };
+        if first {
+            self.save()?;
+        }
+        Ok(first)
     }
 
     /// Note what TV `id` did with one part alone: a capability clip's answer.
@@ -321,6 +365,32 @@ mod tests {
         assert_eq!(caps.record_stall(&flac, 2).as_deref(), Some("flac/hls"));
         assert!(caps.refused("flac/hls"));
         assert_eq!(caps.formats.len(), 1);
+    }
+
+    #[test]
+    fn a_tv_kaeris_receiver_failed_on_starts_with_the_default_one_for_a_day() {
+        let dir = tempfile::tempdir().unwrap();
+        let now = Arc::new(AtomicI64::new(1_000));
+        let clock: Clock = {
+            let now = Arc::clone(&now);
+            Arc::new(move || now.load(Ordering::Relaxed))
+        };
+        let memory = CastMemory::open(dir.path()).unwrap().with_clock(Arc::clone(&clock));
+        memory
+            .seen("tv", "Living room", "Chromecast", Some("1.0"), VolumeControl::Level)
+            .unwrap();
+        memory.own_receiver_failed("tv").unwrap();
+        let again = CastMemory::open(dir.path()).unwrap().with_clock(Arc::clone(&clock));
+        assert!(again.caps("tv").skips_own_receiver());
+        now.store(1_000 + OWN_RECEIVER_SKIPPED, Ordering::Relaxed);
+        assert!(!again.caps("tv").skips_own_receiver(), "a day on");
+
+        now.store(1_000, Ordering::Relaxed);
+        memory.own_receiver_failed("tv").unwrap();
+        memory
+            .seen("tv", "Living room", "Chromecast", Some("1.1"), VolumeControl::Level)
+            .unwrap();
+        assert!(!memory.caps("tv").skips_own_receiver(), "a new firmware tries it again");
     }
 
     #[test]

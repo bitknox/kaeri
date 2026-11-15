@@ -68,6 +68,15 @@
   <data name="NoticeCastLost" xml:space="preserve">
     <value>{name} non risponde più, quindi la trasmissione si è interrotta.</value>
   </data>
+  <data name="NoticeCastSegment" xml:space="preserve">
+    <value>{name} non riceve più lo stream: la fonte non ha risposto per una parte dell'episodio. Prova un'altra fonte.</value>
+  </data>
+  <data name="NoticeCastLostStream" xml:space="preserve">
+    <value>{name} ha perso lo stream da questo dispositivo. Verifica che entrambi siano sulla stessa rete.</value>
+  </data>
+  <data name="NoticeCastSubtitlesPlain" xml:space="preserve">
+    <value>I sottotitoli su {name} appaiono come testo semplice. I sottotitoli formattati erano troppo pesanti per la TV.</value>
+  </data>
   <data name="NoticeCastNoDevice" xml:space="preserve">
     <value>Quel TV non è più sulla rete.</value>
   </data>

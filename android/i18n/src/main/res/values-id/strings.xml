@@ -13,6 +13,9 @@
     <string name="notice_cast_taken_over">Penayangan berhenti karena perangkat lain mulai memutar sesuatu di %1$s.</string>
     <string name="notice_cast_not_same_network">Perangkat ini tidak berada di jaringan yang sama dengan %1$s, atau terhubung lewat VPN. Sambungkan keduanya ke jaringan yang sama untuk menayangkan.</string>
     <string name="notice_cast_lost">Koneksi ke %1$s terputus, jadi penayangan berhenti.</string>
+    <string name="notice_cast_segment">%1$s berhenti menerima aliran: sumber tidak merespons untuk sebagian episode. Coba sumber lain.</string>
+    <string name="notice_cast_lost_stream">%1$s kehilangan aliran dari perangkat ini. Pastikan keduanya berada di jaringan yang sama.</string>
+    <string name="notice_cast_subtitles_plain">Subtitel di %1$s tampil sebagai teks biasa. Subtitel bergaya terlalu berat untuk TV ini.</string>
     <string name="notice_cast_no_device">TV itu sudah tidak ada di jaringan.</string>
     <string name="notice_cast_unavailable">Versi Kaeri ini tidak bisa menayangkan ke TV.</string>
     <string name="cast_phase_starting">Memulai di %1$s</string>

@@ -12,7 +12,9 @@ use std::{
     time::{Duration, Instant},
 };
 
-use kaeri_cast::{CastDevice, CastRoute, CastState, CastStatus, CastStep, VolumeControl};
+use kaeri_cast::{
+    CastDevice, CastRoute, CastState, CastStatus, CastStep, FromReceiver, VolumeControl,
+};
 use kaeri_core::ids::AnilistId;
 use kaeri_model::{
     Msg,
@@ -27,7 +29,7 @@ use tokio::task::JoinHandle;
 
 use super::{LinkPhase, NowCard, Problem, RemoteCard, SkipCard, TvSender, lock};
 use crate::{
-    cast::{CastHub, CastView, SessionView},
+    cast::{CastHub, CastView, SessionState, SessionView},
     engine::RemoteSender,
     playback::link::cast::notice,
 };
@@ -111,6 +113,16 @@ pub(super) struct Casting {
     /// Shared with the task that follows the hub, which stops the browse when Settings turns
     /// the Chromecast group off.
     browser: Arc<Mutex<Option<Arc<dyn CastBrowser>>>>,
+    /// What the app left when it went to the background, for its return.
+    away: Mutex<Option<Away>>,
+}
+
+/// The cast the app left when it went away: its TV and where its episode was.
+struct Away {
+    device: String,
+    from: Option<CastFrom>,
+    /// The TV played when the app left, and was paused for it.
+    paused: bool,
 }
 
 struct Attached {
@@ -134,15 +146,37 @@ impl TvSender {
         let ours = Arc::clone(&self.changes);
         let browser = Arc::clone(&self.casting.browser);
         let following = Arc::downgrade(&hub);
+        let mut heard = hub.heard();
+        let commands = engine.clone();
+        let listener = Arc::downgrade(&hub);
         let task = tokio::spawn(async move {
-            while changes.changed().await.is_ok() {
-                if following.upgrade().is_some_and(|hub| !hub.shows_tvs())
-                    && let Some(browser) = lock(&browser).take()
-                {
-                    browser.stop();
+            // Up Next's buttons on the TV's own remote, as Kaeri's receiver says them.
+            let heard = async move {
+                loop {
+                    match heard.recv().await {
+                        Ok(FromReceiver::UpNext { play }) => {
+                            let Some(hub) = listener.upgrade() else { return };
+                            hub.next_answered(play);
+                            let command =
+                                if play { PlayerCommand::PlayNext } else { PlayerCommand::CancelNext };
+                            let _ = commands.send(Command::Player(command));
+                        }
+                        Ok(_) | Err(tokio::sync::broadcast::error::RecvError::Lagged(_)) => {}
+                        Err(tokio::sync::broadcast::error::RecvError::Closed) => return,
+                    }
                 }
-                ours.send_modify(|n| *n += 1);
-            }
+            };
+            let follow = async move {
+                while changes.changed().await.is_ok() {
+                    if following.upgrade().is_some_and(|hub| !hub.shows_tvs())
+                        && let Some(browser) = lock(&browser).take()
+                    {
+                        browser.stop();
+                    }
+                    ours.send_modify(|n| *n += 1);
+                }
+            };
+            tokio::join!(heard, follow);
         });
         *lock(&self.casting.attached) = Some(Attached { hub, engine, task });
     }
@@ -232,13 +266,38 @@ impl TvSender {
     }
 
     /// Connect to the Cast row `key` and hold its TV: the receiver launches, and every play
-    /// goes to the TV until [`Self::disconnect_cast`]. Returns at once; [`Self::cast_state`]
-    /// follows it.
-    pub fn connect_cast(&self, key: &str) -> Result<(), Problem> {
-        let (hub, _) = self.hub().ok_or(Problem::Other)?;
+    /// goes to the TV until [`Self::disconnect_cast`]. What plays on this device, `from`, moves
+    /// to the TV at its position. Returns at once; [`Self::cast_state`] follows it.
+    pub fn connect_cast(&self, key: &str, from: Option<CastFrom>) -> Result<(), Problem> {
+        let (hub, engine) = self.hub().ok_or(Problem::Other)?;
         let device = hub.device(key.strip_prefix(CAST).unwrap_or(key)).ok_or(Problem::Gone)?;
+        let id = device.id.clone();
         hub.connect(device);
+        if let Some(from) = from {
+            let command = Command::CastTo {
+                device: id,
+                id: from.id,
+                episode: from.episode,
+                position: Some(from.position).filter(|p| *p >= CARRY_FROM),
+            };
+            let _ = engine.send(command);
+        }
         Ok(())
+    }
+
+    /// Play here: what plays on the TV stops, the TV is let go, and the episode and position
+    /// come back for this device to play from. `None` when nothing of Kaeri's played there.
+    pub fn cast_play_here(&self) -> Option<CastFrom> {
+        let (hub, engine) = self.hub()?;
+        let from = hub.session().item.and_then(|item| {
+            Some(CastFrom {
+                id: item.id?,
+                episode: item.episode?,
+                position: if item.position >= CARRY_FROM { item.position } else { 0.0 },
+            })
+        });
+        let _ = engine.send(Command::StopCasting);
+        from
     }
 
     /// Let the held TV go: what plays there stops, the receiver closes, and plays open here
@@ -246,6 +305,69 @@ impl TvSender {
     pub fn disconnect_cast(&self) {
         if let Some((_, engine)) = self.hub() {
             let _ = engine.send(Command::StopCasting);
+        }
+    }
+
+    /// What Kaeri's receiver calls this device: `iphone`, `ipad`, `phone`, `tablet`, `mac` or
+    /// `computer`.
+    pub fn cast_set_device(&self, word: &str) {
+        if let Some((hub, _)) = self.hub() {
+            hub.set_device_word(Some(word.to_owned()).filter(|w| !w.is_empty()));
+        }
+    }
+
+    /// The app leaves the foreground (`true`) or is back (`false`): what an iPhone or an iPad
+    /// says, which can't serve the TV from the background. Away, the TV pauses on Kaeri's
+    /// receiver's "Waiting for the iPhone". Back, it plays on; if the session ended meanwhile
+    /// (the receiver closed when idle, the network dropped), it connects again and the episode
+    /// loads at the second it paused.
+    pub fn cast_away(&self, away: bool) {
+        let Some((hub, engine)) = self.hub() else { return };
+        if away {
+            let view = hub.session();
+            let Some(device) = view.device.filter(|_| view.state == SessionState::Playing)
+            else {
+                return;
+            };
+            let item = view.item;
+            let paused = item.as_ref().is_some_and(|i| !i.paused);
+            let from = item.and_then(|item| {
+                Some(CastFrom { id: item.id?, episode: item.episode?, position: item.position })
+            });
+            if let Some(player) = hub.held(&device.id) {
+                player.tell_away();
+                if paused {
+                    hub.spawn(async move {
+                        if let Err(e) = player.set_paused(true).await {
+                            tracing::debug!(error = %e, "the TV didn't pause for the app leaving");
+                        }
+                    });
+                }
+            }
+            *lock(&self.casting.away) = Some(Away { device: device.id, from, paused });
+            return;
+        }
+        let Some(left) = lock(&self.casting.away).take() else { return };
+        if let Some(player) = hub.held(&left.device).filter(|p| p.is_alive()) {
+            if left.paused {
+                hub.spawn(async move {
+                    if let Err(e) = player.set_paused(false).await {
+                        tracing::debug!(error = %e, "the TV didn't play on");
+                    }
+                });
+            }
+            return;
+        }
+        // The session ended while away: connect again, and the episode follows.
+        let Some(device) = hub.device(&left.device) else { return };
+        hub.connect(device);
+        if let Some(from) = left.from {
+            let _ = engine.send(Command::CastTo {
+                device: left.device,
+                id: from.id,
+                episode: from.episode,
+                position: Some(from.position).filter(|p| *p >= CARRY_FROM),
+            });
         }
     }
 
@@ -316,6 +438,14 @@ pub struct CastSession {
     device: CastDevice,
 }
 
+/// An episode moving between this device and the TV, and where in it.
+#[derive(Debug, Clone, PartialEq)]
+pub struct CastFrom {
+    pub id: AnilistId,
+    pub episode: String,
+    pub position: f64,
+}
+
 /// The card for a cast: the card Play on TV draws, and what only a cast has.
 #[derive(Debug, Clone, PartialEq)]
 pub struct CastCard {
@@ -335,6 +465,9 @@ pub struct CastCard {
     pub undo: Option<CastUndo>,
     /// How the stream reaches the TV, once one plays.
     pub route: Option<CastRouteHint>,
+    /// The TV waits for the stream in the middle of the file: whole seconds since it began.
+    /// Apart from `card.now.loading`, which is a start or a reload.
+    pub waiting: Option<u32>,
 }
 
 /// Up Next on the casting card.
@@ -487,7 +620,7 @@ impl CastSession {
                 screen: Screen::Player,
                 now,
                 party: None,
-                rev: 0,
+                rev: self.hub.rev(),
                 over,
                 reached: view.connected || status.is_some(),
             },
@@ -498,6 +631,7 @@ impl CastSession {
             up_next,
             undo,
             route: status.as_ref().and_then(route_of),
+            waiting: status.as_ref().and_then(crate::cast::waited).filter(|_| !over),
         }
     }
 
@@ -506,7 +640,7 @@ impl CastSession {
     /// is woken each second meanwhile.
     pub fn ticking(&self) -> bool {
         let card = self.card();
-        card.phase_line.is_some() || card.undo.is_some()
+        card.phase_line.is_some() || card.undo.is_some() || card.waiting.is_some()
     }
 
     /// What the card's controls ask: the TV's volume and mute go to the receiver, and so do the

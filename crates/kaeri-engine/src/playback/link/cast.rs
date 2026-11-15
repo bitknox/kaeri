@@ -181,6 +181,8 @@ pub fn notice(failure: &CastFailure, name: &str) -> Msg {
         CastFailure::TakenOver => Msg::NoticeCastTakenOver { name },
         CastFailure::NotSameNetwork => Msg::NoticeCastNotSameNetwork { name },
         CastFailure::Lost(_) => Msg::NoticeCastLost { name },
+        CastFailure::Segment => Msg::NoticeCastSegment { name },
+        CastFailure::LostStream => Msg::NoticeCastLostStream { name },
     }
 }
 

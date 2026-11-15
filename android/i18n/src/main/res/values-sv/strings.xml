@@ -13,6 +13,9 @@
     <string name="notice_cast_taken_over">En annan enhet startade något på %1$s, så castingen avbröts.</string>
     <string name="notice_cast_not_same_network">Den här enheten är inte på samma nätverk som %1$s, eller når det via ett VPN. Anslut båda till samma nätverk för att casta.</string>
     <string name="notice_cast_lost">Tappade kontakten med %1$s, så castingen avbröts.</string>
+    <string name="notice_cast_segment">%1$s slutade få strömmen: källan svarade inte för en del av avsnittet. Prova en annan källa.</string>
+    <string name="notice_cast_lost_stream">%1$s tappade strömmen från den här enheten. Kontrollera att båda är på samma nätverk.</string>
+    <string name="notice_cast_subtitles_plain">Undertexter på %1$s visas som vanlig text. Formaterade undertexter blev för mycket för tv:n.</string>
     <string name="notice_cast_no_device">Den TV:n finns inte längre på nätverket.</string>
     <string name="notice_cast_unavailable">Den här versionen av Kaeri kan inte skicka till TV:ar.</string>
     <string name="cast_phase_starting">Startar på %1$s</string>
