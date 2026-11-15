@@ -186,6 +186,7 @@ pub fn build(ctx: &Rc<Ctx>) -> adw::NavigationPage {
     let header = adw::HeaderBar::new();
     header.pack_start(&widgets::sidebar_button(&ctx.split));
     header.pack_start(&crate::window::tv_session_button(ctx));
+    header.pack_end(&crate::tv::button::cast_button(ctx));
     header.pack_end(&order_button);
     // Surprise me, on Planning only: a random title from the list on this device.
     let surprise = widgets::surprise_button(

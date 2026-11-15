@@ -108,6 +108,7 @@ pub fn build(ctx: &Rc<Ctx>) -> adw::NavigationPage {
     let header = adw::HeaderBar::new();
     header.pack_start(&widgets::sidebar_button(&ctx.split));
     header.pack_start(&crate::window::tv_session_button(ctx));
+    header.pack_end(&crate::tv::button::cast_button(ctx));
 
     // Says only what the sidebar does not: offline since a time, or still loading.
     let capsule = gtk::Box::new(gtk::Orientation::Horizontal, 6);

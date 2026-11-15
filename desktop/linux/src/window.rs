@@ -64,6 +64,8 @@ pub struct Ctx {
     pub updater: Rc<crate::updater::Updater>,
     /// Play on TV and the TV's remote.
     pub tv: Rc<crate::tv::Tv>,
+    /// Around the pages: a cast's bar along the bottom, and its controls grown from it.
+    pub cast_sheet: adw::BottomSheet,
     size: Cell<Size>,
     sized: RefCell<Vec<OnSize>>,
     /// Pushes a page on the destination on screen.
@@ -338,6 +340,8 @@ pub struct Shell {
     pub in_party: Cell<bool>,
     /// The viewer chose to leave the party to close, so the close goes on without asking again.
     party_asked: Cell<bool>,
+    /// Stop and quit was chosen for the cast running: the close goes on.
+    cast_asked: Cell<bool>,
 }
 
 /// The size for a first launch: 80% of the monitor under the pointer (else the first monitor),
@@ -403,6 +407,7 @@ impl Shell {
             hub: Rc::clone(&hub),
             window: window.clone(),
             split: split.clone(),
+            cast_sheet: adw::BottomSheet::new(),
             notices: crate::notices::Notices::new(&toasts),
             prefs,
             updater,
@@ -471,7 +476,9 @@ impl Shell {
 
         let (sidebar_page, sidebar, foot) = sidebar(&ctx);
         split.set_sidebar(Some(&sidebar_page));
-        split.set_content(Some(&stack));
+        ctx.cast_sheet.set_content(Some(&stack));
+        ctx.cast_sheet.set_reveal_bottom_bar(false);
+        split.set_content(Some(&ctx.cast_sheet));
 
         let player = PlayerView::new(&ctx, player);
         let top = gtk::Stack::new();
@@ -507,6 +514,7 @@ impl Shell {
             welcome_checked: Cell::new(false),
             in_party: Cell::new(false),
             party_asked: Cell::new(false),
+            cast_asked: Cell::new(false),
         });
         shell.player.attach(Rc::downgrade(&shell));
         let _ = shell.pad.set(crate::pad::Pad::attach(&shell));
@@ -1776,6 +1784,10 @@ impl Shell {
             {
                 return glib::Propagation::Stop;
             }
+            // Quitting stops a cast: asked first, unless already answered.
+            if !shell.cast_asked.get() && ask_before_stopping_cast(&shell) {
+                return glib::Propagation::Stop;
+            }
             let (downloading, seeding) = shell.ctx.hub.known.borrow().running();
             let running = downloading + seeding > 0;
             if shell.closing.get() || !running {
@@ -1980,6 +1992,37 @@ fn sidebar(ctx: &Rc<Ctx>) -> (adw::NavigationPage, gtk::ListBox, gtk::ListBox) {
     header.pack_end(&primary);
     let page = widgets::page("Kaeri", &header, &column); // i18n-skip
     (page, list, foot)
+}
+
+/// A cast running when the window closes: "Stop casting and quit?", with Cancel the default.
+/// Stop and quit stops the TV and closes; the close goes on asking of downloads as any close
+/// does. Returns whether it asked.
+fn ask_before_stopping_cast(shell: &Rc<Shell>) -> bool {
+    let tv = &shell.ctx.tv;
+    let Some(view) = tv.cast_view().filter(|v| !v.stage.ended()) else { return false };
+    let title = view.now.as_ref().map(|n| n.title.clone()).unwrap_or_default();
+    let dialog = adw::AlertDialog::new(
+        Some(&t::desktop_cast_quit_title()),
+        Some(&t::desktop_cast_quit_body(&title, &view.name)),
+    );
+    dialog.add_responses(&[
+        ("cancel", &t::action_cancel()),
+        ("stop", &t::desktop_cast_quit_action()),
+    ]);
+    dialog.set_response_appearance("stop", adw::ResponseAppearance::Destructive);
+    dialog.set_default_response(Some("cancel"));
+    dialog.set_close_response("cancel");
+    let weak = Rc::downgrade(shell);
+    dialog.connect_response(None, move |_, response| {
+        let Some(shell) = weak.upgrade() else { return };
+        if response == "stop" {
+            shell.ctx.tv.cast_stop();
+            shell.cast_asked.set(true);
+            shell.ctx.window.close();
+        }
+    });
+    dialog.present(Some(&shell.ctx.window));
+    true
 }
 
 /// The way back to the remote while a TV is driven, over the sidebar's foot: "Playing on Living
@@ -2442,6 +2485,7 @@ mod reader_page_tests {
                 hub,
                 window: adw::ApplicationWindow::builder().build(),
                 split: adw::OverlaySplitView::new(),
+                cast_sheet: adw::BottomSheet::new(),
                 notices: crate::notices::Notices::new(&toasts),
                 prefs: Rc::new(Prefs::open(dir.path().join("prefs.ini"))),
                 updater: crate::updater::Updater::new(dir.path(), true),

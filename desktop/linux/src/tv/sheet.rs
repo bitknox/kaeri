@@ -60,23 +60,39 @@ pub fn attach(ctx: &Rc<Ctx>) {
             }
         }
     });
+    // A cast's controls are the bottom sheet over the page, grown from the bar under it; the
+    // picker, pairing and a TV running Kaeri are a dialog.
+    crate::tv::bar::attach(ctx);
     let weak = Rc::downgrade(ctx);
     ctx.tv.listen(move || {
         let Some(ctx) = weak.upgrade() else { return };
-        let up = showing.borrow().clone();
+        let mut up = showing.borrow().clone();
+        let in_bar = ctx.tv.casting() && ctx.tv.sheet() == Some(Shown::Remote);
+        if let Some(dialog) = up.clone().filter(|d| d.in_bar != in_bar) {
+            showing.replace(None);
+            dialog.dismiss();
+            up = None;
+        }
         match (ctx.tv.sheet(), up) {
             (Some(_), Some(dialog)) => dialog.update(),
             (Some(_), None) => {
-                let dialog = Dialog::new(&ctx, &showing);
+                let dialog = Dialog::new(&ctx, &showing, in_bar);
                 showing.replace(Some(Rc::clone(&dialog)));
                 #[cfg(feature = "fixtures")]
                 SHOWN.with(|s| s.replace(Rc::downgrade(&dialog)));
                 dialog.update();
-                dialog.dialog.present(Some(&ctx.window));
+                if in_bar {
+                    ctx.cast_sheet.set_sheet(Some(&dialog.stack));
+                    ctx.cast_sheet.set_open(true);
+                    // The remote itself, so Space and the arrows reach the TV at once.
+                    dialog.remote.view.grab_focus();
+                } else {
+                    dialog.dialog.present(Some(&ctx.window));
+                }
             }
             (None, Some(dialog)) => {
                 showing.replace(None);
-                dialog.dialog.force_close();
+                dialog.dismiss();
             }
             (None, None) => {}
         }
@@ -138,10 +154,12 @@ struct Dialog {
     pairing: Pairing,
     remote: Remote,
     tick: RefCell<Option<glib::SourceId>>,
+    /// Shown as the cast's bottom sheet, not as a dialog.
+    in_bar: bool,
 }
 
 impl Dialog {
-    fn new(ctx: &Rc<Ctx>, showing: &Rc<RefCell<Option<Rc<Self>>>>) -> Rc<Self> {
+    fn new(ctx: &Rc<Ctx>, showing: &Rc<RefCell<Option<Rc<Self>>>>, in_bar: bool) -> Rc<Self> {
         let picker = Picker::new();
         let pairing = Pairing::new();
         let remote = Remote::new();
@@ -159,8 +177,10 @@ impl Dialog {
             .name("tv")
             .title(t::tv_play_on())
             .follows_content_size(true)
-            .child(&stack)
             .build();
+        if !in_bar {
+            dialog.set_child(Some(&stack));
+        }
         // 440 wide in a window with room, and the window's own width as a bottom sheet: kept
         // as the window is resized with the sheet up.
         ctx.on_size({
@@ -182,6 +202,7 @@ impl Dialog {
             pairing,
             remote,
             tick: RefCell::default(),
+            in_bar,
         });
         me.wire();
         // Closed by Done, Escape or a swipe: the model lets the sheet go at once, so a sheet
@@ -235,6 +256,28 @@ impl Dialog {
         });
         me.tick.replace(Some(tick));
         me
+    }
+
+    /// Let the sheet go: the dialog closes, or the bottom sheet shrinks back into the bar.
+    fn dismiss(&self) {
+        if self.in_bar {
+            if let Some(id) = self.tick.take() {
+                id.remove();
+            }
+            self.browse(false);
+            self.ctx.cast_sheet.set_open(false);
+        } else {
+            self.dialog.force_close();
+        }
+    }
+
+    /// Done, or Disconnect: the model lets the sheet go.
+    fn close(&self) {
+        if self.in_bar {
+            self.tv.sheet_closed();
+        } else {
+            self.dialog.close();
+        }
     }
 
     fn browse(&self, on: bool) {
@@ -307,9 +350,7 @@ impl Dialog {
                 }
             }
         };
-        let close = on(|me| {
-            me.dialog.close();
-        });
+        let close = on(|me| me.close());
         let close_too = close.clone();
         self.picker.done.connect_clicked(move |_| close());
         self.remote.done.connect_clicked(move |_| close_too());
@@ -383,14 +424,14 @@ impl Dialog {
         });
 
         // The remote.
-        self.remote.wire(&self.tv, &self.dialog);
+        self.remote.wire(&self.tv, self.stack.upcast_ref());
         let pair_again = on(|me| me.tv.pair_again());
         self.remote.pair_again.connect_clicked(move |_| pair_again());
         let another = on(|me| me.tv.open_picker());
         self.remote.another.connect_clicked(move |_| another());
         let disconnect = on(|me| {
             me.tv.disconnect();
-            me.dialog.close();
+            me.close();
         });
         self.remote.disconnect.connect_clicked(move |_| disconnect());
         self.remote.seek.connect_change_value({
@@ -773,7 +814,7 @@ impl Picker {
 }
 
 /// A row of the picker: the TV, what the engine says under it, and what choosing it does.
-fn tv_row(row: &TvRow, connected: bool) -> adw::ActionRow {
+pub(super) fn tv_row(row: &TvRow, connected: bool) -> adw::ActionRow {
     let line = adw::ActionRow::builder()
         .title(&row.name)
         .subtitle(super::row_detail(row.kind))
@@ -805,7 +846,7 @@ fn tv_row(row: &TvRow, connected: bool) -> adw::ActionRow {
 
 /// A row for a TV with Chromecast built in: its name, and that the stream plays through this
 /// computer.
-fn cast_row(row: &CastRow) -> adw::ActionRow {
+pub(super) fn cast_row(row: &CastRow) -> adw::ActionRow {
     let line = adw::ActionRow::builder()
         .title(&row.name)
         .subtitle(super::cast::route_line(row).unwrap_or_default())
@@ -1434,7 +1475,7 @@ impl Remote {
         }
     }
 
-    fn wire(&self, tv: &Rc<Tv>, dialog: &adw::Dialog) {
+    fn wire(&self, tv: &Rc<Tv>, dialog: &gtk::Widget) {
         let send = |button: &gtk::Button, command: RemoteCommand| {
             let tv = Rc::downgrade(tv);
             button.connect_clicked(move |_| {

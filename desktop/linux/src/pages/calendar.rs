@@ -181,6 +181,7 @@ pub fn build(ctx: &Rc<Ctx>) -> adw::NavigationPage {
     let header = adw::HeaderBar::new();
     header.pack_start(&widgets::sidebar_button(&ctx.split));
     header.pack_start(&crate::window::tv_session_button(ctx));
+    header.pack_end(&crate::tv::button::cast_button(ctx));
     header.set_title_widget(Some(&title));
     let previous = gtk::Button::from_icon_name("go-previous-symbolic");
     previous.set_tooltip_text(Some(&t::calendar_previous_week()));
