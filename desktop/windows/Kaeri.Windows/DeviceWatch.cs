@@ -19,11 +19,14 @@ sealed class DeviceWatch : IDisposable
     readonly DispatcherQueueTimer poll;
     readonly UISettings settings = new();
     (bool, bool, bool, bool)? last;
+    /// <summary>A testing run's: the device says nothing holds trailers back.</summary>
+    readonly bool fine;
 
-    public DeviceWatch(Action<Command> send, DispatcherQueue ui)
+    public DeviceWatch(Action<Command> send, DispatcherQueue ui, bool fine = false)
     {
         this.send = send;
         this.ui = ui;
+        this.fine = fine;
         PowerManager.EnergySaverStatusChanged += Changed;
         // Animation effects and a screen reader have no event to wait for; both are cheap to read.
         poll = ui.CreateTimer();
@@ -37,7 +40,8 @@ sealed class DeviceWatch : IDisposable
 
     void Say()
     {
-        var state = (!settings.AnimationsEnabled, PowerManager.EnergySaverStatus == EnergySaverStatus.On, ScreenReaderRunning(), LowMemory);
+        var state = fine ? (false, false, false, false)
+            : (!settings.AnimationsEnabled, PowerManager.EnergySaverStatus == EnergySaverStatus.On, ScreenReaderRunning(), LowMemory);
         if (state == last)
             return;
         last = state;
