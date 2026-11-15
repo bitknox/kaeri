@@ -11541,6 +11541,30 @@ public enum L {
     /// Row: length of the Up next countdown.
     public static var settingsUpNextCountdown: String { string("settings-up-next-countdown", fallback: "Up next countdown") }
 
+    /// Row under Up next countdown on iPhone, a cellular iPad and Android phones: whether the next episode's first seconds of video load during the ending while on mobile data. Off by default.
+    public static var settingsPreloadCellular: String { string("settings-preload-cellular", fallback: "Preload video on mobile data") }
+
+    /// The same row on the Mac and a Wi-Fi iPad. Low Data Mode is Apple's name for the system setting.
+    public static var settingsPreloadLowData: String { string("settings-preload-low-data", fallback: "Preload video in Low Data Mode") }
+
+    /// The same row on Windows and Linux.
+    public static var settingsPreloadMetered: String { string("settings-preload-metered", fallback: "Preload video on metered connections") }
+
+    /// Line under the row on iPhone and a cellular iPad. Low Data Mode is Apple's name for the system setting.
+    public static var settingsPreloadDetailApplePhone: String { string("settings-preload-detail-apple-phone", fallback: "During the ending, the next episode's stream, subtitles and skip times are found. Its first seconds load too, and on mobile data or in Low Data Mode only when this is on.") }
+
+    /// Line under the row on the Mac and a Wi-Fi iPad. Low Data Mode and Personal Hotspot are Apple's names.
+    public static var settingsPreloadDetailLowData: String { string("settings-preload-detail-low-data", fallback: "During the ending, the next episode's stream, subtitles and skip times are found. Its first seconds load too, and in Low Data Mode or on Personal Hotspot only when this is on.") }
+
+    /// Line under the row on Windows and Linux, and the note under the terminal's settings list.
+    public static var settingsPreloadDetailMetered: String { string("settings-preload-detail-metered", fallback: "During the ending, the next episode's stream, subtitles and skip times are found. Its first seconds load too, and on a metered connection only when this is on.") }
+
+    /// Sentence added after the line under the row while torrent playback is on.
+    public static var settingsPreloadTorrents: String { string("settings-preload-torrents", fallback: "Torrents load their first pieces the same way and upload nothing until the episode plays.") }
+
+    /// Screen reader hint on the preload row while it is dimmed because Auto-play next is off. The terminal shows it at the start of the note.
+    public static var settingsPreloadA11yDimmed: String { string("settings-preload-a11y-dimmed", fallback: "Needs Auto-play next") }
+
     /// Row: skip the opening.
     public static var settingsSkipOpening: String { string("settings-skip-opening", fallback: "Skip opening automatically") }
 

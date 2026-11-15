@@ -11984,6 +11984,26 @@
     <value>Up next countdown</value>
     <comment>Row: length of the Up next countdown.</comment>
   </data>
+  <data name="SettingsPreloadCellular" xml:space="preserve">
+    <value>Preload video on mobile data</value>
+    <comment>Row under Up next countdown on iPhone, a cellular iPad and Android phones: whether the next episode's first seconds of video load during the ending while on mobile data. Off by default.</comment>
+  </data>
+  <data name="SettingsPreloadMetered" xml:space="preserve">
+    <value>Preload video on metered connections</value>
+    <comment>The same row on Windows and Linux.</comment>
+  </data>
+  <data name="SettingsPreloadDetailMetered" xml:space="preserve">
+    <value>During the ending, the next episode's stream, subtitles and skip times are found. Its first seconds load too, and on a metered connection only when this is on.</value>
+    <comment>Line under the row on Windows and Linux, and the note under the terminal's settings list.</comment>
+  </data>
+  <data name="SettingsPreloadTorrents" xml:space="preserve">
+    <value>Torrents load their first pieces the same way and upload nothing until the episode plays.</value>
+    <comment>Sentence added after the line under the row while torrent playback is on.</comment>
+  </data>
+  <data name="SettingsPreloadA11yDimmed" xml:space="preserve">
+    <value>Needs Auto-play next</value>
+    <comment>Screen reader hint on the preload row while it is dimmed because Auto-play next is off. The terminal shows it at the start of the note.</comment>
+  </data>
   <data name="SettingsSkipOpening" xml:space="preserve">
     <value>Skip opening automatically</value>
     <comment>Row: skip the opening.</comment>

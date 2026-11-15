@@ -4297,6 +4297,9 @@ settings-label-fullscreen = Mở toàn màn hình
 # Settings row: the video upscaling mode.
 settings-label-upscaling = Nâng độ phân giải
 
+# Settings row under Auto-play next: whether the next episode's first seconds load during the ending on a metered connection. The column is 26 cells wide.
+settings-label-preload-metered = Tải trước khi đo lưu lượng
+
 # Settings row: which interface the player shows.
 settings-label-player-ui = Giao diện trình phát
 
@@ -10940,6 +10943,21 @@ settings-auto-play = Tự động phát tập tiếp
 
 # Row: length of the Up next countdown.
 settings-up-next-countdown = Đếm ngược Tiếp theo
+
+# Row under Up next countdown on iPhone, a cellular iPad and Android phones: whether the next episode's first seconds of video load during the ending while on mobile data. Off by default.
+settings-preload-cellular = Tải trước video khi dùng dữ liệu di động
+
+# The same row on Windows and Linux.
+settings-preload-metered = Tải trước video trên kết nối có đo lưu lượng
+
+# Line under the row on Windows and Linux, and the note under the terminal's settings list.
+settings-preload-detail-metered = Trong phần kết thúc, luồng phát, phụ đề và mốc bỏ qua của tập tiếp theo được tìm sẵn. Vài giây đầu của tập cũng được tải, và trên kết nối có đo lưu lượng thì chỉ khi mục này bật.
+
+# Sentence added after the line under the row while torrent playback is on.
+settings-preload-torrents = Torrent cũng tải các mảnh đầu tiên như vậy và không tải lên gì cho đến khi tập phát.
+
+# Screen reader hint on the preload row while it is dimmed because Auto-play next is off. The terminal shows it at the start of the note.
+settings-preload-a11y-dimmed = Cần bật "Tự động phát tập tiếp"
 
 # Row: skip the opening.
 settings-skip-opening = Tự động bỏ qua phần mở đầu

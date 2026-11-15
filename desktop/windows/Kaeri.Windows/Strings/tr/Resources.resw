@@ -8462,6 +8462,21 @@
   <data name="SettingsUpNextCountdown" xml:space="preserve">
     <value>Sıradaki geri sayımı</value>
   </data>
+  <data name="SettingsPreloadCellular" xml:space="preserve">
+    <value>Mobil veride videoyu önceden yükle</value>
+  </data>
+  <data name="SettingsPreloadMetered" xml:space="preserve">
+    <value>Tarifeli bağlantılarda videoyu önceden yükle</value>
+  </data>
+  <data name="SettingsPreloadDetailMetered" xml:space="preserve">
+    <value>Bitiş sırasında sonraki bölümün yayını, altyazıları ve atlama zamanları bulunur. İlk saniyeleri de yüklenir; tarifeli bir bağlantıda yalnızca bu açıkken.</value>
+  </data>
+  <data name="SettingsPreloadTorrents" xml:space="preserve">
+    <value>Torrentler ilk parçalarını aynı şekilde yükler ve bölüm oynayana kadar hiçbir şey yüklemez.</value>
+  </data>
+  <data name="SettingsPreloadA11yDimmed" xml:space="preserve">
+    <value>"Sonrakini otomatik oynat" gerekli</value>
+  </data>
   <data name="SettingsSkipOpening" xml:space="preserve">
     <value>Açılışı otomatik atla</value>
   </data>

@@ -8462,6 +8462,21 @@
   <data name="SettingsUpNextCountdown" xml:space="preserve">
     <value>Countdown „Als Nächstes“</value>
   </data>
+  <data name="SettingsPreloadCellular" xml:space="preserve">
+    <value>Video mit mobilen Daten vorladen</value>
+  </data>
+  <data name="SettingsPreloadMetered" xml:space="preserve">
+    <value>Video bei getakteten Verbindungen vorladen</value>
+  </data>
+  <data name="SettingsPreloadDetailMetered" xml:space="preserve">
+    <value>Während des Abspanns werden Stream, Untertitel und Skip-Zeiten der nächsten Folge gefunden. Ihre ersten Sekunden laden ebenfalls, bei einer getakteten Verbindung nur, wenn dies an ist.</value>
+  </data>
+  <data name="SettingsPreloadTorrents" xml:space="preserve">
+    <value>Torrents laden ihre ersten Teile genauso und laden nichts hoch, bis die Folge läuft.</value>
+  </data>
+  <data name="SettingsPreloadA11yDimmed" xml:space="preserve">
+    <value>Braucht „Nächste Folge automatisch abspielen“</value>
+  </data>
   <data name="SettingsSkipOpening" xml:space="preserve">
     <value>Vorspann automatisch überspringen</value>
   </data>

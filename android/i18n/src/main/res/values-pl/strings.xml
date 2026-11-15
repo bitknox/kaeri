@@ -3570,6 +3570,12 @@
     <string name="settings_quality">Jakość</string>
     <string name="settings_auto_play">Automatycznie odtwarzaj następny odcinek</string>
     <string name="settings_up_next_countdown">Następny: czas odliczania</string>
+    <string name="settings_preload_cellular">Wczytuj wideo z wyprzedzeniem przez dane komórkowe</string>
+    <string name="settings_preload_metered">Wczytuj wideo z wyprzedzeniem przez połączenia taryfowe</string>
+    <string name="settings_preload_detail_android">Podczas zakończenia wyszukiwane są strumień, napisy i czasy pominięć następnego odcinka. Jego pierwsze sekundy też się wczytują, a przez dane komórkowe lub taryfowe Wi-Fi tylko wtedy, gdy to jest włączone.</string>
+    <string name="settings_preload_detail_metered">Podczas zakończenia wyszukiwane są strumień, napisy i czasy pominięć następnego odcinka. Jego pierwsze sekundy też się wczytują, a przez połączenie taryfowe tylko wtedy, gdy to jest włączone.</string>
+    <string name="settings_preload_torrents">Torrenty wczytują swoje pierwsze części tak samo i nic nie wysyłają, dopóki odcinek nie ruszy.</string>
+    <string name="settings_preload_a11y_dimmed">Wymaga opcji „Automatycznie odtwarzaj następny odcinek”</string>
     <string name="settings_skip_opening">Automatycznie pomijaj czołówkę</string>
     <string name="settings_skip_recap">Pomijaj streszczenia automatycznie</string>
     <string name="settings_find_skips">Szukaj czasów pominięcia w dźwięku</string>

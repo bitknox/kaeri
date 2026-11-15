@@ -4357,6 +4357,9 @@ settings-label-fullscreen = Starta i helskärm
 # Settings row: the video upscaling mode.
 settings-label-upscaling = Uppskalning
 
+# Settings row under Auto-play next: whether the next episode's first seconds load during the ending on a metered connection. The column is 26 cells wide.
+settings-label-preload-metered = Förladda med datapriser
+
 # Settings row: which interface the player shows.
 settings-label-player-ui = Spelarens gränssnitt
 
@@ -11074,6 +11077,21 @@ settings-auto-play = Spela nästa automatiskt
 
 # Row: length of the Up next countdown.
 settings-up-next-countdown = Nedräkning för Nästa
+
+# Row under Up next countdown on iPhone, a cellular iPad and Android phones: whether the next episode's first seconds of video load during the ending while on mobile data. Off by default.
+settings-preload-cellular = Förladda video via mobildata
+
+# The same row on Windows and Linux.
+settings-preload-metered = Förladda video på anslutningar med datapriser
+
+# Line under the row on Windows and Linux, and the note under the terminal's settings list.
+settings-preload-detail-metered = Under avslutningen hittas nästa avsnitts ström, undertexter och hopptider. Dess första sekunder laddas också, och på en anslutning med datapriser bara när det här är på.
+
+# Sentence added after the line under the row while torrent playback is on.
+settings-preload-torrents = Torrenter laddar sina första delar på samma sätt och laddar inte upp något förrän avsnittet spelas.
+
+# Screen reader hint on the preload row while it is dimmed because Auto-play next is off. The terminal shows it at the start of the note.
+settings-preload-a11y-dimmed = Kräver ”Spela nästa automatiskt”
 
 # Row: skip the opening.
 settings-skip-opening = Hoppa över öppningen automatiskt

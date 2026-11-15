@@ -8609,6 +8609,21 @@ public static partial class T
     /// <summary>Row: length of the Up next countdown.</summary>
     public static string SettingsUpNextCountdown => Get("SettingsUpNextCountdown");
 
+    /// <summary>Row under Up next countdown on iPhone, a cellular iPad and Android phones: whether the next episode's first seconds of video load during the ending while on mobile data. Off by default.</summary>
+    public static string SettingsPreloadCellular => Get("SettingsPreloadCellular");
+
+    /// <summary>The same row on Windows and Linux.</summary>
+    public static string SettingsPreloadMetered => Get("SettingsPreloadMetered");
+
+    /// <summary>Line under the row on Windows and Linux, and the note under the terminal's settings list.</summary>
+    public static string SettingsPreloadDetailMetered => Get("SettingsPreloadDetailMetered");
+
+    /// <summary>Sentence added after the line under the row while torrent playback is on.</summary>
+    public static string SettingsPreloadTorrents => Get("SettingsPreloadTorrents");
+
+    /// <summary>Screen reader hint on the preload row while it is dimmed because Auto-play next is off. The terminal shows it at the start of the note.</summary>
+    public static string SettingsPreloadA11yDimmed => Get("SettingsPreloadA11yDimmed");
+
     /// <summary>Row: skip the opening.</summary>
     public static string SettingsSkipOpening => Get("SettingsSkipOpening");
 
@@ -15056,6 +15071,11 @@ public static partial class T
         ["SettingsQuality"] = "Quality",
         ["SettingsAutoPlay"] = "Auto-play next",
         ["SettingsUpNextCountdown"] = "Up next countdown",
+        ["SettingsPreloadCellular"] = "Preload video on mobile data",
+        ["SettingsPreloadMetered"] = "Preload video on metered connections",
+        ["SettingsPreloadDetailMetered"] = "During the ending, the next episode's stream, subtitles and skip times are found. Its first seconds load too, and on a metered connection only when this is on.",
+        ["SettingsPreloadTorrents"] = "Torrents load their first pieces the same way and upload nothing until the episode plays.",
+        ["SettingsPreloadA11yDimmed"] = "Needs Auto-play next",
         ["SettingsSkipOpening"] = "Skip opening automatically",
         ["SettingsSkipRecap"] = "Skip recaps automatically",
         ["SettingsFindSkips"] = "Find skip times from the audio",

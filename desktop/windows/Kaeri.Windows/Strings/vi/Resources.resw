@@ -8132,6 +8132,21 @@
   <data name="SettingsUpNextCountdown" xml:space="preserve">
     <value>Đếm ngược Tiếp theo</value>
   </data>
+  <data name="SettingsPreloadCellular" xml:space="preserve">
+    <value>Tải trước video khi dùng dữ liệu di động</value>
+  </data>
+  <data name="SettingsPreloadMetered" xml:space="preserve">
+    <value>Tải trước video trên kết nối có đo lưu lượng</value>
+  </data>
+  <data name="SettingsPreloadDetailMetered" xml:space="preserve">
+    <value>Trong phần kết thúc, luồng phát, phụ đề và mốc bỏ qua của tập tiếp theo được tìm sẵn. Vài giây đầu của tập cũng được tải, và trên kết nối có đo lưu lượng thì chỉ khi mục này bật.</value>
+  </data>
+  <data name="SettingsPreloadTorrents" xml:space="preserve">
+    <value>Torrent cũng tải các mảnh đầu tiên như vậy và không tải lên gì cho đến khi tập phát.</value>
+  </data>
+  <data name="SettingsPreloadA11yDimmed" xml:space="preserve">
+    <value>Cần bật "Tự động phát tập tiếp"</value>
+  </data>
   <data name="SettingsSkipOpening" xml:space="preserve">
     <value>Tự động bỏ qua phần mở đầu</value>
   </data>

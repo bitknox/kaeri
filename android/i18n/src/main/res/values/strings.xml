@@ -6855,6 +6855,18 @@
     <string name="settings_auto_play">Auto-play next</string>
     <!-- Row: length of the Up next countdown. -->
     <string name="settings_up_next_countdown">Up next countdown</string>
+    <!-- Row under Up next countdown on iPhone, a cellular iPad and Android phones: whether the next episode's first seconds of video load during the ending while on mobile data. Off by default. -->
+    <string name="settings_preload_cellular">Preload video on mobile data</string>
+    <!-- The same row on Windows and Linux. -->
+    <string name="settings_preload_metered">Preload video on metered connections</string>
+    <!-- Line under the row on Android phones. -->
+    <string name="settings_preload_detail_android">During the ending, the next episode\'s stream, subtitles and skip times are found. Its first seconds load too, and on mobile data or metered Wi-Fi only when this is on.</string>
+    <!-- Line under the row on Windows and Linux, and the note under the terminal's settings list. -->
+    <string name="settings_preload_detail_metered">During the ending, the next episode\'s stream, subtitles and skip times are found. Its first seconds load too, and on a metered connection only when this is on.</string>
+    <!-- Sentence added after the line under the row while torrent playback is on. -->
+    <string name="settings_preload_torrents">Torrents load their first pieces the same way and upload nothing until the episode plays.</string>
+    <!-- Screen reader hint on the preload row while it is dimmed because Auto-play next is off. The terminal shows it at the start of the note. -->
+    <string name="settings_preload_a11y_dimmed">Needs Auto-play next</string>
     <!-- Row: skip the opening. -->
     <string name="settings_skip_opening">Skip opening automatically</string>
     <!-- Settings, Playback: whether recaps are skipped without asking. -->

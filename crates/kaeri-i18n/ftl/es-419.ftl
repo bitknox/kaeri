@@ -4417,6 +4417,9 @@ settings-label-fullscreen = Iniciar en pantalla completa
 # Settings row: the video upscaling mode.
 settings-label-upscaling = Escalado
 
+# Settings row under Auto-play next: whether the next episode's first seconds load during the ending on a metered connection. The column is 26 cells wide.
+settings-label-preload-metered = Precargar con uso medido
+
 # Settings row: which interface the player shows.
 settings-label-player-ui = Interfaz del reproductor
 
@@ -11208,6 +11211,21 @@ settings-auto-play = Reproducir el siguiente automáticamente
 
 # Row: length of the Up next countdown.
 settings-up-next-countdown = Duración de la cuenta regresiva de Siguiente
+
+# Row under Up next countdown on iPhone, a cellular iPad and Android phones: whether the next episode's first seconds of video load during the ending while on mobile data. Off by default.
+settings-preload-cellular = Precargar video con datos móviles
+
+# The same row on Windows and Linux.
+settings-preload-metered = Precargar video en conexiones de uso medido
+
+# Line under the row on Windows and Linux, and the note under the terminal's settings list.
+settings-preload-detail-metered = Durante el cierre se buscan el stream, los subtítulos y los tiempos de salto del episodio siguiente. Sus primeros segundos también se cargan, y en una conexión de uso medido solo cuando esto está activado.
+
+# Sentence added after the line under the row while torrent playback is on.
+settings-preload-torrents = Los torrents cargan sus primeras piezas de la misma forma y no suben nada hasta que se reproduce el episodio.
+
+# Screen reader hint on the preload row while it is dimmed because Auto-play next is off. The terminal shows it at the start of the note.
+settings-preload-a11y-dimmed = Requiere «Reproducir el siguiente automáticamente»
 
 # Row: skip the opening.
 settings-skip-opening = Saltar la apertura automáticamente

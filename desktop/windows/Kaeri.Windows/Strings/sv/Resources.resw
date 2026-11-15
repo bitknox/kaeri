@@ -8462,6 +8462,21 @@
   <data name="SettingsUpNextCountdown" xml:space="preserve">
     <value>Nedräkning för Nästa</value>
   </data>
+  <data name="SettingsPreloadCellular" xml:space="preserve">
+    <value>Förladda video via mobildata</value>
+  </data>
+  <data name="SettingsPreloadMetered" xml:space="preserve">
+    <value>Förladda video på anslutningar med datapriser</value>
+  </data>
+  <data name="SettingsPreloadDetailMetered" xml:space="preserve">
+    <value>Under avslutningen hittas nästa avsnitts ström, undertexter och hopptider. Dess första sekunder laddas också, och på en anslutning med datapriser bara när det här är på.</value>
+  </data>
+  <data name="SettingsPreloadTorrents" xml:space="preserve">
+    <value>Torrenter laddar sina första delar på samma sätt och laddar inte upp något förrän avsnittet spelas.</value>
+  </data>
+  <data name="SettingsPreloadA11yDimmed" xml:space="preserve">
+    <value>Kräver ”Spela nästa automatiskt”</value>
+  </data>
   <data name="SettingsSkipOpening" xml:space="preserve">
     <value>Hoppa över öppningen automatiskt</value>
   </data>

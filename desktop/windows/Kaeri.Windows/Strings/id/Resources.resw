@@ -8132,6 +8132,21 @@
   <data name="SettingsUpNextCountdown" xml:space="preserve">
     <value>Hitung mundur berikutnya</value>
   </data>
+  <data name="SettingsPreloadCellular" xml:space="preserve">
+    <value>Muat awal video dengan data seluler</value>
+  </data>
+  <data name="SettingsPreloadMetered" xml:space="preserve">
+    <value>Muat awal video di koneksi terukur</value>
+  </data>
+  <data name="SettingsPreloadDetailMetered" xml:space="preserve">
+    <value>Selama penutup, stream, subtitle, dan waktu lewati episode berikutnya dicari. Detik-detik pertamanya juga dimuat, dan di koneksi terukur hanya jika ini aktif.</value>
+  </data>
+  <data name="SettingsPreloadTorrents" xml:space="preserve">
+    <value>Torrent memuat potongan pertamanya dengan cara yang sama dan tidak mengunggah apa pun sampai episode diputar.</value>
+  </data>
+  <data name="SettingsPreloadA11yDimmed" xml:space="preserve">
+    <value>Perlu "Putar episode berikutnya otomatis"</value>
+  </data>
   <data name="SettingsSkipOpening" xml:space="preserve">
     <value>Lewati pembukaan otomatis</value>
   </data>

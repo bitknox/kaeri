@@ -9122,6 +9122,21 @@
   <data name="SettingsUpNextCountdown" xml:space="preserve">
     <value>Następny: czas odliczania</value>
   </data>
+  <data name="SettingsPreloadCellular" xml:space="preserve">
+    <value>Wczytuj wideo z wyprzedzeniem przez dane komórkowe</value>
+  </data>
+  <data name="SettingsPreloadMetered" xml:space="preserve">
+    <value>Wczytuj wideo z wyprzedzeniem przez połączenia taryfowe</value>
+  </data>
+  <data name="SettingsPreloadDetailMetered" xml:space="preserve">
+    <value>Podczas zakończenia wyszukiwane są strumień, napisy i czasy pominięć następnego odcinka. Jego pierwsze sekundy też się wczytują, a przez połączenie taryfowe tylko wtedy, gdy to jest włączone.</value>
+  </data>
+  <data name="SettingsPreloadTorrents" xml:space="preserve">
+    <value>Torrenty wczytują swoje pierwsze części tak samo i nic nie wysyłają, dopóki odcinek nie ruszy.</value>
+  </data>
+  <data name="SettingsPreloadA11yDimmed" xml:space="preserve">
+    <value>Wymaga opcji „Automatycznie odtwarzaj następny odcinek”</value>
+  </data>
   <data name="SettingsSkipOpening" xml:space="preserve">
     <value>Automatycznie pomijaj czołówkę</value>
   </data>

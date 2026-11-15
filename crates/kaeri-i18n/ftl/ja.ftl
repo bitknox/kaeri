@@ -4297,6 +4297,9 @@ settings-label-fullscreen = 全画面で開始
 # Settings row: the video upscaling mode.
 settings-label-upscaling = アップスケーリング
 
+# Settings row under Auto-play next: whether the next episode's first seconds load during the ending on a metered connection. The column is 26 cells wide.
+settings-label-preload-metered = 従量制でも先読み
+
 # Settings row: which interface the player shows.
 settings-label-player-ui = プレーヤーのインターフェース
 
@@ -10940,6 +10943,21 @@ settings-auto-play = 次のエピソードを自動再生
 
 # Row: length of the Up next countdown.
 settings-up-next-countdown = 次のエピソードのカウントダウン
+
+# Row under Up next countdown on iPhone, a cellular iPad and Android phones: whether the next episode's first seconds of video load during the ending while on mobile data. Off by default.
+settings-preload-cellular = モバイルデータ通信でビデオを先読み
+
+# The same row on Windows and Linux.
+settings-preload-metered = 従量制課金接続でビデオを先読み
+
+# Line under the row on Windows and Linux, and the note under the terminal's settings list.
+settings-preload-detail-metered = エンディング中に、次のエピソードのストリーム、字幕、スキップ位置を探します。最初の数秒も読み込みますが、従量制課金接続ではこれがオンのときだけです。
+
+# Sentence added after the line under the row while torrent playback is on.
+settings-preload-torrents = トレントも同じように最初のピースを読み込み、エピソードが再生されるまで何もアップロードしません。
+
+# Screen reader hint on the preload row while it is dimmed because Auto-play next is off. The terminal shows it at the start of the note.
+settings-preload-a11y-dimmed = 「次のエピソードを自動再生」が必要です
 
 # Row: skip the opening.
 settings-skip-opening = オープニングを自動でスキップ

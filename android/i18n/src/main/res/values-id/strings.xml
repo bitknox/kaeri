@@ -3189,6 +3189,12 @@
     <string name="settings_quality">Kualitas</string>
     <string name="settings_auto_play">Putar episode berikutnya otomatis</string>
     <string name="settings_up_next_countdown">Hitung mundur berikutnya</string>
+    <string name="settings_preload_cellular">Muat awal video dengan data seluler</string>
+    <string name="settings_preload_metered">Muat awal video di koneksi terukur</string>
+    <string name="settings_preload_detail_android">Selama penutup, stream, subtitle, dan waktu lewati episode berikutnya dicari. Detik-detik pertamanya juga dimuat, dan dengan data seluler atau Wi-Fi terukur hanya jika ini aktif.</string>
+    <string name="settings_preload_detail_metered">Selama penutup, stream, subtitle, dan waktu lewati episode berikutnya dicari. Detik-detik pertamanya juga dimuat, dan di koneksi terukur hanya jika ini aktif.</string>
+    <string name="settings_preload_torrents">Torrent memuat potongan pertamanya dengan cara yang sama dan tidak mengunggah apa pun sampai episode diputar.</string>
+    <string name="settings_preload_a11y_dimmed">Perlu \"Putar episode berikutnya otomatis\"</string>
     <string name="settings_skip_opening">Lewati pembukaan otomatis</string>
     <string name="settings_skip_recap">Lewati rekap otomatis</string>
     <string name="settings_find_skips">Cari waktu lewati dari audio</string>
