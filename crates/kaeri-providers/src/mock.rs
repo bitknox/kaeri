@@ -394,7 +394,8 @@ mod tests {
             vec![(Duration::ZERO, one.clone()), (Duration::ZERO, two.clone())],
         );
         let key = ProviderKey::new("k");
-        let list = || p.episodes(&key, Translation::Sub, &Default::default());
+        let hints = kaeri_core::media::TitleHints::default();
+        let list = || p.episodes(&key, Translation::Sub, &hints);
         assert_eq!(list().await.unwrap(), one);
         assert_eq!(list().await.unwrap(), two);
         assert_eq!(list().await.unwrap(), two, "the last turn stays");
