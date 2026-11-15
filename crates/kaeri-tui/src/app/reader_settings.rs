@@ -270,7 +270,7 @@ impl App {
         let reader = self.reader_here()?;
         let value = match (&item.shown, item.key) {
             (SettingShown::Choices(_), Key::LineSpacing) => {
-                let open = reader.amount(Key::LineSpacing).is_some_and(|a| a >= OPEN_SPACING);
+                let open = reader.amount(Key::LineSpacing).is_none_or(|a| a >= OPEN_SPACING);
                 ReaderValue::Amount { value: if open { TIGHT_AMOUNT } else { OPEN_AMOUNT } }
             }
             (SettingShown::Choices(choices), key) => {

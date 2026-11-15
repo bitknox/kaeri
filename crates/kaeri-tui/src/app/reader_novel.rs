@@ -36,7 +36,7 @@ pub const TEXT_WIDTH_STEP: u16 = 4;
 pub const TEXT_MARGIN: u16 = 2;
 /// Line spacing from this amount up reads as Open, a blank line between paragraphs.
 pub const OPEN_SPACING: f64 = 1.5;
-/// What Tight and Open set the line spacing to.
+/// What Tight and Open set the line spacing to. The engine starts a terminal on Open.
 pub const TIGHT_AMOUNT: f64 = 1.4;
 pub const OPEN_AMOUNT: f64 = 1.8;
 /// A scrolled novel says where it settled this long after it stopped.
@@ -119,7 +119,7 @@ impl App {
             .map_or(TEXT_WIDTH, |v| v.round().clamp(1.0, f64::from(u16::MAX)) as u16);
         let width = wanted.min(stage.width.saturating_sub(2 * TEXT_MARGIN)).max(1);
         let open =
-            reader.amount(ReaderSettingKey::LineSpacing).is_some_and(|a| a >= OPEN_SPACING);
+            reader.amount(ReaderSettingKey::LineSpacing).is_none_or(|a| a >= OPEN_SPACING);
         let justify = reader.toggle(ReaderSettingKey::Justify).unwrap_or(false);
         let x = stage.x + (stage.width.saturating_sub(width)) / 2;
         Some(NovelFrame {

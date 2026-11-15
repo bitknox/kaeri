@@ -109,6 +109,9 @@ pub fn default_for(key: Key, medium: Medium, screen: Screen) -> ReaderValue {
         Key::PageLayout => choice("auto"),
         Key::Spreads => choice("split"),
         Key::TextSize | Key::Margins | Key::Contrast => amount(1.0),
+        // A terminal reads the spacing as a blank line between paragraphs or none, and starts
+        // with the blank line: its Open.
+        Key::LineSpacing if medium == Medium::Novel && screen.terminal => amount(1.8),
         Key::LineSpacing => {
             amount(if medium == Medium::Novel && screen.phone { 1.6 } else { 1.4 })
         }
@@ -947,5 +950,21 @@ mod tests {
         assert!(!justified(Medium::Manga, tablet));
         let terminal = Screen::default().with_terminal(true);
         assert!(!justified(Medium::Novel, terminal), "a terminal starts ragged");
+    }
+
+    #[test]
+    fn a_terminal_starts_novels_open_and_the_apps_keep_their_spacing() {
+        let store = Store::open_in_memory().unwrap();
+        let config = ReadingConfig::default();
+        let spacing = |medium, screen| {
+            Layers::read(&store, &config, medium, None, screen).amount(Key::LineSpacing)
+        };
+        let terminal = Screen::default().with_terminal(true);
+        let phone = Screen { handheld: true, phone: true, ..Screen::default() };
+        let tablet = Screen { handheld: true, ..Screen::default() };
+        assert_eq!(spacing(Medium::Novel, terminal), 1.8, "a blank line between paragraphs");
+        assert_eq!(spacing(Medium::Novel, Screen::default()), 1.4);
+        assert_eq!(spacing(Medium::Novel, tablet), 1.4);
+        assert_eq!(spacing(Medium::Novel, phone), 1.6);
     }
 }

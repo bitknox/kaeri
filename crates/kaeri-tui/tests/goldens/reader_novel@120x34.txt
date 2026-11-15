@@ -7,29 +7,29 @@ Kaeri   Lantern Street Notes · Part 3 · The Lamp Room                         
                            stuck in wet weather. Mio had learned to lift the handle before
                            she turned it, the way her aunt did, and the door gave with a sigh
                            that sounded almost polite.
+
                              Inside, the shelves held every lantern the street had ever sent
                            back for repair. Some were labelled in her aunt's narrow hand.
                            Others had only a date and a house number, as if the lamp itself
                            would explain the rest once it was lit.
+
                              "You don't have to fix them all tonight," her aunt said from the
                            doorway.
+
                              "I know." Mio set the first one on the bench. Its glass was
                            clouded, and a crack ran from the base to the hook like a river on
                            a map. "I want to see which ones still remember how."
+
                              Her aunt laughed, then stopped, because Mio had not meant it as
                            a joke. Outside, the rain kept time on the gutter. Down the street
                            someone was singing the closing song from the market, a little
                            behind the beat, and every so often a window answered with light.
+
                              She worked until the candle in the first lantern stood straight.
                            Then she wrote the house number on a card, and under it, in her
                            own hand, the word ready.
+
                              The second lantern was older. Its hinge had been mended with
-                           wire, and someone had scratched a small star into the brass where
-                           the thumb rests. Mio turned it over twice before she found the
-                           date, faint as breath on a window.
-                             By the time the rain eased, there were four cards on the bench
-                           and the room smelled of wax and wet wool. Her aunt brought tea and
-                           did not ask how many were left.
 ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
 ░░░░░░░░░░░░░░░░  Part 3 · 0% · 9 min left                             → next   ← back   [ ] width   , settings   ? keys
 === styles ===
@@ -52,33 +52,27 @@ r05 c29-90 fg=text
 r06 c27-89 fg=text
 r07 c27-92 fg=text
 r08 c27-53 fg=text
-r09 c29-91 fg=text
-r10 c27-88 fg=text
-r11 c27-90 fg=text
-r12 c27-65 fg=text
-r13 c29-92 fg=text
-r14 c27-34 fg=text
-r15 c29-87 fg=text
-r16 c27-92 fg=text
-r17 c27-65 fg=text
-r17 c66-73 fg=text mod=ITALIC
-r17 c74-79 fg=text
-r18 c29-91 fg=text
+r10 c29-91 fg=text
+r11 c27-88 fg=text
+r12 c27-90 fg=text
+r13 c27-65 fg=text
+r15 c29-92 fg=text
+r16 c27-34 fg=text
+r18 c29-87 fg=text
 r19 c27-92 fg=text
-r20 c27-88 fg=text
-r21 c27-91 fg=text
-r22 c29-92 fg=text
-r23 c27-89 fg=text
-r24 c27-45 fg=text
-r24 c46-50 fg=text mod=ITALIC
-r24 c51-51 fg=text
-r25 c29-88 fg=text
-r26 c27-91 fg=text
-r27 c27-88 fg=text
-r28 c27-60 fg=text
-r29 c29-90 fg=text
-r30 c27-92 fg=text
-r31 c27-57 fg=text
+r20 c27-65 fg=text
+r20 c66-73 fg=text mod=ITALIC
+r20 c74-79 fg=text
+r22 c29-91 fg=text
+r23 c27-92 fg=text
+r24 c27-88 fg=text
+r25 c27-91 fg=text
+r27 c29-92 fg=text
+r28 c27-89 fg=text
+r29 c27-45 fg=text
+r29 c46-50 fg=text mod=ITALIC
+r29 c51-51 fg=text
+r31 c29-88 fg=text
 r32 c00-119 fg=rule
 r33 c00-15 fg=text
 r33 c16-41 fg=text-dim

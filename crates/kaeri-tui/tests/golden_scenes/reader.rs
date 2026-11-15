@@ -724,7 +724,7 @@ fn novel_setting(key: ReaderSettingKey, value: ReaderValue) -> ReaderSettingRow 
     }
 }
 
-/// The settings a terminal novel opens with: paged, 66 columns, tight and ragged.
+/// The settings a terminal novel opens with: paged, 66 columns, open and ragged.
 fn novel_settings(work: &WorkId) -> ReaderSettingsView {
     ReaderSettingsView {
         medium: Medium::Novel,
@@ -732,7 +732,7 @@ fn novel_settings(work: &WorkId) -> ReaderSettingsView {
         rows: vec![
             novel_setting(ReaderSettingKey::Mode, ReaderValue::Choice { name: "paged".into() }),
             novel_setting(ReaderSettingKey::TextWidth, ReaderValue::Amount { value: 66.0 }),
-            novel_setting(ReaderSettingKey::LineSpacing, ReaderValue::Amount { value: 1.4 }),
+            novel_setting(ReaderSettingKey::LineSpacing, ReaderValue::Amount { value: 1.8 }),
             novel_setting(ReaderSettingKey::Justify, ReaderValue::Toggle { on: false }),
         ],
         tap_zones: None,

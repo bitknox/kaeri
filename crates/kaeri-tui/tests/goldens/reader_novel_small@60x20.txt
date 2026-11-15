@@ -5,19 +5,19 @@ Kaeri   Lantern Street Notes
   the handle before she turned it, the way her aunt did,
   and the door gave with a sigh that sounded almost
   polite.
+
     Inside, the shelves held every lantern the street had
   ever sent back for repair. Some were labelled in her
   aunt's narrow hand. Others had only a date and a house
   number, as if the lamp itself would explain the rest
   once it was lit.
+
     "You don't have to fix them all tonight," her aunt
   said from the doorway.
+
     "I know." Mio set the first one on the bench. Its
-  glass was clouded, and a crack ran from the base to the
-  hook like a river on a map. "I want to see which ones
-  still remember how."
 ────────────────────────────────────────────────────────────
-Part 3 · 7%                                  → next   ? keys
+Part 3 · 6%                                  → next   ? keys
 === styles ===
 colours text=#e4e0d6 text-dim=#a8aec9 rule=#46464d obi=#f2a64b state=#7fc7d9 alert=#f59b85 ground=#1a1b26
 r00 c00-04 fg=text mod=BOLD
@@ -28,19 +28,14 @@ r03 c02-56 fg=text
 r04 c02-55 fg=text
 r05 c02-50 fg=text
 r06 c02-08 fg=text
-r07 c04-56 fg=text
-r08 c02-53 fg=text
-r09 c02-55 fg=text
-r10 c02-53 fg=text
-r11 c02-17 fg=text
-r12 c04-53 fg=text
-r13 c02-23 fg=text
-r14 c04-52 fg=text
-r15 c02-56 fg=text
-r16 c02-54 fg=text
-r17 c02-07 fg=text
-r17 c08-15 fg=text mod=ITALIC
-r17 c16-21 fg=text
+r08 c04-56 fg=text
+r09 c02-53 fg=text
+r10 c02-55 fg=text
+r11 c02-53 fg=text
+r12 c02-17 fg=text
+r14 c04-53 fg=text
+r15 c02-23 fg=text
+r17 c04-52 fg=text
 r18 c00-59 fg=rule
 r19 c00-10 fg=text-dim
 r19 c45-45 fg=text
