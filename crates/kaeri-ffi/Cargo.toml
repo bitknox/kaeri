@@ -43,7 +43,6 @@ testing = [
     "dep:kaeri-providers",
     "dep:kaeri-track",
     "dep:kaeri-plugin-store",
-    "dep:serde_json",
     "kaeri-remote?/testing",
     "kaeri-party?/testing",
     "kaeri-cast?/fake",
@@ -104,8 +103,6 @@ kaeri-track = { workspace = true, optional = true }
 # The reading scenes' generated pages and books, behind `testing`.
 # The plugin store scenes serve a store on loopback, as the contract tests do.
 kaeri-plugin-store = { workspace = true, optional = true }
-# The fake receiver's messages, with `testing`.
-serde_json = { workspace = true, optional = true }
 
 [dev-dependencies]
 # A fixture source that is slow to find one episode's streams.

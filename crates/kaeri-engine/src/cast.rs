@@ -693,7 +693,7 @@ impl CastHub {
             state,
             button,
             rev: self.rev(),
-            device: device.clone().filter(|_| state != SessionState::Idle),
+            device: device.filter(|_| state != SessionState::Idle),
             item: item.filter(|_| state == SessionState::Playing),
             queue,
             notice: failure.as_ref().filter(|_| state == SessionState::Error).and_then(|f| {
