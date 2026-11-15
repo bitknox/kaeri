@@ -260,6 +260,13 @@ struct CastController: View {
 final class CastMiniAnchor {
     weak var view: UIView?
 
+    /// The window's safe area, which the controller keeps while the box fills the screen.
+    var insets: EdgeInsets? {
+        guard let window = view?.window else { return nil }
+        let i = window.safeAreaInsets
+        return EdgeInsets(top: i.top, leading: i.left, bottom: i.bottom, trailing: i.right)
+    }
+
     /// The mini's frame in its window, or nil once it is gone.
     var frame: CGRect? {
         guard let view, view.window != nil, view.bounds.width > 0 else { return nil }
@@ -318,6 +325,7 @@ private struct CastMorph: View {
     let anchor: CastMiniAnchor
     let closed: () -> Void
     @State private var from: CGRect?
+    @State private var insets: EdgeInsets?
     @State private var open = false
     @State private var drag: CGFloat = 0
 
@@ -325,6 +333,7 @@ private struct CastMorph: View {
         self.anchor = anchor
         self.closed = closed
         _from = State(initialValue: anchor.frame)
+        _insets = State(initialValue: anchor.insets)
     }
 
     var body: some View {
@@ -338,7 +347,9 @@ private struct CastMorph: View {
             let scale = box.width / max(full.width, 1)
             let radius = open ? (drag > 0 ? 38 : 0) : (mini?.height ?? 0) / 2
             ZStack(alignment: .topLeading) {
+                // The box spans the whole screen, so the controller gets the safe area back.
                 CastController()
+                    .safeAreaPadding(insets ?? proxy.safeAreaInsets)
                     .frame(width: full.width, height: full.height)
                     .scaleEffect(scale, anchor: .topLeading)
                     .offset(x: box.minX, y: box.minY)
@@ -362,7 +373,7 @@ private struct CastMorph: View {
             .simultaneousGesture(
                 DragGesture(minimumDistance: 12)
                     .onChanged { value in
-                        guard open, value.startLocation.y < 140 else { return }
+                        guard open, value.startLocation.y < 170 else { return }
                         drag = max(0, value.translation.height)
                     }
                     .onEnded { value in
