@@ -239,10 +239,19 @@ static class Motion
         _ => SpringSpline(),
     };
 
+#if KAERI_TESTING
+    /// <summary>A motion clip's: every fade this many times slower (KAERI_MOTION_SCALE), so a short run of stills catches its curve.</summary>
+    static readonly double Scale = double.TryParse(Environment.GetEnvironmentVariable("KAERI_MOTION_SCALE"), System.Globalization.NumberStyles.Float,
+        System.Globalization.CultureInfo.InvariantCulture, out var scale) && scale is > 0 and <= 50 ? scale : 1;
+#endif
+
     static void Fade(UIElement element, double from, double to, TimeSpan time, Curve curve, Action? done)
     {
         if (running.Remove(element, out var was))
             was.Stop();
+#if KAERI_TESTING
+        time *= Scale;
+#endif
         var animation = new DoubleAnimationUsingKeyFrames();
         animation.KeyFrames.Add(new DiscreteDoubleKeyFrame { KeyTime = TimeSpan.Zero, Value = from });
         animation.KeyFrames.Add(new SplineDoubleKeyFrame { KeyTime = time, Value = to, KeySpline = Spline(curve) });
