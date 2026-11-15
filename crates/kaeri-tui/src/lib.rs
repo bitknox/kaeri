@@ -13,11 +13,13 @@ pub mod keymap;
 pub mod layout;
 pub mod logo;
 pub mod nav;
+pub mod novel;
+pub mod probe;
 pub mod screens;
 pub mod theme;
 pub mod widgets;
 
-pub use app::{App, NowPlaying, Toast};
+pub use app::{App, NowPlaying, PageJob, Toast};
 pub use clock::{Clock, Zone};
 pub use eyecatch::Eyecatch;
 pub use keymap::{Action, Binding, Keymap, Scope};

@@ -1,5 +1,5 @@
 source-picker-seeders = { $count ->
-    [one] Один сидер
+    [one] { $count } сидер
     [few] { $count } сидера
     [many] { $count } сидеров
    *[other] { $count } сидера

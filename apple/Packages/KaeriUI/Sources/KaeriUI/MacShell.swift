@@ -238,14 +238,15 @@ struct LibraryToolbar: View {
     }
 }
 
-/// Your sources' toolbar: Add a source with reading on, beside the stores' check with shows.
+/// Your sources' toolbar: Add a source with reading on and a source listed, beside the stores'
+/// check with shows.
 struct SourcesToolbar: View {
     @Environment(AppStore.self) private var store
 
     var body: some View {
         HStack(spacing: 8) {
             if store.medium.answer != .read { ProvidersToolbar() }
-            if store.medium.answer != .watch { BookSourcesToolbar() }
+            if BookSourcesToolbar.shows(store) { BookSourcesToolbar() }
         }
     }
 }

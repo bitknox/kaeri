@@ -31,7 +31,7 @@ accounts-screen-title = Contas
 accounts-badge-sign-in = { $tracker } { $mark } entrar
 accounts-needs-sign-in = Entre de novo em { $tracker }. Pressione { $key } para abrir Contas.
 accounts-conflicts-found = { $count ->
-    [one] 1 diferença de sincronização encontrada. Pressione { $key } para revisar.
+    [one] { $count } diferença de sincronização encontrada. Pressione { $key } para revisar.
     [many] { $count } diferenças de sincronização encontradas. Pressione { $key } para revisá-las.
    *[other] { $count } diferenças de sincronização encontradas. Pressione { $key } para revisá-las.
  }
@@ -66,7 +66,7 @@ accounts-row-signed-in-as = Conectado como { $user }
 accounts-row-connected = Conectado
 accounts-row-not-connected = Não conectado
 accounts-row-queued = { $count ->
-    [one] 1 alteração na fila
+    [one] { $count } alteração na fila
     [many] { $count } alterações na fila
    *[other] { $count } alterações na fila
  }
@@ -136,7 +136,7 @@ lists-progress-aired = { $total ->
    *[other] { $done } de { $total } episódios saíram
  }
 lists-progress-watched = { $count ->
-    [one] 1 episódio assistido
+    [one] { $count } episódio assistido
     [many] { $count } episódios assistidos
    *[other] { $count } episódios assistidos
  }

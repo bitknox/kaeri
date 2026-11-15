@@ -53,6 +53,16 @@ pub fn meter(fraction: f64, width: usize) -> String {
     filled + &empty
 }
 
+/// A meter of `width` whole cells, filled for the share of them `fraction` covers and no
+/// further: a count of chapters read, where a partial cell would claim part of a chapter.
+pub fn meter_whole(fraction: f64, width: usize) -> String {
+    let full = ((fraction.clamp(0.0, 1.0) * width as f64) as usize).min(width);
+    let mut cells = String::with_capacity(width * 3);
+    cells.extend(std::iter::repeat_n(METER_FULL, full));
+    cells.extend(std::iter::repeat_n(METER_EMPTY, width - full));
+    cells
+}
+
 /// The two halves of a meter, so callers can style them separately: the filled portion
 /// (full cells plus the ramp cell) and the empty track.
 ///
@@ -168,6 +178,16 @@ mod tests {
             }
         }
         assert_eq!(meter_parts(0.5, 0), (String::new(), String::new()));
+    }
+
+    #[test]
+    fn a_whole_cell_meter_fills_only_whole_cells() {
+        // 13 of 17 is 15.3 cells of 20: fifteen filled, never a sliver of the sixteenth.
+        assert_eq!(meter_whole(13.0 / 17.0, 20), "███████████████░░░░░");
+        assert_eq!(meter_whole(0.0, 4), "░░░░");
+        assert_eq!(meter_whole(1.0, 4), "████");
+        assert_eq!(meter_whole(0.99, 4), "███░");
+        assert_eq!(meter_whole(0.5, 0), "");
     }
 
     #[test]

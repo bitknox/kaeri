@@ -1,0 +1,96 @@
+Kaeri                                                sources ● 3  ·  anilist ⇅ 2
+────────────────────────────────────────────────────────────────────────────────
+────────────────────────────────────────────────────────────────────────────────
+▌ Keys
+────────────────────────────────────────────────────────────────────────────────
+  Reader                                Reader view
+    Next page           space / pgdn      Paged or strip                 m
+    Previous page   backspace / pgup      Fit screen or width            f
+    Page to the left           ← / h      Zoom                           z
+    Page to the right          → / l      Zoom in                        +
+    Scroll down                j / ↓      Zoom out                       -
+    Scroll up                  k / ↑      One or two pages               v
+    First page                     g      Reader settings                ,
+    Last page                      G
+    Next chapter                   n    Global
+    Previous chapter               N      Show keys                      ?
+    Chapters                       e      Run a command         : / ctrl+k
+    Back to page                   b      Leave the reader         q / esc
+    Read or unread                 u      Quit                  Q / ctrl+c
+    Download this chapter          d      Recent messages                !
+    Bare page                      ↵
+
+────────────────────────────────────────────────────────────────────────────────
+Page 8 of 22                                                           esc close
+=== styles ===
+colours text=#e4e0d6 text-dim=#a8aec9 rule=#46464d obi=#f2a64b state=#7fc7d9 alert=#f59b85 ground=#1a1b26
+r00 c00-04 fg=text mod=BOLD
+r00 c53-63 fg=state
+r00 c66-66 fg=rule
+r00 c69-79 fg=state
+r01 c00-79 fg=rule
+r02 c00-79 fg=rule
+r03 c00-00 fg=obi
+r03 c02-05 fg=text mod=BOLD
+r04 c00-79 fg=rule
+r05 c02-07 fg=text-dim
+r05 c40-50 fg=text-dim
+r06 c04-12 fg=text
+r06 c24-35 fg=text
+r06 c42-55 fg=text
+r06 c73-73 fg=text
+r07 c04-16 fg=text
+r07 c20-35 fg=text
+r07 c42-60 fg=text
+r07 c73-73 fg=text
+r08 c04-19 fg=text
+r08 c31-35 fg=text
+r08 c42-45 fg=text
+r08 c73-73 fg=text
+r09 c04-20 fg=text
+r09 c31-35 fg=text
+r09 c42-48 fg=text
+r09 c73-73 fg=text
+r10 c04-14 fg=text
+r10 c31-35 fg=text
+r10 c42-49 fg=text
+r10 c73-73 fg=text
+r11 c04-12 fg=text
+r11 c31-35 fg=text
+r11 c42-57 fg=text
+r11 c73-73 fg=text
+r12 c04-13 fg=text
+r12 c35-35 fg=text
+r12 c42-56 fg=text
+r12 c73-73 fg=text
+r13 c04-12 fg=text
+r13 c35-35 fg=text
+r14 c04-15 fg=text
+r14 c35-35 fg=text
+r14 c40-45 fg=text-dim
+r15 c04-19 fg=text
+r15 c35-35 fg=text
+r15 c42-50 fg=text
+r15 c73-73 fg=text
+r16 c04-11 fg=text
+r16 c35-35 fg=text
+r16 c42-54 fg=text
+r16 c64-73 fg=text
+r17 c04-15 fg=text
+r17 c35-35 fg=text
+r17 c42-57 fg=text
+r17 c67-73 fg=text
+r18 c04-17 fg=text
+r18 c35-35 fg=text
+r18 c42-45 fg=text
+r18 c64-73 fg=text
+r19 c04-24 fg=text
+r19 c35-35 fg=text
+r19 c42-56 fg=text
+r19 c73-73 fg=text
+r20 c04-12 fg=text
+r20 c35-35 fg=text
+r22 c00-79 fg=rule
+r23 c00-11 fg=text-dim
+r23 c71-73 fg=text
+r23 c74-79 fg=text-dim

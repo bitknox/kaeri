@@ -73,6 +73,135 @@ impl Keymap {
     }
 }
 
+/// The reader's key reference, in the order its columns list them. Try again and Skip work in
+/// one state each, and come last.
+const READER_ROWS: &[Action] = &[
+    Action::ReaderNext,
+    Action::ReaderPrevious,
+    Action::ReaderLeft,
+    Action::ReaderRight,
+    Action::ReaderScrollDown,
+    Action::ReaderScrollUp,
+    Action::ReaderFirst,
+    Action::ReaderLast,
+    Action::ReaderNextChapter,
+    Action::ReaderPreviousChapter,
+    Action::ReaderChapters,
+    Action::ReaderBackToPage,
+    Action::ReaderMarkRead,
+    Action::ReaderDownload,
+    Action::ReaderBare,
+    Action::ReaderAgain,
+    Action::ReaderSkip,
+];
+
+const READER_VIEW_ROWS: &[Action] = &[
+    Action::ReaderMode,
+    Action::ReaderFit,
+    Action::ReaderZoom,
+    Action::ReaderZoomIn,
+    Action::ReaderZoomOut,
+    Action::ReaderPages,
+    Action::ReaderNarrower,
+    Action::ReaderWider,
+    Action::ReaderSettings,
+];
+
+const READER_GLOBAL_ROWS: &[Action] = &[
+    Action::Help,
+    Action::CommandPalette,
+    Action::ReaderLeave,
+    Action::Quit,
+    Action::ShowLogs,
+];
+
+impl Keymap {
+    /// The reader's key reference: its own keys first, then how it shows pages, then the global
+    /// keys it keeps, each with the keys that reach it in the reader. Read off the live tables,
+    /// so a rebind shows; an action with no key is left out.
+    ///
+    /// Keys that do nothing in the open chapter are left out: no fit, zoom or two pages in a
+    /// light novel (`novel`), no text width in manga, and no page to the left or right, fit or
+    /// zoom in a strip (`strip`).
+    pub fn reader_help(
+        &self,
+        novel: bool,
+        strip: bool,
+    ) -> Vec<(&'static str, Vec<(String, &'static str)>)> {
+        let here = |action: &Action| {
+            if strip
+                && matches!(
+                    action,
+                    Action::ReaderLeft
+                        | Action::ReaderRight
+                        | Action::ReaderFit
+                        | Action::ReaderZoom
+                        | Action::ReaderZoomIn
+                        | Action::ReaderZoomOut
+                )
+            {
+                return false;
+            }
+            if novel {
+                !matches!(
+                    action,
+                    Action::ReaderFit
+                        | Action::ReaderZoom
+                        | Action::ReaderZoomIn
+                        | Action::ReaderZoomOut
+                        | Action::ReaderPages
+                )
+            } else {
+                !matches!(action, Action::ReaderNarrower | Action::ReaderWider)
+            }
+        };
+        let label = |action: Action| match action {
+            Action::ReaderMode if novel => said(kaeri_i18n::t::tui_reader_action_mode_novel()),
+            _ => action.label(),
+        };
+        let rows = |actions: &[Action]| -> Vec<(String, &'static str)> {
+            actions
+                .iter()
+                .filter(|action| here(action))
+                .filter_map(|action| {
+                    let mut keys = self.keys_in(*action, super::Context::Reading);
+                    if keys.is_empty() {
+                        return None;
+                    }
+                    keys.sort();
+                    // The arrow is the turn key; its letter is the vim alias. Scrolling is the
+                    // other way round: j and k first, as the board lists them.
+                    if matches!(action, Action::ReaderScrollDown | Action::ReaderScrollUp) {
+                        keys.sort_by_key(|b| {
+                            !matches!(b.code, crossterm::event::KeyCode::Char(_))
+                        });
+                    }
+                    if matches!(action, Action::ReaderLeft | Action::ReaderRight) {
+                        keys.sort_by_key(|b| {
+                            !matches!(
+                                b.code,
+                                crossterm::event::KeyCode::Left
+                                    | crossterm::event::KeyCode::Right
+                            )
+                        });
+                    }
+                    let rendered =
+                        keys.iter().map(Binding::render).collect::<Vec<_>>().join(" / ");
+                    Some((rendered, label(*action)))
+                })
+                .collect()
+        };
+        vec![
+            (Scope::Reader.heading(), rows(READER_ROWS)),
+            (Scope::ReaderView.heading(), rows(READER_VIEW_ROWS)),
+            (Scope::Global.heading(), rows(READER_GLOBAL_ROWS)),
+        ]
+        .into_iter()
+        .filter(|(_, rows)| !rows.is_empty())
+        .collect()
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -157,5 +286,70 @@ mod tests {
             assert!(scopes.contains(&expected), "{expected:?} missing from help");
         }
         assert!(help.iter().all(|(_, rows)| !rows.is_empty()));
+    }
+
+    #[test]
+    fn the_reader_s_reference_lists_its_keys_then_the_global_ones() {
+        let help = Keymap::new().reader_help(false, false);
+        let headings: Vec<&str> = help.iter().map(|(h, _)| *h).collect();
+        assert_eq!(
+            headings,
+            [Scope::Reader.heading(), Scope::ReaderView.heading(), Scope::Global.heading()]
+        );
+        let reader = &help[0].1;
+        assert_eq!(reader[0], ("space / pgdn".to_string(), Action::ReaderNext.label()));
+        assert_eq!(reader[1], ("backspace / pgup".to_string(), Action::ReaderPrevious.label()));
+        assert_eq!(reader[2], ("← / h".to_string(), Action::ReaderLeft.label()));
+        let global = &help[2].1;
+        assert!(global.contains(&("q / esc".to_string(), Action::ReaderLeave.label())));
+        assert!(global.contains(&("Q / ctrl+c".to_string(), Action::Quit.label())));
+        // Section digits and Tab do nothing in the reader, so its reference leaves them out.
+        assert!(!help.iter().flat_map(|(_, rows)| rows).any(|(k, _)| k == "tab"));
+        let view = &help[1].1;
+        assert!(!view.iter().any(|(k, _)| k == "[" || k == "]"), "no width in manga");
+        assert!(view.contains(&("z".to_string(), Action::ReaderZoom.label())));
+    }
+
+    #[test]
+    fn the_reader_s_reference_ends_its_column_with_try_again_and_skip() {
+        let help = Keymap::new().reader_help(false, false);
+        let reader = &help[0].1;
+        let last: Vec<_> = reader.iter().rev().take(2).rev().cloned().collect();
+        assert_eq!(
+            last,
+            [
+                ("r".to_string(), Action::ReaderAgain.label()),
+                ("s".to_string(), Action::ReaderSkip.label()),
+            ]
+        );
+    }
+
+    #[test]
+    fn a_strip_s_reference_has_no_page_to_the_left_or_right_and_no_zoom() {
+        let help = Keymap::new().reader_help(false, true);
+        let reader = &help[0].1;
+        for gone in [Action::ReaderLeft, Action::ReaderRight] {
+            assert!(
+                !reader.iter().any(|(_, label)| *label == gone.label()),
+                "{gone:?} left out"
+            );
+        }
+        let view = &help[1].1;
+        for gone in [Action::ReaderFit, Action::ReaderZoom, Action::ReaderZoomIn] {
+            assert!(!view.iter().any(|(_, label)| *label == gone.label()), "{gone:?} left out");
+        }
+        assert!(reader.contains(&("j / ↓".to_string(), Action::ReaderScrollDown.label())));
+    }
+
+    #[test]
+    fn a_novel_s_reference_has_the_width_keys_and_no_zoom() {
+        let help = Keymap::new().reader_help(true, false);
+        let view = &help[1].1;
+        assert!(view.contains(&("[".to_string(), Action::ReaderNarrower.label())));
+        assert!(view.contains(&("]".to_string(), Action::ReaderWider.label())));
+        assert!(view.contains(&("m".to_string(), "Paged or scrolled")));
+        for gone in [Action::ReaderFit, Action::ReaderZoom, Action::ReaderPages] {
+            assert!(!view.iter().any(|(_, label)| *label == gone.label()), "{gone:?} left out");
+        }
     }
 }

@@ -1,7 +1,7 @@
 /* The Features page. The bands, frames and diagrams it shares with Home are in pages.css. */
 
 .f-hero {
-	padding: 72px 32px 104px;
+	padding: clamp(28px, 4vw, 72px) var(--gutter) var(--space-section);
 }
 
 .f-in {
@@ -10,7 +10,7 @@
 }
 
 .f-hero-row {
-	margin-top: 18px;
+	margin-top: 20px;
 	display: flex;
 	flex-wrap: wrap;
 	align-items: center;
@@ -24,39 +24,31 @@
 }
 
 .f-hero-row .k-arrow {
-	font-size: 17px;
+	font-size: var(--fs-body);
 }
 
 .f-sect {
-	padding: 0 32px 120px;
+	padding: 0 var(--gutter) var(--space-section);
 }
 
-.band + .f-sect {
-	padding-top: 120px;
+/* Every section opens on a hairline, as on Home. */
+.f-sect > .f-in {
+	padding-top: clamp(28px, 2vw + 16px, 44px);
+	border-top: 1px solid var(--ani-rule);
 }
 
 .f-sect .band-head {
 	padding-top: 0;
 }
 
-/* A hairline between the hero and the first section, as on the board. */
-.f-hero + .f-sect > .f-in {
-	padding-top: 56px;
-	border-top: 1px solid var(--ani-rule);
-}
-
 .f-fig {
-	margin: 56px 0 0;
-}
-
-.f-hero .f-fig {
-	margin-top: 56px;
+	margin: var(--space-head) 0 0;
 }
 
 .f-fig figcaption,
 .f-compare figcaption {
 	margin-top: 14px;
-	font-size: 14px;
+	font-size: var(--fs-caption);
 	line-height: 1.5;
 	color: var(--ani-dim);
 }
@@ -64,6 +56,17 @@
 .f-fig figcaption a,
 .f-compare figcaption a {
 	color: var(--ani-dim);
+}
+
+/* The terminal app: Home across the top, then watching and reading two by two. */
+.f-term {
+	display: grid;
+	grid-template-columns: repeat(2, minmax(0, 1fr));
+	gap: 24px;
+}
+
+.f-term > .term-shot:first-child {
+	grid-column: 1 / -1;
 }
 
 .f-pair {
@@ -148,13 +151,13 @@
 }
 
 .small-grid dt {
-	font-size: 16px;
+	font-size: var(--fs-body);
 	font-weight: 600;
 }
 
 .small-grid dd {
 	margin: 2px 0 0;
-	font-size: 15px;
+	font-size: var(--fs-small);
 	line-height: 1.5;
 	color: var(--ani-dim);
 }
@@ -164,13 +167,13 @@
 }
 
 .f-matrix {
-	padding-bottom: 136px;
+	padding-bottom: var(--space-section);
 }
 
 .matrix-lede {
 	margin: 20px 0 0;
 	max-width: 820px;
-	font-size: 19px;
+	font-size: var(--fs-lede);
 	line-height: 1.55;
 	color: var(--ani-dim);
 }
@@ -182,7 +185,7 @@
 	display: flex;
 	flex-wrap: wrap;
 	gap: 12px 28px;
-	font-size: 15px;
+	font-size: var(--fs-small);
 	color: var(--ani-dim);
 }
 
@@ -219,6 +222,7 @@
 .matrix-scroll {
 	margin-top: 32px;
 	overflow-x: auto;
+	overscroll-behavior-x: contain;
 }
 
 .matrix {
@@ -235,7 +239,7 @@
 
 .matrix thead th {
 	padding: 0 8px 12px;
-	font-size: 14px;
+	font-size: var(--fs-caption);
 	font-weight: 600;
 	width: 9%;
 	border-bottom-color: var(--ani-rule);
@@ -247,10 +251,14 @@
 	width: auto;
 }
 
+.matrix thead th:first-child {
+	padding-left: 0;
+}
+
 .matrix tbody th[scope='row'] {
 	padding: 12px 16px 12px 0;
 	font-weight: 500;
-	font-size: 15px;
+	font-size: var(--fs-small);
 }
 
 .matrix td {
@@ -260,7 +268,7 @@
 .matrix .matrix-group th {
 	padding: 28px 0 10px;
 	text-align: left;
-	font-size: 13px;
+	font-size: var(--fs-caption);
 	font-weight: 600;
 	color: var(--ani-dim);
 	border-bottom-color: var(--ani-rule);
@@ -273,7 +281,7 @@
 
 .matrix-note {
 	margin: 20px 0 0;
-	font-size: 15px;
+	font-size: var(--fs-small);
 	color: var(--ani-dim);
 }
 
@@ -286,26 +294,6 @@
 }
 
 @media (max-width: 700px) {
-	.band + .f-sect {
-		padding-top: 72px;
-	}
-
-	.f-hero {
-		padding: 28px 16px 56px;
-	}
-
-	.f-sect {
-		padding: 0 16px 72px;
-	}
-
-	.f-hero-row .k-arrow {
-		font-size: 16px;
-	}
-
-	.f-fig {
-		margin-top: 32px;
-	}
-
 	.f-pair {
 		aspect-ratio: auto;
 		display: flex;
@@ -340,8 +328,49 @@
 		flex: none;
 	}
 
+	/* The screens scroll sideways, a little of the next one showing. */
+	.f-term {
+		display: flex;
+		gap: 12px;
+		margin-inline: calc(var(--gutter) * -1);
+		padding-inline: var(--gutter);
+		overflow-x: auto;
+		scroll-snap-type: x mandatory;
+		scroll-padding-inline: var(--gutter);
+		overscroll-behavior-x: contain;
+		scrollbar-width: none;
+	}
+
+	.f-term::-webkit-scrollbar {
+		display: none;
+	}
+
+	.f-term > .term-shot {
+		flex: 0 0 86%;
+		scroll-snap-align: start;
+	}
+
 	.matrix-scroll {
-		margin-inline: -16px;
-		padding-inline: 16px;
+		margin-inline: calc(var(--gutter) * -1);
+		padding-inline: var(--gutter);
+	}
+
+	/* The feature names stay put while the platforms scroll under them; the solid edge to their
+	   left covers the gutter, so nothing shows beside a name. */
+	.matrix thead th:first-child,
+	.matrix tbody th[scope='row'] {
+		position: sticky;
+		left: 0;
+		z-index: 1;
+		width: 10.5rem;
+		background: var(--ani-ground);
+		box-shadow: calc(var(--gutter) * -1) 0 0 var(--ani-ground);
+	}
+
+	/* A group spans the whole row, so its label sticks inside it instead. */
+	.matrix .matrix-group th span {
+		position: sticky;
+		left: 0;
+		display: inline-block;
 	}
 }

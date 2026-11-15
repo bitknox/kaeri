@@ -1,0 +1,135 @@
+/* Starlight's layer order, and the parts of Starlight the site's search needs on every page.
+
+   The top bar (SiteHeader) imports this before anything else, so the order below is the first
+   `@layer` statement on every page. Without it, the search's own styles in starlight.core came
+   first on docs pages and Starlight's reset then won over them. The other pages have none of
+   Starlight's CSS, so the palette, the few type sizes and the show-and-hide classes the search
+   dialog reads are here too. docs.css builds on the same palette. */
+
+@layer starlight.base, starlight.reset, starlight.core, starlight.content, starlight.components, starlight.utils;
+
+@layer starlight.base {
+	:root {
+		--sl-text-2xs: 0.75rem;
+		--sl-text-sm: 0.875rem;
+		--sl-text-xl: 1.25rem;
+		--sl-font-system: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+		--__sl-font: var(--sl-font, var(--sl-font-system)), var(--sl-font-system);
+	}
+}
+
+@layer starlight.utils {
+	.sl-hidden {
+		display: none;
+	}
+	.sl-flex {
+		display: flex;
+	}
+	@media (min-width: 50rem) {
+		.md\:sl-hidden {
+			display: none;
+		}
+		.md\:sl-flex {
+			display: flex;
+		}
+		.md\:sl-block {
+			display: block;
+		}
+	}
+}
+
+:root {
+	--ani-over-art: rgb(16 19 31 / 0.72);
+	--sl-color-text: var(--ani-text);
+}
+
+/* ── Starlight's palette ───────────────────────────────────────────────────
+   Light, the base: Starlight inverts the ramp in light, so the whole scale is written out.
+   --sl-color-white is the text end of the ramp, --sl-color-black the ground. */
+:root {
+	--sl-color-accent-low: #f0ddc2;
+	--sl-color-accent: #7a4309;
+	--sl-color-accent-high: #5e3407;
+	--sl-color-white: #1e2033;
+	--sl-color-gray-1: #1e2033;
+	--sl-color-gray-2: #1e2033;
+	--sl-color-gray-3: #4f546e;
+	--sl-color-gray-4: #c2c0bd;
+	--sl-color-gray-5: #d7d4cf;
+	--sl-color-gray-6: #e3e1d9;
+	--sl-color-gray-7: #e8e5dd;
+	--sl-color-black: #f0ede4;
+
+	--sl-color-text-accent: var(--ani-text);
+	--sl-color-text-invert: #f0ede4;
+	--sl-color-bg-nav: var(--sl-color-black);
+	--sl-color-bg-sidebar: var(--sl-color-black);
+	--sl-color-bg-inline-code: var(--ani-raised);
+	--sl-color-hairline: var(--ani-rule-faint);
+	--sl-color-hairline-light: var(--ani-rule-faint);
+	--sl-color-hairline-shade: var(--ani-rule-faint);
+	--sl-color-backdrop-overlay: var(--ani-over-art);
+
+	--sl-color-blue: #1f5d6e;
+	--sl-color-blue-low: #dce8e4;
+	--sl-color-blue-high: #174754;
+	--sl-color-orange: #7a4309;
+	--sl-color-orange-low: #f0dfc4;
+	--sl-color-orange-high: #5e3407;
+	--sl-color-red: #94301f;
+	--sl-color-red-low: #f0ddd2;
+	--sl-color-red-high: #732517;
+
+	--sl-shadow-sm: none;
+	--sl-shadow-md: none;
+	--sl-shadow-lg: none;
+
+	--sl-font: var(--ani-font-ui);
+	--sl-font-mono: var(--ani-font-mono);
+	--sl-line-height: 1.625;
+	--sl-line-height-headings: 1.2;
+	--sl-text-h1: 2rem;
+	--sl-text-h2: 1.375rem;
+	--sl-text-h3: 1.125rem;
+	--sl-text-h4: 1rem;
+}
+
+@media (min-width: 50em) {
+	:root {
+		--sl-text-h1: 2.5rem;
+		--sl-text-h2: 1.5rem;
+		--sl-text-h3: 1.1875rem;
+		--sl-text-h4: 1rem;
+	}
+}
+
+/* Dark: --sl-color-white is the text end here too. Starlight's dark ramp has no gray-7. */
+:root[data-theme='dark'] {
+	--sl-color-accent-low: #352e32;
+	--sl-color-accent: #f2a64b;
+	--sl-color-accent-high: #f7c88f;
+	--sl-color-white: #e4e0d6;
+	--sl-color-gray-1: #e4e0d6;
+	--sl-color-gray-2: #e4e0d6;
+	--sl-color-gray-3: #9298b5;
+	--sl-color-gray-4: #434653;
+	--sl-color-gray-5: #2f3242;
+	--sl-color-gray-6: #222638;
+	--sl-color-gray-7: initial;
+	--sl-color-black: #10131f;
+
+	--sl-color-text-accent: var(--ani-text);
+	--sl-color-text-invert: #161a2e;
+	--sl-color-bg-nav: var(--sl-color-black);
+	--sl-color-bg-sidebar: var(--sl-color-black);
+
+	--sl-color-blue: #7fc7d9;
+	--sl-color-blue-low: color-mix(in srgb, #7fc7d9 14%, var(--ani-ground));
+	--sl-color-blue-high: #a8dbe8;
+	--sl-color-orange: #f2a64b;
+	--sl-color-orange-low: color-mix(in srgb, #f2a64b 14%, var(--ani-ground));
+	--sl-color-orange-high: #f7c88f;
+	--sl-color-red: #e06b54;
+	--sl-color-red-low: color-mix(in srgb, #e06b54 14%, var(--ani-ground));
+	--sl-color-red-high: #eb9a8a;
+}

@@ -33,7 +33,10 @@ pub struct Handoff {
 }
 
 impl Handoff {
-    /// Whether a playback is still running in the window.
+    /// Whether a playback is still running in the window: its controls are open. A playback
+    /// closes them before it says its ending, so a play asked for on hearing that ending never
+    /// takes the one that ended for live, keeping a window that is gone and saying no ending of
+    /// its own.
     pub fn live(&self) -> bool {
         self.previous.as_ref().is_some_and(|p| !p.is_closed())
     }

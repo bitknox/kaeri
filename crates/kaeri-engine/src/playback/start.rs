@@ -128,7 +128,7 @@ pub fn cast_to(
         Some(at) if at >= CARRY_FROM => {
             let event = kaeri_store::WatchEvent::new(id, episode.clone(), at);
             if let Err(e) = services.store.record_event(&event) {
-                tracing::warn!(error = %e, "couldn't carry the position over to the cast");
+                tx.not_kept("the position carried over to the cast", &e);
             }
             false
         }
@@ -230,7 +230,7 @@ fn stage(
     });
     let (id, episode) = (played.id, played.episode.clone());
     // What the player starts at when it remembers a speed, and Now Playing until it says.
-    let speed = engine.config.effective().playback.persisted_speed.unwrap_or(1.0);
+    let speed = engine.config.effective().playback.carried_speed().unwrap_or(1.0);
     match opener.target() {
         PlayerTarget::Local => {
             Event::PlaybackStaged { id, title, episode, episode_title, speed, resume }
@@ -504,7 +504,7 @@ pub fn play_local(
             // A local file's real length is knowable, but the hint only serves
             // the aniskip fallback and a lie would filter its answers.
             runtime_secs: None,
-            speed: playback.persist_speed.then_some(playback.persisted_speed).flatten(),
+            speed: playback.carried_speed(),
             volume: playback.persist_volume.then_some(playback.persisted_volume).flatten(),
             next,
             episodes,
@@ -800,6 +800,8 @@ fn spawn_playback(
             // The episode it was to take over stops with it: what the viewer stopped.
             Err(Overtaken::Stopped) => {
                 handoff.stop();
+                // Its controls closed before its ending is said: see `Handoff::live`.
+                drop(commands);
                 stopped_unopened(&slot, &tx);
                 return;
             }
@@ -857,6 +859,9 @@ fn spawn_playback(
                 }
                 // A window left open for this episode would wait for nothing.
                 slot.release();
+                // Its controls closed before its ending is said: a play asked for on hearing
+                // the ending takes this one for over only once they are (`Handoff::live`).
+                drop(commands);
                 let _ = tx.send(Event::playback_failed(failure));
                 return;
             }

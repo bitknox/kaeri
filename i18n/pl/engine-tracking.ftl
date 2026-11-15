@@ -28,6 +28,19 @@ notice-signed-out-queue = { $count ->
     [many] Wylogowano z { $tracker }. { $count } zmian w kolejce zostanie zachowanych na następne logowanie.
    *[other] Wylogowano z { $tracker }. { $count } zmian w kolejce zostanie zachowanych na następne logowanie.
  }
+notice-tracker-change-refused = Zmiana w tytule { $title } była wielokrotnie odrzucana przez { $tracker }, więc zostaje tylko w { -app-name }.
+notice-tracker-changes-refused = { $others ->
+    [one] Zmiany w tytule { $title } i jeszcze jednym były wielokrotnie odrzucane przez { $tracker }, więc zostają tylko w { -app-name }.
+    [few] Zmiany w tytule { $title } i { $others } innych tytułach były wielokrotnie odrzucane przez { $tracker }, więc zostają tylko w { -app-name }.
+    [many] Zmiany w tytule { $title } i { $others } innych tytułach były wielokrotnie odrzucane przez { $tracker }, więc zostają tylko w { -app-name }.
+   *[other] Zmiany w tytule { $title } i { $others } innych tytułach były wielokrotnie odrzucane przez { $tracker }, więc zostają tylko w { -app-name }.
+ }
+notice-tracker-change-refused-untitled = { $count ->
+    [one] Zmiana była wielokrotnie odrzucana przez { $tracker }, więc zostaje tylko w { -app-name }.
+    [few] Zmiany w { $count } tytułach były wielokrotnie odrzucane przez { $tracker }, więc zostają tylko w { -app-name }.
+    [many] Zmiany w { $count } tytułach były wielokrotnie odrzucane przez { $tracker }, więc zostają tylko w { -app-name }.
+   *[other] Zmiany w { $count } tytułach były wielokrotnie odrzucane przez { $tracker }, więc zostają tylko w { -app-name }.
+ }
 notice-sign-out-failed = Nie udało się wylogować z { $tracker }. Spróbuj ponownie. { $reason }
 notice-not-saved-because = Nie udało się zapisać tego ustawienia. { $cause }
 notice-proxy-saved = Ruch torrentów idzie teraz przez proxy.

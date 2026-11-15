@@ -47,6 +47,16 @@ impl App {
     pub fn key_context(&self) -> Context {
         if self.nav.has_overlay() || self.is_typing() {
             Context::Modal
+        } else {
+            self.screen_context()
+        }
+    }
+
+    /// The table the screen under any overlay reads: the reader's while it has the window,
+    /// the player's while something plays.
+    pub fn screen_context(&self) -> Context {
+        if self.reader_here().is_some() {
+            Context::Reading
         } else if self.playing.is_some() {
             Context::Playing
         } else {
@@ -87,6 +97,10 @@ impl App {
     /// from Search's field, the field still has focus once the palette closes, and going back
     /// through the typing gate swallowed nearly every command.
     pub(super) fn perform(&mut self, action: Action, visible_rows: usize) -> Option<Command> {
+        // The reader has the whole window: its keys first, and nothing of the screen under it.
+        if let Some(task) = self.reader_key(action) {
+            return task;
+        }
         // Digits on the episode list build a number for `G` to go to; anything else lets go of it.
         if self.in_episodes() && self.nav.focus() == Focus::Stage {
             match action {
@@ -147,6 +161,10 @@ impl App {
             return task;
         }
 
+        // A reading series' page: Enter, `u`, `d`, `a` and `r` act on its chapters.
+        if let Some(task) = self.series_key(action) {
+            return task;
+        }
         // Reading's Home and Search: Enter, Your sources only, Tab, `r` and `f` are theirs.
         if let Some(task) = self.reading_key(action) {
             return task;
@@ -450,6 +468,9 @@ impl App {
             }
             Action::Open if self.nav.overlay() == Some(&Overlay::DownloadRange) => {
                 return self.submit_range();
+            }
+            Action::Open if self.nav.overlay() == Some(&Overlay::ReaderGoTo) => {
+                return self.submit_go_to_page();
             }
             // Enter runs the manual search; the results come back as ordinary match
             // choices, so the whole Disambiguate tail is reused unchanged.

@@ -604,11 +604,15 @@ sealed partial class ReadShelf : StackPanel
     public ReadShelf(string title, IEnumerable<UIElement> cards, string? link = null, Action? act = null, double cardWidth = HomeWording.PosterWidth, double artHeight = HomeWording.PosterHeight)
     {
         Margin = new Thickness(0, HomeWording.ShelfGap, 0, 0);
+        Linked = link is not null;
         Children.Add(ReadingParts.ShelfHeading(title, link, act));
         strip = new CoverStrip(title, cardWidth, artHeight);
         strip.Set([.. cards.OfType<FrameworkElement>()]);
         Children.Add(strip);
     }
+
+    /// <summary>Whether the heading has its link.</summary>
+    public bool Linked { get; }
 
     /// <summary>New cards in the same strip, which keeps its sideways place and the focus on the card it was on.</summary>
     public void Set(IEnumerable<UIElement> cards) => strip.Set([.. cards.OfType<FrameworkElement>()]);

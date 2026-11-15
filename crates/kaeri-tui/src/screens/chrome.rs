@@ -20,6 +20,45 @@ use crate::{
 use super::line;
 
 pub(super) fn render_header(buf: &mut Buffer, app: &App, geometry: &Frame) {
+    let chips = header_chips(app);
+    // Too narrow for the rail, nothing else says which section this is, so the title does.
+    let named = geometry.header.width < crate::layout::VERY_NARROW_WIDTH
+        && matches!(app.nav.current(), crate::nav::StageView::Section(_));
+    let title = if !named {
+        "Kaeri".to_owned() // i18n-skip: the product name
+    } else {
+        t::chrome_header_section(app.section_label(app.nav.section()))
+    };
+    Header::new(&app.palette, &title).chips(&chips).render(geometry.header, buf);
+    if offline_chip(app) {
+        alert_mark(buf, app, geometry.header, glyph::STATE_DOWN);
+    }
+}
+
+/// The series page is offline in reading alone: the sources chip says no source can be asked.
+fn offline_chip(app: &App) -> bool {
+    app.reading_only() && app.series_offline()
+}
+
+/// The offline chip's cross in the alert role, its words dim, as the board draws "sources ✕":
+/// the first `mark` after the wordmark, which is the first chip's.
+fn alert_mark(buf: &mut Buffer, app: &App, area: Rect, mark: char) {
+    let mut glyph = [0; 4];
+    let mark = mark.encode_utf8(&mut glyph);
+    let y = area.top();
+    for x in area.left()..area.right() {
+        if let Some(cell) = buf.cell_mut((x, y))
+            && cell.symbol() == mark
+        {
+            cell.set_style(app.palette.style(Role::Alert));
+            return;
+        }
+    }
+}
+
+/// The header's chips, right-aligned: the sources and how they stand, the proxy, the metadata
+/// ladder when it is degraded, and each tracker with its queue.
+pub(super) fn header_chips(app: &App) -> Vec<(String, Role)> {
     let mut chips: Vec<(String, Role)> = Vec::new();
 
     // One chip per configured source, in failover order, each saying how it stands. The chip
@@ -28,7 +67,11 @@ pub(super) fn render_header(buf: &mut Buffer, app: &App, geometry: &Frame) {
     // alert colour. Off is a choice and is said quietly; only a source that is failing alerts.
     // While Kaeri is for reading alone, the shows' sources say nothing about it: one chip says
     // how many of the person's book sources are on.
-    if app.reading_only() {
+    if offline_chip(app) {
+        // Offline on a series page: no source can be asked. The cross alone alerts; see
+        // `alert_mark`.
+        chips.push((t::tui_read_header_offline(&glyph::STATE_DOWN.to_string()), Role::TextDim));
+    } else if app.reading_only() {
         let on = app.read_sources_on();
         let (mark, role) = if on > 0 {
             (glyph::STATE_READY, Role::State)
@@ -77,15 +120,7 @@ pub(super) fn render_header(buf: &mut Buffer, app: &App, geometry: &Frame) {
         ));
     }
 
-    // Too narrow for the rail, nothing else says which section this is, so the title does.
-    let named = geometry.header.width < crate::layout::VERY_NARROW_WIDTH
-        && matches!(app.nav.current(), crate::nav::StageView::Section(_));
-    let title = if !named {
-        "Kaeri".to_owned() // i18n-skip: the product name
-    } else {
-        t::chrome_header_section(app.section_label(app.nav.section()))
-    };
-    Header::new(&app.palette, &title).chips(&chips).render(geometry.header, buf);
+    chips
 }
 
 /// The running jobs, newest first, each with how long it has taken, written into the status
@@ -164,7 +199,7 @@ pub(super) fn render_activity(
 }
 
 /// A short wait as the language writes it: `7s`, then `1m 05s`.
-fn clock(span: std::time::Duration) -> String {
+pub(super) fn clock(span: std::time::Duration) -> String {
     let secs = span.as_secs().max(1);
     if secs < 60 {
         t::duration_seconds(secs as i64)
@@ -210,6 +245,17 @@ pub(super) fn render_status(buf: &mut Buffer, app: &App, geometry: &Frame, help_
         return;
     }
     let wide = buf.area().width >= crate::layout::NARROW_WIDTH;
+    // A series page says it is reading's, or that it is offline, with its chapter's keys.
+    if app.status.is_empty() && app.series_here().is_some() {
+        let state = if app.series_offline() {
+            t::tui_read_status_offline()
+        } else {
+            app.read_status(wide)
+        };
+        let hints = status_hints_paged(app, help_pages);
+        StatusLine::new(&app.palette, &state).hints(&hints).render(geometry.status, buf);
+        return;
+    }
     if app.status.is_empty() && app.reading_here() {
         let state = app.read_status(wide);
         let hints = crate::keymap::reading_hints(app, wide)

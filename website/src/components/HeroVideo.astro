@@ -96,8 +96,10 @@ const base = '/features/mac-home';
 		transition: color var(--t-fast) var(--ease);
 	}
 
-	.hero-video-toggle:hover {
-		color: var(--ani-link-hover);
+	@media (hover: hover) and (pointer: fine) {
+		.hero-video-toggle:hover {
+			color: var(--ani-link-hover);
+		}
 	}
 
 	.hero-video-toggle .g-play,

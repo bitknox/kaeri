@@ -25,6 +25,9 @@ struct PagedReader: View {
     @State private var zoom = PageZoom()
     /// The pinch gesture is live. It goes back to false however the gesture stops, cancelled too.
     @GestureState private var magnifying = false
+    /// The swipe is live. It goes back to false however the swipe stops: a touch the system takes,
+    /// as when the window is resized by its corner, cancels the swipe with no `onEnded`.
+    @GestureState private var swiping = false
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     private var rtl: Bool { model.view?.direction == .rightToLeft }
@@ -47,13 +50,18 @@ struct PagedReader: View {
         }
         .frame(width: size.width, height: size.height)
         .clipped()
+        #if FIXTURES
+        .overlay(alignment: .topLeading) { PageZoomProbe(zoom: zoom.scale) }
+        #endif
         .contentShape(.rect)
         .gesture(swipe)
+        .onChange(of: swiping) { _, live in if !live { swipeGone() } }
         #if os(iOS)
-        // A double tap zooms, so a single tap waits for it not to be one.
-        .simultaneousGesture(
-            SpatialTapGesture(count: 2).onEnded { zoom.doubleTap(at: $0.location, in: size, motion: !reduceMotion && !paper) }
-                .exclusively(before: SpatialTapGesture().onEnded { tap($0.location.x / max(size.width, 1)) }))
+        // A double tap zooms, so a single tap waits for it not to be one. A tap on a control in
+        // the page, a failed page's Try again, is the control's alone.
+        .readerTaps(double: { zoom.doubleTap(at: $0, in: size, motion: !reduceMotion && !paper) }) {
+            tap($0.x / max(size.width, 1))
+        }
         .simultaneousGesture(
             MagnifyGesture()
                 .updating($magnifying) { _, live, _ in live = true }
@@ -63,7 +71,7 @@ struct PagedReader: View {
             if !live { zoom.pinchGone(in: size, motion: !reduceMotion && !paper) }
         }
         #else
-        .simultaneousGesture(SpatialTapGesture().onEnded { tap($0.location.x / max(size.width, 1)) })
+        .readerTaps { tap($0.x / max(size.width, 1)) }
         #endif
         .onAppear { model.position = (current, max(model.leaves.count, 1)) }
         .onChange(of: model.current) { _, _ in
@@ -73,6 +81,11 @@ struct PagedReader: View {
         .onChange(of: model.leaves.count) { _, _ in
             model.position = (current, max(model.leaves.count, 1))
             zoom.reset()
+        }
+        // Zoom In, Zoom Out and Fit to Window, from the keys or the Go menu.
+        .onChange(of: model.pageZoomAsked) { _, asked in
+            guard let asked else { return }
+            zoom.step(asked.step, in: size, motion: !reduceMotion && !paper)
         }
         // A place the app chose (Back to page, Start over, another device's, a change of mode) is
         // its own move, never the person's jump.
@@ -242,8 +255,18 @@ struct PagedReader: View {
         }
     }
 
+    /// The swipe stopped. Every `onEnded` leaves the pages at rest or settling; one cancelled
+    /// left them where the finger had them, a slice of the next page showing, and a pan's start
+    /// kept for the next pan. They spring back as a swipe let go short does.
+    private func swipeGone() {
+        zoom.dragEnded()
+        guard !settling, drag != 0 else { return }
+        withAnimation(paper ? nil : .standard) { drag = 0 }
+    }
+
     private var swipe: some Gesture {
         DragGesture(minimumDistance: 14)
+            .updating($swiping) { _, live, _ in live = true }
             .onChanged { value in
                 guard !settling else { return }
                 // A zoomed page pans and never turns; a pinch's fingers do neither.
@@ -414,6 +437,7 @@ struct ReaderEndPage: View {
                     .foregroundStyle(theme.silk)
                     .frame(minHeight: 44)
                     .buttonStyle(.plain)
+                    .takesItsOwnTaps()
                     .padding(.top, 4)
             }
         }
@@ -493,6 +517,7 @@ struct ReaderEndPage: View {
                     .frame(maxWidth: .infinity, minHeight: 44)
                     .contentShape(.rect)
                     .buttonStyle(.plain)
+                    .takesItsOwnTaps()
                     .padding(.top, 5)
             } else {
                 Button(L.readerBackToSeries) { closeReader() }
@@ -505,7 +530,7 @@ struct ReaderEndPage: View {
     private func column(_ next: ChapterRow?, phone: Bool) -> some View {
         let chapter = view?.chapter
         VStack(alignment: .leading, spacing: 0) {
-            Text(L.readerEndOfChapterNumber(chapter: chapter.map { $0.number ?? $0.label } ?? ""))
+            Text(chapter.map(Self.endOf) ?? "")
                 .font(.ui(15)).foregroundStyle(theme.haze)
             Text(readLine).font(.ui(13)).foregroundStyle(theme.haze)
                 .padding(.top, 4)
@@ -642,10 +667,17 @@ struct ReaderEndPage: View {
         .accessibilityHidden(true)
     }
 
+    /// "End of chapter 12", or a chapter with no number by its own name: a book in one file is
+    /// named for the book, never "End of chapter <title>".
+    static func endOf(_ chapter: ChapterRow) -> String {
+        chapter.number.map { L.readerEndOfChapterNumber(chapter: $0) } ?? L.readerEndOfNamed(name: chapter.label)
+    }
+
     /// "Chapter 13 · 34 pages · from books.home.example": the chapter's number when it has a
-    /// title of its own, its length, and the source it came from.
+    /// title of its own, its length, and the source it came from. A chapter with no number has
+    /// only its name, which the heading says.
     static func facts(_ next: ChapterRow, end: ReaderEnd?) -> String {
-        let chapter = next.title.map { _ in next.number ?? next.label }
+        let chapter = next.title.flatMap { _ in next.number }
         let pages = next.pages.flatMap { $0 > 0 ? L.readerEndPages(count: Int($0)) : nil }
         let facts: String? = switch (chapter, pages) {
         case (let chapter?, let pages?): L.readerEndFacts(chapter: chapter, facts: pages)
@@ -736,6 +768,8 @@ struct ReaderServerLine: View {
                 .foregroundStyle(Self.failed(line) ? theme.silk : theme.haze)
                 .fixedSize(horizontal: false, vertical: true)
         }
+        // Its Try again link is a control: a tap on the line is not a turn or the bar's.
+        .background { if line.canRetry { Color.clear.takesItsOwnTaps() } }
         .accessibilityElement(children: .combine)
         .accessibilityAction(named: L.readerTryAgain) { if line.canRetry { retry() } }
     }
@@ -838,7 +872,7 @@ struct ReaderSkippedLine: View {
                 .underline()
                 .buttonStyle(.plain)
                 // A 44 point target that keeps the line's own height.
-                .padding(.vertical, 12).contentShape(.rect).padding(.vertical, -12)
+                .padding(.vertical, 12).contentShape(.rect).takesItsOwnTaps().padding(.vertical, -12)
                 .pointerHover()
                 .accessibilityHint(L.readerCreditShowHint)
         }
@@ -847,3 +881,19 @@ struct ReaderSkippedLine: View {
         .dynamicTypeSize(...DynamicTypeSize.accessibility1)
     }
 }
+
+#if FIXTURES
+/// The page's zoom for the Audit tests, in the Fixtures app only: the page's image says its place,
+/// not how far it is zoomed.
+private struct PageZoomProbe: View {
+    let zoom: CGFloat
+
+    var body: some View {
+        Color.clear
+            .frame(width: 1, height: 1)
+            .accessibilityElement()
+            .accessibilityIdentifier("page-zoom")
+            .accessibilityValue(String(format: "%.2f", zoom))
+    }
+}
+#endif

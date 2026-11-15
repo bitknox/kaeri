@@ -241,6 +241,9 @@ struct State {
     always: Option<Failure>,
     /// Failures for one operation each, until healed: see [`FakeAniList::fail_operation`].
     failing: HashMap<Operation, Failure>,
+    /// Titles whose list saves are refused for good, as AniList answers a save for a title it
+    /// removed: see [`FakeAniList::refuse_saves_for`].
+    refused_saves: Vec<u64>,
     now: i64,
     /// How far the clock has moved on past `now` without the broadcasts moving with it: see
     /// [`FakeAniList::advance`].
@@ -318,6 +321,7 @@ impl FakeAniList {
             slow: HashMap::new(),
             said: VecDeque::new(),
             failing: HashMap::new(),
+            refused_saves: Vec::new(),
             art: None,
             art_trouble: ArtTrouble::default(),
             art_asked: HashMap::new(),
@@ -410,6 +414,12 @@ impl FakeAniList {
     /// [`Self::fail_next`] failures still come first.
     pub fn fail_always(&self, failure: Failure) {
         lock(&self.state).always = Some(failure);
+    }
+
+    /// Refuse every list save for title `id`, anime or manga, with AniList's `404` and "Not
+    /// Found.", as for a title it removed. Not lifted by [`Self::heal`].
+    pub fn refuse_saves_for(&self, id: u64) {
+        lock(&self.state).refused_saves.push(id);
     }
 
     /// Answer every request for `operation` with `failure` until [`Self::heal`], and every
@@ -1075,7 +1085,12 @@ fn answer(state: &Mutex<State>, head: &Head, body: &[u8]) -> Reply {
         let failure = limited
             .or_else(|| state.next.pop_front())
             .or_else(|| state.always.clone())
-            .or_else(|| state.failing.get(&operation).cloned());
+            .or_else(|| state.failing.get(&operation).cloned())
+            .or_else(|| {
+                let id = variables["mediaId"].as_u64()?;
+                (operation == Operation::SaveEntry && state.refused_saves.contains(&id))
+                    .then_some(Failure::Status(404))
+            });
         let clock = (state.now, state.ahead);
         let extra = state.extra.clone();
         let pool = state.catalogue.clone();

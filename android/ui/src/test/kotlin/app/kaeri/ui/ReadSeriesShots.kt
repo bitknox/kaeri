@@ -9,6 +9,7 @@ import app.kaeri.store.ExportJob
 import app.kaeri.store.FixtureScene
 import app.kaeri.store.GroupsStage
 import app.kaeri.store.ReadFromStage
+import app.kaeri.store.SendHoldStage
 import app.kaeri.ui.reading.SeriesShots
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -118,7 +119,10 @@ class ReadSeriesShots : ReadingShotHarness() {
     @Config(qualifiers = ReadingShotHarness.PHONE)
     fun phone_read_series_status() = series("phone-read-series-status", open = "status")
 
-    /** On a phone network with chapters kept to Wi-Fi, the send holds until Wi-Fi. */
+    /**
+     * On a phone network with chapters kept to Wi-Fi, a send of chapters to fetch holds until
+     * Wi-Fi. The scene's chapters are files in a folder, which go at once, so the hold is staged.
+     */
     @Test
     @Config(qualifiers = ReadingShotHarness.PHONE)
     fun phone_read_series_send_waits() = shoot(
@@ -129,6 +133,7 @@ class ReadSeriesShots : ReadingShotHarness() {
         screen = true,
         then = {
             it.networkPath(cellular = true, constrained = false)
+            SendHoldStage.stage(it)
             SeriesShots.open = "send"
         },
         act = { compose.onNodeWithText(Strings.sendPrepare(compose.activity)).performClick() },
@@ -151,6 +156,7 @@ class ReadSeriesShots : ReadingShotHarness() {
             screen = true,
             then = {
                 it.networkPath(cellular = true, constrained = false)
+                SendHoldStage.stage(it)
                 SeriesShots.open = "send"
             },
             act = {

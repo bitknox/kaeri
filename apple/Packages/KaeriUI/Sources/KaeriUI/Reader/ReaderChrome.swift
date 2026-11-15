@@ -42,9 +42,30 @@ struct ReaderChrome: View {
         .onChange(of: model.backToPage) { _, page in
             if let page, model.chromeShown { AccessibilityNotification.Announcement(L.readerBackToPage(page: page)).post() }
         }
-        .opacity(model.chromeShown ? 1 : 0)
-        .allowsHitTesting(model.chromeShown)
-        .accessibilityHidden(!model.chromeShown)
+        .opacity(Self.shows(model) ? 1 : 0)
+        .allowsHitTesting(Self.shows(model))
+        .accessibilityHidden(!Self.shows(model))
+        // It goes with a chapter that starts opening or fails as it goes when hidden.
+        .animation(paper ? nil : .fadeOut, value: Self.ready(model))
+    }
+
+    /// Whether the group shows: asked for, over a chapter it can act on. A chapter opening or one
+    /// that would not open has its own Close, and Try again, where the group sits, and the
+    /// group's line, scrubber and Go to page would still be the chapter left, so it stays away
+    /// there, whatever the pointer or a screen reader asks.
+    static func shows(_ model: ReaderModel) -> Bool {
+        model.chromeShown && ready(model)
+    }
+
+    /// The chapter is open, its own pages known.
+    static func ready(_ model: ReaderModel) -> Bool {
+        if case .open = model.phase { return true }
+        return false
+    }
+
+    static func failed(_ model: ReaderModel) -> Bool {
+        if case .failed = model.phase { return true }
+        return false
     }
 
     /// The group's distance from the bottom of the screen.
@@ -165,7 +186,8 @@ struct ReaderChrome: View {
         button("list.bullet", L.readerChapters) { model.sheet = .chapters }
             .accessibilitySortPriority(3)
             .popover(isPresented: sheetBinding(.chapters), attachmentAnchor: .point(.top)) {
-                ReaderChaptersSheet(model: model, theme: theme)
+                // A narrow iPad window shows it as a sheet, which takes the window's width.
+                ReaderChaptersSheet(model: model, theme: theme, popover: wide && !ReaderDevice.isPhone)
             }
     }
 
@@ -301,13 +323,10 @@ private struct GoToPagePrompt: View {
     @State private var text = ""
     @FocusState private var focused: Bool
 
-    private var total: Int { model.novel != nil || model.view?.mode == .strip ? max(model.position.count, 1) : max(model.pageCount, 1) }
+    private var total: Int { model.goToPageTotal }
 
     /// The number typed, when it is a page there is.
-    private var target: Int? {
-        guard let number = Int(text.trimmingCharacters(in: .whitespaces)), (1...total).contains(number) else { return nil }
-        return number
-    }
+    private var target: Int? { model.goToPageTarget(text) }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
@@ -346,9 +365,7 @@ private struct GoToPagePrompt: View {
     }
 
     private func submit() {
-        guard let page = target else { return }
-        model.askingPage = false
-        model.requestJump(model.novel != nil || model.view?.mode == .strip ? page - 1 : model.leaf(ofPage: page))
+        model.goToPage(typed: text)
     }
 }
 

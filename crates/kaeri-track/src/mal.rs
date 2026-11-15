@@ -25,7 +25,9 @@
 
 use kaeri_core::{
     ids::AnilistId,
-    traits::{ReadRemoval, TrackOp, TrackedEntry, TrackedReadEntry, Tracker, WatchStatus},
+    traits::{
+        Pushed, ReadRemoval, TrackOp, TrackedEntry, TrackedReadEntry, Tracker, WatchStatus,
+    },
 };
 
 use crate::{
@@ -388,34 +390,28 @@ impl Tracker for MalTracker {
         Ok(entries)
     }
 
-    async fn push_read(&self, ops: &[TrackOp]) -> Result<Vec<AnilistId>, kaeri_core::Error> {
-        let Some(mapping) = self.read_mapping.clone() else { return Ok(Vec::new()) };
+    async fn push_read(&self, ops: &[TrackOp]) -> Result<Pushed, kaeri_core::Error> {
+        let Some(mapping) = self.read_mapping.clone() else { return Ok(Pushed::default()) };
         let mut token = self.held.access(self, crate::now_epoch()).await?;
-        let mut ignored = Vec::new();
+        let mut titles = crate::Titles::default();
         for (anilist_id, fields) in read_fields(ops) {
             let Some(mal_id) = mapping.mal_id(anilist_id) else {
                 tracing::warn!(
                     anilist_id = anilist_id.get(),
                     "no myanimelist manga id for this work; skipping it rather than stalling"
                 );
-                ignored.push(anilist_id);
+                titles.ignore(anilist_id);
                 continue;
             };
-            let url = format!("{}/manga/{mal_id}/my_list_status", self.api);
-            let response = self
-                .held
-                .send(self, &mut token, |t| self.http.patch(&url).bearer_auth(t).form(&fields))
-                .await?;
-            if response.status() == reqwest::StatusCode::UNAUTHORIZED {
-                return Err(kaeri_core::Error::Auth("myanimelist rejected the token".into()));
-            }
-            if !response.status().is_success() {
-                let status = response.status();
-                let body = response.text().await.unwrap_or_default();
-                return Err(tracker_error(crate::said(status, &body)));
-            }
+            let result = if titles.go() {
+                let url = format!("{}/manga/{mal_id}/my_list_status", self.api);
+                self.write_status(&mut token, &url, &fields).await
+            } else {
+                Ok(())
+            };
+            titles.record(anilist_id, result);
         }
-        Ok(ignored)
+        Ok(titles.finish())
     }
 
     async fn remove_read(
@@ -525,6 +521,12 @@ impl Tracker for MalTracker {
     }
 
     async fn push(&self, ops: &[TrackOp]) -> Result<(), kaeri_core::Error> {
+        self.push_checked(ops).await?.into_result("mal")
+    }
+
+    /// One `my_list_status` write per title, each with its own outcome: a title MyAnimeList
+    /// refuses fails alone, and the titles after it still go.
+    async fn push_checked(&self, ops: &[TrackOp]) -> Result<Pushed, kaeri_core::Error> {
         let mut token = self.held.access(self, crate::now_epoch()).await?;
 
         // Coalesced per title, like the AniList tracker: `my_list_status` is a PATCH that sets
@@ -563,14 +565,14 @@ impl Tracker for MalTracker {
             }
         }
 
+        let mut titles = crate::Titles::default();
         for (anilist_id, fields) in batched {
             if fields.is_empty() {
                 continue;
             }
             // The drain holds back an op for a title with no MAL id (see `can_address`) until
             // the mappings change, so one only reaches here from a caller that skipped that
-            // check. Failing the call for it would fail the *batch*, taking every other op
-            // down with it, so it is skipped and said out loud.
+            // check. It is skipped and said out loud.
             let Some(mal_id) = self.mapping.mal_id(anilist_id) else {
                 tracing::warn!(
                     anilist_id = anilist_id.get(),
@@ -578,22 +580,34 @@ impl Tracker for MalTracker {
                 );
                 continue;
             };
-            let url = format!("{}/anime/{mal_id}/my_list_status", self.api);
-            let response = self
-                .held
-                .send(self, &mut token, |t| self.http.patch(&url).bearer_auth(t).form(&fields))
-                .await?;
-
-            if response.status() == reqwest::StatusCode::UNAUTHORIZED {
-                return Err(kaeri_core::Error::Auth("myanimelist rejected the token".into()));
-            }
-            if !response.status().is_success() {
-                let status = response.status();
-                let body = response.text().await.unwrap_or_default();
-                return Err(tracker_error(crate::said(status, &body)));
-            }
+            let result = if titles.go() {
+                let url = format!("{}/anime/{mal_id}/my_list_status", self.api);
+                self.write_status(&mut token, &url, &fields).await
+            } else {
+                Ok(())
+            };
+            titles.record(anilist_id, result);
         }
-        Ok(())
+        Ok(titles.finish())
+    }
+}
+
+impl MalTracker {
+    /// One `my_list_status` PATCH, and what its answer amounts to.
+    async fn write_status(
+        &self,
+        token: &mut String,
+        url: &str,
+        fields: &[(&str, String)],
+    ) -> Result<(), kaeri_core::Error> {
+        let response = self
+            .held
+            .send(self, token, |t| self.http.patch(url).bearer_auth(t).form(fields))
+            .await?;
+        if response.status().is_success() {
+            return Ok(());
+        }
+        Err(crate::failed_answer(response, "mal", "myanimelist").await)
     }
 }
 

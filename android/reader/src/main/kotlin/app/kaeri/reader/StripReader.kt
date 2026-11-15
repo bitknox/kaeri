@@ -18,6 +18,12 @@ import androidx.compose.ui.input.pointer.changedToUpIgnoreConsumed
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.WindowInsetsSides
+import androidx.compose.foundation.layout.only
+import androidx.compose.foundation.layout.statusBarsIgnoringVisibility
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.gestures.animateScrollBy
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -332,7 +338,7 @@ fun StripReader(
         ) {
             val into = state.view?.chapter
             if (previous != null && into != null && divider != null) {
-                images(previous, above, images, onMissingAbove, onRetryAbove, maxWidth, waiting, failed, state, credits)
+                images(previous, above, images, onMissingAbove, onRetryAbove, maxWidth, waiting, failed, state, credits, top = true)
                 item(key = dividerKey(into)) {
                     Box(Modifier.widthIn(max = maxWidth).fillMaxWidth().height(StripDividerHeight)) { divider(into) }
                 }
@@ -342,7 +348,7 @@ fun StripReader(
                 // with the room after them, a scroll resting in it would follow it to the end.
                 if (story.isEmpty()) item(key = roomKey(into)) { Box(Modifier.fillMaxWidth().height(screen)) }
             }
-            images(state, story, images, onMissing, onRetry, maxWidth, waiting, failed, state, credits)
+            images(state, story, images, onMissing, onRetry, maxWidth, waiting, failed, state, credits, top = previous == null || into == null)
             when {
                 story.isEmpty() -> {}
                 next != null && divider != null -> {
@@ -365,6 +371,7 @@ private fun roomKey(chapter: ChapterRow) = "room ${chapter.id}"
 private fun dividerKey(chapter: ChapterRow) = "divider ${chapter.id}"
 
 /** One chapter's images, each its own height before it lands, keyed by chapter so a flow keeps them. */
+@OptIn(ExperimentalLayoutApi::class)
 private fun LazyListScope.images(
     state: ReaderState,
     story: List<Leaf>,
@@ -377,6 +384,8 @@ private fun LazyListScope.images(
     /** The open state, which holds the credit pages of this chapter and the one above. */
     open: ReaderState,
     credits: (@Composable (chapter: ChapterId, pages: List<CreditPage>) -> Unit)?,
+    /** These images start the strip, so the credit pages before the first sit at its very top. */
+    top: Boolean,
 ) {
     val chapter = state.chapter
     // The credit pages by the image they sat before; those at the end after the last image, and
@@ -395,7 +404,17 @@ private fun LazyListScope.images(
         val before = groups[at]
         val after = if (at == lastIndex) groups.filterKeys { it >= story.size }.values.flatten().filter { open.isRevealed(it, chapter ?: "") } else emptyList()
         Column(Modifier.widthIn(max = maxWidth).fillMaxWidth()) {
-            if (before != null && chapter != null) credits?.invoke(chapter, before)
+            if (before != null && chapter != null) {
+                // At the strip's top their line or caption starts below the status bar, which the
+                // controls bring over it; the room stays while the bar hides, so nothing moves.
+                if (at == 0 && top) {
+                    Column(Modifier.windowInsetsPadding(WindowInsets.statusBarsIgnoringVisibility.only(WindowInsetsSides.Top))) {
+                        credits?.invoke(chapter, before)
+                    }
+                } else {
+                    credits?.invoke(chapter, before)
+                }
+            }
             Box(Modifier.fillMaxWidth().aspectRatio(ratio)) {
                 LeafView(
                     leaf = leaf,

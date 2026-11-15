@@ -291,6 +291,9 @@ pub async fn start(root: &Path, scene: &Scene, host: Arc<dyn Host>) -> Result<St
     let clock = Clock::default();
     let now = clock.now();
     let world = world_asked().then(|| HomeWorld::at(HomeClock::in_zone(now, &clock.zone())));
+    if seed::dropped_change_asked() {
+        seed::dropped_change(&store, FINISHED, "Stardust Wayfarer", now);
+    }
     if !scene.demo {
         seed_scene(&store, scene.home, now);
         if scene.home.reading() {
@@ -408,6 +411,11 @@ pub async fn start(root: &Path, scene: &Scene, host: Arc<dyn Host>) -> Result<St
         Some(Parts { meta, sync, stores, clock, fixture_route: true, windows: None });
     let (engine, events): (Engine, _) =
         Engine::start(options, host).await.map_err(|e| e.to_string())?;
+    if seed::dropped_change_asked() {
+        // The app's own drain runs at launch, and the scene's engine runs none of its loops, so
+        // the drain that says the given-up change is asked for, as Sync now asks.
+        engine.send(kaeri_model::command::Command::SyncNow);
+    }
     Ok(Started { engine, events, keep: Some(Box::new(server)), rebuilt: Some(rebuilt) })
 }
 

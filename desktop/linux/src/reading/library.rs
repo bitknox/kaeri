@@ -216,6 +216,7 @@ pub fn build(ctx: &Rc<Ctx>) -> adw::NavigationPage {
         .hscrollbar_policy(gtk::PolicyType::Never)
         .child(&grid.widget)
         .build();
+    grid.follow(&scroll);
     let empty = crate::states::plain(
         &t::read_library_files_empty_title(),
         &t::read_library_files_empty_line(),

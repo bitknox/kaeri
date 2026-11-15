@@ -27,6 +27,17 @@ notice-signed-out-queue = { $count ->
     [many] Sesión cerrada en { $tracker }. { $count } cambios en cola se conservan para el próximo inicio de sesión.
    *[other] Sesión cerrada en { $tracker }. { $count } cambios en cola se conservan para el próximo inicio de sesión.
  }
+notice-tracker-change-refused = { $tracker } rechazó varias veces un cambio en { $title }, así que solo queda en { -app-name }.
+notice-tracker-changes-refused = { $others ->
+    [one] { $tracker } rechazó varias veces cambios en { $title } y un título más, así que solo quedan en { -app-name }.
+    [many] { $tracker } rechazó varias veces cambios en { $title } y { $others } títulos más, así que solo quedan en { -app-name }.
+   *[other] { $tracker } rechazó varias veces cambios en { $title } y { $others } títulos más, así que solo quedan en { -app-name }.
+ }
+notice-tracker-change-refused-untitled = { $count ->
+    [one] { $tracker } rechazó varias veces un cambio, así que solo queda en { -app-name }.
+    [many] { $tracker } rechazó varias veces cambios en { $count } títulos, así que solo quedan en { -app-name }.
+   *[other] { $tracker } rechazó varias veces cambios en { $count } títulos, así que solo quedan en { -app-name }.
+ }
 notice-sign-out-failed = No se pudo cerrar la sesión en { $tracker }. Inténtalo de nuevo. { $reason }
 notice-not-saved-because = No se pudo guardar esa configuración. { $cause }
 notice-proxy-saved = El tráfico de los torrents ahora pasa por el proxy.

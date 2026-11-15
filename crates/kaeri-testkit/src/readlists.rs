@@ -1,7 +1,8 @@
 //! Stand-ins for the manga lists of MyAnimeList (`/v2`) and Kitsu (`/api/edge`), on one loopback
 //! address. Each holds its list and keeps what the tracker wrote, so a test can read it back.
 //! The accounts and titles are made up. Lists page two entries at a time, so a pull has to
-//! follow the next link.
+//! follow the next link. Anime writes are taken and recorded too, for the watching outbox, and a
+//! test can have a title refused or the whole service go down.
 
 use std::{
     net::{Ipv4Addr, SocketAddr},
@@ -76,6 +77,12 @@ struct State {
     mal: Vec<MalEntry>,
     kitsu: Vec<KitsuEntry>,
     seen: Vec<(String, String)>,
+    /// Service ids whose writes are refused: MyAnimeList answers 404, Kitsu 422.
+    refused: Vec<u32>,
+    /// Every request is answered 503 with a maintenance page.
+    down: bool,
+    /// Anime writes taken: the service (`mal`, `kitsu`) and its anime id.
+    anime: Vec<(String, u32)>,
 }
 
 pub struct FakeReadLists {
@@ -99,6 +106,9 @@ impl FakeReadLists {
             mal: Vec::new(),
             kitsu: Vec::new(),
             seen: Vec::new(),
+            refused: Vec::new(),
+            down: false,
+            anime: Vec::new(),
         }));
         let task = tokio::spawn({
             let state = state.clone();
@@ -144,6 +154,22 @@ impl FakeReadLists {
     /// `(method, path)` of every request.
     pub fn requests(&self) -> Vec<(String, String)> {
         self.state().seen.clone()
+    }
+
+    /// Refuse every write to this service id (a MyAnimeList or Kitsu id, manga or anime) for
+    /// good: MyAnimeList answers 404, as for an entry it removed, Kitsu 422.
+    pub fn refuse(&self, id: u32) {
+        self.state().refused.push(id);
+    }
+
+    /// Answer every request with a 503 maintenance page while `down`.
+    pub fn set_down(&self, down: bool) {
+        self.state().down = down;
+    }
+
+    /// The anime writes taken, in order: the service (`mal`, `kitsu`) and its anime id.
+    pub fn anime_writes(&self) -> Vec<(String, u32)> {
+        self.state().anime.clone()
     }
 }
 
@@ -236,9 +262,12 @@ async fn serve(socket: TcpStream, state: Arc<Mutex<State>>, addr: SocketAddr) {
         body: String::from_utf8_lossy(&raw).into_owned(),
     };
     let (status, reply) = answer(&state, &request, addr);
-    let text = reply.to_string();
+    let (kind, text) = match reply {
+        Value::String(page) if status >= 500 => ("text/html", page),
+        reply => ("application/json", reply.to_string()),
+    };
     let head = format!(
-        "HTTP/1.1 {status} X\r\ncontent-type: application/json\r\ncontent-length: {}\r\nconnection: close\r\n\r\n",
+        "HTTP/1.1 {status} X\r\ncontent-type: {kind}\r\ncontent-length: {}\r\nconnection: close\r\n\r\n",
         text.len()
     );
     let _ = write.write_all(head.as_bytes()).await;
@@ -249,6 +278,9 @@ async fn serve(socket: TcpStream, state: Arc<Mutex<State>>, addr: SocketAddr) {
 fn answer(state: &Mutex<State>, r: &Request, addr: SocketAddr) -> (u16, Value) {
     let mut state = state.lock().unwrap_or_else(|e| e.into_inner());
     state.seen.push((r.method.clone(), r.path.clone()));
+    if state.down {
+        return (503, json!("<html><body><h1>Down for maintenance</h1></body></html>"));
+    }
     if let Some(path) = r.path.strip_prefix("/v2") {
         if r.authorization != format!("Bearer {MAL_TOKEN}") {
             return (401, json!({ "error": "invalid_token" }));
@@ -297,12 +329,27 @@ fn mal(state: &mut State, r: &Request, path: &str, addr: SocketAddr) -> (u16, Va
             }
             (200, json!({ "data": data, "paging": paging }))
         }
+        ("PATCH", p) if p.starts_with("/anime/") && p.ends_with("/my_list_status") => {
+            let id: u32 = p
+                .trim_start_matches("/anime/")
+                .trim_end_matches("/my_list_status")
+                .parse()
+                .unwrap_or(0);
+            if state.refused.contains(&id) {
+                return (404, json!({ "error": "not_found", "message": "No such entry." }));
+            }
+            state.anime.push(("mal".into(), id));
+            (200, json!({ "status": "watching" }))
+        }
         ("PATCH", p) if p.starts_with("/manga/") && p.ends_with("/my_list_status") => {
             let id: u32 = p
                 .trim_start_matches("/manga/")
                 .trim_end_matches("/my_list_status")
                 .parse()
                 .unwrap_or(0);
+            if state.refused.contains(&id) {
+                return (404, json!({ "error": "not_found", "message": "No such entry." }));
+            }
             if !r.content_type.starts_with("application/x-www-form-urlencoded") {
                 return (400, json!({ "error": "invalid_content" }));
             }
@@ -350,6 +397,10 @@ fn kitsu(state: &mut State, r: &Request, path: &str, addr: SocketAddr) -> (u16, 
     match (r.method.as_str(), path) {
         ("GET", "/users") => (200, json!({ "data": [{ "id": KITSU_USER, "type": "users" }] })),
         ("GET", "/library-entries") => {
+            if query(r, "filter[animeId]").is_some() {
+                // No anime entry is ever listed: every anime write is a creation.
+                return (200, json!({ "data": [] }));
+            }
             if let Some(manga) = query(r, "filter[mangaId]") {
                 let found: Vec<Value> = state
                     .kitsu
@@ -396,6 +447,20 @@ fn kitsu(state: &mut State, r: &Request, path: &str, addr: SocketAddr) -> (u16, 
             if attrs["status"].as_str().is_none() {
                 return (422, json!({ "errors": [{ "title": "status can't be blank" }] }));
             }
+            let related = |kind: &str| {
+                body["data"]["relationships"][kind]["data"]["id"]
+                    .as_str()
+                    .and_then(|id| id.parse::<u32>().ok())
+            };
+            if let Some(id) = related("anime").or(related("manga"))
+                && state.refused.contains(&id)
+            {
+                return (422, json!({ "errors": [{ "title": "media has been merged" }] }));
+            }
+            if let Some(anime) = related("anime") {
+                state.anime.push(("kitsu".into(), anime));
+                return (201, json!({ "data": { "id": format!("a{anime}") } }));
+            }
             let Some(manga) = body["data"]["relationships"]["manga"]["data"]["id"]
                 .as_str()
                 .and_then(|m| m.parse::<u32>().ok())
@@ -409,7 +474,11 @@ fn kitsu(state: &mut State, r: &Request, path: &str, addr: SocketAddr) -> (u16, 
         }
         ("PATCH", p) if p.starts_with("/library-entries/") => {
             let id = p.trim_start_matches("/library-entries/");
+            let refused = state.refused.clone();
             match state.kitsu.iter_mut().find(|e| e.entry_id == id) {
+                Some(entry) if refused.contains(&entry.manga) => {
+                    (422, json!({ "errors": [{ "title": "media has been merged" }] }))
+                }
                 Some(entry) => {
                     apply(entry, &body["data"]["attributes"]);
                     (200, json!({ "data": { "id": id } }))

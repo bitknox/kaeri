@@ -154,6 +154,8 @@ pub struct LangLint<'a> {
     banned: Vec<(String, Regex)>,
     /// Every spelling of every glossary term in this language, to catch it typed out.
     term_forms: Vec<(String, String, Regex)>,
+    /// The plural categories that stand for more than one number here (`plural::shared`).
+    shared: Vec<String>,
 }
 
 impl<'a> LangLint<'a> {
@@ -182,6 +184,7 @@ impl<'a> LangLint<'a> {
             names: config.all.names.iter().map(|n| (n.clone(), word_regex(n))).collect(),
             banned,
             term_forms,
+            shared: crate::plural::shared(tag)?,
         })
     }
 
@@ -277,6 +280,25 @@ impl<'a> LangLint<'a> {
                 out.push((Severity::Error, "is in Title Case; use sentence case (only Mac menu bar items, `menu-*` with `@only apple`, are Title Case)".into()));
             }
         }
+        // A count the English shows is shown in every form that stands for more than one number:
+        // French "Un épisode" would also say 0, a Russian one-form without the number also 21.
+        if !is_source
+            && let Body::Plural { selector, variants } = &m.body
+            && let Body::Plural { variants: english, .. } = &src.body
+            && english.iter().any(|v| v.category == "other" && shows(&v.parts, selector))
+        {
+            for v in variants {
+                if self.shared.contains(&v.category) && !shows(&v.parts, selector) {
+                    out.push((
+                        Severity::Error,
+                        format!(
+                            "[{}] stands for more than one number in {}; show {{ ${selector} }} in it as the English does",
+                            v.category, self.tag
+                        ),
+                    ));
+                }
+            }
+        }
         // Length budgets.
         if let Some(max) = src.max {
             let cells = reaches_tui(src);
@@ -298,6 +320,11 @@ impl<'a> LangLint<'a> {
         }
         out
     }
+}
+
+/// Whether a pattern shows the variable `name`.
+fn shows(parts: &[Part], name: &str) -> bool {
+    parts.iter().any(|p| matches!(p, Part::Var(v) if v == name))
 }
 
 pub fn run(cat: &Catalogue) -> Result<Vec<Finding>> {
@@ -502,6 +529,57 @@ mod tests {
         write(dir.path(), &[("pl/ui.ftl", bad_var)]);
         let err = Catalogue::load(dir.path()).unwrap_err().to_string();
         assert!(err.contains("uses $nope"), "{err}");
+    }
+
+    #[test]
+    fn a_form_for_more_than_one_number_shows_the_count() {
+        let dir = tempfile::tempdir().unwrap();
+        let langs = format!(
+            "{LANGS}[language.fr]\nname = \"Français\"\nstage = \"draft\"\n[language.ru]\nname = \"Русский\"\nstage = \"draft\"\n"
+        );
+        let en = "# @arg count: int\nleft = { $count ->\n    [one] One episode left\n   *[other] { $count } episodes left\n }\n# @arg count: int\nready = { $count ->\n    [one] Update ready\n   *[other] Updates ready\n }\n";
+        // French "one" is 0 and 1, so "Un épisode" would also say 0; the Russian one-form is 21 too.
+        let fr_words = "left = { $count ->\n    [one] Un épisode restant\n    [many] { $count } épisodes restants\n   *[other] { $count } épisodes restants\n }\nready = { $count ->\n    [one] Mise à jour prête\n    [many] Mises à jour prêtes\n   *[other] Mises à jour prêtes\n }\n";
+        let ru_words = "left = { $count ->\n    [one] Осталась одна серия\n    [few] Осталось { $count } серии\n    [many] Осталось { $count } серий\n   *[other] Осталось { $count } серии\n }\nready = { $count ->\n    [one] Обновление готово\n    [few] Обновления готовы\n    [many] Обновления готовы\n   *[other] Обновления готовы\n }\n";
+        write(
+            dir.path(),
+            &[
+                ("languages.toml", &langs),
+                ("lint.toml", LINT),
+                ("en/terms.ftl", TERMS),
+                ("en/ui.ftl", en),
+                ("fr/terms.ftl", TERMS),
+                ("fr/ui.ftl", fr_words),
+                ("ru/terms.ftl", TERMS),
+                ("ru/ui.ftl", ru_words),
+            ],
+        );
+        let cat = Catalogue::load(dir.path()).unwrap();
+        let found: Vec<String> =
+            run(&cat).unwrap().into_iter().map(|f| f.to_string()).collect();
+        let shared: Vec<&String> =
+            found.iter().filter(|f| f.contains("more than one number")).collect();
+        // Only the messages whose English shows the count; a count kept to grammar stays free.
+        assert_eq!(shared.len(), 2, "{found:#?}");
+        assert!(
+            shared
+                .iter()
+                .any(|f| f.contains("fr") && f.contains("left") && f.contains("[one]"))
+        );
+        assert!(
+            shared
+                .iter()
+                .any(|f| f.contains("ru") && f.contains("left") && f.contains("[one]"))
+        );
+
+        let fr_count = fr_words.replace("[one] Un épisode", "[one] { $count } épisode");
+        let ru_count =
+            ru_words.replace("[one] Осталась одна серия", "[one] Осталась { $count } серия");
+        write(dir.path(), &[("fr/ui.ftl", &fr_count), ("ru/ui.ftl", &ru_count)]);
+        let cat = Catalogue::load(dir.path()).unwrap();
+        let found: Vec<String> =
+            run(&cat).unwrap().into_iter().map(|f| f.to_string()).collect();
+        assert!(!found.iter().any(|f| f.contains("more than one number")), "{found:#?}");
     }
 
     #[test]

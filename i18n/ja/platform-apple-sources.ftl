@@ -57,3 +57,4 @@ library-matched-apple = 一致済み
 servers-row-summary-apple = { $series ->
    *[other] { $series }シリーズ
  }
+book-picker-message = 本が入ったフォルダーを選んでください。

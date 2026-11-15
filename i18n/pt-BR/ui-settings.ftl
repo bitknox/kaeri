@@ -61,7 +61,7 @@ settings-audio-detail = Cada série guarda o próprio áudio e as próprias lege
 settings-system-captions = Seguir o estilo de legenda do sistema
 settings-system-captions-detail = Legendas simples usam suas preferências de legenda em Acessibilidade. Legendas estilizadas mantêm o próprio visual.
 settings-overridden = { $count ->
-    [one] Alterado em uma série
+    [one] Alterado em { $count } série
     [many] Alterado em { $count } séries
    *[other] Alterado em { $count } séries
  }
@@ -146,7 +146,7 @@ widget-resume-label = Continuar o episódio { $episode } de { $title }
 widget-start-label = Reproduzir o episódio { $episode } de { $title }
 widget-resume-dubbed-label = Continuar o episódio { $episode }, { -dubbed }, de { $title }
 accounts-changes-waiting = { $count ->
-    [one] Uma mudança aguardando sincronização
+    [one] { $count } mudança aguardando sincronização
     [many] { $count } mudanças aguardando sincronização
    *[other] { $count } mudanças aguardando sincronização
  }

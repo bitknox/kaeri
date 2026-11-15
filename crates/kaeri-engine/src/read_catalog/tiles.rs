@@ -2,7 +2,7 @@
 //! and, where they read it, where they are.
 
 use kaeri_core::{
-    books::{ChapterId, WorkId},
+    books::{ChapterId, ChapterKey, WorkId},
     ids::AnilistId,
     media::{MediaStatus, Medium},
 };
@@ -142,6 +142,34 @@ pub fn demo(
     Some(tile)
 }
 
+/// A work's name as the person knows it: the catalogue's title in their title language, or the
+/// name its source or folder gave a work of its own on this device. A work's id is never shown:
+/// one with no name at all is an untitled series.
+pub fn title_of(store: &Store, work: &str, form: kaeri_store::shelf::TitleForm) -> String {
+    name_of(store, work, form).unwrap_or_else(kaeri_i18n::t::reading_untitled_series)
+}
+
+/// [`title_of`], or `None` when the work has no name at all.
+pub fn name_of(
+    store: &Store,
+    work: &str,
+    form: kaeri_store::shelf::TitleForm,
+) -> Option<String> {
+    store
+        .book_work_kind(work)
+        .ok()
+        .flatten()
+        .and_then(|kind| kind.title_in(form))
+        .filter(|title| !title.trim().is_empty())
+        .or_else(|| local_name(store, work))
+}
+
+/// The name of the folder series that carries `work`, for a work AniList does not list.
+pub fn local_name(store: &Store, work: &str) -> Option<String> {
+    let local = store.local_book_series().ok()?;
+    local.into_iter().find(|s| s.work.as_deref() == Some(work)).map(|s| s.name)
+}
+
 /// A book's cover with where the person is in it: the page they stopped on, or the next
 /// chapter, and the dot when one came out that they have not read.
 pub fn reading(
@@ -279,11 +307,33 @@ pub fn named_in(list: Option<&[chapters::Kept]>, chapter: &str) -> Option<String
     words::part_named(&kept.label, kept.number.as_deref())
 }
 
-/// A chapter's number as a person reads it, from the list when it is there.
+/// A chapter's number as a person reads it, from the list when it is there: its row's number,
+/// else its row's name, as the row says it ("Volume 1" for a whole volume).
+///
+/// Off the list, a numbered id gives its number. An unnumbered id's tail is its name folded to
+/// lower case, never shown: a volume's says "Volume" and its number, as a volume's row does,
+/// and any other is named by its tail with its first letter put back.
 pub fn number_of(list: Option<&[chapters::Kept]>, chapter: &str) -> String {
-    list.and_then(|l| l.iter().find(|c| c.id == chapter))
-        .and_then(|c| c.number.clone())
-        .unwrap_or_else(|| chapter.rsplit('/').next().unwrap_or(chapter).to_owned())
+    if let Some(kept) = list.and_then(|l| l.iter().find(|c| c.id == chapter)) {
+        return kept.number.clone().unwrap_or_else(|| kept.label.clone());
+    }
+    let Ok(key) = chapter.parse::<ChapterKey>() else {
+        return chapter.rsplit('/').next().unwrap_or(chapter).to_owned();
+    };
+    if let Some(range) = key.range() {
+        return range.to_string();
+    }
+    if let Some(volume) = key.volume()
+        && volume.parse::<f64>().is_ok()
+    {
+        return format!("Volume {volume}");
+    }
+    let tail = chapter.rsplit('/').next().unwrap_or(chapter);
+    let mut letters = tail.chars();
+    letters
+        .next()
+        .map(|first| first.to_uppercase().chain(letters).collect())
+        .unwrap_or_default()
 }
 
 /// The series page's main button: the chapter in progress, the next one, Read again once
@@ -417,6 +467,25 @@ mod tests {
                 .unwrap()
             })
             .collect()
+    }
+
+    /// A chapter's words are its row's: its number, else its name. An id's folded tail is never
+    /// shown, on the list or off it.
+    #[test]
+    fn a_chapter_is_named_by_its_row_and_never_by_its_id() {
+        let volume: chapters::Kept = serde_json::from_value(serde_json::json!({
+            "id": "x/1/volume 1", "source_ref": "/books/Harbor Lights v01.epub",
+            "label": "Volume 1", "volume": "1",
+        }))
+        .unwrap();
+        let rows = [volume];
+        assert_eq!(number_of(Some(&rows), "x/1/volume 1"), "Volume 1");
+        assert_eq!(number_of(Some(&list(&["12"])), "12"), "12");
+        // Off the list.
+        assert_eq!(number_of(None, "x/1/harbor lights, volume 1"), "Volume 1");
+        assert_eq!(number_of(Some(&rows), "x/-/afterword"), "Afterword");
+        assert_eq!(number_of(None, "v2/12"), "12");
+        assert_eq!(number_of(None, "10.5"), "10.5");
     }
 
     /// A Library cover counts to the newest chapter, an extra after it counted as its chapter.

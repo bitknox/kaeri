@@ -1,0 +1,66 @@
+Kaeri   Lantern Street Notes · Part 3                sources ● 3  ·  anilist ⇅ 2
+────────────────────────────────────────────────────────────────────────────────
+
+       The Lamp Room
+
+         The lamp room sat at the top of the stairs, past the door that
+       stuck in wet weather. Mio had learned to lift the handle before
+       she turned it, the way her aunt did, and the door gave with a sigh
+       that sounded almost polite.
+
+         Inside, the shelves held every lantern the street had ever sent
+       back for repair. Some were labelled in her aunt's narrow hand.
+       Others had only a date and a house number, as if the lamp itself
+       would explain the rest once it was lit.
+
+         "You don't have to fix them all tonight," her aunt said from the
+       doorway.
+
+         "I know." Mio set the first one on the bench. Its glass was
+       clouded, and a crack ran from the base to the hook like a river on
+       a map. "I want to see which ones still remember how."
+
+────────────────────────────────────────────────────────────────────────────────
+░░░░░░░░░░  Part 3 · 0% · 9 min left        → next   ← back   [ ] width   ? keys
+=== styles ===
+colours text=#e4e0d6 text-dim=#a8aec9 rule=#46464d obi=#f2a64b state=#7fc7d9 alert=#f59b85 ground=#1a1b26
+r00 c00-04 fg=text mod=BOLD
+r00 c08-27 fg=text
+r00 c28-36 fg=text-dim
+r00 c53-63 fg=state
+r00 c64-65 fg=text-dim
+r00 c66-66 fg=rule
+r00 c67-68 fg=text-dim
+r00 c69-79 fg=state
+r01 c00-79 fg=rule
+r03 c07-09 fg=text mod=BOLD
+r03 c10-10 fg=text
+r03 c11-14 fg=text mod=BOLD
+r03 c15-15 fg=text
+r03 c16-19 fg=text mod=BOLD
+r05 c09-70 fg=text
+r06 c07-69 fg=text
+r07 c07-72 fg=text
+r08 c07-33 fg=text
+r10 c09-71 fg=text
+r11 c07-68 fg=text
+r12 c07-70 fg=text
+r13 c07-45 fg=text
+r15 c09-72 fg=text
+r16 c07-14 fg=text
+r18 c09-67 fg=text
+r19 c07-72 fg=text
+r20 c07-45 fg=text
+r20 c46-53 fg=text mod=ITALIC
+r20 c54-59 fg=text
+r22 c00-79 fg=rule
+r23 c00-09 fg=text
+r23 c10-35 fg=text-dim
+r23 c44-44 fg=text
+r23 c45-52 fg=text-dim
+r23 c53-53 fg=text
+r23 c54-61 fg=text-dim
+r23 c62-64 fg=text
+r23 c65-73 fg=text-dim
+r23 c74-74 fg=text
+r23 c75-79 fg=text-dim

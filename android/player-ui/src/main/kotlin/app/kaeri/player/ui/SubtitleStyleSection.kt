@@ -32,7 +32,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -77,14 +76,13 @@ internal fun SubtitleStylePanel(more: () -> Unit) {
     val store = LocalAppStore.current
     val view by store.settings.view.collectAsStateWithLifecycle()
     val style = view?.subtitleStyle ?: return
-    val context = LocalContext.current
     fun send(key: SettingKey, value: String) = store.setSetting(key, SettingValue.Str(value))
     fun send(key: SettingKey, value: Int) = store.setSetting(key, SettingValue.Int(value.toLong()))
     Column(Modifier.fillMaxWidth().padding(horizontal = 24.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Text(stringResource(R.string.player_subs_style), style = MaterialTheme.typography.titleMedium, color = ObiSilk.Silk)
         Stepper(
             label = stringResource(R.string.settings_subs_size),
-            value = context.getString(R.string.settings_subs_size_value, style.size.toInt()),
+            value = stringResource(R.string.settings_subs_size_value, style.size.toInt()),
             lessLabel = stringResource(R.string.player_subs_smaller),
             moreLabel = stringResource(R.string.player_subs_larger),
             canLess = style.size.toInt() > SubtitleNames.SIZES.first(),
@@ -94,7 +92,7 @@ internal fun SubtitleStylePanel(more: () -> Unit) {
         )
         Stepper(
             label = stringResource(R.string.settings_subs_raise),
-            value = context.getString(R.string.settings_subs_raise_value, style.raise.toInt()),
+            value = stringResource(R.string.settings_subs_raise_value, style.raise.toInt()),
             lessLabel = stringResource(R.string.player_subs_lower),
             moreLabel = stringResource(R.string.player_subs_raise),
             canLess = style.raise.toInt() > SubtitleNames.RAISES.first(),

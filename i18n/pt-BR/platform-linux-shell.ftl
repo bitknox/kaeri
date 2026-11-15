@@ -5,7 +5,7 @@ shell-no-background = { -app-name } não pode continuar em segundo plano aqui, e
 shell-main-menu = Menu principal
 shell-connect-tracker = Conectar { $tracker }
 shell-changes-waiting = { $count ->
-    [one] 1 alteração para sincronizar
+    [one] { $count } alteração para sincronizar
     [many] { $count } alterações para sincronizar
    *[other] { $count } alterações para sincronizar
  }
@@ -28,12 +28,12 @@ shortcuts-answer-card = Responder ao cartão no canto
 shortcuts-escape = Fechar um cartão, o mini player, a tela cheia e depois o player
 close-stop-and-close = Parar e fechar
 close-body-downloading = { $count ->
-    [one] Um episódio está sendo baixado ou aguardando. Manter o download depois que a janela fechar, ou parar?
+    [one] { $count } episódio está sendo baixado ou aguardando. Manter o download depois que a janela fechar, ou parar?
     [many] { $count } episódios estão sendo baixados ou aguardando. Manter os downloads depois que a janela fechar, ou parar?
    *[other] { $count } episódios estão sendo baixados ou aguardando. Manter os downloads depois que a janela fechar, ou parar?
  }
 close-body-seeding = { $count ->
-    [one] Um episódio está semeando. Manter depois que a janela fechar, ou parar?
+    [one] { $count } episódio está semeando. Manter depois que a janela fechar, ou parar?
     [many] { $count } episódios estão sendo semeados. Manter depois que a janela fechar, ou parar?
    *[other] { $count } episódios estão sendo semeados. Manter depois que a janela fechar, ou parar?
  }

@@ -116,12 +116,12 @@ tv-show-back-to-defaults = Rétablir les valeurs par défaut
 tv-card-progress-spoken = { $percent } vu
 tv-discussion-footer = Pour répondre, ouvrez la discussion sur votre téléphone.
 tv-discussion-count-read-only = { $count ->
-    [one] Un commentaire · Lecture seule
+    [one] { $count } commentaire · Lecture seule
     [many] { $count } commentaires · Lecture seule
    *[other] { $count } commentaires · Lecture seule
  }
 tv-discussion-likes = { $count ->
-    [one] Un j’aime
+    [one] { $count } j’aime
     [many] { $count } j’aime
    *[other] { $count } j’aime
  }

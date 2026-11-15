@@ -134,9 +134,12 @@ public struct PlaybackMenu: View {
             .plainKey("m", when: keys)
             .disabled(!keys)
         Divider()
+        #if !os(macOS)
         Button(model.fullScreen ? L.menuExitFullScreen : L.menuEnterFullScreen) { model.fullScreen.toggle() }
             .keyboardShortcut("f", modifiers: [.command, .control])
             .disabled(!playing)
+        #endif
+        // On the Mac, View › Enter Full Screen (⌃⌘F) is the window's, and the player follows it.
         Toggle(L.menuStatsForNerds, isOn: Binding(get: { model.statsShown }, set: { model.showStats($0) }))
             .plainKey("i", when: keys)
             .disabled(!keys)

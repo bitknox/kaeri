@@ -174,6 +174,12 @@ fn broadcast_line(entry: &Entry) -> String {
 
 /// The list-status picker.
 pub(super) fn status_rows(app: &App) -> Vec<(String, String)> {
+    if app.series_here().is_some() {
+        return crate::app::READ_LISTS
+            .iter()
+            .map(|list| (String::new(), crate::app::read_list_name(*list)))
+            .collect();
+    }
     let current = app.target();
     LibrarySegment::ALL
         .iter()

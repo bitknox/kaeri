@@ -14,7 +14,7 @@ use kaeri_model::{
 use crate::{pages::Dest, reading::reader::Reader, window::Shell};
 
 /// Every reading shot, in the order a run takes them.
-pub const NAMES: [&str; 49] = [
+pub const NAMES: [&str; 50] = [
     "read",
     "read-updates",
     "read-library",
@@ -40,6 +40,8 @@ pub const NAMES: [&str; 49] = [
     "read-end-none",
     "read-end-plate",
     "read-end-skip",
+    // A chapter with no number, as a book in one file is: the end page names it by its name.
+    "read-end-named",
     "read-plate",
     "read-open-failed",
     // Try again on a chapter that couldn't open opens it again.
@@ -258,6 +260,12 @@ pub fn stage(shell: &Rc<Shell>, shot: &str) -> Option<f64> {
             later(shell, 2500, |reader| reader.shot_end());
             // After the engine's own end page has come, which names no skip.
             later(shell, 3500, |reader| reader.shot_end_skip());
+            5.0
+        }
+        "read-end-named" => {
+            read(shell, MANGA, "15");
+            later(shell, 2500, |reader| reader.shot_end());
+            later(shell, 3500, |reader| reader.shot_end_named());
             5.0
         }
         // A page still loading after 4 s: its plate, number and line.

@@ -65,10 +65,12 @@ class EinkLargeSeriesSearchShots : ReadingShotHarness() {
 
     // A long series, to see a page of chapters full: 41 of them at 0.85 and 1.0.
     @Test @Config(qualifiers = EREADER_10, fontScale = AIR_SCALE) fun series_long_085() = series("series-long-085", chapters = 41) {
-        // A chapter with no title shows its number once, and is read out by its name.
+        // A chapter with no title shows its number once, and is read out by its name; one with a
+        // title is read out as a chapter before it, never as a bare number.
         compose.onAllNodesWithText("Chapter 40", useUnmergedTree = true).assertCountEquals(1) // i18n-skip
         compose.onAllNodesWithText("40", useUnmergedTree = true).assertCountEquals(0) // i18n-skip
-        compose.onAllNodesWithText("39", useUnmergedTree = true).assertCountEquals(1) // i18n-skip
+        compose.onAllNodesWithText("Chapter 39", useUnmergedTree = true).assertCountEquals(1) // i18n-skip
+        compose.onAllNodesWithText("39", useUnmergedTree = true).assertCountEquals(0) // i18n-skip
     }
     @Test @Config(qualifiers = EREADER_10) fun series_long_100() = series("series-long-100", chapters = 41)
 

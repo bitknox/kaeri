@@ -4,27 +4,7 @@
 /* ── Bands ────────────────────────────────────────────────────────────── */
 
 .band {
-	padding: 120px 32px;
-}
-
-.band-green {
-	background: var(--ani-band-green);
-}
-
-.band-red {
-	background: var(--ani-band-red);
-}
-
-.band-plum {
-	background: var(--ani-band-plum);
-}
-
-.band-blue {
-	background: var(--ani-band-blue);
-}
-
-.band-plain {
-	background: var(--ani-band);
+	padding: 0 var(--gutter) var(--space-section);
 }
 
 .band-in {
@@ -32,17 +12,38 @@
 	margin: 0 auto;
 }
 
-.band-rule {
+/* Every section opens on a hairline, then the heading. */
+.band > .band-in {
 	border-top: 1px solid var(--ani-rule);
-	padding-top: 40px;
+	padding-top: clamp(28px, 2vw + 16px, 44px);
 }
 
-.band-rule-violet {
-	border-top-color: var(--ani-rule-violet);
+/* The theatre: the player's section is a dark room in either theme, set off by its own ground
+   rather than a hairline. */
+.theatre {
+	--ani-text: #e4e0d6;
+	--ani-dim: #9298b5;
+	--ani-rule: #434653;
+	--ani-link-hover: #f5b467;
+	--ani-focus: #f5b467;
+	--ani-bezel: #161a2e;
+	--ani-bezel-edge: #434653;
+	color-scheme: dark;
+	padding-top: var(--space-section);
+	background: var(--ani-theatre);
+	color: var(--ani-text);
 }
 
-.band-rule-sky {
-	border-top-color: var(--ani-rule-sky);
+.band.theatre > .band-in,
+.theatre + .band > .band-in,
+.theatre + .f-sect > .f-in {
+	border-top: 0;
+	padding-top: 0;
+}
+
+.theatre + .band,
+.theatre + .f-sect {
+	padding-top: var(--space-section);
 }
 
 .band-head {
@@ -54,7 +55,8 @@
 
 .band-head p {
 	margin: 0;
-	font-size: 19px;
+	max-width: 36em;
+	font-size: var(--fs-lede);
 	line-height: 1.55;
 	color: var(--ani-dim);
 }
@@ -65,13 +67,13 @@
 }
 
 .band figure {
-	margin: 48px 0 0;
+	margin: var(--space-head) 0 0;
 }
 
 .band figcaption,
 .devices figcaption {
 	margin-top: 14px;
-	font-size: 14px;
+	font-size: var(--fs-caption);
 	line-height: 1.5;
 	color: var(--ani-dim);
 }
@@ -99,6 +101,51 @@
 	height: auto;
 }
 
+/* The Continue row, close up: from the row's heading to the last caption, running off the window's
+   right edge as it does in the app. Two cards on a phone. */
+.crop-continue {
+	aspect-ratio: 1200 / 330;
+}
+
+.k-body .crop-continue img {
+	left: -21.2%;
+	top: -141.8%;
+	width: 121%;
+}
+
+/* A device or window standing on the next section's hairline: its top half shows, whole and
+   uncropped at the sides, and the section ends where it is cut. The caption comes first. */
+.band-rise {
+	padding-bottom: 0;
+}
+
+.rise-fig figcaption {
+	margin: 0 0 14px;
+}
+
+.rise {
+	overflow: hidden;
+}
+
+.rise-ipad {
+	aspect-ratio: 1000 / 372;
+	max-width: 1000px;
+}
+
+.rise-device {
+	padding: clamp(6px, 1.1vw, 13px);
+	border-radius: clamp(20px, 3.4vw, 40px) clamp(20px, 3.4vw, 40px) 0 0;
+	border: 1px solid var(--ani-bezel-edge);
+	border-bottom: 0;
+	background: var(--ani-bezel);
+}
+
+.rise-device img {
+	display: block;
+	width: 100%;
+	border-radius: clamp(14px, 2.4vw, 27px) clamp(14px, 2.4vw, 27px) 0 0;
+}
+
 .band .player-fig {
 	max-width: 1040px;
 	margin-inline: auto;
@@ -118,8 +165,39 @@
 	border-radius: 44px;
 }
 
+/* A watch party on a phone, and the iPhone as the TV's remote, standing on one line. */
+.together {
+	display: grid;
+	grid-template-columns: minmax(0, 4fr) minmax(0, 1fr);
+	gap: clamp(16px, 3vw, 40px);
+	align-items: end;
+}
+
+.together .bezel {
+	position: static;
+}
+
+.together-party {
+	border-radius: clamp(22px, 3.4vw, 44px);
+	padding: clamp(5px, 0.7vw, 9px);
+}
+
+.k-body .together-party img {
+	aspect-ratio: 2400 / 1080;
+	border-radius: clamp(17px, 2.7vw, 35px);
+}
+
+.together-remote {
+	padding: clamp(4px, 0.5vw, 6px);
+	border-radius: clamp(22px, 2.6vw, 34px);
+}
+
+.together-remote img {
+	border-radius: clamp(18px, 2.1vw, 28px);
+}
+
 .fx-grid {
-	margin-top: 48px;
+	margin-top: var(--space-head);
 	display: grid;
 	grid-template-columns: repeat(auto-fit, minmax(min(240px, 100%), 1fr));
 	gap: 24px;
@@ -137,9 +215,14 @@
 	background: var(--ani-crop-a);
 }
 
-.fx-grid figcaption {
+.fx-term {
+	margin: 24px 0 0;
+}
+
+.fx-grid figcaption,
+.fx-term figcaption {
 	margin-top: 12px;
-	font-size: 15px;
+	font-size: var(--fs-small);
 	color: var(--ani-text);
 }
 
@@ -151,7 +234,7 @@
 .k-body .dl-card .dl-name {
 	margin: 0;
 	font-family: inherit;
-	font-size: 20px;
+	font-size: var(--fs-h3);
 	font-weight: 600;
 	line-height: inherit;
 	letter-spacing: normal;
@@ -160,39 +243,51 @@
 /* ── The hero ─────────────────────────────────────────────────────────── */
 
 .hero {
-	padding: 72px 32px 104px;
+	padding: clamp(28px, 4vw, 72px) var(--gutter) var(--space-section);
 }
 
+/* The headline on the left at display size, what Kaeri is and the download on the right, both on
+   the page's left edge; the apps below. */
 .hero-copy {
-	max-width: 760px;
+	max-width: 1120px;
 	margin: 0 auto;
-	text-align: center;
+	display: grid;
+	grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
+	gap: 28px 64px;
+	align-items: end;
 }
 
-.hero-copy .k-lede {
-	max-width: 620px;
-	margin-inline: auto;
+.k-body .hero h1 {
+	font-size: var(--fs-hero);
+	line-height: 0.98;
+	letter-spacing: -0.03em;
+	text-wrap: balance;
+}
+
+.hero-side .k-lede {
+	margin: 0;
+	max-width: 30em;
 }
 
 .hero-actions {
-	margin-top: 30px;
+	margin-top: 28px;
 	display: flex;
-	justify-content: center;
 	align-items: center;
 	gap: 16px 28px;
 	flex-wrap: wrap;
-	font-size: 17px;
+	font-size: var(--fs-body);
 }
 
 .hero-note {
 	margin: 14px 0 0;
-	font-size: 14px;
+	font-size: var(--fs-caption);
 	color: var(--ani-dim);
 }
 
 .devices {
+	position: relative;
 	max-width: 1280px;
-	margin: 64px auto 0;
+	margin: var(--space-head) auto 0;
 }
 
 .devices-stage {
@@ -243,31 +338,30 @@
 }
 
 .devices figcaption {
-	margin-top: 28px;
-	text-align: center;
+	max-width: 1120px;
+	margin: 28px auto 0;
+}
+
+.cap-narrow {
+	display: none;
 }
 
 /* ── Download cards ───────────────────────────────────────────────────── */
 
 .dl-sect {
-	padding: 136px 32px 0;
+	padding: 0 var(--gutter) var(--space-section);
 }
 
 .dl-in {
 	max-width: 1200px;
 	margin: 0 auto;
-}
-
-.k-body .dl-title {
-	text-align: center;
-	font-size: clamp(36px, 4vw + 14px, 56px);
-	line-height: 1.1;
+	padding-top: clamp(28px, 2vw + 16px, 44px);
+	border-top: 1px solid var(--ani-rule);
 }
 
 .dl-version {
 	margin: 16px 0 0;
-	text-align: center;
-	font-size: 19px;
+	font-size: var(--fs-lede);
 	color: var(--ani-dim);
 }
 
@@ -275,24 +369,66 @@
 	color: var(--ani-text);
 }
 
+/* One row per platform between hairlines: the name, what it needs, and its button on the right, so
+   the seven read down one column. The next steps open across the row beneath them. */
 .dl-grid {
-	margin-top: 72px;
-	display: grid;
-	grid-template-columns: repeat(auto-fit, minmax(min(250px, 100%), 1fr));
-	gap: 40px 32px;
+	margin-top: var(--space-head);
+	border-top: 1px solid var(--ani-rule);
 }
 
-.dl-col {
-	border-top: 1px solid var(--ani-rule);
-	padding-top: 28px;
-	display: flex;
-	flex-direction: column;
-	gap: 44px;
+.dl-card {
+	display: grid;
+	grid-template-columns: minmax(0, 3fr) minmax(0, 6fr) minmax(0, 3fr);
+	column-gap: 40px;
+	align-items: start;
+	padding: 24px 0;
+	border-bottom: 1px solid var(--ani-rule);
+}
+
+.k-body .dl-card .dl-name {
+	grid-column: 1;
+	grid-row: 1 / span 3;
+	align-self: baseline;
+}
+
+.dl-needs,
+.dl-card pre {
+	grid-column: 2;
+	max-width: 36em;
+}
+
+.dl-card pre {
+	grid-row: 2;
+}
+
+.dl-card .dl-act {
+	grid-column: 3;
+	grid-row: 1;
+	justify-self: end;
+	margin: 0;
+}
+
+.dl-card .dl-suggested {
+	grid-column: 3;
+	grid-row: 2;
+	justify-self: end;
+	text-align: right;
+}
+
+.dl-card .dl-next {
+	grid-column: 2 / -1;
+	grid-row: 4;
+	margin-top: 0;
+}
+
+.dl-card .dl-next-body {
+	margin-top: 20px;
 }
 
 .dl-needs {
-	margin: 8px 0 0;
-	font-size: 15px;
+	align-self: baseline;
+	margin: 2px 0 0;
+	font-size: var(--fs-small);
 	line-height: 1.5;
 	color: var(--ani-dim);
 }
@@ -308,7 +444,7 @@
 
 .dl-suggested {
 	margin: 10px 0 0;
-	font-size: 14px;
+	font-size: var(--fs-caption);
 	color: var(--ani-dim);
 }
 
@@ -327,7 +463,7 @@
 	padding: 16px;
 	border-radius: 10px;
 	background: var(--ani-raised);
-	font-size: 15px;
+	font-size: var(--fs-small);
 	line-height: 1.5;
 }
 
@@ -378,9 +514,8 @@
 }
 
 .dl-more {
-	margin-top: 64px;
+	margin-top: 32px;
 	display: flex;
-	justify-content: center;
 	gap: 12px 32px;
 	flex-wrap: wrap;
 	font-size: 15px;
@@ -388,106 +523,115 @@
 
 /* ── The FAQ ──────────────────────────────────────────────────────────── */
 
+/* The question on the left, the answers on the right, on the same hairline as every section. */
 .faq-sect {
-	padding: 120px 32px 136px;
+	padding: 0 var(--gutter) var(--space-section);
 }
 
 .faq {
-	max-width: 800px;
+	max-width: 1200px;
 	margin: 0 auto;
-}
-
-.k-body .faq-title {
-	font-size: clamp(30px, 2vw + 18px, 40px);
-	line-height: 1.1;
-	letter-spacing: -0.01em;
-}
-
-.faq-list {
-	margin-top: 32px;
+	padding-top: clamp(28px, 2vw + 16px, 44px);
 	border-top: 1px solid var(--ani-rule);
+	display: grid;
+	grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+	gap: 24px 64px;
+	align-items: start;
+}
+
+.faq details:first-child {
+	padding-top: 6px;
 }
 
 /* ── Open source ──────────────────────────────────────────────────────── */
 
 .oss {
-	background: var(--ani-band);
-	padding: 128px 32px;
+	padding: 0 var(--gutter) var(--space-section);
 }
 
 .oss-in {
-	max-width: 720px;
+	max-width: 1200px;
 	margin: 0 auto;
-	text-align: center;
-}
-
-.oss-in img {
-	display: block;
-	margin: 0 auto;
-	width: 60px;
-	height: 60px;
-	border-radius: 14px;
-	image-rendering: pixelated;
-}
-
-.k-body .oss-in h2 {
-	margin-top: 28px;
-	font-size: clamp(32px, 3vw + 12px, 48px);
-	line-height: 1.1;
+	padding-top: clamp(28px, 2vw + 16px, 44px);
+	border-top: 1px solid var(--ani-rule);
+	display: grid;
+	grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+	gap: 24px 64px;
+	align-items: start;
 }
 
 .oss-in p {
-	margin: 18px 0 0;
-	font-size: 19px;
+	margin: 20px 0 0;
+	max-width: 30em;
+	font-size: var(--fs-lede);
 	line-height: 1.55;
 	color: var(--ani-dim);
-	text-wrap: pretty;
 }
 
-.oss-actions {
-	margin-top: 32px;
+/* The ways in, as a list of rows like the questions above. */
+.oss-links {
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+
+.k-body .oss-links a {
 	display: flex;
-	justify-content: center;
-	gap: 12px;
-	flex-wrap: wrap;
+	align-items: center;
+	justify-content: space-between;
+	gap: 16px;
+	padding: 18px 0;
+	border-bottom: 1px solid var(--ani-rule);
+	font-size: var(--fs-h3);
+	font-weight: 600;
+	text-decoration: none;
+}
+
+.oss-links li:first-child a {
+	padding-top: 6px;
+}
+
+.oss-links svg {
+	flex: none;
+	color: var(--ani-dim);
 }
 
 /* ── Phones ───────────────────────────────────────────────────────────── */
 
+@media (max-width: 900px) {
+	.hero-copy,
+	.faq,
+	.oss-in {
+		grid-template-columns: minmax(0, 1fr);
+	}
+
+	.faq-list,
+	.oss-links {
+		border-top: 1px solid var(--ani-rule);
+	}
+
+	.faq details:first-child,
+	.oss-links li:first-child a {
+		padding-top: 18px;
+	}
+}
+
 @media (max-width: 700px) {
-	.band {
-		padding: 72px 16px;
-	}
-
-	.band figure {
-		margin-top: 32px;
-	}
-
-	.band-head p {
-		font-size: 17px;
-	}
-
-	.hero {
-		padding: 28px 16px 56px;
-	}
 
 	.hero-actions {
-		flex-direction: column;
 		margin-top: 24px;
 	}
 
-	.devices {
-		margin-top: 32px;
-	}
-
+	/* The Mac runs off the right edge behind the iPhone; the iPad would be too small to read. */
 	.devices-stage {
 		aspect-ratio: auto;
-		height: 400px;
+		height: 392px;
+		margin-inline: calc(var(--gutter) * -1);
 		overflow: hidden;
 	}
 
 	.dev-mac {
-		left: 20px;
+		left: var(--gutter);
 		width: 560px;
 	}
 
@@ -496,9 +640,10 @@
 	}
 
 	.dev-phone {
-		left: 216px;
-		top: 96px;
-		width: 154px;
+		left: auto;
+		right: var(--gutter);
+		top: 44px;
+		width: 156px;
 		padding: 5px;
 		border-radius: 30px;
 	}
@@ -508,15 +653,66 @@
 	}
 
 	.devices figcaption {
-		text-align: left;
-		margin-top: 8px;
-		position: absolute;
-		left: 16px;
-		width: 180px;
+		margin-top: 12px;
 	}
 
-	.devices {
-		position: relative;
+	.cap-wide {
+		display: none;
+	}
+
+	.cap-narrow {
+		display: inline;
+	}
+
+	.dl-card {
+		display: block;
+		padding: 20px 0 24px;
+	}
+
+	.dl-card .dl-act {
+		margin-top: 16px;
+		justify-self: start;
+	}
+
+	.dl-card .dl-suggested {
+		justify-self: start;
+		text-align: left;
+	}
+
+	.crop-continue {
+		aspect-ratio: 2 / 1;
+	}
+
+	.k-body .crop-continue img {
+		left: -42%;
+		top: -146%;
+		width: 227%;
+	}
+
+	.rise-ipad {
+		aspect-ratio: 358 / 190;
+	}
+
+	/* The other platforms sit side by side and scroll sideways, a little of the next one showing. */
+	.fx-grid {
+		display: flex;
+		gap: 12px;
+		margin-inline: calc(var(--gutter) * -1);
+		padding-inline: var(--gutter);
+		overflow-x: auto;
+		scroll-snap-type: x mandatory;
+		scroll-padding-inline: var(--gutter);
+		overscroll-behavior-x: contain;
+		scrollbar-width: none;
+	}
+
+	.fx-grid::-webkit-scrollbar {
+		display: none;
+	}
+
+	.fx-grid > figure {
+		flex: 0 0 72%;
+		scroll-snap-align: start;
 	}
 
 	.player-bezel {
@@ -528,23 +724,4 @@
 		border-radius: 22px;
 	}
 
-	.dl-sect {
-		padding: 80px 16px 0;
-	}
-
-	.dl-grid {
-		margin-top: 40px;
-	}
-
-	.faq-sect {
-		padding: 72px 16px 80px;
-	}
-
-	.oss {
-		padding: 80px 16px;
-	}
-
-	.site-footer {
-		padding-inline: 16px;
-	}
 }

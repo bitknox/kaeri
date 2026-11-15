@@ -139,7 +139,7 @@ player-resumed-at = Продолжено с { $clock }
 player-start-over = Начать сначала
 player-still-watching = Вы ещё смотрите?
 player-still-watching-detail = { $count ->
-    [one] Пауза после одного эпизода подряд.
+    [one] Пауза после { $count } эпизода подряд.
     [few] Пауза после { $count } эпизода подряд.
     [many] Пауза после { $count } эпизодов подряд.
    *[other] Пауза после { $count } эпизода подряд.

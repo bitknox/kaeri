@@ -23,9 +23,20 @@ notice-mal-no-refresh-token = MyAnimeList n'a pas fourni de jeton de renouvellem
 notice-client-id-missing = Réglez d'abord { $setting } dans le fichier de configuration.
 notice-signed-out = Déconnecté de { $tracker }.
 notice-signed-out-queue = { $count ->
-    [one] Déconnecté de { $tracker }. Une modification en attente est conservée pour la prochaine connexion.
+    [one] Déconnecté de { $tracker }. { $count } modification en attente est conservée pour la prochaine connexion.
     [many] Déconnecté de { $tracker }. { $count } modifications en attente sont conservées pour la prochaine connexion.
    *[other] Déconnecté de { $tracker }. { $count } modifications en attente sont conservées pour la prochaine connexion.
+ }
+notice-tracker-change-refused = { $tracker } a refusé plusieurs fois une modification de { $title }, elle reste donc seulement dans { -app-name }.
+notice-tracker-changes-refused = { $others ->
+    [one] { $tracker } a refusé plusieurs fois des modifications de { $title } et de { $others } autre titre, elles restent donc seulement dans { -app-name }.
+    [many] { $tracker } a refusé plusieurs fois des modifications de { $title } et de { $others } autres titres, elles restent donc seulement dans { -app-name }.
+   *[other] { $tracker } a refusé plusieurs fois des modifications de { $title } et de { $others } autres titres, elles restent donc seulement dans { -app-name }.
+ }
+notice-tracker-change-refused-untitled = { $count ->
+    [one] { $tracker } a refusé plusieurs fois des modifications de { $count } titre, elles restent donc seulement dans { -app-name }.
+    [many] { $tracker } a refusé plusieurs fois des modifications de { $count } titres, elles restent donc seulement dans { -app-name }.
+   *[other] { $tracker } a refusé plusieurs fois des modifications de { $count } titres, elles restent donc seulement dans { -app-name }.
  }
 notice-sign-out-failed = Impossible de vous déconnecter de { $tracker }. Réessayez. { $reason }
 notice-not-saved-because = Impossible d'enregistrer ce réglage. { $cause }
@@ -40,7 +51,7 @@ notice-mapping-data-refreshed = Données de correspondance actualisées.
 notice-mapping-data-failed = Impossible d'actualiser les données de correspondance ({ $datasets }). Nouvelle tentative dans { $wait }. { $cause }
 notice-episode-aired = { $title }, épisode { $episode }, a été diffusé pendant votre absence.
 notice-episodes-aired = { $count ->
-    [one] Un nouvel épisode d'une série que vous suivez a été diffusé. Le calendrier l'affiche.
+    [one] { $count } nouvel épisode d'une série que vous suivez a été diffusé. Le calendrier l'affiche.
     [many] { $count } nouveaux épisodes de séries que vous suivez ont été diffusés. Le calendrier les affiche.
    *[other] { $count } nouveaux épisodes de séries que vous suivez ont été diffusés. Le calendrier les affiche.
  }

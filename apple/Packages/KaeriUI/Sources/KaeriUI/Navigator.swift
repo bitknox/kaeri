@@ -29,7 +29,9 @@ public final class Navigator {
     }
     /// The series page open over the section on the Mac, by work id. On iPhone and iPad it is
     /// pushed on the tab's stack.
-    public var seriesOnMac: String?
+    public var seriesOnMac: String? {
+        didSet { if seriesOnMac != oldValue { endClosedSeriesVisits() } }
+    }
     /// A book source's page open in place of Your sources' list on the Mac. On iPhone and iPad it
     /// is pushed on the stack.
     var bookSourcePage: BookSourcePage?
@@ -88,7 +90,12 @@ public final class Navigator {
     @ObservationIgnored var shownLandings: [TitleLandingID: Int] = [:]
     /// Each tab's pushed title pages, on iPhone and iPad, each with the element it zooms from.
     public var paths: [AppSection: [TitleRoute]] = [:] {
-        didSet { if paths != oldValue { endClosedEpisodeVisits() } }
+        didSet {
+            if paths != oldValue {
+                endClosedEpisodeVisits()
+                endClosedSeriesVisits()
+            }
+        }
     }
     /// The title the menus' Episode items and the palette's commands act on: the one selected
     /// in a list, or the page that is open.
@@ -180,6 +187,9 @@ public final class Navigator {
     var synopsisAllShown: Set<AnilistId> = []
     /// The range of a long series' episodes the viewer picked, per title, for the visit.
     var episodeRange: [AnilistId: Int] = [:]
+    /// What an open series page holds, per work, for the visit: here rather than in the page, so
+    /// an iPad window made narrow or wide, which makes the tab view again, keeps it.
+    var seriesPages: [String: SeriesPageState] = [:]
     /// The pick the title page on screen was opened by, while it is: Another asks the same pool
     /// again. Gone once the page is, or another title is opened from it.
     var pickVisit: SearchModel.Pick?
@@ -444,4 +454,25 @@ public struct ReadViewAll: Hashable, Identifiable {
     /// The line over the results, from the row ("Manga, trending").
     public var line: String?
     public var id: Self { self }
+}
+
+/// A series page's chapters being chosen and its list's order.
+struct SeriesPageState: Equatable {
+    /// The chapters chosen, while chapters are being chosen.
+    var choosing: Set<String>?
+    var newestFirst = true
+}
+
+extension Navigator {
+    /// The works whose series pages are open: the Mac's, and on iPhone and iPad every tab's
+    /// pushed pages.
+    var openWorks: Set<String> {
+        Set(paths.values.flatMap { $0.compactMap(\.work) }).union(seriesOnMac.map { [$0] } ?? [])
+    }
+
+    /// Forgets what the series pages that closed held, so a page opened again starts afresh.
+    func endClosedSeriesVisits() {
+        let open = openWorks
+        for work in seriesPages.keys where !open.contains(work) { seriesPages[work] = nil }
+    }
 }

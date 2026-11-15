@@ -7,7 +7,9 @@
 //! so the seek bar's thumbnailer can read from memory.
 //!
 //! **What it changes.** Only the URIs in a playlist, so the player's next requests come back
-//! here. Every other byte is served as the host sent it: segments, keys and initialisation
+//! here, and a playlist is served from its `#EXTM3U` on and labelled as one: a playlist may
+//! carry leading bytes before the tag, and a host may give it any content type. Every other
+//! byte is served as the host sent it: segments, keys and initialisation
 //! segments pass through unchanged, and an `#EXT-X-KEY` is proxied verbatim, so encrypted HLS
 //! keeps working exactly as it did. Nothing here decrypts anything.
 //!
@@ -43,7 +45,8 @@ mod upstream;
 
 pub use playlist::{resolve_url, rewrite_playlist};
 
-use playlist::looks_like_playlist;
+use kaeri_playback::hls::PLAYLIST_TYPE;
+use playlist::playlist_body;
 use upstream::{Cache, send, send_once};
 
 /// The largest response body the proxy will hold in memory.
@@ -379,15 +382,16 @@ async fn handle_connection(socket: TcpStream, upstream: Arc<Upstream>) -> std::i
     };
     match fetched {
         Ok(fetched) => {
-            let content_type = &fetched.content_type;
-            let body = if looks_like_playlist(content_type, &fetched.body) {
-                let text = String::from_utf8_lossy(&fetched.body);
-                upstream.learn_order(&text, &url);
-                upstream.note_subtitles(&text, &url);
-                let proxy = |u: &str| upstream.proxied(u, class);
-                rewrite_playlist(&text, &url, &proxy).into_bytes()
-            } else {
-                fetched.body.clone()
+            let (content_type, body) = match playlist_body(&fetched.content_type, &fetched.body)
+            {
+                Some(playlist) => {
+                    let text = String::from_utf8_lossy(playlist);
+                    upstream.learn_order(&text, &url);
+                    upstream.note_subtitles(&text, &url);
+                    let proxy = |u: &str| upstream.proxied(u, class);
+                    (PLAYLIST_TYPE, rewrite_playlist(&text, &url, &proxy).into_bytes())
+                }
+                None => (fetched.content_type.as_str(), fetched.body.clone()),
             };
             // The thumbnailer's refusals are logged and its answers were not, so a seek bar
             // showing no thumbnails could not be told from one that never asked.
@@ -748,6 +752,87 @@ mod tests {
         socket.read_to_end(&mut raw).await.unwrap();
         let split = raw.windows(4).position(|w| w == b"\r\n\r\n").unwrap() + 4;
         assert!(raw.starts_with(b"HTTP/1.1 200"));
+        assert_eq!(&raw[split..], &body[..]);
+    }
+
+    /// The proxy's whole answer to a `GET` of `path`, headers included, from a loopback host
+    /// that answers every request with `body` labelled `content_type`.
+    async fn answer_through_proxy(
+        path: &str,
+        content_type: &'static str,
+        body: Vec<u8>,
+    ) -> Vec<u8> {
+        let host = TcpListener::bind((Ipv4Addr::LOCALHOST, 0)).await.unwrap();
+        let address = host.local_addr().unwrap();
+        tokio::spawn(async move {
+            let Ok((mut socket, _)) = host.accept().await else { return };
+            let mut request = [0u8; 4096];
+            let _ = socket.read(&mut request).await;
+            let head = format!(
+                "HTTP/1.1 200 OK\r\nContent-Type: {content_type}\r\nContent-Length: {}\r\n\
+                 Connection: close\r\n\r\n",
+                body.len()
+            );
+            let _ = socket.write_all(head.as_bytes()).await;
+            let _ = socket.write_all(&body).await;
+        });
+
+        let http = HttpClient::new(&kaeri_core::config::NetworkConfig::default()).unwrap();
+        let server =
+            serve(http, &format!("http://{address}{path}"), Vec::new(), "tok").await.unwrap();
+        let authority =
+            server.url().trim_start_matches("http://").split('/').next().unwrap().to_owned();
+        let path = &server.url()[server.url().find("/m/").unwrap()..];
+        let mut socket = TcpStream::connect(&authority).await.unwrap();
+        socket
+            .write_all(format!("GET {path} HTTP/1.1\r\nHost: {authority}\r\n\r\n").as_bytes())
+            .await
+            .unwrap();
+        let mut raw = Vec::new();
+        socket.read_to_end(&mut raw).await.unwrap();
+        raw
+    }
+
+    #[tokio::test]
+    async fn a_playlist_with_leading_bytes_is_served_from_its_tag_and_labelled_as_a_playlist() {
+        // A playlist may carry leading bytes before `#EXTM3U`, at an address with any ending
+        // and under any content type. The player gets it from the tag on, its URIs pointed
+        // back here, and labelled so that ffmpeg opens it as HLS.
+        let mut body = b"\x00\x01\x02\x03\x04\x05\x06\n".to_vec();
+        body.extend_from_slice(
+            b"#EXTM3U\n#EXT-X-TARGETDURATION:4\n#EXT-X-MAP:URI=\"https://cdn.example/v/init.bin\"\n\
+              #EXTINF:4.0,\nhttps://cdn.example/v/seg0.bin\n#EXT-X-ENDLIST\n",
+        );
+        let raw = answer_through_proxy("/v/list.bin", "image/jpeg", body).await;
+        let raw = String::from_utf8_lossy(&raw).into_owned();
+        let (head, playlist) = raw.split_once("\r\n\r\n").unwrap();
+        assert!(head.starts_with("HTTP/1.1 200"), "{head}");
+        assert!(head.contains("Content-Type: application/vnd.apple.mpegurl\r\n"), "{head}");
+        assert!(playlist.starts_with("#EXTM3U\n"), "{playlist}");
+        assert_eq!(
+            head.lines()
+                .find_map(|l| l.strip_prefix("Content-Length: "))
+                .and_then(|n| n.parse::<usize>().ok()),
+            Some(playlist.len())
+        );
+        assert!(!playlist.contains("cdn.example/v/seg0.bin\n"), "{playlist}");
+        assert_eq!(
+            decode_path(proxied_ending(playlist, "seg0.bin").rsplit('/').next().unwrap()),
+            "https://cdn.example/v/seg0.bin"
+        );
+        proxied_ending(playlist, "init.bin");
+    }
+
+    #[tokio::test]
+    async fn a_body_with_the_tag_past_the_leading_bytes_is_served_as_media() {
+        // Media that happens to hold the tag further in is not a playlist: every byte of it
+        // reaches the player as the host sent it, under the host's own content type.
+        let mut body = transport_stream();
+        body.splice(300..300, b"#EXTM3U\n".iter().copied());
+        let raw = answer_through_proxy("/v/seg0.bin", "image/jpeg", body.clone()).await;
+        let split = raw.windows(4).position(|w| w == b"\r\n\r\n").unwrap() + 4;
+        let head = String::from_utf8_lossy(&raw[..split]);
+        assert!(head.contains("Content-Type: image/jpeg\r\n"), "{head}");
         assert_eq!(&raw[split..], &body[..]);
     }
 

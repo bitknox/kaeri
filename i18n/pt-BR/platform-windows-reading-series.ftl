@@ -1,7 +1,7 @@
 series-read-again-done-windows = Lendo { $title } de novo desde o início
 send-save-files-windows = Salvar arquivos
 send-saved-windows = { $n ->
-    [one] Arquivo salvo
+    [one] { $n } arquivo salvo
     [many] { $n } de arquivos salvos
    *[other] { $n } arquivos salvos
  }

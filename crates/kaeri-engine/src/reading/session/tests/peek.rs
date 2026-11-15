@@ -448,3 +448,56 @@ async fn a_downloaded_next_chapter_previews_from_its_file() {
     assert_eq!((file.width, file.height), (300, 450), "made from the downloaded file");
     assert!(server.fetched_of("c2").is_empty());
 }
+
+/// R6-M9. A downloaded chapter opens and is laid out with no request to its source, and closing
+/// it leaves none behind: the next chapter is fetched ahead only once the person moves in it.
+#[tokio::test(start_paused = true)]
+async fn a_downloaded_chapter_opens_without_asking_the_source() {
+    let server = Arc::new(ShelfServer::new(vec!["c1", "c2"]));
+    let mut h = opened(server.clone()).await;
+    let first = h.reader.session.as_ref().unwrap().chapter().id.clone();
+    let session = h.session();
+    h.send(ReaderCommand::Close { session });
+    tokio::time::sleep(Duration::from_secs(2)).await;
+    // The first chapter downloaded since, as a folder of its three pages.
+    let folder = tempfile::tempdir().unwrap();
+    for n in 1..=3 {
+        let page = image::GrayImage::from_pixel(300, 450, image::Luma([60 + n]));
+        page.save(folder.path().join(format!("{n:03}.png"))).unwrap();
+    }
+    let ask = kaeri_store::book_downloads::BookDownloadAsk {
+        work: SERVED,
+        chapter: first.as_str(),
+        source_id: "shelf-1",
+        version_label: None,
+        keep_ready: false,
+    };
+    h.services.store.queue_book_download(&ask, 1).unwrap();
+    let id = h.services.store.book_download(SERVED, first.as_str()).unwrap().unwrap().id;
+    let path = folder.path().to_str().unwrap();
+    h.services.store.book_download_done(id, path, Some(3), 1, 1).unwrap();
+    let asked = |s: &ShelfServer| s.asked.lock().unwrap().values().sum::<u32>();
+    let before = (asked(&server), server.fetched.lock().unwrap().len());
+
+    for _ in 0..3 {
+        h.open_work(WorkId::new(SERVED), OpenAt::Start).await;
+        assert_eq!(h.reader.session.as_ref().unwrap().chapter().id, first);
+        h.shown(0, TurnHow::Placed).await;
+        tokio::time::sleep(Duration::from_secs(2)).await;
+        let session = h.session();
+        h.send(ReaderCommand::Close { session });
+        tokio::time::sleep(Duration::from_secs(2)).await;
+    }
+    assert_eq!(
+        (asked(&server), server.fetched.lock().unwrap().len()),
+        before,
+        "no request on opening a downloaded chapter"
+    );
+
+    // Moving in it fetches the next chapter ahead, as from a source's chapter.
+    h.open_work(WorkId::new(SERVED), OpenAt::Start).await;
+    h.near_the_end(1);
+    let (chapter, _) = h.preview().await;
+    assert_eq!(chapter, h.next_chapter());
+    assert!(!server.fetched_of("c2").is_empty());
+}

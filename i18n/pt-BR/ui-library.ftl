@@ -1,5 +1,5 @@
 queue-episodes-left = { $count ->
-    [one] Falta um episódio em { $title }
+    [one] Falta { $count } episódio em { $title }
     [many] Faltam { $count } episódios em { $title }
    *[other] Faltam { $count } episódios em { $title }
  }
@@ -75,7 +75,7 @@ up-next-hidden-until-airs = { $title } fica oculto até estrear.
 up-next-broadcast = Episódio { $episode } · { $when }
 up-next-out = saiu { $ago }
 library-row-scanning = { $files ->
-    [one] Verificando · 1 arquivo encontrado
+    [one] Verificando · { $files } arquivo encontrado
     [many] Verificando · { $files } de arquivos encontrados
    *[other] Verificando · { $files } arquivos encontrados
  }
@@ -83,12 +83,12 @@ library-row-matching = Identificando · { $done } de { $total } séries
 library-row-waiting = Aguardando o AniList · { $seconds } s
 library-row-summary = { $episodes } de { $series }
 library-episodes = { $count ->
-    [one] 1 episódio
+    [one] { $count } episódio
     [many] { $count } de episódios
    *[other] { $count } episódios
  }
 library-series = { $count ->
-    [one] 1 série
+    [one] { $count } série
     [many] { $count } de séries
    *[other] { $count } séries
  }
@@ -113,19 +113,19 @@ library-fix-confidence = { $percent }% de correspondência
 library-open-folder = Abrir pasta
 library-matched-count = { $count } séries identificadas
 library-row-series = { $count ->
-    [one] 1 série
+    [one] { $count } série
     [many] { $count } de séries
    *[other] { $count } séries
  }
 library-row-files = { $files ->
-    [one] 1 arquivo
+    [one] { $files } arquivo
     [many] { $files } de arquivos
    *[other] { $files } arquivos
  }
 library-show-finder = Mostrar no Finder
 library-remove-line = Seus arquivos continuam onde estão.
 library-files = { $count ->
-    [one] 1 arquivo
+    [one] { $count } arquivo
     [many] { $count } de arquivos
    *[other] { $count } arquivos
  }

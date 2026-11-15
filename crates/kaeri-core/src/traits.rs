@@ -401,17 +401,17 @@ pub trait Tracker: Send + Sync {
     /// Apply a batch of operations. Must be safe to call twice with the same input.
     async fn push(&self, ops: &[TrackOp]) -> Result<(), crate::Error>;
 
-    /// [`Self::push`], also naming the titles the tracker answered for without applying
-    /// anything.
+    /// [`Self::push`], saying what became of each title: applied, answered for without applying
+    /// anything, or failed and why.
     ///
     /// Some services answer a write with success and a list of what they could not match, so
     /// the status alone says nothing about whether the list changed. The drain reports those
-    /// titles instead of counting them as sent. Default: `push`, trusting its success.
-    async fn push_checked(
-        &self,
-        ops: &[TrackOp],
-    ) -> Result<Vec<crate::ids::AnilistId>, crate::Error> {
-        self.push(ops).await.map(|()| Vec::new())
+    /// titles instead of counting them as sent. A tracker that writes title by title reports a
+    /// failure against its title and goes on with the rest. An `Err` is about the whole batch:
+    /// the drain then asks again title by title when it was a refusal, so one bad change cannot
+    /// sink the others. Default: `push`, trusting its success.
+    async fn push_checked(&self, ops: &[TrackOp]) -> Result<Pushed, crate::Error> {
+        self.push(ops).await.map(|()| Pushed::default())
     }
 
     /// Whether this tracker can name the title an op is about, with the id mappings as they
@@ -440,13 +440,10 @@ pub trait Tracker: Send + Sync {
         Ok(Vec::new())
     }
 
-    /// Apply a batch of reading operations, naming the titles the tracker answered for without
-    /// applying anything, as [`Self::push_checked`] does. Safe to call twice with the same input.
-    async fn push_read(
-        &self,
-        _ops: &[TrackOp],
-    ) -> Result<Vec<crate::ids::AnilistId>, crate::Error> {
-        Ok(Vec::new())
+    /// Apply a batch of reading operations, saying what became of each work, as
+    /// [`Self::push_checked`] does. Safe to call twice with the same input.
+    async fn push_read(&self, _ops: &[TrackOp]) -> Result<Pushed, crate::Error> {
+        Ok(Pushed::default())
     }
 
     /// Take a manga or novel off this tracker's list. Only the person asks for this: sync never
@@ -561,6 +558,95 @@ impl TrackOp {
                 | Self::SetReadStatus { .. }
                 | Self::SetReadScore { .. }
         )
+    }
+}
+
+/// Why a tracker did not apply one title's changes, in the terms the outbox acts on.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum PushFailure {
+    /// The tracker refused this title's change for good: an entry removed or merged, a value
+    /// it does not accept. The only failure that counts toward the outbox's limit, and it is
+    /// the title's alone: the rest of the batch still goes.
+    Refused(String),
+    /// The credential was rejected. Everything waits for a sign-in; nothing is dropped.
+    Auth(String),
+    /// The tracker asked for a pause. Waits, and is never counted.
+    RateLimited { message: String, retry_in_secs: Option<u64> },
+    /// The network, or the tracker's server, is down. Waits, is never counted and never
+    /// dropped.
+    Unavailable(String),
+}
+
+impl PushFailure {
+    /// What an error from a tracker call means for the change it carried.
+    ///
+    /// Only [`crate::Error::Tracker`] is a refusal. Anything else, errors that are not the
+    /// tracker's at all included (the local store, the configuration), says nothing about the
+    /// change, so it waits rather than counting toward its end.
+    pub fn of(error: &crate::Error) -> Self {
+        match error {
+            crate::Error::Tracker { message, .. } => Self::Refused(message.clone()),
+            crate::Error::Auth(message) => Self::Auth(message.clone()),
+            crate::Error::RateLimited { message, retry_in_secs, .. } => {
+                Self::RateLimited { message: message.clone(), retry_in_secs: *retry_in_secs }
+            }
+            other => Self::Unavailable(other.to_string()),
+        }
+    }
+
+    /// Whether this counts toward the outbox's limit on attempts.
+    pub const fn counts(&self) -> bool {
+        matches!(self, Self::Refused(_))
+    }
+
+    pub fn message(&self) -> &str {
+        match self {
+            Self::Refused(message)
+            | Self::Auth(message)
+            | Self::RateLimited { message, .. }
+            | Self::Unavailable(message) => message,
+        }
+    }
+
+    /// The error this is, for a caller that wants one, as [`Tracker::push`] does over a
+    /// checked push.
+    pub fn into_error(self, tracker: &str) -> crate::Error {
+        let tracker = tracker.to_owned();
+        match self {
+            Self::Refused(message) => crate::Error::Tracker { tracker, message },
+            Self::Auth(message) => crate::Error::Auth(message),
+            Self::RateLimited { message, retry_in_secs } => {
+                crate::Error::RateLimited { tracker, message, retry_in_secs }
+            }
+            Self::Unavailable(message) => crate::Error::Unavailable { tracker, message },
+        }
+    }
+}
+
+/// What a tracker did with each title in a push.
+///
+/// Every title the batch named that this does not list was applied. A failure is per title, so
+/// one change the tracker refuses never takes the others down with it.
+#[derive(Debug, Clone, Default, PartialEq)]
+pub struct Pushed {
+    /// Titles the tracker answered for without applying anything: a title it could not match.
+    pub ignored: Vec<crate::ids::AnilistId>,
+    /// Titles it did not apply, each with why.
+    pub failed: Vec<(crate::ids::AnilistId, PushFailure)>,
+}
+
+impl Pushed {
+    /// Why `id` was not applied, if it was not.
+    pub fn failure_for(&self, id: crate::ids::AnilistId) -> Option<&PushFailure> {
+        self.failed.iter().find(|(failed, _)| *failed == id).map(|(_, failure)| failure)
+    }
+
+    /// The push as a plain result: the first failure, if any, as its error.
+    pub fn into_result(self, tracker: &str) -> Result<(), crate::Error> {
+        match self.failed.into_iter().next() {
+            Some((_, failure)) => Err(failure.into_error(tracker)),
+            None => Ok(()),
+        }
     }
 }
 

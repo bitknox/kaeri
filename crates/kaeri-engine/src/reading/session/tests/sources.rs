@@ -7,7 +7,7 @@ use std::{
     io::Cursor,
     sync::{
         Mutex,
-        atomic::{AtomicU32, Ordering},
+        atomic::{AtomicBool, AtomicU32, Ordering},
     },
 };
 
@@ -48,6 +48,8 @@ struct PageSource {
     wide: HashSet<usize>,
     /// The title every chapter is listed with.
     title: Option<&'static str>,
+    /// No page leaves the device: each fails for want of a network.
+    no_network: AtomicBool,
 }
 
 impl PageSource {
@@ -73,6 +75,7 @@ impl PageSource {
             panicking: Mutex::default(),
             wide: HashSet::new(),
             title: None,
+            no_network: AtomicBool::new(false),
         }
     }
 
@@ -136,6 +139,9 @@ impl kaeri_core::traits::BookSource for PageSource {
         let index: usize = page.url.rsplit('/').next().unwrap().parse().unwrap();
         if self.held_from.is_some_and(|from| index >= from) {
             self.gate.acquire().await.unwrap().forget();
+        }
+        if self.no_network.load(Ordering::SeqCst) {
+            return Err(PageError::Failed(ProviderError::no_network("no route to the host")));
         }
         if self.failing.lock().unwrap().contains(&index) {
             return Err(PageError::Status(404));
@@ -359,6 +365,58 @@ async fn a_page_that_fails_has_its_own_retry() {
     h.send(ReaderCommand::Retry { session, chapter: ChapterId::new("1"), page: Some(1) });
     let again = timeout(wait, h.pages_made(1)).await.expect("the retry answers");
     assert_eq!(again, [(1, true)]);
+}
+
+/// A page that failed while the device was offline is not its last word: it waits for the
+/// network rather than failing, and comes once the network is back, as the reader turns on,
+/// with no retry asked for.
+#[tokio::test]
+async fn a_page_that_failed_offline_comes_once_the_network_is_back() {
+    let source = Arc::new(PageSource { held_from: Some(2), ..PageSource::new(&["1"]) });
+    let mut h = reading(source.clone());
+    h.failures = true;
+    h.open_read(None).await;
+    let wait = Duration::from_secs(20);
+    timeout(wait, h.leaves_of("1")).await.expect("the chapter opens");
+    h.shown(0, TurnHow::Turn).await;
+    let made = timeout(wait, h.pages_made(2)).await.expect("two pages come");
+    assert_eq!(made, [(0, true), (1, true)]);
+
+    // The network goes while the third page is on its way, and its fetch fails for want of it.
+    h.network(true);
+    source.no_network.store(true, Ordering::SeqCst);
+    source.gate.add_permits(16);
+    let mut said = Vec::new();
+    let failed = async {
+        loop {
+            said.extend(h.drain());
+            let s = h.reader.session.as_ref().unwrap();
+            let feed = s.feed.as_ref().expect("the chapter's pages come from the source");
+            if feed.page(2) != Some(crate::reading::feed::FeedPage::Coming) {
+                return feed.page(2);
+            }
+            tokio::time::sleep(Duration::from_millis(20)).await;
+        }
+    };
+    let failed = timeout(wait, failed).await.expect("the third page's fetch ends");
+    assert_eq!(failed, Some(crate::reading::feed::FeedPage::Failed(ReadingFailure::Offline)));
+    // Its leaf, made as it failed, waits for the network rather than failing.
+    tokio::time::sleep(Duration::from_millis(500)).await;
+    said.extend(h.drain());
+    let failures: Vec<_> =
+        said.iter().filter(|e| matches!(e, ReaderEvent::PageFailed { .. })).collect();
+    assert!(failures.is_empty(), "a page waiting for the network failed: {failures:?}");
+
+    // Back online, the reader turns on: the page comes without a retry.
+    source.no_network.store(false, Ordering::SeqCst);
+    h.network(false);
+    h.shown(1, TurnHow::Turn).await;
+    h.shown(2, TurnHow::Turn).await;
+    let came = h.until(|e| match e {
+        ReaderEvent::PageReady { page: 2, .. } => Some(()),
+        _ => None,
+    });
+    timeout(wait, came).await.expect("the third page comes once the network is back");
 }
 
 /// A page whose fetch panics fails as that page, not coming for good: the other pages come and

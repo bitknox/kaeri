@@ -63,6 +63,52 @@ fn hostile(path: &Path) {
     zip.finish().unwrap();
 }
 
+/// An EPUB of two documents in the reading flow with a note between them outside it, its markup
+/// written out so places in it can be worked out by hand.
+fn two_documents(path: &Path) {
+    let file = std::fs::File::create(path).unwrap();
+    let mut zip = zip::ZipWriter::new(file);
+    let o = zip::write::SimpleFileOptions::default();
+    let mut put = |name: &str, text: &str| {
+        zip.start_file(name, o).unwrap();
+        zip.write_all(text.as_bytes()).unwrap();
+    };
+    put("mimetype", "application/epub+zip");
+    put(
+        "META-INF/container.xml",
+        r#"<?xml version="1.0"?><container version="1.0" xmlns="urn:oasis:names:tc:opendocument:xmlns:container"><rootfiles><rootfile full-path="OPS/book.opf" media-type="application/oebps-package+xml"/></rootfiles></container>"#,
+    );
+    put(
+        "OPS/book.opf",
+        r#"<?xml version="1.0"?><package xmlns="http://www.idpf.org/2007/opf" version="3.0" unique-identifier="id"><metadata xmlns:dc="http://purl.org/dc/elements/1.1/"><dc:identifier id="id">urn:uuid:00000000-0000-4000-8000-000000000002</dc:identifier><dc:title>The Lantern Keeper</dc:title><dc:language>en</dc:language></metadata><manifest><item id="one" href="one.xhtml" media-type="application/xhtml+xml"/><item id="note" href="note.xhtml" media-type="application/xhtml+xml"/><item id="two" href="two.xhtml" media-type="application/xhtml+xml"/></manifest><spine><itemref idref="one"/><itemref idref="note" linear="no"/><itemref idref="two"/></spine></package>"#,
+    );
+    let page = |title: &str, body: &str| {
+        format!(
+            r#"<?xml version="1.0" encoding="utf-8"?><html xmlns="http://www.w3.org/1999/xhtml"><head><title>{title}</title></head><body>{body}</body></html>"#
+        )
+    };
+    put(
+        "OPS/one.xhtml",
+        &page(
+            "One",
+            "<h1>One</h1><p>The keeper <em>climbed</em> the stair.</p><p>Night fell.</p>",
+        ),
+    );
+    put("OPS/note.xhtml", &page("Note", "<p>A note on lanterns.</p>"));
+    put("OPS/two.xhtml", &page("Two", "<h1>Two</h1><p>The tide came in.</p>"));
+    zip.finish().unwrap();
+}
+
+/// A surface with no web view, as the terminal's.
+fn text_surface() -> ReaderSurface {
+    ReaderSurface { text: true, ..surface() }
+}
+
+/// The words of a document's blocks, one line a block.
+fn read_out(doc: &kaeri_model::reader::NovelTextDoc) -> Vec<String> {
+    doc.blocks.iter().map(|b| b.runs.iter().map(|r| r.text.as_str()).collect()).collect()
+}
+
 fn shelf_file(path: &Path, n: i64, format: &str) -> ShelfFile {
     ShelfFile {
         path: path.display().to_string(),
@@ -92,8 +138,16 @@ fn novel_harness() -> Harness {
 
 impl Harness {
     async fn open_novel(&mut self, at: OpenAt) -> (ReaderView, NovelOpenView) {
+        self.open_novel_on(at, surface()).await
+    }
+
+    async fn open_novel_on(
+        &mut self,
+        at: OpenAt,
+        surface: ReaderSurface,
+    ) -> (ReaderView, NovelOpenView) {
         let work = WorkId::new(WORK);
-        self.send(ReaderCommand::Open { work, chapter: None, at, surface: surface() });
+        self.send(ReaderCommand::Open { work, chapter: None, at, surface });
         let view = self
             .until(|e| match e {
                 ReaderEvent::Opened(view) => Some(view.as_ref().clone()),
@@ -420,6 +474,39 @@ async fn a_setting_restyles_the_open_book_and_counts_are_kept_per_key() {
 }
 
 #[tokio::test(start_paused = true)]
+async fn the_terminals_text_width_is_kept_without_restyling_the_book() {
+    use kaeri_model::reader::{ReaderValue, SettingScope};
+    let mut h = novel_harness();
+    h.config.set_terminal(true);
+    h.open_novel(OpenAt::Resume).await;
+    let session = h.session();
+    h.drain();
+    let width = ReaderValue::Amount { value: 80.0 };
+    h.send(ReaderCommand::SetSetting {
+        session: Some(session),
+        medium: Medium::Novel,
+        work: None,
+        key: Key::TextWidth,
+        scope: SettingScope::Device,
+        value: width.clone(),
+    });
+    let row = h
+        .until(|e| match e {
+            ReaderEvent::Settings(view) => {
+                view.rows.iter().find(|r| r.key == Key::TextWidth).cloned()
+            }
+            _ => None,
+        })
+        .await;
+    assert_eq!((row.value, row.scope), (width, SettingScope::Device));
+    let events = h.drain();
+    assert!(
+        !events.iter().any(|e| matches!(e, ReaderEvent::NovelStyle { .. })),
+        "the web view's style does not read the text width: {events:?}"
+    );
+}
+
+#[tokio::test(start_paused = true)]
 async fn an_epub_of_pictures_reads_as_pages() {
     let mut h = harness_of(Store::open_in_memory().unwrap(), "manga", |books| {
         let path = books.join("Volume 1.epub");
@@ -551,6 +638,87 @@ async fn a_sources_text_chapter_is_served_like_a_book() {
     h.at(pos(0, &[0], 4), 0, 1, TurnHow::Turn);
     let chapter = view.chapter.id.as_str().to_owned();
     assert_eq!(h.kept(&chapter).and_then(|c| c.novel_pos).as_deref(), Some("0/0/4"));
+}
+
+#[tokio::test(start_paused = true)]
+async fn a_text_chapter_comes_as_blocks_to_a_front_end_without_a_web_view() {
+    use kaeri_model::reader::{TextBlockKind, novel_text_place};
+    let mut h = harness_of(Store::open_in_memory().unwrap(), "novel", |_| Vec::new());
+    h.services.book_sources.registry.put(TextSource::new(None, None));
+    h.services.store.set_book_match("texts", "series-1", WORK, 90, true, false, 1).unwrap();
+    let (view, novel) = h.open_novel_on(OpenAt::Start, text_surface()).await;
+    assert_eq!(novel.text.len(), 1);
+    let doc = &novel.text[0];
+    assert_eq!(doc.spine, 0);
+    // The title once, the hidden second heading and the script left out, the words in order.
+    assert_eq!(read_out(doc), ["The Pier", "Chapter c1 begins at the pier."], "{doc:?}");
+    assert_eq!(doc.blocks[0].kind, TextBlockKind::Heading { level: 2 });
+    assert_eq!(doc.blocks[1].kind, TextBlockKind::Paragraph);
+    // Each block names its own place: the place resolves to the block's start.
+    for (i, block) in doc.blocks.iter().enumerate() {
+        assert_eq!(block.at.spine, 0);
+        assert_eq!(novel_text_place(&novel.text, &block.at), Some((0, i, 0)), "{block:?}");
+    }
+    // The front end reports where it is as the web view does.
+    let paragraph = doc.blocks[1].at.clone();
+    h.at(NovelPos { offset: paragraph.offset + 8, ..paragraph.clone() }, 0, 1, TurnHow::Turn);
+    let chapter = view.chapter.id.as_str().to_owned();
+    let kept = h.kept(&chapter).and_then(|c| c.novel_pos).unwrap();
+    assert_eq!(
+        NovelPos::decode(&kept),
+        Some(NovelPos { offset: paragraph.offset + 8, ..paragraph })
+    );
+}
+
+#[tokio::test(start_paused = true)]
+async fn a_text_chapter_in_a_web_view_carries_no_blocks() {
+    let mut h = harness_of(Store::open_in_memory().unwrap(), "novel", |_| Vec::new());
+    h.services.book_sources.registry.put(TextSource::new(None, None));
+    h.services.store.set_book_match("texts", "series-1", WORK, 90, true, false, 1).unwrap();
+    let (_, novel) = h.open_novel(OpenAt::Start).await;
+    assert!(novel.text.is_empty());
+}
+
+#[tokio::test(start_paused = true)]
+async fn an_epub_comes_as_one_text_doc_for_each_document_in_the_reading_flow() {
+    use kaeri_model::reader::novel_text_place;
+    let mut h = harness_of(Store::open_in_memory().unwrap(), "novel", |books| {
+        let path = books.join("Volume 1.epub");
+        two_documents(&path);
+        vec![shelf_file(&path, 1, "epub")]
+    });
+    let (_, novel) = h.open_novel_on(OpenAt::Start, text_surface()).await;
+    // The note outside the reading flow is left out.
+    let spines: Vec<u32> = novel.text.iter().map(|d| d.spine).collect();
+    assert_eq!(spines, [0, 2]);
+    assert_eq!(
+        read_out(&novel.text[0]),
+        ["One", "The keeper climbed the stair.", "Night fell."]
+    );
+    assert_eq!(read_out(&novel.text[1]), ["Two", "The tide came in."]);
+
+    // The places are worked out by hand from the document as it is served: the paginator counts
+    // element children from the body and a text node's offset in its own element.
+    let served = text(&h.get(&novel.spine[0].url));
+    assert!(
+        served.contains("<body><h1>One</h1><p>The keeper <em>climbed</em> the stair.</p>"),
+        "{served}"
+    );
+    // "clim|bed": the paragraph's own text, after "The keeper " and four letters.
+    assert_eq!(novel_text_place(&novel.text, &pos(0, &[1], 15)), Some((0, 1, 15)));
+    // The same place said inside the emphasis: two letters into "climbed".
+    assert_eq!(novel_text_place(&novel.text, &pos(0, &[1, 0], 2)), Some((0, 1, 13)));
+    // "Night |fell." in the third block, and "The |tide" in the second document.
+    assert_eq!(novel_text_place(&novel.text, &pos(0, &[2], 6)), Some((0, 2, 6)));
+    assert_eq!(novel_text_place(&novel.text, &pos(2, &[1], 4)), Some((1, 1, 4)));
+    let emphasis = &novel.text[0].blocks[1].runs[1];
+    assert!(emphasis.emphasis && emphasis.text == "climbed" && emphasis.offset == 11);
+    assert_eq!(emphasis.path, [1, 0]);
+
+    // The same book in a web view carries no text.
+    h.send(ReaderCommand::Close { session: h.session() });
+    let (_, novel) = h.open_novel(OpenAt::Start).await;
+    assert!(novel.text.is_empty());
 }
 
 /// A text chapter whose open panics on the way fails, as a chapter that cannot open does, and

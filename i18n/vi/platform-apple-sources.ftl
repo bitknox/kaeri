@@ -57,3 +57,4 @@ library-matched-apple = Đã khớp
 servers-row-summary-apple = { $series ->
    *[other] { $series } bộ
  }
+book-picker-message = Chọn thư mục chứa sách của bạn.

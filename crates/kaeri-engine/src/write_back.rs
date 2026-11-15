@@ -42,7 +42,7 @@ const PACE: Duration = Duration::from_millis(150);
 
 /// The waits after the first, second and third failure, in seconds; hourly after that.
 const RETRIES: [i64; 3] = [30, 120, 600];
-const HOURLY: i64 = 3_600;
+const HOURLY: i64 = kaeri_store::book_progress::LONGEST_WAIT;
 
 /// How long Kaeri keeps trying a server that does not answer before it waits for Try again.
 const A_DAY: i64 = 86_400;
@@ -81,7 +81,9 @@ pub struct WriteBack(Arc<Inner>);
 struct Inner {
     wake: tokio::sync::Notify,
     started: AtomicBool,
-    offline: AtomicBool,
+    /// True while the device has no network, as its front end last said: a watch, so a
+    /// source's pages held for the connection start again once it is back.
+    offline: tokio::sync::watch::Sender<bool>,
     sending: Mutex<HashSet<String>>,
     waiting: Mutex<HashMap<Key, Vec<Waiter>>>,
     publish: Mutex<Option<Arc<dyn Fn() + Send + Sync>>>,
@@ -91,7 +93,7 @@ impl std::fmt::Debug for WriteBack {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_struct("WriteBack")
             .field("started", &self.0.started.load(Ordering::Relaxed))
-            .field("offline", &self.0.offline.load(Ordering::Relaxed))
+            .field("offline", &*self.0.offline.borrow())
             .finish_non_exhaustive()
     }
 }
@@ -102,7 +104,12 @@ impl WriteBack {
     }
 
     pub(crate) fn is_offline(&self) -> bool {
-        self.0.offline.load(Ordering::Relaxed)
+        *self.0.offline.borrow()
+    }
+
+    /// Whether the device has no network, followed as it moves.
+    pub(crate) fn connection(&self) -> tokio::sync::watch::Receiver<bool> {
+        self.0.offline.subscribe()
     }
 
     /// Whether a send to `server` is under way.
@@ -124,7 +131,7 @@ impl WriteBack {
         *self.0.publish.lock().unwrap_or_else(|e| e.into_inner()) = Some(publish);
     }
 
-    fn publish(&self) {
+    pub(crate) fn publish(&self) {
         let publish = self.0.publish.lock().unwrap_or_else(|e| e.into_inner()).clone();
         if let Some(publish) = publish {
             publish();
@@ -294,7 +301,7 @@ impl BookSources {
                     tracing::debug!(?pass, "book progress pass");
                 }
                 let now = clock.now();
-                let next = this.store().next_book_progress_due().ok().flatten();
+                let next = this.store().next_book_progress_due(now).ok().flatten();
                 let wait = match next {
                     _ if this.write_back.is_offline() => NAP,
                     Some(at) => (at - now).clamp(0, NAP),
@@ -317,7 +324,7 @@ impl BookSources {
     /// The device went offline or came back. Back online, every mark waiting goes at once,
     /// oldest first.
     pub fn write_back_network(&self, offline: bool, now: i64) {
-        let was = self.write_back.0.offline.swap(offline, Ordering::Relaxed);
+        let was = self.write_back.0.offline.send_replace(offline);
         if was && !offline {
             if let Err(e) = self.store().book_progress_due_now(now) {
                 tracing::warn!(error = %e, "book progress not brought forward");
@@ -557,6 +564,7 @@ fn whole_server(problem: WriteBackProblem) -> bool {
 /// or a password.
 fn problem_of(error: &ProviderError, refused: WriteBackProblem) -> WriteBackProblem {
     match error {
+        error if error.is_no_network() => WriteBackProblem::Offline,
         ProviderError::Transport(_) => WriteBackProblem::NoAnswer,
         ProviderError::Unavailable(why) if why == "signed out" => refused,
         ProviderError::NotFound => WriteBackProblem::SeriesGone,

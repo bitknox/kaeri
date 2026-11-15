@@ -41,6 +41,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -307,8 +308,9 @@ internal fun PlaybackPane() {
         )
         val snackbars = LocalSnackbars.current
         val context = LocalContext.current
+        val resources = LocalResources.current
         SubtitlesGroup { before ->
-            snackbars?.show(context.getString(R.string.settings_subs_reset_done), context.getString(R.string.action_undo)) {
+            snackbars?.show(resources.getString(R.string.settings_subs_reset_done), resources.getString(R.string.action_undo)) {
                 store.restoreSubtitleStyle(before)
             }
         }
@@ -430,7 +432,7 @@ internal fun titleLanguageExamples(): List<Entry> {
     val titles by store.titles.entries.collectAsStateWithLifecycle()
     val continuing by store.continuing.list.state.collectAsStateWithLifecycle()
     val seasonal by store.seasonal.state.collectAsStateWithLifecycle()
-    val library = LibraryModel.order.flatMap { store.library.segment(it).state.value.ids }
+    val library = LibraryModel.order.flatMap { store.library.segment(it).state.collectAsStateWithLifecycle().value.ids }
     return (continuing.ids + library + seasonal.ids)
         .distinct()
         .mapNotNull { titles[it] }

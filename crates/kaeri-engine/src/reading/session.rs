@@ -28,9 +28,9 @@ use kaeri_model::{
     eink::{EinkProfile, ScreenFacts},
     event::Event,
     reader::{
-        Leaf, NoNext, NovelPos, OpenAt, ReadDirection, ReadPlace, ReaderAction, ReaderCommand,
-        ReaderEvent, ReaderMode, ReaderNotice, ReaderSettingKey as Key, ReaderSettingsView,
-        ReaderSurface, ReaderView, ReaderWait, StripPos, TurnHow,
+        Leaf, NoNext, NovelPos, OpenAt, PageFormats, ReadDirection, ReadPlace, ReaderAction,
+        ReaderCommand, ReaderEvent, ReaderMode, ReaderNotice, ReaderSettingKey as Key,
+        ReaderSettingsView, ReaderSurface, ReaderView, ReaderWait, StripPos, TurnHow,
     },
     reading::{ReadingAbout, ReadingEvent, ReadingFailure},
 };
@@ -46,6 +46,7 @@ use super::{
 };
 use crate::{
     config::ConfigState,
+    downloads::books::Here,
     outbox::{Internal, Outbox, ReaderWake},
     services::Services,
 };
@@ -194,6 +195,8 @@ pub struct Session {
     leaves: Vec<Leaf>,
     cuts: Vec<StripPos>,
     pages_total: u32,
+    /// The credit pages the last layout left out, by where they are among the source's pages.
+    credit_pages: Vec<u32>,
     mode: ReaderMode,
     direction: ReadDirection,
     /// `Opened` went out for the open chapter.
@@ -212,6 +215,9 @@ pub struct Session {
     ended: bool,
     /// The next chapter's first page was asked of the worker.
     peeked: bool,
+    /// The person moved in the open chapter: turned, scrolled or jumped. A chapter on this
+    /// device asks a source for nothing until they do.
+    moved: bool,
     /// The next chapter from a source, being fetched while this one is read.
     ahead: Option<novel::Ahead>,
     /// The next chapter's first page for the end page, followed from the download queue's fetch
@@ -299,7 +305,8 @@ impl Reader {
         services: &'a Services,
         tx: &'a Outbox,
     ) -> Cx<'a> {
-        let screen = Screen::new(self.eink.as_ref(), config.handheld(), config.phone());
+        let screen = Screen::new(self.eink.as_ref(), config.handheld(), config.phone())
+            .with_terminal(config.terminal());
         let webview = self.facts.as_ref().and_then(|f| f.webview);
         Cx { config, services, tx, screen, eink: self.eink.clone(), webview }
     }
@@ -350,7 +357,7 @@ impl Reader {
                     &value,
                     now,
                 ) {
-                    tracing::warn!(error = %e, "a reader setting was not kept");
+                    cx.tx.not_kept("a reader setting", &e);
                 }
                 self.settings_changed(cx, session, medium, work, key);
             }
@@ -589,7 +596,16 @@ impl Reader {
         // A demo work says its own medium: opened from Home or the first run before its page was
         // ever loaded, the catalogue has not fetched it, and its chapters come from the demo.
         let demo_work = kaeri_core::reading_demo::WORKS.iter().find(|w| w.work_id() == work);
-        let medium = match (kind.as_ref().map(|k| k.medium.as_str()), chapters.first()) {
+        // A work only a source lists, with nothing kept of it: a medium other than manga that
+        // its sources carry.
+        let held = kind
+            .is_none()
+            .then(|| cx.services.book_sources.held_medium(&work))
+            .flatten()
+            .filter(|m| *m != Medium::Manga)
+            .map(Medium::as_str);
+        let kept = kind.as_ref().map(|k| k.medium.as_str()).or(held);
+        let medium = match (kept, chapters.first()) {
             _ if demo_work.is_some() => demo_work.map_or(Medium::Manga, |w| w.medium()),
             (Some("novel"), _) => Medium::Novel,
             (None, Some(c)) if c.is_text() => Medium::Novel,
@@ -664,6 +680,7 @@ impl Reader {
             leaves: Vec::new(),
             cuts: Vec::new(),
             pages_total: 0,
+            credit_pages: Vec::new(),
             mode: ReaderMode::Paged,
             direction: ReadDirection::RightToLeft,
             opened: false,
@@ -673,6 +690,7 @@ impl Reader {
             resumed: resumed.then_some(page),
             kept_of: of,
             peeked: false,
+            moved: false,
             ahead: None,
             first_page: None,
             back_to: None,
@@ -859,7 +877,7 @@ fn downloading(cx: &Cx<'_>, work: &WorkId, chapter: &ChapterId) -> bool {
 
 /// Whether `chapter` opens with no network: downloaded, or a file on this device.
 fn on_device(chapter: &ShelfChapter) -> bool {
-    chapter.format != novel::SOURCE && !chapter.path.as_os_str().is_empty()
+    Here::of_shelf(chapter).is_some()
 }
 
 /// A chapter's row for the end page, which says when a downloaded one is here.
@@ -868,8 +886,13 @@ fn end_row(
     marks: &kaeri_store::reading::ReadMarks,
 ) -> kaeri_model::reading::ChapterRow {
     let mut row = chapter.row(marks);
-    if chapter.source.is_some() && on_device(chapter) {
-        row.download = Some(kaeri_model::reading::ChapterDownloadState::Done);
+    match Here::of_shelf(chapter) {
+        Some(Here::Downloaded { .. }) => {
+            row.download = Some(kaeri_model::reading::ChapterDownloadState::Done);
+        }
+        // A file in the person's folders: nothing of it downloads, so no Download is offered.
+        Some(Here::Folder { .. }) => row.on_device = true,
+        None => {}
     }
     row
 }
@@ -1110,6 +1133,8 @@ impl Session {
             guess_mode: !l.series_has(Key::Mode) && !l.sourced(Key::Mode),
             guess_direction: !l.series_has(Key::Direction) && !l.sourced(Key::Direction),
             fit_width: l.word(Key::Fit) == "width",
+            decodes: self.surface.decodes,
+            zoom: self.surface.zoom_factor(),
         }
     }
 
@@ -1266,6 +1291,7 @@ impl Session {
         // the same point in this one.
         let skipped: Vec<u32> = laid.credits.iter().map(|c| c.page).collect();
         self.rescale_kept(laid.pages, &skipped);
+        self.credit_pages = skipped;
         self.clamp_start(laid.pages);
         let eink = self.eink();
         // A guess is kept for the series on this device, and said once.
@@ -1369,6 +1395,9 @@ impl Session {
                 // Scrolling on to another image is a turn.
                 if self.page() != Some(at.image) {
                     self.drop_back(cx);
+                }
+                if self.start.page.is_some_and(|p| p != at.image) {
+                    self.moved = true;
                 }
                 let mut here = place(&self.work, &chapter, Some(at.image));
                 here.strip = Some(at);
@@ -1487,6 +1516,9 @@ impl Session {
         if !matches!(how, TurnHow::Jump | TurnHow::Placed) {
             self.drop_back(cx);
         }
+        if how != TurnHow::Placed {
+            self.moved = true;
+        }
         let story = self.leaves.len() as u32;
         if leaf >= story {
             // The end page, in the flow: read at once. A jump lands here without passing the
@@ -1527,6 +1559,9 @@ impl Session {
     fn read_ahead(&mut self, cx: &Cx<'_>, pages: &Pages) {
         let index = self.at + 1;
         self.follow_download(cx, index);
+        if !self.may_ask_sources(cx) {
+            return;
+        }
         let Some(next) = self.chapters.get(index).filter(|c| c.format == novel::SOURCE) else {
             return;
         };
@@ -1546,9 +1581,19 @@ impl Session {
             (self.id, learning),
             &self.work,
             (index, next),
-            &gone,
+            (&gone, self.peek_screen(cx)),
         );
         self.ahead = Some(ahead);
+    }
+
+    /// Whether the next chapter may be asked of its source now. A chapter read from this device,
+    /// downloaded or in a folder, opens and is read with no request: the next one is fetched
+    /// ahead only once the person moves in it, and never offline.
+    fn may_ask_sources(&self, cx: &Cx<'_>) -> bool {
+        if cx.services.offline.load(std::sync::atomic::Ordering::Relaxed) {
+            return false;
+        }
+        self.moved || !on_device(self.chapter())
     }
 
     /// A chapter as the downloads have it now, not as they had it when the session opened: one
@@ -1614,13 +1659,24 @@ impl Session {
     /// it lands; one the download queue has is followed, and its first page made from the
     /// download as it lands.
     fn peek(&mut self, cx: &Cx<'_>, pages: &Pages) {
-        if std::mem::replace(&mut self.peeked, true) {
+        if self.peeked {
             return;
         }
         let offline = cx.services.offline.load(std::sync::atomic::Ordering::Relaxed);
-        let Some(index) = self.end_next(offline) else { return };
+        let Some(index) = self.end_next(offline) else {
+            self.peeked = true;
+            return;
+        };
         self.follow_download(cx, index);
-        let Some(next) = self.chapters.get(index) else { return };
+        let Some(next) = self.chapters.get(index) else {
+            self.peeked = true;
+            return;
+        };
+        // Asked again once the person moves in a chapter on this device.
+        if next.format == novel::SOURCE && !self.may_ask_sources(cx) {
+            return;
+        }
+        self.peeked = true;
         if next.format == novel::SOURCE {
             let fetching = self.ahead.as_ref().is_some_and(|a| a.chapter == next.id);
             if !fetching && downloading(cx, &self.work, &next.id) {
@@ -1630,7 +1686,7 @@ impl Session {
                     self.id,
                     &self.work,
                     (index, next),
-                    &self.gone,
+                    (&self.gone, self.peek_screen(cx)),
                 );
                 self.first_page = Some(first);
             } else {
@@ -1645,12 +1701,21 @@ impl Session {
         if next.path.as_os_str().is_empty() {
             return;
         }
+        let (target, decodes) = self.peek_screen(cx);
         pages.peek(PeekJob {
             session: self.id,
             chapter: next.id.clone(),
             path: next.path.clone(),
             out: cx.tx.clone(),
+            target,
+            decodes,
         });
+    }
+
+    /// The screen the next chapter's first page is drawn for, and the formats the front end
+    /// decodes: a page in another format is drawn for it.
+    fn peek_screen(&self, cx: &Cx<'_>) -> (Target, Option<PageFormats>) {
+        (self.plan(cx).target, self.surface.decodes)
     }
 
     /// Say the chapter opened, with its end page: what follows the chapter, or why nothing
@@ -1787,7 +1852,7 @@ impl Session {
             _ => Vec::new(),
         };
         if let Err(e) = cx.services.store.record_read(&event, told) {
-            tracing::warn!(error = %e, "a read chapter was not kept");
+            cx.tx.not_kept("a read chapter", &e);
         }
         let queued_for = if send_now {
             queue_trackers(cx, &self.work, &chapter, at)
@@ -1896,7 +1961,7 @@ impl Session {
         event.novel_pos = here.novel.as_ref().map(NovelPos::encode);
         event.source_id = Some("local".into());
         if let Err(e) = cx.services.store.record_read(&event, Vec::new()) {
-            tracing::warn!(error = %e, "the reading place was not kept");
+            cx.tx.not_kept("the reading place", &e);
         }
     }
 
@@ -1923,6 +1988,7 @@ impl Session {
         self.read_wait = None;
         self.end_page_said = false;
         self.peeked = false;
+        self.moved = false;
         self.back_to = None;
         self.place = None;
         self.kept_of = None;
@@ -1998,8 +2064,19 @@ impl Session {
         let Some(index) = self.chapters.iter().position(|c| c.id.as_str() == last) else {
             return;
         };
-        let mine = self.page().unwrap_or(0);
+        // Until the reader says a place, it is at the page the chapter opened at.
+        let mine = self.page_now();
+        // Their page at the same point of the chapter as laid out here, as the open's start
+        // was moved: a chapter split into more or fewer pages there (another source's, or with
+        // the credit pages kept) is not a page further on.
         let page = theirs.last_page.unwrap_or(0);
+        let page = theirs
+            .of_pages
+            .filter(|_| self.pages_total > 0)
+            .and_then(|of| {
+                kept_past_credits(page, None, of, (self.pages_total, &self.credit_pages))
+            })
+            .map_or(page, |(page, _)| page);
         let their_pos = theirs.novel_pos.as_deref().and_then(NovelPos::decode);
         let my_pos = self.place.as_ref().and_then(|p| p.novel.clone());
         let further_here = match (&their_pos, &my_pos) {
@@ -2231,6 +2308,7 @@ mod tests {
     mod answers;
     mod back_to;
     mod cross_parts;
+    mod downloading;
     mod eink_strip;
     mod extras;
     mod groups;
@@ -2411,6 +2489,9 @@ mod tests {
             eink: false,
             two_pages: false,
             dark: false,
+            decodes: None,
+            zoom: 0.0,
+            text: false,
         }
     }
 
@@ -2428,6 +2509,8 @@ mod tests {
         /// The device goes off line or comes back, as `NetworkPath` tells the reader.
         fn network(&mut self, offline: bool) {
             let was = self.services.offline.swap(offline, std::sync::atomic::Ordering::Relaxed);
+            self.services.connection.send_replace(offline);
+            self.services.book_sources.write_back_network(offline, 0);
             let mut cx = self.reader.cx(&mut self.config, &self.services, &self.tx);
             self.reader.network_moved(&mut cx, was);
         }
@@ -2502,7 +2585,17 @@ mod tests {
             work: WorkId,
             at: OpenAt,
         ) -> (ReaderView, Vec<Leaf>, Vec<ReaderEvent>) {
-            self.send(ReaderCommand::Open { work, chapter: None, at, surface: surface() });
+            self.open_on(work, at, surface()).await
+        }
+
+        /// As [`Self::open_work`], on a surface of its own.
+        async fn open_on(
+            &mut self,
+            work: WorkId,
+            at: OpenAt,
+            surface: ReaderSurface,
+        ) -> (ReaderView, Vec<Leaf>, Vec<ReaderEvent>) {
+            self.send(ReaderCommand::Open { work, chapter: None, at, surface });
             let view = self
                 .until(|e| match e {
                     ReaderEvent::Opened(view) => Some(view.as_ref().clone()),
@@ -3782,5 +3875,37 @@ mod tests {
         h.shown(2, TurnHow::Turn).await;
         let again = h.drain().iter().any(|e| matches!(e, ReaderEvent::NextPreview { .. }));
         assert!(!again, "made once per chapter");
+    }
+
+    /// A front end that decodes JPEG alone gets the PNG pages, and the next chapter's first,
+    /// as pixels drawn for its screen.
+    #[tokio::test(start_paused = true)]
+    async fn pages_a_front_end_cannot_decode_come_as_pixels() {
+        use kaeri_model::reader::{PageEncoding, PageFormats, PixelFormat};
+        let mut h = harness(Store::open_in_memory().unwrap());
+        let decodes = Some(PageFormats { jpeg: true, ..PageFormats::default() });
+        let surface = ReaderSurface { decodes, ..surface() };
+        h.open_on(WorkId::new(WORK), OpenAt::Resume, surface).await;
+        let page = h
+            .until(|e| match e {
+                ReaderEvent::PageReady { file, .. } => Some(file.clone()),
+                _ => None,
+            })
+            .await;
+        let raw = PageEncoding::Raw { format: PixelFormat::Rgba8, stride: 600 * 4 };
+        assert_eq!((&page.encoding, page.width, page.height), (&raw, 600, 900), "{page:?}");
+        h.shown(1, TurnHow::Turn).await;
+        let preview = h
+            .until(|e| match e {
+                ReaderEvent::NextPreview { file, .. } => Some(file.clone()),
+                _ => None,
+            })
+            .await;
+        assert_eq!(
+            (&preview.encoding, preview.width, preview.height),
+            (&raw, 600, 900),
+            "{preview:?}"
+        );
+        assert!(Path::new(&preview.path).exists());
     }
 }

@@ -47,6 +47,7 @@ import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
@@ -62,6 +63,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -319,8 +321,11 @@ internal fun SkippedLine(count: Int, modifier: Modifier = Modifier, onShow: () -
     )
 }
 
-/** What a credit page's row in a strip says: the line naming those skipped, its caption, or nothing once kept. */
-private enum class StripSlot { Line, Caption, None }
+/**
+ * What a credit page's row in a strip says: the line naming those skipped, its caption, an empty
+ * row while its picture loads, or nothing once kept or when the picture failed.
+ */
+private enum class StripSlot { Line, Caption, Waiting, None }
 
 /**
  * Credit pages in the flow of a strip, where the engine took them out. While any is skipped, one
@@ -348,9 +353,14 @@ internal fun StripCredits(
             key(credit.page) {
                 val revealed = state.isRevealed(credit, chapter)
                 val kept = state.keeping?.let { it.chapter == chapter && it.credit.page == credit.page } == true
+                // Not a credit page is offered for a picture that can be seen: none while it loads,
+                // and none for one that failed, which shows the failed page with Try again.
+                // The row keeps its height while the picture loads, so nothing below moves twice.
+                var decoded by remember(credit.file) { mutableStateOf(if (images.cached(credit.file) != null) true else null) }
                 val slot = when {
                     !revealed -> if (credit == skipped.firstOrNull()) StripSlot.Line else StripSlot.None
-                    kept -> StripSlot.None
+                    kept || decoded == false -> StripSlot.None
+                    decoded == null -> StripSlot.Waiting
                     else -> StripSlot.Caption
                 }
                 val row: @Composable (StripSlot) -> Unit = { now ->
@@ -379,6 +389,7 @@ internal fun StripCredits(
                             haptics.performHapticFeedback(HapticFeedbackType.ContextClick)
                             session.keepCredit(credit, chapter)
                         }
+                        StripSlot.Waiting -> Spacer(Modifier.fillMaxWidth().height(44.dp))
                         StripSlot.None -> Spacer(Modifier.fillMaxWidth())
                     }
                 }
@@ -399,7 +410,7 @@ internal fun StripCredits(
                 val w = (credit.file.crop?.width ?: credit.file.width).toFloat()
                 val h = (credit.file.crop?.height ?: credit.file.height).toFloat()
                 val ratio = if (w > 0f && h > 0f) w / h else 2f / 3f
-                val page = @Composable { CreditPageView(credit, images, ground, Modifier.fillMaxWidth().aspectRatio(ratio), strip = true) }
+                val page = @Composable { CreditPageView(credit, images, ground, Modifier.fillMaxWidth().aspectRatio(ratio), strip = true) { decoded = it } }
                 val shownAtFirst = remember { revealed }
                 if (removed) {
                     // At its full height at once, faded in on the turn's own clock.

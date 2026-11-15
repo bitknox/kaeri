@@ -9,22 +9,22 @@ progress-why-gone = esta série não está mais no servidor
 progress-why-gave-up = sem resposta há um dia
 progress-row-saved = Progresso salvo { $ago }
 progress-row-sending = { $count ->
-    [one] Enviando 1 capítulo…
+    [one] Enviando { $count } capítulo…
     [many] Enviando { $count } capítulos…
    *[other] Enviando { $count } capítulos…
  }
 progress-row-offline = { $count ->
-    [one] 1 capítulo será enviado quando você voltar online
+    [one] { $count } capítulo será enviado quando você voltar online
     [many] { $count } capítulos serão enviados quando você voltar online
    *[other] { $count } capítulos serão enviados quando você voltar online
  }
 progress-row-retrying = { $count ->
-    [one] 1 capítulo aguardando. O { -app-name } vai tentar de novo.
+    [one] { $count } capítulo aguardando. O { -app-name } vai tentar de novo.
     [many] { $count } capítulos aguardando. O { -app-name } vai tentar de novo.
    *[other] { $count } capítulos aguardando. O { -app-name } vai tentar de novo.
  }
 progress-row-failed = { $count ->
-    [one] 1 capítulo não salvo: { $reason }
+    [one] { $count } capítulo não salvo: { $reason }
     [many] { $count } capítulos não salvos: { $reason }
    *[other] { $count } capítulos não salvos: { $reason }
  }

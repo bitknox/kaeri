@@ -323,6 +323,12 @@
         <item quantity="many">Do pobrania zostało %1$,d rozdziałów, więc wysyłanie poczeka na Wi-Fi i ruszy samo.</item>
         <item quantity="other">Do pobrania zostało %1$,d rozdziału, więc wysyłanie poczeka na Wi-Fi i ruszy samo.</item>
     </plurals>
+    <plurals name="export_pages_left_out">
+        <item quantity="one">Jednej strony z %2$s nie udało się odczytać i nie ma jej w plikach.</item>
+        <item quantity="few">%1$,d strony z %2$s nie udało się odczytać i nie ma ich w plikach.</item>
+        <item quantity="many">%1$,d stron z %2$s nie udało się odczytać i nie ma ich w plikach.</item>
+        <item quantity="other">%1$,d strony z %2$s nie udało się odczytać i nie ma ich w plikach.</item>
+    </plurals>
     <string name="reading_chapter_titled">Rozdział %1$s · %2$s</string>
     <string name="reading_row_read">Przeczytany</string>
     <string name="reading_row_new">Nowy</string>
@@ -595,6 +601,19 @@
         <item quantity="few">Wylogowano z %1$s. %2$,d zmiany w kolejce zostaną zachowane na następne logowanie.</item>
         <item quantity="many">Wylogowano z %1$s. %2$,d zmian w kolejce zostanie zachowanych na następne logowanie.</item>
         <item quantity="other">Wylogowano z %1$s. %2$,d zmian w kolejce zostanie zachowanych na następne logowanie.</item>
+    </plurals>
+    <string name="notice_tracker_change_refused">Zmiana w tytule %2$s była wielokrotnie odrzucana przez %1$s, więc zostaje tylko w Kaeri.</string>
+    <plurals name="notice_tracker_changes_refused">
+        <item quantity="one">Zmiany w tytule %2$s i jeszcze jednym były wielokrotnie odrzucane przez %1$s, więc zostają tylko w Kaeri.</item>
+        <item quantity="few">Zmiany w tytule %2$s i %3$,d innych tytułach były wielokrotnie odrzucane przez %1$s, więc zostają tylko w Kaeri.</item>
+        <item quantity="many">Zmiany w tytule %2$s i %3$,d innych tytułach były wielokrotnie odrzucane przez %1$s, więc zostają tylko w Kaeri.</item>
+        <item quantity="other">Zmiany w tytule %2$s i %3$,d innych tytułach były wielokrotnie odrzucane przez %1$s, więc zostają tylko w Kaeri.</item>
+    </plurals>
+    <plurals name="notice_tracker_change_refused_untitled">
+        <item quantity="one">Zmiana była wielokrotnie odrzucana przez %1$s, więc zostaje tylko w Kaeri.</item>
+        <item quantity="few">Zmiany w %2$,d tytułach były wielokrotnie odrzucane przez %1$s, więc zostają tylko w Kaeri.</item>
+        <item quantity="many">Zmiany w %2$,d tytułach były wielokrotnie odrzucane przez %1$s, więc zostają tylko w Kaeri.</item>
+        <item quantity="other">Zmiany w %2$,d tytułach były wielokrotnie odrzucane przez %1$s, więc zostają tylko w Kaeri.</item>
     </plurals>
     <string name="notice_sign_out_failed">Nie udało się wylogować z %1$s. Spróbuj ponownie. %2$s</string>
     <string name="notice_not_saved_because">Nie udało się zapisać tego ustawienia. %1$s</string>
@@ -914,8 +933,6 @@
         <item quantity="many">%1$,d pobranych rozdziałów nadal się otwiera.</item>
         <item quantity="other">%1$,d pobranego rozdziału nadal się otwiera.</item>
     </plurals>
-    <string name="read_downloads_empty_detail">Pobrane rozdziały otwierają się bez połączenia.</string>
-    <string name="read_downloads_empty_both">Pobrane odcinki i rozdziały otwierają się bez połączenia.</string>
     <string name="settings_summary_chapters_on">Nowe rozdziały włączone</string>
     <string name="settings_summary_chapters_off">Nowe rozdziały wyłączone</string>
     <plurals name="settings_summary_book_folders">
@@ -1691,6 +1708,8 @@
     <string name="downloads_space_label">Miejsce zajęte przez pobrania</string>
     <string name="downloads_empty_title">Brak pobrań</string>
     <string name="downloads_empty_detail">Pobrane odcinki odtwarzają się bez połączenia.</string>
+    <string name="read_downloads_empty_detail">Pobrane rozdziały otwierają się bez połączenia.</string>
+    <string name="read_downloads_empty_both">Pobrane odcinki i rozdziały otwierają się bez połączenia.</string>
     <string name="downloads_load_failed">Nie udało się wczytać pobrań</string>
     <string name="downloads_folder_failed">Nie udało się otworzyć folderu. Sprawdź, czy nadal istnieje.</string>
     <string name="downloads_episode_name">Odcinek %1$d</string>
