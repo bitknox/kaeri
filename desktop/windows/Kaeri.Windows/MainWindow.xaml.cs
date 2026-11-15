@@ -418,6 +418,7 @@ public sealed partial class MainWindow : Window
                 "reading-demo" => new FfiScene.ReadingDemo(),
                 "reading-source-failed" => new FfiScene.ReadingSourceFailed(),
                 "reading-anilist-failed" => new FfiScene.ReadingAnilistFailed(),
+                "missing-episode" => new FfiScene.MissingEpisode(),
                 _ => new FfiScene.Watching(),
             };
             return (FfiEngine.StartScene(scratch, host, scene, EngineSession.AppStart(signIn: false)), scratch);

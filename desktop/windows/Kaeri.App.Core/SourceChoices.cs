@@ -66,10 +66,13 @@ public static class SourcePicker
         return [.. rows];
     }
 
-    /// <summary>A source's coverage ("6 of 13 episodes"), or why it has none. A failure is the source's own words.</summary>
-    public static string Detail(SourceOption option) => option.Note switch
+    /// <summary>
+    /// What a source has of the title ("Episodes 1 to 5. Not 6 yet", or "6 of 13 episodes" where
+    /// the ranges say nothing more), or why it has none. A failure is the source's own words.
+    /// </summary>
+    public static string Detail(SourceOption option, long? now = null) => option.Note switch
     {
-        null => T.SourcePickerCoverage(option.Covered, option.Of),
+        null => MissingWords.Coverage(option, now ?? DateTimeOffset.UtcNow.ToUnixTimeSeconds()),
         SourceNote.Off => T.SourceNoteOff,
         SourceNote.Resting => T.SourceNoteResting,
         SourceNote.Gone => T.SourceNoteGone,
