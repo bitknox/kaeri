@@ -40,6 +40,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -566,7 +567,14 @@ private fun SynopsisBand(text: String?, modifier: Modifier, maxLines: Int) {
     Box(modifier) {
         Crossfade(text, animationSpec = Motion.fadeIn(), label = "synopsis") { shown -> // i18n-skip
             if (shown != null) {
-                SynopsisText(shown, MaterialTheme.colorScheme.onSurfaceVariant, maxLines = maxLines)
+                // The band is its lines' height; the font's own ascent and descent can run a hair
+                // past it, so the text lays out unbounded and only its line cap ends it.
+                SynopsisText(
+                    shown,
+                    MaterialTheme.colorScheme.onSurfaceVariant,
+                    Modifier.wrapContentHeight(Alignment.Top, unbounded = true),
+                    maxLines = maxLines,
+                )
             }
         }
     }
