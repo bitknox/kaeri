@@ -16,10 +16,10 @@ Kaeri                          plugins ●  ·  anilist ⇅ 2  kitsu ○  mal �
    │                  Fetching your list failed at 19:24: the token was
    │                  refused
    │
+   │    [x] Show people you follow
+   │        Shows where people you follow on AniList are in a show, on its
+   │
    │    Tokens are stored in files with 0600 permissions because the OS
-   │    keychain is unavailable.
-   │  ────────────────────────────────────────────────────────────────────────
-   │    ↵ Sign in
 ────────────── ▌ MyAnimeList needs signing in again. Press 8 to open Accounts. ─
 plugins · Subbed · 1080p                                      ↵ sign in   ? keys
 === styles ===
@@ -90,13 +90,12 @@ r16 c03-03 fg=rule
 r16 c22-28 fg=alert
 r17 c03-03 fg=rule
 r18 c03-03 fg=rule
-r18 c08-70 fg=text-dim
+r18 c08-33 fg=text
 r19 c03-03 fg=rule
-r19 c08-31 fg=text-dim
+r19 c12-73 fg=text-dim
 r20 c03-03 fg=rule
-r20 c06-77 fg=rule
 r21 c03-03 fg=rule
-r21 c08-16 fg=text-dim
+r21 c08-70 fg=text-dim
 r22 c00-13 fg=rule
 r22 c14-14 fg=text
 r22 c15-15 fg=alert
