@@ -576,7 +576,7 @@ fn palette_rows(app: &App) -> Vec<(String, String)> {
             };
             let key = match on.map(state) {
                 Some(state) if key.is_empty() => state,
-                Some(state) => format!("{}  {}", state, key),
+                Some(state) => [state.as_str(), "  ", key.as_str()].concat(),
                 None => key,
             };
             (key, action.label().to_string())

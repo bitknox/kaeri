@@ -1,7 +1,7 @@
 //! Private watching and reading: the mode, the titles kept private, and the notice.
 //!
 //! The engine holds what private mode keeps out of the history, the trackers and sync; the
-//! terminal draws it. The mode is said with [`Event::Private`] at launch and on every change, and
+//! terminal draws it. The mode is said with `Event::Private` at launch and on every change, and
 //! is never saved, so a launch starts with it off unless `--private` turns it on. Ctrl+P and the
 //! palette turn it over, and so does Enter on its row in Accounts. A title's standing says
 //! whether the title is always private on this device and whether its place is held in memory,
@@ -40,7 +40,7 @@ pub(crate) struct Private {
 }
 
 impl Private {
-    /// A title's standing, as [`Event::Progress`](kaeri_model::event::Event::Progress) says it.
+    /// A title's standing, as `Event::Progress` says it.
     pub(super) fn take_standing(
         &mut self,
         id: AnilistId,
