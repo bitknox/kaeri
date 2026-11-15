@@ -14,6 +14,7 @@ struct NoticeCapsule: View {
     @Environment(AppStore.self) private var store
     @Environment(Navigator.self) private var navigator
     @Environment(\.scenePhase) private var scenePhase
+    @Environment(\.dynamicTypeSize) private var typeSize
     @AccessibilityFocusState private var focused: Bool
     /// Whether the notices show here: over the iPhone's Settings sheet they show on the sheet,
     /// and not twice.
@@ -43,7 +44,8 @@ struct NoticeCapsule: View {
     var body: some View {
         ZStack {
             if here, let item = store.notices.current {
-                HStack(spacing: 0) {
+                let layout = stacked ? AnyLayout(VStackLayout(alignment: .leading, spacing: 0)) : AnyLayout(HStackLayout(spacing: 0))
+                layout {
                     Button {
                         withAnimation(.fadeOut) { store.notices.dismiss(item) }
                     } label: {
@@ -54,40 +56,44 @@ struct NoticeCapsule: View {
                             Text(item.notice.words.firstCapitalized)
                                 .font(.mac(13))
                                 .foregroundStyle(.silk)
-                                .lineLimit(2)
+                                .lineLimit(Self.lineLimit)
+                                .fixedSize(horizontal: false, vertical: true)
                         }
                         .padding(.leading, 16)
-                        .padding(.trailing, item.notice.hint != nil || item.action != nil || item.isAlert || playsHere(item) ? 8 : 16)
+                        .padding(.trailing, !stacked && (item.notice.hint != nil || item.action != nil || item.isAlert || playsHere(item)) ? 8 : 16)
+                        .padding(.top, stacked ? 14 : typeSize > .large ? 6 : 0)
+                        .padding(.bottom, stacked ? 10 : typeSize > .large ? 6 : 0)
                         .frame(minHeight: 36)
                         .contentShape(.rect)
                     }
                     .buttonStyle(.plain)
-                    if let action = item.action {
-                        // The app's own button: Undo, Try again, Mark watched.
-                        Button(action.title) {
-                            withAnimation(.fadeOut) { store.notices.dismiss(item) }
-                            action.run()
-                        }
-                        .buttonStyle(SecondaryCapsuleStyle(height: 24, fontSize: 12))
-                        .padding(.trailing, 6)
-                    } else if let hint = item.notice.hint {
-                        Button(Self.words(hint)) { act(hint, item) }
+                    Group {
+                        if let action = item.action {
+                            // The app's own button: Undo, Try again, Mark watched.
+                            Button(action.title) {
+                                withAnimation(.fadeOut) { store.notices.dismiss(item) }
+                                action.run()
+                            }
                             .buttonStyle(SecondaryCapsuleStyle(height: 24, fontSize: 12))
-                            .padding(.trailing, 6)
-                    } else if playsHere(item) {
-                        // Someone else took the TV: carry on here, from where it was.
-                        Button(L.castPlayHere) {
-                            store.notices.dismiss(item)
-                            store.tv.cast.playHereAfterTakeOver()
+                        } else if let hint = item.notice.hint {
+                            Button(Self.words(hint)) { act(hint, item) }
+                                .buttonStyle(SecondaryCapsuleStyle(height: 24, fontSize: 12))
+                        } else if playsHere(item) {
+                            // Someone else took the TV: carry on here, from where it was.
+                            Button(L.castPlayHere) {
+                                store.notices.dismiss(item)
+                                store.tv.cast.playHereAfterTakeOver()
+                            }
+                            .buttonStyle(SecondaryCapsuleStyle(height: 24, fontSize: 12))
+                        } else if item.isAlert {
+                            ReportButton(context: BugContext(kind: "message", message: item.notice.words), height: 24, fontSize: 12)
                         }
-                        .buttonStyle(SecondaryCapsuleStyle(height: 24, fontSize: 12))
-                        .padding(.trailing, 6)
-                    } else if item.isAlert {
-                        ReportButton(context: BugContext(kind: "message", message: item.notice.words), height: 24, fontSize: 12)
-                            .padding(.trailing, 6)
                     }
+                    // On the trailing side, or under the words and lined up with them at
+                    // accessibility sizes.
+                    .padding(stacked ? EdgeInsets(top: 0, leading: 16, bottom: 14, trailing: 16) : EdgeInsets(top: 0, leading: 0, bottom: 0, trailing: 6))
                 }
-                .chromeGlass(in: .capsule)
+                .chromeGlass(in: stacked ? AnyShape(RoundedRectangle(cornerRadius: 24)) : AnyShape(Capsule()))
                 .frame(maxWidth: 520)
                 .offset(y: pull)
                 .opacity(1 - min(pull / 80, 0.6))
@@ -126,6 +132,22 @@ struct NoticeCapsule: View {
         .animation(.fadeIn, value: store.notices.current?.id)
         .animation(.fadeIn, value: store.updates.notice?.version)
         .modifier(NoticeAnnouncer(enabled: here))
+    }
+
+    /// Whether the button goes under the words: at accessibility sizes, where beside them it
+    /// would leave the words a few letters a line. The capsule becomes a rounded rectangle there.
+    private var stacked: Bool {
+        typeSize.isAccessibilitySize
+    }
+
+    /// The words wrap in full where the text size can grow, so a larger size never cuts them.
+    /// The Mac keeps the two lines the capsule holds; Messages has the rest.
+    static var lineLimit: Int? {
+        #if os(iOS)
+        nil
+        #else
+        2
+        #endif
     }
 
     /// The notice that someone else took the TV, while what it played can still play on here.

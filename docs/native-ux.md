@@ -461,7 +461,7 @@ Home has no empty state. Its empty sections are left out, and with nothing watch
 
 ### Notices
 
-Engine notices appear in a notice capsule: glass (`glassEffect(.regular, in: .capsule)`) at the bottom centre, above the tab bar on iPhone and 16 pt above the window's bottom edge on Mac. It holds one or two lines, with the hint as a button on its trailing side. The system uses this shape for passing confirmations, such as AirPods connecting or “Added to Library” in Music. It stays clear of the toolbar and the Dynamic Island, puts the button within thumb reach and never takes focus. An alert would interrupt for something that needs no answer.
+Engine notices appear in a notice capsule: glass (`glassEffect(.regular, in: .capsule)`) at the bottom centre, above the tab bar on iPhone and 16 pt above the window's bottom edge on Mac. At the default text size it holds one or two lines, with the hint as a button on its trailing side. On iPhone and iPad the words wrap in full at every text size. At accessibility sizes the button goes under the words and the capsule becomes a rounded rectangle. The system uses this shape for passing confirmations, such as AirPods connecting or “Added to Library” in Music. It stays clear of the toolbar and the Dynamic Island, puts the button within thumb reach and never takes focus. An alert would interrupt for something that needs no answer.
 
 - Info notices stay 4 s, notices with a button 8 s and alerts 8 s, plus 1 s for every 10 words past 12. Timers pause under the pointer or VoiceOver focus and while the app is inactive. The other platforms differ here, see Notice timing on other platforms below. A swipe down or a click dismisses. A newer notice crossfades over the current one.
 - `NoticeHint` becomes the button: Stop for `StopPlayback`, Open stores for `OpenStores` (it goes to Plugin stores), Sign in for `KitsuCredentials` (it opens the Kitsu sheet).
@@ -545,6 +545,7 @@ App text uses the system text styles. Show titles use Zen Kaku Gothic New throug
 | Show title in a list row | `.accessibility2` | 2 lines, 3 at accessibility sizes |
 | Grid captions | `.xxxLarge` | Grids become one-column lists with 60 pt covers |
 | Metadata lines | `.accessibility1` | Letter spacing drops to 0 |
+| Notices | None | Wrap in full, with the button under the words at accessibility sizes |
 | Player controls, cards and labels | `.xxxLarge` | Capped, so they never cover the picture |
 
 ### Contrast and colour
