@@ -334,7 +334,8 @@ extension Snapshot {
                         try? png.write(to: url)
                         print("KaeriDev: wrote \(url.path)")
                     }
-                    menu.cancelTracking()
+                    // Found again: the menu, not Sendable, stays out of the timer's closure.
+                    NSApp.mainMenu?.items.first?.submenu?.cancelTracking()
                     done.resume()
                 }
             }
