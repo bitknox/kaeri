@@ -85,7 +85,7 @@ pub fn open(ctx: &Rc<Ctx>) {
         }
     };
     let build = Rc::new(build);
-    let redraw = {
+    let redraw: Rc<dyn Fn()> = {
         let (sent, build) = (sent.clone(), Rc::clone(&build));
         Rc::new(move || {
             let (report, records) = build();
@@ -570,7 +570,7 @@ impl LogRow {
                             .unwrap_or_else(|| log.stats.file_name.clone());
                         log.file.replace(Some(file));
                         log.settle(Saved::As(name));
-                        log.row.announce(
+                        log.row.upcast_ref::<gtk::Widget>().announce(
                             &t::report_player_log_a11y_saved(),
                             gtk::AccessibleAnnouncementPriority::Medium,
                         );
@@ -582,7 +582,7 @@ impl LogRow {
                     Err(e) => {
                         tracing::warn!(error = %e, "the player log was not written");
                         log.settle(Saved::Failed);
-                        log.row.announce(
+                        log.row.upcast_ref::<gtk::Widget>().announce(
                             &t::report_player_log_failed(),
                             gtk::AccessibleAnnouncementPriority::Medium,
                         );
