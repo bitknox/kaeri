@@ -335,6 +335,8 @@ pub const STATS: [&str; 5] = [
 pub fn run(shell: Rc<Shell>, dir: PathBuf, prefix: String, shots: Vec<String>) {
     #[cfg(feature = "fixtures")]
     crate::shots_missing::saving_to(dir.clone());
+    #[cfg(feature = "fixtures")]
+    FRAMES.with(|f| f.replace(Some(dir.clone())));
     glib::spawn_future_local(async move {
         // The first page, its lists and their covers.
         wait(4.0).await;
@@ -2038,6 +2040,37 @@ fn join(shell: &Rc<Shell>) {
     crate::pages::join::open(&shell.ctx, None);
 }
 
+#[cfg(feature = "fixtures")]
+thread_local! {
+    /// Where a run saves its shots, for a motion's frames to go beside them.
+    static FRAMES: std::cell::RefCell<Option<PathBuf>> = const { std::cell::RefCell::new(None) };
+}
+
+/// A motion as frames: the window drawn on each frame it paints, `count` of them, into
+/// `<shots>/<name>/<ms>.png` by the frame clock's time since the first.
+#[cfg(feature = "fixtures")]
+fn frames(window: &adw::ApplicationWindow, name: &'static str, count: u32) {
+    let Some(dir) = FRAMES.with(|f| f.borrow().clone()) else { return };
+    let taken = std::cell::Cell::new(0u32);
+    let first = std::cell::Cell::new(None::<i64>);
+    window.add_tick_callback(move |window, clock| {
+        let now = clock.frame_time();
+        let start = *first.get().get_or_insert(now);
+        first.set(Some(start));
+        let ms = (now - start) / 1000;
+        let path = dir.join(name).join(format!("{ms:04}.png"));
+        if let Err(error) = capture(window, &path, None) {
+            tracing::warn!(%error, "a frame did not save");
+        }
+        taken.set(taken.get() + 1);
+        if taken.get() >= count {
+            glib::ControlFlow::Break
+        } else {
+            glib::ControlFlow::Continue
+        }
+    });
+}
+
 fn close_dialogs(window: &adw::ApplicationWindow) {
     if let Some(dialog) = window.visible_dialog() {
         dialog.force_close();
@@ -3263,9 +3296,47 @@ fn cast_stage(shell: &Rc<Shell>, shot: &str) -> f64 {
             scene.cast(LIVING_ROOM, plays("fixed"));
             open();
             pick(LIVING_ROOM, 1800);
-            let window = shell.ctx.window.clone();
-            later(9500, Box::new(move || close_dialogs(&window)));
+            let tv = Rc::clone(&tv);
+            later(9500, Box::new(move || tv.sheet_closed()));
             11.0
+        }
+        // The bar grows into the controls and shrinks back, as frames: with Reduce Animation
+        // too for the `-reduced` shot.
+        "cast-morph" | "cast-morph-reduced" => {
+            if shot == "cast-morph-reduced"
+                && let Some(settings) = gtk::Settings::default()
+            {
+                settings.set_gtk_enable_animations(false);
+            }
+            scene.cast(LIVING_ROOM, plays("fixed"));
+            open();
+            pick(LIVING_ROOM, 1800);
+            let closing = Rc::clone(&tv);
+            later(9500, Box::new(move || closing.sheet_closed()));
+            let (open_name, close_name) = if shot == "cast-morph" {
+                ("cast-morph/open", "cast-morph/close")
+            } else {
+                ("cast-morph-reduced/open", "cast-morph-reduced/close")
+            };
+            let window = shell.ctx.window.clone();
+            let opening = Rc::clone(&tv);
+            later(
+                11_000,
+                Box::new(move || {
+                    frames(&window, open_name, 45);
+                    opening.open_remote();
+                }),
+            );
+            let window = shell.ctx.window.clone();
+            let shutting = Rc::clone(&tv);
+            later(
+                14_000,
+                Box::new(move || {
+                    frames(&window, close_name, 45);
+                    shutting.sheet_closed();
+                }),
+            );
+            17.0
         }
         "cast-stopped" => {
             scene.cast(LIVING_ROOM, plays("fixed"));

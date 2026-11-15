@@ -9,6 +9,8 @@
 //! - the paired TVs, for Settings.
 
 pub(crate) mod avahi;
+pub mod bar;
+pub mod button;
 pub mod cast;
 #[cfg(feature = "fixtures")]
 pub mod fixture;
@@ -252,6 +254,24 @@ impl Tv {
                 tv.refresh();
             }
         });
+        // The cast session, for the header's button: connecting, connected, nothing playing.
+        let Some(mut cast) = sender.cast_changes() else { return };
+        let (tx, rx) = async_channel::unbounded::<()>();
+        self.handle.spawn(async move {
+            while cast.changed().await.is_ok() {
+                if tx.send(()).await.is_err() {
+                    return;
+                }
+            }
+        });
+        let me = self.me.clone();
+        glib::spawn_future_local(async move {
+            while rx.recv().await.is_ok() {
+                while rx.try_recv().is_ok() {}
+                let Some(tv) = me.upgrade() else { return };
+                tv.changed();
+            }
+        });
     }
 
     /// Run `work` on the engine's runtime, and `then` with what it gave back on the main loop.
@@ -370,8 +390,17 @@ impl Tv {
         }
         self.problem.replace(None);
         self.request.replace(Some(request));
-        match self.connected() {
-            Some(tv) if self.live() => self.play_on(tv),
+        let held = self.cast_held();
+        match (self.connected(), held) {
+            (Some(tv), _) if self.live() => self.play_on(tv),
+            // Connected first from the header's button: the episode goes to that TV.
+            (_, Some(key)) => {
+                let request = self.request.take();
+                if let Some(request) = request {
+                    self.start_cast(key, request);
+                }
+                return;
+            }
             _ => self.sheet.set(Some(Sheet::Picker)),
         }
         self.changed();

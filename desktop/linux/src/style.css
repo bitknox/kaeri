@@ -798,3 +798,15 @@ statuspage.demo-end-ground.look-sepia { background: #E9DCC4; }
 .private-line-head { color: var(--silk); font-weight: 600; }
 .private-player { color: #C9CBD8; font-size: 14px; }
 .private-reader { color: var(--haze); font-size: 0.86em; }
+
+/* A cast's bar under the pages: the raised surface, the TV's playhead a 2 px amber line along
+   its top edge. */
+.cast-bar { min-height: 64px; padding: 0 12px 0 16px; }
+.cast-bar-art { border-radius: 6px; }
+progressbar.cast-bar-progress trough { min-height: 2px; border-radius: 0; background: alpha(currentColor, 0.1); }
+progressbar.cast-bar-progress progress { min-height: 2px; border-radius: 0; }
+/* The header's cast button: an outline while a TV is there, its waves in turn while it
+   connects, filled while connected. */
+.cast-button.connecting image { animation: cast-waves 1.2s ease-in-out infinite; }
+.cast-button.connected { background: alpha(currentColor, 0.1); }
+@keyframes cast-waves { 0% { opacity: 1; } 50% { opacity: 0.38; } 100% { opacity: 1; } }

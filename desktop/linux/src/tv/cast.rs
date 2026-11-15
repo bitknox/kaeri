@@ -11,7 +11,7 @@ use std::{
 use gtk::glib;
 use kaeri_core::ids::AnilistId;
 use kaeri_engine::{
-    cast::{CastHub, protocol::VolumeControl},
+    cast::{CastHub, SessionState, SessionView, protocol::VolumeControl},
     engine::RemoteSender,
     remote::{
         protocol::command::RemoteCommand,
@@ -222,6 +222,65 @@ impl Tv {
         Some(now.position_after(run.card_at.elapsed().as_secs_f64()))
     }
 
+    /// The engine's cast session, as the header's button draws it.
+    pub fn cast_session(&self) -> Option<SessionView> {
+        let sender = self.sender.as_ref()?;
+        let _entered = self.handle.enter();
+        Some(sender.cast_state())
+    }
+
+    /// The Cast row key of a TV held with nothing cast from here yet: connected first from the
+    /// header's button.
+    pub(super) fn cast_held(&self) -> Option<String> {
+        if self.casting() {
+            return None;
+        }
+        let session = self.cast_session()?;
+        let held = matches!(session.state, SessionState::Connected | SessionState::Playing);
+        session.device.filter(|_| held).map(|d| format!("cast:{}", d.id)) // i18n-skip
+    }
+
+    /// A Cast row chosen in the header's chooser: what was asked plays there, else the TV is
+    /// connected to with nothing playing yet.
+    pub fn cast_connect(&self, row: &CastRow) {
+        if self.request.borrow().is_some() {
+            self.choose_cast(row);
+            return;
+        }
+        let Some(sender) = self.sender.clone() else { return };
+        let connected = {
+            let _entered = self.handle.enter();
+            sender.connect_cast(&row.key, None)
+        };
+        if let Err(problem) = connected {
+            self.problem.replace(Some(problem));
+        }
+        self.changed();
+    }
+
+    /// Stop casting from the header's popover: the cast from here, or the TV held with
+    /// nothing playing.
+    pub fn cast_disconnect(&self) {
+        if self.casting() {
+            self.cast_stop();
+            return;
+        }
+        if let Some(sender) = &self.sender {
+            let _entered = self.handle.enter();
+            sender.disconnect_cast();
+        }
+        self.changed();
+    }
+
+    /// What the system's media controls show of a cast: the episode and where the TV's
+    /// playhead is, while the cast runs and has not ended.
+    pub fn cast_media(&self) -> Option<(NowCard, f64)> {
+        let view = self.cast_view().filter(|v| !v.stage.ended())?;
+        let now = view.now?;
+        let at = self.cast_playhead().unwrap_or(now.position);
+        Some((now, at))
+    }
+
     /// What the sidebar and the header button say of the cast: the words, the dot, and whether
     /// it is down.
     pub fn cast_standing(&self) -> Option<(String, &'static str, bool)> {
@@ -240,7 +299,7 @@ impl Tv {
         self.start_cast(row.key.clone(), request);
     }
 
-    fn start_cast(&self, key: String, request: Request) {
+    pub(super) fn start_cast(&self, key: String, request: Request) {
         let Some(sender) = self.sender.clone() else { return };
         let started = {
             let _entered = self.handle.enter();

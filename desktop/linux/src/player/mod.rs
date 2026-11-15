@@ -503,7 +503,8 @@ impl PlayerView {
     /// player on this computer.
     fn tv_drives(&self) -> bool {
         let tv = &self.ctx.tv;
-        tv.live() && tv.now().is_some() && !self.shell().is_some_and(|s| s.is_player())
+        (tv.cast_media().is_some() || (tv.live() && tv.now().is_some()))
+            && !self.shell().is_some_and(|s| s.is_player())
     }
 
     /// Show the TV's episode to the media controls, or nothing once the TV has stopped.
@@ -513,7 +514,15 @@ impl PlayerView {
             return;
         }
         let tv = &self.ctx.tv;
-        let Some(now) = tv.now().filter(|_| tv.connected().is_some()) else {
+        // A cast running is what the controls show; else a TV running Kaeri, driven from here.
+        let cast = tv.cast_media();
+        let playhead = match &cast {
+            Some((_, at)) => Some(*at),
+            None => tv.playhead(),
+        };
+        let Some(now) =
+            cast.map(|(now, _)| now).or_else(|| tv.now().filter(|_| tv.connected().is_some()))
+        else {
             media.stopped();
             return;
         };
@@ -529,7 +538,7 @@ impl PlayerView {
             title: now.episode_line.clone(),
             art: entry.and_then(|e| e.banner_url.or(e.cover_url)),
         });
-        media.state(now.paused, tv.playhead().or(Some(now.position)), now.duration);
+        media.state(now.paused, playhead.or(Some(now.position)), now.duration);
         media.neighbours(true, false);
     }
 
@@ -537,11 +546,17 @@ impl PlayerView {
     fn tv_media_control(&self, action: MediaAction) {
         use kaeri_engine::remote::protocol::command::RemoteCommand;
         let tv = &self.ctx.tv;
-        let paused = tv.now().is_some_and(|n| n.paused);
+        let cast = tv.cast_media().map(|(now, _)| now);
+        let paused = cast.as_ref().or(tv.now().as_ref()).is_some_and(|n| n.paused);
         let command = match action {
             MediaAction::Raise => {
                 self.ctx.window.present();
                 tv.open_remote();
+                return;
+            }
+            // Stop on a cast stops casting, as Stop casting does.
+            MediaAction::Stop if cast.is_some() => {
+                tv.cast_stop();
                 return;
             }
             MediaAction::PlayPause => RemoteCommand::TogglePause,
@@ -551,7 +566,8 @@ impl PlayerView {
             MediaAction::SeekBy(by) => RemoteCommand::Seek { by },
             MediaAction::SeekTo(position) => RemoteCommand::SeekTo { position },
             MediaAction::Volume(level) => {
-                let now = tv.now().and_then(|n| n.volume).unwrap_or(100.0);
+                let now =
+                    cast.as_ref().or(tv.now().as_ref()).and_then(|n| n.volume).unwrap_or(100.0);
                 RemoteCommand::Volume { step: level * 100.0 - now }
             }
             // The TV has no episode before, nor speeds, and Stop leaves it playing.
@@ -561,7 +577,11 @@ impl PlayerView {
             | MediaAction::Stop
             | MediaAction::Rate(_) => return,
         };
-        tv.send(command);
+        if cast.is_some() {
+            tv.cast_send(command);
+        } else {
+            tv.send(command);
+        }
     }
 
     /// What GNOME's media controls, the lock screen or a media key asked.
