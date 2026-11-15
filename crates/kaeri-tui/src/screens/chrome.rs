@@ -77,6 +77,15 @@ pub(super) fn render_header(buf: &mut Buffer, app: &App, geometry: &Frame) {
         ));
     }
 
+    // Private mode leads, in the state colour with its own mark, so colour is never the only
+    // sign. The header gives way from the end, so this chip is the last to go.
+    if let Some(chip) = app.private_chip() {
+        if !chips.is_empty() {
+            chips.insert(0, ("·".into(), Role::Rule));
+        }
+        chips.insert(0, (chip, Role::State));
+    }
+
     // Too narrow for the rail, nothing else says which section this is, so the title does.
     let named = geometry.header.width < crate::layout::VERY_NARROW_WIDTH
         && matches!(app.nav.current(), crate::nav::StageView::Section(_));
@@ -205,6 +214,16 @@ pub(super) fn render_status(buf: &mut Buffer, app: &App, geometry: &Frame, help_
         let hints = status_hints_paged(app, help_pages);
         StatusLine::new(&app.palette, error)
             .state_role(Role::Alert)
+            .hints(&hints)
+            .render(geometry.status, buf);
+        return;
+    }
+    // Turned on from a shortcut or the palette, the mode says what it does for a while, in the
+    // state colour, before the line goes back to what it said.
+    if let Some(notice) = app.private_notice() {
+        let hints = status_hints_paged(app, help_pages);
+        StatusLine::new(&app.palette, &notice)
+            .state_role(Role::State)
             .hints(&hints)
             .render(geometry.status, buf);
         return;

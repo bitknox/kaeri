@@ -305,6 +305,8 @@ pub(crate) fn status_hints_paged(
             hints
         }
         V::Section(Section::Home) => vec![
+            // Private mode first, so a narrow line drops it before the keys for the row.
+            (Action::TogglePrivate, Action::TogglePrivate.hint()),
             // A part-watched row resumes on Enter rather than opening.
             (Action::Open, if app.resumes_on_enter() { hint_play() } else { hint_open() }),
             (Action::ShowEpisodes, Action::ShowEpisodes.hint()),
@@ -408,14 +410,16 @@ pub(crate) fn status_hints_paged(
             });
             hints
         }
-        // Enter signs the highlighted tracker in or out, so it is named for which.
-        V::Section(Section::Accounts) => match app.sync.get(app.cursors.accounts.selected) {
-            Some(tracker) if tracker.connected && !tracker.needs_reauth => {
-                vec![(Action::Open, hint_sign_out())]
-            }
-            Some(_) => vec![(Action::Open, hint_sign_in())],
-            None => Vec::new(),
-        },
+        // Enter turns the private mode switch over on the first row, and signs the highlighted
+        // tracker in or out after it, so it is named for which.
+        V::Section(Section::Accounts) => {
+            let enter = match app.account_tracker() {
+                Some(tracker) if tracker.connected && !tracker.needs_reauth => hint_sign_out(),
+                Some(_) => hint_sign_in(),
+                None => hint_change(),
+            };
+            vec![(Action::Open, enter), (Action::TogglePrivate, Action::TogglePrivate.hint())]
+        }
         // Settings has nothing to open and no episodes, so offering those keys would be a lie.
         // Left and Right are what actually do something here.
         // `d` leads to Devices, first so a narrow line drops it before the arrows.

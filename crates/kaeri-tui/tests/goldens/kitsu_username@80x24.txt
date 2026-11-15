@@ -1,22 +1,22 @@
 Kaeri                          plugins ●  ·  anilist ⇅ 3  kitsu ○  mal ✕ sign in
 ────────────────────────────────────────────────────────────────────────────────
- ▸ │  Tracker         State             Queued    Token
- ▤ │  ────────────────────────────────────────────────────────────────────────
- ▦ │    AniList       ● Connected       3         OS keychain
- / │  ▌ Kitsu         ○ Not connected   0         0600 file
- ▥ │    MyAnimeList   ✕ Sign in again   0
+ ▸ │    Private mode  [off]
+ ▤ │    Nothing you watch or read is saved or synced until you turn it off
+ ▦ │    or quit Kaeri.
+ / │    Your sources and watch parties still see what you open.
+ ▥ │
 ────────────────────────────────────────────────────────────────────────────────
 ▌ Sign in to Kitsu   hotaru@mail.example▏
 ────────────────────────────────────────────────────────────────────────────────
   Email or user name.
 
+   │                  Fetching your list failed on 16 Oct at 17:28: the token
+   │                  was refused
+   │
+   │    Tokens are stored in files with 0600 permissions because the OS
+   │    keychain is unavailable.
    │  ────────────────────────────────────────────────────────────────────────
    │    ↵ Sign in
-   │
-   │
-   │
-   │
-   │
    │
    │
    │
@@ -30,9 +30,7 @@ r01 c00-79 fg=rule
 r02 c00-79 fg=rule
 r03 c00-79 fg=rule
 r04 c00-79 fg=rule
-r05 c00-07 fg=rule
-r05 c08-12 fg=rule mod=BOLD
-r05 c13-79 fg=rule
+r05 c00-79 fg=rule
 r06 c00-79 fg=rule
 r07 c00-79 fg=rule bg=ground
 r08 c00-00 fg=obi bg=ground
@@ -43,7 +41,9 @@ r09 c00-00 fg=rule bg=ground
 r09 c01-01 fg=rule bg=ground mod=BOLD
 r09 c02-79 fg=rule bg=ground
 r10 c00-01 fg=rule bg=ground
-r10 c02-20 fg=text-dim bg=ground
+r10 c02-07 fg=text-dim bg=ground
+r10 c08-12 fg=text-dim bg=ground mod=BOLD
+r10 c13-20 fg=text-dim bg=ground
 r10 c21-79 fg=rule bg=ground
 r11 c00-79 fg=rule bg=ground
 r12 c00-79 fg=rule

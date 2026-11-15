@@ -317,9 +317,12 @@ impl App {
     pub fn palette_matches(&self) -> Vec<(Action, String)> {
         // The keys the screen will read once the palette is closed, not the palette's own.
         let context = if self.playing.is_some() { Context::Playing } else { Context::Browsing };
+        // A title's own switch is listed on its page, where "this show" has one meaning.
+        let on_a_title = self.title_on_screen().is_some();
         self.keymap
             .palette_entries(self.text(Field::Palette), context)
             .into_iter()
+            .filter(|(action, _)| on_a_title || *action != Action::ToggleAlwaysPrivate)
             .take(PALETTE_ROWS)
             .collect()
     }

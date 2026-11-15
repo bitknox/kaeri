@@ -51,6 +51,7 @@ pub mod medium;
 mod notices;
 mod overlays;
 mod playback;
+mod private;
 mod providers;
 mod reading;
 mod settings;
@@ -75,6 +76,7 @@ pub use self::{
     notices::{ACTIVITY_DELAY, Job, LOG_CAPACITY, LogRow, Toast, alert, info, say, worded},
     overlays::{FrameReport, PALETTE_ROWS},
     playback::NowPlaying,
+    private::PrivateLine,
     providers::proxy_badge,
     reading::{
         AnilistState, GROUP_HITS, Part, ReadLine, Reading, read_filter_labels,
@@ -393,6 +395,8 @@ pub struct App {
     pub publish_for: Option<String>,
     /// Reading's Home and Search, while this computer is set to reading alone.
     pub reading: Reading,
+    /// Private watching and reading: the mode, the titles kept private, and the notice.
+    pub(crate) private: private::Private,
 }
 
 impl App {
@@ -527,6 +531,7 @@ impl App {
             local_plugins: Vec::new(),
             publish_for: None,
             reading: Reading::default(),
+            private: private::Private::default(),
         }
     }
 
@@ -576,9 +581,9 @@ impl App {
             Event::LiveSearch { .. }
             | Event::Browse(_)
             | Event::Facets(_)
-            | Event::RecentSearches(_)
-            | Event::Private(_)
-            | Event::AlwaysPrivate { .. } => {}
+            | Event::RecentSearches(_) => {}
+            Event::Private(on) => self.apply_private(on),
+            Event::AlwaysPrivate { title, on } => self.apply_always_private(&title, on),
             // The periods' rail is the native apps'; the terminal has them in the Sort row.
             Event::Trending { .. } => {}
             Event::Surprise { pool, outcome } => self.apply_surprise(pool, outcome),
@@ -744,7 +749,16 @@ impl App {
             Event::PlaybackSpeed(speed) => self.apply_playback_speed(speed),
             Event::ActiveProvider(provider) => self.active_provider = Some(provider),
             Event::PlaybackKept => self.apply_playback_kept(),
-            Event::PlaybackStaged { id, title, episode, episode_title, speed, .. } => {
+            Event::PlaybackStaged {
+                id,
+                title,
+                episode,
+                episode_title,
+                speed,
+                always_private,
+                ..
+            } => {
+                self.private.take_flag(id, always_private);
                 self.take_staged(id, title, episode, episode_title, speed);
             }
             // The terminal has no starting screen; it keeps the notice a stream with no video
@@ -819,7 +833,8 @@ impl App {
             Event::Resumed { position } => self.apply_resumed(position),
             Event::TorrentProxy(status) => self.apply_proxy(status),
             Event::Episodes { id, rows, .. } => self.apply_episodes(id, rows),
-            Event::Progress { id, progress, resume, episodes, .. } => {
+            Event::Progress { id, progress, resume, episodes, private, kept } => {
+                self.private.take_standing(id, private, kept);
                 self.apply_progress(id, progress, resume, episodes)
             }
             Event::SyncPairFailed { problem, device } => {
