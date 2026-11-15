@@ -509,6 +509,8 @@ public sealed partial class TitlePage : Page, IPageKeys
         bars.Children.Add(States.Plate(320, 28, 4));
         bars.Children.Add(States.Plate(200, 14, 3));
         bars.Children.Add(States.Plate(150, 40, 6));
+        if (Avail is null)
+            bars.Children.Add(AvailPlate());
         head.Children.Add(bars);
         main.Children.Add(head);
         main.Children.Add(SynopsisPlates());
@@ -620,6 +622,7 @@ public sealed partial class TitlePage : Page, IPageKeys
         if (!ctx.Known.Episodes.ContainsKey(id))
             EpisodesState.Wait();
         following.Reset();
+        WaitForAvailability();
         Load();
 #if KAERI_TESTING
         // --show=title-another: as if Surprise me opened this title, so Another is there.
@@ -764,6 +767,7 @@ public sealed partial class TitlePage : Page, IPageKeys
                 EpisodeList.ItemsSource = null;
                 EpisodesState.WaitKeeping(false);
             }
+            WaitForAvailability();
             Load();
             ShowAnother();
         });
@@ -1281,14 +1285,20 @@ public sealed partial class TitlePage : Page, IPageKeys
     void ShowAvailability()
     {
         var key = Drawn.Fingerprint(Avail);
-        if (key == availKey)
-            return;
-        availKey = key;
+        if (key != availKey)
+        {
+            availKey = key;
+            DrawAvailability(Avail);
+        }
+        ShowAvailRoom(AvailabilityLine.Room(Avail, DateTimeOffset.UtcNow - availSince));
+    }
+
+    void DrawAvailability(TitleAvailability? avail)
+    {
         AvailLine.Children.Clear();
-        AvailLine.Visibility = Visibility.Collapsed;
         foreach (var old in MoreMenu.Items.Where(i => i.Tag as string == "avail").ToList())
             MoreMenu.Items.Remove(old);
-        if (Avail is not { } a)
+        if (avail is not { } a)
             return;
         var at = 0;
         foreach (var link in a.Yours ?? [])
@@ -1310,20 +1320,114 @@ public sealed partial class TitlePage : Page, IPageKeys
         }
         // The not-found line is a sentence and a link: stacked, so a narrow window wraps the sentence instead of clipping the link.
         AvailLine.Orientation = a.Case == AvailabilityCase.NotInSources ? Orientation.Vertical : Orientation.Horizontal;
-        switch (a.Case)
+        if (!AvailabilityLine.Has(a))
+            return;
+        if (a.Case == AvailabilityCase.NotInSources)
         {
-            case AvailabilityCase.PlaysAlsoOn or AvailabilityCase.OnService when (a.AlsoOn ?? []).Length > 0:
-                Text(T.TitleAlsoOnServices("").TrimEnd());
-                foreach (var link in a.AlsoOn!)
-                    Link(link.Service, () => OpenService(link));
-                break;
-            case AvailabilityCase.NotInSources when (a.Others ?? []).Length > 0:
-                Text(T.TitleListedOn(string.Join(", ", a.Others!)));
-                if (a.ChooseServices)
-                    Link(T.TitleChooseServices, () => ctx.Window.Push(typeof(LicensedPage), null));
-                break;
+            Text(T.TitleListedOn(string.Join(", ", a.Others!)));
+            if (a.ChooseServices)
+                Link(T.TitleChooseServices, () => ctx.Window.Push(typeof(LicensedPage), null));
+            return;
         }
-        AvailLine.Visibility = AvailLine.Children.Count > 0 ? Visibility.Visible : Visibility.Collapsed;
+        Text(T.TitleAlsoOnServices("").TrimEnd());
+        foreach (var link in a.AlsoOn!)
+            Link(link.Service, () => OpenService(link));
+    }
+
+    /// <summary>When the wait for where the show is listed started: the page opening, or another season picked here.</summary>
+    DateTimeOffset availSince;
+
+    /// <summary>Ends the wait after <see cref="AvailabilityLine.WaitFor"/>, as when offline the engine never answers.</summary>
+    Microsoft.UI.Dispatching.DispatcherQueueTimer? availWait;
+
+    /// <summary>What the availability line's room shows now; null before this title's first.</summary>
+    AvailabilityRoom? availRoom;
+
+    /// <summary>
+    /// Starts the wait for where this title is listed: until the answer, or for at most 2 s, a
+    /// placeholder line keeps the line's room from the first frame.
+    /// </summary>
+    void WaitForAvailability()
+    {
+        availSince = DateTimeOffset.UtcNow;
+        availRoom = null;
+        availWait ??= Timers.Weak(this, AvailabilityLine.WaitFor, false, static page =>
+        {
+            // The wait is over, even where the timer ticks a moment early.
+            page.availSince = DateTimeOffset.UtcNow - AvailabilityLine.WaitFor;
+            page.ShowAvailability();
+        });
+        availWait.Stop();
+        availWait.Start();
+        ShowAvailability();
+    }
+
+    /// <summary>The placeholder line: one line of the links' height, as wide as a short line.</summary>
+    static Grid AvailPlate() => States.Lines(1, 240, lineHeight: 24);
+
+    /// <summary>
+    /// The availability line's room: a placeholder line while the answer is not known, the line,
+    /// or nothing. The answer replaces the placeholder in one crossfade where it stands, on the
+    /// reveal token with no hold; an answer with no line closes the room in that same crossfade,
+    /// so what is under it settles as it fades. A change from one answer to another is drawn at once.
+    /// </summary>
+    void ShowAvailRoom(AvailabilityRoom room)
+    {
+        if (room == availRoom)
+            return;
+        var held = availRoom == AvailabilityRoom.Held && AvailHeld.Visibility == Visibility.Visible;
+        availRoom = room;
+        StopAvailClosing();
+        if (room == AvailabilityRoom.Held)
+        {
+            AvailHeld.Child ??= AvailPlate();
+            Motion.Set(AvailHeld, true);
+            Motion.Set(AvailLine, false);
+            AvailRoom.Visibility = Visibility.Visible;
+            return;
+        }
+        availWait?.Stop();
+        var line = room == AvailabilityRoom.Line;
+        if (!held || AvailRoom.ActualHeight <= 0)
+        {
+            Motion.Set(AvailHeld, false);
+            Motion.Set(AvailLine, line);
+            AvailRoom.Visibility = line ? Visibility.Visible : Visibility.Collapsed;
+            return;
+        }
+        if (line)
+        {
+            AvailLine.Opacity = 0;
+            AvailLine.Visibility = Visibility.Visible;
+            Motion.Reveal(AvailLine, 1);
+            Motion.Reveal(AvailHeld, 0, () => AvailHeld.Visibility = Visibility.Collapsed);
+            return;
+        }
+        // The room closes with the placeholder's fade: its height eases to nothing, and so does
+        // the panel's spacing above it, so collapsing it at the end moves nothing.
+        var from = AvailRoom.ActualHeight;
+        var spacing = (AvailRoom.Parent as StackPanel)?.Spacing ?? 0;
+        Motion.Ease(AvailRoom, from, 0, h =>
+        {
+            AvailRoom.Height = h;
+            AvailRoom.Margin = new Thickness(0, -spacing * (1 - h / from), 0, 0);
+        });
+        Motion.Reveal(AvailHeld, 0, () =>
+        {
+            if (availRoom != AvailabilityRoom.Closed)
+                return;
+            StopAvailClosing();
+            AvailHeld.Visibility = Visibility.Collapsed;
+            AvailRoom.Visibility = Visibility.Collapsed;
+        });
+    }
+
+    /// <summary>Stops a closing under way and gives the room its own height again.</summary>
+    void StopAvailClosing()
+    {
+        Motion.Ease(AvailRoom, 0, 0, static _ => { });
+        AvailRoom.Height = double.NaN;
+        AvailRoom.Margin = default;
     }
 
     void ShowAction(Entry entry)
