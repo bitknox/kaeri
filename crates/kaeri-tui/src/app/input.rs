@@ -281,6 +281,10 @@ impl App {
             Action::Open => return self.open_selected(),
             // Space skips the detail screen entirely: from a list, straight into the next
             // episode you have not watched.
+            // A title page whose next episode no source has yet plays the one before it.
+            Action::PlayNext if self.missing_here().is_some() => {
+                return self.play_before_missing();
+            }
             Action::PlayNext => return self.play_next_unwatched(),
             Action::ShowEpisodes => return self.show_episodes(),
             Action::ToggleWatched if self.in_episodes() => return self.toggle_watched(),
@@ -327,6 +331,10 @@ impl App {
             // A title page and an episode table refresh themselves, not the section's list
             // under them — which is what `r` used to fetch, saying "loading the calendar" over
             // a title page that never changed.
+            // There, while its next episode is missing, refreshing is checking for it again.
+            Action::Refresh if self.missing_here().is_some_and(|m| m.checkable()) => {
+                return self.check_again();
+            }
             Action::Refresh if matches!(self.nav.current(), StageView::Title(_)) => {
                 return self.refresh_title();
             }

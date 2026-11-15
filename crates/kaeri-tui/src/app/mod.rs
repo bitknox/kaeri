@@ -48,6 +48,7 @@ mod home;
 mod input;
 mod lists;
 pub mod medium;
+mod missing;
 mod notices;
 mod overlays;
 mod playback;
@@ -72,6 +73,7 @@ pub use self::{
     lists::{
         cycle_search_filter, search_filter_labels, search_filter_summary, search_filter_value,
     },
+    missing::{CHECKING_AFTER, CHECKING_HELD, MissingStatus},
     notices::{ACTIVITY_DELAY, Job, LOG_CAPACITY, LogRow, Toast, alert, info, say, worded},
     overlays::{FrameReport, PALETTE_ROWS},
     playback::NowPlaying,
@@ -316,6 +318,8 @@ pub struct App {
     /// title the moment one is opened, while the rows stay the last title's until its own load
     /// answers, and asked by `detail` they spoke for a show they were never part of.
     episodes_for: Option<AnilistId>,
+    /// The checks of a missing episode the title page asked for, and what they came to.
+    checks: missing::Checks,
     /// How far a title's dub goes, as the engine last said for it: the Episodes screen's
     /// "Dub to episode 6", for the title it names alone.
     pub dub: Option<(AnilistId, DubExtent)>,
@@ -491,6 +495,7 @@ impl App {
             episodes_all: Vec::new(),
             dub: None,
             episodes_for: None,
+            checks: missing::Checks::default(),
             episode_filter: EpisodeFilter::default(),
             go_count: String::new(),
             go_error: None,
@@ -610,7 +615,10 @@ impl App {
             Event::HiddenTitles(_) => {}
             // Every way into a title sets a stand-in `detail` for it before the fetch goes out, so
             // a full record for any other id answers a title the user has already left.
-            Event::Detail(entry) => self.apply_detail(entry),
+            Event::Detail(entry) => {
+                self.apply_detail(entry);
+                self.list_if_missing();
+            }
             // The terminal has no hover cards.
             Event::Cards(cards) => self.apply_note_titles(&cards),
             // The engine names every title as the setting says; nothing here asks the viewer's.
@@ -624,8 +632,8 @@ impl App {
             Event::NewEpisodes(_) | Event::WidgetSnapshot(_) | Event::UpcomingNotices(_) => {}
             // The native apps' discussion sheet; the terminal opens a thread in the browser.
             Event::DiscussionFound { .. } | Event::Discussion(_) => {}
-            // What a check for a missing episode found; the title page owns the answer.
-            Event::EpisodeChecked(_) => {}
+            // What a check for a missing episode came to, for the title page's status line.
+            Event::EpisodeChecked(check) => self.apply_check(check),
             // What the update check found, for an app's Settings: the terminal's own notice
             // comes as a toast, naming `kaeri --update`.
             Event::Update(_) => {}

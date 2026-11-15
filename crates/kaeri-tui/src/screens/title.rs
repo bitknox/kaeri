@@ -5,14 +5,15 @@
 use kaeri_i18n::t;
 use kaeri_model::{
     catalog::{Entry, LibrarySegment},
+    missing::{AiredAgo, CheckOutcome, MissingEpisode, MissingPhase, aired_ago},
     progress::TitleProgress,
 };
 use ratatui::{buffer::Buffer, layout::Rect, style::Modifier};
 
 use crate::{
-    app::{App, push_detail, status_text},
-    theme::Role,
-    widgets::{truncate, wrap, wrap_meta},
+    app::{App, MissingStatus, push_detail, status_text},
+    theme::{Role, glyph},
+    widgets::{Cells, truncate, wrap, wrap_meta},
 };
 
 use super::{
@@ -105,8 +106,17 @@ pub(super) fn render_title(buf: &mut Buffer, app: &App, area: Rect) {
         y += 2;
     }
 
+    // The missing episode's status is worded first, so a short page gives up synopsis lines
+    // before the status: it is what the page has to say right now.
+    let status = app.missing_status();
+    let status_lines = status
+        .as_ref()
+        .map(|s| missing_lines(app, s, area.width as usize, 4))
+        .unwrap_or_default();
+    let status_room = if status_lines.is_empty() { 0 } else { status_lines.len() + 1 };
     let budget = if app.synopsis_expanded { 12 } else { 5 };
-    let room = area.bottom().saturating_sub(y).saturating_sub(4) as usize;
+    let room = (area.bottom().saturating_sub(y).saturating_sub(4) as usize)
+        .saturating_sub(status_room);
     let lines = wrap(&entry.synopsis, area.width as usize, budget.min(room));
     for (i, line) in lines.iter().enumerate() {
         buf.set_string(area.left(), y + i as u16, line, app.palette.style(Role::TextDim));
@@ -152,6 +162,124 @@ pub(super) fn render_title(buf: &mut Buffer, app: &App, area: Rect) {
                     app.palette.style(Role::State),
                 );
             }
+        }
+    }
+
+    // A next episode that aired and no source lists: said a line under the meter.
+    if !status_lines.is_empty() {
+        let y = y + 2;
+        let room = area.bottom().saturating_sub(y) as usize;
+        for (i, words) in status_lines.iter().take(room).enumerate() {
+            let mut x = area.left() + if i == 0 { 0 } else { STATUS_INDENT };
+            for (n, (word, role)) in words.iter().enumerate() {
+                if n > 0 {
+                    x += 1;
+                }
+                buf.set_string(x, y + i as u16, word, app.palette.style(*role));
+                x += word.cells() as u16;
+            }
+        }
+    }
+}
+
+/// How far the status's later lines sit in, so they start under its first word, past the dot.
+const STATUS_INDENT: u16 = 2;
+
+/// The status under the meter, worded and wrapped to `width`, at most `room` lines: each line
+/// its words, each word in its role. The dot and the first sentence in the state colour, the
+/// rest in the dim one; a week on the dot is hollow and the sentence plain text.
+fn missing_lines(
+    app: &App,
+    status: &MissingStatus,
+    width: usize,
+    room: usize,
+) -> Vec<Vec<(String, Role)>> {
+    let words = |text: &str, role: Role| {
+        text.split_whitespace().map(|w| (w.to_owned(), role)).collect::<Vec<_>>()
+    };
+    let mut said = match status {
+        MissingStatus::Checking => {
+            let mut said = vec![(glyph::STATE_WAITING.to_string(), Role::State)];
+            said.extend(words(&t::episode_missing_checking(), Role::State));
+            said
+        }
+        MissingStatus::Says { missing, answer } => {
+            let long_ago = missing.phase == MissingPhase::LongAgo;
+            let (dot, head_role) = if long_ago {
+                (glyph::STATE_OFF, Role::Text)
+            } else {
+                (glyph::STATE_READY, Role::State)
+            };
+            let mut said = vec![(dot.to_string(), head_role)];
+            said.extend(words(&missing_head(app, missing), head_role));
+            said.extend(words(&missing_tail(missing, *answer), Role::TextDim));
+            said
+        }
+    };
+    // Wrapped by words, as the synopsis is, the later lines in by the dot's width.
+    let mut lines: Vec<Vec<(String, Role)>> = Vec::new();
+    let mut used = 0;
+    for word in said.drain(..) {
+        let cells = word.0.cells();
+        let later = lines.len() > 1;
+        let fits = width.saturating_sub(if later { STATUS_INDENT as usize } else { 0 });
+        match lines.last_mut() {
+            Some(line) if used + 1 + cells <= fits => {
+                line.push(word);
+                used += 1 + cells;
+            }
+            _ => {
+                if lines.len() == room {
+                    break;
+                }
+                used = cells;
+                lines.push(vec![word]);
+            }
+        }
+    }
+    lines
+}
+
+/// The status's first sentence: which episode, and when it aired. With no airing time known,
+/// the words the page had before it could say more.
+fn missing_head(app: &App, missing: &MissingEpisode) -> String {
+    let episode = i64::from(missing.episode);
+    let Some(at) = missing.aired_at else { return t::episode_unsourced() };
+    match aired_ago(at, app.clock.now_epoch()) {
+        AiredAgo::Minutes { minutes } => t::episode_missing_aired(
+            episode,
+            &t::time_ago(&t::time_minutes(i64::from(minutes))),
+        ),
+        AiredAgo::Hours { hours } => {
+            t::episode_missing_aired(episode, &t::time_ago(&t::time_hours(i64::from(hours))))
+        }
+        AiredAgo::OnDate => {
+            let date = app.clock.local(at).map(|d| d.format("%-d %b").to_string());
+            t::episode_missing_aired_on(episode, &date.unwrap_or_default())
+        }
+    }
+}
+
+/// The rest of the status, by where the episode stands and what the last check the person asked
+/// for came to. Kaeri's own looking is named only while it looks; offline then, the line says
+/// it looks once back.
+fn missing_tail(missing: &MissingEpisode, answer: Option<CheckOutcome>) -> String {
+    let looks_again = || t::episode_missing_looks_again(i64::from(missing.every_minutes));
+    let joined = |first: String| [first, looks_again()].join(" ");
+    match (missing.phase, answer) {
+        (MissingPhase::LongAgo, _) => t::episode_missing_none(),
+        (MissingPhase::Undated, _) => String::new(),
+        (MissingPhase::After, Some(CheckOutcome::NoAnswer)) => t::episode_missing_no_answer(),
+        (MissingPhase::After, _) => t::episode_missing_still(),
+        (MissingPhase::Quiet, Some(CheckOutcome::Offline)) => t::episode_missing_offline(),
+        (MissingPhase::Quiet, Some(CheckOutcome::Missing)) => {
+            joined(t::episode_missing_still())
+        }
+        (MissingPhase::Quiet, Some(CheckOutcome::NoAnswer)) => {
+            joined(t::episode_missing_no_answer())
+        }
+        (MissingPhase::Quiet, Some(CheckOutcome::Found) | None) => {
+            joined(t::episode_missing_not_yet())
         }
     }
 }
