@@ -202,6 +202,9 @@ class AppStore(
     /** The source picker's options per title. */
     val sourceChoices = SourceChoiceModel()
 
+    /** Check again for a title's aired episode that no source lists, and what the checks said. */
+    val missing = MissingModel { send(it) }
+
     /** The match sheet's question, search and pick per title. */
     val match = MatchPickerModel()
     val episodeFolds = EpisodeFolds()
@@ -1495,6 +1498,7 @@ class AppStore(
             is Event.ProxyChecked -> providers.trialSaid(event.v1)?.let { send(Command.CheckTorrentProxy(it.proxy)) }
             is Event.ProviderPreference -> providers.preference(event.v1)
             is Event.SourceOptions -> sourceChoices.apply(event.id, event.options)
+            is Event.EpisodeChecked -> missing.apply(event.v1)
             is Event.PinUnavailable -> sourceChoices.pinUnavailable(event.id, event.providerId, event.name)
             is Event.Stores -> stores.apply(event.v1)
             is Event.LinkOpened -> opened.linkOpened(event.v1)

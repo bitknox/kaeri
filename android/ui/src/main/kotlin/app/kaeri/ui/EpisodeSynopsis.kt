@@ -12,6 +12,7 @@ import android.content.Context
 import android.view.textclassifier.TextClassificationManager
 import android.view.textclassifier.TextLanguage
 import androidx.compose.animation.Crossfade
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -50,6 +51,7 @@ import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.produceState
@@ -189,11 +191,18 @@ internal fun airedDate(context: Context, airsAt: Long): String =
 
 /**
  * The facts under an episode's title, as its row and its sheet both say them: "E7 · 14 min left",
- * "E6 · Watched" or "E8 · 24 min", then "Aired 21 May 2014" once it has.
+ * "E6 · Watched" or "E8 · 24 min", then "Aired 21 May 2014" once it has. One that aired and no
+ * source lists yet says so in the second line: "Aired 25 min ago · Not in your sources yet",
+ * with the time since airing at [now].
  */
-internal fun rowFacts(context: Context, entry: Entry, row: EpisodeRow, current: Boolean, unaired: Boolean, withNumber: Boolean = true): Pair<String, String?> {
+internal fun rowFacts(context: Context, entry: Entry, row: EpisodeRow, current: Boolean, unaired: Boolean, withNumber: Boolean = true, now: Long = AppClock.now().epochSecond): Pair<String, String?> {
     val number = row.number.toDoubleOrNull()?.toInt() ?: 0
     val resume = entry.resume?.takeIf { current && !row.completed }
+    val missing = row.takeIf { it.unsourced && !unaired }?.let { app.kaeri.store.MissingWords.unsourcedLine(context, it.airsAt, now) }
+    if (missing != null) {
+        val first = if (withNumber) episodeDetail(context, row, resume = null) else episodeDetailOnly(context, row, resume = null) ?: ""
+        return first to missing
+    }
     val first = if (withNumber) {
         when {
             unaired -> Strings.episodeLineDetail(context, number, unairedDetail(context, row))
@@ -256,7 +265,13 @@ internal fun EpisodeCard(
     val airs = row.airsAt?.takeIf { unaired }?.let { airsWords(context, Instant.ofEpochSecond(it)) }
     // A title that is only the number comes through empty; the row writes "Episode N" and leaves "E4" out of the facts.
     val titled = !row.title.isNullOrBlank()
-    val (first, second) = rowFacts(context, entry, row, current, unaired, withNumber = titled || beside)
+    // An aired row no source lists says how long ago it aired, turned on the minute.
+    val now = if (row.unsourced && !unaired) rememberMinute() else AppClock.now().epochSecond
+    val (first, second) = rowFacts(context, entry, row, current, unaired, withNumber = titled || beside, now = now)
+    // An unsourced row's line can take two lines, so its title keeps to one.
+    val titleLines = if (row.unsourced && !unaired && second != null) 1 else 2
+    // Lifted to full strength when a source lists it, on the reveal token.
+    val strength by animateFloatAsState(if (row.unsourced) 0.55f else 1f, Motion.reveal(), label = "sourced") // i18n-skip
     val unairedLabel = if (unaired) {
         val number = row.number
         when {
@@ -326,7 +341,7 @@ internal fun EpisodeCard(
                 .widthIn(max = BesideDims.MaxWidth)
                 .fillMaxWidth()
                 .height(height)
-                .alpha(if (row.unsourced) 0.55f else 1f)
+                .graphicsLayer { alpha = strength }
                 .then(clickable)
                 .padding(horizontal = 16.dp, vertical = BesideDims.Pad),
             horizontalArrangement = Arrangement.spacedBy(BesideDims.Gap),
@@ -356,7 +371,7 @@ internal fun EpisodeCard(
             .fillMaxWidth()
             .then(grows)
             .then(fixed)
-            .alpha(if (row.unsourced) 0.55f else 1f)
+            .graphicsLayer { alpha = strength }
             .then(clickable)
             .padding(start = 16.dp, end = 16.dp, top = RowDims.Top),
     ) {
@@ -381,7 +396,7 @@ internal fun EpisodeCard(
                 Box(Modifier.size(RowDims.StillWidth, RowDims.StillHeight).alpha(1f - 0.3f * marks.dim.value)) {
                     StillWithMark(entry, row, hidden, unaired, RowDims.StillWidth, marks, fraction)
                 }
-                RowHeader(title, titleColor, first, second, marks, titleLines = 2, modifier = Modifier.weight(1f).padding(top = 2.dp), opensService = opensService)
+                RowHeader(title, titleColor, first, second, marks, titleLines = titleLines, modifier = Modifier.weight(1f).padding(top = 2.dp), opensService = opensService)
                 if (followed != null) Box(Modifier.height(RowDims.StillHeight), contentAlignment = Alignment.Center) { MarkSlot(followed) }
             }
             if (tall) {
@@ -452,7 +467,10 @@ private fun RowHeader(
             if (first.isNotEmpty()) Text(first, style = MaterialTheme.typography.bodySmall.tabular().copy(lineHeight = factsLine), color = colors.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis)
         }
         if (second != null) {
-            Text(second, style = MaterialTheme.typography.bodySmall.copy(lineHeight = factsLine), color = colors.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            // A found episode's line crossfades from not in your sources to its date.
+            Crossfade(second, animationSpec = Motion.reveal(), label = "aired") { line -> // i18n-skip
+                Text(line, style = MaterialTheme.typography.bodySmall.copy(lineHeight = factsLine), color = colors.onSurfaceVariant, maxLines = 2, overflow = TextOverflow.Ellipsis)
+            }
         }
     }
 }

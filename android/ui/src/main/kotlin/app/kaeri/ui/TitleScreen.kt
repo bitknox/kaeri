@@ -1322,23 +1322,29 @@ private fun TitleActions(entry: Entry, actions: AppActions, unlisted: Boolean) {
     val asking = store.match.state.collectAsStateWithLifecycle().value.asks(entry.id)
     val availability = availabilityOf(entry.id, playsHere = !unlisted)
     val onService = availability?.main?.takeIf { availability.case == AvailabilityCase.ON_SERVICE }
+    // The next episode aired and no source lists it: its status in the action's slot.
+    val (missing, said) = rememberMissingView(entry)
+    val missed = missing.shown != null && !unlisted
     Column(Modifier.padding(horizontal = 16.dp).padding(top = 16.dp)) {
+        Announcer(said)
         if (onService != null) {
             WatchOnButton(entry, onService, Modifier.fillMaxWidth().heightIn(min = 56.dp))
         } else if (action.playable && asking) {
             ChooseMatchButton(entry.id, Modifier.fillMaxWidth().heightIn(min = 56.dp))
         } else if (action.playable && unlisted) {
             AddSourceButton(Modifier.fillMaxWidth().heightIn(min = 56.dp))
-        } else if (action.playable) {
-            Button(
-                onClick = { actions.play(entry.id, action.episode.toString()) },
-                modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp),
-            ) {
-                Icon(Icons.Play, contentDescription = null, modifier = Modifier.size(24.dp))
-                Spacer(Modifier.width(8.dp))
-                // What it plays crossfades as an episode is marked (T9).
-                Crossfade(action.label(LocalContext.current), animationSpec = Motion.standard(), label = "action") { // i18n-skip
-                    Text(it, style = MaterialTheme.typography.titleMedium.tabular(), maxLines = 1)
+        } else if (action.playable || missed) {
+            MissingSlot(entry, missing, actions, Modifier.fillMaxWidth()) {
+                Button(
+                    onClick = { actions.play(entry.id, action.episode.toString()) },
+                    modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp),
+                ) {
+                    Icon(Icons.Play, contentDescription = null, modifier = Modifier.size(24.dp))
+                    Spacer(Modifier.width(8.dp))
+                    // What it plays crossfades as an episode is marked (T9).
+                    Crossfade(action.label(LocalContext.current), animationSpec = Motion.standard(), label = "action") { // i18n-skip
+                        Text(it, style = MaterialTheme.typography.titleMedium.tabular(), maxLines = 1)
+                    }
                 }
             }
         } else {
@@ -2412,7 +2418,12 @@ private fun TabletActions(entry: Entry, actions: AppActions, unlisted: Boolean, 
     val asking = store.match.state.collectAsStateWithLifecycle().value.asks(entry.id)
     val availability = availabilityOf(entry.id, playsHere = !unlisted)
     val onService = availability?.main?.takeIf { availability.case == AvailabilityCase.ON_SERVICE }
+    // The next episode aired and no source lists it: its status over the row, its buttons in the action's place.
+    val (missing, said) = rememberMissingView(entry)
+    val missed = missing.shown != null && !unlisted && onService == null
     Column(modifier) {
+    Announcer(said)
+    MissingAbove(missing, missed, Modifier.padding(bottom = 12.dp))
     Row(Modifier.heightIn(min = 56.dp), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
         if (onService != null) {
             WatchOnButton(entry, onService, Modifier.heightIn(min = 56.dp))
@@ -2420,12 +2431,14 @@ private fun TabletActions(entry: Entry, actions: AppActions, unlisted: Boolean, 
             ChooseMatchButton(entry.id, Modifier.heightIn(min = 56.dp))
         } else if (action.playable && unlisted) {
             AddSourceButton(Modifier.heightIn(min = 56.dp))
-        } else if (action.playable) {
-            Button(onClick = { actions.play(entry.id, action.episode.toString()) }, modifier = Modifier.heightIn(min = 56.dp), contentPadding = PaddingValues(horizontal = 24.dp)) {
-                Icon(Icons.Play, contentDescription = null, modifier = Modifier.size(24.dp))
-                Spacer(Modifier.width(8.dp))
-                Crossfade(action.label(LocalContext.current), animationSpec = Motion.standard(), label = "action") { // i18n-skip
-                    Text(it, style = MaterialTheme.typography.titleMedium.tabular(), maxLines = 1)
+        } else if (action.playable || missed) {
+            MissingLead(entry, missing, actions) {
+                Button(onClick = { actions.play(entry.id, action.episode.toString()) }, modifier = Modifier.heightIn(min = 56.dp), contentPadding = PaddingValues(horizontal = 24.dp)) {
+                    Icon(Icons.Play, contentDescription = null, modifier = Modifier.size(24.dp))
+                    Spacer(Modifier.width(8.dp))
+                    Crossfade(action.label(LocalContext.current), animationSpec = Motion.standard(), label = "action") { // i18n-skip
+                        Text(it, style = MaterialTheme.typography.titleMedium.tabular(), maxLines = 1)
+                    }
                 }
             }
         } else {

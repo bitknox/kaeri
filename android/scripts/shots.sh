@@ -4,7 +4,8 @@
 #   android/scripts/shots.sh <phone|phone-37|tablet|fold> [shot…]
 #
 # A shot is a scene, and optionally a screen: watching (the default), sourceless (watching with no
-# source set up), unsure (a source unsure of the match), fresh, or one of Home's scenes (suggested,
+# source set up), unsure (a source unsure of the match), missing-episode (900002's episode 6 aired
+# and in no source yet; open it with title=900002), fresh, or one of Home's scenes (suggested,
 # oneleft, continuefull, notfound, slow, failed, offline; add world=1 for Home's invented titles), the fixtures flavour's scenes on the testing engine, or app, the app flavour on the real AniList; then after a
 # colon a section (home, calendar, seasonal, library, search) or key=value, with more joined by
 # +: watched=<id>:<episodes> marks episodes watched as the shot starts, title=<id> opens a title
@@ -72,7 +73,7 @@ shift
 shots=("$@")
 (( ${#shots[@]} )) || shots=(watching)
 for shot in "${shots[@]}"; do
-  case "${shot%%:*}" in watching | sourceless | fresh | unsure | suggested | oneleft | continuefull | notfound | slow | failed | offline | syncon | syncnearby | synccloud | syncphone | profiles | reading-first-run | reading-demo | reading-update-sheet | reading-join-ask | reading-home | reading-series | reading-downloads | reader-manga-rtl | reader-strip | reader-novel | reader-moved | reader-long | reading-dark | eink-grey | eink-kaleido-unsure | eink-long | app) ;; *) usage ;; esac
+  case "${shot%%:*}" in watching | sourceless | fresh | unsure | suggested | oneleft | continuefull | notfound | slow | failed | offline | syncon | syncnearby | synccloud | syncphone | profiles | reading-first-run | reading-demo | reading-update-sheet | reading-join-ask | reading-home | reading-series | reading-downloads | reader-manga-rtl | reader-strip | reader-novel | reader-moved | reader-long | reading-dark | missing-episode | eink-grey | eink-kaleido-unsure | eink-long | app) ;; *) usage ;; esac
 done
 
 android="$(cd "$(dirname "$0")/.." && pwd)"
