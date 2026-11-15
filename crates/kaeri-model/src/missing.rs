@@ -330,7 +330,10 @@ mod tests {
         assert_eq!(missing_phase(Some(NOW - LONG_AGO_SECS + 1), NOW), MissingPhase::After);
         assert_eq!(missing_phase(Some(NOW - LONG_AGO_SECS), NOW), MissingPhase::LongAgo);
         assert_eq!(missing_phase(None, NOW), MissingPhase::Undated);
-        let long = missing_in(&season(LONG_AGO_SECS + DAY), 6, false, NOW).unwrap();
+        // Episode 7 would have aired and be listed by now, which rules 6 out; leave it off.
+        let mut rows = season(LONG_AGO_SECS + DAY);
+        rows.truncate(6);
+        let long = missing_in(&rows, 6, false, NOW).unwrap();
         assert!(!long.checkable());
     }
 
