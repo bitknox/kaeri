@@ -788,6 +788,14 @@ private fun SeasonPage(
     val context = LocalContext.current
     val failedIds by store.titles.failed.collectAsStateWithLifecycle()
     val failed = !loaded && entry.id in failedIds
+    // The page opened from a list has the list's row at once: its head and its actions. What
+    // only its page brings (people you follow, the tags, the picker, Related) would land between
+    // the rest and push it down, so the rest waits for the page under placeholders in its layout,
+    // and the page replaces them in one crossfade, every item below the actions at once (T8).
+    // A page that does not come lets the list's row stand.
+    val clock = rememberPlaceholderClock(waited = ahead)
+    val whole = clock.settled(!loaded || entry.detail?.partial == false || entry.id in failedIds)
+    val held = loaded && !whole
     val jumpFade = app.kaeri.design.rememberStillFade()
     val synopses = rememberSynopsisPage(entry, episodes, jumpFade)
     // Go to episode: once the row's range is on screen, the list scrolls to put it at the top.
@@ -822,9 +830,9 @@ private fun SeasonPage(
         }
     }
     androidx.compose.runtime.CompositionLocalProvider(LocalUserMarks provides marks) {
-        // Every item moves as one when another comes or goes, as the title's details arrive: the
-        // synopsis, the facts and Related fade in above the episodes as they make room, and the
-        // placeholders of a season that had not arrived crossfade with what replaces them (T8).
+        // Every item moves as one when another comes or goes, as a mark or a fold changes the
+        // rows. The placeholders of a page that had not arrived crossfade with what replaces them
+        // where they stand (T8), every item below the actions at once, so nothing glides.
         // Its ground hides the season it fades in over.
         LazyColumn(state = list, modifier = modifier.pageGround(MaterialTheme.colorScheme.surface).let { if (removed || synopses.asking || goal != null) it.stillFade(jumpFade) else it }, contentPadding = PaddingValues(bottom = 24.dp)) {
             CountingScope(this).run {
@@ -844,7 +852,15 @@ private fun SeasonPage(
                     ) { TitleHead(it, headEpisodes(it.id), list, inset, shared) }
                 }
             }
-            if (loaded) {
+            if (held) {
+                item(key = "actions", contentType = "actions") { Box(itemMotion()) { TitleActions(entry, actions, episodes?.firstOrNull()?.metadataOnly == true) } }
+                // Keys of their own, so the page fades in over them rather than moving them.
+                if (synopsisWithoutSpoilers(entry.synopsis).isNotEmpty()) {
+                    item(key = "held-synopsis", contentType = "synopsis-placeholder") { Box(itemMotion()) { ShownWhen(clock.shown) { SynopsisPlaceholder() } } }
+                }
+                item(key = "held-facts", contentType = "facts-placeholder") { Box(itemMotion()) { ShownWhen(clock.shown) { FactsPlaceholder() } } }
+                item(key = "held-more-about", contentType = "more-about-placeholder") { Box(itemMotion()) { ShownWhen(clock.shown) { MoreAboutPlaceholder() } } }
+            } else if (loaded) {
                 val unlisted = episodes?.firstOrNull()?.metadataOnly == true
                 item(key = "actions", contentType = "actions") { Box(itemMotion()) { TitleActions(entry, actions, unlisted) } }
                 followingItem(entry)
@@ -873,30 +889,32 @@ private fun SeasonPage(
                 if (entry.detail != null) {
                     item(key = "actions", contentType = "actions") { Box(itemMotion()) { TitleActions(entry, actions, episodes?.firstOrNull()?.metadataOnly == true) } }
                 } else {
-                    item(key = "actions-placeholder", contentType = "actions-placeholder") { Box(itemMotion()) { WaitFor(!ahead) { ActionsPlaceholder() } } }
+                    item(key = "actions-placeholder", contentType = "actions-placeholder") { Box(itemMotion()) { ShownWhen(clock.shown) { ActionsPlaceholder() } } }
                 }
                 val synopsis = synopsisWithoutSpoilers(entry.synopsis)
                 if (synopsis.isNotEmpty()) item(key = "synopsis", contentType = "synopsis") { Box(itemMotion()) { Synopsis(synopsis) } }
-                item(key = "facts-placeholder", contentType = "facts-placeholder") { Box(itemMotion()) { WaitFor(!ahead) { FactsPlaceholder() } } }
-                item(key = "more-about-placeholder", contentType = "more-about-placeholder") { Box(itemMotion()) { WaitFor(!ahead) { MoreAboutPlaceholder() } } }
+                item(key = "facts-placeholder", contentType = "facts-placeholder") { Box(itemMotion()) { ShownWhen(clock.shown) { FactsPlaceholder() } } }
+                item(key = "more-about-placeholder", contentType = "more-about-placeholder") { Box(itemMotion()) { ShownWhen(clock.shown) { MoreAboutPlaceholder() } } }
             }
-            if (hasSeasons) item(key = SEASONS, contentType = SEASONS) {
+            if (hasSeasons && !held) item(key = SEASONS, contentType = SEASONS) {
                 val picked = chosen.longValue.toUInt()
                 val pickedEntry by remember(picked) { derivedStateOf { titles.value[picked] } }
                 Seasons(picked, pickedEntry, family.value, geometry, pickerScroll, onPick, itemMotion(), onPress = onPress, onLift = onLift)
             }
-            val related = entry.relatedCards()
+            val related = if (held) emptyList() else entry.relatedCards()
             if (related.isNotEmpty()) item(key = "related", contentType = "related") { Box(itemMotion()) { RelatedRail(related) } }
-            episodeRows(list, inset + 64.dp, count, entry, episodes, actions, unfolded = entry.id in unfolded, onFold = fold, wait = !ahead, dub = dubs[entry.id]?.line(context), page = synopses)
+            // The rows wait with the rest, so nothing lands above them once they are in. The
+            // placeholders that wait for the page have keys of their own, so the page crossfades
+            // with them where they stand, rather than pushing them down.
+            episodeRows(
+                list, inset + 64.dp, count, entry, if (held) null else episodes, actions,
+                unfolded = entry.id in unfolded, onFold = fold, shown = clock.shown,
+                placeholders = if (loaded && !held) "placeholder" else "held-placeholder",
+                dub = dubs[entry.id]?.line(context), page = synopses,
+            )
         }
         }
     }
-}
-
-/** [content] after 600 ms when [wait], else at once. */
-@Composable
-private fun WaitFor(wait: Boolean, content: @Composable () -> Unit) {
-    if (wait) AfterWait(content) else content()
 }
 
 /** The actions' places while a season's title is on its way: the main button's, then the list's and the trailer's. */
@@ -912,12 +930,23 @@ private fun ActionsPlaceholder() {
     }
 }
 
-/** The facts' two lines while a season's title is on its way. */
+/** The synopsis's two lines while its page is on its way, in [Synopsis]'s own frame. */
+@Composable
+private fun SynopsisPlaceholder() {
+    val line = with(LocalDensity.current) { MaterialTheme.typography.bodyMedium.lineHeight.toDp() }
+    Column(Modifier.padding(horizontal = 16.dp).padding(top = 4.dp).fillMaxWidth().heightIn(min = 48.dp).padding(vertical = 4.dp)) {
+        TextPlaceholder(0.92f, line)
+        TextPlaceholder(0.7f, line)
+    }
+}
+
+/** The facts' two lines while a season's title is on its way, a line of [FactsLines] each. */
 @Composable
 private fun FactsPlaceholder() {
+    val line = with(LocalDensity.current) { MaterialTheme.typography.bodyMedium.lineHeight.toDp() }
     Column(Modifier.padding(horizontal = 16.dp).padding(top = 4.dp)) {
-        TextPlaceholder(0.62f, 20.dp)
-        TextPlaceholder(0.4f, 20.dp)
+        TextPlaceholder(0.62f, line)
+        TextPlaceholder(0.4f, line)
     }
 }
 
@@ -1799,8 +1828,10 @@ private fun LazyListScope.episodeRows(
     actions: AppActions,
     unfolded: Boolean,
     onFold: (anchor: String) -> Unit,
-    /** Whether the placeholders wait 600 ms first (T8): not on a page composed ahead, off screen. */
-    wait: Boolean = true,
+    /** Whether the placeholders show yet, by the page's [PlaceholderClock] (T8): at once on a page composed ahead, off screen. */
+    shown: Boolean,
+    /** The placeholders' keys: another set crossfades with this one rather than moving it. */
+    placeholders: String = "placeholder",
     /** How far the dub goes: on the fold row's own line, or a row of its own without a fold. */
     dub: String? = null,
     /** The page's synopsis state: the text outlook, the ranges and the reveals. */
@@ -1808,8 +1839,10 @@ private fun LazyListScope.episodeRows(
 ) {
     if (episodes == null) {
         // Crossfading with the rows as they arrive (T8), as every item comes and goes.
-        items(4, key = { "placeholder-$it" }, contentType = { "placeholder" }) {
-            Box(itemMotion()) { if (wait) AfterWait { EpisodePlaceholder() } else EpisodePlaceholder() }
+        items(4, key = { "$placeholders-$it" }, contentType = { "placeholder" }) {
+            Box(itemMotion()) {
+                ShownWhen(shown) { EpisodePlaceholder() }
+            }
         }
         return
     }

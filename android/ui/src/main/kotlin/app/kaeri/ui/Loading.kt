@@ -29,6 +29,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.delay
@@ -138,4 +139,51 @@ fun AfterWait(content: @Composable () -> Unit) {
         shown = true
     }
     AnimatedVisibility(shown, enter = fadeIn(Motion.fadeIn()), exit = ExitTransition.None) { content() }
+}
+
+/**
+ * T8's clock for a screen whose placeholders sit in a list, counted from when it first drew:
+ * [shown] once 600 ms have passed, [held] once placeholders that came have stayed 0.3 s.
+ */
+@androidx.compose.runtime.Stable
+class PlaceholderClock internal constructor(waited: Boolean) {
+    var shown by mutableStateOf(waited)
+        internal set
+    var held by mutableStateOf(waited)
+        internal set
+}
+
+/** A [PlaceholderClock] from now, or one already past its wait with [waited]. */
+@Composable
+fun rememberPlaceholderClock(waited: Boolean = false): PlaceholderClock {
+    val clock = remember { PlaceholderClock(waited) }
+    LaunchedEffect(clock) {
+        if (clock.held) return@LaunchedEffect
+        delay(PLACEHOLDERS_AFTER)
+        clock.shown = true
+        delay(PLACEHOLDERS_HOLD)
+        clock.held = true
+    }
+    return clock
+}
+
+/**
+ * Whether what [ready] says has come may replace the placeholders: at once before they show, and
+ * once they have stayed 0.3 s after. True for good from then on.
+ */
+@Composable
+fun PlaceholderClock.settled(ready: Boolean): Boolean {
+    var done by remember(this) { mutableStateOf(ready) }
+    if (!done && ready && (!shown || held)) done = true
+    return done
+}
+
+/**
+ * [content] fading in once [shown], on a [PlaceholderClock] a page shares. Unlike [AfterWait] it
+ * takes its room from the first frame, unseen, so placeholders coming move nothing below them.
+ */
+@Composable
+fun ShownWhen(shown: Boolean, content: @Composable () -> Unit) {
+    val alpha by androidx.compose.animation.core.animateFloatAsState(if (shown) 1f else 0f, Motion.fadeIn(), label = "placeholders") // i18n-skip
+    Box(Modifier.graphicsLayer { this.alpha = alpha }) { content() }
 }
