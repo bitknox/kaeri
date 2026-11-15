@@ -9980,7 +9980,22 @@ pub fn cast_open_show(title: &str) -> String {
     text("cast-open-show", &[("title", Arg::Text(title))])
 }
 
-/// Line under the episode in the system's Now Playing while it plays on a TV. The name is the TV's.
+/// The chevron that puts the full controller back into the mini player.
+pub fn cast_controller_close() -> String {
+    text("cast-controller-close", &[])
+}
+
+/// Screen reader hint on the mini player over the navigation bar.
+pub fn cast_mini_opens() -> String {
+    text("cast-mini-opens", &[])
+}
+
+/// Long-press menu of an episode while a TV plays: queues the episode after the one playing.
+pub fn cast_play_next_on(name: &str) -> String {
+    text("cast-play-next-on", &[("name", Arg::Text(name))])
+}
+
+/// The system's media notification and Now Playing: the line naming the TV that plays.
 pub fn cast_notification_line(name: &str) -> String {
     text("cast-notification-line", &[("name", Arg::Text(name))])
 }

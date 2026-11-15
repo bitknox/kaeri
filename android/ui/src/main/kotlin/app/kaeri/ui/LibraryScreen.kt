@@ -110,6 +110,7 @@ private fun ShowsLibrary(actions: AppActions, scope: Boolean) {
 
     ScreenFrame(
         title = stringResource(R.string.nav_library),
+        cast = true,
         // On a wide window the rail has Accounts and settings at its foot, as on the other tabs.
         account = if (wideWindow()) null else profileAccount(user, actions.openSettings),
         actions = {

@@ -21,4 +21,7 @@ cast-plays-on = Diputar di { $name }
 cast-idle = Belum ada yang diputar
 cast-status-paused = Dijeda di { $name }
 cast-open-show = Buka { $title }
+cast-controller-close = Tutup
+cast-mini-opens = Membuka kontrol
+cast-play-next-on = Putar setelah ini di { $name }
 cast-notification-line = Casting ke { $name }

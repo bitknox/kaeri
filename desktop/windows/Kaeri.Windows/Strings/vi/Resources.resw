@@ -2825,6 +2825,15 @@
   <data name="CastOpenShow" xml:space="preserve">
     <value>Mở {title}</value>
   </data>
+  <data name="CastControllerClose" xml:space="preserve">
+    <value>Đóng</value>
+  </data>
+  <data name="CastMiniOpens" xml:space="preserve">
+    <value>Mở bảng điều khiển</value>
+  </data>
+  <data name="CastPlayNextOn" xml:space="preserve">
+    <value>Phát sau tập này trên {name}</value>
+  </data>
   <data name="CastNotificationLine" xml:space="preserve">
     <value>Đang chiếu tới {name}</value>
   </data>

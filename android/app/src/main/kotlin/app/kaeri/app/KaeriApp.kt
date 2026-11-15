@@ -325,8 +325,12 @@ class KaeriApp : Application(), PlayerHost, NewEpisodesHost, WidgetHost {
      */
     private fun startCasting() {
         store.cast.attach(store.tv, Flavour.castBrowser(this))
+        Flavour.castSession(this, store, scope)?.let { store.cast.sessions = it }
+        store.cast.setDevice(if (resources.configuration.smallestScreenWidthDp >= 600) "tablet" else "phone") // i18n-skip
         store.cast.handedOff = { player.viewerClosed() }
         store.cast.playHere = { id, episode -> store.send(Command.Play(id, episode, false)) }
+        // While a TV is held, the engine sends every play there.
+        store.cast.sendPlay = { id, episode, fromStart -> store.send(Command.Play(id, episode, fromStart)) }
         castKeeper = CastKeeper(this, store.cast, scope)
     }
 

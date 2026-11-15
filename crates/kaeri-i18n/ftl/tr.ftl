@@ -5985,7 +5985,16 @@ cast-status-paused = { $name } üzerinde duraklatıldı
 # Spoken label of the show's name in the casting controller: it opens the show's page.
 cast-open-show = { $title } aç
 
-# Line under the episode in the system's Now Playing while it plays on a TV. The name is the TV's.
+# The chevron that puts the full controller back into the mini player.
+cast-controller-close = Kapat
+
+# Screen reader hint on the mini player over the navigation bar.
+cast-mini-opens = Kontrolleri açar
+
+# Long-press menu of an episode while a TV plays: queues the episode after the one playing.
+cast-play-next-on = { $name } üzerinde sırada oynat
+
+# The system's media notification and Now Playing: the line naming the TV that plays.
 cast-notification-line = { $name } cihazına yayınlanıyor
 
 # Button that runs a failed action again.

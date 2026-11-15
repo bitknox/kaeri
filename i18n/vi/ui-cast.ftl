@@ -21,4 +21,7 @@ cast-plays-on = Phát trên { $name }
 cast-idle = Chưa phát gì
 cast-status-paused = Đã tạm dừng trên { $name }
 cast-open-show = Mở { $title }
+cast-controller-close = Đóng
+cast-mini-opens = Mở bảng điều khiển
+cast-play-next-on = Phát sau tập này trên { $name }
 cast-notification-line = Đang chiếu tới { $name }

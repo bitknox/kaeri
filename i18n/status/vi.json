@@ -2403,6 +2403,12 @@
     "by": "agent",
     "at": "2026-10-31"
   },
+  "cast-controller-close": {
+    "source": "5e8250fb85d6",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
+  },
   "cast-couldnt-start": {
     "source": "1988cf43151a",
     "state": "draft",
@@ -2438,6 +2444,12 @@
     "state": "draft",
     "by": "agent",
     "at": "2026-10-31"
+  },
+  "cast-mini-opens": {
+    "source": "0dc6b47564fe",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
   },
   "cast-none-found-extra": {
     "source": "5a3f97ad4c01",
@@ -2486,6 +2498,12 @@
     "state": "draft",
     "by": "agent",
     "at": "2026-10-31"
+  },
+  "cast-play-next-on": {
+    "source": "dd6053549121",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
   },
   "cast-plays-on": {
     "source": "27e57a7fa563",

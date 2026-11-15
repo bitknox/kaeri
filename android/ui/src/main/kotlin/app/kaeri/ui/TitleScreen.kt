@@ -123,7 +123,6 @@ import app.kaeri.store.HeroArt
 import app.kaeri.store.LibraryModel
 import app.kaeri.store.label
 import app.kaeri.store.line
-import app.kaeri.store.TvPlayRequest
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalResources
 
@@ -1245,11 +1244,7 @@ private fun TitleTopBar(entry: Entry, pick: SurprisePick?, onBack: () -> Unit, m
         // A picked title's Another, while the pool has more to pick: a text button, so Surprise me's word stays.
         if (pick != null && pick.more) AnotherButton(pick)
         val action = titleAction(entry)
-        if (store.tv.available && action.playable) {
-            CircleIconButton(Icons.Tv, stringResource(R.string.tv_play_on), {
-                store.tv.offer(TvPlayRequest(entry.id, entry.showTitle, action.episode.toString(), action.resume?.position))
-            })
-        }
+        if (action.playable) CastButton(circle = true)
         Box {
             CircleIconButton(Icons.More, stringResource(R.string.action_more), { more = true })
             Menu(expanded = more, onDismissRequest = { more = false }) {
@@ -1335,11 +1330,15 @@ private fun TitleActions(entry: Entry, actions: AppActions, unlisted: Boolean) {
             AddSourceButton(Modifier.fillMaxWidth().heightIn(min = 56.dp))
         } else if (action.playable || missed) {
             MissingSlot(entry, missing, actions, Modifier.fillMaxWidth()) {
+                val origin = rememberCastOrigin()
                 Button(
-                    onClick = { actions.play(entry.id, action.episode.toString()) },
-                    modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp),
+                    onClick = {
+                        origin.mark()
+                        actions.play(entry.id, action.episode.toString())
+                    },
+                    modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp).then(origin.modifier),
                 ) {
-                    Icon(Icons.Play, contentDescription = null, modifier = Modifier.size(24.dp))
+                    CastPlayIcon()
                     Spacer(Modifier.width(8.dp))
                     // What it plays crossfades as an episode is marked (T9).
                     Crossfade(action.label(LocalContext.current), animationSpec = Motion.standard(), label = "action") { // i18n-skip
@@ -1391,6 +1390,7 @@ private fun TitleActions(entry: Entry, actions: AppActions, unlisted: Boolean) {
                 }
             }
         }
+        if (action.playable && onService == null && !asking && !unlisted) CastPlaysOn(Modifier.padding(top = 8.dp))
         ServiceLines(availability, entry)
         if (asking) MatchUncertainLine(entry.id, Modifier.padding(top = 12.dp))
     }
@@ -2433,8 +2433,16 @@ private fun TabletActions(entry: Entry, actions: AppActions, unlisted: Boolean, 
             AddSourceButton(Modifier.heightIn(min = 56.dp))
         } else if (action.playable || missed) {
             MissingLead(entry, missing, actions) {
-                Button(onClick = { actions.play(entry.id, action.episode.toString()) }, modifier = Modifier.heightIn(min = 56.dp), contentPadding = PaddingValues(horizontal = 24.dp)) {
-                    Icon(Icons.Play, contentDescription = null, modifier = Modifier.size(24.dp))
+                val origin = rememberCastOrigin()
+                Button(
+                    onClick = {
+                        origin.mark()
+                        actions.play(entry.id, action.episode.toString())
+                    },
+                    modifier = Modifier.heightIn(min = 56.dp).then(origin.modifier),
+                    contentPadding = PaddingValues(horizontal = 24.dp),
+                ) {
+                    CastPlayIcon()
                     Spacer(Modifier.width(8.dp))
                     Crossfade(action.label(LocalContext.current), animationSpec = Motion.standard(), label = "action") { // i18n-skip
                         Text(it, style = MaterialTheme.typography.titleMedium.tabular(), maxLines = 1)
@@ -2481,6 +2489,7 @@ private fun TabletActions(entry: Entry, actions: AppActions, unlisted: Boolean, 
             }
         }
     }
+    if (action.playable && onService == null && !asking && !unlisted) CastPlaysOn(Modifier.padding(top = 8.dp))
     ServiceLines(availability, entry)
     }
 }

@@ -1299,6 +1299,9 @@
     <string name="cast_idle">まだ何も再生していません</string>
     <string name="cast_status_paused">%1$sで一時停止中</string>
     <string name="cast_open_show">%1$sを開く</string>
+    <string name="cast_controller_close">閉じる</string>
+    <string name="cast_mini_opens">操作画面を開きます</string>
+    <string name="cast_play_next_on">%1$sで次に再生</string>
     <string name="cast_notification_line">%1$sにキャスト中</string>
     <string name="action_try_again">再試行</string>
     <string name="action_cancel">キャンセル</string>

@@ -2934,7 +2934,16 @@ public static partial class T
     /// <summary>Spoken label of the show's name in the casting controller: it opens the show's page.</summary>
     public static string CastOpenShow(string title) => Fill(Get("CastOpenShow"), ("title", title));
 
-    /// <summary>Line under the episode in the system's Now Playing while it plays on a TV. The name is the TV's.</summary>
+    /// <summary>The chevron that puts the full controller back into the mini player.</summary>
+    public static string CastControllerClose => Get("CastControllerClose");
+
+    /// <summary>Screen reader hint on the mini player over the navigation bar.</summary>
+    public static string CastMiniOpens => Get("CastMiniOpens");
+
+    /// <summary>Long-press menu of an episode while a TV plays: queues the episode after the one playing.</summary>
+    public static string CastPlayNextOn(string name) => Fill(Get("CastPlayNextOn"), ("name", name));
+
+    /// <summary>The system's media notification and Now Playing: the line naming the TV that plays.</summary>
     public static string CastNotificationLine(string name) => Fill(Get("CastNotificationLine"), ("name", name));
 
     /// <summary>Button that runs a failed action again.</summary>
@@ -13295,6 +13304,9 @@ public static partial class T
         ["CastIdle"] = "Nothing playing yet",
         ["CastStatusPaused"] = "Paused on {name}",
         ["CastOpenShow"] = "Open {title}",
+        ["CastControllerClose"] = "Close",
+        ["CastMiniOpens"] = "Opens the controls",
+        ["CastPlayNextOn"] = "Play next on {name}",
         ["CastNotificationLine"] = "Casting to {name}",
         ["ActionTryAgain"] = "Try again",
         ["ActionCancel"] = "Cancel",

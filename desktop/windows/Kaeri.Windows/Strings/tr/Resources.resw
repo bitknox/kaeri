@@ -2969,6 +2969,15 @@
   <data name="CastOpenShow" xml:space="preserve">
     <value>{title} aç</value>
   </data>
+  <data name="CastControllerClose" xml:space="preserve">
+    <value>Kapat</value>
+  </data>
+  <data name="CastMiniOpens" xml:space="preserve">
+    <value>Kontrolleri açar</value>
+  </data>
+  <data name="CastPlayNextOn" xml:space="preserve">
+    <value>{name} üzerinde sırada oynat</value>
+  </data>
   <data name="CastNotificationLine" xml:space="preserve">
     <value>{name} cihazına yayınlanıyor</value>
   </data>

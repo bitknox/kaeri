@@ -166,6 +166,21 @@ internal fun kaeriIsFor(): KaeriIsFor {
     return view?.answer ?: medium.kept ?: KaeriIsFor.WATCH
 }
 
+/**
+ * Play on the TV held: a cast session's TV, which the controller then shows, or a Kaeri TV this
+ * phone drives. `false` with no TV held: the play opens here.
+ */
+internal fun castPlay(store: AppStore, id: AnilistId, episode: String, fromStart: Boolean): Boolean {
+    val request = app.kaeri.store.TvPlayRequest(id, store.titles[id]?.showTitle.orEmpty(), episode, from = if (fromStart) 0.0 else null)
+    if (store.cast.playOnTv(request)) return true
+    val tv = store.tv
+    if (tv.connected.value != null && tv.card.value?.live == true) {
+        tv.offer(request)
+        return true
+    }
+    return false
+}
+
 /** What the screens' actions open, which later phases fill in. */
 data class AppActions(
     /** Connect AniList: the engine's sign-in in a Custom Tab, which [AppRoot] starts itself. */
@@ -393,6 +408,9 @@ private fun AppRootFrame(
     var searchOpening by remember { mutableStateOf(false) }
     val routed = remember(actions, navigator, store) {
         actions.copy(
+            // While a TV is held, a play goes to it, and the cast controller comes up for it.
+            play = { id, episode -> if (!castPlay(store, id, episode, fromStart = false)) actions.play(id, episode) },
+            playFromStart = { id, episode -> if (!castPlay(store, id, episode, fromStart = true)) actions.playFromStart(id, episode) },
             openSettings = { navigator.openSettings() },
             connectAniList = { store.connect("anilist") },
             addStore = { store.stores.openJoin() },
@@ -451,6 +469,11 @@ private fun AppRootFrame(
         ProfileSwitchSheet(actions)
         TvSheetHost()
         CastSheetHost()
+        // In front, the TVs are looked for, so the cast button knows whether one is there.
+        androidx.lifecycle.compose.LifecycleStartEffect(store) {
+            store.cast.foreground(true)
+            onStopOrDispose { store.cast.foreground(false) }
+        }
         DiscussionHost()
         JoinStoreSheetHost()
         OpenedSheetHost()
@@ -517,155 +540,158 @@ private fun AppRootFrame(
         }
         // First launch's pages stand over the app, which TalkBack then does not reach.
         var covered by remember { mutableStateOf(false) }
-        Scaffold(
-            modifier = if (covered) Modifier.clearAndSetSemantics {} else Modifier,
-            containerColor = MaterialTheme.colorScheme.surface,
-            contentWindowInsets = WindowInsets(0),
-            // The player says its own notices on the video; the snackbars wait for it to close.
-            snackbarHost = {
-                if (!onPlayer) {
+        // The cast controller grows out of its mini over the navigation bar, over the whole app.
+        CastMorphHost(hidden = onPlayer) {
+            Scaffold(
+                modifier = if (covered) Modifier.clearAndSetSemantics {} else Modifier,
+                containerColor = MaterialTheme.colorScheme.surface,
+                contentWindowInsets = WindowInsets(0),
+                // The player says its own notices on the video; the snackbars wait for it to close.
+                snackbarHost = {
+                    if (!onPlayer) {
+                        androidx.compose.foundation.layout.Column {
+                            UpdateNotice(hidden = entry?.destination?.route?.startsWith(SETTINGS_ROUTE) == true)
+                            SnackbarHost(snackbars.host) { NoticeSnackbar(it) }
+                        }
+                    }
+                },
+                bottomBar = {
                     androidx.compose.foundation.layout.Column {
-                        UpdateNotice(hidden = entry?.destination?.route?.startsWith(SETTINGS_ROUTE) == true)
-                        SnackbarHost(snackbars.host) { NoticeSnackbar(it) }
+                        if (!onPlayer) TvNowPlayingBar()
+                        if (!onPlayer) CastMiniSlot()
+                        // Watch together's bar, above the navigation bar while a party is on.
+                        if (!onPlayer) PartyBar(hidden = entry?.destination?.route == LOBBY_ROUTE)
+                        if (!wide && (!onPage || settingsTab != null) && !onPlayer && !sheets.barHidden) {
+                            // On an e-ink panel the bar is words on paper, as the e-ink boards draw it.
+                            if (eink) EinkTabBar(settingsTab ?: current ?: start, answer, einkReader, navigator::go) else PhoneBar(current ?: start, answer, navigator::go)
+                        }
                     }
-                }
-            },
-            bottomBar = {
-                androidx.compose.foundation.layout.Column {
-                    if (!onPlayer) TvNowPlayingBar()
-                    if (!onPlayer) CastNowPlayingBar()
-                    // Watch together's bar, above the navigation bar while a party is on.
-                    if (!onPlayer) PartyBar(hidden = entry?.destination?.route == LOBBY_ROUTE)
-                    if (!wide && (!onPage || settingsTab != null) && !onPlayer && !sheets.barHidden) {
-                        // On an e-ink panel the bar is words on paper, as the e-ink boards draw it.
-                        if (eink) EinkTabBar(settingsTab ?: current ?: start, answer, einkReader, navigator::go) else PhoneBar(current ?: start, answer, navigator::go)
-                    }
-                }
-            },
-        ) { padding ->
-            Row(Modifier.padding(padding).consumeWindowInsets(padding)) {
-                if (wide && !fullWindow && !onPlayer) Rail(current, answer, entry?.destination?.route, navigator, routed)
-                SharedTransitionLayout(if (removed) Modifier.stillFade(pageFade) else Modifier) {
-                    CompositionLocalProvider(
-                        LocalSharedTransitions provides this,
-                        LocalSharedTransitionsView provides androidx.compose.ui.platform.LocalView.current,
-                    ) {
-                        NavHost(
-                            nav,
-                            startDestination = graphRoute(start),
-                            // A reading page (View all) pushes on M3's shared axis, which predictive back seeks.
-                            // E-ink: no fades between pages; the panel redraws the new one at once.
-                            enterTransition = {
-                                when {
-                                    eink -> EnterTransition.None
-                                    navigator.replacing -> fadeIn(Motion.standard())
-                                    switching() -> fadeIn(Motion.quick())
-                                    targetState.isReadPage -> readPageOver(axis)
-                                    else -> EnterTransition.None
-                                }
-                            },
-                            exitTransition = {
-                                when {
-                                    eink -> ExitTransition.None
-                                    navigator.replacing -> fadeOut(Motion.standard())
-                                    switching() -> fadeOut(Motion.quick())
-                                    targetState.isReadPage -> readPageCovered(-axis)
-                                    else -> ExitTransition.KeepUntilTransitionsFinished
-                                }
-                            },
-                            popEnterTransition = {
-                                when {
-                                    eink -> EnterTransition.None
-                                    switching() -> fadeIn(Motion.quick())
-                                    initialState.isReadPage -> readPageUncovered(-axis)
-                                    else -> EnterTransition.None
-                                }
-                            },
-                            popExitTransition = {
-                                when {
-                                    eink -> ExitTransition.None
-                                    switching() -> fadeOut(Motion.quick())
-                                    initialState.isReadPage -> readPageAway(axis)
-                                    else -> ExitTransition.KeepUntilTransitionsFinished
-                                }
-                            },
-                            // A back swipe seeks the app's own Back, never Navigation's default, which
-                            // scales the page to 0.7 and drops it at the end. A page that flew in flies
-                            // back as far as the finger goes (its shared elements seek); any other page
-                            // slides along the axis and fades over the page underneath, which stays whole.
-                            predictivePopEnterTransition = { edge ->
-                                when {
-                                    eink || removed || initialState.fliesBack(player) -> EnterTransition.None
-                                    else -> pageBackUncovered(-axis * swipeSign(edge))
-                                }
-                            },
-                            predictivePopExitTransition = { edge ->
-                                when {
-                                    eink -> ExitTransition.None
-                                    initialState.fliesBack(player) -> ExitTransition.KeepUntilTransitionsFinished
-                                    removed -> pageBackFaded()
-                                    else -> pageBackAway(axis * swipeSign(edge))
-                                }
-                            },
+                },
+            ) { padding ->
+                Row(Modifier.padding(padding).consumeWindowInsets(padding)) {
+                    if (wide && !fullWindow && !onPlayer) Rail(current, answer, entry?.destination?.route, navigator, routed)
+                    SharedTransitionLayout(if (removed) Modifier.stillFade(pageFade) else Modifier) {
+                        CompositionLocalProvider(
+                            LocalSharedTransitions provides this,
+                            LocalSharedTransitionsView provides androidx.compose.ui.platform.LocalView.current,
                         ) {
-                            if (player != null) {
-                                composable(PLAYER_ROUTE) {
-                                    CompositionLocalProvider(LocalPageAnimation provides this) {
-                                        val id = player.title
-                                        Box(Modifier.fillMaxSize().then(if (id != null) Modifier.shared(Shared.Player, id) else Modifier)) {
-                                            player.Content()
+                            NavHost(
+                                nav,
+                                startDestination = graphRoute(start),
+                                // A reading page (View all) pushes on M3's shared axis, which predictive back seeks.
+                                // E-ink: no fades between pages; the panel redraws the new one at once.
+                                enterTransition = {
+                                    when {
+                                        eink -> EnterTransition.None
+                                        navigator.replacing -> fadeIn(Motion.standard())
+                                        switching() -> fadeIn(Motion.quick())
+                                        targetState.isReadPage -> readPageOver(axis)
+                                        else -> EnterTransition.None
+                                    }
+                                },
+                                exitTransition = {
+                                    when {
+                                        eink -> ExitTransition.None
+                                        navigator.replacing -> fadeOut(Motion.standard())
+                                        switching() -> fadeOut(Motion.quick())
+                                        targetState.isReadPage -> readPageCovered(-axis)
+                                        else -> ExitTransition.KeepUntilTransitionsFinished
+                                    }
+                                },
+                                popEnterTransition = {
+                                    when {
+                                        eink -> EnterTransition.None
+                                        switching() -> fadeIn(Motion.quick())
+                                        initialState.isReadPage -> readPageUncovered(-axis)
+                                        else -> EnterTransition.None
+                                    }
+                                },
+                                popExitTransition = {
+                                    when {
+                                        eink -> ExitTransition.None
+                                        switching() -> fadeOut(Motion.quick())
+                                        initialState.isReadPage -> readPageAway(axis)
+                                        else -> ExitTransition.KeepUntilTransitionsFinished
+                                    }
+                                },
+                                // A back swipe seeks the app's own Back, never Navigation's default, which
+                                // scales the page to 0.7 and drops it at the end. A page that flew in flies
+                                // back as far as the finger goes (its shared elements seek); any other page
+                                // slides along the axis and fades over the page underneath, which stays whole.
+                                predictivePopEnterTransition = { edge ->
+                                    when {
+                                        eink || removed || initialState.fliesBack(player) -> EnterTransition.None
+                                        else -> pageBackUncovered(-axis * swipeSign(edge))
+                                    }
+                                },
+                                predictivePopExitTransition = { edge ->
+                                    when {
+                                        eink -> ExitTransition.None
+                                        initialState.fliesBack(player) -> ExitTransition.KeepUntilTransitionsFinished
+                                        removed -> pageBackFaded()
+                                        else -> pageBackAway(axis * swipeSign(edge))
+                                    }
+                                },
+                            ) {
+                                if (player != null) {
+                                    composable(PLAYER_ROUTE) {
+                                        CompositionLocalProvider(LocalPageAnimation provides this) {
+                                            val id = player.title
+                                            Box(Modifier.fillMaxSize().then(if (id != null) Modifier.shared(Shared.Player, id) else Modifier)) {
+                                                player.Content()
+                                            }
                                         }
                                     }
                                 }
-                            }
-                            for (destination in Destination.entries) {
-                                navigation(route = graphRoute(destination), startDestination = destination.route) {
-                                    composable(destination.route) {
-                                        CompositionLocalProvider(LocalPageAnimation provides this) {
-                                            DestinationScreen(destination, routed, startSearch, startSheet, searchOpening) { searchOpening = false }
+                                for (destination in Destination.entries) {
+                                    navigation(route = graphRoute(destination), startDestination = destination.route) {
+                                        composable(destination.route) {
+                                            CompositionLocalProvider(LocalPageAnimation provides this) {
+                                                DestinationScreen(destination, routed, startSearch, startSheet, searchOpening) { searchOpening = false }
+                                            }
                                         }
-                                    }
-                                    composable(
-                                        titlePattern(destination),
-                                        arguments = listOf(navArgument("id") { type = NavType.LongType }),
-                                    ) { page ->
-                                        val id = page.arguments?.getLong("id")?.toUInt() ?: return@composable
-                                        CompositionLocalProvider(LocalPageAnimation provides this) {
-                                            TitleScreen(id, routed)
+                                        composable(
+                                            titlePattern(destination),
+                                            arguments = listOf(navArgument("id") { type = NavType.LongType }),
+                                        ) { page ->
+                                            val id = page.arguments?.getLong("id")?.toUInt() ?: return@composable
+                                            CompositionLocalProvider(LocalPageAnimation provides this) {
+                                                TitleScreen(id, routed)
+                                            }
                                         }
-                                    }
-                                    composable(
-                                        seriesPattern(destination),
-                                        arguments = listOf(navArgument("work") { type = NavType.StringType }),
-                                    ) { page ->
-                                        val work = page.arguments?.getString("work")?.let(android.net.Uri::decode) ?: return@composable
-                                        CompositionLocalProvider(LocalPageAnimation provides this) {
-                                            app.kaeri.ui.reading.SeriesScreen(work, routed)
+                                        composable(
+                                            seriesPattern(destination),
+                                            arguments = listOf(navArgument("work") { type = NavType.StringType }),
+                                        ) { page ->
+                                            val work = page.arguments?.getString("work")?.let(android.net.Uri::decode) ?: return@composable
+                                            CompositionLocalProvider(LocalPageAnimation provides this) {
+                                                app.kaeri.ui.reading.SeriesScreen(work, routed)
+                                            }
                                         }
-                                    }
-                                    composable(
-                                        readPagePattern(destination),
-                                        arguments = listOf(navArgument("page") { type = NavType.StringType }),
-                                    ) { page ->
-                                        val name = page.arguments?.getString("page")?.let(android.net.Uri::decode) ?: return@composable
-                                        CompositionLocalProvider(LocalPageAnimation provides this) {
-                                            app.kaeri.ui.reading.ReadPage(name)
+                                        composable(
+                                            readPagePattern(destination),
+                                            arguments = listOf(navArgument("page") { type = NavType.StringType }),
+                                        ) { page ->
+                                            val name = page.arguments?.getString("page")?.let(android.net.Uri::decode) ?: return@composable
+                                            CompositionLocalProvider(LocalPageAnimation provides this) {
+                                                app.kaeri.ui.reading.ReadPage(name)
+                                            }
                                         }
-                                    }
-                                    // Watch together sits in Home's back stack, under its bar.
-                                    if (destination == Destination.Home) {
-                                        composable(TOGETHER_ROUTE) {
-                                            CompositionLocalProvider(LocalPageAnimation provides this) { TogetherScreen() }
+                                        // Watch together sits in Home's back stack, under its bar.
+                                        if (destination == Destination.Home) {
+                                            composable(TOGETHER_ROUTE) {
+                                                CompositionLocalProvider(LocalPageAnimation provides this) { TogetherScreen() }
+                                            }
                                         }
                                     }
                                 }
-                            }
-                            settingsPages(routed)
-                            providerPages(routed)
-                            storePages()
-                            downloadPages(routed)
-                            composable(LOBBY_ROUTE) {
-                                CompositionLocalProvider(LocalPageAnimation provides this) { PartyLobbyScreen() }
+                                settingsPages(routed)
+                                providerPages(routed)
+                                storePages()
+                                downloadPages(routed)
+                                composable(LOBBY_ROUTE) {
+                                    CompositionLocalProvider(LocalPageAnimation provides this) { PartyLobbyScreen() }
+                                }
                             }
                         }
                     }

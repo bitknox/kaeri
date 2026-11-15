@@ -21,4 +21,7 @@ cast-plays-on = Se reproduce en { $name }
 cast-idle = Todavía no se reproduce nada
 cast-status-paused = En pausa en { $name }
 cast-open-show = Abrir { $title }
+cast-controller-close = Cerrar
+cast-mini-opens = Abre los controles
+cast-play-next-on = Reproducir a continuación en { $name }
 cast-notification-line = Transmitiendo a { $name }

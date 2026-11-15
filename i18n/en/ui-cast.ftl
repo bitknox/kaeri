@@ -84,6 +84,17 @@ cast-status-paused = Paused on { $name }
 # @arg title: text
 cast-open-show = Open { $title }
 
-# Line under the episode in the system's Now Playing while it plays on a TV. The name is the TV's.
+# The chevron that puts the full controller back into the mini player.
+# @max 20
+cast-controller-close = Close
+
+# Screen reader hint on the mini player over the navigation bar.
+cast-mini-opens = Opens the controls
+
+# Long-press menu of an episode while a TV plays: queues the episode after the one playing.
+# @arg name: text
+cast-play-next-on = Play next on { $name }
+
+# The system's media notification and Now Playing: the line naming the TV that plays.
 # @arg name: text
 cast-notification-line = Casting to { $name }

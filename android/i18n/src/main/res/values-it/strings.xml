@@ -1427,6 +1427,9 @@
     <string name="cast_idle">Ancora niente in riproduzione</string>
     <string name="cast_status_paused">In pausa su %1$s</string>
     <string name="cast_open_show">Apri %1$s</string>
+    <string name="cast_controller_close">Chiudi</string>
+    <string name="cast_mini_opens">Apre i controlli</string>
+    <string name="cast_play_next_on">Riproduci dopo su %1$s</string>
     <string name="cast_notification_line">Trasmissione su %1$s</string>
     <string name="action_try_again">Riprova</string>
     <string name="action_cancel">Annulla</string>

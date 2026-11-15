@@ -5301,7 +5301,19 @@ object Strings {
     fun castOpenShow(context: Context, title: String): String =
         context.getString(R.string.cast_open_show, title)
 
-    /** Line under the episode in the system's Now Playing while it plays on a TV. The name is the TV's. */
+    /** The chevron that puts the full controller back into the mini player. */
+    fun castControllerClose(context: Context): String =
+        context.getString(R.string.cast_controller_close)
+
+    /** Screen reader hint on the mini player over the navigation bar. */
+    fun castMiniOpens(context: Context): String =
+        context.getString(R.string.cast_mini_opens)
+
+    /** Long-press menu of an episode while a TV plays: queues the episode after the one playing. */
+    fun castPlayNextOn(context: Context, name: String): String =
+        context.getString(R.string.cast_play_next_on, name)
+
+    /** The system's media notification and Now Playing: the line naming the TV that plays. */
     fun castNotificationLine(context: Context, name: String): String =
         context.getString(R.string.cast_notification_line, name)
 

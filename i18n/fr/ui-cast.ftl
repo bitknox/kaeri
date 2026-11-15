@@ -21,4 +21,7 @@ cast-plays-on = Lecture sur { $name }
 cast-idle = Rien en lecture pour l’instant
 cast-status-paused = En pause sur { $name }
 cast-open-show = Ouvrir { $title }
+cast-controller-close = Fermer
+cast-mini-opens = Ouvre les commandes
+cast-play-next-on = Lire ensuite sur { $name }
 cast-notification-line = Diffusion sur { $name }

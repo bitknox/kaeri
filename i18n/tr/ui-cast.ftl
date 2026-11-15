@@ -21,4 +21,7 @@ cast-plays-on = { $name } üzerinde oynatılır
 cast-idle = Henüz bir şey oynatılmıyor
 cast-status-paused = { $name } üzerinde duraklatıldı
 cast-open-show = { $title } aç
+cast-controller-close = Kapat
+cast-mini-opens = Kontrolleri açar
+cast-play-next-on = { $name } üzerinde sırada oynat
 cast-notification-line = { $name } cihazına yayınlanıyor

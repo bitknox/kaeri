@@ -1364,6 +1364,9 @@
     <string name="cast_idle">Henüz bir şey oynatılmıyor</string>
     <string name="cast_status_paused">%1$s üzerinde duraklatıldı</string>
     <string name="cast_open_show">%1$s aç</string>
+    <string name="cast_controller_close">Kapat</string>
+    <string name="cast_mini_opens">Kontrolleri açar</string>
+    <string name="cast_play_next_on">%1$s üzerinde sırada oynat</string>
     <string name="cast_notification_line">%1$s cihazına yayınlanıyor</string>
     <string name="action_try_again">Yeniden dene</string>
     <string name="action_cancel">Vazgeç</string>

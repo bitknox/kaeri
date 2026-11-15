@@ -4885,7 +4885,18 @@ public enum L {
         Self.format("cast-open-show", fallback: "Open %1$@", title)
     }
 
-    /// Line under the episode in the system's Now Playing while it plays on a TV. The name is the TV's.
+    /// The chevron that puts the full controller back into the mini player.
+    public static var castControllerClose: String { string("cast-controller-close", fallback: "Close") }
+
+    /// Screen reader hint on the mini player over the navigation bar.
+    public static var castMiniOpens: String { string("cast-mini-opens", fallback: "Opens the controls") }
+
+    /// Long-press menu of an episode while a TV plays: queues the episode after the one playing.
+    public static func castPlayNextOn(name: String) -> String {
+        Self.format("cast-play-next-on", fallback: "Play next on %1$@", name)
+    }
+
+    /// The system's media notification and Now Playing: the line naming the TV that plays.
     public static func castNotificationLine(name: String) -> String {
         Self.format("cast-notification-line", fallback: "Casting to %1$@", name)
     }

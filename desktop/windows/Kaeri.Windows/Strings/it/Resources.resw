@@ -3113,6 +3113,15 @@
   <data name="CastOpenShow" xml:space="preserve">
     <value>Apri {title}</value>
   </data>
+  <data name="CastControllerClose" xml:space="preserve">
+    <value>Chiudi</value>
+  </data>
+  <data name="CastMiniOpens" xml:space="preserve">
+    <value>Apre i controlli</value>
+  </data>
+  <data name="CastPlayNextOn" xml:space="preserve">
+    <value>Riproduci dopo su {name}</value>
+  </data>
   <data name="CastNotificationLine" xml:space="preserve">
     <value>Trasmissione su {name}</value>
   </data>

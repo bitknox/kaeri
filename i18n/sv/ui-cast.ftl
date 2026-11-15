@@ -21,4 +21,7 @@ cast-plays-on = Spelas på { $name }
 cast-idle = Inget spelas än
 cast-status-paused = Pausad på { $name }
 cast-open-show = Öppna { $title }
+cast-controller-close = Stäng
+cast-mini-opens = Öppnar kontrollerna
+cast-play-next-on = Spela härnäst på { $name }
 cast-notification-line = Castar till { $name }

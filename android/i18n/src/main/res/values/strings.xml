@@ -2873,7 +2873,13 @@
     <string name="cast_status_paused">Paused on %1$s</string>
     <!-- Spoken label of the show's name in the casting controller: it opens the show's page. -->
     <string name="cast_open_show">Open %1$s</string>
-    <!-- Line under the episode in the system's Now Playing while it plays on a TV. The name is the TV's. -->
+    <!-- The chevron that puts the full controller back into the mini player. -->
+    <string name="cast_controller_close">Close</string>
+    <!-- Screen reader hint on the mini player over the navigation bar. -->
+    <string name="cast_mini_opens">Opens the controls</string>
+    <!-- Long-press menu of an episode while a TV plays: queues the episode after the one playing. -->
+    <string name="cast_play_next_on">Play next on %1$s</string>
+    <!-- The system's media notification and Now Playing: the line naming the TV that plays. -->
     <string name="cast_notification_line">Casting to %1$s</string>
     <!-- Button that runs a failed action again. -->
     <string name="action_try_again">Try again</string>

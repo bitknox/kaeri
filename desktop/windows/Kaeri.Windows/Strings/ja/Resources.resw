@@ -2825,6 +2825,15 @@
   <data name="CastOpenShow" xml:space="preserve">
     <value>{title}を開く</value>
   </data>
+  <data name="CastControllerClose" xml:space="preserve">
+    <value>閉じる</value>
+  </data>
+  <data name="CastMiniOpens" xml:space="preserve">
+    <value>操作画面を開きます</value>
+  </data>
+  <data name="CastPlayNextOn" xml:space="preserve">
+    <value>{name}で次に再生</value>
+  </data>
   <data name="CastNotificationLine" xml:space="preserve">
     <value>{name}にキャスト中</value>
   </data>

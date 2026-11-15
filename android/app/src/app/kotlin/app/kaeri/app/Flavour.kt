@@ -47,6 +47,9 @@ internal object Flavour {
     /** The TVs with Chromecast built in Android's DNS-SD finds on the network. */
     fun castBrowser(context: Context): FfiCastBrowser = NsdCastBrowser(context)
 
+    /** The engine's own cast session, which [app.kaeri.store.CastModel.attach] takes. */
+    fun castSession(context: Context, store: AppStore, scope: kotlinx.coroutines.CoroutineScope): app.kaeri.store.CastSessionSource? = null
+
     /** The app flavour stages no TV scene. */
     suspend fun reachedTv(intent: Intent, store: AppStore): Boolean = true
 

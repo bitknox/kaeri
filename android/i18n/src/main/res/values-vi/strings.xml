@@ -1299,6 +1299,9 @@
     <string name="cast_idle">Chưa phát gì</string>
     <string name="cast_status_paused">Đã tạm dừng trên %1$s</string>
     <string name="cast_open_show">Mở %1$s</string>
+    <string name="cast_controller_close">Đóng</string>
+    <string name="cast_mini_opens">Mở bảng điều khiển</string>
+    <string name="cast_play_next_on">Phát sau tập này trên %1$s</string>
     <string name="cast_notification_line">Đang chiếu tới %1$s</string>
     <string name="action_try_again">Thử lại</string>
     <string name="action_cancel">Hủy</string>

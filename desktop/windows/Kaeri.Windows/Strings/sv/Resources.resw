@@ -2969,6 +2969,15 @@
   <data name="CastOpenShow" xml:space="preserve">
     <value>Öppna {title}</value>
   </data>
+  <data name="CastControllerClose" xml:space="preserve">
+    <value>Stäng</value>
+  </data>
+  <data name="CastMiniOpens" xml:space="preserve">
+    <value>Öppnar kontrollerna</value>
+  </data>
+  <data name="CastPlayNextOn" xml:space="preserve">
+    <value>Spela härnäst på {name}</value>
+  </data>
   <data name="CastNotificationLine" xml:space="preserve">
     <value>Castar till {name}</value>
   </data>

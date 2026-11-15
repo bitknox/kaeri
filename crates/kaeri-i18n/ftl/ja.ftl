@@ -5911,7 +5911,16 @@ cast-status-paused = { $name }で一時停止中
 # Spoken label of the show's name in the casting controller: it opens the show's page.
 cast-open-show = { $title }を開く
 
-# Line under the episode in the system's Now Playing while it plays on a TV. The name is the TV's.
+# The chevron that puts the full controller back into the mini player.
+cast-controller-close = 閉じる
+
+# Screen reader hint on the mini player over the navigation bar.
+cast-mini-opens = 操作画面を開きます
+
+# Long-press menu of an episode while a TV plays: queues the episode after the one playing.
+cast-play-next-on = { $name }で次に再生
+
+# The system's media notification and Now Playing: the line naming the TV that plays.
 cast-notification-line = { $name }にキャスト中
 
 # Button that runs a failed action again.

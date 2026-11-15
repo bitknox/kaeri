@@ -21,4 +21,7 @@ cast-plays-on = { $name }で再生
 cast-idle = まだ何も再生していません
 cast-status-paused = { $name }で一時停止中
 cast-open-show = { $title }を開く
+cast-controller-close = 閉じる
+cast-mini-opens = 操作画面を開きます
+cast-play-next-on = { $name }で次に再生
 cast-notification-line = { $name }にキャスト中

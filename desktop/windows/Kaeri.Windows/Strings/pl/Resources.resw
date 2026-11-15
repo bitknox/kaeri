@@ -3257,6 +3257,15 @@
   <data name="CastOpenShow" xml:space="preserve">
     <value>Otwórz {title}</value>
   </data>
+  <data name="CastControllerClose" xml:space="preserve">
+    <value>Zamknij</value>
+  </data>
+  <data name="CastMiniOpens" xml:space="preserve">
+    <value>Otwiera sterowanie</value>
+  </data>
+  <data name="CastPlayNextOn" xml:space="preserve">
+    <value>Odtwórz jako następne w {name}</value>
+  </data>
   <data name="CastNotificationLine" xml:space="preserve">
     <value>Przesyłanie do {name}</value>
   </data>

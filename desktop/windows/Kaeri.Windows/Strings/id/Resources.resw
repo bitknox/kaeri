@@ -2825,6 +2825,15 @@
   <data name="CastOpenShow" xml:space="preserve">
     <value>Buka {title}</value>
   </data>
+  <data name="CastControllerClose" xml:space="preserve">
+    <value>Tutup</value>
+  </data>
+  <data name="CastMiniOpens" xml:space="preserve">
+    <value>Membuka kontrol</value>
+  </data>
+  <data name="CastPlayNextOn" xml:space="preserve">
+    <value>Putar setelah ini di {name}</value>
+  </data>
   <data name="CastNotificationLine" xml:space="preserve">
     <value>Casting ke {name}</value>
   </data>
