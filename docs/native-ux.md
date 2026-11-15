@@ -432,7 +432,7 @@ Every screen has loading, content, empty, offline and failed states. All of them
 - Past 600 ms, static placeholder rows appear in the real layout (`.redacted(reason: .placeholder)`, T8). They stay at least 0.3 s and are replaced in one crossfade (standard). Past 4 s the job's activity line appears below them: “Loading this season”.
 - Covers fade in when they arrive (fade-in). Until then, or if they fail, a Raised plate stands in, with no broken-image glyph, and failed covers retry later.
 - Home's sections load separately. What is local (the spotlight from Continue, Continue, and anything kept from the last half hour) shows at once with no placeholders. A discovery section still on its way gets placeholders from 600 ms in its own place, so nothing above it moves when it lands, and the activity line reads “Loading suggestions”.
-- A title page opened from a list shows the head and main actions the list knew at once. The rest waits for the page under placeholders that take their room from the first frame, and the page replaces them in one crossfade where they stand, so nothing below the actions moves when it lands.
+- A title page opened from a list shows the head and main actions the list knew at once. The rest waits for the page under placeholders that take their room from the first frame, and the page replaces them in one crossfade where they stand, so nothing below the actions moves when it lands. The title page is the one exception to the 600 ms rule: its placeholders show with the page from the first frame, and the content replaces them the moment it lands, with no minimum hold.
 
 ### Empty
 
