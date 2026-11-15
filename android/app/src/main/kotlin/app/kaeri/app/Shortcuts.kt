@@ -111,9 +111,9 @@ class ContinueShortcut(private val context: Context) {
          * out, or `null` when there is none. Nothing while the queue is not known.
          */
         fun targets(store: AppStore): Flow<Target?> =
-            combine(store.continuing.list.state, store.continuing.hidden, store.titles.entries, store.titles.episodes, store.privacy.on) { state, _, titles, tables, private ->
+            combine(store.continuing.list.state, store.continuing.hidden, store.titles.entries, store.titles.episodes, store.privacy.on) { state, _, titles, tables, privately ->
                 // While private mode is on, or when the show up next is private, the shortcut stays as it was.
-                if (private) return@combine null
+                if (privately) return@combine null
                 when (state) {
                     is ListState.Loaded -> {
                         val next = store.continuing.queue(titles, tables).nextUp

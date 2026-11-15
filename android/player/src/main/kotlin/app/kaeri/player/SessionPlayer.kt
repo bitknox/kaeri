@@ -62,8 +62,8 @@ class SessionPlayer(
         if (!model.isPresented) return state.setPlaybackState(Player.STATE_IDLE).build()
         // Private: "Playing in Kaeri", with no show, episode or art, on the lock screen, the
         // notification and Bluetooth alike. The controls keep working.
-        val private = model.playsPrivately
-        val metadata = if (private) {
+        val privately = model.playsPrivately
+        val metadata = if (privately) {
             val words = Strings.nowPlayingPrivate(context)
             MediaMetadata.Builder()
                 .setTitle(words)
@@ -80,7 +80,7 @@ class SessionPlayer(
                 .apply { artworkBytes()?.let { setArtworkData(it, MediaMetadata.PICTURE_TYPE_FRONT_COVER) } }
                 .build()
         }
-        val id = if (private) PRIVATE_MEDIA_ID else "${model.titleId ?: 0u}-${model.startingEpisode ?: model.episode?.number ?: ""}"
+        val id = if (privately) PRIVATE_MEDIA_ID else "${model.titleId ?: 0u}-${model.startingEpisode ?: model.episode?.number ?: ""}"
         val item = MediaItem.Builder().setMediaId(id).setMediaMetadata(metadata).build()
         val duration = model.duration
         val data = MediaItemData.Builder(id)

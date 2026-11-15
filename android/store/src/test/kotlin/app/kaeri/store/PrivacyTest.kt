@@ -124,14 +124,14 @@ class PrivacyTest {
         assertEquals(PrivateLine.Always, PrivacyModel.line(on = true, always = true, kept = true))
     }
 
-    private fun row(id: Long, title: String, episode: String, state: DownloadState, private: Boolean) = DownloadRow(
+    private fun row(id: Long, title: String, episode: String, state: DownloadState, hidden: Boolean) = DownloadRow(
         id = id, anilistId = 900000u + id.toUInt(), title = title, episode = episode, state = state,
-        fraction = 0.3, downloaded = 300_000_000u, total = 1_000_000_000u, error = null, path = null, private = private,
+        fraction = 0.3, downloaded = 300_000_000u, total = 1_000_000_000u, error = null, path = null, private = hidden,
     )
 
     @Test
     fun a_private_download_names_nothing_in_its_notification() {
-        val one = LiveDownloads.of(context, listOf(row(1, "Stardust Wayfarer", "8", DownloadState.ACTIVE, private = true)), mapOf(1L to 2_400_000.0))!!
+        val one = LiveDownloads.of(context, listOf(row(1, "Stardust Wayfarer", "8", DownloadState.ACTIVE, hidden = true)), mapOf(1L to 2_400_000.0))!!
         assertEquals("Downloading in Kaeri", one.title)
         assertEquals("5 min left", one.text)
         assertFalse("Stardust Wayfarer" in one.title + one.text)
@@ -139,8 +139,8 @@ class PrivacyTest {
         val several = LiveDownloads.of(
             context,
             listOf(
-                row(1, "Summer Wind Relay", "3", DownloadState.ACTIVE, private = false),
-                row(2, "Stardust Wayfarer", "8", DownloadState.QUEUED, private = true),
+                row(1, "Summer Wind Relay", "3", DownloadState.ACTIVE, hidden = false),
+                row(2, "Stardust Wayfarer", "8", DownloadState.QUEUED, hidden = true),
             ),
             emptyMap(),
         )!!

@@ -155,7 +155,7 @@ class WatchNext(
                 store.continuing.hidden,
                 store.titles.episodes,
                 store.privacy.on,
-            ) { entries, _, _, episodes, private -> if (private) null else WatchNextCard.of(context, store.continuing.queue(entries, episodes), episodes) }
+            ) { entries, _, _, episodes, privately -> if (privately) null else WatchNextCard.of(context, store.continuing.queue(entries, episodes), episodes) }
                 .distinctUntilChanged()
                 .debounce(SETTLE_MILLIS)
                 .collect { found ->
