@@ -94,6 +94,7 @@ import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
@@ -102,6 +103,23 @@ import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.compose.animation.core.LinearOutSlowInEasing
+import androidx.compose.foundation.gestures.Orientation
+import androidx.compose.foundation.gestures.detectVerticalDragGestures
+import androidx.compose.foundation.gestures.draggable
+import androidx.compose.foundation.gestures.rememberDraggableState
+import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
+import androidx.compose.ui.input.nestedscroll.NestedScrollSource
+import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.boundsInWindow
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.unit.Velocity
+import kotlin.math.abs
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -137,8 +155,8 @@ class CastOrigin {
 /** The morph's layout and transition, for the mini in the bottom bar and the controller over all. */
 @OptIn(ExperimentalSharedTransitionApi::class)
 @Stable
-internal class CastMorph(val layout: SharedTransitionScope, val transition: Transition<Boolean>, val still: Boolean, val origin: CastOrigin, private val seeking: () -> Boolean) {
-    /** The surface's flight on the standard spring, or, while a back swipe seeks it, a straight line in time. */
+internal class CastMorph(val layout: SharedTransitionScope, val transition: Transition<Boolean>, val still: Boolean, val origin: CastOrigin, val drag: CastDrag, private val seeking: () -> Boolean) {
+    /** The surface's flight on the standard spring, or, while a back swipe or a drag seeks it, a straight line in time. */
     val bounds = BoundsTransform { _, _ ->
         if (seeking()) tween(300, easing = LinearEasing) else spring(dampingRatio = 1f, stiffness = 440f, visibilityThreshold = Rect.VisibilityThreshold)
     }
@@ -149,8 +167,141 @@ internal class CastMorph(val layout: SharedTransitionScope, val transition: Tran
 
 internal val LocalCastMorph = staticCompositionLocalOf<CastMorph?> { null }
 
+/**
+ * The drawer's drag: up from the mini opens the controller and down on the controller closes it,
+ * the surface following the finger through the morph. A flick settles the way it went, a slower
+ * release on the nearer end, quicker the faster the finger went. A drag caught mid-flight picks
+ * the surface up where it is. With animations removed nothing follows the finger: a drag past a
+ * fifth of the way, or a flick, opens or closes it as a tap does.
+ */
+@Stable
+internal class CastDrag(
+    private val state: SeekableTransitionState<Boolean>,
+    private val scope: CoroutineScope,
+    private val cast: CastModel,
+    private val still: Boolean,
+    /** The speed in px/s past which a release is a flick. */
+    private val flick: Float,
+) {
+    /** From the mini's top to the window's top, in px: how far a whole open travels. */
+    var travel by mutableFloatStateOf(0f)
+
+    /** The window's height, in px: the travel of a controller that opened with no mini under it. */
+    var height by mutableFloatStateOf(0f)
+
+    /** A drag, or the settle after it, holds the morph. */
+    var active by mutableStateOf(false)
+        private set
+
+    private var dragging = false
+    private var openness = 0f
+    private var from = 0f
+    private var follow: Job? = null
+    private var settle: Job? = null
+    private val wanted = Channel<Float>(Channel.CONFLATED)
+
+    private fun span(): Float = if (travel > 0f) travel else height
+
+    /** How open the morph is now, mid-flight included. */
+    private fun opennessNow(): Float = when {
+        state.currentState == state.targetState -> if (state.currentState) 1f else 0f
+        state.targetState -> state.fraction
+        else -> 1f - state.fraction
+    }
+
+    fun start() {
+        settle?.cancel()
+        settle = null
+        follow?.cancel()
+        active = true
+        dragging = true
+        openness = opennessNow()
+        from = openness
+        if (still) return
+        follow = scope.launch {
+            for (open in wanted) {
+                if (state.currentState) state.seekTo(1f - open, targetState = false) else state.seekTo(open, targetState = true)
+            }
+        }
+    }
+
+    /** The finger moved [dy] px, down positive. */
+    fun drag(dy: Float) {
+        if (!dragging) start()
+        val span = span()
+        if (span <= 0f) return
+        openness = (openness - dy / span).coerceIn(0f, 1f)
+        if (!still) wanted.trySend(openness)
+    }
+
+    /** The finger let go at [velocity] px/s, down positive. */
+    fun release(velocity: Float) {
+        if (!dragging) return
+        dragging = false
+        follow?.cancel()
+        follow = null
+        val open = when {
+            abs(velocity) >= flick -> velocity < 0
+            still -> if (from >= 0.5f) openness > from - STILL_PAST else openness > from + STILL_PAST
+            else -> openness > 0.5f
+        }
+        val left = if (open) 1f - openness else openness
+        val millis = (left * span() / maxOf(abs(velocity), flick) * 1000f).toInt().coerceIn(SETTLE_SHORTEST, SETTLE_LONGEST)
+        settle = scope.launch {
+            try {
+                if (open) cast.openCard() else cast.closeCard()
+                if (still) state.animateTo(open) else state.animateTo(open, tween(millis, easing = LinearOutSlowInEasing))
+            } finally {
+                active = dragging
+            }
+        }
+    }
+
+    /**
+     * The controller's scroll hands its leftover to the drag: down at the top of the list closes
+     * it, and back up before the list scrolls again. A fling ends the drag.
+     */
+    val connection = object : NestedScrollConnection {
+        override fun onPreScroll(available: Offset, source: NestedScrollSource): Offset {
+            if (!dragging || source != NestedScrollSource.UserInput || available.y >= 0f || openness >= 1f) return Offset.Zero
+            drag(available.y)
+            return Offset(0f, available.y)
+        }
+
+        override fun onPostScroll(consumed: Offset, available: Offset, source: NestedScrollSource): Offset {
+            if (source != NestedScrollSource.UserInput || available.y <= 0f) return Offset.Zero
+            drag(available.y)
+            return Offset(0f, available.y)
+        }
+
+        override suspend fun onPreFling(available: Velocity): Velocity {
+            if (!dragging) return Velocity.Zero
+            release(available.y)
+            return available
+        }
+    }
+
+    private companion object {
+        /** With animations removed, how far of the way a slow drag goes before it counts. */
+        const val STILL_PAST = 0.2f
+        const val SETTLE_SHORTEST = 120
+        const val SETTLE_LONGEST = 320
+    }
+}
+
+/**
+ * Vertical drags that start here stay here: a slider takes its own horizontal drag, and a drag up
+ * or down on it neither scrolls the controller nor closes it.
+ */
+private fun Modifier.keepsVerticalDrags(): Modifier = pointerInput(Unit) {
+    detectVerticalDragGestures { change, _ -> change.consume() }
+}
+
 /** Where a Play that goes to the TV started, for the controller to grow from. `null` outside [CastMorphHost]. */
 val LocalCastOrigin = staticCompositionLocalOf<CastOrigin?> { null }
+
+/** A release faster than this is a flick: Material's sheets' threshold. */
+private val FLICK = 125.dp
 
 /** The key both ends of the morph's surface share. */
 private const val SURFACE = "cast-surface" // i18n-skip
@@ -175,8 +326,12 @@ fun CastMorphHost(hidden: Boolean, content: @Composable () -> Unit) {
     val still = app.kaeri.design.rememberAnimationsRemoved()
     val origin = remember { CastOrigin() }
     var seeking by remember { mutableStateOf(false) }
+    val scope = rememberCoroutineScope()
+    val flick = with(LocalDensity.current) { FLICK.toPx() }
+    val drag = remember(state, scope, cast, still, flick) { CastDrag(state, scope, cast, still, flick) }
     LaunchedEffect(open) {
-        if (state.targetState != open || state.currentState != open) state.animateTo(open)
+        // A drag's release settles the morph itself, at the finger's speed.
+        if (!drag.active && (state.targetState != open || state.currentState != open)) state.animateTo(open)
     }
     // A Play button's place serves the one open it started.
     LaunchedEffect(transition.currentState) { if (transition.currentState) origin.rect = null }
@@ -187,20 +342,19 @@ fun CastMorphHost(hidden: Boolean, content: @Composable () -> Unit) {
     val stage = shown?.stage
     val has = stage == CastStage.Starting || stage == CastStage.Playing || session.state == CastSessionState.Playing || (joining != null && last != null)
     SharedTransitionLayout {
-        val morph = remember(this, transition, still) { CastMorph(this, transition, still, origin) { seeking } }
+        val morph = remember(this, transition, still, drag) { CastMorph(this, transition, still, origin, drag) { seeking || drag.active } }
         // A controller that opened from a Play button leaves the mini's slot empty until it closes.
         LaunchedEffect(morph, has, open) {
             if (!has) morph.miniPresent = false else if (!open) morph.miniPresent = true
         }
         CompositionLocalProvider(LocalCastMorph provides morph, LocalCastOrigin provides origin) {
-            Box(Modifier.fillMaxSize()) {
+            Box(Modifier.fillMaxSize().onGloballyPositioned { drag.height = it.size.height.toFloat() }) {
                 content()
                 if (!hidden) CastExpandedLayer(morph)
             }
         }
     }
     // A back swipe seeks the controller back into the mini, as far as the finger goes.
-    val scope = rememberCoroutineScope()
     PredictiveBackHandler(enabled = open && !hidden) { progress ->
         try {
             seeking = true
@@ -230,7 +384,23 @@ fun CastMiniSlot() {
         enter = expandVertically(Motion.standard(), expandFrom = Alignment.Top) + fadeIn(Motion.fadeIn()),
         exit = shrinkVertically(Motion.standard(), shrinkTowards = Alignment.Top) + fadeOut(Motion.fadeOut()),
     ) {
-        Box(Modifier.fillMaxWidth().height(66.dp)) {
+        val shown by cast.shown.collectAsStateWithLifecycle()
+        val joining by cast.joining.collectAsStateWithLifecycle()
+        val drag = morph.drag
+        Box(
+            Modifier
+                .fillMaxWidth()
+                .height(66.dp)
+                .onGloballyPositioned { drag.travel = it.boundsInWindow().top }
+                // Up from the mini opens the controller, following the finger, as a tap does at once.
+                .draggable(
+                    rememberDraggableState { drag.drag(it) },
+                    Orientation.Vertical,
+                    enabled = shown != null && joining == null,
+                    onDragStarted = { drag.start() },
+                    onDragStopped = { drag.release(it) },
+                ),
+        ) {
             with(morph.layout) {
                 morph.transition.AnimatedVisibility(
                     visible = { !it },
@@ -299,7 +469,9 @@ private fun CastExpandedLayer(morph: CastMorph) {
                             )
                         },
                     )
-                    .background(MaterialTheme.colorScheme.surfaceContainerHigh),
+                    .background(MaterialTheme.colorScheme.surfaceContainerHigh)
+                    // Down on the controller, with its list at the top, closes it into the mini.
+                    .nestedScroll(morph.drag.connection),
             ) {
                 Box(
                     Modifier
@@ -579,8 +751,11 @@ private fun CastController(cast: CastModel, shown: CastShown, scope: AnimatedVis
             val usable = playing
             CastTrackRow(stringResource(R.string.player_subtitles), FfiTvTrackKind.SUBTITLE, now.subtitles, now.subtitlesOff, cast, enabled = usable)
             TvDivider()
-            CastTrackRow(stringResource(R.string.player_audio), FfiTvTrackKind.AUDIO, now.audio, off = false, cast, enabled = usable)
-            TvDivider()
+            // The engine lists audio only when there is a choice: one track has no row, as on iOS.
+            if (now.audio.isNotEmpty()) {
+                CastTrackRow(stringResource(R.string.player_audio), FfiTvTrackKind.AUDIO, now.audio, off = false, cast, enabled = usable)
+                TvDivider()
+            }
             CastVolumeRow(cast, shown.level, shown.cast.muted == true || session.muted == true, now.volume, enabled = usable)
             // The footer: what each state offers, then More.
             val notice = shown.cast.notice
@@ -721,7 +896,7 @@ private fun CastSeekLine(cast: CastModel, now: FfiNowCard, shown: CastShown, wai
                 if (usable) Box(Modifier.size(4.dp, 44.dp).background(colors.primary, RoundedCornerShape(2.dp)))
             },
             track = { CastSeekTrack(it.coercedValueAsFraction, thumb = usable) },
-            modifier = Modifier.fillMaxWidth().height(44.dp).semantics {
+            modifier = Modifier.fillMaxWidth().height(44.dp).keepsVerticalDrags().semantics {
                 contentDescription = label
                 if (playing) stateDescription = state
             },
@@ -834,26 +1009,30 @@ private fun CastUpNext(cast: CastModel, next: FfiCastUpNext, id: AnilistId) {
     }
 }
 
-/** The subtitle or audio row: its name, the track on and ⇕ at the end, a menu of the tracks. */
+/**
+ * The subtitle or audio row: its name, the track on and ⇕ at the end, a menu of the tracks. With
+ * no tracks to choose it says None, with no ⇕, and takes no tap.
+ */
 @Composable
-private fun CastTrackRow(title: String, kind: FfiTvTrackKind, tracks: List<FfiTvTrack>, off: Boolean, cast: CastModel, enabled: Boolean) {
-    var open by remember { mutableStateOf(false) }
+internal fun CastTrackRow(title: String, kind: FfiTvTrackKind, tracks: List<FfiTvTrack>, off: Boolean, cast: CastModel, enabled: Boolean, startOpen: Boolean = false) {
+    val choosable = tracks.isNotEmpty()
+    var open by remember { mutableStateOf(startOpen && choosable) }
     val colors = MaterialTheme.colorScheme
     val context = LocalContext.current
-    val value = if (tracks.isEmpty()) "" else TvWords.chosen(context, tracks, off)
+    val value = if (choosable) TvWords.chosen(context, tracks, off) else Strings.valueNone(context)
     Box {
         Row(
             Modifier
                 .fillMaxWidth()
                 .heightIn(min = 56.dp)
-                .clickable(enabled = enabled && tracks.isNotEmpty()) { open = true }
+                .then(if (choosable) Modifier.clickable(enabled = enabled, role = Role.DropdownList) { open = true } else Modifier)
                 .alpha(if (enabled) 1f else 0.38f)
                 .semantics(mergeDescendants = true) {},
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Text(title, style = MaterialTheme.typography.bodyLarge, color = colors.onSurface, modifier = Modifier.weight(1f))
             Text(value, style = MaterialTheme.typography.bodyMedium, color = colors.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.widthIn(max = 200.dp))
-            Icon(Icons.DropDown, contentDescription = null, tint = colors.onSurfaceVariant, modifier = Modifier.size(18.dp))
+            if (choosable) Icon(Icons.DropDown, contentDescription = null, tint = colors.onSurfaceVariant, modifier = Modifier.size(18.dp))
         }
         Menu(expanded = open, onDismissRequest = { open = false }) {
             val choices = buildList {
@@ -925,7 +1104,7 @@ internal fun CastVolumeRow(cast: CastModel, level: Boolean, muted: Boolean, volu
             },
             enabled = enabled,
             colors = SliderDefaults.colors(thumbColor = colors.onSurface, activeTrackColor = colors.onSurface, inactiveTrackColor = ObiSilk.RaisedSelected),
-            modifier = Modifier.weight(1f).semantics {
+            modifier = Modifier.weight(1f).keepsVerticalDrags().semantics {
                 contentDescription = label
                 stateDescription = volumeWords
             },
