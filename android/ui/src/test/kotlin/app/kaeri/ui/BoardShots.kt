@@ -336,7 +336,8 @@ class BoardShots {
     @Config(qualifiers = PHONE)
     fun phone_title_following_episodes() = shoot("phone-title-following-episodes", FOLLOWING, title = 900001u) {
         toEpisodes()
-        val row = compose.onNode(hasClickAction() and hasAnyDescendant(hasText("E8 \u00b7", substring = true)), useUnmergedTree = true)
+        // The row as TalkBack reads it: its descendants merged into it.
+        val row = compose.onNode(hasClickAction() and hasText("E8 \u00b7", substring = true))
         row.assert(SemanticsMatcher("says who stopped here") { node ->
             val said = node.config.getOrNull(SemanticsProperties.ContentDescription).orEmpty().joinToString(" ")
             "watched up to here." in said && "Lumi" in said && "Score" !in said

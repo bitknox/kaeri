@@ -38,8 +38,7 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.onClick
-import androidx.compose.ui.semantics.role
-import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
@@ -147,9 +146,9 @@ fun FollowingRow(people: List<FollowedEntry>, onOpen: () -> Unit, modifier: Modi
         modifier = modifier
             .heightIn(min = 56.dp)
             .onFocusChanged { focused = it.isFocused }
-            .clearAndSetSemantics {
+            // Said as one, with what OK does; the surface's own focus and click stay on the node.
+            .semantics {
                 contentDescription = listOf(heading, names, help).joinToString(". ") // i18n-skip
-                role = Role.Button
                 onClick(label = openLabel) { onOpen(); true }
             },
         shape = ClickableSurfaceDefaults.shape(RoundedCornerShape(14.dp)),
@@ -164,7 +163,7 @@ fun FollowingRow(people: List<FollowedEntry>, onOpen: () -> Unit, modifier: Modi
         scale = ClickableSurfaceDefaults.scale(focusedScale = FOCUSED_SCALE),
     ) {
         Row(
-            Modifier.heightIn(min = 56.dp).padding(start = 12.dp, end = 22.dp),
+            Modifier.heightIn(min = 56.dp).padding(start = 12.dp, end = 22.dp).clearAndSetSemantics {},
             horizontalArrangement = Arrangement.spacedBy(14.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
