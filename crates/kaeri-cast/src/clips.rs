@@ -68,6 +68,8 @@ mod tests {
         }
         assert_eq!(clip(&VideoFormat::Vp9, Some(720)).unwrap().name, "vp9-1080.webm");
         assert!(clip(&VideoFormat::H264, Some(1080)).is_none());
+        assert!(clip(&VideoFormat::H264, Some(1088)).is_none(), "1080 lines, coded");
+        assert_eq!(clip(&VideoFormat::H264, Some(1440)).unwrap().name, "h264-2160.mp4");
         assert!(clip(&VideoFormat::Other("MPEG-2".into()), None).is_none());
     }
 }
