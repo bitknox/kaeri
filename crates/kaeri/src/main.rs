@@ -438,12 +438,26 @@ fn init_logging(paths: &Paths) {
     }
     let appender = tracing_appender::rolling::daily(&dir, "kaeri.log");
     let _ = fmt()
-        .with_writer(appender)
+        .with_writer(Redacted(appender))
         .with_ansi(false)
         .with_env_filter(
             EnvFilter::try_from_env("KAERI_LOG").unwrap_or_else(|_| EnvFilter::new("info")),
         )
         .try_init();
+}
+
+/// The log's writer with what is private taken out of each line: see
+/// [`kaeri_engine::private::redact`].
+struct Redacted<M>(M);
+
+impl<'a, M: tracing_subscriber::fmt::MakeWriter<'a>> tracing_subscriber::fmt::MakeWriter<'a>
+    for Redacted<M>
+{
+    type Writer = kaeri_engine::private::redact::Redacting<M::Writer>;
+
+    fn make_writer(&'a self) -> Self::Writer {
+        kaeri_engine::private::redact::Redacting(self.0.make_writer())
+    }
 }
 
 #[cfg(test)]

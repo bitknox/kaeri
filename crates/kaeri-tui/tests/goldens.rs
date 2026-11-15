@@ -1404,6 +1404,7 @@ fn downloads(s: &mut Screen) {
                 error: None,
                 path: None,
                 ahead: false,
+                private: false,
             }
         };
     s.apply(Event::Downloads(vec![

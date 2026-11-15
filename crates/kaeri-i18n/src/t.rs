@@ -7510,6 +7510,31 @@ pub fn settings_note_token_storage() -> String {
     text("settings-note-token-storage", &[])
 }
 
+/// Header chip while private mode is on, in the state colour, lower case.
+pub fn tui_private_chip() -> String {
+    text("tui-private-chip", &[])
+}
+
+/// Footer hint for Ctrl+P, lower case to match the header chip.
+pub fn keys_hint_private() -> String {
+    text("keys-hint-private", &[])
+}
+
+/// Command palette entry that turns private mode on or off; its state shows beside it.
+pub fn palette_private_mode() -> String {
+    text("palette-private-mode", &[])
+}
+
+/// Command palette entry on a title page: keep the show private on this device.
+pub fn palette_always_private() -> String {
+    text("palette-always-private", &[])
+}
+
+/// Help for the --private flag.
+pub fn cli_private_help() -> String {
+    text("cli-private-help", &[])
+}
+
 /// Under a series' title on the terminal's series page: the source its chapters are read from.
 pub fn tui_read_series_from(source: &str) -> String {
     text("tui-read-series-from", &[("source", Arg::Text(source))])
@@ -15020,6 +15045,86 @@ pub fn player_subs_bg_box() -> String {
 /// Button in the subtitles panel that opens Settings.
 pub fn player_subs_more() -> String {
     text("player-subs-more", &[])
+}
+
+/// The private mode switch: under the account card on phones, first in Settings › Accounts on the desktops and the TV, and a check item in the Linux main menu.
+pub fn private_mode() -> String {
+    text("private-mode", &[])
+}
+
+/// The switch's description: the footer on Apple, supporting text on Android and the TV, the SettingsCard description on Windows, the AdwSwitchRow subtitle on Linux.
+pub fn private_mode_detail() -> String {
+    text("private-mode-detail", &[])
+}
+
+/// Second line under the switch. Private mode only stops what the app keeps; it hides nothing from anyone else.
+pub fn private_mode_limits() -> String {
+    text("private-mode-limits", &[])
+}
+
+/// Notice after the menu item or the shortcut turns private mode on, and the words of the badge's popover, flyout and TV dialog. Also the badge's screen reader hint.
+pub fn private_mode_on_notice() -> String {
+    text("private-mode-on-notice", &[])
+}
+
+/// Button in the notice, the badge's popover and flyout, and the TV dialog: turns private mode off.
+pub fn action_turn_off() -> String {
+    text("action-turn-off", &[])
+}
+
+/// Under the switch on the desktops. The keys are the platform's own: ⇧⌘N on the Mac, Ctrl+Shift+N on Windows and Linux.
+pub fn private_mode_shortcut_hint(keys: &str) -> String {
+    text("private-mode-shortcut-hint", &[("keys", Arg::Text(keys))])
+}
+
+/// The badge while private mode is on, the player label, and the head of the title page line.
+pub fn private_badge() -> String {
+    text("private-badge", &[])
+}
+
+/// Screen reader label of the badge.
+pub fn private_badge_label() -> String {
+    text("private-badge-label", &[])
+}
+
+/// Line under a title or series page's main action, after "Private" or "Always private".
+pub fn private_line_not_saved() -> String {
+    text("private-line-not-saved", &[])
+}
+
+/// Line under a title or series page's main action when a place is held in memory, after "Private".
+pub fn private_line_kept() -> String {
+    text("private-line-kept", &[])
+}
+
+/// A title kept private on this device: the More menu item with a check, the switch in the show's settings, and the head of the title page line.
+pub fn title_always_private() -> String {
+    text("title-always-private", &[])
+}
+
+/// Under the Always private switch in a show's settings.
+pub fn show_always_private_detail() -> String {
+    text("show-always-private-detail", &[])
+}
+
+/// Under the Always private switch in a series page's settings.
+pub fn series_always_private_detail() -> String {
+    text("series-always-private-detail", &[])
+}
+
+/// What the system's media controls, the lock screen, the media card and the player window show while private: no show, episode, artist or artwork.
+pub fn now_playing_private() -> String {
+    text("now-playing-private", &[])
+}
+
+/// Announced to screen readers once when private mode turns on.
+pub fn private_mode_on_announcement() -> String {
+    text("private-mode-on-announcement", &[])
+}
+
+/// Announced to screen readers once when private mode turns off.
+pub fn private_mode_off_announcement() -> String {
+    text("private-mode-off-announcement", &[])
 }
 
 /// Under a page that is still loading after four seconds.

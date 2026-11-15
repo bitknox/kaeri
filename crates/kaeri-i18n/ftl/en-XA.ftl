@@ -4763,6 +4763,21 @@ settings-note-upload-limit = [Çàþš àļļ ţöŕŕéñţ üþļöàð, šö 
 # Note under the token storage row. The option is a command-line flag and is not translated.
 settings-note-token-storage = [Ûšé --ţöķéñ-ţö-ƒîļé ţö ɱöṽé àñ éẋîšţîñĝ ţöķéñ.~~~~~~~~~~~~~~]
 
+# Header chip while private mode is on, in the state colour, lower case.
+tui-private-chip = [þŕîṽàţé~~~]
+
+# Footer hint for Ctrl+P, lower case to match the header chip.
+keys-hint-private = [þŕîṽàţé~~~]
+
+# Command palette entry that turns private mode on or off; its state shows beside it.
+palette-private-mode = [Þŕîṽàţé ɱöðé~~~~]
+
+# Command palette entry on a title page: keep the show private on this device.
+palette-always-private = [Åļŵàýš þŕîṽàţé ƒöŕ ţĥîš šĥöŵ~~~~~~~~~]
+
+# Help for the --private flag.
+cli-private-help = [Šţàŕţ îñ þŕîṽàţé ɱöðé. Ñöţĥîñĝ îš šàṽéð öŕ šýñçéð üñţîļ Ķàéŕî ƣüîţš.~~~~~~~~~~~~~~~~~~~~~]
+
 # Under a series' title on the terminal's series page: the source its chapters are read from.
 tui-read-series-from = [Ŕéàðîñĝ ƒŕöɱ { $source }~~~~~]
 
@@ -9400,6 +9415,54 @@ player-subs-bg-box = [Ɓöẋ~]
 
 # Button in the subtitles panel that opens Settings.
 player-subs-more = [Ṁöŕé îñ Šéţţîñĝš…~~~~~~]
+
+# The private mode switch: under the account card on phones, first in Settings › Accounts on the desktops and the TV, and a check item in the Linux main menu.
+private-mode = [Þŕîṽàţé ɱöðé~~~~]
+
+# The switch's description: the footer on Apple, supporting text on Android and the TV, the SettingsCard description on Windows, the AdwSwitchRow subtitle on Linux.
+private-mode-detail = [Ñöţĥîñĝ ýöü ŵàţçĥ öŕ ŕéàð îš šàṽéð öŕ šýñçéð üñţîļ ýöü ţüŕñ îţ öƒƒ öŕ ƣüîţ Ķàéŕî.~~~~~~~~~~~~~~~~~~~~~~~~~]
+
+# Second line under the switch. Private mode only stops what the app keeps; it hides nothing from anyone else.
+private-mode-limits = [Ýöüŕ šöüŕçéš àñð ŵàţçĥ þàŕţîéš šţîļļ šéé ŵĥàţ ýöü öþéñ.~~~~~~~~~~~~~~~~~]
+
+# Notice after the menu item or the shortcut turns private mode on, and the words of the badge's popover, flyout and TV dialog. Also the badge's screen reader hint.
+private-mode-on-notice = [Þŕîṽàţé ɱöðé îš öñ. Ñöţĥîñĝ îš šàṽéð öŕ šýñçéð üñţîļ Ķàéŕî ƣüîţš.~~~~~~~~~~~~~~~~~~~~]
+
+# Button in the notice, the badge's popover and flyout, and the TV dialog: turns private mode off.
+action-turn-off = [Ţüŕñ öƒƒ~~~]
+
+# Under the switch on the desktops. The keys are the platform's own: ⇧⌘N on the Mac, Ctrl+Shift+N on Windows and Linux.
+private-mode-shortcut-hint = [Šĥöŕţçüţ: { $keys }~~~~]
+
+# The badge while private mode is on, the player label, and the head of the title page line.
+private-badge = [Þŕîṽàţé~~~]
+
+# Screen reader label of the badge.
+private-badge-label = [Þŕîṽàţé ɱöðé îš öñ~~~~~~]
+
+# Line under a title or series page's main action, after "Private" or "Always private".
+private-line-not-saved = [Ñöţ šàṽéð öŕ šýñçéð~~~~~~]
+
+# Line under a title or series page's main action when a place is held in memory, after "Private".
+private-line-kept = [Ýöüŕ þļàçé îš ķéþţ üñţîļ Ķàéŕî ƣüîţš~~~~~~~~~~~]
+
+# A title kept private on this device: the More menu item with a check, the switch in the show's settings, and the head of the title page line.
+title-always-private = [Åļŵàýš þŕîṽàţé~~~~~]
+
+# Under the Always private switch in a show's settings.
+show-always-private-detail = [Ñöţĥîñĝ ƒŕöɱ ţĥîš šĥöŵ îš šàṽéð öŕ šýñçéð öñ ţĥîš ðéṽîçé. Ŵĥàţ îš àļŕéàðý šàṽéð šţàýš.~~~~~~~~~~~~~~~~~~~~~~~~~~]
+
+# Under the Always private switch in a series page's settings.
+series-always-private-detail = [Ñöţĥîñĝ ƒŕöɱ ţĥîš šéŕîéš îš šàṽéð öŕ šýñçéð öñ ţĥîš ðéṽîçé. Ŵĥàţ îš àļŕéàðý šàṽéð šţàýš.~~~~~~~~~~~~~~~~~~~~~~~~~~~]
+
+# What the system's media controls, the lock screen, the media card and the player window show while private: no show, episode, artist or artwork.
+now-playing-private = [Þļàýîñĝ îñ Ķàéŕî~~~~~]
+
+# Announced to screen readers once when private mode turns on.
+private-mode-on-announcement = [Þŕîṽàţé ɱöðé öñ~~~~~]
+
+# Announced to screen readers once when private mode turns off.
+private-mode-off-announcement = [Þŕîṽàţé ɱöðé öƒƒ~~~~~]
 
 # Under a page that is still loading after four seconds.
 reader-page-loading = [Ļöàðîñĝ þàĝé { $page }~~~~~]

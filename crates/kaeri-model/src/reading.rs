@@ -162,6 +162,12 @@ pub struct SeriesView {
     /// For a demo series: the demo's other work, for "Also in the demo".
     #[cfg_attr(feature = "ffi", uniffi(default))]
     pub demo_other: Option<WorkId>,
+    /// Private when sent: see [`crate::private`].
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub private: Option<crate::private::PrivateMode>,
+    /// [`Self::action`] continues from a place held in memory until the app quits.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub place_kept: bool,
 }
 
 /// The series page's main button.

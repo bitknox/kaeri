@@ -157,6 +157,10 @@ pub struct ShowSettingsView {
     /// in order.
     #[cfg_attr(feature = "ffi", uniffi(default))]
     pub source: Option<String>,
+    /// The show is always private on this device: its own switch in the sheet, which
+    /// [`Command::SetAlwaysPrivate`](crate::command::Command::SetAlwaysPrivate) turns over.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub always_private: bool,
 }
 
 /// One setting of the show sheet.
@@ -271,7 +275,7 @@ pub fn view(
             default: settings::value(effective, effective, key.setting()),
         })
         .collect();
-    ShowSettingsView { id, rows, remembered, source }
+    ShowSettingsView { id, rows, remembered, source, always_private: false }
 }
 
 #[cfg(test)]

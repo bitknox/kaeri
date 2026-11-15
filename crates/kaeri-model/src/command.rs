@@ -723,6 +723,18 @@ pub enum Command {
         key: SettingKey,
         value: kaeri_core::settings::SettingValue,
     },
+    /// Private mode on or off, at once, for what has not been written yet. Never written to the
+    /// config: a new launch starts with it off. Answered with
+    /// [`Event::Private`](crate::event::Event::Private).
+    SetPrivate {
+        on: bool,
+    },
+    /// A show or series always private on this device, or not. Never synced; what was saved
+    /// before stays. Answered with [`Event::AlwaysPrivate`](crate::event::Event::AlwaysPrivate).
+    SetAlwaysPrivate {
+        title: crate::private::PrivateTitle,
+        on: bool,
+    },
     /// Sub or dub for this session only: put in effect at once and not written, so the next
     /// launch goes by the saved choice. Answered with
     /// [`Event::Settings`](crate::event::Event::Settings).

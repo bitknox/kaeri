@@ -436,6 +436,7 @@ mod tests {
                 error: None,
                 path: Some("/downloads/Hoshikuzu - 05.mkv".into()),
                 ahead: false,
+                private: false,
             },
         ]));
         let text = text_of(&render_to_buffer(&mut app, 120, 30));
@@ -463,6 +464,7 @@ mod tests {
                 error: Some("no peers after 60s".into()),
                 path: None,
                 ahead: false,
+                private: false,
             },
         ]));
         let text = text_of(&render_to_buffer(&mut app, 120, 30));
@@ -489,6 +491,7 @@ mod tests {
                     error: None,
                     path: None,
                     ahead: false,
+                    private: false,
                 })
                 .collect(),
         ));

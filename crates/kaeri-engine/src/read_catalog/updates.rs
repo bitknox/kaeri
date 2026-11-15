@@ -501,6 +501,7 @@ mod tests {
             plugins: crate::book_plugins::BookPlugins::default(),
             clock: crate::clock::Clock::default(),
             offline: Arc::new(AtomicBool::new(false)),
+            privacy: Default::default(),
         }
     }
 

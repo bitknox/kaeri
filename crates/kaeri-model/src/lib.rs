@@ -71,6 +71,7 @@ pub mod opened;
 pub mod party;
 pub mod playback;
 pub mod present;
+pub mod private;
 pub mod profiles;
 pub mod progress;
 pub mod proxy;

@@ -46,6 +46,10 @@ pub(crate) const FILL_IN_AFTER: Duration = Duration::from_secs(30);
 /// Make the record, off the actor, and say it as [`Event::WidgetSnapshot`]: once, with what
 /// could not be fetched left out.
 pub(crate) fn snapshot(engine: &EngineState, services: &Services, tx: &Outbox) {
+    // Private: the widgets are not fed, and show the record they hold until it is turned off.
+    if services.privacy.is_on() {
+        return;
+    }
     let tracker = services
         .sync
         .trackers

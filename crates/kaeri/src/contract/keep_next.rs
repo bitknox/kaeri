@@ -67,6 +67,7 @@ fn starts(h: &mut Harness, id: AnilistId, episode: &str) {
         episode_title: None,
         speed: 1.0,
         resume: None,
+        always_private: false,
     });
 }
 

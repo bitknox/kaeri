@@ -171,6 +171,10 @@ pub struct PlaySettings {
     /// What was made ready for this episode while the one before ended, and when the roll-on
     /// handed over to it: see [`crate::playback::prefetch`].
     pub ahead: crate::playback::prefetch::Ahead,
+    /// Whether what the playback would record is held now, private mode being on or the show
+    /// always private: read at every write, so switching applies at once. See
+    /// [`crate::private`].
+    pub privacy: crate::private::Gate,
 }
 
 impl PlaySettings {
@@ -290,6 +294,8 @@ pub async fn play(
     mut commands: mpsc::UnboundedReceiver<PlayerCommand>,
 ) {
     let Machine { opener, slot, host, power, offline, sources } = machine;
+    // A private play's addresses stay out of the log while it plays, the mode on or not.
+    let _private_log = settings.privacy.holds().then(crate::private::redact::open);
     let Some(first) = streams.first() else {
         slot.release();
         // Its controls closed before its ending is said: see `Handoff::live`.
@@ -505,7 +511,13 @@ pub async fn play(
             resume_at = None;
         }
         let request = PlaybackRequest {
-            title: context.window_title(),
+            // While private the window, and the system's media controls that read it, name no
+            // show: "Playing in Kaeri".
+            title: if settings.privacy.holds() {
+                kaeri_i18n::t::now_playing_private()
+            } else {
+                context.window_title()
+            },
             start_at: resume_at,
             subtitle_language: settings.subtitle_language.clone(),
             speed: context.speed,
@@ -568,7 +580,13 @@ pub async fn play(
         if let Some(previous) = current.tracks_for.replace(key) {
             for action in owed {
                 if let TrackAction::Remember(memory) = action {
-                    remember_tracks(&store, settings.remember_tracks, previous, memory).await;
+                    remember_tracks(
+                        &store,
+                        settings.remember_tracks && !settings.privacy.holds(),
+                        previous,
+                        memory,
+                    )
+                    .await;
                 }
             }
         }

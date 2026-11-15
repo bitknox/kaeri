@@ -150,6 +150,8 @@ pub struct Lent {
     /// What a chapter list is finished with, as the series page has it.
     pub meta: kaeri_meta::Meta,
     pub offline: Arc<std::sync::atomic::AtomicBool>,
+    /// What is read privately, for the series page's place.
+    pub privacy: Arc<crate::private::Privacy>,
 }
 
 impl Lent {
@@ -161,6 +163,7 @@ impl Lent {
             tx: tx.clone(),
             meta: services.meta.clone(),
             offline: services.offline.clone(),
+            privacy: services.privacy.clone(),
         }
     }
 
@@ -172,6 +175,7 @@ impl Lent {
             tx: tx.clone(),
             meta: kit.meta.clone(),
             offline: kit.offline.clone(),
+            privacy: kit.privacy.clone(),
         }
     }
 
@@ -183,6 +187,7 @@ impl Lent {
             plugins: self.plugins.clone(),
             clock: self.clock.clone(),
             offline: self.offline.clone(),
+            privacy: self.privacy.clone(),
         }
     }
 

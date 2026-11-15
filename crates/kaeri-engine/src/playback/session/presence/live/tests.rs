@@ -199,9 +199,17 @@ mod socket {
         if std::env::var_os(CHILD).is_none() {
             return;
         }
-        let mut rpc = Rpc::start(&config(true, true), &context()).await;
-        rpc.observe(Playhead { paused: true, ..head(10.0) }).await;
+        let mut rpc = Rpc::start(&config(true, true), &context(), false).await;
+        rpc.observe(Playhead { paused: true, ..head(10.0) }, false).await;
         rpc.finish().await;
+    }
+
+    /// Private: the presence never connects, so Discord is told nothing of the episode.
+    #[tokio::test]
+    async fn a_private_play_never_connects() {
+        let mut rpc = Rpc::start(&config(true, true), &context(), true).await;
+        rpc.observe(Playhead { paused: true, ..head(10.0) }, true).await;
+        assert!(rpc.inner.is_none() && !rpc.tried && rpc.sent.is_none());
     }
 
     #[tokio::test]

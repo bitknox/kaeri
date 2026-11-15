@@ -652,6 +652,8 @@ mod tests {
                     spoiler_ahead: r.spoiler_ahead,
                 })
                 .collect(),
+            kept: false,
+            private: Default::default(),
         });
         task
     }
@@ -673,6 +675,8 @@ mod tests {
                     spoiler_ahead: false,
                 })
                 .collect(),
+            kept: false,
+            private: Default::default(),
         }
     }
 
@@ -801,6 +805,8 @@ mod tests {
             progress: Some(TitleProgress { done: 3, next: 4 }),
             resume: None,
             episodes: Vec::new(),
+            kept: false,
+            private: Default::default(),
         });
         let (three, two) = (
             Some(TitleProgress { done: 3, next: 4 }),

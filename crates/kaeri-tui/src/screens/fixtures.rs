@@ -151,5 +151,6 @@ pub(super) fn download(
         error: None,
         path: None,
         ahead: false,
+        private: false,
     }
 }

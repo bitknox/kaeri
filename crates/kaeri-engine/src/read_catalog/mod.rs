@@ -87,6 +87,8 @@ pub(crate) struct Kit {
     pub plugins: crate::book_plugins::BookPlugins,
     pub clock: crate::clock::Clock,
     pub offline: Arc<AtomicBool>,
+    /// Places private reads held in memory, which the series page continues from.
+    pub privacy: Arc<crate::private::Privacy>,
 }
 
 impl Kit {
@@ -98,6 +100,7 @@ impl Kit {
             plugins: services.book_plugins.clone(),
             clock: services.clock.clone(),
             offline: services.offline.clone(),
+            privacy: services.privacy.clone(),
         }
     }
 

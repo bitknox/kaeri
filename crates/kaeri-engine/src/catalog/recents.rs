@@ -44,6 +44,10 @@ pub fn remember(query: SearchQuery, services: &Services, tx: &Outbox) {
     if query.is_blank() {
         return;
     }
+    // Private: a search names a title too, so it is not kept.
+    if services.privacy.is_on() {
+        return;
+    }
     let mut kept = recent(&services.store);
     kept.retain(|q| *q != query);
     kept.insert(0, query);

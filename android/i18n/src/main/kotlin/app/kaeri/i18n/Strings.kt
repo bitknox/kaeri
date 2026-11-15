@@ -9362,6 +9362,74 @@ object Strings {
     fun playerSubsMore(context: Context): String =
         context.getString(R.string.player_subs_more)
 
+    /** The private mode switch: under the account card on phones, first in Settings › Accounts on the desktops and the TV, and a check item in the Linux main menu. */
+    fun privateMode(context: Context): String =
+        context.getString(R.string.private_mode)
+
+    /** The switch's description: the footer on Apple, supporting text on Android and the TV, the SettingsCard description on Windows, the AdwSwitchRow subtitle on Linux. */
+    fun privateModeDetail(context: Context): String =
+        context.getString(R.string.private_mode_detail)
+
+    /** Second line under the switch. Private mode only stops what the app keeps; it hides nothing from anyone else. */
+    fun privateModeLimits(context: Context): String =
+        context.getString(R.string.private_mode_limits)
+
+    /** Notice after the menu item or the shortcut turns private mode on, and the words of the badge's popover, flyout and TV dialog. Also the badge's screen reader hint. */
+    fun privateModeOnNotice(context: Context): String =
+        context.getString(R.string.private_mode_on_notice)
+
+    /** Button in the notice, the badge's popover and flyout, and the TV dialog: turns private mode off. */
+    fun actionTurnOff(context: Context): String =
+        context.getString(R.string.action_turn_off)
+
+    /** Under the switch on the desktops. The keys are the platform's own: ⇧⌘N on the Mac, Ctrl+Shift+N on Windows and Linux. */
+    fun privateModeShortcutHint(context: Context, keys: String): String =
+        context.getString(R.string.private_mode_shortcut_hint, keys)
+
+    /** The badge while private mode is on, the player label, and the head of the title page line. */
+    fun privateBadge(context: Context): String =
+        context.getString(R.string.private_badge)
+
+    /** Screen reader label of the badge. */
+    fun privateBadgeLabel(context: Context): String =
+        context.getString(R.string.private_badge_label)
+
+    /** Line under a title or series page's main action, after "Private" or "Always private". */
+    fun privateLineNotSaved(context: Context): String =
+        context.getString(R.string.private_line_not_saved)
+
+    /** Line under a title or series page's main action when a place is held in memory, after "Private". */
+    fun privateLineKept(context: Context): String =
+        context.getString(R.string.private_line_kept)
+
+    /** A title kept private on this device: the More menu item with a check, the switch in the show's settings, and the head of the title page line. */
+    fun titleAlwaysPrivate(context: Context): String =
+        context.getString(R.string.title_always_private)
+
+    /** Under the Always private switch in a show's settings. */
+    fun showAlwaysPrivateDetail(context: Context): String =
+        context.getString(R.string.show_always_private_detail)
+
+    /** Under the Always private switch in a series page's settings. */
+    fun seriesAlwaysPrivateDetail(context: Context): String =
+        context.getString(R.string.series_always_private_detail)
+
+    /** What the system's media controls, the lock screen, the media card and the player window show while private: no show, episode, artist or artwork. */
+    fun nowPlayingPrivate(context: Context): String =
+        context.getString(R.string.now_playing_private)
+
+    /** Android's required download notification for a download started while private. No title or art. */
+    fun privateDownloadLine(context: Context): String =
+        context.getString(R.string.private_download_line)
+
+    /** Announced to screen readers once when private mode turns on. */
+    fun privateModeOnAnnouncement(context: Context): String =
+        context.getString(R.string.private_mode_on_announcement)
+
+    /** Announced to screen readers once when private mode turns off. */
+    fun privateModeOffAnnouncement(context: Context): String =
+        context.getString(R.string.private_mode_off_announcement)
+
     /** Under a page that is still loading after four seconds. */
     fun readerPageLoading(context: Context, page: Int): String =
         context.getString(R.string.reader_page_loading, page)

@@ -318,6 +318,7 @@ fn kit_in(chapters: &[&str], hosts: &[&str], store: Store, dir: Arc<tempfile::Te
         tx: Outbox::from(tx),
         meta: kaeri_meta::Meta::new(kaeri_meta::AniList::new(http, 30), None, store.clone()),
         offline: Arc::default(),
+        privacy: Arc::default(),
     };
     // As the engine sets it up once the front end says Wi-Fi.
     queue.configure(Setup::default());

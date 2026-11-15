@@ -73,6 +73,7 @@ fn kit(fake: Option<&FakeAniList>, dir: &std::path::Path) -> Kit {
         plugins: crate::book_plugins::BookPlugins::default(),
         clock: crate::clock::Clock::in_zone(jiff::tz::TimeZone::UTC),
         offline: Arc::new(AtomicBool::new(false)),
+        privacy: Default::default(),
     }
 }
 

@@ -28,6 +28,7 @@ mod local;
 mod medium;
 mod next_preload;
 mod preview;
+mod private;
 mod progress;
 mod servers;
 mod settings;
