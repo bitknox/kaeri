@@ -165,6 +165,8 @@ sealed partial class MediaControls
                     break;
                 case Event.PlayerUi { Ui: PlayerUi.Starting s }:
                     playingId = s.Id;
+                    // Another show's picture never stands in for this one's.
+                    pictureUrl = null;
                     Open(true);
                     Now(s.Title, Lines.EpisodeNamed(s.EpisodeValue, s.EpisodeTitle), s.BannerUrl ?? s.CoverUrl);
                     break;
