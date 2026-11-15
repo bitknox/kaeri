@@ -9,6 +9,9 @@ import android.view.KeyEvent
 import androidx.compose.animation.core.AnimationSpec
 import androidx.compose.foundation.gestures.scrollBy
 import androidx.compose.foundation.lazy.LazyListState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.key.KeyEventType
 import androidx.compose.ui.input.key.onPreviewKeyEvent
@@ -16,6 +19,7 @@ import androidx.compose.ui.input.key.type
 import androidx.compose.ui.unit.dp
 import app.kaeri.engine.model.tapScrollStep
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 
 /** How far Down and Up scroll a strip: the step the Mac and Windows readers take. */
@@ -67,6 +71,26 @@ class StripKeys {
     /** The list index of its last image; below [first] while it has none. */
     var last = -1
 
+    private var running by mutableIntStateOf(0)
+
+    /** True while a key's move runs. */
+    val moving: Boolean get() = running > 0
+
+    /**
+     * How many key moves have ended. The strip keeps its image through a new layout, and an image
+     * a key brought to the top at once is the reader's own move, which it keeps instead.
+     */
+    var moves by mutableIntStateOf(0)
+        private set
+
+    private fun track(job: Job) {
+        running++
+        job.invokeOnCompletion {
+            running--
+            moves++
+        }
+    }
+
     /**
      * Moves [list] as [move] asks: the steps through [step], gliding by [spec] when [smooth], a
      * [line] of pixels for the arrows; Home and End at once, as a page jump is.
@@ -74,26 +98,26 @@ class StripKeys {
     fun go(move: StripMove, scope: CoroutineScope, list: LazyListState, step: StripStep, line: Float, smooth: Boolean, spec: AnimationSpec<Float>) {
         val screen = list.layoutInfo.viewportSize.height * tapScrollStep().toFloat()
         when (move) {
-            StripMove.LINE_DOWN -> step.go(scope, list, line, smooth, spec, touch = false)
-            StripMove.LINE_UP -> step.go(scope, list, -line, smooth, spec, touch = false)
-            StripMove.SCREEN_DOWN -> step.go(scope, list, screen, smooth, spec, touch = false)
-            StripMove.SCREEN_UP -> step.go(scope, list, -screen, smooth, spec, touch = false)
+            StripMove.LINE_DOWN -> track(step.go(scope, list, line, smooth, spec, touch = false))
+            StripMove.LINE_UP -> track(step.go(scope, list, -line, smooth, spec, touch = false))
+            StripMove.SCREEN_DOWN -> track(step.go(scope, list, screen, smooth, spec, touch = false))
+            StripMove.SCREEN_UP -> track(step.go(scope, list, -screen, smooth, spec, touch = false))
             StripMove.TOP -> if (last >= first) {
                 step.stop()
                 val to = first
-                scope.launch { list.scrollToItem(to) }
+                track(scope.launch { list.scrollToItem(to) })
             }
             StripMove.BOTTOM -> if (last >= first) {
                 step.stop()
                 val to = last
-                scope.launch {
+                track(scope.launch {
                     list.scrollToItem(to)
                     val info = list.layoutInfo
                     val item = info.visibleItemsInfo.firstOrNull { it.index == to } ?: return@launch
                     // The foot of the last image at the foot of the screen: up from its top for a
                     // tall image, down onto the one above for a short one.
                     list.scrollBy((item.offset + item.size - info.viewportEndOffset).toFloat())
-                }
+                })
             }
             StripMove.NONE -> {}
         }

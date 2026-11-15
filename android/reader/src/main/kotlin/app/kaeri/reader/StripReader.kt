@@ -112,12 +112,12 @@ class StripStep {
      * Scroll [list] by [by] pixels and what is left of a step, gliding by [spec] when [smooth]. A
      * [touch] carries on the step its landing stopped; a screen reader's action has no landing.
      */
-    fun go(scope: CoroutineScope, list: LazyListState, by: Float, smooth: Boolean, spec: AnimationSpec<Float>, touch: Boolean) {
+    fun go(scope: CoroutineScope, list: LazyListState, by: Float, smooth: Boolean, spec: AnimationSpec<Float>, touch: Boolean): Job {
         val total = (if (job?.isActive == true) left else if (touch) caught else 0f) + by
         caught = 0f
         job?.cancel()
         left = total
-        job = scope.launch {
+        return scope.launch {
             // The touch that stopped a step lets go of the list as it lifts: the step waits for that.
             withFrameNanos { }
             if (smooth) {
@@ -132,7 +132,7 @@ class StripStep {
                 list.scrollBy(total)
             }
             left = 0f
-        }
+        }.also { job = it }
     }
 }
 
@@ -263,16 +263,27 @@ fun StripReader(
     // kept again from there.
     LaunchedEffect(list, first, state.chapter) {
         var kept: StripKept? = null
-        snapshotFlow { StripSeen(list.stripPos(first, placed.first.size), list.layoutInfo.viewportSize.width, list.isScrollInProgress || now.jump != null) }
+        var keyMoves = -1
+        snapshotFlow {
+            StripSeen(
+                list.stripPos(first, placed.first.size),
+                list.layoutInfo.viewportSize.width,
+                list.isScrollInProgress || now.jump != null || keys?.moving == true,
+                keys?.moves ?: 0,
+            )
+        }
             .collect { seen ->
                 val images = placed.first
                 val at = seen.at
                 val image = at?.let { images.getOrNull(it.image.toInt())?.parts?.firstOrNull()?.page }
                 val held = kept
                 val row = held?.let { images.indexOfFirst { leaf -> leaf.parts.any { it.page == held.page } } } ?: -1
+                // A key's move that ended since: where it left the strip is kept, as a scroll's is.
+                val keyed = seen.keyMoves != keyMoves
+                keyMoves = seen.keyMoves
                 when {
                     at == null || image == null || seen.moving -> kept = null
-                    held == null || row < 0 || held.page == image && held.width == seen.width -> kept = StripKept(image, at.offset, seen.width)
+                    keyed || held == null || row < 0 || held.page == image && held.width == seen.width -> kept = StripKept(image, at.offset, seen.width)
                     else -> {
                         kept = null
                         list.scrollToItem(first + row)
@@ -417,7 +428,7 @@ fun StripReader(
 }
 
 /** What the strip shows at a layout: its place, its width, and whether a scroll or a jump moves it. */
-private data class StripSeen(val at: StripPos?, val width: Int, val moving: Boolean)
+private data class StripSeen(val at: StripPos?, val width: Int, val moving: Boolean, val keyMoves: Int)
 
 /** The page at the top of a strip standing still, how far into it, and at what width. */
 private data class StripKept(val page: UInt, val offset: Float, val width: Int)
