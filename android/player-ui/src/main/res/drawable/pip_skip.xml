@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The floating window's Skip opening, Skip ending and Skip recap: a skip-to-mark glyph, a
+     filled triangle up to a bar, so it never reads as the circular 10 s arrows beside it. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android" android:width="24dp" android:height="24dp" android:viewportWidth="24" android:viewportHeight="24">
+    <path android:pathData="M5,5.5 L14.5,12 L5,18.5 Z" android:fillColor="#FFFFFFFF" />
+    <path android:pathData="M18.5,5.5 V18.5" android:strokeColor="#FFFFFFFF" android:strokeWidth="2.4" android:strokeLineCap="round" android:fillColor="#00000000" />
+</vector>

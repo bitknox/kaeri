@@ -908,6 +908,51 @@ class TvShots {
         assertTrue("the player is still up", model.isPresented)
     }
 
+    /** Info opens on Show live stats, under the Stats for nerds lines. */
+    @Test
+    fun player_info_live_stats_row() = playerShot("tv-player-info-live-row") { model ->
+        repeat(6) { if (focusedText() != "Info") press(Key.DirectionRight) }
+        compose.runOnUiThread { model.apply(Event.PlayerStats(1u, playerStatsFixture(StatsFixture.PLAYING))) }
+        press(Key.DirectionCenter)
+        assertEquals("Show live stats", focusedText())
+    }
+
+    /**
+     * Show live stats closes Info and puts the full rows top leading, Buffer amber while starved;
+     * Info is gone and the engine was asked to sample.
+     */
+    @Test
+    fun player_live_stats() = playerShot("tv-player-live-stats") { model ->
+        repeat(6) { if (focusedText() != "Info") press(Key.DirectionRight) }
+        press(Key.DirectionCenter)
+        press(Key.DirectionCenter)
+        assertTrue("live stats are on", model.statsShown)
+        assertTrue("the engine was asked to sample", sentCommands.any { it.toString().contains("Stats(") && it.toString().contains("true") })
+        compose.runOnUiThread { model.apply(Event.PlayerStats(1u, playerStatsFixture(StatsFixture.BUFFERING))) }
+        compose.mainClock.advanceTimeBy(1_000)
+        compose.waitForIdle()
+        assertEquals("Info closed", 0, compose.onAllNodes(hasText("Info") and SemanticsMatcher.keyIsDefined(SemanticsProperties.Heading)).fetchSemanticsNodes().size)
+    }
+
+    /** Back closes the live stats before anything else; the player stays. */
+    @Test
+    fun back_closes_live_stats_first() = playerShot(null) { model ->
+        repeat(6) { if (focusedText() != "Info") press(Key.DirectionRight) }
+        press(Key.DirectionCenter)
+        press(Key.DirectionCenter)
+        compose.runOnUiThread { model.apply(Event.PlayerStats(1u, playerStatsFixture(StatsFixture.PLAYING))) }
+        compose.waitForIdle()
+        compose.runOnUiThread {
+            listOf(KeyEvent.ACTION_DOWN, KeyEvent.ACTION_UP).forEach {
+                compose.activity.dispatchKeyEvent(KeyEvent(it, KeyEvent.KEYCODE_BACK))
+            }
+        }
+        compose.mainClock.advanceTimeBy(600)
+        compose.waitForIdle()
+        assertTrue("live stats are off", !model.statsShown)
+        assertTrue("the player is still up", model.isPresented)
+    }
+
     /**
      * The page's address shows once its server has bound on an IO thread, in real time, which the
      * test's clock does not wait for: a loaded machine reached the assertion first.

@@ -489,6 +489,15 @@
       }
      },
      {
+      "key": "PICTURE_IN_PICTURE_ON_LEAVE",
+      "value": "on",
+      "change": {
+       "@type": "Steps",
+       "back": true,
+       "forward": false
+      }
+     },
+     {
       "key": "DOWNLOAD_QUALITY",
       "value": "standard",
       "change": {

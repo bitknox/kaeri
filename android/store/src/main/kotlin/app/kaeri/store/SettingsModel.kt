@@ -55,7 +55,7 @@ data class SettingOption(val value: SettingValue, val label: String)
 object SettingsCatalog {
     private val switches = setOf(
         SettingKey.MOTION, SettingKey.AUTO_NEXT, SettingKey.SKIP_OPENING, SettingKey.SKIP_RECAP, SettingKey.SKIP_FILLER,
-        SettingKey.MARK_CHAPTERS, SettingKey.SKIP_BUTTON, SettingKey.FULLSCREEN, SettingKey.NIGHT_MODE, SettingKey.MERGE_SUBTITLES,
+        SettingKey.MARK_CHAPTERS, SettingKey.SKIP_BUTTON, SettingKey.FULLSCREEN, SettingKey.NIGHT_MODE, SettingKey.PICTURE_IN_PICTURE_ON_LEAVE, SettingKey.MERGE_SUBTITLES,
         SettingKey.KEEP_SEEDING, SettingKey.PRESENCE, SettingKey.PRESENCE_TITLE, SettingKey.PRESENCE_RICH, SettingKey.TORRENTS,
         SettingKey.SYNCPLAY, SettingKey.UPDATE_CHECK, SettingKey.UPDATE_BETA, SettingKey.ASK_WAS_OPENING, SettingKey.SHARE_SKIP_TIMES, SettingKey.SPOILER_PROTECTION,
         SettingKey.DOWNLOADS_ON_CELLULAR, SettingKey.TORRENTS_ON_CELLULAR, SettingKey.EPISODE_NOTIFICATIONS,

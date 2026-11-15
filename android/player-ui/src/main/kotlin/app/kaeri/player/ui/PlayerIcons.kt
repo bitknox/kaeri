@@ -56,5 +56,7 @@ internal object PlayerIcons {
     /** A speech bubble, for an episode's discussion. */
     val Discussion = icon("Discussion", listOf("M4 5 H20 A2 2 0 0 1 22 7 V15 A2 2 0 0 1 20 17 H10 L5.5 21 V17 H4 A2 2 0 0 1 2 15 V7 A2 2 0 0 1 4 5 Z"))
 
+    val Check = icon("Check", listOf("M5 12.5 L10 17.5 L19 7"))
+    val Close = icon("Close", listOf("M6.5 6.5 L17.5 17.5 M17.5 6.5 L6.5 17.5"))
     val SkipNext = icon("SkipNext", listOf("M17.5 6 V18"), listOf("M6 6.5 V17.5 L14 12 Z"))
 }
