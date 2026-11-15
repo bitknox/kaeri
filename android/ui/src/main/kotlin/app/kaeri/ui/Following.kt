@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
@@ -138,7 +139,11 @@ internal fun List<FollowedEntry>.asMarks(): List<FollowedMark> = map { FollowedM
 @Composable
 internal fun MarkSlot(marks: List<FollowedMark>, modifier: Modifier = Modifier) {
     Box(modifier.size(MarkColumn, MarkPicture + RING * 2).then(spokenMarks(marks)), contentAlignment = Alignment.CenterEnd) {
-        MarksFading(marks) { FollowedStack(it, MarkPicture, MaterialTheme.colorScheme.surface) }
+        // Three pictures and a two-digit "+N" run a little past the column; they grow toward the
+        // text rather than squeezing the count.
+        MarksFading(marks) {
+            FollowedStack(it, MarkPicture, MaterialTheme.colorScheme.surface, Modifier.wrapContentWidth(Alignment.End, unbounded = true))
+        }
     }
 }
 
