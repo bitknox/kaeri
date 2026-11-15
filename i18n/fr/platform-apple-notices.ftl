@@ -4,7 +4,6 @@ notice-out-behind = L’épisode { $episode } est sorti. Prochain pour vous : �
 notice-out-dubbed-behind = L’épisode { $episode } est sorti, { -dubbed }. Prochain pour vous : épisode { $next }.
 notice-hidden-preview = Nouvel épisode
 notice-summary = %u nouveaux épisodes
-notice-dismiss = Ignorer
 accounts-code-expired-detail = Ce code a expiré. Demandez-en un nouveau pour vous connecter à { $tracker }.
 list-refresh-failed = Impossible d’actualiser. Vous voyez ce qui a été chargé la dernière fois.
 sign-in-failed = Connexion impossible à { $tracker }. Réessayez.

@@ -6331,6 +6331,9 @@ state-working = Çalışıyor
 # Short placeholder while something loads.
 state-loading = Yükleniyor
 
+# Accessibility action of a notice that dismisses it (VoiceOver, TalkBack).
+notice-dismiss = Bildirimi kapat
+
 # Controller help: the D-pad and left stick move focus between items.
 pad-help-move = Odağı taşı
 

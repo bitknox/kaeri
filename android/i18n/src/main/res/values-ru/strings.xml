@@ -1605,6 +1605,7 @@
     <string name="error_label">Ошибка</string>
     <string name="state_working">Выполняется</string>
     <string name="state_loading">Загрузка</string>
+    <string name="notice_dismiss">Закрыть</string>
     <string name="pad_help_move">Перемещение фокуса</string>
     <string name="pad_help_select">Выбрать</string>
     <string name="pad_help_back">Назад</string>

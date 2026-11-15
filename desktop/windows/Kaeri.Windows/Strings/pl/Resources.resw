@@ -3584,6 +3584,9 @@
   <data name="StateLoading" xml:space="preserve">
     <value>Wczytywanie</value>
   </data>
+  <data name="NoticeDismiss" xml:space="preserve">
+    <value>Odrzuć</value>
+  </data>
   <data name="PadHelpMove" xml:space="preserve">
     <value>Przesuwanie fokusu</value>
   </data>

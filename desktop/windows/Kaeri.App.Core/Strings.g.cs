@@ -3252,6 +3252,9 @@ public static partial class T
     /// <summary>Short placeholder while something loads.</summary>
     public static string StateLoading => Get("StateLoading");
 
+    /// <summary>Accessibility action of a notice that dismisses it (VoiceOver, TalkBack).</summary>
+    public static string NoticeDismiss => Get("NoticeDismiss");
+
     /// <summary>Controller help: the D-pad and left stick move focus between items.</summary>
     public static string PadHelpMove => Get("PadHelpMove");
 
@@ -13441,6 +13444,7 @@ public static partial class T
         ["ErrorLabel"] = "Problem",
         ["StateWorking"] = "Working",
         ["StateLoading"] = "Loading",
+        ["NoticeDismiss"] = "Dismiss",
         ["PadHelpMove"] = "Move focus",
         ["PadHelpSelect"] = "Select",
         ["PadHelpBack"] = "Back",

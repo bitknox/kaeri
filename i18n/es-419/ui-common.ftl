@@ -90,3 +90,4 @@ error-sign-in-expired = Tu inicio de sesión caducó. Vuelve a iniciar sesión e
 error-label = Problema
 state-working = Trabajando
 state-loading = Cargando
+notice-dismiss = Descartar

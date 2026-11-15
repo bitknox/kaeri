@@ -90,3 +90,4 @@ error-sign-in-expired = Logowanie wygasło. Zaloguj się ponownie w Kontach.
 error-label = Problem
 state-working = W toku
 state-loading = Wczytywanie
+notice-dismiss = Odrzuć

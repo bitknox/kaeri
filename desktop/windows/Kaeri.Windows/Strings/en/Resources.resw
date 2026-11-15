@@ -4565,6 +4565,10 @@
     <value>Loading</value>
     <comment>Short placeholder while something loads.</comment>
   </data>
+  <data name="NoticeDismiss" xml:space="preserve">
+    <value>Dismiss</value>
+    <comment>Accessibility action of a notice that dismisses it (VoiceOver, TalkBack).</comment>
+  </data>
   <data name="PadHelpMove" xml:space="preserve">
     <value>Move focus</value>
     <comment>Controller help: the D-pad and left stick move focus between items.</comment>

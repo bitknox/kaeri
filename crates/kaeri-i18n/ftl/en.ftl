@@ -6624,6 +6624,9 @@ state-working = Working
 # Short placeholder while something loads.
 state-loading = Loading
 
+# Accessibility action of a notice that dismisses it (VoiceOver, TalkBack).
+notice-dismiss = Dismiss
+
 # Controller help: the D-pad and left stick move focus between items.
 pad-help-move = Move focus
 

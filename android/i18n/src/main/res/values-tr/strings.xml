@@ -1473,6 +1473,7 @@
     <string name="error_label">Sorun</string>
     <string name="state_working">Çalışıyor</string>
     <string name="state_loading">Yükleniyor</string>
+    <string name="notice_dismiss">Bildirimi kapat</string>
     <string name="pad_help_move">Odağı taşı</string>
     <string name="pad_help_select">Seç</string>
     <string name="pad_help_back">Geri</string>

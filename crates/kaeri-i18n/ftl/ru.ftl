@@ -6481,6 +6481,9 @@ state-working = Выполняется
 # Short placeholder while something loads.
 state-loading = Загрузка
 
+# Accessibility action of a notice that dismisses it (VoiceOver, TalkBack).
+notice-dismiss = Закрыть
+
 # Controller help: the D-pad and left stick move focus between items.
 pad-help-move = Перемещение фокуса
 

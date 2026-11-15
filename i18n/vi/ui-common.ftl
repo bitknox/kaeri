@@ -90,3 +90,4 @@ error-sign-in-expired = Phiên đăng nhập đã hết hạn. Đăng nhập l�
 error-label = Lỗi
 state-working = Đang xử lý
 state-loading = Đang tải
+notice-dismiss = Bỏ qua

@@ -6256,6 +6256,9 @@ state-working = 処理中
 # Short placeholder while something loads.
 state-loading = 読み込み中
 
+# Accessibility action of a notice that dismisses it (VoiceOver, TalkBack).
+notice-dismiss = 消去
+
 # Controller help: the D-pad and left stick move focus between items.
 pad-help-move = フォーカスを移動
 

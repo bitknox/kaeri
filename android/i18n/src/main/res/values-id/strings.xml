@@ -1407,6 +1407,7 @@
     <string name="error_label">Masalah</string>
     <string name="state_working">Sedang memproses</string>
     <string name="state_loading">Memuat</string>
+    <string name="notice_dismiss">Tutup</string>
     <string name="pad_help_move">Pindah fokus</string>
     <string name="pad_help_select">Pilih</string>
     <string name="pad_help_back">Kembali</string>

@@ -1539,6 +1539,7 @@
     <string name="error_label">Problema</string>
     <string name="state_working">Trabajando</string>
     <string name="state_loading">Cargando</string>
+    <string name="notice_dismiss">Descartar</string>
     <string name="pad_help_move">Mover el foco</string>
     <string name="pad_help_select">Seleccionar</string>
     <string name="pad_help_back">Atrás</string>

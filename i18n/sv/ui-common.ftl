@@ -90,3 +90,4 @@ error-sign-in-expired = Din inloggning har gått ut. Logga in igen under Konton.
 error-label = Problem
 state-working = Arbetar
 state-loading = Läser in
+notice-dismiss = Avfärda

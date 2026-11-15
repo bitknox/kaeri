@@ -6481,6 +6481,9 @@ state-working = W toku
 # Short placeholder while something loads.
 state-loading = Wczytywanie
 
+# Accessibility action of a notice that dismisses it (VoiceOver, TalkBack).
+notice-dismiss = Odrzuć
+
 # Controller help: the D-pad and left stick move focus between items.
 pad-help-move = Przesuwanie fokusu
 

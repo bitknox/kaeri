@@ -3290,6 +3290,9 @@
   <data name="StateLoading" xml:space="preserve">
     <value>Wird geladen</value>
   </data>
+  <data name="NoticeDismiss" xml:space="preserve">
+    <value>Schließen</value>
+  </data>
   <data name="PadHelpMove" xml:space="preserve">
     <value>Fokus bewegen</value>
   </data>

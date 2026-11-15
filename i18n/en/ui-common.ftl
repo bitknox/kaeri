@@ -317,3 +317,6 @@ state-working = Working
 
 # Short placeholder while something loads.
 state-loading = Loading
+
+# Accessibility action of a notice that dismisses it (VoiceOver, TalkBack).
+notice-dismiss = Dismiss

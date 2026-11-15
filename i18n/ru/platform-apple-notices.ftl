@@ -4,7 +4,6 @@ notice-out-behind = Эпизод { $episode } вышел. Следующий п�
 notice-out-dubbed-behind = Эпизод { $episode } вышел, { -dubbed }. Следующий по порядку: эпизод { $next }.
 notice-hidden-preview = Новый эпизод
 notice-summary = Ещё новых: %u
-notice-dismiss = Закрыть
 accounts-code-expired-detail = Срок действия кода истёк. Получите новый код, чтобы войти в { $tracker }.
 list-refresh-failed = Не удалось обновить. Показано то, что загрузилось в прошлый раз.
 sign-in-failed = Не удалось войти в { $tracker }. Попробуйте снова.

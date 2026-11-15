@@ -12,6 +12,17 @@ import androidx.compose.material3.SnackbarData
 import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.SnackbarResult
+import androidx.compose.material3.SwipeToDismissBox
+import androidx.compose.material3.SwipeToDismissBoxDefaults
+import androidx.compose.material3.SwipeToDismissBoxValue
+import androidx.compose.material3.rememberSwipeToDismissBoxState
+import androidx.compose.runtime.key
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.CustomAccessibilityAction
+import androidx.compose.ui.semantics.customActions
+import androidx.compose.ui.semantics.semantics
+import kotlin.math.abs
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.Stable
@@ -75,22 +86,44 @@ val LocalSnackbars = staticCompositionLocalOf<Snackbars> { error("no Snackbars i
 
 /**
  * A snackbar as AndroidFoundations draws it: surfaceContainerHigh with silk text at corners 4,
- * its button a silk text button.
+ * its button a silk text button. Every notice follows a horizontal swipe 1:1 in either direction
+ * and goes once the swipe passes the threshold or flings; short of it, it springs back. A drag
+ * can catch it mid-settle. TalkBack hears it as one node with a Dismiss action. Only a notice
+ * with a button carries the close button, as on the system's own snackbars.
  */
 @Composable
 internal fun NoticeSnackbar(data: SnackbarData) {
     val colors = MaterialTheme.colorScheme
-    Snackbar(
-        data,
-        shape = MaterialTheme.shapes.extraSmall,
-        containerColor = colors.surfaceContainerHigh,
-        contentColor = colors.onSurface,
-        actionColor = colors.onSurface,
-        actionContentColor = colors.onSurface,
-        dismissActionContentColor = colors.onSurface,
-        // Material's snackbar keeps 12 around itself: 16 from the sides, 12 above the bar.
-        modifier = Modifier.padding(horizontal = 4.dp),
-    )
+    val dismissLabel = stringResource(I18nR.string.notice_dismiss)
+    key(data) {
+        val swipe = rememberSwipeToDismissBoxState(SwipeToDismissBoxValue.Settled, SwipeToDismissBoxDefaults.positionalThreshold)
+        SwipeToDismissBox(
+            state = swipe,
+            backgroundContent = {},
+            onDismiss = { data.dismiss() },
+            modifier = Modifier
+                // Fades as it travels, so a notice swiped most of the way reads as going.
+                .graphicsLayer {
+                    val offset = runCatching { swipe.requireOffset() }.getOrDefault(0f)
+                    alpha = if (size.width > 0f) (1f - abs(offset) / size.width).coerceIn(0f, 1f) else 1f
+                }
+                .semantics(mergeDescendants = true) {
+                    customActions = listOf(CustomAccessibilityAction(dismissLabel) { data.dismiss(); true })
+                },
+        ) {
+            Snackbar(
+                data,
+                shape = MaterialTheme.shapes.extraSmall,
+                containerColor = colors.surfaceContainerHigh,
+                contentColor = colors.onSurface,
+                actionColor = colors.onSurface,
+                actionContentColor = colors.onSurface,
+                dismissActionContentColor = colors.onSurface,
+                // Material's snackbar keeps 12 around itself: 16 from the sides, 12 above the bar.
+                modifier = Modifier.padding(horizontal = 4.dp),
+            )
+        }
+    }
 }
 
 /** The words on a notice's button, for what can be done about it. */
