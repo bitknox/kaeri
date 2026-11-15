@@ -12,10 +12,17 @@ use crate::channel::{CastError, Channel, Incoming, NS_MEDIA, NS_RECEIVER, RECEIV
 /// MP4 through the Cast web player.
 pub const DEFAULT_MEDIA_RECEIVER: &str = "CC1AD845";
 
+/// Kaeri's own messages between this device and Kaeri's receiver: `ready`, `hello`, `error`
+/// and the rest, as JSON with a `type`. Each side ignores a type it doesn't know.
+pub const NS_KAERI: &str = "urn:x-cast:app.kaeri.cast";
+
+/// The version of Kaeri's messages this side speaks.
+pub const KAERI_PROTOCOL: u32 = 1;
+
 /// Kaeri's own receiver, served from the website's `/cast/receiver/`. The config's
 /// `cast.receiver` names another in its place. The Default Media Receiver plays instead whenever
-/// it doesn't launch (a TV it isn't published to refuses it), closes before playing, or leaves a
-/// load unanswered.
+/// it doesn't launch (a TV it isn't published to refuses it), never says `ready`, or closes;
+/// closed mid-episode, the episode loads again on the Default Media Receiver where it was.
 pub const KAERI_RECEIVER: Option<&str> = Some("A7A6DDE4");
 
 /// A connected receiver, through its platform receiver. Cheap to clone.
@@ -213,6 +220,8 @@ pub struct Load {
     pub active_tracks: Vec<u32>,
     pub style: Option<TextStyle>,
     pub autoplay: bool,
+    /// What Kaeri's receiver reads beside the media, under `customData.kaeri`.
+    pub kaeri: Option<Value>,
 }
 
 impl Load {
@@ -232,6 +241,9 @@ impl Load {
             "contentType": self.content_type,
             "metadata": metadata,
         });
+        if let Some(kaeri) = &self.kaeri {
+            media["customData"] = json!({ "kaeri": kaeri });
+        }
         if let Some(format) = &self.hls_segment_format {
             media["hlsSegmentFormat"] = json!(format);
             media["hlsVideoSegmentFormat"] =
@@ -432,15 +444,19 @@ impl MediaStatus {
     /// status of the same media session: its duration, address and title stand until the
     /// receiver describes the media again.
     pub fn fill_from(&mut self, earlier: &MediaStatus) {
-        if self.has_media || self.media_session_id != earlier.media_session_id {
+        if self.media_session_id != earlier.media_session_id {
+            return;
+        }
+        // A receiver that describes the media without its metadata hasn't changed the title.
+        if self.metadata.is_none() {
+            self.metadata.clone_from(&earlier.metadata);
+        }
+        if self.has_media {
             return;
         }
         self.duration = self.duration.or(earlier.duration);
         if self.content.is_none() {
             self.content.clone_from(&earlier.content);
-        }
-        if self.metadata.is_none() {
-            self.metadata.clone_from(&earlier.metadata);
         }
         self.has_media = earlier.has_media;
     }
@@ -478,6 +494,7 @@ mod tests {
             active_tracks: vec![1],
             style: None,
             autoplay: true,
+            kaeri: None,
         };
         let message = load.message("s");
         assert_eq!(message["currentTime"], 42.0);
@@ -518,6 +535,14 @@ mod tests {
         other.media_session_id = 4;
         other.fill_from(&earlier);
         assert_eq!(other.duration, None);
+        // A description without the metadata, as a GET_STATUS answer can be, keeps the title.
+        let described = json!({"type": "MEDIA_STATUS", "status": [{
+            "mediaSessionId": 3, "playerState": "PLAYING", "currentTime": 14.0,
+            "media": {"contentId": "http://192.0.2.1/a", "duration": 1420.0},
+        }]});
+        let mut status = MediaStatus::first(&described).unwrap();
+        status.fill_from(&earlier);
+        assert_eq!(status.metadata.map(|m| m.series).as_deref(), Some("A Made-up Show"));
     }
 
     #[test]

@@ -13,6 +13,9 @@
     <string name="notice_cast_taken_over">Ein anderes Gerät hat auf %1$s etwas gestartet, deshalb wurde das Übertragen beendet.</string>
     <string name="notice_cast_not_same_network">Dieses Gerät ist nicht im Netzwerk von %1$s oder erreicht es über ein VPN. Verbinde beide mit demselben Netzwerk, um zu übertragen.</string>
     <string name="notice_cast_lost">Verbindung zu %1$s verloren, deshalb wurde das Übertragen beendet.</string>
+    <string name="notice_cast_segment">%1$s bekommt den Stream nicht mehr: Die Quelle hat für einen Teil der Folge nicht geantwortet. Probiere eine andere Quelle.</string>
+    <string name="notice_cast_lost_stream">%1$s hat den Stream von diesem Gerät verloren. Prüfe, ob beide im selben Netzwerk sind.</string>
+    <string name="notice_cast_subtitles_plain">Untertitel auf %1$s erscheinen als einfacher Text. Gestaltete Untertitel waren zu viel für den Fernseher.</string>
     <string name="notice_cast_no_device">Dieser Fernseher ist nicht mehr im Netzwerk.</string>
     <string name="notice_cast_unavailable">Diese Version von Kaeri kann nicht auf Fernseher übertragen.</string>
     <string name="cast_phase_starting">Wird auf %1$s gestartet</string>

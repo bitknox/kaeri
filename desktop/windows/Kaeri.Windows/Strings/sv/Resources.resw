@@ -68,6 +68,15 @@
   <data name="NoticeCastLost" xml:space="preserve">
     <value>Tappade kontakten med {name}, så castingen avbröts.</value>
   </data>
+  <data name="NoticeCastSegment" xml:space="preserve">
+    <value>{name} slutade få strömmen: källan svarade inte för en del av avsnittet. Prova en annan källa.</value>
+  </data>
+  <data name="NoticeCastLostStream" xml:space="preserve">
+    <value>{name} tappade strömmen från den här enheten. Kontrollera att båda är på samma nätverk.</value>
+  </data>
+  <data name="NoticeCastSubtitlesPlain" xml:space="preserve">
+    <value>Undertexter på {name} visas som vanlig text. Formaterade undertexter blev för mycket för tv:n.</value>
+  </data>
   <data name="NoticeCastNoDevice" xml:space="preserve">
     <value>Den TV:n finns inte längre på nätverket.</value>
   </data>

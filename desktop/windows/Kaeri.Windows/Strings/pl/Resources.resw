@@ -68,6 +68,15 @@
   <data name="NoticeCastLost" xml:space="preserve">
     <value>Utracono połączenie z {name}, więc przesyłanie zostało przerwane.</value>
   </data>
+  <data name="NoticeCastSegment" xml:space="preserve">
+    <value>{name} przestał odbierać strumień: źródło nie odpowiedziało dla części odcinka. Wypróbuj inne źródło.</value>
+  </data>
+  <data name="NoticeCastLostStream" xml:space="preserve">
+    <value>{name} utracił strumień. Sprawdź, czy to urządzenie i telewizor są w tej samej sieci.</value>
+  </data>
+  <data name="NoticeCastSubtitlesPlain" xml:space="preserve">
+    <value>Napisy na {name} są wyświetlane jako zwykły tekst. Napisy ze stylami były dla telewizora zbyt wymagające.</value>
+  </data>
   <data name="NoticeCastNoDevice" xml:space="preserve">
     <value>Ten telewizor nie jest już w sieci.</value>
   </data>

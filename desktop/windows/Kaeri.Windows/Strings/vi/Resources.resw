@@ -68,6 +68,15 @@
   <data name="NoticeCastLost" xml:space="preserve">
     <value>Mất kết nối với {name}, nên việc chiếu đã dừng.</value>
   </data>
+  <data name="NoticeCastSegment" xml:space="preserve">
+    <value>{name} không còn nhận được luồng phát: nguồn không phản hồi cho một phần của tập. Hãy thử nguồn khác.</value>
+  </data>
+  <data name="NoticeCastLostStream" xml:space="preserve">
+    <value>{name} mất luồng phát từ thiết bị này. Hãy kiểm tra cả hai có cùng một mạng không.</value>
+  </data>
+  <data name="NoticeCastSubtitlesPlain" xml:space="preserve">
+    <value>Phụ đề trên {name} hiển thị dạng văn bản thường. Phụ đề có định dạng quá nặng với TV này.</value>
+  </data>
   <data name="NoticeCastNoDevice" xml:space="preserve">
     <value>TV đã chọn không còn trong mạng nữa.</value>
   </data>

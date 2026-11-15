@@ -33,6 +33,15 @@ notice-cast-not-same-network = このデバイスは{ $name }と同じネット�
 # The TV stopped answering mid-cast. The name is the TV's own.
 notice-cast-lost = { $name }との接続が切れたため、キャストを終了しました。
 
+# Kaeri's receiver on the TV couldn't get part of the episode from the source mid-play, so the cast stopped. The card offers Choose source and Play here. The name is the TV's own.
+notice-cast-segment = { $name }がストリームを受け取れなくなりました。ソースがエピソードの一部に応答しませんでした。別のソースをお試しください。
+
+# The TV stopped reaching this device, which hands it the stream, mid-episode. The card offers Try again and Play here. The name is the TV's own.
+notice-cast-lost-stream = { $name }がこのデバイスからのストリームを失いました。両方が同じネットワークにあるか確認してください。
+
+# Shown once per TV, the first time it can't keep up with styled subtitles and switches to plain ones. Nothing else changes and the episode plays on. The name is the TV's own.
+notice-cast-subtitles-plain = { $name }の字幕はプレーンテキストで表示されます。装飾付きの字幕はこのテレビには重すぎました。
+
 # The TV picked to cast to has left the network.
 notice-cast-no-device = キャスト先のテレビがネットワーク上にもうありません。
 

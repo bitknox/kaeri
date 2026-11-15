@@ -33,6 +33,15 @@ notice-cast-not-same-network = Bu cihaz, { $name } ile aynı ağda değil ya da 
 # The TV stopped answering mid-cast. The name is the TV's own.
 notice-cast-lost = { $name } ile bağlantı koptu, bu yüzden yayınlama durdu.
 
+# Kaeri's receiver on the TV couldn't get part of the episode from the source mid-play, so the cast stopped. The card offers Choose source and Play here. The name is the TV's own.
+notice-cast-segment = { $name } yayını alamaz oldu: kaynak, bölümün bir kısmı için yanıt vermedi. Başka bir kaynak deneyin.
+
+# The TV stopped reaching this device, which hands it the stream, mid-episode. The card offers Try again and Play here. The name is the TV's own.
+notice-cast-lost-stream = { $name }, bu cihazdan gelen yayını kaybetti. İkisinin de aynı ağda olduğundan emin olun.
+
+# Shown once per TV, the first time it can't keep up with styled subtitles and switches to plain ones. Nothing else changes and the episode plays on. The name is the TV's own.
+notice-cast-subtitles-plain = { $name } üzerinde altyazılar düz metin olarak gösteriliyor. Biçimli altyazılar bu TV için fazla ağır geldi.
+
 # The TV picked to cast to has left the network.
 notice-cast-no-device = Seçilen TV artık ağda değil.
 

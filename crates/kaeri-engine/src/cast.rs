@@ -32,15 +32,15 @@ use futures::StreamExt;
 pub use kaeri_cast as protocol;
 use kaeri_cast::{
     AacEncoder, CastDevice, CastFailure, CastMemory, CastPlayer, CastSetup, CastState,
-    CastStatus, DEFAULT_MEDIA_RECEIVER, NoEncoder, PlainHttp, Timings, Upstream,
-    UpstreamResponse, VolumeControl, formats::is_loopback_url,
+    CastStatus, DEFAULT_MEDIA_RECEIVER, FromReceiver, NoEncoder, PlainHttp, Timings,
+    UpNextCard, Upstream, UpstreamResponse, VolumeControl, formats::is_loopback_url,
 };
 use kaeri_core::ids::AnilistId;
 use kaeri_model::{event::Event, playback::SkipKind};
 use kaeri_net::HttpClient;
 use kaeri_playback::{PlaybackEvent, ScriptEvent};
 use kaeri_remote::state::{RemoteState, StateFolder};
-use tokio::sync::watch;
+use tokio::sync::{broadcast, watch};
 
 fn lock<T>(mutex: &Mutex<T>) -> std::sync::MutexGuard<'_, T> {
     mutex.lock().unwrap_or_else(PoisonError::into_inner)
@@ -63,6 +63,12 @@ pub struct CastHub {
     show_tvs: AtomicBool,
     /// The language the front end speaks, for the TV's episode lines.
     language: Mutex<Option<String>>,
+    /// What Kaeri's receiver calls this device: `iphone`, `phone`, `mac`, ...
+    device_word: Mutex<Option<String>>,
+    /// The player whose receiver's messages are followed.
+    listening: Mutex<Weak<CastPlayer>>,
+    /// What Kaeri's receiver says, for the sender's parts that act on it.
+    heard: broadcast::Sender<FromReceiver>,
     /// The cast session: the TV this device holds.
     session: Mutex<Session>,
     /// The receiver app the config names in place of Kaeri's own.
@@ -114,6 +120,19 @@ pub enum SessionState {
     Error,
 }
 
+/// What the cast button shows.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+pub enum CastButton {
+    /// No TV found, or TVs are off in Settings: no button.
+    #[default]
+    Hidden,
+    /// TVs are found and none is held: the outline button opens the chooser.
+    Available,
+    Connecting,
+    /// A TV is held, playing or not.
+    Connected,
+}
+
 /// What plays on the TV, or comes next.
 #[derive(Debug, Clone, PartialEq, Default)]
 pub struct SessionItem {
@@ -128,8 +147,11 @@ pub struct SessionItem {
     pub position: f64,
     pub duration: Option<f64>,
     pub paused: bool,
-    pub buffering: bool,
-    /// The TV is still opening it, or this device is still finding its streams.
+    /// The TV waits for the stream in the middle of the file: whole seconds since it began,
+    /// `Some(0)` at once. Never set while it starts or reloads, which `loading` says.
+    pub waiting: Option<u32>,
+    /// The TV is still opening it, or this device is still finding its streams, or the file
+    /// loads again for another audio track.
     pub loading: bool,
 }
 
@@ -137,6 +159,10 @@ pub struct SessionItem {
 #[derive(Debug, Clone, PartialEq, Default)]
 pub struct SessionView {
     pub state: SessionState,
+    pub button: CastButton,
+    /// Counts up with every change to the cast: a control holds what it shows until a view
+    /// with a higher `rev` arrives.
+    pub rev: u64,
     pub device: Option<CastDevice>,
     pub item: Option<SessionItem>,
     /// What plays next: Up Next's episode, once the playback has said it.
@@ -144,6 +170,8 @@ pub struct SessionView {
     pub failure: Option<CastFailure>,
     /// Why the session ended, in the engine's words, naming the TV.
     pub notice: Option<kaeri_model::Msg>,
+    /// A note while it plays, for a toast: shown when it first reads differently.
+    pub note: Option<kaeri_model::Msg>,
     /// The receiver's volume, 0 to 1.
     pub level: Option<f64>,
     pub muted: Option<bool>,
@@ -259,6 +287,10 @@ struct Current {
     undo: Option<Undo>,
     /// The title and episode the cast was last asked to play, for Try again.
     asked: Option<(AnilistId, String)>,
+    /// A note while it plays, said once: the TV shows plain subtitles.
+    note: Option<kaeri_model::Msg>,
+    /// Kaeri's receiver was told to show Up Next's card.
+    told_next: bool,
 }
 
 /// The cast as the card reads it.
@@ -278,6 +310,8 @@ pub struct CastView {
     pub undo: Option<Undo>,
     /// The title and episode the cast was last asked to play.
     pub asked: Option<(AnilistId, String)>,
+    /// A note while it plays, said once.
+    pub note: Option<kaeri_model::Msg>,
 }
 
 impl CastHub {
@@ -306,6 +340,9 @@ impl CastHub {
             changes,
             show_tvs: AtomicBool::new(true),
             language: Mutex::new(None),
+            device_word: Mutex::new(None),
+            listening: Mutex::new(Weak::new()),
+            heard: broadcast::channel(16).0,
             session: Mutex::new(Session::default()),
             receiver: Mutex::new(None),
             left: Mutex::new(None),
@@ -586,7 +623,7 @@ impl CastHub {
                 position: status.map_or(now.position, |s| s.position),
                 duration: status.and_then(|s| s.duration).or(now.duration),
                 paused: status.map_or(now.paused, |s| s.state == CastState::Paused),
-                buffering: status.is_some_and(|s| s.state == CastState::Buffering),
+                waiting: status.and_then(waited),
                 loading: now.loading
                     || status.is_none_or(|s| {
                         s.step.is_some() || s.plan.is_none() && s.metadata.is_none()
@@ -608,7 +645,7 @@ impl CastHub {
                     position: status.position,
                     duration: status.duration,
                     paused: status.state == CastState::Paused,
-                    buffering: status.state == CastState::Buffering,
+                    waiting: waited(status),
                     loading: false,
                 })
             }
@@ -642,15 +679,28 @@ impl CastHub {
                 ..SessionItem::default()
             })
             .collect();
+        let button = match state {
+            SessionState::Connecting => CastButton::Connecting,
+            SessionState::Connected | SessionState::Playing => CastButton::Connected,
+            SessionState::Idle | SessionState::Error
+                if self.shows_tvs() && !lock(&self.devices).is_empty() =>
+            {
+                CastButton::Available
+            }
+            SessionState::Idle | SessionState::Error => CastButton::Hidden,
+        };
         SessionView {
             state,
-            device: device.filter(|_| state != SessionState::Idle),
+            button,
+            rev: self.rev(),
+            device: device.clone().filter(|_| state != SessionState::Idle),
             item: item.filter(|_| state == SessionState::Playing),
             queue,
             notice: failure.as_ref().filter(|_| state == SessionState::Error).and_then(|f| {
                 let name = device.as_ref()?.name.clone();
                 Some(crate::playback::link::cast::notice(f, &name))
             }),
+            note: view.note.filter(|_| state == SessionState::Playing),
             failure: failure.filter(|_| state == SessionState::Error),
             level: status.as_ref().and_then(|s| s.level),
             muted: status.as_ref().and_then(|s| s.muted),
@@ -778,10 +828,70 @@ impl CastHub {
     /// The language the front end speaks, as a tag, for what the TV shows.
     pub fn set_language(&self, language: Option<String>) {
         *lock(&self.language) = language;
+        if let Some(player) = self.player() {
+            player.set_greeting(self.language(), self.device_word());
+        }
     }
 
     pub fn language(&self) -> Option<String> {
         lock(&self.language).clone()
+    }
+
+    /// What Kaeri's receiver calls this device in its own strings ("Waiting for the iPhone"):
+    /// `iphone`, `ipad`, `phone`, `tablet`, `mac` or `computer`.
+    pub fn set_device_word(&self, word: Option<String>) {
+        *lock(&self.device_word) = word;
+        if let Some(player) = self.player() {
+            player.set_greeting(self.language(), self.device_word());
+        }
+    }
+
+    pub fn device_word(&self) -> Option<String> {
+        lock(&self.device_word).clone()
+    }
+
+    /// What Kaeri's receiver says from now on, past the hub's own handling.
+    pub fn heard(&self) -> broadcast::Receiver<FromReceiver> {
+        self.heard.subscribe()
+    }
+
+    /// Follow what `player`'s receiver says, once per player.
+    fn listen(self: &Arc<Self>, player: &Arc<CastPlayer>) {
+        {
+            let mut listening = lock(&self.listening);
+            if Weak::ptr_eq(&listening, &Arc::downgrade(player)) {
+                return;
+            }
+            *listening = Arc::downgrade(player);
+        }
+        player.set_greeting(self.language(), self.device_word());
+        let mut heard = player.heard();
+        let hub = Arc::downgrade(self);
+        let tv = player.device().clone();
+        tokio::spawn(async move {
+            loop {
+                let said = match heard.recv().await {
+                    Ok(said) => said,
+                    Err(broadcast::error::RecvError::Lagged(_)) => continue,
+                    Err(broadcast::error::RecvError::Closed) => return,
+                };
+                let Some(hub) = hub.upgrade() else { return };
+                if said == FromReceiver::SubtitlesPlain {
+                    match hub.memory().told_subtitles_plain(&tv.id) {
+                        Ok(true) => {
+                            lock(&hub.cast).note =
+                                Some(kaeri_model::Msg::NoticeCastSubtitlesPlain {
+                                    name: tv.name.clone(),
+                                });
+                            hub.bump();
+                        }
+                        Ok(false) => {}
+                        Err(e) => tracing::warn!(error = %e, "couldn't note the TV"),
+                    }
+                }
+                let _ = hub.heard.send(said);
+            }
+        });
     }
 
     /// What the engine has learned of each TV, read the first time it is needed.
@@ -927,6 +1037,7 @@ impl CastHub {
 
     /// The player a cast opened, which the card's volume and mute go to.
     pub(crate) fn attach(self: &Arc<Self>, player: &Arc<CastPlayer>) {
+        self.listen(player);
         let mut status = player.status();
         lock(&self.cast).player = Arc::downgrade(player);
         self.set_status(status.borrow_and_update().clone());
@@ -971,8 +1082,25 @@ impl CastHub {
             if ran_out && let Some(next) = cast.next.as_mut() {
                 next.played = true;
             }
+            // Kaeri's receiver draws Up Next's card on the TV too, while this one shows it.
+            let shown = cast.next.as_ref().filter(|next| next.shown(position, duration));
+            let tell = (shown.is_some() != cast.told_next).then(|| {
+                shown.map(|next| UpNextCard {
+                    number: Some(next.number.clone()),
+                    title: next.title.clone(),
+                    still: next.still.clone(),
+                    seconds: next.remaining(position, duration).map_or(0, |r| r.ceil() as u32),
+                })
+            });
+            if tell.is_some() {
+                cast.told_next = !cast.told_next;
+            }
             cast.status = Some(status);
-            ran_out.then(|| cast.player.upgrade()).flatten()
+            let player = cast.player.upgrade();
+            if let (Some(tell), Some(player)) = (tell, player.as_ref()) {
+                player.tell_up_next(tell);
+            }
+            ran_out.then_some(player).flatten()
         };
         if let Some(player) = play_next {
             tracing::info!("Up Next's count ended on the cast; playing the next episode");
@@ -985,6 +1113,8 @@ impl CastHub {
     /// the skip on offer and the Undo note, and that the next episode is starting.
     pub(crate) fn overlay(&self, overlay: &crate::playback::link::Overlay) {
         use crate::playback::{link::Overlay, offered};
+        use kaeri_model::playback::SkipKind;
+        let mut skipped = None;
         {
             let mut cast = lock(&self.cast);
             match overlay {
@@ -1007,6 +1137,12 @@ impl CastHub {
                 Overlay::SkipOffer { kind, to } => cast.skip = Some((offered(*kind), *to)),
                 Overlay::SkipCleared => cast.skip = None,
                 Overlay::Skipped { kind, from, .. } => {
+                    // Kaeri's receiver shows the skip on the TV too.
+                    skipped = match offered(*kind) {
+                        SkipKind::Opening => Some("opening"),
+                        SkipKind::Ending => Some("ending"),
+                        SkipKind::Recap => None,
+                    };
                     cast.undo = Some(Undo {
                         kind: offered(*kind),
                         to: *from,
@@ -1023,9 +1159,15 @@ impl CastHub {
                     }
                     cast.skip = None;
                     cast.undo = None;
+                    cast.note = None;
                 }
                 _ => return,
             }
+        }
+        if let Some(part) = skipped
+            && let Some(player) = self.player()
+        {
+            player.tell_skipped(part);
         }
         self.bump();
     }
@@ -1102,6 +1244,7 @@ impl CastHub {
             skip: cast.skip,
             undo: cast.undo.clone(),
             asked: cast.asked.clone(),
+            note: cast.note.clone(),
         }
     }
 
@@ -1110,9 +1253,20 @@ impl CastHub {
         self.changes.subscribe()
     }
 
+    /// How many times the cast has changed: a card's `rev`.
+    pub fn rev(&self) -> u64 {
+        *self.changes.borrow()
+    }
+
     fn bump(&self) {
         self.changes.send_modify(|n| *n += 1);
     }
+}
+
+/// Whole seconds the TV has waited for the stream, while it waits.
+pub(crate) fn waited(status: &CastStatus) -> Option<u32> {
+    let since = status.waiting_since.filter(|_| status.state == CastState::Buffering)?;
+    Some(u32::try_from(since.elapsed().as_secs()).unwrap_or(u32::MAX))
 }
 
 /// What the relay fetches upstream with: the sources client for the source's own hosts, with

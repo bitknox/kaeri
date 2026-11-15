@@ -17,6 +17,10 @@ pub struct Fixture {
     /// The picture's size the track header says.
     pub width: u64,
     pub height: u64,
+    /// A subtitle track's codec id after the audio, such as `S_TEXT/ASS`.
+    pub subtitle: Option<&'static str>,
+    /// Attached files: name, MIME type and bytes.
+    pub attachments: Vec<(&'static str, &'static str, Vec<u8>)>,
 }
 
 #[derive(Debug, Clone)]
@@ -40,6 +44,8 @@ impl Default for Fixture {
             cues: true,
             width: 640,
             height: 360,
+            subtitle: None,
+            attachments: Vec::new(),
         }
     }
 }
@@ -157,7 +163,37 @@ pub fn matroska(fixture: &Fixture) -> Vec<u8> {
         }
         tracks.extend(element(0xAE, &entry.concat()));
     }
+    if let Some(codec) = fixture.subtitle {
+        let number = audio.len() as u64 + 2;
+        tracks.extend(element(
+            0xAE,
+            &[uint(0xD7, number), uint(0x73C5, number), uint(0x83, 17), text(0x86, codec)]
+                .concat(),
+        ));
+    }
     let tracks = element(0x1654_AE6B, &tracks);
+    let attachments = if fixture.attachments.is_empty() {
+        Vec::new()
+    } else {
+        let files: Vec<u8> = fixture
+            .attachments
+            .iter()
+            .zip(1u64..)
+            .flat_map(|((name, mime, data), uid)| {
+                element(
+                    0x61A7,
+                    &[
+                        text(0x466E, name),
+                        text(0x4660, mime),
+                        element(0x465C, data),
+                        uint(0x46AE, uid),
+                    ]
+                    .concat(),
+                )
+            })
+            .collect();
+        element(0x1941_A469, &files)
+    };
 
     // A cluster every two seconds, frames interleaved by time.
     let mut clusters = Vec::new();
@@ -212,11 +248,12 @@ pub fn matroska(fixture: &Fixture) -> Vec<u8> {
         )
     };
     let seek_len = if fixture.cues { seek_head(0).len() } else { 0 };
-    let head_len = seek_len + info.len() + tracks.len();
+    let head_len = seek_len + info.len() + tracks.len() + attachments.len();
     let cues_at = (head_len + clusters.len()) as u64;
     let mut body = if fixture.cues { seek_head(cues_at) } else { Vec::new() };
     body.extend(&info);
     body.extend(&tracks);
+    body.extend(&attachments);
     body.extend(&clusters);
     if fixture.cues {
         let mut points = Vec::new();

@@ -68,6 +68,15 @@
   <data name="NoticeCastLost" xml:space="preserve">
     <value>{name}との接続が切れたため、キャストを終了しました。</value>
   </data>
+  <data name="NoticeCastSegment" xml:space="preserve">
+    <value>{name}がストリームを受け取れなくなりました。ソースがエピソードの一部に応答しませんでした。別のソースをお試しください。</value>
+  </data>
+  <data name="NoticeCastLostStream" xml:space="preserve">
+    <value>{name}がこのデバイスからのストリームを失いました。両方が同じネットワークにあるか確認してください。</value>
+  </data>
+  <data name="NoticeCastSubtitlesPlain" xml:space="preserve">
+    <value>{name}の字幕はプレーンテキストで表示されます。装飾付きの字幕はこのテレビには重すぎました。</value>
+  </data>
   <data name="NoticeCastNoDevice" xml:space="preserve">
     <value>キャスト先のテレビがネットワーク上にもうありません。</value>
   </data>

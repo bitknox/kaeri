@@ -36,7 +36,7 @@ use tokio_rustls::{
 
 use crate::{
     channel::{NS_CONNECTION, NS_HEARTBEAT, NS_MEDIA, NS_RECEIVER},
-    client::DEFAULT_MEDIA_RECEIVER,
+    client::{DEFAULT_MEDIA_RECEIVER, NS_KAERI},
     fetch::{PlainHttp, Upstream},
     probe::RECEIVER_ORIGIN,
     proto::{CastMessage, Payload},
@@ -71,6 +71,8 @@ pub struct Refuse {
     pub sound_alone: bool,
     /// HLS whose picture is taller than this is `LOAD_FAILED`: the Nest Hub stops at 720 lines.
     pub hls_taller_than: Option<u32>,
+    /// What Kaeri's receiver says on its namespace as it refuses: `error {part, codec}`.
+    pub says: Option<Value>,
 }
 
 /// What the fake does when asked to launch an app other than the Default Media Receiver: Kaeri's
@@ -84,8 +86,21 @@ pub enum CustomReceiver {
     Unknown,
     /// Launches it, and it closes at its first `LOAD`, as a receiver page that fails does.
     ClosesAtLoad,
-    /// Launches it, and it never answers a `LOAD`: a receiver page that didn't load.
+    /// Launches it, and it never says `ready` nor answers a `LOAD`: a receiver page that
+    /// didn't load.
     Silent,
+}
+
+/// How the fake answers a command (pause, seek, a buffering spell) with its status.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+pub enum Echo {
+    /// Without the `media` object, as real receivers do.
+    #[default]
+    Partial,
+    /// With the `media` object every time.
+    Full,
+    /// Without the `media` object, and only after this long: a TV slow to answer.
+    Late(Duration),
 }
 
 /// How the fake is set up.
@@ -110,6 +125,8 @@ pub struct FakeOptions {
     /// Keeps the receiver app, what it plays and the volume from one sender connection to the
     /// next, as a TV does: for a sender that comes back to a cast it left running.
     pub remembers: bool,
+    /// How statuses after commands come.
+    pub echo: Echo,
 }
 
 /// What a TV that [`FakeOptions::remembers`] keeps between sender connections.
@@ -135,6 +152,7 @@ impl Default for FakeOptions {
             plays_unfetched: false,
             custom: CustomReceiver::default(),
             remembers: false,
+            echo: Echo::default(),
         }
     }
 }
@@ -172,6 +190,7 @@ enum Control {
     TakeOver,
     Silence,
     Buffering(bool),
+    Say(Value),
 }
 
 impl Drop for FakeReceiver {
@@ -197,6 +216,8 @@ struct Playing {
     stalled: bool,
     /// Waiting for data, as [`FakeReceiver::buffer`] says.
     buffering: bool,
+    /// The LOAD's metadata, said back with the media as a receiver does.
+    metadata: Value,
 }
 
 impl Playing {
@@ -226,7 +247,8 @@ impl Playing {
             "supportedMediaCommands": 12303,
             "volume": volume,
             "activeTrackIds": self.tracks,
-            "media": {"contentId": self.url, "duration": self.duration, "streamType": "BUFFERED"},
+            "media": {"contentId": self.url, "duration": self.duration, "streamType": "BUFFERED",
+                      "metadata": self.metadata},
         });
         if let Some(reason) = idle_reason {
             status["idleReason"] = json!(reason);
@@ -326,6 +348,11 @@ impl FakeReceiver {
     pub fn buffer(&self, waiting: bool) {
         let _ = self.control.send(Control::Buffering(waiting));
     }
+
+    /// Say `message` on Kaeri's namespace from the receiver app, as Kaeri's receiver does.
+    pub fn say(&self, message: Value) {
+        let _ = self.control.send(Control::Say(message));
+    }
 }
 
 #[allow(clippy::too_many_lines)]
@@ -415,9 +442,10 @@ async fn serve(
                         p.advance(options.speed);
                         p.buffering = waiting;
                         send(&transport, "*", NS_MEDIA, json!({"type": "MEDIA_STATUS", "requestId": 0,
-                            "status": [p.status_of(None, &volume(level, muted), false)]}));
+                            "status": [p.status_of(None, &volume(level, muted), options.echo == Echo::Full)]}));
                     }
                 }
+                Control::Say(message) => send(&transport, "*", NS_KAERI, message),
             },
             frame = read_frame(&mut read) => {
                 let Some(message) = frame? else { return Ok(()) };
@@ -453,6 +481,13 @@ async fn serve(
                         playing = None;
                         app = Some((format!("session-{request}"), id));
                         send("receiver-0", &sender, NS_RECEIVER, receiver_status(&app, request, level, muted));
+                    }
+                    (NS_KAERI, "hello") => {
+                        let custom = app.as_ref().is_some_and(|(_, id)| id != DEFAULT_MEDIA_RECEIVER);
+                        if custom && options.custom != CustomReceiver::Silent {
+                            send(&transport, &sender, NS_KAERI, json!({"type": "ready", "version": 1,
+                                "build": "fake", "caps": {"typeset": true, "audioSwitch": true}}));
+                        }
                     }
                     (NS_RECEIVER, "STOP") => {
                         app = None;
@@ -501,6 +536,9 @@ async fn serve(
                                 .filter(|_| options.refuse.content_types.contains(&content_type)),
                             Err(_) => Some(Refusal::LoadFailed),
                         };
+                        if let Some(said) = options.refuse.says.clone().filter(|_| custom && refused.is_some()) {
+                            send(&transport, "*", NS_KAERI, said);
+                        }
                         if refused == Some(Refusal::LoadFailed) {
                             send(&transport, &sender, NS_MEDIA, json!({
                                 "type": "LOAD_FAILED", "requestId": request, "detailedErrorCode": 104}));
@@ -524,6 +562,7 @@ async fn serve(
                             since: Instant::now(),
                             stalled: refused == Some(Refusal::Stall),
                             buffering: false,
+                            metadata: payload["media"]["metadata"].clone(),
                         };
                         send(&transport, &sender, NS_MEDIA, json!({"type": "MEDIA_STATUS", "requestId": request, "status": [p.status(None, &volume(level, muted))]}));
                         if refused == Some(Refusal::Error) {
@@ -553,9 +592,12 @@ async fn serve(
                             "STOP" => idle = Some("CANCELLED"),
                             _ => {}
                         }
-                        let status = p.status_of(idle, &volume(level, muted), kind == "GET_STATUS");
+                        let status = p.status_of(idle, &volume(level, muted), kind == "GET_STATUS" || options.echo == Echo::Full);
                         if idle.is_some() {
                             playing = None;
+                        }
+                        if let Echo::Late(late) = options.echo {
+                            tokio::time::sleep(late).await;
                         }
                         send(&transport, &sender, NS_MEDIA, json!({"type": "MEDIA_STATUS", "requestId": request, "status": [status]}));
                     }
@@ -628,6 +670,17 @@ async fn fetch_like_a_receiver(
     }
     let mut url = url.to_owned();
     let mut text = String::from_utf8_lossy(&body).into_owned();
+    // The audio rendition its player plays: the default one, as a receiver with nothing else
+    // to go by picks.
+    if let Some(audio) = text.lines().find_map(|l| {
+        let at = l.find("URI=\"")? + 5;
+        (l.starts_with("#EXT-X-MEDIA:")
+            && l.contains("TYPE=AUDIO")
+            && l.contains("DEFAULT=YES"))
+        .then(|| l[at..].split('"').next().map(str::to_owned))?
+    }) {
+        note(get(resolve(&url, &audio)).await?, false)?;
+    }
     if let Some(variant) = text
         .lines()
         .skip_while(|l| !l.starts_with("#EXT-X-STREAM-INF"))

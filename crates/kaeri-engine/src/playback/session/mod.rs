@@ -538,6 +538,7 @@ pub async fn play(
             image: context.banner_url.clone().or_else(|| context.cover_url.clone()),
             subtitle_language: settings.subtitle_language.clone(),
             dub: context.translation == Translation::Dub,
+            audio_memory: current.tracks.memory().audio.clone(),
         });
         // The audio of this file's head and tail, for finding its skip times: listened for
         // before it loads, so none of it is missed. Never on a cast, which plays elsewhere.

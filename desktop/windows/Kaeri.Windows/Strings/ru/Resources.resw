@@ -68,6 +68,15 @@
   <data name="NoticeCastLost" xml:space="preserve">
     <value>Связь с {name} потеряна, трансляция остановлена.</value>
   </data>
+  <data name="NoticeCastSegment" xml:space="preserve">
+    <value>{name} перестал получать поток: источник не ответил для части серии. Попробуйте другой источник.</value>
+  </data>
+  <data name="NoticeCastLostStream" xml:space="preserve">
+    <value>{name} потерял поток. Проверьте, что это устройство и телевизор в одной сети.</value>
+  </data>
+  <data name="NoticeCastSubtitlesPlain" xml:space="preserve">
+    <value>Субтитры на {name} показываются простым текстом. Оформленные субтитры оказались слишком тяжёлыми для телевизора.</value>
+  </data>
   <data name="NoticeCastNoDevice" xml:space="preserve">
     <value>Этот телевизор больше не в сети.</value>
   </data>

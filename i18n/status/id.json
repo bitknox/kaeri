@@ -12617,6 +12617,12 @@
     "by": "agent",
     "at": "2026-10-31"
   },
+  "notice-cast-lost-stream": {
+    "source": "38a065708e27",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
+  },
   "notice-cast-never-fetches": {
     "source": "e1f14ea43a26",
     "state": "draft",
@@ -12640,6 +12646,18 @@
     "state": "draft",
     "by": "agent",
     "at": "2026-10-31"
+  },
+  "notice-cast-segment": {
+    "source": "ab7adbc61f85",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
+  },
+  "notice-cast-subtitles-plain": {
+    "source": "42405a6f909b",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
   },
   "notice-cast-taken-over": {
     "source": "e4eb106c7397",
