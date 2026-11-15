@@ -227,6 +227,23 @@ public class SourceChoicesTests
     }
 
     [Fact]
+    public void An_episode_a_source_lists_plays_while_the_schedule_still_names_it_next()
+    {
+        var entry = Watching(6) with
+        {
+            Status = AiringStatus.Releasing,
+            LastAired = new Aired(Episode: 5, Ago: 6 * 86_400),
+            NextEpisode = 6,
+            NextAiringIn = 600,
+        };
+        Assert.False(PlayableNext.Item(entry, Table(("5", false), ("6", true)), Casing.Sentence).Playable);
+        var item = PlayableNext.Item(entry, Table(("5", false), ("6", false)), Casing.Sentence);
+        Assert.True(item.Playable);
+        Assert.Equal("Play episode 6", item.Button);
+        Assert.Null(item.Waiting);
+    }
+
+    [Fact]
     public void With_nothing_to_play_the_row_says_no_source_has_it()
     {
         var entry = Watching(4) with { Status = AiringStatus.Finished };
