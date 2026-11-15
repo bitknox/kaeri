@@ -488,7 +488,6 @@ public sealed partial class SeriesPage : Page
         return menu;
     }
 
-    /// <summary>More: the trackers, Read from, and Read again from the start.</summary>
     /// <summary>The line's place, closer to the actions than the words' spacing, so 10 px under them as on a show's page.</summary>
     static StackPanel PrivateLineFor()
     {
@@ -504,6 +503,7 @@ public sealed partial class SeriesPage : Page
             PrivateUi.Draw(privateLine, ctx.Known.Private.SeriesLine(series));
     }
 
+    /// <summary>More: the trackers, Read from, Read again from the start, and Always private.</summary>
     MenuFlyout MoreMenu(SeriesView series)
     {
         var menu = new MenuFlyout();
