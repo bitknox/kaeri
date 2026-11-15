@@ -1,0 +1,97 @@
+package app.kaeri.ui
+
+import androidx.activity.ComponentActivity
+import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
+import androidx.compose.ui.test.onAllNodesWithText
+import java.time.Clock
+import java.time.ZoneId
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
+import org.junit.After
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
+import org.junit.Assume.assumeTrue
+import org.junit.Before
+import org.junit.Rule
+import org.junit.Test
+import org.junit.runner.RunWith
+import org.robolectric.RobolectricTestRunner
+import org.robolectric.annotation.Config
+import org.robolectric.annotation.GraphicsMode
+import app.kaeri.design.KaeriTheme
+import app.kaeri.engine.core.AnilistId
+import app.kaeri.engine.model.Event
+import app.kaeri.store.AppClock
+import app.kaeri.store.AppStore
+import app.kaeri.store.HAS_TESTING_ENGINE
+import app.kaeri.testkit.FixtureArt
+import app.kaeri.testkit.Scene
+
+/**
+ * A title page opened from a list while its page is on its way (T8): the rest of the page stands
+ * where it will from the first frame it shows, and nothing on it moves when the page lands. The
+ * list's row is in the store, as Home leaves it; the page and the episodes come later, as a slow
+ * AniList and a source would send them.
+ */
+@RunWith(RobolectricTestRunner::class)
+@GraphicsMode(GraphicsMode.Mode.NATIVE)
+@Config(sdk = [36], qualifiers = "w412dp-h915dp-port-420dpi")
+class TitleOpenGeometryTest {
+    @get:Rule
+    val compose = createAndroidComposeRule<ComponentActivity>()
+
+    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
+
+    @Before
+    fun setUp() {
+        assumeTrue(HAS_TESTING_ENGINE)
+    }
+
+    @After
+    fun tearDown() {
+        scope.cancel()
+        AppClock.clock = Clock.systemDefaultZone()
+    }
+
+    @Test
+    fun nothing_moves_when_a_slow_page_lands() = assertStill(detailMs = 1_504L)
+
+    @Test
+    fun nothing_moves_when_the_page_lands_before_its_placeholders() = assertStill(detailMs = 304L)
+
+    private fun assertStill(detailMs: Long) {
+        val recorded = Scene.named("watching")
+        AppClock.clock = Clock.fixed(recorded.recordedAt, ZoneId.of("Europe/Copenhagen"))
+        val store = AppStore(scope, clock = { 0L }, artworkWithoutEngine = FixtureArt::bytes)
+        val page = recorded.events.filterIsInstance<Event.Detail>().last { it.v1.id == TITLE && it.v1.detail?.partial != true }
+        val rows = recorded.events.filterIsInstance<Event.Episodes>().last { it.id == TITLE }
+        // Everything else the scene knew, the lists with this title's row among them.
+        store.apply(recorded.events.filter { !(it is Event.Detail && it.v1.id == TITLE) && !(it is Event.Episodes && it.id == TITLE) })
+        assertTrue("the list's row is here", store.titles[TITLE] != null)
+        compose.setContent { KaeriTheme { AppRoot(store, startTitle = TITLE) } }
+        compose.mainClock.autoAdvance = false
+        val more = compose.activity.getString(app.kaeri.i18n.R.string.title_more_about)
+        val tops = mutableListOf<Pair<Long, Float>>()
+        var now = 0L
+        while (now < SETTLE_MS) {
+            if (now == EPISODES_MS) compose.runOnUiThread { store.apply(listOf(rows)) }
+            if (now == detailMs) compose.runOnUiThread { store.apply(listOf(Event.Detail(page.v1))) }
+            compose.mainClock.advanceTimeBy(FRAME_MS)
+            now += FRAME_MS
+            compose.onAllNodesWithText(more).fetchSemanticsNodes().firstOrNull()?.let { tops += now to it.boundsInRoot.top }
+        }
+        assertTrue("More about this show shows", tops.isNotEmpty())
+        val last = tops.last().second
+        // From the first frame it is on the page, it stands where it ends.
+        for ((at, top) in tops) assertEquals("More about this show at $at ms", last, top, 0.5f)
+    }
+
+    private companion object {
+        val TITLE: AnilistId = 900001u
+        const val FRAME_MS = 16L
+        const val EPISODES_MS = 400L
+        const val SETTLE_MS = 3_200L
+    }
+}
