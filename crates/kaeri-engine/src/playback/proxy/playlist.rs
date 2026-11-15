@@ -2,6 +2,8 @@
 //! names back through the proxy with every other byte kept, and reading the order of its
 //! segments.
 
+use kaeri_playback::hls::playlist_start;
+
 /// A media playlist with every fetchable URI pointed back at this proxy.
 ///
 /// Segment URIs, initialisation segments and key URIs are all rewritten: a key that still
@@ -120,18 +122,25 @@ pub(super) fn segment_urls(body: &str, base: &str) -> Vec<String> {
         .collect()
 }
 
-/// Whether a response is an HLS playlist rather than media.
+/// The playlist in a response, from its `#EXTM3U` on, or `None` when the response is media.
 ///
 /// The body is trusted over the content type: image CDNs serving video segments are exactly
-/// the kind of host that also mislabels a playlist.
-pub(super) fn looks_like_playlist(content_type: &str, body: &[u8]) -> bool {
-    if body.starts_with(b"#EXTM3U") {
-        return true;
+/// the kind of host that also mislabels a playlist. A playlist may carry leading bytes before
+/// `#EXTM3U`, which are left out (see [`playlist_start`]).
+pub(super) fn playlist_body<'a>(content_type: &str, body: &'a [u8]) -> Option<&'a [u8]> {
+    if let Some(start) = playlist_start(body) {
+        return Some(&body[start..]);
     }
     let lowered = content_type.to_ascii_lowercase();
-    (lowered.contains("mpegurl") || lowered.contains("m3u"))
+    ((lowered.contains("mpegurl") || lowered.contains("m3u"))
         && body.len() < 4 * 1024 * 1024
-        && std::str::from_utf8(body).is_ok()
+        && std::str::from_utf8(body).is_ok())
+    .then_some(body)
+}
+
+/// Whether a response is an HLS playlist rather than media. See [`playlist_body`].
+pub(super) fn looks_like_playlist(content_type: &str, body: &[u8]) -> bool {
+    playlist_body(content_type, body).is_some()
 }
 
 #[cfg(test)]
