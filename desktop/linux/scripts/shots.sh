@@ -63,6 +63,10 @@ runs=(
   # SIZES="prelaunch pldemo".
   "prelaunch 1280x800 ${SHOTS:-prelaunch}"
   "pldemo 1280x800 ${SHOTS:-prelaunch-demo}"
+  # The missing episode's states on its scene, then Source for this title before any check:
+  # SIZES="missing missingsrc".
+  "missing 1280x900 ${SHOTS:-missing}"
+  "missingsrc 1280x900 ${SHOTS:-missing-sources}"
 )
 for run in "${runs[@]}"; do
   read -r name size shots <<<"$run"
@@ -77,6 +81,7 @@ for run in "${runs[@]}"; do
     readinglong) extra=(--scene reading-long) ;;
     prelaunch) extra=(--scene reading) ;;
     pldemo) extra=(--demo --scene reading) ;;
+    missing | missingsrc) extra=(--scene missing-episode) ;;
   esac
   case ",$shots," in *,downloads,*|*,all,*) extra+=(--downloading) ;; esac
   # The match picker's shots need the finished title's source to be unsure of its match.

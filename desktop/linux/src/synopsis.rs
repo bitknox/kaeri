@@ -85,7 +85,8 @@ pub fn facts(
     let aired = row.airs_at.filter(|at| *at <= now);
     let minutes = |secs: f64| (secs / 60.0).round().max(1.0) as i64;
     let (head, when) = if row.unsourced {
-        (t::episode_unsourced(), None)
+        // When it aired and that the sources don't have it yet, for its first week.
+        (crate::missing::row_line(row, now, &date), None)
     } else if let Some(secs) = row.duration_secs {
         // The episode playing next keeps its air date beside the time left.
         let head = if row.watched > 0.0 && !row.completed {

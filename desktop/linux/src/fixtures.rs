@@ -218,6 +218,12 @@ pub enum HomeScene {
     ReadingLong,
     /// Watching with no source installed.
     Sourceless,
+    /// Signed in, episodes 1 to 5 of the airing title watched, and episode 6 aired 25 minutes
+    /// ago with no source listing it. The fixture source lists it from its third listing of the
+    /// show on, each listing after the first taking 1.4 s: the first Check again shows Checking
+    /// and comes back still, the second finds it. Opening Source for this title lists it too.
+    /// Yamabiko lists episodes 1 to 4 and Minato finds no match, for that sheet's lines.
+    MissingEpisode,
 }
 
 impl HomeScene {
@@ -236,6 +242,7 @@ impl HomeScene {
             "reading" => Self::Reading,
             "reading-downloads" => Self::ReadingDownloads,
             "reading-long" => Self::ReadingLong,
+            "missing-episode" => Self::MissingEpisode,
             _ => return None,
         })
     }
@@ -329,6 +336,13 @@ pub async fn start(root: &Path, scene: &Scene, host: Arc<dyn Host>) -> Result<St
 
     let server = FakeAniList::start().await;
     server.set_now(now);
+    if scene.home == HomeScene::MissingEpisode {
+        // The broadcasts moved back so that episode 6 aired a moment ago, the fake's clock left
+        // at now.
+        let back = missing_episode_shift();
+        server.set_now(now - back);
+        server.advance(back);
+    }
     server.add_titles(fixtures::long_franchise());
     server.serve_art();
     let _ = ART_BASE.set(server.art_base());
@@ -400,6 +414,7 @@ pub async fn start(root: &Path, scene: &Scene, host: Arc<dyn Host>) -> Result<St
                 .with_hits(Vec::new())
                 .arc(),
         ]),
+        HomeScene::MissingEpisode => missing_episode_sources(&server.art_base()),
         _ => registry(&server.art_base(), scene.media.as_deref(), &provided, scene.unsure),
     };
     // A setting that changes which sources exist rebuilds the chain from the config, and the
@@ -475,6 +490,48 @@ fn registry(
         return ProviderRegistry::new(vec![unsure_source(art, &clip).arc(), provider.arc()]);
     }
     ProviderRegistry::new(vec![provider.arc()])
+}
+
+/// How long before the missing episode scene's now its episode 6 aired: 25 minutes.
+const MISSING_AIRED_AGO: i64 = 25 * 60;
+/// How long each listing of the missing episode scene's fixture source takes after the first:
+/// past the 600 ms the page waits before it shows Checking.
+const MISSING_CHECK_TAKES: std::time::Duration = std::time::Duration::from_millis(1_400);
+
+/// How far the missing episode scene moves the fake's broadcasts back: from the fixtures' now
+/// to [`MISSING_AIRED_AGO`] after the airing title's episode 6 airs.
+fn missing_episode_shift() -> i64 {
+    let next = fixtures::media(AIRING).next_airing_episode.map_or(0, |n| n.airing_at);
+    next - fixtures::FIXTURE_NOW + MISSING_AIRED_AGO
+}
+
+/// The missing episode scene's sources: the fixture source, whose listings of the airing title
+/// find episode 6 from the third on; Yamabiko with episodes 1 to 4; Minato with no match.
+fn missing_episode_sources(art: &str) -> ProviderRegistry {
+    let key = sources::key(AIRING);
+    let listed = sources::episodes(AIRING);
+    let mut found = listed.clone();
+    found.push(Episode { duration: listed.last().and_then(|e| e.duration), ..Episode::new(6) });
+    let fixture = sources::provider_with_art(art)
+        .with_listing_turns(
+            key.clone(),
+            vec![
+                (std::time::Duration::ZERO, listed.clone()),
+                (MISSING_CHECK_TAKES, listed.clone()),
+                (MISSING_CHECK_TAKES, found),
+            ],
+        )
+        .with_streams_for(key.clone(), vec![sources::episode_clip()]);
+    let hit = sources::hits().into_iter().find(|hit| hit.key == key);
+    let short = MockProvider::new("fixture-yamabiko")
+        .named("Yamabiko")
+        .with_hits(
+            hit.iter().map(|hit| SearchHit { episode_count: Some(4), ..hit.clone() }).collect(),
+        )
+        .with_episodes_for(key.clone(), listed.into_iter().take(4).collect())
+        .with_streams_for(key, vec![sources::episode_clip()]);
+    let none = MockProvider::new("fixture-minato").named("Minato").with_hits(Vec::new());
+    ProviderRegistry::new(vec![fixture.arc(), short.arc(), none.arc()])
 }
 
 /// The id of the source the unsure scene puts first.
@@ -568,6 +625,7 @@ fn seed_scene(store: &Store, scene: HomeScene, now: i64) {
             seed::watched(store, FINISHED, all, now - HOUR);
         }
         HomeScene::OneLeft => seed::watched(store, AIRING_NO_MAL, 7, now - DAY),
+        HomeScene::MissingEpisode => seed::watched(store, AIRING, 5, now - DAY),
         HomeScene::ContinueFull => {
             let long = fixtures::long_franchise_media();
             let shows = fixtures::ALL.into_iter().chain(long.iter().map(|m| m.id)).take(15);

@@ -77,12 +77,15 @@ pub fn rows(options: Option<&[SourceOption]>) -> Vec<Row> {
     rows
 }
 
-/// A source's coverage ("6 of 13 episodes"), or why it has none. A failure is the source's own
+/// A source's coverage ("Episodes 1 to 5. Not 6 yet", or "6 of 13 episodes" for any other
+/// shape) at `now`, or why it has none. A failure is the source's own
 /// words, as it said them.
-pub fn detail(option: &SourceOption) -> String {
+pub fn detail(option: &SourceOption, now: i64) -> String {
     use kaeri_i18n::t;
     match &option.note {
-        None => t::source_picker_coverage(i64::from(option.covered), i64::from(option.of)),
+        None => crate::missing::coverage(option, now).unwrap_or_else(|| {
+            t::source_picker_coverage(i64::from(option.covered), i64::from(option.of))
+        }),
         Some(SourceNote::Off) => t::source_note_off(),
         Some(SourceNote::Resting) => t::source_note_resting(),
         Some(SourceNote::Gone) => t::source_note_gone(),
@@ -107,21 +110,21 @@ pub fn release_detail(release: &SourceCandidate) -> Option<String> {
 }
 
 /// A row's text: its name, then what it has under it.
-pub fn words(row: &Row) -> (String, Option<String>) {
+pub fn words(row: &Row, now: i64) -> (String, Option<String>) {
     use kaeri_i18n::t;
     match row {
         Row::Automatic { .. } => {
             (t::source_picker_automatic(), Some(t::source_picker_automatic_detail()))
         }
-        Row::Source { option, .. } => (option.name.clone(), Some(detail(option))),
+        Row::Source { option, .. } => (option.name.clone(), Some(detail(option, now))),
         Row::Releases { .. } => (t::source_picker_releases(), None),
         Row::Release { candidate, .. } => (candidate.title.clone(), release_detail(candidate)),
     }
 }
 
 /// What a screen reader says for the row: "Hotaru Open Archive, 6 of 13 episodes, Chosen".
-pub fn spoken(row: &Row) -> String {
-    let (title, detail) = words(row);
+pub fn spoken(row: &Row, now: i64) -> String {
+    let (title, detail) = words(row, now);
     let chosen = row.chosen().then(kaeri_i18n::t::source_picker_chosen);
     [Some(title), detail, chosen]
         .into_iter()
@@ -205,6 +208,8 @@ mod tests {
 
     use super::*;
 
+    const NOW: i64 = 1_800_000_000;
+
     fn release(id: &str, title: &str) -> SourceCandidate {
         SourceCandidate {
             id: id.into(),
@@ -229,6 +234,10 @@ mod tests {
             note: None,
             releases: Vec::new(),
             pinned_release: None,
+            first: None,
+            last: None,
+            lacking: Vec::new(),
+            lacking_since: None,
         }
     }
 
@@ -308,7 +317,7 @@ mod tests {
     fn a_source_is_worded_by_its_count_or_its_note_and_a_failure_in_its_own_words() {
         use kaeri_i18n::t;
         let mut source = option("a", 6);
-        assert_eq!(detail(&source), t::source_picker_coverage(6, 13));
+        assert_eq!(detail(&source, NOW), t::source_picker_coverage(6, 13));
         for (note, words) in [
             (SourceNote::Off, t::source_note_off()),
             (SourceNote::Resting, t::source_note_resting()),
@@ -320,7 +329,7 @@ mod tests {
             ),
         ] {
             source.note = Some(note);
-            assert_eq!(detail(&source), words);
+            assert_eq!(detail(&source, NOW), words);
         }
     }
 
@@ -341,18 +350,18 @@ mod tests {
     fn a_screen_reader_hears_the_name_the_coverage_and_the_check() {
         let mut source = option("a", 6);
         let row = Row::Source { option: source.clone(), chosen: false };
-        assert_eq!(spoken(&row), "Source a, 6 of 13 episodes");
+        assert_eq!(spoken(&row, NOW), "Source a, 6 of 13 episodes");
         let row = Row::Source { option: source.clone(), chosen: true };
-        assert_eq!(spoken(&row), "Source a, 6 of 13 episodes, Chosen");
+        assert_eq!(spoken(&row, NOW), "Source a, 6 of 13 episodes, Chosen");
         source.note = Some(SourceNote::Off);
         let row = Row::Source { option: source, chosen: false };
-        assert_eq!(spoken(&row), "Source a, Switched off");
+        assert_eq!(spoken(&row, NOW), "Source a, Switched off");
         let release = Row::Release {
             provider_id: "torrent".into(),
             candidate: release("batch", "Batch"),
             chosen: false,
         };
-        assert_eq!(spoken(&release), "Batch, 1080p · 14.2 GiB · 84 seeders");
+        assert_eq!(spoken(&release, NOW), "Batch, 1080p · 14.2 GiB · 84 seeders");
     }
 
     #[test]

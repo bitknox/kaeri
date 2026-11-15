@@ -326,6 +326,8 @@ pub const STATS: [&str; 5] = [
 
 /// Take `shots` into `dir`, each named `<prefix><shot>.png`, then quit.
 pub fn run(shell: Rc<Shell>, dir: PathBuf, prefix: String, shots: Vec<String>) {
+    #[cfg(feature = "fixtures")]
+    crate::shots_missing::saving_to(dir.clone());
     glib::spawn_future_local(async move {
         // The first page, its lists and their covers.
         wait(4.0).await;
@@ -378,6 +380,10 @@ fn stage(shell: &Rc<Shell>, shot: &str) -> f64 {
     }
     #[cfg(feature = "fixtures")]
     if let Some(settle) = crate::shots_prelaunch::stage(shell, shot) {
+        return settle;
+    }
+    #[cfg(feature = "fixtures")]
+    if let Some(settle) = crate::shots_missing::stage(shell, shot) {
         return settle;
     }
     let window = &shell.ctx.window;
@@ -1386,6 +1392,8 @@ fn unstage(shell: &Rc<Shell>, shot: &str) {
     crate::shots_reading_credits::unstage(shell, shot);
     #[cfg(feature = "fixtures")]
     crate::shots_prelaunch::unstage(shell, shot);
+    #[cfg(feature = "fixtures")]
+    crate::shots_missing::unstage(shell, shot);
     if shot.starts_with("start-") {
         shell.player.close();
     }
@@ -2140,6 +2148,10 @@ pub fn named(list: Option<&str>) -> Vec<String> {
                 #[cfg(feature = "fixtures")]
                 "prelaunch" => {
                     crate::shots_prelaunch::NAMES.iter().map(|p| (*p).to_owned()).collect()
+                }
+                #[cfg(feature = "fixtures")]
+                "missing" => {
+                    crate::shots_missing::NAMES.iter().map(|p| (*p).to_owned()).collect()
                 }
                 #[cfg(feature = "fixtures")]
                 "prelaunch-demo" => {
@@ -3459,6 +3471,10 @@ fn source_options(
         note,
         releases,
         pinned_release: release.filter(|_| pinned == Some(id)).map(str::to_owned),
+        first: None,
+        last: None,
+        lacking: Vec::new(),
+        lacking_since: None,
     };
     vec![
         option("hotaru-open-archive", "Hotaru Open Archive", 13, None, Vec::new()),
