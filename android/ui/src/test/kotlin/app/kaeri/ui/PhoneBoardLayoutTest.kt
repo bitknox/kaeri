@@ -165,6 +165,44 @@ class PhoneBoardLayoutTest {
         }
     }
 
+    /**
+     * Johan's report from the 0.5 build: in a table where other rows have text, a watched row and
+     * the one in progress with no synopsis take the short height, not the tall room with an empty
+     * band under them; the row with text takes its own line.
+     */
+    @Test
+    fun rows_without_text_are_short_among_rows_with_text() {
+        val base = row(null, emptyList()).copy(synopsisPending = false)
+        val rows = listOf(
+            Triple("watched", base.copy(number = "6", description = null, completed = true, watched = 1.0), false),
+            Triple("in-progress", base.copy(number = "7", description = null, watched = 0.4), true),
+            Triple("with-text", base.copy(number = "8", description = "Rain on the glass."), false),
+        )
+        compose.setContent {
+            KaeriTheme {
+                CompositionLocalProvider(LocalAppStore provides store) {
+                    androidx.compose.foundation.layout.Column(Modifier.width(412.dp)) {
+                        for ((tag, row, current) in rows) {
+                            Box(Modifier.testTag(tag)) {
+                                EpisodeCard(
+                                    entry, row, current = current, unaired = false, hidden = false,
+                                    form = rowForm(app.kaeri.engine.model.EpisodeText.PRESENT, protectedRow = false, textless = textless(row)),
+                                    onPlay = {}, onMenu = {}, onShow = {},
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        compose.mainClock.advanceTimeBy(1_000)
+        compose.waitForIdle()
+        fun px(dp: Int) = with(compose.density) { dp.dp.roundToPx() }
+        for ((tag, dp) in listOf("watched" to 114, "in-progress" to 114, "with-text" to 142)) {
+            assertNear("$tag row", px(dp), compose.onNodeWithTag(tag).fetchSemanticsNode().size.height)
+        }
+    }
+
     private fun assertNear(message: String, expected: Int, actual: Int) =
         assertTrue("$message: $actual px, not $expected", kotlin.math.abs(expected - actual) <= 1)
 
