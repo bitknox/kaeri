@@ -347,8 +347,50 @@ pub fn open(ctx: &Rc<Ctx>) {
         .follows_content_size(true)
         .child(&view)
         .build();
+    #[cfg(feature = "fixtures")]
+    STAGE.with(|stage| {
+        let (log, reveal, segments) =
+            (Rc::downgrade(&log), reveal.downgrade(), segments.downgrade());
+        stage.replace(Some(Box::new(move |state: &str| {
+            let (Some(log), Some(reveal), Some(segments)) =
+                (log.upgrade(), reveal.upgrade(), segments.upgrade())
+            else {
+                return;
+            };
+            log.check.set_active(true);
+            match state {
+                "sent" => {
+                    reveal.set_expanded(true);
+                    segments.set_active_name(Some("log"));
+                }
+                "saved" => log.settle(Saved::As(log.stats.file_name.clone())),
+                "failed" => log.settle(Saved::Failed),
+                _ => {}
+            }
+        })));
+    });
     widgets::keep(&dialog, log);
     dialog.present(Some(&ctx.window));
+}
+
+#[cfg(feature = "fixtures")]
+thread_local! {
+    /// The open sheet's Player log, for the shots to put in a state.
+    static STAGE: RefCell<Option<Box<dyn Fn(&str)>>> = RefCell::new(None);
+}
+
+/// For the shots: tick the open sheet's Player log and put it in `state`: `ticked`, `sent`
+/// (What is sent open on the log's segment), `saved` or `failed`. `empty` leaves it as it is.
+#[cfg(feature = "fixtures")]
+pub fn stage(state: &str) {
+    if state == "empty" {
+        return;
+    }
+    STAGE.with(|stage| {
+        if let Some(stage) = &*stage.borrow() {
+            stage(state);
+        }
+    });
 }
 
 /// Where the log's file stands.
@@ -503,8 +545,10 @@ impl LogRow {
         if self.saving.replace(true) {
             return;
         }
-        let chooser =
-            gtk::FileDialog::builder().initial_name(&self.stats.file_name).modal(true).build();
+        let chooser = gtk::FileDialog::builder()
+            .initial_name(self.stats.file_name.as_str())
+            .modal(true)
+            .build();
         let log = Rc::clone(self);
         chooser.save(Some(&ctx.window), gio::Cancellable::NONE, move |chosen| {
             let file = match chosen {

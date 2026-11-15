@@ -111,6 +111,11 @@ pub const ALL: [&str; 111] = [
     "first-play-subtitles",
     "first-play-crashes",
     "first-play-report",
+    "report-log",
+    "report-log-sent",
+    "report-log-saved",
+    "report-log-failed",
+    "report-log-empty",
     "settings-updates",
     "update-ready",
     "update-saved",
@@ -951,6 +956,19 @@ fn stage(shell: &Rc<Shell>, shot: &str) -> f64 {
             crate::pages::report::open(&shell.ctx);
             1.5
         }
+        // Report a bug with the player log: three made-up playbacks, or none before anything
+        // has played, then the row in the shot's state.
+        #[cfg(feature = "fixtures")]
+        "report-log" | "report-log-sent" | "report-log-saved" | "report-log-failed"
+        | "report-log-empty" => {
+            kaeri_engine::player_log::seed_fixture(u32::from(shot != "report-log-empty") * 3);
+            crate::pages::report::open(&shell.ctx);
+            let state = shot.strip_prefix("report-log-").unwrap_or("ticked").to_owned();
+            glib::timeout_add_local_once(Duration::from_millis(400), move || {
+                crate::pages::report::stage(&state);
+            });
+            2.0
+        }
         "provider" => {
             shell.go(Dest::Providers);
             crate::pages::plugin::push_provider(&shell.ctx, "mukashi-archive");
@@ -1433,6 +1451,8 @@ fn unstage(shell: &Rc<Shell>, shot: &str) {
         "about" | "join" | "join-link" | "join-group" | "join-ended" | "welcome"
         | "first-play-welcome" | "first-play-demo" | "first-play-report" | "accounts-kitsu"
         | "torrents-setup" => close_dialogs(&shell.ctx.window),
+        "report-log" | "report-log-sent" | "report-log-saved" | "report-log-failed"
+        | "report-log-empty" => close_dialogs(&shell.ctx.window),
         #[cfg(feature = "fixtures")]
         "search-failed" | "search-paging" => {
             crate::showcase::set_mood(crate::showcase::Mood::Usual);
