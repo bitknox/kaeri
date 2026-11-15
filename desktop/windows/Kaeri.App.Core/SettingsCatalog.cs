@@ -32,6 +32,7 @@ public static class SettingsCatalog
         SettingKey.ChapterDownloadsOnCellular, SettingKey.KeepChaptersReady, SettingKey.DeleteAfterReading, SettingKey.ShowVolumes, SettingKey.OpdsFeed,
         SettingKey.SeriesChoicesFollow, SettingKey.LookFollows, SettingKey.ChapterNotifications, SettingKey.DownloadsFinished,
         SettingKey.EpisodeDiscussions, SettingKey.CommentImages, SettingKey.CastTvs, SettingKey.TorrentsWhileCasting, SettingKey.AdultTitles,
+        SettingKey.ShowFollowing,
     ];
 
     /// <summary>

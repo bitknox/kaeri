@@ -111,7 +111,6 @@ title-fact-range = { $from } à { $to }
 title-fact-after = Après l'épisode { $episode }
 title-fact-now = En cours
 title-fact-tba = À annoncer
-more-following-line = { $status } · { $score }/10
 episode-go-to = Aller à l’épisode…
 episode-go-to-title = Aller à l’épisode
 episode-go-to-go = Aller

@@ -76,8 +76,43 @@ public sealed partial class EpisodeItem : INotifyPropertyChanged
     public string Heading => long.TryParse(Row.Number, out var n)
         ? Row.Title is { Length: > 0 } t ? T.EpisodeWithTitle(n, t) : T.EpisodeNumber(n)
         : Row.Title is { Length: > 0 } named ? T.EpisodeTextWithTitle(Row.Number, named) : T.EpisodeNumberText(Row.Number);
-    /// <summary>What Narrator reads for the row: its heading, then its line when it has one.</summary>
-    public string Name => Line.Length > 0 ? T.EpisodeRowSpoken(Heading, Line) : Heading;
+    /// <summary>
+    /// What Narrator reads for the row: its heading, then its line when it has one, then who of
+    /// the people followed stopped here ("Lumi and Dario watched up to here.").
+    /// </summary>
+    public string Name
+    {
+        get
+        {
+            var name = Line.Length > 0 ? T.EpisodeRowSpoken(Heading, Line) : Heading;
+            return Row.Followed.Length > 0 ? T.EpisodeRowSpoken(name, Following.MarksSpoken(Row.Followed)) : name;
+        }
+    }
+
+    bool marksRoom;
+    MarkSet? marks;
+
+    /// <summary>The marks of the people followed whose progress stops here, in the slot the table keeps for them.</summary>
+    public object Marks => marks ??= new MarkSet(this, Row.Followed, marksRoom);
+
+    /// <summary>Whether the row keeps the marks' slot: while any row of the table has marks.</summary>
+    internal bool MarksRoom
+    {
+        get => marksRoom;
+        set
+        {
+            if (marksRoom == value)
+                return;
+            marksRoom = value;
+            Remark();
+        }
+    }
+
+    void Remark()
+    {
+        marks = new MarkSet(this, Row.Followed, marksRoom);
+        Changed(nameof(Marks));
+    }
     public double Watched => Row.Watched;
     public bool Completed => Row.Completed;
     /// <summary>An episode no source lists is dimmed whole; a watched one is only a little.</summary>
@@ -202,12 +237,20 @@ public sealed partial class EpisodeItem : INotifyPropertyChanged
     /// that arrives late fades into the room the row kept rather than the row starting over.
     /// </summary>
     /// <summary>The same episode as the engine now has it: its watched state and what follows from it change in place.</summary>
-    internal void Take(EpisodeRow row)
+    internal void Take(EpisodeRow row, bool room)
     {
-        if (row == Row)
+        var remark = !Following.Same(row.Followed, Row.Followed) || room != marksRoom;
+        marksRoom = room;
+        if (!TitlePage.Differ(row, Row))
+        {
+            if (remark)
+                Remark();
             return;
+        }
         Row = row;
         Changed(nameof(Watched), nameof(Completed), nameof(Dim), nameof(PartWay), nameof(Playable), nameof(WatchedAction), nameof(Line), nameof(RowFacts), nameof(Name));
+        if (remark)
+            Remark();
     }
 
     internal void Inherit(EpisodeItem was)
@@ -304,12 +347,32 @@ public sealed partial class NoteItem : INotifyPropertyChanged
     public string Action => action;
     public Visibility LineShown => line.Length > 0 ? Visibility.Visible : Visibility.Collapsed;
 
+    FollowedMark[] followed = [];
+    MarkSet? marks;
+
+    /// <summary>A fold's marks: those of the watched rows inside it.</summary>
+    public object Marks => marks ??= new MarkSet(this, followed, Fold);
+
+    /// <summary>What Narrator reads for the action: it, then who of the people followed stopped inside the fold.</summary>
+    public string Spoken => followed.Length > 0 ? T.EpisodeRowSpoken(action, Following.MarksSpoken(followed)) : action;
+
+    internal void Mark(FollowedMark[] now)
+    {
+        if (Following.Same(followed, now))
+            return;
+        followed = now;
+        marks = new MarkSet(this, now, Fold);
+        PropertyChanged?.Invoke(this, new(nameof(Marks)));
+        PropertyChanged?.Invoke(this, new(nameof(Spoken)));
+    }
+
     internal void Say(string line, string action)
     {
         this.line = line;
         this.action = action;
         PropertyChanged?.Invoke(this, new(nameof(Line)));
         PropertyChanged?.Invoke(this, new(nameof(Action)));
+        PropertyChanged?.Invoke(this, new(nameof(Spoken)));
     }
 
     public event PropertyChangedEventHandler? PropertyChanged;
@@ -340,6 +403,8 @@ public sealed partial class TitlePage : Page, IPageKeys
     internal const string CoverAnimation = "cover";
 
     readonly Ctx ctx = Ctx.Current;
+    /// <summary>People you follow, at the end of the details column.</summary>
+    readonly FollowingSection following;
     uint id;
     /// <summary>The title the frame opened this page with; <see cref="id"/> differs once a season is picked here.</summary>
     uint openedWith;
@@ -348,6 +413,7 @@ public sealed partial class TitlePage : Page, IPageKeys
     public TitlePage()
     {
         InitializeComponent();
+        following = new FollowingSection(ctx, DispatcherQueue);
         foreach (var (segment, name) in new[]
         {
             (LibrarySegment.Watching, T.LibraryStatusWatching), (LibrarySegment.Planning, T.LibraryStatusPlanning),
@@ -459,6 +525,7 @@ public sealed partial class TitlePage : Page, IPageKeys
         // Episodes not yet known: nothing for 600 ms, then plates in the rows' place.
         if (!ctx.Known.Episodes.ContainsKey(id))
             EpisodesState.Wait();
+        following.Reset();
         Load();
 #if KAERI_TESTING
         // --show=title-another: as if Surprise me opened this title, so Another is there.
@@ -530,6 +597,9 @@ public sealed partial class TitlePage : Page, IPageKeys
         // episode 9 through protection, synopsis-ranges opens the range menu.
         if (ctx.Options.Show is { } synopsisShot && synopsisShot.StartsWith("synopsis", StringComparison.Ordinal) && ctx.Options.Title == id)
             _ = Task.Delay(3500).ContinueWith(_ => DispatcherQueue.TryEnqueue(() => StageSynopsis(synopsisShot)));
+        // --show=following-...: the people you follow, for the board's frames (StageFollowing).
+        if (ctx.Options.Show is { } followingShot && followingShot.StartsWith("following-", StringComparison.Ordinal) && ctx.Options.Title == id)
+            _ = Task.Delay(3000).ContinueWith(_ => DispatcherQueue.TryEnqueue(() => StageFollowing(followingShot)));
         // --show=source-menu: the More menu open, for a screenshot.
         if (ctx.Options.Show == "source-menu" && ctx.Options.Title == id)
             _ = Task.Delay(1500).ContinueWith(_ => DispatcherQueue.TryEnqueue(() => MoreButton.Flyout.ShowAt(MoreButton)));
@@ -577,6 +647,7 @@ public sealed partial class TitlePage : Page, IPageKeys
             detailsKey = null;
             availKey = null;
             shownSynopsis = null;
+            following.Reset();
             // The new season's words wait 600 ms over what stood, then plates; its rows, when
             // not yet known, are plates at once, so no row of the last season is clicked for this one.
             if (ctx.Known.Entry(id) is null)
@@ -624,6 +695,53 @@ public sealed partial class TitlePage : Page, IPageKeys
             act();
         };
         timer.Start();
+    }
+
+    /// <summary>
+    /// following-section: the section in view. following-all: Show all pressed, then in view.
+    /// following-tip: episode 8's marks in view with their tooltip open. following-off: the
+    /// switch turned off from here, so the section and the marks fade away.
+    /// </summary>
+    void StageFollowing(string shot)
+    {
+        void InView() => following.Root.StartBringIntoView(new BringIntoViewOptions { AnimationDesired = false, VerticalAlignmentRatio = 0.5 });
+        switch (shot)
+        {
+            case "following-section":
+                InView();
+                break;
+            case "following-all":
+                following.PressShowAll();
+                Later(0.6, InView);
+                break;
+            case "following-off":
+                ctx.Send(new Command.SetSetting(SettingKey.ShowFollowing, new SettingValue.Bool(false)));
+                break;
+            case "following-tip":
+                if (Episodes().FirstOrDefault(i => i.Row.Number == "8") is not { } eight)
+                    return;
+                if (EpisodeList.ContainerFromItem(eight) is not UIElement row || Find<FollowMarks>(row) is not { } marks)
+                    return;
+                row.StartBringIntoView(new BringIntoViewOptions { AnimationDesired = false, VerticalAlignmentRatio = 0.4 });
+                Later(0.8, () =>
+                {
+                    var tip = new ToolTip { Content = Following.MarksSpoken(eight.Row.Followed) };
+                    ToolTipService.SetToolTip(marks, tip);
+                    tip.IsOpen = true;
+                });
+                break;
+        }
+    }
+
+    static TFound? Find<TFound>(DependencyObject at) where TFound : class
+    {
+        for (var i = 0; i < VisualTreeHelper.GetChildrenCount(at); i++)
+        {
+            var child = VisualTreeHelper.GetChild(at, i);
+            if (child as TFound ?? Find<TFound>(child) is { } found)
+                return found;
+        }
+        return null;
     }
 
     /// <summary>The synopsis shots' state: see --show=synopsis... where the page opens.</summary>
@@ -804,6 +922,10 @@ public sealed partial class TitlePage : Page, IPageKeys
                     ShowDownloads(d.V1);
                     break;
                 case Event.Settings:
+                    ShowSpoilers();
+                    // The switch went off: the people fade away until the page is said again without them.
+                    following.Update(Current());
+                    break;
                 case Event.ShowSettings sheet when sheet.V1.Id == id:
                     ShowSpoilers();
                     break;
@@ -848,7 +970,7 @@ public sealed partial class TitlePage : Page, IPageKeys
                 Characters: [new CastMember(Name: "Mira Okonkwo", Role: CastRole.Main, VoiceActors: [new Person("Haru Tanabe", null)]), new CastMember(Name: "Tobias Lindqvist", Role: CastRole.Main, VoiceActors: [new Person("Ren Aoyama", null)]), new CastMember(Name: "Elsa Marchetti", Role: CastRole.Supporting, VoiceActors: [])],
                 Staff: [new StaffCredit("Noor Haddad", "Director"), new StaffCredit("Pavel Novak", "Series composition")],
                 StreamingLinks: [new StreamingLink("Lanternflix", "https://lanternflix.example/show", null), new StreamingLink("Kiri Stream", "https://kiri.example/show", "Japanese")],
-                Following: show.Contains("+signed-out") ? [] : [new FollowedEntry("Ines", null, LibrarySegment.Completed, 90, 10), new FollowedEntry("Jonas", null, LibrarySegment.Watching, null, 4)]),
+                Following: e.Detail?.Following ?? []),
         };
     }
 #endif
@@ -920,6 +1042,7 @@ public sealed partial class TitlePage : Page, IPageKeys
 
         ShowSeasons(entry);
         ShowDetails(entry);
+        following.Update(entry);
     }
 
     /// <summary>
@@ -1180,6 +1303,8 @@ public sealed partial class TitlePage : Page, IPageKeys
             }
             host.Children.Add(list);
         }
+        // Last in the column, so it growing or going moves nothing above it.
+        host.Children.Add(following.Root);
     }
 
     // How the episode list is drawn: the window's width, the range and fold the viewer chose, and
@@ -1222,11 +1347,19 @@ public sealed partial class TitlePage : Page, IPageKeys
     }
 
     /// <summary>Whether two rows of one episode differ only in how far it was watched.</summary>
+    /// The marks of the people followed change in place too: they come with AniList's answer.
     static bool OnlyProgress(EpisodeRow was, EpisodeRow now) =>
-        now with { Watched = was.Watched, Completed = was.Completed, SpoilerAhead = was.SpoilerAhead, PastProgress = was.PastProgress } == was;
+        !Differ(now with { Watched = was.Watched, Completed = was.Completed, SpoilerAhead = was.SpoilerAhead, PastProgress = was.PastProgress, Followed = was.Followed }, was);
+
+    /// <summary>Whether two rows say something different: the marks by who they are, as the record compares a list by reference.</summary>
+    internal static bool Differ(EpisodeRow a, EpisodeRow b) =>
+        a with { Followed = b.Followed } != b || !Following.Same(a.Followed, b.Followed);
 
     /// <summary>The shown rows' numbers and places, and what decides how they are laid: the list is rebuilt only when it changes.</summary>
     string? shownShape;
+
+    /// <summary>The line folding the watched rows away, which carries their marks.</summary>
+    NoteItem? fold;
 
     void ShowEpisodes()
     {
@@ -1248,6 +1381,9 @@ public sealed partial class TitlePage : Page, IPageKeys
             before.TryAdd(old.Row.Number, old);
 
         var shown = rows[(plan.Start + plan.Fold)..plan.End];
+        // The marks' slot, on every row while any row of the table has marks.
+        var room = rows.Any(r => r.Followed.Length > 0);
+        var foldMarks = Following.Union(rows[plan.Start..(plan.Start + plan.Fold)]);
         var start = global::Kaeri.App.Synopsis.ProtectionStart(shown, on);
         // The same rows in the same places, only their state changed (an episode marked
         // watched): each row takes its new state where it stands, and focus stays on it.
@@ -1261,11 +1397,12 @@ public sealed partial class TitlePage : Page, IPageKeys
                 if (!byNumber.TryGetValue(item.Row.Number, out var now))
                     continue;
                 var protectable = global::Kaeri.App.Synopsis.Protectable(now, on);
-                var changed = now != item.Row;
-                item.Take(now);
+                var changed = Differ(now, item.Row);
+                item.Take(now, room);
                 if (changed)
                     item.Lay(narrowList, outlook, protectable, Held(now), true);
             }
+            fold?.Mark(foldMarks);
             ShowDownloads(ctx.Known.Downloads);
             return;
         }
@@ -1276,8 +1413,12 @@ public sealed partial class TitlePage : Page, IPageKeys
         {
             var first = global::Kaeri.App.Synopsis.Number(rows[plan.Start].Number) ?? 1;
             var last = global::Kaeri.App.Synopsis.Number(rows[plan.Start + plan.Fold - 1].Number) ?? first;
-            items.Add(new NoteItem(true, 0, "", T.TitleWatchedRange(first, last)));
+            fold = new NoteItem(true, 0, "", T.TitleWatchedRange(first, last));
+            fold.Mark(foldMarks);
+            items.Add(fold);
         }
+        else
+            fold = null;
         for (var i = 0; i < shown.Length; i++)
         {
             if (start is { } line && line.At == i)
@@ -1287,7 +1428,7 @@ public sealed partial class TitlePage : Page, IPageKeys
                 items.Add(protection);
             }
             var row = shown[i];
-            var item = new EpisodeItem(row, id) { Target = row.Number == targetNumber };
+            var item = new EpisodeItem(row, id) { Target = row.Number == targetNumber, MarksRoom = room };
             var known = before.GetValueOrDefault(row.Number);
             if (known is not null)
                 item.Inherit(known);

@@ -389,13 +389,6 @@ title-fact-now = Now
 # Value of the fact on a show with no announced start.
 title-fact-tba = To be announced
 
-## More about this show, the sheet
-
-# A followed person's status and score, such as "Completed · 9/10". The status is already worded.
-# @arg status: text
-# @arg score: int
-more-following-line = { $status } · { $score }/10
-
 ## Go to episode
 
 # Item of the episode range menu, and the title of its number field. The ellipsis marks that it asks for a number.

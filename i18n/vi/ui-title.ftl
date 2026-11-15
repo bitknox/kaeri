@@ -105,7 +105,6 @@ title-fact-range = { $from } đến { $to }
 title-fact-after = Sau tập { $episode }
 title-fact-now = Đang phát sóng
 title-fact-tba = Chưa công bố
-more-following-line = { $status } · { $score }/10
 episode-go-to = Đến tập…
 episode-go-to-title = Đến tập
 episode-go-to-go = Đi
