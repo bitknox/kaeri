@@ -246,7 +246,7 @@ public sealed partial class ReadUpdatesPage : Page
             menu.Items.Add(ReadingParts.Item(T.SeriesMarkRead, () => ctx.Known.Reading.MarkRead(work, [row.Chapter.Id], true)));
         else
             menu.Items.Add(ReadingParts.Item(T.SeriesMarkUnread, () => ctx.Known.Reading.MarkRead(work, [row.Chapter.Id], false)));
-        if (row.Chapter.Download is null)
+        if (row.Chapter.Downloadable())
             menu.Items.Add(ReadingParts.Item(T.SeriesDownload, () => ctx.Known.Reading.Download(work, new DownloadPick.Chapters([row.Chapter.Id]))));
         menu.Items.Add(ReadingParts.Item(T.ChapterUpdatesOpenSeriesMenu, () => ctx.Window.OpenSeries(work)));
         open.ContextFlyout = menu;

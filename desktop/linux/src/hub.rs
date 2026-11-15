@@ -86,6 +86,8 @@ pub struct Known {
     pub provider_note: Option<String>,
     /// The jobs running, by number, with their activity: "syncing".
     pub jobs: HashMap<JobId, String>,
+    /// Sends the engine started again by itself, for their series' Send dialog to take up.
+    pub held_sends: crate::reading::export::HeldSends,
     /// The trackers being signed in to, and how.
     pub signing: HashMap<String, SignIn>,
     /// The torrent proxy check's last word; `None` while torrents are off or before the first.
@@ -244,6 +246,9 @@ impl Known {
 
     fn take(&mut self, event: &Event) {
         self.matches.take(event);
+        if let Event::Reading(reading) = event {
+            self.held_sends.take(reading);
+        }
         match event {
             Event::Content { view, content } => {
                 // Continue's list carries the local watch history. The other views' rows may
