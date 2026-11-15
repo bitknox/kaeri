@@ -11,7 +11,7 @@ use kaeri_model::{
         CastRole, FuzzyDate, RankingKind, RelationKind, Season, SourceMaterial, TitleLanguage,
     },
     command::Command,
-    episodes::DubExtent,
+    episodes::{DubExtent, EpisodeRow},
     event::Event,
     search::SearchQuery,
     settings::SettingKey,
@@ -790,6 +790,75 @@ async fn a_pinned_source_serves_its_episodes_and_the_others_fill_the_rest() {
         panic!("no table after unpinning")
     };
     assert!(rows.iter().all(|r| r.source.is_none()));
+}
+
+/// The tables an app holds for titles it looked at a while ago, as a native app keeps one for
+/// every title it loaded: [`FINISHED`]'s first, then three more, from covers' stills.
+async fn held_behind_three_others(h: &mut Harness) {
+    h.send(Command::LoadEpisodes(FINISHED));
+    h.settle().await;
+    three_others(h).await;
+}
+
+/// Three titles' stills, as a shelf of covers asks for them.
+async fn three_others(h: &mut Harness) {
+    for other in [AIRING, fixtures::MOVIE, fixtures::ONA] {
+        h.send(Command::LoadStills(other));
+        h.settle().await;
+    }
+}
+
+/// The table said for `id` among `updates`, the last one when there are several.
+fn table_for(updates: &[Event], id: AnilistId) -> Option<Vec<EpisodeRow>> {
+    updates.iter().rev().find_map(|u| match u {
+        Event::Episodes { id: said, rows, failed: None } if *said == id => Some(rows.clone()),
+        _ => None,
+    })
+}
+
+#[tokio::test]
+async fn a_pin_brings_a_held_table_up_to_date_however_long_ago_it_was_listed() {
+    let mut h = harness(with_alt()).await;
+    held_behind_three_others(&mut h).await;
+
+    // Picked from a cover's menu: the app holds the table, so it is said again at once, as
+    // opening the page afresh would list it.
+    h.send(Command::SetProviderPreference { id: FINISHED, provider: Some("alt".into()) });
+    let rows = table_for(&h.settle().await, FINISHED).expect("the held table said again");
+    assert_eq!(rows.len(), 12, "alt's three, then the rest from the fixture source");
+    assert!(rows[..3].iter().all(|r| r.source.is_none()), "the pinned source's own rows");
+    assert!(rows[3..].iter().all(|r| r.source.is_some()));
+
+    // Back to automatic, the same.
+    three_others(&mut h).await;
+    h.send(Command::SetProviderPreference { id: FINISHED, provider: None });
+    let rows = table_for(&h.settle().await, FINISHED).expect("the held table said again");
+    assert!(rows.iter().all(|r| r.source.is_none()), "the first source in the chain again");
+}
+
+#[tokio::test]
+async fn a_pinned_release_brings_a_held_table_up_to_date_however_long_ago_it_was_listed() {
+    let mut h = harness(with_alt()).await;
+    held_behind_three_others(&mut h).await;
+
+    h.send(Command::PinRelease {
+        id: FINISHED,
+        provider_id: "alt".into(),
+        release_id: "season".into(),
+        title: "Season one".into(),
+    });
+    let rows = table_for(&h.settle().await, FINISHED).expect("the held table said again");
+    assert!(rows[..3].iter().all(|r| r.source.is_none()), "the pinned source's own rows");
+    assert!(rows[3..].iter().all(|r| r.source.is_some()));
+}
+
+#[tokio::test]
+async fn a_pin_lists_nothing_for_a_title_never_listed() {
+    let mut h = harness(with_alt()).await;
+    three_others(&mut h).await;
+    h.send(Command::SetProviderPreference { id: FINISHED, provider: Some("alt".into()) });
+    let updates = h.settle().await;
+    assert_eq!(table_for(&updates, FINISHED), None, "no table held, none to bring up to date");
 }
 
 #[tokio::test]
