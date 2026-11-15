@@ -256,6 +256,7 @@ extension SettingKey {
         case .upNextCountdown: L.settingsUpNextCountdown
         case .preloadMetered: PreloadWords.title(cellular: !Device.isMac && !Device.isPad)
         case .spoilerProtection: L.settingsSpoiler
+        case .pictureInPictureOnLeave: L.settingsPictureInPictureOnLeaveApple
         case .episodeDiscussions: L.settingsAppleDiscussions
         case .showFollowing: L.settingsAnilistFollowing
         case .hoverCards: L.settingsLabelHoverCards

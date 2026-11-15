@@ -38,6 +38,9 @@ protocol PictureInPictureSystem: AnyObject {
     func stop()
     /// The playback paused, played or changed length: the window's buttons follow.
     func playbackChanged()
+    /// Whether leaving the app while it plays opens the floating window: on iPhone and iPad the
+    /// system starts it by itself, so it is told.
+    var startsOnLeave: Bool { get set }
 }
 
 /// Picture in Picture for one player: the button, ⌥⌘P, the window minimised or the app hidden
@@ -118,12 +121,24 @@ public final class PictureInPicture {
     /// in the main window.
     public func leaving() {
         guard let model, model.isPresented, !model.paused, model.hasPicture, machine.phase == .inline else { return }
+        guard startsOnLeave else {
+            PlayerModel.note(.info, "picture in picture: off when leaving, the sound plays on")
+            return
+        }
         PlayerModel.note(.info, "picture in picture: starting as the window leaves")
         receive(.toggle)
     }
 
     /// The player closed: the floating window goes with it.
     public func playerClosed() { receive(.playbackClosed) }
+
+    /// The setting Picture in Picture when leaving the app, read as it changes: when off, leaving
+    /// keeps the sound playing with the system's media controls, and the button, ⌥⌘P and the
+    /// Window menu still open the floating window. It applies on the next leave.
+    public var startsOnLeave: Bool {
+        get { system.startsOnLeave }
+        set { system.startsOnLeave = newValue }
+    }
 
     func receive(_ event: PictureInPictureEvent) {
         let before = machine.phase
@@ -331,6 +346,13 @@ final class SystemPictureInPicture: NSObject, PictureInPictureSystem {
     private var waiting: Task<Void, Never>?
     /// Started, and AVKit not yet asked: still waiting for the feed's first frames.
     private var unasked = false
+    var startsOnLeave = true {
+        didSet {
+            #if os(iOS)
+            controller?.canStartPictureInPictureAutomaticallyFromInline = startsOnLeave
+            #endif
+        }
+    }
     #if os(macOS)
     private var stage: NSWindow?
     /// The floating window's panel in the app while it is open, and its resizes followed.
@@ -408,7 +430,7 @@ final class SystemPictureInPicture: NSObject, PictureInPictureSystem {
         let controller = AVPictureInPictureController(contentSource: source)
         controller.delegate = self
         #if os(iOS)
-        controller.canStartPictureInPictureAutomaticallyFromInline = true
+        controller.canStartPictureInPictureAutomaticallyFromInline = startsOnLeave
         #endif
         // In the log: whether the system would open its window now, as that changes.
         possible = controller.observe(\.isPictureInPicturePossible, options: [.initial, .new]) { _, change in

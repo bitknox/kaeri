@@ -1240,7 +1240,7 @@ public final class AppStore {
 
         case .discussion(let view):
             discussion.view(view)
-        case .discussionFound(let media, let episode, let comments):
+        case .discussionFound(let media, let episode, let comments, _):
             discussion.found(DiscussionKey(media: media, episode: episode), comments: comments)
 
         case .searchPaging(let query, let hasNext):
