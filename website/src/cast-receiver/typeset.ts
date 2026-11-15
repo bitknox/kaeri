@@ -2,6 +2,7 @@
 // with the file's own fonts from the sender's relay. JASSUB and its WebAssembly are separate files
 // under vendor/jassub/, loaded only when an episode has typeset subtitles.
 
+import { devLog } from './debug';
 import { FrameClock } from './frame-clock';
 import type { TypesetSink } from './formats/subs';
 
@@ -125,6 +126,10 @@ export class Typeset implements TypesetSink {
 			this.clock = clock;
 			await jassub.ready;
 		} catch (e) {
+			// A newer show or hide replaced this renderer while it started (its worker answers the
+			// destroy with an error): not a failure, and the newer renderer stays.
+			devLog(`typeset ${token === this.token ? 'failed' : 'replaced'}: ${e}`);
+			if (token !== this.token) return;
 			console.warn('typeset subtitles', e);
 			await this.hide();
 			throw 'renderer' as Failure;

@@ -4,7 +4,7 @@
 
 import type { Report } from '../errors';
 import { readExtras, type SubtitleFile } from '../protocol';
-import { Unpacker } from './engine';
+import { Refused, Unpacker } from './engine';
 import { Subtitles, supSamples, type TypesetSink } from './subs';
 import { bytesOf } from './source';
 
@@ -49,8 +49,11 @@ export class Formats {
 		return this.unpacker;
 	}
 
-	/** The LOAD interceptor's part: plays the load through the unpacker when it opens. */
-	async load<R>(request: R): Promise<R> {
+	/**
+	 * The LOAD interceptor's part: plays the load through the unpacker when it opens. Null when the
+	 * load ends here (video the TV can't decode); the error went to the sender already.
+	 */
+	async load<R>(request: R): Promise<R | null> {
 		const token = ++this.token;
 		this.stop();
 		const r = request as LoadRequest;
@@ -75,6 +78,7 @@ export class Formats {
 				container: extras.container,
 				start: r.currentTime ?? 0,
 				audio: extras.audio?.index ?? null,
+				videoCodec: extras.video?.codec ?? null,
 				text: on?.inside ?? null,
 				base: this.base,
 				sink: this.sink,
@@ -92,6 +96,10 @@ export class Formats {
 			delete media.hlsVideoSegmentFormat;
 			if (Number.isFinite(u.duration) && u.duration > 0) media.duration = u.duration;
 		} catch (e) {
+			if (e instanceof Refused) {
+				if (token === this.token) this.report(e.report);
+				return null;
+			}
 			console.info('CAF plays this load as it is:', e instanceof Error ? e.message : e);
 		}
 		return request;

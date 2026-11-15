@@ -150,6 +150,18 @@ export class PcmAudio {
 		this.gain.gain.value = this.video.muted ? 0 : this.video.volume;
 	}
 
+	private tap: AnalyserNode | null = null;
+
+	/** The decoded sound before the volume, for the testing build's level meter. */
+	analyser(): AnalyserNode {
+		if (!this.tap) {
+			this.tap = this.ctx.createAnalyser();
+			this.tap.fftSize = 2048;
+			this.node.connect(this.tap);
+		}
+		return this.tap;
+	}
+
 	/** Decoder CPU time so far (ms) and seconds decoded, from the worker. */
 	cpu(): Promise<{ cpu: number; decoded: number; heap: number }> {
 		return new Promise((resolve) => {

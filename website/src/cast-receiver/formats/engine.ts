@@ -14,7 +14,7 @@ import { Matroska } from './mkv';
 import { Mp4File } from './mp4';
 import { createMuxer, type Muxer } from './mux';
 import { PcmAudio, decoderFor } from './pcm';
-import { FetchError, LeaveToCaf, RangeSource } from './source';
+import { FetchError, LeaveToCaf, RangeSource, bytesOf } from './source';
 import { Subtitles, type TypesetSink } from './subs';
 import { TsFile } from './ts';
 import type { Demuxer, Sample, Track } from './types';
@@ -67,7 +67,7 @@ export function sniff(b: Uint8Array): Format | null {
 	if (b.length > 196 && b[4] === 0x47 && b[196] === 0x47) return 'ts';
 	const head = new TextDecoder().decode(b.subarray(0, 512)).trimStart();
 	if (head.startsWith('#EXTM3U')) return 'hls';
-	if (/^(<\?xml[^>]*>\s*)?<MPD/.test(head)) return 'dash';
+	if (head.startsWith('<') && /<MPD[\s>]/.test(head)) return 'dash';
 	return null;
 }
 
@@ -76,6 +76,11 @@ export async function openDemuxer(url: string, contentType = '', hint = ''): Pro
 	let format = formatOf(url, contentType, hint);
 	const height = typeof screen === 'object' ? Math.round(screen.height * (globalThis.devicePixelRatio || 1)) || 1080 : 1080;
 	if (format === 'hls' || format === 'dash') {
+		// The manifest's first bytes decide: a sender may name a DASH manifest HLS, or a file a
+		// playlist.
+		const head = sniff(await bytesOf(url, { range: [0, 1023], what: 'playlist' }));
+		if (head === 'hls' || head === 'dash') format = head;
+		else if (head) return openDemuxer(url, '', head);
 		const demux = format === 'hls' ? await openHls(url, height) : await openDash(url, height);
 		await demux.open();
 		return { demux, format };
@@ -83,13 +88,14 @@ export async function openDemuxer(url: string, contentType = '', hint = ''): Pro
 	const src = new RangeSource(url);
 	try {
 		await src.open();
-		if (!format) {
-			format = sniff(await src.bytes(0, 1024));
-			if (format === 'hls' || format === 'dash') {
-				src.close();
-				return openDemuxer(url, '', format);
-			}
+		// The first bytes win over the load's word for the container: a sender may name a
+		// Matroska file MP4.
+		const sniffed = sniff(await src.bytes(0, Math.min(1024, Number.isFinite(src.size) ? src.size : 1024)));
+		if (sniffed === 'hls' || sniffed === 'dash') {
+			src.close();
+			return openDemuxer(url, '', sniffed);
 		}
+		format = sniffed ?? format;
 		if (!format) throw new Error('not a format the receiver reads');
 		const demux = format === 'mkv' ? new Matroska(src) : format === 'mp4' ? new Mp4File(src) : new TsFile(src);
 		await demux.open();
@@ -224,6 +230,8 @@ export interface UnpackerOptions {
 	start?: number;
 	/** The audio track to play, counted from 0 in the file's audio tracks. */
 	audio?: number | null;
+	/** The sender's word for the video codec (`h264`, `video:h.264 high 10`), sent back in errors. */
+	videoCodec?: string | null;
 	/** The subtitle track to show, counted from 0 in the file's subtitle tracks. */
 	text?: number | null;
 	/** The receiver's base URL, where pcm/ is. */
@@ -235,7 +243,7 @@ export interface UnpackerOptions {
 }
 
 /** A failure already worded for the sender. */
-class Refused extends Error {
+export class Refused extends Error {
 	constructor(readonly report: Report) {
 		super(report.detail);
 	}
@@ -243,6 +251,24 @@ class Refused extends Error {
 
 function report(part: Report['part'], detail: string, extra: Partial<Report> = {}): Report {
 	return { part, codec: null, detail, fetched: null, status: null, detailed: null, shaka: null, lost: false, ...extra };
+}
+
+/** The engine's names for video codecs; anything else is `video:<name>`. */
+const ENGINE_VIDEO = /^(h264|hevc|vp9|av1)$/;
+
+/**
+ * The video track the TV can't take, worded for the sender, or null. Read from the container's
+ * codec id before anything plays, so a picture the TV can't decode never plays as sound alone.
+ */
+export function videoRefusal(t: Track, senderWord?: string | null): Report | null {
+	const muxer = createMuxer(t);
+	if (!muxer) {
+		const codec = senderWord || (ENGINE_VIDEO.test(t.codec) ? t.codec : `video:${t.codec}`);
+		return report('video', `the TV has no decoder for ${t.codec} video`, { codec });
+	}
+	if (typeof MediaSource !== 'undefined' && !MediaSource.isTypeSupported(muxer.mime))
+		return report('video', `MediaSource doesn't take ${muxer.mime}`, { codec: senderWord || (codecString(t) ?? t.codec) });
+	return null;
 }
 
 /** The base of a track's codec string as the TV names it (`hvc1`, `ec-3`), or the codec word. */
@@ -316,12 +342,21 @@ export class Unpacker {
 		this.target = this.runFrom = this.readTo = Math.max(0, o.start ?? 0);
 	}
 
-	/** Opens the stream. Throws LeaveToCaf, FetchError or a parse error; the caller hands the load to CAF. */
+	/**
+	 * Opens the stream. Throws Refused for video the TV can't decode (the load ends there), or
+	 * LeaveToCaf, FetchError or a parse error (the caller hands the load to CAF).
+	 */
 	static async open(video: HTMLVideoElement, o: UnpackerOptions): Promise<Unpacker> {
 		const { demux, format } = await openDemuxer(o.url, o.contentType, o.container);
 		if (!demux.tracks.some((t) => t.kind === 'video' || t.kind === 'audio')) {
 			demux.close();
 			throw new Error('no video or audio tracks');
+		}
+		const v = demux.tracks.find((t) => t.kind === 'video');
+		const refused = v ? videoRefusal(v, o.videoCodec) : null;
+		if (refused) {
+			demux.close();
+			throw new Refused(refused);
 		}
 		const u = new Unpacker(demux, format, video, o);
 		await u.selectTracks();
@@ -349,6 +384,11 @@ export class Unpacker {
 			seeks: this.seeks,
 			pcm: this.pcm ? this.pcm.stats : null,
 		};
+	}
+
+	/** The WebAssembly audio's level tap, for the testing build. Null when MSE plays the sound. */
+	pcmAnalyser() {
+		return this.pcm?.analyser() ?? null;
 	}
 
 	/** Decoder CPU time, for measuring. */
