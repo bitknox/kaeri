@@ -630,12 +630,6 @@ pub fn open_field(bar: &gtk::SearchBar, entry: &gtk::SearchEntry) {
 
 /// The search field in its bar under the header, open, and the header's button that opens and
 /// closes it.
-/// A search field open with the caret in it, as Search in the sidebar leaves it on either side.
-pub fn open_field(bar: &gtk::SearchBar, entry: &gtk::SearchEntry) {
-    bar.set_search_mode(true);
-    entry.grab_focus();
-}
-
 pub fn field(placeholder: &str) -> (gtk::SearchBar, gtk::SearchEntry, gtk::ToggleButton) {
     let entry = gtk::SearchEntry::builder().placeholder_text(placeholder).hexpand(true).build();
     // Screen readers name the field by its prompt, which a placeholder alone does not give it.
