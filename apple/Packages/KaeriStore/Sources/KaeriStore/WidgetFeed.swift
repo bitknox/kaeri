@@ -200,8 +200,11 @@ extension EngineQuestions: WidgetArtSource {
 
 extension ArtworkStore: WidgetArtSource {
     /// Asks the engine for every one of `urls` at once, then waits for each, a quarter of a minute
-    /// at most in all.
+    /// at most in all. Each is held as a screen holds its art until the snapshot has it: the cache
+    /// can let go of a decode the moment it lands.
     public func images(for urls: [String], maxPixelSize: Int) async -> [String: CGImage] {
+        for url in urls { hold(url) }
+        defer { for url in urls { hide(url) } }
         for url in urls { request(url, maxPixelSize: maxPixelSize) }
         let deadline = ContinuousClock.now + .seconds(15)
         while urls.contains(where: isPending), ContinuousClock.now < deadline {
