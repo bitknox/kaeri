@@ -11,7 +11,7 @@ use super::memory::best_match;
 use super::track::{Role, role};
 use super::{
     SETTLE, SubtitleChoice, SubtitleMemory, Track, TrackAction, TrackKind, TrackPolicy,
-    language_matches, same_delay,
+    TrackPrint, language_matches, same_delay,
 };
 
 impl TrackPolicy {
@@ -57,30 +57,11 @@ impl TrackPolicy {
     /// The audio track this file should play. `None` when there is no audio at all.
     fn pick_audio(&self) -> Option<&Track> {
         let audio = self.of_kind(TrackKind::Audio);
-        if let Some(print) = &self.memory.audio
-            && let Some(track) = best_match(print, &audio)
-        {
-            return Some(track);
-        }
-
-        // The programme rather than a commentary or a description, unless that is all there
-        // is. Then the language that is wanted; then a track that does not say, which in a
-        // file that tags its other audio is usually the one that matters; then any.
-        let candidates = facts(&audio);
-        let main = |c: &Facts| c.role == Role::Main;
-        let any_main = candidates.iter().any(main);
-        let programme = |c: &Facts| !any_main || main(c);
         let wanted = match self.preferences.translation {
             Translation::Sub => Some("jpn"),
             Translation::Dub => self.preferences.language.as_deref(),
         };
-        let in_wanted = |c: &Facts| {
-            programme(c)
-                && wanted
-                    .is_some_and(|w| c.lang.as_deref().is_some_and(|l| language_matches(l, w)))
-        };
-        let untagged = |c: &Facts| programme(c) && wanted.is_some() && c.lang.is_none();
-        pick(&candidates, &[&in_wanted, &untagged, &programme], self.aid.current.flatten())
+        audio_for(&audio, wanted, self.memory.audio.as_ref(), self.aid.current.flatten())
     }
 
     /// The subtitle choice for this file: `Some(None)` for off, `None` to leave mpv's alone.
@@ -143,6 +124,46 @@ impl TrackPolicy {
         // what the viewer would rather have, and turning subtitles off is a guess too.
         pick(&candidates, &tiers, current).map(|t| Some(t.id))
     }
+}
+
+/// The audio track of `audio` the player picks, by the same rules as [`TrackPolicy`]: the
+/// series' remembered track, found again by what it is, then the programme in the `wanted`
+/// language (`ja` for a sub watcher, their own for a dub watcher). For a player that lists
+/// its tracks some other way than mpv, a TV a cast plays on above all, so it plays what the
+/// app would. `None` when there is no audio at all.
+pub fn choose_audio<'a>(
+    audio: &[&'a Track],
+    wanted: Option<&str>,
+    remembered: Option<&TrackPrint>,
+) -> Option<&'a Track> {
+    audio_for(audio, wanted, remembered, None)
+}
+
+fn audio_for<'a>(
+    audio: &[&'a Track],
+    wanted: Option<&str>,
+    remembered: Option<&TrackPrint>,
+    current: Option<i64>,
+) -> Option<&'a Track> {
+    if let Some(print) = remembered
+        && let Some(track) = best_match(print, audio)
+    {
+        return Some(track);
+    }
+
+    // The programme rather than a commentary or a description, unless that is all there
+    // is. Then the language that is wanted; then a track that does not say, which in a
+    // file that tags its other audio is usually the one that matters; then any.
+    let candidates = facts(audio);
+    let main = |c: &Facts| c.role == Role::Main;
+    let any_main = candidates.iter().any(main);
+    let programme = |c: &Facts| !any_main || main(c);
+    let in_wanted = |c: &Facts| {
+        programme(c)
+            && wanted.is_some_and(|w| c.lang.as_deref().is_some_and(|l| language_matches(l, w)))
+    };
+    let untagged = |c: &Facts| programme(c) && wanted.is_some() && c.lang.is_none();
+    pick(&candidates, &[&in_wanted, &untagged, &programme], current)
 }
 
 /// A track with what choosing needs worked out once.

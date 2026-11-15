@@ -317,7 +317,7 @@ fn tracks(card: &mut NowCard, status: &CastStatus) {
         .map(|a| TrackInfo {
             id: i64::try_from(a.index).unwrap_or(i64::MAX),
             kind: Track::Audio,
-            title: None,
+            title: a.title.clone(),
             language: a.language.clone(),
             selected: a.selected,
         })
