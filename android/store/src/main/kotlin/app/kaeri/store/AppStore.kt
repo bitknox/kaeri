@@ -38,6 +38,7 @@ import app.kaeri.engine.core.SourceCandidate
 import app.kaeri.engine.ffi.FfiEngine
 import app.kaeri.engine.ffi.resetConfig
 import app.kaeri.i18n.Strings
+import app.kaeri.engine.ffi.trailerMayAutoplay as engineTrailerMayAutoplay
 import app.kaeri.engine.ffi.trailerWatchUrl as engineTrailerWatchUrl
 import app.kaeri.engine.model.Entry as EngineEntry
 import app.kaeri.engine.model.LicensedCommand
@@ -127,6 +128,15 @@ class AppStore(
 
     /** The one offline state, as the engine says it from the network path the app reports. */
     val offline: StateFlow<Boolean> = _offline.asStateFlow()
+
+    private val _autoplay = MutableStateFlow(false)
+
+    /**
+     * Whether trailers may start by themselves now, as the engine says it from the Play trailers
+     * setting, the network and what the device reports. False until it says so, so no page makes
+     * room for a trailer early.
+     */
+    val trailersMayAutoplay: StateFlow<Boolean> = _autoplay.asStateFlow()
 
     val titles = TitleCache()
     val continuing = ContinueModel()
@@ -851,6 +861,13 @@ class AppStore(
     }
 
     /**
+     * Whether [entry]'s trailer may start by itself now: trailers may, and the title's own side of
+     * it, with the spoiler rule under [spoilerProtection].
+     */
+    fun trailerMayAutoplay(entry: EngineEntry, spoilerProtection: Boolean): Boolean =
+        _autoplay.value && engineTrailerMayAutoplay(entry, spoilerProtection)
+
+    /**
      * The device's network, as the system says it: cellular, Data Saver as constrained, and no
      * network at all as offline. The engine answers with the one offline state.
      */
@@ -1430,6 +1447,7 @@ class AppStore(
             is Event.Surprise -> surprise.answer(event.pool, event.outcome)
 
             is Event.Connectivity -> _offline.value = event.offline
+            is Event.Autoplay -> _autoplay.value = event.v1.trailers
             // A failed sign-in the open sheet says in its place: the snackbar would draw under it.
             // The page says an uncertain match in its own line, so it is not said twice.
             is Event.Toast -> when {
