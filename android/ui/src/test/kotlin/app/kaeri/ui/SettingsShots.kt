@@ -113,7 +113,7 @@ class SettingsShots {
     @Config(qualifiers = PHONE)
     fun phone_settings_playback() = shoot("phone-settings-playback", settingsRoute(SettingsPane.Playback))
 
-    /** General: Title language, Play trailers and Show adult titles, under Titles. */
+    /** General: Title language and Show adult titles, under Titles, as the TV's General has them. */
     @Test
     @Config(qualifiers = PHONE)
     fun phone_settings_general() = shoot("phone-settings-general", settingsRoute(SettingsPane.General))
