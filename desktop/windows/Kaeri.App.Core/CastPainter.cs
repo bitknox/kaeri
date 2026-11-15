@@ -57,7 +57,7 @@ public sealed class CastPainter(Func<DateTimeOffset>? clock = null)
     /// <summary>The session as the engine last said it.</summary>
     public FfiCastSessionView? View { get; private set; }
 
-    /// <summary>The change count: the engine's once it says one, else the views taken.</summary>
+    /// <summary>The engine's change count of the last view taken.</summary>
     public ulong Rev => rev;
 
     /// <summary>The wait after which the line under the seek line says the TV waits for the stream.</summary>
@@ -161,15 +161,16 @@ public sealed class CastPainter(Func<DateTimeOffset>? clock = null)
     };
 
     /// <summary>
-    /// The cast button from the session: the engine's state once it says one; until then,
-    /// waving while it connects or joins again, filled while a TV is held, and there at all
-    /// only while TVs were found.
+    /// The cast button from the session: the engine's state, waving while a left session is
+    /// joined again, filled while a TV running Kaeri is driven, and there while any TV was found.
     /// </summary>
     public static CastButtonState Button(FfiCastSessionView? view, bool tvsFound, bool rejoining, bool driving)
     {
         if (view is not null && CastApi.Button(view) is { } said)
             return rejoining && said != CastButtonState.Connected ? CastButtonState.Connecting
                 : driving && said is CastButtonState.Available or CastButtonState.Hidden ? CastButtonState.Connected
+                // The engine knows only Cast TVs; a TV running Kaeri found here shows the button too.
+                : said == CastButtonState.Hidden && tvsFound ? CastButtonState.Available
                 : said;
         return view?.State switch
         {

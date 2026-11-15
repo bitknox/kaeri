@@ -12,13 +12,22 @@ public class CastPainterTests
 {
     DateTimeOffset now = new(2026, 11, 15, 20, 0, 0, TimeSpan.Zero);
 
+    ulong rev;
+
     static FfiCastItem Item(double position = 100, double? duration = 1440, bool paused = false, bool waiting = false, bool loading = false) =>
         new(Id: 900_001, Title: "Made-up Show", Episode: "7", EpisodeTitle: "A Quiet Harbour", Image: null,
-            Position: position, Duration: duration, Paused: paused, Buffering: waiting, Loading: loading);
+            Position: position, Duration: duration, Paused: paused, Waiting: waiting ? 0u : null, Loading: loading);
 
-    static FfiCastSessionView View(FfiCastItem? item, FfiCastSessionState state = FfiCastSessionState.Playing, Msg? notice = null) =>
-        new(State: state, DeviceKey: "cast:living", DeviceName: "Living room", Item: item, Queue: [], Notice: notice,
-            Level: null, Muted: null, VolumeControl: FfiVolumeControl.Level, OwnReceiver: false);
+    /// <summary>A view as the engine sends it: a higher rev each time unless one is given.</summary>
+    FfiCastSessionView View(FfiCastItem? item, FfiCastSessionState state = FfiCastSessionState.Playing, Msg? notice = null, ulong? sameRev = null) =>
+        new(State: state, Button: state switch
+            {
+                FfiCastSessionState.Connecting => FfiCastButton.Connecting,
+                FfiCastSessionState.Connected or FfiCastSessionState.Playing => FfiCastButton.Connected,
+                _ => FfiCastButton.Hidden,
+            },
+            Rev: sameRev ?? ++rev, DeviceKey: "cast:living", DeviceName: "Living room", Item: item, Queue: [], Notice: notice,
+            Note: null, Level: null, Muted: null, VolumeControl: FfiVolumeControl.Level, OwnReceiver: false);
 
     CastPainter Painter() => new(() => now);
 
@@ -98,6 +107,10 @@ public class CastPainterTests
         Assert.Equal(600, painter.Playhead());
         Assert.True(painter.Draw("Living room")!.Paused);
         Assert.Equal("10:00", painter.Draw("Living room")!.Elapsed);
+        // An echo of the state before the seek, at the same rev: the seek and the press stay.
+        painter.Take(View(Item(), sameRev: painter.Rev));
+        Assert.Equal(600, painter.Playhead());
+        Assert.True(painter.Paused);
         painter.Take(View(Item(position: 598, paused: true)));
         Assert.Equal(598, painter.Playhead());
         Assert.True(painter.Paused);

@@ -131,6 +131,7 @@ public sealed partial class MainWindow
         castButton?.Update();
         castLayer?.Refresh();
         RememberCast();
+        ToastCastNote();
         // While this PC relays the stream, it doesn't sleep.
         KeepAwake(tv.CastRelaying || (tv.SessionLoaded && tv.Session?.Item is not null));
         // While a TV plays, the media keys and Windows' media controls drive it: the cast first,
@@ -141,6 +142,19 @@ public sealed partial class MainWindow
         media?.Tv(now, now is null ? 0 : tv.Playhead() ?? now.Position, tv.Live, Picture(now), c => _ = tv.Send(c));
         if (tv.Sheet is not null && TvDialog.Showing is null && !openingTv)
             OpenTvDialog();
+    }
+
+    string? castNoteShown;
+
+    /// <summary>The cast's one-time line while it plays, as a toast when it first reads differently.</summary>
+    void ToastCastNote()
+    {
+        var note = tv.SessionLoaded ? tv.Session?.Note?.Text() : null;
+        if (note == castNoteShown)
+            return;
+        castNoteShown = note;
+        if (!string.IsNullOrEmpty(note))
+            ShowToast(InfoBarSeverity.Informational, note);
     }
 
     bool keptAwake;
