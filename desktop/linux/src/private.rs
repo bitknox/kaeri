@@ -79,7 +79,9 @@ pub fn heard(ctx: &Ctx, event: &Event) {
         } else {
             t::private_mode_off_announcement()
         };
-        ctx.window.announce(&words, gtk::AccessibleAnnouncementPriority::Medium);
+        ctx.window
+            .upcast_ref::<gtk::Widget>()
+            .announce(&words, gtk::AccessibleAnnouncementPriority::Medium);
     }
 }
 
@@ -426,7 +428,7 @@ pub fn always_action(
             action.set_state(&on.to_variant());
             ctx.hub.send(Command::SetAlwaysPrivate { title: title.clone(), on });
             if on {
-                ctx.window.announce(
+                ctx.window.upcast_ref::<gtk::Widget>().announce(
                     &t::title_always_private(),
                     gtk::AccessibleAnnouncementPriority::Medium,
                 );
