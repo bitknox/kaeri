@@ -40,8 +40,8 @@ pub use aac::{
 };
 pub use channel::{CastError, Channel, Incoming};
 pub use client::{
-    App, DEFAULT_MEDIA_RECEIVER, Device, Load, Media, MediaStatus, Metadata, ReceiverStatus,
-    TextStyle, TextTrack, VolumeControl,
+    App, DEFAULT_MEDIA_RECEIVER, Device, KAERI_RECEIVER, Load, Media, MediaStatus, Metadata,
+    ReceiverStatus, TextStyle, TextTrack, VolumeControl,
 };
 pub use device::{CastDevice, local_address_towards, same_network};
 pub use fetch::{PlainHttp, Upstream, UpstreamResponse};

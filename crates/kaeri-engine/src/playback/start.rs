@@ -72,6 +72,11 @@ pub(crate) fn opener_for(
     {
         return Some(Arc::clone(cast) as Arc<dyn PlayerOpener>);
     }
+    // A cast session holds a TV: every play goes to it.
+    #[cfg(feature = "cast")]
+    if let Some(device) = services.casts.session_device() {
+        return Some(Arc::new(cast_opener(services, device)) as Arc<dyn PlayerOpener>);
+    }
     let hosted = services.hosted_player.then(|| -> Arc<dyn PlayerOpener> {
         Arc::clone(&services.hosted) as Arc<dyn PlayerOpener>
     });
@@ -116,8 +121,6 @@ pub fn cast_to(
     services: &Services,
     tx: &Outbox,
 ) {
-    use crate::playback::link::cast::CastOpener;
-
     let hub = &services.casts;
     let Some(device) = hub.device(device) else {
         let _ = tx.send(Event::Toast(Notice::alert(kaeri_model::Msg::NoticeCastNoDevice)));
@@ -135,14 +138,23 @@ pub fn cast_to(
         Some(_) => true,
         None => false,
     };
+    hub.begin(device.clone());
+    hub.asked(id, episode.clone());
+    engine.casting = Some(Arc::new(cast_opener(services, device)));
+    play(id, episode, from_start, job, engine, services, tx);
+}
+
+/// What opens a cast to `device`, with its scratch files in the runtime directory.
+#[cfg(feature = "cast")]
+fn cast_opener(
+    services: &Services,
+    device: kaeri_cast::CastDevice,
+) -> crate::playback::link::cast::CastOpener {
     let scratch = services.paths.runtime_dir().join("cast");
     if let Err(e) = std::fs::create_dir_all(&scratch) {
         tracing::warn!(error = %e, "couldn't make the cast's scratch directory");
     }
-    hub.begin(device.clone());
-    hub.asked(id, episode.clone());
-    engine.casting = Some(Arc::new(CastOpener::new(Arc::clone(hub), device, scratch)));
-    play(id, episode, from_start, job, engine, services, tx);
+    crate::playback::link::cast::CastOpener::new(Arc::clone(&services.casts), device, scratch)
 }
 
 /// A position closer to the start than this is not carried over to a cast: it starts from the
@@ -154,7 +166,9 @@ const CARRY_FROM: f64 = 5.0;
 /// open on this device again.
 #[cfg(feature = "cast")]
 pub fn stop_casting(engine: &mut EngineState, services: &Services) {
-    if engine.casting.take().is_none() && !services.casts.casting() {
+    // A cast session ends with it: the receiver closes.
+    let held = services.casts.disconnect();
+    if engine.casting.take().is_none() && !services.casts.casting() && !held {
         return;
     }
     services.casts.end();

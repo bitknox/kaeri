@@ -27,7 +27,7 @@ use tokio::task::JoinHandle;
 
 use super::{LinkPhase, NowCard, Problem, RemoteCard, SkipCard, TvSender, lock};
 use crate::{
-    cast::{CastHub, CastView},
+    cast::{CastHub, CastView, SessionView},
     engine::RemoteSender,
     playback::link::cast::notice,
 };
@@ -68,7 +68,13 @@ pub struct CastSink {
 impl CastSink {
     pub fn found(&self, found: FoundCast) {
         match CastDevice::from_txt(&found.instance, found.address, &found.txt) {
-            Some(device) => self.hub.found(device),
+            Some(device) => {
+                self.hub.found(device.clone());
+                // The TV a session was left running on: joined again.
+                if device.shown() && self.hub.shows_tvs() {
+                    self.hub.rejoin(&device);
+                }
+            }
             None => tracing::debug!(instance = %found.instance, "a Cast record without an id"),
         }
     }
@@ -223,6 +229,75 @@ impl TvSender {
             return Err(Problem::Other);
         }
         Ok(Arc::new(CastSession { hub, engine, device }))
+    }
+
+    /// Connect to the Cast row `key` and hold its TV: the receiver launches, and every play
+    /// goes to the TV until [`Self::disconnect_cast`]. Returns at once; [`Self::cast_state`]
+    /// follows it.
+    pub fn connect_cast(&self, key: &str) -> Result<(), Problem> {
+        let (hub, _) = self.hub().ok_or(Problem::Other)?;
+        let device = hub.device(key.strip_prefix(CAST).unwrap_or(key)).ok_or(Problem::Gone)?;
+        hub.connect(device);
+        Ok(())
+    }
+
+    /// Let the held TV go: what plays there stops, the receiver closes, and plays open here
+    /// again.
+    pub fn disconnect_cast(&self) {
+        if let Some((_, engine)) = self.hub() {
+            let _ = engine.send(Command::StopCasting);
+        }
+    }
+
+    /// The cast session as the apps draw it.
+    pub fn cast_state(&self) -> SessionView {
+        self.hub().map(|(hub, _)| hub.session()).unwrap_or_default()
+    }
+
+    /// Counts up whenever [`Self::cast_state`] may read differently. `None` before
+    /// [`Self::attach_casting`].
+    pub fn cast_changes(&self) -> Option<tokio::sync::watch::Receiver<u64>> {
+        self.hub().map(|(hub, _)| hub.changes())
+    }
+
+    /// The Cast row key of the TV a session was left running on, for the app to browse for at
+    /// launch: found, the session is joined again.
+    pub fn cast_left_on(&self) -> Option<String> {
+        let (hub, _) = self.hub()?;
+        hub.left_on().map(|id| format!("{CAST}{id}"))
+    }
+
+    /// A control of the cast session's sheet. What Kaeri plays goes through the engine's
+    /// playback, as the casting card's controls do; what the receiver plays from elsewhere (a
+    /// session joined again) is driven on the TV directly.
+    pub fn cast_command(&self, command: RemoteCommand) {
+        let Some((hub, engine)) = self.hub() else { return };
+        let Some(device) = hub.session_device() else { return };
+        let ours = hub.view().state.is_some_and(|state| state.now_playing.is_some());
+        if !ours && let Some(player) = hub.held(&device.id) {
+            let direct = matches!(
+                command,
+                RemoteCommand::TogglePause
+                    | RemoteCommand::Seek { .. }
+                    | RemoteCommand::SeekTo { .. }
+                    | RemoteCommand::Stop
+            );
+            if direct {
+                hub.spawn(async move {
+                    let done = match command {
+                        RemoteCommand::TogglePause => player.toggle_pause().await,
+                        RemoteCommand::Seek { by } => player.seek(by, false).await,
+                        RemoteCommand::SeekTo { position } => player.seek(position, true).await,
+                        _ => player.stop().await,
+                    };
+                    if let Err(e) = done {
+                        tracing::debug!(error = %e, "the TV didn't take a control");
+                    }
+                });
+                return;
+            }
+        }
+        CastSession { hub, engine, device }.command(command);
     }
 
     /// The cast running now, for a card opened again.

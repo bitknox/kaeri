@@ -9,7 +9,11 @@
 
 use std::{
     path::{Path, PathBuf},
-    sync::{Arc, Mutex, PoisonError},
+    sync::{
+        Arc, Mutex, PoisonError,
+        atomic::{AtomicBool, Ordering},
+    },
+    time::Duration,
 };
 
 use async_trait::async_trait;
@@ -57,8 +61,32 @@ impl CastOpener {
 #[async_trait]
 impl PlayerOpener for CastOpener {
     /// Connect to the TV and open the relay it will read from. Nothing shows on the TV until the
-    /// first file loads, so a stream it can't play never takes it over.
+    /// first file loads, so a stream it can't play never takes it over. A TV a cast session
+    /// holds is already connected, its receiver up: the playback takes it over as it is.
     async fn open(&self, request: &PlaybackRequest) -> Result<Opened, LinkError> {
+        if self.hub.session_device().is_some_and(|d| d.id == self.device.id) {
+            // A play asked for while the TV connects goes to it once it is up.
+            self.hub.connecting(SESSION_CONNECT).await;
+        }
+        if let Some(player) = self.hub.held(&self.device.id) {
+            let events = player.events();
+            if !self.hub.attached(&player) {
+                self.hub.attach(&player);
+            }
+            if let Some(speed) = request.speed.filter(|s| (*s - 1.0).abs() > f64::EPSILON) {
+                let _ = player.set_rate(speed).await;
+            }
+            let link = CastLink {
+                player,
+                device: self.device.id.clone(),
+                name: self.device.name.clone(),
+                hub: Arc::clone(&self.hub),
+                file: Mutex::new(None),
+                held: Some(self.hub.claim()),
+                quit: AtomicBool::new(false),
+            };
+            return Ok((Box::new(link), events));
+        }
         // A TV this cast couldn't reach isn't tried again for the play's next stream.
         if let Some(failure) = lock(&self.unreached).clone() {
             return Err(LinkError(failure.to_string()));
@@ -91,6 +119,8 @@ impl PlayerOpener for CastOpener {
             name: self.device.name.clone(),
             hub: Arc::clone(&self.hub),
             file: Mutex::new(None),
+            held: None,
+            quit: AtomicBool::new(false),
         };
         Ok((Box::new(link), events))
     }
@@ -108,6 +138,9 @@ impl PlayerOpener for CastOpener {
     }
 }
 
+/// How long a play waits for a cast session that is still connecting.
+const SESSION_CONNECT: Duration = Duration::from_secs(30);
+
 /// The session's link to a cast.
 pub struct CastLink {
     player: Arc<CastPlayer>,
@@ -118,6 +151,11 @@ pub struct CastLink {
     hub: Arc<CastHub>,
     /// What the next load plays, from [`PlayerLink::prepare`].
     file: Mutex<Option<FileFacts>>,
+    /// On a player a cast session holds: this link's turn on it, from [`CastHub::claim`]. A
+    /// stop then stops the file and leaves the receiver up for the next play.
+    held: Option<u64>,
+    /// The viewer stopped this link's playback on a held player.
+    quit: AtomicBool,
 }
 
 impl CastLink {
@@ -381,15 +419,28 @@ impl PlayerLink for CastLink {
     }
 
     async fn quit(&self) -> Result<(), LinkError> {
+        if let Some(turn) = self.held
+            && self.hub.holds(&self.player)
+        {
+            // The session goes on: the file stops, the receiver stays for the next play.
+            self.quit.store(true, Ordering::Relaxed);
+            if self.hub.owns(turn) {
+                let stopped = self.player.stop().await.map_err(failed);
+                self.player.detach();
+                self.hub.played_out();
+                return stopped;
+            }
+            return Ok(());
+        }
         self.player.quit().await.map_err(failed)
     }
 
     fn is_alive(&self) -> bool {
-        self.player.is_alive()
+        !self.quit.load(Ordering::Relaxed) && self.player.is_alive()
     }
 
     fn has_quit(&self) -> bool {
-        self.player.has_quit()
+        self.quit.load(Ordering::Relaxed) || self.player.has_quit()
     }
 
     async fn diagnostics(&self) -> Option<String> {
@@ -397,6 +448,22 @@ impl PlayerLink for CastLink {
     }
 
     async fn shutdown(self: Box<Self>) {
+        if let Some(turn) = self.held
+            && self.hub.holds(&self.player)
+        {
+            // The playback is over and the session isn't: the receiver stays up, showing its
+            // idle screen, for whatever plays next.
+            if self.hub.owns(turn) {
+                if !self.quit.load(Ordering::Relaxed)
+                    && let Err(e) = self.player.stop().await
+                {
+                    tracing::debug!(error = %e, "the TV didn't take the stop");
+                }
+                self.player.detach();
+                self.hub.played_out();
+            }
+            return;
+        }
         if let Err(e) = self.player.quit().await {
             tracing::debug!(error = %e, "the TV didn't take the stop");
         }
@@ -542,6 +609,8 @@ mod tests {
             name: "Living room".into(),
             hub,
             file: Mutex::new(None),
+            held: None,
+            quit: AtomicBool::new(false),
         };
         let levels = || -> Vec<f64> {
             receiver
@@ -611,6 +680,8 @@ mod tests {
                     name: "Living room".into(),
                     hub,
                     file: Mutex::new(None),
+                    held: None,
+                    quit: AtomicBool::new(false),
                 })
             }
         };

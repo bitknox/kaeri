@@ -428,6 +428,7 @@ impl Engine {
         {
             casts.set_language(language);
             casts.set_show_tvs(state.config.effective().cast.show_tvs);
+            casts.set_receiver(state.config.effective().cast.receiver.clone());
         }
         #[cfg(not(feature = "cast"))]
         let _ = language;

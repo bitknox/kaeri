@@ -73,6 +73,21 @@ pub struct Refuse {
     pub hls_taller_than: Option<u32>,
 }
 
+/// What the fake does when asked to launch an app other than the Default Media Receiver: Kaeri's
+/// own receiver.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+pub enum CustomReceiver {
+    /// Launches it, and it plays as the Default Media Receiver does: a TV it is published to.
+    #[default]
+    Runs,
+    /// Answers `LAUNCH_ERROR`, as a TV does for an app ID that isn't published to it.
+    Unknown,
+    /// Launches it, and it closes at its first `LOAD`, as a receiver page that fails does.
+    ClosesAtLoad,
+    /// Launches it, and it never answers a `LOAD`: a receiver page that didn't load.
+    Silent,
+}
+
 /// How the fake is set up.
 #[derive(Debug, Clone)]
 pub struct FakeOptions {
@@ -90,6 +105,8 @@ pub struct FakeOptions {
     /// Plays a stream it can't fetch as though it had read it, for `duration`: for an app's
     /// fixtures, whose episodes are test patterns only mpv draws (`av://lavfi:…`).
     pub plays_unfetched: bool,
+    /// What an app other than the Default Media Receiver does.
+    pub custom: CustomReceiver,
 }
 
 impl Default for FakeOptions {
@@ -102,6 +119,7 @@ impl Default for FakeOptions {
             fetches: true,
             launch: Duration::ZERO,
             plays_unfetched: false,
+            custom: CustomReceiver::default(),
         }
     }
 }
@@ -174,7 +192,14 @@ impl Playing {
         self.since = Instant::now();
     }
 
+    /// The status as a receiver sends it, with the media's description when `describe`: a
+    /// receiver includes it in the answer to a `LOAD` or a `GET_STATUS`, and leaves it out of the
+    /// statuses that follow a pause, a seek or a change in buffering.
     fn status(&self, idle_reason: Option<&str>, volume: &Value) -> Value {
+        self.status_of(idle_reason, volume, true)
+    }
+
+    fn status_of(&self, idle_reason: Option<&str>, volume: &Value, describe: bool) -> Value {
         let playing = if self.buffering { "BUFFERING" } else { self.state };
         let mut status = json!({
             "mediaSessionId": self.session,
@@ -190,6 +215,9 @@ impl Playing {
         });
         if let Some(reason) = idle_reason {
             status["idleReason"] = json!(reason);
+        }
+        if !describe && let Some(status) = status.as_object_mut() {
+            status.remove("media");
         }
         status
     }
@@ -297,8 +325,8 @@ async fn serve(
             }
         }
     });
-    let transport = "web-1".to_owned();
-    let mut app: Option<(String, &'static str)> = None;
+    let mut transport = "web-1".to_owned();
+    let mut app: Option<(String, String)> = None;
     let mut playing: Option<Playing> = None;
     let mut next_session = 1;
     let mut level = 0.4;
@@ -308,12 +336,12 @@ async fn serve(
         let _ = tx.send(CastMessage::text(source, destination, namespace, payload.to_string()));
     };
     let volume = |level: f64, muted: bool| json!({"level": level, "muted": muted, "controlType": options.control, "stepInterval": 0.05});
-    let receiver_status = |app: &Option<(String, &'static str)>, request: u64, level, muted| {
+    let receiver_status = |app: &Option<(String, String)>, request: u64, level, muted| {
         let applications: Vec<Value> = app
             .iter()
             .map(|(session, id)| {
                 json!({"appId": id, "displayName": "Receiver", "sessionId": session,
-                       "transportId": if *id == DEFAULT_MEDIA_RECEIVER { "web-1" } else { "web-9" },
+                       "transportId": if id == DEFAULT_MEDIA_RECEIVER { "web-1" } else { "web-9" },
                        "isIdleScreen": false, "namespaces": [{"name": NS_MEDIA}]})
             })
             .collect();
@@ -335,7 +363,7 @@ async fn serve(
             }
             Some(control) = controls.recv() => match control {
                 Control::TakeOver => {
-                    app = Some(("someone-else".into(), "E0000000"));
+                    app = Some(("someone-else".into(), "E0000000".into()));
                     playing = None;
                     send("receiver-0", "*", NS_RECEIVER, receiver_status(&app, 0, level, muted));
                 }
@@ -349,7 +377,7 @@ async fn serve(
                         p.advance(options.speed);
                         p.buffering = waiting;
                         send(&transport, "*", NS_MEDIA, json!({"type": "MEDIA_STATUS", "requestId": 0,
-                            "status": [p.status(None, &volume(level, muted))]}));
+                            "status": [p.status_of(None, &volume(level, muted), false)]}));
                     }
                 }
             },
@@ -377,7 +405,15 @@ async fn serve(
                     }
                     (NS_RECEIVER, "LAUNCH") => {
                         tokio::time::sleep(options.launch).await;
-                        app = Some((format!("session-{request}"), DEFAULT_MEDIA_RECEIVER));
+                        let id = payload["appId"].as_str().unwrap_or(DEFAULT_MEDIA_RECEIVER).to_owned();
+                        if id != DEFAULT_MEDIA_RECEIVER && options.custom == CustomReceiver::Unknown {
+                            send("receiver-0", &sender, NS_RECEIVER, json!({
+                                "type": "LAUNCH_ERROR", "requestId": request, "reason": "NOT_FOUND"}));
+                            continue;
+                        }
+                        transport = if id == DEFAULT_MEDIA_RECEIVER { "web-1" } else { "web-9" }.to_owned();
+                        playing = None;
+                        app = Some((format!("session-{request}"), id));
                         send("receiver-0", &sender, NS_RECEIVER, receiver_status(&app, request, level, muted));
                     }
                     (NS_RECEIVER, "STOP") => {
@@ -387,6 +423,18 @@ async fn serve(
                         send("receiver-0", &sender, NS_RECEIVER, receiver_status(&app, request, level, muted));
                     }
                     (NS_MEDIA, "LOAD") => {
+                        let custom = app.as_ref().is_some_and(|(_, id)| id != DEFAULT_MEDIA_RECEIVER);
+                        if custom && options.custom == CustomReceiver::Silent {
+                            continue;
+                        }
+                        if custom && options.custom == CustomReceiver::ClosesAtLoad {
+                            // The receiver page failed: the app is gone, the load unanswered.
+                            app = None;
+                            playing = None;
+                            send(&transport, &sender, NS_CONNECTION, json!({"type": "CLOSE"}));
+                            send("receiver-0", "*", NS_RECEIVER, receiver_status(&app, 0, level, muted));
+                            continue;
+                        }
                         if !options.fetches {
                             // A TV that can't reach the sender: the load hangs.
                             continue;
@@ -467,7 +515,7 @@ async fn serve(
                             "STOP" => idle = Some("CANCELLED"),
                             _ => {}
                         }
-                        let status = p.status(idle, &volume(level, muted));
+                        let status = p.status_of(idle, &volume(level, muted), kind == "GET_STATUS");
                         if idle.is_some() {
                             playing = None;
                         }

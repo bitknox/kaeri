@@ -77,7 +77,8 @@ pub use remote::{FfiAdvert, FfiLinkSent, FfiPairedPhone, FfiScreen, FfiTvRemote,
 pub use scenes::{FIXTURE_OPENED_LINK, FfiScene, fixture_opened_link};
 #[cfg(feature = "remote")]
 pub use sender::{
-    FfiCastBrowser, FfiCastCard, FfiCastRouteHint, FfiCastRow, FfiCastSession, FfiCastSink,
+    FfiCastBrowser, FfiCastCard, FfiCastItem, FfiCastRouteHint, FfiCastRow, FfiCastSession,
+    FfiCastSessionState, FfiCastSessionView, FfiCastSessionWatch, FfiCastSink,
     FfiVolumeControl,
 };
 #[cfg(feature = "remote")]

@@ -12,6 +12,12 @@ use crate::channel::{CastError, Channel, Incoming, NS_MEDIA, NS_RECEIVER, RECEIV
 /// MP4 through the Cast web player.
 pub const DEFAULT_MEDIA_RECEIVER: &str = "CC1AD845";
 
+/// Kaeri's own receiver, served from the website's `/cast/receiver/`. The config's
+/// `cast.receiver` names another in its place. The Default Media Receiver plays instead whenever
+/// it doesn't launch (a TV it isn't published to refuses it), closes before playing, or leaves a
+/// load unanswered.
+pub const KAERI_RECEIVER: Option<&str> = Some("A7A6DDE4");
+
 /// A connected receiver, through its platform receiver. Cheap to clone.
 #[derive(Clone)]
 pub struct Device {
@@ -339,6 +345,15 @@ impl Media {
         self.command("EDIT_TRACKS_INFO", json!({"activeTrackIds": ids})).await
     }
 
+    /// Ask for the media status and wait for it: what a joined receiver plays, if anything. The
+    /// media session it names is the one later commands go to.
+    pub async fn status(&mut self) -> Result<Option<MediaStatus>, CastError> {
+        let status = MediaStatus::first(&self.ask(json!({"type": "GET_STATUS"})).await?);
+        self.media_session_id =
+            status.as_ref().filter(|s| s.idle_reason.is_none()).map(|s| s.media_session_id);
+        Ok(status)
+    }
+
     /// Ask for the media status without waiting for it: the answer comes back with every other
     /// status the receiver sends. The Default Media Receiver reports on changes only, so this is
     /// what keeps the position moving.
@@ -370,6 +385,12 @@ pub struct MediaStatus {
     pub muted: Option<bool>,
     /// The media the receiver plays, by the URL it was loaded with.
     pub content: Option<String>,
+    /// What the receiver shows of the media: the show, the episode line and the art.
+    pub metadata: Option<Metadata>,
+    /// Whether the status carried the media's description. A receiver sends it only when it
+    /// changed and in answer to `GET_STATUS`, so the statuses that follow a pause, a seek or a
+    /// buffering spell come without it: the duration and the title are the last ones heard.
+    pub has_media: bool,
 }
 
 impl MediaStatus {
@@ -394,7 +415,34 @@ impl MediaStatus {
             volume: status["volume"]["level"].as_f64(),
             muted: status["volume"]["muted"].as_bool(),
             content: status["media"]["contentId"].as_str().map(str::to_owned),
+            metadata: status["media"]["metadata"].as_object().map(|m| Metadata {
+                series: m
+                    .get("seriesTitle")
+                    .and_then(Value::as_str)
+                    .unwrap_or_default()
+                    .to_owned(),
+                title: m.get("title").and_then(Value::as_str).unwrap_or_default().to_owned(),
+                image: m.get("images").and_then(|i| i[0]["url"].as_str()).map(str::to_owned),
+            }),
+            has_media: status["media"].is_object(),
         })
+    }
+
+    /// Fill in what a status without the media's description leaves out from `earlier`, a
+    /// status of the same media session: its duration, address and title stand until the
+    /// receiver describes the media again.
+    pub fn fill_from(&mut self, earlier: &MediaStatus) {
+        if self.has_media || self.media_session_id != earlier.media_session_id {
+            return;
+        }
+        self.duration = self.duration.or(earlier.duration);
+        if self.content.is_none() {
+            self.content.clone_from(&earlier.content);
+        }
+        if self.metadata.is_none() {
+            self.metadata.clone_from(&earlier.metadata);
+        }
+        self.has_media = earlier.has_media;
     }
 
     /// Whether the message says the media session is gone without a status for it: an empty
@@ -443,6 +491,33 @@ mod tests {
             "https://art.example/still.jpg"
         );
         assert_eq!(message["media"]["textTrackStyle"]["edgeType"], "DROP_SHADOW");
+    }
+
+    #[test]
+    fn a_status_without_the_media_keeps_the_duration_and_title_heard_before() {
+        let full = json!({"type": "MEDIA_STATUS", "status": [{
+            "mediaSessionId": 3, "playerState": "PLAYING", "currentTime": 10.0,
+            "media": {"contentId": "http://192.0.2.1/a", "duration": 1420.0,
+                      "metadata": {"seriesTitle": "A Made-up Show", "title": "Episode 2"}},
+        }]});
+        let earlier = MediaStatus::first(&full).unwrap();
+        assert!(earlier.has_media);
+        // What a receiver sends after a pause: the state and the time alone.
+        let paused = json!({"type": "MEDIA_STATUS", "status": [{
+            "mediaSessionId": 3, "playerState": "PAUSED", "currentTime": 12.5,
+        }]});
+        let mut status = MediaStatus::first(&paused).unwrap();
+        assert_eq!(status.duration, None);
+        status.fill_from(&earlier);
+        assert_eq!(status.duration, Some(1420.0));
+        assert_eq!(status.position, 12.5);
+        assert_eq!(status.state, "PAUSED");
+        assert_eq!(status.metadata.as_ref().map(|m| m.title.as_str()), Some("Episode 2"));
+        // Another media session's description is never borrowed.
+        let mut other = MediaStatus::first(&paused).unwrap();
+        other.media_session_id = 4;
+        other.fill_from(&earlier);
+        assert_eq!(other.duration, None);
     }
 
     #[test]
