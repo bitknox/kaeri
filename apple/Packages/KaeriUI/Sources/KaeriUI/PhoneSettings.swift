@@ -880,6 +880,14 @@ struct PhoneAccountsPage: View {
             } footer: {
                 Text(L.accountsLibraryFrom(tracker: AccountsModel.name("anilist")))
             }
+            // The people followed on AniList, on this device: only while signed in.
+            if anilist?.connected == true {
+                Section {
+                    PhoneSettingSwitch(key: .showFollowing)
+                } footer: {
+                    Text(L.settingsAnilistFollowingFooter)
+                }
+            }
             Section {
                 PhoneSettingSwitch(key: .episodeDiscussions, note: L.settingsAppleDiscussionsNote)
                 if store.discussionsOn {

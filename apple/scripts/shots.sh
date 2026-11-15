@@ -32,7 +32,8 @@
 # continuefrom=<device>, Home's Continue cards saying another device played last, fold=open, the title page's watched episodes opened, world=1, Home's invented season of ten
 # drawn titles (with the scenes suggested, oneleft, continuefull, notfound, slow, failed and offline,
 # which stage Home's states), offline=1, the fake AniList gone once the first Home has loaded,
-# for Home's offline line over what it kept, and source=<licensed|server|folder>, the row
+# for Home's offline line over what it kept, the scenes following and followingslow, Watching with
+# people followed on AniList (followingslow holds each title page 2 s), source=<licensed|server|folder>, the row
 # Sources has selected (scenes licensed, servers and library seed one each, sourcesbusy all of them mid-scan, signed out and matching),
 # and skippause=<low-power|storage>, Settings' "Find skip times" row paused for that reason:
 #
@@ -108,7 +109,7 @@ for shot in "${shots[@]}"; do
 done
 shots=("${expanded[@]}")
 for shot in "${shots[@]}"; do
-  case "${shot%%:*}" in watching | sourceless | unsure | linkopened | fresh | playing | suggested | oneleft | continuefull | notfound | slow | failed | offline | licensed | servers | library | sourcesbusy | available | demoonly | demoplayed | demoandstore | demoremoved | subtitlestyled | crashoff | crashsaved | crashheld | storeowner | storeinvited | together | browsing | reader-manga-rtl | reader-strip | reader-novel | reader-moved | reader-long | reading-dark | reading-first-run | reading-update-sheet | reading-join-ask | reading-home | reading-demo | reading-series | reading-downloads | eink-grey | eink-kaleido-unsure) ;; player-*) ;; *) usage ;; esac
+  case "${shot%%:*}" in watching | sourceless | unsure | linkopened | fresh | playing | suggested | oneleft | continuefull | notfound | slow | failed | following | followingslow | offline | licensed | servers | library | sourcesbusy | available | demoonly | demoplayed | demoandstore | demoremoved | subtitlestyled | crashoff | crashsaved | crashheld | storeowner | storeinvited | together | browsing | reader-manga-rtl | reader-strip | reader-novel | reader-moved | reader-long | reading-dark | reading-first-run | reading-update-sheet | reading-join-ask | reading-home | reading-demo | reading-series | reading-downloads | eink-grey | eink-kaleido-unsure) ;; player-*) ;; *) usage ;; esac
   if [[ "$shot" == player-start-* ]]; then continue; fi
   if [[ "$shot" == player-* && ! " ${players[*]} " == *" $shot "* ]]; then usage; fi
 done

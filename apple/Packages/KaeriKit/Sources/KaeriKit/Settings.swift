@@ -26,7 +26,7 @@ extension SettingKey {
              .mergeSubtitles, .keepSeeding, .presence, .presenceTitle, .presenceRich, .torrents, .syncplay,
              .updateCheck, .updateBeta, .spoilerProtection, .downloadsOnCellular, .torrentsOnCellular, .adultTitles,
              .chapterDownloadsOnCellular, .keepChaptersReady, .deleteAfterReading, .showVolumes, .opdsFeed, .seriesChoicesFollow, .lookFollows, .chapterNotifications, .downloadsFinished,
-             .episodeDiscussions, .commentImages, .hoverCards:
+             .episodeDiscussions, .commentImages, .hoverCards, .showFollowing:
             true
         default:
             false

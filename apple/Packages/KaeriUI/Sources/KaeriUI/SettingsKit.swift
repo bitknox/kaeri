@@ -13,6 +13,8 @@ import SwiftUI
 struct SettingsGroup<Content: View>: View {
     var title: String?
     var footnote: String?
+    /// A second paragraph under the footnote, about a row the group gained.
+    var more: String?
     @ViewBuilder let content: Content
 
     var body: some View {
@@ -38,6 +40,9 @@ struct SettingsGroup<Content: View>: View {
             .background(.raised, in: .rect(cornerRadius: 12))
             if let footnote {
                 SettingsFootnote(footnote)
+            }
+            if let more {
+                SettingsFootnote(more)
             }
         }
     }
@@ -249,6 +254,7 @@ extension SettingKey {
         case .upNextCountdown: L.settingsUpNextCountdown
         case .spoilerProtection: L.settingsSpoiler
         case .episodeDiscussions: L.settingsAppleDiscussions
+        case .showFollowing: L.settingsAnilistFollowing
         case .hoverCards: L.settingsLabelHoverCards
         case .commentImages: L.settingsAppleCommentImages
         case .downloadQuality: L.settingsQuality

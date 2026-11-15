@@ -400,11 +400,14 @@ struct AccountsPane: View {
 
     var body: some View {
         let anilist = store.accounts.tracker("anilist")
+        let signedIn = anilist?.connected == true
         SettingsGroup(
             title: AccountsModel.name("anilist"),
             footnote: store.medium.answer == .read
                 ? L.settingsAccountsSyncNoteRead(tracker: AccountsModel.name("anilist"))
-                : L.settingsAccountsSyncNote(tracker: AccountsModel.name("anilist"))
+                : L.settingsAccountsSyncNote(tracker: AccountsModel.name("anilist")),
+            // On the Mac the switch sits under the account, its footer after the group's own.
+            more: macFollowing(signedIn) ? L.settingsAnilistFollowingFooter : nil
         ) {
             if let anilist, anilist.connected {
                 AccountRow(state: anilist) {
@@ -422,6 +425,9 @@ struct AccountsPane: View {
                             .buttonStyle(SecondaryCapsuleStyle(raisedSurface: true))
                     }
                 }
+                if macFollowing(signedIn) {
+                    SettingsRow(title: SettingKey.showFollowing.title) { SettingSwitch(key: .showFollowing) }
+                }
             } else {
                 SettingsRow(title: AccountsModel.name("anilist"), note: AccountWords.bringsLists(store.medium.answer)) {
                     HStack(spacing: 8) {
@@ -434,6 +440,12 @@ struct AccountsPane: View {
             }
         }
         #if !os(macOS)
+        // On the iPad the switch is a group of its own under the account, with its footer.
+        if signedIn {
+            SettingsGroup(footnote: L.settingsAnilistFollowingFooter) {
+                SettingsRow(title: SettingKey.showFollowing.title) { SettingSwitch(key: .showFollowing) }
+            }
+        }
         DiscussionsGroup()
         #endif
         SettingsGroup(title: L.accountsOtherTrackers, footnote: AccountWords.footnote(store)) {
@@ -466,6 +478,15 @@ struct AccountsPane: View {
                 }
             }
             .onLaunchSheet("kitsu", navigator) { sheet = .kitsu }
+    }
+
+    /// Whether Show people you follow sits in the AniList group: on the Mac, while signed in.
+    private func macFollowing(_ signedIn: Bool) -> Bool {
+        #if os(macOS)
+        signedIn
+        #else
+        false
+        #endif
     }
 }
 

@@ -151,6 +151,12 @@ struct PhoneTitle: View {
                             .accessibilityLabel(L.tvPlayOn)
                         }
                     }
+                    // People you follow, under the list: fades in when AniList answers, and what
+                    // is below glides down on standard (fades only with Reduce Motion).
+                    if !(entry.detail?.following ?? []).isEmpty {
+                        FollowingPhoneRow(entry: entry)
+                            .transition(.asymmetric(insertion: .opacity.animation(.fadeIn), removal: .opacity.animation(.fadeOut)))
+                    }
                     LicensedLines(id: entry.id, font: .ui(14))
 
                     VStack(alignment: .leading, spacing: 12) {
@@ -240,6 +246,7 @@ struct PhoneTitle: View {
                     }
                 }
                 .accessibilityElement(children: .contain)
+                .animation(reduceMotion ? nil : .standard, value: (entry.detail?.following ?? []).isEmpty)
                 .padding(.horizontal, 16)
                 .padding(.top, 16)
                 .padding(.bottom, 16)
@@ -431,6 +438,8 @@ struct PhoneEpisodes: View {
         let dub = store.titles.dubLines[entry.id]
         let ranged = !plan.ranges.isEmpty
         let protectedFrom = EpisodeProtection.start(plan.shown, spoilers: spoilers)
+        // The marks' column, kept on every row while any row has marks.
+        let marked = plan.shown.contains { !$0.followed.isEmpty }
         Group {
             if loaded {
                 // A long series: the dub line and the range menu share a row.
@@ -468,10 +477,11 @@ struct PhoneEpisodes: View {
                     WatchedFoldSection(
                         fold: fold, shown: navigator.watchedShown(entry.id), phone: true,
                         dub: ranged ? nil : dub,
+                        marks: marked ? FollowWords.union(plan.shown.prefix(fold.count)) : nil,
                         toggle: { navigator.toggleWatched(entry.id) }
                     ) {
                         ForEach(plan.shown.prefix(fold.count), id: \.number) {
-                            PhoneEpisodeRow(entry: entry, row: $0, spoilers: spoilers, rotor: rotor, room: room, protectedFrom: protectedFrom)
+                            PhoneEpisodeRow(entry: entry, row: $0, spoilers: spoilers, rotor: rotor, room: room, protectedFrom: protectedFrom, marked: marked)
                         }
                     }
                     .bareRow(inset)
@@ -486,7 +496,7 @@ struct PhoneEpisodes: View {
                         .transition(.opacity.animation(.fadeIn))
                 }
                 ForEach(plan.shown.dropFirst(plan.fold?.count ?? 0), id: \.number) { row in
-                    PhoneEpisodeRow(entry: entry, row: row, spoilers: spoilers, rotor: rotor, room: room, protectedFrom: protectedFrom)
+                    PhoneEpisodeRow(entry: entry, row: row, spoilers: spoilers, rotor: rotor, room: room, protectedFrom: protectedFrom, marked: marked)
                         .bareRow(inset)
                         .transition(.opacity)
                         .onAppear { pickers?.onScreen.insert(row.number) }
@@ -530,6 +540,8 @@ struct PhoneEpisodeRow: View {
     let room: Bool
     /// The episode that spoiler protection's line sits above, and the one it names.
     let protectedFrom: (row: String, after: Int)?
+    /// Whether the table keeps a column for the marks of people followed.
+    var marked = false
 
     private var next: UInt32 { entry.progress?.next ?? 1 }
 
@@ -610,7 +622,8 @@ struct PhoneEpisodeRow: View {
     private func label(current: Bool) -> some View {
         EpisodeRowLabel(
             entry: entry, row: row, metrics: .phone, room: room, hidden: hidden, current: current,
-            numberColumn: false, asked: navigator.synopsisIsShown(entry.id, row.number)
+            numberColumn: false, asked: navigator.synopsisIsShown(entry.id, row.number),
+            marks: marked ? row.followed : nil
         )
         .opacity(row.unsourced ? 0.55 : 1)
         // The row Go to episode landed keeps the selection fill until another lands.
