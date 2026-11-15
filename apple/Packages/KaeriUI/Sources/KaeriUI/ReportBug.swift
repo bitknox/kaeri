@@ -21,6 +21,8 @@ struct ReportRequest: Identifiable, Equatable {
     var context: BugContext?
     /// The crash ticked when the sheet opens: the one the notice named.
     var crash: String?
+    /// A shot's: What is sent open on the Player log segment.
+    var showLog = false
 }
 
 /// Opens the bug report sheet for this device, with an error when the report starts from one.
@@ -80,7 +82,17 @@ struct ReportSheetPresenter: ViewModifier {
             }
             // A shot's `sheet=report`: opened once the window is up.
             .onLaunchSheet("report", navigator) { navigator.report = ReportRequest() } // i18n-skip
+            // Shots of the player log: Report from a playback error, and with the log's text shown.
+            .onLaunchSheet("report-error", navigator) { navigator.report = ReportRequest(context: Self.shotError) } // i18n-skip
+            .onLaunchSheet("report-log", navigator) { // i18n-skip
+                navigator.report = ReportRequest(context: Self.shotError, showLog: true)
+            }
     }
+}
+
+extension ReportSheetPresenter {
+    /// A made-up playback error for the shots.
+    static let shotError = BugContext(kind: BugReports.playbackError, message: "Segment 212 failed after 3 tries") // i18n-skip
 }
 
 // MARK: - The sheet
@@ -162,6 +174,10 @@ struct ReportSheet: View {
                 includeLog = true
                 logFocused = true
                 prepareLog()
+                if request.showLog {
+                    showSent = true
+                    sentTab = .log
+                }
             }
         }
         #if os(iOS)
