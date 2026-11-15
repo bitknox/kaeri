@@ -834,6 +834,7 @@ fn stage(shell: &Rc<Shell>, shot: &str) -> f64 {
                     media: kaeri_core::ids::AnilistId::new(TITLE),
                     episode: 1,
                     comments: 214,
+                    url: "https://talk.example/thread/1".into(),
                 }]);
             });
             4.0
@@ -1995,7 +1996,6 @@ fn nth_labelled(widget: &gtk::Widget, label: &str, n: usize) -> Option<gtk::Butt
 }
 
 /// The first widget of type `T` under `widget`, depth first.
-#[cfg(feature = "fixtures")]
 fn first<T: IsA<gtk::Widget>>(widget: &gtk::Widget) -> Option<T> {
     if let Some(found) = widget.downcast_ref::<T>() {
         return Some(found.clone());

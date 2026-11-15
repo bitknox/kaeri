@@ -405,7 +405,7 @@ pub fn page(ctx: &Rc<Ctx>, id: AnilistId) -> adw::NavigationPage {
         let weak = Rc::downgrade(&page);
         move |_| {
             if let Some(page) = weak.upgrade() {
-                page.shown();
+                page.transition_ended();
             }
         }
     });
@@ -481,7 +481,7 @@ impl Page {
     }
 
     /// The page's transition has ended.
-    fn shown(&self) {
+    fn transition_ended(&self) {
         if self.room.get().is_none() {
             match self.ctx.hub.entry(self.id) {
                 Some(entry) => {
