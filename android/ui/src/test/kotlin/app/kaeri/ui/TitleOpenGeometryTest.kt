@@ -33,12 +33,20 @@ import app.kaeri.testkit.Scene
  * A title page opened from a list while its page is on its way (T8): the rest of the page stands
  * where it will from the first frame it shows, and nothing on it moves when the page lands. The
  * list's row is in the store, as Home leaves it; the page and the episodes come later, as a slow
- * AniList and a source would send them.
+ * AniList and a source would send them. On a phone here, and on a tablet below.
  */
 @RunWith(RobolectricTestRunner::class)
 @GraphicsMode(GraphicsMode.Mode.NATIVE)
 @Config(sdk = [36], qualifiers = "w412dp-h915dp-port-420dpi")
-class TitleOpenGeometryTest {
+class TitleOpenGeometryTest : TitleOpenGeometry()
+
+/** [TitleOpenGeometryTest] on a tablet across, whose page lays out beside the cover. */
+@RunWith(RobolectricTestRunner::class)
+@GraphicsMode(GraphicsMode.Mode.NATIVE)
+@Config(sdk = [36], qualifiers = "w1280dp-h800dp-land-xhdpi")
+class TabletTitleOpenGeometryTest : TitleOpenGeometry()
+
+abstract class TitleOpenGeometry {
     @get:Rule
     val compose = createAndroidComposeRule<ComponentActivity>()
 

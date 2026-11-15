@@ -2260,6 +2260,14 @@ private fun TabletTitle(
     val unfolded by store.episodeFolds.unfolded.collectAsStateWithLifecycle()
     val grid = androidx.compose.foundation.lazy.grid.rememberLazyGridState()
     val fold = rememberEpisodeFold(entry.id, grid)
+    // As on a phone (SeasonPage): what only the page brings (Also on, the tags, people you follow,
+    // the picker, Related) would push the rest down as it lands, so the facts, the family and the
+    // episodes wait for it under placeholders that keep their room from the first frame, and the
+    // page replaces them in one crossfade. Another season picked shows its placeholders at once.
+    val failedIds by store.titles.failed.collectAsStateWithLifecycle()
+    val clock = rememberPlaceholderClock(waited = entry.id != id, key = entry.id)
+    val held = !clock.settled(entry.detail?.partial == false || entry.id in failedIds)
+    val heldId = if (held) entry.id else null
     LaunchedEffect(page.goal, page.selected) {
         val row = page.rows.firstOrNull { it.number == page.goal } ?: return@LaunchedEffect
         grid.landOn(page.key(entry.id, row))
@@ -2324,22 +2332,31 @@ private fun TabletTitle(
                                 TabletActions(entry, actions, episodes?.firstOrNull()?.metadataOnly == true, Modifier.padding(top = 4.dp))
                             }
                           }
-                            if (!aboutOpen) TitleFacts(entry, Modifier.padding(top = below).width(376.dp)) { aboutOpen = true }
+                            if (!aboutOpen) {
+                                Crossfade(entry.id == heldId, Modifier.padding(top = below).width(376.dp), animationSpec = Motion.standard(), label = "facts") { waiting -> // i18n-skip
+                                    if (waiting) TitleFactsPlaceholder(entry, clock.shown) else TitleFacts(entry) { aboutOpen = true }
+                                }
+                            }
                         }
                     }
                   }
                 }
-                if (family.seasons.isNotEmpty() || family.related.isNotEmpty()) {
+                if (!held && (family.seasons.isNotEmpty() || family.related.isNotEmpty())) {
                     fullWidth("family") {
                         if (family.seasons.isNotEmpty()) TabletSeasons(entry, family, onPick) else Spacer(Modifier.height(24.dp))
                     }
                 }
-                if (entry.relatedCards().isNotEmpty()) {
+                if (!held && entry.relatedCards().isNotEmpty()) {
                     fullWidth("related") { SeasonFade(entry, itemMotion()) { RelatedRail(it.relatedCards()) } }
                 }
-                fullWidth("gap") { Spacer(Modifier.height(16.dp)) }
-                if (episodes == null) {
-                    items(4) { Box { Box(Modifier.widthIn(max = BesideDims.MaxWidth)) { AfterWait { EpisodePlaceholder() } } } }
+                // Keys of their own while the page is on its way, so it crossfades with them where
+                // they stand rather than moving them.
+                val phase = if (held) "held-" else ""
+                fullWidth("${phase}gap") { Spacer(itemMotion().height(16.dp)) }
+                if (held || episodes == null) {
+                    items(4, key = { "${phase}placeholder-$it" }) {
+                        Box(itemMotion()) { Box(Modifier.widthIn(max = BesideDims.MaxWidth)) { ShownWhen(clock.shown) { EpisodePlaceholder() } } }
+                    }
                 } else {
                     val listed = page.listed
                     if (listed.isEmpty()) fullWidth("no-episodes") { NoEpisodes(entry.id, itemMotion().padding(start = 16.dp)) }
@@ -2529,6 +2546,38 @@ private fun TabletActions(entry: Entry, actions: AppActions, unlisted: Boolean, 
     if (action.playable && onService == null && !asking && !unlisted) CastPlaysOn(Modifier.padding(top = 8.dp))
     PrivatePageLine(privateLine(PrivateTitle.Show(entry.id)))
     ServiceLines(availability, entry)
+    }
+}
+
+/**
+ * The details column while the page is on its way: the synopsis the list brought, then the facts'
+ * row, the tags and More about as placeholders in [TitleFacts]' own frame, once [shown].
+ */
+@Composable
+private fun TitleFactsPlaceholder(entry: Entry, shown: Boolean) {
+    val type = MaterialTheme.typography
+    val density = LocalDensity.current
+    val label = with(density) { type.labelSmall.lineHeight.toDp() }
+    val line = with(density) { type.bodyMedium.lineHeight.toDp() }
+    Column {
+        val synopsis = synopsisWithoutSpoilers(entry.synopsis)
+        if (synopsis.isNotEmpty()) {
+            Text(synopsis, style = type.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 4, overflow = TextOverflow.Ellipsis)
+        }
+        ShownWhen(shown) {
+            Column {
+                Row(Modifier.padding(top = 20.dp), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+                    repeat(3) {
+                        Column(Modifier.weight(1f)) {
+                            TextPlaceholder(0.5f, label)
+                            TextPlaceholder(0.8f, line)
+                        }
+                    }
+                }
+                TextPlaceholder(0.6f, line, Modifier.padding(top = 12.dp))
+                Box(Modifier.padding(top = 12.dp).size(168.dp, 40.dp).clip(CircleShape).background(MaterialTheme.colorScheme.surfaceContainer))
+            }
+        }
     }
 }
 
