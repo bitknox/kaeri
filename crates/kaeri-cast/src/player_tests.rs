@@ -851,7 +851,11 @@ async fn a_tv_that_goes_silent_ends_the_cast_and_never_holds_a_control_up() {
             1 => player.seek(10.0, true).await,
             _ => player.set_volume(50.0).await,
         };
-        assert!(sent.is_ok() || !player.is_alive(), "{sent:?}");
+        // While the connection is made again a control finds it closed, and says so at once.
+        assert!(
+            sent.is_ok() || matches!(sent, Err(CastError::Closed)) || !player.is_alive(),
+            "{sent:?}"
+        );
         assert!(asked.elapsed() < Duration::from_secs(3), "a control waited on a silent TV");
     }
     next(&mut events, |e| matches!(e, PlaybackEvent::Ended { complete: false })).await;
@@ -921,9 +925,10 @@ async fn a_connection_that_drops_while_the_tv_plays_on_is_made_again() {
 #[tokio::test(flavor = "multi_thread", worker_threads = 4)]
 async fn a_connection_made_again_to_a_tv_that_closed_the_app_ends_the_cast() {
     // A TV that forgets between connections: the app it ran is gone on the next one.
-    let receiver = FakeReceiver::start(FakeOptions { duration: 600.0, ..FakeOptions::default() })
-        .await
-        .unwrap();
+    let receiver =
+        FakeReceiver::start(FakeOptions { duration: 600.0, ..FakeOptions::default() })
+            .await
+            .unwrap();
     let (player, mut events) = playing_quick_to_notice(&receiver, Duration::from_secs(6)).await;
     let began = tokio::time::Instant::now();
     receiver.drop_connection();

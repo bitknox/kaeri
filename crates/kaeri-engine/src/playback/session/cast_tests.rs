@@ -107,11 +107,8 @@ impl Rig {
     async fn on(encoder: bool, options: FakeOptions, standard: bool, timings: Timings) -> Self {
         let receiver = FakeReceiver::start(options).await.unwrap();
         let dir = tempfile::tempdir().unwrap();
-        let hub = Arc::new(CastHub::with(
-            Some(dir.path().to_owned()),
-            Arc::new(PlainHttp),
-            timings,
-        ));
+        let hub =
+            Arc::new(CastHub::with(Some(dir.path().to_owned()), Arc::new(PlainHttp), timings));
         if standard {
             hub.set_receiver(Some(DEFAULT_MEDIA_RECEIVER.into()));
         }

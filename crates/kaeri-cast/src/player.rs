@@ -1318,7 +1318,9 @@ impl CastPlayer {
 
     pub fn is_alive(&self) -> bool {
         let state = lock(&self.inner.state);
-        (state.reconnecting || self.inner.device().channel.is_open()) && !state.closed && !state.quit
+        (state.reconnecting || self.inner.device().channel.is_open())
+            && !state.closed
+            && !state.quit
     }
 
     pub fn has_quit(&self) -> bool {
@@ -2570,7 +2572,9 @@ async fn reconnect(inner: &Inner) -> Result<mpsc::UnboundedReceiver<Incoming>, C
         match tried.await {
             Ok(Ok(incoming)) => break Ok(incoming),
             Ok(Err(Rejoin::Over(failure))) => break Err(failure),
-            Ok(Err(Rejoin::Again(e))) => tracing::debug!(error = %e, "the TV didn't answer yet"),
+            Ok(Err(Rejoin::Again(e))) => {
+                tracing::debug!(error = %e, "the TV didn't answer yet")
+            }
             Err(_) => tracing::debug!("the TV didn't answer in time"),
         }
         if Instant::now() + wait >= deadline {
@@ -2599,7 +2603,9 @@ async fn rejoin(inner: &Inner) -> Result<mpsc::UnboundedReceiver<Incoming>, Rejo
         match receiver.app {
             Some(app) if app.session_id == ours.session_id => {}
             Some(_) => return Err(Rejoin::Over(CastFailure::TakenOver)),
-            None => return Err(Rejoin::Over(CastFailure::Lost("the TV closed the app".into()))),
+            None => {
+                return Err(Rejoin::Over(CastFailure::Lost("the TV closed the app".into())));
+            }
         }
         device.channel.connect_to(&ours.transport_id).map_err(Rejoin::Again)?;
     }
