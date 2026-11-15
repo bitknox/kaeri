@@ -63,67 +63,7 @@ struct PhoneTitle: View {
         ScrollViewReader { reader in
         List {
             VStack(alignment: .leading, spacing: 0) {
-                // The wide art: it stretches when pulled down and scrolls at half speed (T1).
-                // With none, the page starts under the navigation bar, the cover beside the title.
-                if !art.isCompact {
-                    ZStack(alignment: .top) {
-                        // The video edge to edge below the floating Back and More: the art fades
-                        // to the ground over it at its first frame.
-                        if room {
-                            TrailerVideo(visit: visit, size: video, fillsWidth: true)
-                                .padding(.top, TrailerLayout.phoneVideoTop(barBottom: trailerPlace.barBottom))
-                        }
-                        HeroArtView(art: art, entry: entry)
-                            .frame(height: band)
-                            // The ground fading up from the art's foot, under the cover and a title
-                            // of three lines.
-                            .overlay(alignment: .bottom) { BannerScrim(held: 38, height: 82) }
-                            .visualEffect { [reduceMotion] content, proxy in
-                                let y = proxy.frame(in: .scrollView(axis: .vertical)).minY
-                                let h = proxy.size.height
-                                return content
-                                    .scaleEffect(reduceMotion || y <= 0 ? 1 : (h + y) / h, anchor: .bottom)
-                                    .offset(y: reduceMotion || y >= 0 ? 0 : -y * 0.5)
-                            }
-                            .clipped()
-                            .trailerArtFade(room ? visit : nil)
-                    }
-                    .frame(height: band, alignment: .top)
-                }
-                HStack(alignment: .bottom, spacing: 16) {
-                    ArtworkView(url: entry.coverUrl, color: entry.plateColor, maxPixelSize: 400)
-                        .frame(width: 100, height: 150)
-                        .clipShape(.rect(cornerRadius: 8))
-                        .overlay(RoundedRectangle(cornerRadius: 8).strokeBorder(Palette.glassEdge.opacity(1.25)))
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text(entry.showTitle)
-                            .font(.showTitle(size: 22, relativeTo: .title2))
-                            .foregroundStyle(.silk)
-                            // As large as `.accessibility3`, in four lines at most.
-                            .lineLimit(4)
-                            .dynamicTypeSize(...DynamicTypeSize.accessibility3)
-                            .titleOverArt()
-                            .accessibilityAddTraits(.isHeader)
-                        OtherTitlesLine(entry: entry, phone: true)
-                        Text(entry.phoneMetadata)
-                            .groupHeaderStyle()
-                            .padding(.top, 2)
-                    }
-                    .padding(.bottom, 4)
-                    // Clear of the sound button at the head's trailing edge.
-                    .padding(.trailing, room ? TrailerLayout.soundSize + TrailerLayout.soundGap : 0)
-                }
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .overlay(alignment: .topTrailing) {
-                    if room {
-                        TrailerSoundButton(visit: visit, size: TrailerLayout.soundSize, raised: true)
-                    }
-                }
-                .padding(.horizontal, 16)
-                // Over the art's foot, except at the accessibility sizes, where the title would
-                // grow up into the art and lose its contrast, and below a trailer's band, which
-                // nothing is drawn over.
-                .padding(.top, room ? TrailerLayout.phoneHeadGap : art.isCompact || typeSize.isAccessibilitySize ? 8 : -60)
+                header(entry: entry, art: art, room: room, band: band, video: video)
 
                 VStack(alignment: .leading, spacing: 16) {
                     // No source has it: nothing to play, and the way to one in Play's place.
@@ -432,6 +372,74 @@ struct PhoneTitle: View {
             reader.scrollTo("episodes", anchor: UnitPoint(x: 0, y: 0.12))
         }
         }
+    }
+
+    /// The wide art, with the video's place in it when the page made room for a trailer, and the
+    /// cover and the words under it.
+    @ViewBuilder
+    private func header(entry: Entry, art: HeroArt, room: Bool, band: CGFloat, video: CGSize) -> some View {
+        // The wide art: it stretches when pulled down and scrolls at half speed (T1).
+        // With none, the page starts under the navigation bar, the cover beside the title.
+        if !art.isCompact {
+            ZStack(alignment: .top) {
+                // The video edge to edge below the floating Back and More: the art fades
+                // to the ground over it at its first frame.
+                if room {
+                    TrailerVideo(visit: visit, size: video, fillsWidth: true)
+                        .padding(.top, TrailerLayout.phoneVideoTop(barBottom: trailerPlace.barBottom))
+                }
+                HeroArtView(art: art, entry: entry)
+                    .frame(height: band)
+                    // The ground fading up from the art's foot, under the cover and a title
+                    // of three lines.
+                    .overlay(alignment: .bottom) { BannerScrim(held: 38, height: 82) }
+                    .visualEffect { [reduceMotion] content, proxy in
+                        let y = proxy.frame(in: .scrollView(axis: .vertical)).minY
+                        let h = proxy.size.height
+                        return content
+                            .scaleEffect(reduceMotion || y <= 0 ? 1 : (h + y) / h, anchor: .bottom)
+                            .offset(y: reduceMotion || y >= 0 ? 0 : -y * 0.5)
+                    }
+                    .clipped()
+                    .trailerArtFade(room ? visit : nil)
+            }
+            .frame(height: band, alignment: .top)
+        }
+        HStack(alignment: .bottom, spacing: 16) {
+            ArtworkView(url: entry.coverUrl, color: entry.plateColor, maxPixelSize: 400)
+                .frame(width: 100, height: 150)
+                .clipShape(.rect(cornerRadius: 8))
+                .overlay(RoundedRectangle(cornerRadius: 8).strokeBorder(Palette.glassEdge.opacity(1.25)))
+            VStack(alignment: .leading, spacing: 2) {
+                Text(entry.showTitle)
+                    .font(.showTitle(size: 22, relativeTo: .title2))
+                    .foregroundStyle(.silk)
+                    // As large as `.accessibility3`, in four lines at most.
+                    .lineLimit(4)
+                    .dynamicTypeSize(...DynamicTypeSize.accessibility3)
+                    .titleOverArt()
+                    .accessibilityAddTraits(.isHeader)
+                OtherTitlesLine(entry: entry, phone: true)
+                Text(entry.phoneMetadata)
+                    .groupHeaderStyle()
+                    .padding(.top, 2)
+            }
+            .padding(.bottom, 4)
+            // Clear of the sound button at the head's trailing edge.
+            .padding(.trailing, room ? TrailerLayout.soundSize + TrailerLayout.soundGap : 0)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .overlay(alignment: .topTrailing) {
+            if room {
+                TrailerSoundButton(visit: visit, size: TrailerLayout.soundSize, raised: true)
+            }
+        }
+        .padding(.horizontal, 16)
+        // Over the art's foot, except at the accessibility sizes, where the title would
+        // grow up into the art and lose its contrast, and below a trailer's band, which
+        // nothing is drawn over.
+        .padding(.top, room ? TrailerLayout.phoneHeadGap : art.isCompact || typeSize.isAccessibilitySize ? 8 : -60)
+
     }
 
     private func seasonChip(index: Int, season: TitleFamily.Season, entry: Entry) -> some View {
