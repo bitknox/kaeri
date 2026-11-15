@@ -121,5 +121,6 @@ internal fun CastSheetHost() {
             }
         }
     }
+    LaunchedEffect(cast) { cast.notes.collect { snackbars.show(it.text(context)) } }
     CastDialogHost()
 }

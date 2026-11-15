@@ -6,6 +6,8 @@
 package app.kaeri.store
 
 import app.kaeri.engine.core.AnilistId
+import app.kaeri.engine.ffi.FfiCastButton
+import app.kaeri.engine.ffi.FfiCastFrom
 import app.kaeri.engine.ffi.FfiCastItem
 import app.kaeri.engine.ffi.FfiCastSessionState
 import app.kaeri.engine.ffi.FfiCastSessionView
@@ -69,6 +71,8 @@ data class CastSession(
     val item: CastItem?,
     val queue: List<CastItem>,
     val notice: Msg?,
+    /** A note while it plays, said once as it first reads differently. */
+    val note: Msg?,
     /** The TV's volume, 0 to 1. */
     val level: Double?,
     val muted: Boolean?,
@@ -79,7 +83,7 @@ data class CastSession(
     val held: Boolean get() = state == CastSessionState.Connecting || state == CastSessionState.Connected || state == CastSessionState.Playing
 
     companion object {
-        val IDLE = CastSession(CastSessionState.Idle, null, 0u, null, null, null, emptyList(), null, null, null, false)
+        val IDLE = CastSession(CastSessionState.Idle, null, 0u, null, null, null, emptyList(), null, null, null, null, false)
     }
 }
 
@@ -93,8 +97,11 @@ interface CastSessionSource {
     /** The session once it reads differently; `null` once the engine has stopped. */
     suspend fun next(): CastSession?
 
-    /** Hold the Cast row [key]'s TV. Throws the engine's [app.kaeri.engine.ffi.FfiTvException]. */
-    fun connect(key: String)
+    /**
+     * Hold the Cast row [key]'s TV; with [from], the episode playing here goes on there. Throws
+     * the engine's [app.kaeri.engine.ffi.FfiTvException].
+     */
+    fun connect(key: String, from: CastFrom? = null)
 
     /** Stop what plays on the TV, close the receiver and let the TV go. */
     fun disconnect()
@@ -131,7 +138,8 @@ class EngineCastSession(
 
     override suspend fun next(): CastSession? = watch.next()?.shown()
 
-    override fun connect(key: String) = sender.castConnect(key)
+    override fun connect(key: String, from: CastFrom?) =
+        sender.castConnect(key, from?.let { FfiCastFrom(it.id, it.episode, it.position) })
 
     override fun disconnect() = sender.castDisconnect()
 
@@ -143,13 +151,7 @@ class EngineCastSession(
 
     override fun playNext(id: AnilistId, episode: String): Boolean = false
 
-    override fun playHere(): CastFrom? {
-        val item = state().item
-        val at = sender.castSession()?.playHere()
-        sender.castDisconnect()
-        val id = item?.id ?: return null
-        return CastFrom(id, item.episode ?: return null, at ?: 0.0)
-    }
+    override fun playHere(): CastFrom? = sender.castPlayHere()?.let { CastFrom(it.id, it.episode, it.position) }
 
     override fun leftOn(): String? = sender.castLeftOn()
 
@@ -164,13 +166,19 @@ private fun FfiCastSessionView.shown() = CastSession(
         FfiCastSessionState.PLAYING -> CastSessionState.Playing
         FfiCastSessionState.ERROR -> CastSessionState.Error
     },
-    button = null,
-    rev = 0u,
+    button = when (button) {
+        FfiCastButton.HIDDEN -> CastButtonState.Hidden
+        FfiCastButton.AVAILABLE -> CastButtonState.Available
+        FfiCastButton.CONNECTING -> CastButtonState.Connecting
+        FfiCastButton.CONNECTED -> CastButtonState.Connected
+    },
+    rev = rev,
     deviceKey = deviceKey,
     deviceName = deviceName,
     item = item?.shown(),
     queue = queue.map { it.shown() },
     notice = notice,
+    note = note,
     level = level,
     muted = muted,
     levelControl = volumeControl == FfiVolumeControl.LEVEL,
@@ -186,5 +194,5 @@ private fun FfiCastItem.shown() = CastItem(
     duration = duration,
     paused = paused,
     loading = loading,
-    waiting = null,
+    waiting = waiting?.toLong(),
 )

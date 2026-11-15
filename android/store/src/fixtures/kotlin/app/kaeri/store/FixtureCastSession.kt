@@ -64,7 +64,7 @@ class FixtureCastSession(
         changes.value += 1
     }
 
-    override fun connect(key: String) {
+    override fun connect(key: String, from: CastFrom?) {
         val kitchen = key.endsWith("fixture-kitchen")
         val name = if (kitchen) "Kitchen display" else "Living room"
         connecting?.cancel()

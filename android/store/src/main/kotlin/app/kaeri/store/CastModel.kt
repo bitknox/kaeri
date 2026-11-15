@@ -31,6 +31,7 @@ import app.kaeri.engine.ffi.FfiRemoteCard
 import app.kaeri.engine.ffi.FfiScreen
 import app.kaeri.engine.ffi.FfiTvCommand
 import app.kaeri.engine.ffi.FfiTvException
+import app.kaeri.engine.ffi.FfiTvRowKind
 import app.kaeri.engine.ffi.FfiVolumeControl
 import app.kaeri.engine.ffi.tvPlayhead
 import app.kaeri.engine.model.Msg
@@ -176,6 +177,11 @@ class CastModel(
 
     /** Casts that ended with a notice once their card had gone, for the snackbar. */
     val ended: SharedFlow<CastEnded> = _ended.asSharedFlow()
+
+    private val _notes = MutableSharedFlow<Msg>(extraBufferCapacity = 1)
+
+    /** A note while a TV plays, once as it first reads differently: a toast. */
+    val notes: SharedFlow<Msg> = _notes.asSharedFlow()
 
     private val _problem = MutableStateFlow<String?>(null)
 
@@ -358,6 +364,7 @@ class CastModel(
         val was = _session.value
         sessionAt = clock()
         _session.value = view
+        view.note?.let { if (it != was.note) _notes.tryEmit(it) }
         view.item?.let { _lastItem.value = it }
         if (view.held) _joining.value = null
         refreshButton()
@@ -392,16 +399,30 @@ class CastModel(
         follow(next, request)
     }
 
-    /** The button as the engine says it, else from what was found and what is held. */
+    /**
+     * The button as the engine says it for Chromecast TVs, joined with the TVs that run Kaeri,
+     * which only this model knows: one found shows the button, one connected fills it.
+     */
     private fun refreshButton() {
         val view = _session.value
-        _button.value = view.button ?: when {
+        val engine = view.button ?: when {
             view.state == CastSessionState.Connecting -> CastButtonState.Connecting
             view.held -> CastButtonState.Connected
-            tv?.connected?.value != null -> CastButtonState.Connected
-            _rows.value.isNotEmpty() || tv?.rows?.value?.isNotEmpty() == true -> CastButtonState.Available
+            _rows.value.isNotEmpty() -> CastButtonState.Available
             else -> CastButtonState.Hidden
         }
+        val kaeri = tv?.rows?.value.orEmpty().any { it.kind != FfiTvRowKind.PAIRED_AWAY }
+        _button.value = when {
+            engine == CastButtonState.Connecting || engine == CastButtonState.Connected -> engine
+            tv?.connected?.value != null -> CastButtonState.Connected
+            engine == CastButtonState.Available || kaeri -> CastButtonState.Available
+            else -> CastButtonState.Hidden
+        }
+    }
+
+    /** Tell the engine what Kaeri's receiver calls this device: `phone` or `tablet`. */
+    fun setDevice(word: String) {
+        tv?.attachedSender?.castSetDevice(word)
     }
 
     /** The cast button: the chooser, or the held TV's dialog. A Kaeri TV opens its own remote. */
