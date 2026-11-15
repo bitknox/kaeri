@@ -624,9 +624,9 @@ impl Meta {
     /// A rate limit or GraphQL's own refusal is an answer from a live AniList, so the ladder
     /// stays where it stands and nothing is said: "no source answered" would be false. Work
     /// nobody is looking at ([`crate::in_background`]) says nothing either, while the screens'
-    /// own asks are answered, unless AniList keeps failing long enough to be skipped: the
-    /// launch queue's refusal is not news, and saying it set the ladder going down and up
-    /// between a screen's answers, a toast each way.
+    /// own asks are answered, unless AniList keeps failing long enough to be skipped. A
+    /// background request's failure is not what the screen shows, and the ladder is one for
+    /// every lane: moved by it, the next screen answer would move it back, a toast each way.
     fn fell(&self, rung: u8, cause: &AniListError) {
         if !Self::outage(cause) {
             return;
