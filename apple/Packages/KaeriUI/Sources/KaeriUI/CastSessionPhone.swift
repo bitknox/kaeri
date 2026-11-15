@@ -1,7 +1,8 @@
 // iPhone and iPad while casting: the mini as the tab bar's bottom accessory, and the controller
-// it zooms into, full screen. The system's zoom carries the mini's frame, corners and art into the
-// controller's and back, and a drag down closes it with the finger; under Reduce Motion it
-// crossfades in place. On iPad the controller lays the art beside the controls.
+// it grows into, full screen. One box carries the mini's frame and corners into the controller's
+// and back, read from where the accessory really is, and a drag down closes it with the finger;
+// under Reduce Motion it crossfades in place. On iPad the controller lays the art beside the
+// controls.
 
 #if os(iOS)
 import KaeriDesign
@@ -117,7 +118,6 @@ struct CastController: View {
     @Environment(AppStore.self) private var store
     @Environment(Navigator.self) private var navigator
     @Environment(\.horizontalSizeClass) private var sizeClass
-    @Environment(\.dismiss) private var dismiss
     /// The controls fade in after the frame has started to grow, and out at once on the way back.
     @State private var controlsIn = false
 
@@ -171,7 +171,10 @@ struct CastController: View {
         .onDisappear { UIApplication.shared.isIdleTimerDisabled = false }
         .onChange(of: cast.miniShown) { _, shown in
             // The session ended on the TV or elsewhere: nothing left to drive.
-            if !shown, !cast.connected { dismiss() }
+            if !shown, !cast.connected { cast.expanded = false }
+        }
+        .onChange(of: cast.expanded) { _, open in
+            if !open { withAnimation(.easeIn(duration: 0.1)) { controlsIn = false } }
         }
     }
 
@@ -244,34 +247,175 @@ struct CastController: View {
     private func openShow(_ id: AnilistId) {
         store.tv.cast.expanded = false
         Task { @MainActor in
-            // Once the controller has zoomed back into the mini.
+            // Once the controller has shrunk back into the mini.
             try? await Task.sleep(for: .milliseconds(450))
             navigator.openTitle(id)
         }
     }
 }
 
-/// The mini over the tab bar, zooming into the controller and back. Before iOS 26.1 the
-/// controller opens from the cast button's dialog and the title page.
+/// Where the mini sits on screen, read from the accessory itself at the moment the controller
+/// opens or closes, so the box leaves from and lands on the mini as it is drawn.
+@MainActor
+final class CastMiniAnchor {
+    weak var view: UIView?
+
+    /// The window's safe area, which the controller keeps while the box fills the screen.
+    var insets: EdgeInsets? {
+        guard let window = view?.window else { return nil }
+        let i = window.safeAreaInsets
+        return EdgeInsets(top: i.top, leading: i.left, bottom: i.bottom, trailing: i.right)
+    }
+
+    /// The mini's frame in its window, or nil once it is gone.
+    var frame: CGRect? {
+        guard let view, view.window != nil, view.bounds.width > 0 else { return nil }
+        return view.convert(view.bounds, to: nil)
+    }
+}
+
+/// An empty view behind the mini that tells the anchor where the mini is.
+struct CastMiniProbe: UIViewRepresentable {
+    let anchor: CastMiniAnchor
+
+    func makeUIView(context: Context) -> UIView {
+        let view = UIView()
+        view.isUserInteractionEnabled = false
+        anchor.view = view
+        return view
+    }
+
+    func updateUIView(_ view: UIView, context: Context) { anchor.view = view }
+}
+
+/// The controller over everything, opened from the mini. The cover itself appears and goes at
+/// once on a clear background; the box inside it does the travelling.
 struct CastAccessoryCover: ViewModifier {
     @Environment(AppStore.self) private var store
     @Environment(Navigator.self) private var navigator
-    let zoom: Namespace.ID
+    let anchor: CastMiniAnchor
+    @State private var presented = false
 
     func body(content: Content) -> some View {
         let cast = store.tv.cast
         content
-            .fullScreenCover(isPresented: Binding(
-                get: { cast.expanded },
-                set: { cast.expanded = $0 }
-            )) {
-                CastController()
-                    .environment(store)
-                    .environment(navigator)
-                    .navigationTransition(.zoom(sourceID: CastAccessoryCover.zoomID, in: zoom))
+            .fullScreenCover(isPresented: $presented) {
+                CastMorph(anchor: anchor) {
+                    withTransaction(\.disablesAnimations, true) { presented = false }
+                }
+                .environment(store)
+                .environment(navigator)
+                .presentationBackground(.clear)
+            }
+            .onChange(of: cast.expanded, initial: true) { _, open in
+                if open, !presented {
+                    withTransaction(\.disablesAnimations, true) { presented = true }
+                }
             }
     }
+}
 
-    static let zoomID = "cast-mini" // i18n-skip
+/// One box that grows from the mini into the controller and shrinks back: its frame and corners
+/// move on the standard spring with the controller drawn inside it at full opacity, the mini's
+/// row fades out over the first 100 ms and the controls fade in from 100 ms. A drag down from
+/// the top closes it with the finger. Under Reduce Motion the controller crossfades in place.
+private struct CastMorph: View {
+    @Environment(AppStore.self) private var store
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    let anchor: CastMiniAnchor
+    let closed: () -> Void
+    @State private var from: CGRect?
+    @State private var insets: EdgeInsets?
+    @State private var open = false
+    @State private var drag: CGFloat = 0
+
+    init(anchor: CastMiniAnchor, closed: @escaping () -> Void) {
+        self.anchor = anchor
+        self.closed = closed
+        _from = State(initialValue: anchor.frame)
+        _insets = State(initialValue: anchor.insets)
+    }
+
+    var body: some View {
+        let cast = store.tv.cast
+        GeometryReader { proxy in
+            let origin = proxy.frame(in: .global).origin
+            let full = CGRect(origin: .zero, size: proxy.size)
+            let mini = from.map { $0.offsetBy(dx: -origin.x, dy: -origin.y) }
+            let travels = !reduceMotion && mini != nil
+            let box = travels && !open ? (mini ?? full) : dragged(full)
+            let scale = box.width / max(full.width, 1)
+            let radius = open ? (drag > 0 ? 38 : 0) : (mini?.height ?? 0) / 2
+            ZStack(alignment: .topLeading) {
+                // The box spans the whole screen, so the controller gets the safe area back.
+                CastController()
+                    .safeAreaPadding(insets ?? proxy.safeAreaInsets)
+                    .frame(width: full.width, height: full.height)
+                    .scaleEffect(scale, anchor: .topLeading)
+                    .offset(x: box.minX, y: box.minY)
+                if travels, let mini {
+                    CastMini()
+                        .frame(width: box.width, height: mini.height)
+                        .offset(x: box.minX, y: box.minY)
+                        .opacity(open ? 0 : 1)
+                        .animation(open ? .easeIn(duration: 0.1) : .easeOut(duration: 0.2).delay(0.1), value: open)
+                        .allowsHitTesting(false)
+                        .accessibilityHidden(true)
+                }
+            }
+            .frame(width: full.width, height: full.height, alignment: .topLeading)
+            .mask(alignment: .topLeading) {
+                RoundedRectangle(cornerRadius: radius, style: .continuous)
+                    .frame(width: box.width, height: box.height)
+                    .offset(x: box.minX, y: box.minY)
+            }
+            .opacity(travels || open ? 1 : 0)
+            .simultaneousGesture(
+                DragGesture(minimumDistance: 12)
+                    .onChanged { value in
+                        guard open, value.startLocation.y < 170 else { return }
+                        drag = max(0, value.translation.height)
+                    }
+                    .onEnded { value in
+                        guard open, drag > 0 else { return }
+                        if value.translation.height > 120 || value.predictedEndTranslation.height > 260 {
+                            cast.expanded = false
+                        } else {
+                            withAnimation(.standard) { drag = 0 }
+                        }
+                    }
+            )
+        }
+        .ignoresSafeArea()
+        .accessibilityAction(.escape) { cast.expanded = false }
+        .onAppear {
+            // One frame on the mini first, then the box grows.
+            Task { @MainActor in
+                withAnimation(reduceMotion ? .easeInOut(duration: 0.25) : .standard) { open = true }
+            }
+        }
+        .onChange(of: cast.expanded) { _, expanded in
+            if expanded {
+                if !open { withAnimation(reduceMotion ? .easeInOut(duration: 0.25) : .standard) { open = true } }
+                return
+            }
+            from = anchor.frame
+            withAnimation(reduceMotion || from == nil ? .easeInOut(duration: 0.25) : .standard) {
+                open = false
+                drag = 0
+            } completion: {
+                if !cast.expanded { closed() }
+            }
+        }
+    }
+
+    /// The open box, following the finger down and shrinking a little as it goes.
+    private func dragged(_ full: CGRect) -> CGRect {
+        guard drag > 0 else { return full }
+        let k = min(drag / max(full.height, 1), 1)
+        let width = full.width * (1 - 0.2 * k)
+        let height = full.height * (1 - 0.2 * k)
+        return CGRect(x: (full.width - width) / 2, y: drag, width: width, height: height)
+    }
 }
 #endif
