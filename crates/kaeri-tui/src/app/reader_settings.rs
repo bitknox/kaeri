@@ -1,7 +1,8 @@
 //! The reader settings overlay, `,` in the reader: the settings a terminal honours, each under
 //! the place a change is kept, changed in place with the arrows and applied at once.
 //!
-//! A light novel has its mode, the text width, the line spacing and justify. Manga has its
+//! A light novel has its mode, the text width, the line spacing and justify, all under the
+//! novels on this computer as the board groups them. Manga has its
 //! mode and direction, fit, page layout, spreads, crop borders, the strip's width and skipping
 //! credit pages. Font, size, look, colour and tap zones follow the terminal or need a touch
 //! screen; the overlay says so in a note rather than offering rows that would do nothing.
@@ -52,14 +53,6 @@ pub enum SettingPlace {
 }
 
 impl SettingPlace {
-    fn scope(self) -> SettingScope {
-        match self {
-            Self::Series => SettingScope::Series,
-            Self::Here => SettingScope::Device,
-            Self::All => SettingScope::Medium,
-        }
-    }
-
     /// The heading over the rows kept here.
     pub fn heading(self, medium: Medium) -> String {
         let novel = medium == Medium::Novel;
@@ -89,6 +82,8 @@ pub enum SettingShown {
 pub struct SettingItem {
     pub key: Key,
     pub place: SettingPlace,
+    /// Where a change is sent to be kept, which is the place's own except for a novel's mode.
+    pub scope: SettingScope,
     pub label: String,
     pub shown: SettingShown,
     /// A series' own choice: `d` drops it for the default.
@@ -181,11 +176,14 @@ impl App {
             .iter()
             .filter_map(|key| {
                 let row = rows.rows.iter().find(|r| r.key == *key)?;
-                let place = match key.series_scope() {
-                    Some(SettingScope::Series) => SettingPlace::Series,
-                    _ if key.syncs() => SettingPlace::All,
-                    _ => SettingPlace::Here,
+                let (scope, place) = match key.series_scope() {
+                    Some(SettingScope::Series) => (SettingScope::Series, SettingPlace::Series),
+                    _ if key.syncs() => (SettingScope::Medium, SettingPlace::All),
+                    _ => (SettingScope::Device, SettingPlace::Here),
                 };
+                // The board puts a novel's four rows together under the novels on this
+                // computer. Mode is still kept for the series, as `m` keeps it.
+                let place = if medium == Medium::Novel { SettingPlace::Here } else { place };
                 let shown = match (key, &row.value) {
                     (Key::LineSpacing, ReaderValue::Amount { value }) => {
                         let open = *value >= OPEN_SPACING;
@@ -213,6 +211,7 @@ impl App {
                 Some(SettingItem {
                     key: *key,
                     place,
+                    scope,
                     label: label(*key),
                     shown,
                     overridden: row.overridden,
@@ -325,7 +324,7 @@ impl App {
         if same {
             return None;
         }
-        self.set_reader_setting(item.key, item.place.scope(), value)
+        self.set_reader_setting(item.key, item.scope, value)
     }
 
     /// Whether the open chapter is a novel, for the overlay's words.

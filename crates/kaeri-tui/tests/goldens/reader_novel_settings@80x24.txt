@@ -4,10 +4,8 @@ Kaeri   Lantern Street Notes · Part 3                sources ● 3  ·  anilist
 ▌ Reader settings
 ────────────────────────────────────────────────────────────────────────────────
 
-  This series  ───────────────────────────────────────────────────────────────
-    Mode                Paged  ·  Scrolled
-
   Light novels on this computer  ─────────────────────────────────────────────
+    Mode                Paged  ·  Scrolled
 ▌   Text width          ‹ 50 columns ›
     Line spacing        Open  ·  Tight
     Justify             Off
@@ -15,6 +13,8 @@ Kaeri   Lantern Street Notes · Part 3                sources ● 3  ·  anilist
   Not in the terminal  ───────────────────────────────────────────────────────
     Font, text size and look follow the terminal's own settings. Margins
     come from the text width.
+
+
 
 
 
@@ -37,27 +37,25 @@ r02 c00-79 fg=rule
 r03 c00-00 fg=obi
 r03 c02-16 fg=text mod=BOLD
 r04 c00-79 fg=rule
-r06 c02-12 fg=text-dim
-r06 c15-77 fg=rule
+r06 c02-30 fg=text-dim
+r06 c33-77 fg=rule
 r07 c04-07 fg=text-dim
 r07 c24-28 fg=text mod=BOLD
 r07 c29-41 fg=text-dim
-r09 c02-30 fg=text-dim
-r09 c33-77 fg=rule
-r10 c00-00 fg=obi
-r10 c04-13 fg=text
-r10 c24-25 fg=text-dim
-r10 c26-35 fg=text mod=BOLD
-r10 c36-37 fg=text-dim
-r11 c04-15 fg=text-dim
-r11 c24-27 fg=text mod=BOLD
-r11 c28-37 fg=text-dim
-r12 c04-10 fg=text-dim
-r12 c24-26 fg=text mod=BOLD
-r14 c02-20 fg=text-dim
-r14 c23-77 fg=rule
-r15 c04-71 fg=text-dim
-r16 c04-28 fg=text-dim
+r08 c00-00 fg=obi
+r08 c04-13 fg=text
+r08 c24-25 fg=text-dim
+r08 c26-35 fg=text mod=BOLD
+r08 c36-37 fg=text-dim
+r09 c04-15 fg=text-dim
+r09 c24-27 fg=text mod=BOLD
+r09 c28-37 fg=text-dim
+r10 c04-10 fg=text-dim
+r10 c24-26 fg=text mod=BOLD
+r12 c02-20 fg=text-dim
+r12 c23-77 fg=rule
+r13 c04-71 fg=text-dim
+r14 c04-28 fg=text-dim
 r22 c00-79 fg=rule
 r23 c00-21 fg=text-dim
 r23 c47-49 fg=text

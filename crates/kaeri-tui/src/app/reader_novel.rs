@@ -990,4 +990,25 @@ pub(in crate::app) mod tests {
         assert_eq!(a.nav.overlay(), None);
         assert!(a.reader_here().is_some(), "still reading");
     }
+
+    #[test]
+    fn a_novels_rows_share_one_heading_and_mode_is_still_kept_for_the_series() {
+        let mut a = novel(120, 34, "paged", None);
+        press(&mut a, KeyCode::Char(','));
+        let items = a.reader_setting_items();
+        assert!(
+            items.iter().all(|i| i.place == crate::app::SettingPlace::Here),
+            "under the novels on this computer, as the board groups them: {items:?}"
+        );
+        let task = press(&mut a, KeyCode::Right);
+        let Some(Command::Reader(ReaderCommand::SetSetting {
+            key, value, scope, work, ..
+        })) = task
+        else {
+            panic!("{task:?}")
+        };
+        assert_eq!((key, scope), (ReaderSettingKey::Mode, SettingScope::Series));
+        assert_eq!(value, ReaderValue::Choice { name: "scrolled".into() });
+        assert_eq!(work, Some(WorkId::new("a:1")));
+    }
 }
