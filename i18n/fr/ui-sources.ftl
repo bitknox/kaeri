@@ -10,7 +10,7 @@ source-picker-coverage = { $of ->
    *[other] { $covered } sur { $of } épisodes
  }
 source-picker-episodes = { $count ->
-    [one] Épisode { $first }
+    [one] { $count } épisode : { $first }
     [many] Épisodes { $first } à { $last }
    *[other] Épisodes { $first } à { $last }
  }

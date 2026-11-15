@@ -1039,7 +1039,7 @@ reading-dl-offline = Offline
 # After "3 queued" on a series' Downloads row when a full device paused the downloads. They go on by themselves once some space is free; the count is the queued chapters.
 reading-dl-no-room =
     { $count ->
-        [one] Sem espaço. Ele é baixado quando houver espaço livre.
+        [one] Sem espaço. { $count } capítulo é baixado quando houver espaço livre.
         [many] Sem espaço. Eles são baixados quando houver espaço livre.
        *[other] Sem espaço. Eles são baixados quando houver espaço livre.
     }
@@ -1273,7 +1273,7 @@ plugins-outdated =
 # Toast at launch when joined plugin stores offer newer versions of installed plugins.
 plugin-updates-ready =
     { $count ->
-        [one] Atualização de Plugin pronta: { $names }.
+        [one] { $count } atualização de plugin pronta: { $names }.
         [many] Atualizações de Plugin prontas: { $names }.
        *[other] Atualizações de Plugin prontas: { $names }.
     }
@@ -8342,7 +8342,7 @@ together-forget-room = Remover das salas recentes
 # Line that says who is in a recent room now, after looking in. The names are already joined.
 together-someone-here =
     { $count ->
-        [one] { $names } está na sala
+        [one] { $count } pessoa na sala: { $names }
         [many] { $names } estão na sala
        *[other] { $names } estão na sala
     }
@@ -10597,7 +10597,7 @@ medium-update-line = O Kaeri agora pode ler mangás, webtoons e light novels das
 # Title of the sheet when the other devices answer Watch. The devices are their names, joined; n is how many there are.
 medium-join-title-watch =
     { $n ->
-        [one] { $devices } está configurado para assistir
+        [one] { $n } dispositivo configurado para assistir: { $devices }
         [many] { $devices } estão configurados para assistir
        *[other] { $devices } estão configurados para assistir
     }
@@ -10605,7 +10605,7 @@ medium-join-title-watch =
 # Title of the sheet when the other devices answer Read.
 medium-join-title-read =
     { $n ->
-        [one] { $devices } está configurado para ler
+        [one] { $n } dispositivo configurado para ler: { $devices }
         [many] { $devices } estão configurados para ler
        *[other] { $devices } estão configurados para ler
     }
@@ -10613,7 +10613,7 @@ medium-join-title-read =
 # Title of the sheet when the other devices answer Both.
 medium-join-title-both =
     { $n ->
-        [one] { $devices } está configurado para assistir e ler
+        [one] { $n } dispositivo configurado para assistir e ler: { $devices }
         [many] { $devices } estão configurados para assistir e ler
        *[other] { $devices } estão configurados para assistir e ler
     }
@@ -12691,7 +12691,7 @@ source-picker-coverage =
 # Under a source that lists every episode that is out.
 source-picker-episodes =
     { $count ->
-        [one] Episódio { $first }
+        [one] { $count } episódio: { $first }
         [many] Episódios { $first } a { $last }
        *[other] Episódios { $first } a { $last }
     }

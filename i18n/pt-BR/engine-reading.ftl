@@ -182,7 +182,7 @@ reading-dl-waits-wifi = espera o Wi-Fi
 reading-dl-failed = Não foi possível baixar o capítulo { $chapter }
 reading-dl-offline = Offline
 reading-dl-no-room = { $count ->
-    [one] Sem espaço. Ele é baixado quando houver espaço livre.
+    [one] Sem espaço. { $count } capítulo é baixado quando houver espaço livre.
     [many] Sem espaço. Eles são baixados quando houver espaço livre.
    *[other] Sem espaço. Eles são baixados quando houver espaço livre.
  }

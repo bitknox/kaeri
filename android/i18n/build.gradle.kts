@@ -12,9 +12,9 @@ android {
         // A language ships only the messages that are reviewed or drafted, and shows the rest in
         // English, per string (docs/translations.md); i18n-tool's draft lists what is missing.
         disable += "MissingTranslation"
-        // tools/i18n checks plural forms itself: a form that stands for more than one number, as
-        // Portuguese "one" does for 0 and 1, shows the count whenever the English shows it. Where
-        // the English keeps the count to grammar ("It downloads"), the translation may too.
+        // tools/i18n checks plural forms itself, for every platform: a "zero", "one" or "two" form
+        // that stands for more than one number, as Portuguese "one" does for 0 and 1, always shows
+        // the count, and any such form shows it whenever the English does.
         disable += "ImpliedQuantity"
     }
 }

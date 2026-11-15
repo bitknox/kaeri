@@ -38,23 +38,21 @@ pub fn category(tag: &str, n: u64) -> Result<&'static str> {
     Ok(name(rules(tag)?.category_for(n)))
 }
 
-/// The categories that stand for more than one whole number in a language: "one" is 0 and 1 in
-/// French and Portuguese, and 1, 21, 31 and on in Russian, so a form for it has to show the number.
-pub fn shared(tag: &str) -> Result<Vec<String>> {
+/// The whole numbers 0 to 200 that each of a language's categories takes, in CLDR order. A
+/// category with more than one of them stands for several counts, so its form may have to show the
+/// count (`Catalogue::validate`).
+pub fn numbers(tag: &str) -> Result<Vec<(String, Vec<u64>)>> {
     let rules = rules(tag)?;
-    let mut seen: Vec<(&'static str, u32)> = Vec::new();
-    for n in (0..TABLE).chain((1..4).map(|k| k * 1_000_000)) {
+    let mut out: Vec<(String, Vec<u64>)> = Vec::new();
+    for n in 0..=200u64 {
         let cat = name(rules.category_for(n));
-        match seen.iter_mut().find(|(c, _)| *c == cat) {
-            Some((_, count)) => *count += 1,
-            None => seen.push((cat, 1)),
+        match out.iter_mut().find(|(c, _)| c == cat) {
+            Some((_, ns)) => ns.push(n),
+            None => out.push((cat.to_owned(), vec![n])),
         }
     }
-    Ok(ORDER
-        .iter()
-        .filter(|c| seen.iter().any(|(s, count)| s == *c && *count > 1))
-        .map(|c| c.to_string())
-        .collect())
+    out.sort_by_key(|(c, _)| ORDER.iter().position(|o| o == c));
+    Ok(out)
 }
 
 /// How many whole numbers are tabulated outright. Past this, a language's category repeats with
@@ -110,13 +108,20 @@ mod tests {
     use super::*;
 
     #[test]
-    fn shared_categories_are_those_of_more_than_one_number() {
-        assert_eq!(shared("en").unwrap(), ["other"]);
-        assert_eq!(shared("fr").unwrap(), ["one", "many", "other"]);
-        assert_eq!(shared("pt-BR").unwrap(), ["one", "many", "other"]);
-        // Their "other" is for fractions only.
-        assert_eq!(shared("ru").unwrap(), ["one", "few", "many"]);
-        assert_eq!(shared("pl").unwrap(), ["few", "many"]);
+    fn numbers_lists_what_each_category_takes() {
+        let en = numbers("en").unwrap();
+        assert_eq!(en[0], ("one".to_owned(), vec![1]));
+        assert_eq!(en[1].0, "other");
+        assert_eq!(en[1].1.len(), 200);
+        let ru = numbers("ru").unwrap();
+        let one = &ru.iter().find(|(c, _)| c == "one").unwrap().1;
+        assert_eq!(one[..3], [1, 21, 31]);
+        assert!(!one.contains(&11));
+        // "one" is 0 and 1 in French and Portuguese, only 1 in Polish.
+        for tag in ["fr", "pt-BR"] {
+            assert_eq!(numbers(tag).unwrap()[0], ("one".to_owned(), vec![0, 1]), "{tag}");
+        }
+        assert_eq!(numbers("pl").unwrap()[0], ("one".to_owned(), vec![1]));
     }
 
     #[test]

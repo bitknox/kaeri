@@ -113065,7 +113065,7 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "%1$@ est réglé sur regarder et lire"
+                      "value" : "%2$lld appareil réglé sur regarder et lire : %1$@"
                     }
                   },
                   "other" : {
@@ -113217,7 +113217,7 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "%1$@ está configurado para assistir e ler"
+                      "value" : "%2$lld dispositivo configurado para assistir e ler: %1$@"
                     }
                   },
                   "other" : {
@@ -113245,25 +113245,25 @@
                   "few" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "На %1$@ выбраны просмотр и чтение"
+                      "value" : "Просмотр и чтение выбраны на %2$lld устройствах: %1$@"
                     }
                   },
                   "many" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "На %1$@ выбраны просмотр и чтение"
+                      "value" : "Просмотр и чтение выбраны на %2$lld устройствах: %1$@"
                     }
                   },
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "На %1$@ выбраны просмотр и чтение"
+                      "value" : "Просмотр и чтение выбраны на %2$lld устройстве: %1$@"
                     }
                   },
                   "other" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "На %1$@ выбраны просмотр и чтение"
+                      "value" : "Просмотр и чтение выбраны на %2$lld устройствах: %1$@"
                     }
                   }
                 }
@@ -113465,7 +113465,7 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "%1$@ est réglé sur lire"
+                      "value" : "%2$lld appareil réglé sur lire : %1$@"
                     }
                   },
                   "other" : {
@@ -113617,7 +113617,7 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "%1$@ está configurado para ler"
+                      "value" : "%2$lld dispositivo configurado para ler: %1$@"
                     }
                   },
                   "other" : {
@@ -113645,25 +113645,25 @@
                   "few" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "На %1$@ выбрано чтение"
+                      "value" : "Чтение выбрано на %2$lld устройствах: %1$@"
                     }
                   },
                   "many" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "На %1$@ выбрано чтение"
+                      "value" : "Чтение выбрано на %2$lld устройствах: %1$@"
                     }
                   },
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "На %1$@ выбрано чтение"
+                      "value" : "Чтение выбрано на %2$lld устройстве: %1$@"
                     }
                   },
                   "other" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "На %1$@ выбрано чтение"
+                      "value" : "Чтение выбрано на %2$lld устройствах: %1$@"
                     }
                   }
                 }
@@ -113865,7 +113865,7 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "%1$@ est réglé sur regarder"
+                      "value" : "%2$lld appareil réglé sur regarder : %1$@"
                     }
                   },
                   "other" : {
@@ -114017,7 +114017,7 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "%1$@ está configurado para assistir"
+                      "value" : "%2$lld dispositivo configurado para assistir: %1$@"
                     }
                   },
                   "other" : {
@@ -114045,25 +114045,25 @@
                   "few" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "На %1$@ выбран просмотр"
+                      "value" : "Просмотр выбран на %2$lld устройствах: %1$@"
                     }
                   },
                   "many" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "На %1$@ выбран просмотр"
+                      "value" : "Просмотр выбран на %2$lld устройствах: %1$@"
                     }
                   },
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "На %1$@ выбран просмотр"
+                      "value" : "Просмотр выбран на %2$lld устройстве: %1$@"
                     }
                   },
                   "other" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "На %1$@ выбран просмотр"
+                      "value" : "Просмотр выбран на %2$lld устройствах: %1$@"
                     }
                   }
                 }
@@ -195601,7 +195601,7 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "Mise à jour prête : %2$@."
+                      "value" : "%1$lld mise à jour de plugin prête : %2$@."
                     }
                   },
                   "other" : {
@@ -195753,7 +195753,7 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "Atualização de Plugin pronta: %2$@."
+                      "value" : "%1$lld atualização de plugin pronta: %2$@."
                     }
                   },
                   "other" : {
@@ -195781,25 +195781,25 @@
                   "few" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "Плагины: готовы обновления. %2$@."
+                      "value" : "Плагины: готовы %1$lld обновления. %2$@."
                     }
                   },
                   "many" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "Плагины: готовы обновления. %2$@."
+                      "value" : "Плагины: готово %1$lld обновлений. %2$@."
                     }
                   },
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "Плагин: готово обновление. %2$@."
+                      "value" : "Плагины: готово %1$lld обновление. %2$@."
                     }
                   },
                   "other" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "Плагины: готовы обновления. %2$@."
+                      "value" : "Плагины: готово %1$lld обновления. %2$@."
                     }
                   }
                 }
@@ -237897,7 +237897,7 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "Plus d'espace. Il se télécharge dès qu'il y a de l'espace libre."
+                      "value" : "Plus d'espace. %1$lld chapitre se télécharge dès qu'il y a de l'espace libre."
                     }
                   },
                   "other" : {
@@ -238049,7 +238049,7 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "Sem espaço. Ele é baixado quando houver espaço livre."
+                      "value" : "Sem espaço. %1$lld capítulo é baixado quando houver espaço livre."
                     }
                   },
                   "other" : {
@@ -238077,25 +238077,25 @@
                   "few" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "Нет места. Загрузка начнётся, когда освободится место."
+                      "value" : "Нет места. %1$lld главы загрузятся, когда освободится место."
                     }
                   },
                   "many" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "Нет места. Загрузка начнётся, когда освободится место."
+                      "value" : "Нет места. %1$lld глав загрузятся, когда освободится место."
                     }
                   },
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "Нет места. Загрузка начнётся, когда освободится место."
+                      "value" : "Нет места. %1$lld глава загрузится, когда освободится место."
                     }
                   },
                   "other" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "Нет места. Загрузка начнётся, когда освободится место."
+                      "value" : "Нет места. %1$lld главы загрузятся, когда освободится место."
                     }
                   }
                 }
@@ -320799,7 +320799,7 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "Épisode %2$@"
+                      "value" : "%1$lld épisode : %2$@"
                     }
                   },
                   "other" : {
@@ -320951,7 +320951,7 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "Episódio %2$@"
+                      "value" : "%1$lld episódio: %2$@"
                     }
                   },
                   "other" : {
@@ -320979,25 +320979,25 @@
                   "few" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "Эпизоды %2$@–%3$@"
+                      "value" : "%1$lld эпизода: %2$@–%3$@"
                     }
                   },
                   "many" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "Эпизоды %2$@–%3$@"
+                      "value" : "%1$lld эпизодов: %2$@–%3$@"
                     }
                   },
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "Эпизоды %2$@–%3$@"
+                      "value" : "%1$lld эпизод: %2$@–%3$@"
                     }
                   },
                   "other" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "Эпизоды %2$@–%3$@"
+                      "value" : "%1$lld эпизода: %2$@–%3$@"
                     }
                   }
                 }
@@ -372915,7 +372915,7 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "%1$@ est dans le salon"
+                      "value" : "%2$lld personne dans le salon : %1$@"
                     }
                   },
                   "other" : {
@@ -373067,7 +373067,7 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "%1$@ está na sala"
+                      "value" : "%2$lld pessoa na sala: %1$@"
                     }
                   },
                   "other" : {
@@ -373095,25 +373095,25 @@
                   "few" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "В комнате: %1$@"
+                      "value" : "В комнате %2$lld человека: %1$@"
                     }
                   },
                   "many" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "В комнате: %1$@"
+                      "value" : "В комнате %2$lld человек: %1$@"
                     }
                   },
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "В комнате: %1$@"
+                      "value" : "В комнате %2$lld человек: %1$@"
                     }
                   },
                   "other" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "В комнате: %1$@"
+                      "value" : "В комнате %2$lld человека: %1$@"
                     }
                   }
                 }

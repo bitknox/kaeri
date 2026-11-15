@@ -11875,19 +11875,19 @@
     "source": "83a5bcbb23c1",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-07"
+    "at": "2026-11-15"
   },
   "medium-join-title-read": {
     "source": "3bd7e1c093f1",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-07"
+    "at": "2026-11-15"
   },
   "medium-join-title-watch": {
     "source": "f2bfe4d7096b",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-07"
+    "at": "2026-11-15"
   },
   "medium-off-confirm-read": {
     "source": "252cf5f99786",
@@ -18241,8 +18241,8 @@
   "plugin-updates-ready": {
     "source": "a5bc033059b9",
     "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31"
+    "by": "agent",
+    "at": "2026-11-15"
   },
   "plugins-load-failed": {
     "source": "5602b0baf446",
@@ -21326,8 +21326,8 @@
   "reading-dl-no-room": {
     "source": "366364609f28",
     "state": "draft",
-    "by": "agent (R7-1, for Johan's review)",
-    "at": "2026-11-13",
+    "by": "agent",
+    "at": "2026-11-15",
     "flags": [
       "new copy for R7-1, needs Johan review"
     ]
@@ -24910,8 +24910,8 @@
   "settings-coming-up-dubbed": {
     "source": "39faa2cb82f9",
     "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31"
+    "by": "agent",
+    "at": "2026-11-15"
   },
   "settings-coming-up-opens": {
     "source": "a127aac72f46",
@@ -24922,8 +24922,8 @@
   "settings-coming-up-switched-off": {
     "source": "e9b8d76c8bf4",
     "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31"
+    "by": "agent",
+    "at": "2026-11-15"
   },
   "settings-comment-images": {
     "source": "e0888180525c",
@@ -34400,7 +34400,7 @@
     "source": "ab041a9850b2",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-01"
+    "at": "2026-11-15"
   },
   "together-start": {
     "source": "5a69ec8410f4",

@@ -11,10 +11,10 @@ source-picker-coverage = { $of ->
    *[other] { $covered } из { $of } эпизода
  }
 source-picker-episodes = { $count ->
-    [one] Эпизоды { $first }–{ $last }
-    [few] Эпизоды { $first }–{ $last }
-    [many] Эпизоды { $first }–{ $last }
-   *[other] Эпизоды { $first }–{ $last }
+    [one] { $count } эпизод: { $first }–{ $last }
+    [few] { $count } эпизода: { $first }–{ $last }
+    [many] { $count } эпизодов: { $first }–{ $last }
+   *[other] { $count } эпизода: { $first }–{ $last }
  }
 source-picker-episodes-not-yet = Эпизоды { $first }–{ $last }. Пока нет { $missing }
 source-picker-episodes-not = Эпизоды { $first }–{ $last }. Нет { $missing }

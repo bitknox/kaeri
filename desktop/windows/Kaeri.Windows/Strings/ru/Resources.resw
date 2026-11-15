@@ -1152,16 +1152,16 @@
     <value>Нет сети</value>
   </data>
   <data name="ReadingDlNoRoom_one" xml:space="preserve">
-    <value>Нет места. Загрузка начнётся, когда освободится место.</value>
+    <value>Нет места. {count} глава загрузится, когда освободится место.</value>
   </data>
   <data name="ReadingDlNoRoom_few" xml:space="preserve">
-    <value>Нет места. Загрузка начнётся, когда освободится место.</value>
+    <value>Нет места. {count} главы загрузятся, когда освободится место.</value>
   </data>
   <data name="ReadingDlNoRoom_many" xml:space="preserve">
-    <value>Нет места. Загрузка начнётся, когда освободится место.</value>
+    <value>Нет места. {count} глав загрузятся, когда освободится место.</value>
   </data>
   <data name="ReadingDlNoRoom_other" xml:space="preserve">
-    <value>Нет места. Загрузка начнётся, когда освободится место.</value>
+    <value>Нет места. {count} главы загрузятся, когда освободится место.</value>
   </data>
   <data name="ReadingEstimateSize" xml:space="preserve">
     <value>Около {size}</value>
@@ -1422,16 +1422,16 @@
     <value>Плагины, собранные для старой версии Kaeri, нужно обновить ({count}): {names}.</value>
   </data>
   <data name="PluginUpdatesReady_one" xml:space="preserve">
-    <value>Плагин: готово обновление. {names}.</value>
+    <value>Плагины: готово {count} обновление. {names}.</value>
   </data>
   <data name="PluginUpdatesReady_few" xml:space="preserve">
-    <value>Плагины: готовы обновления. {names}.</value>
+    <value>Плагины: готовы {count} обновления. {names}.</value>
   </data>
   <data name="PluginUpdatesReady_many" xml:space="preserve">
-    <value>Плагины: готовы обновления. {names}.</value>
+    <value>Плагины: готово {count} обновлений. {names}.</value>
   </data>
   <data name="PluginUpdatesReady_other" xml:space="preserve">
-    <value>Плагины: готовы обновления. {names}.</value>
+    <value>Плагины: готово {count} обновления. {names}.</value>
   </data>
   <data name="PluginsLoadFailed" xml:space="preserve">
     <value>Не удалось загрузить плагины. {reason}</value>
@@ -5583,16 +5583,16 @@
     <value>Убрать из недавних комнат</value>
   </data>
   <data name="TogetherSomeoneHere_one" xml:space="preserve">
-    <value>В комнате: {names}</value>
+    <value>В комнате {count} человек: {names}</value>
   </data>
   <data name="TogetherSomeoneHere_few" xml:space="preserve">
-    <value>В комнате: {names}</value>
+    <value>В комнате {count} человека: {names}</value>
   </data>
   <data name="TogetherSomeoneHere_many" xml:space="preserve">
-    <value>В комнате: {names}</value>
+    <value>В комнате {count} человек: {names}</value>
   </data>
   <data name="TogetherSomeoneHere_other" xml:space="preserve">
-    <value>В комнате: {names}</value>
+    <value>В комнате {count} человека: {names}</value>
   </data>
   <data name="TogetherNobodyHere" xml:space="preserve">
     <value>Сейчас здесь никого нет</value>
@@ -7983,40 +7983,40 @@
     <value>Kaeri теперь умеет читать мангу, вебтуны и ранобэ из ваших источники. Выберите, для чего нужен Kaeri на {device}.</value>
   </data>
   <data name="MediumJoinTitleWatch_one" xml:space="preserve">
-    <value>На {devices} выбран просмотр</value>
+    <value>Просмотр выбран на {n} устройстве: {devices}</value>
   </data>
   <data name="MediumJoinTitleWatch_few" xml:space="preserve">
-    <value>На {devices} выбран просмотр</value>
+    <value>Просмотр выбран на {n} устройствах: {devices}</value>
   </data>
   <data name="MediumJoinTitleWatch_many" xml:space="preserve">
-    <value>На {devices} выбран просмотр</value>
+    <value>Просмотр выбран на {n} устройствах: {devices}</value>
   </data>
   <data name="MediumJoinTitleWatch_other" xml:space="preserve">
-    <value>На {devices} выбран просмотр</value>
+    <value>Просмотр выбран на {n} устройствах: {devices}</value>
   </data>
   <data name="MediumJoinTitleRead_one" xml:space="preserve">
-    <value>На {devices} выбрано чтение</value>
+    <value>Чтение выбрано на {n} устройстве: {devices}</value>
   </data>
   <data name="MediumJoinTitleRead_few" xml:space="preserve">
-    <value>На {devices} выбрано чтение</value>
+    <value>Чтение выбрано на {n} устройствах: {devices}</value>
   </data>
   <data name="MediumJoinTitleRead_many" xml:space="preserve">
-    <value>На {devices} выбрано чтение</value>
+    <value>Чтение выбрано на {n} устройствах: {devices}</value>
   </data>
   <data name="MediumJoinTitleRead_other" xml:space="preserve">
-    <value>На {devices} выбрано чтение</value>
+    <value>Чтение выбрано на {n} устройствах: {devices}</value>
   </data>
   <data name="MediumJoinTitleBoth_one" xml:space="preserve">
-    <value>На {devices} выбраны просмотр и чтение</value>
+    <value>Просмотр и чтение выбраны на {n} устройстве: {devices}</value>
   </data>
   <data name="MediumJoinTitleBoth_few" xml:space="preserve">
-    <value>На {devices} выбраны просмотр и чтение</value>
+    <value>Просмотр и чтение выбраны на {n} устройствах: {devices}</value>
   </data>
   <data name="MediumJoinTitleBoth_many" xml:space="preserve">
-    <value>На {devices} выбраны просмотр и чтение</value>
+    <value>Просмотр и чтение выбраны на {n} устройствах: {devices}</value>
   </data>
   <data name="MediumJoinTitleBoth_other" xml:space="preserve">
-    <value>На {devices} выбраны просмотр и чтение</value>
+    <value>Просмотр и чтение выбраны на {n} устройствах: {devices}</value>
   </data>
   <data name="MediumJoinLine" xml:space="preserve">
     <value>Выберите, для чего нужен Kaeri на {device}. Каждое устройство хранит свой выбор.</value>
@@ -10209,16 +10209,16 @@
     <value>{covered} из {of} эпизода</value>
   </data>
   <data name="SourcePickerEpisodes_one" xml:space="preserve">
-    <value>Эпизоды {first}–{last}</value>
+    <value>{count} эпизод: {first}–{last}</value>
   </data>
   <data name="SourcePickerEpisodes_few" xml:space="preserve">
-    <value>Эпизоды {first}–{last}</value>
+    <value>{count} эпизода: {first}–{last}</value>
   </data>
   <data name="SourcePickerEpisodes_many" xml:space="preserve">
-    <value>Эпизоды {first}–{last}</value>
+    <value>{count} эпизодов: {first}–{last}</value>
   </data>
   <data name="SourcePickerEpisodes_other" xml:space="preserve">
-    <value>Эпизоды {first}–{last}</value>
+    <value>{count} эпизода: {first}–{last}</value>
   </data>
   <data name="SourcePickerEpisodesNotYet" xml:space="preserve">
     <value>Эпизоды {first}–{last}. Пока нет {missing}</value>
