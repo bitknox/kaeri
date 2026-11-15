@@ -43,6 +43,11 @@ struct HostsPlayer<Over: ViewModifier>: ViewModifier {
     @Environment(\.scenePhase) private var phase
     #endif
 
+    /// Picture in Picture when leaving the app, on until the engine says otherwise.
+    private var startsOnLeave: Bool {
+        store.settings.row(.pictureInPictureOnLeave)?.isOn ?? true
+    }
+
     func body(content: Content) -> some View {
         players(content)
             // Plain-text subtitles in the system's caption style, as the setting says, and as the
@@ -85,8 +90,10 @@ struct HostsPlayer<Over: ViewModifier>: ViewModifier {
                     openWindow(id: "main")
                     NSApp.activate()
                 }
+                pip.startsOnLeave = startsOnLeave
                 self.pip = pip
             }
+            .onChange(of: startsOnLeave) { _, on in pip?.startsOnLeave = on }
             // Leaving the window while it plays takes the picture into Picture in Picture.
             .onReceive(NotificationCenter.default.publisher(for: NSApplication.willHideNotification)) { _ in
                 pip?.leaving()
@@ -128,8 +135,12 @@ struct HostsPlayer<Over: ViewModifier>: ViewModifier {
                     PlayerModel.note(.info, "picture in picture: not on this device")
                     return
                 }
-                pip = PictureInPicture(model: model)
+                let pip = PictureInPicture(model: model)
+                pip.startsOnLeave = startsOnLeave
+                self.pip = pip
             }
+            // Read live: a change while the player is up applies on the next leave.
+            .onChange(of: startsOnLeave) { _, on in pip?.startsOnLeave = on }
             // Here rather than in the player, which is down while the picture floats: the audio
             // plays on in the background, and the video only for Picture in Picture.
             .onChange(of: phase) { _, phase in

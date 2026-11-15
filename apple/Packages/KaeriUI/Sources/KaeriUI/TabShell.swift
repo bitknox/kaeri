@@ -12,6 +12,8 @@ struct TabShell: View {
     @Environment(AppStore.self) private var store
     @Environment(Navigator.self) private var navigator
     @Environment(\.horizontalSizeClass) private var sizeClass
+    /// The window's width, for the pages that go by it rather than by the size class.
+    @State private var windowWidth: CGFloat?
 
     var body: some View {
         @Bindable var navigator = navigator
@@ -31,6 +33,8 @@ struct TabShell: View {
                 tabs
             }
         }
+        .onGeometryChange(for: CGFloat.self) { $0.size.width } action: { windowWidth = $0 }
+        .environment(\.windowWidth, windowWidth)
         // A window made narrow keeps the place the person was on, pushed onto its tab; made wide
         // again, that place is its own section again.
         .onChange(of: sizeClass) { _, now in
@@ -288,6 +292,7 @@ struct TabStack<Screen: View>: View {
     @Environment(Navigator.self) private var navigator
     @Environment(\.horizontalSizeClass) private var sizeClass
     @Environment(\.dynamicTypeSize) private var typeSize
+    @Environment(\.windowWidth) private var windowWidth
     @Namespace private var zoom
     let section: AppSection
     /// The screen of a place pushed onto this tab (Navigator.placePushed), where it can be.
@@ -349,13 +354,14 @@ struct TabStack<Screen: View>: View {
     @ViewBuilder
     private func title(_ route: TitleRoute) -> some View {
         let id = navigator.shownInPlace[route.id] ?? route.id
-        // A wide iPad has the Mac's page (PadTitleMeta); an iPhone, a narrow window
-        // and the accessibility text sizes, the iPhone's, whose one column wraps
-        // what the Mac's side-by-side header would cut.
+        // A wide iPad has the Mac's page (PadTitleMeta); an iPhone, a window under
+        // 900 pt and the accessibility text sizes, the iPhone's, whose one column wraps
+        // what the Mac's side-by-side header would cut and has room for a trailer's
+        // video above the title (Trailers board, iPad).
         // Another swaps the title in place: a crossfade with both sides drawn.
         ZStack {
             Group {
-                if sizeClass == .regular, !typeSize.isAccessibilitySize {
+                if sizeClass == .regular, !typeSize.isAccessibilitySize, (windowWidth ?? .infinity) >= 900 {
                     TitlePage(id: id).toolbar { PadTitleToolbar(id: id) }
                 } else {
                     PhoneTitle(id: id)
@@ -615,5 +621,9 @@ final class RowPress: UILongPressGestureRecognizer, UIGestureRecognizerDelegate 
     ) -> Bool {
         true
     }
+}
+extension EnvironmentValues {
+    /// The window's width, measured by the tab shell; nil until it is laid out.
+    @Entry var windowWidth: CGFloat?
 }
 #endif

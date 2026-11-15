@@ -174,6 +174,88 @@ struct TrailerVisitTests {
 
 @MainActor
 struct TrailerGateTests {
+    /// A title page's visit: the sound is off at every start, and turning it on is not kept.
+    @Test func aTitlePagesSoundIsOffAtEveryStartAndNotKept() {
+        let preference = sound()
+        preference.on = true
+        let visit = TrailerVisit(sound: nil)
+        let surface = FakeSurface()
+        visit.begin { _ in surface }
+        #expect(visit.muted)
+        #expect(surface.controls.isEmpty)
+        visit.toggleSound()
+        #expect(!visit.muted)
+        let next = TrailerVisit.titlePage()
+        next.begin { _ in FakeSurface() }
+        #expect(next.muted)
+    }
+
+    /// The page says "ending" a second before the end; a title page's art comes back half a
+    /// second after that, and the view goes once it is covered.
+    @Test func aTitlePagesArtReturnsHalfASecondBeforeTheEnd() async throws {
+        let visit = TrailerVisit(fade: .milliseconds(30), sound: nil, endLead: .milliseconds(150))
+        let surface = FakeSurface()
+        visit.begin { signal in
+            surface.signal = signal
+            return surface
+        }
+        surface.signal?(.playing)
+        surface.signal?(.ending)
+        #expect(visit.shown, "the art waits for the lead")
+        try await until { !visit.shown }
+        #expect(visit.live, "released under the art, after the fade")
+        try await until { surface.released }
+    }
+
+    /// Scrolled past 8 pt: the art fades back, then the video pauses under it. Back at the top
+    /// the video plays first, and the art fades away once the page says it is playing.
+    @Test func scrollingAwayFadesThenPausesAndComingBackPlaysThenFades() async throws {
+        let (visit, surface) = visit()
+        surface.signal?(.playing)
+        visit.scrolledAway(true)
+        #expect(!visit.shown)
+        #expect(surface.controls.isEmpty, "no pause while the art is still fading back")
+        try await until { surface.controls == [.pause] }
+        visit.scrolledAway(false)
+        #expect(surface.controls == [.pause, .play])
+        #expect(!visit.shown, "the art stays until the page plays")
+        surface.signal?(.playing)
+        #expect(visit.shown)
+        #expect(!surface.released)
+    }
+
+    @Test func backBeforeThePauseLandedKeepsPlaying() async throws {
+        let (visit, surface) = visit(fade: .seconds(10))
+        surface.signal?(.playing)
+        visit.scrolledAway(true)
+        visit.scrolledAway(false)
+        #expect(visit.shown)
+        #expect(surface.controls.isEmpty)
+    }
+
+    @Test func awayTooLongLetsTheViewGo() async throws {
+        let visit = TrailerVisit(fade: .milliseconds(10), sound: nil, awayLimit: .milliseconds(50))
+        let surface = FakeSurface()
+        visit.begin { signal in
+            surface.signal = signal
+            return surface
+        }
+        surface.signal?(.playing)
+        visit.scrolledAway(true)
+        try await until { surface.released }
+        #expect(!visit.live)
+        visit.scrolledAway(false)
+        #expect(surface.controls == [.pause], "nothing plays again once let go")
+    }
+
+    @Test func scrolledAwayWhileLoadingWaitsUnderTheArt() async throws {
+        let (visit, surface) = visit()
+        visit.scrolledAway(true)
+        surface.signal?(.playing)
+        #expect(!visit.shown)
+        try await until { surface.controls == [.pause] }
+    }
+
     @Test func aRefusedVideoIsNeverAskedForAgain() {
         let gate = TrailerGate()
         #expect(gate.mayAsk("abc"))

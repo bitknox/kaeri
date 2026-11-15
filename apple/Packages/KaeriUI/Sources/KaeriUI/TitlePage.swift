@@ -131,6 +131,26 @@ struct TitlePage: View {
     /// The last title shown whose seasons and related titles are known: its row stays while a
     /// title picked from it shows as the card it was picked from, which knows none of them.
     @State private var familyOf: AnilistId?
+    /// This visit's trailer, and whether the page made room for one: decided once the page is
+    /// here, so nothing moves when the trailer starts or ends.
+    @State private var visit = TrailerVisit.titlePage()
+    @State private var trailerRoom: TrailerRoom?
+    /// The page's width, where the video's place is worked out from.
+    @State private var pageWidth: CGFloat = 0
+    /// Where the title's words stand, and whether they were kept clear of the video this visit.
+    @State private var wordsFrame: CGRect?
+    @State private var wordsNarrowed: AnilistId?
+    /// Scrolled past the point where the video gives way to the art.
+    @State private var scrolledAway = false
+
+    /// Whether a title's page made room for a trailer.
+    struct TrailerRoom: Equatable {
+        let id: AnilistId
+        let room: Bool
+    }
+
+    /// The page's own coordinates, from its top leading corner, where the video's place is.
+    static let space = "titlePage" // i18n-skip: a coordinate space
 
     /// Which art, of which title: a change of either is a new picture, crossfaded in.
     struct ArtKey: Hashable {
@@ -190,17 +210,29 @@ struct TitlePage: View {
         // What the title picked shows with, asked for while the last one's page stays.
         let picked = ready ? nil : store.titles.page(id)
         let coming = Coming(cover: picked?.coverUrl, wide: picked.flatMap { store.heroArt($0).url })
+        // A page that may play a trailer opens with the video's place in a taller band, decided
+        // once the page is here; a title with none, or with trailers held, keeps today's banner.
+        let mayPlay = !art.isCompact && store.trailerMayAutoplay(entry)
+        let room = !art.isCompact && (trailerRoom.flatMap { $0.id == entry.id ? $0.room : nil } ?? mayPlay)
+        let here = ready && Self.pageHere(entry.id, in: store)
+        let away = scrolledAway || navigator.typedEpisode?.title == entry.id
         ScrollView {
             // Inside the scroll view, which the reader's proxy finds as the one holding the
             // views it scrolls to; the scroll view's own modifiers stay on it.
             ScrollViewReader { scroller in
                 VStack(alignment: .leading, spacing: 0) {
                     // With no wide art the page starts higher: under the toolbar, not under a banner.
-                    Color.clear.frame(height: art.isCompact ? 64 : 96)
+                    Color.clear.frame(height: art.isCompact ? 64 : room ? TrailerLayout.coverTop : 96)
                     // Art flying onto the banner covers the cover and the words over it: they come in
                     // once it has landed, rather than at once with the art drawn under them.
                     let underFlyer = awaited == TitleLandingID(id: entry.id, art: .banner)
-                    TitleHero(entry: entry)
+                    TitleHero(entry: entry, wordsLimit: wordsLimit(room: room, id: entry.id)) { frame in
+                        wordsFrame = frame
+                        if room, pageWidth > 0, frame.height > 0,
+                           frame.minY < TrailerLayout.videoFrame(width: pageWidth).maxY + TrailerLayout.soundGap {
+                            wordsNarrowed = entry.id
+                        }
+                    }
                         .opacity(underFlyer ? 0 : 1)
                         .animation(.fadeIn, value: underFlyer)
                     let family = TitleFamily(kin, this: id)
@@ -219,6 +251,16 @@ struct TitlePage: View {
                     .background(.ground)
                 }
                 .padding(EdgeInsets(top: 0, leading: 24, bottom: 20, trailing: 28))
+                .coordinateSpace(.named(Self.space))
+                .onGeometryChange(for: CGFloat.self) { $0.size.width } action: { pageWidth = $0 }
+                .overlay(alignment: .topTrailing) {
+                    // Under the video's trailing corner, outside its rectangle.
+                    if room {
+                        TrailerSoundButton(visit: visit, size: TrailerLayout.soundSize)
+                            .padding(.top, TrailerLayout.videoTop + TrailerLayout.video.height + TrailerLayout.soundGap)
+                            .padding(.trailing, TrailerLayout.trailing)
+                    }
+                }
                 // On the Mac a season picked on the page changes the page that is open, in the
                 // spring that opens a title. Carried into the page, it would spring every view from
                 // where it stood on the last season's: the titles' words sliding over each other, the
@@ -242,17 +284,27 @@ struct TitlePage: View {
                     // a title of two lines starts. None at all where there is none. Across a season
                     // switch the last season's art stays until the next one's is here, and fades to it.
                     if !art.isCompact {
-                        HeldHeroArt(shown: shown, layer: artLayer)
-                            .frame(height: 280)
-                            .clipped()
-                            .overlay(alignment: .bottom) {
-                                VStack(spacing: 0) {
-                                    BannerScrim()
-                                    Palette.ground.frame(height: 96)
-                                }
+                        ZStack(alignment: .topTrailing) {
+                            // The video's place at the band's trailing end, under the toolbar:
+                            // the art fades to the ground over it at its first frame.
+                            if room {
+                                TrailerVideo(visit: visit, size: TrailerLayout.video)
+                                    .padding(.top, TrailerLayout.videoTop)
+                                    .padding(.trailing, TrailerLayout.trailing)
                             }
-                            .titleLanding(entry.id, .banner)
-                            .playerZoomSource(entry.id)
+                            HeldHeroArt(shown: shown, layer: artLayer)
+                                .frame(height: room ? TrailerLayout.band + TrailerLayout.ground : 280)
+                                .clipped()
+                                .overlay(alignment: .bottom) {
+                                    VStack(spacing: 0) {
+                                        BannerScrim()
+                                        Palette.ground.frame(height: TrailerLayout.ground)
+                                    }
+                                }
+                                .trailerArtFade(room ? visit : nil)
+                                .titleLanding(entry.id, .banner)
+                                .playerZoomSource(entry.id)
+                        }
                     }
                 }
             }
@@ -263,6 +315,17 @@ struct TitlePage: View {
         .nudgeableScroll()
         .scrollIndicators(.never)
         .ignoresSafeArea(edges: .top)
+        // The page never slides over a playing video: past 8 pt the art comes back over it.
+        .onScrollGeometryChange(for: Bool.self) { geometry in
+            geometry.contentOffset.y + geometry.contentInsets.top > TrailerLayout.scrollAway
+        } action: { _, now in
+            scrolledAway = now
+        }
+        .onChange(of: away) { _, now in visit.scrolledAway(now) }
+        .onChange(of: TrailerRoom(id: entry.id, room: here), initial: true) {
+            if here, trailerRoom?.id != entry.id { trailerRoom = TrailerRoom(id: entry.id, room: mayPlay) }
+        }
+        .titleTrailer(visit: visit, entry: entry, room: room, mayPlay: mayPlay)
         #if os(iOS)
         // Under the navigation bar, which the page's art runs beneath.
         .overlay(alignment: .topTrailing) { TypedCapsuleSlot(title: entry.id, top: 12) }
@@ -312,6 +375,23 @@ struct TitlePage: View {
             // What the show sets for itself, its spoiler protection among it: from the database.
             store.loadShowSettings(id)
         }
+    }
+
+    /// How wide the title's words may run while the page has room for a trailer: clear of the
+    /// sound button when they stand level with it, and clear of the video once they reach up
+    /// beside it (kept for the visit, so they never widen back and forth). Nothing is ever drawn
+    /// over the video.
+    private func wordsLimit(room: Bool, id: AnilistId) -> CGFloat? {
+        guard room, pageWidth > 0, let frame = wordsFrame, frame.height > 0 else { return nil }
+        let video = TrailerLayout.videoFrame(width: pageWidth)
+        let sound = TrailerLayout.soundFrame(width: pageWidth)
+        if wordsNarrowed == id || frame.minY < video.maxY + TrailerLayout.soundGap {
+            return max(video.minX - TrailerLayout.titleClearance - frame.minX, 120)
+        }
+        if frame.minY < sound.maxY, frame.maxY > sound.minY {
+            return max(sound.minX - TrailerLayout.titleClearance - frame.minX, 120)
+        }
+        return nil
     }
 
     /// Whether `id`'s page is here: its title and its episodes, which lay out the words, the facts
@@ -394,6 +474,11 @@ struct TitleHero: View {
     @Environment(AppStore.self) private var store
     @Environment(Navigator.self) private var navigator
     let entry: Entry
+    /// How wide the title, its other titles and its facts may run: kept clear of a trailer's
+    /// video and sound button.
+    var wordsLimit: CGFloat?
+    /// Where those words stand in the page, as they move.
+    var wordsMoved: ((CGRect) -> Void)?
     /// The title waited for long enough to show its main button without the services' word,
     /// as when it never comes offline.
     @State private var offersWaited: AnilistId?
@@ -486,19 +571,25 @@ struct TitleHero: View {
             VStack(alignment: .leading, spacing: 0) {
                 // A line kept for the title and the metadata while they are on their way, so the
                 // cover and the actions stand where they will.
-                Text(entry.showTitle.isEmpty ? " " : entry.showTitle)
-                    .font(.macShowTitle(size: 36, relativeTo: .largeTitle))
-                    .macLineHeight(44, relativeTo: .largeTitle)
-                    .foregroundStyle(.silk)
-                    .lineLimit(2)
-                    .titleOverArt()
-                    .accessibilityAddTraits(.isHeader)
-                OtherTitlesLine(entry: entry)
-                    .padding(.top, 6)
-                Text(entry.titleMetadata.isEmpty ? " " : entry.titleMetadata)
-                    .groupHeaderStyle()
-                    .macLineHeight(14)
-                    .padding(.top, 4)
+                VStack(alignment: .leading, spacing: 0) {
+                    Text(entry.showTitle.isEmpty ? " " : entry.showTitle)
+                        .font(.macShowTitle(size: 36, relativeTo: .largeTitle))
+                        .macLineHeight(44, relativeTo: .largeTitle)
+                        .foregroundStyle(.silk)
+                        .lineLimit(2)
+                        .titleOverArt()
+                        .accessibilityAddTraits(.isHeader)
+                    OtherTitlesLine(entry: entry)
+                        .padding(.top, 6)
+                    Text(entry.titleMetadata.isEmpty ? " " : entry.titleMetadata)
+                        .groupHeaderStyle()
+                        .macLineHeight(14)
+                        .padding(.top, 4)
+                }
+                .frame(maxWidth: wordsLimit, alignment: .leading)
+                .onGeometryChange(for: CGRect.self) { $0.frame(in: .named(TitlePage.space)) } action: { frame in
+                    wordsMoved?(frame)
+                }
                 HStack(spacing: 10) {
                     mainAction(action, held: held)
                         .opacity(offersHeld ? 0 : 1)

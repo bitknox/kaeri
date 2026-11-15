@@ -24,7 +24,7 @@ extension SettingKey {
         switch self {
         case .motion, .autoNext, .skipOpening, .skipRecap, .findSkipTimes, .askWasOpening, .shareSkipTimes, .skipFiller, .markChapters, .skipButton, .fullscreen, .nightMode,
              .mergeSubtitles, .keepSeeding, .presence, .presenceTitle, .presenceRich, .torrents, .syncplay,
-             .updateCheck, .updateBeta, .spoilerProtection, .downloadsOnCellular, .torrentsOnCellular, .adultTitles,
+             .updateCheck, .updateBeta, .spoilerProtection, .pictureInPictureOnLeave, .downloadsOnCellular, .torrentsOnCellular, .adultTitles,
              .chapterDownloadsOnCellular, .keepChaptersReady, .deleteAfterReading, .showVolumes, .opdsFeed, .seriesChoicesFollow, .lookFollows, .chapterNotifications, .downloadsFinished,
              .episodeDiscussions, .commentImages, .hoverCards:
             true

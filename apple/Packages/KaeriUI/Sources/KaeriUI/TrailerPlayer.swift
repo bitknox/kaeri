@@ -369,14 +369,13 @@ final class TrailerPage: NSObject {
         configuration.allowsAirPlayForMediaPlayback = false
         let bridge = Bridge()
         configuration.userContentController.add(bridge, name: "kaeri") // i18n-skip: the page's bridge
-        #if os(macOS)
-        // In a preview, YouTube's own controls are hidden in its frame; Play trailer keeps them.
+        // In a preview and a title page's banner, YouTube's own controls are hidden in its frame;
+        // Play trailer keeps them.
         if style == .banner {
             configuration.userContentController.addUserScript(
                 WKUserScript(source: trailerChromeScript(), injectionTime: .atDocumentEnd, forMainFrameOnly: false)
             )
         }
-        #endif
         #if os(macOS)
         let view: WKWebView = style == .banner ? PassiveWebView(frame: .zero, configuration: configuration)
             : WKWebView(frame: .zero, configuration: configuration)
@@ -575,8 +574,13 @@ struct TrailerWebView: UIViewRepresentable {
 /// nothing. Only the Fixtures app installs it.
 public enum TrailerStandIn {
     @MainActor public static func install() {
-        TrailerPlayer.standIn = { trailer in page(endsAfter: trailer.id.hasSuffix("-ends") ? 3 : nil) }
+        // KAERI_TRAILER_ENDS=<seconds> ends every stand-in then, for a clip of the art returning.
+        let ends = ProcessInfo.processInfo.environment["KAERI_TRAILER_ENDS"].flatMap(Double.init) // i18n-skip
+        TrailerPlayer.standIn = { trailer in page(endsAfter: trailer.id.hasSuffix("-ends") ? 3 : ends) }
     }
+
+    /// Whether the stand-in plays in place of YouTube: the Fixtures app.
+    @MainActor static var installed: Bool { TrailerPlayer.standIn != nil }
 
     @MainActor static func page(endsAfter: Double?) -> String {
         let ending = endsAfter.map { "setTimeout(function(){say('ending');setTimeout(function(){say('ended')},500)}, \(Int($0 * 1000)));" } ?? ""

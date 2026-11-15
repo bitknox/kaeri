@@ -27,6 +27,7 @@ struct SettingsPortTests {
         #expect(SettingKey.keepNextEpisodes.options.map(\.label)
                 == ["off", "1 episode", "2 episodes", "3 episodes", "5 episodes", "10 episodes"])
         #expect(SettingKey.spoilerProtection.isSwitch && SettingKey.torrentsOnCellular.isSwitch)
+        #expect(SettingKey.pictureInPictureOnLeave.isSwitch)
         #expect(SettingKey.seedRatio.options.map(\.label)
             == ["off", "until ratio 0.5", "until ratio 1.0", "until ratio 1.5", "until ratio 2.0"])
         #expect(SettingKey.seedHours.options.map(\.label) == ["1 h", "6 h", "12 h", "24 h", "72 h"])
@@ -66,7 +67,7 @@ struct SettingsPortTests {
             .quality, .commitThreshold, .upscaling, .seedRatio, .seedHours, .uploadLimit,
             .translation, .playerUi, .autoNext, .skipOpening, .nightMode, .keepSeeding,
             // The native apps' own rows.
-            .upNextCountdown, .spoilerProtection, .downloadQuality, .keepNextEpisodes,
+            .upNextCountdown, .spoilerProtection, .pictureInPictureOnLeave, .downloadQuality, .keepNextEpisodes,
             .downloadsOnCellular, .torrentsOnCellular,
         ]
         for key in keys {

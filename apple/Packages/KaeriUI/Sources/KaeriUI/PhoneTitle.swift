@@ -21,7 +21,20 @@ struct PhoneTitle: View {
     /// stood on screen. Kept out of the view's state, so scrolling redraws nothing: a page redrawn
     /// on every scroll step takes no scroll to its episodes.
     @State private var pickers = PickersPlace()
+    /// This visit's trailer, and whether the page made room for one: decided once the page is
+    /// here, so nothing moves when the trailer starts or ends.
+    @State private var visit = TrailerVisit.titlePage()
+    @State private var trailerRoom: TitlePage.TrailerRoom?
+    /// The page's width and where the floating Back and More end: the video goes below them.
+    @State private var trailerPlace = TrailerPlace()
+    /// Scrolled past the point where the video gives way to the art.
+    @State private var scrolledAway = false
     let id: AnilistId
+
+    struct TrailerPlace: Equatable {
+        var width: CGFloat = 0
+        var barBottom: CGFloat = 0
+    }
 
     /// Case B: the service the main action opens.
     private var serviceMain: ServiceLink? {
@@ -36,6 +49,16 @@ struct PhoneTitle: View {
         let episodes = entry.episodeTable(store.titles.episodes[id] ?? [])
         let plan = EpisodePlan(rows: episodes, picked: navigator.episodeRange[id])
         let loaded = store.titles.episodes[id] != nil
+        // A page that may play a trailer opens with a taller banner and the video's place in it,
+        // decided once the page is here; a title with none, or with trailers held, keeps today's.
+        let mayPlay = !art.isCompact && store.trailerMayAutoplay(entry)
+        let measured = trailerPlace.width > 0
+        let room = measured && !art.isCompact
+            && (trailerRoom.flatMap { $0.id == entry.id ? $0.room : nil } ?? mayPlay)
+        let here = measured && TitlePage.pageHere(entry.id, in: store)
+        let video = TrailerLayout.phoneVideo(width: trailerPlace.width)
+        let band = room ? TrailerLayout.phoneBand(width: trailerPlace.width, barBottom: trailerPlace.barBottom)
+            : TrailerLayout.phoneBanner
         // A list, so the episodes take their swipes (native-ux), drawn as the scroll view was.
         ScrollViewReader { reader in
         List {
@@ -43,19 +66,29 @@ struct PhoneTitle: View {
                 // The wide art: it stretches when pulled down and scrolls at half speed (T1).
                 // With none, the page starts under the navigation bar, the cover beside the title.
                 if !art.isCompact {
-                    HeroArtView(art: art, entry: entry)
-                        .frame(height: 250)
-                        // The ground fading up from the art's foot, under the cover and a title
-                        // of three lines.
-                        .overlay(alignment: .bottom) { BannerScrim(held: 38, height: 82) }
-                        .visualEffect { [reduceMotion] content, proxy in
-                            let y = proxy.frame(in: .scrollView(axis: .vertical)).minY
-                            let h = proxy.size.height
-                            return content
-                                .scaleEffect(reduceMotion || y <= 0 ? 1 : (h + y) / h, anchor: .bottom)
-                                .offset(y: reduceMotion || y >= 0 ? 0 : -y * 0.5)
+                    ZStack(alignment: .top) {
+                        // The video edge to edge below the floating Back and More: the art fades
+                        // to the ground over it at its first frame.
+                        if room {
+                            TrailerVideo(visit: visit, size: video, fillsWidth: true)
+                                .padding(.top, TrailerLayout.phoneVideoTop(barBottom: trailerPlace.barBottom))
                         }
-                        .clipped()
+                        HeroArtView(art: art, entry: entry)
+                            .frame(height: band)
+                            // The ground fading up from the art's foot, under the cover and a title
+                            // of three lines.
+                            .overlay(alignment: .bottom) { BannerScrim(held: 38, height: 82) }
+                            .visualEffect { [reduceMotion] content, proxy in
+                                let y = proxy.frame(in: .scrollView(axis: .vertical)).minY
+                                let h = proxy.size.height
+                                return content
+                                    .scaleEffect(reduceMotion || y <= 0 ? 1 : (h + y) / h, anchor: .bottom)
+                                    .offset(y: reduceMotion || y >= 0 ? 0 : -y * 0.5)
+                            }
+                            .clipped()
+                            .trailerArtFade(room ? visit : nil)
+                    }
+                    .frame(height: band, alignment: .top)
                 }
                 HStack(alignment: .bottom, spacing: 16) {
                     ArtworkView(url: entry.coverUrl, color: entry.plateColor, maxPixelSize: 400)
@@ -77,11 +110,20 @@ struct PhoneTitle: View {
                             .padding(.top, 2)
                     }
                     .padding(.bottom, 4)
+                    // Clear of the sound button at the head's trailing edge.
+                    .padding(.trailing, room ? TrailerLayout.soundSize + TrailerLayout.soundGap : 0)
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .overlay(alignment: .topTrailing) {
+                    if room {
+                        TrailerSoundButton(visit: visit, size: TrailerLayout.soundSize, raised: true)
+                    }
                 }
                 .padding(.horizontal, 16)
                 // Over the art's foot, except at the accessibility sizes, where the title would
-                // grow up into the art and lose its contrast.
-                .padding(.top, art.isCompact || typeSize.isAccessibilitySize ? 8 : -60)
+                // grow up into the art and lose its contrast, and below a trailer's band, which
+                // nothing is drawn over.
+                .padding(.top, room ? TrailerLayout.phoneHeadGap : art.isCompact || typeSize.isAccessibilitySize ? 8 : -60)
 
                 VStack(alignment: .leading, spacing: 16) {
                     // No source has it: nothing to play, and the way to one in Play's place.
@@ -276,10 +318,28 @@ struct PhoneTitle: View {
         .onScrollGeometryChange(for: CGFloat.self) { $0.contentOffset.y } action: { [pickers] _, offset in
             pickers.offset = offset
         }
+        // The page never slides over a playing video: past 8 pt the art comes back over it.
+        .onScrollGeometryChange(for: Bool.self) { geometry in
+            geometry.contentOffset.y + geometry.contentInsets.top > TrailerLayout.scrollAway
+        } action: { _, now in
+            scrolledAway = now
+        }
+        .onChange(of: scrolledAway) { _, now in visit.scrolledAway(now) }
+        .onChange(of: TitlePage.TrailerRoom(id: entry.id, room: here), initial: true) {
+            if here, trailerRoom?.id != entry.id { trailerRoom = TitlePage.TrailerRoom(id: entry.id, room: mayPlay) }
+        }
+        .titleTrailer(visit: visit, entry: entry, room: room, mayPlay: mayPlay)
         .nudgeableScroll()
         .ignoresSafeArea(edges: art.isCompact ? [] : .top)
         .scrollIndicators(.never)
         .background(.ground)
+        // The width and the bar's foot, from a view that keeps to the safe area.
+        .background {
+            Color.clear
+                .onGeometryChange(for: TrailerPlace.self) {
+                    TrailerPlace(width: $0.size.width, barBottom: $0.safeAreaInsets.top)
+                } action: { trailerPlace = $0 }
+        }
         .unwatchedRotor(store.titles.episodes[id] ?? [], in: rotor)
         .handsOff(title: entry)
         // The main button scrolled away: a capsule of it fades in at the foot (native-ux, iPhone).

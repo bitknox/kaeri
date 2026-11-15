@@ -248,6 +248,7 @@ extension SettingKey {
         case .adultTitles: L.settingsAdult
         case .upNextCountdown: L.settingsUpNextCountdown
         case .spoilerProtection: L.settingsSpoiler
+        case .pictureInPictureOnLeave: L.settingsPictureInPictureOnLeaveApple
         case .episodeDiscussions: L.settingsAppleDiscussions
         case .hoverCards: L.settingsLabelHoverCards
         case .commentImages: L.settingsAppleCommentImages
