@@ -15,9 +15,7 @@
   <ScrollViewer x:Name="Scroll" VerticalScrollBarVisibility="Auto" SizeChanged="OnSizeChanged" k:SmoothWheel.On="True">
     <local:StateHost x:Name="State">
     <Grid x:Name="Body">
-      <!-- The banner across the content, up to 360 high, the ground over its lower part. On a title that
-           may play a trailer it is 280 high from the first frame, the title under it, and the art fades
-           away to the ground around the video while one plays (PageTrailer). -->
+      <!-- The banner across the content, up to 360 high, the ground over its lower part. -->
       <Grid x:Name="Banner" VerticalAlignment="Top" Height="300">
         <Grid x:Name="Art">
           <!-- Faded in once the page is laid out (ShowBanner), never drawn bare in its first frame. -->
@@ -48,7 +46,7 @@
             <Grid x:Name="CoverFrame" Width="120" Height="180" CornerRadius="{x:Bind k:Art.Corner(120)}" VerticalAlignment="Bottom">
               <Image x:Name="CoverImage" Stretch="UniformToFill" AutomationProperties.AccessibilityView="Raw" k:ArtFade.On="True" />
             </Grid>
-            <StackPanel x:Name="HeadText" Grid.Column="1" VerticalAlignment="Bottom" Spacing="6">
+            <StackPanel Grid.Column="1" VerticalAlignment="Bottom" Spacing="6">
               <TextBlock x:Name="ShowTitle" Style="{StaticResource ShowTitleDisplayStyle}" />
               <TextBlock x:Name="Secondary" Style="{StaticResource HazeBodyStyle}" />
               <TextBlock x:Name="Meta" Style="{StaticResource HazeCaptionStyle}" />
@@ -292,13 +290,6 @@
         </StackPanel>
         <StackPanel x:Name="Side" Grid.Column="1" Spacing="16" Margin="0,190,0,0" />
       </Grid>
-      <!-- Sound for the playing trailer: off at every start, 8 under the video's trailing corner,
-           outside the player, only while one shows. Plain, never amber. -->
-      <Button x:Name="SoundButton" Style="{StaticResource SubtleButtonStyle}" Width="40" Height="40" Padding="0" CornerRadius="4"
-              HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,272,36,0" Visibility="Collapsed"
-              ToolTipService.ToolTip="{x:Bind s:T.TitleTrailerSound}" AutomationProperties.Name="{x:Bind s:T.TitleTrailerSound}">
-        <FontIcon Glyph="&#xE74F;" FontSize="16" />
-      </Button>
     </Grid>
     </local:StateHost>
   </ScrollViewer>

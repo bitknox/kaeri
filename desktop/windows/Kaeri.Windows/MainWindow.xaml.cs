@@ -223,16 +223,7 @@ public sealed partial class MainWindow : Window
         // online or offline state (Event.Connectivity) the pages show.
         network = new NetworkWatch(c => ctx.Send(c), ui, options.Offline);
         // What the device says of itself, which with the network decides whether trailers start.
-#if KAERI_TESTING
-        // The title page trailer's shots: a device that lets trailers play, whatever this machine
-        // says (a test VM has under 4 GB), with motion on.
-        var fine = options.Show is { } trailerShot && trailerShot.StartsWith("page-trailer", StringComparison.Ordinal);
-        if (fine)
-            Motion.Override = true;
-        device = new DeviceWatch(c => ctx.Send(c), ui, fine);
-#else
         device = new DeviceWatch(c => ctx.Send(c), ui);
-#endif
         taskbar = Taskbar.For(WinRT.Interop.WindowNative.GetWindowHandle(this));
         // The media overlay, the media keys and the thumbnail's buttons, while an episode plays.
         // Aimed at the playback on screen, and in a party Next and Previous are the room's pick.

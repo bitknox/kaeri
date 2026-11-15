@@ -452,60 +452,8 @@ public sealed partial class TitlePage : Page, IPageKeys
         ctx.Hear(this, Heard, () =>
         {
             discussion?.Close();
-            trailer.Release();
         });
-        trailer = new PageTrailer(this, Banner, Art, Scroll, SoundButton, Reserve, () => PrimaryAction);
     }
-
-    readonly PageTrailer trailer;
-
-    /// <summary>
-    /// A trailer may play here, so the band is 280 high from the first frame and the title stands
-    /// under it. Decided once per visit, as the title's facts show: the page never moves for the
-    /// trailer, and a trailer that cannot play after all leaves the art where it is.
-    /// </summary>
-    bool reserved;
-    bool decided;
-    long openedAt;
-
-    /// <summary>
-    /// Whether the band is the trailer's, deciding it once the title is known: with the engine's
-    /// word on autoplay, or without it once the page has settled. A title Surprise me opened keeps
-    /// today's banner, as Another stands at the band's trailing corner, where the video would play.
-    /// </summary>
-    bool Reserve()
-    {
-        if (decided)
-            return reserved;
-        var width = Scroll.ActualWidth > 0 ? Scroll.ActualWidth : Frame?.ActualWidth ?? 0;
-        if (Current() is not { } entry || width <= 0)
-            return false;
-        if (ctx.Known.Autoplay is null && Environment.TickCount64 - openedAt < 900)
-            return false;
-        decided = true;
-        var another = ctx.Pick is { More: true } pick && pick.Id == id;
-        reserved = !another && trailer.Wanted(entry, width);
-        if (reserved)
-            Layout();
-        return reserved;
-    }
-
-    /// <summary>
-    /// The head on the trailer's band, as the board draws it: the cover 80 into the band, the title
-    /// 12 under it, and the words kept 16 short of the sound button where it would sit beside them.
-    /// </summary>
-    void PlaceHead()
-    {
-        CoverFrame.VerticalAlignment = reserved ? VerticalAlignment.Top : VerticalAlignment.Bottom;
-        HeadText.VerticalAlignment = reserved ? VerticalAlignment.Top : VerticalAlignment.Bottom;
-        var beside = reserved && SideColumn.Width.Value == 0;
-        HeadText.Margin = reserved
-            ? new Thickness(0, PageTrailer.Band + 12 - (PageTrailer.Band - 80), beside ? PageTrailer.SoundSide + 16 : 0, 0)
-            : default;
-    }
-
-    /// <summary>Where the typed-digits capsule ends: on a trailer's band it stands left of the video, never over it.</summary>
-    double CapsuleRight => reserved ? PageTrailer.VideoMargin + PageTrailer.VideoWidth + 12 : 36;
 
     /// <summary>
     /// The banner's height and where the cover and title start under it. Before the page has a
@@ -518,11 +466,7 @@ public sealed partial class TitlePage : Page, IPageKeys
         var width = Scroll.ActualWidth > 0 ? Scroll.ActualWidth : Frame?.ActualWidth ?? 0;
         if (width <= 0)
             return;
-        var band = reserved ? PageTrailer.Band : Math.Min(360, Math.Max(220, width * 9 / 32));
-        PlaceHead();
-        // Under the art the video waits on the ground, never seen before its first frame.
-        Art.Background = reserved ? Ui.Res<Brush>("GroundBrush") : null;
-        Columns.Padding = new Thickness(36, reserved ? band - 80 : band - 120, 36, 24);
+        var band = Math.Min(360, Math.Max(220, width * 9 / 32));
         if (Math.Abs(Banner.Height - band) < 0.5 && Banner.Clip is not null)
             return;
         Banner.Height = band;
@@ -530,6 +474,7 @@ public sealed partial class TitlePage : Page, IPageKeys
         // band's edge, so the band is clipped to its height: any overflow would show as a light
         // line under the scrim. Only the height matters; the width is generous.
         Banner.Clip = new RectangleGeometry { Rect = new global::Windows.Foundation.Rect(0, 0, 100_000, band) };
+        Columns.Padding = new Thickness(36, band - 120, 36, 24);
     }
 
     /// <summary>The page's own layout as raised plates: banner, cover and title, then episode rows.</summary>
@@ -574,8 +519,6 @@ public sealed partial class TitlePage : Page, IPageKeys
     {
         base.OnNavigatedTo(e);
         id = openedWith = (uint)e.Parameter;
-        openedAt = Environment.TickCount64;
-        trailer.Open(id);
         var known = ctx.Known.Entry(id) is not null;
         if (!known)
             State.Wait();
@@ -654,14 +597,6 @@ public sealed partial class TitlePage : Page, IPageKeys
         // episode 9 through protection, synopsis-ranges opens the range menu.
         if (ctx.Options.Show is { } synopsisShot && synopsisShot.StartsWith("synopsis", StringComparison.Ordinal) && ctx.Options.Title == id)
             _ = Task.Delay(3500).ContinueWith(_ => DispatcherQueue.TryEnqueue(() => StageSynopsis(synopsisShot)));
-        // --show=page-trailer...: the title's own trailer, on a device that lets it play (MainWindow);
-        // page-trailer-scroll scrolls the page away at 6 s, and page-trailer-back brings it back at 10 s.
-        if (ctx.Options.Show is { } pageTrailer && pageTrailer.StartsWith("page-trailer-", StringComparison.Ordinal) && ctx.Options.Title == id)
-        {
-            _ = Task.Delay(6000).ContinueWith(_ => DispatcherQueue.TryEnqueue(() => Scroll.ChangeView(null, 120, null, true)));
-            if (pageTrailer == "page-trailer-back")
-                _ = Task.Delay(10000).ContinueWith(_ => DispatcherQueue.TryEnqueue(() => Scroll.ChangeView(null, 0, null, true)));
-        }
         // --show=following-...: the people you follow, for the board's frames (StageFollowing).
         if (ctx.Options.Show is { } followingShot && followingShot.StartsWith("following-", StringComparison.Ordinal) && ctx.Options.Title == id)
             _ = Task.Delay(followingShot == "following-early" ? 300 : 3000).ContinueWith(_ => DispatcherQueue.TryEnqueue(() => StageFollowing(followingShot)));
@@ -684,7 +619,6 @@ public sealed partial class TitlePage : Page, IPageKeys
         DubLine.Opacity = 0;
         Layout();
         Show();
-        Reserve();
         ShowEpisodes();
     }
 
@@ -701,11 +635,6 @@ public sealed partial class TitlePage : Page, IPageKeys
         {
             discussion?.Close();
             id = to;
-            // The new season decides its own band, under the crossfade.
-            trailer.Switch(to);
-            decided = reserved = false;
-            openedAt = Environment.TickCount64;
-            Layout();
             // What was chosen for the last season does not carry over to this one.
             chosenRange = null;
             opened = false;
@@ -966,12 +895,6 @@ public sealed partial class TitlePage : Page, IPageKeys
             {
                 case Event.Detail d when d.V1.Id == id:
                     Show();
-                    Reserve();
-                    trailer.MaybeStart();
-                    break;
-                case Event.Autoplay:
-                    Reserve();
-                    trailer.MaybeStart();
                     break;
                 case Event.Progress p when p.Id == id:
                     // The event carries the rows' watched state, which Known has put in the
@@ -1337,7 +1260,6 @@ public sealed partial class TitlePage : Page, IPageKeys
     {
         SideColumn.Width = wide ? new GridLength(260) : new GridLength(0);
         Side.Visibility = wide ? Visibility.Visible : Visibility.Collapsed;
-        PlaceHead();
         var host = wide ? Side : DetailsBelow;
         Side.Children.Clear();
         DetailsBelow.Children.Clear();
@@ -1757,7 +1679,6 @@ public sealed partial class TitlePage : Page, IPageKeys
 
     void OnSizeChanged(object sender, SizeChangedEventArgs e)
     {
-        Reserve();
         Layout();
         // A narrow window stacks each row's text under its still.
         var narrow = Scroll.ActualWidth is > 0 and < global::Kaeri.App.Synopsis.NarrowBelow;

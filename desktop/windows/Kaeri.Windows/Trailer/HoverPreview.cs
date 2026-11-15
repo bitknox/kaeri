@@ -230,7 +230,7 @@ static class HoverPreview
     static void CueAt(FrameworkElement target, uint id)
     {
         var ctx = Ctx.Current;
-        if (target.XamlRoot is null || !ctx.Window.InFront || TrailerHub.PageShowing || open is { } o && o.Target == target)
+        if (target.XamlRoot is null || !ctx.Window.InFront || open is { } o && o.Target == target)
             return;
         if (ctx.Known.Setting(SettingKey.HoverCards) is { } cards && !SettingsCatalog.IsOn(cards))
             return;
@@ -359,8 +359,7 @@ static class HoverPreview
     static void Show(FrameworkElement target, uint id, long rested)
     {
         var ctx = Ctx.Current;
-        // The title page's own trailer is playing: no preview opens over the page while it shows.
-        if (target.XamlRoot is null || !ctx.Window.InFront || TrailerHub.PageShowing)
+        if (target.XamlRoot is null || !ctx.Window.InFront)
             return;
         if (ctx.Known.Entry(id) is not { } entry)
             return;
