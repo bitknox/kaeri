@@ -12,8 +12,8 @@ const DOWNLOAD_TIMEOUT: Duration = Duration::from_secs(600);
 /// The most redirects one request follows.
 const MAX_REDIRECTS: usize = 10;
 
-/// How requests to a server sign in.
-#[derive(Debug, Clone, PartialEq, Eq)]
+/// How requests to a server sign in. Its `Debug` names the kind only.
+#[derive(Clone, PartialEq, Eq)]
 pub enum Auth {
     None,
     /// `Authorization: Basic <base64(user:password)>`, as the secure store keeps it.
@@ -22,6 +22,17 @@ pub enum Auth {
     Bearer(String),
     /// A named header, as Komga's `X-Auth-Token`.
     Header(&'static str, String),
+}
+
+impl std::fmt::Debug for Auth {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::None => f.write_str("Auth::None"),
+            Self::Basic(_) => f.write_str("Auth::Basic(..)"),
+            Self::Bearer(_) => f.write_str("Auth::Bearer(..)"),
+            Self::Header(name, _) => write!(f, "Auth::Header({name}, ..)"),
+        }
+    }
 }
 
 impl Auth {
