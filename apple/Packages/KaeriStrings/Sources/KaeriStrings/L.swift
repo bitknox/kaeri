@@ -3594,6 +3594,9 @@ public enum L {
     /// Mac menu bar item that syncs with the tracker accounts now.
     public static var menuSyncNow: String { string("menu-sync-now", fallback: "Sync Now") }
 
+    /// Mac and iPad menu bar item that takes Sync Now's place while a title page says its next episode aired and no source has it yet: it asks the sources again, as the page's Check again button does. Everywhere else it is action-check-again.
+    public static var menuCheckAgain: String { string("menu-check-again", fallback: "Check Again") }
+
     /// Mac menu bar item that pauses every download.
     public static var menuPauseAllDownloads: String { string("menu-pause-all-downloads", fallback: "Pause All Downloads") }
 

@@ -499,13 +499,19 @@ struct TitleHero: View {
                     .groupHeaderStyle()
                     .macLineHeight(14)
                     .padding(.top, 4)
-                HStack(spacing: 10) {
+                // An aired episode no source lists says so in the main action's place, with
+                // Check again (MissingSlot).
+                MissingSlot(
+                    entry: entry, action: action, metrics: Self.pad ? .pad : .mac,
+                    allowed: serviceMain == nil && held == nil
+                ) {
                     mainAction(action, held: held)
                         .opacity(offersHeld ? 0 : 1)
                         .disabled(offersHeld)
                         .allowsHitTesting(held == nil)
                         .accessibilityHidden(offersHeld)
                         .animation(.fadeIn, value: offersHeld)
+                } trailing: {
                     if entry.trailerUrl != nil {
                         Button(L.titleTrailer) {
                             navigator.playTrailer(entry, store: store)
@@ -1151,7 +1157,9 @@ struct EpisodeRowView: View {
             UnairedEpisodeRow(entry: entry, row: row, airs: date, metrics: metrics, textInset: textInset)
         } else {
             VStack(spacing: 0) {
-                airedRow
+                // Once a source lists the episode, the row lifts: the two crossfade in place.
+                ZStack { airedRow }
+                    .animation(.reveal, value: row.unsourced)
                     #if os(macOS)
                     // A synopsis cut at three lines is whole here, as a cut title is.
                     .tooltip(helpText)

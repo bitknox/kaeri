@@ -124,8 +124,10 @@ struct EpisodeRowLabel: View {
         Text(row.number)
             .font(Self.numberFont(metrics))
             .monospacedDigit()
-            .foregroundStyle(current ? .amber : .haze)
+            // Amber marks what plays: an episode no source lists stays haze until one does.
+            .foregroundStyle(current && (!row.unsourced || external) ? .amber : .haze)
             .animation(.quick, value: current)
+            .animation(.reveal, value: row.unsourced)
             // A number past 99 keeps one line, standing into the row's margin.
             .lineLimit(1)
             .fixedSize()
@@ -153,12 +155,24 @@ struct EpisodeRowLabel: View {
     }
 
     private func factsLine(_ facts: String, lines: Int) -> some View {
-        Text(facts)
+        // An aired episode no source lists says how long ago it aired, on the minute, with no
+        // motion; once a source lists it the line crossfades to the usual one.
+        TimelineView(.everyMinute) { context in
+            Text(row.unsourced ? factsLine(at: context.date) : facts)
+                .contentTransition(.opacity)
+        }
             .font(Self.factsFont(metrics))
             .monospacedDigit()
             .foregroundStyle(.haze)
             .lineLimit(lines)
             .multilineTextAlignment(.leading)
+    }
+
+    private func factsLine(at now: Date) -> String {
+        EpisodeFacts.line(
+            row, current: current, minutesLeft: current ? EpisodeFacts.minutesLeft(entry) : nil,
+            leadsWithNumber: !numberColumn, now: now
+        )
     }
 
     private func synopsis(_ text: String?, lines: Int) -> some View {

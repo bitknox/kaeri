@@ -100,6 +100,9 @@ public final class Navigator {
     /// The title the menus' Episode items and the palette's commands act on: the one selected
     /// in a list, or the page that is open.
     public var focusedTitle: AnilistId?
+    /// The open page's episode that aired with no source listing it, which ⌘R checks again for
+    /// in Sync Now's place while the page shows Check again.
+    public var checkAgainHere: MissingHere?
     /// Whether the ⌘K palette is up.
     public var paletteShown = false
     /// Whether Messages is up.
@@ -475,4 +478,10 @@ extension Navigator {
         let open = openWorks
         for work in seriesPages.keys where !open.contains(work) { seriesPages[work] = nil }
     }
+}
+
+/// A title page's missing episode, which the menu's Check Again asks the sources for.
+public struct MissingHere: Equatable, Sendable {
+    public let id: AnilistId
+    public let episode: UInt32
 }

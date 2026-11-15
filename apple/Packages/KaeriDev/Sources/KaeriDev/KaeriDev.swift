@@ -194,6 +194,8 @@ final class Delegate: NSObject, NSApplicationDelegate {
             print("KaeriDev: window key \(window.isKeyWindow)")
         }
         await stageSeriesShot()
+        // A missing episode: Check again pressed, and its answer in.
+        if !(await store.stageCheckAgain()) { print("KaeriDev: Check again did not come back") }
         print(settled ? "KAERI_READY" : "KaeriDev: did not settle; going on")
         if let shot = options.playerShot {
             let there: Bool

@@ -96,9 +96,16 @@ public struct KaeriCommands<Playback: View, PlayerWindowItems: View>: Commands {
             }
             .keyboardShortcut(reading ? nil : KeyboardShortcut("[", modifiers: .command))
             .disabled(!navigator.canGoBack && playerBack?.isUp() != true)
-            Button(L.menuSyncNow) { store.send(.syncNow) }
-                .keyboardShortcut("r", modifiers: .command)
-                .disabled(store.accounts.summary.state == .signedOut)
+            // On a page whose next episode aired and no source has yet, ⌘R asks the sources
+            // again, as the page's Check again does.
+            if let here = navigator.checkAgainHere {
+                Button(L.menuCheckAgain) { store.missing.checkAgain(here.id, episode: here.episode) }
+                    .keyboardShortcut("r", modifiers: .command)
+            } else {
+                Button(L.menuSyncNow) { store.send(.syncNow) }
+                    .keyboardShortcut("r", modifiers: .command)
+                    .disabled(store.accounts.summary.state == .signedOut)
+            }
             Divider()
             Button(L.menuPauseAllDownloads) { store.pauseAllDownloads() }
                 .disabled(!store.downloads.rows.contains { $0.state == .active || $0.state == .queued })

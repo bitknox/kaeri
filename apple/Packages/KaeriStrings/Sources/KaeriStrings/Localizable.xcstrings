@@ -111995,6 +111995,18 @@
         }
       }
     },
+    "menu-check-again" : {
+      "comment" : "Mac and iPad menu bar item that takes Sync Now's place while a title page says its next episode aired and no source has it yet: it asks the sources again, as the page's Check again button does. Everywhere else it is action-check-again.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Check Again"
+          }
+        }
+      }
+    },
     "menu-check-for-updates" : {
       "comment" : "Mac menu bar item that checks the plugin stores for plugin updates.",
       "extractionState" : "manual",

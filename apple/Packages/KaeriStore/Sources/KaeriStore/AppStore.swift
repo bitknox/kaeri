@@ -72,6 +72,8 @@ public final class AppStore {
     public let local = LocalLibraryModel()
     /// The source picker's options per title.
     public let sourceChoices = SourceChoiceModel()
+    /// Check again on a title page whose next episode aired and no source lists yet.
+    public let missing = MissingChecks()
     /// The match sheet's question, search and pick per title.
     public let match = MatchPickerModel()
     /// The link or torrent file the person opened, and the confirm step's choices.
@@ -193,6 +195,7 @@ public final class AppStore {
         reader.onClosed = { [weak self] in self?.serverProgress.clearLines() }
         updates.send = { [weak self] command in self?.send(command) }
         party.send = { [weak self] command in self?.send(command) }
+        missing.send = { [weak self] command in self?.send(command) }
         sync.send = { [weak self] command in self?.send(command) }
         party.chat.send = { [weak self] command in self?.send(command) }
         party.say = { [weak self] notice, player, kind in
@@ -1080,6 +1083,8 @@ public final class AppStore {
             // A failed listing is not a table to keep: the page asks again when it next opens.
             if failed == nil { episodesArrived[id] = now() }
             episodesLanded(id)
+        case .episodeChecked(let check):
+            missing.apply(check)
         case .titleDub(let id, let dub):
             titles.dub(id: id, extent: dub)
             titles.recount(id, dub: dub, dubChanged: dub != nil)
