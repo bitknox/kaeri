@@ -211,6 +211,7 @@ struct PadTitleToolbar: ToolbarContent {
     var body: some ToolbarContent {
         // The list's menu is in the page's header, beside Resume (PadTitleMeta): a narrow
         // window's bar, with the tabs in it, folded it away.
+        CastToolbarItem()
         ToolbarItem(placement: .topBarTrailing) {
             AnotherButton(id: id)
         }
@@ -307,11 +308,7 @@ struct TabStack<Screen: View>: View {
             }
         )) {
             screen()
-                .toolbar {
-                    if store.tv.connected != nil {
-                        ToolbarItem(placement: .topBarLeading) { TVNowPlayingButton() }
-                    }
-                }
+                .toolbar { CastToolbarItem() }
                 .navigationTitle(section.title)
                 .boardTitle(section.title)
                 // Library's Downloads row, on iPhone and in a narrow window: no tab of its own.

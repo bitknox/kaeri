@@ -137,6 +137,9 @@ struct KaeriApp: App {
                 switch phase {
                 case .active:
                     delegate.notices.cameForward()
+                    // TVs are looked for while the app is in front: the cast button, and a
+                    // session left running joined again.
+                    delegate.store.tv.foreground(true)
                     // A TV driven tries again at once rather than at the end of its wait.
                     delegate.store.tv.retryNow()
                     // Back from a licensed service after long enough to have watched an episode:
@@ -152,6 +155,7 @@ struct KaeriApp: App {
                     #endif
                 case .background:
                     delegate.notices.wentAway()
+                    delegate.store.tv.foreground(false)
                     #if os(iOS)
                     delegate.store.continued.phase(foreground: false, rows: delegate.store.downloads.rows)
                     #endif

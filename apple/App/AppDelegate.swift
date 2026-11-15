@@ -3,6 +3,7 @@
 import KaeriKit
 import KaeriPlayerUI
 import KaeriStore
+import KaeriStrings
 import KaeriUI
 import Foundation
 import Observation
@@ -443,6 +444,17 @@ extension AppDelegate: NSApplicationDelegate {
     /// Quitting in a watch party leaves it: asked first, with Stay the default.
     func applicationShouldTerminate(_ sender: NSApplication) -> NSApplication.TerminateReply {
         if store.party.asksBeforeQuitting() { return .terminateCancel }
+        if store.tv.cast.connected {
+            // This Mac serves the episode: quitting ends it on the TV, so it asks first.
+            let name = store.tv.cast.heldName
+            let alert = NSAlert()
+            alert.messageText = L.castQuitTitle(name: name)
+            alert.informativeText = L.castQuitBody(name: name)
+            alert.addButton(withTitle: L.castQuitAction)
+            alert.addButton(withTitle: L.actionCancel)
+            guard alert.runModal() == .alertFirstButtonReturn else { return .terminateCancel }
+            store.tv.cast.disconnect()
+        }
         guard store.hasEngine else { return .terminateNow }
         // The windows go first and the engine winds down off the main thread, for at most four
         // seconds, so quitting does not look like a hang.

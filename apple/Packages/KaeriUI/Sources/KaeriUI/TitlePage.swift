@@ -448,7 +448,12 @@ struct TitleHero: View {
                 action.play(entry.id, store: store, navigator: navigator)
             } label: {
                 HStack(spacing: 8) {
-                    Image(systemName: "play.fill").font(.mac(10))
+                    // While a TV is held the play goes there: the cast glyph in place of play.
+                    if store.tv.cast.connected {
+                        CastButtonGlyph(look: .connected, size: Self.pad ? 17 : 13, color: Palette.ground)
+                    } else {
+                        Image(systemName: "play.fill").font(.mac(10))
+                    }
                     Text(Self.pad ? action.sentence : action.title)
                 }
             }
@@ -473,7 +478,8 @@ struct TitleHero: View {
         // Whether a source lists the title is known once its episodes are. Until then Play on TV
         // stays as it was, so a season shown from its header keeps the button it will have, or
         // goes without it, rather than changing twice.
-        let playsOnTV = action.playable && store.tv.available
+        // The cast button in the bar takes Play on TV's place once a TV is found.
+        let playsOnTV = action.playable && store.tv.available && store.tv.castButton == .hidden
             && (store.titles.episodes[entry.id] != nil ? !store.titles.unlisted(entry.id) : tvShown)
         HStack(alignment: .bottom, spacing: 28) {
             // Across a season switch the last season's cover stays until the next one's lands.
@@ -537,6 +543,9 @@ struct TitleHero: View {
                 }
                 .animation(.fadeIn, value: playsOnTV)
                 .padding(.top, Self.pad ? 16 : 12)
+                CastPlaysOnLine(touch: Self.pad)
+                    .padding(.top, 10)
+                    .animation(.fadeIn, value: store.tv.cast.connected)
                 LicensedLines(id: entry.id, font: Self.pad ? .ui(15) : .mac(13))
                 MatchUncertainLine(id: entry.id, font: Self.pad ? .ui(15) : .mac(13), top: 10)
             }
@@ -1395,5 +1404,6 @@ struct TitleToolbar: ToolbarContent {
                 Label(L.actionMore, systemImage: "ellipsis")
             }
         }
+        CastToolbarItem()
     }
 }

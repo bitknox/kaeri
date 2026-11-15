@@ -105,6 +105,8 @@ public final class TVRemoteModel {
     @ObservationIgnored private var cards: Task<Void, Never>?
     @ObservationIgnored private var path: NWPathMonitor?
     @ObservationIgnored private var browsers = 0
+    @ObservationIgnored var lookingInForeground = false
+    @ObservationIgnored var inForeground = false
 
     public init() {}
 
@@ -123,6 +125,7 @@ public final class TVRemoteModel {
         }
         shortFingerprint = sender.shortFingerprint()
         refresh()
+        lookInForeground()
         watcher?.cancel()
         watcher = Task { [weak self, sender] in
             while !Task.isCancelled {
@@ -175,6 +178,15 @@ public final class TVRemoteModel {
 
     /// The card of the TV driven, or the picker when there is none.
     public func openRemote() {
+        // A cast session's controller is its own screen.
+        if cast.link != nil, cast.miniShown {
+            cast.expanded = true
+            return
+        }
+        if cast.link != nil, cast.connected {
+            cast.dialogShown = true
+            return
+        }
         sheet = connected == nil && !cast.active ? .picker : .remote
     }
 
@@ -230,6 +242,16 @@ public final class TVRemoteModel {
     /// A Chromecast row chosen: cast what was asked to it. The card shows at once, starting, and
     /// the player here, when it was asked from there, closes.
     public func choose(cast row: FfiCastRow) {
+        if cast.link != nil {
+            // The session holds the TV: the request moves there, and this sheet goes.
+            if connected != nil { disconnect() }
+            let request = request
+            self.request = nil
+            sheet = nil
+            cast.connect(row, play: request)
+            if request?.fromPlayer == true { handedOff?() }
+            return
+        }
         guard let request else { return }
         if connected != nil { disconnect() }
         if cast.active { cast.stop() }
@@ -459,6 +481,10 @@ public final class TVRemoteModel {
 
     /// Send the TV a command from the card.
     public func send(_ command: FfiTvCommand) {
+        if cast.link != nil, cast.held?.state == .playing {
+            cast.command(command)
+            return
+        }
         if cast.active {
             cast.send(command)
             return

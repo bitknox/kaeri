@@ -380,13 +380,16 @@ public final class AppStore {
         if testing, let fakes = TVRemoteModel.fixtures(engine) {
             let casts = TVRemoteModel.fixtureCasts()
             tv.attach(sender, browser: fakes, castBrowser: casts)
+            // The session by script, in place of the engine's.
+            let link = TVRemoteModel.fixtureLink()
+            tv.cast.hold(link)
             if let scene = CastScene.named() {
                 Task {
                     // The fixture title's name, once its page has loaded, for the sheet's line.
                     let id: AnilistId = 900_001
                     for _ in 0..<60 where titles[id] == nil { try? await Task.sleep(for: .milliseconds(50)) }
                     let play = TVPlayRequest(id: id, title: titles[id]?.title ?? "", episode: "3", from: 312)
-                    await tv.stage(scene, casts: casts, play: play)
+                    await tv.stage(scene, casts: casts, link: link, play: play)
                 }
             }
             if let scene = TVScene.named() {
@@ -441,10 +444,13 @@ public final class AppStore {
         }
         switch command {
         case .play(let id, let episode, _):
+            // While a TV is held the engine plays it there: the controller opens as it starts.
+            tv.cast.playing(TVPlayRequest(id: id, title: titles[id]?.title ?? "", episode: episode, from: nil))
             playSent = .now
             startAt = nil
             AppLog.info("store", "play \(id) episode \(episode)")
         case .playSource(let id, let episode, _, _):
+            tv.cast.playing(TVPlayRequest(id: id, title: titles[id]?.title ?? "", episode: episode, from: nil))
             playSent = .now
             startAt = nil
             AppLog.info("store", "play \(id) episode \(episode) from a chosen source")
@@ -1029,7 +1035,7 @@ public final class AppStore {
         if case .downloads(let rows) = event { continued.update(rows) }
         if wantsWeek, NotificationsModel.reschedules(after: event) { refreshNotices() }
         if case .upcomingNotices(let week) = event { airingActivity.weekChanged(week, titles: titles, artwork: artwork) }
-        if tv.cast.active, Self.playsHere(event) {
+        if tv.cast.active || tv.cast.connected, Self.playsHere(event) {
             // A cast plays through the engine as any play does, on the TV: the player here stays shut.
             AppLog.info("store", "casting: \(String(String(describing: event).prefix { $0 != "(" }))")
             return
