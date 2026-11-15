@@ -715,7 +715,7 @@ public sealed partial class TitlePage : Page, IPageKeys
                 Later(0.6, InView);
                 break;
             case "following-off":
-                ctx.Send(new Command.SetSetting(SettingKey.ShowFollowing, new SettingValue.Bool(false)));
+                ctx.Send(new Command.SetSetting(SettingKey.ShowFollowing, new global::Kaeri.Engine.Core.SettingValue.Bool(false)));
                 break;
             case "following-tip":
                 if (Episodes().FirstOrDefault(i => i.Row.Number == "8") is not { } eight)
@@ -738,7 +738,7 @@ public sealed partial class TitlePage : Page, IPageKeys
         for (var i = 0; i < VisualTreeHelper.GetChildrenCount(at); i++)
         {
             var child = VisualTreeHelper.GetChild(at, i);
-            if (child as TFound ?? Find<TFound>(child) is { } found)
+            if ((child as TFound ?? Find<TFound>(child)) is { } found)
                 return found;
         }
         return null;
