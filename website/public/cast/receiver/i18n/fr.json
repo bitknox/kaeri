@@ -1,0 +1,197 @@
+{
+  "messages": {
+    "receiver-closing-computer": [
+      "Ferme dans ",
+      {
+        "arg": "seconds"
+      },
+      " s. Choisissez un épisode sur l'ordinateur pour rester."
+    ],
+    "receiver-closing-ipad": [
+      "Ferme dans ",
+      {
+        "arg": "seconds"
+      },
+      " s. Choisissez un épisode sur l'iPad pour rester."
+    ],
+    "receiver-closing-iphone": [
+      "Ferme dans ",
+      {
+        "arg": "seconds"
+      },
+      " s. Choisissez un épisode sur l'iPhone pour rester."
+    ],
+    "receiver-closing-mac": [
+      "Ferme dans ",
+      {
+        "arg": "seconds"
+      },
+      " s. Choisissez un épisode sur le Mac pour rester."
+    ],
+    "receiver-closing-phone": [
+      "Ferme dans ",
+      {
+        "arg": "seconds"
+      },
+      " s. Choisissez un épisode sur le téléphone pour rester."
+    ],
+    "receiver-closing-tablet": [
+      "Ferme dans ",
+      {
+        "arg": "seconds"
+      },
+      " s. Choisissez un épisode sur la tablette pour rester."
+    ],
+    "receiver-error": [
+      "Impossible de lire l'épisode ",
+      {
+        "arg": "episode"
+      }
+    ],
+    "receiver-error-audio-codec": [
+      "Ce téléviseur ne peut pas lire l'audio ",
+      {
+        "arg": "codec"
+      },
+      "."
+    ],
+    "receiver-error-hint-computer": [
+      "Choisissez une autre source sur l'ordinateur."
+    ],
+    "receiver-error-hint-ipad": [
+      "Choisissez une autre source sur l'iPad."
+    ],
+    "receiver-error-hint-iphone": [
+      "Choisissez une autre source sur l'iPhone."
+    ],
+    "receiver-error-hint-mac": [
+      "Choisissez une autre source sur le Mac."
+    ],
+    "receiver-error-hint-phone": [
+      "Choisissez une autre source sur le téléphone."
+    ],
+    "receiver-error-hint-tablet": [
+      "Choisissez une autre source sur la tablette."
+    ],
+    "receiver-error-unnumbered": [
+      "Impossible de lire cet épisode"
+    ],
+    "receiver-error-video-codec": [
+      "Ce téléviseur ne peut pas lire la vidéo ",
+      {
+        "arg": "codec"
+      },
+      "."
+    ],
+    "receiver-finished": [
+      "Épisode ",
+      {
+        "arg": "episode"
+      },
+      " terminé"
+    ],
+    "receiver-finished-unnumbered": [
+      "Terminé"
+    ],
+    "receiver-paused": [
+      "En pause"
+    ],
+    "receiver-plain-subs": [
+      "Sur ce téléviseur, les sous-titres sont en texte simple."
+    ],
+    "receiver-ready-computer": [
+      "Prêt. Choisissez un épisode sur l'ordinateur."
+    ],
+    "receiver-ready-ipad": [
+      "Prêt. Choisissez un épisode sur l'iPad."
+    ],
+    "receiver-ready-iphone": [
+      "Prêt. Choisissez un épisode sur l'iPhone."
+    ],
+    "receiver-ready-mac": [
+      "Prêt. Choisissez un épisode sur le Mac."
+    ],
+    "receiver-ready-phone": [
+      "Prêt. Choisissez un épisode sur le téléphone."
+    ],
+    "receiver-ready-tablet": [
+      "Prêt. Choisissez un épisode sur la tablette."
+    ],
+    "receiver-sender-gone-computer": [
+      "En attente de l'ordinateur"
+    ],
+    "receiver-sender-gone-hint-computer": [
+      "Ouvrez Kaeri sur l'ordinateur pour regarder la suite."
+    ],
+    "receiver-sender-gone-hint-ipad": [
+      "Ouvrez Kaeri sur l'iPad pour regarder la suite."
+    ],
+    "receiver-sender-gone-hint-iphone": [
+      "Ouvrez Kaeri sur l'iPhone pour regarder la suite."
+    ],
+    "receiver-sender-gone-hint-mac": [
+      "Ouvrez Kaeri sur le Mac pour regarder la suite."
+    ],
+    "receiver-sender-gone-hint-phone": [
+      "Ouvrez Kaeri sur le téléphone pour regarder la suite."
+    ],
+    "receiver-sender-gone-hint-tablet": [
+      "Ouvrez Kaeri sur la tablette pour regarder la suite."
+    ],
+    "receiver-sender-gone-ipad": [
+      "En attente de l'iPad"
+    ],
+    "receiver-sender-gone-iphone": [
+      "En attente de l'iPhone"
+    ],
+    "receiver-sender-gone-mac": [
+      "En attente du Mac"
+    ],
+    "receiver-sender-gone-phone": [
+      "En attente du téléphone"
+    ],
+    "receiver-sender-gone-tablet": [
+      "En attente de la tablette"
+    ],
+    "receiver-skipped-ending": [
+      "Générique passé"
+    ],
+    "receiver-skipped-opening": [
+      "Intro passée"
+    ],
+    "receiver-starting": [
+      "Démarrage"
+    ],
+    "receiver-up-next": [
+      "À suivre · lecture dans ",
+      {
+        "arg": "seconds"
+      },
+      " s"
+    ],
+    "receiver-up-next-numbered": [
+      "Épisode ",
+      {
+        "arg": "episode"
+      }
+    ],
+    "receiver-up-next-titled": [
+      "Épisode ",
+      {
+        "arg": "episode"
+      },
+      " · ",
+      {
+        "arg": "title"
+      }
+    ],
+    "receiver-waiting": [
+      "En attente du flux · ",
+      {
+        "arg": "seconds"
+      },
+      " s"
+    ]
+  },
+  "tag": "fr"
+}

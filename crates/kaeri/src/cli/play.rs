@@ -233,7 +233,10 @@ pub async fn play_cli(
     // Headless plays one episode: nothing would ever claim a parked window.
     let settings = playback::PlaySettings { auto_next: false, ..settings };
     let host = std::sync::Arc::new(DesktopHost::new(config, paths));
-    let machine = playback::Machine::desktop(mpv, PlayerSlot::default(), host);
+    let machine = playback::Machine {
+        sources: Some(registry.clone()),
+        ..playback::Machine::desktop(mpv, PlayerSlot::default(), host)
+    };
     playback::play(streams, context, store.clone(), http.clone(), machine, settings, tx, prx)
         .await;
 

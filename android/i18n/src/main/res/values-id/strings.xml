@@ -13,6 +13,9 @@
     <string name="notice_cast_taken_over">Penayangan berhenti karena perangkat lain mulai memutar sesuatu di %1$s.</string>
     <string name="notice_cast_not_same_network">Perangkat ini tidak berada di jaringan yang sama dengan %1$s, atau terhubung lewat VPN. Sambungkan keduanya ke jaringan yang sama untuk menayangkan.</string>
     <string name="notice_cast_lost">Koneksi ke %1$s terputus, jadi penayangan berhenti.</string>
+    <string name="notice_cast_segment">%1$s berhenti menerima aliran: sumber tidak merespons untuk sebagian episode. Coba sumber lain.</string>
+    <string name="notice_cast_lost_stream">%1$s kehilangan aliran dari perangkat ini. Pastikan keduanya berada di jaringan yang sama.</string>
+    <string name="notice_cast_subtitles_plain">Subtitel di %1$s tampil sebagai teks biasa. Subtitel bergaya terlalu berat untuk TV ini.</string>
     <string name="notice_cast_no_device">TV itu sudah tidak ada di jaringan.</string>
     <string name="notice_cast_unavailable">Versi Kaeri ini tidak bisa menayangkan ke TV.</string>
     <string name="cast_phase_starting">Memulai di %1$s</string>
@@ -114,6 +117,8 @@
     <string name="status_searching_sources">Mencari sumber-sumber untuk episode %1$s…</string>
     <string name="notice_player_failed_to_start">Tidak bisa memulai mpv. Pastikan mpv bisa berjalan sendiri. (%1$s)</string>
     <string name="notice_stream_no_video">Tidak ada video dari aliran itu. Mencoba %1$,d dari %2$,d.</string>
+    <string name="notice_failed_over">Stream terputus. %1$s melanjutkan dari titik yang sama.</string>
+    <string name="notice_failed_over_same_source">Stream terputus. Stream lain dari %1$s melanjutkan dari titik yang sama.</string>
     <string name="notice_player_could_not_play">mpv tidak bisa memutar ini. %1$s</string>
     <string name="notice_player_exited_silently">mpv ditutup tanpa memutar apa pun dan tanpa memberi alasan. Coba sumber lain.</string>
     <string name="notice_player_not_playing">mpv belum mulai memutar setelah %1$,d dtk. sumber ini mungkin tidak punya data. Pastikan mpv bisa memutar file sendiri.</string>
@@ -299,6 +304,7 @@
     <string name="reading_row_on_device">Di perangkat ini</string>
     <string name="reading_row_queued">Antre</string>
     <string name="reading_row_waits_wifi">Antre · tunggu Wi-Fi</string>
+    <string name="reading_row_waits_room">Antre · tunggu ruang kosong</string>
     <string name="reading_row_downloading">Mengunduh · %1$,d dari %2$,d hal.</string>
     <string name="reading_row_failed">Gagal diunduh</string>
     <string name="reading_row_page_of">Hal. %1$d dari %2$d</string>
@@ -348,6 +354,9 @@
     <string name="reading_dl_waits_wifi">menunggu Wi-Fi</string>
     <string name="reading_dl_failed">Bab %1$s gagal diunduh</string>
     <string name="reading_dl_offline">Offline</string>
+    <plurals name="reading_dl_no_room">
+        <item quantity="other">Ruang penuh. Diunduh begitu ada ruang kosong.</item>
+    </plurals>
     <string name="reading_estimate_size">Sekitar %1$s</string>
     <string name="reading_estimate_wifi">lewat Wi-Fi</string>
     <string name="reading_estimate_mobile">lewat data seluler</string>
@@ -511,6 +520,13 @@
     <string name="notice_signed_out">Keluar dari %1$s.</string>
     <plurals name="notice_signed_out_queue">
         <item quantity="other">Keluar dari %1$s. %2$,d perubahan dalam antrean disimpan untuk masuk lagi nanti.</item>
+    </plurals>
+    <string name="notice_tracker_change_refused">%1$s terus menolak perubahan pada %2$s, jadi perubahan itu hanya tersimpan di Kaeri.</string>
+    <plurals name="notice_tracker_changes_refused">
+        <item quantity="other">%1$s terus menolak perubahan pada %2$s dan %3$,d judul lain, jadi semuanya hanya tersimpan di Kaeri.</item>
+    </plurals>
+    <plurals name="notice_tracker_change_refused_untitled">
+        <item quantity="other">%1$s terus menolak perubahan pada %2$,d judul, jadi semuanya hanya tersimpan di Kaeri.</item>
     </plurals>
     <string name="notice_sign_out_failed">Tidak dapat keluar dari %1$s. Coba lagi. %2$s</string>
     <string name="notice_not_saved_because">Tidak dapat menyimpan pengaturan itu. %1$s</string>
@@ -700,6 +716,7 @@
     <string name="reader_end_again">Baca ulang dari awal</string>
     <string name="reader_opening_chapter">Membuka bab %1$s</string>
     <string name="reader_failed_chapter">Bab %1$s tidak bisa dibuka</string>
+    <string name="reader_failed_chapter_plain">Bab ini tidak bisa dibuka</string>
     <string name="reader_sheet_series">Seri ini</string>
     <string name="reader_sheet_all_manga">Semua manga</string>
     <string name="reader_sheet_all_webtoons">Semua webtoon</string>
@@ -940,6 +957,8 @@
     <string name="tv_discussion_select_spoiler">Pilih untuk menampilkan spoiler</string>
     <string name="updates_unknown_sources_path">Setelan › Aplikasi › Keamanan &amp; pembatasan › Sumber tidak dikenal</string>
     <string name="tv_remote_default_name">Kaeri TV</string>
+    <string name="player_stats_show_live">Tampilkan statistik langsung</string>
+    <string name="player_stats_hide_live">Sembunyikan statistik langsung</string>
     <string name="episode_short_dubbed">E%1$d · Berdubbing</string>
     <string name="episode_long_dubbed">Episode %1$d · Berdubbing</string>
     <plurals name="downloads_live_paused">
@@ -1173,6 +1192,7 @@
     <string name="engine_down_title">Kaeri berhenti</string>
     <string name="engine_down_stopped">Tidak ada yang baru dimuat sampai aplikasi berjalan lagi. Coba lagi, atau tutup dan buka aplikasi sekali lagi.</string>
     <string name="engine_down_quit">Tutup</string>
+    <string name="settings_picture_in_picture_system_off">Nonaktif di setelan Android</string>
     <string name="about_title">Tentang</string>
     <string name="about_title_app">Tentang Kaeri</string>
     <string name="about_version">Versi %1$s</string>
@@ -1208,6 +1228,18 @@
     <string name="report_tv_scan">Pindai kode untuk membuka laporan di ponsel Anda.</string>
     <string name="report_crash_off">Laporan crash nonaktif, jadi tidak ada yang disertakan. Anda bisa mengaktifkannya di Pengaturan, Tentang.</string>
     <string name="report_crash_settings">Pengaturan laporan crash</string>
+    <string name="report_player_log">Log pemutar</string>
+    <plurals name="report_player_log_detail">
+        <item quantity="other">%1$,d pemutaran terakhir · %2$s</item>
+    </plurals>
+    <string name="report_player_log_empty">Belum ada pemutaran yang tercatat</string>
+    <string name="report_player_log_save">Simpan log…</string>
+    <string name="report_player_log_attach">Lampirkan berkas ke isu setelah terbuka di GitHub.</string>
+    <string name="report_player_log_saved">Disimpan sebagai %1$s</string>
+    <string name="report_player_log_failed">Log tidak bisa disimpan. Coba folder lain.</string>
+    <string name="report_sent_report">Laporan</string>
+    <string name="report_player_log_a11y_saved">Log pemutar disimpan</string>
+    <string name="report_player_log_a11y_hint">Menyimpan berkas untuk dilampirkan ke isu</string>
     <string name="settings_group_crashes">Laporan crash</string>
     <string name="settings_crash_save">Simpan laporan crash di perangkat ini</string>
     <string name="settings_crash_save_detail">Kaeri menyimpan catatan singkat setiap crash di perangkat ini untuk Laporkan bug, dengan judul, alamat, dan nama dihapus. Tidak ada yang dikirim otomatis.</string>
@@ -1273,6 +1305,16 @@
     <string name="cast_play_here">Putar di sini</string>
     <string name="cast_stop">Hentikan casting</string>
     <string name="cast_volume_fixed">Diatur di TV</string>
+    <string name="cast_button_connecting">Menghubungkan ke %1$s</string>
+    <string name="cast_button_connected">Terhubung ke %1$s</string>
+    <string name="cast_plays_on">Diputar di %1$s</string>
+    <string name="cast_idle">Belum ada yang diputar</string>
+    <string name="cast_status_paused">Dijeda di %1$s</string>
+    <string name="cast_open_show">Buka %1$s</string>
+    <string name="cast_controller_close">Tutup</string>
+    <string name="cast_mini_opens">Membuka kontrol</string>
+    <string name="cast_play_next_on">Putar setelah ini di %1$s</string>
+    <string name="cast_notification_line">Casting ke %1$s</string>
     <string name="action_try_again">Coba lagi</string>
     <string name="action_cancel">Batal</string>
     <string name="action_go">Ke</string>
@@ -1322,6 +1364,7 @@
     <string name="action_disable">Nonaktifkan</string>
     <string name="action_check_now">Periksa sekarang</string>
     <string name="action_check_again">Periksa lagi</string>
+    <string name="action_checking">Memeriksa</string>
     <string name="action_open_settings">Buka pengaturan</string>
     <string name="action_report">Laporkan</string>
     <string name="action_play_now">Putar sekarang</string>
@@ -1344,6 +1387,7 @@
     <string name="time_in">dalam %1$s</string>
     <string name="time_minutes_left">%1$,d mnt tersisa</string>
     <string name="time_minutes">%1$,d mnt</string>
+    <string name="time_hours">%1$,d jam</string>
     <string name="time_now_inline">sekarang</string>
     <string name="time_just_now_inline">barusan</string>
     <string name="when_today">hari ini %1$s</string>
@@ -1444,6 +1488,9 @@
     <string name="player_position_spoken">%1$s dari %2$s</string>
     <string name="names_pair">%1$s dan %2$s</string>
     <string name="names_list">%1$s, %2$s</string>
+    <string name="desktop_cast_quit_title">Hentikan transmisi dan keluar?</string>
+    <string name="desktop_cast_quit_body">%1$s sedang diputar di %2$s. Keluar akan menghentikannya.</string>
+    <string name="desktop_cast_quit_action">Hentikan dan keluar</string>
     <string name="discussion_open">Diskusi</string>
     <string name="discussion_title_episode">Diskusi episode %1$d</string>
     <plurals name="discussion_row">
@@ -2730,6 +2777,7 @@
     <string name="read_search_source_kind_folder">Folder</string>
     <string name="read_search_source_kind_plugin">Plugin</string>
     <string name="read_search_source_more">Tampilkan %1$,d lagi</string>
+    <string name="read_tile_add_to">Tambahkan ke %1$s</string>
     <string name="onboarding_step">%1$,d dari %2$,d</string>
     <string name="onboarding_welcome_line">Catat yang Anda tonton dan baca, dari sumber-sumber Anda sendiri.</string>
     <string name="onboarding_welcome_note">Daftar dan kemajuan Anda tetap ada di perangkat Anda. Anda sendiri yang menambahkan Pelacak-pelacak dan sumber-sumber.</string>
@@ -3187,6 +3235,12 @@
     <string name="settings_quality">Kualitas</string>
     <string name="settings_auto_play">Putar episode berikutnya otomatis</string>
     <string name="settings_up_next_countdown">Hitung mundur berikutnya</string>
+    <string name="settings_preload_cellular">Muat awal video dengan data seluler</string>
+    <string name="settings_preload_metered">Muat awal video di koneksi terukur</string>
+    <string name="settings_preload_detail_android">Selama penutup, stream, subtitle, dan waktu lewati episode berikutnya dicari. Detik-detik pertamanya juga dimuat, dan dengan data seluler atau Wi-Fi terukur hanya jika ini aktif.</string>
+    <string name="settings_preload_detail_metered">Selama penutup, stream, subtitle, dan waktu lewati episode berikutnya dicari. Detik-detik pertamanya juga dimuat, dan di koneksi terukur hanya jika ini aktif.</string>
+    <string name="settings_preload_torrents">Torrent memuat potongan pertamanya dengan cara yang sama.</string>
+    <string name="settings_preload_a11y_dimmed">Perlu \"Putar episode berikutnya otomatis\"</string>
     <string name="settings_skip_opening">Lewati pembukaan otomatis</string>
     <string name="settings_skip_recap">Lewati rekap otomatis</string>
     <string name="settings_find_skips">Cari waktu lewati dari audio</string>
@@ -3369,6 +3423,9 @@
     <string name="settings_opds_feed">Bagikan di jaringan ini</string>
     <string name="settings_opds_password">Kata sandi feed</string>
     <string name="settings_opds_port">Port feed</string>
+    <string name="settings_label_picture_in_picture_on_leave">Gambar dalam gambar saat keluar dari aplikasi</string>
+    <string name="settings_anilist_following">Tampilkan orang yang diikuti</string>
+    <string name="settings_anilist_following_footer">Menampilkan sampai mana orang yang diikuti di AniList menonton sebuah acara, di halamannya dan episodenya. Siapa yang bisa melihat daftar sendiri diatur di AniList.</string>
     <string name="book_server_address">Alamat</string>
     <string name="book_server_address_hint">Sebuah alamat, atau seluruh tautan OPDS dari Kavita.</string>
     <string name="book_server_kavita_key">Ini tautan OPDS Kavita. Kuncinya dipakai untuk masuk, jadi tidak perlu kata sandi.</string>
@@ -3463,6 +3520,16 @@
     <string name="source_picker_automatic_detail">Setiap episode dari sumber pertama yang memilikinya</string>
     <plurals name="source_picker_coverage">
         <item quantity="other">%1$,d dari %2$,d episode</item>
+    </plurals>
+    <plurals name="source_picker_episodes">
+        <item quantity="other">Episode %2$d–%3$d</item>
+    </plurals>
+    <string name="source_picker_episodes_not_yet">Episode %1$d–%2$d. Belum ada %3$s</string>
+    <string name="source_picker_episodes_not">Episode %1$d–%2$d. Tanpa %3$s</string>
+    <string name="source_picker_missing_pair">%1$d dan %2$d</string>
+    <string name="source_picker_missing_range">%1$d–%2$d</string>
+    <plurals name="source_picker_coverage_missing">
+        <item quantity="other">%1$,d dari %2$,d episode. Tanpa %3$s</item>
     </plurals>
     <string name="source_note_off">Dimatikan</string>
     <string name="source_note_resting">Tidak merespons, akan dicoba lagi segera</string>
@@ -4080,6 +4147,15 @@
     <string name="more_following_note">Dari AniList</string>
     <string name="more_followed_score">%1$,d/10</string>
     <string name="more_like_this">Serupa</string>
+    <string name="following_show_all">Tampilkan semua %1$,d</string>
+    <plurals name="following_names">
+        <item quantity="other">%1$s, %2$s, dan %3$,d lainnya</item>
+    </plurals>
+    <string name="following_names_two">%1$s dan %2$s</string>
+    <string name="following_mark_more">+%1$,d</string>
+    <string name="following_mark_spoken">%1$s menonton sampai sini.</string>
+    <string name="following_score_spoken">Skor %1$,d dari 10</string>
+    <string name="following_open_help">Menampilkan sampai mana masing-masing.</string>
     <string name="more_followed_progress">%1$s · %2$s</string>
     <string name="more_empty">AniList belum memiliki data pemeran, staf, atau rekomendasi untuk tayangan ini.</string>
     <string name="more_spoiler">Spoiler</string>
@@ -4097,7 +4173,6 @@
     <string name="title_fact_after">Setelah episode %1$d</string>
     <string name="title_fact_now">Sedang tayang</string>
     <string name="title_fact_tba">Akan diumumkan</string>
-    <string name="more_following_line">%1$s · %2$,d/10</string>
     <string name="episode_go_to">Ke episode…</string>
     <string name="episode_go_to_title">Ke episode</string>
     <string name="episode_go_to_go">Ke</string>
@@ -4105,6 +4180,18 @@
     <string name="episode_go_to_label">Episode, %1$d sampai %2$d</string>
     <string name="episode_go_to_none">Tidak ada episode %1$d. Serial ini punya %2$d.</string>
     <string name="episode_go_to_not_out">Episode %1$d belum tayang. Yang terbaru adalah %2$d.</string>
+    <string name="episode_missing_aired">Episode %1$d tayang %2$s.</string>
+    <string name="episode_missing_aired_on">Episode %1$d tayang pada %2$s.</string>
+    <string name="episode_missing_not_yet">Sumber-sumber Anda belum memilikinya.</string>
+    <string name="episode_missing_still">Sumber-sumber Anda masih belum memilikinya.</string>
+    <string name="episode_missing_no_answer">Sumber-sumber Anda tidak merespons.</string>
+    <string name="episode_missing_looks_again">Kaeri mencarinya lagi setiap %1$,d menit.</string>
+    <string name="episode_missing_none">Tidak ada sumber Anda yang memilikinya.</string>
+    <string name="episode_missing_offline">Kaeri akan mencarinya setelah Anda kembali daring.</string>
+    <string name="episode_row_aired_ago">Tayang %1$s</string>
+    <string name="episode_unsourced_yet">Belum ada di sumber-sumber Anda</string>
+    <string name="episode_found_announcement">Episode %1$d kini ada di sumber-sumber Anda.</string>
+    <string name="episode_check_again_help">Kaeri juga mencarinya sendiri setiap %1$,d menit selama %2$,d jam setelah episode tayang.</string>
     <string name="torrents_title">Torrent</string>
     <string name="torrents_on">Torrent aktif</string>
     <string name="torrents_off_detail">Nonaktif secara bawaan. Torrent terhubung langsung kecuali Anda mengarahkannya lewat proxy.</string>

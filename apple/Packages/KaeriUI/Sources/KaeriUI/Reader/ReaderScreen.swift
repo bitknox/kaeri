@@ -109,6 +109,9 @@ public struct ReaderScreen: View {
         }
         #endif
         .onChange(of: model.sheet) { _, sheet in if sheet != nil { model.chromeShown = true } }
+        // A chapter starting to open, or one that would not open, puts the group away, so the
+        // chapter opened, or Try again's open, starts without it.
+        .onChange(of: ReaderChrome.ready(model)) { _, ready in if !ready { model.hideChrome() } }
         .onChange(of: model.held?.tick) { _, _ in heldShown = 1 }
         .onChange(of: model.held?.landed == true) { _, landed in if landed { letHeldGo() } }
         #if os(iOS)
@@ -210,8 +213,17 @@ public struct ReaderScreen: View {
         if model.chromeShown { model.hideChrome() } else if x > 0.33 && x < 0.67 { model.chromeShown = true }
     }
 
+    /// Show controls, the page's screen reader action: the controls come up, and the screen
+    /// reader moves to them.
+    static func showControls(_ model: ReaderModel) {
+        model.chromeShown = true
+        AccessibilityNotification.ScreenChanged().post()
+    }
+
     #if os(macOS)
     private func pointerMoved() {
+        // The group stays away from a chapter opening or failed, and so does the pointer's hiding.
+        guard ReaderChrome.ready(model) else { hideTask?.cancel(); return }
         model.chromeShown = true
         hideTask?.cancel()
         hideTask = Task {
@@ -400,6 +412,10 @@ extension ReaderActions {
             model.set(.stripWidth, .amount(value: next))
             // Fit undoes a pinch's zoom too, whatever cut the pinch off.
             if step == 0 { model.fitStrip() }
+        } else {
+            // Pages zoom the page on screen, as a pinch does: in and out about the middle of the
+            // screen, and Fit to Window back to fitted.
+            model.zoomPage(step)
         }
     }
 

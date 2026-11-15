@@ -24,7 +24,8 @@ use crate::{
         autonext::{Follow, Staged},
         handoff::{Handoff, successor, take_controls},
         link::{PlayerOpener, PlayerTarget, opener},
-        resolve::{Pick, Resolved, Unplayable, resolve_for_playback},
+        prefetch::Warm,
+        resolve::{Pick, Unplayable, resolve_for_playback},
         shaders::shader_dir,
         slot::PlayerSlot,
         starting::Starting,
@@ -72,6 +73,11 @@ pub(crate) fn opener_for(
     {
         return Some(Arc::clone(cast) as Arc<dyn PlayerOpener>);
     }
+    // A cast session holds a TV: every play goes to it.
+    #[cfg(feature = "cast")]
+    if let Some(device) = services.casts.session_device() {
+        return Some(Arc::new(cast_opener(services, device)) as Arc<dyn PlayerOpener>);
+    }
     let hosted = services.hosted_player.then(|| -> Arc<dyn PlayerOpener> {
         Arc::clone(&services.hosted) as Arc<dyn PlayerOpener>
     });
@@ -116,8 +122,6 @@ pub fn cast_to(
     services: &Services,
     tx: &Outbox,
 ) {
-    use crate::playback::link::cast::CastOpener;
-
     let hub = &services.casts;
     let Some(device) = hub.device(device) else {
         let _ = tx.send(Event::Toast(Notice::alert(kaeri_model::Msg::NoticeCastNoDevice)));
@@ -135,14 +139,23 @@ pub fn cast_to(
         Some(_) => true,
         None => false,
     };
+    hub.begin(device.clone());
+    hub.asked(id, episode.clone());
+    engine.casting = Some(Arc::new(cast_opener(services, device)));
+    play(id, episode, from_start, job, engine, services, tx);
+}
+
+/// What opens a cast to `device`, with its scratch files in the runtime directory.
+#[cfg(feature = "cast")]
+fn cast_opener(
+    services: &Services,
+    device: kaeri_cast::CastDevice,
+) -> crate::playback::link::cast::CastOpener {
     let scratch = services.paths.runtime_dir().join("cast");
     if let Err(e) = std::fs::create_dir_all(&scratch) {
         tracing::warn!(error = %e, "couldn't make the cast's scratch directory");
     }
-    hub.begin(device.clone());
-    hub.asked(id, episode.clone());
-    engine.casting = Some(Arc::new(CastOpener::new(Arc::clone(hub), device, scratch)));
-    play(id, episode, from_start, job, engine, services, tx);
+    crate::playback::link::cast::CastOpener::new(Arc::clone(&services.casts), device, scratch)
 }
 
 /// A position closer to the start than this is not carried over to a cast: it starts from the
@@ -154,7 +167,9 @@ const CARRY_FROM: f64 = 5.0;
 /// open on this device again.
 #[cfg(feature = "cast")]
 pub fn stop_casting(engine: &mut EngineState, services: &Services) {
-    if engine.casting.take().is_none() && !services.casts.casting() {
+    // A cast session ends with it: the receiver closes.
+    let held = services.casts.disconnect();
+    if engine.casting.take().is_none() && !services.casts.casting() && !held {
         return;
     }
     services.casts.end();
@@ -221,6 +236,8 @@ fn stage(
     engine: &mut EngineState,
 ) -> Event {
     engine.cache.announce(played.id, title.clone());
+    // The player log's lines go under this playback from now on.
+    crate::player_log::begin(&played.episode, &title, episode_title.as_deref());
     engine.staging.staged(Staged {
         serial: played.serial,
         id: played.id,
@@ -387,6 +404,8 @@ fn play_staged(
         None => prefetch.take(id, &episode, config.playback.translation),
         Some(_) => None,
     };
+    // A roll-on handed over to this play: its first frame says how long that took.
+    let rolled_at = prefetch.handover_for(id, &episode);
     // Tracker ids rather than trackers: playback only needs to know which queues to
     // append to, and passing the set would couple the player to the sync layer.
     let tracker_ids = signed_in_tracker_ids(sync);
@@ -411,7 +430,7 @@ fn play_staged(
         tracker_ids,
         hints,
         write_shaders(config, paths),
-        prefetched,
+        (prefetched, rolled_at),
         job,
         &tx.for_playback(played),
     );
@@ -561,6 +580,7 @@ fn machine(opener: Arc<dyn PlayerOpener>, services: &Services) -> playback::Mach
         host: services.host.clone(),
         power: services.power.clone(),
         offline: services.offline.clone(),
+        sources: Some(services.registry.clone()),
     }
 }
 
@@ -712,8 +732,9 @@ fn spawn_playback(
     hints: PlayHints,
     // The shaders being written for it, while it looks for its streams.
     shaders: JoinHandle<Option<std::path::PathBuf>>,
-    // This episode's streams, found ahead while the previous one's ending played.
-    prefetched: Option<Resolved>,
+    // This episode as it was made ready while the previous one's ending played, and when the
+    // roll-on handed over to it.
+    (prefetched, rolled_at): (Option<Warm>, Option<std::time::Instant>),
     job: Option<JobGuard>,
     tx: &Outbox,
 ) {
@@ -729,19 +750,15 @@ fn spawn_playback(
     } else {
         services.registry.clone()
     };
-    let prefetched = if no_torrents {
-        prefetched
-            .map(|(streams, context)| {
-                let streams: Vec<_> = streams
-                    .into_iter()
-                    .filter(|s| s.kind != kaeri_core::stream::StreamKind::TorrentHttp)
-                    .collect();
-                (streams, context)
-            })
-            .filter(|(streams, _)| !streams.is_empty())
-    } else {
-        prefetched
+    let prefetched =
+        if no_torrents { prefetched.and_then(Warm::without_torrents) } else { prefetched };
+    // From here the playback owns what was started ahead: the proxy its first attempt adopts.
+    let (prefetched, proxy) = match prefetched.map(Warm::into_parts) {
+        Some((resolved, proxy)) => (Some(resolved), proxy),
+        None => (None, None),
     };
+    let ahead =
+        crate::playback::prefetch::Ahead::new(rolled_at, proxy, services.prefetch.clone());
     let reports = services.servers.reports();
     // An untracked play is of no show whose episodes could be compared, and a private one keeps
     // no prints of what it played.
@@ -764,6 +781,24 @@ fn spawn_playback(
     tokio::spawn(async move {
         let playback = config.playback.clone();
         let starting = Starting::new(&tx, id, &episode, Some(skip));
+        // A torrent looked up ahead on a limited network starts now, as it would have had it
+        // been found now. One that does not start sends the play looking again.
+        let prefetched = match prefetched {
+            Some((streams, context))
+                if streams
+                    .iter()
+                    .any(|s| s.kind == kaeri_core::stream::StreamKind::Torrent) =>
+            {
+                match torrents.start_first(streams, &episode).await {
+                    Ok(streams) => Some((streams, context)),
+                    Err(error) => {
+                        tracing::info!(%error, "the torrent looked up ahead did not start");
+                        None
+                    }
+                }
+            }
+            prefetched => prefetched,
+        };
         let resolving = async {
             match prefetched {
                 Some(found) => {
@@ -932,6 +967,7 @@ fn spawn_playback(
             find_skip_times: find,
             swarm: crate::playback::starting::Swarm::of(torrents),
             begin,
+            ahead,
             privacy: privacy.gate(id),
             ..play_settings(&config, tracker_ids, hub)
         };
@@ -990,6 +1026,7 @@ pub fn play_settings(
         untracked: false,
         swarm: Default::default(),
         begin: Default::default(),
+        ahead: Default::default(),
         privacy: Default::default(),
     }
 }
@@ -1059,6 +1096,7 @@ mod tests {
                 past_progress: false,
                 spoiler_ahead: false,
                 synopsis_pending: false,
+                followed: Vec::new(),
             })
             .collect();
         assert_eq!(following(&rows, "1").as_deref(), Some("2"));

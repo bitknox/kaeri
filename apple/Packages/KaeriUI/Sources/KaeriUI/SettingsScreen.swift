@@ -118,10 +118,11 @@ struct SettingsScreen: View {
                 }
                 .scrollIndicators(.never)
                 .task {
-                    // A launch scroll brings the find row into view, for the Fixtures shots.
-                    guard navigator.launchScroll != nil else { return }
+                    // A launch scroll brings the find row into view, for the Fixtures shots;
+                    // `-KaeriScroll 2` the Picture in Picture row.
+                    guard let scroll = navigator.launchScroll else { return }
                     try? await Task.sleep(for: .milliseconds(800))
-                    proxy.scrollTo("findSkips", anchor: .center)
+                    proxy.scrollTo(scroll == 2 ? "pictureInPictureOnLeave" : "findSkips", anchor: .center)
                 }
             }
         }
@@ -240,11 +241,12 @@ struct SettingsResults: View {
         (L.settingsReaderDefaults, .reading), (L.settingsFollowGroup, .reading), (L.ereadersGroup, .reading), (L.ereadersSendRow, .reading),
         (L.settingsChapterNotifications, .notifications),
         (L.settingsAudio, .playback), (L.playerSubtitles, .playback), (L.settingsQuality, .playback),
-        (L.settingsAutoPlay, .playback), (L.settingsUpNextCountdown, .playback),
+        (L.settingsAutoPlay, .playback), (L.settingsUpNextCountdown, .playback), (SettingKey.preloadMetered.title, .playback),
         (L.settingsSkipOpening, .playback), (L.settingsSkipRecap, .playback), (L.settingsAskWasOpening, .playback),
         (L.settingsFindSkips, .playback), (L.settingsShareSkips, .playback), (L.settingsClearSkips, .playback), (L.settingsSkipFiller, .playback),
         (L.settingsMarkOpening, .playback), (L.settingsCountsWatched, .playback),
         (L.settingsSpoiler, .playback), (L.playerUpscaling, .playback), (L.playerNightMode, .playback),
+        (L.settingsPictureInPictureOnLeaveApple, .playback),
         (L.settingsStartFullScreen, .playback), (L.settingsHideChat, .playback),
         (L.downloadsFolder, .downloads), (L.downloadsQuality, .downloads), (L.settingsMergeSubtitles, .downloads),
         (L.settingsKeepSeeding, .downloads), (L.settingsAfterDownload, .downloads), (L.settingsWatchedDownloads, .downloads),
@@ -494,6 +496,24 @@ struct PlaybackPane: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var confirmClearSkips = false
 
+    /// Under the Picture in Picture row on the Mac: when its window starts.
+    private var pictureInPictureNote: String? {
+        #if os(macOS)
+        L.settingsPictureInPictureOnLeaveMac
+        #else
+        nil
+        #endif
+    }
+
+    /// Under the Picture and sound group on the iPad: iOS's own switch, which the app can't read.
+    private var pictureInPictureFootnote: String? {
+        #if os(macOS)
+        nil
+        #else
+        L.settingsPictureInPictureOnLeaveIos
+        #endif
+    }
+
     var body: some View {
         let overridden = store.settings.overriddenNote
         SettingsGroup(title: L.settingsLanguage) {
@@ -507,6 +527,7 @@ struct PlaybackPane: View {
             SettingsRow(title: SettingKey.upNextCountdown.title) { SettingMenu(key: .upNextCountdown) }
                 .disabled(!store.settings.isOn(.autoNext))
                 .opacity(store.settings.isOn(.autoNext) ? 1 : 0.45)
+            PreloadRow()
             SettingsRow(title: SettingKey.skipOpening.title, note: overridden(.skipOpening)) { SettingSwitch(key: .skipOpening) }
             SettingsRow(title: SettingKey.skipRecap.title) { SettingSwitch(key: .skipRecap) }
             SettingsRow(title: SettingKey.skipFiller.title, note: overridden(.skipFiller)) { SettingSwitch(key: .skipFiller) }
@@ -542,7 +563,7 @@ struct PlaybackPane: View {
             }
         }
         .animation(reduceMotion ? nil : .standard, value: store.settings.skipFindPausedWords)
-        SettingsGroup(title: L.playerPictureAndSound) {
+        SettingsGroup(title: L.playerPictureAndSound, footnote: pictureInPictureFootnote) {
             // Selected: the column beside the pane is about it.
             SettingsRow(title: SettingKey.upscaling.title, selected: true) {
                 SettingMenu(key: .upscaling)
@@ -550,6 +571,13 @@ struct PlaybackPane: View {
             SettingsRow(title: SettingKey.nightMode.title, note: L.playerNightModeDetail) {
                 SettingSwitch(key: .nightMode)
             }
+            // The Mac's note says when its window starts; on the iPad the group's footnote names
+            // iOS's own switch, which wins over this one.
+            SettingsRow(title: SettingKey.pictureInPictureOnLeave.title, note: pictureInPictureNote) {
+                SettingSwitch(key: .pictureInPictureOnLeave)
+            }
+            .accessibilityHint(pictureInPictureFootnote ?? "")
+            .id("pictureInPictureOnLeave")
             #if os(macOS)
             SettingsRow(title: SettingKey.fullscreen.title) { SettingSwitch(key: .fullscreen) }
             #endif

@@ -1,0 +1,180 @@
+Kaeri   Lanterns Upriver · Chapter 14 · Paper Boats                                          sources ● 3  ·  anilist ⇅ 2
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+
+
+                                    ▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄
+                                    ▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀
+
+
+
+                                    ▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄
+                                    ▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄
+
+
+
+                                    ▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄
+                                    ▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀
+
+
+
+                                    ▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄
+                                    ▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄
+
+
+
+                                    ▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀
+                                    ▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄
+
+
+
+
+
+
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+██░░░░░░░░░░░░░░  Chapter 14 · image 1 of 6 · Strip             j k scroll   space next screen   n next chapter   ? keys
+=== styles ===
+colours text=#e4e0d6 text-dim=#a8aec9 rule=#46464d obi=#f2a64b state=#7fc7d9 alert=#f59b85 ground=#1a1b26
+r00 c00-04 fg=text mod=BOLD
+r00 c08-23 fg=text
+r00 c24-50 fg=text-dim
+r00 c93-103 fg=state
+r00 c104-105 fg=text-dim
+r00 c106-106 fg=rule
+r00 c107-108 fg=text-dim
+r00 c109-119 fg=state
+r01 c00-119 fg=rule
+r02 c36-58 fg=#29bdc7 bg=#29bdc7
+r02 c59-59 fg=#2abec8 bg=#2abec8
+r02 c60-60 fg=#50e4ee bg=#50e4ee
+r02 c61-83 fg=#51e5ef bg=#51e5ef
+r03 c36-58 fg=#29bdc7 bg=#29bdc7
+r03 c59-59 fg=#2abec8 bg=#2abec8
+r03 c60-60 fg=#50e4ee bg=#50e4ee
+r03 c61-83 fg=#51e5ef bg=#51e5ef
+r04 c36-58 fg=#27c2ce bg=#29bdc7
+r04 c59-59 fg=#28c3d0 bg=#2abec8
+r04 c60-60 fg=#4ee9f5 bg=#50e4ee
+r04 c61-61 fg=#4feaf7 bg=#51e5ef
+r04 c62-83 fg=#4feaf6 bg=#51e5ef
+r05 c36-57 fg=#408879 bg=#506242
+r05 c58-58 fg=#3f8879 bg=#506141
+r05 c59-59 fg=#41897b bg=#516343
+r05 c60-60 fg=#66afa0 bg=#778868
+r05 c61-83 fg=#68b0a1 bg=#788a6a
+r06 c36-58 fg=#4e6648 bg=#4e6648
+r06 c59-59 fg=#4f6749 bg=#4f6749
+r06 c60-60 fg=#758d6f bg=#758d6f
+r06 c61-83 fg=#768e70 bg=#768e70
+r07 c36-58 fg=#4e6648 bg=#4e6648
+r07 c59-59 fg=#4f6749 bg=#4f6749
+r07 c60-60 fg=#758d6f bg=#758d6f
+r07 c61-83 fg=#768e70 bg=#768e70
+r08 c36-58 fg=#4e6648 bg=#4e6648
+r08 c59-59 fg=#4f6749 bg=#4f6749
+r08 c60-60 fg=#758d6f bg=#758d6f
+r08 c61-83 fg=#768e70 bg=#768e70
+r09 c36-57 fg=#4f6849 bg=#4e6648
+r09 c58-58 fg=#4f6749 bg=#4e6648
+r09 c59-59 fg=#50694a bg=#4f6749
+r09 c60-60 fg=#768e6f bg=#758d6f
+r09 c61-83 fg=#779071 bg=#768e70
+r10 c36-58 fg=#739b5f bg=#72995e
+r10 c59-59 fg=#749c60 bg=#739b60
+r10 c60-60 fg=#9ac286 bg=#99c085
+r10 c61-61 fg=#9bc387 bg=#9ac286
+r10 c62-83 fg=#9bc387 bg=#9ac186
+r11 c36-58 fg=#739b5f bg=#739b5f
+r11 c59-59 fg=#749c60 bg=#749c60
+r11 c60-60 fg=#9ac286 bg=#9ac286
+r11 c61-83 fg=#9bc387 bg=#9bc387
+r12 c36-58 fg=#739b5f bg=#739b5f
+r12 c59-59 fg=#749c60 bg=#749c60
+r12 c60-60 fg=#9ac286 bg=#9ac286
+r12 c61-83 fg=#9bc387 bg=#9bc387
+r13 c36-58 fg=#739b5f bg=#739b5f
+r13 c59-59 fg=#749c60 bg=#749c60
+r13 c60-60 fg=#9ac286 bg=#9ac286
+r13 c61-83 fg=#9bc387 bg=#9bc387
+r14 c36-58 fg=#71a05e bg=#739b5f
+r14 c59-59 fg=#72a15f bg=#749c60
+r14 c60-60 fg=#98c784 bg=#9ac286
+r14 c61-83 fg=#99c886 bg=#9bc387
+r15 c36-57 fg=#8a666d bg=#9a4077
+r15 c58-58 fg=#89666d bg=#9a3f77
+r15 c59-59 fg=#8b676e bg=#9b4178
+r15 c60-60 fg=#b08d94 bg=#c1669e
+r15 c61-83 fg=#b28e95 bg=#c2689f
+r16 c36-58 fg=#984476 bg=#984476
+r16 c59-59 fg=#994577 bg=#994577
+r16 c60-60 fg=#bf6b9d bg=#bf6b9d
+r16 c61-83 fg=#c06c9e bg=#c06c9e
+r17 c36-58 fg=#984476 bg=#984476
+r17 c59-59 fg=#994577 bg=#994577
+r17 c60-60 fg=#bf6b9d bg=#bf6b9d
+r17 c61-83 fg=#c06c9e bg=#c06c9e
+r18 c36-58 fg=#984476 bg=#984476
+r18 c59-59 fg=#994577 bg=#994577
+r18 c60-60 fg=#bf6b9d bg=#bf6b9d
+r18 c61-83 fg=#c06c9e bg=#c06c9e
+r19 c36-57 fg=#994677 bg=#984476
+r19 c58-58 fg=#994577 bg=#984476
+r19 c59-59 fg=#9a4778 bg=#994577
+r19 c60-60 fg=#c06c9d bg=#bf6b9d
+r19 c61-83 fg=#c16e9f bg=#c06c9e
+r20 c36-58 fg=#bd798d bg=#bc778c
+r20 c59-59 fg=#be7a8e bg=#bd798e
+r20 c60-60 fg=#e4a0b4 bg=#e39eb3
+r20 c61-61 fg=#e5a1b5 bg=#e4a0b4
+r20 c62-83 fg=#e5a1b5 bg=#e49fb4
+r21 c36-58 fg=#bd798d bg=#bd798d
+r21 c59-59 fg=#be7a8e bg=#be7a8e
+r21 c60-60 fg=#e4a0b4 bg=#e4a0b4
+r21 c61-83 fg=#e5a1b5 bg=#e5a1b5
+r22 c36-58 fg=#bd798d bg=#bd798d
+r22 c59-59 fg=#be7a8e bg=#be7a8e
+r22 c60-60 fg=#e4a0b4 bg=#e4a0b4
+r22 c61-83 fg=#e5a1b5 bg=#e5a1b5
+r23 c36-58 fg=#bd798d bg=#bd798d
+r23 c59-59 fg=#be7a8e bg=#be7a8e
+r23 c60-60 fg=#e4a0b4 bg=#e4a0b4
+r23 c61-83 fg=#e5a1b5 bg=#e5a1b5
+r24 c36-58 fg=#bd798d bg=#c4768c
+r24 c59-59 fg=#be7a8e bg=#c5778d
+r24 c60-60 fg=#e4a0b4 bg=#eb9db2
+r24 c61-83 fg=#e5a1b5 bg=#ec9eb4
+r25 c36-58 fg=#3cb1a5 bg=#72999b
+r25 c59-59 fg=#3db2a6 bg=#739b9c
+r25 c60-60 fg=#63d7cc bg=#99c0c2
+r25 c61-61 fg=#64d9cd bg=#9ac2c3
+r25 c62-83 fg=#64d9cd bg=#9ac1c3
+r26 c36-58 fg=#42aea4 bg=#42aea4
+r26 c59-59 fg=#43afa5 bg=#43afa5
+r26 c60-60 fg=#69d5cb bg=#69d5cb
+r26 c61-83 fg=#6ad6cc bg=#6ad6cc
+r27 c36-58 fg=#42aea4 bg=#42aea4
+r27 c59-59 fg=#43afa5 bg=#43afa5
+r27 c60-60 fg=#69d5cb bg=#69d5cb
+r27 c61-83 fg=#6ad6cc bg=#6ad6cc
+r28 c36-58 fg=#42aea4 bg=#42aea4
+r28 c59-59 fg=#43afa5 bg=#43afa5
+r28 c60-60 fg=#69d5cb bg=#69d5cb
+r28 c61-83 fg=#6ad6cc bg=#6ad6cc
+r29 c36-58 fg=#42aea4 bg=#42aea4
+r29 c59-59 fg=#43afa5 bg=#43afa5
+r29 c60-60 fg=#69d5cb bg=#69d5cb
+r29 c61-83 fg=#6ad6cc bg=#6ad6cc
+r31 c36-58 fg=#a488b0 bg=#a488b0
+r31 c59-59 fg=#a589b1 bg=#a589b1
+r31 c60-60 fg=#cbafd7 bg=#cbafd7
+r31 c61-83 fg=#ccb0d8 bg=#ccb0d8
+r32 c00-119 fg=rule
+r33 c00-15 fg=text
+r33 c16-50 fg=text-dim
+r33 c64-66 fg=text
+r33 c67-76 fg=text-dim
+r33 c77-81 fg=text
+r33 c82-96 fg=text-dim
+r33 c97-97 fg=text
+r33 c98-113 fg=text-dim
+r33 c114-114 fg=text
+r33 c115-119 fg=text-dim

@@ -36,6 +36,7 @@ use std::{
 };
 
 use futures::StreamExt;
+use kaeri_playback::hls::{PLAYLIST_TYPE, playlist_start};
 use tokio::{
     fs::File,
     io::{AsyncBufReadExt, AsyncReadExt, AsyncSeekExt, AsyncWriteExt, BufReader},
@@ -262,6 +263,12 @@ impl Relay {
         format!("{}/u/{}", self.shared.base, encode(upstream))
     }
 
+    /// `text`, a playlist fetched from `base`, with its addresses pointed back through the
+    /// relay; their origins are allowed from now.
+    pub fn relay_playlist(&self, text: &str, base: &str) -> String {
+        rewrite_playlist(text, base, &|u| self.upstream_url(u))
+    }
+
     /// The headers every upstream request carries from now on.
     pub fn set_headers(&self, headers: Vec<(String, String)>) {
         *lock(&self.shared.headers) = headers;
@@ -383,6 +390,12 @@ async fn connection(socket: TcpStream, shared: &Shared) -> std::io::Result<()> {
     {
         *lock(&shared.last_request) = Instant::now();
         shared.requests.fetch_add(1, Ordering::Relaxed);
+        tracing::debug!(
+            method = %request.method,
+            path = request.target.split('?').next().unwrap_or_default(),
+            range = request.range.as_deref().unwrap_or("all"),
+            "relay asked"
+        );
         let (status, keep) = answer(&request, shared, &mut write).await?;
         tracing::debug!(method = %request.method, status, "relayed");
         if request.close || !keep {
@@ -675,7 +688,8 @@ async fn upstream(
         drop(wait);
         let text = String::from_utf8_lossy(&first[..first.len().min(64)]).into_owned();
         let text = text.trim_start_matches('\u{feff}').trim_start();
-        if !names_media(&kind) && text.starts_with("#EXTM3U") {
+        // A playlist may carry leading bytes before its `#EXTM3U`.
+        if !names_media(&kind) && playlist_start(&first).is_some() {
             playlist = true;
         } else if text.starts_with("WEBVTT") {
             kind = "text/vtt".into();
@@ -739,7 +753,7 @@ async fn upstream(
             }
         };
         drop(wait);
-        let text = String::from_utf8_lossy(&body);
+        let text = String::from_utf8_lossy(&body[playlist_start(&body).unwrap_or(0)..]);
         let origins = std::cell::RefCell::new(Vec::new());
         let rewritten = rewrite_playlist(&text, &base, &|u| {
             if let Some(o) = origin(u) {
@@ -748,7 +762,7 @@ async fn upstream(
             format!("{}/u/{}", shared.base, encode(u))
         });
         lock(&shared.origins).extend(origins.into_inner());
-        let kind = if sniffed { "application/vnd.apple.mpegurl" } else { kind.as_str() };
+        let kind = if sniffed { PLAYLIST_TYPE } else { kind.as_str() };
         let extra = format!("{cors}Content-Type: {kind}\r\n");
         head(write, 200, &extra, Some(rewritten.len() as u64)).await?;
         if !head_only {
@@ -788,12 +802,16 @@ async fn upstream(
     Ok((status, length.is_some_and(|l| l == sent)))
 }
 
-/// Point every URI in an HLS playlist back through the relay.
+/// Point every URI in an HLS playlist back through the relay, and declare HE-AAC audio as
+/// AAC-LC (see [`plain_aac`]).
 pub fn rewrite_playlist(text: &str, base: &str, proxy: &dyn Fn(&str) -> String) -> String {
     let mut out = String::with_capacity(text.len() * 2);
     for line in text.lines() {
         let trimmed = line.trim();
-        if trimmed.is_empty() {
+        if trimmed.starts_with("#EXT-X-STREAM-INF:") {
+            out.push_str(&plain_aac(trimmed));
+            out.push('\n');
+        } else if trimmed.is_empty() {
             out.push('\n');
         } else if !trimmed.starts_with('#') {
             out.push_str(&proxy(&resolve(base, trimmed)));
@@ -811,6 +829,23 @@ pub fn rewrite_playlist(text: &str, base: &str, proxy: &dyn Fn(&str) -> String) 
         }
     }
     out
+}
+
+/// A variant's `CODECS` with HE-AAC (`mp4a.40.5`) and HE-AAC v2 (`mp4a.40.29`) named as AAC-LC
+/// (`mp4a.40.2`). A Chromecast refuses some MPEG-TS streams whose master declares HE-AAC, with
+/// `MEDIA_UNKNOWN`, and plays the same segments declared as AAC-LC: the decoder finds the SBR
+/// and parametric stereo in the stream by itself, as browsers' do.
+fn plain_aac(line: &str) -> String {
+    let Some(start) = line.find("CODECS=\"").map(|i| i + 8) else { return line.to_owned() };
+    let Some(end) = line[start..].find('"').map(|e| start + e) else { return line.to_owned() };
+    let codecs: Vec<&str> = line[start..end]
+        .split(',')
+        .map(|codec| match codec.trim() {
+            "mp4a.40.5" | "mp4a.40.29" => "mp4a.40.2",
+            other => other,
+        })
+        .collect();
+    format!("{}{}{}", &line[..start], codecs.join(","), &line[end..])
 }
 
 /// Resolve `reference` against `base`, enough for playlist URIs.
@@ -886,6 +921,31 @@ mod tests {
         assert!(out.contains("#EXT-X-MAP:URI=\"P[http://cdn.example/a/init.mp4]\""), "{out}");
         assert!(out.contains("\nP[http://cdn.example/a/seg0.m4s]\n"));
         assert!(out.contains("\nP[http://cdn.example/abs/seg1.m4s]\n"));
+    }
+
+    #[test]
+    fn a_master_declares_he_aac_as_aac_lc() {
+        let text = "#EXTM3U\n\
+            #EXT-X-STREAM-INF:BANDWIDTH=800000,CODECS=\"avc1.640033,mp4a.40.29\",RESOLUTION=1920x1080\n\
+            hi.m3u8\n\
+            #EXT-X-STREAM-INF:BANDWIDTH=400000,CODECS=\"avc1.64001f, mp4a.40.5\"\n\
+            mid.m3u8\n\
+            #EXT-X-STREAM-INF:BANDWIDTH=200000,CODECS=\"avc1.42e01e,mp4a.40.2\"\n\
+            lo.m3u8\n\
+            #EXT-X-I-FRAME-STREAM-INF:BANDWIDTH=9000,CODECS=\"avc1.640033\",URI=\"i.m3u8\"\n";
+        let out =
+            rewrite_playlist(text, "http://cdn.example/a/master.m3u8", &|u| format!("P[{u}]"));
+        assert!(
+            out.contains("CODECS=\"avc1.640033,mp4a.40.2\",RESOLUTION=1920x1080\n"),
+            "{out}"
+        );
+        assert!(out.contains("CODECS=\"avc1.64001f,mp4a.40.2\"\n"), "{out}");
+        assert!(out.contains("CODECS=\"avc1.42e01e,mp4a.40.2\"\n"), "{out}");
+        assert!(!out.contains("mp4a.40.29") && !out.contains("mp4a.40.5"), "{out}");
+        assert!(out.contains("\nP[http://cdn.example/a/hi.m3u8]\n"), "{out}");
+        assert!(out.contains("URI=\"P[http://cdn.example/a/i.m3u8]\""), "{out}");
+        // A variant line without CODECS is left as it is.
+        assert_eq!(plain_aac("#EXT-X-STREAM-INF:BANDWIDTH=1"), "#EXT-X-STREAM-INF:BANDWIDTH=1");
     }
 
     /// GET `url` as the receiver does, with its origin.
@@ -991,6 +1051,28 @@ mod tests {
         let response = get(&relay.upstream_url(&format!("{source}/v?token=abc")), None).await;
         assert_eq!(response.bytes(1 << 20).await.unwrap(), body);
         assert!(relay.media_served());
+    }
+
+    #[tokio::test]
+    async fn a_playlist_with_leading_bytes_is_rewritten_from_its_tag() {
+        // A playlist may carry leading bytes before `#EXTM3U`. The receiver gets it from the
+        // tag on, labelled as a playlist, its URIs pointed back at the relay.
+        let mut body = b"\x00\x01\x02\x03\x04\x05\x06\n".to_vec();
+        body.extend_from_slice(b"#EXTM3U\n#EXTINF:4.0,\nseg0.bin\n#EXT-X-ENDLIST\n");
+        let source = crate::fetch::tests::serve_typed(body, false, Some("image/jpeg")).await;
+        let relay = Relay::start(
+            Ipv4Addr::LOCALHOST,
+            IpAddr::V4(Ipv4Addr::LOCALHOST),
+            Arc::new(PlainHttp),
+        )
+        .await
+        .unwrap();
+        let response = get(&relay.upstream_url(&format!("{source}/list.bin")), None).await;
+        assert_eq!(response.status, 200);
+        assert_eq!(response.header("content-type"), Some(PLAYLIST_TYPE));
+        let text = String::from_utf8(response.bytes(1 << 20).await.unwrap()).unwrap();
+        assert!(text.starts_with("#EXTM3U\n"), "{text}");
+        assert!(text.contains(&format!("{}/u/", relay.base())), "{text}");
     }
 
     /// HEAD `url`, as the receiver's player does to learn a segment's type.

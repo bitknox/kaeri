@@ -26,6 +26,17 @@ struct TVNowPlayingTests {
         #expect(info[MPNowPlayingInfoPropertyPlaybackRate] as? Double == 1.25)
     }
 
+    @Test func whilePrivateItNamesNothing() {
+        let info = TVNowPlaying.info(card(), tvName: "Living room", playhead: 42, live: true, private: true)
+        #expect(info[MPMediaItemPropertyTitle] as? String == "Playing in Kaeri")
+        #expect(info[MPMediaItemPropertyArtist] == nil)
+        #expect(info[MPMediaItemPropertyAlbumTitle] == nil)
+        #expect(info[MPMediaItemPropertyArtwork] == nil)
+        // The controls keep working: the clock still runs.
+        #expect(info[MPNowPlayingInfoPropertyElapsedPlaybackTime] as? Double == 42)
+        #expect(info[MPNowPlayingInfoPropertyPlaybackRate] as? Double == 1.25)
+    }
+
     @Test func theClockStopsWhilePausedStartingOrLost() {
         for (now, live) in [(card(paused: true), true), (card(loading: true), true), (card(), false)] {
             #expect(!TVNowPlaying.playing(now, live: live))

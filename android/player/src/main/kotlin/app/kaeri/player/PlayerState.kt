@@ -50,6 +50,15 @@ object PlayerTiming {
     /** The controls hide after this long without input (T4). */
     const val CONTROLS_HIDE = 3_000L
 
+    /** Stats for nerds opened before the file: nothing this long, then the rows with dashes. */
+    const val STATS_DASHES = 600L
+
+    /** Stats for nerds still waiting this long says "Waiting for the stream" under its title. */
+    const val STATS_WAITING_LINE = 4_000L
+
+    /** "Copied" stands in Copy stats' place this long. */
+    const val STATS_COPIED = 1_500L
+
     /** An alert on the video stays this long. */
     const val ALERT_STAYS = 4_000L
 
@@ -363,3 +372,9 @@ object PlayerClock {
     /** "−2:29". */
     fun remaining(seconds: Double): String = "−" + label(seconds)
 }
+
+/**
+ * What Stats for nerds shows now: the engine's rows, with dashes before the file opens, and
+ * whether it says it is waiting for the stream.
+ */
+data class StatsPanelState(val rows: List<app.kaeri.engine.model.DetailRow>, val waitingLine: Boolean)

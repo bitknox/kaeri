@@ -95,6 +95,14 @@ static class Motion
     public static void FadeTo(UIElement element, double to, TimeSpan time) =>
         Fade(element, element.Opacity, to, time, to > element.Opacity ? Curve.FadeIn : Curve.FadeOut, null);
 
+    /// <summary>
+    /// The reveal token: 300 ms on the fade-in curve, cubic-bezier(0, 0, 0.58, 1), whichever way
+    /// it goes, so both halves of a crossfade in place move together. A fade, so it stays with
+    /// animation effects off. <paramref name="done"/> runs when it ends, unless another took over.
+    /// </summary>
+    public static void Reveal(UIElement element, double to, Action? done = null) =>
+        Fade(element, element.Opacity, to, Standard, Curve.FadeIn, done);
+
     /// <summary>Fades freshly arrived content in from nothing: art, a page, a crossfade's new half.</summary>
     public static void FadeIn(UIElement element, TimeSpan? time = null)
     {

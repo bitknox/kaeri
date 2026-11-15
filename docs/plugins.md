@@ -81,6 +81,38 @@ loopback stream and is not accepted from a plugin.
 Ranking is yours: `resolve` returns your pick, `sources` your candidates best first, and `label`
 on a candidate is one short line of your own, shown as written (a peer count, say).
 
+## Stream transforms
+
+A plugin may transform parts of the HLS streams it resolves on their way to the player. It is
+opt-in, in two halves. The plugin is built for a second world in the same file,
+`plugin-with-relay`, which adds the `relay` interface, and it declares a capability per part:
+`transform-keys` for the files an `#EXT-X-KEY` names, `transform-segments` for media segments and
+the initialisation segment an `#EXT-X-MAP` names.
+
+```wit
+interface relay {                         // exported only by plugin-with-relay
+    record relayed { part: string, url: string, headers: list<tuple<string, string>>, body: list<u8> }
+    transform: func(relayed: relayed) -> result<list<u8>, string>;
+}
+
+world plugin-with-relay {
+    include plugin;
+    export relay;
+}
+```
+
+The host's stream proxy learns which URLs are keys and which are segments from the playlists it
+serves. For each fetched part your plugin declares, it calls `transform` once with the body and
+the request it was fetched with, and serves and keeps what comes back; the host reads nothing
+into those bytes. Playlists, subtitles and the parts you did not declare are served as the stream's
+host sent them, and so is a ranged slice. Each call runs under the same limits as every other
+call, so a segment has to fit in the guest's memory twice. An error fails that one request, which
+the player sees as a failed segment.
+
+A plugin built for `plugin` is never asked. A host without `relay` links a `plugin-with-relay`
+plugin as a plain `plugin`, ignores the capabilities and plays its streams unchanged. Streams cast
+to another device or downloaded do not go through the proxy, and are not transformed.
+
 Record fields are documented in the WIT. Easy to miss: `synonyms`/`format` on a search hit (title
 matching), `description`/`thumbnail`/`air-date`/`filler` on an episode, `format` on a subtitle
 whose URL has no extension, `download-source` on a stream.
@@ -288,6 +320,8 @@ cargo test -p kaeri-plugin       # skips itself if components are not built
 
 The conformance suite runs the same assertions against both references, plus `test-hostile`,
 which spins, allocates without bound, fetches an undeclared host and probes undeclared settings.
+It is built for `plugin-with-relay`, and its `transform` spins or reaches for an undeclared host
+too.
 Copy the `assert_reference_behaviour` shape for your own plugin. `book_conformance.rs` does the
 same for book sources against `example-books`, built for `book-plugin`, and `test-hostile-books`,
 built for `book-plugin-with-pages`, which also names page images on a host it never declared and

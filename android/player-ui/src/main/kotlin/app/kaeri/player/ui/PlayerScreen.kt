@@ -103,6 +103,11 @@ import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.foundation.layout.only
+import androidx.compose.foundation.layout.displayCutout
+import androidx.compose.foundation.layout.WindowInsetsSides
+import androidx.compose.foundation.layout.WindowInsets
 import kotlin.coroutines.cancellation.CancellationException
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
@@ -444,6 +449,49 @@ fun PlayerScreen(
                 onChat = if (chatOn) ({ typing = true }) else null,
                 ticks = ticks,
             )
+        }
+
+        // Stats for nerds, which stays up while the controls hide: over the picture at the top
+        // trailing corner, below the top bar's buttons, as on the iPhone. A phone held sideways is
+        // too short for that: the panel is compact there and ends above the subtitles, which sit
+        // higher while the controls are up, and its rows scroll when that leaves them too little
+        // room. In a window too narrow for it, upright, under the picture at the full width less 16.
+        val upright = maxHeight > maxWidth && maxWidth < 600.dp
+        val short = maxHeight < 500.dp
+        val statsTop by animateDpAsState(
+            when {
+                upright -> rect.y + rect.height + 16.dp
+                short && !chromeVisible -> 16.dp
+                else -> 80.dp
+            },
+            Motion.standard(),
+            label = "stats", // i18n-skip
+        )
+        val statsBottom by animateDpAsState(
+            when {
+                upright -> 32.dp
+                // The subtitles' two lines above where they sit, lifted with the controls.
+                short -> (if (chromeVisible) SUBTITLES_UP else SUBTITLES_DOWN).dp + 56.dp
+                else -> 84.dp
+            },
+            Motion.standard(),
+            label = "stats-bottom", // i18n-skip
+        )
+        DisposableEffect(model, context) {
+            model.copyText = { copyToClipboard(context, it) }
+            model.statsAbout = { statsAbout(context) }
+            onDispose {}
+        }
+        if (still.frame == null && !pip) {
+            app.kaeri.design.KeptFade(
+                model.statsPanel,
+                Modifier
+                    .align(if (upright) Alignment.TopStart else Alignment.TopEnd)
+                    .windowInsetsPadding(WindowInsets.displayCutout.only(WindowInsetsSides.Horizontal))
+                    .padding(start = 16.dp, end = 16.dp, top = statsTop, bottom = statsBottom),
+            ) { panel ->
+                StatsPanel(model, panel, width = if (upright) maxWidth - 32.dp else STATS_WIDTH, compact = short && !upright)
+            }
         }
 
         if (still.frame == null && !pip) {

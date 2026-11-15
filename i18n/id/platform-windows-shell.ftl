@@ -56,3 +56,4 @@ titlebar-open-devices = Buka { -device-cap-pl }
 messages-title = Pesan
 messages-none = Belum ada pesan
 messages-alert = Masalah
+tv-on-this-network = Di jaringan ini

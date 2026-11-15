@@ -131,7 +131,7 @@ pub(super) fn dub_watcher() -> TrackPreferences {
 /// the whole list restated, then the property — and reports nothing when nothing changed.
 pub(super) struct FakeMpv {
     pub(super) tracks: Vec<Track>,
-    delay: f64,
+    pub(super) delay: f64,
 }
 
 impl FakeMpv {

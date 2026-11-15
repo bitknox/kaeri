@@ -141,7 +141,7 @@ pub(crate) fn list_episodes_again(
     let table = engine.dubs.table(id);
     let naming = engine.names.naming(id, engine.network.offline, &services.clock);
     spawn(None, services, tx, move |lent| async move {
-        list_episodes(lent, id, naming, ticket, announce).await;
+        list_episodes(lent, id, naming, ticket, announce, true).await;
         drop(table);
     });
 }
@@ -283,7 +283,7 @@ fn episodes_job(
     let naming = engine.names.naming(id, engine.network.offline, &services.clock);
     let ticket = engine.listed.ticket(id);
     spawn(job, services, tx, move |lent| async move {
-        let listing = list_episodes(lent, id, naming, ticket, true);
+        let listing = list_episodes(lent, id, naming, ticket, true, true);
         if low {
             kaeri_meta::in_background(listing).await;
         } else {
@@ -564,6 +564,10 @@ pub(crate) fn dispatch(
         // `titles::dub`.
         Command::LoadDub(id) => engine.dubs.ask(id, engine.network.offline, services, tx),
         Command::LoadEpisodes(id) => episodes_job(id, false, job, engine, services, tx),
+        // An aired episode no source lists, looked for again as the person asked.
+        Command::Missing(kaeri_model::missing::MissingCommand::CheckAgain { id, episode }) => {
+            crate::titles::recheck::check_again(id, episode, engine, services, tx)
+        }
         // The same table for a card's stills, asked of AniList at low priority.
         Command::LoadStills(id) => episodes_job(id, true, job, engine, services, tx),
         Command::SetWatched { id, episodes, watched } => {
@@ -722,6 +726,10 @@ pub(crate) fn dispatch(
             crate::phases::network_path(network, engine, tx);
             ahead::resume(engine, services, tx);
             crate::downloads::books::resume(engine, services, tx);
+            // A quiet recheck missed while offline runs once now.
+            if moved && !offline {
+                crate::titles::recheck::reconnected(engine, services, tx);
+            }
             // Home open says it is offline, and since when, or stops saying so, at once.
             if moved && engine.home.asked() {
                 let (ask, memory) = (home_ask(engine, services, false), engine.home.clone());
@@ -1288,6 +1296,10 @@ pub(crate) async fn handle_internal(
     match message {
         // What runs on cellular may have changed with it.
         Internal::SettingsSaved => {
+            // Auto-play next turned off: nothing rolls on, so nothing is kept ready for it.
+            if !engine.config.effective().playback.auto_next {
+                services.prefetch.clear();
+            }
             crate::phases::settings_saved(engine, tx);
             crate::downloads::books::resume(engine, services, tx);
             crate::export::apply_feed(engine, services, tx);
@@ -1327,6 +1339,10 @@ pub(crate) async fn handle_internal(
             }
         }
         Internal::BookSourcesChanged => {}
+        Internal::Recheck => crate::titles::recheck::tick(engine, services, tx),
+        Internal::RecheckFound { id, episode } => {
+            crate::titles::recheck::found(id, episode, engine, services, tx)
+        }
         Internal::SyncEffects => {
             let effects = services.syncing.take_effects();
             crate::sync::apply_effects(effects, engine, services, tx);

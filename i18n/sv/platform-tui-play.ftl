@@ -117,6 +117,7 @@ settings-label-mark-chapters = Markera öppning och avslutning
 settings-label-skip-button = Visa hoppa över-knapp
 settings-label-fullscreen = Starta i helskärm
 settings-label-upscaling = Uppskalning
+settings-label-preload-metered = Förladda med datapriser
 settings-label-player-ui = Spelarens gränssnitt
 settings-label-night-mode = Nattläge
 settings-label-download-dir = Nedladdningsmapp

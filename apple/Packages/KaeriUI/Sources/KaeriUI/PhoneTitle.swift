@@ -84,42 +84,58 @@ struct PhoneTitle: View {
                 .padding(.top, art.isCompact || typeSize.isAccessibilitySize ? 8 : -60)
 
                 VStack(alignment: .leading, spacing: 16) {
-                    // No source has it: nothing to play, and the way to one in Play's place.
-                    if let main = serviceMain {
-                        Button { store.openService(entry.id, link: main, episode: nil) } label: {
-                            HStack(spacing: 8) {
-                                Text(L.licensedWatchOn(service: main.service))
-                                Image(systemName: "arrow.up.right").font(.ui(13, weight: .semibold))
+                    // An aired episode no source lists says so in Play's place, with Check
+                    // again (MissingSlot).
+                    MissingSlot(entry: entry, action: action, metrics: .phone, allowed: serviceMain == nil) {
+                        // No source has it: nothing to play, and the way to one in Play's place.
+                        if let main = serviceMain {
+                            Button { store.openService(entry.id, link: main, episode: nil) } label: {
+                                HStack(spacing: 8) {
+                                    Text(L.licensedWatchOn(service: main.service))
+                                    Image(systemName: "arrow.up.right").font(.ui(13, weight: .semibold))
+                                }
+                                .frame(maxWidth: .infinity)
                             }
-                            .frame(maxWidth: .infinity)
-                        }
-                        .buttonStyle(PrimaryCapsuleStyle(height: 50, fontSize: 17))
-                        .accessibilityHint(L.licensedOpensOutside)
-                    } else if action.playable, store.match.asks(entry.id) {
-                        ChooseMatchButton(id: entry.id, height: 50, fontSize: 17, fills: true)
-                        MatchUncertainLine(id: entry.id, font: .ui(14))
-                    } else if action.playable, store.titles.unlisted(entry.id) {
-                        AddSourceButton(sentence: true, height: 50, fontSize: 17, fills: true)
-                    } else if action.playable {
-                        Button {
-                            action.play(entry.id, store: store, navigator: navigator)
-                        } label: {
-                            HStack(spacing: 8) {
-                                Image(systemName: "play.fill").font(.ui(13))
-                                // One line that shrinks a little for a longer translation; wrapped at the
-                                // accessibility sizes. Never wider than the screen.
-                                Text(action.sentence)
-                                    .lineLimit(typeSize.isAccessibilitySize ? nil : 1)
-                                    .minimumScaleFactor(typeSize.isAccessibilitySize ? 1 : 0.7)
+                            .buttonStyle(PrimaryCapsuleStyle(height: 50, fontSize: 17))
+                            .accessibilityHint(L.licensedOpensOutside)
+                        } else if action.playable, store.match.asks(entry.id) {
+                            ChooseMatchButton(id: entry.id, height: 50, fontSize: 17, fills: true)
+                            MatchUncertainLine(id: entry.id, font: .ui(14))
+                        } else if action.playable, store.titles.unlisted(entry.id) {
+                            AddSourceButton(sentence: true, height: 50, fontSize: 17, fills: true)
+                        } else if action.playable {
+                            Button {
+                                action.play(entry.id, store: store, navigator: navigator)
+                            } label: {
+                                HStack(spacing: 8) {
+                                    if store.tv.cast.connected {
+                                        CastButtonGlyph(look: .connected, size: 17, color: Palette.ground)
+                                    } else {
+                                        Image(systemName: "play.fill").font(.ui(13))
+                                    }
+                                    // One line that shrinks a little for a longer translation; wrapped at the
+                                    // accessibility sizes. Never wider than the screen.
+                                    Text(action.sentence)
+                                        .lineLimit(typeSize.isAccessibilitySize ? nil : 1)
+                                        .minimumScaleFactor(typeSize.isAccessibilitySize ? 1 : 0.7)
+                                }
+                                .frame(maxWidth: .infinity)
                             }
-                            .frame(maxWidth: .infinity)
+                            .buttonStyle(PrimaryCapsuleStyle(height: 50, fontSize: 17))
+                            .contextMenu { FromStartItem(id: entry.id, action: action) }
+                            .onScrollVisibilityChange(threshold: 0.2) { visible in mainButtonGone = !visible }
+                        } else {
+                            // Still to air: when, in the button's place.
+                            AirsStatus(text: action.sentence, height: 50, fontSize: 17, fills: true)
                         }
-                        .buttonStyle(PrimaryCapsuleStyle(height: 50, fontSize: 17))
-                        .contextMenu { FromStartItem(id: entry.id, action: action) }
-                        .onScrollVisibilityChange(threshold: 0.2) { visible in mainButtonGone = !visible }
-                    } else {
-                        // Still to air: when, in the button's place.
-                        AirsStatus(text: action.sentence, height: 50, fontSize: 17, fills: true)
+                    } trailing: {
+                        EmptyView()
+                    }
+                    // While private: why, and what it means, 10 under the main button.
+                    if let line = store.privacy.line(show: entry.id) {
+                        PrivateLineView(line: line)
+                            .padding(.top, -16)
+                            .transition(PrivateLineView.transition(reduceMotion: reduceMotion))
                     }
 
                     HStack(spacing: 12) {
@@ -141,7 +157,8 @@ struct PhoneTitle: View {
                             }
                             .buttonStyle(SecondaryCapsuleStyle(height: 44, fontSize: 15))
                         }
-                        if action.playable, !store.titles.unlisted(entry.id), store.tv.available {
+                        // The cast button in the bar takes Play on TV's place once a TV is found.
+                        if action.playable, !store.titles.unlisted(entry.id), store.tv.available, store.tv.castButton == .hidden {
                             Button {
                                 store.playOnTV(entry.id, episode: String(action.episode), from: action.resume?.position)
                             } label: {
@@ -151,6 +168,14 @@ struct PhoneTitle: View {
                             .accessibilityLabel(L.tvPlayOn)
                         }
                     }
+                    // People you follow, under the list: fades in when AniList answers, and what
+                    // is below glides down on standard (fades only with Reduce Motion).
+                    if !(entry.detail?.following ?? []).isEmpty {
+                        FollowingPhoneRow(entry: entry)
+                            .transition(.asymmetric(insertion: .opacity.animation(.fadeIn), removal: .opacity.animation(.fadeOut)))
+                    }
+                    CastPlaysOnLine(touch: true)
+                        .animation(.fadeIn, value: store.tv.cast.connected)
                     LicensedLines(id: entry.id, font: .ui(14))
 
                     VStack(alignment: .leading, spacing: 12) {
@@ -239,7 +264,9 @@ struct PhoneTitle: View {
                         }
                     }
                 }
+                .animation(reduceMotion ? nil : .standard, value: store.privacy.line(show: entry.id))
                 .accessibilityElement(children: .contain)
+                .animation(reduceMotion ? nil : .standard, value: (entry.detail?.following ?? []).isEmpty)
                 .padding(.horizontal, 16)
                 .padding(.top, 16)
                 .padding(.bottom, 16)
@@ -298,6 +325,7 @@ struct PhoneTitle: View {
         }
         .animation(reduceMotion ? nil : .standard, value: mainButtonGone)
         .toolbar {
+            CastToolbarItem()
             ToolbarItem(placement: .topBarTrailing) { AnotherButton(id: id) }
             ToolbarItem(placement: .topBarTrailing) {
                 Menu {
@@ -431,6 +459,8 @@ struct PhoneEpisodes: View {
         let dub = store.titles.dubLines[entry.id]
         let ranged = !plan.ranges.isEmpty
         let protectedFrom = EpisodeProtection.start(plan.shown, spoilers: spoilers)
+        // The marks' column, kept on every row while any row has marks.
+        let marked = plan.shown.contains { !$0.followed.isEmpty }
         Group {
             if loaded {
                 // A long series: the dub line and the range menu share a row.
@@ -468,10 +498,11 @@ struct PhoneEpisodes: View {
                     WatchedFoldSection(
                         fold: fold, shown: navigator.watchedShown(entry.id), phone: true,
                         dub: ranged ? nil : dub,
+                        marks: marked ? FollowWords.union(plan.shown.prefix(fold.count)) : nil,
                         toggle: { navigator.toggleWatched(entry.id) }
                     ) {
                         ForEach(plan.shown.prefix(fold.count), id: \.number) {
-                            PhoneEpisodeRow(entry: entry, row: $0, spoilers: spoilers, rotor: rotor, room: room, protectedFrom: protectedFrom)
+                            PhoneEpisodeRow(entry: entry, row: $0, spoilers: spoilers, rotor: rotor, room: room, protectedFrom: protectedFrom, marked: marked)
                         }
                     }
                     .bareRow(inset)
@@ -486,7 +517,7 @@ struct PhoneEpisodes: View {
                         .transition(.opacity.animation(.fadeIn))
                 }
                 ForEach(plan.shown.dropFirst(plan.fold?.count ?? 0), id: \.number) { row in
-                    PhoneEpisodeRow(entry: entry, row: row, spoilers: spoilers, rotor: rotor, room: room, protectedFrom: protectedFrom)
+                    PhoneEpisodeRow(entry: entry, row: row, spoilers: spoilers, rotor: rotor, room: room, protectedFrom: protectedFrom, marked: marked)
                         .bareRow(inset)
                         .transition(.opacity)
                         .onAppear { pickers?.onScreen.insert(row.number) }
@@ -530,6 +561,8 @@ struct PhoneEpisodeRow: View {
     let room: Bool
     /// The episode that spoiler protection's line sits above, and the one it names.
     let protectedFrom: (row: String, after: Int)?
+    /// Whether the table keeps a column for the marks of people followed.
+    var marked = false
 
     private var next: UInt32 { entry.progress?.next ?? 1 }
 
@@ -548,7 +581,9 @@ struct PhoneEpisodeRow: View {
                     withAnimation(.standard) { navigator.showAllSynopses(entry.id, !shown) }
                 }
             }
-            rowBody
+            // Once a source lists the episode, the row lifts: the two crossfade in place.
+            ZStack { rowBody }
+                .animation(.reveal, value: row.unsourced)
             DiscussionLine(entry: entry, row: row, inset: 156)
         }
         .episodeSwipes(entry, row)
@@ -610,7 +645,8 @@ struct PhoneEpisodeRow: View {
     private func label(current: Bool) -> some View {
         EpisodeRowLabel(
             entry: entry, row: row, metrics: .phone, room: room, hidden: hidden, current: current,
-            numberColumn: false, asked: navigator.synopsisIsShown(entry.id, row.number)
+            numberColumn: false, asked: navigator.synopsisIsShown(entry.id, row.number),
+            marks: marked ? row.followed : nil
         )
         .opacity(row.unsourced ? 0.55 : 1)
         // The row Go to episode landed keeps the selection fill until another lands.

@@ -33,6 +33,19 @@ report-privacy = Raporu GitHub'da açana kadar bu { -device } üzerinden hiçbir
 report-tv-scan = Raporu telefonunuzda açmak için kodu tarayın.
 report-crash-off = Çökme raporları kapalı, bu yüzden hiçbiri eklenmedi. Ayarlar, Hakkında bölümünden açabilirsiniz.
 report-crash-settings = Çökme raporu ayarları
+report-player-log = Oynatıcı günlüğü
+report-player-log-detail = { $playbacks ->
+    [one] Son oynatma · { $size }
+   *[other] Son { $playbacks } oynatma · { $size }
+ }
+report-player-log-empty = Henüz kaydedilmiş oynatma yok
+report-player-log-save = Günlüğü kaydet…
+report-player-log-attach = Kayıt GitHub'da açıldığında dosyayı ekleyin.
+report-player-log-saved = { $file } olarak kaydedildi
+report-player-log-failed = Günlük kaydedilemedi. Başka bir klasör deneyin.
+report-sent-report = Rapor
+report-player-log-a11y-saved = Oynatıcı günlüğü kaydedildi
+report-player-log-a11y-hint = Kayda eklenecek bir dosya kaydeder
 settings-group-crashes = Çökme raporları
 settings-crash-save = Çökme raporlarını bu { -device } üzerinde sakla
 settings-crash-save-detail = { -app-name }, Hata bildir için her çökmenin kısa bir kaydını bu { -device }da tutar; başlıklar, adresler ve adlar çıkarılır. Kendiliğinden hiçbir şey gönderilmez.

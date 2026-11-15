@@ -33,6 +33,15 @@ notice-cast-not-same-network = To urządzenie nie jest w tej samej sieci co { $n
 # The TV stopped answering mid-cast. The name is the TV's own.
 notice-cast-lost = Utracono połączenie z { $name }, więc przesyłanie zostało przerwane.
 
+# Kaeri's receiver on the TV couldn't get part of the episode from the source mid-play, so the cast stopped. The card offers Choose source and Play here. The name is the TV's own.
+notice-cast-segment = { $name } przestał odbierać strumień: źródło nie odpowiedziało dla części odcinka. Wypróbuj inne źródło.
+
+# The TV stopped reaching this device, which hands it the stream, mid-episode. The card offers Try again and Play here. The name is the TV's own.
+notice-cast-lost-stream = { $name } utracił strumień. Sprawdź, czy to urządzenie i telewizor są w tej samej sieci.
+
+# Shown once per TV, the first time it can't keep up with styled subtitles and switches to plain ones. Nothing else changes and the episode plays on. The name is the TV's own.
+notice-cast-subtitles-plain = Napisy na { $name } są wyświetlane jako zwykły tekst. Napisy ze stylami były dla telewizora zbyt wymagające.
+
 # The TV picked to cast to has left the network.
 notice-cast-no-device = Ten telewizor nie jest już w sieci.
 
@@ -335,6 +344,12 @@ notice-player-failed-to-start = Nie udało się uruchomić mpv. Sprawdź, czy dz
 
 # Toast when a stream never showed a frame and the next one is tried.
 notice-stream-no-video = Brak obrazu z tego strumienia. Sprawdzany jest strumień { $next } z { $total }.
+
+# Quiet toast in the player when the stream playing broke off with an error mid-episode and a stream from another source took over at the same second, with the same audio and subtitles. The source is its own name.
+notice-failed-over = Strumień się przerwał. { $source } przejmuje od tego samego miejsca.
+
+# Quiet toast in the player when the stream playing broke off with an error mid-episode and another stream from the same source took over at the same second, with the same audio and subtitles. The source is its own name.
+notice-failed-over-same-source = Strumień się przerwał. Inny strumień z { $source } przejmuje od tego samego miejsca.
 
 # Toast when mpv gave up on a file. The reason is mpv's own line.
 notice-player-could-not-play = mpv nie mógł tego odtworzyć. { $reason }
@@ -891,6 +906,9 @@ reading-row-queued = W kolejce
 # A chapter row's state: it waits to download until the device is on Wi-Fi.
 reading-row-waits-wifi = W kolejce · czeka na Wi-Fi
 
+# A chapter row's state: it waits to download until the device has free space again. A full device paused the downloads; they go on by themselves once there is room.
+reading-row-waits-room = W kolejce · czeka na miejsce
+
 # A chapter row's state while it downloads.
 reading-row-downloading = Pobieranie · { $done } z { $total } stron
 
@@ -1037,6 +1055,15 @@ reading-dl-failed = Nie udało się pobrać rozdziału { $chapter }
 
 # After "Chapter 2 couldn't download" when there was no network: the downloads banner says the rest.
 reading-dl-offline = Offline
+
+# After "3 queued" on a series' Downloads row when a full device paused the downloads. They go on by themselves once some space is free; the count is the queued chapters.
+reading-dl-no-room =
+    { $count ->
+        [one] Brak miejsca. Pobierze się, gdy zwolni się miejsce.
+        [few] Brak miejsca. Pobiorą się, gdy zwolni się miejsce.
+        [many] Brak miejsca. Pobiorą się, gdy zwolni się miejsce.
+       *[other] Brak miejsca. Pobiorą się, gdy zwolni się miejsce.
+    }
 
 # How much the chosen chapters will take, from their pages and the size of pages downloaded before.
 reading-estimate-size = Około { $size }
@@ -1528,6 +1555,27 @@ notice-signed-out-queue =
         [few] Wylogowano z { $tracker }. { $count } zmiany w kolejce zostaną zachowane na następne logowanie.
         [many] Wylogowano z { $tracker }. { $count } zmian w kolejce zostanie zachowanych na następne logowanie.
        *[other] Wylogowano z { $tracker }. { $count } zmian w kolejce zostanie zachowanych na następne logowanie.
+    }
+
+# Toast, shown once, when a tracker kept refusing a change to a title for about two days and the change stopped being sent. The change itself is still saved in the app. The tracker is its name, such as AniList; the title is a show's or a series' name. The notice capsule holds two lines on a phone, so keep it about as short as the English.
+notice-tracker-change-refused = Zmiana w tytule { $title } była wielokrotnie odrzucana przez { $tracker }, więc zostaje tylko w Kaeri.
+
+# The same toast when changes to several titles stopped being sent to one tracker at once. The title is the first of them; others is how many more titles there are.
+notice-tracker-changes-refused =
+    { $others ->
+        [one] Zmiany w tytule { $title } i jeszcze jednym były wielokrotnie odrzucane przez { $tracker }, więc zostają tylko w Kaeri.
+        [few] Zmiany w tytule { $title } i { $others } innych tytułach były wielokrotnie odrzucane przez { $tracker }, więc zostają tylko w Kaeri.
+        [many] Zmiany w tytule { $title } i { $others } innych tytułach były wielokrotnie odrzucane przez { $tracker }, więc zostają tylko w Kaeri.
+       *[other] Zmiany w tytule { $title } i { $others } innych tytułach były wielokrotnie odrzucane przez { $tracker }, więc zostają tylko w Kaeri.
+    }
+
+# The same toast when the app has no name for the titles. Count is how many titles.
+notice-tracker-change-refused-untitled =
+    { $count ->
+        [one] Zmiana była wielokrotnie odrzucana przez { $tracker }, więc zostaje tylko w Kaeri.
+        [few] Zmiany w { $count } tytułach były wielokrotnie odrzucane przez { $tracker }, więc zostają tylko w Kaeri.
+        [many] Zmiany w { $count } tytułach były wielokrotnie odrzucane przez { $tracker }, więc zostają tylko w Kaeri.
+       *[other] Zmiany w { $count } tytułach były wielokrotnie odrzucane przez { $tracker }, więc zostają tylko w Kaeri.
     }
 
 # Toast when signing out of a tracker failed. The reason comes from the system.
@@ -3048,6 +3096,9 @@ episodes-release-dub = Z dubbingiem
 # After a { -release } in the picker: it is the one Kaeri would play on its own.
 episodes-release-current-pick = Obecny wybór
 
+# Replaces the missing-episode status on the title page while a check runs.
+episode-missing-checking = Twoje źródła są sprawdzane…
+
 # Action label in the help overlay and the command palette.
 keys-action-show-keys = Pokaż skróty
 
@@ -3299,6 +3350,12 @@ keys-hint-stop = Zatrzymaj
 
 # Short form of an action for the status line's hints, drawn beside its key. Room is tight, so keep it to a word or two.
 keys-hint-play-next = Następny
+
+# Hint for the Refresh key on a title page whose next episode no source has yet. Keep it to a word or two.
+keys-hint-check-again = Sprawdź ponownie
+
+# Hint for the play key on a title page whose next episode no source has yet: it plays the one before.
+keys-hint-play-episode = Odtwórz odcinek { $episode }
 
 # Short form of an action for the status line's hints, drawn beside its key. Room is tight, so keep it to a word or two.
 keys-hint-episodes = Odcinki
@@ -4471,6 +4528,9 @@ settings-label-fullscreen = Uruchamiaj na pełnym ekranie
 # Settings row: the video upscaling mode.
 settings-label-upscaling = Skalowanie obrazu
 
+# Settings row under Auto-play next: whether the next episode's first seconds load during the ending on a metered connection. The column is 26 cells wide.
+settings-label-preload-metered = Wczytuj przy taryfowym
+
 # Settings row: which interface the player shows.
 settings-label-player-ui = Interfejs odtwarzacza
 
@@ -4647,6 +4707,444 @@ settings-note-upload-limit = Ogranicza całe wysyłanie torrentów, więc udost�
 
 # Note under the token storage row. The option is a command-line flag and is not translated.
 settings-note-token-storage = Użyj --token-to-file, aby przenieść istniejący token.
+
+# Under a series' title on the terminal's series page: the source its chapters are read from.
+tui-read-series-from = Czytane z: { $source }
+
+# After the source on the series page: the list the series is on and the trackers that keep that list, such as "Reading on AniList". The list is its name, such as "Reading" or "Planning"; the trackers are already joined.
+tui-read-series-list-on = { $list } na { $trackers }
+
+# After the source on the series page, when no tracker keeps the list: "On your Reading list".
+tui-read-series-list = Na twojej liście: { $list }
+
+# Beside the progress meter on the series page: how many of the chapters listed are read.
+tui-read-series-read =
+    { $total ->
+        [one] Przeczytano { $read } z 1 rozdziału
+        [few] Przeczytano { $read } z { $total } rozdziałów
+        [many] Przeczytano { $read } z { $total } rozdziałów
+       *[other] Przeczytano { $read } z { $total } rozdziałów
+    }
+
+# At the top of the series page while the computer is offline: the chapters listed are the ones kept from before, and only the downloaded ones open.
+tui-read-series-offline = Offline. Pobrane rozdziały nadal się otwierają.
+
+# Left of the status line on the series page while the computer is offline.
+tui-read-status-offline = Czytanie · offline
+
+# Header chip on the series page while the computer is offline, in place of how many sources are on. The mark is a cross. Lower case, as the header's other chips are.
+tui-read-header-offline = źródła { $mark }
+
+# Hint in the status line on the series page: the key that marks the chapter under the cursor read, or unread when it is read. Shown in lower case. Also a row of the key reference.
+tui-read-read-unread = Przeczytane lub nie
+
+# Hint in the status line on the series page: the key that picks the list the series is on. Shown in lower case.
+tui-read-hint-status = Status
+
+# Hint in the status line on reading's Home, on a series in Continue: the key that opens the chapter where reading stopped. Shown in lower case.
+tui-read-hint-continue = Czytaj dalej
+
+# Heading of the series page's keys in the key reference.
+tui-read-keys-series = Seria
+
+# A row of the key reference: open the chapter under the cursor on the series page.
+tui-read-keys-read = Czytaj rozdział
+
+# A row of the key reference: download the chapter under the cursor on the series page.
+tui-read-keys-download = Pobierz ten rozdział
+
+# A row of the key reference: pick the list the series is on, such as Reading or Planning.
+tui-read-keys-status = Ustaw status na liście
+
+# A row of the key reference on reading's Home: open a series' page with its chapters, from a series in Continue, where Enter opens the chapter itself.
+tui-read-keys-chapters = Otwórz stronę serii
+
+# Left of the status line while a chapter opens in the terminal's reader. The chapter is its number, such as 14.
+tui-reader-opening = Otwieranie rozdziału { $chapter }
+
+# The reader's opening line while no source has been picked for the series yet.
+tui-reader-finding = Szukanie źródła
+
+# Left of the reader's status line: the page in view and how many the chapter has.
+tui-reader-page-of = Strona { $page } z { $pages }
+
+# Left of the reader's status line while two pages show side by side.
+tui-reader-pages-of = Strony { $first } i { $second } z { $pages }
+
+# After the page count in the reader's status line, when the terminal draws pages as coloured blocks because it has no image protocol.
+tui-reader-blocks = Bloki
+
+# Said once a run on the reader's status rule, the first time a chapter opens in a terminal with no image protocol: the pages show as coloured blocks.
+tui-reader-blocks-notice = Brak protokołu obrazów. Strony są pokazywane jako bloki.
+
+# Hint after "Resumed at page 8" on the reader's status rule: the key that starts the chapter from its first page. Shown in lower case.
+tui-reader-start-over = Od nowa
+
+# Hint after the notice that the chapter moved to where another device read to: the key that goes back to the page this computer was on. Shown in lower case.
+tui-reader-go-back = Wróć
+
+# Hint after the notice that the reader guessed how this series reads: the key that opens the reader settings to change it. Shown in lower case.
+tui-reader-change = Zmień
+
+# Middle of the reader when the terminal was started with images turned off, and a chapter of manga or webtoon pages opens. The option is typed as it is on the command line.
+tui-reader-images-off = Strony to obrazy, a Kaeri uruchomiono z --no-images.
+
+# Under that line.
+tui-reader-images-off-how = Uruchom bez tej opcji, aby czytać tutaj mangę i webtoony.
+
+# Under that line.
+tui-reader-images-off-novels = Light novel i tak otwierają się jako tekst.
+
+# Heading in the reader when a chapter couldn't open. The chapter is its number, such as 16.
+tui-reader-chapter-failed = Nie udało się otworzyć rozdziału { $chapter }
+
+# Top line of the page after the last chapter of a finished series.
+tui-reader-end-series = Koniec serii
+
+# Under that line.
+tui-reader-end-no-more = Nie ma więcej rozdziałów.
+
+# Under "You're caught up" on the page after the last chapter there is.
+tui-reader-end-caught-up-line = Nowe rozdziały pojawią się na ekranie Start, gdy twoje źródła je mają.
+
+# On the page after the last chapter there is, when the series goes on. The chapter is the next one's number, such as 18.
+tui-reader-end-not-out = Rozdział { $chapter } jeszcze nie wyszedł
+
+# The same, when the next chapter's number isn't known.
+tui-reader-end-not-out-next = Kolejny rozdział jeszcze nie wyszedł
+
+# Under either of those lines.
+tui-reader-end-not-out-line = Kaeri sprawdza nowe rozdziały w tle. Nowe pojawiają się na ekranie Start.
+
+# On the page between chapters when no source has the next chapter. The chapter is its number, such as 18.
+tui-reader-end-no-source = Twoje źródła nie mają jeszcze rozdziału { $chapter }
+
+# The same, when the next chapter's number isn't known.
+tui-reader-end-no-source-next = Twoje źródła nie mają jeszcze kolejnego rozdziału
+
+# On the page between chapters while offline, and as a toast when a chapter that isn't on this computer is opened offline. The chapter is its number, such as 16.
+tui-reader-end-offline = Rozdział { $chapter } nie jest pobrany
+
+# The same, when the chapter's number isn't known.
+tui-reader-end-offline-next = Kolejny rozdział nie jest pobrany
+
+# Under that line on the page between chapters.
+tui-reader-end-offline-line = Jesteś offline. Otworzy się tutaj po połączeniu z siecią.
+
+# Under the next chapter on the page between chapters when it is an extra, such as 16.5 between 16 and 17: skipping to the next numbered chapter leaves the extra unread. The chapter is the extra's number.
+tui-reader-end-skip-unread = Rozdział { $chapter } pozostanie nieprzeczytany, jeśli go pominiesz.
+
+# Under the next chapter's first page on the page between chapters. The chapter is its number.
+tui-reader-end-first-page = Pierwsza strona rozdziału { $chapter }
+
+# The reader's heading when the terminal is too small to show a page.
+tui-reader-too-small = Potrzebny większy terminal
+
+# Under that heading: the smallest size the reader shows pages at, in columns and rows.
+tui-reader-too-small-line = Co najmniej { $columns } × { $rows }
+
+# Hint in the reader's status line: the key that turns to the next page. Shown in lower case.
+tui-reader-hint-next = Naprzód
+
+# Hint in the reader's status line: the key that turns back a page. Shown in lower case.
+tui-reader-hint-back = Wstecz
+
+# Hint in the reader's status line while a chapter opens: the key that stops it and goes back. Shown in lower case.
+tui-reader-hint-stop = Zatrzymaj
+
+# Hint in the reader's status line: the key that opens the reader settings. Shown in lower case.
+tui-reader-hint-settings = Ustawienia
+
+# Hint in the reader's status line on a page that couldn't load: the turn key goes on to the next page without it. Shown in lower case.
+tui-reader-hint-without = Pomiń tę stronę
+
+# Hint in the reader's status line on the page between chapters. Shown in lower case.
+tui-reader-hint-next-chapter = Kolejny rozdział
+
+# Hint in the reader's status line: the key that leaves the reader for the series page it was opened from. Shown in lower case.
+tui-reader-hint-series = Wróć do serii
+
+# Hint in the reader's status line after the last chapter of a finished series: the key that opens its first chapter. Shown in lower case.
+tui-reader-hint-again = Czytaj od początku
+
+# Heading of the reader's keys in the key reference.
+tui-reader-keys-reader = Czytnik
+
+# Heading of the keys that change how the reader shows pages, in the key reference.
+tui-reader-keys-view = Widok czytnika
+
+# Beside the reader's keys in the key reference.
+tui-reader-keys-rtl = W mandze od prawej do lewej ← przewraca do przodu, a → do tyłu, tak jak przesuwa się strona. Space zawsze przewraca do przodu.
+
+# Beside the reader's keys in the key reference, under that.
+tui-reader-keys-left-out = Klawisze, które nic nie robią w otwartym rozdziale, są pominięte: bez powiększenia w light novel, bez szerokości w mandze.
+
+# Ends the toast that says a command does nothing on this screen, as "on the Downloads screen" does: the command works in the reader.
+tui-reader-where = w czytniku
+
+# A row of the key reference and the command palette: turn to the next page.
+tui-reader-action-next = Kolejna strona
+
+# A row of the key reference and the command palette: turn back a page.
+tui-reader-action-previous = Poprzednia strona
+
+# A row of the key reference: turn to the page on the left, which is the next one in right-to-left manga.
+tui-reader-action-left = Strona po lewej
+
+# A row of the key reference: turn to the page on the right.
+tui-reader-action-right = Strona po prawej
+
+# A row of the key reference: go to the chapter's first page.
+tui-reader-action-first = Pierwsza strona
+
+# A row of the key reference: go to the chapter's last page.
+tui-reader-action-last = Ostatnia strona
+
+# A row of the key reference: open the next chapter.
+tui-reader-action-next-chapter = Kolejny rozdział
+
+# A row of the key reference: open the chapter before this one.
+tui-reader-action-previous-chapter = Poprzedni rozdział
+
+# A row of the key reference: go back to the page read before a jump.
+tui-reader-action-back-to-page = Wróć do strony
+
+# A row of the key reference: hide the header and status line for a bare page, or show them.
+tui-reader-action-bare = Sama strona
+
+# A row of the key reference: show one page or two side by side.
+tui-reader-action-pages = Jedna lub dwie strony
+
+# A row of the key reference: open the reader settings.
+tui-reader-action-settings = Ustawienia czytnika
+
+# A row of the key reference: leave the reader for the screen it was opened from.
+tui-reader-action-leave = Zamknij czytnik
+
+# A row of the key reference: on the page between chapters, open the next numbered chapter past the extras.
+tui-reader-action-skip = Pomiń dodatki
+
+# A row of the key reference: scroll a page shown at fit width, a zoomed page or a strip down.
+tui-reader-action-scroll-down = Przewiń w dół
+
+# A row of the key reference: scroll up.
+tui-reader-action-scroll-up = Przewiń w górę
+
+# A row of the key reference: read the series as pages that turn, or as one long strip.
+tui-reader-action-mode = Strony lub pasek
+
+# A row of the key reference: fit the page to the window, or to its width and scroll it.
+tui-reader-action-fit = Dopasuj do ekranu lub szerokości
+
+# A row of the key reference: zoom in on the page, or leave the zoom.
+tui-reader-action-zoom = Powiększenie
+
+# A row of the key reference: zoom in a step.
+tui-reader-action-zoom-in = Powiększ
+
+# A row of the key reference: zoom out a step.
+tui-reader-action-zoom-out = Pomniejsz
+
+# Hint in the reader's status line: the keys that scroll the page or the strip. Shown in lower case.
+tui-reader-hint-scroll = Przewiń
+
+# Hint in the reader's status line at fit width: the key that fits the page to the window again. Shown in lower case.
+tui-reader-hint-fit-screen = Cała strona
+
+# Hint in the reader's status line while zoomed: the keys that move the view about the page. Shown in lower case.
+tui-reader-hint-move = Przesuń
+
+# Hint in the reader's status line while zoomed: the keys that zoom in and out. Shown in lower case.
+tui-reader-hint-zoom = Zoom
+
+# Hint in the reader's status line while zoomed: the key that leaves the zoom. Shown in lower case.
+tui-reader-hint-leave-zoom = Wyjdź z zoomu
+
+# Hint in the reader's status line in a strip: the key that scrolls on by most of a screen. Shown in lower case.
+tui-reader-hint-next-screen = Kolejny ekran
+
+# Hint in the reader's status line in a wide window with two pages side by side: the key that shows one page at a time. Shown in lower case.
+tui-reader-hint-one-page = Jedna strona
+
+# Hint in the reader's status line in a wide window with one page: the key that shows two side by side. Shown in lower case.
+tui-reader-hint-two-pages = Dwie strony
+
+# After the page count in the reader's status line while the page fits the window's width and scrolls.
+tui-reader-fit-width = Pełna szerokość
+
+# Left of the reader's status line while zoomed in, before the page count: "Zoom 300%".
+tui-reader-zoom = Zoom { $percent }%
+
+# Under the small map of the page at the right while zoomed in: which page it is.
+tui-reader-zoom-page = Strona { $page }
+
+# Left of the reader's status line in a webtoon strip: the chapter, and the image at the top of the window out of the chapter's images. The chapter is its number, such as 15.
+tui-reader-strip-at = Rozdział { $chapter } · obraz { $image } z { $images }
+
+# On the reader's status rule in a strip, once the chapter it ran on from counted as read. The chapter is its number, such as 14.
+tui-reader-strip-read = Rozdział { $chapter } zaliczony jako przeczytany
+
+# On the reader's status rule in a strip, once the chapter counted as read and the trackers were updated. The trackers are already joined, such as "AniList".
+tui-reader-strip-read-tracker = Rozdział { $chapter } zaliczony jako przeczytany · zaktualizowano { $trackers }
+
+# On the reader's status rule in a strip, once the chapter counted as read while the computer is offline: the trackers are told once it is back online.
+tui-reader-strip-read-offline = Rozdział { $chapter } zaliczony jako przeczytany · { $trackers } zaktualizuje się po powrocie online
+
+# A row of the key reference: make a light novel's text column narrower.
+tui-reader-action-narrower = Węższy tekst
+
+# A row of the key reference: make a light novel's text column wider.
+tui-reader-action-wider = Szerszy tekst
+
+# A row of the key reference in a light novel: switch between turning screens and scrolling lines.
+tui-reader-action-mode-novel = Strony lub przewijanie
+
+# Hint in the reader's status line in a light novel: the keys that change the text's width. Shown in lower case.
+tui-reader-hint-width = Szerokość
+
+# Hint in the settings over the reader: the keys that change the setting in the row. Shown in lower case.
+tui-reader-hint-change = Zmień
+
+# A light novel's picture, on a line of its own in the text: the picture's description.
+tui-reader-novel-picture = Ilustracja: { $alt }
+
+# A light novel's picture with no description, on a line of its own in the text.
+tui-reader-novel-picture-plain = Ilustracja
+
+# In the reader's status line in a light novel, after the part's name: how far through the part the text in view reaches, such as "34%".
+tui-reader-novel-through = { $percent }%
+
+# Heading in the reader settings over what this series keeps for itself.
+tui-reader-settings-series = Ta seria
+
+# Heading in the reader settings over what applies to every light novel on this computer.
+tui-reader-settings-novels-here = Light novel na tym komputerze
+
+# Heading in the reader settings over what applies to every light novel, on every device.
+tui-reader-settings-novels-all = Wszystkie light novel
+
+# Heading in the reader settings over what applies to every manga and webtoon on this computer.
+tui-reader-settings-manga-here = Manga na tym komputerze
+
+# Heading in the reader settings over what applies to every manga and webtoon, on every device.
+tui-reader-settings-manga-all = Cała manga
+
+# Heading in the reader settings over the settings the apps have and the terminal leaves to itself.
+tui-reader-settings-not-here = Poza terminalem
+
+# Under that heading in a light novel's reader settings.
+tui-reader-settings-novel-note = Czcionka, rozmiar tekstu i wygląd zależą od ustawień terminala. Marginesy wynikają z szerokości tekstu.
+
+# Under that heading in a manga's reader settings.
+tui-reader-settings-manga-note = Wygląd, kolor i tło zależą od ustawień terminala. Strefy dotyku są dla ekranów dotykowych.
+
+# Heading over the sample of the text at the width being set, beside a light novel's reader settings.
+tui-reader-settings-preview = Podgląd
+
+# At the foot of a light novel's reader settings.
+tui-reader-settings-novel-foot = Zmiany działają od razu. Miejsce w tekście się nie zmienia.
+
+# At the foot of a manga's reader settings.
+tui-reader-settings-manga-foot = Zmiany działają od razu. Widoczna strona się nie zmienia.
+
+# A row of the reader settings: paged or scrolled, or paged or a strip.
+tui-reader-setting-mode = Tryb
+
+# A row of the reader settings: right to left or left to right.
+tui-reader-setting-direction = Kierunek
+
+# A row of the reader settings: a page fitted to the screen or to its width.
+tui-reader-setting-fit = Dopasowanie
+
+# A row of the reader settings: one page at a time, two, or as the window allows.
+tui-reader-setting-page-layout = Układ stron
+
+# A row of the reader settings: what a page printed across two pages does on a one-page screen.
+tui-reader-setting-spreads = Szerokie strony
+
+# A row of the reader settings: white borders cut from the pages.
+tui-reader-setting-crop = Przytnij marginesy
+
+# A row of the reader settings: how many columns a light novel's lines run to.
+tui-reader-setting-text-width = Szerokość tekstu
+
+# A row of the reader settings: a blank line between paragraphs or none.
+tui-reader-setting-line-spacing = Interlinia
+
+# A row of the reader settings: lines spaced out to end together at the text width.
+tui-reader-setting-justify = Wyjustuj tekst
+
+# A reading mode: a screen of text or pages at a time.
+tui-reader-value-paged = Strony
+
+# A reading mode for light novels: the text scrolls a line at a time.
+tui-reader-value-scrolled = Przewijanie
+
+# A reading mode for manga: whole pages one under another.
+tui-reader-value-vertical = Pionowo
+
+# A line spacing in the terminal: a blank line between paragraphs.
+tui-reader-value-open = Luźna
+
+# A line spacing in the terminal: no line between paragraphs.
+tui-reader-value-tight = Ciasna
+
+# A width in the reader settings, in the terminal's columns, such as "66 columns".
+tui-reader-value-columns =
+    { $columns ->
+        [one] 1 kolumna
+        [few] { $columns } kolumny
+        [many] { $columns } kolumn
+       *[other] { $columns } kolumny
+    }
+
+# A short notice on the reader's status rule after the key that marks the open chapter read. The chapter is its number, such as 12.
+tui-reader-marked-read = Rozdział { $chapter } jako przeczytany
+
+# A short notice on the reader's status rule after the key that marks the open chapter unread. The chapter is its number, such as 12.
+tui-reader-marked-unread = Rozdział { $chapter } jako nieprzeczytany
+
+# A short notice on the reader's status rule after the key that downloads the open chapter. The download runs in the background. The chapter is its number, such as 12.
+tui-reader-downloading = Pobieranie rozdziału { $chapter }
+
+# On a series page's chapter row, when the chapter was read or came out a week or more ago this year: the day and the month, as in "Read · 9 Nov". The month is the short month name.
+tui-read-row-date = { $day } { $month }
+
+# On a series page's chapter row, when the chapter was read or came out in an earlier year: the day, the short month name and the year, as in "Read · 9 Nov 2025".
+tui-read-row-date-year = { $day } { $month } { $year }
+
+# A row of the key reference on the series page: put the cursor back on the chapter to read next, the one in progress or the next unread. Its status line hint reads "chapters".
+tui-read-keys-next = Przejdź do następnego rozdziału do czytania
+
+# A row of the reader settings: the space between a webtoon strip's images, None or Small.
+tui-reader-setting-strip-gap = Odstęp obrazów
+
+# A choice for how a page is fitted in the reader settings: the page fills the window's height and moves sideways when it is wider than the window.
+tui-reader-value-height = Wysokość
+
+# After the page count in the reader's status line while the page fills the window's height and moves sideways.
+tui-reader-fit-height = Pełna wysokość
+
+# A row of the command palette in the reader: a field for a page's number, then the jump to that page. Also the field's title.
+tui-reader-action-go-to-page = Przejdź do strony
+
+# Under the Go to page field: the pages it can go to.
+tui-reader-go-to-pages = Strony od 1 do { $total }
+
+# Under the Go to page field in a strip, where each image counts as a page: the images it can go to.
+tui-reader-go-to-images = Obrazy od 1 do { $total }
+
+# Hint in the Go to page field's footer: Enter goes to the page typed. Shown in lower case.
+tui-reader-hint-go = przejdź
+
+# In the reader, on a page that couldn't load, under "Couldn't load page 9": the server of the source answered with an HTTP error. The status is its code, such as 503.
+tui-reader-page-failed-status = Źródło odpowiedziało błędem, { $status }.
+
+# In the reader, under "Couldn't open chapter 16": the source didn't answer the request. The source is its name.
+tui-reader-no-answer = { $source } nie odpowiada.
+
+# In the reader, under "Couldn't open chapter 16": the source didn't answer, after a wait of some seconds. The source is its name; "s" is the short unit for seconds.
+tui-reader-no-answer-in = { $source } nie odpowiada. Brak odpowiedzi przez { $seconds } s.
 
 # Heading of the { -plugin-store } screens when the terminal is too small to draw them.
 stores-needs-larger-terminal = Potrzebny większy terminal
@@ -5311,14 +5809,20 @@ tui-together-not-a-link = To nie jest link ani kod pokoju.
 # Second line of a recent room nobody else was in. The time is already formatted, such as Tuesday.
 tui-together-recent-alone = Odcinek { $episode } · { $when }
 
-# Line under the title of that page.
-tui-medium-read-line = Terminal nie ma czytnika. Manga, webtoony i light novel otwierają się w aplikacjach Kaeri, a synchronizacja utrzymuje twój postęp na bieżąco.
-
-# Line under that page: the key that opens the choice of what { -app-name } is for. The key is the one bound to it, as the key map draws it.
+# Last line of reading's Home: the key that opens the choice of what { -app-name } is for. The key is the one bound to it, as the key map draws it.
 tui-medium-read-change = Naciśnij { $key }, aby zmienić, do czego służy Kaeri.
 
 # Hint beside the Kaeri is for line on the Settings screen. The key is the one bound to it, as the key map draws it.
 tui-medium-settings-hint = { $key }: zmień
+
+# Row in the terminal's Report a bug band, under Open on GitHub: Enter writes the player log file beside the terminal's own logs. Lower-cased, the same words are the key hint for it.
+report-player-log-save-here = Zapisz dziennik odtwarzacza
+
+# That row once the file is written, and the notice in the status line. Path is where the file is, such as ~/.cache/kaeri/logs/kaeri-player-log-2026-11-15-1432.txt.
+report-player-log-saved-to = Dziennik odtwarzacza zapisano w { $path }
+
+# That row when the file could not be written. Folder is where it was to go, such as ~/.cache/kaeri/logs.
+report-player-log-failed-here = Nie udało się zapisać dziennika w { $folder }.
 
 # Title of the about page.
 about-title = O aplikacji
@@ -5424,6 +5928,42 @@ report-crash-off = Raporty awarii są wyłączone, więc żaden nie jest dołąc
 
 # Link from that line to the crash report settings.
 report-crash-settings = Ustawienia raportów awarii
+
+# Report item, the last row under Included: a file of what the player did in the last few playbacks, saved by hand and attached to the issue. Also the name of the second tab in the report's preview, beside Report.
+report-player-log = Dziennik odtwarzacza
+
+# Line under the Player log item: how many playbacks the log holds and the size of the file. The size is already formatted, such as 412 KB.
+report-player-log-detail =
+    { $playbacks ->
+        [one] Ostatnie odtworzenie · { $size }
+        [few] Ostatnie { $playbacks } odtworzenia · { $size }
+        [many] Ostatnie { $playbacks } odtworzeń · { $size }
+       *[other] Ostatnie { $playbacks } odtworzenia · { $size }
+    }
+
+# Line under the Player log item while nothing has played since the app started. The item cannot be ticked then.
+report-player-log-empty = Nie zapisano jeszcze żadnego odtworzenia
+
+# Button under the ticked Player log item. Opens the system's save dialog for the log file.
+report-player-log-save = Zapisz dziennik…
+
+# Line under the Save log button: the file is not sent by itself, the person attaches it on GitHub.
+report-player-log-attach = Dołącz plik do zgłoszenia, gdy otworzy się na GitHubie.
+
+# Replaces the Save log button once the file is written. File is the file's name, such as kaeri-player-log-2026-11-15-1432.txt.
+report-player-log-saved = Zapisano jako { $file }
+
+# Shown beside the Save log button when the file could not be written.
+report-player-log-failed = Nie udało się zapisać dziennika. Wybierz inny folder.
+
+# First tab of the report's preview, beside Player log: the text of the report itself. Shown only while Player log is ticked.
+report-sent-report = Zgłoszenie
+
+# Screen readers announce this once the player log file is written.
+report-player-log-a11y-saved = Dziennik odtwarzacza zapisany
+
+# Screen reader hint on the Player log item.
+report-player-log-a11y-hint = Zapisuje plik do dołączenia do zgłoszenia
 
 # Heading of the Crash reports group in Settings, About.
 settings-group-crashes = Raporty awarii
@@ -5620,6 +6160,36 @@ cast-stop = Zatrzymaj przesyłanie
 # Line under TV volume on the card, for a TV whose volume only its own remote sets.
 cast-volume-fixed = Ustawiane na telewizorze
 
+# The cast button's spoken label while it connects to a TV. The name is the TV's.
+cast-button-connecting = Łączenie z { $name }
+
+# The cast button's spoken label once a TV is connected, and the title of the dialog it opens. The name is the TV's.
+cast-button-connected = Połączono z { $name }
+
+# Line on a title page under its buttons while a TV is connected: what is played goes to it. The name is the TV's.
+cast-plays-on = Odtwarzanie w { $name }
+
+# Row in the connected dialog while the TV has nothing loaded.
+cast-idle = Nic jeszcze nie jest odtwarzane
+
+# The casting controller's line while the episode is paused on the TV. The name is the TV's.
+cast-status-paused = Wstrzymano w { $name }
+
+# Spoken label of the show's name in the casting controller: it opens the show's page.
+cast-open-show = Otwórz { $title }
+
+# The chevron that puts the full controller back into the mini player.
+cast-controller-close = Zamknij
+
+# Screen reader hint on the mini player over the navigation bar.
+cast-mini-opens = Otwiera sterowanie
+
+# Long-press menu of an episode while a TV plays: queues the episode after the one playing.
+cast-play-next-on = Odtwórz jako następne w { $name }
+
+# The system's media notification and Now Playing: the line naming the TV that plays.
+cast-notification-line = Przesyłanie do { $name }
+
 # Button that runs a failed action again.
 action-try-again = Spróbuj ponownie
 
@@ -5767,6 +6337,9 @@ action-check-now = Sprawdź teraz
 # Button that checks a { -source } again after it did not answer.
 action-check-again = Sprawdź ponownie
 
+# Check again while the check runs. Keep it about as short as "Check again": the button keeps its width.
+action-checking = Sprawdzanie
+
 # Button that opens the system's own settings for the app.
 action-open-settings = Otwórz ustawienia systemu
 
@@ -5832,6 +6405,9 @@ time-minutes-left = { $minutes } min zostało
 
 # A length in minutes, for an episode.
 time-minutes = { $minutes } min
+
+# A length in hours, inside time-ago.
+time-hours = { $hours } godz.
 
 # A countdown that has run out: the thing is happening now. Lower case, as it stands inside a line.
 time-now-inline = teraz
@@ -6132,6 +6708,15 @@ names-pair = { $first } i { $last }
 
 # A list of names up to the last two, joined one by one: "Alpha, Brook".
 names-list = { $list }, { $next }
+
+# Title of the question asked on quitting while an episode plays on a TV.
+desktop-cast-quit-title = Zatrzymać przesyłanie i zakończyć?
+
+# Body of the question asked on quitting while an episode plays on a TV. The title is the show's, the name is the TV's.
+desktop-cast-quit-body = Trwa odtwarzanie { $title } na { $name }. Zakończenie je zatrzyma.
+
+# Button of the question asked on quitting while casting: stops the cast and quits.
+desktop-cast-quit-action = Zatrzymaj i zakończ
 
 # Menu item that opens an episode's discussion.
 discussion-open = Dyskusja
@@ -9966,6 +10551,9 @@ read-search-source-kind-plugin = Wtyczka
 # The button of a source group with more than five hits.
 read-search-source-more = Pokaż jeszcze { $n }
 
+# Screen readers: a custom action on a reading cover that puts the series on one of the lists, one action for each list the cover's menu offers under Add to list. The list is its name as the menu shows it, such as "Completed".
+read-tile-add-to = Dodaj do: { $list }
+
 # Over a first-run page's title: which page of how many.
 onboarding-step = { $step } z { $total }
 
@@ -11337,6 +11925,21 @@ settings-auto-play = Automatycznie odtwarzaj następny odcinek
 # Row: length of the Up next countdown.
 settings-up-next-countdown = Następny: czas odliczania
 
+# Row under Up next countdown on iPhone, a cellular iPad and Android phones: whether the next episode's first seconds of video load during the ending while on mobile data. Off by default.
+settings-preload-cellular = Wczytuj wideo z wyprzedzeniem przez dane komórkowe
+
+# The same row on Windows and Linux.
+settings-preload-metered = Wczytuj wideo z wyprzedzeniem przez połączenia taryfowe
+
+# Line under the row on Windows and Linux, and the note under the terminal's settings list.
+settings-preload-detail-metered = Podczas zakończenia wyszukiwane są strumień, napisy i czasy pominięć następnego odcinka. Jego pierwsze sekundy też się wczytują, a przez połączenie taryfowe tylko wtedy, gdy to jest włączone.
+
+# Sentence added after the line under the row while torrent playback is on.
+settings-preload-torrents = Torrenty wczytują swoje pierwsze części tak samo.
+
+# Screen reader hint on the preload row while it is dimmed because Auto-play next is off. The terminal shows it at the start of the note.
+settings-preload-a11y-dimmed = Wymaga opcji „Automatycznie odtwarzaj następny odcinek”
+
 # Row: skip the opening.
 settings-skip-opening = Automatycznie pomijaj czołówkę
 
@@ -11883,6 +12486,15 @@ settings-opds-password = Hasło kanału
 # Row: the port the shared catalogue listens on. Empty picks a free one.
 settings-opds-port = Port kanału
 
+# Settings row: whether leaving the app while an episode plays opens the system's floating window. The engine's label, and the Android row's. Sentence case, as Android writes it.
+settings-label-picture-in-picture-on-leave = Obraz w obrazie po wyjściu z aplikacji
+
+# Switch under the AniList account, on by default, for this device only: whether title pages show the people followed on AniList.
+settings-anilist-following = Pokazuj obserwowane osoby
+
+# Note under that switch.
+settings-anilist-following-footer = Pokazuje, gdzie w serii są osoby obserwowane na AniList, na jej stronie i przy odcinkach. Kto widzi Twoją listę, ustawiasz na AniList.
+
 # Label of the address field in the Add a server sheet.
 book-server-address = Adres
 
@@ -12166,6 +12778,36 @@ source-picker-coverage =
         [few] { $covered } z { $of } odcinków
         [many] { $covered } z { $of } odcinków
        *[other] { $covered } z { $of } odcinków
+    }
+
+# Under a source that lists every episode that is out.
+source-picker-episodes =
+    { $count ->
+        [one] Odcinek { $first }
+        [few] Odcinki { $first }–{ $last }
+        [many] Odcinki { $first }–{ $last }
+       *[other] Odcinki { $first }–{ $last }
+    }
+
+# Under a source that lacks the newest episodes, within a week of them airing. $missing is one number, source-picker-missing-pair or source-picker-missing-range.
+source-picker-episodes-not-yet = Odcinki { $first }–{ $last }. Jeszcze bez { $missing }
+
+# The same, more than a week after the episodes aired.
+source-picker-episodes-not = Odcinki { $first }–{ $last }. Bez { $missing }
+
+# Two episodes a source lacks, inside the missing part of a source's line.
+source-picker-missing-pair = { $a } i { $b }
+
+# Three or more episodes in a row a source lacks, inside the missing part of a source's line.
+source-picker-missing-range = { $first }–{ $last }
+
+# Under a source with a gap in the middle, such as "5 of 6 episodes. Not 3".
+source-picker-coverage-missing =
+    { $of ->
+        [one] { $covered } z { $of } odcinka. Bez { $missing }
+        [few] { $covered } z { $of } odcinków. Bez { $missing }
+        [many] { $covered } z { $of } odcinków. Bez { $missing }
+       *[other] { $covered } z { $of } odcinka. Bez { $missing }
     }
 
 # Under a source that is switched off in Settings.
@@ -14005,6 +14647,33 @@ more-followed-score = { $score }/10
 # Heading of the list of titles people who liked this one also liked.
 more-like-this = Podobne
 
+# Button after the first five people followed, on wide screens. It shows the rest in place.
+following-show-all = Pokaż wszystkie { $count }
+
+# Second line of the People you follow row on phones and the TV, with three or more people: two names, then how many more. The names come from AniList.
+following-names =
+    { $more ->
+        [one] { $first }, { $second } i { $more } inna osoba
+        [few] { $first }, { $second } i { $more } inne osoby
+        [many] { $first }, { $second } i { $more } innych osób
+       *[other] { $first }, { $second } i { $more } innej osoby
+    }
+
+# Second line of the People you follow row on phones and the TV, with two people. The names come from AniList.
+following-names-two = { $first } i { $second }
+
+# After three pictures on an episode's mark, and after three names in the terminal: how many more people stopped there.
+following-mark-more = +{ $count }
+
+# Tooltip on an episode's mark, and the sentence a screen reader adds to the episode row: who stopped at this episode. The names are already joined.
+following-mark-spoken = { $names }: obejrzane do tego miejsca.
+
+# What a screen reader says in place of a score such as 8/10 beside a person followed.
+following-score-spoken = Ocena { $score } na 10
+
+# Hint of the People you follow row on phones and the TV, which opens the full list.
+following-open-help = Pokazuje, gdzie jest każda z tych osób.
+
 # Line of a followed person's list entry: their status and how far they are. Both are already worded.
 more-followed-progress = { $status } · { $progress }
 
@@ -14056,9 +14725,6 @@ title-fact-now = Trwa
 # Value of the fact on a show with no announced start.
 title-fact-tba = Do ogłoszenia
 
-# A followed person's status and score, such as "Completed · 9/10". The status is already worded.
-more-following-line = { $status } · { $score }/10
-
 # Item of the episode range menu, and the title of its number field. The ellipsis marks that it asks for a number.
 episode-go-to = Przejdź do odcinka…
 
@@ -14079,6 +14745,42 @@ episode-go-to-none = Nie ma odcinka { $number }. Ten serial ma ich { $last }.
 
 # Shown when the number typed is an episode with no date that has not come out.
 episode-go-to-not-out = Odcinek { $number } jeszcze nie wyszedł. Najnowszy to { $latest }.
+
+# Status, first sentence, within a day of the episode airing.
+episode-missing-aired = Odcinek { $episode } ukazał się { $ago }.
+
+# Status, first sentence, a day or more after the episode aired.
+episode-missing-aired-on = Odcinek { $episode } ukazał się { $date }.
+
+# Status, second sentence, until a check the person asked for comes back empty.
+episode-missing-not-yet = Twoje źródła jeszcze go nie mają.
+
+# Status, second sentence, after a check the person asked for came back empty, and once Kaeri has stopped looking by itself.
+episode-missing-still = Twoje źródła nadal go nie mają.
+
+# Status, second sentence, after a check where none of the person's sources answered.
+episode-missing-no-answer = Twoje źródła nie odpowiedziały.
+
+# Status, last sentence, during the hours Kaeri looks for the episode by itself.
+episode-missing-looks-again = Kaeri szuka go ponownie co { $minutes } min.
+
+# Status a week after the episode aired, when no source has listed it.
+episode-missing-none = Twoje źródła go nie mają.
+
+# Status, last sentence, while the device is offline during the hours Kaeri looks by itself.
+episode-missing-offline = Kaeri poszuka go po powrocie połączenia.
+
+# Row note of an episode that aired within the last day. The span is already worded ("25 min", "3 h").
+episode-row-aired-ago = Ukazał się { $ago }
+
+# Row note beside when it aired, for an episode that aired in the last week and no source lists yet.
+episode-unsourced-yet = Źródła jeszcze go nie mają
+
+# Announced once to screen readers when a check finds the missing episode while its page is open.
+episode-found-announcement = Twoje źródła mają już odcinek { $episode }.
+
+# Tooltip and screen reader hint of Check again, while Kaeri looks for the episode by itself.
+episode-check-again-help = Kaeri sam też szuka co { $minutes } min przez { $hours } godz. po emisji odcinka.
 
 # Title of the settings group and the screen.
 torrents-title = Torrenty

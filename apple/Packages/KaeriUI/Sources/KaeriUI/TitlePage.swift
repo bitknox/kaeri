@@ -448,7 +448,12 @@ struct TitleHero: View {
                 action.play(entry.id, store: store, navigator: navigator)
             } label: {
                 HStack(spacing: 8) {
-                    Image(systemName: "play.fill").font(.mac(10))
+                    // While a TV is held the play goes there: the cast glyph in place of play.
+                    if store.tv.cast.connected {
+                        CastButtonGlyph(look: .connected, size: Self.pad ? 17 : 13, color: Palette.ground)
+                    } else {
+                        Image(systemName: "play.fill").font(.mac(10))
+                    }
                     Text(Self.pad ? action.sentence : action.title)
                 }
             }
@@ -473,7 +478,8 @@ struct TitleHero: View {
         // Whether a source lists the title is known once its episodes are. Until then Play on TV
         // stays as it was, so a season shown from its header keeps the button it will have, or
         // goes without it, rather than changing twice.
-        let playsOnTV = action.playable && store.tv.available
+        // The cast button in the bar takes Play on TV's place once a TV is found.
+        let playsOnTV = action.playable && store.tv.available && store.tv.castButton == .hidden
             && (store.titles.episodes[entry.id] != nil ? !store.titles.unlisted(entry.id) : tvShown)
         HStack(alignment: .bottom, spacing: 28) {
             // Across a season switch the last season's cover stays until the next one's lands.
@@ -499,13 +505,19 @@ struct TitleHero: View {
                     .groupHeaderStyle()
                     .macLineHeight(14)
                     .padding(.top, 4)
-                HStack(spacing: 10) {
+                // An aired episode no source lists says so in the main action's place, with
+                // Check again (MissingSlot).
+                MissingSlot(
+                    entry: entry, action: action, metrics: Self.pad ? .pad : .mac,
+                    allowed: serviceMain == nil && held == nil
+                ) {
                     mainAction(action, held: held)
                         .opacity(offersHeld ? 0 : 1)
                         .disabled(offersHeld)
                         .allowsHitTesting(held == nil)
                         .accessibilityHidden(offersHeld)
                         .animation(.fadeIn, value: offersHeld)
+                } trailing: {
                     if entry.trailerUrl != nil {
                         Button(L.titleTrailer) {
                             navigator.playTrailer(entry, store: store)
@@ -537,6 +549,11 @@ struct TitleHero: View {
                 }
                 .animation(.fadeIn, value: playsOnTV)
                 .padding(.top, Self.pad ? 16 : 12)
+                // While private: why, and what it means. The main button is as it would be.
+                PrivateLineSlot(line: store.privacy.line(show: entry.id))
+                CastPlaysOnLine(touch: Self.pad)
+                    .padding(.top, 10)
+                    .animation(.fadeIn, value: store.tv.cast.connected)
                 LicensedLines(id: entry.id, font: Self.pad ? .ui(15) : .mac(13))
                 MatchUncertainLine(id: entry.id, font: Self.pad ? .ui(15) : .mac(13), top: 10)
             }
@@ -968,15 +985,20 @@ struct EpisodeList: View {
                             let fold = unwatchedOnly && plan.ranges.isEmpty ? nil : plan.fold
                             let spoilers = store.spoilerProtection(for: entry.id)
                             let protectedFrom = EpisodeProtection.start(plan.shown, spoilers: spoilers)
+                            // The marks' column, kept on every row while any row has marks.
+                            let marked = plan.shown.contains { !$0.followed.isEmpty }
                             if let fold {
                                 WatchedFoldSection(
                                     fold: fold, shown: navigator.watchedShown(entry.id), phone: false,
+                                    marks: marked ? FollowWords.union(plan.shown.prefix(fold.count)) : nil,
+                                    // The rows' padding, and the check's column and gap where text is beside.
+                                    marksTrailing: metrics.text == .beside ? 8 + 14 + 14 : 8,
                                     toggle: { navigator.toggleWatched(entry.id) }
                                 ) {
-                                    ForEach(plan.shown.prefix(fold.count), id: \.number) { row($0, protectedFrom: protectedFrom) }
+                                    ForEach(plan.shown.prefix(fold.count), id: \.number) { row($0, protectedFrom: protectedFrom, marked: marked) }
                                 }
                             }
-                            ForEach(plan.shown.dropFirst(fold?.count ?? 0), id: \.number) { row($0, protectedFrom: protectedFrom) }
+                            ForEach(plan.shown.dropFirst(fold?.count ?? 0), id: \.number) { row($0, protectedFrom: protectedFrom, marked: marked) }
                         }
                         // A range switch crossfades in place.
                         .id(plan.index)
@@ -1101,7 +1123,7 @@ struct EpisodeList: View {
         navigator.jumpToTyped(title: entry.id, rows: rows)
     }
 
-    private func row(_ row: EpisodeRow, protectedFrom: (row: String, after: Int)?) -> some View {
+    private func row(_ row: EpisodeRow, protectedFrom: (row: String, after: Int)?, marked: Bool) -> some View {
         VStack(spacing: 0) {
             if row.number == protectedFrom?.row {
                 let shown = navigator.synopsisAllShown.contains(entry.id)
@@ -1111,7 +1133,7 @@ struct EpisodeList: View {
             }
             EpisodeRowView(
                 entry: entry, row: row, spoilers: store.spoilerProtection(for: entry.id),
-                metrics: metrics, room: room.room
+                metrics: metrics, room: room.room, marked: marked
             )
         }
         .accessibilityRotorEntry(id: row.number, in: rotor)
@@ -1135,6 +1157,8 @@ struct EpisodeRowView: View {
     let metrics: EpisodeMetrics
     /// Whether the table keeps room for text.
     let room: Bool
+    /// Whether the table keeps a column for the marks of people followed.
+    var marked = false
 
     private var next: UInt32 { entry.progress?.next ?? 1 }
 
@@ -1151,7 +1175,9 @@ struct EpisodeRowView: View {
             UnairedEpisodeRow(entry: entry, row: row, airs: date, metrics: metrics, textInset: textInset)
         } else {
             VStack(spacing: 0) {
-                airedRow
+                // Once a source lists the episode, the row lifts: the two crossfade in place.
+                ZStack { airedRow }
+                    .animation(.reveal, value: row.unsourced)
                     #if os(macOS)
                     // A synopsis cut at three lines is whole here, as a cut title is.
                     .tooltip(helpText)
@@ -1242,7 +1268,8 @@ struct EpisodeRowView: View {
     private func rowLabel(current: Bool, external: Bool = false) -> some View {
         EpisodeRowLabel(
             entry: entry, row: row, metrics: metrics, room: room, hidden: hidden, current: current,
-            numberColumn: true, asked: navigator.synopsisIsShown(entry.id, row.number), external: external
+            numberColumn: true, asked: navigator.synopsisIsShown(entry.id, row.number), external: external,
+            marks: marked ? row.followed : nil
         )
         .opacity(row.unsourced && store.licensed.episodeLink(entry.id, UInt32(row.number) ?? 0) == nil ? 0.55 : 1)
         .background(current ? Palette.selection : landed ? Palette.raisedSelected : .clear, in: .rect(cornerRadius: 8))
@@ -1354,6 +1381,8 @@ struct TitleDetails: View {
             MetaFactsGrid(entry: entry)
             MoreAboutButton(entry: entry)
                 .padding(.top, 4)
+            // At the column's end, so its arrival moves nothing below it.
+            FollowingSection(entry: entry)
         }
         // Another season's synopsis and facts swap in place, by one short fade.
         .contentTransition(.opacity)
@@ -1395,5 +1424,6 @@ struct TitleToolbar: ToolbarContent {
                 Label(L.actionMore, systemImage: "ellipsis")
             }
         }
+        CastToolbarItem()
     }
 }

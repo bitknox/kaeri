@@ -809,9 +809,14 @@ async fn a_pin_survives_a_restart_and_the_source_options_count_episodes() {
     let alt = options.iter().find(|o| o.provider_id == "alt").unwrap();
     assert!(alt.pinned);
     assert_eq!(alt.covered, 3);
+    // Its range, and the episodes out that it lacks, for "Episodes 1 to 3. Not 4 to 12".
+    assert_eq!((alt.first, alt.last), (Some(1), Some(3)));
+    assert_eq!(alt.lacking, (4..=12).collect::<Vec<u32>>());
     let main = options.iter().find(|o| o.provider_id == sources::PROVIDER_ID).unwrap();
     assert!(!main.pinned);
     assert_eq!(main.covered, 12);
+    assert_eq!((main.first, main.last), (Some(1), Some(12)));
+    assert!(main.lacking.is_empty());
 
     let pin = h.store().provider_preference(FINISHED).unwrap();
     assert_eq!(pin.as_deref(), Some("alt"));

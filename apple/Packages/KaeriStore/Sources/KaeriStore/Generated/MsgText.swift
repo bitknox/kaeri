@@ -20,6 +20,9 @@ extension Msg {
         case .noticeCastTakenOver(let name): L.noticeCastTakenOver(name: name)
         case .noticeCastNotSameNetwork(let name): L.noticeCastNotSameNetwork(name: name)
         case .noticeCastLost(let name): L.noticeCastLost(name: name)
+        case .noticeCastSegment(let name): L.noticeCastSegment(name: name)
+        case .noticeCastLostStream(let name): L.noticeCastLostStream(name: name)
+        case .noticeCastSubtitlesPlain(let name): L.noticeCastSubtitlesPlain(name: name)
         case .noticeCastNoDevice: L.noticeCastNoDevice
         case .noticeCastUnavailable: L.noticeCastUnavailable
         case .castPhaseStarting(let name): L.castPhaseStarting(name: name)
@@ -98,6 +101,8 @@ extension Msg {
         case .statusSearchingSources(let episode): L.statusSearchingSources(episode: episode)
         case .noticePlayerFailedToStart(let reason): L.noticePlayerFailedToStart(reason: reason)
         case .noticeStreamNoVideo(let next, let total): L.noticeStreamNoVideo(next: Int(next), total: Int(total))
+        case .noticeFailedOver(let source): L.noticeFailedOver(source: source)
+        case .noticeFailedOverSameSource(let source): L.noticeFailedOverSameSource(source: source)
         case .noticePlayerCouldNotPlay(let reason): L.noticePlayerCouldNotPlay(reason: reason)
         case .noticePlayerExitedSilently: L.noticePlayerExitedSilently
         case .noticePlayerNotPlaying(let seconds): L.noticePlayerNotPlaying(seconds: Int(seconds))
@@ -440,6 +445,7 @@ extension ReadingMsg {
         case .readingRowOnDevice: L.readingRowOnDevice
         case .readingRowQueued: L.readingRowQueued
         case .readingRowWaitsWifi: L.readingRowWaitsWifi
+        case .readingRowWaitsRoom: L.readingRowWaitsRoom
         case .readingRowDownloading(let done, let total): L.readingRowDownloading(done: Int(done), total: Int(total))
         case .readingRowDownloadingPlain: L.readingRowDownloadingPlain
         case .readingRowFailed: L.readingRowFailed
@@ -486,6 +492,7 @@ extension ReadingMsg {
         case .readingDlWaitsWifi: L.readingDlWaitsWifi
         case .readingDlFailed(let chapter): L.readingDlFailed(chapter: chapter)
         case .readingDlOffline: L.readingDlOffline
+        case .readingDlNoRoom(let count): L.readingDlNoRoom(count: Int(count))
         case .readingEstimateSize(let size): L.readingEstimateSize(size: sizeText(size))
         case .readingEstimateWifi: L.readingEstimateWifi
         case .readingEstimateMobile: L.readingEstimateMobile

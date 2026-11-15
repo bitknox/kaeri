@@ -28,6 +28,19 @@ notice-signed-out-queue = { $count ->
     [many] Вы вышли из { $tracker }. { $count } изменений в очереди сохранены для следующего входа.
    *[other] Вы вышли из { $tracker }. { $count } изменения в очереди сохранены для следующего входа.
  }
+notice-tracker-change-refused = { $tracker } раз за разом отклонял изменение для { $title }, поэтому оно остаётся только в { -app-name }.
+notice-tracker-changes-refused = { $others ->
+    [one] { $tracker } раз за разом отклонял изменения для { $title } и ещё { $others } тайтла, поэтому они остаются только в { -app-name }.
+    [few] { $tracker } раз за разом отклонял изменения для { $title } и ещё { $others } тайтлов, поэтому они остаются только в { -app-name }.
+    [many] { $tracker } раз за разом отклонял изменения для { $title } и ещё { $others } тайтлов, поэтому они остаются только в { -app-name }.
+   *[other] { $tracker } раз за разом отклонял изменения для { $title } и ещё { $others } тайтла, поэтому они остаются только в { -app-name }.
+ }
+notice-tracker-change-refused-untitled = { $count ->
+    [one] { $tracker } раз за разом отклонял изменения для { $count } тайтла, поэтому они остаются только в { -app-name }.
+    [few] { $tracker } раз за разом отклонял изменения для { $count } тайтлов, поэтому они остаются только в { -app-name }.
+    [many] { $tracker } раз за разом отклонял изменения для { $count } тайтлов, поэтому они остаются только в { -app-name }.
+   *[other] { $tracker } раз за разом отклонял изменения для { $count } тайтла, поэтому они остаются только в { -app-name }.
+ }
 notice-sign-out-failed = Не удалось выйти из { $tracker }. Попробуйте ещё раз. { $reason }
 notice-not-saved-because = Не удалось сохранить настройку. { $cause }
 notice-proxy-saved = Трафик торрентов теперь идёт через прокси.

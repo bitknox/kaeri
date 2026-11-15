@@ -1008,6 +1008,7 @@ mod tests {
             past_progress: false,
             spoiler_ahead: false,
             synopsis_pending: false,
+            followed: Vec::new(),
         };
         Event::Episodes { id, rows: (1..=12).map(row).collect(), failed: None }
     }

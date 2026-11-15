@@ -241,6 +241,51 @@ async fn a_cold_home_asks_four_times_and_a_warm_one_not_at_all() {
     assert_eq!(warm.rows, cold.rows);
 }
 
+/// Remove from Continue: the app has dropped the cover already, and the spotlight with it when
+/// it showed the series, so the hide sends nothing and nothing under Continue moves. The next
+/// Home keeps both hidden and brings a new spotlight.
+#[tokio::test]
+async fn remove_from_continue_sends_nothing_and_the_next_home_keeps_it_hidden() {
+    let fake = FakeAniList::start().await;
+    fake.add_books(popular("MANGA", 911_000));
+    fake.add_books([
+        book(910_003, "Saltwind Diary", "MANGA", (2018, 400), &["Action"], &[]),
+        book(910_005, "Paper Crane Courier", "MANGA", (2023, 400), &["Action"], &[]),
+    ]);
+    let dir = tempfile::tempdir().unwrap();
+    let kit = kit(Some(&fake), dir.path());
+    for (work, at) in [("a:910003", NOW - DAY), ("a:910005", NOW - 2 * DAY)] {
+        let read =
+            ReadEvent { page: Some(4), of_pages: Some(20), ..ReadEvent::new(work, "2", at) };
+        kit.store.record_read(&read, Vec::new()).unwrap();
+    }
+    let works = |tiles: &[WorkTile]| tiles.iter().map(|t| t.work.0.clone()).collect::<Vec<_>>();
+    let (tx, mut rx) = outbox();
+    home::load(&kit, ask(), false, &tx);
+    let shown = whole_home(&mut rx).await;
+    let mut both = works(&shown.continue_reading);
+    both.sort();
+    assert_eq!(both, ["a:910003", "a:910005"]);
+    let spotlit = shown.spotlight.as_ref().map(|t| t.work.clone()).expect("a spotlight");
+    loaded(&kit, &mut rx).await;
+
+    for tile in &shown.continue_reading {
+        super::hide_from_continue(&kit, &tile.work, &tx);
+        assert!(rx.try_recv().is_err(), "{} sends nothing", tile.work.0);
+    }
+
+    home::resend(&kit, ask(), &tx);
+    let Ok(Event::Reading(ReadingEvent::Home(next))) = rx.try_recv() else {
+        panic!("Home is sent when asked");
+    };
+    assert!(next.continue_reading.is_empty(), "both kept hidden");
+    assert_ne!(
+        next.spotlight.map(|t| t.work),
+        Some(spotlit),
+        "the next Home moves the spotlight on"
+    );
+}
+
 /// Home is offline while the path is gone and online again once it is back, though every row is
 /// still fresh and nothing is asked: the path coming back says Home again without the app asking.
 #[tokio::test]

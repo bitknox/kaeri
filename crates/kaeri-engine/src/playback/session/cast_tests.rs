@@ -5,7 +5,7 @@
 use std::{sync::Arc, time::Duration};
 
 use kaeri_cast::{
-    CastDevice, PlainHttp, Timings,
+    CastDevice, CastFailure, DEFAULT_MEDIA_RECEIVER, PlainHttp, Timings,
     aac::FakeEncoder,
     fake::{
         FakeOptions, FakeReceiver,
@@ -24,7 +24,7 @@ use tokio::sync::mpsc;
 
 use super::{Machine, play, scripted::settings};
 use crate::{
-    cast::CastHub,
+    cast::{CastHub, SessionState, SessionView},
     host::Host,
     playback::{
         EpisodeEntry, NextEpisode, PlaybackContext,
@@ -90,11 +90,30 @@ struct Rig {
 
 impl Rig {
     async fn new(encoder: bool) -> Self {
-        let receiver =
-            FakeReceiver::start(FakeOptions { speed: 8.0, ..FakeOptions::default() })
-                .await
-                .unwrap();
-        let hub = Arc::new(CastHub::with(None, Arc::new(PlainHttp), timings()));
+        Self::with(encoder, FakeOptions { speed: 8.0, ..FakeOptions::default() }).await
+    }
+
+    /// A TV cast to through the Default Media Receiver, as `cast.receiver` can name it: the
+    /// relay's conversions and the encoder are what it plays with.
+    async fn standard(encoder: bool) -> Self {
+        Self::on(encoder, FakeOptions { speed: 8.0, ..FakeOptions::default() }, true).await
+    }
+
+    async fn with(encoder: bool, options: FakeOptions) -> Self {
+        Self::on(encoder, options, false).await
+    }
+
+    async fn on(encoder: bool, options: FakeOptions, standard: bool) -> Self {
+        let receiver = FakeReceiver::start(options).await.unwrap();
+        let dir = tempfile::tempdir().unwrap();
+        let hub = Arc::new(CastHub::with(
+            Some(dir.path().to_owned()),
+            Arc::new(PlainHttp),
+            timings(),
+        ));
+        if standard {
+            hub.set_receiver(Some(DEFAULT_MEDIA_RECEIVER.into()));
+        }
         if encoder {
             hub.set_encoder(Arc::new(FakeEncoder::default()));
         }
@@ -108,7 +127,6 @@ impl Rig {
             group: false,
         };
         hub.begin(device.clone());
-        let dir = tempfile::tempdir().unwrap();
         let opener = Arc::new(CastOpener::new(Arc::clone(&hub), device, dir.path().to_owned()));
         Self {
             receiver,
@@ -117,6 +135,18 @@ impl Rig {
             slot: PlayerSlot::default(),
             store: Store::open_in_memory().unwrap(),
             dir,
+        }
+    }
+
+    fn device(&self) -> CastDevice {
+        CastDevice {
+            instance: "Chromecast-test".into(),
+            id: "tv-1".into(),
+            name: "Living room".into(),
+            model: "Chromecast".into(),
+            address: self.receiver.address,
+            video: true,
+            group: false,
         }
     }
 
@@ -151,6 +181,7 @@ impl Rig {
             host: Arc::new(NoHost),
             power: Arc::new(ReportedPower::default()),
             offline: Default::default(),
+            sources: None,
         };
         let (tx, mut rx) = mpsc::unbounded_channel();
         let (_controls, commands) = mpsc::unbounded_channel::<PlayerCommand>();
@@ -247,7 +278,7 @@ async fn a_tv_kept_for_the_next_episode_is_let_go_by_a_play_on_this_device() {
 
 #[tokio::test(flavor = "multi_thread", worker_threads = 4)]
 async fn audio_the_tv_cant_play_says_so_and_never_takes_the_tv_over() {
-    let rig = Rig::new(false).await;
+    let rig = Rig::standard(false).await;
     let stream = rig.file("1.mkv", &Fixture::default());
     let events = rig.play(vec![stream], context("1", None)).await;
     assert_eq!(ending(&events), Some(Ending::Failed));
@@ -258,12 +289,123 @@ async fn audio_the_tv_cant_play_says_so_and_never_takes_the_tv_over() {
 }
 
 #[tokio::test(flavor = "multi_thread", worker_threads = 4)]
-async fn a_stream_the_tv_cant_play_fails_over_to_one_it_can() {
+async fn kaeris_receiver_plays_the_audio_the_standard_one_cant() {
     let rig = Rig::new(false).await;
+    let stream = rig.file("1.mkv", &Fixture::default());
+    let events = rig.play(vec![stream], context("1", None)).await;
+    assert_eq!(ending(&events), Some(Ending::Complete { next: None }), "{events:?}");
+    let said = Msg::NoticeCastAudioCodec { name: "Living room".into(), codec: "AC-3".into() }
+        .english();
+    assert!(!toasts(&events).contains(&said), "{:?}", toasts(&events));
+    // Handed over as it is: no AAC on the way.
+    let loaded = rig.receiver.heard("LOAD");
+    assert_eq!(loaded.len(), 1);
+    assert_eq!(loaded[0]["media"]["customData"]["kaeri"]["audio"]["codec"], "ac3");
+}
+
+#[tokio::test(flavor = "multi_thread", worker_threads = 4)]
+async fn a_stream_the_tv_cant_play_fails_over_to_one_it_can() {
+    let rig = Rig::standard(false).await;
     let ac3 = rig.file("1-ac3.mkv", &Fixture::default());
     let aac = rig
         .file("1-aac.mkv", &Fixture { audio: Some(FixtureAudio::aac()), ..Fixture::default() });
     let events = rig.play(vec![ac3, aac], context("1", None)).await;
     assert_eq!(ending(&events), Some(Ending::Complete { next: None }), "{events:?}");
     assert_eq!(rig.receiver.heard("LOAD").len(), 1, "only the stream it can play was loaded");
+}
+
+/// The hub's session once `want` says it is there.
+async fn session_until(hub: &CastHub, want: impl Fn(&SessionView) -> bool) -> SessionView {
+    let deadline = tokio::time::Instant::now() + Duration::from_secs(10);
+    loop {
+        let view = hub.session();
+        if want(&view) {
+            return view;
+        }
+        assert!(tokio::time::Instant::now() < deadline, "the session as it stood: {view:?}");
+        tokio::time::sleep(Duration::from_millis(50)).await;
+    }
+}
+
+fn receiver_stops(receiver: &FakeReceiver) -> usize {
+    receiver.heard("STOP").iter().filter(|m| m["sessionId"].is_string()).count()
+}
+
+#[tokio::test(flavor = "multi_thread", worker_threads = 4)]
+async fn a_held_tv_plays_one_play_after_another_and_stays_until_let_go() {
+    let rig = Rig::new(true).await;
+    rig.hub.connect(rig.device());
+    assert_eq!(rig.hub.session().state, SessionState::Connecting);
+    let view = session_until(&rig.hub, |v| v.state == SessionState::Connected).await;
+    assert_eq!(view.device.map(|d| d.name).as_deref(), Some("Living room"));
+    assert!(view.own_receiver, "Kaeri's receiver runs where it is published");
+    assert_eq!(rig.receiver.heard("LAUNCH").len(), 1, "connecting launches the receiver");
+    assert!(rig.receiver.heard("LOAD").is_empty());
+
+    let first = rig.file("1.mkv", &Fixture::default());
+    let events = rig.play(vec![first], context("1", None)).await;
+    assert_eq!(ending(&events), Some(Ending::Complete { next: None }), "{events:?}");
+    // The playback is over and the TV stays held, its receiver up.
+    let view = session_until(&rig.hub, |v| v.state == SessionState::Connected).await;
+    assert!(view.item.is_none(), "{view:?}");
+    assert_eq!(receiver_stops(&rig.receiver), 0);
+
+    let second = rig.file("2.mkv", &Fixture::default());
+    let events = rig.play(vec![second], context("2", None)).await;
+    assert_eq!(ending(&events), Some(Ending::Complete { next: None }), "{events:?}");
+    assert_eq!(rig.receiver.heard("LAUNCH").len(), 1, "one receiver for the whole session");
+    assert_eq!(rig.receiver.heard("LOAD").len(), 2);
+    assert_eq!(rig.hub.left_on().as_deref(), Some("tv-1"), "noted for the next launch");
+
+    assert!(rig.hub.disconnect());
+    assert_eq!(rig.hub.session().state, SessionState::Idle);
+    let deadline = tokio::time::Instant::now() + Duration::from_secs(5);
+    while receiver_stops(&rig.receiver) == 0 {
+        assert!(tokio::time::Instant::now() < deadline, "the receiver closed");
+        tokio::time::sleep(Duration::from_millis(50)).await;
+    }
+    assert_eq!(rig.hub.left_on(), None, "nothing to join after a disconnect");
+}
+
+#[tokio::test(flavor = "multi_thread", worker_threads = 4)]
+async fn a_tv_taken_over_ends_the_session_and_says_so() {
+    let rig = Rig::new(true).await;
+    rig.hub.connect(rig.device());
+    session_until(&rig.hub, |v| v.state == SessionState::Connected).await;
+    rig.receiver.take_over();
+    let view = session_until(&rig.hub, |v| v.state == SessionState::Error).await;
+    let said = crate::playback::link::cast::notice(&CastFailure::TakenOver, "Living room");
+    assert_eq!(view.notice, Some(said));
+    assert!(rig.hub.session_device().is_none(), "plays open here again");
+}
+
+#[tokio::test(flavor = "multi_thread", worker_threads = 4)]
+async fn a_session_left_running_is_joined_again_once_its_tv_is_found() {
+    let rig = Rig::with(true, FakeOptions { remembers: true, ..FakeOptions::default() }).await;
+    rig.hub.connect(rig.device());
+    session_until(&rig.hub, |v| v.state == SessionState::Connected).await;
+
+    // The app comes back with the receiver still up: a new hub over the same files.
+    let later = Arc::new(CastHub::with(
+        Some(rig.dir.path().to_owned()),
+        Arc::new(PlainHttp),
+        timings(),
+    ));
+    assert_eq!(later.left_on().as_deref(), Some("tv-1"));
+    let mut elsewhere = rig.device();
+    elsewhere.id = "tv-2".into();
+    later.rejoin(&elsewhere);
+    assert_eq!(later.session().state, SessionState::Idle, "only the TV it was left on");
+    later.rejoin(&rig.device());
+    let view = session_until(&later, |v| v.state == SessionState::Connected).await;
+    assert!(view.own_receiver);
+    assert_eq!(rig.receiver.heard("LAUNCH").len(), 1, "joined, not launched again");
+
+    assert!(later.disconnect());
+    let again = Arc::new(CastHub::with(
+        Some(rig.dir.path().to_owned()),
+        Arc::new(PlainHttp),
+        timings(),
+    ));
+    assert_eq!(again.left_on(), None);
 }

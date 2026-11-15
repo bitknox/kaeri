@@ -3,6 +3,7 @@
 import KaeriKit
 import KaeriPlayerUI
 import KaeriStore
+import KaeriStrings
 import KaeriUI
 import Foundation
 import Observation
@@ -54,7 +55,7 @@ final class AppDelegate: NSObject {
         device = DeviceWatch(send: { [weak store] command in store?.send(command) })
         playing = player.playingActivity { [weak store] id in store?.titles[id]?.showTitle }
         #if os(macOS)
-        tvNowPlaying = TVNowPlaying(tv: store.tv, player: player)
+        tvNowPlaying = TVNowPlaying(tv: store.tv, player: player) { [weak store] in store?.privacy.holds(show: $0) ?? false }
         #endif
         super.init()
         player.skipFindPause = { [weak store] in store?.settings.pausedOverride ?? store?.settings.view?.skipFindPaused }
@@ -313,6 +314,8 @@ final class AppDelegate: NSObject {
         if let scene = SyncScene.named() {
             ready = await store.sync.stage(scene, store: store) && ready
         }
+        // A screenshot of private mode: on, with its notice, or a title always private.
+        if let scene = PrivateScene.named() { await store.stage(scene) }
         // A screenshot of a prelaunch state: what came in, the demo, or the first-run join.
         if let scene = PrelaunchScene.named() {
             store.cameIn.stage(scene)
@@ -333,6 +336,8 @@ final class AppDelegate: NSObject {
         if let scene = TogetherScene.named() {
             ready = await store.party.stage(scene, store: store) && ready
         }
+        // A screenshot of a missing episode: Check again pressed, and its answer in.
+        ready = await store.stageCheckAgain() && ready
         #endif
         if ready {
             print("KAERI_READY")
@@ -409,9 +414,11 @@ final class AppDelegate: NSObject {
 
 #if os(macOS)
 extension AppDelegate: NSApplicationDelegate {
-    /// No window tabs: ⌘T is the calendar's Go to Today.
+    /// No window tabs: ⌘T is the calendar's Go to Today. View › Enter Full Screen is the app's
+    /// own item (`WindowFullScreenItem`), so AppKit adds no second one.
     func applicationWillFinishLaunching(_ notification: Notification) {
         NSWindow.allowsAutomaticWindowTabbing = false
+        UserDefaults.standard.register(defaults: ["NSFullScreenMenuItemEverywhere": false])
     }
 
     /// The main window on screen once the app has launched, as a Mac app opens with its window:
@@ -443,6 +450,17 @@ extension AppDelegate: NSApplicationDelegate {
     /// Quitting in a watch party leaves it: asked first, with Stay the default.
     func applicationShouldTerminate(_ sender: NSApplication) -> NSApplication.TerminateReply {
         if store.party.asksBeforeQuitting() { return .terminateCancel }
+        if store.tv.cast.connected {
+            // This Mac serves the episode: quitting ends it on the TV, so it asks first.
+            let name = store.tv.cast.heldName
+            let alert = NSAlert()
+            alert.messageText = L.castQuitTitle(name: name)
+            alert.informativeText = L.castQuitBody(name: name)
+            alert.addButton(withTitle: L.castQuitAction)
+            alert.addButton(withTitle: L.actionCancel)
+            guard alert.runModal() == .alertFirstButtonReturn else { return .terminateCancel }
+            store.tv.cast.disconnect()
+        }
         guard store.hasEngine else { return .terminateNow }
         // The windows go first and the engine winds down off the main thread, for at most four
         // seconds, so quitting does not look like a hang.

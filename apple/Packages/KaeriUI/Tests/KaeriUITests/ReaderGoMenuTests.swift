@@ -59,6 +59,21 @@ struct ReaderGoMenuTests {
         #expect(ReaderInFront.of(model)?.plain == false)
     }
 
+    /// Zoom In, Zoom Out and Fit to Window act on pages too: the page on screen is asked to zoom,
+    /// as a pinch would, and each ask is seen even when it repeats the last.
+    @Test func theZoomItemsZoomThePageOnScreen() {
+        let model = open()
+        let actions = ReaderActions(model: model) {}
+        actions.zoom(1)
+        #expect(model.pageZoomAsked?.step == 1)
+        let first = model.pageZoomAsked?.tick
+        actions.zoom(1)
+        #expect(model.pageZoomAsked?.step == 1)
+        #expect(model.pageZoomAsked?.tick != first)
+        actions.zoom(0)
+        #expect(model.pageZoomAsked?.step == 0)
+    }
+
     @Test func closingTheBookTakesTheGoMenuAway() {
         let model = open()
         model.close()

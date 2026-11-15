@@ -66,10 +66,13 @@ public static class SourcePicker
         return [.. rows];
     }
 
-    /// <summary>A source's coverage ("6 of 13 episodes"), or why it has none. A failure is the source's own words.</summary>
-    public static string Detail(SourceOption option) => option.Note switch
+    /// <summary>
+    /// What a source has of the title ("Episodes 1 to 5. Not 6 yet", or "6 of 13 episodes" where
+    /// the ranges say nothing more), or why it has none. A failure is the source's own words.
+    /// </summary>
+    public static string Detail(SourceOption option, long? now = null) => option.Note switch
     {
-        null => T.SourcePickerCoverage(option.Covered, option.Of),
+        null => MissingWords.Coverage(option, now ?? DateTimeOffset.UtcNow.ToUnixTimeSeconds()),
         SourceNote.Off => T.SourceNoteOff,
         SourceNote.Resting => T.SourceNoteResting,
         SourceNote.Gone => T.SourceNoteGone,
@@ -210,8 +213,18 @@ public readonly record struct PlayableNext(uint Episode, bool Unsourced)
     public static QueueItem Item(Entry entry, EpisodeRow[]? rows, Casing casing)
     {
         var target = Of(entry, rows);
-        if (target.Episode == (entry.Progress?.Next ?? 1) && !target.Unsourced)
-            return Wording.Said(KaeriFfiMethods.QueueItem(entry, casing));
+        var own = entry.Progress?.Next ?? 1;
+        if (target.Episode == own && !target.Unsourced)
+        {
+            var item = Wording.Said(KaeriFfiMethods.QueueItem(entry, casing));
+            // A source that lists the episode shows it is out, even while the title's schedule
+            // still names it as the one to air next, as it does just after a missing one is found.
+            var listed = rows?.FirstOrDefault(r => r.Number == own.ToString() && EpisodeSources.Playable(r));
+            if (item.Playable || entry.Resume is not null || listed is null)
+                return item;
+            var ago = listed.AirsAt is { } at ? Math.Max(0, DateTimeOffset.UtcNow.ToUnixTimeSeconds() - at) : 0;
+            return Wording.Said(KaeriFfiMethods.QueueItem(entry with { LastAired = new Aired(Episode: own, Ago: ago) }, casing));
+        }
         if (target.Unsourced)
             return Wording.Said(KaeriFfiMethods.QueueItem(entry, casing)) with
             {

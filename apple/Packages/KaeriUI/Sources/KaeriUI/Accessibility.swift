@@ -115,7 +115,16 @@ extension EpisodeRow {
             parts.append(L.accessMinutes(minutes: max(1, Int((Double(seconds) / 60).rounded()))))
         }
         if kind == .filler { parts.append(L.episodeFiller.lowercased(with: AirTime.locale)) }
-        if unsourced { parts.append(L.episodeUnsourced) }
+        if unsourced {
+            // As the row writes it: within a day, how long ago it aired, in whole words.
+            let now = Int64(Date.now.timeIntervalSince1970)
+            if let airsAt, airsAt <= now, now - airsAt < 24 * 60 * 60 {
+                parts.append(L.episodeRowAiredAgo(ago: L.timeAgo(span: Spoken.span(max(60, now - airsAt)))))
+            }
+            parts.append(EpisodeFacts.unsourced(self, now: .now))
+        }
+        // Who followed stopped here, never with a score.
+        if let marked = FollowWords.marked(followed) { parts.append(marked) }
         return parts
     }
 }
@@ -251,10 +260,24 @@ struct NoticeAnnouncer: ViewModifier {
 
     func body(content: Content) -> some View {
         content.onChange(of: store.notices.current?.id) { _, id in
-            guard enabled, id != nil, let item = store.notices.current else { return }
+            guard enabled, id != nil, let item = store.notices.current, item.spoken else { return }
             var words = AttributedString(item.notice.words.firstCapitalized)
             words.accessibilitySpeechAnnouncementPriority = item.isAlert ? .high : .default
             AccessibilityNotification.Announcement(words).post()
+        }
+    }
+}
+
+/// "Private mode on" and "Private mode off", once each time the mode changes, wherever it was
+/// changed from.
+struct PrivateAnnouncer: ViewModifier {
+    @Environment(AppStore.self) private var store
+    var enabled = true
+
+    func body(content: Content) -> some View {
+        content.onChange(of: store.privacy.on) { _, on in
+            guard enabled else { return }
+            AccessibilityNotification.Announcement(on ? L.privateModeOnAnnouncement : L.privateModeOffAnnouncement).post()
         }
     }
 }

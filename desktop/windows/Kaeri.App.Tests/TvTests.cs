@@ -306,7 +306,9 @@ public class TvRemoteTests
             Assert.Equal(TvSheet.Cast, remote.Sheet);
             Assert.True(remote.Casting);
             Assert.Null(remote.Request);
-            await Until(() => remote.Stage == CastStage.Playing, "the cast playing", () => remote.CastCard);
+            // The card reads Playing a moment before the same TakeCast says it was served and handed
+            // off: here the cast's cards come in on a pool thread, with no window to bring them back.
+            await Until(() => remote.Stage == CastStage.Playing && served > 0 && handedOff > 0, "the cast playing", () => remote.CastCard);
             Assert.Equal(1, served);
             Assert.True(remote.CastServed);
             Assert.Equal(1, handedOff);
@@ -321,6 +323,49 @@ public class TvRemoteTests
             Assert.Equal("3", here?.Episode);
             Assert.False(remote.Casting);
             Assert.Null(remote.Sheet);
+            remote.StopBrowsing();
+        }
+        finally
+        {
+            living.Stop();
+            engine.Shutdown();
+            engine.Dispose();
+        }
+        SceneTests.DeleteRoot(root);
+    }
+
+    [Fact(Timeout = 90_000)]
+    public async Task TheCastButtonHoldsATvUntilItIsLetGo()
+    {
+        HomeGuard.Check();
+        var root = AppDirs.NewScratchRoot("cs-session");
+        var engine = FfiEngine.StartScene(AppDirs.Under(root), new QuietHost(), new FfiScene.Fresh(), EngineSession.AppStart());
+        var living = engine.StartFakeCast("Living room", new FfiFakeCastOptions(FixedVolume: false, Fetches: true, Refuses: false, LaunchMs: 0));
+        _ = Task.Run(async () =>
+        {
+            while ((await engine.NextEvents()).Any())
+            {
+            }
+        });
+        try
+        {
+            var remote = new TvRemote();
+            remote.Attach(engine.TvSender("PC", "kaeri-windows/test"), new NoTvs(), new FakeCastBrowse(living));
+            // No TV found yet: no button.
+            Assert.Equal(CastButtonState.Hidden, remote.Button);
+            remote.StartBrowsing();
+            await Until(() => remote.Button == CastButtonState.Available, "the button", () => remote.Session);
+
+            remote.ConnectCast(remote.CastRows.Single(r => r.Name == "Living room"));
+            await Until(() => remote.Session?.State == FfiCastSessionState.Connected, "the TV held", () => remote.Session);
+            Assert.Equal(CastButtonState.Connected, remote.Button);
+            Assert.Equal("Living room", remote.SessionName);
+            // Held with nothing on it: no mini.
+            Assert.False(remote.SessionLoaded);
+            Assert.Null(remote.Drawn());
+
+            remote.DisconnectCast();
+            await Until(() => remote.Button == CastButtonState.Available, "the TV let go", () => remote.Session);
             remote.StopBrowsing();
         }
         finally

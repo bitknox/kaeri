@@ -1,0 +1,190 @@
+{
+  "messages": {
+    "receiver-closing-computer": [
+      {
+        "arg": "seconds"
+      },
+      " sn sonra kapanıyor. Açık kalması için bilgisayarda bir bölüm seçin."
+    ],
+    "receiver-closing-ipad": [
+      {
+        "arg": "seconds"
+      },
+      " sn sonra kapanıyor. Açık kalması için iPad'de bir bölüm seçin."
+    ],
+    "receiver-closing-iphone": [
+      {
+        "arg": "seconds"
+      },
+      " sn sonra kapanıyor. Açık kalması için iPhone'da bir bölüm seçin."
+    ],
+    "receiver-closing-mac": [
+      {
+        "arg": "seconds"
+      },
+      " sn sonra kapanıyor. Açık kalması için Mac'te bir bölüm seçin."
+    ],
+    "receiver-closing-phone": [
+      {
+        "arg": "seconds"
+      },
+      " sn sonra kapanıyor. Açık kalması için telefonda bir bölüm seçin."
+    ],
+    "receiver-closing-tablet": [
+      {
+        "arg": "seconds"
+      },
+      " sn sonra kapanıyor. Açık kalması için tablette bir bölüm seçin."
+    ],
+    "receiver-error": [
+      {
+        "arg": "episode"
+      },
+      ". bölüm oynatılamadı"
+    ],
+    "receiver-error-audio-codec": [
+      "Bu TV ",
+      {
+        "arg": "codec"
+      },
+      " sesini oynatamıyor."
+    ],
+    "receiver-error-hint-computer": [
+      "Bilgisayarda başka bir kaynak seçin."
+    ],
+    "receiver-error-hint-ipad": [
+      "IPad'de başka bir kaynak seçin."
+    ],
+    "receiver-error-hint-iphone": [
+      "IPhone'da başka bir kaynak seçin."
+    ],
+    "receiver-error-hint-mac": [
+      "Mac'te başka bir kaynak seçin."
+    ],
+    "receiver-error-hint-phone": [
+      "Telefonda başka bir kaynak seçin."
+    ],
+    "receiver-error-hint-tablet": [
+      "Tablette başka bir kaynak seçin."
+    ],
+    "receiver-error-unnumbered": [
+      "Bu bölüm oynatılamadı"
+    ],
+    "receiver-error-video-codec": [
+      "Bu TV ",
+      {
+        "arg": "codec"
+      },
+      " videosunu oynatamıyor."
+    ],
+    "receiver-finished": [
+      {
+        "arg": "episode"
+      },
+      ". bölüm bitti"
+    ],
+    "receiver-finished-unnumbered": [
+      "Bitti"
+    ],
+    "receiver-paused": [
+      "Duraklatıldı"
+    ],
+    "receiver-plain-subs": [
+      "Altyazılar bu TV’de düz metin olarak görünür."
+    ],
+    "receiver-ready-computer": [
+      "Hazır. Bilgisayarda bir bölüm seçin."
+    ],
+    "receiver-ready-ipad": [
+      "Hazır. IPad'de bir bölüm seçin."
+    ],
+    "receiver-ready-iphone": [
+      "Hazır. IPhone'da bir bölüm seçin."
+    ],
+    "receiver-ready-mac": [
+      "Hazır. Mac'te bir bölüm seçin."
+    ],
+    "receiver-ready-phone": [
+      "Hazır. Telefonda bir bölüm seçin."
+    ],
+    "receiver-ready-tablet": [
+      "Hazır. Tablette bir bölüm seçin."
+    ],
+    "receiver-sender-gone-computer": [
+      "Bilgisayar bekleniyor"
+    ],
+    "receiver-sender-gone-hint-computer": [
+      "İzlemeyi sürdürmek için bilgisayarda Kaeri'yi açın."
+    ],
+    "receiver-sender-gone-hint-ipad": [
+      "İzlemeyi sürdürmek için iPad'de Kaeri'yi açın."
+    ],
+    "receiver-sender-gone-hint-iphone": [
+      "İzlemeyi sürdürmek için iPhone'da Kaeri'yi açın."
+    ],
+    "receiver-sender-gone-hint-mac": [
+      "İzlemeyi sürdürmek için Mac'te Kaeri'yi açın."
+    ],
+    "receiver-sender-gone-hint-phone": [
+      "İzlemeyi sürdürmek için telefonda Kaeri'yi açın."
+    ],
+    "receiver-sender-gone-hint-tablet": [
+      "İzlemeyi sürdürmek için tablette Kaeri'yi açın."
+    ],
+    "receiver-sender-gone-ipad": [
+      "iPad bekleniyor"
+    ],
+    "receiver-sender-gone-iphone": [
+      "iPhone bekleniyor"
+    ],
+    "receiver-sender-gone-mac": [
+      "Mac bekleniyor"
+    ],
+    "receiver-sender-gone-phone": [
+      "Telefon bekleniyor"
+    ],
+    "receiver-sender-gone-tablet": [
+      "Tablet bekleniyor"
+    ],
+    "receiver-skipped-ending": [
+      "Kapanış atlandı"
+    ],
+    "receiver-skipped-opening": [
+      "Açılış atlandı"
+    ],
+    "receiver-starting": [
+      "Başlatılıyor"
+    ],
+    "receiver-up-next": [
+      "Sıradaki · ",
+      {
+        "arg": "seconds"
+      },
+      " sn içinde oynatılır"
+    ],
+    "receiver-up-next-numbered": [
+      "Bölüm ",
+      {
+        "arg": "episode"
+      }
+    ],
+    "receiver-up-next-titled": [
+      "Bölüm ",
+      {
+        "arg": "episode"
+      },
+      " · ",
+      {
+        "arg": "title"
+      }
+    ],
+    "receiver-waiting": [
+      "Yayın bekleniyor · ",
+      {
+        "arg": "seconds"
+      },
+      " sn"
+    ]
+  },
+  "tag": "tr"
+}

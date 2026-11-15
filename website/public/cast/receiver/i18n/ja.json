@@ -1,0 +1,192 @@
+{
+  "messages": {
+    "receiver-closing-computer": [
+      {
+        "arg": "seconds"
+      },
+      "秒後に閉じます。コンピュータでエピソードを選ぶと閉じません。"
+    ],
+    "receiver-closing-ipad": [
+      {
+        "arg": "seconds"
+      },
+      "秒後に閉じます。iPadでエピソードを選ぶと閉じません。"
+    ],
+    "receiver-closing-iphone": [
+      {
+        "arg": "seconds"
+      },
+      "秒後に閉じます。iPhoneでエピソードを選ぶと閉じません。"
+    ],
+    "receiver-closing-mac": [
+      {
+        "arg": "seconds"
+      },
+      "秒後に閉じます。Macでエピソードを選ぶと閉じません。"
+    ],
+    "receiver-closing-phone": [
+      {
+        "arg": "seconds"
+      },
+      "秒後に閉じます。スマートフォンでエピソードを選ぶと閉じません。"
+    ],
+    "receiver-closing-tablet": [
+      {
+        "arg": "seconds"
+      },
+      "秒後に閉じます。タブレットでエピソードを選ぶと閉じません。"
+    ],
+    "receiver-error": [
+      "エピソード",
+      {
+        "arg": "episode"
+      },
+      "を再生できませんでした"
+    ],
+    "receiver-error-audio-codec": [
+      "このTVでは",
+      {
+        "arg": "codec"
+      },
+      "の音声を再生できません。"
+    ],
+    "receiver-error-hint-computer": [
+      "コンピュータで別のソースを選んでください。"
+    ],
+    "receiver-error-hint-ipad": [
+      "iPadで別のソースを選んでください。"
+    ],
+    "receiver-error-hint-iphone": [
+      "iPhoneで別のソースを選んでください。"
+    ],
+    "receiver-error-hint-mac": [
+      "Macで別のソースを選んでください。"
+    ],
+    "receiver-error-hint-phone": [
+      "スマートフォンで別のソースを選んでください。"
+    ],
+    "receiver-error-hint-tablet": [
+      "タブレットで別のソースを選んでください。"
+    ],
+    "receiver-error-unnumbered": [
+      "このエピソードを再生できませんでした"
+    ],
+    "receiver-error-video-codec": [
+      "このTVでは",
+      {
+        "arg": "codec"
+      },
+      "の映像を再生できません。"
+    ],
+    "receiver-finished": [
+      "エピソード",
+      {
+        "arg": "episode"
+      },
+      "を見終わりました"
+    ],
+    "receiver-finished-unnumbered": [
+      "終了しました"
+    ],
+    "receiver-paused": [
+      "一時停止中"
+    ],
+    "receiver-plain-subs": [
+      "このTVでは字幕をプレーンテキストで表示します。"
+    ],
+    "receiver-ready-computer": [
+      "準備完了。コンピュータでエピソードを選んでください。"
+    ],
+    "receiver-ready-ipad": [
+      "準備完了。iPadでエピソードを選んでください。"
+    ],
+    "receiver-ready-iphone": [
+      "準備完了。iPhoneでエピソードを選んでください。"
+    ],
+    "receiver-ready-mac": [
+      "準備完了。Macでエピソードを選んでください。"
+    ],
+    "receiver-ready-phone": [
+      "準備完了。スマートフォンでエピソードを選んでください。"
+    ],
+    "receiver-ready-tablet": [
+      "準備完了。タブレットでエピソードを選んでください。"
+    ],
+    "receiver-sender-gone-computer": [
+      "コンピュータを待機中"
+    ],
+    "receiver-sender-gone-hint-computer": [
+      "コンピュータでKaeriを開くと再生を再開します。"
+    ],
+    "receiver-sender-gone-hint-ipad": [
+      "iPadでKaeriを開くと再生を再開します。"
+    ],
+    "receiver-sender-gone-hint-iphone": [
+      "iPhoneでKaeriを開くと再生を再開します。"
+    ],
+    "receiver-sender-gone-hint-mac": [
+      "MacでKaeriを開くと再生を再開します。"
+    ],
+    "receiver-sender-gone-hint-phone": [
+      "スマートフォンでKaeriを開くと再生を再開します。"
+    ],
+    "receiver-sender-gone-hint-tablet": [
+      "タブレットでKaeriを開くと再生を再開します。"
+    ],
+    "receiver-sender-gone-ipad": [
+      "iPadを待機中"
+    ],
+    "receiver-sender-gone-iphone": [
+      "iPhoneを待機中"
+    ],
+    "receiver-sender-gone-mac": [
+      "Macを待機中"
+    ],
+    "receiver-sender-gone-phone": [
+      "スマートフォンを待機中"
+    ],
+    "receiver-sender-gone-tablet": [
+      "タブレットを待機中"
+    ],
+    "receiver-skipped-ending": [
+      "エンディングをスキップしました"
+    ],
+    "receiver-skipped-opening": [
+      "オープニングをスキップしました"
+    ],
+    "receiver-starting": [
+      "開始しています"
+    ],
+    "receiver-up-next": [
+      "次のエピソード · ",
+      {
+        "arg": "seconds"
+      },
+      "秒後に再生"
+    ],
+    "receiver-up-next-numbered": [
+      "エピソード ",
+      {
+        "arg": "episode"
+      }
+    ],
+    "receiver-up-next-titled": [
+      "エピソード ",
+      {
+        "arg": "episode"
+      },
+      " · ",
+      {
+        "arg": "title"
+      }
+    ],
+    "receiver-waiting": [
+      "ストリームを待機中 · ",
+      {
+        "arg": "seconds"
+      },
+      "秒"
+    ]
+  },
+  "tag": "ja"
+}

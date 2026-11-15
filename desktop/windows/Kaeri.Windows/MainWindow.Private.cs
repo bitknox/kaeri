@@ -23,8 +23,8 @@ public sealed partial class MainWindow
     /// <summary>How long the notice stays when the shortcut turns the mode on, as the board has it.</summary>
     static readonly TimeSpan PrivateNoticeTime = TimeSpan.FromSeconds(8);
 
-    /// <summary>The title bar's end: the status (or the way back to a TV's card), then the badge.</summary>
-    readonly ContentControl titleStatus = new() { VerticalAlignment = VerticalAlignment.Center, HorizontalContentAlignment = HorizontalAlignment.Stretch };
+    /// <summary>The title bar's end: the cast button once Play on TV starts, where sync stands, then the badge.</summary>
+    readonly StackPanel titleEnd = new() { Orientation = Orientation.Horizontal, Spacing = 4, VerticalAlignment = VerticalAlignment.Center };
     Button? privateBadge;
     /// <summary>What the window last drew of the mode, null before the engine's first word at launch.</summary>
     bool? privateDrawn;
@@ -34,7 +34,6 @@ public sealed partial class MainWindow
     /// <summary>Puts the status and the badge at the title bar's end.</summary>
     void StartPrivate()
     {
-        titleStatus.Content = status;
         privateBadge = new Button
         {
             Height = 32,
@@ -52,11 +51,9 @@ public sealed partial class MainWindow
         privateBadge.Content = inner;
         AutomationProperties.SetName(privateBadge, T.PrivateBadgeLabel);
         ToolTipService.SetToolTip(privateBadge, T.PrivateBadgeLabel);
-        privateBadge.SizeChanged += (_, _) => KeepSearchInPlace();
-        var end = new StackPanel { Orientation = Orientation.Horizontal, VerticalAlignment = VerticalAlignment.Center };
-        end.Children.Add(titleStatus);
-        end.Children.Add(privateBadge);
-        AppTitleBar.RightHeader = end;
+        titleEnd.Children.Add(status);
+        titleEnd.Children.Add(privateBadge);
+        AppTitleBar.RightHeader = titleEnd;
     }
 
     /// <summary>The badge's flyout: the eye, Private mode, what it means, and Turn off.</summary>

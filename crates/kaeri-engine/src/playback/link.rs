@@ -76,6 +76,9 @@ pub struct FileFacts {
     pub image: Option<String>,
     pub subtitle_language: Option<String>,
     pub dub: bool,
+    /// The audio track the series remembers, for a player that picks the audio itself, as a
+    /// TV does from an HLS master's renditions.
+    pub audio_memory: Option<kaeri_playback::tracks::TrackPrint>,
 }
 
 /// What the session does to the player a playback runs in.
@@ -110,6 +113,13 @@ pub trait PlayerLink: Send + Sync {
     /// player that knows better.
     fn failure_notice(&self) -> Option<kaeri_model::Msg> {
         None
+    }
+
+    /// Whether the player ended the file it ended last with an error, rather than at its end,
+    /// on a quit or for the next file. A file that broke off mid-episode this way fails over to
+    /// another stream. `false` for a player that cannot tell.
+    fn ended_in_error(&self) -> bool {
+        false
     }
 
     /// Open `url` in place of whatever is playing, with `options` that belong to that file

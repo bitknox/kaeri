@@ -20,6 +20,8 @@ const TRACKS: u64 = 0x1654_AE6B;
 const TRACK_ENTRY: u64 = 0xAE;
 const CUES: u64 = 0x1C53_BB6B;
 const CLUSTER: u64 = 0x1F43_B675;
+const ATTACHMENTS: u64 = 0x1941_A469;
+const ATTACHED_FILE: u64 = 0x61A7;
 
 #[derive(Debug, Clone, Default)]
 pub struct TrackInfo {
@@ -59,6 +61,71 @@ pub struct Header {
     pub cues: Vec<Cue>,
     /// Where the first cluster starts.
     pub first_cluster: u64,
+    /// Where the attached files are, when the file has any: fonts for its typeset subtitles.
+    pub attachments: Option<u64>,
+}
+
+/// A file attached to a Matroska file.
+#[derive(Debug, Clone, Default)]
+pub struct Attached {
+    pub name: String,
+    pub mime: String,
+    pub data: Vec<u8>,
+}
+
+impl Attached {
+    /// The extension and content type to serve it with, when it is a font.
+    pub fn font(&self) -> Option<(&'static str, &'static str)> {
+        let extension = self.name.rsplit_once('.').map(|(_, e)| e.to_ascii_lowercase());
+        let by_name = match extension.as_deref() {
+            Some("ttf") => Some(("ttf", "font/ttf")),
+            Some("otf") => Some(("otf", "font/otf")),
+            Some("ttc") => Some(("ttc", "font/collection")),
+            Some("woff2") => Some(("woff2", "font/woff2")),
+            Some("woff") => Some(("woff", "font/woff")),
+            _ => None,
+        };
+        let mime = self.mime.to_ascii_lowercase();
+        by_name.or(if mime.contains("woff2") {
+            Some(("woff2", "font/woff2"))
+        } else if mime.contains("woff") {
+            Some(("woff", "font/woff"))
+        } else if mime.contains("opentype") || mime.contains("otf") {
+            Some(("otf", "font/otf"))
+        } else if mime.contains("truetype") || mime.contains("ttf") || mime.contains("sfnt") {
+            Some(("ttf", "font/ttf"))
+        } else {
+            None
+        })
+    }
+}
+
+/// The fonts attached to a Matroska file, from its [`Header::attachments`] at `at`.
+pub fn fonts<R: Read + Seek>(reader: &mut R, at: u64) -> std::io::Result<Vec<Attached>> {
+    reader.seek(SeekFrom::Start(at))?;
+    let (id, size, _, _) = element(reader)?;
+    if id != ATTACHMENTS {
+        return Err(invalid("no Attachments"));
+    }
+    let mut fonts = Vec::new();
+    for (id, file) in children(&body(reader, size)?)? {
+        if id != ATTACHED_FILE {
+            continue;
+        }
+        let mut attached = Attached::default();
+        for (id, value) in children(file)? {
+            match id {
+                0x466E => attached.name = text(value),
+                0x4660 => attached.mime = text(value),
+                0x465C => attached.data = value.to_vec(),
+                _ => {}
+            }
+        }
+        if attached.font().is_some() && !attached.data.is_empty() {
+            fonts.push(attached);
+        }
+    }
+    Ok(fonts)
 }
 
 /// One frame of a block, laced frames split apart.
@@ -231,6 +298,7 @@ pub fn header<R: Read + Seek>(reader: &mut R) -> std::io::Result<Header> {
         tracks: Vec::new(),
         cues: Vec::new(),
         first_cluster: 0,
+        attachments: None,
     };
     let mut cues_at = None;
     let mut at = segment;
@@ -248,6 +316,9 @@ pub fn header<R: Read + Seek>(reader: &mut R) -> std::io::Result<Header> {
                         |want| fields.iter().find(|(id, _)| *id == want).map(|f| unsigned(f.1));
                     if field(SEEK_ID) == Some(CUES) {
                         cues_at = field(SEEK_POSITION).map(|p| segment + p);
+                    }
+                    if field(SEEK_ID) == Some(ATTACHMENTS) {
+                        header.attachments = field(SEEK_POSITION).map(|p| segment + p);
                     }
                 }
             }
@@ -270,6 +341,7 @@ pub fn header<R: Read + Seek>(reader: &mut R) -> std::io::Result<Header> {
                 }
             }
             CUES => header.cues = cues(&body(reader, size)?, segment)?,
+            ATTACHMENTS => header.attachments = Some(at),
             CLUSTER if header.first_cluster == 0 => {
                 header.first_cluster = at;
                 // The cues, from the SeekHead, are past the clusters: read them there.

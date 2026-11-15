@@ -85,3 +85,4 @@ episodes-matched = Dicocokkan dengan { $title }.
 episodes-release-dual = { -subbed-cap } dan { -dubbed }
 episodes-release-dub = { -dubbed-cap }
 episodes-release-current-pick = Pilihan saat ini
+episode-missing-checking = Memeriksa { -source-pl } Anda…

@@ -265,6 +265,30 @@ mod tests {
     }
 
     #[test]
+    fn another_stream_of_the_episode_starts_from_the_choices_made_in_this_one() {
+        // Nothing was remembered when the playback started; the viewer chose during the file,
+        // and was still moving the delay when the stream failed.
+        let mut session = Session::new(sub_watcher(), None);
+        session.load(dual_audio(), Some(2), Some(2));
+        session.wait(10.0);
+        session.viewer_selects(TrackKind::Audio, Some(1));
+        session.viewer_selects(TrackKind::Sub, Some(1));
+        session.viewer_moves_delay(0.3);
+        let (kept, owed) = session.policy.carried();
+        assert_eq!(remembered(&owed).len(), 1, "the delay still moving is settled");
+        let delay = kept.sub_delay.expect("the delay is carried");
+        assert!((delay - 0.3).abs() < 1e-9, "carried {delay}");
+        session.next_episode();
+
+        // The next stream numbers its tracks differently, and gets the same choices.
+        assert!(session.policy.prepare(sub_watcher(), Some(kept)).is_empty());
+        let actions = session.load(reordered(), Some(1), Some(4));
+        assert_eq!(sets(&actions), [&TrackAction::SetAid(2), &TrackAction::SetSid(Some(3))]);
+        assert!(remembered(&actions).is_empty(), "carrying a choice is not a new one");
+        assert!((session.mpv.delay - 0.3).abs() < 1e-9, "the delay stays");
+    }
+
+    #[test]
     fn prepare_swaps_in_the_next_series_memory() {
         let mut session = Session::new(sub_watcher(), None);
         session.load(dual_audio(), Some(2), Some(2));

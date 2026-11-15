@@ -131,6 +131,9 @@ public sealed class Known
     /// <summary>The source picker's listings per title, and which pins have been said to be unavailable.</summary>
     public SourceChoices SourceChoices { get; } = new();
 
+    /// <summary>What the checks of a missing episode the viewer asked for came to.</summary>
+    public MissingChecks MissingChecks { get; } = new();
+
     /// <summary>The match picker's state per title: the questions sources asked, searches by hand and what each title is matched to.</summary>
     public MatchBook Matches { get; } = new();
 
@@ -456,6 +459,9 @@ public sealed class Known
                 break;
             case Event.SourceOptions:
                 SourceChoices.Take(e);
+                break;
+            case Event.EpisodeChecked:
+                MissingChecks.Take(e);
                 break;
             case Event.MatchChoices or Event.MatchSearchFailed or Event.MatchFixFailed or Event.TitleMatch:
                 Matches.Take(e);

@@ -56,11 +56,7 @@ tui-together-not-a-link = That is not a party link or code.
 # @only tui
 tui-together-recent-alone = Episode { $episode } · { $when }
 
-# Line under the title of that page.
-# @only tui
-tui-medium-read-line = The terminal has no reader. Manga, webtoons and light novels open in the { -app-name } apps, and sync keeps your progress in step.
-
-# Line under that page: the key that opens the choice of what { -app-name } is for. The key is the one bound to it, as the key map draws it.
+# Last line of reading's Home: the key that opens the choice of what { -app-name } is for. The key is the one bound to it, as the key map draws it.
 # @arg key: text
 # @only tui
 tui-medium-read-change = Press { $key } to change what { -app-name } is for.
@@ -70,3 +66,20 @@ tui-medium-read-change = Press { $key } to change what { -app-name } is for.
 # @max 24
 # @only tui
 tui-medium-settings-hint = { $key } to change
+
+# Row in the terminal's Report a bug band, under Open on GitHub: Enter writes the player log file
+# beside the terminal's own logs. Lower-cased, the same words are the key hint for it.
+# @only tui
+report-player-log-save-here = Save player log
+
+# That row once the file is written, and the notice in the status line. Path is where the file is,
+# such as ~/.cache/kaeri/logs/kaeri-player-log-2026-11-15-1432.txt.
+# @arg path: text
+# @only tui
+report-player-log-saved-to = Player log saved to { $path }
+
+# That row when the file could not be written. Folder is where it was to go, such as
+# ~/.cache/kaeri/logs.
+# @arg folder: text
+# @only tui
+report-player-log-failed-here = Couldn't save the log to { $folder }.

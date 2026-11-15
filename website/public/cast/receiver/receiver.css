@@ -1,0 +1,602 @@
+/* Kaeri's Cast receiver. Drawn at 1280 x 720 CSS px, the viewport a 1080p TV gives the page;
+   #ui is scaled to other viewports. Dark by design, in the website's dark colours
+   (website/src/styles/site.css): the TV is the only light in the room. */
+
+:root {
+	--ground: #10131f;
+	--text: #e4e0d6;
+	--muted: #9298b5;
+	--amber: #f2a64b;
+	--vermilion: #e06b54;
+	--card: rgba(34, 38, 56, 0.94);
+	--card-edge: rgba(228, 224, 214, 0.08);
+	--shade: 16, 19, 31;
+	--ui: 'Inter Variable', Inter, 'Zen Kaku Gothic New', system-ui, sans-serif;
+	--show: 'Zen Kaku Gothic New', 'Inter Variable', sans-serif;
+	--in: 200ms cubic-bezier(0, 0, 0.58, 1);
+	--out: 300ms cubic-bezier(0.42, 0, 1, 1);
+	/* The standard spring, 360 ms with no bounce, as a curve. */
+	--std: 360ms cubic-bezier(0.2, 0.8, 0.2, 1);
+	--s: 1;
+	color-scheme: dark;
+}
+
+html,
+body {
+	margin: 0;
+	height: 100%;
+	overflow: hidden;
+	background: var(--ground);
+	color: var(--text);
+	font-family: var(--ui);
+	-webkit-font-smoothing: antialiased;
+	cursor: none;
+}
+
+#stage {
+	position: fixed;
+	top: 0;
+	right: 0;
+	bottom: 0;
+	left: 0;
+	background: #000;
+	opacity: 0;
+	transition: opacity var(--out);
+}
+#stage.on {
+	opacity: 1;
+	transition: opacity var(--in);
+}
+#video {
+	position: absolute;
+	top: 0;
+	right: 0;
+	bottom: 0;
+	left: 0;
+	width: 100%;
+	height: 100%;
+	object-fit: contain;
+	background: #000;
+}
+/* JASSUB draws on the canvas it puts after the video; the WebVTT twin stays loaded but hidden. */
+/* Plain subtitles in the TV's face, on a soft box. */
+#video::cue {
+	font-family: var(--ui);
+	font-weight: 500;
+	background: rgba(0, 0, 0, 0.62);
+}
+html.typeset #video::cue {
+	visibility: hidden;
+}
+#still {
+	position: fixed;
+	top: 0;
+	right: 0;
+	bottom: 0;
+	left: 0;
+	width: 100%;
+	height: 100%;
+	object-fit: contain;
+	display: none;
+}
+#still.on {
+	display: block;
+}
+
+#ui {
+	position: fixed;
+	left: 0;
+	top: 0;
+	width: 1280px;
+	height: 720px;
+	transform-origin: 0 0;
+	transform: translate(var(--x, 0), var(--y, 0)) scale(var(--s));
+	pointer-events: none;
+	overflow: hidden;
+}
+
+/* Everything that comes and goes crossfades; nothing fades through an empty screen. A layer
+   that has faded out leaves the compositor's work. */
+#ui > * {
+	opacity: 0;
+	visibility: hidden;
+	transition:
+		opacity var(--out),
+		visibility 0s linear 300ms;
+}
+#ui > .on {
+	opacity: 1;
+	visibility: visible;
+	transition: opacity var(--in);
+}
+.layer {
+	position: absolute;
+	top: 0;
+	right: 0;
+	bottom: 0;
+	left: 0;
+}
+
+/* Ready's city at dusk: a gradient sky that stands in until src/cast-receiver/city.ts has its
+   first drawing, and two canvases that take turns, one fading in over the other. Nothing here
+   runs an animation of its own. The city is its own stacking context, so the canvases' order stays
+   inside it and every later layer, the black one included, covers them. */
+#city {
+	isolation: isolate;
+}
+#city .sky,
+#city canvas {
+	position: absolute;
+	left: 0;
+	top: 0;
+	width: 1280px;
+	height: 720px;
+}
+#city canvas {
+	opacity: 0;
+}
+
+#art img {
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+	display: block;
+}
+#art.on {
+	opacity: var(--art, 0.4);
+}
+
+#dim {
+	background: rgb(var(--shade));
+}
+#dim.on {
+	opacity: var(--dim, 0.45);
+}
+
+#black {
+	background: #000;
+}
+
+.wm {
+	font-family: var(--show);
+	font-weight: 500;
+	letter-spacing: -0.03em;
+	color: var(--text);
+}
+.show {
+	font-family: var(--show);
+	font-weight: 500;
+	letter-spacing: -0.01em;
+	overflow-wrap: anywhere;
+}
+.card {
+	position: absolute;
+	border-radius: 16px;
+	background: var(--card);
+	box-shadow: inset 0 0 0 1px var(--card-edge);
+}
+
+/* Four round lights stepping in turn, amber like progress: the receiver's only wait sign. */
+.lights {
+	display: inline-flex;
+	gap: 6px;
+	flex: none;
+}
+.lights i {
+	position: relative;
+	display: block;
+	width: 10px;
+	height: 10px;
+	border-radius: 50%;
+	background: rgba(228, 224, 214, 0.2);
+}
+.lights i::after {
+	content: '';
+	position: absolute;
+	inset: 0;
+	border-radius: 50%;
+	background: var(--amber);
+	opacity: 0;
+	animation: light 1.2s steps(1, end) infinite;
+}
+.lights i:nth-child(2)::after {
+	animation-delay: 0.3s;
+}
+.lights i:nth-child(3)::after {
+	animation-delay: 0.6s;
+}
+.lights i:nth-child(4)::after {
+	animation-delay: 0.9s;
+}
+/* Once a second where the wait is long, and under Reduce Motion. */
+html.still .lights i::after,
+#gone .lights i::after {
+	animation-duration: 4s;
+}
+html.still .lights i:nth-child(2)::after,
+#gone .lights i:nth-child(2)::after {
+	animation-delay: 1s;
+}
+html.still .lights i:nth-child(3)::after,
+#gone .lights i:nth-child(3)::after {
+	animation-delay: 2s;
+}
+html.still .lights i:nth-child(4)::after,
+#gone .lights i:nth-child(4)::after {
+	animation-delay: 3s;
+}
+/* Lights that can't be seen don't run. */
+#ui > :not(.on) .lights i::after,
+#starting:not(.on) .lights i::after {
+	animation: none;
+}
+@keyframes light {
+	0% {
+		opacity: 1;
+	}
+	25% {
+		opacity: 0;
+	}
+	100% {
+		opacity: 0;
+	}
+}
+
+/* Ready: the name and one line top left, clear of the moon and stars, drifting a few pixels a
+   minute against burn-in. */
+#ready {
+	position: absolute;
+	left: 96px;
+	top: 84px;
+}
+#ready .wm {
+	font-size: 80px;
+	line-height: 80px;
+}
+#ready .line {
+	position: relative;
+	margin-top: 18px;
+	width: 1000px;
+	height: 34px;
+	font-size: 26px;
+	line-height: 34px;
+	color: var(--muted);
+}
+#ready .line span {
+	position: absolute;
+	left: 0;
+	top: 0;
+	white-space: nowrap;
+	font-variant-numeric: tabular-nums;
+	opacity: 0;
+	transition: opacity var(--out);
+}
+#ready .line span.on {
+	opacity: 1;
+	transition: opacity var(--in);
+}
+
+/* The overlay: a flat band of ground at 80 %, the show, the episode, and the seek line and times.
+   While starting, the line and times give way to Starting and the lights, with no band. */
+#ov .band {
+	position: absolute;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	height: 236px;
+	background: rgba(var(--shade), 0.8);
+	transition: opacity var(--in);
+}
+#ui[data-phase='loading'] #ov .band {
+	opacity: 0;
+	transition: opacity var(--out);
+}
+#ov .ov {
+	position: absolute;
+	left: 96px;
+	right: 96px;
+	bottom: 48px;
+	display: flex;
+	flex-direction: column;
+}
+#ov .show {
+	font-size: 40px;
+	line-height: 48px;
+}
+#ov .ep {
+	margin-top: 4px;
+	font-size: 24px;
+	line-height: 32px;
+	font-weight: 500;
+}
+#ov .row {
+	position: relative;
+	height: 56px;
+	margin-top: 18px;
+}
+#ov .row > div {
+	position: absolute;
+	left: 0;
+	right: 0;
+	top: 0;
+	transition: opacity var(--in);
+}
+#ov .seek {
+	position: relative;
+	height: 6px;
+	border-radius: 3px;
+	background: rgba(228, 224, 214, 0.22);
+	margin-top: 6px;
+	overflow: hidden;
+}
+#ov .seek i {
+	position: absolute;
+	left: 0;
+	top: 0;
+	bottom: 0;
+	width: 100%;
+	border-radius: 3px;
+	background: var(--amber);
+	transform-origin: 0 0;
+	transform: scaleX(0);
+}
+#ov .times {
+	display: flex;
+	justify-content: space-between;
+	margin-top: 12px;
+	font-size: 22px;
+	line-height: 28px;
+	color: rgba(228, 224, 214, 0.8);
+	font-variant-numeric: tabular-nums;
+}
+#starting {
+	display: flex;
+	align-items: center;
+	gap: 18px;
+	font-size: 24px;
+	line-height: 32px;
+	height: 32px;
+}
+#ui[data-phase='loading'] #ov-bar,
+#ui:not([data-phase='loading']) #starting {
+	opacity: 0;
+	transition: opacity var(--out);
+}
+
+#paused {
+	position: absolute;
+	left: 96px;
+	top: 64px;
+	display: flex;
+	align-items: center;
+	gap: 14px;
+	font-size: 28px;
+	line-height: 36px;
+	font-weight: 500;
+}
+
+#waiting {
+	left: 96px;
+	bottom: 64px;
+	padding: 14px 22px;
+	display: flex;
+	align-items: center;
+	gap: 18px;
+	font-size: 24px;
+	line-height: 30px;
+}
+#waiting-text {
+	font-variant-numeric: tabular-nums;
+	white-space: nowrap;
+	opacity: 0;
+	transition: opacity var(--out);
+}
+#waiting-text.on {
+	opacity: 1;
+	transition: opacity var(--in);
+}
+#waiting-text:empty {
+	display: none;
+}
+
+#upnext {
+	right: 96px;
+	bottom: 56px;
+	width: 404px;
+	padding: 18px;
+	display: flex;
+	flex-direction: column;
+}
+#ui > #upnext.on {
+	transition: opacity var(--std), transform var(--std);
+}
+/* Subtitles take the bottom fifth of the picture: two lines and their margin. With subtitles on,
+   the card stands clear of them. */
+#upnext.over-subs {
+	bottom: 168px;
+}
+/* With the overlay up, the card clears the band. When the lifted subtitles show as well, it also
+   clears them and sizes down so its top stays on the screen. */
+#upnext.over-band {
+	transform: translateY(-204px);
+}
+#upnext.over-band.over-subs {
+	transform-origin: 100% 100%;
+	transform: translateY(-164px) scale(0.84);
+}
+#upnext .still,
+#finished .still {
+	overflow: hidden;
+	background: rgba(228, 224, 214, 0.06);
+}
+#upnext .still {
+	width: 404px;
+	height: 227px;
+	border-radius: 10px;
+}
+.still img {
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+	display: block;
+}
+.still img:not([src]),
+.still img[src=''] {
+	visibility: hidden;
+}
+#upnext .track {
+	position: relative;
+	height: 4px;
+	border-radius: 2px;
+	background: rgba(228, 224, 214, 0.22);
+	margin-top: 16px;
+	overflow: hidden;
+}
+#upnext .track i {
+	position: absolute;
+	left: 0;
+	top: 0;
+	bottom: 0;
+	width: 100%;
+	background: var(--amber);
+	transform-origin: 0 0;
+	transform: scaleX(0);
+}
+#upnext .count {
+	margin-top: 14px;
+	font-size: 22px;
+	line-height: 28px;
+	font-variant-numeric: tabular-nums;
+}
+#upnext .title {
+	margin-top: 4px;
+	font-size: 28px;
+	line-height: 36px;
+	font-weight: 600;
+	overflow-wrap: anywhere;
+}
+
+.note {
+	padding: 14px 22px;
+	display: flex;
+	align-items: center;
+	gap: 12px;
+	font-size: 24px;
+	line-height: 30px;
+}
+#skipped {
+	right: 96px;
+	top: 64px;
+}
+#plain {
+	left: 96px;
+	top: 64px;
+}
+
+/* Waiting for the device and Couldn't play: a block of text on the held picture or the art, no
+   card, drifting against burn-in. */
+.msg {
+	position: absolute;
+	left: 96px;
+	top: 228px;
+	width: 1000px;
+	display: flex;
+	flex-direction: column;
+	align-items: flex-start;
+	gap: 10px;
+}
+.msg .lights {
+	margin-bottom: 14px;
+}
+.msg .title {
+	display: flex;
+	align-items: center;
+	gap: 18px;
+	font-size: 40px;
+	line-height: 48px;
+	font-weight: 600;
+}
+.msg .title svg {
+	flex: none;
+	color: var(--vermilion);
+}
+.msg .show {
+	font-size: 28px;
+	line-height: 36px;
+	color: var(--muted);
+}
+.msg .reason {
+	margin-top: 14px;
+	font-size: 26px;
+	line-height: 34px;
+}
+.msg .hint {
+	font-size: 26px;
+	line-height: 34px;
+	color: var(--muted);
+}
+.msg > div:empty {
+	display: none;
+}
+
+#finished {
+	position: absolute;
+	top: 0;
+	right: 0;
+	bottom: 0;
+	left: 0;
+	background: var(--ground);
+}
+#finished .still {
+	position: absolute;
+	left: 96px;
+	top: 200px;
+	width: 560px;
+	height: 315px;
+	border-radius: 14px;
+}
+#finished .text {
+	position: absolute;
+	left: 704px;
+	top: 262px;
+	right: 96px;
+	display: flex;
+	flex-direction: column;
+	gap: 10px;
+}
+#finished .show {
+	font-size: 40px;
+	line-height: 48px;
+}
+#finished .line {
+	font-size: 28px;
+	line-height: 36px;
+}
+#finished .wm {
+	position: absolute;
+	right: 96px;
+	bottom: 64px;
+	font-size: 30px;
+	line-height: 36px;
+	letter-spacing: -0.01em;
+	color: var(--muted);
+}
+/* Finished gives way to Ready on the standard spring. */
+#ui[data-phase='idle'] > #finished,
+#ui[data-phase='idle'] > #city.on,
+#ui[data-phase='idle'] > #ready.on {
+	transition:
+		opacity var(--std),
+		visibility 0s linear 360ms;
+}
+#ui[data-phase='idle'] > #city.on,
+#ui[data-phase='idle'] > #ready.on {
+	transition: opacity var(--std);
+}
+/* At launch the name follows the sky by 200 ms. */
+html.launch #ui > #ready.on {
+	transition: opacity var(--in) 200ms;
+}
+html.launch #ui > #city.on {
+	transition: opacity var(--in);
+}

@@ -1,10 +1,12 @@
-// mpv's log lines, as logcat may hold them: every address cut to its scheme, host and port, as the
-// engine's log says one (`logged::address`), since a stream's carries its signed token in its path
-// or query.
+// mpv's log lines, as logcat and the engine's player log may hold them: every address cut to its
+// scheme, host and port, as the engine's log says one (`logged::address`), since a stream's carries
+// its signed token in its path or query.
 
 package app.kaeri.player
 
 import android.util.Log
+import app.kaeri.engine.ffi.FfiLogLevel
+import app.kaeri.engine.ffi.logLine
 
 object MpvLog {
     /** The tag mpv's lines go under. */
@@ -39,5 +41,22 @@ object MpvLog {
             else -> Log.VERBOSE
         }
         return priority to "[${event.name ?: "mpv"}] ${redacting(text)}"
+    }
+
+    /** The engine's level for a line [said] at [priority], or null below info: the player log keeps info and up. */
+    fun kept(priority: Int): FfiLogLevel? = when {
+        priority >= Log.ERROR -> FfiLogLevel.ERROR
+        priority == Log.WARN -> FfiLogLevel.WARN
+        priority == Log.INFO -> FfiLogLevel.INFO
+        else -> null
+    }
+
+    /**
+     * Hands one line [said] to the engine's player log under source `mpv`, its module in brackets
+     * as mpv names it. The engine keeps it with the playback under way, and nothing before one.
+     */
+    fun keep(priority: Int, line: String) {
+        val level = kept(priority) ?: return
+        runCatching { logLine(level, TAG, line) }
     }
 }

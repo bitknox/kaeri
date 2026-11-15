@@ -3,6 +3,7 @@
 
 package app.kaeri.ui
 
+import app.kaeri.store.alertProblem
 import app.kaeri.store.text
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
@@ -117,7 +118,7 @@ internal fun EngineNotices(onHint: (NoticeHint) -> Unit) {
         if (hint == null && item.isAlert) {
             val text = item.notice.text(context)
             snackbars.show(text, resources.getString(I18nR.string.action_report)) {
-                openBugReport(context, store, app.kaeri.store.BugContext("message", text))
+                openBugReport(context, store, store.alertProblem(text))
             }
         } else {
             snackbars.show(item.notice.text(context), hint?.label(context)) { hint?.let(onHint) }

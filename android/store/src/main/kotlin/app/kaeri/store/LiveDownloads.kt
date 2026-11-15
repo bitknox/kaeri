@@ -16,7 +16,9 @@ import app.kaeri.i18n.Strings
  * - one episode: "Stardust Wayfarer" over "Episode 8 · 5 min left", with Pause and Cancel;
  * - several: "Downloading 3 episodes" over "Stardust Wayfarer E8 · 2.7 GB left", with Pause all and
  *   Cancel;
- * - paused: the same with "paused", and Resume (Resume all) in place of Pause.
+ * - paused: the same with "paused", and Resume (Resume all) in place of Pause;
+ * - with a private episode in the queue: "Downloading in Kaeri" over the time or bytes left, no
+ *   show or episode named.
  *
  * The bar is a segment per episode, as long as the episode is, those finished while the job ran
  * first and full, with a point between each two, and the tracker at the bytes done overall.
@@ -56,12 +58,22 @@ data class LiveDownloads(
             val known = sizes.any { it > 0 }
             val seconds = if (paused) null else secondsLeft(left, rates, bytesLeft)
             val several = left.size > 1
+            // A private episode in the queue: "Downloading in Kaeri", and no show or episode named.
+            val hidden = left.any { it.private }
             val title = when {
+                hidden -> Strings.privateDownloadLine(context)
                 !several -> lead.title
                 paused -> context.resources.getQuantityString(R.plurals.downloads_live_paused, left.size, left.size)
                 else -> context.resources.getQuantityString(R.plurals.downloads_notice_running, left.size, left.size)
             }
-            val text = if (several) {
+            val text = if (hidden) {
+                when {
+                    paused -> Strings.downloadsLivePausedOne(context)
+                    seconds != null -> Strings.downloadsTimeLeft(context, chipOf(context, seconds))
+                    known -> Strings.downloadsLiveLeft(context, Wording.bytes(context, bytesLeft))
+                    else -> Strings.downloadsNoticeStarting(context)
+                }
+            } else if (several) {
                 listOfNotNull(
                     wholeEpisode(lead.episode)?.let { Strings.downloadsLiveLead(context, lead.title, it) }
                         ?: listOf(lead.title, episodeName(context, lead.episode)).joinToString(" · "), // i18n-skip

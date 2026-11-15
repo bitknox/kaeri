@@ -8,6 +8,7 @@ pub mod downloads;
 pub mod first_launch;
 pub mod first_party;
 pub mod folders;
+pub mod following;
 pub mod home_page;
 pub mod join;
 pub mod library;
@@ -266,10 +267,11 @@ pub fn shortcuts(ctx: &Ctx) {
                 (t::nav_search(), "<Control>f"),                           // i18n-skip
                 (t::nav_settings(), "<Control>comma"),                     // i18n-skip
                 (t::accounts_sync_now(), "<Control>r"),                    // i18n-skip
-                (t::action_back(), "<Alt>Left"),                           // i18n-skip
-                (t::shortcuts_show(), "<Control>question"),                // i18n-skip
-                (t::shortcuts_close_window(), "<Control>w"),               // i18n-skip
-                (t::shortcuts_quit(), "<Control>q"),                       // i18n-skip
+                (t::private_mode(), crate::private::ACCEL),
+                (t::action_back(), "<Alt>Left"), // i18n-skip
+                (t::shortcuts_show(), "<Control>question"), // i18n-skip
+                (t::shortcuts_close_window(), "<Control>w"), // i18n-skip
+                (t::shortcuts_quit(), "<Control>q"), // i18n-skip
             ],
         ),
         (

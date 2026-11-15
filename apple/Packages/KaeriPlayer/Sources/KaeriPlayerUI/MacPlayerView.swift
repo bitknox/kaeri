@@ -72,8 +72,9 @@ public struct MacPlayerView: View {
             loading: curtain, failed: model.failure != nil, askingStillWatching: model.stillWatching)
     }
 
-    /// The banner holds until the first frame, and comes back between episodes.
-    private var curtain: Bool { model.starting != nil || !model.hasPicture || model.holdsCurtain }
+    /// The banner holds until the first frame, and comes back between episodes. A roll-on's
+    /// starting screen also stays its 0.6 s.
+    private var curtain: Bool { model.starting != nil || !model.hasPicture || model.holdsCurtain || model.startingHeld }
 
     public var body: some View {
         ZStack {
@@ -318,7 +319,12 @@ public struct MacPlayerView: View {
                 Text(model.episodeLine)
                     .contentTransition(.opacity)
                     .animation(.standard, value: model.episodeLine)
+                if model.isPrivate {
+                    PlayerPrivateLabel(size: 13)
+                        .transition(.opacity)
+                }
             }
+            .animation(.fadeIn, value: model.isPrivate)
             .lineLimit(1)
             .overVideoText()
             .frame(maxWidth: .infinity, alignment: .leading)

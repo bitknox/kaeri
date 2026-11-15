@@ -599,6 +599,81 @@ async fn a_stopped_plugin_can_be_called_again() {
     assert_eq!(plugin.describe().await.expect("describe after a deadline").id, "test-hostile");
 }
 
+// ── relay ────────────────────────────────────────────────────────────────────────────────────
+//
+// `plugins/test-hostile` is built for `plugin-with-relay` and declares both transform
+// capabilities; `plugins/example-rust` is built for `plugin` and declares none.
+
+#[tokio::test]
+async fn a_plugin_built_with_relay_transforms_the_parts_it_declares() {
+    use kaeri_core::traits::{Provider, StreamPart, StreamTransforms};
+    let Some(path) = hostile() else { return };
+    let host = PluginHost::new(Limits::default(), None).unwrap();
+    // Loaded and described through the `plugin` world, as a host without `relay` links it: the
+    // extra export changes nothing there.
+    let plugin = host.load(&path).await.expect("load");
+    assert!(plugin.relays());
+    let source = kaeri_plugin::WasmProvider::new(plugin);
+    assert_eq!(source.stream_transforms(), StreamTransforms { keys: true, segments: true });
+
+    let headers = [("referer".to_owned(), "https://allowed.example/".to_owned())];
+    let url = "https://allowed.example/v/seg-1.m4s";
+    let body = source.transform(StreamPart::Segment, url, &headers, b"SEG".to_vec()).await;
+    assert_eq!(body.expect("transformed"), b"relayed:segment:SEG");
+    let url = "https://allowed.example/v/key.bin";
+    let body = source.transform(StreamPart::Key, url, &headers, b"KEY".to_vec()).await;
+    assert_eq!(body.expect("transformed"), b"relayed:key:KEY");
+}
+
+#[tokio::test]
+async fn a_plugin_built_without_relay_is_never_asked_to_transform() {
+    use kaeri_core::traits::{Provider, StreamPart, StreamTransforms};
+    let Some(path) = component() else { return };
+    let host = PluginHost::new(Limits::default(), None).unwrap();
+    let plugin = host.load(&path).await.expect("load");
+    assert!(!plugin.relays());
+    let answered = plugin.transform("segment", "https://x.example/a", &[], b"A".to_vec()).await;
+    assert_eq!(answered.expect("no call").expect("as it came"), b"A");
+    let source = kaeri_plugin::WasmProvider::new(plugin);
+    assert_eq!(source.stream_transforms(), StreamTransforms::default());
+    let body =
+        source.transform(StreamPart::Key, "https://x.example/k", &[], b"K".to_vec()).await;
+    assert_eq!(body.expect("as it came"), b"K");
+}
+
+#[tokio::test]
+async fn a_spinning_transform_is_stopped_by_the_deadline() {
+    let Some(path) = hostile() else { return };
+    let host = PluginHost::new(
+        Limits { deadline: Duration::from_millis(500), ..Limits::default() },
+        None,
+    )
+    .unwrap();
+    let plugin = host.load(&path).await.expect("load");
+    let error = plugin
+        .transform("segment", "https://allowed.example/spin", &[], b"x".to_vec())
+        .await
+        .expect_err("the guest should be stopped");
+    assert!(
+        matches!(error, PluginError::Deadline { .. }),
+        "expected a deadline, got {error:?}"
+    );
+}
+
+#[tokio::test]
+async fn a_transform_cannot_reach_an_undeclared_host() {
+    let Some(path) = hostile() else { return };
+    let host = PluginHost::new(Limits::default(), None).unwrap();
+    let plugin = host.load(&path).await.expect("load");
+    let answered = plugin
+        .transform("segment", "https://allowed.example/escape", &[], b"x".to_vec())
+        .await
+        .expect("no trap");
+    let reason = answered.expect_err("the guest reports the denial");
+    assert!(reason.starts_with("denied:"), "the host did not deny the fetch: {reason}");
+    assert!(reason.contains("exfiltrate.example"), "{reason}");
+}
+
 #[tokio::test]
 async fn a_load_failure_names_the_file() {
     // A plugin directory is user-writable, so "one of your plugins is broken" is useless — the

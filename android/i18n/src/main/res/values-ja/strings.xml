@@ -13,6 +13,9 @@
     <string name="notice_cast_taken_over">別のデバイスが%1$sで再生を始めたため、キャストを終了しました。</string>
     <string name="notice_cast_not_same_network">このデバイスは%1$sと同じネットワークにないか、VPN経由で接続しています。キャストするには両方を同じネットワークに接続してください。</string>
     <string name="notice_cast_lost">%1$sとの接続が切れたため、キャストを終了しました。</string>
+    <string name="notice_cast_segment">%1$sがストリームを受け取れなくなりました。ソースがエピソードの一部に応答しませんでした。別のソースをお試しください。</string>
+    <string name="notice_cast_lost_stream">%1$sがこのデバイスからのストリームを失いました。両方が同じネットワークにあるか確認してください。</string>
+    <string name="notice_cast_subtitles_plain">%1$sの字幕はプレーンテキストで表示されます。装飾付きの字幕はこのテレビには重すぎました。</string>
     <string name="notice_cast_no_device">キャスト先のテレビがネットワーク上にもうありません。</string>
     <string name="notice_cast_unavailable">このバージョンのKaeriでは、テレビへのキャストはできません。</string>
     <string name="cast_phase_starting">%1$sで開始中</string>
@@ -114,6 +117,8 @@
     <string name="status_searching_sources">ソースでエピソード%1$sを検索しています…</string>
     <string name="notice_player_failed_to_start">mpvを起動できませんでした。mpvが単独で起動するか確認してください。（%1$s）</string>
     <string name="notice_stream_no_video">そのストリームから映像が届きませんでした。%2$,d件中%1$,d件目を試しています。</string>
+    <string name="notice_failed_over">ストリームが途切れました。%1$sが同じ位置から引き継ぎました。</string>
+    <string name="notice_failed_over_same_source">ストリームが途切れました。%1$sの別のストリームが同じ位置から引き継ぎました。</string>
     <string name="notice_player_could_not_play">mpvでこのファイルを再生できませんでした。%1$s</string>
     <string name="notice_player_exited_silently">mpvは何も再生せず、理由も表示されないまま終了しました。別のソースを試してください。</string>
     <string name="notice_player_not_playing">%1$,d秒経っても、mpvで再生が始まりません。ソースにデータがない可能性があります。mpvが単独でファイルを再生できるか確認してください。</string>
@@ -299,6 +304,7 @@
     <string name="reading_row_on_device">このデバイス内</string>
     <string name="reading_row_queued">待機中</string>
     <string name="reading_row_waits_wifi">待機中 · Wi-Fi待ち</string>
+    <string name="reading_row_waits_room">待機中 · 空き容量待ち</string>
     <string name="reading_row_downloading">ダウンロード中 · %1$,d/%2$,dページ</string>
     <string name="reading_row_failed">ダウンロード失敗</string>
     <string name="reading_row_page_of">%1$d/%2$dページ</string>
@@ -348,6 +354,9 @@
     <string name="reading_dl_waits_wifi">Wi-Fi待ち</string>
     <string name="reading_dl_failed">第%1$s話をダウンロードできませんでした</string>
     <string name="reading_dl_offline">オフライン</string>
+    <plurals name="reading_dl_no_room">
+        <item quantity="other">空き容量がありません。容量が空くとダウンロードされます。</item>
+    </plurals>
     <string name="reading_estimate_size">約%1$s</string>
     <string name="reading_estimate_wifi">Wi-Fi経由</string>
     <string name="reading_estimate_mobile">モバイルデータ経由</string>
@@ -511,6 +520,13 @@
     <string name="notice_signed_out">%1$sからサインアウトしました。</string>
     <plurals name="notice_signed_out_queue">
         <item quantity="other">%1$sからサインアウトしました。送信待ちの変更が%2$,d件あり、次回のサインイン後に送信されます。</item>
+    </plurals>
+    <string name="notice_tracker_change_refused">%1$sが「%2$s」への変更を何度も拒否したため、変更はKaeriにのみ残ります。</string>
+    <plurals name="notice_tracker_changes_refused">
+        <item quantity="other">%1$sが「%2$s」とほか%3$,d件のタイトルへの変更を何度も拒否したため、変更はKaeriにのみ残ります。</item>
+    </plurals>
+    <plurals name="notice_tracker_change_refused_untitled">
+        <item quantity="other">%1$sが%2$,d件のタイトルへの変更を何度も拒否したため、変更はKaeriにのみ残ります。</item>
     </plurals>
     <string name="notice_sign_out_failed">%1$sからサインアウトできませんでした。もう一度試してください。%2$s</string>
     <string name="notice_not_saved_because">その設定を保存できませんでした。%1$s</string>
@@ -700,6 +716,7 @@
     <string name="reader_end_again">最初から読み直す</string>
     <string name="reader_opening_chapter">第%1$s話を開いています</string>
     <string name="reader_failed_chapter">第%1$s話を開けませんでした</string>
+    <string name="reader_failed_chapter_plain">この話を開けませんでした</string>
     <string name="reader_sheet_series">この作品</string>
     <string name="reader_sheet_all_manga">すべてのマンガ</string>
     <string name="reader_sheet_all_webtoons">すべてのウェブトゥーン</string>
@@ -940,6 +957,8 @@
     <string name="tv_discussion_select_spoiler">決定でネタバレを表示</string>
     <string name="updates_unknown_sources_path">設定 › アプリ › セキュリティと制限 › 提供元不明のアプリ</string>
     <string name="tv_remote_default_name">Kaeri TV</string>
+    <string name="player_stats_show_live">ライブ統計を表示</string>
+    <string name="player_stats_hide_live">ライブ統計を隠す</string>
     <string name="episode_short_dubbed">E%1$d · 吹替版</string>
     <string name="episode_long_dubbed">エピソード %1$d · 吹替版</string>
     <plurals name="downloads_live_paused">
@@ -1173,6 +1192,7 @@
     <string name="engine_down_title">Kaeriが停止しました</string>
     <string name="engine_down_stopped">再び動き出すまで、新しい内容は読み込まれません。もう一度試すか、アプリを終了してから開き直してください。</string>
     <string name="engine_down_quit">終了</string>
+    <string name="settings_picture_in_picture_system_off">Android の設定でオフ</string>
     <string name="about_title">概要</string>
     <string name="about_title_app">Kaeriについて</string>
     <string name="about_version">バージョン %1$s</string>
@@ -1208,6 +1228,18 @@
     <string name="report_tv_scan">コードをスキャンして、スマートフォンでレポートを開きます。</string>
     <string name="report_crash_off">クラッシュレポートがオフのため、含まれていません。設定の「情報」でオンにできます。</string>
     <string name="report_crash_settings">クラッシュレポートの設定</string>
+    <string name="report_player_log">プレーヤーログ</string>
+    <plurals name="report_player_log_detail">
+        <item quantity="other">直近%1$,d回の再生 · %2$s</item>
+    </plurals>
+    <string name="report_player_log_empty">まだ再生の記録はありません</string>
+    <string name="report_player_log_save">ログを保存…</string>
+    <string name="report_player_log_attach">GitHubでissueが開いたら、このファイルを添付してください。</string>
+    <string name="report_player_log_saved">%1$s として保存しました</string>
+    <string name="report_player_log_failed">ログを保存できませんでした。別のフォルダを試してください。</string>
+    <string name="report_sent_report">レポート</string>
+    <string name="report_player_log_a11y_saved">プレーヤーログを保存しました</string>
+    <string name="report_player_log_a11y_hint">issueに添付するファイルを保存します</string>
     <string name="settings_group_crashes">クラッシュレポート</string>
     <string name="settings_crash_save">このデバイスにクラッシュレポートを保存</string>
     <string name="settings_crash_save_detail">Kaeriはバグ報告用に、クラッシュのたびにタイトル、アドレス、名前を除いた短い記録をこのデバイスに保存します。自動では何も送信されません。</string>
@@ -1273,6 +1305,16 @@
     <string name="cast_play_here">ここで再生</string>
     <string name="cast_stop">キャストを停止</string>
     <string name="cast_volume_fixed">テレビ側で設定</string>
+    <string name="cast_button_connecting">%1$sに接続中</string>
+    <string name="cast_button_connected">%1$sに接続済み</string>
+    <string name="cast_plays_on">%1$sで再生</string>
+    <string name="cast_idle">まだ何も再生していません</string>
+    <string name="cast_status_paused">%1$sで一時停止中</string>
+    <string name="cast_open_show">%1$sを開く</string>
+    <string name="cast_controller_close">閉じる</string>
+    <string name="cast_mini_opens">操作画面を開きます</string>
+    <string name="cast_play_next_on">%1$sで次に再生</string>
+    <string name="cast_notification_line">%1$sにキャスト中</string>
     <string name="action_try_again">再試行</string>
     <string name="action_cancel">キャンセル</string>
     <string name="action_go">移動</string>
@@ -1322,6 +1364,7 @@
     <string name="action_disable">無効にする</string>
     <string name="action_check_now">今すぐ確認</string>
     <string name="action_check_again">再確認</string>
+    <string name="action_checking">確認中</string>
     <string name="action_open_settings">設定を開く</string>
     <string name="action_report">報告</string>
     <string name="action_play_now">今すぐ再生</string>
@@ -1344,6 +1387,7 @@
     <string name="time_in">%1$s後</string>
     <string name="time_minutes_left">残り%1$,d分</string>
     <string name="time_minutes">%1$,d分</string>
+    <string name="time_hours">%1$,d時間</string>
     <string name="time_now_inline">今</string>
     <string name="time_just_now_inline">たった今</string>
     <string name="when_today">今日 %1$s</string>
@@ -1444,6 +1488,9 @@
     <string name="player_position_spoken">%1$s / %2$s</string>
     <string name="names_pair">%1$sと%2$s</string>
     <string name="names_list">%1$s、%2$s</string>
+    <string name="desktop_cast_quit_title">キャストを停止して終了しますか？</string>
+    <string name="desktop_cast_quit_body">%1$s を %2$s で再生中です。終了すると停止します。</string>
+    <string name="desktop_cast_quit_action">停止して終了</string>
     <string name="discussion_open">ディスカッション</string>
     <string name="discussion_title_episode">エピソード %1$d のディスカッション</string>
     <plurals name="discussion_row">
@@ -2730,6 +2777,7 @@
     <string name="read_search_source_kind_folder">フォルダ</string>
     <string name="read_search_source_kind_plugin">プラグイン</string>
     <string name="read_search_source_more">さらに%1$,d件を表示</string>
+    <string name="read_tile_add_to">%1$sに追加</string>
     <string name="onboarding_step">%1$,d/%2$,d</string>
     <string name="onboarding_welcome_line">自分のソースで、視聴も読書も記録できます。</string>
     <string name="onboarding_welcome_note">リストと進捗はあなたのデバイスに残ります。連携サービスとソースは、ご自分で追加します。</string>
@@ -3187,6 +3235,12 @@
     <string name="settings_quality">画質</string>
     <string name="settings_auto_play">次のエピソードを自動再生</string>
     <string name="settings_up_next_countdown">次のエピソードのカウントダウン</string>
+    <string name="settings_preload_cellular">モバイルデータ通信でビデオを先読み</string>
+    <string name="settings_preload_metered">従量制課金接続でビデオを先読み</string>
+    <string name="settings_preload_detail_android">エンディング中に、次のエピソードのストリーム、字幕、スキップ位置を探します。最初の数秒も読み込みますが、モバイルデータ通信や従量制のWi-Fiではこれがオンのときだけです。</string>
+    <string name="settings_preload_detail_metered">エンディング中に、次のエピソードのストリーム、字幕、スキップ位置を探します。最初の数秒も読み込みますが、従量制課金接続ではこれがオンのときだけです。</string>
+    <string name="settings_preload_torrents">トレントも同じように最初のピースを読み込みます。</string>
+    <string name="settings_preload_a11y_dimmed">「次のエピソードを自動再生」が必要です</string>
     <string name="settings_skip_opening">オープニングを自動でスキップ</string>
     <string name="settings_skip_recap">前回のあらすじを自動でスキップ</string>
     <string name="settings_find_skips">音声からスキップ位置を検出</string>
@@ -3369,6 +3423,9 @@
     <string name="settings_opds_feed">このネットワークで共有</string>
     <string name="settings_opds_password">フィードのパスワード</string>
     <string name="settings_opds_port">フィードのポート</string>
+    <string name="settings_label_picture_in_picture_on_leave">アプリを離れるときにピクチャー イン ピクチャー</string>
+    <string name="settings_anilist_following">フォロー中の人を表示</string>
+    <string name="settings_anilist_following_footer">AniListでフォローしている人がどこまで観ているかを、作品のページとエピソードに表示します。自分のリストを誰が見られるかはAniListで設定します。</string>
     <string name="book_server_address">アドレス</string>
     <string name="book_server_address_hint">アドレス、またはKavitaのOPDSリンク全体を入力します。</string>
     <string name="book_server_kavita_key">これはKavitaのOPDSリンクです。キーでサインインするため、パスワードは不要です。</string>
@@ -3463,6 +3520,16 @@
     <string name="source_picker_automatic_detail">各エピソードを、配信している最初のソースから取得</string>
     <plurals name="source_picker_coverage">
         <item quantity="other">%1$,d / %2$,dエピソード</item>
+    </plurals>
+    <plurals name="source_picker_episodes">
+        <item quantity="other">エピソード %2$d–%3$d</item>
+    </plurals>
+    <string name="source_picker_episodes_not_yet">エピソード %1$d–%2$d。%3$sはまだありません</string>
+    <string name="source_picker_episodes_not">エピソード %1$d–%2$d。%3$sはありません</string>
+    <string name="source_picker_missing_pair">%1$dと%2$d</string>
+    <string name="source_picker_missing_range">%1$d–%2$d</string>
+    <plurals name="source_picker_coverage_missing">
+        <item quantity="other">%1$,d / %2$,dエピソード。%3$sはありません</item>
     </plurals>
     <string name="source_note_off">オフになっています</string>
     <string name="source_note_resting">応答がなく、まもなく再試行します</string>
@@ -4080,6 +4147,15 @@
     <string name="more_following_note">AniListより</string>
     <string name="more_followed_score">%1$,d/10</string>
     <string name="more_like_this">似た作品</string>
+    <string name="following_show_all">%1$,d人すべて表示</string>
+    <plurals name="following_names">
+        <item quantity="other">%1$s、%2$s、ほか%3$,d人</item>
+    </plurals>
+    <string name="following_names_two">%1$s、%2$s</string>
+    <string name="following_mark_more">+%1$,d</string>
+    <string name="following_mark_spoken">%1$sはここまで視聴しました。</string>
+    <string name="following_score_spoken">スコア %1$,d/10</string>
+    <string name="following_open_help">それぞれの視聴状況を表示します。</string>
     <string name="more_followed_progress">%1$s · %2$s</string>
     <string name="more_empty">AniListには、この作品のキャスト、スタッフ、おすすめがまだありません。</string>
     <string name="more_spoiler">ネタバレ</string>
@@ -4097,7 +4173,6 @@
     <string name="title_fact_after">第%1$d話まで放送</string>
     <string name="title_fact_now">放送中</string>
     <string name="title_fact_tba">未定</string>
-    <string name="more_following_line">%1$s · %2$,d/10</string>
     <string name="episode_go_to">エピソードへ移動…</string>
     <string name="episode_go_to_title">エピソードへ移動</string>
     <string name="episode_go_to_go">移動</string>
@@ -4105,6 +4180,18 @@
     <string name="episode_go_to_label">エピソード、%1$d～%2$d</string>
     <string name="episode_go_to_none">エピソード%1$dはありません。この作品は全%2$d話です。</string>
     <string name="episode_go_to_not_out">エピソード%1$dはまだ公開されていません。最新は%2$dです。</string>
+    <string name="episode_missing_aired">エピソード %1$d は%2$sに公開されました。</string>
+    <string name="episode_missing_aired_on">エピソード %1$d は%2$sに公開されました。</string>
+    <string name="episode_missing_not_yet">ソースにはまだありません。</string>
+    <string name="episode_missing_still">ソースには今もありません。</string>
+    <string name="episode_missing_no_answer">ソースから応答がありませんでした。</string>
+    <string name="episode_missing_looks_again">Kaeriが%1$,d分ごとに探し直します。</string>
+    <string name="episode_missing_none">どのソースにもありません。</string>
+    <string name="episode_missing_offline">オンラインに戻るとKaeriが探します。</string>
+    <string name="episode_row_aired_ago">%1$sに公開</string>
+    <string name="episode_unsourced_yet">まだソースにありません</string>
+    <string name="episode_found_announcement">エピソード %1$d がソースで見つかりました。</string>
+    <string name="episode_check_again_help">エピソードの公開後%2$,d時間は、Kaeriも%1$,d分ごとに自動で探します。</string>
     <string name="torrents_title">トレント</string>
     <string name="torrents_on">トレント：オン</string>
     <string name="torrents_off_detail">初期設定ではオフです。プロキシを経由させない限り、トレントは直接接続します。</string>

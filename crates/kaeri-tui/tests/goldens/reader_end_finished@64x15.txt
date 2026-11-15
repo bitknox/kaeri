@@ -1,0 +1,29 @@
+Kaeri   Harbor Light Recipes · Chapter 17
+────────────────────────────────────────────────────────────────
+
+    End of the series
+    There are no more chapters.
+
+    ● Counted as read · AniList updated
+
+
+
+
+
+
+────────────────────────────────────────────────────────────────
+                            r read again from the start   q back
+=== styles ===
+colours text=#e4e0d6 text-dim=#a8aec9 rule=#46464d obi=#f2a64b state=#7fc7d9 alert=#f59b85 ground=#1a1b26
+r00 c00-04 fg=text mod=BOLD
+r00 c08-40 fg=text-dim
+r01 c00-63 fg=rule
+r03 c04-20 fg=text mod=BOLD
+r04 c04-30 fg=text-dim
+r06 c04-04 fg=state
+r06 c06-38 fg=text
+r13 c00-63 fg=rule
+r14 c28-28 fg=text
+r14 c29-57 fg=text-dim
+r14 c58-58 fg=text
+r14 c59-63 fg=text-dim

@@ -116,16 +116,28 @@ struct TVAccessory: ViewModifier {
             && navigator.section != .together
     }
 
+    @State private var anchor = CastMiniAnchor()
+
     func body(content: Content) -> some View {
         if #available(iOS 26.1, *) {
             // The TV's bar wins: what plays on the TV is the louder thing. Otherwise the party
-            // you are in, while its lobby and the player are away.
-            let tv = (store.tv.connected != nil || store.tv.cast.active) && store.tv.now != nil
-            content.tabViewBottomAccessory(isEnabled: tv || partyBar) {
-                if tv { TVNowPlayingBar() } else { PartyBar() }
-            }
-        } else {
+            // you are in, while its lobby and the player are away. A cast's mini grows into its
+            // controller.
+            let mini = store.tv.cast.miniShown && !playerUp
+            let tv = !mini && store.tv.connected != nil && store.tv.now != nil
             content
+                .tabViewBottomAccessory(isEnabled: mini || tv || partyBar) {
+                    if mini {
+                        CastMini().background(CastMiniProbe(anchor: anchor))
+                    } else if tv {
+                        TVNowPlayingBar()
+                    } else {
+                        PartyBar()
+                    }
+                }
+                .modifier(CastAccessoryCover(anchor: anchor))
+        } else {
+            content.modifier(CastAccessoryCover(anchor: anchor))
         }
     }
 }

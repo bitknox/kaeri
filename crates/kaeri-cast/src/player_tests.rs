@@ -11,7 +11,7 @@ use super::*;
 use crate::{
     aac::{FakeEncoder, NoEncoder},
     fake::{
-        FakeOptions, FakeReceiver, Refusal, Refuse,
+        CustomReceiver, FakeOptions, FakeReceiver, Refusal, Refuse,
         matroska::{Fixture, FixtureAudio, matroska},
     },
     fetch::PlainHttp,
@@ -98,6 +98,17 @@ async fn serve_slowly(
     format!("http://{address}")
 }
 
+/// A cast player for the TV, launching the Default Media Receiver as a TV Kaeri's receiver isn't
+/// published to does: the relay's conversions and clips. A test of Kaeri's receiver names it
+/// with [`CastPlayer::use_receiver`] after this.
+async fn connect_standard(
+    setup: CastSetup,
+) -> Result<(CastPlayer, mpsc::UnboundedReceiver<PlaybackEvent>), CastFailure> {
+    let (player, events) = CastPlayer::connect(setup).await?;
+    player.use_receiver(Some(DEFAULT_MEDIA_RECEIVER.into()));
+    Ok((player, events))
+}
+
 fn timings() -> Timings {
     Timings {
         poll: Duration::from_millis(100),
@@ -145,6 +156,7 @@ fn torrent(url: String) -> CastLoad {
         subtitle: None,
         audio_language: Some("ja".into()),
         audio_track: None,
+        audio_memory: None,
     }
 }
 
@@ -153,13 +165,17 @@ async fn next(
     want: impl Fn(&PlaybackEvent) -> bool,
 ) -> PlaybackEvent {
     let deadline = tokio::time::Instant::now() + Duration::from_secs(15);
+    let mut seen = Vec::new();
     loop {
         let event = tokio::time::timeout_at(deadline, rx.recv())
             .await
-            .expect("the event in time")
+            .unwrap_or_else(|_| panic!("the event in time; heard only {seen:?}"))
             .expect("the player still there");
         if want(&event) {
             return event;
+        }
+        if !matches!(event, PlaybackEvent::Progress { .. }) {
+            seen.push(event);
         }
     }
 }
@@ -174,7 +190,7 @@ async fn a_torrents_matroska_is_remuxed_with_aac_and_driven_as_mpv_is() {
     let memory = Arc::new(CastMemory::memory());
     let encoder = FakeEncoder::default();
     let (player, mut events) =
-        CastPlayer::connect(setup(&receiver, Arc::clone(&memory), Arc::new(encoder)))
+        connect_standard(setup(&receiver, Arc::clone(&memory), Arc::new(encoder)))
             .await
             .unwrap();
     assert!(receiver.heard("LAUNCH").is_empty(), "nothing starts on the TV before a load");
@@ -268,7 +284,7 @@ async fn a_refused_codec_falls_back_to_aac_and_the_next_cast_starts_there() {
         .await
         .unwrap();
         let memory = Arc::new(CastMemory::memory());
-        let (player, mut events) = CastPlayer::connect(setup(
+        let (player, mut events) = connect_standard(setup(
             &receiver,
             Arc::clone(&memory),
             Arc::new(FakeEncoder::default()),
@@ -315,7 +331,7 @@ async fn a_tv_that_stops_hls_at_720_lines_plays_a_1080_line_file_passed_through(
     .unwrap();
     let memory = Arc::new(CastMemory::memory());
     let (player, mut events) =
-        CastPlayer::connect(setup(&receiver, Arc::clone(&memory), Arc::new(NoEncoder)))
+        connect_standard(setup(&receiver, Arc::clone(&memory), Arc::new(NoEncoder)))
             .await
             .unwrap();
 
@@ -367,9 +383,7 @@ async fn a_file_whose_picture_a_tv_may_lack_is_asked_about_with_a_clip_first() {
     .unwrap();
     let memory = Arc::new(CastMemory::memory());
     let (player, mut events) =
-        CastPlayer::connect(setup(&hub, Arc::clone(&memory), Arc::new(NoEncoder)))
-            .await
-            .unwrap();
+        connect_standard(setup(&hub, Arc::clone(&memory), Arc::new(NoEncoder))).await.unwrap();
     player.load(torrent(format!("{base}/episode.mkv")));
     next(&mut events, |e| matches!(e, PlaybackEvent::Ended { .. } | PlaybackEvent::Loaded))
         .await;
@@ -388,9 +402,7 @@ async fn a_file_whose_picture_a_tv_may_lack_is_asked_about_with_a_clip_first() {
         .unwrap();
     let memory = Arc::new(CastMemory::memory());
     let (player, mut events) =
-        CastPlayer::connect(setup(&tv, Arc::clone(&memory), Arc::new(NoEncoder)))
-            .await
-            .unwrap();
+        connect_standard(setup(&tv, Arc::clone(&memory), Arc::new(NoEncoder))).await.unwrap();
     player.load(torrent(format!("{base}/episode.mkv")));
     next(&mut events, |e| *e == PlaybackEvent::Loaded).await;
     let sent = tv.heard("LOAD");
@@ -415,7 +427,7 @@ async fn a_file_the_remuxer_cant_read_is_passed_through() {
         .unwrap();
     let memory = Arc::new(CastMemory::memory());
     let (player, mut events) =
-        CastPlayer::connect(setup(&receiver, Arc::clone(&memory), Arc::new(NoEncoder)))
+        connect_standard(setup(&receiver, Arc::clone(&memory), Arc::new(NoEncoder)))
             .await
             .unwrap();
     let url = path.to_string_lossy().into_owned();
@@ -447,7 +459,7 @@ async fn hls_behind_the_stream_proxy_is_relayed_with_cors() {
         .unwrap();
     let memory = Arc::new(CastMemory::memory());
     let (player, mut events) =
-        CastPlayer::connect(setup(&receiver, Arc::clone(&memory), Arc::new(NoEncoder)))
+        connect_standard(setup(&receiver, Arc::clone(&memory), Arc::new(NoEncoder)))
             .await
             .unwrap();
     let url = format!("{base}/a/index.m3u8");
@@ -496,7 +508,7 @@ async fn a_slow_first_segment_is_waited_for_and_teaches_nothing() {
     let memory = Arc::new(CastMemory::memory());
     let mut setup = setup(&receiver, Arc::clone(&memory), Arc::new(NoEncoder));
     setup.timings.slow_source = Duration::from_secs(1);
-    let (player, mut events) = CastPlayer::connect(setup).await.unwrap();
+    let (player, mut events) = connect_standard(setup).await.unwrap();
     let url = format!("{base}/a/index.m3u8");
     let load = CastLoad {
         source: CastSource {
@@ -556,7 +568,7 @@ async fn segments_named_as_images_reach_the_tv_as_the_media_they_are() {
         .unwrap();
     let memory = Arc::new(CastMemory::memory());
     let (player, mut events) =
-        CastPlayer::connect(setup(&receiver, Arc::clone(&memory), Arc::new(NoEncoder)))
+        connect_standard(setup(&receiver, Arc::clone(&memory), Arc::new(NoEncoder)))
             .await
             .unwrap();
     player.load(hls_with_jpg_segments(ts_segment()).await);
@@ -584,7 +596,7 @@ async fn a_refusal_after_bytes_no_receiver_plays_blames_no_codec() {
     .unwrap();
     let memory = Arc::new(CastMemory::memory());
     let (player, mut events) =
-        CastPlayer::connect(setup(&receiver, Arc::clone(&memory), Arc::new(NoEncoder)))
+        connect_standard(setup(&receiver, Arc::clone(&memory), Arc::new(NoEncoder)))
             .await
             .unwrap();
     player.load(hls_with_jpg_segments(segment).await);
@@ -599,13 +611,10 @@ async fn an_uncastable_stream_never_takes_the_tv_over() {
         serve(HashMap::from([("/episode.mkv".to_owned(), matroska(&Fixture::default()))]))
             .await;
     let receiver = FakeReceiver::start(FakeOptions::default()).await.unwrap();
-    let (player, mut events) = CastPlayer::connect(setup(
-        &receiver,
-        Arc::new(CastMemory::memory()),
-        Arc::new(NoEncoder),
-    ))
-    .await
-    .unwrap();
+    let (player, mut events) =
+        connect_standard(setup(&receiver, Arc::new(CastMemory::memory()), Arc::new(NoEncoder)))
+            .await
+            .unwrap();
     player.load(torrent(format!("{base}/episode.mkv")));
     next(&mut events, |e| matches!(e, PlaybackEvent::Ended { complete: false })).await;
     assert_eq!(
@@ -623,13 +632,10 @@ async fn a_tv_that_never_fetches_ends_the_cast() {
         FakeReceiver::start(FakeOptions { fetches: false, ..FakeOptions::default() })
             .await
             .unwrap();
-    let (player, mut events) = CastPlayer::connect(setup(
-        &receiver,
-        Arc::new(CastMemory::memory()),
-        Arc::new(NoEncoder),
-    ))
-    .await
-    .unwrap();
+    let (player, mut events) =
+        connect_standard(setup(&receiver, Arc::new(CastMemory::memory()), Arc::new(NoEncoder)))
+            .await
+            .unwrap();
     player.load(torrent(format!("{base}/episode.mkv")));
     next(&mut events, |e| matches!(e, PlaybackEvent::Ended { complete: false })).await;
     assert_eq!(player.failure(), Some(CastFailure::NeverFetches));
@@ -646,13 +652,10 @@ async fn stop_while_the_tv_starts_the_receiver_closes_it_once_up() {
     })
     .await
     .unwrap();
-    let (player, _events) = CastPlayer::connect(setup(
-        &receiver,
-        Arc::new(CastMemory::memory()),
-        Arc::new(NoEncoder),
-    ))
-    .await
-    .unwrap();
+    let (player, _events) =
+        connect_standard(setup(&receiver, Arc::new(CastMemory::memory()), Arc::new(NoEncoder)))
+            .await
+            .unwrap();
     player.load(torrent(format!("{base}/episode.mkv")));
     let deadline = tokio::time::Instant::now() + Duration::from_secs(5);
     while receiver.heard("LAUNCH").is_empty() {
@@ -674,13 +677,10 @@ async fn another_sender_taking_over_ends_the_cast() {
     let file = matroska(&Fixture { audio: Some(FixtureAudio::aac()), ..Fixture::default() });
     let base = serve(HashMap::from([("/episode.mkv".to_owned(), file)])).await;
     let receiver = FakeReceiver::start(FakeOptions::default()).await.unwrap();
-    let (player, mut events) = CastPlayer::connect(setup(
-        &receiver,
-        Arc::new(CastMemory::memory()),
-        Arc::new(NoEncoder),
-    ))
-    .await
-    .unwrap();
+    let (player, mut events) =
+        connect_standard(setup(&receiver, Arc::new(CastMemory::memory()), Arc::new(NoEncoder)))
+            .await
+            .unwrap();
     player.load(torrent(format!("{base}/episode.mkv")));
     next(&mut events, |e| *e == PlaybackEvent::Loaded).await;
     receiver.take_over();
@@ -697,7 +697,7 @@ async fn the_speed_asked_for_before_a_load_is_set_once_it_plays() {
     let file = matroska(&Fixture::default());
     let base = serve(HashMap::from([("/episode.mkv".to_owned(), file)])).await;
     let receiver = FakeReceiver::start(FakeOptions::default()).await.unwrap();
-    let (player, mut events) = CastPlayer::connect(setup(
+    let (player, mut events) = connect_standard(setup(
         &receiver,
         Arc::new(CastMemory::memory()),
         Arc::new(FakeEncoder::default()),
@@ -721,7 +721,7 @@ async fn playing(
 ) -> (CastPlayer, mpsc::UnboundedReceiver<PlaybackEvent>) {
     let file = matroska(&Fixture::default());
     let base = serve(HashMap::from([("/episode.mkv".to_owned(), file)])).await;
-    let (player, mut events) = CastPlayer::connect(setup(
+    let (player, mut events) = connect_standard(setup(
         receiver,
         Arc::new(CastMemory::memory()),
         Arc::new(FakeEncoder::default()),
@@ -771,7 +771,7 @@ async fn a_speed_of_0_asks_the_tv_for_nothing() {
         .unwrap();
     let file = matroska(&Fixture::default());
     let base = serve(HashMap::from([("/episode.mkv".to_owned(), file)])).await;
-    let (player, mut events) = CastPlayer::connect(setup(
+    let (player, mut events) = connect_standard(setup(
         &receiver,
         Arc::new(CastMemory::memory()),
         Arc::new(FakeEncoder::default()),
@@ -833,7 +833,7 @@ async fn a_tv_that_goes_silent_ends_the_cast_and_never_holds_a_control_up() {
     let receiver = FakeReceiver::start(FakeOptions::default()).await.unwrap();
     let mut setup = setup(&receiver, Arc::new(CastMemory::memory()), Arc::new(NoEncoder));
     setup.timings.silence = Duration::from_secs(2);
-    let (player, mut events) = CastPlayer::connect(setup).await.unwrap();
+    let (player, mut events) = connect_standard(setup).await.unwrap();
     player.load(torrent(format!("{base}/episode.mkv")));
     next(&mut events, |e| *e == PlaybackEvent::Loaded).await;
     // Long enough on a live TV that the heartbeat and polls keep the channel up.
@@ -875,7 +875,7 @@ async fn a_tv_with_fixed_volume_only_mutes_and_a_long_pause_ends_the_cast() {
             .unwrap();
     let mut setup = setup(&receiver, Arc::new(CastMemory::memory()), Arc::new(NoEncoder));
     setup.timings.idle_close = Duration::from_millis(800);
-    let (player, mut events) = CastPlayer::connect(setup).await.unwrap();
+    let (player, mut events) = connect_standard(setup).await.unwrap();
     assert_eq!(player.volume_control(), VolumeControl::MuteOnly);
     player.load(torrent(format!("{base}/episode.mkv")));
     next(&mut events, |e| *e == PlaybackEvent::Loaded).await;
@@ -921,13 +921,10 @@ async fn another_audio_track_loads_the_file_again_where_it_was_without_a_new_sta
     };
     let base = serve(HashMap::from([("/episode.mkv".to_owned(), matroska(&file))])).await;
     let receiver = FakeReceiver::start(FakeOptions::default()).await.unwrap();
-    let (player, mut events) = CastPlayer::connect(setup(
-        &receiver,
-        Arc::new(CastMemory::memory()),
-        Arc::new(NoEncoder),
-    ))
-    .await
-    .unwrap();
+    let (player, mut events) =
+        connect_standard(setup(&receiver, Arc::new(CastMemory::memory()), Arc::new(NoEncoder)))
+            .await
+            .unwrap();
     let mut status = player.status();
     player.load(torrent(format!("{base}/episode.mkv")));
     assert!(status.borrow_and_update().step.is_some(), "a load not yet playing says so");
@@ -980,13 +977,10 @@ async fn paused_with_a_dub()
     };
     let base = serve(HashMap::from([("/episode.mkv".to_owned(), matroska(&file))])).await;
     let receiver = FakeReceiver::start(FakeOptions::default()).await.unwrap();
-    let (player, mut events) = CastPlayer::connect(setup(
-        &receiver,
-        Arc::new(CastMemory::memory()),
-        Arc::new(NoEncoder),
-    ))
-    .await
-    .unwrap();
+    let (player, mut events) =
+        connect_standard(setup(&receiver, Arc::new(CastMemory::memory()), Arc::new(NoEncoder)))
+            .await
+            .unwrap();
     player.load(torrent(format!("{base}/episode.mkv")));
     next(&mut events, |e| *e == PlaybackEvent::Loaded).await;
     next(
@@ -1051,13 +1045,10 @@ async fn a_fixtures_test_pattern_plays_on_a_fake_that_plays_what_it_cant_fetch()
     })
     .await
     .unwrap();
-    let (player, mut events) = CastPlayer::connect(setup(
-        &receiver,
-        Arc::new(CastMemory::memory()),
-        Arc::new(NoEncoder),
-    ))
-    .await
-    .unwrap();
+    let (player, mut events) =
+        connect_standard(setup(&receiver, Arc::new(CastMemory::memory()), Arc::new(NoEncoder)))
+            .await
+            .unwrap();
     let url = "av://lavfi:testsrc=duration=1440:size=320x240:rate=30".to_owned();
     let mut load = torrent(url.clone());
     load.source.kind = SourceKind::Progressive;
@@ -1078,4 +1069,587 @@ fn a_fixtures_advert_reads_as_a_tv_with_a_screen() {
     let device = CastDevice::from_txt("Chromecast-fake-1", address, &txt).unwrap();
     assert_eq!((device.name.as_str(), device.id.as_str()), ("Living room", "fake-1"));
     assert!(device.shown());
+}
+
+fn media_status(state: &str, position: f64) -> MediaStatus {
+    MediaStatus {
+        media_session_id: 1,
+        state: state.into(),
+        idle_reason: None,
+        position,
+        duration: None,
+        rate: 1.0,
+        active_tracks: Vec::new(),
+        volume: None,
+        muted: None,
+        content: None,
+        metadata: None,
+        has_media: false,
+    }
+}
+
+#[test]
+fn what_was_asked_holds_until_a_status_agrees_or_a_while_has_passed() {
+    let now = Instant::now();
+    let mut want = Wanted {
+        paused: Some((true, now)),
+        position: Some((300.0, now)),
+        level: Some((0.2, now)),
+        ..Wanted::default()
+    };
+    // A poll answered before the pause and the seek landed.
+    let mut before = media_status("PLAYING", 12.0);
+    before.volume = Some(0.4);
+    want.media(&before);
+    assert!(want.paused.is_some() && want.position.is_some() && want.level.is_some());
+    let mut after = media_status("PAUSED", 300.4);
+    after.volume = Some(0.2);
+    want.media(&after);
+    assert!(want.paused.is_none() && want.position.is_none() && want.level.is_none());
+
+    let long_ago = Instant::now().checked_sub(CONFIRM).unwrap();
+    let mut want = Wanted { paused: Some((true, long_ago)), ..Wanted::default() };
+    want.media(&media_status("PLAYING", 12.0));
+    assert!(want.paused.is_none(), "a TV that kept playing wins in the end");
+
+    let mut want = Wanted { paused: Some((false, now)), ..Wanted::default() };
+    want.media(&media_status("IDLE", 0.0));
+    assert!(want.paused.is_none(), "nothing to play or pause once the file ended");
+}
+
+/// Each status seen: its state, its duration, and whether it had the media's description.
+type Seen = Arc<Mutex<Vec<(CastState, Option<f64>, bool)>>>;
+
+#[tokio::test(flavor = "multi_thread", worker_threads = 4)]
+async fn controls_show_at_once_and_the_duration_outlives_statuses_without_the_media() {
+    let receiver =
+        FakeReceiver::start(FakeOptions { duration: 600.0, ..FakeOptions::default() })
+            .await
+            .unwrap();
+    let (player, mut events) = playing(&receiver).await;
+    let seen: Seen = Arc::default();
+    let watching = tokio::spawn({
+        let (mut status, seen) = (player.status(), Arc::clone(&seen));
+        async move {
+            while status.changed().await.is_ok() {
+                let now = status.borrow_and_update().clone();
+                lock(&seen).push((now.state, now.duration, now.metadata.is_some()));
+            }
+        }
+    });
+    // The remuxed playlist gives the file's own length.
+    let duration = player.current().duration;
+    assert!(duration.is_some_and(|d| d > 0.0));
+
+    let pause = player.set_paused(true);
+    tokio::pin!(pause);
+    // Polled once: the request is out and the TV hasn't answered.
+    let _ = futures::poll!(&mut pause);
+    assert_eq!(player.current().state, CastState::Paused, "paused on the tap");
+    pause.await.unwrap();
+    next(&mut events, |e| *e == PlaybackEvent::Paused(true)).await;
+
+    // Inside the 20 s file the remuxed playlist describes, with time to spare after it resumes:
+    // past its end, the resume could hear the file finish before it plays.
+    player.seek(8.0, true).await.unwrap();
+    assert!((player.current().position - 8.0).abs() < 2.0);
+    receiver.buffer(true);
+    next(&mut events, |e| *e == PlaybackEvent::Buffering(true)).await;
+    receiver.buffer(false);
+    player.set_paused(false).await.unwrap();
+    next(&mut events, |e| *e == PlaybackEvent::Paused(false)).await;
+
+    let now = player.current();
+    assert_eq!(now.duration, duration, "{now:?}");
+    assert_eq!(now.metadata.map(|m| m.series).as_deref(), Some("A Made-up Show"));
+    watching.abort();
+    player.quit().await.unwrap();
+    // The watch keeps only the newest status, so a busy machine sees fewer of them.
+    let seen = lock(&seen).clone();
+    assert!(!seen.is_empty(), "{seen:?}");
+    let playing = seen.iter().filter(|(state, ..)| {
+        matches!(state, CastState::Playing | CastState::Paused | CastState::Buffering)
+    });
+    for (state, duration, metadata) in playing {
+        assert!(duration.is_some() && *metadata, "{state:?} without the media: {seen:?}");
+    }
+}
+
+/// A fake whose own receiver does `custom`, and a cast to it of a short file, playing.
+async fn cast_with_own_receiver(
+    custom: CustomReceiver,
+) -> (FakeReceiver, CastPlayer, mpsc::UnboundedReceiver<PlaybackEvent>) {
+    let receiver =
+        FakeReceiver::start(FakeOptions { custom, ..FakeOptions::default() }).await.unwrap();
+    let file = matroska(&Fixture::default());
+    let base = serve(HashMap::from([("/episode.mkv".to_owned(), file)])).await;
+    let mut setup =
+        setup(&receiver, Arc::new(CastMemory::memory()), Arc::new(FakeEncoder::default()));
+    setup.timings.ready = Duration::from_millis(800);
+    let (player, mut events) = connect_standard(setup).await.unwrap();
+    player.use_receiver(Some("0A1B2C3D".into()));
+    player.load(torrent(format!("{base}/episode.mkv")));
+    next(&mut events, |e| *e == PlaybackEvent::Loaded).await;
+    (receiver, player, events)
+}
+
+fn launched(receiver: &FakeReceiver) -> Vec<String> {
+    receiver.heard("LAUNCH").iter().map(|m| m["appId"].as_str().unwrap().to_owned()).collect()
+}
+
+#[tokio::test(flavor = "multi_thread", worker_threads = 4)]
+async fn kaeris_own_receiver_plays_where_it_runs() {
+    let (receiver, player, _events) = cast_with_own_receiver(CustomReceiver::Runs).await;
+    assert_eq!(launched(&receiver), ["0A1B2C3D"]);
+    assert_eq!(player.current().receiver.as_deref(), Some("0A1B2C3D"));
+    player.quit().await.unwrap();
+}
+
+#[tokio::test(flavor = "multi_thread", worker_threads = 4)]
+async fn a_tv_that_refuses_kaeris_receiver_plays_on_the_default_one() {
+    let (receiver, player, _events) = cast_with_own_receiver(CustomReceiver::Unknown).await;
+    assert_eq!(launched(&receiver), ["0A1B2C3D", DEFAULT_MEDIA_RECEIVER]);
+    assert_eq!(player.current().receiver.as_deref(), Some(DEFAULT_MEDIA_RECEIVER));
+    assert_eq!(player.failure(), None);
+    player.quit().await.unwrap();
+}
+
+#[tokio::test(flavor = "multi_thread", worker_threads = 4)]
+async fn kaeris_receiver_closing_at_its_first_load_hands_over_to_the_default_one() {
+    let (receiver, player, _events) =
+        cast_with_own_receiver(CustomReceiver::ClosesAtLoad).await;
+    assert_eq!(launched(&receiver), ["0A1B2C3D", DEFAULT_MEDIA_RECEIVER]);
+    assert_eq!(player.current().receiver.as_deref(), Some(DEFAULT_MEDIA_RECEIVER));
+    assert_eq!(player.failure(), None);
+    player.quit().await.unwrap();
+}
+
+#[tokio::test(flavor = "multi_thread", worker_threads = 4)]
+async fn kaeris_receiver_that_never_says_ready_hands_over_to_the_default_one() {
+    let (receiver, player, _events) = cast_with_own_receiver(CustomReceiver::Silent).await;
+    assert_eq!(launched(&receiver), ["0A1B2C3D", DEFAULT_MEDIA_RECEIVER]);
+    assert_eq!(player.current().receiver.as_deref(), Some(DEFAULT_MEDIA_RECEIVER));
+    assert_eq!(player.failure(), None);
+    assert!(receiver.heard("hello").len() == 1, "greeted once, never on the standard one");
+    player.quit().await.unwrap();
+}
+
+#[tokio::test(flavor = "multi_thread", worker_threads = 4)]
+async fn kaeris_receiver_is_greeted_and_its_messages_are_heard() {
+    let (receiver, player, mut events) = cast_with_own_receiver(CustomReceiver::Runs).await;
+    let hello = receiver.heard("hello");
+    assert_eq!(hello.len(), 1);
+    assert_eq!(hello[0]["version"], KAERI_PROTOCOL);
+    let mut heard = player.heard();
+    player.set_greeting(Some("sv".into()), Some("phone".into()));
+    assert_eq!(receiver_heard_soon(&receiver, "hello", 2).await[1]["device"], "phone");
+    player.tell_skipped("opening");
+    assert_eq!(receiver_heard_soon(&receiver, "skipped", 1).await[0]["part"], "opening");
+
+    receiver.say(serde_json::json!({"type": "subtitles-plain", "version": 1}));
+    assert_eq!(heard.recv().await.unwrap(), FromReceiver::SubtitlesPlain);
+    receiver.say(serde_json::json!({"type": "up-next", "version": 1, "action": "play"}));
+    assert_eq!(heard.recv().await.unwrap(), FromReceiver::UpNext { play: true });
+    receiver.say(serde_json::json!({"type": "something-new", "version": 2}));
+    // A subtitle that didn't load leaves the episode playing.
+    receiver.say(serde_json::json!({"type": "error", "part": "subtitles", "status": 404}));
+    let FromReceiver::Error(error) = heard.recv().await.unwrap() else { panic!() };
+    assert_eq!((error.part.as_str(), error.status), ("subtitles", Some(404)));
+    assert_eq!(player.failure(), None);
+
+    // A segment the source didn't give ends the episode with the one sentence for it.
+    receiver.say(serde_json::json!({"type": "error", "part": "network", "status": 503}));
+    next(&mut events, |e| matches!(e, PlaybackEvent::Ended { complete: false })).await;
+    assert_eq!(player.failure(), Some(CastFailure::Segment));
+    assert!(player.is_alive(), "the receiver stays up for the next play");
+    player.quit().await.unwrap();
+}
+
+/// A cast of `file` on Kaeri's receiver that refuses it, saying `says` as it does; the player
+/// once the cast has ended, and the TV's memory.
+async fn refused_on_own_receiver(
+    file: Vec<u8>,
+    says: Value,
+) -> (FakeReceiver, CastPlayer, Arc<CastMemory>) {
+    let receiver = FakeReceiver::start(FakeOptions {
+        refuse: Refuse {
+            content_types: vec!["video/x-matroska".into()],
+            how: Some(Refusal::LoadFailed),
+            says: Some(says),
+            ..Refuse::default()
+        },
+        ..FakeOptions::default()
+    })
+    .await
+    .unwrap();
+    let base = serve(HashMap::from([("/episode.mkv".to_owned(), file)])).await;
+    let memory = Arc::new(CastMemory::memory());
+    let mut setup = setup(&receiver, Arc::clone(&memory), Arc::new(FakeEncoder::default()));
+    setup.timings.ready = Duration::from_millis(800);
+    let (player, _events) = connect_standard(setup).await.unwrap();
+    player.use_receiver(Some("0A1B2C3D".into()));
+    player.load(torrent(format!("{base}/episode.mkv")));
+    for _ in 0..200 {
+        if player.failure().is_some() {
+            break;
+        }
+        tokio::time::sleep(Duration::from_millis(25)).await;
+    }
+    (receiver, player, memory)
+}
+
+#[tokio::test(flavor = "multi_thread", worker_threads = 4)]
+async fn kaeris_receiver_is_handed_the_file_as_it_is() {
+    let file = matroska(&Fixture {
+        audio: Some(opus()),
+        subtitle: Some("S_TEXT/ASS"),
+        attachments: vec![
+            ("Sample Sans.ttf", "application/x-truetype-font", b"\0\x01\0\0glyphs".to_vec()),
+            ("cover.jpg", "image/jpeg", b"\xff\xd8\xff".to_vec()),
+        ],
+        ..Fixture::default()
+    });
+    let base = serve(HashMap::from([("/episode.mkv".to_owned(), file)])).await;
+    let receiver = FakeReceiver::start(FakeOptions::default()).await.unwrap();
+    let mut setup =
+        setup(&receiver, Arc::new(CastMemory::memory()), Arc::new(FakeEncoder::default()));
+    setup.timings.ready = Duration::from_millis(800);
+    let (player, mut events) = connect_standard(setup).await.unwrap();
+    player.use_receiver(Some("0A1B2C3D".into()));
+    player.load(torrent(format!("{base}/episode.mkv")));
+    next(&mut events, |e| *e == PlaybackEvent::Loaded).await;
+
+    // No remux, no AAC, no clip: the relay passes the Matroska through as it is.
+    let loads = receiver.heard("LOAD");
+    assert_eq!(loads.len(), 1);
+    let media = &loads[0]["media"];
+    assert_eq!(media["contentType"], "video/x-matroska");
+    assert!(!media["contentId"].as_str().unwrap().contains("/x/r/"), "{media}");
+    let kaeri = &media["customData"]["kaeri"];
+    assert_eq!(kaeri["version"], KAERI_PROTOCOL);
+    assert_eq!(kaeri["container"], "mkv");
+    assert_eq!(kaeri["route"], "relay");
+    assert_eq!(kaeri["url"], media["contentId"]);
+    assert_eq!(kaeri["audio"]["codec"], "opus");
+    assert_eq!(kaeri["video"]["codec"], "h264");
+    // The file's font for its typeset track, and no cover art.
+    let fonts = kaeri["fonts"].as_array().unwrap();
+    assert_eq!(fonts.len(), 1, "{kaeri}");
+    assert!(fonts[0].as_str().unwrap().ends_with("/x/f/1.ttf"), "{kaeri}");
+    // The file's own ASS track is the receiver's to read: listed with where it is in the file,
+    // a stand-in WebVTT track with its id, and a line on the phone's list.
+    let subtitles = kaeri["subtitles"].as_array().unwrap();
+    assert_eq!(subtitles.len(), 1, "{kaeri}");
+    assert_eq!(subtitles[0]["inside"], 0);
+    assert_eq!(subtitles[0]["format"], "ass");
+    assert_eq!(subtitles[0]["id"], 1);
+    assert!(subtitles[0]["url"].is_null(), "{kaeri}");
+    assert_eq!(kaeri["subtitle"], serde_json::Value::Null);
+    assert_eq!(media["tracks"][0]["trackId"], 1, "{media}");
+    let listed = player.status().borrow().subtitles.clone();
+    assert_eq!(listed.iter().map(|t| t.id).collect::<Vec<_>>(), [1]);
+    let plan = player.status().borrow().plan.clone().unwrap();
+    assert_eq!(plan.route, CastRoute::Relayed { remux: false });
+    assert_eq!(plan.audio, AudioPlan::Copy(crate::formats::AudioCodec::Opus));
+    player.quit().await.unwrap();
+}
+
+#[tokio::test(flavor = "multi_thread", worker_threads = 4)]
+async fn a_picture_kaeris_receiver_cant_decode_ends_naming_its_codec() {
+    let (receiver, player, _memory) = refused_on_own_receiver(
+        matroska(&Fixture::default()),
+        serde_json::json!({"type": "error", "version": 1, "part": "video", "codec": "hev1"}),
+    )
+    .await;
+    assert_eq!(
+        player.failure(),
+        Some(CastFailure::Uncastable(Uncastable::VideoCodec("HEVC".into())))
+    );
+    // No device converts video, and the standard receiver wouldn't play it either.
+    assert_eq!(receiver.heard("LOAD").len(), 1);
+    assert_eq!(launched(&receiver), ["0A1B2C3D"]);
+    player.quit().await.unwrap();
+}
+
+#[test]
+fn the_files_own_subtitle_tracks_are_read_as_the_receiver_shows_them() {
+    assert_eq!(super::inside_format("S_TEXT/ASS"), Some("ass"));
+    assert_eq!(super::inside_format("S_TEXT/UTF8"), Some("srt"));
+    assert_eq!(super::inside_format("S_HDMV/PGS"), Some("pgs"));
+    assert_eq!(super::inside_format("S_VOBSUB"), Some("vobsub"));
+    assert_eq!(super::inside_format("S_DVBSUB"), None);
+}
+
+#[test]
+fn a_codec_kaeris_receiver_names_reads_as_the_notice_names_it() {
+    let plan = CastPlan {
+        route: CastRoute::Relayed { remux: false },
+        video: crate::formats::VideoFormat::other_from_matroska("V_MPEG2"),
+        height: Some(720),
+        audio: AudioPlan::Copy(crate::formats::AudioCodec::Dts),
+        delivery: Delivery::Mkv,
+    };
+    // The load's own word comes back as the part's name; a codec string's base as the common one.
+    assert_eq!(super::named_codec("video:mpeg-2", Some(&plan), true), "MPEG-2");
+    assert_eq!(super::named_codec("video:mpeg2", None, true), "MPEG-2");
+    assert_eq!(super::named_codec("dts", Some(&plan), false), "DTS");
+    assert_eq!(super::named_codec("hev1", Some(&plan), true), "HEVC");
+    assert_eq!(super::named_codec("ec-3", None, false), "E-AC-3");
+    assert_eq!(super::named_codec("video:vc1", None, true), "VC1");
+}
+
+#[tokio::test(flavor = "multi_thread", worker_threads = 4)]
+async fn an_audio_error_on_kaeris_receiver_never_blames_the_video() {
+    let (_receiver, player, memory) = refused_on_own_receiver(
+        matroska(&Fixture { audio: Some(opus()), ..Fixture::default() }),
+        serde_json::json!({"type": "error", "version": 1, "part": "audio", "codec": "opus"}),
+    )
+    .await;
+    assert_eq!(
+        player.failure(),
+        Some(CastFailure::Uncastable(Uncastable::AudioCodec("Opus".into())))
+    );
+    // Kaeri's receiver said what failed: nothing is guessed, so nothing is marked.
+    let caps = memory.caps("tv-1");
+    assert!(caps.formats.values().all(|answer| answer.played), "{caps:?}");
+    player.quit().await.unwrap();
+}
+
+#[tokio::test(flavor = "multi_thread", worker_threads = 4)]
+async fn a_refusal_kaeris_receiver_gives_no_codec_for_says_the_plain_sentence() {
+    let (_receiver, player, _memory) = refused_on_own_receiver(
+        matroska(&Fixture::default()),
+        serde_json::json!({"type": "error", "version": 1, "part": "manifest"}),
+    )
+    .await;
+    assert_eq!(player.failure(), Some(CastFailure::Refused));
+    player.quit().await.unwrap();
+}
+
+#[tokio::test(flavor = "multi_thread", worker_threads = 4)]
+async fn a_failure_kaeris_receiver_cant_place_loads_the_same_plan_once_more() {
+    let (receiver, player, _memory) = refused_on_own_receiver(
+        matroska(&Fixture::default()),
+        serde_json::json!({"type": "error", "version": 1, "part": "unknown"}),
+    )
+    .await;
+    assert_eq!(player.failure(), Some(CastFailure::Refused));
+    let loads = receiver.heard("LOAD");
+    assert_eq!(loads.len(), 2);
+    assert_eq!(loads[0]["media"]["contentId"], loads[1]["media"]["contentId"]);
+    player.quit().await.unwrap();
+}
+
+#[tokio::test(flavor = "multi_thread", worker_threads = 4)]
+async fn a_second_connect_tries_the_original_again() {
+    let file = matroska(&Fixture { audio: Some(opus()), ..Fixture::default() });
+    let base = serve(HashMap::from([("/episode.mkv".to_owned(), file)])).await;
+    let memory = Arc::new(CastMemory::memory());
+    for session in 0..2 {
+        let receiver = FakeReceiver::start(FakeOptions {
+            speed: 4.0,
+            refuse: Refuse {
+                bytes: vec![b"Opus".to_vec()],
+                how: Some(Refusal::IdleError),
+                ..Refuse::default()
+            },
+            ..FakeOptions::default()
+        })
+        .await
+        .unwrap();
+        let (player, mut events) = connect_standard(setup(
+            &receiver,
+            Arc::clone(&memory),
+            Arc::new(FakeEncoder::default()),
+        ))
+        .await
+        .unwrap();
+        player.load(torrent(format!("{base}/episode.mkv")));
+        next(&mut events, |e| *e == PlaybackEvent::Loaded).await;
+        // Each session tries the Opus as it is first; the refusal of the last one is gone.
+        assert_eq!(receiver.heard("LOAD").len(), 2, "session {session}");
+        player.quit().await.unwrap();
+    }
+}
+
+/// The messages of `kind` the fake heard, once there are `count`.
+async fn receiver_heard_soon(receiver: &FakeReceiver, kind: &str, count: usize) -> Vec<Value> {
+    for _ in 0..50 {
+        let heard = receiver.heard(kind);
+        if heard.len() >= count {
+            return heard;
+        }
+        tokio::time::sleep(Duration::from_millis(20)).await;
+    }
+    panic!("never heard {count} {kind}");
+}
+
+#[tokio::test(flavor = "multi_thread", worker_threads = 4)]
+async fn a_session_left_running_is_joined_with_what_it_plays() {
+    let receiver = FakeReceiver::start(FakeOptions {
+        duration: 600.0,
+        remembers: true,
+        ..FakeOptions::default()
+    })
+    .await
+    .unwrap();
+    let (player, _events) = playing(&receiver).await;
+    let duration = player.current().duration;
+    let session = player.receiver().unwrap().session_id;
+    // The app is closed with the cast running: the TV keeps playing.
+    drop(player);
+    let joined = CastPlayer::join(
+        setup(&receiver, Arc::new(CastMemory::memory()), Arc::new(FakeEncoder::default())),
+        &session,
+    )
+    .await
+    .unwrap();
+    let (player, _events) = joined.expect("the receiver still runs");
+    let now = player.current();
+    assert_eq!(now.state, CastState::Playing, "{now:?}");
+    assert_eq!(now.duration, duration);
+    assert_eq!(now.metadata.map(|m| m.title).as_deref(), Some("Episode 1"));
+    player.set_paused(true).await.unwrap();
+    assert_eq!(receiver.heard("PAUSE").len(), 1, "controls reach the joined receiver");
+    player.quit().await.unwrap();
+
+    let gone = CastPlayer::join(
+        setup(&receiver, Arc::new(CastMemory::memory()), Arc::new(FakeEncoder::default())),
+        &session,
+    )
+    .await
+    .unwrap();
+    assert!(gone.is_none(), "a session that ended isn't joined");
+}
+
+/// An HLS master with the original and a dub as audio renditions beside one picture, the
+/// original the default, behind headers so the relay serves it.
+async fn hls_with_a_dub() -> CastLoad {
+    let master = "#EXTM3U\n\
+        #EXT-X-MEDIA:TYPE=AUDIO,GROUP-ID=\"aud\",LANGUAGE=\"ja\",NAME=\"Japanese\",DEFAULT=YES,AUTOSELECT=YES,URI=\"ja/index.m3u8\"\n\
+        #EXT-X-MEDIA:TYPE=AUDIO,GROUP-ID=\"aud\",LANGUAGE=\"en\",NAME=\"English\",DEFAULT=NO,AUTOSELECT=YES,URI=\"en/index.m3u8\"\n\
+        #EXT-X-STREAM-INF:BANDWIDTH=900000,RESOLUTION=1280x720,CODECS=\"avc1.64001f,mp4a.40.2\",AUDIO=\"aud\"\n\
+        v/index.m3u8\n";
+    let media = |name: &str| {
+        let mut text = String::from("#EXTM3U\n#EXT-X-TARGETDURATION:4\n");
+        for i in 0..15 {
+            text.push_str(&format!("#EXTINF:4.0,\n{name}{i}.ts\n"));
+        }
+        text.push_str("#EXT-X-ENDLIST\n");
+        text.into_bytes()
+    };
+    let mut files = HashMap::from([
+        ("/a/master.m3u8".to_owned(), master.as_bytes().to_vec()),
+        ("/a/v/index.m3u8".to_owned(), media("v")),
+        ("/a/ja/index.m3u8".to_owned(), media("a")),
+        ("/a/en/index.m3u8".to_owned(), media("a")),
+    ]);
+    for dir in ["v", "ja", "en"] {
+        for i in 0..15 {
+            let name = if dir == "v" { "v" } else { "a" };
+            files.insert(format!("/a/{dir}/{name}{i}.ts"), ts_segment());
+        }
+    }
+    let base = serve(files).await;
+    let url = format!("{base}/a/master.m3u8");
+    CastLoad {
+        source: CastSource {
+            url: url.clone(),
+            kind: SourceKind::Hls,
+            headers: vec![("Referer".into(), "https://player.example/".into())],
+        },
+        ..torrent(url)
+    }
+}
+
+/// Which audio renditions the fake fetched, by their folder.
+fn renditions_fetched(receiver: &FakeReceiver) -> Vec<&'static str> {
+    let fetched = receiver.fetched();
+    ["ja", "en"]
+        .into_iter()
+        .filter(|lang| {
+            fetched.iter().any(|f| f.url.contains(&format!("%2F{lang}%2Findex.m3u8")))
+        })
+        .collect()
+}
+
+#[tokio::test(flavor = "multi_thread", worker_threads = 4)]
+async fn the_tv_gets_the_remembered_dub_alone_and_the_card_switches_it() {
+    let receiver = FakeReceiver::start(FakeOptions::default()).await.unwrap();
+    let (player, mut events) =
+        connect_standard(setup(&receiver, Arc::new(CastMemory::memory()), Arc::new(NoEncoder)))
+            .await
+            .unwrap();
+    // A sub watcher's language, but the series remembers the dub: the dub plays, as in the app.
+    let load = CastLoad {
+        audio_language: Some("ja".into()),
+        audio_memory: Some(TrackPrint { lang: Some("eng".into()), ..TrackPrint::default() }),
+        ..hls_with_a_dub().await
+    };
+    player.load(load);
+    next(&mut events, |e| *e == PlaybackEvent::Loaded).await;
+    let loads = receiver.heard("LOAD");
+    let content = loads[0]["media"]["contentId"].as_str().unwrap().to_owned();
+    assert!(content.ends_with("/x/h/master.m3u8"), "{content}");
+    assert_eq!(renditions_fetched(&receiver), ["en"], "{:?}", receiver.fetched());
+    let playing = player.status().borrow().clone();
+    let audio: Vec<_> = playing
+        .audio
+        .iter()
+        .map(|a| (a.index, a.language.as_deref(), a.title.as_deref(), a.selected))
+        .collect();
+    assert_eq!(audio, [(0, Some("ja"), None, false), (1, Some("en"), None, true)]);
+
+    // The original, picked on the card, loads where the file was.
+    next(
+        &mut events,
+        |e| matches!(e, PlaybackEvent::Progress { position, .. } if *position >= 2.0),
+    )
+    .await;
+    let before = receiver.fetched().len();
+    player.set_audio(0);
+    let deadline = tokio::time::Instant::now() + Duration::from_secs(15);
+    while receiver.heard("LOAD").len() < 2
+        || !player.status().borrow().audio.iter().any(|a| a.index == 0 && a.selected)
+        || player.status().borrow().step.is_some()
+    {
+        assert!(tokio::time::Instant::now() < deadline, "the original loaded");
+        tokio::time::sleep(Duration::from_millis(20)).await;
+    }
+    let loads = receiver.heard("LOAD");
+    assert!(loads[1]["currentTime"].as_f64().unwrap_or(0.0) >= 2.0, "{:?}", loads[1]);
+    let after: Vec<_> = receiver.fetched()[before..].iter().map(|f| f.url.clone()).collect();
+    assert!(after.iter().any(|u| u.contains("%2Fja%2Findex.m3u8")), "{after:?}");
+    assert!(!after.iter().any(|u| u.contains("%2Fen%2Findex.m3u8")), "{after:?}");
+}
+
+#[test]
+fn the_cast_picks_audio_as_the_app_does() {
+    let track = |language: &str, name: &str, default| AudioTrack {
+        language: Some(language.into()),
+        name: Some(name.into()),
+        default,
+        ..AudioTrack::default()
+    };
+    let info = MediaInfo {
+        audio: vec![
+            track("ja", "Japanese", true),
+            track("en", "English Commentary", false),
+            track("en", "English", false),
+        ],
+        renditions: true,
+        ..MediaInfo::default()
+    };
+    let load = |language: Option<&str>| CastLoad {
+        audio_language: language.map(str::to_owned),
+        ..torrent("https://cdn.example/a/master.m3u8".into())
+    };
+    // A dub watcher gets the programme in their language, not the commentary.
+    assert_eq!(app_pick(&info, &load(Some("eng"))), Some(2));
+    assert_eq!(app_pick(&info, &load(Some("ja"))), Some(0));
+    // A language the stream lacks: its default.
+    assert_eq!(app_pick(&info, &load(Some("fr"))), Some(0));
+    // The card names a rendition only when the name says more than the language.
+    assert_eq!(audio_title(&info.audio[0]), None);
+    assert_eq!(audio_title(&info.audio[1]).as_deref(), Some("English Commentary"));
 }

@@ -1,0 +1,107 @@
+Kaeri                                                  plugins ●  ·  anilist ⇅ 2
+────────────────────────────────────────────────────────────────────────────────
+▌▸ │  ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
+ ▤ │  ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
+ ▦ │  ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
+ / │  ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
+ ▥ │  ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
+ ↓ │
+ ◇ │  Kumo no Ue no Toshokan
+ ◎ │  The Library Above the Clouds
+ ≡ │
+ ⇄ │  TV  ·  12 episodes  ·  Autumn 2026  ·  81%  ·  Paper Lantern Works
+   │  Airing  ·  Since 3 Oct 2026
+   │
+   │  A librarian on a floating island lends books to the weather. When a…
+   │
+   │  Fantasy  ·  Slice of Life
+   │
+   │  ████████▍░░░░░░░░░░░  5 of 12 episodes   Up next: episode 6
+   │
+   │  ● Episode 6 aired 25 min ago. Your sources don't have it yet. Kaeri
+   │    looks again every 15 minutes.
+────────────────────────────────────────────────────────────────────────────────
+plugins · Subbed · 1080p     space play episode 5   ↵ episodes   q back   ? keys
+=== styles ===
+colours text=#e4e0d6 text-dim=#a8aec9 rule=#46464d obi=#f2a64b state=#7fc7d9 alert=#f59b85 ground=#1a1b26
+r00 c00-04 fg=#1e2033 mod=BOLD
+r00 c55-63 fg=#1f5d6e
+r00 c64-65 fg=#4f546e
+r00 c66-66 fg=#ceced2
+r00 c67-68 fg=#4f546e
+r00 c69-79 fg=#1f5d6e
+r01 c00-79 fg=#ceced2
+r02 c00-00 fg=#4f546e
+r02 c01-01 fg=#1e2033 mod=BOLD
+r02 c03-03 fg=#ceced2
+r02 c06-77 fg=#ceced2
+r03 c01-01 fg=#4f546e
+r03 c03-03 fg=#ceced2
+r03 c06-77 fg=#ceced2
+r04 c01-01 fg=#4f546e
+r04 c03-03 fg=#ceced2
+r04 c06-77 fg=#ceced2
+r05 c01-01 fg=#4f546e
+r05 c03-03 fg=#ceced2
+r05 c06-77 fg=#ceced2
+r06 c01-01 fg=#4f546e
+r06 c03-03 fg=#ceced2
+r06 c06-77 fg=#ceced2
+r07 c01-01 fg=#4f546e
+r07 c03-03 fg=#ceced2
+r08 c01-01 fg=#4f546e
+r08 c03-03 fg=#ceced2
+r08 c06-27 fg=#1e2033 mod=BOLD
+r09 c01-01 fg=#4f546e
+r09 c03-03 fg=#ceced2
+r09 c06-33 fg=#4f546e
+r10 c01-01 fg=#4f546e
+r10 c03-03 fg=#ceced2
+r11 c01-01 fg=#4f546e
+r11 c03-03 fg=#ceced2
+r11 c06-71 fg=#4f546e
+r12 c03-03 fg=#ceced2
+r12 c06-32 fg=#4f546e
+r13 c03-03 fg=#ceced2
+r14 c03-03 fg=#ceced2
+r14 c06-73 fg=#4f546e
+r15 c03-03 fg=#ceced2
+r16 c03-03 fg=#ceced2
+r16 c06-30 fg=#4f546e
+r17 c03-03 fg=#ceced2
+r18 c03-03 fg=#ceced2
+r18 c06-14 fg=#1e2033
+r18 c15-25 fg=#ceced2
+r18 c28-64 fg=#4f546e
+r19 c03-03 fg=#ceced2
+r20 c03-03 fg=#ceced2
+r20 c06-06 fg=#1f5d6e
+r20 c08-14 fg=#1f5d6e
+r20 c16-16 fg=#1f5d6e
+r20 c18-22 fg=#1f5d6e
+r20 c24-25 fg=#1f5d6e
+r20 c27-29 fg=#1f5d6e
+r20 c31-34 fg=#1f5d6e
+r20 c36-39 fg=#4f546e
+r20 c41-47 fg=#4f546e
+r20 c49-53 fg=#4f546e
+r20 c55-58 fg=#4f546e
+r20 c60-61 fg=#4f546e
+r20 c63-66 fg=#4f546e
+r20 c68-72 fg=#4f546e
+r21 c03-03 fg=#ceced2
+r21 c08-12 fg=#4f546e
+r21 c14-18 fg=#4f546e
+r21 c20-24 fg=#4f546e
+r21 c26-27 fg=#4f546e
+r21 c29-36 fg=#4f546e
+r22 c00-79 fg=#ceced2
+r23 c00-23 fg=#4f546e
+r23 c29-33 fg=#1e2033
+r23 c34-51 fg=#4f546e
+r23 c52-52 fg=#1e2033
+r23 c53-64 fg=#4f546e
+r23 c65-65 fg=#1e2033
+r23 c66-73 fg=#4f546e
+r23 c74-74 fg=#1e2033
+r23 c75-79 fg=#4f546e

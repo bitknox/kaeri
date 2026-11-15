@@ -110,3 +110,20 @@ names-pair = { $first } and { $last }
 # @arg list: text
 # @arg next: text
 names-list = { $list }, { $next }
+
+# Line under a TV with Chromecast built in, in the Play on TV list: this computer serves the
+# episode to it while it plays.
+cast-row-through-computer = Plays through this computer
+
+# Title of the question asked on quitting while an episode plays on a TV.
+desktop-cast-quit-title = Stop casting and quit?
+
+# Body of the question asked on quitting while an episode plays on a TV. The title is the
+# show's, the name is the TV's.
+# @arg title: text
+# @arg name: text
+desktop-cast-quit-body = { $title } is playing on { $name }. Quitting stops it.
+
+# Button of the question asked on quitting while casting: stops the cast and quits.
+# @max 24
+desktop-cast-quit-action = Stop and quit

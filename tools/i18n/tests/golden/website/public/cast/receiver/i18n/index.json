@@ -1,0 +1,12 @@
+{
+  "args": {
+    "receiver-waiting": {
+      "seconds": "int"
+    }
+  },
+  "languages": [
+    "en",
+    "pl"
+  ],
+  "source": "en"
+}

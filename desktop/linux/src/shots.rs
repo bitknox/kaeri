@@ -19,7 +19,7 @@ const TITLE: u32 = 900_001;
 const PLAYING: (u32, &str) = (900_002, "4");
 
 /// Every shot by name, in the order a run takes them.
-pub const ALL: [&str; 111] = [
+pub const ALL: [&str; 118] = [
     "home",
     "welcome",
     "offline",
@@ -87,6 +87,8 @@ pub const ALL: [&str; 111] = [
     "join-group",
     "join-ended",
     "settings",
+    "settings-preload-off",
+    "settings-preload-torrents",
     "settings-general",
     "settings-language",
     "settings-integrations",
@@ -111,6 +113,11 @@ pub const ALL: [&str; 111] = [
     "first-play-subtitles",
     "first-play-crashes",
     "first-play-report",
+    "report-log",
+    "report-log-sent",
+    "report-log-saved",
+    "report-log-failed",
+    "report-log-empty",
     "settings-updates",
     "update-ready",
     "update-saved",
@@ -326,6 +333,8 @@ pub const STATS: [&str; 5] = [
 
 /// Take `shots` into `dir`, each named `<prefix><shot>.png`, then quit.
 pub fn run(shell: Rc<Shell>, dir: PathBuf, prefix: String, shots: Vec<String>) {
+    #[cfg(feature = "fixtures")]
+    crate::shots_missing::saving_to(dir.clone());
     glib::spawn_future_local(async move {
         // The first page, its lists and their covers.
         wait(4.0).await;
@@ -378,6 +387,18 @@ fn stage(shell: &Rc<Shell>, shot: &str) -> f64 {
     }
     #[cfg(feature = "fixtures")]
     if let Some(settle) = crate::shots_prelaunch::stage(shell, shot) {
+        return settle;
+    }
+    #[cfg(feature = "fixtures")]
+    if let Some(settle) = crate::shots_following::stage(shell, shot) {
+        return settle;
+    }
+    #[cfg(feature = "fixtures")]
+    if let Some(settle) = crate::shots_missing::stage(shell, shot) {
+        return settle;
+    }
+    #[cfg(feature = "fixtures")]
+    if let Some(settle) = crate::shots_private::stage(shell, shot) {
         return settle;
     }
     let window = &shell.ctx.window;
@@ -706,6 +727,8 @@ fn stage(shell: &Rc<Shell>, shot: &str) -> f64 {
                     progress: Some(kaeri_model::progress::TitleProgress { done: 12, next: 1 }),
                     resume: None,
                     episodes: Vec::new(),
+                    private: None,
+                    kept: false,
                 }]);
             });
             4.0
@@ -790,6 +813,7 @@ fn stage(shell: &Rc<Shell>, shot: &str) -> f64 {
                     media: kaeri_core::ids::AnilistId::new(TITLE),
                     episode: 1,
                     comments: 214,
+                    url: "https://talk.example/thread/1".into(),
                 }]);
             });
             4.0
@@ -951,6 +975,19 @@ fn stage(shell: &Rc<Shell>, shot: &str) -> f64 {
             crate::pages::report::open(&shell.ctx);
             1.5
         }
+        // Report a bug with the player log: three made-up playbacks, or none before anything
+        // has played, then the row in the shot's state.
+        #[cfg(feature = "fixtures")]
+        "report-log" | "report-log-sent" | "report-log-saved" | "report-log-failed"
+        | "report-log-empty" => {
+            kaeri_engine::player_log::seed_fixture(u32::from(shot != "report-log-empty") * 3);
+            crate::pages::report::open(&shell.ctx);
+            let state = shot.strip_prefix("report-log-").unwrap_or("ticked").to_owned();
+            glib::timeout_add_local_once(Duration::from_millis(400), move || {
+                crate::pages::report::stage(&state);
+            });
+            2.0
+        }
         "provider" => {
             shell.go(Dest::Providers);
             crate::pages::plugin::push_provider(&shell.ctx, "mukashi-archive");
@@ -996,6 +1033,18 @@ fn stage(shell: &Rc<Shell>, shot: &str) -> f64 {
             2.0
         }
         "settings" => {
+            shell.settings_pane("playback");
+            1.5
+        }
+        // Preload video on metered connections dimmed with Up next countdown, Auto-play next off.
+        "settings-preload-off" => {
+            set_switch(shell, kaeri_model::settings::SettingKey::AutoNext, false);
+            shell.settings_pane("playback");
+            1.5
+        }
+        // The torrent sentence joins the row's line while torrent playback is on.
+        "settings-preload-torrents" => {
+            set_switch(shell, kaeri_model::settings::SettingKey::Torrents, true);
             shell.settings_pane("playback");
             1.5
         }
@@ -1386,6 +1435,12 @@ fn unstage(shell: &Rc<Shell>, shot: &str) {
     crate::shots_reading_credits::unstage(shell, shot);
     #[cfg(feature = "fixtures")]
     crate::shots_prelaunch::unstage(shell, shot);
+    #[cfg(feature = "fixtures")]
+    crate::shots_following::unstage(shell, shot);
+    #[cfg(feature = "fixtures")]
+    crate::shots_missing::unstage(shell, shot);
+    #[cfg(feature = "fixtures")]
+    crate::shots_private::unstage(shell, shot);
     if shot.starts_with("start-") {
         shell.player.close();
     }
@@ -1433,6 +1488,8 @@ fn unstage(shell: &Rc<Shell>, shot: &str) {
         "about" | "join" | "join-link" | "join-group" | "join-ended" | "welcome"
         | "first-play-welcome" | "first-play-demo" | "first-play-report" | "accounts-kitsu"
         | "torrents-setup" => close_dialogs(&shell.ctx.window),
+        "report-log" | "report-log-sent" | "report-log-saved" | "report-log-failed"
+        | "report-log-empty" => close_dialogs(&shell.ctx.window),
         #[cfg(feature = "fixtures")]
         "search-failed" | "search-paging" => {
             crate::showcase::set_mood(crate::showcase::Mood::Usual);
@@ -1492,6 +1549,12 @@ fn unstage(shell: &Rc<Shell>, shot: &str) {
             if let Some(nav) = shell.ctx.nav() {
                 nav.pop();
             }
+        }
+        "settings-preload-off" => {
+            set_switch(shell, kaeri_model::settings::SettingKey::AutoNext, true);
+        }
+        "settings-preload-torrents" => {
+            set_switch(shell, kaeri_model::settings::SettingKey::Torrents, false);
         }
         #[cfg(feature = "fixtures")]
         owner if owner.starts_with("store-") => {
@@ -1590,6 +1653,14 @@ fn offer_update(shell: &Rc<Shell>) {
         }),
         notify: true,
     })]);
+}
+
+/// Turn a switch setting on or off, as its row would.
+fn set_switch(shell: &Rc<Shell>, key: kaeri_model::settings::SettingKey, on: bool) {
+    shell
+        .ctx
+        .hub
+        .send(Command::SetSetting { key, value: kaeri_core::settings::SettingValue::Bool(on) });
 }
 
 /// Set upscaling, which the fixture scene keeps off for the player shots.
@@ -2066,6 +2137,10 @@ async fn painted(shell: &Rc<Shell>, path: &std::path::Path, shot: &str) -> Resul
                 | "read-chapters-long"
                 | "read-novel-paper" => open_popover(&window),
                 #[cfg(feature = "fixtures")]
+                private if crate::shots_private::POPOVERS.contains(&private) => {
+                    open_popover(&window)
+                }
+                #[cfg(feature = "fixtures")]
                 "read-disc-poster-menu" | "read-disc-poster-menu-own" => context_menu(&window),
                 #[cfg(feature = "fixtures")]
                 "read-series-group-picker" => {
@@ -2142,8 +2217,24 @@ pub fn named(list: Option<&str>) -> Vec<String> {
                     crate::shots_prelaunch::NAMES.iter().map(|p| (*p).to_owned()).collect()
                 }
                 #[cfg(feature = "fixtures")]
+                "following" => {
+                    crate::shots_following::NAMES.iter().map(|p| (*p).to_owned()).collect()
+                }
+                #[cfg(feature = "fixtures")]
+                "following-slow" => {
+                    crate::shots_following::SLOW.iter().map(|p| (*p).to_owned()).collect()
+                }
+                #[cfg(feature = "fixtures")]
+                "missing" => {
+                    crate::shots_missing::NAMES.iter().map(|p| (*p).to_owned()).collect()
+                }
+                #[cfg(feature = "fixtures")]
                 "prelaunch-demo" => {
                     crate::shots_prelaunch::DEMO.iter().map(|p| (*p).to_owned()).collect()
+                }
+                #[cfg(feature = "fixtures")]
+                "private" => {
+                    crate::shots_private::NAMES.iter().map(|p| (*p).to_owned()).collect()
                 }
                 "match" => MATCH.iter().map(|p| (*p).to_owned()).collect(),
                 one => vec![one.to_owned()],
@@ -3459,6 +3550,10 @@ fn source_options(
         note,
         releases,
         pinned_release: release.filter(|_| pinned == Some(id)).map(str::to_owned),
+        first: None,
+        last: None,
+        lacking: Vec::new(),
+        lacking_since: None,
     };
     vec![
         option("hotaru-open-archive", "Hotaru Open Archive", 13, None, Vec::new()),

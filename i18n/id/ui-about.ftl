@@ -33,6 +33,18 @@ report-privacy = Tidak ada yang keluar dari { -device } ini sampai Anda membuka 
 report-tv-scan = Pindai kode untuk membuka laporan di ponsel Anda.
 report-crash-off = Laporan crash nonaktif, jadi tidak ada yang disertakan. Anda bisa mengaktifkannya di Pengaturan, Tentang.
 report-crash-settings = Pengaturan laporan crash
+report-player-log = Log pemutar
+report-player-log-detail = { $playbacks ->
+   *[other] { $playbacks } pemutaran terakhir · { $size }
+ }
+report-player-log-empty = Belum ada pemutaran yang tercatat
+report-player-log-save = Simpan log…
+report-player-log-attach = Lampirkan berkas ke isu setelah terbuka di GitHub.
+report-player-log-saved = Disimpan sebagai { $file }
+report-player-log-failed = Log tidak bisa disimpan. Coba folder lain.
+report-sent-report = Laporan
+report-player-log-a11y-saved = Log pemutar disimpan
+report-player-log-a11y-hint = Menyimpan berkas untuk dilampirkan ke isu
 settings-group-crashes = Laporan crash
 settings-crash-save = Simpan laporan crash di { -device } ini
 settings-crash-save-detail = { -app-name } menyimpan catatan singkat setiap crash di { -device } ini untuk Laporkan bug, dengan judul, alamat, dan nama dihapus. Tidak ada yang dikirim otomatis.

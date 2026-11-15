@@ -133,3 +133,5 @@ tv-discussion-likes = { $count ->
 tv-discussion-select-spoiler = Нажмите OK, чтобы показать спойлер
 updates-unknown-sources-path = Настройки › Приложения › Безопасность и ограничения › Неизвестные источники
 tv-remote-default-name = Телевизор { -app-name }
+player-stats-show-live = Показать живую статистику
+player-stats-hide-live = Скрыть живую статистику

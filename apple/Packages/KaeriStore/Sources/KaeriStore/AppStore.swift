@@ -62,6 +62,8 @@ public final class AppStore {
     /// Did my server get it: the reading progress sent back to book servers.
     public let serverProgress = ServerProgressModel()
     public let showSettings = ShowSettingsModel()
+    /// Private mode, and the titles always private on this device.
+    public let privacy = PrivacyModel()
     public let accounts = AccountsModel()
     public let providers = ProvidersModel()
     /// Licensed services: the page, each title's availability and the return notice.
@@ -72,6 +74,8 @@ public final class AppStore {
     public let local = LocalLibraryModel()
     /// The source picker's options per title.
     public let sourceChoices = SourceChoiceModel()
+    /// Check again on a title page whose next episode aired and no source lists yet.
+    public let missing = MissingChecks()
     /// The match sheet's question, search and pick per title.
     public let match = MatchPickerModel()
     /// The link or torrent file the person opened, and the confirm step's choices.
@@ -98,6 +102,11 @@ public final class AppStore {
     public let demo = DemoModel()
     /// The crash reports kept on this device.
     public let crash = CrashModel()
+    /// The last playback's failure, until another starts: a report started from a menu takes it
+    /// as its last error, so Player log starts ticked.
+    @ObservationIgnored public internal(set) var playbackFailure: (context: BugContext, at: Date)?
+    /// The title of the playback staged last, which a report removes wherever it appears.
+    @ObservationIgnored var stagedTitle: String?
     /// Says a line over the video, when the player is up: what the app's player shows.
     @ObservationIgnored public var playerSays: (@MainActor (String, NoticeKind) -> Void)?
     /// The week's ask, waiting a moment in case more ask at once.
@@ -193,6 +202,7 @@ public final class AppStore {
         reader.onClosed = { [weak self] in self?.serverProgress.clearLines() }
         updates.send = { [weak self] command in self?.send(command) }
         party.send = { [weak self] command in self?.send(command) }
+        missing.send = { [weak self] command in self?.send(command) }
         sync.send = { [weak self] command in self?.send(command) }
         party.chat.send = { [weak self] command in self?.send(command) }
         party.say = { [weak self] notice, player, kind in
@@ -380,13 +390,16 @@ public final class AppStore {
         if testing, let fakes = TVRemoteModel.fixtures(engine) {
             let casts = TVRemoteModel.fixtureCasts()
             tv.attach(sender, browser: fakes, castBrowser: casts)
+            // The session by script, in place of the engine's.
+            let link = TVRemoteModel.fixtureLink()
+            tv.cast.hold(link)
             if let scene = CastScene.named() {
                 Task {
                     // The fixture title's name, once its page has loaded, for the sheet's line.
                     let id: AnilistId = 900_001
                     for _ in 0..<60 where titles[id] == nil { try? await Task.sleep(for: .milliseconds(50)) }
                     let play = TVPlayRequest(id: id, title: titles[id]?.title ?? "", episode: "3", from: 312)
-                    await tv.stage(scene, casts: casts, play: play)
+                    await tv.stage(scene, casts: casts, link: link, play: play)
                 }
             }
             if let scene = TVScene.named() {
@@ -441,10 +454,13 @@ public final class AppStore {
         }
         switch command {
         case .play(let id, let episode, _):
+            // While a TV is held the engine plays it there: the controller opens as it starts.
+            tv.cast.playing(TVPlayRequest(id: id, title: titles[id]?.title ?? "", episode: episode, from: nil))
             playSent = .now
             startAt = nil
             AppLog.info("store", "play \(id) episode \(episode)")
         case .playSource(let id, let episode, _, _):
+            tv.cast.playing(TVPlayRequest(id: id, title: titles[id]?.title ?? "", episode: episode, from: nil))
             playSent = .now
             startAt = nil
             AppLog.info("store", "play \(id) episode \(episode) from a chosen source")
@@ -1014,6 +1030,7 @@ public final class AppStore {
         notifications.observe(event)
         reader.observe(event)
         reading.observe(event)
+        privacy.apply(event)
         // A download that fails before it starts has no row to say so on: a notice says why.
         if case .reading(.failed(.downloads, let failure)) = event {
             notices.post(Notice(kind: .alert, text: L.readDownloadNotStarted(reason: failure.words), hint: nil))
@@ -1027,9 +1044,14 @@ public final class AppStore {
         if case .profileSwitch(let id) = event { onProfileSwitch?(id) }
         answers.deliver([event])
         if case .downloads(let rows) = event { continued.update(rows) }
+        if case .reading(.downloads(let view)) = event { continued.update(chapters: view.rows) }
         if wantsWeek, NotificationsModel.reschedules(after: event) { refreshNotices() }
-        if case .upcomingNotices(let week) = event { airingActivity.weekChanged(week, titles: titles, artwork: artwork) }
-        if tv.cast.active, Self.playsHere(event) {
+        if case .upcomingNotices(var week) = event {
+            // The engine leaves always-private titles out; one made so this session goes too.
+            week.airings.removeAll { privacy.isAlways(show: $0.id) }
+            airingActivity.weekChanged(week, titles: titles, artwork: artwork)
+        }
+        if tv.cast.active || tv.cast.connected, Self.playsHere(event) {
             // A cast plays through the engine as any play does, on the TV: the player here stays shut.
             AppLog.info("store", "casting: \(String(String(describing: event).prefix { $0 != "(" }))")
             return
@@ -1070,7 +1092,7 @@ public final class AppStore {
         case .cards(let entries):
             titles.merge(entries)
             titles.carded(entries.map(\.id))
-        case .progress(let id, let progress, let resume, let episodes):
+        case .progress(let id, let progress, let resume, let episodes, _, _):
             titles.progress(id: id, progress: progress, resume: resume, episodes: episodes)
             widgetsChanged()
         case .lastAired(let rows):
@@ -1080,6 +1102,8 @@ public final class AppStore {
             // A failed listing is not a table to keep: the page asks again when it next opens.
             if failed == nil { episodesArrived[id] = now() }
             episodesLanded(id)
+        case .episodeChecked(let check):
+            missing.apply(check)
         case .titleDub(let id, let dub):
             titles.dub(id: id, extent: dub)
             titles.recount(id, dub: dub, dubChanged: dub != nil)
@@ -1184,13 +1208,19 @@ public final class AppStore {
         case .imageFailed(let url, _):
             artwork.failed(url: url)
 
-        case .playbackStaged(let id, _, let episode, _, _, _):
+        case .playbackStaged(let id, let title, let episode, _, _, _, _):
             if startAt?.staged(id: id, episode: episode) == false { startAt = nil }
+            playbackFailure = nil
+            stagedTitle = title
             let after = playSent.map { " \(AppLog.ms(since: $0)) ms after play" } ?? ""
             AppLog.info("store", "staged \(id) episode \(episode)\(after)")
             onPlayback?(event)
-        case .playbackEnded(let watched, let ending, let rollingOn, _):
+        case .playbackEnded(let watched, let ending, let rollingOn, let failure):
             AppLog.info("store", "playback ended: \(ending), watched \(watched), rolling on \(rollingOn)")
+            if ending == .failed, !rollingOn {
+                let message = failure?.text.text ?? L.noticePlaybackFailed
+                playbackFailure = (BugContext(kind: BugReports.playbackError, message: message, title: stagedTitle), .now)
+            }
             onPlayback?(event)
             widgetsChanged()
         case .sources:
@@ -1213,14 +1243,20 @@ public final class AppStore {
             onPlayback?(event)
 
         case .widgetSnapshot(let data):
-            widgets.received(data, art: artwork)
+            // The engine sends none while private; one asked for before the switch stays unshown.
+            if !privacy.on { widgets.received(data, art: artwork) }
+        case .private(let on):
+            privacyChanged(on)
+            onPlayback?(event)
+        case .alwaysPrivate:
+            onPlayback?(event)
 
         case .update(let status):
             updates.apply(status)
 
         case .discussion(let view):
             discussion.view(view)
-        case .discussionFound(let media, let episode, let comments):
+        case .discussionFound(let media, let episode, let comments, _):
             discussion.found(DiscussionKey(media: media, episode: episode), comments: comments)
 
         case .searchPaging(let query, let hasNext):
@@ -1253,6 +1289,8 @@ public final class AppStore {
 
     /// What the widgets show may have changed: ask for their snapshot once things settle.
     private func widgetsChanged() {
+        // Nothing watched while private reaches the widgets: they keep what they showed before.
+        guard !privacy.on else { return }
         widgets.changed { [weak self] in self?.send(.widgetSnapshot) }
     }
 

@@ -67,13 +67,13 @@ public final class CastModel {
     public private(set) var request: TVPlayRequest?
     /// The row picked, for Try again.
     public private(set) var key: String?
-    public private(set) var tvName = ""
+    public internal(set) var tvName = ""
     /// The TV has played something in this cast.
     public private(set) var played = false
     /// Where the TV last was, and in what episode, for Play here once the cast has ended.
     public private(set) var lastPosition: Double?
     /// Something the picker has to say about a pick that didn't start.
-    public private(set) var problem: String?
+    public internal(set) var problem: String?
 
     /// The cast's card closed by itself: someone else took the TV.
     @ObservationIgnored var closed: (@MainActor () -> Void)?
@@ -83,6 +83,33 @@ public final class CastModel {
     @ObservationIgnored public var playLocally: (@MainActor (AnilistId, String, Double?) -> Void)?
     /// What a pick starts, on the engine's sender; the Fixtures app scripts it instead.
     @ObservationIgnored var opener: (@MainActor (String, TVPlayRequest) throws -> any FfiCastSessionProtocol)?
+
+    // MARK: The session
+
+    /// The cast session as the engine last drew it: the TV held, and what plays there. Nil
+    /// while no TV is held.
+    public internal(set) var held: FfiCastSessionView?
+    /// The cast button, as the engine draws it: hidden while no TV is found.
+    public internal(set) var button: FfiCastButton = .hidden
+    /// The session joins one left running on the TV, rather than one this device asked for:
+    /// the mini says Reconnecting until it has.
+    public internal(set) var rejoining = false
+    /// What the TV last played, kept across launches, for the mini while it joins again.
+    public internal(set) var lastItem: CastLastItem?
+    /// The chooser, the connected dialog and the expanded controller, as the button and the
+    /// mini open them.
+    public var chooserShown = false
+    public var dialogShown = false
+    public var expanded = false
+    /// When `held` last changed, for the playhead to move on from.
+    public internal(set) var heldAt = Date.now
+    /// The engine's side of the session; the Fixtures app scripts one.
+    @ObservationIgnored public internal(set) var link: (any CastSessionLink)?
+    @ObservationIgnored var watching: Task<Void, Never>?
+    /// This device asked for the connect under way: it is not a session joined again.
+    @ObservationIgnored var asked = false
+    /// Open the controller when the next play starts on the TV.
+    @ObservationIgnored var expandOnPlay = false
 
     @ObservationIgnored private var cards: Task<Void, Never>?
     @ObservationIgnored private var leaving: [String: Task<Void, Never>] = [:]
@@ -103,6 +130,11 @@ public final class CastModel {
             try sender.cast(key: key, id: request.id, episode: request.episode, position: request.from)
         }
         if let running = sender.castSession() { follow(running, request: nil) }
+        if let watch = sender.castWatch() {
+            // The receiver's own lines name this device: Waiting for the iPhone.
+            sender.castSetDevice(word: TVRemoteModel.deviceWord)
+            hold(EngineCastLink(sender: sender, watch: watch))
+        }
     }
 
     /// The browse started or stopped. Stopping forgets what it found at once, with no row
@@ -164,7 +196,7 @@ public final class CastModel {
     }
 
     /// Read `session`'s cards until it ends.
-    private func follow(_ session: any FfiCastSessionProtocol, request: TVPlayRequest?) {
+    func follow(_ session: any FfiCastSessionProtocol, request: TVPlayRequest?) {
         cards?.cancel()
         self.session = session
         self.request = request
@@ -343,7 +375,7 @@ public final class CastModel {
         stop()
     }
 
-    private func end() {
+    func end() {
         cards?.cancel()
         cards = nil
         session = nil

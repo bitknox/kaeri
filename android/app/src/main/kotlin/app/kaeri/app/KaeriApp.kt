@@ -23,7 +23,9 @@ import androidx.lifecycle.ProcessLifecycleOwner
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.plus
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
@@ -119,7 +121,7 @@ class KaeriApp : Application(), PlayerHost, NewEpisodesHost, WidgetHost {
             store.onPlayback = player::apply
             store.onPlayAsked = player::asked
             PlayerConnection(this, player, scope)
-            SystemPhases(store, player, scope).start()
+            SystemPhases(store, player, scope, downloadRunning).start()
             captions = CaptionStyleWatch(this, player, scope, store.settings.view.map { it?.subtitleStyle })
         }
     }
@@ -137,6 +139,9 @@ class KaeriApp : Application(), PlayerHost, NewEpisodesHost, WidgetHost {
     }
 
     val notifier: Notifier by lazy { Notifier(this) }
+
+    /** Whether the download job or service runs: the engine is told the downloads go on in the background. */
+    val downloadRunning = MutableStateFlow(false)
 
     /**
      * The e-ink profile the engine makes from this device's facts, and the questions it leaves,
@@ -229,6 +234,13 @@ class KaeriApp : Application(), PlayerHost, NewEpisodesHost, WidgetHost {
                 readingNotifier.chapters(found.map { NewChapterNote.of(it, art) })
             }
         }
+        // The no room notice goes once the chapters move again, which the engine does by itself
+        // when space is freed, with or without the download job.
+        scope.launch {
+            store.reading.downloads.map { it?.stoppedFull }.distinctUntilChanged().filter { it == false }.collect {
+                DownloadNotifier(this@KaeriApp).clearFull()
+            }
+        }
         scope.launch {
             store.reading.downloadsDone.collect { done ->
                 if (!readingNotifier.canPost(ReadingNotifier.DOWNLOADS_FINISHED)) return@collect notifier.wantPermission()
@@ -313,8 +325,12 @@ class KaeriApp : Application(), PlayerHost, NewEpisodesHost, WidgetHost {
      */
     private fun startCasting() {
         store.cast.attach(store.tv, Flavour.castBrowser(this))
+        Flavour.castSession(this, store, scope)?.let { store.cast.sessions = it }
+        store.cast.setDevice(if (resources.configuration.smallestScreenWidthDp >= 600) "tablet" else "phone") // i18n-skip
         store.cast.handedOff = { player.viewerClosed() }
         store.cast.playHere = { id, episode -> store.send(Command.Play(id, episode, false)) }
+        // While a TV is held, the engine sends every play there.
+        store.cast.sendPlay = { id, episode, fromStart -> store.send(Command.Play(id, episode, fromStart)) }
         castKeeper = CastKeeper(this, store.cast, scope)
     }
 
@@ -329,6 +345,8 @@ class KaeriApp : Application(), PlayerHost, NewEpisodesHost, WidgetHost {
                 if (event != Lifecycle.Event.ON_STOP) return@LifecycleEventObserver
                 scope.launch {
                     if (!Widgets.placed(this@KaeriApp)) return@launch
+                    // Private mode: the widgets stay as they were; the engine makes no record now.
+                    if (store.privacy.on.value) return@launch
                     runCatching { makeWidgetRecord() }.onFailure { Log.w(TAG, "the widgets' record was not made: ${it.message}") }
                 }
             },

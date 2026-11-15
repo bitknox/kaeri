@@ -61,6 +61,7 @@ extension ReaderModel {
                 switch parts[0] {
                 case "look": set(.look, .choice(name: parts[1]))
                 case "layout": set(.pageLayout, .choice(name: parts[1]))
+                case "mode": set(.mode, .choice(name: parts[1]), scope: .series)
                 case "paper": set(.paperMode, .toggle(on: parts[1] == "on"))
                 case "at" where parts[1] == "first": requestJump(0)
                 default: continue
@@ -166,6 +167,8 @@ extension ReaderModel {
             case "pill": chromeShown = true; backToPage = 9
             case "opening": hold(.opening)
             case "error": hold(.failed(.offline))
+            // The chapter failing with the group up, as Continue on an end page can leave it.
+            case "errorchrome": chromeShown = true; hold(.failed(.offline))
             default: break
             }
             try? await Task.sleep(for: .milliseconds(900))

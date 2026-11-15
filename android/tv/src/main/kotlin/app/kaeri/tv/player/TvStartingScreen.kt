@@ -93,6 +93,7 @@ import app.kaeri.player.StartDetailsMemory
 import app.kaeri.player.StartProgress
 import app.kaeri.player.StartTiming
 import app.kaeri.player.label
+import app.kaeri.player.rememberStartingShown
 import app.kaeri.player.primaryAction
 import app.kaeri.player.startActions
 import app.kaeri.player.startingAnnouncement
@@ -128,8 +129,11 @@ private val SHADOW = Shadow(Color.Black.copy(alpha = 0.7f), Offset(0f, 1f), 1f)
  */
 @Composable
 internal fun StartingLayer(model: PlayerModel, up: Boolean, focus: StartFocus, onClose: () -> Unit) {
+    // On a roll-on the ground comes first and the art and column only after 600 ms.
+    val content = rememberStartingShown(model, up)
     val reduced = LocalReducedMotion.current
-    val shown by animateFloatAsState(if (up) 1f else 0f, if (reduced) snap() else Motion.fadeIn(), label = "starting") // i18n-skip
+    val shown by animateFloatAsState(if (up || content) 1f else 0f, if (reduced) snap() else Motion.fadeIn(), label = "starting") // i18n-skip
+    val filled by animateFloatAsState(if (content) 1f else 0f, if (reduced) snap() else Motion.fadeIn(), label = "starting art") // i18n-skip
     if (shown == 0f) return
     val store = LocalAppStore.current
     val entries by store.titles.entries.collectAsStateWithLifecycle()
@@ -137,8 +141,12 @@ internal fun StartingLayer(model: PlayerModel, up: Boolean, focus: StartFocus, o
     val id = model.titleId
     val wide = id?.let { entries[it] }?.let { HeroArt.of(it, tables[id]).url } ?: model.starting?.bannerUrl ?: model.bannerUrl
     Box(Modifier.fillMaxSize().graphicsLayer { alpha = shown }.background(ObiSilk.Ground)) {
-        StartingArt(wide, Modifier.fillMaxSize())
-        StartingColumn(model, reduced, focus, onClose, Modifier.fillMaxSize())
+        if (filled > 0f) {
+            Box(Modifier.fillMaxSize().graphicsLayer { alpha = filled }) {
+                StartingArt(wide, Modifier.fillMaxSize())
+                StartingColumn(model, reduced, focus, onClose, Modifier.fillMaxSize())
+            }
+        }
     }
 }
 

@@ -129,6 +129,7 @@ final class StandInSystem: PictureInPictureSystem {
     var starts = 0
     var stops = 0
     var changes = 0
+    var startsOnLeave = true
 
     func start() { starts += 1 }
     func stop() { stops += 1 }
@@ -329,6 +330,25 @@ struct PictureInPictureTests {
         pip.leaving()
         #expect(system.starts == 1)
         #expect(pip.phase == .starting)
+    }
+
+    /// Picture in Picture when leaving the app, off: leaving keeps the sound, and the button still
+    /// opens the floating window. Read as it changes, so the next leave follows it.
+    @Test func leavingFollowsTheSettingAndTheButtonStays() async throws {
+        let (rig, pip, system) = try await playing()
+        pip.startsOnLeave = false
+        #expect(!system.startsOnLeave, "the system is told, for iPhone and iPad")
+        pip.leaving()
+        #expect(system.starts == 0)
+        #expect(pip.phase == .inline)
+        #expect(!rig.model.paused, "the sound plays on")
+        pip.startsOnLeave = true
+        pip.leaving()
+        #expect(system.starts == 1)
+        system.say(.failedToStart)
+        pip.startsOnLeave = false
+        rig.model.togglePictureInPicture()
+        #expect(system.starts == 2, "the button still opens it")
     }
 
     /// Paused, mpv draws nothing new: the floating window starts on mpv's screenshot.

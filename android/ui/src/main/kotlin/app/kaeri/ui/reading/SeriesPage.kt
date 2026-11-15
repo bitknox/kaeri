@@ -6,6 +6,7 @@
 
 package app.kaeri.ui.reading
 
+import android.content.Context
 import androidx.activity.compose.BackHandler
 import app.kaeri.ui.synopsisCut
 import app.kaeri.ui.SynopsisCuts
@@ -93,11 +94,15 @@ import app.kaeri.design.SwapFade
 import app.kaeri.engine.core.ChapterId
 import app.kaeri.engine.core.Medium
 import app.kaeri.engine.core.WorkId
+import app.kaeri.ui.AlwaysPrivateItem
+import app.kaeri.ui.PrivatePageLine
+import app.kaeri.ui.privateLine
 import app.kaeri.engine.model.ChapterDownloadState
 import app.kaeri.engine.model.ChapterReadState
 import app.kaeri.engine.model.ChapterRow
 import app.kaeri.engine.model.DownloadPick
 import app.kaeri.engine.model.KaeriIsFor
+import app.kaeri.engine.model.PrivateTitle
 import app.kaeri.engine.model.ReadingAbout
 import app.kaeri.engine.model.ReadingFailure
 import app.kaeri.engine.model.SeriesAction
@@ -242,6 +247,7 @@ internal fun SeriesScreen(work: WorkId, actions: AppActions) {
                             sheet = SeriesSheet.ReadAgain
                         })
                     }
+                    AlwaysPrivateItem(PrivateTitle.Series(work)) { moreOpen = false }
                 }
             }
         }
@@ -632,7 +638,7 @@ private fun SeriesActions(
 ) {
     val context = LocalContext.current
     val words = SeriesWords.action(context, series.action)
-    val failed = chapters?.let { it.failure != null && !series.action.opensDownloaded(it.volumes) } == true
+    val failed = chapters?.leadsElsewhere(series.action) == true
     // No source is known to have it yet, but the engine is still asking: the chapters have not
     // come. The main button holds its place, quiet, rather than say there is nothing to read.
     val asking = series.action is SeriesAction.NoSource && chapters == null
@@ -654,6 +660,8 @@ private fun SeriesActions(
                 modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp),
             ) { Text(words, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold, textAlign = TextAlign.Center) }
         }
+        // Private: under the main action, while private mode is on or the series is always private.
+        PrivatePageLine(privateLine(PrivateTitle.Series(series.work)), top = 2.dp)
         if (!failed && (words != null || asking)) {
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 Box(Modifier.weight(1f)) {
@@ -882,7 +890,7 @@ private fun LazyListScope.seriesChapters(
             }
         }
     } else if (failure != null) {
-        item(key = "chapters-failed") { Box(itemMotion()) { ChaptersFailed(series, failure, groups.chapterRows().size, onRetry) } }
+        item(key = "chapters-failed") { Box(itemMotion()) { ChaptersFailed(series, failure, groups.downloaded().size, onRetry) } }
     } else if (groups.isEmpty()) {
         item(key = "chapters-none") {
             val context = LocalContext.current
@@ -930,21 +938,25 @@ private fun SeriesAction.opensDownloaded(volumes: List<VolumeGroup>): Boolean {
     return volumes.downloaded().any { it.id == chapter }
 }
 
-/** With the source failed, what is downloaded still opens: only those chapters, under no volume. */
-private fun ReadChapters.listedGroups(): List<VolumeGroup> = if (failure != null) {
-    listOfNotNull(
-        volumes.downloaded().takeIf { it.isNotEmpty() }?.let { VolumeGroup(volume = null, title = null, chapters = it, allRead = false) },
-    )
-} else {
-    volumes
-}
+/**
+ * The chapters listed: with the source failed, the list it gave before, as the engine keeps it,
+ * stays under the failure's note and opens as it did.
+ */
+internal fun ReadChapters.listedGroups(): List<VolumeGroup> = volumes
 
 /**
- * Whether the chapters are one run with no volume rows: the downloaded ones after a failure, a list
- * with no volumes, or a flat one (Show volumes off, or too few chapters with a volume).
+ * Whether the main button leads to another source in place of [action]: the source failed and no
+ * list is kept from before, so the page has the failure alone.
+ */
+internal fun ReadChapters.leadsElsewhere(action: SeriesAction): Boolean =
+    failure != null && volumes.chapterRows().isEmpty() && !action.opensDownloaded(volumes)
+
+/**
+ * Whether the chapters are one run with no volume rows: a list with no volumes, or a flat one (Show
+ * volumes off, or too few chapters with a volume).
  */
 private fun ReadChapters.singleGroup(groups: List<VolumeGroup>): Boolean =
-    failure != null || (groups.size == 1 && (groups.first().flat || groups.first().volume == null))
+    groups.size == 1 && (groups.first().flat || groups.first().volume == null)
 
 /**
  * The item [seriesChapters] lists [id]'s row at while choosing, when the page has no header or
@@ -1108,7 +1120,10 @@ private fun ChaptersHeading(volumes: Boolean, newestFirst: Boolean, onOrder: (Bo
     }
 }
 
-/** The source failed (fig 82): what failed and where, why, what still opens, and Try again. */
+/**
+ * The source failed (fig 82): what failed and where, why, what still opens, and Try again. A list
+ * kept from before stays under it.
+ */
 @Composable
 private fun ChaptersFailed(series: SeriesView, failure: ReadingFailure, downloaded: Int, onRetry: () -> Unit) {
     val context = LocalContext.current
@@ -1117,14 +1132,22 @@ private fun ChaptersFailed(series: SeriesView, failure: ReadingFailure, download
         Icon(Icons.Problem, contentDescription = null, tint = ObiSilk.Vermilion, modifier = Modifier.padding(top = 2.dp).size(20.dp))
         Column(Modifier.weight(1f)) {
             Text(Strings.seriesChaptersFailed(context, source), style = MaterialTheme.typography.bodyLarge)
-            val line = listOfNotNull(
-                failureWords(context, failure),
-                if (downloaded > 0) Strings.readSeriesDownloadedOpen(context, downloaded) else null,
-            ).joinToString(" ") // i18n-skip
-            Text(line, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(top = 4.dp))
+            Text(chaptersFailedLine(context, failure, downloaded), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(top = 4.dp))
             FilledTonalButton(onClick = onRetry, modifier = Modifier.padding(top = 12.dp)) { Text(Strings.actionTryAgain(context)) }
         }
     }
+}
+
+/**
+ * The line under a failed source's heading: why, and how many downloaded chapters still open.
+ * Offline it is one sentence, since the offline words already say downloaded chapters open.
+ */
+internal fun chaptersFailedLine(context: Context, failure: ReadingFailure, downloaded: Int): String = when {
+    failure is ReadingFailure.Offline && downloaded > 0 -> Strings.readSeriesOfflineDownloadedOpen(context, downloaded)
+    else -> listOfNotNull(
+        failureWords(context, failure),
+        if (downloaded > 0) Strings.readSeriesDownloadedOpen(context, downloaded) else null,
+    ).joinToString(" ") // i18n-skip
 }
 
 /** More like this: the engine's recommendations as covers to open. */

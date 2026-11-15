@@ -72,7 +72,9 @@ pub struct WorkTile {
     pub demo: bool,
     /// On a Home discovery row: the series was opened and none of the person's sources has it.
     /// The tile's line says "Not found in your sources" (`home-not-found`) for the rest of the
-    /// row's 30 minutes. Never set by asking sources while Home draws.
+    /// row's 30 minutes. Never set by asking sources while Home draws. On the spotlight of a
+    /// series in Continue: none of the sources has it, so it has no button, and the spotlight
+    /// says the same words under its buttons.
     #[cfg_attr(feature = "ffi", uniffi(default))]
     pub not_in_sources: bool,
     /// Where the series comes from, for the caption "Light novel · Japan": a country AniList
@@ -586,6 +588,28 @@ pub struct ReadingHomeView {
     pub rows: Vec<ReadHomeRow>,
 }
 
+impl ReadingHomeView {
+    /// Remove from Continue as the screen shows it at once: the cover leaves Continue, and a
+    /// spotlight on the same series leaves with it. Nothing else on Home moves. The engine keeps
+    /// the series hidden without sending Home again, as watching's Continue does, and the next
+    /// Home brings a new spotlight. When Continue empties, its gap closes.
+    pub fn without_continue(mut self, work: &WorkId) -> Self {
+        self.continue_reading.retain(|tile| &tile.work != work);
+        if self.spotlight.as_ref().is_some_and(|tile| &tile.work == work) {
+            self.spotlight = None;
+            self.spot = None;
+        }
+        self
+    }
+}
+
+/// [`ReadingHomeView::without_continue`] for a front end: every app drops the cover from
+/// reading's Home with this as it sends [`ReadingCommand::HideFromContinue`].
+#[cfg_attr(feature = "ffi", uniffi::export)]
+pub fn read_home_without_continue(home: ReadingHomeView, work: WorkId) -> ReadingHomeView {
+    home.without_continue(&work)
+}
+
 /// The most discovery rows reading's Home shows.
 pub const READ_HOME_ROWS: u32 = 8;
 
@@ -1061,6 +1085,11 @@ pub struct BookDownloadsView {
     /// The Reading section's total: "38 chapters · 1.1 GB". Empty with nothing downloaded.
     #[cfg_attr(feature = "ffi", uniffi(default))]
     pub total: Vec<Msg>,
+    /// The queue stopped because the device is full: the chapters still queued wait for Retry
+    /// or another download, and nothing fetches them until then. An app that keeps itself
+    /// running for downloads lets go.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub stopped_full: bool,
 }
 
 /// What downloading a choice of chapters will take: "About 62 MB · over Wi-Fi".
@@ -2110,6 +2139,67 @@ pub fn anilist_of(work: &WorkId) -> Option<AnilistId> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    fn tile(work: &str) -> WorkTile {
+        WorkTile {
+            work: WorkId(work.into()),
+            title: format!("Series {work}"),
+            medium: Medium::Manga,
+            cover: None,
+            format_label: None,
+            progress: None,
+            next: None,
+            new_chapter: false,
+            adult: false,
+            facts: vec![],
+            demo: false,
+            not_in_sources: false,
+            origin: None,
+            amount: None,
+            started: None,
+        }
+    }
+
+    #[test]
+    fn remove_from_continue_drops_only_the_cover_and_leaves_the_rest_of_home_still() {
+        let home = ReadingHomeView {
+            spotlight: Some(tile("a:1")),
+            continue_reading: vec![tile("a:1"), tile("a:2")],
+            up_next: vec![tile("a:3")],
+            rows: vec![ReadHomeRow {
+                id: "trending-manga".into(),
+                kind: ReadRowKind::Trending,
+                format: Some(ReadRowFormat::Manga),
+                title: Msg::Reading(ReadingMsg::ReadingSpotlightPopular),
+                side: None,
+                tiles: vec![tile("a:4")],
+                view_all: None,
+                view_all_title: None,
+                pending: false,
+            }],
+            ..ReadingHomeView::default()
+        };
+
+        let one_left = read_home_without_continue(home.clone(), WorkId("a:2".into()));
+        assert_eq!(one_left.continue_reading, vec![tile("a:1")]);
+        assert_eq!(
+            ReadingHomeView {
+                continue_reading: home.continue_reading.clone(),
+                ..one_left.clone()
+            },
+            home,
+            "nothing but Continue changes"
+        );
+
+        let empty = one_left.clone().without_continue(&WorkId("a:1".into()));
+        assert!(empty.continue_reading.is_empty(), "the last cover empties Continue");
+        assert_eq!((empty.spotlight, empty.spot), (None, None), "its spotlight leaves with it");
+        assert_eq!(empty.up_next, home.up_next);
+        assert_eq!(empty.rows, home.rows);
+
+        let unknown = one_left.clone().without_continue(&WorkId("a:9".into()));
+        assert_eq!(unknown, one_left, "a series not in Continue changes nothing");
+    }
 
     #[test]
     fn a_part_says_its_percent_only_when_there_is_one_worth_saying() {

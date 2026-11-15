@@ -116,6 +116,7 @@ fn at_episodes() -> App {
             past_progress: false,
             spoiler_ahead: false,
             synopsis_pending: false,
+            followed: Vec::new(),
             thumbnail: None,
             description: None,
         })

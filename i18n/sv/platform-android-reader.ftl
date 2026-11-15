@@ -89,6 +89,7 @@ reader-end-series = Tillbaka till serien
 reader-end-again = Läs igen från början
 reader-opening-chapter = Öppnar kapitel { $chapter }
 reader-failed-chapter = Kunde inte öppna kapitel { $chapter }
+reader-failed-chapter-plain = Kunde inte öppna kapitlet
 reader-sheet-series = Den här serien
 reader-sheet-all-manga = All manga
 reader-sheet-all-webtoons = Alla webtoons

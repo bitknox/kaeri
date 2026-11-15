@@ -204,6 +204,7 @@ async fn main() {
             untracked: false,
             swarm: Default::default(),
             begin: Default::default(),
+            ahead: Default::default(),
             privacy: Default::default(),
         };
         kaeri_engine::playback::play(

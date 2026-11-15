@@ -24,8 +24,9 @@ asked without your account, even when you have signed in to AniList as a tracker
 requests for your list carry your token.
 
 Covers and banners come from AniList's image server. Episode stills come from the plugin that
-found the episode, or from the image servers of the services AniList lists for it. Images are kept
-on the device for 30 days, so each one is fetched about once a month.
+found the episode, from the image servers of the services AniList lists for it, or from the image
+server the episode service below names (TVDB's, `artworks.thetvdb.com`, for most shows). Images are
+kept on the device for 30 days, so each one is fetched about once a month.
 
 When AniList can't answer, most of the same requests go to Tenrai (`api.tenrai.org`), a public
 MyAnimeList-compatible metadata API, and its images come from MyAnimeList's image server. To turn this
@@ -50,14 +51,18 @@ mode, with reduced or removed animations, or with a screen reader running. While
 protection is on, the trailer of a title that follows one you haven't finished doesn't start by
 itself.
 
-## Episode synopses
+## Episode synopses, titles and stills
 
-When a source lists an episode without a synopsis, Kaeri can fill it in from a public episode
-service at `api.ani.zip`. It is asked once for a title when you open the title's episodes, with
-that title's AniList id and nothing else. The service sees your IP address and that id. The answer
-is kept on the device for six hours while the show airs and a week after, so the same title is not
-asked again in that time. If the service refuses or does not answer, the episodes stay as they
-were. To turn this off, set `episode_text = false` under `[meta]` in `config.toml`.
+When a source lists an episode without a synopsis, a title or a still, Kaeri can fill it in from a
+public episode service at `api.ani.zip`. A source's own synopsis, title and still always stay. The
+service is asked once for a title when you open the title's episodes, with that title's AniList id
+and nothing else. It sees your IP address and that id, so it can tell which shows are opened from
+your address. The answer is kept on the device for six hours while the show airs and a week after,
+so the same title is not asked again in that time, and nothing is asked while you are offline. The
+stills it names are loaded from their image server when the episodes show, like any other still,
+so that server sees your IP address and which episodes' stills are shown. If the service refuses
+or does not answer, the episodes stay as they were. To turn this off, set `episode_text = false`
+under `[meta]` in `config.toml`.
 
 ## Episode discussions
 

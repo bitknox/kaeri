@@ -48,11 +48,17 @@ mod home;
 mod input;
 mod lists;
 pub mod medium;
+mod missing;
 mod notices;
 mod overlays;
 mod playback;
 mod providers;
+mod reader;
+mod reader_novel;
+mod reader_settings;
+mod reader_view;
 mod reading;
+mod series;
 mod settings;
 mod stores;
 mod text;
@@ -60,6 +66,7 @@ mod title;
 mod together;
 
 pub(crate) use self::lists::air_date;
+pub(crate) use self::notices::LOG_ROW;
 use self::title::TitleFrame;
 pub use self::{
     accounts::sync_badge,
@@ -72,13 +79,34 @@ pub use self::{
     lists::{
         cycle_search_filter, search_filter_labels, search_filter_summary, search_filter_value,
     },
-    notices::{ACTIVITY_DELAY, Job, LOG_CAPACITY, LogRow, Toast, alert, info, say, worded},
+    missing::{CHECKING_AFTER, CHECKING_HELD, MissingStatus},
+    notices::{
+        ACTIVITY_DELAY, Job, LOG_CAPACITY, LogRow, PlayerLogRow, Toast, alert, info, say,
+        worded,
+    },
     overlays::{FrameReport, PALETTE_ROWS},
     playback::NowPlaying,
     providers::proxy_badge,
+    reader::{
+        CHROME_ROWS, EndFacts, MIN_COLUMNS, MIN_ROWS, PLATE_AFTER, PageJob, PartKey, Reader,
+        ReaderScreen, SECONDS_AFTER, ShownNotice, TWO_PAGE_ROWS,
+    },
+    reader_novel::{
+        NovelFrame, NovelProgress, NovelReading, OPEN_AMOUNT, OPEN_SPACING, TEXT_MARGIN,
+        TEXT_WIDTH, TEXT_WIDTH_MIN, TEXT_WIDTH_STEP, TIGHT_AMOUNT,
+    },
+    reader_settings::{SettingItem, SettingPlace, SettingShown},
+    reader_view::{
+        CanvasBox, DIVIDER_ROWS, FIT_MARGIN, Piece, StripItem, StripLayout, Viewport,
+        ZOOM_PANEL, Zoom, stage_of, strip_cols,
+    },
     reading::{
-        AnilistState, GROUP_HITS, Part, ReadLine, Reading, read_filter_labels,
-        read_filter_summary, read_filter_value, read_query_blank,
+        AnilistState, GROUP_HITS, LOADING_LINE_AFTER, Part, ReadLine, Reading,
+        read_filter_labels, read_filter_summary, read_filter_value, read_query_blank,
+    },
+    series::{
+        READ_LISTS, SeriesPage, action_words, chapter_line, chapter_name, downloaded,
+        read_list_name, series_facts,
     },
     settings::SettingLine,
     stores::{MemberLine, PluginChoice, StoreConfirm, StoreLine},
@@ -87,6 +115,7 @@ pub use self::{
 pub(crate) use self::{
     devices::{is_drive, service_line, service_name},
     episodes::countdown_text,
+    reader::reader_hints,
     title::{push_detail, status_text, watch_order, watched_all},
 };
 
@@ -202,6 +231,10 @@ pub struct App {
     pub crashes: Vec<kaeri_model::crash::CrashRecord>,
     /// Crash reports the person deleted in Report a bug, for the host to remove from disk.
     deleted_crashes: Vec<String>,
+    /// Report a bug's Save player log row: what the host said of the log and where a save went.
+    pub player_log: PlayerLogRow,
+    /// The last playback could not play, so a report opened now is about a playback error.
+    playback_failed: bool,
     /// The metadata ladder's rungs, for the Providers screen and the header chip.
     pub meta_status: Vec<MetaSourceRow>,
     /// The source pinned for the title on screen. `None` means automatic.
@@ -236,6 +269,10 @@ pub struct App {
     /// Not only on the rows, which every reload rebuilds: Home reloaded, and `a` opened at the
     /// top of the picker rather than on the status just given.
     statuses_set: std::collections::HashMap<AnilistId, LibrarySegment>,
+    /// Each episode's discussion thread on AniList, by title and episode number, as the engine
+    /// found them once the episode counted as watched. Open in browser on that episode's row
+    /// opens its thread; the terminal neither reads nor posts in it.
+    pub(crate) threads: std::collections::HashMap<(AnilistId, u32), String>,
     /// The help overlay's page. Its own field because Help opens on top of a picker, and paging
     /// through it must not move the picker's selection underneath.
     pub help_page: usize,
@@ -316,6 +353,8 @@ pub struct App {
     /// title the moment one is opened, while the rows stay the last title's until its own load
     /// answers, and asked by `detail` they spoke for a show they were never part of.
     episodes_for: Option<AnilistId>,
+    /// The checks of a missing episode the title page asked for, and what they came to.
+    checks: missing::Checks,
     /// How far a title's dub goes, as the engine last said for it: the Episodes screen's
     /// "Dub to episode 6", for the title it names alone.
     pub dub: Option<(AnilistId, DubExtent)>,
@@ -393,6 +432,18 @@ pub struct App {
     pub publish_for: Option<String>,
     /// Reading's Home and Search, while this computer is set to reading alone.
     pub reading: Reading,
+    /// The reader, from its open until it is left.
+    pub reader: Option<Reader>,
+    /// Page files waiting to be decoded: see [`App::take_page_jobs`].
+    page_jobs: Vec<PageJob>,
+    /// The blocks notice has been given in this run.
+    blocks_said: bool,
+    /// The blocks notice waits for the status rule to be free.
+    blocks_owed: bool,
+    /// The window's size, as the last frame was drawn.
+    pub window: Option<(u16, u16)>,
+    /// The engine says the computer is offline.
+    pub offline: bool,
 }
 
 impl App {
@@ -442,6 +493,7 @@ impl App {
             sync: Vec::new(),
             conflicts: Vec::new(),
             statuses_set: std::collections::HashMap::new(),
+            threads: std::collections::HashMap::new(),
             help_page: 0,
             help_pages: 1,
             pulse: 0,
@@ -482,6 +534,8 @@ impl App {
             medium_asked: None,
             crashes: Vec::new(),
             deleted_crashes: Vec::new(),
+            player_log: PlayerLogRow::default(),
+            playback_failed: false,
             meta_status: Vec::new(),
             provider_preference: None,
             source_options: Vec::new(),
@@ -491,6 +545,7 @@ impl App {
             episodes_all: Vec::new(),
             dub: None,
             episodes_for: None,
+            checks: missing::Checks::default(),
             episode_filter: EpisodeFilter::default(),
             go_count: String::new(),
             go_error: None,
@@ -527,6 +582,12 @@ impl App {
             local_plugins: Vec::new(),
             publish_for: None,
             reading: Reading::default(),
+            reader: None,
+            page_jobs: Vec::new(),
+            blocks_said: false,
+            blocks_owed: false,
+            window: None,
+            offline: false,
         }
     }
 
@@ -600,7 +661,8 @@ impl App {
             Event::BookSources(kaeri_model::book_sources::BookSourceEvent::View(view)) => {
                 self.apply_book_sources(&view)
             }
-            Event::Reader(_) | Event::BookSources(_) => {}
+            Event::Reader(event) => self.apply_reader(event),
+            Event::BookSources(_) => {}
             Event::Medium(view) => self.apply_medium(view),
             Event::Content { view, content } => self.apply_content(view, content),
             // Up next for you is a section of Home now; it is not asked for on its own.
@@ -612,7 +674,10 @@ impl App {
             Event::HiddenTitles(_) => {}
             // Every way into a title sets a stand-in `detail` for it before the fetch goes out, so
             // a full record for any other id answers a title the user has already left.
-            Event::Detail(entry) => self.apply_detail(entry),
+            Event::Detail(entry) => {
+                self.apply_detail(entry);
+                self.list_if_missing();
+            }
             // The terminal has no hover cards.
             Event::Cards(cards) => self.apply_note_titles(&cards),
             // The engine names every title as the setting says; nothing here asks the viewer's.
@@ -624,8 +689,16 @@ impl App {
             // A native app's notifications and widgets, which the terminal never asks for: what
             // aired while it was closed is the digest's to say, at launch.
             Event::NewEpisodes(_) | Event::WidgetSnapshot(_) | Event::UpcomingNotices(_) => {}
-            // The native apps' discussion sheet; the terminal opens a thread in the browser.
-            Event::DiscussionFound { .. } | Event::Discussion(_) => {}
+            // The terminal reads no thread: Open in browser on the episode's row opens it.
+            Event::DiscussionFound { media, episode, url, .. } => {
+                if !url.is_empty() {
+                    self.threads.insert((media, episode), url);
+                }
+            }
+            // The native apps' discussion sheet.
+            Event::Discussion(_) => {}
+            // What a check for a missing episode came to, for the title page's status line.
+            Event::EpisodeChecked(check) => self.apply_check(check),
             // What the update check found, for an app's Settings: the terminal's own notice
             // comes as a toast, naming `kaeri --update`.
             Event::Update(_) => {}
@@ -664,7 +737,7 @@ impl App {
             | Event::PartyLastOut { .. } => {}
             // A native app's network monitor, which the terminal has none of: it never says the
             // path, so the engine never says it changed.
-            Event::Connectivity { .. } => {}
+            Event::Connectivity { offline } => self.reader_connectivity(offline),
             // Trailers play in the native apps' web views, and the terminal has none.
             Event::Autoplay(_) => {}
             Event::Seeding(rows) => self.seeding = rows,
@@ -745,6 +818,7 @@ impl App {
             Event::ActiveProvider(provider) => self.active_provider = Some(provider),
             Event::PlaybackKept => self.apply_playback_kept(),
             Event::PlaybackStaged { id, title, episode, episode_title, speed, .. } => {
+                self.playback_failed = false;
                 self.take_staged(id, title, episode, episode_title, speed);
             }
             // The terminal has no starting screen; it keeps the notice a stream with no video
@@ -809,7 +883,10 @@ impl App {
             // the next episode, so the two cannot disagree into a window left waiting for an
             // episode nobody starts.
             Event::PlaybackEnded { rolling_on: true, .. } => self.rolling = true,
-            Event::PlaybackEnded { ending, .. } => self.apply_playback_ended(ending),
+            Event::PlaybackEnded { ending, .. } => {
+                self.playback_failed = ending == kaeri_model::playback::Ending::Failed;
+                self.apply_playback_ended(ending)
+            }
             Event::Sync(state) => self.apply_sync(*state),
             Event::JobStarted { job, activity } => self.start_job(job, activity),
             Event::JobNote { job, note, wait } => self.apply_job_note(job, say(&note), wait),

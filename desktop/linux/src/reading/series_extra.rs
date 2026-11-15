@@ -840,15 +840,27 @@ pub fn trackers(ctx: &Rc<Ctx>, work: &WorkId, view: Option<SeriesView>) {
     dialog.set_content_width(460);
     dialog.set_follows_content_size(true);
     let body = gtk::Box::new(gtk::Orientation::Vertical, 12);
-    body.set_margin_top(12);
-    body.set_margin_bottom(18);
-    body.set_margin_start(18);
-    body.set_margin_end(18);
+    // First, kept apart from the trackers drawn under it: Always private, on this device only.
+    let own = gtk::ListBox::new();
+    own.add_css_class("boxed-list");
+    own.set_selection_mode(gtk::SelectionMode::None);
+    own.append(&crate::private::always_row(
+        ctx,
+        kaeri_model::private::PrivateTitle::Series { work: work.clone() },
+        &t::series_always_private_detail(),
+    ));
+    let column = gtk::Box::new(gtk::Orientation::Vertical, 18);
+    column.set_margin_top(12);
+    column.set_margin_bottom(18);
+    column.set_margin_start(18);
+    column.set_margin_end(18);
+    column.append(&own);
+    column.append(&body);
     let scroll = gtk::ScrolledWindow::builder()
         .hscrollbar_policy(gtk::PolicyType::Never)
         .propagate_natural_height(true)
         .max_content_height(520)
-        .child(&body)
+        .child(&column)
         .build();
     let toolbar = adw::ToolbarView::new();
     let header = adw::HeaderBar::new();

@@ -28,6 +28,9 @@ struct EpisodeRowLabel: View {
     var asked = false
     /// The row opens a service outside the app, which its trailing glyph says.
     var external = false
+    /// The people followed whose progress stops here, in the marks' column before the row's
+    /// trailing end; nil when the table has no marks, which leaves the column out.
+    var marks: [FollowedMark]? = nil
 
     private var stacked: Bool { typeSize.isAccessibilitySize && metrics.text == .under }
 
@@ -62,6 +65,7 @@ struct EpisodeRowLabel: View {
                     .frame(maxWidth: Self.measure, alignment: .leading)
             }
             .frame(maxWidth: .infinity, maxHeight: metrics.still.height, alignment: .topLeading)
+            if let marks { FollowedMarks(marks: marks) }
             trailing
         }
         .padding(.horizontal, 8)
@@ -78,6 +82,7 @@ struct EpisodeRowLabel: View {
                     factsLine(facts, lines: 2).padding(.top, 2)
                 }
                 .frame(maxWidth: .infinity, alignment: .topLeading)
+                if let marks { FollowedMarks(marks: marks) }
                 if external { trailing }
             }
             if room && !hidden { synopsis(text, lines: 3) }
@@ -95,6 +100,10 @@ struct EpisodeRowLabel: View {
             still(width: nil).padding(.bottom, 8)
             title(lines: 2)
             factsLine(facts, lines: 3).padding(.top, 2)
+            if let marks, !marks.isEmpty {
+                PictureStack(people: marks.map { ($0.name, $0.avatarUrl) }, size: MarkMetrics.current.size, ring: Palette.ground)
+                    .padding(.top, 6)
+            }
             if room && !hidden { synopsis(text, lines: 4).padding(.top, 8) }
         }
         .padding(.vertical, 8)
@@ -124,8 +133,10 @@ struct EpisodeRowLabel: View {
         Text(row.number)
             .font(Self.numberFont(metrics))
             .monospacedDigit()
-            .foregroundStyle(current ? .amber : .haze)
+            // Amber marks what plays: an episode no source lists stays haze until one does.
+            .foregroundStyle(current && (!row.unsourced || external) ? .amber : .haze)
             .animation(.quick, value: current)
+            .animation(.reveal, value: row.unsourced)
             // A number past 99 keeps one line, standing into the row's margin.
             .lineLimit(1)
             .fixedSize()
@@ -153,12 +164,24 @@ struct EpisodeRowLabel: View {
     }
 
     private func factsLine(_ facts: String, lines: Int) -> some View {
-        Text(facts)
+        // An aired episode no source lists says how long ago it aired, on the minute, with no
+        // motion; once a source lists it the line crossfades to the usual one.
+        TimelineView(.everyMinute) { context in
+            Text(row.unsourced ? factsLine(at: context.date) : facts)
+                .contentTransition(.opacity)
+        }
             .font(Self.factsFont(metrics))
             .monospacedDigit()
             .foregroundStyle(.haze)
             .lineLimit(lines)
             .multilineTextAlignment(.leading)
+    }
+
+    private func factsLine(at now: Date) -> String {
+        EpisodeFacts.line(
+            row, current: current, minutesLeft: current ? EpisodeFacts.minutesLeft(entry) : nil,
+            leadsWithNumber: !numberColumn, now: now
+        )
     }
 
     private func synopsis(_ text: String?, lines: Int) -> some View {

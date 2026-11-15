@@ -53,6 +53,18 @@ object Strings {
     fun noticeCastLost(context: Context, name: String): String =
         context.getString(R.string.notice_cast_lost, name)
 
+    /** Kaeri's receiver on the TV couldn't get part of the episode from the source mid-play, so the cast stopped. The card offers Choose source and Play here. The name is the TV's own. */
+    fun noticeCastSegment(context: Context, name: String): String =
+        context.getString(R.string.notice_cast_segment, name)
+
+    /** The TV stopped reaching this device, which hands it the stream, mid-episode. The card offers Try again and Play here. The name is the TV's own. */
+    fun noticeCastLostStream(context: Context, name: String): String =
+        context.getString(R.string.notice_cast_lost_stream, name)
+
+    /** Shown once per TV, the first time it can't keep up with styled subtitles and switches to plain ones. Nothing else changes and the episode plays on. The name is the TV's own. */
+    fun noticeCastSubtitlesPlain(context: Context, name: String): String =
+        context.getString(R.string.notice_cast_subtitles_plain, name)
+
     /** The TV picked to cast to has left the network. */
     fun noticeCastNoDevice(context: Context): String =
         context.getString(R.string.notice_cast_no_device)
@@ -432,6 +444,14 @@ object Strings {
     /** Toast when a stream never showed a frame and the next one is tried. */
     fun noticeStreamNoVideo(context: Context, next: Int, total: Int): String =
         context.getString(R.string.notice_stream_no_video, next, total)
+
+    /** Quiet toast in the player when the stream playing broke off with an error mid-episode and a stream from another source took over at the same second, with the same audio and subtitles. The source is its own name. */
+    fun noticeFailedOver(context: Context, source: String): String =
+        context.getString(R.string.notice_failed_over, source)
+
+    /** Quiet toast in the player when the stream playing broke off with an error mid-episode and another stream from the same source took over at the same second, with the same audio and subtitles. The source is its own name. */
+    fun noticeFailedOverSameSource(context: Context, source: String): String =
+        context.getString(R.string.notice_failed_over_same_source, source)
 
     /** Toast when mpv gave up on a file. The reason is mpv's own line. */
     fun noticePlayerCouldNotPlay(context: Context, reason: String): String =
@@ -1145,6 +1165,10 @@ object Strings {
     fun readingRowWaitsWifi(context: Context): String =
         context.getString(R.string.reading_row_waits_wifi)
 
+    /** A chapter row's state: it waits to download until the device has free space again. A full device paused the downloads; they go on by themselves once there is room. */
+    fun readingRowWaitsRoom(context: Context): String =
+        context.getString(R.string.reading_row_waits_room)
+
     /** A chapter row's state while it downloads. */
     fun readingRowDownloading(context: Context, done: Int, total: Int): String =
         context.getString(R.string.reading_row_downloading, done, total)
@@ -1328,6 +1352,10 @@ object Strings {
     /** After "Chapter 2 couldn't download" when there was no network: the downloads banner says the rest. */
     fun readingDlOffline(context: Context): String =
         context.getString(R.string.reading_dl_offline)
+
+    /** After "3 queued" on a series' Downloads row when a full device paused the downloads. They go on by themselves once some space is free; the count is the queued chapters. */
+    fun readingDlNoRoom(context: Context, count: Int): String =
+        context.resources.getQuantityString(R.plurals.reading_dl_no_room, count, count)
 
     /** How much the chosen chapters will take, from their pages and the size of pages downloaded before. */
     fun readingEstimateSize(context: Context, size: String): String =
@@ -1953,7 +1981,7 @@ object Strings {
     fun noticeSignedOutQueue(context: Context, tracker: String, count: Int): String =
         context.resources.getQuantityString(R.plurals.notice_signed_out_queue, count, tracker, count)
 
-    /** Toast, shown once, when a tracker kept refusing a change to a title for about two days and the change stopped being sent. The change itself is still saved in the app. The tracker is its name, such as AniList; the title is a show's or a series' name. */
+    /** Toast, shown once, when a tracker kept refusing a change to a title for about two days and the change stopped being sent. The change itself is still saved in the app. The tracker is its name, such as AniList; the title is a show's or a series' name. The notice capsule holds two lines on a phone, so keep it about as short as the English. */
     fun noticeTrackerChangeRefused(context: Context, tracker: String, title: String): String =
         context.getString(R.string.notice_tracker_change_refused, tracker, title)
 
@@ -2753,6 +2781,10 @@ object Strings {
     fun readerFailedChapter(context: Context, chapter: String): String =
         context.getString(R.string.reader_failed_chapter, chapter)
 
+    /** Heading when a chapter could not open before the reader learned which chapter it was, as when Continue asked for the next chapter and the source did not answer. */
+    fun readerFailedChapterPlain(context: Context): String =
+        context.getString(R.string.reader_failed_chapter_plain)
+
     /** Heading in the reader's settings above the choices that belong to this series only. */
     fun readerSheetSeries(context: Context): String =
         context.getString(R.string.reader_sheet_series)
@@ -3501,6 +3533,10 @@ object Strings {
     fun readSeriesDownloadedOpen(context: Context, n: Int): String =
         context.resources.getQuantityString(R.plurals.read_series_downloaded_open, n, n)
 
+    /** On a series page whose source failed because the device is offline, under the cause: one sentence that says so and how many chapters downloaded before still open. */
+    fun readSeriesOfflineDownloadedOpen(context: Context, n: Int): String =
+        context.resources.getQuantityString(R.plurals.read_series_offline_downloaded_open, n, n)
+
     /** The head of the group menu on a large screen, over its choices: the source the groups are in. */
     fun groupMenuIn(context: Context, source: String): String =
         context.getString(R.string.group_menu_in, source)
@@ -4004,6 +4040,14 @@ object Strings {
     /** Name a TV gives itself to phones when the system has none set. */
     fun tvRemoteDefaultName(context: Context): String =
         context.getString(R.string.tv_remote_default_name)
+
+    /** Row in the TV player's Info panel, under the Stats for nerds lines: puts the full stats over the picture, updated once a second. */
+    fun playerStatsShowLive(context: Context): String =
+        context.getString(R.string.player_stats_show_live)
+
+    /** The same row while the live stats are up. */
+    fun playerStatsHideLive(context: Context): String =
+        context.getString(R.string.player_stats_hide_live)
 
     /** The episode in a short form for a title last watched dubbed. */
     fun episodeShortDubbed(context: Context, episode: Int): String =
@@ -4829,6 +4873,10 @@ object Strings {
     fun engineDownQuit(context: Context): String =
         context.getString(R.string.engine_down_quit)
 
+    /** Words in place of the Picture in picture when leaving the app switch, when Android's own per-app Picture in picture permission is off. An Open settings button sits beside it. */
+    fun settingsPictureInPictureSystemOff(context: Context): String =
+        context.getString(R.string.settings_picture_in_picture_system_off)
+
     /** Title of the about page. */
     fun aboutTitle(context: Context): String =
         context.getString(R.string.about_title)
@@ -4968,6 +5016,46 @@ object Strings {
     /** Link from that line to the crash report settings. */
     fun reportCrashSettings(context: Context): String =
         context.getString(R.string.report_crash_settings)
+
+    /** Report item, the last row under Included: a file of what the player did in the last few playbacks, saved by hand and attached to the issue. Also the name of the second tab in the report's preview, beside Report. */
+    fun reportPlayerLog(context: Context): String =
+        context.getString(R.string.report_player_log)
+
+    /** Line under the Player log item: how many playbacks the log holds and the size of the file. The size is already formatted, such as 412 KB. */
+    fun reportPlayerLogDetail(context: Context, playbacks: Int, size: String): String =
+        context.resources.getQuantityString(R.plurals.report_player_log_detail, playbacks, playbacks, size)
+
+    /** Line under the Player log item while nothing has played since the app started. The item cannot be ticked then. */
+    fun reportPlayerLogEmpty(context: Context): String =
+        context.getString(R.string.report_player_log_empty)
+
+    /** Button under the ticked Player log item. Opens the system's save dialog for the log file. */
+    fun reportPlayerLogSave(context: Context): String =
+        context.getString(R.string.report_player_log_save)
+
+    /** Line under the Save log button: the file is not sent by itself, the person attaches it on GitHub. */
+    fun reportPlayerLogAttach(context: Context): String =
+        context.getString(R.string.report_player_log_attach)
+
+    /** Replaces the Save log button once the file is written. File is the file's name, such as kaeri-player-log-2026-11-15-1432.txt. */
+    fun reportPlayerLogSaved(context: Context, file: String): String =
+        context.getString(R.string.report_player_log_saved, file)
+
+    /** Shown beside the Save log button when the file could not be written. */
+    fun reportPlayerLogFailed(context: Context): String =
+        context.getString(R.string.report_player_log_failed)
+
+    /** First tab of the report's preview, beside Player log: the text of the report itself. Shown only while Player log is ticked. */
+    fun reportSentReport(context: Context): String =
+        context.getString(R.string.report_sent_report)
+
+    /** Screen readers announce this once the player log file is written. */
+    fun reportPlayerLogA11ySaved(context: Context): String =
+        context.getString(R.string.report_player_log_a11y_saved)
+
+    /** Screen reader hint on the Player log item. */
+    fun reportPlayerLogA11yHint(context: Context): String =
+        context.getString(R.string.report_player_log_a11y_hint)
 
     /** Heading of the Crash reports group in Settings, About. */
     fun settingsGroupCrashes(context: Context): String =
@@ -5229,6 +5317,46 @@ object Strings {
     fun castVolumeFixed(context: Context): String =
         context.getString(R.string.cast_volume_fixed)
 
+    /** The cast button's spoken label while it connects to a TV. The name is the TV's. */
+    fun castButtonConnecting(context: Context, name: String): String =
+        context.getString(R.string.cast_button_connecting, name)
+
+    /** The cast button's spoken label once a TV is connected, and the title of the dialog it opens. The name is the TV's. */
+    fun castButtonConnected(context: Context, name: String): String =
+        context.getString(R.string.cast_button_connected, name)
+
+    /** Line on a title page under its buttons while a TV is connected: what is played goes to it. The name is the TV's. */
+    fun castPlaysOn(context: Context, name: String): String =
+        context.getString(R.string.cast_plays_on, name)
+
+    /** Row in the connected dialog while the TV has nothing loaded. */
+    fun castIdle(context: Context): String =
+        context.getString(R.string.cast_idle)
+
+    /** The casting controller's line while the episode is paused on the TV. The name is the TV's. */
+    fun castStatusPaused(context: Context, name: String): String =
+        context.getString(R.string.cast_status_paused, name)
+
+    /** Spoken label of the show's name in the casting controller: it opens the show's page. */
+    fun castOpenShow(context: Context, title: String): String =
+        context.getString(R.string.cast_open_show, title)
+
+    /** The chevron that puts the full controller back into the mini player. */
+    fun castControllerClose(context: Context): String =
+        context.getString(R.string.cast_controller_close)
+
+    /** Screen reader hint on the mini player over the navigation bar. */
+    fun castMiniOpens(context: Context): String =
+        context.getString(R.string.cast_mini_opens)
+
+    /** Long-press menu of an episode while a TV plays: queues the episode after the one playing. */
+    fun castPlayNextOn(context: Context, name: String): String =
+        context.getString(R.string.cast_play_next_on, name)
+
+    /** The system's media notification and Now Playing: the line naming the TV that plays. */
+    fun castNotificationLine(context: Context, name: String): String =
+        context.getString(R.string.cast_notification_line, name)
+
     /** Button that runs a failed action again. */
     fun actionTryAgain(context: Context): String =
         context.getString(R.string.action_try_again)
@@ -5425,6 +5553,10 @@ object Strings {
     fun actionCheckAgain(context: Context): String =
         context.getString(R.string.action_check_again)
 
+    /** Check again while the check runs. Keep it about as short as "Check again": the button keeps its width. */
+    fun actionChecking(context: Context): String =
+        context.getString(R.string.action_checking)
+
     /** Button that opens the system's own settings for the app. */
     fun actionOpenSettings(context: Context): String =
         context.getString(R.string.action_open_settings)
@@ -5512,6 +5644,10 @@ object Strings {
     /** A length in minutes, for an episode. */
     fun timeMinutes(context: Context, minutes: Int): String =
         context.getString(R.string.time_minutes, minutes)
+
+    /** A length in hours, inside time-ago. */
+    fun timeHours(context: Context, hours: Int): String =
+        context.getString(R.string.time_hours, hours)
 
     /** A countdown that has run out: the thing is happening now. Lower case, as it stands inside a line. */
     fun timeNowInline(context: Context): String =
@@ -5896,6 +6032,22 @@ object Strings {
     /** A list of names up to the last two, joined one by one: "Alpha, Brook". */
     fun namesList(context: Context, list: String, next: String): String =
         context.getString(R.string.names_list, list, next)
+
+    /** Line under a TV with Chromecast built in, in the Play on TV list: this computer serves the episode to it while it plays. */
+    fun castRowThroughComputer(context: Context): String =
+        context.getString(R.string.cast_row_through_computer)
+
+    /** Title of the question asked on quitting while an episode plays on a TV. */
+    fun desktopCastQuitTitle(context: Context): String =
+        context.getString(R.string.desktop_cast_quit_title)
+
+    /** Body of the question asked on quitting while an episode plays on a TV. The title is the show's, the name is the TV's. */
+    fun desktopCastQuitBody(context: Context, title: String, name: String): String =
+        context.getString(R.string.desktop_cast_quit_body, title, name)
+
+    /** Button of the question asked on quitting while casting: stops the cast and quits. */
+    fun desktopCastQuitAction(context: Context): String =
+        context.getString(R.string.desktop_cast_quit_action)
 
     /** Menu item that opens an episode's discussion. */
     fun discussionOpen(context: Context): String =
@@ -10530,6 +10682,10 @@ object Strings {
     fun downloadAlready(context: Context): String =
         context.getString(R.string.download_already)
 
+    /** Short note on a series page when a download it asked for couldn't start, such as when the source isn't answering and no chapter list is kept. The reason is a full sentence. */
+    fun downloadNotStarted(context: Context, reason: String): String =
+        context.getString(R.string.download_not_started, reason)
+
     /** Download menu item: a volume's chapters not yet downloaded. */
     fun downloadVolumeCount(context: Context, volume: String, n: Int): String =
         context.resources.getQuantityString(R.plurals.download_volume_count, n, volume, n)
@@ -11195,6 +11351,10 @@ object Strings {
     /** Screen readers: the custom action on a discovery cover that puts the series on Planning. */
     fun readTileAddPlanning(context: Context): String =
         context.getString(R.string.read_tile_add_planning)
+
+    /** Screen readers: a custom action on a reading cover that puts the series on one of the lists, one action for each list the cover's menu offers under Add to list. The list is its name as the menu shows it, such as "Completed". */
+    fun readTileAddTo(context: Context, list: String): String =
+        context.getString(R.string.read_tile_add_to, list)
 
     /** Said once by screen readers when Your sources only turns on. */
     fun readSearchAnilistHidden(context: Context): String =
@@ -12948,6 +13108,30 @@ object Strings {
     fun settingsUpNextCountdown(context: Context): String =
         context.getString(R.string.settings_up_next_countdown)
 
+    /** Row under Up next countdown on iPhone, a cellular iPad and Android phones: whether the next episode's first seconds of video load during the ending while on mobile data. Off by default. */
+    fun settingsPreloadCellular(context: Context): String =
+        context.getString(R.string.settings_preload_cellular)
+
+    /** The same row on Windows and Linux. */
+    fun settingsPreloadMetered(context: Context): String =
+        context.getString(R.string.settings_preload_metered)
+
+    /** Line under the row on Android phones. */
+    fun settingsPreloadDetailAndroid(context: Context): String =
+        context.getString(R.string.settings_preload_detail_android)
+
+    /** Line under the row on Windows and Linux, and the note under the terminal's settings list. */
+    fun settingsPreloadDetailMetered(context: Context): String =
+        context.getString(R.string.settings_preload_detail_metered)
+
+    /** Sentence added after the line under the row while torrent playback is on. */
+    fun settingsPreloadTorrents(context: Context): String =
+        context.getString(R.string.settings_preload_torrents)
+
+    /** Screen reader hint on the preload row while it is dimmed because Auto-play next is off. The terminal shows it at the start of the note. */
+    fun settingsPreloadA11yDimmed(context: Context): String =
+        context.getString(R.string.settings_preload_a11y_dimmed)
+
     /** Row: skip the opening. */
     fun settingsSkipOpening(context: Context): String =
         context.getString(R.string.settings_skip_opening)
@@ -13668,6 +13852,18 @@ object Strings {
     fun settingsOpdsPort(context: Context): String =
         context.getString(R.string.settings_opds_port)
 
+    /** Settings row: whether leaving the app while an episode plays opens the system's floating window. The engine's label, and the Android row's. Sentence case, as Android writes it. */
+    fun settingsLabelPictureInPictureOnLeave(context: Context): String =
+        context.getString(R.string.settings_label_picture_in_picture_on_leave)
+
+    /** Switch under the AniList account, on by default, for this device only: whether title pages show the people followed on AniList. */
+    fun settingsAnilistFollowing(context: Context): String =
+        context.getString(R.string.settings_anilist_following)
+
+    /** Note under that switch. */
+    fun settingsAnilistFollowingFooter(context: Context): String =
+        context.getString(R.string.settings_anilist_following_footer)
+
     /** Label of the address field in the Add a server sheet. */
     fun bookServerAddress(context: Context): String =
         context.getString(R.string.book_server_address)
@@ -13959,6 +14155,30 @@ object Strings {
     /** Under a source: how many of the title's released episodes it lists. */
     fun sourcePickerCoverage(context: Context, covered: Int, of: Int): String =
         context.resources.getQuantityString(R.plurals.source_picker_coverage, of, covered, of)
+
+    /** Under a source that lists every episode that is out. */
+    fun sourcePickerEpisodes(context: Context, count: Int, first: Int, last: Int): String =
+        context.resources.getQuantityString(R.plurals.source_picker_episodes, count, count, first, last)
+
+    /** Under a source that lacks the newest episodes, within a week of them airing. $missing is one number, source-picker-missing-pair or source-picker-missing-range. */
+    fun sourcePickerEpisodesNotYet(context: Context, first: Int, last: Int, missing: String): String =
+        context.getString(R.string.source_picker_episodes_not_yet, first, last, missing)
+
+    /** The same, more than a week after the episodes aired. */
+    fun sourcePickerEpisodesNot(context: Context, first: Int, last: Int, missing: String): String =
+        context.getString(R.string.source_picker_episodes_not, first, last, missing)
+
+    /** Two episodes a source lacks, inside the missing part of a source's line. */
+    fun sourcePickerMissingPair(context: Context, a: Int, b: Int): String =
+        context.getString(R.string.source_picker_missing_pair, a, b)
+
+    /** Three or more episodes in a row a source lacks, inside the missing part of a source's line. */
+    fun sourcePickerMissingRange(context: Context, first: Int, last: Int): String =
+        context.getString(R.string.source_picker_missing_range, first, last)
+
+    /** Under a source with a gap in the middle, such as "5 of 6 episodes. Not 3". */
+    fun sourcePickerCoverageMissing(context: Context, covered: Int, of: Int, missing: String): String =
+        context.resources.getQuantityString(R.plurals.source_picker_coverage_missing, of, covered, of, missing)
 
     /** Under a source that is switched off in Settings. */
     fun sourceNoteOff(context: Context): String =
@@ -16339,6 +16559,34 @@ object Strings {
     fun moreLikeThis(context: Context): String =
         context.getString(R.string.more_like_this)
 
+    /** Button after the first five people followed, on wide screens. It shows the rest in place. */
+    fun followingShowAll(context: Context, count: Int): String =
+        context.getString(R.string.following_show_all, count)
+
+    /** Second line of the People you follow row on phones and the TV, with three or more people: two names, then how many more. The names come from AniList. */
+    fun followingNames(context: Context, first: String, second: String, more: Int): String =
+        context.resources.getQuantityString(R.plurals.following_names, more, first, second, more)
+
+    /** Second line of the People you follow row on phones and the TV, with two people. The names come from AniList. */
+    fun followingNamesTwo(context: Context, first: String, second: String): String =
+        context.getString(R.string.following_names_two, first, second)
+
+    /** After three pictures on an episode's mark, and after three names in the terminal: how many more people stopped there. */
+    fun followingMarkMore(context: Context, count: Int): String =
+        context.getString(R.string.following_mark_more, count)
+
+    /** Tooltip on an episode's mark, and the sentence a screen reader adds to the episode row: who stopped at this episode. The names are already joined. */
+    fun followingMarkSpoken(context: Context, names: String): String =
+        context.getString(R.string.following_mark_spoken, names)
+
+    /** What a screen reader says in place of a score such as 8/10 beside a person followed. */
+    fun followingScoreSpoken(context: Context, score: Int): String =
+        context.getString(R.string.following_score_spoken, score)
+
+    /** Hint of the People you follow row on phones and the TV, which opens the full list. */
+    fun followingOpenHelp(context: Context): String =
+        context.getString(R.string.following_open_help)
+
     /** Line of a followed person's list entry: their status and how far they are. Both are already worded. */
     fun moreFollowedProgress(context: Context, status: String, progress: String): String =
         context.getString(R.string.more_followed_progress, status, progress)
@@ -16399,10 +16647,6 @@ object Strings {
     fun titleFactTba(context: Context): String =
         context.getString(R.string.title_fact_tba)
 
-    /** A followed person's status and score, such as "Completed · 9/10". The status is already worded. */
-    fun moreFollowingLine(context: Context, status: String, score: Int): String =
-        context.getString(R.string.more_following_line, status, score)
-
     /** Item of the episode range menu, and the title of its number field. The ellipsis marks that it asks for a number. */
     fun episodeGoTo(context: Context): String =
         context.getString(R.string.episode_go_to)
@@ -16430,6 +16674,54 @@ object Strings {
     /** Shown when the number typed is an episode with no date that has not come out. */
     fun episodeGoToNotOut(context: Context, number: Int, latest: Int): String =
         context.getString(R.string.episode_go_to_not_out, number, latest)
+
+    /** Status, first sentence, within a day of the episode airing. */
+    fun episodeMissingAired(context: Context, episode: Int, ago: String): String =
+        context.getString(R.string.episode_missing_aired, episode, ago)
+
+    /** Status, first sentence, a day or more after the episode aired. */
+    fun episodeMissingAiredOn(context: Context, episode: Int, date: String): String =
+        context.getString(R.string.episode_missing_aired_on, episode, date)
+
+    /** Status, second sentence, until a check the person asked for comes back empty. */
+    fun episodeMissingNotYet(context: Context): String =
+        context.getString(R.string.episode_missing_not_yet)
+
+    /** Status, second sentence, after a check the person asked for came back empty, and once Kaeri has stopped looking by itself. */
+    fun episodeMissingStill(context: Context): String =
+        context.getString(R.string.episode_missing_still)
+
+    /** Status, second sentence, after a check where none of the person's sources answered. */
+    fun episodeMissingNoAnswer(context: Context): String =
+        context.getString(R.string.episode_missing_no_answer)
+
+    /** Status, last sentence, during the hours Kaeri looks for the episode by itself. */
+    fun episodeMissingLooksAgain(context: Context, minutes: Int): String =
+        context.getString(R.string.episode_missing_looks_again, minutes)
+
+    /** Status a week after the episode aired, when no source has listed it. */
+    fun episodeMissingNone(context: Context): String =
+        context.getString(R.string.episode_missing_none)
+
+    /** Status, last sentence, while the device is offline during the hours Kaeri looks by itself. */
+    fun episodeMissingOffline(context: Context): String =
+        context.getString(R.string.episode_missing_offline)
+
+    /** Row note of an episode that aired within the last day. The span is already worded ("25 min", "3 h"). */
+    fun episodeRowAiredAgo(context: Context, ago: String): String =
+        context.getString(R.string.episode_row_aired_ago, ago)
+
+    /** Row note beside when it aired, for an episode that aired in the last week and no source lists yet. */
+    fun episodeUnsourcedYet(context: Context): String =
+        context.getString(R.string.episode_unsourced_yet)
+
+    /** Announced once to screen readers when a check finds the missing episode while its page is open. */
+    fun episodeFoundAnnouncement(context: Context, episode: Int): String =
+        context.getString(R.string.episode_found_announcement, episode)
+
+    /** Tooltip and screen reader hint of Check again, while Kaeri looks for the episode by itself. */
+    fun episodeCheckAgainHelp(context: Context, minutes: Int, hours: Int): String =
+        context.getString(R.string.episode_check_again_help, minutes, hours)
 
     /** Title of the settings group and the screen. */
     fun torrentsTitle(context: Context): String =
@@ -17110,6 +17402,10 @@ object Strings {
     /** Short word: paired, no date known. */
     fun tvPaired(context: Context): String =
         context.getString(R.string.tv_paired)
+
+    /** Line under a paired TV running the app, in the Play on TV list. */
+    fun tvRowKaeri(context: Context): String =
+        context.getString(R.string.tv_row_kaeri)
 
     /** Line with the address. */
     fun tvConnectedAt(context: Context, address: String): String =

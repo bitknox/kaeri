@@ -233,7 +233,11 @@ internal fun SettingsList(selected: SettingsPane?, open: (SettingsPane) -> Unit)
             }),
         )
     }
-    if (!einkSettings) AccountCard(trackers["anilist"], AccountWords.status(trackers["anilist"], syncedAt, working)) { open(SettingsPane.Accounts) }
+    if (!einkSettings) {
+        AccountCard(trackers["anilist"], AccountWords.status(trackers["anilist"], syncedAt, working)) { open(SettingsPane.Accounts) }
+        // Private mode, under the account card: the badge on the top bar opens Settings here.
+        PrivateModeSwitch()
+    }
     val chapterBytes = if (reads) chapters?.meter?.used?.toLong() ?: 0L else 0L
     val episodeBytes = if (watches) store.downloads.bytes(downloads) else 0L
     val panes = listOfNotNull(
@@ -260,6 +264,7 @@ internal fun SettingsList(selected: SettingsPane?, open: (SettingsPane) -> Unit)
                 add(@Composable { place: Place -> LinkRow(place, stringResource(SettingsPane.Medium.titleRes), app.kaeri.ui.reading.mediumAnswerWords(context, answer), selected = selected == SettingsPane.Medium) { open(SettingsPane.Medium) } })
             }
             add(@Composable { place: Place -> EinkAccount(place, trackers["anilist"], AccountWords.status(trackers["anilist"], syncedAt, working), selected == SettingsPane.Accounts) { open(SettingsPane.Accounts) } })
+            add(@Composable { place: Place -> PrivateModeRow(place) })
             for ((pane, line) in panes) add(@Composable { place: Place -> LinkRow(place, stringResource(pane.titleRes), line, selected = pane == selected) { open(pane) } })
             add(@Composable { place: Place -> LinkRow(place, stringResource(SettingsPane.About.titleRes), version, selected = selected == SettingsPane.About) { open(SettingsPane.About) } })
         }

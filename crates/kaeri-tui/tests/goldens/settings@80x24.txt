@@ -1,13 +1,13 @@
 Kaeri                                                  plugins ●  ·  anilist ⇅ 2
 ────────────────────────────────────────────────────────────────────────────────
- ▸ │    Play trailers               Always
- ▤ │
- ▦ │  Playback  ─────────────────────────────────────────────────────────────
- / │    Audio                       Subbed · Dubbed this session
- ▥ │    Quality                     1080p
- ↓ │    Subtitles                   eng
- ◇ │    Counts as watched at        85%
- ◎ │    Auto-play next              On
+ ▸ │
+ ▤ │  Playback  ─────────────────────────────────────────────────────────────
+ ▦ │    Audio                       Subbed · Dubbed this session
+ / │    Quality                     1080p
+ ▥ │    Subtitles                   eng
+ ↓ │    Counts as watched at        85%
+ ◇ │    Auto-play next              On
+ ◎ │    Preload on metered          Off
 ▌≡ │    Skip opening automatically  On
  ⇄ │    Skip recaps automatically   Off
    │    Ask about skips by hand     On
@@ -33,34 +33,34 @@ r00 c69-79 fg=state
 r01 c00-79 fg=rule
 r02 c01-01 fg=text-dim
 r02 c03-03 fg=rule
-r02 c08-20 fg=text-dim
-r02 c36-41 fg=text
 r03 c01-01 fg=text-dim
 r03 c03-03 fg=rule
+r03 c06-13 fg=text
+r03 c16-76 fg=rule
 r04 c01-01 fg=text-dim
 r04 c03-03 fg=rule
-r04 c06-13 fg=text
-r04 c16-76 fg=rule
+r04 c08-12 fg=text-dim
+r04 c36-63 fg=text
 r05 c01-01 fg=text-dim
 r05 c03-03 fg=rule
-r05 c08-12 fg=text-dim
-r05 c36-63 fg=text
+r05 c08-14 fg=text-dim
+r05 c36-40 fg=text
 r06 c01-01 fg=text-dim
 r06 c03-03 fg=rule
-r06 c08-14 fg=text-dim
-r06 c36-40 fg=text
+r06 c08-16 fg=text-dim
+r06 c36-38 fg=text
 r07 c01-01 fg=text-dim
 r07 c03-03 fg=rule
-r07 c08-16 fg=text-dim
+r07 c08-27 fg=text-dim
 r07 c36-38 fg=text
 r08 c01-01 fg=text-dim
 r08 c03-03 fg=rule
-r08 c08-27 fg=text-dim
-r08 c36-38 fg=text
+r08 c08-21 fg=text-dim
+r08 c36-37 fg=text
 r09 c01-01 fg=text-dim
 r09 c03-03 fg=rule
-r09 c08-21 fg=text-dim
-r09 c36-37 fg=text
+r09 c08-25 fg=text-dim
+r09 c36-38 fg=text
 r10 c00-00 fg=text-dim
 r10 c01-01 fg=text mod=BOLD
 r10 c03-03 fg=rule

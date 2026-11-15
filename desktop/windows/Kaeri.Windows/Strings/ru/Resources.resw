@@ -68,6 +68,15 @@
   <data name="NoticeCastLost" xml:space="preserve">
     <value>Связь с {name} потеряна, трансляция остановлена.</value>
   </data>
+  <data name="NoticeCastSegment" xml:space="preserve">
+    <value>{name} перестал получать поток: источник не ответил для части серии. Попробуйте другой источник.</value>
+  </data>
+  <data name="NoticeCastLostStream" xml:space="preserve">
+    <value>{name} потерял поток. Проверьте, что это устройство и телевизор в одной сети.</value>
+  </data>
+  <data name="NoticeCastSubtitlesPlain" xml:space="preserve">
+    <value>Субтитры на {name} показываются простым текстом. Оформленные субтитры оказались слишком тяжёлыми для телевизора.</value>
+  </data>
   <data name="NoticeCastNoDevice" xml:space="preserve">
     <value>Этот телевизор больше не в сети.</value>
   </data>
@@ -379,6 +388,12 @@
   </data>
   <data name="NoticeStreamNoVideo" xml:space="preserve">
     <value>Из этого потока не пришёл ни один кадр. Пробуем поток {next} из {total}.</value>
+  </data>
+  <data name="NoticeFailedOver" xml:space="preserve">
+    <value>Поток оборвался. {source} продолжает с того же места.</value>
+  </data>
+  <data name="NoticeFailedOverSameSource" xml:space="preserve">
+    <value>Поток оборвался. Другой поток из {source} продолжает с того же места.</value>
   </data>
   <data name="NoticePlayerCouldNotPlay" xml:space="preserve">
     <value>mpv не смог воспроизвести это. {reason}</value>
@@ -965,6 +980,9 @@
   <data name="ReadingRowWaitsWifi" xml:space="preserve">
     <value>В очереди · ждёт Wi-Fi</value>
   </data>
+  <data name="ReadingRowWaitsRoom" xml:space="preserve">
+    <value>В очереди · ждёт места</value>
+  </data>
   <data name="ReadingRowDownloading" xml:space="preserve">
     <value>Скачивание · {done} из {total} стр.</value>
   </data>
@@ -1132,6 +1150,18 @@
   </data>
   <data name="ReadingDlOffline" xml:space="preserve">
     <value>Нет сети</value>
+  </data>
+  <data name="ReadingDlNoRoom_one" xml:space="preserve">
+    <value>Нет места. Загрузка начнётся, когда освободится место.</value>
+  </data>
+  <data name="ReadingDlNoRoom_few" xml:space="preserve">
+    <value>Нет места. Загрузка начнётся, когда освободится место.</value>
+  </data>
+  <data name="ReadingDlNoRoom_many" xml:space="preserve">
+    <value>Нет места. Загрузка начнётся, когда освободится место.</value>
+  </data>
+  <data name="ReadingDlNoRoom_other" xml:space="preserve">
+    <value>Нет места. Загрузка начнётся, когда освободится место.</value>
   </data>
   <data name="ReadingEstimateSize" xml:space="preserve">
     <value>Около {size}</value>
@@ -1654,6 +1684,33 @@
   </data>
   <data name="NoticeSignedOutQueue_other" xml:space="preserve">
     <value>Вы вышли из {tracker}. {count} изменения в очереди сохранены для следующего входа.</value>
+  </data>
+  <data name="NoticeTrackerChangeRefused" xml:space="preserve">
+    <value>{tracker} раз за разом отклонял изменение для {title}, поэтому оно остаётся только в Kaeri.</value>
+  </data>
+  <data name="NoticeTrackerChangesRefused_one" xml:space="preserve">
+    <value>{tracker} раз за разом отклонял изменения для {title} и ещё {others} тайтла, поэтому они остаются только в Kaeri.</value>
+  </data>
+  <data name="NoticeTrackerChangesRefused_few" xml:space="preserve">
+    <value>{tracker} раз за разом отклонял изменения для {title} и ещё {others} тайтлов, поэтому они остаются только в Kaeri.</value>
+  </data>
+  <data name="NoticeTrackerChangesRefused_many" xml:space="preserve">
+    <value>{tracker} раз за разом отклонял изменения для {title} и ещё {others} тайтлов, поэтому они остаются только в Kaeri.</value>
+  </data>
+  <data name="NoticeTrackerChangesRefused_other" xml:space="preserve">
+    <value>{tracker} раз за разом отклонял изменения для {title} и ещё {others} тайтла, поэтому они остаются только в Kaeri.</value>
+  </data>
+  <data name="NoticeTrackerChangeRefusedUntitled_one" xml:space="preserve">
+    <value>{tracker} раз за разом отклонял изменения для {count} тайтла, поэтому они остаются только в Kaeri.</value>
+  </data>
+  <data name="NoticeTrackerChangeRefusedUntitled_few" xml:space="preserve">
+    <value>{tracker} раз за разом отклонял изменения для {count} тайтлов, поэтому они остаются только в Kaeri.</value>
+  </data>
+  <data name="NoticeTrackerChangeRefusedUntitled_many" xml:space="preserve">
+    <value>{tracker} раз за разом отклонял изменения для {count} тайтлов, поэтому они остаются только в Kaeri.</value>
+  </data>
+  <data name="NoticeTrackerChangeRefusedUntitled_other" xml:space="preserve">
+    <value>{tracker} раз за разом отклонял изменения для {count} тайтла, поэтому они остаются только в Kaeri.</value>
   </data>
   <data name="NoticeSignOutFailed" xml:space="preserve">
     <value>Не удалось выйти из {tracker}. Попробуйте ещё раз. {reason}</value>
@@ -2987,6 +3044,45 @@
   <data name="ReportCrashSettings" xml:space="preserve">
     <value>Настройки отчётов о сбоях</value>
   </data>
+  <data name="ReportPlayerLog" xml:space="preserve">
+    <value>Журнал плеера</value>
+  </data>
+  <data name="ReportPlayerLogDetail_one" xml:space="preserve">
+    <value>Последние воспроизведения: {playbacks} · {size}</value>
+  </data>
+  <data name="ReportPlayerLogDetail_few" xml:space="preserve">
+    <value>Последние воспроизведения: {playbacks} · {size}</value>
+  </data>
+  <data name="ReportPlayerLogDetail_many" xml:space="preserve">
+    <value>Последние воспроизведения: {playbacks} · {size}</value>
+  </data>
+  <data name="ReportPlayerLogDetail_other" xml:space="preserve">
+    <value>Последние воспроизведения: {playbacks} · {size}</value>
+  </data>
+  <data name="ReportPlayerLogEmpty" xml:space="preserve">
+    <value>Воспроизведений пока не было</value>
+  </data>
+  <data name="ReportPlayerLogSave" xml:space="preserve">
+    <value>Сохранить журнал…</value>
+  </data>
+  <data name="ReportPlayerLogAttach" xml:space="preserve">
+    <value>Приложите файл к задаче, когда она откроется на GitHub.</value>
+  </data>
+  <data name="ReportPlayerLogSaved" xml:space="preserve">
+    <value>Сохранено как {file}</value>
+  </data>
+  <data name="ReportPlayerLogFailed" xml:space="preserve">
+    <value>Не удалось сохранить журнал. Выберите другую папку.</value>
+  </data>
+  <data name="ReportSentReport" xml:space="preserve">
+    <value>Отчёт</value>
+  </data>
+  <data name="ReportPlayerLogA11ySaved" xml:space="preserve">
+    <value>Журнал плеера сохранён</value>
+  </data>
+  <data name="ReportPlayerLogA11yHint" xml:space="preserve">
+    <value>Сохраняет файл, который можно приложить к задаче</value>
+  </data>
   <data name="SettingsGroupCrashes" xml:space="preserve">
     <value>Отчёты о сбоях</value>
   </data>
@@ -3182,6 +3278,36 @@
   <data name="CastVolumeFixed" xml:space="preserve">
     <value>Задаётся на ТВ</value>
   </data>
+  <data name="CastButtonConnecting" xml:space="preserve">
+    <value>Подключаемся к {name}</value>
+  </data>
+  <data name="CastButtonConnected" xml:space="preserve">
+    <value>Подключено к {name}</value>
+  </data>
+  <data name="CastPlaysOn" xml:space="preserve">
+    <value>Воспроизводится на {name}</value>
+  </data>
+  <data name="CastIdle" xml:space="preserve">
+    <value>Пока ничего не воспроизводится</value>
+  </data>
+  <data name="CastStatusPaused" xml:space="preserve">
+    <value>Пауза на {name}</value>
+  </data>
+  <data name="CastOpenShow" xml:space="preserve">
+    <value>Открыть {title}</value>
+  </data>
+  <data name="CastControllerClose" xml:space="preserve">
+    <value>Закрыть</value>
+  </data>
+  <data name="CastMiniOpens" xml:space="preserve">
+    <value>Открывает управление</value>
+  </data>
+  <data name="CastPlayNextOn" xml:space="preserve">
+    <value>Воспроизвести следующим на {name}</value>
+  </data>
+  <data name="CastNotificationLine" xml:space="preserve">
+    <value>Трансляция на {name}</value>
+  </data>
   <data name="ActionTryAgain" xml:space="preserve">
     <value>Попробовать снова</value>
   </data>
@@ -3329,6 +3455,9 @@
   <data name="ActionCheckAgain" xml:space="preserve">
     <value>Проверить снова</value>
   </data>
+  <data name="ActionChecking" xml:space="preserve">
+    <value>Проверка</value>
+  </data>
   <data name="ActionOpenSettings" xml:space="preserve">
     <value>Открыть настройки</value>
   </data>
@@ -3394,6 +3523,9 @@
   </data>
   <data name="TimeMinutes" xml:space="preserve">
     <value>{minutes} мин</value>
+  </data>
+  <data name="TimeHours" xml:space="preserve">
+    <value>{hours} ч</value>
   </data>
   <data name="TimeNowInline" xml:space="preserve">
     <value>сейчас</value>
@@ -3700,6 +3832,15 @@
   </data>
   <data name="NamesList" xml:space="preserve">
     <value>{list}, {next}</value>
+  </data>
+  <data name="DesktopCastQuitTitle" xml:space="preserve">
+    <value>Остановить трансляцию и выйти?</value>
+  </data>
+  <data name="DesktopCastQuitBody" xml:space="preserve">
+    <value>{title} воспроизводится на {name}. При выходе воспроизведение остановится.</value>
+  </data>
+  <data name="DesktopCastQuitAction" xml:space="preserve">
+    <value>Остановить и выйти</value>
   </data>
   <data name="DiscussionOpen" xml:space="preserve">
     <value>Обсуждение</value>
@@ -7691,6 +7832,9 @@
   <data name="ReadSearchSourceMore" xml:space="preserve">
     <value>Показать ещё {n}</value>
   </data>
+  <data name="ReadTileAddTo" xml:space="preserve">
+    <value>Добавить в «{list}»</value>
+  </data>
   <data name="OnboardingStep" xml:space="preserve">
     <value>{step} из {total}</value>
   </data>
@@ -9116,6 +9260,21 @@
   <data name="SettingsUpNextCountdown" xml:space="preserve">
     <value>Отсчёт блока «Далее»</value>
   </data>
+  <data name="SettingsPreloadCellular" xml:space="preserve">
+    <value>Предзагружать видео по мобильной сети</value>
+  </data>
+  <data name="SettingsPreloadMetered" xml:space="preserve">
+    <value>Предзагружать видео по лимитным подключениям</value>
+  </data>
+  <data name="SettingsPreloadDetailMetered" xml:space="preserve">
+    <value>Во время эндинга находятся поток, субтитры и моменты пропуска следующей серии. Её первые секунды тоже загружаются, а по лимитному подключению только когда это включено.</value>
+  </data>
+  <data name="SettingsPreloadTorrents" xml:space="preserve">
+    <value>Торренты так же загружают первые части.</value>
+  </data>
+  <data name="SettingsPreloadA11yDimmed" xml:space="preserve">
+    <value>Нужно включить «Автоматически включать следующую серию»</value>
+  </data>
   <data name="SettingsSkipOpening" xml:space="preserve">
     <value>Пропускать опенинг автоматически</value>
   </data>
@@ -9668,6 +9827,15 @@
   <data name="SettingsOpdsPort" xml:space="preserve">
     <value>Порт ленты</value>
   </data>
+  <data name="SettingsLabelPictureInPictureOnLeave" xml:space="preserve">
+    <value>«Картинка в картинке» при выходе из приложения</value>
+  </data>
+  <data name="SettingsAnilistFollowing" xml:space="preserve">
+    <value>Показывать тех, на кого вы подписаны</value>
+  </data>
+  <data name="SettingsAnilistFollowingFooter" xml:space="preserve">
+    <value>Показывает на странице сериала и у его эпизодов, где сейчас те, на кого вы подписаны в AniList. Кто видит ваш собственный список, настраивается в AniList.</value>
+  </data>
   <data name="BookServerAddress" xml:space="preserve">
     <value>Адрес</value>
   </data>
@@ -9991,6 +10159,42 @@
   </data>
   <data name="SourcePickerCoverage_other" xml:space="preserve">
     <value>{covered} из {of} эпизода</value>
+  </data>
+  <data name="SourcePickerEpisodes_one" xml:space="preserve">
+    <value>Эпизоды {first}–{last}</value>
+  </data>
+  <data name="SourcePickerEpisodes_few" xml:space="preserve">
+    <value>Эпизоды {first}–{last}</value>
+  </data>
+  <data name="SourcePickerEpisodes_many" xml:space="preserve">
+    <value>Эпизоды {first}–{last}</value>
+  </data>
+  <data name="SourcePickerEpisodes_other" xml:space="preserve">
+    <value>Эпизоды {first}–{last}</value>
+  </data>
+  <data name="SourcePickerEpisodesNotYet" xml:space="preserve">
+    <value>Эпизоды {first}–{last}. Пока нет {missing}</value>
+  </data>
+  <data name="SourcePickerEpisodesNot" xml:space="preserve">
+    <value>Эпизоды {first}–{last}. Нет {missing}</value>
+  </data>
+  <data name="SourcePickerMissingPair" xml:space="preserve">
+    <value>{a} и {b}</value>
+  </data>
+  <data name="SourcePickerMissingRange" xml:space="preserve">
+    <value>{first}–{last}</value>
+  </data>
+  <data name="SourcePickerCoverageMissing_one" xml:space="preserve">
+    <value>{covered} из {of} эпизода. Нет {missing}</value>
+  </data>
+  <data name="SourcePickerCoverageMissing_few" xml:space="preserve">
+    <value>{covered} из {of} эпизодов. Нет {missing}</value>
+  </data>
+  <data name="SourcePickerCoverageMissing_many" xml:space="preserve">
+    <value>{covered} из {of} эпизодов. Нет {missing}</value>
+  </data>
+  <data name="SourcePickerCoverageMissing_other" xml:space="preserve">
+    <value>{covered} из {of} эпизода. Нет {missing}</value>
   </data>
   <data name="SourceNoteOff" xml:space="preserve">
     <value>Выключен</value>
@@ -11870,6 +12074,36 @@
   <data name="MoreLikeThis" xml:space="preserve">
     <value>Похожие тайтлы</value>
   </data>
+  <data name="FollowingShowAll" xml:space="preserve">
+    <value>Показать все {count}</value>
+  </data>
+  <data name="FollowingNames_one" xml:space="preserve">
+    <value>{first}, {second} и ещё {more}</value>
+  </data>
+  <data name="FollowingNames_few" xml:space="preserve">
+    <value>{first}, {second} и ещё {more}</value>
+  </data>
+  <data name="FollowingNames_many" xml:space="preserve">
+    <value>{first}, {second} и ещё {more}</value>
+  </data>
+  <data name="FollowingNames_other" xml:space="preserve">
+    <value>{first}, {second} и ещё {more}</value>
+  </data>
+  <data name="FollowingNamesTwo" xml:space="preserve">
+    <value>{first} и {second}</value>
+  </data>
+  <data name="FollowingMarkMore" xml:space="preserve">
+    <value>+{count}</value>
+  </data>
+  <data name="FollowingMarkSpoken" xml:space="preserve">
+    <value>{names}: просмотрено до этого места.</value>
+  </data>
+  <data name="FollowingScoreSpoken" xml:space="preserve">
+    <value>Оценка {score} из 10</value>
+  </data>
+  <data name="FollowingOpenHelp" xml:space="preserve">
+    <value>Показывает, где сейчас каждый.</value>
+  </data>
   <data name="MoreFollowedProgress" xml:space="preserve">
     <value>{status} · {progress}</value>
   </data>
@@ -11924,9 +12158,6 @@
   <data name="TitleFactTba" xml:space="preserve">
     <value>Дата не объявлена</value>
   </data>
-  <data name="MoreFollowingLine" xml:space="preserve">
-    <value>{status} · {score}/10</value>
-  </data>
   <data name="EpisodeGoTo" xml:space="preserve">
     <value>Перейти к эпизоду…</value>
   </data>
@@ -11947,6 +12178,42 @@
   </data>
   <data name="EpisodeGoToNotOut" xml:space="preserve">
     <value>Эпизод {number} ещё не вышел. Последний: {latest}.</value>
+  </data>
+  <data name="EpisodeMissingAired" xml:space="preserve">
+    <value>Эпизод {episode} вышел {ago}.</value>
+  </data>
+  <data name="EpisodeMissingAiredOn" xml:space="preserve">
+    <value>Эпизод {episode} вышел {date}.</value>
+  </data>
+  <data name="EpisodeMissingNotYet" xml:space="preserve">
+    <value>Ваши источники его пока не нашли.</value>
+  </data>
+  <data name="EpisodeMissingStill" xml:space="preserve">
+    <value>Ваши источники всё ещё его не нашли.</value>
+  </data>
+  <data name="EpisodeMissingNoAnswer" xml:space="preserve">
+    <value>Ваши источники не ответили.</value>
+  </data>
+  <data name="EpisodeMissingLooksAgain" xml:space="preserve">
+    <value>Kaeri ищет его снова каждые {minutes} мин.</value>
+  </data>
+  <data name="EpisodeMissingNone" xml:space="preserve">
+    <value>Ваши источники так и не нашли его.</value>
+  </data>
+  <data name="EpisodeMissingOffline" xml:space="preserve">
+    <value>Kaeri поищет его, когда снова появится сеть.</value>
+  </data>
+  <data name="EpisodeRowAiredAgo" xml:space="preserve">
+    <value>Вышел {ago}</value>
+  </data>
+  <data name="EpisodeUnsourcedYet" xml:space="preserve">
+    <value>Ваши источники пока не нашли</value>
+  </data>
+  <data name="EpisodeFoundAnnouncement" xml:space="preserve">
+    <value>Ваши источники нашли эпизод {episode}.</value>
+  </data>
+  <data name="EpisodeCheckAgainHelp" xml:space="preserve">
+    <value>Kaeri также сам ищет эпизод каждые {minutes} мин в течение {hours} ч после его выхода.</value>
   </data>
   <data name="TorrentsTitle" xml:space="preserve">
     <value>Торренты</value>

@@ -118,3 +118,5 @@ tv-discussion-likes = { $count ->
 tv-discussion-select-spoiler = Pilih untuk menampilkan spoiler
 updates-unknown-sources-path = Setelan › Aplikasi › Keamanan & pembatasan › Sumber tidak dikenal
 tv-remote-default-name = { -app-name } TV
+player-stats-show-live = Tampilkan statistik langsung
+player-stats-hide-live = Sembunyikan statistik langsung

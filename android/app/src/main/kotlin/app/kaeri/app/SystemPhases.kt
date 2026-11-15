@@ -8,6 +8,7 @@ import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.ProcessLifecycleOwner
 import androidx.compose.runtime.snapshotFlow
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import app.kaeri.player.PlayerModel
 import app.kaeri.store.AppPhases
@@ -20,11 +21,17 @@ import app.kaeri.store.AppStore
  *
  * In the background the player turns its video track off and plays the audio on, and the engine is
  * told, with whether an episode plays, so torrents wait but for it; and told again whenever that
- * changes there, paused or played on from the notification, or ended. Back in the foreground the
- * video comes back, and the engine checks the connection again, binds its loopback servers again
- * and reopens what plays.
+ * changes there, paused or played on from the notification, or ended. While the download job or
+ * service runs ([downloading]), it is a background where downloads go on, so chapters and torrents
+ * keep downloading as episodes over HTTP do. Back in the foreground the video comes back, and the
+ * engine checks the connection again, binds its loopback servers again and reopens what plays.
  */
-class SystemPhases(private val store: AppStore, private val player: PlayerModel, private val scope: CoroutineScope) {
+class SystemPhases(
+    private val store: AppStore,
+    private val player: PlayerModel,
+    private val scope: CoroutineScope,
+    private val downloading: StateFlow<Boolean>,
+) {
     private val phases = AppPhases(store::send)
 
     /** Whether an episode plays: the player up, its picture shown, and not paused. */
@@ -46,6 +53,9 @@ class SystemPhases(private val store: AppStore, private val player: PlayerModel,
         // changes of, as long as the process: read here as it changes, on the main thread.
         scope.launch {
             snapshotFlow(::playing).collect(phases::playing)
+        }
+        scope.launch {
+            downloading.collect(phases::downloading)
         }
     }
 }

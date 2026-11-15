@@ -97,6 +97,12 @@ extension ReadingModel {
         guard let home, home.offline, let since = home.offlineSince else { return nil }
         return L.homeOffline(time: AirTime.clock(Date(timeIntervalSince1970: TimeInterval(since))))
     }
+
+    /// Whether Up next's View all leads anywhere: to Planning, which only the row's Planning
+    /// series are on. A row of suggestions alone has no list to show.
+    static func upNextLinksPlanning(_ tiles: [WorkTile]) -> Bool {
+        tiles.contains { $0.facts.contains(.reading(.readingOnPlanning)) }
+    }
 }
 
 private struct ReadHomeContent: View {
@@ -165,7 +171,8 @@ private struct ReadHomeContent: View {
             HomeWait(active: true, activity: "loading home") { HomeShelfPlaceholder(posters: true) } // i18n-skip
         }
         if !home.upNext.isEmpty {
-            shelf(L.homeUpNext, tiles: home.upNext, link: L.homeViewAll) { navigator.readingList(.planning) }
+            let planning = ReadingModel.upNextLinksPlanning(home.upNext)
+            shelf(L.homeUpNext, tiles: home.upNext, link: planning ? L.homeViewAll : nil) { navigator.readingList(.planning) }
         }
         // AniList's rows, the demo's first run included: they show what there is to read once a
         // source is added.
@@ -206,6 +213,9 @@ private struct ReadHomeContent: View {
                     // Up next keeps two title lines as the discovery rows under it do, so the
                     // page has one rhythm; Continue's cards have the track and keep one.
                     ReadTileCard(tile: tile, track: track, twoLines: !track)
+                        .accessibilityActions {
+                            if track { ReadContinueMenu(tile: tile) } else { ReadTileMenu(tile: tile, kind: .details, actions: true) }
+                        }
                         .contextMenu {
                             if track { ReadContinueMenu(tile: tile) } else { ReadTileMenu(tile: tile, kind: .details) }
                         }
@@ -358,6 +368,13 @@ private struct ReadSpotlightView: View {
             }
             line.padding(.top, 16)
             actions.padding(.top, 18)
+            // A series none of the sources has: why there is nothing to read, as Watch says it.
+            if tile.notInSources {
+                Text(L.homeNotFound)
+                    .font(.ui(layout.secondary))
+                    .foregroundStyle(.haze)
+                    .padding(.top, 12)
+            }
         }
         .frame(maxWidth: beside ? layout.textWidth : .infinity, alignment: .leading)
         .accessibilityElement(children: .contain)
@@ -628,8 +645,8 @@ private struct ReadWeekCell: View {
         }
         .buttonStyle(.plain)
         .pointerHover()
-        .contextMenu { ReadTileMenu(tile: tile, kind: .details) }
         .accessibilityElement(children: .combine)
+        .readTileMenu(tile, kind: .details)
     }
 }
 

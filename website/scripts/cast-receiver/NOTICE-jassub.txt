@@ -1,0 +1,29 @@
+Typeset subtitles on Kaeri's Cast receiver are drawn by JASSUB 2.5.19
+(https://github.com/ThaUnknown/jassub, npm package jassub@2.5.19).
+
+The files in this folder are JASSUB's own, kept apart from Kaeri's code:
+
+  jassub.js                   JASSUB's main-thread module (MIT), bundled with abslink
+                              (Apache-2.0) and throughput (MIT). The rvfc-polyfill
+                              dependency (GPL-3.0) is left out; the receiver uses
+                              typeset subtitles only where the browser has
+                              requestVideoFrameCallback itself.
+  worker.js                   JASSUB's worker (MIT) with its Emscripten loader,
+                              bundled with abslink (Apache-2.0) and lfa-ponyfill (MIT).
+  jassub-worker.wasm,
+  jassub-worker-modern.wasm   The WebAssembly build of libass and the libraries it
+                              uses, unmodified from the npm package. The package
+                              gives its licence as
+                              LGPL-2.1-or-later AND (FTL OR GPL-2.0-or-later) AND MIT
+                              AND MIT-Modern-Variant AND ISC AND NTP AND Zlib AND
+                              BSL-1.0: libass (ISC), FriBidi (LGPL-2.1-or-later),
+                              FreeType (FTL, chosen here), HarfBuzz (MIT) and their
+                              helpers. The source for the build is the JASSUB
+                              repository at that version, including its build
+                              scripts and the library submodules. These files can be
+                              replaced by any compatible build of the same version.
+  default.woff2               Liberation Sans (Red Hat, SIL Open Font License 1.1),
+                              JASSUB's fallback font, from its package.
+  LICENSE                     JASSUB's licence.
+
+Kaeri itself is MIT licensed and only loads these files at run time.

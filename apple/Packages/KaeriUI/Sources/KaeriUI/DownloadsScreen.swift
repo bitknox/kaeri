@@ -39,7 +39,7 @@ struct DownloadsScreen: View {
                     VStack(alignment: .leading, spacing: 0) {
                         #if os(iOS)
                         if store.continued.ask != nil,
-                           store.downloads.rows.contains(where: { $0.state == .queued || $0.state == .active }) {
+                           ContinuedDownloads.goesOn(store.downloads.rows, chapters: store.reading.downloads?.rows ?? []) {
                             Text(L.downloadsBackgroundNote)
                                 .font(.mac(12))
                                 .foregroundStyle(.haze)

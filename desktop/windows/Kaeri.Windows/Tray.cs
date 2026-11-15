@@ -46,8 +46,11 @@ sealed unsafe partial class Tray : IDisposable
     public Func<bool>? AnyRunning { get; init; }
     public Func<bool>? AnyPaused { get; init; }
 
-    /// <summary>Adds the icon; with <paramref name="tell"/>, the one-time notification too.</summary>
-    public void Show(bool tell)
+    /// <summary>
+    /// Adds the icon; with <paramref name="tell"/>, the one-time notification too, headed
+    /// <paramref name="title"/> when something other than downloads keeps Kaeri going.
+    /// </summary>
+    public void Show(bool tell, string? title = null)
     {
         var data = Data(NIF_MESSAGE | NIF_ICON | NIF_TIP | NIF_SHOWTIP);
         if (!shown)
@@ -59,7 +62,7 @@ sealed unsafe partial class Tray : IDisposable
         if (shown && tell)
         {
             var info = Data(NIF_INFO);
-            Copy(T.TrayStillDownloading, info.szInfoTitle, 64);
+            Copy(title ?? T.TrayStillDownloading, info.szInfoTitle, 64);
             Copy(T.TrayWhere, info.szInfo, 256);
             info.dwInfoFlags = NIIF_USER | NIIF_LARGE_ICON;
             info.hBalloonIcon = icon;

@@ -6,6 +6,7 @@
 
 package app.kaeri.tv.ui
 
+import app.kaeri.engine.model.PrivateTitle
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.padding
@@ -75,6 +76,21 @@ private fun ShowSettingsBody(store: AppStore, id: AnilistId, title: String) {
     // The show's name stays under the panel title while the rows scroll.
     Text(title, style = TvTitle.list, color = ObiSilk.Haze, maxLines = 1, modifier = Modifier.padding(start = 16.dp, bottom = 8.dp))
     LazyColumn(verticalArrangement = Arrangement.spacedBy(4.dp), contentPadding = PaddingValues(bottom = 27.dp)) {
+        // Always private first: nothing from this show is saved or synced on this device.
+        item(key = "always-private") {
+            val title = PrivateTitle.Show(id)
+            val always by store.privacy.always.collectAsStateWithLifecycle()
+            val on = title in always
+            TvListRow(
+                stringResource(R.string.title_always_private),
+                onClick = { store.setAlwaysPrivate(title, !on) },
+                supporting = stringResource(R.string.show_always_private_detail),
+                supportingLines = 2,
+                switch = on,
+                height = 84.dp,
+                modifier = Modifier.focusRequester(first),
+            )
+        }
         items(ShowChoices, key = { it.key.name }) { choice ->
             val row = view?.rows?.firstOrNull { it.key == choice.key }
             TvListRow(
@@ -82,7 +98,6 @@ private fun ShowSettingsBody(store: AppStore, id: AnilistId, title: String) {
                 onClick = { host?.open(choiceSheet(context, store, id, choice, row)) },
                 value = row?.let { valueWords(context, choice, it) },
                 enabled = row != null,
-                modifier = if (choice === ShowChoices.first()) Modifier.focusRequester(first) else Modifier,
             )
             // The subtitles go with the audio: what the player remembers for it, chosen there.
             if (choice.key == ShowSettingKey.TRANSLATION) SubtitlesRow(store, view)

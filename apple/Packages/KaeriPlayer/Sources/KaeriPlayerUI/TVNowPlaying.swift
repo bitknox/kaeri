@@ -14,11 +14,14 @@ import Observation
 public final class TVNowPlaying {
     private let tv: TVRemoteModel
     private weak var player: PlayerModel?
+    /// Whether nothing of a show may show outside the app: private mode, or always private.
+    private let holds: @MainActor (AnilistId) -> Bool
     private var targets: [(MPRemoteCommand, Any)] = []
 
-    public init(tv: TVRemoteModel, player: PlayerModel) {
+    public init(tv: TVRemoteModel, player: PlayerModel, holds: @escaping @MainActor (AnilistId) -> Bool = { _ in false }) {
         self.tv = tv
         self.player = player
+        self.holds = holds
         watch()
     }
 
@@ -34,6 +37,15 @@ public final class TVNowPlaying {
 
     private func update() {
         let playerUp = player?.isPresented ?? false
+        // A cast session: the episode on the TV, "Casting to" it.
+        let cast = tv.cast
+        if !playerUp, cast.link != nil, cast.miniShown, let item = cast.item {
+            if targets.isEmpty { bind() }
+            let center = MPNowPlayingInfoCenter.default()
+            center.nowPlayingInfo = Self.info(item, line: cast.episodeLine, tvName: cast.heldName, playhead: cast.itemPosition())
+            center.playbackState = cast.itemLive && !item.paused ? .playing : .paused
+            return
+        }
         // A cast is followed as a driven TV is: the card's routing sends the commands to it.
         let tvName = tv.cast.active ? tv.cast.tvName : tv.connected != nil ? tv.card?.tvName : nil
         guard !playerUp, let tvName, let now = tv.now else {
@@ -42,7 +54,8 @@ public final class TVNowPlaying {
         }
         if targets.isEmpty { bind() }
         let center = MPNowPlayingInfoCenter.default()
-        center.nowPlayingInfo = Self.info(now, tvName: tvName, playhead: tv.playhead() ?? now.position, live: tv.live)
+        center.nowPlayingInfo = Self.info(
+            now, tvName: tvName, playhead: tv.playhead() ?? now.position, live: tv.live, private: holds(now.id))
         center.playbackState = Self.playing(now, live: tv.live) ? .playing : .paused
     }
 
@@ -52,37 +65,63 @@ public final class TVNowPlaying {
     }
 
     /// What Now Playing shows of the TV's episode. The system runs the clock from the playhead
-    /// at the rate given, so it is written as the card changes, never on a timer.
-    static func info(_ now: FfiNowCard, tvName: String, playhead: Double, live: Bool) -> [String: Any] {
+    /// at the rate given, so it is written as the card changes, never on a timer. While
+    /// `private`, it names nothing: "Playing in Kaeri", with no show, episode or TV.
+    static func info(_ now: FfiNowCard, tvName: String, playhead: Double, live: Bool, private: Bool = false) -> [String: Any] {
         var info: [String: Any] = [
-            MPMediaItemPropertyTitle: now.episodeLine,
-            MPMediaItemPropertyArtist: now.title,
-            MPMediaItemPropertyAlbumTitle: L.tvStatusPlaying(name: tvName),
+            MPMediaItemPropertyTitle: `private` ? L.nowPlayingPrivate : now.episodeLine,
             MPNowPlayingInfoPropertyMediaType: MPNowPlayingInfoMediaType.video.rawValue,
             MPNowPlayingInfoPropertyElapsedPlaybackTime: playhead,
             MPNowPlayingInfoPropertyPlaybackRate: playing(now, live: live) ? now.speed : 0.0,
             MPNowPlayingInfoPropertyDefaultPlaybackRate: 1.0,
         ]
+        if !`private` {
+            info[MPMediaItemPropertyArtist] = now.title
+            info[MPMediaItemPropertyAlbumTitle] = L.tvStatusPlaying(name: tvName)
+        }
         if let duration = now.duration { info[MPMediaItemPropertyPlaybackDuration] = duration }
+        return info
+    }
+
+    /// What Now Playing shows of a cast session's episode: the show, the episode, and the line
+    /// that says which TV plays it.
+    static func info(_ item: FfiCastItem, line: String, tvName: String, playhead: Double) -> [String: Any] {
+        var info: [String: Any] = [
+            MPMediaItemPropertyTitle: line.isEmpty ? item.title : line,
+            MPMediaItemPropertyArtist: item.title,
+            MPMediaItemPropertyAlbumTitle: L.castNotificationLine(name: tvName),
+            MPNowPlayingInfoPropertyMediaType: MPNowPlayingInfoMediaType.video.rawValue,
+            MPNowPlayingInfoPropertyElapsedPlaybackTime: playhead,
+            MPNowPlayingInfoPropertyPlaybackRate: !item.loading && !item.paused && item.waiting == nil ? 1.0 : 0.0,
+            MPNowPlayingInfoPropertyDefaultPlaybackRate: 1.0,
+        ]
+        if let duration = item.duration { info[MPMediaItemPropertyPlaybackDuration] = duration }
         return info
     }
 
     private func bind() {
         let center = MPRemoteCommandCenter.shared()
-        func on(_ command: MPRemoteCommand, _ action: @escaping @MainActor (TVRemoteModel, FfiNowCard, MPRemoteCommandEvent) -> Void) {
+        func on(_ command: MPRemoteCommand, _ action: @escaping @MainActor (TVRemoteModel, Bool, MPRemoteCommandEvent) -> Void) {
             command.isEnabled = true
             let target = command.addTarget { [weak self] event in
                 MainActor.assumeIsolated {
-                    guard let tv = self?.tv, let now = tv.now else { return .noActionableNowPlayingItem }
+                    guard let tv = self?.tv else { return .noActionableNowPlayingItem }
+                    // A cast session's episode, or the card's.
+                    if tv.cast.link != nil, let item = tv.cast.item {
+                        guard tv.cast.itemLive else { return .commandFailed }
+                        action(tv, item.paused, event)
+                        return .success
+                    }
+                    guard let now = tv.now else { return .noActionableNowPlayingItem }
                     guard tv.live else { return .commandFailed }
-                    action(tv, now, event)
+                    action(tv, now.paused, event)
                     return .success
                 }
             }
             targets.append((command, target))
         }
-        on(center.playCommand) { tv, now, _ in if now.paused { tv.send(.togglePause) } }
-        on(center.pauseCommand) { tv, now, _ in if !now.paused { tv.send(.togglePause) } }
+        on(center.playCommand) { tv, paused, _ in if paused { tv.send(.togglePause) } }
+        on(center.pauseCommand) { tv, paused, _ in if !paused { tv.send(.togglePause) } }
         on(center.togglePlayPauseCommand) { tv, _, _ in tv.send(.togglePause) }
         on(center.changePlaybackPositionCommand) { tv, _, event in
             guard let event = event as? MPChangePlaybackPositionCommandEvent else { return }

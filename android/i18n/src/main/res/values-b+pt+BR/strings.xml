@@ -13,6 +13,9 @@
     <string name="notice_cast_taken_over">Outro dispositivo iniciou algo em %1$s, então a transmissão parou.</string>
     <string name="notice_cast_not_same_network">Este dispositivo não está na mesma rede que %1$s ou se conecta a ela por uma VPN. Conecte os dois à mesma rede para transmitir.</string>
     <string name="notice_cast_lost">Perdemos a conexão com %1$s, então a transmissão parou.</string>
+    <string name="notice_cast_segment">%1$s parou de receber o stream: a fonte não respondeu em parte do episódio. Tente outra fonte.</string>
+    <string name="notice_cast_lost_stream">%1$s perdeu o stream deste dispositivo. Verifique se os dois estão na mesma rede.</string>
+    <string name="notice_cast_subtitles_plain">As legendas em %1$s aparecem como texto simples. Legendas estilizadas eram pesadas demais para a TV.</string>
     <string name="notice_cast_no_device">Essa TV não está mais na rede.</string>
     <string name="notice_cast_unavailable">Esta versão do Kaeri não consegue transmitir para TVs.</string>
     <string name="cast_phase_starting">Iniciando em %1$s</string>
@@ -120,6 +123,8 @@
     <string name="status_searching_sources">Buscando o episódio %1$s em fontes…</string>
     <string name="notice_player_failed_to_start">Não foi possível iniciar o mpv. Verifique se ele roda sozinho. (%1$s)</string>
     <string name="notice_stream_no_video">Nenhum vídeo nesta transmissão. Tentando a transmissão %1$,d de %2$,d.</string>
+    <string name="notice_failed_over">O stream foi interrompido. %1$s assumiu do mesmo ponto.</string>
+    <string name="notice_failed_over_same_source">O stream foi interrompido. Outro stream de %1$s assumiu do mesmo ponto.</string>
     <string name="notice_player_could_not_play">O mpv não conseguiu reproduzir isto. %1$s</string>
     <string name="notice_player_exited_silently">O mpv fechou sem reproduzir nada e sem informar o motivo. Tente outra fonte.</string>
     <string name="notice_player_not_playing">O mpv ainda não começou a reproduzir depois de %1$,d s. A fonte pode não ter dados. Verifique se o mpv reproduz um arquivo sozinho.</string>
@@ -325,6 +330,7 @@
     <string name="reading_row_on_device">Neste dispositivo</string>
     <string name="reading_row_queued">Na fila</string>
     <string name="reading_row_waits_wifi">Na fila · espera o Wi-Fi</string>
+    <string name="reading_row_waits_room">Na fila · espera espaço livre</string>
     <string name="reading_row_downloading">Baixando · %1$,d de %2$,d páginas</string>
     <string name="reading_row_failed">Não foi possível baixar</string>
     <string name="reading_row_page_of">Página %1$d de %2$d</string>
@@ -388,6 +394,11 @@
     <string name="reading_dl_waits_wifi">espera o Wi-Fi</string>
     <string name="reading_dl_failed">Não foi possível baixar o capítulo %1$s</string>
     <string name="reading_dl_offline">Offline</string>
+    <plurals name="reading_dl_no_room">
+        <item quantity="one">Sem espaço. Ele é baixado quando houver espaço livre.</item>
+        <item quantity="many">Sem espaço. Eles são baixados quando houver espaço livre.</item>
+        <item quantity="other">Sem espaço. Eles são baixados quando houver espaço livre.</item>
+    </plurals>
     <string name="reading_estimate_size">Cerca de %1$s</string>
     <string name="reading_estimate_wifi">por Wi-Fi</string>
     <string name="reading_estimate_mobile">por dados móveis</string>
@@ -571,6 +582,17 @@
         <item quantity="one">Desconectado do %1$s. %2$,d alteração na fila foi mantida para a próxima conexão.</item>
         <item quantity="many">Desconectado do %1$s. %2$,d alterações na fila foram mantidas para a próxima conexão.</item>
         <item quantity="other">Desconectado do %1$s. %2$,d alterações na fila foram mantidas para a próxima conexão.</item>
+    </plurals>
+    <string name="notice_tracker_change_refused">%1$s recusou várias vezes uma alteração em %2$s, então ela fica só no Kaeri.</string>
+    <plurals name="notice_tracker_changes_refused">
+        <item quantity="one">%1$s recusou várias vezes alterações em %2$s e em mais %3$,d título, então elas ficam só no Kaeri.</item>
+        <item quantity="many">%1$s recusou várias vezes alterações em %2$s e em mais %3$,d títulos, então elas ficam só no Kaeri.</item>
+        <item quantity="other">%1$s recusou várias vezes alterações em %2$s e em mais %3$,d títulos, então elas ficam só no Kaeri.</item>
+    </plurals>
+    <plurals name="notice_tracker_change_refused_untitled">
+        <item quantity="one">%1$s recusou várias vezes alterações em %2$,d título, então elas ficam só no Kaeri.</item>
+        <item quantity="many">%1$s recusou várias vezes alterações em %2$,d títulos, então elas ficam só no Kaeri.</item>
+        <item quantity="other">%1$s recusou várias vezes alterações em %2$,d títulos, então elas ficam só no Kaeri.</item>
     </plurals>
     <string name="notice_sign_out_failed">Não foi possível desconectar do %1$s. Tente de novo. %2$s</string>
     <string name="notice_not_saved_because">Não foi possível salvar essa configuração. %1$s</string>
@@ -772,6 +794,7 @@
     <string name="reader_end_again">Reler desde o início</string>
     <string name="reader_opening_chapter">Abrindo o capítulo %1$s</string>
     <string name="reader_failed_chapter">Não foi possível abrir o capítulo %1$s</string>
+    <string name="reader_failed_chapter_plain">Não foi possível abrir este capítulo</string>
     <string name="reader_sheet_series">Esta série</string>
     <string name="reader_sheet_all_manga">Todos os mangás</string>
     <string name="reader_sheet_all_webtoons">Todos os webtoons</string>
@@ -1036,6 +1059,8 @@
     <string name="tv_discussion_select_spoiler">Selecione para mostrar o spoiler</string>
     <string name="updates_unknown_sources_path">Configurações › Apps › Segurança e restrições › Fontes desconhecidas</string>
     <string name="tv_remote_default_name">TV Kaeri</string>
+    <string name="player_stats_show_live">Mostrar estatísticas ao vivo</string>
+    <string name="player_stats_hide_live">Ocultar estatísticas ao vivo</string>
     <string name="episode_short_dubbed">E%1$d · Dublado</string>
     <string name="episode_long_dubbed">Episódio %1$d · Dublado</string>
     <plurals name="downloads_live_paused">
@@ -1297,6 +1322,7 @@
     <string name="engine_down_title">O Kaeri parou</string>
     <string name="engine_down_stopped">Nada novo vai carregar até ele voltar a funcionar. Tente de novo ou feche e abra o app mais uma vez.</string>
     <string name="engine_down_quit">Sair</string>
+    <string name="settings_picture_in_picture_system_off">Desativado no Android</string>
     <string name="about_title">Sobre</string>
     <string name="about_title_app">Sobre o Kaeri</string>
     <string name="about_version">Versão %1$s</string>
@@ -1332,6 +1358,20 @@
     <string name="report_tv_scan">Escaneie o código para abrir o relatório no celular.</string>
     <string name="report_crash_off">Os relatórios de falha estão desativados, então nenhum foi incluído. Você pode ativá-los em Configurações, Sobre.</string>
     <string name="report_crash_settings">Ajustes dos relatórios de falha</string>
+    <string name="report_player_log">Log do player</string>
+    <plurals name="report_player_log_detail">
+        <item quantity="one">%1$,d reprodução recente · %2$s</item>
+        <item quantity="many">%1$,d reproduções recentes · %2$s</item>
+        <item quantity="other">%1$,d reproduções recentes · %2$s</item>
+    </plurals>
+    <string name="report_player_log_empty">Nenhuma reprodução registrada ainda</string>
+    <string name="report_player_log_save">Salvar log…</string>
+    <string name="report_player_log_attach">Anexe o arquivo à issue quando ela abrir no GitHub.</string>
+    <string name="report_player_log_saved">Salvo como %1$s</string>
+    <string name="report_player_log_failed">Não foi possível salvar o log. Tente outra pasta.</string>
+    <string name="report_sent_report">Relatório</string>
+    <string name="report_player_log_a11y_saved">Log do player salvo</string>
+    <string name="report_player_log_a11y_hint">Salva um arquivo para anexar à issue</string>
     <string name="settings_group_crashes">Relatórios de falha</string>
     <string name="settings_crash_save">Salvar relatórios de falha neste dispositivo</string>
     <string name="settings_crash_save_detail">O Kaeri guarda um breve registro de cada falha neste dispositivo para Relatar um erro, sem títulos, endereços e nomes. Nada é enviado automaticamente.</string>
@@ -1397,6 +1437,16 @@
     <string name="cast_play_here">Reproduzir aqui</string>
     <string name="cast_stop">Parar transmissão</string>
     <string name="cast_volume_fixed">Definido na TV</string>
+    <string name="cast_button_connecting">Conectando a %1$s</string>
+    <string name="cast_button_connected">Conectado a %1$s</string>
+    <string name="cast_plays_on">Reproduz em %1$s</string>
+    <string name="cast_idle">Nada sendo reproduzido ainda</string>
+    <string name="cast_status_paused">Pausado em %1$s</string>
+    <string name="cast_open_show">Abrir %1$s</string>
+    <string name="cast_controller_close">Fechar</string>
+    <string name="cast_mini_opens">Abre os controles</string>
+    <string name="cast_play_next_on">Reproduzir em seguida em %1$s</string>
+    <string name="cast_notification_line">Transmitindo para %1$s</string>
     <string name="action_try_again">Tentar de novo</string>
     <string name="action_cancel">Cancelar</string>
     <string name="action_go">Ir</string>
@@ -1446,6 +1496,7 @@
     <string name="action_disable">Desativar</string>
     <string name="action_check_now">Verificar agora</string>
     <string name="action_check_again">Verificar de novo</string>
+    <string name="action_checking">Verificando</string>
     <string name="action_open_settings">Abrir ajustes</string>
     <string name="action_report">Reportar</string>
     <string name="action_play_now">Reproduzir agora</string>
@@ -1468,6 +1519,7 @@
     <string name="time_in">em %1$s</string>
     <string name="time_minutes_left">%1$,d min restantes</string>
     <string name="time_minutes">%1$,d min</string>
+    <string name="time_hours">%1$,d h</string>
     <string name="time_now_inline">agora</string>
     <string name="time_just_now_inline">agora mesmo</string>
     <string name="when_today">hoje %1$s</string>
@@ -1572,6 +1624,9 @@
     <string name="player_position_spoken">%1$s de %2$s</string>
     <string name="names_pair">%1$s e %2$s</string>
     <string name="names_list">%1$s, %2$s</string>
+    <string name="desktop_cast_quit_title">Parar a transmissão e sair?</string>
+    <string name="desktop_cast_quit_body">%1$s está passando em %2$s. Sair interrompe a reprodução.</string>
+    <string name="desktop_cast_quit_action">Parar e sair</string>
     <string name="discussion_open">Discussão</string>
     <string name="discussion_title_episode">Discussão do episódio %1$d</string>
     <plurals name="discussion_row">
@@ -2948,6 +3003,7 @@
     <string name="read_search_source_kind_folder">Pasta</string>
     <string name="read_search_source_kind_plugin">Plugin</string>
     <string name="read_search_source_more">Mostrar mais %1$,d</string>
+    <string name="read_tile_add_to">Adicionar a %1$s</string>
     <string name="onboarding_step">%1$,d de %2$,d</string>
     <string name="onboarding_welcome_line">Acompanhe o que você assiste e lê, a partir das suas próprias fontes.</string>
     <string name="onboarding_welcome_note">Suas listas e seu progresso ficam nos seus dispositivos. Serviços de acompanhamento e fontes ficam por sua conta.</string>
@@ -3441,6 +3497,12 @@
     <string name="settings_quality">Qualidade</string>
     <string name="settings_auto_play">Reproduzir o próximo automaticamente</string>
     <string name="settings_up_next_countdown">Contagem do próximo</string>
+    <string name="settings_preload_cellular">Pré-carregar vídeo com dados móveis</string>
+    <string name="settings_preload_metered">Pré-carregar vídeo em conexões limitadas</string>
+    <string name="settings_preload_detail_android">Durante o encerramento, o stream, as legendas e os tempos de pulo do episódio seguinte são encontrados. Os primeiros segundos também carregam, e com dados móveis ou Wi-Fi limitado só quando isto está ativado.</string>
+    <string name="settings_preload_detail_metered">Durante o encerramento, o stream, as legendas e os tempos de pulo do episódio seguinte são encontrados. Os primeiros segundos também carregam, e em uma conexão limitada só quando isto está ativado.</string>
+    <string name="settings_preload_torrents">Torrents carregam as primeiras partes do mesmo jeito.</string>
+    <string name="settings_preload_a11y_dimmed">Requer \"Reproduzir o próximo automaticamente\"</string>
     <string name="settings_skip_opening">Pular abertura automaticamente</string>
     <string name="settings_skip_recap">Pular resumos automaticamente</string>
     <string name="settings_find_skips">Encontrar tempos de pulo a partir do áudio</string>
@@ -3627,6 +3689,9 @@
     <string name="settings_opds_feed">Compartilhar nesta rede</string>
     <string name="settings_opds_password">Senha do feed</string>
     <string name="settings_opds_port">Porta do feed</string>
+    <string name="settings_label_picture_in_picture_on_leave">Picture-in-picture ao sair do app</string>
+    <string name="settings_anilist_following">Mostrar quem você segue</string>
+    <string name="settings_anilist_following_footer">Mostra onde as pessoas que você segue no AniList estão em uma série, na página dela e nos episódios. Quem pode ver a sua lista é definido no AniList.</string>
     <string name="book_server_address">Endereço</string>
     <string name="book_server_address_hint">Um endereço, ou o link OPDS completo do Kavita.</string>
     <string name="book_server_kavita_key">Este é um link OPDS do Kavita. A chave dele faz seu login, então não precisa de senha.</string>
@@ -3747,6 +3812,20 @@
         <item quantity="one">%1$,d de %2$,d episódio</item>
         <item quantity="many">%1$,d de %2$,d episódios</item>
         <item quantity="other">%1$,d de %2$,d episódios</item>
+    </plurals>
+    <plurals name="source_picker_episodes">
+        <item quantity="one">Episódio %2$d</item>
+        <item quantity="many">Episódios %2$d a %3$d</item>
+        <item quantity="other">Episódios %2$d a %3$d</item>
+    </plurals>
+    <string name="source_picker_episodes_not_yet">Episódios %1$d a %2$d. Ainda sem %3$s</string>
+    <string name="source_picker_episodes_not">Episódios %1$d a %2$d. Sem %3$s</string>
+    <string name="source_picker_missing_pair">%1$d e %2$d</string>
+    <string name="source_picker_missing_range">%1$d a %2$d</string>
+    <plurals name="source_picker_coverage_missing">
+        <item quantity="one">%1$,d de %2$,d episódio. Sem %3$s</item>
+        <item quantity="many">%1$,d de %2$,d episódios. Sem %3$s</item>
+        <item quantity="other">%1$,d de %2$,d episódios. Sem %3$s</item>
     </plurals>
     <string name="source_note_off">Desligada</string>
     <string name="source_note_resting">Não responde, tentando de novo em breve</string>
@@ -4386,6 +4465,17 @@
     <string name="more_following_note">Da AniList</string>
     <string name="more_followed_score">%1$,d/10</string>
     <string name="more_like_this">Quem gostou também viu</string>
+    <string name="following_show_all">Mostrar todos os %1$,d</string>
+    <plurals name="following_names">
+        <item quantity="one">%1$s, %2$s e mais %3$,d</item>
+        <item quantity="many">%1$s, %2$s e mais %3$,d</item>
+        <item quantity="other">%1$s, %2$s e mais %3$,d</item>
+    </plurals>
+    <string name="following_names_two">%1$s e %2$s</string>
+    <string name="following_mark_more">+%1$,d</string>
+    <string name="following_mark_spoken">%1$s assistiu até aqui.</string>
+    <string name="following_score_spoken">Nota %1$,d de 10</string>
+    <string name="following_open_help">Mostra onde cada pessoa está.</string>
     <string name="more_followed_progress">%1$s · %2$s</string>
     <string name="more_empty">A AniList ainda não tem elenco, equipe nem recomendações para esta série.</string>
     <string name="more_spoiler">Spoiler</string>
@@ -4405,7 +4495,6 @@
     <string name="title_fact_after">Após o episódio %1$d</string>
     <string name="title_fact_now">Em exibição</string>
     <string name="title_fact_tba">A anunciar</string>
-    <string name="more_following_line">%1$s · %2$,d/10</string>
     <string name="episode_go_to">Ir para o episódio…</string>
     <string name="episode_go_to_title">Ir para o episódio</string>
     <string name="episode_go_to_go">Ir</string>
@@ -4413,6 +4502,18 @@
     <string name="episode_go_to_label">Episódio, de %1$d a %2$d</string>
     <string name="episode_go_to_none">Não existe o episódio %1$d. Esta série tem %2$d.</string>
     <string name="episode_go_to_not_out">O episódio %1$d ainda não foi lançado. O mais recente é o %2$d.</string>
+    <string name="episode_missing_aired">O episódio %1$d foi ao ar %2$s.</string>
+    <string name="episode_missing_aired_on">O episódio %1$d foi ao ar em %2$s.</string>
+    <string name="episode_missing_not_yet">Suas fontes ainda não têm o episódio.</string>
+    <string name="episode_missing_still">Suas fontes continuam sem o episódio.</string>
+    <string name="episode_missing_no_answer">Suas fontes não responderam.</string>
+    <string name="episode_missing_looks_again">Kaeri procura de novo a cada %1$,d min.</string>
+    <string name="episode_missing_none">Nenhuma das suas fontes tem o episódio.</string>
+    <string name="episode_missing_offline">Kaeri vai procurar quando a conexão voltar.</string>
+    <string name="episode_row_aired_ago">Foi ao ar %1$s</string>
+    <string name="episode_unsourced_yet">Ainda não está nas suas fontes</string>
+    <string name="episode_found_announcement">O episódio %1$d já está nas suas fontes.</string>
+    <string name="episode_check_again_help">Kaeri também procura sozinho a cada %1$,d min, por %2$,d h depois que um episódio vai ao ar.</string>
     <string name="torrents_title">Torrents</string>
     <string name="torrents_on">Torrents ativados</string>
     <string name="torrents_off_detail">Desativados por padrão. Os torrents se conectam diretamente, a menos que você os passe por um proxy.</string>

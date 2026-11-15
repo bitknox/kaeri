@@ -105,6 +105,14 @@ struct SpotlightTests {
         #expect(shelf.titles[900_003]?.list == .planning)
     }
 
+    @Test func aTitleAlwaysPrivateNeverReachesTheShelf() {
+        let store = watchingStore()
+        store.apply(.alwaysPrivate(title: .show(id: 900_005), on: true))
+        #expect(Shelf.current(store, over: Shelf()).order == [900_001, 900_002, 900_003])
+        store.apply(.alwaysPrivate(title: .show(id: 900_005), on: false))
+        #expect(Shelf.current(store, over: Shelf()).order == [900_001, 900_005, 900_002, 900_003])
+    }
+
     @Test func aListNotShownThisSessionKeepsWhatWasSaved() {
         var saved = Shelf()
         saved.sources[.completed] = [900_004]

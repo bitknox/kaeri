@@ -12,7 +12,7 @@ path = "src/main.rs"
 
 [dependencies]
 kaeri-core.workspace = true
-kaeri-engine = { workspace = true, features = ["desktop"] }
+kaeri-engine = { workspace = true, features = ["desktop", "dev-receiver"] }
 kaeri-meta.workspace = true
 kaeri-model.workspace = true
 kaeri-net.workspace = true
@@ -36,7 +36,7 @@ rlimit = "0.11"
 clap.workspace = true
 crossterm.workspace = true
 futures.workspace = true
-image.workspace = true
+image = { workspace = true, features = ["gif"] }
 # Local dates in `--doctor`. Already in the tree, through kaeri-core.
 jiff.workspace = true
 ratatui.workspace = true
@@ -48,6 +48,11 @@ tracing-subscriber.workspace = true
 # The updater stages a download in a private directory rather than a predictable one in
 # the shared temp dir: what it installs is read back from disk after `tar` runs.
 tempfile = "3"
+
+# Asks NetworkManager at launch whether the connection is metered. Already in the tree on
+# Linux, through the keyring's Secret Service.
+[target.'cfg(target_os = "linux")'.dependencies]
+zbus = "5"
 
 [dev-dependencies]
 # The engine as the contract tests stand it up: from the harness's own parts, saying when it is

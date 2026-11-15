@@ -472,6 +472,12 @@ download-unread = Every unread chapter
 # @max 40
 download-already = Already downloaded
 
+# Short note on a series page when a download it asked for couldn't start, such as when the
+# source isn't answering and no chapter list is kept. The reason is a full sentence.
+# @only android
+# @arg reason: text
+download-not-started = Couldn't start the download. { $reason }
+
 # Download menu item: a volume's chapters not yet downloaded.
 # @arg volume: text
 # @arg n: int
@@ -1111,6 +1117,13 @@ read-home-row-loading = { $row }, loading
 
 # Screen readers: the custom action on a discovery cover that puts the series on Planning.
 read-tile-add-planning = Add to Planning
+
+# Screen readers: a custom action on a reading cover that puts the series on one of the lists,
+# one action for each list the cover's menu offers under Add to list. The list is its name as the
+# menu shows it, such as "Completed".
+# @arg list: text
+# @max 40
+read-tile-add-to = Add to { $list }
 
 # Said once by screen readers when Your sources only turns on.
 read-search-anilist-hidden = AniList's results are hidden.

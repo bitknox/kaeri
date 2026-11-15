@@ -15,6 +15,7 @@ import app.kaeri.engine.model.BookServerRow
 import app.kaeri.engine.model.BookSourceCommand
 import app.kaeri.engine.model.BookSourceEvent
 import app.kaeri.engine.model.BookSourcesView
+import app.kaeri.engine.model.ChapterRow
 import app.kaeri.engine.model.ChapterVersion
 import app.kaeri.engine.model.Command
 import app.kaeri.engine.model.DownloadEstimate
@@ -60,6 +61,7 @@ import app.kaeri.engine.model.TrackerReadRow
 import app.kaeri.engine.model.UpdatesView
 import app.kaeri.engine.model.VolumeGroup
 import app.kaeri.engine.model.WorkTile
+import app.kaeri.engine.model.readHomeWithoutContinue
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
@@ -189,12 +191,17 @@ data class ReadSearchState(
     val words: Boolean get() = query.text.isNotBlank()
 }
 
-/** [this] with a page of AniList's answer in: the first page replaces, a later one adds. */
+/**
+ * [this] with a page of AniList's answer in: the first page replaces, a later one adds. AniList's
+ * pages can overlap when a work moves down a place between two asks, and the grids key by work,
+ * so each work is kept once, where it first came.
+ */
 private fun ReadSearchState.answered(event: ReadingEvent.Search): ReadSearchState {
     val first = event.page == 0u
+    val pageOne = if (first) event.tiles.distinctBy { it.work } else null
     return copy(
-        tiles = if (first) event.tiles else tiles + event.tiles,
-        firstPage = if (first) event.tiles.size else firstPage,
+        tiles = pageOne ?: (tiles + event.tiles).distinctBy { it.work },
+        firstPage = pageOne?.size ?: firstPage,
         page = event.page,
         hasMore = event.hasMore,
         otherScope = event.otherScope,
@@ -252,6 +259,9 @@ private fun ReadSearchState.sourcesIn(part: ReadSourceSearch): ReadSearchState {
 private fun ReadSearchState.failedWith(failure: ReadingFailure): ReadSearchState =
     if (stale) copy(loading = false, failure = failure, tiles = emptyList(), total = null, firstPage = 0, otherScope = null, stale = false)
     else copy(loading = false, failure = failure)
+
+/** A download asked for that could not start: what was asked, to ask again, and why. */
+data class DownloadNotStarted(val pick: DownloadPick, val failure: ReadingFailure)
 
 /** A finished download batch, said as a notification while Downloads finished is on. */
 data class DownloadsDone(val work: WorkId?, val title: Msg, val body: Msg)
@@ -320,6 +330,20 @@ class ReadingModel(private val send: (Command) -> Unit) {
 
     /** New chapters a check found, for the app's notifications. */
     val newChapters: SharedFlow<List<NewChapter>> = _newChapters.asSharedFlow()
+
+    /** The download last asked for while the engine has not answered it, to name what a failure about downloads stopped. */
+    @Volatile private var downloadAsked: Pair<WorkId, DownloadPick>? = null
+
+    private val _notStarted = MutableStateFlow<Map<WorkId, DownloadNotStarted>>(emptyMap())
+
+    /**
+     * Each series' download that could not start, such as when its source fails and no chapter list
+     * is kept, until a notice has said so: a download is never left looking queued.
+     */
+    val notStarted: StateFlow<Map<WorkId, DownloadNotStarted>> = _notStarted.asStateFlow()
+
+    /** [work]'s download that could not start has been said, or is no longer news. */
+    fun notStartedSeen(work: WorkId) = _notStarted.update { it - work }
 
     private val _downloadsDone = MutableSharedFlow<DownloadsDone>(extraBufferCapacity = 4)
 
@@ -470,7 +494,11 @@ class ReadingModel(private val send: (Command) -> Unit) {
         reloadChapters(work)
     }
 
-    fun hideFromContinue(work: WorkId) = reading(ReadingCommand.HideFromContinue(work))
+    /** Take a series off Continue: the cover goes at once, nothing else on Home moves, and the engine keeps it hidden. */
+    fun hideFromContinue(work: WorkId) {
+        _home.update { home -> home?.let { readHomeWithoutContinue(it, work) } }
+        reading(ReadingCommand.HideFromContinue(work))
+    }
 
     fun setStatus(work: WorkId, status: LibrarySegmentRead) {
         reading(ReadingCommand.SetStatus(work, status))
@@ -495,6 +523,8 @@ class ReadingModel(private val send: (Command) -> Unit) {
         reading(ReadingCommand.ConnectMangaUpdates(username, password))
 
     fun download(work: WorkId, pick: DownloadPick) {
+        downloadAsked = work to pick
+        _notStarted.update { it - work }
         reading(ReadingCommand.Download(work, pick))
         reloadChapters(work)
     }
@@ -548,6 +578,17 @@ class ReadingModel(private val send: (Command) -> Unit) {
 
     /** The reader closed on [work]: its page and lists show where reading got to. */
     fun readerClosed(work: WorkId) = refreshSeries(work)
+
+    /**
+     * [chapter] of [work] as a screen already lists it: its series' chapters, Updates or
+     * Downloads. The reader names it while it opens, and if it fails to, before the engine does.
+     */
+    fun chapterRow(work: WorkId, chapter: ChapterId?): ChapterRow? {
+        if (chapter == null) return null
+        _chapters.value[work]?.volumes?.firstNotNullOfOrNull { group -> group.chapters.firstOrNull { it.id == chapter } }?.let { return it }
+        _updates.value?.days?.firstNotNullOfOrNull { day -> day.rows.firstOrNull { it.tile.work == work && it.chapter.id == chapter } }?.let { return it.chapter }
+        return _downloads.value?.rows?.firstOrNull { it.work == work && it.chapter.id == chapter }?.chapter
+    }
 
     private fun refreshSeries(work: WorkId) {
         if (_series.value[work] != null || _chapters.value[work] != null) {
@@ -615,7 +656,11 @@ class ReadingModel(private val send: (Command) -> Unit) {
             }
             is ReadingEvent.Versions -> _versions.update { it + (event.chapter to event.versions) }
             is ReadingEvent.Tracking -> _tracking.update { it + (event.work to event.rows) }
-            is ReadingEvent.Downloads -> _downloads.value = event.v1
+            is ReadingEvent.Downloads -> {
+                // The queue the engine published answers the ask: it started.
+                downloadAsked = null
+                _downloads.value = event.v1
+            }
             is ReadingEvent.DownloadEstimate -> _estimates.update { it + (event.v1.work to event.v1) }
             is ReadingEvent.RemovedFromLists -> {
                 _removals.update { it + (event.work to event.results) }
@@ -625,6 +670,10 @@ class ReadingModel(private val send: (Command) -> Unit) {
             is ReadingEvent.DownloadsDone -> _downloadsDone.tryEmit(DownloadsDone(event.work, event.title, event.body))
             is ReadingEvent.Failed -> {
                 _failures.update { it + (event.about to event.failure) }
+                if (event.about == ReadingAbout.DOWNLOADS) {
+                    downloadAsked?.let { (work, pick) -> _notStarted.update { it + (work to DownloadNotStarted(pick, event.failure)) } }
+                    downloadAsked = null
+                }
                 if (event.about == ReadingAbout.HOME) _homeLoading.value = false
                 if (event.about == ReadingAbout.SEARCH) {
                     _search.update { it.failedWith(event.failure) }

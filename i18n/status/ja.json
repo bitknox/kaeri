@@ -1191,6 +1191,12 @@
     "at": "2026-10-31",
     "back": "Check now"
   },
+  "action-checking": {
+    "source": "29d3b9fb142c",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
+  },
   "action-clear": {
     "source": "b4f1dffbb6be",
     "state": "draft",
@@ -2555,6 +2561,18 @@
     "at": "2026-10-31",
     "back": "{ $start } to { $end }"
   },
+  "cast-button-connected": {
+    "source": "97783949259c",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
+  },
+  "cast-button-connecting": {
+    "source": "bf4a0f3f08b4",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
+  },
   "cast-card-failed": {
     "source": "1988cf43151a",
     "state": "draft",
@@ -2645,6 +2663,12 @@
     "by": "agent",
     "at": "2026-11-01"
   },
+  "cast-controller-close": {
+    "source": "5e8250fb85d6",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
+  },
   "cast-couldnt-start": {
     "source": "1988cf43151a",
     "state": "draft",
@@ -2665,6 +2689,12 @@
     "at": "2026-10-31",
     "back": "Episode { $episode } · { $title }"
   },
+  "cast-idle": {
+    "source": "4bc2f20b82f6",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
+  },
   "cast-keep-open": {
     "source": "794b6a21c977",
     "state": "draft",
@@ -2677,11 +2707,29 @@
     "by": "agent",
     "at": "2026-11-01"
   },
+  "cast-mini-opens": {
+    "source": "0dc6b47564fe",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
+  },
   "cast-none-found-extra": {
     "source": "5a3f97ad4c01",
     "state": "draft",
     "by": "agent",
     "at": "2026-11-01"
+  },
+  "cast-notification-line": {
+    "source": "5c8791e59c96",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
+  },
+  "cast-open-show": {
+    "source": "26438065e499",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
   },
   "cast-phase-preparing": {
     "source": "57c2de08efc4",
@@ -2712,6 +2760,36 @@
     "state": "draft",
     "by": "agent",
     "at": "2026-11-01"
+  },
+  "cast-play-next-on": {
+    "source": "dd6053549121",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
+  },
+  "cast-plays-on": {
+    "source": "27e57a7fa563",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
+  },
+  "cast-quit-action": {
+    "source": "393f29a71b72",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
+  },
+  "cast-quit-body": {
+    "source": "b1c1d46efc0e",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
+  },
+  "cast-quit-title": {
+    "source": "8f5fc7d419a8",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
   },
   "cast-row-through": {
     "source": "731ed5afc7d5",
@@ -2772,6 +2850,12 @@
     "state": "draft",
     "by": "agent",
     "at": "2026-11-01"
+  },
+  "cast-status-paused": {
+    "source": "66fdb12de866",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
   },
   "cast-stop": {
     "source": "0ac3c517d62e",
@@ -4375,6 +4459,24 @@
     "state": "draft",
     "by": "agent",
     "at": "2026-11-07"
+  },
+  "desktop-cast-quit-action": {
+    "source": "393f29a71b72",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
+  },
+  "desktop-cast-quit-body": {
+    "source": "f22d614740e2",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
+  },
+  "desktop-cast-quit-title": {
+    "source": "534fe08f2d01",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
   },
   "device-kind-computer": {
     "source": "0af16b6b2e49",
@@ -6485,6 +6587,12 @@
     "at": "2026-10-31",
     "back": "Episode { $episode } is scheduled to air at { $when }."
   },
+  "episode-check-again-help": {
+    "source": "ab424500b9d1",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
+  },
   "episode-download-done": {
     "source": "b87a1067596d",
     "state": "draft",
@@ -6606,6 +6714,12 @@
       "Plural wording; the \"many\" form only counts millions"
     ],
     "back": "One watched episode / {count} watched episodes"
+  },
+  "episode-found-announcement": {
+    "source": "b09cc9672859",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
   },
   "episode-go-to": {
     "source": "7d2a5e4c193a",
@@ -6756,6 +6870,60 @@
     "at": "2026-10-31",
     "back": "Download paused"
   },
+  "episode-missing-aired": {
+    "source": "4c3342b91f58",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
+  },
+  "episode-missing-aired-on": {
+    "source": "816c237e58a2",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
+  },
+  "episode-missing-checking": {
+    "source": "cab50d34fd42",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
+  },
+  "episode-missing-looks-again": {
+    "source": "e8b3650504ae",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
+  },
+  "episode-missing-no-answer": {
+    "source": "62385c9ecad5",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
+  },
+  "episode-missing-none": {
+    "source": "da5bd4ae708e",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
+  },
+  "episode-missing-not-yet": {
+    "source": "adb935a3099b",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
+  },
+  "episode-missing-offline": {
+    "source": "551028406e7f",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
+  },
+  "episode-missing-still": {
+    "source": "528aa04f4ec4",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
+  },
   "episode-not-out": {
     "source": "4cef0c89d19f",
     "state": "draft",
@@ -6889,6 +7057,12 @@
     "at": "2026-11-03",
     "back": "{ $from }–{ $to }"
   },
+  "episode-row-aired-ago": {
+    "source": "0124b3f2d411",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
+  },
   "episode-row-airs": {
     "source": "8ad9d45ed7c2",
     "state": "draft",
@@ -7005,6 +7179,12 @@
     "state": "draft",
     "by": "agent",
     "at": "2026-10-31"
+  },
+  "episode-unsourced-yet": {
+    "source": "21955be8f848",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
   },
   "episode-watched": {
     "source": "fbe199a56777",
@@ -8140,6 +8320,48 @@
     "state": "draft",
     "by": "agent",
     "at": "2026-11-05"
+  },
+  "following-mark-more": {
+    "source": "5bc9c34fe675",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
+  },
+  "following-mark-spoken": {
+    "source": "8fe2fd41bfc0",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
+  },
+  "following-names": {
+    "source": "8f615fe80092",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
+  },
+  "following-names-two": {
+    "source": "2210cc318940",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
+  },
+  "following-open-help": {
+    "source": "e3018e5e4a82",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
+  },
+  "following-score-spoken": {
+    "source": "cf771f1bf94d",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
+  },
+  "following-show-all": {
+    "source": "750d1d368b17",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
   },
   "format-movie": {
     "source": "e35de1f96af7",
@@ -9513,6 +9735,12 @@
     "at": "2026-10-31",
     "back": "Check"
   },
+  "keys-hint-check-again": {
+    "source": "c0c8035281ee",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
+  },
   "keys-hint-choose": {
     "source": "bf4808a055e7",
     "state": "draft",
@@ -9722,6 +9950,12 @@
     "by": "haiku",
     "at": "2026-10-31",
     "back": "Play"
+  },
+  "keys-hint-play-episode": {
+    "source": "36363bef36a6",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
   },
   "keys-hint-play-next": {
     "source": "244a15376190",
@@ -13123,13 +13357,6 @@
     "at": "2026-10-31",
     "back": "Users you follow"
   },
-  "more-following-line": {
-    "source": "87fbdc6253ff",
-    "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31",
-    "back": "{ $status } · { $score }/10"
-  },
   "more-following-note": {
     "source": "51ebda4ffae7",
     "state": "draft",
@@ -13691,6 +13918,12 @@
     "by": "agent",
     "at": "2026-11-01"
   },
+  "notice-cast-lost-stream": {
+    "source": "38a065708e27",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
+  },
   "notice-cast-never-fetches": {
     "source": "e1f14ea43a26",
     "state": "draft",
@@ -13715,6 +13948,18 @@
     "state": "draft",
     "by": "agent",
     "at": "2026-11-01"
+  },
+  "notice-cast-segment": {
+    "source": "ab7adbc61f85",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
+  },
+  "notice-cast-subtitles-plain": {
+    "source": "42405a6f909b",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
   },
   "notice-cast-taken-over": {
     "source": "e4eb106c7397",
@@ -13964,6 +14209,18 @@
     "by": "haiku",
     "at": "2026-10-31",
     "back": "Added { $count } episode(s), but stopped partway. { $reason }"
+  },
+  "notice-failed-over": {
+    "source": "83ab54856bbe",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
+  },
+  "notice-failed-over-same-source": {
+    "source": "003d5d9a3e27",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
   },
   "notice-filler-skipped": {
     "source": "5b84ca7f31b4",
@@ -14490,6 +14747,24 @@
     "by": "haiku",
     "at": "2026-10-31",
     "back": "Could not save the sign-in token. Please sign in again. { $reason }"
+  },
+  "notice-tracker-change-refused": {
+    "source": "32186c3c2ab6",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
+  },
+  "notice-tracker-change-refused-untitled": {
+    "source": "900dce4f0422",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
+  },
+  "notice-tracker-changes-refused": {
+    "source": "93e69fcf14d2",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
   },
   "notice-trailer-failed": {
     "source": "63b72b0ba384",
@@ -18969,12 +19244,24 @@
     "at": "2026-10-31",
     "back": "Statistics"
   },
+  "player-stats-hide-live": {
+    "source": "0fd70596cd2a",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
+  },
   "player-stats-row": {
     "source": "a9107ae742d8",
     "state": "draft",
     "by": "haiku",
     "at": "2026-10-31",
     "back": "{ $label }: { $value }"
+  },
+  "player-stats-show-live": {
+    "source": "0e29c7058555",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
   },
   "player-stats-waiting": {
     "source": "b957afa89c9a",
@@ -20487,6 +20774,16 @@
     "by": "agent",
     "at": "2026-11-08"
   },
+  "read-tile-add-to": {
+    "source": "9751af99d6e1",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-13",
+    "flags": [
+      "new string from fix/read-r7-a11y: a screen reader action on a reading cover, needs Johan's review"
+    ],
+    "back": "Add to { $list }"
+  },
   "reader-action-controls": {
     "source": "83cd32b685cc",
     "state": "draft",
@@ -20912,6 +21209,15 @@
     "state": "draft",
     "by": "agent",
     "at": "2026-11-07"
+  },
+  "reader-failed-chapter-plain": {
+    "source": "3aa10beb5ec5",
+    "state": "draft",
+    "by": "agent (R8-1, for Johan's review)",
+    "at": "2026-11-13",
+    "flags": [
+      "new copy for R8-1, needs Johan review"
+    ]
   },
   "reader-failed-choose": {
     "source": "2e134e8c7be9",
@@ -22367,6 +22673,15 @@
     "by": "agent",
     "at": "2026-11-07"
   },
+  "reading-dl-no-room": {
+    "source": "366364609f28",
+    "state": "draft",
+    "by": "agent (R7-1, for Johan's review)",
+    "at": "2026-11-13",
+    "flags": [
+      "new copy for R7-1, needs Johan review"
+    ]
+  },
   "reading-dl-offline": {
     "source": "cde3342a428a",
     "state": "draft",
@@ -22905,6 +23220,15 @@
     "by": "agent",
     "at": "2026-11-07"
   },
+  "reading-row-waits-room": {
+    "source": "6d15f80e16af",
+    "state": "draft",
+    "by": "agent (R7-1, for Johan's review)",
+    "at": "2026-11-13",
+    "flags": [
+      "new copy for R7-1, needs Johan review"
+    ]
+  },
   "reading-row-waits-wifi": {
     "source": "40f4bef74ccf",
     "state": "draft",
@@ -23201,6 +23525,308 @@
     "at": "2026-10-31",
     "back": "The response from the server took too long."
   },
+  "receiver-closing-computer": {
+    "source": "56f3a65787c9",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15",
+    "flags": [
+      "Machine draft of a new Cast receiver line (2026-11-15). A person reviews this translation before it is marked reviewed."
+    ],
+    "back": "Closing in { $seconds } s. Choose an episode on the computer to stay."
+  },
+  "receiver-closing-ipad": {
+    "source": "d999a607e04b",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15",
+    "flags": [
+      "Machine draft of a new Cast receiver line (2026-11-15). A person reviews this translation before it is marked reviewed."
+    ],
+    "back": "Closing in { $seconds } s. Choose an episode on the iPad to stay."
+  },
+  "receiver-closing-iphone": {
+    "source": "7075880a9a25",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15",
+    "flags": [
+      "Machine draft of a new Cast receiver line (2026-11-15). A person reviews this translation before it is marked reviewed."
+    ],
+    "back": "Closing in { $seconds } s. Choose an episode on the iPhone to stay."
+  },
+  "receiver-closing-mac": {
+    "source": "588bc0130a80",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15",
+    "flags": [
+      "Machine draft of a new Cast receiver line (2026-11-15). A person reviews this translation before it is marked reviewed."
+    ],
+    "back": "Closing in { $seconds } s. Choose an episode on the Mac to stay."
+  },
+  "receiver-closing-phone": {
+    "source": "c08bc96db6e5",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15",
+    "flags": [
+      "Machine draft of a new Cast receiver line (2026-11-15). A person reviews this translation before it is marked reviewed."
+    ],
+    "back": "Closing in { $seconds } s. Choose an episode on the phone to stay."
+  },
+  "receiver-closing-tablet": {
+    "source": "5e765d4f92d3",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15",
+    "flags": [
+      "Machine draft of a new Cast receiver line (2026-11-15). A person reviews this translation before it is marked reviewed."
+    ],
+    "back": "Closing in { $seconds } s. Choose an episode on the tablet to stay."
+  },
+  "receiver-error": {
+    "source": "a8a69b36195c",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
+  },
+  "receiver-error-audio-codec": {
+    "source": "97123cd9b384",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15",
+    "flags": [
+      "Machine draft of a new Cast receiver line (2026-11-15). A person reviews this translation before it is marked reviewed."
+    ],
+    "back": "This TV can't play { $codec } audio."
+  },
+  "receiver-error-hint-computer": {
+    "source": "e378e62b70a9",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
+  },
+  "receiver-error-hint-ipad": {
+    "source": "f34b703fe0ce",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
+  },
+  "receiver-error-hint-iphone": {
+    "source": "497951e2ad59",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
+  },
+  "receiver-error-hint-mac": {
+    "source": "16951e456fd4",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
+  },
+  "receiver-error-hint-phone": {
+    "source": "9769175f9b7d",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
+  },
+  "receiver-error-hint-tablet": {
+    "source": "7aaeba8fcf83",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
+  },
+  "receiver-error-unnumbered": {
+    "source": "6de4abde1981",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
+  },
+  "receiver-error-video-codec": {
+    "source": "a8a185c1467a",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15",
+    "flags": [
+      "Machine draft of a new Cast receiver line (2026-11-15). A person reviews this translation before it is marked reviewed."
+    ],
+    "back": "This TV can't play { $codec } video."
+  },
+  "receiver-finished": {
+    "source": "3e6a55ebb668",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
+  },
+  "receiver-finished-unnumbered": {
+    "source": "bb99d4ec27fb",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
+  },
+  "receiver-paused": {
+    "source": "95bc8722b270",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
+  },
+  "receiver-plain-subs": {
+    "source": "e2e38b14ad94",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
+  },
+  "receiver-ready-computer": {
+    "source": "ac91401d97fe",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
+  },
+  "receiver-ready-ipad": {
+    "source": "5786673fd38b",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
+  },
+  "receiver-ready-iphone": {
+    "source": "f92773820131",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
+  },
+  "receiver-ready-mac": {
+    "source": "575e9fb10c15",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
+  },
+  "receiver-ready-phone": {
+    "source": "b1f6c6676a81",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
+  },
+  "receiver-ready-tablet": {
+    "source": "6200a3fc1778",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
+  },
+  "receiver-sender-gone-computer": {
+    "source": "6a6f8cba801c",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
+  },
+  "receiver-sender-gone-hint-computer": {
+    "source": "c81338dae1e0",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
+  },
+  "receiver-sender-gone-hint-ipad": {
+    "source": "03259f491df0",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
+  },
+  "receiver-sender-gone-hint-iphone": {
+    "source": "8e6c66fb9d21",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
+  },
+  "receiver-sender-gone-hint-mac": {
+    "source": "3a2e9e501c49",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
+  },
+  "receiver-sender-gone-hint-phone": {
+    "source": "cc84de53cbb5",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
+  },
+  "receiver-sender-gone-hint-tablet": {
+    "source": "96154cac625f",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
+  },
+  "receiver-sender-gone-ipad": {
+    "source": "a0c7de11da17",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
+  },
+  "receiver-sender-gone-iphone": {
+    "source": "a7cd95bb12ba",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
+  },
+  "receiver-sender-gone-mac": {
+    "source": "7b4026e16334",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
+  },
+  "receiver-sender-gone-phone": {
+    "source": "a0438070aba2",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
+  },
+  "receiver-sender-gone-tablet": {
+    "source": "73caae62f70d",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
+  },
+  "receiver-skipped-ending": {
+    "source": "15b3cc252aed",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
+  },
+  "receiver-skipped-opening": {
+    "source": "2db42bdb3bed",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
+  },
+  "receiver-starting": {
+    "source": "4c60317e4731",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
+  },
+  "receiver-up-next": {
+    "source": "2467f13c3f6d",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
+  },
+  "receiver-up-next-numbered": {
+    "source": "e26aba3836f5",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
+  },
+  "receiver-up-next-titled": {
+    "source": "159b786e5c9c",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
+  },
+  "receiver-waiting": {
+    "source": "01a567ff47c0",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
+  },
   "relation-adaptation": {
     "source": "1854bd18b83f",
     "state": "draft",
@@ -23377,11 +24003,89 @@
     "by": "agent",
     "at": "2026-11-01"
   },
+  "report-player-log": {
+    "source": "d9805819a6cc",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
+  },
+  "report-player-log-a11y-hint": {
+    "source": "6cc493e385d7",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
+  },
+  "report-player-log-a11y-saved": {
+    "source": "e0a4affbf62f",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
+  },
+  "report-player-log-attach": {
+    "source": "3344c82e0e12",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
+  },
+  "report-player-log-detail": {
+    "source": "88bd4b3c1dd5",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
+  },
+  "report-player-log-empty": {
+    "source": "f5094de907da",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
+  },
+  "report-player-log-failed": {
+    "source": "020348ac937e",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
+  },
+  "report-player-log-failed-here": {
+    "source": "8cce9a2ed1a9",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
+  },
+  "report-player-log-save": {
+    "source": "3ca12ecc006b",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
+  },
+  "report-player-log-save-here": {
+    "source": "914e839c9934",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
+  },
+  "report-player-log-saved": {
+    "source": "69e1c610e040",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
+  },
+  "report-player-log-saved-to": {
+    "source": "3f22c123c3fd",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
+  },
   "report-privacy": {
     "source": "2a66bd1f65ce",
     "state": "draft",
     "by": "agent",
     "at": "2026-11-01"
+  },
+  "report-sent-report": {
+    "source": "9b6b14220271",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
   },
   "report-show-sent": {
     "source": "23afb946a4f5",
@@ -25342,6 +26046,18 @@
     "at": "2026-10-31",
     "back": "Run after download"
   },
+  "settings-anilist-following": {
+    "source": "ba920012f13c",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
+  },
+  "settings-anilist-following-footer": {
+    "source": "e35ac1816c51",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
+  },
   "settings-anilist-footer": {
     "source": "721f6827a780",
     "state": "draft",
@@ -26492,12 +27208,24 @@
     "at": "2026-10-31",
     "back": "Night mode"
   },
+  "settings-label-picture-in-picture-on-leave": {
+    "source": "cf11b1da5086",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
+  },
   "settings-label-player-ui": {
     "source": "2e38d6fd4da0",
     "state": "draft",
     "by": "haiku",
     "at": "2026-10-31",
     "back": "Player interface"
+  },
+  "settings-label-preload-metered": {
+    "source": "813a63b8a419",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
   },
   "settings-label-presence": {
     "source": "3d7953d785fa",
@@ -27364,6 +28092,30 @@
     "at": "2026-10-31",
     "back": "List of settings sections"
   },
+  "settings-picture-in-picture-on-leave-apple": {
+    "source": "31768d93f1d6",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
+  },
+  "settings-picture-in-picture-on-leave-ios": {
+    "source": "e5d34b6d8a3f",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
+  },
+  "settings-picture-in-picture-on-leave-mac": {
+    "source": "54e8b94d3d1e",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
+  },
+  "settings-picture-in-picture-system-off": {
+    "source": "8b2c61535738",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
+  },
   "settings-player-interface": {
     "source": "2e38d6fd4da0",
     "state": "draft",
@@ -27384,6 +28136,60 @@
     "by": "haiku",
     "at": "2026-10-31",
     "back": "mpv's settings"
+  },
+  "settings-preload-a11y-dimmed": {
+    "source": "d19fe8536135",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
+  },
+  "settings-preload-cellular": {
+    "source": "8f5ae351cea3",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
+  },
+  "settings-preload-detail-android": {
+    "source": "fd4583e3d208",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
+  },
+  "settings-preload-detail-apple-phone": {
+    "source": "b5e027f00455",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
+  },
+  "settings-preload-detail-low-data": {
+    "source": "251c08c820ee",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
+  },
+  "settings-preload-detail-metered": {
+    "source": "e916093d3209",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
+  },
+  "settings-preload-low-data": {
+    "source": "1952cebc4c42",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
+  },
+  "settings-preload-metered": {
+    "source": "fba64857b1c8",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
+  },
+  "settings-preload-torrents": {
+    "source": "bcab260e7dd9",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
   },
   "settings-presence-button": {
     "source": "3a329c30d042",
@@ -29984,6 +30790,12 @@
     "at": "2026-10-31",
     "back": "{ $covered } / { $of } episodes"
   },
+  "source-picker-coverage-missing": {
+    "source": "b9821f09f58c",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
+  },
   "source-picker-empty": {
     "source": "9548ee1fdcfb",
     "state": "draft",
@@ -29991,12 +30803,42 @@
     "at": "2026-10-31",
     "back": "No { -source } provides a stream for this episode."
   },
+  "source-picker-episodes": {
+    "source": "1fb791616367",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
+  },
+  "source-picker-episodes-not": {
+    "source": "8fcf096a2a5c",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
+  },
+  "source-picker-episodes-not-yet": {
+    "source": "0396edd201e0",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
+  },
   "source-picker-finding": {
     "source": "cfebb42bd0d6",
     "state": "draft",
     "by": "haiku",
     "at": "2026-10-31",
     "back": "Looking for { -source-pl }…"
+  },
+  "source-picker-missing-pair": {
+    "source": "50c1b8c42eaf",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
+  },
+  "source-picker-missing-range": {
+    "source": "5dca6d3bec4f",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
   },
   "source-picker-releases": {
     "source": "bc1bea103654",
@@ -34832,6 +35674,12 @@
     "at": "2026-10-31",
     "back": "{ $span } ago"
   },
+  "time-hours": {
+    "source": "fb12680c5861",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
+  },
   "time-in": {
     "source": "34349cc4e008",
     "state": "draft",
@@ -36547,17 +37395,863 @@
     "by": "opus",
     "at": "2026-11-08"
   },
-  "tui-medium-read-line": {
-    "source": "5fd5587c2d89",
-    "state": "draft",
-    "by": "opus",
-    "at": "2026-11-08"
-  },
   "tui-medium-settings-hint": {
     "source": "82228140080f",
     "state": "draft",
     "by": "opus",
     "at": "2026-11-08"
+  },
+  "tui-read-header-offline": {
+    "source": "156948a12a89",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-14"
+  },
+  "tui-read-hint-continue": {
+    "source": "f42f6a6df6bf",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-14"
+  },
+  "tui-read-hint-status": {
+    "source": "ad3e3c8146fc",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-14"
+  },
+  "tui-read-keys-chapters": {
+    "source": "256d747be0c2",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-14"
+  },
+  "tui-read-keys-download": {
+    "source": "44d78628c649",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-14"
+  },
+  "tui-read-keys-next": {
+    "source": "78b01f0cf740",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
+  },
+  "tui-read-keys-read": {
+    "source": "52575e067bdf",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-14"
+  },
+  "tui-read-keys-series": {
+    "source": "3375a4920652",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-14"
+  },
+  "tui-read-keys-status": {
+    "source": "b3a15290775f",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-14"
+  },
+  "tui-read-read-unread": {
+    "source": "0243539658a6",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-14"
+  },
+  "tui-read-row-date": {
+    "source": "13917b472d7d",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
+  },
+  "tui-read-row-date-year": {
+    "source": "64171c27431e",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
+  },
+  "tui-read-series-from": {
+    "source": "67b7a6279be7",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-14"
+  },
+  "tui-read-series-list": {
+    "source": "2473f3c339a2",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-14"
+  },
+  "tui-read-series-list-on": {
+    "source": "71bab475e749",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-14"
+  },
+  "tui-read-series-offline": {
+    "source": "c98ca421ce61",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-14"
+  },
+  "tui-read-series-read": {
+    "source": "d07a01c00d80",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-14"
+  },
+  "tui-read-status-offline": {
+    "source": "7d817f0f223f",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-14"
+  },
+  "tui-reader-action-back-to-page": {
+    "source": "3a42182f491d",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-14"
+  },
+  "tui-reader-action-bare": {
+    "source": "7bfb9dc317b1",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-14"
+  },
+  "tui-reader-action-first": {
+    "source": "17d7735daef9",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-14"
+  },
+  "tui-reader-action-fit": {
+    "source": "758e81467aef",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-14"
+  },
+  "tui-reader-action-go-to-page": {
+    "source": "e682f076f650",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
+  },
+  "tui-reader-action-last": {
+    "source": "2c4b1cc433fc",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-14"
+  },
+  "tui-reader-action-leave": {
+    "source": "7a4bc3ca3c4c",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-14"
+  },
+  "tui-reader-action-left": {
+    "source": "de1826c0c928",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-14"
+  },
+  "tui-reader-action-mode": {
+    "source": "be1fdb12476b",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-14"
+  },
+  "tui-reader-action-mode-novel": {
+    "source": "8c2e96ee3b25",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-14"
+  },
+  "tui-reader-action-narrower": {
+    "source": "8d5e753a2a63",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-14"
+  },
+  "tui-reader-action-next": {
+    "source": "542ffff55876",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-14"
+  },
+  "tui-reader-action-next-chapter": {
+    "source": "5013793e87d8",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-14"
+  },
+  "tui-reader-action-pages": {
+    "source": "17c5babe1aa1",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-14"
+  },
+  "tui-reader-action-previous": {
+    "source": "5b6a1140834a",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-14"
+  },
+  "tui-reader-action-previous-chapter": {
+    "source": "7ac92381ab6c",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-14"
+  },
+  "tui-reader-action-right": {
+    "source": "c6de4a1d5344",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-14"
+  },
+  "tui-reader-action-scroll-down": {
+    "source": "9dd12575273a",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-14"
+  },
+  "tui-reader-action-scroll-up": {
+    "source": "2b63dc08d32c",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-14"
+  },
+  "tui-reader-action-settings": {
+    "source": "89005c87f469",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-14"
+  },
+  "tui-reader-action-skip": {
+    "source": "831423b950d8",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-14"
+  },
+  "tui-reader-action-wider": {
+    "source": "180ac4ef7275",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-14"
+  },
+  "tui-reader-action-zoom": {
+    "source": "166bd56d1967",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-14"
+  },
+  "tui-reader-action-zoom-in": {
+    "source": "236ae937cbcd",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-14"
+  },
+  "tui-reader-action-zoom-out": {
+    "source": "c65ea2cf2f21",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-14"
+  },
+  "tui-reader-blocks": {
+    "source": "5168cd5936a0",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-14"
+  },
+  "tui-reader-blocks-notice": {
+    "source": "dc7c19e9c4c1",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-14"
+  },
+  "tui-reader-change": {
+    "source": "2f64461723d3",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-14"
+  },
+  "tui-reader-chapter-failed": {
+    "source": "06502febeb13",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-14"
+  },
+  "tui-reader-downloading": {
+    "source": "9bfe2b25e663",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-14"
+  },
+  "tui-reader-end-caught-up-line": {
+    "source": "b02ee8d84175",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-14"
+  },
+  "tui-reader-end-first-page": {
+    "source": "befae46fed09",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-14"
+  },
+  "tui-reader-end-no-more": {
+    "source": "6893412bf017",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-14"
+  },
+  "tui-reader-end-no-source": {
+    "source": "d89e734d3bd8",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-14"
+  },
+  "tui-reader-end-no-source-next": {
+    "source": "9f24cd28a143",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-14"
+  },
+  "tui-reader-end-not-out": {
+    "source": "0b0998f5c719",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-14"
+  },
+  "tui-reader-end-not-out-line": {
+    "source": "4eb588825858",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-14"
+  },
+  "tui-reader-end-not-out-next": {
+    "source": "292492332b47",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-14"
+  },
+  "tui-reader-end-offline": {
+    "source": "f3ecf9ed334e",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-14"
+  },
+  "tui-reader-end-offline-line": {
+    "source": "bae4cdd0d59c",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-14"
+  },
+  "tui-reader-end-offline-next": {
+    "source": "a506cd3e5612",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-14"
+  },
+  "tui-reader-end-series": {
+    "source": "cb7b1474b76f",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-14"
+  },
+  "tui-reader-end-skip-unread": {
+    "source": "145b8674bb24",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-14"
+  },
+  "tui-reader-finding": {
+    "source": "334876825772",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-14"
+  },
+  "tui-reader-fit-height": {
+    "source": "e4e636d967f0",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
+  },
+  "tui-reader-fit-width": {
+    "source": "f967d4ba3984",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-14"
+  },
+  "tui-reader-go-back": {
+    "source": "575e795c45e2",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-14"
+  },
+  "tui-reader-go-to-images": {
+    "source": "2fc01e6d0fde",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
+  },
+  "tui-reader-go-to-pages": {
+    "source": "17b740491815",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
+  },
+  "tui-reader-hint-again": {
+    "source": "d93eec285563",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-14"
+  },
+  "tui-reader-hint-back": {
+    "source": "c16e00a7a8b2",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-14"
+  },
+  "tui-reader-hint-change": {
+    "source": "2f64461723d3",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-14"
+  },
+  "tui-reader-hint-fit-screen": {
+    "source": "9e247b60b029",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-14"
+  },
+  "tui-reader-hint-go": {
+    "source": "08953907b53f",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
+  },
+  "tui-reader-hint-leave-zoom": {
+    "source": "7e0fc0de552b",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-14"
+  },
+  "tui-reader-hint-move": {
+    "source": "379c18aec565",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-14"
+  },
+  "tui-reader-hint-next": {
+    "source": "0fbf6dc6a196",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-14"
+  },
+  "tui-reader-hint-next-chapter": {
+    "source": "5013793e87d8",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-14"
+  },
+  "tui-reader-hint-next-screen": {
+    "source": "82b8d3d95ef9",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-14"
+  },
+  "tui-reader-hint-one-page": {
+    "source": "4056b44edad8",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-14"
+  },
+  "tui-reader-hint-scroll": {
+    "source": "a7698b3d20a6",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-14"
+  },
+  "tui-reader-hint-series": {
+    "source": "0899c5a1d76f",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-14"
+  },
+  "tui-reader-hint-settings": {
+    "source": "9d8b8aa2b404",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-14"
+  },
+  "tui-reader-hint-stop": {
+    "source": "d9ad53251f23",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-14"
+  },
+  "tui-reader-hint-two-pages": {
+    "source": "0f39d653b74a",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-14"
+  },
+  "tui-reader-hint-width": {
+    "source": "f21fb4f4b9e8",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-14"
+  },
+  "tui-reader-hint-without": {
+    "source": "142d89f01a85",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-14"
+  },
+  "tui-reader-hint-zoom": {
+    "source": "166bd56d1967",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-14"
+  },
+  "tui-reader-images-off": {
+    "source": "c6d319a30b42",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-14"
+  },
+  "tui-reader-images-off-how": {
+    "source": "8e208ac88498",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-14"
+  },
+  "tui-reader-images-off-novels": {
+    "source": "64c0e7c4bba6",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-14"
+  },
+  "tui-reader-keys-left-out": {
+    "source": "698ad25de901",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-14"
+  },
+  "tui-reader-keys-reader": {
+    "source": "5a3e33abd5fb",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-14"
+  },
+  "tui-reader-keys-rtl": {
+    "source": "4b93f14c0c0c",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-14"
+  },
+  "tui-reader-keys-view": {
+    "source": "b818d5fb2ed7",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-14"
+  },
+  "tui-reader-marked-read": {
+    "source": "326c1122c93f",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-14"
+  },
+  "tui-reader-marked-unread": {
+    "source": "e3a54d2f6839",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-14"
+  },
+  "tui-reader-no-answer": {
+    "source": "f8bd3cfcebc6",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
+  },
+  "tui-reader-no-answer-in": {
+    "source": "5a2937ff4a26",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
+  },
+  "tui-reader-novel-picture": {
+    "source": "8c754b74d11d",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-14"
+  },
+  "tui-reader-novel-picture-plain": {
+    "source": "5ed03bb1f3a1",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-14"
+  },
+  "tui-reader-novel-through": {
+    "source": "177259baefed",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-14"
+  },
+  "tui-reader-opening": {
+    "source": "219217a4a552",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-14"
+  },
+  "tui-reader-page-failed-status": {
+    "source": "ee7703a84b01",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
+  },
+  "tui-reader-page-of": {
+    "source": "3a1e76c345ee",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-14"
+  },
+  "tui-reader-pages-of": {
+    "source": "8316b1188159",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-14"
+  },
+  "tui-reader-setting-crop": {
+    "source": "1b28173e8b92",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-14"
+  },
+  "tui-reader-setting-direction": {
+    "source": "d23ee5e66df8",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-14"
+  },
+  "tui-reader-setting-fit": {
+    "source": "f2a69a199c80",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-14"
+  },
+  "tui-reader-setting-justify": {
+    "source": "05e9759cfd99",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-14"
+  },
+  "tui-reader-setting-line-spacing": {
+    "source": "04125ff41f4d",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-14"
+  },
+  "tui-reader-setting-mode": {
+    "source": "37cbecaec58e",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-14"
+  },
+  "tui-reader-setting-page-layout": {
+    "source": "a9e5d8a7ac94",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-14"
+  },
+  "tui-reader-setting-spreads": {
+    "source": "ee85ae790329",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-14"
+  },
+  "tui-reader-setting-strip-gap": {
+    "source": "1eaec3dd966c",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
+  },
+  "tui-reader-setting-text-width": {
+    "source": "17d1a4ef7246",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-14"
+  },
+  "tui-reader-settings-manga-all": {
+    "source": "a90be37eda4a",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-14"
+  },
+  "tui-reader-settings-manga-foot": {
+    "source": "a4c877d02536",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-14"
+  },
+  "tui-reader-settings-manga-here": {
+    "source": "fb72b2a99100",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-14"
+  },
+  "tui-reader-settings-manga-note": {
+    "source": "a94558bb105a",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-14"
+  },
+  "tui-reader-settings-not-here": {
+    "source": "2d6ecfbbe114",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-14"
+  },
+  "tui-reader-settings-novel-foot": {
+    "source": "1453623e0cfd",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-14"
+  },
+  "tui-reader-settings-novel-note": {
+    "source": "84ab6449515f",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-14"
+  },
+  "tui-reader-settings-novels-all": {
+    "source": "b2d018bcfb7e",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-14"
+  },
+  "tui-reader-settings-novels-here": {
+    "source": "33c60fd3ef2d",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-14"
+  },
+  "tui-reader-settings-preview": {
+    "source": "417b90913e05",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-14"
+  },
+  "tui-reader-settings-series": {
+    "source": "f902decaf67c",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-14"
+  },
+  "tui-reader-start-over": {
+    "source": "338cca2d2f31",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-14"
+  },
+  "tui-reader-strip-at": {
+    "source": "2b788ed0260a",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-14"
+  },
+  "tui-reader-strip-read": {
+    "source": "46871bae1f48",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-14"
+  },
+  "tui-reader-strip-read-offline": {
+    "source": "8bfd63bea55e",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-14"
+  },
+  "tui-reader-strip-read-tracker": {
+    "source": "b383519121ab",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-14"
+  },
+  "tui-reader-too-small": {
+    "source": "3a0191fc0b69",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-14"
+  },
+  "tui-reader-too-small-line": {
+    "source": "04a689d3816a",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-14"
+  },
+  "tui-reader-value-columns": {
+    "source": "eab2a140a583",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-14"
+  },
+  "tui-reader-value-height": {
+    "source": "ffdadf0a576f",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
+  },
+  "tui-reader-value-open": {
+    "source": "1f7698c061c2",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-14"
+  },
+  "tui-reader-value-paged": {
+    "source": "6ac0cf0ddc5c",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-14"
+  },
+  "tui-reader-value-scrolled": {
+    "source": "68f03c0bc995",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-14"
+  },
+  "tui-reader-value-tight": {
+    "source": "1bec74d2c7d3",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-14"
+  },
+  "tui-reader-value-vertical": {
+    "source": "2fba71bd651b",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-14"
+  },
+  "tui-reader-where": {
+    "source": "36a758892fa5",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-14"
+  },
+  "tui-reader-zoom": {
+    "source": "c2e8c1646409",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-14"
+  },
+  "tui-reader-zoom-page": {
+    "source": "2bd90a7c5733",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-14"
   },
   "tui-together-chat-hidden-line": {
     "source": "6be0cc730c25",

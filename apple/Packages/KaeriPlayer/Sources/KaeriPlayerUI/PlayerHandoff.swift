@@ -8,7 +8,8 @@ import KaeriStrings
 extension PlayerModel {
     /// What plays, as Handoff carries it: the episode at mpv's place, in its translation.
     func handoff(title: (AnilistId) -> String?) -> (handoff: Handoff, title: String)? {
-        guard isPresented, let staged else { return nil }
+        // Nothing private is offered to other devices: the mode is on, or the show always private.
+        guard isPresented, !isPrivate, let staged else { return nil }
         let name = title(staged.id) ?? staged.title
         return (
             .playing(staged.id, episode: staged.episode, position: position, translation: episode?.translation),

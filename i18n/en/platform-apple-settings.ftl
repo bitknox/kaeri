@@ -410,3 +410,18 @@ language-restart = Restart
 # @only apple
 # @max 120
 language-next-open-note = { -app-name } uses the new language the next time it opens.
+
+# Settings row on the Mac, iPhone and iPad: whether leaving the app while an episode plays opens Picture in Picture. "Picture in Picture" in the system's own capitals.
+# @only apple
+# @max 56
+settings-picture-in-picture-on-leave-apple = Picture in Picture when leaving the app
+
+# Note under that row on the Mac: when the Mac counts as leaving.
+# @only apple
+# @max 90
+settings-picture-in-picture-on-leave-mac = Starts when the window is minimised or { -app-name } is hidden.
+
+# Footnote under the iPhone and iPad group that holds that row: the system's own switch, which wins over the app's. Name the switch and the path as iOS names them in this language.
+# @only apple
+# @max 120
+settings-picture-in-picture-on-leave-ios = Also needs Start PiP Automatically in Settings > General > Picture in Picture.

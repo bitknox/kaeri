@@ -33,6 +33,19 @@ report-privacy = Inget lämnar den här { -device }en förrän du öppnar rappor
 report-tv-scan = Skanna koden för att öppna rapporten på din telefon.
 report-crash-off = Kraschrapporter är avstängda, så ingen ingår. Du kan slå på dem under Inställningar, Om.
 report-crash-settings = Kraschrapportinställningar
+report-player-log = Spelarlogg
+report-player-log-detail = { $playbacks ->
+    [one] Den senaste uppspelningen · { $size }
+   *[other] De senaste { $playbacks } uppspelningarna · { $size }
+ }
+report-player-log-empty = Ingen uppspelning loggad än
+report-player-log-save = Spara logg…
+report-player-log-attach = Bifoga filen i ärendet när det öppnas på GitHub.
+report-player-log-saved = Sparad som { $file }
+report-player-log-failed = Loggen kunde inte sparas. Prova en annan mapp.
+report-sent-report = Rapport
+report-player-log-a11y-saved = Spelarloggen sparades
+report-player-log-a11y-hint = Sparar en fil att bifoga i ärendet
 settings-group-crashes = Kraschrapporter
 settings-crash-save = Spara kraschrapporter på den här { -device }en
 settings-crash-save-detail = { -app-name } sparar en kort logg över varje krasch på den här { -device }en för Rapportera ett fel, utan titlar, adresser och namn. Inget skickas av sig självt.

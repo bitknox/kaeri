@@ -91,10 +91,11 @@ struct PhoneList<Content: View>: View {
                 .listRowBackground(Palette.raised)
                 .environment(\.defaultMinListRowHeight, 48)
                 .task {
-                    // A launch scroll brings the find row into view, for the Fixtures shots.
-                    guard navigator.launchScroll != nil else { return }
+                    // A launch scroll brings the find row into view, for the Fixtures shots;
+                    // `-KaeriScroll 2` the Picture in Picture row.
+                    guard let scroll = navigator.launchScroll else { return }
                     try? await Task.sleep(for: .milliseconds(800))
-                    proxy.scrollTo("findSkips", anchor: .center)
+                    proxy.scrollTo(scroll == 2 ? "pictureInPictureOnLeave" : "findSkips", anchor: .center)
                 }
         }
     }
@@ -254,6 +255,12 @@ struct PhoneSettingsRoot: View {
                 }
                 .listRowBackground(Palette.raised)
             }
+            // Private mode sits with the account: it says what is saved and synced.
+            Section {
+                PhonePrivateSwitch(title: L.privateMode, isOn: store.privateSwitch)
+            } footer: {
+                Text(L.privateModeDetail + " " + L.privateModeLimits) // i18n-skip: two sentences joined
+            }
             Section {
                 link(.general, L.settingsGroupGeneral, "gearshape", value: store.titleChoice.label)
                 if store.medium.watches {
@@ -406,6 +413,8 @@ struct PhonePlaybackPage: View {
                 PhoneSettingSwitch(key: .autoNext)
                 PhoneSettingPicker(key: .upNextCountdown)
                     .disabled(!store.settings.isOn(.autoNext))
+                    .opacity(store.settings.isOn(.autoNext) ? 1 : 0.45)
+                PhonePreloadRow()
                 PhoneSettingSwitch(key: .skipOpening, note: overridden(.skipOpening))
                 PhoneSettingSwitch(key: .skipRecap)
                 PhoneSettingSwitch(key: .skipFiller, note: overridden(.skipFiller))
@@ -430,8 +439,15 @@ struct PhonePlaybackPage: View {
             Section {
                 PhoneSettingPicker(key: .upscaling, note: upscalingNote)
                 PhoneSettingSwitch(key: .nightMode, note: L.playerNightModeDetail)
+                // iOS's own Start PiP Automatically wins over this switch, so the footnote
+                // names it, and VoiceOver reads it after the value.
+                PhoneSettingSwitch(key: .pictureInPictureOnLeave)
+                    .accessibilityHint(L.settingsPictureInPictureOnLeaveIos)
+                    .id("pictureInPictureOnLeave")
             } header: {
                 PhoneSectionHeader(L.playerPictureAndSound)
+            } footer: {
+                Text(L.settingsPictureInPictureOnLeaveIos)
             }
             Section {
                 Toggle(isOn: Binding(
@@ -879,6 +895,14 @@ struct PhoneAccountsPage: View {
                 PhoneSectionHeader(AccountsModel.name("anilist"))
             } footer: {
                 Text(L.accountsLibraryFrom(tracker: AccountsModel.name("anilist")))
+            }
+            // The people followed on AniList, on this device: only while signed in.
+            if anilist?.connected == true {
+                Section {
+                    PhoneSettingSwitch(key: .showFollowing)
+                } footer: {
+                    Text(L.settingsAnilistFollowingFooter)
+                }
             }
             Section {
                 PhoneSettingSwitch(key: .episodeDiscussions, note: L.settingsAppleDiscussionsNote)

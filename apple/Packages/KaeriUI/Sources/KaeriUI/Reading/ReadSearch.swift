@@ -254,8 +254,8 @@ private struct ReadRailRow: View {
             ReadWaitSlot(waiting: waiting) {
                 RailStrip(compact: compact) { width in
                     ForEach(row.tiles, id: \.work) { tile in
-                        ReadTileCard(tile: tile, width: width, twoLines: true, planAction: true, caption: row.caption)
-                            .contextMenu { ReadTileMenu(tile: tile, kind: .plan) }
+                        ReadTileCard(tile: tile, width: width, twoLines: true, caption: row.caption)
+                            .readTileMenu(tile, kind: .plan)
                             .transition(.opacity)
                     }
                 }
@@ -708,7 +708,7 @@ private struct ReadSourceRow: View {
                 RailStrip(compact: compact) { width in
                     ForEach(group.tiles.prefix(group.tiles.count - hidden), id: \.work) { tile in
                         ReadTileCard(tile: tile, width: width, twoLines: true, caption: .amount)
-                            .contextMenu { ReadTileMenu(tile: tile, kind: .details) }
+                            .readTileMenu(tile, kind: .details)
                             .transition(.opacity)
                     }
                 }

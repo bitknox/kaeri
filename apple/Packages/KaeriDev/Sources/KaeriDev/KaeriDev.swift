@@ -147,6 +147,7 @@ final class Delegate: NSObject, NSApplicationDelegate {
         if store.applyGoOfflineArgument() { settled = await store.settle() }
         store.applyShowcase()
         if let scene = SyncScene.named() { _ = await store.sync.stage(scene, store: store) }
+        if let scene = PrivateScene.named() { await store.stage(scene) }
         if let scene = PrelaunchScene.named() {
             store.cameIn.stage(scene)
             store.sync.stage(prelaunch: scene)
@@ -194,6 +195,8 @@ final class Delegate: NSObject, NSApplicationDelegate {
             print("KaeriDev: window key \(window.isKeyWindow)")
         }
         await stageSeriesShot()
+        // A missing episode: Check again pressed, and its answer in.
+        if !(await store.stageCheckAgain()) { print("KaeriDev: Check again did not come back") }
         print(settled ? "KAERI_READY" : "KaeriDev: did not settle; going on")
         if let shot = options.playerShot {
             let there: Bool
@@ -218,6 +221,10 @@ final class Delegate: NSObject, NSApplicationDelegate {
         if let scene = TogetherScene.named() {
             let there = await store.party.stage(scene, store: store)
             print(there ? "KaeriDev: Watch together is at \(scene.rawValue)" : "KaeriDev: Watch together did not reach \(scene.rawValue)")
+        }
+        // A cast scene's loop (morph, pause): frames from the moment the window is up.
+        if CastScene.named() != nil, !options.frames.isEmpty, let url = options.snapshot, let window = Snapshot.window {
+            await frames(of: nil, in: window, to: url)
         }
         // `KAERI_PROBE_TOOLTIPS=1`: every tooltip the window could show now (TooltipProbe).
         if TooltipProbe.asked, let window = Snapshot.window {
@@ -252,6 +259,11 @@ final class Delegate: NSObject, NSApplicationDelegate {
         }
         if let point = options.openMenu, let window = Snapshot.window {
             await Snapshot.withMenu(at: point, open: window, to: url)
+            exitAfterSnapshot()
+            return
+        }
+        if let point = options.appMenu, let window = Snapshot.window {
+            await Snapshot.withAppMenu(at: point, over: window, to: url)
             exitAfterSnapshot()
             return
         }

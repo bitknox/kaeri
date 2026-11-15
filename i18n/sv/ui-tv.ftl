@@ -32,6 +32,7 @@ tv-none-paired = Inga TV:ar är parade ännu
 tv-none-paired-detail = Öppna { -app-name } på TV:n, på samma Wi-Fi, och para sedan ihop den här.
 tv-paired-on = Parad { $when }
 tv-paired = Parad
+tv-row-kaeri = { -app-name } på Android TV
 tv-connected-at = Ansluten · { $address }
 tv-forget-title = Glöm { $name }?
 tv-forget-detail = Para ihop den igen för att spela på den.

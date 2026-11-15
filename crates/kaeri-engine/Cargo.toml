@@ -38,6 +38,10 @@ remote = ["dep:kaeri-remote"]
 # Casting to TVs with Chromecast built in, from the remote's TV picker: see `cast` and
 # `playback::link::cast`. Rides on `remote`, whose sender the picker is.
 cast = ["remote", "dep:kaeri-cast"]
+# `KAERI_CAST_RECEIVER_APP` names a development receiver app in place of Kaeri's own (see
+# `cast::dev_receiver`). The terminal turns it on; `testing` honours the variable too, for the
+# Fixtures and QA apps. A release app build never turns either on.
+dev-receiver = []
 # The OPDS feed: downloads and folders served to e-readers on the home network, off by default,
 # behind a password and only while Kaeri runs: see `export::feed`. The desktop apps turn it on (the
 # Mac beside `--no-default-features`, as it does `presence`); a phone's build leaves it off.
@@ -74,6 +78,7 @@ network-interface = { version = "2", optional = true }
 kaeri-track.workspace = true
 # The reader: book files opened and pages processed on the page worker.
 kaeri-pages.workspace = true
+kaeri-alloc.workspace = true
 toml.workspace = true
 open = { workspace = true, optional = true }
 async-trait.workspace = true
@@ -86,6 +91,8 @@ serde.workspace = true
 serde_json.workspace = true
 tokio.workspace = true
 tracing.workspace = true
+# The player log's layer, which a front end's subscriber installs beside its own: see `player_log`.
+tracing-subscriber.workspace = true
 # Random tokens for the stream proxy's loopback path.
 rand = "0.10"
 # Named by the stream proxy, whose upstream requests go through `HttpClient::sources`.

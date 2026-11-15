@@ -25,6 +25,7 @@ import app.kaeri.engine.core.SettingValue
 import app.kaeri.engine.core.SubtitleBackground
 import app.kaeri.engine.core.SubtitleEdge
 import app.kaeri.engine.core.WorkId
+import app.kaeri.engine.model.PrivateTitle
 import app.kaeri.engine.model.DemoState
 import app.kaeri.engine.model.ReadingAbout
 import app.kaeri.engine.model.ReadingEvent
@@ -199,8 +200,14 @@ class AppStore(
     val servers = ServersModel()
     val showSettings = ShowSettingsModel()
 
+    /** Private mode, and which titles are always private on this device or hold a place in memory. */
+    val privacy = PrivacyModel()
+
     /** The source picker's options per title. */
     val sourceChoices = SourceChoiceModel()
+
+    /** Check again for a title's aired episode that no source lists, and what the checks said. */
+    val missing = MissingModel { send(it) }
 
     /** The match sheet's question, search and pick per title. */
     val match = MatchPickerModel()
@@ -262,6 +269,13 @@ class AppStore(
 
     /** The playback's events, for the player the app hosts: its ops and interface. */
     var onPlayback: ((Event) -> Unit)? = null
+
+    /**
+     * Whether the last playback ended because it failed, until the next one is staged: an alert
+     * reported after it is a playback error, and Report a bug starts with Player log ticked.
+     */
+    @Volatile var playbackFailed = false
+        private set
 
     private val readers = java.util.concurrent.CopyOnWriteArrayList<(Event) -> Unit>()
 
@@ -758,6 +772,21 @@ class AppStore(
      */
     private fun sourcesArrived() {
         for (id in titles.unlistedTitles()) loadEpisodes(id, force = true)
+    }
+
+    /**
+     * Private mode on or off, at once, for what has not been written yet. The switch shows it
+     * straight away; the engine's `Private` says it back.
+     */
+    fun setPrivate(on: Boolean) {
+        privacy.mode(on)
+        send(Command.SetPrivate(on))
+    }
+
+    /** [title] always private on this device, or not; the engine's `AlwaysPrivate` says it back. */
+    fun setAlwaysPrivate(title: PrivateTitle, on: Boolean) {
+        privacy.flag(title, on)
+        send(Command.SetAlwaysPrivate(title, on))
     }
 
     /** [id]'s own settings sheet, answered with `ShowSettings`. */
@@ -1380,6 +1409,8 @@ class AppStore(
         // An alert is also the player's: one while an episode starts is why it could not, which
         // its "Couldn't play episode 7" says. The notice below still says it too.
         if (event is Event.Toast && event.v1.kind == NoticeKind.ALERT) onPlayback?.invoke(event)
+        if (event is Event.PlaybackStaged) playbackFailed = false
+        if (event is Event.PlaybackEnded && !event.rollingOn) playbackFailed = event.ending == app.kaeri.engine.model.Ending.Failed
         // The room started or moved on: the engine opens the episode, and the player takes it.
         if (event is Event.PartyStarted) onPlayAsked?.invoke()
         if (party.apply(event)) return
@@ -1419,7 +1450,19 @@ class AppStore(
             is Event.Detail -> titles.merge(detail = event.v1)
             is Event.Cards -> titles.merge(list = event.v1)
             is Event.TitlesChanged -> titlesChanged()
-            is Event.Progress -> titles.progress(event.id, event.progress, event.resume, event.episodes)
+            is Event.Progress -> {
+                titles.progress(event.id, event.progress, event.resume, event.episodes)
+                privacy.show(event.id, event.private, event.kept)
+            }
+            // Private mode, said at launch and on every change; the player follows it too.
+            is Event.Private -> {
+                privacy.mode(event.v1)
+                onPlayback?.invoke(event)
+            }
+            is Event.AlwaysPrivate -> {
+                privacy.flag(event.title, event.on)
+                onPlayback?.invoke(event)
+            }
             is Event.LastAired -> titles.lastAired(event.v1)
             is Event.Episodes -> {
                 titles.episodes(event.id, event.rows, event.failed)
@@ -1429,7 +1472,11 @@ class AppStore(
             is Event.Trending -> search.trending(event.period, TrendAnswer(event.entries, event.updatedAt, event.failed, event.waiting), titles)
             is Event.Surprise -> surprise.answer(event.pool, event.outcome)
 
-            is Event.Connectivity -> _offline.value = event.offline
+            is Event.Connectivity -> {
+                _offline.value = event.offline
+                // The reader's strip flows on only into a chapter that can be had.
+                readers.forEach { it(event) }
+            }
             // A failed sign-in the open sheet says in its place: the snackbar would draw under it.
             // The page says an uncertain match in its own line, so it is not said twice.
             is Event.Toast -> when {
@@ -1491,6 +1538,7 @@ class AppStore(
             is Event.ProxyChecked -> providers.trialSaid(event.v1)?.let { send(Command.CheckTorrentProxy(it.proxy)) }
             is Event.ProviderPreference -> providers.preference(event.v1)
             is Event.SourceOptions -> sourceChoices.apply(event.id, event.options)
+            is Event.EpisodeChecked -> missing.apply(event.v1)
             is Event.PinUnavailable -> sourceChoices.pinUnavailable(event.id, event.providerId, event.name)
             is Event.Stores -> stores.apply(event.v1)
             is Event.LinkOpened -> opened.linkOpened(event.v1)
@@ -1501,7 +1549,10 @@ class AppStore(
             is Event.StoreMembers -> stores.membersSaid(StoresModel.Members(event.store, event.members, event.invites, event.ended, event.inviteChoices))
             is Event.Downloads -> downloads.apply(event.v1)
             is Event.Seeding -> downloads.seeding(event.v1)
-            is Event.ShowSettings -> showSettings.apply(event.v1)
+            is Event.ShowSettings -> {
+                showSettings.apply(event.v1)
+                privacy.flag(PrivateTitle.Show(event.v1.id), event.v1.alwaysPrivate)
+            }
             is Event.NewEpisodes, is Event.WidgetSnapshot -> _answers.tryEmit(event)
             is Event.UpcomingNotices -> coming.apply(event.v1)
             is Event.Update -> updates.apply(event.v1)
@@ -1535,6 +1586,10 @@ class AppStore(
                 }
                 is ReadingEvent.ExportTargets, is ReadingEvent.ExportProgress, is ReadingEvent.ExportReady,
                 is ReadingEvent.ExportWaiting, is ReadingEvent.ExportFailed -> export.apply(said)
+                is ReadingEvent.Series -> {
+                    privacy.series(said.v1.work, said.v1.private, said.v1.placeKept)
+                    reading.apply(said)
+                }
                 else -> reading.apply(said)
             }
             is Event.Medium -> {
@@ -1560,7 +1615,7 @@ class AppStore(
             is Event.PlayerOps, is Event.PlayerUi, is Event.PlayerTimeline, is Event.PlayerBuffered,
             is Event.PlaybackStaged, is Event.PlaybackEnded, Event.PlaybackKept,
             is Event.PlayerSkipMark, is Event.PlayerSkipPrompt, is Event.PlayerSkipNotice,
-            is Event.PlayerStats -> onPlayback?.invoke(event)
+            is Event.PlayerStats, is Event.Clipboard -> onPlayback?.invoke(event)
 
             // Everything else is said in the events above, or has no screen yet.
             else -> {}

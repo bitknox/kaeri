@@ -1,6 +1,8 @@
 // Zooming a page on iPhone and iPad: pinch zooms about the fingers, one finger pans the zoomed
 // page, a double tap zooms in at the tapped point or returns to fit. While zoomed a tap never
-// turns the page and a drag never turns it either. Turning the page fits it again.
+// turns the page and a drag never turns it either. Turning the page fits it again. On the Mac,
+// and on iPad with a keyboard, Zoom In and Zoom Out step about the middle of the screen and Fit
+// to Window returns to fit.
 
 import KaeriDesign
 import SwiftUI
@@ -110,6 +112,30 @@ final class PageZoom {
                 scale = to
                 pan = clamped(CGSize(width: (1 - to) * (point.x - centre.x), height: (1 - to) * (point.y - centre.y)),
                               scale: to, in: size)
+            }
+        }
+        detail = scale
+    }
+
+    /// How far one Zoom In or Zoom Out goes.
+    static let keyStep: CGFloat = 1.25
+
+    /// Zoom In (1), Zoom Out (-1) or Fit to Window (0) from the keys or the Go menu. The point in
+    /// the middle of the screen stays there, as a pinch keeps the one under the fingers, and a
+    /// pinch the system cut off is let go.
+    func step(_ step: Int, in size: CGSize, motion: Bool) {
+        pinchFrom = nil
+        panFrom = nil
+        if pinching { pinching = false }
+        let to = step == 0 ? 1 : min(max(scale * pow(Self.keyStep, CGFloat(step)), 1), Self.most)
+        withAnimation(motion ? .standard : nil) {
+            if to < 1.05 {
+                scale = 1
+                pan = .zero
+            } else {
+                let grown = to / max(scale, 0.01)
+                pan = clamped(CGSize(width: pan.width * grown, height: pan.height * grown), scale: to, in: size)
+                scale = to
             }
         }
         detail = scale

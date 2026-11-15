@@ -1,0 +1,142 @@
+Kaeri                                                                                          plugins ●  ·  anilist ⇅ 2
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+▌ ▸  Home                   │  ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
+  ▤  Calendar               │  ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
+  ▦  Seasonal               │  ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
+  /  Search                 │  ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
+  ▥  Library                │  ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
+  ↓  Downloads              │  ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
+  ◇  Sources                │  ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
+  ◎  Accounts               │
+  ≡  Settings               │  Kumo no Ue no Toshokan
+  ⇄  Together               │  The Library Above the Clouds
+                            │
+                            │  TV  ·  12 episodes  ·  Autumn 2026  ·  81%  ·  Paper Lantern Works
+                            │  Airing  ·  Since 3 Oct 2026
+                            │
+                            │  A librarian on a floating island lends books to the weather. When a storm returns one
+                            │  overdue and soaked through, she sets out to find who wrote in its margins.
+                            │
+                            │  Fantasy  ·  Slice of Life
+                            │
+                            │  ████████▍░░░░░░░░░░░  5 of 12 episodes   Up next: episode 6
+                            │
+                            │  ● Episode 6 aired 40 min ago. Your sources still don't have it. Kaeri looks again every
+                            │    15 minutes.
+                            │
+                            │
+                            │
+                            │
+                            │
+                            │
+                            │
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+plugins · Subbed · 1080p                             r check again   space play episode 5   ↵ episodes   q back   ? keys
+=== styles ===
+colours text=#e4e0d6 text-dim=#a8aec9 rule=#46464d obi=#f2a64b state=#7fc7d9 alert=#f59b85 ground=#1a1b26
+r00 c00-04 fg=text mod=BOLD
+r00 c95-103 fg=state
+r00 c104-105 fg=text-dim
+r00 c106-106 fg=rule
+r00 c107-108 fg=text-dim
+r00 c109-119 fg=state
+r01 c00-119 fg=rule
+r02 c00-00 fg=text-dim
+r02 c02-02 fg=text
+r02 c05-08 fg=text mod=BOLD
+r02 c28-28 fg=rule
+r02 c31-117 fg=rule
+r03 c02-02 fg=text-dim
+r03 c05-12 fg=text-dim
+r03 c28-28 fg=rule
+r03 c31-117 fg=rule
+r04 c02-02 fg=text-dim
+r04 c05-12 fg=text-dim
+r04 c28-28 fg=rule
+r04 c31-117 fg=rule
+r05 c02-02 fg=text-dim
+r05 c05-10 fg=text-dim
+r05 c28-28 fg=rule
+r05 c31-117 fg=rule
+r06 c02-02 fg=text-dim
+r06 c05-11 fg=text-dim
+r06 c28-28 fg=rule
+r06 c31-117 fg=rule
+r07 c02-02 fg=text-dim
+r07 c05-13 fg=text-dim
+r07 c28-28 fg=rule
+r07 c31-117 fg=rule
+r08 c02-02 fg=text-dim
+r08 c05-11 fg=text-dim
+r08 c28-28 fg=rule
+r08 c31-117 fg=rule
+r09 c02-02 fg=text-dim
+r09 c05-12 fg=text-dim
+r09 c28-28 fg=rule
+r10 c02-02 fg=text-dim
+r10 c05-12 fg=text-dim
+r10 c28-28 fg=rule
+r10 c31-52 fg=text mod=BOLD
+r11 c02-02 fg=text-dim
+r11 c05-12 fg=text-dim
+r11 c28-28 fg=rule
+r11 c31-58 fg=text-dim
+r12 c28-28 fg=rule
+r13 c28-28 fg=rule
+r13 c31-96 fg=text-dim
+r14 c28-28 fg=rule
+r14 c31-57 fg=text-dim
+r15 c28-28 fg=rule
+r16 c28-28 fg=rule
+r16 c31-115 fg=text-dim
+r17 c28-28 fg=rule
+r17 c31-104 fg=text-dim
+r18 c28-28 fg=rule
+r19 c28-28 fg=rule
+r19 c31-55 fg=text-dim
+r20 c28-28 fg=rule
+r21 c28-28 fg=rule
+r21 c31-39 fg=text
+r21 c40-50 fg=rule
+r21 c53-89 fg=text-dim
+r22 c28-28 fg=rule
+r23 c28-28 fg=rule
+r23 c31-31 fg=state
+r23 c33-39 fg=state
+r23 c41-41 fg=state
+r23 c43-47 fg=state
+r23 c49-50 fg=state
+r23 c52-54 fg=state
+r23 c56-59 fg=state
+r23 c61-64 fg=text-dim
+r23 c66-72 fg=text-dim
+r23 c74-78 fg=text-dim
+r23 c80-84 fg=text-dim
+r23 c86-89 fg=text-dim
+r23 c91-93 fg=text-dim
+r23 c95-99 fg=text-dim
+r23 c101-105 fg=text-dim
+r23 c107-111 fg=text-dim
+r23 c113-117 fg=text-dim
+r24 c28-28 fg=rule
+r24 c33-34 fg=text-dim
+r24 c36-43 fg=text-dim
+r25 c28-28 fg=rule
+r26 c28-28 fg=rule
+r27 c28-28 fg=rule
+r28 c28-28 fg=rule
+r29 c28-28 fg=rule
+r30 c28-28 fg=rule
+r31 c28-28 fg=rule
+r32 c00-119 fg=rule
+r33 c00-23 fg=text-dim
+r33 c53-53 fg=text
+r33 c54-68 fg=text-dim
+r33 c69-73 fg=text
+r33 c74-91 fg=text-dim
+r33 c92-92 fg=text
+r33 c93-104 fg=text-dim
+r33 c105-105 fg=text
+r33 c106-113 fg=text-dim
+r33 c114-114 fg=text
+r33 c115-119 fg=text-dim

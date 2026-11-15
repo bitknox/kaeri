@@ -65,3 +65,4 @@ titlebar-open-devices = Otwórz: { -device-cap-pl }
 messages-title = Komunikaty
 messages-none = Brak komunikatów
 messages-alert = Problem
+tv-on-this-network = W tej sieci

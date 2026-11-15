@@ -69,6 +69,8 @@ internal fun ScreenFrame(
      * so the bar keeps its height and nothing under it moves.
      */
     activity: String? = null,
+    /** The screen can play: the cast button stands before the account button while a TV is found. */
+    cast: Boolean = false,
     content: @Composable (PaddingValues) -> Unit,
 ) {
     val scroll = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
@@ -97,6 +99,9 @@ internal fun ScreenFrame(
                 },
                 actions = {
                     actions()
+                    if (cast) CastButton()
+                    // The private mode badge, before the avatar on the screens the bar leads to.
+                    if (onBack == null) PrivateChip()
                     AnimatedContent(
                         targetState = activity,
                         transitionSpec = {

@@ -87,6 +87,7 @@ reader-end-series = Về trang truyện
 reader-end-again = Đọc lại từ đầu
 reader-opening-chapter = Đang mở chương { $chapter }
 reader-failed-chapter = Không mở được chương { $chapter }
+reader-failed-chapter-plain = Không mở được chương này
 reader-sheet-series = Bộ truyện này
 reader-sheet-all-manga = Mọi manga
 reader-sheet-all-webtoons = Mọi webtoon

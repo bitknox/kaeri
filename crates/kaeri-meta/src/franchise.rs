@@ -419,7 +419,7 @@ fn header_of(media: &Media) -> Media {
         rankings: Vec::new(),
         characters: Default::default(),
         staff: Default::default(),
-        following: Vec::new(),
+        following: None,
         ..media.clone()
     }
 }

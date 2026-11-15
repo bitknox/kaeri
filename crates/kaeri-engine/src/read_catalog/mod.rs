@@ -25,8 +25,10 @@ pub(crate) mod volumes;
 use std::sync::{Arc, Mutex, atomic::AtomicBool};
 
 use kaeri_model::{
+    Msg,
     event::Event,
     medium::KaeriIsFor,
+    notice::Notice,
     reading::{ReadingCommand, ReadingEvent, ReadingFailure},
 };
 
@@ -175,12 +177,7 @@ pub(crate) fn command(
     let kit = &Kit::of(services);
     match command {
         ReadingCommand::LoadHome { refresh } => home::load(kit, ask, refresh, tx),
-        ReadingCommand::HideFromContinue { work } => {
-            if let Err(e) = kit.store.set_read_hidden(work.as_str(), true) {
-                tracing::warn!(error = %e, "the series was not hidden from Continue");
-            }
-            home::load(kit, ask, false, tx);
-        }
+        ReadingCommand::HideFromContinue { work } => hide_from_continue(kit, &work, tx),
         ReadingCommand::LoadUpdates => updates::load(kit, ask, tx),
         ReadingCommand::CheckUpdates => updates::check(kit, ask, tx),
         ReadingCommand::LoadLibrary { segment } => search::library(kit, ask, segment, tx),
@@ -214,6 +211,18 @@ pub(crate) fn command(
             series::header(kit, ask, &work, tx);
         }
         other => tracing::debug!(command = ?other, "not a catalogue command"),
+    }
+}
+
+/// Take a series off Continue for good. The app has already dropped the cover, and a spotlight
+/// on the same series, from the screen ([`kaeri_model::reading::read_home_without_continue`]), so
+/// Home is not sent again and nothing else on it moves, as on watching's Continue. The next Home
+/// brings a new spotlight. A failure to keep it is named, as it would come back on that Home.
+fn hide_from_continue(kit: &Kit, work: &kaeri_core::books::WorkId, tx: &Outbox) {
+    if let Err(e) = kit.store.set_read_hidden(work.as_str(), true) {
+        let _ = tx.send(Event::Toast(Notice::alert(Msg::NoticeContinueHideFailed {
+            reason: e.to_string(),
+        })));
     }
 }
 

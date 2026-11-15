@@ -13,6 +13,9 @@
     <string name="notice_cast_taken_over">Başka bir cihaz %1$s üzerinde bir şey başlattı, bu yüzden yayınlama durdu.</string>
     <string name="notice_cast_not_same_network">Bu cihaz, %1$s ile aynı ağda değil ya da ona VPN üzerinden ulaşıyor. Yayınlamak için ikisini de aynı ağa bağlayın.</string>
     <string name="notice_cast_lost">%1$s ile bağlantı koptu, bu yüzden yayınlama durdu.</string>
+    <string name="notice_cast_segment">%1$s yayını alamaz oldu: kaynak, bölümün bir kısmı için yanıt vermedi. Başka bir kaynak deneyin.</string>
+    <string name="notice_cast_lost_stream">%1$s, bu cihazdan gelen yayını kaybetti. İkisinin de aynı ağda olduğundan emin olun.</string>
+    <string name="notice_cast_subtitles_plain">%1$s üzerinde altyazılar düz metin olarak gösteriliyor. Biçimli altyazılar bu TV için fazla ağır geldi.</string>
     <string name="notice_cast_no_device">Seçilen TV artık ağda değil.</string>
     <string name="notice_cast_unavailable">Bu Kaeri sürümü TV\'lere yayınlamayı desteklemiyor.</string>
     <string name="cast_phase_starting">%1$s üzerinde başlatılıyor</string>
@@ -117,6 +120,8 @@
     <string name="status_searching_sources">Bölüm %1$s için kaynaklar aranıyor…</string>
     <string name="notice_player_failed_to_start">mpv başlatılamadı. Tek başına çalışıp çalışmadığını kontrol edin. (%1$s)</string>
     <string name="notice_stream_no_video">Bu akıştan görüntü gelmedi. Bir sonraki akış deneniyor (%1$,d/%2$,d).</string>
+    <string name="notice_failed_over">Akış kesildi. %1$s aynı yerden devraldı.</string>
+    <string name="notice_failed_over_same_source">Akış kesildi. %1$s üzerinden başka bir akış aynı yerden devraldı.</string>
     <string name="notice_player_could_not_play">mpv bunu oynatamadı. %1$s</string>
     <string name="notice_player_exited_silently">mpv bir şey oynatmadan ve neden belirtmeden kapandı. Başka bir kaynak deneyin.</string>
     <string name="notice_player_not_playing">mpv %1$,d sn geçmesine rağmen oynatmaya başlamadı. Bu kaynak veri içermiyor olabilir. mpv\'nin bir dosyayı tek başına oynatıp oynatmadığını kontrol edin.</string>
@@ -312,6 +317,7 @@
     <string name="reading_row_on_device">Bu cihazda</string>
     <string name="reading_row_queued">Sırada</string>
     <string name="reading_row_waits_wifi">Sırada · Wi-Fi bekliyor</string>
+    <string name="reading_row_waits_room">Sırada · boş alan bekliyor</string>
     <string name="reading_row_downloading">İndiriliyor · %1$,d / %2$,d sayfa</string>
     <string name="reading_row_failed">İndirilemedi</string>
     <string name="reading_row_page_of">Sayfa %1$d / %2$d</string>
@@ -368,6 +374,10 @@
     <string name="reading_dl_waits_wifi">Wi-Fi bekliyor</string>
     <string name="reading_dl_failed">Bölüm %1$s indirilemedi</string>
     <string name="reading_dl_offline">Çevrimdışı</string>
+    <plurals name="reading_dl_no_room">
+        <item quantity="one">Yer kalmadı. Boş alan açılınca indirilir.</item>
+        <item quantity="other">Yer kalmadı. Boş alan açılınca indirilirler.</item>
+    </plurals>
     <string name="reading_estimate_size">Yaklaşık %1$s</string>
     <string name="reading_estimate_wifi">Wi-Fi ile</string>
     <string name="reading_estimate_mobile">mobil veriyle</string>
@@ -541,6 +551,15 @@
     <plurals name="notice_signed_out_queue">
         <item quantity="one">Oturum kapatıldı: %1$s. Bekleyen bir değişiklik, bir sonraki oturum açmada gönderilmek üzere saklandı.</item>
         <item quantity="other">Oturum kapatıldı: %1$s. Bekleyen %2$,d değişiklik, bir sonraki oturum açmada gönderilmek üzere saklandı.</item>
+    </plurals>
+    <string name="notice_tracker_change_refused">%1$s, %2$s için bir değişikliği tekrar tekrar reddetti, bu yüzden değişiklik yalnızca Kaeri içinde kalıyor.</string>
+    <plurals name="notice_tracker_changes_refused">
+        <item quantity="one">%1$s, %2$s ve bir başlık daha için değişiklikleri tekrar tekrar reddetti, bu yüzden değişiklikler yalnızca Kaeri içinde kalıyor.</item>
+        <item quantity="other">%1$s, %2$s ve %3$,d başlık daha için değişiklikleri tekrar tekrar reddetti, bu yüzden değişiklikler yalnızca Kaeri içinde kalıyor.</item>
+    </plurals>
+    <plurals name="notice_tracker_change_refused_untitled">
+        <item quantity="one">%1$s bir değişikliği tekrar tekrar reddetti, bu yüzden değişiklik yalnızca Kaeri içinde kalıyor.</item>
+        <item quantity="other">%1$s, %2$,d başlık için değişiklikleri tekrar tekrar reddetti, bu yüzden değişiklikler yalnızca Kaeri içinde kalıyor.</item>
     </plurals>
     <string name="notice_sign_out_failed">Oturum kapatılamadı: %1$s. Yeniden deneyin. %2$s</string>
     <string name="notice_not_saved_because">Bu ayar kaydedilemedi. %1$s</string>
@@ -736,6 +755,7 @@
     <string name="reader_end_again">Baştan yeniden oku</string>
     <string name="reader_opening_chapter">Bölüm %1$s açılıyor</string>
     <string name="reader_failed_chapter">Bölüm %1$s açılamadı</string>
+    <string name="reader_failed_chapter_plain">Bu bölüm açılamadı</string>
     <string name="reader_sheet_series">Bu seri</string>
     <string name="reader_sheet_all_manga">Tüm mangalar</string>
     <string name="reader_sheet_all_webtoons">Tüm webtoonlar</string>
@@ -988,6 +1008,8 @@
     <string name="tv_discussion_select_spoiler">Spoiler\'ı göstermek için Seç</string>
     <string name="updates_unknown_sources_path">Ayarlar › Uygulamalar › Güvenlik ve kısıtlamalar › Bilinmeyen kaynaklar</string>
     <string name="tv_remote_default_name">Kaeri TV</string>
+    <string name="player_stats_show_live">Canlı istatistikleri göster</string>
+    <string name="player_stats_hide_live">Canlı istatistikleri gizle</string>
     <string name="episode_short_dubbed">E%1$d · Dublajlı</string>
     <string name="episode_long_dubbed">Bölüm %1$d · Dublajlı</string>
     <plurals name="downloads_live_paused">
@@ -1235,6 +1257,7 @@
     <string name="engine_down_title">Kaeri durdu</string>
     <string name="engine_down_stopped">Yeniden başlayana kadar yeni bir şey yüklenmez. Yeniden deneyin ya da uygulamayı kapatıp bir kez daha açın.</string>
     <string name="engine_down_quit">Kapat</string>
+    <string name="settings_picture_in_picture_system_off">Android ayarlarında kapalı</string>
     <string name="about_title">Hakkında</string>
     <string name="about_title_app">Kaeri hakkında</string>
     <string name="about_version">Versiyon %1$s</string>
@@ -1270,6 +1293,19 @@
     <string name="report_tv_scan">Raporu telefonunuzda açmak için kodu tarayın.</string>
     <string name="report_crash_off">Çökme raporları kapalı, bu yüzden hiçbiri eklenmedi. Ayarlar, Hakkında bölümünden açabilirsiniz.</string>
     <string name="report_crash_settings">Çökme raporu ayarları</string>
+    <string name="report_player_log">Oynatıcı günlüğü</string>
+    <plurals name="report_player_log_detail">
+        <item quantity="one">Son oynatma · %2$s</item>
+        <item quantity="other">Son %1$,d oynatma · %2$s</item>
+    </plurals>
+    <string name="report_player_log_empty">Henüz kaydedilmiş oynatma yok</string>
+    <string name="report_player_log_save">Günlüğü kaydet…</string>
+    <string name="report_player_log_attach">Kayıt GitHub\'da açıldığında dosyayı ekleyin.</string>
+    <string name="report_player_log_saved">%1$s olarak kaydedildi</string>
+    <string name="report_player_log_failed">Günlük kaydedilemedi. Başka bir klasör deneyin.</string>
+    <string name="report_sent_report">Rapor</string>
+    <string name="report_player_log_a11y_saved">Oynatıcı günlüğü kaydedildi</string>
+    <string name="report_player_log_a11y_hint">Kayda eklenecek bir dosya kaydeder</string>
     <string name="settings_group_crashes">Çökme raporları</string>
     <string name="settings_crash_save">Çökme raporlarını bu cihaz üzerinde sakla</string>
     <string name="settings_crash_save_detail">Kaeri, Hata bildir için her çökmenin kısa bir kaydını bu cihazda tutar; başlıklar, adresler ve adlar çıkarılır. Kendiliğinden hiçbir şey gönderilmez.</string>
@@ -1335,6 +1371,16 @@
     <string name="cast_play_here">Burada oynat</string>
     <string name="cast_stop">Yayını durdur</string>
     <string name="cast_volume_fixed">TV\'den ayarlanır</string>
+    <string name="cast_button_connecting">%1$s cihazına bağlanılıyor</string>
+    <string name="cast_button_connected">%1$s cihazına bağlı</string>
+    <string name="cast_plays_on">%1$s üzerinde oynatılır</string>
+    <string name="cast_idle">Henüz bir şey oynatılmıyor</string>
+    <string name="cast_status_paused">%1$s üzerinde duraklatıldı</string>
+    <string name="cast_open_show">%1$s aç</string>
+    <string name="cast_controller_close">Kapat</string>
+    <string name="cast_mini_opens">Kontrolleri açar</string>
+    <string name="cast_play_next_on">%1$s üzerinde sırada oynat</string>
+    <string name="cast_notification_line">%1$s cihazına yayınlanıyor</string>
     <string name="action_try_again">Yeniden dene</string>
     <string name="action_cancel">Vazgeç</string>
     <string name="action_go">Git</string>
@@ -1384,6 +1430,7 @@
     <string name="action_disable">Devre dışı bırak</string>
     <string name="action_check_now">Şimdi denetle</string>
     <string name="action_check_again">Yeniden denetle</string>
+    <string name="action_checking">Denetleniyor</string>
     <string name="action_open_settings">Ayarları aç</string>
     <string name="action_report">Bildir</string>
     <string name="action_play_now">Şimdi oynat</string>
@@ -1406,6 +1453,7 @@
     <string name="time_in">%1$s içinde</string>
     <string name="time_minutes_left">%1$,d dk kaldı</string>
     <string name="time_minutes">%1$,d dk</string>
+    <string name="time_hours">%1$,d sa</string>
     <string name="time_now_inline">şimdi</string>
     <string name="time_just_now_inline">az önce</string>
     <string name="when_today">bugün %1$s</string>
@@ -1508,6 +1556,9 @@
     <string name="player_position_spoken">%1$s / %2$s</string>
     <string name="names_pair">%1$s ve %2$s</string>
     <string name="names_list">%1$s, %2$s</string>
+    <string name="desktop_cast_quit_title">Yayın durdurulup çıkılsın mı?</string>
+    <string name="desktop_cast_quit_body">%1$s, %2$s üzerinde oynatılıyor. Çıkmak oynatmayı durdurur.</string>
+    <string name="desktop_cast_quit_action">Durdur ve çık</string>
     <string name="discussion_open">Tartışma</string>
     <string name="discussion_title_episode">Bölüm %1$d tartışması</string>
     <plurals name="discussion_row">
@@ -2839,6 +2890,7 @@
     <string name="read_search_source_kind_folder">Klasör</string>
     <string name="read_search_source_kind_plugin">Eklenti</string>
     <string name="read_search_source_more">%1$,d tane daha göster</string>
+    <string name="read_tile_add_to">%1$s listesine ekle</string>
     <string name="onboarding_step">%1$,d / %2$,d</string>
     <string name="onboarding_welcome_line">Kendi kaynaklarınızdan izlediklerinizi ve okuduklarınızı takip edin.</string>
     <string name="onboarding_welcome_note">Listeleriniz ve ilerlemeniz cihazlarınızda kalır. Takip hizmetleri ve kaynaklar eklemek size kalmış.</string>
@@ -3314,6 +3366,12 @@
     <string name="settings_quality">Kalite</string>
     <string name="settings_auto_play">Sonrakini otomatik oynat</string>
     <string name="settings_up_next_countdown">Sıradaki geri sayımı</string>
+    <string name="settings_preload_cellular">Mobil veride videoyu önceden yükle</string>
+    <string name="settings_preload_metered">Tarifeli bağlantılarda videoyu önceden yükle</string>
+    <string name="settings_preload_detail_android">Bitiş sırasında sonraki bölümün yayını, altyazıları ve atlama zamanları bulunur. İlk saniyeleri de yüklenir; mobil veride ya da tarifeli Wi-Fi\'da yalnızca bu açıkken.</string>
+    <string name="settings_preload_detail_metered">Bitiş sırasında sonraki bölümün yayını, altyazıları ve atlama zamanları bulunur. İlk saniyeleri de yüklenir; tarifeli bir bağlantıda yalnızca bu açıkken.</string>
+    <string name="settings_preload_torrents">Torrentler ilk parçalarını aynı şekilde yükler.</string>
+    <string name="settings_preload_a11y_dimmed">\"Sonrakini otomatik oynat\" gerekli</string>
     <string name="settings_skip_opening">Açılışı otomatik atla</string>
     <string name="settings_skip_recap">Özetleri otomatik atla</string>
     <string name="settings_find_skips">Atlama zamanlarını sesten bul</string>
@@ -3498,6 +3556,9 @@
     <string name="settings_opds_feed">Bu ağda paylaş</string>
     <string name="settings_opds_password">Akış parolası</string>
     <string name="settings_opds_port">Akış portu</string>
+    <string name="settings_label_picture_in_picture_on_leave">Uygulamadan çıkarken pencere içinde pencere</string>
+    <string name="settings_anilist_following">Takip ettiklerini göster</string>
+    <string name="settings_anilist_following_footer">AniList\'te takip ettiğin kişilerin bir dizide nerede olduğunu, dizinin sayfasında ve bölümlerinde gösterir. Kendi listeni kimlerin görebileceği AniList\'te ayarlanır.</string>
     <string name="book_server_address">Adres</string>
     <string name="book_server_address_hint">Bir adres veya Kavita’daki OPDS bağlantısının tamamı.</string>
     <string name="book_server_kavita_key">Bu bir Kavita OPDS bağlantısı. Anahtarı oturum açmayı sağlar, bu yüzden parola gerekmez.</string>
@@ -3605,6 +3666,18 @@
     <plurals name="source_picker_coverage">
         <item quantity="one">%1$,d / %2$,d bölüm</item>
         <item quantity="other">%1$,d / %2$,d bölüm</item>
+    </plurals>
+    <plurals name="source_picker_episodes">
+        <item quantity="one">Bölüm %2$d</item>
+        <item quantity="other">Bölüm %2$d-%3$d</item>
+    </plurals>
+    <string name="source_picker_episodes_not_yet">Bölüm %1$d-%2$d. %3$s henüz yok</string>
+    <string name="source_picker_episodes_not">Bölüm %1$d-%2$d. %3$s yok</string>
+    <string name="source_picker_missing_pair">%1$d ve %2$d</string>
+    <string name="source_picker_missing_range">%1$d-%2$d</string>
+    <plurals name="source_picker_coverage_missing">
+        <item quantity="one">%1$,d / %2$,d bölüm. %3$s yok</item>
+        <item quantity="other">%1$,d / %2$,d bölüm. %3$s yok</item>
     </plurals>
     <string name="source_note_off">Kapalı</string>
     <string name="source_note_resting">Yanıt vermiyor, yakında yeniden denenecek</string>
@@ -4233,6 +4306,16 @@
     <string name="more_following_note">AniList\'ten</string>
     <string name="more_followed_score">%1$,d/10</string>
     <string name="more_like_this">Buna benzer</string>
+    <string name="following_show_all">%1$,d kişinin tümünü göster</string>
+    <plurals name="following_names">
+        <item quantity="one">%1$s, %2$s ve %3$,d kişi daha</item>
+        <item quantity="other">%1$s, %2$s ve %3$,d kişi daha</item>
+    </plurals>
+    <string name="following_names_two">%1$s ve %2$s</string>
+    <string name="following_mark_more">+%1$,d</string>
+    <string name="following_mark_spoken">%1$s buraya kadar izledi.</string>
+    <string name="following_score_spoken">Puan %1$,d/10</string>
+    <string name="following_open_help">Her birinin nerede olduğunu gösterir.</string>
     <string name="more_followed_progress">%1$s · %2$s</string>
     <string name="more_empty">AniList bu dizi için henüz kadro, ekip ya da öneri içermiyor.</string>
     <string name="more_spoiler">Spoiler</string>
@@ -4251,7 +4334,6 @@
     <string name="title_fact_after">%1$d. bölümden sonra</string>
     <string name="title_fact_now">Şimdi</string>
     <string name="title_fact_tba">Açıklanacak</string>
-    <string name="more_following_line">%1$s · %2$,d/10</string>
     <string name="episode_go_to">Bölüme git…</string>
     <string name="episode_go_to_title">Bölüme git</string>
     <string name="episode_go_to_go">Git</string>
@@ -4259,6 +4341,18 @@
     <string name="episode_go_to_label">Bölüm, %1$d - %2$d</string>
     <string name="episode_go_to_none">%1$d. bölüm yok. Bu dizide %2$d bölüm var.</string>
     <string name="episode_go_to_not_out">%1$d. bölüm henüz çıkmadı. En son bölüm %2$d.</string>
+    <string name="episode_missing_aired">Bölüm %1$d %2$s yayınlandı.</string>
+    <string name="episode_missing_aired_on">Bölüm %1$d %2$s tarihinde yayınlandı.</string>
+    <string name="episode_missing_not_yet">Kaynaklarınızda henüz yok.</string>
+    <string name="episode_missing_still">Kaynaklarınızda hâlâ yok.</string>
+    <string name="episode_missing_no_answer">Kaynaklarınız yanıt vermedi.</string>
+    <string name="episode_missing_looks_again">Kaeri her %1$,d dakikada bir yeniden bakıyor.</string>
+    <string name="episode_missing_none">Kaynaklarınızın hiçbirinde yok.</string>
+    <string name="episode_missing_offline">Kaeri, yeniden çevrimiçi olduğunuzda bakacak.</string>
+    <string name="episode_row_aired_ago">%1$s yayınlandı</string>
+    <string name="episode_unsourced_yet">Henüz kaynaklarınızda yok</string>
+    <string name="episode_found_announcement">Bölüm %1$d artık kaynaklarınızda.</string>
+    <string name="episode_check_again_help">Kaeri, bir bölüm yayınlandıktan sonra %2$,d saat boyunca her %1$,d dakikada bir kendisi de bakar.</string>
     <string name="torrents_title">Torrentler</string>
     <string name="torrents_on">Torrentler açık</string>
     <string name="torrents_off_detail">Varsayılan olarak kapalı. Bir proxy üzerinden yönlendirmediğiniz sürece torrent\'ler doğrudan bağlanır.</string>

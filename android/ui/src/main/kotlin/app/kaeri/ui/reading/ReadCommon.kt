@@ -30,6 +30,7 @@ import androidx.compose.material3.SegmentedButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -72,13 +73,18 @@ import app.kaeri.store.ReadingModel
 import app.kaeri.store.Wording
 import app.kaeri.store.text
 import app.kaeri.ui.ArtworkImage
+import app.kaeri.ui.Destination
 import app.kaeri.ui.Icons
+import app.kaeri.ui.LocalAppStore
 import app.kaeri.ui.LocalNavigator
+import app.kaeri.ui.LocalSnackbars
+import app.kaeri.ui.Navigator
 import app.kaeri.ui.Shared
 import app.kaeri.ui.SilkMeter
 import app.kaeri.ui.WaterDot
 import app.kaeri.ui.pixels
 import app.kaeri.ui.sharedWork
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import java.time.Instant
 import java.time.format.DateTimeFormatter
 
@@ -151,8 +157,8 @@ internal fun ReadTile(
     onLongClick: (() -> Unit)? = null,
     /** Keeps [lines] lines under the title even when the line is shorter, so tiles in a row line up. */
     reserveLine: Boolean = false,
-    /** Offers Add to Planning as a screen reader's custom action, as discovery's covers do. */
-    planning: Boolean = false,
+    /** The long-press menu's items as a screen reader's custom actions, from [readTileActions]. */
+    actions: List<CustomAccessibilityAction> = emptyList(),
     /** A third line in silk under the facts: "In Home library" on a joined search result. */
     extra: String? = null,
     /** The line under the title in place of the tile's own: Search's "Manga · Japan", a hit's "2 volumes". */
@@ -165,8 +171,6 @@ internal fun ReadTile(
     titleMax: Int? = null,
 ) {
     val navigator = LocalNavigator.current
-    val store = app.kaeri.ui.LocalAppStore.current
-    val planningWord = Strings.readTileAddPlanning(context = LocalContext.current)
     val context = LocalContext.current
     val haptics = LocalHapticFeedback.current
     val colors = MaterialTheme.colorScheme
@@ -182,14 +186,7 @@ internal fun ReadTile(
             contentDescription = said
             // The water dot is colour alone; the state says it too.
             if (tile.newChapter) stateDescription = newWord
-            if (planning) {
-                customActions = listOf(
-                    CustomAccessibilityAction(planningWord) {
-                        store.reading.setStatus(tile.work, LibrarySegmentRead.PLANNING)
-                        true
-                    },
-                )
-            }
+            if (actions.isNotEmpty()) customActions = actions
         }
         .combinedClickable(
             onClickLabel = stringResource(R.string.title_open),
@@ -608,6 +605,15 @@ internal object ReadPlaces {
         libraryReading = true
     }
 
+    /**
+     * Switch to Library at [segment], at its start: a series page left open on Library last time
+     * is closed, so the list shows.
+     */
+    fun openList(navigator: Navigator, segment: LibrarySegmentRead) {
+        showList(segment)
+        navigator.goToStart(Destination.Library)
+    }
+
     /** Search on reading's side, running [query]. */
     fun search(reading: ReadingModel, query: ReadSearchQuery) {
         searchReading = true
@@ -635,6 +641,26 @@ internal fun ScopeControl(reading: Boolean, modifier: Modifier = Modifier, onCha
                 shape = androidx.compose.material3.SegmentedButtonDefaults.itemShape(index, choices.size),
                 label = { Text(words, maxLines = 1) },
             )
+        }
+    }
+}
+
+/**
+ * [ReadTileMenu]'s items as a screen reader's custom actions: Details, then "Add to Completed"
+ * for each list but [current]. Actions have no submenus, so each list is an action of its own.
+ */
+@Composable
+internal fun readTileActions(tile: WorkTile, current: LibrarySegmentRead?, lists: Boolean = true): List<CustomAccessibilityAction> {
+    val store = app.kaeri.ui.LocalAppStore.current
+    val context = LocalContext.current
+    val navigator = LocalNavigator.current
+    return buildList {
+        add(CustomAccessibilityAction(Strings.homeDetails(context)) { navigator.openSeries(tile.work, "read-menu"); true })
+        if (lists) {
+            for (list in READ_STATUSES) {
+                if (list == current) continue
+                add(CustomAccessibilityAction(Strings.readTileAddTo(context, listWords(context, list))) { store.reading.setStatus(tile.work, list); true })
+            }
         }
     }
 }
@@ -670,5 +696,24 @@ internal fun ReadTileMenu(tile: WorkTile, expanded: Boolean, current: LibrarySeg
                 },
             )
         }
+    }
+}
+
+/**
+ * A download asked for anywhere that could not start, such as when the source fails and no chapter
+ * list is kept, says so with Try again, rather than leave the ask looking queued.
+ */
+@Composable
+internal fun DownloadNotStartedNotice() {
+    val store = LocalAppStore.current
+    val snackbars = LocalSnackbars.current
+    val context = LocalContext.current
+    val notStarted by store.reading.notStarted.collectAsStateWithLifecycle()
+    val (work, said) = notStarted.entries.firstOrNull() ?: return
+    LaunchedEffect(work, said) {
+        snackbars.show(Strings.downloadNotStarted(context, failureWords(context, said.failure)), Strings.actionTryAgain(context)) {
+            store.reading.download(work, said.pick)
+        }
+        store.reading.notStartedSeen(work)
     }
 }

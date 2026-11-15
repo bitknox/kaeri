@@ -126,3 +126,6 @@ settings-trailers-row = Reproducir tráilers
 settings-trailers-note-apple = Los tráilers se reproducen sin sonido desde YouTube, que ve tu dirección IP. No se reproducen en Modo de datos bajos, con Reducir movimiento activado ni en Modo de bajo consumo.
 language-restart = Reiniciar
 language-next-open-note = { -app-name } usará el nuevo idioma la próxima vez que se abra.
+settings-picture-in-picture-on-leave-apple = Imagen dentro de imagen al salir de la app
+settings-picture-in-picture-on-leave-mac = Se inicia al minimizar la ventana o al ocultar { -app-name }.
+settings-picture-in-picture-on-leave-ios = También necesita Iniciar PiP automáticamente en Configuración > General > Imagen dentro de imagen.

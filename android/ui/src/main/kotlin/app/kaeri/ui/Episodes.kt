@@ -152,12 +152,16 @@ internal fun EpisodeLine(
     }
     val optionsLabel = stringResource(R.string.episode_options)
     val playLabel = stringResource(R.string.action_play)
+    // Lifted to full strength when a source lists it, on the reveal token.
+    val strength by androidx.compose.animation.core.animateFloatAsState(if (row.unsourced) UNSOURCED_ALPHA else 1f, Motion.reveal(), label = "sourced") // i18n-skip
+    // An aired one no source lists says how long ago it aired, turned on the minute.
+    val missing = if (row.unsourced && !unaired) app.kaeri.store.MissingWords.unsourcedLine(context, row.airsAt, rememberMinute()) else null
     Row(
         Modifier
             .fillMaxWidth()
             .heightIn(min = 72.dp)
             // One no source lists is dimmed whole and plays nothing.
-            .graphicsLayer { alpha = if (row.unsourced) UNSOURCED_ALPHA else 1f }
+            .graphicsLayer { alpha = strength }
             // One still to air is no button: nothing plays from it.
             .then(
                 if (unaired) {
@@ -222,7 +226,7 @@ internal fun EpisodeLine(
                 if (unaired) Box(Modifier.size(6.dp).background(colors.secondary, androidx.compose.foundation.shape.CircleShape))
                 Text(
                     if (unaired) episodeLineDetail(context, row, airs?.let { Strings.episodeRowAirs(context, it) } ?: Strings.episodeRowNotOut(context))
-                    else if (row.unsourced) episodeLineDetail(context, row, Strings.episodeUnsourced(context))
+                    else if (row.unsourced) episodeLineDetail(context, row, missing ?: Strings.episodeUnsourced(context))
                     else episodeDetail(context, row, resume = resume.takeIf { !row.completed }),
                     style = MaterialTheme.typography.bodyMedium.tabular(),
                     color = colors.onSurfaceVariant,

@@ -33,6 +33,21 @@ report-privacy = Dopóki nie otworzysz zgłoszenia na GitHubie, nic nie wychodzi
 report-tv-scan = Zeskanuj kod, aby otworzyć zgłoszenie na telefonie.
 report-crash-off = Raporty awarii są wyłączone, więc żaden nie jest dołączony. Możesz je włączyć w Ustawieniach, w sekcji O aplikacji.
 report-crash-settings = Ustawienia raportów awarii
+report-player-log = Dziennik odtwarzacza
+report-player-log-detail = { $playbacks ->
+    [one] Ostatnie odtworzenie · { $size }
+    [few] Ostatnie { $playbacks } odtworzenia · { $size }
+    [many] Ostatnie { $playbacks } odtworzeń · { $size }
+   *[other] Ostatnie { $playbacks } odtworzenia · { $size }
+ }
+report-player-log-empty = Nie zapisano jeszcze żadnego odtworzenia
+report-player-log-save = Zapisz dziennik…
+report-player-log-attach = Dołącz plik do zgłoszenia, gdy otworzy się na GitHubie.
+report-player-log-saved = Zapisano jako { $file }
+report-player-log-failed = Nie udało się zapisać dziennika. Wybierz inny folder.
+report-sent-report = Zgłoszenie
+report-player-log-a11y-saved = Dziennik odtwarzacza zapisany
+report-player-log-a11y-hint = Zapisuje plik do dołączenia do zgłoszenia
 settings-group-crashes = Raporty awarii
 settings-crash-save = Zapisuj raporty awarii lokalnie
 settings-crash-save-detail = { -app-name } zachowuje na tym urządzeniu krótki zapis każdej awarii do zgłoszenia błędu, bez tytułów, adresów i nazw. Nic nie jest wysyłane samo.

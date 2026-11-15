@@ -1,5 +1,5 @@
-# Reading's Home and Search in the terminal, drawn as text. The terminal has no reader: a
-# series found here opens in the apps.
+# Reading's Home and Search in the terminal, drawn as text. A series found here opens on its
+# page, and its chapters in the terminal's reader.
 
 ## Search
 
@@ -57,11 +57,6 @@ tui-read-source-offline = { $source } needs a connection.
 # @arg last: text
 # @only tui
 tui-read-names-and = { $names } and { $last }
-
-# Toast after Enter on a series in reading's Home or Search. The terminal has no reader.
-# @max 40
-# @only tui
-tui-read-opens-in-apps = Opens in the { -app-name } apps.
 
 # On reading's Home when no book source is set up. The terminal cannot add one; the apps can.
 # @only tui

@@ -62,6 +62,11 @@ struct WatchedFoldRow: View {
     /// The title's dub line, where the page has no Episodes header to carry it: on this row's own
     /// line, so its arrival moves nothing.
     var dub: String?
+    /// The marks of the folded rows, in the column the rows keep for theirs; nil when the table
+    /// has none. Open, the rows carry their own.
+    var marks: [FollowedMark]? = nil
+    /// How far the rows' marks column stands from their trailing edge.
+    var marksTrailing: CGFloat = 0
     let toggle: () -> Void
 
     var body: some View {
@@ -78,6 +83,10 @@ struct WatchedFoldRow: View {
                         .padding(.trailing, 16)
                         .transition(.opacity.animation(.fadeIn))
                 }
+                if let marks {
+                    FollowedMarks(marks: shown ? [] : marks)
+                        .padding(.trailing, marksTrailing)
+                }
             }
             .animation(.fadeIn, value: dub)
             .font(phone ? .ui(15) : .mac(13))
@@ -89,7 +98,7 @@ struct WatchedFoldRow: View {
         }
         .buttonStyle(.plain)
         .pointerHover()
-        .accessibilityValue(shown ? L.stateExpanded : L.stateCollapsed)
+        .accessibilityValue(([shown ? L.stateExpanded : L.stateCollapsed] + (shown ? [] : FollowWords.marked(marks ?? []).map { [$0] } ?? [])).joined(separator: ", "))
     }
 }
 
@@ -101,6 +110,8 @@ struct WatchedFoldSection<Rows: View>: View {
     let shown: Bool
     let phone: Bool
     var dub: String?
+    var marks: [FollowedMark]? = nil
+    var marksTrailing: CGFloat = 0
     let toggle: () -> Void
     @ViewBuilder let rows: () -> Rows
     /// Set by a tap, so only the change it makes moves the page: not the rows' own changes, nor
@@ -116,7 +127,7 @@ struct WatchedFoldSection<Rows: View>: View {
             armed = false
             nudge?.by(new - old)
         }
-        WatchedFoldRow(fold: fold, shown: shown, phone: phone, dub: dub) {
+        WatchedFoldRow(fold: fold, shown: shown, phone: phone, dub: dub, marks: marks, marksTrailing: marksTrailing) {
             armed = true
             toggle()
         }

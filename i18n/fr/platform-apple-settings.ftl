@@ -126,3 +126,6 @@ settings-trailers-row = Lire les bandes-annonces
 settings-trailers-note-apple = Les bandes-annonces sont lues en sourdine depuis YouTube, qui voit votre adresse IP. Elles ne se lisent pas en mode Données réduites, avec Réduire les animations activé, ni en mode Faible consommation.
 language-restart = Redémarrer
 language-next-open-note = { -app-name } utilisera la nouvelle langue à sa prochaine ouverture.
+settings-picture-in-picture-on-leave-apple = Image dans l'image en quittant l'app
+settings-picture-in-picture-on-leave-mac = Démarre quand la fenêtre est réduite ou que { -app-name } est masqué.
+settings-picture-in-picture-on-leave-ios = Nécessite aussi Démarrer PiP automatiquement dans Réglages > Général > Image dans l'image.

@@ -48,6 +48,15 @@ public static partial class T
     /// <summary>The TV stopped answering mid-cast. The name is the TV's own.</summary>
     public static string NoticeCastLost(string name) => Fill(Get("NoticeCastLost"), ("name", name));
 
+    /// <summary>Kaeri's receiver on the TV couldn't get part of the episode from the source mid-play, so the cast stopped. The card offers Choose source and Play here. The name is the TV's own.</summary>
+    public static string NoticeCastSegment(string name) => Fill(Get("NoticeCastSegment"), ("name", name));
+
+    /// <summary>The TV stopped reaching this device, which hands it the stream, mid-episode. The card offers Try again and Play here. The name is the TV's own.</summary>
+    public static string NoticeCastLostStream(string name) => Fill(Get("NoticeCastLostStream"), ("name", name));
+
+    /// <summary>Shown once per TV, the first time it can't keep up with styled subtitles and switches to plain ones. Nothing else changes and the episode plays on. The name is the TV's own.</summary>
+    public static string NoticeCastSubtitlesPlain(string name) => Fill(Get("NoticeCastSubtitlesPlain"), ("name", name));
+
     /// <summary>The TV picked to cast to has left the network.</summary>
     public static string NoticeCastNoDevice => Get("NoticeCastNoDevice");
 
@@ -332,6 +341,12 @@ public static partial class T
 
     /// <summary>Toast when a stream never showed a frame and the next one is tried.</summary>
     public static string NoticeStreamNoVideo(long next, long total) => Fill(Get("NoticeStreamNoVideo"), ("next", next.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)), ("total", total.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>Quiet toast in the player when the stream playing broke off with an error mid-episode and a stream from another source took over at the same second, with the same audio and subtitles. The source is its own name.</summary>
+    public static string NoticeFailedOver(string source) => Fill(Get("NoticeFailedOver"), ("source", source));
+
+    /// <summary>Quiet toast in the player when the stream playing broke off with an error mid-episode and another stream from the same source took over at the same second, with the same audio and subtitles. The source is its own name.</summary>
+    public static string NoticeFailedOverSameSource(string source) => Fill(Get("NoticeFailedOverSameSource"), ("source", source));
 
     /// <summary>Toast when mpv gave up on a file. The reason is mpv's own line.</summary>
     public static string NoticePlayerCouldNotPlay(string reason) => Fill(Get("NoticePlayerCouldNotPlay"), ("reason", reason));
@@ -867,6 +882,9 @@ public static partial class T
     /// <summary>A chapter row's state: it waits to download until the device is on Wi-Fi.</summary>
     public static string ReadingRowWaitsWifi => Get("ReadingRowWaitsWifi");
 
+    /// <summary>A chapter row's state: it waits to download until the device has free space again. A full device paused the downloads; they go on by themselves once there is room.</summary>
+    public static string ReadingRowWaitsRoom => Get("ReadingRowWaitsRoom");
+
     /// <summary>A chapter row's state while it downloads.</summary>
     public static string ReadingRowDownloading(long done, long total) => Fill(Get("ReadingRowDownloading"), ("done", done.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)), ("total", total.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
@@ -1004,6 +1022,9 @@ public static partial class T
 
     /// <summary>After "Chapter 2 couldn't download" when there was no network: the downloads banner says the rest.</summary>
     public static string ReadingDlOffline => Get("ReadingDlOffline");
+
+    /// <summary>After "3 queued" on a series' Downloads row when a full device paused the downloads. They go on by themselves once some space is free; the count is the queued chapters.</summary>
+    public static string ReadingDlNoRoom(long count) => Fill(GetPlural("ReadingDlNoRoom", count), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>How much the chosen chapters will take, from their pages and the size of pages downloaded before.</summary>
     public static string ReadingEstimateSize(string size) => Fill(Get("ReadingEstimateSize"), ("size", size));
@@ -1473,7 +1494,7 @@ public static partial class T
     /// <summary>Toast after signing out of a tracker. The changes were not discarded: they are sent after the next sign-in.</summary>
     public static string NoticeSignedOutQueue(string tracker, long count) => Fill(GetPlural("NoticeSignedOutQueue", count), ("tracker", tracker), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
-    /// <summary>Toast, shown once, when a tracker kept refusing a change to a title for about two days and the change stopped being sent. The change itself is still saved in the app. The tracker is its name, such as AniList; the title is a show's or a series' name.</summary>
+    /// <summary>Toast, shown once, when a tracker kept refusing a change to a title for about two days and the change stopped being sent. The change itself is still saved in the app. The tracker is its name, such as AniList; the title is a show's or a series' name. The notice capsule holds two lines on a phone, so keep it about as short as the English.</summary>
     public static string NoticeTrackerChangeRefused(string tracker, string title) => Fill(Get("NoticeTrackerChangeRefused"), ("tracker", tracker), ("title", title));
 
     /// <summary>The same toast when changes to several titles stopped being sent to one tracker at once. The title is the first of them; others is how many more titles there are.</summary>
@@ -2442,6 +2463,9 @@ public static partial class T
     /// <summary>Name of the dot before a notice that was an alert, for Narrator.</summary>
     public static string MessagesAlert => Get("MessagesAlert");
 
+    /// <summary>The heading over the TVs running Kaeri in the title bar's Play on TV menu, under the TVs with Chromecast built in.</summary>
+    public static string TvOnThisNetwork => Get("TvOnThisNetwork");
+
     /// <summary>Under the TV picker's title: the episode about to play on the TV, with its show's title.</summary>
     public static string TvPickerEpisodeOf(string title, string episode) => Fill(Get("TvPickerEpisodeOf"), ("title", title), ("episode", episode));
 
@@ -2697,6 +2721,36 @@ public static partial class T
     /// <summary>Link from that line to the crash report settings.</summary>
     public static string ReportCrashSettings => Get("ReportCrashSettings");
 
+    /// <summary>Report item, the last row under Included: a file of what the player did in the last few playbacks, saved by hand and attached to the issue. Also the name of the second tab in the report's preview, beside Report.</summary>
+    public static string ReportPlayerLog => Get("ReportPlayerLog");
+
+    /// <summary>Line under the Player log item: how many playbacks the log holds and the size of the file. The size is already formatted, such as 412 KB.</summary>
+    public static string ReportPlayerLogDetail(long playbacks, string size) => Fill(GetPlural("ReportPlayerLogDetail", playbacks), ("playbacks", playbacks.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)), ("size", size));
+
+    /// <summary>Line under the Player log item while nothing has played since the app started. The item cannot be ticked then.</summary>
+    public static string ReportPlayerLogEmpty => Get("ReportPlayerLogEmpty");
+
+    /// <summary>Button under the ticked Player log item. Opens the system's save dialog for the log file.</summary>
+    public static string ReportPlayerLogSave => Get("ReportPlayerLogSave");
+
+    /// <summary>Line under the Save log button: the file is not sent by itself, the person attaches it on GitHub.</summary>
+    public static string ReportPlayerLogAttach => Get("ReportPlayerLogAttach");
+
+    /// <summary>Replaces the Save log button once the file is written. File is the file's name, such as kaeri-player-log-2026-11-15-1432.txt.</summary>
+    public static string ReportPlayerLogSaved(string file) => Fill(Get("ReportPlayerLogSaved"), ("file", file));
+
+    /// <summary>Shown beside the Save log button when the file could not be written.</summary>
+    public static string ReportPlayerLogFailed => Get("ReportPlayerLogFailed");
+
+    /// <summary>First tab of the report's preview, beside Player log: the text of the report itself. Shown only while Player log is ticked.</summary>
+    public static string ReportSentReport => Get("ReportSentReport");
+
+    /// <summary>Screen readers announce this once the player log file is written.</summary>
+    public static string ReportPlayerLogA11ySaved => Get("ReportPlayerLogA11ySaved");
+
+    /// <summary>Screen reader hint on the Player log item.</summary>
+    public static string ReportPlayerLogA11yHint => Get("ReportPlayerLogA11yHint");
+
     /// <summary>Heading of the Crash reports group in Settings, About.</summary>
     public static string SettingsGroupCrashes => Get("SettingsGroupCrashes");
 
@@ -2892,6 +2946,36 @@ public static partial class T
     /// <summary>Line under TV volume on the card, for a TV whose volume only its own remote sets.</summary>
     public static string CastVolumeFixed => Get("CastVolumeFixed");
 
+    /// <summary>The cast button's spoken label while it connects to a TV. The name is the TV's.</summary>
+    public static string CastButtonConnecting(string name) => Fill(Get("CastButtonConnecting"), ("name", name));
+
+    /// <summary>The cast button's spoken label once a TV is connected, and the title of the dialog it opens. The name is the TV's.</summary>
+    public static string CastButtonConnected(string name) => Fill(Get("CastButtonConnected"), ("name", name));
+
+    /// <summary>Line on a title page under its buttons while a TV is connected: what is played goes to it. The name is the TV's.</summary>
+    public static string CastPlaysOn(string name) => Fill(Get("CastPlaysOn"), ("name", name));
+
+    /// <summary>Row in the connected dialog while the TV has nothing loaded.</summary>
+    public static string CastIdle => Get("CastIdle");
+
+    /// <summary>The casting controller's line while the episode is paused on the TV. The name is the TV's.</summary>
+    public static string CastStatusPaused(string name) => Fill(Get("CastStatusPaused"), ("name", name));
+
+    /// <summary>Spoken label of the show's name in the casting controller: it opens the show's page.</summary>
+    public static string CastOpenShow(string title) => Fill(Get("CastOpenShow"), ("title", title));
+
+    /// <summary>The chevron that puts the full controller back into the mini player.</summary>
+    public static string CastControllerClose => Get("CastControllerClose");
+
+    /// <summary>Screen reader hint on the mini player over the navigation bar.</summary>
+    public static string CastMiniOpens => Get("CastMiniOpens");
+
+    /// <summary>Long-press menu of an episode while a TV plays: queues the episode after the one playing.</summary>
+    public static string CastPlayNextOn(string name) => Fill(Get("CastPlayNextOn"), ("name", name));
+
+    /// <summary>The system's media notification and Now Playing: the line naming the TV that plays.</summary>
+    public static string CastNotificationLine(string name) => Fill(Get("CastNotificationLine"), ("name", name));
+
     /// <summary>Button that runs a failed action again.</summary>
     public static string ActionTryAgain => Get("ActionTryAgain");
 
@@ -3039,6 +3123,9 @@ public static partial class T
     /// <summary>Button that checks a { -source } again after it did not answer.</summary>
     public static string ActionCheckAgain => Get("ActionCheckAgain");
 
+    /// <summary>Check again while the check runs. Keep it about as short as "Check again": the button keeps its width.</summary>
+    public static string ActionChecking => Get("ActionChecking");
+
     /// <summary>Button that opens the system's own settings for the app.</summary>
     public static string ActionOpenSettings => Get("ActionOpenSettings");
 
@@ -3104,6 +3191,9 @@ public static partial class T
 
     /// <summary>A length in minutes, for an episode.</summary>
     public static string TimeMinutes(long minutes) => Fill(Get("TimeMinutes"), ("minutes", minutes.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>A length in hours, inside time-ago.</summary>
+    public static string TimeHours(long hours) => Fill(Get("TimeHours"), ("hours", hours.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>A countdown that has run out: the thing is happening now. Lower case, as it stands inside a line.</summary>
     public static string TimeNowInline => Get("TimeNowInline");
@@ -3392,6 +3482,18 @@ public static partial class T
 
     /// <summary>A list of names up to the last two, joined one by one: "Alpha, Brook".</summary>
     public static string NamesList(string list, string next) => Fill(Get("NamesList"), ("list", list), ("next", next));
+
+    /// <summary>Line under a TV with Chromecast built in, in the Play on TV list: this computer serves the episode to it while it plays.</summary>
+    public static string CastRowThroughComputer => Get("CastRowThroughComputer");
+
+    /// <summary>Title of the question asked on quitting while an episode plays on a TV.</summary>
+    public static string DesktopCastQuitTitle => Get("DesktopCastQuitTitle");
+
+    /// <summary>Body of the question asked on quitting while an episode plays on a TV. The title is the show's, the name is the TV's.</summary>
+    public static string DesktopCastQuitBody(string title, string name) => Fill(Get("DesktopCastQuitBody"), ("title", title), ("name", name));
+
+    /// <summary>Button of the question asked on quitting while casting: stops the cast and quits.</summary>
+    public static string DesktopCastQuitAction => Get("DesktopCastQuitAction");
 
     /// <summary>Menu item that opens an episode's discussion.</summary>
     public static string DiscussionOpen => Get("DiscussionOpen");
@@ -7352,6 +7454,9 @@ public static partial class T
     /// <summary>Screen readers: the custom action on a discovery cover that puts the series on Planning.</summary>
     public static string ReadTileAddPlanning => Get("ReadTileAddPlanning");
 
+    /// <summary>Screen readers: a custom action on a reading cover that puts the series on one of the lists, one action for each list the cover's menu offers under Add to list. The list is its name as the menu shows it, such as "Completed".</summary>
+    public static string ReadTileAddTo(string list) => Fill(Get("ReadTileAddTo"), ("list", list));
+
     /// <summary>Said once by screen readers when Your sources only turns on.</summary>
     public static string ReadSearchAnilistHidden => Get("ReadSearchAnilistHidden");
 
@@ -8651,6 +8756,21 @@ public static partial class T
     /// <summary>Row: length of the Up next countdown.</summary>
     public static string SettingsUpNextCountdown => Get("SettingsUpNextCountdown");
 
+    /// <summary>Row under Up next countdown on iPhone, a cellular iPad and Android phones: whether the next episode's first seconds of video load during the ending while on mobile data. Off by default.</summary>
+    public static string SettingsPreloadCellular => Get("SettingsPreloadCellular");
+
+    /// <summary>The same row on Windows and Linux.</summary>
+    public static string SettingsPreloadMetered => Get("SettingsPreloadMetered");
+
+    /// <summary>Line under the row on Windows and Linux, and the note under the terminal's settings list.</summary>
+    public static string SettingsPreloadDetailMetered => Get("SettingsPreloadDetailMetered");
+
+    /// <summary>Sentence added after the line under the row while torrent playback is on.</summary>
+    public static string SettingsPreloadTorrents => Get("SettingsPreloadTorrents");
+
+    /// <summary>Screen reader hint on the preload row while it is dimmed because Auto-play next is off. The terminal shows it at the start of the note.</summary>
+    public static string SettingsPreloadA11yDimmed => Get("SettingsPreloadA11yDimmed");
+
     /// <summary>Row: skip the opening.</summary>
     public static string SettingsSkipOpening => Get("SettingsSkipOpening");
 
@@ -9191,6 +9311,15 @@ public static partial class T
     /// <summary>Row: the port the shared catalogue listens on. Empty picks a free one.</summary>
     public static string SettingsOpdsPort => Get("SettingsOpdsPort");
 
+    /// <summary>Settings row: whether leaving the app while an episode plays opens the system's floating window. The engine's label, and the Android row's. Sentence case, as Android writes it.</summary>
+    public static string SettingsLabelPictureInPictureOnLeave => Get("SettingsLabelPictureInPictureOnLeave");
+
+    /// <summary>Switch under the AniList account, on by default, for this device only: whether title pages show the people followed on AniList.</summary>
+    public static string SettingsAnilistFollowing => Get("SettingsAnilistFollowing");
+
+    /// <summary>Note under that switch.</summary>
+    public static string SettingsAnilistFollowingFooter => Get("SettingsAnilistFollowingFooter");
+
     /// <summary>Label of the address field in the Add a server sheet.</summary>
     public static string BookServerAddress => Get("BookServerAddress");
 
@@ -9409,6 +9538,24 @@ public static partial class T
 
     /// <summary>Under a source: how many of the title's released episodes it lists.</summary>
     public static string SourcePickerCoverage(long covered, long of) => Fill(GetPlural("SourcePickerCoverage", of), ("covered", covered.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)), ("of", of.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>Under a source that lists every episode that is out.</summary>
+    public static string SourcePickerEpisodes(long count, long first, long last) => Fill(GetPlural("SourcePickerEpisodes", count), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)), ("first", first.ToString(System.Globalization.CultureInfo.CurrentCulture)), ("last", last.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>Under a source that lacks the newest episodes, within a week of them airing. $missing is one number, source-picker-missing-pair or source-picker-missing-range.</summary>
+    public static string SourcePickerEpisodesNotYet(long first, long last, string missing) => Fill(Get("SourcePickerEpisodesNotYet"), ("first", first.ToString(System.Globalization.CultureInfo.CurrentCulture)), ("last", last.ToString(System.Globalization.CultureInfo.CurrentCulture)), ("missing", missing));
+
+    /// <summary>The same, more than a week after the episodes aired.</summary>
+    public static string SourcePickerEpisodesNot(long first, long last, string missing) => Fill(Get("SourcePickerEpisodesNot"), ("first", first.ToString(System.Globalization.CultureInfo.CurrentCulture)), ("last", last.ToString(System.Globalization.CultureInfo.CurrentCulture)), ("missing", missing));
+
+    /// <summary>Two episodes a source lacks, inside the missing part of a source's line.</summary>
+    public static string SourcePickerMissingPair(long a, long b) => Fill(Get("SourcePickerMissingPair"), ("a", a.ToString(System.Globalization.CultureInfo.CurrentCulture)), ("b", b.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>Three or more episodes in a row a source lacks, inside the missing part of a source's line.</summary>
+    public static string SourcePickerMissingRange(long first, long last) => Fill(Get("SourcePickerMissingRange"), ("first", first.ToString(System.Globalization.CultureInfo.CurrentCulture)), ("last", last.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>Under a source with a gap in the middle, such as "5 of 6 episodes. Not 3".</summary>
+    public static string SourcePickerCoverageMissing(long covered, long of, string missing) => Fill(GetPlural("SourcePickerCoverageMissing", of), ("covered", covered.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)), ("of", of.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)), ("missing", missing));
 
     /// <summary>Under a source that is switched off in Settings.</summary>
     public static string SourceNoteOff => Get("SourceNoteOff");
@@ -11186,6 +11333,27 @@ public static partial class T
     /// <summary>Heading of the list of titles people who liked this one also liked.</summary>
     public static string MoreLikeThis => Get("MoreLikeThis");
 
+    /// <summary>Button after the first five people followed, on wide screens. It shows the rest in place.</summary>
+    public static string FollowingShowAll(long count) => Fill(Get("FollowingShowAll"), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>Second line of the People you follow row on phones and the TV, with three or more people: two names, then how many more. The names come from AniList.</summary>
+    public static string FollowingNames(string first, string second, long more) => Fill(GetPlural("FollowingNames", more), ("first", first), ("second", second), ("more", more.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>Second line of the People you follow row on phones and the TV, with two people. The names come from AniList.</summary>
+    public static string FollowingNamesTwo(string first, string second) => Fill(Get("FollowingNamesTwo"), ("first", first), ("second", second));
+
+    /// <summary>After three pictures on an episode's mark, and after three names in the terminal: how many more people stopped there.</summary>
+    public static string FollowingMarkMore(long count) => Fill(Get("FollowingMarkMore"), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>Tooltip on an episode's mark, and the sentence a screen reader adds to the episode row: who stopped at this episode. The names are already joined.</summary>
+    public static string FollowingMarkSpoken(string names) => Fill(Get("FollowingMarkSpoken"), ("names", names));
+
+    /// <summary>What a screen reader says in place of a score such as 8/10 beside a person followed.</summary>
+    public static string FollowingScoreSpoken(long score) => Fill(Get("FollowingScoreSpoken"), ("score", score.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>Hint of the People you follow row on phones and the TV, which opens the full list.</summary>
+    public static string FollowingOpenHelp => Get("FollowingOpenHelp");
+
     /// <summary>Line of a followed person's list entry: their status and how far they are. Both are already worded.</summary>
     public static string MoreFollowedProgress(string status, string progress) => Fill(Get("MoreFollowedProgress"), ("status", status), ("progress", progress));
 
@@ -11231,9 +11399,6 @@ public static partial class T
     /// <summary>Value of the fact on a show with no announced start.</summary>
     public static string TitleFactTba => Get("TitleFactTba");
 
-    /// <summary>A followed person's status and score, such as "Completed · 9/10". The status is already worded.</summary>
-    public static string MoreFollowingLine(string status, long score) => Fill(Get("MoreFollowingLine"), ("status", status), ("score", score.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
-
     /// <summary>Item of the episode range menu, and the title of its number field. The ellipsis marks that it asks for a number.</summary>
     public static string EpisodeGoTo => Get("EpisodeGoTo");
 
@@ -11254,6 +11419,42 @@ public static partial class T
 
     /// <summary>Shown when the number typed is an episode with no date that has not come out.</summary>
     public static string EpisodeGoToNotOut(long number, long latest) => Fill(Get("EpisodeGoToNotOut"), ("number", number.ToString(System.Globalization.CultureInfo.CurrentCulture)), ("latest", latest.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>Status, first sentence, within a day of the episode airing.</summary>
+    public static string EpisodeMissingAired(long episode, string ago) => Fill(Get("EpisodeMissingAired"), ("episode", episode.ToString(System.Globalization.CultureInfo.CurrentCulture)), ("ago", ago));
+
+    /// <summary>Status, first sentence, a day or more after the episode aired.</summary>
+    public static string EpisodeMissingAiredOn(long episode, string date) => Fill(Get("EpisodeMissingAiredOn"), ("episode", episode.ToString(System.Globalization.CultureInfo.CurrentCulture)), ("date", date));
+
+    /// <summary>Status, second sentence, until a check the person asked for comes back empty.</summary>
+    public static string EpisodeMissingNotYet => Get("EpisodeMissingNotYet");
+
+    /// <summary>Status, second sentence, after a check the person asked for came back empty, and once Kaeri has stopped looking by itself.</summary>
+    public static string EpisodeMissingStill => Get("EpisodeMissingStill");
+
+    /// <summary>Status, second sentence, after a check where none of the person's sources answered.</summary>
+    public static string EpisodeMissingNoAnswer => Get("EpisodeMissingNoAnswer");
+
+    /// <summary>Status, last sentence, during the hours Kaeri looks for the episode by itself.</summary>
+    public static string EpisodeMissingLooksAgain(long minutes) => Fill(Get("EpisodeMissingLooksAgain"), ("minutes", minutes.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>Status a week after the episode aired, when no source has listed it.</summary>
+    public static string EpisodeMissingNone => Get("EpisodeMissingNone");
+
+    /// <summary>Status, last sentence, while the device is offline during the hours Kaeri looks by itself.</summary>
+    public static string EpisodeMissingOffline => Get("EpisodeMissingOffline");
+
+    /// <summary>Row note of an episode that aired within the last day. The span is already worded ("25 min", "3 h").</summary>
+    public static string EpisodeRowAiredAgo(string ago) => Fill(Get("EpisodeRowAiredAgo"), ("ago", ago));
+
+    /// <summary>Row note beside when it aired, for an episode that aired in the last week and no source lists yet.</summary>
+    public static string EpisodeUnsourcedYet => Get("EpisodeUnsourcedYet");
+
+    /// <summary>Announced once to screen readers when a check finds the missing episode while its page is open.</summary>
+    public static string EpisodeFoundAnnouncement(long episode) => Fill(Get("EpisodeFoundAnnouncement"), ("episode", episode.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>Tooltip and screen reader hint of Check again, while Kaeri looks for the episode by itself.</summary>
+    public static string EpisodeCheckAgainHelp(long minutes, long hours) => Fill(Get("EpisodeCheckAgainHelp"), ("minutes", minutes.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)), ("hours", hours.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Title of the settings group and the screen.</summary>
     public static string TorrentsTitle => Get("TorrentsTitle");
@@ -11765,6 +11966,9 @@ public static partial class T
     /// <summary>Short word: paired, no date known.</summary>
     public static string TvPaired => Get("TvPaired");
 
+    /// <summary>Line under a paired TV running the app, in the Play on TV list.</summary>
+    public static string TvRowKaeri => Get("TvRowKaeri");
+
     /// <summary>Line with the address.</summary>
     public static string TvConnectedAt(string address) => Fill(Get("TvConnectedAt"), ("address", address));
 
@@ -12114,6 +12318,9 @@ public static partial class T
         ["NoticeCastTakenOver"] = "Another device started something on {name}, so casting stopped.",
         ["NoticeCastNotSameNetwork"] = "This device isn't on the network {name} is on, or reaches it through a VPN. Connect both to the same network to cast.",
         ["NoticeCastLost"] = "Lost {name}, so casting stopped.",
+        ["NoticeCastSegment"] = "{name} stopped getting the stream: the source didn't answer for part of the episode. Try another source.",
+        ["NoticeCastLostStream"] = "{name} lost the stream from this device. Check that both are on the same network.",
+        ["NoticeCastSubtitlesPlain"] = "Subtitles on {name} show as plain text. Typeset subtitles were too much for it.",
         ["NoticeCastNoDevice"] = "That TV is no longer on the network.",
         ["NoticeCastUnavailable"] = "This version of Kaeri can't cast to TVs.",
         ["CastPhaseStarting"] = "Starting on {name}",
@@ -12212,6 +12419,8 @@ public static partial class T
         ["StatusSearchingSources"] = "Searching sources for episode {episode}…",
         ["NoticePlayerFailedToStart"] = "Couldn't start mpv. Check that it runs on its own. ({reason})",
         ["NoticeStreamNoVideo"] = "No video from that stream. Trying {next} of {total}.",
+        ["NoticeFailedOver"] = "The stream broke off. {source} took over at the same point.",
+        ["NoticeFailedOverSameSource"] = "The stream broke off. Another stream from {source} took over at the same point.",
         ["NoticePlayerCouldNotPlay"] = "mpv couldn't play this. {reason}",
         ["NoticePlayerExitedSilently"] = "mpv exited without playing anything and gave no reason. Try another source.",
         ["NoticePlayerNotPlaying"] = "mpv hasn't started playing after {seconds} s. The source may have no data. Check that mpv plays a file on its own.",
@@ -12400,6 +12609,7 @@ public static partial class T
         ["ReadingRowOnDevice"] = "On this device",
         ["ReadingRowQueued"] = "Queued",
         ["ReadingRowWaitsWifi"] = "Queued · waits for Wi-Fi",
+        ["ReadingRowWaitsRoom"] = "Queued · waits for room",
         ["ReadingRowDownloading"] = "Downloading · {done} of {total} pages",
         ["ReadingRowDownloadingPlain"] = "Downloading",
         ["ReadingRowFailed"] = "Couldn't download",
@@ -12456,6 +12666,8 @@ public static partial class T
         ["ReadingDlWaitsWifi"] = "waits for Wi-Fi",
         ["ReadingDlFailed"] = "Chapter {chapter} couldn't download",
         ["ReadingDlOffline"] = "Offline",
+        ["ReadingDlNoRoom_one"] = "No room left. It downloads once some space is free.",
+        ["ReadingDlNoRoom_other"] = "No room left. They download once some space is free.",
         ["ReadingEstimateSize"] = "About {size}",
         ["ReadingEstimateWifi"] = "over Wi-Fi",
         ["ReadingEstimateMobile"] = "over mobile data",
@@ -12622,11 +12834,11 @@ public static partial class T
         ["NoticeSignedOut"] = "Signed out of {tracker}.",
         ["NoticeSignedOutQueue_one"] = "Signed out of {tracker}. One queued change is kept for the next sign-in.",
         ["NoticeSignedOutQueue_other"] = "Signed out of {tracker}. {count} queued changes are kept for the next sign-in.",
-        ["NoticeTrackerChangeRefused"] = "{tracker} kept refusing a change to {title}, so it stopped being sent. It's still saved in Kaeri.",
-        ["NoticeTrackerChangesRefused_one"] = "{tracker} kept refusing changes to {title} and one more title, so they stopped being sent. They're still saved in Kaeri.",
-        ["NoticeTrackerChangesRefused_other"] = "{tracker} kept refusing changes to {title} and {others} more titles, so they stopped being sent. They're still saved in Kaeri.",
-        ["NoticeTrackerChangeRefusedUntitled_one"] = "{tracker} kept refusing a change, so it stopped being sent. It's still saved in Kaeri.",
-        ["NoticeTrackerChangeRefusedUntitled_other"] = "{tracker} kept refusing changes to {count} titles, so they stopped being sent. They're still saved in Kaeri.",
+        ["NoticeTrackerChangeRefused"] = "{tracker} kept refusing a change to {title}, so it stays in Kaeri only.",
+        ["NoticeTrackerChangesRefused_one"] = "{tracker} kept refusing changes to {title} and one more title, so they stay in Kaeri only.",
+        ["NoticeTrackerChangesRefused_other"] = "{tracker} kept refusing changes to {title} and {others} more titles, so they stay in Kaeri only.",
+        ["NoticeTrackerChangeRefusedUntitled_one"] = "{tracker} kept refusing a change, so it stays in Kaeri only.",
+        ["NoticeTrackerChangeRefusedUntitled_other"] = "{tracker} kept refusing changes to {count} titles, so they stay in Kaeri only.",
         ["NoticeSignOutFailed"] = "Couldn't sign out of {tracker}. Try again. {reason}",
         ["NoticeNotSavedBecause"] = "Couldn't save that setting. {cause}",
         ["NoticeProxySaved"] = "Torrent traffic now goes through the proxy.",
@@ -12963,6 +13175,7 @@ public static partial class T
         ["MessagesTitle"] = "Messages",
         ["MessagesNone"] = "No messages yet",
         ["MessagesAlert"] = "Problem",
+        ["TvOnThisNetwork"] = "On this network",
         ["TvPickerEpisodeOf"] = "{title}, episode {episode}",
         ["EpisodeLabel"] = "Episode {episode}",
         ["EpisodeLabelOf"] = "Episode {episode} of {title}",
@@ -13050,6 +13263,17 @@ public static partial class T
         ["ReportTvScan"] = "Scan the code to open the report on your phone.",
         ["ReportCrashOff"] = "Crash reports are off, so none is included. You can turn them on in Settings, About.",
         ["ReportCrashSettings"] = "Crash report settings",
+        ["ReportPlayerLog"] = "Player log",
+        ["ReportPlayerLogDetail_one"] = "The last playback · {size}",
+        ["ReportPlayerLogDetail_other"] = "The last {playbacks} playbacks · {size}",
+        ["ReportPlayerLogEmpty"] = "No playback logged yet",
+        ["ReportPlayerLogSave"] = "Save log…",
+        ["ReportPlayerLogAttach"] = "Attach the file to the issue once it opens on GitHub.",
+        ["ReportPlayerLogSaved"] = "Saved as {file}",
+        ["ReportPlayerLogFailed"] = "Couldn't save the log. Try another folder.",
+        ["ReportSentReport"] = "Report",
+        ["ReportPlayerLogA11ySaved"] = "Player log saved",
+        ["ReportPlayerLogA11yHint"] = "Saves a file to attach to the issue",
         ["SettingsGroupCrashes"] = "Crash reports",
         ["SettingsCrashSave"] = "Save crash reports on this device",
         ["SettingsCrashSaveDetail"] = "Kaeri keeps a short record of each crash on this device for Report a bug, with titles, addresses and names removed. Nothing is sent by itself.",
@@ -13115,6 +13339,16 @@ public static partial class T
         ["CastPlayHere"] = "Play here",
         ["CastStop"] = "Stop casting",
         ["CastVolumeFixed"] = "Set on the TV",
+        ["CastButtonConnecting"] = "Connecting to {name}",
+        ["CastButtonConnected"] = "Connected to {name}",
+        ["CastPlaysOn"] = "Plays on {name}",
+        ["CastIdle"] = "Nothing playing yet",
+        ["CastStatusPaused"] = "Paused on {name}",
+        ["CastOpenShow"] = "Open {title}",
+        ["CastControllerClose"] = "Close",
+        ["CastMiniOpens"] = "Opens the controls",
+        ["CastPlayNextOn"] = "Play next on {name}",
+        ["CastNotificationLine"] = "Casting to {name}",
         ["ActionTryAgain"] = "Try again",
         ["ActionCancel"] = "Cancel",
         ["ActionGo"] = "Go",
@@ -13164,6 +13398,7 @@ public static partial class T
         ["ActionDisable"] = "Disable",
         ["ActionCheckNow"] = "Check now",
         ["ActionCheckAgain"] = "Check again",
+        ["ActionChecking"] = "Checking",
         ["ActionOpenSettings"] = "Open settings",
         ["ActionReport"] = "Report",
         ["ActionPlayNow"] = "Play now",
@@ -13186,6 +13421,7 @@ public static partial class T
         ["TimeIn"] = "in {span}",
         ["TimeMinutesLeft"] = "{minutes} min left",
         ["TimeMinutes"] = "{minutes} min",
+        ["TimeHours"] = "{hours} h",
         ["TimeNowInline"] = "now",
         ["TimeJustNowInline"] = "just now",
         ["WhenToday"] = "today {time}",
@@ -13284,6 +13520,10 @@ public static partial class T
         ["PlayerPositionSpoken"] = "{position} of {duration}",
         ["NamesPair"] = "{first} and {last}",
         ["NamesList"] = "{list}, {next}",
+        ["CastRowThroughComputer"] = "Plays through this computer",
+        ["DesktopCastQuitTitle"] = "Stop casting and quit?",
+        ["DesktopCastQuitBody"] = "{title} is playing on {name}. Quitting stops it.",
+        ["DesktopCastQuitAction"] = "Stop and quit",
         ["DiscussionOpen"] = "Discussion",
         ["DiscussionTitleEpisode"] = "Episode {episode} discussion",
         ["DiscussionRow_one"] = "Discussion · one comment",
@@ -14659,6 +14899,7 @@ public static partial class T
         ["ReadSearchDone"] = "{anilist} from AniList, {sources} from your sources.",
         ["ReadHomeRowLoading"] = "{row}, loading",
         ["ReadTileAddPlanning"] = "Add to Planning",
+        ["ReadTileAddTo"] = "Add to {list}",
         ["ReadSearchAnilistHidden"] = "AniList's results are hidden.",
         ["ReadSearchSaidAnilist_one"] = "1 from AniList",
         ["ReadSearchSaidAnilist_other"] = "{n} from AniList",
@@ -15112,6 +15353,11 @@ public static partial class T
         ["SettingsQuality"] = "Quality",
         ["SettingsAutoPlay"] = "Auto-play next",
         ["SettingsUpNextCountdown"] = "Up next countdown",
+        ["SettingsPreloadCellular"] = "Preload video on mobile data",
+        ["SettingsPreloadMetered"] = "Preload video on metered connections",
+        ["SettingsPreloadDetailMetered"] = "During the ending, the next episode's stream, subtitles and skip times are found. Its first seconds load too, and on a metered connection only when this is on.",
+        ["SettingsPreloadTorrents"] = "Torrents load their first pieces the same way.",
+        ["SettingsPreloadA11yDimmed"] = "Needs Auto-play next",
         ["SettingsSkipOpening"] = "Skip opening automatically",
         ["SettingsSkipRecap"] = "Skip recaps automatically",
         ["SettingsFindSkips"] = "Find skip times from the audio",
@@ -15295,6 +15541,9 @@ public static partial class T
         ["SettingsOpdsFeed"] = "Share on this network",
         ["SettingsOpdsPassword"] = "Feed password",
         ["SettingsOpdsPort"] = "Feed port",
+        ["SettingsLabelPictureInPictureOnLeave"] = "Picture in picture when leaving the app",
+        ["SettingsAnilistFollowing"] = "Show people you follow",
+        ["SettingsAnilistFollowingFooter"] = "Shows where people you follow on AniList are in a show, on its page and its episodes. Who can see your own list is set on AniList.",
         ["BookServerAddress"] = "Address",
         ["BookServerAddressHint"] = "An address, or the whole OPDS link from Kavita.",
         ["BookServerKavitaKey"] = "This is a Kavita OPDS link. Its key signs you in, so no password is needed.",
@@ -15382,6 +15631,14 @@ public static partial class T
         ["SourcePickerAutomaticDetail"] = "Each episode from the first source that has it",
         ["SourcePickerCoverage_one"] = "{covered} of {of} episode",
         ["SourcePickerCoverage_other"] = "{covered} of {of} episodes",
+        ["SourcePickerEpisodes_one"] = "Episode {first}",
+        ["SourcePickerEpisodes_other"] = "Episodes {first} to {last}",
+        ["SourcePickerEpisodesNotYet"] = "Episodes {first} to {last}. Not {missing} yet",
+        ["SourcePickerEpisodesNot"] = "Episodes {first} to {last}. Not {missing}",
+        ["SourcePickerMissingPair"] = "{a} or {b}",
+        ["SourcePickerMissingRange"] = "{first} to {last}",
+        ["SourcePickerCoverageMissing_one"] = "{covered} of {of} episode. Not {missing}",
+        ["SourcePickerCoverageMissing_other"] = "{covered} of {of} episodes. Not {missing}",
         ["SourceNoteOff"] = "Switched off",
         ["SourceNoteResting"] = "Not responding, trying again soon",
         ["SourceNoteGone"] = "Not installed",
@@ -15988,6 +16245,13 @@ public static partial class T
         ["MoreFollowingNote"] = "From AniList",
         ["MoreFollowedScore"] = "{score}/10",
         ["MoreLikeThis"] = "More like this",
+        ["FollowingShowAll"] = "Show all {count}",
+        ["FollowingNames_other"] = "{first}, {second} and {more} more",
+        ["FollowingNamesTwo"] = "{first} and {second}",
+        ["FollowingMarkMore"] = "+{count}",
+        ["FollowingMarkSpoken"] = "{names} watched up to here.",
+        ["FollowingScoreSpoken"] = "Score {score} out of 10",
+        ["FollowingOpenHelp"] = "Shows where each of them is.",
         ["MoreFollowedProgress"] = "{status} · {progress}",
         ["MoreEmpty"] = "AniList has no cast, staff or recommendations for this show yet.",
         ["MoreSpoiler"] = "Spoiler",
@@ -16004,7 +16268,6 @@ public static partial class T
         ["TitleFactAfter"] = "After episode {episode}",
         ["TitleFactNow"] = "Now",
         ["TitleFactTba"] = "To be announced",
-        ["MoreFollowingLine"] = "{status} · {score}/10",
         ["EpisodeGoTo"] = "Go to episode…",
         ["EpisodeGoToTitle"] = "Go to episode",
         ["EpisodeGoToGo"] = "Go",
@@ -16012,6 +16275,18 @@ public static partial class T
         ["EpisodeGoToLabel"] = "Episode, {first} to {last}",
         ["EpisodeGoToNone"] = "No episode {number}. This show has {last}.",
         ["EpisodeGoToNotOut"] = "Episode {number} isn't out yet. The latest is {latest}.",
+        ["EpisodeMissingAired"] = "Episode {episode} aired {ago}.",
+        ["EpisodeMissingAiredOn"] = "Episode {episode} aired on {date}.",
+        ["EpisodeMissingNotYet"] = "Your sources don't have it yet.",
+        ["EpisodeMissingStill"] = "Your sources still don't have it.",
+        ["EpisodeMissingNoAnswer"] = "Your sources didn't answer.",
+        ["EpisodeMissingLooksAgain"] = "Kaeri looks again every {minutes} minutes.",
+        ["EpisodeMissingNone"] = "None of your sources has it.",
+        ["EpisodeMissingOffline"] = "Kaeri looks for it when you're back online.",
+        ["EpisodeRowAiredAgo"] = "Aired {ago}",
+        ["EpisodeUnsourcedYet"] = "Not in your sources yet",
+        ["EpisodeFoundAnnouncement"] = "Episode {episode} is in your sources now.",
+        ["EpisodeCheckAgainHelp"] = "Kaeri also looks by itself every {minutes} minutes for {hours} hours after an episode airs.",
         ["TorrentsTitle"] = "Torrents",
         ["TorrentsOn"] = "Torrents are on",
         ["TorrentsOffDetail"] = "Off by default. Torrents connect directly unless you route them through a proxy.",
@@ -16183,6 +16458,7 @@ public static partial class T
         ["TvNonePairedDetail"] = "Open Kaeri on the TV, on the same Wi-Fi, then pair with it here.",
         ["TvPairedOn"] = "Paired {when}",
         ["TvPaired"] = "Paired",
+        ["TvRowKaeri"] = "Kaeri on Android TV",
         ["TvConnectedAt"] = "Connected · {address}",
         ["TvForgetTitle"] = "Forget {name}?",
         ["TvForgetDetail"] = "To play on it again, pair with it again.",

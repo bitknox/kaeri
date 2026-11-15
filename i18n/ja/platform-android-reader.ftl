@@ -87,6 +87,7 @@ reader-end-series = 作品に戻る
 reader-end-again = 最初から読み直す
 reader-opening-chapter = 第{ $chapter }話を開いています
 reader-failed-chapter = 第{ $chapter }話を開けませんでした
+reader-failed-chapter-plain = この話を開けませんでした
 reader-sheet-series = この作品
 reader-sheet-all-manga = すべてのマンガ
 reader-sheet-all-webtoons = すべてのウェブトゥーン

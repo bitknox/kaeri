@@ -215,6 +215,52 @@ class TvShots {
     @Test
     fun title() = shoot("tv-title", title = 900001u)
 
+    // People you follow: the row between the buttons and the episodes, its side panel, the marks
+    // on the stills, and the switch under the AniList account.
+
+    @Test
+    fun title_following() = shoot("tv-title-following", title = 900001u, scene = FOLLOWING)
+
+    /** Down from Play reaches the row, which says what it holds and grows as the buttons do. */
+    @Test
+    fun title_following_row() = shoot("tv-title-following-row", title = 900001u, scene = FOLLOWING) {
+        repeat(4) {
+            if (focusedLabel().startsWith("People you follow")) return@repeat
+            press(Key.DirectionDown)
+            settle()
+        }
+        assertTrue("the row takes focus between the buttons and the episodes", focusedLabel().startsWith("People you follow"))
+    }
+
+    /** OK opens the panel with everyone, the first focused; scores show there only. */
+    @Test
+    fun title_following_panel() = shoot("tv-title-following-panel", title = 900001u, scene = FOLLOWING) {
+        repeat(4) {
+            if (focusedLabel().startsWith("People you follow")) return@repeat
+            press(Key.DirectionDown)
+            settle()
+        }
+        press(Key.DirectionCenter)
+        settle()
+        assertTrue("the first person is focused", focusedLabel().startsWith("Ines"))
+    }
+
+    /** The focused card reads out who stopped there, never a score. */
+    @Test
+    fun title_following_marks() = shoot("tv-title-following-marks", title = 900001u, scene = FOLLOWING) {
+        toShelf()
+        repeat(3) {
+            if (focusedLabel().contains("E8")) return@repeat
+            press(Key.DirectionRight)
+            settle()
+        }
+        val said = focusedLabel()
+        assertTrue("the card says who stopped here: $said", "watched up to here." in said && "Lumi" in said && "Score" !in said)
+    }
+
+    @Test
+    fun settings_following() = shoot("tv-settings-following", section = "Accounts", scene = FOLLOWING)
+
     // Browsing extras (the browsing board): the Trending rail with its periods, Surprise me and Another.
     @Test
     fun browse_search_start() = shoot("tv-browse-search-start", start = Destination.Search, scene = BROWSING) { shot.chooseTrending(app.kaeri.engine.model.TrendPeriod.TODAY) }
@@ -859,6 +905,51 @@ class TvShots {
         compose.waitForIdle()
         assertEquals("the panel is closed", 1, compose.onAllNodesWithText("Info").fetchSemanticsNodes().size)
         assertEquals("its title is gone", 0, compose.onAllNodes(hasText("Info") and SemanticsMatcher.keyIsDefined(SemanticsProperties.Heading)).fetchSemanticsNodes().size)
+        assertTrue("the player is still up", model.isPresented)
+    }
+
+    /** Info opens on Show live stats, under the Stats for nerds lines. */
+    @Test
+    fun player_info_live_stats_row() = playerShot("tv-player-info-live-row") { model ->
+        repeat(6) { if (focusedText() != "Info") press(Key.DirectionRight) }
+        compose.runOnUiThread { model.apply(Event.PlayerStats(1u, playerStatsFixture(StatsFixture.PLAYING))) }
+        press(Key.DirectionCenter)
+        assertEquals("Show live stats", focusedText())
+    }
+
+    /**
+     * Show live stats closes Info and puts the full rows top leading, Buffer amber while starved;
+     * Info is gone and the engine was asked to sample.
+     */
+    @Test
+    fun player_live_stats() = playerShot("tv-player-live-stats") { model ->
+        repeat(6) { if (focusedText() != "Info") press(Key.DirectionRight) }
+        press(Key.DirectionCenter)
+        press(Key.DirectionCenter)
+        assertTrue("live stats are on", model.statsShown)
+        assertTrue("the engine was asked to sample", sentCommands.any { it.toString().contains("Stats(") && it.toString().contains("true") })
+        compose.runOnUiThread { model.apply(Event.PlayerStats(1u, playerStatsFixture(StatsFixture.BUFFERING))) }
+        compose.mainClock.advanceTimeBy(1_000)
+        compose.waitForIdle()
+        assertEquals("Info closed", 0, compose.onAllNodes(hasText("Info") and SemanticsMatcher.keyIsDefined(SemanticsProperties.Heading)).fetchSemanticsNodes().size)
+    }
+
+    /** Back closes the live stats before anything else; the player stays. */
+    @Test
+    fun back_closes_live_stats_first() = playerShot(null) { model ->
+        repeat(6) { if (focusedText() != "Info") press(Key.DirectionRight) }
+        press(Key.DirectionCenter)
+        press(Key.DirectionCenter)
+        compose.runOnUiThread { model.apply(Event.PlayerStats(1u, playerStatsFixture(StatsFixture.PLAYING))) }
+        compose.waitForIdle()
+        compose.runOnUiThread {
+            listOf(KeyEvent.ACTION_DOWN, KeyEvent.ACTION_UP).forEach {
+                compose.activity.dispatchKeyEvent(KeyEvent(it, KeyEvent.KEYCODE_BACK))
+            }
+        }
+        compose.mainClock.advanceTimeBy(600)
+        compose.waitForIdle()
+        assertTrue("live stats are off", !model.statsShown)
         assertTrue("the player is still up", model.isPresented)
     }
 
@@ -1666,6 +1757,7 @@ class TvShots {
         const val TV = "w960dp-h540dp-land-television-xhdpi"
 
         const val WATCHING = "watching"
+        const val FOLLOWING = "following"
         const val BROWSING = "browsing"
         const val HOME_WATCHING = "home-watching"
         const val TOGETHER = "together"

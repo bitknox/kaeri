@@ -5,14 +5,15 @@
 use kaeri_i18n::t;
 use kaeri_model::{
     catalog::{Entry, LibrarySegment},
+    missing::{AiredAgo, CheckOutcome, MissingEpisode, MissingPhase, aired_ago},
     progress::TitleProgress,
 };
 use ratatui::{buffer::Buffer, layout::Rect, style::Modifier};
 
 use crate::{
-    app::{App, push_detail, status_text},
-    theme::Role,
-    widgets::{truncate, wrap, wrap_meta},
+    app::{App, MissingStatus, push_detail, status_text},
+    theme::{Role, glyph},
+    widgets::{Cells, truncate, wrap, wrap_meta},
 };
 
 use super::{
@@ -105,8 +106,17 @@ pub(super) fn render_title(buf: &mut Buffer, app: &App, area: Rect) {
         y += 2;
     }
 
+    // The missing episode's status is worded first, so a short page gives up synopsis lines
+    // before the status: it is what the page has to say right now.
+    let status = app.missing_status();
+    let status_lines = status
+        .as_ref()
+        .map(|s| missing_lines(app, s, area.width as usize, 4))
+        .unwrap_or_default();
+    let status_room = if status_lines.is_empty() { 0 } else { status_lines.len() + 1 };
     let budget = if app.synopsis_expanded { 12 } else { 5 };
-    let room = area.bottom().saturating_sub(y).saturating_sub(4) as usize;
+    let room = (area.bottom().saturating_sub(y).saturating_sub(4) as usize)
+        .saturating_sub(status_room);
     let lines = wrap(&entry.synopsis, area.width as usize, budget.min(room));
     for (i, line) in lines.iter().enumerate() {
         buf.set_string(area.left(), y + i as u16, line, app.palette.style(Role::TextDim));
@@ -124,6 +134,7 @@ pub(super) fn render_title(buf: &mut Buffer, app: &App, area: Rect) {
     }
 
     // Progress, or the countdown to the next broadcast — whichever the viewer needs next.
+    let meter_y = y;
     if y < area.bottom() {
         if let (Some(TitleProgress { next, .. }), Some(label)) =
             (entry.progress, progress_label(entry))
@@ -154,6 +165,220 @@ pub(super) fn render_title(buf: &mut Buffer, app: &App, area: Rect) {
             }
         }
     }
+
+    // A next episode that aired and no source lists: said a line under the meter, and the
+    // people followed under that.
+    let mut top = meter_y.saturating_add(2);
+    if !status_lines.is_empty() {
+        let room = area.bottom().saturating_sub(top) as usize;
+        for (i, words) in status_lines.iter().take(room).enumerate() {
+            let mut x = area.left() + if i == 0 { 0 } else { STATUS_INDENT };
+            for (n, (word, role)) in words.iter().enumerate() {
+                if n > 0 {
+                    x += 1;
+                }
+                buf.set_string(x, top + i as u16, word, app.palette.style(*role));
+                x += word.cells() as u16;
+            }
+        }
+        top = top.saturating_add(status_lines.len() as u16 + 1);
+    }
+    render_following(
+        buf,
+        app,
+        entry,
+        Rect { y: top, height: area.bottom().saturating_sub(top), ..area },
+    );
+}
+
+/// The width of a person's name, the line under it and the score, in the people's columns.
+const FOLLOWING_COLUMNS: [usize; 3] = [13, 22, 9];
+
+/// The people the viewer follows on AniList who have the title on a list, under the meter: the
+/// heading, then up to ten in two columns of five, each with where they are and their score.
+/// Nothing when nobody has it, the switch is off or nobody is signed in.
+fn render_following(buf: &mut Buffer, app: &App, entry: &Entry, area: Rect) {
+    let people = following_cells(entry);
+    if people.is_empty() || area.top() >= area.bottom() {
+        return;
+    }
+    let width = area.width as usize;
+    let mut x = area.left();
+    let heading = t::more_following();
+    buf.set_string(
+        x,
+        area.top(),
+        truncate(&heading, width),
+        app.palette.style(Role::Text).add_modifier(Modifier::BOLD),
+    );
+    x += heading.chars().count() as u16;
+    let note = format!("  ·  {}", t::more_following_note());
+    let room = width.saturating_sub(heading.chars().count());
+    buf.set_string(x, area.top(), truncate(&note, room), app.palette.style(Role::TextDim));
+    let column: usize = FOLLOWING_COLUMNS.iter().sum();
+    let (first, second) = people.split_at(people.len().min(5));
+    for (i, cell) in first.iter().enumerate() {
+        let y = area.top() + 1 + i as u16;
+        if y >= area.bottom() {
+            break;
+        }
+        draw_person(buf, app, area.left(), y, cell, width);
+        if let Some(beside) = second.get(i).filter(|_| width > column) {
+            draw_person(buf, app, area.left() + column as u16, y, beside, width - column);
+        }
+    }
+}
+
+fn draw_person(buf: &mut Buffer, app: &App, x: u16, y: u16, cell: &[String; 3], room: usize) {
+    let roles = [Role::Text, Role::TextDim, Role::Text];
+    let mut x = x;
+    let mut room = room;
+    for ((text, width), role) in cell.iter().zip(FOLLOWING_COLUMNS).zip(roles) {
+        if room == 0 {
+            break;
+        }
+        let shown = truncate(text, width.saturating_sub(1).min(room));
+        buf.set_string(x, y, shown, app.palette.style(role));
+        x += width.min(room) as u16;
+        room = room.saturating_sub(width);
+    }
+}
+
+/// Each person as the terminal words them: the name, where they are, and the score out of 10.
+/// Watching, Paused and Dropped say which episode; Completed and Planning say only that.
+pub(crate) fn following_cells(entry: &Entry) -> Vec<[String; 3]> {
+    let Some(detail) = entry.detail.as_ref() else { return Vec::new() };
+    detail
+        .following
+        .iter()
+        .take(10)
+        .map(|person| {
+            let status = person.status.map(status_text);
+            let progress = matches!(
+                person.status,
+                Some(
+                    LibrarySegment::Watching | LibrarySegment::Paused | LibrarySegment::Dropped
+                )
+            )
+            .then_some(person.progress)
+            .filter(|p| *p > 0)
+            .map(|p| t::episode_number(i64::from(p)));
+            let line = match (status, progress) {
+                (Some(status), Some(progress)) => t::more_followed_progress(&status, &progress),
+                (Some(status), None) => status,
+                (None, Some(progress)) => progress,
+                (None, None) => String::new(),
+            };
+            let score = person
+                .score
+                .filter(|score| *score > 0)
+                .map(|score| t::more_followed_score(i64::from((score + 5) / 10)))
+                .unwrap_or_default();
+            [person.name.clone(), line, score]
+        })
+        .collect()
+}
+
+/// How far the status's later lines sit in, so they start under its first word, past the dot.
+const STATUS_INDENT: u16 = 2;
+
+/// The status under the meter, worded and wrapped to `width`, at most `room` lines: each line
+/// its words, each word in its role. The dot and the first sentence in the state colour, the
+/// rest in the dim one; a week on the dot is hollow and the sentence plain text.
+fn missing_lines(
+    app: &App,
+    status: &MissingStatus,
+    width: usize,
+    room: usize,
+) -> Vec<Vec<(String, Role)>> {
+    let words = |text: &str, role: Role| {
+        text.split_whitespace().map(|w| (w.to_owned(), role)).collect::<Vec<_>>()
+    };
+    let mut said = match status {
+        MissingStatus::Checking => {
+            let mut said = vec![(glyph::STATE_WAITING.to_string(), Role::State)];
+            said.extend(words(&t::episode_missing_checking(), Role::State));
+            said
+        }
+        MissingStatus::Says { missing, answer } => {
+            let long_ago = missing.phase == MissingPhase::LongAgo;
+            let (dot, head_role) = if long_ago {
+                (glyph::STATE_OFF, Role::Text)
+            } else {
+                (glyph::STATE_READY, Role::State)
+            };
+            let mut said = vec![(dot.to_string(), head_role)];
+            said.extend(words(&missing_head(app, missing), head_role));
+            said.extend(words(&missing_tail(missing, *answer), Role::TextDim));
+            said
+        }
+    };
+    // Wrapped by words, as the synopsis is, the later lines in by the dot's width.
+    let mut lines: Vec<Vec<(String, Role)>> = Vec::new();
+    let mut used = 0;
+    for word in said.drain(..) {
+        let cells = word.0.cells();
+        let later = lines.len() > 1;
+        let fits = width.saturating_sub(if later { STATUS_INDENT as usize } else { 0 });
+        match lines.last_mut() {
+            Some(line) if used + 1 + cells <= fits => {
+                line.push(word);
+                used += 1 + cells;
+            }
+            _ => {
+                if lines.len() == room {
+                    break;
+                }
+                used = cells;
+                lines.push(vec![word]);
+            }
+        }
+    }
+    lines
+}
+
+/// The status's first sentence: which episode, and when it aired. With no airing time known,
+/// the words the page had before it could say more.
+fn missing_head(app: &App, missing: &MissingEpisode) -> String {
+    let episode = i64::from(missing.episode);
+    let Some(at) = missing.aired_at else { return t::episode_unsourced() };
+    match aired_ago(at, app.clock.now_epoch()) {
+        AiredAgo::Minutes { minutes } => t::episode_missing_aired(
+            episode,
+            &t::time_ago(&t::time_minutes(i64::from(minutes))),
+        ),
+        AiredAgo::Hours { hours } => {
+            t::episode_missing_aired(episode, &t::time_ago(&t::time_hours(i64::from(hours))))
+        }
+        AiredAgo::OnDate => {
+            let date = app.clock.local(at).map(|d| d.format("%-d %b").to_string());
+            t::episode_missing_aired_on(episode, &date.unwrap_or_default())
+        }
+    }
+}
+
+/// The rest of the status, by where the episode stands and what the last check the person asked
+/// for came to. Kaeri's own looking is named only while it looks; offline then, the line says
+/// it looks once back.
+fn missing_tail(missing: &MissingEpisode, answer: Option<CheckOutcome>) -> String {
+    let looks_again = || t::episode_missing_looks_again(i64::from(missing.every_minutes));
+    let joined = |first: String| [first, looks_again()].join(" ");
+    match (missing.phase, answer) {
+        (MissingPhase::LongAgo, _) => t::episode_missing_none(),
+        (MissingPhase::Undated, _) => String::new(),
+        (MissingPhase::After, Some(CheckOutcome::NoAnswer)) => t::episode_missing_no_answer(),
+        (MissingPhase::After, _) => t::episode_missing_still(),
+        (MissingPhase::Quiet, Some(CheckOutcome::Offline)) => t::episode_missing_offline(),
+        (MissingPhase::Quiet, Some(CheckOutcome::Missing)) => {
+            joined(t::episode_missing_still())
+        }
+        (MissingPhase::Quiet, Some(CheckOutcome::NoAnswer)) => {
+            joined(t::episode_missing_no_answer())
+        }
+        (MissingPhase::Quiet, Some(CheckOutcome::Found) | None) => {
+            joined(t::episode_missing_not_yet())
+        }
+    }
 }
 
 /// The count beside the meter, in the language in use.
@@ -174,6 +399,12 @@ fn broadcast_line(entry: &Entry) -> String {
 
 /// The list-status picker.
 pub(super) fn status_rows(app: &App) -> Vec<(String, String)> {
+    if app.series_here().is_some() {
+        return crate::app::READ_LISTS
+            .iter()
+            .map(|list| (String::new(), crate::app::read_list_name(*list)))
+            .collect();
+    }
     let current = app.target();
     LibrarySegment::ALL
         .iter()
@@ -306,6 +537,63 @@ mod tests {
         let plate_row = text.lines().position(|l| l.contains('░')).unwrap();
         let title_row = text.lines().position(|l| l.contains("Hoshikuzu")).unwrap();
         assert!(plate_row < title_row, "artwork must lead");
+    }
+
+    #[test]
+    fn the_people_followed_sit_under_the_meter_in_two_columns_of_five() {
+        use kaeri_model::catalog::{FollowedEntry, LibrarySegment::*, TitleDetail};
+        let person = |name: &str, status, progress, score| FollowedEntry {
+            name: name.into(),
+            avatar_url: None,
+            status: Some(status),
+            score,
+            progress,
+        };
+        let mut show = entry(1, "Lighthouse Kites");
+        show.detail = Some(TitleDetail {
+            following: vec![
+                person("Ines", Watching, 7, Some(80)),
+                person("Lumi", Watching, 7, Some(70)),
+                person("SannaQ", Watching, 9, None),
+                person("Dario", Watching, 7, None),
+                person("Rowanpaper", Completed, 12, Some(90)),
+                person("Oskar", Watching, 7, None),
+                person("TeoVale", Paused, 4, None),
+                person("Petrakite", Completed, 12, Some(60)),
+                person("Kofi", Planning, 0, None),
+                person("Yunami", Dropped, 2, Some(40)),
+            ],
+            ..TitleDetail::default()
+        });
+        let mut app = app_with(ContentList::Entries(vec![show]));
+        app.nav.focus_stage();
+        app.handle(crate::keymap::Action::Open, 20);
+        let text = text_of(&render_to_buffer(&mut app, 120, 40));
+        assert!(text.contains(&t::more_following()), "{text}");
+        let line =
+            |n: &str| text.lines().find(|l| l.contains(n)).unwrap_or_default().to_owned();
+        let ines = line("Ines");
+        assert!(ines.contains("Episode 7") && ines.contains("8/10"), "{ines}");
+        assert!(ines.contains("Oskar"), "the sixth beside the first: {ines}");
+        // The fifth shares a line with the tenth, so look at the fifth's own cell only.
+        let fifth = line("Rowanpaper");
+        let cell = fifth
+            .split_once("Rowanpaper")
+            .and_then(|(_, rest)| rest.split_once("Yunami"))
+            .map(|(cell, _)| cell)
+            .unwrap_or_else(|| panic!("the tenth beside the fifth: {fifth}"));
+        assert!(cell.contains("9/10"), "{cell}");
+        assert!(!cell.contains("Episode"), "Completed says only that: {cell}");
+        assert!(line("Yunami").contains("Episode 2"), "Dropped says where");
+    }
+
+    #[test]
+    fn nobody_followed_leaves_the_section_out() {
+        let mut app = app_with(ContentList::Entries(vec![entry(1, "Lighthouse Kites")]));
+        app.nav.focus_stage();
+        app.handle(crate::keymap::Action::Open, 20);
+        let text = text_of(&render_to_buffer(&mut app, 120, 40));
+        assert!(!text.contains(&t::more_following()));
     }
 
     #[test]

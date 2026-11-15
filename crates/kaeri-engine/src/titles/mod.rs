@@ -6,4 +6,5 @@ pub mod dub;
 pub mod episodes;
 pub mod matching;
 pub mod names;
+pub mod recheck;
 pub mod refresh;

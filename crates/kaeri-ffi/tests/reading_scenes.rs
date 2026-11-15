@@ -183,6 +183,9 @@ fn surface() -> kaeri_model::reader::ReaderSurface {
         eink: false,
         two_pages: false,
         dark: true,
+        decodes: None,
+        zoom: 0.0,
+        text: false,
     }
 }
 

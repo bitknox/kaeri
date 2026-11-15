@@ -36,6 +36,11 @@ pub const STATE_UNKNOWN: char = '·';
 /// Off on purpose: a source left disabled, a tracker signed out. Hollow beside the filled
 /// [`STATE_READY`], and not the interpunct, which the header also uses between chip groups.
 pub const STATE_OFF: char = '○';
+/// Under way and not answered yet: a check of the sources for a missing episode.
+pub const STATE_WAITING: char = '◌';
+
+/// Before the names of the people who stopped at an episode, in the episode table.
+pub const FOLLOWED: char = '◆';
 
 /// Sync indicator for the status line.
 pub const SYNC: char = '⇅';
@@ -51,6 +56,16 @@ pub const BACK: char = '←';
 pub fn meter(fraction: f64, width: usize) -> String {
     let (filled, empty) = meter_parts(fraction, width);
     filled + &empty
+}
+
+/// A meter of `width` whole cells, filled for the share of them `fraction` covers and no
+/// further: a count of chapters read, where a partial cell would claim part of a chapter.
+pub fn meter_whole(fraction: f64, width: usize) -> String {
+    let full = ((fraction.clamp(0.0, 1.0) * width as f64) as usize).min(width);
+    let mut cells = String::with_capacity(width * 3);
+    cells.extend(std::iter::repeat_n(METER_FULL, full));
+    cells.extend(std::iter::repeat_n(METER_EMPTY, width - full));
+    cells
 }
 
 /// The two halves of a meter, so callers can style them separately: the filled portion
@@ -168,6 +183,16 @@ mod tests {
             }
         }
         assert_eq!(meter_parts(0.5, 0), (String::new(), String::new()));
+    }
+
+    #[test]
+    fn a_whole_cell_meter_fills_only_whole_cells() {
+        // 13 of 17 is 15.3 cells of 20: fifteen filled, never a sliver of the sixteenth.
+        assert_eq!(meter_whole(13.0 / 17.0, 20), "███████████████░░░░░");
+        assert_eq!(meter_whole(0.0, 4), "░░░░");
+        assert_eq!(meter_whole(1.0, 4), "████");
+        assert_eq!(meter_whole(0.99, 4), "███░");
+        assert_eq!(meter_whole(0.5, 0), "");
     }
 
     #[test]

@@ -140,14 +140,16 @@ public struct Shelf: Codable, Equatable, Sendable {
                 shelf.sources[source] = []
                 continue
             }
+            // A title always private on this device never reaches Spotlight.
+            let always = store.privacy.alwaysShows
             switch list.state {
             case .loaded(let ids):
                 let hidden = source == .continue ? store.continuing.hidden : []
-                shelf.sources[source] = ids.filter { !hidden.contains($0) }
+                shelf.sources[source] = ids.filter { !hidden.contains($0) && !always.contains($0) }
             case .empty:
                 shelf.sources[source] = []
             case .idle, .loading, .failed:
-                shelf.sources[source] = saved.sources[source] ?? []
+                shelf.sources[source] = (saved.sources[source] ?? []).filter { !always.contains($0) }
             }
         }
         // Each title under the first Library list that has it, and Continue's otherwise.

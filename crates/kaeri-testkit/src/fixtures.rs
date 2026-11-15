@@ -693,6 +693,46 @@ pub fn books() -> Vec<serde_json::Value> {
         .expect("the book fixtures are JSON")
 }
 
+/// The people the viewer follows who have `id` on a list, as the friends' progress board draws
+/// them, newest update first, for [`crate::FakeAniList::set_following`]: ten on
+/// [`FINISHED`], so a page shows five and Show all 10, and five on [`AIRING`], so all of them
+/// show. Every name is made up. Each has a picture under [`ART_HOST`]'s `avatar/` but SannaQ,
+/// who has none, so a front end draws the first letter. Nobody follows any other title.
+pub fn following(id: AnilistId) -> Vec<Value> {
+    use crate::following_entry as entry;
+    let people = match id {
+        FINISHED => vec![
+            entry("Ines", "CURRENT", Some(80), 8, false),
+            entry("Lumi", "CURRENT", Some(70), 8, false),
+            entry("Rowanpaper", "COMPLETED", Some(90), 12, false),
+            entry("SannaQ", "CURRENT", None, 10, false),
+            entry("Dario", "CURRENT", None, 8, false),
+            entry("TeoVale", "PAUSED", None, 5, false),
+            entry("Oskar", "CURRENT", None, 8, false),
+            entry("Kofi", "PLANNING", None, 0, false),
+            entry("Petrakite", "COMPLETED", Some(60), 12, false),
+            entry("Yunami", "DROPPED", Some(40), 3, false),
+        ],
+        AIRING => vec![
+            entry("Halden", "CURRENT", None, 5, false),
+            entry("Ines", "CURRENT", Some(80), 4, false),
+            entry("Lumi", "CURRENT", None, 3, false),
+            entry("Kofi", "PLANNING", None, 0, false),
+            entry("Yunami", "DROPPED", Some(50), 2, false),
+        ],
+        _ => Vec::new(),
+    };
+    people
+        .into_iter()
+        .map(|mut person| {
+            if person["user"]["name"] == "SannaQ" {
+                person["user"]["avatar"]["medium"] = Value::Null;
+            }
+            person
+        })
+        .collect()
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

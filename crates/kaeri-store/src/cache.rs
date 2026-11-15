@@ -32,6 +32,20 @@ impl Store {
         })
     }
 
+    /// Take the people the viewer follows out of every cached page: after a sign-out from
+    /// AniList, or once Show people you follow is switched off, nothing of them stays on the
+    /// device. The rest of each page stays as it was, its fetch time too.
+    pub fn forget_following(&self) -> Result<()> {
+        self.with_conn(|c| {
+            c.execute(
+                "UPDATE media_cache SET payload = json_remove(payload, '$.following')
+                 WHERE json_valid(payload) AND json_type(payload, '$.following') IS NOT NULL",
+                [],
+            )?;
+            Ok(())
+        })
+    }
+
     /// The last cached payload and when it was fetched.
     pub fn cached_media(&self, anilist_id: AnilistId) -> Result<Option<(String, i64)>> {
         self.with_conn(|c| {
@@ -52,6 +66,24 @@ mod tests {
     use super::*;
 
     const HOSHIKUZU: AnilistId = AnilistId::new(154_587);
+
+    #[test]
+    fn forgetting_the_people_followed_leaves_the_rest_of_each_page() {
+        let store = Store::open_in_memory().unwrap();
+        let with = r#"{"id":154587,"title":"Kept","following":[{"user":{"name":"Mika"}}]}"#;
+        store.cache_media(HOSHIKUZU, with, 1_000).unwrap();
+        let other = AnilistId::new(7);
+        store.cache_media(other, r#"{"id":7,"title":"Other"}"#, 2_000).unwrap();
+        store.forget_following().unwrap();
+        let (payload, at) = store.cached_media(HOSHIKUZU).unwrap().unwrap();
+        assert!(!payload.contains("Mika") && !payload.contains("following"), "{payload}");
+        assert!(payload.contains("Kept"));
+        assert_eq!(at, 1_000, "its fetch time stands");
+        assert_eq!(
+            store.cached_media(other).unwrap().unwrap().0,
+            r#"{"id":7,"title":"Other"}"#
+        );
+    }
 
     #[test]
     fn a_fresh_fetch_replaces_the_stale_row() {

@@ -116,3 +116,6 @@ settings-trailers-row = Putar trailer
 settings-trailers-note-apple = Trailer diputar tanpa suara dari YouTube, yang dapat melihat alamat IP Anda. Trailer tidak diputar dalam Mode Data Rendah, saat Kurangi Gerakan aktif, atau dalam Mode Daya Rendah.
 language-restart = Mulai ulang
 language-next-open-note = { -app-name } memakai bahasa baru saat dibuka lagi.
+settings-picture-in-picture-on-leave-apple = Gambar dalam Gambar saat keluar dari aplikasi
+settings-picture-in-picture-on-leave-mac = Dimulai saat jendela diperkecil atau { -app-name } disembunyikan.
+settings-picture-in-picture-on-leave-ios = Juga perlu Mulai PiP Secara Otomatis di Pengaturan > Umum > Gambar dalam Gambar.

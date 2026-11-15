@@ -38,4 +38,31 @@ class AppPhasesTest {
         phases.background(playing = false)
         assertEquals(listOf(background(false), Command.AppPhase(AppState.Foreground), background(false)), said)
     }
+
+    private val downloads = Command.AppPhase(AppState.BackgroundDownloads)
+
+    @Test
+    fun the_download_job_running_in_the_background_lets_the_downloads_go_on() {
+        // Chapters queued in front start the job; then the app leaves.
+        phases.downloading(true)
+        phases.background(playing = false)
+        assertEquals(listOf(downloads), said)
+        // Playback changing meanwhile changes nothing: downloads and what plays go on.
+        phases.playing(true)
+        assertEquals(listOf(downloads), said)
+        // The job ends: what waits in the background waits again, as playback has it now.
+        phases.downloading(false)
+        assertEquals(listOf(downloads, background(true)), said)
+    }
+
+    @Test
+    fun the_job_starting_or_ending_while_away_is_said_and_in_front_is_not() {
+        phases.background(playing = false)
+        // Started again by the system after the app left.
+        phases.downloading(true)
+        phases.downloading(true)
+        phases.foreground()
+        phases.downloading(false)
+        assertEquals(listOf(background(false), downloads, Command.AppPhase(AppState.Foreground)), said)
+    }
 }

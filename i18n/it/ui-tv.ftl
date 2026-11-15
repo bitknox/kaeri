@@ -32,6 +32,7 @@ tv-none-paired = Nessuna TV collegata per ora
 tv-none-paired-detail = Apri { -app-name } sulla TV, sulla stessa rete Wi-Fi, poi collegala da qui.
 tv-paired-on = Collegata { $when }
 tv-paired = Collegata
+tv-row-kaeri = { -app-name } su Android TV
 tv-connected-at = Connessa · { $address }
 tv-forget-title = Dimenticare { $name }?
 tv-forget-detail = Per riprodurre di nuovo, collegala di nuovo.

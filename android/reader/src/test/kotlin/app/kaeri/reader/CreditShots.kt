@@ -158,9 +158,9 @@ class CreditShots {
 
     private val scrubber = SemanticsMatcher.keyIsDefined(androidx.compose.ui.semantics.SemanticsProperties.ProgressBarRangeInfo)
 
-    /** The page's Controls action, as TalkBack would give it: shows or hides the chrome. */
+    /** The page's Show controls action, as TalkBack would give it: shows or hides the chrome. */
     private fun chrome(on: Boolean = true) {
-        val label = app.kaeri.i18n.Strings.readerActionControls(compose.activity)
+        val label = app.kaeri.i18n.Strings.readerZoneShowControls(compose.activity)
         repeat(3) {
             val up = compose.onAllNodes(scrubber, useUnmergedTree = true).fetchSemanticsNodes().isNotEmpty()
             if (up == on) return

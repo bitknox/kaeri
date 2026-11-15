@@ -68,6 +68,15 @@
   <data name="NoticeCastLost" xml:space="preserve">
     <value>Koneksi ke {name} terputus, jadi penayangan berhenti.</value>
   </data>
+  <data name="NoticeCastSegment" xml:space="preserve">
+    <value>{name} berhenti menerima aliran: sumber tidak merespons untuk sebagian episode. Coba sumber lain.</value>
+  </data>
+  <data name="NoticeCastLostStream" xml:space="preserve">
+    <value>{name} kehilangan aliran dari perangkat ini. Pastikan keduanya berada di jaringan yang sama.</value>
+  </data>
+  <data name="NoticeCastSubtitlesPlain" xml:space="preserve">
+    <value>Subtitel di {name} tampil sebagai teks biasa. Subtitel bergaya terlalu berat untuk TV ini.</value>
+  </data>
   <data name="NoticeCastNoDevice" xml:space="preserve">
     <value>TV itu sudah tidak ada di jaringan.</value>
   </data>
@@ -352,6 +361,12 @@
   </data>
   <data name="NoticeStreamNoVideo" xml:space="preserve">
     <value>Tidak ada video dari aliran itu. Mencoba {next} dari {total}.</value>
+  </data>
+  <data name="NoticeFailedOver" xml:space="preserve">
+    <value>Stream terputus. {source} melanjutkan dari titik yang sama.</value>
+  </data>
+  <data name="NoticeFailedOverSameSource" xml:space="preserve">
+    <value>Stream terputus. Stream lain dari {source} melanjutkan dari titik yang sama.</value>
   </data>
   <data name="NoticePlayerCouldNotPlay" xml:space="preserve">
     <value>mpv tidak bisa memutar ini. {reason}</value>
@@ -848,6 +863,9 @@
   <data name="ReadingRowWaitsWifi" xml:space="preserve">
     <value>Antre · tunggu Wi-Fi</value>
   </data>
+  <data name="ReadingRowWaitsRoom" xml:space="preserve">
+    <value>Antre · tunggu ruang kosong</value>
+  </data>
   <data name="ReadingRowDownloading" xml:space="preserve">
     <value>Mengunduh · {done} dari {total} hal.</value>
   </data>
@@ -952,6 +970,9 @@
   </data>
   <data name="ReadingDlOffline" xml:space="preserve">
     <value>Offline</value>
+  </data>
+  <data name="ReadingDlNoRoom_other" xml:space="preserve">
+    <value>Ruang penuh. Diunduh begitu ada ruang kosong.</value>
   </data>
   <data name="ReadingEstimateSize" xml:space="preserve">
     <value>Sekitar {size}</value>
@@ -1384,6 +1405,15 @@
   </data>
   <data name="NoticeSignedOutQueue_other" xml:space="preserve">
     <value>Keluar dari {tracker}. {count} perubahan dalam antrean disimpan untuk masuk lagi nanti.</value>
+  </data>
+  <data name="NoticeTrackerChangeRefused" xml:space="preserve">
+    <value>{tracker} terus menolak perubahan pada {title}, jadi perubahan itu hanya tersimpan di Kaeri.</value>
+  </data>
+  <data name="NoticeTrackerChangesRefused_other" xml:space="preserve">
+    <value>{tracker} terus menolak perubahan pada {title} dan {others} judul lain, jadi semuanya hanya tersimpan di Kaeri.</value>
+  </data>
+  <data name="NoticeTrackerChangeRefusedUntitled_other" xml:space="preserve">
+    <value>{tracker} terus menolak perubahan pada {count} judul, jadi semuanya hanya tersimpan di Kaeri.</value>
   </data>
   <data name="NoticeSignOutFailed" xml:space="preserve">
     <value>Tidak dapat keluar dari {tracker}. Coba lagi. {reason}</value>
@@ -2582,6 +2612,36 @@
   <data name="ReportCrashSettings" xml:space="preserve">
     <value>Pengaturan laporan crash</value>
   </data>
+  <data name="ReportPlayerLog" xml:space="preserve">
+    <value>Log pemutar</value>
+  </data>
+  <data name="ReportPlayerLogDetail_other" xml:space="preserve">
+    <value>{playbacks} pemutaran terakhir · {size}</value>
+  </data>
+  <data name="ReportPlayerLogEmpty" xml:space="preserve">
+    <value>Belum ada pemutaran yang tercatat</value>
+  </data>
+  <data name="ReportPlayerLogSave" xml:space="preserve">
+    <value>Simpan log…</value>
+  </data>
+  <data name="ReportPlayerLogAttach" xml:space="preserve">
+    <value>Lampirkan berkas ke isu setelah terbuka di GitHub.</value>
+  </data>
+  <data name="ReportPlayerLogSaved" xml:space="preserve">
+    <value>Disimpan sebagai {file}</value>
+  </data>
+  <data name="ReportPlayerLogFailed" xml:space="preserve">
+    <value>Log tidak bisa disimpan. Coba folder lain.</value>
+  </data>
+  <data name="ReportSentReport" xml:space="preserve">
+    <value>Laporan</value>
+  </data>
+  <data name="ReportPlayerLogA11ySaved" xml:space="preserve">
+    <value>Log pemutar disimpan</value>
+  </data>
+  <data name="ReportPlayerLogA11yHint" xml:space="preserve">
+    <value>Menyimpan berkas untuk dilampirkan ke isu</value>
+  </data>
   <data name="SettingsGroupCrashes" xml:space="preserve">
     <value>Laporan crash</value>
   </data>
@@ -2777,6 +2837,36 @@
   <data name="CastVolumeFixed" xml:space="preserve">
     <value>Diatur di TV</value>
   </data>
+  <data name="CastButtonConnecting" xml:space="preserve">
+    <value>Menghubungkan ke {name}</value>
+  </data>
+  <data name="CastButtonConnected" xml:space="preserve">
+    <value>Terhubung ke {name}</value>
+  </data>
+  <data name="CastPlaysOn" xml:space="preserve">
+    <value>Diputar di {name}</value>
+  </data>
+  <data name="CastIdle" xml:space="preserve">
+    <value>Belum ada yang diputar</value>
+  </data>
+  <data name="CastStatusPaused" xml:space="preserve">
+    <value>Dijeda di {name}</value>
+  </data>
+  <data name="CastOpenShow" xml:space="preserve">
+    <value>Buka {title}</value>
+  </data>
+  <data name="CastControllerClose" xml:space="preserve">
+    <value>Tutup</value>
+  </data>
+  <data name="CastMiniOpens" xml:space="preserve">
+    <value>Membuka kontrol</value>
+  </data>
+  <data name="CastPlayNextOn" xml:space="preserve">
+    <value>Putar setelah ini di {name}</value>
+  </data>
+  <data name="CastNotificationLine" xml:space="preserve">
+    <value>Casting ke {name}</value>
+  </data>
   <data name="ActionTryAgain" xml:space="preserve">
     <value>Coba lagi</value>
   </data>
@@ -2924,6 +3014,9 @@
   <data name="ActionCheckAgain" xml:space="preserve">
     <value>Periksa lagi</value>
   </data>
+  <data name="ActionChecking" xml:space="preserve">
+    <value>Memeriksa</value>
+  </data>
   <data name="ActionOpenSettings" xml:space="preserve">
     <value>Buka pengaturan</value>
   </data>
@@ -2989,6 +3082,9 @@
   </data>
   <data name="TimeMinutes" xml:space="preserve">
     <value>{minutes} mnt</value>
+  </data>
+  <data name="TimeHours" xml:space="preserve">
+    <value>{hours} jam</value>
   </data>
   <data name="TimeNowInline" xml:space="preserve">
     <value>sekarang</value>
@@ -3277,6 +3373,15 @@
   </data>
   <data name="NamesList" xml:space="preserve">
     <value>{list}, {next}</value>
+  </data>
+  <data name="DesktopCastQuitTitle" xml:space="preserve">
+    <value>Hentikan transmisi dan keluar?</value>
+  </data>
+  <data name="DesktopCastQuitBody" xml:space="preserve">
+    <value>{title} sedang diputar di {name}. Keluar akan menghentikannya.</value>
+  </data>
+  <data name="DesktopCastQuitAction" xml:space="preserve">
+    <value>Hentikan dan keluar</value>
   </data>
   <data name="DiscussionOpen" xml:space="preserve">
     <value>Diskusi</value>
@@ -6863,6 +6968,9 @@
   <data name="ReadSearchSourceMore" xml:space="preserve">
     <value>Tampilkan {n} lagi</value>
   </data>
+  <data name="ReadTileAddTo" xml:space="preserve">
+    <value>Tambahkan ke {list}</value>
+  </data>
   <data name="OnboardingStep" xml:space="preserve">
     <value>{step} dari {total}</value>
   </data>
@@ -8126,6 +8234,21 @@
   <data name="SettingsUpNextCountdown" xml:space="preserve">
     <value>Hitung mundur berikutnya</value>
   </data>
+  <data name="SettingsPreloadCellular" xml:space="preserve">
+    <value>Muat awal video dengan data seluler</value>
+  </data>
+  <data name="SettingsPreloadMetered" xml:space="preserve">
+    <value>Muat awal video di koneksi terukur</value>
+  </data>
+  <data name="SettingsPreloadDetailMetered" xml:space="preserve">
+    <value>Selama penutup, stream, subtitle, dan waktu lewati episode berikutnya dicari. Detik-detik pertamanya juga dimuat, dan di koneksi terukur hanya jika ini aktif.</value>
+  </data>
+  <data name="SettingsPreloadTorrents" xml:space="preserve">
+    <value>Torrent memuat potongan pertamanya dengan cara yang sama.</value>
+  </data>
+  <data name="SettingsPreloadA11yDimmed" xml:space="preserve">
+    <value>Perlu "Putar episode berikutnya otomatis"</value>
+  </data>
   <data name="SettingsSkipOpening" xml:space="preserve">
     <value>Lewati pembukaan otomatis</value>
   </data>
@@ -8660,6 +8783,15 @@
   <data name="SettingsOpdsPort" xml:space="preserve">
     <value>Port feed</value>
   </data>
+  <data name="SettingsLabelPictureInPictureOnLeave" xml:space="preserve">
+    <value>Gambar dalam gambar saat keluar dari aplikasi</value>
+  </data>
+  <data name="SettingsAnilistFollowing" xml:space="preserve">
+    <value>Tampilkan orang yang diikuti</value>
+  </data>
+  <data name="SettingsAnilistFollowingFooter" xml:space="preserve">
+    <value>Menampilkan sampai mana orang yang diikuti di AniList menonton sebuah acara, di halamannya dan episodenya. Siapa yang bisa melihat daftar sendiri diatur di AniList.</value>
+  </data>
   <data name="BookServerAddress" xml:space="preserve">
     <value>Alamat</value>
   </data>
@@ -8866,6 +8998,24 @@
   </data>
   <data name="SourcePickerCoverage_other" xml:space="preserve">
     <value>{covered} dari {of} episode</value>
+  </data>
+  <data name="SourcePickerEpisodes_other" xml:space="preserve">
+    <value>Episode {first}–{last}</value>
+  </data>
+  <data name="SourcePickerEpisodesNotYet" xml:space="preserve">
+    <value>Episode {first}–{last}. Belum ada {missing}</value>
+  </data>
+  <data name="SourcePickerEpisodesNot" xml:space="preserve">
+    <value>Episode {first}–{last}. Tanpa {missing}</value>
+  </data>
+  <data name="SourcePickerMissingPair" xml:space="preserve">
+    <value>{a} dan {b}</value>
+  </data>
+  <data name="SourcePickerMissingRange" xml:space="preserve">
+    <value>{first}–{last}</value>
+  </data>
+  <data name="SourcePickerCoverageMissing_other" xml:space="preserve">
+    <value>{covered} dari {of} episode. Tanpa {missing}</value>
   </data>
   <data name="SourceNoteOff" xml:space="preserve">
     <value>Dimatikan</value>
@@ -10646,6 +10796,27 @@
   <data name="MoreLikeThis" xml:space="preserve">
     <value>Serupa</value>
   </data>
+  <data name="FollowingShowAll" xml:space="preserve">
+    <value>Tampilkan semua {count}</value>
+  </data>
+  <data name="FollowingNames_other" xml:space="preserve">
+    <value>{first}, {second}, dan {more} lainnya</value>
+  </data>
+  <data name="FollowingNamesTwo" xml:space="preserve">
+    <value>{first} dan {second}</value>
+  </data>
+  <data name="FollowingMarkMore" xml:space="preserve">
+    <value>+{count}</value>
+  </data>
+  <data name="FollowingMarkSpoken" xml:space="preserve">
+    <value>{names} menonton sampai sini.</value>
+  </data>
+  <data name="FollowingScoreSpoken" xml:space="preserve">
+    <value>Skor {score} dari 10</value>
+  </data>
+  <data name="FollowingOpenHelp" xml:space="preserve">
+    <value>Menampilkan sampai mana masing-masing.</value>
+  </data>
   <data name="MoreFollowedProgress" xml:space="preserve">
     <value>{status} · {progress}</value>
   </data>
@@ -10691,9 +10862,6 @@
   <data name="TitleFactTba" xml:space="preserve">
     <value>Akan diumumkan</value>
   </data>
-  <data name="MoreFollowingLine" xml:space="preserve">
-    <value>{status} · {score}/10</value>
-  </data>
   <data name="EpisodeGoTo" xml:space="preserve">
     <value>Ke episode…</value>
   </data>
@@ -10714,6 +10882,42 @@
   </data>
   <data name="EpisodeGoToNotOut" xml:space="preserve">
     <value>Episode {number} belum tayang. Yang terbaru adalah {latest}.</value>
+  </data>
+  <data name="EpisodeMissingAired" xml:space="preserve">
+    <value>Episode {episode} tayang {ago}.</value>
+  </data>
+  <data name="EpisodeMissingAiredOn" xml:space="preserve">
+    <value>Episode {episode} tayang pada {date}.</value>
+  </data>
+  <data name="EpisodeMissingNotYet" xml:space="preserve">
+    <value>Sumber-sumber Anda belum memilikinya.</value>
+  </data>
+  <data name="EpisodeMissingStill" xml:space="preserve">
+    <value>Sumber-sumber Anda masih belum memilikinya.</value>
+  </data>
+  <data name="EpisodeMissingNoAnswer" xml:space="preserve">
+    <value>Sumber-sumber Anda tidak merespons.</value>
+  </data>
+  <data name="EpisodeMissingLooksAgain" xml:space="preserve">
+    <value>Kaeri mencarinya lagi setiap {minutes} menit.</value>
+  </data>
+  <data name="EpisodeMissingNone" xml:space="preserve">
+    <value>Tidak ada sumber Anda yang memilikinya.</value>
+  </data>
+  <data name="EpisodeMissingOffline" xml:space="preserve">
+    <value>Kaeri akan mencarinya setelah Anda kembali daring.</value>
+  </data>
+  <data name="EpisodeRowAiredAgo" xml:space="preserve">
+    <value>Tayang {ago}</value>
+  </data>
+  <data name="EpisodeUnsourcedYet" xml:space="preserve">
+    <value>Belum ada di sumber-sumber Anda</value>
+  </data>
+  <data name="EpisodeFoundAnnouncement" xml:space="preserve">
+    <value>Episode {episode} kini ada di sumber-sumber Anda.</value>
+  </data>
+  <data name="EpisodeCheckAgainHelp" xml:space="preserve">
+    <value>Kaeri juga mencarinya sendiri setiap {minutes} menit selama {hours} jam setelah episode tayang.</value>
   </data>
   <data name="TorrentsTitle" xml:space="preserve">
     <value>Torrent</value>

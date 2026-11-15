@@ -115,6 +115,7 @@ settings-label-mark-chapters = Đánh dấu mở đầu và kết thúc
 settings-label-skip-button = Hiện nút bỏ qua
 settings-label-fullscreen = Mở toàn màn hình
 settings-label-upscaling = Nâng độ phân giải
+settings-label-preload-metered = Tải trước khi đo lưu lượng
 settings-label-player-ui = Giao diện trình phát
 settings-label-night-mode = Chế độ đêm
 settings-label-download-dir = Thư mục tải xuống

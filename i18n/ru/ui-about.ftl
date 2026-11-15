@@ -33,6 +33,21 @@ report-privacy = Ничего не покидает это { -device }, пока
 report-tv-scan = Отсканируйте код, чтобы открыть отчёт на телефоне.
 report-crash-off = Отчёты о сбоях выключены, поэтому ни один не включён. Включить их можно в настройках, в разделе «О программе».
 report-crash-settings = Настройки отчётов о сбоях
+report-player-log = Журнал плеера
+report-player-log-detail = { $playbacks ->
+    [one] Последние воспроизведения: { $playbacks } · { $size }
+    [few] Последние воспроизведения: { $playbacks } · { $size }
+    [many] Последние воспроизведения: { $playbacks } · { $size }
+   *[other] Последние воспроизведения: { $playbacks } · { $size }
+ }
+report-player-log-empty = Воспроизведений пока не было
+report-player-log-save = Сохранить журнал…
+report-player-log-attach = Приложите файл к задаче, когда она откроется на GitHub.
+report-player-log-saved = Сохранено как { $file }
+report-player-log-failed = Не удалось сохранить журнал. Выберите другую папку.
+report-sent-report = Отчёт
+report-player-log-a11y-saved = Журнал плеера сохранён
+report-player-log-a11y-hint = Сохраняет файл, который можно приложить к задаче
 settings-group-crashes = Отчёты о сбоях
 settings-crash-save = Сохранять отчёты о сбоях на этом устройстве
 settings-crash-save-detail = { -app-name } хранит на этом устройстве краткую запись о каждом сбое для «Сообщить об ошибке», убирая из неё названия, адреса и имена. Ничего не отправляется само по себе.

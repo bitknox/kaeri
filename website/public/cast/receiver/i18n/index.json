@@ -1,0 +1,63 @@
+{
+  "args": {
+    "receiver-closing-computer": {
+      "seconds": "int"
+    },
+    "receiver-closing-ipad": {
+      "seconds": "int"
+    },
+    "receiver-closing-iphone": {
+      "seconds": "int"
+    },
+    "receiver-closing-mac": {
+      "seconds": "int"
+    },
+    "receiver-closing-phone": {
+      "seconds": "int"
+    },
+    "receiver-closing-tablet": {
+      "seconds": "int"
+    },
+    "receiver-error": {
+      "episode": "plain"
+    },
+    "receiver-error-audio-codec": {
+      "codec": "plain"
+    },
+    "receiver-error-video-codec": {
+      "codec": "plain"
+    },
+    "receiver-finished": {
+      "episode": "plain"
+    },
+    "receiver-up-next": {
+      "seconds": "int"
+    },
+    "receiver-up-next-numbered": {
+      "episode": "plain"
+    },
+    "receiver-up-next-titled": {
+      "episode": "plain",
+      "title": "text"
+    },
+    "receiver-waiting": {
+      "seconds": "int"
+    }
+  },
+  "languages": [
+    "en",
+    "de",
+    "es-419",
+    "fr",
+    "id",
+    "it",
+    "ja",
+    "pl",
+    "pt-BR",
+    "ru",
+    "sv",
+    "tr",
+    "vi"
+  ],
+  "source": "en"
+}

@@ -1,0 +1,198 @@
+{
+  "messages": {
+    "receiver-closing-computer": [
+      "Schließt in ",
+      {
+        "arg": "seconds"
+      },
+      " s. Wähle eine Folge auf dem Computer, um zu bleiben."
+    ],
+    "receiver-closing-ipad": [
+      "Schließt in ",
+      {
+        "arg": "seconds"
+      },
+      " s. Wähle eine Folge auf dem iPad, um zu bleiben."
+    ],
+    "receiver-closing-iphone": [
+      "Schließt in ",
+      {
+        "arg": "seconds"
+      },
+      " s. Wähle eine Folge auf dem iPhone, um zu bleiben."
+    ],
+    "receiver-closing-mac": [
+      "Schließt in ",
+      {
+        "arg": "seconds"
+      },
+      " s. Wähle eine Folge auf dem Mac, um zu bleiben."
+    ],
+    "receiver-closing-phone": [
+      "Schließt in ",
+      {
+        "arg": "seconds"
+      },
+      " s. Wähle eine Folge auf dem Smartphone, um zu bleiben."
+    ],
+    "receiver-closing-tablet": [
+      "Schließt in ",
+      {
+        "arg": "seconds"
+      },
+      " s. Wähle eine Folge auf dem Tablet, um zu bleiben."
+    ],
+    "receiver-error": [
+      "Folge ",
+      {
+        "arg": "episode"
+      },
+      " ließ sich nicht abspielen"
+    ],
+    "receiver-error-audio-codec": [
+      "Dieser TV kann ",
+      {
+        "arg": "codec"
+      },
+      "-Audio nicht abspielen."
+    ],
+    "receiver-error-hint-computer": [
+      "Wähle auf dem Computer eine andere Quelle."
+    ],
+    "receiver-error-hint-ipad": [
+      "Wähle auf dem iPad eine andere Quelle."
+    ],
+    "receiver-error-hint-iphone": [
+      "Wähle auf dem iPhone eine andere Quelle."
+    ],
+    "receiver-error-hint-mac": [
+      "Wähle auf dem Mac eine andere Quelle."
+    ],
+    "receiver-error-hint-phone": [
+      "Wähle auf dem Smartphone eine andere Quelle."
+    ],
+    "receiver-error-hint-tablet": [
+      "Wähle auf dem Tablet eine andere Quelle."
+    ],
+    "receiver-error-unnumbered": [
+      "Diese Folge ließ sich nicht abspielen"
+    ],
+    "receiver-error-video-codec": [
+      "Dieser TV kann ",
+      {
+        "arg": "codec"
+      },
+      "-Video nicht abspielen."
+    ],
+    "receiver-finished": [
+      "Folge ",
+      {
+        "arg": "episode"
+      },
+      " zu Ende"
+    ],
+    "receiver-finished-unnumbered": [
+      "Zu Ende"
+    ],
+    "receiver-paused": [
+      "Pausiert"
+    ],
+    "receiver-plain-subs": [
+      "Untertitel erscheinen auf diesem TV als einfacher Text."
+    ],
+    "receiver-ready-computer": [
+      "Bereit. Wähle eine Folge auf dem Computer."
+    ],
+    "receiver-ready-ipad": [
+      "Bereit. Wähle eine Folge auf dem iPad."
+    ],
+    "receiver-ready-iphone": [
+      "Bereit. Wähle eine Folge auf dem iPhone."
+    ],
+    "receiver-ready-mac": [
+      "Bereit. Wähle eine Folge auf dem Mac."
+    ],
+    "receiver-ready-phone": [
+      "Bereit. Wähle eine Folge auf dem Smartphone."
+    ],
+    "receiver-ready-tablet": [
+      "Bereit. Wähle eine Folge auf dem Tablet."
+    ],
+    "receiver-sender-gone-computer": [
+      "Warten auf den Computer"
+    ],
+    "receiver-sender-gone-hint-computer": [
+      "Öffne Kaeri auf dem Computer, um weiterzuschauen."
+    ],
+    "receiver-sender-gone-hint-ipad": [
+      "Öffne Kaeri auf dem iPad, um weiterzuschauen."
+    ],
+    "receiver-sender-gone-hint-iphone": [
+      "Öffne Kaeri auf dem iPhone, um weiterzuschauen."
+    ],
+    "receiver-sender-gone-hint-mac": [
+      "Öffne Kaeri auf dem Mac, um weiterzuschauen."
+    ],
+    "receiver-sender-gone-hint-phone": [
+      "Öffne Kaeri auf dem Smartphone, um weiterzuschauen."
+    ],
+    "receiver-sender-gone-hint-tablet": [
+      "Öffne Kaeri auf dem Tablet, um weiterzuschauen."
+    ],
+    "receiver-sender-gone-ipad": [
+      "Warten auf das iPad"
+    ],
+    "receiver-sender-gone-iphone": [
+      "Warten auf das iPhone"
+    ],
+    "receiver-sender-gone-mac": [
+      "Warten auf den Mac"
+    ],
+    "receiver-sender-gone-phone": [
+      "Warten auf das Smartphone"
+    ],
+    "receiver-sender-gone-tablet": [
+      "Warten auf das Tablet"
+    ],
+    "receiver-skipped-ending": [
+      "Abspann übersprungen"
+    ],
+    "receiver-skipped-opening": [
+      "Vorspann übersprungen"
+    ],
+    "receiver-starting": [
+      "Wird gestartet"
+    ],
+    "receiver-up-next": [
+      "Als Nächstes · startet in ",
+      {
+        "arg": "seconds"
+      },
+      " s"
+    ],
+    "receiver-up-next-numbered": [
+      "Folge ",
+      {
+        "arg": "episode"
+      }
+    ],
+    "receiver-up-next-titled": [
+      "Folge ",
+      {
+        "arg": "episode"
+      },
+      " · ",
+      {
+        "arg": "title"
+      }
+    ],
+    "receiver-waiting": [
+      "Warten auf den Stream · ",
+      {
+        "arg": "seconds"
+      },
+      " s"
+    ]
+  },
+  "tag": "de"
+}

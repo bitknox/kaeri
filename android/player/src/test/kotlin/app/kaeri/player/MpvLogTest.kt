@@ -27,4 +27,13 @@ class MpvLogTest {
         )
         assertEquals(android.util.Log.ERROR to "[ffmpeg] https: HTTP error 403 for https://cdn.example", MpvLog.said(event))
     }
+
+    @Test
+    fun thePlayerLogKeepsInfoAndUpAtTheEnginesLevels() {
+        assertEquals(app.kaeri.engine.ffi.FfiLogLevel.ERROR, MpvLog.kept(android.util.Log.ERROR))
+        assertEquals(app.kaeri.engine.ffi.FfiLogLevel.WARN, MpvLog.kept(android.util.Log.WARN))
+        assertEquals(app.kaeri.engine.ffi.FfiLogLevel.INFO, MpvLog.kept(android.util.Log.INFO))
+        assertEquals(null, MpvLog.kept(android.util.Log.DEBUG))
+        assertEquals(null, MpvLog.kept(android.util.Log.VERBOSE))
+    }
 }

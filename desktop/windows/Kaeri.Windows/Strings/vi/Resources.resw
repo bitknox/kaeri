@@ -68,6 +68,15 @@
   <data name="NoticeCastLost" xml:space="preserve">
     <value>Mất kết nối với {name}, nên việc chiếu đã dừng.</value>
   </data>
+  <data name="NoticeCastSegment" xml:space="preserve">
+    <value>{name} không còn nhận được luồng phát: nguồn không phản hồi cho một phần của tập. Hãy thử nguồn khác.</value>
+  </data>
+  <data name="NoticeCastLostStream" xml:space="preserve">
+    <value>{name} mất luồng phát từ thiết bị này. Hãy kiểm tra cả hai có cùng một mạng không.</value>
+  </data>
+  <data name="NoticeCastSubtitlesPlain" xml:space="preserve">
+    <value>Phụ đề trên {name} hiển thị dạng văn bản thường. Phụ đề có định dạng quá nặng với TV này.</value>
+  </data>
   <data name="NoticeCastNoDevice" xml:space="preserve">
     <value>TV đã chọn không còn trong mạng nữa.</value>
   </data>
@@ -352,6 +361,12 @@
   </data>
   <data name="NoticeStreamNoVideo" xml:space="preserve">
     <value>Luồng này không có hình. Đang thử {next} trên {total}.</value>
+  </data>
+  <data name="NoticeFailedOver" xml:space="preserve">
+    <value>Luồng bị ngắt. {source} đã tiếp quản tại cùng vị trí.</value>
+  </data>
+  <data name="NoticeFailedOverSameSource" xml:space="preserve">
+    <value>Luồng bị ngắt. Một luồng khác từ {source} đã tiếp quản tại cùng vị trí.</value>
   </data>
   <data name="NoticePlayerCouldNotPlay" xml:space="preserve">
     <value>mpv không phát được tệp này. {reason}</value>
@@ -848,6 +863,9 @@
   <data name="ReadingRowWaitsWifi" xml:space="preserve">
     <value>Đang chờ · cần Wi-Fi</value>
   </data>
+  <data name="ReadingRowWaitsRoom" xml:space="preserve">
+    <value>Đang chờ · cần dung lượng trống</value>
+  </data>
   <data name="ReadingRowDownloading" xml:space="preserve">
     <value>Đang tải · {done}/{total} trang</value>
   </data>
@@ -952,6 +970,9 @@
   </data>
   <data name="ReadingDlOffline" xml:space="preserve">
     <value>Ngoại tuyến</value>
+  </data>
+  <data name="ReadingDlNoRoom_other" xml:space="preserve">
+    <value>Hết dung lượng. Sẽ tải khi có dung lượng trống.</value>
   </data>
   <data name="ReadingEstimateSize" xml:space="preserve">
     <value>Khoảng {size}</value>
@@ -1384,6 +1405,15 @@
   </data>
   <data name="NoticeSignedOutQueue_other" xml:space="preserve">
     <value>Đã đăng xuất khỏi {tracker}. {count} thay đổi đang chờ được giữ lại cho lần đăng nhập sau.</value>
+  </data>
+  <data name="NoticeTrackerChangeRefused" xml:space="preserve">
+    <value>{tracker} liên tục từ chối một thay đổi cho {title}, nên thay đổi đó chỉ còn trong Kaeri.</value>
+  </data>
+  <data name="NoticeTrackerChangesRefused_other" xml:space="preserve">
+    <value>{tracker} liên tục từ chối các thay đổi cho {title} và {others} tựa khác, nên chúng chỉ còn trong Kaeri.</value>
+  </data>
+  <data name="NoticeTrackerChangeRefusedUntitled_other" xml:space="preserve">
+    <value>{tracker} liên tục từ chối các thay đổi cho {count} tựa, nên chúng chỉ còn trong Kaeri.</value>
   </data>
   <data name="NoticeSignOutFailed" xml:space="preserve">
     <value>Không đăng xuất được khỏi {tracker}. Hãy thử lại. {reason}</value>
@@ -2582,6 +2612,36 @@
   <data name="ReportCrashSettings" xml:space="preserve">
     <value>Cài đặt báo cáo sự cố</value>
   </data>
+  <data name="ReportPlayerLog" xml:space="preserve">
+    <value>Nhật ký trình phát</value>
+  </data>
+  <data name="ReportPlayerLogDetail_other" xml:space="preserve">
+    <value>{playbacks} lượt phát gần nhất · {size}</value>
+  </data>
+  <data name="ReportPlayerLogEmpty" xml:space="preserve">
+    <value>Chưa có lượt phát nào được ghi lại</value>
+  </data>
+  <data name="ReportPlayerLogSave" xml:space="preserve">
+    <value>Lưu nhật ký…</value>
+  </data>
+  <data name="ReportPlayerLogAttach" xml:space="preserve">
+    <value>Đính kèm tệp vào issue khi issue mở trên GitHub.</value>
+  </data>
+  <data name="ReportPlayerLogSaved" xml:space="preserve">
+    <value>Đã lưu thành {file}</value>
+  </data>
+  <data name="ReportPlayerLogFailed" xml:space="preserve">
+    <value>Không lưu được nhật ký. Hãy thử thư mục khác.</value>
+  </data>
+  <data name="ReportSentReport" xml:space="preserve">
+    <value>Báo cáo</value>
+  </data>
+  <data name="ReportPlayerLogA11ySaved" xml:space="preserve">
+    <value>Đã lưu nhật ký trình phát</value>
+  </data>
+  <data name="ReportPlayerLogA11yHint" xml:space="preserve">
+    <value>Lưu một tệp để đính kèm vào issue</value>
+  </data>
   <data name="SettingsGroupCrashes" xml:space="preserve">
     <value>Báo cáo sự cố</value>
   </data>
@@ -2777,6 +2837,36 @@
   <data name="CastVolumeFixed" xml:space="preserve">
     <value>Đặt trên TV</value>
   </data>
+  <data name="CastButtonConnecting" xml:space="preserve">
+    <value>Đang kết nối tới {name}</value>
+  </data>
+  <data name="CastButtonConnected" xml:space="preserve">
+    <value>Đã kết nối tới {name}</value>
+  </data>
+  <data name="CastPlaysOn" xml:space="preserve">
+    <value>Phát trên {name}</value>
+  </data>
+  <data name="CastIdle" xml:space="preserve">
+    <value>Chưa phát gì</value>
+  </data>
+  <data name="CastStatusPaused" xml:space="preserve">
+    <value>Đã tạm dừng trên {name}</value>
+  </data>
+  <data name="CastOpenShow" xml:space="preserve">
+    <value>Mở {title}</value>
+  </data>
+  <data name="CastControllerClose" xml:space="preserve">
+    <value>Đóng</value>
+  </data>
+  <data name="CastMiniOpens" xml:space="preserve">
+    <value>Mở bảng điều khiển</value>
+  </data>
+  <data name="CastPlayNextOn" xml:space="preserve">
+    <value>Phát sau tập này trên {name}</value>
+  </data>
+  <data name="CastNotificationLine" xml:space="preserve">
+    <value>Đang chiếu tới {name}</value>
+  </data>
   <data name="ActionTryAgain" xml:space="preserve">
     <value>Thử lại</value>
   </data>
@@ -2924,6 +3014,9 @@
   <data name="ActionCheckAgain" xml:space="preserve">
     <value>Kiểm tra lại</value>
   </data>
+  <data name="ActionChecking" xml:space="preserve">
+    <value>Đang kiểm tra</value>
+  </data>
   <data name="ActionOpenSettings" xml:space="preserve">
     <value>Mở cài đặt</value>
   </data>
@@ -2989,6 +3082,9 @@
   </data>
   <data name="TimeMinutes" xml:space="preserve">
     <value>{minutes} phút</value>
+  </data>
+  <data name="TimeHours" xml:space="preserve">
+    <value>{hours} giờ</value>
   </data>
   <data name="TimeNowInline" xml:space="preserve">
     <value>bây giờ</value>
@@ -3277,6 +3373,15 @@
   </data>
   <data name="NamesList" xml:space="preserve">
     <value>{list}, {next}</value>
+  </data>
+  <data name="DesktopCastQuitTitle" xml:space="preserve">
+    <value>Dừng truyền và thoát?</value>
+  </data>
+  <data name="DesktopCastQuitBody" xml:space="preserve">
+    <value>{title} đang phát trên {name}. Thoát sẽ dừng phát.</value>
+  </data>
+  <data name="DesktopCastQuitAction" xml:space="preserve">
+    <value>Dừng và thoát</value>
   </data>
   <data name="DiscussionOpen" xml:space="preserve">
     <value>Thảo luận</value>
@@ -6863,6 +6968,9 @@
   <data name="ReadSearchSourceMore" xml:space="preserve">
     <value>Hiện thêm {n}</value>
   </data>
+  <data name="ReadTileAddTo" xml:space="preserve">
+    <value>Thêm vào {list}</value>
+  </data>
   <data name="OnboardingStep" xml:space="preserve">
     <value>{step}/{total}</value>
   </data>
@@ -8126,6 +8234,21 @@
   <data name="SettingsUpNextCountdown" xml:space="preserve">
     <value>Đếm ngược Tiếp theo</value>
   </data>
+  <data name="SettingsPreloadCellular" xml:space="preserve">
+    <value>Tải trước video khi dùng dữ liệu di động</value>
+  </data>
+  <data name="SettingsPreloadMetered" xml:space="preserve">
+    <value>Tải trước video trên kết nối có đo lưu lượng</value>
+  </data>
+  <data name="SettingsPreloadDetailMetered" xml:space="preserve">
+    <value>Trong phần kết thúc, luồng phát, phụ đề và mốc bỏ qua của tập tiếp theo được tìm sẵn. Vài giây đầu của tập cũng được tải, và trên kết nối có đo lưu lượng thì chỉ khi mục này bật.</value>
+  </data>
+  <data name="SettingsPreloadTorrents" xml:space="preserve">
+    <value>Torrent cũng tải các mảnh đầu tiên như vậy.</value>
+  </data>
+  <data name="SettingsPreloadA11yDimmed" xml:space="preserve">
+    <value>Cần bật "Tự động phát tập tiếp"</value>
+  </data>
   <data name="SettingsSkipOpening" xml:space="preserve">
     <value>Tự động bỏ qua phần mở đầu</value>
   </data>
@@ -8660,6 +8783,15 @@
   <data name="SettingsOpdsPort" xml:space="preserve">
     <value>Cổng của feed</value>
   </data>
+  <data name="SettingsLabelPictureInPictureOnLeave" xml:space="preserve">
+    <value>Hình trong hình khi rời ứng dụng</value>
+  </data>
+  <data name="SettingsAnilistFollowing" xml:space="preserve">
+    <value>Hiện người bạn theo dõi</value>
+  </data>
+  <data name="SettingsAnilistFollowingFooter" xml:space="preserve">
+    <value>Cho biết những người bạn theo dõi trên AniList đang xem đến đâu trong một bộ, trên trang và các tập của bộ đó. Ai xem được danh sách của bạn được đặt trên AniList.</value>
+  </data>
   <data name="BookServerAddress" xml:space="preserve">
     <value>Địa chỉ</value>
   </data>
@@ -8866,6 +8998,24 @@
   </data>
   <data name="SourcePickerCoverage_other" xml:space="preserve">
     <value>{covered} trên {of} tập</value>
+  </data>
+  <data name="SourcePickerEpisodes_other" xml:space="preserve">
+    <value>Tập {first}–{last}</value>
+  </data>
+  <data name="SourcePickerEpisodesNotYet" xml:space="preserve">
+    <value>Tập {first}–{last}. Chưa có {missing}</value>
+  </data>
+  <data name="SourcePickerEpisodesNot" xml:space="preserve">
+    <value>Tập {first}–{last}. Không có {missing}</value>
+  </data>
+  <data name="SourcePickerMissingPair" xml:space="preserve">
+    <value>{a} và {b}</value>
+  </data>
+  <data name="SourcePickerMissingRange" xml:space="preserve">
+    <value>{first}–{last}</value>
+  </data>
+  <data name="SourcePickerCoverageMissing_other" xml:space="preserve">
+    <value>{covered} trên {of} tập. Không có {missing}</value>
   </data>
   <data name="SourceNoteOff" xml:space="preserve">
     <value>Đã tắt</value>
@@ -10646,6 +10796,27 @@
   <data name="MoreLikeThis" xml:space="preserve">
     <value>Tác phẩm tương tự</value>
   </data>
+  <data name="FollowingShowAll" xml:space="preserve">
+    <value>Hiện cả {count}</value>
+  </data>
+  <data name="FollowingNames_other" xml:space="preserve">
+    <value>{first}, {second} và {more} người khác</value>
+  </data>
+  <data name="FollowingNamesTwo" xml:space="preserve">
+    <value>{first} và {second}</value>
+  </data>
+  <data name="FollowingMarkMore" xml:space="preserve">
+    <value>+{count}</value>
+  </data>
+  <data name="FollowingMarkSpoken" xml:space="preserve">
+    <value>{names} đã xem đến đây.</value>
+  </data>
+  <data name="FollowingScoreSpoken" xml:space="preserve">
+    <value>Điểm {score}/10</value>
+  </data>
+  <data name="FollowingOpenHelp" xml:space="preserve">
+    <value>Cho biết mỗi người đang xem đến đâu.</value>
+  </data>
   <data name="MoreFollowedProgress" xml:space="preserve">
     <value>{status} · {progress}</value>
   </data>
@@ -10691,9 +10862,6 @@
   <data name="TitleFactTba" xml:space="preserve">
     <value>Chưa công bố</value>
   </data>
-  <data name="MoreFollowingLine" xml:space="preserve">
-    <value>{status} · {score}/10</value>
-  </data>
   <data name="EpisodeGoTo" xml:space="preserve">
     <value>Đến tập…</value>
   </data>
@@ -10714,6 +10882,42 @@
   </data>
   <data name="EpisodeGoToNotOut" xml:space="preserve">
     <value>Tập {number} chưa ra mắt. Tập mới nhất là {latest}.</value>
+  </data>
+  <data name="EpisodeMissingAired" xml:space="preserve">
+    <value>Tập {episode} đã phát sóng {ago}.</value>
+  </data>
+  <data name="EpisodeMissingAiredOn" xml:space="preserve">
+    <value>Tập {episode} đã phát sóng vào {date}.</value>
+  </data>
+  <data name="EpisodeMissingNotYet" xml:space="preserve">
+    <value>Các nguồn của bạn chưa có tập này.</value>
+  </data>
+  <data name="EpisodeMissingStill" xml:space="preserve">
+    <value>Các nguồn của bạn vẫn chưa có tập này.</value>
+  </data>
+  <data name="EpisodeMissingNoAnswer" xml:space="preserve">
+    <value>Các nguồn của bạn không phản hồi.</value>
+  </data>
+  <data name="EpisodeMissingLooksAgain" xml:space="preserve">
+    <value>Kaeri tìm lại sau mỗi {minutes} phút.</value>
+  </data>
+  <data name="EpisodeMissingNone" xml:space="preserve">
+    <value>Không nguồn nào của bạn có tập này.</value>
+  </data>
+  <data name="EpisodeMissingOffline" xml:space="preserve">
+    <value>Kaeri sẽ tìm khi bạn có mạng trở lại.</value>
+  </data>
+  <data name="EpisodeRowAiredAgo" xml:space="preserve">
+    <value>Đã phát sóng {ago}</value>
+  </data>
+  <data name="EpisodeUnsourcedYet" xml:space="preserve">
+    <value>Chưa có trong các nguồn của bạn</value>
+  </data>
+  <data name="EpisodeFoundAnnouncement" xml:space="preserve">
+    <value>Tập {episode} đã có trong các nguồn của bạn.</value>
+  </data>
+  <data name="EpisodeCheckAgainHelp" xml:space="preserve">
+    <value>Kaeri cũng tự tìm sau mỗi {minutes} phút, trong {hours} giờ sau khi một tập phát sóng.</value>
   </data>
   <data name="TorrentsTitle" xml:space="preserve">
     <value>Torrent</value>

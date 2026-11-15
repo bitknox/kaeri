@@ -374,9 +374,19 @@ struct ReadFromSheet: View {
             return checking
         case .listed, nil:
             guard has else { return edition.listing == nil ? checking : empty }
+            // A range only runs to a number. A newest chapter known by name, as a book in one file
+            // is known by its title, gives the count instead: "1 chapter".
             let latest = edition.latest ?? String(edition.chapters)
+            guard isNumber(latest) else { return L.readingChapters(count: Int(max(edition.chapters, 1))) }
             return first ? L.seriesReadFromChapters(latest: latest) : L.seriesReadFromChaptersLater(latest: latest)
         }
+    }
+
+    /// A chapter label that is only a number, such as 12 or 12.5.
+    static func isNumber(_ label: String) -> Bool {
+        let words = label.trimmingCharacters(in: .whitespaces)
+        return words.first?.isASCII == true && words.first?.isNumber == true
+            && words.allSatisfy { $0.isASCII && ($0.isNumber || $0 == ".") }
     }
 }
 
@@ -400,6 +410,29 @@ struct SeriesTrackingSheet: View {
         let newest = tracked.filter { !$0.divergent }.map(\.chapters).max() ?? tracked.map(\.chapters).max() ?? 0
         ReadSheetFrame(title: L.seriesTracking, subtitle: series?.titles.display, close: L.actionDone) {
             VStack(alignment: .leading, spacing: 0) {
+                // Per device and never synced: nothing of it reaches a tracker from here on.
+                SheetRows {
+                    HStack(spacing: 12) {
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(L.titleAlwaysPrivate)
+                                .font(.plat(mac: 13, touch: 17, weight: .semibold))
+                                .foregroundStyle(.silk)
+                            Text(L.seriesAlwaysPrivateDetail)
+                                .font(.plat(mac: 12, touch: 15))
+                                .foregroundStyle(.haze)
+                                .fixedSize(horizontal: false, vertical: true)
+                        }
+                        Spacer(minLength: 0)
+                        Toggle(L.titleAlwaysPrivate, isOn: store.alwaysPrivate(series: work))
+                            .toggleStyle(.switch)
+                            .tint(.amber)
+                            .labelsHidden()
+                    }
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, Device.isMac ? 9 : 12)
+                    .accessibilityElement(children: .combine)
+                }
+                .padding(.bottom, 18)
                 if !tracked.isEmpty, let series {
                     SheetRows {
                         ForEach(tracked, id: \.tracker) { row in

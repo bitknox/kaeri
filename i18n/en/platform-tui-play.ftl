@@ -408,6 +408,11 @@ settings-label-fullscreen = Start in full screen
 # Settings row: the video upscaling mode.
 settings-label-upscaling = Upscaling
 
+# Settings row under Auto-play next: whether the next episode's first seconds load during the
+# ending on a metered connection. The column is 26 cells wide.
+# @max 26
+settings-label-preload-metered = Preload on metered
+
 # Settings row: which interface the player shows.
 settings-label-player-ui = Player interface
 

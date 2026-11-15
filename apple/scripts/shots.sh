@@ -11,13 +11,13 @@
 # downloads, providers, pluginStores, settings) or title=<id>, select=<id>, query=<words>,
 # genre=<name> (Search browsing a genre), filters=set (Search with Fantasy, 2024, Spring, TV and two sheet filters set, on the fuller catalogue, which finds two titles), scroll=<points> (Search's results scrolled), available=<here|services> (Search with its Available filter set) or palette=<words>, with more joined by +: pane=<Settings
 # pane>, notice=alert (a failure toast), sheet=<torrent|proxy|join|kitsu|update|show|about|report|welcome-sources|welcome-setup|filters|messages|discussion-<episode>|sync-status>,
-# prelaunch=<state> (a reading prelaunch state, see PrelaunchScene), sync=<state> (a Devices state or sync sheet, see SyncScene), tv=<paired|picker|code|expired|remote|lost|refused|empty|bar|away>, Play on TV with the Fixtures app's
+# prelaunch=<state> (a reading prelaunch state, see PrelaunchScene), sync=<state> (a Devices state or sync sheet, see SyncScene), private=<on|notice|kept|always|series> (private mode, see PrivateScene; sheet=sync-status opens the Mac badge's popover, sheet=private-badge the iPad's), tv=<paired|picker|code|expired|remote|lost|refused|empty|bar|away>, Play on TV with the Fixtures app's
 # fake TVs (FixtureTVs.swift says what each shows), cast=<scene>, casting to the made-up TVs with
 # Chromecast built in (FixtureCasts.swift lists the scenes), day=<days after today>, the calendar opened on
 # that day, for one with broadcasts, mine=1 the calendar on My list,
 # together=<state>, Watch together in a state TogetherScene (KaeriUI/TogetherShots.swift) lists, on
 # the together scene for its recent rooms (together:together=lobby-filling),
-# reader=<chrome|settings|chapters|ask|end|endskip|scrub|pill|plate|opening|error> on a reader scene (reader-manga-rtl, reader-strip, reader-novel,
+# reader=<chrome|settings|chapters|ask|end|endskip|scrub|pill|plate|opening|error|errorchrome> on a reader scene (reader-manga-rtl, reader-strip, reader-novel,
 # reader-moved, reader-long: the manga at chapter 60 of 120), the reader open with its chrome or a sheet up,
 # medium=<read|watch|both> on a reading scene, what Kaeri is for chosen at launch as Settings would,
 # work=<id> a series' page by its work id (work=a:900301), reading=1 the Library and Search on their reading side (with filters=set, reading's Fantasy, Manga, Japan and Releasing),
@@ -28,11 +28,15 @@
 # scene: playing:party=panel), showcase=<sources|stores|downloads|invite|pale|messages|proxy|checking|unsaved|held|stuck|all>, the invented rows of `Showcase`
 # (pale: 900001's page with a long title on a near-white banner; proxy: torrents through a saved proxy,
 # which sheet=proxy edits, and checking or unsaved its check under way or failed), and watched=<id>:<episodes>,
-# episodes marked watched as the shot starts (900006:8 is caught up), and
+# episodes marked watched as the shot starts (900006:8 is caught up),
+# check=<1|2|checking|clip> on missingepisode:title=900002, whose episode 6 aired with no source:
+# Check again pressed once (still) or twice (found), held on Checking, or pressed twice once ready
+# for a recording (MissingStaging.swift), and
 # continuefrom=<device>, Home's Continue cards saying another device played last, fold=open, the title page's watched episodes opened, world=1, Home's invented season of ten
 # drawn titles (with the scenes suggested, oneleft, continuefull, notfound, slow, failed and offline,
 # which stage Home's states), offline=1, the fake AniList gone once the first Home has loaded,
-# for Home's offline line over what it kept, and source=<licensed|server|folder>, the row
+# for Home's offline line over what it kept, the scenes following and followingslow, Watching with
+# people followed on AniList (followingslow holds each title page 2 s), source=<licensed|server|folder>, the row
 # Sources has selected (scenes licensed, servers and library seed one each, sourcesbusy all of them mid-scan, signed out and matching),
 # and skippause=<low-power|storage>, Settings' "Find skip times" row paused for that reason:
 #
@@ -86,7 +90,7 @@ players=(player-starting player-playing player-skip player-up-next player-still-
   player-found-undo player-found-panel player-found-panel-paused)
 
 usage() {
-  echo "usage: apple/scripts/shots.sh <mac|iphone|ipad> [--landscape] [<watching|sourceless|unsure|linkopened|fresh|playing|demoonly|demoplayed|demoandstore|demoremoved|subtitlestyled|crashoff|crashsaved|crashheld|storeowner|storeinvited|together>[:<section|key=value>]|player|player-<state>]…" >&2
+  echo "usage: apple/scripts/shots.sh <mac|iphone|ipad> [--landscape] [<watching|sourceless|unsure|linkopened|fresh|playing|demoonly|demoplayed|demoandstore|demoremoved|subtitlestyled|crashoff|crashsaved|crashheld|storeowner|storeinvited|together|missingepisode>[:<section|key=value>]|player|player-<state>]…" >&2
   exit 2
 }
 
@@ -108,7 +112,7 @@ for shot in "${shots[@]}"; do
 done
 shots=("${expanded[@]}")
 for shot in "${shots[@]}"; do
-  case "${shot%%:*}" in watching | sourceless | unsure | linkopened | fresh | playing | suggested | oneleft | continuefull | notfound | slow | failed | offline | licensed | servers | library | sourcesbusy | available | demoonly | demoplayed | demoandstore | demoremoved | subtitlestyled | crashoff | crashsaved | crashheld | storeowner | storeinvited | together | browsing | reader-manga-rtl | reader-strip | reader-novel | reader-moved | reader-long | reading-dark | reading-first-run | reading-update-sheet | reading-join-ask | reading-home | reading-demo | reading-series | reading-downloads | eink-grey | eink-kaleido-unsure) ;; player-*) ;; *) usage ;; esac
+  case "${shot%%:*}" in watching | sourceless | unsure | linkopened | fresh | playing | suggested | oneleft | continuefull | notfound | slow | failed | following | followingslow | offline | licensed | servers | library | sourcesbusy | available | demoonly | demoplayed | demoandstore | demoremoved | subtitlestyled | crashoff | crashsaved | crashheld | storeowner | storeinvited | together | missingepisode | browsing | reader-manga-rtl | reader-strip | reader-novel | reader-moved | reader-long | reading-dark | reading-first-run | reading-update-sheet | reading-join-ask | reading-home | reading-demo | reading-series | reading-downloads | eink-grey | eink-kaleido-unsure) ;; player-*) ;; *) usage ;; esac
   if [[ "$shot" == player-start-* ]]; then continue; fi
   if [[ "$shot" == player-* && ! " ${players[*]} " == *" $shot "* ]]; then usage; fi
 done
@@ -166,6 +170,7 @@ arguments() {
       sheet=*) printf '%s\n' -KaeriSheet "${screen#sheet=}" ;;
       tv=*) printf '%s\n' -KaeriTV "${screen#tv=}" ;;
       sync=*) printf '%s\n' -KaeriSync "${screen#sync=}" ;;
+      private=*) printf '%s\n' -KaeriPrivate "${screen#private=}" ;;
       prelaunch=*) printf '%s\n' -KaeriPrelaunch "${screen#prelaunch=}" ;;
       cast=*) printf '%s\n' -KaeriCast "${screen#cast=}" ;;
       reader=*) printf '%s\n' -KaeriReader "${screen#reader=}" ;;
@@ -178,6 +183,7 @@ arguments() {
       together=*) printf '%s\n' -KaeriSection together -KaeriTogether "${screen#together=}" ;;
       showcase=*) printf '%s\n' -KaeriShowcase "${screen#showcase=}" ;;
       watched=*) printf '%s\n' -KaeriWatched "${screen#watched=}" ;;
+      check=*) printf '%s\n' -KaeriCheckAgain "${screen#check=}" ;;
       source=*) printf '%s\n' -KaeriSource "${screen#source=}" ;;
       fold=*) printf '%s\n' -KaeriFold "${screen#fold=}" ;;
       day=*) printf '%s\n' -KaeriDay "${screen#day=}" ;;

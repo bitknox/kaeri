@@ -8,6 +8,18 @@ source-picker-coverage = { $of ->
     [one] { $covered } av { $of } avsnitt
    *[other] { $covered } av { $of } avsnitt
  }
+source-picker-episodes = { $count ->
+    [one] Avsnitt { $first }
+   *[other] Avsnitt { $first } till { $last }
+ }
+source-picker-episodes-not-yet = Avsnitt { $first } till { $last }. Inte { $missing } än
+source-picker-episodes-not = Avsnitt { $first } till { $last }. Inte { $missing }
+source-picker-missing-pair = { $a } eller { $b }
+source-picker-missing-range = { $first } till { $last }
+source-picker-coverage-missing = { $of ->
+    [one] { $covered } av { $of } avsnitt. Inte { $missing }
+   *[other] { $covered } av { $of } avsnitt. Inte { $missing }
+ }
 source-note-off = Avstängd
 source-note-resting = Svarar inte, provar igen snart
 source-note-gone = Inte installerad

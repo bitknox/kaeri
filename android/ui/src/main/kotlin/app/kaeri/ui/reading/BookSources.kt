@@ -77,6 +77,7 @@ import app.kaeri.ui.Icons
 import app.kaeri.ui.InfoRow
 import app.kaeri.ui.RowMark
 import app.kaeri.ui.LocalAppStore
+import app.kaeri.ui.LocalSnackbars
 import app.kaeri.ui.LocalNavigator
 import app.kaeri.ui.Place
 import app.kaeri.ui.QuietButton
@@ -238,7 +239,7 @@ internal fun BookSourcesScreen(title: String) {
         }
     }
     // With nothing added, the empty state's own button is the one Add.
-    val empty = view?.let { v -> v.folders.none { !it.removed } && v.servers.isEmpty() && v.plugins.isEmpty() } ?: true
+    val empty = bookSourcesEmpty(view)
     ScreenFrame(
         title = title,
         onBack = navigator::back,
@@ -267,6 +268,10 @@ internal fun BookSourcesScreen(title: String) {
     }
     if (adding) AddSourceSheet { adding = false }
 }
+
+/** Whether nothing is added yet, or the engine has not said: the list's empty state then holds the one Add a source. */
+internal fun bookSourcesEmpty(view: app.kaeri.engine.model.BookSourcesView?): Boolean =
+    view?.let { v -> v.folders.none { !it.removed } && v.servers.isEmpty() && v.plugins.isEmpty() } ?: true
 
 /**
  * Pulling [content] down looks again at the servers that showed no series, as the 30-minute check
@@ -431,6 +436,33 @@ private fun ServerRow(place: Place, server: BookServerRow, justAdded: Boolean) {
             }
         },
     )
+}
+
+/** The folder whose removal can still be taken back: the engine keeps it, marked, for 8 s. */
+internal fun BookSourcesView?.folderRemoving(): BookFolderRow? = this?.folders?.lastOrNull { it.removed }
+
+/**
+ * "Comics removed" with Undo while a removed folder can still be taken back, as video folders do:
+ * Undo brings it back with its series, read marks and places. The notice goes when the engine lets
+ * the folder go, so Undo is never offered once it would do nothing.
+ */
+@Composable
+internal fun FolderRemovedNotice() {
+    val store = LocalAppStore.current
+    val view by store.bookSources.view.collectAsStateWithLifecycle()
+    FolderRemovedNotice(view.folderRemoving(), store.bookSources::restoreFolder)
+}
+
+@Composable
+internal fun FolderRemovedNotice(folder: BookFolderRow?, restore: (String) -> Unit) {
+    val snackbars = LocalSnackbars.current
+    val context = LocalContext.current
+    folder ?: return
+    val text = Strings.sourcesRemoved(context, folder.name)
+    LaunchedEffect(folder.id) { snackbars.show(text, Strings.actionUndo(context)) { restore(folder.id) } }
+    DisposableEffect(folder.id) {
+        onDispose { snackbars.host.currentSnackbarData?.takeIf { it.visuals.message == text }?.dismiss() }
+    }
 }
 
 /** More, at a row's end: its menu on surfaceContainerHigh. */

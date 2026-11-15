@@ -17,10 +17,12 @@ use std::{
     sync::Arc,
 };
 
+use kaeri_playback::hls::playlist_start;
+
 use crate::{
     fetch::{RangeFile, Upstream, UpstreamResponse},
     formats::{AudioCodec, AudioTrack, Delivery, MediaInfo, VideoFormat},
-    mkv,
+    master, mkv,
     relay::resolve,
 };
 
@@ -84,13 +86,17 @@ pub async fn hls(
     // Relative addresses resolve against where a redirect landed.
     let mut playlist_url = response.url.clone().unwrap_or_else(|| url.to_owned());
     let Ok(body) = response.bytes(PLAYLIST_LIMIT).await else { return (info, probe) };
-    let mut text = String::from_utf8_lossy(&body).into_owned();
+    let mut text =
+        String::from_utf8_lossy(&body[playlist_start(&body).unwrap_or(0)..]).into_owned();
 
     if let Some(variant) = best_variant(&text) {
         if let Some(codecs) = variant.codecs {
             read_codecs(&codecs, &mut info);
         }
         info.height = variant.height;
+        if let Some(group) = &variant.audio {
+            read_renditions(&text, group, &mut info);
+        }
         let variant = variant.uri;
         playlist_url = resolve(&playlist_url, &variant);
         let Ok(response) = get(upstream, &playlist_url, headers, None).await else {
@@ -101,7 +107,8 @@ pub async fn hls(
         }
         probe.manifest &= cors_allowed(&response);
         let Ok(body) = response.bytes(PLAYLIST_LIMIT).await else { return (info, probe) };
-        text = String::from_utf8_lossy(&body).into_owned();
+        text =
+            String::from_utf8_lossy(&body[playlist_start(&body).unwrap_or(0)..]).into_owned();
     }
 
     let map = text.lines().find_map(|line| {
@@ -131,12 +138,38 @@ pub async fn hls(
     (info, probe)
 }
 
-/// A master playlist's variant: its address, its `CODECS` and the height its `RESOLUTION` says.
+/// A master playlist's variant: its address, its `CODECS`, the height its `RESOLUTION` says
+/// and its `AUDIO` group.
 #[derive(Debug, Clone, PartialEq, Eq)]
 struct Variant {
     uri: String,
     codecs: Option<String>,
     height: Option<u32>,
+    audio: Option<String>,
+}
+
+/// The audio renditions of `group` as the stream's audio tracks, when there are two or more to
+/// choose from, each in the codec `CODECS` named, and the one marked default chosen until the
+/// viewer's choice is.
+fn read_renditions(text: &str, group: &str, info: &mut MediaInfo) {
+    let renditions: Vec<_> =
+        master::audio_renditions(text).into_iter().filter(|r| r.group == group).collect();
+    if renditions.len() < 2 {
+        return;
+    }
+    let codec = info.audio.first().and_then(|t| t.codec.clone());
+    info.audio = renditions
+        .into_iter()
+        .map(|r| AudioTrack {
+            codec: codec.clone(),
+            channels: r.channels.unwrap_or(2),
+            language: r.language,
+            name: r.name,
+            default: r.default,
+        })
+        .collect();
+    info.audio_choice = info.audio.iter().position(|t| t.default).unwrap_or(0);
+    info.renditions = true;
 }
 
 /// The variant with the most bandwidth, when `text` is a master playlist.
@@ -149,11 +182,12 @@ fn best_variant(text: &str) -> Option<Variant> {
         let codecs = attribute(attrs, "CODECS");
         let height = attribute(attrs, "RESOLUTION")
             .and_then(|r| r.split_once(['x', 'X']).and_then(|(_, h)| h.parse().ok()));
+        let audio = attribute(attrs, "AUDIO");
         let Some(uri) = lines.by_ref().find(|l| !l.is_empty() && !l.starts_with('#')) else {
             break;
         };
         if best.as_ref().is_none_or(|(b, _)| bandwidth > *b) {
-            best = Some((bandwidth, Variant { uri: uri.to_owned(), codecs, height }));
+            best = Some((bandwidth, Variant { uri: uri.to_owned(), codecs, height, audio }));
         }
     }
     best.map(|(_, variant)| variant)
@@ -184,7 +218,11 @@ fn read_codecs(codecs: &str, info: &mut MediaInfo) {
         if let Some(video) = VideoFormat::from_rfc6381(codec) {
             info.video.get_or_insert(video);
         } else if let Some(audio) = AudioCodec::from_rfc6381(codec) {
-            info.audio.push(AudioTrack { codec: Some(audio), channels: 2, language: None });
+            info.audio.push(AudioTrack {
+                codec: Some(audio),
+                channels: 2,
+                ..AudioTrack::default()
+            });
         }
     }
 }
@@ -320,7 +358,7 @@ pub fn read_sample_entries(data: &[u8], info: &mut MediaInfo) {
                     info.audio.push(AudioTrack {
                         codec: Some(codec),
                         channels,
-                        language: None,
+                        ..AudioTrack::default()
                     });
                 }
             }
@@ -381,13 +419,14 @@ pub fn matroska<R: Read + Seek>(reader: &mut R) -> std::io::Result<MediaInfo> {
                     ),
                     "V_VP9" => VideoFormat::Vp9,
                     "V_AV1" => VideoFormat::Av1,
-                    other => VideoFormat::Other(other.trim_start_matches("V_").to_owned()),
+                    other => VideoFormat::other_from_matroska(other),
                 });
             }
             2 => info.audio.push(AudioTrack {
                 codec: Some(AudioCodec::from_matroska(&track.codec)),
                 channels: u16::try_from(track.channels).unwrap_or(2),
                 language: Some(track.language.clone()).filter(|l| !l.is_empty()),
+                ..AudioTrack::default()
             }),
             _ => {}
         }
@@ -428,6 +467,42 @@ mod tests {
         assert_eq!(info.video, Some(VideoFormat::HevcMain10));
         assert_eq!(info.audio[0].codec, Some(AudioCodec::Eac3));
         assert_eq!(best_variant("#EXTM3U\n#EXTINF:4,\nseg0.ts\n"), None);
+    }
+
+    #[test]
+    fn the_best_variants_audio_renditions_are_the_streams_audio_tracks() {
+        let master = "#EXTM3U\n\
+            #EXT-X-MEDIA:TYPE=AUDIO,GROUP-ID=\"a\",LANGUAGE=\"ja\",NAME=\"Japanese\",DEFAULT=YES,URI=\"ja.m3u8\"\n\
+            #EXT-X-MEDIA:TYPE=AUDIO,GROUP-ID=\"a\",LANGUAGE=\"en\",NAME=\"English\",CHANNELS=\"6\",URI=\"en.m3u8\"\n\
+            #EXT-X-MEDIA:TYPE=AUDIO,GROUP-ID=\"low\",LANGUAGE=\"ja\",NAME=\"Japanese\",URI=\"ja-low.m3u8\"\n\
+            #EXT-X-STREAM-INF:BANDWIDTH=800000,CODECS=\"avc1.4d401f,mp4a.40.2\",AUDIO=\"low\"\nlow.m3u8\n\
+            #EXT-X-STREAM-INF:BANDWIDTH=5000000,CODECS=\"avc1.640028,mp4a.40.2\",AUDIO=\"a\"\nhigh.m3u8\n";
+        let variant = best_variant(master).unwrap();
+        assert_eq!(variant.audio.as_deref(), Some("a"));
+        let mut info = MediaInfo::default();
+        read_codecs(&variant.codecs.unwrap(), &mut info);
+        read_renditions(master, "a", &mut info);
+        assert!(info.renditions);
+        let tracks: Vec<_> = info
+            .audio
+            .iter()
+            .map(|t| (t.language.as_deref(), t.name.as_deref(), t.channels, t.codec.clone()))
+            .collect();
+        assert_eq!(
+            tracks,
+            [
+                (Some("ja"), Some("Japanese"), 2, Some(AudioCodec::Aac)),
+                (Some("en"), Some("English"), 6, Some(AudioCodec::Aac)),
+            ]
+        );
+        assert_eq!(info.audio_choice, 0, "the default until the viewer's choice is known");
+
+        // One rendition is no choice: the audio stays as `CODECS` said.
+        let mut info = MediaInfo::default();
+        read_codecs("avc1.4d401f,mp4a.40.2", &mut info);
+        read_renditions(master, "low", &mut info);
+        assert!(!info.renditions);
+        assert_eq!(info.audio.len(), 1);
     }
 
     #[test]

@@ -66,6 +66,7 @@ import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.res.stringResource
 import app.kaeri.i18n.R
+import app.kaeri.engine.model.PrivateTitle
 import app.kaeri.engine.model.AvailabilityCase
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -94,6 +95,7 @@ import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
+import app.kaeri.store.FollowingWords
 import app.kaeri.store.text
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kotlin.math.roundToInt
@@ -122,7 +124,6 @@ import app.kaeri.store.HeroArt
 import app.kaeri.store.LibraryModel
 import app.kaeri.store.label
 import app.kaeri.store.line
-import app.kaeri.store.TvPlayRequest
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalResources
 
@@ -684,8 +685,25 @@ private fun HeldRows(
 /** The season picker's key in a page's list. */
 private const val SEASONS = "seasons"
 
-/** Where the season picker stands in [entry]'s page: after the head, the actions, the synopsis if any, the facts and More about. */
-private fun seasonsIndex(entry: Entry): Int = if (synopsisWithoutSpoilers(entry.synopsis).isNotEmpty()) 5 else 4
+/**
+ * Where the season picker stands in [entry]'s page: after the head, the actions, People you follow
+ * if anyone has it, the synopsis if any, the facts and More about.
+ */
+private fun seasonsIndex(entry: Entry): Int =
+    4 + (if (synopsisWithoutSpoilers(entry.synopsis).isNotEmpty()) 1 else 0) + (if (entry.detail?.following.isNullOrEmpty()) 0 else 1)
+
+/**
+ * People you follow, under the list button, while anyone followed has the show: it fades in on
+ * the fade-in token as the people arrive, the items under it gliding on standard to make room,
+ * and fades out over 0.3 s when the switch goes off.
+ */
+private fun LazyListScope.followingItem(entry: Entry) {
+    val people = entry.detail?.following.orEmpty()
+    if (people.isEmpty()) return
+    item(key = "following", contentType = "following") {
+        FollowingRow(people, Modifier.animateItem(fadeInSpec = Motion.fadeIn(), placementSpec = Motion.standard(), fadeOutSpec = Motion.fadeOut()))
+    }
+}
 
 /**
  * A page's prefetch: the lazy list's own while it scrolls, and, while the page waits off screen,
@@ -829,6 +847,7 @@ private fun SeasonPage(
             if (loaded) {
                 val unlisted = episodes?.firstOrNull()?.metadataOnly == true
                 item(key = "actions", contentType = "actions") { Box(itemMotion()) { TitleActions(entry, actions, unlisted) } }
+                followingItem(entry)
                 val synopsis = synopsisWithoutSpoilers(entry.synopsis)
                 if (synopsis.isNotEmpty()) item(key = "synopsis", contentType = "synopsis") { Box(itemMotion()) { Synopsis(synopsis) } }
                 if (entry.isDemo) item(key = "demo-credit", contentType = "demo-credit") { Box(itemMotion()) { DemoCredit(Modifier.padding(horizontal = 16.dp, vertical = 8.dp)) } }
@@ -1226,11 +1245,7 @@ private fun TitleTopBar(entry: Entry, pick: SurprisePick?, onBack: () -> Unit, m
         // A picked title's Another, while the pool has more to pick: a text button, so Surprise me's word stays.
         if (pick != null && pick.more) AnotherButton(pick)
         val action = titleAction(entry)
-        if (store.tv.available && action.playable) {
-            CircleIconButton(Icons.Tv, stringResource(R.string.tv_play_on), {
-                store.tv.offer(TvPlayRequest(entry.id, entry.showTitle, action.episode.toString(), action.resume?.position))
-            })
-        }
+        if (action.playable) CastButton(circle = true)
         Box {
             CircleIconButton(Icons.More, stringResource(R.string.action_more), { more = true })
             Menu(expanded = more, onDismissRequest = { more = false }) {
@@ -1242,6 +1257,7 @@ private fun TitleTopBar(entry: Entry, pick: SurprisePick?, onBack: () -> Unit, m
                         showSettings = true
                     },
                 )
+                AlwaysPrivateItem(PrivateTitle.Show(entry.id)) { more = false }
                 DropdownMenuItem(
                     text = { Text(stringResource(R.string.source_picker_title)) },
                     leadingIcon = { Icon(Icons.Providers, null) },
@@ -1303,29 +1319,41 @@ private fun TitleActions(entry: Entry, actions: AppActions, unlisted: Boolean) {
     val asking = store.match.state.collectAsStateWithLifecycle().value.asks(entry.id)
     val availability = availabilityOf(entry.id, playsHere = !unlisted)
     val onService = availability?.main?.takeIf { availability.case == AvailabilityCase.ON_SERVICE }
+    // The next episode aired and no source lists it: its status in the action's slot.
+    val (missing, said) = rememberMissingView(entry)
+    val missed = missing.shown != null && !unlisted
     Column(Modifier.padding(horizontal = 16.dp).padding(top = 16.dp)) {
+        Announcer(said)
         if (onService != null) {
             WatchOnButton(entry, onService, Modifier.fillMaxWidth().heightIn(min = 56.dp))
         } else if (action.playable && asking) {
             ChooseMatchButton(entry.id, Modifier.fillMaxWidth().heightIn(min = 56.dp))
         } else if (action.playable && unlisted) {
             AddSourceButton(Modifier.fillMaxWidth().heightIn(min = 56.dp))
-        } else if (action.playable) {
-            Button(
-                onClick = { actions.play(entry.id, action.episode.toString()) },
-                modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp),
-            ) {
-                Icon(Icons.Play, contentDescription = null, modifier = Modifier.size(24.dp))
-                Spacer(Modifier.width(8.dp))
-                // What it plays crossfades as an episode is marked (T9).
-                Crossfade(action.label(LocalContext.current), animationSpec = Motion.standard(), label = "action") { // i18n-skip
-                    Text(it, style = MaterialTheme.typography.titleMedium.tabular(), maxLines = 1)
+        } else if (action.playable || missed) {
+            MissingSlot(entry, missing, actions, Modifier.fillMaxWidth()) {
+                val origin = rememberCastOrigin()
+                Button(
+                    onClick = {
+                        origin.mark()
+                        actions.play(entry.id, action.episode.toString())
+                    },
+                    modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp).then(origin.modifier),
+                ) {
+                    CastPlayIcon()
+                    Spacer(Modifier.width(8.dp))
+                    // What it plays crossfades as an episode is marked (T9).
+                    Crossfade(action.label(LocalContext.current), animationSpec = Motion.standard(), label = "action") { // i18n-skip
+                        Text(it, style = MaterialTheme.typography.titleMedium.tabular(), maxLines = 1)
+                    }
                 }
             }
         } else {
             // Caught up: when the next one airs, in the action's place, and no amber on the page.
             CaughtUp(action, Modifier.heightIn(min = 56.dp))
         }
+        // Private: under the main action, while private mode is on or the show is always private.
+        PrivatePageLine(privateLine(PrivateTitle.Show(entry.id)))
         Row(Modifier.padding(top = 4.dp).heightIn(min = 48.dp), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
             var open by remember { mutableStateOf(false) }
             Box(Modifier.weight(1f)) {
@@ -1366,6 +1394,7 @@ private fun TitleActions(entry: Entry, actions: AppActions, unlisted: Boolean) {
                 }
             }
         }
+        if (action.playable && onService == null && !asking && !unlisted) CastPlaysOn(Modifier.padding(top = 8.dp))
         ServiceLines(availability, entry)
         if (asking) MatchUncertainLine(entry.id, Modifier.padding(top = 12.dp))
     }
@@ -1812,7 +1841,7 @@ private fun LazyListScope.episodeRows(
     }
     if (folded.isNotEmpty()) {
         val anchor = page.key(entry.id, inRange[folded.size])
-        item(key = watchedFold(entry.id), contentType = "fold") { WatchedFoldRow(folded, unfolded, itemMotion().padding(horizontal = 16.dp), dub = rangeDub) { onFold(anchor) } }
+        item(key = watchedFold(entry.id), contentType = "fold") { WatchedFoldRow(folded, unfolded, itemMotion().padding(horizontal = 16.dp), dub = rangeDub, marked = page.marked) { onFold(anchor) } }
     }
     if (folded.isEmpty() && rangeDub != null) {
         item(key = "dub-line", contentType = "dub-line") {
@@ -1897,6 +1926,11 @@ internal class SynopsisPage(
     val arrived: () -> Unit = {},
     /** Whether the Go to episode dialog is open, so the page is recorded for the crossfade after it. */
     val asking: Boolean = false,
+    /**
+     * Whether the rows keep a column for the marks: once anyone followed stopped at one of the
+     * episodes, for as long as the page is open, so marks leaving fade out and move nothing.
+     */
+    val marked: Boolean = false,
 ) {
     /** The rows shown: the selected range's, or all of a short series. */
     val rows: List<EpisodeRow> = if (ranges.isEmpty()) listed else rangeRows(listed, ranges[selected])
@@ -1966,7 +2000,9 @@ private fun rememberSynopsisPage(entry: Entry, episodes: List<EpisodeRow>?, befo
             }
         })
     }
-    return SynopsisPage(listed, ranges, selected, { picked = it; landed = null }, outlook, protect, reveals, foldCount, { asking = true }, landed, goal, { goal = null }, asking)
+    var marked by remember(entry.id) { mutableStateOf(false) }
+    if (!marked && listed.any { it.followed.isNotEmpty() }) marked = true
+    return SynopsisPage(listed, ranges, selected, { picked = it; landed = null }, outlook, protect, reveals, foldCount, { asking = true }, landed, goal, { goal = null }, asking, marked)
 }
 
 /**
@@ -2046,7 +2082,15 @@ private fun rememberEpisodeFold(id: AnilistId, grid: androidx.compose.foundation
  * quiet one-line row with a chevron, not a button.
  */
 @Composable
-private fun WatchedFoldRow(folded: List<EpisodeRow>, unfolded: Boolean, modifier: Modifier = Modifier, dub: String? = null, onToggle: () -> Unit) {
+private fun WatchedFoldRow(
+    folded: List<EpisodeRow>,
+    unfolded: Boolean,
+    modifier: Modifier = Modifier,
+    dub: String? = null,
+    /** Whether the table's rows keep the marks' column, so this row keeps it too. */
+    marked: Boolean = false,
+    onToggle: () -> Unit,
+) {
     val colors = MaterialTheme.colorScheme
     val turn by androidx.compose.animation.core.animateFloatAsState(if (unfolded) 180f else 0f, Motion.quick(), label = "fold") // i18n-skip
     val hide = stringResource(R.string.title_hide_watched)
@@ -2071,6 +2115,8 @@ private fun WatchedFoldRow(folded: List<EpisodeRow>, unfolded: Boolean, modifier
         androidx.compose.animation.AnimatedVisibility(dub != null, enter = fadeIn(Motion.fadeIn()), exit = ExitTransition.None) {
             Text(dub.orEmpty(), style = MaterialTheme.typography.bodyMedium, color = colors.onSurfaceVariant, maxLines = 1, modifier = Modifier.padding(end = 12.dp))
         }
+        // Folded, the row carries the marks of the episodes inside it; unfolded, those rows carry their own.
+        if (marked) MarkSlot(if (unfolded) emptyList() else FollowingWords.folded(folded), Modifier.padding(end = 8.dp))
         Icon(Icons.Down, contentDescription = null, tint = colors.onSurfaceVariant, modifier = Modifier.graphicsLayer { rotationZ = turn })
     }
 }
@@ -2132,6 +2178,7 @@ private fun EpisodeRowView(entry: Entry, row: EpisodeRow, next: UInt, actions: A
                 onShow = { reveals.show(row.number) },
                 opensService = link != null && !unaired,
                 beside = beside,
+                followed = if (page.marked) row.followed else null,
             )
         } else {
             EpisodeLine(
@@ -2273,7 +2320,7 @@ private fun TabletTitle(
                         val anchor = page.key(entry.id, page.rows[folded.size])
                         fullWidth(watchedFold(entry.id)) {
                             // In a Box, which lets the row be narrower than the grid's cell.
-                            Box(itemMotion()) { WatchedFoldRow(folded, entry.id in unfolded, Modifier.widthIn(max = BesideDims.MaxWidth).padding(start = 16.dp)) { fold(anchor) } }
+                            Box(itemMotion()) { WatchedFoldRow(folded, entry.id in unfolded, Modifier.widthIn(max = BesideDims.MaxWidth).padding(start = 16.dp), marked = page.marked) { fold(anchor) } }
                         }
                     }
                     val shown = if (folded.isNotEmpty() && entry.id !in unfolded) page.rows.drop(folded.size) else page.rows
@@ -2375,7 +2422,12 @@ private fun TabletActions(entry: Entry, actions: AppActions, unlisted: Boolean, 
     val asking = store.match.state.collectAsStateWithLifecycle().value.asks(entry.id)
     val availability = availabilityOf(entry.id, playsHere = !unlisted)
     val onService = availability?.main?.takeIf { availability.case == AvailabilityCase.ON_SERVICE }
+    // The next episode aired and no source lists it: its status over the row, its buttons in the action's place.
+    val (missing, said) = rememberMissingView(entry)
+    val missed = missing.shown != null && !unlisted && onService == null
     Column(modifier) {
+    Announcer(said)
+    MissingAbove(missing, missed, Modifier.padding(bottom = 12.dp))
     Row(Modifier.heightIn(min = 56.dp), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
         if (onService != null) {
             WatchOnButton(entry, onService, Modifier.heightIn(min = 56.dp))
@@ -2383,12 +2435,22 @@ private fun TabletActions(entry: Entry, actions: AppActions, unlisted: Boolean, 
             ChooseMatchButton(entry.id, Modifier.heightIn(min = 56.dp))
         } else if (action.playable && unlisted) {
             AddSourceButton(Modifier.heightIn(min = 56.dp))
-        } else if (action.playable) {
-            Button(onClick = { actions.play(entry.id, action.episode.toString()) }, modifier = Modifier.heightIn(min = 56.dp), contentPadding = PaddingValues(horizontal = 24.dp)) {
-                Icon(Icons.Play, contentDescription = null, modifier = Modifier.size(24.dp))
-                Spacer(Modifier.width(8.dp))
-                Crossfade(action.label(LocalContext.current), animationSpec = Motion.standard(), label = "action") { // i18n-skip
-                    Text(it, style = MaterialTheme.typography.titleMedium.tabular(), maxLines = 1)
+        } else if (action.playable || missed) {
+            MissingLead(entry, missing, actions) {
+                val origin = rememberCastOrigin()
+                Button(
+                    onClick = {
+                        origin.mark()
+                        actions.play(entry.id, action.episode.toString())
+                    },
+                    modifier = Modifier.heightIn(min = 56.dp).then(origin.modifier),
+                    contentPadding = PaddingValues(horizontal = 24.dp),
+                ) {
+                    CastPlayIcon()
+                    Spacer(Modifier.width(8.dp))
+                    Crossfade(action.label(LocalContext.current), animationSpec = Motion.standard(), label = "action") { // i18n-skip
+                        Text(it, style = MaterialTheme.typography.titleMedium.tabular(), maxLines = 1)
+                    }
                 }
             }
         } else {
@@ -2431,6 +2493,8 @@ private fun TabletActions(entry: Entry, actions: AppActions, unlisted: Boolean, 
             }
         }
     }
+    if (action.playable && onService == null && !asking && !unlisted) CastPlaysOn(Modifier.padding(top = 8.dp))
+    PrivatePageLine(privateLine(PrivateTitle.Show(entry.id)))
     ServiceLines(availability, entry)
     }
 }
@@ -2475,5 +2539,16 @@ private fun TitleFacts(entry: Entry, modifier: Modifier = Modifier, onMore: () -
             Text(it, style = MaterialTheme.typography.bodyMedium, color = colors.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.padding(top = 12.dp))
         }
         FilledTonalButton(onClick = onMore, modifier = Modifier.padding(top = 12.dp)) { Text(stringResource(R.string.title_more_about)) }
+        // People you follow, after More about as wide screens place them: the phone's row and
+        // sheet, fading in as they arrive while the column grows on standard.
+        val people = entry.detail?.following.orEmpty()
+        var kept by remember { mutableStateOf(people) }
+        if (people.isNotEmpty()) kept = people
+        androidx.compose.animation.AnimatedVisibility(
+            people.isNotEmpty(),
+            enter = fadeIn(Motion.fadeIn()) + androidx.compose.animation.expandVertically(Motion.standard()),
+            exit = androidx.compose.animation.fadeOut(Motion.fadeOut()) + androidx.compose.animation.shrinkVertically(Motion.standard()),
+            label = "following", // i18n-skip
+        ) { FollowingRow(kept, inset = 0.dp) }
     }
 }

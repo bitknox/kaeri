@@ -695,6 +695,8 @@ impl Harness {
             Internal::Reader { .. }
             | Internal::ReadingSynced
             | Internal::BookSourcesChanged => {}
+            // A quiet recheck says what it found as `EpisodeChecked`, after relisting.
+            Internal::Recheck | Internal::RecheckFound { .. } => {}
         }
     }
 
@@ -710,6 +712,10 @@ impl Harness {
                 covers::hand_over(&mut self.app, covers::now(url, &bytes));
             }
             update => self.app.apply(update),
+        }
+        // Reader pages too, at once, as covers are.
+        for job in self.app.take_page_jobs() {
+            crate::tui::pages::hand_over(&mut self.app, crate::tui::pages::now(job));
         }
     }
 }
@@ -955,6 +961,7 @@ pub fn name(update: &Event) -> &'static str {
         Event::SyncStoreJoinFailed { .. } => "SyncStoreJoinFailed",
         Event::SetupFrom(_) => "SetupFrom",
         Event::CameIn(_) => "CameIn",
+        Event::EpisodeChecked(_) => "EpisodeChecked",
     }
 }
 
@@ -1011,6 +1018,7 @@ fn copy(update: &Event) -> Event {
         Event::Medium(event) => Event::Medium(event.clone()),
         Event::SetupFrom(setup) => Event::SetupFrom(setup.clone()),
         Event::CameIn(came) => Event::CameIn(came.clone()),
+        Event::EpisodeChecked(check) => Event::EpisodeChecked(check.clone()),
         Event::RecentSearches(recent) => Event::RecentSearches(recent.clone()),
         Event::Private(on) => Event::Private(*on),
         Event::AlwaysPrivate { title, on } => {
@@ -1222,9 +1230,12 @@ fn copy(update: &Event) -> Event {
         Event::Seeding(rows) => Event::Seeding(rows.clone()),
         Event::DeviceCode(prompt) => Event::DeviceCode(prompt.clone()),
         Event::LastAired(rows) => Event::LastAired(rows.clone()),
-        Event::DiscussionFound { media, episode, comments } => {
-            Event::DiscussionFound { media: *media, episode: *episode, comments: *comments }
-        }
+        Event::DiscussionFound { media, episode, comments, url } => Event::DiscussionFound {
+            media: *media,
+            episode: *episode,
+            comments: *comments,
+            url: url.clone(),
+        },
         Event::Discussion(view) => Event::Discussion(view.clone()),
         Event::Stores(rows) => Event::Stores(rows.clone()),
         Event::Profiles(view) => Event::Profiles(view.clone()),

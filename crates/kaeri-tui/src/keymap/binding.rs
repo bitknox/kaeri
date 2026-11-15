@@ -137,9 +137,11 @@ impl Binding {
     }
 
     pub(super) fn from_event(event: KeyEvent) -> Self {
-        // Crossterm reports SHIFT alongside uppercase characters on some platforms and not
-        // others. Normalising it away keeps `G` matching whether or not the flag arrives.
-        let modifiers = if matches!(event.code, KeyCode::Char(c) if c.is_uppercase()) {
+        // Crossterm reports SHIFT alongside uppercase characters and shifted symbols on some
+        // platforms and not others. Normalising it away keeps `G` and `+` matching whether or
+        // not the flag arrives.
+        let modifiers = if matches!(event.code, KeyCode::Char(c) if c.is_uppercase() || (c.is_ascii_punctuation()))
+        {
             event.modifiers & !KeyModifiers::SHIFT
         } else {
             event.modifiers

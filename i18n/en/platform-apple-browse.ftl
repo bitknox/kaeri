@@ -44,6 +44,19 @@ downloads-continued-left = { $count ->
    *[other] { $count } episodes left
  }
 
+# Title of that window while only chapters download.
+downloads-continued-chapters-title = Downloading chapters
+
+# Title of that window while episodes and chapters download together.
+downloads-continued-both-title = Downloading episodes and chapters
+
+# Line in that window: how many chapters are still to finish. Beside the episodes' line when both download, as "2 episodes left · 3 chapters left".
+# @arg count: int
+downloads-continued-chapters-left = { $count ->
+    [one] One chapter left
+   *[other] { $count } chapters left
+ }
+
 ## The title page
 
 # Line on the title page and in a Continue preview: where else the show streams. The places are already joined, such as "Lantern Library and Hikari Library".

@@ -300,6 +300,7 @@ read-search-source-kind-server = Servidor
 read-search-source-kind-folder = Pasta
 read-search-source-kind-plugin = { -plugin-cap }
 read-search-source-more = Mostrar mais { $n }
+read-tile-add-to = Adicionar a { $list }
 onboarding-step = { $step } de { $total }
 onboarding-welcome-line = Acompanhe o que você assiste e lê, a partir das suas próprias { -source-pl }.
 onboarding-welcome-note = Suas listas e seu progresso ficam nos seus { -device-pl }. { -tracker-cap-pl } e { -source-pl } ficam por sua conta.

@@ -17,16 +17,18 @@ use kaeri_model::{
     browsing::{self, GoTo},
     catalog::{Entry, LibrarySegment, LinkedTitle, RelationKind},
     command::{Command, LicensedCommand},
-    episodes::{self, EpisodeRange, EpisodeRow, EpisodeText},
+    episodes::{self, EpisodeRange, EpisodeRow, EpisodeText, FollowedMark},
     event::Event,
     licensed::{AvailabilityCase, TitleAvailability},
     settings::SettingKey,
     show::ShowSettingKey,
 };
 
+mod missing;
+
 use crate::{
     catalog, choices, matching, motion,
-    pages::licensed,
+    pages::{following, licensed},
     say,
     states::{Shape, States},
     synopsis, widgets,
@@ -50,6 +52,8 @@ struct EpisodeLine {
     /// The row's content, dimmed when no source lists the episode.
     root: gtk::Box,
     sub: gtk::Label,
+    /// Over the line: the picture it crossfades from when a source lists the episode.
+    sub_veil: gtk::Overlay,
     /// "Discussion · 214 comments", once a thread is known.
     discuss: gtk::Button,
     bar: gtk::ProgressBar,
@@ -68,6 +72,9 @@ struct EpisodeLine {
     room: Cell<bool>,
     /// The height the row has now.
     height: Cell<i32>,
+    /// Where the people followed who stopped at this episode show, and who they are.
+    marks: Option<gtk::Box>,
+    marked: RefCell<Vec<FollowedMark>>,
 }
 
 /// What the episode list was drawn from: when a table arrives that differs in none of it, the
@@ -79,6 +86,10 @@ struct Drawn {
     range: Option<usize>,
     fold: usize,
     protection_at: Option<usize>,
+    /// The rows keep a column for people followed.
+    column: bool,
+    /// What the page said about licensed services when the list was drawn.
+    availability: Option<TitleAvailability>,
 }
 
 /// The one line where spoiler protection starts.
@@ -99,6 +110,13 @@ struct Page {
     side: gtk::Box,
     seasons: gtk::Box,
     synopsis: gtk::Box,
+    /// People you follow, at the side column's end.
+    people: Rc<following::Section>,
+    /// What stands after the marks at a row's end, the same width on every row, so the folded
+    /// rows' marks line up with the rows'.
+    trail: gtk::SizeGroup,
+    /// The folded watched rows' marks, and whose they are.
+    fold_marks: RefCell<Option<(gtk::Box, Vec<FollowedMark>)>>,
     episodes: gtk::ListBox,
     episodes_state: Rc<States>,
     lines: RefCell<Vec<EpisodeLine>>,
@@ -155,6 +173,10 @@ struct Page {
     typing: RefCell<Option<glib::SourceId>>,
     capsule: gtk::Label,
     target: RefCell<Option<String>>,
+    /// The next episode while it has aired and no source lists it.
+    missing: missing::Missing,
+    /// The private line under the main action, moved into each new layout of the head.
+    private_line: Rc<crate::private::Line>,
 }
 
 /// The tag a title's page carries in the navigation stack: one page per title.
@@ -242,9 +264,14 @@ pub fn page(ctx: &Rc<Ctx>, id: AnilistId) -> adw::NavigationPage {
 
     let side = gtk::Box::new(gtk::Orientation::Vertical, 18);
     side.set_size_request(260, -1);
+    // People you follow stand at the column's end, kept while the rest of it is laid out again.
+    let people = following::Section::new(&ctx.hub);
+    let side_column = gtk::Box::new(gtk::Orientation::Vertical, 18);
+    side_column.append(&side);
+    side_column.append(&people.widget);
     let columns = gtk::Box::new(gtk::Orientation::Horizontal, 36);
     columns.append(&main);
-    columns.append(&side);
+    columns.append(&side_column);
     columns.set_margin_start(36);
     columns.set_margin_end(36);
     columns.set_margin_top(18);
@@ -306,6 +333,7 @@ pub fn page(ctx: &Rc<Ctx>, id: AnilistId) -> adw::NavigationPage {
         ));
     }
     let view = adw::ToolbarView::new();
+    crate::private::badge_on(&header);
     view.add_top_bar(&header);
     view.add_top_bar(&widgets::offline_banner());
     view.set_extend_content_to_top_edge(true);
@@ -327,6 +355,9 @@ pub fn page(ctx: &Rc<Ctx>, id: AnilistId) -> adw::NavigationPage {
         side,
         seasons,
         synopsis,
+        people,
+        trail: gtk::SizeGroup::new(gtk::SizeGroupMode::Horizontal),
+        fold_marks: RefCell::default(),
         episodes,
         episodes_state,
         lines: RefCell::default(),
@@ -364,6 +395,8 @@ pub fn page(ctx: &Rc<Ctx>, id: AnilistId) -> adw::NavigationPage {
         typing: RefCell::default(),
         capsule,
         target: RefCell::default(),
+        missing: missing::Missing::default(),
+        private_line: crate::private::Line::new(),
     });
     scroll.vadjustment().connect_value_changed({
         let weak = Rc::downgrade(&page);
@@ -390,12 +423,25 @@ pub fn page(ctx: &Rc<Ctx>, id: AnilistId) -> adw::NavigationPage {
         }
     });
     page.me.replace(Rc::downgrade(&page));
+    // The time since an episode aired, on the minute.
+    glib::timeout_add_seconds_local(15, {
+        let weak = Rc::downgrade(&page);
+        move || match weak.upgrade() {
+            Some(page) => {
+                page.tick();
+                glib::ControlFlow::Continue
+            }
+            None => glib::ControlFlow::Break,
+        }
+    });
     page.actions();
     page.keys(&view);
     ctx.hub.known.borrow_mut().visit(id);
+    page.people.wait();
     if let Some(entry) = &entry {
         page.fill(entry);
     }
+    page.private_line.set(ctx.hub.known.borrow().show_line(id), false);
     ctx.hub.send(Command::LoadDetail(id));
     ctx.hub.send(Command::LoadEpisodes(id));
     ctx.hub.send(Command::LoadDub(id));
@@ -430,6 +476,9 @@ impl Page {
     }
 
     fn heard(&self, event: &Event) {
+        if crate::private::changes(event) {
+            self.private_changed();
+        }
         match event {
             // Titles are named another way now: this one and its related titles again.
             Event::TitlesChanged(_) => self.ctx.hub.send(Command::LoadDetail(self.id)),
@@ -447,6 +496,7 @@ impl Page {
                         && old.iter().zip(rows).all(|(a, b)| a.number == b.number)
                 };
                 self.rows.replace(rows.clone());
+                self.track_missing();
                 self.ask_availability();
                 // The same table with more in it (text that arrived late, a mark): the rows
                 // change in place, and only a change in what the list is made of draws it again.
@@ -500,7 +550,16 @@ impl Page {
             // What the page says about licensed services: the buttons and lines change in
             // place, and the episodes take their links.
             Event::Availability(availability) if availability.id == self.id => {
-                self.draw_episodes();
+                // Asked again with every table: the list is drawn again only when it changed,
+                // so a row lifting as its episode is found carries on.
+                let same = self
+                    .drawn
+                    .borrow()
+                    .as_ref()
+                    .is_some_and(|d| d.availability.as_ref() == Some(availability));
+                if !same {
+                    self.draw_episodes();
+                }
                 if let Some(entry) = self.ctx.hub.entry(self.id) {
                     self.fill(&entry);
                 }
@@ -524,6 +583,7 @@ impl Page {
                         }
                     }
                 }
+                self.track_missing();
                 if let Some(entry) = self.ctx.hub.entry(self.id) {
                     self.fill(&entry);
                 }
@@ -531,6 +591,8 @@ impl Page {
                 // Which rows are ahead moved with the mark.
                 self.ctx.hub.send(Command::LoadEpisodes(self.id));
             }
+            Event::EpisodeChecked(check) if check.id == self.id => self.heard_check(check),
+            Event::Connectivity { offline } => self.connectivity(*offline),
             Event::ShowSettings(view) if view.id == self.id => {
                 let own = view
                     .rows
@@ -651,6 +713,13 @@ impl Page {
             }
         });
         group.add_action(&show_settings);
+        if let Some(navigation) = self.navigation.upgrade() {
+            group.add_action(&crate::private::always_action(
+                &self.ctx,
+                kaeri_model::private::PrivateTitle::Show { id },
+                &navigation,
+            ));
+        }
         let source = gio::SimpleAction::new("source-picker", None);
         source.connect_activate({
             let ctx = Rc::downgrade(&self.ctx);
@@ -749,6 +818,12 @@ impl Page {
         }
     }
 
+    /// The private line follows the mode and the title's own flag.
+    fn private_changed(&self) {
+        let (hub, id) = (Rc::downgrade(&self.ctx.hub), self.id);
+        self.private_line.later(move || hub.upgrade()?.known.borrow().show_line(id));
+    }
+
     /// The header block again, when what the title is matched to changed what it offers.
     fn redress(&self) {
         if let Some(entry) = self.ctx.hub.entry(self.id) {
@@ -760,6 +835,8 @@ impl Page {
     fn fill(&self, entry: &Entry) {
         let size = *self.sized.borrow();
         let narrow = size == Size::Narrow;
+        let had_focus = self.lead_focus();
+        self.missing.parts.replace(None);
         clear(&self.head);
         let hub = &self.ctx.hub;
         // The banner, once: its art does not change with the detail.
@@ -790,7 +867,10 @@ impl Page {
             say::queue_item(entry, (!rows.is_empty()).then_some(rows.as_slice()))
         };
         let actions = gtk::Box::new(gtk::Orientation::Horizontal, 8);
-        actions.set_margin_top(10);
+        // The episode that aired and that no source lists yet: Check again and the episode
+        // before lead the row, and the status sits under it. Play crossfades in once found.
+        let missing = self.missing_shown().filter(|_| !entry.is_demo);
+        let mut found_play = None;
         // The source could not choose between its titles: choosing is the way on, in Play's place.
         let asked = hub.known.borrow().matches.asked(entry.id).cloned();
         if asked.is_some() {
@@ -843,12 +923,18 @@ impl Page {
                 button.add_css_class("pill");
                 button.add_css_class("suggested-action");
                 button.add_css_class("first-focus");
+                button.set_widget_name(missing::PLAY);
                 button.set_action_target_value(Some(
                     &(id, item.episode.to_string()).to_variant(),
                 ));
                 button.set_action_name(Some("win.play"));
                 button.set_hexpand(narrow);
-                actions.append(&button);
+                if missing.is_some() && self.found_running() {
+                    found_play = Some(button.clone());
+                } else if missing.is_none() || !self.found_waiting() {
+                    // Held back while a source has it and the check asked for has yet to answer.
+                    actions.append(&button);
+                }
                 // A controller opened the page: the main action takes focus once it exists.
                 if self.ctx.controller_mode.get()
                     && GtkWindowExt::focus(&self.ctx.window)
@@ -861,11 +947,27 @@ impl Page {
                 }
             }
             None if asked.is_some() => {}
-            None => {
-                if let Some(waiting) = item.waiting.clone().filter(|_| on_service.is_none()) {
-                    actions.append(&widgets::haze(&waiting, ""));
-                }
+            None => {}
+        }
+        let mut under_row = None;
+        if let Some(missing) =
+            missing.as_ref().filter(|_| asked.is_none() && on_service.is_none())
+            && (item.button.is_none() || found_play.is_some() || self.found_waiting())
+        {
+            let (lead, under) = self.missing_widgets(missing, found_play.take(), narrow);
+            if let Some(lead) = lead {
+                actions.append(&lead);
             }
+            under_row = Some(under);
+        } else if item.button.is_none()
+            && asked.is_none()
+            && let Some(waiting) = item.waiting.clone().filter(|_| on_service.is_none())
+        {
+            // When the next episode comes, under the row rather than in it.
+            let line = widgets::haze(&waiting, "");
+            line.set_wrap(true);
+            line.set_margin_top(10);
+            under_row = Some(line.upcast());
         }
         // A choice each, checked where the title is.
         self.status.set_state(
@@ -963,6 +1065,7 @@ impl Page {
         if let Some(action) = self.fix_match.borrow().as_ref() {
             action.set_enabled(hub.known.borrow().can_fix_match());
         }
+        third.append(Some(&t::title_always_private()), Some("title.always-private"));
         third.append(Some(&t::show_settings_title()), Some("title.show-settings"));
         more_menu.append_section(None, &third);
         let more = gtk::MenuButton::builder()
@@ -976,7 +1079,17 @@ impl Page {
             actions.append(&status);
             actions.append(&more);
         }
-        text.append(&actions);
+        // The row and what sits under it, with no spacing between, so the status's height
+        // closes to nothing as Play comes in.
+        let row = gtk::Box::new(gtk::Orientation::Vertical, 0);
+        row.set_margin_top(10);
+        row.append(&actions);
+        if let Some(under) = &under_row {
+            row.append(under);
+        }
+        text.append(&row);
+        // Under the main action: "Private · Not saved or synced", while it applies.
+        self.private_line.place(&text);
         if let Some(asked) = &asked {
             // How many titles could be it, under the action.
             text.append(&widgets::haze(&matching::uncertain(asked), ""));
@@ -1006,6 +1119,8 @@ impl Page {
         }
         line.append(&text);
         self.head.append(&line);
+        self.apply_missing();
+        self.restore_focus(had_focus);
 
         clear(&self.synopsis);
         if !entry.synopsis.is_empty() {
@@ -1051,6 +1166,7 @@ impl Page {
 
         self.fill_seasons(entry);
         self.fill_side(entry, size);
+        self.people.show(entry);
     }
 
     /// The franchise's seasons as a picker, when there is more than one.
@@ -1631,6 +1747,7 @@ impl Page {
         clear_list(&self.episodes);
         self.lines.borrow_mut().clear();
         self.protection.replace(None);
+        self.fold_marks.replace(None);
         let rows = self.rows.borrow();
         if rows.is_empty() {
             self.drawn.replace(None);
@@ -1641,6 +1758,8 @@ impl Page {
             return;
         }
         let narrow = *self.sized.borrow() == Size::Narrow;
+        // People followed have a column at each row's end while they show at all.
+        let column = following::on(&self.ctx.hub);
         let outlook = self.outlook.get().unwrap_or_else(|| episodes::episode_text(&rows));
         self.outlook.set(Some(outlook));
         let (ranges, plan) = self.plan(&rows);
@@ -1663,6 +1782,8 @@ impl Page {
             range: self.range.get(),
             fold: plan.fold,
             protection_at,
+            column,
+            availability: self.availability(),
         }));
         let mut lines = Vec::with_capacity(shown.len());
         // Case B: each episode opens its own page on the service, or else the title's.
@@ -1689,7 +1810,28 @@ impl Page {
                     page.unfold();
                 }
             });
-            self.episodes.append(&Self::note_row(&button));
+            let row = Self::note_row(&button);
+            if column {
+                // The folded rows carry the marks of the episodes inside them, in the rows'
+                // column, with the sentence for a screen reader on the button.
+                let marks = following::union(
+                    rows[plan.start..plan.start + plan.fold].iter().flat_map(|r| &r.followed),
+                );
+                let slot = following::slot(!narrow);
+                following::set_marks(&self.ctx.hub, &slot, &marks, false);
+                let trail = gtk::Box::new(gtk::Orientation::Horizontal, 0);
+                self.trail.add_widget(&trail);
+                if let Some(line) = row.child().and_downcast::<gtk::Box>() {
+                    // The rows' spacing, so the marks stand in the same column.
+                    line.set_spacing(14);
+                    button.set_hexpand(true);
+                    line.append(&slot);
+                    line.append(&trail);
+                }
+                say_fold(&button, &marks);
+                self.fold_marks.replace(Some((slot, marks)));
+            }
+            self.episodes.append(&row);
         }
 
         for (at, row) in shown.iter().enumerate() {
@@ -1778,7 +1920,9 @@ impl Page {
             text.append(&label);
             let sub = widgets::haze("", "caption");
             sub.add_css_class("numeric");
-            text.append(&sub);
+            let sub_veil = gtk::Overlay::new();
+            sub_veil.set_child(Some(&sub));
+            text.append(&sub_veil);
             let discuss = gtk::Button::new();
             discuss.add_css_class("flat");
             discuss.add_css_class("caption");
@@ -1828,6 +1972,14 @@ impl Page {
             }
             line.append(&text);
 
+            // People followed who stopped here, in the column before the row's own controls.
+            let marks = column.then(|| following::slot(!narrow));
+            if let Some(marks) = &marks {
+                line.append(marks);
+            }
+            let trail = gtk::Box::new(gtk::Orientation::Horizontal, 14);
+            self.trail.add_widget(&trail);
+
             let check = gtk::CheckButton::new();
             check.set_valign(gtk::Align::Center);
             check.update_property(&[gtk::accessible::Property::Label(
@@ -1840,7 +1992,7 @@ impl Page {
                     Some(&(episode.clone(), check.is_active()).to_variant()),
                 );
             });
-            line.append(&check);
+            trail.append(&check);
 
             let mut outside: Option<glib::Variant> = None;
             if let Some((main, listings)) = &service {
@@ -1852,7 +2004,7 @@ impl Page {
                 glyph.set_valign(gtk::Align::Center);
                 glyph.add_css_class("dim-label");
                 glyph.set_tooltip_text(Some(&t::licensed_opens_outside()));
-                line.append(&glyph);
+                trail.append(&glyph);
                 outside = Some(target);
             }
 
@@ -1864,7 +2016,8 @@ impl Page {
                 .valign(gtk::Align::Center)
                 .build();
             more.add_css_class("flat");
-            line.append(&more);
+            trail.append(&more);
+            line.append(&trail);
             root.append(&line);
             if narrow {
                 room_box.set_margin_start(0);
@@ -1898,6 +2051,7 @@ impl Page {
                 still: still_widget,
                 root,
                 sub,
+                sub_veil,
                 discuss,
                 bar,
                 menu,
@@ -1909,6 +2063,8 @@ impl Page {
                 protected: Cell::new(held),
                 room: Cell::new(room),
                 height: Cell::new(height),
+                marks,
+                marked: RefCell::default(),
             };
             self.dress(&drawn, row, false);
             lines.push(drawn);
@@ -2144,11 +2300,17 @@ impl Page {
             None => line.synopsis.set_label(""),
         }
         line.list_row.set_tooltip_text(text);
-        let description = if line.protected.get() {
+        let mut description = if line.protected.get() {
             t::episode_synopsis_hidden()
         } else {
             text.unwrap_or_default().to_owned()
         };
+        // Who stopped here, after the synopsis. Never a score.
+        if line.marks.is_some() && !row.followed.is_empty() {
+            let said = following::spoken(&row.followed);
+            description =
+                if description.is_empty() { said } else { format!("{description} {said}") }; // i18n-skip
+        }
         line.list_row.update_property(&[gtk::accessible::Property::Description(&description)]);
     }
 
@@ -2164,10 +2326,33 @@ impl Page {
             let numbers_same = drawn.numbers.len() == rows.len()
                 && drawn.numbers.iter().zip(rows.iter()).all(|(a, b)| *a == b.number);
             let at = synopsis::protection_start(shown, on).map(|(at, _)| at);
-            if !numbers_same || drawn.fold != plan.fold || drawn.protection_at != at {
+            let column = following::on(&self.ctx.hub);
+            if !numbers_same
+                || drawn.fold != plan.fold
+                || drawn.protection_at != at
+                || drawn.column != column
+            {
                 drop(rows);
                 self.draw_episodes();
                 return;
+            }
+            // The folded rows' marks, from the episodes inside them now.
+            if let Some((slot, marked)) = self.fold_marks.borrow_mut().as_mut() {
+                let marks = following::union(
+                    rows[plan.start..plan.start + plan.fold].iter().flat_map(|r| &r.followed),
+                );
+                if *marked != marks {
+                    let new = marked.is_empty() || marks.is_empty();
+                    following::set_marks(&self.ctx.hub, slot, &marks, new);
+                    if let Some(button) = slot
+                        .parent()
+                        .and_then(|line| line.first_child())
+                        .and_downcast::<gtk::Button>()
+                    {
+                        say_fold(&button, &marks);
+                    }
+                    *marked = marks;
+                }
             }
         }
         for line in self.lines.borrow().iter() {
@@ -2230,19 +2415,24 @@ impl Page {
         }
 
         // An episode no source lists is dimmed and says so; it cannot be played or downloaded.
+        // When a source lists it, the row lifts and its line crossfades, with the status's Play.
+        let lifts = animate && !row.unsourced && line.shown.borrow().unsourced;
         if row.unsourced {
             line.root.add_css_class("dim-label");
         } else {
             line.root.remove_css_class("dim-label");
         }
+        if lifts && line.root.is_mapped() {
+            let run = motion::timed(&line.root, WATCHED, 1.0, 300, motion::opacity(&line.root));
+            run.set_easing(adw::Easing::EaseOutCubic);
+            // A fade, which Reduce Animation keeps.
+            run.set_follow_enable_animations_setting(false);
+            line.root.set_opacity(WATCHED);
+            run.play();
+        }
         let part_way = row.watched > 0.0 && !row.completed;
-        let now = glib::DateTime::now_utc().map_or(0, |t| t.to_unix());
-        let date = |at| {
-            glib::DateTime::from_unix_local(at)
-                .ok()
-                .and_then(|d| d.format("%-d %b %Y").ok())
-                .map_or_else(String::new, |d| d.to_string())
-        };
+        let now = missing::now();
+        let date = missing::short_date;
         let sub = synopsis::facts(row, now, date, None);
         // A narrow row whose title stands alone says its number in the facts.
         let titled = row.title.as_deref().is_some_and(|title| !title.is_empty());
@@ -2251,8 +2441,16 @@ impl Page {
         } else {
             sub.clone()
         };
-        line.sub.set_label(&shown);
-        line.sub.set_visible(!shown.is_empty());
+        let relabel = || {
+            line.sub.set_label(&shown);
+            line.sub.set_visible(!shown.is_empty());
+            line.sub_veil.set_visible(!shown.is_empty());
+        };
+        if lifts && line.sub.is_mapped() && line.sub.label() != shown {
+            motion::ghost(&line.sub_veil, &line.sub, true, relabel);
+        } else {
+            relabel();
+        }
         line.bar.set_fraction(row.watched);
         line.bar.set_visible(part_way);
 
@@ -2346,8 +2544,22 @@ impl Page {
             format!("{}, {sub}", full_name(row)) // i18n-skip
         };
         line.list_row.update_property(&[gtk::accessible::Property::Label(&spoken)]);
+        if let Some(slot) = &line.marks
+            && *line.marked.borrow() != row.followed
+        {
+            // Marks that arrive fade in and ones that go fade out; a change is put in place.
+            let new = line.marked.borrow().is_empty() || row.followed.is_empty();
+            line.marked.replace(row.followed.clone());
+            following::set_marks(&self.ctx.hub, slot, &row.followed, animate && new);
+        }
         self.settle(line, row, animate);
     }
+}
+
+/// The sentence of who stopped inside the folded rows, as the fold's description.
+fn say_fold(button: &gtk::Button, marks: &[FollowedMark]) {
+    let said = if marks.is_empty() { String::new() } else { following::spoken(marks) };
+    button.update_property(&[gtk::accessible::Property::Description(&said)]);
 }
 
 /// An episode's full name: its number and title, or its number alone.
@@ -2468,6 +2680,7 @@ mod tests {
             past_progress: false,
             spoiler_ahead: false,
             synopsis_pending: false,
+            followed: Vec::new(),
             unsourced,
             source: None,
         };

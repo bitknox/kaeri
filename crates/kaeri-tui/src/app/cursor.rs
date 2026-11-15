@@ -23,6 +23,8 @@ enum Rows {
     /// The Providers table, in the order failover walks it.
     Providers,
     Episodes,
+    /// A reading series' chapters, newest first.
+    Chapters,
     Stores,
     StoreLines,
     Members,
@@ -65,6 +67,8 @@ pub struct Cursors {
     /// Episodes does not disturb where you were in the list. Its window is the frame's to place,
     /// as the overlay's is, so the rows stay put while the highlight moves within them.
     pub episodes: Cursor,
+    /// The chapters on a reading series' page, kept apart as the episodes' are.
+    pub chapters: Cursor,
     /// The three store screens, so stepping back out of a store finds the store list where it
     /// was. One past the last store is the join row.
     pub stores: Cursor,
@@ -183,6 +187,7 @@ impl App {
     fn rows_here(&self) -> Option<Rows> {
         match self.nav.current() {
             StageView::Episodes(_) => Some(Rows::Episodes),
+            StageView::Series(_) => Some(Rows::Chapters),
             StageView::Stores => Some(Rows::Stores),
             StageView::Store(_) => Some(Rows::StoreLines),
             StageView::StoreMembers(_) => Some(Rows::Members),
@@ -197,7 +202,7 @@ impl App {
             // A title page is one title, not a list, and Now Playing's keys belong to the
             // player. Moving on either moved the list behind it, so Back landed rows away from
             // where it was left.
-            StageView::Title(_) | StageView::NowPlaying => None,
+            StageView::Title(_) | StageView::NowPlaying | StageView::Reader(_) => None,
         }
     }
 
@@ -261,11 +266,12 @@ impl App {
 
         let len = match rows {
             Rows::Downloads => self.downloads.len(),
-            Rows::Accounts => self.sync.len(),
+            Rows::Accounts => self.sync.len() + usize::from(self.following_row()),
             Rows::Settings => SettingKey::ROWS.len(),
             Rows::Together => self.together_rows(),
             Rows::Providers => self.providers.len(),
             Rows::Episodes => self.episodes.len(),
+            Rows::Chapters => self.series_here().map_or(0, |page| page.rows().len()),
             // The last row is the one that joins another store.
             Rows::Stores => self.stores.len() + 1,
             Rows::StoreLines => self
@@ -286,6 +292,7 @@ impl App {
             Rows::Together => &mut self.cursors.together.selected,
             Rows::Providers => &mut self.cursors.providers.selected,
             Rows::Episodes => &mut self.cursors.episodes.selected,
+            Rows::Chapters => &mut self.cursors.chapters.selected,
             Rows::Stores => &mut self.cursors.stores.selected,
             Rows::StoreLines => &mut self.cursors.store_lines.selected,
             Rows::Members => &mut self.cursors.members.selected,

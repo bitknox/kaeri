@@ -246,3 +246,9 @@ messages-none = No messages yet
 # Name of the dot before a notice that was an alert, for Narrator.
 # @only windows
 messages-alert = Problem
+
+# The heading over the TVs running Kaeri in the title bar's Play on TV menu, under the TVs with
+# Chromecast built in.
+# @only windows
+# @max 24
+tv-on-this-network = On this network

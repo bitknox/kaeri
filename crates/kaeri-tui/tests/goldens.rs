@@ -47,11 +47,12 @@ use kaeri_model::{
         SpotlightCase,
     },
     jobs::JobId,
+    missing::{CheckOutcome, EpisodeCheck},
     playback::SkipKind,
     present::SeasonYear,
     progress::TitleProgress,
     settings::{self, SettingsView},
-    sources::{MatchCandidate, MatchQuestion, MetaSourceRow, ProviderRow},
+    sources::{MatchCandidate, MatchQuestion, MetaSourceRow, ProviderRow, SourceOption},
     stores::{
         AnonymousDeviceRow, InviteLinkView, InvitePreview, InvitedStore, LocalPluginRow,
         OpenJoinView, Secret, StoreInviteRow, StoreMemberRow, StorePluginRow,
@@ -445,9 +446,27 @@ fn modifiers(set: Modifier) -> String {
 }
 
 /// Every scenario, by name: a test each, and the list the stale-file check reads.
+#[path = "golden_scenes/series.rs"]
+mod series_scenes;
+use series_scenes::{series_chapters_loading, series_failed, series_offline, series_page};
+#[path = "golden_scenes/reader.rs"]
+mod reader_scenes;
+use reader_scenes::{
+    reader_blocks_after_resumed, reader_chapter_failed, reader_end_caught_up,
+    reader_end_extras, reader_end_finished, reader_end_not_out, reader_end_offline,
+    reader_end_page, reader_fit_width, reader_go_to_page, reader_help, reader_images_off,
+    reader_manga_settings, reader_novel, reader_novel_help, reader_novel_settings,
+    reader_novel_small, reader_one_page, reader_opening, reader_page_failed,
+    reader_page_loading, reader_spread_bare, reader_strip, reader_strip_gap, reader_strip_help,
+    reader_two_pages, reader_two_pages_blocks, reader_two_pages_wide, reader_zoom,
+};
+
 macro_rules! scenarios {
     ($($name:ident),+ $(,)?) => {
         const SCENARIOS: &[&str] = &[$(stringify!($name)),+];
+
+        /// Every scenario with the function that sets it up.
+        const SCENARIO_FNS: &[(&str, fn(&mut Screen))] = &[$((stringify!($name), $name)),+];
 
         mod golden {
             $(
@@ -474,6 +493,10 @@ scenarios! {
     read_search_nothing,
     read_search_filters,
     read_keys,
+    series_page,
+    series_offline,
+    series_chapters_loading,
+    series_failed,
     both_home_shows,
     both_home_reading,
     medium_first_run,
@@ -497,6 +520,15 @@ scenarios! {
     immersive,
     title,
     title_not_started,
+    title_missing,
+    title_missing_checking,
+    title_missing_still,
+    title_missing_no_answer,
+    title_missing_found,
+    title_missing_after,
+    title_missing_long_ago,
+    title_missing_offline,
+    title_missing_light,
     episodes,
     episodes_long_filtered,
     episodes_go_typing,
@@ -522,6 +554,7 @@ scenarios! {
     disambiguate,
     sources,
     source_provider,
+    source_provider_missing,
     watch_order,
     watch_order_long,
     recommendations,
@@ -599,6 +632,68 @@ scenarios! {
     turn_off_confirm,
     profiles_two,
     add_profile,
+    reader_opening,
+    reader_two_pages,
+    reader_two_pages_blocks,
+    reader_blocks_after_resumed,
+    reader_one_page,
+    reader_images_off,
+    reader_page_loading,
+    reader_page_failed,
+    reader_chapter_failed,
+    reader_end_page,
+    reader_end_caught_up,
+    reader_end_not_out,
+    reader_end_offline,
+    reader_end_extras,
+    reader_end_finished,
+    reader_help,
+    reader_go_to_page,
+    reader_fit_width,
+    reader_zoom,
+    reader_strip,
+    reader_strip_gap,
+    reader_strip_help,
+    reader_two_pages_wide,
+    reader_spread_bare,
+    reader_novel,
+    reader_novel_small,
+    reader_novel_settings,
+    reader_novel_help,
+    reader_manga_settings,
+}
+
+/// The reader's scenes at the size the board draws them, where that is neither of the two.
+#[test]
+fn reader_scenes_at_the_board_s_sizes() {
+    for (name, scenario, (width, height)) in reader_scenes::BOARD {
+        let mut screen = Screen::new(*width, *height);
+        scenario(&mut screen);
+        golden(name, &screen.draw());
+    }
+}
+
+/// The window can shrink to almost nothing between frames. Every reader screen, set up at a
+/// normal size, then drawn at 1x1, 2x2 and just under the smallest it shows a page in, draws
+/// without a panic.
+#[test]
+fn reader_screens_draw_in_a_tiny_window() {
+    let scenes = SCENARIO_FNS
+        .iter()
+        .filter(|(name, _)| name.starts_with("reader_"))
+        .map(|(name, scenario)| (*name, *scenario))
+        .chain(reader_scenes::BOARD.iter().map(|(name, scenario, _)| (*name, *scenario)));
+    for (name, scenario) in scenes {
+        let mut screen = Screen::new(120, 34);
+        scenario(&mut screen);
+        for (width, height) in [(1, 1), (2, 2), (39, 11), (120, 34)] {
+            screen.width = width;
+            screen.height = height;
+            let drawn =
+                std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| screen.draw()));
+            assert!(drawn.is_ok(), "{name} panicked at {width}x{height}");
+        }
+    }
 }
 
 /// A golden left behind by a renamed or removed scenario is a file nothing checks, and reads as
@@ -608,6 +703,9 @@ fn every_golden_belongs_to_a_scenario() {
     let wanted: Vec<String> = SCENARIOS
         .iter()
         .flat_map(|name| SIZES.iter().map(move |(w, h)| format!("{name}@{w}x{h}.txt")))
+        .chain(
+            reader_scenes::BOARD.iter().map(|(name, _, (w, h))| format!("{name}@{w}x{h}.txt")),
+        )
         .collect();
     let Ok(dir) = std::fs::read_dir(goldens_dir()) else { return };
     let mut stale = Vec::new();
@@ -1445,9 +1543,9 @@ fn settings(s: &mut Screen) {
     let mut session = Config::default();
     session.playback.translation = kaeri_core::media::Translation::Dub;
     s.settings(&session, &Config::default());
-    // Down to upscaling, past the titles, trailers, skip recap, the opening question, sharing
-    // and the skip button rows too.
-    s.press(&["j"; 17]);
+    // Down to upscaling, past the titles, trailers, preload, skip recap, the opening question,
+    // sharing and the skip button rows too.
+    s.press(&["j"; 18]);
 }
 
 /// The immersive theme, switched on from Settings: the painted ground under everything.
@@ -1602,6 +1700,131 @@ fn title_not_started(s: &mut Screen) {
     s.press(&["enter"]);
 }
 
+/// Kumo no Ue no Toshokan, airing, episodes 1 to 5 watched: its record says episode 6 aired 25
+/// minutes ago.
+fn kumo() -> Entry {
+    Entry {
+        secondary: Some("The Library Above the Clouds".into()),
+        format: Some("TV".into()),
+        episodes: Some(12),
+        year: Some(2026),
+        score: Some(81),
+        studio: Some("Paper Lantern Works".into()),
+        synopsis: "A librarian on a floating island lends books to the weather. When a storm \
+                   returns one overdue and soaked through, she sets out to find who wrote in its \
+                   margins."
+            .into(),
+        genres: vec!["Fantasy".into(), "Slice of Life".into()],
+        banner_url: Some("https://img.example/banner/kumo.jpg".into()),
+        season: Some(Season::Fall),
+        airing: Some(AiringFact::Airing {
+            since: Some(FuzzyDate { year: 2026, month: Some(10), day: Some(3) }),
+        }),
+        progress: Some(TitleProgress { done: 5, next: 6 }),
+        last_aired: Some(Aired { episode: 6, ago: 25 * MINUTE }),
+        next_episode: Some(7),
+        next_airing_in: Some(7 * DAY - 25 * MINUTE),
+        ..Entry::new(id(900_002), "Kumo no Ue no Toshokan")
+    }
+}
+
+/// Kumo no Ue no Toshokan's table: episodes 1 to 5 watched a week apart, 6 aired `ago` before
+/// now, listed by a source when `listed`, and 7 a week after it.
+fn kumo_table(ago: i64, listed: bool) -> Vec<EpisodeRow> {
+    (1..=7)
+        .map(|n| {
+            let aired = NOW - ago - (6 - n as i64) * 7 * DAY;
+            let row = EpisodeRow { airs_at: Some(aired), ..episode(n, &format!("Volume {n}")) };
+            match n {
+                1..=5 => watched(row),
+                6 => EpisodeRow { unsourced: !listed, ..row },
+                _ => EpisodeRow { unsourced: aired <= NOW, ..row },
+            }
+        })
+        .collect()
+}
+
+/// Kumo no Ue no Toshokan's page from Continue, `ago` after episode 6 aired, its table in.
+fn on_kumo(s: &mut Screen, ago: i64) {
+    settled_on(s, 1);
+    s.list(vec![kumo(), hoshikuzu()]);
+    s.press(&["enter"]);
+    let aired = Aired { episode: 6, ago };
+    s.apply(Event::Detail(Box::new(Entry { last_aired: Some(aired), ..kumo() })));
+    s.apply(Event::ProviderPreference(None));
+    s.episodes(kumo_table(ago, false));
+}
+
+/// What a check of episode 6 came to.
+fn kumo_checked(s: &mut Screen, outcome: CheckOutcome) {
+    s.apply(Event::EpisodeChecked(EpisodeCheck {
+        id: id(900_002),
+        episode: 6,
+        outcome,
+        asked: true,
+    }));
+}
+
+/// Episode 6 aired 25 minutes ago and no source lists it: the status under the meter, with `r`
+/// to check again and Space for episode 5.
+fn title_missing(s: &mut Screen) {
+    on_kumo(s, 25 * MINUTE);
+}
+
+/// Check again, past the 600 ms wait: the status line says it is checking.
+fn title_missing_checking(s: &mut Screen) {
+    on_kumo(s, 25 * MINUTE);
+    s.press(&["r"]);
+    s.wait(Duration::from_millis(700));
+}
+
+/// The check came back without it.
+fn title_missing_still(s: &mut Screen) {
+    on_kumo(s, 40 * MINUTE);
+    s.press(&["r"]);
+    s.wait(Duration::from_millis(1_400));
+    kumo_checked(s, CheckOutcome::Missing);
+}
+
+/// No source answered the check.
+fn title_missing_no_answer(s: &mut Screen) {
+    on_kumo(s, 40 * MINUTE);
+    s.press(&["r"]);
+    kumo_checked(s, CheckOutcome::NoAnswer);
+}
+
+/// The check found it: the table relisted with episode 6, the status gone and Space plays it.
+fn title_missing_found(s: &mut Screen) {
+    on_kumo(s, 40 * MINUTE);
+    s.press(&["r"]);
+    s.wait(Duration::from_millis(1_400));
+    s.episodes(kumo_table(40 * MINUTE, true));
+    kumo_checked(s, CheckOutcome::Found);
+}
+
+/// Past the six hours Kaeri looks by itself: the date, "still", and Check again stays.
+fn title_missing_after(s: &mut Screen) {
+    on_kumo(s, 2 * DAY + 3 * HOUR);
+}
+
+/// Thirteen days on: other words, a hollow dot, and no Check again.
+fn title_missing_long_ago(s: &mut Screen) {
+    on_kumo(s, 13 * DAY);
+}
+
+/// Checked while offline: the answer comes at once, and says Kaeri looks once back online.
+fn title_missing_offline(s: &mut Screen) {
+    on_kumo(s, 25 * MINUTE);
+    s.press(&["r"]);
+    kumo_checked(s, CheckOutcome::Offline);
+}
+
+/// The just-aired status on the light palette.
+fn title_missing_light(s: &mut Screen) {
+    s.app.palette = Palette::light();
+    on_kumo(s, 25 * MINUTE);
+}
+
 /// One episode row of a 24-minute show.
 fn episode(number: u32, title: &str) -> EpisodeRow {
     EpisodeRow {
@@ -1622,6 +1845,7 @@ fn episode(number: u32, title: &str) -> EpisodeRow {
         past_progress: false,
         spoiler_ahead: false,
         synopsis_pending: false,
+        followed: Vec::new(),
     }
 }
 
@@ -2069,6 +2293,31 @@ fn source_provider(s: &mut Screen) {
     on_kaze(s);
     s.apply(Event::ProviderPreference(Some("tsubame".into())));
     s.act(Action::PickProvider);
+}
+
+/// Source for this title on Kumo no Ue no Toshokan's page while episode 6 is missing: what each
+/// source has, in a column of its own.
+fn source_provider_missing(s: &mut Screen) {
+    on_kumo(s, 25 * MINUTE);
+    s.act(Action::PickProvider);
+    let option = |id: &str, covered: u32, last: u32, lacking: Vec<u32>| SourceOption {
+        provider_id: id.into(),
+        name: id.into(),
+        covered,
+        of: 6,
+        pinned: false,
+        note: None,
+        releases: Vec::new(),
+        pinned_release: None,
+        first: Some(1),
+        last: Some(last),
+        lacking,
+        lacking_since: Some(NOW - 25 * MINUTE),
+    };
+    s.apply(Event::SourceOptions {
+        id: id(900_002),
+        options: vec![option("yamabiko", 4, 4, vec![5, 6]), option("tsubame", 5, 5, vec![6])],
+    });
 }
 
 /// The watch order around a title: its prequel and sequel.
@@ -2582,6 +2831,7 @@ fn episodes_from_anilist(s: &mut Screen) {
                 past_progress: false,
                 spoiler_ahead: false,
                 synopsis_pending: false,
+                followed: Vec::new(),
                 ..episode(n, &format!("Letter No. {n}"))
             };
             match n {

@@ -219,6 +219,7 @@ impl Engine {
             device_label,
             handheld,
             phone,
+            terminal,
             device_kind,
             language,
             sources: given,
@@ -402,6 +403,7 @@ impl Engine {
         crate::tracking::commands::announce_signed_in(&services.store, &services.sync);
         state.config.set_handheld(handheld);
         state.config.set_phone(phone);
+        state.config.set_terminal(terminal);
         let account = {
             use kaeri_store::sync::kinds::MEDIUM_ACCOUNT;
             let store = &services.store;
@@ -423,6 +425,8 @@ impl Engine {
             services.book_sources.put_demo(services.clock.now());
         }
         crate::crash::arm_from(&services.paths.data_dir, state.config.effective());
+        // Where the player log is mirrored: read back only when it is first written or asked for.
+        crate::player_log::mirror_to(&services.paths.cache_dir.join("logs"));
         services.syncing.set_language(language.clone());
         // The terminal sets the process's language and passes none.
         let tag = language.clone().unwrap_or_else(|| kaeri_i18n::language().to_owned());
@@ -432,6 +436,7 @@ impl Engine {
         {
             casts.set_language(language);
             casts.set_show_tvs(state.config.effective().cast.show_tvs);
+            casts.set_receiver(state.config.effective().cast.receiver.clone());
         }
         #[cfg(not(feature = "cast"))]
         let _ = language;
@@ -523,6 +528,12 @@ impl Engine {
         }
         // Home's first screen goes first: AniList's background work waits for it.
         services.meta.anilist().launching();
+        // A title page asks after the people the viewer follows as the tracker's viewer, while
+        // this device's switch is on.
+        if let Some(anilist) = services.sync.anilist.as_ref() {
+            services.meta.anilist().follows_as(anilist.client());
+        }
+        services.meta.anilist().show_following(state.config.effective().meta.following);
         // How titles are named: the setting, and under `anilist` the signed-in viewer's own
         // choice, which comes with the viewer lookup the library pull makes anyway.
         services.meta.titles().choose(state.config.effective().meta.title_language);
@@ -536,6 +547,11 @@ impl Engine {
         if background.sync_loops {
             tracking::spawn_loops(
                 services.sync.clone(),
+                services.meta.anilist().clone(),
+                inbox.sender(),
+            );
+            // Episodes that aired and no source lists are looked for again, quietly.
+            crate::titles::recheck::spawn_ticks(
                 services.meta.anilist().clone(),
                 inbox.sender(),
             );
@@ -632,6 +648,9 @@ impl Engine {
             #[cfg(feature = "testing")]
             sent: AtomicU64::new(0),
         };
+        for event in &launch {
+            crate::player_log::note(event);
+        }
         Ok((engine, EventStream { launch, checking, live }))
     }
 
@@ -1213,6 +1232,9 @@ impl Actor {
     fn forward(&mut self, mut event: Event, played: Option<Played>) {
         // Named as the titles are shown now, before the record takes the names in.
         crate::title_language::retitle(&mut event, self.services.meta.titles().language());
+        // Where the people the viewer follows stopped, on the episode rows; a table marked again
+        // when its page brings them after it, said right after the page.
+        let marked = self.state.followed.pass(&mut event);
         // A show whose episode starts, or is finished: keep next tops that show up.
         let kept = match &event {
             Event::PlaybackStaged { id, .. } | Event::CastStaged { id, .. } => Some(*id),
@@ -1250,6 +1272,7 @@ impl Actor {
         let watched = played.clone().filter(|_| matches!(event, Event::ProgressQueued));
         let after = self.follow(&mut event, played.as_ref());
         self.pass_on(event);
+        marked.into_iter().for_each(|said| self.pass_on(said));
         after.into_iter().for_each(|said| self.pass_on(said));
         // An episode counted as watched: its discussion opens from now on, and is looked up.
         if let Some(played) = watched.as_ref() {
@@ -1315,7 +1338,14 @@ impl Actor {
             &self.state.cache,
             skip_filler,
         );
-        let Some(follow) = follow else { return said };
+        let Some(follow) = follow else {
+            // The player closed, or the episode ended with nothing to roll on to: what was
+            // made ready for the next episode will not be played.
+            if matches!(event, Event::PlaybackEnded { .. }) {
+                self.services.prefetch.clear();
+            }
+            return said;
+        };
         said.extend(self.roll_on(follow, event));
         said
     }
@@ -1329,6 +1359,17 @@ impl Actor {
         let opener = opener_for(&self.state, &self.services)?;
         if let Event::PlaybackEnded { rolling_on, .. } = event {
             *rolling_on = true;
+        }
+        // The hand-over to the next episode: the end of the ending, or of Up next's countdown,
+        // or its Play now. Its first frame says how long the episode took to show from here.
+        let prefetch = &self.services.prefetch;
+        let handover = match event {
+            Event::PlaybackEnded { .. } => true,
+            Event::PlayerPlayEpisode { .. } => prefetch.is_next(follow.id, &follow.episode),
+            _ => false,
+        };
+        if handover {
+            prefetch.handed_over(follow.id, &follow.episode);
         }
         let tx = self.inbox.sender();
         let play = Command::play(follow.id, follow.episode.clone());
@@ -1390,6 +1431,7 @@ impl Actor {
     fn pass_on(&self, mut event: Event) {
         crate::title_language::retitle(&mut event, self.services.meta.titles().language());
         self.services.privacy.overlay(&mut event);
+        crate::player_log::note(&event);
         let _ = self.out.send(Out::Event(event));
     }
 
@@ -1739,6 +1781,7 @@ mod tests {
             .iter()
             .map(|event| match event {
                 Event::Settings(_) => "settings",
+                Event::Private(false) => "private",
                 Event::Autoplay(view) if view.trailers => "autoplay",
                 Event::Stores(_) => "stores",
                 Event::Providers(_) => "providers",
@@ -1749,7 +1792,11 @@ mod tests {
             .collect();
         // Kitsu is the one tracker the defaults build.
         // Trailers may start until the front end says otherwise: Always is the default.
-        assert_eq!(launch, ["settings", "autoplay", "stores", "providers", "demo", "sync"]);
+        // Private mode is never kept, so every launch says it is off.
+        assert_eq!(
+            launch,
+            ["settings", "private", "autoplay", "stores", "providers", "demo", "sync"]
+        );
         assert!(events.launch().await.is_empty(), "taken once");
     }
 

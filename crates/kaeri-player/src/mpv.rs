@@ -121,6 +121,9 @@ pub struct MpvSession {
     /// Set by the reader when mpv ends a file because it is quitting: the viewer closed the
     /// window or pressed q, or something asked it to quit. See [`Self::has_quit`].
     quit: Arc<AtomicBool>,
+    /// Set by the reader as each file ends: whether mpv ended it with an error. See
+    /// [`Self::ended_in_error`].
+    errored: Arc<AtomicBool>,
     /// Whether this mpv takes `loadfile`'s index argument (0.38 and newer).
     loadfile_index: bool,
 }
@@ -188,6 +191,12 @@ impl MpvSession {
     /// a new window. This is the window going away, said at the moment mpv says it.
     pub fn has_quit(&self) -> bool {
         self.quit.load(Ordering::Relaxed)
+    }
+
+    /// Whether mpv ended the last file it ended with an error, rather than at its end, on a
+    /// quit or for the next file.
+    pub fn ended_in_error(&self) -> bool {
+        self.errored.load(Ordering::Relaxed)
     }
 
     /// Send a command, without waiting for the reply.
@@ -573,9 +582,11 @@ impl Mpv {
         let writer = Arc::new(Mutex::new(write_half));
         let alive = Arc::new(AtomicBool::new(true));
         let quit = Arc::new(AtomicBool::new(false));
+        let errored = Arc::new(AtomicBool::new(false));
 
         let (tx, rx) = mpsc::unbounded_channel();
-        spawn_reader(read_half, tx, Arc::clone(&alive), Arc::clone(&quit));
+        let ends = Ends { quit: Arc::clone(&quit), errored: Arc::clone(&errored) };
+        spawn_reader(read_half, tx, Arc::clone(&alive), ends);
 
         let session = MpvSession {
             child,
@@ -585,6 +596,7 @@ impl Mpv {
             diagnostics,
             alive,
             quit,
+            errored,
             loadfile_index: version.is_none_or(MpvVersion::has_loadfile_index),
         };
 
@@ -661,6 +673,12 @@ async fn connect_with_retry(
     }
 }
 
+/// What the reader says of how files end, beside the events it sends.
+struct Ends {
+    quit: Arc<AtomicBool>,
+    errored: Arc<AtomicBool>,
+}
+
 /// Read events off the socket and forward the ones the UI cares about.
 ///
 /// Runs for the life of the process rather than of one file: the end of a file is reported
@@ -669,8 +687,9 @@ fn spawn_reader(
     read_half: ipc::ReadHalf,
     tx: mpsc::UnboundedSender<PlaybackEvent>,
     alive: Arc<AtomicBool>,
-    quit: Arc<AtomicBool>,
+    ends: Ends,
 ) {
+    let Ends { quit, errored } = ends;
     tokio::spawn(async move {
         let mut lines = BufReader::new(read_half).lines();
         // What the session reads of it: positions with their duration, the display whole.
@@ -702,6 +721,12 @@ fn spawn_reader(
                     // is going with it.
                     if event == Event::EndFile(EndReason::Quit) {
                         quit.store(true, Ordering::Relaxed);
+                    }
+                    // Our own `loadfile` replacing a file says nothing of how it played.
+                    if let Event::EndFile(reason) = &event
+                        && *reason != EndReason::Stop
+                    {
+                        errored.store(*reason == EndReason::Error, Ordering::Relaxed);
                     }
                     reader.read(event)
                 }

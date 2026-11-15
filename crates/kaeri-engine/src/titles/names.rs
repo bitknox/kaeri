@@ -26,13 +26,14 @@
 //!   asked again.
 //! - While offline it asks nothing, and names from what was kept, however old.
 //!
-//! Synopses have a second well: [`kaeri_meta::EpisodeText`], when it is switched on, answers for
-//! the whole title in one request, asked beside the other source (or alone when there is none)
-//! and kept on the device by the client. It fills only the rows no source gave a synopsis, after
-//! the other source's text, and is put on by AniList's numbers through [`Numbering`] like the
-//! rest: where the table's numbering cannot be lined up with AniList's, or a title is numbered
-//! otherwise by the service, nothing is put on rather than a neighbour's text. It never delays the
-//! table, and a refusal or a timeout leaves the rows as they were.
+//! Synopses, titles and stills have a last well: [`kaeri_meta::EpisodeText`], when it is
+//! switched on, answers for the whole title in one request, asked beside the other source (or
+//! alone when there is none) and kept on the device by the client. It fills only what no source
+//! and no AniList listing gave, after the other source, and is put on by AniList's numbers
+//! through [`Numbering`] like the rest: where the table's numbering cannot be lined up with
+//! AniList's, or a title is numbered otherwise by the service, nothing is put on rather than a
+//! neighbour's. It never delays the table, and a refusal or a timeout leaves the rows as they
+//! were.
 
 use std::{
     collections::{BTreeMap, HashMap},
@@ -44,7 +45,7 @@ use kaeri_core::{
     ids::AnilistId,
     media::{Episode, MediaStatus, Translation},
 };
-use kaeri_meta::{EpisodeText, anilist::Media};
+use kaeri_meta::{EpisodeText, anilist::Media, episode_text::Fill};
 use kaeri_model::{episodes::EpisodeRow, event::Event};
 use kaeri_providers::{Answer, ProviderRegistry};
 use kaeri_store::{ResolutionRung, Store};
@@ -127,18 +128,34 @@ pub(crate) struct Unnamed {
     marks: super::coverage::Marks,
     /// When the table was loaded.
     now: i64,
-    /// The per-title synopsis fill, when it is on.
+    /// The per-title episode fill, when it is on.
     text: Option<Arc<EpisodeText>>,
 }
 
-/// `raw`, the fill's synopses by AniList's number, cleaned as a source's own are for `media`.
-fn tidy_texts(raw: BTreeMap<u32, String>, media: &Media) -> BTreeMap<u32, String> {
-    let mut listed: Vec<Episode> = raw
+/// `raw`, what the fill says by AniList's number, cleaned as a source's own is for `media`:
+/// titles lose their numbering, and synopses are tidied with their episode's title in view.
+fn tidy_fill(raw: Fill, media: &Media) -> Fill {
+    let Fill { texts, titles, stills } = raw;
+    let titles: BTreeMap<u32, String> = titles
         .into_iter()
-        .map(|(number, text)| Episode { description: Some(text), ..Episode::new(number) })
+        .filter_map(|(number, title)| {
+            Some((number, kaeri_meta::anilist::model::unnumbered(&title)?.to_owned()))
+        })
+        .collect();
+    let mut listed: Vec<Episode> = texts
+        .into_iter()
+        .map(|(number, text)| Episode {
+            description: Some(text),
+            title: titles.get(&number).cloned(),
+            ..Episode::new(number)
+        })
         .collect();
     data::tidy_synopses(&mut listed, &media.plain_description());
-    listed.into_iter().filter_map(|e| Some((data::whole(&e.number)?, e.description?))).collect()
+    let texts = listed
+        .into_iter()
+        .filter_map(|e| Some((data::whole(&e.number)?, e.description?)))
+        .collect();
+    Fill { texts, titles, stills }
 }
 
 impl Unnamed {
@@ -175,9 +192,9 @@ impl Unnamed {
         })
     }
 
-    /// The table's episodes, with what `borrowed` and the fill's `texts` have put on those that
-    /// lacked it: the other source's synopsis before the fill's.
-    fn named(&self, borrowed: &Borrowed, texts: &BTreeMap<u32, String>) -> Vec<Episode> {
+    /// The table's episodes, with what `borrowed` and the fill have put on those that lacked
+    /// it: the other source's titles, stills and synopses before the fill's.
+    fn named(&self, borrowed: &Borrowed, fill: &Fill) -> Vec<Episode> {
         let mut episodes = self.episodes.clone();
         data::name_episodes(
             &mut episodes,
@@ -185,7 +202,12 @@ impl Unnamed {
             &self.numbering.rekey(&borrowed.stills),
         );
         data::name_synopses(&mut episodes, &self.numbering.rekey(&borrowed.synopses));
-        data::name_synopses(&mut episodes, &self.numbering.rekey(texts));
+        data::name_episodes(
+            &mut episodes,
+            &self.numbering.rekey(&fill.titles),
+            &self.numbering.rekey(&fill.stills),
+        );
+        data::name_synopses(&mut episodes, &self.numbering.rekey(&fill.texts));
         episodes
     }
 
@@ -266,6 +288,7 @@ struct Running {
 }
 
 /// What a load of a title's table names it with: taken when the load is asked for.
+#[derive(Clone)]
 pub(crate) struct Naming {
     names: Names,
     offline: bool,
@@ -325,6 +348,12 @@ impl Names {
     pub(crate) fn naming(&self, id: AnilistId, offline: bool, clock: &Clock) -> Naming {
         self.leave_for(id);
         Naming { names: self.clone(), offline, clock: clock.clone() }
+    }
+
+    /// For a listing nobody is looking at, such as a quiet recheck: it names the rows from what
+    /// is kept, looks nothing up, and leaves the lookup for the title on screen running.
+    pub(crate) fn unlooked(&self, clock: &Clock) -> Naming {
+        Naming { names: self.clone(), offline: true, clock: clock.clone() }
     }
 
     /// Stop the lookup running when it is for a title other than `id`, which is the one on
@@ -415,7 +444,7 @@ impl Naming {
         let kept_text = unnamed.text.as_ref().and_then(|text| text.kept(id));
         let have_text = kept_text
             .as_ref()
-            .map(|kept| tidy_texts(kept.texts.clone(), &unnamed.media))
+            .map(|kept| tidy_fill(kept.fill(), &unnamed.media))
             .unwrap_or_default();
         let base = kept.as_ref().map(|(borrowed, _)| borrowed.clone()).unwrap_or_default();
         let sent = unnamed.named(&base, &have_text);
@@ -469,13 +498,10 @@ impl Naming {
                 let Some(text) = unnamed.text.as_ref().filter(|_| ask_text) else {
                     return have_text;
                 };
-                match tokio::time::timeout(
-                    within,
-                    text.texts(id, unnamed.airing(), clock.now()),
-                )
-                .await
+                match tokio::time::timeout(within, text.fill(id, unnamed.airing(), clock.now()))
+                    .await
                 {
-                    Ok(Ok(texts)) => tidy_texts(texts, &unnamed.media),
+                    Ok(Ok(fill)) => tidy_fill(fill, &unnamed.media),
                     Ok(Err(error)) => {
                         tracing::info!(%id, %error, "no episode text from the fill");
                         have_text
@@ -486,14 +512,14 @@ impl Naming {
                     }
                 }
             };
-            let (borrowed, texts) = tokio::join!(from_sources, from_fill);
+            let (borrowed, fill) = tokio::join!(from_sources, from_fill);
             {
                 let mut inner = names.lock();
                 if inner.running.as_ref().is_some_and(|running| running.serial == serial) {
                     inner.running = None;
                 }
             }
-            let named = unnamed.named(&borrowed, &texts);
+            let named = unnamed.named(&borrowed, &fill);
             type Shown = (Option<String>, Option<String>, Option<String>);
             let shown = |episodes: &[Episode]| -> Vec<Shown> {
                 episodes
@@ -822,6 +848,108 @@ mod tests {
         let named = page.table().await;
         assert_eq!(named[2].description.as_deref(), Some("The shelf's own words."));
         assert_eq!(named[0].description.as_deref(), Some("A lamplighter finds a lantern."));
+    }
+
+    /// The service's answer with titles and stills: episode 1 in English and romaji, episode 2
+    /// in romaji alone and with a still over plain `http`, episode 3 with only its numbering.
+    const FILL_NAMED: &str = r#"{"episodes":{
+        "1":{"overview":"A lamplighter finds a lantern.","title":{"en":"The Lantern","x-jat":"Tomoshibi"},"image":"https://img.episodes.example/1.jpg"},
+        "2":{"overview":"The road home.","title":{"x-jat":"Kaerimichi"},"image":"http://img.episodes.example/2.jpg"},
+        "3":{"title":{"en":"Episode 3"},"image":"https://img.episodes.example/3.jpg"}
+    }}"#;
+
+    #[tokio::test]
+    async fn the_fill_names_a_bare_table_and_gives_it_stills() {
+        let (base, count) = stand_in(200, FILL_NAMED).await;
+        let mut page = Page::new(registry(vec![torrent()]), false).with_fill(base);
+        page.load(bare(1..=12), false);
+
+        let first = page.table().await;
+        assert!(first.iter().all(|row| row.title.is_none() && row.thumbnail.is_none()));
+        let filled = page.table().await;
+        assert_eq!(
+            &titles(&filled)[..4],
+            [Some("The Lantern"), Some("Kaerimichi"), None, None]
+        );
+        assert_eq!(
+            &stills(&filled)[..4],
+            [
+                Some("https://img.episodes.example/1.jpg"),
+                None,
+                Some("https://img.episodes.example/3.jpg"),
+                None
+            ]
+        );
+        assert_eq!(filled[1].description.as_deref(), Some("The road home."));
+
+        // Opened again: named at once from what was kept, and nothing is asked.
+        page.load(bare(1..=12), false);
+        let again = page.table().await;
+        assert_eq!(again[0].title.as_deref(), Some("The Lantern"));
+        assert_eq!(again[2].thumbnail.as_deref(), Some("https://img.episodes.example/3.jpg"));
+        assert!(page.quiet().await);
+        assert_eq!(calls(&count), 1);
+    }
+
+    #[tokio::test]
+    async fn offline_the_fill_names_from_what_was_kept() {
+        let (base, count) = stand_in(200, FILL_NAMED).await;
+        let mut page = Page::new(registry(vec![torrent()]), false).with_fill(base);
+        page.load(bare(1..=12), false);
+        let _ = page.table().await;
+        let _ = page.table().await;
+
+        page.load(bare(1..=12), true);
+        let rows = page.table().await;
+        assert_eq!(rows[0].title.as_deref(), Some("The Lantern"));
+        assert_eq!(rows[0].thumbnail.as_deref(), Some("https://img.episodes.example/1.jpg"));
+        assert!(page.quiet().await);
+        assert_eq!(calls(&count), 1);
+    }
+
+    #[tokio::test]
+    async fn a_sources_titles_and_stills_win_over_the_fills() {
+        let (base, _) = stand_in(200, FILL_NAMED).await;
+        // The other source names episode 1 alone; the table's own source gave episode 2 a still.
+        let shelf = catalogue("shelf", catalogued(1..=1, "img.shelf.example"));
+        let mut page = Page::new(registry(vec![torrent(), shelf]), false).with_fill(base);
+        let mut own = bare(1..=12);
+        own[1].thumbnail = Some("https://img.own.example/2.jpg".into());
+        own[2].title = Some("The Own Title".into());
+        page.load(own, false);
+        let _ = page.table().await;
+        let named = page.table().await;
+        assert_eq!(
+            &titles(&named)[..3],
+            [Some("Verse 1"), Some("Kaerimichi"), Some("The Own Title")]
+        );
+        assert_eq!(
+            &stills(&named)[..3],
+            [
+                Some("https://img.shelf.example/still/1.jpg"),
+                Some("https://img.own.example/2.jpg"),
+                Some("https://img.episodes.example/3.jpg")
+            ]
+        );
+    }
+
+    #[tokio::test]
+    async fn an_answer_of_another_shape_leaves_the_rows_as_the_sources_left_them() {
+        for body in ["<html>moved</html>", r#"{"episodes":["a","b"]}"#, r#"{"items":{}}"#] {
+            let (base, count) = stand_in(200, body).await;
+            let shelf = catalogue("shelf", catalogued(1..=2, "img.shelf.example"));
+            let mut page = Page::new(registry(vec![torrent(), shelf]), false).with_fill(base);
+            page.load(bare(1..=12), false);
+            let _ = page.table().await;
+            let named = page.table().await;
+            assert_eq!(
+                &titles(&named)[..3],
+                [Some("Verse 1"), Some("Verse 2"), None],
+                "{body}"
+            );
+            assert!(named.iter().all(|row| row.description.is_none() && !row.synopsis_pending));
+            assert_eq!(calls(&count), 1);
+        }
     }
 
     #[tokio::test]

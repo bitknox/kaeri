@@ -12,6 +12,7 @@ Kaeri                                                                           
   ⇄  Together               │    Subtitles                   eng
                             │    Counts as watched at        85%
                             │    Auto-play next              On
+                            │    Preload on metered          Off
                             │    Skip opening automatically  On
                             │    Skip recaps automatically   Off
                             │    Ask about skips by hand     On
@@ -26,7 +27,6 @@ Kaeri                                                                           
                             │    Size                        100%
                             │    Font                        default
                             │    Text colour                 white
-                            │    Edge                        outline
                             │
                             │
                             │

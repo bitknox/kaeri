@@ -119,6 +119,7 @@ settings-label-mark-chapters = Marcar abertura e encerramento
 settings-label-skip-button = Mostrar botão de pular
 settings-label-fullscreen = Iniciar em tela cheia
 settings-label-upscaling = Upscaling
+settings-label-preload-metered = Pré-carregar se limitada
 settings-label-player-ui = Interface do player
 settings-label-night-mode = Modo noturno
 settings-label-download-dir = Pasta de downloads

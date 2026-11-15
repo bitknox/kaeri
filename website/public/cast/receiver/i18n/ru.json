@@ -1,0 +1,197 @@
+{
+  "messages": {
+    "receiver-closing-computer": [
+      "Закрытие через ",
+      {
+        "arg": "seconds"
+      },
+      " с. Выберите эпизод на компьютере, чтобы остаться."
+    ],
+    "receiver-closing-ipad": [
+      "Закрытие через ",
+      {
+        "arg": "seconds"
+      },
+      " с. Выберите эпизод на iPad, чтобы остаться."
+    ],
+    "receiver-closing-iphone": [
+      "Закрытие через ",
+      {
+        "arg": "seconds"
+      },
+      " с. Выберите эпизод на iPhone, чтобы остаться."
+    ],
+    "receiver-closing-mac": [
+      "Закрытие через ",
+      {
+        "arg": "seconds"
+      },
+      " с. Выберите эпизод на Mac, чтобы остаться."
+    ],
+    "receiver-closing-phone": [
+      "Закрытие через ",
+      {
+        "arg": "seconds"
+      },
+      " с. Выберите эпизод на телефоне, чтобы остаться."
+    ],
+    "receiver-closing-tablet": [
+      "Закрытие через ",
+      {
+        "arg": "seconds"
+      },
+      " с. Выберите эпизод на планшете, чтобы остаться."
+    ],
+    "receiver-error": [
+      "Не удалось воспроизвести эпизод ",
+      {
+        "arg": "episode"
+      }
+    ],
+    "receiver-error-audio-codec": [
+      "Этот телевизор не может воспроизвести аудио ",
+      {
+        "arg": "codec"
+      },
+      "."
+    ],
+    "receiver-error-hint-computer": [
+      "Выберите другой источник на компьютере."
+    ],
+    "receiver-error-hint-ipad": [
+      "Выберите другой источник на iPad."
+    ],
+    "receiver-error-hint-iphone": [
+      "Выберите другой источник на iPhone."
+    ],
+    "receiver-error-hint-mac": [
+      "Выберите другой источник на Mac."
+    ],
+    "receiver-error-hint-phone": [
+      "Выберите другой источник на телефоне."
+    ],
+    "receiver-error-hint-tablet": [
+      "Выберите другой источник на планшете."
+    ],
+    "receiver-error-unnumbered": [
+      "Не удалось воспроизвести этот эпизод"
+    ],
+    "receiver-error-video-codec": [
+      "Этот телевизор не может воспроизвести видео ",
+      {
+        "arg": "codec"
+      },
+      "."
+    ],
+    "receiver-finished": [
+      "Эпизод ",
+      {
+        "arg": "episode"
+      },
+      " завершён"
+    ],
+    "receiver-finished-unnumbered": [
+      "Завершено"
+    ],
+    "receiver-paused": [
+      "Пауза"
+    ],
+    "receiver-plain-subs": [
+      "На этом телевизоре субтитры показываются простым текстом."
+    ],
+    "receiver-ready-computer": [
+      "Готово. Выберите эпизод на компьютере."
+    ],
+    "receiver-ready-ipad": [
+      "Готово. Выберите эпизод на iPad."
+    ],
+    "receiver-ready-iphone": [
+      "Готово. Выберите эпизод на iPhone."
+    ],
+    "receiver-ready-mac": [
+      "Готово. Выберите эпизод на Mac."
+    ],
+    "receiver-ready-phone": [
+      "Готово. Выберите эпизод на телефоне."
+    ],
+    "receiver-ready-tablet": [
+      "Готово. Выберите эпизод на планшете."
+    ],
+    "receiver-sender-gone-computer": [
+      "Ожидание: компьютер"
+    ],
+    "receiver-sender-gone-hint-computer": [
+      "Откройте Kaeri на компьютере, чтобы возобновить просмотр."
+    ],
+    "receiver-sender-gone-hint-ipad": [
+      "Откройте Kaeri на iPad, чтобы возобновить просмотр."
+    ],
+    "receiver-sender-gone-hint-iphone": [
+      "Откройте Kaeri на iPhone, чтобы возобновить просмотр."
+    ],
+    "receiver-sender-gone-hint-mac": [
+      "Откройте Kaeri на Mac, чтобы возобновить просмотр."
+    ],
+    "receiver-sender-gone-hint-phone": [
+      "Откройте Kaeri на телефоне, чтобы возобновить просмотр."
+    ],
+    "receiver-sender-gone-hint-tablet": [
+      "Откройте Kaeri на планшете, чтобы возобновить просмотр."
+    ],
+    "receiver-sender-gone-ipad": [
+      "Ожидание: iPad"
+    ],
+    "receiver-sender-gone-iphone": [
+      "Ожидание: iPhone"
+    ],
+    "receiver-sender-gone-mac": [
+      "Ожидание: Mac"
+    ],
+    "receiver-sender-gone-phone": [
+      "Ожидание: телефон"
+    ],
+    "receiver-sender-gone-tablet": [
+      "Ожидание: планшет"
+    ],
+    "receiver-skipped-ending": [
+      "Эндинг пропущен"
+    ],
+    "receiver-skipped-opening": [
+      "Опенинг пропущен"
+    ],
+    "receiver-starting": [
+      "Запуск"
+    ],
+    "receiver-up-next": [
+      "Далее · воспроизведение через ",
+      {
+        "arg": "seconds"
+      },
+      " с"
+    ],
+    "receiver-up-next-numbered": [
+      "Эпизод ",
+      {
+        "arg": "episode"
+      }
+    ],
+    "receiver-up-next-titled": [
+      "Эпизод ",
+      {
+        "arg": "episode"
+      },
+      " · ",
+      {
+        "arg": "title"
+      }
+    ],
+    "receiver-waiting": [
+      "Ожидание потока · ",
+      {
+        "arg": "seconds"
+      },
+      " с"
+    ]
+  },
+  "tag": "ru"
+}

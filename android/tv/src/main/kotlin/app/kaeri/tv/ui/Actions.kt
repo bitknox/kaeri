@@ -52,7 +52,16 @@ import app.kaeri.store.AppStore
 import app.kaeri.store.label
 
 /** One row of the panel. A [then] sheet opens over the panel instead of closing it, and Back returns from it. */
-data class CardAction(val label: String, val selected: Boolean = false, val then: ActionSheet? = null, val supporting: String? = null, val flagRes: Int? = null, val run: () -> Unit = {})
+data class CardAction(
+    val label: String,
+    val selected: Boolean = false,
+    val then: ActionSheet? = null,
+    val supporting: String? = null,
+    val flagRes: Int? = null,
+    /** A switch's state, drawn at the row's end as it changes; selecting the row runs it and the panel stays. */
+    val switch: (@Composable () -> Boolean)? = null,
+    val run: () -> Unit = {},
+)
 
 /** A card's actions, under its title; or, with a [body], what it draws in their place. */
 data class ActionSheet(val title: String, val actions: List<CardAction> = emptyList(), val width: androidx.compose.ui.unit.Dp = 400.dp, val body: (@Composable () -> Unit)? = null, val lead: (@Composable () -> Unit)? = null)
@@ -160,11 +169,15 @@ private fun Sheet(host: ActionsHost, sheet: ActionSheet, modifier: Modifier) {
         }
         LazyColumn(verticalArrangement = Arrangement.spacedBy(4.dp)) {
             itemsIndexed(sheet.actions, key = { index, action -> "$index/${action.label}" }) { index, action ->
+                val switched = action.switch?.invoke()
                 TvListRow(
                     action.label,
+                    switch = switched,
                     onClick = {
                         if (action.then != null) {
                             host.open(action.then)
+                        } else if (action.switch != null) {
+                            action.run()
                         } else {
                             host.close()
                             action.run()

@@ -26,6 +26,7 @@ mod licensed;
 mod lists;
 mod local;
 mod medium;
+mod next_preload;
 mod preview;
 mod private;
 mod progress;

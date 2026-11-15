@@ -5,7 +5,7 @@
 use kaeri_i18n::t;
 
 use super::{Action, Binding, Keymap, said};
-use crate::nav::Section;
+use crate::{app::SeriesPage, nav::Section};
 
 /// Two keys drawn as one hint.
 fn pair(first: &str, second: &str) -> String {
@@ -166,6 +166,24 @@ fn hint_use() -> &'static str {
     said(t::keys_hint_use())
 }
 
+/// A title page's keys while its next episode is missing: Refresh checks for it again until a
+/// week on, and Space plays the episode before it when a source has one.
+fn missing_hints(
+    missing: &kaeri_model::missing::MissingEpisode,
+) -> Vec<(Action, &'static str)> {
+    [
+        missing.checkable().then(|| (Action::Refresh, said(t::keys_hint_check_again()))),
+        missing.previous.map(|previous| {
+            (Action::PlayNext, said(t::keys_hint_play_episode(i64::from(previous))))
+        }),
+        Some((Action::Open, Action::ShowEpisodes.hint())),
+        Some((Action::Back, Action::Back.hint())),
+    ]
+    .into_iter()
+    .flatten()
+    .collect()
+}
+
 /// The two or three contextual hints shown at the right of the status line.
 ///
 /// Deliberately short. A full footer of bindings is the templated look this design avoids;
@@ -224,7 +242,10 @@ pub(crate) fn status_hints_paged(
         Some(pair(&key(Action::Left)?, &key(Action::Right)?))
     };
     let in_stage = app.nav.focus() == crate::nav::Focus::Stage;
+    let missing = app.missing_here().filter(|_| app.playing.is_none());
     let wanted: Vec<(Action, &'static str)> = match app.nav.current() {
+        // The reader draws its own status line, with the keys for the open state.
+        V::Reader(_) => return crate::app::reader_hints(app, usize::MAX),
         // Now Playing has its own vocabulary, and it is the one view where the browsing
         // hints would be actively wrong.
         // Skip only while a skip is offered: at any other moment the key does nothing.
@@ -263,6 +284,11 @@ pub(crate) fn status_hints_paged(
         ],
         // Enter on a title page goes one deeper, into its episodes. Space is play next only
         // while nothing plays; then it pauses the player, as on every other screen.
+        // While the next episode is missing, Refresh checks for it again and Space plays the one
+        // before it, when a source has one: each named only where it does that.
+        V::Title(_) if missing.is_some() => {
+            missing.as_ref().map(missing_hints).unwrap_or_default()
+        }
         V::Title(id) => [
             // Another, on the page Surprise me opened, while its pool has one to pick.
             app.surprised_here()
@@ -285,6 +311,31 @@ pub(crate) fn status_hints_paged(
         .collect(),
         V::Stores | V::Store(_) | V::StoreMembers(_) => {
             vec![(Action::Open, Action::Open.hint()), (Action::Back, Action::Back.hint())]
+        }
+        // A series' page: its chapter's keys. Offline, as the board has it, Enter and the way
+        // back to the chapter to read next: only downloaded chapters open, and nothing
+        // downloads.
+        V::Series(_) if app.series_offline() => {
+            let mut wanted = Vec::new();
+            if app.series_selected().is_some() {
+                wanted.push((Action::Open, said(t::series_read_chapter_menu())));
+            }
+            if app.series_here().and_then(SeriesPage::next_up).is_some() {
+                wanted.push((Action::ShowEpisodes, said(t::series_chapters())));
+            }
+            wanted
+        }
+        V::Series(_) => {
+            let mut wanted = Vec::new();
+            if app.series_selected().is_some() {
+                wanted.push((Action::Open, said(t::series_read_chapter_menu())));
+                wanted.push((Action::ToggleWatched, said(t::tui_read_read_unread())));
+                wanted.push((Action::Download, said(t::series_download())));
+            }
+            if app.series_here().is_some_and(|page| page.view.is_some()) {
+                wanted.push((Action::SetListStatus, said(t::tui_read_hint_status())));
+            }
+            wanted
         }
         // Focus is on the rail: the arrows walk it, which is exactly the thing nobody could
         // discover when they did not.
@@ -409,6 +460,12 @@ pub(crate) fn status_hints_paged(
             hints
         }
         // Enter signs the highlighted tracker in or out, so it is named for which.
+        // The switch after the trackers: Enter turns it over, as Space does a setting.
+        V::Section(Section::Accounts)
+            if app.cursors.accounts.selected == app.sync.len() && app.following_row() =>
+        {
+            vec![(Action::Open, said(t::keys_hint_change()))]
+        }
         V::Section(Section::Accounts) => match app.sync.get(app.cursors.accounts.selected) {
             Some(tracker) if tracker.connected && !tracker.needs_reauth => {
                 vec![(Action::Open, hint_sign_out())]
@@ -481,8 +538,16 @@ pub(crate) fn reading_hints(
     let items = app.read_items();
     let search = app.nav.section() == Section::Search;
     let mut wanted: Vec<(Action, &'static str)> = Vec::new();
-    if !items.is_empty() {
+    let continues =
+        matches!(app.read_selected(), Some(crate::app::ReadLine::Work { continues: true, .. }));
+    if continues {
+        // A title in Continue reads on where it stopped; its page is a key away.
+        wanted.push((Action::Open, said(t::tui_read_hint_continue())));
+        wanted.push((Action::ShowEpisodes, said(t::series_chapters())));
+    } else if !items.is_empty() {
         wanted.push((Action::Open, hint_open()));
+    }
+    if !items.is_empty() {
         let parts = items.windows(2).any(|pair| pair[0].part() != pair[1].part());
         if parts {
             wanted.push((
@@ -573,13 +638,24 @@ fn overlay_hints(
         O::MediumOff => {
             vec![hint("↑↓", hint_move()), hint("↵", hint_choose()), hint(ESC, hint_cancel())]
         }
-        O::BugReport => vec![
-            hint("↑↓", hint_move()),
-            hint("↵", super::said(kaeri_i18n::t::report_open_github())),
-            hint("C", super::said(kaeri_i18n::t::report_copy())),
-            hint("E", super::said(kaeri_i18n::t::settings_crash_delete())),
-            hint(ESC, hint_close()),
-        ],
+        O::BugReport => {
+            // On Save player log, Enter saves it; once saved there is nothing more for it to do.
+            let open = if app.cursors.overlay.selected != crate::app::LOG_ROW {
+                Some(kaeri_i18n::t::report_open_github())
+            } else if app.player_log.saved.is_none() && app.player_log.stats.playbacks > 0 {
+                Some(kaeri_i18n::t::report_player_log_save_here())
+            } else {
+                None
+            };
+            let mut hints = vec![hint("↑↓", hint_move())];
+            hints.extend(open.map(|open| hint("↵", super::said(open))));
+            hints.extend([
+                hint("C", super::said(kaeri_i18n::t::report_copy())),
+                hint("E", super::said(kaeri_i18n::t::settings_crash_delete())),
+                hint(ESC, hint_close()),
+            ]);
+            hints
+        }
         O::Logs if app.logs.is_empty() => vec![hint(ESC, hint_close())],
         O::Logs => vec![hint("↑↓", hint_move()), hint(ESC, hint_close())],
         O::SearchFilters => {
@@ -625,6 +701,7 @@ fn overlay_hints(
                 O::StoreConfirm => hint_confirm(),
                 O::ManualQuery => hint_search(),
                 O::DownloadRange => hint_queue(),
+                O::ReaderGoTo => said(t::tui_reader_hint_go()),
                 O::EditSetting => hint_save(),
                 O::KitsuUsername => hint_next(),
                 O::KitsuPassword => hint_sign_in(),

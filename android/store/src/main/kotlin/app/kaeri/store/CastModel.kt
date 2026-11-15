@@ -11,6 +11,7 @@ package app.kaeri.store
 
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
@@ -24,9 +25,13 @@ import app.kaeri.engine.ffi.FfiCastBrowser
 import app.kaeri.engine.ffi.FfiCastCard
 import app.kaeri.engine.ffi.FfiCastRow
 import app.kaeri.engine.ffi.FfiCastSession
+import app.kaeri.engine.ffi.FfiLinkPhase
 import app.kaeri.engine.ffi.FfiNowCard
+import app.kaeri.engine.ffi.FfiRemoteCard
+import app.kaeri.engine.ffi.FfiScreen
 import app.kaeri.engine.ffi.FfiTvCommand
 import app.kaeri.engine.ffi.FfiTvException
+import app.kaeri.engine.ffi.FfiTvRowKind
 import app.kaeri.engine.ffi.FfiVolumeControl
 import app.kaeri.engine.ffi.tvPlayhead
 import app.kaeri.engine.model.Msg
@@ -133,7 +138,10 @@ data class CastShown(
  * A cast that ended with something to say once the card has gone: someone else took the TV. The
  * notice offers to play on here, from where the TV was.
  */
-data class CastEnded(val notice: Msg, val id: AnilistId, val episode: String)
+data class CastEnded(val notice: Msg, val id: AnilistId?, val episode: String?)
+
+/** The cast button's dialogs: the chooser while no TV is held, the TV's own once one is. */
+enum class CastDialog { Chooser, Connected }
 
 /**
  * Casting's state, on the main thread.
@@ -170,16 +178,49 @@ class CastModel(
     /** Casts that ended with a notice once their card had gone, for the snackbar. */
     val ended: SharedFlow<CastEnded> = _ended.asSharedFlow()
 
+    private val _notes = MutableSharedFlow<Msg>(extraBufferCapacity = 1)
+
+    /** A note while a TV plays, once as it first reads differently: a toast. */
+    val notes: SharedFlow<Msg> = _notes.asSharedFlow()
+
     private val _problem = MutableStateFlow<String?>(null)
 
     /** The engine's words for a cast that could not even be asked for, as the TV left the network. */
     val problem: StateFlow<String?> = _problem.asStateFlow()
+
+    private val _session = MutableStateFlow(CastSession.IDLE)
+
+    /** The held TV's session, as the engine last drew it. */
+    val session: StateFlow<CastSession> = _session.asStateFlow()
+
+    private val _button = MutableStateFlow(CastButtonState.Hidden)
+
+    /** The cast button in the top bars. */
+    val button: StateFlow<CastButtonState> = _button.asStateFlow()
+
+    private val _dialog = MutableStateFlow<CastDialog?>(null)
+
+    /** The cast button's dialog, while it is up. */
+    val dialog: StateFlow<CastDialog?> = _dialog.asStateFlow()
+
+    private val _joining = MutableStateFlow<String?>(null)
+
+    /** The name of the TV a session was left running on, while it is joined again. */
+    val joining: StateFlow<String?> = _joining.asStateFlow()
+
+    private val _lastItem = MutableStateFlow<CastItem?>(null)
+
+    /** What the session played last, for the mini while it joins again. */
+    val lastItem: StateFlow<CastItem?> = _lastItem.asStateFlow()
 
     /**
      * Plays an episode on this device: Play here, once the cast has stopped. The app sends the
      * engine its play, which resumes where the TV left off.
      */
     var playHere: ((AnilistId, String) -> Unit)? = null
+
+    /** Sends the engine a play, which goes to the held TV while one is held. */
+    var sendPlay: ((id: AnilistId, episode: String, fromStart: Boolean) -> Unit)? = null
 
     /** Called once the TV plays what the player here was playing: the app closes its player. */
     var handedOff: (() -> Unit)? = null
@@ -190,9 +231,22 @@ class CastModel(
      */
     var starter: ((key: String, request: TvPlayRequest) -> CastLink?)? = null
 
+    /** The session's source: the engine's watch, or the fixtures' scripted session. */
+    var sessions: CastSessionSource? = null
+        set(value) {
+            field = value
+            watching?.cancel()
+            watching = value?.let(::watch)
+        }
+
     private var tv: TvRemoteModel? = null
     private var browser: FfiCastBrowser? = null
-    private var browsing = false
+    private var browsers = 0
+    private val browsing get() = browsers > 0
+    private var watching: Job? = null
+    private var foreground = false
+    private var sessionAt = clock()
+    private var pendingGuard: Job? = null
     private var link: CastLink? = null
     private var cards: Job? = null
 
@@ -209,7 +263,10 @@ class CastModel(
     fun attach(tv: TvRemoteModel, browser: FfiCastBrowser) {
         this.tv = tv
         this.browser = browser
-        tv.changed = ::refresh
+        tv.changed = {
+            refresh()
+            refreshButton()
+        }
         if (starter == null) {
             starter = { key, request ->
                 val sender = tv.attachedSender
@@ -222,12 +279,30 @@ class CastModel(
                 }
             }
         }
+        val sender = tv.attachedSender
+        if (sessions == null && sender != null) {
+            sender.castWatch()?.let { watch ->
+                sessions = EngineCastSession(sender, watch) { id, episode, fromStart -> sendPlay?.invoke(id, episode, fromStart) }
+            }
+        }
         refresh()
     }
 
     internal fun refresh() {
         val sender = tv?.attachedSender ?: return
         _rows.value = if (browsing) sender.castRows() else emptyList()
+        refreshJoining()
+        refreshButton()
+    }
+
+    /** A session left running is joined again once its TV is found: the mini says so meanwhile. */
+    private fun refreshJoining() {
+        if (_session.value.held) {
+            _joining.value = null
+            return
+        }
+        val key = sessions?.leftOn()
+        _joining.value = key?.let { left -> _rows.value.firstOrNull { it.key == left }?.name }
     }
 
     /**
@@ -237,20 +312,193 @@ class CastModel(
     fun startBrowsing() {
         val sender = tv?.attachedSender ?: return
         val browser = browser ?: return
-        browsing = true
-        sender.browseCast(browser)
+        browsers += 1
+        if (browsers == 1) sender.browseCast(browser)
         refresh()
     }
 
     fun stopBrowsing() {
-        browsing = false
-        _rows.value = emptyList()
+        if (browsers == 0) return
+        browsers -= 1
+        if (browsers == 0) _rows.value = emptyList()
+        refreshButton()
+    }
+
+    /**
+     * The app came to the front or left it. In front, both browses run, so the button knows
+     * whether a TV is there and a session left running is joined again.
+     */
+    fun foreground(on: Boolean) {
+        if (on == foreground) return
+        foreground = on
+        val tv = tv ?: return
+        if (on) {
+            tv.startBrowsing()
+            startBrowsing()
+        } else {
+            stopBrowsing()
+            tv.stopBrowsing()
+        }
     }
 
     /** Browse again from the start, as after the local network was allowed. */
     fun browseAgain() {
-        if (browsing) startBrowsing()
+        val sender = tv?.attachedSender ?: return
+        val browser = browser ?: return
+        if (browsing) sender.browseCast(browser)
     }
+
+    // The session
+
+    /** Follow [source]'s views until the engine stops. */
+    private fun watch(source: CastSessionSource) = scope.launch {
+        takeSession(source.state())
+        while (isActive) {
+            val next = source.next() ?: break
+            takeSession(next)
+        }
+    }
+
+    /** A view of the session: the button, the mini and the controller's card follow it. */
+    internal fun takeSession(view: CastSession) {
+        val was = _session.value
+        sessionAt = clock()
+        _session.value = view
+        view.note?.let { if (it != was.note) _notes.tryEmit(it) }
+        view.item?.let { _lastItem.value = it }
+        if (view.held) _joining.value = null
+        refreshButton()
+        when {
+            view.state == CastSessionState.Playing && link == null && _shown.value?.stage.let { it == null || it == CastStage.Starting } -> attachCard(view)
+            !view.held && was.held -> {
+                if (_dialog.value == CastDialog.Connected) _dialog.value = null
+                val notice = view.notice
+                if (view.state == CastSessionState.Error && notice != null && _shown.value == null) {
+                    _ended.tryEmit(CastEnded(notice, was.item?.id, was.item?.episode))
+                }
+                // A card that says why it ended stays; one still starting goes with the TV.
+                if (_shown.value?.stage.let { it == CastStage.Starting || it == CastStage.Playing }) end()
+            }
+        }
+    }
+
+    /** The controller's card for what the held TV plays, from the engine's cast. */
+    private fun attachCard(view: CastSession) {
+        val next = sessions?.card() ?: return
+        val item = view.item
+        val held = _shown.value
+        val request = held?.request ?: TvPlayRequest(
+            id = item?.id ?: return,
+            title = item.title,
+            episode = item.episode ?: return,
+        )
+        pendingGuard?.cancel()
+        link = next
+        val now = clock()
+        _shown.value = CastShown(next.card(), now, view.deviceName ?: next.tvName, request, held?.startedAt ?: now)
+        follow(next, request)
+    }
+
+    /**
+     * The button as the engine says it for Chromecast TVs, joined with the TVs that run Kaeri,
+     * which only this model knows: one found shows the button, one connected fills it.
+     */
+    private fun refreshButton() {
+        val view = _session.value
+        val engine = view.button ?: when {
+            view.state == CastSessionState.Connecting -> CastButtonState.Connecting
+            view.held -> CastButtonState.Connected
+            _rows.value.isNotEmpty() -> CastButtonState.Available
+            else -> CastButtonState.Hidden
+        }
+        val kaeri = tv?.rows?.value.orEmpty().any { it.kind != FfiTvRowKind.PAIRED_AWAY }
+        _button.value = when {
+            engine == CastButtonState.Connecting || engine == CastButtonState.Connected -> engine
+            tv?.connected?.value != null -> CastButtonState.Connected
+            engine == CastButtonState.Available || kaeri -> CastButtonState.Available
+            else -> CastButtonState.Hidden
+        }
+    }
+
+    /** Tell the engine what Kaeri's receiver calls this device: `phone` or `tablet`. */
+    fun setDevice(word: String) {
+        tv?.attachedSender?.castSetDevice(word)
+    }
+
+    /** The cast button: the chooser, or the held TV's dialog. A Kaeri TV opens its own remote. */
+    fun pressButton() {
+        val tv = tv
+        when {
+            _session.value.held -> _dialog.value = CastDialog.Connected
+            tv?.connected?.value != null -> tv.openRemote()
+            else -> _dialog.value = CastDialog.Chooser
+        }
+    }
+
+    fun closeDialog() {
+        _dialog.value = null
+    }
+
+    /** Hold the Chromecast row [row]'s TV. Nothing plays until something is played. */
+    fun connect(row: FfiCastRow) {
+        _dialog.value = null
+        _problem.value = null
+        try {
+            sessions?.connect(row.key)
+        } catch (e: FfiTvException) {
+            _problem.value = TvRemoteModel.words(e)
+            TvRemoteModel.relookAfter(e, browser)
+        }
+    }
+
+    /** A Kaeri TV row in the chooser: its own pairing and remote take over. */
+    fun choose(row: app.kaeri.engine.ffi.FfiTvRow) {
+        _dialog.value = null
+        tv?.choose(row)
+    }
+
+    /** Stop casting: what plays on the TV stops, the receiver closes and the TV is let go. */
+    fun disconnect() {
+        _dialog.value = null
+        _joining.value = null
+        if (_session.value.held) sessions?.disconnect() else link?.stop()
+        end()
+    }
+
+    /** Plays go to the held TV: a TV is held, or a session is joined again. */
+    val held: Boolean get() = _session.value.held
+
+    /**
+     * Play [request] on the held TV: the controller comes up at once on its starting state, and
+     * the engine's card takes over once the TV starts. `false` when no TV is held.
+     */
+    fun playOnTv(request: TvPlayRequest): Boolean {
+        val source = sessions ?: return false
+        if (!_session.value.held) return false
+        val name = _session.value.deviceName.orEmpty()
+        cards?.cancel()
+        cards = null
+        link = null
+        over = null
+        val now = clock()
+        _shown.value = CastShown(starting(name, _session.value.levelControl), now, name, request, now)
+        _open.value = true
+        source.play(request)
+        // A play the engine could not start never reaches the TV: the controller lets it go.
+        pendingGuard?.cancel()
+        pendingGuard = scope.launch {
+            delay(PENDING_FOR)
+            if (link == null && _shown.value?.request == request) end()
+        }
+        return true
+    }
+
+    /** "Play next on Living room": queued after what plays. `false` where the engine cannot. */
+    fun queueNext(id: AnilistId, episode: String): Boolean =
+        _session.value.state == CastSessionState.Playing && sessions?.playNext(id, episode) == true
+
+    /** Whether an episode can be queued on the held TV now. */
+    val canQueue: Boolean get() = sessions?.queues == true
 
     /**
      * What Android said of the local network permission: turned down, the picker says so in
@@ -329,6 +577,8 @@ class CastModel(
 
     /** Let the cast and its card go. */
     private fun end() {
+        pendingGuard?.cancel()
+        pendingGuard = null
         cards?.cancel()
         cards = null
         link = null
@@ -349,12 +599,13 @@ class CastModel(
 
     /** Send the TV a command from the card, the notification or the volume keys. */
     fun send(command: FfiTvCommand) {
-        link?.command(command)
+        val source = sessions
+        if (source != null && _session.value.held) source.command(command) else link?.command(command)
     }
 
     /** Mute the TV, or bring its sound back. */
     fun toggleMute() {
-        val muted = _shown.value?.cast?.muted ?: false
+        val muted = _shown.value?.cast?.muted ?: _session.value.muted ?: false
         send(FfiTvCommand.Mute(!muted))
     }
 
@@ -367,13 +618,22 @@ class CastModel(
 
     /** A step of the volume keys, out of 100: nothing on a TV whose volume is fixed. */
     fun stepVolume(up: Boolean) {
-        if (_shown.value?.level != true) return
+        if (_shown.value?.level != true && !(_session.value.held && _session.value.levelControl)) return
         send(FfiTvCommand.Volume(if (up) VOLUME_STEP else -VOLUME_STEP))
     }
 
     /** Stop the TV and play on here, from where it was. */
     fun playHere() {
-        val shown = _shown.value ?: return
+        val shown = _shown.value
+        val source = sessions
+        if (source != null && _session.value.held) {
+            val from = source.playHere()
+            end()
+            val id = from?.id ?: shown?.request?.id ?: return
+            playHere?.invoke(id, from?.episode ?: shown?.request?.episode ?: return)
+            return
+        }
+        shown ?: return
         link?.playHere()
         val now = shown.cast.card.now
         end()
@@ -381,10 +641,7 @@ class CastModel(
     }
 
     /** Stop casting: the receiver quits on the TV, the card and the bar go. */
-    fun stop() {
-        link?.stop()
-        end()
-    }
+    fun stop() = disconnect()
 
     /** The card of a cast that failed or dropped off, dismissed. */
     fun dismiss() {
@@ -448,6 +705,14 @@ class CastModel(
         return tvPlayhead(now, ((at - shown.at).coerceAtLeast(0)) / 1000.0)
     }
 
+    /** Where the session's item is now, moved on from its view on this device's clock while it plays. */
+    fun itemPlayhead(at: Long = clock()): Double? {
+        val item = _session.value.item ?: return null
+        if (item.paused || item.loading || item.waiting != null) return item.position
+        val moved = item.position + (at - sessionAt).coerceAtLeast(0) / 1000.0
+        return item.duration?.let { moved.coerceAtMost(it) } ?: moved
+    }
+
     /** Whole seconds since the cast was asked for, for the starting line's counter. */
     fun startingSeconds(at: Long = clock()): Long {
         val shown = _shown.value ?: return 0
@@ -460,6 +725,30 @@ class CastModel(
 
         /** Past this many seconds the starting line counts. */
         const val COUNT_FROM_SECONDS = 4L
+
+        /** How long a play on the held TV may take to start before the controller lets it go. */
+        const val PENDING_FOR = 45_000L
+
+        /** The controller's card before the engine's: the TV starting what was asked. */
+        fun starting(tvName: String, level: Boolean) = FfiCastCard(
+            card = FfiRemoteCard(
+                tvName = tvName,
+                phase = FfiLinkPhase.CONNECTED,
+                phaseLine = null,
+                screen = FfiScreen.Player,
+                now = null,
+                rev = 0u,
+                over = false,
+                reached = true,
+            ),
+            volumeControl = if (level) FfiVolumeControl.LEVEL else FfiVolumeControl.MUTE_ONLY,
+            muted = null,
+            notice = null,
+            phaseLine = null,
+            upNext = null,
+            undo = null,
+            route = null,
+        )
 
         /** What the TV plays, as the card shows it: what the engine says, else what was asked while it starts. */
         fun now(shown: CastShown): FfiNowCard = shown.cast.card.now ?: FfiNowCard(

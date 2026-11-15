@@ -402,6 +402,8 @@ public sealed partial class MainWindow : Window
                 "crash-saved" => new FfiScene.CrashSaved(),
                 "crash-held" => new FfiScene.CrashHeld(),
                 "profiles" => new FfiScene.Profiles(),
+                "following" => new FfiScene.Following(),
+                "following-slow" => new FfiScene.FollowingSlow(),
                 "reading-first-run" => new FfiScene.ReadingFirstRun(),
                 "reading-update-sheet" => new FfiScene.ReadingUpdateSheet(),
                 "reading-join-ask" => new FfiScene.ReadingJoinAsk(),
@@ -416,6 +418,7 @@ public sealed partial class MainWindow : Window
                 "reading-demo" => new FfiScene.ReadingDemo(),
                 "reading-source-failed" => new FfiScene.ReadingSourceFailed(),
                 "reading-anilist-failed" => new FfiScene.ReadingAnilistFailed(),
+                "missing-episode" => new FfiScene.MissingEpisode(),
                 _ => new FfiScene.Watching(),
             };
             return (FfiEngine.StartScene(scratch, host, scene, EngineSession.AppStart(signIn: false)), scratch);
@@ -432,9 +435,11 @@ public sealed partial class MainWindow : Window
     {
         try
         {
+            // mpv's lines from info up: Report's player log keeps them for each playback.
             var opts = new FfiPlayerOptions(
                 Video: new FfiVideo.Composition(1280, 720),
-                CacheDir: Path.Combine(dirs.Cache, "player"));
+                CacheDir: Path.Combine(dirs.Cache, "player"),
+                LogLevel: "info");
             return new FfiPlayer(opts, engine, new Sink(this));
         }
         catch (Exception e)
@@ -976,7 +981,10 @@ public sealed partial class MainWindow : Window
     public void Say(string text) => ShowToast(InfoBarSeverity.Informational, text);
 
     /// <summary>A notice said elsewhere than the notice bar still goes to Messages.</summary>
-    void Keep(Notice notice) => ctx.Known.Messages.Add(notice.Msg?.Text() ?? "", notice.Kind == NoticeKind.Alert, DateTimeOffset.Now);
+    void Keep(Notice notice) => ctx.Known.Messages.Add(notice.Msg?.Text() ?? "", notice.Kind == NoticeKind.Alert, DateTimeOffset.Now, notice.Kind == NoticeKind.Alert && InPlayback);
+
+    /// <summary>A playback is starting or under way: an alert now is a playback error, for Report's Player log.</summary>
+    bool InPlayback => Player.Showing || Player.IsStarting;
 
     /// <summary>Ctrl+Shift+L and the status flyout: every notice this run.</summary>
     internal void ShowMessages() => Messages.Show(ctx, Root.XamlRoot);
@@ -984,8 +992,9 @@ public sealed partial class MainWindow : Window
     void ShowToast(Notice notice)
     {
         var text = notice.Msg?.Text() ?? "";
+        var playback = notice.Kind == NoticeKind.Alert && InPlayback;
         if (notice.Kind == NoticeKind.Alert && text.Length > 0)
-            ctx.Known.LastError = new BugError("message", text);
+            ctx.Known.LastError = new BugError(playback ? "playback" : "message", text);
         var (button, act) = notice.Hint switch
         {
             NoticeHint.StopPlayback => (T.ActionStop, (Action)(() => { if (Player.Showing) Player.Close(); })),
@@ -1001,16 +1010,17 @@ public sealed partial class MainWindow : Window
             NoticeHint.ReportCrash => (T.CrashNoticeReport, () => ReportDialog.Show(ctx, Root.XamlRoot, latestCrash: true)),
             _ => (null, null),
         };
-        ShowToast(notice.Kind == NoticeKind.Alert ? InfoBarSeverity.Warning : InfoBarSeverity.Informational, text, button, act);
+        ShowToast(notice.Kind == NoticeKind.Alert ? InfoBarSeverity.Warning : InfoBarSeverity.Informational, text, button, act, playback);
     }
 
+    /// <param name="playback">The notice is about what plays.</param>
     /// <param name="hold">How long it stays, even with a button: the private notice's 8 s.</param>
     /// <param name="icon">Its own mark in place of the severity's: the private notice's eye.</param>
-    void ShowToast(InfoBarSeverity severity, string text, string? button = null, Action? act = null, TimeSpan? hold = null, IconSource? icon = null)
+    void ShowToast(InfoBarSeverity severity, string text, string? button = null, Action? act = null, bool playback = false, TimeSpan? hold = null, IconSource? icon = null)
     {
         var shown = ++toastShown;
         var alert = severity == InfoBarSeverity.Warning;
-        ctx.Known.Messages.Add(text, alert, DateTimeOffset.Now);
+        ctx.Known.Messages.Add(text, alert, DateTimeOffset.Now, playback);
         // A newer notice crossfades over the last; a first one fades in.
         if (Toast.IsOpen)
             Motion.FadeIn(Toast);
@@ -1591,7 +1601,38 @@ public sealed partial class MainWindow : Window
             return;
         }
         if (HoldForDownloads())
+        {
             args.Cancel = true;
+            return;
+        }
+        // The TV plays on with the window closed: Kaeri waits in the notification area.
+        if (CastKeepsGoing)
+        {
+            args.Cancel = true;
+            KeepGoingHidden();
+        }
+    }
+
+    /// <summary>Something plays on the TV this PC holds: closing the window keeps it going.</summary>
+    bool CastKeepsGoing => tv.SessionLoaded && tv.Session?.Item is not null;
+
+    /// <summary>
+    /// The icon's Quit: while the TV plays, asked first, as quitting stops it there; otherwise at
+    /// once.
+    /// </summary>
+    async void QuitFromTray()
+    {
+        if (!CastKeepsGoing)
+        {
+            CloseNow();
+            return;
+        }
+        ShowAgain();
+        var title = tv.Drawn()?.Title is { Length: > 0 } shown ? shown : tv.SessionPlay?.Title ?? "";
+        if (!await Ui.Confirm(Root.XamlRoot, T.DesktopCastQuitTitle, T.DesktopCastQuitBody(title, tv.SessionName), T.DesktopCastQuitAction))
+            return;
+        tv.DisconnectCast();
+        CloseNow();
     }
 
     /// <summary>
@@ -1678,12 +1719,15 @@ public sealed partial class MainWindow : Window
             Open = () => ui.TryEnqueue(ShowAgain),
             PauseAll = () => ui.TryEnqueue(() => trayPaused.UnionWith(ctx.PauseAllDownloads())),
             ResumeAll = () => ui.TryEnqueue(ctx.ResumeAllDownloads),
-            Quit = () => ui.TryEnqueue(CloseNow),
+            Quit = () => ui.TryEnqueue(QuitFromTray),
             AnyRunning = () => ctx.Known.Downloads.Any(r => r.State is DownloadState.Active or DownloadState.Queued),
             AnyPaused = () => ctx.Known.Downloads.Any(r => r.State is DownloadState.Paused),
         };
-        var told = Path.Combine(dirs.Config, "windows-told-tray");
-        tray.Show(tell: !File.Exists(told));
+        // Told once for downloads and once for a cast, each in its own words.
+        var casting = CastKeepsGoing;
+        var told = Path.Combine(dirs.Config, casting ? "windows-told-tray-cast" : "windows-told-tray");
+        tray.Show(tell: !File.Exists(told), casting ? T.CastNotificationLine(tv.SessionName) : null);
+        BrowseForButton(false);
         // Told again next time when it can't be kept: harmless.
         SmallFiles.Write(told, "");
         keepGoing?.Stop();
@@ -1694,7 +1738,7 @@ public sealed partial class MainWindow : Window
             var (d, s) = ctx.Known.Running();
             // Paused from the icon: still there to resume, so Kaeri stays for them.
             trayPaused.IntersectWith(ctx.Known.Downloads.Where(r => r.State is DownloadState.Paused or DownloadState.Active or DownloadState.Queued).Select(r => r.Id));
-            if (d + s == 0 && !ctx.Known.Downloads.Any(r => r.State is DownloadState.Paused && trayPaused.Contains(r.Id)))
+            if (d + s == 0 && !ctx.Known.Downloads.Any(r => r.State is DownloadState.Paused && trayPaused.Contains(r.Id)) && !CastKeepsGoing)
                 CloseNow();
         };
         keepGoing.Start();
@@ -1939,6 +1983,8 @@ public sealed partial class MainWindow : Window
         tray?.Hide();
         AppWindow.Show(true);
         Activate();
+        if (tvSender is not null)
+            BrowseForButton(true);
     }
 
     internal void CloseNow()

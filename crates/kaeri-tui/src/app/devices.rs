@@ -226,9 +226,12 @@ impl App {
         self.devices.restart_as.as_deref()
     }
 
-    /// Whether something on screen counts down by the second: the pairing code's time.
+    /// Whether something on screen counts down by the second: the pairing code's time, or a
+    /// check of a missing episode waiting to show Checking or its answer.
     pub fn is_ticking(&self) -> bool {
-        self.nav.overlay() == Some(&Overlay::SyncPairShow) && self.devices.invite.is_some()
+        (self.nav.overlay() == Some(&Overlay::SyncPairShow) && self.devices.invite.is_some())
+            || self.reader_ticking()
+            || self.checking_missing()
     }
 
     /// Whoever runs the app copied the text it was handed, or could not: the store's open

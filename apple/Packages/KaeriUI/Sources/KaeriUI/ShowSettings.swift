@@ -136,6 +136,8 @@ struct ShowSettingsSheet: View {
                     Text(L.showSettingsTitle).font(.mac(13)).foregroundStyle(.haze)
                 }
             }
+            AlwaysPrivateCard(isOn: store.alwaysPrivate(show: entry.id), detail: L.showAlwaysPrivateDetail)
+                .padding(.top, 20)
             Grid(alignment: .leadingFirstTextBaseline, horizontalSpacing: 12, verticalSpacing: 12) {
                 row(L.settingsAudio) { menu(.translation) }
                 row(L.playerSubtitles) {
@@ -251,6 +253,12 @@ struct PhoneShowSettingsSheet: View {
         let view = store.showSettings.sheets[entry.id]
         NavigationStack {
             PhoneList {
+                // Per device and never synced: what was saved before stays.
+                Section {
+                    PhonePrivateSwitch(title: L.titleAlwaysPrivate, isOn: store.alwaysPrivate(show: entry.id))
+                } footer: {
+                    Text(L.showAlwaysPrivateDetail)
+                }
                 Section {
                     menuRow(L.settingsAudio, key: .translation)
                     HStack {

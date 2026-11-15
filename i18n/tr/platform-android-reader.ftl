@@ -89,6 +89,7 @@ reader-end-series = Seriye dön
 reader-end-again = Baştan yeniden oku
 reader-opening-chapter = Bölüm { $chapter } açılıyor
 reader-failed-chapter = Bölüm { $chapter } açılamadı
+reader-failed-chapter-plain = Bu bölüm açılamadı
 reader-sheet-series = Bu seri
 reader-sheet-all-manga = Tüm mangalar
 reader-sheet-all-webtoons = Tüm webtoonlar

@@ -57,6 +57,7 @@ import app.kaeri.engine.model.RememberedSubtitles
 import app.kaeri.engine.model.RememberedTrack
 import app.kaeri.engine.model.ShowSettingKey
 import app.kaeri.engine.model.ShowSettingRow
+import app.kaeri.engine.model.PrivateTitle
 import app.kaeri.engine.model.ShowSettingsView
 
 /** The sheet, over the title page, with one detent and its top at 77, as T7 has it. */
@@ -98,6 +99,10 @@ private fun ShowSettingsContent(entry: Entry, view: ShowSettingsView?) {
                 Text(entry.showTitle, style = ShowTitle.row, color = colors.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis)
             }
         }
+
+        // Always private, at the top: nothing from this show is saved or synced on this device.
+        AlwaysPrivateRow(PrivateTitle.Show(entry.id), stringResource(R.string.show_always_private_detail))
+        SheetDivider()
 
         SheetHeading(stringResource(R.string.show_settings_audio_subtitles))
         val audio = row(ShowSettingKey.TRANSLATION)

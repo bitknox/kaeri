@@ -13,6 +13,9 @@
     <string name="notice_cast_taken_over">Другое устройство запустило что-то на %1$s, поэтому трансляция остановлена.</string>
     <string name="notice_cast_not_same_network">Это устройство не в той же сети, что %1$s, или подключается к ней через VPN. Для трансляции подключите оба к одной сети.</string>
     <string name="notice_cast_lost">Связь с %1$s потеряна, трансляция остановлена.</string>
+    <string name="notice_cast_segment">%1$s перестал получать поток: источник не ответил для части серии. Попробуйте другой источник.</string>
+    <string name="notice_cast_lost_stream">%1$s потерял поток. Проверьте, что это устройство и телевизор в одной сети.</string>
+    <string name="notice_cast_subtitles_plain">Субтитры на %1$s показываются простым текстом. Оформленные субтитры оказались слишком тяжёлыми для телевизора.</string>
     <string name="notice_cast_no_device">Этот телевизор больше не в сети.</string>
     <string name="notice_cast_unavailable">Эта версия Kaeri не умеет передавать видео на телевизоры.</string>
     <string name="cast_phase_starting">Запуск на %1$s</string>
@@ -123,6 +126,8 @@
     <string name="status_searching_sources">Запрашиваем источники об эпизоде %1$s…</string>
     <string name="notice_player_failed_to_start">Не удалось запустить mpv. Проверьте, что mpv запускается сам по себе. (%1$s)</string>
     <string name="notice_stream_no_video">Из этого потока не пришёл ни один кадр. Пробуем поток %1$,d из %2$,d.</string>
+    <string name="notice_failed_over">Поток оборвался. %1$s продолжает с того же места.</string>
+    <string name="notice_failed_over_same_source">Поток оборвался. Другой поток из %1$s продолжает с того же места.</string>
     <string name="notice_player_could_not_play">mpv не смог воспроизвести это. %1$s</string>
     <string name="notice_player_exited_silently">mpv закрылся без воспроизведения и без объяснения причины. Попробуйте другой источник.</string>
     <string name="notice_player_not_playing">mpv не начал воспроизведение через %1$,d с. У источника может не быть данных. Проверьте, что mpv сам воспроизводит файлы.</string>
@@ -338,6 +343,7 @@
     <string name="reading_row_on_device">Хранится здесь</string>
     <string name="reading_row_queued">В очереди</string>
     <string name="reading_row_waits_wifi">В очереди · ждёт Wi-Fi</string>
+    <string name="reading_row_waits_room">В очереди · ждёт места</string>
     <string name="reading_row_downloading">Скачивание · %1$,d из %2$,d стр.</string>
     <string name="reading_row_failed">Не удалось скачать</string>
     <string name="reading_row_page_of">Стр. %1$d из %2$d</string>
@@ -408,6 +414,12 @@
     <string name="reading_dl_waits_wifi">ждёт Wi-Fi</string>
     <string name="reading_dl_failed">Не удалось скачать главу %1$s</string>
     <string name="reading_dl_offline">Нет сети</string>
+    <plurals name="reading_dl_no_room">
+        <item quantity="one">Нет места. Загрузка начнётся, когда освободится место.</item>
+        <item quantity="few">Нет места. Загрузка начнётся, когда освободится место.</item>
+        <item quantity="many">Нет места. Загрузка начнётся, когда освободится место.</item>
+        <item quantity="other">Нет места. Загрузка начнётся, когда освободится место.</item>
+    </plurals>
     <string name="reading_estimate_size">Около %1$s</string>
     <string name="reading_estimate_wifi">по Wi-Fi</string>
     <string name="reading_estimate_mobile">по мобильной сети</string>
@@ -601,6 +613,19 @@
         <item quantity="few">Вы вышли из %1$s. %2$,d изменения в очереди сохранены для следующего входа.</item>
         <item quantity="many">Вы вышли из %1$s. %2$,d изменений в очереди сохранены для следующего входа.</item>
         <item quantity="other">Вы вышли из %1$s. %2$,d изменения в очереди сохранены для следующего входа.</item>
+    </plurals>
+    <string name="notice_tracker_change_refused">%1$s раз за разом отклонял изменение для %2$s, поэтому оно остаётся только в Kaeri.</string>
+    <plurals name="notice_tracker_changes_refused">
+        <item quantity="one">%1$s раз за разом отклонял изменения для %2$s и ещё %3$,d тайтла, поэтому они остаются только в Kaeri.</item>
+        <item quantity="few">%1$s раз за разом отклонял изменения для %2$s и ещё %3$,d тайтлов, поэтому они остаются только в Kaeri.</item>
+        <item quantity="many">%1$s раз за разом отклонял изменения для %2$s и ещё %3$,d тайтлов, поэтому они остаются только в Kaeri.</item>
+        <item quantity="other">%1$s раз за разом отклонял изменения для %2$s и ещё %3$,d тайтла, поэтому они остаются только в Kaeri.</item>
+    </plurals>
+    <plurals name="notice_tracker_change_refused_untitled">
+        <item quantity="one">%1$s раз за разом отклонял изменения для %2$,d тайтла, поэтому они остаются только в Kaeri.</item>
+        <item quantity="few">%1$s раз за разом отклонял изменения для %2$,d тайтлов, поэтому они остаются только в Kaeri.</item>
+        <item quantity="many">%1$s раз за разом отклонял изменения для %2$,d тайтлов, поэтому они остаются только в Kaeri.</item>
+        <item quantity="other">%1$s раз за разом отклонял изменения для %2$,d тайтла, поэтому они остаются только в Kaeri.</item>
     </plurals>
     <string name="notice_sign_out_failed">Не удалось выйти из %1$s. Попробуйте ещё раз. %2$s</string>
     <string name="notice_not_saved_because">Не удалось сохранить настройку. %1$s</string>
@@ -808,6 +833,7 @@
     <string name="reader_end_again">Прочитать заново</string>
     <string name="reader_opening_chapter">Открывается глава %1$s</string>
     <string name="reader_failed_chapter">Не удалось открыть главу %1$s</string>
+    <string name="reader_failed_chapter_plain">Не удалось открыть главу</string>
     <string name="reader_sheet_series">Эта серия</string>
     <string name="reader_sheet_all_manga">Вся манга</string>
     <string name="reader_sheet_all_webtoons">Все вебтуны</string>
@@ -1084,6 +1110,8 @@
     <string name="tv_discussion_select_spoiler">Нажмите OK, чтобы показать спойлер</string>
     <string name="updates_unknown_sources_path">Настройки › Приложения › Безопасность и ограничения › Неизвестные источники</string>
     <string name="tv_remote_default_name">Телевизор Kaeri</string>
+    <string name="player_stats_show_live">Показать живую статистику</string>
+    <string name="player_stats_hide_live">Скрыть живую статистику</string>
     <string name="episode_short_dubbed">Эп. %1$d · С дубляжом</string>
     <string name="episode_long_dubbed">Эпизод %1$d · С дубляжом</string>
     <plurals name="downloads_live_paused">
@@ -1359,6 +1387,7 @@
     <string name="engine_down_title">Kaeri остановлен</string>
     <string name="engine_down_stopped">Ничего нового не загрузится, пока он не запустится снова. Попробуйте ещё раз или закройте и снова откройте приложение.</string>
     <string name="engine_down_quit">Закрыть</string>
+    <string name="settings_picture_in_picture_system_off">Отключено в настройках Android</string>
     <string name="about_title">О программе</string>
     <string name="about_title_app">О Kaeri</string>
     <string name="about_version">Версия %1$s</string>
@@ -1394,6 +1423,21 @@
     <string name="report_tv_scan">Отсканируйте код, чтобы открыть отчёт на телефоне.</string>
     <string name="report_crash_off">Отчёты о сбоях выключены, поэтому ни один не включён. Включить их можно в настройках, в разделе «О программе».</string>
     <string name="report_crash_settings">Настройки отчётов о сбоях</string>
+    <string name="report_player_log">Журнал плеера</string>
+    <plurals name="report_player_log_detail">
+        <item quantity="one">Последние воспроизведения: %1$,d · %2$s</item>
+        <item quantity="few">Последние воспроизведения: %1$,d · %2$s</item>
+        <item quantity="many">Последние воспроизведения: %1$,d · %2$s</item>
+        <item quantity="other">Последние воспроизведения: %1$,d · %2$s</item>
+    </plurals>
+    <string name="report_player_log_empty">Воспроизведений пока не было</string>
+    <string name="report_player_log_save">Сохранить журнал…</string>
+    <string name="report_player_log_attach">Приложите файл к задаче, когда она откроется на GitHub.</string>
+    <string name="report_player_log_saved">Сохранено как %1$s</string>
+    <string name="report_player_log_failed">Не удалось сохранить журнал. Выберите другую папку.</string>
+    <string name="report_sent_report">Отчёт</string>
+    <string name="report_player_log_a11y_saved">Журнал плеера сохранён</string>
+    <string name="report_player_log_a11y_hint">Сохраняет файл, который можно приложить к задаче</string>
     <string name="settings_group_crashes">Отчёты о сбоях</string>
     <string name="settings_crash_save">Сохранять отчёты о сбоях на этом устройстве</string>
     <string name="settings_crash_save_detail">Kaeri хранит на этом устройстве краткую запись о каждом сбое для «Сообщить об ошибке», убирая из неё названия, адреса и имена. Ничего не отправляется само по себе.</string>
@@ -1459,6 +1503,16 @@
     <string name="cast_play_here">Смотреть здесь</string>
     <string name="cast_stop">Остановить трансляцию</string>
     <string name="cast_volume_fixed">Задаётся на ТВ</string>
+    <string name="cast_button_connecting">Подключаемся к %1$s</string>
+    <string name="cast_button_connected">Подключено к %1$s</string>
+    <string name="cast_plays_on">Воспроизводится на %1$s</string>
+    <string name="cast_idle">Пока ничего не воспроизводится</string>
+    <string name="cast_status_paused">Пауза на %1$s</string>
+    <string name="cast_open_show">Открыть %1$s</string>
+    <string name="cast_controller_close">Закрыть</string>
+    <string name="cast_mini_opens">Открывает управление</string>
+    <string name="cast_play_next_on">Воспроизвести следующим на %1$s</string>
+    <string name="cast_notification_line">Трансляция на %1$s</string>
     <string name="action_try_again">Попробовать снова</string>
     <string name="action_cancel">Отмена</string>
     <string name="action_go">Перейти</string>
@@ -1508,6 +1562,7 @@
     <string name="action_disable">Выключить</string>
     <string name="action_check_now">Проверить сейчас</string>
     <string name="action_check_again">Проверить снова</string>
+    <string name="action_checking">Проверка</string>
     <string name="action_open_settings">Открыть настройки</string>
     <string name="action_report">Сообщить об ошибке</string>
     <string name="action_play_now">Смотреть сейчас</string>
@@ -1530,6 +1585,7 @@
     <string name="time_in">через %1$s</string>
     <string name="time_minutes_left">осталось %1$,d мин</string>
     <string name="time_minutes">%1$,d мин</string>
+    <string name="time_hours">%1$,d ч</string>
     <string name="time_now_inline">сейчас</string>
     <string name="time_just_now_inline">только что</string>
     <string name="when_today">сегодня в %1$s</string>
@@ -1636,6 +1692,9 @@
     <string name="player_position_spoken">%1$s из %2$s</string>
     <string name="names_pair">%1$s и %2$s</string>
     <string name="names_list">%1$s, %2$s</string>
+    <string name="desktop_cast_quit_title">Остановить трансляцию и выйти?</string>
+    <string name="desktop_cast_quit_body">%1$s воспроизводится на %2$s. При выходе воспроизведение остановится.</string>
+    <string name="desktop_cast_quit_action">Остановить и выйти</string>
     <string name="discussion_open">Обсуждение</string>
     <string name="discussion_title_episode">Обсуждение эпизода %1$d</string>
     <plurals name="discussion_row">
@@ -3057,6 +3116,7 @@
     <string name="read_search_source_kind_folder">Папка</string>
     <string name="read_search_source_kind_plugin">Плагин</string>
     <string name="read_search_source_more">Показать ещё %1$,d</string>
+    <string name="read_tile_add_to">Добавить в «%1$s»</string>
     <string name="onboarding_step">%1$,d из %2$,d</string>
     <string name="onboarding_welcome_line">Следите за тем, что смотрите и читаете. Источники вы добавляете сами.</string>
     <string name="onboarding_welcome_note">Ваши списки и прогресс остаются при вас. Трекеры и источники вы добавляете сами.</string>
@@ -3568,6 +3628,12 @@
     <string name="settings_quality">Качество</string>
     <string name="settings_auto_play">Автоматически включать следующую серию</string>
     <string name="settings_up_next_countdown">Отсчёт блока «Далее»</string>
+    <string name="settings_preload_cellular">Предзагружать видео по мобильной сети</string>
+    <string name="settings_preload_metered">Предзагружать видео по лимитным подключениям</string>
+    <string name="settings_preload_detail_android">Во время эндинга находятся поток, субтитры и моменты пропуска следующей серии. Её первые секунды тоже загружаются, а по мобильной сети или лимитному Wi-Fi только когда это включено.</string>
+    <string name="settings_preload_detail_metered">Во время эндинга находятся поток, субтитры и моменты пропуска следующей серии. Её первые секунды тоже загружаются, а по лимитному подключению только когда это включено.</string>
+    <string name="settings_preload_torrents">Торренты так же загружают первые части.</string>
+    <string name="settings_preload_a11y_dimmed">Нужно включить «Автоматически включать следующую серию»</string>
     <string name="settings_skip_opening">Пропускать опенинг автоматически</string>
     <string name="settings_skip_recap">Пропускать рекапы автоматически</string>
     <string name="settings_find_skips">Искать моменты пропуска по звуку</string>
@@ -3756,6 +3822,9 @@
     <string name="settings_opds_feed">Делиться в этой сети</string>
     <string name="settings_opds_password">Пароль ленты</string>
     <string name="settings_opds_port">Порт ленты</string>
+    <string name="settings_label_picture_in_picture_on_leave">«Картинка в картинке» при выходе из приложения</string>
+    <string name="settings_anilist_following">Показывать тех, на кого вы подписаны</string>
+    <string name="settings_anilist_following_footer">Показывает на странице сериала и у его эпизодов, где сейчас те, на кого вы подписаны в AniList. Кто видит ваш собственный список, настраивается в AniList.</string>
     <string name="book_server_address">Адрес</string>
     <string name="book_server_address_hint">Адрес или вся ссылка OPDS из Kavita.</string>
     <string name="book_server_kavita_key">Это ссылка OPDS из Kavita. Ключ в ней служит для входа, поэтому пароль не нужен.</string>
@@ -3889,6 +3958,22 @@
         <item quantity="few">%1$,d из %2$,d эпизода</item>
         <item quantity="many">%1$,d из %2$,d эпизодов</item>
         <item quantity="other">%1$,d из %2$,d эпизода</item>
+    </plurals>
+    <plurals name="source_picker_episodes">
+        <item quantity="one">Эпизоды %2$d–%3$d</item>
+        <item quantity="few">Эпизоды %2$d–%3$d</item>
+        <item quantity="many">Эпизоды %2$d–%3$d</item>
+        <item quantity="other">Эпизоды %2$d–%3$d</item>
+    </plurals>
+    <string name="source_picker_episodes_not_yet">Эпизоды %1$d–%2$d. Пока нет %3$s</string>
+    <string name="source_picker_episodes_not">Эпизоды %1$d–%2$d. Нет %3$s</string>
+    <string name="source_picker_missing_pair">%1$d и %2$d</string>
+    <string name="source_picker_missing_range">%1$d–%2$d</string>
+    <plurals name="source_picker_coverage_missing">
+        <item quantity="one">%1$,d из %2$,d эпизода. Нет %3$s</item>
+        <item quantity="few">%1$,d из %2$,d эпизодов. Нет %3$s</item>
+        <item quantity="many">%1$,d из %2$,d эпизодов. Нет %3$s</item>
+        <item quantity="other">%1$,d из %2$,d эпизода. Нет %3$s</item>
     </plurals>
     <string name="source_note_off">Выключен</string>
     <string name="source_note_resting">Не отвечает, скоро попробуем снова</string>
@@ -4539,6 +4624,18 @@
     <string name="more_following_note">Из AniList</string>
     <string name="more_followed_score">%1$,d/10</string>
     <string name="more_like_this">Похожие тайтлы</string>
+    <string name="following_show_all">Показать все %1$,d</string>
+    <plurals name="following_names">
+        <item quantity="one">%1$s, %2$s и ещё %3$,d</item>
+        <item quantity="few">%1$s, %2$s и ещё %3$,d</item>
+        <item quantity="many">%1$s, %2$s и ещё %3$,d</item>
+        <item quantity="other">%1$s, %2$s и ещё %3$,d</item>
+    </plurals>
+    <string name="following_names_two">%1$s и %2$s</string>
+    <string name="following_mark_more">+%1$,d</string>
+    <string name="following_mark_spoken">%1$s: просмотрено до этого места.</string>
+    <string name="following_score_spoken">Оценка %1$,d из 10</string>
+    <string name="following_open_help">Показывает, где сейчас каждый.</string>
     <string name="more_followed_progress">%1$s · %2$s</string>
     <string name="more_empty">У AniList пока нет актёров, создателей и рекомендаций для этого тайтла.</string>
     <string name="more_spoiler">Спойлер</string>
@@ -4559,7 +4656,6 @@
     <string name="title_fact_after">После серии %1$d</string>
     <string name="title_fact_now">Сейчас</string>
     <string name="title_fact_tba">Дата не объявлена</string>
-    <string name="more_following_line">%1$s · %2$,d/10</string>
     <string name="episode_go_to">Перейти к эпизоду…</string>
     <string name="episode_go_to_title">Перейти к эпизоду</string>
     <string name="episode_go_to_go">Перейти</string>
@@ -4567,6 +4663,18 @@
     <string name="episode_go_to_label">Эпизод, с %1$d по %2$d</string>
     <string name="episode_go_to_none">Эпизода %1$d нет. В этом сериале их %2$d.</string>
     <string name="episode_go_to_not_out">Эпизод %1$d ещё не вышел. Последний: %2$d.</string>
+    <string name="episode_missing_aired">Эпизод %1$d вышел %2$s.</string>
+    <string name="episode_missing_aired_on">Эпизод %1$d вышел %2$s.</string>
+    <string name="episode_missing_not_yet">Ваши источники его пока не нашли.</string>
+    <string name="episode_missing_still">Ваши источники всё ещё его не нашли.</string>
+    <string name="episode_missing_no_answer">Ваши источники не ответили.</string>
+    <string name="episode_missing_looks_again">Kaeri ищет его снова каждые %1$,d мин.</string>
+    <string name="episode_missing_none">Ваши источники так и не нашли его.</string>
+    <string name="episode_missing_offline">Kaeri поищет его, когда снова появится сеть.</string>
+    <string name="episode_row_aired_ago">Вышел %1$s</string>
+    <string name="episode_unsourced_yet">Ваши источники пока не нашли</string>
+    <string name="episode_found_announcement">Ваши источники нашли эпизод %1$d.</string>
+    <string name="episode_check_again_help">Kaeri также сам ищет эпизод каждые %1$,d мин в течение %2$,d ч после его выхода.</string>
     <string name="torrents_title">Торренты</string>
     <string name="torrents_on">Торренты включены</string>
     <string name="torrents_off_detail">По умолчанию выключено. Торренты подключаются напрямую, если не направить их через прокси.</string>

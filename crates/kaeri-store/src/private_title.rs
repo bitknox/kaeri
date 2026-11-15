@@ -47,10 +47,14 @@ mod tests {
         store.set_private_title("show:4242", false, 4).unwrap();
         assert_eq!(store.private_titles().unwrap(), ["series:a:30001"]);
         let ops: i64 = store
-            .with_conn(|c| Ok(c.query_row("SELECT COUNT(*) FROM sync_op", [], |r| r.get(0))?))
+            .with_personal(|c| {
+                Ok(c.query_row("SELECT COUNT(*) FROM sync_op", [], |r| r.get(0))?)
+            })
             .unwrap();
         let regs: i64 = store
-            .with_conn(|c| Ok(c.query_row("SELECT COUNT(*) FROM sync_reg", [], |r| r.get(0))?))
+            .with_personal(|c| {
+                Ok(c.query_row("SELECT COUNT(*) FROM sync_reg", [], |r| r.get(0))?)
+            })
             .unwrap();
         assert_eq!((ops, regs), (0, 0), "the flag never reaches sync");
     }

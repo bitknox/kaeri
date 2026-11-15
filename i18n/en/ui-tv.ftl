@@ -115,6 +115,9 @@ tv-paired-on = Paired { $when }
 # Short word: paired, no date known.
 tv-paired = Paired
 
+# Line under a paired TV running the app, in the Play on TV list.
+tv-row-kaeri = { -app-name } on Android TV
+
 # Line with the address.
 # @arg address: text
 tv-connected-at = Connected · { $address }

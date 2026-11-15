@@ -2,6 +2,7 @@
 
 import KaeriKit
 import KaeriStore
+import KaeriStrings
 @testable import KaeriUI
 import Foundation
 import Testing
@@ -180,5 +181,17 @@ struct SettingsWordsTests {
     @Test func aSettingSomeShowsSetSaysForHowMany() {
         let store = AppStore()
         #expect(store.settings.overriddenNote(.skipOpening) == nil)
+    }
+
+    @Test func thePreloadRowNamesThisDevicesLimitedNetwork() {
+        #expect(PreloadWords.title(cellular: true) == L.settingsPreloadCellular)
+        #expect(PreloadWords.title(cellular: false) == L.settingsPreloadLowData)
+        #expect(PreloadWords.line(cellular: true, torrents: false) == L.settingsPreloadDetailApplePhone)
+        #expect(PreloadWords.line(cellular: false, torrents: false) == L.settingsPreloadDetailLowData)
+        #expect(PreloadWords.line(cellular: false, torrents: true) == L.settingsPreloadDetailLowData + " " + L.settingsPreloadTorrents)
+        #if os(macOS)
+        #expect(SettingKey.preloadMetered.title == L.settingsPreloadLowData)
+        #expect(SettingsResults.index.contains { $0.title == L.settingsPreloadLowData && $0.pane == .playback })
+        #endif
     }
 }

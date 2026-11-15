@@ -101,11 +101,16 @@ object FixtureArt {
 
     /**
      * The PNG for [url], or `null` for one the fixtures do not name: `cover/900001-xl.jpg` is the
-     * poster, `banner/900001.jpg` and a still, `ep/900001/3.jpg`, the wide drawing.
+     * poster, `banner/900001.jpg` and a still, `ep/900001/3.jpg`, the wide drawing, and
+     * `avatar/Ines.png` a followed person's picture.
      */
     fun bytes(url: String): ByteArray? {
         if (!url.startsWith(HOST)) return null
         val parts = url.removePrefix(HOST).split('/')
+        if (parts[0] == "avatar") {
+            val person = parts.getOrNull(1)?.substringBefore('.')?.lowercase() ?: return null
+            return File(directory, "avatar-$person.png").takeIf { it.isFile }?.readBytes()
+        }
         val id = parts.getOrNull(1)?.split('-', '.')?.firstOrNull()?.toUIntOrNull() ?: return null
         val name = names[id] ?: return null
         val kind = when (parts[0]) {
