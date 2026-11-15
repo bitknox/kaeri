@@ -141,7 +141,7 @@ pub(crate) fn list_episodes_again(
     let table = engine.dubs.table(id);
     let naming = engine.names.naming(id, engine.network.offline, &services.clock);
     spawn(None, services, tx, move |lent| async move {
-        list_episodes(lent, id, naming, ticket, announce).await;
+        list_episodes(lent, id, naming, ticket, announce, true).await;
         drop(table);
     });
 }
@@ -283,7 +283,7 @@ fn episodes_job(
     let naming = engine.names.naming(id, engine.network.offline, &services.clock);
     let ticket = engine.listed.ticket(id);
     spawn(job, services, tx, move |lent| async move {
-        let listing = list_episodes(lent, id, naming, ticket, true);
+        let listing = list_episodes(lent, id, naming, ticket, true, true);
         if low {
             kaeri_meta::in_background(listing).await;
         } else {

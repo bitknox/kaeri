@@ -99,7 +99,8 @@ pub fn check_again(
     let found = Arc::clone(&engine.rechecks.found);
     dispatch::spawn_abortable(None, services, tx, move |lent| async move {
         let tx = lent.tx.clone();
-        let outcome = outcome(&list_episodes(lent, id, naming, ticket, false).await, episode);
+        let outcome =
+            outcome(&list_episodes(lent, id, naming, ticket, false, false).await, episode);
         drop(table);
         if outcome == CheckOutcome::Found {
             found.lock().unwrap_or_else(|e| e.into_inner()).insert((id, episode));
@@ -152,7 +153,8 @@ pub fn found(
     let naming = engine.names.naming(id, engine.network.offline, &services.clock);
     dispatch::spawn_abortable(None, services, tx, move |lent| async move {
         let tx = lent.tx.clone();
-        let listing = kaeri_meta::in_background(list_episodes(lent, id, naming, ticket, false));
+        let listing =
+            kaeri_meta::in_background(list_episodes(lent, id, naming, ticket, false, false));
         let outcome = outcome(&listing.await, episode);
         drop(table);
         if outcome == CheckOutcome::Found {
@@ -205,7 +207,8 @@ fn round(back: bool, engine: &mut EngineState, services: &Services, tx: &Outbox)
                 stores: stores.clone(),
                 tx: tx.clone(),
             };
-            let listing = list_episodes(lent, id, naming.clone(), Ticket::muted(id), false);
+            let listing =
+                list_episodes(lent, id, naming.clone(), Ticket::muted(id), false, false);
             let outcome = outcome(&kaeri_meta::in_background(listing).await, episode);
             tracing::debug!(id = id.get(), episode, ?outcome, "quiet recheck");
             if outcome == CheckOutcome::Found {

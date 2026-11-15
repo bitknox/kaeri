@@ -69,6 +69,15 @@ fn read_until(
 fn checked(engine: &Arc<FfiEngine>) -> CheckOutcome {
     engine.send(Command::Missing(MissingCommand::CheckAgain { id: AIRING, episode: 6 }));
     let read = read_until(engine, |event| matches!(event, Event::EpisodeChecked(_)));
+    // A check never sends a table short of what plays: episode 5 keeps its source throughout.
+    for event in &read {
+        if let Event::Episodes { id, rows, .. } = event
+            && *id == AIRING
+        {
+            let five = rows.iter().find(|row| row.number == "5").expect("row 5");
+            assert!(!five.unsourced, "a check took episode 5 away: {rows:?}");
+        }
+    }
     read.into_iter()
         .find_map(|event| match event {
             Event::EpisodeChecked(check) => {

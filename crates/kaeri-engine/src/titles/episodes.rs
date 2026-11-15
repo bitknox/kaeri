@@ -444,13 +444,15 @@ pub(crate) async fn dub_answer(
 /// Only the newest listing of a title speaks: `ticket` is checked before anything is sent, so a
 /// slow earlier load cannot land over a newer table. `announce` is whether a pin on a source
 /// that is not available is said (a load the viewer asked for, or a pin just set), not on every
-/// quiet relist.
+/// quiet relist. `partial` sends a table short of the season as it comes, while slower sources
+/// are still asked.
 pub(crate) async fn list_episodes(
     lent: Lent,
     id: AnilistId,
     naming: names::Naming,
     ticket: super::refresh::Ticket,
     announce: bool,
+    partial: bool,
 ) -> Listing {
     let Lent { meta, store, registry, tx, .. } = lent;
     // A source still compiling is not an unavailable one: wait for those on their way.
@@ -463,7 +465,12 @@ pub(crate) async fn list_episodes(
     }
     // A table that is short of the season is shown as it comes, and the sources still being
     // asked fill in the rest.
+    // Not for a check of a missing episode: a short table there would take away episodes the
+    // page already plays while the slower sources answer.
     let mut early = |rows| {
+        if !partial {
+            return;
+        }
         for event in said(id, Ok(EpisodeLoad::Rows(rows)), Asked::Looking) {
             ticket.send(&tx, event);
         }
