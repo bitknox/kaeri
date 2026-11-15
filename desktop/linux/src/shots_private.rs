@@ -7,7 +7,16 @@ use std::{rc::Rc, time::Duration};
 use adw::prelude::*;
 use gtk::glib;
 
+use kaeri_model::{
+    command::Command,
+    medium::{KaeriIsFor, MediumAsk, MediumCommand},
+};
+
 use crate::{pages::Dest, window::Shell};
+
+thread_local! {
+    static ANSWERED: std::cell::Cell<bool> = const { std::cell::Cell::new(false) };
+}
 
 /// Every private mode shot, in order.
 pub const NAMES: [&str; 8] = [
@@ -31,6 +40,19 @@ const TITLE: u32 = 900_001;
 pub fn stage(shell: &Rc<Shell>, shot: &str) -> Option<f64> {
     let ctx = &shell.ctx;
     let window = &ctx.window;
+    if !shot.starts_with("private-") {
+        return None;
+    }
+    // The fixture scene asks what Kaeri is for: answered once, so no sheet covers the shots.
+    if !ANSWERED.replace(true) {
+        ctx.hub.send(Command::Medium(MediumCommand::Answer {
+            ask: MediumAsk::Updated,
+            answer: KaeriIsFor::Watch,
+        }));
+    }
+    if let Some(dialog) = window.visible_dialog() {
+        dialog.force_close();
+    }
     Some(match shot {
         "private-switch-off" => {
             crate::private::set(ctx, false);
