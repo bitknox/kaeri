@@ -1172,6 +1172,10 @@ pub struct PlaybackConfig {
     /// it seen and push progress to a tracker.
     pub commit_threshold: f64,
     pub auto_next: bool,
+    /// On a limited network (cellular, Low Data Mode, metered), load the next episode's first
+    /// seconds of video during the ending as on Wi-Fi. Off by default: there only its streams,
+    /// subtitles and skip times are found ahead. Nothing is fetched ahead with `auto_next` off.
+    pub preload_metered: bool,
     /// Carry playback speed and audio/subtitle track choice to the next episode.
     pub persist_speed: bool,
     /// The speed last chosen in the player, carried to the next episode.
@@ -1281,6 +1285,7 @@ impl Default for PlaybackConfig {
             subtitle_language: "eng".into(),
             commit_threshold: 0.85,
             auto_next: true,
+            preload_metered: false,
             persist_speed: true,
             persisted_speed: None,
             persist_volume: true,

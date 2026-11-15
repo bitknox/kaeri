@@ -4574,6 +4574,9 @@ settings-label-fullscreen = Start in full screen
 # Settings row: the video upscaling mode.
 settings-label-upscaling = Upscaling
 
+# Settings row under Auto-play next: whether the next episode's first seconds load during the ending on a metered connection. The column is 26 cells wide.
+settings-label-preload-metered = Preload on metered
+
 # Settings row: which interface the player shows.
 settings-label-player-ui = Player interface
 
@@ -12231,6 +12234,21 @@ settings-auto-play = Auto-play next
 
 # Row: length of the Up next countdown.
 settings-up-next-countdown = Up next countdown
+
+# Row under Up next countdown on iPhone, a cellular iPad and Android phones: whether the next episode's first seconds of video load during the ending while on mobile data. Off by default.
+settings-preload-cellular = Preload video on mobile data
+
+# The same row on Windows and Linux.
+settings-preload-metered = Preload video on metered connections
+
+# Line under the row on Windows and Linux, and the note under the terminal's settings list.
+settings-preload-detail-metered = During the ending, the next episode's stream, subtitles and skip times are found. Its first seconds load too, and on a metered connection only when this is on.
+
+# Sentence added after the line under the row while torrent playback is on.
+settings-preload-torrents = Torrents load their first pieces the same way.
+
+# Screen reader hint on the preload row while it is dimmed because Auto-play next is off. The terminal shows it at the start of the note.
+settings-preload-a11y-dimmed = Needs Auto-play next
 
 # Row: skip the opening.
 settings-skip-opening = Skip opening automatically

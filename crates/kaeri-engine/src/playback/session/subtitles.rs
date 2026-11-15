@@ -106,6 +106,26 @@ pub(super) async fn localise_subtitles(
     }
 }
 
+/// Fetch `stream`'s subtitles into `dir` ahead of its play, waiting up to `wait`, and point it at
+/// them only when every track arrived: a track missing or late is left as listed, for the play
+/// to fetch, and to say so, as it would have.
+pub(crate) async fn localise_ahead(
+    http: &HttpClient,
+    dir: &std::path::Path,
+    stream: &mut Stream,
+    wait: Duration,
+) {
+    if !stream.subtitles.iter().any(fetches) {
+        return;
+    }
+    let mut ahead = stream.clone();
+    let late = localise_subtitles(http, dir, &mut ahead, wait, || {}).await;
+    if late.is_none() && ahead.subtitles.len() == stream.subtitles.len() {
+        tracing::info!(tracks = ahead.subtitles.len(), "the next episode's subtitles fetched");
+        stream.subtitles = ahead.subtitles;
+    }
+}
+
 /// How long the file waits for its subtitles before it opens without the ones still coming.
 pub(super) const SUBTITLE_WAIT: Duration = Duration::from_secs(2);
 

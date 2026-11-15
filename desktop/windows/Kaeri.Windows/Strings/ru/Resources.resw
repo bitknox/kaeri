@@ -9167,6 +9167,21 @@
   <data name="SettingsUpNextCountdown" xml:space="preserve">
     <value>Отсчёт блока «Далее»</value>
   </data>
+  <data name="SettingsPreloadCellular" xml:space="preserve">
+    <value>Предзагружать видео по мобильной сети</value>
+  </data>
+  <data name="SettingsPreloadMetered" xml:space="preserve">
+    <value>Предзагружать видео по лимитным подключениям</value>
+  </data>
+  <data name="SettingsPreloadDetailMetered" xml:space="preserve">
+    <value>Во время эндинга находятся поток, субтитры и моменты пропуска следующей серии. Её первые секунды тоже загружаются, а по лимитному подключению только когда это включено.</value>
+  </data>
+  <data name="SettingsPreloadTorrents" xml:space="preserve">
+    <value>Торренты так же загружают первые части.</value>
+  </data>
+  <data name="SettingsPreloadA11yDimmed" xml:space="preserve">
+    <value>Нужно включить «Автоматически включать следующую серию»</value>
+  </data>
   <data name="SettingsSkipOpening" xml:space="preserve">
     <value>Пропускать опенинг автоматически</value>
   </data>

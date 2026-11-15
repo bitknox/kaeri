@@ -25051,6 +25051,12 @@
     "by": "agent",
     "at": "2026-10-31"
   },
+  "settings-label-preload-metered": {
+    "source": "813a63b8a419",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
+  },
   "settings-label-presence": {
     "source": "3d7953d785fa",
     "state": "draft",
@@ -25860,6 +25866,60 @@
     "state": "draft",
     "by": "agent",
     "at": "2026-10-31"
+  },
+  "settings-preload-a11y-dimmed": {
+    "source": "d19fe8536135",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
+  },
+  "settings-preload-cellular": {
+    "source": "8f5ae351cea3",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
+  },
+  "settings-preload-detail-android": {
+    "source": "fd4583e3d208",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
+  },
+  "settings-preload-detail-apple-phone": {
+    "source": "b5e027f00455",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
+  },
+  "settings-preload-detail-low-data": {
+    "source": "251c08c820ee",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
+  },
+  "settings-preload-detail-metered": {
+    "source": "e916093d3209",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
+  },
+  "settings-preload-low-data": {
+    "source": "1952cebc4c42",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
+  },
+  "settings-preload-metered": {
+    "source": "fba64857b1c8",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
+  },
+  "settings-preload-torrents": {
+    "source": "bcab260e7dd9",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
   },
   "settings-presence-button": {
     "source": "3a329c30d042",

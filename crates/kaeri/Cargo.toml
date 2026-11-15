@@ -49,6 +49,11 @@ tracing-subscriber.workspace = true
 # the shared temp dir: what it installs is read back from disk after `tar` runs.
 tempfile = "3"
 
+# Asks NetworkManager at launch whether the connection is metered. Already in the tree on
+# Linux, through the keyring's Secret Service.
+[target.'cfg(target_os = "linux")'.dependencies]
+zbus = "5"
+
 [dev-dependencies]
 # The engine as the contract tests stand it up: from the harness's own parts, saying when it is
 # idle. Only for the tests: the binary that ships has none of it.

@@ -12,11 +12,11 @@ Kaeri                                                  plugins ●  ·  anilist 
 
    │    Counts as watched at        85%
    │    Auto-play next              On
+   │    Preload on metered          Off
    │    Skip opening automatically  On
    │    Skip recaps automatically   Off
    │    Ask about skips by hand     On
    │    Share skips with AniSkip    Off
-   │    Skip filler automatically   Off
    │  ────────────────────────────────────────────────────────────────────────
    │    Press Enter to type a language code. There are too many values to
    │    cycle through.

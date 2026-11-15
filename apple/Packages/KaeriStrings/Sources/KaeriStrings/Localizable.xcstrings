@@ -290221,6 +290221,678 @@
         }
       }
     },
+    "settings-preload-a11y-dimmed" : {
+      "comment" : "Screen reader hint on the preload row while it is dimmed because Auto-play next is off. The terminal shows it at the start of the note.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Braucht „Nächste Folge automatisch abspielen“"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Needs Auto-play next"
+          }
+        },
+        "es-419" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Requiere «Reproducir el siguiente automáticamente»"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nécessite « Lecture automatique de la suite »"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Perlu \"Putar episode berikutnya otomatis\""
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Richiede «Riproduci il successivo automaticamente»"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "「次のエピソードを自動再生」が必要です"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wymaga opcji „Automatycznie odtwarzaj następny odcinek”"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Requer \"Reproduzir o próximo automaticamente\""
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Нужно включить «Автоматически включать следующую серию»"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kräver ”Spela nästa automatiskt”"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "\"Sonrakini otomatik oynat\" gerekli"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cần bật \"Tự động phát tập tiếp\""
+          }
+        }
+      }
+    },
+    "settings-preload-cellular" : {
+      "comment" : "Row under Up next countdown on iPhone, a cellular iPad and Android phones: whether the next episode's first seconds of video load during the ending while on mobile data. Off by default.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Video mit mobilen Daten vorladen"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Preload video on mobile data"
+          }
+        },
+        "es-419" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Precargar video con datos móviles"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Précharger la vidéo en données mobiles"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Muat awal video dengan data seluler"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Precarica il video con i dati mobili"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "モバイルデータ通信でビデオを先読み"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wczytuj wideo z wyprzedzeniem przez dane komórkowe"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pré-carregar vídeo com dados móveis"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Предзагружать видео по мобильной сети"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Förladda video via mobildata"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mobil veride videoyu önceden yükle"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tải trước video khi dùng dữ liệu di động"
+          }
+        }
+      }
+    },
+    "settings-preload-detail-apple-phone" : {
+      "comment" : "Line under the row on iPhone and a cellular iPad. Low Data Mode is Apple's name for the system setting.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Während des Abspanns werden Stream, Untertitel und Skip-Zeiten der nächsten Folge gefunden. Ihre ersten Sekunden laden ebenfalls, mit mobilen Daten oder im Datensparmodus nur, wenn dies an ist."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "During the ending, the next episode's stream, subtitles and skip times are found. Its first seconds load too, and on mobile data or in Low Data Mode only when this is on."
+          }
+        },
+        "es-419" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Durante el cierre se buscan el stream, los subtítulos y los tiempos de salto del episodio siguiente. Sus primeros segundos también se cargan, y con datos móviles o en Modo de datos bajos solo cuando esto está activado."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pendant le générique de fin, le flux, les sous-titres et les repères de saut de l’épisode suivant sont trouvés. Ses premières secondes se chargent aussi, et en données mobiles ou en mode données réduites seulement si ceci est activé."
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Selama penutup, stream, subtitle, dan waktu lewati episode berikutnya dicari. Detik-detik pertamanya juga dimuat, dan dengan data seluler atau dalam Mode Data Rendah hanya jika ini aktif."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Durante la sigla di chiusura vengono trovati lo stream, i sottotitoli e i tempi di salto dell'episodio successivo. Si caricano anche i suoi primi secondi, e con i dati mobili o in modalità dati ridotti solo se questa opzione è attiva."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "エンディング中に、次のエピソードのストリーム、字幕、スキップ位置を探します。最初の数秒も読み込みますが、モバイルデータ通信や省データモードではこれがオンのときだけです。"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Podczas zakończenia wyszukiwane są strumień, napisy i czasy pominięć następnego odcinka. Jego pierwsze sekundy też się wczytują, a przez dane komórkowe lub w trybie oszczędzania danych tylko wtedy, gdy to jest włączone."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Durante o encerramento, o stream, as legendas e os tempos de pulo do episódio seguinte são encontrados. Os primeiros segundos também carregam, e com dados móveis ou no Modo Dados Reduzidos só quando isto está ativado."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Во время эндинга находятся поток, субтитры и моменты пропуска следующей серии. Её первые секунды тоже загружаются, а по мобильной сети или в режиме экономии данных только когда это включено."
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Under avslutningen hittas nästa avsnitts ström, undertexter och hopptider. Dess första sekunder laddas också, och via mobildata eller i lågdataläge bara när det här är på."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bitiş sırasında sonraki bölümün yayını, altyazıları ve atlama zamanları bulunur. İlk saniyeleri de yüklenir; mobil veride ya da Düşük Veri Modu'nda yalnızca bu açıkken."
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Trong phần kết thúc, luồng phát, phụ đề và mốc bỏ qua của tập tiếp theo được tìm sẵn. Vài giây đầu của tập cũng được tải, và khi dùng dữ liệu di động hoặc ở Chế độ dữ liệu thấp thì chỉ khi mục này bật."
+          }
+        }
+      }
+    },
+    "settings-preload-detail-low-data" : {
+      "comment" : "Line under the row on the Mac and a Wi-Fi iPad. Low Data Mode and Personal Hotspot are Apple's names.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Während des Abspanns werden Stream, Untertitel und Skip-Zeiten der nächsten Folge gefunden. Ihre ersten Sekunden laden ebenfalls, im Datensparmodus oder über einen persönlichen Hotspot nur, wenn dies an ist."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "During the ending, the next episode's stream, subtitles and skip times are found. Its first seconds load too, and in Low Data Mode or on Personal Hotspot only when this is on."
+          }
+        },
+        "es-419" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Durante el cierre se buscan el stream, los subtítulos y los tiempos de salto del episodio siguiente. Sus primeros segundos también se cargan, y en Modo de datos bajos o con Compartir Internet solo cuando esto está activado."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pendant le générique de fin, le flux, les sous-titres et les repères de saut de l’épisode suivant sont trouvés. Ses premières secondes se chargent aussi, et en mode données réduites ou via le partage de connexion seulement si ceci est activé."
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Selama penutup, stream, subtitle, dan waktu lewati episode berikutnya dicari. Detik-detik pertamanya juga dimuat, dan dalam Mode Data Rendah atau lewat Hotspot Pribadi hanya jika ini aktif."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Durante la sigla di chiusura vengono trovati lo stream, i sottotitoli e i tempi di salto dell'episodio successivo. Si caricano anche i suoi primi secondi, e in modalità dati ridotti o con l'hotspot personale solo se questa opzione è attiva."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "エンディング中に、次のエピソードのストリーム、字幕、スキップ位置を探します。最初の数秒も読み込みますが、省データモードやインターネット共有ではこれがオンのときだけです。"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Podczas zakończenia wyszukiwane są strumień, napisy i czasy pominięć następnego odcinka. Jego pierwsze sekundy też się wczytują, a w trybie oszczędzania danych lub przez osobisty hotspot tylko wtedy, gdy to jest włączone."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Durante o encerramento, o stream, as legendas e os tempos de pulo do episódio seguinte são encontrados. Os primeiros segundos também carregam, e no Modo Dados Reduzidos ou no Acesso Pessoal só quando isto está ativado."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Во время эндинга находятся поток, субтитры и моменты пропуска следующей серии. Её первые секунды тоже загружаются, а в режиме экономии данных или через режим модема только когда это включено."
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Under avslutningen hittas nästa avsnitts ström, undertexter och hopptider. Dess första sekunder laddas också, och i lågdataläge eller via internetdelning bara när det här är på."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bitiş sırasında sonraki bölümün yayını, altyazıları ve atlama zamanları bulunur. İlk saniyeleri de yüklenir; Düşük Veri Modu'nda ya da Kişisel Erişim Noktası'nda yalnızca bu açıkken."
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Trong phần kết thúc, luồng phát, phụ đề và mốc bỏ qua của tập tiếp theo được tìm sẵn. Vài giây đầu của tập cũng được tải, và ở Chế độ dữ liệu thấp hoặc qua Điểm truy cập cá nhân thì chỉ khi mục này bật."
+          }
+        }
+      }
+    },
+    "settings-preload-detail-metered" : {
+      "comment" : "Line under the row on Windows and Linux, and the note under the terminal's settings list.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Während des Abspanns werden Stream, Untertitel und Skip-Zeiten der nächsten Folge gefunden. Ihre ersten Sekunden laden ebenfalls, bei einer getakteten Verbindung nur, wenn dies an ist."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "During the ending, the next episode's stream, subtitles and skip times are found. Its first seconds load too, and on a metered connection only when this is on."
+          }
+        },
+        "es-419" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Durante el cierre se buscan el stream, los subtítulos y los tiempos de salto del episodio siguiente. Sus primeros segundos también se cargan, y en una conexión de uso medido solo cuando esto está activado."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pendant le générique de fin, le flux, les sous-titres et les repères de saut de l’épisode suivant sont trouvés. Ses premières secondes se chargent aussi, et sur une connexion limitée seulement si ceci est activé."
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Selama penutup, stream, subtitle, dan waktu lewati episode berikutnya dicari. Detik-detik pertamanya juga dimuat, dan di koneksi terukur hanya jika ini aktif."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Durante la sigla di chiusura vengono trovati lo stream, i sottotitoli e i tempi di salto dell'episodio successivo. Si caricano anche i suoi primi secondi, e su una connessione a consumo solo se questa opzione è attiva."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "エンディング中に、次のエピソードのストリーム、字幕、スキップ位置を探します。最初の数秒も読み込みますが、従量制課金接続ではこれがオンのときだけです。"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Podczas zakończenia wyszukiwane są strumień, napisy i czasy pominięć następnego odcinka. Jego pierwsze sekundy też się wczytują, a przez połączenie taryfowe tylko wtedy, gdy to jest włączone."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Durante o encerramento, o stream, as legendas e os tempos de pulo do episódio seguinte são encontrados. Os primeiros segundos também carregam, e em uma conexão limitada só quando isto está ativado."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Во время эндинга находятся поток, субтитры и моменты пропуска следующей серии. Её первые секунды тоже загружаются, а по лимитному подключению только когда это включено."
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Under avslutningen hittas nästa avsnitts ström, undertexter och hopptider. Dess första sekunder laddas också, och på en anslutning med datapriser bara när det här är på."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bitiş sırasında sonraki bölümün yayını, altyazıları ve atlama zamanları bulunur. İlk saniyeleri de yüklenir; tarifeli bir bağlantıda yalnızca bu açıkken."
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Trong phần kết thúc, luồng phát, phụ đề và mốc bỏ qua của tập tiếp theo được tìm sẵn. Vài giây đầu của tập cũng được tải, và trên kết nối có đo lưu lượng thì chỉ khi mục này bật."
+          }
+        }
+      }
+    },
+    "settings-preload-low-data" : {
+      "comment" : "The same row on the Mac and a Wi-Fi iPad. Low Data Mode is Apple's name for the system setting.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Video im Datensparmodus vorladen"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Preload video in Low Data Mode"
+          }
+        },
+        "es-419" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Precargar video en Modo de datos bajos"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Précharger la vidéo en mode données réduites"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Muat awal video dalam Mode Data Rendah"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Precarica il video in modalità dati ridotti"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "省データモードでビデオを先読み"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wczytuj wideo z wyprzedzeniem w trybie oszczędzania danych"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pré-carregar vídeo no Modo Dados Reduzidos"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Предзагружать видео в режиме экономии данных"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Förladda video i lågdataläge"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Düşük Veri Modu'nda videoyu önceden yükle"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tải trước video ở Chế độ dữ liệu thấp"
+          }
+        }
+      }
+    },
+    "settings-preload-metered" : {
+      "comment" : "The same row on Windows and Linux.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Video bei getakteten Verbindungen vorladen"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Preload video on metered connections"
+          }
+        },
+        "es-419" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Precargar video en conexiones de uso medido"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Précharger la vidéo sur les connexions limitées"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Muat awal video di koneksi terukur"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Precarica il video sulle connessioni a consumo"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "従量制課金接続でビデオを先読み"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wczytuj wideo z wyprzedzeniem przez połączenia taryfowe"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pré-carregar vídeo em conexões limitadas"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Предзагружать видео по лимитным подключениям"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Förladda video på anslutningar med datapriser"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tarifeli bağlantılarda videoyu önceden yükle"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tải trước video trên kết nối có đo lưu lượng"
+          }
+        }
+      }
+    },
+    "settings-preload-torrents" : {
+      "comment" : "Sentence added after the line under the row while torrent playback is on.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Torrents laden ihre ersten Teile genauso."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Torrents load their first pieces the same way."
+          }
+        },
+        "es-419" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Los torrents cargan sus primeras piezas de la misma forma."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Les torrents chargent leurs premiers morceaux de la même façon."
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Torrent memuat potongan pertamanya dengan cara yang sama."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "I torrent caricano i primi pezzi allo stesso modo."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "トレントも同じように最初のピースを読み込みます。"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Torrenty wczytują swoje pierwsze części tak samo."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Torrents carregam as primeiras partes do mesmo jeito."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Торренты так же загружают первые части."
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Torrenter laddar sina första delar på samma sätt."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Torrentler ilk parçalarını aynı şekilde yükler."
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Torrent cũng tải các mảnh đầu tiên như vậy."
+          }
+        }
+      }
+    },
     "settings-presence-button" : {
       "comment" : "Preview of the Discord presence: the button that opens the show on the tracker. Argument 1: tracker (Text).",
       "extractionState" : "manual",

@@ -7195,6 +7195,11 @@ pub fn settings_label_upscaling() -> String {
     text("settings-label-upscaling", &[])
 }
 
+/// Settings row under Auto-play next: whether the next episode's first seconds load during the ending on a metered connection. The column is 26 cells wide.
+pub fn settings_label_preload_metered() -> String {
+    text("settings-label-preload-metered", &[])
+}
+
 /// Settings row: which interface the player shows.
 pub fn settings_label_player_ui() -> String {
     text("settings-label-player-ui", &[])
@@ -19433,6 +19438,31 @@ pub fn settings_auto_play() -> String {
 /// Row: length of the Up next countdown.
 pub fn settings_up_next_countdown() -> String {
     text("settings-up-next-countdown", &[])
+}
+
+/// Row under Up next countdown on iPhone, a cellular iPad and Android phones: whether the next episode's first seconds of video load during the ending while on mobile data. Off by default.
+pub fn settings_preload_cellular() -> String {
+    text("settings-preload-cellular", &[])
+}
+
+/// The same row on Windows and Linux.
+pub fn settings_preload_metered() -> String {
+    text("settings-preload-metered", &[])
+}
+
+/// Line under the row on Windows and Linux, and the note under the terminal's settings list.
+pub fn settings_preload_detail_metered() -> String {
+    text("settings-preload-detail-metered", &[])
+}
+
+/// Sentence added after the line under the row while torrent playback is on.
+pub fn settings_preload_torrents() -> String {
+    text("settings-preload-torrents", &[])
+}
+
+/// Screen reader hint on the preload row while it is dimmed because Auto-play next is off. The terminal shows it at the start of the note.
+pub fn settings_preload_a11y_dimmed() -> String {
+    text("settings-preload-a11y-dimmed", &[])
 }
 
 /// Row: skip the opening.

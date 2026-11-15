@@ -917,6 +917,26 @@ impl TorrentSession {
             .map_err(|e| ProviderError::Transport(format!("removing torrent {id}: {e}")))
     }
 
+    /// Let go of the stream served at `url`, which nothing played: its server, and the torrent
+    /// with what it fetched, unless another stream serves from the same torrent or the download
+    /// queue owns it.
+    pub async fn drop_stream(&self, url: &str) {
+        let (id, shared) = {
+            let mut servers = self.active.lock().unwrap_or_else(|e| e.into_inner());
+            let Some(at) = servers.iter().position(|active| active.url() == url) else {
+                return;
+            };
+            let Some(dropped) = servers.remove(at) else { return };
+            let id = dropped.key.0;
+            (id, servers.iter().any(|active| active.key.0 == id))
+        };
+        if shared {
+            return;
+        }
+        tracing::info!(id, "a torrent started ahead was let go unplayed");
+        self.discard(id).await;
+    }
+
     /// Whether the download queue owns this torrent, and so whether its files are the user's.
     fn owned_by_downloads(&self, id: usize) -> bool {
         self.download_ids.lock().unwrap_or_else(|e| e.into_inner()).contains(&id)

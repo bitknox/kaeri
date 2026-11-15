@@ -78,6 +78,7 @@ mod upscaling;
 mod watch;
 
 pub use skips::{SkipTimes, offered, origin, taken, timeline_mark};
+pub(crate) use subtitles::localise_ahead;
 pub use upscaling::PictureState;
 
 use companion_state::fetch_still;
@@ -89,7 +90,7 @@ use watch::remember_tracks;
 /// Not a security boundary — binding to loopback is — but it keeps an unrelated local process
 /// from stumbling onto the proxy, and differs per attempt so a stale connection from a failed
 /// stream cannot address the next one's.
-fn proxy_token(context: &PlaybackContext, attempt: usize) -> String {
+pub(crate) fn proxy_token(context: &PlaybackContext, attempt: usize) -> String {
     // Random, because the parts identifying the playback were all guessable: the AniList id is
     // the show on screen, the episode a small integer, the attempt almost always zero, and the
     // timestamp a few seconds wide. That is a few thousand candidates against a scannable
@@ -167,6 +168,9 @@ pub struct PlaySettings {
     /// Set when the viewer asked to begin at 0: the file then opens there, whatever the resume
     /// point.
     pub begin: std::sync::Arc<std::sync::atomic::AtomicBool>,
+    /// What was made ready for this episode while the one before ended, and when the roll-on
+    /// handed over to it: see [`crate::playback::prefetch`].
+    pub ahead: crate::playback::prefetch::Ahead,
 }
 
 impl PlaySettings {
@@ -448,15 +452,26 @@ pub async fn play(
                 .as_ref()
                 .and_then(|sources| sources.get(&stream.provider_id))
                 .filter(|source| source.stream_transforms().any());
-            stream.url = proxies
-                .route(
-                    &http,
-                    &original,
-                    &stream.headers,
-                    source,
-                    &proxy_token(&context, attempt),
-                )
-                .await;
+            // The first attempt plays through the proxy started ahead for it, its first
+            // seconds already fetched. That proxy transforms nothing, so a stream whose source
+            // transforms parts of it gets a proxy of its own.
+            let ahead = (attempt == 0 && source.is_none())
+                .then(|| settings.ahead.adopt(&original))
+                .flatten();
+            stream.url = match ahead {
+                Some(server) => proxies.adopt(&original, server),
+                None => {
+                    proxies
+                        .route(
+                            &http,
+                            &original,
+                            &stream.headers,
+                            source,
+                            &proxy_token(&context, attempt),
+                        )
+                        .await
+                }
+            };
             // The seek bar's thumbnailer reads the same stream through its own entry, which
             // answers from what playback already fetched and never waits out a rate limit.
             // Unset when the proxy could not start, and thumbfast then opens the stream as

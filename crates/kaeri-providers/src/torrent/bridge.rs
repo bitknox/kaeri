@@ -26,6 +26,22 @@ use kaeri_core::{
 
 use crate::torrent::session::TorrentSession;
 
+tokio::task_local! {
+    /// Set while a resolve should leave torrents as the source named them.
+    static NAMED_ONLY: ();
+}
+
+/// Run `resolve` with every torrent a source names left as it was named: looked up, not
+/// started, so no peer or tracker is contacted. See [`TorrentPlayback::start_first`].
+pub async fn named_only<F: std::future::Future>(resolve: F) -> F::Output {
+    NAMED_ONLY.scope((), resolve).await
+}
+
+/// Whether the resolve under way leaves torrents unstarted.
+fn naming_only() -> bool {
+    NAMED_ONLY.try_with(|_| ()).is_ok()
+}
+
 /// What [`ProviderError::Unavailable`] says while torrent playback is off or waiting for the
 /// check. The engine words it for the person; this is for the log.
 pub const PLAYBACK_OFF: &str = "torrent playback is off";
@@ -96,6 +112,59 @@ impl TorrentPlayback {
     }
 }
 
+impl TorrentPlayback {
+    /// The streams with the first torrent that starts in place of the torrents named among
+    /// them.
+    ///
+    /// One torrent, not every one: each is a swarm joined. The rest are tried in the source's
+    /// order only when the one before fails to start. Streams that are not torrents keep their
+    /// places.
+    pub async fn start_first(
+        &self,
+        streams: Vec<Stream>,
+        episode: &str,
+    ) -> Result<Vec<Stream>, ProviderError> {
+        if !streams.iter().any(|s| s.kind == StreamKind::Torrent) {
+            return Ok(streams);
+        }
+        let mut out = Vec::with_capacity(streams.len());
+        let mut started = false;
+        let mut failure = None;
+        for stream in streams {
+            if stream.kind != StreamKind::Torrent {
+                out.push(stream);
+                continue;
+            }
+            if started {
+                continue;
+            }
+            match self.start(&stream, episode).await {
+                Ok(playing) => {
+                    started = true;
+                    out.push(playing);
+                }
+                Err(error) => {
+                    tracing::info!(provider = %stream.provider_id, %error, "torrent did not start");
+                    failure = Some(error);
+                }
+            }
+        }
+        match (out.is_empty(), failure) {
+            (true, Some(error)) => Err(error),
+            _ => Ok(out),
+        }
+    }
+
+    /// Let go of a torrent started ahead for an episode that never played: its loopback
+    /// server, and the torrent with what it fetched unless another stream or a download still
+    /// uses it.
+    pub async fn drop_started(&self, url: &str) {
+        if let Some(session) = self.session() {
+            session.drop_stream(url).await;
+        }
+    }
+}
+
 /// Add each tracker `link` does not already carry.
 fn with_trackers(link: &str, trackers: &[String]) -> String {
     let mut link = link.to_owned();
@@ -145,45 +214,17 @@ impl TorrentBridge {
         }
     }
 
-    /// The streams with the source's first torrent that starts in place of the torrents it named.
-    ///
-    /// One torrent, not every one: each is a swarm joined. The rest are tried in the source's
-    /// order only when the one before fails to start. Streams that are not torrents keep their
-    /// places.
+    /// The streams with the source's first torrent that starts in place of the torrents it
+    /// named, or as named inside [`named_only`]. See [`TorrentPlayback::start_first`].
     async fn started(
         &self,
         streams: Vec<Stream>,
         episode: &str,
     ) -> Result<Vec<Stream>, ProviderError> {
-        if !streams.iter().any(|s| s.kind == StreamKind::Torrent) {
+        if naming_only() {
             return Ok(streams);
         }
-        let mut out = Vec::with_capacity(streams.len());
-        let mut started = false;
-        let mut failure = None;
-        for stream in streams {
-            if stream.kind != StreamKind::Torrent {
-                out.push(stream);
-                continue;
-            }
-            if started {
-                continue;
-            }
-            match self.playback.start(&stream, episode).await {
-                Ok(playing) => {
-                    started = true;
-                    out.push(playing);
-                }
-                Err(error) => {
-                    tracing::info!(provider = %stream.provider_id, %error, "torrent did not start");
-                    failure = Some(error);
-                }
-            }
-        }
-        match (out.is_empty(), failure) {
-            (true, Some(error)) => Err(error),
-            _ => Ok(out),
-        }
+        self.playback.start_first(streams, episode).await
     }
 }
 
@@ -306,6 +347,23 @@ mod tests {
             .await
             .unwrap();
         assert_eq!(streams, vec![web], "what is not a torrent keeps its place");
+    }
+
+    #[tokio::test]
+    async fn looked_up_ahead_a_torrent_is_named_and_not_started() {
+        // No session to start it with: a start would fail, and a lookup names it as it was.
+        let looked_up = named_only(bridged(vec![torrent(LINK)]).resolve(
+            &ProviderKey::new("k"),
+            "1",
+            Translation::Sub,
+            &Default::default(),
+        ))
+        .await;
+        assert_eq!(looked_up, Ok(vec![torrent(LINK)]));
+
+        // Starting it later goes the usual way, behind the session.
+        let started = TorrentPlayback::default().start_first(vec![torrent(LINK)], "1").await;
+        assert_eq!(started, Err(ProviderError::Unavailable(PLAYBACK_OFF.into())));
     }
 
     #[test]

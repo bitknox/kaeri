@@ -117,6 +117,7 @@ settings-label-mark-chapters = Açılış ve kapanışı işaretle
 settings-label-skip-button = Atla düğmesini göster
 settings-label-fullscreen = Tam ekranda başlat
 settings-label-upscaling = Görüntü büyütme
+settings-label-preload-metered = Tarifelide önceden yükle
 settings-label-player-ui = Oynatıcı arayüzü
 settings-label-night-mode = Gece modu
 settings-label-download-dir = İndirme klasörü

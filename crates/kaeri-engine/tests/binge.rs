@@ -139,6 +139,7 @@ fn settings(auto_next: bool) -> PlaySettings {
         untracked: false,
         swarm: Default::default(),
         begin: Default::default(),
+        ahead: Default::default(),
     }
 }
 

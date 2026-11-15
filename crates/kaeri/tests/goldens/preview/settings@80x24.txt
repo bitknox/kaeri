@@ -12,11 +12,11 @@ Kaeri                                                      plugins ·  ·  kitsu
  ⇄ │    Subtitles                   eng
    │    Counts as watched at        85%
    │    Auto-play next              On
+   │    Preload on metered          Off
    │    Skip opening automatically  On
    │    Skip recaps automatically   Off
    │    Ask about skips by hand     On
    │    Share skips with AniSkip    Off
-   │    Skip filler automatically   Off
    │
    │
    │

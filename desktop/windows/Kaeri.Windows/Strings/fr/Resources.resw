@@ -8828,6 +8828,21 @@
   <data name="SettingsUpNextCountdown" xml:space="preserve">
     <value>À suivre : compte à rebours</value>
   </data>
+  <data name="SettingsPreloadCellular" xml:space="preserve">
+    <value>Précharger la vidéo en données mobiles</value>
+  </data>
+  <data name="SettingsPreloadMetered" xml:space="preserve">
+    <value>Précharger la vidéo sur les connexions limitées</value>
+  </data>
+  <data name="SettingsPreloadDetailMetered" xml:space="preserve">
+    <value>Pendant le générique de fin, le flux, les sous-titres et les repères de saut de l’épisode suivant sont trouvés. Ses premières secondes se chargent aussi, et sur une connexion limitée seulement si ceci est activé.</value>
+  </data>
+  <data name="SettingsPreloadTorrents" xml:space="preserve">
+    <value>Les torrents chargent leurs premiers morceaux de la même façon.</value>
+  </data>
+  <data name="SettingsPreloadA11yDimmed" xml:space="preserve">
+    <value>Nécessite « Lecture automatique de la suite »</value>
+  </data>
   <data name="SettingsSkipOpening" xml:space="preserve">
     <value>Passer le générique d’ouverture automatiquement</value>
   </data>

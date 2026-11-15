@@ -3185,6 +3185,7 @@ dependencies = [
  "tracing",
  "tracing-appender",
  "tracing-subscriber",
+ "zbus",
 ]
 
 [[package]]

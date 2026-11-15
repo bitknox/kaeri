@@ -121,6 +121,7 @@ settings-label-mark-chapters = Отмечать опенинг и эндинг
 settings-label-skip-button = Показывать кнопку пропуска
 settings-label-fullscreen = Запускать на весь экран
 settings-label-upscaling = Апскейлинг
+settings-label-preload-metered = Предзагрузка при лимите
 settings-label-player-ui = Интерфейс плеера
 settings-label-night-mode = Ночной режим
 settings-label-download-dir = Папка загрузок

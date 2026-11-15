@@ -4510,6 +4510,9 @@ settings-label-fullscreen = Uruchamiaj na pełnym ekranie
 # Settings row: the video upscaling mode.
 settings-label-upscaling = Skalowanie obrazu
 
+# Settings row under Auto-play next: whether the next episode's first seconds load during the ending on a metered connection. The column is 26 cells wide.
+settings-label-preload-metered = Wczytuj przy taryfowym
+
 # Settings row: which interface the player shows.
 settings-label-player-ui = Interfejs odtwarzacza
 
@@ -11813,6 +11816,21 @@ settings-auto-play = Automatycznie odtwarzaj następny odcinek
 
 # Row: length of the Up next countdown.
 settings-up-next-countdown = Następny: czas odliczania
+
+# Row under Up next countdown on iPhone, a cellular iPad and Android phones: whether the next episode's first seconds of video load during the ending while on mobile data. Off by default.
+settings-preload-cellular = Wczytuj wideo z wyprzedzeniem przez dane komórkowe
+
+# The same row on Windows and Linux.
+settings-preload-metered = Wczytuj wideo z wyprzedzeniem przez połączenia taryfowe
+
+# Line under the row on Windows and Linux, and the note under the terminal's settings list.
+settings-preload-detail-metered = Podczas zakończenia wyszukiwane są strumień, napisy i czasy pominięć następnego odcinka. Jego pierwsze sekundy też się wczytują, a przez połączenie taryfowe tylko wtedy, gdy to jest włączone.
+
+# Sentence added after the line under the row while torrent playback is on.
+settings-preload-torrents = Torrenty wczytują swoje pierwsze części tak samo.
+
+# Screen reader hint on the preload row while it is dimmed because Auto-play next is off. The terminal shows it at the start of the note.
+settings-preload-a11y-dimmed = Wymaga opcji „Automatycznie odtwarzaj następny odcinek”
 
 # Row: skip the opening.
 settings-skip-opening = Automatycznie pomijaj czołówkę

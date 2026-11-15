@@ -3464,6 +3464,12 @@
     <string name="settings_quality">Qualità</string>
     <string name="settings_auto_play">Riproduci il successivo automaticamente</string>
     <string name="settings_up_next_countdown">Durata del conto alla rovescia del prossimo</string>
+    <string name="settings_preload_cellular">Precarica il video con i dati mobili</string>
+    <string name="settings_preload_metered">Precarica il video sulle connessioni a consumo</string>
+    <string name="settings_preload_detail_android">Durante la sigla di chiusura vengono trovati lo stream, i sottotitoli e i tempi di salto dell\'episodio successivo. Si caricano anche i suoi primi secondi, e con i dati mobili o una Wi-Fi a consumo solo se questa opzione è attiva.</string>
+    <string name="settings_preload_detail_metered">Durante la sigla di chiusura vengono trovati lo stream, i sottotitoli e i tempi di salto dell\'episodio successivo. Si caricano anche i suoi primi secondi, e su una connessione a consumo solo se questa opzione è attiva.</string>
+    <string name="settings_preload_torrents">I torrent caricano i primi pezzi allo stesso modo.</string>
+    <string name="settings_preload_a11y_dimmed">Richiede «Riproduci il successivo automaticamente»</string>
     <string name="settings_skip_opening">Salta automaticamente la sigla di apertura</string>
     <string name="settings_skip_recap">Salta automaticamente i riepiloghi</string>
     <string name="settings_find_skips">Trova i tempi di salto dall\'audio</string>

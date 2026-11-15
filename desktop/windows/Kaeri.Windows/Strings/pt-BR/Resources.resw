@@ -8828,6 +8828,21 @@
   <data name="SettingsUpNextCountdown" xml:space="preserve">
     <value>Contagem do próximo</value>
   </data>
+  <data name="SettingsPreloadCellular" xml:space="preserve">
+    <value>Pré-carregar vídeo com dados móveis</value>
+  </data>
+  <data name="SettingsPreloadMetered" xml:space="preserve">
+    <value>Pré-carregar vídeo em conexões limitadas</value>
+  </data>
+  <data name="SettingsPreloadDetailMetered" xml:space="preserve">
+    <value>Durante o encerramento, o stream, as legendas e os tempos de pulo do episódio seguinte são encontrados. Os primeiros segundos também carregam, e em uma conexão limitada só quando isto está ativado.</value>
+  </data>
+  <data name="SettingsPreloadTorrents" xml:space="preserve">
+    <value>Torrents carregam as primeiras partes do mesmo jeito.</value>
+  </data>
+  <data name="SettingsPreloadA11yDimmed" xml:space="preserve">
+    <value>Requer "Reproduzir o próximo automaticamente"</value>
+  </data>
   <data name="SettingsSkipOpening" xml:space="preserve">
     <value>Pular abertura automaticamente</value>
   </data>

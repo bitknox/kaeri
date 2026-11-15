@@ -4321,6 +4321,9 @@ settings-label-fullscreen = Mulai dalam layar penuh
 # Settings row: the video upscaling mode.
 settings-label-upscaling = Upscaling
 
+# Settings row under Auto-play next: whether the next episode's first seconds load during the ending on a metered connection. The column is 26 cells wide.
+settings-label-preload-metered = Muat awal saat terukur
+
 # Settings row: which interface the player shows.
 settings-label-player-ui = Antarmuka pemutar
 
@@ -11396,6 +11399,21 @@ settings-auto-play = Putar episode berikutnya otomatis
 
 # Row: length of the Up next countdown.
 settings-up-next-countdown = Hitung mundur berikutnya
+
+# Row under Up next countdown on iPhone, a cellular iPad and Android phones: whether the next episode's first seconds of video load during the ending while on mobile data. Off by default.
+settings-preload-cellular = Muat awal video dengan data seluler
+
+# The same row on Windows and Linux.
+settings-preload-metered = Muat awal video di koneksi terukur
+
+# Line under the row on Windows and Linux, and the note under the terminal's settings list.
+settings-preload-detail-metered = Selama penutup, stream, subtitle, dan waktu lewati episode berikutnya dicari. Detik-detik pertamanya juga dimuat, dan di koneksi terukur hanya jika ini aktif.
+
+# Sentence added after the line under the row while torrent playback is on.
+settings-preload-torrents = Torrent memuat potongan pertamanya dengan cara yang sama.
+
+# Screen reader hint on the preload row while it is dimmed because Auto-play next is off. The terminal shows it at the start of the note.
+settings-preload-a11y-dimmed = Perlu "Putar episode berikutnya otomatis"
 
 # Row: skip the opening.
 settings-skip-opening = Lewati pembukaan otomatis

@@ -1531,9 +1531,9 @@ fn settings(s: &mut Screen) {
     let mut session = Config::default();
     session.playback.translation = kaeri_core::media::Translation::Dub;
     s.settings(&session, &Config::default());
-    // Down to upscaling, past the titles, trailers, skip recap, the opening question, sharing
-    // and the skip button rows too.
-    s.press(&["j"; 17]);
+    // Down to upscaling, past the titles, trailers, preload, skip recap, the opening question,
+    // sharing and the skip button rows too.
+    s.press(&["j"; 18]);
 }
 
 /// The immersive theme, switched on from Settings: the painted ground under everything.

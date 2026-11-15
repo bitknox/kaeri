@@ -8150,6 +8150,21 @@
   <data name="SettingsUpNextCountdown" xml:space="preserve">
     <value>次のエピソードのカウントダウン</value>
   </data>
+  <data name="SettingsPreloadCellular" xml:space="preserve">
+    <value>モバイルデータ通信でビデオを先読み</value>
+  </data>
+  <data name="SettingsPreloadMetered" xml:space="preserve">
+    <value>従量制課金接続でビデオを先読み</value>
+  </data>
+  <data name="SettingsPreloadDetailMetered" xml:space="preserve">
+    <value>エンディング中に、次のエピソードのストリーム、字幕、スキップ位置を探します。最初の数秒も読み込みますが、従量制課金接続ではこれがオンのときだけです。</value>
+  </data>
+  <data name="SettingsPreloadTorrents" xml:space="preserve">
+    <value>トレントも同じように最初のピースを読み込みます。</value>
+  </data>
+  <data name="SettingsPreloadA11yDimmed" xml:space="preserve">
+    <value>「次のエピソードを自動再生」が必要です</value>
+  </data>
   <data name="SettingsSkipOpening" xml:space="preserve">
     <value>オープニングを自動でスキップ</value>
   </data>

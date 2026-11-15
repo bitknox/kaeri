@@ -1308,7 +1308,14 @@ impl Actor {
             &self.state.cache,
             skip_filler,
         );
-        let Some(follow) = follow else { return said };
+        let Some(follow) = follow else {
+            // The player closed, or the episode ended with nothing to roll on to: what was
+            // made ready for the next episode will not be played.
+            if matches!(event, Event::PlaybackEnded { .. }) {
+                self.services.prefetch.clear();
+            }
+            return said;
+        };
         said.extend(self.roll_on(follow, event));
         said
     }
@@ -1322,6 +1329,17 @@ impl Actor {
         let opener = opener_for(&self.state, &self.services)?;
         if let Event::PlaybackEnded { rolling_on, .. } = event {
             *rolling_on = true;
+        }
+        // The hand-over to the next episode: the end of the ending, or of Up next's countdown,
+        // or its Play now. Its first frame says how long the episode took to show from here.
+        let prefetch = &self.services.prefetch;
+        let handover = match event {
+            Event::PlaybackEnded { .. } => true,
+            Event::PlayerPlayEpisode { .. } => prefetch.is_next(follow.id, &follow.episode),
+            _ => false,
+        };
+        if handover {
+            prefetch.handed_over(follow.id, &follow.episode);
         }
         let tx = self.inbox.sender();
         let play = Command::play(follow.id, follow.episode.clone());

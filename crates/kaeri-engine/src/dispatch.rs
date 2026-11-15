@@ -1284,6 +1284,10 @@ pub(crate) async fn handle_internal(
     match message {
         // What runs on cellular may have changed with it.
         Internal::SettingsSaved => {
+            // Auto-play next turned off: nothing rolls on, so nothing is kept ready for it.
+            if !engine.config.effective().playback.auto_next {
+                services.prefetch.clear();
+            }
             crate::phases::settings_saved(engine, tx);
             crate::downloads::books::resume(engine, services, tx);
             crate::export::apply_feed(engine, services, tx);

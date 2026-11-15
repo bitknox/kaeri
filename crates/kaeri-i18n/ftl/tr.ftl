@@ -4384,6 +4384,9 @@ settings-label-fullscreen = Tam ekranda başlat
 # Settings row: the video upscaling mode.
 settings-label-upscaling = Görüntü büyütme
 
+# Settings row under Auto-play next: whether the next episode's first seconds load during the ending on a metered connection. The column is 26 cells wide.
+settings-label-preload-metered = Tarifelide önceden yükle
+
 # Settings row: which interface the player shows.
 settings-label-player-ui = Oynatıcı arayüzü
 
@@ -11535,6 +11538,21 @@ settings-auto-play = Sonrakini otomatik oynat
 
 # Row: length of the Up next countdown.
 settings-up-next-countdown = Sıradaki geri sayımı
+
+# Row under Up next countdown on iPhone, a cellular iPad and Android phones: whether the next episode's first seconds of video load during the ending while on mobile data. Off by default.
+settings-preload-cellular = Mobil veride videoyu önceden yükle
+
+# The same row on Windows and Linux.
+settings-preload-metered = Tarifeli bağlantılarda videoyu önceden yükle
+
+# Line under the row on Windows and Linux, and the note under the terminal's settings list.
+settings-preload-detail-metered = Bitiş sırasında sonraki bölümün yayını, altyazıları ve atlama zamanları bulunur. İlk saniyeleri de yüklenir; tarifeli bir bağlantıda yalnızca bu açıkken.
+
+# Sentence added after the line under the row while torrent playback is on.
+settings-preload-torrents = Torrentler ilk parçalarını aynı şekilde yükler.
+
+# Screen reader hint on the preload row while it is dimmed because Auto-play next is off. The terminal shows it at the start of the note.
+settings-preload-a11y-dimmed = "Sonrakini otomatik oynat" gerekli
 
 # Row: skip the opening.
 settings-skip-opening = Açılışı otomatik atla

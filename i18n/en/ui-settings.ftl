@@ -123,6 +123,41 @@ settings-auto-play = Auto-play next
 # Row: length of the Up next countdown.
 settings-up-next-countdown = { -up-next-cap } countdown
 
+# Row under Up next countdown on iPhone, a cellular iPad and Android phones: whether the next
+# episode's first seconds of video load during the ending while on mobile data. Off by default.
+settings-preload-cellular = Preload video on mobile data
+
+# The same row on the Mac and a Wi-Fi iPad. Low Data Mode is Apple's name for the system setting.
+# @only apple
+settings-preload-low-data = Preload video in Low Data Mode
+
+# The same row on Windows and Linux.
+settings-preload-metered = Preload video on metered connections
+
+# Line under the row on iPhone and a cellular iPad. Low Data Mode is Apple's name for the system
+# setting.
+# @only apple
+settings-preload-detail-apple-phone = During the ending, the next episode's stream, subtitles and skip times are found. Its first seconds load too, and on mobile data or in Low Data Mode only when this is on.
+
+# Line under the row on the Mac and a Wi-Fi iPad. Low Data Mode and Personal Hotspot are Apple's
+# names.
+# @only apple
+settings-preload-detail-low-data = During the ending, the next episode's stream, subtitles and skip times are found. Its first seconds load too, and in Low Data Mode or on Personal Hotspot only when this is on.
+
+# Line under the row on Android phones.
+# @only android
+settings-preload-detail-android = During the ending, the next episode's stream, subtitles and skip times are found. Its first seconds load too, and on mobile data or metered Wi-Fi only when this is on.
+
+# Line under the row on Windows and Linux, and the note under the terminal's settings list.
+settings-preload-detail-metered = During the ending, the next episode's stream, subtitles and skip times are found. Its first seconds load too, and on a metered connection only when this is on.
+
+# Sentence added after the line under the row while torrent playback is on.
+settings-preload-torrents = Torrents load their first pieces the same way.
+
+# Screen reader hint on the preload row while it is dimmed because Auto-play next is off. The
+# terminal shows it at the start of the note.
+settings-preload-a11y-dimmed = Needs Auto-play next
+
 # Row: skip the opening.
 settings-skip-opening = Skip opening automatically
 

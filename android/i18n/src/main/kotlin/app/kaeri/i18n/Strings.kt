@@ -12928,6 +12928,30 @@ object Strings {
     fun settingsUpNextCountdown(context: Context): String =
         context.getString(R.string.settings_up_next_countdown)
 
+    /** Row under Up next countdown on iPhone, a cellular iPad and Android phones: whether the next episode's first seconds of video load during the ending while on mobile data. Off by default. */
+    fun settingsPreloadCellular(context: Context): String =
+        context.getString(R.string.settings_preload_cellular)
+
+    /** The same row on Windows and Linux. */
+    fun settingsPreloadMetered(context: Context): String =
+        context.getString(R.string.settings_preload_metered)
+
+    /** Line under the row on Android phones. */
+    fun settingsPreloadDetailAndroid(context: Context): String =
+        context.getString(R.string.settings_preload_detail_android)
+
+    /** Line under the row on Windows and Linux, and the note under the terminal's settings list. */
+    fun settingsPreloadDetailMetered(context: Context): String =
+        context.getString(R.string.settings_preload_detail_metered)
+
+    /** Sentence added after the line under the row while torrent playback is on. */
+    fun settingsPreloadTorrents(context: Context): String =
+        context.getString(R.string.settings_preload_torrents)
+
+    /** Screen reader hint on the preload row while it is dimmed because Auto-play next is off. The terminal shows it at the start of the note. */
+    fun settingsPreloadA11yDimmed(context: Context): String =
+        context.getString(R.string.settings_preload_a11y_dimmed)
+
     /** Row: skip the opening. */
     fun settingsSkipOpening(context: Context): String =
         context.getString(R.string.settings_skip_opening)

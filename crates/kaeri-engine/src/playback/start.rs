@@ -24,7 +24,8 @@ use crate::{
         autonext::{Follow, Staged},
         handoff::{Handoff, successor, take_controls},
         link::{PlayerOpener, PlayerTarget, opener},
-        resolve::{Pick, Resolved, Unplayable, resolve_for_playback},
+        prefetch::Warm,
+        resolve::{Pick, Unplayable, resolve_for_playback},
         shaders::shader_dir,
         slot::PlayerSlot,
         starting::Starting,
@@ -375,6 +376,8 @@ fn play_staged(
         None => prefetch.take(id, &episode, config.playback.translation),
         Some(_) => None,
     };
+    // A roll-on handed over to this play: its first frame says how long that took.
+    let rolled_at = prefetch.handover_for(id, &episode);
     // Tracker ids rather than trackers: playback only needs to know which queues to
     // append to, and passing the set would couple the player to the sync layer.
     let tracker_ids = signed_in_tracker_ids(sync);
@@ -399,7 +402,7 @@ fn play_staged(
         tracker_ids,
         hints,
         write_shaders(config, paths),
-        prefetched,
+        (prefetched, rolled_at),
         job,
         &tx.for_playback(played),
     );
@@ -701,8 +704,9 @@ fn spawn_playback(
     hints: PlayHints,
     // The shaders being written for it, while it looks for its streams.
     shaders: JoinHandle<Option<std::path::PathBuf>>,
-    // This episode's streams, found ahead while the previous one's ending played.
-    prefetched: Option<Resolved>,
+    // This episode as it was made ready while the previous one's ending played, and when the
+    // roll-on handed over to it.
+    (prefetched, rolled_at): (Option<Warm>, Option<std::time::Instant>),
     job: Option<JobGuard>,
     tx: &Outbox,
 ) {
@@ -718,19 +722,15 @@ fn spawn_playback(
     } else {
         services.registry.clone()
     };
-    let prefetched = if no_torrents {
-        prefetched
-            .map(|(streams, context)| {
-                let streams: Vec<_> = streams
-                    .into_iter()
-                    .filter(|s| s.kind != kaeri_core::stream::StreamKind::TorrentHttp)
-                    .collect();
-                (streams, context)
-            })
-            .filter(|(streams, _)| !streams.is_empty())
-    } else {
-        prefetched
+    let prefetched =
+        if no_torrents { prefetched.and_then(Warm::without_torrents) } else { prefetched };
+    // From here the playback owns what was started ahead: the proxy its first attempt adopts.
+    let (prefetched, proxy) = match prefetched.map(Warm::into_parts) {
+        Some((resolved, proxy)) => (Some(resolved), proxy),
+        None => (None, None),
     };
+    let ahead =
+        crate::playback::prefetch::Ahead::new(rolled_at, proxy, services.prefetch.clone());
     let reports = services.servers.reports();
     // An untracked play is of no show whose episodes could be compared.
     let find = !untracked && services.skip_find.runs(config);
@@ -750,6 +750,24 @@ fn spawn_playback(
     tokio::spawn(async move {
         let playback = config.playback.clone();
         let starting = Starting::new(&tx, id, &episode, Some(skip));
+        // A torrent looked up ahead on a limited network starts now, as it would have had it
+        // been found now. One that does not start sends the play looking again.
+        let prefetched = match prefetched {
+            Some((streams, context))
+                if streams
+                    .iter()
+                    .any(|s| s.kind == kaeri_core::stream::StreamKind::Torrent) =>
+            {
+                match torrents.start_first(streams, &episode).await {
+                    Ok(streams) => Some((streams, context)),
+                    Err(error) => {
+                        tracing::info!(%error, "the torrent looked up ahead did not start");
+                        None
+                    }
+                }
+            }
+            prefetched => prefetched,
+        };
         let resolving = async {
             match prefetched {
                 Some(found) => {
@@ -915,6 +933,7 @@ fn spawn_playback(
             find_skip_times: find,
             swarm: crate::playback::starting::Swarm::of(torrents),
             begin,
+            ahead,
             ..play_settings(&config, tracker_ids, hub)
         };
         let settings = if untracked { settings.untracked() } else { settings };
@@ -972,6 +991,7 @@ pub fn play_settings(
         untracked: false,
         swarm: Default::default(),
         begin: Default::default(),
+        ahead: Default::default(),
     }
 }
 

@@ -8828,6 +8828,21 @@
   <data name="SettingsUpNextCountdown" xml:space="preserve">
     <value>Durata del conto alla rovescia del prossimo</value>
   </data>
+  <data name="SettingsPreloadCellular" xml:space="preserve">
+    <value>Precarica il video con i dati mobili</value>
+  </data>
+  <data name="SettingsPreloadMetered" xml:space="preserve">
+    <value>Precarica il video sulle connessioni a consumo</value>
+  </data>
+  <data name="SettingsPreloadDetailMetered" xml:space="preserve">
+    <value>Durante la sigla di chiusura vengono trovati lo stream, i sottotitoli e i tempi di salto dell'episodio successivo. Si caricano anche i suoi primi secondi, e su una connessione a consumo solo se questa opzione è attiva.</value>
+  </data>
+  <data name="SettingsPreloadTorrents" xml:space="preserve">
+    <value>I torrent caricano i primi pezzi allo stesso modo.</value>
+  </data>
+  <data name="SettingsPreloadA11yDimmed" xml:space="preserve">
+    <value>Richiede «Riproduci il successivo automaticamente»</value>
+  </data>
   <data name="SettingsSkipOpening" xml:space="preserve">
     <value>Salta automaticamente la sigla di apertura</value>
   </data>

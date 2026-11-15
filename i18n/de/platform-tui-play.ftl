@@ -117,6 +117,7 @@ settings-label-mark-chapters = Intro und Abspann markieren
 settings-label-skip-button = Überspringen-Schaltfläche anzeigen
 settings-label-fullscreen = Im Vollbild starten
 settings-label-upscaling = Hochskalierung
+settings-label-preload-metered = Vorladen bei Taktung
 settings-label-player-ui = Player-Oberfläche
 settings-label-night-mode = Nachtmodus
 settings-label-download-dir = Download-Ordner

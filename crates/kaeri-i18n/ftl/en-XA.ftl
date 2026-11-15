@@ -4574,6 +4574,9 @@ settings-label-fullscreen = [Šţàŕţ îñ ƒüļļ šçŕééñ~~~~~~]
 # Settings row: the video upscaling mode.
 settings-label-upscaling = [Ûþšçàļîñĝ~~~]
 
+# Settings row under Auto-play next: whether the next episode's first seconds load during the ending on a metered connection. The column is 26 cells wide.
+settings-label-preload-metered = [Þŕéļöàð öñ ɱéţéŕéð~~~~~~]
+
 # Settings row: which interface the player shows.
 settings-label-player-ui = [Þļàýéŕ îñţéŕƒàçé~~~~~]
 
@@ -12231,6 +12234,21 @@ settings-auto-play = [Åüţö-þļàý ñéẋţ~~~~~]
 
 # Row: length of the Up next countdown.
 settings-up-next-countdown = [Ûþ ñéẋţ çöüñţðöŵñ~~~~~~]
+
+# Row under Up next countdown on iPhone, a cellular iPad and Android phones: whether the next episode's first seconds of video load during the ending while on mobile data. Off by default.
+settings-preload-cellular = [Þŕéļöàð ṽîðéö öñ ɱöƀîļé ðàţà~~~~~~~~~]
+
+# The same row on Windows and Linux.
+settings-preload-metered = [Þŕéļöàð ṽîðéö öñ ɱéţéŕéð çöññéçţîöñš~~~~~~~~~~~]
+
+# Line under the row on Windows and Linux, and the note under the terminal's settings list.
+settings-preload-detail-metered = [Ðüŕîñĝ ţĥé éñðîñĝ, ţĥé ñéẋţ éþîšöðé'š šţŕéàɱ, šüƀţîţļéš àñð šķîþ ţîɱéš àŕé ƒöüñð. Îţš ƒîŕšţ šéçöñðš ļöàð ţöö, àñð öñ à ɱéţéŕéð çöññéçţîöñ öñļý ŵĥéñ ţĥîš îš öñ.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]
+
+# Sentence added after the line under the row while torrent playback is on.
+settings-preload-torrents = [Ţöŕŕéñţš ļöàð ţĥéîŕ ƒîŕšţ þîéçéš ţĥé šàɱé ŵàý.~~~~~~~~~~~~~~]
+
+# Screen reader hint on the preload row while it is dimmed because Auto-play next is off. The terminal shows it at the start of the note.
+settings-preload-a11y-dimmed = [Ñééðš Åüţö-þļàý ñéẋţ~~~~~~]
 
 # Row: skip the opening.
 settings-skip-opening = [Šķîþ öþéñîñĝ àüţöɱàţîçàļļý~~~~~~~~]

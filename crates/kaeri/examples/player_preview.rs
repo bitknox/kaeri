@@ -114,6 +114,7 @@ async fn main() -> anyhow::Result<()> {
             untracked: false,
             swarm: Default::default(),
             begin: Default::default(),
+            ahead: Default::default(),
         };
         let stream = Stream {
             provider_id: "preview".into(),
