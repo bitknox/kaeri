@@ -137,15 +137,22 @@ pub enum StageView {
     /// This device, the others it syncs with, the cloud folder, and the profiles when there are
     /// two or more. Reached from Settings.
     Devices,
+    /// A reading series' page: its header and its chapters. Reached from reading's Home and
+    /// Search.
+    Series(kaeri_core::books::WorkId),
+    /// The reader on a work, over the whole window. Reached from a Continue line and the series
+    /// page; Back returns there with the cursor where it was.
+    Reader(kaeri_core::books::WorkId),
 }
 
 impl StageView {
     /// Whether this view needs the rail out of the way.
     pub const fn wants_wide_stage(&self) -> bool {
         match self {
-            Self::Episodes(_) | Self::NowPlaying => true,
+            Self::Episodes(_) | Self::NowPlaying | Self::Reader(_) => true,
             Self::Section(s) => s.wants_wide_stage(),
             Self::Title(_)
+            | Self::Series(_)
             | Self::Stores
             | Self::Store(_)
             | Self::StoreMembers(_)
@@ -155,7 +162,7 @@ impl StageView {
 
     /// Whether the rail should be hidden entirely rather than merely collapsed.
     pub const fn hides_rail(&self) -> bool {
-        matches!(self, Self::NowPlaying)
+        matches!(self, Self::NowPlaying | Self::Reader(_))
     }
 }
 
@@ -164,6 +171,10 @@ impl StageView {
 pub enum Overlay {
     CommandPalette,
     Help,
+    /// The reader's settings, `,` in the reader.
+    ReaderSettings,
+    /// The number of a page to go to, from the reader's palette.
+    ReaderGoTo,
     Sources,
     SourceProvider,
     /// Which release of the pinned source to use, for a source that offers several.
@@ -253,6 +264,8 @@ impl Overlay {
         crate::keymap::said(match self {
             Self::CommandPalette => t::nav_overlay_palette(),
             Self::Help => t::nav_overlay_help(),
+            Self::ReaderSettings => t::tui_reader_action_settings(),
+            Self::ReaderGoTo => t::tui_reader_action_go_to_page(),
             Self::Sources => t::sources_title(),
             Self::SourceProvider => t::source_picker_title(),
             Self::SourceRelease => t::nav_overlay_release_for_title(),
@@ -334,6 +347,7 @@ impl Overlay {
             Self::CommandPalette
                 | Self::ManualQuery
                 | Self::DownloadRange
+                | Self::ReaderGoTo
                 | Self::EditSetting
                 | Self::KitsuUsername
                 | Self::KitsuPassword
@@ -431,6 +445,11 @@ impl Nav {
     pub fn current(&self) -> &StageView {
         // The stack is never emptied — `pop` refuses to remove the root.
         self.stage.last().unwrap_or(&StageView::Section(Section::Home))
+    }
+
+    /// The view under the one on top, which Back returns to.
+    pub fn under(&self) -> Option<&StageView> {
+        self.stage.len().checked_sub(2).and_then(|i| self.stage.get(i))
     }
 
     pub fn depth(&self) -> usize {

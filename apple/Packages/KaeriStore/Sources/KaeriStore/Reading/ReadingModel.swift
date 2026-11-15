@@ -154,8 +154,12 @@ public final class ReadingModel {
     public func downloadNew() { send?(.reading(.downloadNew)) }
 
     public func loadList(_ segment: LibrarySegmentRead) {
+        if !listsAsked.contains(segment) { listsAsked.append(segment) }
         send?(.reading(.loadLibrary(segment: segment)))
     }
+
+    /// The reading lists asked for, in the order first asked, to ask again after reading.
+    @ObservationIgnored private var listsAsked: [LibrarySegmentRead] = []
 
     public func runSearch(_ query: ReadSearchQuery) {
         search.query = query
@@ -350,15 +354,22 @@ public final class ReadingModel {
 
     /// The engine sends nothing for a read or a place kept by the reader: the series page under
     /// it asks again, so its main button offers the next chapter or the place left at, not the
-    /// chapter just read.
+    /// chapter just read. Once the reader closes, the reading lists asked for so far are asked
+    /// again too, so Last read puts the series just read first and its cover says how far it is.
     private func heard(_ event: ReaderEvent) {
         switch event {
         case .opened(let view):
             readerWork = view.work
         case .chapterRead(let work, _, _):
-            refreshSeries(work)
+            // Counted as read on the end page: the series page under it offers the next chapter.
+            readerMoved(work, home: false)
         case .closed:
-            if let work = readerWork { refreshSeries(work) }
+            // The last place is written by the time the engine says it closed, and the lists
+            // shown are ordered by it.
+            if let work = readerWork {
+                readerMoved(work, home: true)
+                for list in listsAsked { send?(.reading(.loadLibrary(segment: list))) }
+            }
             readerWork = nil
         default:
             break
@@ -424,7 +435,12 @@ public final class ReadingModel {
         case .series(let view):
             series[view.work] = Self.shot(view)
         case .chapters(let work, let edition, let volumes, let failure):
-            chapters[work] = Self.shot(ReadChapters(edition: edition, volumes: volumes, failure: failure))
+            // A refresh that failed keeps the list already shown under why, never an empty one.
+            if failure != nil, volumes.isEmpty, let kept = chapters[work], !kept.volumes.isEmpty {
+                chapters[work] = ReadChapters(edition: edition ?? kept.edition, volumes: kept.volumes, failure: failure)
+            } else {
+                chapters[work] = Self.shot(ReadChapters(edition: edition, volumes: volumes, failure: failure))
+            }
         case .versions(_, let chapter, let list):
             versions[chapter] = list
         case .tracking(let work, let rows):
@@ -554,6 +570,12 @@ public final class BookSourcesModel {
     public var isEmpty: Bool {
         guard let view else { return true }
         return view.folders.isEmpty && view.servers.isEmpty && view.plugins.isEmpty
+    }
+
+    /// Folders, servers and book plugins, all told.
+    public var count: Int {
+        guard let view else { return 0 }
+        return view.folders.count + view.servers.count + view.plugins.count
     }
 
     public func load() { send?(.bookSources(.load)) }

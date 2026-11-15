@@ -56,6 +56,18 @@ pub fn resolve(mode: ThemeMode) -> Palette {
     palette
 }
 
+/// [`resolve`] with the background the start-up queries found ([`crate::probe::ask`]), which
+/// asked for it when the mode calls for it, so the terminal is not asked again here.
+pub fn resolve_answered(mode: ThemeMode, answers: &crate::probe::Answers) -> Palette {
+    let detected = match mode {
+        ThemeMode::Immersive | ThemeMode::Light | ThemeMode::Dark => None,
+        ThemeMode::Adaptive => answers.background,
+    };
+    let palette = resolve_with(mode, detected);
+    tracing::info!(?mode, variant = ?palette.variant, detected = detected.is_some(), "resolved theme");
+    palette
+}
+
 /// Resolve from an explicitly supplied background, bypassing the terminal query.
 ///
 /// Used by tests and by the `--background` escape hatch for terminals that answer the

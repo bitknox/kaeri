@@ -7,7 +7,6 @@ package app.kaeri.ui.reading
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
@@ -19,6 +18,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.lazy.grid.itemsIndexed
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.DropdownMenuItem
@@ -42,6 +42,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import app.kaeri.design.CoverPlate
@@ -61,7 +62,7 @@ import app.kaeri.ui.Icons
 import app.kaeri.ui.LocalAppStore
 import app.kaeri.ui.LocalNavigator
 import app.kaeri.ui.Menu
-import app.kaeri.ui.PosterGrid
+import app.kaeri.ui.SizedPosterGrid
 import app.kaeri.ui.Refreshable
 import app.kaeri.ui.ScreenFrame
 import app.kaeri.ui.TextPlaceholder
@@ -133,7 +134,7 @@ internal fun ReadLibraryScreen(actions: AppActions) {
         }
         val failure = failures[ReadingAbout.LIBRARY]
         Refreshable({ store.reading.loadList(segment) }, top = top) {
-            PosterGrid(PaddingValues(start = 16.dp, end = 16.dp, top = top, bottom = 24.dp)) {
+            SizedPosterGrid(PaddingValues(start = 16.dp, end = 16.dp, top = top, bottom = 24.dp)) { cells ->
                 if (both) {
                     item(span = { GridItemSpan(maxLineSpan) }, key = "scope", contentType = "scope") {
                         ScopeControl(reading = true, modifier = itemMotion().padding(top = 4.dp, bottom = 4.dp)) { ReadPlaces.libraryReading = it }
@@ -166,8 +167,9 @@ internal fun ReadLibraryScreen(actions: AppActions) {
                     tiles.isEmpty() -> item(span = { GridItemSpan(maxLineSpan) }, key = "quiet", contentType = "quiet") {
                         Box(itemMotion()) { EmptyList(segment) }
                     }
-                    else -> items(tiles, key = { it.work }, contentType = { "cover" }) { tile ->
-                        Box(itemMotion()) { LibraryCell(tile, segment) }
+                    // The tiles start a row, below the lines that span it.
+                    else -> itemsIndexed(tiles, key = { _, tile -> tile.work }, contentType = { _, _ -> "cover" }) { index, tile ->
+                        Box(itemMotion()) { LibraryCell(tile, segment, cells.width(index)) }
                     }
                 }
             }
@@ -210,13 +212,17 @@ private fun ListChips(segment: LibrarySegmentRead, lists: Map<LibrarySegmentRead
     }
 }
 
-/** A cover in the grid with its line, "Chapter 41 of 43"; a long press offers Details and the lists. */
+/**
+ * A cover in the grid, [width] wide, with its line, "Chapter 41 of 43"; a long press offers Details
+ * and the lists. The menu is composed from its first opening on, and kept for its closing motion.
+ */
 @Composable
-private fun LibraryCell(tile: WorkTile, segment: LibrarySegmentRead) {
+private fun LibraryCell(tile: WorkTile, segment: LibrarySegmentRead, width: Dp) {
     var menu by remember { mutableStateOf(false) }
-    BoxWithConstraints {
-        ReadTile(tile, maxWidth, from = "read-library", lines = if (wideWindow()) 1 else 2, onLongClick = { menu = true })
-        ReadTileMenu(tile, menu, current = segment) { menu = false }
+    var opened by remember { mutableStateOf(false) }
+    Box {
+        ReadTile(tile, width, from = "read-library", lines = if (wideWindow()) 1 else 2, onLongClick = { menu = true; opened = true })
+        if (opened) ReadTileMenu(tile, menu, current = segment) { menu = false }
     }
 }
 

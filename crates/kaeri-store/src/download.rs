@@ -274,7 +274,10 @@ impl Store {
         })
     }
 
-    /// Record progress against a download.
+    /// Record progress against a download. The engine that records it runs it: it holds the
+    /// download for [`LEASE_SECS`](crate::book_downloads::LEASE_SECS), renewed with each poll, and
+    /// another engine on the same database leaves it alone meanwhile. Progress on a download
+    /// another engine holds is not recorded.
     pub fn update_download_progress(
         &self,
         id: i64,
@@ -291,11 +294,20 @@ impl Store {
                         total = CASE WHEN ?3 > 0 THEN ?3 ELSE total END,
                         path = COALESCE(?4, path),
                         state = CASE WHEN state = 'queued' THEN 'active' ELSE state END,
-                        updated_at = ?5
-                  WHERE id = ?1",
+                        updated_at = ?5, owner = ?6, lease_until = ?5 + ?7
+                  WHERE id = ?1 AND NOT (owner IS NOT NULL AND owner <> ?6
+                                         AND lease_until >= ?5 AND lease_until <= ?5 + ?7)",
                 // Cast at the boundary: SQLite integers are signed, and a torrent will never
                 // approach the point where that matters.
-                rusqlite::params![id, downloaded as i64, total as i64, path, now()],
+                rusqlite::params![
+                    id,
+                    downloaded as i64,
+                    total as i64,
+                    path,
+                    now(),
+                    self.owner(),
+                    crate::book_downloads::LEASE_SECS
+                ],
             )?;
             Ok(())
         })
@@ -332,11 +344,39 @@ impl Store {
         })
     }
 
+    /// Claim a waiting download for this engine before it starts it, or renew the claim while
+    /// its torrent is being added: false when another engine on the database has claimed it and
+    /// still says so, and that engine starts it.
+    pub fn claim_download(&self, id: i64) -> Result<bool> {
+        self.with_conn(|c| {
+            let claimed = c.execute(
+                "UPDATE download SET owner = ?2, lease_until = ?3 + ?4
+                  WHERE id = ?1 AND state = 'queued'
+                    AND NOT (owner IS NOT NULL AND owner <> ?2
+                             AND lease_until >= ?3 AND lease_until <= ?3 + ?4)",
+                rusqlite::params![id, self.owner(), now(), crate::book_downloads::LEASE_SECS],
+            )?;
+            Ok(claimed > 0)
+        })
+    }
+
+    /// Set a download's state. A download another engine on the database runs, and still says
+    /// so, is not put back in the queue: that engine's launch found it running, not cut short.
     pub fn set_download_state(&self, id: i64, state: DownloadState) -> Result<()> {
         self.with_conn(|c| {
             c.execute(
-                "UPDATE download SET state = ?2, updated_at = ?3 WHERE id = ?1",
-                rusqlite::params![id, state.as_str(), now()],
+                "UPDATE download SET state = ?2, updated_at = ?3
+                  WHERE id = ?1
+                    AND NOT (?2 = 'queued' AND state = 'active'
+                             AND owner IS NOT NULL AND owner <> ?4
+                             AND lease_until >= ?3 AND lease_until <= ?3 + ?5)",
+                rusqlite::params![
+                    id,
+                    state.as_str(),
+                    now(),
+                    self.owner(),
+                    crate::book_downloads::LEASE_SECS
+                ],
             )?;
             Ok(())
         })
@@ -738,5 +778,93 @@ mod tests {
         // Forward compatibility: a row written by a newer build must not vanish from the queue.
         assert_eq!(DownloadState::parse("teleporting"), DownloadState::Queued);
         assert!(DownloadState::parse("teleporting").is_running());
+    }
+
+    /// Two engines on one database, each with its own store, as an app and the terminal.
+    fn two_engines() -> (tempfile::TempDir, Store, Store) {
+        let dir = tempfile::tempdir().unwrap();
+        let db = dir.path().join("kaeri.db");
+        let first = Store::open(&db).unwrap();
+        let second = Store::open(&db).unwrap();
+        (dir, first, second)
+    }
+
+    /// A second engine's launch puts back in the queue what it finds active. A download the
+    /// first engine still runs stays its own.
+    #[test]
+    fn a_second_engine_leaves_a_download_the_first_one_runs_alone() {
+        let (_dir, first, second) = two_engines();
+        let row = first.enqueue_download(ID, "1", "Hoshikuzu", "magnet:?xt=a").unwrap();
+        first.update_download_progress(row.id, 10, 100, None).unwrap();
+
+        second.set_download_state(row.id, DownloadState::Queued).unwrap();
+        let after = second.download_for(ID, "1").unwrap().unwrap();
+        assert_eq!(after.state, DownloadState::Active, "the first engine still runs it");
+        // The other engine's progress is not recorded over the first one's.
+        second.update_download_progress(row.id, 99, 100, None).unwrap();
+        assert_eq!(first.download_for(ID, "1").unwrap().unwrap().downloaded, 10);
+        // Its owner records on, and can put it back in the queue itself.
+        first.update_download_progress(row.id, 20, 100, None).unwrap();
+        first.set_download_state(row.id, DownloadState::Queued).unwrap();
+        assert_eq!(first.download_for(ID, "1").unwrap().unwrap().state, DownloadState::Queued);
+    }
+
+    /// The first engine was killed: nothing renews its hold, and once that runs out the next
+    /// launch puts the download back in the queue.
+    #[test]
+    fn a_download_whose_engine_stopped_is_queued_again_once_its_hold_runs_out() {
+        let (_dir, first, second) = two_engines();
+        let row = first.enqueue_download(ID, "1", "Hoshikuzu", "magnet:?xt=a").unwrap();
+        first.update_download_progress(row.id, 10, 100, None).unwrap();
+        drop(first);
+        let lapse = |at: i64| {
+            second
+                .with_conn(|c| {
+                    c.execute(
+                        "UPDATE download SET lease_until = ?2 WHERE id = ?1",
+                        [row.id, at],
+                    )?;
+                    Ok(())
+                })
+                .unwrap();
+        };
+        lapse(now() - 1);
+        second.set_download_state(row.id, DownloadState::Queued).unwrap();
+        assert_eq!(second.download_for(ID, "1").unwrap().unwrap().state, DownloadState::Queued);
+
+        // A hold set while the clock ran a year ahead is over once it is put right.
+        second.update_download_progress(row.id, 10, 100, None).unwrap();
+        second
+            .with_conn(|c| {
+                c.execute("UPDATE download SET owner = 'gone' WHERE id = ?1", [row.id])?;
+                Ok(())
+            })
+            .unwrap();
+        lapse(now() + 31_536_000);
+        second.set_download_state(row.id, DownloadState::Queued).unwrap();
+        assert_eq!(second.download_for(ID, "1").unwrap().unwrap().state, DownloadState::Queued);
+    }
+
+    #[test]
+    fn a_waiting_download_is_started_by_the_engine_that_claims_it_first() {
+        let (_dir, first, second) = two_engines();
+        let row = first.enqueue_download(ID, "1", "Hoshikuzu", "magnet:?xt=a").unwrap();
+        assert!(first.claim_download(row.id).unwrap());
+        assert!(!second.claim_download(row.id).unwrap(), "the first engine starts it");
+        assert!(first.claim_download(row.id).unwrap(), "renewed while its torrent is added");
+        // The first engine stopped before it started: once the claim runs out, the other takes it.
+        second
+            .with_conn(|c| {
+                c.execute(
+                    "UPDATE download SET lease_until = ?2 WHERE id = ?1",
+                    [row.id, now() - 1],
+                )?;
+                Ok(())
+            })
+            .unwrap();
+        assert!(second.claim_download(row.id).unwrap());
+        // A download already running is not claimed again.
+        second.update_download_progress(row.id, 1, 100, None).unwrap();
+        assert!(!second.claim_download(row.id).unwrap());
     }
 }

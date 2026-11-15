@@ -7,5 +7,6 @@
 
 pub mod clipboard;
 pub mod focus;
+pub mod pages;
 pub mod run;
 pub mod terminal;

@@ -11,6 +11,8 @@ downloads-in-downloads = { $size } em downloads
 downloads-space-label = Espaço usado pelos downloads
 downloads-empty-title = Nenhum download
 downloads-empty-detail = Episódios baixados são reproduzidos sem conexão.
+read-downloads-empty-detail = Capítulos baixados abrem sem conexão.
+read-downloads-empty-both = Episódios e capítulos baixados abrem sem conexão.
 downloads-load-failed = Não foi possível carregar os downloads
 downloads-folder-failed = Não foi possível abrir a pasta. Confira se ela ainda existe.
 downloads-episode-name = Episódio { $episode }
@@ -58,7 +60,7 @@ downloads-quality = Qualidade do download
 downloads-notice-done = Episódio { $episode } baixado
 downloads-notice-done-detail = { $title } · pronto para assistir offline
 downloads-notice-running = { $count ->
-    [one] Baixando um episódio
+    [one] Baixando { $count } episódio
     [many] Baixando { $count } episódios
    *[other] Baixando { $count } episódios
  }

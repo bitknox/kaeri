@@ -30,8 +30,24 @@ use kaeri_core::{
 pub use crate::{
     address::{KavitaLink, candidates, host_of, kavita_link, last_four, root_of},
     error::{Result, ServerError},
-    http::{Auth, Http, basic},
+    http::{Auth, Http, basic, signs_in},
 };
+
+/// The most pages one book from a server may have: as many as an archive may hold entries
+/// (`kaeri_books::Limits::max_entries`). A server states a book's page count and every page
+/// becomes a [`PageRef`], so a count past this is a broken or hostile answer, not a book.
+pub const MOST_PAGES: u32 = 20_000;
+
+/// A page count a server stated, kept only when a book could have it: at least one page and at
+/// most [`MOST_PAGES`].
+pub(crate) fn pages_stated(count: impl Into<u64>) -> Option<u32> {
+    u32::try_from(count.into()).ok().filter(|n| (1..=MOST_PAGES).contains(n))
+}
+
+/// A server's book of more pages than any book has.
+pub(crate) fn too_many_pages(count: impl std::fmt::Display) -> ServerError {
+    ServerError::Parse(format!("a book of {count} pages, more than {MOST_PAGES}"))
+}
 
 /// The kinds of book server.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -60,8 +76,8 @@ impl Kind {
     }
 }
 
-/// A server that accepted a sign-in.
-#[derive(Debug, Clone, PartialEq, Eq)]
+/// A server that accepted a sign-in. Its `Debug` leaves the credential out.
+#[derive(Clone, PartialEq, Eq)]
 pub struct SignedIn {
     pub kind: Kind,
     pub name: String,
@@ -70,6 +86,17 @@ pub struct SignedIn {
     pub series: Option<u32>,
     /// What to keep in the secure store.
     pub credential: String,
+}
+
+impl std::fmt::Debug for SignedIn {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("SignedIn")
+            .field("kind", &self.kind)
+            .field("name", &self.name)
+            .field("version", &self.version)
+            .field("series", &self.series)
+            .finish_non_exhaustive()
+    }
 }
 
 /// What an address turned out to be.
@@ -121,12 +148,12 @@ async fn detect(client: &reqwest::Client, address: &str) -> Result<Option<Kind>>
         return Ok(Some(Kind::Komga));
     }
     // An OPDS catalogue, or something that wants a sign-in before it says.
-    let response = client
-        .get(http.url(address_path(address, &root)))
-        .timeout(std::time::Duration::from_secs(20))
-        .send()
-        .await
-        .map_err(|e| ServerError::Unreachable(describe_transport(&e)))?;
+    let response = http
+        .fetch(
+            http.request(reqwest::Method::GET, address_path(address, &root))
+                .timeout(std::time::Duration::from_secs(20)),
+        )
+        .await?;
     let status = response.status().as_u16();
     if status == 401 || status == 403 {
         return Ok(None);
@@ -149,12 +176,17 @@ fn address_path<'a>(address: &'a str, root: &str) -> &'a str {
 }
 
 fn describe_transport(error: &reqwest::Error) -> String {
-    if error.is_timeout() {
-        "the request timed out".into()
+    let words = if error.is_timeout() {
+        "the request timed out"
     } else if error.is_connect() {
-        "the connection was refused".into()
+        "the connection was refused"
     } else {
-        "the request failed".into()
+        "the request failed"
+    };
+    if kaeri_net::reach::no_network(error) {
+        format!("{}: {words}", kaeri_core::error::NO_NETWORK)
+    } else {
+        words.into()
     }
 }
 
@@ -241,17 +273,65 @@ pub async fn count_series(
     kind: Kind,
     credential: &str,
 ) -> Result<Option<u32>> {
+    count_series_kept(
+        client,
+        address,
+        kind,
+        credential,
+        &Arc::new(AtomicBool::new(false)).into(),
+    )
+    .await
+}
+
+/// [`count_series`] for a server whose sign-in `gate` keeps: a Kavita JWT or a Komga session
+/// the server refuses is renewed as its source renews it, and the new sign-in goes to the
+/// keeper; a refusal that cannot be got past signs the server out.
+pub async fn count_series_kept(
+    client: &reqwest::Client,
+    address: &str,
+    kind: Kind,
+    credential: &str,
+    gate: &Gate,
+) -> Result<Option<u32>> {
+    let counted = count_once(client, address, kind, credential, gate).await;
+    if let Err(error) = &counted {
+        note_sign_in(gate, error);
+    }
+    counted
+}
+
+async fn count_once(
+    client: &reqwest::Client,
+    address: &str,
+    kind: Kind,
+    credential: &str,
+    gate: &Gate,
+) -> Result<Option<u32>> {
     match kind {
         Kind::Komga => {
-            let credential = komga::Credential::parse(credential)
+            let held = komga::Credential::parse(credential)
                 .ok_or_else(|| ServerError::Parse("the kept sign-in".into()))?;
-            komga::count_series(&Http::new(client, root_of(address), credential.auth())).await
+            let base = Http::new(client, root_of(address), Auth::None);
+            match komga::count_series(&base.with_auth(held.auth())).await {
+                Err(ServerError::Unauthorized) => {
+                    let fresh = komga::renew_kept(&base, &held, gate).await?;
+                    komga::count_series(&base.with_auth(fresh.auth())).await
+                }
+                counted => counted,
+            }
         }
         Kind::Kavita => {
             let tokens = kavita::Tokens::parse(credential)
                 .ok_or_else(|| ServerError::Parse("the kept sign-in".into()))?;
-            let http = Http::new(client, root_of(address), Auth::Bearer(tokens.token));
-            kavita::count_all(&http).await
+            let base = Http::new(client, root_of(address), Auth::None);
+            match kavita::count_all(&base.with_auth(Auth::Bearer(tokens.token.clone()))).await {
+                Err(ServerError::Unauthorized) => {
+                    let fresh = kavita::renew(&base, &tokens).await?;
+                    gate.renewed(&fresh.kept());
+                    kavita::count_all(&base.with_auth(Auth::Bearer(fresh.token))).await
+                }
+                counted => counted,
+            }
         }
         Kind::Opds => {
             let b64 = credential
@@ -277,7 +357,7 @@ pub fn source(
     client: &reqwest::Client,
     server: &Server<'_>,
     keep: PathBuf,
-    signed_out: Arc<AtomicBool>,
+    signed_out: impl Into<Gate>,
 ) -> Option<Arc<dyn BookSource>> {
     source_with(client, server, &[], keep, signed_out)
 }
@@ -289,42 +369,99 @@ pub fn source_with(
     server: &Server<'_>,
     libraries: &[String],
     keep: PathBuf,
-    signed_out: Arc<AtomicBool>,
+    signed_out: impl Into<Gate>,
 ) -> Option<Arc<dyn BookSource>> {
     let Server { id, name, kind, address, credential } = *server;
+    let gate = signed_out.into();
     match kind {
         Kind::Komga => {
             let credential = komga::Credential::parse(credential)?;
-            let http = Http::new(client, root_of(address), credential.auth());
-            let source = komga::KomgaSource::new(id, name, http, keep, signed_out)
+            let http = Http::new(client, root_of(address), Auth::None);
+            let source = komga::KomgaSource::new(id, name, http, credential, keep, gate)
                 .in_libraries(libraries.to_vec());
             Some(Arc::new(source))
         }
         Kind::Kavita => {
             let tokens = kavita::Tokens::parse(credential)?;
             let http = Http::new(client, root_of(address), Auth::Bearer(tokens.token.clone()));
-            let source = kavita::KavitaSource::new(id, name, http, &tokens, keep, signed_out)
+            let source = kavita::KavitaSource::new(id, name, http, &tokens, keep, gate)
                 .in_libraries(libraries.to_vec());
             Some(Arc::new(source))
         }
         Kind::Opds => {
             let b64 = credential.strip_prefix("basic:")?;
             let http = Http::new(client, address, Auth::Basic(b64.to_owned()));
-            Some(Arc::new(opds::OpdsSource::new(id, name, http, keep, signed_out)))
+            Some(Arc::new(opds::OpdsSource::new(id, name, http, keep, gate)))
         }
     }
 }
 
+/// Where a server's sign-in is kept, told when it changes while its source runs. The source
+/// never writes the sign-in anywhere itself.
+pub trait Keeper: Send + Sync {
+    /// The server handed out a new sign-in in place of the one kept: keep `credential` instead.
+    fn renewed(&self, credential: &str);
+    /// The server refused the sign-in and it could not be renewed: it waits for the person to
+    /// sign in again.
+    fn refused(&self);
+}
+
+/// A keeper that keeps nothing, for a source no one keeps the sign-in of.
+struct NoKeeper;
+
+impl Keeper for NoKeeper {
+    fn renewed(&self, _credential: &str) {}
+    fn refused(&self) {}
+}
+
+/// A source's sign-in state: whether the server refused it, and the keeper told when that or
+/// the sign-in itself changes. Cheap to clone; clones share the state.
+#[derive(Clone)]
+pub struct Gate {
+    signed_out: Arc<AtomicBool>,
+    keeper: Arc<dyn Keeper>,
+}
+
+impl Gate {
+    /// The state behind `signed_out`, telling `keeper` of every change.
+    pub fn new(signed_out: Arc<AtomicBool>, keeper: Arc<dyn Keeper>) -> Self {
+        Self { signed_out, keeper }
+    }
+
+    /// Whether the server refused the sign-in.
+    pub fn is_signed_out(&self) -> bool {
+        self.signed_out.load(Ordering::Relaxed)
+    }
+
+    /// The server refused the sign-in: the keeper is told once, when it was not known before.
+    pub(crate) fn refuse(&self) {
+        if !self.signed_out.swap(true, Ordering::Relaxed) {
+            self.keeper.refused();
+        }
+    }
+
+    /// The server handed out a new sign-in.
+    pub(crate) fn renewed(&self, credential: &str) {
+        self.keeper.renewed(credential);
+    }
+}
+
+impl From<Arc<AtomicBool>> for Gate {
+    fn from(signed_out: Arc<AtomicBool>) -> Self {
+        Self::new(signed_out, Arc::new(NoKeeper))
+    }
+}
+
 /// Remember that a server refused the sign-in it was given.
-pub(crate) fn note_sign_in(flag: &AtomicBool, error: &ServerError) {
+pub(crate) fn note_sign_in(gate: &Gate, error: &ServerError) {
     if error.needs_sign_in() {
-        flag.store(true, Ordering::Relaxed);
+        gate.refuse();
     }
 }
 
 /// Whether a server may be asked: not while its sign-in is known to be refused.
-pub(crate) fn signed_out_check(flag: &AtomicBool) -> std::result::Result<(), ProviderError> {
-    if flag.load(Ordering::Relaxed) {
+pub(crate) fn signed_out_check(gate: &Gate) -> std::result::Result<(), ProviderError> {
+    if gate.is_signed_out() {
         Err(ProviderError::Unavailable("signed out".into()))
     } else {
         Ok(())
@@ -338,12 +475,16 @@ pub(crate) async fn fetch_with(
 ) -> std::result::Result<Vec<u8>, PageError> {
     let mut request = http.request(reqwest::Method::GET, &page.url);
     for (name, value) in &page.headers {
+        // The sign-in is the server's own to add, and only on its origin.
+        if http.auth().header().is_some_and(|(own, _)| own.eq_ignore_ascii_case(name)) {
+            continue;
+        }
         request = request.header(name, value);
     }
-    let response = request
-        .send()
-        .await
-        .map_err(|e| PageError::Failed(ProviderError::Transport(describe_transport(&e))))?;
+    let response = http.fetch(request).await.map_err(|e| match e {
+        ServerError::Unreachable(why) => PageError::Failed(ProviderError::Transport(why)),
+        other => PageError::Failed(other.into()),
+    })?;
     let status = response.status().as_u16();
     if !(200..300).contains(&status) {
         return Err(PageError::Status(status));
@@ -369,5 +510,16 @@ mod tests {
         };
         assert!(matches!(answered(step).await, Err(ServerError::Parse(_))));
         assert_eq!(answered(async { Ok::<_, ServerError>(7) }).await, Ok(7));
+    }
+
+    #[test]
+    fn a_stated_page_count_is_kept_only_when_a_book_could_have_it() {
+        assert_eq!(MOST_PAGES as usize, kaeri_books::Limits::default().max_entries);
+        assert_eq!(pages_stated(0u32), None);
+        assert_eq!(pages_stated(1u32), Some(1));
+        assert_eq!(pages_stated(MOST_PAGES), Some(MOST_PAGES));
+        assert_eq!(pages_stated(MOST_PAGES + 1), None);
+        assert_eq!(pages_stated(u32::MAX), None);
+        assert_eq!(pages_stated(u64::MAX), None);
     }
 }

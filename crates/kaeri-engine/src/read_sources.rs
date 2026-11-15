@@ -56,8 +56,10 @@ pub(crate) mod added;
 pub(crate) mod pictures;
 pub use added::RECHECK;
 
-/// The id the folders answer to in the registry.
-pub const FOLDERS: &str = "folders";
+/// The id the folders answer to in the registry, and that their series are matched under.
+pub const FOLDERS: &str = kaeri_store::reading::FOLDERS_SOURCE;
+/// How often at most a folder scan says how far it has got: four times a second.
+pub const PROGRESS_EVERY: std::time::Duration = std::time::Duration::from_millis(250);
 const META_ORDER: &str = "reading.book_order";
 /// How long a source's word on how a series reads is kept before it is asked again.
 const HINT_KEPT: i64 = 7 * 24 * 3600;
@@ -65,6 +67,8 @@ const HINT_KEPT: i64 = 7 * 24 * 3600;
 const HINT_RETRY: i64 = 3600;
 /// How long the source has to say how a series reads, asked in the background.
 const HINT_WAIT: std::time::Duration = std::time::Duration::from_secs(20);
+/// The rest between two series asked for their names at launch, so no source is asked often.
+const NAME_PACE: std::time::Duration = std::time::Duration::from_secs(4);
 /// How long the reader's open waits for that answer, when none is kept and one is coming.
 const HINT_OPEN_WAIT: std::time::Duration = std::time::Duration::from_millis(1500);
 
@@ -99,6 +103,34 @@ fn kind_of(kind: Kind) -> BookServerKind {
         Kind::Komga => BookServerKind::Komga,
         Kind::Kavita => BookServerKind::Kavita,
         Kind::Opds => BookServerKind::Opds,
+    }
+}
+
+/// Keeps what a server's source learns about its sign-in while it runs.
+struct ServerKeeper {
+    id: String,
+    tokens: TokenStore,
+    store: Store,
+    write_back: crate::write_back::WriteBack,
+}
+
+impl kaeri_bookserver::Keeper for ServerKeeper {
+    fn renewed(&self, credential: &str) {
+        // A server removed while its source renewed has no sign-in to keep any more.
+        if !matches!(self.store.book_server(&self.id), Ok(Some(_))) {
+            return;
+        }
+        if let Err(e) = self.tokens.set(&secret_key(&self.id), credential) {
+            tracing::warn!(error = %e, "a book server's renewed sign-in was not kept");
+        }
+    }
+
+    fn refused(&self) {
+        match self.store.set_book_server_signed_out(&self.id, true) {
+            Ok(true) => self.write_back.publish(),
+            Ok(false) => {}
+            Err(e) => tracing::warn!(error = %e, "a book server's refusal was not kept"),
+        }
     }
 }
 
@@ -148,6 +180,20 @@ fn reach(path: Option<&str>, tree_uri: Option<&str>) -> Option<PathBuf> {
 }
 
 /// `10500` as `10.5`.
+/// A book file in a folder as a chapter. The series page's list and the shelf both make their
+/// chapter, and so its id, here: a place or a read mark made from either is the same chapter's
+/// in the other. A whole volume with no number of its own is "Volume 1", keyed by that, whatever
+/// the book calls itself.
+pub(crate) fn folder_chapter(
+    path: &str,
+    volume: Option<&str>,
+    number_milli: Option<i64>,
+    label: &str,
+) -> SourceChapter {
+    let number = number_milli.map(milli_label);
+    SourceChapter::of(path, volume, number.as_deref(), Some(label), label)
+}
+
 fn milli_label(milli: i64) -> String {
     let (whole, part) = (milli / 1000, milli % 1000);
     if part == 0 {
@@ -224,14 +270,8 @@ impl BookSource for FolderSource {
         Ok(files
             .into_iter()
             .map(|f| {
-                let number = f.number_milli.map(milli_label);
-                let mut chapter = SourceChapter::of(
-                    &f.path,
-                    f.volume.as_deref(),
-                    number.as_deref(),
-                    Some(&f.label),
-                    &f.label,
-                );
+                let mut chapter =
+                    folder_chapter(&f.path, f.volume.as_deref(), f.number_milli, &f.label);
                 chapter.page_count = f.pages;
                 chapter
             })
@@ -259,16 +299,48 @@ impl BookSource for FolderSource {
 /// that said so.
 type EmptyList = (std::time::Instant, Option<u64>);
 
+/// A source's answer to a chapter-list ask, once it has come.
+type ListAnswer =
+    tokio::sync::watch::Receiver<Option<Result<Vec<SourceChapter>, ProviderError>>>;
+
+/// The chapter lists being asked for now, by source and series, each with the
+/// [`BookSources::source_mark`] of the source asked: see [`BookSources::ask_list`].
+type ListsAsked = Arc<Mutex<HashMap<(String, String), (Option<u64>, ListAnswer)>>>;
+
+/// One chapter-list ask on its way: it leaves [`ListsAsked`] when it ends or is dropped, unless
+/// a newer ask has taken its place.
+struct ListTurn {
+    asked: ListsAsked,
+    key: (String, String),
+    mine: ListAnswer,
+}
+
+impl Drop for ListTurn {
+    fn drop(&mut self) {
+        let mut asked = self.asked.lock().unwrap_or_else(|e| e.into_inner());
+        if asked.get(&self.key).is_some_and(|(_, answer)| answer.same_channel(&self.mine)) {
+            asked.remove(&self.key);
+        }
+    }
+}
+
 /// Everything the Sources screen and the reading commands share. Cheap to clone.
 #[derive(Clone)]
 pub struct BookSources {
     pub registry: BookRegistry,
     store: Store,
     tokens: TokenStore,
-    client: reqwest::Client,
+    /// The client book servers are asked through: it follows no redirects, so the server's
+    /// own requests follow them a hop at a time and keep its sign-in on its origin.
+    servers: reqwest::Client,
     keep: PathBuf,
     flags: Arc<Mutex<HashMap<String, Arc<AtomicBool>>>>,
     scanning: Arc<Mutex<HashMap<String, Arc<AtomicU32>>>>,
+    /// The view as last built: a scan's progress is said on it, with only its counts changed.
+    shown: Arc<Mutex<Option<BookSourcesView>>>,
+    /// Folders whose scan stopped as they were removed, with whether that scan was to say what
+    /// came in: an undo scans them again.
+    stopped: Arc<Mutex<HashMap<String, Option<bool>>>>,
     removed: Arc<RwLock<HashSet<String>>>,
     undo: Arc<Mutex<HashMap<String, tokio::task::AbortHandle>>>,
     /// Servers signed in to and not added yet, with their sign-ins: in memory only.
@@ -277,6 +349,10 @@ pub struct BookSources {
     pub demo: kaeri_providers::reading_demo::ReadingDemo,
     /// The series whose sources are being asked how they read, by source and series.
     hint_lookups: Arc<Mutex<HashMap<(String, String), HintLookup>>>,
+    /// The sources lately not reached: when several fail that way at once, it is the network.
+    unreached: Unreached,
+    /// The chapter lists on their way from the sources: an ask of one meanwhile joins it.
+    lists_asked: ListsAsked,
     /// The series whose chapter list came back empty lately, by source and series, with the
     /// [`BookSources::source_mark`] of the source that said so: an empty answer is not kept, so
     /// this is what keeps a work from being read from it meanwhile.
@@ -316,21 +392,25 @@ impl BookSources {
     pub fn new(
         store: Store,
         tokens: TokenStore,
-        client: reqwest::Client,
+        http: &kaeri_net::HttpClient,
         paths: &kaeri_core::config::Paths,
     ) -> Self {
         let this = Self {
             registry: BookRegistry::new(),
             store,
             tokens,
-            client,
+            servers: http.sources().clone(),
             keep: paths.cache_dir.join("books"),
             flags: Arc::default(),
             scanning: Arc::default(),
+            shown: Arc::default(),
+            stopped: Arc::default(),
             removed: Arc::default(),
             undo: Arc::default(),
             pending: Arc::default(),
             hint_lookups: Arc::default(),
+            unreached: Unreached::default(),
+            lists_asked: Arc::default(),
             empty: Arc::default(),
             language: Arc::default(),
             show_volumes: Arc::default(),
@@ -341,7 +421,7 @@ impl BookSources {
             downloads: crate::downloads::books::BookDownloads::new(
                 paths.data_dir.join("book-downloads"),
             ),
-            exports: crate::export::Exports::new(paths.data_dir.join("exports")),
+            exports: crate::export::Exports::new(crate::export::dir_of(paths)),
             #[cfg(feature = "opds-feed")]
             feed: crate::export::feed::Feed::default(),
             write_back: crate::write_back::WriteBack::default(),
@@ -456,9 +536,29 @@ impl BookSources {
         }
     }
 
-    /// Ask `server` once more after it refused the sign-in.
+    /// Ask `server` once more after it refused the sign-in. Its row says signed in again while
+    /// it is asked, and says signed out again if it refuses once more.
     pub(crate) fn forget_refusal(&self, server: &str) {
         self.flag(server).store(false, Ordering::Relaxed);
+        if self.registry.get(server).is_some()
+            && let Err(e) = self.store.set_book_server_signed_out(server, false)
+        {
+            tracing::warn!(error = %e, "a book server's sign-in was not marked as tried again");
+        }
+    }
+
+    /// The sign-in state of `server`, with what its source tells about it kept: a renewed
+    /// sign-in goes to the secure store, a refusal to the server's row.
+    fn gate(&self, server: &str) -> kaeri_bookserver::Gate {
+        kaeri_bookserver::Gate::new(
+            self.flag(server),
+            Arc::new(ServerKeeper {
+                id: server.to_owned(),
+                tokens: self.tokens.clone(),
+                store: self.store.clone(),
+                write_back: self.write_back.clone(),
+            }),
+        )
     }
 
     fn put_server(&self, server: &BookServer) {
@@ -468,11 +568,13 @@ impl BookSources {
                 self.store.put_book_server(&BookServer { signed_out: true, ..server.clone() });
             return;
         };
-        let flag = self.flag(&server.id);
-        flag.store(server.signed_out, Ordering::Relaxed);
+        self.flag(&server.id).store(server.signed_out, Ordering::Relaxed);
+        if !server.signed_out {
+            self.downloads.signed_in(&self.store, &server.id, kaeri_store::now());
+        }
         let libraries = self.server_meta(&server.id).libraries;
         let built = kaeri_bookserver::source_with(
-            &self.client,
+            &self.servers,
             &Server {
                 id: &server.id,
                 name: &server.name,
@@ -482,7 +584,7 @@ impl BookSources {
             },
             &libraries,
             self.keep.clone(),
-            flag,
+            self.gate(&server.id),
         );
         if let Some(source) = built {
             self.registry.put(source);
@@ -547,6 +649,7 @@ impl BookSources {
         let removed = self.removed.read().unwrap_or_else(|e| e.into_inner()).clone();
         let scanning = self.scanning.lock().unwrap_or_else(|e| e.into_inner()).clone();
         let series = self.store.local_book_series().unwrap_or_default();
+        let files = self.store.local_book_file_counts().unwrap_or_default();
         let folders = self
             .store
             .book_folders()
@@ -584,8 +687,7 @@ impl BookSources {
                 medium: Medium::parse(&s.medium).unwrap_or(Medium::Manga),
                 work: s.work.clone().map(kaeri_core::books::WorkId::new),
                 matched_title: None,
-                files: u32::try_from(self.store.local_book_files(&s.id).map_or(0, |f| f.len()))
-                    .unwrap_or(u32::MAX),
+                files: files.get(&s.id).copied().unwrap_or(0),
                 kept: s.state == "kept",
             })
             .collect();
@@ -624,13 +726,28 @@ impl BookSources {
         for row in &mut plugin_rows {
             row.off = self.registry.is_off(&row.id);
         }
-        BookSourcesView {
+        let view = BookSourcesView {
             folders,
             groups,
             servers,
             plugins: plugin_rows,
             order: self.registry.ids(),
+        };
+        *self.shown.lock().unwrap_or_else(|e| e.into_inner()) = Some(view.clone());
+        view
+    }
+
+    /// The view as last built, with each folder being scanned showing what it has found so far:
+    /// what a scan's progress says, without building the view again. `None` before any view.
+    pub fn scan_progress(&self) -> Option<BookSourcesView> {
+        let mut view = self.shown.lock().unwrap_or_else(|e| e.into_inner()).clone()?;
+        let scanning = self.scanning.lock().unwrap_or_else(|e| e.into_inner());
+        for row in &mut view.folders {
+            if let Some(found) = scanning.get(&row.id) {
+                row.scan = BookFolderScan::Scanning { found: found.load(Ordering::Relaxed) };
+            }
         }
+        Some(view)
     }
 
     // -----------------------------------------------------------------------------------------
@@ -668,37 +785,71 @@ impl BookSources {
             available: usable,
         };
         self.store.put_book_folder(&row).ok()?;
+        self.stopped.lock().unwrap_or_else(|e| e.into_inner()).remove(&id);
         self.removed.write().unwrap_or_else(|e| e.into_inner()).remove(&id);
         Some((id, before.is_some() && !leaving))
     }
 
-    /// Scan one folder on a blocking thread, telling `progress` what it has found.
+    fn is_removed(&self, id: &str) -> bool {
+        self.removed.read().unwrap_or_else(|e| e.into_inner()).contains(id)
+    }
+
+    /// Scan one folder on a blocking thread. While it runs, `progress` is told when more has
+    /// been found, at most every [`PROGRESS_EVERY`] and never on the scan's own thread. A folder
+    /// removed meanwhile stops its scan, and nothing of it is kept.
     pub async fn scan_folder(
         &self,
         folder: Folder,
         now: i64,
         progress: impl Fn() + Send + 'static,
-    ) -> Option<kaeri_model::came_in::FolderReport> {
+    ) -> ScanEnd {
         let Some(path) = reach(folder.path.as_deref(), folder.tree_uri.as_deref()) else {
             tracing::info!("a book folder has no path and nothing opens it");
             let _ = self.store.set_book_folder_available(&folder.id, false);
-            return None;
+            return ScanEnd::Unread;
         };
         let found = Arc::new(AtomicU32::new(0));
         self.scanning
             .lock()
             .unwrap_or_else(|e| e.into_inner())
             .insert(folder.id.clone(), found.clone());
-        let counter = found.clone();
-        let scanned = tokio::task::spawn_blocking(move || {
-            library::scan(&path, &Nothing, &Limits::default(), &mut |n| {
-                counter.store(n, Ordering::Relaxed);
-                progress();
+        let ticker = {
+            let found = found.clone();
+            tokio::spawn(async move {
+                let mut every = tokio::time::interval(PROGRESS_EVERY);
+                every.set_missed_tick_behavior(tokio::time::MissedTickBehavior::Delay);
+                every.tick().await;
+                let mut said = 0;
+                loop {
+                    every.tick().await;
+                    let now = found.load(Ordering::Relaxed);
+                    if now != said {
+                        said = now;
+                        progress();
+                    }
+                }
             })
+        };
+        let counter = found.clone();
+        let (removed, id) = (self.removed.clone(), folder.id.clone());
+        let scanned = tokio::task::spawn_blocking(move || {
+            let stop = || removed.read().unwrap_or_else(|e| e.into_inner()).contains(&id);
+            library::scan_until(
+                &path,
+                &Nothing,
+                &Limits::default(),
+                &mut |n| counter.store(n, Ordering::Relaxed),
+                &stop,
+            )
         })
         .await;
+        // Stopped for good before the scan is said done, so no late count follows it.
+        ticker.abort();
+        let _ = ticker.await;
         self.scanning.lock().unwrap_or_else(|e| e.into_inner()).remove(&folder.id);
         match scanned {
+            Ok(Err(e)) if e.kind() == std::io::ErrorKind::Interrupted => ScanEnd::Stopped,
+            Ok(Ok(_)) if self.is_removed(&folder.id) => ScanEnd::Stopped,
             Ok(Ok(scan)) => {
                 let report = added::folder_report(&folder, &scan);
                 self.keep_folder_meta(&report);
@@ -706,9 +857,12 @@ impl BookSources {
                 if let Err(e) = self.store.replace_book_scan(&folder.id, &rows, now) {
                     tracing::warn!(error = %e, "the scan was not kept");
                 }
-                // Each series is findable by its work, so chapters and editions can be asked.
+                // Each series is findable by its work, so chapters and editions can be asked,
+                // and one of its own on this device is named by its folder.
                 for (series, _) in &rows {
                     if let Some(work) = &series.work {
+                        let medium = Medium::parse(&series.medium).unwrap_or(Medium::Manga);
+                        self.name_local(work, medium, &series.name, None, now);
                         let keep = matches!(
                             self.store.book_match_state(FOLDERS, &series.id),
                             Ok(Some((_, true)))
@@ -726,16 +880,16 @@ impl BookSources {
                         }
                     }
                 }
-                Some(report)
+                ScanEnd::Read(report)
             }
             Ok(Err(e)) => {
                 tracing::info!(error = %e, "a book folder could not be read");
                 let _ = self.store.set_book_folder_available(&folder.id, false);
-                None
+                ScanEnd::Unread
             }
             Err(e) => {
                 tracing::warn!(error = %e, "the folder scan stopped");
-                None
+                ScanEnd::Unread
             }
         }
     }
@@ -830,6 +984,17 @@ pub(crate) fn demo_tile(work: &kaeri_core::reading_demo::DemoWork) -> WorkTile {
         amount: None,
         started: None,
     }
+}
+
+/// How a folder's scan ended.
+#[derive(Debug)]
+pub enum ScanEnd {
+    /// What came in from it.
+    Read(kaeri_model::came_in::FolderReport),
+    /// It could not be read.
+    Unread,
+    /// It was removed while it was scanned: nothing of it was kept.
+    Stopped,
 }
 
 /// A scanned series as the store keeps it.
@@ -969,6 +1134,7 @@ pub fn command(
                     keeper.removed.write().unwrap_or_else(|e| e.into_inner()).remove(&forget);
                 if gone {
                     let _ = keeper.store.remove_book_folder(&forget);
+                    keeper.stopped.lock().unwrap_or_else(|e| e.into_inner()).remove(&forget);
                     changed(&tx);
                 }
                 keeper.undo.lock().unwrap_or_else(|e| e.into_inner()).remove(&forget);
@@ -984,8 +1150,17 @@ pub fn command(
             {
                 timer.abort();
             }
-            this.removed.write().unwrap_or_else(|e| e.into_inner()).remove(&id);
+            // Taken out of the removed under the lock a stopping scan holds as it looks, so a
+            // scan that stopped for the removal is either kept here or scans again by itself.
+            let stopped = {
+                let mut stopped = this.stopped.lock().unwrap_or_else(|e| e.into_inner());
+                this.removed.write().unwrap_or_else(|e| e.into_inner()).remove(&id);
+                stopped.remove(&id)
+            };
             publish();
+            if let Some(answer) = stopped {
+                rescan(this, Some(id), now, publish, tx, answer);
+            }
         }
         BookSourceCommand::FindMatch { group, query } => {
             // Matching needs the manga catalogue, which is not on this device yet.
@@ -1023,7 +1198,7 @@ pub fn command(
             let address = link.as_ref().map_or(address, |l| l.root.clone());
             tokio::spawn(async move {
                 let checked =
-                    kaeri_bookserver::check(&this.client, &address).await.map(|mut c| {
+                    kaeri_bookserver::check(&this.servers, &address).await.map(|mut c| {
                         if link.is_some() {
                             c.kind = Some(Kind::Kavita);
                         }
@@ -1123,11 +1298,38 @@ fn rescan(
             .collect();
         let scanned = !folders.is_empty();
         for folder in folders {
-            let tick = publish.clone();
+            let tick = {
+                let (this, tx, publish) = (this.clone(), tx.clone(), publish.clone());
+                move || match this.scan_progress() {
+                    Some(view) => {
+                        let _ = tx.send(Event::BookSources(BookSourceEvent::View(view)));
+                    }
+                    None => publish(),
+                }
+            };
             // What is said when the scan can't start or stops: the folder, and nothing found.
             let mut unread =
                 added::folder_report(&folder, &kaeri_books::library::Scan::default());
-            let found = this.scan_folder(folder, now, tick).await;
+            let found = loop {
+                match this.scan_folder(folder.clone(), now, tick.clone()).await {
+                    ScanEnd::Read(report) => break Some(Some(report)),
+                    ScanEnd::Unread => break Some(None),
+                    ScanEnd::Stopped => {
+                        let mut stopped =
+                            this.stopped.lock().unwrap_or_else(|e| e.into_inner());
+                        if this.is_removed(&folder.id) {
+                            // Nothing is said of a folder that was removed; an undo scans it.
+                            stopped.insert(folder.id.clone(), answer);
+                            break None;
+                        }
+                        // Brought back as the scan stopped: it is scanned again.
+                    }
+                }
+            };
+            let Some(found) = found else {
+                publish();
+                continue;
+            };
             if let Some(already) = answer {
                 let came = match found {
                     Some(mut found) => {
@@ -1181,8 +1383,9 @@ fn recheck(
     });
 }
 
-/// Every [`RECHECK`] once launch is over, look again at the servers that showed no series.
-/// Runs in AniList's paced background queue, after Home's first screen.
+/// Once launch is over, name the works of their own on this device that have no name yet
+/// ([`BookSources::name_unnamed`]); then every [`RECHECK`], look again at the servers that
+/// showed no series. Runs in AniList's paced background queue, after Home's first screen.
 pub fn spawn_rechecks(
     this: BookSources,
     anilist: kaeri_meta::AniList,
@@ -1191,6 +1394,11 @@ pub fn spawn_rechecks(
 ) {
     tokio::spawn(async move {
         anilist.launch_over().await;
+        // Works of their own on this device read before their names were kept are named first.
+        let named = kaeri_meta::in_background(this.name_unnamed(clock())).await;
+        if named > 0 {
+            changed(&tx);
+        }
         let mut every = tokio::time::interval(RECHECK);
         every.set_missed_tick_behavior(tokio::time::MissedTickBehavior::Delay);
         loop {
@@ -1224,12 +1432,12 @@ async fn sign_in(
         step,
         failure: server_failure(error, address),
     };
-    let found = match kaeri_bookserver::check(&this.client, address).await {
+    let found = match kaeri_bookserver::check(&this.servers, address).await {
         Ok(found) => found,
         Err(e) => return failed(ServerStep::Address, &e),
     };
     let done = match kaeri_bookserver::sign_in(
-        &this.client,
+        &this.servers,
         &found.address,
         found.kind,
         user,
@@ -1628,6 +1836,26 @@ fn source_row(
     row
 }
 
+/// How close together sources must fail to be reached for it to be the network's doing.
+const AT_ONCE: std::time::Duration = std::time::Duration::from_secs(5);
+
+/// The sources not reached lately, each with when. Several different sources failing that way
+/// within [`AT_ONCE`] of each other is the network, whatever each failure said: every request
+/// left the device and none came back, though the platform still says there is a network.
+#[derive(Debug, Clone, Default)]
+struct Unreached(Arc<Mutex<Vec<(String, std::time::Instant)>>>);
+
+impl Unreached {
+    /// Note `source` not reached now, and say whether another source was too, just before.
+    fn many_at_once(&self, source: &str) -> bool {
+        let now = std::time::Instant::now();
+        let mut lately = self.0.lock().unwrap_or_else(|e| e.into_inner());
+        lately.retain(|(other, at)| other != source && now.duration_since(*at) < AT_ONCE);
+        lately.push((source.to_owned(), now));
+        lately.len() > 1
+    }
+}
+
 /// Why asking a source failed. `source` is the name the person knows it by, as the words
 /// show it: [`BookSources::failure`] looks it up from an id.
 pub(crate) fn failure(source: &str, error: &ProviderError) -> ReadingFailure {
@@ -1636,8 +1864,12 @@ pub(crate) fn failure(source: &str, error: &ProviderError) -> ReadingFailure {
         ProviderError::Unavailable(_) => {
             ReadingFailure::SignInNeeded { what: source.to_owned() }
         }
-        // A source not reached is not answering: the device is offline only when the network
-        // says so, which [`BookSources::failure`] knows.
+        // A request that could not leave the device is the device's: no route past it, or no
+        // name server answering.
+        error if error.is_no_network() => ReadingFailure::Offline,
+        // Any other source not reached is not answering: the device is offline only when the
+        // network says so, or other sources fail the same way, which [`BookSources::failure`]
+        // knows.
         ProviderError::Transport(_) => ReadingFailure::SourceDown { source: source.to_owned() },
         ProviderError::Blocked(reason) => {
             ReadingFailure::Blocked { source: source.to_owned(), reason: reason.clone() }
@@ -1778,6 +2010,7 @@ impl BookSources {
                 work
             }
         };
+        self.name_local(&work, medium, &hit.title, hit.cover.as_deref(), now);
         Some(WorkTile {
             work: WorkId::new(work),
             title: hit.title,
@@ -1797,6 +2030,25 @@ impl BookSources {
         })
     }
 
+    /// The reading medium of a work no catalogue lists, as the sources that hold it declare:
+    /// the one it is read from first, then the person's order, the first that carries only
+    /// one. `None` when each carries more.
+    pub(crate) fn held_medium(&self, work: &WorkId) -> Option<Medium> {
+        let refs = self.store.book_refs_for_work(work.as_str()).unwrap_or_default();
+        let in_use = self.edition_of(work, None).map(|(source, _)| source);
+        let order = self.registry.ids();
+        let mut sources: Vec<String> = refs.into_iter().map(|(source, _)| source).collect();
+        sources.sort_by_key(|source| {
+            (Some(source) != in_use.as_ref(), order.iter().position(|id| id == source))
+        });
+        sources.into_iter().filter(|source| source != FOLDERS).find_map(|source| {
+            let manifest = self.registry.manifest(&source)?;
+            let mut reading = manifest.media.iter().copied().filter(|m| m.is_reading());
+            let first = reading.next()?;
+            reading.all(|m| m == first).then_some(first)
+        })
+    }
+
     /// Why asking `source` failed, naming it as the person knows it. A source switched off
     /// says so, rather than the sign-in its refusal would otherwise read as.
     pub(crate) fn failure(&self, source: &str, error: &ProviderError) -> ReadingFailure {
@@ -1804,7 +2056,15 @@ impl BookSources {
         if matches!(error, ProviderError::Unavailable(_)) && self.registry.is_off(source) {
             return ReadingFailure::SourceOff { source: name };
         }
+        if matches!(error, ProviderError::Transport(_)) && self.unreached.many_at_once(source) {
+            return ReadingFailure::Offline;
+        }
         self.offline_or(failure(&name, error))
+    }
+
+    /// Whether the device has no network, as its front end last said, followed as it moves.
+    pub(crate) fn connection(&self) -> tokio::sync::watch::Receiver<bool> {
+        self.write_back.connection()
     }
 
     /// A source that could not be reached while the network says there is none is offline,
@@ -2032,6 +2292,75 @@ impl BookSources {
         });
     }
 
+    /// Keep `title` as the name of `work` when it is a work of its own on this device, one no
+    /// catalogue lists, so every screen, download and send names it as its source or folder
+    /// does. A catalogue's work is left to the catalogue, and a demo work to the demo, whatever
+    /// source its series is matched to.
+    pub(crate) fn name_local(
+        &self,
+        work: &str,
+        medium: Medium,
+        title: &str,
+        cover: Option<&str>,
+        now: i64,
+    ) {
+        let title = title.trim();
+        let demo = kaeri_core::reading_demo::WORKS.iter().any(|w| w.work_id().as_str() == work);
+        if crate::read_catalog::tiles::anilist(work).is_some() || demo || title.is_empty() {
+            return;
+        }
+        if let Err(error) = self.store.name_local_work(work, medium.as_str(), title, cover, now)
+        {
+            tracing::warn!(%error, "a work's name was not kept");
+        }
+    }
+
+    /// Name the work `source`'s `series` is matched to from what the source said of it.
+    fn name_from(&self, source: &str, series: &str, detail: &SeriesDetail, now: i64) {
+        let Ok(Some(work)) = self.store.book_match(source, series) else { return };
+        let medium = self
+            .store
+            .book_work_kind(&work)
+            .ok()
+            .flatten()
+            .and_then(|kind| Medium::parse(&kind.medium))
+            .unwrap_or_else(|| self.hit_medium(source, &SeriesHit::new(series, ""), None, &[]));
+        self.name_local(&work, medium, &detail.title, detail.cover.as_deref(), now);
+    }
+
+    /// Name the works of their own on this device that were read or downloaded before their
+    /// names were kept, asking each one's source once, a few seconds apart, and none whose
+    /// source can't be asked. Answers how many were named.
+    pub(crate) async fn name_unnamed(&self, now: i64) -> usize {
+        let (mut named, mut asked_any) = (0, false);
+        let mut done: HashSet<String> = HashSet::new();
+        let unnamed = self.store.unnamed_local_works().unwrap_or_default();
+        for (work, source, series) in unnamed {
+            if done.contains(&work) || source == FOLDERS || !self.is_available(&source) {
+                continue;
+            }
+            if asked_any {
+                tokio::time::sleep(NAME_PACE).await;
+            }
+            asked_any = true;
+            let hints = BookHints::default();
+            let asked = self.registry.series(&source, &series, &hints, now);
+            match tokio::time::timeout(HINT_WAIT, asked).await {
+                Ok(Ok(detail)) => {
+                    self.name_from(&source, &series, &detail, now);
+                    done.insert(work);
+                    named += 1;
+                }
+                outcome => {
+                    if let Ok(Err(error)) = outcome {
+                        tracing::debug!(source, %error, "a work's name was not asked");
+                    }
+                }
+            }
+        }
+        named
+    }
+
     /// Ask the source how a series reads and keep the answer.
     async fn learn_hint(
         &self,
@@ -2043,7 +2372,10 @@ impl BookSources {
         let hints = BookHints::default();
         let asked = self.registry.series(source, series, &hints, now);
         let (hint, at) = match tokio::time::timeout(HINT_WAIT, asked).await {
-            Ok(Ok(detail)) => (detail.reading_hint.map(ReadingHint::as_str), now),
+            Ok(Ok(detail)) => {
+                self.name_from(source, series, &detail, now);
+                (detail.reading_hint.map(ReadingHint::as_str), now)
+            }
             // Asked again within the hour, keeping what it said before.
             outcome => {
                 if let Ok(Err(error)) = outcome {
@@ -2080,9 +2412,7 @@ impl BookSources {
             })
             .collect();
         let fetches = unknown.iter().map(|(source, series)| async move {
-            if let Ok(list) =
-                self.registry.chapters(source, series, &BookHints::default(), now).await
-            {
+            if let Ok(list) = self.ask_list(source, series, now).await {
                 self.note_list(source, series, &list);
                 crate::read_catalog::chapters::keep(&self.store, source, series, &list, now);
             }
@@ -2159,6 +2489,52 @@ impl BookSources {
         Some((row, groups))
     }
 
+    /// Ask `source` for a series' whole chapter list. While an ask of the same list is on its
+    /// way, from the source as it stands, this one waits for that answer rather than asking
+    /// again: a page opening lists a series once, whichever of its parts asks first. One that
+    /// goes without an answer (its task dropped) leaves the next ask to the source.
+    pub(crate) async fn ask_list(
+        &self,
+        source: &str,
+        series: &str,
+        now: i64,
+    ) -> Result<Vec<SourceChapter>, ProviderError> {
+        let key = (source.to_owned(), series.to_owned());
+        loop {
+            let mark = self.source_mark(source);
+            let turn = {
+                let mut asked = self.lists_asked.lock().unwrap_or_else(|e| e.into_inner());
+                match asked.get(&key) {
+                    Some((said_by, answer)) if *said_by == mark => Err(answer.clone()),
+                    _ => {
+                        let (tell, answer) = tokio::sync::watch::channel(None);
+                        asked.insert(key.clone(), (mark, answer.clone()));
+                        Ok((tell, answer))
+                    }
+                }
+            };
+            match turn {
+                Ok((tell, mine)) => {
+                    let _turn =
+                        ListTurn { asked: self.lists_asked.clone(), key: key.clone(), mine };
+                    let answer = self
+                        .registry
+                        .chapters(source, series, &BookHints::default(), now)
+                        .await;
+                    tell.send_replace(Some(answer.clone()));
+                    return answer;
+                }
+                Err(mut answer) => {
+                    let came =
+                        answer.wait_for(Option::is_some).await.ok().and_then(|a| a.clone());
+                    if let Some(came) = came {
+                        return came;
+                    }
+                }
+            }
+        }
+    }
+
     /// Ask the source for a series' whole list, put it in reading order and keep it.
     async fn fetch_list(
         &self,
@@ -2167,12 +2543,16 @@ impl BookSources {
         now: i64,
     ) -> Result<Vec<SourceChapter>, ReadingFailure> {
         self.note_listing(source, series, Some(Asked::Asking), now);
-        let asked = self.registry.chapters(source, series, &BookHints::default(), now).await;
+        let asked = self.ask_list(source, series, now).await;
         let mut chapters = match asked {
             Ok(chapters) => chapters,
             Err(e) => {
                 let failure = self.failure(source, &e);
-                self.note_listing(source, series, Some(Asked::Failed(failure.clone())), now);
+                // A list kept from before still stands: a refresh that failed never takes its
+                // place.
+                let kept = self.kept_source_list(source, series, now, i64::MAX).is_some();
+                let asked = (!kept).then(|| Asked::Failed(failure.clone()));
+                self.note_listing(source, series, asked, now);
                 return Err(failure);
             }
         };
@@ -2290,8 +2670,9 @@ impl BookSources {
         match self.open_found(&source, &series, found, now).await {
             Ok(opened) => Ok(opened),
             // The chapter as a kept list named it may have moved: the list is asked for again,
-            // once, unless the source could not be reached at all.
-            Err(e) if kept && !matches!(e, ProviderError::Transport(_)) => {
+            // once, when the source says it has no such chapter. A source that timed out or could
+            // not be reached is not asked for the whole series on top.
+            Err(e) if kept && matches!(e, ProviderError::NotFound) => {
                 tracing::debug!(error = %e, "a kept chapter did not open; listing again");
                 let (source, series, found, _) =
                     self.find_chapter(work, chapter, edition, now, false).await?;
@@ -2537,7 +2918,7 @@ impl BookSources {
         };
         self.registry
             .fetch_page(&at, pages, index, now, |page: PageRef| {
-                let client = self.client.clone();
+                let client = self.servers.clone();
                 async move { plain_fetch(&client, &page).await }
             })
             .await
@@ -2753,18 +3134,44 @@ fn one_shot(row: &ChapterRow) -> bool {
 }
 
 /// A page fetched with the engine's own client, for a source that does not fetch its own.
+///
+/// `client` follows no redirects: they are followed here, and a header of the page's that may
+/// carry a sign-in goes only to the page's own origin (scheme, host and port). The rest, such
+/// as a referrer, go along.
 async fn plain_fetch(
     client: &reqwest::Client,
     page: &PageRef,
 ) -> Result<Vec<u8>, kaeri_core::traits::PageError> {
     use kaeri_core::traits::PageError;
-    let mut request = client.get(&page.url).timeout(std::time::Duration::from_secs(30));
-    for (name, value) in &page.headers {
-        request = request.header(name, value);
-    }
-    let response = request.send().await.map_err(|_| {
-        PageError::Failed(ProviderError::Transport("the request failed".into()))
-    })?;
+    let failed = || PageError::Failed(ProviderError::Transport("the request failed".into()));
+    let origin = reqwest::Url::parse(&page.url).map_err(|_| failed())?.origin();
+    let mut at = page.url.clone();
+    let mut hops = 0;
+    let response = loop {
+        let mut request = client.get(&at).timeout(std::time::Duration::from_secs(30));
+        let home = reqwest::Url::parse(&at).is_ok_and(|u| u.origin() == origin);
+        for (name, value) in &page.headers {
+            if home || !kaeri_bookserver::signs_in(name) {
+                request = request.header(name, value);
+            }
+        }
+        let response = request
+            .send()
+            .await
+            .map_err(|e| PageError::Failed(kaeri_net::reach::transport(&e)))?;
+        let next = response.status().is_redirection().then(|| {
+            let to = response.headers().get(reqwest::header::LOCATION)?.to_str().ok()?;
+            let to = reqwest::Url::parse(&at).ok()?.join(to).ok()?;
+            matches!(to.scheme(), "http" | "https").then(|| to.to_string())
+        });
+        match next.flatten() {
+            Some(to) if hops < 10 => {
+                hops += 1;
+                at = to;
+            }
+            _ => break response,
+        }
+    };
     let status = response.status().as_u16();
     if !(200..300).contains(&status) {
         return Err(PageError::Status(status));
@@ -2848,5 +3255,92 @@ mod filled_tests {
         assert_eq!(filled(&mut here), ["x/-/oneshot", "1", "7"]);
         let mut none = vec![row("x/-/prologue", "Prologue", None, None)];
         assert_eq!(filled(&mut none), ["x/-/prologue", "0", "1", "7"]);
+    }
+}
+
+#[cfg(test)]
+mod reach_tests {
+    use super::*;
+
+    fn sources(dir: &std::path::Path) -> BookSources {
+        let paths = kaeri_core::config::Paths {
+            config_file: dir.join("config.toml"),
+            data_dir: dir.join("data"),
+            cache_dir: dir.join("cache"),
+        };
+        BookSources::new(
+            Store::open_in_memory().unwrap(),
+            TokenStore::new(dir.join("tokens")),
+            &kaeri_net::HttpClient::offline(&Default::default()).unwrap(),
+            &paths,
+        )
+    }
+
+    /// A request that could not leave the device reads as offline, though the platform still
+    /// says there is a network; a source that did not answer reads as down.
+    #[test]
+    fn no_network_is_offline_and_a_silent_source_is_down() {
+        let dir = tempfile::tempdir().unwrap();
+        let sources = sources(dir.path());
+        assert_eq!(
+            sources.failure("attic", &ProviderError::no_network("no route")),
+            ReadingFailure::Offline
+        );
+        let down = sources.failure("attic", &ProviderError::Transport("timed out".into()));
+        assert!(matches!(down, ReadingFailure::SourceDown { .. }), "{down:?}");
+        let down = failure("Attic", &ProviderError::Transport("connection refused".into()));
+        assert_eq!(down, ReadingFailure::SourceDown { source: "Attic".into() });
+    }
+
+    /// One source not answering, again and again, is that source. Two different sources not
+    /// reached at once is the network.
+    #[test]
+    fn several_sources_not_reached_at_once_is_offline() {
+        let dir = tempfile::tempdir().unwrap();
+        let sources = sources(dir.path());
+        let unreached = || ProviderError::Transport("connection reset".into());
+        for _ in 0..3 {
+            let down = sources.failure("attic", &unreached());
+            assert!(matches!(down, ReadingFailure::SourceDown { .. }), "{down:?}");
+        }
+        assert_eq!(sources.failure("cellar", &unreached()), ReadingFailure::Offline);
+        // A source that answered with a refusal is no sign of the network.
+        let other = sources.failure("loft", &ProviderError::NotFound);
+        assert_eq!(other, ReadingFailure::NotFound);
+    }
+}
+
+#[cfg(test)]
+mod held_back_tests {
+    use kaeri_plugin::host::{Capabilities, HostError, Request};
+
+    use super::*;
+
+    /// A page on a host the plugin's manifest leaves out is held back on the device, so the
+    /// words say the plugin isn't allowed to reach it, never that the source refused it.
+    #[test]
+    fn a_host_the_plugin_may_not_reach_reads_as_not_allowed_rather_than_refused() {
+        let caps = Capabilities::new(
+            "inkwell",
+            vec!["inkwell.example".into()],
+            kaeri_plugin::Limits::default(),
+            None,
+        );
+        let page = Request {
+            method: "GET".into(),
+            url: "https://pages.example/1/1.jpg".into(),
+            headers: Vec::new(),
+            body: None,
+        };
+        let Err(HostError::Denied(reason)) = caps.authorise(&page) else {
+            panic!("an off-list host is denied");
+        };
+        let said = failure("Inkwell", &ProviderError::Blocked(reason)).msg().english();
+        assert!(said.contains("isn't allowed to reach"), "{said}");
+        assert!(!said.contains("refused"), "{said}");
+
+        let refused = ProviderError::Blocked("slow down".into());
+        let said = failure("Inkwell", &refused).msg().english();
+        assert!(said.contains("refused"), "a source's own refusal keeps its words: {said}");
     }
 }

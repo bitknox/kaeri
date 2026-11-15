@@ -16,6 +16,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
@@ -51,8 +52,10 @@ private fun device(context: Context): BugReportDevice {
 private fun ReportPage(store: AppStore, ticked: List<String>) {
     val context = LocalContext.current
     val device = device(context)
-    val url = BugReports.urlCapped(device, store.providers.rows.value, store.notices.log.value.firstOrNull { it.isAlert }?.let { BugContext("message", it.notice.text.orEmpty()) }, ticked, TV_REPORT_BYTES)
-    val text = BugReports.text(device, store.providers.rows.value, null, ticked)
+    val providers by store.providers.rows.collectAsStateWithLifecycle()
+    val log by store.notices.log.collectAsStateWithLifecycle()
+    val url = BugReports.urlCapped(device, providers, log.firstOrNull { it.isAlert }?.let { BugContext("message", it.notice.text.orEmpty()) }, ticked, TV_REPORT_BYTES)
+    val text = BugReports.text(device, providers, null, ticked)
     Row(horizontalArrangement = Arrangement.spacedBy(32.dp), verticalAlignment = Alignment.Top) {
         QrCode(url, label = stringResource(R.string.report_tv_scan))
         Column(Modifier.widthIn(max = 520.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -71,6 +74,7 @@ internal fun CrashRows(store: AppStore) {
     val saving = store.settings.isOn(SettingKey.SAVE_CRASH_REPORTS, view)
     val actions = LocalActions.current
     val context = LocalContext.current
+    val resources = LocalResources.current
     LaunchedEffect(saving) { store.crashes.refresh() }
     Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
         TvListRow(
@@ -102,7 +106,7 @@ internal fun CrashRows(store: AppStore) {
             stringResource(R.string.about_report_bug),
             onClick = {
                 val ids = if (saving) saved.map { it.id }.take(1) else emptyList()
-                actions?.open(ActionSheet(context.getString(R.string.report_title), width = 720.dp, body = { ReportPage(store, ids) }))
+                actions?.open(ActionSheet(resources.getString(R.string.report_title), width = 720.dp, body = { ReportPage(store, ids) }))
             },
             supporting = if (saving) null else stringResource(R.string.report_crash_off),
             supportingLines = 2,

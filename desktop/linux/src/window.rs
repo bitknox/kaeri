@@ -89,6 +89,8 @@ pub struct Ctx {
     pub read_from_home: Cell<bool>,
     /// The View all that opened it, for focus to return to on Back.
     pub read_view_all_from: RefCell<Option<glib::WeakRef<gtk::Widget>>>,
+    /// Reading's Search field open with the caret in it, as the shows' `SearchPage::focus`.
+    pub read_search_focus: RefCell<Option<Rc<dyn Fn()>>>,
 }
 
 /// Opens reading's Search on a query.
@@ -404,6 +406,7 @@ impl Shell {
             pick: RefCell::default(),
             read_view_all: RefCell::default(),
             read_view_all_from: RefCell::default(),
+            read_search_focus: RefCell::default(),
             read_from_home: Cell::new(false),
         });
 
@@ -620,9 +623,14 @@ impl Shell {
         if ctx.split.is_collapsed() {
             ctx.split.set_show_sidebar(false);
         }
-        // The Shows side's field, only while that side shows.
+        // Search's field, on whichever side shows. View all leaves the keyboard on its Back.
         if shown == Dest::Search {
             self.search.focus();
+        } else if shown == Dest::ReadSearch && !ctx.read_from_home.get() {
+            let focus = ctx.read_search_focus.borrow().clone();
+            if let Some(focus) = focus {
+                focus();
+            }
         }
     }
 
@@ -1589,6 +1597,10 @@ impl Shell {
 
     /// Tell the engine where the network stands, now and as it changes: offline without a
     /// route past the local network, and a metered connection as a constrained one.
+    /// Limited is never offline by itself: it comes from a connectivity check that ran and
+    /// failed, and a privacy DNS or firewall that blocks the check's host gives it while every
+    /// real fetch works. A request that fails is left to the engine to tell the network from
+    /// the source.
     fn watch_network(&self) {
         let monitor = gio::NetworkMonitor::default();
         let told: Rc<Cell<Option<(bool, bool)>>> = Rc::default();

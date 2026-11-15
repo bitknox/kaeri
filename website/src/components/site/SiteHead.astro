@@ -43,13 +43,15 @@ const { t, alternates } = useSite(Astro);
 <link rel="icon" href="/favicon.ico" sizes="16x16 32x32 48x48" />
 <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
 <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
-<meta name="theme-color" content="#f0ede4" />
+<meta name="theme-color" media="(prefers-color-scheme: light)" content="#f0ede4" />
+<meta name="theme-color" media="(prefers-color-scheme: dark)" content="#10131f" />
 <script is:inline>
-	// Light, unless the visitor picked dark. The docs' ThemeProvider override does the same.
+	// The system's theme, unless the visitor picked one with the switch. The docs' ThemeProvider
+	// override does the same. Without a script the page is light.
 	document.documentElement.classList.add('js');
 	try {
-		document.documentElement.dataset.theme = localStorage.getItem('starlight-theme') === 'dark' ? 'dark' : 'light';
-	} catch (e) {
-		document.documentElement.dataset.theme = 'light';
-	}
+		var picked = localStorage.getItem('starlight-theme');
+	} catch (e) {}
+	document.documentElement.dataset.theme =
+		picked === 'dark' || picked === 'light' ? picked : matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
 </script>

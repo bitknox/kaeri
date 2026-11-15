@@ -53,13 +53,21 @@ pub struct Wait {
 }
 
 impl Wait {
-    fn asked(at: Instant) -> Self {
+    pub(super) fn asked(at: Instant) -> Self {
         Self { asked: Some(at), landed: None }
     }
 
     /// The answer came. The first answer counts; later ones only change what is drawn.
-    fn land(&mut self, at: Instant) {
+    pub(super) fn land(&mut self, at: Instant) {
         self.landed.get_or_insert(at);
+    }
+
+    /// How long a part still on its way has been asked for; `None` once it has come.
+    pub fn since(&self, now: Instant) -> Option<Duration> {
+        match (self.asked, self.landed) {
+            (Some(asked), None) => Some(now.saturating_duration_since(asked)),
+            _ => None,
+        }
     }
 
     /// Whether the placeholder shows now, for a part still on its way: from 600 ms after it was
@@ -106,6 +114,8 @@ pub struct Reading {
     pub home: Option<ReadingHomeView>,
     /// Home asked for, so its loading line waits before it shows and then holds.
     pub home_wait: Wait,
+    /// The series page, while one is open or was last.
+    pub series: Option<super::series::SeriesPage>,
     /// Each of Home's rows that came still on its way, by row id.
     pub row_waits: HashMap<String, Wait>,
     /// The filters the next search carries, its words aside. Sticky across queries, as the
@@ -186,6 +196,8 @@ pub enum ReadLine {
         fresh: bool,
         /// Whether `a` puts it on Planning: a discovery row's title or an AniList result.
         plannable: bool,
+        /// A title in Continue: Enter opens the chapter where reading stopped, `e` its page.
+        continues: bool,
         part: Part,
     },
     /// View all under a Home shelf: Search with the shelf's filters, under the shelf's name.
@@ -507,11 +519,22 @@ impl App {
                     reading.anilist_wait.land(now);
                 }
             }
-            // Opening a series is the one other thing asked from here.
+            ReadingEvent::Series(view) => self.take_series(*view),
+            ReadingEvent::Chapters { work, edition, volumes, failure } => {
+                self.reader_chapters(&work, &volumes);
+                self.take_chapters(&work, edition, volumes, failure);
+            }
+            ReadingEvent::Tracking { work, rows } => self.take_tracking(&work, rows),
+            ReadingEvent::Failed { about: ReadingAbout::Chapters, failure } => {
+                self.series_failed(&failure, true);
+            }
             ReadingEvent::Failed { about: ReadingAbout::Series, failure }
                 if self.reading_only() || self.both() =>
             {
-                self.push_toast(alert(say(&failure.msg())));
+                self.series_failed(&failure, false);
+            }
+            ReadingEvent::Failed { about: ReadingAbout::Reader, failure } => {
+                self.reader_failed(failure);
             }
             _ => {}
         }
@@ -611,11 +634,11 @@ impl App {
         }
         let mut shelf = 0;
         let own = [
-            (t::home_continue(), &view.continue_reading),
-            (t::home_this_week(), &view.this_week),
-            (t::home_up_next(), &view.up_next),
+            (t::home_continue(), &view.continue_reading, true),
+            (t::home_this_week(), &view.this_week, false),
+            (t::home_up_next(), &view.up_next, false),
         ];
-        for (title, tiles) in own {
+        for (title, tiles, continues) in own {
             if tiles.is_empty() {
                 continue;
             }
@@ -624,7 +647,10 @@ impl App {
             }
             lines.push(ReadLine::Shelf { title, side: None });
             lines.extend(
-                tiles.iter().take(SHELF_TILES).map(|tile| home_tile(tile, shelf, None, false)),
+                tiles
+                    .iter()
+                    .take(SHELF_TILES)
+                    .map(|tile| home_tile(tile, shelf, None, false, continues)),
             );
             shelf += 1;
         }
@@ -658,7 +684,7 @@ impl App {
                 row.tiles
                     .iter()
                     .take(SHELF_TILES)
-                    .map(|tile| home_tile(tile, shelf, Some(row), !tile.demo)),
+                    .map(|tile| home_tile(tile, shelf, Some(row), !tile.demo, false)),
             );
             if let Some(query) = &row.view_all {
                 lines.push(ReadLine::ViewAll {
@@ -771,6 +797,7 @@ impl App {
                             joined,
                             fresh: false,
                             plannable: !tile.demo,
+                            continues: false,
                             part: Part::Anilist,
                         });
                     }
@@ -840,6 +867,7 @@ impl App {
                             joined: None,
                             fresh: false,
                             plannable: false,
+                            continues: false,
                             part: Part::Sources,
                         });
                     }
@@ -928,6 +956,13 @@ impl App {
                 Some(None)
             }
             Action::SetListStatus if on_stage => Some(self.plan_read_line()),
+            Action::ShowEpisodes if on_stage => match self.read_selected() {
+                Some(ReadLine::Work { work, .. }) => Some(self.open_series(work)),
+                _ => {
+                    self.works_elsewhere(action);
+                    Some(None)
+                }
+            },
             _ if action.acts_on_a_title() => {
                 self.works_elsewhere(action);
                 Some(None)
@@ -943,12 +978,9 @@ impl App {
             return None;
         };
         match line {
-            // The terminal has no reader: the series opens in the apps. Asking for it still
-            // tells the engine whether a source has it, which Home says next time.
-            ReadLine::Work { work, .. } => {
-                self.push_toast(info(t::tui_read_opens_in_apps()));
-                Some(Command::Reading(ReadingCommand::LoadSeries { work }))
-            }
+            // A title in Continue opens where reading stopped; any other its series page.
+            ReadLine::Work { work, continues: true, .. } => self.open_reader(work, None),
+            ReadLine::Work { work, .. } => self.open_series(work),
             ReadLine::ViewAll { query, title, .. } => {
                 let query = *query;
                 self.set_text(Field::Search, query.text.clone());
@@ -1141,6 +1173,7 @@ fn home_tile(
     shelf: usize,
     row: Option<&ReadHomeRow>,
     plannable: bool,
+    continues: bool,
 ) -> ReadLine {
     let facts = if tile.not_in_sources {
         t::home_not_found()
@@ -1156,6 +1189,7 @@ fn home_tile(
         joined: None,
         fresh: tile.new_chapter && !tile.not_in_sources,
         plannable,
+        continues,
         part: Part::Shelf(shelf),
     }
 }
@@ -2119,7 +2153,7 @@ mod tests {
     }
 
     #[test]
-    fn enter_on_a_result_asks_for_the_series_and_says_where_it_reads() {
+    fn enter_on_a_result_opens_its_series_page() {
         let mut a = searched();
         // The results answer the query as typed, so Enter in the field opens the first.
         let task = a.handle(Action::Open, 10);
@@ -2127,14 +2161,16 @@ mod tests {
             task,
             Some(Command::Reading(ReadingCommand::LoadSeries { work: WorkId::new("a:1") }))
         );
-        assert!(!a.toasts.is_empty());
+        assert_eq!(a.nav.current(), &StageView::Series(WorkId::new("a:1")));
     }
 
     #[test]
     fn title_keys_say_they_work_elsewhere_rather_than_acting_on_a_hidden_show() {
         let mut a = searched();
         a.handle(Action::Down, 10);
-        assert_eq!(a.handle(Action::ShowEpisodes, 10), None);
+        // `e` is the series page here, so a key that acts on a show stands in.
+        assert_eq!(a.handle(Action::RateTitle, 10), None);
+        assert!(!a.toasts.is_empty());
         assert!(a.selected_entry().is_none());
     }
 }

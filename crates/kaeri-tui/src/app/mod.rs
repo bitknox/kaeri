@@ -52,7 +52,12 @@ mod notices;
 mod overlays;
 mod playback;
 mod providers;
+mod reader;
+mod reader_novel;
+mod reader_settings;
+mod reader_view;
 mod reading;
+mod series;
 mod settings;
 mod stores;
 mod text;
@@ -76,9 +81,26 @@ pub use self::{
     overlays::{FrameReport, PALETTE_ROWS},
     playback::NowPlaying,
     providers::proxy_badge,
+    reader::{
+        CHROME_ROWS, EndFacts, MIN_COLUMNS, MIN_ROWS, PLATE_AFTER, PageJob, PartKey, Reader,
+        ReaderScreen, SECONDS_AFTER, ShownNotice, TWO_PAGE_ROWS,
+    },
+    reader_novel::{
+        NovelFrame, NovelProgress, NovelReading, OPEN_AMOUNT, OPEN_SPACING, TEXT_MARGIN,
+        TEXT_WIDTH, TEXT_WIDTH_MIN, TEXT_WIDTH_STEP, TIGHT_AMOUNT,
+    },
+    reader_settings::{SettingItem, SettingPlace, SettingShown},
+    reader_view::{
+        CanvasBox, DIVIDER_ROWS, FIT_MARGIN, Piece, StripItem, StripLayout, Viewport,
+        ZOOM_PANEL, Zoom, stage_of, strip_cols,
+    },
     reading::{
-        AnilistState, GROUP_HITS, Part, ReadLine, Reading, read_filter_labels,
-        read_filter_summary, read_filter_value, read_query_blank,
+        AnilistState, GROUP_HITS, LOADING_LINE_AFTER, Part, ReadLine, Reading,
+        read_filter_labels, read_filter_summary, read_filter_value, read_query_blank,
+    },
+    series::{
+        READ_LISTS, SeriesPage, action_words, chapter_line, chapter_name, downloaded,
+        read_list_name, series_facts,
     },
     settings::SettingLine,
     stores::{MemberLine, PluginChoice, StoreConfirm, StoreLine},
@@ -87,6 +109,7 @@ pub use self::{
 pub(crate) use self::{
     devices::{is_drive, service_line, service_name},
     episodes::countdown_text,
+    reader::reader_hints,
     title::{push_detail, status_text, watch_order, watched_all},
 };
 
@@ -393,6 +416,18 @@ pub struct App {
     pub publish_for: Option<String>,
     /// Reading's Home and Search, while this computer is set to reading alone.
     pub reading: Reading,
+    /// The reader, from its open until it is left.
+    pub reader: Option<Reader>,
+    /// Page files waiting to be decoded: see [`App::take_page_jobs`].
+    page_jobs: Vec<PageJob>,
+    /// The blocks notice has been given in this run.
+    blocks_said: bool,
+    /// The blocks notice waits for the status rule to be free.
+    blocks_owed: bool,
+    /// The window's size, as the last frame was drawn.
+    pub window: Option<(u16, u16)>,
+    /// The engine says the computer is offline.
+    pub offline: bool,
 }
 
 impl App {
@@ -527,6 +562,12 @@ impl App {
             local_plugins: Vec::new(),
             publish_for: None,
             reading: Reading::default(),
+            reader: None,
+            page_jobs: Vec::new(),
+            blocks_said: false,
+            blocks_owed: false,
+            window: None,
+            offline: false,
         }
     }
 
@@ -598,7 +639,8 @@ impl App {
             Event::BookSources(kaeri_model::book_sources::BookSourceEvent::View(view)) => {
                 self.apply_book_sources(&view)
             }
-            Event::Reader(_) | Event::BookSources(_) => {}
+            Event::Reader(event) => self.apply_reader(event),
+            Event::BookSources(_) => {}
             Event::Medium(view) => self.apply_medium(view),
             Event::Content { view, content } => self.apply_content(view, content),
             // Up next for you is a section of Home now; it is not asked for on its own.
@@ -662,7 +704,7 @@ impl App {
             | Event::PartyLastOut { .. } => {}
             // A native app's network monitor, which the terminal has none of: it never says the
             // path, so the engine never says it changed.
-            Event::Connectivity { .. } => {}
+            Event::Connectivity { offline } => self.reader_connectivity(offline),
             // Trailers play in the native apps' web views, and the terminal has none.
             Event::Autoplay(_) => {}
             Event::Seeding(rows) => self.seeding = rows,

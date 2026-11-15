@@ -33,6 +33,8 @@ pub struct Screen {
     pub handheld: bool,
     /// A phone, not a tablet.
     pub phone: bool,
+    /// The terminal app, which lays a novel's text out itself: the text width shows.
+    pub terminal: bool,
 }
 
 impl Screen {
@@ -44,7 +46,13 @@ impl Screen {
             panel_modes: profile.is_some_and(|p| p.panel_modes),
             handheld,
             phone,
+            terminal: false,
         }
+    }
+
+    /// The screen of the terminal app, or of an app.
+    pub fn with_terminal(self, terminal: bool) -> Self {
+        Self { terminal, ..self }
     }
 
     fn colour_eink(self) -> bool {
@@ -101,10 +109,17 @@ pub fn default_for(key: Key, medium: Medium, screen: Screen) -> ReaderValue {
         Key::PageLayout => choice("auto"),
         Key::Spreads => choice("split"),
         Key::TextSize | Key::Margins | Key::Contrast => amount(1.0),
+        // A terminal reads the spacing as a blank line between paragraphs or none, and starts
+        // with the blank line: its Open.
+        Key::LineSpacing if medium == Medium::Novel && screen.terminal => amount(1.8),
         Key::LineSpacing => {
             amount(if medium == Medium::Novel && screen.phone { 1.6 } else { 1.4 })
         }
-        Key::Justify => on(medium == Medium::Novel && (screen.eink.is_some() || !screen.phone)),
+        // A terminal justifies by widening the spaces a whole cell at a time, which leaves
+        // rivers through the text, so it starts ragged.
+        Key::Justify => on(medium == Medium::Novel
+            && !screen.terminal
+            && (screen.eink.is_some() || !screen.phone)),
         Key::TapLayout => choice("edges"),
         // E-ink and the desktop start on Sides; a phone or a tablet on Auto, so vertical paging
         // gets zones that point down.
@@ -135,6 +150,8 @@ pub fn default_for(key: Key, medium: Medium, screen: Screen) -> ReaderValue {
         // Paper mode's parts, on by default inside it; the page's white dimmed a little.
         Key::PaperInstant | Key::PaperLook | Key::PaperVolume => on(true),
         Key::PaperDim => amount(0.3),
+        // A measure that reads well: about 66 characters a line.
+        Key::TextWidth => amount(66.0),
     }
 }
 
@@ -164,6 +181,7 @@ pub fn shown(key: Key, medium: Medium, screen: Screen) -> bool {
         Key::TapScroll => screen.eink.is_none(),
         Key::SwipeTurns => screen.eink.is_some(),
         Key::TapLayout => false,
+        Key::TextWidth => screen.terminal,
         _ => true,
     }
 }
@@ -704,6 +722,7 @@ mod tests {
             panel_modes: false,
             handheld: true,
             phone: true,
+            terminal: false,
         };
         let rows = keys(Medium::Manga, kaleido);
         assert!(rows.contains(&Key::RainbowFilter) && rows.contains(&Key::RefreshText));
@@ -863,6 +882,58 @@ mod tests {
     }
 
     #[test]
+    fn the_text_width_shows_in_the_terminal_and_stays_on_the_device() {
+        let dir = tempfile::tempdir().unwrap();
+        let paths = kaeri_core::config::Paths {
+            config_file: dir.path().join("config.toml"),
+            data_dir: dir.path().join("data"),
+            cache_dir: dir.path().join("cache"),
+        };
+        let mut config = crate::config::ConfigState::new(
+            kaeri_core::config::Config::default(),
+            None,
+            &paths,
+        );
+        let store = Store::open_in_memory().unwrap();
+        let terminal = Screen::default().with_terminal(true);
+        let shows = |reading: &ReadingConfig, medium, screen| {
+            Layers::read(&store, reading, medium, None, screen)
+                .rows()
+                .iter()
+                .any(|r| r.key == Key::TextWidth)
+        };
+        let reading = config.effective().reading.clone();
+        assert!(shows(&reading, Medium::Novel, terminal));
+        assert!(!shows(&reading, Medium::Manga, terminal), "manga has no text to measure");
+        let phone = Screen { handheld: true, phone: true, ..Screen::default() };
+        for screen in [Screen::default(), phone] {
+            assert!(
+                !shows(&reading, Medium::Novel, screen),
+                "the apps lay text out in a web view"
+            );
+        }
+        let row =
+            Layers::read(&store, &reading, Medium::Novel, None, terminal).row(Key::TextWidth);
+        assert_eq!(row.value, ReaderValue::Amount { value: 66.0 });
+        assert_eq!(row.scope, SettingScope::Device);
+        assert!(Key::TextWidth.series_scope().is_none() && !Key::TextWidth.syncs());
+        // Only the terminal reads it: it neither lays pages out again nor restyles the web view.
+        assert!(!relays(Key::TextWidth));
+
+        let value = ReaderValue::Amount { value: 80.0 };
+        let scope = Key::TextWidth.home_scope();
+        set(&mut config, &paths, &store, Medium::Novel, None, Key::TextWidth, scope, &value, 1)
+            .unwrap();
+        let reading = config.effective().reading.clone();
+        let row =
+            Layers::read(&store, &reading, Medium::Novel, None, terminal).row(Key::TextWidth);
+        assert_eq!(row.value, value);
+        assert_eq!(row.scope, SettingScope::Device);
+        let text = std::fs::read_to_string(&paths.config_file).unwrap();
+        assert!(text.contains("[reading.novel]") && text.contains("text_width = 80"), "{text}");
+    }
+
+    #[test]
     fn novel_text_is_justified_unless_the_screen_is_a_phone() {
         let store = Store::open_in_memory().unwrap();
         let config = ReadingConfig::default();
@@ -877,5 +948,23 @@ mod tests {
         assert!(justified(Medium::Novel, Screen::default()));
         assert!(justified(Medium::Novel, eink_phone));
         assert!(!justified(Medium::Manga, tablet));
+        let terminal = Screen::default().with_terminal(true);
+        assert!(!justified(Medium::Novel, terminal), "a terminal starts ragged");
+    }
+
+    #[test]
+    fn a_terminal_starts_novels_open_and_the_apps_keep_their_spacing() {
+        let store = Store::open_in_memory().unwrap();
+        let config = ReadingConfig::default();
+        let spacing = |medium, screen| {
+            Layers::read(&store, &config, medium, None, screen).amount(Key::LineSpacing)
+        };
+        let terminal = Screen::default().with_terminal(true);
+        let phone = Screen { handheld: true, phone: true, ..Screen::default() };
+        let tablet = Screen { handheld: true, ..Screen::default() };
+        assert_eq!(spacing(Medium::Novel, terminal), 1.8, "a blank line between paragraphs");
+        assert_eq!(spacing(Medium::Novel, Screen::default()), 1.4);
+        assert_eq!(spacing(Medium::Novel, tablet), 1.4);
+        assert_eq!(spacing(Medium::Novel, phone), 1.6);
     }
 }

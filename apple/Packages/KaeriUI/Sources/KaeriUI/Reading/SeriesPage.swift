@@ -174,8 +174,22 @@ struct SeriesPage: View {
     @Environment(\.horizontalSizeClass) private var sizeClass
     #endif
     let work: String
-    @State private var choosing: Set<String>?
-    @State private var newestFirst = true
+    /// The chapters chosen while chapters are being chosen, and the list's order. Navigator
+    /// holds them for the page's visit, so an iPad window made narrow or wide keeps them.
+    private var choosing: Set<String>? {
+        get { navigator.seriesPages[work]?.choosing }
+        nonmutating set { navigator.seriesPages[work, default: SeriesPageState()].choosing = newValue }
+    }
+    private var newestFirst: Bool {
+        get { navigator.seriesPages[work]?.newestFirst ?? true }
+        nonmutating set { navigator.seriesPages[work, default: SeriesPageState()].newestFirst = newValue }
+    }
+    private var choosingBinding: Binding<Set<String>?> {
+        Binding(get: { choosing }, set: { choosing = $0 })
+    }
+    private var newestFirstBinding: Binding<Bool> {
+        Binding(get: { newestFirst }, set: { newestFirst = $0 })
+    }
     /// The heading has scrolled under the bar: the bar takes the title, as the title page does.
     @State private var headingGone = false
     /// The reader's place, which VoiceOver and the keyboard start on as Choose chapters opens.
@@ -205,9 +219,9 @@ struct SeriesPage: View {
             VStack(alignment: .leading, spacing: 0) {
                 if let series {
                     if wide {
-                        WideSeriesHeader(series: series, choosing: $choosing)
+                        WideSeriesHeader(series: series, choosing: choosingBinding)
                     } else {
-                        PhoneSeriesHeader(series: series, choosing: $choosing)
+                        PhoneSeriesHeader(series: series, choosing: choosingBinding)
                     }
                     if case .send? = navigator.seriesSheet {} else { SendStatusRows(work: work) }
                     if let demo = series.demo {
@@ -216,7 +230,7 @@ struct SeriesPage: View {
                             .padding(.top, wide ? 32 : 24)
                     } else {
                         SeriesChapters(series: series, chapters: store.reading.chapters[work],
-                                       choosing: $choosing, newestFirst: $newestFirst,
+                                       choosing: choosingBinding, newestFirst: newestFirstBinding,
                                        spoken: $spokenRow, keyed: $keyedRow)
                             .padding(.top, wide ? 32 : 24)
                     }
@@ -324,7 +338,7 @@ struct SeriesPage: View {
             for _ in 0..<30 where store.reading.chapters[work] == nil {
                 try? await Task.sleep(for: .milliseconds(100))
             }
-            SeriesChoosing.enter($choosing, store.reading.chapters[work])
+            SeriesChoosing.enter(choosingBinding, store.reading.chapters[work])
             // Taken once the bar is up, so the snapshot waits for it.
             try? await Task.sleep(for: .milliseconds(500))
             navigator.launchSheet = nil
@@ -372,7 +386,7 @@ struct SeriesPage: View {
             } else if !wide {
                 // A wide page has More in its action row.
                 ToolbarItem(placement: .topBarTrailing) {
-                    if let series { SeriesMoreMenu(series: series, choosing: $choosing) }
+                    if let series { SeriesMoreMenu(series: series, choosing: choosingBinding) }
                 }
             }
         }
@@ -392,7 +406,7 @@ enum SeriesChoosing {
     static func start(_ chapters: ReadChapters?) -> Set<String> {
         let rows = chapters?.volumes.flatMap(\.chapters) ?? []
         let at = at(rows) ?? 0
-        let wanted = { (row: ChapterRow) in row.state != .read && row.download == nil }
+        let wanted = { (row: ChapterRow) in row.state != .read && row.downloadable }
         let after = rows[min(at, rows.count)...].filter(wanted)
         let next = after.isEmpty ? rows.filter(wanted) : after
         return Set(next.prefix(ahead).map(\.id))
@@ -421,11 +435,23 @@ enum SeriesChoosing {
         WindowCrossfade.run { WindowCrossfade.still { choosing.wrappedValue = chosen } }
     }
 
+    /// Whether Download has anything to do: a chapter to download, or one downloaded. A folder's
+    /// series has neither, and its Download rests.
+    static func hasDownloads(_ chapters: ReadChapters?) -> Bool {
+        (chapters?.volumes ?? []).flatMap(\.chapters).contains { $0.downloadable || $0.download != nil }
+    }
+
     /// All unread, in the bar.
     static func unread(_ chapters: ReadChapters?) -> Set<String> {
         let rows = chapters?.volumes.flatMap(\.chapters) ?? []
         return Set(rows.filter { $0.state != .read }.map(\.id))
     }
+}
+
+extension ChapterRow {
+    /// Whether Download is offered for the chapter: not here or on its way, and not a file on
+    /// this device, as a folder's chapters are.
+    var downloadable: Bool { download == nil && !onDevice }
 }
 
 extension SeriesSheet {
@@ -650,9 +676,10 @@ private struct SeriesActions: View {
                     if icon {
                         Image(systemName: "book").font(.ui(font < 15 ? 12 : 15)).accessibilityHidden(true)
                     }
+                    // At the accessibility sizes the words wrap rather than run off the row.
                     Text(words).lineLimit(type.isAccessibilitySize ? 3 : 1)
                         .multilineTextAlignment(.center)
-                        .fixedSize(horizontal: !stretch, vertical: type.isAccessibilitySize)
+                        .fixedSize(horizontal: !stretch && !type.isAccessibilitySize, vertical: type.isAccessibilitySize)
                 }
                 .frame(maxWidth: stretch ? .infinity : nil)
             }
@@ -720,7 +747,7 @@ private struct SeriesActions: View {
     /// The next 5 or 10 unread, every unread chapter, a volume, Choose chapters, and delete.
     private var downloadMenu: some View {
         let volumes = store.reading.chapters[series.work]?.volumes ?? []
-        let unread = volumes.flatMap(\.chapters).filter { $0.state != .read && $0.download == nil }
+        let unread = volumes.flatMap(\.chapters).filter { $0.state != .read && $0.downloadable }
         let downloaded = volumes.flatMap(\.chapters).filter { $0.download != nil }
         let byVolume = ReadSeriesWords.downloadVolumes(volumes)
         return Menu {
@@ -728,15 +755,15 @@ private struct SeriesActions: View {
             Button(L.downloadNext(n: 10)) { store.reading.download(series.work, .nextUnread(n: 10)) }
             Button(L.downloadUnread) { store.reading.download(series.work, .unread) }
                 .disabled(unread.isEmpty)
-            let toFetch = byVolume.filter { group in group.chapters.contains { $0.download == nil } }
+            let toFetch = byVolume.filter { group in group.chapters.contains(where: \.downloadable) }
             if !toFetch.isEmpty { Divider() }
             ForEach(toFetch, id: \.volume) { group in
-                let count = group.chapters.filter { $0.download == nil }.count
+                let count = group.chapters.filter(\.downloadable).count
                 Button(L.downloadVolumeCount(volume: ReadSeriesWords.volume(group, novel: false).name, n: count)) {
                     if let volume = group.volume {
                         store.reading.download(series.work, .volume(volume: volume))
                     } else {
-                        store.reading.download(series.work, .chapters(ids: group.chapters.filter { $0.download == nil }.map(\.id)))
+                        store.reading.download(series.work, .chapters(ids: group.chapters.filter(\.downloadable).map(\.id)))
                     }
                 }
             }
@@ -754,6 +781,8 @@ private struct SeriesActions: View {
             menuLabel(L.seriesDownload)
         }
         .accessibilityLabel(L.seriesDownload)
+        // Rests with nothing to download and nothing downloaded, as a folder's series has.
+        .disabled(!SeriesChoosing.hasDownloads(store.reading.chapters[series.work]))
         .menuStyle(.button)
         .buttonStyle(SecondaryCapsuleStyle(height: secondaryHeight, fontSize: secondaryFont))
         .menuIndicator(.hidden)
@@ -771,22 +800,48 @@ private struct SeriesActions: View {
 }
 
 /// The main action and its menus on one line, or the main action over the rest when the line
-/// is too narrow. Each keeps its own width.
-private struct SeriesActionRow: Layout {
+/// is too narrow. Each keeps its own width, up to the line's. At the largest text sizes the rest
+/// wraps again where it does not fit on one line.
+struct SeriesActionRow: Layout {
     var spacing: CGFloat
 
-    private func lines(_ subviews: Subviews, width: CGFloat?) -> [[Int]] {
-        let all = Array(subviews.indices)
+    /// The subviews' indices line by line, for lines `width` wide whose items are `widths` wide.
+    nonisolated static func wrap(_ widths: [CGFloat], width: CGFloat?, spacing: CGFloat) -> [[Int]] {
+        let all = Array(widths.indices)
         guard let width, all.count > 1 else { return [all] }
-        let sizes = subviews.map { $0.sizeThatFits(.unspecified).width }
-        let one = sizes.reduce(0, +) + spacing * CGFloat(sizes.count - 1)
-        return one <= width ? [all] : [[all[0]], Array(all.dropFirst())]
+        let one = widths.reduce(0, +) + spacing * CGFloat(widths.count - 1)
+        if one <= width { return [all] }
+        var wrapped = [[all[0]]], line: [Int] = [], used: CGFloat = 0
+        for index in all.dropFirst() {
+            let added = line.isEmpty ? widths[index] : used + spacing + widths[index]
+            if !line.isEmpty, added > width {
+                wrapped.append(line)
+                line = [index]
+                used = widths[index]
+            } else {
+                line.append(index)
+                used = added
+            }
+        }
+        wrapped.append(line)
+        return wrapped
+    }
+
+    private func lines(_ subviews: Subviews, width: CGFloat?) -> [[Int]] {
+        Self.wrap(subviews.map { $0.sizeThatFits(.unspecified).width }, width: width, spacing: spacing)
+    }
+
+    /// A subview's own size, or its size at the line's width when it is wider than the line.
+    private func fitted(_ subview: LayoutSubview, width: CGFloat?) -> CGSize {
+        let own = subview.sizeThatFits(.unspecified)
+        guard let width, own.width > width else { return own }
+        return subview.sizeThatFits(ProposedViewSize(width: width, height: nil))
     }
 
     func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
         var width: CGFloat = 0, height: CGFloat = 0
         for (n, line) in lines(subviews, width: proposal.width).enumerated() {
-            let sizes = line.map { subviews[$0].sizeThatFits(.unspecified) }
+            let sizes = line.map { fitted(subviews[$0], width: proposal.width) }
             width = max(width, sizes.map(\.width).reduce(0, +) + spacing * CGFloat(max(sizes.count - 1, 0)))
             height += (n > 0 ? spacing : 0) + (sizes.map(\.height).max() ?? 0)
         }
@@ -796,7 +851,7 @@ private struct SeriesActionRow: Layout {
     func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) {
         var y = bounds.minY
         for line in lines(subviews, width: bounds.width) {
-            let sizes = line.map { subviews[$0].sizeThatFits(.unspecified) }
+            let sizes = line.map { fitted(subviews[$0], width: bounds.width) }
             let tall = sizes.map(\.height).max() ?? 0
             var x = bounds.minX
             for (index, size) in zip(line, sizes) {
@@ -1057,9 +1112,11 @@ private struct SeriesChapters: View {
         }
     }
 
+    /// Lazy, so a series of thousands of chapters builds only the rows in view, for the screen
+    /// and for VoiceOver alike.
     @ViewBuilder
     private func list(_ chapters: ReadChapters) -> some View {
-        VStack(alignment: .leading, spacing: 0) {
+        LazyVStack(alignment: .leading, spacing: 0) {
                 if chapters.failure == .noSource {
                     // Nothing was ever read from a source, so nothing failed: an empty state that
                     // leads to Read from.
@@ -1180,6 +1237,15 @@ private struct SeriesChapters: View {
     }
 }
 
+#if DEBUG
+/// How many chapter rows have appeared, for the test that a long series builds only the rows in
+/// view. Debug builds only.
+@MainActor
+enum ChapterRowsShown {
+    static var count = 0
+}
+#endif
+
 /// One chapter: "Chapter 88" in silk with its title in haze, and its state in words under it.
 /// The ring shows only while bytes move, and stops the download when pressed.
 private struct ChapterRowView: View {
@@ -1272,13 +1338,16 @@ private struct ChapterRowView: View {
         .buttonStyle(.plain)
         .pointerHover()
         .contextMenu { ChapterMenu(series: series, row: row) }
+        #if DEBUG
+        .onAppear { ChapterRowsShown.count += 1 }
+        #endif
         #if os(iOS)
         .swipeActions(edge: .trailing) {
             Button(row.state == .read ? L.seriesMarkUnread : L.seriesMarkRead) {
                 store.reading.markRead(series.work, chapters: [row.id], read: row.state != .read)
             }
             .tint(Palette.raisedSelected)
-            if row.download == nil {
+            if row.downloadable {
                 Button(L.seriesDownload) { store.reading.download(series.work, .chapters(ids: [row.id])) }
                     .tint(Palette.raised)
             }
@@ -1305,7 +1374,10 @@ private struct ChapterMenu: View {
         Button(L.seriesMarkReadUpTo) { store.reading.markReadUpTo(series.work, chapter: row.id) }
         switch row.download {
         case .none:
-            Button(L.seriesDownload) { store.reading.download(series.work, .chapters(ids: [row.id])) }
+            // A file on this device, as a folder's chapters are, has nothing to download.
+            if !row.onDevice {
+                Button(L.seriesDownload) { store.reading.download(series.work, .chapters(ids: [row.id])) }
+            }
         case .done:
             Button(L.chapterDownloadDelete, role: .destructive) { store.reading.deleteDownloads(series.work, chapters: [row.id]) }
         case .failed:
@@ -1406,9 +1478,13 @@ private struct ChooseChaptersBar: View {
                     store.reading.download(series.work, .chapters(ids: Array(chosen)))
                     done()
                 } label: {
-                    Text(L.downloadChapters(n: chosen.count))
-                        .lineLimit(1)
-                        .frame(maxWidth: Device.isMac ? nil : .infinity)
+                    // A narrow window drops the count, which the title already shows ("4 chosen").
+                    ViewThatFits(in: .horizontal) {
+                        Text(L.downloadChapters(n: chosen.count))
+                        Text(L.seriesDownload)
+                    }
+                    .lineLimit(1)
+                    .frame(maxWidth: Device.isMac ? nil : .infinity)
                 }
                 .buttonStyle(PrimaryCapsuleStyle(height: height, fontSize: Device.isMac ? 13 : 17))
                 .disabled(chosen.isEmpty)

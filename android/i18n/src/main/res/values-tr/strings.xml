@@ -299,6 +299,10 @@
         <item quantity="one">Bir bölüm henüz indirilmedi, bu yüzden gönderim Wi-Fi\'yi bekler ve sonra kendiliğinden sürer.</item>
         <item quantity="other">%1$,d bölüm henüz indirilmedi, bu yüzden gönderim Wi-Fi\'yi bekler ve sonra kendiliğinden sürer.</item>
     </plurals>
+    <plurals name="export_pages_left_out">
+        <item quantity="one">%2$s içindeki bir sayfa okunamadı ve dosyalarda yok.</item>
+        <item quantity="other">%2$s içindeki %1$,d sayfa okunamadı ve dosyalarda yok.</item>
+    </plurals>
     <string name="reading_chapter_titled">Bölüm %1$s · %2$s</string>
     <string name="reading_row_read">Okundu</string>
     <string name="reading_row_new">Yeni</string>
@@ -537,6 +541,15 @@
     <plurals name="notice_signed_out_queue">
         <item quantity="one">Oturum kapatıldı: %1$s. Bekleyen bir değişiklik, bir sonraki oturum açmada gönderilmek üzere saklandı.</item>
         <item quantity="other">Oturum kapatıldı: %1$s. Bekleyen %2$,d değişiklik, bir sonraki oturum açmada gönderilmek üzere saklandı.</item>
+    </plurals>
+    <string name="notice_tracker_change_refused">%1$s, %2$s için bir değişikliği tekrar tekrar reddetti, bu yüzden değişiklik yalnızca Kaeri içinde kalıyor.</string>
+    <plurals name="notice_tracker_changes_refused">
+        <item quantity="one">%1$s, %2$s ve bir başlık daha için değişiklikleri tekrar tekrar reddetti, bu yüzden değişiklikler yalnızca Kaeri içinde kalıyor.</item>
+        <item quantity="other">%1$s, %2$s ve %3$,d başlık daha için değişiklikleri tekrar tekrar reddetti, bu yüzden değişiklikler yalnızca Kaeri içinde kalıyor.</item>
+    </plurals>
+    <plurals name="notice_tracker_change_refused_untitled">
+        <item quantity="one">%1$s bir değişikliği tekrar tekrar reddetti, bu yüzden değişiklik yalnızca Kaeri içinde kalıyor.</item>
+        <item quantity="other">%1$s, %2$,d başlık için değişiklikleri tekrar tekrar reddetti, bu yüzden değişiklikler yalnızca Kaeri içinde kalıyor.</item>
     </plurals>
     <string name="notice_sign_out_failed">Oturum kapatılamadı: %1$s. Yeniden deneyin. %2$s</string>
     <string name="notice_not_saved_because">Bu ayar kaydedilemedi. %1$s</string>
@@ -838,8 +851,6 @@
         <item quantity="one">İndirilmiş bir bölüm yine de açılır.</item>
         <item quantity="other">İndirilmiş %1$,d bölüm yine de açılır.</item>
     </plurals>
-    <string name="read_downloads_empty_detail">İndirilen bölümler bağlantı olmadan açılır.</string>
-    <string name="read_downloads_empty_both">İzlemek ve okumak için indirilen bölümler bağlantı olmadan açılır.</string>
     <string name="settings_summary_chapters_on">Yeni bölümler açık</string>
     <string name="settings_summary_chapters_off">Yeni bölümler kapalı</string>
     <plurals name="settings_summary_book_folders">
@@ -1559,6 +1570,8 @@
     <string name="downloads_space_label">İndirmelerin kullandığı alan</string>
     <string name="downloads_empty_title">Henüz indirme yok</string>
     <string name="downloads_empty_detail">İndirilen bölümler bağlantı olmadan oynatılır.</string>
+    <string name="read_downloads_empty_detail">İndirilen bölümler bağlantı olmadan açılır.</string>
+    <string name="read_downloads_empty_both">İzlemek ve okumak için indirilen bölümler bağlantı olmadan açılır.</string>
     <string name="downloads_load_failed">İndirmeler yüklenemedi</string>
     <string name="downloads_folder_failed">Klasör açılamadı. Klasörün hâlâ var olduğunu kontrol edin.</string>
     <string name="downloads_episode_name">Bölüm %1$d</string>

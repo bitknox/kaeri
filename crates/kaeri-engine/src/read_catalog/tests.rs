@@ -53,7 +53,12 @@ fn kit(fake: Option<&FakeAniList>, dir: &std::path::Path) -> Kit {
         cache_dir: dir.join("cache"),
     };
     let tokens = kaeri_track::TokenStore::new(dir.join("tokens"));
-    let sources = BookSources::new(store.clone(), tokens, reqwest::Client::new(), &paths);
+    let sources = BookSources::new(
+        store.clone(),
+        tokens,
+        &kaeri_net::HttpClient::new(&Default::default()).unwrap(),
+        &paths,
+    );
     let meta = match fake {
         Some(fake) => fake.meta(&store),
         None => {
@@ -386,6 +391,85 @@ async fn continue_and_the_sources_stay_when_anilist_fails() {
     assert_eq!(home.end, Some(kaeri_model::reading::ReadHomeEnd::Everything));
 }
 
+/// R6K-6. A series in the person's own folder that AniList does not list, read partway, is on
+/// Continue by its folder's name, as Library's Reading list shows it.
+#[tokio::test]
+async fn a_folder_series_anilist_does_not_list_is_on_continue() {
+    let fake = FakeAniList::start().await;
+    let dir = tempfile::tempdir().unwrap();
+    let kit = kit(Some(&fake), dir.path());
+    let folder = dir.path().join("books").display().to_string();
+    let added = kaeri_store::book_sources::Folder {
+        id: "books".into(),
+        path: Some(folder.clone()),
+        tree_uri: None,
+        bookmark: None,
+        name: None,
+        added_at: NOW,
+        last_scan: Some(NOW),
+        available: true,
+    };
+    kit.store.put_book_folder(&added).unwrap();
+    let work =
+        kaeri_core::books::WorkKey::local(Medium::Manga, "Rooftop Paper Club").to_string();
+    let series = kaeri_store::shelf::LocalSeries {
+        id: "books:rooftop".into(),
+        folder,
+        name: "Rooftop Paper Club".into(),
+        medium: "manga".into(),
+        work: Some(work.clone()),
+        state: "unmatched".into(),
+    };
+    kit.store.put_local_series(&series).unwrap();
+    let place =
+        ReadEvent { page: Some(2), of_pages: Some(20), ..ReadEvent::new(&work, "2", NOW) };
+    kit.store.record_read(&place, Vec::new()).unwrap();
+
+    let (tx, mut rx) = outbox();
+    home::load(&kit, ask(), false, &tx);
+    let home = whole_home(&mut rx).await;
+    let titles: Vec<(&str, &str)> =
+        home.continue_reading.iter().map(|t| (t.work.as_str(), t.title.as_str())).collect();
+    assert_eq!(titles, [(work.as_str(), "Rooftop Paper Club")]);
+}
+
+/// R7E-4. A book server's series no catalogue lists (Komga, Kavita or OPDS alike), read
+/// partway, is on Continue by the name and cover its source gave, never by its id.
+#[tokio::test]
+async fn a_server_series_anilist_does_not_list_is_on_continue_by_its_name() {
+    let fake = FakeAniList::start().await;
+    let dir = tempfile::tempdir().unwrap();
+    let kit = kit(Some(&fake), dir.path());
+    let mut expected = Vec::new();
+    for (source, title) in [
+        ("srv-komga", "The Paper Lantern"),
+        ("srv-kavita", "Harbour Signal Club"),
+        ("srv-opds", "A Ferry at Dawn"),
+    ] {
+        let cover = format!("https://{source}.example/cover/s-1");
+        let mut hit = SeriesHit::new("s-1", title);
+        hit.cover = Some(cover.clone());
+        let tile = kit.sources.hit_tile(source, hit, Some(Medium::Manga), &[], NOW).unwrap();
+        let work = tile.work.as_str().to_owned();
+        let place =
+            ReadEvent { page: Some(2), of_pages: Some(20), ..ReadEvent::new(&work, "2", NOW) };
+        kit.store.record_read(&place, Vec::new()).unwrap();
+        expected.push((work, title.to_owned(), Some(cover)));
+    }
+
+    let (tx, mut rx) = outbox();
+    home::load(&kit, ask(), false, &tx);
+    let home = whole_home(&mut rx).await;
+    let mut shown: Vec<(String, String, Option<String>)> = home
+        .continue_reading
+        .iter()
+        .map(|t| (t.work.as_str().to_owned(), t.title.clone(), t.cover.clone()))
+        .collect();
+    shown.sort();
+    expected.sort();
+    assert_eq!(shown, expected);
+}
+
 // ---------------------------------------------------------------------------------------------
 // Search
 
@@ -417,12 +501,23 @@ impl Shelf {
         kind: BookSourceKind,
         answer: Answer,
     ) -> Arc<Self> {
+        Self::put_carrying(kit, id, name, kind, vec![Medium::Manga, Medium::Novel], answer)
+    }
+
+    fn put_carrying(
+        kit: &Kit,
+        id: &str,
+        name: &str,
+        kind: BookSourceKind,
+        media: Vec<Medium>,
+        answer: Answer,
+    ) -> Arc<Self> {
         let manifest = BookSourceManifest {
             id: id.into(),
             name: name.into(),
             version: "1".into(),
             kind,
-            media: vec![Medium::Manga, Medium::Novel],
+            media,
             languages: vec!["en".into()],
             allowed_hosts: Vec::new(),
             capabilities: Vec::new(),
@@ -503,6 +598,54 @@ async fn part_until(
 
 fn state<'a>(part: &'a ReadSourceSearch, id: &str) -> &'a ReadSourceState {
     &part.groups.iter().find(|g| g.source_id == id).unwrap().state
+}
+
+/// A novel found in a source that only serves novels, with no AniList entry: its page says it
+/// is a novel and names it as the source does, so the reader reads it as one.
+#[tokio::test]
+async fn a_source_novel_no_catalogue_lists_opens_as_a_novel_with_its_name() {
+    let fake = FakeAniList::start().await;
+    let dir = tempfile::tempdir().unwrap();
+    let kit = kit(Some(&fake), dir.path());
+    let hits = vec![hit("n-1", "The Quiet Ferry Almanac", None)];
+    let novels = vec![Medium::Novel];
+    Shelf::put_carrying(
+        &kit,
+        "inkwell",
+        "Inkwell",
+        BookSourceKind::Native,
+        novels,
+        Answer::Now(hits),
+    );
+
+    let (tx, mut rx) = outbox();
+    search::search(&kit, ask(), query("quiet ferry"), 0, &tx);
+    let done = part_until(&mut rx, |p| p.done).await;
+    let group = done.groups.iter().find(|g| g.source_id == "inkwell").unwrap();
+    let tile = group.tiles.first().expect("the source's hit as a tile of its own").clone();
+    assert_eq!(tile.medium, Medium::Novel);
+
+    let view = crate::read_catalog::series::view(&kit, ask(), &tile.work, false);
+    assert_eq!(view.medium, Medium::Novel, "the page reads it as the novel it is");
+    assert_eq!(view.titles.display, "The Quiet Ferry Almanac", "and names it");
+    let kind = kit.store.book_work_kind(tile.work.as_str()).unwrap().unwrap();
+    assert_eq!(kind.medium, "novel", "the reader and Downloads read the same");
+}
+
+/// A work matched in a source that only serves novels before its name and medium were kept:
+/// the page still reads it as a novel, from what its source carries.
+#[tokio::test]
+async fn a_source_work_kept_before_reads_in_the_medium_its_source_carries() {
+    let dir = tempfile::tempdir().unwrap();
+    let kit = kit(None, dir.path());
+    let novels = vec![Medium::Novel];
+    let none = Answer::Now(Vec::new());
+    Shelf::put_carrying(&kit, "inkwell", "Inkwell", BookSourceKind::Native, novels, none);
+    let work = kaeri_core::books::WorkKey::local(Medium::Novel, "The Quiet Ferry Almanac").id();
+    kit.store.set_book_match("inkwell", "n-1", work.as_str(), 50, false, false, NOW).unwrap();
+
+    let view = crate::read_catalog::series::view(&kit, ask(), &work, false);
+    assert_eq!(view.medium, Medium::Novel);
 }
 
 #[tokio::test]

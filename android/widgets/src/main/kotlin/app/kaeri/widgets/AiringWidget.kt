@@ -63,7 +63,8 @@ class AiringWidget(private val hostOf: (Context) -> WidgetHost? = ::widgetHost) 
         // The record as it is, not followed: a preview's composition runs once and waits for
         // every effect in it to end, and following the record never would.
         val host = hostOf(context)
-        provideContent { Drawn(context, host, host?.widgetRecord?.value) }
+        val data = host?.widgetRecord?.value
+        provideContent { Drawn(context, host, data) }
     }
 
     @Composable

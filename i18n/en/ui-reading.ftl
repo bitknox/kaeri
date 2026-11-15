@@ -472,6 +472,12 @@ download-unread = Every unread chapter
 # @max 40
 download-already = Already downloaded
 
+# Short note on a series page when a download it asked for couldn't start, such as when the
+# source isn't answering and no chapter list is kept. The reason is a full sentence.
+# @only android
+# @arg reason: text
+download-not-started = Couldn't start the download. { $reason }
+
 # Download menu item: a volume's chapters not yet downloaded.
 # @arg volume: text
 # @arg n: int
@@ -1625,6 +1631,18 @@ send-again = Send again
 # A send in a list or banner that is under way, with a ring beside it. The device is the e-reader.
 # @arg device: text
 send-banner = Sending to { $device }
+
+# The chapters a send holds, on its row under Sending to, when there are several: the first to
+# the last, by their numbers or labels, such as 21 to 23.
+# @arg first: text
+# @arg last: text
+send-row-chapters = Chapters { $first } to { $last }
+
+# A send's row under Sending to: the series' title, then the chapters the send holds, such as
+# "Chapter 23" or "Chapters 21 to 23". Shown on one line.
+# @arg title: text
+# @arg chapters: text
+send-row-line = { $title } · { $chapters }
 
 # The format of the files an e-reader is sent: a manga as a fixed-layout EPUB.
 send-format-fixed-epub = Fixed-layout EPUB

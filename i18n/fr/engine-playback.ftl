@@ -6,7 +6,7 @@ notice-not-aired-yet = L'épisode { $episode } n'est pas encore diffusé. L'épi
 cause-airs-today = aujourd'hui à { $time }
 cause-airs-tomorrow = demain à { $time }
 cause-airs-in-days = { $days ->
-    [one] dans un jour à { $time }
+    [one] dans { $days } jour à { $time }
     [many] dans { $days } jours à { $time }
    *[other] dans { $days } jours à { $time }
  }
@@ -20,13 +20,13 @@ cause-no-source-has-episode = Aucune { -source } n'a l'épisode { $episode } : 
 cause-source-cannot-download = Cette { -source } permet de regarder des épisodes, mais pas de les télécharger.
 cause-no-source-could-list-show = Aucune { -source } n'a pu répertorier cette série, elle ne peut donc pas être téléchargée.
 cause-subtitles-merged = { $tracks ->
-    [one] Une piste de sous-titres a été intégrée.
+    [one] { $tracks } piste de sous-titres a été intégrée.
     [many] { $tracks } pistes de sous-titres ont été intégrées.
    *[other] { $tracks } pistes de sous-titres ont été intégrées.
  }
 cause-subtitles-left-apart = Les sous-titres restent dans des fichiers séparés. { $reason }
 cause-already-in-downloads = { $count ->
-    [one] Un épisode est déjà dans les téléchargements.
+    [one] { $count } épisode est déjà dans les téléchargements.
     [many] { $count } épisodes sont déjà dans les téléchargements.
    *[other] { $count } épisodes sont déjà dans les téléchargements.
  }
@@ -86,12 +86,12 @@ notice-download-removed-file-gone = Téléchargement retiré. Son fichier n'exis
 notice-download-removed-file-kept = Téléchargement retiré, mais son fichier n'a pas pu être supprimé. { $reason }
 notice-download-removed = Téléchargement retiré.
 notice-downloads-cleared = { $count ->
-    [one] Un téléchargement terminé a été retiré de la liste.
+    [one] { $count } téléchargement terminé a été retiré de la liste.
     [many] { $count } téléchargements terminés ont été retirés de la liste.
    *[other] { $count } téléchargements terminés ont été retirés de la liste.
  }
 notice-skip-marks-cleared = { $count ->
-    [one] Le seul repère de saut que vous aviez marqué a été effacé.
+    [one] { $count } repère de saut que vous aviez marqué a été effacé.
     [many] { $count } repères de saut que vous aviez marqués ont été effacés.
    *[other] { $count } repères de saut que vous aviez marqués ont été effacés.
  }
@@ -105,17 +105,17 @@ notice-downloads-none-queued-stopped = Rien ajouté à la file. { $reason }
 notice-downloads-none-new = Rien de nouveau ajouté à la file. { $existing }
 notice-downloads-none-new-stopped = Rien de nouveau ajouté à la file. { $existing } { $reason }
 notice-episodes-queued-existing = { $count ->
-    [one] Un épisode ajouté à la file. { $existing }
+    [one] { $count } épisode ajouté à la file. { $existing }
     [many] { $count } épisodes ajoutés à la file. { $existing }
    *[other] { $count } épisodes ajoutés à la file. { $existing }
  }
 notice-episodes-queued-stopped = { $count ->
-    [one] Un épisode ajouté à la file, puis l'ajout s'est arrêté. { $reason }
+    [one] { $count } épisode ajouté à la file, puis l'ajout s'est arrêté. { $reason }
     [many] { $count } épisodes ajoutés à la file, puis l'ajout s'est arrêté. { $reason }
    *[other] { $count } épisodes ajoutés à la file, puis l'ajout s'est arrêté. { $reason }
  }
 notice-episodes-queued-existing-stopped = { $count ->
-    [one] Un épisode ajouté à la file, puis l'ajout s'est arrêté. { $existing } { $reason }
+    [one] { $count } épisode ajouté à la file, puis l'ajout s'est arrêté. { $existing } { $reason }
     [many] { $count } épisodes ajoutés à la file, puis l'ajout s'est arrêté. { $existing } { $reason }
    *[other] { $count } épisodes ajoutés à la file, puis l'ajout s'est arrêté. { $existing } { $reason }
  }

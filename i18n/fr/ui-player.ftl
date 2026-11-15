@@ -23,7 +23,7 @@ player-start-from = Depuis { $name }
 player-start-no-video = Le premier n'affichait aucune vidéo
 player-start-stream-place = Flux { $next } sur { $total }
 player-start-peers = { $count ->
-    [one] Un pair
+    [one] { $count } pair
     [many] { $count } pairs
    *[other] { $count } pairs
  }
@@ -138,7 +138,7 @@ player-resumed-at = Reprise à { $clock }
 player-start-over = Recommencer
 player-still-watching = Toujours là ?
 player-still-watching-detail = { $count ->
-    [one] En pause après un épisode d’affilée.
+    [one] En pause après { $count } épisode d’affilée.
     [many] En pause après { $count } épisodes d’affilée.
    *[other] En pause après { $count } épisodes d’affilée.
  }

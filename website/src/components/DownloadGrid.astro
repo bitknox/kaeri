@@ -18,15 +18,9 @@ interface Props {
 const { steps, heading: Heading = 'h3' } = Astro.props;
 const { t } = useSite(Astro);
 
-// The platforms in the columns of the design: a pair in each, and the terminal alone.
-const columns = [
-	['mac', 'ios'],
-	['android', 'android-tv'],
-	['windows', 'linux'],
-	['terminal'],
-] as const;
-
-type Id = (typeof columns)[number][number];
+// One row per platform, Apple's first, the terminal last.
+const ids = ['mac', 'ios', 'android', 'android-tv', 'windows', 'linux', 'terminal'] as const;
+type Id = (typeof ids)[number];
 const kind: Record<Id, { asset?: string; link?: string }> = {
 	mac: { asset: FILES.mac[0].suffix },
 	ios: { link: 'ios' },
@@ -40,45 +34,41 @@ const kind: Record<Id, { asset?: string; link?: string }> = {
 
 <div class="dl-grid">
 	{
-		columns.map((column) => (
-			<div class="dl-col">
-				{column.map((id) => {
-					const k = kind[id];
-					const stepsHref = `${steps}#${id}`;
-					const hasPanel = id !== 'ios' && id !== 'android-tv';
-					return (
-						<div class="dl-card" data-card={id}>
-							<Heading class="dl-name">{t(`dl.card.${id}.name`)}</Heading>
-							<p class="dl-needs">{t(`dl.card.${id}.needs`)}</p>
-							{id === 'terminal' && <pre><code>brew install mpv ffmpeg</code></pre>}
-							<p class="dl-act">
-								<a
-									class="k-btn"
-									href={k.asset ? LATEST : stepsHref}
-									data-asset={k.asset}
-									data-next={hasPanel ? id : undefined}
-									data-steps={stepsHref}
-								>
-									{t(`dl.card.${id}.button`)}
-								</a>
-							</p>
-							<p class="dl-suggested" hidden>{t('dl.suggested')}</p>
-							{hasPanel && (
-								<div class="dl-next" data-panel={id}>
-									<div class="dl-next-in">
-										<div class="dl-next-body">
-											<h4 tabindex="-1">{t('dl.next.title')}</h4>
-											<ol set:html={t(`dl.next.${id}.list`)} />
-											<p><a href={stepsHref}>{t('dl.next.more')}</a></p>
-										</div>
-									</div>
+		ids.map((id) => {
+			const k = kind[id];
+			const stepsHref = `${steps}#${id}`;
+			const hasPanel = id !== 'ios' && id !== 'android-tv';
+			return (
+				<div class="dl-card" data-card={id}>
+					<Heading class="dl-name">{t(`dl.card.${id}.name`)}</Heading>
+					<p class="dl-needs">{t(`dl.card.${id}.needs`)}</p>
+					{id === 'terminal' && <pre><code>brew install mpv ffmpeg</code></pre>}
+					<p class="dl-act">
+						<a
+							class="k-btn"
+							href={k.asset ? LATEST : stepsHref}
+							data-asset={k.asset}
+							data-next={hasPanel ? id : undefined}
+							data-steps={stepsHref}
+						>
+							{t(`dl.card.${id}.button`)}
+						</a>
+					</p>
+					<p class="dl-suggested" hidden>{t('dl.suggested')}</p>
+					{hasPanel && (
+						<div class="dl-next" data-panel={id}>
+							<div class="dl-next-in">
+								<div class="dl-next-body">
+									<h4 tabindex="-1">{t('dl.next.title')}</h4>
+									<ol set:html={t(`dl.next.${id}.list`)} />
+									<p><a href={stepsHref}>{t('dl.next.more')}</a></p>
 								</div>
-							)}
+							</div>
 						</div>
-					);
-				})}
-			</div>
-		))
+					)}
+				</div>
+			);
+		})
 	}
 </div>
 

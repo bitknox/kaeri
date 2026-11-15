@@ -28,6 +28,8 @@ struct Stall {
     most: AtomicUsize,
     /// Its chapter lists come back empty, as a plugin's broken release lists none.
     empty: bool,
+    /// How many chapters its lists hold.
+    count: u32,
 }
 
 impl Stall {
@@ -48,7 +50,14 @@ impl Stall {
             running: AtomicUsize::new(0),
             most: AtomicUsize::new(0),
             empty: false,
+            count: 3,
         })
+    }
+
+    fn listing(self: Arc<Self>, count: u32) -> Arc<Self> {
+        let mut this = Arc::into_inner(self).unwrap();
+        this.count = count;
+        Arc::new(this)
     }
 
     fn listing_nothing(self: Arc<Self>) -> Arc<Self> {
@@ -103,7 +112,9 @@ impl BookSource for Stall {
         if self.empty {
             return Ok(Vec::new());
         }
-        Ok((1..=3).map(|n| SourceChapter::new(format!("c-{n}"), n.to_string())).collect())
+        Ok((1..=self.count)
+            .map(|n| SourceChapter::new(format!("c-{n}"), n.to_string()))
+            .collect())
     }
 
     async fn content(&self, _: &str, _: &str) -> Result<ChapterContent, ProviderError> {
@@ -483,4 +494,50 @@ async fn a_folder_picked_again_says_it_is_already_a_source() {
     std::fs::remove_dir_all(&shelf).unwrap();
     let (lost, unreadable) = answer(add(&shelf)).await;
     assert!(unreadable && lost.already_added, "{lost:?}");
+}
+
+/// The bug as reported: a series read from one source, and a source installed since that has
+/// more of its chapters. Opening the page searches the new source, which matches and becomes the
+/// edition read from. The page then names it and lists its chapters, the ones a read opens,
+/// rather than keeping the first source's list.
+#[tokio::test]
+async fn the_page_follows_when_a_source_found_on_opening_becomes_the_edition_read_from() {
+    let fake = FakeAniList::start().await;
+    let mut entry = book(WORK_ID, TITLE, "MANGA", (2021, 500), &[], &[]);
+    entry["chapters"] = json!(40);
+    fake.add_books([entry]);
+    let dir = tempfile::tempdir().unwrap();
+    let kit = kit(Some(&fake), dir.path());
+    kit.meta.book(kaeri_core::AnilistId(WORK_ID)).await.unwrap();
+    Stall::new("first", "1", &[TITLE]).put(&kit);
+    Stall::new("second", "1", &[TITLE]).listing(40).put(&kit);
+    kit.sources.registry.set_order(vec!["first".into(), "second".into()]);
+    let work = work_of(WORK_ID);
+    let series_ref = format!("s-{}", TITLE.len());
+    let matched = editions::MATCHED;
+    kit.store
+        .set_book_match("first", &series_ref, work.as_str(), matched, false, false, NOW)
+        .unwrap();
+
+    let (tx, mut rx) = outbox();
+    open(&kit, &work, &tx);
+    let mut named = None;
+    let mut listed = None;
+    while let Ok(Some(event)) = tokio::time::timeout(QUIET, rx.recv()).await {
+        match event {
+            Event::Reading(ReadingEvent::Series(view)) => {
+                named = view.edition.map(|e| e.source_id);
+            }
+            Event::Reading(ReadingEvent::Chapters { edition, volumes, .. }) => {
+                let rows: usize = volumes.iter().map(|v| v.chapters.len()).sum();
+                listed = Some((edition.map(|e| e.source_id), rows));
+            }
+            _ => {}
+        }
+    }
+
+    let read_from = kit.sources.edition_of(&work, None).map(|(source, _)| source);
+    assert_eq!(read_from.as_deref(), Some("second"), "the new source has the work's chapters");
+    assert_eq!(named.as_deref(), Some("second"), "the page names the source read from");
+    assert_eq!(listed, Some((Some("second".to_owned()), 40)), "and lists its chapters");
 }

@@ -247,27 +247,10 @@ static class SendDialog
         List<ChapterRow> Rows() => [.. (reading.Chapters.GetValueOrDefault(work)?.All ?? []).Where(c => ids.Contains(c.Id))];
         List<string> Ordered() => [.. Rows().Select(r => r.Id)];
 
-        ulong? Size()
-        {
-            var rows = Rows();
-            if (rows.Count == 0)
-                return null;
-            var held = rows.Count(r => r.Download is ChapterDownloadState.Done);
-            ulong bytes = 0;
-            if (held > 0)
-            {
-                if (reading.Downloads?.Series.FirstOrDefault(s => s.Work == work) is not { Chapters: > 0 } kept)
-                    return null;
-                bytes += kept.Bytes / kept.Chapters * (ulong)held;
-            }
-            if (held < rows.Count)
-            {
-                if (!reading.Estimates.TryGetValue(work, out var estimate) || estimate.Pick is not DownloadPick.Chapters picked || !picked.Ids.SequenceEqual(Ordered()))
-                    return null;
-                bytes += estimate.Bytes;
-            }
-            return bytes;
-        }
+        // The engine's figure for every chosen chapter: those here by what they take, the rest as
+        // estimated. 0 is a size it doesn't know, which is left unsaid rather than added as nothing.
+        DownloadEstimate? Estimate() => ChapterDownloads.For(reading.Estimates.GetValueOrDefault(work), Ordered());
+        ulong? Size() => ChapterDownloads.SendSize(reading.Estimates.GetValueOrDefault(work), Ordered());
 
         string ChaptersWords()
         {
@@ -303,7 +286,8 @@ static class SendDialog
             AutomationProperties.SetName(chaptersButton, $"{T.SendChapters}, {chaptersValue.Text}, {(picking ? T.SendChaptersOpen : T.SendChaptersClosed)}");
             chaptersButton.IsEnabled = running?.IsRunning != true;
             var size = Size();
-            sizeValue.Text = size is { } bytes ? T.SendSizeAbout(Wording.Bytes(bytes)) : waited ? T.SendSizeWorking : "";
+            // Working it out only while the estimate is on its way; an answer with no size says none.
+            sizeValue.Text = size is { } bytes ? T.SendSizeAbout(Wording.Bytes(bytes)) : waited && Estimate() is null && ids.Count > 0 ? T.SendSizeWorking : "";
             notes.Children.Clear();
             if (size is { } total && target is { Split: true } && !novel && total > PartsOver)
                 notes.Children.Add(Ui.Text(T.SendInParts(Wording.Bytes(PartsOver)), "HazeCaptionStyle"));
@@ -369,6 +353,8 @@ static class SendDialog
                     dialog.DefaultButton = ContentDialogButton.Primary;
                     progressPart.Children.Clear();
                     progressPart.Children.Add(Ui.Text(T.SendReady(running.Files.Length), "BodyTextBlockStyle"));
+                    if (running.Line.Length > 0)
+                        progressPart.Children.Add(Ui.Text(running.Line, "HazeCaptionStyle"));
                     break;
                 case SendPhase.Failed:
                     dialog.PrimaryButtonText = running.FilesGone ? T.SendAgain : T.ActionTryAgain;
@@ -560,6 +546,8 @@ sealed partial class SendStatusRows : StackPanel
                 break;
             case SendPhase.Ready:
                 words.Children.Add(Ui.Text(T.SendReady(send.Files.Length), "HazeCaptionStyle", wrap: false));
+                if (send.Line.Length > 0)
+                    words.Children.Add(Ui.Text(send.Line, "HazeCaptionStyle"));
                 buttons.Children.Add(Ui.Label(T.ActionShare, async (_, _) =>
                 {
                     if (await SendFiles.Share(ctx, send, TitleOf(send)) || send.Phase != SendPhase.Ready)
@@ -681,25 +669,62 @@ static class SendFiles
                 if (await picker.PickSaveFileAsync() is not { } target)
                     return false;
                 var source = await global::Windows.Storage.StorageFile.GetFileFromPathAsync(only.Path);
-                await source.CopyAndReplaceAsync(target);
+                try
+                {
+                    await source.CopyAndReplaceAsync(target);
+                }
+                catch (Exception)
+                {
+                    // A copy cut off (a full disk) must not leave part of a book under its name.
+                    try { await target.DeleteAsync(); } catch (Exception) { }
+                    throw;
+                }
             }
             else
             {
                 if (await ctx.Window.PickFolder() is not { Length: > 0 } folder)
                     return false;
                 foreach (var file in send.Files)
-                    File.Copy(file.Path, Free(Path.Combine(folder, file.Name)));
+                    CopyWhole(file.Path, Free(Path.Combine(folder, file.Name)));
             }
             ctx.Known.Reading.Sending.Shared(send.Id);
             ctx.Window.Say(T.SendSavedWindows(send.Files.Length));
             return true;
         }
-        catch (Exception)
+        catch (Exception e)
         {
-            ctx.Window.Say(T.SendSaveFailedWindows);
+            ctx.Window.Say(IsDiskFull(e) ? T.ReadingFailedDiskFull : T.SendSaveFailedWindows);
             return false;
         }
     }
+
+    /// <summary>
+    /// Copy through a hidden name beside <paramref name="to"/>, flushed to the disk and only then
+    /// renamed, so a copy cut off by a full disk never leaves part of a book under the book's name,
+    /// which an e-reader would list as the whole book. What was written goes when the copy fails.
+    /// </summary>
+    static void CopyWhole(string from, string to)
+    {
+        var temp = Path.Combine(Path.GetDirectoryName(to) ?? "", $".{Path.GetFileName(to)}.part");
+        try
+        {
+            using (var source = File.OpenRead(from))
+            using (var target = new FileStream(temp, FileMode.Create, FileAccess.Write, FileShare.None))
+            {
+                source.CopyTo(target);
+                target.Flush(flushToDisk: true);
+            }
+            File.Move(temp, to);
+        }
+        catch (Exception)
+        {
+            SmallFiles.Delete(temp);
+            throw;
+        }
+    }
+
+    /// <summary>A disk or quota that is full: ERROR_DISK_FULL and ERROR_HANDLE_DISK_FULL.</summary>
+    static bool IsDiskFull(Exception e) => e.HResult is unchecked((int)0x80070070) or unchecked((int)0x80070027);
 
     /// <summary>The path, or "name (2).ext" and on when a file is already there.</summary>
     static string Free(string path)

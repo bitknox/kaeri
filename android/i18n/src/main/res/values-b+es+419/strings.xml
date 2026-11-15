@@ -311,6 +311,11 @@
         <item quantity="many">%1$,d capítulos aún no están descargados, así que este envío espera al Wi-Fi y sigue por sí solo.</item>
         <item quantity="other">%1$,d capítulos aún no están descargados, así que este envío espera al Wi-Fi y sigue por sí solo.</item>
     </plurals>
+    <plurals name="export_pages_left_out">
+        <item quantity="one">Una página de %2$s no se pudo leer y no está en los archivos.</item>
+        <item quantity="many">%1$,d de páginas de %2$s no se pudieron leer y no están en los archivos.</item>
+        <item quantity="other">%1$,d páginas de %2$s no se pudieron leer y no están en los archivos.</item>
+    </plurals>
     <string name="reading_chapter_titled">Capítulo %1$s · %2$s</string>
     <string name="reading_row_read">Leído</string>
     <string name="reading_row_new">Nuevo</string>
@@ -566,6 +571,17 @@
         <item quantity="one">Sesión cerrada en %1$s. Un cambio en cola se conserva para el próximo inicio de sesión.</item>
         <item quantity="many">Sesión cerrada en %1$s. %2$,d cambios en cola se conservan para el próximo inicio de sesión.</item>
         <item quantity="other">Sesión cerrada en %1$s. %2$,d cambios en cola se conservan para el próximo inicio de sesión.</item>
+    </plurals>
+    <string name="notice_tracker_change_refused">%1$s rechazó varias veces un cambio en %2$s, así que solo queda en Kaeri.</string>
+    <plurals name="notice_tracker_changes_refused">
+        <item quantity="one">%1$s rechazó varias veces cambios en %2$s y un título más, así que solo quedan en Kaeri.</item>
+        <item quantity="many">%1$s rechazó varias veces cambios en %2$s y %3$,d títulos más, así que solo quedan en Kaeri.</item>
+        <item quantity="other">%1$s rechazó varias veces cambios en %2$s y %3$,d títulos más, así que solo quedan en Kaeri.</item>
+    </plurals>
+    <plurals name="notice_tracker_change_refused_untitled">
+        <item quantity="one">%1$s rechazó varias veces un cambio, así que solo queda en Kaeri.</item>
+        <item quantity="many">%1$s rechazó varias veces cambios en %2$,d títulos, así que solo quedan en Kaeri.</item>
+        <item quantity="other">%1$s rechazó varias veces cambios en %2$,d títulos, así que solo quedan en Kaeri.</item>
     </plurals>
     <string name="notice_sign_out_failed">No se pudo cerrar la sesión en %1$s. Inténtalo de nuevo. %2$s</string>
     <string name="notice_not_saved_because">No se pudo guardar esa configuración. %1$s</string>
@@ -876,8 +892,6 @@
         <item quantity="many">%1$,d capítulos descargados se siguen abriendo.</item>
         <item quantity="other">%1$,d capítulos descargados se siguen abriendo.</item>
     </plurals>
-    <string name="read_downloads_empty_detail">Los capítulos descargados se abren sin conexión.</string>
-    <string name="read_downloads_empty_both">Los episodios y capítulos descargados se abren sin conexión.</string>
     <string name="settings_summary_chapters_on">Capítulos nuevos activados</string>
     <string name="settings_summary_chapters_off">Capítulos nuevos desactivados</string>
     <plurals name="settings_summary_book_folders">
@@ -1625,6 +1639,8 @@
     <string name="downloads_space_label">Espacio ocupado por las descargas</string>
     <string name="downloads_empty_title">No hay descargas</string>
     <string name="downloads_empty_detail">Los episodios descargados se reproducen sin conexión.</string>
+    <string name="read_downloads_empty_detail">Los capítulos descargados se abren sin conexión.</string>
+    <string name="read_downloads_empty_both">Los episodios y capítulos descargados se abren sin conexión.</string>
     <string name="downloads_load_failed">No se pudieron cargar las descargas</string>
     <string name="downloads_folder_failed">No se pudo abrir la carpeta. Revisa que todavía exista.</string>
     <string name="downloads_episode_name">Episodio %1$d</string>

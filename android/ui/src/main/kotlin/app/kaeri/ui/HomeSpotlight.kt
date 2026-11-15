@@ -48,6 +48,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.AnnotatedString
@@ -320,6 +321,7 @@ private fun MainAction(spot: Spotlight, action: HomeAction, full: Modifier, heig
 private fun SpotlightMenu(spot: Spotlight, menu: Boolean, close: () -> Unit, h: HomeHandlers) {
     val store = LocalAppStore.current
     val context = LocalContext.current
+    val resources = LocalResources.current
     val snackbars = LocalSnackbars.current
     val entry = spot.entry
     val id = entry.id
@@ -332,7 +334,7 @@ private fun SpotlightMenu(spot: Spotlight, menu: Boolean, close: () -> Unit, h: 
                 onClick = {
                     close()
                     store.setWatched(id, listOf(spot.episode.toString()))
-                    snackbars.show(Strings.homeMarkedWatched(context, episode), context.getString(R.string.action_undo)) {
+                    snackbars.show(Strings.homeMarkedWatched(context, episode), resources.getString(R.string.action_undo)) {
                         store.setWatched(id, listOf(spot.episode.toString()), watched = false)
                     }
                 },

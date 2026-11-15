@@ -5,7 +5,7 @@ use kaeri_model::{catalog::LibrarySegment, command::Command};
 
 use super::{App, Field, cycle_search_filter, search_filter_labels};
 use crate::{
-    keymap::{Action, Context},
+    keymap::Action,
     nav::{Overlay, StageView},
 };
 
@@ -27,6 +27,10 @@ pub struct FrameReport {
     pub help_pages: Option<usize>,
     /// The first row the episode table's window showed, when it was drawn.
     pub episodes_offset: Option<usize>,
+    /// The first chapter a series page's window showed, when it was drawn.
+    pub series_offset: Option<usize>,
+    /// The window's size in cells. The reader sends the engine a new surface when it changes.
+    pub window: Option<(u16, u16)>,
 }
 
 impl App {
@@ -70,6 +74,10 @@ impl App {
                 return None;
             }
             _ => {}
+        }
+
+        if *overlay == Overlay::ReaderSettings {
+            return self.reader_settings_key(action);
         }
 
         let reference = matches!(overlay, Overlay::Help | Overlay::Logs);
@@ -256,6 +264,9 @@ impl App {
         match self.nav.overlay() {
             Some(Overlay::CommandPalette) => self.run_palette_pick(visible_rows),
             Some(Overlay::Logs) => None,
+            Some(Overlay::ListStatus) if self.series_here().is_some() => {
+                self.confirm_read_status()
+            }
             Some(Overlay::ListStatus) => self.confirm_list_status(),
             Some(Overlay::SearchFilters) => self.confirm_search_filters(),
             Some(Overlay::Rate) => self.confirm_rating(),
@@ -279,6 +290,9 @@ impl App {
     /// Rows the currently-open overlay is listing, so movement can be bounded.
     fn overlay_len(&self) -> usize {
         match self.nav.overlay() {
+            Some(Overlay::ListStatus) if self.series_here().is_some() => {
+                crate::app::READ_LISTS.len()
+            }
             Some(Overlay::ListStatus) => LibrarySegment::ALL.len(),
             Some(Overlay::Rate) => 10,
             Some(Overlay::SearchFilters) if self.reading_section() => {
@@ -316,10 +330,13 @@ impl App {
     /// set separately from the drawn set is how a palette ends up running the wrong entry.
     pub fn palette_matches(&self) -> Vec<(Action, String)> {
         // The keys the screen will read once the palette is closed, not the palette's own.
-        let context = if self.playing.is_some() { Context::Playing } else { Context::Browsing };
+        let context = self.screen_context();
+        // A novel has no pages to number.
+        let novel = self.reads_novel();
         self.keymap
             .palette_entries(self.text(Field::Palette), context)
             .into_iter()
+            .filter(|(action, _)| !(novel && *action == Action::ReaderGoToPage))
             .take(PALETTE_ROWS)
             .collect()
     }
@@ -367,6 +384,12 @@ impl App {
         if let Some(offset) = report.episodes_offset {
             self.cursors.episodes.offset = offset;
             self.episodes_jumped = false;
+        }
+        if let Some(offset) = report.series_offset {
+            self.cursors.chapters.offset = offset;
+        }
+        if let Some(window) = report.window {
+            self.reader_window(window);
         }
     }
 }

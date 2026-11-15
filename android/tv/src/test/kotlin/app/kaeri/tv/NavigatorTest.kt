@@ -43,6 +43,22 @@ class NavigatorTest {
     }
 
     @Test
+    fun another_pick_takes_the_title_pages_place_so_back_returns_to_where_surprise_me_was() {
+        val forgotten = mutableListOf<String>()
+        val nav = TvNavigator().apply { forget = { forgotten += it } }
+        nav.openTitle(930001u)
+        val first = nav.top as Page.Title
+        nav.replaceTitle(930002u)
+        assertEquals(930002u, (nav.top as Page.Title).id)
+        assertEquals(listOf(first.key), forgotten)
+        assertTrue(nav.pop())
+        assertNull(nav.top)
+        // With no title page on top, the pick opens one.
+        nav.replaceTitle(930003u)
+        assertEquals(930003u, (nav.top as Page.Title).id)
+    }
+
+    @Test
     fun another_destination_starts_afresh_and_search_forgets_its_text() {
         val nav = TvNavigator(Destination.Search)
         nav.typeSearch("hoshi")

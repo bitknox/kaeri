@@ -195,7 +195,7 @@ party-chat-send = Отправить
 party-chat-title = Чат
 party-chat-wait = Ждите { $seconds } с
 party-chat-wait-spoken = { $seconds ->
-    [one] Подождите одну секунду
+    [one] Подождите { $seconds } секунду
     [few] Подождите { $seconds } секунды
     [many] Подождите { $seconds } секунд
    *[other] Подождите { $seconds } секунды

@@ -5,6 +5,7 @@
 package app.kaeri.store
 
 import app.kaeri.engine.model.BookEditionRow
+import app.kaeri.engine.model.ChapterDownloadState
 import app.kaeri.engine.model.GroupChoice
 import app.kaeri.engine.model.Msg
 import app.kaeri.engine.model.PartGroup
@@ -12,10 +13,13 @@ import app.kaeri.engine.model.ReadingMsg
 import app.kaeri.engine.model.VolumeGroup
 
 object GroupsStage {
-    /** Every series and chapter list from now on lists three groups; null puts the engine's back. */
-    fun stage(store: AppStore, on: Boolean = true) {
+    /**
+     * Every series and chapter list from now on lists three groups; off puts the engine's back.
+     * With [downloaded] the chapter read in two parts is downloaded.
+     */
+    fun stage(store: AppStore, on: Boolean = true, downloaded: Boolean = false) {
         store.reading.seriesShot = if (on) { view -> view.copy(edition = view.edition?.let(::withGroups)) } else null
-        store.reading.chaptersShot = if (on) { list -> list.copy(edition = list.edition?.let(::withGroups), volumes = withParts(list.volumes)) } else null
+        store.reading.chaptersShot = if (on) { list -> list.copy(edition = list.edition?.let(::withGroups), volumes = withParts(list.volumes, downloaded)) } else null
     }
 
     fun withGroups(edition: BookEditionRow): BookEditionRow {
@@ -31,8 +35,11 @@ object GroupsStage {
         )
     }
 
-    /** The newest chapter from another group, one read in two parts, and one with a part from a group in another language. */
-    fun withParts(volumes: List<VolumeGroup>): List<VolumeGroup> {
+    /**
+     * The newest chapter from another group, one read in two parts (downloaded with [downloaded]),
+     * and one with a part from a group in another language.
+     */
+    fun withParts(volumes: List<VolumeGroup>, downloaded: Boolean = false): List<VolumeGroup> {
         var seen = 0
         return volumes.map { volume ->
             volume.copy(
@@ -43,7 +50,13 @@ object GroupsStage {
                             versionLabel = "Saltmarsh Team", // i18n-skip
                             line = chapter.line + Msg.Reading(ReadingMsg.ReadingRowFromGroup("Saltmarsh Team")), // i18n-skip
                         )
-                        2 -> chapter.copy(parts = 2u, line = chapter.line + Msg.Reading(ReadingMsg.ReadingRowParts(2)))
+                        2 -> {
+                            val inParts = chapter.copy(parts = 2u, line = chapter.line + Msg.Reading(ReadingMsg.ReadingRowParts(2)))
+                            if (!downloaded) inParts else inParts.copy(
+                                download = ChapterDownloadState.Done,
+                                line = inParts.line.map { if (it == Msg.Reading(ReadingMsg.ReadingRowNotDownloaded)) Msg.Reading(ReadingMsg.ReadingRowDownloaded) else it },
+                            )
+                        }
                         4 -> chapter.copy(
                             parts = 2u,
                             partGroups = listOf(PartGroup(part = 2u, group = "Bluefinch Group", language = "es")), // i18n-skip

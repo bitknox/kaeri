@@ -4,12 +4,12 @@ tray-open = Abrir o { -app-name }
 tray-quit = Sair
 close-title = Os downloads ainda estão em andamento
 close-downloading = { $count ->
-    [one] Um episódio está sendo baixado.
+    [one] { $count } episódio está sendo baixado.
     [many] { $count } episódios estão sendo baixados.
    *[other] { $count } episódios estão sendo baixados.
  }
 close-seeding = { $count ->
-    [one] Um episódio está compartilhando.
+    [one] { $count } episódio está compartilhando.
     [many] { $count } episódios estão compartilhando.
    *[other] { $count } episódios estão compartilhando.
  }
@@ -25,7 +25,7 @@ notify-episode-out-dubbed = O episódio { $episode } saiu, { -dubbed }.
 notify-next-for-you = A seguir para você: episódio { $episode }.
 notify-downloaded-one = Episódio { $episode } baixado.
 notify-downloaded = { $count ->
-    [one] Um episódio baixado.
+    [one] { $count } episódio baixado.
     [many] { $count } episódios baixados.
    *[other] { $count } episódios baixados.
  }

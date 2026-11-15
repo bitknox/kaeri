@@ -854,6 +854,12 @@
   <data name="ExportWaitsForWifi_other" xml:space="preserve">
     <value>{n} Kapitel sind noch nicht heruntergeladen. Dieser Versand wartet daher auf Wi-Fi und läuft dann von selbst an.</value>
   </data>
+  <data name="ExportPagesLeftOut_one" xml:space="preserve">
+    <value>Eine Seite von {chapter} ließ sich nicht lesen und fehlt in den Dateien.</value>
+  </data>
+  <data name="ExportPagesLeftOut_other" xml:space="preserve">
+    <value>{n} Seiten von {chapter} ließen sich nicht lesen und fehlen in den Dateien.</value>
+  </data>
   <data name="ReadingChapterTitled" xml:space="preserve">
     <value>Kapitel {chapter} · {title}</value>
   </data>
@@ -1468,6 +1474,21 @@
   </data>
   <data name="NoticeSignedOutQueue_other" xml:space="preserve">
     <value>Bei {tracker} abgemeldet. {count} wartende Änderungen werden für die nächste Anmeldung aufbewahrt.</value>
+  </data>
+  <data name="NoticeTrackerChangeRefused" xml:space="preserve">
+    <value>{tracker} hat eine Änderung an {title} wiederholt abgelehnt, sie bleibt nur in Kaeri.</value>
+  </data>
+  <data name="NoticeTrackerChangesRefused_one" xml:space="preserve">
+    <value>{tracker} hat Änderungen an {title} und einem weiteren Titel wiederholt abgelehnt, sie bleiben nur in Kaeri.</value>
+  </data>
+  <data name="NoticeTrackerChangesRefused_other" xml:space="preserve">
+    <value>{tracker} hat Änderungen an {title} und {others} weiteren Titeln wiederholt abgelehnt, sie bleiben nur in Kaeri.</value>
+  </data>
+  <data name="NoticeTrackerChangeRefusedUntitled_one" xml:space="preserve">
+    <value>{tracker} hat eine Änderung wiederholt abgelehnt, sie bleibt nur in Kaeri.</value>
+  </data>
+  <data name="NoticeTrackerChangeRefusedUntitled_other" xml:space="preserve">
+    <value>{tracker} hat Änderungen an {count} Titeln wiederholt abgelehnt, sie bleiben nur in Kaeri.</value>
   </data>
   <data name="NoticeSignOutFailed" xml:space="preserve">
     <value>Abmeldung bei {tracker} fehlgeschlagen. Versuche es noch einmal. {reason}</value>
@@ -3553,6 +3574,12 @@
   </data>
   <data name="DownloadsEmptyDetail" xml:space="preserve">
     <value>Heruntergeladene Folgen laufen ohne Verbindung.</value>
+  </data>
+  <data name="ReadDownloadsEmptyDetail" xml:space="preserve">
+    <value>Heruntergeladene Kapitel öffnen sich ohne Verbindung.</value>
+  </data>
+  <data name="ReadDownloadsEmptyBoth" xml:space="preserve">
+    <value>Heruntergeladene Folgen und Kapitel öffnen sich ohne Verbindung.</value>
   </data>
   <data name="DownloadsLoadFailed" xml:space="preserve">
     <value>Downloads konnten nicht geladen werden</value>

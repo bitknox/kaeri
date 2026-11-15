@@ -1,5 +1,5 @@
 source-picker-seeders = { $count ->
-    [one] Un seeder
+    [one] { $count } seeder
     [many] { $count } seeders
    *[other] { $count } seeders
  }

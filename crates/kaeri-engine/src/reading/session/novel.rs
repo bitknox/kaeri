@@ -25,12 +25,12 @@ use kaeri_model::{
     event::Event,
     reader::{
         NovelOpenView, NovelPos, NovelSpineItem, NovelTocEntry, PageEncoding, PageFile,
-        PixelFormat, ReaderAction, ReaderCommand, ReaderEvent, ReaderMode,
+        PageFormats, PixelFormat, ReaderAction, ReaderCommand, ReaderEvent, ReaderMode,
         ReaderSettingKey as Key, TurnHow,
     },
     reading::{ReadingAbout, ReadingEvent, ReadingFailure, VolumeGroup},
 };
-use kaeri_pages::{Renderer, resize::Fit};
+use kaeri_pages::{Renderer, Target, resize::Fit};
 
 use super::{Cx, RESUMED_MS, Session, notice, place};
 use crate::{
@@ -195,7 +195,7 @@ pub(super) fn fetch_ahead(
     (session, learning): (u64, crate::reading::credits::Learning),
     work: &WorkId,
     next: (usize, &ShelfChapter),
-    gone: &crate::reading::feed::Gone,
+    (gone, (target, decodes)): (&crate::reading::feed::Gone, (Target, Option<PageFormats>)),
 ) -> Ahead {
     let (index, next) = next;
     let sources = cx.services.book_sources.clone();
@@ -251,7 +251,7 @@ pub(super) fn fetch_ahead(
                 && tokio::fs::copy(&first, peek_dir.join(name)).await.is_ok()
                 && !gone.swept()
             {
-                worker.peek(PeekJob { session, chapter, path: peek_dir, out });
+                worker.peek(PeekJob { session, chapter, path: peek_dir, out, target, decodes });
             }
             Some(feed)
         };
@@ -288,7 +288,7 @@ pub(super) fn follow_first_page(
     session: u64,
     work: &WorkId,
     next: (usize, &ShelfChapter),
-    gone: &crate::reading::feed::Gone,
+    (gone, (target, decodes)): (&crate::reading::feed::Gone, (Target, Option<PageFormats>)),
 ) -> FirstPage {
     use kaeri_store::book_downloads::BookDownloadState as State;
     let (index, next) = next;
@@ -307,6 +307,8 @@ pub(super) fn follow_first_page(
                     chapter: chapter.clone(),
                     path,
                     out: out.clone(),
+                    target,
+                    decodes,
                 });
             }
         };
@@ -681,6 +683,7 @@ impl Session {
                 .eink
                 .then_some(EinkImages { target: plan.target, look: plan.look }),
             limits: Limits::default(),
+            text: self.surface.text,
         }
     }
 
@@ -908,7 +911,7 @@ impl Session {
         )
     }
 
-    fn novel_opened(&mut self, cx: &mut Cx<'_>, book: NovelBook) {
+    fn novel_opened(&mut self, cx: &mut Cx<'_>, mut book: NovelBook) {
         let support = self.support(cx);
         if support == NovelSupport::Refused {
             let version = cx.webview.unwrap_or(0);
@@ -977,6 +980,7 @@ impl Session {
             counted: counted.clone(),
             render_dir: render_dir.as_ref().map(|d| d.display().to_string()),
             words_per_minute: pace(&cx.services.store),
+            text: std::mem::take(&mut book.text),
         };
         self.mode = if self.layers.word(Key::Mode) == "scrolled" && !self.surface.eink {
             ReaderMode::Scrolled
@@ -1005,9 +1009,7 @@ impl Session {
         // The resumed notice waits for the first page, which says the page number.
         self.novel_resumed = restore.is_some() && self.resumed.take().is_some();
         if !self.opened {
-            self.opened = true;
-            cx.send(ReaderEvent::Opened(Box::new(self.view(cx))));
-            self.downloads_follow(cx, false);
+            self.say_opened(cx);
         }
         cx.send(ReaderEvent::NovelOpen(view));
     }

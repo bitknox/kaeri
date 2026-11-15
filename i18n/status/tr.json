@@ -1551,6 +1551,16 @@
     "by": "opus",
     "at": "2026-11-08"
   },
+  "book-picker-message": {
+    "source": "4d3eda59d6ad",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-13",
+    "flags": [
+      "review: new line, drafted to match library-picker-message with books in place of episodes"
+    ],
+    "back": "Choose a folder where your books are."
+  },
   "book-server-address": {
     "source": "fcdd8e672c75",
     "state": "draft",
@@ -6778,6 +6788,15 @@
     "state": "draft",
     "by": "agent",
     "at": "2026-11-07"
+  },
+  "export-pages-left-out": {
+    "source": "a4ba40fe7e1d",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-13",
+    "flags": [
+      "Machine draft of a new Send to e-reader line (2026-11-13). Johan reviews this translation before it is marked reviewed."
+    ]
   },
   "export-waits-for-wifi": {
     "source": "5c75b5abd78d",
@@ -13251,6 +13270,24 @@
     "state": "draft",
     "by": "agent",
     "at": "2026-10-31"
+  },
+  "notice-tracker-change-refused": {
+    "source": "32186c3c2ab6",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
+  },
+  "notice-tracker-change-refused-untitled": {
+    "source": "900dce4f0422",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
+  },
+  "notice-tracker-changes-refused": {
+    "source": "93e69fcf14d2",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
   },
   "notice-trailer-failed": {
     "source": "63b72b0ba384",
@@ -33747,17 +33784,863 @@
     "by": "opus",
     "at": "2026-11-08"
   },
-  "tui-medium-read-line": {
-    "source": "5fd5587c2d89",
-    "state": "draft",
-    "by": "opus",
-    "at": "2026-11-08"
-  },
   "tui-medium-settings-hint": {
     "source": "82228140080f",
     "state": "draft",
     "by": "opus",
     "at": "2026-11-08"
+  },
+  "tui-read-header-offline": {
+    "source": "156948a12a89",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-14"
+  },
+  "tui-read-hint-continue": {
+    "source": "f42f6a6df6bf",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-14"
+  },
+  "tui-read-hint-status": {
+    "source": "ad3e3c8146fc",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-14"
+  },
+  "tui-read-keys-chapters": {
+    "source": "256d747be0c2",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-14"
+  },
+  "tui-read-keys-download": {
+    "source": "44d78628c649",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-14"
+  },
+  "tui-read-keys-next": {
+    "source": "78b01f0cf740",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
+  },
+  "tui-read-keys-read": {
+    "source": "52575e067bdf",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-14"
+  },
+  "tui-read-keys-series": {
+    "source": "3375a4920652",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-14"
+  },
+  "tui-read-keys-status": {
+    "source": "b3a15290775f",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-14"
+  },
+  "tui-read-read-unread": {
+    "source": "0243539658a6",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-14"
+  },
+  "tui-read-row-date": {
+    "source": "13917b472d7d",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
+  },
+  "tui-read-row-date-year": {
+    "source": "64171c27431e",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
+  },
+  "tui-read-series-from": {
+    "source": "67b7a6279be7",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-14"
+  },
+  "tui-read-series-list": {
+    "source": "2473f3c339a2",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-14"
+  },
+  "tui-read-series-list-on": {
+    "source": "71bab475e749",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-14"
+  },
+  "tui-read-series-offline": {
+    "source": "c98ca421ce61",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-14"
+  },
+  "tui-read-series-read": {
+    "source": "d07a01c00d80",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-14"
+  },
+  "tui-read-status-offline": {
+    "source": "7d817f0f223f",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-14"
+  },
+  "tui-reader-action-back-to-page": {
+    "source": "3a42182f491d",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-14"
+  },
+  "tui-reader-action-bare": {
+    "source": "7bfb9dc317b1",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-14"
+  },
+  "tui-reader-action-first": {
+    "source": "17d7735daef9",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-14"
+  },
+  "tui-reader-action-fit": {
+    "source": "758e81467aef",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-14"
+  },
+  "tui-reader-action-go-to-page": {
+    "source": "e682f076f650",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
+  },
+  "tui-reader-action-last": {
+    "source": "2c4b1cc433fc",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-14"
+  },
+  "tui-reader-action-leave": {
+    "source": "7a4bc3ca3c4c",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-14"
+  },
+  "tui-reader-action-left": {
+    "source": "de1826c0c928",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-14"
+  },
+  "tui-reader-action-mode": {
+    "source": "be1fdb12476b",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-14"
+  },
+  "tui-reader-action-mode-novel": {
+    "source": "8c2e96ee3b25",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-14"
+  },
+  "tui-reader-action-narrower": {
+    "source": "8d5e753a2a63",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-14"
+  },
+  "tui-reader-action-next": {
+    "source": "542ffff55876",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-14"
+  },
+  "tui-reader-action-next-chapter": {
+    "source": "5013793e87d8",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-14"
+  },
+  "tui-reader-action-pages": {
+    "source": "17c5babe1aa1",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-14"
+  },
+  "tui-reader-action-previous": {
+    "source": "5b6a1140834a",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-14"
+  },
+  "tui-reader-action-previous-chapter": {
+    "source": "7ac92381ab6c",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-14"
+  },
+  "tui-reader-action-right": {
+    "source": "c6de4a1d5344",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-14"
+  },
+  "tui-reader-action-scroll-down": {
+    "source": "9dd12575273a",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-14"
+  },
+  "tui-reader-action-scroll-up": {
+    "source": "2b63dc08d32c",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-14"
+  },
+  "tui-reader-action-settings": {
+    "source": "89005c87f469",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-14"
+  },
+  "tui-reader-action-skip": {
+    "source": "831423b950d8",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-14"
+  },
+  "tui-reader-action-wider": {
+    "source": "180ac4ef7275",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-14"
+  },
+  "tui-reader-action-zoom": {
+    "source": "166bd56d1967",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-14"
+  },
+  "tui-reader-action-zoom-in": {
+    "source": "236ae937cbcd",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-14"
+  },
+  "tui-reader-action-zoom-out": {
+    "source": "c65ea2cf2f21",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-14"
+  },
+  "tui-reader-blocks": {
+    "source": "5168cd5936a0",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-14"
+  },
+  "tui-reader-blocks-notice": {
+    "source": "dc7c19e9c4c1",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-14"
+  },
+  "tui-reader-change": {
+    "source": "2f64461723d3",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-14"
+  },
+  "tui-reader-chapter-failed": {
+    "source": "06502febeb13",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-14"
+  },
+  "tui-reader-downloading": {
+    "source": "9bfe2b25e663",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-14"
+  },
+  "tui-reader-end-caught-up-line": {
+    "source": "b02ee8d84175",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-14"
+  },
+  "tui-reader-end-first-page": {
+    "source": "befae46fed09",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-14"
+  },
+  "tui-reader-end-no-more": {
+    "source": "6893412bf017",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-14"
+  },
+  "tui-reader-end-no-source": {
+    "source": "d89e734d3bd8",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-14"
+  },
+  "tui-reader-end-no-source-next": {
+    "source": "9f24cd28a143",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-14"
+  },
+  "tui-reader-end-not-out": {
+    "source": "0b0998f5c719",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-14"
+  },
+  "tui-reader-end-not-out-line": {
+    "source": "4eb588825858",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-14"
+  },
+  "tui-reader-end-not-out-next": {
+    "source": "292492332b47",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-14"
+  },
+  "tui-reader-end-offline": {
+    "source": "f3ecf9ed334e",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-14"
+  },
+  "tui-reader-end-offline-line": {
+    "source": "bae4cdd0d59c",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-14"
+  },
+  "tui-reader-end-offline-next": {
+    "source": "a506cd3e5612",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-14"
+  },
+  "tui-reader-end-series": {
+    "source": "cb7b1474b76f",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-14"
+  },
+  "tui-reader-end-skip-unread": {
+    "source": "145b8674bb24",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-14"
+  },
+  "tui-reader-finding": {
+    "source": "334876825772",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-14"
+  },
+  "tui-reader-fit-height": {
+    "source": "e4e636d967f0",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
+  },
+  "tui-reader-fit-width": {
+    "source": "f967d4ba3984",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-14"
+  },
+  "tui-reader-go-back": {
+    "source": "575e795c45e2",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-14"
+  },
+  "tui-reader-go-to-images": {
+    "source": "2fc01e6d0fde",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
+  },
+  "tui-reader-go-to-pages": {
+    "source": "17b740491815",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
+  },
+  "tui-reader-hint-again": {
+    "source": "d93eec285563",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-14"
+  },
+  "tui-reader-hint-back": {
+    "source": "c16e00a7a8b2",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-14"
+  },
+  "tui-reader-hint-change": {
+    "source": "2f64461723d3",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-14"
+  },
+  "tui-reader-hint-fit-screen": {
+    "source": "9e247b60b029",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-14"
+  },
+  "tui-reader-hint-go": {
+    "source": "08953907b53f",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
+  },
+  "tui-reader-hint-leave-zoom": {
+    "source": "7e0fc0de552b",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-14"
+  },
+  "tui-reader-hint-move": {
+    "source": "379c18aec565",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-14"
+  },
+  "tui-reader-hint-next": {
+    "source": "0fbf6dc6a196",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-14"
+  },
+  "tui-reader-hint-next-chapter": {
+    "source": "5013793e87d8",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-14"
+  },
+  "tui-reader-hint-next-screen": {
+    "source": "82b8d3d95ef9",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-14"
+  },
+  "tui-reader-hint-one-page": {
+    "source": "4056b44edad8",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-14"
+  },
+  "tui-reader-hint-scroll": {
+    "source": "a7698b3d20a6",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-14"
+  },
+  "tui-reader-hint-series": {
+    "source": "0899c5a1d76f",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-14"
+  },
+  "tui-reader-hint-settings": {
+    "source": "9d8b8aa2b404",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-14"
+  },
+  "tui-reader-hint-stop": {
+    "source": "d9ad53251f23",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-14"
+  },
+  "tui-reader-hint-two-pages": {
+    "source": "0f39d653b74a",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-14"
+  },
+  "tui-reader-hint-width": {
+    "source": "f21fb4f4b9e8",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-14"
+  },
+  "tui-reader-hint-without": {
+    "source": "142d89f01a85",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-14"
+  },
+  "tui-reader-hint-zoom": {
+    "source": "166bd56d1967",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-14"
+  },
+  "tui-reader-images-off": {
+    "source": "c6d319a30b42",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-14"
+  },
+  "tui-reader-images-off-how": {
+    "source": "8e208ac88498",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-14"
+  },
+  "tui-reader-images-off-novels": {
+    "source": "64c0e7c4bba6",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-14"
+  },
+  "tui-reader-keys-left-out": {
+    "source": "698ad25de901",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-14"
+  },
+  "tui-reader-keys-reader": {
+    "source": "5a3e33abd5fb",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-14"
+  },
+  "tui-reader-keys-rtl": {
+    "source": "4b93f14c0c0c",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-14"
+  },
+  "tui-reader-keys-view": {
+    "source": "b818d5fb2ed7",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-14"
+  },
+  "tui-reader-marked-read": {
+    "source": "326c1122c93f",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-14"
+  },
+  "tui-reader-marked-unread": {
+    "source": "e3a54d2f6839",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-14"
+  },
+  "tui-reader-no-answer": {
+    "source": "f8bd3cfcebc6",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
+  },
+  "tui-reader-no-answer-in": {
+    "source": "5a2937ff4a26",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
+  },
+  "tui-reader-novel-picture": {
+    "source": "8c754b74d11d",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-14"
+  },
+  "tui-reader-novel-picture-plain": {
+    "source": "5ed03bb1f3a1",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-14"
+  },
+  "tui-reader-novel-through": {
+    "source": "177259baefed",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-14"
+  },
+  "tui-reader-opening": {
+    "source": "219217a4a552",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-14"
+  },
+  "tui-reader-page-failed-status": {
+    "source": "ee7703a84b01",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
+  },
+  "tui-reader-page-of": {
+    "source": "3a1e76c345ee",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-14"
+  },
+  "tui-reader-pages-of": {
+    "source": "8316b1188159",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-14"
+  },
+  "tui-reader-setting-crop": {
+    "source": "1b28173e8b92",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-14"
+  },
+  "tui-reader-setting-direction": {
+    "source": "d23ee5e66df8",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-14"
+  },
+  "tui-reader-setting-fit": {
+    "source": "f2a69a199c80",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-14"
+  },
+  "tui-reader-setting-justify": {
+    "source": "05e9759cfd99",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-14"
+  },
+  "tui-reader-setting-line-spacing": {
+    "source": "04125ff41f4d",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-14"
+  },
+  "tui-reader-setting-mode": {
+    "source": "37cbecaec58e",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-14"
+  },
+  "tui-reader-setting-page-layout": {
+    "source": "a9e5d8a7ac94",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-14"
+  },
+  "tui-reader-setting-spreads": {
+    "source": "ee85ae790329",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-14"
+  },
+  "tui-reader-setting-strip-gap": {
+    "source": "1eaec3dd966c",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
+  },
+  "tui-reader-setting-text-width": {
+    "source": "17d1a4ef7246",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-14"
+  },
+  "tui-reader-settings-manga-all": {
+    "source": "a90be37eda4a",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-14"
+  },
+  "tui-reader-settings-manga-foot": {
+    "source": "a4c877d02536",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-14"
+  },
+  "tui-reader-settings-manga-here": {
+    "source": "fb72b2a99100",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-14"
+  },
+  "tui-reader-settings-manga-note": {
+    "source": "a94558bb105a",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-14"
+  },
+  "tui-reader-settings-not-here": {
+    "source": "2d6ecfbbe114",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-14"
+  },
+  "tui-reader-settings-novel-foot": {
+    "source": "1453623e0cfd",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-14"
+  },
+  "tui-reader-settings-novel-note": {
+    "source": "84ab6449515f",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-14"
+  },
+  "tui-reader-settings-novels-all": {
+    "source": "b2d018bcfb7e",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-14"
+  },
+  "tui-reader-settings-novels-here": {
+    "source": "33c60fd3ef2d",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-14"
+  },
+  "tui-reader-settings-preview": {
+    "source": "417b90913e05",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-14"
+  },
+  "tui-reader-settings-series": {
+    "source": "f902decaf67c",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-14"
+  },
+  "tui-reader-start-over": {
+    "source": "338cca2d2f31",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-14"
+  },
+  "tui-reader-strip-at": {
+    "source": "2b788ed0260a",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-14"
+  },
+  "tui-reader-strip-read": {
+    "source": "46871bae1f48",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-14"
+  },
+  "tui-reader-strip-read-offline": {
+    "source": "8bfd63bea55e",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-14"
+  },
+  "tui-reader-strip-read-tracker": {
+    "source": "b383519121ab",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-14"
+  },
+  "tui-reader-too-small": {
+    "source": "3a0191fc0b69",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-14"
+  },
+  "tui-reader-too-small-line": {
+    "source": "04a689d3816a",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-14"
+  },
+  "tui-reader-value-columns": {
+    "source": "eab2a140a583",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-14"
+  },
+  "tui-reader-value-height": {
+    "source": "ffdadf0a576f",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
+  },
+  "tui-reader-value-open": {
+    "source": "1f7698c061c2",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-14"
+  },
+  "tui-reader-value-paged": {
+    "source": "6ac0cf0ddc5c",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-14"
+  },
+  "tui-reader-value-scrolled": {
+    "source": "68f03c0bc995",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-14"
+  },
+  "tui-reader-value-tight": {
+    "source": "1bec74d2c7d3",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-14"
+  },
+  "tui-reader-value-vertical": {
+    "source": "2fba71bd651b",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-14"
+  },
+  "tui-reader-where": {
+    "source": "36a758892fa5",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-14"
+  },
+  "tui-reader-zoom": {
+    "source": "c2e8c1646409",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-14"
+  },
+  "tui-reader-zoom-page": {
+    "source": "2bd90a7c5733",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-14"
   },
   "tui-together-chat-hidden-line": {
     "source": "6be0cc730c25",

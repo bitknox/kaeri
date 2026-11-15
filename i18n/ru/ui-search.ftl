@@ -91,7 +91,7 @@ search-available-here = Играет здесь
 search-available-services = В ваших сервисах
 search-line-service = В { $service }
 count-episodes = { $count ->
-    [one] Один эпизод
+    [one] { $count } эпизод
     [few] { $count } эпизода
     [many] { $count } эпизодов
    *[other] { $count } эпизода
@@ -100,7 +100,7 @@ count-episodes-short = { $count } эп.
 count-out-of = Вышло { $out } из { $total }
 count-out-of-short = { $out } из { $total }
 count-out = { $count ->
-    [one] Вышел один эпизод
+    [one] Вышел { $count } эпизод
     [few] Вышло { $count } эпизода
     [many] Вышло { $count } эпизодов
    *[other] Вышло { $count } эпизода
@@ -112,14 +112,14 @@ count-next-of = Эп. { $episode } из { $total }
 count-dub = Дубляж
 count-dub-through = Дубляж { $through }
 count-spoken-episodes = { $count ->
-    [one] Один эпизод
+    [one] { $count } эпизод
     [few] { $count } эпизода
     [many] { $count } эпизодов
    *[other] { $count } эпизода
  }
 count-spoken-out-of = Вышло эпизодов: { $out } из { $total }
 count-spoken-out = { $count ->
-    [one] Вышел один эпизод
+    [one] Вышел { $count } эпизод
     [few] Вышло { $count } эпизода
     [many] Вышло { $count } эпизодов
    *[other] Вышло { $count } эпизода

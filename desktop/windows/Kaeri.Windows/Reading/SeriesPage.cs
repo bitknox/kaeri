@@ -248,7 +248,7 @@ public sealed partial class SeriesPage : Page
 
     void DrawHead(SeriesView series)
     {
-        var print = Drawn.Fingerprint((wide, series.Titles, series.Cover, series.Facts, series.Synopsis, series.Action, series.List, series.Score, Volumes().Select(v => (v.Volume, v.Chapters.Count(c => c.Download is null))).ToList(), Downloaded().Count));
+        var print = Drawn.Fingerprint((wide, series.Titles, series.Cover, series.Facts, series.Synopsis, series.Action, series.List, series.Score, Volumes().Select(v => (v.Volume, v.Chapters.Count(c => c.Downloadable()))).ToList(), Downloaded().Count, Volumes().HasDownloads()));
         if (print == drawnHead)
             return;
         drawnHead = print;
@@ -372,7 +372,10 @@ public sealed partial class SeriesPage : Page
         mainAction = main;
         var status = series.List is { } list ? SeriesWords.List(list) : T.SeriesAddToList;
         row.Children.Add(Menu(status, StatusMenu(series), status));
-        row.Children.Add(Menu(T.SeriesDownload, DownloadMenu(), T.SeriesDownload));
+        // A folder's series has nothing to download or delete: its Download button rests.
+        var download = Menu(T.SeriesDownload, DownloadMenu(), T.SeriesDownload);
+        download.IsEnabled = Volumes().HasDownloads();
+        row.Children.Add(download);
         var more = new DropDownButton { Content = new FontIcon { Glyph = "\uE712", FontSize = 14 }, MinHeight = 40, Flyout = Named(MoreMenu(series), T.ActionMore) };
         AutomationProperties.SetName(more, T.ActionMore);
         ToolTipService.SetToolTip(more, T.ActionMore);
@@ -448,17 +451,17 @@ public sealed partial class SeriesPage : Page
     {
         var menu = new MenuFlyout();
         var volumes = Volumes();
-        var unread = volumes.SelectMany(v => v.Chapters).Any(c => c.State is not ChapterReadState.Read && c.Download is null);
+        var unread = volumes.SelectMany(v => v.Chapters).Any(c => c.State is not ChapterReadState.Read && c.Downloadable());
         menu.Items.Add(SeriesWords.Item(T.DownloadNext(5), () => ctx.Known.Reading.Download(work, new DownloadPick.NextUnread(5))));
         menu.Items.Add(SeriesWords.Item(T.DownloadNext(10), () => ctx.Known.Reading.Download(work, new DownloadPick.NextUnread(10))));
         menu.Items.Add(SeriesWords.Item(T.DownloadUnread, () => ctx.Known.Reading.Download(work, new DownloadPick.Unread()), enabled: unread));
-        var toFetch = SeriesWords.DownloadVolumes(volumes).Where(g => g.Chapters.Any(c => c.Download is null)).ToList();
+        var toFetch = SeriesWords.DownloadVolumes(volumes).Where(g => g.Chapters.Any(c => c.Downloadable())).ToList();
         if (toFetch.Count > 0)
             menu.Items.Add(new MenuFlyoutSeparator());
         var novel = Series?.Medium == Medium.Novel;
         foreach (var group in toFetch)
         {
-            var missing = group.Chapters.Where(c => c.Download is null).Select(c => c.Id).ToList();
+            var missing = group.Chapters.Where(c => c.Downloadable()).Select(c => c.Id).ToList();
             menu.Items.Add(SeriesWords.Item(T.DownloadVolumeCount(SeriesWords.Volume(group, novel).Name, missing.Count), () =>
             {
                 if (group.Volume is { Length: > 0 } volume)
@@ -502,6 +505,12 @@ public sealed partial class SeriesPage : Page
         var print = Drawn.Fingerprint((series.Edition, tracking, editions.Length, series.AskWhereStopped, both ? series.OtherMedium : null, ctx.Known.Reading.Sending.Targets.Select(t => (t.Id, t.Name)).ToList()));
         if (print == drawnSide)
             return;
+        if (groupPicked.Remove("side"))
+        {
+            // The series that comes back with a group pick crossfades to its new words.
+            Crossfade.Swap(side, DrawSide);
+            return;
+        }
         drawnSide = print;
         var focus = Ui.MarkFocus(side);
         side.Children.Clear();
@@ -509,6 +518,10 @@ public sealed partial class SeriesPage : Page
         if (series.Edition is { } edition)
             AddSide(T.SeriesReadingFrom, SeriesWords.Source(edition, Math.Max(0, editions.Length - 1)), T.SeriesChange,
                 () => _ = SeriesDialogs.ReadFrom(ctx, XamlRoot, work));
+        // The group, when the source has more than one to read a chapter from: under Reading
+        // from, before the trackers, as the board orders them.
+        if (GroupPicker.Offered(series.Edition))
+            AddGroup(series.Edition!);
         var followed = tracking.Where(t => t.Mapping is TrackerMapping.Mapped).ToList();
         if (followed.Count > 0)
             AddSide(SeriesWords.Names([.. followed.Select(t => SeriesWords.Tracker(t.Tracker))]), SeriesWords.Progress(followed[0], series), T.SeriesTracking,
@@ -516,8 +529,6 @@ public sealed partial class SeriesPage : Page
         else if (tracking.Length > 0)
             AddSide(SeriesWords.Names([.. tracking.Select(t => SeriesWords.Tracker(t.Tracker))]), T.SeriesTrackerAsk, T.SeriesChange,
                 () => _ = SeriesDialogs.Tracking(ctx, XamlRoot, work));
-        if (series.Edition?.VersionLabel is { Length: > 0 } label)
-            AddSide(label, T.SeriesPreferredGroup, T.SeriesChange, () => _ = SeriesDialogs.ReadFrom(ctx, XamlRoot, work));
         if (series.AskWhereStopped is { } sent)
             AddSide(T.SendTitle, T.StopNote(SeriesWords.Device(ctx, sent.Target)), T.StopNoteAction,
                 () => _ = StoppedDialog.Show(ctx, XamlRoot, series, sent));
@@ -581,6 +592,11 @@ public sealed partial class SeriesPage : Page
         var print = Drawn.Fingerprint((read, newestFirst, choosing?.Count, choosing is null ? null : string.Join(",", choosing.Order())));
         if (print == drawnChapters)
             return;
+        if (groupPicked.Remove("chapters"))
+        {
+            Crossfade.Swap(chapters, DrawChapters);
+            return;
+        }
         drawnChapters = print;
         // The head's Download menu counts what is left to fetch.
         DrawHead(series);
@@ -846,6 +862,9 @@ public sealed partial class SeriesPage : Page
         menu.Items.Add(new MenuFlyoutSeparator());
         switch (row.Download)
         {
+            case null when row.OnDevice:
+                // A file on this device, as a folder's chapters are: nothing to download.
+                break;
             case null:
                 menu.Items.Add(SeriesWords.Item(T.SeriesDownload, () => reading.Download(work, new DownloadPick.Chapters([row.Id]))));
                 break;
@@ -903,7 +922,8 @@ public sealed partial class SeriesPage : Page
 
     void StartChoosing()
     {
-        choosing = [];
+        // The next ten unread chapters not downloaded yet, from where the reader is, start ticked.
+        choosing = [.. ChooseChapters.Start([.. Volumes().SelectMany(v => v.Chapters)])];
         // Every volume opens while choosing, so a whole volume can be ticked.
         foreach (var group in Volumes())
             folded[group.Volume ?? ""] = true;

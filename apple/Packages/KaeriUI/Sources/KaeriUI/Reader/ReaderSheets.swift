@@ -489,6 +489,10 @@ enum ReaderDevice {
 struct ReaderChaptersSheet: View {
     @Bindable var model: ReaderModel
     let theme: ReaderTheme
+    /// A popover, 520 pt square, on the Mac and an iPad window of regular width. A sheet as wide
+    /// as the window otherwise: the iPhone's, and an iPad window made narrow, which the popover
+    /// adapts to.
+    var popover = !ReaderDevice.isPhone
     @State private var tab = ReaderModel.chapterListShot ? 1 : 0
     /// The loading line waits 600 ms, as every state does.
     @State private var loadingShown = false
@@ -496,9 +500,18 @@ struct ReaderChaptersSheet: View {
     @AccessibilityFocusState private var spoken: String?
     @FocusState private var keyed: String?
 
-    private var hasPages: Bool { model.medium == .manga }
+    /// Pages for a chapter open with its own: while a chapter opens, or would not open, the
+    /// leaves are still the chapter left, so only the chapters show.
+    private var hasPages: Bool { Self.hasPages(model) }
+
+    static func hasPages(_ model: ReaderModel) -> Bool {
+        guard model.medium == .manga, case .open = model.phase else { return false }
+        return true
+    }
     /// Pages a jump in the grid covers.
     private static let band = 20
+    /// The popover's width and height.
+    static let side: CGFloat = 520
 
     var body: some View {
         VStack(spacing: 0) {
@@ -513,7 +526,7 @@ struct ReaderChaptersSheet: View {
             }
             if hasPages && tab == 0 { pages } else { chapters }
         }
-        .frame(width: ReaderDevice.isPhone ? nil : 520, height: ReaderDevice.isPhone ? nil : 520)
+        .frame(width: popover ? Self.side : nil, height: popover ? Self.side : nil)
         .presentationDetents([.fraction(0.55), .large])
         .presentationBackgroundInteraction(.enabled)
         .presentationBackground(theme.glassSolid)
@@ -522,22 +535,42 @@ struct ReaderChaptersSheet: View {
         .foregroundStyle(theme.silk)
     }
 
-    /// Every page of the chapter, as the person counts them: both halves of a spread are here.
-    private var pageList: [(number: Int, leaf: Int, part: LeafPart)] {
-        var all: [(Int, Int, LeafPart)] = []
-        for (index, leaf) in model.leaves.enumerated() where !leaf.endPage {
-            for part in leaf.parts { all.append((Int(part.page) + 1, index, part)) }
+    /// A cell of the Pages grid: a page, or one half of a wide page split in two, which both
+    /// carry the page's number.
+    struct PageEntry: Identifiable {
+        let number: Int
+        let leaf: Int
+        let part: LeafPart
+
+        /// The page and its half, so the two halves of a split page are two cells.
+        var id: String {
+            switch part.half {
+            case nil: "\(part.page)"
+            case .left?: "\(part.page)-left" // i18n-skip: an id
+            case .right?: "\(part.page)-right" // i18n-skip: an id
+            }
         }
-        return all.sorted { $0.0 < $1.0 }
     }
+
+    /// Every page of the chapter, as the person counts them: both halves of a spread are here,
+    /// and both halves of a split page, in the order their leaves read.
+    static func pageList(_ leaves: [Leaf]) -> [PageEntry] {
+        var all: [PageEntry] = []
+        for (index, leaf) in leaves.enumerated() where !leaf.endPage {
+            for part in leaf.parts { all.append(PageEntry(number: Int(part.page) + 1, leaf: index, part: part)) }
+        }
+        return all.enumerated().sorted { ($0.element.number, $0.offset) < ($1.element.number, $1.offset) }.map(\.element)
+    }
+
+    private var pageList: [PageEntry] { Self.pageList(model.leaves) }
 
     private var pages: some View {
         // The strip reads down whatever the series' direction, so its pages run as it does.
         let strip = model.view?.mode == .strip
         let rtl = model.view?.direction == .rightToLeft && !strip
-        let columns = ReaderDevice.isPhone
-            ? Array(repeating: GridItem(.flexible(), spacing: 10), count: 4)
-            : Array(repeating: GridItem(.fixed(84), spacing: 10), count: 5)
+        let columns = popover
+            ? Array(repeating: GridItem(.fixed(84), spacing: 10), count: 5)
+            : Array(repeating: GridItem(.flexible(), spacing: 10), count: 4)
         let list = pageList
         return ScrollViewReader { proxy in
             VStack(spacing: 0) {
@@ -545,10 +578,10 @@ struct ReaderChaptersSheet: View {
                 if list.count > Self.band * 2 {
                     ScrollView(.horizontal, showsIndicators: false) {
                         HStack(spacing: 6) {
-                            ForEach(Array(stride(from: 1, through: list.count, by: Self.band)), id: \.self) { first in
-                                let last = min(first + Self.band - 1, list.count)
-                                Button(L.readerPagesRange(from: first, to: last)) {
-                                    withAnimation(.standard) { proxy.scrollTo(first, anchor: .top) }
+                            ForEach(Array(stride(from: 0, to: list.count, by: Self.band)), id: \.self) { first in
+                                let last = min(first + Self.band, list.count) - 1
+                                Button(L.readerPagesRange(from: list[first].number, to: list[last].number)) {
+                                    withAnimation(.standard) { proxy.scrollTo(list[first].id, anchor: .top) }
                                 }
                                 .font(.ui(13, weight: .medium)).monospacedDigit()
                                 .foregroundStyle(theme.silk)
@@ -567,11 +600,10 @@ struct ReaderChaptersSheet: View {
         }
     }
 
-    private func pageGrid(_ list: [(number: Int, leaf: Int, part: LeafPart)], columns: [GridItem], rtl: Bool,
-                          strip: Bool) -> some View {
+    private func pageGrid(_ list: [PageEntry], columns: [GridItem], rtl: Bool, strip: Bool) -> some View {
         ScrollView {
             LazyVGrid(columns: columns, spacing: 10) {
-                ForEach(list, id: \.number) { entry in
+                ForEach(list) { entry in
                     Button {
                         model.requestJump(entry.leaf)
                         model.sheet = nil
@@ -581,7 +613,7 @@ struct ReaderChaptersSheet: View {
                               open: strip ? entry.number == model.position.index + 1 : entry.leaf == model.current)
                     }
                     .buttonStyle(.plain)
-                    .id(entry.number)
+                    .id(entry.id)
                     .environment(\.layoutDirection, .leftToRight)
                 }
             }
@@ -631,7 +663,7 @@ struct ReaderChaptersSheet: View {
 
     private var chapters: some View {
         ScrollViewReader { proxy in
-            chapterList.onAppear { place(proxy) }
+            chapterList.onAppear { model.loadChapters(); place(proxy) }
                 // Chapters listed after the sheet opened are placed as they come in.
                 .onChange(of: model.chaptersLoaded) { _, loaded in if loaded { place(proxy) } }
         }

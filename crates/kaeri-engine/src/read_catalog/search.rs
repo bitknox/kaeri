@@ -771,7 +771,7 @@ fn list(kit: &Kit, ask: Ask, segment: LibrarySegmentRead) -> Vec<WorkTile> {
                 Some(k) if !ask.adult && k.book.adult() => return None,
                 Some(k) => tiles::reading(&kit.meta, &kit.store, &kit.sources, &k.book),
                 None => match local.iter().find(|s| s.work.as_deref() == Some(work.as_str())) {
-                    Some(series) => local_tile(kit, work, &series.name, &series.medium),
+                    Some(series) => local_tile(&kit.store, &kit.sources, work, series),
                     None => tiles::demo(work, &kit.store, &kit.sources)?,
                 },
             };
@@ -792,16 +792,22 @@ fn your_files(kit: &Kit) -> Vec<WorkTile> {
             let medium = Medium::parse(&s.medium).unwrap_or(Medium::Manga);
             let work =
                 s.work.clone().unwrap_or_else(|| WorkKey::local(medium, &s.name).to_string());
-            local_tile(kit, &work, &s.name, &s.medium)
+            local_tile(&kit.store, &kit.sources, &work, &s)
         })
         .collect()
 }
 
-fn local_tile(kit: &Kit, work: &str, name: &str, medium: &str) -> WorkTile {
-    let medium = Medium::parse(medium).unwrap_or(Medium::Manga);
+/// A folder's series as a cover, by its own name, with where the person is in it.
+pub(super) fn local_tile(
+    store: &kaeri_store::Store,
+    sources: &crate::read_sources::BookSources,
+    work: &str,
+    series: &kaeri_store::book_sources::LocalSeries,
+) -> WorkTile {
+    let medium = Medium::parse(&series.medium).unwrap_or(Medium::Manga);
     let mut tile = WorkTile {
         work: kaeri_core::books::WorkId::new(work.to_owned()),
-        title: name.to_owned(),
+        title: series.name.clone(),
         medium,
         cover: None,
         format_label: None,
@@ -816,7 +822,7 @@ fn local_tile(kit: &Kit, work: &str, name: &str, medium: &str) -> WorkTile {
         amount: None,
         started: None,
     };
-    tiles::mark(&mut tile, &kit.store, &kit.sources);
+    tiles::mark(&mut tile, store, sources);
     tile
 }
 
