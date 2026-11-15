@@ -1007,8 +1007,9 @@ pub struct MetaConfig {
     /// Calendar shows only the shows on the person's list. Off, it opens on everything airing;
     /// the choice is remembered.
     pub calendar_mine: bool,
-    /// Fill episode synopses the source left out from a public episode service, one request
-    /// per title you open (`api.ani.zip`, asked the title's AniList id). On unless switched off.
+    /// Fill episode synopses, titles and stills the sources left out from a public episode
+    /// service, one request per title you open (`api.ani.zip`, asked the title's AniList id).
+    /// On unless switched off.
     pub episode_text: bool,
 }
 
