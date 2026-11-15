@@ -273,6 +273,7 @@ pub fn build(ctx: &Rc<Ctx>) -> adw::NavigationPage {
     });
     // The page as `widgets::content_page` makes it, with Home's own hold on the banner.
     let view = adw::ToolbarView::new();
+    crate::private::badge_on(&header);
     view.add_top_bar(&header);
     view.add_top_bar(&page.banner);
     view.set_content(Some(&page.stack));

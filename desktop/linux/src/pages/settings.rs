@@ -718,6 +718,7 @@ impl Inner {
         let has_aside = preview::content(Topic::Pane(name), &known).is_some();
         drop(known);
         let header = adw::HeaderBar::new();
+        crate::private::badge_on(&header);
         let view = adw::ToolbarView::new();
         view.add_top_bar(&header);
         view.set_content(Some(&self.with_aside(&page, has_aside)));

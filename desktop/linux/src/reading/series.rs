@@ -61,6 +61,7 @@ pub fn page(ctx: &Rc<Ctx>, work: &WorkId) -> adw::NavigationPage {
         .menu_model(&more_menu(work))
         .build();
     header.pack_end(&menu_button);
+    crate::private::badge_on(&header);
     let page = widgets::page("", &header, &states.widget);
     page.set_tag(Some(&series_tag(work)));
     // Beside the main action: the list it is on, and what to download.
@@ -106,6 +107,11 @@ pub fn page(ctx: &Rc<Ctx>, work: &WorkId) -> adw::NavigationPage {
         }
     });
     actions.add_action(&order);
+    actions.add_action(&crate::private::always_action(
+        ctx,
+        kaeri_model::private::PrivateTitle::Series { work: work.clone() },
+        &page,
+    ));
     page.insert_action_group("series", Some(&actions));
     states.on_retry({
         let (hub, work) = (Rc::downgrade(&ctx.hub), work.clone());
@@ -126,7 +132,11 @@ pub fn page(ctx: &Rc<Ctx>, work: &WorkId) -> adw::NavigationPage {
         }
     });
     let wanted = work.clone();
+    // Under the main action while private: moved into each new layout of the head.
+    let private_line = crate::private::Line::new();
+    let place_kept = Rc::new(Cell::new(false));
     listen(ctx, &page, {
+        let (private_line, place_kept) = (Rc::clone(&private_line), Rc::clone(&place_kept));
         let (ctx, states, head, page) =
             (Rc::downgrade(ctx), states.clone(), head.clone(), page.downgrade());
         let (status_button, download_button, shown) =
@@ -137,6 +147,13 @@ pub fn page(ctx: &Rc<Ctx>, work: &WorkId) -> adw::NavigationPage {
         let (menu_button, top) = (menu_button.clone(), Rc::clone(&top));
         move |event| {
             let Some(ctx) = ctx.upgrade() else { return };
+            if crate::private::changes(event) && shown.borrow().is_some() {
+                let (hub, work, kept) =
+                    (Rc::downgrade(&ctx.hub), wanted.clone(), Rc::clone(&place_kept));
+                private_line.later(move || {
+                    hub.upgrade()?.known.borrow().series_line(work.as_str(), kept.get())
+                });
+            }
             if series_extra::follow(&memo, &work, event) {
                 let series = matches!(event, Event::Reading(ReadingEvent::Series(_)));
                 series_extra::redraw(&ctx, &details_veil, &details, &memo.borrow(), series);
@@ -169,9 +186,24 @@ pub fn page(ctx: &Rc<Ctx>, work: &WorkId) -> adw::NavigationPage {
                         &view.list.map_or_else(t::series_add_to_list, library::name),
                     );
                     status_button.set_menu_model(Some(&status_menu(view)));
-                    let drawn =
-                        draw_head(&ctx, &head, view, &[&status_button, &download_button]);
+                    let drawn = draw_head(
+                        &ctx,
+                        &head,
+                        view,
+                        &[&status_button, &download_button],
+                        &private_line,
+                    );
                     top.set(Some(&drawn));
+                    place_kept.set(view.place_kept);
+                    if shown.borrow().is_none() {
+                        // As the page opens: there at once.
+                        let now = ctx
+                            .hub
+                            .known
+                            .borrow()
+                            .series_line(view.work.as_str(), view.place_kept);
+                        private_line.set(now, false);
+                    }
                     shown.replace(Some(SeriesView::clone(view)));
                     // The heading says Volumes for a novel, which the series view tells.
                     if listed.borrow().is_some() {
@@ -366,6 +398,9 @@ fn more_menu(work: &WorkId) -> gio::Menu {
     menu.append_item(&widgets::menu_item(&t::linux_send_menu(), "win.read-send", &work.0));
     menu.append(Some(&t::series_read_from_menu()), Some("series.read-from"));
     menu.append(Some(&t::series_tracking()), Some("series.trackers"));
+    let own = gio::Menu::new();
+    own.append(Some(&t::title_always_private()), Some("series.always-private"));
+    menu.append_section(None, &own);
     menu
 }
 
@@ -444,6 +479,7 @@ fn draw_head(
     head: &gtk::Box,
     view: &SeriesView,
     menus: &[&gtk::MenuButton],
+    private_line: &crate::private::Line,
 ) -> gtk::Box {
     let top = gtk::Box::new(gtk::Orientation::Horizontal, 20);
     lay_top(&top, ctx.size());
@@ -486,6 +522,8 @@ fn draw_head(
         buttons.append(*menu);
     }
     text.append(&buttons);
+    // Under the main action: "Private · Not saved or synced", while it applies.
+    private_line.place(&text);
     top.append(&text);
     head.append(&top);
     if let Some(synopsis) = &view.synopsis {

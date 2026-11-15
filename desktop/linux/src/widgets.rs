@@ -294,6 +294,7 @@ fn page_with_banner(
     banner: &adw::Banner,
     content: &impl IsA<gtk::Widget>,
 ) -> adw::NavigationPage {
+    crate::private::badge_on(header);
     let view = adw::ToolbarView::new();
     view.add_top_bar(header);
     view.add_top_bar(banner);

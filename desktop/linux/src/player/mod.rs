@@ -275,6 +275,8 @@ struct Ui {
     stage: gtk::Overlay,
     show: gtk::Label,
     episode: gtk::Label,
+    /// "Private" after the episode line, while the mode or the show's own flag holds it.
+    private: gtk::Box,
     play: gtk::Button,
     timeline: gtk::Scale,
     marked: Marked,
@@ -521,6 +523,7 @@ impl PlayerView {
             Some(entry) => entry.title.clone(),
             None => String::new(),
         };
+        media.private(self.ctx.hub.known.borrow().holds_show(now.id));
         media.track(Track {
             show,
             title: now.episode_line.clone(),
@@ -591,6 +594,36 @@ impl PlayerView {
                     .unwrap_or(100.0);
                 self.send(PlayerCommand::Volume(level * 100.0 - now));
             }
+        }
+    }
+
+    /// "Private" in the bar and the neutral media controls, while the mode or the playing
+    /// show's own flag holds what plays. A link played with no title behind it follows the mode.
+    fn follow_private(&self) {
+        let held = {
+            let known = self.ctx.hub.known.borrow();
+            match self.title_id.get() {
+                Some(id) => known.holds_show(id),
+                None => known.private,
+            }
+        };
+        self.ui.private.set_visible(held);
+        if self.tv_drives() {
+            return;
+        }
+        if let Some(media) = self.media() {
+            media.private(held);
+        }
+    }
+
+    /// While the TV's episode is on the media controls, they follow its show.
+    fn tv_media_private(&self) {
+        if !self.tv_drives() {
+            return;
+        }
+        let Some(now) = self.ctx.tv.now() else { return };
+        if let Some(media) = self.media() {
+            media.private(self.ctx.hub.known.borrow().holds_show(now.id));
         }
     }
 
@@ -676,6 +709,10 @@ impl PlayerView {
 
     /// What the engine said, as the player hears it.
     pub fn engine_event(&self, event: &Event) {
+        if crate::private::changes(event) {
+            self.follow_private();
+            self.tv_media_private();
+        }
         match event {
             Event::PlayerOps { playback, ops } => {
                 if ops.iter().any(|op| matches!(op, PlayerOp::Open { .. })) {
@@ -1195,6 +1232,8 @@ impl PlayerView {
                     translation,
                 ));
                 let line = self.show_episode_line();
+                // Held or not before the controls hear of it, so its name never reaches them.
+                self.follow_private();
                 if let Some(media) = self.media() {
                     media.track(Track {
                         show: title.clone(),
@@ -3143,7 +3182,13 @@ fn build_ui(ctx: &Rc<Ctx>, video: &gtk::Widget) -> Ui {
     let titles = gtk::Box::new(gtk::Orientation::Vertical, 0);
     titles.set_valign(gtk::Align::Center);
     titles.append(&show);
-    titles.append(&episode);
+    // The episode line, and after it "Private" while what plays is held.
+    let private = crate::private::player_label();
+    let episode_row = gtk::Box::new(gtk::Orientation::Horizontal, 10);
+    episode_row.set_halign(gtk::Align::Center);
+    episode_row.append(&episode);
+    episode_row.append(&private);
+    titles.append(&episode_row);
     let episodes = gtk::MenuButton::builder()
         .icon_name("view-list-symbolic")
         .tooltip_text(t::player_episodes())
@@ -3512,6 +3557,7 @@ fn build_ui(ctx: &Rc<Ctx>, video: &gtk::Widget) -> Ui {
         stage,
         show,
         episode,
+        private,
         play,
         timeline,
         marked,

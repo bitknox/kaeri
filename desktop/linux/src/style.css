@@ -781,3 +781,20 @@ statuspage.demo-end-ground.look-sepia { background: #E9DCC4; }
 
 .medium-check { color: var(--amber); transition: opacity 150ms ease-out; }
 .medium-choices row.chosen { background: var(--raised-selected); }
+
+/* Private mode: the header bar's badge, the line under a page's main action, and the player's
+   and reader's labels. The eye-slash always goes with the word, so colour is never the only sign. */
+.private-badge > button {
+  min-height: 34px;
+  padding: 0 14px;
+  border-radius: 17px;
+  background: var(--raised);
+  font-weight: 700;
+}
+.private-badge > button:hover { background: var(--raised-high); }
+.private-badge > button:checked { background: var(--raised-selected); }
+.private-line { color: var(--haze); font-size: 14px; }
+.private-line .private-eye { color: var(--silk); }
+.private-line-head { color: var(--silk); font-weight: 600; }
+.private-player { color: #C9CBD8; font-size: 14px; }
+.private-reader { color: var(--haze); font-size: 0.86em; }

@@ -64,6 +64,8 @@ pub fn fill(ctx: &Rc<Ctx>, page: &adw::PreferencesPage, rebuild: Rc<dyn Fn()>) {
             anilist.add(&following_switch(ctx, on));
         }
     }
+    // Private mode first, as it sits with the account on every platform.
+    page.add(&crate::private::settings_group(ctx));
     page.add(&anilist);
     page.add(&others);
 
