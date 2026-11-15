@@ -168,6 +168,13 @@ function episodeOf(extras: LoadExtras, metadata: Record<string, unknown> | undef
 	return n == null || n === '' ? null : String(n);
 }
 
+/** "Episode 3 · The Ferry at Dawn", as the overlay and Up next write it. */
+function episodeLine(episode: string | number | null | undefined, title: string | undefined) {
+	if (episode != null && title) return t('receiver-up-next-titled', { episode: String(episode), title });
+	if (episode != null) return t('receiver-up-next-numbered', { episode: String(episode) });
+	return title ?? '';
+}
+
 function render() {
 	const p = S.phase;
 	const at = now();
@@ -201,8 +208,9 @@ function render() {
 	const overlay = p === 'loading' || (playing && (S.paused || at < S.overlayUntil));
 	on('ov', overlay);
 	text('ov-show', S.media.show);
-	text('ov-episode', S.media.line);
-	$('ov-episode').hidden = !S.media.line;
+	const line = episodeLine(S.media.episode, S.media.line);
+	text('ov-episode', line);
+	$('ov-episode').hidden = !line;
 	text('starting-text', t('receiver-starting'));
 	$('starting').classList.toggle('on', p === 'loading' && at - S.since >= T.starting);
 	if (playing) {
@@ -227,13 +235,7 @@ function render() {
 	if (next) {
 		img('#upnext img', next.still ?? '');
 		text('upnext-count', t('receiver-up-next', { seconds: Math.max(0, Math.ceil((next.endsAt - at) / 1000)) }));
-		const title =
-			next.number != null && next.title
-				? t('receiver-up-next-titled', { episode: String(next.number), title: next.title })
-				: next.number != null
-					? t('receiver-up-next-numbered', { episode: String(next.number) })
-					: (next.title ?? '');
-		text('upnext-title', title);
+		text('upnext-title', episodeLine(next.number, next.title));
 	}
 
 	const skipped = playing && S.skipped && at < S.skipped.until ? S.skipped : null;
