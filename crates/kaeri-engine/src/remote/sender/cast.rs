@@ -157,8 +157,11 @@ impl TvSender {
                         Ok(FromReceiver::UpNext { play }) => {
                             let Some(hub) = listener.upgrade() else { return };
                             hub.next_answered(play);
-                            let command =
-                                if play { PlayerCommand::PlayNext } else { PlayerCommand::CancelNext };
+                            let command = if play {
+                                PlayerCommand::PlayNext
+                            } else {
+                                PlayerCommand::CancelNext
+                            };
                             let _ = commands.send(Command::Player(command));
                         }
                         Ok(_) | Err(tokio::sync::broadcast::error::RecvError::Lagged(_)) => {}

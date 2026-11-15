@@ -220,6 +220,8 @@ pub struct Load {
     pub active_tracks: Vec<u32>,
     pub style: Option<TextStyle>,
     pub autoplay: bool,
+    /// What Kaeri's receiver reads beside the media, under `customData.kaeri`.
+    pub kaeri: Option<Value>,
 }
 
 impl Load {
@@ -239,6 +241,9 @@ impl Load {
             "contentType": self.content_type,
             "metadata": metadata,
         });
+        if let Some(kaeri) = &self.kaeri {
+            media["customData"] = json!({ "kaeri": kaeri });
+        }
         if let Some(format) = &self.hls_segment_format {
             media["hlsSegmentFormat"] = json!(format);
             media["hlsVideoSegmentFormat"] =
@@ -485,6 +490,7 @@ mod tests {
             active_tracks: vec![1],
             style: None,
             autoplay: true,
+            kaeri: None,
         };
         let message = load.message("s");
         assert_eq!(message["currentTime"], 42.0);

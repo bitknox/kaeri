@@ -49,7 +49,7 @@ pub use device::{CastDevice, local_address_towards, same_network};
 pub use fetch::{PlainHttp, Upstream, UpstreamResponse};
 pub use formats::{
     AudioCodec, AudioPlan, CastPlan, CastRoute, CastSource, Delivery, MediaInfo, SourceKind,
-    Uncastable, VideoFormat, cast_plans,
+    Uncastable, VideoFormat, cast_plans, pass_through_plans,
 };
 pub use memory::{CastCaps, CastMemory, FormatAnswer};
 pub use player::{

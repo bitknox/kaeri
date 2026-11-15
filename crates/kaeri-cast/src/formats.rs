@@ -578,6 +578,45 @@ pub fn cast_plans(
     Ok(plans)
 }
 
+/// The plans for Kaeri's own receiver, which unpacks every container itself, decodes audio
+/// the TV lacks in WebAssembly and draws every subtitle format: the stream as it is, straight
+/// from the source when the TV can read it there with CORS, and else through the relay, which
+/// only adds CORS and the source's headers. Nothing is remuxed or converted, and video the TV
+/// can't decode is the receiver's to report.
+pub fn pass_through_plans(
+    source: &CastSource,
+    media: &MediaInfo,
+    probe: &CorsProbe,
+) -> Result<Vec<CastPlan>, Uncastable> {
+    if source.kind == SourceKind::DeepLink {
+        return Err(Uncastable::DeepLink);
+    }
+    let delivery = media.container.unwrap_or(match source.kind {
+        SourceKind::Hls => Delivery::HlsTs,
+        _ => Delivery::Mp4,
+    });
+    let audio = match media.chosen_audio() {
+        Some(track) => AudioPlan::Copy(track.codec.clone().unwrap_or(AudioCodec::Aac)),
+        None if delivery == Delivery::Mkv => AudioPlan::Silent,
+        None => AudioPlan::Copy(AudioCodec::Aac),
+    };
+    let plan = |route| CastPlan {
+        route,
+        video: media.video.clone().unwrap_or(VideoFormat::H264),
+        height: media.height,
+        audio: audio.clone(),
+        delivery,
+    };
+    let mut plans = Vec::new();
+    // The receiver's player fetches with CORS, which only an HLS probe has checked.
+    if source.headers.is_empty() && !source.local_only() && delivery.is_hls() && probe.passed()
+    {
+        plans.push(plan(CastRoute::Direct { url: source.url.clone() }));
+    }
+    plans.push(plan(CastRoute::Relayed { remux: false }));
+    Ok(plans)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -612,6 +651,28 @@ mod tests {
 
     fn passed() -> CorsProbe {
         CorsProbe { manifest: true, segment: true, plain_media: true }
+    }
+
+    #[test]
+    fn kaeris_receiver_is_handed_the_stream_as_it_is() {
+        let mut info = media(VideoFormat::Hevc, AudioCodec::Dts, Delivery::Mkv);
+        info.height = Some(2160);
+        let mkv = CastSource {
+            url: "https://cdn.example/a/episode.mkv".into(),
+            kind: SourceKind::Progressive,
+            headers: Vec::new(),
+        };
+        let plans = pass_through_plans(&mkv, &info, &CorsProbe::default()).unwrap();
+        assert_eq!(plans.len(), 1);
+        assert_eq!(plans[0].route, CastRoute::Relayed { remux: false });
+        assert_eq!(plans[0].delivery, Delivery::Mkv);
+        assert_eq!(plans[0].audio, AudioPlan::Copy(AudioCodec::Dts), "decoded on the TV");
+
+        let hls = media(VideoFormat::H264, AudioCodec::Aac, Delivery::HlsTs);
+        let plans =
+            pass_through_plans(&source(SourceKind::Hls, false), &hls, &passed()).unwrap();
+        assert!(matches!(plans[0].route, CastRoute::Direct { .. }));
+        assert_eq!(plans[1].route, CastRoute::Relayed { remux: false });
     }
 
     #[test]
