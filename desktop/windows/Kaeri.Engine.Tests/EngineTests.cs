@@ -368,6 +368,34 @@ public class EngineTests
         }
     }
 
+    [Fact(Timeout = Minute)]
+    public void ThePlayerLogIsReadThroughTheFreeFunctions()
+    {
+        using var started = Started.Testing();
+        // Report's Player log row: how much the log holds, the file Save log writes, and whether the
+        // row starts ticked. The log is process-wide, so the fixture replaces whatever was there.
+        started.Engine.TestingPlayerLog(3);
+        var stats = KaeriFfiMethods.PlayerLogStats();
+        Assert.Equal(3u, stats.Playbacks);
+        Assert.True(stats.Bytes > 0);
+        Assert.StartsWith("kaeri-player-log-", stats.FileName);
+        Assert.EndsWith(".txt", stats.FileName);
+
+        var report = new BugReport("0.1.1", "Windows", "10.0.26200", DeviceClass.Computer, "tests", [], null, [], []);
+        var text = KaeriFfiMethods.PlayerLog(report);
+        Assert.Contains("mpv", text);
+        // The playbacks' titles never leave in the file.
+        Assert.DoesNotContain("Stardust Wayfarer", text);
+
+        Assert.False(KaeriFfiMethods.PlayerLogStartsTicked(report));
+        Assert.True(KaeriFfiMethods.PlayerLogStartsTicked(report with { Error = new BugError("playback", "the stream stopped") }));
+        Assert.DoesNotContain("Player log", KaeriFfiMethods.ReportText(report));
+        Assert.Contains("Player log: attached by hand", KaeriFfiMethods.ReportText(report with { PlayerLog = true }));
+
+        started.Engine.TestingPlayerLog(0);
+        Assert.Equal(0u, KaeriFfiMethods.PlayerLogStats().Playbacks);
+    }
+
     [Fact]
     public void TheAppsLogIsWrittenThroughTheFreeFunctions()
     {

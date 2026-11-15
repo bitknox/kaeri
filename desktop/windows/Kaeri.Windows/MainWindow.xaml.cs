@@ -432,9 +432,11 @@ public sealed partial class MainWindow : Window
     {
         try
         {
+            // mpv's lines from info up: Report's player log keeps them for each playback.
             var opts = new FfiPlayerOptions(
                 Video: new FfiVideo.Composition(1280, 720),
-                CacheDir: Path.Combine(dirs.Cache, "player"));
+                CacheDir: Path.Combine(dirs.Cache, "player"),
+                LogLevel: "info");
             return new FfiPlayer(opts, engine, new Sink(this));
         }
         catch (Exception e)
@@ -968,7 +970,10 @@ public sealed partial class MainWindow : Window
     public void Say(string text) => ShowToast(InfoBarSeverity.Informational, text);
 
     /// <summary>A notice said elsewhere than the notice bar still goes to Messages.</summary>
-    void Keep(Notice notice) => ctx.Known.Messages.Add(notice.Msg?.Text() ?? "", notice.Kind == NoticeKind.Alert, DateTimeOffset.Now);
+    void Keep(Notice notice) => ctx.Known.Messages.Add(notice.Msg?.Text() ?? "", notice.Kind == NoticeKind.Alert, DateTimeOffset.Now, notice.Kind == NoticeKind.Alert && InPlayback);
+
+    /// <summary>A playback is starting or under way: an alert now is a playback error, for Report's Player log.</summary>
+    bool InPlayback => Player.Showing || Player.IsStarting;
 
     /// <summary>Ctrl+Shift+L and the status flyout: every notice this run.</summary>
     internal void ShowMessages() => Messages.Show(ctx, Root.XamlRoot);
@@ -976,8 +981,9 @@ public sealed partial class MainWindow : Window
     void ShowToast(Notice notice)
     {
         var text = notice.Msg?.Text() ?? "";
+        var playback = notice.Kind == NoticeKind.Alert && InPlayback;
         if (notice.Kind == NoticeKind.Alert && text.Length > 0)
-            ctx.Known.LastError = new BugError("message", text);
+            ctx.Known.LastError = new BugError(playback ? "playback" : "message", text);
         var (button, act) = notice.Hint switch
         {
             NoticeHint.StopPlayback => (T.ActionStop, (Action)(() => { if (Player.Showing) Player.Close(); })),
@@ -993,14 +999,14 @@ public sealed partial class MainWindow : Window
             NoticeHint.ReportCrash => (T.CrashNoticeReport, () => ReportDialog.Show(ctx, Root.XamlRoot, latestCrash: true)),
             _ => (null, null),
         };
-        ShowToast(notice.Kind == NoticeKind.Alert ? InfoBarSeverity.Warning : InfoBarSeverity.Informational, text, button, act);
+        ShowToast(notice.Kind == NoticeKind.Alert ? InfoBarSeverity.Warning : InfoBarSeverity.Informational, text, button, act, playback);
     }
 
-    void ShowToast(InfoBarSeverity severity, string text, string? button = null, Action? act = null)
+    void ShowToast(InfoBarSeverity severity, string text, string? button = null, Action? act = null, bool playback = false)
     {
         var shown = ++toastShown;
         var alert = severity == InfoBarSeverity.Warning;
-        ctx.Known.Messages.Add(text, alert, DateTimeOffset.Now);
+        ctx.Known.Messages.Add(text, alert, DateTimeOffset.Now, playback);
         // A newer notice crossfades over the last; a first one fades in.
         if (Toast.IsOpen)
             Motion.FadeIn(Toast);

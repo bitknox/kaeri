@@ -92,9 +92,9 @@ static class Messages
             AutomationProperties.SetName(report, $"{T.ActionReport}, {said.Text}");
             report.Click += (_, _) =>
             {
-                ctx.Known.LastError = new Kaeri.Engine.Model.BugError("message", said.Text);
+                ctx.Known.LastError = new Kaeri.Engine.Model.BugError(said.Playback ? "playback" : "message", said.Text);
                 InfoCard.HideOpen();
-                ReportDialog.Show(ctx, root);
+                ReportDialog.Show(ctx, root, fromError: true);
             };
             Grid.SetColumn(report, 2);
             grid.Children.Add(report);
