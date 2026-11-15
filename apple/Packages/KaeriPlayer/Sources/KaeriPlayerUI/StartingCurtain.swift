@@ -41,12 +41,20 @@ struct StartingCurtain: View {
         GeometryReader { proxy in
             ZStack {
                 Palette.ground
-                if let image, let ground {
-                    FilledArt(image: image)
-                        .transition(.opacity)
-                    Palette.ground.opacity(ground)
+                // On a roll-on the ground alone shows for 600 ms, then the art and the column
+                // fade in together; a picture that comes sooner follows the ground directly.
+                ZStack {
+                    if let image, let ground {
+                        FilledArt(image: image)
+                            .transition(.opacity)
+                        Palette.ground.opacity(ground)
+                    }
+                    column(in: proxy.size)
                 }
-                column(in: proxy.size)
+                .compositingGroup()
+                .opacity(model.startingQuiet ? 0 : 1)
+                .animation(.fadeIn, value: model.startingQuiet)
+                .accessibilityHidden(model.startingQuiet)
             }
         }
         .animation(.fadeIn, value: image != nil && ground != nil)

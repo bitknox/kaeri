@@ -64,7 +64,7 @@ struct SettingsPortTests {
 
         let keys: [SettingKey] = [
             .quality, .commitThreshold, .upscaling, .seedRatio, .seedHours, .uploadLimit,
-            .translation, .playerUi, .autoNext, .skipOpening, .nightMode, .keepSeeding,
+            .translation, .playerUi, .autoNext, .preloadMetered, .skipOpening, .nightMode, .keepSeeding,
             // The native apps' own rows.
             .upNextCountdown, .spoilerProtection, .downloadQuality, .keepNextEpisodes,
             .downloadsOnCellular, .torrentsOnCellular,

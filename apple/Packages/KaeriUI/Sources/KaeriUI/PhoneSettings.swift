@@ -412,6 +412,8 @@ struct PhonePlaybackPage: View {
                 PhoneSettingSwitch(key: .autoNext)
                 PhoneSettingPicker(key: .upNextCountdown)
                     .disabled(!store.settings.isOn(.autoNext))
+                    .opacity(store.settings.isOn(.autoNext) ? 1 : 0.45)
+                PhonePreloadRow()
                 PhoneSettingSwitch(key: .skipOpening, note: overridden(.skipOpening))
                 PhoneSettingSwitch(key: .skipRecap)
                 PhoneSettingSwitch(key: .skipFiller, note: overridden(.skipFiller))
