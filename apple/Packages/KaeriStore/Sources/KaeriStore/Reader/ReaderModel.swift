@@ -140,6 +140,15 @@ public final class ReaderModel {
     /// Counts the asks to fit the strip back to its column (Cmd-0), which also undo a pinch's zoom.
     public private(set) var stripFitAsked = 0
     public func fitStrip() { stripFitAsked &+= 1 }
+    /// The last Zoom In (1), Zoom Out (-1) or Fit to Window (0) asked of the page on screen, with
+    /// a count, so the same step asked again is seen again.
+    public struct PageZoomAsk: Equatable, Sendable {
+        public let step: Int
+        public let tick: Int
+    }
+
+    public private(set) var pageZoomAsked: PageZoomAsk?
+    public func zoomPage(_ step: Int) { pageZoomAsked = PageZoomAsk(step: step, tick: (pageZoomAsked?.tick ?? 0) &+ 1) }
     /// The chapters of the work, once the engine has listed them.
     public private(set) var chapters: [VolumeGroup] = []
     public private(set) var chaptersLoaded = false

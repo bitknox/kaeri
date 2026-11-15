@@ -409,9 +409,11 @@ final class AppDelegate: NSObject {
 
 #if os(macOS)
 extension AppDelegate: NSApplicationDelegate {
-    /// No window tabs: ⌘T is the calendar's Go to Today.
+    /// No window tabs: ⌘T is the calendar's Go to Today. View › Enter Full Screen is the app's
+    /// own item (`WindowFullScreenItem`), so AppKit adds no second one.
     func applicationWillFinishLaunching(_ notification: Notification) {
         NSWindow.allowsAutomaticWindowTabbing = false
+        UserDefaults.standard.register(defaults: ["NSFullScreenMenuItemEverywhere": false])
     }
 
     /// The main window on screen once the app has launched, as a Mac app opens with its window:
