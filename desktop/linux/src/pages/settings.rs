@@ -1815,9 +1815,4 @@ mod tests {
             }
         }
     }
-
-    #[test]
-    fn picture_in_picture_when_leaving_has_no_row_with_no_floating_window() {
-        assert_eq!(pane_of(K::PictureInPictureOnLeave), None);
-    }
 }

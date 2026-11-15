@@ -1,7 +1,7 @@
 //! The preview a cover opens when the pointer rests on it: the banner, the title, a facts line,
 //! two lines of synopsis and the title's main action, in a popover. Where the title has a
 //! trailer and trailers may play, the trailer plays muted under the banner as it does on the
-//! title page, unless the title page under it is playing its own: one at a time.
+//! title page.
 //!
 //! The pointer must rest: less than 4 px of movement for 800 ms. The preview closes 150 ms after
 //! the pointer leaves both the cover and the preview, and at once on a scroll, a key press, a
@@ -18,7 +18,7 @@ use gtk::glib;
 use kaeri_i18n::t;
 use kaeri_model::{catalog::Entry, command::Command};
 
-use super::{Stage, may_autoplay, stage::Slot};
+use super::{Stage, may_autoplay};
 use crate::{fit::Fit, hub::Hub, say, widgets};
 
 const DWELL: Duration = Duration::from_millis(800);
@@ -36,13 +36,6 @@ thread_local! {
     static OPEN: RefCell<Option<Rc<Preview>>> = const { RefCell::new(None) };
     /// When the last preview closed, for the shorter wait while scanning a row.
     static CLOSED: Cell<Option<Instant>> = const { Cell::new(None) };
-    /// A title page's trailer is on screen, so a preview shows its art only.
-    static PAGE_PLAYING: Cell<bool> = const { Cell::new(false) };
-}
-
-/// A title page's trailer started or stopped showing.
-pub fn page_playing(playing: bool) {
-    PAGE_PLAYING.with(|cell| cell.set(playing));
 }
 
 /// The preview on screen and where it stands in the window, for a shot, which draws the window
@@ -55,11 +48,6 @@ pub fn shot_popover(window: &gtk::Window) -> Option<(gtk::Widget, f32, f32)> {
         let bounds = target.compute_bounds(window)?;
         Some((preview.popover.clone().upcast(), bounds.x() + bounds.width() + 6.0, bounds.y()))
     })
-}
-
-/// Whether a preview is on screen.
-pub fn is_open() -> bool {
-    OPEN.with(|open| open.borrow().is_some())
 }
 
 /// Close the preview on screen, if there is one.
@@ -291,9 +279,8 @@ fn open(hub: &Rc<Hub>, target: &gtk::Widget, id: u32) {
 
     if let Some(trailer) = entry.trailer.clone()
         && may_autoplay(hub, &entry)
-        && !PAGE_PLAYING.with(Cell::get)
     {
-        stage.start(&trailer, &super::subtitle_language(hub), Slot::Fill);
+        stage.start(&trailer, &super::subtitle_language(hub));
     }
 }
 

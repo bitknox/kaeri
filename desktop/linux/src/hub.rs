@@ -368,7 +368,7 @@ impl Known {
                 self.feed = Some(view.clone());
             }
             Event::Autoplay(view) => self.autoplay = Some(*view),
-            Event::DiscussionFound { media, episode, comments, .. } => {
+            Event::DiscussionFound { media, episode, comments } => {
                 self.discussions.insert((media.get(), *episode), *comments);
             }
             Event::Update(status) => self.update = Some(status.clone()),
