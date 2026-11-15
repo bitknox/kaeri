@@ -49,6 +49,8 @@ interface Cursor {
 	inner: Map<number, number>;
 	/** TS: the PIDs of a muxed variant's audio. */
 	audioPid?: number;
+	/** TS: the segment the parser read last, -1 after a seek. */
+	last: number;
 }
 
 const VIDEO_ID = 1;
@@ -118,7 +120,7 @@ export class SegmentedStream implements Demuxer {
 	}
 
 	private cursor(r: Rendition, id: number): Cursor {
-		return { r, id, next: 0, inits: new Map(), ts: r.format === 'ts' ? new TsParser() : null, inner: new Map() };
+		return { r, id, next: 0, inits: new Map(), ts: r.format === 'ts' ? new TsParser() : null, inner: new Map(), last: -1 };
 	}
 
 	/** Reads a rendition's first segment (or init) to learn its tracks and their setup. */
@@ -218,6 +220,7 @@ export class SegmentedStream implements Demuxer {
 			if (i < 0) i = segs.length;
 			c.next = i;
 			c.ts?.reset();
+			c.last = -1;
 			if (c.r.kind === 'video' && segs[i]) start = segs[i].start;
 		}
 		return start;
@@ -233,40 +236,55 @@ export class SegmentedStream implements Demuxer {
 			if (!pick || s.start < pick.r.segments[pick.next].start) pick = c;
 		}
 		if (!pick) return null;
-		const seg = pick.r.segments[pick.next++];
+		const index = pick.next++;
+		const seg = pick.r.segments[index];
 		const b = await this.fetch(seg);
-		let samples: Sample[];
-		if (pick.r.format === 'vtt') samples = this.vtt(utf8(b), seg, pick.id);
-		else {
-			if (pick.r.format === 'mp4') {
-				const map = await this.init(pick, seg);
-				if (!pick.inner.size) for (const t of map.values()) if (t.kind === pick.r.kind) pick.inner.set(t.id, pick.id);
-				samples = mediaSegment(b, map);
-			} else {
-				pick.ts!.reset();
-				samples = [...pick.ts!.push(b), ...pick.ts!.flush()];
-			}
-			let origin: number;
-			if (seg.offset != null) origin = -seg.offset;
-			else {
-				if (!this.origins.has(seg.epoch)) {
-					const first = samples[0];
-					this.origins.set(seg.epoch, first ? Math.min(first.pts, first.dts) - seg.start : 0);
-				}
-				origin = this.origins.get(seg.epoch)!;
-			}
-			const out: Sample[] = [];
-			for (const s of samples) {
-				const id = pick.inner.get(s.track);
-				if (id == null || !this.active.has(id)) continue;
-				s.track = id;
-				s.pts -= origin;
-				s.dts -= origin;
-				out.push(s);
-			}
-			samples = out;
+		if (pick.r.format === 'vtt') return this.vtt(utf8(b), seg, pick.id);
+		if (pick.r.format === 'mp4') {
+			const map = await this.init(pick, seg);
+			if (!pick.inner.size) for (const t of map.values()) if (t.kind === pick.r.kind) pick.inner.set(t.id, pick.id);
+			return this.place(mediaSegment(b, map), seg, pick);
 		}
-		return samples;
+		// A PES packet, and an audio frame inside it, may run on from one segment into the next:
+		// segmenters cut at video keyframes, not between audio packets. Segments read in a row go
+		// through one parser, so what the last one left open completes here. After a seek or a
+		// discontinuity it starts over, and what was open belongs to the segment before.
+		const ts = pick.ts!;
+		const prev = pick.last >= 0 ? pick.r.segments[pick.last] : null;
+		let tail: Sample[] = [];
+		if (prev && pick.last === index - 1 && prev.epoch === seg.epoch) ts.nextSegment();
+		else {
+			if (prev) tail = this.place(ts.flush(), prev, pick);
+			ts.reset();
+		}
+		pick.last = index;
+		const samples = ts.push(b);
+		// Nothing follows the last segment to complete what is open.
+		if (index === pick.r.segments.length - 1) samples.push(...ts.flush());
+		return [...tail, ...this.place(samples, seg, pick)];
+	}
+
+	/** A segment's samples on the presentation timeline, under the stream's track ids. */
+	private place(samples: Sample[], seg: Segment, pick: Cursor): Sample[] {
+		let origin: number;
+		if (seg.offset != null) origin = -seg.offset;
+		else {
+			if (!this.origins.has(seg.epoch)) {
+				const first = samples[0];
+				this.origins.set(seg.epoch, first ? Math.min(first.pts, first.dts) - seg.start : 0);
+			}
+			origin = this.origins.get(seg.epoch)!;
+		}
+		const out: Sample[] = [];
+		for (const s of samples) {
+			const id = pick.inner.get(s.track);
+			if (id == null || !this.active.has(id)) continue;
+			s.track = id;
+			s.pts -= origin;
+			s.dts -= origin;
+			out.push(s);
+		}
+		return out;
 	}
 
 	/** A WebVTT segment's cues as samples (text, with pts and duration). */
