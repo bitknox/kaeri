@@ -30,6 +30,12 @@
 
 uniffi::setup_scaffolding!();
 
+// On Apple platforms the engine's large blocks are kaeri-alloc's, which the reader's close gives
+// back to the system: the system allocator there keeps them for the process.
+#[cfg(target_vendor = "apple")]
+#[global_allocator]
+static ALLOCATOR: kaeri_alloc::Blocks = kaeri_alloc::Blocks;
+
 mod browsing;
 mod bug_report;
 mod crash;

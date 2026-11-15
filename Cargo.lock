@@ -3188,6 +3188,10 @@ dependencies = [
 ]
 
 [[package]]
+name = "kaeri-alloc"
+version = "0.4.0"
+
+[[package]]
 name = "kaeri-audio-tap"
 version = "0.4.0"
 
@@ -3285,6 +3289,7 @@ dependencies = [
  "hex",
  "image",
  "jiff",
+ "kaeri-alloc",
  "kaeri-audio-tap",
  "kaeri-books",
  "kaeri-bookserver",
@@ -3332,6 +3337,7 @@ dependencies = [
  "async-trait",
  "futures",
  "jiff",
+ "kaeri-alloc",
  "kaeri-audio-tap",
  "kaeri-cast",
  "kaeri-core",
