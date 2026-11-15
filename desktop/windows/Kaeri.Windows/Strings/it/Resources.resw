@@ -3056,6 +3056,27 @@
   <data name="CastVolumeFixed" xml:space="preserve">
     <value>Impostato sulla TV</value>
   </data>
+  <data name="CastButtonConnecting" xml:space="preserve">
+    <value>Connessione a {name}</value>
+  </data>
+  <data name="CastButtonConnected" xml:space="preserve">
+    <value>Connesso a {name}</value>
+  </data>
+  <data name="CastPlaysOn" xml:space="preserve">
+    <value>Si riproduce su {name}</value>
+  </data>
+  <data name="CastIdle" xml:space="preserve">
+    <value>Ancora niente in riproduzione</value>
+  </data>
+  <data name="CastStatusPaused" xml:space="preserve">
+    <value>In pausa su {name}</value>
+  </data>
+  <data name="CastOpenShow" xml:space="preserve">
+    <value>Apri {title}</value>
+  </data>
+  <data name="CastNotificationLine" xml:space="preserve">
+    <value>Trasmissione su {name}</value>
+  </data>
   <data name="ActionTryAgain" xml:space="preserve">
     <value>Riprova</value>
   </data>

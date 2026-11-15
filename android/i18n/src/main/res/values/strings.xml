@@ -2837,6 +2837,20 @@
     <string name="cast_stop">Stop casting</string>
     <!-- Line under TV volume on the card, for a TV whose volume only its own remote sets. -->
     <string name="cast_volume_fixed">Set on the TV</string>
+    <!-- The cast button's spoken label while it connects to a TV. The name is the TV's. -->
+    <string name="cast_button_connecting">Connecting to %1$s</string>
+    <!-- The cast button's spoken label once a TV is connected, and the title of the dialog it opens. The name is the TV's. -->
+    <string name="cast_button_connected">Connected to %1$s</string>
+    <!-- Line on a title page under its buttons while a TV is connected: what is played goes to it. The name is the TV's. -->
+    <string name="cast_plays_on">Plays on %1$s</string>
+    <!-- Row in the connected dialog while the TV has nothing loaded. -->
+    <string name="cast_idle">Nothing playing yet</string>
+    <!-- The casting controller's line while the episode is paused on the TV. The name is the TV's. -->
+    <string name="cast_status_paused">Paused on %1$s</string>
+    <!-- Spoken label of the show's name in the casting controller: it opens the show's page. -->
+    <string name="cast_open_show">Open %1$s</string>
+    <!-- Line under the episode in the system's Now Playing while it plays on a TV. The name is the TV's. -->
+    <string name="cast_notification_line">Casting to %1$s</string>
     <!-- Button that runs a failed action again. -->
     <string name="action_try_again">Try again</string>
     <!-- Button that closes a dialog without doing what it offered. -->

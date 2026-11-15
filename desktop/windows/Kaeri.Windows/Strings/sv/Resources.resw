@@ -2921,6 +2921,27 @@
   <data name="CastVolumeFixed" xml:space="preserve">
     <value>Ställs in på TV:n</value>
   </data>
+  <data name="CastButtonConnecting" xml:space="preserve">
+    <value>Ansluter till {name}</value>
+  </data>
+  <data name="CastButtonConnected" xml:space="preserve">
+    <value>Ansluten till {name}</value>
+  </data>
+  <data name="CastPlaysOn" xml:space="preserve">
+    <value>Spelas på {name}</value>
+  </data>
+  <data name="CastIdle" xml:space="preserve">
+    <value>Inget spelas än</value>
+  </data>
+  <data name="CastStatusPaused" xml:space="preserve">
+    <value>Pausad på {name}</value>
+  </data>
+  <data name="CastOpenShow" xml:space="preserve">
+    <value>Öppna {title}</value>
+  </data>
+  <data name="CastNotificationLine" xml:space="preserve">
+    <value>Castar till {name}</value>
+  </data>
   <data name="ActionTryAgain" xml:space="preserve">
     <value>Försök igen</value>
   </data>

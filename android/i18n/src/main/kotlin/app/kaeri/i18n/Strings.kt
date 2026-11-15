@@ -5241,6 +5241,34 @@ object Strings {
     fun castVolumeFixed(context: Context): String =
         context.getString(R.string.cast_volume_fixed)
 
+    /** The cast button's spoken label while it connects to a TV. The name is the TV's. */
+    fun castButtonConnecting(context: Context, name: String): String =
+        context.getString(R.string.cast_button_connecting, name)
+
+    /** The cast button's spoken label once a TV is connected, and the title of the dialog it opens. The name is the TV's. */
+    fun castButtonConnected(context: Context, name: String): String =
+        context.getString(R.string.cast_button_connected, name)
+
+    /** Line on a title page under its buttons while a TV is connected: what is played goes to it. The name is the TV's. */
+    fun castPlaysOn(context: Context, name: String): String =
+        context.getString(R.string.cast_plays_on, name)
+
+    /** Row in the connected dialog while the TV has nothing loaded. */
+    fun castIdle(context: Context): String =
+        context.getString(R.string.cast_idle)
+
+    /** The casting controller's line while the episode is paused on the TV. The name is the TV's. */
+    fun castStatusPaused(context: Context, name: String): String =
+        context.getString(R.string.cast_status_paused, name)
+
+    /** Spoken label of the show's name in the casting controller: it opens the show's page. */
+    fun castOpenShow(context: Context, title: String): String =
+        context.getString(R.string.cast_open_show, title)
+
+    /** Line under the episode in the system's Now Playing while it plays on a TV. The name is the TV's. */
+    fun castNotificationLine(context: Context, name: String): String =
+        context.getString(R.string.cast_notification_line, name)
+
     /** Button that runs a failed action again. */
     fun actionTryAgain(context: Context): String =
         context.getString(R.string.action_try_again)

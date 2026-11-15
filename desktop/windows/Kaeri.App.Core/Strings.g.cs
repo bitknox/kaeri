@@ -2901,6 +2901,27 @@ public static partial class T
     /// <summary>Line under TV volume on the card, for a TV whose volume only its own remote sets.</summary>
     public static string CastVolumeFixed => Get("CastVolumeFixed");
 
+    /// <summary>The cast button's spoken label while it connects to a TV. The name is the TV's.</summary>
+    public static string CastButtonConnecting(string name) => Fill(Get("CastButtonConnecting"), ("name", name));
+
+    /// <summary>The cast button's spoken label once a TV is connected, and the title of the dialog it opens. The name is the TV's.</summary>
+    public static string CastButtonConnected(string name) => Fill(Get("CastButtonConnected"), ("name", name));
+
+    /// <summary>Line on a title page under its buttons while a TV is connected: what is played goes to it. The name is the TV's.</summary>
+    public static string CastPlaysOn(string name) => Fill(Get("CastPlaysOn"), ("name", name));
+
+    /// <summary>Row in the connected dialog while the TV has nothing loaded.</summary>
+    public static string CastIdle => Get("CastIdle");
+
+    /// <summary>The casting controller's line while the episode is paused on the TV. The name is the TV's.</summary>
+    public static string CastStatusPaused(string name) => Fill(Get("CastStatusPaused"), ("name", name));
+
+    /// <summary>Spoken label of the show's name in the casting controller: it opens the show's page.</summary>
+    public static string CastOpenShow(string title) => Fill(Get("CastOpenShow"), ("title", title));
+
+    /// <summary>Line under the episode in the system's Now Playing while it plays on a TV. The name is the TV's.</summary>
+    public static string CastNotificationLine(string name) => Fill(Get("CastNotificationLine"), ("name", name));
+
     /// <summary>Button that runs a failed action again.</summary>
     public static string ActionTryAgain => Get("ActionTryAgain");
 
@@ -13079,6 +13100,13 @@ public static partial class T
         ["CastPlayHere"] = "Play here",
         ["CastStop"] = "Stop casting",
         ["CastVolumeFixed"] = "Set on the TV",
+        ["CastButtonConnecting"] = "Connecting to {name}",
+        ["CastButtonConnected"] = "Connected to {name}",
+        ["CastPlaysOn"] = "Plays on {name}",
+        ["CastIdle"] = "Nothing playing yet",
+        ["CastStatusPaused"] = "Paused on {name}",
+        ["CastOpenShow"] = "Open {title}",
+        ["CastNotificationLine"] = "Casting to {name}",
         ["ActionTryAgain"] = "Try again",
         ["ActionCancel"] = "Cancel",
         ["ActionGo"] = "Go",

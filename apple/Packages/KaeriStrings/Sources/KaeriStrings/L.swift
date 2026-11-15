@@ -2416,6 +2416,19 @@ public enum L {
         Self.format("cast-keep-open", fallback: "Keep Kaeri open on this %1$@ while %2$@ plays.", device, name)
     }
 
+    /// Title of the Mac's confirmation when the app quits while it casts. The name is the TV's.
+    public static func castQuitTitle(name: String) -> String {
+        Self.format("cast-quit-title", fallback: "Stop casting to %1$@?", name)
+    }
+
+    /// Line in that confirmation: the Mac serves the episode, so quitting ends it on the TV.
+    public static func castQuitBody(name: String) -> String {
+        Self.format("cast-quit-body", fallback: "Quitting Kaeri stops the episode on %1$@.", name)
+    }
+
+    /// The confirmation's button that stops casting and quits.
+    public static var castQuitAction: String { string("cast-quit-action", fallback: "Stop and quit") }
+
     /// Line under the header while AniList's request budget is spent. The placeholders stay.
     public static func discussionAppleWaiting(time: String) -> String {
         Self.format("discussion-apple-waiting", fallback: "Waiting for AniList · %1$@", time)
@@ -4796,6 +4809,39 @@ public enum L {
 
     /// Line under TV volume on the card, for a TV whose volume only its own remote sets.
     public static var castVolumeFixed: String { string("cast-volume-fixed", fallback: "Set on the TV") }
+
+    /// The cast button's spoken label while it connects to a TV. The name is the TV's.
+    public static func castButtonConnecting(name: String) -> String {
+        Self.format("cast-button-connecting", fallback: "Connecting to %1$@", name)
+    }
+
+    /// The cast button's spoken label once a TV is connected, and the title of the dialog it opens. The name is the TV's.
+    public static func castButtonConnected(name: String) -> String {
+        Self.format("cast-button-connected", fallback: "Connected to %1$@", name)
+    }
+
+    /// Line on a title page under its buttons while a TV is connected: what is played goes to it. The name is the TV's.
+    public static func castPlaysOn(name: String) -> String {
+        Self.format("cast-plays-on", fallback: "Plays on %1$@", name)
+    }
+
+    /// Row in the connected dialog while the TV has nothing loaded.
+    public static var castIdle: String { string("cast-idle", fallback: "Nothing playing yet") }
+
+    /// The casting controller's line while the episode is paused on the TV. The name is the TV's.
+    public static func castStatusPaused(name: String) -> String {
+        Self.format("cast-status-paused", fallback: "Paused on %1$@", name)
+    }
+
+    /// Spoken label of the show's name in the casting controller: it opens the show's page.
+    public static func castOpenShow(title: String) -> String {
+        Self.format("cast-open-show", fallback: "Open %1$@", title)
+    }
+
+    /// Line under the episode in the system's Now Playing while it plays on a TV. The name is the TV's.
+    public static func castNotificationLine(name: String) -> String {
+        Self.format("cast-notification-line", fallback: "Casting to %1$@", name)
+    }
 
     /// Button that runs a failed action again.
     public static var actionTryAgain: String { string("action-try-again", fallback: "Try again") }

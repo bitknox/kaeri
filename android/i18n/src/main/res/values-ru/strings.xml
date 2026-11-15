@@ -1462,6 +1462,13 @@
     <string name="cast_play_here">Смотреть здесь</string>
     <string name="cast_stop">Остановить трансляцию</string>
     <string name="cast_volume_fixed">Задаётся на ТВ</string>
+    <string name="cast_button_connecting">Подключаемся к %1$s</string>
+    <string name="cast_button_connected">Подключено к %1$s</string>
+    <string name="cast_plays_on">Воспроизводится на %1$s</string>
+    <string name="cast_idle">Пока ничего не воспроизводится</string>
+    <string name="cast_status_paused">Пауза на %1$s</string>
+    <string name="cast_open_show">Открыть %1$s</string>
+    <string name="cast_notification_line">Трансляция на %1$s</string>
     <string name="action_try_again">Попробовать снова</string>
     <string name="action_cancel">Отмена</string>
     <string name="action_go">Перейти</string>
