@@ -4451,7 +4451,7 @@ settings-label-calendar-mine = Takvim yalnızca listenizi gösterir
 settings-note-titles = AniList'in seçimi, AniList hesabınızı izler. Oturum kapalıyken İngilizce kullanılır.
 
 # Note under the trailers row. The terminal never plays trailers by itself; the setting is shared with the apps.
-settings-note-trailers = Uygulamalar fragmanları başlık sayfalarında ve imleçle önizlemelerde sessiz oynatır. Terminal ayarı saklar ve hiçbirini oynatmaz.
+settings-note-trailers = Masaüstü uygulamaları, üzerine gelince açılan önizlemelerde fragmanları sessiz oynatır. Terminal ayarı saklar ama hiçbir fragman oynatmaz.
 
 # Note under the subtitles row.
 settings-note-subtitles = Bir dil kodu yazmak için Enter tuşuna basın. Değerler tek tek dolaşılamayacak kadar çok.

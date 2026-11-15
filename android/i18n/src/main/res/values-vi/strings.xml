@@ -1176,7 +1176,6 @@
     <string name="engine_down_stopped">Sẽ không tải thêm gì mới cho đến khi nó chạy lại. Hãy thử lại, hoặc thoát rồi mở lại ứng dụng.</string>
     <string name="engine_down_quit">Thoát</string>
     <string name="settings_picture_in_picture_system_off">Đã tắt trong cài đặt Android</string>
-    <string name="settings_trailers_note_android">Trailer phát không tiếng từ YouTube, nơi thấy địa chỉ IP của bạn. Trailer không phát khi bật Trình tiết kiệm dữ liệu hoặc Trình tiết kiệm pin, hay khi đã xóa hiệu ứng động.</string>
     <string name="about_title">Giới thiệu</string>
     <string name="about_title_app">Giới thiệu về Kaeri</string>
     <string name="about_version">Phiên bản %1$s</string>

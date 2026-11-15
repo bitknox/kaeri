@@ -1238,7 +1238,6 @@
     <string name="engine_down_stopped">Inget nytt laddas förrän den startar igen. Försök igen, eller avsluta och öppna appen en gång till.</string>
     <string name="engine_down_quit">Avsluta</string>
     <string name="settings_picture_in_picture_system_off">Av i Android-inställningarna</string>
-    <string name="settings_trailers_note_android">Trailrar spelas utan ljud från YouTube, som ser din IP-adress. De spelas inte med Databesparing eller Batterisparläge på, eller med animationer borttagna.</string>
     <string name="about_title">Om</string>
     <string name="about_title_app">Om Kaeri</string>
     <string name="about_version">Version %1$s</string>

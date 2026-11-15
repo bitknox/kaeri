@@ -1362,7 +1362,6 @@
     <string name="engine_down_stopped">Nic nowego się nie wczyta, dopóki znów nie ruszy. Spróbuj ponownie albo zamknij i otwórz aplikację jeszcze raz.</string>
     <string name="engine_down_quit">Zamknij</string>
     <string name="settings_picture_in_picture_system_off">Wyłączone w Androidzie</string>
-    <string name="settings_trailers_note_android">Zwiastuny odtwarzają się bez dźwięku z YouTube, który widzi Twój adres IP. Nie odtwarzają się przy włączonym Oszczędzaniu danych lub Oszczędzaniu baterii ani przy usuniętych animacjach.</string>
     <string name="about_title">O aplikacji</string>
     <string name="about_title_app">O Kaeri</string>
     <string name="about_version">Wersja %1$s</string>

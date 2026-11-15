@@ -4571,7 +4571,7 @@ settings-label-calendar-mine = В календаре только ваш спи�
 settings-note-titles = По выбору AniList: язык следует за вашим аккаунтом, а без входа будет английский.
 
 # Note under the trailers row. The terminal never plays trailers by itself; the setting is shared with the apps.
-settings-note-trailers = Приложения воспроизводят трейлеры без звука на страницах тайтлов и в превью при наведении. Терминал хранит настройку и ничего не воспроизводит.
+settings-note-trailers = Приложения для компьютера воспроизводят трейлеры без звука в превью при наведении. В терминале настройка сохраняется, но трейлеры не воспроизводятся.
 
 # Note under the subtitles row.
 settings-note-subtitles = Нажмите Enter, чтобы ввести код языка. Вариантов слишком много, чтобы перебирать.

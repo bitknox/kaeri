@@ -9,4 +9,3 @@ engine-down-title = O { -app-name } parou
 engine-down-stopped = Nada novo vai carregar até ele voltar a funcionar. Tente de novo ou feche e abra o app mais uma vez.
 engine-down-quit = Sair
 settings-picture-in-picture-system-off = Desativado no Android
-settings-trailers-note-android = Os trailers tocam sem som pelo YouTube, que vê seu endereço IP. Eles não tocam com a Economia de dados ou a Economia de bateria ativada, nem com as animações removidas.

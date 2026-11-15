@@ -1300,7 +1300,6 @@
     <string name="engine_down_stopped">Rien de nouveau ne se charge avant son redémarrage. Réessayez, ou quittez l\'application et rouvrez-la.</string>
     <string name="engine_down_quit">Quitter</string>
     <string name="settings_picture_in_picture_system_off">Désactivé dans Android</string>
-    <string name="settings_trailers_note_android">Les bandes-annonces sont lues sans le son depuis YouTube, qui voit votre adresse IP. Elles ne sont pas lues avec l\'Économiseur de données ou l\'Économiseur de batterie activé, ni avec les animations supprimées.</string>
     <string name="about_title">À propos</string>
     <string name="about_title_app">À propos de Kaeri</string>
     <string name="about_version">Version %1$s</string>

@@ -25303,10 +25303,10 @@
     "at": "2026-11-07"
   },
   "settings-note-trailers": {
-    "source": "d13eb76d28dc",
+    "source": "b83a10eb6e6c",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-15"
+    "at": "2026-10-31"
   },
   "settings-note-trailers-linux": {
     "source": "54fcf4340ab7",
@@ -26791,12 +26791,6 @@
     "state": "draft",
     "by": "agent",
     "at": "2026-10-31"
-  },
-  "settings-trailers-note-android": {
-    "source": "f24c6c651111",
-    "state": "draft",
-    "by": "agent",
-    "at": "2026-11-15"
   },
   "settings-trailers-note-apple": {
     "source": "b21582da2a10",

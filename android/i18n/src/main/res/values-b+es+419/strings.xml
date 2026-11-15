@@ -1300,7 +1300,6 @@
     <string name="engine_down_stopped">No se cargará nada nuevo hasta que vuelva a funcionar. Inténtalo de nuevo o cierra la app y ábrela otra vez.</string>
     <string name="engine_down_quit">Salir</string>
     <string name="settings_picture_in_picture_system_off">Desactivado en Android</string>
-    <string name="settings_trailers_note_android">Los tráileres se reproducen sin sonido desde YouTube, que ve tu dirección IP. No se reproducen con Ahorro de datos o Ahorro de batería activados, ni con las animaciones quitadas.</string>
     <string name="about_title">Acerca de</string>
     <string name="about_title_app">Acerca de Kaeri</string>
     <string name="about_version">Versión %1$s</string>

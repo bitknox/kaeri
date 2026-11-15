@@ -1238,7 +1238,6 @@
     <string name="engine_down_stopped">Yeniden başlayana kadar yeni bir şey yüklenmez. Yeniden deneyin ya da uygulamayı kapatıp bir kez daha açın.</string>
     <string name="engine_down_quit">Kapat</string>
     <string name="settings_picture_in_picture_system_off">Android ayarlarında kapalı</string>
-    <string name="settings_trailers_note_android">Fragmanlar YouTube\'dan sessiz oynatılır ve YouTube IP adresini görür. Veri Tasarrufu veya Pil Tasarrufu açıkken ya da animasyonlar kaldırılmışken oynatılmaz.</string>
     <string name="about_title">Hakkında</string>
     <string name="about_title_app">Kaeri hakkında</string>
     <string name="about_version">Versiyon %1$s</string>

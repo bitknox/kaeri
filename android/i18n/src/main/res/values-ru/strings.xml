@@ -1362,7 +1362,6 @@
     <string name="engine_down_stopped">Ничего нового не загрузится, пока он не запустится снова. Попробуйте ещё раз или закройте и снова откройте приложение.</string>
     <string name="engine_down_quit">Закрыть</string>
     <string name="settings_picture_in_picture_system_off">Отключено в настройках Android</string>
-    <string name="settings_trailers_note_android">Трейлеры воспроизводятся без звука с YouTube, который видит ваш IP-адрес. Они не воспроизводятся при включённой экономии трафика или энергосбережении, а также при отключённой анимации.</string>
     <string name="about_title">О программе</string>
     <string name="about_title_app">О Kaeri</string>
     <string name="about_version">Версия %1$s</string>
