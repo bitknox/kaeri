@@ -3182,6 +3182,27 @@
   <data name="CastVolumeFixed" xml:space="preserve">
     <value>Задаётся на ТВ</value>
   </data>
+  <data name="CastButtonConnecting" xml:space="preserve">
+    <value>Подключение к {name}</value>
+  </data>
+  <data name="CastButtonConnected" xml:space="preserve">
+    <value>Подключено к {name}</value>
+  </data>
+  <data name="CastPlaysOn" xml:space="preserve">
+    <value>Воспроизведение на {name}</value>
+  </data>
+  <data name="CastIdle" xml:space="preserve">
+    <value>Пока ничего не воспроизводится</value>
+  </data>
+  <data name="CastStatusPaused" xml:space="preserve">
+    <value>Пауза на {name}</value>
+  </data>
+  <data name="CastOpenShow" xml:space="preserve">
+    <value>Открыть {title}</value>
+  </data>
+  <data name="CastNotificationLine" xml:space="preserve">
+    <value>Трансляция на {name}</value>
+  </data>
   <data name="ActionTryAgain" xml:space="preserve">
     <value>Попробовать снова</value>
   </data>
@@ -3700,6 +3721,18 @@
   </data>
   <data name="NamesList" xml:space="preserve">
     <value>{list}, {next}</value>
+  </data>
+  <data name="CastRowThroughComputer" xml:space="preserve">
+    <value>Воспроизводится через этот компьютер</value>
+  </data>
+  <data name="CastQuitTitle" xml:space="preserve">
+    <value>Остановить трансляцию и выйти?</value>
+  </data>
+  <data name="CastQuitBody" xml:space="preserve">
+    <value>{title} воспроизводится на {name}. При выходе воспроизведение остановится.</value>
+  </data>
+  <data name="CastQuitAction" xml:space="preserve">
+    <value>Остановить и выйти</value>
   </data>
   <data name="DiscussionOpen" xml:space="preserve">
     <value>Обсуждение</value>
@@ -12466,6 +12499,9 @@
   </data>
   <data name="TvPaired" xml:space="preserve">
     <value>Подключён</value>
+  </data>
+  <data name="TvRowKaeri" xml:space="preserve">
+    <value>Kaeri на Android TV</value>
   </data>
   <data name="TvConnectedAt" xml:space="preserve">
     <value>Подключён · {address}</value>

@@ -1273,6 +1273,13 @@
     <string name="cast_play_here">Putar di sini</string>
     <string name="cast_stop">Hentikan casting</string>
     <string name="cast_volume_fixed">Diatur di TV</string>
+    <string name="cast_button_connecting">Menghubungkan ke %1$s</string>
+    <string name="cast_button_connected">Terhubung ke %1$s</string>
+    <string name="cast_plays_on">Diputar di %1$s</string>
+    <string name="cast_idle">Belum ada yang diputar</string>
+    <string name="cast_status_paused">Dijeda di %1$s</string>
+    <string name="cast_open_show">Buka %1$s</string>
+    <string name="cast_notification_line">Mentransmisikan ke %1$s</string>
     <string name="action_try_again">Coba lagi</string>
     <string name="action_cancel">Batal</string>
     <string name="action_go">Ke</string>
@@ -1444,6 +1451,10 @@
     <string name="player_position_spoken">%1$s dari %2$s</string>
     <string name="names_pair">%1$s dan %2$s</string>
     <string name="names_list">%1$s, %2$s</string>
+    <string name="cast_row_through_computer">Diputar melalui komputer ini</string>
+    <string name="cast_quit_title">Hentikan transmisi dan keluar?</string>
+    <string name="cast_quit_body">%1$s sedang diputar di %2$s. Keluar akan menghentikannya.</string>
+    <string name="cast_quit_action">Hentikan dan keluar</string>
     <string name="discussion_open">Diskusi</string>
     <string name="discussion_title_episode">Diskusi episode %1$d</string>
     <plurals name="discussion_row">
@@ -4277,6 +4288,7 @@
     <string name="tv_none_paired_detail">Buka Kaeri di TV, di Wi-Fi yang sama, lalu pasangkan di sini.</string>
     <string name="tv_paired_on">Dipasangkan %1$s</string>
     <string name="tv_paired">Dipasangkan</string>
+    <string name="tv_row_kaeri">Kaeri di Android TV</string>
     <string name="tv_connected_at">Terhubung · %1$s</string>
     <string name="tv_forget_title">Lupakan %1$s?</string>
     <string name="tv_forget_detail">Untuk memutar lagi di TV ini, pasangkan kembali.</string>

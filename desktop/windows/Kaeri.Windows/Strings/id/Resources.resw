@@ -2777,6 +2777,27 @@
   <data name="CastVolumeFixed" xml:space="preserve">
     <value>Diatur di TV</value>
   </data>
+  <data name="CastButtonConnecting" xml:space="preserve">
+    <value>Menghubungkan ke {name}</value>
+  </data>
+  <data name="CastButtonConnected" xml:space="preserve">
+    <value>Terhubung ke {name}</value>
+  </data>
+  <data name="CastPlaysOn" xml:space="preserve">
+    <value>Diputar di {name}</value>
+  </data>
+  <data name="CastIdle" xml:space="preserve">
+    <value>Belum ada yang diputar</value>
+  </data>
+  <data name="CastStatusPaused" xml:space="preserve">
+    <value>Dijeda di {name}</value>
+  </data>
+  <data name="CastOpenShow" xml:space="preserve">
+    <value>Buka {title}</value>
+  </data>
+  <data name="CastNotificationLine" xml:space="preserve">
+    <value>Mentransmisikan ke {name}</value>
+  </data>
   <data name="ActionTryAgain" xml:space="preserve">
     <value>Coba lagi</value>
   </data>
@@ -3277,6 +3298,18 @@
   </data>
   <data name="NamesList" xml:space="preserve">
     <value>{list}, {next}</value>
+  </data>
+  <data name="CastRowThroughComputer" xml:space="preserve">
+    <value>Diputar melalui komputer ini</value>
+  </data>
+  <data name="CastQuitTitle" xml:space="preserve">
+    <value>Hentikan transmisi dan keluar?</value>
+  </data>
+  <data name="CastQuitBody" xml:space="preserve">
+    <value>{title} sedang diputar di {name}. Keluar akan menghentikannya.</value>
+  </data>
+  <data name="CastQuitAction" xml:space="preserve">
+    <value>Hentikan dan keluar</value>
   </data>
   <data name="DiscussionOpen" xml:space="preserve">
     <value>Diskusi</value>
@@ -11224,6 +11257,9 @@
   </data>
   <data name="TvPaired" xml:space="preserve">
     <value>Dipasangkan</value>
+  </data>
+  <data name="TvRowKaeri" xml:space="preserve">
+    <value>Kaeri di Android TV</value>
   </data>
   <data name="TvConnectedAt" xml:space="preserve">
     <value>Terhubung · {address}</value>

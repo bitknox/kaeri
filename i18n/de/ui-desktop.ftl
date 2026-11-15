@@ -29,3 +29,7 @@ tv-problem-unpaired = Der Fernseher kennt dieses { -device } nicht mehr. Koppel 
 player-position-spoken = { $position } von { $duration }
 names-pair = { $first } und { $last }
 names-list = { $list }, { $next }
+cast-row-through-computer = Wird über diesen Computer abgespielt
+cast-quit-title = Übertragung stoppen und beenden?
+cast-quit-body = { $title } läuft auf { $name }. Beim Beenden stoppt die Wiedergabe.
+cast-quit-action = Stoppen und beenden

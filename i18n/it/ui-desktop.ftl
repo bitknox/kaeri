@@ -29,3 +29,7 @@ tv-problem-unpaired = La TV non riconosce più questo { -device }. Abbinalo di n
 player-position-spoken = { $position } di { $duration }
 names-pair = { $first } e { $last }
 names-list = { $list }, { $next }
+cast-row-through-computer = Riprodotto tramite questo computer
+cast-quit-title = Interrompere la trasmissione e uscire?
+cast-quit-body = { $title } è in riproduzione su { $name }. Uscendo si interrompe.
+cast-quit-action = Interrompi ed esci

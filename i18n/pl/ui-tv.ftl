@@ -32,6 +32,7 @@ tv-none-paired = Nie sparowano jeszcze żadnego telewizora
 tv-none-paired-detail = Otwórz { -app-name } w telewizorze, w tej samej sieci Wi-Fi, a potem sparuj go tutaj.
 tv-paired-on = Sparowano { $when }
 tv-paired = Sparowany
+tv-row-kaeri = { -app-name } na Android TV
 tv-connected-at = Połączono · { $address }
 tv-forget-title = Zapomnieć { $name }?
 tv-forget-detail = Żeby znów odtwarzać na nim, sparuj go ponownie.

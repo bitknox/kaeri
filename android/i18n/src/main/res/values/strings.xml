@@ -2831,6 +2831,20 @@
     <string name="cast_stop">Stop casting</string>
     <!-- Line under TV volume on the card, for a TV whose volume only its own remote sets. -->
     <string name="cast_volume_fixed">Set on the TV</string>
+    <!-- The cast button's label and tooltip while it connects to a TV. The name is the TV's. -->
+    <string name="cast_button_connecting">Connecting to %1$s</string>
+    <!-- The cast button's label and tooltip while a TV is connected, also read out once on connecting. The name is the TV's. -->
+    <string name="cast_button_connected">Connected to %1$s</string>
+    <!-- Line under a title page's main button while a TV is connected: the episode will play there. -->
+    <string name="cast_plays_on">Plays on %1$s</string>
+    <!-- Row of the connected TV's menu while the TV shows the app and nothing is loaded. -->
+    <string name="cast_idle">Nothing playing yet</string>
+    <!-- Status line of the cast controller while the episode is paused on the TV. -->
+    <string name="cast_status_paused">Paused on %1$s</string>
+    <!-- Tooltip and screen reader label of the show's name and cover in the cast controller: opens the show's page. -->
+    <string name="cast_open_show">Open %1$s</string>
+    <!-- Line in the system's media controls while an episode plays on a TV. The name is the TV's. -->
+    <string name="cast_notification_line">Casting to %1$s</string>
     <!-- Button that runs a failed action again. -->
     <string name="action_try_again">Try again</string>
     <!-- Button that closes a dialog without doing what it offered. -->
@@ -3171,6 +3185,14 @@
     <string name="names_pair">%1$s and %2$s</string>
     <!-- A list of names up to the last two, joined one by one: "Alpha, Brook". -->
     <string name="names_list">%1$s, %2$s</string>
+    <!-- Line under a TV with Chromecast built in, in the Play on TV list: this computer serves the episode to it while it plays. -->
+    <string name="cast_row_through_computer">Plays through this computer</string>
+    <!-- Title of the question asked on quitting while an episode plays on a TV. -->
+    <string name="cast_quit_title">Stop casting and quit?</string>
+    <!-- Body of the question asked on quitting while an episode plays on a TV. The title is the show's, the name is the TV's. -->
+    <string name="cast_quit_body">%1$s is playing on %2$s. Quitting stops it.</string>
+    <!-- Button of the question asked on quitting while casting: stops the cast and quits. -->
+    <string name="cast_quit_action">Stop and quit</string>
     <!-- Menu item that opens an episode's discussion. -->
     <string name="discussion_open">Discussion</string>
     <!-- Title of the discussion window or sheet when the thread has no title yet. -->
@@ -9018,6 +9040,8 @@
     <string name="tv_paired_on">Paired %1$s</string>
     <!-- Short word: paired, no date known. -->
     <string name="tv_paired">Paired</string>
+    <!-- Line under a paired TV running the app, in the Play on TV list. -->
+    <string name="tv_row_kaeri">Kaeri on Android TV</string>
     <!-- Line with the address. -->
     <string name="tv_connected_at">Connected · %1$s</string>
     <!-- Title of the confirmation that forgets a TV. -->

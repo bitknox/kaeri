@@ -32,6 +32,7 @@ tv-none-paired = Belum ada TV yang dipasangkan
 tv-none-paired-detail = Buka { -app-name } di TV, di Wi-Fi yang sama, lalu pasangkan di sini.
 tv-paired-on = Dipasangkan { $when }
 tv-paired = Dipasangkan
+tv-row-kaeri = { -app-name } di Android TV
 tv-connected-at = Terhubung · { $address }
 tv-forget-title = Lupakan { $name }?
 tv-forget-detail = Untuk memutar lagi di TV ini, pasangkan kembali.

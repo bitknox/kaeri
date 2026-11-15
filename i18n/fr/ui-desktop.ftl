@@ -29,3 +29,7 @@ tv-problem-unpaired = La TV ne connaît plus cet { -device }. Appairez-la de nou
 player-position-spoken = { $position } sur { $duration }
 names-pair = { $first } et { $last }
 names-list = { $list }, { $next }
+cast-row-through-computer = Diffusé via cet ordinateur
+cast-quit-title = Arrêter la diffusion et quitter ?
+cast-quit-body = { $title } est en lecture sur { $name }. Quitter arrête la lecture.
+cast-quit-action = Arrêter et quitter

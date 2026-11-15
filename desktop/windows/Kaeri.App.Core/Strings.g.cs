@@ -2892,6 +2892,27 @@ public static partial class T
     /// <summary>Line under TV volume on the card, for a TV whose volume only its own remote sets.</summary>
     public static string CastVolumeFixed => Get("CastVolumeFixed");
 
+    /// <summary>The cast button's label and tooltip while it connects to a TV. The name is the TV's.</summary>
+    public static string CastButtonConnecting(string name) => Fill(Get("CastButtonConnecting"), ("name", name));
+
+    /// <summary>The cast button's label and tooltip while a TV is connected, also read out once on connecting. The name is the TV's.</summary>
+    public static string CastButtonConnected(string name) => Fill(Get("CastButtonConnected"), ("name", name));
+
+    /// <summary>Line under a title page's main button while a TV is connected: the episode will play there.</summary>
+    public static string CastPlaysOn(string name) => Fill(Get("CastPlaysOn"), ("name", name));
+
+    /// <summary>Row of the connected TV's menu while the TV shows the app and nothing is loaded.</summary>
+    public static string CastIdle => Get("CastIdle");
+
+    /// <summary>Status line of the cast controller while the episode is paused on the TV.</summary>
+    public static string CastStatusPaused(string name) => Fill(Get("CastStatusPaused"), ("name", name));
+
+    /// <summary>Tooltip and screen reader label of the show's name and cover in the cast controller: opens the show's page.</summary>
+    public static string CastOpenShow(string title) => Fill(Get("CastOpenShow"), ("title", title));
+
+    /// <summary>Line in the system's media controls while an episode plays on a TV. The name is the TV's.</summary>
+    public static string CastNotificationLine(string name) => Fill(Get("CastNotificationLine"), ("name", name));
+
     /// <summary>Button that runs a failed action again.</summary>
     public static string ActionTryAgain => Get("ActionTryAgain");
 
@@ -3392,6 +3413,18 @@ public static partial class T
 
     /// <summary>A list of names up to the last two, joined one by one: "Alpha, Brook".</summary>
     public static string NamesList(string list, string next) => Fill(Get("NamesList"), ("list", list), ("next", next));
+
+    /// <summary>Line under a TV with Chromecast built in, in the Play on TV list: this computer serves the episode to it while it plays.</summary>
+    public static string CastRowThroughComputer => Get("CastRowThroughComputer");
+
+    /// <summary>Title of the question asked on quitting while an episode plays on a TV.</summary>
+    public static string CastQuitTitle => Get("CastQuitTitle");
+
+    /// <summary>Body of the question asked on quitting while an episode plays on a TV. The title is the show's, the name is the TV's.</summary>
+    public static string CastQuitBody(string title, string name) => Fill(Get("CastQuitBody"), ("title", title), ("name", name));
+
+    /// <summary>Button of the question asked on quitting while casting: stops the cast and quits.</summary>
+    public static string CastQuitAction => Get("CastQuitAction");
 
     /// <summary>Menu item that opens an episode's discussion.</summary>
     public static string DiscussionOpen => Get("DiscussionOpen");
@@ -11717,6 +11750,9 @@ public static partial class T
     /// <summary>Short word: paired, no date known.</summary>
     public static string TvPaired => Get("TvPaired");
 
+    /// <summary>Line under a paired TV running the app, in the Play on TV list.</summary>
+    public static string TvRowKaeri => Get("TvRowKaeri");
+
     /// <summary>Line with the address.</summary>
     public static string TvConnectedAt(string address) => Fill(Get("TvConnectedAt"), ("address", address));
 
@@ -13067,6 +13103,13 @@ public static partial class T
         ["CastPlayHere"] = "Play here",
         ["CastStop"] = "Stop casting",
         ["CastVolumeFixed"] = "Set on the TV",
+        ["CastButtonConnecting"] = "Connecting to {name}",
+        ["CastButtonConnected"] = "Connected to {name}",
+        ["CastPlaysOn"] = "Plays on {name}",
+        ["CastIdle"] = "Nothing playing yet",
+        ["CastStatusPaused"] = "Paused on {name}",
+        ["CastOpenShow"] = "Open {title}",
+        ["CastNotificationLine"] = "Casting to {name}",
         ["ActionTryAgain"] = "Try again",
         ["ActionCancel"] = "Cancel",
         ["ActionGo"] = "Go",
@@ -13236,6 +13279,10 @@ public static partial class T
         ["PlayerPositionSpoken"] = "{position} of {duration}",
         ["NamesPair"] = "{first} and {last}",
         ["NamesList"] = "{list}, {next}",
+        ["CastRowThroughComputer"] = "Plays through this computer",
+        ["CastQuitTitle"] = "Stop casting and quit?",
+        ["CastQuitBody"] = "{title} is playing on {name}. Quitting stops it.",
+        ["CastQuitAction"] = "Stop and quit",
         ["DiscussionOpen"] = "Discussion",
         ["DiscussionTitleEpisode"] = "Episode {episode} discussion",
         ["DiscussionRow_one"] = "Discussion · one comment",
@@ -16119,6 +16166,7 @@ public static partial class T
         ["TvNonePairedDetail"] = "Open Kaeri on the TV, on the same Wi-Fi, then pair with it here.",
         ["TvPairedOn"] = "Paired {when}",
         ["TvPaired"] = "Paired",
+        ["TvRowKaeri"] = "Kaeri on Android TV",
         ["TvConnectedAt"] = "Connected · {address}",
         ["TvForgetTitle"] = "Forget {name}?",
         ["TvForgetDetail"] = "To play on it again, pair with it again.",

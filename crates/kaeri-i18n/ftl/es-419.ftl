@@ -5551,6 +5551,27 @@ cast-stop = Dejar de transmitir
 # Line under TV volume on the card, for a TV whose volume only its own remote sets.
 cast-volume-fixed = Se ajusta en la TV
 
+# The cast button's label and tooltip while it connects to a TV. The name is the TV's.
+cast-button-connecting = Conectando con { $name }
+
+# The cast button's label and tooltip while a TV is connected, also read out once on connecting. The name is the TV's.
+cast-button-connected = Conectado a { $name }
+
+# Line under a title page's main button while a TV is connected: the episode will play there.
+cast-plays-on = Se reproduce en { $name }
+
+# Row of the connected TV's menu while the TV shows the app and nothing is loaded.
+cast-idle = Nada en reproducción todavía
+
+# Status line of the cast controller while the episode is paused on the TV.
+cast-status-paused = En pausa en { $name }
+
+# Tooltip and screen reader label of the show's name and cover in the cast controller: opens the show's page.
+cast-open-show = Abrir { $title }
+
+# Line in the system's media controls while an episode plays on a TV. The name is the TV's.
+cast-notification-line = Transmitiendo a { $name }
+
 # Button that runs a failed action again.
 action-try-again = Intentar de nuevo
 
@@ -6061,6 +6082,18 @@ names-pair = { $first } y { $last }
 
 # A list of names up to the last two, joined one by one: "Alpha, Brook".
 names-list = { $list }, { $next }
+
+# Line under a TV with Chromecast built in, in the Play on TV list: this computer serves the episode to it while it plays.
+cast-row-through-computer = Se reproduce a través de esta computadora
+
+# Title of the question asked on quitting while an episode plays on a TV.
+cast-quit-title = ¿Detener la transmisión y salir?
+
+# Body of the question asked on quitting while an episode plays on a TV. The title is the show's, the name is the TV's.
+cast-quit-body = { $title } se está reproduciendo en { $name }. Al salir, se detiene.
+
+# Button of the question asked on quitting while casting: stops the cast and quits.
+cast-quit-action = Detener y salir
 
 # Menu item that opens an episode's discussion.
 discussion-open = Discusión
@@ -14433,6 +14466,9 @@ tv-paired-on = Vinculado { $when }
 
 # Short word: paired, no date known.
 tv-paired = Vinculado
+
+# Line under a paired TV running the app, in the Play on TV list.
+tv-row-kaeri = Kaeri en Android TV
 
 # Line with the address.
 tv-connected-at = Conectado · { $address }

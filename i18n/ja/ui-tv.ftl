@@ -32,6 +32,7 @@ tv-none-paired = ペアリング済みのテレビはまだありません
 tv-none-paired-detail = テレビで{ -app-name }を開き、同じWi-Fiに接続してから、ここでペアリングしてください。
 tv-paired-on = { $when }にペアリング済み
 tv-paired = ペアリング済み
+tv-row-kaeri = Android TV の { -app-name }
 tv-connected-at = 接続済み · { $address }
 tv-forget-title = { $name }を削除しますか？
 tv-forget-detail = 再び再生するには、もう一度ペアリングしてください。

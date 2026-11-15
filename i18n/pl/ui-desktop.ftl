@@ -29,3 +29,7 @@ tv-problem-unpaired = Telewizor usunął ten komputer ze swojej listy. Sparuj go
 player-position-spoken = { $position } z { $duration }
 names-pair = { $first } i { $last }
 names-list = { $list }, { $next }
+cast-row-through-computer = Odtwarzane przez ten komputer
+cast-quit-title = Zatrzymać przesyłanie i zakończyć?
+cast-quit-body = Trwa odtwarzanie { $title } na { $name }. Zakończenie je zatrzyma.
+cast-quit-action = Zatrzymaj i zakończ

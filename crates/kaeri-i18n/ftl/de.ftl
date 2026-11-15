@@ -5482,6 +5482,27 @@ cast-stop = Übertragung beenden
 # Line under TV volume on the card, for a TV whose volume only its own remote sets.
 cast-volume-fixed = Am Fernseher eingestellt
 
+# The cast button's label and tooltip while it connects to a TV. The name is the TV's.
+cast-button-connecting = Verbindung mit { $name } wird hergestellt
+
+# The cast button's label and tooltip while a TV is connected, also read out once on connecting. The name is the TV's.
+cast-button-connected = Verbunden mit { $name }
+
+# Line under a title page's main button while a TV is connected: the episode will play there.
+cast-plays-on = Wird auf { $name } abgespielt
+
+# Row of the connected TV's menu while the TV shows the app and nothing is loaded.
+cast-idle = Noch wird nichts abgespielt
+
+# Status line of the cast controller while the episode is paused on the TV.
+cast-status-paused = Pausiert auf { $name }
+
+# Tooltip and screen reader label of the show's name and cover in the cast controller: opens the show's page.
+cast-open-show = { $title } öffnen
+
+# Line in the system's media controls while an episode plays on a TV. The name is the TV's.
+cast-notification-line = Übertragung an { $name }
+
 # Button that runs a failed action again.
 action-try-again = Erneut versuchen
 
@@ -5990,6 +6011,18 @@ names-pair = { $first } und { $last }
 
 # A list of names up to the last two, joined one by one: "Alpha, Brook".
 names-list = { $list }, { $next }
+
+# Line under a TV with Chromecast built in, in the Play on TV list: this computer serves the episode to it while it plays.
+cast-row-through-computer = Wird über diesen Computer abgespielt
+
+# Title of the question asked on quitting while an episode plays on a TV.
+cast-quit-title = Übertragung stoppen und beenden?
+
+# Body of the question asked on quitting while an episode plays on a TV. The title is the show's, the name is the TV's.
+cast-quit-body = { $title } läuft auf { $name }. Beim Beenden stoppt die Wiedergabe.
+
+# Button of the question asked on quitting while casting: stops the cast and quits.
+cast-quit-action = Stoppen und beenden
 
 # Menu item that opens an episode's discussion.
 discussion-open = Diskussion
@@ -14271,6 +14304,9 @@ tv-paired-on = Gekoppelt { $when }
 
 # Short word: paired, no date known.
 tv-paired = Gekoppelt
+
+# Line under a paired TV running the app, in the Play on TV list.
+tv-row-kaeri = Kaeri auf Android TV
 
 # Line with the address.
 tv-connected-at = Verbunden · { $address }

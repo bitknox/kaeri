@@ -1459,6 +1459,13 @@
     <string name="cast_play_here">Смотреть здесь</string>
     <string name="cast_stop">Остановить трансляцию</string>
     <string name="cast_volume_fixed">Задаётся на ТВ</string>
+    <string name="cast_button_connecting">Подключение к %1$s</string>
+    <string name="cast_button_connected">Подключено к %1$s</string>
+    <string name="cast_plays_on">Воспроизведение на %1$s</string>
+    <string name="cast_idle">Пока ничего не воспроизводится</string>
+    <string name="cast_status_paused">Пауза на %1$s</string>
+    <string name="cast_open_show">Открыть %1$s</string>
+    <string name="cast_notification_line">Трансляция на %1$s</string>
     <string name="action_try_again">Попробовать снова</string>
     <string name="action_cancel">Отмена</string>
     <string name="action_go">Перейти</string>
@@ -1636,6 +1643,10 @@
     <string name="player_position_spoken">%1$s из %2$s</string>
     <string name="names_pair">%1$s и %2$s</string>
     <string name="names_list">%1$s, %2$s</string>
+    <string name="cast_row_through_computer">Воспроизводится через этот компьютер</string>
+    <string name="cast_quit_title">Остановить трансляцию и выйти?</string>
+    <string name="cast_quit_body">%1$s воспроизводится на %2$s. При выходе воспроизведение остановится.</string>
+    <string name="cast_quit_action">Остановить и выйти</string>
     <string name="discussion_open">Обсуждение</string>
     <string name="discussion_title_episode">Обсуждение эпизода %1$d</string>
     <plurals name="discussion_row">
@@ -4742,6 +4753,7 @@
     <string name="tv_none_paired_detail">Откройте Kaeri на телевизоре в той же сети Wi-Fi, затем подключите его здесь.</string>
     <string name="tv_paired_on">Подключён %1$s</string>
     <string name="tv_paired">Подключён</string>
+    <string name="tv_row_kaeri">Kaeri на Android TV</string>
     <string name="tv_connected_at">Подключён · %1$s</string>
     <string name="tv_forget_title">Забыть %1$s?</string>
     <string name="tv_forget_detail">Чтобы снова играть на нём, подключите его заново.</string>

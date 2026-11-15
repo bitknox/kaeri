@@ -1397,6 +1397,13 @@
     <string name="cast_play_here">Reproducir aquí</string>
     <string name="cast_stop">Dejar de transmitir</string>
     <string name="cast_volume_fixed">Se ajusta en la TV</string>
+    <string name="cast_button_connecting">Conectando con %1$s</string>
+    <string name="cast_button_connected">Conectado a %1$s</string>
+    <string name="cast_plays_on">Se reproduce en %1$s</string>
+    <string name="cast_idle">Nada en reproducción todavía</string>
+    <string name="cast_status_paused">En pausa en %1$s</string>
+    <string name="cast_open_show">Abrir %1$s</string>
+    <string name="cast_notification_line">Transmitiendo a %1$s</string>
     <string name="action_try_again">Intentar de nuevo</string>
     <string name="action_cancel">Cancelar</string>
     <string name="action_go">Ir</string>
@@ -1572,6 +1579,10 @@
     <string name="player_position_spoken">%1$s de %2$s</string>
     <string name="names_pair">%1$s y %2$s</string>
     <string name="names_list">%1$s, %2$s</string>
+    <string name="cast_row_through_computer">Se reproduce a través de esta computadora</string>
+    <string name="cast_quit_title">¿Detener la transmisión y salir?</string>
+    <string name="cast_quit_body">%1$s se está reproduciendo en %2$s. Al salir, se detiene.</string>
+    <string name="cast_quit_action">Detener y salir</string>
     <string name="discussion_open">Discusión</string>
     <string name="discussion_title_episode">Discusión del episodio %1$d</string>
     <plurals name="discussion_row">
@@ -4587,6 +4598,7 @@
     <string name="tv_none_paired_detail">Abre Kaeri en el televisor, en el mismo Wi-Fi, y luego vincúlalo desde aquí.</string>
     <string name="tv_paired_on">Vinculado %1$s</string>
     <string name="tv_paired">Vinculado</string>
+    <string name="tv_row_kaeri">Kaeri en Android TV</string>
     <string name="tv_connected_at">Conectado · %1$s</string>
     <string name="tv_forget_title">¿Olvidar %1$s?</string>
     <string name="tv_forget_detail">Para reproducir en él otra vez, vuelve a vincularlo.</string>

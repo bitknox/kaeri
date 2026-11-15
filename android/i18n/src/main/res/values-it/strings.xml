@@ -1397,6 +1397,13 @@
     <string name="cast_play_here">Riproduci qui</string>
     <string name="cast_stop">Interrompi trasmissione</string>
     <string name="cast_volume_fixed">Impostato sulla TV</string>
+    <string name="cast_button_connecting">Connessione a %1$s</string>
+    <string name="cast_button_connected">Connesso a %1$s</string>
+    <string name="cast_plays_on">Si riproduce su %1$s</string>
+    <string name="cast_idle">Ancora nulla in riproduzione</string>
+    <string name="cast_status_paused">In pausa su %1$s</string>
+    <string name="cast_open_show">Apri %1$s</string>
+    <string name="cast_notification_line">Trasmissione su %1$s</string>
     <string name="action_try_again">Riprova</string>
     <string name="action_cancel">Annulla</string>
     <string name="action_go">Vai</string>
@@ -1572,6 +1579,10 @@
     <string name="player_position_spoken">%1$s di %2$s</string>
     <string name="names_pair">%1$s e %2$s</string>
     <string name="names_list">%1$s, %2$s</string>
+    <string name="cast_row_through_computer">Riprodotto tramite questo computer</string>
+    <string name="cast_quit_title">Interrompere la trasmissione e uscire?</string>
+    <string name="cast_quit_body">%1$s è in riproduzione su %2$s. Uscendo si interrompe.</string>
+    <string name="cast_quit_action">Interrompi ed esci</string>
     <string name="discussion_open">Discussione</string>
     <string name="discussion_title_episode">Discussione sull\'episodio %1$d</string>
     <plurals name="discussion_row">
@@ -4587,6 +4598,7 @@
     <string name="tv_none_paired_detail">Apri Kaeri sulla TV, sulla stessa rete Wi-Fi, poi collegala da qui.</string>
     <string name="tv_paired_on">Collegata %1$s</string>
     <string name="tv_paired">Collegata</string>
+    <string name="tv_row_kaeri">Kaeri su Android TV</string>
     <string name="tv_connected_at">Connessa · %1$s</string>
     <string name="tv_forget_title">Dimenticare %1$s?</string>
     <string name="tv_forget_detail">Per riprodurre di nuovo, collegala di nuovo.</string>

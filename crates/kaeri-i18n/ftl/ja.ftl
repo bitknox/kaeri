@@ -5413,6 +5413,27 @@ cast-stop = キャストを停止
 # Line under TV volume on the card, for a TV whose volume only its own remote sets.
 cast-volume-fixed = テレビ側で設定
 
+# The cast button's label and tooltip while it connects to a TV. The name is the TV's.
+cast-button-connecting = { $name } に接続中
+
+# The cast button's label and tooltip while a TV is connected, also read out once on connecting. The name is the TV's.
+cast-button-connected = { $name } に接続済み
+
+# Line under a title page's main button while a TV is connected: the episode will play there.
+cast-plays-on = { $name } で再生
+
+# Row of the connected TV's menu while the TV shows the app and nothing is loaded.
+cast-idle = まだ何も再生していません
+
+# Status line of the cast controller while the episode is paused on the TV.
+cast-status-paused = { $name } で一時停止中
+
+# Tooltip and screen reader label of the show's name and cover in the cast controller: opens the show's page.
+cast-open-show = { $title } を開く
+
+# Line in the system's media controls while an episode plays on a TV. The name is the TV's.
+cast-notification-line = { $name } にキャスト中
+
 # Button that runs a failed action again.
 action-try-again = 再試行
 
@@ -5919,6 +5940,18 @@ names-pair = { $first }と{ $last }
 
 # A list of names up to the last two, joined one by one: "Alpha, Brook".
 names-list = { $list }、{ $next }
+
+# Line under a TV with Chromecast built in, in the Play on TV list: this computer serves the episode to it while it plays.
+cast-row-through-computer = このコンピュータ経由で再生
+
+# Title of the question asked on quitting while an episode plays on a TV.
+cast-quit-title = キャストを停止して終了しますか？
+
+# Body of the question asked on quitting while an episode plays on a TV. The title is the show's, the name is the TV's.
+cast-quit-body = { $title } を { $name } で再生中です。終了すると停止します。
+
+# Button of the question asked on quitting while casting: stops the cast and quits.
+cast-quit-action = 停止して終了
 
 # Menu item that opens an episode's discussion.
 discussion-open = ディスカッション
@@ -14109,6 +14142,9 @@ tv-paired-on = { $when }にペアリング済み
 
 # Short word: paired, no date known.
 tv-paired = ペアリング済み
+
+# Line under a paired TV running the app, in the Play on TV list.
+tv-row-kaeri = Android TV の Kaeri
 
 # Line with the address.
 tv-connected-at = 接続済み · { $address }

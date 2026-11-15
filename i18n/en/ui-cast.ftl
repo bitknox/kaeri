@@ -57,3 +57,32 @@ cast-stop = Stop casting
 
 # Line under TV volume on the card, for a TV whose volume only its own remote sets.
 cast-volume-fixed = Set on the TV
+
+# The cast button's label and tooltip while it connects to a TV. The name is the TV's.
+# @arg name: text
+cast-button-connecting = Connecting to { $name }
+
+# The cast button's label and tooltip while a TV is connected, also read out once on
+# connecting. The name is the TV's.
+# @arg name: text
+cast-button-connected = Connected to { $name }
+
+# Line under a title page's main button while a TV is connected: the episode will play there.
+# @arg name: text
+cast-plays-on = Plays on { $name }
+
+# Row of the connected TV's menu while the TV shows the app and nothing is loaded.
+cast-idle = Nothing playing yet
+
+# Status line of the cast controller while the episode is paused on the TV.
+# @arg name: text
+cast-status-paused = Paused on { $name }
+
+# Tooltip and screen reader label of the show's name and cover in the cast controller: opens
+# the show's page.
+# @arg title: text
+cast-open-show = Open { $title }
+
+# Line in the system's media controls while an episode plays on a TV. The name is the TV's.
+# @arg name: text
+cast-notification-line = Casting to { $name }

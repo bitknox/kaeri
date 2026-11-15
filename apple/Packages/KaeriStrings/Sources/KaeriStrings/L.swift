@@ -4782,6 +4782,39 @@ public enum L {
     /// Line under TV volume on the card, for a TV whose volume only its own remote sets.
     public static var castVolumeFixed: String { string("cast-volume-fixed", fallback: "Set on the TV") }
 
+    /// The cast button's label and tooltip while it connects to a TV. The name is the TV's.
+    public static func castButtonConnecting(name: String) -> String {
+        Self.format("cast-button-connecting", fallback: "Connecting to %1$@", name)
+    }
+
+    /// The cast button's label and tooltip while a TV is connected, also read out once on connecting. The name is the TV's.
+    public static func castButtonConnected(name: String) -> String {
+        Self.format("cast-button-connected", fallback: "Connected to %1$@", name)
+    }
+
+    /// Line under a title page's main button while a TV is connected: the episode will play there.
+    public static func castPlaysOn(name: String) -> String {
+        Self.format("cast-plays-on", fallback: "Plays on %1$@", name)
+    }
+
+    /// Row of the connected TV's menu while the TV shows the app and nothing is loaded.
+    public static var castIdle: String { string("cast-idle", fallback: "Nothing playing yet") }
+
+    /// Status line of the cast controller while the episode is paused on the TV.
+    public static func castStatusPaused(name: String) -> String {
+        Self.format("cast-status-paused", fallback: "Paused on %1$@", name)
+    }
+
+    /// Tooltip and screen reader label of the show's name and cover in the cast controller: opens the show's page.
+    public static func castOpenShow(title: String) -> String {
+        Self.format("cast-open-show", fallback: "Open %1$@", title)
+    }
+
+    /// Line in the system's media controls while an episode plays on a TV. The name is the TV's.
+    public static func castNotificationLine(name: String) -> String {
+        Self.format("cast-notification-line", fallback: "Casting to %1$@", name)
+    }
+
     /// Button that runs a failed action again.
     public static var actionTryAgain: String { string("action-try-again", fallback: "Try again") }
 
@@ -5338,6 +5371,20 @@ public enum L {
     public static func namesList(list: String, next: String) -> String {
         Self.format("names-list", fallback: "%1$@, %2$@", list, next)
     }
+
+    /// Line under a TV with Chromecast built in, in the Play on TV list: this computer serves the episode to it while it plays.
+    public static var castRowThroughComputer: String { string("cast-row-through-computer", fallback: "Plays through this computer") }
+
+    /// Title of the question asked on quitting while an episode plays on a TV.
+    public static var castQuitTitle: String { string("cast-quit-title", fallback: "Stop casting and quit?") }
+
+    /// Body of the question asked on quitting while an episode plays on a TV. The title is the show's, the name is the TV's.
+    public static func castQuitBody(title: String, name: String) -> String {
+        Self.format("cast-quit-body", fallback: "%1$@ is playing on %2$@. Quitting stops it.", title, name)
+    }
+
+    /// Button of the question asked on quitting while casting: stops the cast and quits.
+    public static var castQuitAction: String { string("cast-quit-action", fallback: "Stop and quit") }
 
     /// Menu item that opens an episode's discussion.
     public static var discussionOpen: String { string("discussion-open", fallback: "Discussion") }
@@ -15216,6 +15263,9 @@ public enum L {
 
     /// Short word: paired, no date known.
     public static var tvPaired: String { string("tv-paired", fallback: "Paired") }
+
+    /// Line under a paired TV running the app, in the Play on TV list.
+    public static var tvRowKaeri: String { string("tv-row-kaeri", fallback: "Kaeri on Android TV") }
 
     /// Line with the address.
     public static func tvConnectedAt(address: String) -> String {

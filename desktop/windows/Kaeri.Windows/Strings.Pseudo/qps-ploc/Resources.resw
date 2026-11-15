@@ -4077,6 +4077,34 @@
     <value>[Šéţ öñ ţĥé ŢṼ~~~~]</value>
     <comment>Line under TV volume on the card, for a TV whose volume only its own remote sets.</comment>
   </data>
+  <data name="CastButtonConnecting" xml:space="preserve">
+    <value>[Çöññéçţîñĝ ţö {name}~~~~~~]</value>
+    <comment>The cast button's label and tooltip while it connects to a TV. The name is the TV's.</comment>
+  </data>
+  <data name="CastButtonConnected" xml:space="preserve">
+    <value>[Çöññéçţéð ţö {name}~~~~~]</value>
+    <comment>The cast button's label and tooltip while a TV is connected, also read out once on connecting. The name is the TV's.</comment>
+  </data>
+  <data name="CastPlaysOn" xml:space="preserve">
+    <value>[Þļàýš öñ {name}~~~~]</value>
+    <comment>Line under a title page's main button while a TV is connected: the episode will play there.</comment>
+  </data>
+  <data name="CastIdle" xml:space="preserve">
+    <value>[Ñöţĥîñĝ þļàýîñĝ ýéţ~~~~~~]</value>
+    <comment>Row of the connected TV's menu while the TV shows the app and nothing is loaded.</comment>
+  </data>
+  <data name="CastStatusPaused" xml:space="preserve">
+    <value>[Þàüšéð öñ {name}~~~~]</value>
+    <comment>Status line of the cast controller while the episode is paused on the TV.</comment>
+  </data>
+  <data name="CastOpenShow" xml:space="preserve">
+    <value>[Öþéñ {title}~~~]</value>
+    <comment>Tooltip and screen reader label of the show's name and cover in the cast controller: opens the show's page.</comment>
+  </data>
+  <data name="CastNotificationLine" xml:space="preserve">
+    <value>[Çàšţîñĝ ţö {name}~~~~~]</value>
+    <comment>Line in the system's media controls while an episode plays on a TV. The name is the TV's.</comment>
+  </data>
   <data name="ActionTryAgain" xml:space="preserve">
     <value>[Ţŕý àĝàîñ~~~]</value>
     <comment>Button that runs a failed action again.</comment>
@@ -4752,6 +4780,22 @@
   <data name="NamesList" xml:space="preserve">
     <value>[{list}, {next}~~~]</value>
     <comment>A list of names up to the last two, joined one by one: "Alpha, Brook".</comment>
+  </data>
+  <data name="CastRowThroughComputer" xml:space="preserve">
+    <value>[Þļàýš ţĥŕöüĝĥ ţĥîš çöɱþüţéŕ~~~~~~~~~]</value>
+    <comment>Line under a TV with Chromecast built in, in the Play on TV list: this computer serves the episode to it while it plays.</comment>
+  </data>
+  <data name="CastQuitTitle" xml:space="preserve">
+    <value>[Šţöþ çàšţîñĝ àñð ƣüîţ?~~~~~~~]</value>
+    <comment>Title of the question asked on quitting while an episode plays on a TV.</comment>
+  </data>
+  <data name="CastQuitBody" xml:space="preserve">
+    <value>[{title} îš þļàýîñĝ öñ {name}. Ǫüîţţîñĝ šţöþš îţ.~~~~~~~~~~~~~]</value>
+    <comment>Body of the question asked on quitting while an episode plays on a TV. The title is the show's, the name is the TV's.</comment>
+  </data>
+  <data name="CastQuitAction" xml:space="preserve">
+    <value>[Šţöþ àñð ƣüîţ~~~~]</value>
+    <comment>Button of the question asked on quitting while casting: stops the cast and quits.</comment>
   </data>
   <data name="DiscussionOpen" xml:space="preserve">
     <value>[Ðîšçüššîöñ~~~]</value>
@@ -16250,6 +16294,10 @@
   <data name="TvPaired" xml:space="preserve">
     <value>[Þàîŕéð~~]</value>
     <comment>Short word: paired, no date known.</comment>
+  </data>
+  <data name="TvRowKaeri" xml:space="preserve">
+    <value>[Ķàéŕî öñ Åñðŕöîð ŢṼ~~~~~~]</value>
+    <comment>Line under a paired TV running the app, in the Play on TV list.</comment>
   </data>
   <data name="TvConnectedAt" xml:space="preserve">
     <value>[Çöññéçţéð · {address}~~~~~]</value>

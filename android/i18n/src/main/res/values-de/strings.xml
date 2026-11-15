@@ -1335,6 +1335,13 @@
     <string name="cast_play_here">Hier abspielen</string>
     <string name="cast_stop">Übertragung beenden</string>
     <string name="cast_volume_fixed">Am Fernseher eingestellt</string>
+    <string name="cast_button_connecting">Verbindung mit %1$s wird hergestellt</string>
+    <string name="cast_button_connected">Verbunden mit %1$s</string>
+    <string name="cast_plays_on">Wird auf %1$s abgespielt</string>
+    <string name="cast_idle">Noch wird nichts abgespielt</string>
+    <string name="cast_status_paused">Pausiert auf %1$s</string>
+    <string name="cast_open_show">%1$s öffnen</string>
+    <string name="cast_notification_line">Übertragung an %1$s</string>
     <string name="action_try_again">Erneut versuchen</string>
     <string name="action_cancel">Abbrechen</string>
     <string name="action_go">Los</string>
@@ -1508,6 +1515,10 @@
     <string name="player_position_spoken">%1$s von %2$s</string>
     <string name="names_pair">%1$s und %2$s</string>
     <string name="names_list">%1$s, %2$s</string>
+    <string name="cast_row_through_computer">Wird über diesen Computer abgespielt</string>
+    <string name="cast_quit_title">Übertragung stoppen und beenden?</string>
+    <string name="cast_quit_body">%1$s läuft auf %2$s. Beim Beenden stoppt die Wiedergabe.</string>
+    <string name="cast_quit_action">Stoppen und beenden</string>
     <string name="discussion_open">Diskussion</string>
     <string name="discussion_title_episode">Diskussion zu Episode %1$d</string>
     <plurals name="discussion_row">
@@ -4432,6 +4443,7 @@
     <string name="tv_none_paired_detail">Öffne Kaeri auf dem Fernseher, im selben Netzwerk, und koppele ihn dann hier.</string>
     <string name="tv_paired_on">Gekoppelt %1$s</string>
     <string name="tv_paired">Gekoppelt</string>
+    <string name="tv_row_kaeri">Kaeri auf Android TV</string>
     <string name="tv_connected_at">Verbunden · %1$s</string>
     <string name="tv_forget_title">%1$s vergessen?</string>
     <string name="tv_forget_detail">Um darauf wieder abzuspielen, koppele ihn erneut.</string>

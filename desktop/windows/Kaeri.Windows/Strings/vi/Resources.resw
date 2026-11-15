@@ -2777,6 +2777,27 @@
   <data name="CastVolumeFixed" xml:space="preserve">
     <value>Đặt trên TV</value>
   </data>
+  <data name="CastButtonConnecting" xml:space="preserve">
+    <value>Đang kết nối với {name}</value>
+  </data>
+  <data name="CastButtonConnected" xml:space="preserve">
+    <value>Đã kết nối với {name}</value>
+  </data>
+  <data name="CastPlaysOn" xml:space="preserve">
+    <value>Phát trên {name}</value>
+  </data>
+  <data name="CastIdle" xml:space="preserve">
+    <value>Chưa phát gì</value>
+  </data>
+  <data name="CastStatusPaused" xml:space="preserve">
+    <value>Đã tạm dừng trên {name}</value>
+  </data>
+  <data name="CastOpenShow" xml:space="preserve">
+    <value>Mở {title}</value>
+  </data>
+  <data name="CastNotificationLine" xml:space="preserve">
+    <value>Đang truyền tới {name}</value>
+  </data>
   <data name="ActionTryAgain" xml:space="preserve">
     <value>Thử lại</value>
   </data>
@@ -3277,6 +3298,18 @@
   </data>
   <data name="NamesList" xml:space="preserve">
     <value>{list}, {next}</value>
+  </data>
+  <data name="CastRowThroughComputer" xml:space="preserve">
+    <value>Phát qua máy tính này</value>
+  </data>
+  <data name="CastQuitTitle" xml:space="preserve">
+    <value>Dừng truyền và thoát?</value>
+  </data>
+  <data name="CastQuitBody" xml:space="preserve">
+    <value>{title} đang phát trên {name}. Thoát sẽ dừng phát.</value>
+  </data>
+  <data name="CastQuitAction" xml:space="preserve">
+    <value>Dừng và thoát</value>
   </data>
   <data name="DiscussionOpen" xml:space="preserve">
     <value>Thảo luận</value>
@@ -11224,6 +11257,9 @@
   </data>
   <data name="TvPaired" xml:space="preserve">
     <value>Đã ghép nối</value>
+  </data>
+  <data name="TvRowKaeri" xml:space="preserve">
+    <value>Kaeri trên Android TV</value>
   </data>
   <data name="TvConnectedAt" xml:space="preserve">
     <value>Đã kết nối · {address}</value>

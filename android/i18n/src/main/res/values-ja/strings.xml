@@ -1273,6 +1273,13 @@
     <string name="cast_play_here">ここで再生</string>
     <string name="cast_stop">キャストを停止</string>
     <string name="cast_volume_fixed">テレビ側で設定</string>
+    <string name="cast_button_connecting">%1$s に接続中</string>
+    <string name="cast_button_connected">%1$s に接続済み</string>
+    <string name="cast_plays_on">%1$s で再生</string>
+    <string name="cast_idle">まだ何も再生していません</string>
+    <string name="cast_status_paused">%1$s で一時停止中</string>
+    <string name="cast_open_show">%1$s を開く</string>
+    <string name="cast_notification_line">%1$s にキャスト中</string>
     <string name="action_try_again">再試行</string>
     <string name="action_cancel">キャンセル</string>
     <string name="action_go">移動</string>
@@ -1444,6 +1451,10 @@
     <string name="player_position_spoken">%1$s / %2$s</string>
     <string name="names_pair">%1$sと%2$s</string>
     <string name="names_list">%1$s、%2$s</string>
+    <string name="cast_row_through_computer">このコンピュータ経由で再生</string>
+    <string name="cast_quit_title">キャストを停止して終了しますか？</string>
+    <string name="cast_quit_body">%1$s を %2$s で再生中です。終了すると停止します。</string>
+    <string name="cast_quit_action">停止して終了</string>
     <string name="discussion_open">ディスカッション</string>
     <string name="discussion_title_episode">エピソード %1$d のディスカッション</string>
     <plurals name="discussion_row">
@@ -4277,6 +4288,7 @@
     <string name="tv_none_paired_detail">テレビでKaeriを開き、同じWi-Fiに接続してから、ここでペアリングしてください。</string>
     <string name="tv_paired_on">%1$sにペアリング済み</string>
     <string name="tv_paired">ペアリング済み</string>
+    <string name="tv_row_kaeri">Android TV の Kaeri</string>
     <string name="tv_connected_at">接続済み · %1$s</string>
     <string name="tv_forget_title">%1$sを削除しますか？</string>
     <string name="tv_forget_detail">再び再生するには、もう一度ペアリングしてください。</string>

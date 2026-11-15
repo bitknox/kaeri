@@ -29,3 +29,7 @@ tv-problem-unpaired = TV bu { -device }ı artık tanımıyor. Yeniden eşleştir
 player-position-spoken = { $position } / { $duration }
 names-pair = { $first } ve { $last }
 names-list = { $list }, { $next }
+cast-row-through-computer = Bu bilgisayar üzerinden oynatılır
+cast-quit-title = Yayın durdurulup çıkılsın mı?
+cast-quit-body = { $title }, { $name } üzerinde oynatılıyor. Çıkmak oynatmayı durdurur.
+cast-quit-action = Durdur ve çık

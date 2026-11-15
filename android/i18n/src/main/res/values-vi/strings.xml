@@ -1273,6 +1273,13 @@
     <string name="cast_play_here">Phát tại đây</string>
     <string name="cast_stop">Dừng chiếu</string>
     <string name="cast_volume_fixed">Đặt trên TV</string>
+    <string name="cast_button_connecting">Đang kết nối với %1$s</string>
+    <string name="cast_button_connected">Đã kết nối với %1$s</string>
+    <string name="cast_plays_on">Phát trên %1$s</string>
+    <string name="cast_idle">Chưa phát gì</string>
+    <string name="cast_status_paused">Đã tạm dừng trên %1$s</string>
+    <string name="cast_open_show">Mở %1$s</string>
+    <string name="cast_notification_line">Đang truyền tới %1$s</string>
     <string name="action_try_again">Thử lại</string>
     <string name="action_cancel">Hủy</string>
     <string name="action_go">Đi</string>
@@ -1444,6 +1451,10 @@
     <string name="player_position_spoken">%1$s trên %2$s</string>
     <string name="names_pair">%1$s và %2$s</string>
     <string name="names_list">%1$s, %2$s</string>
+    <string name="cast_row_through_computer">Phát qua máy tính này</string>
+    <string name="cast_quit_title">Dừng truyền và thoát?</string>
+    <string name="cast_quit_body">%1$s đang phát trên %2$s. Thoát sẽ dừng phát.</string>
+    <string name="cast_quit_action">Dừng và thoát</string>
     <string name="discussion_open">Thảo luận</string>
     <string name="discussion_title_episode">Thảo luận tập %1$d</string>
     <plurals name="discussion_row">
@@ -4277,6 +4288,7 @@
     <string name="tv_none_paired_detail">Mở Kaeri trên TV, cùng mạng Wi-Fi, rồi ghép nối với TV tại đây.</string>
     <string name="tv_paired_on">Đã ghép nối %1$s</string>
     <string name="tv_paired">Đã ghép nối</string>
+    <string name="tv_row_kaeri">Kaeri trên Android TV</string>
     <string name="tv_connected_at">Đã kết nối · %1$s</string>
     <string name="tv_forget_title">Quên %1$s?</string>
     <string name="tv_forget_detail">Để phát lại trên TV này, hãy ghép nối lại.</string>

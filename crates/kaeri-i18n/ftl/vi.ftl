@@ -5413,6 +5413,27 @@ cast-stop = Dừng chiếu
 # Line under TV volume on the card, for a TV whose volume only its own remote sets.
 cast-volume-fixed = Đặt trên TV
 
+# The cast button's label and tooltip while it connects to a TV. The name is the TV's.
+cast-button-connecting = Đang kết nối với { $name }
+
+# The cast button's label and tooltip while a TV is connected, also read out once on connecting. The name is the TV's.
+cast-button-connected = Đã kết nối với { $name }
+
+# Line under a title page's main button while a TV is connected: the episode will play there.
+cast-plays-on = Phát trên { $name }
+
+# Row of the connected TV's menu while the TV shows the app and nothing is loaded.
+cast-idle = Chưa phát gì
+
+# Status line of the cast controller while the episode is paused on the TV.
+cast-status-paused = Đã tạm dừng trên { $name }
+
+# Tooltip and screen reader label of the show's name and cover in the cast controller: opens the show's page.
+cast-open-show = Mở { $title }
+
+# Line in the system's media controls while an episode plays on a TV. The name is the TV's.
+cast-notification-line = Đang truyền tới { $name }
+
 # Button that runs a failed action again.
 action-try-again = Thử lại
 
@@ -5919,6 +5940,18 @@ names-pair = { $first } và { $last }
 
 # A list of names up to the last two, joined one by one: "Alpha, Brook".
 names-list = { $list }, { $next }
+
+# Line under a TV with Chromecast built in, in the Play on TV list: this computer serves the episode to it while it plays.
+cast-row-through-computer = Phát qua máy tính này
+
+# Title of the question asked on quitting while an episode plays on a TV.
+cast-quit-title = Dừng truyền và thoát?
+
+# Body of the question asked on quitting while an episode plays on a TV. The title is the show's, the name is the TV's.
+cast-quit-body = { $title } đang phát trên { $name }. Thoát sẽ dừng phát.
+
+# Button of the question asked on quitting while casting: stops the cast and quits.
+cast-quit-action = Dừng và thoát
 
 # Menu item that opens an episode's discussion.
 discussion-open = Thảo luận
@@ -14109,6 +14142,9 @@ tv-paired-on = Đã ghép nối { $when }
 
 # Short word: paired, no date known.
 tv-paired = Đã ghép nối
+
+# Line under a paired TV running the app, in the Play on TV list.
+tv-row-kaeri = Kaeri trên Android TV
 
 # Line with the address.
 tv-connected-at = Đã kết nối · { $address }

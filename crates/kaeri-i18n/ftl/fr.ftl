@@ -5551,6 +5551,27 @@ cast-stop = Arrêter la diffusion
 # Line under TV volume on the card, for a TV whose volume only its own remote sets.
 cast-volume-fixed = Réglé sur la TV
 
+# The cast button's label and tooltip while it connects to a TV. The name is the TV's.
+cast-button-connecting = Connexion à { $name }
+
+# The cast button's label and tooltip while a TV is connected, also read out once on connecting. The name is the TV's.
+cast-button-connected = Connecté à { $name }
+
+# Line under a title page's main button while a TV is connected: the episode will play there.
+cast-plays-on = Lecture sur { $name }
+
+# Row of the connected TV's menu while the TV shows the app and nothing is loaded.
+cast-idle = Rien en cours de lecture
+
+# Status line of the cast controller while the episode is paused on the TV.
+cast-status-paused = En pause sur { $name }
+
+# Tooltip and screen reader label of the show's name and cover in the cast controller: opens the show's page.
+cast-open-show = Ouvrir { $title }
+
+# Line in the system's media controls while an episode plays on a TV. The name is the TV's.
+cast-notification-line = Diffusion sur { $name }
+
 # Button that runs a failed action again.
 action-try-again = Réessayer
 
@@ -6061,6 +6082,18 @@ names-pair = { $first } et { $last }
 
 # A list of names up to the last two, joined one by one: "Alpha, Brook".
 names-list = { $list }, { $next }
+
+# Line under a TV with Chromecast built in, in the Play on TV list: this computer serves the episode to it while it plays.
+cast-row-through-computer = Diffusé via cet ordinateur
+
+# Title of the question asked on quitting while an episode plays on a TV.
+cast-quit-title = Arrêter la diffusion et quitter ?
+
+# Body of the question asked on quitting while an episode plays on a TV. The title is the show's, the name is the TV's.
+cast-quit-body = { $title } est en lecture sur { $name }. Quitter arrête la lecture.
+
+# Button of the question asked on quitting while casting: stops the cast and quits.
+cast-quit-action = Arrêter et quitter
 
 # Menu item that opens an episode's discussion.
 discussion-open = Discussion
@@ -14433,6 +14466,9 @@ tv-paired-on = Associée { $when }
 
 # Short word: paired, no date known.
 tv-paired = Associée
+
+# Line under a paired TV running the app, in the Play on TV list.
+tv-row-kaeri = Kaeri sur Android TV
 
 # Line with the address.
 tv-connected-at = Connectée · { $address }

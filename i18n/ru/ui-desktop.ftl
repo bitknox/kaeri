@@ -29,3 +29,7 @@ tv-problem-unpaired = Телевизор больше не знает это { -
 player-position-spoken = { $position } из { $duration }
 names-pair = { $first } и { $last }
 names-list = { $list }, { $next }
+cast-row-through-computer = Воспроизводится через этот компьютер
+cast-quit-title = Остановить трансляцию и выйти?
+cast-quit-body = { $title } воспроизводится на { $name }. При выходе воспроизведение остановится.
+cast-quit-action = Остановить и выйти

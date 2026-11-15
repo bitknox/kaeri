@@ -5482,6 +5482,27 @@ cast-stop = Yayını durdur
 # Line under TV volume on the card, for a TV whose volume only its own remote sets.
 cast-volume-fixed = TV'den ayarlanır
 
+# The cast button's label and tooltip while it connects to a TV. The name is the TV's.
+cast-button-connecting = { $name } cihazına bağlanılıyor
+
+# The cast button's label and tooltip while a TV is connected, also read out once on connecting. The name is the TV's.
+cast-button-connected = { $name } cihazına bağlı
+
+# Line under a title page's main button while a TV is connected: the episode will play there.
+cast-plays-on = { $name } üzerinde oynatılır
+
+# Row of the connected TV's menu while the TV shows the app and nothing is loaded.
+cast-idle = Henüz oynatılan bir şey yok
+
+# Status line of the cast controller while the episode is paused on the TV.
+cast-status-paused = { $name } üzerinde duraklatıldı
+
+# Tooltip and screen reader label of the show's name and cover in the cast controller: opens the show's page.
+cast-open-show = { $title } sayfasını aç
+
+# Line in the system's media controls while an episode plays on a TV. The name is the TV's.
+cast-notification-line = { $name } cihazına yayınlanıyor
+
 # Button that runs a failed action again.
 action-try-again = Yeniden dene
 
@@ -5990,6 +6011,18 @@ names-pair = { $first } ve { $last }
 
 # A list of names up to the last two, joined one by one: "Alpha, Brook".
 names-list = { $list }, { $next }
+
+# Line under a TV with Chromecast built in, in the Play on TV list: this computer serves the episode to it while it plays.
+cast-row-through-computer = Bu bilgisayar üzerinden oynatılır
+
+# Title of the question asked on quitting while an episode plays on a TV.
+cast-quit-title = Yayın durdurulup çıkılsın mı?
+
+# Body of the question asked on quitting while an episode plays on a TV. The title is the show's, the name is the TV's.
+cast-quit-body = { $title }, { $name } üzerinde oynatılıyor. Çıkmak oynatmayı durdurur.
+
+# Button of the question asked on quitting while casting: stops the cast and quits.
+cast-quit-action = Durdur ve çık
 
 # Menu item that opens an episode's discussion.
 discussion-open = Tartışma
@@ -14271,6 +14304,9 @@ tv-paired-on = { $when } eşleştirildi
 
 # Short word: paired, no date known.
 tv-paired = Eşleştirildi
+
+# Line under a paired TV running the app, in the Play on TV list.
+tv-row-kaeri = Android TV üzerinde Kaeri
 
 # Line with the address.
 tv-connected-at = Bağlı · { $address }

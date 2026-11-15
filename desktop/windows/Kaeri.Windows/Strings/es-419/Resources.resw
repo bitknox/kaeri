@@ -3047,6 +3047,27 @@
   <data name="CastVolumeFixed" xml:space="preserve">
     <value>Se ajusta en la TV</value>
   </data>
+  <data name="CastButtonConnecting" xml:space="preserve">
+    <value>Conectando con {name}</value>
+  </data>
+  <data name="CastButtonConnected" xml:space="preserve">
+    <value>Conectado a {name}</value>
+  </data>
+  <data name="CastPlaysOn" xml:space="preserve">
+    <value>Se reproduce en {name}</value>
+  </data>
+  <data name="CastIdle" xml:space="preserve">
+    <value>Nada en reproducción todavía</value>
+  </data>
+  <data name="CastStatusPaused" xml:space="preserve">
+    <value>En pausa en {name}</value>
+  </data>
+  <data name="CastOpenShow" xml:space="preserve">
+    <value>Abrir {title}</value>
+  </data>
+  <data name="CastNotificationLine" xml:space="preserve">
+    <value>Transmitiendo a {name}</value>
+  </data>
   <data name="ActionTryAgain" xml:space="preserve">
     <value>Intentar de nuevo</value>
   </data>
@@ -3559,6 +3580,18 @@
   </data>
   <data name="NamesList" xml:space="preserve">
     <value>{list}, {next}</value>
+  </data>
+  <data name="CastRowThroughComputer" xml:space="preserve">
+    <value>Se reproduce a través de esta computadora</value>
+  </data>
+  <data name="CastQuitTitle" xml:space="preserve">
+    <value>¿Detener la transmisión y salir?</value>
+  </data>
+  <data name="CastQuitBody" xml:space="preserve">
+    <value>{title} se está reproduciendo en {name}. Al salir, se detiene.</value>
+  </data>
+  <data name="CastQuitAction" xml:space="preserve">
+    <value>Detener y salir</value>
   </data>
   <data name="DiscussionOpen" xml:space="preserve">
     <value>Discusión</value>
@@ -12052,6 +12085,9 @@
   </data>
   <data name="TvPaired" xml:space="preserve">
     <value>Vinculado</value>
+  </data>
+  <data name="TvRowKaeri" xml:space="preserve">
+    <value>Kaeri en Android TV</value>
   </data>
   <data name="TvConnectedAt" xml:space="preserve">
     <value>Conectado · {address}</value>

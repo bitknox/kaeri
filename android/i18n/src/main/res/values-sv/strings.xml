@@ -1335,6 +1335,13 @@
     <string name="cast_play_here">Spela här</string>
     <string name="cast_stop">Sluta casta</string>
     <string name="cast_volume_fixed">Ställs in på TV:n</string>
+    <string name="cast_button_connecting">Ansluter till %1$s</string>
+    <string name="cast_button_connected">Ansluten till %1$s</string>
+    <string name="cast_plays_on">Spelas upp på %1$s</string>
+    <string name="cast_idle">Inget spelas upp ännu</string>
+    <string name="cast_status_paused">Pausad på %1$s</string>
+    <string name="cast_open_show">Öppna %1$s</string>
+    <string name="cast_notification_line">Strömmar till %1$s</string>
     <string name="action_try_again">Försök igen</string>
     <string name="action_cancel">Avbryt</string>
     <string name="action_go">Gå</string>
@@ -1508,6 +1515,10 @@
     <string name="player_position_spoken">%1$s av %2$s</string>
     <string name="names_pair">%1$s och %2$s</string>
     <string name="names_list">%1$s, %2$s</string>
+    <string name="cast_row_through_computer">Spelas upp via den här datorn</string>
+    <string name="cast_quit_title">Stoppa strömningen och avsluta?</string>
+    <string name="cast_quit_body">%1$s spelas upp på %2$s. Uppspelningen stoppas vid avslut.</string>
+    <string name="cast_quit_action">Stoppa och avsluta</string>
     <string name="discussion_open">Diskussion</string>
     <string name="discussion_title_episode">Diskussion om avsnitt %1$d</string>
     <plurals name="discussion_row">
@@ -4432,6 +4443,7 @@
     <string name="tv_none_paired_detail">Öppna Kaeri på TV:n, på samma Wi-Fi, och para sedan ihop den här.</string>
     <string name="tv_paired_on">Parad %1$s</string>
     <string name="tv_paired">Parad</string>
+    <string name="tv_row_kaeri">Kaeri på Android TV</string>
     <string name="tv_connected_at">Ansluten · %1$s</string>
     <string name="tv_forget_title">Glöm %1$s?</string>
     <string name="tv_forget_detail">Para ihop den igen för att spela på den.</string>

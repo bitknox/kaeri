@@ -2570,6 +2570,18 @@
     "at": "2026-10-31",
     "back": "From the { $start } to the { $end }"
   },
+  "cast-button-connected": {
+    "source": "97783949259c",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
+  },
+  "cast-button-connecting": {
+    "source": "bf4a0f3f08b4",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
+  },
   "cast-card-failed": {
     "source": "1988cf43151a",
     "state": "draft",
@@ -2680,6 +2692,12 @@
     "at": "2026-10-31",
     "back": "Episode { $episode } · { $title }"
   },
+  "cast-idle": {
+    "source": "4bc2f20b82f6",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
+  },
   "cast-keep-open": {
     "source": "794b6a21c977",
     "state": "draft",
@@ -2697,6 +2715,18 @@
     "state": "draft",
     "by": "agent",
     "at": "2026-11-01"
+  },
+  "cast-notification-line": {
+    "source": "5c8791e59c96",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
+  },
+  "cast-open-show": {
+    "source": "26438065e499",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
   },
   "cast-phase-preparing": {
     "source": "57c2de08efc4",
@@ -2728,11 +2758,41 @@
     "by": "agent",
     "at": "2026-11-01"
   },
+  "cast-plays-on": {
+    "source": "27e57a7fa563",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
+  },
+  "cast-quit-action": {
+    "source": "393f29a71b72",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
+  },
+  "cast-quit-body": {
+    "source": "f22d614740e2",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
+  },
+  "cast-quit-title": {
+    "source": "534fe08f2d01",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
+  },
   "cast-row-through": {
     "source": "731ed5afc7d5",
     "state": "draft",
     "by": "agent",
     "at": "2026-11-01"
+  },
+  "cast-row-through-computer": {
+    "source": "73c73fdd331f",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
   },
   "cast-settings-torrents": {
     "source": "9d07a512c919",
@@ -2787,6 +2847,12 @@
     "state": "draft",
     "by": "agent",
     "at": "2026-11-01"
+  },
+  "cast-status-paused": {
+    "source": "66fdb12de866",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
   },
   "cast-stop": {
     "source": "0ac3c517d62e",
@@ -38030,6 +38096,12 @@
     "by": "haiku",
     "at": "2026-10-31",
     "back": "Linked, not seen on this network"
+  },
+  "tv-row-kaeri": {
+    "source": "7688ecf7c2a0",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
   },
   "tv-row-name": {
     "source": "fce9071cce90",

@@ -1397,6 +1397,13 @@
     <string name="cast_play_here">Reproduzir aqui</string>
     <string name="cast_stop">Parar transmissão</string>
     <string name="cast_volume_fixed">Definido na TV</string>
+    <string name="cast_button_connecting">Conectando a %1$s</string>
+    <string name="cast_button_connected">Conectado a %1$s</string>
+    <string name="cast_plays_on">Reproduz em %1$s</string>
+    <string name="cast_idle">Nada em reprodução ainda</string>
+    <string name="cast_status_paused">Pausado em %1$s</string>
+    <string name="cast_open_show">Abrir %1$s</string>
+    <string name="cast_notification_line">Transmitindo para %1$s</string>
     <string name="action_try_again">Tentar de novo</string>
     <string name="action_cancel">Cancelar</string>
     <string name="action_go">Ir</string>
@@ -1572,6 +1579,10 @@
     <string name="player_position_spoken">%1$s de %2$s</string>
     <string name="names_pair">%1$s e %2$s</string>
     <string name="names_list">%1$s, %2$s</string>
+    <string name="cast_row_through_computer">Reproduz por este computador</string>
+    <string name="cast_quit_title">Parar a transmissão e sair?</string>
+    <string name="cast_quit_body">%1$s está passando em %2$s. Sair interrompe a reprodução.</string>
+    <string name="cast_quit_action">Parar e sair</string>
     <string name="discussion_open">Discussão</string>
     <string name="discussion_title_episode">Discussão do episódio %1$d</string>
     <plurals name="discussion_row">
@@ -4587,6 +4598,7 @@
     <string name="tv_none_paired_detail">Abra o Kaeri na TV, na mesma rede Wi-Fi, e depois pareie com ela aqui.</string>
     <string name="tv_paired_on">Pareada em %1$s</string>
     <string name="tv_paired">Pareada</string>
+    <string name="tv_row_kaeri">Kaeri no Android TV</string>
     <string name="tv_connected_at">Conectada · %1$s</string>
     <string name="tv_forget_title">Esquecer %1$s?</string>
     <string name="tv_forget_detail">Para reproduzir nela de novo, pareie de novo com ela.</string>

@@ -3182,6 +3182,27 @@
   <data name="CastVolumeFixed" xml:space="preserve">
     <value>Ustawiane na telewizorze</value>
   </data>
+  <data name="CastButtonConnecting" xml:space="preserve">
+    <value>Łączenie z {name}</value>
+  </data>
+  <data name="CastButtonConnected" xml:space="preserve">
+    <value>Połączono z {name}</value>
+  </data>
+  <data name="CastPlaysOn" xml:space="preserve">
+    <value>Odtwarzane na {name}</value>
+  </data>
+  <data name="CastIdle" xml:space="preserve">
+    <value>Jeszcze nic nie jest odtwarzane</value>
+  </data>
+  <data name="CastStatusPaused" xml:space="preserve">
+    <value>Wstrzymano na {name}</value>
+  </data>
+  <data name="CastOpenShow" xml:space="preserve">
+    <value>Otwórz {title}</value>
+  </data>
+  <data name="CastNotificationLine" xml:space="preserve">
+    <value>Przesyłanie do {name}</value>
+  </data>
   <data name="ActionTryAgain" xml:space="preserve">
     <value>Spróbuj ponownie</value>
   </data>
@@ -3700,6 +3721,18 @@
   </data>
   <data name="NamesList" xml:space="preserve">
     <value>{list}, {next}</value>
+  </data>
+  <data name="CastRowThroughComputer" xml:space="preserve">
+    <value>Odtwarzane przez ten komputer</value>
+  </data>
+  <data name="CastQuitTitle" xml:space="preserve">
+    <value>Zatrzymać przesyłanie i zakończyć?</value>
+  </data>
+  <data name="CastQuitBody" xml:space="preserve">
+    <value>Trwa odtwarzanie {title} na {name}. Zakończenie je zatrzyma.</value>
+  </data>
+  <data name="CastQuitAction" xml:space="preserve">
+    <value>Zatrzymaj i zakończ</value>
   </data>
   <data name="DiscussionOpen" xml:space="preserve">
     <value>Dyskusja</value>
@@ -12466,6 +12499,9 @@
   </data>
   <data name="TvPaired" xml:space="preserve">
     <value>Sparowany</value>
+  </data>
+  <data name="TvRowKaeri" xml:space="preserve">
+    <value>Kaeri na Android TV</value>
   </data>
   <data name="TvConnectedAt" xml:space="preserve">
     <value>Połączono · {address}</value>
