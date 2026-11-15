@@ -512,6 +512,13 @@
     <plurals name="notice_signed_out_queue">
         <item quantity="other">%1$sからサインアウトしました。送信待ちの変更が%2$,d件あり、次回のサインイン後に送信されます。</item>
     </plurals>
+    <string name="notice_tracker_change_refused">%1$sが「%2$s」への変更を何度も拒否したため、変更はKaeriにのみ残ります。</string>
+    <plurals name="notice_tracker_changes_refused">
+        <item quantity="other">%1$sが「%2$s」とほか%3$,d件のタイトルへの変更を何度も拒否したため、変更はKaeriにのみ残ります。</item>
+    </plurals>
+    <plurals name="notice_tracker_change_refused_untitled">
+        <item quantity="other">%1$sが%2$,d件のタイトルへの変更を何度も拒否したため、変更はKaeriにのみ残ります。</item>
+    </plurals>
     <string name="notice_sign_out_failed">%1$sからサインアウトできませんでした。もう一度試してください。%2$s</string>
     <string name="notice_not_saved_because">その設定を保存できませんでした。%1$s</string>
     <string name="notice_proxy_saved">トレントの通信がプロキシ経由になりました。</string>

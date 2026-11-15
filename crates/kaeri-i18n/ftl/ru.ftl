@@ -1530,6 +1530,27 @@ notice-signed-out-queue =
        *[other] Вы вышли из { $tracker }. { $count } изменения в очереди сохранены для следующего входа.
     }
 
+# Toast, shown once, when a tracker kept refusing a change to a title for about two days and the change stopped being sent. The change itself is still saved in the app. The tracker is its name, such as AniList; the title is a show's or a series' name. The notice capsule holds two lines on a phone, so keep it about as short as the English.
+notice-tracker-change-refused = { $tracker } раз за разом отклонял изменение для { $title }, поэтому оно остаётся только в Kaeri.
+
+# The same toast when changes to several titles stopped being sent to one tracker at once. The title is the first of them; others is how many more titles there are.
+notice-tracker-changes-refused =
+    { $others ->
+        [one] { $tracker } раз за разом отклонял изменения для { $title } и ещё { $others } тайтла, поэтому они остаются только в Kaeri.
+        [few] { $tracker } раз за разом отклонял изменения для { $title } и ещё { $others } тайтлов, поэтому они остаются только в Kaeri.
+        [many] { $tracker } раз за разом отклонял изменения для { $title } и ещё { $others } тайтлов, поэтому они остаются только в Kaeri.
+       *[other] { $tracker } раз за разом отклонял изменения для { $title } и ещё { $others } тайтла, поэтому они остаются только в Kaeri.
+    }
+
+# The same toast when the app has no name for the titles. Count is how many titles.
+notice-tracker-change-refused-untitled =
+    { $count ->
+        [one] { $tracker } раз за разом отклонял изменения для { $count } тайтла, поэтому они остаются только в Kaeri.
+        [few] { $tracker } раз за разом отклонял изменения для { $count } тайтлов, поэтому они остаются только в Kaeri.
+        [many] { $tracker } раз за разом отклонял изменения для { $count } тайтлов, поэтому они остаются только в Kaeri.
+       *[other] { $tracker } раз за разом отклонял изменения для { $count } тайтла, поэтому они остаются только в Kaeri.
+    }
+
 # Toast when signing out of a tracker failed. The reason comes from the system.
 notice-sign-out-failed = Не удалось выйти из { $tracker }. Попробуйте ещё раз. { $reason }
 

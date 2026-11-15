@@ -25,6 +25,13 @@ notice-signed-out = Keluar dari { $tracker }.
 notice-signed-out-queue = { $count ->
    *[other] Keluar dari { $tracker }. { $count } perubahan dalam antrean disimpan untuk masuk lagi nanti.
  }
+notice-tracker-change-refused = { $tracker } terus menolak perubahan pada { $title }, jadi perubahan itu hanya tersimpan di { -app-name }.
+notice-tracker-changes-refused = { $others ->
+   *[other] { $tracker } terus menolak perubahan pada { $title } dan { $others } judul lain, jadi semuanya hanya tersimpan di { -app-name }.
+ }
+notice-tracker-change-refused-untitled = { $count ->
+   *[other] { $tracker } terus menolak perubahan pada { $count } judul, jadi semuanya hanya tersimpan di { -app-name }.
+ }
 notice-sign-out-failed = Tidak dapat keluar dari { $tracker }. Coba lagi. { $reason }
 notice-not-saved-because = Tidak dapat menyimpan pengaturan itu. { $cause }
 notice-proxy-saved = Lalu lintas torrent kini melewati proxy.

@@ -1500,6 +1500,25 @@ notice-signed-out-queue =
        *[other] Sesión cerrada en { $tracker }. { $count } cambios en cola se conservan para el próximo inicio de sesión.
     }
 
+# Toast, shown once, when a tracker kept refusing a change to a title for about two days and the change stopped being sent. The change itself is still saved in the app. The tracker is its name, such as AniList; the title is a show's or a series' name. The notice capsule holds two lines on a phone, so keep it about as short as the English.
+notice-tracker-change-refused = { $tracker } rechazó varias veces un cambio en { $title }, así que solo queda en Kaeri.
+
+# The same toast when changes to several titles stopped being sent to one tracker at once. The title is the first of them; others is how many more titles there are.
+notice-tracker-changes-refused =
+    { $others ->
+        [one] { $tracker } rechazó varias veces cambios en { $title } y un título más, así que solo quedan en Kaeri.
+        [many] { $tracker } rechazó varias veces cambios en { $title } y { $others } títulos más, así que solo quedan en Kaeri.
+       *[other] { $tracker } rechazó varias veces cambios en { $title } y { $others } títulos más, así que solo quedan en Kaeri.
+    }
+
+# The same toast when the app has no name for the titles. Count is how many titles.
+notice-tracker-change-refused-untitled =
+    { $count ->
+        [one] { $tracker } rechazó varias veces un cambio, así que solo queda en Kaeri.
+        [many] { $tracker } rechazó varias veces cambios en { $count } títulos, así que solo quedan en Kaeri.
+       *[other] { $tracker } rechazó varias veces cambios en { $count } títulos, así que solo quedan en Kaeri.
+    }
+
 # Toast when signing out of a tracker failed. The reason comes from the system.
 notice-sign-out-failed = No se pudo cerrar la sesión en { $tracker }. Inténtalo de nuevo. { $reason }
 

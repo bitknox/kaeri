@@ -1500,6 +1500,25 @@ notice-signed-out-queue =
        *[other] Disconnesso da { $tracker }. { $count } modifiche in coda vengono conservate per il successivo accesso.
     }
 
+# Toast, shown once, when a tracker kept refusing a change to a title for about two days and the change stopped being sent. The change itself is still saved in the app. The tracker is its name, such as AniList; the title is a show's or a series' name. The notice capsule holds two lines on a phone, so keep it about as short as the English.
+notice-tracker-change-refused = { $tracker } ha rifiutato più volte una modifica a { $title }, quindi resta solo in Kaeri.
+
+# The same toast when changes to several titles stopped being sent to one tracker at once. The title is the first of them; others is how many more titles there are.
+notice-tracker-changes-refused =
+    { $others ->
+        [one] { $tracker } ha rifiutato più volte modifiche a { $title } e a un altro titolo, quindi restano solo in Kaeri.
+        [many] { $tracker } ha rifiutato più volte modifiche a { $title } e ad altri { $others } titoli, quindi restano solo in Kaeri.
+       *[other] { $tracker } ha rifiutato più volte modifiche a { $title } e ad altri { $others } titoli, quindi restano solo in Kaeri.
+    }
+
+# The same toast when the app has no name for the titles. Count is how many titles.
+notice-tracker-change-refused-untitled =
+    { $count ->
+        [one] { $tracker } ha rifiutato più volte una modifica, quindi resta solo in Kaeri.
+        [many] { $tracker } ha rifiutato più volte modifiche a { $count } titoli, quindi restano solo in Kaeri.
+       *[other] { $tracker } ha rifiutato più volte modifiche a { $count } titoli, quindi restano solo in Kaeri.
+    }
+
 # Toast when signing out of a tracker failed. The reason comes from the system.
 notice-sign-out-failed = Impossibile disconnettersi da { $tracker }. Riprova. { $reason }
 

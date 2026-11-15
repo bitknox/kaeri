@@ -1500,6 +1500,25 @@ notice-signed-out-queue =
        *[other] Déconnecté de { $tracker }. { $count } modifications en attente sont conservées pour la prochaine connexion.
     }
 
+# Toast, shown once, when a tracker kept refusing a change to a title for about two days and the change stopped being sent. The change itself is still saved in the app. The tracker is its name, such as AniList; the title is a show's or a series' name. The notice capsule holds two lines on a phone, so keep it about as short as the English.
+notice-tracker-change-refused = { $tracker } a refusé plusieurs fois une modification de { $title }, elle reste donc seulement dans Kaeri.
+
+# The same toast when changes to several titles stopped being sent to one tracker at once. The title is the first of them; others is how many more titles there are.
+notice-tracker-changes-refused =
+    { $others ->
+        [one] { $tracker } a refusé plusieurs fois des modifications de { $title } et de { $others } autre titre, elles restent donc seulement dans Kaeri.
+        [many] { $tracker } a refusé plusieurs fois des modifications de { $title } et de { $others } autres titres, elles restent donc seulement dans Kaeri.
+       *[other] { $tracker } a refusé plusieurs fois des modifications de { $title } et de { $others } autres titres, elles restent donc seulement dans Kaeri.
+    }
+
+# The same toast when the app has no name for the titles. Count is how many titles.
+notice-tracker-change-refused-untitled =
+    { $count ->
+        [one] { $tracker } a refusé plusieurs fois des modifications de { $count } titre, elles restent donc seulement dans Kaeri.
+        [many] { $tracker } a refusé plusieurs fois des modifications de { $count } titres, elles restent donc seulement dans Kaeri.
+       *[other] { $tracker } a refusé plusieurs fois des modifications de { $count } titres, elles restent donc seulement dans Kaeri.
+    }
+
 # Toast when signing out of a tracker failed. The reason comes from the system.
 notice-sign-out-failed = Impossible de vous déconnecter de { $tracker }. Réessayez. { $reason }
 

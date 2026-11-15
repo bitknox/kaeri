@@ -542,6 +542,15 @@
         <item quantity="one">Oturum kapatıldı: %1$s. Bekleyen bir değişiklik, bir sonraki oturum açmada gönderilmek üzere saklandı.</item>
         <item quantity="other">Oturum kapatıldı: %1$s. Bekleyen %2$,d değişiklik, bir sonraki oturum açmada gönderilmek üzere saklandı.</item>
     </plurals>
+    <string name="notice_tracker_change_refused">%1$s, %2$s için bir değişikliği tekrar tekrar reddetti, bu yüzden değişiklik yalnızca Kaeri içinde kalıyor.</string>
+    <plurals name="notice_tracker_changes_refused">
+        <item quantity="one">%1$s, %2$s ve bir başlık daha için değişiklikleri tekrar tekrar reddetti, bu yüzden değişiklikler yalnızca Kaeri içinde kalıyor.</item>
+        <item quantity="other">%1$s, %2$s ve %3$,d başlık daha için değişiklikleri tekrar tekrar reddetti, bu yüzden değişiklikler yalnızca Kaeri içinde kalıyor.</item>
+    </plurals>
+    <plurals name="notice_tracker_change_refused_untitled">
+        <item quantity="one">%1$s bir değişikliği tekrar tekrar reddetti, bu yüzden değişiklik yalnızca Kaeri içinde kalıyor.</item>
+        <item quantity="other">%1$s, %2$,d başlık için değişiklikleri tekrar tekrar reddetti, bu yüzden değişiklikler yalnızca Kaeri içinde kalıyor.</item>
+    </plurals>
     <string name="notice_sign_out_failed">Oturum kapatılamadı: %1$s. Yeniden deneyin. %2$s</string>
     <string name="notice_not_saved_because">Bu ayar kaydedilemedi. %1$s</string>
     <string name="notice_proxy_saved">Torrent trafiği artık proxy üzerinden gidiyor.</string>

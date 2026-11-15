@@ -1530,6 +1530,27 @@ notice-signed-out-queue =
        *[other] Wylogowano z { $tracker }. { $count } zmian w kolejce zostanie zachowanych na następne logowanie.
     }
 
+# Toast, shown once, when a tracker kept refusing a change to a title for about two days and the change stopped being sent. The change itself is still saved in the app. The tracker is its name, such as AniList; the title is a show's or a series' name. The notice capsule holds two lines on a phone, so keep it about as short as the English.
+notice-tracker-change-refused = Zmiana w tytule { $title } była wielokrotnie odrzucana przez { $tracker }, więc zostaje tylko w Kaeri.
+
+# The same toast when changes to several titles stopped being sent to one tracker at once. The title is the first of them; others is how many more titles there are.
+notice-tracker-changes-refused =
+    { $others ->
+        [one] Zmiany w tytule { $title } i jeszcze jednym były wielokrotnie odrzucane przez { $tracker }, więc zostają tylko w Kaeri.
+        [few] Zmiany w tytule { $title } i { $others } innych tytułach były wielokrotnie odrzucane przez { $tracker }, więc zostają tylko w Kaeri.
+        [many] Zmiany w tytule { $title } i { $others } innych tytułach były wielokrotnie odrzucane przez { $tracker }, więc zostają tylko w Kaeri.
+       *[other] Zmiany w tytule { $title } i { $others } innych tytułach były wielokrotnie odrzucane przez { $tracker }, więc zostają tylko w Kaeri.
+    }
+
+# The same toast when the app has no name for the titles. Count is how many titles.
+notice-tracker-change-refused-untitled =
+    { $count ->
+        [one] Zmiana była wielokrotnie odrzucana przez { $tracker }, więc zostaje tylko w Kaeri.
+        [few] Zmiany w { $count } tytułach były wielokrotnie odrzucane przez { $tracker }, więc zostają tylko w Kaeri.
+        [many] Zmiany w { $count } tytułach były wielokrotnie odrzucane przez { $tracker }, więc zostają tylko w Kaeri.
+       *[other] Zmiany w { $count } tytułach były wielokrotnie odrzucane przez { $tracker }, więc zostają tylko w Kaeri.
+    }
+
 # Toast when signing out of a tracker failed. The reason comes from the system.
 notice-sign-out-failed = Nie udało się wylogować z { $tracker }. Spróbuj ponownie. { $reason }
 

@@ -1440,6 +1440,21 @@ notice-signed-out-queue =
        *[other] { $tracker }からサインアウトしました。送信待ちの変更が{ $count }件あり、次回のサインイン後に送信されます。
     }
 
+# Toast, shown once, when a tracker kept refusing a change to a title for about two days and the change stopped being sent. The change itself is still saved in the app. The tracker is its name, such as AniList; the title is a show's or a series' name. The notice capsule holds two lines on a phone, so keep it about as short as the English.
+notice-tracker-change-refused = { $tracker }が「{ $title }」への変更を何度も拒否したため、変更はKaeriにのみ残ります。
+
+# The same toast when changes to several titles stopped being sent to one tracker at once. The title is the first of them; others is how many more titles there are.
+notice-tracker-changes-refused =
+    { $others ->
+       *[other] { $tracker }が「{ $title }」とほか{ $others }件のタイトルへの変更を何度も拒否したため、変更はKaeriにのみ残ります。
+    }
+
+# The same toast when the app has no name for the titles. Count is how many titles.
+notice-tracker-change-refused-untitled =
+    { $count ->
+       *[other] { $tracker }が{ $count }件のタイトルへの変更を何度も拒否したため、変更はKaeriにのみ残ります。
+    }
+
 # Toast when signing out of a tracker failed. The reason comes from the system.
 notice-sign-out-failed = { $tracker }からサインアウトできませんでした。もう一度試してください。{ $reason }
 

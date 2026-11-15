@@ -13259,6 +13259,24 @@
     "by": "agent",
     "at": "2026-10-31"
   },
+  "notice-tracker-change-refused": {
+    "source": "32186c3c2ab6",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
+  },
+  "notice-tracker-change-refused-untitled": {
+    "source": "900dce4f0422",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
+  },
+  "notice-tracker-changes-refused": {
+    "source": "93e69fcf14d2",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
+  },
   "notice-trailer-failed": {
     "source": "63b72b0ba384",
     "state": "draft",

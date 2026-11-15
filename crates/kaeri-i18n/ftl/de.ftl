@@ -1470,6 +1470,23 @@ notice-signed-out-queue =
        *[other] Bei { $tracker } abgemeldet. { $count } wartende Änderungen werden für die nächste Anmeldung aufbewahrt.
     }
 
+# Toast, shown once, when a tracker kept refusing a change to a title for about two days and the change stopped being sent. The change itself is still saved in the app. The tracker is its name, such as AniList; the title is a show's or a series' name. The notice capsule holds two lines on a phone, so keep it about as short as the English.
+notice-tracker-change-refused = { $tracker } hat eine Änderung an { $title } wiederholt abgelehnt, sie bleibt nur in Kaeri.
+
+# The same toast when changes to several titles stopped being sent to one tracker at once. The title is the first of them; others is how many more titles there are.
+notice-tracker-changes-refused =
+    { $others ->
+        [one] { $tracker } hat Änderungen an { $title } und einem weiteren Titel wiederholt abgelehnt, sie bleiben nur in Kaeri.
+       *[other] { $tracker } hat Änderungen an { $title } und { $others } weiteren Titeln wiederholt abgelehnt, sie bleiben nur in Kaeri.
+    }
+
+# The same toast when the app has no name for the titles. Count is how many titles.
+notice-tracker-change-refused-untitled =
+    { $count ->
+        [one] { $tracker } hat eine Änderung wiederholt abgelehnt, sie bleibt nur in Kaeri.
+       *[other] { $tracker } hat Änderungen an { $count } Titeln wiederholt abgelehnt, sie bleiben nur in Kaeri.
+    }
+
 # Toast when signing out of a tracker failed. The reason comes from the system.
 notice-sign-out-failed = Abmeldung bei { $tracker } fehlgeschlagen. Versuche es noch einmal. { $reason }
 
