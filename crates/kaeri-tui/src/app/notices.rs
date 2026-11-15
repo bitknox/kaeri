@@ -257,6 +257,7 @@ impl App {
             toast.ttl = toast.ttl.saturating_sub(1);
         }
         self.toasts.retain(|t| t.ttl > 0);
+        self.tick_private_notice();
         self.tick_pending_reload();
         // A placeholder held past its answer gives way on a tick: the cursor stays on its line.
         self.settle_reading_cursor();

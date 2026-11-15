@@ -7,6 +7,7 @@ use ratatui::{buffer::Buffer, layout::Rect, style::Modifier, widgets::Widget};
 
 use crate::{
     app::{App, Field, FrameReport},
+    keymap::Action,
     layout::{self, Frame},
     nav::Overlay,
     theme::{
@@ -508,7 +509,7 @@ pub(super) fn field_text(app: &App, field: Field) -> String {
 }
 
 fn help_rows(app: &App) -> Vec<(String, String)> {
-    use crate::keymap::{Action, Scope};
+    use crate::keymap::Scope;
     let mut rows = Vec::new();
     // Reading's own keys first, while Home or Search is reading's.
     if app.reading_section() {
@@ -563,9 +564,23 @@ fn help_rows(app: &App) -> Vec<(String, String)> {
 fn palette_rows(app: &App) -> Vec<(String, String)> {
     // Through `palette_matches` so what is drawn and what Enter runs come from one list. Two
     // independent `take(12)` calls is exactly how a palette ends up launching the wrong entry.
+    // The two private switches say where they stand beside their key, as a switch does.
+    let state = |on: bool| if on { t::tui_read_on() } else { t::tui_read_off() };
     app.palette_matches()
         .into_iter()
-        .map(|(action, key)| (key, action.label().to_string()))
+        .map(|(action, key)| {
+            let on = match action {
+                Action::TogglePrivate => Some(app.private_on()),
+                Action::ToggleAlwaysPrivate => app.always_private_here(),
+                _ => None,
+            };
+            let key = match on.map(state) {
+                Some(state) if key.is_empty() => state,
+                Some(state) => format!("{}  {}", state, key),
+                None => key,
+            };
+            (key, action.label().to_string())
+        })
         .collect()
 }
 

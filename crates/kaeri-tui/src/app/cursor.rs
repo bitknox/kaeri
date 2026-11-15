@@ -261,7 +261,8 @@ impl App {
 
         let len = match rows {
             Rows::Downloads => self.downloads.len(),
-            Rows::Accounts => self.sync.len(),
+            // The private mode switch, then the trackers.
+            Rows::Accounts => self.sync.len() + 1,
             Rows::Settings => SettingKey::ROWS.len(),
             Rows::Together => self.together_rows(),
             Rows::Providers => self.providers.len(),

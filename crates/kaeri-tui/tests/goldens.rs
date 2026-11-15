@@ -599,6 +599,14 @@ scenarios! {
     turn_off_confirm,
     profiles_two,
     add_profile,
+    private_notice,
+    private_chip,
+    private_palette,
+    private_title,
+    private_title_always,
+    private_title_palette,
+    private_accounts,
+    private_accounts_on,
 }
 
 /// A golden left behind by a renamed or removed scenario is a file nothing checks, and reads as
@@ -1429,7 +1437,8 @@ fn accounts(s: &mut Screen) {
         url: "https://auth.example/device".into(),
         expires_at: Some(NOW + 14 * MINUTE + 32),
     })));
-    s.press(&["j", "j"]);
+    // Past the private mode switch, onto the second tracker.
+    s.press(&["j", "j", "j"]);
 }
 
 /// Settings scrolled to a row with a note, sub and dub switched for this session only — which
@@ -3911,4 +3920,63 @@ fn medium_turn_off(s: &mut Screen) {
     s.act(Action::Up);
     s.act(Action::Up);
     s.act(Action::Open);
+}
+
+/// Ctrl+P on Home, once the engine says the mode is on: the chip leads the header and the
+/// status line says what the mode does.
+fn private_notice(s: &mut Screen) {
+    home_watching(s);
+    s.press(&["ctrl+p"]);
+    s.apply(Event::Private(true));
+}
+
+/// The notice gone after its 8 s: the chip alone, and the key in the hints.
+fn private_chip(s: &mut Screen) {
+    private_notice(s);
+    s.idle(80);
+}
+
+/// The palette while private, with the mode's state beside its key. Off a title page there is
+/// no Always private entry.
+fn private_palette(s: &mut Screen) {
+    home_watching(s);
+    s.apply(Event::Private(true));
+    s.press(&[":"]);
+    s.type_text("priv");
+}
+
+/// A title page while private: the line under the progress line.
+fn private_title(s: &mut Screen) {
+    title(s);
+    s.apply(Event::Private(true));
+}
+
+/// A title kept always private, with the mode off: the line says so, and there is no chip.
+fn private_title_always(s: &mut Screen) {
+    title(s);
+    s.apply(Event::AlwaysPrivate {
+        title: kaeri_model::private::PrivateTitle::Show { id: id(102) },
+        on: true,
+    });
+}
+
+/// The palette on a title page: Always private for this show is listed, with its state.
+fn private_title_palette(s: &mut Screen) {
+    title(s);
+    s.press(&[":"]);
+    s.type_text("priv");
+}
+
+/// Accounts with the private mode switch highlighted, off, above the trackers.
+fn private_accounts(s: &mut Screen) {
+    settled_on(s, 8);
+    s.apply(Event::Sync(Box::new(SyncState::new("kitsu"))));
+}
+
+/// The switch turned on with Enter: on in the state colour, the chip in the header, and no
+/// notice, since the description is beside it.
+fn private_accounts_on(s: &mut Screen) {
+    private_accounts(s);
+    s.press(&["enter"]);
+    s.apply(Event::Private(true));
 }

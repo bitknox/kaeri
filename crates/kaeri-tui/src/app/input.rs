@@ -171,6 +171,8 @@ impl App {
             Action::ShowAccounts => return self.go_to_section(Section::Accounts),
             Action::ShowLogs => self.show_logs(),
             Action::ShowConflicts => self.show_conflicts(),
+            Action::TogglePrivate => return self.toggle_private(true),
+            Action::ToggleAlwaysPrivate => return self.toggle_always_private(),
             Action::OpenPrivacy => {
                 return Some(Command::OpenExternal { url: PRIVACY_URL.into() });
             }
@@ -408,6 +410,8 @@ impl App {
             Action::CommandPalette => self.open_palette(),
             Action::Help => self.open_help(),
             Action::Quit => self.should_quit = true,
+            // Mid-search, as everywhere else; a prompt's question keeps the keyboard.
+            Action::TogglePrivate if !in_prompt => return self.toggle_private(true),
             // The two sign-in steps. Enter with nothing typed stays put — an empty
             // submit is a slip of the finger, not an answer.
             Action::Open if self.nav.overlay() == Some(&Overlay::KitsuUsername) => {

@@ -64,6 +64,15 @@ struct Cli {
     #[arg(long)]
     no_images: bool,
 
+    // Its help is the catalogue's, so the words match the ones the app shows for the mode.
+    // The interface alone: a command that runs and exits has nothing to keep private.
+    #[arg(
+        long,
+        help = kaeri_i18n::t::cli_private_help(),
+        conflicts_with_all = ["command", "open_torrent"],
+    )]
+    private: bool,
+
     /// Report what the terminal supports and exit.
     #[arg(long)]
     doctor: bool,
@@ -411,7 +420,9 @@ async fn main() -> Result<()> {
         .await;
     }
 
-    run(config, paths, http, store, !args.no_images, config_problem, set_aside, party).await
+    let images = !args.no_images;
+    run(config, paths, http, store, images, config_problem, set_aside, party, args.private)
+        .await
 }
 
 /// What the terminal's graphics support amounts to, in words.
@@ -550,6 +561,9 @@ mod tests {
         assert_eq!(refused(&["--stats", "--random"]), ErrorKind::ArgumentConflict);
         assert_eq!(refused(&["--doctor", "--plugins"]), ErrorKind::ArgumentConflict);
         assert_eq!(refused(&["--continue", "--play", "1"]), ErrorKind::ArgumentConflict);
+        // Private mode is the interface's: a command that runs and exits is refused beside it.
+        assert_eq!(refused(&["--private", "--play", "1"]), ErrorKind::ArgumentConflict);
+        assert_eq!(refused(&["--private", "--doctor"]), ErrorKind::ArgumentConflict);
 
         // Alone, these started the interface as if they had not been typed.
         for alone in [
@@ -583,6 +597,8 @@ mod tests {
             &["--play", "1", "--episode", "OVA"],
             &["--login", "--tracker", "mal"],
             &["--logout", "--tracker", "kitsu"],
+            &["--private"],
+            &["--private", "--no-images", "--lang", "da"],
             &[],
         ] {
             assert!(parse(fine).is_ok(), "{fine:?}: {:?}", parse(fine).err());

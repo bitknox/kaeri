@@ -31,6 +31,10 @@ pub enum Action {
     ShowAccounts,
     ShowConflicts,
     ShowLogs,
+    /// Private mode on or off: nothing watched or read is saved or synced while it is on.
+    TogglePrivate,
+    /// The title on screen always private on this device, or not.
+    ToggleAlwaysPrivate,
     /// The website's privacy page, in the browser: what Kaeri sends, and what it keeps.
     OpenPrivacy,
     /// A bug report: a pre-filled GitHub issue in the browser, with the last error in it.
@@ -156,6 +160,11 @@ impl Action {
         Self::ShowAccounts,
         Self::ShowConflicts,
         Self::ShowLogs,
+        // Both before the privacy page, so typing `priv` finds them first. The title's own
+        // switch sits with the mode rather than with the title commands: the palette lists it
+        // only on a title page.
+        Self::TogglePrivate,
+        Self::ToggleAlwaysPrivate,
         Self::OpenPrivacy,
         Self::ReportBug,
         Self::CopyReport,
@@ -257,6 +266,8 @@ impl Action {
             Self::ShowAccounts => t::keys_action_show_accounts(),
             Self::ShowConflicts => t::keys_action_show_conflicts(),
             Self::ShowLogs => t::keys_action_show_logs(),
+            Self::TogglePrivate => t::palette_private_mode(),
+            Self::ToggleAlwaysPrivate => t::palette_always_private(),
             Self::OpenPrivacy => t::keys_action_open_privacy(),
             Self::ReportBug => t::keys_action_report_bug(),
             Self::CopyReport => t::keys_action_copy_report(),
@@ -339,6 +350,7 @@ impl Action {
             Self::Surprise => said(t::keys_hint_surprise()),
             Self::ForceResync => said(t::keys_hint_resync()),
             Self::Help => said(t::keys_hint_keys()),
+            Self::TogglePrivate => said(t::keys_hint_private()),
             Self::Refresh => said(t::keys_hint_refresh()),
             Self::ToggleWatched => said(t::keys_hint_watched()),
             Self::ClearCompleted => said(t::keys_hint_clear_finished()),
@@ -367,6 +379,7 @@ impl Action {
             | Self::ShowAccounts
             | Self::ShowConflicts
             | Self::ShowLogs
+            | Self::TogglePrivate
             | Self::OpenPrivacy
             | Self::ReportBug
             | Self::CopyReport
@@ -403,7 +416,8 @@ impl Action {
             | Self::Recommendations
             | Self::PlayTrailer
             | Self::OpenInBrowser
-            | Self::PlayParty => Scope::Title,
+            | Self::PlayParty
+            | Self::ToggleAlwaysPrivate => Scope::Title,
 
             Self::ToggleWatched
             | Self::MarkAllPrevious
@@ -439,6 +453,7 @@ impl Action {
                 | Self::PageDown
                 | Self::Help
                 | Self::FilterSearch
+                | Self::TogglePrivate
         )
     }
 

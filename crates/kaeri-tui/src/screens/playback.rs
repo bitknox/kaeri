@@ -162,6 +162,11 @@ pub(super) fn render_now_playing(buf: &mut Buffer, app: &App, area: Rect) {
         &speed,
         app.palette.style(Role::TextDim),
     );
+
+    // Under the block, the line the title page draws: whether this watch is saved.
+    if let Some(private) = playing.id.and_then(|id| app.private_line(id)) {
+        super::title::render_private_line(buf, app, body, y + 2, &private);
+    }
 }
 
 /// The eyecatch wipe, painted over everything but the status line.

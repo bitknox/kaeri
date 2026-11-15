@@ -46,6 +46,7 @@ pub async fn run(
     config_problem: Option<kaeri_core::config::ConfigProblem>,
     set_aside: Option<std::path::PathBuf>,
     party: Option<kaeri_model::party::PartyTarget>,
+    private: bool,
 ) -> Result<()> {
     // The colour depth first: every colour the palette hands out is drawn at it.
     theme::set_depth(theme::detect_depth(|key| std::env::var(key).ok()));
@@ -91,6 +92,11 @@ pub async fn run(
     let (engine, mut from_engine) = Engine::start(options, host).await?;
     engine.send(network_at_launch());
     engine.send(medium_at_launch());
+    // `--private`: the mode on from the first frame. The engine says so as it does for Ctrl+P,
+    // and the header's chip is the word; the notice is for a shortcut taken mid-session.
+    if private {
+        engine.send(Command::SetPrivate { on: true });
+    }
 
     // The settings as the engine starts on them, which it says again at launch.
     let settings = kaeri_model::settings::view(&config, &saved);

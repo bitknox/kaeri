@@ -12,7 +12,7 @@ use ratatui::{buffer::Buffer, layout::Rect, style::Modifier};
 use crate::{
     app::{App, push_detail, status_text},
     theme::Role,
-    widgets::{truncate, wrap, wrap_meta},
+    widgets::{Cells, truncate, wrap, wrap_meta},
 };
 
 use super::{
@@ -124,6 +124,7 @@ pub(super) fn render_title(buf: &mut Buffer, app: &App, area: Rect) {
     }
 
     // Progress, or the countdown to the next broadcast — whichever the viewer needs next.
+    let action_y = y;
     if y < area.bottom() {
         if let (Some(TitleProgress { next, .. }), Some(label)) =
             (entry.progress, progress_label(entry))
@@ -153,6 +154,41 @@ pub(super) fn render_title(buf: &mut Buffer, app: &App, area: Rect) {
                 );
             }
         }
+    }
+
+    // Private, under the line that leads to the next episode: whether this title is saved
+    // now. The play keys, the list status and the episodes stay as they are.
+    if let Some(private) = app.private_line(entry.id) {
+        render_private_line(buf, app, area, action_y + 1, &private);
+    }
+}
+
+/// A title's private line: its head in the state colour, then what is kept, dim. Shared with
+/// Now Playing, so the two say it the same way.
+pub(super) fn render_private_line(
+    buf: &mut Buffer,
+    app: &App,
+    area: Rect,
+    y: u16,
+    private: &crate::app::PrivateLine,
+) {
+    if y >= area.bottom() {
+        return;
+    }
+    let width = area.width as usize;
+    let head = truncate(&private.head, width);
+    let x = area.left() + head.cells() as u16;
+    line(
+        buf,
+        area.left(),
+        y,
+        head,
+        app.palette.style(Role::State).add_modifier(Modifier::BOLD),
+    );
+    let rest = [" · ", private.rest.as_str()].concat();
+    let room = area.right().saturating_sub(x) as usize;
+    if room > 0 {
+        line(buf, x, y, truncate(&rest, room), app.palette.style(Role::TextDim));
     }
 }
 
