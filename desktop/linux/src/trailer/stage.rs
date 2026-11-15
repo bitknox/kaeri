@@ -1,9 +1,11 @@
-//! A banner that plays its title's trailer behind it, for the hover preview.
+//! A banner that plays its title's trailer behind it, for the title page and the hover preview.
 //!
 //! The banner shows at once and stays on top. The web view sits underneath, transparent, and the
 //! banner fades away only when the page says a frame is playing, so the wait for the video is
 //! never seen. Nothing is ever drawn over the video: the banner is clear by then. The web view is
-//! exactly the video's 16:9, so the player never letterboxes, and it fills the stage.
+//! exactly the video's 16:9, so the player never letterboxes, and it sits where the [`Slot`]
+//! says: filling the stage in the hover preview, at the band's trailing end on the title page,
+//! where the page's own ground shows around it once the art has gone.
 
 use std::{
     cell::{Cell, RefCell},
@@ -21,8 +23,38 @@ use kaeri_model::{
 use super::webkit::{Signal, Web};
 use crate::motion;
 
-/// The banner comes back this long before the player's last frame.
+/// The title page's video: 448 by 252, YouTube's 16:9, over its 200 by 200 floor.
+const VIDEO_WIDTH: i32 = 448;
+const VIDEO_HEIGHT: i32 = 252;
+/// Where the title page's video sits: this far below the page's top (under the header bar) and
+/// in from the band's trailing end.
+const VIDEO_TOP: i32 = 58;
+const VIDEO_END: i32 = 28;
+
+/// The view is let go of this long after the page says the trailer is half a second from its
+/// end, once the art is back over it.
 const TAIL: Duration = Duration::from_millis(600);
+
+/// Where the video sits in the stage.
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+pub enum Slot {
+    /// The whole stage: the hover preview's 16:9 banner.
+    Fill,
+    /// The trailing end of the title page's band, at the video's own size.
+    Corner,
+}
+
+impl Slot {
+    /// The bottom edge of the corner video, where the sound button hangs below it.
+    pub const fn video_bottom() -> i32 {
+        VIDEO_TOP + VIDEO_HEIGHT
+    }
+
+    /// The trailing margin of the corner video.
+    pub const fn video_end() -> i32 {
+        VIDEO_END
+    }
+}
 
 /// A trailer that has not played in this long is let go, with nothing said.
 const GIVE_UP: Duration = Duration::from_secs(8);
@@ -38,6 +70,8 @@ enum State {
     Loading,
     /// A frame is on screen and the banner is clear.
     Playing,
+    /// The view is held, paused, with the banner back over it.
+    Paused,
     /// It ended or was refused: not again on this visit.
     Done,
 }
@@ -51,6 +85,8 @@ pub struct Stage {
     timeout: RefCell<Option<glib::SourceId>>,
     changed: RefCell<Option<Showing>>,
     fade: RefCell<Option<adw::TimedAnimation>>,
+    /// The pause has not reached the player yet: the banner is still coming back over it.
+    pausing: Cell<bool>,
 }
 
 impl Stage {
@@ -73,6 +109,7 @@ impl Stage {
             timeout: RefCell::default(),
             changed: RefCell::default(),
             fade: RefCell::default(),
+            pausing: Cell::new(false),
         })
     }
 
@@ -82,15 +119,25 @@ impl Stage {
         self.changed.replace(Some(Rc::new(f)));
     }
 
-    /// Whether a view is held at all: loading, playing or paused.
-    pub fn active(&self) -> bool {
-        matches!(self.state.get(), State::Loading | State::Playing)
+    /// Whether a trailer is on screen.
+    pub fn showing(&self) -> bool {
+        self.state.get() == State::Playing
     }
 
-    /// Load `trailer` under the banner, filling the stage. False when it cannot: no WebKitGTK, a trailer
+    /// Whether a view is held at all: loading, playing or paused.
+    pub fn active(&self) -> bool {
+        matches!(self.state.get(), State::Loading | State::Playing | State::Paused)
+    }
+
+    /// Whether the trailer has ended or was refused on this visit.
+    pub fn done(&self) -> bool {
+        self.state.get() == State::Done
+    }
+
+    /// Load `trailer` under the banner, in `slot`. False when it cannot: no WebKitGTK, a trailer
     /// the player does not play, or one already held.
     /// Its captions follow `subtitles`, the playback setting's language.
-    pub fn start(self: &Rc<Self>, trailer: &Trailer, subtitles: &str) -> bool {
+    pub fn start(self: &Rc<Self>, trailer: &Trailer, subtitles: &str, slot: Slot) -> bool {
         if self.web.borrow().is_some() || self.state.get() == State::Done {
             return false;
         }
@@ -107,11 +154,22 @@ impl Stage {
             }
         });
         let Some(web) = web else { return false };
-        self.video.set_halign(gtk::Align::Fill);
-        self.video.set_valign(gtk::Align::Fill);
-        self.video.set_margin_top(0);
-        self.video.set_margin_end(0);
-        self.video.set_size_request(-1, -1);
+        match slot {
+            Slot::Fill => {
+                self.video.set_halign(gtk::Align::Fill);
+                self.video.set_valign(gtk::Align::Fill);
+                self.video.set_margin_top(0);
+                self.video.set_margin_end(0);
+                self.video.set_size_request(-1, -1);
+            }
+            Slot::Corner => {
+                self.video.set_halign(gtk::Align::End);
+                self.video.set_valign(gtk::Align::Start);
+                self.video.set_margin_top(VIDEO_TOP);
+                self.video.set_margin_end(VIDEO_END);
+                self.video.set_size_request(VIDEO_WIDTH, VIDEO_HEIGHT);
+            }
+        }
         web.widget.set_vexpand(true);
         self.video.append(&web.widget);
         self.web.replace(Some(web));
@@ -138,7 +196,8 @@ impl Stage {
     fn heard(self: &Rc<Self>, signal: Signal) {
         match signal {
             Signal::Message(TrailerMessage::Playing) => {
-                if self.state.get() == State::Loading {
+                let resumed = self.state.get() == State::Paused && !self.pausing.get();
+                if self.state.get() == State::Loading || resumed {
                     self.cancel_timeout();
                     self.state.set(State::Playing);
                     self.fade_banner(false);
@@ -172,6 +231,41 @@ impl Stage {
         })));
     }
 
+    /// Hold the trailer: the banner comes back over it, and the player pauses once it has, so its
+    /// paused screen never shows.
+    pub fn pause(self: &Rc<Self>) {
+        if self.state.get() != State::Playing {
+            return;
+        }
+        self.state.set(State::Paused);
+        self.pausing.set(true);
+        let weak = Rc::downgrade(self);
+        self.fade_banner_then(true, move || {
+            if let Some(stage) = weak.upgrade()
+                && stage.pausing.replace(false)
+            {
+                stage.control(TrailerControl::Pause);
+            }
+        });
+        self.say(false);
+    }
+
+    /// Play it again from where it paused; the banner clears when the page says a frame is
+    /// playing.
+    pub fn resume(self: &Rc<Self>) {
+        if self.state.get() != State::Paused {
+            return;
+        }
+        if self.pausing.replace(false) {
+            // The player never paused: it is still playing, so the banner clears again.
+            self.state.set(State::Playing);
+            self.fade_banner(false);
+            self.say(true);
+            return;
+        }
+        self.control(TrailerControl::Play);
+    }
+
     /// Sound on or off, for this trailer only.
     pub fn set_sound(&self, on: bool) {
         self.control(if on { TrailerControl::Unmute } else { TrailerControl::Mute });
@@ -192,17 +286,17 @@ impl Stage {
 
     fn release(&self, then: State) {
         self.cancel_timeout();
+        self.pausing.set(false);
         let was = self.state.replace(then);
         if let Some(web) = self.web.take() {
             self.video.remove(&web.widget);
         }
+        self.video.set_size_request(-1, -1);
+        if matches!(was, State::Playing | State::Paused) && self.banner.opacity() < 1.0 {
+            self.fade_banner(true);
+        }
         if was == State::Playing {
-            if self.banner.opacity() < 1.0 || was == State::Playing {
-                self.fade_banner(true);
-            }
-            if was == State::Playing {
-                self.say(false);
-            }
+            self.say(false);
         }
     }
 
@@ -212,7 +306,9 @@ impl Stage {
         }
     }
 
-    /// Fade the banner back in (`back`) or away: 300 ms in, 200 ms out, the motion tokens.
+    /// Fade the banner back in (`back`) or away: back over 300 ms on fade-out's curve,
+    /// cubic-bezier(0.42, 0, 1, 1), and away over 200 ms on fade-in's, cubic-bezier(0, 0, 0.58, 1),
+    /// the canvas tokens (libadwaita's ease-in and ease-out are those two curves).
     fn fade_banner(&self, back: bool) {
         self.fade_banner_then(back, || {});
     }
@@ -222,9 +318,9 @@ impl Stage {
             old.pause();
         }
         let (from, to, ms, easing) = if back {
-            (self.banner.opacity(), 1.0, 300, adw::Easing::EaseInCubic)
+            (self.banner.opacity(), 1.0, 300, adw::Easing::EaseIn)
         } else {
-            (self.banner.opacity(), 0.0, 200, adw::Easing::EaseOutCubic)
+            (self.banner.opacity(), 0.0, 200, adw::Easing::EaseOut)
         };
         let animation =
             motion::timed(&self.banner, from, to, ms, motion::opacity(&self.banner));
@@ -279,19 +375,34 @@ pub(super) fn log(id: &str, started: Instant, signal: &Signal) {
     }
 }
 
-/// A page that says what the real one would, for the shots and for trying the app offline: a
-/// slow gradient in place of the video, `ready` at once and `playing` a moment later.
+/// A page that says what the real one would, for the shots and for trying the app offline: the
+/// boards' flat stand-in in place of the video (a pale sun crossing grey hills), `ready` at once,
+/// `playing` a moment later, `ending` half a second before its ten seconds are up and `ended` at
+/// the end. Pause and play stop and start its clock, and each play says `playing` again.
 #[cfg(feature = "fixtures")]
-const FIXTURE_PAGE: &str = r#"<!doctype html><html><head><meta charset="utf-8"><style>
+const FIXTURE_PAGE: &str = r##"<!doctype html><html><head><meta charset="utf-8"><style>
 html,body{margin:0;width:100%;height:100%;overflow:hidden;background:transparent}
-#clip{width:100%;height:100%;background:linear-gradient(120deg,#1d3557,#e76f51,#f4a261,#264653);
-background-size:300% 300%;animation:drift 6s linear infinite}
-@keyframes drift{0%{background-position:0% 50%}100%{background-position:100% 50%}}
-</style></head><body><div id="clip"></div><script>
+#clip{position:absolute;inset:0;overflow:hidden;background:#4a4f63}
+#sun{position:absolute;left:6%;top:16%;width:15%;height:26.67%;border-radius:50%;background:#8c92a7;
+animation:sun 12s linear infinite}
+#hills{position:absolute;left:0;bottom:0;width:200%;height:46%;animation:drift 6s linear infinite}
+#hills svg{display:block;width:100%;height:100%}
+.held #sun,.held #hills{animation-play-state:paused}
+@keyframes sun{from{transform:translateX(0)}to{transform:translateX(480%)}}
+@keyframes drift{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+</style></head><body><div id="clip" class="held"><div id="sun"></div><div id="hills"><svg viewBox="0 0 400 100" preserveAspectRatio="none"><path d="M0 60 L40 35 L80 55 L120 25 L160 50 L200 60 L240 35 L280 55 L320 25 L360 50 L400 60 V100 H0 Z" fill="#3b4054"/><path d="M0 80 L50 68 L100 82 L150 70 L200 80 L250 68 L300 82 L350 70 L400 80 V100 H0 Z" fill="#2f3345"/></svg></div></div><script>
 function say(m){try{window.webkit.messageHandlers.kaeri.postMessage(m)}catch(e){}}
-window.trailer={play:function(){say("playing")},pause:function(){say("paused")},mute:function(){},unmute:function(){}};
-say("ready");setTimeout(function(){say("playing")},700);
-</script></body></html>"#; // i18n-skip
+var LENGTH=10000,played=0,since=null,timers=[],clip=document.getElementById("clip");
+function at(ms,f){timers.push(setTimeout(f,Math.max(0,ms-played)))}
+function play(){if(since!==null||played>=LENGTH)return;since=Date.now();clip.className="";
+at(0,function(){say("playing")});
+at(LENGTH-500,function(){say("ending")});
+at(LENGTH,function(){hold();say("ended")})}
+function hold(){if(since===null)return;played+=Date.now()-since;since=null;clip.className="held";
+timers.forEach(clearTimeout);timers=[]}
+window.trailer={play:play,pause:function(){hold();say("paused")},mute:function(){},unmute:function(){}};
+say("ready");setTimeout(play,700);
+</script></body></html>"##; // i18n-skip
 
 #[cfg(feature = "fixtures")]
 pub fn fixture_page() -> String {

@@ -99,13 +99,18 @@ Play on TV added:
 
 Trailers added:
 
-- The title page plays its trailer, muted, in the corner of the banner once the page has settled.
-  A title with a trailer opens with its head 100 px below the band, so nothing moves when the
-  trailer plays. The video is 448 by 252, exactly 16:9, so the player never letterboxes; the art
-  fades to the page's colour only when a frame is playing, and the sound button hangs below the
-  video's corner. The banner comes back half a second before the end. Scrolling more than 8 px
-  brings the banner back and then pauses the trailer. Below 700 px wide the page keeps its banner.
-  Leaving the page, starting an episode, opening a dialog or the window losing focus lets it go.
+- The title page plays its trailer, muted, at the trailing end of the banner once the page has
+  settled. Whether one may play is decided once when the page opens (the window is wide and the
+  engine allows this title's trailer here); then the band is 328 high and the head stands 100 px
+  lower, the cover at 248 and the title 30 px under the video, so nothing moves when it plays.
+  The web view is the 448 by 252 video, exactly 16:9, 58 px from the top and 28 from the band's
+  end; at its first frame the art fades to the page's ground over 200 ms on cubic-bezier(0, 0,
+  0.58, 1), and a 36 px flat sound button fades in 8 px under the video's trailing corner. Half a
+  second before the end the art comes back over 300 ms on cubic-bezier(0.42, 0, 1, 1) and the view
+  is let go of. Scrolling more than 8 px brings the art back, then pauses; back at the top it
+  plays, and the art clears at the first frame. Below the wide size the page keeps its banner.
+  Leaving the page, starting an episode, opening a dialog, typing an episode number or the window
+  losing focus lets it go.
 - Resting the pointer on a cover in Seasonal, Search, Library or Related for 800 ms opens a preview
   in a popover, one surface with the video flush at the top, then the title, the facts, two lines
   of synopsis and the main action. When a preview has just closed, the next one opens after 300 ms

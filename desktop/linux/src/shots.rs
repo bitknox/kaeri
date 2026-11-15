@@ -324,6 +324,16 @@ pub const STATS: [&str; 5] = [
     "player-stats-copied",
 ];
 
+/// The title page's trailer in the board's four states, apart from the rest since the ended one
+/// waits out the fixture clip: `--shot trailers` takes them. `title-trailer-visit` is one whole
+/// visit (it plays, the page scrolls away and back, it ends) for a recording of the screen.
+pub const TRAILERS: [&str; 4] = [
+    "title-trailer-banner",
+    "title-trailer-playing",
+    "title-trailer-paused",
+    "title-trailer-ended",
+];
+
 /// Take `shots` into `dir`, each named `<prefix><shot>.png`, then quit.
 pub fn run(shell: Rc<Shell>, dir: PathBuf, prefix: String, shots: Vec<String>) {
     glib::spawn_future_local(async move {
@@ -646,6 +656,40 @@ fn stage(shell: &Rc<Shell>, shot: &str) -> f64 {
             let _ =
                 WidgetExt::activate_action(window, "win.open-title", Some(&TITLE.to_variant()));
             3.5
+        }
+        trailer if trailer.starts_with("title-trailer-") => {
+            // The title page opens; its fixture clip plays 0.7 s after the page has settled,
+            // for ten seconds.
+            shell.go(Dest::Home);
+            let _ =
+                WidgetExt::activate_action(window, "win.open-title", Some(&TITLE.to_variant()));
+            let scroll_at = |ms: u64, to: f64| {
+                let ctx = Rc::clone(&shell.ctx);
+                glib::timeout_add_local_once(Duration::from_millis(ms), move || {
+                    if let Some(scroll) = ctx
+                        .nav()
+                        .and_then(|nav| nav.visible_page())
+                        .and_then(|page| first::<gtk::ScrolledWindow>(page.upcast_ref()))
+                    {
+                        scroll.vadjustment().set_value(to);
+                    }
+                });
+            };
+            match trailer {
+                "title-trailer-paused" => scroll_at(3000, 120.0),
+                "title-trailer-visit" => {
+                    scroll_at(4500, 120.0);
+                    scroll_at(7000, 0.0);
+                }
+                _ => {}
+            }
+            match trailer {
+                "title-trailer-banner" => 0.4,
+                "title-trailer-playing" => 4.0,
+                "title-trailer-paused" => 4.5,
+                "title-trailer-ended" => 13.5,
+                _ => 16.5,
+            }
         }
         "trailer-preview" => {
             // The pointer rests on a cover in Seasonal: its preview opens, and its trailer plays.
@@ -1425,6 +1469,10 @@ fn unstage(shell: &Rc<Shell>, shot: &str) {
             let _ = WidgetExt::activate_action(&shell.ctx.window, "win.back", None);
         }
         "trailer-preview" => crate::trailer::close_preview(),
+        trailer if trailer.starts_with("title-trailer-") => {
+            close_dialogs(&shell.ctx.window);
+            let _ = WidgetExt::activate_action(&shell.ctx.window, "win.back", None);
+        }
         "trailer-window"
         | "discussion"
         | "discussion-none"
@@ -2120,6 +2168,7 @@ pub fn named(list: Option<&str>) -> Vec<String> {
                 "lawful" => LAWFUL.iter().map(|p| (*p).to_owned()).collect(),
                 "pad" => PAD.iter().map(|p| (*p).to_owned()).collect(),
                 "stats" => STATS.iter().map(|p| (*p).to_owned()).collect(),
+                "trailers" => TRAILERS.iter().map(|p| (*p).to_owned()).collect(),
                 "tv" => TV.iter().map(|p| (*p).to_owned()).collect(),
                 "cast" => CAST.iter().map(|p| (*p).to_owned()).collect(),
                 #[cfg(feature = "fixtures")]
