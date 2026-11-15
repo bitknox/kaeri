@@ -324,9 +324,10 @@ fun SwitchRow(
     enabled: Boolean = true,
     focus: String? = null,
     extra: String? = null,
+    hint: String? = null,
     onChange: (Boolean) -> Unit,
 ) {
-    if (einkSettings) return EinkSwitchRow(place, title, checked, note, enabled, extra, onChange)
+    if (einkSettings) return EinkSwitchRow(place, title, checked, note, enabled, extra, hint, onChange)
     val onWord = stringResource(R.string.value_on)
     val offWord = stringResource(R.string.value_off)
     RowFrame(
@@ -338,7 +339,8 @@ fun SwitchRow(
             .alpha(if (enabled) 1f else 0.38f)
             .semantics(mergeDescendants = true) {
                 role = Role.Switch
-                stateDescription = if (checked) onWord else offWord
+                // A dimmed row says what it needs after its state: "Off, Needs Auto-play next".
+                stateDescription = listOfNotNull(if (checked) onWord else offWord, hint?.takeIf { !enabled }).joinToString(", ") // i18n-skip
             },
     ) { selected ->
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(16.dp)) {

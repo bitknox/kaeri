@@ -209,7 +209,7 @@ internal fun <T> EinkMenuRow(
 
 /** A setting that is on or off, on paper: its name and note, and Off and On as a segmented control. */
 @Composable
-internal fun EinkSwitchRow(place: Place, title: String, checked: Boolean, note: String?, enabled: Boolean, extra: String?, onChange: (Boolean) -> Unit) {
+internal fun EinkSwitchRow(place: Place, title: String, checked: Boolean, note: String?, enabled: Boolean, extra: String?, hint: String?, onChange: (Boolean) -> Unit) {
     val context = LocalContext.current
     val onWord = stringResource(R.string.value_on)
     val offWord = stringResource(R.string.value_off)
@@ -219,7 +219,7 @@ internal fun EinkSwitchRow(place: Place, title: String, checked: Boolean, note: 
         height = 74.dp,
         modifier = Modifier.alpha(if (enabled) 1f else 0.5f).semantics(mergeDescendants = false) {
             role = Role.Switch
-            stateDescription = if (checked) onWord else offWord
+            stateDescription = listOfNotNull(if (checked) onWord else offWord, hint?.takeIf { !enabled }).joinToString(", ") // i18n-skip
         },
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {

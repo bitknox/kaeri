@@ -122,7 +122,7 @@ internal fun SettingMenu(
 
 /** A setting that is on or off, with how many shows set it for themselves under it. */
 @Composable
-internal fun SettingSwitch(place: Place, key: SettingKey, title: String, note: String? = null, enabled: Boolean = true, extra: String? = null) {
+internal fun SettingSwitch(place: Place, key: SettingKey, title: String, note: String? = null, enabled: Boolean = true, extra: String? = null, hint: String? = null) {
     val store = LocalAppStore.current
     val view by store.settings.view.collectAsStateWithLifecycle()
     val row = store.settings.row(key, view)
@@ -133,6 +133,7 @@ internal fun SettingSwitch(place: Place, key: SettingKey, title: String, note: S
         note = listOfNotNull(store.settings.overridden(LocalContext.current, key, view), note).joinToString("\n").ifEmpty { null }, // i18n-skip
         enabled = enabled && SettingsCatalog.editable(row),
         extra = extra,
+        hint = hint,
     ) { store.setSetting(key, SettingValue.Bool(it)) }
 }
 
@@ -319,6 +320,7 @@ internal fun PlaybackPane() {
             rows = listOf(
                 { place -> SettingSwitch(place, SettingKey.AUTO_NEXT, stringResource(R.string.settings_auto_play)) },
                 { place -> SettingMenu(place, SettingKey.UP_NEXT_COUNTDOWN, stringResource(R.string.settings_up_next_countdown), enabled = autoNext) },
+                { place -> PreloadRow(place, autoNext, torrents = store.settings.isOn(SettingKey.TORRENTS, view)) },
                 { place -> SettingSwitch(place, SettingKey.SKIP_OPENING, stringResource(R.string.settings_skip_opening)) },
                 { place -> SettingSwitch(place, SettingKey.SKIP_RECAP, stringResource(R.string.settings_skip_recap)) },
                 { place -> SettingSwitch(place, SettingKey.SKIP_FILLER, stringResource(R.string.settings_skip_filler)) },
@@ -353,6 +355,24 @@ internal fun PlaybackPane() {
             ),
         )
     }
+}
+
+/**
+ * Preload video on mobile data, under Up next countdown: what loads during the ending, and the
+ * torrent sentence while torrents play. Nothing preloads without Auto-play next, so it dims and
+ * stops taking touches with Up next countdown then, and says so to a screen reader.
+ */
+@Composable
+private fun PreloadRow(place: Place, autoNext: Boolean, torrents: Boolean) {
+    val line = stringResource(R.string.settings_preload_detail_android)
+    SettingSwitch(
+        place,
+        SettingKey.PRELOAD_METERED,
+        stringResource(R.string.settings_preload_cellular),
+        note = if (torrents) line + " " + stringResource(R.string.settings_preload_torrents) else line, // i18n-skip
+        enabled = autoNext,
+        hint = stringResource(R.string.settings_preload_a11y_dimmed),
+    )
 }
 
 /** The three forms a title can be named in, as the settings file names them. */
