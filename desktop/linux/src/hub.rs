@@ -1044,6 +1044,10 @@ mod tests {
             note: None,
             releases: Vec::new(),
             pinned_release: None,
+            first: None,
+            last: None,
+            lacking: Vec::new(),
+            lacking_since: None,
         };
         known.take(&Event::SourceOptions { id, options: vec![option("a"), option("b")] });
         known.choose(id, Some("b"), None);

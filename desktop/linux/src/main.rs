@@ -22,6 +22,7 @@ mod flags;
 mod gtk_test;
 mod hub;
 mod matching;
+mod missing;
 mod motion;
 mod mpris;
 mod nagare;
@@ -37,6 +38,8 @@ mod say;
 mod shots;
 #[cfg(feature = "fixtures")]
 mod shots_following;
+#[cfg(feature = "fixtures")]
+mod shots_missing;
 #[cfg(feature = "fixtures")]
 mod shots_prelaunch;
 #[cfg(feature = "fixtures")]

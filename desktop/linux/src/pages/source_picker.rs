@@ -302,7 +302,8 @@ impl Picker {
 
     /// Set a row's text, check, dimming and what a screen reader says.
     fn dress(&self, widget: &adw::ActionRow, mark: &gtk::Image, row: &Row) {
-        let (title, detail) = choices::words(row);
+        let now = glib::DateTime::now_utc().map_or(0, |t| t.to_unix());
+        let (title, detail) = choices::words(row, now);
         widget.set_title(&title);
         widget.set_subtitle(detail.as_deref().unwrap_or_default());
         widget.set_activatable(row.selectable());
@@ -313,7 +314,8 @@ impl Picker {
             widget.remove_css_class("noted");
         }
         let accessible = widget.upcast_ref::<gtk::Widget>();
-        accessible.update_property(&[gtk::accessible::Property::Label(&choices::spoken(row))]);
+        accessible
+            .update_property(&[gtk::accessible::Property::Label(&choices::spoken(row, now))]);
         accessible.update_state(&[gtk::accessible::State::Selected(Some(row.chosen()))]);
     }
 

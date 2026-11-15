@@ -24,6 +24,8 @@ use kaeri_model::{
     show::ShowSettingKey,
 };
 
+mod missing;
+
 use crate::{
     catalog, choices, matching, motion,
     pages::{following, licensed},
@@ -50,6 +52,8 @@ struct EpisodeLine {
     /// The row's content, dimmed when no source lists the episode.
     root: gtk::Box,
     sub: gtk::Label,
+    /// Over the line: the picture it crossfades from when a source lists the episode.
+    sub_veil: gtk::Overlay,
     /// "Discussion · 214 comments", once a thread is known.
     discuss: gtk::Button,
     bar: gtk::ProgressBar,
@@ -84,6 +88,8 @@ struct Drawn {
     protection_at: Option<usize>,
     /// The rows keep a column for people followed.
     column: bool,
+    /// What the page said about licensed services when the list was drawn.
+    availability: Option<TitleAvailability>,
 }
 
 /// The one line where spoiler protection starts.
@@ -167,6 +173,8 @@ struct Page {
     typing: RefCell<Option<glib::SourceId>>,
     capsule: gtk::Label,
     target: RefCell<Option<String>>,
+    /// The next episode while it has aired and no source lists it.
+    missing: missing::Missing,
 }
 
 /// The tag a title's page carries in the navigation stack: one page per title.
@@ -384,6 +392,7 @@ pub fn page(ctx: &Rc<Ctx>, id: AnilistId) -> adw::NavigationPage {
         typing: RefCell::default(),
         capsule,
         target: RefCell::default(),
+        missing: missing::Missing::default(),
     });
     scroll.vadjustment().connect_value_changed({
         let weak = Rc::downgrade(&page);
@@ -410,6 +419,17 @@ pub fn page(ctx: &Rc<Ctx>, id: AnilistId) -> adw::NavigationPage {
         }
     });
     page.me.replace(Rc::downgrade(&page));
+    // The time since an episode aired, on the minute.
+    glib::timeout_add_seconds_local(15, {
+        let weak = Rc::downgrade(&page);
+        move || match weak.upgrade() {
+            Some(page) => {
+                page.tick();
+                glib::ControlFlow::Continue
+            }
+            None => glib::ControlFlow::Break,
+        }
+    });
     page.actions();
     page.keys(&view);
     ctx.hub.known.borrow_mut().visit(id);
@@ -468,6 +488,7 @@ impl Page {
                         && old.iter().zip(rows).all(|(a, b)| a.number == b.number)
                 };
                 self.rows.replace(rows.clone());
+                self.track_missing();
                 self.ask_availability();
                 // The same table with more in it (text that arrived late, a mark): the rows
                 // change in place, and only a change in what the list is made of draws it again.
@@ -521,7 +542,16 @@ impl Page {
             // What the page says about licensed services: the buttons and lines change in
             // place, and the episodes take their links.
             Event::Availability(availability) if availability.id == self.id => {
-                self.draw_episodes();
+                // Asked again with every table: the list is drawn again only when it changed,
+                // so a row lifting as its episode is found carries on.
+                let same = self
+                    .drawn
+                    .borrow()
+                    .as_ref()
+                    .is_some_and(|d| d.availability.as_ref() == Some(availability));
+                if !same {
+                    self.draw_episodes();
+                }
                 if let Some(entry) = self.ctx.hub.entry(self.id) {
                     self.fill(&entry);
                 }
@@ -545,6 +575,7 @@ impl Page {
                         }
                     }
                 }
+                self.track_missing();
                 if let Some(entry) = self.ctx.hub.entry(self.id) {
                     self.fill(&entry);
                 }
@@ -552,6 +583,8 @@ impl Page {
                 // Which rows are ahead moved with the mark.
                 self.ctx.hub.send(Command::LoadEpisodes(self.id));
             }
+            Event::EpisodeChecked(check) if check.id == self.id => self.heard_check(check),
+            Event::Connectivity { offline } => self.connectivity(*offline),
             Event::ShowSettings(view) if view.id == self.id => {
                 let own = view
                     .rows
@@ -781,6 +814,8 @@ impl Page {
     fn fill(&self, entry: &Entry) {
         let size = *self.sized.borrow();
         let narrow = size == Size::Narrow;
+        let had_focus = self.lead_focus();
+        self.missing.parts.replace(None);
         clear(&self.head);
         let hub = &self.ctx.hub;
         // The banner, once: its art does not change with the detail.
@@ -811,7 +846,10 @@ impl Page {
             say::queue_item(entry, (!rows.is_empty()).then_some(rows.as_slice()))
         };
         let actions = gtk::Box::new(gtk::Orientation::Horizontal, 8);
-        actions.set_margin_top(10);
+        // The episode that aired and that no source lists yet: Check again and the episode
+        // before lead the row, and the status sits under it. Play crossfades in once found.
+        let missing = self.missing_shown().filter(|_| !entry.is_demo);
+        let mut found_play = None;
         // The source could not choose between its titles: choosing is the way on, in Play's place.
         let asked = hub.known.borrow().matches.asked(entry.id).cloned();
         if asked.is_some() {
@@ -864,12 +902,18 @@ impl Page {
                 button.add_css_class("pill");
                 button.add_css_class("suggested-action");
                 button.add_css_class("first-focus");
+                button.set_widget_name(missing::PLAY);
                 button.set_action_target_value(Some(
                     &(id, item.episode.to_string()).to_variant(),
                 ));
                 button.set_action_name(Some("win.play"));
                 button.set_hexpand(narrow);
-                actions.append(&button);
+                if missing.is_some() && self.found_running() {
+                    found_play = Some(button.clone());
+                } else if missing.is_none() || !self.found_waiting() {
+                    // Held back while a source has it and the check asked for has yet to answer.
+                    actions.append(&button);
+                }
                 // A controller opened the page: the main action takes focus once it exists.
                 if self.ctx.controller_mode.get()
                     && GtkWindowExt::focus(&self.ctx.window)
@@ -882,11 +926,27 @@ impl Page {
                 }
             }
             None if asked.is_some() => {}
-            None => {
-                if let Some(waiting) = item.waiting.clone().filter(|_| on_service.is_none()) {
-                    actions.append(&widgets::haze(&waiting, ""));
-                }
+            None => {}
+        }
+        let mut under_row = None;
+        if let Some(missing) =
+            missing.as_ref().filter(|_| asked.is_none() && on_service.is_none())
+            && (item.button.is_none() || found_play.is_some() || self.found_waiting())
+        {
+            let (lead, under) = self.missing_widgets(missing, found_play.take(), narrow);
+            if let Some(lead) = lead {
+                actions.append(&lead);
             }
+            under_row = Some(under);
+        } else if item.button.is_none()
+            && asked.is_none()
+            && let Some(waiting) = item.waiting.clone().filter(|_| on_service.is_none())
+        {
+            // When the next episode comes, under the row rather than in it.
+            let line = widgets::haze(&waiting, "");
+            line.set_wrap(true);
+            line.set_margin_top(10);
+            under_row = Some(line.upcast());
         }
         // A choice each, checked where the title is.
         self.status.set_state(
@@ -997,7 +1057,15 @@ impl Page {
             actions.append(&status);
             actions.append(&more);
         }
-        text.append(&actions);
+        // The row and what sits under it, with no spacing between, so the status's height
+        // closes to nothing as Play comes in.
+        let row = gtk::Box::new(gtk::Orientation::Vertical, 0);
+        row.set_margin_top(10);
+        row.append(&actions);
+        if let Some(under) = &under_row {
+            row.append(under);
+        }
+        text.append(&row);
         if let Some(asked) = &asked {
             // How many titles could be it, under the action.
             text.append(&widgets::haze(&matching::uncertain(asked), ""));
@@ -1027,6 +1095,8 @@ impl Page {
         }
         line.append(&text);
         self.head.append(&line);
+        self.apply_missing();
+        self.restore_focus(had_focus);
 
         clear(&self.synopsis);
         if !entry.synopsis.is_empty() {
@@ -1689,6 +1759,7 @@ impl Page {
             fold: plan.fold,
             protection_at,
             column,
+            availability: self.availability(),
         }));
         let mut lines = Vec::with_capacity(shown.len());
         // Case B: each episode opens its own page on the service, or else the title's.
@@ -1825,7 +1896,9 @@ impl Page {
             text.append(&label);
             let sub = widgets::haze("", "caption");
             sub.add_css_class("numeric");
-            text.append(&sub);
+            let sub_veil = gtk::Overlay::new();
+            sub_veil.set_child(Some(&sub));
+            text.append(&sub_veil);
             let discuss = gtk::Button::new();
             discuss.add_css_class("flat");
             discuss.add_css_class("caption");
@@ -1954,6 +2027,7 @@ impl Page {
                 still: still_widget,
                 root,
                 sub,
+                sub_veil,
                 discuss,
                 bar,
                 menu,
@@ -2317,19 +2391,24 @@ impl Page {
         }
 
         // An episode no source lists is dimmed and says so; it cannot be played or downloaded.
+        // When a source lists it, the row lifts and its line crossfades, with the status's Play.
+        let lifts = animate && !row.unsourced && line.shown.borrow().unsourced;
         if row.unsourced {
             line.root.add_css_class("dim-label");
         } else {
             line.root.remove_css_class("dim-label");
         }
+        if lifts && line.root.is_mapped() {
+            let run = motion::timed(&line.root, WATCHED, 1.0, 300, motion::opacity(&line.root));
+            run.set_easing(adw::Easing::EaseOutCubic);
+            // A fade, which Reduce Animation keeps.
+            run.set_follow_enable_animations_setting(false);
+            line.root.set_opacity(WATCHED);
+            run.play();
+        }
         let part_way = row.watched > 0.0 && !row.completed;
-        let now = glib::DateTime::now_utc().map_or(0, |t| t.to_unix());
-        let date = |at| {
-            glib::DateTime::from_unix_local(at)
-                .ok()
-                .and_then(|d| d.format("%-d %b %Y").ok())
-                .map_or_else(String::new, |d| d.to_string())
-        };
+        let now = missing::now();
+        let date = missing::short_date;
         let sub = synopsis::facts(row, now, date, None);
         // A narrow row whose title stands alone says its number in the facts.
         let titled = row.title.as_deref().is_some_and(|title| !title.is_empty());
@@ -2338,8 +2417,16 @@ impl Page {
         } else {
             sub.clone()
         };
-        line.sub.set_label(&shown);
-        line.sub.set_visible(!shown.is_empty());
+        let relabel = || {
+            line.sub.set_label(&shown);
+            line.sub.set_visible(!shown.is_empty());
+            line.sub_veil.set_visible(!shown.is_empty());
+        };
+        if lifts && line.sub.is_mapped() && line.sub.label() != shown {
+            motion::ghost(&line.sub_veil, &line.sub, true, relabel);
+        } else {
+            relabel();
+        }
         line.bar.set_fraction(row.watched);
         line.bar.set_visible(part_way);
 

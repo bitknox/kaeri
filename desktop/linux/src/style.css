@@ -48,6 +48,7 @@
 .haze { color: var(--haze); }
 .state { color: var(--water); }
 .state-dot { background: var(--water); border-radius: 999px; min-width: 8px; min-height: 8px; }
+.state-dot.long-ago { background: var(--haze); }
 
 /* A language's flag in the picker: corners 2 and a hairline in the faint rule, for white flags. */
 .language-flag { border-radius: 2px; }

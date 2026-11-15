@@ -921,18 +921,23 @@ mod tests {
             std::fs::write(dir.path().join("prepared.cbz"), vec![7_u8; 512 * 1024]).unwrap();
             std::fs::create_dir(dir.path().join("folder")).unwrap();
             let module = module_path!().split_once("::").map_or("", |(_, rest)| rest);
-            // Its output comes back through pipes: the cap holds for every file the child writes,
-            // so an inherited stdout that is a log file past 64 KiB would fail its own report.
-            let child = std::process::Command::new(std::env::current_exe().unwrap())
-                .args(["--exact", &format!("{module}::{NAME}"), "--test-threads=1"])
+            // Through pipes: the cap holds for every file the child writes, so a log file past
+            // 64 KiB as its output would fail the child's own report.
+            let out = std::process::Command::new(std::env::current_exe().unwrap())
+                .args([
+                    "--exact",
+                    &format!("{module}::{NAME}"),
+                    "--test-threads=1",
+                    "--nocapture",
+                ])
                 .env(CHILD, dir.path())
                 .output()
                 .unwrap();
             assert!(
-                child.status.success(),
-                "the capped save left something behind: {}{}",
-                String::from_utf8_lossy(&child.stdout),
-                String::from_utf8_lossy(&child.stderr)
+                out.status.success(),
+                "the capped save left something behind:\n{}{}",
+                String::from_utf8_lossy(&out.stdout),
+                String::from_utf8_lossy(&out.stderr)
             );
             return;
         };
