@@ -1330,15 +1330,21 @@ fn decode_detail(data: &serde_json::Value) -> Result<Media> {
     // does not.
     // Only when asked: an answer without the root says nothing of them, which is not the same
     // as nobody.
-    media.following = data.get("following").filter(|f| !f.is_null()).map(|following| {
-        following["mediaList"]
-            .as_array()
-            .into_iter()
-            .flatten()
-            .filter_map(|row| serde_json::from_value::<model::Follower>(row.clone()).ok())
-            .filter(|entry| !entry.private && !entry.user.name.is_empty())
-            .take(query::FOLLOWING_LIMIT as usize)
-            .collect()
+    media.following = data.get("following").filter(|f| !f.is_null()).and_then(|following| {
+        // AniList counts the viewer among the people they follow. Without their id the viewer's
+        // own entry cannot be told apart, so the people are not known either.
+        let viewer = data["Viewer"]["id"].as_u64().and_then(|id| u32::try_from(id).ok())?;
+        Some(
+            following["mediaList"]
+                .as_array()
+                .into_iter()
+                .flatten()
+                .filter_map(|row| serde_json::from_value::<model::Follower>(row.clone()).ok())
+                .filter(|entry| !entry.private && !entry.user.name.is_empty())
+                .filter(|entry| entry.user.id.is_some_and(|id| id != viewer))
+                .take(query::FOLLOWING_LIMIT as usize)
+                .collect(),
+        )
     });
     Ok(media)
 }
@@ -1568,6 +1574,44 @@ mod tests {
             decode_detail(&serde_json::json!({"Media": null})),
             Err(AniListError::NotFound)
         ));
+    }
+
+    #[test]
+    fn the_viewer_is_never_among_the_people_they_follow() {
+        // AniList's `isFollowing` answers the viewer's own entry beside the people they follow.
+        let person = |id: u32, name: &str| {
+            serde_json::json!({
+                "status": "CURRENT", "progress": 3, "private": false,
+                "user": {"id": id, "name": name, "avatar": {"medium": null}}
+            })
+        };
+        let data = serde_json::json!({
+            "Media": {"id": 1},
+            "following": {"mediaList": [
+                person(5150, "fixture-viewer"),
+                person(71, "Mika"),
+                person(72, "Tomo"),
+            ]},
+            "Viewer": {"id": 5150}
+        });
+        let following = decode_detail(&data).unwrap().following.unwrap();
+        let names: Vec<_> = following.iter().map(|f| f.user.name.as_str()).collect();
+        assert_eq!(names, ["Mika", "Tomo"]);
+
+        // Without the viewer's id their entry cannot be told apart: nobody is known.
+        let mut unknown = data.clone();
+        unknown["Viewer"] = serde_json::Value::Null;
+        assert_eq!(decode_detail(&unknown).unwrap().following, None);
+
+        // Ten shown of the eleven asked, when the viewer is not among them.
+        let eleven: Vec<_> = (0..11).map(|n| person(100 + n, &format!("P{n}"))).collect();
+        let full = serde_json::json!({
+            "Media": {"id": 1},
+            "following": {"mediaList": eleven},
+            "Viewer": {"id": 5150}
+        });
+        let shown = decode_detail(&full).unwrap().following.unwrap();
+        assert_eq!(shown.len(), query::FOLLOWING_LIMIT as usize);
     }
 
     #[test]

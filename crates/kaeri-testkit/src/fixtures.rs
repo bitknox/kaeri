@@ -698,10 +698,13 @@ pub fn books() -> Vec<serde_json::Value> {
 /// [`FINISHED`], so a page shows five and Show all 10, and five on [`AIRING`], so all of them
 /// show. Every name is made up. Each has a picture under [`ART_HOST`]'s `avatar/` but SannaQ,
 /// who has none, so a front end draws the first letter. Nobody follows any other title.
+///
+/// The viewer's own entry comes first on [`FINISHED`], as AniList answers it, and never shows.
 pub fn following(id: AnilistId) -> Vec<Value> {
     use crate::following_entry as entry;
     let people = match id {
         FINISHED => vec![
+            crate::viewer_following_entry("CURRENT", 9),
             entry("Ines", "CURRENT", Some(80), 8, false),
             entry("Lumi", "CURRENT", Some(70), 8, false),
             entry("Rowanpaper", "COMPLETED", Some(90), 12, false),

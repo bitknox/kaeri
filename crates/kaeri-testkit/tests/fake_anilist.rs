@@ -7,7 +7,7 @@ use kaeri_testkit::{
     fixtures::{
         self, AIRING, AIRING_NO_MAL, FINISHED, FIXTURE_NOW, MISSING, MOVIE, ONA, SEQUEL,
     },
-    following_entry,
+    following_entry, viewer_following_entry,
 };
 
 use std::time::Duration;
@@ -228,6 +228,60 @@ async fn signed_in_the_people_followed_ride_the_same_request() {
     // Kept with the cached page, for offline, and only the ones shown.
     let cached = kit.store.cached_media(FINISHED).unwrap().unwrap().0;
     assert!(cached.contains("Mika") && !cached.contains("Hidden"), "{cached}");
+}
+
+#[tokio::test]
+async fn the_viewer_is_never_among_the_people_they_follow() {
+    let kit = MetaKit::start().await;
+    kit.meta.anilist().set_token(Some("tok".into()));
+    // AniList's `isFollowing` answers the viewer's own entry too, here the newest.
+    kit.server.set_following(
+        FINISHED,
+        [
+            viewer_following_entry("CURRENT", 9),
+            following_entry("Mika", "COMPLETED", Some(90), 12, false),
+            following_entry("Tomo", "CURRENT", None, 7, false),
+        ],
+    );
+    assert_eq!(followed(&kit.meta.media(FINISHED).await.unwrap()), Some(vec!["Mika", "Tomo"]));
+    let cached = kit.store.cached_media(FINISHED).unwrap().unwrap().0;
+    assert!(!cached.contains("fixture-viewer"), "nor kept for offline: {cached}");
+
+    // Told apart by the id AniList answers for the token, not by a name or a kept id.
+    let mika = following_entry("Mika", "COMPLETED", Some(90), 12, false);
+    kit.server.answer_as_viewer(mika["user"]["id"].as_u64().unwrap());
+    kit.server.set_following(AIRING, [mika, viewer_following_entry("CURRENT", 2)]);
+    assert_eq!(followed(&kit.meta.media(AIRING).await.unwrap()), Some(vec!["fixture-viewer"]));
+}
+
+#[tokio::test]
+async fn a_page_cached_before_the_viewer_was_told_apart_shows_nobody_offline() {
+    let kit = MetaKit::start().await;
+    kit.meta.anilist().set_token(Some("tok".into()));
+    kit.server.set_following(
+        FINISHED,
+        [
+            viewer_following_entry("CURRENT", 9),
+            following_entry("Mika", "CURRENT", None, 4, false),
+        ],
+    );
+    kit.meta.media(FINISHED).await.unwrap();
+    // The page as an earlier build kept it: the people without their ids, the viewer among them.
+    let (payload, _) = kit.store.cached_media(FINISHED).unwrap().unwrap();
+    let mut page: serde_json::Value = serde_json::from_str(&payload).unwrap();
+    page["following"] = serde_json::json!([
+        { "status": "CURRENT", "progress": 9, "private": false,
+          "user": { "name": "fixture-viewer", "avatar": { "medium": null } } },
+        { "status": "CURRENT", "progress": 4, "private": false,
+          "user": { "name": "Mika", "avatar": { "medium": null } } },
+    ]);
+    kit.store.cache_media(FINISHED, &page.to_string(), kaeri_store::now()).unwrap();
+
+    // Another launch, with AniList out of reach: the cache answers, and knows nobody.
+    kit.server.fail_operation(Operation::Detail, Failure::Status(500));
+    let later = kit.server.meta(&kit.store);
+    later.anilist().set_token(Some("tok".into()));
+    assert_eq!(followed(&later.media(FINISHED).await.unwrap()), None);
 }
 
 #[tokio::test]
