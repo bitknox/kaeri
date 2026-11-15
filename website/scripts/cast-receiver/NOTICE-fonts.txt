@@ -1,0 +1,6 @@
+Fonts on Kaeri's Cast receiver, served from kaeri.app:
+
+  Inter (variable), by The Inter Project Authors, SIL Open Font License 1.1,
+  from the npm package @fontsource-variable/inter. Licence: LICENSE-inter.txt.
+  Zen Kaku Gothic New, by The Zen Project Authors, SIL Open Font License 1.1,
+  from the npm package @fontsource/zen-kaku-gothic-new. Licence: LICENSE-zen-kaku-gothic-new.txt.

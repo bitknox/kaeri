@@ -13,3 +13,8 @@
 /party/*
   Cache-Control: no-store
   Referrer-Policy: no-referrer
+
+# The Cast receiver: the TV checks for a newer page, its strings and its scripts on every launch.
+/cast/receiver/*
+  Cache-Control: no-cache
+  X-Robots-Tag: noindex
