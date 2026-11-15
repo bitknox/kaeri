@@ -125,6 +125,10 @@ struct CastController: View {
         let cast = store.tv.cast
         let shown = CastShown(cast)
         VStack(spacing: 0) {
+            if sizeClass != .regular {
+                // A drag down closes it, as the grabber says.
+                Capsule().fill(Palette.rule).frame(width: 36, height: 5).padding(.top, 6).accessibilityHidden(true)
+            }
             header
             if sizeClass == .regular {
                 HStack(alignment: .top, spacing: 32) {
@@ -154,6 +158,7 @@ struct CastController: View {
                     .padding(.bottom, 20)
                 }
                 .scrollBounceBehavior(.basedOnSize)
+                .scrollIndicators(.hidden)
             }
         }
         .background(Palette.ground.ignoresSafeArea())

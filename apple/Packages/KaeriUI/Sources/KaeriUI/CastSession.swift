@@ -432,7 +432,7 @@ struct CastGroupBox<Content: View>: View {
                 }
             }
         }
-        .background(CastMetrics.touch ? Palette.ground.opacity(0.5) : Palette.ground.opacity(0.6), in: .rect(cornerRadius: CastMetrics.touch ? 16 : 8))
+        .background(CastMetrics.touch ? Palette.raised : Palette.ground.opacity(0.6), in: .rect(cornerRadius: CastMetrics.touch ? 26 : 8))
     }
 }
 
