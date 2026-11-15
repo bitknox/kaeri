@@ -12,7 +12,7 @@ path = "src/main.rs"
 
 [dependencies]
 kaeri-core.workspace = true
-kaeri-engine = { workspace = true, features = ["desktop"] }
+kaeri-engine = { workspace = true, features = ["desktop", "dev-receiver"] }
 kaeri-meta.workspace = true
 kaeri-model.workspace = true
 kaeri-net.workspace = true

@@ -35,6 +35,8 @@ rand = "0.10"
 
 [dev-dependencies]
 tempfile = "3"
+# The cast_dev example: keys in raw mode and the cast's log on stderr.
+crossterm.workspace = true
 tracing-subscriber.workspace = true
 tokio = { workspace = true, features = ["test-util"] }
 
