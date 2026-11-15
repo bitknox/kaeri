@@ -149,7 +149,7 @@ impl App {
     /// the next episode happens only on the way to it.
     fn waits_on_auto_next(&self, key: SettingKey) -> bool {
         key == SettingKey::PreloadMetered
-            && self.shown_value(SettingKey::AutoNext) == Some("off")
+            && self.shown_value(SettingKey::AutoNext) == Some("off") // i18n-skip: a raw value
     }
 
     /// A row's raw value as the engine last sent it.
@@ -204,10 +204,10 @@ impl App {
             S::PreloadMetered => {
                 let mut note = t::settings_preload_detail_metered();
                 if self.shown_value(S::Torrents) == Some("on") {
-                    note = format!("{note} {}", t::settings_preload_torrents());
+                    note = format!("{note} {}", t::settings_preload_torrents()); // i18n-skip: joins two lines
                 }
                 if self.waits_on_auto_next(key) {
-                    note = format!("{}. {note}", t::settings_preload_a11y_dimmed());
+                    note = format!("{}. {note}", t::settings_preload_a11y_dimmed()); // i18n-skip: joins two lines
                 }
                 note
             }

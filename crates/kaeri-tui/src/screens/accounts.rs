@@ -234,7 +234,7 @@ pub(super) fn render_accounts(buf: &mut Buffer, app: &App, area: Rect) {
             mark_selected(buf, app, area.left(), y, focused);
         }
         let check = if app.shows_following() { "[x]" } else { "[ ]" };
-        let label = format!("{check} {}", t::settings_anilist_following());
+        let label = format!("{check} {}", t::settings_anilist_following()); // i18n-skip: joins a box and its label
         buf.set_string(
             area.left() + 2,
             y,

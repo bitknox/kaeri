@@ -1775,6 +1775,7 @@ mod tests {
             .iter()
             .map(|event| match event {
                 Event::Settings(_) => "settings",
+                Event::Private(false) => "private",
                 Event::Autoplay(view) if view.trailers => "autoplay",
                 Event::Stores(_) => "stores",
                 Event::Providers(_) => "providers",
@@ -1785,7 +1786,11 @@ mod tests {
             .collect();
         // Kitsu is the one tracker the defaults build.
         // Trailers may start until the front end says otherwise: Always is the default.
-        assert_eq!(launch, ["settings", "autoplay", "stores", "providers", "demo", "sync"]);
+        // Private mode is never kept, so every launch says it is off.
+        assert_eq!(
+            launch,
+            ["settings", "private", "autoplay", "stores", "providers", "demo", "sync"]
+        );
         assert!(events.launch().await.is_empty(), "taken once");
     }
 
