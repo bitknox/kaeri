@@ -97,8 +97,9 @@ public static class Synopsis
         long? aired = row.AirsAt is { } at && at <= now ? at : null;
         string? when = null;
         string head;
+        // An aired episode no source lists says when it aired and that the sources don't have it yet.
         if (row.Unsourced)
-            head = T.EpisodeUnsourced;
+            head = MissingWords.RowLine(row, now, date);
         else if (row.DurationSecs is { } secs)
         {
             // The episode playing next keeps its air date beside the time left.

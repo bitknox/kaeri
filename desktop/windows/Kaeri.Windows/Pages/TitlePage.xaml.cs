@@ -207,8 +207,12 @@ public sealed partial class EpisodeItem : INotifyPropertyChanged
         if (row == Row)
             return;
         Row = row;
-        Changed(nameof(Watched), nameof(Completed), nameof(Dim), nameof(PartWay), nameof(Playable), nameof(WatchedAction), nameof(Line), nameof(RowFacts), nameof(Name));
+        Changed(nameof(Watched), nameof(Completed), nameof(Dim), nameof(PartWay), nameof(Playable), nameof(WatchedAction), nameof(Line), nameof(RowFacts), nameof(Name),
+            nameof(CanDownload), nameof(DownloadOpacity));
     }
+
+    /// <summary>The minute turned: an unsourced row's "Aired 25 min ago" reads again, with no motion.</summary>
+    internal void Tick() => Changed(nameof(Line), nameof(RowFacts), nameof(Name));
 
     internal void Inherit(EpisodeItem was)
     {
@@ -530,6 +534,15 @@ public sealed partial class TitlePage : Page, IPageKeys
         // episode 9 through protection, synopsis-ranges opens the range menu.
         if (ctx.Options.Show is { } synopsisShot && synopsisShot.StartsWith("synopsis", StringComparison.Ordinal) && ctx.Options.Title == id)
             _ = Task.Delay(3500).ContinueWith(_ => DispatcherQueue.TryEnqueue(() => StageSynopsis(synopsisShot)));
+        // --show=missing-check, missing-found (with --scene=missing-episode): Check again pressed 5 s
+        // after the page opens, which comes back empty after Checking; missing-found presses it again
+        // at 9 s, and the third listing finds the episode.
+        if (ctx.Options.Show is "missing-check" or "missing-found" && ctx.Options.Title == id)
+        {
+            Later(5, () => OnCheckAgain(CheckAgain, new RoutedEventArgs()));
+            if (ctx.Options.Show == "missing-found")
+                Later(9, () => OnCheckAgain(CheckAgain, new RoutedEventArgs()));
+        }
         // --show=source-menu: the More menu open, for a screenshot.
         if (ctx.Options.Show == "source-menu" && ctx.Options.Title == id)
             _ = Task.Delay(1500).ContinueWith(_ => DispatcherQueue.TryEnqueue(() => MoreButton.Flyout.ShowAt(MoreButton)));
@@ -577,6 +590,7 @@ public sealed partial class TitlePage : Page, IPageKeys
             detailsKey = null;
             availKey = null;
             shownSynopsis = null;
+            ForgetMissing();
             // The new season's words wait 600 ms over what stood, then plates; its rows, when
             // not yet known, are plates at once, so no row of the last season is clicked for this one.
             if (ctx.Known.Entry(id) is null)
@@ -795,10 +809,22 @@ public sealed partial class TitlePage : Page, IPageKeys
                     ShowAction(Current()!);
                     break;
                 case Event.Episodes ep when ep.Id == id:
+                    // A check under way shows its table with its answer, so the row and the button change together.
+                    if (checking)
+                    {
+                        tableHeld = true;
+                        break;
+                    }
                     ShowEpisodes();
                     // The button plays the first episode after the next that a source lists.
                     if (ctx.Known.Entry(id) is { } known)
                         ShowAction(known);
+                    break;
+                case Event.EpisodeChecked check when check.V1.Id == id:
+                    Answered(check.V1);
+                    break;
+                case Event.Connectivity:
+                    MissingConnectivity();
                     break;
                 case Event.Downloads d:
                     ShowDownloads(d.V1);
@@ -1021,6 +1047,7 @@ public sealed partial class TitlePage : Page, IPageKeys
             WaitingLine.Visibility = Visibility.Visible;
             PartyItem.IsEnabled = false;
             TvAction.Visibility = Visibility.Collapsed;
+            HideMissing();
             return;
         }
         if (ctx.Known.Episodes.ContainsKey(id))
@@ -1049,16 +1076,19 @@ public sealed partial class TitlePage : Page, IPageKeys
                 Motion.Hide(TvAction);
         }
         // Case B: it does not play here, so the amber action opens the service that has it.
-        if (Avail is { Case: AvailabilityCase.OnService, Main: { } main } && action is not { Playable: true })
+        var onService = Avail is { Case: AvailabilityCase.OnService, Main: not null } && action is not { Playable: true };
+        if (onService && Avail is { Main: { } service })
         {
-            if (PrimaryAction.Content is not StackPanel { Tag: string said } || said != main.Service)
-                PrimaryAction.Content = ExternalLabel(T.TitleWatchOn(main.Service), main.Service);
+            if (PrimaryAction.Content is not StackPanel { Tag: string said } || said != service.Service)
+                PrimaryAction.Content = ExternalLabel(T.TitleWatchOn(service.Service), service.Service);
             PrimaryAction.Visibility = Visibility.Visible;
             WaitingLine.Visibility = Visibility.Collapsed;
-            Microsoft.UI.Xaml.Automation.AutomationProperties.SetName(PrimaryAction, T.TitleWatchOn(main.Service));
+            Microsoft.UI.Xaml.Automation.AutomationProperties.SetName(PrimaryAction, T.TitleWatchOn(service.Service));
         }
         else
             PrimaryAction.ClearValue(Microsoft.UI.Xaml.Automation.AutomationProperties.NameProperty);
+        // An aired episode no source lists: Check again and the one before it, and the status under them.
+        ShowMissing(onService ? null : MissingNow(entry));
         ShowAvailability();
     }
 
@@ -1221,9 +1251,16 @@ public sealed partial class TitlePage : Page, IPageKeys
         });
     }
 
-    /// <summary>Whether two rows of one episode differ only in how far it was watched.</summary>
+    /// <summary>
+    /// Whether two rows of one episode differ only in how far it was watched, or in which source
+    /// lists it: an episode a source now has lifts where it stands.
+    /// </summary>
     static bool OnlyProgress(EpisodeRow was, EpisodeRow now) =>
-        now with { Watched = was.Watched, Completed = was.Completed, SpoilerAhead = was.SpoilerAhead, PastProgress = was.PastProgress } == was;
+        now with
+        {
+            Watched = was.Watched, Completed = was.Completed, SpoilerAhead = was.SpoilerAhead, PastProgress = was.PastProgress,
+            Unsourced = was.Unsourced, Source = was.Source, DurationSecs = was.DurationSecs,
+        } == was;
 
     /// <summary>The shown rows' numbers and places, and what decides how they are laid: the list is rebuilt only when it changes.</summary>
     string? shownShape;
