@@ -118,7 +118,6 @@ tui-reader-setting-fit = Sığdır
 tui-reader-setting-page-layout = Sayfa düzeni
 tui-reader-setting-spreads = Geniş sayfalar
 tui-reader-setting-crop = Kenarları kırp
-tui-reader-setting-strip-width = Şerit genişliği
 tui-reader-setting-text-width = Metin genişliği
 tui-reader-setting-line-spacing = Satır aralığı
 tui-reader-setting-justify = İki yana yasla

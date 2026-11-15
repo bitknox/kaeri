@@ -4944,9 +4944,6 @@ tui-reader-setting-spreads = Páginas largas
 # A row of the reader settings: white borders cut from the pages.
 tui-reader-setting-crop = Cortar bordas
 
-# A row of the reader settings: how wide a webtoon strip runs.
-tui-reader-setting-strip-width = Largura da tira
-
 # A row of the reader settings: how many columns a light novel's lines run to.
 tui-reader-setting-text-width = Largura do texto
 

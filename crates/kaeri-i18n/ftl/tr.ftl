@@ -4883,9 +4883,6 @@ tui-reader-setting-spreads = Geniş sayfalar
 # A row of the reader settings: white borders cut from the pages.
 tui-reader-setting-crop = Kenarları kırp
 
-# A row of the reader settings: how wide a webtoon strip runs.
-tui-reader-setting-strip-width = Şerit genişliği
-
 # A row of the reader settings: how many columns a light novel's lines run to.
 tui-reader-setting-text-width = Metin genişliği
 

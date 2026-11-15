@@ -117,7 +117,6 @@ tui-reader-setting-fit = Paskan
 tui-reader-setting-page-layout = Tata letak halaman
 tui-reader-setting-spreads = Halaman lebar
 tui-reader-setting-crop = Pangkas tepi
-tui-reader-setting-strip-width = Lebar strip
 tui-reader-setting-text-width = Lebar teks
 tui-reader-setting-line-spacing = Spasi baris
 tui-reader-setting-justify = Rata kiri-kanan

@@ -4822,9 +4822,6 @@ tui-reader-setting-spreads = 見開きページ
 # A row of the reader settings: white borders cut from the pages.
 tui-reader-setting-crop = 余白を切り取る
 
-# A row of the reader settings: how wide a webtoon strip runs.
-tui-reader-setting-strip-width = 縦スクロールの幅
-
 # A row of the reader settings: how many columns a light novel's lines run to.
 tui-reader-setting-text-width = 本文の幅
 

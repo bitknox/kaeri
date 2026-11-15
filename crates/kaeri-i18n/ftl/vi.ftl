@@ -4822,9 +4822,6 @@ tui-reader-setting-spreads = Trang rộng
 # A row of the reader settings: white borders cut from the pages.
 tui-reader-setting-crop = Cắt viền trắng
 
-# A row of the reader settings: how wide a webtoon strip runs.
-tui-reader-setting-strip-width = Độ rộng dải
-
 # A row of the reader settings: how many columns a light novel's lines run to.
 tui-reader-setting-text-width = Độ rộng văn bản
 

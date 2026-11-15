@@ -117,7 +117,6 @@ tui-reader-setting-fit = Vừa khít
 tui-reader-setting-page-layout = Bố cục trang
 tui-reader-setting-spreads = Trang rộng
 tui-reader-setting-crop = Cắt viền trắng
-tui-reader-setting-strip-width = Độ rộng dải
 tui-reader-setting-text-width = Độ rộng văn bản
 tui-reader-setting-line-spacing = Giãn dòng
 tui-reader-setting-justify = Căn đều hai bên

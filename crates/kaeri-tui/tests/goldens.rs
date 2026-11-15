@@ -457,8 +457,7 @@ use reader_scenes::{
     reader_manga_settings, reader_novel, reader_novel_help, reader_novel_settings,
     reader_novel_small, reader_one_page, reader_opening, reader_page_failed,
     reader_page_loading, reader_spread_bare, reader_strip, reader_strip_gap, reader_strip_help,
-    reader_two_pages,
-    reader_two_pages_blocks, reader_two_pages_wide, reader_zoom,
+    reader_two_pages, reader_two_pages_blocks, reader_two_pages_wide, reader_zoom,
 };
 
 macro_rules! scenarios {

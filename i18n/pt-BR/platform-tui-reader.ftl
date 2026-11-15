@@ -119,7 +119,6 @@ tui-reader-setting-fit = Ajuste
 tui-reader-setting-page-layout = Layout da página
 tui-reader-setting-spreads = Páginas largas
 tui-reader-setting-crop = Cortar bordas
-tui-reader-setting-strip-width = Largura da tira
 tui-reader-setting-text-width = Largura do texto
 tui-reader-setting-line-spacing = Espaço entre linhas
 tui-reader-setting-justify = Justificar texto

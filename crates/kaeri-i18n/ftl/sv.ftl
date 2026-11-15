@@ -4883,9 +4883,6 @@ tui-reader-setting-spreads = Breda sidor
 # A row of the reader settings: white borders cut from the pages.
 tui-reader-setting-crop = Beskär kanter
 
-# A row of the reader settings: how wide a webtoon strip runs.
-tui-reader-setting-strip-width = Remsans bredd
-
 # A row of the reader settings: how many columns a light novel's lines run to.
 tui-reader-setting-text-width = Textbredd
 

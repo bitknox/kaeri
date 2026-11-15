@@ -5090,9 +5090,6 @@ tui-reader-setting-spreads = Spreads
 # A row of the reader settings: white borders cut from the pages.
 tui-reader-setting-crop = Crop borders
 
-# A row of the reader settings: how wide a webtoon strip runs.
-tui-reader-setting-strip-width = Strip width
-
 # A row of the reader settings: how many columns a light novel's lines run to.
 tui-reader-setting-text-width = Text width
 

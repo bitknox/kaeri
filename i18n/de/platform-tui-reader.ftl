@@ -118,7 +118,6 @@ tui-reader-setting-fit = Anpassung
 tui-reader-setting-page-layout = Seitenlayout
 tui-reader-setting-spreads = Breite Seiten
 tui-reader-setting-crop = Ränder zuschneiden
-tui-reader-setting-strip-width = Streifenbreite
 tui-reader-setting-text-width = Textbreite
 tui-reader-setting-line-spacing = Zeilenabstand
 tui-reader-setting-justify = Blocksatz

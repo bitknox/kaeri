@@ -118,7 +118,6 @@ tui-reader-setting-fit = Anpassa
 tui-reader-setting-page-layout = Sidlayout
 tui-reader-setting-spreads = Breda sidor
 tui-reader-setting-crop = Beskär kanter
-tui-reader-setting-strip-width = Remsans bredd
 tui-reader-setting-text-width = Textbredd
 tui-reader-setting-line-spacing = Radavstånd
 tui-reader-setting-justify = Marginaljustera

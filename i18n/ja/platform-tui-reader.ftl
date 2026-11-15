@@ -117,7 +117,6 @@ tui-reader-setting-fit = フィット
 tui-reader-setting-page-layout = ページレイアウト
 tui-reader-setting-spreads = 見開きページ
 tui-reader-setting-crop = 余白を切り取る
-tui-reader-setting-strip-width = 縦スクロールの幅
 tui-reader-setting-text-width = 本文の幅
 tui-reader-setting-line-spacing = 行間
 tui-reader-setting-justify = 両端揃え

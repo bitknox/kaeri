@@ -120,7 +120,6 @@ tui-reader-setting-fit = Масштаб
 tui-reader-setting-page-layout = Расположение страниц
 tui-reader-setting-spreads = Широкие страницы
 tui-reader-setting-crop = Обрезать поля
-tui-reader-setting-strip-width = Ширина ленты
 tui-reader-setting-text-width = Ширина текста
 tui-reader-setting-line-spacing = Межстрочный интервал
 tui-reader-setting-justify = По ширине

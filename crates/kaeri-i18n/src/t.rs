@@ -8055,11 +8055,6 @@ pub fn tui_reader_setting_crop() -> String {
     text("tui-reader-setting-crop", &[])
 }
 
-/// A row of the reader settings: how wide a webtoon strip runs.
-pub fn tui_reader_setting_strip_width() -> String {
-    text("tui-reader-setting-strip-width", &[])
-}
-
 /// A row of the reader settings: how many columns a light novel's lines run to.
 pub fn tui_reader_setting_text_width() -> String {
     text("tui-reader-setting-text-width", &[])
