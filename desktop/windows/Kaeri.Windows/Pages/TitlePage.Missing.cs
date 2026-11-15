@@ -74,7 +74,7 @@ public sealed partial class TitlePage
     {
         if (missing is not { } m)
             return;
-        var status = MissingWords.Status(m, Now(), ctx.Known.MissingChecks.Asked(id, m.Episode), ctx.Known.Offline, at => Synopsis.Date(at));
+        var status = MissingWords.Status(m, Now(), ctx.Known.MissingChecks.Asked(id, m.Episode), ctx.Known.Offline, at => global::Kaeri.App.Synopsis.Date(at));
         var head = status.Head;
         var tail = head.Length > 0 ? " " + status.Tail : status.Tail;
         void Apply()
@@ -106,7 +106,7 @@ public sealed partial class TitlePage
     /// </summary>
     void Found(MissingEpisode was)
     {
-        var focused = FocusManager.GetFocusedElement(XamlRoot) is { } f && (f == CheckAgain || f == PlayPrevious);
+        var focused = FocusManager.GetFocusedElement(XamlRoot) is Button f && (f == CheckAgain || f == PlayPrevious);
         var from = Lead.ActualWidth;
         PrimaryAction.Opacity = 0;
         PrimaryAction.Measure(new global::Windows.Foundation.Size(double.PositiveInfinity, double.PositiveInfinity));
