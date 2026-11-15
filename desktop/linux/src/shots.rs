@@ -1612,6 +1612,14 @@ fn offer_update(shell: &Rc<Shell>) {
     })]);
 }
 
+/// Turn a switch setting on or off, as its row would.
+fn set_switch(shell: &Rc<Shell>, key: kaeri_model::settings::SettingKey, on: bool) {
+    shell
+        .ctx
+        .hub
+        .send(Command::SetSetting { key, value: kaeri_core::settings::SettingValue::Bool(on) });
+}
+
 /// Set upscaling, which the fixture scene keeps off for the player shots.
 fn upscaling(shell: &Rc<Shell>, mode: &str) {
     shell.ctx.hub.send(Command::SetSetting {
@@ -4512,12 +4520,4 @@ mod tests {
         assert_eq!(named(None).len(), ALL.len());
         assert_eq!(named(Some("home,party")).len(), PARTY.len() + 1);
     }
-}
-
-/// Turn a switch setting on or off, as its row would.
-fn set_switch(shell: &Rc<Shell>, key: kaeri_model::settings::SettingKey, on: bool) {
-    shell
-        .ctx
-        .hub
-        .send(Command::SetSetting { key, value: kaeri_core::settings::SettingValue::Bool(on) });
 }
