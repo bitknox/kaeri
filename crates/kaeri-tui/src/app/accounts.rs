@@ -4,6 +4,7 @@ use kaeri_i18n::t;
 use kaeri_model::{
     command::Command,
     present::tracker_name,
+    settings::SettingKey,
     stores::Secret,
     sync::{ConflictRow, SyncState},
 };
@@ -47,8 +48,28 @@ impl App {
     /// The same decision the Accounts overlay made, kept in one place so the screen and the overlay
     /// cannot disagree about what Enter does.
     pub(super) fn toggle_account(&mut self) -> Option<Command> {
+        // The row after the trackers is Show people you follow, while AniList is signed in.
+        if self.cursors.accounts.selected == self.sync.len() && self.following_row() {
+            return Some(Command::StepSetting { key: SettingKey::ShowFollowing, delta: 1 });
+        }
         let tracker = self.sync.get(self.cursors.accounts.selected)?.clone();
         self.account_action(tracker)
+    }
+
+    /// Whether Accounts has the Show people you follow row: only while AniList is signed in, as
+    /// the switch belongs to that account.
+    pub(crate) fn following_row(&self) -> bool {
+        self.sync.iter().any(|s| s.tracker == "anilist" && s.connected && !s.needs_reauth)
+    }
+
+    /// Whether this device shows the people the viewer follows on AniList: the switch, on until
+    /// it is turned off.
+    pub(crate) fn shows_following(&self) -> bool {
+        self.settings
+            .native_rows
+            .iter()
+            .find(|row| row.key == SettingKey::ShowFollowing)
+            .is_none_or(|row| row.value == "on")
     }
 
     /// What Enter means for one tracker row: out if in, in if out — and for Kitsu, "in"
@@ -441,11 +462,29 @@ mod tests {
             a.handle(Action::Open, 10),
             Some(Command::Connect { tracker: "mal".into() })
         );
-        // Clamped at the last row rather than running off the end.
+        // Clamped at the last row rather than running off the end: Show people you follow,
+        // after the trackers while AniList is signed in, which Enter turns over.
         for _ in 0..10 {
             a.handle(Action::Down, 10);
         }
-        assert_eq!(a.cursor(), 1);
+        assert_eq!(a.cursor(), 2);
+        assert_eq!(
+            a.handle(Action::Open, 10),
+            Some(Command::StepSetting { key: SettingKey::ShowFollowing, delta: 1 })
+        );
+    }
+
+    #[test]
+    fn the_switch_for_people_followed_is_a_row_only_while_anilist_is_signed_in() {
+        let mut a = app();
+        a.apply(Event::Sync(Box::new(SyncState::new("anilist"))));
+        a.handle(Action::ShowAccounts, 10);
+        a.nav.focus_stage();
+        for _ in 0..10 {
+            a.handle(Action::Down, 10);
+        }
+        assert_eq!(a.cursor(), 0, "signed out, AniList's row is the only one");
+        assert!(a.shows_following(), "on until it is turned off");
     }
 
     #[test]

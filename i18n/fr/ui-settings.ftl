@@ -223,3 +223,5 @@ settings-subs-reset = Réinitialiser le style des sous-titres
 settings-opds-feed = Partager sur ce réseau
 settings-opds-password = Mot de passe du flux
 settings-opds-port = Port du flux
+settings-anilist-following = Afficher les personnes que vous suivez
+settings-anilist-following-footer = Indique où en sont les personnes que vous suivez sur AniList dans une série, sur sa page et ses épisodes. Qui peut voir votre propre liste se règle sur AniList.

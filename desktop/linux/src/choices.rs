@@ -250,6 +250,7 @@ mod tests {
                 past_progress: false,
                 spoiler_ahead: false,
                 synopsis_pending: false,
+                followed: Vec::new(),
                 unsourced: unsourced.contains(&n),
                 source: None,
             })

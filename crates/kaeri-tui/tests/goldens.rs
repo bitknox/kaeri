@@ -1621,6 +1621,7 @@ fn episode(number: u32, title: &str) -> EpisodeRow {
         past_progress: false,
         spoiler_ahead: false,
         synopsis_pending: false,
+        followed: Vec::new(),
     }
 }
 
@@ -2581,6 +2582,7 @@ fn episodes_from_anilist(s: &mut Screen) {
                 past_progress: false,
                 spoiler_ahead: false,
                 synopsis_pending: false,
+                followed: Vec::new(),
                 ..episode(n, &format!("Letter No. {n}"))
             };
             match n {

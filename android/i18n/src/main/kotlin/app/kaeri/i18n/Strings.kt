@@ -13600,6 +13600,14 @@ object Strings {
     fun settingsOpdsPort(context: Context): String =
         context.getString(R.string.settings_opds_port)
 
+    /** Switch under the AniList account, on by default, for this device only: whether title pages show the people followed on AniList. */
+    fun settingsAnilistFollowing(context: Context): String =
+        context.getString(R.string.settings_anilist_following)
+
+    /** Note under that switch. */
+    fun settingsAnilistFollowingFooter(context: Context): String =
+        context.getString(R.string.settings_anilist_following_footer)
+
     /** Label of the address field in the Add a server sheet. */
     fun bookServerAddress(context: Context): String =
         context.getString(R.string.book_server_address)
@@ -16270,6 +16278,34 @@ object Strings {
     /** Heading of the list of titles people who liked this one also liked. */
     fun moreLikeThis(context: Context): String =
         context.getString(R.string.more_like_this)
+
+    /** Button after the first five people followed, on wide screens. It shows the rest in place. */
+    fun followingShowAll(context: Context, count: Int): String =
+        context.getString(R.string.following_show_all, count)
+
+    /** Second line of the People you follow row on phones and the TV, with three or more people: two names, then how many more. The names come from AniList. */
+    fun followingNames(context: Context, first: String, second: String, more: Int): String =
+        context.resources.getQuantityString(R.plurals.following_names, more, first, second, more)
+
+    /** Second line of the People you follow row on phones and the TV, with two people. The names come from AniList. */
+    fun followingNamesTwo(context: Context, first: String, second: String): String =
+        context.getString(R.string.following_names_two, first, second)
+
+    /** After three pictures on an episode's mark, and after three names in the terminal: how many more people stopped there. */
+    fun followingMarkMore(context: Context, count: Int): String =
+        context.getString(R.string.following_mark_more, count)
+
+    /** Tooltip on an episode's mark, and the sentence a screen reader adds to the episode row: who stopped at this episode. The names are already joined. */
+    fun followingMarkSpoken(context: Context, names: String): String =
+        context.getString(R.string.following_mark_spoken, names)
+
+    /** What a screen reader says in place of a score such as 8/10 beside a person followed. */
+    fun followingScoreSpoken(context: Context, score: Int): String =
+        context.getString(R.string.following_score_spoken, score)
+
+    /** Hint of the People you follow row on phones and the TV, which opens the full list. */
+    fun followingOpenHelp(context: Context): String =
+        context.getString(R.string.following_open_help)
 
     /** Line of a followed person's list entry: their status and how far they are. Both are already worded. */
     fun moreFollowedProgress(context: Context, status: String, progress: String): String =

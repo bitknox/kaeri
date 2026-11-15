@@ -212,6 +212,14 @@ pub enum FfiScene {
     /// [`Self::Watching`] with three profiles: Alex, who is in use and whose data this is,
     /// Kim, and Sam, a kids profile. Kim's and Sam's start empty.
     Profiles,
+    /// [`Self::Watching`] with the people the viewer follows on AniList
+    /// ([`fixtures::following`]): ten on Stardust Wayfarer, whose page shows five and Show all
+    /// 10, four of them on episode 8 for a row of three pictures and a count, and five on the
+    /// airing title. Every other title has nobody, so its page leaves the section out.
+    Following,
+    /// [`Self::Following`] with AniList slow to answer a title page, after
+    /// [`FOLLOWING_SLOW_ANSWER`]: the placeholders show, then the people take their place.
+    FollowingSlow,
     /// Reading on, a first launch: Watch, read or both is asked on page 2 of the first run,
     /// nothing chosen.
     ReadingFirstRun,
@@ -360,6 +368,10 @@ pub fn testing_certificate_check() -> kaeri_model::servers::CertificateCheck {
 /// waits for an answer.
 pub const SLOW_ANSWER: std::time::Duration = std::time::Duration::from_millis(4_500);
 
+/// How long [`FfiScene::FollowingSlow`]'s fake AniList holds a title page: past the 600 ms after
+/// which the people's placeholders show, well within the time the client waits.
+pub const FOLLOWING_SLOW_ANSWER: std::time::Duration = std::time::Duration::from_millis(2_000);
+
 /// What Home asks AniList for beyond its queue's titles and their broadcasts: the season's
 /// lists, the genre shelf, recommendations and the season walk. [`FfiScene::Slow`] and
 /// [`FfiScene::Failed`] hold these up.
@@ -395,6 +407,8 @@ impl FfiScene {
                 | Self::SyncCloud
                 | Self::SyncTvPhoneSignIn
                 | Self::Profiles
+                | Self::Following
+                | Self::FollowingSlow
         )
     }
 
@@ -423,6 +437,8 @@ impl FfiScene {
                 | Self::SyncCloud
                 | Self::SyncTvPhoneSignIn
                 | Self::Profiles
+                | Self::Following
+                | Self::FollowingSlow
         )
     }
 
@@ -614,6 +630,14 @@ impl FfiEngine {
                 FfiScene::Failed => {
                     for operation in DISCOVERY {
                         server.fail_operation(operation, Failure::Status(500));
+                    }
+                }
+                FfiScene::Following | FfiScene::FollowingSlow => {
+                    for id in [fixtures::FINISHED, fixtures::AIRING] {
+                        server.set_following(id, fixtures::following(id));
+                    }
+                    if scene == FfiScene::FollowingSlow {
+                        server.answer_slowly(Operation::Detail, FOLLOWING_SLOW_ANSWER);
                     }
                 }
                 FfiScene::ReadingAnilistFailed => {
@@ -1117,6 +1141,8 @@ fn seed_scene(store: &Store, scene: &FfiScene, now: i64) {
         | FfiScene::SyncCloud
         | FfiScene::SyncTvPhoneSignIn
         | FfiScene::Profiles
+        | FfiScene::Following
+        | FfiScene::FollowingSlow
         | FfiScene::Browsing
         | FfiScene::LinkOpened => {
             // Oldest first, since each watch moves its title to the top.

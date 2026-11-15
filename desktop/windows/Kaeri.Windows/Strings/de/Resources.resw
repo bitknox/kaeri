@@ -8996,6 +8996,12 @@
   <data name="SettingsOpdsPort" xml:space="preserve">
     <value>Feed-Port</value>
   </data>
+  <data name="SettingsAnilistFollowing" xml:space="preserve">
+    <value>Personen anzeigen, denen du folgst</value>
+  </data>
+  <data name="SettingsAnilistFollowingFooter" xml:space="preserve">
+    <value>Zeigt bei einer Serie, auf ihrer Seite und bei ihren Folgen, wo Personen stehen, denen du auf AniList folgst. Wer deine eigene Liste sehen kann, legst du auf AniList fest.</value>
+  </data>
   <data name="BookServerAddress" xml:space="preserve">
     <value>Adresse</value>
   </data>
@@ -11053,6 +11059,30 @@
   </data>
   <data name="MoreLikeThis" xml:space="preserve">
     <value>Andere mögen auch</value>
+  </data>
+  <data name="FollowingShowAll" xml:space="preserve">
+    <value>Alle {count} zeigen</value>
+  </data>
+  <data name="FollowingNames_one" xml:space="preserve">
+    <value>{first}, {second} und {more} weitere Person</value>
+  </data>
+  <data name="FollowingNames_other" xml:space="preserve">
+    <value>{first}, {second} und {more} weitere</value>
+  </data>
+  <data name="FollowingNamesTwo" xml:space="preserve">
+    <value>{first} und {second}</value>
+  </data>
+  <data name="FollowingMarkMore" xml:space="preserve">
+    <value>+{count}</value>
+  </data>
+  <data name="FollowingMarkSpoken" xml:space="preserve">
+    <value>{names} hat bis hier geschaut.</value>
+  </data>
+  <data name="FollowingScoreSpoken" xml:space="preserve">
+    <value>Wertung {score} von 10</value>
+  </data>
+  <data name="FollowingOpenHelp" xml:space="preserve">
+    <value>Zeigt, wo jede Person steht.</value>
   </data>
   <data name="MoreFollowedProgress" xml:space="preserve">
     <value>{status} · {progress}</value>

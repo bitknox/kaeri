@@ -11475,6 +11475,12 @@ settings-opds-password = Mật khẩu của feed
 # Row: the port the shared catalogue listens on. Empty picks a free one.
 settings-opds-port = Cổng của feed
 
+# Switch under the AniList account, on by default, for this device only: whether title pages show the people followed on AniList.
+settings-anilist-following = Hiện người bạn theo dõi
+
+# Note under that switch.
+settings-anilist-following-footer = Cho biết những người bạn theo dõi trên AniList đang xem đến đâu trong một bộ, trên trang và các tập của bộ đó. Ai xem được danh sách của bạn được đặt trên AniList.
+
 # Label of the address field in the Add a server sheet.
 book-server-address = Địa chỉ
 
@@ -13524,6 +13530,30 @@ more-followed-score = { $score }/10
 
 # Heading of the list of titles people who liked this one also liked.
 more-like-this = Tác phẩm tương tự
+
+# Button after the first five people followed, on wide screens. It shows the rest in place.
+following-show-all = Hiện cả { $count }
+
+# Second line of the People you follow row on phones and the TV, with three or more people: two names, then how many more. The names come from AniList.
+following-names =
+    { $more ->
+       *[other] { $first }, { $second } và { $more } người khác
+    }
+
+# Second line of the People you follow row on phones and the TV, with two people. The names come from AniList.
+following-names-two = { $first } và { $second }
+
+# After three pictures on an episode's mark, and after three names in the terminal: how many more people stopped there.
+following-mark-more = +{ $count }
+
+# Tooltip on an episode's mark, and the sentence a screen reader adds to the episode row: who stopped at this episode. The names are already joined.
+following-mark-spoken = { $names } đã xem đến đây.
+
+# What a screen reader says in place of a score such as 8/10 beside a person followed.
+following-score-spoken = Điểm { $score }/10
+
+# Hint of the People you follow row on phones and the TV, which opens the full list.
+following-open-help = Cho biết mỗi người đang xem đến đâu.
 
 # Line of a followed person's list entry: their status and how far they are. Both are already worded.
 more-followed-progress = { $status } · { $progress }

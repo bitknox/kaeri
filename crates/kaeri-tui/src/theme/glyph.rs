@@ -37,6 +37,9 @@ pub const STATE_UNKNOWN: char = '·';
 /// [`STATE_READY`], and not the interpunct, which the header also uses between chip groups.
 pub const STATE_OFF: char = '○';
 
+/// Before the names of the people who stopped at an episode, in the episode table.
+pub const FOLLOWED: char = '◆';
+
 /// Sync indicator for the status line.
 pub const SYNC: char = '⇅';
 

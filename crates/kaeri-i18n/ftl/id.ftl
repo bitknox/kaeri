@@ -11475,6 +11475,12 @@ settings-opds-password = Kata sandi feed
 # Row: the port the shared catalogue listens on. Empty picks a free one.
 settings-opds-port = Port feed
 
+# Switch under the AniList account, on by default, for this device only: whether title pages show the people followed on AniList.
+settings-anilist-following = Tampilkan orang yang diikuti
+
+# Note under that switch.
+settings-anilist-following-footer = Menampilkan sampai mana orang yang diikuti di AniList menonton sebuah acara, di halamannya dan episodenya. Siapa yang bisa melihat daftar sendiri diatur di AniList.
+
 # Label of the address field in the Add a server sheet.
 book-server-address = Alamat
 
@@ -13524,6 +13530,30 @@ more-followed-score = { $score }/10
 
 # Heading of the list of titles people who liked this one also liked.
 more-like-this = Serupa
+
+# Button after the first five people followed, on wide screens. It shows the rest in place.
+following-show-all = Tampilkan semua { $count }
+
+# Second line of the People you follow row on phones and the TV, with three or more people: two names, then how many more. The names come from AniList.
+following-names =
+    { $more ->
+       *[other] { $first }, { $second }, dan { $more } lainnya
+    }
+
+# Second line of the People you follow row on phones and the TV, with two people. The names come from AniList.
+following-names-two = { $first } dan { $second }
+
+# After three pictures on an episode's mark, and after three names in the terminal: how many more people stopped there.
+following-mark-more = +{ $count }
+
+# Tooltip on an episode's mark, and the sentence a screen reader adds to the episode row: who stopped at this episode. The names are already joined.
+following-mark-spoken = { $names } menonton sampai sini.
+
+# What a screen reader says in place of a score such as 8/10 beside a person followed.
+following-score-spoken = Skor { $score } dari 10
+
+# Hint of the People you follow row on phones and the TV, which opens the full list.
+following-open-help = Menampilkan sampai mana masing-masing.
 
 # Line of a followed person's list entry: their status and how far they are. Both are already worded.
 more-followed-progress = { $status } · { $progress }

@@ -225,6 +225,7 @@ impl App {
             | S::MpvOptions
             | S::AdultTitles
             | S::EpisodeDiscussions
+            | S::ShowFollowing
             | S::CommentImages
             | S::ControllerInput
             | S::SwapFaceButtons
@@ -371,6 +372,7 @@ fn label_text(key: SettingKey) -> String {
         S::MpvOptions => t::settings_label_mpv_options(),
         S::AdultTitles => t::settings_label_adult_titles(),
         S::EpisodeDiscussions => t::settings_label_episode_discussions(),
+        S::ShowFollowing => t::settings_anilist_following(),
         S::CommentImages => t::settings_label_comment_images(),
         S::ControllerInput => t::settings_label_controller_input(),
         S::SwapFaceButtons => t::settings_label_swap_face_buttons(),

@@ -3498,6 +3498,8 @@
     <string name="settings_opds_feed">Bu ağda paylaş</string>
     <string name="settings_opds_password">Akış parolası</string>
     <string name="settings_opds_port">Akış portu</string>
+    <string name="settings_anilist_following">Takip ettiklerini göster</string>
+    <string name="settings_anilist_following_footer">AniList\'te takip ettiğin kişilerin bir dizide nerede olduğunu, dizinin sayfasında ve bölümlerinde gösterir. Kendi listeni kimlerin görebileceği AniList\'te ayarlanır.</string>
     <string name="book_server_address">Adres</string>
     <string name="book_server_address_hint">Bir adres veya Kavita’daki OPDS bağlantısının tamamı.</string>
     <string name="book_server_kavita_key">Bu bir Kavita OPDS bağlantısı. Anahtarı oturum açmayı sağlar, bu yüzden parola gerekmez.</string>
@@ -4233,6 +4235,16 @@
     <string name="more_following_note">AniList\'ten</string>
     <string name="more_followed_score">%1$,d/10</string>
     <string name="more_like_this">Buna benzer</string>
+    <string name="following_show_all">%1$,d kişinin tümünü göster</string>
+    <plurals name="following_names">
+        <item quantity="one">%1$s, %2$s ve %3$,d kişi daha</item>
+        <item quantity="other">%1$s, %2$s ve %3$,d kişi daha</item>
+    </plurals>
+    <string name="following_names_two">%1$s ve %2$s</string>
+    <string name="following_mark_more">+%1$,d</string>
+    <string name="following_mark_spoken">%1$s buraya kadar izledi.</string>
+    <string name="following_score_spoken">Puan %1$,d/10</string>
+    <string name="following_open_help">Her birinin nerede olduğunu gösterir.</string>
     <string name="more_followed_progress">%1$s · %2$s</string>
     <string name="more_empty">AniList bu dizi için henüz kadro, ekip ya da öneri içermiyor.</string>
     <string name="more_spoiler">Spoiler</string>

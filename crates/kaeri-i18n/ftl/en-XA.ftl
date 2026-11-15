@@ -12337,6 +12337,12 @@ settings-opds-password = [Ƒééð þàššŵöŕð~~~~]
 # Row: the port the shared catalogue listens on. Empty picks a free one.
 settings-opds-port = [Ƒééð þöŕţ~~~]
 
+# Switch under the AniList account, on by default, for this device only: whether title pages show the people followed on AniList.
+settings-anilist-following = [Šĥöŵ þéöþļé ýöü ƒöļļöŵ~~~~~~~]
+
+# Note under that switch.
+settings-anilist-following-footer = [Šĥöŵš ŵĥéŕé þéöþļé ýöü ƒöļļöŵ öñ ÅñîĻîšţ àŕé îñ à šĥöŵ, öñ îţš þàĝé àñð îţš éþîšöðéš. Ŵĥö çàñ šéé ýöüŕ öŵñ ļîšţ îš šéţ öñ ÅñîĻîšţ.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]
+
 # Label of the address field in the Add a server sheet.
 book-server-address = [Åððŕéšš~~~]
 
@@ -14431,6 +14437,30 @@ more-followed-score = [{ $score }/10~~]
 
 # Heading of the list of titles people who liked this one also liked.
 more-like-this = [Ṁöŕé ļîķé ţĥîš~~~~~]
+
+# Button after the first five people followed, on wide screens. It shows the rest in place.
+following-show-all = [Šĥöŵ àļļ { $count }~~~~]
+
+# Second line of the People you follow row on phones and the TV, with three or more people: two names, then how many more. The names come from AniList.
+following-names =
+    { $more ->
+       *[other] [{ $first }, { $second } àñð { $more } ɱöŕé~~~~~~~]
+    }
+
+# Second line of the People you follow row on phones and the TV, with two people. The names come from AniList.
+following-names-two = [{ $first } àñð { $second }~~~~]
+
+# After three pictures on an episode's mark, and after three names in the terminal: how many more people stopped there.
+following-mark-more = [+{ $count }~~]
+
+# Tooltip on an episode's mark, and the sentence a screen reader adds to the episode row: who stopped at this episode. The names are already joined.
+following-mark-spoken = [{ $names } ŵàţçĥéð üþ ţö ĥéŕé.~~~~~~~]
+
+# What a screen reader says in place of a score such as 8/10 beside a person followed.
+following-score-spoken = [Šçöŕé { $score } öüţ öƒ 10~~~~~~]
+
+# Hint of the People you follow row on phones and the TV, which opens the full list.
+following-open-help = [Šĥöŵš ŵĥéŕé éàçĥ öƒ ţĥéɱ îš.~~~~~~~~~]
 
 # Line of a followed person's list entry: their status and how far they are. Both are already worded.
 more-followed-progress = [{ $status } · { $progress }~~~]

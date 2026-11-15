@@ -80,6 +80,16 @@ more-following = Personer du följer
 more-following-note = Från AniList
 more-followed-score = { $score }/10
 more-like-this = Liknande
+following-show-all = Visa alla { $count }
+following-names = { $more ->
+    [one] { $first }, { $second } och { $more } till
+   *[other] { $first }, { $second } och { $more } till
+ }
+following-names-two = { $first } och { $second }
+following-mark-more = +{ $count }
+following-mark-spoken = { $names } har tittat hit.
+following-score-spoken = Betyg { $score } av 10
+following-open-help = Visar var var och en är.
 more-followed-progress = { $status } · { $progress }
 more-empty = AniList har inga roller, medarbetare eller rekommendationer för den här titeln än.
 more-spoiler = Spoiler

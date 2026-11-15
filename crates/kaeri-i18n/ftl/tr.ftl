@@ -11611,6 +11611,12 @@ settings-opds-password = Akış parolası
 # Row: the port the shared catalogue listens on. Empty picks a free one.
 settings-opds-port = Akış portu
 
+# Switch under the AniList account, on by default, for this device only: whether title pages show the people followed on AniList.
+settings-anilist-following = Takip ettiklerini göster
+
+# Note under that switch.
+settings-anilist-following-footer = AniList'te takip ettiğin kişilerin bir dizide nerede olduğunu, dizinin sayfasında ve bölümlerinde gösterir. Kendi listeni kimlerin görebileceği AniList'te ayarlanır.
+
 # Label of the address field in the Add a server sheet.
 book-server-address = Adres
 
@@ -13684,6 +13690,31 @@ more-followed-score = { $score }/10
 
 # Heading of the list of titles people who liked this one also liked.
 more-like-this = Buna benzer
+
+# Button after the first five people followed, on wide screens. It shows the rest in place.
+following-show-all = { $count } kişinin tümünü göster
+
+# Second line of the People you follow row on phones and the TV, with three or more people: two names, then how many more. The names come from AniList.
+following-names =
+    { $more ->
+        [one] { $first }, { $second } ve { $more } kişi daha
+       *[other] { $first }, { $second } ve { $more } kişi daha
+    }
+
+# Second line of the People you follow row on phones and the TV, with two people. The names come from AniList.
+following-names-two = { $first } ve { $second }
+
+# After three pictures on an episode's mark, and after three names in the terminal: how many more people stopped there.
+following-mark-more = +{ $count }
+
+# Tooltip on an episode's mark, and the sentence a screen reader adds to the episode row: who stopped at this episode. The names are already joined.
+following-mark-spoken = { $names } buraya kadar izledi.
+
+# What a screen reader says in place of a score such as 8/10 beside a person followed.
+following-score-spoken = Puan { $score }/10
+
+# Hint of the People you follow row on phones and the TV, which opens the full list.
+following-open-help = Her birinin nerede olduğunu gösterir.
 
 # Line of a followed person's list entry: their status and how far they are. Both are already worded.
 more-followed-progress = { $status } · { $progress }

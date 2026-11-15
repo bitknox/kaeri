@@ -221,3 +221,5 @@ settings-subs-reset = Untertitelstil zurücksetzen
 settings-opds-feed = Im Netzwerk teilen
 settings-opds-password = Feed-Passwort
 settings-opds-port = Feed-Port
+settings-anilist-following = Personen anzeigen, denen du folgst
+settings-anilist-following-footer = Zeigt bei einer Serie, auf ihrer Seite und bei ihren Folgen, wo Personen stehen, denen du auf AniList folgst. Wer deine eigene Liste sehen kann, legst du auf AniList fest.

@@ -8660,6 +8660,12 @@
   <data name="SettingsOpdsPort" xml:space="preserve">
     <value>フィードのポート</value>
   </data>
+  <data name="SettingsAnilistFollowing" xml:space="preserve">
+    <value>フォロー中の人を表示</value>
+  </data>
+  <data name="SettingsAnilistFollowingFooter" xml:space="preserve">
+    <value>AniListでフォローしている人がどこまで観ているかを、作品のページとエピソードに表示します。自分のリストを誰が見られるかはAniListで設定します。</value>
+  </data>
   <data name="BookServerAddress" xml:space="preserve">
     <value>アドレス</value>
   </data>
@@ -10645,6 +10651,27 @@
   </data>
   <data name="MoreLikeThis" xml:space="preserve">
     <value>似た作品</value>
+  </data>
+  <data name="FollowingShowAll" xml:space="preserve">
+    <value>{count}人すべて表示</value>
+  </data>
+  <data name="FollowingNames_other" xml:space="preserve">
+    <value>{first}、{second}、ほか{more}人</value>
+  </data>
+  <data name="FollowingNamesTwo" xml:space="preserve">
+    <value>{first}、{second}</value>
+  </data>
+  <data name="FollowingMarkMore" xml:space="preserve">
+    <value>+{count}</value>
+  </data>
+  <data name="FollowingMarkSpoken" xml:space="preserve">
+    <value>{names}はここまで視聴しました。</value>
+  </data>
+  <data name="FollowingScoreSpoken" xml:space="preserve">
+    <value>スコア {score}/10</value>
+  </data>
+  <data name="FollowingOpenHelp" xml:space="preserve">
+    <value>それぞれの視聴状況を表示します。</value>
   </data>
   <data name="MoreFollowedProgress" xml:space="preserve">
     <value>{status} · {progress}</value>

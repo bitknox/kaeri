@@ -221,3 +221,5 @@ settings-subs-reset = Återställ undertextstil
 settings-opds-feed = Dela i det här nätverket
 settings-opds-password = Flödeslösenord
 settings-opds-port = Flödesport
+settings-anilist-following = Visa personer du följer
+settings-anilist-following-footer = Visar var personer du följer på AniList är i en serie, på dess sida och dess avsnitt. Vem som kan se din egen lista ställs in på AniList.

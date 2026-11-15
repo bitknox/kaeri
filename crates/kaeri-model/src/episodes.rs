@@ -1,7 +1,7 @@
 //! A title's episodes, as its episode table and the player's Episodes menu list them.
 
 /// One row of the timing-sheet episode table.
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, Default, PartialEq)]
 #[cfg_attr(feature = "ffi", derive(uniffi::Record))]
 pub struct EpisodeRow {
     pub number: String,
@@ -85,6 +85,46 @@ pub struct EpisodeRow {
     /// has no lookup running.
     #[cfg_attr(feature = "ffi", uniffi(default))]
     pub synopsis_pending: bool,
+    /// The people the viewer follows on AniList whose progress stops at this episode, while
+    /// they are watching it or have paused it, newest update first. A name and a picture, never
+    /// a score: a row has no place for one. Empty for most rows, and always with the switch
+    /// off or nobody signed in. See [`followed_marks`].
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub followed: Vec<FollowedMark>,
+}
+
+/// One person the viewer follows, on the episode row where their progress stops.
+#[derive(Debug, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "ffi", derive(uniffi::Record))]
+pub struct FollowedMark {
+    /// Their AniList name, as AniList spells it; never translated.
+    pub name: String,
+    /// Their picture on AniList's image host, when they have one; the first letter of the name
+    /// stands in for it otherwise.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub avatar_url: Option<String>,
+}
+
+/// Put on each of `rows` the people of `following` whose progress stops at it: those watching
+/// (a rewatch counts) or paused, by the row's whole number. Completed, planning and dropped
+/// mark nothing, nor does a progress of nought. Every row's marks are replaced, so an empty
+/// `following` clears them.
+pub fn followed_marks(rows: &mut [EpisodeRow], following: &[crate::catalog::FollowedEntry]) {
+    use crate::catalog::LibrarySegment;
+    for row in rows.iter_mut() {
+        let number = row.number.trim().parse::<u32>().ok().filter(|n| *n > 0);
+        row.followed = following
+            .iter()
+            .filter(|person| {
+                matches!(person.status, Some(LibrarySegment::Watching | LibrarySegment::Paused))
+            })
+            .filter(|person| number == Some(person.progress))
+            .map(|person| FollowedMark {
+                name: person.name.clone(),
+                avatar_url: person.avatar_url.clone(),
+            })
+            .collect();
+    }
 }
 
 /// Whether a table has synopses to show, which decides at first layout how tall its rows are:
@@ -252,6 +292,7 @@ mod tests {
                 past_progress: false,
                 spoiler_ahead: false,
                 synopsis_pending: false,
+                followed: Vec::new(),
             })
             .collect()
     }

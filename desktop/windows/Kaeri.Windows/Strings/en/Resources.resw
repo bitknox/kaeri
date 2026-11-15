@@ -12708,6 +12708,14 @@
     <value>Feed port</value>
     <comment>Row: the port the shared catalogue listens on. Empty picks a free one.</comment>
   </data>
+  <data name="SettingsAnilistFollowing" xml:space="preserve">
+    <value>Show people you follow</value>
+    <comment>Switch under the AniList account, on by default, for this device only: whether title pages show the people followed on AniList.</comment>
+  </data>
+  <data name="SettingsAnilistFollowingFooter" xml:space="preserve">
+    <value>Shows where people you follow on AniList are in a show, on its page and its episodes. Who can see your own list is set on AniList.</value>
+    <comment>Note under that switch.</comment>
+  </data>
   <data name="BookServerAddress" xml:space="preserve">
     <value>Address</value>
     <comment>Label of the address field in the Add a server sheet.</comment>
@@ -15470,6 +15478,34 @@
   <data name="MoreLikeThis" xml:space="preserve">
     <value>More like this</value>
     <comment>Heading of the list of titles people who liked this one also liked.</comment>
+  </data>
+  <data name="FollowingShowAll" xml:space="preserve">
+    <value>Show all {count}</value>
+    <comment>Button after the first five people followed, on wide screens. It shows the rest in place.</comment>
+  </data>
+  <data name="FollowingNames_other" xml:space="preserve">
+    <value>{first}, {second} and {more} more</value>
+    <comment>Second line of the People you follow row on phones and the TV, with three or more people: two names, then how many more. The names come from AniList.</comment>
+  </data>
+  <data name="FollowingNamesTwo" xml:space="preserve">
+    <value>{first} and {second}</value>
+    <comment>Second line of the People you follow row on phones and the TV, with two people. The names come from AniList.</comment>
+  </data>
+  <data name="FollowingMarkMore" xml:space="preserve">
+    <value>+{count}</value>
+    <comment>After three pictures on an episode's mark, and after three names in the terminal: how many more people stopped there.</comment>
+  </data>
+  <data name="FollowingMarkSpoken" xml:space="preserve">
+    <value>{names} watched up to here.</value>
+    <comment>Tooltip on an episode's mark, and the sentence a screen reader adds to the episode row: who stopped at this episode. The names are already joined.</comment>
+  </data>
+  <data name="FollowingScoreSpoken" xml:space="preserve">
+    <value>Score {score} out of 10</value>
+    <comment>What a screen reader says in place of a score such as 8/10 beside a person followed.</comment>
+  </data>
+  <data name="FollowingOpenHelp" xml:space="preserve">
+    <value>Shows where each of them is.</value>
+    <comment>Hint of the People you follow row on phones and the TV, which opens the full list.</comment>
   </data>
   <data name="MoreFollowedProgress" xml:space="preserve">
     <value>{status} · {progress}</value>

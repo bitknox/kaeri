@@ -8996,6 +8996,12 @@
   <data name="SettingsOpdsPort" xml:space="preserve">
     <value>Flödesport</value>
   </data>
+  <data name="SettingsAnilistFollowing" xml:space="preserve">
+    <value>Visa personer du följer</value>
+  </data>
+  <data name="SettingsAnilistFollowingFooter" xml:space="preserve">
+    <value>Visar var personer du följer på AniList är i en serie, på dess sida och dess avsnitt. Vem som kan se din egen lista ställs in på AniList.</value>
+  </data>
   <data name="BookServerAddress" xml:space="preserve">
     <value>Adress</value>
   </data>
@@ -11053,6 +11059,30 @@
   </data>
   <data name="MoreLikeThis" xml:space="preserve">
     <value>Liknande</value>
+  </data>
+  <data name="FollowingShowAll" xml:space="preserve">
+    <value>Visa alla {count}</value>
+  </data>
+  <data name="FollowingNames_one" xml:space="preserve">
+    <value>{first}, {second} och {more} till</value>
+  </data>
+  <data name="FollowingNames_other" xml:space="preserve">
+    <value>{first}, {second} och {more} till</value>
+  </data>
+  <data name="FollowingNamesTwo" xml:space="preserve">
+    <value>{first} och {second}</value>
+  </data>
+  <data name="FollowingMarkMore" xml:space="preserve">
+    <value>+{count}</value>
+  </data>
+  <data name="FollowingMarkSpoken" xml:space="preserve">
+    <value>{names} har tittat hit.</value>
+  </data>
+  <data name="FollowingScoreSpoken" xml:space="preserve">
+    <value>Betyg {score} av 10</value>
+  </data>
+  <data name="FollowingOpenHelp" xml:space="preserve">
+    <value>Visar var var och en är.</value>
   </data>
   <data name="MoreFollowedProgress" xml:space="preserve">
     <value>{status} · {progress}</value>

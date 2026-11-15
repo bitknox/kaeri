@@ -3369,6 +3369,8 @@
     <string name="settings_opds_feed">Chia sẻ trong mạng này</string>
     <string name="settings_opds_password">Mật khẩu của feed</string>
     <string name="settings_opds_port">Cổng của feed</string>
+    <string name="settings_anilist_following">Hiện người bạn theo dõi</string>
+    <string name="settings_anilist_following_footer">Cho biết những người bạn theo dõi trên AniList đang xem đến đâu trong một bộ, trên trang và các tập của bộ đó. Ai xem được danh sách của bạn được đặt trên AniList.</string>
     <string name="book_server_address">Địa chỉ</string>
     <string name="book_server_address_hint">Một địa chỉ, hoặc toàn bộ liên kết OPDS từ Kavita.</string>
     <string name="book_server_kavita_key">Đây là liên kết OPDS của Kavita. Khóa trong đó dùng để đăng nhập, nên không cần mật khẩu.</string>
@@ -4080,6 +4082,15 @@
     <string name="more_following_note">Từ AniList</string>
     <string name="more_followed_score">%1$,d/10</string>
     <string name="more_like_this">Tác phẩm tương tự</string>
+    <string name="following_show_all">Hiện cả %1$,d</string>
+    <plurals name="following_names">
+        <item quantity="other">%1$s, %2$s và %3$,d người khác</item>
+    </plurals>
+    <string name="following_names_two">%1$s và %2$s</string>
+    <string name="following_mark_more">+%1$,d</string>
+    <string name="following_mark_spoken">%1$s đã xem đến đây.</string>
+    <string name="following_score_spoken">Điểm %1$,d/10</string>
+    <string name="following_open_help">Cho biết mỗi người đang xem đến đâu.</string>
     <string name="more_followed_progress">%1$s · %2$s</string>
     <string name="more_empty">AniList chưa có diễn viên, đội ngũ sản xuất hay đề xuất cho tác phẩm này.</string>
     <string name="more_spoiler">Tiết lộ</string>

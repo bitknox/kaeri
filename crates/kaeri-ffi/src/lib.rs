@@ -1654,6 +1654,7 @@ mod tests {
             past_progress: false,
             spoiler_ahead: false,
             synopsis_pending: false,
+            followed: Vec::new(),
         };
         assert_eq!(crossed(row.clone()), row);
         let dub = DubExtent { through: 6, complete: false };

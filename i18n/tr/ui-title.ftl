@@ -80,6 +80,16 @@ more-following = Takip ettiğiniz kişiler
 more-following-note = AniList'ten
 more-followed-score = { $score }/10
 more-like-this = Buna benzer
+following-show-all = { $count } kişinin tümünü göster
+following-names = { $more ->
+    [one] { $first }, { $second } ve { $more } kişi daha
+   *[other] { $first }, { $second } ve { $more } kişi daha
+ }
+following-names-two = { $first } ve { $second }
+following-mark-more = +{ $count }
+following-mark-spoken = { $names } buraya kadar izledi.
+following-score-spoken = Puan { $score }/10
+following-open-help = Her birinin nerede olduğunu gösterir.
 more-followed-progress = { $status } · { $progress }
 more-empty = AniList bu dizi için henüz kadro, ekip ya da öneri içermiyor.
 more-spoiler = Spoiler

@@ -128,10 +128,10 @@ struct Answered {
     /// answer from the fallback or the cache is for an outage, and the next ask should find
     /// out whether it is over.
     fresh: bool,
-    /// Whether someone was signed in to AniList when it was asked, and so whether the people they
-    /// follow were asked after. An answer is not reused across a sign-in or a sign-out: the one
-    /// would miss them, the other would keep them.
-    signed_in: bool,
+    /// Whether the people the viewer follows were asked after: someone was signed in to AniList
+    /// and Show people you follow was on. An answer is not reused across a sign-in or a
+    /// sign-out, or the switch turned: the one would miss them, the other would keep them.
+    following: bool,
 }
 
 impl Answered {
@@ -139,13 +139,13 @@ impl Answered {
     ///
     /// Not once an episode has aired since: the next one and its countdown have moved, and
     /// the episode count with them.
-    fn serves(&self, now: Instant, reuse_for: Duration, signed_in: bool) -> bool {
+    fn serves(&self, now: Instant, reuse_for: Duration, following: bool) -> bool {
         let age = now.saturating_duration_since(self.at);
         let Ok(media) = &self.outcome else { return false };
         let aired = media.next_airing_episode.as_ref().is_some_and(|next| {
             next.time_until_airing <= i64::try_from(age.as_secs()).unwrap_or(i64::MAX)
         });
-        self.fresh && age < reuse_for && !aired && self.signed_in == signed_in
+        self.fresh && age < reuse_for && !aired && self.following == following
     }
 
     /// The answer as of `now`, its countdown run on by the time since.
@@ -650,12 +650,17 @@ impl Meta {
     /// lists that show it, for the wide art Home draws where there is no banner.
     fn remember(&self, media: &Media) {
         let kept;
-        let media = match self.cached_listings(media) {
-            Some(listings) => {
-                kept = Media { streaming_episodes: listings, ..media.clone() };
-                &kept
-            }
-            None => media,
+        let (listings, following) = self.cached_extras(media);
+        let media = if listings.is_some() || following.is_some() {
+            kept = Media {
+                streaming_episodes: listings
+                    .unwrap_or_else(|| media.streaming_episodes.clone()),
+                following: following.or_else(|| media.following.clone()),
+                ..media.clone()
+            };
+            &kept
+        } else {
+            media
         };
         let Ok(payload) = serde_json::to_string(media) else { return };
         if let Err(e) = self.store.cache_media(media.id, &payload, kaeri_store::now()) {
@@ -663,21 +668,60 @@ impl Meta {
         }
     }
 
-    /// The listings cached for `media`, when it comes with none and the cache holds some.
-    fn cached_listings(&self, media: &Media) -> Option<Vec<StreamingEpisode>> {
-        /// The one field read back, so the rest of the payload is not decoded.
+    /// What the cache holds for `media` that its answer leaves out: the listings, when it comes
+    /// with none, and the people the viewer follows, when they were not asked after (a list's
+    /// answer, or the fallback's), so the page keeps them for offline.
+    fn cached_extras(
+        &self,
+        media: &Media,
+    ) -> (Option<Vec<StreamingEpisode>>, Option<Vec<crate::anilist::model::Follower>>) {
+        /// The fields read back, so the rest of the payload is not decoded.
         #[derive(serde::Deserialize)]
         #[serde(rename_all = "camelCase")]
-        struct Listings {
+        struct Extras {
             #[serde(default)]
             streaming_episodes: Vec<StreamingEpisode>,
+            #[serde(default)]
+            following: Option<Vec<crate::anilist::model::Follower>>,
         }
-        if !media.streaming_episodes.is_empty() {
+        let wants_listings = media.streaming_episodes.is_empty();
+        let wants_following = media.following.is_none();
+        if !wants_listings && !wants_following {
+            return (None, None);
+        }
+        let Some((payload, _)) = self.store.cached_media(media.id).ok().flatten() else {
+            return (None, None);
+        };
+        let Ok(cached) = serde_json::from_str::<Extras>(&payload) else { return (None, None) };
+        let listings = Some(cached.streaming_episodes)
+            .filter(|listings| wants_listings && !listings.is_empty());
+        (listings, cached.following.filter(|_| wants_following))
+    }
+
+    /// The people the viewer follows as the cache last had them for `id`, for a page answered
+    /// by the fallback; `None` while they are not asked after.
+    fn cached_following(&self, id: AnilistId) -> Option<Vec<crate::anilist::model::Follower>> {
+        if !self.anilist.asks_following() {
             return None;
         }
-        let (payload, _) = self.store.cached_media(media.id).ok().flatten()?;
-        let cached: Listings = serde_json::from_str(&payload).ok()?;
-        Some(cached.streaming_episodes).filter(|listings| !listings.is_empty())
+        self.recall(id)?.following
+    }
+
+    /// Show people you follow, this device's switch, put in effect: off, title pages stop asking
+    /// after them and the cache lets go of what it kept of them.
+    pub fn show_following(&self, on: bool) {
+        self.anilist.show_following(on);
+        if !on {
+            self.forget_following();
+        }
+    }
+
+    /// Let go of every cached page's people followed: the viewer signed out of AniList, or the
+    /// switch was turned off.
+    pub fn forget_following(&self) {
+        if let Err(e) = self.store.forget_following() {
+            tracing::warn!(error = %e, "could not take the people followed out of the cache");
+        }
     }
 
     fn remember_page(&self, page: &Page<Media>) {
@@ -690,6 +734,11 @@ impl Meta {
     fn recall(&self, id: AnilistId) -> Option<Media> {
         let (payload, _) = self.store.cached_media(id).ok().flatten()?;
         let mut media: Media = serde_json::from_str(&payload).ok()?;
+        // Only while they would be asked after: never past a sign-out or the switch turned off,
+        // even before the cache has let go of them.
+        if !self.anilist.asks_following() {
+            media.following = None;
+        }
         // The stored countdown froze at fetch time; the air date did not move.
         if let Some(next) = &mut media.next_airing_episode {
             next.time_until_airing = next.airing_at - kaeri_store::now();
@@ -710,12 +759,12 @@ impl Meta {
     pub async fn media_answered(&self, id: AnilistId) -> Result<(Media, bool)> {
         let flight = self.flight(id);
         let lane = self.flight_lane(id);
-        let signed_in = self.anilist.is_authenticated();
+        let following = self.anilist.asks_following();
         let answered = flight
             .get_or_init(|| {
                 lane.run(async {
                     let (outcome, fresh) = self.ask_media(id).await;
-                    Answered { at: kaeri_store::instant_now(), outcome, fresh, signed_in }
+                    Answered { at: kaeri_store::instant_now(), outcome, fresh, following }
                 })
             })
             .await;
@@ -841,12 +890,12 @@ impl Meta {
     /// Whether an ask for title `id`'s page is under way, or its answer still serves.
     fn detail_under_way(&self, id: AnilistId) -> bool {
         let now = kaeri_store::instant_now();
-        let signed_in = self.anilist.is_authenticated();
+        let following = self.anilist.asks_following();
         self.recent.lock().is_ok_and(|recent| {
             recent.titles.get(&id).is_some_and(|flight| {
                 flight
                     .get()
-                    .is_none_or(|answered| answered.serves(now, self.reuse_for, signed_in))
+                    .is_none_or(|answered| answered.serves(now, self.reuse_for, following))
             })
         })
     }
@@ -987,13 +1036,13 @@ impl Meta {
     /// Whether AniList's answer for title `id`'s page is in and still serves.
     fn answered(&self, id: AnilistId) -> bool {
         let now = kaeri_store::instant_now();
-        let signed_in = self.anilist.is_authenticated();
+        let following = self.anilist.asks_following();
         self.recent.lock().is_ok_and(|recent| {
             recent
                 .titles
                 .get(&id)
                 .and_then(|flight| flight.get())
-                .is_some_and(|answered| answered.serves(now, self.reuse_for, signed_in))
+                .is_some_and(|answered| answered.serves(now, self.reuse_for, following))
         })
     }
 
@@ -1001,10 +1050,10 @@ impl Meta {
     /// new one. Answers that serve no longer are let go on the way.
     fn flight(&self, id: AnilistId) -> Flight {
         let now = kaeri_store::instant_now();
-        let signed_in = self.anilist.is_authenticated();
+        let following = self.anilist.asks_following();
         let Ok(mut recent) = self.recent.lock() else { return Flight::default() };
         recent.titles.retain(|_, flight| {
-            flight.get().is_none_or(|answered| answered.serves(now, self.reuse_for, signed_in))
+            flight.get().is_none_or(|answered| answered.serves(now, self.reuse_for, following))
         });
         let Recent { titles, lanes } = &mut *recent;
         lanes.retain(|id, _| titles.get(id).is_some_and(|flight| !flight.initialized()));
@@ -1044,10 +1093,12 @@ impl Meta {
         let patient = matches!(primary, AniListError::RateLimited { .. });
         if let Some(tenrai) = self.tenrai.as_ref().filter(|_| !patient) {
             match self.ask_tenrai(tenrai.media(id)).await {
-                Ok(media) => {
+                Ok(mut media) => {
                     self.note_tenrai(None);
                     self.went(TENRAI);
                     self.remember(&media);
+                    // The fallback knows nobody's follows: the page keeps the ones it last had.
+                    media.following = self.cached_following(id);
                     return (Ok(media), false);
                 }
                 Err(e) => {
@@ -1776,7 +1827,7 @@ mod tests {
     fn an_answer_serves_for_its_minutes_and_not_past_a_broadcast() {
         let at = Instant::now();
         let answered =
-            |media: Media, fresh| Answered { at, outcome: Ok(media), fresh, signed_in: false };
+            |media: Media, fresh| Answered { at, outcome: Ok(media), fresh, following: false };
         let minute = Duration::from_secs(60);
 
         let hour_away = answered(airing(3_600), true);
@@ -1801,14 +1852,14 @@ mod tests {
             at,
             outcome: Err(MetaError::Anilist(AniListError::NotFound)),
             fresh: true,
-            signed_in: false,
+            following: false,
         };
         assert!(!failed.serves(at, REUSE_FOR, false));
 
         // A sign-in or a sign-out is another answer: the people the viewer follows come with one
         // and must not outlast the other.
         assert!(!hour_away.serves(at, REUSE_FOR, true), "not after a sign-in");
-        let signed_in = Answered { signed_in: true, ..answered(airing(3_600), true) };
+        let signed_in = Answered { following: true, ..answered(airing(3_600), true) };
         assert!(signed_in.serves(at, REUSE_FOR, true));
         assert!(!signed_in.serves(at, REUSE_FOR, false), "nor after a sign-out");
     }

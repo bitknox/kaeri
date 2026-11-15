@@ -724,3 +724,9 @@ settings-opds-password = Feed password
 
 # Row: the port the shared catalogue listens on. Empty picks a free one.
 settings-opds-port = Feed port
+
+# Switch under the AniList account, on by default, for this device only: whether title pages show the people followed on AniList.
+settings-anilist-following = Show people you follow
+
+# Note under that switch.
+settings-anilist-following-footer = Shows where people you follow on AniList are in a show, on its page and its episodes. Who can see your own list is set on AniList.

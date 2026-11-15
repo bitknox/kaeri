@@ -166,6 +166,10 @@ pub enum SettingKey {
     /// Episode discussions: an episode's AniList forum thread, looked up once it counts as
     /// watched. On by default.
     EpisodeDiscussions,
+    /// Whether a title page shows where the people the signed-in AniList viewer follows are in
+    /// the show, and its episodes mark where each stopped. On by default, and this device's
+    /// alone: under the AniList account. Off, the page's request leaves them out.
+    ShowFollowing,
     /// Whether images in discussion comments load inline rather than as a line that opens them
     /// in the browser. Off by default; shown while discussions are on.
     CommentImages,
@@ -271,7 +275,7 @@ impl SettingKey {
     /// The native apps' own rows, which the terminal's Settings screen does not show: a front
     /// end finds the rows both show among [`Self::ROWS`]. In no order of their own, since each
     /// app lays them out on its own panes; grouped by [`Self::category`] all the same.
-    pub const NATIVE_ROWS: [Self; 32] = [
+    pub const NATIVE_ROWS: [Self; 33] = [
         Self::UpNextCountdown,
         Self::SpoilerProtection,
         Self::DownloadQuality,
@@ -282,6 +286,7 @@ impl SettingKey {
         Self::MpvOptions,
         Self::AdultTitles,
         Self::EpisodeDiscussions,
+        Self::ShowFollowing,
         Self::CommentImages,
         Self::ControllerInput,
         Self::SwapFaceButtons,
@@ -318,6 +323,7 @@ impl SettingKey {
             Self::Trailers => (&["theme"], "trailers"),
             Self::AdultTitles => (&["meta"], "adult"),
             Self::EpisodeDiscussions => (&["meta"], "discussions"),
+            Self::ShowFollowing => (&["meta"], "following"),
             Self::CommentImages => (&["meta"], "discussion_images"),
             Self::ControllerInput => (&["controller"], "enabled"),
             Self::SwapFaceButtons => (&["controller"], "swap_face"),
@@ -482,6 +488,7 @@ impl SettingKey {
             Self::UpdateBeta => to.updates.beta = from.updates.beta,
             Self::AdultTitles => to.meta.adult = from.meta.adult,
             Self::EpisodeDiscussions => to.meta.discussions = from.meta.discussions,
+            Self::ShowFollowing => to.meta.following = from.meta.following,
             Self::CommentImages => to.meta.discussion_images = from.meta.discussion_images,
             Self::ControllerInput => to.controller.enabled = from.controller.enabled,
             Self::SwapFaceButtons => to.controller.swap_face = from.controller.swap_face,
@@ -644,6 +651,7 @@ impl SettingKey {
             | Self::UpdateCheck
             | Self::UpdateBeta
             | Self::EpisodeDiscussions
+            | Self::ShowFollowing
             | Self::CommentImages
             | Self::CastTvs => "integrations",
             Self::EpisodeNotifications
@@ -725,6 +733,7 @@ impl SettingKey {
             Self::TorrentsOnCellular => "torrents on cellular",
             Self::AdultTitles => "adult titles",
             Self::EpisodeDiscussions => "episode discussions",
+            Self::ShowFollowing => "show people you follow",
             Self::CommentImages => "load images in comments",
             Self::ControllerInput => "use a controller",
             Self::SwapFaceButtons => "swap a and b",
@@ -1119,6 +1128,7 @@ pub fn step(
         SettingKey::EpisodeNotifications => V::Bool(!effective.notifications.episodes),
         SettingKey::AdultTitles => V::Bool(!effective.meta.adult),
         SettingKey::EpisodeDiscussions => V::Bool(!effective.meta.discussions),
+        SettingKey::ShowFollowing => V::Bool(!effective.meta.following),
         SettingKey::CommentImages => V::Bool(!effective.meta.discussion_images),
         SettingKey::ControllerInput => V::Bool(!effective.controller.enabled),
         SettingKey::SwapFaceButtons => V::Bool(!effective.controller.swap_face),
@@ -1374,6 +1384,7 @@ pub fn put(config: &mut Config, key: SettingKey, value: &SettingValue) -> bool {
         (SettingKey::EpisodeNotifications, V::Bool(on)) => config.notifications.episodes = *on,
         (SettingKey::AdultTitles, V::Bool(on)) => config.meta.adult = *on,
         (SettingKey::EpisodeDiscussions, V::Bool(on)) => config.meta.discussions = *on,
+        (SettingKey::ShowFollowing, V::Bool(on)) => config.meta.following = *on,
         (SettingKey::CommentImages, V::Bool(on)) => config.meta.discussion_images = *on,
         (SettingKey::ControllerInput, V::Bool(on)) => config.controller.enabled = *on,
         (SettingKey::SwapFaceButtons, V::Bool(on)) => config.controller.swap_face = *on,
@@ -1584,6 +1595,7 @@ pub(crate) fn value(effective: &Config, saved: &Config, key: SettingKey) -> Stri
         SettingKey::EpisodeNotifications => on_off(effective.notifications.episodes),
         SettingKey::AdultTitles => on_off(effective.meta.adult),
         SettingKey::EpisodeDiscussions => on_off(effective.meta.discussions),
+        SettingKey::ShowFollowing => on_off(effective.meta.following),
         SettingKey::CommentImages => on_off(effective.meta.discussion_images),
         SettingKey::ControllerInput => on_off(effective.controller.enabled),
         SettingKey::SwapFaceButtons => on_off(effective.controller.swap_face),
@@ -1698,6 +1710,7 @@ fn two_state(effective: &Config, saved: &Config, key: SettingKey) -> Option<bool
         S::EpisodeNotifications => c.notifications.episodes,
         S::AdultTitles => c.meta.adult,
         S::EpisodeDiscussions => c.meta.discussions,
+        S::ShowFollowing => c.meta.following,
         S::CommentImages => c.meta.discussion_images,
         S::ControllerInput => c.controller.enabled,
         S::SwapFaceButtons => c.controller.swap_face,
@@ -2040,6 +2053,7 @@ mod tests {
                 (SettingKey::MpvOptions, "none"),
                 (SettingKey::AdultTitles, "off"),
                 (SettingKey::EpisodeDiscussions, "on"),
+                (SettingKey::ShowFollowing, "on"),
                 (SettingKey::CommentImages, "off"),
                 (SettingKey::ControllerInput, "on"),
                 (SettingKey::SwapFaceButtons, "off"),

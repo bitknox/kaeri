@@ -12097,6 +12097,12 @@ public enum L {
     /// Row: the port the shared catalogue listens on. Empty picks a free one.
     public static var settingsOpdsPort: String { string("settings-opds-port", fallback: "Feed port") }
 
+    /// Switch under the AniList account, on by default, for this device only: whether title pages show the people followed on AniList.
+    public static var settingsAnilistFollowing: String { string("settings-anilist-following", fallback: "Show people you follow") }
+
+    /// Note under that switch.
+    public static var settingsAnilistFollowingFooter: String { string("settings-anilist-following-footer", fallback: "Shows where people you follow on AniList are in a show, on its page and its episodes. Who can see your own list is set on AniList.") }
+
     /// Label of the address field in the Add a server sheet.
     public static var bookServerAddress: String { string("book-server-address", fallback: "Address") }
 
@@ -14511,6 +14517,39 @@ public enum L {
 
     /// Heading of the list of titles people who liked this one also liked.
     public static var moreLikeThis: String { string("more-like-this", fallback: "More like this") }
+
+    /// Button after the first five people followed, on wide screens. It shows the rest in place.
+    public static func followingShowAll(count: Int) -> String {
+        Self.format("following-show-all", fallback: "Show all %1$lld", count)
+    }
+
+    /// Second line of the People you follow row on phones and the TV, with three or more people: two names, then how many more. The names come from AniList.
+    public static func followingNames(first: String, second: String, more: Int) -> String {
+        Self.format("following-names", fallback: "%1$@, %2$@ and %3$lld more", first, second, more)
+    }
+
+    /// Second line of the People you follow row on phones and the TV, with two people. The names come from AniList.
+    public static func followingNamesTwo(first: String, second: String) -> String {
+        Self.format("following-names-two", fallback: "%1$@ and %2$@", first, second)
+    }
+
+    /// After three pictures on an episode's mark, and after three names in the terminal: how many more people stopped there.
+    public static func followingMarkMore(count: Int) -> String {
+        Self.format("following-mark-more", fallback: "+%1$lld", count)
+    }
+
+    /// Tooltip on an episode's mark, and the sentence a screen reader adds to the episode row: who stopped at this episode. The names are already joined.
+    public static func followingMarkSpoken(names: String) -> String {
+        Self.format("following-mark-spoken", fallback: "%1$@ watched up to here.", names)
+    }
+
+    /// What a screen reader says in place of a score such as 8/10 beside a person followed.
+    public static func followingScoreSpoken(score: Int) -> String {
+        Self.format("following-score-spoken", fallback: "Score %1$lld out of 10", score)
+    }
+
+    /// Hint of the People you follow row on phones and the TV, which opens the full list.
+    public static var followingOpenHelp: String { string("following-open-help", fallback: "Shows where each of them is.") }
 
     /// Line of a followed person's list entry: their status and how far they are. Both are already worded.
     public static func moreFollowedProgress(status: String, progress: String) -> String {

@@ -261,7 +261,7 @@ impl App {
 
         let len = match rows {
             Rows::Downloads => self.downloads.len(),
-            Rows::Accounts => self.sync.len(),
+            Rows::Accounts => self.sync.len() + usize::from(self.following_row()),
             Rows::Settings => SettingKey::ROWS.len(),
             Rows::Together => self.together_rows(),
             Rows::Providers => self.providers.len(),

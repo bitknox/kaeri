@@ -79,6 +79,15 @@ more-following = Orang yang Anda ikuti
 more-following-note = Dari AniList
 more-followed-score = { $score }/10
 more-like-this = Serupa
+following-show-all = Tampilkan semua { $count }
+following-names = { $more ->
+   *[other] { $first }, { $second }, dan { $more } lainnya
+ }
+following-names-two = { $first } dan { $second }
+following-mark-more = +{ $count }
+following-mark-spoken = { $names } menonton sampai sini.
+following-score-spoken = Skor { $score } dari 10
+following-open-help = Menampilkan sampai mana masing-masing.
 more-followed-progress = { $status } · { $progress }
 more-empty = AniList belum memiliki data pemeran, staf, atau rekomendasi untuk tayangan ini.
 more-spoiler = Spoiler

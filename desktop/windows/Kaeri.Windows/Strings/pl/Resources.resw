@@ -9668,6 +9668,12 @@
   <data name="SettingsOpdsPort" xml:space="preserve">
     <value>Port kanału</value>
   </data>
+  <data name="SettingsAnilistFollowing" xml:space="preserve">
+    <value>Pokazuj obserwowane osoby</value>
+  </data>
+  <data name="SettingsAnilistFollowingFooter" xml:space="preserve">
+    <value>Pokazuje, gdzie w serii są osoby obserwowane na AniList, na jej stronie i przy odcinkach. Kto widzi Twoją listę, ustawiasz na AniList.</value>
+  </data>
   <data name="BookServerAddress" xml:space="preserve">
     <value>Adres</value>
   </data>
@@ -11869,6 +11875,36 @@
   </data>
   <data name="MoreLikeThis" xml:space="preserve">
     <value>Podobne</value>
+  </data>
+  <data name="FollowingShowAll" xml:space="preserve">
+    <value>Pokaż wszystkie {count}</value>
+  </data>
+  <data name="FollowingNames_one" xml:space="preserve">
+    <value>{first}, {second} i {more} inna osoba</value>
+  </data>
+  <data name="FollowingNames_few" xml:space="preserve">
+    <value>{first}, {second} i {more} inne osoby</value>
+  </data>
+  <data name="FollowingNames_many" xml:space="preserve">
+    <value>{first}, {second} i {more} innych osób</value>
+  </data>
+  <data name="FollowingNames_other" xml:space="preserve">
+    <value>{first}, {second} i {more} innej osoby</value>
+  </data>
+  <data name="FollowingNamesTwo" xml:space="preserve">
+    <value>{first} i {second}</value>
+  </data>
+  <data name="FollowingMarkMore" xml:space="preserve">
+    <value>+{count}</value>
+  </data>
+  <data name="FollowingMarkSpoken" xml:space="preserve">
+    <value>{names}: obejrzane do tego miejsca.</value>
+  </data>
+  <data name="FollowingScoreSpoken" xml:space="preserve">
+    <value>Ocena {score} na 10</value>
+  </data>
+  <data name="FollowingOpenHelp" xml:space="preserve">
+    <value>Pokazuje, gdzie jest każda z tych osób.</value>
   </data>
   <data name="MoreFollowedProgress" xml:space="preserve">
     <value>{status} · {progress}</value>

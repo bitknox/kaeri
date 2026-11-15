@@ -9668,6 +9668,12 @@
   <data name="SettingsOpdsPort" xml:space="preserve">
     <value>Порт ленты</value>
   </data>
+  <data name="SettingsAnilistFollowing" xml:space="preserve">
+    <value>Показывать тех, на кого вы подписаны</value>
+  </data>
+  <data name="SettingsAnilistFollowingFooter" xml:space="preserve">
+    <value>Показывает на странице сериала и у его эпизодов, где сейчас те, на кого вы подписаны в AniList. Кто видит ваш собственный список, настраивается в AniList.</value>
+  </data>
   <data name="BookServerAddress" xml:space="preserve">
     <value>Адрес</value>
   </data>
@@ -11869,6 +11875,36 @@
   </data>
   <data name="MoreLikeThis" xml:space="preserve">
     <value>Похожие тайтлы</value>
+  </data>
+  <data name="FollowingShowAll" xml:space="preserve">
+    <value>Показать все {count}</value>
+  </data>
+  <data name="FollowingNames_one" xml:space="preserve">
+    <value>{first}, {second} и ещё {more}</value>
+  </data>
+  <data name="FollowingNames_few" xml:space="preserve">
+    <value>{first}, {second} и ещё {more}</value>
+  </data>
+  <data name="FollowingNames_many" xml:space="preserve">
+    <value>{first}, {second} и ещё {more}</value>
+  </data>
+  <data name="FollowingNames_other" xml:space="preserve">
+    <value>{first}, {second} и ещё {more}</value>
+  </data>
+  <data name="FollowingNamesTwo" xml:space="preserve">
+    <value>{first} и {second}</value>
+  </data>
+  <data name="FollowingMarkMore" xml:space="preserve">
+    <value>+{count}</value>
+  </data>
+  <data name="FollowingMarkSpoken" xml:space="preserve">
+    <value>{names}: просмотрено до этого места.</value>
+  </data>
+  <data name="FollowingScoreSpoken" xml:space="preserve">
+    <value>Оценка {score} из 10</value>
+  </data>
+  <data name="FollowingOpenHelp" xml:space="preserve">
+    <value>Показывает, где сейчас каждый.</value>
   </data>
   <data name="MoreFollowedProgress" xml:space="preserve">
     <value>{status} · {progress}</value>

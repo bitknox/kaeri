@@ -11883,6 +11883,12 @@ settings-opds-password = Hasło kanału
 # Row: the port the shared catalogue listens on. Empty picks a free one.
 settings-opds-port = Port kanału
 
+# Switch under the AniList account, on by default, for this device only: whether title pages show the people followed on AniList.
+settings-anilist-following = Pokazuj obserwowane osoby
+
+# Note under that switch.
+settings-anilist-following-footer = Pokazuje, gdzie w serii są osoby obserwowane na AniList, na jej stronie i przy odcinkach. Kto widzi Twoją listę, ustawiasz na AniList.
+
 # Label of the address field in the Add a server sheet.
 book-server-address = Adres
 
@@ -14004,6 +14010,33 @@ more-followed-score = { $score }/10
 
 # Heading of the list of titles people who liked this one also liked.
 more-like-this = Podobne
+
+# Button after the first five people followed, on wide screens. It shows the rest in place.
+following-show-all = Pokaż wszystkie { $count }
+
+# Second line of the People you follow row on phones and the TV, with three or more people: two names, then how many more. The names come from AniList.
+following-names =
+    { $more ->
+        [one] { $first }, { $second } i { $more } inna osoba
+        [few] { $first }, { $second } i { $more } inne osoby
+        [many] { $first }, { $second } i { $more } innych osób
+       *[other] { $first }, { $second } i { $more } innej osoby
+    }
+
+# Second line of the People you follow row on phones and the TV, with two people. The names come from AniList.
+following-names-two = { $first } i { $second }
+
+# After three pictures on an episode's mark, and after three names in the terminal: how many more people stopped there.
+following-mark-more = +{ $count }
+
+# Tooltip on an episode's mark, and the sentence a screen reader adds to the episode row: who stopped at this episode. The names are already joined.
+following-mark-spoken = { $names }: obejrzane do tego miejsca.
+
+# What a screen reader says in place of a score such as 8/10 beside a person followed.
+following-score-spoken = Ocena { $score } na 10
+
+# Hint of the People you follow row on phones and the TV, which opens the full list.
+following-open-help = Pokazuje, gdzie jest każda z tych osób.
 
 # Line of a followed person's list entry: their status and how far they are. Both are already worded.
 more-followed-progress = { $status } · { $progress }

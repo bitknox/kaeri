@@ -223,3 +223,5 @@ settings-subs-reset = Redefinir estilo das legendas
 settings-opds-feed = Compartilhar nesta rede
 settings-opds-password = Senha do feed
 settings-opds-port = Porta do feed
+settings-anilist-following = Mostrar quem você segue
+settings-anilist-following-footer = Mostra onde as pessoas que você segue no AniList estão em uma série, na página dela e nos episódios. Quem pode ver a sua lista é definido no AniList.

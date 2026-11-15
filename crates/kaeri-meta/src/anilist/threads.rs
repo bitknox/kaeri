@@ -194,6 +194,7 @@ impl AniList {
             limiter: base.limiter.clone(),
             token: self.token.clone(),
             endpoint: base.endpoint.clone(),
+            following: base.following.clone(),
         }
     }
 

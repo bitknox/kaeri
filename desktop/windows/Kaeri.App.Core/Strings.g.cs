@@ -9143,6 +9143,12 @@ public static partial class T
     /// <summary>Row: the port the shared catalogue listens on. Empty picks a free one.</summary>
     public static string SettingsOpdsPort => Get("SettingsOpdsPort");
 
+    /// <summary>Switch under the AniList account, on by default, for this device only: whether title pages show the people followed on AniList.</summary>
+    public static string SettingsAnilistFollowing => Get("SettingsAnilistFollowing");
+
+    /// <summary>Note under that switch.</summary>
+    public static string SettingsAnilistFollowingFooter => Get("SettingsAnilistFollowingFooter");
+
     /// <summary>Label of the address field in the Add a server sheet.</summary>
     public static string BookServerAddress => Get("BookServerAddress");
 
@@ -11137,6 +11143,27 @@ public static partial class T
 
     /// <summary>Heading of the list of titles people who liked this one also liked.</summary>
     public static string MoreLikeThis => Get("MoreLikeThis");
+
+    /// <summary>Button after the first five people followed, on wide screens. It shows the rest in place.</summary>
+    public static string FollowingShowAll(long count) => Fill(Get("FollowingShowAll"), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>Second line of the People you follow row on phones and the TV, with three or more people: two names, then how many more. The names come from AniList.</summary>
+    public static string FollowingNames(string first, string second, long more) => Fill(GetPlural("FollowingNames", more), ("first", first), ("second", second), ("more", more.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>Second line of the People you follow row on phones and the TV, with two people. The names come from AniList.</summary>
+    public static string FollowingNamesTwo(string first, string second) => Fill(Get("FollowingNamesTwo"), ("first", first), ("second", second));
+
+    /// <summary>After three pictures on an episode's mark, and after three names in the terminal: how many more people stopped there.</summary>
+    public static string FollowingMarkMore(long count) => Fill(Get("FollowingMarkMore"), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>Tooltip on an episode's mark, and the sentence a screen reader adds to the episode row: who stopped at this episode. The names are already joined.</summary>
+    public static string FollowingMarkSpoken(string names) => Fill(Get("FollowingMarkSpoken"), ("names", names));
+
+    /// <summary>What a screen reader says in place of a score such as 8/10 beside a person followed.</summary>
+    public static string FollowingScoreSpoken(long score) => Fill(Get("FollowingScoreSpoken"), ("score", score.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>Hint of the People you follow row on phones and the TV, which opens the full list.</summary>
+    public static string FollowingOpenHelp => Get("FollowingOpenHelp");
 
     /// <summary>Line of a followed person's list entry: their status and how far they are. Both are already worded.</summary>
     public static string MoreFollowedProgress(string status, string progress) => Fill(Get("MoreFollowedProgress"), ("status", status), ("progress", progress));
@@ -15231,6 +15258,8 @@ public static partial class T
         ["SettingsOpdsFeed"] = "Share on this network",
         ["SettingsOpdsPassword"] = "Feed password",
         ["SettingsOpdsPort"] = "Feed port",
+        ["SettingsAnilistFollowing"] = "Show people you follow",
+        ["SettingsAnilistFollowingFooter"] = "Shows where people you follow on AniList are in a show, on its page and its episodes. Who can see your own list is set on AniList.",
         ["BookServerAddress"] = "Address",
         ["BookServerAddressHint"] = "An address, or the whole OPDS link from Kavita.",
         ["BookServerKavitaKey"] = "This is a Kavita OPDS link. Its key signs you in, so no password is needed.",
@@ -15924,6 +15953,13 @@ public static partial class T
         ["MoreFollowingNote"] = "From AniList",
         ["MoreFollowedScore"] = "{score}/10",
         ["MoreLikeThis"] = "More like this",
+        ["FollowingShowAll"] = "Show all {count}",
+        ["FollowingNames_other"] = "{first}, {second} and {more} more",
+        ["FollowingNamesTwo"] = "{first} and {second}",
+        ["FollowingMarkMore"] = "+{count}",
+        ["FollowingMarkSpoken"] = "{names} watched up to here.",
+        ["FollowingScoreSpoken"] = "Score {score} out of 10",
+        ["FollowingOpenHelp"] = "Shows where each of them is.",
         ["MoreFollowedProgress"] = "{status} · {progress}",
         ["MoreEmpty"] = "AniList has no cast, staff or recommendations for this show yet.",
         ["MoreSpoiler"] = "Spoiler",

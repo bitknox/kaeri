@@ -19610,6 +19610,16 @@ pub fn settings_opds_port() -> String {
     text("settings-opds-port", &[])
 }
 
+/// Switch under the AniList account, on by default, for this device only: whether title pages show the people followed on AniList.
+pub fn settings_anilist_following() -> String {
+    text("settings-anilist-following", &[])
+}
+
+/// Note under that switch.
+pub fn settings_anilist_following_footer() -> String {
+    text("settings-anilist-following-footer", &[])
+}
+
 /// Label of the address field in the Add a server sheet.
 pub fn book_server_address() -> String {
     text("book-server-address", &[])
@@ -22939,6 +22949,41 @@ pub fn more_followed_score(score: i64) -> String {
 /// Heading of the list of titles people who liked this one also liked.
 pub fn more_like_this() -> String {
     text("more-like-this", &[])
+}
+
+/// Button after the first five people followed, on wide screens. It shows the rest in place.
+pub fn following_show_all(count: i64) -> String {
+    text("following-show-all", &[("count", Arg::Int(count))])
+}
+
+/// Second line of the People you follow row on phones and the TV, with three or more people: two names, then how many more. The names come from AniList.
+pub fn following_names(first: &str, second: &str, more: i64) -> String {
+    text("following-names", &[("first", Arg::Text(first)), ("second", Arg::Text(second)), ("more", Arg::Int(more))])
+}
+
+/// Second line of the People you follow row on phones and the TV, with two people. The names come from AniList.
+pub fn following_names_two(first: &str, second: &str) -> String {
+    text("following-names-two", &[("first", Arg::Text(first)), ("second", Arg::Text(second))])
+}
+
+/// After three pictures on an episode's mark, and after three names in the terminal: how many more people stopped there.
+pub fn following_mark_more(count: i64) -> String {
+    text("following-mark-more", &[("count", Arg::Int(count))])
+}
+
+/// Tooltip on an episode's mark, and the sentence a screen reader adds to the episode row: who stopped at this episode. The names are already joined.
+pub fn following_mark_spoken(names: &str) -> String {
+    text("following-mark-spoken", &[("names", Arg::Text(names))])
+}
+
+/// What a screen reader says in place of a score such as 8/10 beside a person followed.
+pub fn following_score_spoken(score: i64) -> String {
+    text("following-score-spoken", &[("score", Arg::Int(score))])
+}
+
+/// Hint of the People you follow row on phones and the TV, which opens the full list.
+pub fn following_open_help() -> String {
+    text("following-open-help", &[])
 }
 
 /// Line of a followed person's list entry: their status and how far they are. Both are already worded.
