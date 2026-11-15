@@ -12,7 +12,8 @@
 //! - A refusal counts against a format part only when the TV asked the relay for media, counted
 //!   as the request arrives: a TV that never asked for the picture said nothing about its codec.
 //! - Nothing counts while the TV waits on the source behind the relay, or after that source was
-//!   slow or failed: a torrent that has only just started is not a codec the TV lacks. A stall
+//!   slow or failed: a torrent that has only just started is not a codec the TV lacks. Nor does
+//!   it count after the relay served media whose first bytes are no format a receiver plays. A stall
 //!   with the source served in good time blames a copied audio codec alone, never the picture
 //!   or the container.
 //! - Before a file whose picture this TV hasn't played, a capability clip is loaded
@@ -296,6 +297,9 @@ struct State {
     errored: bool,
     /// The load in force, with its tracks, for a reload when a subtitle comes later.
     load: Option<Load>,
+    /// A reload of the same file asked for while paused: it loads paused, so the TV doesn't
+    /// start playing by itself.
+    hold_paused: bool,
     plan: Option<CastPlan>,
     /// What the session asked to cast, with the subtitles that came later: what a change of
     /// audio loads again.
@@ -564,6 +568,7 @@ impl CastPlayer {
             let mut state = lock(&self.inner.state);
             state.trying = true;
             state.reloading = false;
+            state.hold_paused = quiet && state.paused == Some(true);
             state.ended = false;
             state.failure = None;
             state.loaded = None;
@@ -628,6 +633,7 @@ impl CastPlayer {
         let reload = {
             let mut state = lock(&self.inner.state);
             let position = state.last.as_ref().map(|s| s.position);
+            let paused = state.paused == Some(true);
             if let Some(asked) = state.asked.as_mut() {
                 asked.subtitles.push(CastSubtitle {
                     path: path.to_owned(),
@@ -640,6 +646,8 @@ impl CastPlayer {
                 track.id = u32::try_from(load.tracks.len() + 1).unwrap_or(u32::MAX);
                 load.tracks.push(track);
                 load.start = position.or(load.start);
+                // Paused stays paused: the reload doesn't start the TV by itself.
+                load.autoplay = !paused;
                 load.clone()
             });
             if let Some(load) = &reload
@@ -663,8 +671,13 @@ impl CastPlayer {
                 let inner = Arc::downgrade(&self.inner);
                 answered(async move {
                     media.load(&load).await?;
-                    if let Some(inner) = inner.upgrade() {
-                        *lock(&inner.media) = Some(media);
+                    // A load starts at normal speed: the one asked for is set again.
+                    let rate = inner.upgrade().and_then(|inner| {
+                        *lock(&inner.media) = Some(media.clone());
+                        lock(&inner.state).asked_rate.filter(|r| (r - 1.0).abs() > f64::EPSILON)
+                    });
+                    if let Some(rate) = rate {
+                        media.set_rate(rate).await?;
                     }
                     Ok(())
                 })
@@ -704,6 +717,11 @@ impl CastPlayer {
     }
 
     pub async fn set_rate(&self, rate: f64) -> Result<(), CastError> {
+        // 0 or less is no speed to play at, and clamped it would play at half speed.
+        if !is_rate(rate) {
+            tracing::debug!(rate, "no speed to cast at");
+            return Ok(());
+        }
         let rate = rate.clamp(0.5, 2.0);
         lock(&self.inner.state).asked_rate = Some(rate);
         // Before a load there is nothing to set: the load applies it once it plays.
@@ -1068,7 +1086,7 @@ async fn attempt(inner: &Arc<Inner>, load: CastLoad) -> Result<CastPlan, CastFai
             tracks: tracks.clone(),
             active_tracks: active.clone(),
             style: None,
-            autoplay: true,
+            autoplay: !lock(&inner.state).hold_paused,
         };
         match try_plan(inner, plan.relayed(), cast).await? {
             Tried::Played => {
@@ -1253,12 +1271,17 @@ async fn stage(
     }
 }
 
+/// Whether what the TV did says anything about the format: it was served media, in good time,
+/// and that media started as a format it plays.
+fn fair(inner: &Inner) -> bool {
+    let source = inner.relay.source();
+    inner.relay.media_served() && !source.busy && !source.troubled && !source.unreadable
+}
+
 /// What a plan the TV didn't play teaches, by how it went.
 fn refused(inner: &Inner) -> Tried {
-    let source = inner.relay.source();
     // A TV that gave up while it waited on a slow source said nothing about the format.
-    let fair = inner.relay.media_served() && !source.busy && !source.troubled;
-    Tried::Refused(if fair { Blame::Format } else { Blame::Nothing })
+    Tried::Refused(if fair(inner) { Blame::Format } else { Blame::Nothing })
 }
 
 /// What a plan that never moved teaches: a stall says less than a refusal (see
@@ -1266,9 +1289,7 @@ fn refused(inner: &Inner) -> Tried {
 ///
 /// [`CastCaps::record_stall`]: crate::memory::CastCaps::record_stall
 fn stalled(inner: &Inner) -> Tried {
-    let source = inner.relay.source();
-    let fair = inner.relay.media_served() && !source.busy && !source.troubled;
-    Tried::Refused(if fair { Blame::Audio } else { Blame::Nothing })
+    Tried::Refused(if fair(inner) { Blame::Audio } else { Blame::Nothing })
 }
 
 /// Whether a plan that hasn't moved `waited` after its load has had its chance: the TV is
@@ -1367,6 +1388,10 @@ async fn try_plan(inner: &Arc<Inner>, relayed: bool, cast: Load) -> Result<Tried
                     Some("FINISHED") => return Ok(Tried::Played),
                     Some(_) => return Ok(refused(inner)),
                     None if last.position > from + 0.2 => return Ok(Tried::Played),
+                    // Loaded paused, as asked: the TV took the file and waits.
+                    None if !cast.autoplay && last.state == "PAUSED" => {
+                        return Ok(Tried::Played);
+                    }
                     None => {}
                 }
             }
@@ -1382,6 +1407,11 @@ async fn try_plan(inner: &Arc<Inner>, relayed: bool, cast: Load) -> Result<Tried
             return Ok(Tried::Refused(Blame::Nothing));
         }
     }
+}
+
+/// Whether `rate` is a speed to play at: a receiver's rate of 0 while it buffers is not.
+fn is_rate(rate: f64) -> bool {
+    rate.is_finite() && rate > 0.0
 }
 
 /// Apply a status the session may hear: `Loaded` for a new media session, then what changed.
@@ -1433,7 +1463,9 @@ fn apply(inner: &Inner, state: &mut State, status: &MediaStatus) {
         state.buffering = buffering;
         inner.say_locked(state, PlaybackEvent::Buffering(buffering));
     }
-    if state.rate != Some(status.rate) {
+    // A receiver whose player waits for data reports a rate of 0 (Shaka holds the video
+    // element there while it buffers): the speed it plays at is unchanged.
+    if is_rate(status.rate) && state.rate != Some(status.rate) {
         state.rate = Some(status.rate);
         inner.say_locked(state, PlaybackEvent::Speed(status.rate));
     }

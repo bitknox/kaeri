@@ -30,14 +30,18 @@ public struct EReaderSend: Identifiable, Equatable, Sendable {
     /// Empty for a send the engine started again after a restart, until it says which.
     public internal(set) var work: String
     public internal(set) var target: String
-    /// The chapters asked for, in reading order; empty for a restarted send.
-    public let chapters: [String]
+    /// The chapters asked for, in reading order. A send the engine started again after a
+    /// restart learns them when it says the send waits.
+    public internal(set) var chapters: [String]
     public internal(set) var phase: Phase
     /// The format asked for, so a send whose files are gone can be asked for again; nil for a
     /// restarted send.
     var format: ExportFormat?
     /// Stopped before the engine named its job: stopped as soon as it does.
     var cancelOnBind = false
+    /// Once ready, a line for each chapter that went without some of its pages, in the engine's
+    /// words: "One page of Volume 1 couldn't be read and isn't in the files."
+    public internal(set) var leftOut: [String] = []
 
     /// Which phase it is in, whatever it carries: for animating between them.
     public var kind: Int {
@@ -106,9 +110,11 @@ public final class SendModel {
     // MARK: Sending
 
     /// Asks for files of `chapters` for `target`. The send is the one returned, so a sheet can
-    /// follow it.
+    /// follow it. The same chapters already under way for the same e-reader are that send, and
+    /// nothing is asked again.
     @discardableResult
     public func begin(work: String, chapters: [String], target: ExportTarget, novel: Bool) -> Int? {
+        if let under = running(work: work, chapters: chapters, target: target.id) { return under.id }
         guard let format = Self.format(of: target, novel: novel) else { return nil }
         lastId += 1
         var send = EReaderSend(
@@ -187,6 +193,16 @@ public final class SendModel {
         sends.first { $0.work == work && $0.isRunning }
     }
 
+    /// The send under way for these same chapters of a series, to `target` or to any e-reader:
+    /// a Send sheet opened again shows it and starts no second one.
+    public func running(work: String, chapters: [String], target: String? = nil) -> EReaderSend? {
+        guard !chapters.isEmpty else { return nil }
+        let asked = Set(chapters)
+        return sends.first {
+            $0.work == work && $0.isRunning && Set($0.chapters) == asked && (target == nil || $0.target == target)
+        }
+    }
+
     // MARK: The answer to where you stopped
 
     public func stoppedAt(work: String, chapter: String?) {
@@ -218,16 +234,25 @@ public final class SendModel {
         case .exportTargets(let list):
             targets = list
             if let kept = list.first(where: \.chosen) { chosenTarget = kept.id }
-        case .exportProgress(let job, let done, let total, let chaptersDone, let chapters):
+        case .exportProgress(
+            job: let job, done: let done, total: let total, chaptersDone: let chaptersDone, chapters: let chapters,
+            work: let work, target: let target, sendChapters: let sendChapters):
             let fraction = total > 0 ? min(1, max(0, Double(done) / Double(total))) : nil
-            update(job: job) { $0.phase = .preparing(fraction: fraction, done: Int(chaptersDone), total: Int(chapters)) }
-        case .exportFailed(let job, let chapter, let failure):
+            // A send held across a restart is placed by these: its series page, its device, and
+            // the chapters Shared reports as sent.
+            update(job: job, work: work, target: target, chapters: sendChapters) {
+                $0.phase = .preparing(fraction: fraction, done: Int(chaptersDone), total: Int(chapters))
+            }
+        case .exportFailed(job: let job, chapter: let chapter, failure: let failure, work: let work, target: let target):
             let words = chapter.map { L.sendFailedChapter(chapter: $0, cause: failure.sendWords) } ?? L.sendFailed(cause: failure.sendWords)
-            update(job: job) { $0.phase = .failed(words) }
-        case .exportWaiting(let job, let work, let target, let line, _):
-            update(job: job, work: work, target: target) { $0.phase = .waiting(line: line.text) }
-        case .exportReady(let job, let files):
-            update(job: job) { $0.phase = .ready(files) }
+            update(job: job, work: work, target: target) { $0.phase = .failed(words) }
+        case .exportWaiting(let job, let work, let target, let line, let chapters):
+            update(job: job, work: work, target: target, chapters: chapters) { $0.phase = .waiting(line: line.text) }
+        case .exportReady(let job, let files, let skipped):
+            update(job: job) {
+                $0.phase = .ready(files)
+                $0.leftOut = skipped.map(\.line.text)
+            }
         case .feed(let view):
             if !feedStaged { feed = view }
         case .failed(.export, let failure):
@@ -243,12 +268,20 @@ public final class SendModel {
 
     /// The send a job belongs to: the one already bound to it, else the first one asked for
     /// that the engine had not named yet, else one the app never started (a send held across a
-    /// restart), which shows all the same.
-    private func update(job: JobId, work: String? = nil, target: String? = nil, _ change: (inout EReaderSend) -> Void) {
+    /// restart), which shows all the same. A send that knows no chapters takes the ones the
+    /// engine names, so Shared can say which chapters went.
+    private func update(
+        job: JobId, work: String? = nil, target: String? = nil, chapters: [String] = [],
+        _ change: (inout EReaderSend) -> Void
+    ) {
         let index: Int
         if let found = sends.firstIndex(where: { $0.job == job }) {
             index = found
-        } else if let unbound = sends.firstIndex(where: { $0.job == nil && $0.isRunning }) {
+        } else if let unbound = sends.firstIndex(where: {
+            // A send held across a restart names its series, so it never takes the place of one
+            // just asked for of another series.
+            $0.job == nil && $0.isRunning && (work == nil || $0.work.isEmpty || $0.work == work)
+        }) {
             sends[unbound].job = job
             index = unbound
         } else {
@@ -260,6 +293,7 @@ public final class SendModel {
         }
         if let work, sends[index].work.isEmpty { sends[index].work = work }
         if let target, sends[index].target.isEmpty { sends[index].target = target }
+        if !chapters.isEmpty, sends[index].chapters.isEmpty { sends[index].chapters = chapters }
         if sends[index].cancelOnBind, let bound = sends[index].job {
             command?(.reading(.cancelPrepare(job: bound)))
             sends.remove(at: index)

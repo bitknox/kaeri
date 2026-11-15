@@ -102,10 +102,16 @@ export-device-colour-eink = Цветной E-ink, 7 дюймов
 export-device-tablet = Планшет
 export-chapter = Глава { $chapter }
 export-waits-for-wifi = { $n ->
-    [one] Одна глава ещё не скачана, поэтому отправка дождётся Wi-Fi и продолжится сама.
+    [one] { $n } глава ещё не скачана, поэтому отправка дождётся Wi-Fi и продолжится сама.
     [few] { $n } главы ещё не скачаны, поэтому отправка дождётся Wi-Fi и продолжится сама.
     [many] { $n } глав ещё не скачано, поэтому отправка дождётся Wi-Fi и продолжится сама.
    *[other] { $n } главы ещё не скачаны, поэтому отправка дождётся Wi-Fi и продолжится сама.
+ }
+export-pages-left-out = { $n ->
+    [one] { $n } страницу из { $chapter } не удалось прочитать, её нет в файлах.
+    [few] { $n } страницы из { $chapter } не удалось прочитать, их нет в файлах.
+    [many] { $n } страниц из { $chapter } не удалось прочитать, их нет в файлах.
+   *[other] { $n } страницы из { $chapter } не удалось прочитать, их нет в файлах.
  }
 reading-chapter-titled = Глава { $chapter } · { $title }
 reading-row-read = Прочитано
@@ -192,13 +198,13 @@ reading-estimate-mobile = по мобильной сети
 reading-estimate-waits-wifi = ждёт Wi-Fi
 reading-downloads-done-title = Загрузки завершены
 reading-downloads-done-chapters = { $count ->
-    [one] Глава «{ $title }» готова для чтения офлайн.
+    [one] { $count } глава «{ $title }» готова для чтения офлайн.
     [few] { $count } главы «{ $title }» готовы для чтения офлайн.
     [many] { $count } глав «{ $title }» готовы для чтения офлайн.
    *[other] { $count } главы «{ $title }» готовы для чтения офлайн.
  }
 reading-downloads-done-parts = { $count ->
-    [one] Часть «{ $title }» готова для чтения офлайн.
+    [one] { $count } часть «{ $title }» готова для чтения офлайн.
     [few] { $count } части «{ $title }» готовы для чтения офлайн.
     [many] { $count } частей «{ $title }» готовы для чтения офлайн.
    *[other] { $count } части «{ $title }» готовы для чтения офлайн.

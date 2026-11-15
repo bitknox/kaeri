@@ -26,16 +26,139 @@ const BACKOFF_BASE_SECS: i64 = 30;
 
 /// Ceiling on the backoff. An hour is long enough to ride out an outage without leaving
 /// a recovered tracker waiting for days.
-const BACKOFF_MAX_SECS: i64 = 3_600;
-
-/// Failures after which an operation is abandoned.
 ///
-/// Far away on purpose. Every discard loses a progress push the user earned by watching
-/// something, so this must mean "no amount of waiting will fix it" rather than "the network
-/// was down for a while" — at the capped hourly backoff, roughly two days of continuous
-/// failure. A laptop closed for a week never reaches it, because the clock that matters is
-/// attempts, not time.
+/// Also the longest any wait in the queue may be: one set further off than this was set by a
+/// clock that ran ahead, and is due at once.
+pub const BACKOFF_MAX_SECS: i64 = 3_600;
+
+/// Refusals after which an operation is abandoned.
+///
+/// Far away on purpose. Every discard loses a change the person made, so this must mean "no
+/// amount of waiting will fix it" rather than "the network was down for a while". Only
+/// [`Store::fail`] and [`Store::fail_read`] count toward it, and the drain calls them only for
+/// a tracker's refusal of that one change: a network that is down, a tracker's own trouble, a
+/// pause it asked for or a rejected credential never count, however long they last. At the
+/// capped hourly backoff this is roughly two days of the tracker refusing the same change.
 const MAX_ATTEMPTS: u32 = 50;
+
+/// How many abandoned operations are remembered for the app to show.
+const DROPPED_KEPT: usize = 100;
+
+/// Where the abandoned operations are remembered, in `app_state`.
+const DROPPED_KEY: &str = "outbox_dropped";
+
+/// Where the abandoned operations nobody has been told about yet wait, in `app_state`: kept
+/// apart from the record so that saying one, once, takes it out of here and leaves the record.
+const UNTOLD_KEY: &str = "outbox_dropped_untold";
+
+/// An operation the outbox gave up on: the change, and the tracker's last word on it.
+#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
+pub struct DroppedOp {
+    pub tracker_id: String,
+    pub op: TrackOp,
+    /// The tracker's refusal, as it last said it.
+    pub error: String,
+    /// When it was given up, in seconds since the epoch.
+    pub at: i64,
+}
+
+/// The claim query for `table`: due rows, oldest first, leaving out any row with an older row
+/// for the same title still waiting. A later change to a title must never reach the tracker
+/// before an earlier one that is backing off, or the earlier one would land last and undo it.
+fn claim_sql(table: &str) -> String {
+    // Due: its time has come, or it is further off than any wait the queue sets, which only a
+    // clock that ran ahead when the wait was set leaves behind. Without that, a change whose push
+    // failed while the clock read a year ahead waited that year after the clock was put right.
+    let due = |row: &str| {
+        format!(
+            "({row}.next_retry <= ?2
+              OR ({row}.next_retry > ?2 + {BACKOFF_MAX_SECS} AND {row}.next_retry <> {DEFERRED}))"
+        )
+    };
+    format!(
+        "SELECT id, tracker_id, op, attempts, created_at
+           FROM {table} o
+          WHERE tracker_id = ?1 AND {o_due}
+            AND NOT EXISTS (
+                SELECT 1 FROM {table} e
+                 WHERE e.tracker_id = o.tracker_id AND e.anilist_id = o.anilist_id
+                   AND NOT {e_due}
+                   AND (e.created_at < o.created_at
+                        OR (e.created_at = o.created_at AND e.id < o.id)))
+          ORDER BY created_at ASC, id ASC
+          LIMIT ?3",
+        o_due = due("o"),
+        e_due = due("e"),
+    )
+}
+
+/// Count a refusal of the op `id` in `table`, and schedule its retry, or give it up and
+/// remember it once it has had [`MAX_ATTEMPTS`]. True when it was given up.
+fn refuse_in(
+    c: &rusqlite::Connection,
+    table: &str,
+    id: i64,
+    error: &str,
+    now: i64,
+) -> Result<bool> {
+    let row: Option<(u32, String, String)> = c
+        .query_row(
+            &format!("SELECT attempts + 1, tracker_id, op FROM {table} WHERE id = ?1"),
+            [id],
+            |r| Ok((r.get(0)?, r.get(1)?, r.get(2)?)),
+        )
+        .optional()?;
+    let Some((attempts, tracker_id, op)) = row else { return Ok(false) };
+    if attempts < MAX_ATTEMPTS {
+        c.execute(
+            &format!(
+                "UPDATE {table} SET attempts = ?1, last_error = ?2, next_retry = ?3 + ?4
+                  WHERE id = ?5"
+            ),
+            rusqlite::params![attempts, error, now, backoff_secs(attempts), id],
+        )?;
+        return Ok(false);
+    }
+    tracing::error!(id, attempts, %error, table, "giving up on a change the tracker keeps refusing");
+    c.execute(&format!("DELETE FROM {table} WHERE id = ?1"), [id])?;
+    // Kept, so the change is not gone without a word: the app can say which change the
+    // tracker would not take, and why.
+    // It also waits to be said, once, by whichever engine drains next: this one, or the next
+    // launch when the app closes first.
+    if let Ok(op) = serde_json::from_str::<TrackOp>(&op) {
+        let dropped = DroppedOp { tracker_id, op, error: error.to_owned(), at: now };
+        for key in [DROPPED_KEY, UNTOLD_KEY] {
+            let mut kept = dropped_ops_in(c, key)?;
+            kept.push(dropped.clone());
+            let over = kept.len().saturating_sub(DROPPED_KEPT);
+            kept.drain(..over);
+            put_dropped_ops(c, key, &kept)?;
+        }
+    }
+    Ok(true)
+}
+
+fn dropped_in(c: &rusqlite::Connection) -> Result<Vec<DroppedOp>> {
+    dropped_ops_in(c, DROPPED_KEY)
+}
+
+fn dropped_ops_in(c: &rusqlite::Connection, key: &str) -> Result<Vec<DroppedOp>> {
+    let json: Option<String> = c
+        .query_row("SELECT value FROM app_state WHERE key = ?1", [key], |r| r.get(0))
+        .optional()?;
+    Ok(json.and_then(|json| serde_json::from_str(&json).ok()).unwrap_or_default())
+}
+
+fn put_dropped_ops(c: &rusqlite::Connection, key: &str, ops: &[DroppedOp]) -> Result<()> {
+    let json = serde_json::to_string(ops)
+        .map_err(|source| StoreError::Encode { what: "dropped outbox ops", source })?;
+    c.execute(
+        "INSERT INTO app_state (key, value) VALUES (?1, ?2)
+         ON CONFLICT(key) DO UPDATE SET value = excluded.value",
+        rusqlite::params![key, json],
+    )?;
+    Ok(())
+}
 
 /// `next_retry` for an op held until the id mappings change.
 ///
@@ -265,13 +388,7 @@ impl Store {
         limit: u32,
     ) -> Result<Vec<OutboxEntry>> {
         self.with_personal(|c| {
-            let mut stmt = c.prepare(
-                "SELECT id, tracker_id, op, attempts, created_at
-                   FROM read_outbox
-                  WHERE tracker_id = ?1 AND next_retry <= ?2
-                  ORDER BY created_at ASC, id ASC
-                  LIMIT ?3",
-            )?;
+            let mut stmt = c.prepare(&claim_sql("read_outbox"))?;
             let rows = stmt.query_map(rusqlite::params![tracker_id, now, limit], |r| {
                 Ok((
                     r.get::<_, i64>(0)?,
@@ -309,27 +426,10 @@ impl Store {
         })
     }
 
-    /// Record a failure of a reading op and schedule a retry, as [`Self::fail`] does.
-    pub fn fail_read(&self, id: i64, error: &str, now: i64) -> Result<()> {
-        self.with_personal(|c| {
-            let attempts = c
-                .query_row("SELECT attempts + 1 FROM read_outbox WHERE id = ?1", [id], |r| {
-                    r.get::<_, u32>(0)
-                })
-                .unwrap_or(1);
-            if attempts >= MAX_ATTEMPTS {
-                tracing::error!(id, attempts, %error, "giving up on a reading outbox operation");
-                c.execute("DELETE FROM read_outbox WHERE id = ?1", [id])?;
-                return Ok(());
-            }
-            c.execute(
-                "UPDATE read_outbox
-                    SET attempts = ?1, last_error = ?2, next_retry = ?3 + ?4
-                  WHERE id = ?5",
-                rusqlite::params![attempts, error, now, backoff_secs(attempts), id],
-            )?;
-            Ok(())
-        })
+    /// Count the tracker's refusal of a reading op, as [`Self::fail`] does. True when it was
+    /// given up.
+    pub fn fail_read(&self, id: i64, error: &str, now: i64) -> Result<bool> {
+        self.with_personal_tx(|c| refuse_in(c, "read_outbox", id, error, now))
     }
 
     /// Hold a reading op until it can be addressed or the tracker may be asked again at `until`.
@@ -383,13 +483,7 @@ impl Store {
         limit: u32,
     ) -> Result<Vec<OutboxEntry>> {
         self.with_personal(|c| {
-            let mut stmt = c.prepare(
-                "SELECT id, tracker_id, op, attempts, created_at
-                   FROM sync_outbox
-                  WHERE tracker_id = ?1 AND next_retry <= ?2
-                  ORDER BY created_at ASC, id ASC
-                  LIMIT ?3",
-            )?;
+            let mut stmt = c.prepare(&claim_sql("sync_outbox"))?;
             let rows = stmt.query_map(rusqlite::params![tracker_id, now, limit], |r| {
                 let json: String = r.get(2)?;
                 Ok((
@@ -438,43 +532,45 @@ impl Store {
         })
     }
 
-    /// Record a failure and schedule a retry, or give up on an operation that never will.
-    pub fn fail(&self, id: i64, error: &str, now: i64) -> Result<()> {
+    /// Count the tracker's refusal of an op and schedule a retry, or give up on one it keeps
+    /// refusing. True when it was given up, which [`Self::dropped_track_ops`] then remembers.
+    ///
+    /// Without a ceiling, an operation that could never succeed, such as a title the tracker
+    /// has deleted, would retry hourly for the life of the installation and hold the `⇅` badge
+    /// above zero for good. Only refusals reach here: a failure that is not the tracker's word
+    /// on this change waits through [`Self::postpone`] instead, and never counts.
+    pub fn fail(&self, id: i64, error: &str, now: i64) -> Result<bool> {
+        self.with_personal_tx(|c| refuse_in(c, "sync_outbox", id, error, now))
+    }
+
+    /// Hold an op until `until` without counting anything against it: a failure that says
+    /// nothing about the change, such as the tracker's trouble with this one title.
+    pub fn postpone(&self, id: i64, reason: &str, until: i64) -> Result<()> {
         self.with_personal(|c| {
-            let attempts = c
-                .query_row("SELECT attempts + 1 FROM sync_outbox WHERE id = ?1", [id], |r| {
-                    r.get::<_, u32>(0)
-                })
-                .unwrap_or(1);
-
-            // Without a ceiling on `attempts`, an operation that could never succeed, such as a
-            // title the tracker has deleted, would retry hourly for the life of the installation
-            // and hold the `⇅` badge above zero for good.
-            //
-            // The ceiling is deliberately far away. Discarding this row loses a progress push
-            // the user earned by watching something, which is worse than a stuck badge, so it
-            // has to be unambiguous that no amount of waiting will help: at the capped hourly
-            // backoff this is roughly two days of continuous failure.
-            if attempts >= MAX_ATTEMPTS {
-                tracing::error!(
-                    id,
-                    attempts,
-                    %error,
-                    "giving up on an outbox operation after repeated failures"
-                );
-                c.execute("DELETE FROM sync_outbox WHERE id = ?1", [id])?;
-                return Ok(());
-            }
-
             c.execute(
-                "UPDATE sync_outbox
-                    SET attempts = ?1,
-                        last_error = ?2,
-                        next_retry = ?3 + ?4
-                  WHERE id = ?5",
-                rusqlite::params![attempts, error, now, backoff_secs(attempts), id],
+                "UPDATE sync_outbox SET next_retry = ?1, last_error = ?2 WHERE id = ?3",
+                rusqlite::params![until, reason, id],
             )?;
             Ok(())
+        })
+    }
+
+    /// The operations the outbox gave up on, oldest first, the last hundred of them: changes
+    /// a tracker refused until the outbox stopped asking.
+    pub fn dropped_track_ops(&self) -> Result<Vec<DroppedOp>> {
+        self.with_personal(dropped_in)
+    }
+
+    /// The operations given up since the app last said so, oldest first, taken: each is
+    /// returned once, by one call, however many engines share the library. A change given up
+    /// while no app was open waits here for the next launch.
+    pub fn take_untold_dropped_track_ops(&self) -> Result<Vec<DroppedOp>> {
+        self.with_personal_tx(|c| {
+            let untold = dropped_ops_in(c, UNTOLD_KEY)?;
+            if !untold.is_empty() {
+                c.execute("DELETE FROM app_state WHERE key = ?1", [UNTOLD_KEY])?;
+            }
+            Ok(untold)
         })
     }
 
@@ -610,6 +706,10 @@ mod tests {
         TrackOp::SetProgress { anilist_id: HOSHIKUZU, episode }
     }
 
+    fn progress_of(id: u32) -> TrackOp {
+        TrackOp::SetProgress { anilist_id: AnilistId::new(id), episode: 1 }
+    }
+
     #[test]
     fn a_title_with_its_own_id_is_never_queued_for_a_tracker() {
         let store = Store::open_in_memory().unwrap();
@@ -716,15 +816,126 @@ mod tests {
         store.enqueue("anilist", &progress(7), 0).unwrap();
         let id = store.claim_ready("anilist", 0, 10).unwrap()[0].id;
 
-        for attempt in 0..MAX_ATTEMPTS {
-            store.fail(id, "gone", i64::from(attempt) * 10_000).unwrap();
+        for attempt in 1..MAX_ATTEMPTS {
+            assert!(!store.fail(id, "gone", i64::from(attempt) * 10_000).unwrap());
         }
+        assert!(store.fail(id, "Not Found.", 1_000_000).unwrap(), "the last refusal gives up");
 
         assert_eq!(
             store.outbox_depth(Some("anilist")).unwrap(),
             0,
             "the queue should not carry an operation forever"
         );
+        let kept = store.dropped_track_ops().unwrap();
+        assert_eq!(
+            kept,
+            [DroppedOp {
+                tracker_id: "anilist".into(),
+                op: progress(7),
+                error: "Not Found.".into(),
+                at: 1_000_000,
+            }],
+            "the change given up is kept, with the tracker's last word on it"
+        );
+    }
+
+    #[test]
+    fn a_change_given_up_is_handed_out_to_be_said_once() {
+        let store = Store::open_in_memory().unwrap();
+        let id = store.enqueue("anilist", &progress(7), 0).unwrap().unwrap();
+        let read = TrackOp::SetReadProgress {
+            anilist_id: AnilistId::new(8),
+            chapter: 3,
+            volume: None,
+        };
+        let read_id = store.enqueue("mal", &read, 0).unwrap().unwrap();
+        for attempt in 0..MAX_ATTEMPTS {
+            store.fail(id, "Not Found.", i64::from(attempt)).unwrap();
+            store.fail_read(read_id, "refused", i64::from(attempt)).unwrap();
+        }
+
+        let untold: Vec<_> = store
+            .take_untold_dropped_track_ops()
+            .unwrap()
+            .into_iter()
+            .map(|d| (d.tracker_id, d.op))
+            .collect();
+        assert_eq!(untold, [("anilist".to_owned(), progress(7)), ("mal".to_owned(), read)]);
+        assert!(
+            store.take_untold_dropped_track_ops().unwrap().is_empty(),
+            "taken once, by whichever engine asked first"
+        );
+        assert_eq!(store.dropped_track_ops().unwrap().len(), 2, "the record keeps both");
+    }
+
+    #[test]
+    fn a_reading_op_given_up_is_kept_and_the_record_stays_bounded() {
+        let store = Store::open_in_memory().unwrap();
+        for n in 0..(DROPPED_KEPT as u32 + 5) {
+            let op = TrackOp::SetReadProgress {
+                anilist_id: AnilistId::new(990_000 + n),
+                chapter: 1,
+                volume: None,
+            };
+            let id = store.enqueue("mal", &op, 0).unwrap().unwrap();
+            let given_up = (0..MAX_ATTEMPTS)
+                .map(|attempt| store.fail_read(id, "refused", i64::from(attempt)).unwrap())
+                .collect::<Vec<_>>();
+            assert_eq!(given_up.iter().filter(|g| **g).count(), 1);
+            assert!(given_up[MAX_ATTEMPTS as usize - 1]);
+        }
+        assert_eq!(store.read_outbox_depth(Some("mal")).unwrap(), 0);
+        let kept = store.dropped_track_ops().unwrap();
+        assert_eq!(kept.len(), DROPPED_KEPT, "only the latest are kept");
+        assert_eq!(kept[0].op.anilist_id(), AnilistId::new(990_005), "the oldest went first");
+    }
+
+    #[test]
+    fn a_retry_set_while_the_clock_ran_ahead_is_due_once_it_is_put_right() {
+        let store = Store::open_in_memory().unwrap();
+        let ahead = 365 * 86_400;
+        let id = store.enqueue("anilist", &progress(7), ahead).unwrap().unwrap();
+        store.fail(id, "refused", ahead).unwrap();
+        let newer =
+            TrackOp::SetStatus { anilist_id: HOSHIKUZU, status: WatchStatus::Completed, at: 2 };
+        store.enqueue("anilist", &newer, ahead + 1).unwrap();
+        assert!(
+            store.claim_ready("anilist", ahead + 1, 10).unwrap().is_empty(),
+            "still waiting"
+        );
+        // The clock put right: both are due, in the order they were made.
+        let due = store.claim_ready("anilist", 2_000, 10).unwrap();
+        assert_eq!(due.iter().map(|e| e.op.clone()).collect::<Vec<_>>(), [progress(7), newer]);
+        // A row held for a mapping stays held.
+        let held = store.enqueue("anilist", &progress_of(990_002), 2_000).unwrap().unwrap();
+        store.defer(held, "no id").unwrap();
+        assert_eq!(store.claim_ready("anilist", 2_000, 10).unwrap().len(), 2);
+    }
+
+    #[test]
+    fn a_newer_op_for_a_title_waits_behind_an_older_one_backing_off() {
+        let store = Store::open_in_memory().unwrap();
+        let status = |status, at| TrackOp::SetStatus { anilist_id: HOSHIKUZU, status, at };
+        let older = store.enqueue("anilist", &status(WatchStatus::Current, 1), 0).unwrap();
+        store.fail(older.unwrap(), "refused", 0).unwrap();
+        store.enqueue("anilist", &status(WatchStatus::Completed, 2), 5).unwrap();
+        let other = TrackOp::SetStatus {
+            anilist_id: AnilistId::new(990_001),
+            status: WatchStatus::Completed,
+            at: 2,
+        };
+        store.enqueue("anilist", &other, 5).unwrap();
+
+        let ready = store.claim_ready("anilist", 10, 10).unwrap();
+        assert_eq!(
+            ready.iter().map(|e| e.op.clone()).collect::<Vec<_>>(),
+            [other],
+            "the newer status waits; another title does not"
+        );
+        let later = store.claim_ready("anilist", backoff_secs(1) + 1, 10).unwrap();
+        assert_eq!(later.len(), 3, "once the older one may go, both go, in order");
+        assert_eq!(later[0].op, status(WatchStatus::Current, 1));
+        assert_eq!(later[1].op, status(WatchStatus::Completed, 2));
     }
 
     #[test]

@@ -131,6 +131,50 @@ pub enum Action {
     Fullscreen,
     Detach,
     StopPlayback,
+
+    // Reader. Its own table, as the player has, so a key can mean one thing while reading.
+    /// Space: forward, whichever way the book reads.
+    ReaderNext,
+    ReaderPrevious,
+    /// The page to the left: forward in a right-to-left book, as the page moves.
+    ReaderLeft,
+    ReaderRight,
+    /// A page at fit width, a zoomed page or a strip, three rows on or back.
+    ReaderScrollDown,
+    ReaderScrollUp,
+    ReaderFirst,
+    ReaderLast,
+    ReaderNextChapter,
+    ReaderPreviousChapter,
+    /// The series page, with the cursor on the open chapter.
+    ReaderChapters,
+    /// Back to the page a jump left, while the engine offers it.
+    ReaderBackToPage,
+    /// A field for a page's number, from the palette, and the jump to it; a strip's image.
+    ReaderGoToPage,
+    ReaderMarkRead,
+    ReaderDownload,
+    /// Hide the header and status line for a bare page, or show them; Continue on the end page.
+    ReaderBare,
+    /// Paged or strip, for the series, as the engine keeps the choice.
+    ReaderMode,
+    /// Fit screen or fit width, kept on this computer.
+    ReaderFit,
+    /// Zoom in to 200%, or leave the zoom.
+    ReaderZoom,
+    ReaderZoomIn,
+    ReaderZoomOut,
+    /// One page or two side by side, kept on this computer.
+    ReaderPages,
+    /// A light novel's text column 4 narrower or wider.
+    ReaderNarrower,
+    ReaderWider,
+    ReaderSettings,
+    ReaderLeave,
+    /// Try again after a failure, or read a finished series again from the start.
+    ReaderAgain,
+    /// Past the extras to the next numbered chapter, from the end page.
+    ReaderSkip,
 }
 
 impl Action {
@@ -227,6 +271,44 @@ impl Action {
         Self::StopPlayback,
     ];
 
+    /// The reader's actions, which the palette offers only while reading: elsewhere there is
+    /// no page for them to turn.
+    pub const READER: &'static [Self] = &[
+        Self::ReaderNext,
+        Self::ReaderPrevious,
+        Self::ReaderLeft,
+        Self::ReaderRight,
+        Self::ReaderScrollDown,
+        Self::ReaderScrollUp,
+        Self::ReaderFirst,
+        Self::ReaderLast,
+        Self::ReaderNextChapter,
+        Self::ReaderPreviousChapter,
+        Self::ReaderChapters,
+        Self::ReaderBackToPage,
+        Self::ReaderGoToPage,
+        Self::ReaderMarkRead,
+        Self::ReaderDownload,
+        Self::ReaderBare,
+        Self::ReaderMode,
+        Self::ReaderFit,
+        Self::ReaderZoom,
+        Self::ReaderZoomIn,
+        Self::ReaderZoomOut,
+        Self::ReaderPages,
+        Self::ReaderNarrower,
+        Self::ReaderWider,
+        Self::ReaderSettings,
+        Self::ReaderLeave,
+        Self::ReaderAgain,
+        Self::ReaderSkip,
+    ];
+
+    /// The global actions that keep their keys in the reader. Section digits, Tab and the
+    /// rest do nothing there, so the reader's table can have the keys it needs.
+    pub const IN_READER: &'static [Self] =
+        &[Self::Help, Self::CommandPalette, Self::Quit, Self::ShowLogs];
+
     /// Label shown in the help overlay and the command palette.
     pub fn label(self) -> &'static str {
         use kaeri_i18n::t;
@@ -316,6 +398,34 @@ impl Action {
             Self::Fullscreen => t::keys_action_fullscreen(),
             Self::Detach => t::keys_action_detach(),
             Self::StopPlayback => t::keys_action_stop_playback(),
+            Self::ReaderNext => t::tui_reader_action_next(),
+            Self::ReaderPrevious => t::tui_reader_action_previous(),
+            Self::ReaderLeft => t::tui_reader_action_left(),
+            Self::ReaderRight => t::tui_reader_action_right(),
+            Self::ReaderScrollDown => t::tui_reader_action_scroll_down(),
+            Self::ReaderScrollUp => t::tui_reader_action_scroll_up(),
+            Self::ReaderFirst => t::tui_reader_action_first(),
+            Self::ReaderLast => t::tui_reader_action_last(),
+            Self::ReaderNextChapter => t::tui_reader_action_next_chapter(),
+            Self::ReaderPreviousChapter => t::tui_reader_action_previous_chapter(),
+            Self::ReaderChapters => t::series_chapters(),
+            Self::ReaderBackToPage => t::tui_reader_action_back_to_page(),
+            Self::ReaderGoToPage => t::tui_reader_action_go_to_page(),
+            Self::ReaderMarkRead => t::tui_read_read_unread(),
+            Self::ReaderDownload => t::tui_read_keys_download(),
+            Self::ReaderBare => t::tui_reader_action_bare(),
+            Self::ReaderMode => t::tui_reader_action_mode(),
+            Self::ReaderFit => t::tui_reader_action_fit(),
+            Self::ReaderZoom => t::tui_reader_action_zoom(),
+            Self::ReaderZoomIn => t::tui_reader_action_zoom_in(),
+            Self::ReaderZoomOut => t::tui_reader_action_zoom_out(),
+            Self::ReaderPages => t::tui_reader_action_pages(),
+            Self::ReaderNarrower => t::tui_reader_action_narrower(),
+            Self::ReaderWider => t::tui_reader_action_wider(),
+            Self::ReaderSettings => t::tui_reader_action_settings(),
+            Self::ReaderLeave => t::tui_reader_action_leave(),
+            Self::ReaderAgain => t::reader_try_again(),
+            Self::ReaderSkip => t::tui_reader_action_skip(),
         })
     }
 
@@ -345,6 +455,12 @@ impl Action {
             Self::DeleteDownload => said(t::keys_hint_delete()),
             Self::RaiseSource => said(t::keys_hint_move_up()),
             Self::LowerSource => said(t::keys_hint_move_down()),
+            Self::ReaderNext | Self::ReaderLeft => said(t::tui_reader_hint_next()),
+            Self::ReaderPrevious | Self::ReaderRight => said(t::tui_reader_hint_back()),
+            Self::ReaderSettings => said(t::tui_reader_hint_settings()),
+            Self::ReaderNarrower | Self::ReaderWider => said(t::tui_reader_hint_width()),
+            Self::ReaderLeave => said(t::keys_hint_back()),
+            Self::ReaderAgain => said(t::reader_try_again()),
             other => other.label(),
         }
     }
@@ -416,6 +532,35 @@ impl Action {
                 Scope::Providers
             }
 
+            Self::ReaderMode
+            | Self::ReaderFit
+            | Self::ReaderZoom
+            | Self::ReaderZoomIn
+            | Self::ReaderZoomOut
+            | Self::ReaderPages
+            | Self::ReaderNarrower
+            | Self::ReaderWider
+            | Self::ReaderSettings => Scope::ReaderView,
+            Self::ReaderNext
+            | Self::ReaderPrevious
+            | Self::ReaderLeft
+            | Self::ReaderRight
+            | Self::ReaderScrollDown
+            | Self::ReaderScrollUp
+            | Self::ReaderFirst
+            | Self::ReaderLast
+            | Self::ReaderNextChapter
+            | Self::ReaderPreviousChapter
+            | Self::ReaderChapters
+            | Self::ReaderBackToPage
+            | Self::ReaderGoToPage
+            | Self::ReaderMarkRead
+            | Self::ReaderDownload
+            | Self::ReaderBare
+            | Self::ReaderLeave
+            | Self::ReaderAgain
+            | Self::ReaderSkip => Scope::Reader,
+
             _ => Scope::Playback,
         }
     }
@@ -470,6 +615,7 @@ impl Action {
             Scope::Downloads => t::keys_where_downloads(),
             Scope::Providers => t::keys_where_sources(),
             Scope::Episodes => t::keys_where_episodes(),
+            Scope::Reader | Scope::ReaderView => t::tui_reader_where(),
             _ => t::keys_where_elsewhere(),
         })
     }
@@ -508,6 +654,10 @@ pub enum Scope {
     Downloads,
     Providers,
     Playback,
+    /// The reader's own keys: listed by the reader's key reference, never the shows' one.
+    Reader,
+    /// The keys that change how the reader shows pages.
+    ReaderView,
 }
 
 impl Scope {
@@ -533,6 +683,8 @@ impl Scope {
             Self::Downloads => t::keys_scope_downloads(),
             Self::Providers => t::keys_scope_sources(),
             Self::Playback => t::keys_scope_playback(),
+            Self::Reader => t::tui_reader_keys_reader(),
+            Self::ReaderView => t::tui_reader_keys_view(),
         })
     }
 }
@@ -547,6 +699,8 @@ mod tests {
         let mut keys: Vec<String> = keymap
             .palette_entries("", Context::Browsing)
             .iter()
+            .chain(keymap.palette_entries("", Context::Reading).iter())
+            .filter(|(a, _)| !super::Action::IN_READER.contains(a))
             .map(|(a, _)| a.config_key())
             .collect();
         let count = keys.len();

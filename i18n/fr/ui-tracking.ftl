@@ -18,7 +18,7 @@ accounts-list-empty = Les titres que vous ajoutez sur { $tracker } s'affichent i
 accounts-state-signed-out = Non connecté
 accounts-state-signed-in = Connecté à { $tracker } en tant que { $name }
 accounts-state-signed-in-waiting = { $count ->
-    [one] Connecté à { $tracker } en tant que { $name } · une modification en attente
+    [one] Connecté à { $tracker } en tant que { $name } · { $count } modification en attente
     [many] Connecté à { $tracker } en tant que { $name } · { $count } modifications en attente
    *[other] Connecté à { $tracker } en tant que { $name } · { $count } modifications en attente
  }

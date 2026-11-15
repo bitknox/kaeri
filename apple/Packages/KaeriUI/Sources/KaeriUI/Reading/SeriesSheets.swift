@@ -302,7 +302,9 @@ struct ReadFromSheet: View {
 
     private func row(_ edition: BookEditionRow) -> some View {
         Button {
-            if !edition.inUse { store.reading.chooseEdition(work, edition) }
+            // The one in use is chosen again too: the series page may still name the source it
+            // read from before a new match, and a choice puts it right.
+            store.reading.chooseEdition(work, edition)
             dismiss()
         } label: {
             HStack(spacing: 12) {
@@ -372,9 +374,19 @@ struct ReadFromSheet: View {
             return checking
         case .listed, nil:
             guard has else { return edition.listing == nil ? checking : empty }
+            // A range only runs to a number. A newest chapter known by name, as a book in one file
+            // is known by its title, gives the count instead: "1 chapter".
             let latest = edition.latest ?? String(edition.chapters)
+            guard isNumber(latest) else { return L.readingChapters(count: Int(max(edition.chapters, 1))) }
             return first ? L.seriesReadFromChapters(latest: latest) : L.seriesReadFromChaptersLater(latest: latest)
         }
+    }
+
+    /// A chapter label that is only a number, such as 12 or 12.5.
+    static func isNumber(_ label: String) -> Bool {
+        let words = label.trimmingCharacters(in: .whitespaces)
+        return words.first?.isASCII == true && words.first?.isNumber == true
+            && words.allSatisfy { $0.isASCII && ($0.isNumber || $0 == ".") }
     }
 }
 

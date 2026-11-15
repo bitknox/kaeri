@@ -55,4 +55,27 @@ struct ChooseChaptersTests {
     @Test func selectAllStillTakesEveryUnreadChapter() {
         #expect(SeriesChoosing.unread(chapters) == ids(6...30))
     }
+
+    /// A folder's chapters are files on this device: none is offered for download, Choose
+    /// chapters starts with none of them, and the series' Download rests.
+    private func folder(_ count: Int, downloadedToo: Bool = false) -> ReadChapters {
+        let rows = (1...count).map { n in
+            ChapterRow(
+                id: ChapterId("c\(n)"), label: "Chapter \(n)", state: .unread,
+                number: "\(n)", title: nil, volume: nil, published: nil, pages: 20, newChapter: false,
+                download: downloadedToo && n == 1 ? .done : nil, versions: 1, bookmarked: false, onDevice: !(downloadedToo && n == 1))
+        }
+        return ReadChapters(edition: nil, volumes: [VolumeGroup(chapters: rows)], failure: nil)
+    }
+
+    @Test func chaptersOnTheDeviceOfferNoDownload() {
+        let files = folder(5)
+        #expect(files.volumes[0].chapters.allSatisfy { !$0.downloadable })
+        #expect(SeriesChoosing.start(files).isEmpty)
+        #expect(!SeriesChoosing.hasDownloads(files))
+        // A chapter from a source beside them can be downloaded, and one downloaded can be deleted.
+        #expect(SeriesChoosing.hasDownloads(chapters))
+        #expect(SeriesChoosing.hasDownloads(folder(5, downloadedToo: true)))
+        #expect(!SeriesChoosing.hasDownloads(nil))
+    }
 }

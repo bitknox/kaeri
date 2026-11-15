@@ -61,3 +61,4 @@ servers-row-summary-apple = { $series ->
     [one] 1 serie
    *[other] { $series } serier
  }
+book-picker-message = Välj en mapp med dina böcker.

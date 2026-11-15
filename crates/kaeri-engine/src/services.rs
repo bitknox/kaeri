@@ -137,12 +137,8 @@ impl Services {
         let secrets = host.secrets().unwrap_or_else(|| crate::host::file_secrets(&paths));
         let tokens = TokenStore::over(secrets);
         let local = crate::local::Local::new(store.clone());
-        let book_sources = crate::read_sources::BookSources::new(
-            store.clone(),
-            tokens.clone(),
-            http.plain().clone(),
-            &paths,
-        );
+        let book_sources =
+            crate::read_sources::BookSources::new(store.clone(), tokens.clone(), &http, &paths);
         book_sources.downloads.use_titles(meta.titles().clone());
         #[cfg(feature = "opds-feed")]
         book_sources.feed.use_titles(meta.titles().clone());

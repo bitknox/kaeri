@@ -887,6 +887,10 @@
     <value>[{source} ŕéƒüšéð ţĥé ŕéƣüéšţ. {reason}~~~~~~~~~]</value>
     <comment>Why a chapter or a list could not load: the source refused. The reason comes from the source.</comment>
   </data>
+  <data name="ReadingFailedHostNotAllowed" xml:space="preserve">
+    <value>[Ţĥé þļüĝîñ ƒöŕ {source} àšķéð ƒöŕ à ĥöšţ îţ îšñ'ţ àļļöŵéð ţö ŕéàçĥ. Åñ üþðàţé ţö ţĥé þļüĝîñ ɱàý ƒîẋ îţ.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]</value>
+    <comment>Why a chapter or a list could not load: the source's plugin asked for a host its manifest doesn't list, so the request never left the device and the source refused nothing. An update to the plugin usually fixes it.</comment>
+  </data>
   <data name="ReadingFailedParse" xml:space="preserve">
     <value>[Ķàéŕî çöüļðñ'ţ ŕéàð ŵĥàţ {source} šéñţ. Îţš þļüĝîñ ɱàý ñééð àñ üþðàţé.~~~~~~~~~~~~~~~~~~~~]</value>
     <comment>Why a chapter or a list could not load: the source answered with something Kaeri could not read.</comment>
@@ -1175,6 +1179,14 @@
     <value>[{n} çĥàþţéŕš àŕéñ'ţ ðöŵñļöàðéð ýéţ, šö ţĥîš šéñð ŵàîţš ƒöŕ Ŵî-Ƒî àñð ĝöéš öñ ƀý îţšéļƒ.~~~~~~~~~~~~~~~~~~~~~~~~~~~]</value>
     <comment>Send to e-reader: a send that waits because chapters must be fetched and downloads are kept to Wi-Fi. A send makes its files from every chapter at once, so all of it waits. n is how many chapters it still has to fetch.</comment>
   </data>
+  <data name="ExportPagesLeftOut_one" xml:space="preserve">
+    <value>[Öñé þàĝé öƒ {chapter} çöüļðñ'ţ ƀé ŕéàð àñð îšñ'ţ îñ ţĥé ƒîļéš.~~~~~~~~~~~~~~~~~]</value>
+    <comment>Send to e-reader, under the ready files: pages of one chapter that couldn't be read, as the reader shows them broken, so the files go without them. The chapter is its name as the series shows it, such as Chapter 12 or Volume 1. n is how many pages were left out.</comment>
+  </data>
+  <data name="ExportPagesLeftOut_other" xml:space="preserve">
+    <value>[{n} þàĝéš öƒ {chapter} çöüļðñ'ţ ƀé ŕéàð àñð àŕéñ'ţ îñ ţĥé ƒîļéš.~~~~~~~~~~~~~~~~~~]</value>
+    <comment>Send to e-reader, under the ready files: pages of one chapter that couldn't be read, as the reader shows them broken, so the files go without them. The chapter is its name as the series shows it, such as Chapter 12 or Volume 1. n is how many pages were left out.</comment>
+  </data>
   <data name="ReadingChapterTitled" xml:space="preserve">
     <value>[Çĥàþţéŕ {chapter} · {title}~~~~~~]</value>
     <comment>Under a This week cell: the chapter that came out that day, with its own title.</comment>
@@ -1450,6 +1462,14 @@
   <data name="ReadingEstimateWaitsWifi" xml:space="preserve">
     <value>[ŵàîţš ƒöŕ Ŵî-Ƒî~~~~~]</value>
     <comment>The device is on mobile data and the chapters wait until it's on Wi-Fi.</comment>
+  </data>
+  <data name="ReadingDownloadOnDevice" xml:space="preserve">
+    <value>[Ţĥéšé àŕé ƒîļéš öñ ţĥîš ðéṽîçé àļŕéàðý. Ţĥéý ŕéàð öƒƒļîñé ŵîţĥöüţ à ðöŵñļöàð.~~~~~~~~~~~~~~~~~~~~~~~~]</value>
+    <comment>Notice after Download on chapters that are files in the person's own folders: they open from where they are, so nothing is downloaded.</comment>
+  </data>
+  <data name="ReadingUntitledSeries" xml:space="preserve">
+    <value>[Ûñţîţļéð šéŕîéš~~~~~]</value>
+    <comment>A series' name where neither the catalogue nor its source gave one: on Downloads, in a sent file's name and in the e-reader's library.</comment>
   </data>
   <data name="ReadingDownloadsDoneTitle" xml:space="preserve">
     <value>[Ðöŵñļöàðš ƒîñîšĥéð~~~~~~]</value>
@@ -2091,6 +2111,26 @@
     <value>[Šîĝñéð öüţ öƒ {tracker}. {count} ƣüéüéð çĥàñĝéš àŕé ķéþţ ƒöŕ ţĥé ñéẋţ šîĝñ-îñ.~~~~~~~~~~~~~~~~~~~~~]</value>
     <comment>Toast after signing out of a tracker. The changes were not discarded: they are sent after the next sign-in.</comment>
   </data>
+  <data name="NoticeTrackerChangeRefused" xml:space="preserve">
+    <value>[{tracker} ķéþţ ŕéƒüšîñĝ à çĥàñĝé ţö {title}, šö îţ šţàýš îñ Ķàéŕî öñļý.~~~~~~~~~~~~~~~~~~~]</value>
+    <comment>Toast, shown once, when a tracker kept refusing a change to a title for about two days and the change stopped being sent. The change itself is still saved in the app. The tracker is its name, such as AniList; the title is a show's or a series' name. The notice capsule holds two lines on a phone, so keep it about as short as the English.</comment>
+  </data>
+  <data name="NoticeTrackerChangesRefused_one" xml:space="preserve">
+    <value>[{tracker} ķéþţ ŕéƒüšîñĝ çĥàñĝéš ţö {title} àñð öñé ɱöŕé ţîţļé, šö ţĥéý šţàý îñ Ķàéŕî öñļý.~~~~~~~~~~~~~~~~~~~~~~~~]</value>
+    <comment>The same toast when changes to several titles stopped being sent to one tracker at once. The title is the first of them; others is how many more titles there are.</comment>
+  </data>
+  <data name="NoticeTrackerChangesRefused_other" xml:space="preserve">
+    <value>[{tracker} ķéþţ ŕéƒüšîñĝ çĥàñĝéš ţö {title} àñð {others} ɱöŕé ţîţļéš, šö ţĥéý šţàý îñ Ķàéŕî öñļý.~~~~~~~~~~~~~~~~~~~~~~~~~]</value>
+    <comment>The same toast when changes to several titles stopped being sent to one tracker at once. The title is the first of them; others is how many more titles there are.</comment>
+  </data>
+  <data name="NoticeTrackerChangeRefusedUntitled_one" xml:space="preserve">
+    <value>[{tracker} ķéþţ ŕéƒüšîñĝ à çĥàñĝé, šö îţ šţàýš îñ Ķàéŕî öñļý.~~~~~~~~~~~~~~~~~]</value>
+    <comment>The same toast when the app has no name for the titles. Count is how many titles.</comment>
+  </data>
+  <data name="NoticeTrackerChangeRefusedUntitled_other" xml:space="preserve">
+    <value>[{tracker} ķéþţ ŕéƒüšîñĝ çĥàñĝéš ţö {count} ţîţļéš, šö ţĥéý šţàý îñ Ķàéŕî öñļý.~~~~~~~~~~~~~~~~~~~~~]</value>
+    <comment>The same toast when the app has no name for the titles. Count is how many titles.</comment>
+  </data>
   <data name="NoticeSignOutFailed" xml:space="preserve">
     <value>[Çöüļðñ'ţ šîĝñ öüţ öƒ {tracker}. Ţŕý àĝàîñ. {reason}~~~~~~~~~~~~]</value>
     <comment>Toast when signing out of a tracker failed. The reason comes from the system.</comment>
@@ -2174,6 +2214,10 @@
   <data name="NoticeNotSaved" xml:space="preserve">
     <value>[Çöüļðñ'ţ šàṽé ţĥàţ šéţţîñĝ. {reason}~~~~~~~~~~]</value>
     <comment>Toast when a setting could not be stored. The reason comes from the system.</comment>
+  </data>
+  <data name="NoticeChangeNotKept" xml:space="preserve">
+    <value>[Çöüļðñ'ţ šàṽé ţĥàţ çĥàñĝé. {reason}~~~~~~~~~]</value>
+    <comment>Toast when something the person did, such as a chapter marked read, a place in a book, a watched episode or a list change, could not be stored. The reason comes from the system.</comment>
   </data>
   <data name="NoticeTitleLoadFailed" xml:space="preserve">
     <value>[Çöüļðñ'ţ ļöàð ţĥîš ţîţļé. Çĥéçķ ýöüŕ çöññéçţîöñ àñð ţŕý àĝàîñ.~~~~~~~~~~~~~~~~~~~]</value>
@@ -2972,6 +3016,10 @@
   <data name="FeedFirewallBodyWindows" xml:space="preserve">
     <value>[Ţö ļéţ é-ŕéàðéŕš àţ ĥöɱé ŕéàçĥ ţĥé ƒééð, àļļöŵ Ķàéŕî öñ þŕîṽàţé ñéţŵöŕķš öñļý. Ļéàṽé þüƀļîç ñéţŵöŕķš üñţîçķéð.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]</value>
     <comment>Body of that dialog. "Private networks" and "public networks" are the names Windows' own question uses.</comment>
+  </data>
+  <data name="WindowsGroupPickerIn" xml:space="preserve">
+    <value>[Ĝŕöüþ îñ {source}~~~~]</value>
+    <comment>Header of the group picker that opens from the Group row's Change on a series page. The source is a site or server name, such as "books.home.example".</comment>
   </data>
   <data name="SettingsLoading" xml:space="preserve">
     <value>[Ļöàðîñĝ šéţţîñĝš~~~~~]</value>
@@ -4892,6 +4940,14 @@
   <data name="DownloadsEmptyDetail" xml:space="preserve">
     <value>[Ðöŵñļöàðéð éþîšöðéš þļàý ŵîţĥöüţ à çöññéçţîöñ.~~~~~~~~~~~~~~]</value>
     <comment>Line under the empty title.</comment>
+  </data>
+  <data name="ReadDownloadsEmptyDetail" xml:space="preserve">
+    <value>[Ðöŵñļöàðéð çĥàþţéŕš öþéñ ŵîţĥöüţ à çöññéçţîöñ.~~~~~~~~~~~~~~]</value>
+    <comment>Downloads' empty line for a person who only reads, under "No downloads".</comment>
+  </data>
+  <data name="ReadDownloadsEmptyBoth" xml:space="preserve">
+    <value>[Ðöŵñļöàðéð éþîšöðéš àñð çĥàþţéŕš öþéñ ŵîţĥöüţ à çöññéçţîöñ.~~~~~~~~~~~~~~~~~~]</value>
+    <comment>Downloads' empty line for a person who watches and reads, under "No downloads".</comment>
   </data>
   <data name="DownloadsLoadFailed" xml:space="preserve">
     <value>[Çöüļðñ'ţ ļöàð ðöŵñļöàðš~~~~~~~]</value>
@@ -10679,6 +10735,14 @@
   <data name="SendBanner" xml:space="preserve">
     <value>[Šéñðîñĝ ţö {device}~~~~~]</value>
     <comment>A send in a list or banner that is under way, with a ring beside it. The device is the e-reader.</comment>
+  </data>
+  <data name="SendRowChapters" xml:space="preserve">
+    <value>[Çĥàþţéŕš {first} ţö {last}~~~~~~]</value>
+    <comment>The chapters a send holds, on its row under Sending to, when there are several: the first to the last, by their numbers or labels, such as 21 to 23.</comment>
+  </data>
+  <data name="SendRowLine" xml:space="preserve">
+    <value>[{title} · {chapters}~~~]</value>
+    <comment>A send's row under Sending to: the series' title, then the chapters the send holds, such as "Chapter 23" or "Chapters 21 to 23". Shown on one line.</comment>
   </data>
   <data name="SendFormatFixedEpub" xml:space="preserve">
     <value>[Ƒîẋéð-ļàýöüţ ÉÞÛƁ~~~~~~]</value>

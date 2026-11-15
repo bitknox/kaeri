@@ -30,7 +30,7 @@ widget-action-start = Reproduzir { $episode }
 widget-a11y-episode = episódio { $episode }
 widget-a11y-episode-marked = { $episode }, { $mark }
 widget-a11y-resume = { $minutes ->
-    [one] { $episode }, falta um minuto
+    [one] { $episode }, falta { $minutes } minuto
     [many] { $episode }, faltam { $minutes } minutos
    *[other] { $episode }, faltam { $minutes } minutos
  }
@@ -48,7 +48,7 @@ widget-a11y-out-now = { $title }, episódio { $episode }, já saiu
 widget-downloaded-line = Episódio { $episode } baixado
 widget-downloaded-ready = Pronto para assistir offline
 widget-downloading-title = { $count ->
-    [one] Baixando um episódio
+    [one] Baixando { $count } episódio
     [many] Baixando { $count } episódios
    *[other] Baixando { $count } episódios
  }
@@ -65,7 +65,7 @@ widget-a11y-downloading = { $title }, episódio { $episode }, { $percent }
 widget-a11y-then-paused = { $label }, pausado
 widget-a11y-then-time-left = { $label }, faltam { $time }
 widget-a11y-then-count = { $count ->
-    [one] { $label }, um episódio baixando
+    [one] { $label }, { $count } episódio baixando
     [many] { $label }, { $count } episódios baixando
    *[other] { $label }, { $count } episódios baixando
  }
@@ -75,12 +75,12 @@ widget-resume-downloads = Retomar downloads
 widget-pause-downloads = Pausar downloads
 widget-paused-line = Pausado · faltam { $left }
 widget-a11y-playback-paused = { $minutes ->
-    [one] { $title }, episódio { $episode }, pausado, falta um minuto
+    [one] { $title }, episódio { $episode }, pausado, falta { $minutes } minuto
     [many] { $title }, episódio { $episode }, pausado, faltam { $minutes } minutos
    *[other] { $title }, episódio { $episode }, pausado, faltam { $minutes } minutos
  }
 widget-a11y-playback-playing = { $minutes ->
-    [one] { $title }, episódio { $episode }, reproduzindo, falta um minuto
+    [one] { $title }, episódio { $episode }, reproduzindo, falta { $minutes } minuto
     [many] { $title }, episódio { $episode }, reproduzindo, faltam { $minutes } minutos
    *[other] { $title }, episódio { $episode }, reproduzindo, faltam { $minutes } minutos
  }

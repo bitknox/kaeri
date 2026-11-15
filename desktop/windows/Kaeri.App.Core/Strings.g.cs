@@ -627,6 +627,9 @@ public static partial class T
     /// <summary>Why a chapter or a list could not load: the source refused. The reason comes from the source.</summary>
     public static string ReadingFailedBlocked(string source, string reason) => Fill(Get("ReadingFailedBlocked"), ("source", source), ("reason", reason));
 
+    /// <summary>Why a chapter or a list could not load: the source's plugin asked for a host its manifest doesn't list, so the request never left the device and the source refused nothing. An update to the plugin usually fixes it.</summary>
+    public static string ReadingFailedHostNotAllowed(string source) => Fill(Get("ReadingFailedHostNotAllowed"), ("source", source));
+
     /// <summary>Why a chapter or a list could not load: the source answered with something Kaeri could not read.</summary>
     public static string ReadingFailedParse(string source) => Fill(Get("ReadingFailedParse"), ("source", source));
 
@@ -834,6 +837,9 @@ public static partial class T
     /// <summary>Send to e-reader: a send that waits because chapters must be fetched and downloads are kept to Wi-Fi. A send makes its files from every chapter at once, so all of it waits. n is how many chapters it still has to fetch.</summary>
     public static string ExportWaitsForWifi(long n) => Fill(GetPlural("ExportWaitsForWifi", n), ("n", n.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
+    /// <summary>Send to e-reader, under the ready files: pages of one chapter that couldn't be read, as the reader shows them broken, so the files go without them. The chapter is its name as the series shows it, such as Chapter 12 or Volume 1. n is how many pages were left out.</summary>
+    public static string ExportPagesLeftOut(long n, string chapter) => Fill(GetPlural("ExportPagesLeftOut", n), ("n", n.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)), ("chapter", chapter));
+
     /// <summary>Under a This week cell: the chapter that came out that day, with its own title.</summary>
     public static string ReadingChapterTitled(string chapter, string title) => Fill(Get("ReadingChapterTitled"), ("chapter", chapter), ("title", title));
 
@@ -1010,6 +1016,12 @@ public static partial class T
 
     /// <summary>The device is on mobile data and the chapters wait until it's on Wi-Fi.</summary>
     public static string ReadingEstimateWaitsWifi => Get("ReadingEstimateWaitsWifi");
+
+    /// <summary>Notice after Download on chapters that are files in the person's own folders: they open from where they are, so nothing is downloaded.</summary>
+    public static string ReadingDownloadOnDevice => Get("ReadingDownloadOnDevice");
+
+    /// <summary>A series' name where neither the catalogue nor its source gave one: on Downloads, in a sent file's name and in the e-reader's library.</summary>
+    public static string ReadingUntitledSeries => Get("ReadingUntitledSeries");
 
     /// <summary>The notification's title.</summary>
     public static string ReadingDownloadsDoneTitle => Get("ReadingDownloadsDoneTitle");
@@ -1461,6 +1473,15 @@ public static partial class T
     /// <summary>Toast after signing out of a tracker. The changes were not discarded: they are sent after the next sign-in.</summary>
     public static string NoticeSignedOutQueue(string tracker, long count) => Fill(GetPlural("NoticeSignedOutQueue", count), ("tracker", tracker), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
+    /// <summary>Toast, shown once, when a tracker kept refusing a change to a title for about two days and the change stopped being sent. The change itself is still saved in the app. The tracker is its name, such as AniList; the title is a show's or a series' name. The notice capsule holds two lines on a phone, so keep it about as short as the English.</summary>
+    public static string NoticeTrackerChangeRefused(string tracker, string title) => Fill(Get("NoticeTrackerChangeRefused"), ("tracker", tracker), ("title", title));
+
+    /// <summary>The same toast when changes to several titles stopped being sent to one tracker at once. The title is the first of them; others is how many more titles there are.</summary>
+    public static string NoticeTrackerChangesRefused(string tracker, string title, long others) => Fill(GetPlural("NoticeTrackerChangesRefused", others), ("tracker", tracker), ("title", title), ("others", others.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>The same toast when the app has no name for the titles. Count is how many titles.</summary>
+    public static string NoticeTrackerChangeRefusedUntitled(string tracker, long count) => Fill(GetPlural("NoticeTrackerChangeRefusedUntitled", count), ("tracker", tracker), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
+
     /// <summary>Toast when signing out of a tracker failed. The reason comes from the system.</summary>
     public static string NoticeSignOutFailed(string tracker, string reason) => Fill(Get("NoticeSignOutFailed"), ("tracker", tracker), ("reason", reason));
 
@@ -1520,6 +1541,9 @@ public static partial class T
 
     /// <summary>Toast when a setting could not be stored. The reason comes from the system.</summary>
     public static string NoticeNotSaved(string reason) => Fill(Get("NoticeNotSaved"), ("reason", reason));
+
+    /// <summary>Toast when something the person did, such as a chapter marked read, a place in a book, a watched episode or a list change, could not be stored. The reason comes from the system.</summary>
+    public static string NoticeChangeNotKept(string reason) => Fill(Get("NoticeChangeNotKept"), ("reason", reason));
 
     /// <summary>Toast when a title's details did not load.</summary>
     public static string NoticeTitleLoadFailed => Get("NoticeTitleLoadFailed");
@@ -2093,6 +2117,9 @@ public static partial class T
 
     /// <summary>Body of that dialog. "Private networks" and "public networks" are the names Windows' own question uses.</summary>
     public static string FeedFirewallBodyWindows => Get("FeedFirewallBodyWindows");
+
+    /// <summary>Header of the group picker that opens from the Group row's Change on a series page. The source is a site or server name, such as "books.home.example".</summary>
+    public static string WindowsGroupPickerIn(string source) => Fill(Get("WindowsGroupPickerIn"), ("source", source));
 
     /// <summary>Busy line while Settings waits for the engine's values.</summary>
     public static string SettingsLoading => Get("SettingsLoading");
@@ -3497,6 +3524,12 @@ public static partial class T
 
     /// <summary>Line under the empty title.</summary>
     public static string DownloadsEmptyDetail => Get("DownloadsEmptyDetail");
+
+    /// <summary>Downloads' empty line for a person who only reads, under "No downloads".</summary>
+    public static string ReadDownloadsEmptyDetail => Get("ReadDownloadsEmptyDetail");
+
+    /// <summary>Downloads' empty line for a person who watches and reads, under "No downloads".</summary>
+    public static string ReadDownloadsEmptyBoth => Get("ReadDownloadsEmptyBoth");
 
     /// <summary>Title when the list could not be read.</summary>
     public static string DownloadsLoadFailed => Get("DownloadsLoadFailed");
@@ -7669,6 +7702,12 @@ public static partial class T
 
     /// <summary>A send in a list or banner that is under way, with a ring beside it. The device is the e-reader.</summary>
     public static string SendBanner(string device) => Fill(Get("SendBanner"), ("device", device));
+
+    /// <summary>The chapters a send holds, on its row under Sending to, when there are several: the first to the last, by their numbers or labels, such as 21 to 23.</summary>
+    public static string SendRowChapters(string first, string last) => Fill(Get("SendRowChapters"), ("first", first), ("last", last));
+
+    /// <summary>A send's row under Sending to: the series' title, then the chapters the send holds, such as "Chapter 23" or "Chapters 21 to 23". Shown on one line.</summary>
+    public static string SendRowLine(string title, string chapters) => Fill(Get("SendRowLine"), ("title", title), ("chapters", chapters));
 
     /// <summary>The format of the files an e-reader is sent: a manga as a fixed-layout EPUB.</summary>
     public static string SendFormatFixedEpub => Get("SendFormatFixedEpub");
@@ -12229,6 +12268,7 @@ public static partial class T
         ["ReadingFailedNotFound"] = "This source doesn't have it anymore. Try another source.",
         ["ReadingFailedNoSource"] = "None of your sources has this series yet. Search for it by another name in Read from, or add a source in Your sources.",
         ["ReadingFailedBlocked"] = "{source} refused the request. {reason}",
+        ["ReadingFailedHostNotAllowed"] = "The plugin for {source} asked for a host it isn't allowed to reach. An update to the plugin may fix it.",
         ["ReadingFailedParse"] = "Kaeri couldn't read what {source} sent. Its plugin may need an update.",
         ["ReadingFailedPage"] = "This page didn't load (error {status}). Try again.",
         ["ReadingPictureFailed"] = "Couldn't load picture",
@@ -12301,6 +12341,8 @@ public static partial class T
         ["ExportChapter"] = "Chapter {chapter}",
         ["ExportWaitsForWifi_one"] = "One chapter isn't downloaded yet, so this send waits for Wi-Fi and goes on by itself.",
         ["ExportWaitsForWifi_other"] = "{n} chapters aren't downloaded yet, so this send waits for Wi-Fi and goes on by itself.",
+        ["ExportPagesLeftOut_one"] = "One page of {chapter} couldn't be read and isn't in the files.",
+        ["ExportPagesLeftOut_other"] = "{n} pages of {chapter} couldn't be read and aren't in the files.",
         ["ReadingChapterTitled"] = "Chapter {chapter} · {title}",
         ["ReadingRowRead"] = "Read",
         ["ReadingRowNew"] = "New",
@@ -12370,6 +12412,8 @@ public static partial class T
         ["ReadingEstimateWifi"] = "over Wi-Fi",
         ["ReadingEstimateMobile"] = "over mobile data",
         ["ReadingEstimateWaitsWifi"] = "waits for Wi-Fi",
+        ["ReadingDownloadOnDevice"] = "These are files on this device already. They read offline without a download.",
+        ["ReadingUntitledSeries"] = "Untitled series",
         ["ReadingDownloadsDoneTitle"] = "Downloads finished",
         ["ReadingDownloadsDoneChapters_one"] = "A chapter of {title} is ready to read offline.",
         ["ReadingDownloadsDoneChapters_other"] = "{count} chapters of {title} are ready to read offline.",
@@ -12530,6 +12574,11 @@ public static partial class T
         ["NoticeSignedOut"] = "Signed out of {tracker}.",
         ["NoticeSignedOutQueue_one"] = "Signed out of {tracker}. One queued change is kept for the next sign-in.",
         ["NoticeSignedOutQueue_other"] = "Signed out of {tracker}. {count} queued changes are kept for the next sign-in.",
+        ["NoticeTrackerChangeRefused"] = "{tracker} kept refusing a change to {title}, so it stays in Kaeri only.",
+        ["NoticeTrackerChangesRefused_one"] = "{tracker} kept refusing changes to {title} and one more title, so they stay in Kaeri only.",
+        ["NoticeTrackerChangesRefused_other"] = "{tracker} kept refusing changes to {title} and {others} more titles, so they stay in Kaeri only.",
+        ["NoticeTrackerChangeRefusedUntitled_one"] = "{tracker} kept refusing a change, so it stays in Kaeri only.",
+        ["NoticeTrackerChangeRefusedUntitled_other"] = "{tracker} kept refusing changes to {count} titles, so they stay in Kaeri only.",
         ["NoticeSignOutFailed"] = "Couldn't sign out of {tracker}. Try again. {reason}",
         ["NoticeNotSavedBecause"] = "Couldn't save that setting. {cause}",
         ["NoticeProxySaved"] = "Torrent traffic now goes through the proxy.",
@@ -12551,6 +12600,7 @@ public static partial class T
         ["LegalHostsNoContent"] = "Kaeri doesn't host any shows or books. You add your own sources.",
         ["NoticeSaved"] = "Saved {label}.",
         ["NoticeNotSaved"] = "Couldn't save that setting. {reason}",
+        ["NoticeChangeNotKept"] = "Couldn't save that change. {reason}",
         ["NoticeTitleLoadFailed"] = "Couldn't load this title. Check your connection and try again.",
         ["NoticePlaybackFailed"] = "Playback failed. Try another source.",
         ["NoticeEngineFault"] = "Something went wrong inside Kaeri. It carried on, but if a screen looks stuck, quit and open it again.",
@@ -12752,6 +12802,7 @@ public static partial class T
         ["OpdsPausedVpnWindows"] = "Paused. This PC is only connected through a VPN.",
         ["FeedFirewallTitleWindows"] = "Windows will ask about the network",
         ["FeedFirewallBodyWindows"] = "To let e-readers at home reach the feed, allow Kaeri on private networks only. Leave public networks unticked.",
+        ["WindowsGroupPickerIn"] = "Group in {source}",
         ["SettingsLoading"] = "Loading settings",
         ["SettingsGroupMpv"] = "mpv",
         ["SettingsCardState"] = "{title}, {state}",
@@ -13232,6 +13283,8 @@ public static partial class T
         ["DownloadsSpaceLabel"] = "Space used by downloads",
         ["DownloadsEmptyTitle"] = "No downloads",
         ["DownloadsEmptyDetail"] = "Downloaded episodes play without a connection.",
+        ["ReadDownloadsEmptyDetail"] = "Downloaded chapters open without a connection.",
+        ["ReadDownloadsEmptyBoth"] = "Downloaded episodes and chapters open without a connection.",
         ["DownloadsLoadFailed"] = "Couldn't load downloads",
         ["DownloadsFolderFailed"] = "Couldn't open the folder. Check that it still exists.",
         ["DownloadsEpisodeName"] = "Episode {episode}",
@@ -14685,6 +14738,8 @@ public static partial class T
         ["SendFilesGone"] = "These files are gone. Prepared files are kept for a day.",
         ["SendAgain"] = "Send again",
         ["SendBanner"] = "Sending to {device}",
+        ["SendRowChapters"] = "Chapters {first} to {last}",
+        ["SendRowLine"] = "{title} · {chapters}",
         ["SendFormatFixedEpub"] = "Fixed-layout EPUB",
         ["SendFormatKepub"] = "KEPUB",
         ["SendFormatEpub"] = "EPUB",

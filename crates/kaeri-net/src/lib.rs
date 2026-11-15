@@ -8,6 +8,7 @@ pub mod client;
 pub mod fetch;
 pub mod loopback;
 pub mod ratelimit;
+pub mod reach;
 
 pub use client::{HttpClient, NetError, trusted_roots};
 pub use fetch::{Conditional, ConditionalResponse};

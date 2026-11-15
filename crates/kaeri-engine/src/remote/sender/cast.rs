@@ -643,6 +643,7 @@ mod tests {
             episode: "3".into(),
             episode_title: Some("Low Tide".into()),
             speed: 1.0,
+            resume: None,
         });
         let card = session.card();
         assert_eq!(card.card.tv_name, "Bedroom");
@@ -1038,6 +1039,7 @@ mod tests {
             episode: "3".into(),
             episode_title: None,
             speed: 1.0,
+            resume: None,
         });
         hub.set_status(playing(20.0, 1400.0));
         hub.overlay(&Overlay::SkipOffer { kind: Part::Opening, to: 110.0 });

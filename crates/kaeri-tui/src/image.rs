@@ -12,24 +12,28 @@
 //!   plate; it must never fail a screen, because cover art is decoration and the title
 //!   underneath it is not.
 
+mod pictures;
+
 use std::{
     collections::HashMap,
     path::PathBuf,
     sync::{Arc, Mutex},
 };
 
+pub use pictures::{Cut, EncodeJob, Encoded};
+
 use ratatui::layout::Rect;
 use ratatui_image::{picker::Picker, protocol::StatefulProtocol};
 
-/// Whether the terminal answers a cursor position report. crossterm waits for the answer for
-/// at most two seconds without leaving a read behind, and keeps keys pressed meanwhile for the
-/// app's own event loop. On Windows the position comes from the console itself, so this says
-/// nothing there and the query runs as before.
-fn answers_queries() -> bool {
-    if cfg!(windows) {
-        return true;
+/// The cell size from the window's size in pixels, for a terminal that answers the graphics
+/// query but not the cell size one, as `ratatui-image` falls back to it.
+#[cfg(unix)]
+fn cell_from_window() -> Option<(u16, u16)> {
+    let size = rustix::termios::tcgetwinsize(std::io::stdout()).ok()?;
+    if size.ws_xpixel == 0 || size.ws_ypixel == 0 || size.ws_col == 0 || size.ws_row == 0 {
+        return None;
     }
-    crossterm::cursor::position().is_ok()
+    Some((size.ws_xpixel / size.ws_col, size.ws_ypixel / size.ws_row))
 }
 
 /// What the terminal can actually do.
@@ -73,24 +77,70 @@ impl ImageEngine {
     /// Detection can fail — a pipe, a CI runner, a terminal that ignores the query — and
     /// that is not an error. It degrades to halfblocks, which work anywhere.
     pub fn detect(enabled: bool) -> Self {
-        Self::detect_with(enabled, answers_queries)
-    }
-
-    /// [`Self::detect`], with `answers` telling whether the terminal answers queries at all.
-    ///
-    /// The graphics query reads its reply from stdin on a thread of its own. When no reply
-    /// comes, the query gives up but the thread stays blocked on that read, and the first key
-    /// pressed after start-up goes to it instead of the app. So the full query runs only in
-    /// a terminal that answered a cursor position report in time; it ends on a status report
-    /// any such terminal answers, so it never leaves a read behind.
-    fn detect_with(enabled: bool, answers: impl FnOnce() -> bool) -> Self {
         if !enabled {
             return Self::disabled();
         }
-        if !answers() {
-            tracing::info!("the terminal answers no queries; using halfblocks");
-            return Self::halfblocks_with_default_cells();
+        let answers =
+            crate::probe::ask(crate::probe::Ask { background: false, graphics: true });
+        Self::with_answers(enabled, &answers)
+    }
+
+    /// An engine for what the terminal answered when it was asked at start-up
+    /// ([`crate::probe::ask`]), so nothing is asked twice and no key typed meanwhile is lost.
+    pub fn with_answers(enabled: bool, answers: &crate::probe::Answers) -> Self {
+        if !enabled {
+            return Self::disabled();
         }
+        #[cfg(unix)]
+        {
+            Self::from_graphics(answers.graphics)
+        }
+        #[cfg(not(unix))]
+        {
+            let _ = answers;
+            Self::queried()
+        }
+    }
+
+    /// The engine for a terminal's answer about graphics: Kitty before Sixel, as
+    /// `ratatui-image` picks, and otherwise what the environment says (tmux, iTerm2) once the
+    /// cell size is known. No answer is halfblocks.
+    #[cfg(unix)]
+    fn from_graphics(answer: Option<crate::probe::GraphicsAnswer>) -> Self {
+        use ratatui_image::picker::ProtocolType;
+        let Some(answer) = answer else {
+            tracing::info!("the terminal did not answer the graphics query; using halfblocks");
+            return Self::halfblocks_with_default_cells();
+        };
+        let Some((width, height)) = answer.cell.or_else(cell_from_window) else {
+            tracing::info!("the terminal did not say its cell size; using halfblocks");
+            return Self::halfblocks_with_default_cells();
+        };
+        // Deprecated for the query it leaves out, which has been asked here already.
+        #[allow(deprecated)]
+        let mut picker = Picker::from_fontsize(ratatui_image::FontSize::new(width, height));
+        if answer.kitty {
+            picker.set_protocol_type(ProtocolType::Kitty);
+        } else if answer.sixel {
+            picker.set_protocol_type(ProtocolType::Sixel);
+        }
+        let graphics = if picker.protocol_type() == ProtocolType::Halfblocks {
+            Graphics::Halfblocks
+        } else {
+            Graphics::Native
+        };
+        tracing::info!(?graphics, protocol = ?picker.protocol_type(), font_size = ?(width, height), "terminal graphics");
+        Self {
+            picker: Some(picker),
+            graphics,
+            cache_dir: PathBuf::new(),
+            font_size: (width, height),
+        }
+    }
+
+    /// `ratatui-image`'s own query, where the start-up reader does not run.
+    #[cfg(not(unix))]
+    fn queried() -> Self {
         match Picker::from_query_stdio() {
             Ok(picker) => {
                 let fs = picker.font_size();
@@ -147,6 +197,31 @@ impl ImageEngine {
         }
     }
 
+    /// An image protocol's engine that draws through halfblocks, for tests and goldens: the
+    /// screens lay pages out as a terminal with kitty, sixel or iTerm2 would, at a 10 by 20
+    /// cell, and the pictures land in the buffer as blocks a golden can hold.
+    #[doc(hidden)]
+    pub fn drawn_as_blocks() -> Self {
+        Self {
+            picker: Some(Picker::halfblocks()),
+            graphics: Graphics::Native,
+            cache_dir: PathBuf::new(),
+            font_size: (10, 20),
+        }
+    }
+
+    /// An engine for a picker made by hand, for tests of what a protocol does.
+    #[cfg(test)]
+    pub(crate) fn with_picker(picker: Picker) -> Self {
+        let font = picker.font_size();
+        Self {
+            graphics: Graphics::Native,
+            font_size: (font.width, font.height),
+            picker: Some(picker),
+            cache_dir: PathBuf::new(),
+        }
+    }
+
     pub fn with_cache_dir(mut self, dir: impl Into<PathBuf>) -> Self {
         self.cache_dir = dir.into();
         self
@@ -162,6 +237,17 @@ impl ImageEngine {
 
     pub fn is_enabled(&self) -> bool {
         self.picker.is_some()
+    }
+
+    /// Whether a picture's pixels can stay on screen after the cells under it are drawn again:
+    /// sixel and iTerm2 draw over the cells, and only clearing the screen takes them all
+    /// away. Kitty deletes its own placements, and halfblocks are only text.
+    pub fn leaves_pixels(&self) -> bool {
+        use ratatui_image::picker::ProtocolType;
+        self.graphics == Graphics::Native
+            && self.picker.as_ref().is_some_and(|p| {
+                matches!(p.protocol_type(), ProtocolType::Sixel | ProtocolType::Iterm2)
+            })
     }
 
     /// Cell dimensions that preserve an image's aspect ratio inside `available`.
@@ -214,6 +300,13 @@ impl ImageEngine {
 pub struct ImageStore {
     engine: ImageEngine,
     protocols: std::cell::RefCell<HashMap<String, StatefulProtocol>>,
+    /// Reader pages, kept whole so a part of one can be drawn: a page scrolled at fit width,
+    /// zoomed, or cut by the edge of the window in a strip.
+    pages: std::cell::RefCell<HashMap<String, pictures::Kept>>,
+    /// The pages made for the boxes they are drawn in: see [`pictures`].
+    pictures: pictures::Pictures,
+    /// Small copies of pages for the zoom's map, by key and size in cells.
+    thumbs: std::cell::RefCell<HashMap<String, Thumbnail>>,
     requests: ImageRequests,
 }
 
@@ -231,6 +324,9 @@ impl ImageStore {
         Self {
             engine,
             protocols: std::cell::RefCell::new(HashMap::new()),
+            pages: std::cell::RefCell::new(HashMap::new()),
+            pictures: pictures::Pictures::default(),
+            thumbs: std::cell::RefCell::new(HashMap::new()),
             requests: ImageRequests::new(),
         }
     }
@@ -268,11 +364,46 @@ impl ImageStore {
     }
 
     pub fn has(&self, url: &str) -> bool {
-        self.protocols.borrow().contains_key(url)
+        self.protocols.borrow().contains_key(url) || self.pages.borrow().contains_key(url)
+    }
+
+    /// Keep a reader page whole, in place of any picture under its key, for drawing it or any
+    /// part of it. What was made of the page before goes on showing until the new one is made.
+    pub fn insert_page(&self, key: &str, image: image::DynamicImage) {
+        if !self.engine.is_enabled() {
+            return;
+        }
+        self.protocols.borrow_mut().remove(key);
+        self.thumbs.borrow_mut().remove(key);
+        let kept = self.pictures.keep(image);
+        self.pages.borrow_mut().insert(key.to_owned(), kept);
+    }
+
+    /// A page's size in pixels, once it is kept.
+    pub fn page_size(&self, key: &str) -> Option<(u32, u32)> {
+        self.pages.borrow().get(key).map(|kept| (kept.image.width(), kept.image.height()))
+    }
+
+    /// Let go of one picture.
+    pub fn forget(&self, key: &str) {
+        self.forget_where(|k| k == key);
+    }
+
+    /// Let go of every picture whose key starts with `prefix`: a chapter's pages once it is
+    /// left, which are never drawn again under the same key.
+    pub fn forget_prefix(&self, prefix: &str) {
+        self.forget_where(|k| k.starts_with(prefix));
+    }
+
+    fn forget_where(&self, gone: impl Fn(&str) -> bool) {
+        self.protocols.borrow_mut().retain(|key, _| !gone(key));
+        self.pages.borrow_mut().retain(|key, _| !gone(key));
+        self.thumbs.borrow_mut().retain(|key, _| !gone(key));
+        self.pictures.forget_where(&gone);
     }
 
     pub fn len(&self) -> usize {
-        self.protocols.borrow().len()
+        self.protocols.borrow().len() + self.pages.borrow().len()
     }
 
     pub fn is_empty(&self) -> bool {
@@ -309,7 +440,25 @@ impl ImageStore {
         );
         true
     }
+
+    /// A kept page shrunk to `cols` by `rows` cells of halfblocks: two pixels a cell, one over
+    /// the other. Made once for each size.
+    pub fn thumbnail(&self, key: &str, (cols, rows): (u16, u16)) -> Option<image::RgbImage> {
+        if let Some((size, thumb)) = self.thumbs.borrow().get(key)
+            && *size == (cols, rows)
+        {
+            return Some(thumb.clone());
+        }
+        let page = self.pages.borrow().get(key).map(|kept| kept.image.clone())?;
+        let (w, h) = (u32::from(cols.max(1)), u32::from(rows.max(1)) * 2);
+        let thumb = page.resize_exact(w, h, image::imageops::FilterType::Triangle).into_rgb8();
+        self.thumbs.borrow_mut().insert(key.to_owned(), ((cols, rows), thumb.clone()));
+        Some(thumb)
+    }
 }
+
+/// A page's map for the zoom: the cells it was made for, and its pixels.
+type Thumbnail = ((u16, u16), image::RgbImage);
 
 /// Shrink an image before it is handed to a protocol.
 ///
@@ -488,19 +637,19 @@ mod tests {
     }
 
     #[test]
-    fn a_terminal_that_answers_nothing_gets_halfblocks_without_a_query() {
-        // The graphics query is never started, so no read of stdin is left waiting for a
-        // reply that will not come and the first key pressed reaches the app.
-        let engine = ImageEngine::detect_with(true, || false);
-        assert_eq!(engine.graphics(), Graphics::Halfblocks);
-        assert!(engine.is_enabled());
-        let mut asked = false;
-        let off = ImageEngine::detect_with(false, || {
-            asked = true;
-            true
-        });
+    #[cfg(unix)]
+    fn the_graphics_answer_picks_the_protocol() {
+        use crate::probe::GraphicsAnswer;
+        // No answer, or no cell size, is halfblocks.
+        assert_eq!(ImageEngine::from_graphics(None).graphics(), Graphics::Halfblocks);
+        let kitty = GraphicsAnswer { kitty: true, sixel: true, cell: Some((9, 18)) };
+        let engine = ImageEngine::from_graphics(Some(kitty));
+        assert_eq!(engine.graphics(), Graphics::Native);
+        assert_eq!(engine.font_size(), (9, 18));
+        let sixel = GraphicsAnswer { kitty: false, sixel: true, cell: Some((9, 18)) };
+        assert_eq!(ImageEngine::from_graphics(Some(sixel)).graphics(), Graphics::Native);
+        let off = ImageEngine::with_answers(false, &crate::probe::Answers::default());
         assert_eq!(off.graphics(), Graphics::Disabled);
-        assert!(!asked, "images off asks the terminal nothing");
     }
 
     #[test]

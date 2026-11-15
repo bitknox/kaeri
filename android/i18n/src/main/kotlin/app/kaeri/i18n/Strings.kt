@@ -825,6 +825,10 @@ object Strings {
     fun readingFailedBlocked(context: Context, source: String, reason: String): String =
         context.getString(R.string.reading_failed_blocked, source, reason)
 
+    /** Why a chapter or a list could not load: the source's plugin asked for a host its manifest doesn't list, so the request never left the device and the source refused nothing. An update to the plugin usually fixes it. */
+    fun readingFailedHostNotAllowed(context: Context, source: String): String =
+        context.getString(R.string.reading_failed_host_not_allowed, source)
+
     /** Why a chapter or a list could not load: the source answered with something Kaeri could not read. */
     fun readingFailedParse(context: Context, source: String): String =
         context.getString(R.string.reading_failed_parse, source)
@@ -1101,6 +1105,10 @@ object Strings {
     fun exportWaitsForWifi(context: Context, n: Int): String =
         context.resources.getQuantityString(R.plurals.export_waits_for_wifi, n, n)
 
+    /** Send to e-reader, under the ready files: pages of one chapter that couldn't be read, as the reader shows them broken, so the files go without them. The chapter is its name as the series shows it, such as Chapter 12 or Volume 1. n is how many pages were left out. */
+    fun exportPagesLeftOut(context: Context, n: Int, chapter: String): String =
+        context.resources.getQuantityString(R.plurals.export_pages_left_out, n, n, chapter)
+
     /** Under a This week cell: the chapter that came out that day, with its own title. */
     fun readingChapterTitled(context: Context, chapter: String, title: String): String =
         context.getString(R.string.reading_chapter_titled, chapter, title)
@@ -1336,6 +1344,14 @@ object Strings {
     /** The device is on mobile data and the chapters wait until it's on Wi-Fi. */
     fun readingEstimateWaitsWifi(context: Context): String =
         context.getString(R.string.reading_estimate_waits_wifi)
+
+    /** Notice after Download on chapters that are files in the person's own folders: they open from where they are, so nothing is downloaded. */
+    fun readingDownloadOnDevice(context: Context): String =
+        context.getString(R.string.reading_download_on_device)
+
+    /** A series' name where neither the catalogue nor its source gave one: on Downloads, in a sent file's name and in the e-reader's library. */
+    fun readingUntitledSeries(context: Context): String =
+        context.getString(R.string.reading_untitled_series)
 
     /** The notification's title. */
     fun readingDownloadsDoneTitle(context: Context): String =
@@ -1937,6 +1953,18 @@ object Strings {
     fun noticeSignedOutQueue(context: Context, tracker: String, count: Int): String =
         context.resources.getQuantityString(R.plurals.notice_signed_out_queue, count, tracker, count)
 
+    /** Toast, shown once, when a tracker kept refusing a change to a title for about two days and the change stopped being sent. The change itself is still saved in the app. The tracker is its name, such as AniList; the title is a show's or a series' name. The notice capsule holds two lines on a phone, so keep it about as short as the English. */
+    fun noticeTrackerChangeRefused(context: Context, tracker: String, title: String): String =
+        context.getString(R.string.notice_tracker_change_refused, tracker, title)
+
+    /** The same toast when changes to several titles stopped being sent to one tracker at once. The title is the first of them; others is how many more titles there are. */
+    fun noticeTrackerChangesRefused(context: Context, tracker: String, title: String, others: Int): String =
+        context.resources.getQuantityString(R.plurals.notice_tracker_changes_refused, others, tracker, title, others)
+
+    /** The same toast when the app has no name for the titles. Count is how many titles. */
+    fun noticeTrackerChangeRefusedUntitled(context: Context, tracker: String, count: Int): String =
+        context.resources.getQuantityString(R.plurals.notice_tracker_change_refused_untitled, count, tracker, count)
+
     /** Toast when signing out of a tracker failed. The reason comes from the system. */
     fun noticeSignOutFailed(context: Context, tracker: String, reason: String): String =
         context.getString(R.string.notice_sign_out_failed, tracker, reason)
@@ -2016,6 +2044,10 @@ object Strings {
     /** Toast when a setting could not be stored. The reason comes from the system. */
     fun noticeNotSaved(context: Context, reason: String): String =
         context.getString(R.string.notice_not_saved, reason)
+
+    /** Toast when something the person did, such as a chapter marked read, a place in a book, a watched episode or a list change, could not be stored. The reason comes from the system. */
+    fun noticeChangeNotKept(context: Context, reason: String): String =
+        context.getString(R.string.notice_change_not_kept, reason)
 
     /** Toast when a title's details did not load. */
     fun noticeTitleLoadFailed(context: Context): String =
@@ -3468,14 +3500,6 @@ object Strings {
     /** On a series page whose source failed, under the cause: the chapters downloaded before still open. */
     fun readSeriesDownloadedOpen(context: Context, n: Int): String =
         context.resources.getQuantityString(R.plurals.read_series_downloaded_open, n, n)
-
-    /** Downloads' empty line for a person who only reads, under "No downloads". */
-    fun readDownloadsEmptyDetail(context: Context): String =
-        context.getString(R.string.read_downloads_empty_detail)
-
-    /** Downloads' empty line for a person who watches and reads, under "No downloads". */
-    fun readDownloadsEmptyBoth(context: Context): String =
-        context.getString(R.string.read_downloads_empty_both)
 
     /** The head of the group menu on a large screen, over its choices: the source the groups are in. */
     fun groupMenuIn(context: Context, source: String): String =
@@ -6048,6 +6072,14 @@ object Strings {
     /** Line under the empty title. */
     fun downloadsEmptyDetail(context: Context): String =
         context.getString(R.string.downloads_empty_detail)
+
+    /** Downloads' empty line for a person who only reads, under "No downloads". */
+    fun readDownloadsEmptyDetail(context: Context): String =
+        context.getString(R.string.read_downloads_empty_detail)
+
+    /** Downloads' empty line for a person who watches and reads, under "No downloads". */
+    fun readDownloadsEmptyBoth(context: Context): String =
+        context.getString(R.string.read_downloads_empty_both)
 
     /** Title when the list could not be read. */
     fun downloadsLoadFailed(context: Context): String =
@@ -10430,6 +10462,10 @@ object Strings {
     fun downloadAlready(context: Context): String =
         context.getString(R.string.download_already)
 
+    /** Short note on a series page when a download it asked for couldn't start, such as when the source isn't answering and no chapter list is kept. The reason is a full sentence. */
+    fun downloadNotStarted(context: Context, reason: String): String =
+        context.getString(R.string.download_not_started, reason)
+
     /** Download menu item: a volume's chapters not yet downloaded. */
     fun downloadVolumeCount(context: Context, volume: String, n: Int): String =
         context.resources.getQuantityString(R.plurals.download_volume_count, n, volume, n)
@@ -11647,6 +11683,14 @@ object Strings {
     /** A send in a list or banner that is under way, with a ring beside it. The device is the e-reader. */
     fun sendBanner(context: Context, device: String): String =
         context.getString(R.string.send_banner, device)
+
+    /** The chapters a send holds, on its row under Sending to, when there are several: the first to the last, by their numbers or labels, such as 21 to 23. */
+    fun sendRowChapters(context: Context, first: String, last: String): String =
+        context.getString(R.string.send_row_chapters, first, last)
+
+    /** A send's row under Sending to: the series' title, then the chapters the send holds, such as "Chapter 23" or "Chapters 21 to 23". Shown on one line. */
+    fun sendRowLine(context: Context, title: String, chapters: String): String =
+        context.getString(R.string.send_row_line, title, chapters)
 
     /** The format of the files an e-reader is sent: a manga as a fixed-layout EPUB. */
     fun sendFormatFixedEpub(context: Context): String =

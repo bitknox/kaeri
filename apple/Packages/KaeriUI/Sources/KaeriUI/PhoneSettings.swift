@@ -266,7 +266,9 @@ struct PhoneSettingsRoot: View {
                 }
                 link(.downloads, L.navDownloads, "arrow.down.to.line", value: Wording.bytes(downloadedBytes))
                 link(.notifications, L.settingsGroupNotifications, "bell", value: notificationsOn ? L.valueOn : L.valueOff)
-                link(.sources, L.sourcesTitle, "powerplug", value: store.settings.isOn(.torrents) ? L.settingsTorrentsValueOn : L.settingsTorrentsValueOff)
+                link(.sources, L.sourcesTitle, "powerplug", value: SourcesRowWords.value(store))
+                    // Asked as the root draws, so a reader's count is there before the page is opened.
+                    .task { if store.medium.reads, store.bookSources.view == nil { store.bookSources.load() } }
                 link(.accounts, L.navAccounts, "person", value: anilist?.connected == true ? AccountsModel.name("anilist") : L.valueNone)
                 link(.devices, L.devicesTitle, "laptopcomputer.and.iphone", value: SyncWords.rowValue(store.sync, tvs: store.tv.paired.count))
                 link(.profiles, L.profilesTitle, "person.2", value: store.sync.profiles.isEmpty ? L.profilesOnlyYou : store.sync.profiles.count.formatted(.number.locale(AirTime.locale)))
@@ -682,8 +684,28 @@ struct PhoneSourcesPage: View {
     @Environment(Navigator.self) private var navigator
     @State private var routing = false
     @State private var editingProxy = false
+    @State private var reading = false
 
+    /// What Kaeri is for decides, as SourcesScreen does on iPad and Mac: the shows' sources and
+    /// torrents, the book sources, or both under a picker.
     var body: some View {
+        Group {
+            switch store.medium.answer {
+            case .watch: shows
+            case .read: PhoneBookSources()
+            case .both:
+                VStack(spacing: 0) {
+                    SourcesScopePicker(reading: $reading).padding(.horizontal, 16).padding(.vertical, 8)
+                    if reading { PhoneBookSources() } else { shows }
+                }
+                .background(.ground)
+            }
+        }
+        .navigationTitle(store.medium.answer == .read ? L.sourcesYour : L.sourcesTitle)
+        .navigationBarTitleDisplayMode(store.medium.answer == .read ? .large : .inline)
+    }
+
+    @ViewBuilder private var shows: some View {
         let on = store.settings.isOn(.torrents)
         let proxy = store.settings.torrent?.proxy
         PhoneList {
@@ -748,8 +770,6 @@ struct PhoneSourcesPage: View {
                 }
             }
         }
-        .navigationTitle(L.sourcesTitle)
-        .navigationBarTitleDisplayMode(.inline)
         .sheet(isPresented: $routing) { PhoneProxySheet() }
         .sheet(isPresented: $editingProxy) { PhoneProxySheet(mode: .edit) }
         .onLaunchSheet("torrent", navigator) { routing = true }

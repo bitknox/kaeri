@@ -57,3 +57,4 @@ library-matched-apple = Cocok
 servers-row-summary-apple = { $series ->
    *[other] { $series } serial
  }
+book-picker-message = Pilih folder berisi buku Anda.

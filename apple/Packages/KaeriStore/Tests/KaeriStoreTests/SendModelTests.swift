@@ -72,6 +72,74 @@ struct SendModelTests {
         #expect(target == "kobo")
     }
 
+    /// A send the engine started again at launch is one this screen never asked for: it learns
+    /// its chapters from the waiting word, so once ready, sharing it says which chapters went.
+    @Test func aSendHeldAcrossARestartKnowsItsChapters() {
+        let model = SendModel()
+        var sent: [Command] = []
+        model.command = { sent.append($0) }
+        model.apply(.exportWaiting(job: 41, work: "w", target: "kobo", line: .verbatim(text: "Waiting for Wi-Fi"), chapters: ["c3", "c4"]))
+        guard let send = model.sends.first(where: { $0.job == 41 }) else {
+            Issue.record("the restarted send did not show")
+            return
+        }
+        #expect(send.chapters == ["c3", "c4"])
+        #expect(send.isWaiting)
+
+        model.apply(.exportReady(job: 41, files: [ExportFile(path: "/sends/b.kepub.epub", name: "b.kepub.epub", bytes: 10, part: nil)]))
+        model.shared(send.id)
+        let shared = sent.compactMap { command -> [String]? in
+            if case .reading(.shared(let work, let chapters, let target)) = command, work == "w", target == "kobo" { chapters } else { nil }
+        }
+        #expect(shared == [["c3", "c4"]])
+    }
+
+    /// The Send sheet opened again on the same chapters finds the send under way, and Prepare
+    /// there starts no second one. Other chapters, or the same ones once the first has ended,
+    /// are a send of their own.
+    @Test func theSameChaptersUnderWayAreOneSend() {
+        let model = SendModel()
+        var sent: [Command] = []
+        model.command = { sent.append($0) }
+        let prepares = { sent.filter { if case .reading(.prepare) = $0 { true } else { false } }.count }
+        let first = model.begin(work: "w", chapters: ["23"], target: kobo(), novel: false)
+        model.apply(.exportProgress(job: 9, done: 1, total: 25, chaptersDone: 0, chapters: 1))
+        #expect(model.running(work: "w", chapters: ["23"])?.id == first)
+
+        #expect(model.begin(work: "w", chapters: ["23"], target: kobo(), novel: false) == first)
+        #expect(model.sends.count == 1)
+        #expect(prepares() == 1)
+
+        #expect(model.running(work: "w", chapters: ["24"]) == nil)
+        #expect(model.running(work: "w", chapters: ["23"], target: "kindle") == nil)
+        model.apply(.exportFailed(job: 9, chapter: nil, failure: .offline))
+        #expect(model.running(work: "w", chapters: ["23"]) == nil)
+        #expect(model.begin(work: "w", chapters: ["23"], target: kobo(), novel: false) != first)
+        #expect(prepares() == 2)
+    }
+
+    /// A send this screen asked for keeps the chapters it asked for.
+    @Test func aSendAskedForKeepsItsOwnChapters() {
+        let model = SendModel()
+        let id = model.begin(work: "w", chapters: ["1", "2"], target: kobo(), novel: false)!
+        model.apply(.exportWaiting(job: 5, work: "w", target: "kobo", line: .verbatim(text: "Waiting for Wi-Fi"), chapters: ["2"]))
+        #expect(model.send(id)?.chapters == ["1", "2"])
+    }
+
+    /// R7L-5. A send that left pages out says, once ready, how many and of which volume.
+    @Test func aReadySendSaysWhichPagesItLeftOut() {
+        let model = SendModel()
+        let id = model.begin(work: "w", chapters: ["v1", "v2"], target: kobo(), novel: false)!
+        model.apply(.exportProgress(job: 5, done: 0, total: 10, chaptersDone: 0, chapters: 2))
+        let file = ExportFile(path: "/sends/one.cbz", name: "one.cbz", bytes: 10, part: nil)
+        let skipped = ExportSkipped(
+            chapter: "Volume 1", pages: 1,
+            line: .reading(.exportPagesLeftOut(n: 1, chapter: "Volume 1")))
+        model.apply(.exportReady(job: 5, files: [file], skipped: [skipped]))
+        #expect(model.send(id)?.phase == .ready([file]))
+        #expect(model.send(id)?.leftOut == ["One page of Volume 1 couldn't be read and isn't in the files."])
+    }
+
     @Test func theEngineKeepsTheDefaultEReader() {
         let model = SendModel()
         var sent: [Command] = []
@@ -80,5 +148,45 @@ struct SendModelTests {
         #expect(model.defaultTarget?.id == "kobo")
         model.choose(target: "kindle")
         #expect(sent.count == 1)
+    }
+
+    /// A send held across a restart starts again as a job the app never asked for (iPhone R8I-2):
+    /// it shows on its series page with its device, and Share counts its chapters as sent.
+    @Test func aResumedSendIsPlacedAndCountedWhenShared() throws {
+        let model = SendModel()
+        var sent: [Command] = []
+        model.command = { sent.append($0) }
+        model.apply(.exportProgress(
+            job: 31, done: 2, total: 8, chaptersDone: 0, chapters: 2,
+            work: "a:900311", target: "kobo", sendChapters: ["c4", "c5"]))
+        let send = try #require(model.running(work: "a:900311"), "the series page shows the send")
+        #expect(send.target == "kobo", "with its device")
+        #expect(send.chapters == ["c4", "c5"])
+
+        model.apply(.exportReady(job: 31, files: [ExportFile(path: "/sends/four.cbz", name: "four.cbz", bytes: 10, part: nil)]))
+        model.shared(send.id)
+        let shared = sent.compactMap { command -> [String]? in
+            if case .reading(.shared(let work, let chapters, let target)) = command, work == "a:900311", target == "kobo" { chapters } else { nil }
+        }
+        #expect(shared == [["c4", "c5"]], "Share records the chapters as sent")
+    }
+
+    /// A send just asked for of one series never takes the place of another's resumed send.
+    @Test func aResumedSendKeepsItsOwnSeries() {
+        let model = SendModel()
+        let mine = model.begin(work: "a:900312", chapters: ["c1"], target: kobo(), novel: false)
+        model.apply(.exportProgress(
+            job: 32, done: 0, total: 8, chaptersDone: 0, chapters: 1,
+            work: "a:900311", target: "kobo", sendChapters: ["c4"]))
+        #expect(model.send(mine!)?.job == nil, "the new send still waits for its own job")
+        #expect(model.running(work: "a:900311")?.job == 32)
+    }
+
+    @Test func aResumedSendThatFailsIsPlaced() {
+        let model = SendModel()
+        model.apply(.exportFailed(job: 33, chapter: nil, failure: .offline, work: "a:900311", target: "kobo"))
+        let send = model.sends.first { $0.job == 33 }
+        #expect(send?.work == "a:900311")
+        #expect(send?.target == "kobo")
     }
 }

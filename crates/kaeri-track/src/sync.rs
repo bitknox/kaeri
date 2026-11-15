@@ -14,7 +14,8 @@ use std::sync::Arc;
 
 use kaeri_core::{
     config::WhenTrackersDisagree,
-    traits::{TrackOp, Tracker},
+    ids::AnilistId,
+    traits::{PushFailure, Pushed, TrackOp, Tracker},
 };
 use kaeri_store::{Store, outbox::OutboxEntry};
 
@@ -30,6 +31,8 @@ const DRAIN_BATCH: u32 = 25;
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
 pub struct DrainReport {
     pub sent: u32,
+    /// Ops not sent in this pass and still queued, unless counted in `dropped`: refused, or
+    /// waiting out the network, the tracker's trouble or a pause it asked for.
     pub failed: u32,
     /// Set when the tracker rejected our credentials. The user has to re-authorise; retrying
     /// cannot help.
@@ -41,6 +44,9 @@ pub struct DrainReport {
     /// Ops the tracker answered with success but did not apply — a title it could not match.
     /// Not retried, since the same request gets the same answer, and not counted in `sent`.
     pub ignored: u32,
+    /// Ops given up on in this pass: the tracker refused each of them too many times. Counted
+    /// in `failed` as well, and kept in [`Store::dropped_track_ops`].
+    pub dropped: u32,
     /// Ops still queued after this pass.
     pub remaining: u32,
 }
@@ -51,6 +57,7 @@ impl DrainReport {
             && self.failed == 0
             && self.deferred == 0
             && self.ignored == 0
+            && self.dropped == 0
             && !self.needs_reauth
     }
 }
@@ -152,25 +159,175 @@ pub fn clear_reauth_hold(
     store.set_meta_i64(&reauth_hold_key(tracker_id), 0)
 }
 
+/// How long a title waits after the tracker's own trouble with it alone, while the tracker
+/// answered for other titles in the same pass: its backoff's ceiling. Not counted against it.
+const TITLE_TROUBLE_SECS: i64 = kaeri_store::outbox::BACKOFF_MAX_SECS;
+
+/// The longest an outage hold lasts: a pause a tracker asks for is honoured up to a day.
+const OUTAGE_HOLD_MAX_SECS: i64 = 86_400;
+
+/// Where a tracker's outage hold is remembered: until when its queues wait, after the network
+/// or the tracker failed, or the tracker asked for a pause.
+fn outage_hold_key(tracker_id: &str) -> String {
+    format!("outage_hold:{tracker_id}")
+}
+
+/// How many passes in a row found the tracker down or asking for a pause, for the hold's
+/// backoff.
+fn outage_streak_key(tracker_id: &str) -> String {
+    format!("outage_streak:{tracker_id}")
+}
+
+/// Which of a tracker's two outboxes a drain works on.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum Queue {
+    Watching,
+    Reading,
+}
+
+impl Queue {
+    fn depth(self, store: &Store, id: &str) -> Result<u32, kaeri_store::StoreError> {
+        match self {
+            Self::Watching => store.outbox_depth(Some(id)),
+            Self::Reading => store.read_outbox_depth(Some(id)),
+        }
+    }
+
+    fn claim(
+        self,
+        store: &Store,
+        id: &str,
+        now: i64,
+    ) -> Result<Vec<OutboxEntry>, kaeri_store::StoreError> {
+        match self {
+            Self::Watching => store.claim_ready(id, now, DRAIN_BATCH),
+            Self::Reading => store.claim_ready_read(id, now, DRAIN_BATCH),
+        }
+    }
+
+    fn defer(self, store: &Store, entry: &OutboxEntry) -> Result<(), kaeri_store::StoreError> {
+        match self {
+            Self::Watching => store.defer(entry.id, "no id for this title on this tracker yet"),
+            Self::Reading => {
+                store.defer_read(entry.id, "no id for this work on this tracker yet", None)
+            }
+        }
+    }
+
+    fn complete(
+        self,
+        store: &Store,
+        id: &str,
+        entry: &OutboxEntry,
+    ) -> Result<(), kaeri_store::StoreError> {
+        // Remembered whether or not it took, so the next pull does not queue the same value
+        // again: see `LocalState::last_pushed`.
+        match (self, &entry.op) {
+            (Self::Watching, TrackOp::SetProgress { anilist_id, episode }) => {
+                remember_pushed(store, id, *anilist_id, *episode)?;
+            }
+            (Self::Reading, TrackOp::SetReadProgress { anilist_id, chapter, volume }) => {
+                remember_pushed_read(store, id, *anilist_id, *chapter, *volume)?;
+            }
+            _ => {}
+        }
+        match self {
+            Self::Watching => store.complete(entry.id),
+            Self::Reading => store.complete_read(entry.id),
+        }
+    }
+
+    /// Count a refusal against an op. True when it was given up.
+    fn refuse(
+        self,
+        store: &Store,
+        entry: &OutboxEntry,
+        error: &str,
+        now: i64,
+    ) -> Result<bool, kaeri_store::StoreError> {
+        match self {
+            Self::Watching => store.fail(entry.id, error, now),
+            Self::Reading => store.fail_read(entry.id, error, now),
+        }
+    }
+
+    fn postpone(
+        self,
+        store: &Store,
+        entry: &OutboxEntry,
+        reason: &str,
+        until: i64,
+    ) -> Result<(), kaeri_store::StoreError> {
+        match self {
+            Self::Watching => store.postpone(entry.id, reason, until),
+            Self::Reading => store.defer_read(entry.id, reason, Some(until)),
+        }
+    }
+
+    async fn push(
+        self,
+        tracker: &dyn Tracker,
+        ops: &[TrackOp],
+    ) -> Result<Pushed, kaeri_core::Error> {
+        match self {
+            Self::Watching => tracker.push_checked(ops).await,
+            Self::Reading => tracker.push_read(ops).await,
+        }
+    }
+}
+
 /// Send what the outbox holds for one tracker.
 ///
-/// Ops are sent as a batch, and the batch's fate is applied to every op in it. That is safe
-/// precisely because tracker pushes are idempotent — a partial success followed by a retry
-/// re-sends something already applied, which by contract is a no-op.
+/// Each title's fate is its own. A change the tracker refuses counts against that change
+/// alone, and the titles beside it in the batch still go. Only a refusal counts toward the
+/// outbox's limit: a rejected credential holds the queue for a sign-in, and the network, the
+/// tracker's own trouble or a pause it asked for hold the tracker's queues with a backoff,
+/// however long they last, and nothing waiting is lost to them.
 pub async fn drain(
     store: &Store,
     tracker: &dyn Tracker,
     now: i64,
 ) -> Result<DrainReport, kaeri_store::StoreError> {
-    let id = tracker.id();
-    let mut report = DrainReport::default();
-
     if !tracker.is_authenticated() {
         // Not an error. Watching with no account is a supported way to use this, so the queue
         // simply waits — and keeps waiting across restarts, because it is a table.
-        report.remaining = store.outbox_depth(Some(id))?;
-        return Ok(report);
+        let remaining = store.outbox_depth(Some(tracker.id()))?;
+        return Ok(DrainReport { remaining, ..DrainReport::default() });
     }
+    drain_queue(store, tracker, now, Queue::Watching).await
+}
+
+/// Send what the reading outbox holds for one tracker: [`drain`] for manga and novels.
+///
+/// Holds an op back when the tracker cannot name the work yet, and waits out the tracker's own
+/// pacing inside its push, so a tracker that spaces its writes is not failed for it.
+pub async fn drain_read(
+    store: &Store,
+    tracker: &dyn Tracker,
+    now: i64,
+) -> Result<DrainReport, kaeri_store::StoreError> {
+    if !tracker.is_authenticated() || !tracker.serves_reading() {
+        let remaining = store.read_outbox_depth(Some(tracker.id()))?;
+        return Ok(DrainReport { remaining, ..DrainReport::default() });
+    }
+    drain_queue(store, tracker, now, Queue::Reading).await
+}
+
+/// Whether a hold set to last until `until`, and never set longer than `longest`, still holds
+/// at `now`. One further off than it could have been set was set by a clock that ran ahead, and
+/// is over: the queue would otherwise wait for the clock to catch up.
+fn holds(until: i64, longest: i64, now: i64) -> bool {
+    now < until && until - now <= longest
+}
+
+async fn drain_queue(
+    store: &Store,
+    tracker: &dyn Tracker,
+    now: i64,
+    queue: Queue,
+) -> Result<DrainReport, kaeri_store::StoreError> {
+    let id = tracker.id();
+    let mut report = DrainReport::default();
 
     // A token the tracker has already rejected is still a token, and every
     // `is_authenticated()` in this crate only asks whether one is present — so nothing here
@@ -178,14 +335,22 @@ pub async fn drain(
     // rejection below records a hold, and until it lapses the queue waits rather than
     // re-presenting the same dead credential every minute for months.
     if let Some(until) = store.get_meta_i64(&reauth_hold_key(id))?
-        && now < until
+        && holds(until, REAUTH_HOLD_SECS, now)
     {
         report.needs_reauth = true;
-        report.remaining = store.outbox_depth(Some(id))?;
+        report.remaining = queue.depth(store, id)?;
+        return Ok(report);
+    }
+    // The network or the tracker was down at the last pass, or it asked for a pause: both
+    // queues wait the hold out, quietly, and nothing in them is counted for it.
+    if let Some(until) = store.get_meta_i64(&outage_hold_key(id))?
+        && holds(until, OUTAGE_HOLD_MAX_SECS, now)
+    {
+        report.remaining = queue.depth(store, id)?;
         return Ok(report);
     }
 
-    let mut claimed = store.claim_ready(id, now, DRAIN_BATCH)?;
+    let mut claimed = queue.claim(store, id, now)?;
     if claimed.is_empty() {
         return Ok(report);
     }
@@ -198,7 +363,7 @@ pub async fn drain(
     let (sendable, unaddressable): (Vec<_>, Vec<_>) =
         claimed.drain(..).partition(|entry| tracker.can_address(&entry.op));
     for entry in &unaddressable {
-        store.defer(entry.id, "no id for this title on this tracker yet")?;
+        queue.defer(store, entry)?;
         tracing::info!(
             tracker = id,
             anilist_id = entry.op.anilist_id().get(),
@@ -206,69 +371,194 @@ pub async fn drain(
         );
     }
     report.deferred = unaddressable.len() as u32;
-    let claimed = sendable;
-    if claimed.is_empty() {
-        report.remaining = store.outbox_depth(Some(id))?;
+    if sendable.is_empty() {
+        report.remaining = queue.depth(store, id)?;
         return Ok(report);
     }
 
-    let ops: Vec<_> = claimed.iter().map(|entry| entry.op.clone()).collect();
-    match tracker.push_checked(&ops).await {
-        Ok(ignored) => {
-            credential_accepted(store, id)?;
-            for entry in &claimed {
-                store.complete(entry.id)?;
-                // Remembered whether or not it took, so the next pull does not queue the same
-                // value again: see `LocalState::last_pushed`.
-                if let kaeri_core::traits::TrackOp::SetProgress { anilist_id, episode } =
-                    entry.op
-                {
-                    remember_pushed(store, id, anilist_id, episode)?;
-                }
-                if ignored.contains(&entry.op.anilist_id()) {
+    let pushed = push_each(tracker, queue, &sendable).await;
+    settle(store, id, queue, &sendable, &pushed, now, &mut report)?;
+    report.remaining = queue.depth(store, id)?;
+    Ok(report)
+}
+
+/// The titles of `entries`, each once, in the order they were queued: the order a tracker
+/// writes them in.
+fn titles_of(entries: &[OutboxEntry]) -> Vec<AnilistId> {
+    let mut titles: Vec<AnilistId> = Vec::new();
+    for entry in entries {
+        let title = entry.op.anilist_id();
+        if !titles.contains(&title) {
+            titles.push(title);
+        }
+    }
+    titles
+}
+
+/// Push `entries` and say what became of each title.
+///
+/// A tracker that writes the batch in one request can only fail it whole. A refusal, or a
+/// failure on the tracker's side while the network works, may be about one change in it, so
+/// the batch is asked again title by title: only the title the tracker refuses alone fails, and
+/// a tracker that fails twice in a row is taken to be down. Anything else that fails a whole
+/// batch (the network, the credential, a pause) fails every title in it.
+async fn push_each(tracker: &dyn Tracker, queue: Queue, entries: &[OutboxEntry]) -> Pushed {
+    let ops: Vec<TrackOp> = entries.iter().map(|entry| entry.op.clone()).collect();
+    let titles = titles_of(entries);
+    let (failure, maybe_one) = match queue.push(tracker, &ops).await {
+        Ok(pushed) => return pushed,
+        Err(error) => (
+            PushFailure::of(&error),
+            matches!(
+                error,
+                kaeri_core::Error::Tracker { .. } | kaeri_core::Error::Unavailable { .. }
+            ),
+        ),
+    };
+    if !maybe_one || titles.len() < 2 {
+        let failed = titles.into_iter().map(|title| (title, failure.clone())).collect();
+        return Pushed { ignored: Vec::new(), failed };
+    }
+    tracing::info!(
+        tracker = tracker.id(),
+        titles = titles.len(),
+        reason = failure.message(),
+        "the tracker failed a batch; asking title by title"
+    );
+    let mut each = crate::Titles::default();
+    let mut ignored = Vec::new();
+    for title in titles {
+        if !each.go() {
+            each.settle(title, None);
+            continue;
+        }
+        let alone: Vec<TrackOp> =
+            ops.iter().filter(|op| op.anilist_id() == title).cloned().collect();
+        match queue.push(tracker, &alone).await {
+            Ok(pushed) => {
+                ignored.extend(pushed.ignored.iter().copied());
+                each.settle(title, pushed.failure_for(title).cloned());
+            }
+            Err(error) => each.settle(title, Some(PushFailure::of(&error))),
+        }
+    }
+    let mut pushed = each.finish();
+    pushed.ignored.extend(ignored);
+    pushed
+}
+
+/// Put what a push did into effect, op by op.
+fn settle(
+    store: &Store,
+    id: &str,
+    queue: Queue,
+    entries: &[OutboxEntry],
+    pushed: &Pushed,
+    now: i64,
+    report: &mut DrainReport,
+) -> Result<(), kaeri_store::StoreError> {
+    let titles = titles_of(entries);
+    // Whether the tracker answered for a title: took it, matched it or refused it. Only a
+    // failure on the tracker's side with an answered title after it is that title's own
+    // trouble; one with nothing answered after it is the tracker going down.
+    let answered = |title: &AnilistId| {
+        matches!(pushed.failure_for(*title), None | Some(PushFailure::Refused(_)))
+    };
+    let answered_after =
+        |title: AnilistId| titles.iter().skip_while(|t| **t != title).skip(1).any(answered);
+
+    let mut rejected = None;
+    let mut pause: Option<Option<u64>> = None;
+    let mut down = false;
+    for entry in entries {
+        let title = entry.op.anilist_id();
+        match pushed.failure_for(title) {
+            None => {
+                queue.complete(store, id, entry)?;
+                if pushed.ignored.contains(&title) {
                     report.ignored += 1;
                     tracing::warn!(
                         tracker = id,
-                        anilist_id = entry.op.anilist_id().get(),
+                        anilist_id = title.get(),
                         "the tracker answered but did not apply this update; not retrying it"
                     );
                 } else {
                     report.sent += 1;
                 }
             }
-            tracing::info!(tracker = id, sent = report.sent, "outbox drained");
-        }
-        Err(kaeri_core::Error::Auth(message)) => {
-            // Deliberately *not* counted as a failure: incrementing attempts would push the
-            // backoff toward an hour for something no amount of waiting fixes, and the queue
-            // has to still be intact when the user re-authorises.
-            //
-            // But it cannot be retried freely either. Nothing marked the rows, and
-            // `claim_ready` takes no lease, so the same batch was re-sent on every tick — an
-            // uncapped request loop against a rate-limited third party with a credential
-            // already known to be dead, for as long as the app ran. The hold is a statement
-            // about the credential rather than about the queue, which is why it is not the
-            // retry counter; signing in again lifts it.
-            report.needs_reauth = true;
-            note_rejected(store, id, now)?;
-            tracing::warn!(
-                tracker = id,
-                %message,
-                "tracker rejected our credentials; holding the queue until sign-in"
-            );
-        }
-        Err(error) => {
-            let message = error.to_string();
-            for entry in &claimed {
-                store.fail(entry.id, &message, now)?;
+            Some(PushFailure::Refused(message)) => {
+                report.failed += 1;
+                if queue.refuse(store, entry, message, now)? {
+                    report.dropped += 1;
+                }
+                tracing::warn!(
+                    tracker = id,
+                    anilist_id = title.get(),
+                    %message,
+                    "the tracker refused this update; the rest of the batch went"
+                );
             }
-            report.failed = claimed.len() as u32;
-            tracing::warn!(tracker = id, %message, "outbox push failed; backing off");
+            Some(PushFailure::Auth(message)) => {
+                // Not counted as a failure: the queue has to still be intact
+                // when the user re-authorises, and no amount of waiting fixes it.
+                rejected = Some(message.clone());
+            }
+            Some(PushFailure::RateLimited { retry_in_secs, .. }) => {
+                report.failed += 1;
+                pause = Some(pause.flatten().max(*retry_in_secs));
+            }
+            Some(PushFailure::Unavailable(message)) => {
+                report.failed += 1;
+                if answered_after(title) {
+                    queue.postpone(store, entry, message, now + TITLE_TROUBLE_SECS)?;
+                } else {
+                    down = true;
+                }
+            }
         }
     }
 
-    report.remaining = store.outbox_depth(Some(id))?;
-    Ok(report)
+    if titles.iter().any(answered) {
+        // A request with the credential went through.
+        credential_accepted(store, id)?;
+    }
+    if let Some(message) = rejected {
+        // Nothing marked the rows, and `claim_ready` takes no lease, so without this hold the
+        // same batch would be re-sent on every tick with a credential already known to be dead.
+        // The hold is a statement about the credential rather than about the queue, which is
+        // why it is not the retry counter; signing in again lifts it.
+        report.needs_reauth = true;
+        note_rejected(store, id, now)?;
+        tracing::warn!(
+            tracker = id,
+            %message,
+            "tracker rejected our credentials; holding the queue until sign-in"
+        );
+    }
+    if pause.is_some() || down {
+        // The tracker's state, not any change's: both of its queues wait, with a backoff that
+        // grows while it stays down, and no op is counted for it.
+        let streak = store.get_meta_i64(&outage_streak_key(id))?.unwrap_or(0).max(0) + 1;
+        let backoff = kaeri_store::outbox::backoff_secs((streak - 1) as u32);
+        let asked =
+            pause.flatten().map_or(0, |secs| secs.min(OUTAGE_HOLD_MAX_SECS as u64) as i64);
+        store.set_meta_i64(&outage_streak_key(id), streak)?;
+        store.set_meta_i64(&outage_hold_key(id), now + backoff.max(asked))?;
+        tracing::warn!(
+            tracker = id,
+            ?queue,
+            streak,
+            "the tracker could not be reached or asked for a pause; holding its queue"
+        );
+    } else if titles.iter().any(answered)
+        && store.get_meta_i64(&outage_streak_key(id))?.is_some_and(|streak| streak > 0)
+    {
+        store.set_meta_i64(&outage_streak_key(id), 0)?;
+    }
+    if report.sent > 0 {
+        tracing::info!(tracker = id, ?queue, sent = report.sent, "outbox drained");
+    }
+    Ok(())
 }
 
 /// What a library pull produced.
@@ -449,81 +739,6 @@ pub fn read_status_from_name(name: &str) -> Option<(kaeri_core::traits::WatchSta
         // Files of the person's own are on no tracker.
         _ => return None,
     })
-}
-
-/// Send what the reading outbox holds for one tracker: [`drain`] for manga and novels.
-///
-/// Holds an op back when the tracker cannot name the work yet, and waits out the tracker's own
-/// pacing inside its push, so a tracker that spaces its writes is not failed for it.
-pub async fn drain_read(
-    store: &Store,
-    tracker: &dyn Tracker,
-    now: i64,
-) -> Result<DrainReport, kaeri_store::StoreError> {
-    let id = tracker.id();
-    let mut report = DrainReport::default();
-    if !tracker.is_authenticated() || !tracker.serves_reading() {
-        report.remaining = store.read_outbox_depth(Some(id))?;
-        return Ok(report);
-    }
-    if let Some(until) = store.get_meta_i64(&reauth_hold_key(id))?
-        && now < until
-    {
-        report.needs_reauth = true;
-        report.remaining = store.read_outbox_depth(Some(id))?;
-        return Ok(report);
-    }
-    let mut claimed = store.claim_ready_read(id, now, DRAIN_BATCH)?;
-    if claimed.is_empty() {
-        return Ok(report);
-    }
-    let (sendable, unaddressable): (Vec<_>, Vec<_>) =
-        claimed.drain(..).partition(|entry| tracker.can_address(&entry.op));
-    for entry in &unaddressable {
-        store.defer_read(entry.id, "no id for this work on this tracker yet", None)?;
-    }
-    report.deferred = unaddressable.len() as u32;
-    if sendable.is_empty() {
-        report.remaining = store.read_outbox_depth(Some(id))?;
-        return Ok(report);
-    }
-    let ops: Vec<_> = sendable.iter().map(|entry| entry.op.clone()).collect();
-    match tracker.push_read(&ops).await {
-        Ok(ignored) => {
-            credential_accepted(store, id)?;
-            for entry in &sendable {
-                store.complete_read(entry.id)?;
-                if let kaeri_core::traits::TrackOp::SetReadProgress {
-                    anilist_id,
-                    chapter,
-                    volume,
-                } = entry.op
-                {
-                    remember_pushed_read(store, id, anilist_id, chapter, volume)?;
-                }
-                if ignored.contains(&entry.op.anilist_id()) {
-                    report.ignored += 1;
-                } else {
-                    report.sent += 1;
-                }
-            }
-        }
-        Err(kaeri_core::Error::Auth(message)) => {
-            report.needs_reauth = true;
-            note_rejected(store, id, now)?;
-            tracing::warn!(tracker = id, %message, "tracker rejected our credentials; holding reading");
-        }
-        Err(error) => {
-            let message = error.to_string();
-            for entry in &sendable {
-                store.fail_read(entry.id, &message, now)?;
-            }
-            report.failed = sendable.len() as u32;
-            tracing::warn!(tracker = id, %message, "reading push failed; backing off");
-        }
-    }
-    report.remaining = store.read_outbox_depth(Some(id))?;
-    Ok(report)
 }
 
 /// Pull the manga and novel list and reconcile it: [`pull`] for reading, with progress settled
@@ -792,16 +1007,14 @@ mod tests {
             Ok(self.remote.clone())
         }
 
-        async fn push_checked(
-            &self,
-            ops: &[TrackOp],
-        ) -> Result<Vec<AnilistId>, kaeri_core::Error> {
+        async fn push_checked(&self, ops: &[TrackOp]) -> Result<Pushed, kaeri_core::Error> {
             self.push(ops).await?;
-            Ok(ops
+            let ignored = ops
                 .iter()
                 .map(TrackOp::anilist_id)
                 .filter(|id| self.ignores.contains(id))
-                .collect())
+                .collect();
+            Ok(Pushed { ignored, failed: Vec::new() })
         }
 
         async fn push(&self, ops: &[TrackOp]) -> Result<(), kaeri_core::Error> {

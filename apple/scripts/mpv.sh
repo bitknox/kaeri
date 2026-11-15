@@ -31,7 +31,15 @@
 #   apple/.mpv/current                 a link to <pin>, which project.yml and KaeriPlayer use
 #
 # Nothing is built when the stamp matches this script, the patches and the slices asked for;
-# --check builds nothing either way and fails when the build is not current. The build caches its
+# --check builds nothing either way and fails when the build is not current.
+#
+# apple/.mpv can be one cache that several worktrees share (the slot workers link it to
+# ~/.cache/kaeri-mpv), with builds and app builds running at once. So a build takes the lock
+# apple/.mpv/.lock (a directory; one left by a process that has gone is taken over), builds every
+# slice already stamped as well as the ones asked for, never fewer, and reuses the stamped slices'
+# frameworks when the sources are unchanged. It writes into <pin>/builds/<n> and then swaps the link
+# <pin>/Mpv.xcframework over to it in one rename, so a reader sees the old framework or the new one,
+# never a half-built one or none. The build before stays until the next one replaces it. The build caches its
 # downloads and its tools (meson, ninja and pkgconf, in a Python venv of their own: nothing is
 # installed on the machine) in apple/.mpv, and deletes its intermediate trees when it is done.
 # The licences of everything inside are in apple/ThirdParty/NOTICES.txt.
@@ -82,14 +90,18 @@ usage() {
 }
 
 root="$(cd "$(dirname "$0")/../.." && pwd)"
-cache="$root/apple/.mpv"
+# The cache's own path, not the worktree link's: the tools' venv records it, and a shared cache
+# outlives the worktree that made it.
+mkdir -p "$root/apple/.mpv"
+cache="$(cd -P "$root/apple/.mpv" && pwd)"
 out="$cache/$mpvkit"
 
-check=0
+check=0 clean_cache=0
 case "${1:-}" in
   --check) check=1; shift ;;
-  --clean) rm -rf "$cache/downloads" "$cache/tools" "$cache/work"; echo "mpv.sh: cleaned $cache"; exit 0 ;;
+  --clean) clean_cache=1 ;;
 esac
+(( clean_cache )) && shift
 slices=("$@")
 (( ${#slices[@]} )) || slices=(macos ios ios-sim)
 for slice in "${slices[@]}"; do
@@ -112,33 +124,117 @@ sources_hash() {
 
 # apple/.mpv/current names the pin's build; KaeriPlayer reaches it through a link, as
 # KaeriKit reaches the engine.
+# A link set in one rename (ln -sfn removes the old link first), and only when it changes, so a
+# reader never finds it missing.
+set_link() {
+  local target="$1" link="$2"
+  [[ -L "$link" && "$(readlink "$link")" == "$target" ]] && return 0
+  ln -s "$target" "$link.new.$$"
+  /usr/bin/perl -e 'rename($ARGV[0], $ARGV[1]) or die "rename $ARGV[1]: $!\n"' "$link.new.$$" "$link"
+}
 link_package() {
-  ln -sfn "$mpvkit" "$cache/current"
+  set_link "$mpvkit" "$cache/current"
   local package="$root/apple/Packages/KaeriPlayer"
   [[ -d "$package" ]] || return 0
   mkdir -p "$package/Mpv"
-  ln -sfn "../../../.mpv/current/Mpv.xcframework" "$package/Mpv/Mpv.xcframework"
+  set_link "../../../.mpv/current/Mpv.xcframework" "$package/Mpv/Mpv.xcframework"
 }
 
+# The build lock: a directory holding the owner's pid, host and start time. A lock whose process
+# is gone (on this host), or older than four hours, is stale and taken over. Waits up to
+# MPV_LOCK_WAIT seconds (two hours).
+lock="$cache/.lock"
+take_lock() {
+  local waited=0 said=0 pid host start stale
+  until mkdir "$lock" 2>/dev/null; do
+    pid="" host="" start="" stale=0
+    read -r pid host start 2>/dev/null <"$lock/owner" || true
+    if [[ -n "$pid" && "$host" == "$(hostname -s)" ]] && ! kill -0 "$pid" 2>/dev/null; then stale=1; fi
+    if [[ "$start" =~ ^[0-9]+$ ]] && (( $(date +%s) - start > 14400 )); then stale=1; fi
+    if (( stale )); then
+      echo "mpv.sh: taking over a stale build lock (pid ${pid:-?} on ${host:-?})"
+      rm -rf "$lock"
+      continue
+    fi
+    if [[ -z "$pid" ]] && (( waited >= 10 )); then
+      # A lock without an owner for 10 s: its maker died between mkdir and writing the owner.
+      echo "mpv.sh: taking over a build lock with no owner"
+      rm -rf "$lock"
+      continue
+    fi
+    (( said )) || { echo "mpv.sh: another build of libmpv runs (pid ${pid:-?} on ${host:-?}); waiting for it"; said=1; }
+    (( waited >= ${MPV_LOCK_WAIT:-7200} )) && { echo "mpv.sh: the build lock $lock stayed taken for ${waited} s" >&2; exit 1; }
+    sleep 2
+    waited=$((waited + 2))
+  done
+  echo "$$ $(hostname -s) $(date +%s)" >"$lock/owner"
+  trap 'rm -rf "$lock"' EXIT
+}
+
+if (( clean_cache )); then
+  take_lock
+  rm -rf "$cache/downloads" "$cache/tools" "$cache/work"
+  echo "mpv.sh: cleaned $cache"
+  exit 0
+fi
+
 hash="$(sources_hash)"
-if [[ -f "$out/stamp" && -d "$out/Mpv.xcframework" ]]; then
-  fresh=1
-  [[ "$(sed -n 's/^sources //p' "$out/stamp")" == "$hash" ]] || fresh=0
+is_fresh() {
+  [[ -f "$out/stamp" && -d "$out/Mpv.xcframework" ]] || return 1
+  [[ "$(sed -n 's/^sources //p' "$out/stamp")" == "$hash" ]] || return 1
+  local stamped slice
   stamped=" $(sed -n 's/^slices //p' "$out/stamp") "
   for slice in "${slices[@]}"; do
-    [[ "$stamped" == *" $slice "* ]] || fresh=0
+    [[ "$stamped" == *" $slice "* ]] || return 1
   done
-  if (( fresh )); then
-    (( check )) || link_package
-    echo "mpv.sh: libmpv is up to date in $out"
-    exit 0
-  fi
+}
+if is_fresh; then
+  (( check )) || link_package
+  echo "mpv.sh: libmpv is up to date in $out"
+  exit 0
 fi
 if (( check )); then
   echo "error: libmpv for ${slices[*]} is missing or older than apple/scripts/mpv.sh and its patches." >&2
   echo "error: run apple/scripts/mpv.sh ${slices[*]}" >&2
   exit 1
 fi
+
+# --- Lock and slices -------------------------------------------------------------------------------
+
+take_lock
+# Another build may have made it while this one waited.
+if is_fresh; then
+  link_package
+  echo "mpv.sh: libmpv is up to date in $out"
+  exit 0
+fi
+# Every slice the cache has stays: other worktrees' jobs may be using it. Those built from the same
+# sources are reused as they are.
+asked=" ${slices[*]} "
+reuse=()
+if [[ -f "$out/stamp" && -d "$out/Mpv.xcframework" ]]; then
+  same=0
+  [[ "$(sed -n 's/^sources //p' "$out/stamp")" == "$hash" ]] && same=1
+  for slice in $(sed -n 's/^slices //p' "$out/stamp"); do
+    case "$slice" in macos | ios | ios-sim) ;; *) continue ;; esac
+    if (( same )); then
+      reuse+=("$slice")
+    elif [[ "$asked" != *" $slice "* ]]; then
+      slices+=("$slice")
+    fi
+  done
+fi
+# In a fixed order: macos, ios, ios-sim.
+all=()
+for slice in macos ios ios-sim; do
+  [[ "$asked $(printf '%s ' "${slices[@]}") ${reuse[*]:-} " == *" $slice "* ]] && all+=("$slice")
+done
+to_build=()
+for slice in "${all[@]}"; do
+  [[ " ${reuse[*]:-} " == *" $slice "* ]] || to_build+=("$slice")
+done
+slices=("${all[@]}")
+echo "mpv.sh: building ${to_build[*]}${reuse[*]:+, reusing ${reuse[*]}}, for ${slices[*]}"
 
 # --- Tools -----------------------------------------------------------------------------------------
 
@@ -437,7 +533,22 @@ EOF
   clean codesign --force --sign - --timestamp=none "$fw" >>"$log" 2>&1
 }
 
-for slice in "${slices[@]}"; do
+# A stamped slice built from the same sources: its framework from the current XCFramework, as is.
+reuse_slice() {
+  local slice="$1" dir
+  case "$slice" in macos) dir=macos-arm64 ;; ios) dir=ios-arm64 ;; ios-sim) dir=ios-arm64-simulator ;; esac
+  [[ -d "$out/Mpv.xcframework/$dir/Mpv.framework" ]] || return 1
+  mkdir -p "$work/slices/$slice"
+  cp -R "$out/Mpv.xcframework/$dir/Mpv.framework" "$work/slices/$slice/"
+  grep "^$slice " "$out/contents" >>"$work/contents" 2>/dev/null || true
+}
+: >"$work/contents"
+for slice in ${reuse[@]+"${reuse[@]}"}; do
+  step "$slice: reusing the current framework"
+  reuse_slice "$slice" || { echo "mpv.sh: the current XCFramework has no $slice slice; building it" >&2; to_build+=("$slice"); }
+done
+
+for slice in ${to_build[@]+"${to_build[@]}"}; do
   read -r platform sdk target subsystem vkslice <<<"$(slice_info "$slice")"
   step "$slice: unpacking MPVKit's libraries"
   for dep in "${deps[@]}"; do
@@ -475,7 +586,14 @@ for slice in "${slices[@]}"; do
 done
 
 step "packaging Mpv.xcframework"
-stage="$out.partial"
+mkdir -p "$out/builds"
+n=0
+for old in "$out/builds"/*; do
+  b="${old##*/}"
+  [[ "$b" =~ ^[0-9]+$ ]] && (( b > n )) && n=$b
+done
+n=$((n + 1))
+stage="$out/builds/$n"
 rm -rf "$stage"
 mkdir -p "$stage"
 args=()
@@ -499,7 +617,26 @@ done)"
 } >"$stage/stamp"
 cp "$log" "$stage/build.log"
 cp "$work/contents" "$stage/contents"
-rm -rf "$out" "$work"
-mv "$stage" "$out"
+rm -rf "$work"
+# A framework from before builds/ (a directory, not a link) moves under builds/ first.
+if [[ -d "$out/Mpv.xcframework" && ! -L "$out/Mpv.xcframework" ]]; then
+  mkdir -p "$out/builds/0"
+  mv "$out/Mpv.xcframework" "$out/builds/0/Mpv.xcframework"
+  set_link "builds/0/Mpv.xcframework" "$out/Mpv.xcframework"
+fi
+# The swap: the framework link first, then what describes it, each in one rename.
+previous="$(readlink "$out/Mpv.xcframework" 2>/dev/null || true)"
+set_link "builds/$n/Mpv.xcframework" "$out/Mpv.xcframework"
+for f in contents build.log stamp; do
+  cp "$stage/$f" "$out/$f.new.$$"
+  /usr/bin/perl -e 'rename($ARGV[0], $ARGV[1]) or die "rename $ARGV[1]: $!\n"' "$out/$f.new.$$" "$out/$f"
+done
+# The build before stays for anything still reading it; older ones go.
+keep="${previous#builds/}"
+keep="${keep%%/*}"
+for old in "$out/builds"/*; do
+  b="${old##*/}"
+  [[ "$b" == "$n" || "$b" == "$keep" ]] || rm -rf "$old"
+done
 link_package
 echo "mpv.sh: wrote $out in ${elapsed} s (peak $((peak / 1024)) MB in apple/.mpv; ${sizes% })"

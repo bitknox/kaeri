@@ -1316,6 +1316,11 @@ pub(crate) async fn handle_internal(
                 crate::read_catalog::Ask::of(engine, services),
                 tx,
             );
+            // A server signed in again: the downloads it failed go on by themselves.
+            let downloads = &services.book_sources.downloads;
+            if downloads.take_requeued() && engine.ahead.on() {
+                downloads.start(&crate::downloads::books::Lent::of(services, tx));
+            }
         }
         Internal::BookSourcesChanged => {}
         Internal::SyncEffects => {

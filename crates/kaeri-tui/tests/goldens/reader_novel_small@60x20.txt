@@ -1,0 +1,44 @@
+Kaeri   Lantern Street Notes
+────────────────────────────────────────────────────────────
+    The lamp room sat at the top of the stairs, past the
+  door that stuck in wet weather. Mio had learned to lift
+  the handle before she turned it, the way her aunt did,
+  and the door gave with a sigh that sounded almost
+  polite.
+
+    Inside, the shelves held every lantern the street had
+  ever sent back for repair. Some were labelled in her
+  aunt's narrow hand. Others had only a date and a house
+  number, as if the lamp itself would explain the rest
+  once it was lit.
+
+    "You don't have to fix them all tonight," her aunt
+  said from the doorway.
+
+    "I know." Mio set the first one on the bench. Its
+────────────────────────────────────────────────────────────
+Part 3 · 6%                                  → next   ? keys
+=== styles ===
+colours text=#e4e0d6 text-dim=#a8aec9 rule=#46464d obi=#f2a64b state=#7fc7d9 alert=#f59b85 ground=#1a1b26
+r00 c00-04 fg=text mod=BOLD
+r00 c08-27 fg=text-dim
+r01 c00-59 fg=rule
+r02 c04-55 fg=text
+r03 c02-56 fg=text
+r04 c02-55 fg=text
+r05 c02-50 fg=text
+r06 c02-08 fg=text
+r08 c04-56 fg=text
+r09 c02-53 fg=text
+r10 c02-55 fg=text
+r11 c02-53 fg=text
+r12 c02-17 fg=text
+r14 c04-53 fg=text
+r15 c02-23 fg=text
+r17 c04-52 fg=text
+r18 c00-59 fg=rule
+r19 c00-10 fg=text-dim
+r19 c45-45 fg=text
+r19 c46-53 fg=text-dim
+r19 c54-54 fg=text
+r19 c55-59 fg=text-dim

@@ -23,8 +23,8 @@ use kaeri_core::books::ChapterId;
 use kaeri_model::{
     event::Event,
     reader::{
-        CreditPage, Leaf, LeafPart, PageEncoding, PageFile, PageHalf, PageKind, PixelFormat,
-        PixelRect, ReadDirection, ReaderEvent, ReaderMode, StripPos, UnitRect,
+        CreditPage, Leaf, LeafPart, PageEncoding, PageFile, PageFormats, PageHalf, PageKind,
+        PixelFormat, PixelRect, ReadDirection, ReaderEvent, ReaderMode, StripPos, UnitRect,
     },
     reading::ReadingFailure,
 };
@@ -74,6 +74,23 @@ fn within_page_bytes((w, h): (u32, u32)) -> (u32, u32) {
     (shrink(w), shrink(h))
 }
 
+/// `target` made `zoom` times larger on each side, within [`PAGE_BYTES`]: the pages of a zoom
+/// that stays sharp. A zoom of 1 or less is the target as it is.
+fn zoomed(target: Target, zoom: f32) -> Target {
+    if !zoom.is_finite() || zoom <= 1.0 {
+        return target;
+    }
+    let side = |s: u32| ((s as f32 * zoom).round() as u32).max(1);
+    let (width, height) = within_page_bytes((side(target.width), side(target.height)));
+    Target { width, height, ..target }
+}
+
+/// Whether a front end that decodes `decodes` can show a file of `format` as it is: `None`
+/// decodes all of them.
+fn decoded_by(decodes: Option<&PageFormats>, format: SourceFormat) -> bool {
+    decodes.is_none_or(|d| d.decodes_mime(format.mime()))
+}
+
 /// What the session decided before the book is open; the rest is decided from the book.
 #[derive(Debug, Clone)]
 pub struct Plan {
@@ -90,6 +107,12 @@ pub struct Plan {
     pub guess_direction: bool,
     /// Pages are fitted to the screen's width (the Fit setting's Width), to be scrolled.
     pub fit_width: bool,
+    /// The page formats the front end decodes; `None` is all of them. Any other page goes as
+    /// raw pixels.
+    pub decodes: Option<PageFormats>,
+    /// Pages are made this many times larger than `target`, the layout staying the target's.
+    /// 1 or less is the target's size.
+    pub zoom: f32,
 }
 
 /// What the book said, for the session: the layout and the guesses made.
@@ -176,6 +199,10 @@ pub struct PeekJob {
     pub chapter: ChapterId,
     pub path: PathBuf,
     pub out: Outbox,
+    /// The screen the page is drawn for, when the front end does not decode its format.
+    pub target: Target,
+    /// The page formats the front end decodes; `None` is all of them.
+    pub decodes: Option<PageFormats>,
 }
 
 /// The handle the engine keeps: jobs go in, events come out through the outbox.
@@ -363,6 +390,8 @@ struct Chapter {
     /// Each page is drawn as wide as its share of the screen however tall it is: on an LCD in
     /// the strip, vertical mode or Fit width.
     by_width: bool,
+    /// The page formats the front end decodes; `None` is all of them.
+    decodes: Option<PageFormats>,
 }
 
 /// A chapter laid out from a feed before all its pages landed.
@@ -517,15 +546,23 @@ impl Worker {
                 }
             }
             Job::Close { session } => {
-                if self.open.as_ref().is_some_and(|c| c.session == session) {
+                let open = self.open.as_ref().is_some_and(|c| c.session == session);
+                if open {
                     self.open = None;
                 }
-                if self.kept.as_ref().is_some_and(|c| c.session == session) {
+                let kept = self.kept.as_ref().is_some_and(|c| c.session == session);
+                if kept {
                     self.kept = None;
+                }
+                if open || kept {
+                    // The pages' working memory, kept for the next page while the reader was
+                    // open, goes back to the system with it, once the chapter flowed on from
+                    // has let go of its pages as well.
+                    kaeri_alloc::release();
                 }
             }
             Job::Peek(job) => {
-                if let Some(file) = self.first_page(&job.path) {
+                if let Some(file) = self.first_page(&job) {
                     let event = ReaderEvent::NextPreview {
                         session: job.session,
                         chapter: job.chapter,
@@ -537,8 +574,10 @@ impl Worker {
         }
     }
 
-    /// A book's first picture as the book has it, kept in that book's cache folder.
-    fn first_page(&self, path: &Path) -> Option<PageFile> {
+    /// A book's first picture as the book has it, kept in that book's cache folder, or drawn
+    /// for the screen when the front end does not decode its format.
+    fn first_page(&self, job: &PeekJob) -> Option<PageFile> {
+        let path = job.path.as_path();
         let dir = self.cache.join(book_key(path));
         std::fs::create_dir_all(&dir).ok()?;
         let kept = ["jpg", "png", "webp", "gif", "avif"]
@@ -567,7 +606,9 @@ impl Worker {
             },
         };
         touch(&dir);
-        page_file(&keep_original(&dir, 0, &bytes)?)
+        let original = keep_original(&dir, 0, &bytes)?;
+        let shown = Shown { decodes: job.decodes.as_ref(), target: job.target, dir: &dir };
+        shown.page(&original, &self.decoder, "n0")
     }
 
     /// Every page of the open chapter's feed landed or failed, and they lay out otherwise than
@@ -598,7 +639,8 @@ impl Worker {
         }
         touch(&dir);
         evict(&self.cache, &dir);
-        let path = job.path.display().to_string();
+        // A failure names the book by its file, never by its full path.
+        let path = book_name(&job.path);
         // A feed's pages are the ones landed so far; a book is opened.
         let book = match &job.feed {
             Some(_) => None,
@@ -611,6 +653,10 @@ impl Worker {
         let mut kinds = Vec::new();
         let mut credits = Vec::new();
         let mut info_rtl = None;
+        // Pages are made for the zoomed screen; the layout and an e-ink strip's cuts are the
+        // screen's own.
+        let target = zoomed(job.plan.target, job.plan.zoom);
+        let shown = Shown { decodes: job.plan.decodes.as_ref(), target, dir: &dir };
         if let Some(feed) = &job.feed {
             for (i, page) in feed.pages().iter().enumerate() {
                 kinds.push(layout::PageKind::Story);
@@ -623,7 +669,10 @@ impl Worker {
             }
             // The feed left its credit pages out as they came; they are a tap away.
             for credit in &feed.credits {
-                if let Some(file) = original_at(&credit.path).as_ref().and_then(page_file) {
+                let original = original_at(&credit.path);
+                let name = format!("c{}", credit.page);
+                if let Some(file) = original.and_then(|o| shown.page(&o, &self.decoder, &name))
+                {
                     credits.push(CreditPage {
                         page: credit.page,
                         at_end: credit.at_end,
@@ -687,7 +736,10 @@ impl Worker {
                         }
                         let original = originals.remove(at);
                         kinds.remove(at);
-                        if let Some(file) = original.as_ref().and_then(page_file) {
+                        let name = format!("c{}", found.page);
+                        if let Some(file) =
+                            original.and_then(|o| shown.page(&o, &self.decoder, &name))
+                        {
                             credits.insert(
                                 0,
                                 CreditPage {
@@ -703,7 +755,7 @@ impl Worker {
             }
             #[allow(unreachable_patterns)]
             Some(Book::Pdf(pdf)) => {
-                let room = (job.plan.target.width * 2, job.plan.target.height * 2);
+                let room = within_page_bytes((target.width * 2, target.height * 2));
                 let pages = match pdf_pages(pdf, &dir, room, &self.opening) {
                     Ok(pages) => pages,
                     Err(()) => {
@@ -783,11 +835,7 @@ impl Worker {
             chapter: job.chapter.clone(),
             source: job.path.clone(),
             dir,
-            renderer: Renderer::new(plan.target, plan.look).with_threads(if eink {
-                2
-            } else {
-                1
-            }),
+            renderer: Renderer::new(target, plan.look).with_threads(if eink { 2 } else { 1 }),
             originals,
             leaves: Vec::new(),
             strip: None,
@@ -799,6 +847,7 @@ impl Worker {
             decoder: self.decoder.clone(),
             feed: None,
             by_width: !eink && (mode.flows() || plan.fit_width),
+            decodes: plan.decodes,
         };
         let mut options_used = None;
         // On e-ink a strip is cut into screens at the panel's width, and the cuts are planned
@@ -951,7 +1000,8 @@ fn wished(leaves: Vec<u32>, queue: &VecDeque<u32>, asked: &HashSet<u32>) -> VecD
 fn open_book(path: &Path, opening: &Arc<AtomicBool>) -> Result<Book, ReadingFailure> {
     let shown = path.display().to_string();
     let format = path.extension().and_then(|e| e.to_str()).unwrap_or("").to_ascii_uppercase();
-    let slow = || ReadingFailure::Unreadable { path: shown.clone(), format: format.clone() };
+    let name = book_name(path);
+    let slow = || ReadingFailure::Unreadable { path: name.clone(), format: format.clone() };
     let since = Instant::now();
     // A book still opening from before holds the slot: wait for it within the same budget.
     while opening.swap(true, Ordering::AcqRel) {
@@ -1038,6 +1088,12 @@ fn pdf_pages(
     Ok(pages)
 }
 
+/// A book as a failure names it: its file's name, never the folders it sits in.
+pub(crate) fn book_name(path: &Path) -> String {
+    path.file_name()
+        .map_or_else(|| path.display().to_string(), |n| n.to_string_lossy().into_owned())
+}
+
 pub(crate) fn failure_of(
     e: &kaeri_books::BookError,
     path: String,
@@ -1051,7 +1107,9 @@ pub(crate) fn failure_of(
         K::Unsupported => {
             ReadingFailure::Unsupported { extension: format.to_ascii_lowercase() }
         }
-        K::Unreadable => ReadingFailure::Unreadable { path, format },
+        K::Unreadable => {
+            ReadingFailure::Unreadable { path: book_name(Path::new(&path)), format }
+        }
     }
 }
 
@@ -1150,6 +1208,22 @@ impl Chapter {
                         fed.feed.want(part.page as usize);
                         continue;
                     }
+                    // Failed for want of a network: fetched again once it is back, and made
+                    // then. Offline it waits for the network; otherwise it says so once.
+                    Some(FeedPage::Failed(failure @ ReadingFailure::Offline)) => {
+                        fed.waiting.insert(leaf);
+                        if fed.feed.offline() {
+                            self.sent.remove(&(part.page, half));
+                        } else {
+                            events.push(ReaderEvent::PageFailed {
+                                session: self.session,
+                                chapter: self.chapter.clone(),
+                                page: part.page,
+                                failure,
+                            });
+                        }
+                        continue;
+                    }
                     // Said once: a retry asks for it again.
                     Some(FeedPage::Failed(failure)) => {
                         events.push(ReaderEvent::PageFailed {
@@ -1197,6 +1271,11 @@ impl Chapter {
     /// other page is on its way and the pages lay out otherwise than guessed before they had.
     fn landed(&mut self, page: u32) -> bool {
         let Some(fed) = self.feed.as_mut() else { return false };
+        // What was said of the page before, its failure, is said again as it is now. A strip's
+        // cuts are counted apart from its pages.
+        if self.strip.is_none() {
+            self.sent.retain(|(p, _)| *p != page);
+        }
         let leaves = &self.leaves;
         let ready: Vec<u32> = fed
             .waiting
@@ -1268,7 +1347,7 @@ impl Chapter {
 
     fn unreadable(&self) -> ReadingFailure {
         ReadingFailure::Unreadable {
-            path: self.source.display().to_string(),
+            path: book_name(&self.source),
             format: self
                 .source
                 .extension()
@@ -1305,6 +1384,7 @@ impl Chapter {
         // is taller than the screen.
         let room = if self.by_width { (w, h) } else { (target.width, target.height) };
         if original_fits
+            && decoded_by(self.decodes.as_ref(), format)
             && kaeri_pages::delivery(format, (region.width, region.height), &fitted)
                 == Delivery::Original
         {
@@ -1359,24 +1439,12 @@ impl Chapter {
         format: SourceFormat,
         room: (u32, u32),
     ) -> Result<kaeri_pages::SourcePage, ReadingFailure> {
-        let bytes = std::fs::read(&original.path).map_err(|_| self.unreadable())?;
-        if format.decodes() {
-            return self.renderer.open_for(&bytes, room).map_err(|e| {
-                tracing::warn!(error = %e, "a page did not decode");
-                self.unreadable()
-            });
-        }
-        // A format the engine cannot read: the platform decodes it, small if it can.
-        let room = decode_room(original.width, original.height, room);
-        match self.decoder.bitmap(bytes, format, room) {
-            Hosted::Image(bitmap) => self.renderer.open_bitmap(bitmap, format).map_err(|e| {
-                tracing::warn!(error = %e, "a page did not decode");
-                self.unreadable()
-            }),
-            Hosted::Unsupported => {
+        match decode_original(&self.renderer, &self.decoder, original, format, room) {
+            Ok(page) => Ok(page),
+            Err(Undecoded::Unsupported) => {
                 Err(ReadingFailure::Unsupported { extension: extension_of(format).into() })
             }
-            Hosted::Unreadable => Err(self.unreadable()),
+            Err(Undecoded::Unreadable) => Err(self.unreadable()),
         }
     }
 
@@ -1406,27 +1474,7 @@ impl Chapter {
         format: kaeri_pages::PixelFormat,
         colour: bool,
     ) -> Result<PageFile, ReadingFailure> {
-        let path = self.dir.join(name);
-        write_whole(&path, bytes).map_err(|e| {
-            if e.raw_os_error() == Some(28) {
-                ReadingFailure::DiskFull
-            } else {
-                ReadingFailure::Other { reason: e.to_string() }
-            }
-        })?;
-        let (format, bpp) = match format {
-            kaeri_pages::PixelFormat::Gray8 => (PixelFormat::Gray8, 1),
-            _ => (PixelFormat::Rgba8, 4),
-        };
-        Ok(PageFile {
-            path: path.display().to_string(),
-            encoding: PageEncoding::Raw { format, stride: width * bpp },
-            width,
-            height,
-            crop: None,
-            colour,
-            bytes: bytes.len() as u64,
-        })
+        write_raw_in(&self.dir, name, bytes, (width, height), format, colour)
     }
 
     fn make_cut(&mut self, index: u32) -> Option<ReaderEvent> {
@@ -1761,6 +1809,104 @@ fn book_key(path: &Path) -> String {
     format!("{:016x}", h.finish())
 }
 
+/// Why a page did not decode.
+enum Undecoded {
+    /// Neither the engine nor the platform reads its format.
+    Unsupported,
+    Unreadable,
+}
+
+/// Decodes a page for a box of `room` pixels: in the engine, or by the platform for a format the
+/// engine cannot read.
+fn decode_original(
+    renderer: &Renderer,
+    decoder: &HostDecoder,
+    original: &Original,
+    format: SourceFormat,
+    room: (u32, u32),
+) -> Result<kaeri_pages::SourcePage, Undecoded> {
+    let bytes = std::fs::read(&original.path).map_err(|_| Undecoded::Unreadable)?;
+    if format.decodes() {
+        return renderer.open_for(&bytes, room).map_err(|e| {
+            tracing::warn!(error = %e, "a page did not decode");
+            Undecoded::Unreadable
+        });
+    }
+    // A format the engine cannot read: the platform decodes it, small if it can.
+    let room = decode_room(original.width, original.height, room);
+    match decoder.bitmap(bytes, format, room) {
+        Hosted::Image(bitmap) => renderer.open_bitmap(bitmap, format).map_err(|e| {
+            tracing::warn!(error = %e, "a page did not decode");
+            Undecoded::Unreadable
+        }),
+        Hosted::Unsupported => Err(Undecoded::Unsupported),
+        Hosted::Unreadable => Err(Undecoded::Unreadable),
+    }
+}
+
+/// Raw pixels written to `name` in `dir`, as the page file an app draws.
+fn write_raw_in(
+    dir: &Path,
+    name: &str,
+    bytes: &[u8],
+    (width, height): (u32, u32),
+    format: kaeri_pages::PixelFormat,
+    colour: bool,
+) -> Result<PageFile, ReadingFailure> {
+    let path = dir.join(name);
+    write_whole(&path, bytes).map_err(|e| {
+        if e.raw_os_error() == Some(28) {
+            ReadingFailure::DiskFull
+        } else {
+            ReadingFailure::Other { reason: e.to_string() }
+        }
+    })?;
+    let (format, bpp) = match format {
+        kaeri_pages::PixelFormat::Gray8 => (PixelFormat::Gray8, 1),
+        _ => (PixelFormat::Rgba8, 4),
+    };
+    Ok(PageFile {
+        path: path.display().to_string(),
+        encoding: PageEncoding::Raw { format, stride: width * bpp },
+        width,
+        height,
+        crop: None,
+        colour,
+        bytes: bytes.len() as u64,
+    })
+}
+
+/// How a page shown whole (a credit page, the next chapter's first) reaches a front end.
+struct Shown<'a> {
+    /// The page formats the front end decodes; `None` is all of them.
+    decodes: Option<&'a PageFormats>,
+    /// The screen a page is drawn for when its format is not one of them.
+    target: Target,
+    /// Where such a drawn page is written.
+    dir: &'a Path,
+}
+
+impl Shown<'_> {
+    /// The original as it is when the front end decodes its format, else the page drawn to fit
+    /// the screen as raw pixels, written as `{name}-{w}x{h}.raw`.
+    fn page(&self, original: &Original, decoder: &HostDecoder, name: &str) -> Option<PageFile> {
+        let format = original.format?;
+        if decoded_by(self.decodes, format) {
+            return page_file(original);
+        }
+        let (w, h) = within_page_bytes((self.target.width, self.target.height));
+        let mut renderer = Renderer::new(self.target, Look::default());
+        let page = decode_original(&renderer, decoder, original, format, (w, h)).ok()?;
+        let raw = renderer
+            .render(&page, None, w, h)
+            .map_err(|e| tracing::warn!(error = %e, "a page was not processed"))
+            .ok()?;
+        let name = format!("{name}-{w}x{h}.raw");
+        let size = (raw.width(), raw.height());
+        write_raw_in(self.dir, &name, raw.bytes(), size, raw.format(), raw.colour).ok()
+    }
+}
+
 /// A kept original as the app shows it, untouched.
 fn page_file(original: &Original) -> Option<PageFile> {
     let format = original.format?;
@@ -2004,6 +2150,8 @@ mod tests {
                 guess_mode: false,
                 guess_direction: false,
                 fit_width: false,
+                decodes: None,
+                zoom: 1.0,
             },
             start_page: 0,
             shared: Shared::default(),
@@ -2072,6 +2220,18 @@ mod tests {
         fit_width: bool,
         look: Look,
     ) -> Vec<PageFile> {
+        made_for(pages, (screen, None, 1.0), mode, fit_width, look).0
+    }
+
+    /// As [`made_files`], for a front end that decodes `decodes` and zooms `zoom` times on a
+    /// screen of `screen` pixels, with the leaves laid out.
+    fn made_for(
+        pages: &[(String, Vec<u8>)],
+        (screen, decodes, zoom): ((u32, u32), Option<PageFormats>, f32),
+        mode: ReaderMode,
+        fit_width: bool,
+        look: Look,
+    ) -> (Vec<PageFile>, Vec<Leaf>) {
         let dir = tempfile::tempdir().unwrap();
         let book = dir.path().join("1-pages");
         std::fs::create_dir_all(&book).unwrap();
@@ -2100,6 +2260,8 @@ mod tests {
                 guess_mode: false,
                 guess_direction: false,
                 fit_width,
+                decodes,
+                zoom,
             },
             start_page: 0,
             shared: shared.clone(),
@@ -2126,8 +2288,102 @@ mod tests {
                 Err(_) => std::thread::sleep(Duration::from_millis(10)),
             }
         }
-        assert_eq!(shared.lock().unwrap().mode, Some(mode));
-        made.into_iter().map(Option::unwrap).collect()
+        let laid = shared.lock().unwrap();
+        assert_eq!(laid.mode, Some(mode));
+        (made.into_iter().map(Option::unwrap).collect(), laid.leaves.clone())
+    }
+
+    fn png_only() -> Option<PageFormats> {
+        Some(PageFormats { png: true, ..PageFormats::default() })
+    }
+
+    fn is_original(file: &PageFile) -> bool {
+        matches!(file.encoding, PageEncoding::Original { .. })
+    }
+
+    #[test]
+    fn a_front_end_that_decodes_png_alone_gets_a_jpeg_page_as_pixels() {
+        let pages = [
+            ("00001.jpg".to_owned(), stripes_jpeg(500, 700)),
+            ("00002.png".to_owned(), framed_png(500, 700, 20)),
+        ];
+        let made = |decodes| {
+            made_for(
+                &pages,
+                ((1080, 1600), decodes, 1.0),
+                ReaderMode::Paged,
+                false,
+                Look::default(),
+            )
+            .0
+        };
+        let only_png = made(png_only());
+        let jpeg = &only_png[0];
+        // Drawn at the box it shows at, as raw pixels on an LCD.
+        assert_eq!(
+            jpeg.encoding,
+            PageEncoding::Raw { format: PixelFormat::Rgba8, stride: jpeg.width * 4 },
+            "{jpeg:?}"
+        );
+        assert!(jpeg.width.abs_diff(1080) <= 2 && jpeg.height.abs_diff(1512) <= 2, "{jpeg:?}");
+        assert!(is_original(&only_png[1]), "{:?}", only_png[1]);
+        // A front end that decodes everything gets both as they are.
+        assert!(made(None).iter().all(is_original));
+    }
+
+    #[test]
+    fn zoomed_pages_are_made_larger_on_the_same_leaves() {
+        let pages = [
+            ("00001.jpg".to_owned(), stripes_jpeg(400, 560)),
+            ("00002.jpg".to_owned(), stripes_jpeg(2000, 2800)),
+        ];
+        let made = |decodes, zoom| {
+            made_for(
+                &pages,
+                ((600, 900), decodes, zoom),
+                ReaderMode::Paged,
+                false,
+                Look::default(),
+            )
+        };
+        let (plain, leaves) = made(None, 1.0);
+        let (zoomed, zoomed_leaves) = made(None, 3.0);
+        assert_eq!(leaves, zoomed_leaves, "zoom keeps the layout");
+        // At 1x the large page is shrunk to the screen; at 3x it is close enough to its
+        // original size that the original goes.
+        assert!(is_original(&plain[0]) && !is_original(&plain[1]), "{plain:?}");
+        assert!(is_original(&zoomed[0]) && is_original(&zoomed[1]), "{zoomed:?}");
+
+        // Drawn as pixels, each side is three times as long.
+        let (small, _) = made(png_only(), 1.0);
+        let (large, large_leaves) = made(png_only(), 3.0);
+        assert_eq!(leaves, large_leaves);
+        for (s, l) in small.iter().zip(&large) {
+            assert!(!is_original(s) && !is_original(l), "{s:?} {l:?}");
+            assert!(l.width.abs_diff(s.width * 3) <= 3, "{s:?} {l:?}");
+            assert!(l.height.abs_diff(s.height * 3) <= 3, "{s:?} {l:?}");
+        }
+        assert_eq!((small[1].width, small[1].height), (600, 840));
+
+        // Zoom 0 is no zoom.
+        let (none, none_leaves) = made(png_only(), 0.0);
+        assert_eq!(leaves, none_leaves);
+        let sizes = |files: &[PageFile]| -> Vec<_> {
+            files.iter().map(|f| (f.encoding.clone(), f.width, f.height)).collect()
+        };
+        assert_eq!(sizes(&none), sizes(&small));
+    }
+
+    #[test]
+    fn a_zoom_stays_within_the_page_budget() {
+        let target = Target { panel: kaeri_pages::Panel::Lcd, width: 1000, height: 1500 };
+        let big = zoomed(target, 8.0);
+        assert!(u64::from(big.width) * u64::from(big.height) * 4 <= PAGE_BYTES, "{big:?}");
+        // As large as the budget lets it be, about 3.3 times, its shape kept.
+        assert!(big.width > target.width * 3 && big.width < target.width * 8, "{big:?}");
+        assert!(big.height.abs_diff(big.width * 3 / 2) <= 2, "{big:?}");
+        assert_eq!(zoomed(target, 0.0), target);
+        assert_eq!(zoomed(target, f32::NAN), target);
     }
 
     #[test]
@@ -2246,6 +2502,37 @@ mod tests {
         let (aspect, made_aspect) =
             (40_000.0 / 720.0, f64::from(file.height) / f64::from(file.width));
         assert!((aspect - made_aspect).abs() < 0.2, "{file:?}");
+    }
+
+    /// A book that does not open says so by its file's name, not by the folders it sits in.
+    #[test]
+    fn a_book_that_cannot_be_read_is_named_by_its_file() {
+        let dir = tempfile::tempdir().unwrap();
+        let book = dir.path().join("Private Shelf").join("Broken Bell.epub");
+        std::fs::create_dir_all(book.parent().unwrap()).unwrap();
+        std::fs::write(&book, b"PK\x03\x04 cut short").unwrap();
+        let failure = open_book(&book, &Arc::new(AtomicBool::new(false))).err().unwrap();
+        assert_eq!(
+            failure,
+            ReadingFailure::Unreadable {
+                path: "Broken Bell.epub".into(),
+                format: "EPUB".into()
+            }
+        );
+        let opening = crate::reading::novel::Opening {
+            session: 0,
+            soft_hyphens: false,
+            dir: dir.path().join("cache"),
+            eink: None,
+            limits: Limits::default(),
+            text: false,
+        };
+        let opened = crate::reading::novel::open_epub(&book, opening);
+        assert!(
+            matches!(&opened, Err(ReadingFailure::Unreadable { path, .. }) if path == "Broken Bell.epub"),
+            "{:?}",
+            opened.err()
+        );
     }
 
     #[test]

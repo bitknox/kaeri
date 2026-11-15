@@ -1115,7 +1115,45 @@ const MIGRATIONS: &[(&str, &str)] = &[
      WHERE path LIKE '_:\%' AND instr(path, '\book-downloads\') > 0;
     "#,
     ),
+    (
+        "0035_local_work_names",
+        r#"
+    -- A work of its own on this device (`l:`) is named in book_work, where every screen, download
+    -- and send reads a work's name. Folder series carry their own name, so the ones kept before
+    -- this release are named from it; a book server's are named again from the server.
+    INSERT OR IGNORE INTO book_work (work, medium, titles, fetched_at)
+        SELECT work, MIN(medium), json_array(MIN(name)), 0 FROM book_local_series
+         WHERE work LIKE 'l:%' GROUP BY work;
+    "#,
+    ),
+    (
+        "0036_book_download_owner",
+        r#"
+    -- Which engine fetches a chapter, and until when it has last said it still does. Two engines
+    -- on one data folder (an app and the terminal) never fetch the same chapter, and one that
+    -- starts leaves a fetch another still makes alone. Rows from before have no owner and a lease
+    -- long over.
+    ALTER TABLE book_download ADD COLUMN owner TEXT;
+    ALTER TABLE book_download ADD COLUMN lease_until INTEGER NOT NULL DEFAULT 0;
+    "#,
+    ),
+    (
+        "0037_download_owner",
+        r#"
+    -- Which engine runs an episode's download, and until when it has last said it still does,
+    -- as for chapters. An engine that starts leaves a download another one still runs alone.
+    -- Rows from before have no owner and a lease long over.
+    ALTER TABLE download ADD COLUMN owner TEXT;
+    ALTER TABLE download ADD COLUMN lease_until INTEGER NOT NULL DEFAULT 0;
+    "#,
+    ),
 ];
+
+/// How long a statement waits for a lock another connection or process holds before it fails.
+///
+/// WAL lets readers go on beside a writer, but two writers still take turns. Long enough for any
+/// write the app makes to finish; a write that still fails is said to the person.
+pub const BUSY_WAIT: std::time::Duration = std::time::Duration::from_secs(5);
 
 /// Apply any migrations the database has not yet seen.
 pub fn migrate(conn: &Connection) -> rusqlite::Result<u32> {
@@ -1125,6 +1163,10 @@ pub fn migrate(conn: &Connection) -> rusqlite::Result<u32> {
 /// [`migrate`], stopping before the migration called `stop`: a database as an older release left
 /// it, for the tests of what a migration does to existing data.
 pub fn migrate_until(conn: &Connection, stop: Option<&str>) -> rusqlite::Result<u32> {
+    // Every connection comes through here. Two engines can have the database open at once (the
+    // Mac app and the terminal share a data folder), and without a wait a write that meets the
+    // other's lock fails at once and the change is lost.
+    conn.busy_timeout(BUSY_WAIT)?;
     conn.pragma_update(None, "journal_mode", "WAL")?;
     conn.pragma_update(None, "foreign_keys", "ON")?;
     conn.pragma_update(None, "synchronous", "NORMAL")?;
@@ -1141,12 +1183,22 @@ pub fn migrate_until(conn: &Connection, stop: Option<&str>) -> rusqlite::Result<
         if Some(*name) == stop {
             break;
         }
-        let already: bool = conn.query_row(
-            "SELECT EXISTS(SELECT 1 FROM schema_migration WHERE name = ?1)",
-            [name],
-            |r| r.get(0),
-        )?;
-        if already {
+        let already = |conn: &Connection| -> rusqlite::Result<bool> {
+            conn.query_row(
+                "SELECT EXISTS(SELECT 1 FROM schema_migration WHERE name = ?1)",
+                [name],
+                |r| r.get(0),
+            )
+        };
+        if already(conn)? {
+            continue;
+        }
+        // Another engine opening the same database at the same moment may be applying it: the
+        // write lock is taken first, waiting for that engine's, and the record asked again
+        // under it, so the migration is never run twice.
+        conn.execute_batch("BEGIN IMMEDIATE;")?;
+        if already(conn)? {
+            conn.execute_batch("COMMIT;")?;
             continue;
         }
         // Each migration is one transaction, **and the record of it is inside that
@@ -1156,12 +1208,16 @@ pub fn migrate_until(conn: &Connection, stop: Option<&str>) -> rusqlite::Result<
         // `table … already exists`, and `Store::open` returns an error every time from then on.
         // There is no repair path for that short of deleting the database, so the two facts
         // have to become durable together.
-        conn.execute_batch(&format!(
-            "BEGIN;\n\
-             {sql}\n\
+        let applied_now = conn.execute_batch(&format!(
+            "{sql}\n\
              INSERT INTO schema_migration (name, applied_at) VALUES ('{name}', unixepoch());\n\
              COMMIT;"
-        ))?;
+        ));
+        if let Err(e) = applied_now {
+            // Nothing of it is kept: the next open tries it again.
+            let _ = conn.execute_batch("ROLLBACK;");
+            return Err(e);
+        }
         tracing::info!(migration = name, "applied migration");
         applied += 1;
     }
@@ -1315,6 +1371,38 @@ mod tests {
                 Some("/elsewhere/3.cbz".to_owned()),
                 None,
             ]
+        );
+    }
+
+    /// R7E-4. Folder series kept before names were kept for local works are named by their
+    /// folder's name; a work the catalogue already describes is left as it is.
+    #[test]
+    fn folder_works_kept_before_are_named_by_their_folder() {
+        let conn = Connection::open_in_memory().unwrap();
+        migrate_until(&conn, Some("0035_local_work_names")).unwrap();
+        for (id, name, work) in [
+            ("f:1", "The Long Ferry", Some("l:m:the long ferry")),
+            ("f:2", "Rooftop Paper Club", Some("a:900301")),
+            ("f:3", "Unmatched", None),
+        ] {
+            conn.execute(
+                "INSERT INTO book_local_series (id, folder, name, medium, work, state)
+                 VALUES (?1, 'f', ?2, 'manga', ?3, 'unmatched')",
+                rusqlite::params![id, name, work],
+            )
+            .unwrap();
+        }
+        migrate(&conn).unwrap();
+        let mut stmt =
+            conn.prepare("SELECT work, titles FROM book_work ORDER BY work").unwrap();
+        let rows: Vec<(String, String)> = stmt
+            .query_map([], |r| Ok((r.get(0)?, r.get(1)?)))
+            .unwrap()
+            .map(Result::unwrap)
+            .collect();
+        assert_eq!(
+            rows,
+            [("l:m:the long ferry".to_owned(), r#"["The Long Ferry"]"#.to_owned())]
         );
     }
 

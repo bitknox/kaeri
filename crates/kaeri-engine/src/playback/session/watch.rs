@@ -140,7 +140,7 @@ impl Run<'_> {
         let id = self.context.anilist_id;
         // Blocking sqlite calls: off the async worker so a slow disk cannot stall the event
         // stream.
-        let _ = tokio::task::spawn_blocking(move || {
+        let written = tokio::task::spawn_blocking(move || {
             store_handle.record_event_queued(
                 &watch,
                 if queue_now { trackers.clone() } else { Vec::new() },
@@ -156,8 +156,21 @@ impl Run<'_> {
             Ok::<_, kaeri_store::StoreError>(())
         })
         .await;
+        if let Ok(Err(e)) = written {
+            if queue_now {
+                // Not committed after all: the next record tries the finish, and its trackers,
+                // again.
+                *committed = false;
+            }
+            if completed {
+                self.tx.not_kept("a watched episode", &e);
+            } else {
+                // The next position written replaces this one, so it is only logged.
+                tracing::warn!(error = %e, "a watch position was not kept");
+            }
+        }
 
-        if queue_now {
+        if queue_now && *committed {
             let _ = self.tx.send(Event::ProgressQueued);
         }
     }

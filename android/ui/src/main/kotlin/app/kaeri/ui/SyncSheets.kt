@@ -63,6 +63,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
@@ -611,6 +612,7 @@ internal fun RecoveryKeyDialog(key: String) {
 @Composable
 internal fun DevicePage(device: app.kaeri.engine.model.SyncDeviceView, onRemove: () -> Unit, onDismiss: () -> Unit) {
     val context = LocalContext.current
+    val resources = LocalResources.current
     val store = LocalAppStore.current
     SettingsSheet(onDismiss = onDismiss) {
         SheetTitle(device.name)
@@ -620,7 +622,7 @@ internal fun DevicePage(device: app.kaeri.engine.model.SyncDeviceView, onRemove:
             SwitchRow(if (remote) Place.First else Place.Only, stringResource(R.string.devices_sync_switch), !device.paused) { store.setDeviceSync(device.name, device.paused) }
             if (remote) SwitchRow(Place.Last, stringResource(R.string.devices_remote_switch), !device.remoteOff) { store.setDeviceRemote(device.name, device.remoteOff) }
         }
-        SheetText(Strings.devicesSwitchesFoot(context, context.getString(R.string.device_kind_phone), device.name), Modifier.padding(top = 8.dp))
+        SheetText(Strings.devicesSwitchesFoot(context, resources.getString(R.string.device_kind_phone), device.name), Modifier.padding(top = 8.dp))
         SheetButtons {
             QuietButton(stringResource(R.string.action_cancel), onClick = onDismiss)
             TextButton(onClick = onRemove) { Text(stringResource(R.string.devices_remove), color = MaterialTheme.colorScheme.error) }

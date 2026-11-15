@@ -6,7 +6,7 @@ continue-widget-resume = Retomar E{ $episode }
 continue-widget-resume-dubbed = Retomar E{ $episode } { -dubbed }
 downloads-continued-title = Baixando episódios
 downloads-continued-left = { $count ->
-    [one] Um episódio restante
+    [one] { $count } episódio restante
     [many] { $count } episódios restantes
    *[other] { $count } episódios restantes
  }

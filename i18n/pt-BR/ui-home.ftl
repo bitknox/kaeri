@@ -8,7 +8,7 @@ home-mark-watched = Marcar episódio { $episode } como assistido
 home-marked-watched = Episódio { $episode } marcado como assistido
 home-remove-continue = Remover de { -continue-cap }
 home-continue-count = { $count ->
-    [one] 1 título
+    [one] { $count } título
     [many] { $count } de títulos
    *[other] { $count } títulos
  }

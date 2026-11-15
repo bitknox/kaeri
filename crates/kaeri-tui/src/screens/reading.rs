@@ -113,12 +113,9 @@ fn render_home(buf: &mut Buffer, app: &App, area: Rect) {
             _ => {}
         }
     }
-    // The terminal has no reader: where reading is, and the key that changes what Kaeri is for.
+    // Last, the key that changes what Kaeri is for.
     if !rows.is_empty() {
         rows.push(ObiRow::new(String::new()));
-    }
-    for text in wrap(&t::tui_medium_read_line(), width, 3) {
-        rows.push(ObiRow::new(text).muted(true));
     }
     rows.push(
         ObiRow::new(t::tui_medium_read_change(&app.key_for(Action::ChooseMedium))).muted(true),

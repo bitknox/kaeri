@@ -711,6 +711,10 @@ impl Harness {
             }
             update => self.app.apply(update),
         }
+        // Reader pages too, at once, as covers are.
+        for job in self.app.take_page_jobs() {
+            crate::tui::pages::hand_over(&mut self.app, crate::tui::pages::now(job));
+        }
     }
 }
 

@@ -45,6 +45,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
@@ -727,6 +728,7 @@ internal fun DownloadMenu(
     onSend: (List<ChapterId>) -> Unit,
 ) {
     val context = LocalContext.current
+    val resources = LocalResources.current
     val store = LocalAppStore.current
     val work = series.work
     val all = volumes.chapterRows()
@@ -741,7 +743,7 @@ internal fun DownloadMenu(
         // here or on its way, it queues nothing, so say so.
         val next = (what as? DownloadPick.NextUnread)?.let { volumes.nextToFetch(it.n.toInt()) }
         if (next != null && next.isEmpty()) {
-            snackbars.show(context.getString(app.kaeri.i18n.R.string.download_already))
+            snackbars.show(resources.getString(app.kaeri.i18n.R.string.download_already))
         } else {
             store.reading.download(work, what)
         }

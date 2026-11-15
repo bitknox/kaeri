@@ -44,3 +44,9 @@ feed-firewall-title-windows = Windows will ask about the network
 # @only windows
 # @max 160
 feed-firewall-body-windows = To let e-readers at home reach the feed, allow { -app-name } on private networks only. Leave public networks unticked.
+
+# Header of the group picker that opens from the Group row's Change on a series page. The source is a site or server name, such as "books.home.example".
+# @only windows
+# @arg source: text
+# @max 48
+windows-group-picker-in = Group in { $source }

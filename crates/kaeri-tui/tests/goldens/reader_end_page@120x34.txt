@@ -1,0 +1,85 @@
+Kaeri   Harbor Light Recipes · Chapter 14 · Tide Tables                                      sources ● 3  ·  anilist ⇅ 2
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+
+
+                              End of chapter 14
+                              Chapter 14 · Tide Tables · 22 pages
+
+                              ● Counted as read · AniList updated
+                              ● Saved to books.home.example
+
+
+                              Next  ──────────────────────────────────────────────────────
+
+                                                ▌ Chapter 15 · The Night Market
+                                                  22 pages · From Home library · Downloaded
+
+                                                  ↵ continue
+
+
+
+
+
+
+
+                                                  First page of chapter 15
+
+
+
+
+
+
+
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+████████████████  End of chapter 14             ↵ continue   n next chapter   e chapters   q back to the series   ? keys
+=== styles ===
+colours text=#e4e0d6 text-dim=#a8aec9 rule=#46464d obi=#f2a64b state=#7fc7d9 alert=#f59b85 ground=#1a1b26
+r00 c00-04 fg=text mod=BOLD
+r00 c08-27 fg=text
+r00 c28-54 fg=text-dim
+r00 c93-103 fg=state
+r00 c104-105 fg=text-dim
+r00 c106-106 fg=rule
+r00 c107-108 fg=text-dim
+r00 c109-119 fg=state
+r01 c00-119 fg=rule
+r04 c30-46 fg=text mod=BOLD
+r05 c30-64 fg=text-dim
+r07 c30-30 fg=state
+r07 c32-64 fg=text
+r08 c30-30 fg=state
+r08 c32-58 fg=text
+r11 c30-33 fg=text-dim
+r11 c36-89 fg=rule
+r13 c30-46 fg=#2db95f bg=#2db95f
+r13 c48-48 fg=obi
+r13 c50-78 fg=text mod=BOLD
+r14 c30-46 fg=#2db95f bg=#2db95f
+r14 c50-90 fg=text-dim
+r15 c30-46 fg=#2db95f bg=#2db95f
+r16 c30-46 fg=#2db95f bg=#2db95f
+r16 c50-50 fg=text
+r16 c51-59 fg=text-dim
+r17 c30-46 fg=#2db95f bg=#2db95f
+r18 c30-46 fg=#2db95f bg=#2db95f
+r19 c30-46 fg=#2db95f bg=#2db95f
+r20 c30-46 fg=#2db95f bg=#2db95f
+r21 c30-46 fg=#2db95f bg=#2db95f
+r22 c30-46 fg=#2db95f bg=#2db95f
+r23 c30-46 fg=#2db95f bg=#2db95f
+r24 c30-46 fg=#2db95f bg=#2db95f
+r24 c50-73 fg=text-dim
+r25 c30-46 fg=#2db95f bg=#2db95f
+r32 c00-119 fg=rule
+r33 c00-15 fg=text
+r33 c16-34 fg=text-dim
+r33 c48-48 fg=text
+r33 c49-60 fg=text-dim
+r33 c61-61 fg=text
+r33 c62-77 fg=text-dim
+r33 c78-78 fg=text
+r33 c79-90 fg=text-dim
+r33 c91-91 fg=text
+r33 c92-113 fg=text-dim
+r33 c114-114 fg=text
+r33 c115-119 fg=text-dim

@@ -37,12 +37,14 @@
 //             (the reading scenes); page=read/series/a%3A900301 opens a series' page over Read
 //   series    a sheet or menu the series' page opens once it has loaded: chapter, read-from,
 //             group, tracking, read-again, send, where-stop, choose, status or download
-//   credits   start, end, both or parts: each layout of the chapter the reader opens comes with a
-//             credit page skipped at its start, its end or both, or in two parts (CreditsStage)
+//   credits   start, end, both, two, parts, missing or broken: each layout of the chapter the
+//             reader opens comes with a credit page skipped at its start, its end or both, two at
+//             its start, two parts, a missing part, or a page that cannot be read (CreditsStage)
 //   creditshot what the reader shows once they have come: line, chrome, shown, shownchrome, kept,
 //             parts or end (CreditShot)
 //   groups    set: the series' source lists three groups, and its rows show a chapter in parts
-//             and chapters from other groups (GroupsStage)
+//             and chapters from other groups (GroupsStage); downloaded: the same, with the
+//             chapter in parts downloaded
 //   chapterwait ms a chapter opened from another waits before the engine hears of it, to see the
 //             reader's pressed and loading states on chapters that open at once here
 //   openwait  ms the reader's first open waits before the engine hears of it, to see the opening
@@ -167,6 +169,8 @@ internal object Flavour {
         if (named != null && FixtureScene.named(named) == null) Log.w(KaeriApp.TAG, "no scene named $named")
         // Home's world: invented titles dated by the scene's clock, for Home's shots.
         if (intent.getStringExtra("world") == "1") android.system.Os.setenv("KAERI_FIXTURES_HOME_WORLD", "1", true)
+        // A change AniList kept refusing until it stopped being sent, for the one-time notice's shots.
+        if (intent.getStringExtra("dropped") == "1") android.system.Os.setenv("KAERI_FIXTURES_DROPPED", "1", true)
         // The fuller catalogue, which Search's filters=set route needs for titles that match.
         if (intent.getStringExtra("catalogue") == "1" || intent.getStringExtra(MainActivity.FILTERS) != null) {
             android.system.Os.setenv("KAERI_FIXTURES_CATALOGUE", "1", true)
@@ -303,8 +307,12 @@ internal object Flavour {
         intent.getStringExtra("discovery")?.let { state ->
             if (!app.kaeri.store.ReadDiscoveryStage.stage(store, state)) Log.w(KaeriApp.TAG, "no discovery state named $state: ${app.kaeri.store.ReadDiscoveryStage.STATES.joinToString()}")
         }
-        // groups=set: the series' source lists three groups, and its rows show parts and other groups.
-        if (intent.getStringExtra("groups") == "set") app.kaeri.store.GroupsStage.stage(store)
+        // groups=set: the series' source lists three groups, and its rows show parts and other
+        // groups; downloaded has the chapter in parts downloaded.
+        when (intent.getStringExtra("groups")) {
+            "set" -> app.kaeri.store.GroupsStage.stage(store)
+            "downloaded" -> app.kaeri.store.GroupsStage.stage(store, downloaded = true)
+        }
         intent.getStringExtra("sync")?.let { state ->
             if (!app.kaeri.store.FixtureSync.stage(store, state)) Log.w(KaeriApp.TAG, "no sync state named $state: ${app.kaeri.store.FixtureSync.STATES.joinToString()}")
         }

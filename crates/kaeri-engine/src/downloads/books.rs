@@ -44,6 +44,7 @@ use kaeri_model::{
     command::AppState,
     event::Event,
     medium::AppEdition,
+    notice::Notice,
     reading::{
         BookDownloadRow, BookDownloadsView, ChapterDownloadState, ChapterReadState, ChapterRow,
         DownloadPick, ReadingEvent, ReadingFailure, StorageMeter, VolumeGroup, WriteProblem,
@@ -72,6 +73,16 @@ impl Drop for NotRunningOnPanic<'_> {
     }
 }
 
+/// A fetch's heartbeat: it stops when the fetch ends, however it ends, so a chapter is never
+/// held for an engine that no longer fetches it.
+struct Heartbeat(tokio::task::JoinHandle<()>);
+
+impl Drop for Heartbeat {
+    fn drop(&mut self) {
+        self.0.abort();
+    }
+}
+
 /// How many unread chapters after the one being read are kept ready.
 pub const KEEP_AHEAD: usize = 3;
 /// What a device keeps free of downloads: below this the queue stops with
@@ -80,9 +91,45 @@ pub const KEEP_FREE: u64 = 512 * 1_000_000;
 /// Progress is told at most this often; a chapter starting, finishing or failing is told at once.
 const PROGRESS_EVERY: Duration =
     if cfg!(test) { Duration::ZERO } else { Duration::from_secs(2) };
+/// A chapter kept ready whose download failed is queued again by itself only after a wait that
+/// doubles with each failure, from this many seconds up to [`RETRY_LONGEST`], and at most
+/// [`RETRIES`] times while the app runs. The person asking for it queues it at once.
+const RETRY_FIRST: i64 = 60;
+const RETRY_LONGEST: i64 = 3600;
+const RETRIES: u32 = 5;
 /// The rest between chapters.
 const PACE: Duration =
     if cfg!(test) { Duration::from_millis(2) } else { Duration::from_millis(400) };
+/// How often a fetch tells other engines on the data folder that it goes on, well inside its
+/// claim ([`kaeri_store::book_downloads::LEASE_SECS`]).
+const HEARTBEAT: Duration =
+    if cfg!(test) { Duration::from_millis(20) } else { Duration::from_secs(15) };
+/// How often a queue with nothing left but chapters another engine fetches looks whether that
+/// engine has stopped.
+const LOOK_AGAIN: Duration =
+    if cfg!(test) { Duration::from_millis(20) } else { Duration::from_secs(5) };
+
+/// How long a fetch that could not reach its source waits to hear the network went, before it
+/// fails: the device often notices a lost network a moment after the fetch does.
+const NETWORK_GRACE: Duration =
+    if cfg!(test) { Duration::from_millis(300) } else { Duration::from_secs(6) };
+
+/// The waits before one of a chapter's pages is asked for again when the source did not
+/// answer, after the tries the source itself makes: three more asks, each through the source as
+/// any other, so its pacing holds. A source still not answering after them ends the fetch,
+/// which Try again starts over. The chapter's opening is asked for once.
+const ASK_AGAIN: [Duration; 3] = if cfg!(test) {
+    [Duration::from_millis(1), Duration::from_millis(2), Duration::from_millis(3)]
+} else {
+    [Duration::from_secs(2), Duration::from_secs(6), Duration::from_secs(15)]
+};
+
+/// Whether a fetch that failed this way may work when asked again a moment later: the source
+/// did not answer, as a request lost on the way says. Not when the device has no network, nor
+/// when the source answered with a refusal or without the chapter.
+fn asked_again(failure: &ReadingFailure) -> bool {
+    matches!(failure, ReadingFailure::SourceDown { .. })
+}
 
 /// What the engine lends a download: the sources, the clock and the way to speak.
 #[derive(Clone)]
@@ -242,6 +289,11 @@ struct Inner {
     titles: std::sync::OnceLock<kaeri_meta::titles::Titles>,
     /// The pages of the chapters being fetched, for a reader that opens one meanwhile.
     shares: shared::Shares,
+    /// Fetches went back in the queue as their source was signed in again, and the queue has
+    /// not been started for them yet.
+    requeued: std::sync::atomic::AtomicBool,
+    /// Downloads that failed in a row, by work and chapter: how many times, and when last.
+    failed: Mutex<HashMap<(String, String), (u32, i64)>>,
 }
 
 impl std::fmt::Debug for BookDownloads {
@@ -258,6 +310,7 @@ pub struct Wanted {
 }
 
 /// Why a fetch ended without a file.
+#[derive(Debug)]
 pub(crate) enum Stop {
     Failed(ReadingFailure),
     /// The person took it out of the queue.
@@ -289,7 +342,28 @@ impl BookDownloads {
             told: Mutex::new(None),
             titles: std::sync::OnceLock::new(),
             shares: shared::Shares::default(),
+            requeued: std::sync::atomic::AtomicBool::new(false),
+            failed: Mutex::default(),
         }))
+    }
+
+    /// Put back in the queue the fetches from `source` that failed for want of a sign-in, now
+    /// that it is signed in again. The queue starts for them with the next change of sources:
+    /// see [`Self::take_requeued`].
+    pub(crate) fn signed_in(&self, store: &Store, source: &str, now: i64) {
+        match store.book_downloads_signed_in(source, now) {
+            Ok(0) => {}
+            Ok(n) => {
+                tracing::info!(n, "downloads that wanted a sign-in are queued again");
+                self.0.requeued.store(true, std::sync::atomic::Ordering::Relaxed);
+            }
+            Err(e) => tracing::warn!(error = %e, "downloads that wanted a sign-in stay failed"),
+        }
+    }
+
+    /// Whether fetches went back in the queue since this was last asked.
+    pub(crate) fn take_requeued(&self) -> bool {
+        self.0.requeued.swap(false, std::sync::atomic::Ordering::Relaxed)
     }
 
     /// Name series in the title language `titles` follows.
@@ -317,6 +391,22 @@ impl BookDownloads {
         !setup.hold
     }
 
+    /// The network came back: chapters that failed for want of one go back in the queue, to run
+    /// with the rest. Says whether any did.
+    pub fn network_back(&self, store: &Store, now: i64) -> bool {
+        match store.book_downloads_retry_offline(now) {
+            Ok(0) => false,
+            Ok(n) => {
+                tracing::info!(n, "chapter downloads that failed offline are queued again");
+                true
+            }
+            Err(e) => {
+                tracing::warn!(error = %e, "downloads that failed offline were not queued again");
+                false
+            }
+        }
+    }
+
     /// Changes to the setup, as [`Self::configure`] takes them in.
     pub(crate) fn changes(&self) -> tokio::sync::watch::Receiver<Setup> {
         self.0.changed.subscribe()
@@ -324,6 +414,9 @@ impl BookDownloads {
 
     /// Fetches the last run left half done go back in the queue, and half-written files go.
     /// The pages a fetch kept stay for it to pick up, while its chapter is still to be fetched.
+    /// A fetch another engine on the same data folder makes now is its own: its row and its
+    /// files stay as they are. A chapter whose fetch failed but whose whole file is there is
+    /// downloaded.
     pub fn recover(&self, store: &Store, now: i64) {
         match store.book_downloads_recover(now) {
             Ok(0) => {}
@@ -339,16 +432,43 @@ impl BookDownloads {
             })
             .map(|r| pages_of(&self.file_stem(r)))
             .collect();
+        // Still downloading after the reset: another engine fetches these now.
+        let elsewhere: HashSet<PathBuf> = rows
+            .iter()
+            .filter(|r| r.state == BookDownloadState::Downloading)
+            .flat_map(|r| {
+                let stem = self.file_stem(r);
+                [part_of(&stem), pages_of(&stem)]
+            })
+            .collect();
+        let failed: Vec<&BookDownload> =
+            rows.iter().filter(|r| r.state == BookDownloadState::Failed).collect();
         let Ok(works) = std::fs::read_dir(&self.0.dir) else { return };
         for work in works.flatten() {
             let Ok(files) = std::fs::read_dir(work.path()) else { continue };
             for file in files.flatten() {
                 let path = file.path();
                 let ext = path.extension().and_then(|e| e.to_str()).unwrap_or_default();
+                if elsewhere.contains(&path) {
+                    continue;
+                }
                 if ext == "part" {
                     let _ = std::fs::remove_file(&path);
-                } else if ext == "pages" && !to_fetch.contains(&path) {
-                    KeptPages::remove(&path);
+                } else if ext == "pages" {
+                    if !to_fetch.contains(&path) {
+                        KeptPages::remove(&path);
+                    }
+                } else if let Some(row) =
+                    failed.iter().find(|r| self.file_stem(r).with_extension(ext) == path)
+                {
+                    let bytes = file.metadata().map(|m| m.len()).unwrap_or(0);
+                    let kept = path.to_string_lossy();
+                    match store.book_download_done(row.id, &kept, None, bytes, now) {
+                        Ok(()) => {
+                            tracing::info!("a failed download whose file is whole is done")
+                        }
+                        Err(e) => tracing::warn!(error = %e, "a whole download was not kept"),
+                    }
                 }
             }
         }
@@ -430,8 +550,7 @@ impl BookDownloads {
                 .as_ref()
                 .and_then(|kind| kaeri_core::media::Medium::parse(&kind.medium))
                 .unwrap_or(kaeri_core::media::Medium::Manga);
-            let title =
-                kind.and_then(|kind| kind.title_in(form)).unwrap_or_else(|| d.work.clone());
+            let title = crate::read_catalog::tiles::title_of(store, &d.work, form);
             let state = state_of(d, wifi);
             let mut chapter = chapter_row(d, read, bookmarked);
             // A download row carries no dates, so the clock plays no part in its words.
@@ -494,6 +613,9 @@ impl BookDownloads {
     ) -> usize {
         let mut added = 0;
         for want in wanted {
+            if keep_ready && !self.retry_due(store, work.as_str(), want.chapter.as_str(), now) {
+                continue;
+            }
             let ask = BookDownloadAsk {
                 work: work.as_str(),
                 chapter: want.chapter.as_str(),
@@ -508,6 +630,37 @@ impl BookDownloads {
             }
         }
         added
+    }
+
+    /// Whether keeping chapters ready may queue `chapter` now: always, unless its download
+    /// failed and the wait after that failure is not over, or it failed [`RETRIES`] times.
+    fn retry_due(&self, store: &Store, work: &str, chapter: &str, now: i64) -> bool {
+        let failed = store
+            .book_download(work, chapter)
+            .ok()
+            .flatten()
+            .is_some_and(|row| row.state == BookDownloadState::Failed);
+        let key = (work.to_owned(), chapter.to_owned());
+        let times = self.0.failed.lock().unwrap_or_else(|e| e.into_inner()).get(&key).copied();
+        match times {
+            Some((n, at)) if failed => {
+                let wait = (RETRY_FIRST << (n.saturating_sub(1)).min(16)).min(RETRY_LONGEST);
+                n < RETRIES && now >= at.saturating_add(wait)
+            }
+            _ => true,
+        }
+    }
+
+    /// Count a download's failure in a row, or clear the count once it is done.
+    fn note_outcome(&self, row: &BookDownload, failed: bool, now: i64) {
+        let key = (row.work.clone(), row.chapter.clone());
+        let mut times = self.0.failed.lock().unwrap_or_else(|e| e.into_inner());
+        if failed {
+            let (n, _) = times.get(&key).copied().unwrap_or((0, now));
+            times.insert(key, (n.saturating_add(1), now));
+        } else {
+            times.remove(&key);
+        }
     }
 
     /// The chapters `pick` names, in reading order, out of a work's list.
@@ -551,13 +704,23 @@ impl BookDownloads {
             .collect()
     }
 
-    /// Ask for the chapters `pick` names. Lists the work's chapters first, so this answers
-    /// after the source does; a source that cannot be asked ends in `Failed` for the screen
+    /// Ask for the chapters `pick` names, out of the work's list as [`listed_rows`] gives it. A
+    /// work with no list kept and a source that cannot be asked ends in `Failed` for the screen
     /// that asked.
     pub async fn download(&self, lent: &Lent, work: WorkId, pick: DownloadPick) {
         let now = lent.clock.now();
         lent.sources.plugins_in(&lent.plugins, None).await;
-        let listed = ordered_chapters(&lent.sources, &work, now).await;
+        // A chapter or volume named that the kept list lacks is a reason to ask for a new one.
+        let covers = |rows: &[ChapterRow]| match &pick {
+            DownloadPick::Chapters { ids } => {
+                ids.iter().all(|id| rows.iter().any(|r| r.id == *id))
+            }
+            DownloadPick::Volume { volume } => {
+                rows.iter().any(|r| r.volume.as_deref() == Some(volume.as_str()))
+            }
+            _ => true,
+        };
+        let listed = listed_rows(&lent.sources, &work, now, covers).await;
         let (source, rows) = match listed {
             Ok(found) => found,
             Err(failure) => {
@@ -569,6 +732,16 @@ impl BookDownloads {
         let wanted = Self::to_fetch(&pick, &rows);
         let store = lent.sources.store();
         let listers = Listers::of(&lent.sources, &work, &source);
+        // A file in the person's folders opens from where it is: nothing of it is fetched, and
+        // asking for only such files says so.
+        let here = OnDevice::of(store, work.as_str());
+        let on_device = |w: &Wanted| here.file(w.chapter.as_str()).is_some_and(Here::is_folder);
+        if !wanted.is_empty() && wanted.iter().all(on_device) {
+            let notice = Notice::info(Msg::Reading(ReadingMsg::ReadingDownloadOnDevice));
+            let _ = lent.tx.send(Event::Toast(notice));
+            return;
+        }
+        let wanted: Vec<Wanted> = wanted.into_iter().filter(|w| !on_device(w)).collect();
         let (added, unlisted) =
             self.queue_listed(store, &work, (&listers, &rows), &wanted, false, now);
         // A chapter the series page listed from a source that no longer has it.
@@ -819,16 +992,9 @@ impl BookDownloads {
         lent.sources.adopt_plugins(&lent.plugins);
         // The list the reader opened from serves while it is fresh: a chapter read is no reason
         // to ask the source for the whole list again.
-        let listed = match lent.sources.kept_listing(work, now, crate::read_sources::LIST_FRESH)
-        {
-            Some((edition, groups)) => edition
-                .map(|e| e.source_id)
-                .or_else(|| lent.sources.edition_of(work, None).map(|(source, _)| source))
-                .map(|source| (source, flatten(groups)))
-                .ok_or(ReadingFailure::NotFound),
-            None => ordered_chapters(&lent.sources, work, now).await,
+        let Ok((source, rows)) = listed_rows(&lent.sources, work, now, |_| true).await else {
+            return;
         };
-        let Ok((source, rows)) = listed else { return };
         let Some(at) = rows.iter().position(|r| r.id == *after) else { return };
         let ahead = Self::picked(
             &DownloadPick::NextUnread { n: u32::try_from(KEEP_AHEAD).unwrap_or(3) },
@@ -912,17 +1078,31 @@ impl BookDownloads {
                 let next = if self.setup().hold {
                     None
                 } else {
-                    store.next_book_download().unwrap_or_else(|e| {
+                    store.claim_book_download(lent.clock.now()).unwrap_or_else(|e| {
                         tracing::warn!(error = %e, "the download queue was not read");
                         None
                     })
                 };
-                if next.is_none() {
+                // Another engine on the data folder fetches the rest: this one waits to take
+                // over a fetch whose engine has stopped.
+                let elsewhere = next.is_none()
+                    && !self.setup().hold
+                    && store
+                        .book_downloads_held_elsewhere(lent.clock.now())
+                        .is_ok_and(|held| !held.is_empty());
+                if next.is_none() && !elsewhere {
                     *running = false;
                 }
-                next
+                (next, elsewhere)
             };
-            let Some(row) = next else { break };
+            let row = match next {
+                (Some(row), _) => row,
+                (None, true) => {
+                    tokio::time::sleep(LOOK_AGAIN).await;
+                    continue;
+                }
+                (None, false) => break,
+            };
             let work = WorkId::new(row.work.clone());
             if !touched.contains(&work) {
                 touched.push(work);
@@ -964,7 +1144,18 @@ impl BookDownloads {
         }
         self.publish(store, &lent.tx);
         self.relist_kept(lent, &row.work);
+        // Other engines on the data folder hear that this fetch goes on between its pages too.
+        let beat = {
+            let (store, clock, id) = (store.clone(), lent.clock.clone(), row.id);
+            Heartbeat(tokio::spawn(async move {
+                loop {
+                    tokio::time::sleep(HEARTBEAT).await;
+                    let _ = store.book_download_heartbeat(id, clock.now());
+                }
+            }))
+        };
         let outcome = self.ended(lent, store, &row, now).await;
+        drop(beat);
         // The series page hears each chapter land, not the whole run at its end.
         self.relist_kept(lent, &row.work);
         outcome
@@ -989,6 +1180,14 @@ impl BookDownloads {
                     reason: "the chapter could not be downloaded".into(),
                 }))
             });
+        // A source not reached as the network went is waited for, as a fetch the network
+        // change stopped is: it goes back in the queue and resumes once the network is back.
+        let fetched = match fetched {
+            Err(Stop::Failed(failure)) if unreached(&failure) && self.network_went().await => {
+                Err(Stop::Held)
+            }
+            other => other,
+        };
         match fetched {
             Ok(done) => {
                 let path = done.path.to_string_lossy().into_owned();
@@ -998,35 +1197,59 @@ impl BookDownloads {
                     tracing::warn!(error = %e, "a finished download was not kept");
                     true
                 });
-                if !kept {
+                if !kept && !Self::taken(store, lent, row) {
                     // Cancelled or deleted while its last page or its file was made: the file
                     // goes with the row, and a row kept as removed stays removed.
                     let _ = std::fs::remove_file(&done.path);
                 }
+                self.note_outcome(row, false, now);
                 self.publish(store, &lent.tx);
                 (true, kept)
             }
             Err(Stop::Cancelled) => {
-                let _ = std::fs::remove_file(part_of(&self.file_stem(row)));
+                if !Self::taken(store, lent, row) {
+                    let _ = std::fs::remove_file(part_of(&self.file_stem(row)));
+                }
                 self.publish(store, &lent.tx);
                 (true, false)
             }
             Err(Stop::Held) => {
+                if !Self::taken(store, lent, row) {
+                    let _ = std::fs::remove_file(part_of(&self.file_stem(row)));
+                }
+                let _ = store.book_download_requeue(row.id, now);
+                self.publish(store, &lent.tx);
+                (true, false)
+            }
+            // A fetch that failed as the network went or the setting changed under it was held,
+            // not failed: the source could not be reached because the queue may not reach it.
+            // It goes back in the queue and on once the hold lifts.
+            Err(Stop::Failed(_)) if self.setup().hold => {
                 let _ = std::fs::remove_file(part_of(&self.file_stem(row)));
                 let _ = store.book_download_requeue(row.id, now);
                 self.publish(store, &lent.tx);
                 (true, false)
             }
             Err(Stop::Failed(failure)) => {
-                let _ = std::fs::remove_file(part_of(&self.file_stem(row)));
+                if !Self::taken(store, lent, row) {
+                    let _ = std::fs::remove_file(part_of(&self.file_stem(row)));
+                }
                 let full = failure == ReadingFailure::DiskFull;
                 if let Err(e) = store.book_download_failed(row.id, &encode(&failure), now) {
                     tracing::warn!(error = %e, "a failed download was not kept");
                 }
+                self.note_outcome(row, true, lent.clock.now());
                 self.publish(store, &lent.tx);
                 (!full, false)
             }
         }
+    }
+
+    /// Whether the queue is held now, or is within [`NETWORK_GRACE`].
+    async fn network_went(&self) -> bool {
+        let mut changes = self.changes();
+        let held = changes.wait_for(|setup| setup.hold);
+        matches!(tokio::time::timeout(NETWORK_GRACE, held).await, Ok(Ok(_)))
     }
 
     /// The first page of a chapter being fetched, once it has landed and been kept: for the
@@ -1068,13 +1291,21 @@ impl BookDownloads {
         self.0.dir.join(safe(&row.work)).join(safe(&row.chapter))
     }
 
-    /// Whether the row is still being fetched: it can be taken out of the queue meanwhile.
-    fn wanted(store: &Store, row: &BookDownload) -> bool {
+    /// Whether the row is still being fetched, by this engine: it can be taken out of the queue
+    /// meanwhile, or taken over by another engine when this one went unheard too long.
+    fn wanted(store: &Store, lent: &Lent, row: &BookDownload) -> bool {
         store
             .book_download(&row.work, &row.chapter)
             .ok()
             .flatten()
             .is_some_and(|now| now.id == row.id && now.state == BookDownloadState::Downloading)
+            && !Self::taken(store, lent, row)
+    }
+
+    /// Whether another engine on the data folder fetches or fetched the chapter now: its files
+    /// are that engine's to keep or clear.
+    fn taken(store: &Store, lent: &Lent, row: &BookDownload) -> bool {
+        store.book_download_taken(row.id, lent.clock.now()).unwrap_or(false)
     }
 
     async fn fetch(
@@ -1083,7 +1314,7 @@ impl BookDownloads {
         store: &Store,
         row: &BookDownload,
     ) -> Result<Fetched, Stop> {
-        let wanted = || Self::wanted(store, row);
+        let wanted = || Self::wanted(store, lent, row);
         let progress = |done: u32, total: u32| {
             let _ = store.book_download_progress(row.id, done, Some(total), lent.clock.now());
             // The series page counts the pages with Downloads, as often as Downloads does.
@@ -1121,6 +1352,9 @@ impl BookDownloads {
         if !(job.wanted)() {
             return Err(Stop::Cancelled);
         }
+        // The chapter's opening is asked for once: a source that let it time out is slow or
+        // down as a whole, and asking again would only stack more waits on it. Its pages are
+        // asked again, below, since one lost page should not end a whole chapter.
         let mut opened = lent
             .sources
             .open(work, chapter, Some(&job.source_id), now)
@@ -1173,10 +1407,21 @@ impl BookDownloads {
                         if self.free().is_some_and(|free| free < KEEP_FREE) {
                             return Err(ReadingFailure::DiskFull.into());
                         }
-                        let now = lent.clock.now();
-                        kept.page(&lent.sources, index, now, false)
-                            .await
-                            .map_err(Stop::Failed)?;
+                        // A page lost on the way is asked for again, a few times, before the
+                        // fetch ends: one dropped request never ends a whole chapter.
+                        let mut waits = ASK_AGAIN.iter();
+                        while let Err(failure) =
+                            kept.page(&lent.sources, index, lent.clock.now(), false).await
+                        {
+                            if let Err(stop) =
+                                self.wait_to_ask_again(job, &mut waits, failure).await
+                            {
+                                if matches!(stop, Stop::Cancelled) {
+                                    kept.let_go();
+                                }
+                                return Err(stop);
+                            }
+                        }
                         if !kept.has(index) {
                             let failure = kept.unkept(index).unwrap_or_else(|| {
                                 let reason = format!("page {index} was not kept");
@@ -1239,8 +1484,13 @@ impl BookDownloads {
                 let file =
                     File::create(&part).map_err(|e| Stop::Failed(io_failure(&e, &part)))?;
                 let label = job.chapter.as_str().to_owned();
+                // The writer needs a title with something in it; a chapter id of only control
+                // characters gives way to the work's.
+                let title = Some(kaeri_books::write::plain_text(&label))
+                    .filter(|t| !t.is_empty())
+                    .unwrap_or_else(|| job.work.as_str().to_owned());
                 let meta = kaeri_books::write::BookMeta {
-                    title: label.clone(),
+                    title,
                     language: language.unwrap_or_else(|| "und".to_owned()),
                     ..Default::default()
                 };
@@ -1265,19 +1515,46 @@ impl BookDownloads {
                 finish(&part, &stem.with_extension("epub"), None)
             }
             ChapterContent::Book(book) => {
-                let extension = book
-                    .path
-                    .extension()
-                    .and_then(|e| e.to_str())
-                    .map_or_else(|| "cbz".to_owned(), str::to_ascii_lowercase);
-                std::fs::copy(&book.path, &part)
-                    .map_err(|e| Stop::Failed(io_failure(&e, &part)))?;
+                // A folder of pages is packed as a CBZ; a book file is copied as it is.
+                let extension = if keep_book(&book.path, &part)? {
+                    "cbz".to_owned()
+                } else {
+                    book.path
+                        .extension()
+                        .and_then(|e| e.to_str())
+                        .map_or_else(|| "cbz".to_owned(), str::to_ascii_lowercase)
+                };
                 if book.temporary {
                     let _ = std::fs::remove_file(&book.path);
                 }
                 finish(&part, &stem.with_extension(extension), None)
             }
         }
+    }
+}
+
+impl BookDownloads {
+    /// After `failure`, wait the next of `waits` to ask the source again, when the failure is
+    /// one asking again may mend and a wait is left; otherwise the fetch stops with it. A fetch
+    /// held or taken out of the queue meanwhile stops as that.
+    async fn wait_to_ask_again(
+        &self,
+        job: &Fetching<'_>,
+        waits: &mut std::slice::Iter<'_, Duration>,
+        failure: ReadingFailure,
+    ) -> Result<(), Stop> {
+        let Some(wait) = waits.next().filter(|_| asked_again(&failure)) else {
+            return Err(Stop::Failed(failure));
+        };
+        tracing::debug!(chapter = job.chapter.as_str(), ?failure, "asking the source again");
+        tokio::time::sleep(*wait).await;
+        if self.setup().hold {
+            return Err(Stop::Held);
+        }
+        if !(job.wanted)() {
+            return Err(Stop::Cancelled);
+        }
+        Ok(())
     }
 }
 
@@ -1333,7 +1610,15 @@ pub(crate) fn kept_parts(
     serde_json::from_str(&text).ok()
 }
 
+/// The written `part` synced to the disk, then given the chapter's name: a chapter cut off on
+/// the way (a full disk, the app closed) is never found under that name. The part is removed by
+/// whoever sees the failure.
 fn finish(part: &Path, to: &Path, pages: Option<u32>) -> Result<Fetched, Stop> {
+    std::fs::OpenOptions::new()
+        .write(true)
+        .open(part)
+        .and_then(|file| file.sync_all())
+        .map_err(|e| Stop::Failed(io_failure(&e, to)))?;
     std::fs::rename(part, to).map_err(|e| Stop::Failed(io_failure(&e, to)))?;
     let bytes = std::fs::metadata(to).map(|m| m.len()).unwrap_or(0);
     Ok(Fetched { path: to.to_path_buf(), pages, bytes })
@@ -1378,6 +1663,69 @@ pub(crate) fn io_failure(e: &std::io::Error, path: &Path) -> ReadingFailure {
         _ => WriteProblem::Other,
     };
     ReadingFailure::CannotWrite { path, problem }
+}
+
+/// A failure that says the source was not reached, which a lost network also gives.
+fn unreached(failure: &ReadingFailure) -> bool {
+    matches!(failure, ReadingFailure::SourceDown { .. } | ReadingFailure::Offline)
+}
+
+/// A book kept as `to`: a folder of pages packed as a CBZ, which says `true`, and a book file
+/// copied as it is. A folder is known by what it is, never by a failed open, which a folder
+/// answers differently on each system (on Windows as a refusal to write).
+fn keep_book(from: &Path, to: &Path) -> Result<bool, Stop> {
+    match kaeri_books::tree::stat(from) {
+        Ok(stat) if stat.folder => pack_pages(from, to).map(|()| true),
+        _ => copy_book(from, to).map(|()| false),
+    }
+}
+
+/// A folder of pages, on a plain path or in a folder the platform opens, packed as a CBZ with
+/// its pages in their natural order (2 before 10). A failure names the folder when it can't be
+/// read and the CBZ when it can't be written.
+fn pack_pages(from: &Path, to: &Path) -> Result<(), Stop> {
+    let unreadable = |e: &kaeri_books::BookError| match e {
+        kaeri_books::BookError::Io(io) => Stop::Failed(io_failure(io, from)),
+        _ => Stop::Failed(ReadingFailure::Unreadable {
+            path: from.display().to_string(),
+            format: "folder".into(),
+        }),
+    };
+    let unwritable = |e: &kaeri_books::BookError| match e {
+        kaeri_books::BookError::Io(io) => Stop::Failed(io_failure(io, to)),
+        _ => Stop::Failed(io_failure(&std::io::Error::other(e.to_string()), to)),
+    };
+    let mut comic = kaeri_books::Comic::open_folder(from, &kaeri_books::Limits::default())
+        .map_err(|e| unreadable(&e))?;
+    let out = BufWriter::new(File::create(to).map_err(|e| Stop::Failed(io_failure(&e, to)))?);
+    let mut cbz = kaeri_books::write::CbzWriter::new(out, None).map_err(|e| unwritable(&e))?;
+    for index in 0..comic.pages().len() {
+        let bytes = comic.read_page(index).map_err(|e| unreadable(&e))?;
+        cbz.add_page(&bytes).map_err(|e| unreadable(&e))?;
+    }
+    let mut out = cbz.finish().map_err(|e| unwritable(&e))?;
+    out.flush().map_err(|e| Stop::Failed(io_failure(&e, to)))
+}
+
+/// A whole book file copied as it is, from a plain path or a folder the platform opens. A
+/// failure names the file it is about: the book when it can't be read, the copy when it can't be
+/// written.
+fn copy_book(from: &Path, to: &Path) -> Result<(), Stop> {
+    let mut source =
+        kaeri_books::tree::open_file(from).map_err(|e| Stop::Failed(io_failure(&e, from)))?;
+    let mut out =
+        BufWriter::new(File::create(to).map_err(|e| Stop::Failed(io_failure(&e, to)))?);
+    let mut buffer = vec![0; 64 * 1024];
+    loop {
+        let read = match std::io::Read::read(&mut source, &mut buffer) {
+            Ok(0) => break,
+            Ok(read) => read,
+            Err(e) if e.kind() == std::io::ErrorKind::Interrupted => continue,
+            Err(e) => return Err(Stop::Failed(io_failure(&e, from))),
+        };
+        out.write_all(&buffer[..read]).map_err(|e| Stop::Failed(io_failure(&e, to)))?;
+    }
+    out.flush().map_err(|e| Stop::Failed(io_failure(&e, to)))
 }
 
 fn book_failure(e: &kaeri_books::BookError, path: &Path, source: &str) -> ReadingFailure {
@@ -1507,7 +1855,7 @@ fn done_notice(
         [(work, n)] => {
             let kind = store.book_work_kind(work).ok().flatten();
             let novel = kind.as_ref().is_some_and(|k| k.medium == "novel");
-            let name = kind.and_then(|k| k.title_in(form)).unwrap_or_else(|| work.clone());
+            let name = crate::read_catalog::tiles::title_of(store, work, form);
             let body = if novel {
                 ReadingMsg::ReadingDownloadsDoneParts { title: name, count: count(*n) }
             } else {
@@ -1541,6 +1889,42 @@ pub(crate) async fn ordered_chapters(
         .ok_or(ReadingFailure::NotFound)?;
     // A chapter listed from another source is downloaded from there: see [`Listers`].
     Ok((source, flatten(groups)))
+}
+
+/// A work's chapters for downloads to pick from, as [`ordered_chapters`] gives them: the list
+/// as kept while it is [`LIST_FRESH`](crate::read_sources::LIST_FRESH), as the series page
+/// showed it, so asking for downloads does not ask the source for a list it gave just now,
+/// unless that list lacks what `covers` looks for. Otherwise the source is asked, and one that does not answer leaves the list as kept, however
+/// old, to pick from: the chapters wait in the queue for the source.
+pub(crate) async fn listed_rows(
+    sources: &BookSources,
+    work: &WorkId,
+    now: i64,
+    covers: impl Fn(&[ChapterRow]) -> bool,
+) -> Result<(String, Vec<ChapterRow>), ReadingFailure> {
+    if let Some(kept) = kept_rows(sources, work, now, crate::read_sources::LIST_FRESH)
+        && covers(&kept.1)
+    {
+        return Ok(kept);
+    }
+    match ordered_chapters(sources, work, now).await {
+        Ok(listed) => Ok(listed),
+        Err(failure) => kept_rows(sources, work, now, i64::MAX).ok_or(failure),
+    }
+}
+
+/// [`listed_rows`] from the list as kept alone, when it was asked within `max_age` seconds.
+fn kept_rows(
+    sources: &BookSources,
+    work: &WorkId,
+    now: i64,
+    max_age: i64,
+) -> Option<(String, Vec<ChapterRow>)> {
+    let (edition, groups) = sources.kept_listing(work, now, max_age)?;
+    let source = edition
+        .map(|e| e.source_id)
+        .or_else(|| sources.edition_of(work, None).map(|(source, _)| source))?;
+    Some((source, flatten(groups)))
 }
 
 /// Where each chapter of a work is downloaded from: the edition's source, or for a chapter the
@@ -1634,12 +2018,15 @@ pub fn resume(engine: &crate::state::EngineState, services: &Services, tx: &Outb
     );
     let downloads = &services.book_sources.downloads;
     let before = downloads.setup();
+    let back = before.offline
+        && !setup.offline
+        && downloads.network_back(services.book_sources.store(), services.clock.now());
     if downloads.configure(setup) {
         // An engine that does only what it is sent leaves the queue as it is.
         if engine.ahead.on() {
             downloads.start(&Lent::of(services, tx));
         }
-    } else if before != setup {
+    } else if before != setup || back {
         // Rows that wait for Wi-Fi say so; with none, there is nothing to tell.
         let store = services.book_sources.store();
         if store.book_downloads(None).is_ok_and(|rows| !rows.is_empty()) {
@@ -1660,11 +2047,13 @@ pub fn launched(engine: &crate::state::EngineState, services: &Services, tx: &Ou
     resume(engine, services, tx);
 }
 
+mod here;
 mod kept;
 mod shared;
 mod sizes;
 #[cfg(test)]
 mod tests;
 
+pub(crate) use here::{Here, OnDevice, in_folders};
 use kept::{KeptPages, pages_of};
 pub(crate) use shared::SharedPages;

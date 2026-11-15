@@ -31,7 +31,9 @@ private struct ReaderHost: ViewModifier {
         }
         #else
         // The window under the reader stays as it is, so going back finds it where it was. The
-        // reader crossfades in over it and out again.
+        // reader crossfades in over it and out again. The reader is modal, so VoiceOver stays in
+        // the book. The window isn't hidden from accessibility here: `accessibilityHidden(false)`
+        // on it would bring back every view its own code hides, the player's faded controls too.
         content
             .toolbarVisibility(model.request != nil ? .hidden : .automatic, for: .windowToolbar)
             // In full screen the toolbar's strip stays at the top, drawn over the page in the
@@ -41,6 +43,7 @@ private struct ReaderHost: ViewModifier {
             .overlay {
                 if model.request != nil {
                     ReaderScreen(model: model) {}
+                        .accessibilityAddTraits(.isModal)
                         .ignoresSafeArea()
                         .background(TrafficLights(visible: model.chromeShown))
                         .background(CloseKey { model.close() })
@@ -100,9 +103,11 @@ private struct CloseKey: NSViewRepresentable {
 /// The menu bar's keys as they are now. SwiftUI hands a changed item to AppKit's menu only as
 /// that menu opens, so a key that moves from one item to another, as ⌘L does from View to Go
 /// when a book opens, stays with the old item until the menu is opened, and AppKit gives the
-/// key to that item, dimmed or not. So after the reader's keys change, the next key brings every
-/// menu up to date first, as opening it would.
-private struct MenuKeys: NSViewRepresentable {
+/// key to that item, dimmed or not. So once the reader's keys change, every menu is brought up
+/// to date as opening it would, as soon as the change is drawn, or before the next key if that
+/// comes first. The menu bar is also read without a menu being opened, as the Help menu's search
+/// reads it, so a closed book's Go menu must not wait for a key to dim.
+struct MenuKeys: NSViewRepresentable {
     /// What the menus' keys hang on: the View menu's while no book is open, the Go menu's.
     struct Keys: Equatable {
         var reading: Bool
@@ -116,27 +121,41 @@ private struct MenuKeys: NSViewRepresentable {
         var keys: Keys?
         /// The keys as the menu bar last had them.
         var held: Keys?
+        /// Brings every menu up to date.
+        var refresh: @MainActor () -> Void = { MenuKeys.update() }
+        /// Runs its work once the change that called it is drawn: the menus are not touched in
+        /// the middle of SwiftUI's update.
+        var later: @MainActor (@escaping @MainActor () -> Void) -> Void = { work in Task { @MainActor in work() } }
+
+        /// The keys as the window has them now: the menus follow once the change is drawn.
+        func follow(_ keys: Keys) {
+            self.keys = keys
+            guard keys != held else { return }
+            later { [weak self] in self?.catchUp() }
+        }
+
+        /// The menus brought up to the keys, unless they already are.
+        func catchUp() {
+            guard held != keys else { return }
+            held = keys
+            refresh()
+        }
     }
 
     func makeCoordinator() -> Coordinator { Coordinator() }
 
     func makeNSView(context: Context) -> NSView {
         let coordinator = context.coordinator
-        coordinator.keys = keys
+        coordinator.follow(keys)
         coordinator.monitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { event in
-            MainActor.assumeIsolated {
-                if coordinator.held != coordinator.keys {
-                    coordinator.held = coordinator.keys
-                    Self.update()
-                }
-            }
+            MainActor.assumeIsolated { coordinator.catchUp() }
             return event
         }
         return NSView()
     }
 
     func updateNSView(_ view: NSView, context: Context) {
-        context.coordinator.keys = keys
+        context.coordinator.follow(keys)
     }
 
     static func dismantleNSView(_ view: NSView, coordinator: Coordinator) {
@@ -159,7 +178,7 @@ private struct MenuKeys: NSViewRepresentable {
 /// trailer, a discussion) the Go menu binds none of the reader's keys and Space or an arrow stays
 /// with that window. The reader's own sheets and popovers, and the app in the background, keep
 /// the reader in front.
-private struct WindowFront: NSViewRepresentable {
+struct WindowFront: NSViewRepresentable {
     let model: ReaderModel
 
     @MainActor final class Coordinator {
@@ -172,21 +191,27 @@ private struct WindowFront: NSViewRepresentable {
         func follow() {
             DispatchQueue.main.async { [weak self] in
                 guard let self, let model, let window = view?.window else { return }
-                let front = WindowFront.inFront(key: NSApp.keyWindow, reader: window)
+                let front = WindowFront.inFront(
+                    key: NSApp.keyWindow, reader: window, readerOwns: model.sheet != nil || model.askingPage)
                 if model.windowInFront != front { model.windowInFront = front }
             }
         }
     }
 
-    /// The reader's window is in front unless another window of the app has the keys. A window
-    /// on the reader's, such as a sheet or a popover, counts as the reader's.
-    static func inFront(key: NSWindow?, reader: NSWindow) -> Bool {
-        var window = key
+    /// The reader's window is in front unless another window of the app has the keys. A sheet
+    /// or popover on the reader's window counts as the reader's only while the reader has one of
+    /// its own up (`readerOwns`: its settings, chapters or Go to page). Any other over the book,
+    /// File › Open (⌘O), Join Plugin Store or an invite link, is the app's, with a field of its
+    /// own, so the Go menu and its keys step aside for it.
+    static func inFront(key: NSWindow?, reader: NSWindow, readerOwns: Bool) -> Bool {
+        guard let key else { return true }
+        if key === reader { return true }
+        var window = key.sheetParent ?? key.parent
         while let current = window {
-            if current === reader { return true }
+            if current === reader { return readerOwns }
             window = current.sheetParent ?? current.parent
         }
-        return key == nil
+        return false
     }
 
     func makeCoordinator() -> Coordinator { Coordinator() }

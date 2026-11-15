@@ -31,8 +31,8 @@ const offers = alternates
 }
 
 <style is:global>
-	/* On the marketing pages, where body.landing's own rule gives its children a position. */
-	body.landing > .lang-suggest {
+	/* On the marketing pages; the docs place it themselves. */
+	body.k-body > .lang-suggest {
 		position: fixed;
 		inset: auto 16px 16px;
 		z-index: 40;
@@ -50,8 +50,23 @@ const offers = alternates
 		box-shadow: 0 8px 24px rgb(0 0 0 / 0.25);
 	}
 
-	body.landing > .lang-suggest[hidden] {
+	body.k-body > .lang-suggest[hidden] {
 		display: none;
+	}
+
+	/* It shows a moment after the page, so it rises a little from the edge it sits on rather than
+	   appearing over the text at once. Dismissing it is instant. */
+	@media (prefers-reduced-motion: no-preference) {
+		body.k-body > .lang-suggest {
+			transition:
+				opacity 240ms var(--ease-out),
+				transform 240ms var(--ease-out);
+
+			@starting-style {
+				opacity: 0;
+				transform: translateY(8px);
+			}
+		}
 	}
 
 	.lang-suggest p {
@@ -73,8 +88,10 @@ const offers = alternates
 		cursor: pointer;
 	}
 
-	.lang-suggest button:hover {
-		color: var(--ani-text);
+	@media (hover: hover) and (pointer: fine) {
+		.lang-suggest button:hover {
+			color: var(--ani-text);
+		}
 	}
 </style>
 

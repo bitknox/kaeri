@@ -1,6 +1,7 @@
 //! Browsing extras: Trending over a period, Surprise me, and what they ask AniList.
 
 use kaeri_core::ids::AnilistId;
+use kaeri_engine::clock::Clock;
 use kaeri_model::{
     browsing::{SurpriseOutcome, SurprisePool, TrendPeriod},
     command::Command,
@@ -9,17 +10,49 @@ use kaeri_model::{
 };
 use kaeri_testkit::{
     Operation,
-    fixtures::{ALL, FINISHED, MOVIE, SEQUEL},
+    fixtures::{ALL, FINISHED, FIXTURE_NOW, MOVIE, SEQUEL},
 };
 
 use super::{content, ids};
-use crate::harness::{Harness, names};
+use crate::harness::{Harness, Options, names};
 
 /// The fake's week: the fixtures from halfway along, so it leads otherwise than today.
 fn week() -> Vec<AnilistId> {
     let mut titles = ALL.to_vec();
     titles.rotate_left(ALL.len() / 2);
     titles
+}
+
+/// The app, its engine's clock and the fake's at `now`. The month's window is taken from the
+/// engine's clock and the fake dates each day's figure by its own, so the two must agree: with
+/// the engine on the system's clock, the fake's days fell out of the window a month after
+/// [`FIXTURE_NOW`].
+async fn at(now: i64) -> Harness {
+    let clock = Clock::default();
+    clock.advance(now - kaeri_store::now());
+    Harness::with(Options { now, clock: Some(clock), ..Options::default() }).await
+}
+
+/// A moment in UTC.
+fn utc(year: i16, month: i8, day: i8, hour: i8, minute: i8, second: i8) -> i64 {
+    jiff::civil::date(year, month, day)
+        .at(hour, minute, second, 0)
+        .to_zoned(jiff::tz::TimeZone::UTC)
+        .expect("a moment in UTC")
+        .timestamp()
+        .as_second()
+}
+
+/// The month's rail at `now`, after checking it took its two requests.
+async fn month_at(now: i64) -> Vec<AnilistId> {
+    let mut h = at(now).await;
+    h.send(Command::LoadTrending(TrendPeriod::Month));
+    let updates = h.settle().await;
+    let (_, shown, _, failed) = trending(&updates);
+    assert!(!failed, "the month failed at {now}");
+    assert_eq!(h.server().requests_for(Operation::TrendMonthCandidates).len(), 1);
+    assert_eq!(h.server().requests_for(Operation::TrendSeries).len(), 1);
+    shown
 }
 
 fn trending(updates: &[Event]) -> (TrendPeriod, Vec<AnilistId>, Option<i64>, bool) {
@@ -56,16 +89,29 @@ async fn trending_over_a_week_is_summed_in_one_request_and_kept() {
 
 #[tokio::test]
 async fn trending_over_a_month_takes_two_requests_and_ranks_by_the_sum() {
-    let mut h = Harness::new().await;
-    h.send(Command::LoadTrending(TrendPeriod::Month));
-    let updates = h.settle().await;
-    let (_, shown, _, failed) = trending(&updates);
-    assert!(!failed);
     let mut reversed = week();
     reversed.reverse();
+    let shown = month_at(FIXTURE_NOW).await;
     assert_eq!(shown, reversed, "the month's figures rank otherwise than the week's");
-    assert_eq!(h.server().requests_for(Operation::TrendMonthCandidates).len(), 1);
-    assert_eq!(h.server().requests_for(Operation::TrendSeries).len(), 1);
+}
+
+#[tokio::test]
+async fn trending_over_a_month_ranks_the_same_whatever_the_date() {
+    let mut reversed = week();
+    reversed.reverse();
+    let moments = [
+        // Thirty days on from the fixtures, the moment the month's window first left their days.
+        FIXTURE_NOW + 30 * 86_400,
+        utc(2026, 11, 13, 12, 30, 0),
+        // The ends of a short month, a leap day, a year and a clock change in Europe.
+        utc(2027, 2, 28, 23, 59, 59),
+        utc(2028, 2, 29, 0, 0, 0),
+        utc(2026, 12, 31, 23, 59, 59),
+        utc(2027, 3, 28, 1, 30, 0),
+    ];
+    for now in moments {
+        assert_eq!(month_at(now).await, reversed, "the month ranks otherwise at {now}");
+    }
 }
 
 #[tokio::test]

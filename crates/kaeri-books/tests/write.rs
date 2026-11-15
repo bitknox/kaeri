@@ -8,7 +8,7 @@ use common::*;
 use kaeri_books::comicinfo::{ComicPage, ComicPageType, MangaFlag};
 use kaeri_books::epub::{Direction, Layout, PageSpread, Series};
 use kaeri_books::write::{
-    BookMeta, CbzWriter, EpubFlavor, EpubWriter, FixedLayout, KINDLE_PART_BYTES,
+    BookMeta, CbzWriter, EpubFlavor, EpubWriter, FixedLayout, KINDLE_PART_BYTES, check_epub,
     kepub_from_epub, split_parts,
 };
 use kaeri_books::{Book, BookError, Comic, ComicInfo, Epub, Limits, open_bytes};
@@ -260,4 +260,50 @@ fn an_empty_cbz_is_damaged_not_unsupported() {
     let err =
         open_bytes(b"plain text".to_vec(), Some("notes.txt"), &Limits::default()).unwrap_err();
     assert!(matches!(err, BookError::Unsupported { .. }), "{err:?}");
+}
+
+/// The title parts of the novel fuzz's crash inputs (R7E-15): names made only of control
+/// characters, which escaping empties.
+fn control_titles() -> Vec<String> {
+    let nul = |n: usize| "\0".repeat(n);
+    vec![
+        "\u{15}".into(),
+        "\u{1e}".into(),
+        format!("{}\u{15}", nul(3)),
+        format!("\u{11}{}\u{b}", nul(7)),
+        format!("\u{15}{}", nul(18)),
+        format!("\u{15}{}", nul(83)),
+    ]
+}
+
+/// R7E-15. A title of only control characters is refused up front rather than written as a
+/// book that fails its own check; such an author is left out, and such a chapter title still
+/// makes a book that passes it.
+#[test]
+fn names_of_only_control_characters_never_make_a_malformed_book() {
+    let dir = tempfile::tempdir().unwrap();
+    for (n, name) in control_titles().iter().enumerate() {
+        let meta =
+            BookMeta { title: name.clone(), language: "ja".into(), ..BookMeta::default() };
+        let refused = EpubWriter::new(Cursor::new(Vec::new()), meta, EpubFlavor::Kepub, None);
+        assert!(matches!(refused, Err(BookError::Unsupported { .. })), "{name:?}");
+
+        let meta = BookMeta {
+            title: format!("Paper Moth Garden{name}"),
+            creators: vec![name.clone(), "Imogen Vale".into()],
+            language: "ja".into(),
+            ..BookMeta::default()
+        };
+        let mut w =
+            EpubWriter::new(Cursor::new(Vec::new()), meta, EpubFlavor::Kepub, None).unwrap();
+        w.add_chapter(name, "<p>Moths.</p>").unwrap();
+        let bytes = w.finish().unwrap().into_inner();
+        let path = dir.path().join(format!("{n}.kepub.epub"));
+        std::fs::write(&path, &bytes).unwrap();
+        check_epub(&path, &Limits::default()).unwrap();
+        let m = epub(bytes).metadata().clone();
+        assert_eq!(m.titles, ["Paper Moth Garden"]);
+        let names: Vec<&str> = m.creators.iter().map(|c| c.name.as_str()).collect();
+        assert_eq!(names, ["Imogen Vale"]);
+    }
 }
