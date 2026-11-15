@@ -135,6 +135,11 @@ final class FixtureCastSession: FfiCastSessionProtocol, @unchecked Sendable {
         /// The revision the last card handed out was made at.
         var handed: UInt64 = 0
         var stopped = false
+        /// The playhead moves on with the clock between reports, as the session's scenes need;
+        /// the card's own tests keep it where they put it.
+        var moves = false
+        /// When the position was last moved on.
+        var since = Date.now
     }
 
     private let state: Mutex<State>
@@ -153,6 +158,11 @@ final class FixtureCastSession: FfiCastSessionProtocol, @unchecked Sendable {
     /// Change the card, as a report from the TV would.
     func change(_ edit: (inout State) -> Void) {
         state.withLock { state in
+            // The playhead moves on while it plays, as the TV's next report would say.
+            if state.moves, !state.paused, !state.loading, state.waiting == nil {
+                state.position += Date.now.timeIntervalSince(state.since)
+            }
+            state.since = .now
             edit(&state)
             state.rev += 1
         }
@@ -373,7 +383,10 @@ final class FixtureCastLink: CastSessionLink, @unchecked Sendable {
             $0.session = session
             $0.state = .playing
         }
-        session.change { $0.phaseLine = .castPhaseStarting(name: device.name) }
+        session.change {
+            $0.moves = true
+            $0.phaseLine = .castPhaseStarting(name: device.name)
+        }
         return session
     }
 
