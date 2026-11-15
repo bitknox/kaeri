@@ -48,6 +48,7 @@ mod language;
 mod memory;
 mod track;
 
+pub use choice::choose_audio;
 pub use language::language_matches;
 pub use track::{Track, TrackKind, parse_track_id, parse_track_list};
 

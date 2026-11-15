@@ -13,6 +13,9 @@
     <string name="notice_cast_taken_over">Un altro dispositivo ha avviato qualcosa su %1$s, quindi la trasmissione si è interrotta.</string>
     <string name="notice_cast_not_same_network">Questo dispositivo non è nella rete di %1$s oppure la raggiunge tramite una VPN. Collega entrambi alla stessa rete per trasmettere.</string>
     <string name="notice_cast_lost">%1$s non risponde più, quindi la trasmissione si è interrotta.</string>
+    <string name="notice_cast_segment">%1$s non riceve più lo stream: la fonte non ha risposto per una parte dell\'episodio. Prova un\'altra fonte.</string>
+    <string name="notice_cast_lost_stream">%1$s ha perso lo stream da questo dispositivo. Verifica che entrambi siano sulla stessa rete.</string>
+    <string name="notice_cast_subtitles_plain">I sottotitoli su %1$s appaiono come testo semplice. I sottotitoli formattati erano troppo pesanti per la TV.</string>
     <string name="notice_cast_no_device">Quel TV non è più sulla rete.</string>
     <string name="notice_cast_unavailable">Questa build di Kaeri non può trasmettere ai TV.</string>
     <string name="cast_phase_starting">Avvio su %1$s</string>

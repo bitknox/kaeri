@@ -12,10 +12,17 @@ use crate::channel::{CastError, Channel, Incoming, NS_MEDIA, NS_RECEIVER, RECEIV
 /// MP4 through the Cast web player.
 pub const DEFAULT_MEDIA_RECEIVER: &str = "CC1AD845";
 
+/// Kaeri's own messages between this device and Kaeri's receiver: `ready`, `hello`, `error`
+/// and the rest, as JSON with a `type`. Each side ignores a type it doesn't know.
+pub const NS_KAERI: &str = "urn:x-cast:app.kaeri.cast";
+
+/// The version of Kaeri's messages this side speaks.
+pub const KAERI_PROTOCOL: u32 = 1;
+
 /// Kaeri's own receiver, served from the website's `/cast/receiver/`. The config's
 /// `cast.receiver` names another in its place. The Default Media Receiver plays instead whenever
-/// it doesn't launch (a TV it isn't published to refuses it), closes before playing, or leaves a
-/// load unanswered.
+/// it doesn't launch (a TV it isn't published to refuses it), never says `ready`, or closes;
+/// closed mid-episode, the episode loads again on the Default Media Receiver where it was.
 pub const KAERI_RECEIVER: Option<&str> = Some("A7A6DDE4");
 
 /// A connected receiver, through its platform receiver. Cheap to clone.

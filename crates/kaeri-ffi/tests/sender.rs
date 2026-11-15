@@ -305,6 +305,8 @@ fn fake_cast_options() -> kaeri_ffi::FfiFakeCastOptions {
         fetches: true,
         refuses: false,
         launch_ms: 0,
+        full_statuses: false,
+        answer_late_ms: None,
     }
 }
 

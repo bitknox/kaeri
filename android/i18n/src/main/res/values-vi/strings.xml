@@ -13,6 +13,9 @@
     <string name="notice_cast_taken_over">Một thiết bị khác vừa bắt đầu phát trên %1$s, nên việc chiếu đã dừng.</string>
     <string name="notice_cast_not_same_network">Thiết bị này không ở cùng mạng với %1$s, hoặc đang kết nối qua VPN. Hãy kết nối cả hai vào cùng một mạng để chiếu.</string>
     <string name="notice_cast_lost">Mất kết nối với %1$s, nên việc chiếu đã dừng.</string>
+    <string name="notice_cast_segment">%1$s không còn nhận được luồng phát: nguồn không phản hồi cho một phần của tập. Hãy thử nguồn khác.</string>
+    <string name="notice_cast_lost_stream">%1$s mất luồng phát từ thiết bị này. Hãy kiểm tra cả hai có cùng một mạng không.</string>
+    <string name="notice_cast_subtitles_plain">Phụ đề trên %1$s hiển thị dạng văn bản thường. Phụ đề có định dạng quá nặng với TV này.</string>
     <string name="notice_cast_no_device">TV đã chọn không còn trong mạng nữa.</string>
     <string name="notice_cast_unavailable">Phiên bản Kaeri này không hỗ trợ chiếu lên TV.</string>
     <string name="cast_phase_starting">Đang bắt đầu trên %1$s</string>

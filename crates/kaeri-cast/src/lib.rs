@@ -11,6 +11,7 @@
 //!   by itself.
 //! - [`fetch`] and [`relay`]: the streamed upstream, and the relay on the interface that faces
 //!   the TV, for that TV alone.
+//! - [`master`]: an HLS master's audio renditions, and the master with the chosen one alone.
 //! - [`mkv`], [`remux`] and [`aac`]: Matroska to HLS with fragmented MP4 segments, the video
 //!   copied and the audio copied or re-encoded to AAC by the platform's encoder.
 //! - [`vtt`]: ASS and SRT to WebVTT, dialogue kept and typesetting dropped.
@@ -26,6 +27,7 @@ pub mod device;
 pub mod fake;
 pub mod fetch;
 pub mod formats;
+pub mod master;
 pub mod memory;
 pub mod mkv;
 pub mod player;
@@ -40,8 +42,8 @@ pub use aac::{
 };
 pub use channel::{CastError, Channel, Incoming};
 pub use client::{
-    App, DEFAULT_MEDIA_RECEIVER, Device, KAERI_RECEIVER, Load, Media, MediaStatus, Metadata,
-    ReceiverStatus, TextStyle, TextTrack, VolumeControl,
+    App, DEFAULT_MEDIA_RECEIVER, Device, KAERI_PROTOCOL, KAERI_RECEIVER, Load, Media,
+    MediaStatus, Metadata, NS_KAERI, ReceiverStatus, TextStyle, TextTrack, VolumeControl,
 };
 pub use device::{CastDevice, local_address_towards, same_network};
 pub use fetch::{PlainHttp, Upstream, UpstreamResponse};
@@ -52,7 +54,7 @@ pub use formats::{
 pub use memory::{CastCaps, CastMemory, FormatAnswer};
 pub use player::{
     CastAudio, CastFailure, CastLoad, CastPlayer, CastSetup, CastState, CastStatus, CastStep,
-    CastSubtitle, CastText, Timings,
+    CastSubtitle, CastText, FromReceiver, ReceiverError, Timings, UpNextCard,
 };
 pub use probe::CorsProbe;
 pub use relay::Relay;

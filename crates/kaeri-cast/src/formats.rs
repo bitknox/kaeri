@@ -93,11 +93,12 @@ impl VideoFormat {
 }
 
 /// How tall the picture is, as a TV's answer differs by it: up to 720 lines, up to 1080, or
-/// more. A height nobody read is taken as 1080, what most sources send.
+/// more. A height nobody read is taken as 1080, what most sources send. A 1080-line picture
+/// coded in whole macroblocks is 1088 lines tall, and some files say so.
 pub fn height_class(height: Option<u32>) -> u32 {
     match height.unwrap_or(1080) {
         0..=720 => 720,
-        721..=1080 => 1080,
+        721..=1088 => 1080,
         _ => 2160,
     }
 }
@@ -365,6 +366,10 @@ pub struct AudioTrack {
     pub codec: Option<AudioCodec>,
     pub channels: u16,
     pub language: Option<String>,
+    /// Its name, as an HLS rendition's `NAME`.
+    pub name: Option<String>,
+    /// The stream marks it as the one to play when nothing else chooses.
+    pub default: bool,
 }
 
 /// What the engine read from the stream: the MKV's tracks, the HLS master's `CODECS`, an MP4's
@@ -379,6 +384,9 @@ pub struct MediaInfo {
     /// Which of `audio` plays: the one the viewer's language picks.
     pub audio_choice: usize,
     pub container: Option<Delivery>,
+    /// `audio` are an HLS master's renditions (`EXT-X-MEDIA:TYPE=AUDIO`), so the TV can be
+    /// handed the master with the chosen one alone ([`crate::master::keep_audio`]).
+    pub renditions: bool,
 }
 
 impl MediaInfo {
@@ -591,9 +599,14 @@ mod tests {
         MediaInfo {
             video: Some(video),
             height: None,
-            audio: vec![AudioTrack { codec: Some(audio), channels: 2, language: None }],
+            audio: vec![AudioTrack {
+                codec: Some(audio),
+                channels: 2,
+                ..AudioTrack::default()
+            }],
             audio_choice: 0,
             container: Some(container),
+            renditions: false,
         }
     }
 
@@ -823,11 +836,13 @@ mod tests {
                     codec: Some(AudioCodec::Aac),
                     channels: 2,
                     language: Some("jpn".into()),
+                    ..AudioTrack::default()
                 },
                 AudioTrack {
                     codec: Some(AudioCodec::Ac3),
                     channels: 6,
                     language: Some("eng".into()),
+                    ..AudioTrack::default()
                 },
             ],
             ..MediaInfo::default()
@@ -846,6 +861,7 @@ mod tests {
             codec: Some(codec),
             channels: 2,
             language: Some(language.into()),
+            ..AudioTrack::default()
         };
         let mut info = MediaInfo {
             audio: vec![track(AudioCodec::Eac3, "eng"), track(AudioCodec::Aac, "jpn")],

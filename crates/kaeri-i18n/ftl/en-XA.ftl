@@ -33,6 +33,15 @@ notice-cast-not-same-network = [Ţĥîš ðéṽîçé îšñ'ţ öñ ţĥé ñ�
 # The TV stopped answering mid-cast. The name is the TV's own.
 notice-cast-lost = [Ļöšţ { $name }, šö çàšţîñĝ šţöþþéð.~~~~~~~~~]
 
+# Kaeri's receiver on the TV couldn't get part of the episode from the source mid-play, so the cast stopped. The card offers Choose source and Play here. The name is the TV's own.
+notice-cast-segment = [{ $name } šţöþþéð ĝéţţîñĝ ţĥé šţŕéàɱ: ţĥé šöüŕçé ðîðñ'ţ àñšŵéŕ ƒöŕ þàŕţ öƒ ţĥé éþîšöðé. Ţŕý àñöţĥéŕ šöüŕçé.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]
+
+# The TV stopped reaching this device, which hands it the stream, mid-episode. The card offers Try again and Play here. The name is the TV's own.
+notice-cast-lost-stream = [{ $name } ļöšţ ţĥé šţŕéàɱ ƒŕöɱ ţĥîš ðéṽîçé. Çĥéçķ ţĥàţ ƀöţĥ àŕé öñ ţĥé šàɱé ñéţŵöŕķ.~~~~~~~~~~~~~~~~~~~~~~~~]
+
+# Shown once per TV, the first time it can't keep up with styled subtitles and switches to plain ones. Nothing else changes and the episode plays on. The name is the TV's own.
+notice-cast-subtitles-plain = [Šüƀţîţļéš öñ { $name } šĥöŵ àš þļàîñ ţéẋţ. Ţýþéšéţ šüƀţîţļéš ŵéŕé ţöö ɱüçĥ ƒöŕ îţ.~~~~~~~~~~~~~~~~~~~~~~~]
+
 # The TV picked to cast to has left the network.
 notice-cast-no-device = [Ţĥàţ ŢṼ îš ñö ļöñĝéŕ öñ ţĥé ñéţŵöŕķ.~~~~~~~~~~~]
 

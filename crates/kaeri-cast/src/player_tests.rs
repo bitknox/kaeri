@@ -145,6 +145,7 @@ fn torrent(url: String) -> CastLoad {
         subtitle: None,
         audio_language: Some("ja".into()),
         audio_track: None,
+        audio_memory: None,
     }
 }
 
@@ -1126,6 +1127,9 @@ fn what_was_asked_holds_until_a_status_agrees_or_a_while_has_passed() {
     assert!(want.paused.is_none(), "nothing to play or pause once the file ended");
 }
 
+/// Each status seen: its state, its duration, and whether it had the media's description.
+type Seen = Arc<Mutex<Vec<(CastState, Option<f64>, bool)>>>;
+
 #[tokio::test(flavor = "multi_thread", worker_threads = 4)]
 async fn controls_show_at_once_and_the_duration_outlives_statuses_without_the_media() {
     let receiver =
@@ -1133,7 +1137,7 @@ async fn controls_show_at_once_and_the_duration_outlives_statuses_without_the_me
             .await
             .unwrap();
     let (player, mut events) = playing(&receiver).await;
-    let seen: Arc<Mutex<Vec<(CastState, Option<f64>, bool)>>> = Arc::default();
+    let seen: Seen = Arc::default();
     let watching = tokio::spawn({
         let (mut status, seen) = (player.status(), Arc::clone(&seen));
         async move {
@@ -1143,7 +1147,9 @@ async fn controls_show_at_once_and_the_duration_outlives_statuses_without_the_me
             }
         }
     });
-    assert_eq!(player.current().duration, Some(600.0));
+    // The remuxed playlist gives the file's own length.
+    let duration = player.current().duration;
+    assert!(duration.is_some_and(|d| d > 0.0));
 
     let pause = player.set_paused(true);
     tokio::pin!(pause);
@@ -1162,7 +1168,7 @@ async fn controls_show_at_once_and_the_duration_outlives_statuses_without_the_me
     next(&mut events, |e| *e == PlaybackEvent::Paused(false)).await;
 
     let now = player.current();
-    assert_eq!(now.duration, Some(600.0), "{now:?}");
+    assert_eq!(now.duration, duration, "{now:?}");
     assert_eq!(now.metadata.map(|m| m.series).as_deref(), Some("A Made-up Show"));
     watching.abort();
     player.quit().await.unwrap();
@@ -1177,22 +1183,24 @@ async fn controls_show_at_once_and_the_duration_outlives_statuses_without_the_me
 }
 
 /// A fake whose own receiver does `custom`, and a cast to it of a short file, playing.
-async fn cast_with_own_receiver(custom: CustomReceiver) -> (FakeReceiver, CastPlayer) {
+async fn cast_with_own_receiver(
+    custom: CustomReceiver,
+) -> (FakeReceiver, CastPlayer, mpsc::UnboundedReceiver<PlaybackEvent>) {
     let receiver =
         FakeReceiver::start(FakeOptions { custom, ..FakeOptions::default() }).await.unwrap();
     let file = matroska(&Fixture::default());
     let base = serve(HashMap::from([("/episode.mkv".to_owned(), file)])).await;
-    let (player, mut events) = CastPlayer::connect(setup(
+    let mut setup = setup(
         &receiver,
         Arc::new(CastMemory::memory()),
         Arc::new(FakeEncoder::default()),
-    ))
-    .await
-    .unwrap();
+    );
+    setup.timings.ready = Duration::from_millis(800);
+    let (player, mut events) = CastPlayer::connect(setup).await.unwrap();
     player.use_receiver(Some("0A1B2C3D".into()));
     player.load(torrent(format!("{base}/episode.mkv")));
     next(&mut events, |e| *e == PlaybackEvent::Loaded).await;
-    (receiver, player)
+    (receiver, player, events)
 }
 
 fn launched(receiver: &FakeReceiver) -> Vec<String> {
@@ -1201,7 +1209,7 @@ fn launched(receiver: &FakeReceiver) -> Vec<String> {
 
 #[tokio::test(flavor = "multi_thread", worker_threads = 4)]
 async fn kaeris_own_receiver_plays_where_it_runs() {
-    let (receiver, player) = cast_with_own_receiver(CustomReceiver::Runs).await;
+    let (receiver, player, _events) = cast_with_own_receiver(CustomReceiver::Runs).await;
     assert_eq!(launched(&receiver), ["0A1B2C3D"]);
     assert_eq!(player.current().receiver.as_deref(), Some("0A1B2C3D"));
     player.quit().await.unwrap();
@@ -1209,7 +1217,7 @@ async fn kaeris_own_receiver_plays_where_it_runs() {
 
 #[tokio::test(flavor = "multi_thread", worker_threads = 4)]
 async fn a_tv_that_refuses_kaeris_receiver_plays_on_the_default_one() {
-    let (receiver, player) = cast_with_own_receiver(CustomReceiver::Unknown).await;
+    let (receiver, player, _events) = cast_with_own_receiver(CustomReceiver::Unknown).await;
     assert_eq!(launched(&receiver), ["0A1B2C3D", DEFAULT_MEDIA_RECEIVER]);
     assert_eq!(player.current().receiver.as_deref(), Some(DEFAULT_MEDIA_RECEIVER));
     assert_eq!(player.failure(), None);
@@ -1218,7 +1226,7 @@ async fn a_tv_that_refuses_kaeris_receiver_plays_on_the_default_one() {
 
 #[tokio::test(flavor = "multi_thread", worker_threads = 4)]
 async fn kaeris_receiver_closing_at_its_first_load_hands_over_to_the_default_one() {
-    let (receiver, player) = cast_with_own_receiver(CustomReceiver::ClosesAtLoad).await;
+    let (receiver, player, _events) = cast_with_own_receiver(CustomReceiver::ClosesAtLoad).await;
     assert_eq!(launched(&receiver), ["0A1B2C3D", DEFAULT_MEDIA_RECEIVER]);
     assert_eq!(player.current().receiver.as_deref(), Some(DEFAULT_MEDIA_RECEIVER));
     assert_eq!(player.failure(), None);
@@ -1226,12 +1234,54 @@ async fn kaeris_receiver_closing_at_its_first_load_hands_over_to_the_default_one
 }
 
 #[tokio::test(flavor = "multi_thread", worker_threads = 4)]
-async fn kaeris_receiver_that_never_answers_a_load_hands_over_to_the_default_one() {
-    let (receiver, player) = cast_with_own_receiver(CustomReceiver::Silent).await;
+async fn kaeris_receiver_that_never_says_ready_hands_over_to_the_default_one() {
+    let (receiver, player, _events) = cast_with_own_receiver(CustomReceiver::Silent).await;
     assert_eq!(launched(&receiver), ["0A1B2C3D", DEFAULT_MEDIA_RECEIVER]);
     assert_eq!(player.current().receiver.as_deref(), Some(DEFAULT_MEDIA_RECEIVER));
     assert_eq!(player.failure(), None);
+    assert!(receiver.heard("hello").len() == 1, "greeted once, never on the standard one");
     player.quit().await.unwrap();
+}
+
+#[tokio::test(flavor = "multi_thread", worker_threads = 4)]
+async fn kaeris_receiver_is_greeted_and_its_messages_are_heard() {
+    let (receiver, player, mut events) = cast_with_own_receiver(CustomReceiver::Runs).await;
+    let hello = receiver.heard("hello");
+    assert_eq!(hello.len(), 1);
+    assert_eq!(hello[0]["version"], KAERI_PROTOCOL);
+    let mut heard = player.heard();
+    player.set_greeting(Some("sv".into()), Some("phone".into()));
+    assert_eq!(receiver_heard_soon(&receiver, "hello", 2).await[1]["device"], "phone");
+
+    receiver.say(serde_json::json!({"type": "subtitles-plain", "version": 1}));
+    assert_eq!(heard.recv().await.unwrap(), FromReceiver::SubtitlesPlain);
+    receiver.say(serde_json::json!({"type": "up-next", "version": 1, "action": "play"}));
+    assert_eq!(heard.recv().await.unwrap(), FromReceiver::UpNext { play: true });
+    receiver.say(serde_json::json!({"type": "something-new", "version": 2}));
+    // A subtitle that didn't load leaves the episode playing.
+    receiver.say(serde_json::json!({"type": "error", "part": "subtitle", "status": 404}));
+    let FromReceiver::Error(error) = heard.recv().await.unwrap() else { panic!() };
+    assert_eq!((error.part.as_str(), error.status), ("subtitle", Some(404)));
+    assert_eq!(player.failure(), None);
+
+    // A segment the source didn't give ends the episode with the one sentence for it.
+    receiver.say(serde_json::json!({"type": "error", "part": "segment", "status": 503}));
+    next(&mut events, |e| matches!(e, PlaybackEvent::Ended { complete: false })).await;
+    assert_eq!(player.failure(), Some(CastFailure::Segment));
+    assert!(player.is_alive(), "the receiver stays up for the next play");
+    player.quit().await.unwrap();
+}
+
+/// The messages of `kind` the fake heard, once there are `count`.
+async fn receiver_heard_soon(receiver: &FakeReceiver, kind: &str, count: usize) -> Vec<Value> {
+    for _ in 0..50 {
+        let heard = receiver.heard(kind);
+        if heard.len() >= count {
+            return heard;
+        }
+        tokio::time::sleep(Duration::from_millis(20)).await;
+    }
+    panic!("never heard {count} {kind}");
 }
 
 #[tokio::test(flavor = "multi_thread", worker_threads = 4)]
@@ -1244,6 +1294,7 @@ async fn a_session_left_running_is_joined_with_what_it_plays() {
     .await
     .unwrap();
     let (player, _events) = playing(&receiver).await;
+    let duration = player.current().duration;
     let session = player.receiver().unwrap().session_id;
     // The app is closed with the cast running: the TV keeps playing.
     drop(player);
@@ -1256,7 +1307,7 @@ async fn a_session_left_running_is_joined_with_what_it_plays() {
     let (player, _events) = joined.expect("the receiver still runs");
     let now = player.current();
     assert_eq!(now.state, CastState::Playing, "{now:?}");
-    assert_eq!(now.duration, Some(600.0));
+    assert_eq!(now.duration, duration);
     assert_eq!(now.metadata.map(|m| m.title).as_deref(), Some("Episode 1"));
     player.set_paused(true).await.unwrap();
     assert_eq!(receiver.heard("PAUSE").len(), 1, "controls reach the joined receiver");
@@ -1269,4 +1320,139 @@ async fn a_session_left_running_is_joined_with_what_it_plays() {
     .await
     .unwrap();
     assert!(gone.is_none(), "a session that ended isn't joined");
+}
+
+/// An HLS master with the original and a dub as audio renditions beside one picture, the
+/// original the default, behind headers so the relay serves it.
+async fn hls_with_a_dub() -> CastLoad {
+    let master = "#EXTM3U\n\
+        #EXT-X-MEDIA:TYPE=AUDIO,GROUP-ID=\"aud\",LANGUAGE=\"ja\",NAME=\"Japanese\",DEFAULT=YES,AUTOSELECT=YES,URI=\"ja/index.m3u8\"\n\
+        #EXT-X-MEDIA:TYPE=AUDIO,GROUP-ID=\"aud\",LANGUAGE=\"en\",NAME=\"English\",DEFAULT=NO,AUTOSELECT=YES,URI=\"en/index.m3u8\"\n\
+        #EXT-X-STREAM-INF:BANDWIDTH=900000,RESOLUTION=1280x720,CODECS=\"avc1.64001f,mp4a.40.2\",AUDIO=\"aud\"\n\
+        v/index.m3u8\n";
+    let media = |name: &str| {
+        let mut text = String::from("#EXTM3U\n#EXT-X-TARGETDURATION:4\n");
+        for i in 0..15 {
+            text.push_str(&format!("#EXTINF:4.0,\n{name}{i}.ts\n"));
+        }
+        text.push_str("#EXT-X-ENDLIST\n");
+        text.into_bytes()
+    };
+    let mut files = HashMap::from([
+        ("/a/master.m3u8".to_owned(), master.as_bytes().to_vec()),
+        ("/a/v/index.m3u8".to_owned(), media("v")),
+        ("/a/ja/index.m3u8".to_owned(), media("a")),
+        ("/a/en/index.m3u8".to_owned(), media("a")),
+    ]);
+    for dir in ["v", "ja", "en"] {
+        for i in 0..15 {
+            let name = if dir == "v" { "v" } else { "a" };
+            files.insert(format!("/a/{dir}/{name}{i}.ts"), ts_segment());
+        }
+    }
+    let base = serve(files).await;
+    let url = format!("{base}/a/master.m3u8");
+    CastLoad {
+        source: CastSource {
+            url: url.clone(),
+            kind: SourceKind::Hls,
+            headers: vec![("Referer".into(), "https://player.example/".into())],
+        },
+        ..torrent(url)
+    }
+}
+
+/// Which audio renditions the fake fetched, by their folder.
+fn renditions_fetched(receiver: &FakeReceiver) -> Vec<&'static str> {
+    let fetched = receiver.fetched();
+    ["ja", "en"]
+        .into_iter()
+        .filter(|lang| {
+            fetched.iter().any(|f| f.url.contains(&format!("%2F{lang}%2Findex.m3u8")))
+        })
+        .collect()
+}
+
+#[tokio::test(flavor = "multi_thread", worker_threads = 4)]
+async fn the_tv_gets_the_remembered_dub_alone_and_the_card_switches_it() {
+    let receiver = FakeReceiver::start(FakeOptions::default()).await.unwrap();
+    let (player, mut events) = CastPlayer::connect(setup(
+        &receiver,
+        Arc::new(CastMemory::memory()),
+        Arc::new(NoEncoder),
+    ))
+    .await
+    .unwrap();
+    // A sub watcher's language, but the series remembers the dub: the dub plays, as in the app.
+    let load = CastLoad {
+        audio_language: Some("ja".into()),
+        audio_memory: Some(TrackPrint { lang: Some("eng".into()), ..TrackPrint::default() }),
+        ..hls_with_a_dub().await
+    };
+    player.load(load);
+    next(&mut events, |e| *e == PlaybackEvent::Loaded).await;
+    let loads = receiver.heard("LOAD");
+    let content = loads[0]["media"]["contentId"].as_str().unwrap().to_owned();
+    assert!(content.ends_with("/x/h/master.m3u8"), "{content}");
+    assert_eq!(renditions_fetched(&receiver), ["en"], "{:?}", receiver.fetched());
+    let playing = player.status().borrow().clone();
+    let audio: Vec<_> = playing
+        .audio
+        .iter()
+        .map(|a| (a.index, a.language.as_deref(), a.title.as_deref(), a.selected))
+        .collect();
+    assert_eq!(audio, [(0, Some("ja"), None, false), (1, Some("en"), None, true)]);
+
+    // The original, picked on the card, loads where the file was.
+    next(
+        &mut events,
+        |e| matches!(e, PlaybackEvent::Progress { position, .. } if *position >= 2.0),
+    )
+    .await;
+    let before = receiver.fetched().len();
+    player.set_audio(0);
+    let deadline = tokio::time::Instant::now() + Duration::from_secs(15);
+    while receiver.heard("LOAD").len() < 2
+        || !player.status().borrow().audio.iter().any(|a| a.index == 0 && a.selected)
+        || player.status().borrow().step.is_some()
+    {
+        assert!(tokio::time::Instant::now() < deadline, "the original loaded");
+        tokio::time::sleep(Duration::from_millis(20)).await;
+    }
+    let loads = receiver.heard("LOAD");
+    assert!(loads[1]["currentTime"].as_f64().unwrap_or(0.0) >= 2.0, "{:?}", loads[1]);
+    let after: Vec<_> = receiver.fetched()[before..].iter().map(|f| f.url.clone()).collect();
+    assert!(after.iter().any(|u| u.contains("%2Fja%2Findex.m3u8")), "{after:?}");
+    assert!(!after.iter().any(|u| u.contains("%2Fen%2Findex.m3u8")), "{after:?}");
+}
+
+#[test]
+fn the_cast_picks_audio_as_the_app_does() {
+    let track = |language: &str, name: &str, default| AudioTrack {
+        language: Some(language.into()),
+        name: Some(name.into()),
+        default,
+        ..AudioTrack::default()
+    };
+    let info = MediaInfo {
+        audio: vec![
+            track("ja", "Japanese", true),
+            track("en", "English Commentary", false),
+            track("en", "English", false),
+        ],
+        renditions: true,
+        ..MediaInfo::default()
+    };
+    let load = |language: Option<&str>| CastLoad {
+        audio_language: language.map(str::to_owned),
+        ..torrent("https://cdn.example/a/master.m3u8".into())
+    };
+    // A dub watcher gets the programme in their language, not the commentary.
+    assert_eq!(app_pick(&info, &load(Some("eng"))), Some(2));
+    assert_eq!(app_pick(&info, &load(Some("ja"))), Some(0));
+    // A language the stream lacks: its default.
+    assert_eq!(app_pick(&info, &load(Some("fr"))), Some(0));
+    // The card names a rendition only when the name says more than the language.
+    assert_eq!(audio_title(&info.audio[0]), None);
+    assert_eq!(audio_title(&info.audio[1]).as_deref(), Some("English Commentary"));
 }

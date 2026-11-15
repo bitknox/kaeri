@@ -13,6 +13,9 @@
     <string name="notice_cast_taken_over">別のデバイスが%1$sで再生を始めたため、キャストを終了しました。</string>
     <string name="notice_cast_not_same_network">このデバイスは%1$sと同じネットワークにないか、VPN経由で接続しています。キャストするには両方を同じネットワークに接続してください。</string>
     <string name="notice_cast_lost">%1$sとの接続が切れたため、キャストを終了しました。</string>
+    <string name="notice_cast_segment">%1$sがストリームを受け取れなくなりました。ソースがエピソードの一部に応答しませんでした。別のソースをお試しください。</string>
+    <string name="notice_cast_lost_stream">%1$sがこのデバイスからのストリームを失いました。両方が同じネットワークにあるか確認してください。</string>
+    <string name="notice_cast_subtitles_plain">%1$sの字幕はプレーンテキストで表示されます。装飾付きの字幕はこのテレビには重すぎました。</string>
     <string name="notice_cast_no_device">キャスト先のテレビがネットワーク上にもうありません。</string>
     <string name="notice_cast_unavailable">このバージョンのKaeriでは、テレビへのキャストはできません。</string>
     <string name="cast_phase_starting">%1$sで開始中</string>

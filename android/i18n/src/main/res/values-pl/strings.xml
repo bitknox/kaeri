@@ -13,6 +13,9 @@
     <string name="notice_cast_taken_over">Inne urządzenie uruchomiło coś na %1$s, więc przesyłanie zostało przerwane.</string>
     <string name="notice_cast_not_same_network">To urządzenie nie jest w tej samej sieci co %1$s albo łączy się z nim przez VPN. Połącz oba w jednej sieci, aby przesyłać.</string>
     <string name="notice_cast_lost">Utracono połączenie z %1$s, więc przesyłanie zostało przerwane.</string>
+    <string name="notice_cast_segment">%1$s przestał odbierać strumień: źródło nie odpowiedziało dla części odcinka. Wypróbuj inne źródło.</string>
+    <string name="notice_cast_lost_stream">%1$s utracił strumień. Sprawdź, czy to urządzenie i telewizor są w tej samej sieci.</string>
+    <string name="notice_cast_subtitles_plain">Napisy na %1$s są wyświetlane jako zwykły tekst. Napisy ze stylami były dla telewizora zbyt wymagające.</string>
     <string name="notice_cast_no_device">Ten telewizor nie jest już w sieci.</string>
     <string name="notice_cast_unavailable">Ta wersja Kaeri nie może przesyłać na telewizory.</string>
     <string name="cast_phase_starting">Uruchamianie na %1$s</string>

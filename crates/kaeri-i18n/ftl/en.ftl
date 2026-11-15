@@ -33,6 +33,15 @@ notice-cast-not-same-network = This device isn't on the network { $name } is on,
 # The TV stopped answering mid-cast. The name is the TV's own.
 notice-cast-lost = Lost { $name }, so casting stopped.
 
+# Kaeri's receiver on the TV couldn't get part of the episode from the source mid-play, so the cast stopped. The card offers Choose source and Play here. The name is the TV's own.
+notice-cast-segment = { $name } stopped getting the stream: the source didn't answer for part of the episode. Try another source.
+
+# The TV stopped reaching this device, which hands it the stream, mid-episode. The card offers Try again and Play here. The name is the TV's own.
+notice-cast-lost-stream = { $name } lost the stream from this device. Check that both are on the same network.
+
+# Shown once per TV, the first time it can't keep up with styled subtitles and switches to plain ones. Nothing else changes and the episode plays on. The name is the TV's own.
+notice-cast-subtitles-plain = Subtitles on { $name } show as plain text. Typeset subtitles were too much for it.
+
 # The TV picked to cast to has left the network.
 notice-cast-no-device = That TV is no longer on the network.
 
