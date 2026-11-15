@@ -272,6 +272,7 @@ mod tests {
             airs_at: ago.map(|ago| NOW - ago),
             delayed_from: None,
             metadata_only: false,
+            followed: Vec::new(),
             source: None,
             unsourced: true,
             past_progress: false,

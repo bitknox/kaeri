@@ -718,6 +718,8 @@ fn stage(shell: &Rc<Shell>, shot: &str) -> f64 {
                     progress: Some(kaeri_model::progress::TitleProgress { done: 12, next: 1 }),
                     resume: None,
                     episodes: Vec::new(),
+                    private: None,
+                    kept: false,
                 }]);
             });
             4.0

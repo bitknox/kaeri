@@ -935,6 +935,8 @@ mod tests {
             progress: Some(TitleProgress { done: 3, next: 4 }),
             resume: Some(ResumePoint { position: 60.0, fraction: None }),
             episodes: Vec::new(),
+            private: None,
+            kept: false,
         });
         let entry = &known.entries[&7];
         assert_eq!(entry.progress, Some(TitleProgress { done: 3, next: 4 }));
@@ -1077,6 +1079,7 @@ mod tests {
             error: None,
             path: None,
             ahead: false,
+            private: false,
         };
         let mut known = Known::default();
         known.take(&Event::Downloads(vec![

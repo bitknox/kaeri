@@ -747,6 +747,7 @@ mod tests {
                 airs_at: None,
                 delayed_from: None,
                 metadata_only: false,
+                followed: Vec::new(),
                 past_progress: false,
                 spoiler_ahead: false,
                 synopsis_pending: false,

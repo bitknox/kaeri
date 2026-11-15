@@ -331,6 +331,7 @@ mod tests {
         let mut view = ShowSettingsView {
             id: AnilistId::new(1),
             rows: vec![row(S::Translation, "sub", "sub")],
+            always_private: false,
             remembered: vec![RememberedTracks {
                 translation: Translation::Sub,
                 audio: None,
