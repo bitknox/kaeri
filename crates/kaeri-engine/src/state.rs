@@ -127,6 +127,9 @@ pub struct EngineState {
     /// The titles whose episodes were listed lately, for listing them again when the sources
     /// change: see [`crate::titles::refresh`].
     pub listed: crate::titles::refresh::Listed,
+    /// The quiet rechecks of episodes that aired and no source lists: see
+    /// [`crate::titles::recheck`].
+    pub rechecks: crate::titles::recheck::Rechecks,
     /// The episode discussion open, and the episodes whose threads were looked up: see
     /// [`crate::discussion`].
     pub discussion: crate::discussion::Discussions,
@@ -188,6 +191,7 @@ impl EngineState {
             calendar: Default::default(),
             names: Default::default(),
             listed: Default::default(),
+            rechecks: Default::default(),
             discussion: Default::default(),
             #[cfg(feature = "party")]
             party: None,

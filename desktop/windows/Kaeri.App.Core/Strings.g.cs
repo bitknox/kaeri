@@ -3039,6 +3039,9 @@ public static partial class T
     /// <summary>Button that checks a { -source } again after it did not answer.</summary>
     public static string ActionCheckAgain => Get("ActionCheckAgain");
 
+    /// <summary>Check again while the check runs. Keep it about as short as "Check again": the button keeps its width.</summary>
+    public static string ActionChecking => Get("ActionChecking");
+
     /// <summary>Button that opens the system's own settings for the app.</summary>
     public static string ActionOpenSettings => Get("ActionOpenSettings");
 
@@ -3104,6 +3107,9 @@ public static partial class T
 
     /// <summary>A length in minutes, for an episode.</summary>
     public static string TimeMinutes(long minutes) => Fill(Get("TimeMinutes"), ("minutes", minutes.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>A length in hours, inside time-ago.</summary>
+    public static string TimeHours(long hours) => Fill(Get("TimeHours"), ("hours", hours.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>A countdown that has run out: the thing is happening now. Lower case, as it stands inside a line.</summary>
     public static string TimeNowInline => Get("TimeNowInline");
@@ -9362,6 +9368,24 @@ public static partial class T
     /// <summary>Under a source: how many of the title's released episodes it lists.</summary>
     public static string SourcePickerCoverage(long covered, long of) => Fill(GetPlural("SourcePickerCoverage", of), ("covered", covered.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)), ("of", of.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
+    /// <summary>Under a source that lists every episode that is out.</summary>
+    public static string SourcePickerEpisodes(long count, long first, long last) => Fill(GetPlural("SourcePickerEpisodes", count), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)), ("first", first.ToString(System.Globalization.CultureInfo.CurrentCulture)), ("last", last.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>Under a source that lacks the newest episodes, within a week of them airing. $missing is one number, source-picker-missing-pair or source-picker-missing-range.</summary>
+    public static string SourcePickerEpisodesNotYet(long first, long last, string missing) => Fill(Get("SourcePickerEpisodesNotYet"), ("first", first.ToString(System.Globalization.CultureInfo.CurrentCulture)), ("last", last.ToString(System.Globalization.CultureInfo.CurrentCulture)), ("missing", missing));
+
+    /// <summary>The same, more than a week after the episodes aired.</summary>
+    public static string SourcePickerEpisodesNot(long first, long last, string missing) => Fill(Get("SourcePickerEpisodesNot"), ("first", first.ToString(System.Globalization.CultureInfo.CurrentCulture)), ("last", last.ToString(System.Globalization.CultureInfo.CurrentCulture)), ("missing", missing));
+
+    /// <summary>Two episodes a source lacks, inside the missing part of a source's line.</summary>
+    public static string SourcePickerMissingPair(long a, long b) => Fill(Get("SourcePickerMissingPair"), ("a", a.ToString(System.Globalization.CultureInfo.CurrentCulture)), ("b", b.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>Three or more episodes in a row a source lacks, inside the missing part of a source's line.</summary>
+    public static string SourcePickerMissingRange(long first, long last) => Fill(Get("SourcePickerMissingRange"), ("first", first.ToString(System.Globalization.CultureInfo.CurrentCulture)), ("last", last.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>Under a source with a gap in the middle, such as "5 of 6 episodes. Not 3".</summary>
+    public static string SourcePickerCoverageMissing(long covered, long of, string missing) => Fill(GetPlural("SourcePickerCoverageMissing", of), ("covered", covered.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)), ("of", of.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)), ("missing", missing));
+
     /// <summary>Under a source that is switched off in Settings.</summary>
     public static string SourceNoteOff => Get("SourceNoteOff");
 
@@ -11206,6 +11230,42 @@ public static partial class T
 
     /// <summary>Shown when the number typed is an episode with no date that has not come out.</summary>
     public static string EpisodeGoToNotOut(long number, long latest) => Fill(Get("EpisodeGoToNotOut"), ("number", number.ToString(System.Globalization.CultureInfo.CurrentCulture)), ("latest", latest.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>Status, first sentence, within a day of the episode airing.</summary>
+    public static string EpisodeMissingAired(long episode, string ago) => Fill(Get("EpisodeMissingAired"), ("episode", episode.ToString(System.Globalization.CultureInfo.CurrentCulture)), ("ago", ago));
+
+    /// <summary>Status, first sentence, a day or more after the episode aired.</summary>
+    public static string EpisodeMissingAiredOn(long episode, string date) => Fill(Get("EpisodeMissingAiredOn"), ("episode", episode.ToString(System.Globalization.CultureInfo.CurrentCulture)), ("date", date));
+
+    /// <summary>Status, second sentence, until a check the person asked for comes back empty.</summary>
+    public static string EpisodeMissingNotYet => Get("EpisodeMissingNotYet");
+
+    /// <summary>Status, second sentence, after a check the person asked for came back empty, and once Kaeri has stopped looking by itself.</summary>
+    public static string EpisodeMissingStill => Get("EpisodeMissingStill");
+
+    /// <summary>Status, second sentence, after a check where none of the person's sources answered.</summary>
+    public static string EpisodeMissingNoAnswer => Get("EpisodeMissingNoAnswer");
+
+    /// <summary>Status, last sentence, during the hours Kaeri looks for the episode by itself.</summary>
+    public static string EpisodeMissingLooksAgain(long minutes) => Fill(Get("EpisodeMissingLooksAgain"), ("minutes", minutes.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>Status a week after the episode aired, when no source has listed it.</summary>
+    public static string EpisodeMissingNone => Get("EpisodeMissingNone");
+
+    /// <summary>Status, last sentence, while the device is offline during the hours Kaeri looks by itself.</summary>
+    public static string EpisodeMissingOffline => Get("EpisodeMissingOffline");
+
+    /// <summary>Row note of an episode that aired within the last day. The span is already worded ("25 min", "3 h").</summary>
+    public static string EpisodeRowAiredAgo(string ago) => Fill(Get("EpisodeRowAiredAgo"), ("ago", ago));
+
+    /// <summary>Row note beside when it aired, for an episode that aired in the last week and no source lists yet.</summary>
+    public static string EpisodeUnsourcedYet => Get("EpisodeUnsourcedYet");
+
+    /// <summary>Announced once to screen readers when a check finds the missing episode while its page is open.</summary>
+    public static string EpisodeFoundAnnouncement(long episode) => Fill(Get("EpisodeFoundAnnouncement"), ("episode", episode.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>Tooltip and screen reader hint of Check again, while Kaeri looks for the episode by itself.</summary>
+    public static string EpisodeCheckAgainHelp(long minutes, long hours) => Fill(Get("EpisodeCheckAgainHelp"), ("minutes", minutes.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)), ("hours", hours.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Title of the settings group and the screen.</summary>
     public static string TorrentsTitle => Get("TorrentsTitle");
@@ -13116,6 +13176,7 @@ public static partial class T
         ["ActionDisable"] = "Disable",
         ["ActionCheckNow"] = "Check now",
         ["ActionCheckAgain"] = "Check again",
+        ["ActionChecking"] = "Checking",
         ["ActionOpenSettings"] = "Open settings",
         ["ActionReport"] = "Report",
         ["ActionPlayNow"] = "Play now",
@@ -13138,6 +13199,7 @@ public static partial class T
         ["TimeIn"] = "in {span}",
         ["TimeMinutesLeft"] = "{minutes} min left",
         ["TimeMinutes"] = "{minutes} min",
+        ["TimeHours"] = "{hours} h",
         ["TimeNowInline"] = "now",
         ["TimeJustNowInline"] = "just now",
         ["WhenToday"] = "today {time}",
@@ -15318,6 +15380,14 @@ public static partial class T
         ["SourcePickerAutomaticDetail"] = "Each episode from the first source that has it",
         ["SourcePickerCoverage_one"] = "{covered} of {of} episode",
         ["SourcePickerCoverage_other"] = "{covered} of {of} episodes",
+        ["SourcePickerEpisodes_one"] = "Episode {first}",
+        ["SourcePickerEpisodes_other"] = "Episodes {first} to {last}",
+        ["SourcePickerEpisodesNotYet"] = "Episodes {first} to {last}. Not {missing} yet",
+        ["SourcePickerEpisodesNot"] = "Episodes {first} to {last}. Not {missing}",
+        ["SourcePickerMissingPair"] = "{a} or {b}",
+        ["SourcePickerMissingRange"] = "{first} to {last}",
+        ["SourcePickerCoverageMissing_one"] = "{covered} of {of} episode. Not {missing}",
+        ["SourcePickerCoverageMissing_other"] = "{covered} of {of} episodes. Not {missing}",
         ["SourceNoteOff"] = "Switched off",
         ["SourceNoteResting"] = "Not responding, trying again soon",
         ["SourceNoteGone"] = "Not installed",
@@ -15948,6 +16018,18 @@ public static partial class T
         ["EpisodeGoToLabel"] = "Episode, {first} to {last}",
         ["EpisodeGoToNone"] = "No episode {number}. This show has {last}.",
         ["EpisodeGoToNotOut"] = "Episode {number} isn't out yet. The latest is {latest}.",
+        ["EpisodeMissingAired"] = "Episode {episode} aired {ago}.",
+        ["EpisodeMissingAiredOn"] = "Episode {episode} aired on {date}.",
+        ["EpisodeMissingNotYet"] = "Your sources don't have it yet.",
+        ["EpisodeMissingStill"] = "Your sources still don't have it.",
+        ["EpisodeMissingNoAnswer"] = "Your sources didn't answer.",
+        ["EpisodeMissingLooksAgain"] = "Kaeri looks again every {minutes} minutes.",
+        ["EpisodeMissingNone"] = "None of your sources has it.",
+        ["EpisodeMissingOffline"] = "Kaeri looks for it when you're back online.",
+        ["EpisodeRowAiredAgo"] = "Aired {ago}",
+        ["EpisodeUnsourcedYet"] = "Not in your sources yet",
+        ["EpisodeFoundAnnouncement"] = "Episode {episode} is in your sources now.",
+        ["EpisodeCheckAgainHelp"] = "Kaeri also looks by itself every {minutes} minutes for {hours} hours after an episode airs.",
         ["TorrentsTitle"] = "Torrents",
         ["TorrentsOn"] = "Torrents are on",
         ["TorrentsOffDetail"] = "Off by default. Torrents connect directly unless you route them through a proxy.",

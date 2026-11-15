@@ -451,7 +451,7 @@ pub(crate) async fn list_episodes(
     naming: names::Naming,
     ticket: super::refresh::Ticket,
     announce: bool,
-) {
+) -> Listing {
     let Lent { meta, store, registry, tx, .. } = lent;
     // A source still compiling is not an unavailable one: wait for those on their way.
     crate::sources::arrived(&registry, || ()).await;
@@ -477,17 +477,35 @@ pub(crate) async fn list_episodes(
         Ok(listed) => current_match(&store, &registry, id, listed.main.as_deref()),
         Err(_) => None,
     };
+    let listing = match &listed {
+        Ok(Listed { load: EpisodeLoad::Rows(rows), .. }) => Listing::Rows(rows.clone()),
+        Ok(Listed { load: EpisodeLoad::Unlisted { .. }, .. }) | Err(_) => Listing::Unanswered,
+        Ok(Listed { load: EpisodeLoad::Choose { .. }, .. }) => Listing::Unsure,
+    };
     let load = match listed {
         Ok(Listed { load: EpisodeLoad::Rows(_), unnamed: Some(unnamed), .. }) => {
             naming.say(id, unnamed, &store, &registry, &tx, &ticket);
             ticket.send(&tx, Event::TitleMatch { id, current });
-            return;
+            return listing;
         }
         listed => listed.map(|listed| listed.load),
     };
     for event in said_matched(id, load, current, Asked::Looking) {
         ticket.send(&tx, event);
     }
+    listing
+}
+
+/// What [`list_episodes`] came to, for a check of one episode: see
+/// [`crate::titles::recheck`].
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) enum Listing {
+    /// The sources listed the title: its table, as sent.
+    Rows(Vec<EpisodeRow>),
+    /// No source answered, or the title could not be loaded to ask them.
+    Unanswered,
+    /// A source could not tell which title this is.
+    Unsure,
 }
 
 /// Mark episodes watched, or take back that they were: in local history, and on the signed-in

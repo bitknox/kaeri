@@ -80,6 +80,7 @@ pub fn load_source_options(
         .await;
         let mut said: std::collections::HashMap<_, _> = asked.into_iter().collect();
         let out: Vec<u32> = data::metadata_episodes(&media, now).collect();
+        let aired = media.air_times();
 
         // Releases for the title's first episode, from the sources that offer several.
         let mut options = Vec::new();
@@ -99,6 +100,10 @@ pub fn load_source_options(
                     .as_ref()
                     .filter(|pin| pin.provider_id == provider_id)
                     .map(|pin| pin.release_id.clone()),
+                first: None,
+                last: None,
+                lacking: Vec::new(),
+                lacking_since: None,
             };
             if registry.is_disabled(&provider_id) {
                 option.note = Some(SourceNote::Off);
@@ -115,19 +120,23 @@ pub fn load_source_options(
                             .filter(|n| n.fract() == 0.0 && *n >= 1.0)
                             .map(|n| n as u32)
                             .collect();
-                        let covered = out
-                            .iter()
-                            .filter(|n| match numbering {
-                                Numbering::Same => have.contains(n),
-                                Numbering::After(offset) => have.contains(&(**n + offset)),
-                                Numbering::Unknown => false,
-                            })
-                            .count() as u32;
+                        let listed = |n: &u32| match numbering {
+                            Numbering::Same => have.contains(n),
+                            Numbering::After(offset) => have.contains(&(*n + offset)),
+                            Numbering::Unknown => false,
+                        };
+                        let covered = out.iter().filter(|n| listed(n)).count() as u32;
                         if out.is_empty() {
                             option.covered = have.len() as u32;
                             option.of = have.len() as u32;
                         } else {
                             option.covered = covered;
+                            if numbering != Numbering::Unknown {
+                                let (first, last, lacking, since) =
+                                    ranges(&out, listed, &aired);
+                                (option.first, option.last) = (first, last);
+                                (option.lacking, option.lacking_since) = (lacking, since);
+                            }
                         }
                         let first = have.first().copied().unwrap_or(1).to_string();
                         if let Some(source) = registry.pinned(&provider_id) {
@@ -158,10 +167,31 @@ pub fn load_source_options(
                 note: Some(SourceNote::Gone),
                 releases: Vec::new(),
                 pinned_release: None,
+                first: None,
+                last: None,
+                lacking: Vec::new(),
+                lacking_since: None,
             });
         }
         ticket.send(&tx, Event::SourceOptions { id, options });
     });
+}
+
+/// What a source has of the episodes `out`, in AniList's numbers, as its picker line says it:
+/// the first and last it lists, the ones it does not, and when the first of those aired, from
+/// `aired`, the schedule. With none listed, no range: the line keeps its count.
+fn ranges(
+    out: &[u32],
+    listed: impl Fn(&u32) -> bool,
+    aired: &std::collections::BTreeMap<u32, i64>,
+) -> (Option<u32>, Option<u32>, Vec<u32>, Option<i64>) {
+    let has: Vec<u32> = out.iter().copied().filter(|n| listed(n)).collect();
+    let (Some(first), Some(last)) = (has.iter().min(), has.iter().max()) else {
+        return (None, None, Vec::new(), None);
+    };
+    let lacking: Vec<u32> = out.iter().copied().filter(|n| !listed(n)).collect();
+    let since = lacking.iter().max().and_then(|n| aired.get(n).copied());
+    (Some(*first), Some(*last), lacking, since)
 }
 
 /// Pin a release of a source for a title: the source is pinned as by

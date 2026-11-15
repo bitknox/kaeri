@@ -4273,6 +4273,10 @@
     <value>Check again</value>
     <comment>Button that checks a { -source } again after it did not answer.</comment>
   </data>
+  <data name="ActionChecking" xml:space="preserve">
+    <value>Checking</value>
+    <comment>Check again while the check runs. Keep it about as short as "Check again": the button keeps its width.</comment>
+  </data>
   <data name="ActionOpenSettings" xml:space="preserve">
     <value>Open settings</value>
     <comment>Button that opens the system's own settings for the app.</comment>
@@ -4360,6 +4364,10 @@
   <data name="TimeMinutes" xml:space="preserve">
     <value>{minutes} min</value>
     <comment>A length in minutes, for an episode.</comment>
+  </data>
+  <data name="TimeHours" xml:space="preserve">
+    <value>{hours} h</value>
+    <comment>A length in hours, inside time-ago.</comment>
   </data>
   <data name="TimeNowInline" xml:space="preserve">
     <value>now</value>
@@ -13056,6 +13064,38 @@
     <value>{covered} of {of} episodes</value>
     <comment>Under a source: how many of the title's released episodes it lists.</comment>
   </data>
+  <data name="SourcePickerEpisodes_one" xml:space="preserve">
+    <value>Episode {first}</value>
+    <comment>Under a source that lists every episode that is out.</comment>
+  </data>
+  <data name="SourcePickerEpisodes_other" xml:space="preserve">
+    <value>Episodes {first} to {last}</value>
+    <comment>Under a source that lists every episode that is out.</comment>
+  </data>
+  <data name="SourcePickerEpisodesNotYet" xml:space="preserve">
+    <value>Episodes {first} to {last}. Not {missing} yet</value>
+    <comment>Under a source that lacks the newest episodes, within a week of them airing. $missing is one number, source-picker-missing-pair or source-picker-missing-range.</comment>
+  </data>
+  <data name="SourcePickerEpisodesNot" xml:space="preserve">
+    <value>Episodes {first} to {last}. Not {missing}</value>
+    <comment>The same, more than a week after the episodes aired.</comment>
+  </data>
+  <data name="SourcePickerMissingPair" xml:space="preserve">
+    <value>{a} or {b}</value>
+    <comment>Two episodes a source lacks, inside the missing part of a source's line.</comment>
+  </data>
+  <data name="SourcePickerMissingRange" xml:space="preserve">
+    <value>{first} to {last}</value>
+    <comment>Three or more episodes in a row a source lacks, inside the missing part of a source's line.</comment>
+  </data>
+  <data name="SourcePickerCoverageMissing_one" xml:space="preserve">
+    <value>{covered} of {of} episode. Not {missing}</value>
+    <comment>Under a source with a gap in the middle, such as "5 of 6 episodes. Not 3".</comment>
+  </data>
+  <data name="SourcePickerCoverageMissing_other" xml:space="preserve">
+    <value>{covered} of {of} episodes. Not {missing}</value>
+    <comment>Under a source with a gap in the middle, such as "5 of 6 episodes. Not 3".</comment>
+  </data>
   <data name="SourceNoteOff" xml:space="preserve">
     <value>Switched off</value>
     <comment>Under a source that is switched off in Settings.</comment>
@@ -15566,6 +15606,54 @@
   <data name="EpisodeGoToNotOut" xml:space="preserve">
     <value>Episode {number} isn't out yet. The latest is {latest}.</value>
     <comment>Shown when the number typed is an episode with no date that has not come out.</comment>
+  </data>
+  <data name="EpisodeMissingAired" xml:space="preserve">
+    <value>Episode {episode} aired {ago}.</value>
+    <comment>Status, first sentence, within a day of the episode airing.</comment>
+  </data>
+  <data name="EpisodeMissingAiredOn" xml:space="preserve">
+    <value>Episode {episode} aired on {date}.</value>
+    <comment>Status, first sentence, a day or more after the episode aired.</comment>
+  </data>
+  <data name="EpisodeMissingNotYet" xml:space="preserve">
+    <value>Your sources don't have it yet.</value>
+    <comment>Status, second sentence, until a check the person asked for comes back empty.</comment>
+  </data>
+  <data name="EpisodeMissingStill" xml:space="preserve">
+    <value>Your sources still don't have it.</value>
+    <comment>Status, second sentence, after a check the person asked for came back empty, and once Kaeri has stopped looking by itself.</comment>
+  </data>
+  <data name="EpisodeMissingNoAnswer" xml:space="preserve">
+    <value>Your sources didn't answer.</value>
+    <comment>Status, second sentence, after a check where none of the person's sources answered.</comment>
+  </data>
+  <data name="EpisodeMissingLooksAgain" xml:space="preserve">
+    <value>Kaeri looks again every {minutes} minutes.</value>
+    <comment>Status, last sentence, during the hours Kaeri looks for the episode by itself.</comment>
+  </data>
+  <data name="EpisodeMissingNone" xml:space="preserve">
+    <value>None of your sources has it.</value>
+    <comment>Status a week after the episode aired, when no source has listed it.</comment>
+  </data>
+  <data name="EpisodeMissingOffline" xml:space="preserve">
+    <value>Kaeri looks for it when you're back online.</value>
+    <comment>Status, last sentence, while the device is offline during the hours Kaeri looks by itself.</comment>
+  </data>
+  <data name="EpisodeRowAiredAgo" xml:space="preserve">
+    <value>Aired {ago}</value>
+    <comment>Row note of an episode that aired within the last day. The span is already worded ("25 min", "3 h").</comment>
+  </data>
+  <data name="EpisodeUnsourcedYet" xml:space="preserve">
+    <value>Not in your sources yet</value>
+    <comment>Row note beside when it aired, for an episode that aired in the last week and no source lists yet.</comment>
+  </data>
+  <data name="EpisodeFoundAnnouncement" xml:space="preserve">
+    <value>Episode {episode} is in your sources now.</value>
+    <comment>Announced once to screen readers when a check finds the missing episode while its page is open.</comment>
+  </data>
+  <data name="EpisodeCheckAgainHelp" xml:space="preserve">
+    <value>Kaeri also looks by itself every {minutes} minutes for {hours} hours after an episode airs.</value>
+    <comment>Tooltip and screen reader hint of Check again, while Kaeri looks for the episode by itself.</comment>
   </data>
   <data name="TorrentsTitle" xml:space="preserve">
     <value>Torrents</value>

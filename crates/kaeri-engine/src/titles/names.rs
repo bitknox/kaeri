@@ -266,6 +266,7 @@ struct Running {
 }
 
 /// What a load of a title's table names it with: taken when the load is asked for.
+#[derive(Clone)]
 pub(crate) struct Naming {
     names: Names,
     offline: bool,
@@ -325,6 +326,12 @@ impl Names {
     pub(crate) fn naming(&self, id: AnilistId, offline: bool, clock: &Clock) -> Naming {
         self.leave_for(id);
         Naming { names: self.clone(), offline, clock: clock.clone() }
+    }
+
+    /// For a listing nobody is looking at, such as a quiet recheck: it names the rows from what
+    /// is kept, looks nothing up, and leaves the lookup for the title on screen running.
+    pub(crate) fn unlooked(&self, clock: &Clock) -> Naming {
+        Naming { names: self.clone(), offline: true, clock: clock.clone() }
     }
 
     /// Stop the lookup running when it is for a title other than `id`, which is the one on

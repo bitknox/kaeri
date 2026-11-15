@@ -33,6 +33,9 @@ pub struct MockProvider {
     /// Answers for one key, in place of the shared lists above. A key names one title, so a
     /// mock standing in for a catalogue of several has to tell them apart by it.
     episodes_for: HashMap<ProviderKey, Vec<Episode>>,
+    /// Listings of one key answered in turns, in place of `episodes_for`: see
+    /// [`Self::with_listing_turns`].
+    turns_for: HashMap<ProviderKey, Turns>,
     /// What a listing in the dub answers for one key, where it differs from the sub's.
     dub_for: HashMap<ProviderKey, Vec<Episode>>,
     /// A listing in the dub of a key `dub_for` does not name finds nothing, rather than the
@@ -68,6 +71,7 @@ impl MockProvider {
             episodes: Vec::new(),
             streams: Vec::new(),
             episodes_for: HashMap::new(),
+            turns_for: HashMap::new(),
             dub_for: HashMap::new(),
             no_dub: false,
             streams_for: HashMap::new(),
@@ -116,6 +120,19 @@ impl MockProvider {
         episodes: Vec<Episode>,
     ) -> Self {
         self.episodes_for.insert(key.into(), episodes);
+        self
+    }
+
+    /// Answer the listings of this key in turns: each takes the next turn's time and answers its
+    /// episodes, and the last turn answers every listing after it. A source that lists a new
+    /// episode only some time after it aired, for the checks that look for it.
+    pub fn with_listing_turns(
+        mut self,
+        key: impl Into<ProviderKey>,
+        turns: Vec<(Duration, Vec<Episode>)>,
+    ) -> Self {
+        assert!(!turns.is_empty(), "a listing needs a turn to answer with");
+        self.turns_for.insert(key.into(), Turns { taken: Arc::default(), turns });
         self
     }
 
@@ -213,6 +230,12 @@ impl MockProvider {
     }
 }
 
+/// [`MockProvider::with_listing_turns`]: the turns, and how many listings have taken one.
+struct Turns {
+    taken: Arc<AtomicUsize>,
+    turns: Vec<(Duration, Vec<Episode>)>,
+}
+
 #[async_trait]
 impl Provider for MockProvider {
     fn manifest(&self) -> &ProviderManifest {
@@ -240,6 +263,15 @@ impl Provider for MockProvider {
         hints: &kaeri_core::media::TitleHints,
     ) -> Result<Vec<Episode>, ProviderError> {
         self.note(hints);
+        if translation == Translation::Sub
+            && let Some(turns) = self.turns_for.get(key)
+        {
+            let taken = turns.taken.fetch_add(1, Ordering::SeqCst);
+            let (latency, episodes) = &turns.turns[taken.min(turns.turns.len() - 1)];
+            tokio::time::sleep(*latency).await;
+            self.record().await?;
+            return Ok(episodes.clone());
+        }
         self.record().await?;
         if translation == Translation::Dub {
             if let Some(dub) = self.dub_for.get(key) {
@@ -351,6 +383,21 @@ mod tests {
         let calls = p.call_count();
         assert!(p.search("q", Translation::Sub, &Default::default()).await.is_err());
         assert_eq!(calls.load(Ordering::SeqCst), 1);
+    }
+
+    #[tokio::test]
+    async fn listings_in_turns_keep_the_last_turn() {
+        let one = vec![Episode::new(1)];
+        let two = vec![Episode::new(1), Episode::new(2)];
+        let p = MockProvider::new("m").with_listing_turns(
+            "k",
+            vec![(Duration::ZERO, one.clone()), (Duration::ZERO, two.clone())],
+        );
+        let key = ProviderKey::new("k");
+        let list = || p.episodes(&key, Translation::Sub, &Default::default());
+        assert_eq!(list().await.unwrap(), one);
+        assert_eq!(list().await.unwrap(), two);
+        assert_eq!(list().await.unwrap(), two, "the last turn stays");
     }
 
     #[test]

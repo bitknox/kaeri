@@ -695,6 +695,8 @@ impl Harness {
             Internal::Reader { .. }
             | Internal::ReadingSynced
             | Internal::BookSourcesChanged => {}
+            // A quiet recheck says what it found as `EpisodeChecked`, after relisting.
+            Internal::Recheck | Internal::RecheckFound { .. } => {}
         }
     }
 
@@ -953,6 +955,7 @@ pub fn name(update: &Event) -> &'static str {
         Event::SyncStoreJoinFailed { .. } => "SyncStoreJoinFailed",
         Event::SetupFrom(_) => "SetupFrom",
         Event::CameIn(_) => "CameIn",
+        Event::EpisodeChecked(_) => "EpisodeChecked",
     }
 }
 
@@ -1009,6 +1012,7 @@ fn copy(update: &Event) -> Event {
         Event::Medium(event) => Event::Medium(event.clone()),
         Event::SetupFrom(setup) => Event::SetupFrom(setup.clone()),
         Event::CameIn(came) => Event::CameIn(came.clone()),
+        Event::EpisodeChecked(check) => Event::EpisodeChecked(check.clone()),
         Event::RecentSearches(recent) => Event::RecentSearches(recent.clone()),
         Event::CalendarWindow {
             anchor,

@@ -162,6 +162,10 @@ action-check-now = Check now
 # Button that checks a { -source } again after it did not answer.
 action-check-again = Check again
 
+# Check again while the check runs. Keep it about as short as "Check again": the button keeps its width.
+# @max 16
+action-checking = Checking
+
 # Button that opens the system's own settings for the app.
 action-open-settings = Open settings
 
@@ -237,6 +241,10 @@ time-minutes-left = { $minutes } min left
 # A length in minutes, for an episode.
 # @arg minutes: int
 time-minutes = { $minutes } min
+
+# A length in hours, inside time-ago.
+# @arg hours: int
+time-hours = { $hours } h
 
 # A countdown that has run out: the thing is happening now. Lower case, as it stands inside a line.
 time-now-inline = now

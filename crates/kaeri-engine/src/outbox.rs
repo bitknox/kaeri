@@ -46,6 +46,11 @@ pub enum Internal {
     /// or a server's series came in: what reading shows is brought up to date, as
     /// [`crate::read_catalog::changed`] says.
     BookSourcesChanged,
+    /// A tick of the quiet rechecks of episodes that aired and no source lists: see
+    /// [`crate::titles::recheck`].
+    Recheck,
+    /// A quiet recheck found episode `episode` of title `id`: an open page lists it again.
+    RecheckFound { id: AnilistId, episode: u32 },
 }
 
 /// What woke the reader session.

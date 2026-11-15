@@ -624,6 +624,8 @@ impl App {
             Event::NewEpisodes(_) | Event::WidgetSnapshot(_) | Event::UpcomingNotices(_) => {}
             // The native apps' discussion sheet; the terminal opens a thread in the browser.
             Event::DiscussionFound { .. } | Event::Discussion(_) => {}
+            // What a check for a missing episode found; the title page owns the answer.
+            Event::EpisodeChecked(_) => {}
             // What the update check found, for an app's Settings: the terminal's own notice
             // comes as a toast, naming `kaeri --update`.
             Event::Update(_) => {}

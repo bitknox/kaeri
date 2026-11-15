@@ -397,3 +397,52 @@ episode-go-to-none = No episode { $number }. This show has { $last }.
 # @arg number: plain
 # @arg latest: plain
 episode-go-to-not-out = Episode { $number } isn't out yet. The latest is { $latest }.
+
+## The next episode to watch has aired and no source lists it yet. The title page says so in
+## the main action's place, as a head sentence and a tail sentence the app joins with a space.
+
+# Status, first sentence, within a day of the episode airing.
+# @arg episode: plain
+# @arg ago: text
+episode-missing-aired = Episode { $episode } aired { $ago }.
+
+# Status, first sentence, a day or more after the episode aired.
+# @arg episode: plain
+# @arg date: text
+episode-missing-aired-on = Episode { $episode } aired on { $date }.
+
+# Status, second sentence, until a check the person asked for comes back empty.
+episode-missing-not-yet = Your { -source-pl } don't have it yet.
+
+# Status, second sentence, after a check the person asked for came back empty, and once Kaeri has stopped looking by itself.
+episode-missing-still = Your { -source-pl } still don't have it.
+
+# Status, second sentence, after a check where none of the person's sources answered.
+episode-missing-no-answer = Your { -source-pl } didn't answer.
+
+# Status, last sentence, during the hours Kaeri looks for the episode by itself.
+# @arg minutes: int
+episode-missing-looks-again = { -app-name } looks again every { $minutes } minutes.
+
+# Status a week after the episode aired, when no source has listed it.
+episode-missing-none = None of your { -source-pl } has it.
+
+# Status, last sentence, while the device is offline during the hours Kaeri looks by itself.
+episode-missing-offline = { -app-name } looks for it when you're back online.
+
+# Row note of an episode that aired within the last day. The span is already worded ("25 min", "3 h").
+# @arg ago: text
+episode-row-aired-ago = Aired { $ago }
+
+# Row note beside when it aired, for an episode that aired in the last week and no source lists yet.
+# @max 36
+episode-unsourced-yet = Not in your { -source-pl } yet
+
+# Announced once to screen readers when a check finds the missing episode while its page is open.
+# @arg episode: plain
+episode-found-announcement = Episode { $episode } is in your { -source-pl } now.
+
+# Tooltip and screen reader hint of Check again, while Kaeri looks for the episode by itself.
+# @arg minutes: int
+# @arg hours: int
+episode-check-again-help = { -app-name } also looks by itself every { $minutes } minutes for { $hours } hours after an episode airs.

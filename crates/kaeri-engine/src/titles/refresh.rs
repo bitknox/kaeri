@@ -53,6 +53,12 @@ impl Ticket {
         true
     }
 
+    /// A ticket that is never current: a listing that says nothing, such as a quiet recheck of a
+    /// title nobody has open.
+    pub fn muted(id: AnilistId) -> Self {
+        Self { id, n: 0, generations: Generations::default() }
+    }
+
     /// A ticket that is always current, for a caller with no newer listing to lose to.
     #[cfg(test)]
     pub fn standalone(id: AnilistId) -> Self {
@@ -148,5 +154,6 @@ mod tests {
         // Options listings are counted apart from episode listings.
         let options = listed.options_ticket(id);
         assert!(pinned.current() && options.current());
+        assert!(!Ticket::muted(id).current(), "a muted listing never speaks");
     }
 }

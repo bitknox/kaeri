@@ -270,7 +270,21 @@ pub enum FfiScene {
     /// Reading as release builds have it: off, whatever the start says, with Both kept from a
     /// Fixtures build. The medium is Watch and every reading command is refused.
     ReadingDark,
+    /// Signed in, with Kumo no Ue no Toshokan's episodes 1 to 5 watched and episode 6 aired
+    /// [`MISSING_AIRED_AGO`] seconds before the scene's now, which no source lists yet: its page
+    /// says the episode aired and offers Check again and Play episode 5. The fixture source lists
+    /// episode 6 from its third listing of the show on, each listing after the first taking
+    /// [`MISSING_CHECK_TAKES`], so the first Check again shows Checking and comes back empty and
+    /// the second finds it. A second source, Yamabiko, lists episodes 1 to 4, and a third, Minato,
+    /// finds no match, for the lines in Source for this title.
+    MissingEpisode,
 }
+
+/// How long before [`FfiScene::MissingEpisode`]'s now its missing episode aired: 25 minutes.
+pub const MISSING_AIRED_AGO: i64 = 25 * 60;
+/// How long each check of [`FfiScene::MissingEpisode`]'s fixture source takes after the first:
+/// past the 600 ms an app waits before it shows Checking.
+pub const MISSING_CHECK_TAKES: std::time::Duration = std::time::Duration::from_millis(1_400);
 
 /// The works the reading scenes use, made up like every fixture.
 pub const READING_MANGA: &str = "a:900301";
@@ -403,6 +417,7 @@ impl FfiScene {
         matches!(
             self,
             Self::Watching
+                | Self::MissingEpisode
                 | Self::Browsing
                 | Self::Servers
                 | Self::Library
@@ -579,6 +594,13 @@ impl FfiEngine {
         let started = runtime.block_on(async {
             let server = FakeAniList::start().await;
             server.set_now(now);
+            if scene == FfiScene::MissingEpisode {
+                // The broadcasts moved back so that episode 6 aired a moment ago, the fake's
+                // clock left at now.
+                let back = missing_episode_shift();
+                server.set_now(now - back);
+                server.advance(back);
+            }
             // The long franchise beside the six, for a season picker of twelve: a page opens on
             // it by id, as no list has it.
             server.add_titles(fixtures::long_franchise());
@@ -790,6 +812,9 @@ fn fixture_sources(scene: &FfiScene, art: &str, provided: &[(Media, u32)]) -> Pr
     if matches!(scene, FfiScene::Sourceless | FfiScene::Licensed) {
         return ProviderRegistry::new(Vec::new());
     }
+    if *scene == FfiScene::MissingEpisode {
+        return missing_episode_sources(art);
+    }
     if *scene == FfiScene::NotFound {
         // A source that answers every search with nothing: a miss for every title.
         return ProviderRegistry::new(vec![
@@ -847,6 +872,43 @@ fn fixture_sources(scene: &FfiScene, art: &str, provided: &[(Media, u32)]) -> Pr
         provider = provider.with_streams_for(sources::key(id), vec![stream.clone()]);
     }
     ProviderRegistry::new(vec![provider.arc()])
+}
+
+/// How far [`FfiScene::MissingEpisode`] moves the fake's broadcasts back: from the fixtures'
+/// now to [`MISSING_AIRED_AGO`] after Kumo no Ue no Toshokan's episode 6 airs.
+fn missing_episode_shift() -> i64 {
+    let next = fixtures::media(AIRING).next_airing_episode.map_or(0, |n| n.airing_at);
+    next - fixtures::FIXTURE_NOW + MISSING_AIRED_AGO
+}
+
+/// [`FfiScene::MissingEpisode`]'s sources: the fixture source, whose listings of Kumo no Ue no
+/// Toshokan find episode 6 from the third on; Yamabiko, with episodes 1 to 4 of it; and Minato,
+/// which matches nothing.
+fn missing_episode_sources(art: &str) -> ProviderRegistry {
+    let key = sources::key(AIRING);
+    let listed = sources::episodes(AIRING);
+    let mut found = listed.clone();
+    found.push(Episode { duration: listed.last().and_then(|e| e.duration), ..Episode::new(6) });
+    let fixture = sources::provider_with_art(art)
+        .with_listing_turns(
+            key.clone(),
+            vec![
+                (std::time::Duration::ZERO, listed.clone()),
+                (MISSING_CHECK_TAKES, listed.clone()),
+                (MISSING_CHECK_TAKES, found),
+            ],
+        )
+        .with_streams_for(key.clone(), vec![sources::episode_clip()]);
+    let hit = sources::hits().into_iter().find(|hit| hit.key == key);
+    let short = MockProvider::new("fixture-yamabiko")
+        .named("Yamabiko")
+        .with_hits(
+            hit.iter().map(|hit| SearchHit { episode_count: Some(4), ..hit.clone() }).collect(),
+        )
+        .with_episodes_for(key.clone(), listed.into_iter().take(4).collect())
+        .with_streams_for(key, vec![sources::episode_clip()]);
+    let none = MockProvider::new("fixture-minato").named("Minato").with_hits(Vec::new());
+    ProviderRegistry::new(vec![fixture.arc(), short.arc(), none.arc()])
 }
 
 /// The source [`FfiScene::Unsure`] puts first: an invented archive that lists four titles for
@@ -1048,6 +1110,7 @@ fn seed_scene(store: &Store, scene: &FfiScene, now: i64) {
     const HOUR: i64 = 3_600;
     const DAY: i64 = 24 * HOUR;
     match scene {
+        FfiScene::MissingEpisode => seed::watched(store, AIRING, 5, now - DAY),
         FfiScene::Fresh
         | FfiScene::NotFound
         | FfiScene::Offline

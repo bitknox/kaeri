@@ -533,6 +533,11 @@ impl Engine {
                 services.meta.anilist().clone(),
                 inbox.sender(),
             );
+            // Episodes that aired and no source lists are looked for again, quietly.
+            crate::titles::recheck::spawn_ticks(
+                services.meta.anilist().clone(),
+                inbox.sender(),
+            );
             if state.reading.available {
                 // Servers that showed no series are looked at again every half hour.
                 let clock = services.clock.clone();

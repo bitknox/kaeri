@@ -5425,6 +5425,10 @@ object Strings {
     fun actionCheckAgain(context: Context): String =
         context.getString(R.string.action_check_again)
 
+    /** Check again while the check runs. Keep it about as short as "Check again": the button keeps its width. */
+    fun actionChecking(context: Context): String =
+        context.getString(R.string.action_checking)
+
     /** Button that opens the system's own settings for the app. */
     fun actionOpenSettings(context: Context): String =
         context.getString(R.string.action_open_settings)
@@ -5512,6 +5516,10 @@ object Strings {
     /** A length in minutes, for an episode. */
     fun timeMinutes(context: Context, minutes: Int): String =
         context.getString(R.string.time_minutes, minutes)
+
+    /** A length in hours, inside time-ago. */
+    fun timeHours(context: Context, hours: Int): String =
+        context.getString(R.string.time_hours, hours)
 
     /** A countdown that has run out: the thing is happening now. Lower case, as it stands inside a line. */
     fun timeNowInline(context: Context): String =
@@ -13892,6 +13900,30 @@ object Strings {
     fun sourcePickerCoverage(context: Context, covered: Int, of: Int): String =
         context.resources.getQuantityString(R.plurals.source_picker_coverage, of, covered, of)
 
+    /** Under a source that lists every episode that is out. */
+    fun sourcePickerEpisodes(context: Context, count: Int, first: Int, last: Int): String =
+        context.resources.getQuantityString(R.plurals.source_picker_episodes, count, count, first, last)
+
+    /** Under a source that lacks the newest episodes, within a week of them airing. $missing is one number, source-picker-missing-pair or source-picker-missing-range. */
+    fun sourcePickerEpisodesNotYet(context: Context, first: Int, last: Int, missing: String): String =
+        context.getString(R.string.source_picker_episodes_not_yet, first, last, missing)
+
+    /** The same, more than a week after the episodes aired. */
+    fun sourcePickerEpisodesNot(context: Context, first: Int, last: Int, missing: String): String =
+        context.getString(R.string.source_picker_episodes_not, first, last, missing)
+
+    /** Two episodes a source lacks, inside the missing part of a source's line. */
+    fun sourcePickerMissingPair(context: Context, a: Int, b: Int): String =
+        context.getString(R.string.source_picker_missing_pair, a, b)
+
+    /** Three or more episodes in a row a source lacks, inside the missing part of a source's line. */
+    fun sourcePickerMissingRange(context: Context, first: Int, last: Int): String =
+        context.getString(R.string.source_picker_missing_range, first, last)
+
+    /** Under a source with a gap in the middle, such as "5 of 6 episodes. Not 3". */
+    fun sourcePickerCoverageMissing(context: Context, covered: Int, of: Int, missing: String): String =
+        context.resources.getQuantityString(R.plurals.source_picker_coverage_missing, of, covered, of, missing)
+
     /** Under a source that is switched off in Settings. */
     fun sourceNoteOff(context: Context): String =
         context.getString(R.string.source_note_off)
@@ -16362,6 +16394,54 @@ object Strings {
     /** Shown when the number typed is an episode with no date that has not come out. */
     fun episodeGoToNotOut(context: Context, number: Int, latest: Int): String =
         context.getString(R.string.episode_go_to_not_out, number, latest)
+
+    /** Status, first sentence, within a day of the episode airing. */
+    fun episodeMissingAired(context: Context, episode: Int, ago: String): String =
+        context.getString(R.string.episode_missing_aired, episode, ago)
+
+    /** Status, first sentence, a day or more after the episode aired. */
+    fun episodeMissingAiredOn(context: Context, episode: Int, date: String): String =
+        context.getString(R.string.episode_missing_aired_on, episode, date)
+
+    /** Status, second sentence, until a check the person asked for comes back empty. */
+    fun episodeMissingNotYet(context: Context): String =
+        context.getString(R.string.episode_missing_not_yet)
+
+    /** Status, second sentence, after a check the person asked for came back empty, and once Kaeri has stopped looking by itself. */
+    fun episodeMissingStill(context: Context): String =
+        context.getString(R.string.episode_missing_still)
+
+    /** Status, second sentence, after a check where none of the person's sources answered. */
+    fun episodeMissingNoAnswer(context: Context): String =
+        context.getString(R.string.episode_missing_no_answer)
+
+    /** Status, last sentence, during the hours Kaeri looks for the episode by itself. */
+    fun episodeMissingLooksAgain(context: Context, minutes: Int): String =
+        context.getString(R.string.episode_missing_looks_again, minutes)
+
+    /** Status a week after the episode aired, when no source has listed it. */
+    fun episodeMissingNone(context: Context): String =
+        context.getString(R.string.episode_missing_none)
+
+    /** Status, last sentence, while the device is offline during the hours Kaeri looks by itself. */
+    fun episodeMissingOffline(context: Context): String =
+        context.getString(R.string.episode_missing_offline)
+
+    /** Row note of an episode that aired within the last day. The span is already worded ("25 min", "3 h"). */
+    fun episodeRowAiredAgo(context: Context, ago: String): String =
+        context.getString(R.string.episode_row_aired_ago, ago)
+
+    /** Row note beside when it aired, for an episode that aired in the last week and no source lists yet. */
+    fun episodeUnsourcedYet(context: Context): String =
+        context.getString(R.string.episode_unsourced_yet)
+
+    /** Announced once to screen readers when a check finds the missing episode while its page is open. */
+    fun episodeFoundAnnouncement(context: Context, episode: Int): String =
+        context.getString(R.string.episode_found_announcement, episode)
+
+    /** Tooltip and screen reader hint of Check again, while Kaeri looks for the episode by itself. */
+    fun episodeCheckAgainHelp(context: Context, minutes: Int, hours: Int): String =
+        context.getString(R.string.episode_check_again_help, minutes, hours)
 
     /** Title of the settings group and the screen. */
     fun torrentsTitle(context: Context): String =
