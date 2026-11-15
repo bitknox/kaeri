@@ -153,10 +153,10 @@ class PlaceholderClock internal constructor(waited: Boolean) {
         internal set
 }
 
-/** A [PlaceholderClock] from now, or one already past its wait with [waited]. */
+/** A [PlaceholderClock] from now, or one already past its wait with [waited]; a new one for each [key]. */
 @Composable
-fun rememberPlaceholderClock(waited: Boolean = false): PlaceholderClock {
-    val clock = remember { PlaceholderClock(waited) }
+fun rememberPlaceholderClock(waited: Boolean = false, key: Any? = null): PlaceholderClock {
+    val clock = remember(key) { PlaceholderClock(waited) }
     LaunchedEffect(clock) {
         if (clock.held) return@LaunchedEffect
         delay(PLACEHOLDERS_AFTER)
