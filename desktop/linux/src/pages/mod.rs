@@ -8,6 +8,7 @@ pub mod downloads;
 pub mod first_launch;
 pub mod first_party;
 pub mod folders;
+pub mod following;
 pub mod home_page;
 pub mod join;
 pub mod library;

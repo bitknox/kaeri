@@ -140,6 +140,25 @@ list.episode-list > row { border-radius: 8px; }
 /* The synopsis line is 20 px, as on Windows, where GTK would give about 17.5. */
 .synopsis-text { line-height: 1.43; }
 
+/* People you follow: pictures in circles, a first letter in silk on the selected raised fill when
+   there is no picture. On an episode's mark they overlap, each ringed in the ground, then +N. */
+.followed-face, .plate.followed-face { border-radius: 999px; }
+.followed-letter { background: var(--raised-selected); color: var(--silk); font-weight: 600; font-size: 15px; }
+.followed-letter.small { font-size: 11px; }
+.followed-face.ringed, .followed-more { box-shadow: 0 0 0 2px var(--ground); }
+.followed-marks > .overlap { margin-left: -6px; }
+.followed-more {
+  min-height: 24px; min-width: 24px; padding: 0 4px 0 9px; border-radius: 999px;
+  background: var(--raised-selected); color: var(--silk); font-size: 11px; font-weight: 600;
+}
+/* The section's rows, in the card More about this show's lists use. */
+.following-row { min-height: 52px; padding: 0 14px; }
+.following-row.ruled { border-top: 1px solid var(--faint-rule); }
+.following-row:focus-visible { outline: 2px solid alpha(var(--silk), 0.5); outline-offset: -2px; border-radius: 12px; }
+.following-line { font-size: 13px; }
+.following-all { min-height: 48px; border-radius: 0; font-weight: 700; border-top: 1px solid var(--faint-rule); }
+.following-card .plate { background: var(--raised-selected); }
+
 /* The player: controls on a 35% dim of the ground, no blur, and behind each bar a gradient that
    reaches 72% at the screen edge, so silk holds 5:1 on a white frame. */
 .player { background: black; }

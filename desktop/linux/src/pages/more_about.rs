@@ -1,6 +1,5 @@
-//! "More about this show": what the title page has no room for, in a dialog. People you follow,
-//! where it streams, rankings, cast, staff, more like this and tags. A section with nothing in it
-//! is left out.
+//! "More about this show": what the title page has no room for, in a dialog. Where it streams,
+//! rankings, cast, staff, more like this and tags. A section with nothing in it is left out.
 
 use std::rc::Rc;
 
@@ -28,7 +27,6 @@ pub fn open(ctx: &Rc<Ctx>, entry: &Entry) {
     let dialog = adw::Dialog::builder().follows_content_size(true).build();
 
     let sections = [
-        following(detail),
         streaming(ctx, detail),
         rankings(detail),
         cast(detail),
@@ -84,30 +82,6 @@ fn suffix(text: &str) -> gtk::Label {
     let label = widgets::haze(text, "numeric");
     label.set_valign(gtk::Align::Center);
     label
-}
-
-fn following(detail: &TitleDetail) -> Option<gtk::Box> {
-    if detail.following.is_empty() {
-        return None;
-    }
-    let list = widgets::boxed_list();
-    for person in &detail.following {
-        let status = person.status.map(crate::pages::library::segment_title);
-        let progress =
-            (person.progress > 0).then(|| t::episode_number(i64::from(person.progress)));
-        let line = match (status, progress) {
-            (Some(s), Some(p)) => Some(t::more_followed_progress(&s, &p)),
-            (Some(s), None) => Some(s),
-            (None, Some(p)) => Some(p),
-            (None, None) => None,
-        };
-        let row = row(&person.name, line.as_deref());
-        if let Some(score) = person.score.filter(|s| *s > 0) {
-            row.add_suffix(&suffix(&t::more_followed_score(i64::from(score))));
-        }
-        list.append(&row);
-    }
-    Some(section(&t::more_following(), Some(&t::more_following_note()), &list))
 }
 
 fn streaming(ctx: &Rc<Ctx>, detail: &TitleDetail) -> Option<gtk::Box> {

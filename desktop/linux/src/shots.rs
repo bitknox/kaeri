@@ -380,6 +380,10 @@ fn stage(shell: &Rc<Shell>, shot: &str) -> f64 {
     if let Some(settle) = crate::shots_prelaunch::stage(shell, shot) {
         return settle;
     }
+    #[cfg(feature = "fixtures")]
+    if let Some(settle) = crate::shots_following::stage(shell, shot) {
+        return settle;
+    }
     let window = &shell.ctx.window;
     match shot {
         "home" => {
@@ -1386,6 +1390,8 @@ fn unstage(shell: &Rc<Shell>, shot: &str) {
     crate::shots_reading_credits::unstage(shell, shot);
     #[cfg(feature = "fixtures")]
     crate::shots_prelaunch::unstage(shell, shot);
+    #[cfg(feature = "fixtures")]
+    crate::shots_following::unstage(shell, shot);
     if shot.starts_with("start-") {
         shell.player.close();
     }
@@ -2140,6 +2146,14 @@ pub fn named(list: Option<&str>) -> Vec<String> {
                 #[cfg(feature = "fixtures")]
                 "prelaunch" => {
                     crate::shots_prelaunch::NAMES.iter().map(|p| (*p).to_owned()).collect()
+                }
+                #[cfg(feature = "fixtures")]
+                "following" => {
+                    crate::shots_following::NAMES.iter().map(|p| (*p).to_owned()).collect()
+                }
+                #[cfg(feature = "fixtures")]
+                "following-slow" => {
+                    crate::shots_following::SLOW.iter().map(|p| (*p).to_owned()).collect()
                 }
                 #[cfg(feature = "fixtures")]
                 "prelaunch-demo" => {

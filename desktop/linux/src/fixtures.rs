@@ -181,6 +181,9 @@ pub static ONLINE_SCENE: std::sync::atomic::AtomicBool =
 /// catch the placeholders and the activity line after four seconds, inside the wait the slow
 /// scene gives the client.
 const SLOW_ANSWER: std::time::Duration = std::time::Duration::from_secs(10);
+/// How long the slow people scene holds a title page: past the 0.6 s after which the people's
+/// placeholders show, the same as the phones' Fixtures scene.
+const FOLLOWING_SLOW_ANSWER: std::time::Duration = std::time::Duration::from_millis(2_000);
 /// How long the client waits for an answer: twice the slow answer in the slow scene.
 const fn client_wait(scene: HomeScene) -> u64 {
     if matches!(scene, HomeScene::Slow) { 20 } else { 5 }
@@ -218,6 +221,11 @@ pub enum HomeScene {
     ReadingLong,
     /// Watching with no source installed.
     Sourceless,
+    /// Watching with the people the viewer follows on AniList: ten on the finished title, four
+    /// of them stopped at episode 8, and five on the airing one.
+    Following,
+    /// [`Self::Following`] with AniList slow to answer a title page, so its placeholders show.
+    FollowingSlow,
 }
 
 impl HomeScene {
@@ -236,6 +244,8 @@ impl HomeScene {
             "reading" => Self::Reading,
             "reading-downloads" => Self::ReadingDownloads,
             "reading-long" => Self::ReadingLong,
+            "following" => Self::Following,
+            "following-slow" => Self::FollowingSlow,
             _ => return None,
         })
     }
@@ -253,7 +263,13 @@ impl HomeScene {
     fn world_history(self) -> bool {
         matches!(
             self,
-            Self::Watching | Self::Suggested | Self::Slow | Self::Failed | Self::Sourceless
+            Self::Watching
+                | Self::Suggested
+                | Self::Slow
+                | Self::Failed
+                | Self::Sourceless
+                | Self::Following
+                | Self::FollowingSlow
         )
     }
 }
@@ -366,6 +382,15 @@ pub async fn start(root: &Path, scene: &Scene, host: Arc<dyn Host>) -> Result<St
         }
         HomeScene::Reading | HomeScene::ReadingLong if !scene.demo => {
             ONLINE_SCENE.store(true, std::sync::atomic::Ordering::Relaxed);
+        }
+        // The board's people, with pictures at the fake's art; every other title has nobody.
+        HomeScene::Following | HomeScene::FollowingSlow => {
+            for id in [FINISHED, AIRING] {
+                server.set_following(id, fixtures::following(id));
+            }
+            if scene.home == HomeScene::FollowingSlow {
+                server.answer_slowly(Operation::Detail, FOLLOWING_SLOW_ANSWER);
+            }
         }
         _ => {}
     }
@@ -576,9 +601,12 @@ fn seed_scene(store: &Store, scene: HomeScene, now: i64) {
                 seed::stopped_at(store, id, "1", 5.0 * 60.0, now - (15 - n as i64) * HOUR);
             }
         }
-        HomeScene::Watching | HomeScene::Slow | HomeScene::Failed | HomeScene::Sourceless => {
-            seed_history(store, now)
-        }
+        HomeScene::Watching
+        | HomeScene::Slow
+        | HomeScene::Failed
+        | HomeScene::Sourceless
+        | HomeScene::Following
+        | HomeScene::FollowingSlow => seed_history(store, now),
         HomeScene::Reading | HomeScene::ReadingDownloads | HomeScene::ReadingLong => {
             seed_history(store, now);
             crate::fixtures_reading::seed_reading(

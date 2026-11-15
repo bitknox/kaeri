@@ -17,7 +17,7 @@ use kaeri_model::{
     browsing::{self, GoTo},
     catalog::{Entry, LibrarySegment, LinkedTitle, RelationKind},
     command::{Command, LicensedCommand},
-    episodes::{self, EpisodeRange, EpisodeRow, EpisodeText},
+    episodes::{self, EpisodeRange, EpisodeRow, EpisodeText, FollowedMark},
     event::Event,
     licensed::{AvailabilityCase, TitleAvailability},
     settings::SettingKey,
@@ -26,7 +26,7 @@ use kaeri_model::{
 
 use crate::{
     catalog, choices, matching, motion,
-    pages::licensed,
+    pages::{following, licensed},
     say,
     states::{Shape, States},
     synopsis, widgets,
@@ -68,6 +68,9 @@ struct EpisodeLine {
     room: Cell<bool>,
     /// The height the row has now.
     height: Cell<i32>,
+    /// Where the people followed who stopped at this episode show, and who they are.
+    marks: Option<gtk::Box>,
+    marked: RefCell<Vec<FollowedMark>>,
 }
 
 /// What the episode list was drawn from: when a table arrives that differs in none of it, the
@@ -79,6 +82,8 @@ struct Drawn {
     range: Option<usize>,
     fold: usize,
     protection_at: Option<usize>,
+    /// The rows keep a column for people followed.
+    column: bool,
 }
 
 /// The one line where spoiler protection starts.
@@ -99,6 +104,13 @@ struct Page {
     side: gtk::Box,
     seasons: gtk::Box,
     synopsis: gtk::Box,
+    /// People you follow, at the side column's end.
+    people: Rc<following::Section>,
+    /// What stands after the marks at a row's end, the same width on every row, so the folded
+    /// rows' marks line up with the rows'.
+    trail: gtk::SizeGroup,
+    /// The folded watched rows' marks, and whose they are.
+    fold_marks: RefCell<Option<(gtk::Box, Vec<FollowedMark>)>>,
     episodes: gtk::ListBox,
     episodes_state: Rc<States>,
     lines: RefCell<Vec<EpisodeLine>>,
@@ -242,9 +254,14 @@ pub fn page(ctx: &Rc<Ctx>, id: AnilistId) -> adw::NavigationPage {
 
     let side = gtk::Box::new(gtk::Orientation::Vertical, 18);
     side.set_size_request(260, -1);
+    // People you follow stand at the column's end, kept while the rest of it is laid out again.
+    let people = following::Section::new(&ctx.hub);
+    let side_column = gtk::Box::new(gtk::Orientation::Vertical, 18);
+    side_column.append(&side);
+    side_column.append(&people.widget);
     let columns = gtk::Box::new(gtk::Orientation::Horizontal, 36);
     columns.append(&main);
-    columns.append(&side);
+    columns.append(&side_column);
     columns.set_margin_start(36);
     columns.set_margin_end(36);
     columns.set_margin_top(18);
@@ -327,6 +344,9 @@ pub fn page(ctx: &Rc<Ctx>, id: AnilistId) -> adw::NavigationPage {
         side,
         seasons,
         synopsis,
+        people,
+        trail: gtk::SizeGroup::new(gtk::SizeGroupMode::Horizontal),
+        fold_marks: RefCell::default(),
         episodes,
         episodes_state,
         lines: RefCell::default(),
@@ -393,6 +413,7 @@ pub fn page(ctx: &Rc<Ctx>, id: AnilistId) -> adw::NavigationPage {
     page.actions();
     page.keys(&view);
     ctx.hub.known.borrow_mut().visit(id);
+    page.people.wait();
     if let Some(entry) = &entry {
         page.fill(entry);
     }
@@ -1051,6 +1072,7 @@ impl Page {
 
         self.fill_seasons(entry);
         self.fill_side(entry, size);
+        self.people.show(entry);
     }
 
     /// The franchise's seasons as a picker, when there is more than one.
@@ -1631,6 +1653,7 @@ impl Page {
         clear_list(&self.episodes);
         self.lines.borrow_mut().clear();
         self.protection.replace(None);
+        self.fold_marks.replace(None);
         let rows = self.rows.borrow();
         if rows.is_empty() {
             self.drawn.replace(None);
@@ -1641,6 +1664,8 @@ impl Page {
             return;
         }
         let narrow = *self.sized.borrow() == Size::Narrow;
+        // People followed have a column at each row's end while they show at all.
+        let column = following::on(&self.ctx.hub);
         let outlook = self.outlook.get().unwrap_or_else(|| episodes::episode_text(&rows));
         self.outlook.set(Some(outlook));
         let (ranges, plan) = self.plan(&rows);
@@ -1663,6 +1688,7 @@ impl Page {
             range: self.range.get(),
             fold: plan.fold,
             protection_at,
+            column,
         }));
         let mut lines = Vec::with_capacity(shown.len());
         // Case B: each episode opens its own page on the service, or else the title's.
@@ -1689,7 +1715,28 @@ impl Page {
                     page.unfold();
                 }
             });
-            self.episodes.append(&Self::note_row(&button));
+            let row = Self::note_row(&button);
+            if column {
+                // The folded rows carry the marks of the episodes inside them, in the rows'
+                // column, with the sentence for a screen reader on the button.
+                let marks = following::union(
+                    rows[plan.start..plan.start + plan.fold].iter().flat_map(|r| &r.followed),
+                );
+                let slot = following::slot(!narrow);
+                following::set_marks(&self.ctx.hub, &slot, &marks, false);
+                let trail = gtk::Box::new(gtk::Orientation::Horizontal, 0);
+                self.trail.add_widget(&trail);
+                if let Some(line) = row.child().and_downcast::<gtk::Box>() {
+                    // The rows' spacing, so the marks stand in the same column.
+                    line.set_spacing(14);
+                    button.set_hexpand(true);
+                    line.append(&slot);
+                    line.append(&trail);
+                }
+                say_fold(&button, &marks);
+                self.fold_marks.replace(Some((slot, marks)));
+            }
+            self.episodes.append(&row);
         }
 
         for (at, row) in shown.iter().enumerate() {
@@ -1828,6 +1875,14 @@ impl Page {
             }
             line.append(&text);
 
+            // People followed who stopped here, in the column before the row's own controls.
+            let marks = column.then(|| following::slot(!narrow));
+            if let Some(marks) = &marks {
+                line.append(marks);
+            }
+            let trail = gtk::Box::new(gtk::Orientation::Horizontal, 14);
+            self.trail.add_widget(&trail);
+
             let check = gtk::CheckButton::new();
             check.set_valign(gtk::Align::Center);
             check.update_property(&[gtk::accessible::Property::Label(
@@ -1840,7 +1895,7 @@ impl Page {
                     Some(&(episode.clone(), check.is_active()).to_variant()),
                 );
             });
-            line.append(&check);
+            trail.append(&check);
 
             let mut outside: Option<glib::Variant> = None;
             if let Some((main, listings)) = &service {
@@ -1852,7 +1907,7 @@ impl Page {
                 glyph.set_valign(gtk::Align::Center);
                 glyph.add_css_class("dim-label");
                 glyph.set_tooltip_text(Some(&t::licensed_opens_outside()));
-                line.append(&glyph);
+                trail.append(&glyph);
                 outside = Some(target);
             }
 
@@ -1864,7 +1919,8 @@ impl Page {
                 .valign(gtk::Align::Center)
                 .build();
             more.add_css_class("flat");
-            line.append(&more);
+            trail.append(&more);
+            line.append(&trail);
             root.append(&line);
             if narrow {
                 room_box.set_margin_start(0);
@@ -1909,6 +1965,8 @@ impl Page {
                 protected: Cell::new(held),
                 room: Cell::new(room),
                 height: Cell::new(height),
+                marks,
+                marked: RefCell::default(),
             };
             self.dress(&drawn, row, false);
             lines.push(drawn);
@@ -2144,11 +2202,17 @@ impl Page {
             None => line.synopsis.set_label(""),
         }
         line.list_row.set_tooltip_text(text);
-        let description = if line.protected.get() {
+        let mut description = if line.protected.get() {
             t::episode_synopsis_hidden()
         } else {
             text.unwrap_or_default().to_owned()
         };
+        // Who stopped here, after the synopsis. Never a score.
+        if line.marks.is_some() && !row.followed.is_empty() {
+            let said = following::spoken(&row.followed);
+            description =
+                if description.is_empty() { said } else { format!("{description} {said}") }; // i18n-skip
+        }
         line.list_row.update_property(&[gtk::accessible::Property::Description(&description)]);
     }
 
@@ -2164,10 +2228,33 @@ impl Page {
             let numbers_same = drawn.numbers.len() == rows.len()
                 && drawn.numbers.iter().zip(rows.iter()).all(|(a, b)| *a == b.number);
             let at = synopsis::protection_start(shown, on).map(|(at, _)| at);
-            if !numbers_same || drawn.fold != plan.fold || drawn.protection_at != at {
+            let column = following::on(&self.ctx.hub);
+            if !numbers_same
+                || drawn.fold != plan.fold
+                || drawn.protection_at != at
+                || drawn.column != column
+            {
                 drop(rows);
                 self.draw_episodes();
                 return;
+            }
+            // The folded rows' marks, from the episodes inside them now.
+            if let Some((slot, marked)) = self.fold_marks.borrow_mut().as_mut() {
+                let marks = following::union(
+                    rows[plan.start..plan.start + plan.fold].iter().flat_map(|r| &r.followed),
+                );
+                if *marked != marks {
+                    let new = marked.is_empty() || marks.is_empty();
+                    following::set_marks(&self.ctx.hub, slot, &marks, new);
+                    if let Some(button) = slot
+                        .parent()
+                        .and_then(|line| line.first_child())
+                        .and_downcast::<gtk::Button>()
+                    {
+                        say_fold(&button, &marks);
+                    }
+                    *marked = marks;
+                }
             }
         }
         for line in self.lines.borrow().iter() {
@@ -2346,8 +2433,22 @@ impl Page {
             format!("{}, {sub}", full_name(row)) // i18n-skip
         };
         line.list_row.update_property(&[gtk::accessible::Property::Label(&spoken)]);
+        if let Some(slot) = &line.marks
+            && *line.marked.borrow() != row.followed
+        {
+            // Marks that arrive fade in and ones that go fade out; a change is put in place.
+            let new = line.marked.borrow().is_empty() || row.followed.is_empty();
+            line.marked.replace(row.followed.clone());
+            following::set_marks(&self.ctx.hub, slot, &row.followed, animate && new);
+        }
         self.settle(line, row, animate);
     }
+}
+
+/// The sentence of who stopped inside the folded rows, as the fold's description.
+fn say_fold(button: &gtk::Button, marks: &[FollowedMark]) {
+    let said = if marks.is_empty() { String::new() } else { following::spoken(marks) };
+    button.update_property(&[gtk::accessible::Property::Description(&said)]);
 }
 
 /// An episode's full name: its number and title, or its number alone.
