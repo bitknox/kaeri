@@ -889,7 +889,8 @@ impl Page {
                 button.set_hexpand(narrow);
                 if missing.is_some() && self.found_running() {
                     found_play = Some(button.clone());
-                } else {
+                } else if missing.is_none() || !self.found_waiting() {
+                    // Held back while a source has it and the check asked for has yet to answer.
                     actions.append(&button);
                 }
                 // A controller opened the page: the main action takes focus once it exists.
@@ -909,7 +910,7 @@ impl Page {
         let mut under_row = None;
         if let Some(missing) =
             missing.as_ref().filter(|_| asked.is_none() && on_service.is_none())
-            && (item.button.is_none() || found_play.is_some())
+            && (item.button.is_none() || found_play.is_some() || self.found_waiting())
         {
             let (lead, under) = self.missing_widgets(missing, found_play.take(), narrow);
             if let Some(lead) = lead {

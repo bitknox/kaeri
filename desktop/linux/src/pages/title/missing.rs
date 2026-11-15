@@ -23,7 +23,7 @@ use kaeri_model::{
 };
 
 use super::Page;
-use crate::{missing::Status, motion, say, widgets};
+use crate::{missing::Status, motion, say};
 
 /// How long a check runs before Checking shows: most sources answer inside it.
 const QUIET: Duration = Duration::from_millis(600);
@@ -79,9 +79,9 @@ pub(super) struct Parts {
     idle: Option<gtk::Widget>,
     busy: Option<gtk::Widget>,
     check: Option<gtk::Button>,
-    /// The buttons' slot: its size from `sizer`, the buttons and the amber Play over it.
-    lead: Option<gtk::Overlay>,
-    sizer: gtk::Box,
+    /// While Play comes in, the frame over the buttons and Play, one over the other, whose
+    /// width settles from the buttons' to Play's.
+    frame: Option<gtk::ScrolledWindow>,
     miss: gtk::Box,
     play: Option<gtk::Button>,
     /// The status line, and the words it had while they crossfade.
@@ -131,6 +131,33 @@ fn status_label(status: &Status) -> gtk::Label {
     attrs.insert(haze);
     label.set_attributes(Some(&attrs));
     label
+}
+
+/// A frame around `child` that clips it along `along` to the size the frame is asked for, and
+/// shows no scroll bar: the child keeps its natural size and is cut, never squeezed.
+fn clipping(child: &impl IsA<gtk::Widget>, along: gtk::Orientation) -> gtk::ScrolledWindow {
+    let viewport = gtk::Viewport::new(None::<&gtk::Adjustment>, None::<&gtk::Adjustment>);
+    viewport.set_child(Some(child));
+    viewport.set_hscroll_policy(gtk::ScrollablePolicy::Natural);
+    viewport.set_vscroll_policy(gtk::ScrollablePolicy::Natural);
+    let horizontal = along == gtk::Orientation::Horizontal;
+    let frame = gtk::ScrolledWindow::builder()
+        .hscrollbar_policy(if horizontal {
+            gtk::PolicyType::External
+        } else {
+            gtk::PolicyType::Never
+        })
+        .vscrollbar_policy(if horizontal {
+            gtk::PolicyType::Never
+        } else {
+            gtk::PolicyType::External
+        })
+        .propagate_natural_width(!horizontal)
+        .propagate_natural_height(horizontal)
+        .child(&viewport)
+        .build();
+    frame.set_can_focus(false);
+    frame
 }
 
 /// The widget named `name` under `root`, when there is one that can take focus.
@@ -218,13 +245,11 @@ impl Page {
         }
         // What Play takes the place of, as it stands on screen.
         let from = m.parts.borrow().as_ref().map_or((0, 0), |p| {
-            let width = p.lead.as_ref().map_or(0, |lead| {
-                if lead.width() > 0 {
-                    lead.width()
-                } else {
-                    lead.measure(gtk::Orientation::Horizontal, -1).1
-                }
-            });
+            let width = if p.miss.width() > 0 {
+                p.miss.width()
+            } else {
+                p.miss.measure(gtk::Orientation::Horizontal, -1).1
+            };
             let height = if p.line.height() > 0 {
                 p.line.height() + p.line.margin_top()
             } else {
@@ -443,7 +468,8 @@ impl Page {
         crate::missing::status(
             missing,
             self.missing.answer.get(),
-            widgets::is_offline(),
+            // The hub hears connectivity before any page.
+            self.ctx.hub.known.borrow().offline,
             now(),
             short_date,
         )
@@ -457,6 +483,11 @@ impl Page {
     /// Whether the amber Play is crossfading in.
     pub(super) fn found_running(&self) -> bool {
         self.missing.found.get().is_some()
+    }
+
+    /// Whether a source lists the episode and Play waits for the check asked for to answer.
+    pub(super) fn found_waiting(&self) -> bool {
+        self.missing.found_waits.get()
     }
 
     /// The buttons that lead the row and the status under it, for `missing`. `play` is the amber
@@ -491,40 +522,32 @@ impl Page {
         miss.set_homogeneous(narrow);
 
         let found = self.missing.found.get();
-        let sizer = gtk::Box::new(gtk::Orientation::Horizontal, 0);
-        let lead = (miss.first_child().is_some() || play.is_some()).then(|| {
-            let lead = gtk::Overlay::new();
-            lead.set_child(Some(&sizer));
-            for side in [
-                Some(miss.clone().upcast::<gtk::Widget>()),
-                play.clone().map(|p| p.upcast::<gtk::Widget>()),
-            ]
-            .into_iter()
-            .flatten()
-            {
-                side.set_halign(if narrow { gtk::Align::Fill } else { gtk::Align::Start });
-                side.set_valign(gtk::Align::Center);
-                lead.add_overlay(&side);
+        // While Play comes in, both in one cell of a frame that clips them: each keeps its own
+        // width, and the frame's settles between the two.
+        let frame = found.map(|_| {
+            let cell = gtk::Grid::new();
+            let align = if narrow { gtk::Align::Fill } else { gtk::Align::Start };
+            miss.set_halign(align);
+            cell.attach(&miss, 0, 0, 1, 1);
+            if let Some(play) = &play {
+                play.set_halign(align);
+                cell.attach(play, 0, 0, 1, 1);
             }
+            miss.set_can_focus(false);
+            miss.set_can_target(false);
+            clipping(&cell, gtk::Orientation::Horizontal)
+        });
+        let lead: Option<gtk::Widget> = match &frame {
+            Some(frame) => {
+                frame.set_hexpand(narrow);
+                Some(frame.clone().upcast())
+            }
+            None => miss.first_child().is_some().then(|| miss.clone().upcast()),
+        };
+        if let Some(lead) = &lead {
             lead.set_valign(gtk::Align::Center);
             lead.set_hexpand(narrow);
-            sizer.set_hexpand(narrow);
-            let height = [miss.measure(gtk::Orientation::Vertical, -1).1]
-                .into_iter()
-                .chain(play.iter().map(|p| p.measure(gtk::Orientation::Vertical, -1).1))
-                .max()
-                .unwrap_or(0);
-            let width =
-                if narrow { -1 } else { miss.measure(gtk::Orientation::Horizontal, -1).1 };
-            sizer.set_size_request(width, height);
-            if found.is_some() {
-                // Clipped only while Play comes in, so a focus ring is never cut.
-                lead.set_overflow(gtk::Overflow::Hidden);
-                miss.set_can_focus(false);
-                miss.set_can_target(false);
-            }
-            lead
-        });
+        }
 
         let status = self.status_of(missing);
         let dot = gtk::Box::new(gtk::Orientation::Horizontal, 0);
@@ -549,16 +572,7 @@ impl Page {
         line.append(&words);
         // In the clip, so its height closes with the line's.
         line.set_margin_top(10);
-        let clip = found.map(|_| {
-            let clip = gtk::ScrolledWindow::builder()
-                .hscrollbar_policy(gtk::PolicyType::Never)
-                .vscrollbar_policy(gtk::PolicyType::External)
-                .propagate_natural_height(false)
-                .child(&line)
-                .build();
-            clip.set_can_focus(false);
-            clip
-        });
+        let clip = found.map(|_| clipping(&line, gtk::Orientation::Vertical));
         let under: gtk::Widget =
             clip.as_ref().map_or_else(|| line.clone().upcast(), |c| c.clone().upcast());
         self.missing.parts.replace(Some(Parts {
@@ -566,8 +580,7 @@ impl Page {
             idle,
             busy,
             check,
-            lead: lead.clone(),
-            sizer,
+            frame,
             miss,
             play,
             line,
@@ -575,7 +588,7 @@ impl Page {
             label_from,
             clip,
         }));
-        (lead.map(|l| l.upcast::<gtk::Widget>()), under)
+        (lead, under)
     }
 
     /// Check again, with Checking and its spinner over it, faded out: the button is as wide as
@@ -640,10 +653,9 @@ impl Page {
             p.miss.set_opacity(1.0 - by);
             if let Some(play) = &p.play {
                 play.set_opacity(by);
-                if !p.narrow {
+                if let Some(frame) = p.frame.as_ref().filter(|_| !p.narrow) {
                     let to = play.measure(gtk::Orientation::Horizontal, -1).1;
-                    let (_, tall) = p.sizer.size_request();
-                    p.sizer.set_size_request(lerp(width, to, by), tall);
+                    frame.set_size_request(lerp(width, to, by), -1);
                 }
             }
             if let Some(clip) = &p.clip {
