@@ -295,6 +295,11 @@ html.typeset #video::cue {
 	flex-direction: column;
 	gap: 14px;
 }
+/* Subtitles take the bottom fifth of the picture: two lines and their margin. With subtitles on,
+   the card stands clear of them. */
+#upnext.over-subs {
+	bottom: 168px;
+}
 #upnext .still,
 #finished .still {
 	overflow: hidden;

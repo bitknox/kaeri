@@ -130,6 +130,10 @@ const browser = spawn(
 		'--no-default-browser-check',
 		'--autoplay-policy=no-user-gesture-required',
 		'--mute-audio',
+		// The page is the only one and must keep its timers at full rate.
+		'--disable-background-timer-throttling',
+		'--disable-renderer-backgrounding',
+		'--disable-backgrounding-occluded-windows',
 		'--hide-scrollbars',
 		'--lang=en-US',
 		'about:blank',
@@ -202,6 +206,8 @@ cdp.on('Runtime.exceptionThrown', (p) => consoleErrors.push(JSON.stringify((p.ex
 cdp.on('Runtime.consoleAPICalled', (p) => {
 	if (p.type === 'error') consoleErrors.push((p.args as { value?: unknown; description?: string }[]).map((a) => a.value ?? a.description).join(' '));
 });
+await page('Page.bringToFront');
+await page('Emulation.setFocusEmulationEnabled', { enabled: true });
 await page('Runtime.enable');
 await page('Page.enable');
 // A 1080p Chromecast gives the page 1280 x 720 CSS px at 1.5x.
@@ -225,6 +231,15 @@ async function until(expression: string, what: string, timeout = 8000) {
 	expect(false, `${what} (waited for ${expression})`);
 	return false;
 }
+/** Shots of the same screen at 1920 x 1080 (the TV's pixels) and at 1280 x 720. */
+async function shotBoth(name: string) {
+	await shot(`${name}-1080`);
+	await page('Emulation.setDeviceMetricsOverride', { width: 1280, height: 720, deviceScaleFactor: 1, mobile: false });
+	await shot(`${name}-720`);
+	await page('Emulation.setDeviceMetricsOverride', { width: 1280, height: 720, deviceScaleFactor: 1.5, mobile: false });
+}
+/** The Up next card stands clear of the bottom fifth, where subtitles show. */
+const upNextClear = () => js<boolean>(`(() => { const r = document.getElementById('upnext').getBoundingClientRect(); return innerHeight - r.bottom >= 168 * Math.min(innerWidth / 1280, innerHeight / 720) - 1; })()`);
 async function shot(name: string) {
 	await sleep(350); // the crossfade in
 	const { data } = await page<{ data: string }>('Page.captureScreenshot', { format: 'png' });
@@ -332,10 +347,10 @@ try {
 
 	// Waiting for the stream
 	await js('__caf.buffering(true)');
-	await sleep(700);
-	const early = await shown();
-	expect(early.includes('spin') && !early.includes('waiting'), `the spinner first (${early.join()})`);
-	await sleep(3800);
+	await until(`document.getElementById('spin').classList.contains('on')`, 'the spinner after 600 ms', 3000);
+	const early = await js<number>('performance.now() - __receiver.S.bufferingAt');
+	expect(early >= 600 && !(await shown()).includes('waiting'), `the spinner first, the count not yet (${Math.round(early)} ms)`);
+	await sleep(4300 - early);
 	expect((await shown()).includes('waiting') && /^Waiting for the stream · [45] s$/.test(await textOf('waiting')), 'then the count');
 	await shot('06-waiting');
 	await js('__caf.buffering(false)');
@@ -351,7 +366,8 @@ try {
 	await sleep(400);
 	expect((await textOf('upnext-title')) === 'Episode 4 · Lights on the Water', 'Up next names the episode');
 	expect(/^Up next · plays in 1[45] s$/.test(await textOf('upnext-count')), 'Up next counts down');
-	await shot('08-up-next');
+	expect(await upNextClear(), 'Up next stands clear of typeset subtitles');
+	await shotBoth('08-up-next-typeset');
 	await page('Input.dispatchKeyEvent', { type: 'keyDown', key: 'Enter', code: 'Enter', windowsVirtualKeyCode: 13 });
 	await page('Input.dispatchKeyEvent', { type: 'keyUp', key: 'Enter', code: 'Enter', windowsVirtualKeyCode: 13 });
 	await sleep(100);
@@ -368,6 +384,13 @@ try {
 	expect(!(await js<boolean>(`document.documentElement.classList.contains('typeset')`)) && !(await js<boolean>('__receiver.typeset.active')), 'the WebVTT twin shows instead');
 	expect((await textOf('plain')) === 'Subtitles show as plain text on this TV.', 'the plain subtitles notice');
 	await shot('09-plain-subs');
+	await say({ type: 'up-next', version: 1, number: 4, title: 'Lights on the Water', still: at('still.png'), seconds: 12 });
+	await sleep(400);
+	expect(await js<boolean>(`[...document.getElementById('video').textTracks].some((t) => t.mode === 'showing')`), 'the WebVTT twin is on');
+	expect(await upNextClear(), 'Up next stands clear of WebVTT subtitles');
+	await shotBoth('09b-up-next-webvtt');
+	await say({ type: 'up-next', version: 1 });
+	await sleep(300);
 
 	// The device went away, and came back
 	await say({ type: 'sender-away', version: 1, device: 'iphone' });
@@ -426,6 +449,12 @@ try {
 	// Finished
 	await load(episode({ subtitles: [] }));
 	await until(`document.getElementById('ui').dataset.phase === 'playing'`, 'the last episode plays');
+	await say({ type: 'up-next', version: 1, number: 4, title: 'Lights on the Water', still: at('still.png'), seconds: 12 });
+	await sleep(400);
+	const why = await js<string>(`JSON.stringify({ typeset: __receiver.typeset.active, tracks: [...document.getElementById('video').textTracks].map((t) => t.mode) })`);
+	expect(!(await js<boolean>(`document.getElementById('upnext').classList.contains('over-subs')`)), `without subtitles Up next keeps its place on the board ${why}`);
+	await shot('08b-up-next-no-subs');
+	await say({ type: 'up-next', version: 1 });
 	await js(`document.getElementById('video').currentTime = 38`);
 	await until(`document.getElementById('ui').dataset.phase === 'finished'`, 'Finished', 8000);
 	expect((await textOf('finished-line')) === 'Finished episode 3', 'Finished episode 3');

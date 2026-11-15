@@ -34,6 +34,10 @@
 	const text = { active: [] };
 	const audio = { tracks: [], active: null };
 
+	function showTracks() {
+		for (const el of video ? video.querySelectorAll('track') : [])
+			el.track.mode = text.active.includes(Number(el.dataset.id)) ? 'showing' : 'disabled';
+	}
 	const emit = (type, event = {}) => (listeners[type] || []).forEach((f) => f({ type, ...event }));
 	const finish = (endedReason) => {
 		if (finishedSent) return;
@@ -72,6 +76,9 @@
 		setMediaElement(v) {
 			video = v;
 			wire(v);
+			// CAF decides which text track shows. Chrome turns newly added tracks on by itself once
+			// one has shown, so the stand-in puts its own choice back.
+			v.textTracks.addEventListener('change', showTracks);
 		},
 		setMessageInterceptor(type, f) {
 			interceptors[type] = f;
@@ -146,6 +153,18 @@
 			const r = window.__caf.pending;
 			if (window.__caf.playing !== r) {
 				window.__caf.playing = r;
+				// CAF's side-loaded WebVTT tracks, shown when active.
+				video.querySelectorAll('track').forEach((t) => t.remove());
+				text.active = [];
+				for (const tr of r.media.tracks || []) {
+					if (tr.type !== 'TEXT') continue;
+					const el = document.createElement('track');
+					el.kind = 'subtitles';
+					el.src = tr.trackContentId;
+					el.dataset.id = String(tr.trackId);
+					video.appendChild(el);
+				}
+				showTracks();
 				video.src = r.media.contentUrl || r.media.contentId;
 				if (r.currentTime) video.currentTime = r.currentTime;
 			}
@@ -153,6 +172,7 @@
 		},
 		editTracks(ids) {
 			text.active = ids;
+			showTracks();
 			if (interceptors.EDIT_TRACKS_INFO) interceptors.EDIT_TRACKS_INFO({ activeTrackIds: ids });
 		},
 		connect(senderId, userAgent) {
