@@ -283,10 +283,33 @@ impl Page {
                 page.redress();
             }
         });
-        run.play();
-        if let Some(old) = m.found_run.replace(Some(run)) {
+        if let Some(old) = m.found_run.replace(Some(run.clone())) {
             old.pause();
         }
+        // The rebuilt head's first frame can take a while to lay out and draw: Play comes in
+        // from the frame after it, so none of the reveal is spent before it shows.
+        let Some(clock) = self.head.frame_clock() else {
+            run.play();
+            return;
+        };
+        let handler = std::rc::Rc::new(Cell::new(None));
+        let weak = self.me.borrow().clone();
+        let id = clock.connect_after_paint({
+            let handler = std::rc::Rc::clone(&handler);
+            move |clock| {
+                if let Some(id) = handler.take() {
+                    clock.disconnect(id);
+                }
+                let still = weak
+                    .upgrade()
+                    .is_some_and(|page| page.missing.found_run.borrow().as_ref() == Some(&run));
+                if still {
+                    run.play();
+                }
+            }
+        });
+        handler.set(Some(id));
+        self.head.queue_draw();
     }
 
     /// An animation of one of the values on the reveal curve, laid on the head as it goes.
