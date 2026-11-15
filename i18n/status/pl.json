@@ -33787,6 +33787,12 @@
     "by": "agent",
     "at": "2026-11-14"
   },
+  "tui-read-keys-next": {
+    "source": "78b01f0cf740",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
+  },
   "tui-read-keys-read": {
     "source": "52575e067bdf",
     "state": "draft",
@@ -33810,6 +33816,18 @@
     "state": "draft",
     "by": "agent",
     "at": "2026-11-14"
+  },
+  "tui-read-row-date": {
+    "source": "13917b472d7d",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
+  },
+  "tui-read-row-date-year": {
+    "source": "64171c27431e",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
   },
   "tui-read-series-from": {
     "source": "67b7a6279be7",
@@ -33870,6 +33888,12 @@
     "state": "draft",
     "by": "agent",
     "at": "2026-11-14"
+  },
+  "tui-reader-action-go-to-page": {
+    "source": "e682f076f650",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
   },
   "tui-reader-action-last": {
     "source": "2c4b1cc433fc",
@@ -34105,6 +34129,12 @@
     "by": "agent",
     "at": "2026-11-14"
   },
+  "tui-reader-fit-height": {
+    "source": "e4e636d967f0",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
+  },
   "tui-reader-fit-width": {
     "source": "f967d4ba3984",
     "state": "draft",
@@ -34116,6 +34146,18 @@
     "state": "draft",
     "by": "agent",
     "at": "2026-11-14"
+  },
+  "tui-reader-go-to-images": {
+    "source": "2fc01e6d0fde",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
+  },
+  "tui-reader-go-to-pages": {
+    "source": "17b740491815",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
   },
   "tui-reader-hint-again": {
     "source": "d93eec285563",
@@ -34140,6 +34182,12 @@
     "state": "draft",
     "by": "agent",
     "at": "2026-11-14"
+  },
+  "tui-reader-hint-go": {
+    "source": "08953907b53f",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
   },
   "tui-reader-hint-leave-zoom": {
     "source": "7e0fc0de552b",
@@ -34279,6 +34327,18 @@
     "by": "agent",
     "at": "2026-11-14"
   },
+  "tui-reader-no-answer": {
+    "source": "f8bd3cfcebc6",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
+  },
+  "tui-reader-no-answer-in": {
+    "source": "5a2937ff4a26",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
+  },
   "tui-reader-novel-picture": {
     "source": "8c754b74d11d",
     "state": "draft",
@@ -34302,6 +34362,12 @@
     "state": "draft",
     "by": "agent",
     "at": "2026-11-14"
+  },
+  "tui-reader-page-failed-status": {
+    "source": "ee7703a84b01",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
   },
   "tui-reader-page-of": {
     "source": "3a1e76c345ee",
@@ -34362,6 +34428,12 @@
     "state": "draft",
     "by": "agent",
     "at": "2026-11-14"
+  },
+  "tui-reader-setting-strip-gap": {
+    "source": "1eaec3dd966c",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
   },
   "tui-reader-setting-text-width": {
     "source": "17d1a4ef7246",
@@ -34482,6 +34554,12 @@
     "state": "draft",
     "by": "agent",
     "at": "2026-11-14"
+  },
+  "tui-reader-value-height": {
+    "source": "ffdadf0a576f",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
   },
   "tui-reader-value-open": {
     "source": "1f7698c061c2",

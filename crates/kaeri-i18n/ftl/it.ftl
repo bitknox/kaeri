@@ -4985,6 +4985,45 @@ tui-reader-marked-unread = Capitolo { $chapter } segnato come non letto
 # A short notice on the reader's status rule after the key that downloads the open chapter. The download runs in the background. The chapter is its number, such as 12.
 tui-reader-downloading = Download del capitolo { $chapter }
 
+# On a series page's chapter row, when the chapter was read or came out a week or more ago this year: the day and the month, as in "Read · 9 Nov". The month is the short month name.
+tui-read-row-date = { $day } { $month }
+
+# On a series page's chapter row, when the chapter was read or came out in an earlier year: the day, the short month name and the year, as in "Read · 9 Nov 2025".
+tui-read-row-date-year = { $day } { $month } { $year }
+
+# A row of the key reference on the series page: put the cursor back on the chapter to read next, the one in progress or the next unread. Its status line hint reads "chapters".
+tui-read-keys-next = Vai al capitolo da leggere dopo
+
+# A row of the reader settings: the space between a webtoon strip's images, None or Small.
+tui-reader-setting-strip-gap = Spazio tra immagini
+
+# A choice for how a page is fitted in the reader settings: the page fills the window's height and moves sideways when it is wider than the window.
+tui-reader-value-height = Altezza
+
+# After the page count in the reader's status line while the page fills the window's height and moves sideways.
+tui-reader-fit-height = Adatta altezza
+
+# A row of the command palette in the reader: a field for a page's number, then the jump to that page. Also the field's title.
+tui-reader-action-go-to-page = Vai alla pagina
+
+# Under the Go to page field: the pages it can go to.
+tui-reader-go-to-pages = Pagine da 1 a { $total }
+
+# Under the Go to page field in a strip, where each image counts as a page: the images it can go to.
+tui-reader-go-to-images = Immagini da 1 a { $total }
+
+# Hint in the Go to page field's footer: Enter goes to the page typed. Shown in lower case.
+tui-reader-hint-go = vai
+
+# In the reader, on a page that couldn't load, under "Couldn't load page 9": the server of the source answered with an HTTP error. The status is its code, such as 503.
+tui-reader-page-failed-status = La fonte ha risposto con un errore, { $status }.
+
+# In the reader, under "Couldn't open chapter 16": the source didn't answer the request. The source is its name.
+tui-reader-no-answer = { $source } non ha risposto.
+
+# In the reader, under "Couldn't open chapter 16": the source didn't answer, after a wait of some seconds. The source is its name; "s" is the short unit for seconds.
+tui-reader-no-answer-in = { $source } non ha risposto. Nessuna risposta in { $seconds } s.
+
 # Heading of the { -plugin-store } screens when the terminal is too small to draw them.
 stores-needs-larger-terminal = Serve un terminale più grande
 
