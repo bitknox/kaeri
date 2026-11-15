@@ -185,9 +185,8 @@ struct ReportSheet: View {
             isPresented: $exporting, document: exportDocument, contentType: .plainText,
             defaultFilename: logStats.map { ($0.fileName as NSString).deletingPathExtension }
         ) { result in
+            // Cancel calls nothing: every save sets `openAfterSave` again before it asks.
             if case .success(let url) = result { saved(url) } else { saveFailed() }
-        } onCancellation: {
-            openAfterSave = false
         }
         #endif
     }
