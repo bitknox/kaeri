@@ -2432,6 +2432,7 @@ mod reader_page_tests {
                 pick: RefCell::default(),
                 read_view_all: RefCell::default(),
                 read_view_all_from: RefCell::default(),
+                read_search_focus: RefCell::default(),
                 read_from_home: Cell::new(false),
             });
             let reader = crate::reading::reader::Reader::new(&ctx, Rc::new(|_: bool| {}));
