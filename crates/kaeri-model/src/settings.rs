@@ -40,6 +40,11 @@ pub enum SettingKey {
     Subtitles,
     CommitThreshold,
     AutoNext,
+    /// Whether the next episode's first seconds of video load during the ending on a limited
+    /// network (cellular, Low Data Mode, metered) too. Off by default: there only its streams,
+    /// subtitles and skip times are found ahead. Means nothing while [`Self::AutoNext`] is off,
+    /// so each app dims its row then, as it does Up next countdown's.
+    PreloadMetered,
     SkipOpening,
     /// Skip a recap by itself. Off by default, apart from the opening's own switch.
     SkipRecap,
@@ -215,7 +220,7 @@ impl SettingKey {
     /// The Settings screen's rows, in display order. Grouped by [`Self::category`] — the
     /// renderer draws a heading each time the category changes, so rows of one category must
     /// be contiguous here.
-    pub const ROWS: [Self; 50] = [
+    pub const ROWS: [Self; 51] = [
         Self::Theme,
         Self::Motion,
         Self::Titles,
@@ -225,6 +230,7 @@ impl SettingKey {
         Self::Subtitles,
         Self::CommitThreshold,
         Self::AutoNext,
+        Self::PreloadMetered,
         Self::SkipOpening,
         Self::SkipRecap,
         Self::AskWasOpening,
@@ -342,6 +348,7 @@ impl SettingKey {
             Self::Subtitles => (&["playback"], "subtitle_language"),
             Self::CommitThreshold => (&["playback"], "commit_threshold"),
             Self::AutoNext => (&["playback"], "auto_next"),
+            Self::PreloadMetered => (&["playback"], "preload_metered"),
             Self::SkipOpening => (&["playback"], "skip_opening"),
             Self::SkipRecap => (&["playback"], "skip_recap_auto"),
             Self::AskWasOpening => (&["playback"], "ask_was_opening"),
@@ -441,6 +448,7 @@ impl SettingKey {
             Self::Subtitles => dst.subtitle_language.clone_from(&src.subtitle_language),
             Self::CommitThreshold => dst.commit_threshold = src.commit_threshold,
             Self::AutoNext => dst.auto_next = src.auto_next,
+            Self::PreloadMetered => dst.preload_metered = src.preload_metered,
             Self::SkipOpening => dst.skip_opening = src.skip_opening,
             Self::SkipRecap => dst.skip_recap_auto = src.skip_recap_auto,
             Self::AskWasOpening => dst.ask_was_opening = src.ask_was_opening,
@@ -584,6 +592,7 @@ impl SettingKey {
             | Self::Subtitles
             | Self::CommitThreshold
             | Self::AutoNext
+            | Self::PreloadMetered
             | Self::SkipOpening
             | Self::SkipRecap
             | Self::AskWasOpening
@@ -665,6 +674,7 @@ impl SettingKey {
             Self::Subtitles => "subtitles",
             Self::CommitThreshold => "counts as watched at",
             Self::AutoNext => "auto-play next",
+            Self::PreloadMetered => "preload on metered",
             // With this on, the opening is skipped, not proposed. mpv shows
             // a note on its own OSD as it happens, which is a courtesy, not a prompt.
             Self::SkipOpening => "skip opening automatically",
@@ -1015,6 +1025,7 @@ pub fn step(
             V::Float(f64::from(step_through(&LADDER, current, delta)) / 100.0)
         }
         SettingKey::AutoNext => V::Bool(!playback.auto_next),
+        SettingKey::PreloadMetered => V::Bool(!playback.preload_metered),
         SettingKey::Upscaling => {
             const LADDER: [Upscaling; 3] =
                 [Upscaling::Off, Upscaling::Natural, Upscaling::Sharp];
@@ -1226,6 +1237,7 @@ pub fn put(config: &mut Config, key: SettingKey, value: &SettingValue) -> bool {
             playback.commit_threshold = *threshold;
         }
         (SettingKey::AutoNext, V::Bool(on)) => playback.auto_next = *on,
+        (SettingKey::PreloadMetered, V::Bool(on)) => playback.preload_metered = *on,
         (SettingKey::SkipOpening, V::Bool(on)) => playback.skip_opening = *on,
         (SettingKey::SkipRecap, V::Bool(on)) => playback.skip_recap_auto = *on,
         (SettingKey::AskWasOpening, V::Bool(on)) => playback.ask_was_opening = *on,
@@ -1477,6 +1489,7 @@ pub(crate) fn value(effective: &Config, saved: &Config, key: SettingKey) -> Stri
             format!("{}%", (playback.commit_threshold * 100.0).round())
         }
         SettingKey::AutoNext => on_off(playback.auto_next),
+        SettingKey::PreloadMetered => on_off(playback.preload_metered),
         SettingKey::SkipOpening => on_off(playback.skip_opening),
         SettingKey::SkipRecap => on_off(playback.skip_recap_auto),
         SettingKey::AskWasOpening => on_off(playback.ask_was_opening),
@@ -1661,6 +1674,7 @@ fn two_state(effective: &Config, saved: &Config, key: SettingKey) -> Option<bool
         S::PlayerUi => c.playback.player_ui == PlayerUi::Mpv,
         S::Motion => c.theme.motion,
         S::AutoNext => c.playback.auto_next,
+        S::PreloadMetered => c.playback.preload_metered,
         S::SkipOpening => c.playback.skip_opening,
         S::SkipRecap => c.playback.skip_recap_auto,
         S::AskWasOpening => c.playback.ask_was_opening,
