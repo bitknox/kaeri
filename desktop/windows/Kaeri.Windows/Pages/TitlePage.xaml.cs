@@ -1346,8 +1346,10 @@ public sealed partial class TitlePage : Page, IPageKeys
         });
     }
 
-    /// <summary>Whether two rows of one episode differ only in how far it was watched.</summary>
-    /// The marks of the people followed change in place too: they come with AniList's answer.
+    /// <summary>
+    /// Whether two rows of one episode differ only in how far it was watched, or in the marks of
+    /// the people followed, which come with AniList's answer and change in place too.
+    /// </summary>
     static bool OnlyProgress(EpisodeRow was, EpisodeRow now) =>
         !Differ(now with { Watched = was.Watched, Completed = was.Completed, SpoilerAhead = was.SpoilerAhead, PastProgress = was.PastProgress, Followed = was.Followed }, was);
 

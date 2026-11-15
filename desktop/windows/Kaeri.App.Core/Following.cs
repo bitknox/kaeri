@@ -96,7 +96,8 @@ public static class Following
     public static FollowedMark[] Union(IEnumerable<EpisodeRow> rows)
     {
         var seen = new HashSet<string>();
-        return [.. rows.SelectMany(r => r.Followed).Where(m => seen.Add(m.Name))];
+        // A row made with the record's defaults, as a test makes one, has no list at all.
+        return [.. rows.SelectMany(r => r.Followed ?? []).Where(m => seen.Add(m.Name))];
     }
 
     /// <summary>Whether two lists of marks show the same people, picture for picture.</summary>
