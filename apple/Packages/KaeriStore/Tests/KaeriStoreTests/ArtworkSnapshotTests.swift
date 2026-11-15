@@ -7,9 +7,11 @@ import Testing
 
 /// A cache the system lets go of everything in the moment a decode goes in, as `NSCache` may
 /// whenever memory runs short.
-final class PurgedCache: NSCache<NSString, Artwork>, @unchecked Sendable {
-    override func object(forKey key: NSString) -> Artwork? { nil }
-    override func setObject(_ art: Artwork, forKey key: NSString, cost: Int) {}
+final class PurgedCache: ArtworkCache, @unchecked Sendable {
+    var totalCostLimit = 0
+    func object(forKey key: NSString) -> Artwork? { nil }
+    func setObject(_ artwork: Artwork, forKey key: NSString, cost: Int) {}
+    func removeObject(forKey key: NSString) {}
 }
 
 @MainActor
