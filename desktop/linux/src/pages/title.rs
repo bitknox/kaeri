@@ -35,6 +35,16 @@ use crate::{
 
 /// The banner's tallest height: the band the head stands over.
 const BAND: i32 = 328;
+/// Where the head stands without a trailer: its top, and below it the cover's at 148.
+const HEAD_TOP: i32 = 120;
+/// Where the cover's top stands when a trailer may play: 100 lower, beside the video's lower part,
+/// with the title 30 under the video (at 340, 92 below the cover's top) and its line ending 16
+/// before the sound button, 80 from the band's end (44 more than the head's own 36).
+const ROOM_COVER_TOP: i32 = 248;
+const ROOM_TITLE_DROP: i32 = 92;
+const ROOM_TEXT_END: i32 = 44;
+/// The head's own space above its line of cover and text.
+const LINE_TOP: i32 = 18;
 
 /// How far a watched episode's still dims.
 const WATCHED: f64 = 0.55;
@@ -95,6 +105,14 @@ struct Page {
     navigation: glib::WeakRef<adw::NavigationPage>,
     banner: gtk::Box,
     banner_filled: Cell<bool>,
+    /// The band's art, kept so a trailer can be laid under it.
+    banner_art: RefCell<Option<crate::fit::Fit>>,
+    /// The banner and the head, one cell of a grid, where the trailer's sound button hangs too.
+    top: gtk::Grid,
+    /// Whether a trailer may play on this visit, decided once: none until the page knows.
+    room: Cell<Option<bool>>,
+    /// The trailer under the band's art, when one may play.
+    trailer: RefCell<Option<Rc<crate::trailer::PageTrailer>>>,
     head: gtk::Box,
     side: gtk::Box,
     seasons: gtk::Box,
@@ -255,7 +273,7 @@ pub fn page(ctx: &Rc<Ctx>, id: AnilistId) -> adw::NavigationPage {
     let banner_slot = gtk::Box::new(gtk::Orientation::Vertical, 0);
     banner_slot.set_valign(gtk::Align::Start);
     head.set_valign(gtk::Align::End);
-    head.set_margin_top(120);
+    head.set_margin_top(HEAD_TOP);
     head.set_margin_start(36);
     head.set_margin_end(36);
     let head_clamp = adw::Clamp::builder()
@@ -323,6 +341,10 @@ pub fn page(ctx: &Rc<Ctx>, id: AnilistId) -> adw::NavigationPage {
         navigation: navigation.downgrade(),
         banner: banner_slot,
         banner_filled: Cell::new(false),
+        banner_art: RefCell::default(),
+        top,
+        room: Cell::new(None),
+        trailer: RefCell::default(),
         head,
         side,
         seasons,
@@ -370,6 +392,20 @@ pub fn page(ctx: &Rc<Ctx>, id: AnilistId) -> adw::NavigationPage {
         move |adjustment| {
             if let Some(page) = weak.upgrade() {
                 page.title_shown(adjustment.value());
+                let trailer = page.trailer.borrow().clone();
+                if let Some(trailer) = trailer {
+                    trailer.scrolled(adjustment.value());
+                }
+            }
+        }
+    });
+    // The page has slid in: whether a trailer may play is decided now if it was not yet, and
+    // one that may loads once the page has settled. Coming back to the page settles it again.
+    navigation.connect_shown({
+        let weak = Rc::downgrade(&page);
+        move |_| {
+            if let Some(page) = weak.upgrade() {
+                page.transition_ended();
             }
         }
     });
@@ -406,6 +442,9 @@ pub fn page(ctx: &Rc<Ctx>, id: AnilistId) -> adw::NavigationPage {
         if let Some(id) = page.listening.borrow_mut().take() {
             page.ctx.hub.forget(id);
         }
+        if let Some(trailer) = page.trailer.borrow_mut().take() {
+            trailer.release();
+        }
         // The pick this page was opened by ends with it.
         let mut pick = page.ctx.pick.borrow_mut();
         if pick.as_ref().is_some_and(|p| p.id == page.id) {
@@ -416,6 +455,50 @@ pub fn page(ctx: &Rc<Ctx>, id: AnilistId) -> adw::NavigationPage {
 }
 
 impl Page {
+    /// Whether a trailer may play on this visit: this wide window, and a title whose trailer the
+    /// engine lets start by itself here (Play trailers, the network, power saver, animations).
+    /// Decided once, so the head never moves: with the first entry that has its detail (the
+    /// trailer rides it), or with what is known when the page has slid in (`last`).
+    fn decide_trailer(&self, entry: &Entry, last: bool) {
+        if self.room.get().is_some() {
+            return;
+        }
+        let wide = *self.sized.borrow() == Size::Wide;
+        let room = wide && crate::trailer::may_autoplay(&self.ctx.hub, entry);
+        if !room && entry.detail.is_none() && !last {
+            return;
+        }
+        self.room.set(Some(room));
+        let art = self.banner_art.borrow().clone();
+        if let (true, Some(art)) = (room, art) {
+            self.banner.remove(&art);
+            let trailer = crate::trailer::PageTrailer::new(&self.ctx, self.id, &art);
+            self.banner.append(&trailer.stage.widget);
+            // The sound button hangs under the video's corner, over the head's layer.
+            self.top.attach(&trailer.sound, 0, 0, 1, 1);
+            self.trailer.replace(Some(trailer));
+        }
+    }
+
+    /// The page's transition has ended.
+    fn transition_ended(&self) {
+        if self.room.get().is_none() {
+            match self.ctx.hub.entry(self.id) {
+                Some(entry) => {
+                    self.decide_trailer(&entry, true);
+                    if self.room.get() == Some(true) {
+                        self.fill(&entry);
+                    }
+                }
+                None => self.room.set(Some(false)),
+            }
+        }
+        let trailer = self.trailer.borrow().clone();
+        if let Some(trailer) = trailer {
+            trailer.settle_soon();
+        }
+    }
+
     /// The header bar's title, shown once the page's heading has scrolled under it.
     fn title_shown(&self, scrolled: f64) {
         let gone = self.heading.borrow().as_ref().and_then(|heading| {
@@ -581,6 +664,10 @@ impl Page {
             self.fill(&entry);
         }
         self.draw_episodes();
+        let trailer = self.trailer.borrow().clone();
+        if let Some(trailer) = trailer {
+            trailer.resized(size);
+        }
     }
 
     /// The page's own actions: the status menu and More.
@@ -766,11 +853,22 @@ impl Page {
         if !self.banner_filled.replace(true) {
             let fit = widgets::faded_banner(hub, entry, BAND);
             self.banner.append(&fit);
+            self.banner_art.replace(Some(fit));
         }
+        self.decide_trailer(entry, false);
+        // With room for a trailer the head stands lower, from the top, so the title sits under
+        // the video and the sound button; without, it stands on the band's foot.
+        let room = self.room.get() == Some(true) && size == Size::Wide;
+        self.head.set_valign(if room { gtk::Align::Start } else { gtk::Align::End });
+        self.head.set_margin_top(if room { ROOM_COVER_TOP - LINE_TOP } else { HEAD_TOP });
         let id = entry.id.get();
 
         let text = gtk::Box::new(gtk::Orientation::Vertical, 6);
-        text.set_valign(gtk::Align::End);
+        text.set_valign(if room { gtk::Align::Start } else { gtk::Align::End });
+        if room {
+            text.set_margin_top(ROOM_TITLE_DROP);
+            text.set_margin_end(ROOM_TEXT_END);
+        }
         text.set_hexpand(true);
         let title = widgets::show_title(&entry.title, "page");
         text.append(&title);
@@ -1000,9 +1098,13 @@ impl Page {
         }
 
         let line = gtk::Box::new(gtk::Orientation::Horizontal, 20);
-        line.set_margin_top(18);
+        line.set_margin_top(LINE_TOP);
         if !narrow {
-            line.append(&widgets::cover(hub, entry, 120, 180));
+            let cover = widgets::cover(hub, entry, 120, 180);
+            if room {
+                cover.set_valign(gtk::Align::Start);
+            }
+            line.append(&cover);
         }
         line.append(&text);
         self.head.append(&line);
@@ -1484,6 +1586,11 @@ impl Page {
     fn say_typed(&self, words: Option<&str>) {
         match words {
             Some(words) => {
+                // Nothing is drawn over a playing trailer: the capsule's place is over the video.
+                let trailer = self.trailer.borrow().clone();
+                if let Some(trailer) = trailer {
+                    trailer.stop();
+                }
                 self.capsule.set_attributes(None);
                 self.capsule.set_label(words);
                 if !self.capsule.is_visible() {
