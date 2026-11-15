@@ -1011,6 +1011,11 @@ pub struct MetaConfig {
     /// service, one request per title you open (`api.ani.zip`, asked the title's AniList id).
     /// On unless switched off.
     pub episode_text: bool,
+    /// Show where the people the signed-in AniList viewer follows are in a show, on its page and
+    /// its episodes. This device's alone, never synced: a TV in a shared room can hide the names
+    /// while a laptop shows them. Off, a title page's request leaves them out. On unless
+    /// switched off.
+    pub following: bool,
 }
 
 impl Default for MetaConfig {
@@ -1023,6 +1028,7 @@ impl Default for MetaConfig {
             discussion_images: false,
             calendar_mine: false,
             episode_text: true,
+            following: true,
         }
     }
 }
@@ -1800,6 +1806,13 @@ mod tests {
         assert_eq!(Config::default().language, None);
         let cfg = Config::from_toml("language = \"da\"\n[theme]\nmotion = false").unwrap();
         assert_eq!(cfg.language.as_deref(), Some("da"));
+    }
+
+    #[test]
+    fn people_followed_show_until_the_file_turns_them_off() {
+        assert!(Config::default().meta.following);
+        let cfg = Config::from_toml("[meta]\nfollowing = false").unwrap();
+        assert!(!cfg.meta.following);
     }
 
     #[test]

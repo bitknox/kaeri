@@ -545,6 +545,7 @@ async fn the_viewers_controls_tell_the_player_what_the_golden_says() {
                 past_progress: false,
                 spoiler_ahead: false,
                 synopsis_pending: false,
+                followed: Vec::new(),
             })
             .collect();
         for command in [

@@ -12099,6 +12099,12 @@ settings-opds-port = Feed-Port
 # Settings row: whether leaving the app while an episode plays opens the system's floating window. The engine's label, and the Android row's. Sentence case, as Android writes it.
 settings-label-picture-in-picture-on-leave = Bild-im-Bild beim Verlassen der App
 
+# Switch under the AniList account, on by default, for this device only: whether title pages show the people followed on AniList.
+settings-anilist-following = Personen anzeigen, denen du folgst
+
+# Note under that switch.
+settings-anilist-following-footer = Zeigt bei einer Serie, auf ihrer Seite und bei ihren Folgen, wo Personen stehen, denen du auf AniList folgst. Wer deine eigene Liste sehen kann, legst du auf AniList fest.
+
 # Label of the address field in the Add a server sheet.
 book-server-address = Adresse
 
@@ -14172,6 +14178,31 @@ more-followed-score = { $score }/10
 
 # Heading of the list of titles people who liked this one also liked.
 more-like-this = Andere mögen auch
+
+# Button after the first five people followed, on wide screens. It shows the rest in place.
+following-show-all = Alle { $count } zeigen
+
+# Second line of the People you follow row on phones and the TV, with three or more people: two names, then how many more. The names come from AniList.
+following-names =
+    { $more ->
+        [one] { $first }, { $second } und { $more } weitere Person
+       *[other] { $first }, { $second } und { $more } weitere
+    }
+
+# Second line of the People you follow row on phones and the TV, with two people. The names come from AniList.
+following-names-two = { $first } und { $second }
+
+# After three pictures on an episode's mark, and after three names in the terminal: how many more people stopped there.
+following-mark-more = +{ $count }
+
+# Tooltip on an episode's mark, and the sentence a screen reader adds to the episode row: who stopped at this episode. The names are already joined.
+following-mark-spoken = { $names } hat bis hier geschaut.
+
+# What a screen reader says in place of a score such as 8/10 beside a person followed.
+following-score-spoken = Wertung { $score } von 10
+
+# Hint of the People you follow row on phones and the TV, which opens the full list.
+following-open-help = Zeigt, wo jede Person steht.
 
 # Line of a followed person's list entry: their status and how far they are. Both are already worded.
 more-followed-progress = { $status } · { $progress }

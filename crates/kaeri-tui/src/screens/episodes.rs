@@ -170,6 +170,18 @@ pub(super) fn render_episodes(buf: &mut Buffer, app: &App, area: Rect) -> Option
     let meter_width =
         (table.width.saturating_sub(cols.state + 2 + tag_room.unwrap_or(4) as u16)).min(10)
             as usize;
+    // Who the viewer follows stopped at each row, in a column of their own before the run time,
+    // so the names line up down the table. Only as wide as the longest needs, and only when the
+    // title keeps most of its room.
+    let marks: Vec<String> =
+        app.episodes.iter().map(|row| followed_text(&row.followed)).collect();
+    let marks_width = marks.iter().map(|m| m.cells()).max().unwrap_or(0).min(MARKS_MAX);
+    let full_title = (cols.runtime - cols.title).saturating_sub(2) as usize;
+    let marks_width = if marks_width > 0 && full_title >= marks_width + 2 + MIN_TITLE {
+        marks_width
+    } else {
+        0
+    };
     let mut next_y = body_top;
     for (i, episode) in app.episodes.iter().enumerate().skip(first) {
         if let Some(heading) = &headings[i] {
@@ -208,7 +220,15 @@ pub(super) fn render_episodes(buf: &mut Buffer, app: &App, area: Rect) -> Option
             number_style,
         );
 
-        let title_room = (cols.runtime - cols.title).saturating_sub(2) as usize;
+        let title_room = full_title - if marks_width > 0 { marks_width + 2 } else { 0 };
+        if marks_width > 0 && !marks[i].is_empty() {
+            buf.set_string(
+                table.left() + cols.runtime - 2 - marks_width as u16,
+                y,
+                truncate(&marks[i], marks_width),
+                app.palette.style(Role::State),
+            );
+        }
         // An episode AniList has no title for is named by its number, not a lone dash.
         let untitled;
         let title = match episode.title.as_deref() {
@@ -278,6 +298,24 @@ pub(super) fn render_episodes(buf: &mut Buffer, app: &App, area: Rect) -> Option
         }
     }
     Some(first)
+}
+
+/// The widest the column of names who stopped at a row gets.
+const MARKS_MAX: usize = 30;
+
+/// The people who stopped at a row, as its end names them: three names, then how many more.
+/// No scores, as on every platform's rows.
+pub(crate) fn followed_text(marks: &[kaeri_model::episodes::FollowedMark]) -> String {
+    if marks.is_empty() {
+        return String::new();
+    }
+    let names: Vec<&str> = marks.iter().take(3).map(|mark| mark.name.as_str()).collect();
+    let mut text = format!("{} {}", glyph::FOLLOWED, names.join(", "));
+    if marks.len() > 3 {
+        text.push(' ');
+        text.push_str(&t::following_mark_more(marks.len() as i64 - 3));
+    }
+    text
 }
 
 /// The heading line before each row that opens a range of a long show: "Episodes 301 to 400",
@@ -601,6 +639,36 @@ mod tests {
         let geometry = layout::compute(Rect::new(0, 0, 110, 20), app.nav.rail_width());
         assert!(geometry.rail.width <= 3);
         assert!(geometry.stage.width >= 100);
+    }
+
+    #[test]
+    fn a_row_names_who_stopped_there_three_then_how_many_more() {
+        let mark = |name: &str| kaeri_model::episodes::FollowedMark {
+            name: name.into(),
+            avatar_url: None,
+        };
+        let mut app = app_with(ContentList::Entries(vec![entry(1, "Hoshikuzu")]));
+        app.handle(crate::keymap::Action::Open, 20);
+        app.detail = app.selected_entry().cloned();
+        app.nav.push(StageView::Episodes(AnilistId::new(1)));
+        let mut eight = episode("8", "Night Flight", 0.0, false);
+        eight.followed = ["Ines", "Lumi", "Dario", "Oskar"].map(mark).to_vec();
+        let mut ten = episode("10", "Mainland Light", 0.0, false);
+        ten.followed = vec![mark("SannaQ")];
+        app.apply(app.episodes_here(vec![
+            episode("7", "The Gull Kite", 0.0, false),
+            eight,
+            ten,
+        ]));
+        let text = text_of(&render_to_buffer(&mut app, 120, 20));
+        let line =
+            |n: &str| text.lines().find(|l| l.contains(n)).unwrap_or_default().to_owned();
+        assert!(line("Night Flight").contains("◆ Ines, Lumi, Dario +1"), "{text}");
+        assert!(line("Mainland Light").contains("◆ SannaQ"), "{text}");
+        assert!(!line("The Gull Kite").contains('◆'));
+        // The names sit in one column, so they line up down the table.
+        let at = |n: &str| line(n).find('◆');
+        assert_eq!(at("Night Flight"), at("Mainland Light"));
     }
 
     /// An app sitting on the episodes overlay, the way the table tests set it up.

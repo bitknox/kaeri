@@ -3659,6 +3659,8 @@
     <string name="settings_opds_password">Contraseña del catálogo</string>
     <string name="settings_opds_port">Puerto del catálogo</string>
     <string name="settings_label_picture_in_picture_on_leave">Imagen en imagen al salir de la app</string>
+    <string name="settings_anilist_following">Mostrar a quienes sigues</string>
+    <string name="settings_anilist_following_footer">Muestra en qué parte de una serie van las personas que sigues en AniList, en su página y en sus episodios. Quién puede ver tu propia lista se configura en AniList.</string>
     <string name="book_server_address">Dirección</string>
     <string name="book_server_address_hint">Una dirección, o el enlace OPDS completo de Kavita.</string>
     <string name="book_server_kavita_key">Este es un enlace OPDS de Kavita. Su clave inicia tu sesión, así que no hace falta contraseña.</string>
@@ -4418,6 +4420,17 @@
     <string name="more_following_note">Desde AniList</string>
     <string name="more_followed_score">%1$,d/10</string>
     <string name="more_like_this">Títulos similares</string>
+    <string name="following_show_all">Ver los %1$,d</string>
+    <plurals name="following_names">
+        <item quantity="one">%1$s, %2$s y %3$,d más</item>
+        <item quantity="many">%1$s, %2$s y %3$,d más</item>
+        <item quantity="other">%1$s, %2$s y %3$,d más</item>
+    </plurals>
+    <string name="following_names_two">%1$s y %2$s</string>
+    <string name="following_mark_more">+%1$,d</string>
+    <string name="following_mark_spoken">%1$s vio hasta aquí.</string>
+    <string name="following_score_spoken">Puntuación %1$,d de 10</string>
+    <string name="following_open_help">Muestra en qué parte va cada persona.</string>
     <string name="more_followed_progress">%1$s · %2$s</string>
     <string name="more_empty">AniList todavía no tiene reparto, equipo ni recomendaciones para este título.</string>
     <string name="more_spoiler">Spoiler</string>

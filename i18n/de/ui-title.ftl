@@ -80,6 +80,16 @@ more-following = Personen, denen du folgst
 more-following-note = Von AniList
 more-followed-score = { $score }/10
 more-like-this = Andere mögen auch
+following-show-all = Alle { $count } zeigen
+following-names = { $more ->
+    [one] { $first }, { $second } und { $more } weitere Person
+   *[other] { $first }, { $second } und { $more } weitere
+ }
+following-names-two = { $first } und { $second }
+following-mark-more = +{ $count }
+following-mark-spoken = { $names } hat bis hier geschaut.
+following-score-spoken = Wertung { $score } von 10
+following-open-help = Zeigt, wo jede Person steht.
 more-followed-progress = { $status } · { $progress }
 more-empty = AniList hat für diese Serie noch keine Besetzung, keinen Stab und keine Empfehlungen.
 more-spoiler = Spoiler

@@ -79,6 +79,15 @@ more-following = Người bạn theo dõi
 more-following-note = Từ AniList
 more-followed-score = { $score }/10
 more-like-this = Tác phẩm tương tự
+following-show-all = Hiện cả { $count }
+following-names = { $more ->
+   *[other] { $first }, { $second } và { $more } người khác
+ }
+following-names-two = { $first } và { $second }
+following-mark-more = +{ $count }
+following-mark-spoken = { $names } đã xem đến đây.
+following-score-spoken = Điểm { $score }/10
+following-open-help = Cho biết mỗi người đang xem đến đâu.
 more-followed-progress = { $status } · { $progress }
 more-empty = AniList chưa có diễn viên, đội ngũ sản xuất hay đề xuất cho tác phẩm này.
 more-spoiler = Tiết lộ

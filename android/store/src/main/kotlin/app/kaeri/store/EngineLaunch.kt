@@ -303,6 +303,12 @@ enum class FixtureScene {
     /** [WATCHING] with three profiles, one of them a kids profile. */
     PROFILES,
 
+    /** [WATCHING] with the people the viewer follows on AniList: ten on the first title, five on the airing one. */
+    FOLLOWING,
+
+    /** [FOLLOWING] with AniList slow to answer a title page, so the people's placeholders show first. */
+    FOLLOWING_SLOW,
+
     /** A first launch with reading on: Watch, read or both on page 2. */
     READING_FIRST_RUN,
 

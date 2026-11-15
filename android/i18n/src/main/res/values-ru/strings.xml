@@ -3791,6 +3791,8 @@
     <string name="settings_opds_password">Пароль ленты</string>
     <string name="settings_opds_port">Порт ленты</string>
     <string name="settings_label_picture_in_picture_on_leave">«Картинка в картинке» при выходе из приложения</string>
+    <string name="settings_anilist_following">Показывать тех, на кого вы подписаны</string>
+    <string name="settings_anilist_following_footer">Показывает на странице сериала и у его эпизодов, где сейчас те, на кого вы подписаны в AniList. Кто видит ваш собственный список, настраивается в AniList.</string>
     <string name="book_server_address">Адрес</string>
     <string name="book_server_address_hint">Адрес или вся ссылка OPDS из Kavita.</string>
     <string name="book_server_kavita_key">Это ссылка OPDS из Kavita. Ключ в ней служит для входа, поэтому пароль не нужен.</string>
@@ -4574,6 +4576,18 @@
     <string name="more_following_note">Из AniList</string>
     <string name="more_followed_score">%1$,d/10</string>
     <string name="more_like_this">Похожие тайтлы</string>
+    <string name="following_show_all">Показать все %1$,d</string>
+    <plurals name="following_names">
+        <item quantity="one">%1$s, %2$s и ещё %3$,d</item>
+        <item quantity="few">%1$s, %2$s и ещё %3$,d</item>
+        <item quantity="many">%1$s, %2$s и ещё %3$,d</item>
+        <item quantity="other">%1$s, %2$s и ещё %3$,d</item>
+    </plurals>
+    <string name="following_names_two">%1$s и %2$s</string>
+    <string name="following_mark_more">+%1$,d</string>
+    <string name="following_mark_spoken">%1$s: просмотрено до этого места.</string>
+    <string name="following_score_spoken">Оценка %1$,d из 10</string>
+    <string name="following_open_help">Показывает, где сейчас каждый.</string>
     <string name="more_followed_progress">%1$s · %2$s</string>
     <string name="more_empty">У AniList пока нет актёров, создателей и рекомендаций для этого тайтла.</string>
     <string name="more_spoiler">Спойлер</string>

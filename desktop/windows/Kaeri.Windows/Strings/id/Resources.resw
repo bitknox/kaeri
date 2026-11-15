@@ -8702,6 +8702,12 @@
   <data name="SettingsLabelPictureInPictureOnLeave" xml:space="preserve">
     <value>Gambar dalam gambar saat keluar dari aplikasi</value>
   </data>
+  <data name="SettingsAnilistFollowing" xml:space="preserve">
+    <value>Tampilkan orang yang diikuti</value>
+  </data>
+  <data name="SettingsAnilistFollowingFooter" xml:space="preserve">
+    <value>Menampilkan sampai mana orang yang diikuti di AniList menonton sebuah acara, di halamannya dan episodenya. Siapa yang bisa melihat daftar sendiri diatur di AniList.</value>
+  </data>
   <data name="BookServerAddress" xml:space="preserve">
     <value>Alamat</value>
   </data>
@@ -10687,6 +10693,27 @@
   </data>
   <data name="MoreLikeThis" xml:space="preserve">
     <value>Serupa</value>
+  </data>
+  <data name="FollowingShowAll" xml:space="preserve">
+    <value>Tampilkan semua {count}</value>
+  </data>
+  <data name="FollowingNames_other" xml:space="preserve">
+    <value>{first}, {second}, dan {more} lainnya</value>
+  </data>
+  <data name="FollowingNamesTwo" xml:space="preserve">
+    <value>{first} dan {second}</value>
+  </data>
+  <data name="FollowingMarkMore" xml:space="preserve">
+    <value>+{count}</value>
+  </data>
+  <data name="FollowingMarkSpoken" xml:space="preserve">
+    <value>{names} menonton sampai sini.</value>
+  </data>
+  <data name="FollowingScoreSpoken" xml:space="preserve">
+    <value>Skor {score} dari 10</value>
+  </data>
+  <data name="FollowingOpenHelp" xml:space="preserve">
+    <value>Menampilkan sampai mana masing-masing.</value>
   </data>
   <data name="MoreFollowedProgress" xml:space="preserve">
     <value>{status} · {progress}</value>

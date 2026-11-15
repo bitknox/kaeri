@@ -3395,6 +3395,8 @@
     <string name="settings_opds_password">Kata sandi feed</string>
     <string name="settings_opds_port">Port feed</string>
     <string name="settings_label_picture_in_picture_on_leave">Gambar dalam gambar saat keluar dari aplikasi</string>
+    <string name="settings_anilist_following">Tampilkan orang yang diikuti</string>
+    <string name="settings_anilist_following_footer">Menampilkan sampai mana orang yang diikuti di AniList menonton sebuah acara, di halamannya dan episodenya. Siapa yang bisa melihat daftar sendiri diatur di AniList.</string>
     <string name="book_server_address">Alamat</string>
     <string name="book_server_address_hint">Sebuah alamat, atau seluruh tautan OPDS dari Kavita.</string>
     <string name="book_server_kavita_key">Ini tautan OPDS Kavita. Kuncinya dipakai untuk masuk, jadi tidak perlu kata sandi.</string>
@@ -4106,6 +4108,15 @@
     <string name="more_following_note">Dari AniList</string>
     <string name="more_followed_score">%1$,d/10</string>
     <string name="more_like_this">Serupa</string>
+    <string name="following_show_all">Tampilkan semua %1$,d</string>
+    <plurals name="following_names">
+        <item quantity="other">%1$s, %2$s, dan %3$,d lainnya</item>
+    </plurals>
+    <string name="following_names_two">%1$s dan %2$s</string>
+    <string name="following_mark_more">+%1$,d</string>
+    <string name="following_mark_spoken">%1$s menonton sampai sini.</string>
+    <string name="following_score_spoken">Skor %1$,d dari 10</string>
+    <string name="following_open_help">Menampilkan sampai mana masing-masing.</string>
     <string name="more_followed_progress">%1$s · %2$s</string>
     <string name="more_empty">AniList belum memiliki data pemeran, staf, atau rekomendasi untuk tayangan ini.</string>
     <string name="more_spoiler">Spoiler</string>

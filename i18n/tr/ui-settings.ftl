@@ -231,3 +231,6 @@ settings-opds-feed = Bu ağda paylaş
 settings-opds-password = Akış parolası
 settings-opds-port = Akış portu
 settings-label-picture-in-picture-on-leave = Uygulamadan çıkarken pencere içinde pencere
+
+settings-anilist-following = Takip ettiklerini göster
+settings-anilist-following-footer = AniList'te takip ettiğin kişilerin bir dizide nerede olduğunu, dizinin sayfasında ve bölümlerinde gösterir. Kendi listeni kimlerin görebileceği AniList'te ayarlanır.

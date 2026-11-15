@@ -579,6 +579,7 @@ fn as_rows(episodes: &[EpisodeProgress]) -> Vec<EpisodeRow> {
             past_progress: false,
             spoiler_ahead: false,
             synopsis_pending: false,
+            followed: Vec::new(),
         })
         .collect()
 }
@@ -621,6 +622,7 @@ mod tests {
             past_progress: false,
             spoiler_ahead: false,
             synopsis_pending: false,
+            followed: Vec::new(),
         }
     }
 

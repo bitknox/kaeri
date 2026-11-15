@@ -1060,6 +1060,7 @@ mod tests {
                 past_progress: false,
                 spoiler_ahead: false,
                 synopsis_pending: false,
+                followed: Vec::new(),
             })
             .collect();
         assert_eq!(following(&rows, "1").as_deref(), Some("2"));

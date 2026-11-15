@@ -229,3 +229,6 @@ settings-opds-feed = このネットワークで共有
 settings-opds-password = フィードのパスワード
 settings-opds-port = フィードのポート
 settings-label-picture-in-picture-on-leave = アプリを離れるときにピクチャー イン ピクチャー
+
+settings-anilist-following = フォロー中の人を表示
+settings-anilist-following-footer = AniListでフォローしている人がどこまで観ているかを、作品のページとエピソードに表示します。自分のリストを誰が見られるかはAniListで設定します。

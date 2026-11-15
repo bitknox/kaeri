@@ -519,6 +519,12 @@ impl Engine {
         }
         // Home's first screen goes first: AniList's background work waits for it.
         services.meta.anilist().launching();
+        // A title page asks after the people the viewer follows as the tracker's viewer, while
+        // this device's switch is on.
+        if let Some(anilist) = services.sync.anilist.as_ref() {
+            services.meta.anilist().follows_as(anilist.client());
+        }
+        services.meta.anilist().show_following(state.config.effective().meta.following);
         // How titles are named: the setting, and under `anilist` the signed-in viewer's own
         // choice, which comes with the viewer lookup the library pull makes anyway.
         services.meta.titles().choose(state.config.effective().meta.title_language);
@@ -1208,6 +1214,9 @@ impl Actor {
     fn forward(&mut self, mut event: Event, played: Option<Played>) {
         // Named as the titles are shown now, before the record takes the names in.
         crate::title_language::retitle(&mut event, self.services.meta.titles().language());
+        // Where the people the viewer follows stopped, on the episode rows; a table marked again
+        // when its page brings them after it, said right after the page.
+        let marked = self.state.followed.pass(&mut event);
         // A show whose episode starts, or is finished: keep next tops that show up.
         let kept = match &event {
             Event::PlaybackStaged { id, .. } | Event::CastStaged { id, .. } => Some(*id),
@@ -1243,6 +1252,7 @@ impl Actor {
         let watched = played.clone().filter(|_| matches!(event, Event::ProgressQueued));
         let after = self.follow(&mut event, played.as_ref());
         self.pass_on(event);
+        marked.into_iter().for_each(|said| self.pass_on(said));
         after.into_iter().for_each(|said| self.pass_on(said));
         // An episode counted as watched: its discussion opens from now on, and is looked up.
         if let Some(played) = watched.as_ref() {

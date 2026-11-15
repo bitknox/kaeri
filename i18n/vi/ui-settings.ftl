@@ -229,3 +229,6 @@ settings-opds-feed = Chia sẻ trong mạng này
 settings-opds-password = Mật khẩu của feed
 settings-opds-port = Cổng của feed
 settings-label-picture-in-picture-on-leave = Hình trong hình khi rời ứng dụng
+
+settings-anilist-following = Hiện người bạn theo dõi
+settings-anilist-following-footer = Cho biết những người bạn theo dõi trên AniList đang xem đến đâu trong một bộ, trên trang và các tập của bộ đó. Ai xem được danh sách của bạn được đặt trên AniList.

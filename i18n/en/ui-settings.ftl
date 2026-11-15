@@ -763,3 +763,9 @@ settings-opds-port = Feed port
 # Settings row: whether leaving the app while an episode plays opens the system's floating window. The engine's label, and the Android row's. Sentence case, as Android writes it.
 # @max 56
 settings-label-picture-in-picture-on-leave = Picture in picture when leaving the app
+
+# Switch under the AniList account, on by default, for this device only: whether title pages show the people followed on AniList.
+settings-anilist-following = Show people you follow
+
+# Note under that switch.
+settings-anilist-following-footer = Shows where people you follow on AniList are in a show, on its page and its episodes. Who can see your own list is set on AniList.

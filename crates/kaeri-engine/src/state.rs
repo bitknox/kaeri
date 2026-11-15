@@ -111,6 +111,9 @@ pub struct EngineState {
     /// Keep next: whether it runs, and the top-up asked for while one runs. See
     /// [`crate::downloads::ahead`].
     pub ahead: crate::downloads::ahead::Ahead,
+    /// The people the viewer follows, put on the episode rows on their way out: see
+    /// [`crate::followed`].
+    pub followed: crate::followed::Followed,
     /// Search's kept answers and the search waiting or running: see
     /// [`crate::catalog::search::Searches`].
     pub search: crate::catalog::search::Searches,
@@ -182,6 +185,7 @@ impl EngineState {
             gated: None,
             episode_check: Arc::default(),
             ahead: Default::default(),
+            followed: Default::default(),
             search: Default::default(),
             dubs: Default::default(),
             picks: Default::default(),

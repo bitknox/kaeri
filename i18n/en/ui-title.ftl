@@ -293,6 +293,38 @@ more-followed-score = { $score }/10
 # Heading of the list of titles people who liked this one also liked.
 more-like-this = More like this
 
+# Button after the first five people followed, on wide screens. It shows the rest in place.
+# @arg count: int
+following-show-all = Show all { $count }
+
+# Second line of the People you follow row on phones and the TV, with three or more people: two names, then how many more. The names come from AniList.
+# @arg first: text
+# @arg second: text
+# @arg more: int
+following-names = { $more ->
+   *[other] { $first }, { $second } and { $more } more
+ }
+
+# Second line of the People you follow row on phones and the TV, with two people. The names come from AniList.
+# @arg first: text
+# @arg second: text
+following-names-two = { $first } and { $second }
+
+# After three pictures on an episode's mark, and after three names in the terminal: how many more people stopped there.
+# @arg count: int
+following-mark-more = +{ $count }
+
+# Tooltip on an episode's mark, and the sentence a screen reader adds to the episode row: who stopped at this episode. The names are already joined.
+# @arg names: text
+following-mark-spoken = { $names } watched up to here.
+
+# What a screen reader says in place of a score such as 8/10 beside a person followed.
+# @arg score: int
+following-score-spoken = Score { $score } out of 10
+
+# Hint of the People you follow row on phones and the TV, which opens the full list.
+following-open-help = Shows where each of them is.
+
 # Line of a followed person's list entry: their status and how far they are. Both are already worded.
 # @arg status: text
 # @arg progress: text

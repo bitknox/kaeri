@@ -7448,6 +7448,48 @@
     "by": "agent",
     "at": "2026-11-05"
   },
+  "following-mark-more": {
+    "source": "5bc9c34fe675",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
+  },
+  "following-mark-spoken": {
+    "source": "8fe2fd41bfc0",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
+  },
+  "following-names": {
+    "source": "8f615fe80092",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
+  },
+  "following-names-two": {
+    "source": "2210cc318940",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
+  },
+  "following-open-help": {
+    "source": "e3018e5e4a82",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
+  },
+  "following-score-spoken": {
+    "source": "cf771f1bf94d",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
+  },
+  "following-show-all": {
+    "source": "750d1d368b17",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
+  },
   "format-movie": {
     "source": "e35de1f96af7",
     "state": "draft",
@@ -23924,6 +23966,18 @@
     "state": "draft",
     "by": "haiku",
     "at": "2026-10-31"
+  },
+  "settings-anilist-following": {
+    "source": "ba920012f13c",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
+  },
+  "settings-anilist-following-footer": {
+    "source": "e35ac1816c51",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
   },
   "settings-anilist-footer": {
     "source": "721f6827a780",

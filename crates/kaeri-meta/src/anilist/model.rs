@@ -609,14 +609,17 @@ pub struct Media {
     pub staff: StaffConnection,
     /// People the signed-in viewer follows who have the title on a list, newest update first.
     /// Not a field of AniList's `Media`: the detail fetch asks for it beside the title when
-    /// someone is signed in, and puts it here. Never written to the cache, so a sign-out leaves
-    /// nothing of it behind.
-    #[serde(default, skip_serializing)]
-    pub following: Vec<Follower>,
+    /// someone is signed in and the switch is on, and puts it here. `None` when it was not
+    /// asked, as for every list's answer; `Some` and empty when nobody followed has the title.
+    ///
+    /// Kept with the cached page, so offline shows what the page last had, until a sign-out or
+    /// the switch turned off takes it out of the cache ([`kaeri_store::Store::forget_following`]).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub following: Option<Vec<Follower>>,
 }
 
 /// One person the viewer follows, with their entry for a title.
-#[derive(Debug, Clone, Default, Deserialize, PartialEq)]
+#[derive(Debug, Clone, Default, Deserialize, Serialize, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub struct Follower {
     #[serde(default)]
@@ -633,7 +636,7 @@ pub struct Follower {
     pub user: FollowerUser,
 }
 
-#[derive(Debug, Clone, Default, Deserialize, PartialEq)]
+#[derive(Debug, Clone, Default, Deserialize, Serialize, PartialEq)]
 pub struct FollowerUser {
     #[serde(default)]
     pub name: String,
@@ -641,7 +644,7 @@ pub struct FollowerUser {
     pub avatar: FollowerAvatar,
 }
 
-#[derive(Debug, Clone, Default, Deserialize, PartialEq)]
+#[derive(Debug, Clone, Default, Deserialize, Serialize, PartialEq)]
 pub struct FollowerAvatar {
     #[serde(default)]
     pub medium: Option<String>,

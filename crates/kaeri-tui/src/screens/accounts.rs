@@ -225,6 +225,37 @@ pub(super) fn render_accounts(buf: &mut Buffer, app: &App, area: Rect) {
         }
     }
 
+    // Show people you follow, after the trackers while AniList is signed in: this device's
+    // switch, its words under it.
+    if app.following_row() && y + 1 < area.bottom().saturating_sub(2) {
+        y += 1;
+        let selected = app.cursors.accounts.selected == app.sync.len();
+        if selected {
+            mark_selected(buf, app, area.left(), y, focused);
+        }
+        let check = if app.shows_following() { "[x]" } else { "[ ]" };
+        let label = format!("{check} {}", t::settings_anilist_following());
+        buf.set_string(
+            area.left() + 2,
+            y,
+            truncate(&label, area.width.saturating_sub(3) as usize),
+            if selected {
+                app.palette.style(Role::Text).add_modifier(Modifier::BOLD)
+            } else {
+                app.palette.style(Role::Text)
+            },
+        );
+        y += 1;
+        let width = area.width.saturating_sub(7).min(70) as usize;
+        for text in wrap(&t::settings_anilist_following_footer(), width, 3) {
+            if y >= area.bottom().saturating_sub(2) {
+                break;
+            }
+            buf.set_string(area.left() + 6, y, text, app.palette.style(Role::TextDim));
+            y += 1;
+        }
+    }
+
     // File-stored tokens are worth knowing about on a shared machine, but they are a working
     // state, not an error — so the fact is stated once, quietly, rather than a salmon cell
     // per row that reads as three failures.

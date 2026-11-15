@@ -8702,6 +8702,12 @@
   <data name="SettingsLabelPictureInPictureOnLeave" xml:space="preserve">
     <value>Hình trong hình khi rời ứng dụng</value>
   </data>
+  <data name="SettingsAnilistFollowing" xml:space="preserve">
+    <value>Hiện người bạn theo dõi</value>
+  </data>
+  <data name="SettingsAnilistFollowingFooter" xml:space="preserve">
+    <value>Cho biết những người bạn theo dõi trên AniList đang xem đến đâu trong một bộ, trên trang và các tập của bộ đó. Ai xem được danh sách của bạn được đặt trên AniList.</value>
+  </data>
   <data name="BookServerAddress" xml:space="preserve">
     <value>Địa chỉ</value>
   </data>
@@ -10687,6 +10693,27 @@
   </data>
   <data name="MoreLikeThis" xml:space="preserve">
     <value>Tác phẩm tương tự</value>
+  </data>
+  <data name="FollowingShowAll" xml:space="preserve">
+    <value>Hiện cả {count}</value>
+  </data>
+  <data name="FollowingNames_other" xml:space="preserve">
+    <value>{first}, {second} và {more} người khác</value>
+  </data>
+  <data name="FollowingNamesTwo" xml:space="preserve">
+    <value>{first} và {second}</value>
+  </data>
+  <data name="FollowingMarkMore" xml:space="preserve">
+    <value>+{count}</value>
+  </data>
+  <data name="FollowingMarkSpoken" xml:space="preserve">
+    <value>{names} đã xem đến đây.</value>
+  </data>
+  <data name="FollowingScoreSpoken" xml:space="preserve">
+    <value>Điểm {score}/10</value>
+  </data>
+  <data name="FollowingOpenHelp" xml:space="preserve">
+    <value>Cho biết mỗi người đang xem đến đâu.</value>
   </data>
   <data name="MoreFollowedProgress" xml:space="preserve">
     <value>{status} · {progress}</value>

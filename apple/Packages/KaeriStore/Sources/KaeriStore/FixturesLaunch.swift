@@ -57,6 +57,8 @@ extension EngineLaunch {
         case "notfound": return .notFound
         case "slow": return .slow
         case "failed": return .failed
+        case "following": return .following
+        case "followingslow": return .followingSlow
         case "offline": return .offline
         case "sourceless": return .sourceless
         case "unsure": return .unsure

@@ -9047,6 +9047,12 @@
   <data name="SettingsLabelPictureInPictureOnLeave" xml:space="preserve">
     <value>Uygulamadan çıkarken pencere içinde pencere</value>
   </data>
+  <data name="SettingsAnilistFollowing" xml:space="preserve">
+    <value>Takip ettiklerini göster</value>
+  </data>
+  <data name="SettingsAnilistFollowingFooter" xml:space="preserve">
+    <value>AniList'te takip ettiğin kişilerin bir dizide nerede olduğunu, dizinin sayfasında ve bölümlerinde gösterir. Kendi listeni kimlerin görebileceği AniList'te ayarlanır.</value>
+  </data>
   <data name="BookServerAddress" xml:space="preserve">
     <value>Adres</value>
   </data>
@@ -11104,6 +11110,30 @@
   </data>
   <data name="MoreLikeThis" xml:space="preserve">
     <value>Buna benzer</value>
+  </data>
+  <data name="FollowingShowAll" xml:space="preserve">
+    <value>{count} kişinin tümünü göster</value>
+  </data>
+  <data name="FollowingNames_one" xml:space="preserve">
+    <value>{first}, {second} ve {more} kişi daha</value>
+  </data>
+  <data name="FollowingNames_other" xml:space="preserve">
+    <value>{first}, {second} ve {more} kişi daha</value>
+  </data>
+  <data name="FollowingNamesTwo" xml:space="preserve">
+    <value>{first} ve {second}</value>
+  </data>
+  <data name="FollowingMarkMore" xml:space="preserve">
+    <value>+{count}</value>
+  </data>
+  <data name="FollowingMarkSpoken" xml:space="preserve">
+    <value>{names} buraya kadar izledi.</value>
+  </data>
+  <data name="FollowingScoreSpoken" xml:space="preserve">
+    <value>Puan {score}/10</value>
+  </data>
+  <data name="FollowingOpenHelp" xml:space="preserve">
+    <value>Her birinin nerede olduğunu gösterir.</value>
   </data>
   <data name="MoreFollowedProgress" xml:space="preserve">
     <value>{status} · {progress}</value>

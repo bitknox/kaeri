@@ -3395,6 +3395,8 @@
     <string name="settings_opds_password">フィードのパスワード</string>
     <string name="settings_opds_port">フィードのポート</string>
     <string name="settings_label_picture_in_picture_on_leave">アプリを離れるときにピクチャー イン ピクチャー</string>
+    <string name="settings_anilist_following">フォロー中の人を表示</string>
+    <string name="settings_anilist_following_footer">AniListでフォローしている人がどこまで観ているかを、作品のページとエピソードに表示します。自分のリストを誰が見られるかはAniListで設定します。</string>
     <string name="book_server_address">アドレス</string>
     <string name="book_server_address_hint">アドレス、またはKavitaのOPDSリンク全体を入力します。</string>
     <string name="book_server_kavita_key">これはKavitaのOPDSリンクです。キーでサインインするため、パスワードは不要です。</string>
@@ -4106,6 +4108,15 @@
     <string name="more_following_note">AniListより</string>
     <string name="more_followed_score">%1$,d/10</string>
     <string name="more_like_this">似た作品</string>
+    <string name="following_show_all">%1$,d人すべて表示</string>
+    <plurals name="following_names">
+        <item quantity="other">%1$s、%2$s、ほか%3$,d人</item>
+    </plurals>
+    <string name="following_names_two">%1$s、%2$s</string>
+    <string name="following_mark_more">+%1$,d</string>
+    <string name="following_mark_spoken">%1$sはここまで視聴しました。</string>
+    <string name="following_score_spoken">スコア %1$,d/10</string>
+    <string name="following_open_help">それぞれの視聴状況を表示します。</string>
     <string name="more_followed_progress">%1$s · %2$s</string>
     <string name="more_empty">AniListには、この作品のキャスト、スタッフ、おすすめがまだありません。</string>
     <string name="more_spoiler">ネタバレ</string>

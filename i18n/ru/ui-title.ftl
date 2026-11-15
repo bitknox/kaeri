@@ -82,6 +82,18 @@ more-following = Люди, которых вы отслеживаете
 more-following-note = Из AniList
 more-followed-score = { $score }/10
 more-like-this = Похожие тайтлы
+following-show-all = Показать все { $count }
+following-names = { $more ->
+    [one] { $first }, { $second } и ещё { $more }
+    [few] { $first }, { $second } и ещё { $more }
+    [many] { $first }, { $second } и ещё { $more }
+   *[other] { $first }, { $second } и ещё { $more }
+ }
+following-names-two = { $first } и { $second }
+following-mark-more = +{ $count }
+following-mark-spoken = { $names }: просмотрено до этого места.
+following-score-spoken = Оценка { $score } из 10
+following-open-help = Показывает, где сейчас каждый.
 more-followed-progress = { $status } · { $progress }
 more-empty = У AniList пока нет актёров, создателей и рекомендаций для этого тайтла.
 more-spoiler = Спойлер

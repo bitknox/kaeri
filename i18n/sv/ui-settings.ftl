@@ -231,3 +231,6 @@ settings-opds-feed = Dela i det här nätverket
 settings-opds-password = Flödeslösenord
 settings-opds-port = Flödesport
 settings-label-picture-in-picture-on-leave = Bild-i-bild när du lämnar appen
+
+settings-anilist-following = Visa personer du följer
+settings-anilist-following-footer = Visar var personer du följer på AniList är i en serie, på dess sida och dess avsnitt. Vem som kan se din egen lista ställs in på AniList.

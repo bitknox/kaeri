@@ -79,6 +79,15 @@ more-following = フォロー中のユーザー
 more-following-note = AniListより
 more-followed-score = { $score }/10
 more-like-this = 似た作品
+following-show-all = { $count }人すべて表示
+following-names = { $more ->
+   *[other] { $first }、{ $second }、ほか{ $more }人
+ }
+following-names-two = { $first }、{ $second }
+following-mark-more = +{ $count }
+following-mark-spoken = { $names }はここまで視聴しました。
+following-score-spoken = スコア { $score }/10
+following-open-help = それぞれの視聴状況を表示します。
 more-followed-progress = { $status } · { $progress }
 more-empty = AniListには、この作品のキャスト、スタッフ、おすすめがまだありません。
 more-spoiler = ネタバレ

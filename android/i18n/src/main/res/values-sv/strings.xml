@@ -3527,6 +3527,8 @@
     <string name="settings_opds_password">Flödeslösenord</string>
     <string name="settings_opds_port">Flödesport</string>
     <string name="settings_label_picture_in_picture_on_leave">Bild-i-bild när du lämnar appen</string>
+    <string name="settings_anilist_following">Visa personer du följer</string>
+    <string name="settings_anilist_following_footer">Visar var personer du följer på AniList är i en serie, på dess sida och dess avsnitt. Vem som kan se din egen lista ställs in på AniList.</string>
     <string name="book_server_address">Adress</string>
     <string name="book_server_address_hint">En adress, eller hela OPDS-länken från Kavita.</string>
     <string name="book_server_kavita_key">Det här är en OPDS-länk från Kavita. Nyckeln loggar in dig, så inget lösenord behövs.</string>
@@ -4262,6 +4264,16 @@
     <string name="more_following_note">Från AniList</string>
     <string name="more_followed_score">%1$,d/10</string>
     <string name="more_like_this">Liknande</string>
+    <string name="following_show_all">Visa alla %1$,d</string>
+    <plurals name="following_names">
+        <item quantity="one">%1$s, %2$s och %3$,d till</item>
+        <item quantity="other">%1$s, %2$s och %3$,d till</item>
+    </plurals>
+    <string name="following_names_two">%1$s och %2$s</string>
+    <string name="following_mark_more">+%1$,d</string>
+    <string name="following_mark_spoken">%1$s har tittat hit.</string>
+    <string name="following_score_spoken">Betyg %1$,d av 10</string>
+    <string name="following_open_help">Visar var var och en är.</string>
     <string name="more_followed_progress">%1$s · %2$s</string>
     <string name="more_empty">AniList har inga roller, medarbetare eller rekommendationer för den här titeln än.</string>
     <string name="more_spoiler">Spoiler</string>

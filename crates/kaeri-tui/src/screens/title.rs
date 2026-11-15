@@ -124,6 +124,7 @@ pub(super) fn render_title(buf: &mut Buffer, app: &App, area: Rect) {
     }
 
     // Progress, or the countdown to the next broadcast — whichever the viewer needs next.
+    let meter_y = y;
     if y < area.bottom() {
         if let (Some(TitleProgress { next, .. }), Some(label)) =
             (entry.progress, progress_label(entry))
@@ -154,6 +155,102 @@ pub(super) fn render_title(buf: &mut Buffer, app: &App, area: Rect) {
             }
         }
     }
+
+    let top = meter_y.saturating_add(2);
+    render_following(
+        buf,
+        app,
+        entry,
+        Rect { y: top, height: area.bottom().saturating_sub(top), ..area },
+    );
+}
+
+/// The width of a person's name, the line under it and the score, in the people's columns.
+const FOLLOWING_COLUMNS: [usize; 3] = [13, 22, 9];
+
+/// The people the viewer follows on AniList who have the title on a list, under the meter: the
+/// heading, then up to ten in two columns of five, each with where they are and their score.
+/// Nothing when nobody has it, the switch is off or nobody is signed in.
+fn render_following(buf: &mut Buffer, app: &App, entry: &Entry, area: Rect) {
+    let people = following_cells(entry);
+    if people.is_empty() || area.top() >= area.bottom() {
+        return;
+    }
+    let width = area.width as usize;
+    let mut x = area.left();
+    let heading = t::more_following();
+    buf.set_string(
+        x,
+        area.top(),
+        truncate(&heading, width),
+        app.palette.style(Role::Text).add_modifier(Modifier::BOLD),
+    );
+    x += heading.chars().count() as u16;
+    let note = format!("  ·  {}", t::more_following_note());
+    let room = width.saturating_sub(heading.chars().count());
+    buf.set_string(x, area.top(), truncate(&note, room), app.palette.style(Role::TextDim));
+    let column: usize = FOLLOWING_COLUMNS.iter().sum();
+    let (first, second) = people.split_at(people.len().min(5));
+    for (i, cell) in first.iter().enumerate() {
+        let y = area.top() + 1 + i as u16;
+        if y >= area.bottom() {
+            break;
+        }
+        draw_person(buf, app, area.left(), y, cell, width);
+        if let Some(beside) = second.get(i).filter(|_| width > column) {
+            draw_person(buf, app, area.left() + column as u16, y, beside, width - column);
+        }
+    }
+}
+
+fn draw_person(buf: &mut Buffer, app: &App, x: u16, y: u16, cell: &[String; 3], room: usize) {
+    let roles = [Role::Text, Role::TextDim, Role::Text];
+    let mut x = x;
+    let mut room = room;
+    for ((text, width), role) in cell.iter().zip(FOLLOWING_COLUMNS).zip(roles) {
+        if room == 0 {
+            break;
+        }
+        let shown = truncate(text, width.saturating_sub(1).min(room));
+        buf.set_string(x, y, shown, app.palette.style(role));
+        x += width.min(room) as u16;
+        room = room.saturating_sub(width);
+    }
+}
+
+/// Each person as the terminal words them: the name, where they are, and the score out of 10.
+/// Watching, Paused and Dropped say which episode; Completed and Planning say only that.
+pub(crate) fn following_cells(entry: &Entry) -> Vec<[String; 3]> {
+    let Some(detail) = entry.detail.as_ref() else { return Vec::new() };
+    detail
+        .following
+        .iter()
+        .take(10)
+        .map(|person| {
+            let status = person.status.map(status_text);
+            let progress = matches!(
+                person.status,
+                Some(
+                    LibrarySegment::Watching | LibrarySegment::Paused | LibrarySegment::Dropped
+                )
+            )
+            .then_some(person.progress)
+            .filter(|p| *p > 0)
+            .map(|p| t::episode_number(i64::from(p)));
+            let line = match (status, progress) {
+                (Some(status), Some(progress)) => t::more_followed_progress(&status, &progress),
+                (Some(status), None) => status,
+                (None, Some(progress)) => progress,
+                (None, None) => String::new(),
+            };
+            let score = person
+                .score
+                .filter(|score| *score > 0)
+                .map(|score| t::more_followed_score(i64::from((score + 5) / 10)))
+                .unwrap_or_default();
+            [person.name.clone(), line, score]
+        })
+        .collect()
 }
 
 /// The count beside the meter, in the language in use.
@@ -312,6 +409,63 @@ mod tests {
         let plate_row = text.lines().position(|l| l.contains('░')).unwrap();
         let title_row = text.lines().position(|l| l.contains("Hoshikuzu")).unwrap();
         assert!(plate_row < title_row, "artwork must lead");
+    }
+
+    #[test]
+    fn the_people_followed_sit_under_the_meter_in_two_columns_of_five() {
+        use kaeri_model::catalog::{FollowedEntry, LibrarySegment::*, TitleDetail};
+        let person = |name: &str, status, progress, score| FollowedEntry {
+            name: name.into(),
+            avatar_url: None,
+            status: Some(status),
+            score,
+            progress,
+        };
+        let mut show = entry(1, "Lighthouse Kites");
+        show.detail = Some(TitleDetail {
+            following: vec![
+                person("Ines", Watching, 7, Some(80)),
+                person("Lumi", Watching, 7, Some(70)),
+                person("SannaQ", Watching, 9, None),
+                person("Dario", Watching, 7, None),
+                person("Rowanpaper", Completed, 12, Some(90)),
+                person("Oskar", Watching, 7, None),
+                person("TeoVale", Paused, 4, None),
+                person("Petrakite", Completed, 12, Some(60)),
+                person("Kofi", Planning, 0, None),
+                person("Yunami", Dropped, 2, Some(40)),
+            ],
+            ..TitleDetail::default()
+        });
+        let mut app = app_with(ContentList::Entries(vec![show]));
+        app.nav.focus_stage();
+        app.handle(crate::keymap::Action::Open, 20);
+        let text = text_of(&render_to_buffer(&mut app, 120, 40));
+        assert!(text.contains(&t::more_following()), "{text}");
+        let line =
+            |n: &str| text.lines().find(|l| l.contains(n)).unwrap_or_default().to_owned();
+        let ines = line("Ines");
+        assert!(ines.contains("Episode 7") && ines.contains("8/10"), "{ines}");
+        assert!(ines.contains("Oskar"), "the sixth beside the first: {ines}");
+        // The fifth shares a line with the tenth, so look at the fifth's own cell only.
+        let fifth = line("Rowanpaper");
+        let cell = fifth
+            .split_once("Rowanpaper")
+            .and_then(|(_, rest)| rest.split_once("Yunami"))
+            .map(|(cell, _)| cell)
+            .unwrap_or_else(|| panic!("the tenth beside the fifth: {fifth}"));
+        assert!(cell.contains("9/10"), "{cell}");
+        assert!(!cell.contains("Episode"), "Completed says only that: {cell}");
+        assert!(line("Yunami").contains("Episode 2"), "Dropped says where");
+    }
+
+    #[test]
+    fn nobody_followed_leaves_the_section_out() {
+        let mut app = app_with(ContentList::Entries(vec![entry(1, "Lighthouse Kites")]));
+        app.nav.focus_stage();
+        app.handle(crate::keymap::Action::Open, 20);
+        let text = text_of(&render_to_buffer(&mut app, 120, 40));
+        assert!(!text.contains(&t::more_following()));
     }
 
     #[test]

@@ -235,3 +235,6 @@ settings-opds-feed = Делиться в этой сети
 settings-opds-password = Пароль ленты
 settings-opds-port = Порт ленты
 settings-label-picture-in-picture-on-leave = «Картинка в картинке» при выходе из приложения
+
+settings-anilist-following = Показывать тех, на кого вы подписаны
+settings-anilist-following-footer = Показывает на странице сериала и у его эпизодов, где сейчас те, на кого вы подписаны в AniList. Кто видит ваш собственный список, настраивается в AniList.

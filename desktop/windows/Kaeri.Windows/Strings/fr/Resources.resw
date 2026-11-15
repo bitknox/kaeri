@@ -9392,6 +9392,12 @@
   <data name="SettingsLabelPictureInPictureOnLeave" xml:space="preserve">
     <value>Picture-in-picture en quittant l'app</value>
   </data>
+  <data name="SettingsAnilistFollowing" xml:space="preserve">
+    <value>Afficher les personnes que vous suivez</value>
+  </data>
+  <data name="SettingsAnilistFollowingFooter" xml:space="preserve">
+    <value>Indique où en sont les personnes que vous suivez sur AniList dans une série, sur sa page et ses épisodes. Qui peut voir votre propre liste se règle sur AniList.</value>
+  </data>
   <data name="BookServerAddress" xml:space="preserve">
     <value>Adresse</value>
   </data>
@@ -11521,6 +11527,33 @@
   </data>
   <data name="MoreLikeThis" xml:space="preserve">
     <value>Titres similaires</value>
+  </data>
+  <data name="FollowingShowAll" xml:space="preserve">
+    <value>Tout afficher ({count})</value>
+  </data>
+  <data name="FollowingNames_one" xml:space="preserve">
+    <value>{first}, {second} et {more} autre</value>
+  </data>
+  <data name="FollowingNames_many" xml:space="preserve">
+    <value>{first}, {second} et {more} autres</value>
+  </data>
+  <data name="FollowingNames_other" xml:space="preserve">
+    <value>{first}, {second} et {more} autres</value>
+  </data>
+  <data name="FollowingNamesTwo" xml:space="preserve">
+    <value>{first} et {second}</value>
+  </data>
+  <data name="FollowingMarkMore" xml:space="preserve">
+    <value>+{count}</value>
+  </data>
+  <data name="FollowingMarkSpoken" xml:space="preserve">
+    <value>{names} a regardé jusqu’ici.</value>
+  </data>
+  <data name="FollowingScoreSpoken" xml:space="preserve">
+    <value>Note de {score} sur 10</value>
+  </data>
+  <data name="FollowingOpenHelp" xml:space="preserve">
+    <value>Indique où en est chaque personne.</value>
   </data>
   <data name="MoreFollowedProgress" xml:space="preserve">
     <value>{status} · {progress}</value>

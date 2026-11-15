@@ -233,3 +233,6 @@ settings-opds-feed = Condividi su questa rete
 settings-opds-password = Password del feed
 settings-opds-port = Porta del feed
 settings-label-picture-in-picture-on-leave = Picture in picture all'uscita dall'app
+
+settings-anilist-following = Mostra le persone che segui
+settings-anilist-following-footer = Mostra a che punto sono in una serie le persone che segui su AniList, nella sua pagina e nei suoi episodi. Chi può vedere la tua lista si imposta su AniList.

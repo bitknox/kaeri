@@ -204,7 +204,15 @@ fn detail_from(
     TitleDetail {
         tags: ranked_tags(media),
         streaming_links: streaming_links(media),
-        following: media.following.iter().map(follower).collect(),
+        // A private entry never shows, whatever the answer carried: AniList withholds them, the
+        // client drops one if it does not, and so does this.
+        following: media
+            .following
+            .iter()
+            .flatten()
+            .filter(|entry| !entry.private)
+            .map(follower)
+            .collect(),
         schedule: media
             .air_times()
             .into_iter()
@@ -1181,6 +1189,7 @@ pub fn episode_rows_with_filler(
                 past_progress: false,
                 spoiler_ahead: false,
                 synopsis_pending: false,
+                followed: Vec::new(),
             }
         })
         .collect()
@@ -1660,6 +1669,7 @@ mod tests {
 
         let mut media = title_with(serde_json::json!({}));
         media.following = serde_json::from_value(serde_json::json!([
+            {"status": "CURRENT", "progress": 4, "private": true, "user": {"name": "Hidden"}},
             {"status": "COMPLETED", "score": 90.0, "progress": 12,
              "user": {"name": "Mika", "avatar": {"medium": "https://img.example/a/mika.png"}}},
             {"status": "REPEATING", "score": 0, "progress": 3, "user": {"name": "Tomo"}},
@@ -1667,7 +1677,8 @@ mod tests {
         ]))
         .unwrap();
         let following = entry_with_detail(&media, None, None).detail.unwrap().following;
-        assert_eq!(following.len(), 3);
+        assert_eq!(following.len(), 3, "a private entry is dropped here too");
+        assert!(following.iter().all(|f| f.name != "Hidden"));
         assert_eq!(following[0].name, "Mika");
         assert_eq!(following[0].avatar_url.as_deref(), Some("https://img.example/a/mika.png"));
         assert_eq!(
@@ -1704,6 +1715,7 @@ mod tests {
             past_progress: false,
             spoiler_ahead: false,
             synopsis_pending: false,
+            followed: Vec::new(),
         };
         let mut rows =
             vec![row("1", true), row("2", false), row("3", false), row("OVA", false)];
@@ -1749,6 +1761,7 @@ mod tests {
                 past_progress: false,
                 spoiler_ahead: false,
                 synopsis_pending: false,
+                followed: Vec::new(),
             })
             .collect();
         mark_past_progress(&mut rows, &store, id);
@@ -1966,6 +1979,7 @@ mod tests {
                 past_progress: false,
                 spoiler_ahead: false,
                 synopsis_pending: false,
+                followed: Vec::new(),
             })
             .collect();
         date_episodes(&mut rows, &[(1, 100), (2, 200)].into_iter().collect());

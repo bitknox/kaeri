@@ -1794,6 +1794,12 @@ pub fn disconnect(sync: &Sync, tracker_id: &str, tx: &Outbox) {
         if let Some(tracker) = sync.trackers.iter().find(|t| t.id() == tracker_id) {
             tracker.forget_credentials().await;
         }
+        // The people the viewer followed leave the cached pages with the account.
+        if tracker_id == "anilist"
+            && let Err(e) = sync.store.forget_following()
+        {
+            tracing::warn!(error = %e, "could not take the people followed out of the cache");
+        }
         // Rebuilt from what is now true rather than patched, so there is one description of the
         // state and no way for the badge and the list to disagree.
         for state in sync.initial_states() {

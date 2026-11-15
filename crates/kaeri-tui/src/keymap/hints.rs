@@ -436,6 +436,12 @@ pub(crate) fn status_hints_paged(
             hints
         }
         // Enter signs the highlighted tracker in or out, so it is named for which.
+        // The switch after the trackers: Enter turns it over, as Space does a setting.
+        V::Section(Section::Accounts)
+            if app.cursors.accounts.selected == app.sync.len() && app.following_row() =>
+        {
+            vec![(Action::Open, said(t::keys_hint_change()))]
+        }
         V::Section(Section::Accounts) => match app.sync.get(app.cursors.accounts.selected) {
             Some(tracker) if tracker.connected && !tracker.needs_reauth => {
                 vec![(Action::Open, hint_sign_out())]
