@@ -116,6 +116,8 @@ extension EpisodeRow {
         }
         if kind == .filler { parts.append(L.episodeFiller.lowercased(with: AirTime.locale)) }
         if unsourced { parts.append(L.episodeUnsourced) }
+        // Who followed stopped here, never with a score.
+        if let marked = FollowWords.marked(followed) { parts.append(marked) }
         return parts
     }
 }
