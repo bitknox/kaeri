@@ -1336,6 +1336,18 @@ async fn kaeris_receiver_is_handed_the_file_as_it_is() {
     let fonts = kaeri["fonts"].as_array().unwrap();
     assert_eq!(fonts.len(), 1, "{kaeri}");
     assert!(fonts[0].as_str().unwrap().ends_with("/x/f/1.ttf"), "{kaeri}");
+    // The file's own ASS track is the receiver's to read: listed with where it is in the file,
+    // a stand-in WebVTT track with its id, and a line on the phone's list.
+    let subtitles = kaeri["subtitles"].as_array().unwrap();
+    assert_eq!(subtitles.len(), 1, "{kaeri}");
+    assert_eq!(subtitles[0]["inside"], 0);
+    assert_eq!(subtitles[0]["format"], "ass");
+    assert_eq!(subtitles[0]["id"], 1);
+    assert!(subtitles[0]["url"].is_null(), "{kaeri}");
+    assert_eq!(kaeri["subtitle"], serde_json::Value::Null);
+    assert_eq!(media["tracks"][0]["trackId"], 1, "{media}");
+    let listed = player.status().borrow().subtitles.clone();
+    assert_eq!(listed.iter().map(|t| t.id).collect::<Vec<_>>(), [1]);
     let plan = player.status().borrow().plan.clone().unwrap();
     assert_eq!(plan.route, CastRoute::Relayed { remux: false });
     assert_eq!(plan.audio, AudioPlan::Copy(crate::formats::AudioCodec::Opus));
@@ -1360,16 +1372,26 @@ async fn a_picture_kaeris_receiver_cant_decode_ends_naming_its_codec() {
 }
 
 #[test]
+fn the_files_own_subtitle_tracks_are_read_as_the_receiver_shows_them() {
+    assert_eq!(super::inside_format("S_TEXT/ASS"), Some("ass"));
+    assert_eq!(super::inside_format("S_TEXT/UTF8"), Some("srt"));
+    assert_eq!(super::inside_format("S_HDMV/PGS"), Some("pgs"));
+    assert_eq!(super::inside_format("S_VOBSUB"), Some("vobsub"));
+    assert_eq!(super::inside_format("S_DVBSUB"), None);
+}
+
+#[test]
 fn a_codec_kaeris_receiver_names_reads_as_the_notice_names_it() {
     let plan = CastPlan {
         route: CastRoute::Relayed { remux: false },
-        video: crate::formats::VideoFormat::Other("MPEG2".into()),
+        video: crate::formats::VideoFormat::other_from_matroska("V_MPEG2"),
         height: Some(720),
         audio: AudioPlan::Copy(crate::formats::AudioCodec::Dts),
         delivery: Delivery::Mkv,
     };
     // The load's own word comes back as the part's name; a codec string's base as the common one.
-    assert_eq!(super::named_codec("video:mpeg2", Some(&plan), true), "MPEG2");
+    assert_eq!(super::named_codec("video:mpeg-2", Some(&plan), true), "MPEG-2");
+    assert_eq!(super::named_codec("video:mpeg2", None, true), "MPEG-2");
     assert_eq!(super::named_codec("dts", Some(&plan), false), "DTS");
     assert_eq!(super::named_codec("hev1", Some(&plan), true), "HEVC");
     assert_eq!(super::named_codec("ec-3", None, false), "E-AC-3");

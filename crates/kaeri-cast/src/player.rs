@@ -1522,6 +1522,21 @@ fn text_track(
     })
 }
 
+/// The empty WebVTT stand-in for a subtitle track inside the file, which Kaeri's receiver
+/// draws itself: the TV's list carries its id, language and name.
+fn inside_track(inner: &Inner, original: &Original) -> TextTrack {
+    let name = format!("t/inside-{}.vtt", original.id);
+    lock(&inner.resources.texts).insert(name.clone(), Arc::new(b"WEBVTT\n\n".to_vec()));
+    TextTrack {
+        id: original.id,
+        url: inner.relay.dynamic_url(&name),
+        name: original.title.clone().unwrap_or_else(|| {
+            original.language.clone().unwrap_or_else(|| format!("Subtitles {}", original.id))
+        }),
+        language: original.language.clone().unwrap_or_else(|| "und".into()),
+    }
+}
+
 /// A subtitle file's text as WebVTT: ASS converted with its typesetting dropped, SRT given a
 /// header and full stops, WebVTT as it is.
 pub fn to_webvtt(text: &str, extension: Option<&str>) -> String {
@@ -1591,12 +1606,7 @@ async fn attempt(inner: &Arc<Inner>, load: CastLoad) -> Result<CastPlan, CastFai
     // The text tracks, once for every plan.
     lock(&inner.resources.texts).clear();
     lock(&inner.resources.originals).clear();
-    let originals = if own { original_subtitles(inner, &load) } else { Vec::new() };
-    let fonts = if own {
-        attached_fonts(inner, &load, &info, originals.iter().any(|o| o.format == "ass")).await
-    } else {
-        Vec::new()
-    };
+    let mut originals = if own { original_subtitles(inner, &load) } else { Vec::new() };
     let mut tracks = Vec::new();
     for (index, subtitle) in load.subtitles.iter().enumerate() {
         let id = u32::try_from(index + 1).unwrap_or(u32::MAX);
@@ -1605,6 +1615,18 @@ async fn attempt(inner: &Arc<Inner>, load: CastLoad) -> Result<CastPlan, CastFai
             Err(e) => tracing::warn!(error = %e, "a subtitle couldn't be read"),
         }
     }
+    let fonts = if own {
+        let typeset_file = originals.iter().any(|o| o.format == "ass");
+        let first_id = u32::try_from(load.subtitles.len() + 1).unwrap_or(u32::MAX);
+        let (inside, fonts) = file_extras(inner, &load, &info, typeset_file, first_id).await;
+        // The file's own tracks list beside the side-loaded ones; their WebVTT tracks are
+        // empty stand-ins whose ids the receiver shows them by.
+        tracks.extend(inside.iter().map(|o| inside_track(inner, o)));
+        originals.extend(inside);
+        fonts
+    } else {
+        Vec::new()
+    };
     let active: Vec<u32> = load
         .subtitle
         .and_then(|i| u32::try_from(i + 1).ok())
@@ -1785,6 +1807,7 @@ fn named_codec(said: &str, plan: Option<&CastPlan>, video: bool) -> String {
         "hev1" | "hvc1" | "hevc" => "HEVC",
         "vp09" | "vp9" => "VP9",
         "vp08" | "vp8" => "VP8",
+        "mp2v" | "mpeg2" | "mpeg-2" => "MPEG-2",
         "av01" | "av1" => "AV1",
         "mp4a" | "aac" => "AAC",
         "ac-3" | "ac3" => "AC-3",
@@ -1798,15 +1821,18 @@ fn named_codec(said: &str, plan: Option<&CastPlan>, video: bool) -> String {
     name.to_owned()
 }
 
-/// A subtitle file as it is, for Kaeri's receiver to draw: served by the relay with its
-/// format.
+/// A subtitle as it is, for Kaeri's receiver to draw: a side-loaded file served by the relay
+/// with its format, or one of the file's own tracks, which the receiver reads itself.
 #[derive(Debug, Clone)]
 struct Original {
     id: u32,
-    url: String,
+    /// Null for a track inside the file.
+    url: Option<String>,
     format: &'static str,
     language: Option<String>,
     title: Option<String>,
+    /// The index among the file's own subtitle tracks, for a track inside it.
+    inside: Option<u32>,
 }
 
 /// Every subtitle of `load` as it is, in the order of `load.subtitles`. A file that can't be
@@ -1839,59 +1865,78 @@ fn original_subtitles(inner: &Inner, load: &CastLoad) -> Vec<Original> {
         lock(&inner.resources.originals).insert(name.clone(), (kind, Arc::new(bytes)));
         originals.push(Original {
             id,
-            url: inner.relay.dynamic_url(&name),
+            url: Some(inner.relay.dynamic_url(&name)),
             format,
             language: subtitle.language.clone(),
             title: subtitle.title.clone(),
+            inside: None,
         });
     }
     originals
 }
 
-/// The fonts a Matroska file carries, served by the relay for Kaeri's receiver to typeset with.
-/// Read only when something typeset can show: a side-loaded ASS file or an ASS track.
-async fn attached_fonts(
+/// What a Matroska file carries for Kaeri's receiver beyond its picture and sound: its own
+/// subtitle tracks, numbered from `first_id`, and the attached fonts the relay serves for them
+/// to typeset with. The fonts are read only when something typeset can show: a side-loaded ASS
+/// file or an ASS track.
+async fn file_extras(
     inner: &Inner,
     load: &CastLoad,
     info: &MediaInfo,
     typeset_file: bool,
-) -> Vec<String> {
+    first_id: u32,
+) -> (Vec<Original>, Vec<String>) {
     if info.container != Some(Delivery::Mkv) {
-        return Vec::new();
+        return (Vec::new(), Vec::new());
     }
     let (upstream, url, headers) =
         (Arc::clone(&inner.setup.upstream), load.url.clone(), load.headers.clone());
     let local = load.source.kind == SourceKind::File;
     let runtime = tokio::runtime::Handle::current();
-    let read = tokio::task::spawn_blocking(move || -> std::io::Result<Vec<mkv::Attached>> {
+    let read = tokio::task::spawn_blocking(move || -> std::io::Result<_> {
         let mut file = if local {
             RangeFile::local(Path::new(url.strip_prefix("file://").unwrap_or(&url)))?
         } else {
             RangeFile::remote(upstream, &url, headers, runtime)?
         };
         let header = mkv::header(&mut file)?;
-        let typeset = typeset_file
-            || header.tracks.iter().any(|t| {
-                t.kind == 17
-                    && matches!(
-                        t.codec.as_str(),
-                        "S_TEXT/ASS" | "S_TEXT/SSA" | "S_ASS" | "S_SSA"
-                    )
-            });
-        match header.attachments {
-            Some(at) if typeset => mkv::fonts(&mut file, at),
-            _ => Ok(Vec::new()),
-        }
+        let subtitles: Vec<mkv::TrackInfo> =
+            header.tracks.into_iter().filter(|t| t.kind == 17).collect();
+        let typeset =
+            typeset_file || subtitles.iter().any(|t| inside_format(&t.codec) == Some("ass"));
+        let fonts = match header.attachments {
+            // A font that can't be read leaves the tracks standing, drawn in the fallback font.
+            Some(at) if typeset => mkv::fonts(&mut file, at).unwrap_or_else(|e| {
+                tracing::info!(error = %e, "the file's fonts couldn't be read");
+                Vec::new()
+            }),
+            _ => Vec::new(),
+        };
+        Ok((subtitles, fonts))
     })
     .await;
-    let fonts = match read {
-        Ok(Ok(fonts)) => fonts,
+    let (subtitles, fonts) = match read {
+        Ok(Ok(read)) => read,
         Ok(Err(e)) => {
-            tracing::info!(error = %e, "the file's fonts couldn't be read");
-            return Vec::new();
+            tracing::info!(error = %e, "the file's subtitles and fonts couldn't be read");
+            return (Vec::new(), Vec::new());
         }
-        Err(_) => return Vec::new(),
+        Err(_) => return (Vec::new(), Vec::new()),
     };
+    let mut inside = Vec::new();
+    let mut id = first_id;
+    for (index, track) in subtitles.iter().enumerate() {
+        let Some(format) = inside_format(&track.codec) else { continue };
+        inside.push(Original {
+            id,
+            url: None,
+            format,
+            language: Some(track.language.clone()).filter(|l| !l.is_empty() && l != "und"),
+            title: track.name.clone().filter(|name| !name.is_empty()),
+            inside: u32::try_from(index).ok(),
+        });
+        id = id.saturating_add(1);
+    }
     let mut urls = Vec::new();
     for (number, font) in fonts.into_iter().enumerate() {
         let Some((extension, kind)) = font.font() else { continue };
@@ -1899,7 +1944,20 @@ async fn attached_fonts(
         lock(&inner.resources.originals).insert(name.clone(), (kind, Arc::new(font.data)));
         urls.push(inner.relay.dynamic_url(&name));
     }
-    urls
+    (inside, urls)
+}
+
+/// The format Kaeri's receiver reads a Matroska subtitle track as, from its codec id; `None`
+/// for one it doesn't show.
+fn inside_format(codec: &str) -> Option<&'static str> {
+    Some(match codec {
+        "S_TEXT/ASS" | "S_TEXT/SSA" | "S_ASS" | "S_SSA" => "ass",
+        "S_TEXT/UTF8" | "S_TEXT/ASCII" => "srt",
+        "S_TEXT/WEBVTT" | "D_WEBVTT/SUBTITLES" => "vtt",
+        "S_HDMV/PGS" => "pgs",
+        "S_VOBSUB" => "vobsub",
+        _ => return None,
+    })
 }
 
 /// What Kaeri's receiver reads beside the media: where the stream comes from, its container,
@@ -1939,13 +1997,19 @@ fn kaeri_load(
         },
         "video": { "codec": plan.video.part(), "height": plan.height },
         "audio": audio,
-        "subtitles": originals.iter().map(|o| json!({
-            "id": o.id,
-            "url": o.url,
-            "format": o.format,
-            "language": o.language,
-            "title": o.title,
-        })).collect::<Vec<_>>(),
+        "subtitles": originals.iter().map(|o| {
+            let mut entry = json!({
+                "id": o.id,
+                "url": o.url,
+                "format": o.format,
+                "language": o.language,
+                "title": o.title,
+            });
+            if let Some(inside) = o.inside {
+                entry["inside"] = inside.into();
+            }
+            entry
+        }).collect::<Vec<_>>(),
         "subtitle": active.map(|o| o.id),
         "fonts": fonts,
         "language": language,
