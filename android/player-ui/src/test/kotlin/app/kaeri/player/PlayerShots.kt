@@ -266,7 +266,8 @@ class PlayerShots {
         model.stageStats(playerStatsFixture(StatsFixture.TORRENT))
     }.also {
         compose.onNodeWithText("Peers").assertExists()
-        compose.onNodeWithText("12 connected · 48 found").assertExists()
+        // The value is drawn with no-break spaces; its description reads as the engine said it.
+        compose.onNodeWithContentDescription("Peers, 12 connected · 48 found").assertExists()
     }
 
     /** A torrent on a tablet sideways, where every row fits. */

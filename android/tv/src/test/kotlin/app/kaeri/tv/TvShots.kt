@@ -944,7 +944,9 @@ class TvShots {
         compose.runOnUiThread { model.apply(Event.PlayerStats(1u, playerStatsFixture(StatsFixture.TORRENT))) }
         compose.mainClock.advanceTimeBy(1_000)
         compose.waitForIdle()
-        compose.onNodeWithText("Peers").assertExists()
+        // The panel reads as one description, so its rows are checked on the model it draws.
+        val rows = model.statsPanel?.rows.orEmpty().map { it.label }
+        assertEquals(listOf("Buffer", "Network", "Peers", "Pieces", "Uploaded"), rows.dropWhile { it != "Buffer" }.take(5))
     }
 
     /** Back closes the live stats before anything else; the player stays. */
