@@ -160,6 +160,12 @@ reading-failed-no-source = None of your { -source-pl } has this series yet. Sear
 # @arg reason: text
 reading-failed-blocked = { $source } refused the request. { $reason }
 
+# Why a chapter or a list could not load: the source's plugin asked for a host its manifest
+# doesn't list, so the request never left the device and the source refused nothing. An update
+# to the plugin usually fixes it.
+# @arg source: text
+reading-failed-host-not-allowed = The { -plugin } for { $source } asked for a host it isn't allowed to reach. An update to the { -plugin } may fix it.
+
 # Why a chapter or a list could not load: the source answered with something Kaeri could not read.
 # @arg source: text
 reading-failed-parse = { -app-name } couldn't read what { $source } sent. Its { -plugin } may need an update.
@@ -508,6 +514,16 @@ export-waits-for-wifi = { $n ->
     [one] One chapter isn't downloaded yet, so this send waits for Wi-Fi and goes on by itself.
    *[other] { $n } chapters aren't downloaded yet, so this send waits for Wi-Fi and goes on by itself.
 }
+
+# Send to e-reader, under the ready files: pages of one chapter that couldn't be read, as the
+# reader shows them broken, so the files go without them. The chapter is its name as the series
+# shows it, such as Chapter 12 or Volume 1. n is how many pages were left out.
+# @arg n: int
+# @arg chapter: text
+export-pages-left-out = { $n ->
+    [one] One page of { $chapter } couldn't be read and isn't in the files.
+   *[other] { $n } pages of { $chapter } couldn't be read and aren't in the files.
+}
 # Under a This week cell: the chapter that came out that day, with its own title.
 # @arg chapter: text
 # @arg title: text
@@ -843,6 +859,15 @@ reading-estimate-mobile = over mobile data
 
 # The device is on mobile data and the chapters wait until it's on Wi-Fi.
 reading-estimate-waits-wifi = waits for Wi-Fi
+
+# Notice after Download on chapters that are files in the person's own folders: they open from
+# where they are, so nothing is downloaded.
+reading-download-on-device = These are files on this { -device } already. They read offline without a download.
+
+# A series' name where neither the catalogue nor its source gave one: on Downloads, in a sent
+# file's name and in the e-reader's library.
+# @max 32
+reading-untitled-series = Untitled series
 
 ## Downloads finished
 ## The notification a native app shows when the chapters it was downloading are all done, when

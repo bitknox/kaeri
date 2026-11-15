@@ -72,7 +72,9 @@ pub struct WorkTile {
     pub demo: bool,
     /// On a Home discovery row: the series was opened and none of the person's sources has it.
     /// The tile's line says "Not found in your sources" (`home-not-found`) for the rest of the
-    /// row's 30 minutes. Never set by asking sources while Home draws.
+    /// row's 30 minutes. Never set by asking sources while Home draws. On the spotlight of a
+    /// series in Continue: none of the sources has it, so it has no button, and the spotlight
+    /// says the same words under its buttons.
     #[cfg_attr(feature = "ffi", uniffi(default))]
     pub not_in_sources: bool,
     /// Where the series comes from, for the caption "Light novel · Japan": a country AniList
@@ -1195,6 +1197,17 @@ pub struct ExportFile {
     pub part: Option<u32>,
 }
 
+/// Pages of one chapter a send left out: they could not be read, as the reader shows them broken,
+/// and the rest of the chapter went. `chapter` is its name as the person knows it ("Chapter 12",
+/// "Volume 1"), `pages` how many were left out, and `line` says so in words.
+#[derive(Debug, Clone, PartialEq)]
+#[cfg_attr(feature = "ffi", derive(uniffi::Record))]
+pub struct ExportSkipped {
+    pub chapter: String,
+    pub pages: u32,
+    pub line: Msg,
+}
+
 /// The local OPDS feed, on desktop builds.
 #[derive(Debug, Clone, PartialEq, Eq, Default)]
 #[cfg_attr(feature = "ffi", derive(uniffi::Record))]
@@ -1398,6 +1411,12 @@ impl ReadingFailure {
             }
             Self::NotFound => ReadingMsg::ReadingFailedNotFound,
             Self::NoSource => ReadingMsg::ReadingFailedNoSource,
+            // The host held the request back: the source never saw it, so nothing refused it.
+            Self::Blocked { source, reason }
+                if kaeri_core::error::says_host_not_allowed(reason) =>
+            {
+                ReadingMsg::ReadingFailedHostNotAllowed { source: source.clone() }
+            }
             Self::Blocked { source, reason } => ReadingMsg::ReadingFailedBlocked {
                 source: source.clone(),
                 reason: reason.clone(),
@@ -2015,27 +2034,63 @@ pub enum ReadingEvent {
         /// `chapters` means the send does not know yet.
         chapters_done: u32,
         chapters: u32,
+        /// The series the send is of. A send held across a restart starts again at launch as
+        /// a job no screen sent, so this is how a screen places it. The engine always says it.
+        #[cfg_attr(feature = "ffi", uniffi(default))]
+        work: Option<WorkId>,
+        /// The target the send is for, as `Prepare` named it. The engine always says it.
+        #[cfg_attr(feature = "ffi", uniffi(default))]
+        target: Option<String>,
+        /// The chapters the send holds, in reading order, once it knows them: for Set my place
+        /// after a send the screen never asked for. Empty until then.
+        #[cfg_attr(feature = "ffi", uniffi(default))]
+        send_chapters: Vec<ChapterId>,
     },
-    /// A send failed. `chapter` is the chapter it could not prepare, when it was one.
+    /// A send failed. `chapter` is the chapter it could not fetch, when it was one; a chapter it
+    /// could not read is named in `failure`. `work` and `target` place a send no screen sent, as
+    /// for [`Self::ExportProgress`].
     ExportFailed {
         job: JobId,
         chapter: Option<String>,
         failure: ReadingFailure,
+        #[cfg_attr(feature = "ffi", uniffi(default))]
+        work: Option<WorkId>,
+        #[cfg_attr(feature = "ffi", uniffi(default))]
+        target: Option<String>,
     },
+    /// A send's files are ready. `skipped` names each chapter that went without some of its
+    /// pages, in reading order; the screen shows their lines under the ready files.
     ExportReady {
         job: JobId,
         files: Vec<ExportFile>,
+        #[cfg_attr(feature = "ffi", uniffi(default))]
+        skipped: Vec<ExportSkipped>,
     },
     /// A send waits for Wi-Fi: it has chapters to fetch and downloads are kept to Wi-Fi. It
     /// goes on by itself once the network allows, and the next [`Self::ExportProgress`] says
     /// so; `CancelPrepare` drops it. A send left waiting when the engine stopped is started
     /// again at the next launch as a job of its own, so `job` may be one the screen never sent.
-    /// `line` says why, in words.
+    /// `line` says why, in words. `chapters` are the chapters the send holds, in reading
+    /// order, so a screen that never asked for it can still offer Set my place once it is
+    /// ready.
     ExportWaiting {
         job: JobId,
         work: WorkId,
         target: String,
         line: Msg,
+        #[cfg_attr(feature = "ffi", uniffi(default))]
+        chapters: Vec<ChapterId>,
+    },
+    /// A send that was ready when the app last stopped, its files still kept: told at launch
+    /// as a job of this launch, which no screen sent, so Downloads and the series page can
+    /// offer its Share again. `chapters` are the chapters it holds, in reading order.
+    /// `CancelPrepare` puts it away; unshared, it goes after a day as any ready send does.
+    ExportKept {
+        job: JobId,
+        work: WorkId,
+        target: String,
+        chapters: Vec<ChapterId>,
+        files: Vec<ExportFile>,
     },
     Feed(FeedView),
     Eink(EinkProfile),

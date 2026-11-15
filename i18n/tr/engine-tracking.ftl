@@ -26,6 +26,15 @@ notice-signed-out-queue = { $count ->
     [one] Oturum kapatıldı: { $tracker }. Bekleyen bir değişiklik, bir sonraki oturum açmada gönderilmek üzere saklandı.
    *[other] Oturum kapatıldı: { $tracker }. Bekleyen { $count } değişiklik, bir sonraki oturum açmada gönderilmek üzere saklandı.
  }
+notice-tracker-change-refused = { $tracker }, { $title } için bir değişikliği tekrar tekrar reddetti, bu yüzden değişiklik yalnızca { -app-name } içinde kalıyor.
+notice-tracker-changes-refused = { $others ->
+    [one] { $tracker }, { $title } ve bir başlık daha için değişiklikleri tekrar tekrar reddetti, bu yüzden değişiklikler yalnızca { -app-name } içinde kalıyor.
+   *[other] { $tracker }, { $title } ve { $others } başlık daha için değişiklikleri tekrar tekrar reddetti, bu yüzden değişiklikler yalnızca { -app-name } içinde kalıyor.
+ }
+notice-tracker-change-refused-untitled = { $count ->
+    [one] { $tracker } bir değişikliği tekrar tekrar reddetti, bu yüzden değişiklik yalnızca { -app-name } içinde kalıyor.
+   *[other] { $tracker }, { $count } başlık için değişiklikleri tekrar tekrar reddetti, bu yüzden değişiklikler yalnızca { -app-name } içinde kalıyor.
+ }
 notice-sign-out-failed = Oturum kapatılamadı: { $tracker }. Yeniden deneyin. { $reason }
 notice-not-saved-because = Bu ayar kaydedilemedi. { $cause }
 notice-proxy-saved = Torrent trafiği artık proxy üzerinden gidiyor.

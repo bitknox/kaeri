@@ -28,6 +28,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -250,6 +251,7 @@ private fun HomeCard(
     scope: CoroutineScope,
 ) {
     val context = LocalContext.current
+    val resources = LocalResources.current
     val notices = LocalNotices.current
     val entry = item.entry
     val line = item.cardLine(context)
@@ -273,7 +275,7 @@ private fun HomeCard(
             actions += CardAction(Strings.homeRemoveContinue(context)) {
                 leave()
                 store.hideFromContinue(entry.id)
-                notices?.say(context.getString(R.string.continue_hidden))
+                notices?.say(resources.getString(R.string.continue_hidden))
             }
         } else {
             actions += CardAction(Strings.tvAddToPlanning(context)) { store.setStatus(entry.id, LibrarySegment.PLANNING) }

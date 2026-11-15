@@ -1,10 +1,11 @@
-//! Episode synopses for a whole title from one request: the optional fill for rows a source
-//! listed without text.
+//! Episode synopses, titles and stills for a whole title from one request: the optional fill for
+//! rows a source listed without them.
 //!
 //! The service is a public mapping-keyed one at `api.ani.zip`. `GET /mappings?anilist_id=<id>`
 //! answers with an `episodes` map keyed by episode number, each with an English `overview`
-//! (from TVDB), sometimes a `summary`, a title, a still and an air date. It publishes no terms
-//! and no rate limit, and sits behind a cache of about 15 minutes, so it is used lightly:
+//! (from TVDB), sometimes a `summary`, a title by language, a still and an air date. It
+//! publishes no terms and no rate limit, and sits behind a cache of about 15 minutes, so it is
+//! used lightly:
 //!
 //! - One request per title and listing, asked beside the source's listing, never before it.
 //! - The answer is kept on the device in the store's key/value table, for [`AIRING_FOR`] while
@@ -56,6 +57,16 @@ const MAX_BODY: usize = 8 * 1024 * 1024;
 /// The most of one synopsis that is kept.
 const MAX_TEXT: usize = 4_000;
 
+/// The most of one episode title that is kept.
+const MAX_TITLE: usize = 300;
+
+/// The longest still address that is kept.
+const MAX_URL: usize = 2_048;
+
+/// What a kept answer was read for. One kept before titles and stills were read has none, so
+/// it is asked again when online, and its synopses still serve until then.
+const VERSION: u8 = 2;
+
 const KEY: &str = "episode_text:";
 
 #[derive(Debug, Clone, thiserror::Error)]
@@ -66,21 +77,52 @@ pub enum EpisodeTextError {
     Failed(String),
 }
 
-/// What was kept of a title: the synopses by AniList's episode number, and until when.
+/// What the service says of a title's episodes, each by AniList's episode number.
+#[derive(Debug, Clone, Default, PartialEq, Eq)]
+pub struct Fill {
+    /// Synopses.
+    pub texts: BTreeMap<u32, String>,
+    /// Titles, in English, else in romaji.
+    pub titles: BTreeMap<u32, String>,
+    /// Stills, as `https` addresses.
+    pub stills: BTreeMap<u32, String>,
+}
+
+/// What was kept of a title, and until when.
 #[derive(Debug, Clone, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 pub struct Kept {
     pub until: i64,
-    pub texts: BTreeMap<u32, String>,
+    texts: BTreeMap<u32, String>,
+    #[serde(default)]
+    titles: BTreeMap<u32, String>,
+    #[serde(default)]
+    stills: BTreeMap<u32, String>,
+    #[serde(default)]
+    version: u8,
 }
 
 impl Kept {
-    /// Whether the answer is still fresh at `now`.
+    fn new(until: i64, fill: Fill) -> Self {
+        let Fill { texts, titles, stills } = fill;
+        Self { until, texts, titles, stills, version: VERSION }
+    }
+
+    /// Whether the answer is still fresh at `now`, and was read for all [`Fill`] holds.
     pub fn fresh(&self, now: i64) -> bool {
-        self.until > now
+        self.version >= VERSION && self.until > now
+    }
+
+    /// What was kept, of any age.
+    pub fn fill(&self) -> Fill {
+        Fill {
+            texts: self.texts.clone(),
+            titles: self.titles.clone(),
+            stills: self.stills.clone(),
+        }
     }
 }
 
-/// The episode text client.
+/// The episode fill's client: synopses, titles and stills by AniList id.
 pub struct EpisodeText {
     http: HttpClient,
     store: Store,
@@ -106,18 +148,18 @@ impl EpisodeText {
         serde_json::from_str(&raw).ok()
     }
 
-    /// Title `id`'s synopses by AniList's number: from what is kept while it is fresh at
+    /// What the service says of title `id`'s episodes: from what is kept while it is fresh at
     /// `now`, else from one request. `airing` decides how long a new answer keeps.
-    pub async fn texts(
+    pub async fn fill(
         &self,
         id: AnilistId,
         airing: bool,
         now: i64,
-    ) -> Result<BTreeMap<u32, String>, EpisodeTextError> {
+    ) -> Result<Fill, EpisodeTextError> {
         if let Some(kept) = self.kept(id).filter(|kept| kept.fresh(now)) {
-            return Ok(kept.texts);
+            return Ok(kept.fill());
         }
-        let (texts, unknown) = self.fetch(id).await?;
+        let (fill, unknown) = self.fetch(id).await?;
         let keeps = if unknown {
             UNKNOWN_FOR
         } else if airing {
@@ -125,13 +167,13 @@ impl EpisodeText {
         } else {
             SETTLED_FOR
         };
-        let kept = Kept { until: now + keeps, texts };
+        let kept = Kept::new(now + keeps, fill);
         if let Ok(raw) = serde_json::to_string(&kept)
             && let Err(error) = self.store.set_meta_text(&format!("{KEY}{}", id.get()), &raw)
         {
             tracing::warn!(%error, "could not keep episode text");
         }
-        Ok(kept.texts)
+        Ok(kept.fill())
     }
 
     fn resting(&self) -> bool {
@@ -151,11 +193,8 @@ impl EpisodeText {
         *self.rest_until.lock().unwrap_or_else(|p| p.into_inner()) = Some(until);
     }
 
-    /// One request. With the texts, and whether the service does not know the title.
-    async fn fetch(
-        &self,
-        id: AnilistId,
-    ) -> Result<(BTreeMap<u32, String>, bool), EpisodeTextError> {
+    /// One request. With what it says, and whether the service does not know the title.
+    async fn fetch(&self, id: AnilistId) -> Result<(Fill, bool), EpisodeTextError> {
         if self.resting() {
             return Err(EpisodeTextError::Resting);
         }
@@ -173,7 +212,7 @@ impl EpisodeText {
             })?;
         let status = response.status();
         if status.as_u16() == 404 {
-            return Ok((BTreeMap::new(), true));
+            return Ok((Fill::default(), true));
         }
         if status.as_u16() == 429 || status.is_server_error() {
             let wait = response
@@ -200,28 +239,74 @@ impl EpisodeText {
         }
         let body: serde_json::Value = serde_json::from_slice(&bytes)
             .map_err(|error| EpisodeTextError::Failed(error.to_string()))?;
-        Ok((texts_of(&body), false))
+        // An answer of another shape is kept as briefly as an unknown title, and changes nothing.
+        let shaped = body.get("episodes").is_some_and(serde_json::Value::is_object);
+        if !shaped {
+            tracing::info!(%id, "episode text: an answer without an episodes map");
+        }
+        Ok((fill_in(&body), !shaped))
     }
 }
 
-/// The synopses in an answer by whole episode number: `overview`, else `summary`.
-pub fn texts_of(body: &serde_json::Value) -> BTreeMap<u32, String> {
-    let mut texts = BTreeMap::new();
+/// What an answer says by whole episode number: the synopsis from `overview`, else `summary`;
+/// the title in English, else in romaji; and the still from `image` when it is an `https`
+/// address.
+///
+/// The service publishes no schema, terms or versions, so this is the whole of the shape relied
+/// on, read field by field from untyped JSON, every field optional and the rest ignored:
+///
+/// ```text
+/// { "episodes": {
+///     "<whole number>": {
+///       "overview": "<text>",            // the synopsis, else
+///       "summary": "<text>",             // this one
+///       "title": { "en": "<text>",       // the title, else
+///                  "x-jat": "<text>" },  // its romaji
+///       "image": "https://<still>"       // the still
+///     }, ...
+/// } }
+/// ```
+///
+/// A key that is not a whole number, an episode that is not an object, and a field of another
+/// type or empty are skipped, and the rest of the answer is still read. An answer with no
+/// `episodes` object says nothing, and the rows stay as the sources left them.
+pub fn fill_in(body: &serde_json::Value) -> Fill {
+    let mut fill = Fill::default();
     let Some(episodes) = body.get("episodes").and_then(|e| e.as_object()) else {
-        return texts;
+        return fill;
     };
     for (key, episode) in episodes {
         let Ok(number) = key.trim().parse::<u32>() else { continue };
+        if number == 0 {
+            continue;
+        }
         let text = ["overview", "summary"]
             .iter()
             .filter_map(|field| episode.get(*field).and_then(|v| v.as_str()))
             .map(str::trim)
             .find(|text| !text.is_empty());
         if let Some(text) = text {
-            texts.insert(number, text.chars().take(MAX_TEXT).collect());
+            fill.texts.insert(number, text.chars().take(MAX_TEXT).collect());
+        }
+        let title = ["en", "x-jat"]
+            .iter()
+            .filter_map(|language| episode.get("title")?.get(*language)?.as_str())
+            .map(str::trim)
+            .find(|title| !title.is_empty());
+        if let Some(title) = title {
+            fill.titles.insert(number, title.chars().take(MAX_TITLE).collect());
+        }
+        let still = episode
+            .get("image")
+            .and_then(|v| v.as_str())
+            .map(str::trim)
+            .filter(|url| url.starts_with("https://") && url.len() <= MAX_URL)
+            .filter(|url| !url.chars().any(char::is_whitespace));
+        if let Some(still) = still {
+            fill.stills.insert(number, still.to_owned());
         }
     }
-    texts
+    fill
 }
 
 #[cfg(test)]
@@ -236,9 +321,68 @@ mod tests {
             "3": { "title": "No text" },
             "S1": { "overview": "A special." },
         }});
-        let texts = texts_of(&body);
+        let texts = fill_in(&body).texts;
         assert_eq!(texts.get(&1).map(String::as_str), Some("A lantern."));
         assert_eq!(texts.get(&2).map(String::as_str), Some("Only a summary."));
         assert_eq!(texts.len(), 2);
+    }
+
+    #[test]
+    fn titles_are_english_then_romaji_and_stills_only_https() {
+        let body = serde_json::json!({ "episodes": {
+            "1": {
+                "title": { "ja": "灯", "en": " The Lantern ", "x-jat": "Tomoshibi" },
+                "image": "https://img.episodes.example/1.jpg",
+            },
+            "2": { "title": { "en": "", "x-jat": "Kaze no Michi" }, "image": "http://img.episodes.example/2.jpg" },
+            "3": { "title": { "ja": "星" }, "image": "https://img.episodes.example/a b.jpg" },
+            "0": { "title": { "en": "A Prologue" }, "image": "https://img.episodes.example/0.jpg" },
+        }});
+        let found = fill_in(&body);
+        assert_eq!(found.titles.get(&1).map(String::as_str), Some("The Lantern"));
+        assert_eq!(found.titles.get(&2).map(String::as_str), Some("Kaze no Michi"));
+        assert_eq!(found.titles.len(), 2);
+        assert_eq!(
+            found.stills.get(&1).map(String::as_str),
+            Some("https://img.episodes.example/1.jpg")
+        );
+        assert_eq!(found.stills.len(), 1);
+    }
+
+    #[test]
+    fn an_answer_of_another_shape_is_read_where_it_can_be_and_skipped_where_not() {
+        let body = serde_json::json!({ "episodes": {
+            "1": "not an episode",
+            "2": { "overview": 7, "title": "The Plain Title", "image": ["https://img.episodes.example/2.jpg"] },
+            "3": { "overview": "Still read.", "title": { "en": null, "x-jat": 3 }, "extra": { "new": true } },
+            "-4": { "overview": "Negative." },
+        }});
+        let fill = fill_in(&body);
+        assert_eq!(fill.texts.len(), 1);
+        assert_eq!(fill.texts.get(&3).map(String::as_str), Some("Still read."));
+        assert!(fill.titles.is_empty() && fill.stills.is_empty());
+
+        for body in [
+            serde_json::json!({ "episodes": [1, 2] }),
+            serde_json::json!({ "items": {} }),
+            serde_json::json!([]),
+            serde_json::json!(null),
+        ] {
+            assert_eq!(fill_in(&body), Fill::default());
+        }
+    }
+
+    #[test]
+    fn an_answer_kept_before_titles_and_stills_were_read_is_stale_but_still_read() {
+        let old: Kept =
+            serde_json::from_str(r#"{"until":100,"texts":{"1":"A lantern."}}"#).unwrap();
+        assert_eq!(old.fill().texts.get(&1).map(String::as_str), Some("A lantern."));
+        assert!(old.fill().titles.is_empty());
+        assert!(!old.fresh(50));
+
+        let new = Kept::new(100, Fill::default());
+        let again: Kept = serde_json::from_str(&serde_json::to_string(&new).unwrap()).unwrap();
+        assert!(again.fresh(50));
+        assert!(!again.fresh(100));
     }
 }

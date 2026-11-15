@@ -8,8 +8,15 @@ namespace Kaeri.Windows;
 /// Windows' network path, said to the engine each time it changes (<c>NetworkPath</c>), the way
 /// NWPathMonitor feeds it on Apple. The engine answers with one app-wide <c>Connectivity</c>
 /// state the pages render. A metered connection counts as cellular, a restricted or over-limit
-/// one as constrained, and no profile with internet access as offline.
+/// one as constrained, and no network past this device at all as offline.
 /// </summary>
+/// <remarks>
+/// Offline is never read from <c>LocalAccess</c> alone. <c>InternetAccess</c> rests on the
+/// connectivity indicator's active probe, which privacy setups turn off by policy, and Windows
+/// then says <c>LocalAccess</c> of a network that reaches the internet. Such a network counts as
+/// one; when a request fails on it, the engine tells from the error whether the device has no
+/// network or the source did not answer.
+/// </remarks>
 sealed class NetworkWatch : IDisposable
 {
     readonly Action<Command> send;
@@ -42,7 +49,9 @@ sealed class NetworkWatch : IDisposable
         try
         {
             var profile = NetworkInformation.GetInternetConnectionProfile();
-            if (profile is null || profile.GetNetworkConnectivityLevel() != NetworkConnectivityLevel.InternetAccess)
+            if (profile is null)
+                return (false, false, NoNetwork());
+            if (profile.GetNetworkConnectivityLevel() == NetworkConnectivityLevel.None)
                 return (false, false, true);
             var cost = profile.GetConnectionCost();
             var metered = cost.NetworkCostType is NetworkCostType.Fixed or NetworkCostType.Variable || profile.IsWwanConnectionProfile;
@@ -55,6 +64,11 @@ sealed class NetworkWatch : IDisposable
             return (false, false, false);
         }
     }
+
+    /// <summary>No profile is connected past this device: every one says <c>None</c>.</summary>
+    static bool NoNetwork() =>
+        NetworkInformation.GetConnectionProfiles()
+            .All(p => p.GetNetworkConnectivityLevel() == NetworkConnectivityLevel.None);
 
     public void Dispose() => NetworkInformation.NetworkStatusChanged -= Changed;
 }

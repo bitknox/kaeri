@@ -36,7 +36,7 @@ use crate::{
 };
 
 /// Every shot of the reading scene's run, in order.
-pub const NAMES: [&str; 37] = [
+pub const NAMES: [&str; 39] = [
     "pl-added-01",
     "pl-added-02",
     "pl-added-03",
@@ -53,6 +53,8 @@ pub const NAMES: [&str; 37] = [
     "pl-added-14",
     "pl-added-15",
     "pl-added-16",
+    "pl-added-folder-again",
+    "pl-added-folder-unreadable",
     "pl-added-first-01",
     "pl-added-first-16",
     "pl-join-01",
@@ -441,6 +443,33 @@ pub fn stage(shell: &Rc<Shell>, shot: &str) -> Option<f64> {
                 host: "store.home.example".into(),
             }));
             settle
+        }
+        // A folder picked again while it is a source: it says so, with Done.
+        "pl-added-folder-again" => {
+            shell.go(Dest::ReadSources);
+            came_in::shot_folder(
+                ctx,
+                CameIn::Folder(FolderReport { already_added: true, ..folder(true) }),
+            );
+            3.0
+        }
+        // A folder that can't be read: gone, or no longer open to the app.
+        "pl-added-folder-unreadable" => {
+            shell.go(Dest::ReadSources);
+            let gone =
+                FolderReport { series: 0, books: 0, files: 0, matched: 0, ..folder(false) };
+            came_in::shot_folder(
+                ctx,
+                CameIn::Empty(NothingCameIn::FolderUnreadable {
+                    folder: FolderReport {
+                        unsupported: Vec::new(),
+                        locked: Vec::new(),
+                        listed: Vec::new(),
+                        ..gone
+                    },
+                }),
+            );
+            3.0
         }
         "pl-added-16" => {
             came_in::shot_just_added("server-kavita");

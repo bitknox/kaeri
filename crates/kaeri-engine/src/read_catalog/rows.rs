@@ -55,7 +55,7 @@ pub fn fill_waits_room(volumes: &mut [VolumeGroup]) {
 /// Where the rows of `source`'s edition are read from: the person's folders are files on this
 /// device, every other source is read from the source.
 pub fn kept_by(source: Option<&str>) -> Kept {
-    if source == Some(crate::read_sources::FOLDERS) { Kept::Device } else { Kept::Source }
+    if crate::downloads::books::in_folders(source) { Kept::Device } else { Kept::Source }
 }
 
 /// A row's line: its reading state, when that happened, then what this device keeps of it. A

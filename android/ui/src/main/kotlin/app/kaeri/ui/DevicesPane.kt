@@ -32,6 +32,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -352,7 +353,8 @@ private fun RecoveryKeyRow(status: SyncStatus) {
     val store = LocalAppStore.current
     val context = LocalContext.current
     val unlock = rememberDeviceUnlock { store.showRecoveryKey() }
-    val made = status.recoveryKeyMade?.let { java.text.SimpleDateFormat(android.text.format.DateFormat.getBestDateTimePattern(java.util.Locale.getDefault(), "dMMM"), java.util.Locale.getDefault()).format(java.util.Date(it * 1000)) }
+    val locale = LocalConfiguration.current.locales[0]
+    val made = status.recoveryKeyMade?.let { java.text.SimpleDateFormat(android.text.format.DateFormat.getBestDateTimePattern(locale, "dMMM"), locale).format(java.util.Date(it * 1000)) }
     SettingsGroup(
         rows = listOf { place ->
             LinkRow(place, stringResource(R.string.rkey_row), made?.let { Strings.rkeyMade(context, it) }, SyncIcons.Key) { unlock() }

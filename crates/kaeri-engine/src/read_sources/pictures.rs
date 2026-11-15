@@ -406,7 +406,12 @@ mod tests {
         };
         let tokens = kaeri_track::TokenStore::new(dir.path().join("tokens"));
         let store = Store::open_in_memory().unwrap();
-        let sources = BookSources::new(store, tokens, reqwest::Client::new(), &paths);
+        let sources = BookSources::new(
+            store,
+            tokens,
+            &kaeri_net::HttpClient::new(&Default::default()).unwrap(),
+            &paths,
+        );
         let easel = Arc::new(Easel {
             manifest: BookSourceManifest {
                 id: "easel".into(),

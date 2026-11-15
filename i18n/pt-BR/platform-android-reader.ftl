@@ -32,7 +32,7 @@ eink-chapter = Capítulo { $chapter }
 eink-contents = Índice
 eink-back = Voltar
 eink-pages-left = { $count ->
-    [one] Falta uma página no capítulo
+    [one] Falta { $count } página no capítulo
     [many] Faltam { $count } de páginas no capítulo
    *[other] Faltam { $count } páginas no capítulo
  }
@@ -43,7 +43,7 @@ eink-clean-screen = Limpar a tela
 eink-end-of-chapter = Fim do capítulo { $chapter }
 eink-end-next = Seguinte
 eink-end-pages = { $count ->
-    [one] Uma página
+    [one] { $count } página
     [many] { $count } de páginas
    *[other] { $count } páginas
  }

@@ -8,8 +8,8 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
-import android.os.Build
 import android.util.Log
+import androidx.core.content.ContextCompat
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.withTimeoutOrNull
 import app.kaeri.engine.ffi.FfiChatFixture
@@ -250,11 +250,7 @@ object FixtureParty {
             }
         }
         // The shell sends it, so it is exported; Android 13 asks to be told so.
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            context.applicationContext.registerReceiver(receiver, IntentFilter(GO), Context.RECEIVER_EXPORTED)
-        } else {
-            context.applicationContext.registerReceiver(receiver, IntentFilter(GO))
-        }
+        ContextCompat.registerReceiver(context.applicationContext, receiver, IntentFilter(GO), ContextCompat.RECEIVER_EXPORTED)
     }
 
     /** The lobby of the room an invite opened, joined, with its members and conversation. */

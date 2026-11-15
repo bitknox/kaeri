@@ -821,6 +821,11 @@ public enum L {
         Self.format("reading-failed-blocked", fallback: "%1$@ refused the request. %2$@", source, reason)
     }
 
+    /// Why a chapter or a list could not load: the source's plugin asked for a host its manifest doesn't list, so the request never left the device and the source refused nothing. An update to the plugin usually fixes it.
+    public static func readingFailedHostNotAllowed(source: String) -> String {
+        Self.format("reading-failed-host-not-allowed", fallback: "The plugin for %1$@ asked for a host it isn't allowed to reach. An update to the plugin may fix it.", source)
+    }
+
     /// Why a chapter or a list could not load: the source answered with something Kaeri could not read.
     public static func readingFailedParse(source: String) -> String {
         Self.format("reading-failed-parse", fallback: "Kaeri couldn't read what %1$@ sent. Its plugin may need an update.", source)
@@ -1106,6 +1111,11 @@ public enum L {
         Self.format("export-waits-for-wifi", fallback: "%1$lld chapters aren't downloaded yet, so this send waits for Wi-Fi and goes on by itself.", n)
     }
 
+    /// Send to e-reader, under the ready files: pages of one chapter that couldn't be read, as the reader shows them broken, so the files go without them. The chapter is its name as the series shows it, such as Chapter 12 or Volume 1. n is how many pages were left out.
+    public static func exportPagesLeftOut(n: Int, chapter: String) -> String {
+        Self.format("export-pages-left-out", fallback: "%1$lld pages of %2$@ couldn't be read and aren't in the files.", n, chapter)
+    }
+
     /// Under a This week cell: the chapter that came out that day, with its own title.
     public static func readingChapterTitled(chapter: String, title: String) -> String {
         Self.format("reading-chapter-titled", fallback: "Chapter %1$@ · %2$@", chapter, title)
@@ -1362,6 +1372,12 @@ public enum L {
 
     /// The device is on mobile data and the chapters wait until it's on Wi-Fi.
     public static var readingEstimateWaitsWifi: String { string("reading-estimate-waits-wifi", fallback: "waits for Wi-Fi") }
+
+    /// Notice after Download on chapters that are files in the person's own folders: they open from where they are, so nothing is downloaded.
+    public static var readingDownloadOnDevice: String { string("reading-download-on-device", fallback: "These are files on this device already. They read offline without a download.") }
+
+    /// A series' name where neither the catalogue nor its source gave one: on Downloads, in a sent file's name and in the e-reader's library.
+    public static var readingUntitledSeries: String { string("reading-untitled-series", fallback: "Untitled series") }
 
     /// The notification's title.
     public static var readingDownloadsDoneTitle: String { string("reading-downloads-done-title", fallback: "Downloads finished") }
@@ -1975,6 +1991,21 @@ public enum L {
         Self.format("notice-signed-out-queue", fallback: "Signed out of %1$@. %2$lld queued changes are kept for the next sign-in.", tracker, count)
     }
 
+    /// Toast, shown once, when a tracker kept refusing a change to a title for about two days and the change stopped being sent. The change itself is still saved in the app. The tracker is its name, such as AniList; the title is a show's or a series' name. The notice capsule holds two lines on a phone, so keep it about as short as the English.
+    public static func noticeTrackerChangeRefused(tracker: String, title: String) -> String {
+        Self.format("notice-tracker-change-refused", fallback: "%1$@ kept refusing a change to %2$@, so it stays in Kaeri only.", tracker, title)
+    }
+
+    /// The same toast when changes to several titles stopped being sent to one tracker at once. The title is the first of them; others is how many more titles there are.
+    public static func noticeTrackerChangesRefused(tracker: String, title: String, others: Int) -> String {
+        Self.format("notice-tracker-changes-refused", fallback: "%1$@ kept refusing changes to %2$@ and %3$lld more titles, so they stay in Kaeri only.", tracker, title, others)
+    }
+
+    /// The same toast when the app has no name for the titles. Count is how many titles.
+    public static func noticeTrackerChangeRefusedUntitled(tracker: String, count: Int) -> String {
+        Self.format("notice-tracker-change-refused-untitled", fallback: "%1$@ kept refusing changes to %2$lld titles, so they stay in Kaeri only.", tracker, count)
+    }
+
     /// Toast when signing out of a tracker failed. The reason comes from the system.
     public static func noticeSignOutFailed(tracker: String, reason: String) -> String {
         Self.format("notice-sign-out-failed", fallback: "Couldn't sign out of %1$@. Try again. %2$@", tracker, reason)
@@ -2057,6 +2088,11 @@ public enum L {
     /// Toast when a setting could not be stored. The reason comes from the system.
     public static func noticeNotSaved(reason: String) -> String {
         Self.format("notice-not-saved", fallback: "Couldn't save that setting. %1$@", reason)
+    }
+
+    /// Toast when something the person did, such as a chapter marked read, a place in a book, a watched episode or a list change, could not be stored. The reason comes from the system.
+    public static func noticeChangeNotKept(reason: String) -> String {
+        Self.format("notice-change-not-kept", fallback: "Couldn't save that change. %1$@", reason)
     }
 
     /// Toast when a title's details did not load.
@@ -3924,6 +3960,9 @@ public enum L {
         Self.format("servers-row-summary-apple", fallback: "%1$lld series", series)
     }
 
+    /// Heading of the Mac's folder chooser for a folder of books: Reading's Add a source, the first launch's books step and a folder's Choose another.
+    public static var bookPickerMessage: String { string("book-picker-message", fallback: "Choose a folder with your books.") }
+
     /// Button on the recovery key sheet that opens the Files save panel on iPhone and iPad.
     public static var rkeySaveFiles: String { string("rkey-save-files", fallback: "Save to Files") }
 
@@ -5457,6 +5496,12 @@ public enum L {
 
     /// Line under the empty title.
     public static var downloadsEmptyDetail: String { string("downloads-empty-detail", fallback: "Downloaded episodes play without a connection.") }
+
+    /// Downloads' empty line for a person who only reads, under "No downloads".
+    public static var readDownloadsEmptyDetail: String { string("read-downloads-empty-detail", fallback: "Downloaded chapters open without a connection.") }
+
+    /// Downloads' empty line for a person who watches and reads, under "No downloads".
+    public static var readDownloadsEmptyBoth: String { string("read-downloads-empty-both", fallback: "Downloaded episodes and chapters open without a connection.") }
 
     /// Title when the list could not be read.
     public static var downloadsLoadFailed: String { string("downloads-load-failed", fallback: "Couldn't load downloads") }
@@ -10460,6 +10505,16 @@ public enum L {
     /// A send in a list or banner that is under way, with a ring beside it. The device is the e-reader.
     public static func sendBanner(device: String) -> String {
         Self.format("send-banner", fallback: "Sending to %1$@", device)
+    }
+
+    /// The chapters a send holds, on its row under Sending to, when there are several: the first to the last, by their numbers or labels, such as 21 to 23.
+    public static func sendRowChapters(first: String, last: String) -> String {
+        Self.format("send-row-chapters", fallback: "Chapters %1$@ to %2$@", first, last)
+    }
+
+    /// A send's row under Sending to: the series' title, then the chapters the send holds, such as "Chapter 23" or "Chapters 21 to 23". Shown on one line.
+    public static func sendRowLine(title: String, chapters: String) -> String {
+        Self.format("send-row-line", fallback: "%1$@ · %2$@", title, chapters)
     }
 
     /// The format of the files an e-reader is sent: a manga as a fixed-layout EPUB.

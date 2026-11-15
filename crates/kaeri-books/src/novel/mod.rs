@@ -8,13 +8,18 @@
 //! response carries [`csp`]. A source's chapter opening with its title twice says it once
 //! ([`heading_once`]). The paginator ([`script`]) lays the pages out and reports positions; its
 //! messages and calls are described at the top of `web/paginator.js`.
+//!
+//! A front end with no web view reads each cleaned document as [`text_blocks`] instead, with
+//! places named as the paginator names them.
 
+mod blocks;
 mod css;
 mod headings;
 mod hyphen;
 mod images;
 mod sanitize;
 
+pub use blocks::{Block, BlockKind, Run, text_blocks};
 pub use headings::heading_once;
 pub use hyphen::{BUILT_IN as HYPHENATES, SHY};
 pub use images::{MOST_WEB_IMAGES, web_images, with_local_images};
@@ -92,6 +97,32 @@ mod tests {
         assert!(!s.contains("__KAERI_CSS__"));
         assert!(s.contains("html.kaeri.k-paged"));
         assert!(s.contains("window.kaeriReader"));
+    }
+
+    /// WebKit before September 2025 (WebKitGTK up to 2.50) makes no columns for a count of 1
+    /// with an auto width, so a one-column page never breaks: every rule that counts columns
+    /// also sets a width.
+    #[test]
+    fn every_column_count_comes_with_a_column_width() {
+        let mut rules = 0;
+        for rule in STYLESHEET.split('}') {
+            let Some((selector, body)) = rule.split_once('{') else { continue };
+            if !body.contains("column-count") {
+                continue;
+            }
+            rules += 1;
+            let width = body
+                .split(';')
+                .filter_map(|d| d.split_once(':'))
+                .find(|(name, _)| name.trim() == "column-width")
+                .map(|(_, value)| value.trim().to_owned());
+            assert!(
+                width.as_deref().is_some_and(|w| w.starts_with("1px")),
+                "{} sets column-count without a 1px column-width: {width:?}",
+                selector.trim()
+            );
+        }
+        assert!(rules >= 2, "the horizontal and vertical paged rules count columns");
     }
 
     #[test]

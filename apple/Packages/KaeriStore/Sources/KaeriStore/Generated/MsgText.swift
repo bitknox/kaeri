@@ -191,6 +191,9 @@ extension Msg {
         case .noticeClientIdMissing(let setting): L.noticeClientIdMissing(setting: setting)
         case .noticeSignedOut(let tracker): L.noticeSignedOut(tracker: tracker)
         case .noticeSignedOutQueue(let tracker, let count): L.noticeSignedOutQueue(tracker: tracker, count: Int(count))
+        case .noticeTrackerChangeRefused(let tracker, let title): L.noticeTrackerChangeRefused(tracker: tracker, title: title)
+        case .noticeTrackerChangesRefused(let tracker, let title, let others): L.noticeTrackerChangesRefused(tracker: tracker, title: title, others: Int(others))
+        case .noticeTrackerChangeRefusedUntitled(let tracker, let count): L.noticeTrackerChangeRefusedUntitled(tracker: tracker, count: Int(count))
         case .noticeSignOutFailed(let tracker, let reason): L.noticeSignOutFailed(tracker: tracker, reason: reason)
         case .noticeNotSavedBecause(let cause): L.noticeNotSavedBecause(cause: cause.text)
         case .noticeProxySaved: L.noticeProxySaved
@@ -208,6 +211,7 @@ extension Msg {
         case .legalHostsNoContent: L.legalHostsNoContent
         case .noticeSaved(let label): L.noticeSaved(label: label)
         case .noticeNotSaved(let reason): L.noticeNotSaved(reason: reason)
+        case .noticeChangeNotKept(let reason): L.noticeChangeNotKept(reason: reason)
         case .noticeTitleLoadFailed: L.noticeTitleLoadFailed
         case .noticePlaybackFailed: L.noticePlaybackFailed
         case .noticeEngineFault: L.noticeEngineFault
@@ -356,6 +360,7 @@ extension ReadingMsg {
         case .readingFailedNotFound: L.readingFailedNotFound
         case .readingFailedNoSource: L.readingFailedNoSource
         case .readingFailedBlocked(let source, let reason): L.readingFailedBlocked(source: source, reason: reason)
+        case .readingFailedHostNotAllowed(let source): L.readingFailedHostNotAllowed(source: source)
         case .readingFailedParse(let source): L.readingFailedParse(source: source)
         case .readingFailedPage(let status): L.readingFailedPage(status: Int(status))
         case .readingPictureFailed: L.readingPictureFailed
@@ -425,6 +430,7 @@ extension ReadingMsg {
         case .exportDeviceTablet: L.exportDeviceTablet
         case .exportChapter(let chapter): L.exportChapter(chapter: chapter)
         case .exportWaitsForWifi(let n): L.exportWaitsForWifi(n: Int(n))
+        case .exportPagesLeftOut(let n, let chapter): L.exportPagesLeftOut(n: Int(n), chapter: chapter)
         case .readingChapterTitled(let chapter, let title): L.readingChapterTitled(chapter: chapter, title: title)
         case .readingRowRead: L.readingRowRead
         case .readingRowNew: L.readingRowNew
@@ -486,6 +492,8 @@ extension ReadingMsg {
         case .readingEstimateWifi: L.readingEstimateWifi
         case .readingEstimateMobile: L.readingEstimateMobile
         case .readingEstimateWaitsWifi: L.readingEstimateWaitsWifi
+        case .readingDownloadOnDevice: L.readingDownloadOnDevice
+        case .readingUntitledSeries: L.readingUntitledSeries
         case .readingDownloadsDoneTitle: L.readingDownloadsDoneTitle
         case .readingDownloadsDoneChapters(let title, let count): L.readingDownloadsDoneChapters(title: title, count: Int(count))
         case .readingDownloadsDoneParts(let title, let count): L.readingDownloadsDoneParts(title: title, count: Int(count))

@@ -49,7 +49,13 @@ pub async fn run(
 ) -> Result<()> {
     // The colour depth first: every colour the palette hands out is drawn at it.
     theme::set_depth(theme::detect_depth(|key| std::env::var(key).ok()));
-    let palette = theme::resolve(config.theme.mode);
+    // The terminal is asked everything at once, through one reader that keeps the keys typed
+    // meanwhile: they are the first the loop reads.
+    let answers = kaeri_tui::probe::ask(kaeri_tui::probe::Ask {
+        background: config.theme.mode == kaeri_core::config::ThemeMode::Adaptive,
+        graphics: images,
+    });
+    let palette = theme::resolve_answered(config.theme.mode, &answers);
 
     let mut keymap = Keymap::new();
     let keybinding_problems = keymap.apply_overrides(&config.keys);
@@ -57,8 +63,8 @@ pub async fn run(
         eprintln!("warning: keybinding: {problem}");
     }
 
-    let image_engine =
-        kaeri_tui::image::ImageEngine::detect(images).with_cache_dir(paths.image_cache());
+    let image_engine = kaeri_tui::image::ImageEngine::with_answers(images, &answers)
+        .with_cache_dir(paths.image_cache());
     tracing::info!(graphics = ?image_engine.graphics(), "image engine ready");
 
     // What the file says, as distinct from what is in effect: `--theme` changes only this
@@ -81,6 +87,8 @@ pub async fn run(
     // starting parties when asked, do without.
     options.every_play_a_party = true;
     options.reading = true;
+    // The terminal's own reader settings: the text width of a light novel, in columns.
+    options.terminal = true;
     let host = Arc::new(DesktopHost::new(&config, &paths));
     let (engine, mut from_engine) = Engine::start(options, host).await?;
     engine.send(network_at_launch());
@@ -89,6 +97,8 @@ pub async fn run(
     // The settings as the engine starts on them, which it says again at launch.
     let settings = kaeri_model::settings::view(&config, &saved);
     let mut app = App::with_images(settings, palette, keymap, image_engine);
+    // Reader pictures are resized and encoded on the blocking pool, not in the draw.
+    app.images.encode_off_loop();
     // What sync names this computer when it starts without a name in the group.
     app.set_device_name(computer_name());
     // The crash reports saved here, for Report a bug to offer. Saving is off unless asked for,
@@ -143,10 +153,13 @@ pub async fn run(
         app.apply(update);
     }
 
-    let mut events = EventStream::new();
+    let typed = answers.typed_events().into_iter().map(Ok::<TermEvent, io::Error>);
+    let mut events = futures::stream::iter(typed).chain(EventStream::new());
     let mut ticker = tokio::time::interval(Duration::from_millis(100));
     // Covers come back from the blocking pool on this, decoded, to be handed to the app.
     let (covers_tx, mut covers_rx) = mpsc::unbounded_channel();
+    let (pages_tx, mut pages_rx) = mpsc::unbounded_channel();
+    let (made_tx, mut made_rx) = mpsc::unbounded_channel();
 
     // Painting on change rather than on every tick: see `Repaint`. `idle_tick` is whether
     // nothing but the ticker woke this pass, the one case that may skip it.
@@ -181,6 +194,17 @@ pub async fn run(
             if let Err(e) = terminal.draw(|frame| report = screens::render(frame, &app)) {
                 break Err(e.into());
             }
+            // Sixel and iTerm2 keep a picture's pixels where the frame drew no picture over
+            // them: one page after two, a page after a spread or after zooming out. The screen
+            // is cleared and drawn again at once, so what was left shows for a frame at most.
+            if app.images.left_behind() {
+                let again = terminal.clear().and_then(|()| {
+                    terminal.draw(|frame| report = screens::render(frame, &app))
+                });
+                if let Err(e) = again {
+                    break Err(e.into());
+                }
+            }
             // How the frame laid the overlay out, for the next key to page and scroll by.
             app.took_frame(report);
             repaint.painted(terminal.backend_mut().take_wrote(), now);
@@ -206,6 +230,15 @@ pub async fn run(
         // section's reload once the rail has settled. All of it, in the order it was asked.
         for task in app.take_commands() {
             engine.send(task);
+        }
+        // Reader pages to decode, off the loop; each comes back on the arm below.
+        for job in app.take_page_jobs() {
+            tui::pages::spawn(job, &pages_tx);
+        }
+        // Pages the last frame wanted made for its boxes, off the loop too; the frame drew
+        // what it had meanwhile, and each comes back on the arm below.
+        for job in app.images.take_encode_jobs() {
+            tui::pages::encode(job, &made_tx);
         }
 
         tokio::select! {
@@ -255,6 +288,8 @@ pub async fn run(
                 }
             }
             Some(decoded) = covers_rx.recv() => covers::hand_over(&mut app, decoded),
+            Some(decoded) = pages_rx.recv() => tui::pages::hand_over(&mut app, decoded),
+            Some(made) = made_rx.recv() => app.images.encoded(made),
             // Asked to end from outside — a kill, the terminal closing — which leaves the way
             // Q does, so the player is closed rather than orphaned and playing on.
             signal = signals.recv() => {
@@ -298,6 +333,7 @@ pub async fn run(
                     Some(Ok(TermEvent::Resize(width, height))) => {
                         let area = ratatui::layout::Rect::new(0, 0, width, height);
                         app.fit_to(screens::visible_rows(area, app.nav.section()));
+                        app.resized((width, height));
                     }
                     Some(Err(e)) => break Err(anyhow::anyhow!(e)),
                     None => break Ok(()),

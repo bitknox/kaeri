@@ -534,7 +534,7 @@ impl Home {
         rule.add_css_class("home-rule");
         column.append(&rule);
         let label = gtk::Label::new(None);
-        label.set_markup(&linked(&text, &links));
+        crate::widgets::set_link_markup(&label, &linked(&text, &links));
         label.add_css_class("haze");
         label.add_css_class("home-end");
         label.set_xalign(0.0);

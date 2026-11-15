@@ -1,14 +1,14 @@
 ---
-// The docs' theme before the first paint, as on the other pages (SiteHead): light, unless the
-// visitor picked dark with the theme switch. Starlight's own provider follows the system instead.
-// The docs have no theme select of Starlight's, so its pickers have nothing to update.
+// The docs' theme before the first paint, as on the other pages (SiteHead): the system's, unless
+// the visitor picked one with the theme switch. The docs have no theme select of Starlight's, so its
+// pickers have nothing to update.
 ---
 
 <script is:inline>
 	try {
-		document.documentElement.dataset.theme = localStorage.getItem('starlight-theme') === 'dark' ? 'dark' : 'light';
-	} catch (e) {
-		document.documentElement.dataset.theme = 'light';
-	}
+		var picked = localStorage.getItem('starlight-theme');
+	} catch (e) {}
+	document.documentElement.dataset.theme =
+		picked === 'dark' || picked === 'light' ? picked : matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
 	window.StarlightThemeProvider = { updatePickers() {} };
 </script>

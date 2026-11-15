@@ -120,3 +120,52 @@ async fn komga_names_a_comic_s_pages_and_never_downloads_a_file_for_them() {
     assert!(seen.iter().any(|(_, p, _)| p == "/api/v1/books/b4"));
     assert!(seen.iter().all(|(_, p, _)| !p.ends_with("/file")), "no file was downloaded");
 }
+
+/// Ids go into paths percent-encoded as one segment: a space is `%20`, never a form's `+`,
+/// and a slash stays inside its segment, so a strict server finds them.
+#[tokio::test]
+async fn komga_ids_with_spaces_and_slashes_go_in_paths_as_one_segment() {
+    let mut routes = routes();
+    routes.extend([
+        (
+            "/api/v1/series/s%201%2Fx/books",
+            r#"{"content":[{"id":"b 1","name":"Lantern Keeper 001","sizeBytes":1000,"media":{"status":"READY","mediaType":"application/zip","pagesCount":1},"metadata":{"title":"","number":"1"}}],"totalElements":1}"#,
+        ),
+        (
+            "/api/v1/books/b%201",
+            r#"{"id":"b 1","name":"Lantern Keeper 001","sizeBytes":1000,"media":{"status":"READY","mediaType":"application/zip","pagesCount":1},"metadata":{"title":"","number":"1"}}"#,
+        ),
+        ("/api/v1/books/b%201/pages", r#"[{"number":1}]"#),
+        ("/api/v1/books/b%201/read-progress", ""),
+    ]);
+    let (address, seen) = serve(routes).await;
+    let client = reqwest::Client::new();
+    let done = sign_in(&client, &address, Some(Kind::Komga), "test", "test").await.unwrap();
+    let keep = tempfile::tempdir().unwrap();
+    let source = source(
+        &client,
+        &Server {
+            id: "k",
+            name: "Komga",
+            kind: Kind::Komga,
+            address: &address,
+            credential: &done.credential,
+        },
+        keep.path().to_path_buf(),
+        Arc::new(AtomicBool::new(false)),
+    )
+    .unwrap();
+
+    let chapters = source.chapters("s 1/x", &BookHints::default()).await.unwrap();
+    assert_eq!(chapters.iter().map(|c| c.id.as_str()).collect::<Vec<_>>(), ["b 1"]);
+    let pages = source.chapter_pages("s 1/x", "b 1").await.unwrap().expect("pages");
+    assert!(pages[0].url.ends_with("/api/v1/books/b%201/pages/1"), "{}", pages[0].url);
+    source.report_progress("s 1/x", "b 1", true).await.unwrap();
+
+    let seen = seen.lock().unwrap();
+    let paths: Vec<&str> = seen.iter().map(|(_, p, _)| p.as_str()).collect();
+    assert!(paths.contains(&"/api/v1/series/s%201%2Fx/books?unpaged=true"), "{paths:?}");
+    assert!(paths.contains(&"/api/v1/books/b%201/pages"), "{paths:?}");
+    assert!(paths.contains(&"/api/v1/books/b%201/read-progress"), "{paths:?}");
+    assert!(paths.iter().all(|p| !p.contains('+')), "{paths:?}");
+}

@@ -11,6 +11,8 @@ downloads-in-downloads = { $size } de téléchargements
 downloads-space-label = Espace occupé par les téléchargements
 downloads-empty-title = Aucun téléchargement
 downloads-empty-detail = Les épisodes téléchargés se lisent sans connexion.
+read-downloads-empty-detail = Les chapitres téléchargés se lisent sans connexion.
+read-downloads-empty-both = Les épisodes et chapitres téléchargés se lisent sans connexion.
 downloads-load-failed = Impossible de charger les téléchargements
 downloads-folder-failed = Impossible d’ouvrir le dossier. Vérifiez qu’il existe toujours.
 downloads-episode-name = Épisode { $episode }
@@ -58,7 +60,7 @@ downloads-quality = Qualité des téléchargements
 downloads-notice-done = Épisode { $episode } téléchargé
 downloads-notice-done-detail = { $title } · prêt à regarder hors ligne
 downloads-notice-running = { $count ->
-    [one] Téléchargement d’un épisode
+    [one] Téléchargement de { $count } épisode
     [many] Téléchargement de { $count } épisodes
    *[other] Téléchargement de { $count } épisodes
  }

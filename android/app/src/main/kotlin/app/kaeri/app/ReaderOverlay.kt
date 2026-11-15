@@ -44,6 +44,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import app.kaeri.design.Motion
@@ -282,13 +283,13 @@ private fun OpenReader(
     // On a phone the reader turns with the phone as the player does, unless rotation is locked;
     // the app under it stays portrait, and is portrait again as the reader closes.
     val activity = androidx.activity.compose.LocalActivity.current
+    val phone = LocalConfiguration.current.smallestScreenWidthDp < 600
     DisposableEffect(activity) {
-        val phone = context.resources.configuration.smallestScreenWidthDp < 600
         if (phone) activity?.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_FULL_USER
         onDispose { if (phone) activity?.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT }
     }
     LaunchedEffect(leaving) {
-        if (leaving && context.resources.configuration.smallestScreenWidthDp < 600) {
+        if (leaving && phone) {
             activity?.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
         }
     }

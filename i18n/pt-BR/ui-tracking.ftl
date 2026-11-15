@@ -18,7 +18,7 @@ accounts-list-empty = Títulos que você adicionar em { $tracker } aparecem aqui
 accounts-state-signed-out = Não conectado
 accounts-state-signed-in = Conectado em { $tracker } como { $name }
 accounts-state-signed-in-waiting = { $count ->
-    [one] Conectado em { $tracker } como { $name } · uma alteração pendente
+    [one] Conectado em { $tracker } como { $name } · { $count } alteração pendente
     [many] Conectado em { $tracker } como { $name } · { $count } alterações pendentes
    *[other] Conectado em { $tracker } como { $name } · { $count } alterações pendentes
  }

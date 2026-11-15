@@ -32,7 +32,7 @@ eink-chapter = Chapitre { $chapter }
 eink-contents = Sommaire
 eink-back = Retour
 eink-pages-left = { $count ->
-    [one] Une page restante dans le chapitre
+    [one] { $count } page restante dans le chapitre
     [many] { $count } pages restantes dans le chapitre
    *[other] { $count } pages restantes dans le chapitre
  }
@@ -43,7 +43,7 @@ eink-clean-screen = Nettoyer l'écran
 eink-end-of-chapter = Fin du chapitre { $chapter }
 eink-end-next = Suivant
 eink-end-pages = { $count ->
-    [one] Une page
+    [one] { $count } page
     [many] { $count } pages
    *[other] { $count } pages
  }

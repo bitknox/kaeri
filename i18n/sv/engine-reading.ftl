@@ -99,6 +99,10 @@ export-waits-for-wifi = { $n ->
     [one] Ett kapitel är inte nedladdat än, så den här sändningen väntar på Wi-Fi och fortsätter av sig själv.
    *[other] { $n } kapitel är inte nedladdade än, så den här sändningen väntar på Wi-Fi och fortsätter av sig själv.
  }
+export-pages-left-out = { $n ->
+    [one] En sida i { $chapter } gick inte att läsa och finns inte med i filerna.
+   *[other] { $n } sidor i { $chapter } gick inte att läsa och finns inte med i filerna.
+ }
 reading-chapter-titled = Kapitel { $chapter } · { $title }
 reading-row-read = Läst
 reading-row-new = Ny

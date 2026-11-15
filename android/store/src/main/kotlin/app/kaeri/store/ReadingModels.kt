@@ -24,6 +24,7 @@ import app.kaeri.engine.model.EditionMiss
 import app.kaeri.engine.model.Event
 import app.kaeri.engine.model.ExportFile
 import app.kaeri.engine.model.ExportFormat
+import app.kaeri.engine.model.ExportSkipped
 import app.kaeri.engine.model.ExportTarget
 import app.kaeri.engine.model.FolderRef
 import app.kaeri.engine.model.KaeriIsFor
@@ -51,6 +52,7 @@ import app.kaeri.engine.model.ReadingCommand
 import app.kaeri.engine.model.ReadingEvent
 import app.kaeri.engine.model.ReadingFailure
 import app.kaeri.engine.model.ReadingHomeView
+import app.kaeri.engine.model.ReadingMsg
 import app.kaeri.engine.model.SeriesView
 import app.kaeri.engine.model.ServerStep
 import app.kaeri.engine.model.SettingScope
@@ -257,6 +259,9 @@ private fun ReadSearchState.failedWith(failure: ReadingFailure): ReadSearchState
     if (stale) copy(loading = false, failure = failure, tiles = emptyList(), total = null, firstPage = 0, otherScope = null, stale = false)
     else copy(loading = false, failure = failure)
 
+/** A download asked for that could not start: what was asked, to ask again, and why. */
+data class DownloadNotStarted(val pick: DownloadPick, val failure: ReadingFailure)
+
 /** A finished download batch, said as a notification while Downloads finished is on. */
 data class DownloadsDone(val work: WorkId?, val title: Msg, val body: Msg)
 
@@ -324,6 +329,20 @@ class ReadingModel(private val send: (Command) -> Unit) {
 
     /** New chapters a check found, for the app's notifications. */
     val newChapters: SharedFlow<List<NewChapter>> = _newChapters.asSharedFlow()
+
+    /** The download last asked for while the engine has not answered it, to name what a failure about downloads stopped. */
+    @Volatile private var downloadAsked: Pair<WorkId, DownloadPick>? = null
+
+    private val _notStarted = MutableStateFlow<Map<WorkId, DownloadNotStarted>>(emptyMap())
+
+    /**
+     * Each series' download that could not start, such as when its source fails and no chapter list
+     * is kept, until a notice has said so: a download is never left looking queued.
+     */
+    val notStarted: StateFlow<Map<WorkId, DownloadNotStarted>> = _notStarted.asStateFlow()
+
+    /** [work]'s download that could not start has been said, or is no longer news. */
+    fun notStartedSeen(work: WorkId) = _notStarted.update { it - work }
 
     private val _downloadsDone = MutableSharedFlow<DownloadsDone>(extraBufferCapacity = 4)
 
@@ -499,6 +518,8 @@ class ReadingModel(private val send: (Command) -> Unit) {
         reading(ReadingCommand.ConnectMangaUpdates(username, password))
 
     fun download(work: WorkId, pick: DownloadPick) {
+        downloadAsked = work to pick
+        _notStarted.update { it - work }
         reading(ReadingCommand.Download(work, pick))
         reloadChapters(work)
     }
@@ -630,7 +651,11 @@ class ReadingModel(private val send: (Command) -> Unit) {
             }
             is ReadingEvent.Versions -> _versions.update { it + (event.chapter to event.versions) }
             is ReadingEvent.Tracking -> _tracking.update { it + (event.work to event.rows) }
-            is ReadingEvent.Downloads -> _downloads.value = event.v1
+            is ReadingEvent.Downloads -> {
+                // The queue the engine published answers the ask: it started.
+                downloadAsked = null
+                _downloads.value = event.v1
+            }
             is ReadingEvent.DownloadEstimate -> _estimates.update { it + (event.v1.work to event.v1) }
             is ReadingEvent.RemovedFromLists -> {
                 _removals.update { it + (event.work to event.results) }
@@ -640,6 +665,10 @@ class ReadingModel(private val send: (Command) -> Unit) {
             is ReadingEvent.DownloadsDone -> _downloadsDone.tryEmit(DownloadsDone(event.work, event.title, event.body))
             is ReadingEvent.Failed -> {
                 _failures.update { it + (event.about to event.failure) }
+                if (event.about == ReadingAbout.DOWNLOADS) {
+                    downloadAsked?.let { (work, pick) -> _notStarted.update { it + (work to DownloadNotStarted(pick, event.failure)) } }
+                    downloadAsked = null
+                }
                 if (event.about == ReadingAbout.HOME) _homeLoading.value = false
                 if (event.about == ReadingAbout.SEARCH) {
                     _search.update { it.failedWith(event.failure) }
@@ -858,7 +887,15 @@ sealed interface ExportJob {
 
     /** Held for Wi-Fi: goes on by itself once the network allows; [line] says why. */
     data class Waiting(override val job: ULong, override val work: WorkId, override val target: String, val line: Msg) : ExportJob
-    data class Ready(override val job: ULong, override val work: WorkId, override val target: String, val chapters: List<ChapterId>, val files: List<ExportFile>) : ExportJob
+    /** [skipped] are the chapters that went without some of their pages, each with its line. */
+    data class Ready(
+        override val job: ULong,
+        override val work: WorkId,
+        override val target: String,
+        val chapters: List<ChapterId>,
+        val files: List<ExportFile>,
+        val skipped: List<ExportSkipped> = emptyList(),
+    ) : ExportJob
 
     /** [chapter] is the one it could not prepare, when it was one. */
     data class Failed(
@@ -902,9 +939,21 @@ class ExportModel(private val send: (Command) -> ULong?) {
         send(Command.Reading(ReadingCommand.SetSendTarget(target)))
     }
 
+    /**
+     * A Fixtures shot's send held for Wi-Fi: [prepare] asks the engine for nothing and the send
+     * waits as one does on a phone network. The fixture scenes have no source to fetch from.
+     */
+    internal var holdShot = false
+
     /** Prepare [chapters] of [work] for [target] in [format]; the job, or `null` without an engine. */
     fun prepare(work: WorkId, chapters: List<ChapterId>, target: String, format: ExportFormat): ULong? {
         choose(target)
+        if (holdShot) {
+            val job = ULong.MAX_VALUE - _jobs.value.size.toULong()
+            val line = Msg.Reading(ReadingMsg.ExportWaitsForWifi(chapters.size.toLong()))
+            apply(ReadingEvent.ExportWaiting(job, work, target, line, chapters))
+            return job
+        }
         val job = send(Command.Reading(ReadingCommand.Prepare(work, DownloadPick.Chapters(chapters), target, format))) ?: return null
         asked[job] = Triple(work, target, chapters)
         _jobs.update { it + (job to ExportJob.Preparing(job, work, target, 0u, chapters.size.toUInt())) }
@@ -960,12 +1009,14 @@ class ExportModel(private val send: (Command) -> ULong?) {
                 }
             }
             is ReadingEvent.ExportWaiting -> {
-                if (event.job !in asked) asked[event.job] = Triple(event.work, event.target, emptyList())
+                // A send this model did not ask for (one held across a restart) learns its
+                // chapters here, so its Ready state can offer Set my place.
+                if (event.job !in asked) asked[event.job] = Triple(event.work, event.target, event.chapters)
                 _jobs.update { it + (event.job to ExportJob.Waiting(event.job, event.work, event.target, event.line)) }
             }
             is ReadingEvent.ExportReady -> {
                 val (work, target, chapters) = asked[event.job] ?: return
-                _jobs.update { it + (event.job to ExportJob.Ready(event.job, work, target, chapters, event.files)) }
+                _jobs.update { it + (event.job to ExportJob.Ready(event.job, work, target, chapters, event.files, event.skipped)) }
             }
             is ReadingEvent.ExportFailed -> {
                 val (work, target) = asked[event.job] ?: return

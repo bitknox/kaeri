@@ -219,6 +219,7 @@ impl Engine {
             device_label,
             handheld,
             phone,
+            terminal,
             device_kind,
             language,
             sources: given,
@@ -302,7 +303,7 @@ impl Engine {
                 let book_sources = crate::read_sources::BookSources::new(
                     store.clone(),
                     kaeri_track::TokenStore::over(crate::host::file_secrets(&paths)),
-                    http.plain().clone(),
+                    &http,
                     &paths,
                 );
                 Services {
@@ -398,6 +399,7 @@ impl Engine {
         crate::tracking::commands::announce_signed_in(&services.store, &services.sync);
         state.config.set_handheld(handheld);
         state.config.set_phone(phone);
+        state.config.set_terminal(terminal);
         let account = {
             use kaeri_store::sync::kinds::MEDIUM_ACCOUNT;
             let store = &services.store;
@@ -1169,14 +1171,25 @@ impl Actor {
                 let tx = self.inbox.sender();
                 let said = handle_internal(message, &mut self.state, &self.services, &tx).await;
                 said.into_iter().for_each(|said| self.pass_on(said));
-                // Sends left waiting for Wi-Fi when the engine last stopped start again, each
-                // as a job of its own, as queued chapter downloads do.
+                // Sends left under way when the engine last stopped, waiting for Wi-Fi or cut
+                // off while they prepared, start again, each as a job of its own, as queued
+                // chapter downloads do.
                 if message == Internal::LetGo {
-                    for again in crate::export::held_sends(&self.state, &self.services) {
+                    let jobs = &self.jobs;
+                    let held = crate::export::held_sends(
+                        &self.state,
+                        &self.services,
+                        || jobs.next(),
+                        &tx,
+                    );
+                    for again in held {
                         let again = Command::Reading(again);
                         let job = again.activity().map(|activity| (self.jobs.next(), activity));
                         self.route(job, again);
                     }
+                    // Sends that were ready when the app stopped are offered again.
+                    let jobs = &self.jobs;
+                    crate::export::offer_kept(&self.state, &self.services, || jobs.next(), &tx);
                 }
                 #[cfg(feature = "testing")]
                 if self.trace {
@@ -4517,8 +4530,17 @@ mod tests {
             })
             .await;
             let job = seen.iter().find_map(|e| match e {
-                Event::Reading(ReadingEvent::ExportWaiting { job, work, target, line }) => {
+                Event::Reading(ReadingEvent::ExportWaiting {
+                    job,
+                    work,
+                    target,
+                    line,
+                    chapters,
+                }) => {
                     assert_eq!((work.as_str(), target.as_str()), (WORK, "kobo"));
+                    // Every send that waits here holds chapters 1 and 2: a screen that never
+                    // asked for it learns them from this.
+                    assert_eq!(chapters, &[ChapterId::new("1"), ChapterId::new("2")]);
                     assert_eq!(
                         *line,
                         Msg::Reading(kaeri_model::ReadingMsg::ExportWaitsForWifi { n: 1 })
@@ -4533,7 +4555,7 @@ mod tests {
         /// How many pages the files of a finished send hold, by its job.
         fn pages_sent(seen: &[Event]) -> Option<(JobId, usize)> {
             seen.iter().find_map(|e| match e {
-                Event::Reading(ReadingEvent::ExportReady { job, files }) => {
+                Event::Reading(ReadingEvent::ExportReady { job, files, .. }) => {
                     let book = kaeri_books::open(
                         std::path::Path::new(&files[0].path),
                         &kaeri_books::Limits::default(),
@@ -4666,6 +4688,562 @@ mod tests {
             engine.shutdown().await;
         }
 
+        /// A send identical to one waiting for Wi-Fi joins it and is told it waits as well,
+        /// so the screen that asked shows the wait; on Wi-Fi both turn ready.
+        #[tokio::test]
+        async fn a_send_that_joins_one_waiting_for_wifi_is_told_it_waits() {
+            let dir = tempfile::tempdir().unwrap();
+            let (engine, mut events, _) = send_engine(dir.path(), None).await;
+            events.launch().await;
+            engine.send(network(true, false));
+            engine.send(send_of(&["1", "2"]));
+            let (first, _) = waiting(&mut events).await;
+
+            engine.send(send_of(&["1", "2"]));
+            let (second, seen) = waiting(&mut events).await;
+            assert_ne!(second, first, "the joining send is told it waits: {seen:?}");
+
+            engine.send(network(false, false));
+            let is_ready =
+                |e: &Event| matches!(e, Event::Reading(ReadingEvent::ExportReady { .. }));
+            let mut ready = std::collections::HashSet::new();
+            while ready.len() < 2 {
+                for e in seen_until(&mut events, is_ready).await {
+                    if let Event::Reading(ReadingEvent::ExportReady { job, .. }) = e {
+                        ready.insert(job);
+                    }
+                }
+            }
+            assert_eq!(ready, [first, second].into(), "both turn ready on Wi-Fi");
+            engine.shutdown().await;
+        }
+
+        /// A made-up one-chapter novel.
+        fn novel_file(path: &std::path::Path) {
+            use kaeri_books::write::{BookMeta, EpubFlavor, EpubWriter};
+            let meta = BookMeta {
+                title: "The Lantern Ferry".into(),
+                language: "en".into(),
+                ..BookMeta::default()
+            };
+            let out = std::io::BufWriter::new(std::fs::File::create(path).unwrap());
+            let mut w = EpubWriter::new(out, meta, EpubFlavor::Epub, None).unwrap();
+            w.add_chapter("Eight", "<p>The tide came in under the pier.</p>").unwrap();
+            w.finish().unwrap();
+        }
+
+        /// Puts `files` (each a file name in `books` and its chapter number) in a folder
+        /// series of the work, and reads the work from there.
+        fn read_from_folders(
+            store: &kaeri_store::Store,
+            books: &std::path::Path,
+            files: &[(&str, u32)],
+        ) {
+            let series = kaeri_store::shelf::LocalSeries {
+                id: "books:ferry".into(),
+                folder: books.display().to_string(),
+                name: "The Lantern Ferry".into(),
+                medium: "manga".into(),
+                work: Some(WORK.into()),
+                state: "matched".into(),
+            };
+            store.put_local_series(&series).unwrap();
+            for (name, number) in files {
+                let path = books.join(name);
+                let format = path
+                    .extension()
+                    .map_or_else(|| "folder".to_owned(), |e| e.to_string_lossy().into_owned());
+                let file = kaeri_store::shelf::ShelfFile {
+                    path: path.display().to_string(),
+                    chapter: None,
+                    label: format!("Chapter {number}"),
+                    volume: None,
+                    number_milli: Some(i64::from(*number) * 1000),
+                    format,
+                    pages: None,
+                    comicinfo: None,
+                    source: None,
+                };
+                store.put_local_file("books:ferry", &file, 1, 1).unwrap();
+            }
+            store.set_book_match("shelf", "s-1", WORK, 0, false, false, 1).unwrap();
+            let folders = crate::read_sources::FOLDERS;
+            store.set_book_match(folders, "books:ferry", WORK, 100, true, false, 1).unwrap();
+        }
+
+        /// R6-7 and R6W-1. Files in the person's folders are on this device: on cellular a
+        /// send of a folder's CBZ, or of its EPUB, goes at once, fetches nothing and never
+        /// waits, and offline a chapter that is a folder of pages goes as well.
+        #[tokio::test]
+        async fn on_cellular_a_send_of_files_in_folders_goes_at_once() {
+            let dir = tempfile::tempdir().unwrap();
+            let (engine, mut events, store, source) = launch_engine(dir.path(), None).await;
+            events.launch().await;
+            let books = dir.path().join("books");
+            std::fs::create_dir_all(&books).unwrap();
+            comic_file(&books.join("Chapter 7.cbz"), 3);
+            novel_file(&books.join("Chapter 8.epub"));
+            // R6W-1. Chapter 9 is a folder of pages.
+            let pages = books.join("Chapter 9");
+            std::fs::create_dir_all(&pages).unwrap();
+            for n in 1..=2u8 {
+                let page = image::GrayImage::from_pixel(200, 300, image::Luma([n * 40]));
+                page.save(pages.join(format!("{n}.png"))).unwrap();
+            }
+            read_from_folders(
+                &store,
+                &books,
+                &[("Chapter 7.cbz", 7), ("Chapter 8.epub", 8), ("Chapter 9", 9)],
+            );
+            engine.send(network(true, false));
+
+            engine.send(send_of(&["7"]));
+            let seen = seen_until(&mut events, send_ended).await;
+            assert_eq!(pages_sent(&seen).map(|(_, pages)| pages), Some(3), "{seen:?}");
+            assert!(!seen.iter().any(said_waiting), "{seen:?}");
+
+            engine.send(Command::Reading(ReadingCommand::Prepare {
+                work: WorkId::new(WORK),
+                pick: DownloadPick::Chapters { ids: vec![ChapterId::new("8")] },
+                target: "kobo".into(),
+                format: kaeri_model::reading::ExportFormat::Epub,
+            }));
+            let seen = seen_until(&mut events, send_ended).await;
+            assert!(!seen.iter().any(said_waiting), "{seen:?}");
+            let files = seen.iter().find_map(|e| match e {
+                Event::Reading(ReadingEvent::ExportReady { files, .. }) => Some(files.clone()),
+                _ => None,
+            });
+            let files = files.unwrap_or_else(|| panic!("the EPUB was not sent: {seen:?}"));
+            assert!(files.len() == 1 && files[0].name.ends_with(".epub"), "{files:?}");
+
+            // A folder of pages goes too, and needs no network at all.
+            engine.send(network(false, true));
+            engine.send(send_of(&["9"]));
+            let seen = seen_until(&mut events, send_ended).await;
+            assert_eq!(pages_sent(&seen).map(|(_, pages)| pages), Some(2), "{seen:?}");
+            assert_eq!(source.fetched(), 0, "nothing was asked of the source");
+            assert!(!kept_waiting(&store));
+            engine.shutdown().await;
+        }
+
+        /// R6-7. A send of a folder's file, a downloaded chapter and one to fetch waits for
+        /// Wi-Fi for the one it fetches alone, then sends all three.
+        #[tokio::test]
+        async fn a_mixed_send_waits_only_for_the_chapter_it_fetches() {
+            let dir = tempfile::tempdir().unwrap();
+            let (engine, mut events, store, source) = launch_engine(dir.path(), None).await;
+            events.launch().await;
+            // Downloading chapter 2 keeps the source's list, so the folder series lists the
+            // source's chapters beside its own file.
+            engine.send(network(false, false));
+            engine.send(Command::Reading(ReadingCommand::Download {
+                work: WorkId::new(WORK),
+                pick: DownloadPick::Chapters { ids: vec![ChapterId::new("2")] },
+            }));
+            downloads_until(&engine, &mut events, |v| done_ids(v) == ["1", "2"]).await;
+            let books = dir.path().join("books");
+            std::fs::create_dir_all(&books).unwrap();
+            comic_file(&books.join("Chapter 7.cbz"), 3);
+            read_from_folders(&store, &books, &[("Chapter 7.cbz", 7)]);
+            engine.send(network(true, false));
+            let fetched = source.fetched();
+
+            engine.send(send_of(&["1", "3", "7"]));
+            let seen = seen_until(&mut events, |e| send_ended(e) || said_waiting(e)).await;
+            let line = seen.iter().find_map(|e| match e {
+                Event::Reading(ReadingEvent::ExportWaiting { line, .. }) => Some(line.clone()),
+                _ => None,
+            });
+            let one = Msg::Reading(kaeri_model::ReadingMsg::ExportWaitsForWifi { n: 1 });
+            assert_eq!(line, Some(one), "only chapter 3 is to fetch: {seen:?}");
+            assert_eq!(source.fetched(), fetched);
+
+            engine.send(network(false, false));
+            let seen = seen_until(&mut events, send_ended).await;
+            assert_eq!(pages_sent(&seen).map(|(_, pages)| pages), Some(2 + 2 + 3), "{seen:?}");
+            engine.shutdown().await;
+        }
+
+        /// R7I-2. A second send identical to one still preparing (same work, chapters, target
+        /// and format) joins it: the chapter is fetched once, both are told it is ready with the
+        /// same files, and putting one away leaves the files the other offers.
+        #[tokio::test]
+        async fn an_identical_send_joins_the_one_preparing() {
+            let dir = tempfile::tempdir().unwrap();
+            let (engine, mut events, _, source) = launch_engine(dir.path(), None).await;
+            events.launch().await;
+            engine.send(network(false, false));
+            source.held.store(true, Ordering::SeqCst);
+            engine.send(send_of(&["2"]));
+            let pages = source.clone();
+            store_waits("the first send fetches", move || pages.fetched() == 2).await;
+            engine.send(send_of(&["2"]));
+            tokio::time::sleep(Duration::from_millis(300)).await;
+            source.held.store(false, Ordering::SeqCst);
+            let ready = |seen: &[Event]| {
+                seen.iter()
+                    .filter_map(|e| match e {
+                        Event::Reading(ReadingEvent::ExportReady { job, files, .. }) => {
+                            Some((*job, files.clone()))
+                        }
+                        _ => None,
+                    })
+                    .collect::<Vec<_>>()
+            };
+            let is_ready =
+                |e: &Event| matches!(e, Event::Reading(ReadingEvent::ExportReady { .. }));
+            let mut seen = Vec::new();
+            while ready(&seen).len() < 2 {
+                seen.extend(seen_until(&mut events, is_ready).await);
+            }
+            let ready = ready(&seen);
+            assert_eq!(ready.len(), 2, "{seen:?}");
+            assert_ne!(ready[0].0, ready[1].0);
+            assert_eq!(ready[0].1, ready[1].1, "both offer the same files");
+            assert_eq!(source.fetched(), 2, "chapter 2 is fetched once");
+
+            engine.send(Command::Reading(ReadingCommand::CancelPrepare { job: ready[0].0 }));
+            tokio::time::sleep(Duration::from_millis(300)).await;
+            let path = ready[1].1[0].path.clone();
+            assert!(std::path::Path::new(&path).is_file(), "the other still offers them");
+            engine.send(Command::Reading(ReadingCommand::CancelPrepare { job: ready[1].0 }));
+            store_waits("put away", move || !std::path::Path::new(&path).exists()).await;
+            engine.shutdown().await;
+        }
+
+        /// R7I-2. Putting away a send that another joined, while it prepares, leaves it
+        /// preparing for the other: that one turns ready, and the chapter is fetched once.
+        #[tokio::test]
+        async fn a_send_put_away_while_another_joined_it_goes_on_for_the_other() {
+            let dir = tempfile::tempdir().unwrap();
+            let (engine, mut events, _, source) = launch_engine(dir.path(), None).await;
+            events.launch().await;
+            engine.send(network(false, false));
+            source.held.store(true, Ordering::SeqCst);
+            engine.send(send_of(&["2"]));
+            let seen = seen_until(&mut events, |e| {
+                matches!(e, Event::Reading(ReadingEvent::ExportProgress { .. }))
+            })
+            .await;
+            let first = seen
+                .iter()
+                .find_map(|e| match e {
+                    Event::Reading(ReadingEvent::ExportProgress { job, .. }) => Some(*job),
+                    _ => None,
+                })
+                .unwrap();
+            engine.send(send_of(&["2"]));
+            tokio::time::sleep(Duration::from_millis(300)).await;
+            engine.send(Command::Reading(ReadingCommand::CancelPrepare { job: first }));
+            tokio::time::sleep(Duration::from_millis(300)).await;
+            source.held.store(false, Ordering::SeqCst);
+            let seen = seen_until(&mut events, send_ended).await;
+            let (job, path) = seen
+                .iter()
+                .find_map(|e| match e {
+                    Event::Reading(ReadingEvent::ExportReady { job, files, .. }) => {
+                        Some((*job, files[0].path.clone()))
+                    }
+                    _ => None,
+                })
+                .unwrap_or_else(|| panic!("the other send turns ready: {seen:?}"));
+            assert_ne!(job, first, "the send put away is not told it is ready");
+            assert!(std::path::Path::new(&path).is_file());
+            assert_eq!(source.fetched(), 2, "chapter 2 is fetched once");
+
+            engine.send(Command::Reading(ReadingCommand::CancelPrepare { job }));
+            store_waits("put away", move || !std::path::Path::new(&path).exists()).await;
+            engine.shutdown().await;
+        }
+
+        /// Android R7-2. A send that was ready but never shared when the app was killed is
+        /// offered again at the next launch, with its chapters and its files, until it is put
+        /// away.
+        #[tokio::test]
+        async fn a_ready_send_is_offered_again_after_a_restart() {
+            let kept = |seen: &[Event]| {
+                seen.iter().find_map(|e| match e {
+                    Event::Reading(ReadingEvent::ExportKept {
+                        job,
+                        work,
+                        target,
+                        chapters,
+                        files,
+                    }) => Some((
+                        *job,
+                        work.as_str().to_owned(),
+                        target.clone(),
+                        chapters.clone(),
+                        files.clone(),
+                    )),
+                    _ => None,
+                })
+            };
+            let is_kept =
+                |e: &Event| matches!(e, Event::Reading(ReadingEvent::ExportKept { .. }));
+            let dir = tempfile::tempdir().unwrap();
+            let (engine, mut events, store, _) = launch_engine(dir.path(), None).await;
+            events.launch().await;
+            engine.send(network(false, false));
+            engine.send(send_of(&["1"]));
+            let seen = seen_until(&mut events, send_ended).await;
+            let files = seen.iter().find_map(|e| match e {
+                Event::Reading(ReadingEvent::ExportReady { files, .. }) => Some(files.clone()),
+                _ => None,
+            });
+            let files = files.unwrap_or_else(|| panic!("not sent: {seen:?}"));
+            // The app is killed before the files are shared.
+            engine.shutdown().await;
+
+            let (engine, mut events, store, _) = launch_engine(dir.path(), Some(store)).await;
+            let mut seen = events.launch().await;
+            if !seen.iter().any(is_kept) {
+                seen.extend(seen_until(&mut events, is_kept).await);
+            }
+            let (job, work, target, chapters, again) = kept(&seen).unwrap();
+            assert_eq!((work.as_str(), target.as_str()), (WORK, "kobo"));
+            assert_eq!(chapters, [ChapterId::new("1")]);
+            assert_eq!(again, files);
+            assert!(std::path::Path::new(&again[0].path).is_file());
+            assert_eq!(
+                pages_sent(&[Event::Reading(ReadingEvent::ExportReady {
+                    job,
+                    files: again.clone(),
+                    skipped: Vec::new(),
+                })])
+                .map(|(_, pages)| pages),
+                Some(2)
+            );
+
+            // Put away, its files go and the next launch offers nothing.
+            engine.send(Command::Reading(ReadingCommand::CancelPrepare { job }));
+            let path = again[0].path.clone();
+            store_waits("put away", move || !std::path::Path::new(&path).exists()).await;
+            engine.shutdown().await;
+            let (engine, mut events, _, _) = launch_engine(dir.path(), Some(store)).await;
+            let mut seen = events.launch().await;
+            engine.send(network(false, false));
+            engine.send(send_of(&["1"]));
+            seen.extend(seen_until(&mut events, send_ended).await);
+            assert!(kept(&seen).is_none(), "{seen:?}");
+            engine.shutdown().await;
+        }
+
+        /// R7E-10. A send of a chapter whose download is fetching waits for it and takes its
+        /// file, so the source is asked for each page once; when the download is cancelled
+        /// instead, the send fetches the chapter itself.
+        #[tokio::test]
+        async fn a_send_of_a_chapter_downloading_takes_the_download() {
+            let dir = tempfile::tempdir().unwrap();
+            let (engine, mut events, store, source) = launch_engine(dir.path(), None).await;
+            events.launch().await;
+            engine.send(network(false, false));
+            let fetching = |chapter: &'static str| {
+                let store = store.clone();
+                move || {
+                    store.book_download(WORK, chapter).unwrap().is_some_and(|d| {
+                        d.state == kaeri_store::book_downloads::BookDownloadState::Downloading
+                    })
+                }
+            };
+            let download = |chapter: &str| {
+                Command::Reading(ReadingCommand::Download {
+                    work: WorkId::new(WORK),
+                    pick: DownloadPick::Chapters { ids: vec![ChapterId::new(chapter)] },
+                })
+            };
+
+            // Chapter 2's download holds on its second page while the send starts.
+            source.held.store(true, Ordering::SeqCst);
+            engine.send(download("2"));
+            store_waits("chapter 2 downloading", fetching("2")).await;
+            let pages = source.clone();
+            store_waits("both pages asked", move || pages.fetched() == 2).await;
+            engine.send(send_of(&["2"]));
+            tokio::time::sleep(Duration::from_millis(500)).await;
+            assert_eq!(source.fetched(), 2, "the send asks for no page of its own");
+            source.held.store(false, Ordering::SeqCst);
+            let seen = seen_until(&mut events, send_ended).await;
+            assert_eq!(pages_sent(&seen).map(|(_, pages)| pages), Some(2), "{seen:?}");
+            assert_eq!(source.fetched(), 2, "each page once");
+
+            // Chapter 3's download is cancelled while the send waits for it: the send
+            // fetches the chapter.
+            source.held.store(true, Ordering::SeqCst);
+            engine.send(download("3"));
+            store_waits("chapter 3 downloading", fetching("3")).await;
+            let pages = source.clone();
+            store_waits("both pages asked", move || pages.fetched() == 4).await;
+            engine.send(send_of(&["3"]));
+            tokio::time::sleep(Duration::from_millis(500)).await;
+            engine.send(Command::Reading(ReadingCommand::DownloadCancel {
+                work: WorkId::new(WORK),
+                chapters: vec![ChapterId::new("3")],
+            }));
+            let cancelled = fetching("3");
+            store_waits("chapter 3 cancelled", move || !cancelled()).await;
+            source.held.store(false, Ordering::SeqCst);
+            let seen = seen_until(&mut events, send_ended).await;
+            assert_eq!(pages_sent(&seen).map(|(_, pages)| pages), Some(2), "{seen:?}");
+            assert_eq!(source.fetched(), 6, "the send fetched chapter 3 itself");
+            engine.shutdown().await;
+        }
+
+        /// R7E-4. A send of a downloaded chapter from a book server's series no catalogue lists
+        /// (Komga, Kavita or OPDS alike) names its file and its ComicInfo Title and Series by
+        /// the series' own name, and one with no name at all as an untitled series; never by
+        /// the work's id.
+        #[tokio::test]
+        async fn a_send_of_a_series_no_catalogue_lists_is_named_by_its_source() {
+            let dir = tempfile::tempdir().unwrap();
+            let store = kaeri_store::Store::open_in_memory().unwrap();
+            let now = kaeri_store::now();
+            let works = [
+                ("l:m:4b1c2d3e", "srv-komga", Some("The Paper Lantern")),
+                ("l:m:5c2d3e4f", "srv-kavita", Some("Harbour Signal Club")),
+                ("l:m:6d3e4f5a", "srv-opds", Some("A Ferry at Dawn")),
+                ("l:m:7e4f5a6b", "srv-opds", None),
+            ];
+            for (n, (work, source, title)) in works.iter().enumerate() {
+                if let Some(title) = title {
+                    store.name_local_work(work, "manga", title, None, now).unwrap();
+                }
+                let series = format!("s-{n}");
+                store.set_book_match(source, &series, work, 100, true, false, 1).unwrap();
+                let path = dir.path().join(format!("kept-{n}.cbz"));
+                comic_file(&path, 2);
+                let ask = kaeri_store::book_downloads::BookDownloadAsk {
+                    work,
+                    chapter: "1",
+                    source_id: source,
+                    version_label: None,
+                    keep_ready: false,
+                };
+                store.queue_book_download(&ask, now).unwrap();
+                let id = store.book_downloads(Some(work)).unwrap()[0].id;
+                let kept = path.display().to_string();
+                store.book_download_done(id, &kept, Some(2), 10, now).unwrap();
+            }
+            let (engine, mut events, _, _) = launch_engine(dir.path(), Some(store)).await;
+            events.launch().await;
+            engine.send(network(false, true));
+
+            for (work, _, title) in works {
+                let name = title.unwrap_or("Untitled series");
+                engine.send(Command::Reading(ReadingCommand::Prepare {
+                    work: WorkId::new(work),
+                    pick: DownloadPick::Chapters { ids: vec![ChapterId::new("1")] },
+                    target: "kobo".into(),
+                    format: kaeri_model::reading::ExportFormat::Cbz,
+                }));
+                let seen = seen_until(&mut events, send_ended).await;
+                let files = seen.iter().find_map(|e| match e {
+                    Event::Reading(ReadingEvent::ExportReady { files, .. }) => {
+                        Some(files.clone())
+                    }
+                    _ => None,
+                });
+                let files = files.unwrap_or_else(|| panic!("{work} was not sent: {seen:?}"));
+                let id = work.trim_start_matches("l:m:");
+                assert!(files[0].name.starts_with(name), "{files:?}");
+                assert!(!files[0].name.contains(id), "{files:?}");
+                let book = kaeri_books::open(
+                    std::path::Path::new(&files[0].path),
+                    &kaeri_books::Limits::default(),
+                )
+                .unwrap();
+                let kaeri_books::Book::Comic(comic) = book else { panic!("not a comic") };
+                let info = comic.info().unwrap_or_else(|| panic!("no ComicInfo for {work}"));
+                assert_eq!(info.series.as_deref(), Some(name), "{work}");
+                let title = info.title.clone().unwrap_or_default();
+                assert!(title.starts_with(name) && !title.contains(id), "{title}");
+            }
+            engine.shutdown().await;
+        }
+
+        /// R8-M3. A send of a folder series AniList does not match was named by its work id:
+        /// its file "l 37afcf98… 1-2.kepub.epub" and its title the id. It takes the folder
+        /// series' name.
+        #[tokio::test]
+        async fn a_send_of_an_unmatched_folder_series_is_named_by_the_folder() {
+            let dir = tempfile::tempdir().unwrap();
+            let store = kaeri_store::Store::open_in_memory().unwrap();
+            let now = kaeri_store::now();
+            let work = "l:m:37afcf98";
+            let folder = kaeri_store::book_sources::Folder {
+                id: "f1".into(),
+                path: Some(dir.path().display().to_string()),
+                added_at: 1,
+                available: true,
+                ..Default::default()
+            };
+            store.put_book_folder(&folder).unwrap();
+            let path = dir.path().join("Lantern Harbour v01.cbz");
+            comic_file(&path, 2);
+            let kept = path.display().to_string();
+            let series = kaeri_store::book_sources::LocalSeries {
+                id: "37afcf98:Lantern Harbour".into(),
+                folder: "f1".into(),
+                name: "Lantern Harbour".into(),
+                medium: "manga".into(),
+                work: Some(work.into()),
+                state: "unmatched".into(),
+                confidence: 0,
+                reason: None,
+            };
+            let file = kaeri_store::book_sources::LocalFile {
+                path: kept.clone(),
+                series: series.id.clone(),
+                volume: Some("1".into()),
+                label: "Lantern Harbour v01".into(),
+                number_milli: None,
+                format: "cbz".into(),
+                pages: Some(2),
+                size: 10,
+                mtime: 1,
+                comicinfo: None,
+            };
+            store.replace_book_scan("f1", &[(series, vec![file])], 2).unwrap();
+            store.set_book_match("srv-local", "s-0", work, 100, true, false, 1).unwrap();
+            let ask = kaeri_store::book_downloads::BookDownloadAsk {
+                work,
+                chapter: "1",
+                source_id: "srv-local",
+                version_label: None,
+                keep_ready: false,
+            };
+            store.queue_book_download(&ask, now).unwrap();
+            let id = store.book_downloads(Some(work)).unwrap()[0].id;
+            store.book_download_done(id, &kept, Some(2), 10, now).unwrap();
+            let (engine, mut events, _, _) = launch_engine(dir.path(), Some(store)).await;
+            events.launch().await;
+            engine.send(network(false, true));
+            engine.send(Command::Reading(ReadingCommand::Prepare {
+                work: WorkId::new(work),
+                pick: DownloadPick::Chapters { ids: vec![ChapterId::new("1")] },
+                target: "kobo".into(),
+                format: kaeri_model::reading::ExportFormat::Cbz,
+            }));
+            let seen = seen_until(&mut events, send_ended).await;
+            let files = seen.iter().find_map(|e| match e {
+                Event::Reading(ReadingEvent::ExportReady { files, .. }) => Some(files.clone()),
+                _ => None,
+            });
+            let files = files.unwrap_or_else(|| panic!("not sent: {seen:?}"));
+            assert!(files[0].name.starts_with("Lantern Harbour"), "{files:?}");
+            assert!(!files[0].name.contains("37afcf98"), "{files:?}");
+            let book = kaeri_books::open(
+                std::path::Path::new(&files[0].path),
+                &kaeri_books::Limits::default(),
+            )
+            .unwrap();
+            let kaeri_books::Book::Comic(comic) = book else { panic!("not a comic") };
+            let info = comic.info().expect("ComicInfo");
+            assert_eq!(info.series.as_deref(), Some("Lantern Harbour"));
+            engine.shutdown().await;
+        }
+
         #[tokio::test]
         async fn a_send_waiting_for_wifi_is_cancelled_and_leaves_nothing() {
             let dir = tempfile::tempdir().unwrap();
@@ -4706,6 +5284,7 @@ mod tests {
                             job,
                             chapter: Some(_),
                             failure: ReadingFailure::Offline,
+                            ..
                         }) if job.get() != 0
                     )
                 })
@@ -4751,10 +5330,113 @@ mod tests {
             assert!(!seen.iter().any(send_ended), "{seen:?}");
             assert_eq!(source.fetched(), 0);
             assert!(kept_waiting(&store));
+            // On cellular it says it waits, as the job the screen never sent, with its chapters.
+            engine.send(network(true, false));
+            let (waited, _) = waiting(&mut events).await;
+            assert_eq!(Some(waited), started);
             engine.send(network(false, false));
             let seen = seen_until(&mut events, send_ended).await;
             let (job, pages) = pages_sent(&seen).unwrap_or_else(|| panic!("{seen:?}"));
             assert_eq!((Some(job), pages), (started, 4));
+            assert!(!kept_waiting(&store));
+            engine.shutdown().await;
+        }
+
+        /// What a send's progress said about it, as text: a send no screen sent is placed by
+        /// its series and target there.
+        fn progress_said(seen: &[Event]) -> Vec<String> {
+            seen.iter()
+                .filter(|e| matches!(e, Event::Reading(ReadingEvent::ExportProgress { .. })))
+                .map(|e| format!("{e:?}"))
+                .collect()
+        }
+
+        /// The first job the engine started in `seen`.
+        fn started(seen: &[Event]) -> Option<JobId> {
+            seen.iter().find_map(|e| match e {
+                Event::JobStarted { job, .. } => Some(*job),
+                _ => None,
+            })
+        }
+
+        /// R8I-2. A send held across a restart says its series and target as it goes, so a
+        /// screen that never sent it can place it.
+        #[tokio::test]
+        async fn a_send_started_again_at_launch_says_its_series_and_target_as_it_goes() {
+            let dir = tempfile::tempdir().unwrap();
+            let (engine, mut events, store) = send_engine(dir.path(), None).await;
+            events.launch().await;
+            engine.send(network(true, false));
+            engine.send(send_of(&["1", "2"]));
+            waiting(&mut events).await;
+            engine.shutdown().await;
+
+            let (engine, mut events, _, _) = launch_engine(dir.path(), Some(store)).await;
+            let seen = seen_until(&mut events, |e| matches!(e, Event::JobStarted { .. })).await;
+            let job = started(&seen);
+            engine.send(network(false, false));
+            let seen = seen_until(&mut events, send_ended).await;
+            assert_eq!(pages_sent(&seen).map(|(job, _)| job), job, "{seen:?}");
+            let said = progress_said(&seen);
+            assert!(!said.is_empty(), "{seen:?}");
+            for line in &said {
+                assert!(line.contains(WORK) && line.contains("\"kobo\""), "{line}");
+            }
+            engine.shutdown().await;
+        }
+
+        /// R7-2. A send cut off by the app closing while it fetched starts again at the next
+        /// launch, as one left waiting does. Cut off once more, it ends as failed, placed by its
+        /// series and target, and is not started again.
+        #[tokio::test]
+        async fn a_send_cut_off_while_it_fetched_starts_again_once_then_ends_as_failed() {
+            let dir = tempfile::tempdir().unwrap();
+            let (engine, mut events, store, source) = launch_engine(dir.path(), None).await;
+            events.launch().await;
+
+            // On Wi-Fi it fetches chapter 2, and holds on its second page as the app closes.
+            engine.send(network(false, false));
+            source.held.store(true, Ordering::SeqCst);
+            engine.send(send_of(&["1", "2"]));
+            let pages = source.clone();
+            store_waits("the held page asked", move || pages.fetched() == 2).await;
+            engine.shutdown().await;
+            assert!(kept_waiting(&store), "kept, as it was under way when the engine stopped");
+
+            // The next launch starts it again as a job of its own, and it is cut off again.
+            let (engine, mut events, store, source) =
+                launch_engine(dir.path(), Some(store)).await;
+            let seen = seen_until(&mut events, |e| matches!(e, Event::JobStarted { .. })).await;
+            let again = started(&seen);
+            source.held.store(true, Ordering::SeqCst);
+            engine.send(network(false, false));
+            let pages = source.clone();
+            store_waits("the held page asked again", move || pages.fetched() == 2).await;
+            let seen = said_so_far(&engine, &mut events).await;
+            let said = progress_said(&seen);
+            assert!(!said.is_empty(), "{seen:?}");
+            for line in &said {
+                assert!(line.contains(&format!("{:?}", again.unwrap())), "{line}");
+                assert!(line.contains(WORK) && line.contains("\"kobo\""), "{line}");
+            }
+            engine.shutdown().await;
+            assert!(kept_waiting(&store));
+
+            // Cut off twice, it fails where the screen shows it rather than starting again.
+            let (engine, mut events, store, source) =
+                launch_engine(dir.path(), Some(store)).await;
+            let seen = seen_until(&mut events, send_ended).await;
+            let failed: Vec<String> = seen
+                .iter()
+                .filter(|e| matches!(e, Event::Reading(ReadingEvent::ExportFailed { .. })))
+                .map(|e| format!("{e:?}"))
+                .collect();
+            assert_eq!(failed.len(), 1, "{seen:?}");
+            assert!(failed[0].contains(WORK) && failed[0].contains("\"kobo\""), "{failed:?}");
+            engine.send(network(false, false));
+            let seen = said_so_far(&engine, &mut events).await;
+            assert!(started(&seen).is_none(), "{seen:?}");
+            assert_eq!(source.fetched(), 0);
             assert!(!kept_waiting(&store));
             engine.shutdown().await;
         }

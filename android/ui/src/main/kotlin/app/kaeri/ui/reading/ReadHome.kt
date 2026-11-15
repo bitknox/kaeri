@@ -63,6 +63,7 @@ import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.AnnotatedString
@@ -86,6 +87,7 @@ import app.kaeri.design.tabular
 import app.kaeri.engine.core.WorkId
 import app.kaeri.engine.model.KaeriIsFor
 import app.kaeri.engine.model.LibrarySegmentRead
+import app.kaeri.engine.model.Msg
 import app.kaeri.engine.model.ReadHomeEnd
 import app.kaeri.engine.model.ReadHomePart
 import app.kaeri.engine.model.ReadSpotlight
@@ -94,6 +96,7 @@ import app.kaeri.engine.model.ReadWeekDay
 import app.kaeri.engine.model.ReadWeekEntry
 import app.kaeri.engine.model.ReadingAbout
 import app.kaeri.engine.model.ReadingHomeView
+import app.kaeri.engine.model.ReadingMsg
 import app.kaeri.engine.model.WorkTile
 import app.kaeri.i18n.R
 import app.kaeri.i18n.Strings
@@ -315,7 +318,7 @@ private fun ReadHomeColumn(home: ReadingHomeView, actions: AppActions, gone: Mut
         if (home.upNext.isNotEmpty()) {
             item(key = "up-next", contentType = "shelf") {
                 Box(itemMotion()) {
-                    TileShelf(Strings.homeUpNext(context), home.upNext, "read-up-next", Strings.homeViewAll(context)) {
+                    UpNextShelf(home.upNext) {
                         ReadPlaces.openList(navigator, LibrarySegmentRead.PLANNING)
                     }
                 }
@@ -401,6 +404,8 @@ private fun ReadSpotlightBlock(tile: WorkTile, spot: ReadSpotlight, actions: App
             tile.cover,
             m.aspectRatio(16f / 9f)
                 .clip(ArtShape.banner)
+                // The art opens the series, so TalkBack names it by the series' title.
+                .semantics { contentDescription = tile.title }
                 .clickable(onClickLabel = stringResource(R.string.title_open), role = Role.Button) { navigator.openSeries(tile.work, "read-spotlight") },
             zoom = Modifier.readerZoomSource(key),
         )
@@ -664,6 +669,21 @@ private fun ContinueShelf(tiles: List<WorkTile>, actions: AppActions, hide: (Wor
             }
         }
     }
+}
+
+/**
+ * Whether Up next's View all leads anywhere: to Planning, which only the row's Planning series are
+ * on. A row of suggestions alone has no list to show.
+ */
+internal fun upNextLinksPlanning(tiles: List<WorkTile>): Boolean =
+    tiles.any { tile -> tile.facts.any { it == Msg.Reading(ReadingMsg.ReadingOnPlanning) } }
+
+/** Up next: the Planning list, then suggestions, with View all to Planning when it has any here. */
+@Composable
+internal fun UpNextShelf(tiles: List<WorkTile>, onLink: () -> Unit) {
+    val context = LocalContext.current
+    val link = if (upNextLinksPlanning(tiles)) Strings.homeViewAll(context) else null
+    TileShelf(Strings.homeUpNext(context), tiles, "read-up-next", link, onLink)
 }
 
 /** A discovery shelf: covers, each with its line, and the heading's link when it has one. */

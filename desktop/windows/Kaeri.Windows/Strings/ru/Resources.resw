@@ -915,7 +915,7 @@
     <value>Глава {chapter}</value>
   </data>
   <data name="ExportWaitsForWifi_one" xml:space="preserve">
-    <value>Одна глава ещё не скачана, поэтому отправка дождётся Wi-Fi и продолжится сама.</value>
+    <value>{n} глава ещё не скачана, поэтому отправка дождётся Wi-Fi и продолжится сама.</value>
   </data>
   <data name="ExportWaitsForWifi_few" xml:space="preserve">
     <value>{n} главы ещё не скачаны, поэтому отправка дождётся Wi-Fi и продолжится сама.</value>
@@ -925,6 +925,18 @@
   </data>
   <data name="ExportWaitsForWifi_other" xml:space="preserve">
     <value>{n} главы ещё не скачаны, поэтому отправка дождётся Wi-Fi и продолжится сама.</value>
+  </data>
+  <data name="ExportPagesLeftOut_one" xml:space="preserve">
+    <value>{n} страницу из {chapter} не удалось прочитать, её нет в файлах.</value>
+  </data>
+  <data name="ExportPagesLeftOut_few" xml:space="preserve">
+    <value>{n} страницы из {chapter} не удалось прочитать, их нет в файлах.</value>
+  </data>
+  <data name="ExportPagesLeftOut_many" xml:space="preserve">
+    <value>{n} страниц из {chapter} не удалось прочитать, их нет в файлах.</value>
+  </data>
+  <data name="ExportPagesLeftOut_other" xml:space="preserve">
+    <value>{n} страницы из {chapter} не удалось прочитать, их нет в файлах.</value>
   </data>
   <data name="ReadingChapterTitled" xml:space="preserve">
     <value>Глава {chapter} · {title}</value>
@@ -1152,7 +1164,7 @@
     <value>Загрузки завершены</value>
   </data>
   <data name="ReadingDownloadsDoneChapters_one" xml:space="preserve">
-    <value>Глава «{title}» готова для чтения офлайн.</value>
+    <value>{count} глава «{title}» готова для чтения офлайн.</value>
   </data>
   <data name="ReadingDownloadsDoneChapters_few" xml:space="preserve">
     <value>{count} главы «{title}» готовы для чтения офлайн.</value>
@@ -1164,7 +1176,7 @@
     <value>{count} главы «{title}» готовы для чтения офлайн.</value>
   </data>
   <data name="ReadingDownloadsDoneParts_one" xml:space="preserve">
-    <value>Часть «{title}» готова для чтения офлайн.</value>
+    <value>{count} часть «{title}» готова для чтения офлайн.</value>
   </data>
   <data name="ReadingDownloadsDoneParts_few" xml:space="preserve">
     <value>{count} части «{title}» готовы для чтения офлайн.</value>
@@ -1320,7 +1332,7 @@
     <value>Приглашение отменено. Ссылка больше не работает.</value>
   </data>
   <data name="StoreInviteCancelledKept_one" xml:space="preserve">
-    <value>Приглашение отменено. Присоединившийся человек остаётся участником.</value>
+    <value>Приглашение отменено. {count} присоединившийся человек остаётся участником.</value>
   </data>
   <data name="StoreInviteCancelledKept_few" xml:space="preserve">
     <value>Приглашение отменено. Присоединившиеся ({count}) остаются участниками.</value>
@@ -1338,7 +1350,7 @@
     <value>Теперь подключиться могут только приглашённые.</value>
   </data>
   <data name="StoreOpenJoinOffDevices_one" xml:space="preserve">
-    <value>Теперь подключиться могут только приглашённые. устройство по ссылке продолжает работать, пока вы его не удалите.</value>
+    <value>Теперь подключиться могут только приглашённые. {devices} устройство по ссылке продолжает работать, пока вы его не удалите.</value>
   </data>
   <data name="StoreOpenJoinOffDevices_few" xml:space="preserve">
     <value>Теперь подключиться могут только приглашённые. устройства ({devices}), подключившиеся по ссылке, продолжают работать, пока вы их не удалите.</value>
@@ -1647,7 +1659,7 @@
     <value>Вы вышли из {tracker}.</value>
   </data>
   <data name="NoticeSignedOutQueue_one" xml:space="preserve">
-    <value>Вы вышли из {tracker}. Одно изменение в очереди сохранено для следующего входа.</value>
+    <value>Вы вышли из {tracker}. {count} изменение в очереди сохранено для следующего входа.</value>
   </data>
   <data name="NoticeSignedOutQueue_few" xml:space="preserve">
     <value>Вы вышли из {tracker}. {count} изменения в очереди сохранены для следующего входа.</value>
@@ -1657,6 +1669,33 @@
   </data>
   <data name="NoticeSignedOutQueue_other" xml:space="preserve">
     <value>Вы вышли из {tracker}. {count} изменения в очереди сохранены для следующего входа.</value>
+  </data>
+  <data name="NoticeTrackerChangeRefused" xml:space="preserve">
+    <value>{tracker} раз за разом отклонял изменение для {title}, поэтому оно остаётся только в Kaeri.</value>
+  </data>
+  <data name="NoticeTrackerChangesRefused_one" xml:space="preserve">
+    <value>{tracker} раз за разом отклонял изменения для {title} и ещё {others} тайтла, поэтому они остаются только в Kaeri.</value>
+  </data>
+  <data name="NoticeTrackerChangesRefused_few" xml:space="preserve">
+    <value>{tracker} раз за разом отклонял изменения для {title} и ещё {others} тайтлов, поэтому они остаются только в Kaeri.</value>
+  </data>
+  <data name="NoticeTrackerChangesRefused_many" xml:space="preserve">
+    <value>{tracker} раз за разом отклонял изменения для {title} и ещё {others} тайтлов, поэтому они остаются только в Kaeri.</value>
+  </data>
+  <data name="NoticeTrackerChangesRefused_other" xml:space="preserve">
+    <value>{tracker} раз за разом отклонял изменения для {title} и ещё {others} тайтла, поэтому они остаются только в Kaeri.</value>
+  </data>
+  <data name="NoticeTrackerChangeRefusedUntitled_one" xml:space="preserve">
+    <value>{tracker} раз за разом отклонял изменения для {count} тайтла, поэтому они остаются только в Kaeri.</value>
+  </data>
+  <data name="NoticeTrackerChangeRefusedUntitled_few" xml:space="preserve">
+    <value>{tracker} раз за разом отклонял изменения для {count} тайтлов, поэтому они остаются только в Kaeri.</value>
+  </data>
+  <data name="NoticeTrackerChangeRefusedUntitled_many" xml:space="preserve">
+    <value>{tracker} раз за разом отклонял изменения для {count} тайтлов, поэтому они остаются только в Kaeri.</value>
+  </data>
+  <data name="NoticeTrackerChangeRefusedUntitled_other" xml:space="preserve">
+    <value>{tracker} раз за разом отклонял изменения для {count} тайтла, поэтому они остаются только в Kaeri.</value>
   </data>
   <data name="NoticeSignOutFailed" xml:space="preserve">
     <value>Не удалось выйти из {tracker}. Попробуйте ещё раз. {reason}</value>
@@ -1695,7 +1734,7 @@
     <value>{title}, серия {episode}, вышла, пока вас не было.</value>
   </data>
   <data name="NoticeEpisodesAired_one" xml:space="preserve">
-    <value>Вышла новая серия тайтла, который вы смотрите. Она есть в календаре.</value>
+    <value>Вышла {count} новая серия тайтлов, которые вы смотрите. Календарь уже обновлён.</value>
   </data>
   <data name="NoticeEpisodesAired_few" xml:space="preserve">
     <value>Вышли {count} новые серии тайтлов, которые вы смотрите. Они есть в календаре.</value>
@@ -1764,7 +1803,7 @@
     <value>Не удалось запустить плеер. {reason}</value>
   </data>
   <data name="NoticeEpisodesQueued_one" xml:space="preserve">
-    <value>В очередь добавлен один эпизод.</value>
+    <value>В очередь добавлен {count} эпизод.</value>
   </data>
   <data name="NoticeEpisodesQueued_few" xml:space="preserve">
     <value>В очередь добавлены {count} эпизода.</value>
@@ -1800,7 +1839,7 @@
     <value>Продолжить просмотр</value>
   </data>
   <data name="ContinueSyncWaiting_one" xml:space="preserve">
-    <value>Одно изменение ждёт синхронизации</value>
+    <value>{count} изменение ждёт синхронизации</value>
   </data>
   <data name="ContinueSyncWaiting_few" xml:space="preserve">
     <value>{count} изменения ждут синхронизации</value>
@@ -2442,7 +2481,7 @@
     <value>Отправляет изменения отсюда и загружает изменения, сделанные в других местах.</value>
   </data>
   <data name="SettingsSignedInWaiting_one" xml:space="preserve">
-    <value>Вход выполнен · одно изменение ждёт</value>
+    <value>Вход выполнен · {count} изменение ждёт</value>
   </data>
   <data name="SettingsSignedInWaiting_few" xml:space="preserve">
     <value>Вход выполнен · {count} изменения ждут</value>
@@ -2793,7 +2832,7 @@
     <value>Kaeri больше не будет искать в нём эпизоды. Его можно снова установить через тот же магазин плагинов.</value>
   </data>
   <data name="StoresUpdatesCount_one" xml:space="preserve">
-    <value>Одно обновление</value>
+    <value>{count} обновление</value>
   </data>
   <data name="StoresUpdatesCount_few" xml:space="preserve">
     <value>{count} к обновлению</value>
@@ -2868,7 +2907,7 @@
     <value>Открыть: {device}</value>
   </data>
   <data name="SourcePickerSeeders_one" xml:space="preserve">
-    <value>Один сидер</value>
+    <value>{count} сидер</value>
   </data>
   <data name="SourcePickerSeeders_few" xml:space="preserve">
     <value>{count} сидера</value>
@@ -3711,7 +3750,7 @@
     <value>Обсуждение эпизода {episode}</value>
   </data>
   <data name="DiscussionRow_one" xml:space="preserve">
-    <value>Обсуждение · один комментарий</value>
+    <value>Обсуждение · {count} комментарий</value>
   </data>
   <data name="DiscussionRow_few" xml:space="preserve">
     <value>Обсуждение · {count} комментария</value>
@@ -3723,7 +3762,7 @@
     <value>Обсуждение · {count} комментария</value>
   </data>
   <data name="DiscussionCount_one" xml:space="preserve">
-    <value>Один комментарий</value>
+    <value>{count} комментарий</value>
   </data>
   <data name="DiscussionCount_few" xml:space="preserve">
     <value>{count} комментария</value>
@@ -3741,7 +3780,7 @@
     <value>Ответить</value>
   </data>
   <data name="DiscussionMoreReplies_one" xml:space="preserve">
-    <value>Ещё один ответ</value>
+    <value>Ещё {count} ответ</value>
   </data>
   <data name="DiscussionMoreReplies_few" xml:space="preserve">
     <value>Ещё {count} ответа</value>
@@ -3862,6 +3901,12 @@
   </data>
   <data name="DownloadsEmptyDetail" xml:space="preserve">
     <value>Скачанные эпизоды воспроизводятся без подключения к сети.</value>
+  </data>
+  <data name="ReadDownloadsEmptyDetail" xml:space="preserve">
+    <value>Скачанные главы открываются без подключения к сети.</value>
+  </data>
+  <data name="ReadDownloadsEmptyBoth" xml:space="preserve">
+    <value>Скачанные эпизоды и главы открываются без подключения к сети.</value>
   </data>
   <data name="DownloadsLoadFailed" xml:space="preserve">
     <value>Не удалось открыть загрузки</value>
@@ -3999,7 +4044,7 @@
     <value>{title} · можно смотреть без подключения</value>
   </data>
   <data name="DownloadsNoticeRunning_one" xml:space="preserve">
-    <value>Загружается один эпизод</value>
+    <value>Загружается {count} эпизод</value>
   </data>
   <data name="DownloadsNoticeRunning_few" xml:space="preserve">
     <value>Загружаются {count} эпизода</value>
@@ -5715,7 +5760,7 @@
     <value>Ждите {seconds} с</value>
   </data>
   <data name="PartyChatWaitSpoken_one" xml:space="preserve">
-    <value>Подождите одну секунду</value>
+    <value>Подождите {seconds} секунду</value>
   </data>
   <data name="PartyChatWaitSpoken_few" xml:space="preserve">
     <value>Подождите {seconds} секунды</value>
@@ -6249,7 +6294,7 @@
     <value>Вы ещё смотрите?</value>
   </data>
   <data name="PlayerStillWatchingDetail_one" xml:space="preserve">
-    <value>Пауза после одного эпизода подряд.</value>
+    <value>Пауза после {count} эпизода подряд.</value>
   </data>
   <data name="PlayerStillWatchingDetail_few" xml:space="preserve">
     <value>Пауза после {count} эпизода подряд.</value>
@@ -8565,7 +8610,7 @@
     <value>В {service}</value>
   </data>
   <data name="CountEpisodes_one" xml:space="preserve">
-    <value>Один эпизод</value>
+    <value>{count} эпизод</value>
   </data>
   <data name="CountEpisodes_few" xml:space="preserve">
     <value>{count} эпизода</value>
@@ -8586,7 +8631,7 @@
     <value>{out} из {total}</value>
   </data>
   <data name="CountOut_one" xml:space="preserve">
-    <value>Вышел один эпизод</value>
+    <value>Вышел {count} эпизод</value>
   </data>
   <data name="CountOut_few" xml:space="preserve">
     <value>Вышло {count} эпизода</value>
@@ -8616,7 +8661,7 @@
     <value>Дубляж {through}</value>
   </data>
   <data name="CountSpokenEpisodes_one" xml:space="preserve">
-    <value>Один эпизод</value>
+    <value>{count} эпизод</value>
   </data>
   <data name="CountSpokenEpisodes_few" xml:space="preserve">
     <value>{count} эпизода</value>
@@ -8631,7 +8676,7 @@
     <value>Вышло эпизодов: {out} из {total}</value>
   </data>
   <data name="CountSpokenOut_one" xml:space="preserve">
-    <value>Вышел один эпизод</value>
+    <value>Вышел {count} эпизод</value>
   </data>
   <data name="CountSpokenOut_few" xml:space="preserve">
     <value>Вышло {count} эпизода</value>
@@ -10824,7 +10869,7 @@
     <value>{name} · присоединился {when}</value>
   </data>
   <data name="StoresCancelInviteDetail_one" xml:space="preserve">
-    <value>Больше никто не сможет присоединиться. Присоединившийся остаётся участником.</value>
+    <value>Больше никто не сможет присоединиться. {count} присоединившийся остаётся участником.</value>
   </data>
   <data name="StoresCancelInviteDetail_few" xml:space="preserve">
     <value>Больше никто не сможет присоединиться. Присоединившиеся ({count}) остаются участниками.</value>
@@ -11499,7 +11544,7 @@
     <value>Создайте его в Nextcloud, в разделе «Настройки», «Безопасность». Он хранится на этом устройстве ({kind}).</value>
   </data>
   <data name="DevicesTvsForPlay_one" xml:space="preserve">
-    <value>Один телевизор для «Смотреть на ТВ»</value>
+    <value>{count} телевизор для «Смотреть на ТВ»</value>
   </data>
   <data name="DevicesTvsForPlay_few" xml:space="preserve">
     <value>{count} телевизора для «Смотреть на ТВ»</value>
@@ -11760,7 +11805,7 @@
     <value>Диапазон серий</value>
   </data>
   <data name="EpisodeFold_one" xml:space="preserve">
-    <value>Одна просмотренная серия</value>
+    <value>{count} просмотренная серия</value>
   </data>
   <data name="EpisodeFold_few" xml:space="preserve">
     <value>{count} просмотренные серии</value>

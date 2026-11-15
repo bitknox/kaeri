@@ -286,6 +286,17 @@ async fn chapters_opened_back_and_forth_each_get_every_page() {
     let made = timeout(Duration::from_secs(60), async {
         let mut pages = std::collections::BTreeSet::new();
         while pages.len() < 8 {
+            // Asked for before waiting: the pages the reader sent by itself during the back and
+            // forth were drained above, and a page already made comes again only when asked.
+            let Some(s) = h.reader.session.as_ref() else { break };
+            let chapter = s.chapter().id.clone();
+            for leaf in 0..8 {
+                h.send(ReaderCommand::NeedPage {
+                    session,
+                    chapter: chapter.clone(),
+                    page: leaf,
+                });
+            }
             let page = h
                 .until(|e| match e {
                     ReaderEvent::PageReady { chapter, page, .. } if chapter.as_str() == "1" => {
@@ -295,16 +306,6 @@ async fn chapters_opened_back_and_forth_each_get_every_page() {
                 })
                 .await;
             pages.insert(page);
-            let Some(s) = h.reader.session.as_ref() else { break };
-            let chapter = s.chapter().id.clone();
-            let leaves: Vec<u32> = (0..8).collect();
-            for leaf in leaves {
-                h.send(ReaderCommand::NeedPage {
-                    session,
-                    chapter: chapter.clone(),
-                    page: leaf,
-                });
-            }
         }
         pages
     })

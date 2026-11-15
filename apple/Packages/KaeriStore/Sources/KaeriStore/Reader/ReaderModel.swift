@@ -137,6 +137,18 @@ public final class ReaderModel {
     /// Counts the open chapter's layouts after its first, so the strip puts the place back even
     /// when it has not moved since the last restore.
     public private(set) var stripRelaid = 0
+    /// Counts the asks to fit the strip back to its column (Cmd-0), which also undo a pinch's zoom.
+    public private(set) var stripFitAsked = 0
+    public func fitStrip() { stripFitAsked &+= 1 }
+    /// The last Zoom In (1), Zoom Out (-1) or Fit to Window (0) asked of the page on screen, with
+    /// a count, so the same step asked again is seen again.
+    public struct PageZoomAsk: Equatable, Sendable {
+        public let step: Int
+        public let tick: Int
+    }
+
+    public private(set) var pageZoomAsked: PageZoomAsk?
+    public func zoomPage(_ step: Int) { pageZoomAsked = PageZoomAsk(step: step, tick: (pageZoomAsked?.tick ?? 0) &+ 1) }
     /// The chapters of the work, once the engine has listed them.
     public private(set) var chapters: [VolumeGroup] = []
     public private(set) var chaptersLoaded = false
@@ -276,6 +288,30 @@ public final class ReaderModel {
 
     /// Go to page is open.
     public var askingPage = false
+
+    /// The pages Go to page counts: the novel's pages and the strip's images as the reader
+    /// places them, and the chapter's pages otherwise.
+    public var goToPageTotal: Int {
+        novel != nil || view?.mode == .strip ? max(position.count, 1) : max(pageCount, 1)
+    }
+
+    /// The page typed into Go to page, when it is one there is.
+    public func goToPageTarget(_ typed: String) -> Int? {
+        guard let number = Int(typed.trimmingCharacters(in: .whitespaces)), (1...goToPageTotal).contains(number) else {
+            return nil
+        }
+        return number
+    }
+
+    /// Go to page submits what was typed: a page there is closes the prompt and jumps to it,
+    /// anything else leaves the prompt open. Return in the field and Go both come here.
+    @discardableResult
+    public func goToPage(typed: String) -> Bool {
+        guard let page = goToPageTarget(typed) else { return false }
+        askingPage = false
+        requestJump(novel != nil || view?.mode == .strip ? page - 1 : leaf(ofPage: page))
+        return true
+    }
     /// The window the book is open in has the keys, or no window of the app does. Another of the
     /// app's windows in front keeps its own keys: the Go menu binds the reader's only while this
     /// holds. The Mac's reader follows its window; on iPad and iPhone it stays true.
@@ -335,6 +371,40 @@ public final class ReaderModel {
     @ObservationIgnored private var staleOpens = 0
     /// The chapter asked for in the open book, until it opens.
     @ObservationIgnored private var asked: ChapterId?
+    /// The chapter asked for, with the chapter it was asked from, until it opens; kept when it
+    /// fails. The view stays the chapter left until the engine says the new one opened.
+    private var aim: Aim?
+
+    private struct Aim {
+        let row: ChapterRow
+        /// The view of the chapter open when the first of these asks went.
+        let from: ReaderView
+    }
+
+    /// The chapter the reader is on: the one opening, or the one that would not open, else the
+    /// open one. The opening line and the failure name it.
+    public var chapterHere: ChapterRow? { aim?.row ?? view?.chapter }
+
+    /// The chapter `]` (next) or `[` goes to: either side of the chapter the reader is on, so
+    /// from a chapter still opening or one that failed, never the chapter left.
+    public func chapterStep(next: Bool) -> ChapterRow? {
+        guard let aim else { return next ? view?.next : view?.previous }
+        let around = Self.around(aim.row, from: aim.from, list: chapters.flatMap(\.chapters))
+        return next ? around.next : around.previous
+    }
+
+    /// The chapters either side of `row`: the open view's own, the chapter list's once it is in
+    /// (in reading order), else the chapter left when `row` is next to it.
+    static func around(_ row: ChapterRow, from view: ReaderView, list: [ChapterRow])
+        -> (previous: ChapterRow?, next: ChapterRow?) {
+        if row.id == view.chapter.id { return (view.previous, view.next) }
+        if let at = list.firstIndex(where: { $0.id == row.id }) {
+            return (at > 0 ? list[at - 1] : nil, at + 1 < list.count ? list[at + 1] : nil)
+        }
+        if view.next?.id == row.id { return (view.chapter, nil) }
+        if view.previous?.id == row.id { return (nil, view.chapter) }
+        return (nil, nil)
+    }
 
     public init() {
         focusPaper = Self.defaults.bool(forKey: Self.focusKey)
@@ -406,7 +476,13 @@ public final class ReaderModel {
         send?(.reader(.open(
             work: WorkId(request.work), chapter: request.chapter.map { ChapterId($0) },
             at: request.at, surface: surface)))
-        send?(.reading(.loadChapters(work: WorkId(request.work), edition: nil)))
+    }
+
+    /// The chapter list, asked for when the Chapters sheet shows without one. Never on open: a
+    /// book opened and closed again asks its source for nothing beyond what the open needs.
+    public func loadChapters() {
+        guard !chaptersLoaded, let work = view?.work ?? request.map({ WorkId($0.work) }) else { return }
+        send?(.reading(.loadChapters(work: work, edition: nil)))
     }
 
     @ObservationIgnored private var opened = false
@@ -585,6 +661,7 @@ public final class ReaderModel {
         commitKeep()
         flushStrip()
         asked = id
+        if let from = aim?.from ?? view { aim = chapterRow(id).map { Aim(row: $0, from: from) } }
         openAtEnd = atEnd ? id : nil
         holdEnd(to: id)
         end = nil
@@ -827,7 +904,9 @@ public final class ReaderModel {
     /// Change a setting for the medium's default, or for the series with `.series`.
     public func set(_ key: ReaderSettingKey, _ value: ReaderValue, scope: SettingScope? = nil) {
         let scope = scope ?? Self.homeScope(key)
-        let work = (scope == .series || scope == .seriesHere) ? view.map { $0.work } : nil
+        // The open series goes with every change, a shared one too: the engine keeps a shared
+        // setting for everyone and answers with this series' settings, its own reading mode in.
+        let work = view.map { $0.work }
         send?(.reader(.setSetting(
             session: session == 0 ? nil : session, medium: medium, work: work, key: key, scope: scope, value: value)))
     }
@@ -918,6 +997,7 @@ public final class ReaderModel {
                 return
             }
             asked = nil
+            aim = nil
             // A strip that flowed on keeps the chapters above; any other open starts clean.
             if flowing != opened.chapter.id || opened.mode != .strip {
                 trail = StripTrail()
@@ -1056,8 +1136,9 @@ public final class ReaderModel {
             guard session == self.session else { return }
             // The notice that comes with it says where, and offers the way back.
         case .settings(let view):
-            // Settings' Reading pane asks for each medium's defaults: an open book keeps its own.
-            if let open = self.view, view.medium != open.medium { return }
+            // Settings' Reading pane asks for each medium's defaults: an open book keeps its own,
+            // which name its series.
+            if let open = self.view, view.medium != open.medium || view.work != open.work { return }
             settings = view
             // A mode or direction changed in the reader lays the chapter out again without
             // opening it anew: the view follows, so the tap zones and the slider turn with it.
@@ -1251,6 +1332,7 @@ public final class ReaderModel {
         noticeTask?.cancel()
         dropHeldStrip()
         asked = nil
+        aim = nil
         view = nil
         leaves = []
         pages = [:]
@@ -1300,7 +1382,10 @@ public final class ReaderModel {
     /// The row of a chapter of the open book: a neighbour the view or end page names, or one
     /// from the listed chapters.
     private func chapterRow(_ id: ChapterId) -> ChapterRow? {
-        let near = [view?.next, view?.previous, end?.next, end?.skipTo, held?.end?.next, held?.end?.skipTo]
+        let near = [
+            view?.next, view?.previous, end?.next, end?.skipTo, held?.end?.next, held?.end?.skipTo,
+            aim?.row, aim?.from.chapter, aim?.from.next, aim?.from.previous,
+        ]
         if let row = near.lazy.compactMap({ $0 }).first(where: { $0.id == id }) { return row }
         return chapters.lazy.flatMap(\.chapters).first { $0.id == id }
     }

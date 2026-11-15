@@ -140,7 +140,7 @@ impl ReadingDemo {
             .get(&url)
             .send()
             .await
-            .map_err(|e| PageError::Failed(ProviderError::Transport(e.to_string())))?;
+            .map_err(|e| PageError::Failed(kaeri_net::reach::transport(&e)))?;
         let status = response.status();
         if !status.is_success() {
             return Err(PageError::Status(status.as_u16()));
@@ -148,7 +148,7 @@ impl ReadingDemo {
         let bytes = response
             .bytes()
             .await
-            .map_err(|e| PageError::Failed(ProviderError::Transport(e.to_string())))?
+            .map_err(|e| PageError::Failed(kaeri_net::reach::transport(&e)))?
             .to_vec();
         if sha1_hex(&bytes) != page.sha1 {
             return Err(PageError::Failed(ProviderError::Blocked(

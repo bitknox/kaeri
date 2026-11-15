@@ -123,7 +123,7 @@ stores-anonymous-joined = Присоединилось { $when }
 stores-anonymous-seen = Последний раз в сети { $when }
 stores-anonymous-never-seen = Ещё не появлялось
 stores-remove-devices = { $count ->
-    [one] Удалить его
+    [one] Удалить { $count } { -device }
     [few] Удалить все { $count }
     [many] Удалить все { $count }
    *[other] Удалить все { $count }
@@ -149,7 +149,7 @@ stores-confirm-open = Разрешить любому, у кого есть сс
 stores-confirm-close = Пускать в { $name } только приглашённых?
 stores-confirm-remove-device = Удалить это { -device }?
 stores-confirm-remove-devices = { $count ->
-    [one] Удалить { -device }, присоединившееся по ссылке?
+    [one] Удалить { $count } { -device }, присоединившееся по ссылке?
     [few] Удалить все { $count } { -device-pl }, присоединившиеся по ссылке?
     [many] Удалить все { $count } устройств, присоединившиеся по ссылке?
    *[other] Удалить все { $count } { -device-pl }, присоединившиеся по ссылке?
@@ -168,7 +168,7 @@ stores-join-device-note = Владелец { -store }а видит это имя
 stores-leave-plugins = Это { -device } сохранит { -plugin-pl }, установленные из него, но они перестанут обновляться.
 stores-leave-revoked = Доступ этого { -device }а к { -store }у отозван.
 stores-remove-member-devices = { $count ->
-    [one] Их { -device } перестанет работать с этим { -store }ом сразу.
+    [one] Их { $count } { -device } перестанет работать с этим { -store }ом сразу.
     [few] Их { $count } { -device-pl } перестанут работать с этим { -store }ом сразу.
     [many] Их { $count } устройств перестанут работать с этим { -store }ом сразу.
    *[other] Их { $count } { -device-pl } перестанут работать с этим { -store }ом сразу.

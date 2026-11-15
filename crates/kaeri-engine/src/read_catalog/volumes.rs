@@ -187,6 +187,7 @@ mod tests {
             version_label: None,
             language: None,
             published: None,
+            published_day: None,
             pages: None,
             seen_at: None,
             part: None,

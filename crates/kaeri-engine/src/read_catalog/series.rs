@@ -142,6 +142,13 @@ pub(crate) async fn chapters(
                 failure: None,
             },
         );
+        // A list the source gave within LIST_FRESH is the list: the page shown again, as it is
+        // once the reader closes, a chapter is marked or a download is asked for, does not ask
+        // the source for it again.
+        if kit.sources.kept_listing(work, now, crate::read_sources::LIST_FRESH).is_some() {
+            send(tx, ReadingEvent::Series(Box::new(view(kit, ask, work, false))));
+            return;
+        }
     }
     let mut asked = kit.sources.chapters(work, edition.as_deref(), now).await;
     if edition.is_none()
@@ -421,7 +428,14 @@ pub(crate) fn view(kit: &Kit, ask: Ask, work: &WorkId, partial: bool) -> SeriesV
         work: work.clone(),
         medium,
         titles: WorkTitles {
-            display: local_name(kit, work).unwrap_or_default(),
+            // A work AniList does not list is named as its source or folder names it, and is
+            // never shown by its id.
+            display: match tiles::anilist(work.as_str()) {
+                Some(_) => String::new(),
+                None => {
+                    local_name(kit, work).unwrap_or_else(kaeri_i18n::t::reading_untitled_series)
+                }
+            },
             romaji: None,
             english: None,
             native: None,
@@ -519,14 +533,13 @@ fn fill(kit: &Kit, ask: Ask, view: &mut SeriesView, kept: &KeptBook) {
     }
 }
 
-/// A work AniList does not list: its folder's name.
+/// A work AniList does not list: the name its source or its folder gave it.
 pub(crate) fn local_name(kit: &Kit, work: &WorkId) -> Option<String> {
-    kit.store
-        .local_book_series()
-        .ok()?
-        .into_iter()
-        .find(|s| s.work.as_deref() == Some(work.as_str()))
-        .map(|s| s.name)
+    if tiles::anilist(work.as_str()).is_some() {
+        return None;
+    }
+    let form = crate::data::title_form(kit.meta.titles());
+    tiles::name_of(&kit.store, work.as_str(), form)
 }
 
 /// The series' medium: the catalogue's, else its folder's.
@@ -536,11 +549,18 @@ pub(crate) fn medium_of(kit: &Kit, work: &WorkId) -> Medium {
         .map_or_else(|| local_medium(kit, work), |k| k.book.medium())
 }
 
+/// A work AniList does not list: its folder's medium, else the one kept from its source's
+/// search, else the one the sources holding it carry. Manga when none says.
 pub(crate) fn local_medium(kit: &Kit, work: &WorkId) -> Medium {
     kit.store
         .local_book_series()
         .ok()
         .and_then(|all| all.into_iter().find(|s| s.work.as_deref() == Some(work.as_str())))
         .and_then(|s| Medium::parse(&s.medium))
+        .or_else(|| {
+            let kind = kit.store.book_work_kind(work.as_str()).ok().flatten()?;
+            Medium::parse(&kind.medium)
+        })
+        .or_else(|| kit.sources.held_medium(work))
         .unwrap_or(Medium::Manga)
 }

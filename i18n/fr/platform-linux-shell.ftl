@@ -5,7 +5,7 @@ shell-no-background = { -app-name } ne peut pas continuer de tourner en arrière
 shell-main-menu = Menu principal
 shell-connect-tracker = Connecter { $tracker }
 shell-changes-waiting = { $count ->
-    [one] Une modification à synchroniser
+    [one] { $count } modification à synchroniser
     [many] { $count } modifications à synchroniser
    *[other] { $count } modifications à synchroniser
  }
@@ -28,12 +28,12 @@ shortcuts-answer-card = Répondre à la carte dans le coin
 shortcuts-escape = Fermer une carte, le mini-lecteur, le plein écran, puis le lecteur
 close-stop-and-close = Arrêter et fermer
 close-body-downloading = { $count ->
-    [one] Un épisode est en cours de téléchargement ou en attente. Le laisser continuer après la fermeture de la fenêtre, ou l'arrêter ?
+    [one] { $count } épisode est en cours de téléchargement ou en attente. Le laisser continuer après la fermeture de la fenêtre, ou l'arrêter ?
     [many] { $count } épisodes sont en cours de téléchargement ou en attente. Les laisser continuer après la fermeture de la fenêtre, ou les arrêter ?
    *[other] { $count } épisodes sont en cours de téléchargement ou en attente. Les laisser continuer après la fermeture de la fenêtre, ou les arrêter ?
  }
 close-body-seeding = { $count ->
-    [one] Un épisode est en cours de partage. Le laisser continuer après la fermeture de la fenêtre, ou l'arrêter ?
+    [one] { $count } épisode est en cours de partage. Le laisser continuer après la fermeture de la fenêtre, ou l'arrêter ?
     [many] { $count } épisodes sont en cours de partage. Les laisser continuer après la fermeture de la fenêtre, ou les arrêter ?
    *[other] { $count } épisodes sont en cours de partage. Les laisser continuer après la fermeture de la fenêtre, ou les arrêter ?
  }

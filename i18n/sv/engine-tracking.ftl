@@ -26,6 +26,15 @@ notice-signed-out-queue = { $count ->
     [one] Utloggad från { $tracker }. En köad ändring sparas till nästa inloggning.
    *[other] Utloggad från { $tracker }. { $count } köade ändringar sparas till nästa inloggning.
  }
+notice-tracker-change-refused = { $tracker } avvisade en ändring av { $title } gång på gång, så den finns bara kvar i { -app-name }.
+notice-tracker-changes-refused = { $others ->
+    [one] { $tracker } avvisade ändringar av { $title } och en titel till gång på gång, så de finns bara kvar i { -app-name }.
+   *[other] { $tracker } avvisade ändringar av { $title } och { $others } titlar till gång på gång, så de finns bara kvar i { -app-name }.
+ }
+notice-tracker-change-refused-untitled = { $count ->
+    [one] { $tracker } avvisade en ändring gång på gång, så den finns bara kvar i { -app-name }.
+   *[other] { $tracker } avvisade ändringar av { $count } titlar gång på gång, så de finns bara kvar i { -app-name }.
+ }
 notice-sign-out-failed = Det gick inte att logga ut från { $tracker }. Försök igen. { $reason }
 notice-not-saved-because = Det gick inte att spara inställningen. { $cause }
 notice-proxy-saved = Torrenttrafiken går nu via proxyn.

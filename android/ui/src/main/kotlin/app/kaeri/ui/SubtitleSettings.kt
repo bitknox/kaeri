@@ -29,6 +29,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shadow
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
@@ -121,6 +122,7 @@ internal fun SubtitlesGroup(onReset: (before: SubtitleStyle) -> Unit) {
     val view by store.settings.view.collectAsStateWithLifecycle()
     val style = view?.subtitleStyle ?: return
     val context = LocalContext.current
+    val resources = LocalResources.current
     fun send(key: SettingKey, value: String) = store.setSetting(key, SettingValue.Str(value))
     fun send(key: SettingKey, value: Int) = store.setSetting(key, SettingValue.Int(value.toLong()))
     val rows = buildList<@Composable (Place) -> Unit> {
@@ -131,8 +133,8 @@ internal fun SubtitlesGroup(onReset: (before: SubtitleStyle) -> Unit) {
         }
         add { place ->
             MenuRow(
-                place, stringResource(R.string.settings_subs_size), context.getString(R.string.settings_subs_size_value, style.size.toInt()),
-                SubtitleNames.SIZES.map { MenuChoice(it, context.getString(R.string.settings_subs_size_value, it)) }, style.size.toInt(),
+                place, stringResource(R.string.settings_subs_size), resources.getString(R.string.settings_subs_size_value, style.size.toInt()),
+                SubtitleNames.SIZES.map { MenuChoice(it, resources.getString(R.string.settings_subs_size_value, it)) }, style.size.toInt(),
             ) { send(SettingKey.SUBTITLE_SIZE, it) }
         }
         add { place ->
@@ -173,14 +175,14 @@ internal fun SubtitlesGroup(onReset: (before: SubtitleStyle) -> Unit) {
         }
         if (style.background != SubtitleBackground.NO_BACKGROUND) add { place ->
             MenuRow(
-                place, stringResource(R.string.settings_subs_opacity), context.getString(R.string.settings_subs_size_value, style.opacity.toInt()),
-                SubtitleNames.OPACITIES.map { MenuChoice(it, context.getString(R.string.settings_subs_size_value, it)) }, style.opacity.toInt(),
+                place, stringResource(R.string.settings_subs_opacity), resources.getString(R.string.settings_subs_size_value, style.opacity.toInt()),
+                SubtitleNames.OPACITIES.map { MenuChoice(it, resources.getString(R.string.settings_subs_size_value, it)) }, style.opacity.toInt(),
             ) { send(SettingKey.SUBTITLE_OPACITY, it) }
         }
         add { place ->
             MenuRow(
-                place, stringResource(R.string.settings_subs_raise), context.getString(R.string.settings_subs_raise_value, style.raise.toInt()),
-                SubtitleNames.RAISES.map { MenuChoice(it, context.getString(R.string.settings_subs_raise_value, it)) }, style.raise.toInt(),
+                place, stringResource(R.string.settings_subs_raise), resources.getString(R.string.settings_subs_raise_value, style.raise.toInt()),
+                SubtitleNames.RAISES.map { MenuChoice(it, resources.getString(R.string.settings_subs_raise_value, it)) }, style.raise.toInt(),
             ) { send(SettingKey.SUBTITLE_RAISE, it) }
         }
         add { place ->

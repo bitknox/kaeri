@@ -5,6 +5,7 @@ import Faq from '../../components/Faq.astro';
 import HeroVideo from '../../components/HeroVideo.astro';
 import NagareStrip from '../../components/NagareStrip.astro';
 import Pic from '../../components/Pic.astro';
+import TermShot from '../../components/TermShot.astro';
 import Page from '../../layouts/Page.astro';
 import { CC, DEMO_PART_1, DOWNLOAD, FEATURES, GITHUB, RELEASES } from '../../data/site';
 import { VERSION } from '../../data/version';
@@ -24,15 +25,17 @@ const bands = ['f1', 'f2', 'f3', 'f4'] as const;
 	<section class="hero" aria-labelledby="hero-h">
 		<div class="hero-copy">
 			<h1 id="hero-h">{t('home.hero.title')}</h1>
-			<p class="k-lede">{t('home.hero.sub')}</p>
-			<div class="hero-actions">
-				<a class="k-btn k-btn-primary k-btn-lg" href="#download" data-hero-download>{t('dl.hero.any.label')}</a>
-				<a class="k-arrow" href="#download">
-					{t('home.hero.platforms')}
-					<svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true"><path d="M4 2l4 4-4 4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"></path></svg>
-				</a>
+			<div class="hero-side">
+				<p class="k-lede">{t('home.hero.sub')}</p>
+				<div class="hero-actions">
+					<a class="k-btn k-btn-primary k-btn-lg" href="#download" data-hero-download>{t('dl.hero.any.label')}</a>
+					<a class="k-arrow" href="#download">
+						{t('home.hero.platforms')}
+						<svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true"><path d="M4 2l4 4-4 4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+					</a>
+				</div>
+				<p class="hero-note" data-hero-note>{t('dl.hero.any.note', { version: VERSION })}</p>
 			</div>
-			<p class="hero-note" data-hero-note>{t('dl.hero.any.note', { version: VERSION })}</p>
 		</div>
 
 		<figure class="devices">
@@ -47,41 +50,28 @@ const bands = ['f1', 'f2', 'f3', 'f4'] as const;
 					<Pic name="iphone-title" sizes="(min-width: 1280px) 190px, 154px" alt={t('home.hero.phoneAlt')} />
 				</div>
 			</div>
-			<figcaption>{t('home.hero.caption')}</figcaption>
+			<figcaption><span class="cap-wide">{t('home.hero.caption')}</span><span class="cap-narrow">{t('home.hero.captionNarrow')}</span></figcaption>
 		</figure>
 	</section>
 
-	<section class="band band-green" aria-labelledby="f1-h">
+	<section class="band band-rise" aria-labelledby="read-h">
 		<div class="band-in">
 			<div class="band-head">
-				<h2 id="f1-h">{t('home.f1.title')}</h2>
-				<p><span class="lead">{t('home.f1.lead')}</span> {t('home.f1.text')}</p>
+				<h2 id="read-h">{t('home.read.title')}</h2>
+				<p><span class="lead">{t('home.read.lead')}</span> {t('home.read.text')}</p>
 			</div>
-			<figure>
-				<div class="crop crop-a" style="aspect-ratio: 1200 / 540; view-transition-name: shot-continue">
-					<Pic name="mac-continue" sizes="min(1476px, 125vw)" style="left: -23%; top: -70%; width: 123%" alt={t('home.f1.alt')} />
+			<figure class="rise-fig">
+				<figcaption>{t('home.read.caption')}</figcaption>
+				<div class="rise rise-ipad">
+					<div class="rise-device">
+						<Pic name="ipad-reading" sizes="(min-width: 1100px) 1000px, 92vw" alt={t('home.read.alt')} />
+					</div>
 				</div>
-				<figcaption>{t('home.f1.caption')}</figcaption>
 			</figure>
 		</div>
 	</section>
 
-	<section class="band" aria-labelledby="f2-h">
-		<div class="band-in band-rule band-rule-violet">
-			<div class="band-head">
-				<h2 id="f2-h">{t('home.f2.title')}</h2>
-				<p><span class="lead">{t('home.f2.lead')}</span> {t('home.f2.text')}</p>
-			</div>
-			<figure>
-				<div class="crop crop-b" style="aspect-ratio: 1200 / 620; view-transition-name: shot-title">
-					<Pic name="ipad-title" sizes="min(1404px, 117vw)" style="left: -17.4%; top: -8.9%; width: 117%" alt={t('home.f2.alt')} />
-				</div>
-				<figcaption>{t('home.f2.caption')}</figcaption>
-			</figure>
-		</div>
-	</section>
-
-	<section class="band band-red" aria-labelledby="f3-h">
+	<section class="band theatre" aria-labelledby="f3-h">
 		<div class="band-in">
 			<div class="band-head">
 				<h2 id="f3-h">{t('home.f3.title')}</h2>
@@ -96,22 +86,27 @@ const bands = ['f1', 'f2', 'f3', 'f4'] as const;
 		</div>
 	</section>
 
-	<section class="band" aria-labelledby="f4-h">
-		<div class="band-in band-rule band-rule-sky">
+	<section class="band" aria-labelledby="together-h">
+		<div class="band-in">
 			<div class="band-head">
-				<h2 id="f4-h">{t('home.f4.title')}</h2>
-				<p><span class="lead">{t('home.f4.lead')}</span> {t('home.f4.text')}</p>
+				<h2 id="together-h">{t('home.together.title')}</h2>
+				<p><span class="lead">{t('home.together.lead')}</span> {t('home.together.text')}</p>
 			</div>
 			<figure>
-				<div class="crop crop-b" style="aspect-ratio: 1200 / 420; view-transition-name: shot-calendar">
-					<Pic name="mac-calendar" sizes="min(1464px, 122vw)" style="left: -21.9%; top: 0; width: 122%" alt={t('home.f4.alt')} />
+				<div class="together">
+					<div class="player-bezel together-party">
+						<Pic name="android-party-chat" sizes="(min-width: 1100px) 900px, 92vw" alt={t('features.together.alt')} />
+					</div>
+					<div class="bezel together-remote">
+						<Pic name="iphone-tv-remote" sizes="(min-width: 1100px) 240px, 40vw" alt={t('features.tv.remoteAlt')} />
+					</div>
 				</div>
-				<figcaption>{t('home.f4.caption')}</figcaption>
+				<figcaption set:html={t('home.together.caption', { source: DEMO_PART_1, licence: CC })} />
 			</figure>
 		</div>
 	</section>
 
-	<section class="band band-plain" aria-labelledby="fx-h">
+	<section class="band" aria-labelledby="fx-h">
 		<div class="band-in">
 			<div class="band-head">
 				<h2 id="fx-h">{t('home.fx.title')}</h2>
@@ -135,10 +130,29 @@ const bands = ['f1', 'f2', 'f3', 'f4'] as const;
 					<figcaption>{t('home.fx.linux')}</figcaption>
 				</figure>
 			</div>
+			<figure class="fx-term">
+				<TermShot name="home" alt={t('home.fx.terminalAlt')} />
+				<figcaption>{t('home.fx.terminal')}</figcaption>
+			</figure>
 			<p class="more"><a class="k-arrow" href={href(FEATURES)}>
 				{t('home.more')}
 				<svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true"><path d="M4 2l4 4-4 4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"></path></svg>
 			</a></p>
+		</div>
+	</section>
+
+	<section class="band" aria-labelledby="f1-h">
+		<div class="band-in">
+			<div class="band-head">
+				<h2 id="f1-h">{t('home.f1.title')}</h2>
+				<p><span class="lead">{t('home.f1.lead')}</span> {t('home.f1.text')}</p>
+			</div>
+			<figure>
+				<div class="crop crop-a crop-continue" style="view-transition-name: shot-continue">
+					<Pic name="mac-continue" sizes="(min-width: 701px) min(1452px, 121vw), 227vw" alt={t('home.f1.alt')} />
+				</div>
+				<figcaption>{t('home.f1.caption')}</figcaption>
+			</figure>
 		</div>
 	</section>
 
@@ -159,15 +173,16 @@ const bands = ['f1', 'f2', 'f3', 'f4'] as const;
 
 	<section class="oss" aria-labelledby="oss-h">
 		<div class="oss-in">
-			<img src="/favicon.svg" alt="" width="60" height="60" />
-			<h2 id="oss-h">{t('home.oss.title')}</h2>
-			<p>{t('home.oss.text')}</p>
-			<div class="oss-actions">
-				<a class="k-btn" href={GITHUB}>{t('home.oss.source')}</a>
-				<a class="k-btn" href={href('/docs/plugins/authoring/')}>{t('home.oss.plugin')}</a>
-				<a class="k-btn" href={`${GITHUB}/blob/main/docs/translations.md`}>{t('home.oss.translate')}</a>
-				<a class="k-btn" href={`${GITHUB}/issues`}>{t('home.oss.issue')}</a>
+			<div>
+				<h2 id="oss-h">{t('home.oss.title')}</h2>
+				<p>{t('home.oss.text')}</p>
 			</div>
+			<ul class="oss-links">
+				<li><a href={GITHUB}>{t('home.oss.source')}<svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true"><path d="M4 2l4 4-4 4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"></path></svg></a></li>
+				<li><a href={href('/docs/plugins/authoring/')}>{t('home.oss.plugin')}<svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true"><path d="M4 2l4 4-4 4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"></path></svg></a></li>
+				<li><a href={`${GITHUB}/blob/main/docs/translations.md`}>{t('home.oss.translate')}<svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true"><path d="M4 2l4 4-4 4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"></path></svg></a></li>
+				<li><a href={`${GITHUB}/issues`}>{t('home.oss.issue')}<svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true"><path d="M4 2l4 4-4 4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"></path></svg></a></li>
+			</ul>
 		</div>
 	</section>
 

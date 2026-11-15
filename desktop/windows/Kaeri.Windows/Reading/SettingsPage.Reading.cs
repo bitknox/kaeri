@@ -189,6 +189,19 @@ public sealed partial class SettingsPage
         if (ctx.Known.Setting(K.CountsAsRead) is { } counts)
             Cards.Children.Add(Card(counts));
 
+        // Skip credit pages: a manga setting, on by the engine's default, that follows to other devices.
+        var skipOn = !reading.ReaderDefaults.TryGetValue(Medium.Manga, out var skipView)
+            || skipView.Rows.FirstOrDefault(r => r.Key == ReaderSettingKey.SkipCreditPages)?.Value is not ReaderValue.Toggle { On: false };
+        var skip = new ToggleSwitch { Name = "ReaderDefaultSkipCredits", IsOn = skipOn, OnContent = "", OffContent = "", MinWidth = 0, IsEnabled = mangaNow is not null };
+        AutomationProperties.SetName(skip, T.SettingsSkipCredits);
+        AutomationProperties.SetHelpText(skip, T.SettingsSkipCreditsNote);
+        skip.Toggled += (_, _) =>
+        {
+            if (!quiet)
+                reading.SetReaderDefault(Medium.Manga, ReaderSettingKey.SkipCreditPages, new ReaderValue.Toggle(skip.IsOn));
+        };
+        Cards.Children.Add(CardFrame(T.SettingsSkipCredits, T.SettingsSkipCreditsNote, skip));
+
         // What follows you to your other devices.
         var follow = new[] { K.SeriesChoicesFollow, K.LookFollows }.Select(k => ctx.Known.Setting(k)).OfType<SettingRow>().ToList();
         if (follow.Count > 0)

@@ -30,17 +30,17 @@ servers-report-line = Pontos de retomada e marcas de assistido acompanham o que 
 servers-add = Adicionar
 servers-row-matching = Identificando · { $done } de { $total } séries
 servers-row-summary = { $libraries ->
-    [one] 1 { -library } · { $series } séries
+    [one] { $libraries } { -library } · { $series } séries
     [many] { $libraries } de bibliotecas · { $series } séries
    *[other] { $libraries } bibliotecas · { $series } séries
  }
 servers-row-libraries = { $count ->
-    [one] 1 { -library }
+    [one] { $count } { -library }
     [many] { $count } de bibliotecas
    *[other] { $count } bibliotecas
  }
 servers-row-series = { $count ->
-    [one] 1 série
+    [one] { $count } série
     [many] { $count } de séries
    *[other] { $count } séries
  }

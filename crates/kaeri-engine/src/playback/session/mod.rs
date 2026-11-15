@@ -273,6 +273,8 @@ pub async fn play(
     let Machine { opener, slot, host, power, offline } = machine;
     let Some(first) = streams.first() else {
         slot.release();
+        // Its controls closed before its ending is said: see `Handoff::live`.
+        commands.close();
         let _ = tx.send(Event::playback_ended(false, Ending::Failed));
         return;
     };
@@ -292,6 +294,7 @@ pub async fn play(
         let _ = tx.send(update);
         // Nothing plays here, so Now Playing comes down rather than waiting on a player that
         // was never going to report.
+        commands.close();
         let _ = tx.send(Event::playback_ended(false, Ending::Elsewhere));
         return;
     }
@@ -486,6 +489,7 @@ pub async fn play(
                     // The player never existed, but the UI has Now Playing up and a control
                     // surface pointed at it. Saying so is what takes them down.
                     run.servers.settle().await;
+                    commands.close();
                     let _ = tx.send(Event::playback_failed(StartFailure {
                         why: NoSourceWhy::NotFound,
                         text: notice,
@@ -735,6 +739,8 @@ pub async fn play(
                     Ending::Failed
                 };
                 let failure = failure.filter(|_| ending == Ending::Failed);
+                // Its controls closed before its ending is said: see `Handoff::live`.
+                commands.close();
                 let _ = tx.send(Event::PlaybackEnded {
                     watched: watched.unwrap_or(false),
                     ending,

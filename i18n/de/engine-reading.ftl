@@ -99,6 +99,10 @@ export-waits-for-wifi = { $n ->
     [one] Ein Kapitel ist noch nicht heruntergeladen. Dieser Versand wartet daher auf Wi-Fi und läuft dann von selbst an.
    *[other] { $n } Kapitel sind noch nicht heruntergeladen. Dieser Versand wartet daher auf Wi-Fi und läuft dann von selbst an.
  }
+export-pages-left-out = { $n ->
+    [one] Eine Seite von { $chapter } ließ sich nicht lesen und fehlt in den Dateien.
+   *[other] { $n } Seiten von { $chapter } ließen sich nicht lesen und fehlen in den Dateien.
+ }
 reading-chapter-titled = Kapitel { $chapter } · { $title }
 reading-row-read = Gelesen
 reading-row-new = Neu

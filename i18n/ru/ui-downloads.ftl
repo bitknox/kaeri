@@ -11,6 +11,8 @@ downloads-in-downloads = { $size } в загрузках
 downloads-space-label = Место, занятое загрузками
 downloads-empty-title = Нет загрузок
 downloads-empty-detail = Скачанные эпизоды воспроизводятся без подключения к сети.
+read-downloads-empty-detail = Скачанные главы открываются без подключения к сети.
+read-downloads-empty-both = Скачанные эпизоды и главы открываются без подключения к сети.
 downloads-load-failed = Не удалось открыть загрузки
 downloads-folder-failed = Не удалось открыть папку. Проверьте, что она ещё существует.
 downloads-episode-name = Эпизод { $episode }
@@ -58,7 +60,7 @@ downloads-quality = Качество загрузки
 downloads-notice-done = Эпизод { $episode } загружен
 downloads-notice-done-detail = { $title } · можно смотреть без подключения
 downloads-notice-running = { $count ->
-    [one] Загружается один эпизод
+    [one] Загружается { $count } эпизод
     [few] Загружаются { $count } эпизода
     [many] Загружаются { $count } эпизодов
    *[other] Загружаются { $count } эпизодов

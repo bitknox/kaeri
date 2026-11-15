@@ -1,6 +1,7 @@
 // Credit pages and chapter parts, staged for shots on the fixtures engine: its sources have no
 // group that repeats a page, so after each layout of the chapter opened the reader hears what the
-// engine would say of one that does. The credit page is drawn here, a made-up card on a dark plate.
+// engine would say of one that does, and a keep is answered as the engine answers it. The credit
+// page is drawn here, a made-up card on a dark plate.
 
 package app.kaeri.store
 
@@ -13,12 +14,16 @@ import android.graphics.Paint
 import android.graphics.RectF
 import android.os.Handler
 import android.os.Looper
+import app.kaeri.engine.core.ChapterId
 import app.kaeri.engine.model.ChapterPart
+import app.kaeri.engine.model.Command
 import app.kaeri.engine.model.CreditPage
 import app.kaeri.engine.model.Event
+import app.kaeri.engine.model.Leaf
 import app.kaeri.engine.model.Msg
 import app.kaeri.engine.model.PageEncoding
 import app.kaeri.engine.model.PageFile
+import app.kaeri.engine.model.ReaderCommand
 import app.kaeri.engine.model.ReaderEvent
 import app.kaeri.engine.model.ReadingMsg
 import java.io.File
@@ -31,6 +36,9 @@ object CreditsStage {
     val STATES = listOf("start", "end", "both", "parts", "two", "missing", "broken")
 
     private var unlisten: (() -> Unit)? = null
+
+    /** A keep the shot answered: the session, the chapter, the kept page's number and its file. */
+    private data class Relaid(val session: ULong, val chapter: ChapterId, val at: UInt, val file: PageFile)
 
     /**
      * From now on, every layout the reader hears comes with [what]'s credit pages or parts, the
@@ -48,11 +56,23 @@ object CreditsStage {
             else -> draw(context, grey)
         }
         val main = Handler(Looper.getMainLooper())
+        // The last layout heard, the pages staged with it, those kept, and the keep answered.
+        var last: ReaderEvent.Leaves? = null
+        var staged = emptyList<CreditPage>()
+        val kept = mutableSetOf<ULong>()
+        var relaid: Relaid? = null
+        val passing = mutableSetOf<UInt>()
         unlisten?.invoke()
-        unlisten = store.listenToReading { event ->
-            val leaves = ((event as? Event.Reader)?.v1 as? ReaderEvent.Leaves) ?: return@listenToReading
+        val stop = store.listenToReading { event ->
+            val said = (event as? Event.Reader)?.v1
+            if (said is ReaderEvent.Opened) {
+                relaid = null
+                kept.clear()
+            }
+            val leaves = said as? ReaderEvent.Leaves ?: return@listenToReading
+            last = leaves
             val count = leaves.leaves.flatMap { leaf -> leaf.parts.map { it.page } }.distinct().size.toUInt()
-            val said = if (file == null && what == "missing") {
+            val answer = if (file == null && what == "missing") {
                 // Part 3 no group has: part 4 starts two thirds of the way in.
                 val second = maxOf(count / 3u, 2u) + 1u
                 val fourth = maxOf(count * 2u / 3u, second + 1u) + 1u
@@ -80,13 +100,78 @@ object CreditsStage {
                         add(CreditPage(1u, false, file, 0xC0FFF0uL))
                     }
                     if (what == "end" || what == "both") add(CreditPage(count + size.toUInt(), true, file, 0xC0FFEFuL))
-                }
+                }.filter { it.fingerprint !in kept }
+                staged = pages
                 ReaderEvent.CreditPages(leaves.session, leaves.chapter, pages, Msg.Reading(ReadingMsg.ReaderCreditPagesSkipped(pages.size.toLong())))
             }
             // After the layout itself has reached the reader, as the engine sends them.
-            main.post { store.stageReaderEvent(Event.Reader(said)) }
+            main.post { store.stageReaderEvent(Event.Reader(answer)) }
+        }
+        // The fixture engine has no credit pages, so a keep is answered here as the engine answers
+        // it: the chapter laid out again with the kept page in its place and every page after it
+        // one on, the kept page landing from its file. A page asked for later comes from the
+        // fixture engine one page back and is moved one on.
+        store.readerAnswer = answer@{ command ->
+            when (command) {
+                is ReaderCommand.NotACreditPage -> {
+                    val now = last?.takeIf { it.session == command.session } ?: return@answer false
+                    val credit = staged.firstOrNull { it.fingerprint == command.fingerprint } ?: return@answer false
+                    val story = now.leaves.flatMap { leaf -> leaf.parts.map { it.page } }.maxOrNull()?.plus(1u) ?: 0u
+                    val at = if (credit.atEnd) story else 0u
+                    kept += credit.fingerprint
+                    relaid = Relaid(now.session, now.chapter, at, credit.file)
+                    main.postDelayed({ store.stageReaderEvent(Event.Reader(relay(now, at))) }, 250)
+                    true
+                }
+                is ReaderCommand.NeedPage -> {
+                    val keep = relaid?.takeIf { it.session == command.session } ?: return@answer false
+                    if (command.page < keep.at || passing.remove(command.page)) return@answer false
+                    if (command.page == keep.at) {
+                        main.post { store.stageReaderEvent(Event.Reader(ReaderEvent.PageReady(keep.session, keep.chapter, keep.at, null, keep.file))) }
+                    } else {
+                        val back = command.page - 1u
+                        passing += back
+                        main.post { store.send(Command.Reader(ReaderCommand.NeedPage(command.session, command.chapter, back))) }
+                    }
+                    true
+                }
+                else -> false
+            }
+        }
+        store.readerDress = { event ->
+            val keep = relaid
+            val said = (event as? Event.Reader)?.v1
+            when {
+                keep == null -> event
+                said is ReaderEvent.PageReady && said.session == keep.session && said.page >= keep.at -> Event.Reader(said.copy(page = said.page + 1u))
+                said is ReaderEvent.PageFailed && said.session == keep.session && said.page >= keep.at -> Event.Reader(said.copy(page = said.page + 1u))
+                else -> event
+            }
+        }
+        unlisten = {
+            stop()
+            store.readerAnswer = null
+            store.readerDress = null
         }
         return true
+    }
+
+    /** [leaves] with a leaf for the kept page at [at] and every page from there one on, none landed yet. */
+    private fun relay(leaves: ReaderEvent.Leaves, at: UInt): ReaderEvent.Leaves {
+        val model = leaves.leaves.flatMap { it.parts }.firstOrNull() ?: return leaves
+        val keptLeaf = Leaf(0u, listOf(model.copy(page = at, file = null)), false)
+        val out = mutableListOf<Leaf>()
+        var placed = false
+        for (leaf in leaves.leaves) {
+            val first = leaf.parts.firstOrNull()?.page
+            if (!placed && (leaf.endPage || (first != null && first >= at))) {
+                out += keptLeaf
+                placed = true
+            }
+            out += leaf.copy(parts = leaf.parts.map { it.copy(page = if (it.page >= at) it.page + 1u else it.page, file = null) })
+        }
+        if (!placed) out += keptLeaf
+        return leaves.copy(leaves = out.mapIndexed { i, leaf -> leaf.copy(index = i.toUInt()) })
     }
 
     /** A card with lines of type on a deep blue plate in a gold frame, as a group's page tends to look. */

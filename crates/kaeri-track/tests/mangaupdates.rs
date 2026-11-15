@@ -105,7 +105,7 @@ async fn a_new_series_is_added_then_its_numbers_set_in_array_calls() {
     let server = FakeMangaUpdates::start().await;
     let t = tracker(&server, fake::TOKEN);
     let ops = [progress(7, 5, Some(1)), progress(8, 2, None)];
-    let ignored = t.push_read(&ops).await.unwrap();
+    let ignored = t.push_read(&ops).await.unwrap().ignored;
     assert!(ignored.is_empty());
     assert_eq!(server.writes(), ["/v1/lists/series", "/v1/lists/series/update"]);
     let a = server.item(A).unwrap();
@@ -174,7 +174,9 @@ async fn a_delay_that_does_not_lift_is_left_to_the_outbox() {
     server.add(item(A, fake::READING, 1, 0));
     server.delay_writes(50);
     let t = tracker(&server, fake::TOKEN);
-    assert!(t.push_read(&[progress(7, 9, None)]).await.is_err());
+    // A pause, never a refusal: the outbox waits it out without counting it.
+    let error = t.push_read(&[progress(7, 9, None)]).await.unwrap_err();
+    assert!(matches!(error, kaeri_core::Error::RateLimited { .. }), "{error:?}");
     assert_eq!(server.item(A).unwrap().chapter, 1);
 }
 
@@ -192,7 +194,7 @@ async fn a_work_without_a_series_id_is_held_back_and_a_pushed_one_is_ignored() {
     let t = tracker(&server, fake::TOKEN);
     assert!(!t.can_address(&progress(99, 1, None)));
     assert!(t.can_address(&progress(7, 1, None)));
-    let ignored = t.push_read(&[progress(99, 1, None)]).await.unwrap();
+    let ignored = t.push_read(&[progress(99, 1, None)]).await.unwrap().ignored;
     assert_eq!(ignored, [AnilistId::new(99)]);
 }
 

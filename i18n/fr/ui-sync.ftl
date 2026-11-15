@@ -161,7 +161,7 @@ first-join-store-line = { $device } fait de cet { $kind } sa propre invitation
 cloud-folder = Un dossier sur cet { $kind }
 cloud-app-password-note = Créez-en un dans Nextcloud, sous Réglages, Sécurité. Il est gardé sur cet { $kind }.
 devices-tvs-for-play = { $count ->
-    [one] Une TV pour Lire sur la TV
+    [one] { $count } TV pour Lire sur la TV
     [many] { $count } TV pour Lire sur la TV
    *[other] { $count } TV pour Lire sur la TV
  }

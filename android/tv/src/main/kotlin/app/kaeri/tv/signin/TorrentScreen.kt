@@ -44,6 +44,7 @@ import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.clearAndSetSemantics
@@ -93,6 +94,7 @@ val LocalPageHost = staticCompositionLocalOf<(Context) -> String?> { ::localAddr
 @Composable
 fun TorrentScreen(onDone: () -> Unit) {
     val context = LocalContext.current
+    val resources = LocalResources.current
     val store = LocalAppStore.current
     val notices = LocalNotices.current
     val view by store.settings.view.collectAsStateWithLifecycle()
@@ -109,7 +111,7 @@ fun TorrentScreen(onDone: () -> Unit) {
     val check = proxyCheck(details) { checked ->
         store.setTorrentProxy(checked)
         password = ""
-        notices?.say(context.getString(TorrentWords.SAID_PROXY))
+        notices?.say(resources.getString(TorrentWords.SAID_PROXY))
         done()
     }
     BackHandler { if (form.typing) form.stopTyping() else done() }

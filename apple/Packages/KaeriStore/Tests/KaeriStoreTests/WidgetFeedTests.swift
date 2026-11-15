@@ -137,7 +137,9 @@ struct WidgetFeedEngineTests {
         defer { try? FileManager.default.removeItem(at: root) }
         let files = WidgetFiles(directory: root.appending(path: "widgets", directoryHint: .isDirectory))
         let reloads = Reloads()
-        let store = AppStore(widgets: WidgetFeed(files: files, reload: { reloads.count += 1 }))
+        let store = AppStore(
+            widgets: WidgetFeed(files: files, reload: { reloads.count += 1 }), artworkCache: KeptCache()
+        )
         await store.start(
             EngineLaunch(engine: .fixtures(.watching), home: .override(root: root.appending(path: "home")),
                          platform: .macOs, secrets: .host),
