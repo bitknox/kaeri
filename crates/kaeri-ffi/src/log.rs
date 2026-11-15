@@ -14,7 +14,9 @@ use std::path::Path;
 use std::sync::OnceLock;
 
 use tracing_appender::non_blocking::WorkerGuard;
-use tracing_subscriber::{EnvFilter, Layer, fmt, layer::SubscriberExt, util::SubscriberInitExt};
+use tracing_subscriber::{
+    EnvFilter, Layer, fmt, layer::SubscriberExt, util::SubscriberInitExt,
+};
 
 /// Keeps the log's writer thread for the life of the process: lines are written off the
 /// engine's threads and the app's main thread, and flushed as the process exits.

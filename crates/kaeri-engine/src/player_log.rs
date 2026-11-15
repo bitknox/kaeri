@@ -244,7 +244,9 @@ fn replay(reader: impl BufRead) -> Option<(Ring, i64)> {
         let mut fields = record.split('\t');
         match fields.next() {
             Some("P") => {
-                let Some(Ok(started_ms)) = fields.next().map(str::parse::<i64>) else { continue };
+                let Some(Ok(started_ms)) = fields.next().map(str::parse::<i64>) else {
+                    continue;
+                };
                 let episode = fields.next().unwrap_or_default().to_owned();
                 let titles = fields.map(str::to_owned).filter(|t| !t.is_empty()).collect();
                 newest = newest.max(started_ms);
@@ -597,7 +599,10 @@ pub fn text(report: &BugReport) -> String {
 pub fn stats() -> PlayerLogStats {
     match LOG.get() {
         Some(log) => log.stats(&TimeZone::system(), now_ms()),
-        None => PlayerLogStats { file_name: file_name(now_ms(), &TimeZone::system()), ..Default::default() },
+        None => PlayerLogStats {
+            file_name: file_name(now_ms(), &TimeZone::system()),
+            ..Default::default()
+        },
     }
 }
 
@@ -637,7 +642,9 @@ fn private_in(event: &Event) -> Vec<String> {
             out.push(view.link.0.clone());
             out.extend(view.for_whom.clone());
         }
-        Event::OpenJoin { view, .. } => out.extend(view.link.as_ref().map(|link| link.0.clone())),
+        Event::OpenJoin { view, .. } => {
+            out.extend(view.link.as_ref().map(|link| link.0.clone()))
+        }
         Event::PartyJoined(view) | Event::PartyState(view) => {
             out.extend([view.room.clone(), view.server.clone(), view.name.clone()]);
             out.extend(view.invite.clone());
@@ -853,7 +860,10 @@ mod tests {
         let kept = texts(&log);
         assert_eq!(kept.len(), 1, "the first playback went as the second filled the cap");
         assert_eq!(kept[0].episode, "2");
-        assert!(kept[0].dropped > 0, "the second, alone over the cap, dropped its oldest lines");
+        assert!(
+            kept[0].dropped > 0,
+            "the second, alone over the cap, dropped its oldest lines"
+        );
         assert_eq!(kept[0].dropped as usize + kept[0].lines.len(), 2000);
         let bytes: usize = log.state().ring.bytes;
         assert!(bytes <= CAP_BYTES, "{bytes}");
@@ -869,7 +879,10 @@ mod tests {
         }
         let kept = &texts(&log)[0];
         assert!(kept.dropped > 0);
-        assert!(kept.lines[0].message.starts_with(&format!("{} ", kept.dropped)), "oldest went");
+        assert!(
+            kept.lines[0].message.starts_with(&format!("{} ", kept.dropped)),
+            "oldest went"
+        );
         let text = log.text(&BugReport::default(), &utc(), T0);
         assert!(
             text.contains(&format!("({} earlier lines were dropped", kept.dropped)),
@@ -888,7 +901,8 @@ mod tests {
 
     #[test]
     fn times_and_the_file_name_are_in_the_zone_given() {
-        let zone = TimeZone::get("Europe/Copenhagen").unwrap_or_else(|_| TimeZone::fixed(jiff::tz::offset(1)));
+        let zone = TimeZone::get("Europe/Copenhagen")
+            .unwrap_or_else(|_| TimeZone::fixed(jiff::tz::offset(1)));
         assert_eq!(file_name(T0, &zone), "kaeri-player-log-2026-11-15-1522.txt");
         assert_eq!(file_name(T0, &utc()), "kaeri-player-log-2026-11-15-1422.txt");
         assert_eq!(clock_time(T0 + 7_412, &utc(), true), "14:22:07.412");
@@ -1047,7 +1061,15 @@ mod tests {
         line(&log, T0, "[osd] The Lantern Festival");
         line(&log, T0, "fetching from http://shelf.lan:8096 (Den Shelf) for harbor lights");
         let text = log.text(&BugReport::default(), &utc(), T0);
-        for leak in ["viewer-handle", "LAMP-8812", "shelf.lan", "Den Shelf", "harbor lights", "Moonlit", "Lantern"] {
+        for leak in [
+            "viewer-handle",
+            "LAMP-8812",
+            "shelf.lan",
+            "Den Shelf",
+            "harbor lights",
+            "Moonlit",
+            "Lantern",
+        ] {
             assert!(!text.contains(leak), "{leak} in {text}");
         }
         assert!(text.contains("── Playback 1 of 1 · Episode 8 · 14:22 ──"), "{text}");

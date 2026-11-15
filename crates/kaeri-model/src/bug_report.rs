@@ -182,9 +182,8 @@ pub fn player_log_text(
         match playback.dropped {
             0 => {}
             1 => out.push_str("(1 earlier line was dropped to keep the log small)\n"),
-            n => out.push_str(&format!(
-                "({n} earlier lines were dropped to keep the log small)\n"
-            )),
+            n => out
+                .push_str(&format!("({n} earlier lines were dropped to keep the log small)\n")),
         }
         for line in &playback.lines {
             let message: String = redact(&line.message, &remove)
@@ -1168,17 +1167,62 @@ mod tests {
             started: "14:21".into(),
             titles: vec!["Moonlit Harbor".into(), "The Lantern Festival".into()],
             lines: vec![
-                logged("14:21:07.412", "INFO", "resolve", "resolving a play id=[removed] episode=8 sources=[\"test-hostile\", \"torrents\"]"),
-                logged("14:21:07.500", "WARN", "resolve", "denied: https://exfiltrate.example/steal is not an allowed host"),
-                logged("14:21:07.501", "WARN", "resolve", "ESCAPED: config-get leaked \"credential-that-does-not-exist\""),
-                logged("14:21:07.502", "INFO", "resolve", "Hostile (test only) answered from allowed.example with 3 streams"),
+                logged(
+                    "14:21:07.412",
+                    "INFO",
+                    "resolve",
+                    "resolving a play id=[removed] episode=8 sources=[\"test-hostile\", \"torrents\"]",
+                ),
+                logged(
+                    "14:21:07.500",
+                    "WARN",
+                    "resolve",
+                    "denied: https://exfiltrate.example/steal is not an allowed host",
+                ),
+                logged(
+                    "14:21:07.501",
+                    "WARN",
+                    "resolve",
+                    "ESCAPED: config-get leaked \"credential-that-does-not-exist\"",
+                ),
+                logged(
+                    "14:21:07.502",
+                    "INFO",
+                    "resolve",
+                    "Hostile (test only) answered from allowed.example with 3 streams",
+                ),
                 logged("14:21:07.630", "INFO", "proxy", "listening on 127.0.0.1:52811"),
-                logged("14:21:07.702", "INFO", "player", "open https://cdn.allowed.example/v/Moonlit%20Harbor/08.m3u8?token=eyJhbGciOiJIUzI1NiJ9.abc.def"),
-                logged("14:21:07.940", "INFO", "mpv", "[cplayer] Playing: Moonlit Harbor - 08 [1080p].mkv"),
-                logged("14:21:08.613", "INFO", "mpv", "[cplayer]  (+) Subs  --sid=1 --slang=eng /Users/viewer/Movies/Moonlit Harbor/08.ass"),
+                logged(
+                    "14:21:07.702",
+                    "INFO",
+                    "player",
+                    "open https://cdn.allowed.example/v/Moonlit%20Harbor/08.m3u8?token=eyJhbGciOiJIUzI1NiJ9.abc.def",
+                ),
+                logged(
+                    "14:21:07.940",
+                    "INFO",
+                    "mpv",
+                    "[cplayer] Playing: Moonlit Harbor - 08 [1080p].mkv",
+                ),
+                logged(
+                    "14:21:08.613",
+                    "INFO",
+                    "mpv",
+                    "[cplayer]  (+) Subs  --sid=1 --slang=eng /Users/viewer/Movies/Moonlit Harbor/08.ass",
+                ),
                 logged("14:21:08.700", "INFO", "mpv", "[osd] The Lantern Festival"),
-                logged("14:21:09.000", "INFO", "player", "signed in as viewer-handle on [::1]:7000 room LAMP-8812 for viewer@mail.example"),
-                logged("14:33:58.004", "ERROR", "proxy", "segment 212 failed after 3 tries (cdn.allowed.example)"),
+                logged(
+                    "14:21:09.000",
+                    "INFO",
+                    "player",
+                    "signed in as viewer-handle on [::1]:7000 room LAMP-8812 for viewer@mail.example",
+                ),
+                logged(
+                    "14:33:58.004",
+                    "ERROR",
+                    "proxy",
+                    "segment 212 failed after 3 tries (cdn.allowed.example)",
+                ),
             ],
             dropped: 0,
         }
@@ -1220,8 +1264,16 @@ mod tests {
             assert!(!text.contains(leak), "{leak} in\n{text}");
         }
         // What helps a report stays: the times, levels, sources and plain words.
-        assert!(text.contains("14:33:58.004 ERROR proxy    segment 212 failed after 3 tries"), "{text}");
-        assert!(text.contains("14:21:08.613 INFO  mpv      [cplayer]  (+) Subs  --sid=1 --slang=eng"), "{text}");
+        assert!(
+            text.contains("14:33:58.004 ERROR proxy    segment 212 failed after 3 tries"),
+            "{text}"
+        );
+        assert!(
+            text.contains(
+                "14:21:08.613 INFO  mpv      [cplayer]  (+) Subs  --sid=1 --slang=eng"
+            ),
+            "{text}"
+        );
     }
 
     #[test]
