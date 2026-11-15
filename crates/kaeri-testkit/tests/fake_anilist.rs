@@ -579,7 +579,7 @@ async fn a_status_and_a_hang_up_fail_as_their_own_kinds() {
     server.fail_next(Failure::Status(500));
     server.fail_next(Failure::Disconnect);
     let status = anilist.media(FINISHED).await;
-    assert!(matches!(status, Err(AniListError::Api(ref m)) if m.contains("500")), "{status:?}");
+    assert!(matches!(status, Err(AniListError::Server { status: 500, .. })), "{status:?}");
     let hang_up = anilist.media(FINISHED).await;
     assert!(matches!(hang_up, Err(AniListError::Network(_))), "{hang_up:?}");
     assert!(anilist.media(FINISHED).await.is_ok(), "both were one request each");
