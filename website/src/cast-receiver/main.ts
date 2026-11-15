@@ -171,6 +171,16 @@ function episodeOf(extras: LoadExtras, metadata: Record<string, unknown> | undef
 	return n == null || n === '' ? null : String(n);
 }
 
+/** Typeset subtitles draw, or a WebVTT track shows. */
+function subtitlesShow(): boolean {
+	if (typeset.active) return true;
+	try {
+		return [...video.textTracks].some((tr) => tr.mode === 'showing');
+	} catch {
+		return false;
+	}
+}
+
 /** "Episode 3 · The Ferry at Dawn", as the overlay and Up next write it. */
 function episodeLine(episode: string | number | null | undefined, title: string | undefined) {
 	if (episode != null && title) return t('receiver-up-next-titled', { episode: String(episode), title });
@@ -232,9 +242,10 @@ function render() {
 	on('waiting', count);
 	if (count) text('waiting', t('receiver-waiting', { seconds: Math.floor((at - S.bufferingAt!) / 1000) }));
 
-	// Up next
+	// Up next. While subtitles show, the card sits above them instead of over them.
 	const next = playing ? S.upNext : null;
 	on('upnext', !!next);
+	$('upnext').classList.toggle('over-subs', !!next && subtitlesShow());
 	if (next) {
 		img('#upnext img', next.still ?? '');
 		text('upnext-count', t('receiver-up-next', { seconds: Math.max(0, Math.ceil((next.endsAt - at) / 1000)) }));
