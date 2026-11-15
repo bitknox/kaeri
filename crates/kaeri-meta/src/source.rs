@@ -70,6 +70,9 @@ const FRESH: u8 = 0;
 const TENRAI: u8 = 1;
 const CACHE: u8 = 2;
 
+/// What [`CACHE`] says, when the ladder steps down to it.
+const CACHED_NOTICE: &str = "no metadata source answered — showing what was last cached";
+
 /// One rung's condition, for the Providers screen.
 #[derive(Debug, Clone)]
 pub struct SourceHealth {
@@ -519,10 +522,7 @@ impl Meta {
         }
         let result = call.await;
         match &result {
-            // Over the limit is AniList asking for patience, not failing: no strike for the
-            // breaker, so it is never skipped for it. This call falls to what is kept.
-            Err(AniListError::RateLimited { .. }) => {}
-            Err(e) if Self::descends(e) => {
+            Err(e) if Self::outage(e) => {
                 self.note_anilist(Some(e.to_string()));
                 self.trip("anilist");
             }
@@ -530,7 +530,11 @@ impl Meta {
                 self.note_anilist(None);
                 self.reset("anilist");
             }
-            // An answer about the title, which says the service is up.
+            // Over the limit is AniList asking for patience, not failing: no strike for the
+            // breaker, so it is never skipped for it. This call falls to what is kept.
+            Err(AniListError::RateLimited { .. }) => {}
+            // An answer: not found, or GraphQL refusing this request. Either says the service
+            // is up.
             Err(_) => self.reset("anilist"),
         }
         result
@@ -614,6 +618,28 @@ impl Meta {
         self.notice.lock().ok()?.take()
     }
 
+    /// A rung below AniList answered, because AniList failed with `cause`. Said only when it is
+    /// true, and to someone looking.
+    ///
+    /// A rate limit or GraphQL's own refusal is an answer from a live AniList, so the ladder
+    /// stays where it stands and nothing is said: "no source answered" would be false. Work
+    /// nobody is looking at ([`crate::in_background`]) says nothing either, while the screens'
+    /// own asks are answered, unless AniList keeps failing long enough to be skipped: the
+    /// launch queue's refusal is not news, and saying it set the ladder going down and up
+    /// between a screen's answers, a toast each way.
+    fn fell(&self, rung: u8, cause: &AniListError) {
+        if !Self::outage(cause) {
+            return;
+        }
+        if crate::anilist::is_background() && !self.resting("anilist") {
+            return;
+        }
+        self.went(rung);
+    }
+
+    /// Stand on `rung`, with a notice when that moves the ladder. AniList's answer comes here
+    /// directly ([`FRESH`]), from any lane, so a recovery is said once; the rungs below come
+    /// through [`Self::fell`].
     fn went(&self, rung: u8) {
         let was = self.rung.swap(rung, Ordering::Relaxed);
         if was == rung {
@@ -621,7 +647,7 @@ impl Meta {
         }
         let message = match rung {
             TENRAI => "anilist is unreachable — fresh data via tenrai for now",
-            CACHE => "no metadata source answered — showing what was last cached",
+            CACHE => CACHED_NOTICE,
             _ => "anilist is back",
         };
         if let Ok(mut slot) = self.notice.lock() {
@@ -635,12 +661,18 @@ impl Meta {
     /// re-ask a question that was already answered. Unauthenticated cannot happen on
     /// these unauthenticated reads, but if it ever does, another source is not the fix.
     fn descends(error: &AniListError) -> bool {
+        Self::outage(error)
+            || matches!(error, AniListError::Api(_) | AniListError::RateLimited { .. })
+    }
+
+    /// Whether this failure says AniList is down, rather than answering: unreachable, its own
+    /// trouble (a `5xx`), or a body that could not be read (a gateway's error page). Only these
+    /// count towards the breaker and move the ladder's notice. A breaker's skip comes as
+    /// `Network`, and only outages open it.
+    fn outage(error: &AniListError) -> bool {
         matches!(
             error,
-            AniListError::Network(_)
-                | AniListError::Api(_)
-                | AniListError::Decode(_)
-                | AniListError::RateLimited { .. }
+            AniListError::Network(_) | AniListError::Server { .. } | AniListError::Decode(_)
         )
     }
 
@@ -1047,7 +1079,7 @@ impl Meta {
             match self.ask_tenrai(tenrai.media(id)).await {
                 Ok(media) => {
                     self.note_tenrai(None);
-                    self.went(TENRAI);
+                    self.fell(TENRAI, &primary);
                     self.remember(&media);
                     return (Ok(media), false);
                 }
@@ -1059,7 +1091,7 @@ impl Meta {
             }
         }
         if let Some(media) = self.recall(id) {
-            self.went(CACHE);
+            self.fell(CACHE, &primary);
             return (Ok(media), false);
         }
         (Err(self.exhausted(primary, tenrai_error)), false)
@@ -1193,7 +1225,7 @@ impl Meta {
         if assembled.is_empty() && !ids.is_empty() {
             return Err(self.exhausted(primary, tenrai_error));
         }
-        self.went(rung);
+        self.fell(rung, &primary);
         Ok(assembled)
     }
 
@@ -1338,7 +1370,7 @@ impl Meta {
             {
                 Ok(found) => {
                     self.note_tenrai(None);
-                    self.went(TENRAI);
+                    self.fell(TENRAI, &primary);
                     self.remember_page(&found.page);
                     return Ok(found);
                 }
@@ -1913,7 +1945,42 @@ mod tests {
         assert!(Meta::descends(&AniListError::Network("timed out".into())));
         assert!(Meta::descends(&AniListError::Api("internal error".into())));
         assert!(Meta::descends(&AniListError::Decode("shape changed".into())));
+        assert!(Meta::descends(&AniListError::Server { status: 502, message: String::new() }));
         assert!(!Meta::descends(&AniListError::NotFound));
         assert!(!Meta::descends(&AniListError::Unauthenticated));
+    }
+
+    #[test]
+    fn only_a_down_anilist_is_an_outage() {
+        assert!(Meta::outage(&AniListError::Network("timed out".into())));
+        assert!(Meta::outage(&AniListError::Server { status: 503, message: String::new() }));
+        assert!(Meta::outage(&AniListError::Decode("a gateway's page".into())));
+        // Answers from a live AniList: what is kept stands in, and nothing claims it is down.
+        assert!(!Meta::outage(&AniListError::Api("Max query complexity exceeded".into())));
+        assert!(!Meta::outage(&AniListError::RateLimited { retry_in_secs: 30 }));
+        assert!(!Meta::outage(&AniListError::NotFound));
+    }
+
+    #[tokio::test]
+    async fn graphql_refusing_a_request_never_trips_the_breaker() {
+        let meta = meta();
+        for _ in 0..BREAKER_THRESHOLD * 3 {
+            let answer = meta
+                .ask_anilist(async { Err::<(), _>(AniListError::Api("Validation".into())) })
+                .await;
+            assert!(matches!(answer, Err(AniListError::Api(_))));
+        }
+        assert!(meta.skip("anilist").is_none(), "AniList is still asked after many refusals");
+        assert!(meta.health()[0].healthy, "{:?}", meta.health()[0]);
+    }
+
+    #[test]
+    fn a_fall_for_an_answer_from_anilist_says_nothing() {
+        let meta = meta();
+        meta.fell(CACHE, &AniListError::RateLimited { retry_in_secs: 5 });
+        meta.fell(TENRAI, &AniListError::Api("Validation".into()));
+        assert_eq!(meta.take_notice(), None);
+        meta.fell(CACHE, &AniListError::Network("timed out".into()));
+        assert_eq!(meta.take_notice().as_deref(), Some(CACHED_NOTICE));
     }
 }
