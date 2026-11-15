@@ -63,6 +63,7 @@ import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.AnnotatedString
@@ -402,6 +403,8 @@ private fun ReadSpotlightBlock(tile: WorkTile, spot: ReadSpotlight, actions: App
             tile.cover,
             m.aspectRatio(16f / 9f)
                 .clip(ArtShape.banner)
+                // The art opens the series, so TalkBack names it by the series' title.
+                .semantics { contentDescription = tile.title }
                 .clickable(onClickLabel = stringResource(R.string.title_open), role = Role.Button) { navigator.openSeries(tile.work, "read-spotlight") },
             zoom = Modifier.readerZoomSource(key),
         )

@@ -253,6 +253,9 @@ private fun ReadSearchState.failedWith(failure: ReadingFailure): ReadSearchState
     if (stale) copy(loading = false, failure = failure, tiles = emptyList(), total = null, firstPage = 0, otherScope = null, stale = false)
     else copy(loading = false, failure = failure)
 
+/** A download asked for that could not start: what was asked, to ask again, and why. */
+data class DownloadNotStarted(val pick: DownloadPick, val failure: ReadingFailure)
+
 /** A finished download batch, said as a notification while Downloads finished is on. */
 data class DownloadsDone(val work: WorkId?, val title: Msg, val body: Msg)
 
@@ -320,6 +323,20 @@ class ReadingModel(private val send: (Command) -> Unit) {
 
     /** New chapters a check found, for the app's notifications. */
     val newChapters: SharedFlow<List<NewChapter>> = _newChapters.asSharedFlow()
+
+    /** The download last asked for while the engine has not answered it, to name what a failure about downloads stopped. */
+    @Volatile private var downloadAsked: Pair<WorkId, DownloadPick>? = null
+
+    private val _notStarted = MutableStateFlow<Map<WorkId, DownloadNotStarted>>(emptyMap())
+
+    /**
+     * Each series' download that could not start, such as when its source fails and no chapter list
+     * is kept, until a notice has said so: a download is never left looking queued.
+     */
+    val notStarted: StateFlow<Map<WorkId, DownloadNotStarted>> = _notStarted.asStateFlow()
+
+    /** [work]'s download that could not start has been said, or is no longer news. */
+    fun notStartedSeen(work: WorkId) = _notStarted.update { it - work }
 
     private val _downloadsDone = MutableSharedFlow<DownloadsDone>(extraBufferCapacity = 4)
 
@@ -495,6 +512,8 @@ class ReadingModel(private val send: (Command) -> Unit) {
         reading(ReadingCommand.ConnectMangaUpdates(username, password))
 
     fun download(work: WorkId, pick: DownloadPick) {
+        downloadAsked = work to pick
+        _notStarted.update { it - work }
         reading(ReadingCommand.Download(work, pick))
         reloadChapters(work)
     }
@@ -615,7 +634,11 @@ class ReadingModel(private val send: (Command) -> Unit) {
             }
             is ReadingEvent.Versions -> _versions.update { it + (event.chapter to event.versions) }
             is ReadingEvent.Tracking -> _tracking.update { it + (event.work to event.rows) }
-            is ReadingEvent.Downloads -> _downloads.value = event.v1
+            is ReadingEvent.Downloads -> {
+                // The queue the engine published answers the ask: it started.
+                downloadAsked = null
+                _downloads.value = event.v1
+            }
             is ReadingEvent.DownloadEstimate -> _estimates.update { it + (event.v1.work to event.v1) }
             is ReadingEvent.RemovedFromLists -> {
                 _removals.update { it + (event.work to event.results) }
@@ -625,6 +648,10 @@ class ReadingModel(private val send: (Command) -> Unit) {
             is ReadingEvent.DownloadsDone -> _downloadsDone.tryEmit(DownloadsDone(event.work, event.title, event.body))
             is ReadingEvent.Failed -> {
                 _failures.update { it + (event.about to event.failure) }
+                if (event.about == ReadingAbout.DOWNLOADS) {
+                    downloadAsked?.let { (work, pick) -> _notStarted.update { it + (work to DownloadNotStarted(pick, event.failure)) } }
+                    downloadAsked = null
+                }
                 if (event.about == ReadingAbout.HOME) _homeLoading.value = false
                 if (event.about == ReadingAbout.SEARCH) {
                     _search.update { it.failedWith(event.failure) }
