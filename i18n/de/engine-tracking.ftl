@@ -26,6 +26,15 @@ notice-signed-out-queue = { $count ->
     [one] Bei { $tracker } abgemeldet. Eine wartende Änderung wird für die nächste Anmeldung aufbewahrt.
    *[other] Bei { $tracker } abgemeldet. { $count } wartende Änderungen werden für die nächste Anmeldung aufbewahrt.
  }
+notice-tracker-change-refused = { $tracker } hat eine Änderung an { $title } wiederholt abgelehnt, sie bleibt nur in { -app-name }.
+notice-tracker-changes-refused = { $others ->
+    [one] { $tracker } hat Änderungen an { $title } und einem weiteren Titel wiederholt abgelehnt, sie bleiben nur in { -app-name }.
+   *[other] { $tracker } hat Änderungen an { $title } und { $others } weiteren Titeln wiederholt abgelehnt, sie bleiben nur in { -app-name }.
+ }
+notice-tracker-change-refused-untitled = { $count ->
+    [one] { $tracker } hat eine Änderung wiederholt abgelehnt, sie bleibt nur in { -app-name }.
+   *[other] { $tracker } hat Änderungen an { $count } Titeln wiederholt abgelehnt, sie bleiben nur in { -app-name }.
+ }
 notice-sign-out-failed = Abmeldung bei { $tracker } fehlgeschlagen. Versuche es noch einmal. { $reason }
 notice-not-saved-because = Diese Einstellung konnte nicht gespeichert werden. { $cause }
 notice-proxy-saved = Der Torrent-Verkehr läuft jetzt über den Proxy.

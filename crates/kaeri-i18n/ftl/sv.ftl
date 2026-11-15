@@ -1470,6 +1470,23 @@ notice-signed-out-queue =
        *[other] Utloggad från { $tracker }. { $count } köade ändringar sparas till nästa inloggning.
     }
 
+# Toast, shown once, when a tracker kept refusing a change to a title for about two days and the change stopped being sent. The change itself is still saved in the app. The tracker is its name, such as AniList; the title is a show's or a series' name. The notice capsule holds two lines on a phone, so keep it about as short as the English.
+notice-tracker-change-refused = { $tracker } avvisade en ändring av { $title } gång på gång, så den finns bara kvar i Kaeri.
+
+# The same toast when changes to several titles stopped being sent to one tracker at once. The title is the first of them; others is how many more titles there are.
+notice-tracker-changes-refused =
+    { $others ->
+        [one] { $tracker } avvisade ändringar av { $title } och en titel till gång på gång, så de finns bara kvar i Kaeri.
+       *[other] { $tracker } avvisade ändringar av { $title } och { $others } titlar till gång på gång, så de finns bara kvar i Kaeri.
+    }
+
+# The same toast when the app has no name for the titles. Count is how many titles.
+notice-tracker-change-refused-untitled =
+    { $count ->
+        [one] { $tracker } avvisade en ändring gång på gång, så den finns bara kvar i Kaeri.
+       *[other] { $tracker } avvisade ändringar av { $count } titlar gång på gång, så de finns bara kvar i Kaeri.
+    }
+
 # Toast when signing out of a tracker failed. The reason comes from the system.
 notice-sign-out-failed = Det gick inte att logga ut från { $tracker }. Försök igen. { $reason }
 
@@ -4528,6 +4545,440 @@ settings-note-upload-limit = Begränsar all torrentuppladdning, så delning aldr
 # Note under the token storage row. The option is a command-line flag and is not translated.
 settings-note-token-storage = Använd --token-to-file för att flytta en befintlig token.
 
+# Under a series' title on the terminal's series page: the source its chapters are read from.
+tui-read-series-from = Läses från { $source }
+
+# After the source on the series page: the list the series is on and the trackers that keep that list, such as "Reading on AniList". The list is its name, such as "Reading" or "Planning"; the trackers are already joined.
+tui-read-series-list-on = { $list } på { $trackers }
+
+# After the source on the series page, when no tracker keeps the list: "On your Reading list".
+tui-read-series-list = På din lista { $list }
+
+# Beside the progress meter on the series page: how many of the chapters listed are read.
+tui-read-series-read =
+    { $total ->
+        [one] { $read } av 1 kapitel läst
+       *[other] { $read } av { $total } kapitel lästa
+    }
+
+# At the top of the series page while the computer is offline: the chapters listed are the ones kept from before, and only the downloaded ones open.
+tui-read-series-offline = Offline. Nedladdade kapitel går fortfarande att öppna.
+
+# Left of the status line on the series page while the computer is offline.
+tui-read-status-offline = Läser · offline
+
+# Header chip on the series page while the computer is offline, in place of how many sources are on. The mark is a cross. Lower case, as the header's other chips are.
+tui-read-header-offline = källor { $mark }
+
+# Hint in the status line on the series page: the key that marks the chapter under the cursor read, or unread when it is read. Shown in lower case. Also a row of the key reference.
+tui-read-read-unread = Läst eller oläst
+
+# Hint in the status line on the series page: the key that picks the list the series is on. Shown in lower case.
+tui-read-hint-status = Status
+
+# Hint in the status line on reading's Home, on a series in Continue: the key that opens the chapter where reading stopped. Shown in lower case.
+tui-read-hint-continue = Läs vidare
+
+# Heading of the series page's keys in the key reference.
+tui-read-keys-series = Serie
+
+# A row of the key reference: open the chapter under the cursor on the series page.
+tui-read-keys-read = Läs kapitlet
+
+# A row of the key reference: download the chapter under the cursor on the series page.
+tui-read-keys-download = Ladda ner det här kapitlet
+
+# A row of the key reference: pick the list the series is on, such as Reading or Planning.
+tui-read-keys-status = Ange liststatus
+
+# A row of the key reference on reading's Home: open a series' page with its chapters, from a series in Continue, where Enter opens the chapter itself.
+tui-read-keys-chapters = Öppna seriens sida
+
+# Left of the status line while a chapter opens in the terminal's reader. The chapter is its number, such as 14.
+tui-reader-opening = Öppnar kapitel { $chapter }
+
+# The reader's opening line while no source has been picked for the series yet.
+tui-reader-finding = Letar efter en källa
+
+# Left of the reader's status line: the page in view and how many the chapter has.
+tui-reader-page-of = Sida { $page } av { $pages }
+
+# Left of the reader's status line while two pages show side by side.
+tui-reader-pages-of = Sidorna { $first } och { $second } av { $pages }
+
+# After the page count in the reader's status line, when the terminal draws pages as coloured blocks because it has no image protocol.
+tui-reader-blocks = Block
+
+# Said once a run on the reader's status rule, the first time a chapter opens in a terminal with no image protocol: the pages show as coloured blocks.
+tui-reader-blocks-notice = Inget bildprotokoll här. Sidorna visas som block.
+
+# Hint after "Resumed at page 8" on the reader's status rule: the key that starts the chapter from its first page. Shown in lower case.
+tui-reader-start-over = Börja om
+
+# Hint after the notice that the chapter moved to where another device read to: the key that goes back to the page this computer was on. Shown in lower case.
+tui-reader-go-back = Gå tillbaka
+
+# Hint after the notice that the reader guessed how this series reads: the key that opens the reader settings to change it. Shown in lower case.
+tui-reader-change = Ändra
+
+# Middle of the reader when the terminal was started with images turned off, and a chapter of manga or webtoon pages opens. The option is typed as it is on the command line.
+tui-reader-images-off = Sidorna är bilder, och Kaeri startades med --no-images.
+
+# Under that line.
+tui-reader-images-off-how = Starta utan det alternativet för att läsa manga och webtoons här.
+
+# Under that line.
+tui-reader-images-off-novels = Light novels öppnas som text i vilket fall som helst.
+
+# Heading in the reader when a chapter couldn't open. The chapter is its number, such as 16.
+tui-reader-chapter-failed = Kunde inte öppna kapitel { $chapter }
+
+# Top line of the page after the last chapter of a finished series.
+tui-reader-end-series = Slutet på serien
+
+# Under that line.
+tui-reader-end-no-more = Det finns inga fler kapitel.
+
+# Under "You're caught up" on the page after the last chapter there is.
+tui-reader-end-caught-up-line = Nya kapitel visas på Hem när dina källor har dem.
+
+# On the page after the last chapter there is, when the series goes on. The chapter is the next one's number, such as 18.
+tui-reader-end-not-out = Kapitel { $chapter } har inte kommit ut än
+
+# The same, when the next chapter's number isn't known.
+tui-reader-end-not-out-next = Kapitlet efter har inte kommit ut än
+
+# Under either of those lines.
+tui-reader-end-not-out-line = Kaeri söker efter nya kapitel i bakgrunden. Nya visas på Hem.
+
+# On the page between chapters when no source has the next chapter. The chapter is its number, such as 18.
+tui-reader-end-no-source = Kapitel { $chapter } finns inte hos dina källor än
+
+# The same, when the next chapter's number isn't known.
+tui-reader-end-no-source-next = Kapitlet efter finns inte hos dina källor än
+
+# On the page between chapters while offline, and as a toast when a chapter that isn't on this computer is opened offline. The chapter is its number, such as 16.
+tui-reader-end-offline = Kapitel { $chapter } har inte laddats ner
+
+# The same, when the chapter's number isn't known.
+tui-reader-end-offline-next = Kapitlet efter har inte laddats ner
+
+# Under that line on the page between chapters.
+tui-reader-end-offline-line = Du är offline. Kapitlet öppnas här när du är uppkopplad.
+
+# Under the next chapter on the page between chapters when it is an extra, such as 16.5 between 16 and 17: skipping to the next numbered chapter leaves the extra unread. The chapter is the extra's number.
+tui-reader-end-skip-unread = Kapitel { $chapter } förblir oläst om det hoppas över.
+
+# Under the next chapter's first page on the page between chapters. The chapter is its number.
+tui-reader-end-first-page = Första sidan i kapitel { $chapter }
+
+# The reader's heading when the terminal is too small to show a page.
+tui-reader-too-small = Behöver en större terminal
+
+# Under that heading: the smallest size the reader shows pages at, in columns and rows.
+tui-reader-too-small-line = Minst { $columns } × { $rows }
+
+# Hint in the reader's status line: the key that turns to the next page. Shown in lower case.
+tui-reader-hint-next = Framåt
+
+# Hint in the reader's status line: the key that turns back a page. Shown in lower case.
+tui-reader-hint-back = Bakåt
+
+# Hint in the reader's status line while a chapter opens: the key that stops it and goes back. Shown in lower case.
+tui-reader-hint-stop = Stoppa
+
+# Hint in the reader's status line: the key that opens the reader settings. Shown in lower case.
+tui-reader-hint-settings = Alternativ
+
+# Hint in the reader's status line on a page that couldn't load: the turn key goes on to the next page without it. Shown in lower case.
+tui-reader-hint-without = Gå vidare utan den
+
+# Hint in the reader's status line on the page between chapters. Shown in lower case.
+tui-reader-hint-next-chapter = Kapitlet efter
+
+# Hint in the reader's status line: the key that leaves the reader for the series page it was opened from. Shown in lower case.
+tui-reader-hint-series = Tillbaka till serien
+
+# Hint in the reader's status line after the last chapter of a finished series: the key that opens its first chapter. Shown in lower case.
+tui-reader-hint-again = Läs igen från början
+
+# Heading of the reader's keys in the key reference.
+tui-reader-keys-reader = Läsare
+
+# Heading of the keys that change how the reader shows pages, in the key reference.
+tui-reader-keys-view = Läsarvy
+
+# Beside the reader's keys in the key reference.
+tui-reader-keys-rtl = I manga från höger till vänster bläddrar ← framåt och → bakåt, så som sidan rör sig. Space bläddrar alltid framåt.
+
+# Beside the reader's keys in the key reference, under that.
+tui-reader-keys-left-out = Tangenter som inte gör något i det öppna kapitlet visas inte: ingen zoom i light novels, ingen bredd i manga.
+
+# Ends the toast that says a command does nothing on this screen, as "on the Downloads screen" does: the command works in the reader.
+tui-reader-where = i läsaren
+
+# A row of the key reference and the command palette: turn to the next page.
+tui-reader-action-next = Sidan efter
+
+# A row of the key reference and the command palette: turn back a page.
+tui-reader-action-previous = Sidan före
+
+# A row of the key reference: turn to the page on the left, which is the next one in right-to-left manga.
+tui-reader-action-left = Sidan till vänster
+
+# A row of the key reference: turn to the page on the right.
+tui-reader-action-right = Sidan till höger
+
+# A row of the key reference: go to the chapter's first page.
+tui-reader-action-first = Första sidan
+
+# A row of the key reference: go to the chapter's last page.
+tui-reader-action-last = Sista sidan
+
+# A row of the key reference: open the next chapter.
+tui-reader-action-next-chapter = Kapitlet efter
+
+# A row of the key reference: open the chapter before this one.
+tui-reader-action-previous-chapter = Kapitlet före
+
+# A row of the key reference: go back to the page read before a jump.
+tui-reader-action-back-to-page = Tillbaka till sidan
+
+# A row of the key reference: hide the header and status line for a bare page, or show them.
+tui-reader-action-bare = Bara sidan
+
+# A row of the key reference: show one page or two side by side.
+tui-reader-action-pages = En eller två sidor
+
+# A row of the key reference: open the reader settings.
+tui-reader-action-settings = Läsarinställningar
+
+# A row of the key reference: leave the reader for the screen it was opened from.
+tui-reader-action-leave = Lämna läsaren
+
+# A row of the key reference: on the page between chapters, open the next numbered chapter past the extras.
+tui-reader-action-skip = Hoppa över extrakapitlen
+
+# A row of the key reference: scroll a page shown at fit width, a zoomed page or a strip down.
+tui-reader-action-scroll-down = Rulla ner
+
+# A row of the key reference: scroll up.
+tui-reader-action-scroll-up = Rulla upp
+
+# A row of the key reference: read the series as pages that turn, or as one long strip.
+tui-reader-action-mode = Sidvis eller remsa
+
+# A row of the key reference: fit the page to the window, or to its width and scroll it.
+tui-reader-action-fit = Anpassa till skärm eller bredd
+
+# A row of the key reference: zoom in on the page, or leave the zoom.
+tui-reader-action-zoom = Zooma
+
+# A row of the key reference: zoom in a step.
+tui-reader-action-zoom-in = Zooma in
+
+# A row of the key reference: zoom out a step.
+tui-reader-action-zoom-out = Zooma ut
+
+# Hint in the reader's status line: the keys that scroll the page or the strip. Shown in lower case.
+tui-reader-hint-scroll = Rulla
+
+# Hint in the reader's status line at fit width: the key that fits the page to the window again. Shown in lower case.
+tui-reader-hint-fit-screen = Hela sidan
+
+# Hint in the reader's status line while zoomed: the keys that move the view about the page. Shown in lower case.
+tui-reader-hint-move = Flytta
+
+# Hint in the reader's status line while zoomed: the keys that zoom in and out. Shown in lower case.
+tui-reader-hint-zoom = Zooma
+
+# Hint in the reader's status line while zoomed: the key that leaves the zoom. Shown in lower case.
+tui-reader-hint-leave-zoom = Lämna zoom
+
+# Hint in the reader's status line in a strip: the key that scrolls on by most of a screen. Shown in lower case.
+tui-reader-hint-next-screen = En skärm till
+
+# Hint in the reader's status line in a wide window with two pages side by side: the key that shows one page at a time. Shown in lower case.
+tui-reader-hint-one-page = En sida
+
+# Hint in the reader's status line in a wide window with one page: the key that shows two side by side. Shown in lower case.
+tui-reader-hint-two-pages = Två sidor
+
+# After the page count in the reader's status line while the page fits the window's width and scrolls.
+tui-reader-fit-width = Full bredd
+
+# Left of the reader's status line while zoomed in, before the page count: "Zoom 300%".
+tui-reader-zoom = Zoom { $percent }%
+
+# Under the small map of the page at the right while zoomed in: which page it is.
+tui-reader-zoom-page = Sida { $page }
+
+# Left of the reader's status line in a webtoon strip: the chapter, and the image at the top of the window out of the chapter's images. The chapter is its number, such as 15.
+tui-reader-strip-at = Kapitel { $chapter } · bild { $image } av { $images }
+
+# On the reader's status rule in a strip, once the chapter it ran on from counted as read. The chapter is its number, such as 14.
+tui-reader-strip-read = Kapitel { $chapter } räknas som läst
+
+# On the reader's status rule in a strip, once the chapter counted as read and the trackers were updated. The trackers are already joined, such as "AniList".
+tui-reader-strip-read-tracker = Kapitel { $chapter } räknas som läst · { $trackers } har uppdaterats
+
+# On the reader's status rule in a strip, once the chapter counted as read while the computer is offline: the trackers are told once it is back online.
+tui-reader-strip-read-offline = Kapitel { $chapter } räknas som läst · { $trackers } uppdateras när du är online igen
+
+# A row of the key reference: make a light novel's text column narrower.
+tui-reader-action-narrower = Smalare text
+
+# A row of the key reference: make a light novel's text column wider.
+tui-reader-action-wider = Bredare text
+
+# A row of the key reference in a light novel: switch between turning screens and scrolling lines.
+tui-reader-action-mode-novel = Sidvis eller rullande
+
+# Hint in the reader's status line in a light novel: the keys that change the text's width. Shown in lower case.
+tui-reader-hint-width = Bredd
+
+# Hint in the settings over the reader: the keys that change the setting in the row. Shown in lower case.
+tui-reader-hint-change = Ändra
+
+# A light novel's picture, on a line of its own in the text: the picture's description.
+tui-reader-novel-picture = Bild: { $alt }
+
+# A light novel's picture with no description, on a line of its own in the text.
+tui-reader-novel-picture-plain = Bild
+
+# In the reader's status line in a light novel, after the part's name: how far through the part the text in view reaches, such as "34%".
+tui-reader-novel-through = { $percent }%
+
+# Heading in the reader settings over what this series keeps for itself.
+tui-reader-settings-series = Den här serien
+
+# Heading in the reader settings over what applies to every light novel on this computer.
+tui-reader-settings-novels-here = Light novels på den här datorn
+
+# Heading in the reader settings over what applies to every light novel, on every device.
+tui-reader-settings-novels-all = Alla light novels
+
+# Heading in the reader settings over what applies to every manga and webtoon on this computer.
+tui-reader-settings-manga-here = Manga på den här datorn
+
+# Heading in the reader settings over what applies to every manga and webtoon, on every device.
+tui-reader-settings-manga-all = All manga
+
+# Heading in the reader settings over the settings the apps have and the terminal leaves to itself.
+tui-reader-settings-not-here = Inte i terminalen
+
+# Under that heading in a light novel's reader settings.
+tui-reader-settings-novel-note = Typsnitt, textstorlek och utseende följer terminalens egna inställningar. Marginalerna kommer från textbredden.
+
+# Under that heading in a manga's reader settings.
+tui-reader-settings-manga-note = Utseende, färg och bakgrund följer terminalens egna inställningar. Tryckytor är till för pekskärmar.
+
+# Heading over the sample of the text at the width being set, beside a light novel's reader settings.
+tui-reader-settings-preview = Förhandsvisning
+
+# At the foot of a light novel's reader settings.
+tui-reader-settings-novel-foot = Ändringar gäller direkt. Platsen i texten behålls.
+
+# At the foot of a manga's reader settings.
+tui-reader-settings-manga-foot = Ändringar gäller direkt. Sidan som visas behålls.
+
+# A row of the reader settings: paged or scrolled, or paged or a strip.
+tui-reader-setting-mode = Läge
+
+# A row of the reader settings: right to left or left to right.
+tui-reader-setting-direction = Riktning
+
+# A row of the reader settings: a page fitted to the screen or to its width.
+tui-reader-setting-fit = Anpassa
+
+# A row of the reader settings: one page at a time, two, or as the window allows.
+tui-reader-setting-page-layout = Sidlayout
+
+# A row of the reader settings: what a page printed across two pages does on a one-page screen.
+tui-reader-setting-spreads = Breda sidor
+
+# A row of the reader settings: white borders cut from the pages.
+tui-reader-setting-crop = Beskär kanter
+
+# A row of the reader settings: how many columns a light novel's lines run to.
+tui-reader-setting-text-width = Textbredd
+
+# A row of the reader settings: a blank line between paragraphs or none.
+tui-reader-setting-line-spacing = Radavstånd
+
+# A row of the reader settings: lines spaced out to end together at the text width.
+tui-reader-setting-justify = Marginaljustera
+
+# A reading mode: a screen of text or pages at a time.
+tui-reader-value-paged = Sidvis
+
+# A reading mode for light novels: the text scrolls a line at a time.
+tui-reader-value-scrolled = Rullande
+
+# A reading mode for manga: whole pages one under another.
+tui-reader-value-vertical = Vertikal
+
+# A line spacing in the terminal: a blank line between paragraphs.
+tui-reader-value-open = Luftigt
+
+# A line spacing in the terminal: no line between paragraphs.
+tui-reader-value-tight = Tätt
+
+# A width in the reader settings, in the terminal's columns, such as "66 columns".
+tui-reader-value-columns =
+    { $columns ->
+        [one] 1 kolumn
+       *[other] { $columns } kolumner
+    }
+
+# A short notice on the reader's status rule after the key that marks the open chapter read. The chapter is its number, such as 12.
+tui-reader-marked-read = Kapitel { $chapter } markerat som läst
+
+# A short notice on the reader's status rule after the key that marks the open chapter unread. The chapter is its number, such as 12.
+tui-reader-marked-unread = Kapitel { $chapter } markerat som oläst
+
+# A short notice on the reader's status rule after the key that downloads the open chapter. The download runs in the background. The chapter is its number, such as 12.
+tui-reader-downloading = Laddar ner kapitel { $chapter }
+
+# On a series page's chapter row, when the chapter was read or came out a week or more ago this year: the day and the month, as in "Read · 9 Nov". The month is the short month name.
+tui-read-row-date = { $day } { $month }
+
+# On a series page's chapter row, when the chapter was read or came out in an earlier year: the day, the short month name and the year, as in "Read · 9 Nov 2025".
+tui-read-row-date-year = { $day } { $month } { $year }
+
+# A row of the key reference on the series page: put the cursor back on the chapter to read next, the one in progress or the next unread. Its status line hint reads "chapters".
+tui-read-keys-next = Gå till kapitlet att läsa härnäst
+
+# A row of the reader settings: the space between a webtoon strip's images, None or Small.
+tui-reader-setting-strip-gap = Bildavstånd
+
+# A choice for how a page is fitted in the reader settings: the page fills the window's height and moves sideways when it is wider than the window.
+tui-reader-value-height = Höjd
+
+# After the page count in the reader's status line while the page fills the window's height and moves sideways.
+tui-reader-fit-height = Full höjd
+
+# A row of the command palette in the reader: a field for a page's number, then the jump to that page. Also the field's title.
+tui-reader-action-go-to-page = Gå till sida
+
+# Under the Go to page field: the pages it can go to.
+tui-reader-go-to-pages = Sidorna 1 till { $total }
+
+# Under the Go to page field in a strip, where each image counts as a page: the images it can go to.
+tui-reader-go-to-images = Bilderna 1 till { $total }
+
+# Hint in the Go to page field's footer: Enter goes to the page typed. Shown in lower case.
+tui-reader-hint-go = gå
+
+# In the reader, on a page that couldn't load, under "Couldn't load page 9": the server of the source answered with an HTTP error. The status is its code, such as 503.
+tui-reader-page-failed-status = Källa svarade med ett fel, { $status }.
+
+# In the reader, under "Couldn't open chapter 16": the source didn't answer the request. The source is its name.
+tui-reader-no-answer = { $source } svarade inte.
+
+# In the reader, under "Couldn't open chapter 16": the source didn't answer, after a wait of some seconds. The source is its name; "s" is the short unit for seconds.
+tui-reader-no-answer-in = { $source } svarade inte. Inget svar på { $seconds } s.
+
 # Heading of the { -plugin-store } screens when the terminal is too small to draw them.
 stores-needs-larger-terminal = Terminalen är för liten
 
@@ -5173,10 +5624,7 @@ tui-together-not-a-link = Det där är varken en länk eller en kod för watch p
 # Second line of a recent room nobody else was in. The time is already formatted, such as Tuesday.
 tui-together-recent-alone = Avsnitt { $episode } · { $when }
 
-# Line under the title of that page.
-tui-medium-read-line = Terminalen har ingen läsare. Manga, webtoons och light novels öppnas i Kaeri-apparna, och synk håller ditt förlopp i takt.
-
-# Line under that page: the key that opens the choice of what { -app-name } is for. The key is the one bound to it, as the key map draws it.
+# Last line of reading's Home: the key that opens the choice of what { -app-name } is for. The key is the one bound to it, as the key map draws it.
 tui-medium-read-change = Tryck { $key } för att ändra vad Kaeri är till för.
 
 # Hint beside the Kaeri is for line on the Settings screen. The key is the one bound to it, as the key map draws it.

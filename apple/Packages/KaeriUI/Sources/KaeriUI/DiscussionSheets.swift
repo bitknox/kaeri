@@ -130,8 +130,21 @@ public struct DiscussionWindowHost: View {
         if let key = store.discussion.reading {
             DiscussionWindowView(key: key).id(key)
         } else {
-            Color.clear
+            AuxiliaryWindowEmpty()
         }
+    }
+}
+
+/// A Mac window opened with nothing to show, by the system rather than a person's action: it
+/// closes itself rather than stand empty. It closes only the window it is in, so a window of the
+/// same group showing something stays.
+public struct AuxiliaryWindowEmpty: View {
+    @Environment(\.dismiss) private var dismiss
+
+    public init() {}
+
+    public var body: some View {
+        Color.clear.onAppear { dismiss() }
     }
 }
 

@@ -542,6 +542,15 @@
         <item quantity="one">Bei %1$s abgemeldet. Eine wartende Änderung wird für die nächste Anmeldung aufbewahrt.</item>
         <item quantity="other">Bei %1$s abgemeldet. %2$,d wartende Änderungen werden für die nächste Anmeldung aufbewahrt.</item>
     </plurals>
+    <string name="notice_tracker_change_refused">%1$s hat eine Änderung an %2$s wiederholt abgelehnt, sie bleibt nur in Kaeri.</string>
+    <plurals name="notice_tracker_changes_refused">
+        <item quantity="one">%1$s hat Änderungen an %2$s und einem weiteren Titel wiederholt abgelehnt, sie bleiben nur in Kaeri.</item>
+        <item quantity="other">%1$s hat Änderungen an %2$s und %3$,d weiteren Titeln wiederholt abgelehnt, sie bleiben nur in Kaeri.</item>
+    </plurals>
+    <plurals name="notice_tracker_change_refused_untitled">
+        <item quantity="one">%1$s hat eine Änderung wiederholt abgelehnt, sie bleibt nur in Kaeri.</item>
+        <item quantity="other">%1$s hat Änderungen an %2$,d Titeln wiederholt abgelehnt, sie bleiben nur in Kaeri.</item>
+    </plurals>
     <string name="notice_sign_out_failed">Abmeldung bei %1$s fehlgeschlagen. Versuche es noch einmal. %2$s</string>
     <string name="notice_not_saved_because">Diese Einstellung konnte nicht gespeichert werden. %1$s</string>
     <string name="notice_proxy_saved">Der Torrent-Verkehr läuft jetzt über den Proxy.</string>

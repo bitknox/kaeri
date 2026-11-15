@@ -72,7 +72,9 @@ pub struct WorkTile {
     pub demo: bool,
     /// On a Home discovery row: the series was opened and none of the person's sources has it.
     /// The tile's line says "Not found in your sources" (`home-not-found`) for the rest of the
-    /// row's 30 minutes. Never set by asking sources while Home draws.
+    /// row's 30 minutes. Never set by asking sources while Home draws. On the spotlight of a
+    /// series in Continue: none of the sources has it, so it has no button, and the spotlight
+    /// says the same words under its buttons.
     #[cfg_attr(feature = "ffi", uniffi(default))]
     pub not_in_sources: bool,
     /// Where the series comes from, for the caption "Light novel · Japan": a country AniList

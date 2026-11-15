@@ -133596,13 +133596,85 @@
       }
     },
     "notice-tracker-change-refused" : {
-      "comment" : "Toast, shown once, when a tracker kept refusing a change to a title for about two days and the change stopped being sent. The change itself is still saved in the app. The tracker is its name, such as AniList; the title is a show's or a series' name. Argument 1: tracker (Text). Argument 2: title (Text).",
+      "comment" : "Toast, shown once, when a tracker kept refusing a change to a title for about two days and the change stopped being sent. The change itself is still saved in the app. The tracker is its name, such as AniList; the title is a show's or a series' name. The notice capsule holds two lines on a phone, so keep it about as short as the English. Argument 1: tracker (Text). Argument 2: title (Text).",
       "extractionState" : "manual",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ hat eine Änderung an %2$@ wiederholt abgelehnt, sie bleibt nur in Kaeri."
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "%1$@ kept refusing a change to %2$@, so it stopped being sent. It's still saved in Kaeri."
+            "value" : "%1$@ kept refusing a change to %2$@, so it stays in Kaeri only."
+          }
+        },
+        "es-419" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ rechazó varias veces un cambio en %2$@, así que solo queda en Kaeri."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ a refusé plusieurs fois une modification de %2$@, elle reste donc seulement dans Kaeri."
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ terus menolak perubahan pada %2$@, jadi perubahan itu hanya tersimpan di Kaeri."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ ha rifiutato più volte una modifica a %2$@, quindi resta solo in Kaeri."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@が「%2$@」への変更を何度も拒否したため、変更はKaeriにのみ残ります。"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zmiana w tytule %2$@ była wielokrotnie odrzucana przez %1$@, więc zostaje tylko w Kaeri."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ recusou várias vezes uma alteração em %2$@, então ela fica só no Kaeri."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ раз за разом отклонял изменение для %2$@, поэтому оно остаётся только в Kaeri."
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ avvisade en ändring av %2$@ gång på gång, så den finns bara kvar i Kaeri."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@, %2$@ için bir değişikliği tekrar tekrar reddetti, bu yüzden değişiklik yalnızca Kaeri içinde kalıyor."
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ liên tục từ chối một thay đổi cho %2$@, nên thay đổi đó chỉ còn trong Kaeri."
           }
         }
       }
@@ -133611,6 +133683,34 @@
       "comment" : "The same toast when the app has no name for the titles. Count is how many titles. Argument 1: tracker (Text). Argument 2: count (Int).",
       "extractionState" : "manual",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%#@count@"
+          },
+          "substitutions" : {
+            "count" : {
+              "argNum" : 2,
+              "formatSpecifier" : "lld",
+              "variations" : {
+                "plural" : {
+                  "one" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%1$@ hat eine Änderung wiederholt abgelehnt, sie bleibt nur in Kaeri."
+                    }
+                  },
+                  "other" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%1$@ hat Änderungen an %2$lld Titeln wiederholt abgelehnt, sie bleiben nur in Kaeri."
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
@@ -133625,13 +133725,351 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "%1$@ kept refusing a change, so it stopped being sent. It's still saved in Kaeri."
+                      "value" : "%1$@ kept refusing a change, so it stays in Kaeri only."
                     }
                   },
                   "other" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "%1$@ kept refusing changes to %2$lld titles, so they stopped being sent. They're still saved in Kaeri."
+                      "value" : "%1$@ kept refusing changes to %2$lld titles, so they stay in Kaeri only."
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "es-419" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%#@count@"
+          },
+          "substitutions" : {
+            "count" : {
+              "argNum" : 2,
+              "formatSpecifier" : "lld",
+              "variations" : {
+                "plural" : {
+                  "many" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%1$@ rechazó varias veces cambios en %2$lld títulos, así que solo quedan en Kaeri."
+                    }
+                  },
+                  "one" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%1$@ rechazó varias veces un cambio, así que solo queda en Kaeri."
+                    }
+                  },
+                  "other" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%1$@ rechazó varias veces cambios en %2$lld títulos, así que solo quedan en Kaeri."
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%#@count@"
+          },
+          "substitutions" : {
+            "count" : {
+              "argNum" : 2,
+              "formatSpecifier" : "lld",
+              "variations" : {
+                "plural" : {
+                  "many" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%1$@ a refusé plusieurs fois des modifications de %2$lld titres, elles restent donc seulement dans Kaeri."
+                    }
+                  },
+                  "one" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%1$@ a refusé plusieurs fois des modifications de %2$lld titre, elles restent donc seulement dans Kaeri."
+                    }
+                  },
+                  "other" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%1$@ a refusé plusieurs fois des modifications de %2$lld titres, elles restent donc seulement dans Kaeri."
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%#@count@"
+          },
+          "substitutions" : {
+            "count" : {
+              "argNum" : 2,
+              "formatSpecifier" : "lld",
+              "variations" : {
+                "plural" : {
+                  "other" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%1$@ terus menolak perubahan pada %2$lld judul, jadi semuanya hanya tersimpan di Kaeri."
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%#@count@"
+          },
+          "substitutions" : {
+            "count" : {
+              "argNum" : 2,
+              "formatSpecifier" : "lld",
+              "variations" : {
+                "plural" : {
+                  "many" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%1$@ ha rifiutato più volte modifiche a %2$lld titoli, quindi restano solo in Kaeri."
+                    }
+                  },
+                  "one" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%1$@ ha rifiutato più volte una modifica, quindi resta solo in Kaeri."
+                    }
+                  },
+                  "other" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%1$@ ha rifiutato più volte modifiche a %2$lld titoli, quindi restano solo in Kaeri."
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%#@count@"
+          },
+          "substitutions" : {
+            "count" : {
+              "argNum" : 2,
+              "formatSpecifier" : "lld",
+              "variations" : {
+                "plural" : {
+                  "other" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%1$@が%2$lld件のタイトルへの変更を何度も拒否したため、変更はKaeriにのみ残ります。"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%#@count@"
+          },
+          "substitutions" : {
+            "count" : {
+              "argNum" : 2,
+              "formatSpecifier" : "lld",
+              "variations" : {
+                "plural" : {
+                  "few" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "Zmiany w %2$lld tytułach były wielokrotnie odrzucane przez %1$@, więc zostają tylko w Kaeri."
+                    }
+                  },
+                  "many" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "Zmiany w %2$lld tytułach były wielokrotnie odrzucane przez %1$@, więc zostają tylko w Kaeri."
+                    }
+                  },
+                  "one" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "Zmiana była wielokrotnie odrzucana przez %1$@, więc zostaje tylko w Kaeri."
+                    }
+                  },
+                  "other" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "Zmiany w %2$lld tytułach były wielokrotnie odrzucane przez %1$@, więc zostają tylko w Kaeri."
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%#@count@"
+          },
+          "substitutions" : {
+            "count" : {
+              "argNum" : 2,
+              "formatSpecifier" : "lld",
+              "variations" : {
+                "plural" : {
+                  "many" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%1$@ recusou várias vezes alterações em %2$lld títulos, então elas ficam só no Kaeri."
+                    }
+                  },
+                  "one" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%1$@ recusou várias vezes alterações em %2$lld título, então elas ficam só no Kaeri."
+                    }
+                  },
+                  "other" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%1$@ recusou várias vezes alterações em %2$lld títulos, então elas ficam só no Kaeri."
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%#@count@"
+          },
+          "substitutions" : {
+            "count" : {
+              "argNum" : 2,
+              "formatSpecifier" : "lld",
+              "variations" : {
+                "plural" : {
+                  "few" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%1$@ раз за разом отклонял изменения для %2$lld тайтлов, поэтому они остаются только в Kaeri."
+                    }
+                  },
+                  "many" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%1$@ раз за разом отклонял изменения для %2$lld тайтлов, поэтому они остаются только в Kaeri."
+                    }
+                  },
+                  "one" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%1$@ раз за разом отклонял изменения для %2$lld тайтла, поэтому они остаются только в Kaeri."
+                    }
+                  },
+                  "other" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%1$@ раз за разом отклонял изменения для %2$lld тайтла, поэтому они остаются только в Kaeri."
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%#@count@"
+          },
+          "substitutions" : {
+            "count" : {
+              "argNum" : 2,
+              "formatSpecifier" : "lld",
+              "variations" : {
+                "plural" : {
+                  "one" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%1$@ avvisade en ändring gång på gång, så den finns bara kvar i Kaeri."
+                    }
+                  },
+                  "other" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%1$@ avvisade ändringar av %2$lld titlar gång på gång, så de finns bara kvar i Kaeri."
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%#@count@"
+          },
+          "substitutions" : {
+            "count" : {
+              "argNum" : 2,
+              "formatSpecifier" : "lld",
+              "variations" : {
+                "plural" : {
+                  "one" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%1$@ bir değişikliği tekrar tekrar reddetti, bu yüzden değişiklik yalnızca Kaeri içinde kalıyor."
+                    }
+                  },
+                  "other" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%1$@, %2$lld başlık için değişiklikleri tekrar tekrar reddetti, bu yüzden değişiklikler yalnızca Kaeri içinde kalıyor."
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%#@count@"
+          },
+          "substitutions" : {
+            "count" : {
+              "argNum" : 2,
+              "formatSpecifier" : "lld",
+              "variations" : {
+                "plural" : {
+                  "other" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%1$@ liên tục từ chối các thay đổi cho %2$lld tựa, nên chúng chỉ còn trong Kaeri."
                     }
                   }
                 }
@@ -133645,6 +134083,34 @@
       "comment" : "The same toast when changes to several titles stopped being sent to one tracker at once. The title is the first of them; others is how many more titles there are. Argument 1: tracker (Text). Argument 2: title (Text). Argument 3: others (Int).",
       "extractionState" : "manual",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%#@others@"
+          },
+          "substitutions" : {
+            "others" : {
+              "argNum" : 3,
+              "formatSpecifier" : "lld",
+              "variations" : {
+                "plural" : {
+                  "one" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%1$@ hat Änderungen an %2$@ und einem weiteren Titel wiederholt abgelehnt, sie bleiben nur in Kaeri."
+                    }
+                  },
+                  "other" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%1$@ hat Änderungen an %2$@ und %3$lld weiteren Titeln wiederholt abgelehnt, sie bleiben nur in Kaeri."
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
@@ -133659,13 +134125,351 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "%1$@ kept refusing changes to %2$@ and one more title, so they stopped being sent. They're still saved in Kaeri."
+                      "value" : "%1$@ kept refusing changes to %2$@ and one more title, so they stay in Kaeri only."
                     }
                   },
                   "other" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "%1$@ kept refusing changes to %2$@ and %3$lld more titles, so they stopped being sent. They're still saved in Kaeri."
+                      "value" : "%1$@ kept refusing changes to %2$@ and %3$lld more titles, so they stay in Kaeri only."
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "es-419" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%#@others@"
+          },
+          "substitutions" : {
+            "others" : {
+              "argNum" : 3,
+              "formatSpecifier" : "lld",
+              "variations" : {
+                "plural" : {
+                  "many" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%1$@ rechazó varias veces cambios en %2$@ y %3$lld títulos más, así que solo quedan en Kaeri."
+                    }
+                  },
+                  "one" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%1$@ rechazó varias veces cambios en %2$@ y un título más, así que solo quedan en Kaeri."
+                    }
+                  },
+                  "other" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%1$@ rechazó varias veces cambios en %2$@ y %3$lld títulos más, así que solo quedan en Kaeri."
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%#@others@"
+          },
+          "substitutions" : {
+            "others" : {
+              "argNum" : 3,
+              "formatSpecifier" : "lld",
+              "variations" : {
+                "plural" : {
+                  "many" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%1$@ a refusé plusieurs fois des modifications de %2$@ et de %3$lld autres titres, elles restent donc seulement dans Kaeri."
+                    }
+                  },
+                  "one" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%1$@ a refusé plusieurs fois des modifications de %2$@ et de %3$lld autre titre, elles restent donc seulement dans Kaeri."
+                    }
+                  },
+                  "other" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%1$@ a refusé plusieurs fois des modifications de %2$@ et de %3$lld autres titres, elles restent donc seulement dans Kaeri."
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%#@others@"
+          },
+          "substitutions" : {
+            "others" : {
+              "argNum" : 3,
+              "formatSpecifier" : "lld",
+              "variations" : {
+                "plural" : {
+                  "other" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%1$@ terus menolak perubahan pada %2$@ dan %3$lld judul lain, jadi semuanya hanya tersimpan di Kaeri."
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%#@others@"
+          },
+          "substitutions" : {
+            "others" : {
+              "argNum" : 3,
+              "formatSpecifier" : "lld",
+              "variations" : {
+                "plural" : {
+                  "many" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%1$@ ha rifiutato più volte modifiche a %2$@ e ad altri %3$lld titoli, quindi restano solo in Kaeri."
+                    }
+                  },
+                  "one" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%1$@ ha rifiutato più volte modifiche a %2$@ e a un altro titolo, quindi restano solo in Kaeri."
+                    }
+                  },
+                  "other" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%1$@ ha rifiutato più volte modifiche a %2$@ e ad altri %3$lld titoli, quindi restano solo in Kaeri."
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%#@others@"
+          },
+          "substitutions" : {
+            "others" : {
+              "argNum" : 3,
+              "formatSpecifier" : "lld",
+              "variations" : {
+                "plural" : {
+                  "other" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%1$@が「%2$@」とほか%3$lld件のタイトルへの変更を何度も拒否したため、変更はKaeriにのみ残ります。"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%#@others@"
+          },
+          "substitutions" : {
+            "others" : {
+              "argNum" : 3,
+              "formatSpecifier" : "lld",
+              "variations" : {
+                "plural" : {
+                  "few" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "Zmiany w tytule %2$@ i %3$lld innych tytułach były wielokrotnie odrzucane przez %1$@, więc zostają tylko w Kaeri."
+                    }
+                  },
+                  "many" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "Zmiany w tytule %2$@ i %3$lld innych tytułach były wielokrotnie odrzucane przez %1$@, więc zostają tylko w Kaeri."
+                    }
+                  },
+                  "one" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "Zmiany w tytule %2$@ i jeszcze jednym były wielokrotnie odrzucane przez %1$@, więc zostają tylko w Kaeri."
+                    }
+                  },
+                  "other" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "Zmiany w tytule %2$@ i %3$lld innych tytułach były wielokrotnie odrzucane przez %1$@, więc zostają tylko w Kaeri."
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%#@others@"
+          },
+          "substitutions" : {
+            "others" : {
+              "argNum" : 3,
+              "formatSpecifier" : "lld",
+              "variations" : {
+                "plural" : {
+                  "many" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%1$@ recusou várias vezes alterações em %2$@ e em mais %3$lld títulos, então elas ficam só no Kaeri."
+                    }
+                  },
+                  "one" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%1$@ recusou várias vezes alterações em %2$@ e em mais %3$lld título, então elas ficam só no Kaeri."
+                    }
+                  },
+                  "other" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%1$@ recusou várias vezes alterações em %2$@ e em mais %3$lld títulos, então elas ficam só no Kaeri."
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%#@others@"
+          },
+          "substitutions" : {
+            "others" : {
+              "argNum" : 3,
+              "formatSpecifier" : "lld",
+              "variations" : {
+                "plural" : {
+                  "few" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%1$@ раз за разом отклонял изменения для %2$@ и ещё %3$lld тайтлов, поэтому они остаются только в Kaeri."
+                    }
+                  },
+                  "many" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%1$@ раз за разом отклонял изменения для %2$@ и ещё %3$lld тайтлов, поэтому они остаются только в Kaeri."
+                    }
+                  },
+                  "one" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%1$@ раз за разом отклонял изменения для %2$@ и ещё %3$lld тайтла, поэтому они остаются только в Kaeri."
+                    }
+                  },
+                  "other" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%1$@ раз за разом отклонял изменения для %2$@ и ещё %3$lld тайтла, поэтому они остаются только в Kaeri."
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%#@others@"
+          },
+          "substitutions" : {
+            "others" : {
+              "argNum" : 3,
+              "formatSpecifier" : "lld",
+              "variations" : {
+                "plural" : {
+                  "one" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%1$@ avvisade ändringar av %2$@ och en titel till gång på gång, så de finns bara kvar i Kaeri."
+                    }
+                  },
+                  "other" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%1$@ avvisade ändringar av %2$@ och %3$lld titlar till gång på gång, så de finns bara kvar i Kaeri."
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%#@others@"
+          },
+          "substitutions" : {
+            "others" : {
+              "argNum" : 3,
+              "formatSpecifier" : "lld",
+              "variations" : {
+                "plural" : {
+                  "one" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%1$@, %2$@ ve bir başlık daha için değişiklikleri tekrar tekrar reddetti, bu yüzden değişiklikler yalnızca Kaeri içinde kalıyor."
+                    }
+                  },
+                  "other" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%1$@, %2$@ ve %3$lld başlık daha için değişiklikleri tekrar tekrar reddetti, bu yüzden değişiklikler yalnızca Kaeri içinde kalıyor."
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%#@others@"
+          },
+          "substitutions" : {
+            "others" : {
+              "argNum" : 3,
+              "formatSpecifier" : "lld",
+              "variations" : {
+                "plural" : {
+                  "other" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%1$@ liên tục từ chối các thay đổi cho %2$@ và %3$lld tựa khác, nên chúng chỉ còn trong Kaeri."
                     }
                   }
                 }

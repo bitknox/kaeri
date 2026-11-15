@@ -413,8 +413,16 @@ async fn leaves_of(h: &mut Harness, chapter: &str) -> Vec<Leaf> {
 /// Read chapters 1 and 2 from the source, so their edges teach the group's credit pages, and
 /// open chapter 3, giving its leaves and the credit pages said.
 async fn third_chapter(h: &mut Harness) -> (Vec<Leaf>, Vec<kaeri_model::reader::CreditPage>) {
+    third_chapter_on(h, surface()).await
+}
+
+/// As [`third_chapter`], on a surface of its own.
+async fn third_chapter_on(
+    h: &mut Harness,
+    surface: ReaderSurface,
+) -> (Vec<Leaf>, Vec<kaeri_model::reader::CreditPage>) {
     rows(h).await;
-    h.open(OpenAt::Start).await;
+    h.open_on(WorkId::new(WORK), OpenAt::Start, surface).await;
     let session = h.session();
     h.send(ReaderCommand::OpenChapter { session, chapter: ChapterId::new("2") });
     leaves_of(h, "2").await;
@@ -474,6 +482,23 @@ async fn a_streamed_chapter_opens_without_its_credit_pages_at_both_ends() {
     let s = h.reader.session.as_ref().unwrap();
     assert_eq!(s.chapter().path, folder.path(), "read from the download");
     assert_eq!(downloaded.len(), leaves.len(), "one count, streamed or downloaded");
+}
+
+/// A front end that does not decode the credit pages' format gets them drawn as pixels.
+#[tokio::test(start_paused = true)]
+async fn credit_pages_come_as_pixels_to_a_front_end_that_cannot_decode_them() {
+    use kaeri_model::reader::{PageEncoding, PageFormats};
+    let source = Arc::new(Groups::both_ends());
+    let mut h = harness_with(source, false);
+    let decodes = Some(PageFormats { jpeg: true, ..PageFormats::default() });
+    let (_, credits) = third_chapter_on(&mut h, ReaderSurface { decodes, ..surface() }).await;
+    assert_eq!(credits.len(), 2);
+    for credit in credits {
+        let file = &credit.file;
+        assert!(matches!(file.encoding, PageEncoding::Raw { .. }), "{file:?}");
+        assert!(file.width <= 600 && file.height <= 900, "{file:?}");
+        assert!(Path::new(&file.path).exists());
+    }
 }
 
 /// A chapter opened while its download runs leaves its credit pages out as one read from the

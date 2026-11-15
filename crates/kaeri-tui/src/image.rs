@@ -12,11 +12,15 @@
 //!   plate; it must never fail a screen, because cover art is decoration and the title
 //!   underneath it is not.
 
+mod pictures;
+
 use std::{
     collections::HashMap,
     path::PathBuf,
     sync::{Arc, Mutex},
 };
+
+pub use pictures::{Cut, EncodeJob, Encoded};
 
 use ratatui::layout::Rect;
 use ratatui_image::{picker::Picker, protocol::StatefulProtocol};
@@ -193,6 +197,31 @@ impl ImageEngine {
         }
     }
 
+    /// An image protocol's engine that draws through halfblocks, for tests and goldens: the
+    /// screens lay pages out as a terminal with kitty, sixel or iTerm2 would, at a 10 by 20
+    /// cell, and the pictures land in the buffer as blocks a golden can hold.
+    #[doc(hidden)]
+    pub fn drawn_as_blocks() -> Self {
+        Self {
+            picker: Some(Picker::halfblocks()),
+            graphics: Graphics::Native,
+            cache_dir: PathBuf::new(),
+            font_size: (10, 20),
+        }
+    }
+
+    /// An engine for a picker made by hand, for tests of what a protocol does.
+    #[cfg(test)]
+    pub(crate) fn with_picker(picker: Picker) -> Self {
+        let font = picker.font_size();
+        Self {
+            graphics: Graphics::Native,
+            font_size: (font.width, font.height),
+            picker: Some(picker),
+            cache_dir: PathBuf::new(),
+        }
+    }
+
     pub fn with_cache_dir(mut self, dir: impl Into<PathBuf>) -> Self {
         self.cache_dir = dir.into();
         self
@@ -208,6 +237,17 @@ impl ImageEngine {
 
     pub fn is_enabled(&self) -> bool {
         self.picker.is_some()
+    }
+
+    /// Whether a picture's pixels can stay on screen after the cells under it are drawn again:
+    /// sixel and iTerm2 draw over the cells, and only clearing the screen takes them all
+    /// away. Kitty deletes its own placements, and halfblocks are only text.
+    pub fn leaves_pixels(&self) -> bool {
+        use ratatui_image::picker::ProtocolType;
+        self.graphics == Graphics::Native
+            && self.picker.as_ref().is_some_and(|p| {
+                matches!(p.protocol_type(), ProtocolType::Sixel | ProtocolType::Iterm2)
+            })
     }
 
     /// Cell dimensions that preserve an image's aspect ratio inside `available`.
@@ -260,6 +300,13 @@ impl ImageEngine {
 pub struct ImageStore {
     engine: ImageEngine,
     protocols: std::cell::RefCell<HashMap<String, StatefulProtocol>>,
+    /// Reader pages, kept whole so a part of one can be drawn: a page scrolled at fit width,
+    /// zoomed, or cut by the edge of the window in a strip.
+    pages: std::cell::RefCell<HashMap<String, pictures::Kept>>,
+    /// The pages made for the boxes they are drawn in: see [`pictures`].
+    pictures: pictures::Pictures,
+    /// Small copies of pages for the zoom's map, by key and size in cells.
+    thumbs: std::cell::RefCell<HashMap<String, Thumbnail>>,
     requests: ImageRequests,
 }
 
@@ -277,6 +324,9 @@ impl ImageStore {
         Self {
             engine,
             protocols: std::cell::RefCell::new(HashMap::new()),
+            pages: std::cell::RefCell::new(HashMap::new()),
+            pictures: pictures::Pictures::default(),
+            thumbs: std::cell::RefCell::new(HashMap::new()),
             requests: ImageRequests::new(),
         }
     }
@@ -314,11 +364,46 @@ impl ImageStore {
     }
 
     pub fn has(&self, url: &str) -> bool {
-        self.protocols.borrow().contains_key(url)
+        self.protocols.borrow().contains_key(url) || self.pages.borrow().contains_key(url)
+    }
+
+    /// Keep a reader page whole, in place of any picture under its key, for drawing it or any
+    /// part of it. What was made of the page before goes on showing until the new one is made.
+    pub fn insert_page(&self, key: &str, image: image::DynamicImage) {
+        if !self.engine.is_enabled() {
+            return;
+        }
+        self.protocols.borrow_mut().remove(key);
+        self.thumbs.borrow_mut().remove(key);
+        let kept = self.pictures.keep(image);
+        self.pages.borrow_mut().insert(key.to_owned(), kept);
+    }
+
+    /// A page's size in pixels, once it is kept.
+    pub fn page_size(&self, key: &str) -> Option<(u32, u32)> {
+        self.pages.borrow().get(key).map(|kept| (kept.image.width(), kept.image.height()))
+    }
+
+    /// Let go of one picture.
+    pub fn forget(&self, key: &str) {
+        self.forget_where(|k| k == key);
+    }
+
+    /// Let go of every picture whose key starts with `prefix`: a chapter's pages once it is
+    /// left, which are never drawn again under the same key.
+    pub fn forget_prefix(&self, prefix: &str) {
+        self.forget_where(|k| k.starts_with(prefix));
+    }
+
+    fn forget_where(&self, gone: impl Fn(&str) -> bool) {
+        self.protocols.borrow_mut().retain(|key, _| !gone(key));
+        self.pages.borrow_mut().retain(|key, _| !gone(key));
+        self.thumbs.borrow_mut().retain(|key, _| !gone(key));
+        self.pictures.forget_where(&gone);
     }
 
     pub fn len(&self) -> usize {
-        self.protocols.borrow().len()
+        self.protocols.borrow().len() + self.pages.borrow().len()
     }
 
     pub fn is_empty(&self) -> bool {
@@ -355,7 +440,25 @@ impl ImageStore {
         );
         true
     }
+
+    /// A kept page shrunk to `cols` by `rows` cells of halfblocks: two pixels a cell, one over
+    /// the other. Made once for each size.
+    pub fn thumbnail(&self, key: &str, (cols, rows): (u16, u16)) -> Option<image::RgbImage> {
+        if let Some((size, thumb)) = self.thumbs.borrow().get(key)
+            && *size == (cols, rows)
+        {
+            return Some(thumb.clone());
+        }
+        let page = self.pages.borrow().get(key).map(|kept| kept.image.clone())?;
+        let (w, h) = (u32::from(cols.max(1)), u32::from(rows.max(1)) * 2);
+        let thumb = page.resize_exact(w, h, image::imageops::FilterType::Triangle).into_rgb8();
+        self.thumbs.borrow_mut().insert(key.to_owned(), ((cols, rows), thumb.clone()));
+        Some(thumb)
+    }
 }
+
+/// A page's map for the zoom: the cells it was made for, and its pixels.
+type Thumbnail = ((u16, u16), image::RgbImage);
 
 /// Shrink an image before it is handed to a protocol.
 ///

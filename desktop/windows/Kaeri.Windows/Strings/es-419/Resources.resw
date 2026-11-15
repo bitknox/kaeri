@@ -1565,6 +1565,27 @@
   <data name="NoticeSignedOutQueue_other" xml:space="preserve">
     <value>Sesión cerrada en {tracker}. {count} cambios en cola se conservan para el próximo inicio de sesión.</value>
   </data>
+  <data name="NoticeTrackerChangeRefused" xml:space="preserve">
+    <value>{tracker} rechazó varias veces un cambio en {title}, así que solo queda en Kaeri.</value>
+  </data>
+  <data name="NoticeTrackerChangesRefused_one" xml:space="preserve">
+    <value>{tracker} rechazó varias veces cambios en {title} y un título más, así que solo quedan en Kaeri.</value>
+  </data>
+  <data name="NoticeTrackerChangesRefused_many" xml:space="preserve">
+    <value>{tracker} rechazó varias veces cambios en {title} y {others} títulos más, así que solo quedan en Kaeri.</value>
+  </data>
+  <data name="NoticeTrackerChangesRefused_other" xml:space="preserve">
+    <value>{tracker} rechazó varias veces cambios en {title} y {others} títulos más, así que solo quedan en Kaeri.</value>
+  </data>
+  <data name="NoticeTrackerChangeRefusedUntitled_one" xml:space="preserve">
+    <value>{tracker} rechazó varias veces un cambio, así que solo queda en Kaeri.</value>
+  </data>
+  <data name="NoticeTrackerChangeRefusedUntitled_many" xml:space="preserve">
+    <value>{tracker} rechazó varias veces cambios en {count} títulos, así que solo quedan en Kaeri.</value>
+  </data>
+  <data name="NoticeTrackerChangeRefusedUntitled_other" xml:space="preserve">
+    <value>{tracker} rechazó varias veces cambios en {count} títulos, así que solo quedan en Kaeri.</value>
+  </data>
   <data name="NoticeSignOutFailed" xml:space="preserve">
     <value>No se pudo cerrar la sesión en {tracker}. Inténtalo de nuevo. {reason}</value>
   </data>

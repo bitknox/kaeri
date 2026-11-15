@@ -602,6 +602,19 @@
         <item quantity="many">Wylogowano z %1$s. %2$,d zmian w kolejce zostanie zachowanych na następne logowanie.</item>
         <item quantity="other">Wylogowano z %1$s. %2$,d zmian w kolejce zostanie zachowanych na następne logowanie.</item>
     </plurals>
+    <string name="notice_tracker_change_refused">Zmiana w tytule %2$s była wielokrotnie odrzucana przez %1$s, więc zostaje tylko w Kaeri.</string>
+    <plurals name="notice_tracker_changes_refused">
+        <item quantity="one">Zmiany w tytule %2$s i jeszcze jednym były wielokrotnie odrzucane przez %1$s, więc zostają tylko w Kaeri.</item>
+        <item quantity="few">Zmiany w tytule %2$s i %3$,d innych tytułach były wielokrotnie odrzucane przez %1$s, więc zostają tylko w Kaeri.</item>
+        <item quantity="many">Zmiany w tytule %2$s i %3$,d innych tytułach były wielokrotnie odrzucane przez %1$s, więc zostają tylko w Kaeri.</item>
+        <item quantity="other">Zmiany w tytule %2$s i %3$,d innych tytułach były wielokrotnie odrzucane przez %1$s, więc zostają tylko w Kaeri.</item>
+    </plurals>
+    <plurals name="notice_tracker_change_refused_untitled">
+        <item quantity="one">Zmiana była wielokrotnie odrzucana przez %1$s, więc zostaje tylko w Kaeri.</item>
+        <item quantity="few">Zmiany w %2$,d tytułach były wielokrotnie odrzucane przez %1$s, więc zostają tylko w Kaeri.</item>
+        <item quantity="many">Zmiany w %2$,d tytułach były wielokrotnie odrzucane przez %1$s, więc zostają tylko w Kaeri.</item>
+        <item quantity="other">Zmiany w %2$,d tytułach były wielokrotnie odrzucane przez %1$s, więc zostają tylko w Kaeri.</item>
+    </plurals>
     <string name="notice_sign_out_failed">Nie udało się wylogować z %1$s. Spróbuj ponownie. %2$s</string>
     <string name="notice_not_saved_because">Nie udało się zapisać tego ustawienia. %1$s</string>
     <string name="notice_proxy_saved">Ruch torrentów idzie teraz przez proxy.</string>

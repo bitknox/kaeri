@@ -512,6 +512,13 @@
     <plurals name="notice_signed_out_queue">
         <item quantity="other">Keluar dari %1$s. %2$,d perubahan dalam antrean disimpan untuk masuk lagi nanti.</item>
     </plurals>
+    <string name="notice_tracker_change_refused">%1$s terus menolak perubahan pada %2$s, jadi perubahan itu hanya tersimpan di Kaeri.</string>
+    <plurals name="notice_tracker_changes_refused">
+        <item quantity="other">%1$s terus menolak perubahan pada %2$s dan %3$,d judul lain, jadi semuanya hanya tersimpan di Kaeri.</item>
+    </plurals>
+    <plurals name="notice_tracker_change_refused_untitled">
+        <item quantity="other">%1$s terus menolak perubahan pada %2$,d judul, jadi semuanya hanya tersimpan di Kaeri.</item>
+    </plurals>
     <string name="notice_sign_out_failed">Tidak dapat keluar dari %1$s. Coba lagi. %2$s</string>
     <string name="notice_not_saved_because">Tidak dapat menyimpan pengaturan itu. %1$s</string>
     <string name="notice_proxy_saved">Lalu lintas torrent kini melewati proxy.</string>

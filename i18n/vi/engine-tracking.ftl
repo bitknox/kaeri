@@ -25,6 +25,13 @@ notice-signed-out = Đã đăng xuất khỏi { $tracker }.
 notice-signed-out-queue = { $count ->
    *[other] Đã đăng xuất khỏi { $tracker }. { $count } thay đổi đang chờ được giữ lại cho lần đăng nhập sau.
  }
+notice-tracker-change-refused = { $tracker } liên tục từ chối một thay đổi cho { $title }, nên thay đổi đó chỉ còn trong { -app-name }.
+notice-tracker-changes-refused = { $others ->
+   *[other] { $tracker } liên tục từ chối các thay đổi cho { $title } và { $others } tựa khác, nên chúng chỉ còn trong { -app-name }.
+ }
+notice-tracker-change-refused-untitled = { $count ->
+   *[other] { $tracker } liên tục từ chối các thay đổi cho { $count } tựa, nên chúng chỉ còn trong { -app-name }.
+ }
 notice-sign-out-failed = Không đăng xuất được khỏi { $tracker }. Hãy thử lại. { $reason }
 notice-not-saved-because = Không lưu được cài đặt đó. { $cause }
 notice-proxy-saved = Lưu lượng torrent giờ đi qua proxy.

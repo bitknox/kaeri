@@ -17,6 +17,8 @@ use std::{
     sync::Arc,
 };
 
+use kaeri_playback::hls::playlist_start;
+
 use crate::{
     fetch::{RangeFile, Upstream, UpstreamResponse},
     formats::{AudioCodec, AudioTrack, Delivery, MediaInfo, VideoFormat},
@@ -84,7 +86,8 @@ pub async fn hls(
     // Relative addresses resolve against where a redirect landed.
     let mut playlist_url = response.url.clone().unwrap_or_else(|| url.to_owned());
     let Ok(body) = response.bytes(PLAYLIST_LIMIT).await else { return (info, probe) };
-    let mut text = String::from_utf8_lossy(&body).into_owned();
+    let mut text =
+        String::from_utf8_lossy(&body[playlist_start(&body).unwrap_or(0)..]).into_owned();
 
     if let Some(variant) = best_variant(&text) {
         if let Some(codecs) = variant.codecs {
@@ -101,7 +104,8 @@ pub async fn hls(
         }
         probe.manifest &= cors_allowed(&response);
         let Ok(body) = response.bytes(PLAYLIST_LIMIT).await else { return (info, probe) };
-        text = String::from_utf8_lossy(&body).into_owned();
+        text =
+            String::from_utf8_lossy(&body[playlist_start(&body).unwrap_or(0)..]).into_owned();
     }
 
     let map = text.lines().find_map(|line| {

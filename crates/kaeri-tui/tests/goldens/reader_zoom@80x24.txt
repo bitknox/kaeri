@@ -1,0 +1,206 @@
+Kaeri   Harbor Light Recipes · Chapter 14            sources ● 3  ·  anilist ⇅ 2
+────────────────────────────────────────────────────────────────────────────────
+
+                                                                   ▀▀▀▀▀▀▀▀▀▀▀▀
+ ▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄  ▀▀▀▀▀▀▀▀▀▀▀▀
+ ▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄  ▀▀▀▀▀▀▀▀▀▀▀▀
+                                                                   ▀▀▀▀▀▀▀▀▀▀▀▀
+                                                                   ▀▀▀▀▀▀▀▀▀▀▀▀
+                                                                   ▀▀▀▀▀▀▀▀▀▀▀▀
+                                                                   ▀▀▀▀▀▀▀▀▀▀▀▀
+                                                                   ▀▀▀▀▀▀▀▀▀▀▀▀
+ ▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄  ▀▀▀▀▀▀▀▀▀▀▀▀
+ ▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀
+ ▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄ ▀▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄  Page 9
+
+
+
+
+ ▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▀▀▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄
+ ▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄
+ ▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀
+
+────────────────────────────────────────────────────────────────────────────────
+Zoom 300% · Page 9 of 22         h j k l move   + - zoom   z leave zoom   ? keys
+=== styles ===
+colours text=#e4e0d6 text-dim=#a8aec9 rule=#46464d obi=#f2a64b state=#7fc7d9 alert=#f59b85 ground=#1a1b26
+r00 c00-04 fg=text mod=BOLD
+r00 c08-27 fg=text
+r00 c28-40 fg=text-dim
+r00 c53-63 fg=state
+r00 c64-65 fg=text-dim
+r00 c66-66 fg=rule
+r00 c67-68 fg=text-dim
+r00 c69-79 fg=state
+r01 c00-79 fg=rule
+r02 c01-38 fg=#6662bc bg=#6662bc
+r02 c39-39 fg=#6460ba bg=#6460ba
+r02 c40-40 fg=#6965bf bg=#6965bf
+r02 c41-41 fg=#8b87e1 bg=#8b87e1
+r02 c42-42 fg=#908ce6 bg=#908ce6
+r02 c43-64 fg=#8e8ae4 bg=#8e8ae4
+r03 c01-38 fg=#6662bc bg=#6662bc
+r03 c39-39 fg=#6460ba bg=#6460ba
+r03 c40-40 fg=#6965bf bg=#6965bf
+r03 c41-41 fg=#8b87e1 bg=#8b87e1
+r03 c42-42 fg=#908ce6 bg=#908ce6
+r03 c43-64 fg=#8e8ae4 bg=#8e8ae4
+r03 c67-71 fg=#2d4226 bg=#2d4226
+r03 c72-72 fg=#2f4428 bg=#2f4428
+r03 c73-73 fg=#3b5034 bg=#3b5034
+r03 c74-78 fg=#3d5236 bg=#3d5236
+r04 c01-38 fg=#6966b1 bg=#6460c2
+r04 c39-39 fg=#6765b0 bg=#635ec0
+r04 c40-40 fg=#6c6ab5 bg=#6863c5
+r04 c41-41 fg=#8e8bd6 bg=#8984e6
+r04 c42-42 fg=#9390db bg=#8e89eb
+r04 c43-64 fg=#918ed9 bg=#8c88ea
+r04 c67-71 fg=#362d2c bg=#3c1f2f
+r04 c72-72 fg=#382f2e bg=#3e2131
+r04 c73-73 fg=#443b3a bg=#4a2d3d
+r04 c74-78 fg=#463d3c bg=#4c2f3f
+r05 c01-38 fg=#8d9937 bg=#889348
+r05 c39-39 fg=#8b9836 bg=#869146
+r05 c40-40 fg=#909d3b bg=#8b964b
+r05 c41-41 fg=#b1be5c bg=#adb76c
+r05 c42-42 fg=#b6c361 bg=#b2bc71
+r05 c43-64 fg=#b5c15f bg=#b0bb70
+r05 c67-71 fg=#422833 bg=#4b3438
+r05 c72-72 fg=#442a35 bg=#4d363a
+r05 c73-73 fg=#503641 bg=#594246
+r05 c74-78 fg=#523843 bg=#5b4448
+r06 c01-38 fg=#8b973d bg=#8b973d
+r06 c39-39 fg=#89953b bg=#89953b
+r06 c40-40 fg=#8e9a40 bg=#8e9a40
+r06 c41-41 fg=#b0bc62 bg=#b0bc62
+r06 c42-42 fg=#b5c167 bg=#b5c167
+r06 c43-64 fg=#b3bf65 bg=#b3bf65
+r06 c67-71 fg=#3f3a3b bg=#1c4941
+r06 c72-72 fg=#413c3c bg=#1e4b43
+r06 c73-73 fg=#4d4849 bg=#2a574f
+r06 c74-78 fg=#4f4a4b bg=#2c5951
+r07 c01-38 fg=#8b973d bg=#8b973d
+r07 c39-39 fg=#89953b bg=#89953b
+r07 c40-40 fg=#8e9a40 bg=#8e9a40
+r07 c41-41 fg=#b0bc62 bg=#b0bc62
+r07 c42-42 fg=#b5c167 bg=#b5c167
+r07 c43-64 fg=#b3bf65 bg=#b3bf65
+r07 c67-71 fg=#1b4643 bg=#272b4a
+r07 c72-72 fg=#1d4745 bg=#282d4c
+r07 c73-73 fg=#2a5451 bg=#353958
+r07 c74-78 fg=#2b5653 bg=#373b5a
+r08 c01-38 fg=#8b973d bg=#8b973d
+r08 c39-39 fg=#89953b bg=#89953b
+r08 c40-40 fg=#8e9a40 bg=#8e9a40
+r08 c41-41 fg=#b0bc62 bg=#b0bc62
+r08 c42-42 fg=#b5c167 bg=#b5c167
+r08 c43-64 fg=#b3bf65 bg=#b3bf65
+r08 c67-71 fg=#6662bc bg=#7c8270
+r08 c72-72 fg=#6b67c1 bg=#818775
+r08 c73-73 fg=#8985df bg=#9fa593
+r08 c74-76 fg=#8e8ae4 bg=#a4aa98
+r08 c77-78 fg=#38375b bg=#41443c
+r09 c01-38 fg=#8b973d bg=#8b973d
+r09 c39-39 fg=#89953b bg=#89953b
+r09 c40-40 fg=#8e9a40 bg=#8e9a40
+r09 c41-41 fg=#b0bc62 bg=#b0bc62
+r09 c42-42 fg=#b5c167 bg=#b5c167
+r09 c43-64 fg=#b3bf65 bg=#b3bf65
+r09 c67-71 fg=#8b973d bg=#9a7446
+r09 c72-72 fg=#909c42 bg=#9f794b
+r09 c73-73 fg=#aeba60 bg=#bd9769
+r09 c74-76 fg=#b3bf65 bg=#c29c6e
+r09 c77-78 fg=#474c28 bg=#4d3e2c
+r10 c01-38 fg=#8b973d bg=#8b973d
+r10 c39-39 fg=#89953b bg=#89953b
+r10 c40-40 fg=#8e9a40 bg=#8e9a40
+r10 c41-41 fg=#b0bc62 bg=#b0bc62
+r10 c42-42 fg=#b5c167 bg=#b5c167
+r10 c43-64 fg=#b3bf65 bg=#b3bf65
+r10 c67-71 fg=#b04054 bg=#924d5a
+r10 c72-72 fg=#b54559 bg=#97525e
+r10 c73-73 fg=#d36377 bg=#b6707d
+r10 c74-76 fg=#d8687c bg=#ba7582
+r10 c77-78 fg=#562931 bg=#4a2e34
+r11 c01-38 fg=#889d3b bg=#8b973d
+r11 c39-39 fg=#879c3a bg=#89953b
+r11 c40-40 fg=#8ca13f bg=#8e9a40
+r11 c41-41 fg=#adc260 bg=#b0bc62
+r11 c42-42 fg=#b2c765 bg=#b5c167
+r11 c43-64 fg=#b0c563 bg=#b3bf65
+r11 c67-71 fg=#3a736a bg=#152e2a
+r11 c72-72 fg=#3f786f bg=#17302c
+r11 c73-73 fg=#5d968d bg=#233c38
+r11 c74-76 fg=#629b92 bg=#253e3a
+r11 c77-78 fg=#273e3a bg=#253e3a
+r12 c01-38 fg=#987945 bg=#b23c55
+r12 c39-39 fg=#967743 bg=#b03a53
+r12 c40-40 fg=#9b7c48 bg=#b53f58
+r12 c41-41 fg=#bc9e6a bg=#d6607a
+r12 c42-42 fg=#c2a36f bg=#dc667f
+r12 c43-64 fg=#c0a16d bg=#da647d
+r13 c01-38 fg=#b04054 bg=#b03f54
+r13 c39-39 fg=#ae3e52 bg=#ae3e52
+r13 c40-40 fg=#b44358 bg=#b34357
+r13 c41-41 fg=#d56579 bg=#d56479
+r13 c42-42 fg=#da6a7e bg=#da697e
+r13 c43-64 fg=#d8687c bg=#d8677c
+r13 c67-72 fg=text-dim
+r14 c01-38 fg=#b04054 bg=#b04054
+r14 c39-39 fg=#ae3e52 bg=#ae3e52
+r14 c40-40 fg=#b34357 bg=#b34357
+r14 c41-41 fg=#d56579 bg=#d56579
+r14 c42-42 fg=#da6a7e bg=#da6a7e
+r14 c43-64 fg=#d8687c bg=#d8687c
+r15 c01-38 fg=#b04054 bg=#b04054
+r15 c39-39 fg=#ae3e52 bg=#ae3e52
+r15 c40-40 fg=#b34357 bg=#b34357
+r15 c41-41 fg=#d56579 bg=#d56579
+r15 c42-42 fg=#da6a7e bg=#da6a7e
+r15 c43-64 fg=#d8687c bg=#d8687c
+r16 c01-38 fg=#b04054 bg=#b04054
+r16 c39-39 fg=#ae3e52 bg=#ae3e52
+r16 c40-40 fg=#b34357 bg=#b34357
+r16 c41-41 fg=#d56579 bg=#d56579
+r16 c42-42 fg=#da6a7e bg=#da6a7e
+r16 c43-64 fg=#d8687c bg=#d8687c
+r17 c01-38 fg=#b04054 bg=#b04054
+r17 c39-39 fg=#ae3e52 bg=#ae3e52
+r17 c40-40 fg=#b34357 bg=#b34357
+r17 c41-41 fg=#d56579 bg=#d56579
+r17 c42-42 fg=#da6a7e bg=#da6a7e
+r17 c43-64 fg=#d8687c bg=#d8687c
+r18 c01-38 fg=#b14054 bg=#b04054
+r18 c39-39 fg=#af3e52 bg=#ae3e52
+r18 c40-40 fg=#b44357 bg=#b34357
+r18 c41-41 fg=#d56579 bg=#d56478
+r18 c42-42 fg=#da6a7e bg=#db697e
+r18 c43-64 fg=#d9687c bg=#d8687c
+r19 c01-38 fg=#606363 bg=#b63d53
+r19 c39-39 fg=#5e6161 bg=#b43c51
+r19 c40-40 fg=#636666 bg=#b94156
+r19 c41-41 fg=#848788 bg=#db6278
+r19 c42-42 fg=#898c8d bg=#e0677d
+r19 c43-64 fg=#888b8b bg=#de657b
+r20 c01-38 fg=#2c796d bg=#35756b
+r20 c39-39 fg=#2a776b bg=#337369
+r20 c40-40 fg=#2f7c70 bg=#38786e
+r20 c41-41 fg=#519e91 bg=#5a9a90
+r20 c42-42 fg=#56a396 bg=#5f9f95
+r20 c43-64 fg=#54a195 bg=#5d9d93
+r21 c01-38 fg=#35756b bg=#35756b
+r21 c39-39 fg=#337369 bg=#337369
+r21 c40-40 fg=#38786e bg=#38786e
+r21 c41-41 fg=#5a9a90 bg=#5a9a90
+r21 c42-42 fg=#5f9f95 bg=#5f9f95
+r21 c43-64 fg=#5d9d93 bg=#5d9d93
+r22 c00-79 fg=rule
+r23 c00-23 fg=text-dim
+r23 c33-39 fg=text
+r23 c40-47 fg=text-dim
+r23 c48-50 fg=text
+r23 c51-58 fg=text-dim
+r23 c59-59 fg=text
+r23 c60-73 fg=text-dim
+r23 c74-74 fg=text
+r23 c75-79 fg=text-dim

@@ -602,6 +602,19 @@
         <item quantity="many">Вы вышли из %1$s. %2$,d изменений в очереди сохранены для следующего входа.</item>
         <item quantity="other">Вы вышли из %1$s. %2$,d изменения в очереди сохранены для следующего входа.</item>
     </plurals>
+    <string name="notice_tracker_change_refused">%1$s раз за разом отклонял изменение для %2$s, поэтому оно остаётся только в Kaeri.</string>
+    <plurals name="notice_tracker_changes_refused">
+        <item quantity="one">%1$s раз за разом отклонял изменения для %2$s и ещё %3$,d тайтла, поэтому они остаются только в Kaeri.</item>
+        <item quantity="few">%1$s раз за разом отклонял изменения для %2$s и ещё %3$,d тайтлов, поэтому они остаются только в Kaeri.</item>
+        <item quantity="many">%1$s раз за разом отклонял изменения для %2$s и ещё %3$,d тайтлов, поэтому они остаются только в Kaeri.</item>
+        <item quantity="other">%1$s раз за разом отклонял изменения для %2$s и ещё %3$,d тайтла, поэтому они остаются только в Kaeri.</item>
+    </plurals>
+    <plurals name="notice_tracker_change_refused_untitled">
+        <item quantity="one">%1$s раз за разом отклонял изменения для %2$,d тайтла, поэтому они остаются только в Kaeri.</item>
+        <item quantity="few">%1$s раз за разом отклонял изменения для %2$,d тайтлов, поэтому они остаются только в Kaeri.</item>
+        <item quantity="many">%1$s раз за разом отклонял изменения для %2$,d тайтлов, поэтому они остаются только в Kaeri.</item>
+        <item quantity="other">%1$s раз за разом отклонял изменения для %2$,d тайтла, поэтому они остаются только в Kaeri.</item>
+    </plurals>
     <string name="notice_sign_out_failed">Не удалось выйти из %1$s. Попробуйте ещё раз. %2$s</string>
     <string name="notice_not_saved_because">Не удалось сохранить настройку. %1$s</string>
     <string name="notice_proxy_saved">Трафик торрентов теперь идёт через прокси.</string>

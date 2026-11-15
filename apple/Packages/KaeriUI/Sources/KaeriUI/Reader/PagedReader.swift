@@ -50,6 +50,9 @@ struct PagedReader: View {
         }
         .frame(width: size.width, height: size.height)
         .clipped()
+        #if FIXTURES
+        .overlay(alignment: .topLeading) { PageZoomProbe(zoom: zoom.scale) }
+        #endif
         .contentShape(.rect)
         .gesture(swipe)
         .onChange(of: swiping) { _, live in if !live { swipeGone() } }
@@ -78,6 +81,11 @@ struct PagedReader: View {
         .onChange(of: model.leaves.count) { _, _ in
             model.position = (current, max(model.leaves.count, 1))
             zoom.reset()
+        }
+        // Zoom In, Zoom Out and Fit to Window, from the keys or the Go menu.
+        .onChange(of: model.pageZoomAsked) { _, asked in
+            guard let asked else { return }
+            zoom.step(asked.step, in: size, motion: !reduceMotion && !paper)
         }
         // A place the app chose (Back to page, Start over, another device's, a change of mode) is
         // its own move, never the person's jump.
@@ -873,3 +881,19 @@ struct ReaderSkippedLine: View {
         .dynamicTypeSize(...DynamicTypeSize.accessibility1)
     }
 }
+
+#if FIXTURES
+/// The page's zoom for the Audit tests, in the Fixtures app only: the page's image says its place,
+/// not how far it is zoomed.
+private struct PageZoomProbe: View {
+    let zoom: CGFloat
+
+    var body: some View {
+        Color.clear
+            .frame(width: 1, height: 1)
+            .accessibilityElement()
+            .accessibilityIdentifier("page-zoom")
+            .accessibilityValue(String(format: "%.2f", zoom))
+    }
+}
+#endif

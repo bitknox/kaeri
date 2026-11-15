@@ -311,6 +311,8 @@ pub enum ReaderSettingKey {
     TapFlipEnds,
     /// E-ink only: swipes turn pages. On by default.
     SwipeTurns,
+    /// The terminal only: how many columns a novel's lines run to. 66 at first.
+    TextWidth,
 }
 
 /// Where a setting's value is kept.
@@ -380,6 +382,7 @@ impl ReaderSettingKey {
         Self::PaperDim,
         Self::PaperVolume,
         Self::SkipCreditPages,
+        Self::TextWidth,
     ];
 
     /// The setting's name in the store, the config and the `read_series` register.
@@ -426,6 +429,7 @@ impl ReaderSettingKey {
             Self::TapFlipSides => "tap_flip_sides",
             Self::TapFlipEnds => "tap_flip_ends",
             Self::SwipeTurns => "swipe_turns",
+            Self::TextWidth => "text_width",
         }
     }
 
@@ -451,9 +455,12 @@ impl ReaderSettingKey {
             | Self::StripWidth
             | Self::StripGap
             | Self::SkipCreditPages => matches!(medium, Medium::Manga),
-            Self::Font | Self::TextSize | Self::Margins | Self::LineSpacing | Self::Justify => {
-                matches!(medium, Medium::Novel)
-            }
+            Self::Font
+            | Self::TextSize
+            | Self::Margins
+            | Self::LineSpacing
+            | Self::Justify
+            | Self::TextWidth => matches!(medium, Medium::Novel),
             // E-ink, colour e-ink and phone settings serve both media; the app shows them only
             // where the screen has them.
             _ => !matches!(medium, Medium::Anime),
@@ -631,6 +638,57 @@ pub struct ReaderSurface {
     /// The look is dark: on e-ink a text refresh the person turned on comes sooner.
     #[cfg_attr(feature = "ffi", uniffi(default))]
     pub dark: bool,
+    /// The page formats the front end decodes itself. A page in any other format comes as raw
+    /// pixels ([`PageEncoding::Raw`]) rather than as its original file. `None`, the default, is
+    /// a platform that decodes every format the engine hands over, as the apps do.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub decodes: Option<PageFormats>,
+    /// Pages are made this many times larger than the surface, for a zoom that stays sharp. The
+    /// layout is the surface's own, so the leaves keep their places. 0 or 1, the default, is the
+    /// surface's size.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub zoom: f32,
+    /// The front end has no web view: a novel's [`NovelOpenView`] carries the chapter as text
+    /// blocks ([`NovelOpenView::text`]) for it to lay out itself, as the terminal does.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub text: bool,
+}
+
+impl ReaderSurface {
+    /// How many times larger than the surface pages are made: at least 1.
+    pub fn zoom_factor(&self) -> f32 {
+        if self.zoom.is_finite() && self.zoom > 1.0 { self.zoom } else { 1.0 }
+    }
+}
+
+/// Which page formats a front end decodes, by the formats the engine hands over as originals.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Default)]
+#[cfg_attr(feature = "ffi", derive(uniffi::Record))]
+pub struct PageFormats {
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub jpeg: bool,
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub png: bool,
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub webp: bool,
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub gif: bool,
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub avif: bool,
+}
+
+impl PageFormats {
+    /// Whether a file of this MIME type is one the front end decodes.
+    pub fn decodes_mime(&self, mime: &str) -> bool {
+        match mime {
+            "image/jpeg" => self.jpeg,
+            "image/png" => self.png,
+            "image/webp" => self.webp,
+            "image/gif" => self.gif,
+            "image/avif" => self.avif,
+            _ => false,
+        }
+    }
 }
 
 /// What a session opened on.
@@ -713,6 +771,154 @@ pub struct NovelOpenView {
     /// The person's reading pace, learnt from their page turns: see [`novel_minutes_left`].
     #[cfg_attr(feature = "ffi", uniffi(default))]
     pub words_per_minute: u32,
+    /// For a surface with no web view ([`ReaderSurface::text`]): the book's text, one entry per
+    /// spine document in the reading flow, in spine order. Empty for a web view, and for a fixed
+    /// layout book, which has no text to reflow.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub text: Vec<NovelTextDoc>,
+}
+
+/// One spine document of a novel as text blocks, for a front end that lays text out itself.
+#[derive(Debug, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "ffi", derive(uniffi::Record))]
+pub struct NovelTextDoc {
+    /// Its index in the spine, as [`NovelPos::spine`] counts.
+    pub spine: u32,
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub blocks: Vec<TextBlock>,
+}
+
+/// A block of a novel's text: a heading, a paragraph, a scene break or a picture's line.
+#[derive(Debug, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "ffi", derive(uniffi::Record))]
+pub struct TextBlock {
+    pub kind: TextBlockKind,
+    /// Where the block starts, as the web view's paginator names places: the block element's
+    /// path and, for text with no element of its own, the offset it starts at. A place inside
+    /// the block is this path with `at.offset` plus the characters before it.
+    pub at: NovelPos,
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub runs: Vec<TextRun>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "ffi", derive(uniffi::Enum))]
+pub enum TextBlockKind {
+    Paragraph,
+    /// A heading, 1 the highest.
+    Heading {
+        level: u8,
+    },
+    Quote,
+    ListItem,
+    /// Text whose spaces and lines are kept as they are.
+    Preformatted,
+    /// A break between scenes: a rule, or a line of only ornaments.
+    SceneBreak,
+    /// A picture, with its description when the book gives one.
+    Picture {
+        alt: Option<String>,
+    },
+}
+
+/// A run of a block's text in one style, from one text node of the document. Every text node of
+/// the block is a run, spaces and newlines as the book has them, so offsets count as the
+/// paginator counts them. Text that never shows (a hidden element's, a style sheet's) has no run
+/// but is counted: the run after it starts that much later. Ruby text, `<rt>` and `<rp>` alike,
+/// is in runs marked `ruby`, as the paginator counts both.
+///
+/// A line break (`<br>`) is a run whose text is `"\n"` and which takes no room in the count: the
+/// run after it starts at the same offset, which tells it from a newline of the book's own text
+/// (that one counts one). A break at a block's end shows nothing and is left out.
+#[derive(Debug, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "ffi", derive(uniffi::Record))]
+pub struct TextRun {
+    /// The text, soft hyphens left out.
+    pub text: String,
+    /// Where the run starts in the block's text, in UTF-16 units as the paginator counts:
+    /// `block.at.offset + offset` is its place under `block.at.path`.
+    pub offset: u32,
+    /// The path of the element the text is in, from `<body>`: a place another device kept
+    /// inside an `<em>` names that element.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub path: Vec<u32>,
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub emphasis: bool,
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub strong: bool,
+    /// A ruby reading over the text before it.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub ruby: bool,
+}
+
+/// Where a place falls in a novel's text blocks: the document, the block and the offset in the
+/// block's text, in UTF-16 units. A place the paginator made (in a text node's own element)
+/// falls exactly. A place in an element that holds blocks, kept on another device or made by
+/// hand, falls near: the whitespace between the blocks in it is not counted. A place before every
+/// block is the first one's start; a place past a document's text is its last block's end.
+/// `None` when no document is that place's spine.
+pub fn novel_text_place(docs: &[NovelTextDoc], pos: &NovelPos) -> Option<(usize, usize, u32)> {
+    let d = docs.iter().position(|doc| doc.spine == pos.spine)?;
+    let blocks = &docs[d].blocks;
+    let Some(last) = blocks.len().checked_sub(1) else { return Some((d, 0, 0)) };
+    // A block inside the place's element, below it.
+    let inside =
+        |b: &TextBlock| b.at.path.len() > pos.path.len() && b.at.path.starts_with(&pos.path);
+    // From block `i`, `left` units on through the blocks inside the place's element.
+    let onwards = |mut i: usize, mut left: u32| {
+        loop {
+            let len = block_len(&blocks[i]);
+            if left <= len || !blocks.get(i + 1).is_some_and(inside) {
+                return (d, i, left.min(len));
+            }
+            left -= len;
+            i += 1;
+        }
+    };
+    // The place's element is a block's own, or holds text of its own beside blocks: the last
+    // such block starting at or before the offset.
+    let own = blocks
+        .iter()
+        .rposition(|b| b.at.path == pos.path && b.at.offset <= pos.offset)
+        .or_else(|| blocks.iter().position(|b| b.at.path == pos.path));
+    if let Some(i) = own {
+        let block = &blocks[i];
+        let into = pos.offset.saturating_sub(block.at.offset);
+        let len = block_len(block);
+        if into <= len || !blocks.get(i + 1).is_some_and(inside) {
+            return Some((d, i, into.min(len)));
+        }
+        return Some(onwards(i + 1, into - len));
+    }
+    // An element inside a block's text (an `<em>`): from where its text starts in the block.
+    let held = blocks.iter().enumerate().find_map(|(i, b)| {
+        b.runs.iter().find(|r| r.path.starts_with(&pos.path)).map(|r| (i, r.offset))
+    });
+    if let Some((i, start)) = held
+        && pos.path.starts_with(&blocks[i].at.path)
+    {
+        return Some((d, i, (start + pos.offset).min(block_len(&blocks[i]))));
+    }
+    // An element that holds blocks: through them from the first.
+    if let Some(i) = blocks.iter().position(inside) {
+        return Some(onwards(i, pos.offset));
+    }
+    // An element with no text: a picture in a block, or one between blocks.
+    let around = blocks
+        .iter()
+        .enumerate()
+        .filter(|(_, b)| !b.at.path.is_empty() && pos.path.starts_with(&b.at.path))
+        .max_by_key(|(i, b)| (b.at.path.len(), std::cmp::Reverse(*i)))
+        .map(|(i, _)| i);
+    if let Some(i) = around.or_else(|| blocks.iter().position(|b| b.at.path > pos.path)) {
+        return Some((d, i, 0));
+    }
+    Some((d, last, block_len(&blocks[last])))
+}
+
+/// The length of a block's text, in UTF-16 units.
+pub fn block_len(block: &TextBlock) -> u32 {
+    block.runs.last().map_or(0, |r| r.offset + r.text.encode_utf16().count() as u32)
 }
 
 /// One document of a novel's spine.
@@ -1251,6 +1457,97 @@ mod tests {
         ] {
             assert_eq!(ReaderValue::decode(&value.encode()), value);
         }
+    }
+}
+
+#[cfg(test)]
+mod text_places {
+    use super::*;
+
+    fn run(text: &str, offset: u32, path: &[u32]) -> TextRun {
+        TextRun {
+            text: text.into(),
+            offset,
+            path: path.to_vec(),
+            emphasis: false,
+            strong: false,
+            ruby: false,
+        }
+    }
+
+    fn block(kind: TextBlockKind, path: &[u32], offset: u32, runs: Vec<TextRun>) -> TextBlock {
+        TextBlock { kind, at: NovelPos { spine: 2, path: path.to_vec(), offset }, runs }
+    }
+
+    /// A made-up document: a hidden heading at 0, a heading, a paragraph with an `<em>`, a
+    /// `<div>` with text loose beside a paragraph, a picture and a last line.
+    fn docs() -> Vec<NovelTextDoc> {
+        let p = TextBlockKind::Paragraph;
+        let blocks = vec![
+            block(TextBlockKind::Heading { level: 1 }, &[1], 0, vec![run("One", 0, &[1])]),
+            block(
+                p.clone(),
+                &[2],
+                0,
+                vec![
+                    run("The ", 0, &[2]),
+                    TextRun { emphasis: true, ..run("lantern", 4, &[2, 0]) },
+                    run(" keeper climbed.", 11, &[2]),
+                ],
+            ),
+            block(
+                p.clone(),
+                &[3],
+                0,
+                vec![run("Loose words ", 0, &[3]), run("here", 12, &[3, 0])],
+            ),
+            block(p.clone(), &[3, 1], 0, vec![run("Inner", 0, &[3, 1])]),
+            block(p.clone(), &[3], 21, vec![run("after", 0, &[3])]),
+            block(TextBlockKind::Picture { alt: None }, &[4], 0, Vec::new()),
+            block(p, &[5], 0, vec![run("The end.", 0, &[5])]),
+        ];
+        vec![NovelTextDoc { spine: 0, blocks: Vec::new() }, NovelTextDoc { spine: 2, blocks }]
+    }
+
+    fn at(path: &[u32], offset: u32) -> Option<(usize, usize, u32)> {
+        novel_text_place(&docs(), &NovelPos { spine: 2, path: path.to_vec(), offset })
+    }
+
+    #[test]
+    fn a_place_in_a_paragraph_or_an_element_in_it_falls_in_its_text() {
+        assert_eq!(at(&[2], 6), Some((1, 1, 6)));
+        // Three into the <em>, which starts four into the paragraph.
+        assert_eq!(at(&[2, 0], 3), Some((1, 1, 7)));
+        assert_eq!(block_len(&docs()[1].blocks[1]), 27);
+    }
+
+    #[test]
+    fn a_place_in_a_containers_loose_text_falls_in_the_right_stretch() {
+        assert_eq!(at(&[3], 14), Some((1, 2, 14)));
+        assert_eq!(at(&[3, 0], 2), Some((1, 2, 14)), "inside the <b> of the loose text");
+        // Past the loose text, in the paragraph between.
+        assert_eq!(at(&[3], 18), Some((1, 3, 2)));
+        assert_eq!(at(&[3], 23), Some((1, 4, 2)));
+    }
+
+    #[test]
+    fn places_before_past_and_between_fall_at_the_nearest_block() {
+        // The hidden heading: before every block.
+        assert_eq!(at(&[0], 5), Some((1, 0, 0)));
+        assert_eq!(at(&[], 0), Some((1, 0, 0)));
+        // Past a paragraph's text: its end. Past the document: the last block's end.
+        assert_eq!(at(&[2], 999), Some((1, 1, 27)));
+        assert_eq!(at(&[9], 0), Some((1, 6, 8)));
+        // An element with no text inside a paragraph: the paragraph.
+        assert_eq!(at(&[2, 1], 0), Some((1, 1, 0)));
+        assert_eq!(at(&[4], 0), Some((1, 5, 0)), "the picture");
+    }
+
+    #[test]
+    fn a_spine_with_no_document_has_no_place_and_an_empty_one_its_start() {
+        let pos = |spine| NovelPos { spine, path: vec![1], offset: 0 };
+        assert_eq!(novel_text_place(&docs(), &pos(7)), None);
+        assert_eq!(novel_text_place(&docs(), &pos(0)), Some((0, 0, 0)));
     }
 }
 

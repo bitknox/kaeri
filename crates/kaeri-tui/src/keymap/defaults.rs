@@ -153,7 +153,54 @@ impl Keymap {
             bind(Binding::plain(Char('x')), A::StopPlayback);
         }
 
-        Self { bindings, playback }
+        // The reader, in a table of its own: the keys a page wants are the ones browsing and
+        // the player have, and the reader takes the whole window, so only the global keys in
+        // `Action::IN_READER` fall through to the browsing table.
+        let mut reader = BTreeMap::new();
+        {
+            use KeyCode::{Backspace, PageDown, PageUp};
+            let mut bind = |b: Binding, a: Action| {
+                reader.insert(b, a);
+            };
+            bind(Binding::plain(Char(' ')), A::ReaderNext);
+            bind(Binding::plain(PageDown), A::ReaderNext);
+            bind(Binding::plain(Backspace), A::ReaderPrevious);
+            bind(Binding::plain(PageUp), A::ReaderPrevious);
+            // As the page moves: forward in a right-to-left book. See `ReaderLeft`.
+            bind(Binding::plain(Left), A::ReaderLeft);
+            bind(Binding::plain(Char('h')), A::ReaderLeft);
+            bind(Binding::plain(Right), A::ReaderRight);
+            bind(Binding::plain(Char('l')), A::ReaderRight);
+            bind(Binding::plain(Char('j')), A::ReaderScrollDown);
+            bind(Binding::plain(Down), A::ReaderScrollDown);
+            bind(Binding::plain(Char('k')), A::ReaderScrollUp);
+            bind(Binding::plain(Up), A::ReaderScrollUp);
+            bind(Binding::plain(Char('g')), A::ReaderFirst);
+            bind(Binding::plain(Char('G')), A::ReaderLast);
+            bind(Binding::plain(Char('n')), A::ReaderNextChapter);
+            bind(Binding::plain(Char('N')), A::ReaderPreviousChapter);
+            // `e` is the series page everywhere a work is, as on Home.
+            bind(Binding::plain(Char('e')), A::ReaderChapters);
+            bind(Binding::plain(Char('b')), A::ReaderBackToPage);
+            bind(Binding::plain(Char('u')), A::ReaderMarkRead);
+            bind(Binding::plain(Char('d')), A::ReaderDownload);
+            bind(Binding::plain(Enter), A::ReaderBare);
+            bind(Binding::plain(Char('m')), A::ReaderMode);
+            bind(Binding::plain(Char('f')), A::ReaderFit);
+            bind(Binding::plain(Char('z')), A::ReaderZoom);
+            bind(Binding::plain(Char('+')), A::ReaderZoomIn);
+            bind(Binding::plain(Char('-')), A::ReaderZoomOut);
+            bind(Binding::plain(Char('v')), A::ReaderPages);
+            bind(Binding::plain(Char('[')), A::ReaderNarrower);
+            bind(Binding::plain(Char(']')), A::ReaderWider);
+            bind(Binding::plain(Char(',')), A::ReaderSettings);
+            bind(Binding::plain(Char('q')), A::ReaderLeave);
+            bind(Binding::plain(Esc), A::ReaderLeave);
+            bind(Binding::plain(Char('r')), A::ReaderAgain);
+            bind(Binding::plain(Char('s')), A::ReaderSkip);
+        }
+
+        Self { bindings, playback, reader }
     }
 }
 

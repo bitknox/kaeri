@@ -985,6 +985,9 @@ impl Reader {
             eink: false,
             two_pages: width_px >= height_px * 13 / 10,
             dark,
+            decodes: None,
+            zoom: 0.0,
+            text: false,
         }
     }
 
@@ -1175,6 +1178,18 @@ impl Reader {
             }
         }
         self.fill_end();
+    }
+
+    /// The end of a book in one file: its one chapter has no number and is named for the book,
+    /// so the heading says the name. Logs the heading for the shot's run.
+    #[cfg(feature = "fixtures")]
+    pub fn shot_end_named(self: &Rc<Self>) {
+        if let Some(chapter) = self.state.borrow_mut().chapter.as_mut() {
+            chapter.number = None;
+            chapter.label = "Rooftop Lantern".into(); // i18n-skip: a shot's book title
+        }
+        self.fill_end();
+        eprintln!("reader end: {}", self.end.heading_shown()); // i18n-skip
     }
 
     /// Every strip image as if its file were still coming: its plate with its number, and with
@@ -2292,7 +2307,7 @@ impl Reader {
                 .filter(|(id, _)| state.next.as_ref().is_some_and(|n| &n.id == id))
                 .map(|(_, texture)| texture.clone());
             end::EndFacts {
-                chapter: chapter.number.clone().unwrap_or_else(|| chapter.label.clone()),
+                heading: end::heading(chapter),
                 read: state.read.clone(),
                 next: state.next.clone(),
                 why: state.why_none,

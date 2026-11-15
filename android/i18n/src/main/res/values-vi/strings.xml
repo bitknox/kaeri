@@ -512,6 +512,13 @@
     <plurals name="notice_signed_out_queue">
         <item quantity="other">Đã đăng xuất khỏi %1$s. %2$,d thay đổi đang chờ được giữ lại cho lần đăng nhập sau.</item>
     </plurals>
+    <string name="notice_tracker_change_refused">%1$s liên tục từ chối một thay đổi cho %2$s, nên thay đổi đó chỉ còn trong Kaeri.</string>
+    <plurals name="notice_tracker_changes_refused">
+        <item quantity="other">%1$s liên tục từ chối các thay đổi cho %2$s và %3$,d tựa khác, nên chúng chỉ còn trong Kaeri.</item>
+    </plurals>
+    <plurals name="notice_tracker_change_refused_untitled">
+        <item quantity="other">%1$s liên tục từ chối các thay đổi cho %2$,d tựa, nên chúng chỉ còn trong Kaeri.</item>
+    </plurals>
     <string name="notice_sign_out_failed">Không đăng xuất được khỏi %1$s. Hãy thử lại. %2$s</string>
     <string name="notice_not_saved_because">Không lưu được cài đặt đó. %1$s</string>
     <string name="notice_proxy_saved">Lưu lượng torrent giờ đi qua proxy.</string>

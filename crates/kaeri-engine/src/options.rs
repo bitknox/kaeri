@@ -54,6 +54,9 @@ pub struct EngineOptions {
     /// The engine runs on a phone, not a tablet, for the defaults that depend on the screen's
     /// size: novel text left-aligned there. `false` for a tablet, a computer and the terminal.
     pub phone: bool,
+    /// The terminal app, whose reader settings differ: the text width shows, the web view's text
+    /// size does not need to. `false` for every other front end.
+    pub terminal: bool,
     /// What kind of device this is, for the other devices' lists in sync. `None` leaves it
     /// unsaid (the terminal).
     pub device_kind: Option<kaeri_model::group::SyncDeviceKind>,
@@ -123,6 +126,7 @@ impl EngineOptions {
             device_label: kaeri_model::stores::COMPUTER.to_owned(),
             handheld: false,
             phone: false,
+            terminal: false,
             device_kind: None,
             language: None,
             sources: None,

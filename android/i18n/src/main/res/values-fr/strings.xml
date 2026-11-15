@@ -572,6 +572,17 @@
         <item quantity="many">Déconnecté de %1$s. %2$,d modifications en attente sont conservées pour la prochaine connexion.</item>
         <item quantity="other">Déconnecté de %1$s. %2$,d modifications en attente sont conservées pour la prochaine connexion.</item>
     </plurals>
+    <string name="notice_tracker_change_refused">%1$s a refusé plusieurs fois une modification de %2$s, elle reste donc seulement dans Kaeri.</string>
+    <plurals name="notice_tracker_changes_refused">
+        <item quantity="one">%1$s a refusé plusieurs fois des modifications de %2$s et de %3$,d autre titre, elles restent donc seulement dans Kaeri.</item>
+        <item quantity="many">%1$s a refusé plusieurs fois des modifications de %2$s et de %3$,d autres titres, elles restent donc seulement dans Kaeri.</item>
+        <item quantity="other">%1$s a refusé plusieurs fois des modifications de %2$s et de %3$,d autres titres, elles restent donc seulement dans Kaeri.</item>
+    </plurals>
+    <plurals name="notice_tracker_change_refused_untitled">
+        <item quantity="one">%1$s a refusé plusieurs fois des modifications de %2$,d titre, elles restent donc seulement dans Kaeri.</item>
+        <item quantity="many">%1$s a refusé plusieurs fois des modifications de %2$,d titres, elles restent donc seulement dans Kaeri.</item>
+        <item quantity="other">%1$s a refusé plusieurs fois des modifications de %2$,d titres, elles restent donc seulement dans Kaeri.</item>
+    </plurals>
     <string name="notice_sign_out_failed">Impossible de vous déconnecter de %1$s. Réessayez. %2$s</string>
     <string name="notice_not_saved_because">Impossible d\'enregistrer ce réglage. %1$s</string>
     <string name="notice_proxy_saved">Le trafic des torrents passe désormais par le proxy.</string>

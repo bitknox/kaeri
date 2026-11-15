@@ -572,6 +572,17 @@
         <item quantity="many">Sesión cerrada en %1$s. %2$,d cambios en cola se conservan para el próximo inicio de sesión.</item>
         <item quantity="other">Sesión cerrada en %1$s. %2$,d cambios en cola se conservan para el próximo inicio de sesión.</item>
     </plurals>
+    <string name="notice_tracker_change_refused">%1$s rechazó varias veces un cambio en %2$s, así que solo queda en Kaeri.</string>
+    <plurals name="notice_tracker_changes_refused">
+        <item quantity="one">%1$s rechazó varias veces cambios en %2$s y un título más, así que solo quedan en Kaeri.</item>
+        <item quantity="many">%1$s rechazó varias veces cambios en %2$s y %3$,d títulos más, así que solo quedan en Kaeri.</item>
+        <item quantity="other">%1$s rechazó varias veces cambios en %2$s y %3$,d títulos más, así que solo quedan en Kaeri.</item>
+    </plurals>
+    <plurals name="notice_tracker_change_refused_untitled">
+        <item quantity="one">%1$s rechazó varias veces un cambio, así que solo queda en Kaeri.</item>
+        <item quantity="many">%1$s rechazó varias veces cambios en %2$,d títulos, así que solo quedan en Kaeri.</item>
+        <item quantity="other">%1$s rechazó varias veces cambios en %2$,d títulos, así que solo quedan en Kaeri.</item>
+    </plurals>
     <string name="notice_sign_out_failed">No se pudo cerrar la sesión en %1$s. Inténtalo de nuevo. %2$s</string>
     <string name="notice_not_saved_because">No se pudo guardar esa configuración. %1$s</string>
     <string name="notice_proxy_saved">El tráfico de los torrents ahora pasa por el proxy.</string>

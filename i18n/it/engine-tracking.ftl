@@ -27,6 +27,17 @@ notice-signed-out-queue = { $count ->
     [many] Disconnesso da { $tracker }. { $count } modifiche in coda vengono conservate per il successivo accesso.
    *[other] Disconnesso da { $tracker }. { $count } modifiche in coda vengono conservate per il successivo accesso.
  }
+notice-tracker-change-refused = { $tracker } ha rifiutato più volte una modifica a { $title }, quindi resta solo in { -app-name }.
+notice-tracker-changes-refused = { $others ->
+    [one] { $tracker } ha rifiutato più volte modifiche a { $title } e a un altro titolo, quindi restano solo in { -app-name }.
+    [many] { $tracker } ha rifiutato più volte modifiche a { $title } e ad altri { $others } titoli, quindi restano solo in { -app-name }.
+   *[other] { $tracker } ha rifiutato più volte modifiche a { $title } e ad altri { $others } titoli, quindi restano solo in { -app-name }.
+ }
+notice-tracker-change-refused-untitled = { $count ->
+    [one] { $tracker } ha rifiutato più volte una modifica, quindi resta solo in { -app-name }.
+    [many] { $tracker } ha rifiutato più volte modifiche a { $count } titoli, quindi restano solo in { -app-name }.
+   *[other] { $tracker } ha rifiutato più volte modifiche a { $count } titoli, quindi restano solo in { -app-name }.
+ }
 notice-sign-out-failed = Impossibile disconnettersi da { $tracker }. Riprova. { $reason }
 notice-not-saved-because = Impossibile salvare questa impostazione. { $cause }
 notice-proxy-saved = Il traffico dei torrent ora passa dal proxy.

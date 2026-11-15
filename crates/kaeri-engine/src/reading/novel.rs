@@ -37,8 +37,8 @@ use kaeri_model::{
     eink::NovelSupport,
     playback::HttpHeader,
     reader::{
-        BookBody, BookResource, NovelAssets, ReadDirection, ReaderSettingKey as Key,
-        ReaderSurface, WritingMode,
+        BookBody, BookResource, NovelAssets, NovelPos, NovelTextDoc, ReadDirection,
+        ReaderSettingKey as Key, ReaderSurface, TextBlock, TextBlockKind, TextRun, WritingMode,
     },
     reading::ReadingFailure,
 };
@@ -243,6 +243,8 @@ pub(crate) struct Opening {
     pub dir: PathBuf,
     pub eink: Option<EinkImages>,
     pub limits: Limits,
+    /// The front end lays text out itself: the book carries its documents as text blocks.
+    pub text: bool,
 }
 
 enum Content {
@@ -347,13 +349,7 @@ impl ServedBook {
         if let Some(doc) = self.docs.lock().ok().and_then(|d| d.get(path).cloned()) {
             return doc;
         }
-        let mut doc = novel::document(bytes, &self.clean(path));
-        // A chapter kept from a source is a book of its own, its title said twice at times, as
-        // the source gave it (`heading_once`, which a chapter read from the source has too).
-        if doc.failed.is_none() {
-            doc.text = novel::heading_once(&doc.text, &|_| None);
-        }
-        let doc = Arc::new(doc);
+        let doc = Arc::new(self.cleaned(path, bytes));
         if let Ok(mut docs) = self.docs.lock() {
             if docs.len() >= KEPT_DOCUMENTS {
                 docs.clear();
@@ -361,6 +357,38 @@ impl ServedBook {
             docs.insert(path.to_owned(), doc.clone());
         }
         doc
+    }
+
+    /// The document at `path` cleaned as it is served, not kept.
+    fn cleaned(&self, path: &str, bytes: &[u8]) -> Document {
+        let mut doc = novel::document(bytes, &self.clean(path));
+        // A chapter kept from a source is a book of its own, its title said twice at times, as
+        // the source gave it (`heading_once`, which a chapter read from the source has too).
+        if doc.failed.is_none() {
+            doc.text = novel::heading_once(&doc.text, &|_| None);
+        }
+        doc
+    }
+
+    /// Each document in the reading flow as text blocks, in spine order, for a front end that
+    /// lays text out itself. Their places are the paginator's, as each is served.
+    fn text_docs(&self, spine: &[(String, bool)]) -> Vec<NovelTextDoc> {
+        let flow = spine.iter().enumerate().filter(|(_, (_, linear))| *linear);
+        flow.map(|(index, (path, _))| {
+            let blocks = match &self.content {
+                Content::Text(doc, _) => text_blocks(index as u32, &doc.text, &self.limits),
+                Content::Epub(epub) => {
+                    // Cleaned without keeping: the web view's documents stay as they were.
+                    let bytes = epub.lock().ok().and_then(|mut e| e.resource(path).ok());
+                    bytes.map_or_else(Vec::new, |r| {
+                        let doc = self.cleaned(path, &r.data);
+                        text_blocks(index as u32, &doc.text, &self.limits)
+                    })
+                }
+            };
+            NovelTextDoc { spine: index as u32, blocks }
+        })
+        .collect()
     }
 
     /// The answer for `path`, asked with `query` (the part of the URL after `?`).
@@ -577,6 +605,9 @@ pub(crate) struct NovelBook {
     pub identity: String,
     /// Each spine document's words: see [`words`].
     pub words: Vec<u32>,
+    /// The documents in the reading flow as text blocks, when the front end lays text out
+    /// itself. Empty for a web view and for a fixed layout book.
+    pub text: Vec<NovelTextDoc>,
 }
 
 impl NovelBook {
@@ -653,6 +684,7 @@ pub(crate) fn open_epub(path: &Path, opening: Opening) -> Result<Opened, Reading
         dir: opening.dir,
         eink: opening.eink,
     });
+    let text = if opening.text && !fixed { served.text_docs(&spine) } else { Vec::new() };
     let first = spine.iter().position(|(_, l)| *l).unwrap_or(0);
     let flow = flow_of(&served, &spine[first].0);
     let writing_mode = match flow {
@@ -674,6 +706,7 @@ pub(crate) fn open_epub(path: &Path, opening: Opening) -> Result<Opened, Reading
         fixed,
         identity,
         words,
+        text,
     }))
 }
 
@@ -774,9 +807,11 @@ pub(crate) fn open_text(
         eink: opening.eink,
     });
     let vertical = flow != novel::Flow::Horizontal;
+    let spine = vec![(TEXT_CHAPTER.to_owned(), true)];
+    let text = if opening.text { served.text_docs(&spine) } else { Vec::new() };
     NovelBook {
         served,
-        spine: vec![(TEXT_CHAPTER.to_owned(), true)],
+        spine,
         toc: Vec::new(),
         writing_mode: match flow {
             novel::Flow::VerticalRl => WritingMode::VerticalRightToLeft,
@@ -791,7 +826,39 @@ pub(crate) fn open_text(
         fixed: false,
         identity,
         words: vec![words(xhtml)],
+        text,
     }
+}
+
+/// A cleaned document's blocks as the model gives them, at spine index `spine`.
+fn text_blocks(spine: u32, xhtml: &str, limits: &Limits) -> Vec<TextBlock> {
+    novel::text_blocks(xhtml, limits)
+        .into_iter()
+        .map(|b| TextBlock {
+            kind: match b.kind {
+                novel::BlockKind::Paragraph => TextBlockKind::Paragraph,
+                novel::BlockKind::Heading(level) => TextBlockKind::Heading { level },
+                novel::BlockKind::Quote => TextBlockKind::Quote,
+                novel::BlockKind::ListItem => TextBlockKind::ListItem,
+                novel::BlockKind::Preformatted => TextBlockKind::Preformatted,
+                novel::BlockKind::SceneBreak => TextBlockKind::SceneBreak,
+                novel::BlockKind::Picture { alt } => TextBlockKind::Picture { alt },
+            },
+            at: NovelPos { spine, path: b.path, offset: b.offset },
+            runs: b
+                .runs
+                .into_iter()
+                .map(|r| TextRun {
+                    text: r.text,
+                    offset: r.offset,
+                    path: r.path,
+                    emphasis: r.emphasis,
+                    strong: r.strong,
+                    ruby: r.ruby,
+                })
+                .collect(),
+        })
+        .collect()
 }
 
 /// A document's words, for the time left in it: the words of its body, two Chinese, Japanese
@@ -961,6 +1028,9 @@ mod tests {
             eink: false,
             two_pages: false,
             dark: true,
+            decodes: None,
+            zoom: 0.0,
+            text: false,
         };
         let foot = |handheld: bool| {
             let screen = super::super::settings::Screen { handheld, ..Default::default() };
@@ -977,6 +1047,31 @@ mod tests {
     }
 
     #[test]
+    fn the_terminals_text_width_leaves_the_web_view_style_alone() {
+        let store = kaeri_store::Store::open_in_memory().unwrap();
+        let surface = ReaderSurface {
+            width_px: 1280,
+            height_px: 800,
+            scale: 1.0,
+            eink: false,
+            two_pages: false,
+            dark: true,
+            decodes: None,
+            zoom: 0.0,
+            text: false,
+        };
+        let style_with = |config: &kaeri_core::config::ReadingConfig| {
+            let screen = super::super::settings::Screen::default().with_terminal(true);
+            let layers =
+                Layers::read(&store, config, kaeri_core::media::Medium::Novel, None, screen);
+            style(&layers, &surface, false, NovelSupport::Full, false, false)
+        };
+        let mut narrow = kaeri_core::config::ReadingConfig::default();
+        narrow.novel.insert("text_width".into(), toml::Value::Float(40.0));
+        assert_eq!(style_with(&narrow), style_with(&Default::default()));
+    }
+
+    #[test]
     fn a_line_holds_65_to_75_characters_on_every_screen_but_e_ink() {
         let store = kaeri_store::Store::open_in_memory().unwrap();
         let config = kaeri_core::config::ReadingConfig::default();
@@ -988,6 +1083,9 @@ mod tests {
                 eink,
                 two_pages: true,
                 dark: false,
+                decodes: None,
+                zoom: 0.0,
+                text: false,
             };
             let screen = super::super::settings::Screen::default();
             let layers =
@@ -1025,6 +1123,7 @@ mod tests {
             dir: dir.join("novel-7"),
             eink: None,
             limits: Limits::default(),
+            text: false,
         };
         let book = open_text(
             "<p>The lantern keeper climbed the stair.</p><script>x()</script>",
@@ -1088,6 +1187,7 @@ mod tests {
             dir: dir.path().join("novel-9"),
             eink: None,
             limits: Limits::default(),
+            text: false,
         };
         let bottle = Fetched { media_type: "image/png", bytes: ONE_PIXEL_PNG.to_vec() };
         let pictures = TextPictures::standing(vec![

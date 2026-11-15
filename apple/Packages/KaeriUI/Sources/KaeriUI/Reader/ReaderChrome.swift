@@ -42,9 +42,30 @@ struct ReaderChrome: View {
         .onChange(of: model.backToPage) { _, page in
             if let page, model.chromeShown { AccessibilityNotification.Announcement(L.readerBackToPage(page: page)).post() }
         }
-        .opacity(model.chromeShown ? 1 : 0)
-        .allowsHitTesting(model.chromeShown)
-        .accessibilityHidden(!model.chromeShown)
+        .opacity(Self.shows(model) ? 1 : 0)
+        .allowsHitTesting(Self.shows(model))
+        .accessibilityHidden(!Self.shows(model))
+        // It goes with a chapter that starts opening or fails as it goes when hidden.
+        .animation(paper ? nil : .fadeOut, value: Self.ready(model))
+    }
+
+    /// Whether the group shows: asked for, over a chapter it can act on. A chapter opening or one
+    /// that would not open has its own Close, and Try again, where the group sits, and the
+    /// group's line, scrubber and Go to page would still be the chapter left, so it stays away
+    /// there, whatever the pointer or a screen reader asks.
+    static func shows(_ model: ReaderModel) -> Bool {
+        model.chromeShown && ready(model)
+    }
+
+    /// The chapter is open, its own pages known.
+    static func ready(_ model: ReaderModel) -> Bool {
+        if case .open = model.phase { return true }
+        return false
+    }
+
+    static func failed(_ model: ReaderModel) -> Bool {
+        if case .failed = model.phase { return true }
+        return false
     }
 
     /// The group's distance from the bottom of the screen.

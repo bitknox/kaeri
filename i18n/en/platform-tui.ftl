@@ -56,11 +56,7 @@ tui-together-not-a-link = That is not a party link or code.
 # @only tui
 tui-together-recent-alone = Episode { $episode } · { $when }
 
-# Line under the title of that page.
-# @only tui
-tui-medium-read-line = The terminal has no reader. Manga, webtoons and light novels open in the { -app-name } apps, and sync keeps your progress in step.
-
-# Line under that page: the key that opens the choice of what { -app-name } is for. The key is the one bound to it, as the key map draws it.
+# Last line of reading's Home: the key that opens the choice of what { -app-name } is for. The key is the one bound to it, as the key map draws it.
 # @arg key: text
 # @only tui
 tui-medium-read-change = Press { $key } to change what { -app-name } is for.

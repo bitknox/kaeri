@@ -22,9 +22,9 @@ final class ReaderStuckTests: XCTestCase {
         continueAfterFailure = false
     }
 
-    private func launch(_ scene: String) -> XCUIApplication {
+    private func launch(_ scene: String, _ extra: [String] = []) -> XCUIApplication {
         let app = XCUIApplication()
-        app.launchArguments = ["-KaeriScene", scene]
+        app.launchArguments = ["-KaeriScene", scene] + extra
         // The script's settings for the app, when it passes any.
         for (name, value) in ProcessInfo.processInfo.environment where name.hasPrefix("KAERI_APP_") {
             app.launchEnvironment["KAERI_" + name.dropFirst("KAERI_APP_".count)] = value
@@ -314,5 +314,90 @@ final class ReaderStuckTests: XCTestCase {
         key(app, "0", .command)
         Thread.sleep(forTimeInterval: 1)
         XCTAssertEqual(zoom(), 1, accuracy: 0.01, "Command-0 left the strip magnified")
+    }
+
+    /// Zoom In, Zoom Out and Fit to Window zoom a page from the keyboard: a pinched page is fitted
+    /// by Command-0, and Command-equals and Command-minus step it about the middle.
+    func testTheZoomKeysZoomAPage() throws {
+        try XCTSkipUnless(UIDevice.current.userInterfaceIdiom == .pad, "the keys are an iPad check")
+        let app = launch("readermangartl")
+        let start = try XCTUnwrap(page(app), "no page on screen")
+        let probe = app.descendants(matching: .any)["page-zoom"]
+        XCTAssertTrue(probe.waitForExistence(timeout: 10), "no page zoom from the Fixtures app")
+        let zoom = { () -> Double in
+            Thread.sleep(forTimeInterval: 0.8)
+            return Double(probe.value as? String ?? "") ?? 0
+        }
+        XCTAssertEqual(zoom(), 1, accuracy: 0.01, "the page did not open fitted")
+        let shown = app.images.matching(NSPredicate(format: "label BEGINSWITH 'Page '")).allElementsBoundByIndex
+        try XCTUnwrap(shown.first(where: \.isHittable), "no page to pinch").pinch(withScale: 2.5, velocity: 1)
+        XCTAssertGreaterThan(zoom(), 1.05, "the pinch did not zoom")
+        key(app, "0", .command)
+        XCTAssertEqual(zoom(), 1, accuracy: 0.01, "Command-0 left the page zoomed")
+        key(app, "=", .command)
+        XCTAssertEqual(zoom(), 1.25, accuracy: 0.01, "Command-equals did not zoom in")
+        key(app, "=", .command)
+        XCTAssertEqual(zoom(), 1.56, accuracy: 0.01, "a second Command-equals did not zoom in again")
+        key(app, "-", .command)
+        XCTAssertEqual(zoom(), 1.25, accuracy: 0.01, "Command-minus did not zoom out")
+        key(app, "0", .command)
+        XCTAssertEqual(zoom(), 1, accuracy: 0.01, "Command-0 did not fit the page")
+        XCTAssertEqual(page(app), start, "zooming moved the place")
+        app.swipeRight()
+        XCTAssertNotEqual(page(app), start, "the swipe did not turn after the zoom keys")
+    }
+
+    /// Command-0 fits a finished pinch in every way of reading: one page, a spread, pages one
+    /// under another and the long strip. One test each, so a mode that fails names itself and
+    /// the others still run.
+    func testCommandZeroFitsAPinchedPage() throws {
+        try fitsAfterPinch("readermangartl", probe: "page-zoom")
+    }
+
+    func testCommandZeroFitsAPinchedSpread() throws {
+        try fitsAfterPinch("readermangartl", probe: "page-zoom", wide: true)
+    }
+
+    func testCommandZeroFitsPinchedPagesOneUnderAnother() throws {
+        try fitsAfterPinch("readermangartl", ["-KaeriReaderSet", "mode=vertical"], probe: "page-zoom")
+    }
+
+    func testCommandZeroFitsAPinchedStrip() throws {
+        try fitsAfterPinch("readerstrip", probe: "strip-zoom")
+    }
+
+    private func fitsAfterPinch(_ scene: String, _ extra: [String] = [], probe name: String, wide: Bool = false) throws {
+        try XCTSkipUnless(UIDevice.current.userInterfaceIdiom == .pad, "Command-0 is an iPad check")
+        XCUIDevice.shared.orientation = wide ? .landscapeLeft : .portrait
+        defer { XCUIDevice.shared.orientation = .portrait }
+        let app = launch(scene, extra)
+        Thread.sleep(forTimeInterval: 3)
+        let probe = app.descendants(matching: .any)[name]
+        XCTAssertTrue(probe.waitForExistence(timeout: 10), "no zoom from the Fixtures app")
+        let zoom = { () -> Double in
+            Thread.sleep(forTimeInterval: 0.8)
+            return Double(probe.value as? String ?? "") ?? 0
+        }
+        XCTAssertEqual(zoom(), 1, accuracy: 0.01, "did not open fitted")
+        app.pinch(withScale: 2.5, velocity: 1)
+        XCTAssertGreaterThan(zoom(), 1.05, "the pinch did not zoom")
+        key(app, "0", .command)
+        XCTAssertEqual(zoom(), 1, accuracy: 0.01, "Command-0 left the pinch")
+    }
+
+    /// File › Open (Command-O) over a book on iPad waits until the book is closed: the reader is a
+    /// full-screen cover, and the sheet coming up from the window under it put the book away. The
+    /// book stays, with no sheet, and keeps its keys.
+    func testCommandOOverABookLeavesTheBookOpen() throws {
+        try XCTSkipUnless(UIDevice.current.userInterfaceIdiom == .pad, "an iPad check")
+        let app = launch("readermangartl")
+        let start = try XCTUnwrap(page(app), "no page on screen")
+        key(app, "o", .command)
+        Thread.sleep(forTimeInterval: 1.5)
+        XCTAssertFalse(app.buttons["Choose a torrent file"].exists, "Command-O brought up its sheet")
+        let after = page(app)
+        XCTAssertEqual(after, start, "the book is not where it was")
+        key(app, .leftArrow)
+        XCTAssertNotEqual(page(app), start, "the book did not turn after Command-O")
     }
 }
