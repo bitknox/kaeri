@@ -701,10 +701,14 @@ private fun CastSeekLine(cast: CastModel, now: FfiNowCard, shown: CastShown, wai
     val time = MaterialTheme.typography.labelMedium.tabular()
     Column(Modifier.padding(top = 12.dp)) {
         val range = 0f..maxOf(duration.toFloat(), 1f)
+        val slider = remember(range) { SliderState(value = at.toFloat(), valueRange = range) }
+        if (dragging == null && slider.value != at.toFloat()) slider.value = at.toFloat()
         Slider(
-            value = at.toFloat(),
-            valueRange = range,
-            onValueChange = { dragging = it },
+            state = slider,
+            onValueChange = {
+                slider.value = it
+                dragging = it
+            },
             onValueChangeFinished = {
                 dragging?.let {
                     cast.send(FfiTvCommand.SeekTo(it.toDouble()))
