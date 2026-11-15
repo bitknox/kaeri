@@ -36,13 +36,6 @@ struct Broadcast: Identifiable, Equatable {
         entry.airingTranslation == .dub || entry.airingDubbed
     }
 
-    /// The mark as an episode line ends with it: " · Dubbed", or nothing. The spaces don't break,
-    /// so a line that wraps in a narrow column takes its last word down with the mark rather
-    /// than leaving "· Dubbed" alone on a line.
-    var markSuffix: String {
-        dubbed ? "\u{00A0}·\u{00A0}\(L.audioDubbed)" : ""
-    }
-
     /// Whether you have watched this episode.
     var watched: Bool {
         (entry.progress?.done ?? 0) >= episode
@@ -603,7 +596,7 @@ struct BroadcastCell: View {
                             }
                             // Two lines in a column narrower than the line, as on an iPad in
                             // portrait, rather than cut before it says when.
-                            Text(broadcast.line(now: now) + broadcast.markSuffix)
+                            Text(broadcast.line(now: now))
                                 .lineLimit(2)
                                 .fixedSize(horizontal: false, vertical: true)
                         }
