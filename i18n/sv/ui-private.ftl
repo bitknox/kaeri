@@ -1,0 +1,17 @@
+private-mode = Privat läge
+private-mode-detail = Inget du tittar på eller läser sparas eller synkas förrän du stänger av det eller avslutar { -app-name }.
+private-mode-limits = Dina { -source-pl } och { -watch-party-pl } ser fortfarande vad du öppnar.
+private-mode-on-notice = Privat läge är på. Inget sparas eller synkas förrän { -app-name } avslutas.
+action-turn-off = Stäng av
+private-mode-shortcut-hint = Kortkommando: { $keys }
+private-badge = Privat
+private-badge-label = Privat läge är på
+private-line-not-saved = Sparas inte och synkas inte
+private-line-kept = Din plats finns kvar tills { -app-name } avslutas
+title-always-private = Alltid privat
+show-always-private-detail = Inget från den här serien sparas eller synkas på den här { -device }en. Det som redan är sparat finns kvar.
+series-always-private-detail = Inget från den här serien sparas eller synkas på den här { -device }en. Det som redan är sparat finns kvar.
+now-playing-private = Spelas i { -app-name }
+private-download-line = Laddar ner i { -app-name }
+private-mode-on-announcement = Privat läge på
+private-mode-off-announcement = Privat läge av

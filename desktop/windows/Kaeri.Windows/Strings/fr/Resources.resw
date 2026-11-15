@@ -6263,6 +6263,54 @@
   <data name="PlayerSubsMore" xml:space="preserve">
     <value>Plus dans les paramètres…</value>
   </data>
+  <data name="PrivateMode" xml:space="preserve">
+    <value>Mode privé</value>
+  </data>
+  <data name="PrivateModeDetail" xml:space="preserve">
+    <value>Rien de ce que vous regardez ou lisez n’est enregistré ni synchronisé tant que vous ne le désactivez pas ou ne quittez pas Kaeri.</value>
+  </data>
+  <data name="PrivateModeLimits" xml:space="preserve">
+    <value>Vos sources et vos visionnages en groupe voient toujours ce que vous ouvrez.</value>
+  </data>
+  <data name="PrivateModeOnNotice" xml:space="preserve">
+    <value>Le mode privé est activé. Rien n’est enregistré ni synchronisé jusqu’à la fermeture de Kaeri.</value>
+  </data>
+  <data name="ActionTurnOff" xml:space="preserve">
+    <value>Désactiver</value>
+  </data>
+  <data name="PrivateModeShortcutHint" xml:space="preserve">
+    <value>Raccourci : {keys}</value>
+  </data>
+  <data name="PrivateBadge" xml:space="preserve">
+    <value>Privé</value>
+  </data>
+  <data name="PrivateBadgeLabel" xml:space="preserve">
+    <value>Mode privé activé</value>
+  </data>
+  <data name="PrivateLineNotSaved" xml:space="preserve">
+    <value>Ni enregistré ni synchronisé</value>
+  </data>
+  <data name="PrivateLineKept" xml:space="preserve">
+    <value>Votre position est conservée jusqu’à la fermeture de Kaeri</value>
+  </data>
+  <data name="TitleAlwaysPrivate" xml:space="preserve">
+    <value>Toujours privé</value>
+  </data>
+  <data name="ShowAlwaysPrivateDetail" xml:space="preserve">
+    <value>Rien de cette série n’est enregistré ni synchronisé sur cet appareil. Ce qui est déjà enregistré est conservé.</value>
+  </data>
+  <data name="SeriesAlwaysPrivateDetail" xml:space="preserve">
+    <value>Rien de cette série n’est enregistré ni synchronisé sur cet appareil. Ce qui est déjà enregistré est conservé.</value>
+  </data>
+  <data name="NowPlayingPrivate" xml:space="preserve">
+    <value>Lecture dans Kaeri</value>
+  </data>
+  <data name="PrivateModeOnAnnouncement" xml:space="preserve">
+    <value>Mode privé activé</value>
+  </data>
+  <data name="PrivateModeOffAnnouncement" xml:space="preserve">
+    <value>Mode privé désactivé</value>
+  </data>
   <data name="ReaderPageLoading" xml:space="preserve">
     <value>Chargement de la page {page}</value>
   </data>

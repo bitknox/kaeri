@@ -6467,6 +6467,54 @@
   <data name="PlayerSubsMore" xml:space="preserve">
     <value>Больше в настройках…</value>
   </data>
+  <data name="PrivateMode" xml:space="preserve">
+    <value>Приватный режим</value>
+  </data>
+  <data name="PrivateModeDetail" xml:space="preserve">
+    <value>Ничего из того, что вы смотрите или читаете, не сохраняется и не синхронизируется, пока вы не выключите режим или не закроете Kaeri.</value>
+  </data>
+  <data name="PrivateModeLimits" xml:space="preserve">
+    <value>Ваши источники и совместные просмотры по-прежнему видят, что вы открываете.</value>
+  </data>
+  <data name="PrivateModeOnNotice" xml:space="preserve">
+    <value>Приватный режим включён. Ничего не сохраняется и не синхронизируется до закрытия Kaeri.</value>
+  </data>
+  <data name="ActionTurnOff" xml:space="preserve">
+    <value>Выключить</value>
+  </data>
+  <data name="PrivateModeShortcutHint" xml:space="preserve">
+    <value>Сочетание клавиш: {keys}</value>
+  </data>
+  <data name="PrivateBadge" xml:space="preserve">
+    <value>Приватно</value>
+  </data>
+  <data name="PrivateBadgeLabel" xml:space="preserve">
+    <value>Приватный режим включён</value>
+  </data>
+  <data name="PrivateLineNotSaved" xml:space="preserve">
+    <value>Не сохраняется и не синхронизируется</value>
+  </data>
+  <data name="PrivateLineKept" xml:space="preserve">
+    <value>Место запоминается до закрытия Kaeri</value>
+  </data>
+  <data name="TitleAlwaysPrivate" xml:space="preserve">
+    <value>Всегда приватно</value>
+  </data>
+  <data name="ShowAlwaysPrivateDetail" xml:space="preserve">
+    <value>Это устройство ничего не сохраняет и не синхронизирует из этого тайтла. Уже сохранённое остаётся.</value>
+  </data>
+  <data name="SeriesAlwaysPrivateDetail" xml:space="preserve">
+    <value>Это устройство ничего не сохраняет и не синхронизирует из этой серии. Уже сохранённое остаётся.</value>
+  </data>
+  <data name="NowPlayingPrivate" xml:space="preserve">
+    <value>Воспроизводится в Kaeri</value>
+  </data>
+  <data name="PrivateModeOnAnnouncement" xml:space="preserve">
+    <value>Приватный режим включён</value>
+  </data>
+  <data name="PrivateModeOffAnnouncement" xml:space="preserve">
+    <value>Приватный режим выключен</value>
+  </data>
   <data name="ReaderPageLoading" xml:space="preserve">
     <value>Загрузка страницы {page}</value>
   </data>

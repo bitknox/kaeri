@@ -4528,6 +4528,21 @@ settings-note-upload-limit = Tüm torrent yüklemesini sınırlar, böylece payl
 # Note under the token storage row. The option is a command-line flag and is not translated.
 settings-note-token-storage = Var olan bir belirteci taşımak için --token-to-file kullanın.
 
+# Header chip while private mode is on, in the state colour, lower case.
+tui-private-chip = gizli
+
+# Footer hint for Ctrl+P, lower case to match the header chip.
+keys-hint-private = gizli
+
+# Command palette entry that turns private mode on or off; its state shows beside it.
+palette-private-mode = Gizli mod
+
+# Command palette entry on a title page: keep the show private on this device.
+palette-always-private = Bu dizi için her zaman gizli
+
+# Help for the --private flag.
+cli-private-help = Gizli modda başlat. Kaeri kapanana kadar hiçbir şey kaydedilmez veya eşitlenmez.
+
 # Heading of the { -plugin-store } screens when the terminal is too small to draw them.
 stores-needs-larger-terminal = Daha büyük bir terminal gerekiyor
 
@@ -8631,6 +8646,54 @@ player-subs-bg-box = Kutu
 
 # Button in the subtitles panel that opens Settings.
 player-subs-more = Ayarlar'da daha fazlası…
+
+# The private mode switch: under the account card on phones, first in Settings › Accounts on the desktops and the TV, and a check item in the Linux main menu.
+private-mode = Gizli mod
+
+# The switch's description: the footer on Apple, supporting text on Android and the TV, the SettingsCard description on Windows, the AdwSwitchRow subtitle on Linux.
+private-mode-detail = İzlediğiniz veya okuduğunuz hiçbir şey, modu kapatana ya da Kaeri uygulamasından çıkana kadar kaydedilmez veya eşitlenmez.
+
+# Second line under the switch. Private mode only stops what the app keeps; it hides nothing from anyone else.
+private-mode-limits = kaynaklarınız ve birlikte izlemeleriniz açtığınız şeyleri yine de görür.
+
+# Notice after the menu item or the shortcut turns private mode on, and the words of the badge's popover, flyout and TV dialog. Also the badge's screen reader hint.
+private-mode-on-notice = Gizli mod açık. Kaeri kapanana kadar hiçbir şey kaydedilmez veya eşitlenmez.
+
+# Button in the notice, the badge's popover and flyout, and the TV dialog: turns private mode off.
+action-turn-off = Kapat
+
+# Under the switch on the desktops. The keys are the platform's own: ⇧⌘N on the Mac, Ctrl+Shift+N on Windows and Linux.
+private-mode-shortcut-hint = Kısayol: { $keys }
+
+# The badge while private mode is on, the player label, and the head of the title page line.
+private-badge = Gizli
+
+# Screen reader label of the badge.
+private-badge-label = Gizli mod açık
+
+# Line under a title or series page's main action, after "Private" or "Always private".
+private-line-not-saved = Kaydedilmez veya eşitlenmez
+
+# Line under a title or series page's main action when a place is held in memory, after "Private".
+private-line-kept = Kaldığınız yer, Kaeri kapanana kadar hatırlanır
+
+# A title kept private on this device: the More menu item with a check, the switch in the show's settings, and the head of the title page line.
+title-always-private = Her zaman gizli
+
+# Under the Always private switch in a show's settings.
+show-always-private-detail = Bu diziden hiçbir şey bu cihazda kaydedilmez veya eşitlenmez. Önceden kaydedilenler kalır.
+
+# Under the Always private switch in a series page's settings.
+series-always-private-detail = Bu seriden hiçbir şey bu cihazda kaydedilmez veya eşitlenmez. Önceden kaydedilenler kalır.
+
+# What the system's media controls, the lock screen, the media card and the player window show while private: no show, episode, artist or artwork.
+now-playing-private = Kaeri içinde oynatılıyor
+
+# Announced to screen readers once when private mode turns on.
+private-mode-on-announcement = Gizli mod açık
+
+# Announced to screen readers once when private mode turns off.
+private-mode-off-announcement = Gizli mod kapalı
 
 # Under a page that is still loading after four seconds.
 reader-page-loading = Sayfa { $page } yükleniyor

@@ -5855,6 +5855,54 @@
   <data name="PlayerSubsMore" xml:space="preserve">
     <value>Selengkapnya di Pengaturan…</value>
   </data>
+  <data name="PrivateMode" xml:space="preserve">
+    <value>Mode pribadi</value>
+  </data>
+  <data name="PrivateModeDetail" xml:space="preserve">
+    <value>Apa pun yang Anda tonton atau baca tidak disimpan atau disinkronkan sampai mode ini dimatikan atau Kaeri ditutup.</value>
+  </data>
+  <data name="PrivateModeLimits" xml:space="preserve">
+    <value>sumber-sumber dan nonton bareng Anda tetap melihat apa yang Anda buka.</value>
+  </data>
+  <data name="PrivateModeOnNotice" xml:space="preserve">
+    <value>Mode pribadi aktif. Tidak ada yang disimpan atau disinkronkan sampai Kaeri ditutup.</value>
+  </data>
+  <data name="ActionTurnOff" xml:space="preserve">
+    <value>Matikan</value>
+  </data>
+  <data name="PrivateModeShortcutHint" xml:space="preserve">
+    <value>Pintasan: {keys}</value>
+  </data>
+  <data name="PrivateBadge" xml:space="preserve">
+    <value>Pribadi</value>
+  </data>
+  <data name="PrivateBadgeLabel" xml:space="preserve">
+    <value>Mode pribadi aktif</value>
+  </data>
+  <data name="PrivateLineNotSaved" xml:space="preserve">
+    <value>Tidak disimpan atau disinkronkan</value>
+  </data>
+  <data name="PrivateLineKept" xml:space="preserve">
+    <value>Posisi Anda diingat sampai Kaeri ditutup</value>
+  </data>
+  <data name="TitleAlwaysPrivate" xml:space="preserve">
+    <value>Selalu pribadi</value>
+  </data>
+  <data name="ShowAlwaysPrivateDetail" xml:space="preserve">
+    <value>Tidak ada dari judul ini yang disimpan atau disinkronkan di perangkat ini. Yang sudah tersimpan tetap ada.</value>
+  </data>
+  <data name="SeriesAlwaysPrivateDetail" xml:space="preserve">
+    <value>Tidak ada dari seri ini yang disimpan atau disinkronkan di perangkat ini. Yang sudah tersimpan tetap ada.</value>
+  </data>
+  <data name="NowPlayingPrivate" xml:space="preserve">
+    <value>Diputar di Kaeri</value>
+  </data>
+  <data name="PrivateModeOnAnnouncement" xml:space="preserve">
+    <value>Mode pribadi aktif</value>
+  </data>
+  <data name="PrivateModeOffAnnouncement" xml:space="preserve">
+    <value>Mode pribadi nonaktif</value>
+  </data>
   <data name="ReaderPageLoading" xml:space="preserve">
     <value>Memuat halaman {page}</value>
   </data>

@@ -4648,6 +4648,21 @@ settings-note-upload-limit = Ogranicza całe wysyłanie torrentów, więc udost�
 # Note under the token storage row. The option is a command-line flag and is not translated.
 settings-note-token-storage = Użyj --token-to-file, aby przenieść istniejący token.
 
+# Header chip while private mode is on, in the state colour, lower case.
+tui-private-chip = prywatnie
+
+# Footer hint for Ctrl+P, lower case to match the header chip.
+keys-hint-private = prywatnie
+
+# Command palette entry that turns private mode on or off; its state shows beside it.
+palette-private-mode = Tryb prywatny
+
+# Command palette entry on a title page: keep the show private on this device.
+palette-always-private = Ten tytuł zawsze prywatnie
+
+# Help for the --private flag.
+cli-private-help = Uruchom w trybie prywatnym. Nic nie jest zapisywane ani synchronizowane do zamknięcia Kaeri.
+
 # Heading of the { -plugin-store } screens when the terminal is too small to draw them.
 stores-needs-larger-terminal = Potrzebny większy terminal
 
@@ -8815,6 +8830,54 @@ player-subs-bg-box = Tło
 
 # Button in the subtitles panel that opens Settings.
 player-subs-more = Więcej w Ustawieniach…
+
+# The private mode switch: under the account card on phones, first in Settings › Accounts on the desktops and the TV, and a check item in the Linux main menu.
+private-mode = Tryb prywatny
+
+# The switch's description: the footer on Apple, supporting text on Android and the TV, the SettingsCard description on Windows, the AdwSwitchRow subtitle on Linux.
+private-mode-detail = Nic, co oglądasz lub czytasz, nie jest zapisywane ani synchronizowane, dopóki go nie wyłączysz lub nie zamkniesz Kaeri.
+
+# Second line under the switch. Private mode only stops what the app keeps; it hides nothing from anyone else.
+private-mode-limits = Twoje źródła i wspólne oglądania nadal widzą, co otwierasz.
+
+# Notice after the menu item or the shortcut turns private mode on, and the words of the badge's popover, flyout and TV dialog. Also the badge's screen reader hint.
+private-mode-on-notice = Tryb prywatny jest włączony. Nic nie jest zapisywane ani synchronizowane do zamknięcia Kaeri.
+
+# Button in the notice, the badge's popover and flyout, and the TV dialog: turns private mode off.
+action-turn-off = Wyłącz
+
+# Under the switch on the desktops. The keys are the platform's own: ⇧⌘N on the Mac, Ctrl+Shift+N on Windows and Linux.
+private-mode-shortcut-hint = Skrót: { $keys }
+
+# The badge while private mode is on, the player label, and the head of the title page line.
+private-badge = Prywatnie
+
+# Screen reader label of the badge.
+private-badge-label = Tryb prywatny jest włączony
+
+# Line under a title or series page's main action, after "Private" or "Always private".
+private-line-not-saved = Nie jest zapisywane ani synchronizowane
+
+# Line under a title or series page's main action when a place is held in memory, after "Private".
+private-line-kept = Miejsce jest pamiętane do zamknięcia Kaeri
+
+# A title kept private on this device: the More menu item with a check, the switch in the show's settings, and the head of the title page line.
+title-always-private = Zawsze prywatnie
+
+# Under the Always private switch in a show's settings.
+show-always-private-detail = To urządzenie nie zapisuje ani nie synchronizuje niczego z tego tytułu. To, co już zapisane, zostaje.
+
+# Under the Always private switch in a series page's settings.
+series-always-private-detail = To urządzenie nie zapisuje ani nie synchronizuje niczego z tej serii. To, co już zapisane, zostaje.
+
+# What the system's media controls, the lock screen, the media card and the player window show while private: no show, episode, artist or artwork.
+now-playing-private = Odtwarzanie w Kaeri
+
+# Announced to screen readers once when private mode turns on.
+private-mode-on-announcement = Tryb prywatny włączony
+
+# Announced to screen readers once when private mode turns off.
+private-mode-off-announcement = Tryb prywatny wyłączony
 
 # Under a page that is still loading after four seconds.
 reader-page-loading = Wczytywanie strony { $page }

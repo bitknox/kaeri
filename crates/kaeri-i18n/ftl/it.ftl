@@ -4588,6 +4588,21 @@ settings-note-upload-limit = Limita tutto il caricamento torrent, così la condi
 # Note under the token storage row. The option is a command-line flag and is not translated.
 settings-note-token-storage = Usa --token-to-file per spostare un token esistente.
 
+# Header chip while private mode is on, in the state colour, lower case.
+tui-private-chip = privato
+
+# Footer hint for Ctrl+P, lower case to match the header chip.
+keys-hint-private = privato
+
+# Command palette entry that turns private mode on or off; its state shows beside it.
+palette-private-mode = Modalità privata
+
+# Command palette entry on a title page: keep the show private on this device.
+palette-always-private = Sempre privato per questa serie
+
+# Help for the --private flag.
+cli-private-help = Avvia in modalità privata. Niente viene salvato o sincronizzato finché Kaeri non viene chiuso.
+
 # Heading of the { -plugin-store } screens when the terminal is too small to draw them.
 stores-needs-larger-terminal = Serve un terminale più grande
 
@@ -8723,6 +8738,54 @@ player-subs-bg-box = Riquadro
 
 # Button in the subtitles panel that opens Settings.
 player-subs-more = Altro in Impostazioni…
+
+# The private mode switch: under the account card on phones, first in Settings › Accounts on the desktops and the TV, and a check item in the Linux main menu.
+private-mode = Modalità privata
+
+# The switch's description: the footer on Apple, supporting text on Android and the TV, the SettingsCard description on Windows, the AdwSwitchRow subtitle on Linux.
+private-mode-detail = Niente di ciò che guardi o leggi viene salvato o sincronizzato finché non la disattivi o chiudi Kaeri.
+
+# Second line under the switch. Private mode only stops what the app keeps; it hides nothing from anyone else.
+private-mode-limits = Le tue fonti e le watch party vedono comunque cosa apri.
+
+# Notice after the menu item or the shortcut turns private mode on, and the words of the badge's popover, flyout and TV dialog. Also the badge's screen reader hint.
+private-mode-on-notice = La modalità privata è attiva. Niente viene salvato o sincronizzato finché Kaeri non viene chiuso.
+
+# Button in the notice, the badge's popover and flyout, and the TV dialog: turns private mode off.
+action-turn-off = Disattiva
+
+# Under the switch on the desktops. The keys are the platform's own: ⇧⌘N on the Mac, Ctrl+Shift+N on Windows and Linux.
+private-mode-shortcut-hint = Scorciatoia: { $keys }
+
+# The badge while private mode is on, the player label, and the head of the title page line.
+private-badge = Privato
+
+# Screen reader label of the badge.
+private-badge-label = Modalità privata attiva
+
+# Line under a title or series page's main action, after "Private" or "Always private".
+private-line-not-saved = Non salvato né sincronizzato
+
+# Line under a title or series page's main action when a place is held in memory, after "Private".
+private-line-kept = La posizione resta in memoria finché Kaeri non viene chiuso
+
+# A title kept private on this device: the More menu item with a check, the switch in the show's settings, and the head of the title page line.
+title-always-private = Sempre privato
+
+# Under the Always private switch in a show's settings.
+show-always-private-detail = Niente di questa serie viene salvato o sincronizzato su questo dispositivo. Ciò che è già salvato resta.
+
+# Under the Always private switch in a series page's settings.
+series-always-private-detail = Niente di questa serie viene salvato o sincronizzato su questo dispositivo. Ciò che è già salvato resta.
+
+# What the system's media controls, the lock screen, the media card and the player window show while private: no show, episode, artist or artwork.
+now-playing-private = In riproduzione in Kaeri
+
+# Announced to screen readers once when private mode turns on.
+private-mode-on-announcement = Modalità privata attivata
+
+# Announced to screen readers once when private mode turns off.
+private-mode-off-announcement = Modalità privata disattivata
 
 # Under a page that is still loading after four seconds.
 reader-page-loading = Caricamento pagina { $page }

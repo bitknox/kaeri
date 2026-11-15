@@ -1,0 +1,17 @@
+private-mode = Gizli mod
+private-mode-detail = İzlediğiniz veya okuduğunuz hiçbir şey, modu kapatana ya da { -app-name } uygulamasından çıkana kadar kaydedilmez veya eşitlenmez.
+private-mode-limits = { -source-pl }ınız ve { -watch-party-pl }iniz açtığınız şeyleri yine de görür.
+private-mode-on-notice = Gizli mod açık. { -app-name } kapanana kadar hiçbir şey kaydedilmez veya eşitlenmez.
+action-turn-off = Kapat
+private-mode-shortcut-hint = Kısayol: { $keys }
+private-badge = Gizli
+private-badge-label = Gizli mod açık
+private-line-not-saved = Kaydedilmez veya eşitlenmez
+private-line-kept = Kaldığınız yer, { -app-name } kapanana kadar hatırlanır
+title-always-private = Her zaman gizli
+show-always-private-detail = Bu diziden hiçbir şey bu { -device }da kaydedilmez veya eşitlenmez. Önceden kaydedilenler kalır.
+series-always-private-detail = Bu seriden hiçbir şey bu { -device }da kaydedilmez veya eşitlenmez. Önceden kaydedilenler kalır.
+now-playing-private = { -app-name } içinde oynatılıyor
+private-download-line = { -app-name } içinde indiriliyor
+private-mode-on-announcement = Gizli mod açık
+private-mode-off-announcement = Gizli mod kapalı
