@@ -395,7 +395,10 @@ class BoardShots {
         }
         compose.waitForIdle()
         toEpisodes()
-        compose.onAllNodesWithText("E8 \u00b7 No source has this episode", substring = true).assertCountEquals(1)
+        // An aired episode no source lists says when it aired and that no source has it yet.
+        val eighth = rows.first { it.number == "8" }
+        val line = checkNotNull(app.kaeri.store.MissingWords.unsourcedLine(RuntimeEnvironment.getApplication(), eighth.airsAt, app.kaeri.store.AppClock.now().epochSecond))
+        compose.onAllNodesWithText(line, substring = true).onFirst().assertExists()
     }
 
     private fun openPicker(store: AppStore, pinned: Boolean) {
