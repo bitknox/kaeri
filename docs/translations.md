@@ -13,6 +13,8 @@ cargo run -p i18n-tool -- generate
 
 1. Pick the file in `i18n/en/` by screen (`ui-library.ftl`, `ui-settings.ftl`, and so on). Strings
    that only one platform shows go in `platform-<name>.ftl` (or `platform-<name>-<screen>.ftl`). Engine notices go in `engine.ftl`.
+   The Cast receiver page's strings go in `receiver-*.ftl`; they reach only the website, as JSON
+   in `website/public/cast/receiver/i18n/`.
 2. Write the message. The id is kebab-case and names what the text is, not where it sits.
 
    ```

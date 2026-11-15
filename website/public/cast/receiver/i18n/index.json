@@ -1,0 +1,39 @@
+{
+  "args": {
+    "receiver-error": {
+      "episode": "plain"
+    },
+    "receiver-finished": {
+      "episode": "plain"
+    },
+    "receiver-up-next": {
+      "seconds": "int"
+    },
+    "receiver-up-next-numbered": {
+      "episode": "plain"
+    },
+    "receiver-up-next-titled": {
+      "episode": "plain",
+      "title": "text"
+    },
+    "receiver-waiting": {
+      "seconds": "int"
+    }
+  },
+  "languages": [
+    "en",
+    "de",
+    "es-419",
+    "fr",
+    "id",
+    "it",
+    "ja",
+    "pl",
+    "pt-BR",
+    "ru",
+    "sv",
+    "tr",
+    "vi"
+  ],
+  "source": "en"
+}

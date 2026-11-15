@@ -94,6 +94,9 @@ cause-not-writable = { $path } is not writable.
 notice-done = Done.
 "#;
 
+const RECEIVER_EN: &str = "# The TV while it waits.\n# @arg seconds: int\nreceiver-waiting = Waiting for the stream · { $seconds } s\n\n# The TV's error hint.\nreceiver-error-hint = Choose another { -source }.\n";
+const RECEIVER_PL: &str = "receiver-waiting = Czekanie na strumień · { $seconds } s\n";
+
 const ANDROID_EN: &str = "# Name of the downloads channel.\nchannel-downloads = Downloads\n";
 
 const PL_TERMS: &str = "-app-name = Kaeri\n-source = źródło\n-source-cap-pl = Źródła\n";
@@ -134,6 +137,8 @@ fn fixture() -> tempfile::TempDir {
     put("en/ui.ftl", EN);
     put("en/engine.ftl", ENGINE_EN);
     put("en/platform-android.ftl", ANDROID_EN);
+    put("en/receiver-cast.ftl", RECEIVER_EN);
+    put("pl/receiver-cast.ftl", RECEIVER_PL);
     put("pl/terms.ftl", PL_TERMS);
     put("pl/ui.ftl", PL);
     put("da/terms.ftl", TERMS);
@@ -147,6 +152,7 @@ fn fixture() -> tempfile::TempDir {
     pl.insert("queue-left".into(), entry(&h("queue-left"), "draft"));
     pl.insert("at-home".into(), entry("000000000000", "reviewed"));
     pl.insert("two-args".into(), entry(&h("two-args"), "reviewed"));
+    pl.insert("receiver-waiting".into(), entry(&h("receiver-waiting"), "reviewed"));
     // da ships its drafts, labelled.
     let mut da = Status::new();
     da.insert("settings-language".into(), entry(&h("settings-language"), "draft"));
@@ -498,4 +504,34 @@ fn every_bundled_flag_has_its_image() {
     }
     let svgs = std::fs::read_dir(root.join("svg")).unwrap().count();
     assert_eq!(svgs, i18n_tool::catalogue::FLAGS.len(), "an image without a flag code");
+}
+
+#[test]
+fn receiver_messages_reach_only_the_receiver_page() {
+    let dir = fixture();
+    let cat = Catalogue::load(dir.path()).unwrap();
+    let files = generate_all(&cat, Mode::Release).unwrap();
+    for (path, text) in &files {
+        if !path.starts_with("website/") {
+            assert!(!text.contains("receiver"), "{path} carries a receiver message");
+        }
+    }
+    let en: serde_json::Value =
+        serde_json::from_str(file(&files, "cast/receiver/i18n/en.json")).unwrap();
+    assert_eq!(
+        en["messages"]["receiver-waiting"],
+        serde_json::json!(["Waiting for the stream · ", {"arg": "seconds"}, " s"])
+    );
+    // The term is written out and joined to the text around it.
+    assert_eq!(
+        en["messages"]["receiver-error-hint"],
+        serde_json::json!(["Choose another source."])
+    );
+    let pl: serde_json::Value =
+        serde_json::from_str(file(&files, "cast/receiver/i18n/pl.json")).unwrap();
+    assert!(pl["messages"].get("receiver-error-hint").is_none());
+    let index: serde_json::Value =
+        serde_json::from_str(file(&files, "cast/receiver/i18n/index.json")).unwrap();
+    assert_eq!(index["languages"], serde_json::json!(["en", "pl"]));
+    assert_eq!(index["args"]["receiver-waiting"]["seconds"], "int");
 }
