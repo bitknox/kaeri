@@ -380,6 +380,10 @@ fn stage(shell: &Rc<Shell>, shot: &str) -> f64 {
     if let Some(settle) = crate::shots_prelaunch::stage(shell, shot) {
         return settle;
     }
+    #[cfg(feature = "fixtures")]
+    if let Some(settle) = crate::shots_private::stage(shell, shot) {
+        return settle;
+    }
     let window = &shell.ctx.window;
     match shot {
         "home" => {
@@ -706,6 +710,8 @@ fn stage(shell: &Rc<Shell>, shot: &str) -> f64 {
                     progress: Some(kaeri_model::progress::TitleProgress { done: 12, next: 1 }),
                     resume: None,
                     episodes: Vec::new(),
+                    private: None,
+                    kept: false,
                 }]);
             });
             4.0
@@ -1386,6 +1392,8 @@ fn unstage(shell: &Rc<Shell>, shot: &str) {
     crate::shots_reading_credits::unstage(shell, shot);
     #[cfg(feature = "fixtures")]
     crate::shots_prelaunch::unstage(shell, shot);
+    #[cfg(feature = "fixtures")]
+    crate::shots_private::unstage(shell, shot);
     if shot.starts_with("start-") {
         shell.player.close();
     }
@@ -2066,6 +2074,10 @@ async fn painted(shell: &Rc<Shell>, path: &std::path::Path, shot: &str) -> Resul
                 | "read-chapters-long"
                 | "read-novel-paper" => open_popover(&window),
                 #[cfg(feature = "fixtures")]
+                private if crate::shots_private::POPOVERS.contains(&private) => {
+                    open_popover(&window)
+                }
+                #[cfg(feature = "fixtures")]
                 "read-disc-poster-menu" | "read-disc-poster-menu-own" => context_menu(&window),
                 #[cfg(feature = "fixtures")]
                 "read-series-group-picker" => {
@@ -2144,6 +2156,10 @@ pub fn named(list: Option<&str>) -> Vec<String> {
                 #[cfg(feature = "fixtures")]
                 "prelaunch-demo" => {
                     crate::shots_prelaunch::DEMO.iter().map(|p| (*p).to_owned()).collect()
+                }
+                #[cfg(feature = "fixtures")]
+                "private" => {
+                    crate::shots_private::NAMES.iter().map(|p| (*p).to_owned()).collect()
                 }
                 "match" => MATCH.iter().map(|p| (*p).to_owned()).collect(),
                 one => vec![one.to_owned()],

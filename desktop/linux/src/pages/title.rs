@@ -155,6 +155,8 @@ struct Page {
     typing: RefCell<Option<glib::SourceId>>,
     capsule: gtk::Label,
     target: RefCell<Option<String>>,
+    /// The private line under the main action, moved into each new layout of the head.
+    private_line: Rc<crate::private::Line>,
 }
 
 /// The tag a title's page carries in the navigation stack: one page per title.
@@ -306,6 +308,7 @@ pub fn page(ctx: &Rc<Ctx>, id: AnilistId) -> adw::NavigationPage {
         ));
     }
     let view = adw::ToolbarView::new();
+    crate::private::badge_on(&header);
     view.add_top_bar(&header);
     view.add_top_bar(&widgets::offline_banner());
     view.set_extend_content_to_top_edge(true);
@@ -364,6 +367,7 @@ pub fn page(ctx: &Rc<Ctx>, id: AnilistId) -> adw::NavigationPage {
         typing: RefCell::default(),
         capsule,
         target: RefCell::default(),
+        private_line: crate::private::Line::new(),
     });
     scroll.vadjustment().connect_value_changed({
         let weak = Rc::downgrade(&page);
@@ -396,6 +400,7 @@ pub fn page(ctx: &Rc<Ctx>, id: AnilistId) -> adw::NavigationPage {
     if let Some(entry) = &entry {
         page.fill(entry);
     }
+    page.private_line.set(ctx.hub.known.borrow().show_line(id), false);
     ctx.hub.send(Command::LoadDetail(id));
     ctx.hub.send(Command::LoadEpisodes(id));
     ctx.hub.send(Command::LoadDub(id));
@@ -430,6 +435,9 @@ impl Page {
     }
 
     fn heard(&self, event: &Event) {
+        if crate::private::changes(event) {
+            self.private_changed();
+        }
         match event {
             // Titles are named another way now: this one and its related titles again.
             Event::TitlesChanged(_) => self.ctx.hub.send(Command::LoadDetail(self.id)),
@@ -651,6 +659,13 @@ impl Page {
             }
         });
         group.add_action(&show_settings);
+        if let Some(navigation) = self.navigation.upgrade() {
+            group.add_action(&crate::private::always_action(
+                &self.ctx,
+                kaeri_model::private::PrivateTitle::Show { id },
+                &navigation,
+            ));
+        }
         let source = gio::SimpleAction::new("source-picker", None);
         source.connect_activate({
             let ctx = Rc::downgrade(&self.ctx);
@@ -747,6 +762,12 @@ impl Page {
         if let Some(navigation) = self.navigation.upgrade() {
             navigation.insert_action_group("title", Some(&group));
         }
+    }
+
+    /// The private line follows the mode and the title's own flag.
+    fn private_changed(&self) {
+        let (hub, id) = (Rc::downgrade(&self.ctx.hub), self.id);
+        self.private_line.later(move || hub.upgrade()?.known.borrow().show_line(id));
     }
 
     /// The header block again, when what the title is matched to changed what it offers.
@@ -963,6 +984,7 @@ impl Page {
         if let Some(action) = self.fix_match.borrow().as_ref() {
             action.set_enabled(hub.known.borrow().can_fix_match());
         }
+        third.append(Some(&t::title_always_private()), Some("title.always-private"));
         third.append(Some(&t::show_settings_title()), Some("title.show-settings"));
         more_menu.append_section(None, &third);
         let more = gtk::MenuButton::builder()
@@ -977,6 +999,8 @@ impl Page {
             actions.append(&more);
         }
         text.append(&actions);
+        // Under the main action: "Private · Not saved or synced", while it applies.
+        self.private_line.place(&text);
         if let Some(asked) = &asked {
             // How many titles could be it, under the action.
             text.append(&widgets::haze(&matching::uncertain(asked), ""));

@@ -115,6 +115,14 @@ pub fn open(ctx: &Rc<Ctx>, id: AnilistId, title: &str) {
     let page = adw::PreferencesPage::new();
     let mut rows = Vec::new();
     let mut subtitles = None;
+    // First: Always private, on this device only.
+    let private = adw::PreferencesGroup::new();
+    private.add(&crate::private::always_row(
+        ctx,
+        kaeri_model::private::PrivateTitle::Show { id },
+        &t::show_always_private_detail(),
+    ));
+    page.add(&private);
     for (heading, keys) in GROUPS {
         let group = adw::PreferencesGroup::builder().title(heading.title()).build();
         for key in keys {
@@ -345,6 +353,7 @@ mod tests {
                 sub_delay: None,
             }],
             source: None,
+            always_private: false,
         };
         assert_eq!(subtitles(&view, "en"), "English (Signs)");
         view.rows = vec![row(S::Translation, "dub", "sub")];
