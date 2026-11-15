@@ -241,6 +241,11 @@ internal fun EpisodeCard(
     opensService: Boolean = false,
     /** The tablet's beside row: 192 × 108 still, title, facts and three lines of text beside it. */
     beside: Boolean = false,
+    /**
+     * The people followed who stopped at this episode, in a column at the row's end; `null` when
+     * no row of the table has any, so the column takes no room.
+     */
+    followed: List<app.kaeri.engine.model.FollowedMark>? = null,
 ) {
     val colors = MaterialTheme.colorScheme
     val context = LocalContext.current
@@ -341,6 +346,7 @@ internal fun EpisodeCard(
                     SynopsisBand(shown, Modifier.padding(top = BesideDims.BandGap).fillMaxWidth().height(besideBand), maxLines = BesideDims.SynopsisLines)
                 }
             }
+            if (followed != null) Box(Modifier.height(BesideDims.StillHeight), contentAlignment = Alignment.Center) { MarkSlot(followed) }
         }
         return
     }
@@ -355,8 +361,12 @@ internal fun EpisodeCard(
             .padding(start = 16.dp, end = 16.dp, top = RowDims.Top),
     ) {
         if (stacked) {
-            Box(Modifier.fillMaxWidth().aspectRatio(16f / 9f).alpha(1f - 0.3f * marks.dim.value)) {
-                StillWithMark(entry, row, hidden, unaired, 360.dp, marks, fraction)
+            Box(Modifier.fillMaxWidth().aspectRatio(16f / 9f)) {
+                Box(Modifier.fillMaxSize().alpha(1f - 0.3f * marks.dim.value)) {
+                    StillWithMark(entry, row, hidden, unaired, 360.dp, marks, fraction)
+                }
+                // At this text size the column would squeeze the title: the marks sit on the still, as on the TV.
+                if (followed != null) Box(Modifier.align(Alignment.BottomEnd).padding(8.dp).then(spokenMarks(followed))) { MarksFading(followed) { FollowedStack(it, MarkPicture, MaterialTheme.colorScheme.surface) } }
             }
             Spacer(Modifier.height(8.dp))
             RowHeader(title, titleColor, first, second, marks, titleLines = 2, modifier = Modifier.fillMaxWidth(), opensService = opensService)
@@ -372,6 +382,7 @@ internal fun EpisodeCard(
                     StillWithMark(entry, row, hidden, unaired, RowDims.StillWidth, marks, fraction)
                 }
                 RowHeader(title, titleColor, first, second, marks, titleLines = 2, modifier = Modifier.weight(1f).padding(top = 2.dp), opensService = opensService)
+                if (followed != null) Box(Modifier.height(RowDims.StillHeight), contentAlignment = Alignment.Center) { MarkSlot(followed) }
             }
             if (tall) {
                 SynopsisBand(text, Modifier.padding(top = RowDims.BandGap).fillMaxWidth().height(band), maxLines = RowDims.SynopsisLines)

@@ -408,6 +408,35 @@ private fun Header(
             }
         }
         ServiceLine(availability, memory)
+        FollowingLine(entry, memory)
+    }
+}
+
+/**
+ * People you follow, a focus stop between the buttons and the episodes while anyone followed has
+ * the show. It comes after the page, so it opens on standard and fades in on the fade-in token,
+ * the episodes moving down with it; the switch going off fades it out over 0.3 s.
+ */
+@Composable
+private fun FollowingLine(entry: Entry, memory: FocusMemory) {
+    val actions = LocalActions.current
+    val context = LocalContext.current
+    val people = entry.detail?.following.orEmpty()
+    // The last people shown, kept while the row closes.
+    var kept by remember { mutableStateOf(people) }
+    if (people.isNotEmpty()) kept = people
+    AnimatedVisibility(
+        people.isNotEmpty(),
+        // Unclipped, so the focused row's growth to 1.05 is not cut at its edges.
+        enter = expandVertically(Motion.standard(), expandFrom = Alignment.Top, clip = false) + fadeIn(Motion.fadeIn()),
+        exit = shrinkVertically(Motion.standard(), shrinkTowards = Alignment.Top, clip = false) + fadeOut(Motion.fadeOut()),
+        label = "following", // i18n-skip
+    ) {
+        app.kaeri.tv.ui.FollowingRow(
+            kept,
+            onOpen = { actions?.open(app.kaeri.tv.ui.followingPanel(context, kept)) },
+            modifier = Modifier.padding(top = 14.dp).remembered(memory, "following"),
+        )
     }
 }
 
@@ -712,8 +741,11 @@ private fun EpisodeCard(
     val hiddenWord = stringResource(R.string.episode_synopsis_hidden)
     // The card reads as one: number, title, facts, then the synopsis last, or that it is hidden.
     val base = cardLabel(context, title, facts, progress)
+    // Then who of the people followed stopped here, before the synopsis; never their scores.
+    val marked = row.followed.takeIf { it.isNotEmpty() }?.let { app.kaeri.store.FollowingWords.spoken(context, it) }
     val said = base.let { if (row.completed) Strings.tvCardLabelWatched(context, it) else it } +
-        (synopsis?.let { ". $it" } ?: if (covered) ". $hiddenWord" else "") // i18n-skip
+        (marked?.let { ". $it" } ?: "") + // i18n-skip
+        (synopsis?.let { (if (marked != null) " " else ". ") + it } ?: if (covered) (if (marked != null) " " else ". ") + hiddenWord else "") // i18n-skip
     Column(Modifier.width(EpisodeCardDims.Width).onFocusChanged { focused = it.hasFocus }) {
         ArtCard(onClick, EpisodeCardDims.Width, EpisodeCardDims.StillHeight, modifier, sheet, said) {
             // The show's banner stands in for a still the episode does not have, and is never blurred.
@@ -737,6 +769,7 @@ private fun EpisodeCard(
                     Icon(TvIcons.Check, contentDescription = null, tint = ObiSilk.Water, modifier = Modifier.size(24.dp * 2 / 3))
                 }
             }
+            app.kaeri.tv.ui.StillMarks(row.followed, Modifier.align(Alignment.BottomEnd).padding(8.dp))
         }
         Spacer(Modifier.height(10.dp))
         Text(

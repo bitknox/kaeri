@@ -748,6 +748,19 @@ private fun LazyListScope.accounts(nav: TvNavigator, memory: FocusMemory, first:
                     supporting = accountLine(context, trackers[id]),
                     modifier = (if (index == 0) first else Modifier).remembered(memory, "account/$id"),
                 )
+                // People you follow, per device, under the AniList account while it is signed in.
+                if (id == "anilist" && trackers[id]?.connected == true) {
+                    val view by store.settings.view.collectAsStateWithLifecycle()
+                    val on = store.settings.isOn(SettingKey.SHOW_FOLLOWING, view)
+                    TvListRow(
+                        stringResource(R.string.settings_anilist_following),
+                        onClick = { store.setSwitch(SettingKey.SHOW_FOLLOWING, !on) },
+                        switch = on,
+                        height = 64.dp,
+                        modifier = Modifier.remembered(memory, "account/following"),
+                    )
+                    Quiet(stringResource(R.string.settings_anilist_following_footer))
+                }
             }
             if (trackers.values.any { it.connected && !it.needsReauth }) {
                 val syncing = "sync" in store.accounts.working.collectAsStateWithLifecycle().value.values
