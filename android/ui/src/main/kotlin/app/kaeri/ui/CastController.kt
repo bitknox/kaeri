@@ -19,6 +19,7 @@ import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.SeekableTransitionState
 import androidx.compose.animation.core.Transition
+import androidx.compose.animation.core.VisibilityThreshold
 import androidx.compose.animation.core.animateDp
 import androidx.compose.animation.core.rememberTransition
 import androidx.compose.animation.core.spring
@@ -136,7 +137,12 @@ class CastOrigin {
 /** The morph's layout and transition, for the mini in the bottom bar and the controller over all. */
 @OptIn(ExperimentalSharedTransitionApi::class)
 @Stable
-internal class CastMorph(val layout: SharedTransitionScope, val transition: Transition<Boolean>, val still: Boolean, val origin: CastOrigin) {
+internal class CastMorph(val layout: SharedTransitionScope, val transition: Transition<Boolean>, val still: Boolean, val origin: CastOrigin, private val seeking: () -> Boolean) {
+    /** The surface's flight on the standard spring, or, while a back swipe seeks it, a straight line in time. */
+    val bounds = BoundsTransform { _, _ ->
+        if (seeking()) tween(300, easing = LinearEasing) else spring(dampingRatio = 1f, stiffness = 440f, visibilityThreshold = Rect.VisibilityThreshold)
+    }
+
     /** The mini is in its slot: it plays, or joins again, and the controller has been closed once since. */
     var miniPresent by mutableStateOf(false)
 }
@@ -155,15 +161,6 @@ private const val COVER = "cast-cover" // i18n-skip
 /** How long the controller's status line stays blank as an episode starts. */
 private const val QUIET_FOR = 600L
 
-/** The surface's flight on the standard spring, or, while a back swipe seeks it, a straight line in time. */
-@OptIn(ExperimentalSharedTransitionApi::class)
-private fun surfaceBounds(transition: Transition<Boolean>) = BoundsTransform { _, _ ->
-    if (transition.isSeekingCast()) tween(300, easing = LinearEasing) else spring(dampingRatio = 1f, stiffness = 440f, visibilityThreshold = Rect.VisibilityThreshold)
-}
-
-@android.annotation.SuppressLint("RestrictedApi")
-private fun Transition<*>.isSeekingCast(): Boolean = isSeeking
-
 /**
  * The app's frame with the cast controller over it. [content] places [CastMiniSlot] in its bottom
  * bar; the controller fills the window over everything while it is open, unless [hidden].
@@ -177,6 +174,7 @@ fun CastMorphHost(hidden: Boolean, content: @Composable () -> Unit) {
     val transition = rememberTransition(state, label = "cast controller") // i18n-skip
     val still = app.kaeri.design.rememberAnimationsRemoved()
     val origin = remember { CastOrigin() }
+    var seeking by remember { mutableStateOf(false) }
     LaunchedEffect(open) {
         if (state.targetState != open || state.currentState != open) state.animateTo(open)
     }
@@ -189,7 +187,7 @@ fun CastMorphHost(hidden: Boolean, content: @Composable () -> Unit) {
     val stage = shown?.stage
     val has = stage == CastStage.Starting || stage == CastStage.Playing || session.state == CastSessionState.Playing || (joining != null && last != null)
     SharedTransitionLayout {
-        val morph = remember(this, transition, still) { CastMorph(this, transition, still, origin) }
+        val morph = remember(this, transition, still) { CastMorph(this, transition, still, origin) { seeking } }
         // A controller that opened from a Play button leaves the mini's slot empty until it closes.
         LaunchedEffect(morph, has, open) {
             if (!has) morph.miniPresent = false else if (!open) morph.miniPresent = true
@@ -205,10 +203,13 @@ fun CastMorphHost(hidden: Boolean, content: @Composable () -> Unit) {
     val scope = rememberCoroutineScope()
     PredictiveBackHandler(enabled = open && !hidden) { progress ->
         try {
+            seeking = true
             progress.collect { event -> state.seekTo(event.progress, targetState = false) }
+            seeking = false
             cast.closeCard()
             scope.launch { state.animateTo(false) }
         } catch (e: CancellationException) {
+            seeking = false
             scope.launch { state.animateTo(true) }
             throw e
         }
@@ -239,7 +240,7 @@ fun CastMiniSlot() {
                     Box(
                         Modifier
                             .fillMaxSize()
-                            .then(if (morph.still) Modifier else Modifier.sharedBounds(rememberSharedContentState(SURFACE), this, fadeIn(tween(1)), fadeOut(tween(300, delayMillis = 150)), surfaceBounds(morph.transition), clipInOverlayDuringTransition = OverlayClip(RectangleShape)))
+                            .then(if (morph.still) Modifier else Modifier.sharedBounds(rememberSharedContentState(SURFACE), this, fadeIn(tween(1)), fadeOut(tween(300, delayMillis = 150)), morph.bounds, clipInOverlayDuringTransition = OverlayClip(RectangleShape)))
                             .background(MaterialTheme.colorScheme.surfaceContainerHigh),
                     ) {
                         CastMini(cast, this@AnimatedVisibility, morph)
@@ -270,7 +271,7 @@ private fun CastExpandedLayer(morph: CastMorph) {
                     } else {
                         Modifier.align(Alignment.BottomCenter).windowInsetsPadding(WindowInsets.navigationBars).padding(bottom = 80.dp).fillMaxWidth().height(66.dp)
                     }
-                    Box(anchor.sharedBounds(rememberSharedContentState(SURFACE), this@AnimatedVisibility, fadeIn(tween(1)), fadeOut(tween(1)), surfaceBounds(morph.transition)))
+                    Box(anchor.sharedBounds(rememberSharedContentState(SURFACE), this@AnimatedVisibility, fadeIn(tween(1)), fadeOut(tween(1)), morph.bounds))
                 }
             }
         }
@@ -292,7 +293,7 @@ private fun CastExpandedLayer(morph: CastMorph) {
                                 scope,
                                 enter = fadeIn(tween(150)),
                                 exit = fadeOut(tween(300, delayMillis = 150)),
-                                boundsTransform = surfaceBounds(morph.transition),
+                                boundsTransform = morph.bounds,
                                 resizeMode = SharedTransitionScope.ResizeMode.RemeasureToBounds,
                                 clipInOverlayDuringTransition = OverlayClip(RectangleShape),
                             )
@@ -322,7 +323,7 @@ private fun CastExpandedLayer(morph: CastMorph) {
 private fun Modifier.castCover(scope: AnimatedVisibilityScope, morph: CastMorph): Modifier {
     val radius by morph.transition.animateDp(label = "cover radius") { if (it) 16.dp else 8.dp } // i18n-skip
     val shaped = if (morph.still) this else with(morph.layout) {
-        this@castCover.sharedElement(rememberSharedContentState(COVER), scope, boundsTransform = surfaceBounds(morph.transition))
+        this@castCover.sharedElement(rememberSharedContentState(COVER), scope, boundsTransform = morph.bounds)
     }
     return shaped.clip(RoundedCornerShape(radius))
 }
@@ -700,10 +701,9 @@ private fun CastSeekLine(cast: CastModel, now: FfiNowCard, shown: CastShown, wai
     val time = MaterialTheme.typography.labelMedium.tabular()
     Column(Modifier.padding(top = 12.dp)) {
         val range = 0f..maxOf(duration.toFloat(), 1f)
-        val slider = remember(range) { SliderState(at.toFloat(), 0, range) }
-        if (dragging == null && slider.value != at.toFloat()) slider.value = at.toFloat()
         Slider(
-            state = slider,
+            value = at.toFloat(),
+            valueRange = range,
             onValueChange = { dragging = it },
             onValueChangeFinished = {
                 dragging?.let {
@@ -916,11 +916,10 @@ internal fun CastVolumeRow(cast: CastModel, level: Boolean, muted: Boolean, volu
         var dragging by remember { mutableStateOf<Float?>(null) }
         val at = dragging ?: (volume ?: 0.0).toFloat()
         val volumeWords = Strings.tvSheetVolumeValue(LocalContext.current, at.toInt())
-        val state = remember { SliderState(at, 0, 0f..100f) }
-        if (dragging == null && state.value != at) state.value = at
         TvGlyph(if (muted) Icons.SoundOff else Icons.VolumeDown, muteLabel, enabled = enabled, onClick = cast::toggleMute)
         Slider(
-            state = state,
+            value = at,
+            valueRange = 0f..100f,
             onValueChange = { dragging = it },
             onValueChangeFinished = {
                 dragging?.let { cast.setVolume(it.toDouble()) }
