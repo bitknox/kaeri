@@ -1916,12 +1916,14 @@ internal class SynopsisPage(
     val arrived: () -> Unit = {},
     /** Whether the Go to episode dialog is open, so the page is recorded for the crossfade after it. */
     val asking: Boolean = false,
+    /**
+     * Whether the rows keep a column for the marks: once anyone followed stopped at one of the
+     * episodes, for as long as the page is open, so marks leaving fade out and move nothing.
+     */
+    val marked: Boolean = false,
 ) {
     /** The rows shown: the selected range's, or all of a short series. */
     val rows: List<EpisodeRow> = if (ranges.isEmpty()) listed else rangeRows(listed, ranges[selected])
-
-    /** Whether anyone followed stopped at one of the episodes, so the rows keep a column for the marks. */
-    val marked: Boolean = listed.any { it.followed.isNotEmpty() }
 
     /** The leading watched rows folded into one line; for a long series the engine's count for the range. */
     fun folded(entry: Entry): List<EpisodeRow> {
@@ -1988,7 +1990,9 @@ private fun rememberSynopsisPage(entry: Entry, episodes: List<EpisodeRow>?, befo
             }
         })
     }
-    return SynopsisPage(listed, ranges, selected, { picked = it; landed = null }, outlook, protect, reveals, foldCount, { asking = true }, landed, goal, { goal = null }, asking)
+    var marked by remember(entry.id) { mutableStateOf(false) }
+    if (!marked && listed.any { it.followed.isNotEmpty() }) marked = true
+    return SynopsisPage(listed, ranges, selected, { picked = it; landed = null }, outlook, protect, reveals, foldCount, { asking = true }, landed, goal, { goal = null }, asking, marked)
 }
 
 /**
