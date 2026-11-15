@@ -867,9 +867,14 @@ public sealed partial class ReaderOverlay : UserControl
     /// <summary>A strip settled on another image: a screen reader hears it.</summary>
     internal void StripSettled() => Announce();
 
+    /// <summary>Private mode, or the series' own flag: Private after the line in the chrome.</summary>
+    internal void ShowPrivate() =>
+        chrome.Private(Ctx.Known.Private.On || Reader.View?.Work is { } work && Ctx.Known.Private.SeriesAlways(work));
+
     /// <summary>The place changed: the group's line and the scrubber follow.</summary>
     internal void PositionChanged()
     {
+        ShowPrivate();
         var label = Reader.View?.Chapter.Label ?? "";
         switch (kind)
         {

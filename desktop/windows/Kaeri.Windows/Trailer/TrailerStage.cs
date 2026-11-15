@@ -146,13 +146,13 @@ sealed class TrailerStage
         page.Hear = text => Heard(mine, text);
         page.View.Opacity = style == EmbedStyle.Full || art is not null || flow.Held ? 1 : 0;
         Fit();
-        Log(FfiLogLevel.Debug, $"loading {id}, {Kind}");
+        Log(FfiLogLevel.Debug, $"loading {Privately.Logged(id)}, {Kind}");
         timeout = host.DispatcherQueue.CreateTimer();
         timeout.Interval = GiveUp;
         timeout.IsRepeating = false;
         timeout.Tick += (_, _) =>
         {
-            Log(FfiLogLevel.Warn, $"{id} gave up after {Environment.TickCount64 - started} ms, never playing, {Kind}");
+            Log(FfiLogLevel.Warn, $"{Privately.Logged(id)} gave up after {Environment.TickCount64 - started} ms, never playing, {Kind}");
             var effect = flow.GiveUp();
             if (effect != TrailerEffect.None && style == EmbedStyle.Full)
                 TimedOut?.Invoke();
@@ -194,11 +194,11 @@ sealed class TrailerStage
         var ms = Environment.TickCount64 - started;
         if (message is TrailerMessage.Error error)
         {
-            Log(FfiLogLevel.Warn, $"{id} failed after {ms} ms: error {error.Code}, {Trailers.Meaning(error.Code)}");
+            Log(FfiLogLevel.Warn, $"{Privately.Logged(id)} failed after {ms} ms: error {error.Code}, {Trailers.Meaning(error.Code)}");
             Refused?.Invoke(error.Code);
         }
         else if (message is TrailerMessage.Playing && flow.Phase is TrailerPhase.Loading or TrailerPhase.Paused)
-            Log(FfiLogLevel.Debug, flow.Held ? $"{id} playing after {ms} ms, {Kind}" : $"{id} playing, shown after {ms} ms, {Kind}");
+            Log(FfiLogLevel.Debug, flow.Held ? $"{Privately.Logged(id)} playing after {ms} ms, {Kind}" : $"{Privately.Logged(id)} playing, shown after {ms} ms, {Kind}");
         Apply(flow.Heard(message));
         // It played: no giving up on it now, held or not.
         if (flow.Phase == TrailerPhase.Playing)

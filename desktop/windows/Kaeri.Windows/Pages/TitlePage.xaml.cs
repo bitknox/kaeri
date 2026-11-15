@@ -344,6 +344,7 @@ public sealed partial class TitlePage : Page, IPageKeys
     /// <summary>The title the frame opened this page with; <see cref="id"/> differs once a season is picked here.</summary>
     uint openedWith;
     QueueItem? action;
+    readonly StackPanel privateLine = PrivateUi.Line();
 
     public TitlePage()
     {
@@ -382,6 +383,7 @@ public sealed partial class TitlePage : Page, IPageKeys
         // The page's own key is in the shortcuts list; a tooltip naming it over the whole page is not wanted.
         KeyboardAcceleratorPlacementMode = KeyboardAcceleratorPlacementMode.Hidden;
         KeysForGo();
+        PrivateSlot.Content = privateLine;
         // Heard from the start: what arrives before the page is loaded is not missed.
         ctx.Hear(this, Heard, () =>
         {
@@ -765,7 +767,13 @@ public sealed partial class TitlePage : Page, IPageKeys
                 case Event.Detail d when d.V1.Id == id:
                     Show();
                     break;
+                case Event.Private:
+                case Event.AlwaysPrivate { Title: PrivateTitle.Show shown } when shown.Id == id:
+                case Event.ShowSettings sheet when sheet.V1.Id == id:
+                    ShowPrivate();
+                    break;
                 case Event.Progress p when p.Id == id:
+                    ShowPrivate();
                     // The event carries the rows' watched state, which Known has put in the
                     // table: the rows change in place, with no new listing and no rebuilt list.
                     if (ctx.Known.Entry(id) is { } progressed)
@@ -901,6 +909,7 @@ public sealed partial class TitlePage : Page, IPageKeys
         ctx.Art.Bind(entry.BannerUrl ?? entry.CoverUrl, ShowBanner);
         ShowTitle.Text = entry.Title;
         Secondary.Text = entry.Secondary ?? "";
+        ShowPrivate();
         Secondary.Visibility = entry.Secondary is { Length: > 0 } ? Visibility.Visible : Visibility.Collapsed;
         Meta.Text = Wording.MetaLine(entry);
         if (shownSynopsis != entry.Synopsis)
@@ -1696,6 +1705,17 @@ public sealed partial class TitlePage : Page, IPageKeys
     }
 
     void OnShowSettings(object sender, RoutedEventArgs e) => OpenShowSettings();
+
+    /// <summary>More › Always private: the engine keeps the flag on this device and says it back.</summary>
+    void OnAlwaysPrivate(object sender, RoutedEventArgs e) =>
+        ctx.Send(new Command.SetAlwaysPrivate(new PrivateTitle.Show(id), AlwaysPrivateItem.IsChecked));
+
+    /// <summary>The line under the main action and the menu's check, from what the engine last said.</summary>
+    void ShowPrivate()
+    {
+        PrivateUi.Draw(privateLine, ctx.Known.Private.ShowLine(id));
+        AlwaysPrivateItem.IsChecked = ctx.Known.Private.ShowAlways(id);
+    }
 
     void OnPickSource(object sender, RoutedEventArgs e) => OpenSourcePicker();
 
