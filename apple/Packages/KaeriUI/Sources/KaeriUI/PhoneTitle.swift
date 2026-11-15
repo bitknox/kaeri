@@ -27,8 +27,6 @@ struct PhoneTitle: View {
     @State private var trailerRoom: TitlePage.TrailerRoom?
     /// The page's width and where the floating Back and More end: the video goes below them.
     @State private var trailerPlace = TrailerPlace()
-    /// Scrolled past the point where the video gives way to the art.
-    @State private var scrolledAway = false
     let id: AnilistId
 
     struct TrailerPlace: Equatable {
@@ -258,28 +256,14 @@ struct PhoneTitle: View {
         .onScrollGeometryChange(for: CGFloat.self) { $0.contentOffset.y } action: { [pickers] _, offset in
             pickers.offset = offset
         }
-        // The page never slides over a playing video: past 8 pt the art comes back over it.
-        .onScrollGeometryChange(for: Bool.self) { geometry in
-            geometry.contentOffset.y + geometry.contentInsets.top > TrailerLayout.scrollAway
-        } action: { _, now in
-            scrolledAway = now
-        }
-        .onChange(of: scrolledAway) { _, now in visit.scrolledAway(now) }
-        .onChange(of: TitlePage.TrailerRoom(id: entry.id, room: here), initial: true) {
-            if here, trailerRoom?.id != entry.id { trailerRoom = TitlePage.TrailerRoom(id: entry.id, room: mayPlay) }
-        }
-        .titleTrailer(visit: visit, entry: entry, room: room, mayPlay: mayPlay)
+        .modifier(PhoneTitleTrailer(
+            visit: visit, entry: entry, room: room, here: here, mayPlay: mayPlay, decided: $trailerRoom
+        ))
         .nudgeableScroll()
         .ignoresSafeArea(edges: art.isCompact ? [] : .top)
         .scrollIndicators(.never)
         .background(.ground)
-        // The width and the bar's foot, from a view that keeps to the safe area.
-        .background {
-            Color.clear
-                .onGeometryChange(for: TrailerPlace.self) {
-                    TrailerPlace(width: $0.size.width, barBottom: $0.safeAreaInsets.top)
-                } action: { trailerPlace = $0 }
-        }
+        .background { TrailerPlaceReader(place: $trailerPlace) }
         .unwatchedRotor(store.titles.episodes[id] ?? [], in: rotor)
         .handsOff(title: entry)
         // The main button scrolled away: a capsule of it fades in at the foot (native-ux, iPhone).
@@ -468,6 +452,46 @@ struct PhoneTitle: View {
         .pointerHover()
         // Pointed at, on an iPad in a narrow window, its page and art asked for ahead.
         .onHover { inside in if inside, !season.isThis { store.prefetchArt(season.id) } }
+    }
+}
+
+/// A title page's trailer on iPhone: the room decided once the page is here, the scroll that
+/// fades the art back over the video past 8 pt, and when the visit starts and lets go.
+private struct PhoneTitleTrailer: ViewModifier {
+    let visit: TrailerVisit
+    let entry: Entry
+    let room: Bool
+    let here: Bool
+    let mayPlay: Bool
+    @Binding var decided: TitlePage.TrailerRoom?
+    @State private var scrolledAway = false
+
+    func body(content: Content) -> some View {
+        content
+            // The page never slides over a playing video: past 8 pt the art comes back over it.
+            .onScrollGeometryChange(for: Bool.self) { geometry in
+                geometry.contentOffset.y + geometry.contentInsets.top > TrailerLayout.scrollAway
+            } action: { _, now in
+                scrolledAway = now
+            }
+            .onChange(of: scrolledAway) { _, now in visit.scrolledAway(now) }
+            .onChange(of: TitlePage.TrailerRoom(id: entry.id, room: here), initial: true) {
+                if here, decided?.id != entry.id { decided = TitlePage.TrailerRoom(id: entry.id, room: mayPlay) }
+            }
+            .titleTrailer(visit: visit, entry: entry, room: room, mayPlay: mayPlay)
+    }
+}
+
+/// The page's width and where the floating Back and More end, read by a view that keeps to the
+/// safe area.
+private struct TrailerPlaceReader: View {
+    @Binding var place: PhoneTitle.TrailerPlace
+
+    var body: some View {
+        Color.clear
+            .onGeometryChange(for: PhoneTitle.TrailerPlace.self) {
+                PhoneTitle.TrailerPlace(width: $0.size.width, barBottom: $0.safeAreaInsets.top)
+            } action: { place = $0 }
     }
 }
 
