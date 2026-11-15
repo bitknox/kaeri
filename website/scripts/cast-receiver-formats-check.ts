@@ -208,6 +208,8 @@ interface Case {
 	text?: 'cues' | 'image' | 'typeset';
 	/** Seek here once playing and check it plays on from there. */
 	seek?: number;
+	/** Check it plays on to this time from the start, with the picture moving. */
+	playOn?: number;
 }
 
 const cases: Case[] = [
@@ -233,6 +235,7 @@ const cases: Case[] = [
 	{ name: 'mp4 moov at the end', file: 'mp4-h264-aac.mp4', format: 'mp4', video: 'avc1', codec: 'aac', path: 'mse', seek: 5 },
 	{ name: 'mp4 faststart', file: 'mp4-h264-aac-faststart.mp4', format: 'mp4', video: 'avc1', codec: 'aac', path: 'mse' },
 	{ name: 'mp4 fragmented', file: 'mp4-frag-h264-aac.mp4', format: 'mp4', video: 'avc1', codec: 'aac', path: 'mse', seek: 5 },
+	{ name: 'mp4 720p plays on', file: 'mp4-720p.mp4', format: 'mp4', video: 'avc1', codec: 'aac', path: 'mse', playOn: 8 },
 	{ name: 'mp4 h264 ac3', file: 'mp4-h264-ac3.mp4', format: 'mp4', video: 'avc1', codec: 'ac3', path: 'wasm' },
 	{ name: 'mp4 h264 flac', file: 'mp4-h264-flac.mp4', format: 'mp4', video: 'avc1', codec: 'flac', path: 'mse' },
 	{ name: 'mp4 h264 opus', file: 'mp4-h264-opus.mp4', format: 'mp4', video: 'avc1', codec: 'opus', path: 'mse' },
@@ -248,6 +251,7 @@ const cases: Case[] = [
 	{ name: 'hls ts', file: 'hls-ts/index.m3u8', format: 'hls', video: 'avc1', codec: 'aac', path: 'mse', seek: 6 },
 	{ name: 'hls fmp4 with ac3 rendition', file: 'hls-fmp4/master.m3u8', format: 'hls', video: 'avc1', codec: 'ac3', path: 'wasm', seek: 6 },
 	{ name: 'dash timeline', file: 'dash/manifest.mpd', format: 'dash', video: 'avc1', codec: 'aac', path: 'mse', seek: 6 },
+	{ name: 'dash named hls by the sender', file: 'dash/manifest.mpd', type: 'application/x-mpegurl', format: 'dash', video: 'avc1', codec: 'aac', path: 'mse' },
 	{ name: 'dash numbered eac3', file: 'dash-eac3/manifest.mpd', format: 'dash', video: 'avc1', codec: 'eac3', path: 'wasm' },
 	// A file with no extension or type: read from its bytes
 	{ name: 'sniffed matroska', file: 'stream', type: 'application/octet-stream', format: 'mkv', video: 'avc1', codec: 'aac', path: 'mse' },
@@ -338,6 +342,11 @@ async function playCase(c: Case) {
 	} else if (c.text === 'typeset') {
 		expect(await until('__receiver.typeset.active', 8000), `${label}: typeset by JASSUB`);
 	}
+	if (c.playOn != null) {
+		const on = await until(`document.getElementById('video').currentTime > ${c.playOn}`, (c.playOn + 6) * 1000);
+		const q = await js<{ t: number; f: number }>(`({ t: document.getElementById('video').currentTime, f: document.getElementById('video').getVideoPlaybackQuality().totalVideoFrames })`);
+		expect(on && q.f > c.playOn * 20, `${label}: plays on to ${c.playOn} s with the picture (at ${q.t.toFixed(1)} s, ${q.f} frames, ${JSON.stringify(await stats())}, ${JSON.stringify(await js(`[...Array(document.getElementById("video").buffered.length).keys()].map((i) => [document.getElementById("video").buffered.start(i), document.getElementById("video").buffered.end(i)])`))})`);
+	}
 	if (c.seek != null) {
 		await js(`document.getElementById('video').currentTime = ${c.seek}`);
 		const on = await until(`document.getElementById('video').currentTime > ${c.seek + 0.8} && !document.getElementById('video').seeking`, 10_000);
@@ -393,7 +402,7 @@ async function syncCase() {
 		p = await drift();
 		const t = await time();
 		if (process.env.FORMATS_DEBUG) console.log(JSON.stringify({ target, t, p, s: await stats() }));
-		expect(!!p && Math.abs(p.drift) < 0.02 && Math.abs(p.time - t) < 0.3, `${label}: in step after a seek to ${target} s (${((p?.drift ?? 0) * 1000).toFixed(1)} ms)`);
+		expect(!!p && Math.abs(p.drift) < 0.02 && Math.abs(p.time - t) < 0.3, `${label}: in step after a seek to ${target} s (${((p?.drift ?? 0) * 1000).toFixed(1)} ms, audio at ${p?.time?.toFixed(3)}, video at ${t.toFixed(3)}, gen ${p?.gen}, queued ${p?.queued?.toFixed(2)})`);
 	}
 	p = await drift();
 	const cpu = await js<{ cpu: number; decoded: number; heap: number } | null>('__receiver.formats.current?.pcmCpu() ?? null');
@@ -417,27 +426,81 @@ async function switchCase() {
 	expect(await until(`document.getElementById('video').currentTime > ${t + 1}`, 6000), `${label}: plays on`);
 }
 
-/** A video codec MediaSource can't take is reported as video, naming it. */
+/**
+ * A video codec the TV can't decode is reported at once from the container's codec id, and the
+ * load fails, so its sound never plays alone.
+ */
 async function refusedVideoCase() {
 	const label = 'unplayable video';
-	const file = 'mkv-mpeg2.mkv';
+	const file = 'mkv-mpeg2-aac.mkv';
 	if (!existsSync(join(media, file)))
-		spawnSync('ffmpeg', ['-hide_banner', '-loglevel', 'error', '-y', '-f', 'lavfi', '-i', 'testsrc2=size=320x180:rate=24:duration=3', '-c:v', 'mpeg2video', join(media, file)]);
+		spawnSync('ffmpeg', ['-hide_banner', '-loglevel', 'error', '-y', '-f', 'lavfi', '-i', 'testsrc2=size=320x180:rate=24:duration=10', '-f', 'lavfi', '-i', 'sine=frequency=440:sample_rate=48000:duration=10', '-c:v', 'mpeg2video', '-c:a', 'aac', join(media, file)]);
+	await js('__caf.load({ media: { contentId: "about:blank" } })');
+	// The blank page's own media error comes and goes first.
+	await sleep(1000);
 	await js('__caf.sent.length = 0');
+	const started = Date.now();
 	await js(`__caf.load(${JSON.stringify(request({ name: label, file, format: 'mkv' }))})`);
-	expect(await until(`__caf.sent.some((m) => m.body.type === 'error')`, 8000), `${label}: an error is sent`);
+	expect(await until(`__caf.sent.some((m) => m.body.type === 'error')`, 3000), `${label}: an error is sent`);
+	const ms = Date.now() - started;
 	const e = (await errors())[0];
-	expect(e?.part === 'video' && e?.codec === 'mpeg2', `${label}: part video, codec mpeg2 (${JSON.stringify(e)})`);
+	expect(e?.part === 'video' && e?.codec === 'video:mpeg2', `${label}: part video, codec video:mpeg2 (${JSON.stringify(e)})`);
+	expect(ms < 1500, `${label}: reported before anything plays (${ms} ms)`);
+	expect(await js<boolean>(`__caf.sent.some((m) => m.body.type === 'LOAD_FAILED')`), `${label}: the load fails`);
+	await sleep(2000);
+	const t = await js<number>(`document.getElementById('video').currentTime`);
+	expect(t === 0, `${label}: nothing plays (clock at ${t})`);
+	expect((await js<string>(`document.getElementById('ui').dataset.phase`)) === 'error', `${label}: the error screen shows`);
+}
+
+/** Sound that plays while no video frame comes is a video error within about 3 s. */
+async function silentPictureCase() {
+	const label = 'sound without picture';
+	const file = 'mp4-aac-only.mp4';
+	if (!existsSync(join(media, file)))
+		spawnSync('ffmpeg', ['-hide_banner', '-loglevel', 'error', '-y', '-f', 'lavfi', '-i', 'sine=frequency=440:sample_rate=48000:duration=12', '-c:a', 'aac', join(media, file)]);
+	await js('__caf.sent.length = 0');
+	const r = request({ name: label, file, format: 'mp4' }) as ReturnType<typeof request> & { media: { customData: { kaeri: Record<string, unknown> } } };
+	r.media.customData.kaeri.video = { codec: 'h264', height: 720 };
+	await js(`__caf.load(${JSON.stringify(r)})`);
+	expect(await until(`document.getElementById('video').currentTime > 0.5`, 8000), `${label}: the sound plays`);
+	const from = Date.now();
+	expect(await until(`__caf.sent.some((m) => m.body.type === 'error' && m.body.part === 'video')`, 7000), `${label}: a video error is sent`);
+	const ms = Date.now() - from;
+	const e = (await errors())[0];
+	expect(/sound without picture/.test(String(e?.detail)), `${label}: the error says why (${JSON.stringify(e)})`);
+	expect(ms < 5500, `${label}: within about 3 s of sound (${ms} ms)`);
+}
+
+/** The testing build's status line proves sound on a muted TV, both audio paths. */
+async function debugCase() {
+	for (const c of cases.filter((x) => x.name === 'mkv h264 aac' || x.name === 'mkv h264 ac3')) {
+		const label = `debug status, ${c.name}`;
+		await js(`__caf.load(${JSON.stringify(request(c))})`);
+		await until(`document.getElementById('video').currentTime > 2.5`, 10_000);
+		await sleep(1200);
+		const d = await js<Record<string, number | string | null>>('__kaeriDebug()');
+		expect(d?.audioPath === c.path, `${label}: audio path ${c.path} (${JSON.stringify(d)})`);
+		expect(typeof d?.audioDecoded === 'number' && d.audioDecoded > 0, `${label}: audio decoded (${d?.audioDecoded} ${d?.audioUnit})`);
+		// WebAssembly sound has a level; MediaSource sound shows its decoded bytes alone.
+		if (c.path === 'wasm') expect(typeof d?.level === 'number' && d.level > -40 && d.level <= 0, `${label}: a level for the tone (${d?.level} dBFS)`);
+		else expect(d?.level === null, `${label}: no level for MediaSource sound (${d?.level})`);
+		expect(typeof d?.videoDecoded === 'number' && d.videoDecoded > 24, `${label}: video frames decoded (${d?.videoDecoded})`);
+		const line = await js<string>(`document.getElementById('debug-status')?.textContent ?? ''`);
+		expect(/level (-?\d|silent|\?)/.test(line), `${label}: the line shows on screen (${line.replace('\n', ' | ')})`);
+	}
 }
 
 try {
-	await page('Page.navigate', { url: `${origin}/cast/receiver/` });
+	await page('Page.navigate', { url: `${origin}/cast/receiver/?debug` });
 	if (!(await until('!!window.__receiver?.formats'))) throw new Error('the receiver did not start');
 	await js(`__caf.connect('sender-1', 'Mozilla/5.0 (iPhone)')`);
 	for (const c of cases) if (!only || c.name.includes(only)) await playCase(c);
 	if (!only || 'sync'.includes(only)) await syncCase();
 	if (!only || 'switch'.includes(only)) await switchCase();
 	if (!only || 'refused'.includes(only)) await refusedVideoCase();
+	if (!only || 'silent'.includes(only)) await silentPictureCase();
+	if (!only || 'debug'.includes(only)) await debugCase();
 } finally {
 	await js('__caf.load({ media: { contentId: "about:blank" } })').catch(() => {});
 	ws.close();

@@ -64,9 +64,14 @@ export function startPlayer(video: HTMLVideoElement, hooks: Hooks, formats?: For
 	const E = fw.events.EventType;
 	const M = fw.messages.MessageType;
 	const ended = fw.events.EndedReason ?? {};
-	manager.setMessageInterceptor(M.LOAD, (request: unknown) => {
+	manager.setMessageInterceptor(M.LOAD, async (request: unknown) => {
 		const r = hooks.load(request);
-		return formats ? formats.load(r) : r;
+		if (!formats) return r;
+		const out = await formats.load(r);
+		if (out !== null) return out;
+		// The receiver already sent `error {part: video}`; CAF answers the LOAD as failed, so nothing
+		// plays the sound without the picture.
+		return new fw.messages.ErrorData(fw.messages.ErrorType.LOAD_FAILED);
 	});
 	manager.setMessageInterceptor(M.EDIT_TRACKS_INFO, (request: unknown) => {
 		setTimeout(() => hooks.tracksChanged(), 200);

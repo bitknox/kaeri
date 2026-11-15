@@ -16,7 +16,8 @@ import {
 	type LoadExtras,
 } from './protocol';
 import { Formats } from './formats/receiver';
-import { SilentPicture } from './silent';
+import { DebugStatusLine, debugOn, devLog, forwardErrors } from './debug';
+import { ShownFrames, SilentPicture } from './silent';
 import { Typeset, canTypeset, type Failure } from './typeset';
 
 declare const __BUILD__: string;
@@ -69,6 +70,8 @@ let player: Player | null = null;
 const video = $<HTMLVideoElement>('video');
 const typeset = new Typeset(video, base);
 const silent = new SilentPicture();
+let shown: ShownFrames | null = null;
+let debug: DebugStatusLine | null = null;
 // Files and playlists unpacked on the receiver; their errors count like the player's own.
 const formats = new Formats(video, base, () => (canTypeset() && !S.plainSubs ? typeset : null), (r) => unpackError(r));
 
@@ -111,8 +114,9 @@ function sendError(r: Report) {
 	send(
 		message('error', {
 			part: r.part,
-			// As the receiver names it (`hev1`, `ec-3`, or the engine's own word); left out when unknown.
-			...(r.codec ? { codec: r.codec.split('.')[0] } : {}),
+			// Whole, as the receiver names it (`hev1.1.6.L93.B0`, `ec-3`) or the engine's own word
+			// (`video:h.264 high 10`); left out when unknown.
+			...(r.codec ? { codec: r.codec } : {}),
 			detail: r.detail,
 			fetched: r.fetched,
 			status: r.status,
@@ -311,6 +315,7 @@ function releasePicture() {
 // ---------- Typeset subtitles ----------
 
 function plainSubtitles(reason: 'slow' | Failure) {
+	devLog(`plain subtitles: ${reason}`);
 	S.plainSubs = true;
 	document.documentElement.classList.remove('typeset');
 	void typeset.hide();
@@ -395,6 +400,14 @@ function unpackError(report: Report) {
 	}
 	S.error = report;
 	fatal(report);
+}
+
+/** Whether this load has a picture to watch for: the file has a video track, or the sender says so. */
+function hasVideo(): boolean {
+	const u = formats.current;
+	if (u?.tracks.some((t) => t.kind === 'video')) return true;
+	if (S.extras.video != null) return true;
+	return !u && /^video\//i.test(S.media.type);
 }
 
 function silentPicture() {
@@ -565,14 +578,17 @@ function everySecond() {
 	const at = now();
 	const playing = S.phase === 'playing' && !S.paused && S.bufferingAt == null && !video.seeking;
 	if (typeset.active && typeset.tick(playing)) plainSubtitles('slow');
-	if (S.phase === 'playing') {
+	if ((S.phase === 'playing' || S.phase === 'loading') && hasVideo()) {
+		// The element's own clock, not CAF's state: with no picture CAF can stay in BUFFERING
+		// while the sound plays.
 		const quality = typeof video.getVideoPlaybackQuality === 'function' ? video.getVideoPlaybackQuality() : null;
 		if (
 			silent.check({
 				time: video.currentTime,
 				videoWidth: video.videoWidth,
-				frames: quality ? quality.totalVideoFrames : null,
-				playing,
+				frames: quality ? quality.totalVideoFrames - quality.droppedVideoFrames : null,
+				presented: shown?.count ?? null,
+				playing: !video.paused && !video.seeking && !video.ended,
 			})
 		)
 			void silentPicture();
@@ -589,6 +605,12 @@ function everySecond() {
 
 async function start() {
 	fit();
+	shown = new ShownFrames(video);
+	if (debugOn()) {
+		forwardErrors();
+		debug = new DebugStatusLine(video, formats, () => shown?.count ?? null);
+		(window as unknown as Record<string, unknown>).__kaeriDebug = () => debug?.status ?? null;
+	}
 	addEventListener('resize', fit);
 	addEventListener('keydown', onKey);
 	player = startPlayer(
@@ -633,7 +655,7 @@ async function start() {
 	ready();
 
 	if ((window as unknown as { __cafStub?: boolean }).__cafStub)
-		(window as unknown as Record<string, unknown>).__receiver = { S, render, typeset, plainSubtitles, silent, formats };
+		(window as unknown as Record<string, unknown>).__receiver = { S, render, typeset, plainSubtitles, silent, formats, get debug() { return debug?.status ?? null; } };
 }
 
 void start();

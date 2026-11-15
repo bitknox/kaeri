@@ -5,6 +5,7 @@ import { classify, codecPart, refusedOf } from './errors';
 import { FrameClock, BEHIND_SECONDS } from './frame-clock';
 import { Strings, loadStrings, pickLanguage, type Index, type Pack } from './i18n';
 import { asDevice, deviceFromAgent, message, readExtras, typesetFiles } from './protocol';
+import { debugOn } from './debug';
 import { SilentPicture } from './silent';
 
 const names = { 104: 'LOAD_FAILED', 301: 'MEDIA_SRC_NOT_SUPPORTED', 311: 'HLS_NETWORK_MASTER_PLAYLIST', 315: 'HLS_NETWORK_KEY_LOAD', 905: 'SEGMENT_NETWORK', 102: 'MEDIA_DECODE' };
@@ -158,9 +159,33 @@ describe('silent picture', () => {
 		expect(s.check({ time: 13, videoWidth: 1920, frames: 240, playing: true })).toBe(true);
 	});
 
+	test('shown frames count as picture where decoded frames are not counted', () => {
+		const s = new SilentPicture();
+		for (let i = 0; i < 10; i++) expect(s.check({ time: i, videoWidth: 1920, frames: 0, presented: i * 24, playing: true })).toBe(false);
+		const stuck = (time: number) => s.check({ time, videoWidth: 1920, frames: 0, presented: 216, playing: true });
+		expect([10, 11].map(stuck)).toEqual([false, false]);
+		expect(stuck(12)).toBe(true);
+	});
+
+	test('a size alone is no picture when the TV counts frames', () => {
+		const s = new SilentPicture();
+		const at = (time: number) => s.check({ time, videoWidth: 720, frames: 0, presented: 0, playing: true });
+		expect([0, 1, 2].map(at)).toEqual([false, false, false]);
+		expect(at(3)).toBe(true);
+	});
+
 	test('a paused video is never silent', () => {
 		const s = new SilentPicture();
 		for (let i = 0; i < 10; i++) expect(s.check({ time: 0, videoWidth: 0, frames: 0, playing: false })).toBe(false);
+	});
+});
+
+describe('debug status', () => {
+	test('only the dev receiver or ?debug shows it', () => {
+		const at = (url: string) => debugOn(new URL(url) as unknown as Location);
+		expect(at('https://cast-dev.kaeri.app/')).toBe(true);
+		expect(at('https://kaeri.app/cast/receiver/?debug')).toBe(true);
+		expect(at('https://kaeri.app/cast/receiver/')).toBe(false);
 	});
 });
 

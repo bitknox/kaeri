@@ -1,7 +1,7 @@
 import { describe, expect, test } from 'bun:test';
 import { existsSync } from 'node:fs';
 import { join } from 'node:path';
-import { DecodeTimes, formatOf, sniff } from './engine';
+import { DecodeTimes, formatOf, sniff, videoRefusal } from './engine';
 import { FileSource } from './file-source.test-helper';
 import { Matroska } from './mkv';
 import { Mp4File } from './mp4';
@@ -31,6 +31,17 @@ describe('format detection', () => {
 		expect(sniff(ts)).toBe('ts');
 		expect(sniff(new TextEncoder().encode('#EXTM3U\n#EXT-X-VERSION:3\n'))).toBe('hls');
 		expect(sniff(new TextEncoder().encode('<?xml version="1.0"?>\n<MPD>'))).toBe('dash');
+	});
+});
+
+describe('video the TV can take', () => {
+	test('a codec with no MediaSource form is refused from its codec id', () => {
+		for (const codec of ['mpeg2', 'mpeg4', 'vc1']) {
+			const r = videoRefusal({ id: 1, kind: 'video', codec });
+			expect(r?.part).toBe('video');
+			expect(r?.codec).toBe(`video:${codec}`);
+		}
+		for (const codec of ['h264', 'hevc', 'vp9', 'av1', 'vp8']) expect(videoRefusal({ id: 1, kind: 'video', codec })).toBeNull();
 	});
 });
 

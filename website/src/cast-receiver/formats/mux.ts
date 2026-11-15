@@ -138,6 +138,12 @@ export class Mp4Muxer implements Muxer {
 	private held: Sample | null = null;
 	private lastDuration = 0;
 	private seq = 1;
+	/**
+	 * Ticks added to every decode time, so the earliest (below 0 in files with B-frames) starts at
+	 * 0. The same for every fragment: a decode time that steps back reads as a break to
+	 * MediaSource, which then drops frames up to the next keyframe.
+	 */
+	private shift = 0;
 
 	constructor(
 		private readonly t: Track,
@@ -271,7 +277,9 @@ export class Mp4Muxer implements Muxer {
 			this.lastDuration = d;
 			return d;
 		});
-		const base = Math.max(0, ticks(samples[0].dts));
+		const first = ticks(samples[0].dts);
+		if (first + this.shift < 0) this.shift = -first;
+		const base = first + this.shift;
 		let size = 0;
 		for (const x of samples) size += x.data.length;
 		const w = new Writer();

@@ -23,6 +23,12 @@
 
 	const listeners = {};
 	const interceptors = {};
+	// What a LOAD interceptor returns to fail the load; CAF answers the sender LOAD_FAILED.
+	class ErrorData {
+		constructor(type) {
+			this.type = type;
+		}
+	}
 	const custom = [];
 	const system = {};
 	let video = null;
@@ -128,6 +134,8 @@
 				MessageType: { LOAD: 'LOAD', EDIT_TRACKS_INFO: 'EDIT_TRACKS_INFO' },
 				PlayerState,
 				Command: { ALL_BASIC_MEDIA: 12303 },
+				ErrorType: { LOAD_FAILED: 'LOAD_FAILED' },
+				ErrorData,
 			},
 			system: { EventType: { SENDER_CONNECTED: 'senderconnected' }, MessageType: { JSON: 'JSON' } },
 		},
@@ -144,6 +152,11 @@
 			if (state !== PlayerState.IDLE && !finishedSent) emit(EventType.MEDIA_FINISHED, { endedReason: 'INTERRUPTED' });
 			// CAF waits for an interceptor that returns a promise.
 			const r = interceptors.LOAD ? await interceptors.LOAD(request) : request;
+			if (r instanceof ErrorData) {
+				sent.push({ ns: 'urn:x-cast:com.google.cast.media', to: null, body: { type: r.type } });
+				state = PlayerState.IDLE;
+				return;
+			}
 			finishedSent = false;
 			state = PlayerState.BUFFERING;
 			window.__caf.pending = r;
