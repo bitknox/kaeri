@@ -54,6 +54,9 @@ import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.liveRegion
+import androidx.compose.ui.semantics.onClick
+import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.Placeholder
 import androidx.compose.ui.text.PlaceholderVerticalAlign
 import androidx.compose.ui.text.SpanStyle
@@ -219,9 +222,14 @@ private fun CheckAgainButton(missing: MissingEpisode, view: MissingView, modifie
     val label = if (view.checking) Strings.actionChecking(context) else Strings.actionCheckAgain(context)
     // Compose has no hint of its own: the hint follows the name.
     val described = MissingWords.checkHint(context, missing)?.takeIf { !view.checking }?.let { "$label. $it" } ?: label // i18n-skip
+    val press = { view.page.press(missing.episode) }
     TonalButton(
-        onClick = { view.page.press(missing.episode) },
-        modifier = modifier.clearAndSetSemantics { contentDescription = described },
+        onClick = press,
+        modifier = modifier.clearAndSetSemantics {
+            contentDescription = described
+            role = Role.Button
+            onClick { press(); true }
+        },
     ) {
         Box(contentAlignment = Alignment.Center) {
             Row(Modifier.graphicsLayer { alpha = 1f - busy }, verticalAlignment = Alignment.CenterVertically) {
