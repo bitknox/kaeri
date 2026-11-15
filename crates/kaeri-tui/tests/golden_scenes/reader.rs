@@ -298,10 +298,10 @@ pub(super) fn reader_page_failed(s: &mut Screen) {
     }));
 }
 
-/// Chapter 16 could not open.
+/// Chapter 16 could not open: its source didn't answer in 15 s.
 pub(super) fn reader_chapter_failed(s: &mut Screen) {
     open(s, ImageEngine::drawn_as_blocks(), 2);
-    s.wait(Duration::from_secs(1));
+    s.wait(Duration::from_secs(15));
     s.apply(Event::Reading(ReadingEvent::Failed {
         about: ReadingAbout::Reader,
         failure: ReadingFailure::SourceDown { source: "Home library".into() },

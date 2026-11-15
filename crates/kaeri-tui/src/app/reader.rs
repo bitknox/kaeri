@@ -161,6 +161,8 @@ pub struct Reader {
     pub failures: HashMap<u32, ReadingFailure>,
     /// Why the chapter could not open; the screen says it in place of the page.
     pub chapter_failure: Option<ReadingFailure>,
+    /// How long the open waited before it failed.
+    pub failed_after: Option<Duration>,
     pub end: EndFacts,
     pub notice: Option<ShownNotice>,
     /// The page a jump left, while the engine offers Back to page.
@@ -216,6 +218,7 @@ impl Reader {
             asked_again: HashSet::new(),
             failures: HashMap::new(),
             chapter_failure: None,
+            failed_after: None,
             end: EndFacts::default(),
             notice: None,
             back_to: None,
@@ -821,7 +824,9 @@ impl App {
     /// The chapter could not open, before or after `Opened`: said in place of the page, with
     /// the whole error in Recent messages.
     pub(super) fn reader_failed(&mut self, failure: ReadingFailure) {
+        let now = self.clock.now_instant();
         let Some(reader) = self.reader_mut() else { return };
+        reader.failed_after = reader.opening.map(|since| now.saturating_duration_since(since));
         reader.opening = None;
         reader.wait = None;
         reader.chapter_failure = Some(failure.clone());
@@ -2233,6 +2238,20 @@ pub(super) mod tests {
             a.type_char(ch);
         }
         assert!(a.palette_matches().iter().all(|m| m.0 != Action::ReaderGoToPage));
+    }
+
+    #[test]
+    fn a_source_that_did_not_answer_counts_the_open_s_wait() {
+        let mut a = reading(ReadDirection::RightToLeft, 120, 34);
+        a.clock = crate::clock::Clock::fixed(1_793_000_000, crate::clock::Zone::utc());
+        a.open_chapter(ChapterId("c15".into()));
+        a.clock.advance(Duration::from_secs(15));
+        a.apply(Event::Reading(kaeri_model::reading::ReadingEvent::Failed {
+            about: kaeri_model::reading::ReadingAbout::Reader,
+            failure: ReadingFailure::SourceDown { source: "Home library".into() },
+        }));
+        let reader = a.reader_here().unwrap();
+        assert_eq!(reader.failed_after, Some(Duration::from_secs(15)));
     }
 
     #[test]

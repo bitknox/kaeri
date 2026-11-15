@@ -10,8 +10,8 @@ Kaeri   Harbor Light Recipes · Chapter 14            sources ● 3  ·  anilist
                           ░░░░░░░░░░░░░░░░░░░░░░░░░░░
                           ░░ ▲ ░░░░░░░░░░░░░░░░░░░░░░
                           ░░ Couldn't load page 9 ░░░
-                          ░░ This page didn't     ░░░
-                          ░░ load (error 503).    ░░░
+                          ░░ The source answered  ░░░
+                          ░░ with an error, 503.  ░░░
                           ░░░░░░░░░░░░░░░░░░░░░░░░░░░
                           ░░░░░░░░░░░░░░░░░░░░░░░░░░░
                           ░░░░░░░░░░░░░░░░░░░░░░░░░░░

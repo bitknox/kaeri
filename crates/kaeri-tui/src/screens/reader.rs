@@ -413,7 +413,7 @@ fn chapter_failed(buf: &mut Buffer, app: &App, reader: &Reader, stage: Rect) {
         "  {}",
         t::tui_reader_chapter_failed(&reader.chapter_number().unwrap_or_default())
     );
-    let reason = say(&failure.msg());
+    let reason = chapter_failed_reason(failure, reader.failed_after);
     let room = stage.width.saturating_sub(4) as usize;
     let widest = (1 + heading.cells()).max(3 + reason.cells()).min(room);
     let x = stage.x + (stage.width.saturating_sub(widest as u16)) / 2;
@@ -427,6 +427,24 @@ fn chapter_failed(buf: &mut Buffer, app: &App, reader: &Reader, stage: Rect) {
         p.style(Role::Text).add_modifier(Modifier::BOLD),
     );
     line(buf, x + 3, y + 1, truncate(&reason, room.saturating_sub(3)), p.style(Role::TextDim));
+}
+
+/// Why the chapter could not open, in the board's words where it has them: a source that didn't
+/// answer, with the seconds the open waited once they were worth saying. The engine says which
+/// source but not how long its request ran, so the seconds are the terminal's own count from the
+/// open. Anything else in the engine's words.
+fn chapter_failed_reason(
+    failure: &kaeri_model::reading::ReadingFailure,
+    waited: Option<std::time::Duration>,
+) -> String {
+    use kaeri_model::reading::ReadingFailure;
+    match (failure, waited) {
+        (ReadingFailure::SourceDown { source }, Some(waited)) if waited >= SECONDS_AFTER => {
+            t::tui_reader_no_answer_in(source, waited.as_secs() as i64)
+        }
+        (ReadingFailure::SourceDown { source }, _) => t::tui_reader_no_answer(source),
+        _ => say(&failure.msg()),
+    }
 }
 
 /// Manga with images turned off: why there are no pages, centred.
@@ -827,10 +845,18 @@ fn page_failed(
 ) {
     let p = &app.palette;
     let heading = t::reader_page_failed(i64::from(page) + 1);
-    let reason = say(&failure.msg());
-    let first = match reason.find(". ") {
-        Some(at) => reason[..=at].to_owned(),
-        None => reason,
+    // The board's words for a server's error; anything else, the engine's first sentence.
+    let first = match failure {
+        kaeri_model::reading::ReadingFailure::PageFetch { status } => {
+            t::tui_reader_page_failed_status(i64::from(*status))
+        }
+        _ => {
+            let reason = say(&failure.msg());
+            match reason.find(". ") {
+                Some(at) => reason[..=at].to_owned(),
+                None => reason,
+            }
+        }
     };
     let room = rect.width.saturating_sub(4) as usize;
     let wrap_at = 20.min(room.saturating_sub(2));
@@ -1222,7 +1248,30 @@ fn help(buf: &mut Buffer, app: &App, reader: &Reader, area: Rect) {
 
 #[cfg(test)]
 mod tests {
-    use super::fitting_sentences;
+    use std::time::Duration;
+
+    use kaeri_model::reading::ReadingFailure;
+
+    use super::{chapter_failed_reason, fitting_sentences};
+
+    #[test]
+    fn a_source_that_did_not_answer_says_the_wait_once_it_was_long() {
+        kaeri_i18n::set_language("en");
+        let down = ReadingFailure::SourceDown { source: "Home library".into() };
+        assert_eq!(
+            chapter_failed_reason(&down, Some(Duration::from_secs(15))),
+            "Home library didn't answer. No answer in 15 s."
+        );
+        assert_eq!(
+            chapter_failed_reason(&down, Some(Duration::from_secs(1))),
+            "Home library didn't answer."
+        );
+        assert_eq!(chapter_failed_reason(&down, None), "Home library didn't answer.");
+        assert_eq!(
+            chapter_failed_reason(&ReadingFailure::Offline, None),
+            "You're offline. Downloaded chapters still open."
+        );
+    }
 
     #[test]
     fn a_status_run_keeps_whole_sentences_or_goes() {
