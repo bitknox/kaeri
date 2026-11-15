@@ -22362,11 +22362,81 @@
     "by": "haiku",
     "at": "2026-10-31"
   },
+  "receiver-closing-computer": {
+    "source": "56f3a65787c9",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15",
+    "flags": [
+      "Machine draft of a new Cast receiver line (2026-11-15). A person reviews this translation before it is marked reviewed."
+    ],
+    "back": "Closing in { $seconds } s. Choose an episode on the computer to stay."
+  },
+  "receiver-closing-ipad": {
+    "source": "d999a607e04b",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15",
+    "flags": [
+      "Machine draft of a new Cast receiver line (2026-11-15). A person reviews this translation before it is marked reviewed."
+    ],
+    "back": "Closing in { $seconds } s. Choose an episode on the iPad to stay."
+  },
+  "receiver-closing-iphone": {
+    "source": "7075880a9a25",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15",
+    "flags": [
+      "Machine draft of a new Cast receiver line (2026-11-15). A person reviews this translation before it is marked reviewed."
+    ],
+    "back": "Closing in { $seconds } s. Choose an episode on the iPhone to stay."
+  },
+  "receiver-closing-mac": {
+    "source": "588bc0130a80",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15",
+    "flags": [
+      "Machine draft of a new Cast receiver line (2026-11-15). A person reviews this translation before it is marked reviewed."
+    ],
+    "back": "Closing in { $seconds } s. Choose an episode on the Mac to stay."
+  },
+  "receiver-closing-phone": {
+    "source": "c08bc96db6e5",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15",
+    "flags": [
+      "Machine draft of a new Cast receiver line (2026-11-15). A person reviews this translation before it is marked reviewed."
+    ],
+    "back": "Closing in { $seconds } s. Choose an episode on the phone to stay."
+  },
+  "receiver-closing-tablet": {
+    "source": "5e765d4f92d3",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15",
+    "flags": [
+      "Machine draft of a new Cast receiver line (2026-11-15). A person reviews this translation before it is marked reviewed."
+    ],
+    "back": "Closing in { $seconds } s. Choose an episode on the tablet to stay."
+  },
   "receiver-error": {
     "source": "a8a69b36195c",
     "state": "draft",
     "by": "agent",
     "at": "2026-11-15"
+  },
+  "receiver-error-audio-codec": {
+    "source": "97123cd9b384",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15",
+    "flags": [
+      "Machine draft of a new Cast receiver line (2026-11-15). A person reviews this translation before it is marked reviewed."
+    ],
+    "back": "This TV can't play { $codec } audio."
   },
   "receiver-error-hint-computer": {
     "source": "e378e62b70a9",
@@ -22409,6 +22479,16 @@
     "state": "draft",
     "by": "agent",
     "at": "2026-11-15"
+  },
+  "receiver-error-video-codec": {
+    "source": "a8a185c1467a",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15",
+    "flags": [
+      "Machine draft of a new Cast receiver line (2026-11-15). A person reviews this translation before it is marked reviewed."
+    ],
+    "back": "This TV can't play { $codec } video."
   },
   "receiver-finished": {
     "source": "3e6a55ebb668",

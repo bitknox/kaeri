@@ -1,18 +1,22 @@
 /* Kaeri's Cast receiver. Drawn at 1280 x 720 CSS px, the viewport a 1080p TV gives the page;
-   #ui is scaled to other viewports. Dark by design: the TV is the only light in the room. */
+   #ui is scaled to other viewports. Dark by design, in the website's dark colours
+   (website/src/styles/site.css): the TV is the only light in the room. */
 
 :root {
-	--ground: #0e1022;
+	--ground: #10131f;
 	--text: #e4e0d6;
-	--muted: #a3a9c4;
+	--muted: #9298b5;
+	--amber: #f2a64b;
+	--vermilion: #e06b54;
 	--card: rgba(34, 38, 56, 0.94);
 	--card-edge: rgba(228, 224, 214, 0.08);
-	--accent: #7fc7d9;
-	--shade: 10, 12, 26;
+	--shade: 16, 19, 31;
 	--ui: 'Inter Variable', Inter, 'Zen Kaku Gothic New', system-ui, sans-serif;
 	--show: 'Zen Kaku Gothic New', 'Inter Variable', sans-serif;
 	--in: 200ms cubic-bezier(0, 0, 0.58, 1);
 	--out: 300ms cubic-bezier(0.42, 0, 1, 1);
+	/* The standard spring, 360 ms with no bounce, as a curve. */
+	--std: 360ms cubic-bezier(0.2, 0.8, 0.2, 1);
 	--s: 1;
 	color-scheme: dark;
 }
@@ -55,6 +59,12 @@ body {
 	background: #000;
 }
 /* JASSUB draws on the canvas it puts after the video; the WebVTT twin stays loaded but hidden. */
+/* Plain subtitles in the TV's face, on a soft box. */
+#video::cue {
+	font-family: var(--ui);
+	font-weight: 500;
+	background: rgba(0, 0, 0, 0.62);
+}
 html.typeset #video::cue {
 	visibility: hidden;
 }
@@ -82,15 +92,21 @@ html.typeset #video::cue {
 	transform-origin: 0 0;
 	transform: translate(var(--x, 0), var(--y, 0)) scale(var(--s));
 	pointer-events: none;
+	overflow: hidden;
 }
 
-/* Everything that comes and goes crossfades. */
+/* Everything that comes and goes crossfades; nothing fades through an empty screen. A layer
+   that has faded out leaves the compositor's work. */
 #ui > * {
 	opacity: 0;
-	transition: opacity var(--out);
+	visibility: hidden;
+	transition:
+		opacity var(--out),
+		visibility 0s linear 300ms;
 }
 #ui > .on {
 	opacity: 1;
+	visibility: visible;
 	transition: opacity var(--in);
 }
 .layer {
@@ -99,6 +115,25 @@ html.typeset #video::cue {
 	right: 0;
 	bottom: 0;
 	left: 0;
+}
+
+/* Ready's city at dusk: a gradient sky that stands in until src/cast-receiver/city.ts has its
+   first drawing, and two canvases that take turns, one fading in over the other. Nothing here
+   runs an animation of its own. The city is its own stacking context, so the canvases' order stays
+   inside it and every later layer, the black one included, covers them. */
+#city {
+	isolation: isolate;
+}
+#city .sky,
+#city canvas {
+	position: absolute;
+	left: 0;
+	top: 0;
+	width: 1280px;
+	height: 720px;
+}
+#city canvas {
+	opacity: 0;
 }
 
 #art img {
@@ -112,30 +147,27 @@ html.typeset #video::cue {
 }
 
 #dim {
-	background: rgba(var(--shade), var(--dim, 0.45));
+	background: rgb(var(--shade));
+}
+#dim.on {
+	opacity: var(--dim, 0.45);
+}
+
+#black {
+	background: #000;
 }
 
 .wm {
 	font-family: var(--show);
-	font-weight: 700;
-	letter-spacing: 0.02em;
+	font-weight: 500;
+	letter-spacing: -0.03em;
 	color: var(--text);
 }
-.tt {
+.show {
 	font-family: var(--show);
-	font-weight: 700;
-	font-size: 40px;
-	line-height: 48px;
+	font-weight: 500;
+	letter-spacing: -0.01em;
 	overflow-wrap: anywhere;
-}
-.mark {
-	position: absolute;
-	display: flex;
-	align-items: center;
-	gap: 10px;
-	font-size: 20px;
-	line-height: 26px;
-	color: var(--muted);
 }
 .card {
 	position: absolute;
@@ -143,162 +175,254 @@ html.typeset #video::cue {
 	background: var(--card);
 	box-shadow: inset 0 0 0 1px var(--card-edge);
 }
-.rspin {
-	box-sizing: border-box;
-	display: block;
-	width: 40px;
-	height: 40px;
-	border-radius: 50%;
-	border: 4px solid rgba(228, 224, 214, 0.18);
-	border-top-color: var(--text);
-	animation: spin 0.9s linear infinite;
+
+/* Four round lights stepping in turn, amber like progress: the receiver's only wait sign. */
+.lights {
+	display: inline-flex;
+	gap: 6px;
+	flex: none;
 }
-@keyframes spin {
-	to {
-		transform: rotate(360deg);
+.lights i {
+	position: relative;
+	display: block;
+	width: 10px;
+	height: 10px;
+	border-radius: 50%;
+	background: rgba(228, 224, 214, 0.2);
+}
+.lights i::after {
+	content: '';
+	position: absolute;
+	inset: 0;
+	border-radius: 50%;
+	background: var(--amber);
+	opacity: 0;
+	animation: light 1.2s steps(1, end) infinite;
+}
+.lights i:nth-child(2)::after {
+	animation-delay: 0.3s;
+}
+.lights i:nth-child(3)::after {
+	animation-delay: 0.6s;
+}
+.lights i:nth-child(4)::after {
+	animation-delay: 0.9s;
+}
+/* Once a second where the wait is long, and under Reduce Motion. */
+html.still .lights i::after,
+#gone .lights i::after {
+	animation-duration: 4s;
+}
+html.still .lights i:nth-child(2)::after,
+#gone .lights i:nth-child(2)::after {
+	animation-delay: 1s;
+}
+html.still .lights i:nth-child(3)::after,
+#gone .lights i:nth-child(3)::after {
+	animation-delay: 2s;
+}
+html.still .lights i:nth-child(4)::after,
+#gone .lights i:nth-child(4)::after {
+	animation-delay: 3s;
+}
+/* Lights that can't be seen don't run. */
+#ui > :not(.on) .lights i::after,
+#starting:not(.on) .lights i::after {
+	animation: none;
+}
+@keyframes light {
+	0% {
+		opacity: 1;
+	}
+	25% {
+		opacity: 0;
+	}
+	100% {
+		opacity: 0;
 	}
 }
 
-/* Ready: the wordmark and one line, drifting a few pixels a minute against burn-in. */
+/* Ready: the name and one line top left, clear of the moon and stars, drifting a few pixels a
+   minute against burn-in. */
 #ready {
 	position: absolute;
-	left: 0;
-	right: 0;
-	top: 300px;
-	text-align: center;
+	left: 96px;
+	top: 84px;
 }
 #ready .wm {
-	font-size: 72px;
-	line-height: 84px;
+	font-size: 80px;
+	line-height: 80px;
 }
 #ready .line {
+	position: relative;
 	margin-top: 18px;
+	width: 1000px;
+	height: 34px;
 	font-size: 26px;
 	line-height: 34px;
 	color: var(--muted);
+}
+#ready .line span {
+	position: absolute;
+	left: 0;
+	top: 0;
+	white-space: nowrap;
+	font-variant-numeric: tabular-nums;
 	opacity: 0;
+	transition: opacity var(--out);
+}
+#ready .line span.on {
+	opacity: 1;
 	transition: opacity var(--in);
 }
-#ready .line.on {
-	opacity: 1;
-}
-.drift {
-	animation: drift 1440s linear infinite;
-}
-@keyframes drift {
-	0% { transform: translate(0, 0); }
-	25% { transform: translate(36px, -18px); }
-	50% { transform: translate(0, -36px); }
-	75% { transform: translate(-36px, -18px); }
-	100% { transform: translate(0, 0); }
-}
 
-/* The overlay: the show, the episode, the seek line and times. While starting, the line and
-   times give way to Starting. */
-#ov .scrim {
+/* The overlay: a flat band of ground at 80 %, the show, the episode, and the seek line and times.
+   While starting, the line and times give way to Starting and the lights, with no band. */
+#ov .band {
 	position: absolute;
 	left: 0;
 	right: 0;
 	bottom: 0;
-	height: 300px;
-	background: linear-gradient(to top, rgba(var(--shade), 0.88), rgba(var(--shade), 0));
+	height: 236px;
+	background: rgba(var(--shade), 0.8);
+	transition: opacity var(--in);
+}
+#ui[data-phase='loading'] #ov .band {
+	opacity: 0;
+	transition: opacity var(--out);
 }
 #ov .ov {
 	position: absolute;
-	left: 64px;
-	right: 64px;
+	left: 96px;
+	right: 96px;
 	bottom: 48px;
 	display: flex;
 	flex-direction: column;
-	gap: 10px;
 }
-#ov .el {
-	font-size: 22px;
-	line-height: 30px;
-	color: var(--muted);
+#ov .show {
+	font-size: 40px;
+	line-height: 48px;
 }
-#ov .rsk {
+#ov .ep {
+	margin-top: 4px;
+	font-size: 24px;
+	line-height: 32px;
+	font-weight: 500;
+}
+#ov .row {
+	position: relative;
+	height: 56px;
+	margin-top: 18px;
+}
+#ov .row > div {
+	position: absolute;
+	left: 0;
+	right: 0;
+	top: 0;
+	transition: opacity var(--in);
+}
+#ov .seek {
 	position: relative;
 	height: 6px;
 	border-radius: 3px;
 	background: rgba(228, 224, 214, 0.22);
-	margin-top: 14px;
+	margin-top: 6px;
+	overflow: hidden;
 }
-#ov .rsk i {
+#ov .seek i {
 	position: absolute;
 	left: 0;
 	top: 0;
 	bottom: 0;
+	width: 100%;
 	border-radius: 3px;
-	background: var(--text);
-	width: 0;
+	background: var(--amber);
+	transform-origin: 0 0;
+	transform: scaleX(0);
 }
-#ov .rtimes {
+#ov .times {
 	display: flex;
 	justify-content: space-between;
-	font-size: 20px;
-	line-height: 26px;
-	color: var(--muted);
+	margin-top: 12px;
+	font-size: 22px;
+	line-height: 28px;
+	color: rgba(228, 224, 214, 0.8);
 	font-variant-numeric: tabular-nums;
 }
 #starting {
-	position: static;
-	margin-top: 18px;
-	opacity: 0;
-	transition: opacity var(--in);
-}
-#starting .rspin {
-	width: 28px;
-	height: 28px;
-	border-width: 3px;
-}
-#starting.on {
-	opacity: 1;
+	display: flex;
+	align-items: center;
+	gap: 18px;
+	font-size: 24px;
+	line-height: 32px;
+	height: 32px;
 }
 #ui[data-phase='loading'] #ov-bar,
-#ui[data-phase='loading'] #ov-times {
-	display: none;
-}
 #ui:not([data-phase='loading']) #starting {
-	display: none;
+	opacity: 0;
+	transition: opacity var(--out);
 }
 
 #paused {
-	left: 64px;
-	top: 48px;
-	color: var(--text);
-	font-size: 26px;
-	line-height: 34px;
+	position: absolute;
+	left: 96px;
+	top: 64px;
+	display: flex;
+	align-items: center;
 	gap: 14px;
+	font-size: 28px;
+	line-height: 36px;
+	font-weight: 500;
 }
 
-#spin {
-	position: absolute;
-	left: 612px;
-	top: 332px;
-	width: 56px;
-	height: 56px;
-}
 #waiting {
-	left: 64px;
-	bottom: 48px;
+	left: 96px;
+	bottom: 64px;
+	padding: 14px 22px;
+	display: flex;
+	align-items: center;
+	gap: 18px;
 	font-size: 24px;
 	line-height: 30px;
 }
+#waiting-text {
+	font-variant-numeric: tabular-nums;
+	white-space: nowrap;
+	opacity: 0;
+	transition: opacity var(--out);
+}
+#waiting-text.on {
+	opacity: 1;
+	transition: opacity var(--in);
+}
+#waiting-text:empty {
+	display: none;
+}
 
 #upnext {
-	right: 64px;
+	right: 96px;
 	bottom: 56px;
 	width: 404px;
 	padding: 18px;
 	display: flex;
 	flex-direction: column;
-	gap: 14px;
+}
+#ui > #upnext.on {
+	transition: opacity var(--std), transform var(--std);
 }
 /* Subtitles take the bottom fifth of the picture: two lines and their margin. With subtitles on,
    the card stands clear of them. */
 #upnext.over-subs {
 	bottom: 168px;
+}
+/* With the overlay up, the card clears the band. When the lifted subtitles show as well, it also
+   clears them and sizes down so its top stays on the screen. */
+#upnext.over-band {
+	transform: translateY(-204px);
+}
+#upnext.over-band.over-subs {
+	transform-origin: 100% 100%;
+	transform: translateY(-164px) scale(0.84);
 }
 #upnext .still,
 #finished .still {
@@ -320,20 +444,39 @@ html.typeset #video::cue {
 .still img[src=''] {
 	visibility: hidden;
 }
+#upnext .track {
+	position: relative;
+	height: 4px;
+	border-radius: 2px;
+	background: rgba(228, 224, 214, 0.22);
+	margin-top: 16px;
+	overflow: hidden;
+}
+#upnext .track i {
+	position: absolute;
+	left: 0;
+	top: 0;
+	bottom: 0;
+	width: 100%;
+	background: var(--amber);
+	transform-origin: 0 0;
+	transform: scaleX(0);
+}
 #upnext .count {
+	margin-top: 14px;
 	font-size: 22px;
 	line-height: 28px;
-	color: var(--accent);
 	font-variant-numeric: tabular-nums;
 }
-#upnext .tt {
-	font-size: 30px;
-	line-height: 38px;
+#upnext .title {
+	margin-top: 4px;
+	font-size: 28px;
+	line-height: 36px;
+	font-weight: 600;
+	overflow-wrap: anywhere;
 }
 
-#skipped {
-	right: 64px;
-	top: 48px;
+.note {
 	padding: 14px 22px;
 	display: flex;
 	align-items: center;
@@ -341,56 +484,59 @@ html.typeset #video::cue {
 	font-size: 24px;
 	line-height: 30px;
 }
-
+#skipped {
+	right: 96px;
+	top: 64px;
+}
 #plain {
-	left: 64px;
-	top: 48px;
-	padding: 14px 22px;
-	font-size: 22px;
-	line-height: 28px;
-	color: var(--muted);
+	left: 96px;
+	top: 64px;
 }
 
-#gone {
-	left: 290px;
-	right: 290px;
-	top: 250px;
-	padding: 36px 44px;
+/* Waiting for the device and Couldn't play: a block of text on the held picture or the art, no
+   card, drifting against burn-in. */
+.msg {
+	position: absolute;
+	left: 96px;
+	top: 228px;
+	width: 1000px;
 	display: flex;
 	flex-direction: column;
-	gap: 12px;
+	align-items: flex-start;
+	gap: 10px;
+}
+.msg .lights {
+	margin-bottom: 14px;
+}
+.msg .title {
+	display: flex;
 	align-items: center;
-	text-align: center;
-}
-#gone .tt {
-	font-family: var(--ui);
+	gap: 18px;
+	font-size: 40px;
+	line-height: 48px;
 	font-weight: 600;
-	font-size: 36px;
-	line-height: 44px;
 }
-#gone .hint,
-#error .show,
-#error .hint {
-	font-size: 24px;
-	line-height: 32px;
+.msg .title svg {
+	flex: none;
+	color: var(--vermilion);
 }
-#gone .hint,
-#error .show {
+.msg .show {
+	font-size: 28px;
+	line-height: 36px;
 	color: var(--muted);
 }
-
-#error {
-	left: 240px;
-	right: 240px;
-	top: 230px;
-	padding: 40px 44px;
-	display: flex;
-	flex-direction: column;
-	gap: 14px;
+.msg .reason {
+	margin-top: 14px;
+	font-size: 26px;
+	line-height: 34px;
 }
-#error .tt {
-	font-size: 36px;
-	line-height: 44px;
+.msg .hint {
+	font-size: 26px;
+	line-height: 34px;
+	color: var(--muted);
+}
+.msg > div:empty {
+	display: none;
 }
 
 #finished {
@@ -399,6 +545,7 @@ html.typeset #video::cue {
 	right: 0;
 	bottom: 0;
 	left: 0;
+	background: var(--ground);
 }
 #finished .still {
 	position: absolute;
@@ -410,26 +557,46 @@ html.typeset #video::cue {
 }
 #finished .text {
 	position: absolute;
-	left: 700px;
-	top: 250px;
+	left: 704px;
+	top: 262px;
 	right: 96px;
 	display: flex;
 	flex-direction: column;
-	gap: 12px;
+	gap: 10px;
+}
+#finished .show {
+	font-size: 40px;
+	line-height: 48px;
 }
 #finished .line {
 	font-size: 28px;
 	line-height: 36px;
 }
-#finished .mark {
-	right: 56px;
-	bottom: 40px;
-	font-size: 28px;
-	line-height: 34px;
+#finished .wm {
+	position: absolute;
+	right: 96px;
+	bottom: 64px;
+	font-size: 30px;
+	line-height: 36px;
+	letter-spacing: -0.01em;
+	color: var(--muted);
 }
-
-@media (prefers-reduced-motion: reduce) {
-	.rspin {
-		animation-duration: 2.4s;
-	}
+/* Finished gives way to Ready on the standard spring. */
+#ui[data-phase='idle'] > #finished,
+#ui[data-phase='idle'] > #city.on,
+#ui[data-phase='idle'] > #ready.on {
+	transition:
+		opacity var(--std),
+		visibility 0s linear 360ms;
+}
+#ui[data-phase='idle'] > #city.on,
+#ui[data-phase='idle'] > #ready.on {
+	transition: opacity var(--std);
+}
+/* At launch the name follows the sky by 200 ms. */
+html.launch #ui > #ready.on {
+	transition: opacity var(--in) 200ms;
+}
+html.launch #ui > #city.on {
+	transition: opacity var(--in);
 }

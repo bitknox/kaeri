@@ -1,10 +1,59 @@
 {
   "messages": {
+    "receiver-closing-computer": [
+      "Ditutup dalam ",
+      {
+        "arg": "seconds"
+      },
+      " dtk. Pilih episode di komputer agar tetap terbuka."
+    ],
+    "receiver-closing-ipad": [
+      "Ditutup dalam ",
+      {
+        "arg": "seconds"
+      },
+      " dtk. Pilih episode di iPad agar tetap terbuka."
+    ],
+    "receiver-closing-iphone": [
+      "Ditutup dalam ",
+      {
+        "arg": "seconds"
+      },
+      " dtk. Pilih episode di iPhone agar tetap terbuka."
+    ],
+    "receiver-closing-mac": [
+      "Ditutup dalam ",
+      {
+        "arg": "seconds"
+      },
+      " dtk. Pilih episode di Mac agar tetap terbuka."
+    ],
+    "receiver-closing-phone": [
+      "Ditutup dalam ",
+      {
+        "arg": "seconds"
+      },
+      " dtk. Pilih episode di ponsel agar tetap terbuka."
+    ],
+    "receiver-closing-tablet": [
+      "Ditutup dalam ",
+      {
+        "arg": "seconds"
+      },
+      " dtk. Pilih episode di tablet agar tetap terbuka."
+    ],
     "receiver-error": [
       "Tidak dapat memutar episode ",
       {
         "arg": "episode"
       }
+    ],
+    "receiver-error-audio-codec": [
+      "TV ini tidak dapat memutar audio ",
+      {
+        "arg": "codec"
+      },
+      "."
     ],
     "receiver-error-hint-computer": [
       "Pilih sumber lain di komputer."
@@ -26,6 +75,13 @@
     ],
     "receiver-error-unnumbered": [
       "Tidak dapat memutar episode ini"
+    ],
+    "receiver-error-video-codec": [
+      "TV ini tidak dapat memutar video ",
+      {
+        "arg": "codec"
+      },
+      "."
     ],
     "receiver-finished": [
       "Episode ",

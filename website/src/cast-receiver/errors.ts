@@ -67,6 +67,39 @@ export function codecPart(codec: string): 'video' | 'audio' | null {
 	return null;
 }
 
+/** Names people know for the codecs the receiver reports, by the id's first part. */
+const CODEC_NAMES: [RegExp, string][] = [
+	[/^(avc[13]\.6e|h\.?264 high 10)/, 'H.264 High 10'],
+	[/^(avc[13]|h\.?264)/, 'H.264'],
+	[/^(hvc1|hev1|hevc|h\.?265|dvh1|dvhe)/, 'HEVC'],
+	[/^(av01|av1)/, 'AV1'],
+	[/^(vp09|vp9)/, 'VP9'],
+	[/^vp0?8/, 'VP8'],
+	[/^(mp2v|mpeg-?2)/, 'MPEG-2'],
+	[/^(mp4v|mpeg-?4)/, 'MPEG-4'],
+	[/^(wvc1|vc-?1)/, 'VC-1'],
+	[/^(ec-3|eac-?3|e-ac-?3)/, 'Dolby Digital Plus'],
+	[/^(ac-?3)/, 'Dolby Digital'],
+	[/^(mlpa|truehd)/, 'Dolby TrueHD'],
+	[/^(dts|dtsc|dtse|dtsh|dtsl)/, 'DTS'],
+	[/^(mp4a|aac)/, 'AAC'],
+	[/^(\.?mp3)/, 'MP3'],
+	[/^opus/, 'Opus'],
+	[/^flac/, 'FLAC'],
+	[/^vorbis/, 'Vorbis'],
+	[/^alac/, 'ALAC'],
+];
+
+/**
+ * The name the Couldn't play screen gives a codec the receiver reported (`mp2v`, `hev1.1.6.L93.B0`,
+ * `video:mpeg2`, `ac-3`), or null when it has none and the line is left out.
+ */
+export function codecLabel(codec: string | null | undefined): string | null {
+	if (!codec) return null;
+	const id = codec.trim().toLowerCase().replace(/^(video|audio):/, '');
+	return CODEC_NAMES.find(([re]) => re.test(id))?.[1] ?? null;
+}
+
 /** Shaka's request types, from its NetworkingEngine. */
 const REQUEST_MANIFEST = 0;
 const REQUEST_SEGMENT = 1;

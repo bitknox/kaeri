@@ -1,10 +1,59 @@
 {
   "messages": {
+    "receiver-closing-computer": [
+      "Stängs om ",
+      {
+        "arg": "seconds"
+      },
+      " s. Välj ett avsnitt på datorn för att stanna."
+    ],
+    "receiver-closing-ipad": [
+      "Stängs om ",
+      {
+        "arg": "seconds"
+      },
+      " s. Välj ett avsnitt på iPaden för att stanna."
+    ],
+    "receiver-closing-iphone": [
+      "Stängs om ",
+      {
+        "arg": "seconds"
+      },
+      " s. Välj ett avsnitt på iPhonen för att stanna."
+    ],
+    "receiver-closing-mac": [
+      "Stängs om ",
+      {
+        "arg": "seconds"
+      },
+      " s. Välj ett avsnitt på Macen för att stanna."
+    ],
+    "receiver-closing-phone": [
+      "Stängs om ",
+      {
+        "arg": "seconds"
+      },
+      " s. Välj ett avsnitt på telefonen för att stanna."
+    ],
+    "receiver-closing-tablet": [
+      "Stängs om ",
+      {
+        "arg": "seconds"
+      },
+      " s. Välj ett avsnitt på surfplattan för att stanna."
+    ],
     "receiver-error": [
       "Det gick inte att spela avsnitt ",
       {
         "arg": "episode"
       }
+    ],
+    "receiver-error-audio-codec": [
+      "Den här tv:n kan inte spela upp ",
+      {
+        "arg": "codec"
+      },
+      "-ljud."
     ],
     "receiver-error-hint-computer": [
       "Välj en annan källa på datorn."
@@ -26,6 +75,13 @@
     ],
     "receiver-error-unnumbered": [
       "Det gick inte att spela avsnittet"
+    ],
+    "receiver-error-video-codec": [
+      "Den här tv:n kan inte spela upp ",
+      {
+        "arg": "codec"
+      },
+      "-video."
     ],
     "receiver-finished": [
       "Avsnitt ",
