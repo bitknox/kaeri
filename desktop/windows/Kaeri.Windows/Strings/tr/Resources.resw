@@ -68,6 +68,15 @@
   <data name="NoticeCastLost" xml:space="preserve">
     <value>{name} ile bağlantı koptu, bu yüzden yayınlama durdu.</value>
   </data>
+  <data name="NoticeCastSegment" xml:space="preserve">
+    <value>{name} yayını alamaz oldu: kaynak, bölümün bir kısmı için yanıt vermedi. Başka bir kaynak deneyin.</value>
+  </data>
+  <data name="NoticeCastLostStream" xml:space="preserve">
+    <value>{name}, bu cihazdan gelen yayını kaybetti. İkisinin de aynı ağda olduğundan emin olun.</value>
+  </data>
+  <data name="NoticeCastSubtitlesPlain" xml:space="preserve">
+    <value>{name} üzerinde altyazılar düz metin olarak gösteriliyor. Biçimli altyazılar bu TV için fazla ağır geldi.</value>
+  </data>
   <data name="NoticeCastNoDevice" xml:space="preserve">
     <value>Seçilen TV artık ağda değil.</value>
   </data>

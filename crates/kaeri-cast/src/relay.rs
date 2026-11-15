@@ -390,6 +390,12 @@ async fn connection(socket: TcpStream, shared: &Shared) -> std::io::Result<()> {
     {
         *lock(&shared.last_request) = Instant::now();
         shared.requests.fetch_add(1, Ordering::Relaxed);
+        tracing::debug!(
+            method = %request.method,
+            path = request.target.split('?').next().unwrap_or_default(),
+            range = request.range.as_deref().unwrap_or("all"),
+            "relay asked"
+        );
         let (status, keep) = answer(&request, shared, &mut write).await?;
         tracing::debug!(method = %request.method, status, "relayed");
         if request.close || !keep {

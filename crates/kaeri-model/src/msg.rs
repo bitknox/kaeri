@@ -33,6 +33,12 @@ pub enum Msg {
     NoticeCastNotSameNetwork { name: String },
     /// The TV stopped answering mid-cast. The name is the TV's own.
     NoticeCastLost { name: String },
+    /// Kaeri's receiver on the TV couldn't get part of the episode from the source mid-play, so the cast stopped. The card offers Choose source and Play here. The name is the TV's own.
+    NoticeCastSegment { name: String },
+    /// The TV stopped reaching this device, which hands it the stream, mid-episode. The card offers Try again and Play here. The name is the TV's own.
+    NoticeCastLostStream { name: String },
+    /// Shown once per TV, the first time it can't keep up with styled subtitles and switches to plain ones. Nothing else changes and the episode plays on. The name is the TV's own.
+    NoticeCastSubtitlesPlain { name: String },
     /// The TV picked to cast to has left the network.
     NoticeCastNoDevice,
     /// This build of the app has no casting.
@@ -484,6 +490,9 @@ impl Msg {
             Self::NoticeCastTakenOver { .. } => "notice-cast-taken-over",
             Self::NoticeCastNotSameNetwork { .. } => "notice-cast-not-same-network",
             Self::NoticeCastLost { .. } => "notice-cast-lost",
+            Self::NoticeCastSegment { .. } => "notice-cast-segment",
+            Self::NoticeCastLostStream { .. } => "notice-cast-lost-stream",
+            Self::NoticeCastSubtitlesPlain { .. } => "notice-cast-subtitles-plain",
             Self::NoticeCastNoDevice => "notice-cast-no-device",
             Self::NoticeCastUnavailable => "notice-cast-unavailable",
             Self::CastPhaseStarting { .. } => "cast-phase-starting",
@@ -718,6 +727,9 @@ impl Msg {
             Self::NoticeCastTakenOver { name } => vec![("name", Value::Text(name.clone()))],
             Self::NoticeCastNotSameNetwork { name } => vec![("name", Value::Text(name.clone()))],
             Self::NoticeCastLost { name } => vec![("name", Value::Text(name.clone()))],
+            Self::NoticeCastSegment { name } => vec![("name", Value::Text(name.clone()))],
+            Self::NoticeCastLostStream { name } => vec![("name", Value::Text(name.clone()))],
+            Self::NoticeCastSubtitlesPlain { name } => vec![("name", Value::Text(name.clone()))],
             Self::NoticeCastNoDevice => Vec::new(),
             Self::NoticeCastUnavailable => Vec::new(),
             Self::CastPhaseStarting { name } => vec![("name", Value::Text(name.clone()))],

@@ -13,6 +13,9 @@
     <string name="notice_cast_taken_over">Otro dispositivo inició algo en %1$s, así que se detuvo la transmisión.</string>
     <string name="notice_cast_not_same_network">Este dispositivo no está en la red de %1$s, o llega a ella por una VPN. Conecta ambos a la misma red para transmitir.</string>
     <string name="notice_cast_lost">Se perdió la conexión con %1$s, así que se detuvo la transmisión.</string>
+    <string name="notice_cast_segment">%1$s dejó de recibir la transmisión: la fuente no respondió para una parte del episodio. Prueba con otra fuente.</string>
+    <string name="notice_cast_lost_stream">%1$s perdió la transmisión de este dispositivo. Comprueba que ambos estén en la misma red.</string>
+    <string name="notice_cast_subtitles_plain">Los subtítulos en %1$s se muestran como texto simple. Los subtítulos con estilo eran demasiado para la TV.</string>
     <string name="notice_cast_no_device">Ese televisor ya no está en la red.</string>
     <string name="notice_cast_unavailable">Esta versión de Kaeri no puede transmitir a televisores.</string>
     <string name="cast_phase_starting">Iniciando en %1$s</string>

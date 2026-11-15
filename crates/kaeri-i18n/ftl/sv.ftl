@@ -33,6 +33,15 @@ notice-cast-not-same-network = Den här enheten är inte på samma nätverk som 
 # The TV stopped answering mid-cast. The name is the TV's own.
 notice-cast-lost = Tappade kontakten med { $name }, så castingen avbröts.
 
+# Kaeri's receiver on the TV couldn't get part of the episode from the source mid-play, so the cast stopped. The card offers Choose source and Play here. The name is the TV's own.
+notice-cast-segment = { $name } slutade få strömmen: källan svarade inte för en del av avsnittet. Prova en annan källa.
+
+# The TV stopped reaching this device, which hands it the stream, mid-episode. The card offers Try again and Play here. The name is the TV's own.
+notice-cast-lost-stream = { $name } tappade strömmen från den här enheten. Kontrollera att båda är på samma nätverk.
+
+# Shown once per TV, the first time it can't keep up with styled subtitles and switches to plain ones. Nothing else changes and the episode plays on. The name is the TV's own.
+notice-cast-subtitles-plain = Undertexter på { $name } visas som vanlig text. Formaterade undertexter blev för mycket för tv:n.
+
 # The TV picked to cast to has left the network.
 notice-cast-no-device = Den TV:n finns inte längre på nätverket.
 

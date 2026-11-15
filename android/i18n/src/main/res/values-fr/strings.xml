@@ -13,6 +13,9 @@
     <string name="notice_cast_taken_over">Un autre appareil a lancé quelque chose sur %1$s, la diffusion s’est donc arrêtée.</string>
     <string name="notice_cast_not_same_network">Cet appareil n’est pas sur le même réseau que %1$s, ou il y accède par un VPN. Connectez les deux au même réseau pour diffuser.</string>
     <string name="notice_cast_lost">%1$s ne répond plus, la diffusion s’est donc arrêtée.</string>
+    <string name="notice_cast_segment">%1$s ne reçoit plus le flux : la source n’a pas répondu pour une partie de l’épisode. Essayez une autre source.</string>
+    <string name="notice_cast_lost_stream">%1$s a perdu le flux de cet appareil. Vérifiez que les deux sont sur le même réseau.</string>
+    <string name="notice_cast_subtitles_plain">Les sous-titres sur %1$s s’affichent en texte simple. Les sous-titres mis en forme étaient trop lourds pour la TV.</string>
     <string name="notice_cast_no_device">Cette télévision n’est plus sur le réseau.</string>
     <string name="notice_cast_unavailable">Cette version de Kaeri ne peut pas diffuser sur les télévisions.</string>
     <string name="cast_phase_starting">Démarrage sur %1$s</string>

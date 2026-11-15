@@ -961,11 +961,15 @@ pub struct CastConfig {
     /// List TVs with Chromecast built in in the TV picker. On unless switched off; off, the
     /// picker doesn't look for them.
     pub show_tvs: bool,
+    /// The Cast receiver app to launch in place of Kaeri's own, by its app ID. Unset, Kaeri's
+    /// own; the Default Media Receiver plays whenever the one launched fails.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub receiver: Option<String>,
 }
 
 impl Default for CastConfig {
     fn default() -> Self {
-        Self { show_tvs: true }
+        Self { show_tvs: true, receiver: None }
     }
 }
 

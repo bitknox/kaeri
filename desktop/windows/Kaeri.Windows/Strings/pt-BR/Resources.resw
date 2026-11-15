@@ -68,6 +68,15 @@
   <data name="NoticeCastLost" xml:space="preserve">
     <value>Perdemos a conexão com {name}, então a transmissão parou.</value>
   </data>
+  <data name="NoticeCastSegment" xml:space="preserve">
+    <value>{name} parou de receber o stream: a fonte não respondeu em parte do episódio. Tente outra fonte.</value>
+  </data>
+  <data name="NoticeCastLostStream" xml:space="preserve">
+    <value>{name} perdeu o stream deste dispositivo. Verifique se os dois estão na mesma rede.</value>
+  </data>
+  <data name="NoticeCastSubtitlesPlain" xml:space="preserve">
+    <value>As legendas em {name} aparecem como texto simples. Legendas estilizadas eram pesadas demais para a TV.</value>
+  </data>
   <data name="NoticeCastNoDevice" xml:space="preserve">
     <value>Essa TV não está mais na rede.</value>
   </data>

@@ -68,6 +68,15 @@
   <data name="NoticeCastLost" xml:space="preserve">
     <value>Koneksi ke {name} terputus, jadi penayangan berhenti.</value>
   </data>
+  <data name="NoticeCastSegment" xml:space="preserve">
+    <value>{name} berhenti menerima aliran: sumber tidak merespons untuk sebagian episode. Coba sumber lain.</value>
+  </data>
+  <data name="NoticeCastLostStream" xml:space="preserve">
+    <value>{name} kehilangan aliran dari perangkat ini. Pastikan keduanya berada di jaringan yang sama.</value>
+  </data>
+  <data name="NoticeCastSubtitlesPlain" xml:space="preserve">
+    <value>Subtitel di {name} tampil sebagai teks biasa. Subtitel bergaya terlalu berat untuk TV ini.</value>
+  </data>
   <data name="NoticeCastNoDevice" xml:space="preserve">
     <value>TV itu sudah tidak ada di jaringan.</value>
   </data>

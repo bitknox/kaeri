@@ -122015,6 +122015,90 @@
         }
       }
     },
+    "notice-cast-lost-stream" : {
+      "comment" : "The TV stopped reaching this device, which hands it the stream, mid-episode. The card offers Try again and Play here. The name is the TV's own. Argument 1: name (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ hat den Stream von diesem Gerät verloren. Prüfe, ob beide im selben Netzwerk sind."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ lost the stream from this device. Check that both are on the same network."
+          }
+        },
+        "es-419" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ perdió la transmisión de este dispositivo. Comprueba que ambos estén en la misma red."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ a perdu le flux de cet appareil. Vérifiez que les deux sont sur le même réseau."
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ kehilangan aliran dari perangkat ini. Pastikan keduanya berada di jaringan yang sama."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ ha perso lo stream da questo dispositivo. Verifica che entrambi siano sulla stessa rete."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@がこのデバイスからのストリームを失いました。両方が同じネットワークにあるか確認してください。"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ utracił strumień. Sprawdź, czy to urządzenie i telewizor są w tej samej sieci."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ perdeu o stream deste dispositivo. Verifique se os dois estão na mesma rede."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ потерял поток. Проверьте, что это устройство и телевизор в одной сети."
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ tappade strömmen från den här enheten. Kontrollera att båda är på samma nätverk."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@, bu cihazdan gelen yayını kaybetti. İkisinin de aynı ağda olduğundan emin olun."
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ mất luồng phát từ thiết bị này. Hãy kiểm tra cả hai có cùng một mạng không."
+          }
+        }
+      }
+    },
     "notice-cast-never-fetches" : {
       "comment" : "The TV accepted the stream but never started reading it. The card offers Try again and Play here beside it. The name is the TV's own. Argument 1: name (Text).",
       "extractionState" : "manual",
@@ -122347,6 +122431,174 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "%1$@ không phát được luồng này. Hãy thử nguồn khác."
+          }
+        }
+      }
+    },
+    "notice-cast-segment" : {
+      "comment" : "Kaeri's receiver on the TV couldn't get part of the episode from the source mid-play, so the cast stopped. The card offers Choose source and Play here. The name is the TV's own. Argument 1: name (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ bekommt den Stream nicht mehr: Die Quelle hat für einen Teil der Folge nicht geantwortet. Probiere eine andere Quelle."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ stopped getting the stream: the source didn't answer for part of the episode. Try another source."
+          }
+        },
+        "es-419" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ dejó de recibir la transmisión: la fuente no respondió para una parte del episodio. Prueba con otra fuente."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ ne reçoit plus le flux : la source n’a pas répondu pour une partie de l’épisode. Essayez une autre source."
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ berhenti menerima aliran: sumber tidak merespons untuk sebagian episode. Coba sumber lain."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ non riceve più lo stream: la fonte non ha risposto per una parte dell'episodio. Prova un'altra fonte."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@がストリームを受け取れなくなりました。ソースがエピソードの一部に応答しませんでした。別のソースをお試しください。"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ przestał odbierać strumień: źródło nie odpowiedziało dla części odcinka. Wypróbuj inne źródło."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ parou de receber o stream: a fonte não respondeu em parte do episódio. Tente outra fonte."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ перестал получать поток: источник не ответил для части серии. Попробуйте другой источник."
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ slutade få strömmen: källan svarade inte för en del av avsnittet. Prova en annan källa."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ yayını alamaz oldu: kaynak, bölümün bir kısmı için yanıt vermedi. Başka bir kaynak deneyin."
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ không còn nhận được luồng phát: nguồn không phản hồi cho một phần của tập. Hãy thử nguồn khác."
+          }
+        }
+      }
+    },
+    "notice-cast-subtitles-plain" : {
+      "comment" : "Shown once per TV, the first time it can't keep up with styled subtitles and switches to plain ones. Nothing else changes and the episode plays on. The name is the TV's own. Argument 1: name (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Untertitel auf %1$@ erscheinen als einfacher Text. Gestaltete Untertitel waren zu viel für den Fernseher."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Subtitles on %1$@ show as plain text. Typeset subtitles were too much for it."
+          }
+        },
+        "es-419" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Los subtítulos en %1$@ se muestran como texto simple. Los subtítulos con estilo eran demasiado para la TV."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Les sous-titres sur %1$@ s’affichent en texte simple. Les sous-titres mis en forme étaient trop lourds pour la TV."
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Subtitel di %1$@ tampil sebagai teks biasa. Subtitel bergaya terlalu berat untuk TV ini."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "I sottotitoli su %1$@ appaiono come testo semplice. I sottotitoli formattati erano troppo pesanti per la TV."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@の字幕はプレーンテキストで表示されます。装飾付きの字幕はこのテレビには重すぎました。"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Napisy na %1$@ są wyświetlane jako zwykły tekst. Napisy ze stylami były dla telewizora zbyt wymagające."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "As legendas em %1$@ aparecem como texto simples. Legendas estilizadas eram pesadas demais para a TV."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Субтитры на %1$@ показываются простым текстом. Оформленные субтитры оказались слишком тяжёлыми для телевизора."
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Undertexter på %1$@ visas som vanlig text. Formaterade undertexter blev för mycket för tv:n."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ üzerinde altyazılar düz metin olarak gösteriliyor. Biçimli altyazılar bu TV için fazla ağır geldi."
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Phụ đề trên %1$@ hiển thị dạng văn bản thường. Phụ đề có định dạng quá nặng với TV này."
           }
         }
       }

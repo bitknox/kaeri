@@ -24,7 +24,9 @@
 //! - Until a plan plays, the session hears nothing; then `Loaded`, as from mpv.
 //!
 //! The receiver app is launched at the first load that has a plan, so a stream that can't be
-//! cast never takes the TV over. The media status is asked for every [`Timings::poll`] for the
+//! cast never takes the TV over, unless a cast session launched it first ([`CastPlayer::launch`]).
+//! It is Kaeri's own receiver when one is named, and the Default Media Receiver when there is
+//! none, when Kaeri's doesn't launch, or when it closes before it played anything. The media status is asked for every [`Timings::poll`] for the
 //! whole cast, since the Default Media Receiver reports on changes only. After
 //! [`Timings::idle_close`] paused, the cast ends and the TV goes back to what it showed.
 
@@ -40,9 +42,9 @@ use kaeri_playback::{
     PlaybackEvent,
     tracks::{Track, TrackKind, TrackPrint, choose_audio, language_matches},
 };
-use serde_json::Value;
+use serde_json::{Value, json};
 use tokio::{
-    sync::{Mutex as AsyncMutex, mpsc, watch},
+    sync::{Mutex as AsyncMutex, broadcast, mpsc, watch},
     task::JoinHandle,
 };
 
@@ -50,19 +52,19 @@ use crate::{
     aac::AacEncoder,
     channel::{CastError, Incoming, NS_CONNECTION, NS_MEDIA, NS_RECEIVER},
     client::{
-        App, DEFAULT_MEDIA_RECEIVER, Device, Load, Media, MediaStatus, Metadata,
-        ReceiverStatus, TextTrack, VolumeControl,
+        App, DEFAULT_MEDIA_RECEIVER, Device, KAERI_PROTOCOL, KAERI_RECEIVER, Load, Media,
+        MediaStatus, Metadata, NS_KAERI, ReceiverStatus, TextTrack, VolumeControl,
     },
     clips::{Clip, clip},
     device::{CastDevice, local_address_towards, same_network},
     fetch::{RangeFile, Upstream},
     formats::{
-        AudioPlan, AudioTrack, CastPlan, CastRoute, CastSource, Delivery, MediaInfo,
-        SourceKind, Uncastable, cast_plans,
+        AudioCodec, AudioPlan, AudioTrack, CastPlan, CastRoute, CastSource, Delivery,
+        MediaInfo, SourceKind, Uncastable, cast_plans, pass_through_plans,
     },
     master,
     memory::CastMemory,
-    probe,
+    mkv, probe,
     relay::{Dynamic, Made, Relay, rewrite_playlist},
     remux::{AudioMode, RemuxOptions, Remuxer, Source},
     vtt,
@@ -86,6 +88,9 @@ pub struct Timings {
     pub patience: Duration,
     /// The TV said nothing this long, heartbeat and status polls unanswered: it is gone.
     pub silence: Duration,
+    /// How long Kaeri's receiver has to say `ready` once launched, before the Default Media
+    /// Receiver takes its place.
+    pub ready: Duration,
 }
 
 impl Default for Timings {
@@ -98,6 +103,7 @@ impl Default for Timings {
             slow_source: Duration::from_secs(4),
             patience: Duration::from_secs(60),
             silence: crate::channel::SILENCE,
+            ready: Duration::from_secs(8),
         }
     }
 }
@@ -164,6 +170,12 @@ pub enum CastFailure {
     /// The TV stopped answering.
     #[error("the TV went away: {0}")]
     Lost(String),
+    /// Kaeri's receiver couldn't get part of the file from the source mid-play.
+    #[error("the source didn't answer for part of the episode")]
+    Segment,
+    /// Kaeri's receiver lost the relay on this device mid-play.
+    #[error("the TV lost the stream from this device")]
+    LostStream,
 }
 
 /// Where a cast is.
@@ -233,6 +245,68 @@ pub struct CastStatus {
     pub audio: Vec<CastAudio>,
     /// The text tracks sent with the load.
     pub subtitles: Vec<CastText>,
+    /// What the receiver shows of the media: the show, the episode line and the art.
+    pub metadata: Option<Metadata>,
+    /// The receiver app's ID while it runs for this cast: Kaeri's own or the Default Media
+    /// Receiver.
+    pub receiver: Option<String>,
+    /// Since when the TV has waited for the stream, while it waits: a buffering spell in a file
+    /// that plays, never a start or a reload.
+    pub waiting_since: Option<Instant>,
+}
+
+/// How long a control's effect is shown before the TV has said it. A receiver answers within a
+/// second; a status that still disagrees after this is the TV's own word.
+const CONFIRM: Duration = Duration::from_secs(3);
+
+/// What the viewer asked of the TV that its status hasn't said yet. The status shows it at once,
+/// so a control answers on the tap; the receiver status that agrees confirms it, and one that
+/// still disagrees after [`CONFIRM`] wins.
+#[derive(Debug, Clone, Copy, Default)]
+struct Wanted {
+    paused: Option<(bool, Instant)>,
+    position: Option<(f64, Instant)>,
+    level: Option<(f64, Instant)>,
+    muted: Option<(bool, Instant)>,
+}
+
+impl Wanted {
+    /// Check what is wanted against a media status.
+    fn media(&mut self, status: &MediaStatus) {
+        let stale = |at: &Instant| at.elapsed() >= CONFIRM;
+        if status.idle_reason.is_some() || status.state == "IDLE" {
+            self.paused = None;
+            self.position = None;
+        }
+        if let Some((paused, at)) = self.paused
+            && ((status.state == "PAUSED") == paused || stale(&at))
+        {
+            self.paused = None;
+        }
+        if let Some((target, at)) = self.position {
+            // Played on since, at up to double speed, and a receiver lands near a keyframe.
+            let near = 2.0 + at.elapsed().as_secs_f64() * 2.0;
+            if (status.position - target).abs() <= near || stale(&at) {
+                self.position = None;
+            }
+        }
+        self.volume(status.volume, status.muted);
+    }
+
+    /// Check the volume wanted against what the receiver said of it.
+    fn volume(&mut self, level: Option<f64>, muted: Option<bool>) {
+        let stale = |at: &Instant| at.elapsed() >= CONFIRM;
+        if let Some((want, at)) = self.level
+            && (level.is_some_and(|l| (l - want).abs() < 0.005) || stale(&at))
+        {
+            self.level = None;
+        }
+        if let Some((want, at)) = self.muted
+            && (muted == Some(want) || stale(&at))
+        {
+            self.muted = None;
+        }
+    }
 }
 
 fn lock<T>(mutex: &Mutex<T>) -> std::sync::MutexGuard<'_, T> {
@@ -245,8 +319,13 @@ fn lock<T>(mutex: &Mutex<T>) -> std::sync::MutexGuard<'_, T> {
 struct Resources {
     remuxer: Mutex<Option<Arc<Remuxer>>>,
     texts: Mutex<HashMap<String, Arc<Vec<u8>>>>,
+    /// Subtitle files as they are, for Kaeri's receiver, with their media types.
+    originals: Mutex<HashMap<String, Served>>,
     master: Mutex<Option<Arc<Vec<u8>>>>,
 }
+
+/// A file the relay serves as it is: its content type and bytes.
+type Served = (&'static str, Arc<Vec<u8>>);
 
 /// Where the relay serves [`Resources::master`].
 const MASTER: &str = "h/master.m3u8";
@@ -256,6 +335,9 @@ impl Dynamic for Resources {
         Box::pin(async move {
             if let Some(text) = lock(&self.texts).get(path).cloned() {
                 return Some(("text/vtt".into(), text.to_vec()));
+            }
+            if let Some((kind, bytes)) = lock(&self.originals).get(path).cloned() {
+                return Some((kind.into(), bytes.to_vec()));
             }
             if path == MASTER {
                 let master = lock(&self.master).clone()?;
@@ -313,6 +395,8 @@ struct State {
     /// The receiver sent `ERROR` while a plan was tried: the Nest Hub's word for audio it can't
     /// decode, after it accepted the load.
     errored: bool,
+    /// What Kaeri's receiver said failed while a plan was tried.
+    reported: Option<ReceiverError>,
     /// The load in force, with its tracks, for a reload when a subtitle comes later.
     load: Option<Load>,
     /// A reload of the same file asked for while paused: it loads paused, so the TV doesn't
@@ -328,9 +412,39 @@ struct State {
     subtitles: Vec<CastText>,
     /// The text track on, from one.
     subtitle: Option<u32>,
+    /// What the viewer asked that the TV hasn't confirmed yet.
+    want: Wanted,
+    /// The receiver app to launch: Kaeri's own when one is named.
+    receiver: Option<String>,
+    /// Kaeri's receiver didn't launch or closed before it played: the Default Media Receiver
+    /// plays this cast.
+    fallen_back: bool,
+    /// Kaeri's receiver closed while a plan was tried: the plan is tried again on the Default
+    /// Media Receiver.
+    relaunch: bool,
+    /// Kaeri's receiver closed with nothing loading: the Default Media Receiver is launched at
+    /// the next poll, so a session stays connected.
+    relaunch_idle: bool,
+    /// The receiver app running played a file.
+    played_in_app: bool,
+    /// When the receiver app running came up.
+    launched: Option<Instant>,
+    /// Since when the TV has said it waits for data.
+    waiting_since: Option<Instant>,
+    /// Kaeri's receiver closed mid-episode: the poll loads it again on the Default Media
+    /// Receiver where it was.
+    reload_elsewhere: bool,
+    /// The language and device word Kaeri's receiver is greeted with.
+    language: Option<String>,
+    device_word: Option<String>,
 }
 
 impl State {
+    /// Whether the TV is paused, or asked to pause and not yet heard from.
+    fn paused_now(&self) -> bool {
+        self.want.paused.map(|(p, _)| p).or(self.paused).unwrap_or(false)
+    }
+
     fn status(&self) -> CastStatus {
         let state = if self.closed || self.quit {
             CastState::Ended
@@ -348,12 +462,22 @@ impl State {
                 None => CastState::Connecting,
             }
         };
+        // What the viewer asked shows until the TV says otherwise.
+        let state = match (state, self.want.paused) {
+            (
+                CastState::Playing | CastState::Paused | CastState::Buffering,
+                Some((true, _)),
+            ) => CastState::Paused,
+            (CastState::Paused, Some((false, _))) => CastState::Playing,
+            (state, _) => state,
+        };
+        let position = self.want.position.map(|(p, _)| p);
         CastStatus {
             state,
-            position: self.last.as_ref().map_or(0.0, |s| s.position),
+            position: position.or(self.last.as_ref().map(|s| s.position)).unwrap_or(0.0),
             duration: self.last.as_ref().and_then(|s| s.duration),
-            level: self.level,
-            muted: self.muted,
+            level: self.want.level.map(|(l, _)| l).or(self.level),
+            muted: self.want.muted.map(|(m, _)| m).or(self.muted),
             volume: self.control,
             plan: self.plan.clone(),
             failure: self.failure.clone(),
@@ -365,6 +489,9 @@ impl State {
                 .iter()
                 .map(|t| CastText { selected: Some(t.id) == self.subtitle, ..t.clone() })
                 .collect(),
+            metadata: self.last.as_ref().and_then(|s| s.metadata.clone()),
+            receiver: self.app.as_ref().map(|a| a.app_id.clone()),
+            waiting_since: self.waiting_since.filter(|_| !self.trying && !self.ended),
         }
     }
 }
@@ -382,6 +509,12 @@ struct Inner {
     state: Mutex<State>,
     events: Mutex<Option<mpsc::UnboundedSender<PlaybackEvent>>>,
     status: watch::Sender<CastStatus>,
+    /// What Kaeri's receiver said in its `ready`, once it has, for the app running now.
+    ready: watch::Sender<Option<Value>>,
+    /// What Kaeri's receiver says on its own namespace, for the engine.
+    heard: broadcast::Sender<FromReceiver>,
+    /// The load being tried, aborted by a stop or the next load.
+    attempt: Mutex<Option<JoinHandle<()>>>,
 }
 
 impl Inner {
@@ -409,6 +542,12 @@ impl Inner {
         });
     }
 
+    /// Note what the viewer asked of the TV, shown until the TV confirms it.
+    fn want(&self, change: impl FnOnce(&mut Wanted)) {
+        change(&mut lock(&self.state).want);
+        self.publish();
+    }
+
     /// Say an event from inside the state lock. The status goes out first, so whoever reacts to
     /// the event reads a status that already includes what caused it.
     fn say_locked(&self, state: &State, event: PlaybackEvent) {
@@ -427,11 +566,57 @@ impl Inner {
         }
         let inner = Arc::clone(self);
         let launch = tokio::spawn(async move {
-            let app = inner.device.launch(DEFAULT_MEDIA_RECEIVER).await?;
+            let tv = &inner.setup.device.id;
+            let receiver = {
+                let state = lock(&inner.state);
+                state.receiver.clone().filter(|_| !state.fallen_back)
+            };
+            let receiver = receiver.filter(|r| {
+                let skipped = r != DEFAULT_MEDIA_RECEIVER
+                    && inner.setup.memory.caps(tv).skips_own_receiver();
+                if skipped {
+                    tracing::info!("Kaeri's receiver failed on this TV lately; the Default Media Receiver plays");
+                    lock(&inner.state).fallen_back = true;
+                }
+                !skipped
+            });
+            let app = match receiver {
+                Some(receiver) if receiver != DEFAULT_MEDIA_RECEIVER => {
+                    inner.ready.send_replace(None);
+                    match inner.device.launch(&receiver).await {
+                        // The receiver answers `hello` with `ready`, and also says it to each
+                        // sender that connects, so neither order of the two loses it.
+                        Ok(app) => match inner.hello(&app).wait_ready(&app).await {
+                            Some(ready) => {
+                                tracing::info!(%ready, "Kaeri's receiver is ready");
+                                app
+                            }
+                            None => {
+                                tracing::info!(
+                                    "Kaeri's receiver never said it was ready; the Default Media Receiver plays"
+                                );
+                                lock(&inner.state).fallen_back = true;
+                                if let Err(e) = inner.setup.memory.own_receiver_failed(tv) {
+                                    tracing::warn!(error = %e, "couldn't note the TV");
+                                }
+                                inner.device.launch(DEFAULT_MEDIA_RECEIVER).await?
+                            }
+                        },
+                        Err(e) => {
+                            tracing::info!(error = %e, "Kaeri's receiver didn't launch; the Default Media Receiver plays");
+                            lock(&inner.state).fallen_back = true;
+                            inner.device.launch(DEFAULT_MEDIA_RECEIVER).await?
+                        }
+                    }
+                }
+                _ => inner.device.launch(DEFAULT_MEDIA_RECEIVER).await?,
+            };
             {
                 // Under the state's lock, so a quit either sees this media or is seen here.
                 let mut state = lock(&inner.state);
                 if !state.quit {
+                    state.played_in_app = false;
+                    state.launched = Some(Instant::now());
                     state.app = Some(app.clone());
                     let fresh = Media::new(inner.device.channel.clone(), app);
                     *lock(&inner.media) = Some(fresh.clone());
@@ -445,9 +630,148 @@ impl Inner {
         launch.await.unwrap_or(Err(CastError::Closed))
     }
 
+    /// Kaeri's receiver runs now.
+    fn runs_own(&self) -> bool {
+        let state = lock(&self.state);
+        !state.fallen_back
+            && state.app.as_ref().is_some_and(|app| app.app_id != DEFAULT_MEDIA_RECEIVER)
+    }
+
+    /// Whether the next load goes to Kaeri's receiver. When it is the receiver to launch and
+    /// nothing runs yet, it is launched now, so the plans are made for the receiver that plays.
+    async fn own_receiver(self: &Arc<Self>) -> bool {
+        if self.runs_own() {
+            return true;
+        }
+        let expected = {
+            let state = lock(&self.state);
+            state.app.is_none()
+                && !state.fallen_back
+                && state.receiver.as_deref().is_some_and(|r| r != DEFAULT_MEDIA_RECEIVER)
+        };
+        if !expected || self.setup.memory.caps(&self.setup.device.id).skips_own_receiver() {
+            return false;
+        }
+        match self.app().await {
+            Ok(_) => self.runs_own(),
+            Err(e) => {
+                tracing::info!(error = %e, "no receiver yet; planning for the Default Media Receiver");
+                false
+            }
+        }
+    }
+
     /// The media session in force, for a command.
     fn media(&self) -> Option<Media> {
         lock(&self.media).clone()
+    }
+
+    /// Wait for Kaeri's receiver `app` to say `ready`, up to [`Timings::ready`]. `None`: the
+    /// page never loaded, or isn't Kaeri's.
+    async fn wait_ready(&self, app: &App) -> Option<Value> {
+        let mut ready = self.ready.subscribe();
+        let waited = tokio::time::timeout(
+            self.setup.timings.ready,
+            ready.wait_for(|ready| ready.is_some()),
+        )
+        .await;
+        let said = waited.ok()?.ok()?.clone();
+        tracing::debug!(app = %app.app_id, "ready heard");
+        said
+    }
+
+    /// Greet Kaeri's receiver: the language for its strings and the word for this device.
+    fn hello(&self, app: &App) -> &Self {
+        let (language, device) = {
+            let state = lock(&self.state);
+            (state.language.clone(), state.device_word.clone())
+        };
+        let hello = json!({"type": "hello", "version": KAERI_PROTOCOL,
+                           "language": language, "device": device});
+        if let Err(e) = self.device.channel.send(&app.transport_id, NS_KAERI, &hello) {
+            tracing::debug!(error = %e, "couldn't greet Kaeri's receiver");
+        }
+        self
+    }
+
+    /// Say `message` to Kaeri's receiver, when it runs. Nothing on the Default Media Receiver.
+    fn tell(&self, mut message: Value) {
+        let app = lock(&self.state).app.clone();
+        let Some(app) = app.filter(|a| a.app_id != DEFAULT_MEDIA_RECEIVER) else { return };
+        message["version"] = json!(KAERI_PROTOCOL);
+        if let Err(e) = self.device.channel.send(&app.transport_id, NS_KAERI, &message) {
+            tracing::debug!(error = %e, "couldn't tell Kaeri's receiver");
+        }
+    }
+}
+
+/// What Kaeri's receiver says that the engine acts on.
+#[derive(Debug, Clone, PartialEq)]
+pub enum FromReceiver {
+    /// Typeset subtitles fell behind; the receiver shows them as plain text from now.
+    SubtitlesPlain,
+    /// Up Next's Play now (`true`) or Cancel, pressed on the TV's remote.
+    UpNext { play: bool },
+    /// The receiver waited this many seconds with the relay unreachable.
+    SenderGone { waited: f64 },
+    /// Something it fetched or played failed.
+    Error(ReceiverError),
+}
+
+/// Up Next as Kaeri's receiver draws it over the episode.
+#[derive(Debug, Clone, PartialEq)]
+pub struct UpNextCard {
+    pub number: Option<String>,
+    pub title: Option<String>,
+    /// The next episode's still, a URL the TV can fetch.
+    pub still: Option<String>,
+    /// Seconds until it plays by itself.
+    pub seconds: u32,
+}
+
+/// Kaeri's receiver's report of a failure.
+#[derive(Debug, Clone, PartialEq, Default)]
+pub struct ReceiverError {
+    /// `video`, `audio`, `subtitles`, `network`, `manifest`, or `unknown` for a media error
+    /// neither the player nor the TV placed.
+    pub part: String,
+    /// The player's own words for it.
+    pub detail: Option<String>,
+    /// The HTTP status of the fetch, 0 for no answer at all.
+    pub status: Option<u16>,
+    /// The Cast framework's detailed error code.
+    pub detailed: Option<i64>,
+    /// The Shaka player's error code.
+    pub shaka: Option<i64>,
+    pub codec: Option<String>,
+    pub position: Option<f64>,
+    /// What was being fetched: `playlist`, `init`, `segment`, `subtitle` or `font`.
+    pub fetched: Option<String>,
+    /// Nothing answered the fetch.
+    pub lost: bool,
+}
+
+impl ReceiverError {
+    fn read(payload: &Value) -> Self {
+        // The names of the first protocol drafts, read as the parts they were.
+        let part = match payload["part"].as_str().unwrap_or("video") {
+            "subtitle" | "font" => "subtitles",
+            "segment" => "network",
+            "playlist" | "init" => "manifest",
+            "media" => "video",
+            part => part,
+        };
+        Self {
+            part: part.to_owned(),
+            detail: payload["detail"].as_str().map(str::to_owned),
+            status: payload["status"].as_u64().and_then(|s| u16::try_from(s).ok()),
+            detailed: payload["detailed"].as_i64(),
+            shaka: payload["shaka"].as_i64(),
+            codec: payload["codec"].as_str().map(str::to_owned),
+            position: payload["position"].as_f64(),
+            fetched: payload["fetched"].as_str().map(str::to_owned),
+            lost: payload["lost"].as_bool().unwrap_or(false),
+        }
     }
 }
 
@@ -455,7 +779,6 @@ impl Inner {
 pub struct CastPlayer {
     inner: Arc<Inner>,
     tasks: Vec<JoinHandle<()>>,
-    attempt: Mutex<Option<JoinHandle<()>>>,
 }
 
 impl Drop for CastPlayer {
@@ -463,7 +786,7 @@ impl Drop for CastPlayer {
         for task in &self.tasks {
             task.abort();
         }
-        if let Some(attempt) = lock(&self.attempt).take() {
+        if let Some(attempt) = lock(&self.inner.attempt).take() {
             attempt.abort();
         }
     }
@@ -501,6 +824,8 @@ impl CastPlayer {
         let receiver = device.status().await.map_err(lost)?;
         let firmware =
             if tv.is_loopback() { None } else { firmware(setup.upstream.as_ref(), tv).await };
+        // A session tries every stream as it is: nothing refused in the last one counts.
+        setup.memory.new_session(&setup.device.id);
         if let Err(e) = setup.memory.seen(
             &setup.device.id,
             &setup.device.name,
@@ -515,6 +840,7 @@ impl CastPlayer {
             control: receiver.volume,
             level: receiver.level,
             muted: receiver.muted,
+            receiver: KAERI_RECEIVER.map(str::to_owned),
             ..State::default()
         };
         let (events, rx) = mpsc::unbounded_channel();
@@ -529,10 +855,122 @@ impl CastPlayer {
             state: Mutex::new(state),
             events: Mutex::new(Some(events)),
             status,
+            ready: watch::channel(None).0,
+            heard: broadcast::channel(16).0,
+            attempt: Mutex::new(None),
         });
         let pump = tokio::spawn(pump(incoming, Arc::downgrade(&inner)));
         let poll = tokio::spawn(poll(Arc::downgrade(&inner)));
-        Ok((Self { inner, tasks: vec![pump, poll], attempt: Mutex::new(None) }, rx))
+        Ok((Self { inner, tasks: vec![pump, poll] }, rx))
+    }
+
+    /// Launch `receiver` in place of Kaeri's own, from the next launch: an app ID from the
+    /// config. `None` keeps Kaeri's own, or the Default Media Receiver while there is none.
+    pub fn use_receiver(&self, receiver: Option<String>) {
+        let receiver = receiver.filter(|r| !r.trim().is_empty());
+        lock(&self.inner.state).receiver = receiver.or(KAERI_RECEIVER.map(str::to_owned));
+    }
+
+    /// The language Kaeri's receiver shows its strings in and the word it calls this device
+    /// by (`iphone`, `phone`, `mac`, ...). A receiver already running hears it at once.
+    pub fn set_greeting(&self, language: Option<String>, device: Option<String>) {
+        {
+            let mut state = lock(&self.inner.state);
+            state.language = language.clone();
+            state.device_word = device.clone();
+        }
+        self.inner.tell(json!({"type": "hello", "language": language, "device": device}));
+    }
+
+    /// What Kaeri's receiver says from now on: plain subtitles, Up Next's buttons, errors.
+    pub fn heard(&self) -> broadcast::Receiver<FromReceiver> {
+        self.inner.heard.subscribe()
+    }
+
+    /// This device is about to stop answering (an iPhone leaving the foreground): Kaeri's
+    /// receiver shows that it waits for it.
+    pub fn tell_away(&self) {
+        let device = lock(&self.inner.state).device_word.clone();
+        self.inner.tell(json!({"type": "sender-away", "device": device}));
+    }
+
+    /// The engine skipped the opening or the ending (`part`): Kaeri's receiver says so on the
+    /// TV for a moment.
+    pub fn tell_skipped(&self, part: &str) {
+        self.inner.tell(json!({"type": "skipped", "part": part}));
+    }
+
+    /// Up Next counting on this device: its episode for the receiver's own card, `None` to
+    /// hide it.
+    pub fn tell_up_next(&self, next: Option<UpNextCard>) {
+        let message = match next {
+            Some(next) => json!({"type": "up-next", "number": next.number, "title": next.title,
+                                 "still": next.still, "seconds": next.seconds}),
+            None => json!({"type": "up-next"}),
+        };
+        self.inner.tell(message);
+    }
+
+    /// Start the receiver app now, before anything plays: what connecting to a TV does in a
+    /// cast session. The TV shows the receiver's idle screen until a file loads.
+    pub async fn launch(&self) -> Result<(), CastFailure> {
+        let launched = self.inner.app().await;
+        self.inner.publish();
+        launched.map(drop).map_err(|e| CastFailure::Lost(e.to_string()))
+    }
+
+    /// Join the receiver app `session` names, when it still runs on the TV: what a cast session
+    /// left running when this device last held it. `None` when it has gone.
+    pub async fn join(
+        setup: CastSetup,
+        session: &str,
+    ) -> Result<Option<(Self, mpsc::UnboundedReceiver<PlaybackEvent>)>, CastFailure> {
+        let (player, events) = Self::connect(setup).await?;
+        let lost = |e: CastError| CastFailure::Lost(e.to_string());
+        let receiver = player.inner.device.status().await.map_err(lost)?;
+        let Some(app) = receiver.app.filter(|app| app.session_id == session) else {
+            player.inner.relay.close();
+            return Ok(None);
+        };
+        player.inner.device.channel.connect_to(&app.transport_id).map_err(lost)?;
+        let mut media = Media::new(player.inner.device.channel.clone(), app.clone());
+        {
+            let mut state = lock(&player.inner.state);
+            state.app = Some(app);
+            state.played_in_app = true;
+        }
+        // Its media session, when something plays: the answer is the first status. It is taken
+        // here, as the receive task may read the same message only after this returns.
+        match media.status().await {
+            Ok(Some(status)) => {
+                let mut state = lock(&player.inner.state);
+                state.last = Some(status.clone());
+                apply(&player.inner, &mut state, &status);
+            }
+            Ok(None) => {}
+            Err(e) => tracing::debug!(error = %e, "the joined receiver didn't say what plays"),
+        }
+        *lock(&player.inner.media) = Some(media);
+        player.inner.publish();
+        Ok(Some((player, events)))
+    }
+
+    /// The receiver app running for this cast.
+    pub fn receiver(&self) -> Option<App> {
+        lock(&self.inner.state).app.clone()
+    }
+
+    /// A fresh stream of the session's events for the next playback, ending the one before: a
+    /// cast session plays one playback after another on the same receiver.
+    pub fn events(&self) -> mpsc::UnboundedReceiver<PlaybackEvent> {
+        let (events, rx) = mpsc::unbounded_channel();
+        *lock(&self.inner.events) = Some(events);
+        rx
+    }
+
+    /// End the event stream: the playback reading it is over, and the receiver stays.
+    pub fn detach(&self) {
+        lock(&self.inner.events).take();
     }
 
     /// The card's view of the cast, as it changes.
@@ -544,9 +982,15 @@ impl CastPlayer {
         &self.inner.setup.device
     }
 
-    /// Where the TV is in the file.
+    /// The card's view of the cast as it stands.
+    pub fn current(&self) -> CastStatus {
+        self.inner.status.borrow().clone()
+    }
+
+    /// Where the TV is in the file, or where it was asked to seek to and hasn't said yet.
     pub fn position(&self) -> Option<f64> {
-        lock(&self.inner.state).last.as_ref().map(|s| s.position)
+        let state = lock(&self.inner.state);
+        state.want.position.map(|(p, _)| p).or(state.last.as_ref().map(|s| s.position))
     }
 
     /// Say `event` to the session as if the TV had: what the sender's card asks of the session
@@ -582,59 +1026,67 @@ impl CastPlayer {
     }
 
     fn start(&self, load: CastLoad, quiet: bool) {
-        {
-            let mut state = lock(&self.inner.state);
-            state.trying = true;
-            state.reloading = false;
-            state.hold_paused = quiet && state.paused == Some(true);
-            state.ended = false;
-            state.failure = None;
-            state.loaded = None;
-            state.step = Some(CastStep::Preparing);
-            state.since = Some(Instant::now());
-            state.asked = Some(load.clone());
-        }
-        self.inner.publish();
-        let inner = Arc::clone(&self.inner);
-        let task = tokio::spawn(async move {
-            let outcome = attempt(&inner, load).await;
-            let speed = {
-                let mut state = lock(&inner.state);
-                state.trying = false;
-                state.step = None;
-                state.since = None;
-                match outcome {
-                    Ok(plan) => {
-                        tracing::info!(route = ?plan.route, delivery = ?plan.delivery, "cast playing");
-                        state.plan = Some(plan);
-                        // The same file where it was, for the session: no new `Loaded`.
-                        state.reloading = quiet;
-                        // The status that confirmed it is the session's first.
-                        if let Some(last) = state.last.clone() {
-                            apply(&inner, &mut state, &last);
-                        }
-                    }
-                    Err(failure) => {
-                        tracing::warn!(%failure, "nothing cast");
-                        state.failure = Some(failure);
-                        state.ended = true;
-                        inner.say_locked(&state, PlaybackEvent::Ended { complete: false });
+        begin(&self.inner, load, quiet);
+    }
+}
+
+/// Try `load` on the TV, ending any load still tried: `quiet` loads the same file again where it
+/// was, for another track or another receiver, with no new start for the session.
+fn begin(owner: &Arc<Inner>, load: CastLoad, quiet: bool) {
+    {
+        let mut state = lock(&owner.state);
+        state.trying = true;
+        state.reloading = false;
+        state.hold_paused = quiet && state.paused == Some(true);
+        state.ended = false;
+        state.failure = None;
+        state.loaded = None;
+        state.step = Some(CastStep::Preparing);
+        state.since = Some(Instant::now());
+        state.asked = Some(load.clone());
+    }
+    owner.publish();
+    let inner = Arc::clone(owner);
+    let task = tokio::spawn(async move {
+        let outcome = attempt(&inner, load).await;
+        let speed = {
+            let mut state = lock(&inner.state);
+            state.trying = false;
+            state.step = None;
+            state.since = None;
+            match outcome {
+                Ok(plan) => {
+                    tracing::info!(route = ?plan.route, delivery = ?plan.delivery, "cast playing");
+                    state.plan = Some(plan);
+                    // The same file where it was, for the session: no new `Loaded`.
+                    state.reloading = quiet;
+                    // The status that confirmed it is the session's first.
+                    if let Some(last) = state.last.clone() {
+                        apply(&inner, &mut state, &last);
                     }
                 }
-                // A load starts at normal speed: the one asked for is set once it plays.
-                let playing = state.plan.is_some() && !state.ended;
-                state.asked_rate.filter(|r| playing && (r - 1.0).abs() > f64::EPSILON)
-            };
-            inner.publish();
-            if let (Some(rate), Some(media)) = (speed, inner.media()) {
-                let _ = answered(async move { media.set_rate(rate).await.map(|_| ()) }).await;
+                Err(failure) => {
+                    tracing::warn!(%failure, "nothing cast");
+                    state.failure = Some(failure);
+                    state.ended = true;
+                    inner.say_locked(&state, PlaybackEvent::Ended { complete: false });
+                }
             }
-        });
-        if let Some(previous) = lock(&self.attempt).replace(task) {
-            previous.abort();
+            // A load starts at normal speed: the one asked for is set once it plays.
+            let playing = state.plan.is_some() && !state.ended;
+            state.asked_rate.filter(|r| playing && (r - 1.0).abs() > f64::EPSILON)
+        };
+        inner.publish();
+        if let (Some(rate), Some(media)) = (speed, inner.media()) {
+            let _ = answered(async move { media.set_rate(rate).await.map(|_| ()) }).await;
         }
+    });
+    if let Some(previous) = lock(&owner.attempt).replace(task) {
+        previous.abort();
     }
+}
 
+impl CastPlayer {
     /// Side-load a subtitle file that came after the load, by a reload where it is: tracks are
     /// fixed at `LOAD`.
     pub async fn add_subtitle(
@@ -705,16 +1157,24 @@ impl CastPlayer {
         }
     }
 
+    /// Pause or play. The status says so at once, and the TV's next status confirms it.
     pub async fn set_paused(&self, paused: bool) -> Result<(), CastError> {
-        let Some(media) = self.inner.media() else { return Ok(()) };
-        answered(async move {
+        let Some(media) = self.inner.media().filter(|m| m.media_session_id.is_some()) else {
+            return Ok(());
+        };
+        self.inner.want(|want| want.paused = Some((paused, Instant::now())));
+        let result = answered(async move {
             if paused { media.pause().await } else { media.play().await }.map(|_| ())
         })
-        .await
+        .await;
+        if result.is_err() {
+            self.inner.want(|want| want.paused = None);
+        }
+        result
     }
 
     pub async fn toggle_pause(&self) -> Result<(), CastError> {
-        let paused = lock(&self.inner.state).paused.unwrap_or(false);
+        let paused = lock(&self.inner.state).paused_now();
         self.set_paused(!paused).await
     }
 
@@ -722,16 +1182,24 @@ impl CastPlayer {
     pub async fn seek(&self, seconds: f64, absolute: bool) -> Result<(), CastError> {
         let Some(media) = self.inner.media() else { return Ok(()) };
         let target = if absolute { seconds } else { self.position().unwrap_or(0.0) + seconds };
+        let target = target.max(0.0);
+        if media.media_session_id.is_some() {
+            self.inner.want(|want| want.position = Some((target, Instant::now())));
+        }
         self.inner.say(PlaybackEvent::Seeking(true));
         let inner = Arc::downgrade(&self.inner);
-        answered(async move {
-            let result = media.seek(target.max(0.0)).await;
+        let result = answered(async move {
+            let result = media.seek(target).await;
             if let Some(inner) = inner.upgrade() {
                 inner.say(PlaybackEvent::Seeking(false));
             }
             result.map(|_| ())
         })
-        .await
+        .await;
+        if result.is_err() {
+            self.inner.want(|want| want.position = None);
+        }
+        result
     }
 
     pub async fn set_rate(&self, rate: f64) -> Result<(), CastError> {
@@ -757,14 +1225,18 @@ impl CastPlayer {
             return Ok(());
         }
         let device = self.inner.device.clone();
-        answered(
-            async move { device.set_volume(Some((level / 100.0).clamp(0.0, 1.0)), None).await },
-        )
-        .await
+        let level = (level / 100.0).clamp(0.0, 1.0);
+        self.inner.want(|want| want.level = Some((level, Instant::now())));
+        let result = answered(async move { device.set_volume(Some(level), None).await }).await;
+        if result.is_err() {
+            self.inner.want(|want| want.level = None);
+        }
+        result
     }
 
     pub fn volume(&self) -> f64 {
-        lock(&self.inner.state).level.map_or(100.0, |l| (l * 100.0).round())
+        let state = lock(&self.inner.state);
+        state.want.level.map(|(l, _)| l).or(state.level).map_or(100.0, |l| (l * 100.0).round())
     }
 
     pub fn volume_control(&self) -> VolumeControl {
@@ -773,11 +1245,17 @@ impl CastPlayer {
 
     pub async fn set_muted(&self, muted: bool) -> Result<(), CastError> {
         let device = self.inner.device.clone();
-        answered(async move { device.set_volume(None, Some(muted)).await }).await
+        self.inner.want(|want| want.muted = Some((muted, Instant::now())));
+        let result = answered(async move { device.set_volume(None, Some(muted)).await }).await;
+        if result.is_err() {
+            self.inner.want(|want| want.muted = None);
+        }
+        result
     }
 
     pub fn muted(&self) -> bool {
-        lock(&self.inner.state).muted.unwrap_or(false)
+        let state = lock(&self.inner.state);
+        state.want.muted.map(|(m, _)| m).or(state.muted).unwrap_or(false)
     }
 
     /// Show the text track `id` (1-based, as loaded), or none.
@@ -794,8 +1272,16 @@ impl CastPlayer {
 
     /// Stop the file, keeping the receiver for the next.
     pub async fn stop(&self) -> Result<(), CastError> {
-        if let Some(attempt) = lock(&self.attempt).take() {
+        if let Some(attempt) = lock(&self.inner.attempt).take() {
             attempt.abort();
+            // A load cut short isn't loading any more.
+            {
+                let mut state = lock(&self.inner.state);
+                state.trying = false;
+                state.step = None;
+                state.since = None;
+            }
+            self.inner.publish();
         }
         let Some(media) = self.inner.media() else { return Ok(()) };
         if media.media_session_id.is_none() {
@@ -807,7 +1293,7 @@ impl CastPlayer {
     /// Stop playing and close the receiver app, so the TV goes back to what it showed. The
     /// event stream ends with it.
     pub async fn quit(&self) -> Result<(), CastError> {
-        if let Some(attempt) = lock(&self.attempt).take() {
+        if let Some(attempt) = lock(&self.inner.attempt).take() {
             attempt.abort();
         }
         lock(&self.inner.state).quit = true;
@@ -1036,6 +1522,21 @@ fn text_track(
     })
 }
 
+/// The empty WebVTT stand-in for a subtitle track inside the file, which Kaeri's receiver
+/// draws itself: the TV's list carries its id, language and name.
+fn inside_track(inner: &Inner, original: &Original) -> TextTrack {
+    let name = format!("t/inside-{}.vtt", original.id);
+    lock(&inner.resources.texts).insert(name.clone(), Arc::new(b"WEBVTT\n\n".to_vec()));
+    TextTrack {
+        id: original.id,
+        url: inner.relay.dynamic_url(&name),
+        name: original.title.clone().unwrap_or_else(|| {
+            original.language.clone().unwrap_or_else(|| format!("Subtitles {}", original.id))
+        }),
+        language: original.language.clone().unwrap_or_else(|| "und".into()),
+    }
+}
+
 /// A subtitle file's text as WebVTT: ASS converted with its typesetting dropped, SRT given a
 /// header and full stops, WebVTT as it is.
 pub fn to_webvtt(text: &str, extension: Option<&str>) -> String {
@@ -1090,13 +1591,22 @@ enum Blame {
 async fn attempt(inner: &Arc<Inner>, load: CastLoad) -> Result<CastPlan, CastFailure> {
     let setup = &inner.setup;
     let (info, cors) = media_info(setup, &load).await;
-    let caps = setup.memory.caps(&setup.device.id);
-    let plans = cast_plans(&load.source, &info, &caps, &cors, setup.encoder.as_ref())?;
-    tracing::info!(plans = plans.len(), video = ?info.video, "casting");
-    let audio = audio_choices(setup, &load, &info, &cors);
+    // Kaeri's receiver is handed the stream as it is; the Default Media Receiver gets the
+    // relay's conversions, and the capability clips.
+    let own = inner.own_receiver().await;
+    let plans = if own {
+        pass_through_plans(&load.source, &info, &cors)?
+    } else {
+        let caps = setup.memory.caps(&setup.device.id);
+        cast_plans(&load.source, &info, &caps, &cors, setup.encoder.as_ref())?
+    };
+    tracing::info!(plans = plans.len(), video = ?info.video, own, "casting");
+    let audio = audio_choices(setup, &load, &info, &cors, own);
 
     // The text tracks, once for every plan.
     lock(&inner.resources.texts).clear();
+    lock(&inner.resources.originals).clear();
+    let mut originals = if own { original_subtitles(inner, &load) } else { Vec::new() };
     let mut tracks = Vec::new();
     for (index, subtitle) in load.subtitles.iter().enumerate() {
         let id = u32::try_from(index + 1).unwrap_or(u32::MAX);
@@ -1105,6 +1615,18 @@ async fn attempt(inner: &Arc<Inner>, load: CastLoad) -> Result<CastPlan, CastFai
             Err(e) => tracing::warn!(error = %e, "a subtitle couldn't be read"),
         }
     }
+    let fonts = if own {
+        let typeset_file = originals.iter().any(|o| o.format == "ass");
+        let first_id = u32::try_from(load.subtitles.len() + 1).unwrap_or(u32::MAX);
+        let (inside, fonts) = file_extras(inner, &load, &info, typeset_file, first_id).await;
+        // The file's own tracks list beside the side-loaded ones; their WebVTT tracks are
+        // empty stand-ins whose ids the receiver shows them by.
+        tracks.extend(inside.iter().map(|o| inside_track(inner, o)));
+        originals.extend(inside);
+        fonts
+    } else {
+        Vec::new()
+    };
     let active: Vec<u32> = load
         .subtitle
         .and_then(|i| u32::try_from(i + 1).ok())
@@ -1129,14 +1651,20 @@ async fn attempt(inner: &Arc<Inner>, load: CastLoad) -> Result<CastPlan, CastFai
 
     // A clip's refusal, when it is what ended the last plan that could be made.
     let mut why = None;
-    for plan in plans {
-        // What an earlier plan or clip of this load taught is heeded at once.
+    // What Kaeri's receiver said failed: one more plan is tried after it, then it is said.
+    let mut reported: Option<ReceiverError> = None;
+    // A failure Kaeri's receiver couldn't place loads the same plan once more.
+    let mut same_again = false;
+    let mut plans = std::collections::VecDeque::from(plans);
+    while let Some(plan) = plans.pop_front() {
+        // What an earlier plan or clip of this session taught is heeded at once.
         let caps = setup.memory.caps(&setup.device.id);
-        if plan.parts().iter().any(|part| caps.refused(part)) {
+        if !own && plan.parts().iter().any(|part| caps.refused(part)) {
             continue;
         }
         step(inner, CastStep::Waiting);
-        if plan.wants_clip()
+        if !own
+            && plan.wants_clip()
             && !caps.played(&plan.video_part())
             && let Some(clip) = clip(&plan.video, plan.height)
             && !ask_with_clip(inner, &plan, clip, &load).await?
@@ -1145,10 +1673,22 @@ async fn attempt(inner: &Arc<Inner>, load: CastLoad) -> Result<CastPlan, CastFai
             continue;
         }
         step(inner, CastStep::Preparing);
-        let Some((url, content_type)) = stage(inner, &load, &info, &plan).await else {
+        let Some((url, content_type)) = stage(inner, &load, &info, &plan, own).await else {
             continue;
         };
         step(inner, CastStep::Waiting);
+        let kaeri = own.then(|| {
+            let state = lock(&inner.state);
+            kaeri_load(
+                &url,
+                &plan,
+                &info,
+                &originals,
+                load.subtitle.and_then(|i| originals.iter().find(|o| o.id as usize == i + 1)),
+                &fonts,
+                (state.language.as_deref(), state.device_word.as_deref()),
+            )
+        });
         let cast = Load {
             url,
             content_type,
@@ -1163,13 +1703,41 @@ async fn attempt(inner: &Arc<Inner>, load: CastLoad) -> Result<CastPlan, CastFai
             active_tracks: active.clone(),
             style: None,
             autoplay: !lock(&inner.state).hold_paused,
+            kaeri,
         };
-        match try_plan(inner, plan.relayed(), cast).await? {
+        let tried = try_plan(inner, plan.relayed(), cast, own).await?;
+        if own && !inner.runs_own() {
+            // Kaeri's receiver gave way to the Default Media Receiver: its own plans.
+            tracing::info!("planning again for the Default Media Receiver");
+            return Box::pin(attempt(inner, load)).await;
+        }
+        match tried {
             Tried::Played => {
                 if let Err(e) = setup.memory.record(&setup.device.id, &plan, true) {
                     tracing::warn!(error = %e, "couldn't note what the TV played");
                 }
                 return Ok(plan);
+            }
+            Tried::Refused(_) if own => {
+                let said = what_the_receiver_said(inner).await;
+                tracing::info!(route = ?plan.route, ?said, "Kaeri's receiver didn't play a plan");
+                // No device converts video: a picture the TV can't decode ends it at once.
+                if let Some(said) = said.as_ref().filter(|said| said.part == "video") {
+                    return Err(said_failure(Some(said), Some(&plan)));
+                }
+                if said.as_ref().is_some_and(|said| said.part == "unknown") {
+                    if same_again {
+                        reported = said;
+                        break;
+                    }
+                    same_again = true;
+                    plans.push_front(plan.clone());
+                    continue;
+                }
+                if reported.is_some() {
+                    break;
+                }
+                reported = said;
             }
             Tried::Refused(blame) => {
                 why = None;
@@ -1187,10 +1755,266 @@ async fn attempt(inner: &Arc<Inner>, load: CastLoad) -> Result<CastPlan, CastFai
             }
         }
     }
+    if own {
+        return Err(said_failure(reported.as_ref(), None));
+    }
     // When what this load taught leaves nothing, the reason is the part the TV refused.
     let caps = setup.memory.caps(&setup.device.id);
     cast_plans(&load.source, &info, &caps, &cors, setup.encoder.as_ref())?;
     Err(why.map_or(CastFailure::Refused, CastFailure::Uncastable))
+}
+
+/// What Kaeri's receiver reported of the load it refused. It says it before `LOAD_FAILED`, but
+/// the two are read on different paths, so the refusal can be heard first: a moment is given.
+async fn what_the_receiver_said(inner: &Inner) -> Option<ReceiverError> {
+    for _ in 0..10 {
+        if let Some(said) = lock(&inner.state).reported.take() {
+            return Some(said);
+        }
+        tokio::time::sleep(Duration::from_millis(30)).await;
+    }
+    None
+}
+
+/// Why a cast on Kaeri's receiver didn't play: the codec it named, or the plain sentence.
+fn said_failure(said: Option<&ReceiverError>, plan: Option<&CastPlan>) -> CastFailure {
+    let Some(said) = said else { return CastFailure::Refused };
+    match (said.part.as_str(), said.codec.as_deref()) {
+        ("video", Some(codec)) => Uncastable::VideoCodec(named_codec(codec, plan, true)).into(),
+        ("audio", Some(codec)) => {
+            Uncastable::AudioCodec(named_codec(codec, plan, false)).into()
+        }
+        _ => CastFailure::Refused,
+    }
+}
+
+/// The name a notice shows for a codec Kaeri's receiver named. The receiver gives the base of
+/// the TV's codec string (`hev1`, `ec-3`) or echoes the load's own word (`video:mpeg2`), so the
+/// loaded part keeps its own name and a codec string's base gets the common one.
+fn named_codec(said: &str, plan: Option<&CastPlan>, video: bool) -> String {
+    match plan {
+        Some(plan) if video && said == plan.video.part() => return plan.video.to_string(),
+        Some(CastPlan { audio: AudioPlan::Copy(codec), .. })
+            if !video && said == codec.part() =>
+        {
+            return codec.to_string();
+        }
+        _ => {}
+    }
+    let base = said.strip_prefix(if video { "video:" } else { "audio:" }).unwrap_or(said);
+    let name = match base.to_ascii_lowercase().as_str() {
+        "avc1" | "avc3" | "h264" => "H.264",
+        "hev1" | "hvc1" | "hevc" => "HEVC",
+        "vp09" | "vp9" => "VP9",
+        "vp08" | "vp8" => "VP8",
+        "mp2v" | "mpeg2" | "mpeg-2" => "MPEG-2",
+        "av01" | "av1" => "AV1",
+        "mp4a" | "aac" => "AAC",
+        "ac-3" | "ac3" => "AC-3",
+        "ec-3" | "eac3" => "E-AC-3",
+        "dts" | "dtsc" | "dtse" | "dtsh" | "dtsl" | "dtsx" => "DTS",
+        "mlpa" | "truehd" => "TrueHD",
+        "opus" => "Opus",
+        "flac" => "FLAC",
+        _ => return base.to_ascii_uppercase(),
+    };
+    name.to_owned()
+}
+
+/// A subtitle as it is, for Kaeri's receiver to draw: a side-loaded file served by the relay
+/// with its format, or one of the file's own tracks, which the receiver reads itself.
+#[derive(Debug, Clone)]
+struct Original {
+    id: u32,
+    /// Null for a track inside the file.
+    url: Option<String>,
+    format: &'static str,
+    language: Option<String>,
+    title: Option<String>,
+    /// The index among the file's own subtitle tracks, for a track inside it.
+    inside: Option<u32>,
+}
+
+/// Every subtitle of `load` as it is, in the order of `load.subtitles`. A file that can't be
+/// read is left out of the receiver's list; its WebVTT track still stands.
+fn original_subtitles(inner: &Inner, load: &CastLoad) -> Vec<Original> {
+    let mut originals = Vec::new();
+    for (index, subtitle) in load.subtitles.iter().enumerate() {
+        let id = u32::try_from(index + 1).unwrap_or(u32::MAX);
+        let extension = subtitle
+            .path
+            .extension()
+            .map(|e| e.to_string_lossy().to_ascii_lowercase())
+            .unwrap_or_default();
+        let (format, kind) = match extension.as_str() {
+            "ass" | "ssa" => ("ass", "text/x-ssa"),
+            "srt" => ("srt", "application/x-subrip"),
+            "vtt" => ("vtt", "text/vtt"),
+            "sup" => ("pgs", "application/octet-stream"),
+            "sub" | "idx" => ("vobsub", "application/octet-stream"),
+            _ => ("srt", "text/plain"),
+        };
+        let bytes = match std::fs::read(&subtitle.path) {
+            Ok(bytes) => bytes,
+            Err(e) => {
+                tracing::warn!(error = %e, "a subtitle couldn't be read");
+                continue;
+            }
+        };
+        let name = format!("o/{id}.{extension}");
+        lock(&inner.resources.originals).insert(name.clone(), (kind, Arc::new(bytes)));
+        originals.push(Original {
+            id,
+            url: Some(inner.relay.dynamic_url(&name)),
+            format,
+            language: subtitle.language.clone(),
+            title: subtitle.title.clone(),
+            inside: None,
+        });
+    }
+    originals
+}
+
+/// What a Matroska file carries for Kaeri's receiver beyond its picture and sound: its own
+/// subtitle tracks, numbered from `first_id`, and the attached fonts the relay serves for them
+/// to typeset with. The fonts are read only when something typeset can show: a side-loaded ASS
+/// file or an ASS track.
+async fn file_extras(
+    inner: &Inner,
+    load: &CastLoad,
+    info: &MediaInfo,
+    typeset_file: bool,
+    first_id: u32,
+) -> (Vec<Original>, Vec<String>) {
+    if info.container != Some(Delivery::Mkv) {
+        return (Vec::new(), Vec::new());
+    }
+    let (upstream, url, headers) =
+        (Arc::clone(&inner.setup.upstream), load.url.clone(), load.headers.clone());
+    let local = load.source.kind == SourceKind::File;
+    let runtime = tokio::runtime::Handle::current();
+    let read = tokio::task::spawn_blocking(move || -> std::io::Result<_> {
+        let mut file = if local {
+            RangeFile::local(Path::new(url.strip_prefix("file://").unwrap_or(&url)))?
+        } else {
+            RangeFile::remote(upstream, &url, headers, runtime)?
+        };
+        let header = mkv::header(&mut file)?;
+        let subtitles: Vec<mkv::TrackInfo> =
+            header.tracks.into_iter().filter(|t| t.kind == 17).collect();
+        let typeset =
+            typeset_file || subtitles.iter().any(|t| inside_format(&t.codec) == Some("ass"));
+        let fonts = match header.attachments {
+            // A font that can't be read leaves the tracks standing, drawn in the fallback font.
+            Some(at) if typeset => mkv::fonts(&mut file, at).unwrap_or_else(|e| {
+                tracing::info!(error = %e, "the file's fonts couldn't be read");
+                Vec::new()
+            }),
+            _ => Vec::new(),
+        };
+        Ok((subtitles, fonts))
+    })
+    .await;
+    let (subtitles, fonts) = match read {
+        Ok(Ok(read)) => read,
+        Ok(Err(e)) => {
+            tracing::info!(error = %e, "the file's subtitles and fonts couldn't be read");
+            return (Vec::new(), Vec::new());
+        }
+        Err(_) => return (Vec::new(), Vec::new()),
+    };
+    let mut inside = Vec::new();
+    let mut id = first_id;
+    for (index, track) in subtitles.iter().enumerate() {
+        let Some(format) = inside_format(&track.codec) else { continue };
+        inside.push(Original {
+            id,
+            url: None,
+            format,
+            language: Some(track.language.clone()).filter(|l| !l.is_empty() && l != "und"),
+            title: track.name.clone().filter(|name| !name.is_empty()),
+            inside: u32::try_from(index).ok(),
+        });
+        id = id.saturating_add(1);
+    }
+    let mut urls = Vec::new();
+    for (number, font) in fonts.into_iter().enumerate() {
+        let Some((extension, kind)) = font.font() else { continue };
+        let name = format!("f/{}.{extension}", number + 1);
+        lock(&inner.resources.originals).insert(name.clone(), (kind, Arc::new(font.data)));
+        urls.push(inner.relay.dynamic_url(&name));
+    }
+    (inside, urls)
+}
+
+/// The format Kaeri's receiver reads a Matroska subtitle track as, from its codec id; `None`
+/// for one it doesn't show.
+fn inside_format(codec: &str) -> Option<&'static str> {
+    Some(match codec {
+        "S_TEXT/ASS" | "S_TEXT/SSA" | "S_ASS" | "S_SSA" => "ass",
+        "S_TEXT/UTF8" | "S_TEXT/ASCII" => "srt",
+        "S_TEXT/WEBVTT" | "D_WEBVTT/SUBTITLES" => "vtt",
+        "S_HDMV/PGS" => "pgs",
+        "S_VOBSUB" => "vobsub",
+        _ => return None,
+    })
+}
+
+/// What Kaeri's receiver reads beside the media: where the stream comes from, its container,
+/// the audio track to play, the subtitles as they are with the file's fonts, and the sender's
+/// language and device word for its first screen.
+fn kaeri_load(
+    url: &str,
+    plan: &CastPlan,
+    info: &MediaInfo,
+    originals: &[Original],
+    active: Option<&Original>,
+    fonts: &[String],
+    (language, device): (Option<&str>, Option<&str>),
+) -> Value {
+    let container = match plan.delivery {
+        Delivery::HlsTs | Delivery::HlsFmp4 => "hls",
+        Delivery::Mp4 => "mp4",
+        Delivery::Mkv => "mkv",
+        Delivery::WebM => "webm",
+    };
+    let audio = info.chosen_audio().map(|track| {
+        json!({
+            "index": info.audio_choice,
+            "language": track.language,
+            "codec": track.codec.as_ref().map(AudioCodec::part),
+        })
+    });
+    json!({
+        "version": KAERI_PROTOCOL,
+        "url": url,
+        "route": if plan.relayed() { "relay" } else { "direct" },
+        "container": container,
+        "segments": match plan.delivery {
+            Delivery::HlsFmp4 => Some("fmp4"),
+            Delivery::HlsTs => Some("ts"),
+            _ => None,
+        },
+        "video": { "codec": plan.video.part(), "height": plan.height },
+        "audio": audio,
+        "subtitles": originals.iter().map(|o| {
+            let mut entry = json!({
+                "id": o.id,
+                "url": o.url,
+                "format": o.format,
+                "language": o.language,
+                "title": o.title,
+            });
+            if let Some(inside) = o.inside {
+                entry["inside"] = inside.into();
+            }
+            entry
+        }).collect::<Vec<_>>(),
+        "subtitle": active.map(|o| o.id),
+        "fonts": fonts,
+        "language": language,
+        "device": device,
+    })
 }
 
 /// Say what a load not yet playing is doing.
@@ -1214,16 +2038,21 @@ fn audio_choices(
     load: &CastLoad,
     info: &MediaInfo,
     cors: &probe::CorsProbe,
+    own: bool,
 ) -> Vec<CastAudio> {
     let remuxed = info.container == Some(Delivery::Mkv);
-    if !(remuxed || info.renditions) || info.audio.len() < 2 {
+    if !(own || remuxed || info.renditions) || info.audio.len() < 2 {
         return Vec::new();
     }
     let caps = setup.memory.caps(&setup.device.id);
     info.audio
         .iter()
         .enumerate()
+        // Kaeri's receiver plays every track, decoding what the TV lacks itself.
         .filter(|(index, _)| {
+            if own {
+                return true;
+            }
             let info = MediaInfo { audio_choice: *index, ..info.clone() };
             cast_plans(&load.source, &info, &caps, cors, setup.encoder.as_ref()).is_ok_and(
                 |plans| {
@@ -1278,10 +2107,11 @@ async fn ask_with_clip(
         active_tracks: Vec::new(),
         style: None,
         autoplay: true,
+        kaeri: None,
     };
     let part = plan.video_part();
     // A clip has no sound, so only the receiver's own refusal says it lacks the decoder.
-    let played = match try_plan(inner, true, cast).await? {
+    let played = match try_plan(inner, true, cast, false).await? {
         Tried::Played => true,
         Tried::Refused(Blame::Format) => false,
         Tried::Refused(Blame::Nothing | Blame::Audio) => return Ok(true),
@@ -1300,6 +2130,7 @@ async fn stage(
     load: &CastLoad,
     info: &MediaInfo,
     plan: &CastPlan,
+    own: bool,
 ) -> Option<(String, String)> {
     let relay = &inner.relay;
     *lock(&inner.resources.remuxer) = None;
@@ -1307,7 +2138,10 @@ async fn stage(
     let content_type = plan.delivery.content_type().to_owned();
     match &plan.route {
         CastRoute::Direct { url } => {
-            if let Some(master) = chosen_master(inner, info, plan, url, &[], false).await {
+            // Kaeri's receiver switches renditions itself; it is handed the whole master.
+            if !own
+                && let Some(master) = chosen_master(inner, info, plan, url, &[], false).await
+            {
                 return Some((master, content_type));
             }
             Some((url.clone(), content_type))
@@ -1354,8 +2188,9 @@ async fn stage(
                 return Some((relay.share_file(Path::new(path)), content_type));
             }
             relay.set_headers(load.headers.clone());
-            if let Some(master) =
-                chosen_master(inner, info, plan, &load.url, &load.headers, true).await
+            if !own
+                && let Some(master) =
+                    chosen_master(inner, info, plan, &load.url, &load.headers, true).await
             {
                 return Some((master, content_type));
             }
@@ -1444,7 +2279,33 @@ fn had_its_chance(inner: &Inner, waited: Duration) -> bool {
 /// the format. A plan that doesn't move is a stall, and while the TV waits on the source behind
 /// the relay (a torrent that has only just started, a slow CDN) it is not even that: the plan
 /// is given until [`Timings::patience`].
-async fn try_plan(inner: &Arc<Inner>, relayed: bool, cast: Load) -> Result<Tried, CastFailure> {
+async fn try_plan(
+    inner: &Arc<Inner>,
+    relayed: bool,
+    cast: Load,
+    own: bool,
+) -> Result<Tried, CastFailure> {
+    loop {
+        let tried = try_plan_once(inner, relayed, cast.clone()).await;
+        // Kaeri's receiver closed under the load: the same plan on the Default Media Receiver,
+        // or, for a plan made for Kaeri's receiver, new plans.
+        let again = std::mem::take(&mut lock(&inner.state).relaunch);
+        if !again {
+            return tried;
+        }
+        if own {
+            return Ok(Tried::Refused(Blame::Nothing));
+        }
+        tracing::info!("trying the plan again on the Default Media Receiver");
+    }
+}
+
+/// One try of [`try_plan`] on the receiver app running, or launched for it.
+async fn try_plan_once(
+    inner: &Arc<Inner>,
+    relayed: bool,
+    cast: Load,
+) -> Result<Tried, CastFailure> {
     const TICK: Duration = Duration::from_millis(100);
     let timings = inner.setup.timings;
     inner.relay.reset_stats();
@@ -1454,12 +2315,16 @@ async fn try_plan(inner: &Arc<Inner>, relayed: bool, cast: Load) -> Result<Tried
         let mut state = lock(&inner.state);
         state.last = None;
         state.errored = false;
+        state.reported = None;
         state.load = Some(cast.clone());
     }
     let started = Instant::now();
     let never_fetched = || relayed && inner.relay.requests() == 0;
     let closed = || {
         let state = lock(&inner.state);
+        if state.relaunch {
+            return Some(CastFailure::Lost("Kaeri's receiver closed".into()));
+        }
         state
             .closed
             .then(|| state.failure.clone().unwrap_or(CastFailure::Lost("closed".into())))
@@ -1575,6 +2440,7 @@ fn apply(inner: &Inner, state: &mut State, status: &MediaStatus) {
     if new_session {
         state.loaded = Some(status.media_session_id);
         state.ended = false;
+        state.played_in_app = true;
         if state.reloading {
             // Our own reload, for a late subtitle: the same file, where it was.
             state.reloading = false;
@@ -1651,6 +2517,7 @@ fn receive(inner: &Inner, message: &Incoming) {
     if message.namespace == NS_RECEIVER && message.payload["type"] == "RECEIVER_STATUS" {
         let Some(receiver) = ReceiverStatus::read(&message.payload) else { return };
         state.control = receiver.volume;
+        state.want.volume(receiver.level, receiver.muted);
         volume(inner, &mut state, receiver.level, receiver.muted);
         let ours = state.app.as_ref().map(|a| a.session_id.clone());
         let still_ours =
@@ -1661,6 +2528,9 @@ fn receive(inner: &Inner, message: &Incoming) {
             });
         if ours.is_some() && !still_ours && !state.quit {
             let taken = receiver.app.is_some();
+            if !taken && falls_back(inner, &mut state) {
+                return;
+            }
             end_cast(
                 inner,
                 &mut state,
@@ -1675,9 +2545,13 @@ fn receive(inner: &Inner, message: &Incoming) {
     }
     let ours = state.app.as_ref().is_some_and(|a| a.transport_id == message.source);
     if message.namespace == NS_CONNECTION && message.payload["type"] == "CLOSE" && ours {
-        if !state.quit {
+        if !state.quit && !falls_back(inner, &mut state) {
             end_cast(inner, &mut state, CastFailure::Lost("the TV closed the app".into()));
         }
+        return;
+    }
+    if message.namespace == NS_KAERI {
+        from_kaeris_receiver(inner, &mut state, message, ours);
         return;
     }
     if message.namespace != NS_MEDIA {
@@ -1690,12 +2564,121 @@ fn receive(inner: &Inner, message: &Incoming) {
         }
         return;
     }
-    let Some(status) = MediaStatus::first(&message.payload) else { return };
+    let Some(mut status) = MediaStatus::first(&message.payload) else { return };
+    // A status after a pause, a seek or a buffering spell leaves the media's description out:
+    // the duration and title stand, so the card never reads as a file of no length.
+    if let Some(last) = &state.last {
+        status.fill_from(last);
+    }
+    state.want.media(&status);
     volume(inner, &mut state, status.volume, status.muted);
+    let waits = status.state == "BUFFERING" || status.state == "LOADING";
+    state.waiting_since = waits.then(|| state.waiting_since.unwrap_or_else(Instant::now));
     state.last = Some(status.clone());
     if !state.trying {
         apply(inner, &mut state, &status);
     }
+}
+
+/// A message of Kaeri's receiver on its own namespace. `ready` comes while it launches, before
+/// it is the app in force; the rest only from the app in force.
+fn from_kaeris_receiver(inner: &Inner, state: &mut State, message: &Incoming, ours: bool) {
+    let payload = &message.payload;
+    let kind = payload["type"].as_str().unwrap_or_default();
+    if kind == "ready" {
+        inner.ready.send_replace(Some(payload.clone()));
+        return;
+    }
+    if !ours {
+        return;
+    }
+    let heard = match kind {
+        "subtitles-plain" => FromReceiver::SubtitlesPlain,
+        "up-next" => FromReceiver::UpNext { play: payload["action"] == "play" },
+        "sender-gone" => {
+            FromReceiver::SenderGone { waited: payload["waited"].as_f64().unwrap_or(0.0) }
+        }
+        "error" => {
+            let error = ReceiverError::read(payload);
+            tracing::info!(?error, "Kaeri's receiver reported an error");
+            match error.part.as_str() {
+                // The episode plays on with plain subtitles, or none.
+                "subtitles" => {}
+                _ if state.trying => {
+                    state.errored = true;
+                    state.reported = Some(error.clone());
+                }
+                part if !state.ended && state.plan.is_some() => {
+                    let relayed = state.plan.as_ref().is_some_and(CastPlan::relayed);
+                    let failure = match part {
+                        "video" | "audio" => said_failure(Some(&error), state.plan.as_ref()),
+                        "network" | "manifest"
+                            if relayed && (error.lost || error.status == Some(0)) =>
+                        {
+                            CastFailure::LostStream
+                        }
+                        "network" | "manifest" => CastFailure::Segment,
+                        _ => CastFailure::Refused,
+                    };
+                    tracing::warn!(%failure, "the cast stopped mid-episode");
+                    state.failure = Some(failure);
+                    state.ended = true;
+                    inner.say_locked(state, PlaybackEvent::Ended { complete: false });
+                    inner.publish_locked(state);
+                }
+                _ => {}
+            }
+            FromReceiver::Error(error)
+        }
+        _ => return,
+    };
+    let _ = inner.heard.send(heard);
+}
+
+/// Kaeri's receiver closing this soon after it came up, with nothing loading, is a receiver
+/// page that failed: a closed one later was closed on the TV.
+const OWN_RECEIVER_FAILS: Duration = Duration::from_secs(15);
+
+/// Kaeri's receiver closed: the Default Media Receiver takes its place and the cast goes on.
+/// Before it played anything, the next load launches it; mid-episode, the file loads again on it
+/// where it was. `false` for any other app, or Kaeri's closed idle after it played: that
+/// closing ends the cast.
+fn falls_back(inner: &Inner, state: &mut State) -> bool {
+    let custom = state.app.as_ref().is_some_and(|app| app.app_id != DEFAULT_MEDIA_RECEIVER);
+    if !custom || state.fallen_back {
+        return false;
+    }
+    if state.played_in_app {
+        let mid_episode = state.plan.is_some() && !state.ended && state.asked.is_some();
+        if !mid_episode {
+            return false;
+        }
+        tracing::info!(
+            "Kaeri's receiver closed mid-episode; it plays on the Default Media Receiver"
+        );
+        state.app = None;
+        state.fallen_back = true;
+        state.reload_elsewhere = true;
+        *lock(&inner.media) = None;
+        return true;
+    }
+    // Idle a while, it was closed on the TV, as any receiver is: the session ends.
+    let failed = state.launched.is_some_and(|at| at.elapsed() < OWN_RECEIVER_FAILS);
+    if !state.trying && !failed {
+        return false;
+    }
+    tracing::info!(
+        "Kaeri's receiver closed before playing; the Default Media Receiver takes over"
+    );
+    state.app = None;
+    state.fallen_back = true;
+    if state.trying {
+        state.relaunch = true;
+    } else {
+        state.relaunch_idle = true;
+    }
+    *lock(&inner.media) = None;
+    true
 }
 
 /// The receiver app is gone, or someone else's: the cast is over.
@@ -1732,6 +2715,26 @@ async fn poll(inner: std::sync::Weak<Inner>) {
         };
         if done {
             return;
+        }
+        let elsewhere = {
+            let mut state = lock(&inner.state);
+            let reload = std::mem::take(&mut state.reload_elsewhere);
+            state.asked.clone().filter(|_| reload).map(|mut load| {
+                load.start = state.last.as_ref().map(|s| s.position).or(load.start);
+                load.subtitle =
+                    state.subtitle.and_then(|id| usize::try_from(id).ok()?.checked_sub(1));
+                load
+            })
+        };
+        if let Some(load) = elsewhere {
+            begin(&inner, load, true);
+        }
+        let relaunch = std::mem::take(&mut lock(&inner.state).relaunch_idle);
+        if relaunch {
+            if let Err(e) = inner.app().await {
+                tracing::info!(error = %e, "the Default Media Receiver didn't launch");
+            }
+            inner.publish();
         }
         if idle {
             tracing::info!("paused too long; ending the cast");

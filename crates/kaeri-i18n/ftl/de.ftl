@@ -33,6 +33,15 @@ notice-cast-not-same-network = Dieses Gerät ist nicht im Netzwerk von { $name }
 # The TV stopped answering mid-cast. The name is the TV's own.
 notice-cast-lost = Verbindung zu { $name } verloren, deshalb wurde das Übertragen beendet.
 
+# Kaeri's receiver on the TV couldn't get part of the episode from the source mid-play, so the cast stopped. The card offers Choose source and Play here. The name is the TV's own.
+notice-cast-segment = { $name } bekommt den Stream nicht mehr: Die Quelle hat für einen Teil der Folge nicht geantwortet. Probiere eine andere Quelle.
+
+# The TV stopped reaching this device, which hands it the stream, mid-episode. The card offers Try again and Play here. The name is the TV's own.
+notice-cast-lost-stream = { $name } hat den Stream von diesem Gerät verloren. Prüfe, ob beide im selben Netzwerk sind.
+
+# Shown once per TV, the first time it can't keep up with styled subtitles and switches to plain ones. Nothing else changes and the episode plays on. The name is the TV's own.
+notice-cast-subtitles-plain = Untertitel auf { $name } erscheinen als einfacher Text. Gestaltete Untertitel waren zu viel für den Fernseher.
+
 # The TV picked to cast to has left the network.
 notice-cast-no-device = Dieser Fernseher ist nicht mehr im Netzwerk.
 

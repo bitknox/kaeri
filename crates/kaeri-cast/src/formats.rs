@@ -51,8 +51,13 @@ impl VideoFormat {
             "av01" => Self::Av1,
             "mp4a" | "opus" | "Opus" | "fLaC" | "flac" | "ac-3" | "ec-3" | "dtsc" | "dtsh"
             | "dtsl" | "mlpa" => return None,
-            other => Self::Other(other.to_owned()),
+            other => Self::Other(known_name(other).unwrap_or(other).to_owned()),
         })
+    }
+
+    /// From a Matroska codec id the TV path has no variant for, by the name people know.
+    pub fn other_from_matroska(id: &str) -> Self {
+        Self::Other(known_name(id).unwrap_or_else(|| id.trim_start_matches("V_")).to_owned())
     }
 
     /// H.264 by its `profile_idc`: High 10 and above are a different decoder.
@@ -116,6 +121,24 @@ impl fmt::Display for VideoFormat {
     }
 }
 
+/// The name people know a codec by, for an id the TV path has no variant for: what a notice
+/// shows in its sentence.
+fn known_name(id: &str) -> Option<&'static str> {
+    Some(match id {
+        "V_MPEG2" | "mp2v" => "MPEG-2",
+        "V_MPEG1" => "MPEG-1",
+        "V_MPEG4/ISO/ASP" | "V_MPEG4/ISO/SP" | "V_MPEG4/ISO/AP" | "mp4v" => "MPEG-4 Part 2",
+        "V_VP8" | "vp08" => "VP8",
+        "V_THEORA" => "Theora",
+        "V_PRORES" => "ProRes",
+        "A_MPEG/L3" | ".mp3" => "MP3",
+        "A_MPEG/L2" => "MP2",
+        "A_VORBIS" => "Vorbis",
+        "A_PCM/INT/LIT" | "A_PCM/INT/BIG" | "A_PCM/FLOAT/IEEE" => "PCM",
+        _ => return None,
+    })
+}
+
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub enum AudioCodec {
     Aac,
@@ -153,7 +176,9 @@ impl AudioCodec {
             "A_EAC3" => Self::Eac3,
             id if id.starts_with("A_DTS") => Self::Dts,
             "A_TRUEHD" => Self::TrueHd,
-            other => Self::Other(other.trim_start_matches("A_").to_owned()),
+            other => Self::Other(
+                known_name(other).unwrap_or_else(|| other.trim_start_matches("A_")).to_owned(),
+            ),
         }
     }
 
@@ -578,6 +603,45 @@ pub fn cast_plans(
     Ok(plans)
 }
 
+/// The plans for Kaeri's own receiver, which unpacks every container itself, decodes audio
+/// the TV lacks in WebAssembly and draws every subtitle format: the stream as it is, straight
+/// from the source when the TV can read it there with CORS, and else through the relay, which
+/// only adds CORS and the source's headers. Nothing is remuxed or converted, and video the TV
+/// can't decode is the receiver's to report.
+pub fn pass_through_plans(
+    source: &CastSource,
+    media: &MediaInfo,
+    probe: &CorsProbe,
+) -> Result<Vec<CastPlan>, Uncastable> {
+    if source.kind == SourceKind::DeepLink {
+        return Err(Uncastable::DeepLink);
+    }
+    let delivery = media.container.unwrap_or(match source.kind {
+        SourceKind::Hls => Delivery::HlsTs,
+        _ => Delivery::Mp4,
+    });
+    let audio = match media.chosen_audio() {
+        Some(track) => AudioPlan::Copy(track.codec.clone().unwrap_or(AudioCodec::Aac)),
+        None if delivery == Delivery::Mkv => AudioPlan::Silent,
+        None => AudioPlan::Copy(AudioCodec::Aac),
+    };
+    let plan = |route| CastPlan {
+        route,
+        video: media.video.clone().unwrap_or(VideoFormat::H264),
+        height: media.height,
+        audio: audio.clone(),
+        delivery,
+    };
+    let mut plans = Vec::new();
+    // The receiver's player fetches with CORS, which only an HLS probe has checked.
+    if source.headers.is_empty() && !source.local_only() && delivery.is_hls() && probe.passed()
+    {
+        plans.push(plan(CastRoute::Direct { url: source.url.clone() }));
+    }
+    plans.push(plan(CastRoute::Relayed { remux: false }));
+    Ok(plans)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -612,6 +676,28 @@ mod tests {
 
     fn passed() -> CorsProbe {
         CorsProbe { manifest: true, segment: true, plain_media: true }
+    }
+
+    #[test]
+    fn kaeris_receiver_is_handed_the_stream_as_it_is() {
+        let mut info = media(VideoFormat::Hevc, AudioCodec::Dts, Delivery::Mkv);
+        info.height = Some(2160);
+        let mkv = CastSource {
+            url: "https://cdn.example/a/episode.mkv".into(),
+            kind: SourceKind::Progressive,
+            headers: Vec::new(),
+        };
+        let plans = pass_through_plans(&mkv, &info, &CorsProbe::default()).unwrap();
+        assert_eq!(plans.len(), 1);
+        assert_eq!(plans[0].route, CastRoute::Relayed { remux: false });
+        assert_eq!(plans[0].delivery, Delivery::Mkv);
+        assert_eq!(plans[0].audio, AudioPlan::Copy(AudioCodec::Dts), "decoded on the TV");
+
+        let hls = media(VideoFormat::H264, AudioCodec::Aac, Delivery::HlsTs);
+        let plans =
+            pass_through_plans(&source(SourceKind::Hls, false), &hls, &passed()).unwrap();
+        assert!(matches!(plans[0].route, CastRoute::Direct { .. }));
+        assert_eq!(plans[1].route, CastRoute::Relayed { remux: false });
     }
 
     #[test]

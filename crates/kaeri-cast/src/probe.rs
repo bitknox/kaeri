@@ -419,7 +419,7 @@ pub fn matroska<R: Read + Seek>(reader: &mut R) -> std::io::Result<MediaInfo> {
                     ),
                     "V_VP9" => VideoFormat::Vp9,
                     "V_AV1" => VideoFormat::Av1,
-                    other => VideoFormat::Other(other.trim_start_matches("V_").to_owned()),
+                    other => VideoFormat::other_from_matroska(other),
                 });
             }
             2 => info.audio.push(AudioTrack {

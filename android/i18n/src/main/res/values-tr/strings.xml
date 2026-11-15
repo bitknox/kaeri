@@ -13,6 +13,9 @@
     <string name="notice_cast_taken_over">Başka bir cihaz %1$s üzerinde bir şey başlattı, bu yüzden yayınlama durdu.</string>
     <string name="notice_cast_not_same_network">Bu cihaz, %1$s ile aynı ağda değil ya da ona VPN üzerinden ulaşıyor. Yayınlamak için ikisini de aynı ağa bağlayın.</string>
     <string name="notice_cast_lost">%1$s ile bağlantı koptu, bu yüzden yayınlama durdu.</string>
+    <string name="notice_cast_segment">%1$s yayını alamaz oldu: kaynak, bölümün bir kısmı için yanıt vermedi. Başka bir kaynak deneyin.</string>
+    <string name="notice_cast_lost_stream">%1$s, bu cihazdan gelen yayını kaybetti. İkisinin de aynı ağda olduğundan emin olun.</string>
+    <string name="notice_cast_subtitles_plain">%1$s üzerinde altyazılar düz metin olarak gösteriliyor. Biçimli altyazılar bu TV için fazla ağır geldi.</string>
     <string name="notice_cast_no_device">Seçilen TV artık ağda değil.</string>
     <string name="notice_cast_unavailable">Bu Kaeri sürümü TV\'lere yayınlamayı desteklemiyor.</string>
     <string name="cast_phase_starting">%1$s üzerinde başlatılıyor</string>

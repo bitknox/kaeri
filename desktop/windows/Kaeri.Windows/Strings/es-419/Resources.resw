@@ -68,6 +68,15 @@
   <data name="NoticeCastLost" xml:space="preserve">
     <value>Se perdió la conexión con {name}, así que se detuvo la transmisión.</value>
   </data>
+  <data name="NoticeCastSegment" xml:space="preserve">
+    <value>{name} dejó de recibir la transmisión: la fuente no respondió para una parte del episodio. Prueba con otra fuente.</value>
+  </data>
+  <data name="NoticeCastLostStream" xml:space="preserve">
+    <value>{name} perdió la transmisión de este dispositivo. Comprueba que ambos estén en la misma red.</value>
+  </data>
+  <data name="NoticeCastSubtitlesPlain" xml:space="preserve">
+    <value>Los subtítulos en {name} se muestran como texto simple. Los subtítulos con estilo eran demasiado para la TV.</value>
+  </data>
   <data name="NoticeCastNoDevice" xml:space="preserve">
     <value>Ese televisor ya no está en la red.</value>
   </data>

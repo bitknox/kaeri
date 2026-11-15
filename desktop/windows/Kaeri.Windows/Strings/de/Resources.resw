@@ -68,6 +68,15 @@
   <data name="NoticeCastLost" xml:space="preserve">
     <value>Verbindung zu {name} verloren, deshalb wurde das Übertragen beendet.</value>
   </data>
+  <data name="NoticeCastSegment" xml:space="preserve">
+    <value>{name} bekommt den Stream nicht mehr: Die Quelle hat für einen Teil der Folge nicht geantwortet. Probiere eine andere Quelle.</value>
+  </data>
+  <data name="NoticeCastLostStream" xml:space="preserve">
+    <value>{name} hat den Stream von diesem Gerät verloren. Prüfe, ob beide im selben Netzwerk sind.</value>
+  </data>
+  <data name="NoticeCastSubtitlesPlain" xml:space="preserve">
+    <value>Untertitel auf {name} erscheinen als einfacher Text. Gestaltete Untertitel waren zu viel für den Fernseher.</value>
+  </data>
   <data name="NoticeCastNoDevice" xml:space="preserve">
     <value>Dieser Fernseher ist nicht mehr im Netzwerk.</value>
   </data>

@@ -68,6 +68,15 @@
   <data name="NoticeCastLost" xml:space="preserve">
     <value>{name} ne répond plus, la diffusion s’est donc arrêtée.</value>
   </data>
+  <data name="NoticeCastSegment" xml:space="preserve">
+    <value>{name} ne reçoit plus le flux : la source n’a pas répondu pour une partie de l’épisode. Essayez une autre source.</value>
+  </data>
+  <data name="NoticeCastLostStream" xml:space="preserve">
+    <value>{name} a perdu le flux de cet appareil. Vérifiez que les deux sont sur le même réseau.</value>
+  </data>
+  <data name="NoticeCastSubtitlesPlain" xml:space="preserve">
+    <value>Les sous-titres sur {name} s’affichent en texte simple. Les sous-titres mis en forme étaient trop lourds pour la TV.</value>
+  </data>
   <data name="NoticeCastNoDevice" xml:space="preserve">
     <value>Cette télévision n’est plus sur le réseau.</value>
   </data>

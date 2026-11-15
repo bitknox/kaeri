@@ -13,6 +13,9 @@
     <string name="notice_cast_taken_over">Другое устройство запустило что-то на %1$s, поэтому трансляция остановлена.</string>
     <string name="notice_cast_not_same_network">Это устройство не в той же сети, что %1$s, или подключается к ней через VPN. Для трансляции подключите оба к одной сети.</string>
     <string name="notice_cast_lost">Связь с %1$s потеряна, трансляция остановлена.</string>
+    <string name="notice_cast_segment">%1$s перестал получать поток: источник не ответил для части серии. Попробуйте другой источник.</string>
+    <string name="notice_cast_lost_stream">%1$s потерял поток. Проверьте, что это устройство и телевизор в одной сети.</string>
+    <string name="notice_cast_subtitles_plain">Субтитры на %1$s показываются простым текстом. Оформленные субтитры оказались слишком тяжёлыми для телевизора.</string>
     <string name="notice_cast_no_device">Этот телевизор больше не в сети.</string>
     <string name="notice_cast_unavailable">Эта версия Kaeri не умеет передавать видео на телевизоры.</string>
     <string name="cast_phase_starting">Запуск на %1$s</string>
