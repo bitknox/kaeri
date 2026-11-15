@@ -87,3 +87,4 @@ episodes-matched = Eşleşme: { $title }.
 episodes-release-dual = { -subbed-cap } ve { -dubbed }
 episodes-release-dub = { -dubbed-cap }
 episodes-release-current-pick = Şu anki seçim
+episode-missing-checking = { -source-cap-pl }ınız denetleniyor…

@@ -3407,6 +3407,9 @@
   <data name="ActionCheckAgain" xml:space="preserve">
     <value>Sprawdź ponownie</value>
   </data>
+  <data name="ActionChecking" xml:space="preserve">
+    <value>Sprawdzanie</value>
+  </data>
   <data name="ActionOpenSettings" xml:space="preserve">
     <value>Otwórz ustawienia systemu</value>
   </data>
@@ -3472,6 +3475,9 @@
   </data>
   <data name="TimeMinutes" xml:space="preserve">
     <value>{minutes} min</value>
+  </data>
+  <data name="TimeHours" xml:space="preserve">
+    <value>{hours} godz.</value>
   </data>
   <data name="TimeNowInline" xml:space="preserve">
     <value>teraz</value>
@@ -10097,6 +10103,42 @@
   <data name="SourcePickerCoverage_other" xml:space="preserve">
     <value>{covered} z {of} odcinków</value>
   </data>
+  <data name="SourcePickerEpisodes_one" xml:space="preserve">
+    <value>Odcinek {first}</value>
+  </data>
+  <data name="SourcePickerEpisodes_few" xml:space="preserve">
+    <value>Odcinki {first}–{last}</value>
+  </data>
+  <data name="SourcePickerEpisodes_many" xml:space="preserve">
+    <value>Odcinki {first}–{last}</value>
+  </data>
+  <data name="SourcePickerEpisodes_other" xml:space="preserve">
+    <value>Odcinki {first}–{last}</value>
+  </data>
+  <data name="SourcePickerEpisodesNotYet" xml:space="preserve">
+    <value>Odcinki {first}–{last}. Jeszcze bez {missing}</value>
+  </data>
+  <data name="SourcePickerEpisodesNot" xml:space="preserve">
+    <value>Odcinki {first}–{last}. Bez {missing}</value>
+  </data>
+  <data name="SourcePickerMissingPair" xml:space="preserve">
+    <value>{a} i {b}</value>
+  </data>
+  <data name="SourcePickerMissingRange" xml:space="preserve">
+    <value>{first}–{last}</value>
+  </data>
+  <data name="SourcePickerCoverageMissing_one" xml:space="preserve">
+    <value>{covered} z {of} odcinka. Bez {missing}</value>
+  </data>
+  <data name="SourcePickerCoverageMissing_few" xml:space="preserve">
+    <value>{covered} z {of} odcinków. Bez {missing}</value>
+  </data>
+  <data name="SourcePickerCoverageMissing_many" xml:space="preserve">
+    <value>{covered} z {of} odcinków. Bez {missing}</value>
+  </data>
+  <data name="SourcePickerCoverageMissing_other" xml:space="preserve">
+    <value>{covered} z {of} odcinka. Bez {missing}</value>
+  </data>
   <data name="SourceNoteOff" xml:space="preserve">
     <value>Wyłączone</value>
   </data>
@@ -12079,6 +12121,42 @@
   </data>
   <data name="EpisodeGoToNotOut" xml:space="preserve">
     <value>Odcinek {number} jeszcze nie wyszedł. Najnowszy to {latest}.</value>
+  </data>
+  <data name="EpisodeMissingAired" xml:space="preserve">
+    <value>Odcinek {episode} ukazał się {ago}.</value>
+  </data>
+  <data name="EpisodeMissingAiredOn" xml:space="preserve">
+    <value>Odcinek {episode} ukazał się {date}.</value>
+  </data>
+  <data name="EpisodeMissingNotYet" xml:space="preserve">
+    <value>Twoje źródła jeszcze go nie mają.</value>
+  </data>
+  <data name="EpisodeMissingStill" xml:space="preserve">
+    <value>Twoje źródła nadal go nie mają.</value>
+  </data>
+  <data name="EpisodeMissingNoAnswer" xml:space="preserve">
+    <value>Twoje źródła nie odpowiedziały.</value>
+  </data>
+  <data name="EpisodeMissingLooksAgain" xml:space="preserve">
+    <value>Kaeri szuka go ponownie co {minutes} min.</value>
+  </data>
+  <data name="EpisodeMissingNone" xml:space="preserve">
+    <value>Twoje źródła go nie mają.</value>
+  </data>
+  <data name="EpisodeMissingOffline" xml:space="preserve">
+    <value>Kaeri poszuka go po powrocie połączenia.</value>
+  </data>
+  <data name="EpisodeRowAiredAgo" xml:space="preserve">
+    <value>Ukazał się {ago}</value>
+  </data>
+  <data name="EpisodeUnsourcedYet" xml:space="preserve">
+    <value>Źródła jeszcze go nie mają</value>
+  </data>
+  <data name="EpisodeFoundAnnouncement" xml:space="preserve">
+    <value>Twoje źródła mają już odcinek {episode}.</value>
+  </data>
+  <data name="EpisodeCheckAgainHelp" xml:space="preserve">
+    <value>Kaeri sam też szuka co {minutes} min przez {hours} godz. po emisji odcinka.</value>
   </data>
   <data name="TorrentsTitle" xml:space="preserve">
     <value>Torrenty</value>

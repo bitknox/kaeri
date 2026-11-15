@@ -1544,6 +1544,7 @@
     <string name="action_disable">Выключить</string>
     <string name="action_check_now">Проверить сейчас</string>
     <string name="action_check_again">Проверить снова</string>
+    <string name="action_checking">Проверка</string>
     <string name="action_open_settings">Открыть настройки</string>
     <string name="action_report">Сообщить об ошибке</string>
     <string name="action_play_now">Смотреть сейчас</string>
@@ -1566,6 +1567,7 @@
     <string name="time_in">через %1$s</string>
     <string name="time_minutes_left">осталось %1$,d мин</string>
     <string name="time_minutes">%1$,d мин</string>
+    <string name="time_hours">%1$,d ч</string>
     <string name="time_now_inline">сейчас</string>
     <string name="time_just_now_inline">только что</string>
     <string name="when_today">сегодня в %1$s</string>
@@ -3936,6 +3938,22 @@
         <item quantity="many">%1$,d из %2$,d эпизодов</item>
         <item quantity="other">%1$,d из %2$,d эпизода</item>
     </plurals>
+    <plurals name="source_picker_episodes">
+        <item quantity="one">Эпизоды %2$d–%3$d</item>
+        <item quantity="few">Эпизоды %2$d–%3$d</item>
+        <item quantity="many">Эпизоды %2$d–%3$d</item>
+        <item quantity="other">Эпизоды %2$d–%3$d</item>
+    </plurals>
+    <string name="source_picker_episodes_not_yet">Эпизоды %1$d–%2$d. Пока нет %3$s</string>
+    <string name="source_picker_episodes_not">Эпизоды %1$d–%2$d. Нет %3$s</string>
+    <string name="source_picker_missing_pair">%1$d и %2$d</string>
+    <string name="source_picker_missing_range">%1$d–%2$d</string>
+    <plurals name="source_picker_coverage_missing">
+        <item quantity="one">%1$,d из %2$,d эпизода. Нет %3$s</item>
+        <item quantity="few">%1$,d из %2$,d эпизодов. Нет %3$s</item>
+        <item quantity="many">%1$,d из %2$,d эпизодов. Нет %3$s</item>
+        <item quantity="other">%1$,d из %2$,d эпизода. Нет %3$s</item>
+    </plurals>
     <string name="source_note_off">Выключен</string>
     <string name="source_note_resting">Не отвечает, скоро попробуем снова</string>
     <string name="source_note_gone">Не установлен</string>
@@ -4624,6 +4642,18 @@
     <string name="episode_go_to_label">Эпизод, с %1$d по %2$d</string>
     <string name="episode_go_to_none">Эпизода %1$d нет. В этом сериале их %2$d.</string>
     <string name="episode_go_to_not_out">Эпизод %1$d ещё не вышел. Последний: %2$d.</string>
+    <string name="episode_missing_aired">Эпизод %1$d вышел %2$s.</string>
+    <string name="episode_missing_aired_on">Эпизод %1$d вышел %2$s.</string>
+    <string name="episode_missing_not_yet">Ваши источники его пока не нашли.</string>
+    <string name="episode_missing_still">Ваши источники всё ещё его не нашли.</string>
+    <string name="episode_missing_no_answer">Ваши источники не ответили.</string>
+    <string name="episode_missing_looks_again">Kaeri ищет его снова каждые %1$,d мин.</string>
+    <string name="episode_missing_none">Ваши источники так и не нашли его.</string>
+    <string name="episode_missing_offline">Kaeri поищет его, когда снова появится сеть.</string>
+    <string name="episode_row_aired_ago">Вышел %1$s</string>
+    <string name="episode_unsourced_yet">Ваши источники пока не нашли</string>
+    <string name="episode_found_announcement">Ваши источники нашли эпизод %1$d.</string>
+    <string name="episode_check_again_help">Kaeri также сам ищет эпизод каждые %1$,d мин в течение %2$,d ч после его выхода.</string>
     <string name="torrents_title">Торренты</string>
     <string name="torrents_on">Торренты включены</string>
     <string name="torrents_off_detail">По умолчанию выключено. Торренты подключаются напрямую, если не направить их через прокси.</string>

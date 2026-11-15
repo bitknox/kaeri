@@ -2982,6 +2982,9 @@ episodes-release-dub = Dublajlı
 # After a { -release } in the picker: it is the one Kaeri would play on its own.
 episodes-release-current-pick = Şu anki seçim
 
+# Replaces the missing-episode status on the title page while a check runs.
+episode-missing-checking = Kaynaklarınız denetleniyor…
+
 # Action label in the help overlay and the command palette.
 keys-action-show-keys = Tuşları göster
 
@@ -3233,6 +3236,12 @@ keys-hint-stop = Durdur
 
 # Short form of an action for the status line's hints, drawn beside its key. Room is tight, so keep it to a word or two.
 keys-hint-play-next = Sonrakini oynat
+
+# Hint for the Refresh key on a title page whose next episode no source has yet. Keep it to a word or two.
+keys-hint-check-again = Yeniden denetle
+
+# Hint for the play key on a title page whose next episode no source has yet: it plays the one before.
+keys-hint-play-episode = Bölüm { $episode } oynat
 
 # Short form of an action for the status line's hints, drawn beside its key. Room is tight, so keep it to a word or two.
 keys-hint-episodes = Bölümler
@@ -6126,6 +6135,9 @@ action-check-now = Şimdi denetle
 # Button that checks a { -source } again after it did not answer.
 action-check-again = Yeniden denetle
 
+# Check again while the check runs. Keep it about as short as "Check again": the button keeps its width.
+action-checking = Denetleniyor
+
 # Button that opens the system's own settings for the app.
 action-open-settings = Ayarları aç
 
@@ -6191,6 +6203,9 @@ time-minutes-left = { $minutes } dk kaldı
 
 # A length in minutes, for an episode.
 time-minutes = { $minutes } dk
+
+# A length in hours, inside time-ago.
+time-hours = { $hours } sa
 
 # A countdown that has run out: the thing is happening now. Lower case, as it stands inside a line.
 time-now-inline = şimdi
@@ -12394,6 +12409,32 @@ source-picker-coverage =
        *[other] { $covered } / { $of } bölüm
     }
 
+# Under a source that lists every episode that is out.
+source-picker-episodes =
+    { $count ->
+        [one] Bölüm { $first }
+       *[other] Bölüm { $first }-{ $last }
+    }
+
+# Under a source that lacks the newest episodes, within a week of them airing. $missing is one number, source-picker-missing-pair or source-picker-missing-range.
+source-picker-episodes-not-yet = Bölüm { $first }-{ $last }. { $missing } henüz yok
+
+# The same, more than a week after the episodes aired.
+source-picker-episodes-not = Bölüm { $first }-{ $last }. { $missing } yok
+
+# Two episodes a source lacks, inside the missing part of a source's line.
+source-picker-missing-pair = { $a } ve { $b }
+
+# Three or more episodes in a row a source lacks, inside the missing part of a source's line.
+source-picker-missing-range = { $first }-{ $last }
+
+# Under a source with a gap in the middle, such as "5 of 6 episodes. Not 3".
+source-picker-coverage-missing =
+    { $of ->
+        [one] { $covered } / { $of } bölüm. { $missing } yok
+       *[other] { $covered } / { $of } bölüm. { $missing } yok
+    }
+
 # Under a source that is switched off in Settings.
 source-note-off = Kapalı
 
@@ -14303,6 +14344,42 @@ episode-go-to-none = { $number }. bölüm yok. Bu dizide { $last } bölüm var.
 
 # Shown when the number typed is an episode with no date that has not come out.
 episode-go-to-not-out = { $number }. bölüm henüz çıkmadı. En son bölüm { $latest }.
+
+# Status, first sentence, within a day of the episode airing.
+episode-missing-aired = Bölüm { $episode } { $ago } yayınlandı.
+
+# Status, first sentence, a day or more after the episode aired.
+episode-missing-aired-on = Bölüm { $episode } { $date } tarihinde yayınlandı.
+
+# Status, second sentence, until a check the person asked for comes back empty.
+episode-missing-not-yet = Kaynaklarınızda henüz yok.
+
+# Status, second sentence, after a check the person asked for came back empty, and once Kaeri has stopped looking by itself.
+episode-missing-still = Kaynaklarınızda hâlâ yok.
+
+# Status, second sentence, after a check where none of the person's sources answered.
+episode-missing-no-answer = Kaynaklarınız yanıt vermedi.
+
+# Status, last sentence, during the hours Kaeri looks for the episode by itself.
+episode-missing-looks-again = Kaeri her { $minutes } dakikada bir yeniden bakıyor.
+
+# Status a week after the episode aired, when no source has listed it.
+episode-missing-none = Kaynaklarınızın hiçbirinde yok.
+
+# Status, last sentence, while the device is offline during the hours Kaeri looks by itself.
+episode-missing-offline = Kaeri, yeniden çevrimiçi olduğunuzda bakacak.
+
+# Row note of an episode that aired within the last day. The span is already worded ("25 min", "3 h").
+episode-row-aired-ago = { $ago } yayınlandı
+
+# Row note beside when it aired, for an episode that aired in the last week and no source lists yet.
+episode-unsourced-yet = Henüz kaynaklarınızda yok
+
+# Announced once to screen readers when a check finds the missing episode while its page is open.
+episode-found-announcement = Bölüm { $episode } artık kaynaklarınızda.
+
+# Tooltip and screen reader hint of Check again, while Kaeri looks for the episode by itself.
+episode-check-again-help = Kaeri, bir bölüm yayınlandıktan sonra { $hours } saat boyunca her { $minutes } dakikada bir kendisi de bakar.
 
 # Title of the settings group and the screen.
 torrents-title = Torrentler

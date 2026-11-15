@@ -1349,6 +1349,7 @@
     <string name="action_disable">Nonaktifkan</string>
     <string name="action_check_now">Periksa sekarang</string>
     <string name="action_check_again">Periksa lagi</string>
+    <string name="action_checking">Memeriksa</string>
     <string name="action_open_settings">Buka pengaturan</string>
     <string name="action_report">Laporkan</string>
     <string name="action_play_now">Putar sekarang</string>
@@ -1371,6 +1372,7 @@
     <string name="time_in">dalam %1$s</string>
     <string name="time_minutes_left">%1$,d mnt tersisa</string>
     <string name="time_minutes">%1$,d mnt</string>
+    <string name="time_hours">%1$,d jam</string>
     <string name="time_now_inline">sekarang</string>
     <string name="time_just_now_inline">barusan</string>
     <string name="when_today">hari ini %1$s</string>
@@ -3501,6 +3503,16 @@
     <plurals name="source_picker_coverage">
         <item quantity="other">%1$,d dari %2$,d episode</item>
     </plurals>
+    <plurals name="source_picker_episodes">
+        <item quantity="other">Episode %2$d–%3$d</item>
+    </plurals>
+    <string name="source_picker_episodes_not_yet">Episode %1$d–%2$d. Belum ada %3$s</string>
+    <string name="source_picker_episodes_not">Episode %1$d–%2$d. Tanpa %3$s</string>
+    <string name="source_picker_missing_pair">%1$d dan %2$d</string>
+    <string name="source_picker_missing_range">%1$d–%2$d</string>
+    <plurals name="source_picker_coverage_missing">
+        <item quantity="other">%1$,d dari %2$,d episode. Tanpa %3$s</item>
+    </plurals>
     <string name="source_note_off">Dimatikan</string>
     <string name="source_note_resting">Tidak merespons, akan dicoba lagi segera</string>
     <string name="source_note_gone">Tidak terpasang</string>
@@ -4150,6 +4162,18 @@
     <string name="episode_go_to_label">Episode, %1$d sampai %2$d</string>
     <string name="episode_go_to_none">Tidak ada episode %1$d. Serial ini punya %2$d.</string>
     <string name="episode_go_to_not_out">Episode %1$d belum tayang. Yang terbaru adalah %2$d.</string>
+    <string name="episode_missing_aired">Episode %1$d tayang %2$s.</string>
+    <string name="episode_missing_aired_on">Episode %1$d tayang pada %2$s.</string>
+    <string name="episode_missing_not_yet">Sumber-sumber Anda belum memilikinya.</string>
+    <string name="episode_missing_still">Sumber-sumber Anda masih belum memilikinya.</string>
+    <string name="episode_missing_no_answer">Sumber-sumber Anda tidak merespons.</string>
+    <string name="episode_missing_looks_again">Kaeri mencarinya lagi setiap %1$,d menit.</string>
+    <string name="episode_missing_none">Tidak ada sumber Anda yang memilikinya.</string>
+    <string name="episode_missing_offline">Kaeri akan mencarinya setelah Anda kembali daring.</string>
+    <string name="episode_row_aired_ago">Tayang %1$s</string>
+    <string name="episode_unsourced_yet">Belum ada di sumber-sumber Anda</string>
+    <string name="episode_found_announcement">Episode %1$d kini ada di sumber-sumber Anda.</string>
+    <string name="episode_check_again_help">Kaeri juga mencarinya sendiri setiap %1$,d menit selama %2$,d jam setelah episode tayang.</string>
     <string name="torrents_title">Torrent</string>
     <string name="torrents_on">Torrent aktif</string>
     <string name="torrents_off_detail">Nonaktif secara bawaan. Torrent terhubung langsung kecuali Anda mengarahkannya lewat proxy.</string>

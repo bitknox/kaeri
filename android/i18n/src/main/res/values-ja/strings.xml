@@ -1349,6 +1349,7 @@
     <string name="action_disable">無効にする</string>
     <string name="action_check_now">今すぐ確認</string>
     <string name="action_check_again">再確認</string>
+    <string name="action_checking">確認中</string>
     <string name="action_open_settings">設定を開く</string>
     <string name="action_report">報告</string>
     <string name="action_play_now">今すぐ再生</string>
@@ -1371,6 +1372,7 @@
     <string name="time_in">%1$s後</string>
     <string name="time_minutes_left">残り%1$,d分</string>
     <string name="time_minutes">%1$,d分</string>
+    <string name="time_hours">%1$,d時間</string>
     <string name="time_now_inline">今</string>
     <string name="time_just_now_inline">たった今</string>
     <string name="when_today">今日 %1$s</string>
@@ -3501,6 +3503,16 @@
     <plurals name="source_picker_coverage">
         <item quantity="other">%1$,d / %2$,dエピソード</item>
     </plurals>
+    <plurals name="source_picker_episodes">
+        <item quantity="other">エピソード %2$d–%3$d</item>
+    </plurals>
+    <string name="source_picker_episodes_not_yet">エピソード %1$d–%2$d。%3$sはまだありません</string>
+    <string name="source_picker_episodes_not">エピソード %1$d–%2$d。%3$sはありません</string>
+    <string name="source_picker_missing_pair">%1$dと%2$d</string>
+    <string name="source_picker_missing_range">%1$d–%2$d</string>
+    <plurals name="source_picker_coverage_missing">
+        <item quantity="other">%1$,d / %2$,dエピソード。%3$sはありません</item>
+    </plurals>
     <string name="source_note_off">オフになっています</string>
     <string name="source_note_resting">応答がなく、まもなく再試行します</string>
     <string name="source_note_gone">未インストール</string>
@@ -4150,6 +4162,18 @@
     <string name="episode_go_to_label">エピソード、%1$d～%2$d</string>
     <string name="episode_go_to_none">エピソード%1$dはありません。この作品は全%2$d話です。</string>
     <string name="episode_go_to_not_out">エピソード%1$dはまだ公開されていません。最新は%2$dです。</string>
+    <string name="episode_missing_aired">エピソード %1$d は%2$sに公開されました。</string>
+    <string name="episode_missing_aired_on">エピソード %1$d は%2$sに公開されました。</string>
+    <string name="episode_missing_not_yet">ソースにはまだありません。</string>
+    <string name="episode_missing_still">ソースには今もありません。</string>
+    <string name="episode_missing_no_answer">ソースから応答がありませんでした。</string>
+    <string name="episode_missing_looks_again">Kaeriが%1$,d分ごとに探し直します。</string>
+    <string name="episode_missing_none">どのソースにもありません。</string>
+    <string name="episode_missing_offline">オンラインに戻るとKaeriが探します。</string>
+    <string name="episode_row_aired_ago">%1$sに公開</string>
+    <string name="episode_unsourced_yet">まだソースにありません</string>
+    <string name="episode_found_announcement">エピソード %1$d がソースで見つかりました。</string>
+    <string name="episode_check_again_help">エピソードの公開後%2$,d時間は、Kaeriも%1$,d分ごとに自動で探します。</string>
     <string name="torrents_title">トレント</string>
     <string name="torrents_on">トレント：オン</string>
     <string name="torrents_off_detail">初期設定ではオフです。プロキシを経由させない限り、トレントは直接接続します。</string>

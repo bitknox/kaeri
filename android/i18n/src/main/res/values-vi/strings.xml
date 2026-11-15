@@ -1349,6 +1349,7 @@
     <string name="action_disable">Tắt</string>
     <string name="action_check_now">Kiểm tra ngay</string>
     <string name="action_check_again">Kiểm tra lại</string>
+    <string name="action_checking">Đang kiểm tra</string>
     <string name="action_open_settings">Mở cài đặt</string>
     <string name="action_report">Báo lỗi</string>
     <string name="action_play_now">Phát ngay</string>
@@ -1371,6 +1372,7 @@
     <string name="time_in">sau %1$s</string>
     <string name="time_minutes_left">còn %1$,d phút</string>
     <string name="time_minutes">%1$,d phút</string>
+    <string name="time_hours">%1$,d giờ</string>
     <string name="time_now_inline">bây giờ</string>
     <string name="time_just_now_inline">vừa xong</string>
     <string name="when_today">hôm nay lúc %1$s</string>
@@ -3501,6 +3503,16 @@
     <plurals name="source_picker_coverage">
         <item quantity="other">%1$,d trên %2$,d tập</item>
     </plurals>
+    <plurals name="source_picker_episodes">
+        <item quantity="other">Tập %2$d–%3$d</item>
+    </plurals>
+    <string name="source_picker_episodes_not_yet">Tập %1$d–%2$d. Chưa có %3$s</string>
+    <string name="source_picker_episodes_not">Tập %1$d–%2$d. Không có %3$s</string>
+    <string name="source_picker_missing_pair">%1$d và %2$d</string>
+    <string name="source_picker_missing_range">%1$d–%2$d</string>
+    <plurals name="source_picker_coverage_missing">
+        <item quantity="other">%1$,d trên %2$,d tập. Không có %3$s</item>
+    </plurals>
     <string name="source_note_off">Đã tắt</string>
     <string name="source_note_resting">Không phản hồi, sẽ thử lại sớm</string>
     <string name="source_note_gone">Chưa cài đặt</string>
@@ -4150,6 +4162,18 @@
     <string name="episode_go_to_label">Tập, từ %1$d đến %2$d</string>
     <string name="episode_go_to_none">Không có tập %1$d. Phim này có %2$d tập.</string>
     <string name="episode_go_to_not_out">Tập %1$d chưa ra mắt. Tập mới nhất là %2$d.</string>
+    <string name="episode_missing_aired">Tập %1$d đã phát sóng %2$s.</string>
+    <string name="episode_missing_aired_on">Tập %1$d đã phát sóng vào %2$s.</string>
+    <string name="episode_missing_not_yet">Các nguồn của bạn chưa có tập này.</string>
+    <string name="episode_missing_still">Các nguồn của bạn vẫn chưa có tập này.</string>
+    <string name="episode_missing_no_answer">Các nguồn của bạn không phản hồi.</string>
+    <string name="episode_missing_looks_again">Kaeri tìm lại sau mỗi %1$,d phút.</string>
+    <string name="episode_missing_none">Không nguồn nào của bạn có tập này.</string>
+    <string name="episode_missing_offline">Kaeri sẽ tìm khi bạn có mạng trở lại.</string>
+    <string name="episode_row_aired_ago">Đã phát sóng %1$s</string>
+    <string name="episode_unsourced_yet">Chưa có trong các nguồn của bạn</string>
+    <string name="episode_found_announcement">Tập %1$d đã có trong các nguồn của bạn.</string>
+    <string name="episode_check_again_help">Kaeri cũng tự tìm sau mỗi %1$,d phút, trong %2$,d giờ sau khi một tập phát sóng.</string>
     <string name="torrents_title">Torrent</string>
     <string name="torrents_on">Đang bật</string>
     <string name="torrents_off_detail">Mặc định tắt. Torrent kết nối trực tiếp trừ khi bạn đưa chúng qua proxy.</string>

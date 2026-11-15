@@ -3119,6 +3119,9 @@
   <data name="ActionCheckAgain" xml:space="preserve">
     <value>Erneut prüfen</value>
   </data>
+  <data name="ActionChecking" xml:space="preserve">
+    <value>Wird geprüft</value>
+  </data>
   <data name="ActionOpenSettings" xml:space="preserve">
     <value>Einstellungen öffnen</value>
   </data>
@@ -3184,6 +3187,9 @@
   </data>
   <data name="TimeMinutes" xml:space="preserve">
     <value>{minutes} min</value>
+  </data>
+  <data name="TimeHours" xml:space="preserve">
+    <value>{hours} Std.</value>
   </data>
   <data name="TimeNowInline" xml:space="preserve">
     <value>jetzt</value>
@@ -9329,6 +9335,30 @@
   <data name="SourcePickerCoverage_other" xml:space="preserve">
     <value>{covered} von {of} Folgen</value>
   </data>
+  <data name="SourcePickerEpisodes_one" xml:space="preserve">
+    <value>Folge {first}</value>
+  </data>
+  <data name="SourcePickerEpisodes_other" xml:space="preserve">
+    <value>Folgen {first} bis {last}</value>
+  </data>
+  <data name="SourcePickerEpisodesNotYet" xml:space="preserve">
+    <value>Folgen {first} bis {last}. Noch ohne {missing}</value>
+  </data>
+  <data name="SourcePickerEpisodesNot" xml:space="preserve">
+    <value>Folgen {first} bis {last}. Ohne {missing}</value>
+  </data>
+  <data name="SourcePickerMissingPair" xml:space="preserve">
+    <value>{a} und {b}</value>
+  </data>
+  <data name="SourcePickerMissingRange" xml:space="preserve">
+    <value>{first} bis {last}</value>
+  </data>
+  <data name="SourcePickerCoverageMissing_one" xml:space="preserve">
+    <value>{covered} von {of} Folge. Ohne {missing}</value>
+  </data>
+  <data name="SourcePickerCoverageMissing_other" xml:space="preserve">
+    <value>{covered} von {of} Folgen. Ohne {missing}</value>
+  </data>
   <data name="SourceNoteOff" xml:space="preserve">
     <value>Ausgeschaltet</value>
   </data>
@@ -11233,6 +11263,42 @@
   </data>
   <data name="EpisodeGoToNotOut" xml:space="preserve">
     <value>Folge {number} ist noch nicht erschienen. Die neueste ist {latest}.</value>
+  </data>
+  <data name="EpisodeMissingAired" xml:space="preserve">
+    <value>Folge {episode} ist {ago} erschienen.</value>
+  </data>
+  <data name="EpisodeMissingAiredOn" xml:space="preserve">
+    <value>Folge {episode} ist am {date} erschienen.</value>
+  </data>
+  <data name="EpisodeMissingNotYet" xml:space="preserve">
+    <value>Deine Quellen haben sie noch nicht.</value>
+  </data>
+  <data name="EpisodeMissingStill" xml:space="preserve">
+    <value>Deine Quellen haben sie immer noch nicht.</value>
+  </data>
+  <data name="EpisodeMissingNoAnswer" xml:space="preserve">
+    <value>Deine Quellen haben nicht geantwortet.</value>
+  </data>
+  <data name="EpisodeMissingLooksAgain" xml:space="preserve">
+    <value>Kaeri sucht alle {minutes} Min. erneut.</value>
+  </data>
+  <data name="EpisodeMissingNone" xml:space="preserve">
+    <value>Keine deiner Quellen hat sie.</value>
+  </data>
+  <data name="EpisodeMissingOffline" xml:space="preserve">
+    <value>Kaeri sucht danach, sobald du wieder online bist.</value>
+  </data>
+  <data name="EpisodeRowAiredAgo" xml:space="preserve">
+    <value>Erschienen {ago}</value>
+  </data>
+  <data name="EpisodeUnsourcedYet" xml:space="preserve">
+    <value>Noch nicht in deinen Quellen</value>
+  </data>
+  <data name="EpisodeFoundAnnouncement" xml:space="preserve">
+    <value>Folge {episode} ist jetzt in deinen Quellen.</value>
+  </data>
+  <data name="EpisodeCheckAgainHelp" xml:space="preserve">
+    <value>Kaeri sucht nach dem Erscheinen einer Folge {hours} Std. lang auch selbst alle {minutes} Min.</value>
   </data>
   <data name="TorrentsTitle" xml:space="preserve">
     <value>Torrents</value>

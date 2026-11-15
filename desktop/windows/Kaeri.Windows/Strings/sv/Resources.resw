@@ -3119,6 +3119,9 @@
   <data name="ActionCheckAgain" xml:space="preserve">
     <value>Kontrollera igen</value>
   </data>
+  <data name="ActionChecking" xml:space="preserve">
+    <value>Kontrollerar</value>
+  </data>
   <data name="ActionOpenSettings" xml:space="preserve">
     <value>Öppna inställningarna</value>
   </data>
@@ -3184,6 +3187,9 @@
   </data>
   <data name="TimeMinutes" xml:space="preserve">
     <value>{minutes} min</value>
+  </data>
+  <data name="TimeHours" xml:space="preserve">
+    <value>{hours} tim</value>
   </data>
   <data name="TimeNowInline" xml:space="preserve">
     <value>nu</value>
@@ -9329,6 +9335,30 @@
   <data name="SourcePickerCoverage_other" xml:space="preserve">
     <value>{covered} av {of} avsnitt</value>
   </data>
+  <data name="SourcePickerEpisodes_one" xml:space="preserve">
+    <value>Avsnitt {first}</value>
+  </data>
+  <data name="SourcePickerEpisodes_other" xml:space="preserve">
+    <value>Avsnitt {first} till {last}</value>
+  </data>
+  <data name="SourcePickerEpisodesNotYet" xml:space="preserve">
+    <value>Avsnitt {first} till {last}. Inte {missing} än</value>
+  </data>
+  <data name="SourcePickerEpisodesNot" xml:space="preserve">
+    <value>Avsnitt {first} till {last}. Inte {missing}</value>
+  </data>
+  <data name="SourcePickerMissingPair" xml:space="preserve">
+    <value>{a} eller {b}</value>
+  </data>
+  <data name="SourcePickerMissingRange" xml:space="preserve">
+    <value>{first} till {last}</value>
+  </data>
+  <data name="SourcePickerCoverageMissing_one" xml:space="preserve">
+    <value>{covered} av {of} avsnitt. Inte {missing}</value>
+  </data>
+  <data name="SourcePickerCoverageMissing_other" xml:space="preserve">
+    <value>{covered} av {of} avsnitt. Inte {missing}</value>
+  </data>
   <data name="SourceNoteOff" xml:space="preserve">
     <value>Avstängd</value>
   </data>
@@ -11233,6 +11263,42 @@
   </data>
   <data name="EpisodeGoToNotOut" xml:space="preserve">
     <value>Avsnitt {number} är inte ute än. Det senaste är {latest}.</value>
+  </data>
+  <data name="EpisodeMissingAired" xml:space="preserve">
+    <value>Avsnitt {episode} sändes {ago}.</value>
+  </data>
+  <data name="EpisodeMissingAiredOn" xml:space="preserve">
+    <value>Avsnitt {episode} sändes den {date}.</value>
+  </data>
+  <data name="EpisodeMissingNotYet" xml:space="preserve">
+    <value>Dina källor har det inte än.</value>
+  </data>
+  <data name="EpisodeMissingStill" xml:space="preserve">
+    <value>Dina källor har det fortfarande inte.</value>
+  </data>
+  <data name="EpisodeMissingNoAnswer" xml:space="preserve">
+    <value>Dina källor svarade inte.</value>
+  </data>
+  <data name="EpisodeMissingLooksAgain" xml:space="preserve">
+    <value>Kaeri letar igen med {minutes} min mellanrum.</value>
+  </data>
+  <data name="EpisodeMissingNone" xml:space="preserve">
+    <value>Ingen av dina källor har det.</value>
+  </data>
+  <data name="EpisodeMissingOffline" xml:space="preserve">
+    <value>Kaeri letar efter det när du är online igen.</value>
+  </data>
+  <data name="EpisodeRowAiredAgo" xml:space="preserve">
+    <value>Sändes {ago}</value>
+  </data>
+  <data name="EpisodeUnsourcedYet" xml:space="preserve">
+    <value>Inte i dina källor än</value>
+  </data>
+  <data name="EpisodeFoundAnnouncement" xml:space="preserve">
+    <value>Avsnitt {episode} finns nu i dina källor.</value>
+  </data>
+  <data name="EpisodeCheckAgainHelp" xml:space="preserve">
+    <value>Kaeri letar också själv med {minutes} min mellanrum i {hours} tim efter att ett avsnitt har sänts.</value>
   </data>
   <data name="TorrentsTitle" xml:space="preserve">
     <value>Torrenter</value>

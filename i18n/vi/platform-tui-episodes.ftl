@@ -85,3 +85,4 @@ episodes-matched = Đã khớp với { $title }.
 episodes-release-dual = { -subbed-cap } và { -dubbed }
 episodes-release-dub = { -dubbed-cap }
 episodes-release-current-pick = Lựa chọn hiện tại
+episode-missing-checking = Đang kiểm tra { -source-pl } của bạn…
