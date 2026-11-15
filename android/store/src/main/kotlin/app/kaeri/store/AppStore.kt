@@ -266,6 +266,13 @@ class AppStore(
     /** The playback's events, for the player the app hosts: its ops and interface. */
     var onPlayback: ((Event) -> Unit)? = null
 
+    /**
+     * Whether the last playback ended because it failed, until the next one is staged: an alert
+     * reported after it is a playback error, and Report a bug starts with Player log ticked.
+     */
+    @Volatile var playbackFailed = false
+        private set
+
     private val readers = java.util.concurrent.CopyOnWriteArrayList<(Event) -> Unit>()
 
     /**
@@ -1383,6 +1390,8 @@ class AppStore(
         // An alert is also the player's: one while an episode starts is why it could not, which
         // its "Couldn't play episode 7" says. The notice below still says it too.
         if (event is Event.Toast && event.v1.kind == NoticeKind.ALERT) onPlayback?.invoke(event)
+        if (event is Event.PlaybackStaged) playbackFailed = false
+        if (event is Event.PlaybackEnded && !event.rollingOn) playbackFailed = event.ending == app.kaeri.engine.model.Ending.Failed
         // The room started or moved on: the engine opens the episode, and the player takes it.
         if (event is Event.PartyStarted) onPlayAsked?.invoke()
         if (party.apply(event)) return

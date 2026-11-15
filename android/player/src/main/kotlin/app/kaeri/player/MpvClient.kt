@@ -75,12 +75,21 @@ class MpvClient(private val name: String) {
         }
     }
 
-    /** Creates and initialises mpv with [options], set in order, observing [observed]. */
-    suspend fun start(options: List<Pair<String, String>>, observed: List<String>, logLevel: String = "warn", audioTap: Long = 0L) = call {
+    /**
+     * Creates and initialises mpv with [options], set in order, observing [observed]. With
+     * [playerLog], mpv's lines at info and up also go to the engine's player log, from the event
+     * thread, and logcat keeps only warnings and errors, as before.
+     */
+    suspend fun start(options: List<Pair<String, String>>, observed: List<String>, logLevel: String = "warn", audioTap: Long = 0L, playerLog: Boolean = false) = call {
         check(handle == 0L) { "mpv $name has already started" }
         val h = MpvNative.create { id, prop, data ->
             val event = MpvEvent(id, prop, data?.toString(Charsets.UTF_8))
-            if (id == MpvNative.Event.LOG_MESSAGE) MpvLog.said(event)?.let { (priority, line) -> Log.println(priority, MpvLog.TAG, line) }
+            if (id == MpvNative.Event.LOG_MESSAGE) {
+                MpvLog.said(event)?.let { (priority, line) ->
+                    if (!playerLog || priority >= Log.WARN) Log.println(priority, MpvLog.TAG, line)
+                    if (playerLog) MpvLog.keep(priority, line)
+                }
+            }
             deliver(event)
         }
         check(h != 0L) { "mpv_create failed" }
