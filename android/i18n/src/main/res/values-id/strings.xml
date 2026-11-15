@@ -1473,6 +1473,9 @@
     <string name="player_position_spoken">%1$s dari %2$s</string>
     <string name="names_pair">%1$s dan %2$s</string>
     <string name="names_list">%1$s, %2$s</string>
+    <string name="desktop_cast_quit_title">Hentikan transmisi dan keluar?</string>
+    <string name="desktop_cast_quit_body">%1$s sedang diputar di %2$s. Keluar akan menghentikannya.</string>
+    <string name="desktop_cast_quit_action">Hentikan dan keluar</string>
     <string name="discussion_open">Diskusi</string>
     <string name="discussion_title_episode">Diskusi episode %1$d</string>
     <plurals name="discussion_row">

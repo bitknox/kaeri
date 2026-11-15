@@ -32,6 +32,7 @@ tv-none-paired = Chưa ghép nối TV nào
 tv-none-paired-detail = Mở { -app-name } trên TV, cùng mạng Wi-Fi, rồi ghép nối với TV tại đây.
 tv-paired-on = Đã ghép nối { $when }
 tv-paired = Đã ghép nối
+tv-row-kaeri = { -app-name } trên Android TV
 tv-connected-at = Đã kết nối · { $address }
 tv-forget-title = Quên { $name }?
 tv-forget-detail = Để phát lại trên TV này, hãy ghép nối lại.

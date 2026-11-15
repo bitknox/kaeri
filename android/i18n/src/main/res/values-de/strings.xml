@@ -1540,6 +1540,9 @@
     <string name="player_position_spoken">%1$s von %2$s</string>
     <string name="names_pair">%1$s und %2$s</string>
     <string name="names_list">%1$s, %2$s</string>
+    <string name="desktop_cast_quit_title">Übertragung stoppen und beenden?</string>
+    <string name="desktop_cast_quit_body">%1$s läuft auf %2$s. Beim Beenden stoppt die Wiedergabe.</string>
+    <string name="desktop_cast_quit_action">Stoppen und beenden</string>
     <string name="discussion_open">Diskussion</string>
     <string name="discussion_title_episode">Diskussion zu Episode %1$d</string>
     <plurals name="discussion_row">

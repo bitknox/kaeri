@@ -6811,6 +6811,18 @@ names-pair = [{ $first } àñð { $last }~~~~]
 # A list of names up to the last two, joined one by one: "Alpha, Brook".
 names-list = [{ $list }, { $next }~~~]
 
+# Line under a TV with Chromecast built in, in the Play on TV list: this computer serves the episode to it while it plays.
+cast-row-through-computer = [Þļàýš ţĥŕöüĝĥ ţĥîš çöɱþüţéŕ~~~~~~~~~]
+
+# Title of the question asked on quitting while an episode plays on a TV.
+desktop-cast-quit-title = [Šţöþ çàšţîñĝ àñð ƣüîţ?~~~~~~~]
+
+# Body of the question asked on quitting while an episode plays on a TV. The title is the show's, the name is the TV's.
+desktop-cast-quit-body = [{ $title } îš þļàýîñĝ öñ { $name }. Ǫüîţţîñĝ šţöþš îţ.~~~~~~~~~~~~~]
+
+# Button of the question asked on quitting while casting: stops the cast and quits.
+desktop-cast-quit-action = [Šţöþ àñð ƣüîţ~~~~]
+
 # Menu item that opens an episode's discussion.
 discussion-open = [Ðîšçüššîöñ~~~]
 
@@ -15683,6 +15695,9 @@ tv-paired-on = [Þàîŕéð { $when }~~~]
 
 # Short word: paired, no date known.
 tv-paired = [Þàîŕéð~~]
+
+# Line under a paired TV running the app, in the Play on TV list.
+tv-row-kaeri = [Ķàéŕî öñ Åñðŕöîð ŢṼ~~~~~~]
 
 # Line with the address.
 tv-connected-at = [Çöññéçţéð · { $address }~~~~~]

@@ -6503,6 +6503,15 @@ names-pair = { $first } und { $last }
 # A list of names up to the last two, joined one by one: "Alpha, Brook".
 names-list = { $list }, { $next }
 
+# Title of the question asked on quitting while an episode plays on a TV.
+desktop-cast-quit-title = Übertragung stoppen und beenden?
+
+# Body of the question asked on quitting while an episode plays on a TV. The title is the show's, the name is the TV's.
+desktop-cast-quit-body = { $title } läuft auf { $name }. Beim Beenden stoppt die Wiedergabe.
+
+# Button of the question asked on quitting while casting: stops the cast and quits.
+desktop-cast-quit-action = Stoppen und beenden
+
 # Menu item that opens an episode's discussion.
 discussion-open = Diskussion
 

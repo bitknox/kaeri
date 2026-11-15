@@ -1605,6 +1605,9 @@
     <string name="player_position_spoken">%1$s di %2$s</string>
     <string name="names_pair">%1$s e %2$s</string>
     <string name="names_list">%1$s, %2$s</string>
+    <string name="desktop_cast_quit_title">Interrompere la trasmissione e uscire?</string>
+    <string name="desktop_cast_quit_body">%1$s è in riproduzione su %2$s. Uscendo si interrompe.</string>
+    <string name="desktop_cast_quit_action">Interrompi ed esci</string>
     <string name="discussion_open">Discussione</string>
     <string name="discussion_title_episode">Discussione sull\'episodio %1$d</string>
     <plurals name="discussion_row">

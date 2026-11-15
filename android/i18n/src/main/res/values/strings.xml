@@ -3219,6 +3219,14 @@
     <string name="names_pair">%1$s and %2$s</string>
     <!-- A list of names up to the last two, joined one by one: "Alpha, Brook". -->
     <string name="names_list">%1$s, %2$s</string>
+    <!-- Line under a TV with Chromecast built in, in the Play on TV list: this computer serves the episode to it while it plays. -->
+    <string name="cast_row_through_computer">Plays through this computer</string>
+    <!-- Title of the question asked on quitting while an episode plays on a TV. -->
+    <string name="desktop_cast_quit_title">Stop casting and quit?</string>
+    <!-- Body of the question asked on quitting while an episode plays on a TV. The title is the show's, the name is the TV's. -->
+    <string name="desktop_cast_quit_body">%1$s is playing on %2$s. Quitting stops it.</string>
+    <!-- Button of the question asked on quitting while casting: stops the cast and quits. -->
+    <string name="desktop_cast_quit_action">Stop and quit</string>
     <!-- Menu item that opens an episode's discussion. -->
     <string name="discussion_open">Discussion</string>
     <!-- Title of the discussion window or sheet when the thread has no title yet. -->
@@ -9178,6 +9186,8 @@
     <string name="tv_paired_on">Paired %1$s</string>
     <!-- Short word: paired, no date known. -->
     <string name="tv_paired">Paired</string>
+    <!-- Line under a paired TV running the app, in the Play on TV list. -->
+    <string name="tv_row_kaeri">Kaeri on Android TV</string>
     <!-- Line with the address. -->
     <string name="tv_connected_at">Connected · %1$s</string>
     <!-- Title of the confirmation that forgets a TV. -->

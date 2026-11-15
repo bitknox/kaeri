@@ -3335,6 +3335,15 @@
   <data name="NamesList" xml:space="preserve">
     <value>{list}, {next}</value>
   </data>
+  <data name="DesktopCastQuitTitle" xml:space="preserve">
+    <value>Dừng truyền và thoát?</value>
+  </data>
+  <data name="DesktopCastQuitBody" xml:space="preserve">
+    <value>{title} đang phát trên {name}. Thoát sẽ dừng phát.</value>
+  </data>
+  <data name="DesktopCastQuitAction" xml:space="preserve">
+    <value>Dừng và thoát</value>
+  </data>
   <data name="DiscussionOpen" xml:space="preserve">
     <value>Thảo luận</value>
   </data>

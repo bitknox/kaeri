@@ -29097,6 +29097,18 @@
         }
       }
     },
+    "cast-row-through-computer" : {
+      "comment" : "Line under a TV with Chromecast built in, in the Play on TV list: this computer serves the episode to it while it plays.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Plays through this computer"
+          }
+        }
+      }
+    },
     "cast-status-paused" : {
       "comment" : "The casting controller's line while the episode is paused on the TV. The name is the TV's. Argument 1: name (Text).",
       "extractionState" : "manual",
@@ -50493,6 +50505,258 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Truyện ngắn · %1$@ · %2$@"
+          }
+        }
+      }
+    },
+    "desktop-cast-quit-action" : {
+      "comment" : "Button of the question asked on quitting while casting: stops the cast and quits.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Stoppen und beenden"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Stop and quit"
+          }
+        },
+        "es-419" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Detener y salir"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Arrêter et quitter"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hentikan dan keluar"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Interrompi ed esci"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "停止して終了"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zatrzymaj i zakończ"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Parar e sair"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Остановить и выйти"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Stoppa och avsluta"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Durdur ve çık"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dừng và thoát"
+          }
+        }
+      }
+    },
+    "desktop-cast-quit-body" : {
+      "comment" : "Body of the question asked on quitting while an episode plays on a TV. The title is the show's, the name is the TV's. Argument 1: title (Text). Argument 2: name (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ läuft auf %2$@. Beim Beenden stoppt die Wiedergabe."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ is playing on %2$@. Quitting stops it."
+          }
+        },
+        "es-419" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ se está reproduciendo en %2$@. Al salir, se detiene."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ est en lecture sur %2$@. Quitter arrête la lecture."
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ sedang diputar di %2$@. Keluar akan menghentikannya."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ è in riproduzione su %2$@. Uscendo si interrompe."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ を %2$@ で再生中です。終了すると停止します。"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Trwa odtwarzanie %1$@ na %2$@. Zakończenie je zatrzyma."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ está passando em %2$@. Sair interrompe a reprodução."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ воспроизводится на %2$@. При выходе воспроизведение остановится."
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ spelas upp på %2$@. Uppspelningen stoppas vid avslut."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@, %2$@ üzerinde oynatılıyor. Çıkmak oynatmayı durdurur."
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ đang phát trên %2$@. Thoát sẽ dừng phát."
+          }
+        }
+      }
+    },
+    "desktop-cast-quit-title" : {
+      "comment" : "Title of the question asked on quitting while an episode plays on a TV.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Übertragung stoppen und beenden?"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Stop casting and quit?"
+          }
+        },
+        "es-419" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "¿Detener la transmisión y salir?"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Arrêter la diffusion et quitter ?"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hentikan transmisi dan keluar?"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Interrompere la trasmissione e uscire?"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "キャストを停止して終了しますか？"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zatrzymać przesyłanie i zakończyć?"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Parar a transmissão e sair?"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Остановить трансляцию и выйти?"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Stoppa strömningen och avsluta?"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Yayın durdurulup çıkılsın mı?"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dừng truyền và thoát?"
           }
         }
       }
@@ -383417,6 +383681,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Xóa %1$@?"
+          }
+        }
+      }
+    },
+    "tv-row-kaeri" : {
+      "comment" : "Line under a paired TV running the app, in the Play on TV list.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kaeri on Android TV"
           }
         }
       }

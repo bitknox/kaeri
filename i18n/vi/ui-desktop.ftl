@@ -29,3 +29,7 @@ tv-problem-unpaired = TV không còn nhận { -device } này. Hãy ghép nối l
 player-position-spoken = { $position } trên { $duration }
 names-pair = { $first } và { $last }
 names-list = { $list }, { $next }
+cast-row-through-computer = Phát qua máy tính này
+desktop-cast-quit-title = Dừng truyền và thoát?
+desktop-cast-quit-body = { $title } đang phát trên { $name }. Thoát sẽ dừng phát.
+desktop-cast-quit-action = Dừng và thoát

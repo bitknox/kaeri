@@ -61,7 +61,7 @@ public enum TvSheet
 /// Called on the UI thread; what the engine answers later arrives there too, through the UI
 /// thread's synchronization context. <see cref="Changed"/> follows every change.
 /// </summary>
-public sealed class TvRemote(Func<DateTimeOffset>? clock = null)
+public sealed partial class TvRemote(Func<DateTimeOffset>? clock = null)
 {
     readonly Func<DateTimeOffset> clock = clock ?? (() => DateTimeOffset.UtcNow);
     FfiTvSender? sender;
@@ -127,6 +127,7 @@ public sealed class TvRemote(Func<DateTimeOffset>? clock = null)
         ShortFingerprint = tvSender.ShortFingerprint();
         Refresh();
         Watch(tvSender);
+        AttachSession(tvSender);
     }
 
     async void Watch(FfiTvSender watched)
@@ -160,6 +161,9 @@ public sealed class TvRemote(Func<DateTimeOffset>? clock = null)
         if (!Available)
             return;
         Problem = null;
+        // A TV held by the cast session plays it: the engine sends every play there.
+        if (OfferToSession(request))
+            return;
         Request = request;
         if (Connected is { } fingerprint && Live)
             _ = PlayOn(fingerprint);

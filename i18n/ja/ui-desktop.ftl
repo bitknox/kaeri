@@ -29,3 +29,7 @@ tv-problem-unpaired = このテレビはこの{ -device }をもう認識して�
 player-position-spoken = { $position } / { $duration }
 names-pair = { $first }と{ $last }
 names-list = { $list }、{ $next }
+cast-row-through-computer = このコンピュータ経由で再生
+desktop-cast-quit-title = キャストを停止して終了しますか？
+desktop-cast-quit-body = { $title } を { $name } で再生中です。終了すると停止します。
+desktop-cast-quit-action = 停止して終了

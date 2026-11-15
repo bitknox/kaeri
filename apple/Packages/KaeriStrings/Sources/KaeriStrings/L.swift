@@ -5455,6 +5455,20 @@ public enum L {
         Self.format("names-list", fallback: "%1$@, %2$@", list, next)
     }
 
+    /// Line under a TV with Chromecast built in, in the Play on TV list: this computer serves the episode to it while it plays.
+    public static var castRowThroughComputer: String { string("cast-row-through-computer", fallback: "Plays through this computer") }
+
+    /// Title of the question asked on quitting while an episode plays on a TV.
+    public static var desktopCastQuitTitle: String { string("desktop-cast-quit-title", fallback: "Stop casting and quit?") }
+
+    /// Body of the question asked on quitting while an episode plays on a TV. The title is the show's, the name is the TV's.
+    public static func desktopCastQuitBody(title: String, name: String) -> String {
+        Self.format("desktop-cast-quit-body", fallback: "%1$@ is playing on %2$@. Quitting stops it.", title, name)
+    }
+
+    /// Button of the question asked on quitting while casting: stops the cast and quits.
+    public static var desktopCastQuitAction: String { string("desktop-cast-quit-action", fallback: "Stop and quit") }
+
     /// Menu item that opens an episode's discussion.
     public static var discussionOpen: String { string("discussion-open", fallback: "Discussion") }
 
@@ -15526,6 +15540,9 @@ public enum L {
 
     /// Short word: paired, no date known.
     public static var tvPaired: String { string("tv-paired", fallback: "Paired") }
+
+    /// Line under a paired TV running the app, in the Play on TV list.
+    public static var tvRowKaeri: String { string("tv-row-kaeri", fallback: "Kaeri on Android TV") }
 
     /// Line with the address.
     public static func tvConnectedAt(address: String) -> String {

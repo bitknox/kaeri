@@ -1473,6 +1473,9 @@
     <string name="player_position_spoken">%1$s / %2$s</string>
     <string name="names_pair">%1$sと%2$s</string>
     <string name="names_list">%1$s、%2$s</string>
+    <string name="desktop_cast_quit_title">キャストを停止して終了しますか？</string>
+    <string name="desktop_cast_quit_body">%1$s を %2$s で再生中です。終了すると停止します。</string>
+    <string name="desktop_cast_quit_action">停止して終了</string>
     <string name="discussion_open">ディスカッション</string>
     <string name="discussion_title_episode">エピソード %1$d のディスカッション</string>
     <plurals name="discussion_row">

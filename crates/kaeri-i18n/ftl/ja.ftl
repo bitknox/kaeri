@@ -6427,6 +6427,15 @@ names-pair = { $first }と{ $last }
 # A list of names up to the last two, joined one by one: "Alpha, Brook".
 names-list = { $list }、{ $next }
 
+# Title of the question asked on quitting while an episode plays on a TV.
+desktop-cast-quit-title = キャストを停止して終了しますか？
+
+# Body of the question asked on quitting while an episode plays on a TV. The title is the show's, the name is the TV's.
+desktop-cast-quit-body = { $title } を { $name } で再生中です。終了すると停止します。
+
+# Button of the question asked on quitting while casting: stops the cast and quits.
+desktop-cast-quit-action = 停止して終了
+
 # Menu item that opens an episode's discussion.
 discussion-open = ディスカッション
 

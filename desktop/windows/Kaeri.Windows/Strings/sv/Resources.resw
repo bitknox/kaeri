@@ -3485,6 +3485,15 @@
   <data name="NamesList" xml:space="preserve">
     <value>{list}, {next}</value>
   </data>
+  <data name="DesktopCastQuitTitle" xml:space="preserve">
+    <value>Stoppa strömningen och avsluta?</value>
+  </data>
+  <data name="DesktopCastQuitBody" xml:space="preserve">
+    <value>{title} spelas upp på {name}. Uppspelningen stoppas vid avslut.</value>
+  </data>
+  <data name="DesktopCastQuitAction" xml:space="preserve">
+    <value>Stoppa och avsluta</value>
+  </data>
   <data name="DiscussionOpen" xml:space="preserve">
     <value>Diskussion</value>
   </data>

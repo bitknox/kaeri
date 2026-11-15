@@ -1540,6 +1540,9 @@
     <string name="player_position_spoken">%1$s / %2$s</string>
     <string name="names_pair">%1$s ve %2$s</string>
     <string name="names_list">%1$s, %2$s</string>
+    <string name="desktop_cast_quit_title">Yayın durdurulup çıkılsın mı?</string>
+    <string name="desktop_cast_quit_body">%1$s, %2$s üzerinde oynatılıyor. Çıkmak oynatmayı durdurur.</string>
+    <string name="desktop_cast_quit_action">Durdur ve çık</string>
     <string name="discussion_open">Tartışma</string>
     <string name="discussion_title_episode">Bölüm %1$d tartışması</string>
     <plurals name="discussion_row">

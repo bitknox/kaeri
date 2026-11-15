@@ -29,3 +29,7 @@ tv-problem-unpaired = A TV não reconhece mais este { -device }. Pareie de novo.
 player-position-spoken = { $position } de { $duration }
 names-pair = { $first } e { $last }
 names-list = { $list }, { $next }
+cast-row-through-computer = Reproduz por este computador
+desktop-cast-quit-title = Parar a transmissão e sair?
+desktop-cast-quit-body = { $title } está passando em { $name }. Sair interrompe a reprodução.
+desktop-cast-quit-action = Parar e sair

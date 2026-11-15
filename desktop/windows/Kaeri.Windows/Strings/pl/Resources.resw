@@ -3785,6 +3785,15 @@
   <data name="NamesList" xml:space="preserve">
     <value>{list}, {next}</value>
   </data>
+  <data name="DesktopCastQuitTitle" xml:space="preserve">
+    <value>Zatrzymać przesyłanie i zakończyć?</value>
+  </data>
+  <data name="DesktopCastQuitBody" xml:space="preserve">
+    <value>Trwa odtwarzanie {title} na {name}. Zakończenie je zatrzyma.</value>
+  </data>
+  <data name="DesktopCastQuitAction" xml:space="preserve">
+    <value>Zatrzymaj i zakończ</value>
+  </data>
   <data name="DiscussionOpen" xml:space="preserve">
     <value>Dyskusja</value>
   </data>

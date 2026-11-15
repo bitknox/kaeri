@@ -1674,6 +1674,9 @@
     <string name="player_position_spoken">%1$s из %2$s</string>
     <string name="names_pair">%1$s и %2$s</string>
     <string name="names_list">%1$s, %2$s</string>
+    <string name="desktop_cast_quit_title">Остановить трансляцию и выйти?</string>
+    <string name="desktop_cast_quit_body">%1$s воспроизводится на %2$s. При выходе воспроизведение остановится.</string>
+    <string name="desktop_cast_quit_action">Остановить и выйти</string>
     <string name="discussion_open">Обсуждение</string>
     <string name="discussion_title_episode">Обсуждение эпизода %1$d</string>
     <plurals name="discussion_row">

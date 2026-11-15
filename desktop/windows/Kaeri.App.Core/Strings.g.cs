@@ -2463,6 +2463,9 @@ public static partial class T
     /// <summary>Name of the dot before a notice that was an alert, for Narrator.</summary>
     public static string MessagesAlert => Get("MessagesAlert");
 
+    /// <summary>The heading over the TVs running Kaeri in the title bar's Play on TV menu, under the TVs with Chromecast built in.</summary>
+    public static string TvOnThisNetwork => Get("TvOnThisNetwork");
+
     /// <summary>Under the TV picker's title: the episode about to play on the TV, with its show's title.</summary>
     public static string TvPickerEpisodeOf(string title, string episode) => Fill(Get("TvPickerEpisodeOf"), ("title", title), ("episode", episode));
 
@@ -3440,6 +3443,18 @@ public static partial class T
 
     /// <summary>A list of names up to the last two, joined one by one: "Alpha, Brook".</summary>
     public static string NamesList(string list, string next) => Fill(Get("NamesList"), ("list", list), ("next", next));
+
+    /// <summary>Line under a TV with Chromecast built in, in the Play on TV list: this computer serves the episode to it while it plays.</summary>
+    public static string CastRowThroughComputer => Get("CastRowThroughComputer");
+
+    /// <summary>Title of the question asked on quitting while an episode plays on a TV.</summary>
+    public static string DesktopCastQuitTitle => Get("DesktopCastQuitTitle");
+
+    /// <summary>Body of the question asked on quitting while an episode plays on a TV. The title is the show's, the name is the TV's.</summary>
+    public static string DesktopCastQuitBody(string title, string name) => Fill(Get("DesktopCastQuitBody"), ("title", title), ("name", name));
+
+    /// <summary>Button of the question asked on quitting while casting: stops the cast and quits.</summary>
+    public static string DesktopCastQuitAction => Get("DesktopCastQuitAction");
 
     /// <summary>Menu item that opens an episode's discussion.</summary>
     public static string DiscussionOpen => Get("DiscussionOpen");
@@ -11912,6 +11927,9 @@ public static partial class T
     /// <summary>Short word: paired, no date known.</summary>
     public static string TvPaired => Get("TvPaired");
 
+    /// <summary>Line under a paired TV running the app, in the Play on TV list.</summary>
+    public static string TvRowKaeri => Get("TvRowKaeri");
+
     /// <summary>Line with the address.</summary>
     public static string TvConnectedAt(string address) => Fill(Get("TvConnectedAt"), ("address", address));
 
@@ -13118,6 +13136,7 @@ public static partial class T
         ["MessagesTitle"] = "Messages",
         ["MessagesNone"] = "No messages yet",
         ["MessagesAlert"] = "Problem",
+        ["TvOnThisNetwork"] = "On this network",
         ["TvPickerEpisodeOf"] = "{title}, episode {episode}",
         ["EpisodeLabel"] = "Episode {episode}",
         ["EpisodeLabelOf"] = "Episode {episode} of {title}",
@@ -13448,6 +13467,10 @@ public static partial class T
         ["PlayerPositionSpoken"] = "{position} of {duration}",
         ["NamesPair"] = "{first} and {last}",
         ["NamesList"] = "{list}, {next}",
+        ["CastRowThroughComputer"] = "Plays through this computer",
+        ["DesktopCastQuitTitle"] = "Stop casting and quit?",
+        ["DesktopCastQuitBody"] = "{title} is playing on {name}. Quitting stops it.",
+        ["DesktopCastQuitAction"] = "Stop and quit",
         ["DiscussionOpen"] = "Discussion",
         ["DiscussionTitleEpisode"] = "Episode {episode} discussion",
         ["DiscussionRow_one"] = "Discussion · one comment",
@@ -16382,6 +16405,7 @@ public static partial class T
         ["TvNonePairedDetail"] = "Open Kaeri on the TV, on the same Wi-Fi, then pair with it here.",
         ["TvPairedOn"] = "Paired {when}",
         ["TvPaired"] = "Paired",
+        ["TvRowKaeri"] = "Kaeri on Android TV",
         ["TvConnectedAt"] = "Connected · {address}",
         ["TvForgetTitle"] = "Forget {name}?",
         ["TvForgetDetail"] = "To play on it again, pair with it again.",

@@ -29,3 +29,7 @@ tv-problem-unpaired = TV tidak lagi mengenali { -device } ini. Pasangkan lagi.
 player-position-spoken = { $position } dari { $duration }
 names-pair = { $first } dan { $last }
 names-list = { $list }, { $next }
+cast-row-through-computer = Diputar melalui komputer ini
+desktop-cast-quit-title = Hentikan transmisi dan keluar?
+desktop-cast-quit-body = { $title } sedang diputar di { $name }. Keluar akan menghentikannya.
+desktop-cast-quit-action = Hentikan dan keluar

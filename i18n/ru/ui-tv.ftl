@@ -32,6 +32,7 @@ tv-none-paired = Телевизоры пока не подключены
 tv-none-paired-detail = Откройте { -app-name } на телевизоре в той же сети Wi-Fi, затем подключите его здесь.
 tv-paired-on = Подключён { $when }
 tv-paired = Подключён
+tv-row-kaeri = { -app-name } на Android TV
 tv-connected-at = Подключён · { $address }
 tv-forget-title = Забыть { $name }?
 tv-forget-detail = Чтобы снова играть на нём, подключите его заново.

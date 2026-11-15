@@ -1540,6 +1540,9 @@
     <string name="player_position_spoken">%1$s av %2$s</string>
     <string name="names_pair">%1$s och %2$s</string>
     <string name="names_list">%1$s, %2$s</string>
+    <string name="desktop_cast_quit_title">Stoppa strömningen och avsluta?</string>
+    <string name="desktop_cast_quit_body">%1$s spelas upp på %2$s. Uppspelningen stoppas vid avslut.</string>
+    <string name="desktop_cast_quit_action">Stoppa och avsluta</string>
     <string name="discussion_open">Diskussion</string>
     <string name="discussion_title_episode">Diskussion om avsnitt %1$d</string>
     <plurals name="discussion_row">

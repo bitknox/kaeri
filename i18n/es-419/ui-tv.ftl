@@ -32,6 +32,7 @@ tv-none-paired = Todavía no hay televisores vinculados
 tv-none-paired-detail = Abre { -app-name } en el televisor, en el mismo Wi-Fi, y luego vincúlalo desde aquí.
 tv-paired-on = Vinculado { $when }
 tv-paired = Vinculado
+tv-row-kaeri = { -app-name } en Android TV
 tv-connected-at = Conectado · { $address }
 tv-forget-title = ¿Olvidar { $name }?
 tv-forget-detail = Para reproducir en él otra vez, vuelve a vincularlo.

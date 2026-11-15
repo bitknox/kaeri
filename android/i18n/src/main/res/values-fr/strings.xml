@@ -1607,6 +1607,9 @@
     <string name="player_position_spoken">%1$s sur %2$s</string>
     <string name="names_pair">%1$s et %2$s</string>
     <string name="names_list">%1$s, %2$s</string>
+    <string name="desktop_cast_quit_title">Arrêter la diffusion et quitter ?</string>
+    <string name="desktop_cast_quit_body">%1$s est en lecture sur %2$s. Quitter arrête la lecture.</string>
+    <string name="desktop_cast_quit_action">Arrêter et quitter</string>
     <string name="discussion_open">Discussion</string>
     <string name="discussion_title_episode">Discussion de l’épisode %1$d</string>
     <plurals name="discussion_row">

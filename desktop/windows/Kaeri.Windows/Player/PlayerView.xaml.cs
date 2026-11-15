@@ -1625,6 +1625,19 @@ public sealed partial class PlayerView : UserControl
         c.Tv.Offer(new TvPlay(playingId, ShowTitle.Text, playingEpisode, position > 5 ? position : null, FromPlayer: true));
     }
 
+    /// <summary>
+    /// What plays here, with its second, for the title bar's cast button to carry to the TV it
+    /// connects to; the player pauses meanwhile and closes once the TV has it.
+    /// </summary>
+    internal TvPlay? PlayingOnTv()
+    {
+        if (playingId == 0 || playingEpisode.Length == 0)
+            return null;
+        if (!paused)
+            Send(new PlayerCommand.TogglePause());
+        return new TvPlay(playingId, ShowTitle.Text, playingEpisode, position > 5 ? position : null, FromPlayer: true);
+    }
+
     static string Skipped(SkipKind kind) => kind switch { SkipKind.Ending => T.PlayerSkippedEnding, SkipKind.Recap => T.PlayerSkippedRecap, _ => T.PlayerSkippedOpening };
 
     /// <summary>The buttons' tooltips, each with its key: "Episodes (E)".</summary>

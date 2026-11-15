@@ -1473,6 +1473,9 @@
     <string name="player_position_spoken">%1$s trên %2$s</string>
     <string name="names_pair">%1$s và %2$s</string>
     <string name="names_list">%1$s, %2$s</string>
+    <string name="desktop_cast_quit_title">Dừng truyền và thoát?</string>
+    <string name="desktop_cast_quit_body">%1$s đang phát trên %2$s. Thoát sẽ dừng phát.</string>
+    <string name="desktop_cast_quit_action">Dừng và thoát</string>
     <string name="discussion_open">Thảo luận</string>
     <string name="discussion_title_episode">Thảo luận tập %1$d</string>
     <plurals name="discussion_row">

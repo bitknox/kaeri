@@ -4109,6 +4109,24 @@
     "by": "agent",
     "at": "2026-11-07"
   },
+  "desktop-cast-quit-action": {
+    "source": "393f29a71b72",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
+  },
+  "desktop-cast-quit-body": {
+    "source": "f22d614740e2",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
+  },
+  "desktop-cast-quit-title": {
+    "source": "534fe08f2d01",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
+  },
   "device-kind-computer": {
     "source": "0af16b6b2e49",
     "state": "draft",

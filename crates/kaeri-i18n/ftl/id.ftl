@@ -6427,6 +6427,15 @@ names-pair = { $first } dan { $last }
 # A list of names up to the last two, joined one by one: "Alpha, Brook".
 names-list = { $list }, { $next }
 
+# Title of the question asked on quitting while an episode plays on a TV.
+desktop-cast-quit-title = Hentikan transmisi dan keluar?
+
+# Body of the question asked on quitting while an episode plays on a TV. The title is the show's, the name is the TV's.
+desktop-cast-quit-body = { $title } sedang diputar di { $name }. Keluar akan menghentikannya.
+
+# Button of the question asked on quitting while casting: stops the cast and quits.
+desktop-cast-quit-action = Hentikan dan keluar
+
 # Menu item that opens an episode's discussion.
 discussion-open = Diskusi
 

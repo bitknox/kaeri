@@ -3335,6 +3335,15 @@
   <data name="NamesList" xml:space="preserve">
     <value>{list}、{next}</value>
   </data>
+  <data name="DesktopCastQuitTitle" xml:space="preserve">
+    <value>キャストを停止して終了しますか？</value>
+  </data>
+  <data name="DesktopCastQuitBody" xml:space="preserve">
+    <value>{title} を {name} で再生中です。終了すると停止します。</value>
+  </data>
+  <data name="DesktopCastQuitAction" xml:space="preserve">
+    <value>停止して終了</value>
+  </data>
   <data name="DiscussionOpen" xml:space="preserve">
     <value>ディスカッション</value>
   </data>

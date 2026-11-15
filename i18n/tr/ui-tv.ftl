@@ -32,6 +32,7 @@ tv-none-paired = Henüz eşleştirilmiş TV yok
 tv-none-paired-detail = TV'de { -app-name } uygulamasını açın, aynı Wi-Fi ağında olsun, ardından buradan onunla eşleştirin.
 tv-paired-on = { $when } eşleştirildi
 tv-paired = Eşleştirildi
+tv-row-kaeri = Android TV üzerinde { -app-name }
 tv-connected-at = Bağlı · { $address }
 tv-forget-title = { $name } unutulsun mu?
 tv-forget-detail = Bu TV'de yeniden oynatmak için yeniden eşleştirin.

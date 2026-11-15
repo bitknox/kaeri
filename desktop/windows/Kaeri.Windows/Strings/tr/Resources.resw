@@ -3485,6 +3485,15 @@
   <data name="NamesList" xml:space="preserve">
     <value>{list}, {next}</value>
   </data>
+  <data name="DesktopCastQuitTitle" xml:space="preserve">
+    <value>Yayın durdurulup çıkılsın mı?</value>
+  </data>
+  <data name="DesktopCastQuitBody" xml:space="preserve">
+    <value>{title}, {name} üzerinde oynatılıyor. Çıkmak oynatmayı durdurur.</value>
+  </data>
+  <data name="DesktopCastQuitAction" xml:space="preserve">
+    <value>Durdur ve çık</value>
+  </data>
   <data name="DiscussionOpen" xml:space="preserve">
     <value>Tartışma</value>
   </data>

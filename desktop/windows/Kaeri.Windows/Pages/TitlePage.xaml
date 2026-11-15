@@ -144,6 +144,11 @@
                   <Run x:Name="MissingHead" FontWeight="SemiBold" Foreground="{ThemeResource SilkBrush}" /><Run x:Name="MissingTail" />
                 </TextBlock>
               </Grid>
+              <!-- While a TV is held: the play goes there, said under the actions with the water dot. -->
+              <StackPanel x:Name="CastLineRow" Orientation="Horizontal" Spacing="8" Visibility="Collapsed">
+                <Ellipse Width="7" Height="7" Fill="{ThemeResource WaterBrush}" VerticalAlignment="Center" />
+                <TextBlock x:Name="CastLineText" Style="{StaticResource HazeBodyStyle}" TextTrimming="CharacterEllipsis" />
+              </StackPanel>
               <!-- Services that have the title: Also on, or Listed on with a way to choose yours. -->
               <StackPanel x:Name="AvailLine" Orientation="Horizontal" Spacing="2" Margin="0,6,0,0" Visibility="Collapsed" />
             </StackPanel>

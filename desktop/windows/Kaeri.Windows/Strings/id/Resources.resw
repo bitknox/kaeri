@@ -3335,6 +3335,15 @@
   <data name="NamesList" xml:space="preserve">
     <value>{list}, {next}</value>
   </data>
+  <data name="DesktopCastQuitTitle" xml:space="preserve">
+    <value>Hentikan transmisi dan keluar?</value>
+  </data>
+  <data name="DesktopCastQuitBody" xml:space="preserve">
+    <value>{title} sedang diputar di {name}. Keluar akan menghentikannya.</value>
+  </data>
+  <data name="DesktopCastQuitAction" xml:space="preserve">
+    <value>Hentikan dan keluar</value>
+  </data>
   <data name="DiscussionOpen" xml:space="preserve">
     <value>Diskusi</value>
   </data>

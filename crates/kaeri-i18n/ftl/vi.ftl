@@ -6427,6 +6427,15 @@ names-pair = { $first } và { $last }
 # A list of names up to the last two, joined one by one: "Alpha, Brook".
 names-list = { $list }, { $next }
 
+# Title of the question asked on quitting while an episode plays on a TV.
+desktop-cast-quit-title = Dừng truyền và thoát?
+
+# Body of the question asked on quitting while an episode plays on a TV. The title is the show's, the name is the TV's.
+desktop-cast-quit-body = { $title } đang phát trên { $name }. Thoát sẽ dừng phát.
+
+# Button of the question asked on quitting while casting: stops the cast and quits.
+desktop-cast-quit-action = Dừng và thoát
+
 # Menu item that opens an episode's discussion.
 discussion-open = Thảo luận
 

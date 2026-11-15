@@ -59,3 +59,4 @@ titlebar-open-devices = Öppna { -device-cap-pl }
 messages-title = Meddelanden
 messages-none = Inga meddelanden än
 messages-alert = Problem
+tv-on-this-network = På det här nätverket

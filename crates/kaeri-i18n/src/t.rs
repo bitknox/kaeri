@@ -10830,6 +10830,26 @@ pub fn names_list(list: &str, next: &str) -> String {
     text("names-list", &[("list", Arg::Text(list)), ("next", Arg::Text(next))])
 }
 
+/// Line under a TV with Chromecast built in, in the Play on TV list: this computer serves the episode to it while it plays.
+pub fn cast_row_through_computer() -> String {
+    text("cast-row-through-computer", &[])
+}
+
+/// Title of the question asked on quitting while an episode plays on a TV.
+pub fn desktop_cast_quit_title() -> String {
+    text("desktop-cast-quit-title", &[])
+}
+
+/// Body of the question asked on quitting while an episode plays on a TV. The title is the show's, the name is the TV's.
+pub fn desktop_cast_quit_body(title: &str, name: &str) -> String {
+    text("desktop-cast-quit-body", &[("title", Arg::Text(title)), ("name", Arg::Text(name))])
+}
+
+/// Button of the question asked on quitting while casting: stops the cast and quits.
+pub fn desktop_cast_quit_action() -> String {
+    text("desktop-cast-quit-action", &[])
+}
+
 /// Menu item that opens an episode's discussion.
 pub fn discussion_open() -> String {
     text("discussion-open", &[])
@@ -24974,6 +24994,11 @@ pub fn tv_paired_on(when: &str) -> String {
 /// Short word: paired, no date known.
 pub fn tv_paired() -> String {
     text("tv-paired", &[])
+}
+
+/// Line under a paired TV running the app, in the Play on TV list.
+pub fn tv_row_kaeri() -> String {
+    text("tv-row-kaeri", &[])
 }
 
 /// Line with the address.

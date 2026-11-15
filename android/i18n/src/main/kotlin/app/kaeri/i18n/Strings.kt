@@ -5981,6 +5981,22 @@ object Strings {
     fun namesList(context: Context, list: String, next: String): String =
         context.getString(R.string.names_list, list, next)
 
+    /** Line under a TV with Chromecast built in, in the Play on TV list: this computer serves the episode to it while it plays. */
+    fun castRowThroughComputer(context: Context): String =
+        context.getString(R.string.cast_row_through_computer)
+
+    /** Title of the question asked on quitting while an episode plays on a TV. */
+    fun desktopCastQuitTitle(context: Context): String =
+        context.getString(R.string.desktop_cast_quit_title)
+
+    /** Body of the question asked on quitting while an episode plays on a TV. The title is the show's, the name is the TV's. */
+    fun desktopCastQuitBody(context: Context, title: String, name: String): String =
+        context.getString(R.string.desktop_cast_quit_body, title, name)
+
+    /** Button of the question asked on quitting while casting: stops the cast and quits. */
+    fun desktopCastQuitAction(context: Context): String =
+        context.getString(R.string.desktop_cast_quit_action)
+
     /** Menu item that opens an episode's discussion. */
     fun discussionOpen(context: Context): String =
         context.getString(R.string.discussion_open)
@@ -17334,6 +17350,10 @@ object Strings {
     /** Short word: paired, no date known. */
     fun tvPaired(context: Context): String =
         context.getString(R.string.tv_paired)
+
+    /** Line under a paired TV running the app, in the Play on TV list. */
+    fun tvRowKaeri(context: Context): String =
+        context.getString(R.string.tv_row_kaeri)
 
     /** Line with the address. */
     fun tvConnectedAt(context: Context, address: String): String =

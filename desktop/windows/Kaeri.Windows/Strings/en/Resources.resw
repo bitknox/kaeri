@@ -3501,6 +3501,10 @@
     <value>Problem</value>
     <comment>Name of the dot before a notice that was an alert, for Narrator.</comment>
   </data>
+  <data name="TvOnThisNetwork" xml:space="preserve">
+    <value>On this network</value>
+    <comment>The heading over the TVs running Kaeri in the title bar's Play on TV menu, under the TVs with Chromecast built in.</comment>
+  </data>
   <data name="TvPickerEpisodeOf" xml:space="preserve">
     <value>{title}, episode {episode}</value>
     <comment>Under the TV picker's title: the episode about to play on the TV, with its show's title.</comment>
@@ -4820,6 +4824,22 @@
   <data name="NamesList" xml:space="preserve">
     <value>{list}, {next}</value>
     <comment>A list of names up to the last two, joined one by one: "Alpha, Brook".</comment>
+  </data>
+  <data name="CastRowThroughComputer" xml:space="preserve">
+    <value>Plays through this computer</value>
+    <comment>Line under a TV with Chromecast built in, in the Play on TV list: this computer serves the episode to it while it plays.</comment>
+  </data>
+  <data name="DesktopCastQuitTitle" xml:space="preserve">
+    <value>Stop casting and quit?</value>
+    <comment>Title of the question asked on quitting while an episode plays on a TV.</comment>
+  </data>
+  <data name="DesktopCastQuitBody" xml:space="preserve">
+    <value>{title} is playing on {name}. Quitting stops it.</value>
+    <comment>Body of the question asked on quitting while an episode plays on a TV. The title is the show's, the name is the TV's.</comment>
+  </data>
+  <data name="DesktopCastQuitAction" xml:space="preserve">
+    <value>Stop and quit</value>
+    <comment>Button of the question asked on quitting while casting: stops the cast and quits.</comment>
   </data>
   <data name="DiscussionOpen" xml:space="preserve">
     <value>Discussion</value>
@@ -16522,6 +16542,10 @@
   <data name="TvPaired" xml:space="preserve">
     <value>Paired</value>
     <comment>Short word: paired, no date known.</comment>
+  </data>
+  <data name="TvRowKaeri" xml:space="preserve">
+    <value>Kaeri on Android TV</value>
+    <comment>Line under a paired TV running the app, in the Play on TV list.</comment>
   </data>
   <data name="TvConnectedAt" xml:space="preserve">
     <value>Connected · {address}</value>
