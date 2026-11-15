@@ -1592,7 +1592,12 @@ fn taking_over(from: f64) -> Vec<PlaybackEvent> {
 /// The first stream plays from 600 s, the viewer turns to the English audio and turns the
 /// subtitles off, and then the stream ends as `end` has it: what the playback said and did.
 async fn choices_then(end: Vec<PlaybackEvent>, failing: &[usize]) -> (Rig, Vec<Event>) {
-    let rig = failing_rig(vec![opening(&[]), taking_over(612.0)], failing);
+    let mut next = taking_over(612.0);
+    if !end.iter().any(|event| matches!(event, PlaybackEvent::Ended { .. })) {
+        // A file that never ended is ended by the `loadfile` that replaces it, as mpv does.
+        next.insert(0, PlaybackEvent::Replaced);
+    }
+    let rig = failing_rig(vec![opening(&[]), next], failing);
     let (controls, commands) = mpsc::unbounded_channel::<PlayerCommand>();
     let driving = async {
         until_called(&rig, |call| matches!(call, Call::Load { .. })).await;
