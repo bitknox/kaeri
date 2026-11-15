@@ -29,7 +29,7 @@ use kaeri_model::{
     event::Event,
     medium::KaeriIsFor,
     notice::Notice,
-    reading::{ReadingCommand, ReadingEvent, ReadingFailure},
+    reading::{ReadingCommand, ReadingEvent, ReadingFailure, ReadingHomeView},
 };
 
 use crate::{outbox::Outbox, services::Services, state::EngineState};
@@ -213,19 +213,21 @@ pub(crate) fn command(
 
 /// Take a series off Continue for good. The app has already dropped the cover from the screen
 /// ([`kaeri_model::reading::read_home_without_continue`]), so Home is not sent again and nothing
-/// else on it moves, as on watching's Continue. Only a series the spotlight shows sends Home
-/// again, from what is kept, for the spotlight to move on. A failure to keep it is named, as it
-/// would come back on the next Home.
+/// else on it moves, as on watching's Continue. A series the spotlight shows sends Home as it
+/// stood with only the spotlight moved on, so the shelves under it stay as they are. A failure
+/// to keep it is named, as it would come back on the next Home.
 fn hide_from_continue(kit: &Kit, ask: Ask, work: &kaeri_core::books::WorkId, tx: &Outbox) {
-    let spotlit = home::spotlight(kit, ask).as_ref() == Some(work);
-    match kit.store.set_read_hidden(work.as_str(), true) {
-        Ok(()) if spotlit => home::resend(kit, ask, tx),
-        Ok(()) => {}
-        Err(e) => {
-            let _ = tx.send(Event::Toast(Notice::alert(Msg::NoticeContinueHideFailed {
-                reason: e.to_string(),
-            })));
-        }
+    let shown = home::view(kit, ask);
+    if let Err(e) = kit.store.set_read_hidden(work.as_str(), true) {
+        let _ = tx.send(Event::Toast(Notice::alert(Msg::NoticeContinueHideFailed {
+            reason: e.to_string(),
+        })));
+        return;
+    }
+    if shown.spotlight.as_ref().is_some_and(|tile| &tile.work == work) {
+        let now = home::view(kit, ask);
+        let moved = ReadingHomeView { spotlight: now.spotlight, spot: now.spot, ..shown };
+        send(tx, ReadingEvent::Home(Box::new(moved.without_continue(work))));
     }
 }
 

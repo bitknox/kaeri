@@ -240,6 +240,52 @@ async fn a_cold_home_asks_four_times_and_a_warm_one_not_at_all() {
     assert_eq!(warm.rows, cold.rows);
 }
 
+/// Remove from Continue: the app has dropped the cover already, so Home is not sent again and
+/// nothing under Continue moves. A series the spotlight shows sends Home as it stood, with only
+/// the spotlight moved on.
+#[tokio::test]
+async fn remove_from_continue_moves_nothing_but_the_spotlight_it_held() {
+    let fake = FakeAniList::start().await;
+    fake.add_books(popular("MANGA", 911_000));
+    fake.add_books([
+        book(910_003, "Saltwind Diary", "MANGA", (2018, 400), &["Action"], &[]),
+        book(910_005, "Paper Crane Courier", "MANGA", (2023, 400), &["Action"], &[]),
+    ]);
+    let dir = tempfile::tempdir().unwrap();
+    let kit = kit(Some(&fake), dir.path());
+    for (work, at) in [("a:910003", NOW - DAY), ("a:910005", NOW - 2 * DAY)] {
+        let read =
+            ReadEvent { page: Some(4), of_pages: Some(20), ..ReadEvent::new(work, "2", at) };
+        kit.store.record_read(&read, Vec::new()).unwrap();
+    }
+    let works = |tiles: &[WorkTile]| tiles.iter().map(|t| t.work.0.clone()).collect::<Vec<_>>();
+    let (tx, mut rx) = outbox();
+    home::load(&kit, ask(), false, &tx);
+    let shown = whole_home(&mut rx).await;
+    assert_eq!(works(&shown.continue_reading), ["a:910003", "a:910005"]);
+    assert_eq!(shown.spotlight.as_ref().map(|t| t.work.as_str()), Some("a:910003"));
+
+    let quiet = kaeri_core::books::WorkId::new("a:910005".to_owned());
+    super::hide_from_continue(&kit, ask(), &quiet, &tx);
+    assert!(rx.try_recv().is_err(), "a cover the spotlight does not show sends nothing");
+    let kept = home::view(&kit, ask());
+    assert_eq!(works(&kept.continue_reading), ["a:910003"], "kept hidden");
+
+    let spotlit = kaeri_core::books::WorkId::new("a:910003".to_owned());
+    super::hide_from_continue(&kit, ask(), &spotlit, &tx);
+    let Ok(Event::Reading(ReadingEvent::Home(moved))) = rx.try_recv() else {
+        panic!("the spotlight's series sends Home");
+    };
+    assert!(moved.continue_reading.is_empty());
+    assert_ne!(moved.spotlight.as_ref().map(|t| t.work.as_str()), Some("a:910003"));
+    assert_eq!(moved.spotlight, home::view(&kit, ask()).spotlight, "the spotlight moved on");
+    assert_eq!(
+        (&moved.up_next, &moved.rows),
+        (&kept.up_next, &kept.rows),
+        "nothing else moved"
+    );
+}
+
 /// Home is offline while the path is gone and online again once it is back, though every row is
 /// still fresh and nothing is asked: the path coming back says Home again without the app asking.
 #[tokio::test]
