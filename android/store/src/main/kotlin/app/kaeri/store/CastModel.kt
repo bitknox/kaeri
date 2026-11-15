@@ -14,13 +14,10 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import app.kaeri.engine.core.AnilistId
@@ -203,9 +200,13 @@ class CastModel(
      * A cast starts or plays: the stream goes out through this device, so it stays up and its
      * torrents run with the screen off, as for an episode playing here.
      */
-    val casting: StateFlow<Boolean> = combine(_shown, _session) { shown, session ->
-        shown?.live == true || session.state == CastSessionState.Playing
-    }.stateIn(scope, SharingStarted.Eagerly, false)
+    private val _casting = MutableStateFlow(false)
+    val casting: StateFlow<Boolean> = _casting.asStateFlow()
+
+    /** Kept with the card and the session as they change, with no coroutine of its own. */
+    private fun recast() {
+        _casting.value = _shown.value?.live == true || _session.value.state == CastSessionState.Playing
+    }
 
     private val _button = MutableStateFlow(CastButtonState.Hidden)
 
@@ -376,6 +377,7 @@ class CastModel(
         val was = _session.value
         sessionAt = clock()
         _session.value = view
+        recast()
         view.note?.let { if (it != was.note) _notes.tryEmit(it) }
         view.item?.let { _lastItem.value = it }
         if (view.state != CastSessionState.Idle) _joining.value = null
@@ -410,6 +412,7 @@ class CastModel(
         over = link
         link = null
         _shown.value = shown.copy(cast = shown.cast.copy(card = shown.cast.card.copy(over = true), notice = notice))
+        recast()
     }
 
     /** The cast ended with [ended] to say once its card has gone: the snackbar, said once. */
@@ -433,6 +436,7 @@ class CastModel(
         link = next
         val now = clock()
         _shown.value = CastShown(next.card(), now, view.deviceName ?: next.tvName, request, held?.startedAt ?: now)
+        recast()
         follow(next, request)
     }
 
@@ -520,6 +524,7 @@ class CastModel(
         told = null
         val now = clock()
         _shown.value = CastShown(starting(name, _session.value.levelControl), now, name, request, now)
+        recast()
         _open.value = true
         source.play(request)
         // A play the engine could not start never reaches the TV: the controller lets it go.
@@ -562,6 +567,7 @@ class CastModel(
         link = next
         val now = clock()
         _shown.value = CastShown(next.card(), now, next.tvName, request, now)
+        recast()
         _open.value = true
         tv?.sheetClosed()
         follow(next, request)
@@ -592,6 +598,7 @@ class CastModel(
         val held = _shown.value ?: return
         val same = held.cast.card.now?.position == card.card.now?.position && held.cast.card.now?.paused == card.card.now?.paused
         _shown.value = held.copy(cast = card, at = if (same) held.at else clock())
+        recast()
         if (!card.card.over) return
         val notice = card.notice
         val now = card.card.now
@@ -629,6 +636,7 @@ class CastModel(
         link = null
         over = null
         _shown.value = null
+        recast()
         _open.value = false
     }
 
@@ -720,6 +728,7 @@ class CastModel(
         link = again
         val now = clock()
         _shown.value = shown.copy(cast = again.card(), at = now, startedAt = now)
+        recast()
         follow(again, shown.request)
     }
 
