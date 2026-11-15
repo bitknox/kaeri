@@ -95,6 +95,9 @@ class Navigator(private val nav: NavHostController, private val start: Destinati
      * page outside every destination such as Downloads, the nearest one under it, so a series
      * opened from Library's Downloads stays in Library.
      */
+    // Navigation keeps its whole back stack to its own libraries and offers no public way to look
+    // under the page on screen.
+    @SuppressLint("RestrictedApi")
     private fun owner(): Destination =
         nav.currentBackStack.value.asReversed().firstNotNullOfOrNull { it.destinationOf() } ?: start
 
