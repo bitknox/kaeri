@@ -34,6 +34,11 @@ export interface SubtitleFile {
 	title?: string;
 	/** Fonts for this file, when they differ from the load's `fonts`. */
 	fonts?: string[];
+	/**
+	 * A subtitle track inside the file, counted from 0 in its subtitle tracks, which the receiver
+	 * reads and draws itself. Its `media.tracks` entry is a stand-in; `url` is unused.
+	 */
+	inside?: number;
 }
 
 /**

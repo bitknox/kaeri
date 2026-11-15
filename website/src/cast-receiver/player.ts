@@ -2,6 +2,7 @@
 // of the receiver's CAF setup is here, so the screens (main.ts) only see the hooks below and the
 // few calls on `Player`. Playing more formats (feat/cast-receiver-formats) extends this module.
 
+import type { Formats } from './formats/receiver';
 import { NAMESPACE } from './protocol';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -46,7 +47,8 @@ export interface Player {
 	close(): void;
 }
 
-export function startPlayer(video: HTMLVideoElement, hooks: Hooks): Player {
+/** `formats` unpacks loads on the receiver itself (formats/receiver.ts); without it CAF plays every load. */
+export function startPlayer(video: HTMLVideoElement, hooks: Hooks, formats?: Formats): Player {
 	const fw = cast.framework;
 	const context = fw.CastReceiverContext.getInstance();
 	const manager = context.getPlayerManager();
@@ -62,7 +64,10 @@ export function startPlayer(video: HTMLVideoElement, hooks: Hooks): Player {
 	const E = fw.events.EventType;
 	const M = fw.messages.MessageType;
 	const ended = fw.events.EndedReason ?? {};
-	manager.setMessageInterceptor(M.LOAD, (request: unknown) => hooks.load(request));
+	manager.setMessageInterceptor(M.LOAD, (request: unknown) => {
+		const r = hooks.load(request);
+		return formats ? formats.load(r) : r;
+	});
 	manager.setMessageInterceptor(M.EDIT_TRACKS_INFO, (request: unknown) => {
 		setTimeout(() => hooks.tracksChanged(), 200);
 		return request;
@@ -133,6 +138,8 @@ export function startPlayer(video: HTMLVideoElement, hooks: Hooks): Player {
 		activeTextTracks: () => safe(() => manager.getTextTracksManager().getActiveIds(), [] as number[]),
 		switchAudio: (language, name) =>
 			safe(() => {
+				const inside = formats?.switchAudio(language, name);
+				if (inside != null) return inside;
 				const atm = manager.getAudioTracksManager();
 				const tracks: { trackId: number; language?: string; name?: string }[] = atm.getTracks() ?? [];
 				const pick =

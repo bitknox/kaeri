@@ -1,0 +1,15 @@
+Kaeri Cast receiver: audio decoders (pcm/*.js and pcm/*.wasm)
+
+These files are FFmpeg's libavcodec and libavutil, version 7.1.1, compiled to WebAssembly with
+Emscripten, together with a small wrapper (decoder.c, MIT). FFmpeg is licensed under the GNU
+Lesser General Public License version 2.1 or later; the text is in COPYING.LGPLv2.1 beside this
+file. The build is configured with --disable-gpl and --disable-nonfree.
+
+They are separate files that the receiver loads at run time, only when a stream's audio needs
+them, and they can be replaced with any build that exports the same functions.
+
+FFmpeg source: https://ffmpeg.org/releases/ffmpeg-7.1.1.tar.xz
+SHA-256: 733984395e0dbbe5c046abda2dc49a5544e7e0e1e2366bba849222ae9e3a03b1
+Build script and wrapper: website/scripts/cast-receiver/pcm/ in https://github.com/bitknox/kaeri
+
+FFmpeg is a trademark of Fabrice Bellard, originator of the FFmpeg project.

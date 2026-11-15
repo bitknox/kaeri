@@ -140,9 +140,10 @@
 		text,
 		audio,
 		/** A sender's LOAD; `play: false` holds it on Starting. */
-		load(request, { play = true } = {}) {
+		async load(request, { play = true } = {}) {
 			if (state !== PlayerState.IDLE && !finishedSent) emit(EventType.MEDIA_FINISHED, { endedReason: 'INTERRUPTED' });
-			const r = interceptors.LOAD ? interceptors.LOAD(request) : request;
+			// CAF waits for an interceptor that returns a promise.
+			const r = interceptors.LOAD ? await interceptors.LOAD(request) : request;
 			finishedSent = false;
 			state = PlayerState.BUFFERING;
 			window.__caf.pending = r;
@@ -164,7 +165,7 @@
 					video.appendChild(el);
 				}
 				showTracks();
-				video.src = r.media.contentId;
+				video.src = r.media.contentUrl || r.media.contentId;
 				if (r.currentTime) video.currentTime = r.currentTime;
 			}
 			video.play().catch(() => {});

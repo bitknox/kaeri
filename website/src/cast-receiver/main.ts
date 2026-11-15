@@ -15,6 +15,7 @@ import {
 	type Device,
 	type LoadExtras,
 } from './protocol';
+import { Formats } from './formats/receiver';
 import { SilentPicture } from './silent';
 import { Typeset, canTypeset, type Failure } from './typeset';
 
@@ -68,6 +69,8 @@ let player: Player | null = null;
 const video = $<HTMLVideoElement>('video');
 const typeset = new Typeset(video, base);
 const silent = new SilentPicture();
+// Files and playlists unpacked on the receiver; their errors count like the player's own.
+const formats = new Formats(video, base, () => (canTypeset() && !S.plainSubs ? typeset : null), (r) => unpackError(r));
 
 const t = (id: string, args?: Record<string, string | number>) => strings?.t(id, args) ?? '';
 
@@ -311,6 +314,7 @@ function plainSubtitles(reason: 'slow' | Failure) {
 	S.plainSubs = true;
 	document.documentElement.classList.remove('typeset');
 	void typeset.hide();
+	formats.plainText();
 	if (reason === 'slow' || reason === 'renderer') {
 		if (!S.plainSaid) {
 			S.plainSaid = true;
@@ -337,6 +341,12 @@ async function applyTypeset() {
 	let active = player?.activeTextTracks() ?? [];
 	// Until the sender changes tracks, the load's own pick counts when CAF hasn't turned it on.
 	if (!S.tracksEdited && !active.length && S.extras.subtitle != null) active = [S.extras.subtitle];
+	// A track inside the file, or a PGS file: the receiver draws it.
+	const entry = (S.extras.subtitles ?? []).find((s) => active.includes(s.id)) ?? null;
+	if (await formats.showSubtitle(entry)) {
+		document.documentElement.classList.remove('typeset');
+		return;
+	}
 	const twin = typesetFiles(S.extras).find((s) => active.includes(s.trackId));
 	if (!twin || S.plainSubs || !canTypeset()) {
 		document.documentElement.classList.remove('typeset');
@@ -374,6 +384,17 @@ function fatal(report: Report) {
 	} else {
 		setPhase('error');
 	}
+}
+
+/** An error from the receiver's own unpacking. Subtitles keep playing; the rest ends the episode. */
+function unpackError(report: Report) {
+	console.warn('unpacking', report.part, report.detail);
+	if (report.part === 'subtitles') {
+		sendError(report);
+		return;
+	}
+	S.error = report;
+	fatal(report);
 }
 
 function silentPicture() {
@@ -570,7 +591,9 @@ async function start() {
 	fit();
 	addEventListener('resize', fit);
 	addEventListener('keydown', onKey);
-	player = startPlayer(video, {
+	player = startPlayer(
+		video,
+		{
 		load: onLoad,
 		playing: onPlaying,
 		paused: () => {
@@ -598,7 +621,9 @@ async function start() {
 			if (!S.deviceKnown) S.device = deviceFromAgent(userAgent);
 			ready(senderId);
 		},
-	});
+		},
+		formats,
+	);
 
 	await useLanguage(S.language);
 	setInterval(render, 250);
@@ -608,7 +633,7 @@ async function start() {
 	ready();
 
 	if ((window as unknown as { __cafStub?: boolean }).__cafStub)
-		(window as unknown as Record<string, unknown>).__receiver = { S, render, typeset, plainSubtitles, silent };
+		(window as unknown as Record<string, unknown>).__receiver = { S, render, typeset, plainSubtitles, silent, formats };
 }
 
 void start();
