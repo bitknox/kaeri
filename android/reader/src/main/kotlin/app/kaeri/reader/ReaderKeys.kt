@@ -13,8 +13,11 @@ import android.view.KeyEvent
 import androidx.compose.foundation.focusable
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.compositionLocalOf
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusDirection
@@ -76,6 +79,12 @@ fun keyRoute(keyCode: Int, readerHolds: Boolean, controlsTakeArrows: Boolean): K
  */
 class ReaderControlKeys(val shown: Boolean, val enter: () -> Unit)
 
+/**
+ * Whether the reader on screen is closing. A closing reader gives no focus back to itself, so the
+ * control under it that held the focus before it opened keeps it.
+ */
+val LocalReaderLeaving = compositionLocalOf { false }
+
 /** Where the reader itself holds the focus, as against a control inside it, and whether either does. */
 private class OwnFocus {
     var held = false
@@ -97,6 +106,7 @@ fun Modifier.readerKeys(
     val own = remember { OwnFocus() }
     val focusManager = LocalFocusManager.current
     val scope = rememberCoroutineScope()
+    val leaving by rememberUpdatedState(LocalReaderLeaving.current)
     LaunchedEffect(Unit) { runCatching { focus.requestFocus() } }
     return this
         .onFocusChanged {
@@ -104,11 +114,12 @@ fun Modifier.readerKeys(
             own.held = it.isFocused
             own.within = it.hasFocus
             // The focused control left with its bars or page and the focus went nowhere: back to the
-            // reader, a frame on, unless something took it meanwhile. Leaving the reader cancels this.
-            if (lost) {
+            // reader, a frame on, unless something took it meanwhile. Leaving the reader cancels this,
+            // and so does a closing reader, whose focus goes back to the app under it.
+            if (lost && !leaving) {
                 scope.launch {
                     withFrameNanos {}
-                    if (!own.within) runCatching { focus.requestFocus() }
+                    if (!own.within && !leaving) runCatching { focus.requestFocus() }
                 }
             }
         }
