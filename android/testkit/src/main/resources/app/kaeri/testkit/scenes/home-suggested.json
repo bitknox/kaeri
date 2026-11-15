@@ -560,6 +560,15 @@
       }
      },
      {
+      "key": "SHOW_FOLLOWING",
+      "value": "on",
+      "change": {
+       "@type": "Steps",
+       "back": true,
+       "forward": false
+      }
+     },
+     {
       "key": "COMMENT_IMAGES",
       "value": "off",
       "change": {
@@ -887,10 +896,10 @@
       "availableOn": [],
       "availableAt": null,
       "progress": null,
-      "airingIn": "208800",
+      "airingIn": "212400",
       "airingEpisode": null,
       "nextEpisode": "5",
-      "nextAiringIn": "208800",
+      "nextAiringIn": "212400",
       "lastAired": null,
       "resume": null,
       "related": [],
@@ -993,10 +1002,10 @@
           "done": "7",
           "next": "8"
          },
-         "airingIn": "131400",
+         "airingIn": "135000",
          "airingEpisode": null,
          "nextEpisode": "8",
-         "nextAiringIn": "131400",
+         "nextAiringIn": "135000",
          "lastAired": null,
          "resume": null,
          "related": [],
@@ -1058,7 +1067,7 @@
         "resume": null,
         "progress": null,
         "new": false,
-        "airsAt": "1793914200",
+        "airsAt": "1793917800",
         "day": "1",
         "reason": null,
         "starts": null,
@@ -1189,10 +1198,10 @@
           "done": "5",
           "next": "6"
          },
-         "airingIn": "219600",
+         "airingIn": "223200",
          "airingEpisode": null,
          "nextEpisode": "6",
-         "nextAiringIn": "219600",
+         "nextAiringIn": "223200",
          "lastAired": null,
          "resume": null,
          "related": [],
@@ -1254,7 +1263,7 @@
         "resume": null,
         "progress": null,
         "new": false,
-        "airsAt": "1794002400",
+        "airsAt": "1794006000",
         "day": "2",
         "reason": null,
         "starts": null,
@@ -1287,10 +1296,10 @@
           "done": "6",
           "next": "7"
          },
-         "airingIn": "457200",
+         "airingIn": "460800",
          "airingEpisode": null,
          "nextEpisode": "7",
-         "nextAiringIn": "457200",
+         "nextAiringIn": "460800",
          "lastAired": null,
          "resume": null,
          "related": [],
@@ -1352,7 +1361,7 @@
         "resume": null,
         "progress": null,
         "new": false,
-        "airsAt": "1794240000",
+        "airsAt": "1794243600",
         "day": "5",
         "reason": null,
         "starts": null,
@@ -1394,10 +1403,10 @@
          "availableOn": [],
          "availableAt": null,
          "progress": null,
-         "airingIn": "374400",
+         "airingIn": "378000",
          "airingEpisode": null,
          "nextEpisode": "5",
-         "nextAiringIn": "374400",
+         "nextAiringIn": "378000",
          "lastAired": null,
          "resume": null,
          "related": [],
@@ -1608,10 +1617,10 @@
          "availableOn": [],
          "availableAt": null,
          "progress": null,
-         "airingIn": "552600",
+         "airingIn": "556200",
          "airingEpisode": null,
          "nextEpisode": "4",
-         "nextAiringIn": "552600",
+         "nextAiringIn": "556200",
          "lastAired": null,
          "resume": null,
          "related": [],
@@ -1705,10 +1714,10 @@
          "availableOn": [],
          "availableAt": null,
          "progress": null,
-         "airingIn": "5659200",
+         "airingIn": "5662800",
          "airingEpisode": null,
          "nextEpisode": "1",
-         "nextAiringIn": "5659200",
+         "nextAiringIn": "5662800",
          "lastAired": null,
          "resume": null,
          "related": [],
@@ -2555,10 +2564,10 @@
          "availableOn": [],
          "availableAt": null,
          "progress": null,
-         "airingIn": "570600",
+         "airingIn": "574200",
          "airingEpisode": null,
          "nextEpisode": "6",
-         "nextAiringIn": "570600",
+         "nextAiringIn": "574200",
          "lastAired": null,
          "resume": null,
          "related": [],
@@ -2653,10 +2662,10 @@
          "availableOn": [],
          "availableAt": null,
          "progress": null,
-         "airingIn": "36000",
+         "airingIn": "39600",
          "airingEpisode": null,
          "nextEpisode": "5",
-         "nextAiringIn": "36000",
+         "nextAiringIn": "39600",
          "lastAired": null,
          "resume": null,
          "related": [],
@@ -2751,10 +2760,10 @@
          "availableOn": [],
          "availableAt": null,
          "progress": null,
-         "airingIn": "41400",
+         "airingIn": "45000",
          "airingEpisode": null,
          "nextEpisode": "4",
-         "nextAiringIn": "41400",
+         "nextAiringIn": "45000",
          "lastAired": null,
          "resume": null,
          "related": [],
@@ -2849,10 +2858,10 @@
          "availableOn": [],
          "availableAt": null,
          "progress": null,
-         "airingIn": "216000",
+         "airingIn": "219600",
          "airingEpisode": null,
          "nextEpisode": "6",
-         "nextAiringIn": "216000",
+         "nextAiringIn": "219600",
          "lastAired": null,
          "resume": null,
          "related": [],
@@ -2947,10 +2956,10 @@
          "availableOn": [],
          "availableAt": null,
          "progress": null,
-         "airingIn": "306000",
+         "airingIn": "309600",
          "airingEpisode": null,
          "nextEpisode": "4",
-         "nextAiringIn": "306000",
+         "nextAiringIn": "309600",
          "lastAired": null,
          "resume": null,
          "related": [],
@@ -3045,10 +3054,10 @@
          "availableOn": [],
          "availableAt": null,
          "progress": null,
-         "airingIn": "394200",
+         "airingIn": "397800",
          "airingEpisode": null,
          "nextEpisode": "6",
-         "nextAiringIn": "394200",
+         "nextAiringIn": "397800",
          "lastAired": null,
          "resume": null,
          "related": [],
@@ -3143,10 +3152,10 @@
          "availableOn": [],
          "availableAt": null,
          "progress": null,
-         "airingIn": "462600",
+         "airingIn": "466200",
          "airingEpisode": null,
          "nextEpisode": "3",
-         "nextAiringIn": "462600",
+         "nextAiringIn": "466200",
          "lastAired": null,
          "resume": null,
          "related": [],
@@ -3241,10 +3250,10 @@
          "availableOn": [],
          "availableAt": null,
          "progress": null,
-         "airingIn": "558000",
+         "airingIn": "561600",
          "airingEpisode": null,
          "nextEpisode": "6",
-         "nextAiringIn": "558000",
+         "nextAiringIn": "561600",
          "lastAired": null,
          "resume": null,
          "related": [],
@@ -5283,10 +5292,10 @@
       "availableOn": [],
       "availableAt": null,
       "progress": null,
-      "airingIn": "570600",
+      "airingIn": "574200",
       "airingEpisode": null,
       "nextEpisode": "6",
-      "nextAiringIn": "570600",
+      "nextAiringIn": "574200",
       "lastAired": null,
       "resume": null,
       "related": [],
@@ -5363,10 +5372,10 @@
       "availableOn": [],
       "availableAt": null,
       "progress": null,
-      "airingIn": "208800",
+      "airingIn": "212400",
       "airingEpisode": null,
       "nextEpisode": "5",
-      "nextAiringIn": "208800",
+      "nextAiringIn": "212400",
       "lastAired": null,
       "resume": null,
       "related": [],
@@ -5448,10 +5457,10 @@
       "availableOn": [],
       "availableAt": null,
       "progress": null,
-      "airingIn": "36000",
+      "airingIn": "39600",
       "airingEpisode": null,
       "nextEpisode": "5",
-      "nextAiringIn": "36000",
+      "nextAiringIn": "39600",
       "lastAired": null,
       "resume": null,
       "related": [],
@@ -5531,10 +5540,10 @@
        "done": "7",
        "next": "8"
       },
-      "airingIn": "131400",
+      "airingIn": "135000",
       "airingEpisode": null,
       "nextEpisode": "8",
-      "nextAiringIn": "131400",
+      "nextAiringIn": "135000",
       "lastAired": null,
       "resume": null,
       "related": [],
@@ -5611,10 +5620,10 @@
       "availableOn": [],
       "availableAt": null,
       "progress": null,
-      "airingIn": "41400",
+      "airingIn": "45000",
       "airingEpisode": null,
       "nextEpisode": "4",
-      "nextAiringIn": "41400",
+      "nextAiringIn": "45000",
       "lastAired": null,
       "resume": null,
       "related": [],
@@ -5691,10 +5700,10 @@
       "availableOn": [],
       "availableAt": null,
       "progress": null,
-      "airingIn": "216000",
+      "airingIn": "219600",
       "airingEpisode": null,
       "nextEpisode": "6",
-      "nextAiringIn": "216000",
+      "nextAiringIn": "219600",
       "lastAired": null,
       "resume": null,
       "related": [],
@@ -5774,10 +5783,10 @@
        "done": "6",
        "next": "7"
       },
-      "airingIn": "457200",
+      "airingIn": "460800",
       "airingEpisode": null,
       "nextEpisode": "7",
-      "nextAiringIn": "457200",
+      "nextAiringIn": "460800",
       "lastAired": null,
       "resume": null,
       "related": [],
@@ -5854,10 +5863,10 @@
       "availableOn": [],
       "availableAt": null,
       "progress": null,
-      "airingIn": "306000",
+      "airingIn": "309600",
       "airingEpisode": null,
       "nextEpisode": "4",
-      "nextAiringIn": "306000",
+      "nextAiringIn": "309600",
       "lastAired": null,
       "resume": null,
       "related": [],
@@ -5937,10 +5946,10 @@
        "done": "5",
        "next": "6"
       },
-      "airingIn": "219600",
+      "airingIn": "223200",
       "airingEpisode": null,
       "nextEpisode": "6",
-      "nextAiringIn": "219600",
+      "nextAiringIn": "223200",
       "lastAired": null,
       "resume": null,
       "related": [],
@@ -6017,10 +6026,10 @@
       "availableOn": [],
       "availableAt": null,
       "progress": null,
-      "airingIn": "394200",
+      "airingIn": "397800",
       "airingEpisode": null,
       "nextEpisode": "6",
-      "nextAiringIn": "394200",
+      "nextAiringIn": "397800",
       "lastAired": null,
       "resume": null,
       "related": [],
@@ -6097,10 +6106,10 @@
       "availableOn": [],
       "availableAt": null,
       "progress": null,
-      "airingIn": "374400",
+      "airingIn": "378000",
       "airingEpisode": null,
       "nextEpisode": "5",
-      "nextAiringIn": "374400",
+      "nextAiringIn": "378000",
       "lastAired": null,
       "resume": null,
       "related": [],
@@ -6182,10 +6191,10 @@
       "availableOn": [],
       "availableAt": null,
       "progress": null,
-      "airingIn": "462600",
+      "airingIn": "466200",
       "airingEpisode": null,
       "nextEpisode": "3",
-      "nextAiringIn": "462600",
+      "nextAiringIn": "466200",
       "lastAired": null,
       "resume": null,
       "related": [],
@@ -6262,10 +6271,10 @@
       "availableOn": [],
       "availableAt": null,
       "progress": null,
-      "airingIn": "552600",
+      "airingIn": "556200",
       "airingEpisode": null,
       "nextEpisode": "4",
-      "nextAiringIn": "552600",
+      "nextAiringIn": "556200",
       "lastAired": null,
       "resume": null,
       "related": [],
@@ -6342,10 +6351,10 @@
       "availableOn": [],
       "availableAt": null,
       "progress": null,
-      "airingIn": "558000",
+      "airingIn": "561600",
       "airingEpisode": null,
       "nextEpisode": "6",
-      "nextAiringIn": "558000",
+      "nextAiringIn": "561600",
       "lastAired": null,
       "resume": null,
       "related": [],
@@ -6588,98 +6597,98 @@
      "id": "950001",
      "aired": {
       "episode": "5",
-      "ago": "34200"
+      "ago": "30600"
      }
     },
     {
      "id": "950002",
      "aired": {
       "episode": "4",
-      "ago": "568800"
+      "ago": "565200"
      }
     },
     {
      "id": "950003",
      "aired": {
       "episode": "3",
-      "ago": "563400"
+      "ago": "559800"
      }
     },
     {
      "id": "950004",
      "aired": {
       "episode": "5",
-      "ago": "388800"
+      "ago": "385200"
      }
     },
     {
      "id": "950005",
      "aired": {
       "episode": "3",
-      "ago": "298800"
+      "ago": "295200"
      }
     },
     {
      "id": "950006",
      "aired": {
       "episode": "5",
-      "ago": "210600"
+      "ago": "207000"
      }
     },
     {
      "id": "950007",
      "aired": {
       "episode": "2",
-      "ago": "142200"
+      "ago": "138600"
      }
     },
     {
      "id": "950008",
      "aired": {
       "episode": "5",
-      "ago": "46800"
+      "ago": "43200"
      }
     },
     {
      "id": "950009",
      "aired": {
       "episode": "7",
-      "ago": "473400"
+      "ago": "469800"
      }
     },
     {
      "id": "950010",
      "aired": {
       "episode": "5",
-      "ago": "385200"
+      "ago": "381600"
      }
     },
     {
      "id": "950011",
      "aired": {
       "episode": "6",
-      "ago": "147600"
+      "ago": "144000"
      }
     },
     {
      "id": "950012",
      "aired": {
       "episode": "4",
-      "ago": "396000"
+      "ago": "392400"
      }
     },
     {
      "id": "950013",
      "aired": {
       "episode": "4",
-      "ago": "230400"
+      "ago": "226800"
      }
     },
     {
      "id": "950014",
      "aired": {
       "episode": "3",
-      "ago": "52200"
+      "ago": "48600"
      }
     }
    ]
@@ -6735,10 +6744,10 @@
        "done": "7",
        "next": "8"
       },
-      "airingIn": "-4102200",
+      "airingIn": "-4098600",
       "airingEpisode": "1",
       "nextEpisode": "8",
-      "nextAiringIn": "131400",
+      "nextAiringIn": "135000",
       "lastAired": null,
       "resume": null,
       "related": [],
@@ -6818,10 +6827,10 @@
        "done": "7",
        "next": "8"
       },
-      "airingIn": "-3497400",
+      "airingIn": "-3493800",
       "airingEpisode": "2",
       "nextEpisode": "8",
-      "nextAiringIn": "131400",
+      "nextAiringIn": "135000",
       "lastAired": null,
       "resume": null,
       "related": [],
@@ -6901,10 +6910,10 @@
        "done": "6",
        "next": "7"
       },
-      "airingIn": "-3171600",
+      "airingIn": "-3168000",
       "airingEpisode": "1",
       "nextEpisode": "7",
-      "nextAiringIn": "457200",
+      "nextAiringIn": "460800",
       "lastAired": null,
       "resume": null,
       "related": [],
@@ -6984,10 +6993,10 @@
        "done": "7",
        "next": "8"
       },
-      "airingIn": "-2892600",
+      "airingIn": "-2889000",
       "airingEpisode": "3",
       "nextEpisode": "8",
-      "nextAiringIn": "131400",
+      "nextAiringIn": "135000",
       "lastAired": null,
       "resume": null,
       "related": [],
@@ -7064,10 +7073,10 @@
       "availableOn": [],
       "availableAt": null,
       "progress": null,
-      "airingIn": "-2808000",
+      "airingIn": "-2804400",
       "airingEpisode": "1",
       "nextEpisode": "6",
-      "nextAiringIn": "216000",
+      "nextAiringIn": "219600",
       "lastAired": null,
       "resume": null,
       "related": [],
@@ -7147,10 +7156,10 @@
        "done": "5",
        "next": "6"
       },
-      "airingIn": "-2804400",
+      "airingIn": "-2800800",
       "airingEpisode": "1",
       "nextEpisode": "6",
-      "nextAiringIn": "219600",
+      "nextAiringIn": "223200",
       "lastAired": null,
       "resume": null,
       "related": [],
@@ -7227,10 +7236,10 @@
       "availableOn": [],
       "availableAt": null,
       "progress": null,
-      "airingIn": "-2629800",
+      "airingIn": "-2626200",
       "airingEpisode": "1",
       "nextEpisode": "6",
-      "nextAiringIn": "394200",
+      "nextAiringIn": "397800",
       "lastAired": null,
       "resume": null,
       "related": [],
@@ -7310,10 +7319,10 @@
        "done": "6",
        "next": "7"
       },
-      "airingIn": "-2566800",
+      "airingIn": "-2563200",
       "airingEpisode": "2",
       "nextEpisode": "7",
-      "nextAiringIn": "457200",
+      "nextAiringIn": "460800",
       "lastAired": null,
       "resume": null,
       "related": [],
@@ -7390,10 +7399,10 @@
       "availableOn": [],
       "availableAt": null,
       "progress": null,
-      "airingIn": "-2466000",
+      "airingIn": "-2462400",
       "airingEpisode": "1",
       "nextEpisode": "6",
-      "nextAiringIn": "558000",
+      "nextAiringIn": "561600",
       "lastAired": null,
       "resume": null,
       "related": [],
@@ -7470,10 +7479,10 @@
       "availableOn": [],
       "availableAt": null,
       "progress": null,
-      "airingIn": "-2453400",
+      "airingIn": "-2449800",
       "airingEpisode": "1",
       "nextEpisode": "6",
-      "nextAiringIn": "570600",
+      "nextAiringIn": "574200",
       "lastAired": null,
       "resume": null,
       "related": [],
@@ -7550,10 +7559,10 @@
       "availableOn": [],
       "availableAt": null,
       "progress": null,
-      "airingIn": "-2383200",
+      "airingIn": "-2379600",
       "airingEpisode": "1",
       "nextEpisode": "5",
-      "nextAiringIn": "36000",
+      "nextAiringIn": "39600",
       "lastAired": null,
       "resume": null,
       "related": [],
@@ -7633,10 +7642,10 @@
        "done": "7",
        "next": "8"
       },
-      "airingIn": "-2287800",
+      "airingIn": "-2284200",
       "airingEpisode": "4",
       "nextEpisode": "8",
-      "nextAiringIn": "131400",
+      "nextAiringIn": "135000",
       "lastAired": null,
       "resume": null,
       "related": [],
@@ -7713,10 +7722,10 @@
       "availableOn": [],
       "availableAt": null,
       "progress": null,
-      "airingIn": "-2210400",
+      "airingIn": "-2206800",
       "airingEpisode": "1",
       "nextEpisode": "5",
-      "nextAiringIn": "208800",
+      "nextAiringIn": "212400",
       "lastAired": null,
       "resume": null,
       "related": [],
@@ -7798,10 +7807,10 @@
       "availableOn": [],
       "availableAt": null,
       "progress": null,
-      "airingIn": "-2203200",
+      "airingIn": "-2199600",
       "airingEpisode": "2",
       "nextEpisode": "6",
-      "nextAiringIn": "216000",
+      "nextAiringIn": "219600",
       "lastAired": null,
       "resume": null,
       "related": [],
@@ -7881,10 +7890,10 @@
        "done": "5",
        "next": "6"
       },
-      "airingIn": "-2199600",
+      "airingIn": "-2196000",
       "airingEpisode": "2",
       "nextEpisode": "6",
-      "nextAiringIn": "219600",
+      "nextAiringIn": "223200",
       "lastAired": null,
       "resume": null,
       "related": [],
@@ -7961,10 +7970,10 @@
       "availableOn": [],
       "availableAt": null,
       "progress": null,
-      "airingIn": "-2044800",
+      "airingIn": "-2041200",
       "airingEpisode": "1",
       "nextEpisode": "5",
-      "nextAiringIn": "374400",
+      "nextAiringIn": "378000",
       "lastAired": null,
       "resume": null,
       "related": [],
@@ -8046,10 +8055,10 @@
       "availableOn": [],
       "availableAt": null,
       "progress": null,
-      "airingIn": "-2025000",
+      "airingIn": "-2021400",
       "airingEpisode": "2",
       "nextEpisode": "6",
-      "nextAiringIn": "394200",
+      "nextAiringIn": "397800",
       "lastAired": null,
       "resume": null,
       "related": [],
@@ -8129,10 +8138,10 @@
        "done": "6",
        "next": "7"
       },
-      "airingIn": "-1962000",
+      "airingIn": "-1958400",
       "airingEpisode": "3",
       "nextEpisode": "7",
-      "nextAiringIn": "457200",
+      "nextAiringIn": "460800",
       "lastAired": null,
       "resume": null,
       "related": [],
@@ -8209,10 +8218,10 @@
       "availableOn": [],
       "availableAt": null,
       "progress": null,
-      "airingIn": "-1861200",
+      "airingIn": "-1857600",
       "airingEpisode": "2",
       "nextEpisode": "6",
-      "nextAiringIn": "558000",
+      "nextAiringIn": "561600",
       "lastAired": null,
       "resume": null,
       "related": [],
@@ -8289,10 +8298,10 @@
       "availableOn": [],
       "availableAt": null,
       "progress": null,
-      "airingIn": "-1848600",
+      "airingIn": "-1845000",
       "airingEpisode": "2",
       "nextEpisode": "6",
-      "nextAiringIn": "570600",
+      "nextAiringIn": "574200",
       "lastAired": null,
       "resume": null,
       "related": [],
@@ -8369,10 +8378,10 @@
       "availableOn": [],
       "availableAt": null,
       "progress": null,
-      "airingIn": "-1778400",
+      "airingIn": "-1774800",
       "airingEpisode": "2",
       "nextEpisode": "5",
-      "nextAiringIn": "36000",
+      "nextAiringIn": "39600",
       "lastAired": null,
       "resume": null,
       "related": [],
@@ -8449,10 +8458,10 @@
       "availableOn": [],
       "availableAt": null,
       "progress": null,
-      "airingIn": "-1773000",
+      "airingIn": "-1769400",
       "airingEpisode": "1",
       "nextEpisode": "4",
-      "nextAiringIn": "41400",
+      "nextAiringIn": "45000",
       "lastAired": null,
       "resume": null,
       "related": [],
@@ -8532,10 +8541,10 @@
        "done": "7",
        "next": "8"
       },
-      "airingIn": "-1683000",
+      "airingIn": "-1679400",
       "airingEpisode": "5",
       "nextEpisode": "8",
-      "nextAiringIn": "131400",
+      "nextAiringIn": "135000",
       "lastAired": null,
       "resume": null,
       "related": [],
@@ -8693,10 +8702,10 @@
       "availableOn": [],
       "availableAt": null,
       "progress": null,
-      "airingIn": "-1605600",
+      "airingIn": "-1602000",
       "airingEpisode": "2",
       "nextEpisode": "5",
-      "nextAiringIn": "208800",
+      "nextAiringIn": "212400",
       "lastAired": null,
       "resume": null,
       "related": [],
@@ -8778,10 +8787,10 @@
       "availableOn": [],
       "availableAt": null,
       "progress": null,
-      "airingIn": "-1598400",
+      "airingIn": "-1594800",
       "airingEpisode": "3",
       "nextEpisode": "6",
-      "nextAiringIn": "216000",
+      "nextAiringIn": "219600",
       "lastAired": null,
       "resume": null,
       "related": [],
@@ -8861,10 +8870,10 @@
        "done": "5",
        "next": "6"
       },
-      "airingIn": "-1594800",
+      "airingIn": "-1591200",
       "airingEpisode": "3",
       "nextEpisode": "6",
-      "nextAiringIn": "219600",
+      "nextAiringIn": "223200",
       "lastAired": null,
       "resume": null,
       "related": [],
@@ -8941,10 +8950,10 @@
       "availableOn": [],
       "availableAt": null,
       "progress": null,
-      "airingIn": "-1508400",
+      "airingIn": "-1504800",
       "airingEpisode": "1",
       "nextEpisode": "4",
-      "nextAiringIn": "306000",
+      "nextAiringIn": "309600",
       "lastAired": null,
       "resume": null,
       "related": [],
@@ -9021,10 +9030,10 @@
       "availableOn": [],
       "availableAt": null,
       "progress": null,
-      "airingIn": "-1440000",
+      "airingIn": "-1436400",
       "airingEpisode": "2",
       "nextEpisode": "5",
-      "nextAiringIn": "374400",
+      "nextAiringIn": "378000",
       "lastAired": null,
       "resume": null,
       "related": [],
@@ -9106,10 +9115,10 @@
       "availableOn": [],
       "availableAt": null,
       "progress": null,
-      "airingIn": "-1420200",
+      "airingIn": "-1416600",
       "airingEpisode": "3",
       "nextEpisode": "6",
-      "nextAiringIn": "394200",
+      "nextAiringIn": "397800",
       "lastAired": null,
       "resume": null,
       "related": [],
@@ -9189,10 +9198,10 @@
        "done": "6",
        "next": "7"
       },
-      "airingIn": "-1357200",
+      "airingIn": "-1353600",
       "airingEpisode": "4",
       "nextEpisode": "7",
-      "nextAiringIn": "457200",
+      "nextAiringIn": "460800",
       "lastAired": null,
       "resume": null,
       "related": [],
@@ -9269,10 +9278,10 @@
       "availableOn": [],
       "availableAt": null,
       "progress": null,
-      "airingIn": "-1261800",
+      "airingIn": "-1258200",
       "airingEpisode": "1",
       "nextEpisode": "4",
-      "nextAiringIn": "552600",
+      "nextAiringIn": "556200",
       "lastAired": null,
       "resume": null,
       "related": [],
@@ -9349,10 +9358,10 @@
       "availableOn": [],
       "availableAt": null,
       "progress": null,
-      "airingIn": "-1256400",
+      "airingIn": "-1252800",
       "airingEpisode": "3",
       "nextEpisode": "6",
-      "nextAiringIn": "558000",
+      "nextAiringIn": "561600",
       "lastAired": null,
       "resume": null,
       "related": [],
@@ -9429,10 +9438,10 @@
       "availableOn": [],
       "availableAt": null,
       "progress": null,
-      "airingIn": "-1243800",
+      "airingIn": "-1240200",
       "airingEpisode": "3",
       "nextEpisode": "6",
-      "nextAiringIn": "570600",
+      "nextAiringIn": "574200",
       "lastAired": null,
       "resume": null,
       "related": [],
@@ -9509,10 +9518,10 @@
       "availableOn": [],
       "availableAt": null,
       "progress": null,
-      "airingIn": "-1173600",
+      "airingIn": "-1170000",
       "airingEpisode": "3",
       "nextEpisode": "5",
-      "nextAiringIn": "36000",
+      "nextAiringIn": "39600",
       "lastAired": null,
       "resume": null,
       "related": [],
@@ -9589,10 +9598,10 @@
       "availableOn": [],
       "availableAt": null,
       "progress": null,
-      "airingIn": "-1168200",
+      "airingIn": "-1164600",
       "airingEpisode": "2",
       "nextEpisode": "4",
-      "nextAiringIn": "41400",
+      "nextAiringIn": "45000",
       "lastAired": null,
       "resume": null,
       "related": [],
@@ -9672,10 +9681,10 @@
        "done": "7",
        "next": "8"
       },
-      "airingIn": "-1078200",
+      "airingIn": "-1074600",
       "airingEpisode": "6",
       "nextEpisode": "8",
-      "nextAiringIn": "131400",
+      "nextAiringIn": "135000",
       "lastAired": null,
       "resume": null,
       "related": [],
@@ -9833,10 +9842,10 @@
       "availableOn": [],
       "availableAt": null,
       "progress": null,
-      "airingIn": "-1000800",
+      "airingIn": "-997200",
       "airingEpisode": "3",
       "nextEpisode": "5",
-      "nextAiringIn": "208800",
+      "nextAiringIn": "212400",
       "lastAired": null,
       "resume": null,
       "related": [],
@@ -9918,10 +9927,10 @@
       "availableOn": [],
       "availableAt": null,
       "progress": null,
-      "airingIn": "-993600",
+      "airingIn": "-990000",
       "airingEpisode": "4",
       "nextEpisode": "6",
-      "nextAiringIn": "216000",
+      "nextAiringIn": "219600",
       "lastAired": null,
       "resume": null,
       "related": [],
@@ -10001,10 +10010,10 @@
        "done": "5",
        "next": "6"
       },
-      "airingIn": "-990000",
+      "airingIn": "-986400",
       "airingEpisode": "4",
       "nextEpisode": "6",
-      "nextAiringIn": "219600",
+      "nextAiringIn": "223200",
       "lastAired": null,
       "resume": null,
       "related": [],
@@ -10081,10 +10090,10 @@
       "availableOn": [],
       "availableAt": null,
       "progress": null,
-      "airingIn": "-903600",
+      "airingIn": "-900000",
       "airingEpisode": "2",
       "nextEpisode": "4",
-      "nextAiringIn": "306000",
+      "nextAiringIn": "309600",
       "lastAired": null,
       "resume": null,
       "related": [],
@@ -10161,10 +10170,10 @@
       "availableOn": [],
       "availableAt": null,
       "progress": null,
-      "airingIn": "-835200",
+      "airingIn": "-831600",
       "airingEpisode": "3",
       "nextEpisode": "5",
-      "nextAiringIn": "374400",
+      "nextAiringIn": "378000",
       "lastAired": null,
       "resume": null,
       "related": [],
@@ -10246,10 +10255,10 @@
       "availableOn": [],
       "availableAt": null,
       "progress": null,
-      "airingIn": "-815400",
+      "airingIn": "-811800",
       "airingEpisode": "4",
       "nextEpisode": "6",
-      "nextAiringIn": "394200",
+      "nextAiringIn": "397800",
       "lastAired": null,
       "resume": null,
       "related": [],
@@ -10329,10 +10338,10 @@
        "done": "6",
        "next": "7"
       },
-      "airingIn": "-752400",
+      "airingIn": "-748800",
       "airingEpisode": "5",
       "nextEpisode": "7",
-      "nextAiringIn": "457200",
+      "nextAiringIn": "460800",
       "lastAired": null,
       "resume": null,
       "related": [],
@@ -10409,10 +10418,10 @@
       "availableOn": [],
       "availableAt": null,
       "progress": null,
-      "airingIn": "-747000",
+      "airingIn": "-743400",
       "airingEpisode": "1",
       "nextEpisode": "3",
-      "nextAiringIn": "462600",
+      "nextAiringIn": "466200",
       "lastAired": null,
       "resume": null,
       "related": [],
@@ -10569,10 +10578,10 @@
       "availableOn": [],
       "availableAt": null,
       "progress": null,
-      "airingIn": "-657000",
+      "airingIn": "-653400",
       "airingEpisode": "2",
       "nextEpisode": "4",
-      "nextAiringIn": "552600",
+      "nextAiringIn": "556200",
       "lastAired": null,
       "resume": null,
       "related": [],
@@ -10649,10 +10658,10 @@
       "availableOn": [],
       "availableAt": null,
       "progress": null,
-      "airingIn": "-651600",
+      "airingIn": "-648000",
       "airingEpisode": "4",
       "nextEpisode": "6",
-      "nextAiringIn": "558000",
+      "nextAiringIn": "561600",
       "lastAired": null,
       "resume": null,
       "related": [],
@@ -10729,10 +10738,10 @@
       "availableOn": [],
       "availableAt": null,
       "progress": null,
-      "airingIn": "-639000",
+      "airingIn": "-635400",
       "airingEpisode": "4",
       "nextEpisode": "6",
-      "nextAiringIn": "570600",
+      "nextAiringIn": "574200",
       "lastAired": null,
       "resume": null,
       "related": [],
@@ -10809,10 +10818,10 @@
       "availableOn": [],
       "availableAt": null,
       "progress": null,
-      "airingIn": "-568800",
+      "airingIn": "-565200",
       "airingEpisode": "4",
       "nextEpisode": "5",
-      "nextAiringIn": "36000",
+      "nextAiringIn": "39600",
       "lastAired": null,
       "resume": null,
       "related": [],
@@ -10889,10 +10898,10 @@
       "availableOn": [],
       "availableAt": null,
       "progress": null,
-      "airingIn": "-563400",
+      "airingIn": "-559800",
       "airingEpisode": "3",
       "nextEpisode": "4",
-      "nextAiringIn": "41400",
+      "nextAiringIn": "45000",
       "lastAired": null,
       "resume": null,
       "related": [],
@@ -10972,10 +10981,10 @@
        "done": "7",
        "next": "8"
       },
-      "airingIn": "-473400",
+      "airingIn": "-469800",
       "airingEpisode": "7",
       "nextEpisode": "8",
-      "nextAiringIn": "131400",
+      "nextAiringIn": "135000",
       "lastAired": null,
       "resume": null,
       "related": [],
@@ -11133,10 +11142,10 @@
       "availableOn": [],
       "availableAt": null,
       "progress": null,
-      "airingIn": "-396000",
+      "airingIn": "-392400",
       "airingEpisode": "4",
       "nextEpisode": "5",
-      "nextAiringIn": "208800",
+      "nextAiringIn": "212400",
       "lastAired": null,
       "resume": null,
       "related": [],
@@ -11218,10 +11227,10 @@
       "availableOn": [],
       "availableAt": null,
       "progress": null,
-      "airingIn": "-388800",
+      "airingIn": "-385200",
       "airingEpisode": "5",
       "nextEpisode": "6",
-      "nextAiringIn": "216000",
+      "nextAiringIn": "219600",
       "lastAired": null,
       "resume": null,
       "related": [],
@@ -11301,10 +11310,10 @@
        "done": "5",
        "next": "6"
       },
-      "airingIn": "-385200",
+      "airingIn": "-381600",
       "airingEpisode": "5",
       "nextEpisode": "6",
-      "nextAiringIn": "219600",
+      "nextAiringIn": "223200",
       "lastAired": null,
       "resume": null,
       "related": [],
@@ -11381,10 +11390,10 @@
       "availableOn": [],
       "availableAt": null,
       "progress": null,
-      "airingIn": "-298800",
+      "airingIn": "-295200",
       "airingEpisode": "3",
       "nextEpisode": "4",
-      "nextAiringIn": "306000",
+      "nextAiringIn": "309600",
       "lastAired": null,
       "resume": null,
       "related": [],
@@ -11461,10 +11470,10 @@
       "availableOn": [],
       "availableAt": null,
       "progress": null,
-      "airingIn": "-230400",
+      "airingIn": "-226800",
       "airingEpisode": "4",
       "nextEpisode": "5",
-      "nextAiringIn": "374400",
+      "nextAiringIn": "378000",
       "lastAired": null,
       "resume": null,
       "related": [],
@@ -11546,10 +11555,10 @@
       "availableOn": [],
       "availableAt": null,
       "progress": null,
-      "airingIn": "-210600",
+      "airingIn": "-207000",
       "airingEpisode": "5",
       "nextEpisode": "6",
-      "nextAiringIn": "394200",
+      "nextAiringIn": "397800",
       "lastAired": null,
       "resume": null,
       "related": [],
@@ -11629,10 +11638,10 @@
        "done": "6",
        "next": "7"
       },
-      "airingIn": "-147600",
+      "airingIn": "-144000",
       "airingEpisode": "6",
       "nextEpisode": "7",
-      "nextAiringIn": "457200",
+      "nextAiringIn": "460800",
       "lastAired": null,
       "resume": null,
       "related": [],
@@ -11709,10 +11718,10 @@
       "availableOn": [],
       "availableAt": null,
       "progress": null,
-      "airingIn": "-142200",
+      "airingIn": "-138600",
       "airingEpisode": "2",
       "nextEpisode": "3",
-      "nextAiringIn": "462600",
+      "nextAiringIn": "466200",
       "lastAired": null,
       "resume": null,
       "related": [],
@@ -11869,10 +11878,10 @@
       "availableOn": [],
       "availableAt": null,
       "progress": null,
-      "airingIn": "-52200",
+      "airingIn": "-48600",
       "airingEpisode": "3",
       "nextEpisode": "4",
-      "nextAiringIn": "552600",
+      "nextAiringIn": "556200",
       "lastAired": null,
       "resume": null,
       "related": [],
@@ -11949,10 +11958,10 @@
       "availableOn": [],
       "availableAt": null,
       "progress": null,
-      "airingIn": "-46800",
+      "airingIn": "-43200",
       "airingEpisode": "5",
       "nextEpisode": "6",
-      "nextAiringIn": "558000",
+      "nextAiringIn": "561600",
       "lastAired": null,
       "resume": null,
       "related": [],
@@ -12029,10 +12038,10 @@
       "availableOn": [],
       "availableAt": null,
       "progress": null,
-      "airingIn": "-34200",
+      "airingIn": "-30600",
       "airingEpisode": "5",
       "nextEpisode": "6",
-      "nextAiringIn": "570600",
+      "nextAiringIn": "574200",
       "lastAired": null,
       "resume": null,
       "related": [],
@@ -12109,10 +12118,10 @@
       "availableOn": [],
       "availableAt": null,
       "progress": null,
-      "airingIn": "36000",
+      "airingIn": "39600",
       "airingEpisode": "5",
       "nextEpisode": "5",
-      "nextAiringIn": "36000",
+      "nextAiringIn": "39600",
       "lastAired": null,
       "resume": null,
       "related": [],
@@ -12189,10 +12198,10 @@
       "availableOn": [],
       "availableAt": null,
       "progress": null,
-      "airingIn": "41400",
+      "airingIn": "45000",
       "airingEpisode": "4",
       "nextEpisode": "4",
-      "nextAiringIn": "41400",
+      "nextAiringIn": "45000",
       "lastAired": null,
       "resume": null,
       "related": [],
@@ -12272,10 +12281,10 @@
        "done": "7",
        "next": "8"
       },
-      "airingIn": "131400",
+      "airingIn": "135000",
       "airingEpisode": "8",
       "nextEpisode": "8",
-      "nextAiringIn": "131400",
+      "nextAiringIn": "135000",
       "lastAired": null,
       "resume": null,
       "related": [],
@@ -12433,10 +12442,10 @@
       "availableOn": [],
       "availableAt": null,
       "progress": null,
-      "airingIn": "208800",
+      "airingIn": "212400",
       "airingEpisode": "5",
       "nextEpisode": "5",
-      "nextAiringIn": "208800",
+      "nextAiringIn": "212400",
       "lastAired": null,
       "resume": null,
       "related": [],
@@ -12518,10 +12527,10 @@
       "availableOn": [],
       "availableAt": null,
       "progress": null,
-      "airingIn": "216000",
+      "airingIn": "219600",
       "airingEpisode": "6",
       "nextEpisode": "6",
-      "nextAiringIn": "216000",
+      "nextAiringIn": "219600",
       "lastAired": null,
       "resume": null,
       "related": [],
@@ -12601,10 +12610,10 @@
        "done": "5",
        "next": "6"
       },
-      "airingIn": "219600",
+      "airingIn": "223200",
       "airingEpisode": "6",
       "nextEpisode": "6",
-      "nextAiringIn": "219600",
+      "nextAiringIn": "223200",
       "lastAired": null,
       "resume": null,
       "related": [],
@@ -12681,10 +12690,10 @@
       "availableOn": [],
       "availableAt": null,
       "progress": null,
-      "airingIn": "306000",
+      "airingIn": "309600",
       "airingEpisode": "4",
       "nextEpisode": "4",
-      "nextAiringIn": "306000",
+      "nextAiringIn": "309600",
       "lastAired": null,
       "resume": null,
       "related": [],
@@ -12761,10 +12770,10 @@
       "availableOn": [],
       "availableAt": null,
       "progress": null,
-      "airingIn": "374400",
+      "airingIn": "378000",
       "airingEpisode": "5",
       "nextEpisode": "5",
-      "nextAiringIn": "374400",
+      "nextAiringIn": "378000",
       "lastAired": null,
       "resume": null,
       "related": [],
@@ -12846,10 +12855,10 @@
       "availableOn": [],
       "availableAt": null,
       "progress": null,
-      "airingIn": "394200",
+      "airingIn": "397800",
       "airingEpisode": "6",
       "nextEpisode": "6",
-      "nextAiringIn": "394200",
+      "nextAiringIn": "397800",
       "lastAired": null,
       "resume": null,
       "related": [],
@@ -12929,10 +12938,10 @@
        "done": "6",
        "next": "7"
       },
-      "airingIn": "457200",
+      "airingIn": "460800",
       "airingEpisode": "7",
       "nextEpisode": "7",
-      "nextAiringIn": "457200",
+      "nextAiringIn": "460800",
       "lastAired": null,
       "resume": null,
       "related": [],
@@ -13009,10 +13018,10 @@
       "availableOn": [],
       "availableAt": null,
       "progress": null,
-      "airingIn": "462600",
+      "airingIn": "466200",
       "airingEpisode": "3",
       "nextEpisode": "3",
-      "nextAiringIn": "462600",
+      "nextAiringIn": "466200",
       "lastAired": null,
       "resume": null,
       "related": [],
@@ -13169,10 +13178,10 @@
       "availableOn": [],
       "availableAt": null,
       "progress": null,
-      "airingIn": "552600",
+      "airingIn": "556200",
       "airingEpisode": "4",
       "nextEpisode": "4",
-      "nextAiringIn": "552600",
+      "nextAiringIn": "556200",
       "lastAired": null,
       "resume": null,
       "related": [],
@@ -13249,10 +13258,10 @@
       "availableOn": [],
       "availableAt": null,
       "progress": null,
-      "airingIn": "558000",
+      "airingIn": "561600",
       "airingEpisode": "6",
       "nextEpisode": "6",
-      "nextAiringIn": "558000",
+      "nextAiringIn": "561600",
       "lastAired": null,
       "resume": null,
       "related": [],
@@ -13329,10 +13338,10 @@
       "availableOn": [],
       "availableAt": null,
       "progress": null,
-      "airingIn": "570600",
+      "airingIn": "574200",
       "airingEpisode": "6",
       "nextEpisode": "6",
-      "nextAiringIn": "570600",
+      "nextAiringIn": "574200",
       "lastAired": null,
       "resume": null,
       "related": [],
@@ -13409,10 +13418,10 @@
       "availableOn": [],
       "availableAt": null,
       "progress": null,
-      "airingIn": "640800",
+      "airingIn": "644400",
       "airingEpisode": "6",
       "nextEpisode": "5",
-      "nextAiringIn": "36000",
+      "nextAiringIn": "39600",
       "lastAired": null,
       "resume": null,
       "related": [],
@@ -13489,10 +13498,10 @@
       "availableOn": [],
       "availableAt": null,
       "progress": null,
-      "airingIn": "646200",
+      "airingIn": "649800",
       "airingEpisode": "5",
       "nextEpisode": "4",
-      "nextAiringIn": "41400",
+      "nextAiringIn": "45000",
       "lastAired": null,
       "resume": null,
       "related": [],
@@ -13572,10 +13581,10 @@
        "done": "7",
        "next": "8"
       },
-      "airingIn": "736200",
+      "airingIn": "739800",
       "airingEpisode": "9",
       "nextEpisode": "8",
-      "nextAiringIn": "131400",
+      "nextAiringIn": "135000",
       "lastAired": null,
       "resume": null,
       "related": [],
@@ -13733,10 +13742,10 @@
       "availableOn": [],
       "availableAt": null,
       "progress": null,
-      "airingIn": "813600",
+      "airingIn": "817200",
       "airingEpisode": "6",
       "nextEpisode": "5",
-      "nextAiringIn": "208800",
+      "nextAiringIn": "212400",
       "lastAired": null,
       "resume": null,
       "related": [],
@@ -13818,89 +13827,6 @@
       "availableOn": [],
       "availableAt": null,
       "progress": null,
-      "airingIn": "820800",
-      "airingEpisode": "7",
-      "nextEpisode": "6",
-      "nextAiringIn": "216000",
-      "lastAired": null,
-      "resume": null,
-      "related": [],
-      "recommended": [],
-      "trailerUrl": null,
-      "listStatus": null,
-      "titleRomaji": "Sora Tobu Shoten",
-      "titleEnglish": "The Flying Bookshop",
-      "titleNative": null,
-      "season": "FALL",
-      "startDate": {
-       "year": "2026",
-       "month": "10",
-       "day": "2"
-      },
-      "endDate": null,
-      "source": "ORIGINAL",
-      "adult": false,
-      "isDemo": false,
-      "detail": null,
-      "status": "RELEASING",
-      "airing": {
-       "@type": "Airing",
-       "since": {
-        "year": "2026",
-        "month": "10",
-        "day": "2"
-       }
-      },
-      "duration": "24",
-      "filmLength": null,
-      "country": null,
-      "madeOutsideJapan": false,
-      "synopsisSpans": [
-       {
-        "text": "A bookshop tied to a hot-air balloon drifts from town to town, lending each one the book it needs and taking one back.",
-        "spoiler": false
-       }
-      ],
-      "delayedFrom": null,
-      "airingApproximate": false,
-      "airingTranslation": null,
-      "airingDubbed": false,
-      "watchedIn": null,
-      "trailer": null,
-      "prequels": [],
-      "sequels": [],
-      "dub": null,
-      "countLine": {
-       "long": "5 of 13 out",
-       "short": "5 of 13",
-       "spoken": "5 of 13 episodes out",
-       "dub": null
-      }
-     },
-     {
-      "id": "950010",
-      "title": "The Swallow Flying Club",
-      "secondary": "Tsubame Hiko Kurabu",
-      "format": "TV",
-      "episodes": "12",
-      "year": "2026",
-      "score": "77",
-      "studio": null,
-      "synopsis": "Three students rebuild a school glider club from one cracked wing and a handbook with half its pages missing.",
-      "coverUrl": "https://img.example/cover/950010-xl.jpg",
-      "coverColor": "#c98f8f",
-      "bannerUrl": "https://img.example/banner/950010.jpg",
-      "seenStill": null,
-      "genres": [
-       "Sports",
-       "Comedy"
-      ],
-      "availableOn": [],
-      "availableAt": null,
-      "progress": {
-       "done": "5",
-       "next": "6"
-      },
       "airingIn": "824400",
       "airingEpisode": "7",
       "nextEpisode": "6",
@@ -13911,6 +13837,89 @@
       "recommended": [],
       "trailerUrl": null,
       "listStatus": null,
+      "titleRomaji": "Sora Tobu Shoten",
+      "titleEnglish": "The Flying Bookshop",
+      "titleNative": null,
+      "season": "FALL",
+      "startDate": {
+       "year": "2026",
+       "month": "10",
+       "day": "2"
+      },
+      "endDate": null,
+      "source": "ORIGINAL",
+      "adult": false,
+      "isDemo": false,
+      "detail": null,
+      "status": "RELEASING",
+      "airing": {
+       "@type": "Airing",
+       "since": {
+        "year": "2026",
+        "month": "10",
+        "day": "2"
+       }
+      },
+      "duration": "24",
+      "filmLength": null,
+      "country": null,
+      "madeOutsideJapan": false,
+      "synopsisSpans": [
+       {
+        "text": "A bookshop tied to a hot-air balloon drifts from town to town, lending each one the book it needs and taking one back.",
+        "spoiler": false
+       }
+      ],
+      "delayedFrom": null,
+      "airingApproximate": false,
+      "airingTranslation": null,
+      "airingDubbed": false,
+      "watchedIn": null,
+      "trailer": null,
+      "prequels": [],
+      "sequels": [],
+      "dub": null,
+      "countLine": {
+       "long": "5 of 13 out",
+       "short": "5 of 13",
+       "spoken": "5 of 13 episodes out",
+       "dub": null
+      }
+     },
+     {
+      "id": "950010",
+      "title": "The Swallow Flying Club",
+      "secondary": "Tsubame Hiko Kurabu",
+      "format": "TV",
+      "episodes": "12",
+      "year": "2026",
+      "score": "77",
+      "studio": null,
+      "synopsis": "Three students rebuild a school glider club from one cracked wing and a handbook with half its pages missing.",
+      "coverUrl": "https://img.example/cover/950010-xl.jpg",
+      "coverColor": "#c98f8f",
+      "bannerUrl": "https://img.example/banner/950010.jpg",
+      "seenStill": null,
+      "genres": [
+       "Sports",
+       "Comedy"
+      ],
+      "availableOn": [],
+      "availableAt": null,
+      "progress": {
+       "done": "5",
+       "next": "6"
+      },
+      "airingIn": "828000",
+      "airingEpisode": "7",
+      "nextEpisode": "6",
+      "nextAiringIn": "223200",
+      "lastAired": null,
+      "resume": null,
+      "related": [],
+      "recommended": [],
+      "trailerUrl": null,
+      "listStatus": null,
       "titleRomaji": "Tsubame Hiko Kurabu",
       "titleEnglish": "The Swallow Flying Club",
       "titleNative": null,
@@ -13981,10 +13990,10 @@
       "availableOn": [],
       "availableAt": null,
       "progress": null,
-      "airingIn": "910800",
+      "airingIn": "914400",
       "airingEpisode": "5",
       "nextEpisode": "4",
-      "nextAiringIn": "306000",
+      "nextAiringIn": "309600",
       "lastAired": null,
       "resume": null,
       "related": [],
@@ -14061,10 +14070,10 @@
       "availableOn": [],
       "availableAt": null,
       "progress": null,
-      "airingIn": "979200",
+      "airingIn": "982800",
       "airingEpisode": "6",
       "nextEpisode": "5",
-      "nextAiringIn": "374400",
+      "nextAiringIn": "378000",
       "lastAired": null,
       "resume": null,
       "related": [],
@@ -14146,10 +14155,10 @@
       "availableOn": [],
       "availableAt": null,
       "progress": null,
-      "airingIn": "999000",
+      "airingIn": "1002600",
       "airingEpisode": "7",
       "nextEpisode": "6",
-      "nextAiringIn": "394200",
+      "nextAiringIn": "397800",
       "lastAired": null,
       "resume": null,
       "related": [],
@@ -14229,10 +14238,10 @@
        "done": "6",
        "next": "7"
       },
-      "airingIn": "1062000",
+      "airingIn": "1065600",
       "airingEpisode": "8",
       "nextEpisode": "7",
-      "nextAiringIn": "457200",
+      "nextAiringIn": "460800",
       "lastAired": null,
       "resume": null,
       "related": [],
@@ -14309,10 +14318,10 @@
       "availableOn": [],
       "availableAt": null,
       "progress": null,
-      "airingIn": "1067400",
+      "airingIn": "1071000",
       "airingEpisode": "4",
       "nextEpisode": "3",
-      "nextAiringIn": "462600",
+      "nextAiringIn": "466200",
       "lastAired": null,
       "resume": null,
       "related": [],
@@ -14389,10 +14398,10 @@
       "availableOn": [],
       "availableAt": null,
       "progress": null,
-      "airingIn": "1157400",
+      "airingIn": "1161000",
       "airingEpisode": "5",
       "nextEpisode": "4",
-      "nextAiringIn": "552600",
+      "nextAiringIn": "556200",
       "lastAired": null,
       "resume": null,
       "related": [],
@@ -14469,10 +14478,10 @@
       "availableOn": [],
       "availableAt": null,
       "progress": null,
-      "airingIn": "1162800",
+      "airingIn": "1166400",
       "airingEpisode": "7",
       "nextEpisode": "6",
-      "nextAiringIn": "558000",
+      "nextAiringIn": "561600",
       "lastAired": null,
       "resume": null,
       "related": [],
@@ -14549,10 +14558,10 @@
       "availableOn": [],
       "availableAt": null,
       "progress": null,
-      "airingIn": "1175400",
+      "airingIn": "1179000",
       "airingEpisode": "7",
       "nextEpisode": "6",
-      "nextAiringIn": "570600",
+      "nextAiringIn": "574200",
       "lastAired": null,
       "resume": null,
       "related": [],
@@ -14629,10 +14638,10 @@
       "availableOn": [],
       "availableAt": null,
       "progress": null,
-      "airingIn": "1245600",
+      "airingIn": "1249200",
       "airingEpisode": "7",
       "nextEpisode": "5",
-      "nextAiringIn": "36000",
+      "nextAiringIn": "39600",
       "lastAired": null,
       "resume": null,
       "related": [],
@@ -14709,10 +14718,10 @@
       "availableOn": [],
       "availableAt": null,
       "progress": null,
-      "airingIn": "1251000",
+      "airingIn": "1254600",
       "airingEpisode": "6",
       "nextEpisode": "4",
-      "nextAiringIn": "41400",
+      "nextAiringIn": "45000",
       "lastAired": null,
       "resume": null,
       "related": [],
@@ -14792,10 +14801,10 @@
        "done": "7",
        "next": "8"
       },
-      "airingIn": "1341000",
+      "airingIn": "1344600",
       "airingEpisode": "10",
       "nextEpisode": "8",
-      "nextAiringIn": "131400",
+      "nextAiringIn": "135000",
       "lastAired": null,
       "resume": null,
       "related": [],
@@ -14872,10 +14881,10 @@
       "availableOn": [],
       "availableAt": null,
       "progress": null,
-      "airingIn": "1418400",
+      "airingIn": "1422000",
       "airingEpisode": "7",
       "nextEpisode": "5",
-      "nextAiringIn": "208800",
+      "nextAiringIn": "212400",
       "lastAired": null,
       "resume": null,
       "related": [],
@@ -14957,89 +14966,6 @@
       "availableOn": [],
       "availableAt": null,
       "progress": null,
-      "airingIn": "1425600",
-      "airingEpisode": "8",
-      "nextEpisode": "6",
-      "nextAiringIn": "216000",
-      "lastAired": null,
-      "resume": null,
-      "related": [],
-      "recommended": [],
-      "trailerUrl": null,
-      "listStatus": null,
-      "titleRomaji": "Sora Tobu Shoten",
-      "titleEnglish": "The Flying Bookshop",
-      "titleNative": null,
-      "season": "FALL",
-      "startDate": {
-       "year": "2026",
-       "month": "10",
-       "day": "2"
-      },
-      "endDate": null,
-      "source": "ORIGINAL",
-      "adult": false,
-      "isDemo": false,
-      "detail": null,
-      "status": "RELEASING",
-      "airing": {
-       "@type": "Airing",
-       "since": {
-        "year": "2026",
-        "month": "10",
-        "day": "2"
-       }
-      },
-      "duration": "24",
-      "filmLength": null,
-      "country": null,
-      "madeOutsideJapan": false,
-      "synopsisSpans": [
-       {
-        "text": "A bookshop tied to a hot-air balloon drifts from town to town, lending each one the book it needs and taking one back.",
-        "spoiler": false
-       }
-      ],
-      "delayedFrom": null,
-      "airingApproximate": false,
-      "airingTranslation": null,
-      "airingDubbed": false,
-      "watchedIn": null,
-      "trailer": null,
-      "prequels": [],
-      "sequels": [],
-      "dub": null,
-      "countLine": {
-       "long": "5 of 13 out",
-       "short": "5 of 13",
-       "spoken": "5 of 13 episodes out",
-       "dub": null
-      }
-     },
-     {
-      "id": "950010",
-      "title": "The Swallow Flying Club",
-      "secondary": "Tsubame Hiko Kurabu",
-      "format": "TV",
-      "episodes": "12",
-      "year": "2026",
-      "score": "77",
-      "studio": null,
-      "synopsis": "Three students rebuild a school glider club from one cracked wing and a handbook with half its pages missing.",
-      "coverUrl": "https://img.example/cover/950010-xl.jpg",
-      "coverColor": "#c98f8f",
-      "bannerUrl": "https://img.example/banner/950010.jpg",
-      "seenStill": null,
-      "genres": [
-       "Sports",
-       "Comedy"
-      ],
-      "availableOn": [],
-      "availableAt": null,
-      "progress": {
-       "done": "5",
-       "next": "6"
-      },
       "airingIn": "1429200",
       "airingEpisode": "8",
       "nextEpisode": "6",
@@ -15050,6 +14976,89 @@
       "recommended": [],
       "trailerUrl": null,
       "listStatus": null,
+      "titleRomaji": "Sora Tobu Shoten",
+      "titleEnglish": "The Flying Bookshop",
+      "titleNative": null,
+      "season": "FALL",
+      "startDate": {
+       "year": "2026",
+       "month": "10",
+       "day": "2"
+      },
+      "endDate": null,
+      "source": "ORIGINAL",
+      "adult": false,
+      "isDemo": false,
+      "detail": null,
+      "status": "RELEASING",
+      "airing": {
+       "@type": "Airing",
+       "since": {
+        "year": "2026",
+        "month": "10",
+        "day": "2"
+       }
+      },
+      "duration": "24",
+      "filmLength": null,
+      "country": null,
+      "madeOutsideJapan": false,
+      "synopsisSpans": [
+       {
+        "text": "A bookshop tied to a hot-air balloon drifts from town to town, lending each one the book it needs and taking one back.",
+        "spoiler": false
+       }
+      ],
+      "delayedFrom": null,
+      "airingApproximate": false,
+      "airingTranslation": null,
+      "airingDubbed": false,
+      "watchedIn": null,
+      "trailer": null,
+      "prequels": [],
+      "sequels": [],
+      "dub": null,
+      "countLine": {
+       "long": "5 of 13 out",
+       "short": "5 of 13",
+       "spoken": "5 of 13 episodes out",
+       "dub": null
+      }
+     },
+     {
+      "id": "950010",
+      "title": "The Swallow Flying Club",
+      "secondary": "Tsubame Hiko Kurabu",
+      "format": "TV",
+      "episodes": "12",
+      "year": "2026",
+      "score": "77",
+      "studio": null,
+      "synopsis": "Three students rebuild a school glider club from one cracked wing and a handbook with half its pages missing.",
+      "coverUrl": "https://img.example/cover/950010-xl.jpg",
+      "coverColor": "#c98f8f",
+      "bannerUrl": "https://img.example/banner/950010.jpg",
+      "seenStill": null,
+      "genres": [
+       "Sports",
+       "Comedy"
+      ],
+      "availableOn": [],
+      "availableAt": null,
+      "progress": {
+       "done": "5",
+       "next": "6"
+      },
+      "airingIn": "1432800",
+      "airingEpisode": "8",
+      "nextEpisode": "6",
+      "nextAiringIn": "223200",
+      "lastAired": null,
+      "resume": null,
+      "related": [],
+      "recommended": [],
+      "trailerUrl": null,
+      "listStatus": null,
       "titleRomaji": "Tsubame Hiko Kurabu",
       "titleEnglish": "The Swallow Flying Club",
       "titleNative": null,
@@ -15120,10 +15129,10 @@
       "availableOn": [],
       "availableAt": null,
       "progress": null,
-      "airingIn": "1515600",
+      "airingIn": "1519200",
       "airingEpisode": "6",
       "nextEpisode": "4",
-      "nextAiringIn": "306000",
+      "nextAiringIn": "309600",
       "lastAired": null,
       "resume": null,
       "related": [],
@@ -15200,10 +15209,10 @@
       "availableOn": [],
       "availableAt": null,
       "progress": null,
-      "airingIn": "1584000",
+      "airingIn": "1587600",
       "airingEpisode": "7",
       "nextEpisode": "5",
-      "nextAiringIn": "374400",
+      "nextAiringIn": "378000",
       "lastAired": null,
       "resume": null,
       "related": [],
@@ -15285,10 +15294,10 @@
       "availableOn": [],
       "availableAt": null,
       "progress": null,
-      "airingIn": "1603800",
+      "airingIn": "1607400",
       "airingEpisode": "8",
       "nextEpisode": "6",
-      "nextAiringIn": "394200",
+      "nextAiringIn": "397800",
       "lastAired": null,
       "resume": null,
       "related": [],
@@ -15368,10 +15377,10 @@
        "done": "6",
        "next": "7"
       },
-      "airingIn": "1666800",
+      "airingIn": "1670400",
       "airingEpisode": "9",
       "nextEpisode": "7",
-      "nextAiringIn": "457200",
+      "nextAiringIn": "460800",
       "lastAired": null,
       "resume": null,
       "related": [],
@@ -15448,10 +15457,10 @@
       "availableOn": [],
       "availableAt": null,
       "progress": null,
-      "airingIn": "1672200",
+      "airingIn": "1675800",
       "airingEpisode": "5",
       "nextEpisode": "3",
-      "nextAiringIn": "462600",
+      "nextAiringIn": "466200",
       "lastAired": null,
       "resume": null,
       "related": [],
@@ -15528,10 +15537,10 @@
       "availableOn": [],
       "availableAt": null,
       "progress": null,
-      "airingIn": "1762200",
+      "airingIn": "1765800",
       "airingEpisode": "6",
       "nextEpisode": "4",
-      "nextAiringIn": "552600",
+      "nextAiringIn": "556200",
       "lastAired": null,
       "resume": null,
       "related": [],
@@ -15608,10 +15617,10 @@
       "availableOn": [],
       "availableAt": null,
       "progress": null,
-      "airingIn": "1767600",
+      "airingIn": "1771200",
       "airingEpisode": "8",
       "nextEpisode": "6",
-      "nextAiringIn": "558000",
+      "nextAiringIn": "561600",
       "lastAired": null,
       "resume": null,
       "related": [],
@@ -15688,10 +15697,10 @@
       "availableOn": [],
       "availableAt": null,
       "progress": null,
-      "airingIn": "1780200",
+      "airingIn": "1783800",
       "airingEpisode": "8",
       "nextEpisode": "6",
-      "nextAiringIn": "570600",
+      "nextAiringIn": "574200",
       "lastAired": null,
       "resume": null,
       "related": [],
@@ -15768,10 +15777,10 @@
       "availableOn": [],
       "availableAt": null,
       "progress": null,
-      "airingIn": "1850400",
+      "airingIn": "1854000",
       "airingEpisode": "8",
       "nextEpisode": "5",
-      "nextAiringIn": "36000",
+      "nextAiringIn": "39600",
       "lastAired": null,
       "resume": null,
       "related": [],
@@ -15848,10 +15857,10 @@
       "availableOn": [],
       "availableAt": null,
       "progress": null,
-      "airingIn": "1855800",
+      "airingIn": "1859400",
       "airingEpisode": "7",
       "nextEpisode": "4",
-      "nextAiringIn": "41400",
+      "nextAiringIn": "45000",
       "lastAired": null,
       "resume": null,
       "related": [],
@@ -15931,10 +15940,10 @@
        "done": "7",
        "next": "8"
       },
-      "airingIn": "1945800",
+      "airingIn": "1949400",
       "airingEpisode": "11",
       "nextEpisode": "8",
-      "nextAiringIn": "131400",
+      "nextAiringIn": "135000",
       "lastAired": null,
       "resume": null,
       "related": [],
@@ -16011,10 +16020,10 @@
       "availableOn": [],
       "availableAt": null,
       "progress": null,
-      "airingIn": "2023200",
+      "airingIn": "2026800",
       "airingEpisode": "8",
       "nextEpisode": "5",
-      "nextAiringIn": "208800",
+      "nextAiringIn": "212400",
       "lastAired": null,
       "resume": null,
       "related": [],
@@ -16096,10 +16105,10 @@
       "availableOn": [],
       "availableAt": null,
       "progress": null,
-      "airingIn": "2030400",
+      "airingIn": "2034000",
       "airingEpisode": "9",
       "nextEpisode": "6",
-      "nextAiringIn": "216000",
+      "nextAiringIn": "219600",
       "lastAired": null,
       "resume": null,
       "related": [],
@@ -16179,10 +16188,10 @@
        "done": "5",
        "next": "6"
       },
-      "airingIn": "2034000",
+      "airingIn": "2037600",
       "airingEpisode": "9",
       "nextEpisode": "6",
-      "nextAiringIn": "219600",
+      "nextAiringIn": "223200",
       "lastAired": null,
       "resume": null,
       "related": [],
@@ -16259,10 +16268,10 @@
       "availableOn": [],
       "availableAt": null,
       "progress": null,
-      "airingIn": "2120400",
+      "airingIn": "2124000",
       "airingEpisode": "7",
       "nextEpisode": "4",
-      "nextAiringIn": "306000",
+      "nextAiringIn": "309600",
       "lastAired": null,
       "resume": null,
       "related": [],
@@ -16339,10 +16348,10 @@
       "availableOn": [],
       "availableAt": null,
       "progress": null,
-      "airingIn": "2188800",
+      "airingIn": "2192400",
       "airingEpisode": "8",
       "nextEpisode": "5",
-      "nextAiringIn": "374400",
+      "nextAiringIn": "378000",
       "lastAired": null,
       "resume": null,
       "related": [],
@@ -16424,10 +16433,10 @@
       "availableOn": [],
       "availableAt": null,
       "progress": null,
-      "airingIn": "2208600",
+      "airingIn": "2212200",
       "airingEpisode": "9",
       "nextEpisode": "6",
-      "nextAiringIn": "394200",
+      "nextAiringIn": "397800",
       "lastAired": null,
       "resume": null,
       "related": [],
@@ -16507,10 +16516,10 @@
        "done": "6",
        "next": "7"
       },
-      "airingIn": "2271600",
+      "airingIn": "2275200",
       "airingEpisode": "10",
       "nextEpisode": "7",
-      "nextAiringIn": "457200",
+      "nextAiringIn": "460800",
       "lastAired": null,
       "resume": null,
       "related": [],
@@ -16587,10 +16596,10 @@
       "availableOn": [],
       "availableAt": null,
       "progress": null,
-      "airingIn": "2277000",
+      "airingIn": "2280600",
       "airingEpisode": "6",
       "nextEpisode": "3",
-      "nextAiringIn": "462600",
+      "nextAiringIn": "466200",
       "lastAired": null,
       "resume": null,
       "related": [],
@@ -16667,10 +16676,10 @@
       "availableOn": [],
       "availableAt": null,
       "progress": null,
-      "airingIn": "2367000",
+      "airingIn": "2370600",
       "airingEpisode": "7",
       "nextEpisode": "4",
-      "nextAiringIn": "552600",
+      "nextAiringIn": "556200",
       "lastAired": null,
       "resume": null,
       "related": [],
@@ -16747,10 +16756,10 @@
       "availableOn": [],
       "availableAt": null,
       "progress": null,
-      "airingIn": "2372400",
+      "airingIn": "2376000",
       "airingEpisode": "9",
       "nextEpisode": "6",
-      "nextAiringIn": "558000",
+      "nextAiringIn": "561600",
       "lastAired": null,
       "resume": null,
       "related": [],
@@ -16827,10 +16836,10 @@
       "availableOn": [],
       "availableAt": null,
       "progress": null,
-      "airingIn": "2385000",
+      "airingIn": "2388600",
       "airingEpisode": "9",
       "nextEpisode": "6",
-      "nextAiringIn": "570600",
+      "nextAiringIn": "574200",
       "lastAired": null,
       "resume": null,
       "related": [],
@@ -16963,10 +16972,10 @@
        "availableOn": [],
        "availableAt": null,
        "progress": null,
-       "airingIn": "570600",
+       "airingIn": "574200",
        "airingEpisode": null,
        "nextEpisode": "6",
-       "nextAiringIn": "570600",
+       "nextAiringIn": "574200",
        "lastAired": null,
        "resume": null,
        "related": [],
@@ -17043,10 +17052,10 @@
        "availableOn": [],
        "availableAt": null,
        "progress": null,
-       "airingIn": "208800",
+       "airingIn": "212400",
        "airingEpisode": null,
        "nextEpisode": "5",
-       "nextAiringIn": "208800",
+       "nextAiringIn": "212400",
        "lastAired": null,
        "resume": null,
        "related": [],
@@ -17128,10 +17137,10 @@
        "availableOn": [],
        "availableAt": null,
        "progress": null,
-       "airingIn": "36000",
+       "airingIn": "39600",
        "airingEpisode": null,
        "nextEpisode": "5",
-       "nextAiringIn": "36000",
+       "nextAiringIn": "39600",
        "lastAired": null,
        "resume": null,
        "related": [],
@@ -17211,10 +17220,10 @@
         "done": "7",
         "next": "8"
        },
-       "airingIn": "131400",
+       "airingIn": "135000",
        "airingEpisode": null,
        "nextEpisode": "8",
-       "nextAiringIn": "131400",
+       "nextAiringIn": "135000",
        "lastAired": null,
        "resume": null,
        "related": [],
@@ -17291,10 +17300,10 @@
        "availableOn": [],
        "availableAt": null,
        "progress": null,
-       "airingIn": "41400",
+       "airingIn": "45000",
        "airingEpisode": null,
        "nextEpisode": "4",
-       "nextAiringIn": "41400",
+       "nextAiringIn": "45000",
        "lastAired": null,
        "resume": null,
        "related": [],
@@ -17371,10 +17380,10 @@
        "availableOn": [],
        "availableAt": null,
        "progress": null,
-       "airingIn": "216000",
+       "airingIn": "219600",
        "airingEpisode": null,
        "nextEpisode": "6",
-       "nextAiringIn": "216000",
+       "nextAiringIn": "219600",
        "lastAired": null,
        "resume": null,
        "related": [],
@@ -17454,10 +17463,10 @@
         "done": "6",
         "next": "7"
        },
-       "airingIn": "457200",
+       "airingIn": "460800",
        "airingEpisode": null,
        "nextEpisode": "7",
-       "nextAiringIn": "457200",
+       "nextAiringIn": "460800",
        "lastAired": null,
        "resume": null,
        "related": [],
@@ -17534,10 +17543,10 @@
        "availableOn": [],
        "availableAt": null,
        "progress": null,
-       "airingIn": "306000",
+       "airingIn": "309600",
        "airingEpisode": null,
        "nextEpisode": "4",
-       "nextAiringIn": "306000",
+       "nextAiringIn": "309600",
        "lastAired": null,
        "resume": null,
        "related": [],
@@ -17617,10 +17626,10 @@
         "done": "5",
         "next": "6"
        },
-       "airingIn": "219600",
+       "airingIn": "223200",
        "airingEpisode": null,
        "nextEpisode": "6",
-       "nextAiringIn": "219600",
+       "nextAiringIn": "223200",
        "lastAired": null,
        "resume": null,
        "related": [],
@@ -17697,10 +17706,10 @@
        "availableOn": [],
        "availableAt": null,
        "progress": null,
-       "airingIn": "394200",
+       "airingIn": "397800",
        "airingEpisode": null,
        "nextEpisode": "6",
-       "nextAiringIn": "394200",
+       "nextAiringIn": "397800",
        "lastAired": null,
        "resume": null,
        "related": [],
@@ -17865,10 +17874,10 @@
        "availableOn": [],
        "availableAt": null,
        "progress": null,
-       "airingIn": "374400",
+       "airingIn": "378000",
        "airingEpisode": null,
        "nextEpisode": "5",
-       "nextAiringIn": "374400",
+       "nextAiringIn": "378000",
        "lastAired": null,
        "resume": null,
        "related": [],
@@ -18044,10 +18053,10 @@
        "availableOn": [],
        "availableAt": null,
        "progress": null,
-       "airingIn": "462600",
+       "airingIn": "466200",
        "airingEpisode": null,
        "nextEpisode": "3",
-       "nextAiringIn": "462600",
+       "nextAiringIn": "466200",
        "lastAired": null,
        "resume": null,
        "related": [],
@@ -18124,10 +18133,10 @@
        "availableOn": [],
        "availableAt": null,
        "progress": null,
-       "airingIn": "552600",
+       "airingIn": "556200",
        "airingEpisode": null,
        "nextEpisode": "4",
-       "nextAiringIn": "552600",
+       "nextAiringIn": "556200",
        "lastAired": null,
        "resume": null,
        "related": [],
@@ -18204,10 +18213,10 @@
        "availableOn": [],
        "availableAt": null,
        "progress": null,
-       "airingIn": "558000",
+       "airingIn": "561600",
        "airingEpisode": null,
        "nextEpisode": "6",
-       "nextAiringIn": "558000",
+       "nextAiringIn": "561600",
        "lastAired": null,
        "resume": null,
        "related": [],
@@ -18683,10 +18692,10 @@
        "availableOn": [],
        "availableAt": null,
        "progress": null,
-       "airingIn": "570600",
+       "airingIn": "574200",
        "airingEpisode": null,
        "nextEpisode": "6",
-       "nextAiringIn": "570600",
+       "nextAiringIn": "574200",
        "lastAired": null,
        "resume": null,
        "related": [],
@@ -18763,10 +18772,10 @@
        "availableOn": [],
        "availableAt": null,
        "progress": null,
-       "airingIn": "208800",
+       "airingIn": "212400",
        "airingEpisode": null,
        "nextEpisode": "5",
-       "nextAiringIn": "208800",
+       "nextAiringIn": "212400",
        "lastAired": null,
        "resume": null,
        "related": [],
@@ -18848,10 +18857,10 @@
        "availableOn": [],
        "availableAt": null,
        "progress": null,
-       "airingIn": "36000",
+       "airingIn": "39600",
        "airingEpisode": null,
        "nextEpisode": "5",
-       "nextAiringIn": "36000",
+       "nextAiringIn": "39600",
        "lastAired": null,
        "resume": null,
        "related": [],
@@ -18931,10 +18940,10 @@
         "done": "7",
         "next": "8"
        },
-       "airingIn": "131400",
+       "airingIn": "135000",
        "airingEpisode": null,
        "nextEpisode": "8",
-       "nextAiringIn": "131400",
+       "nextAiringIn": "135000",
        "lastAired": null,
        "resume": null,
        "related": [],
@@ -19011,10 +19020,10 @@
        "availableOn": [],
        "availableAt": null,
        "progress": null,
-       "airingIn": "41400",
+       "airingIn": "45000",
        "airingEpisode": null,
        "nextEpisode": "4",
-       "nextAiringIn": "41400",
+       "nextAiringIn": "45000",
        "lastAired": null,
        "resume": null,
        "related": [],
@@ -19091,10 +19100,10 @@
        "availableOn": [],
        "availableAt": null,
        "progress": null,
-       "airingIn": "216000",
+       "airingIn": "219600",
        "airingEpisode": null,
        "nextEpisode": "6",
-       "nextAiringIn": "216000",
+       "nextAiringIn": "219600",
        "lastAired": null,
        "resume": null,
        "related": [],
@@ -19174,10 +19183,10 @@
         "done": "6",
         "next": "7"
        },
-       "airingIn": "457200",
+       "airingIn": "460800",
        "airingEpisode": null,
        "nextEpisode": "7",
-       "nextAiringIn": "457200",
+       "nextAiringIn": "460800",
        "lastAired": null,
        "resume": null,
        "related": [],
@@ -19254,10 +19263,10 @@
        "availableOn": [],
        "availableAt": null,
        "progress": null,
-       "airingIn": "306000",
+       "airingIn": "309600",
        "airingEpisode": null,
        "nextEpisode": "4",
-       "nextAiringIn": "306000",
+       "nextAiringIn": "309600",
        "lastAired": null,
        "resume": null,
        "related": [],
@@ -19337,10 +19346,10 @@
         "done": "5",
         "next": "6"
        },
-       "airingIn": "219600",
+       "airingIn": "223200",
        "airingEpisode": null,
        "nextEpisode": "6",
-       "nextAiringIn": "219600",
+       "nextAiringIn": "223200",
        "lastAired": null,
        "resume": null,
        "related": [],
@@ -19417,10 +19426,10 @@
        "availableOn": [],
        "availableAt": null,
        "progress": null,
-       "airingIn": "394200",
+       "airingIn": "397800",
        "airingEpisode": null,
        "nextEpisode": "6",
-       "nextAiringIn": "394200",
+       "nextAiringIn": "397800",
        "lastAired": null,
        "resume": null,
        "related": [],
@@ -19497,10 +19506,10 @@
        "availableOn": [],
        "availableAt": null,
        "progress": null,
-       "airingIn": "374400",
+       "airingIn": "378000",
        "airingEpisode": null,
        "nextEpisode": "5",
-       "nextAiringIn": "374400",
+       "nextAiringIn": "378000",
        "lastAired": null,
        "resume": null,
        "related": [],
@@ -19582,10 +19591,10 @@
        "availableOn": [],
        "availableAt": null,
        "progress": null,
-       "airingIn": "462600",
+       "airingIn": "466200",
        "airingEpisode": null,
        "nextEpisode": "3",
-       "nextAiringIn": "462600",
+       "nextAiringIn": "466200",
        "lastAired": null,
        "resume": null,
        "related": [],
@@ -19662,10 +19671,10 @@
        "availableOn": [],
        "availableAt": null,
        "progress": null,
-       "airingIn": "552600",
+       "airingIn": "556200",
        "airingEpisode": null,
        "nextEpisode": "4",
-       "nextAiringIn": "552600",
+       "nextAiringIn": "556200",
        "lastAired": null,
        "resume": null,
        "related": [],
@@ -19742,10 +19751,10 @@
        "availableOn": [],
        "availableAt": null,
        "progress": null,
-       "airingIn": "558000",
+       "airingIn": "561600",
        "airingEpisode": null,
        "nextEpisode": "6",
-       "nextAiringIn": "558000",
+       "nextAiringIn": "561600",
        "lastAired": null,
        "resume": null,
        "related": [],
@@ -20024,10 +20033,10 @@
        "availableOn": [],
        "availableAt": null,
        "progress": null,
-       "airingIn": "5659200",
+       "airingIn": "5662800",
        "airingEpisode": null,
        "nextEpisode": "1",
-       "nextAiringIn": "5659200",
+       "nextAiringIn": "5662800",
        "lastAired": null,
        "resume": null,
        "related": [],
@@ -20507,10 +20516,10 @@
        "availableOn": [],
        "availableAt": null,
        "progress": null,
-       "airingIn": "570600",
+       "airingIn": "574200",
        "airingEpisode": null,
        "nextEpisode": "6",
-       "nextAiringIn": "570600",
+       "nextAiringIn": "574200",
        "lastAired": null,
        "resume": null,
        "related": [],
@@ -20676,10 +20685,10 @@
        "availableOn": [],
        "availableAt": null,
        "progress": null,
-       "airingIn": "208800",
+       "airingIn": "212400",
        "airingEpisode": null,
        "nextEpisode": "5",
-       "nextAiringIn": "208800",
+       "nextAiringIn": "212400",
        "lastAired": null,
        "resume": null,
        "related": [],
@@ -20761,10 +20770,10 @@
        "availableOn": [],
        "availableAt": null,
        "progress": null,
-       "airingIn": "36000",
+       "airingIn": "39600",
        "airingEpisode": null,
        "nextEpisode": "5",
-       "nextAiringIn": "36000",
+       "nextAiringIn": "39600",
        "lastAired": null,
        "resume": null,
        "related": [],
@@ -20933,10 +20942,10 @@
         "done": "7",
         "next": "8"
        },
-       "airingIn": "131400",
+       "airingIn": "135000",
        "airingEpisode": null,
        "nextEpisode": "8",
-       "nextAiringIn": "131400",
+       "nextAiringIn": "135000",
        "lastAired": null,
        "resume": null,
        "related": [],
@@ -21102,10 +21111,10 @@
        "availableOn": [],
        "availableAt": null,
        "progress": null,
-       "airingIn": "41400",
+       "airingIn": "45000",
        "airingEpisode": null,
        "nextEpisode": "4",
-       "nextAiringIn": "41400",
+       "nextAiringIn": "45000",
        "lastAired": null,
        "resume": null,
        "related": [],
@@ -21363,10 +21372,10 @@
        "availableOn": [],
        "availableAt": null,
        "progress": null,
-       "airingIn": "216000",
+       "airingIn": "219600",
        "airingEpisode": null,
        "nextEpisode": "6",
-       "nextAiringIn": "216000",
+       "nextAiringIn": "219600",
        "lastAired": null,
        "resume": null,
        "related": [],
@@ -21624,10 +21633,10 @@
         "done": "6",
         "next": "7"
        },
-       "airingIn": "457200",
+       "airingIn": "460800",
        "airingEpisode": null,
        "nextEpisode": "7",
-       "nextAiringIn": "457200",
+       "nextAiringIn": "460800",
        "lastAired": null,
        "resume": null,
        "related": [],
@@ -21798,10 +21807,10 @@
        "availableOn": [],
        "availableAt": null,
        "progress": null,
-       "airingIn": "306000",
+       "airingIn": "309600",
        "airingEpisode": null,
        "nextEpisode": "4",
-       "nextAiringIn": "306000",
+       "nextAiringIn": "309600",
        "lastAired": null,
        "resume": null,
        "related": [],
@@ -22281,10 +22290,10 @@
        "availableOn": [],
        "availableAt": null,
        "progress": null,
-       "airingIn": "570600",
+       "airingIn": "574200",
        "airingEpisode": null,
        "nextEpisode": "6",
-       "nextAiringIn": "570600",
+       "nextAiringIn": "574200",
        "lastAired": null,
        "resume": null,
        "related": [],
@@ -22545,10 +22554,10 @@
        "availableOn": [],
        "availableAt": null,
        "progress": null,
-       "airingIn": "208800",
+       "airingIn": "212400",
        "airingEpisode": null,
        "nextEpisode": "5",
-       "nextAiringIn": "208800",
+       "nextAiringIn": "212400",
        "lastAired": null,
        "resume": null,
        "related": [],
@@ -22721,10 +22730,10 @@
         "done": "7",
         "next": "8"
        },
-       "airingIn": "131400",
+       "airingIn": "135000",
        "airingEpisode": null,
        "nextEpisode": "8",
-       "nextAiringIn": "131400",
+       "nextAiringIn": "135000",
        "lastAired": null,
        "resume": null,
        "related": [],
@@ -22983,10 +22992,10 @@
        "availableOn": [],
        "availableAt": null,
        "progress": null,
-       "airingIn": "216000",
+       "airingIn": "219600",
        "airingEpisode": null,
        "nextEpisode": "6",
-       "nextAiringIn": "216000",
+       "nextAiringIn": "219600",
        "lastAired": null,
        "resume": null,
        "related": [],
@@ -23155,10 +23164,10 @@
        "availableOn": [],
        "availableAt": null,
        "progress": null,
-       "airingIn": "36000",
+       "airingIn": "39600",
        "airingEpisode": null,
        "nextEpisode": "5",
-       "nextAiringIn": "36000",
+       "nextAiringIn": "39600",
        "lastAired": null,
        "resume": null,
        "related": [],
@@ -23238,10 +23247,10 @@
         "done": "6",
         "next": "7"
        },
-       "airingIn": "457200",
+       "airingIn": "460800",
        "airingEpisode": null,
        "nextEpisode": "7",
-       "nextAiringIn": "457200",
+       "nextAiringIn": "460800",
        "lastAired": null,
        "resume": null,
        "related": [],
@@ -23496,10 +23505,10 @@
        "availableOn": [],
        "availableAt": null,
        "progress": null,
-       "airingIn": "394200",
+       "airingIn": "397800",
        "airingEpisode": null,
        "nextEpisode": "6",
-       "nextAiringIn": "394200",
+       "nextAiringIn": "397800",
        "lastAired": null,
        "resume": null,
        "related": [],
@@ -23750,10 +23759,10 @@
      "availableOn": [],
      "availableAt": null,
      "progress": null,
-     "airingIn": "36000",
+     "airingIn": "39600",
      "airingEpisode": null,
      "nextEpisode": "5",
-     "nextAiringIn": "36000",
+     "nextAiringIn": "39600",
      "lastAired": null,
      "resume": null,
      "related": [],
@@ -23927,10 +23936,10 @@
      "availableOn": [],
      "availableAt": null,
      "progress": null,
-     "airingIn": "41400",
+     "airingIn": "45000",
      "airingEpisode": null,
      "nextEpisode": "4",
-     "nextAiringIn": "41400",
+     "nextAiringIn": "45000",
      "lastAired": null,
      "resume": null,
      "related": [],
@@ -24104,10 +24113,10 @@
      "availableOn": [],
      "availableAt": null,
      "progress": null,
-     "airingIn": "570600",
+     "airingIn": "574200",
      "airingEpisode": null,
      "nextEpisode": "6",
-     "nextAiringIn": "570600",
+     "nextAiringIn": "574200",
      "lastAired": null,
      "resume": null,
      "related": [],
@@ -24359,10 +24368,10 @@
      "availableOn": [],
      "availableAt": null,
      "progress": null,
-     "airingIn": "570600",
+     "airingIn": "574200",
      "airingEpisode": null,
      "nextEpisode": "6",
-     "nextAiringIn": "570600",
+     "nextAiringIn": "574200",
      "lastAired": null,
      "resume": null,
      "related": [],
@@ -24536,10 +24545,10 @@
      "availableOn": [],
      "availableAt": null,
      "progress": null,
-     "airingIn": "41400",
+     "airingIn": "45000",
      "airingEpisode": null,
      "nextEpisode": "4",
-     "nextAiringIn": "41400",
+     "nextAiringIn": "45000",
      "lastAired": null,
      "resume": null,
      "related": [],
@@ -24713,10 +24722,10 @@
      "availableOn": [],
      "availableAt": null,
      "progress": null,
-     "airingIn": "36000",
+     "airingIn": "39600",
      "airingEpisode": null,
      "nextEpisode": "5",
-     "nextAiringIn": "36000",
+     "nextAiringIn": "39600",
      "lastAired": null,
      "resume": null,
      "related": [],
@@ -24802,10 +24811,10 @@
      "availableOn": [],
      "availableAt": null,
      "progress": null,
-     "airingIn": "570600",
+     "airingIn": "574200",
      "airingEpisode": null,
      "nextEpisode": "6",
-     "nextAiringIn": "570600",
+     "nextAiringIn": "574200",
      "lastAired": null,
      "resume": null,
      "related": [],
@@ -24882,10 +24891,10 @@
      "availableOn": [],
      "availableAt": null,
      "progress": null,
-     "airingIn": "208800",
+     "airingIn": "212400",
      "airingEpisode": null,
      "nextEpisode": "5",
-     "nextAiringIn": "208800",
+     "nextAiringIn": "212400",
      "lastAired": null,
      "resume": null,
      "related": [],
@@ -24967,10 +24976,10 @@
      "availableOn": [],
      "availableAt": null,
      "progress": null,
-     "airingIn": "36000",
+     "airingIn": "39600",
      "airingEpisode": null,
      "nextEpisode": "5",
-     "nextAiringIn": "36000",
+     "nextAiringIn": "39600",
      "lastAired": null,
      "resume": null,
      "related": [],
@@ -25050,10 +25059,10 @@
       "done": "7",
       "next": "8"
      },
-     "airingIn": "131400",
+     "airingIn": "135000",
      "airingEpisode": null,
      "nextEpisode": "8",
-     "nextAiringIn": "131400",
+     "nextAiringIn": "135000",
      "lastAired": null,
      "resume": null,
      "related": [],
@@ -25130,10 +25139,10 @@
      "availableOn": [],
      "availableAt": null,
      "progress": null,
-     "airingIn": "41400",
+     "airingIn": "45000",
      "airingEpisode": null,
      "nextEpisode": "4",
-     "nextAiringIn": "41400",
+     "nextAiringIn": "45000",
      "lastAired": null,
      "resume": null,
      "related": [],
@@ -25210,10 +25219,10 @@
      "availableOn": [],
      "availableAt": null,
      "progress": null,
-     "airingIn": "216000",
+     "airingIn": "219600",
      "airingEpisode": null,
      "nextEpisode": "6",
-     "nextAiringIn": "216000",
+     "nextAiringIn": "219600",
      "lastAired": null,
      "resume": null,
      "related": [],
@@ -25293,10 +25302,10 @@
       "done": "6",
       "next": "7"
      },
-     "airingIn": "457200",
+     "airingIn": "460800",
      "airingEpisode": null,
      "nextEpisode": "7",
-     "nextAiringIn": "457200",
+     "nextAiringIn": "460800",
      "lastAired": null,
      "resume": null,
      "related": [],
@@ -25373,10 +25382,10 @@
      "availableOn": [],
      "availableAt": null,
      "progress": null,
-     "airingIn": "306000",
+     "airingIn": "309600",
      "airingEpisode": null,
      "nextEpisode": "4",
-     "nextAiringIn": "306000",
+     "nextAiringIn": "309600",
      "lastAired": null,
      "resume": null,
      "related": [],
@@ -25456,10 +25465,10 @@
       "done": "5",
       "next": "6"
      },
-     "airingIn": "219600",
+     "airingIn": "223200",
      "airingEpisode": null,
      "nextEpisode": "6",
-     "nextAiringIn": "219600",
+     "nextAiringIn": "223200",
      "lastAired": null,
      "resume": null,
      "related": [],
@@ -25536,10 +25545,10 @@
      "availableOn": [],
      "availableAt": null,
      "progress": null,
-     "airingIn": "394200",
+     "airingIn": "397800",
      "airingEpisode": null,
      "nextEpisode": "6",
-     "nextAiringIn": "394200",
+     "nextAiringIn": "397800",
      "lastAired": null,
      "resume": null,
      "related": [],
@@ -25704,10 +25713,10 @@
      "availableOn": [],
      "availableAt": null,
      "progress": null,
-     "airingIn": "374400",
+     "airingIn": "378000",
      "airingEpisode": null,
      "nextEpisode": "5",
-     "nextAiringIn": "374400",
+     "nextAiringIn": "378000",
      "lastAired": null,
      "resume": null,
      "related": [],
@@ -25883,10 +25892,10 @@
      "availableOn": [],
      "availableAt": null,
      "progress": null,
-     "airingIn": "462600",
+     "airingIn": "466200",
      "airingEpisode": null,
      "nextEpisode": "3",
-     "nextAiringIn": "462600",
+     "nextAiringIn": "466200",
      "lastAired": null,
      "resume": null,
      "related": [],
@@ -25963,10 +25972,10 @@
      "availableOn": [],
      "availableAt": null,
      "progress": null,
-     "airingIn": "552600",
+     "airingIn": "556200",
      "airingEpisode": null,
      "nextEpisode": "4",
-     "nextAiringIn": "552600",
+     "nextAiringIn": "556200",
      "lastAired": null,
      "resume": null,
      "related": [],
@@ -26043,10 +26052,10 @@
      "availableOn": [],
      "availableAt": null,
      "progress": null,
-     "airingIn": "558000",
+     "airingIn": "561600",
      "airingEpisode": null,
      "nextEpisode": "6",
-     "nextAiringIn": "558000",
+     "nextAiringIn": "561600",
      "lastAired": null,
      "resume": null,
      "related": [],
@@ -27143,10 +27152,10 @@
        "done": "7",
        "next": "8"
       },
-      "airingIn": "131400",
+      "airingIn": "135000",
       "airingEpisode": null,
       "nextEpisode": "8",
-      "nextAiringIn": "131400",
+      "nextAiringIn": "135000",
       "lastAired": null,
       "resume": null,
       "related": [],
@@ -27226,10 +27235,10 @@
        "done": "5",
        "next": "6"
       },
-      "airingIn": "219600",
+      "airingIn": "223200",
       "airingEpisode": null,
       "nextEpisode": "6",
-      "nextAiringIn": "219600",
+      "nextAiringIn": "223200",
       "lastAired": null,
       "resume": null,
       "related": [],
@@ -27309,10 +27318,10 @@
        "done": "6",
        "next": "7"
       },
-      "airingIn": "457200",
+      "airingIn": "460800",
       "airingEpisode": null,
       "nextEpisode": "7",
-      "nextAiringIn": "457200",
+      "nextAiringIn": "460800",
       "lastAired": null,
       "resume": null,
       "related": [],
@@ -27504,10 +27513,10 @@
        "done": "0",
        "next": "1"
       },
-      "airingIn": "552600",
+      "airingIn": "556200",
       "airingEpisode": null,
       "nextEpisode": "4",
-      "nextAiringIn": "552600",
+      "nextAiringIn": "556200",
       "lastAired": null,
       "resume": null,
       "related": [],
@@ -27587,10 +27596,10 @@
        "done": "0",
        "next": "1"
       },
-      "airingIn": "5659200",
+      "airingIn": "5662800",
       "airingEpisode": null,
       "nextEpisode": "1",
-      "nextAiringIn": "5659200",
+      "nextAiringIn": "5662800",
       "lastAired": null,
       "resume": null,
       "related": [],
@@ -28680,7 +28689,8 @@
      "unsourced": false,
      "pastProgress": false,
      "spoilerAhead": false,
-     "synopsisPending": false
+     "synopsisPending": false,
+     "followed": []
     },
     {
      "number": "2",
@@ -28699,7 +28709,8 @@
      "unsourced": false,
      "pastProgress": false,
      "spoilerAhead": false,
-     "synopsisPending": false
+     "synopsisPending": false,
+     "followed": []
     },
     {
      "number": "3",
@@ -28718,7 +28729,8 @@
      "unsourced": false,
      "pastProgress": false,
      "spoilerAhead": false,
-     "synopsisPending": false
+     "synopsisPending": false,
+     "followed": []
     },
     {
      "number": "4",
@@ -28737,7 +28749,8 @@
      "unsourced": false,
      "pastProgress": false,
      "spoilerAhead": false,
-     "synopsisPending": false
+     "synopsisPending": false,
+     "followed": []
     },
     {
      "number": "5",
@@ -28756,7 +28769,8 @@
      "unsourced": false,
      "pastProgress": false,
      "spoilerAhead": false,
-     "synopsisPending": false
+     "synopsisPending": false,
+     "followed": []
     },
     {
      "number": "6",
@@ -28775,7 +28789,8 @@
      "unsourced": false,
      "pastProgress": false,
      "spoilerAhead": false,
-     "synopsisPending": false
+     "synopsisPending": false,
+     "followed": []
     },
     {
      "number": "7",
@@ -28794,7 +28809,8 @@
      "unsourced": false,
      "pastProgress": false,
      "spoilerAhead": false,
-     "synopsisPending": false
+     "synopsisPending": false,
+     "followed": []
     },
     {
      "number": "8",
@@ -28813,7 +28829,8 @@
      "unsourced": false,
      "pastProgress": false,
      "spoilerAhead": false,
-     "synopsisPending": false
+     "synopsisPending": false,
+     "followed": []
     },
     {
      "number": "9",
@@ -28832,7 +28849,8 @@
      "unsourced": false,
      "pastProgress": false,
      "spoilerAhead": false,
-     "synopsisPending": false
+     "synopsisPending": false,
+     "followed": []
     },
     {
      "number": "10",
@@ -28851,7 +28869,8 @@
      "unsourced": false,
      "pastProgress": false,
      "spoilerAhead": false,
-     "synopsisPending": false
+     "synopsisPending": false,
+     "followed": []
     },
     {
      "number": "11",
@@ -28870,7 +28889,8 @@
      "unsourced": false,
      "pastProgress": false,
      "spoilerAhead": false,
-     "synopsisPending": false
+     "synopsisPending": false,
+     "followed": []
     },
     {
      "number": "12",
@@ -28889,7 +28909,8 @@
      "unsourced": false,
      "pastProgress": false,
      "spoilerAhead": false,
-     "synopsisPending": false
+     "synopsisPending": false,
+     "followed": []
     }
    ],
    "failed": null
@@ -29295,7 +29316,8 @@
      "unsourced": false,
      "pastProgress": true,
      "spoilerAhead": false,
-     "synopsisPending": false
+     "synopsisPending": false,
+     "followed": []
     },
     {
      "number": "2",
@@ -29314,7 +29336,8 @@
      "unsourced": false,
      "pastProgress": true,
      "spoilerAhead": true,
-     "synopsisPending": false
+     "synopsisPending": false,
+     "followed": []
     },
     {
      "number": "3",
@@ -29333,7 +29356,8 @@
      "unsourced": false,
      "pastProgress": true,
      "spoilerAhead": true,
-     "synopsisPending": false
+     "synopsisPending": false,
+     "followed": []
     },
     {
      "number": "4",
@@ -29352,7 +29376,8 @@
      "unsourced": false,
      "pastProgress": true,
      "spoilerAhead": true,
-     "synopsisPending": false
+     "synopsisPending": false,
+     "followed": []
     },
     {
      "number": "5",
@@ -29371,7 +29396,8 @@
      "unsourced": false,
      "pastProgress": true,
      "spoilerAhead": true,
-     "synopsisPending": false
+     "synopsisPending": false,
+     "followed": []
     }
    ],
    "failed": null
@@ -29653,7 +29679,8 @@
      "unsourced": false,
      "pastProgress": true,
      "spoilerAhead": false,
-     "synopsisPending": false
+     "synopsisPending": false,
+     "followed": []
     }
    ],
    "failed": null
@@ -30214,7 +30241,8 @@
      "unsourced": false,
      "pastProgress": true,
      "spoilerAhead": false,
-     "synopsisPending": false
+     "synopsisPending": false,
+     "followed": []
     },
     {
      "number": "2",
@@ -30233,7 +30261,8 @@
      "unsourced": false,
      "pastProgress": true,
      "spoilerAhead": true,
-     "synopsisPending": false
+     "synopsisPending": false,
+     "followed": []
     },
     {
      "number": "3",
@@ -30252,7 +30281,8 @@
      "unsourced": false,
      "pastProgress": true,
      "spoilerAhead": true,
-     "synopsisPending": false
+     "synopsisPending": false,
+     "followed": []
     },
     {
      "number": "4",
@@ -30271,7 +30301,8 @@
      "unsourced": false,
      "pastProgress": true,
      "spoilerAhead": true,
-     "synopsisPending": false
+     "synopsisPending": false,
+     "followed": []
     },
     {
      "number": "5",
@@ -30290,7 +30321,8 @@
      "unsourced": false,
      "pastProgress": true,
      "spoilerAhead": true,
-     "synopsisPending": false
+     "synopsisPending": false,
+     "followed": []
     },
     {
      "number": "6",
@@ -30309,7 +30341,8 @@
      "unsourced": false,
      "pastProgress": true,
      "spoilerAhead": true,
-     "synopsisPending": false
+     "synopsisPending": false,
+     "followed": []
     },
     {
      "number": "7",
@@ -30328,7 +30361,8 @@
      "unsourced": false,
      "pastProgress": true,
      "spoilerAhead": true,
-     "synopsisPending": false
+     "synopsisPending": false,
+     "followed": []
     },
     {
      "number": "8",
@@ -30347,7 +30381,8 @@
      "unsourced": false,
      "pastProgress": true,
      "spoilerAhead": true,
-     "synopsisPending": false
+     "synopsisPending": false,
+     "followed": []
     },
     {
      "number": "9",
@@ -30366,7 +30401,8 @@
      "unsourced": false,
      "pastProgress": true,
      "spoilerAhead": true,
-     "synopsisPending": false
+     "synopsisPending": false,
+     "followed": []
     },
     {
      "number": "10",
@@ -30385,7 +30421,8 @@
      "unsourced": false,
      "pastProgress": true,
      "spoilerAhead": true,
-     "synopsisPending": false
+     "synopsisPending": false,
+     "followed": []
     },
     {
      "number": "11",
@@ -30404,7 +30441,8 @@
      "unsourced": false,
      "pastProgress": true,
      "spoilerAhead": true,
-     "synopsisPending": false
+     "synopsisPending": false,
+     "followed": []
     },
     {
      "number": "12",
@@ -30423,7 +30461,8 @@
      "unsourced": false,
      "pastProgress": true,
      "spoilerAhead": true,
-     "synopsisPending": false
+     "synopsisPending": false,
+     "followed": []
     }
    ],
    "failed": null
@@ -30672,7 +30711,8 @@
      "unsourced": false,
      "pastProgress": true,
      "spoilerAhead": false,
-     "synopsisPending": false
+     "synopsisPending": false,
+     "followed": []
     },
     {
      "number": "2",
@@ -30691,7 +30731,8 @@
      "unsourced": false,
      "pastProgress": true,
      "spoilerAhead": true,
-     "synopsisPending": false
+     "synopsisPending": false,
+     "followed": []
     },
     {
      "number": "3",
@@ -30710,7 +30751,8 @@
      "unsourced": false,
      "pastProgress": true,
      "spoilerAhead": true,
-     "synopsisPending": false
+     "synopsisPending": false,
+     "followed": []
     },
     {
      "number": "4",
@@ -30729,7 +30771,8 @@
      "unsourced": false,
      "pastProgress": true,
      "spoilerAhead": true,
-     "synopsisPending": false
+     "synopsisPending": false,
+     "followed": []
     },
     {
      "number": "5",
@@ -30748,7 +30791,8 @@
      "unsourced": false,
      "pastProgress": true,
      "spoilerAhead": true,
-     "synopsisPending": false
+     "synopsisPending": false,
+     "followed": []
     },
     {
      "number": "6",
@@ -30767,7 +30811,8 @@
      "unsourced": false,
      "pastProgress": true,
      "spoilerAhead": true,
-     "synopsisPending": false
+     "synopsisPending": false,
+     "followed": []
     },
     {
      "number": "7",
@@ -30786,7 +30831,8 @@
      "unsourced": false,
      "pastProgress": true,
      "spoilerAhead": true,
-     "synopsisPending": false
+     "synopsisPending": false,
+     "followed": []
     },
     {
      "number": "8",
@@ -30805,7 +30851,8 @@
      "unsourced": false,
      "pastProgress": true,
      "spoilerAhead": true,
-     "synopsisPending": false
+     "synopsisPending": false,
+     "followed": []
     },
     {
      "number": "9",
@@ -30824,7 +30871,8 @@
      "unsourced": false,
      "pastProgress": true,
      "spoilerAhead": true,
-     "synopsisPending": false
+     "synopsisPending": false,
+     "followed": []
     },
     {
      "number": "10",
@@ -30843,7 +30891,8 @@
      "unsourced": false,
      "pastProgress": true,
      "spoilerAhead": true,
-     "synopsisPending": false
+     "synopsisPending": false,
+     "followed": []
     }
    ],
    "failed": null
@@ -31117,7 +31166,8 @@
      "unsourced": false,
      "pastProgress": true,
      "spoilerAhead": false,
-     "synopsisPending": false
+     "synopsisPending": false,
+     "followed": []
     },
     {
      "number": "2",
@@ -31136,7 +31186,8 @@
      "unsourced": false,
      "pastProgress": true,
      "spoilerAhead": true,
-     "synopsisPending": false
+     "synopsisPending": false,
+     "followed": []
     },
     {
      "number": "3",
@@ -31155,7 +31206,8 @@
      "unsourced": false,
      "pastProgress": true,
      "spoilerAhead": true,
-     "synopsisPending": false
+     "synopsisPending": false,
+     "followed": []
     },
     {
      "number": "4",
@@ -31174,7 +31226,8 @@
      "unsourced": false,
      "pastProgress": true,
      "spoilerAhead": true,
-     "synopsisPending": false
+     "synopsisPending": false,
+     "followed": []
     },
     {
      "number": "5",
@@ -31193,7 +31246,8 @@
      "unsourced": false,
      "pastProgress": true,
      "spoilerAhead": true,
-     "synopsisPending": false
+     "synopsisPending": false,
+     "followed": []
     },
     {
      "number": "6",
@@ -31212,7 +31266,8 @@
      "unsourced": false,
      "pastProgress": true,
      "spoilerAhead": true,
-     "synopsisPending": false
+     "synopsisPending": false,
+     "followed": []
     },
     {
      "number": "7",
@@ -31231,7 +31286,8 @@
      "unsourced": false,
      "pastProgress": true,
      "spoilerAhead": true,
-     "synopsisPending": false
+     "synopsisPending": false,
+     "followed": []
     },
     {
      "number": "8",
@@ -31250,7 +31306,8 @@
      "unsourced": false,
      "pastProgress": true,
      "spoilerAhead": true,
-     "synopsisPending": false
+     "synopsisPending": false,
+     "followed": []
     }
    ],
    "failed": null
@@ -33512,7 +33569,8 @@
      "unsourced": false,
      "pastProgress": true,
      "spoilerAhead": false,
-     "synopsisPending": false
+     "synopsisPending": false,
+     "followed": []
     },
     {
      "number": "2",
@@ -33531,7 +33589,8 @@
      "unsourced": false,
      "pastProgress": true,
      "spoilerAhead": true,
-     "synopsisPending": false
+     "synopsisPending": false,
+     "followed": []
     },
     {
      "number": "3",
@@ -33550,7 +33609,8 @@
      "unsourced": false,
      "pastProgress": true,
      "spoilerAhead": true,
-     "synopsisPending": false
+     "synopsisPending": false,
+     "followed": []
     },
     {
      "number": "4",
@@ -33569,7 +33629,8 @@
      "unsourced": false,
      "pastProgress": true,
      "spoilerAhead": true,
-     "synopsisPending": false
+     "synopsisPending": false,
+     "followed": []
     },
     {
      "number": "5",
@@ -33588,7 +33649,8 @@
      "unsourced": false,
      "pastProgress": true,
      "spoilerAhead": true,
-     "synopsisPending": false
+     "synopsisPending": false,
+     "followed": []
     },
     {
      "number": "6",
@@ -33607,7 +33669,8 @@
      "unsourced": false,
      "pastProgress": true,
      "spoilerAhead": true,
-     "synopsisPending": false
+     "synopsisPending": false,
+     "followed": []
     },
     {
      "number": "7",
@@ -33626,7 +33689,8 @@
      "unsourced": false,
      "pastProgress": true,
      "spoilerAhead": true,
-     "synopsisPending": false
+     "synopsisPending": false,
+     "followed": []
     },
     {
      "number": "8",
@@ -33645,7 +33709,8 @@
      "unsourced": false,
      "pastProgress": true,
      "spoilerAhead": true,
-     "synopsisPending": false
+     "synopsisPending": false,
+     "followed": []
     },
     {
      "number": "9",
@@ -33664,7 +33729,8 @@
      "unsourced": false,
      "pastProgress": true,
      "spoilerAhead": true,
-     "synopsisPending": false
+     "synopsisPending": false,
+     "followed": []
     },
     {
      "number": "10",
@@ -33683,7 +33749,8 @@
      "unsourced": false,
      "pastProgress": true,
      "spoilerAhead": true,
-     "synopsisPending": false
+     "synopsisPending": false,
+     "followed": []
     },
     {
      "number": "11",
@@ -33702,7 +33769,8 @@
      "unsourced": false,
      "pastProgress": true,
      "spoilerAhead": true,
-     "synopsisPending": false
+     "synopsisPending": false,
+     "followed": []
     },
     {
      "number": "12",
@@ -33721,7 +33789,8 @@
      "unsourced": false,
      "pastProgress": true,
      "spoilerAhead": true,
-     "synopsisPending": false
+     "synopsisPending": false,
+     "followed": []
     }
    ],
    "failed": null
@@ -35601,7 +35670,8 @@
      "unsourced": false,
      "pastProgress": true,
      "spoilerAhead": false,
-     "synopsisPending": false
+     "synopsisPending": false,
+     "followed": []
     },
     {
      "number": "2",
@@ -35620,7 +35690,8 @@
      "unsourced": false,
      "pastProgress": true,
      "spoilerAhead": true,
-     "synopsisPending": false
+     "synopsisPending": false,
+     "followed": []
     },
     {
      "number": "3",
@@ -35639,7 +35710,8 @@
      "unsourced": false,
      "pastProgress": true,
      "spoilerAhead": true,
-     "synopsisPending": false
+     "synopsisPending": false,
+     "followed": []
     },
     {
      "number": "4",
@@ -35658,7 +35730,8 @@
      "unsourced": false,
      "pastProgress": true,
      "spoilerAhead": true,
-     "synopsisPending": false
+     "synopsisPending": false,
+     "followed": []
     },
     {
      "number": "5",
@@ -35677,7 +35750,8 @@
      "unsourced": false,
      "pastProgress": true,
      "spoilerAhead": true,
-     "synopsisPending": false
+     "synopsisPending": false,
+     "followed": []
     },
     {
      "number": "6",
@@ -35696,7 +35770,8 @@
      "unsourced": false,
      "pastProgress": true,
      "spoilerAhead": true,
-     "synopsisPending": false
+     "synopsisPending": false,
+     "followed": []
     },
     {
      "number": "7",
@@ -35715,7 +35790,8 @@
      "unsourced": false,
      "pastProgress": true,
      "spoilerAhead": true,
-     "synopsisPending": false
+     "synopsisPending": false,
+     "followed": []
     },
     {
      "number": "8",
@@ -35734,7 +35810,8 @@
      "unsourced": false,
      "pastProgress": true,
      "spoilerAhead": true,
-     "synopsisPending": false
+     "synopsisPending": false,
+     "followed": []
     },
     {
      "number": "9",
@@ -35753,7 +35830,8 @@
      "unsourced": false,
      "pastProgress": true,
      "spoilerAhead": true,
-     "synopsisPending": false
+     "synopsisPending": false,
+     "followed": []
     },
     {
      "number": "10",
@@ -35772,7 +35850,8 @@
      "unsourced": false,
      "pastProgress": true,
      "spoilerAhead": true,
-     "synopsisPending": false
+     "synopsisPending": false,
+     "followed": []
     },
     {
      "number": "11",
@@ -35791,7 +35870,8 @@
      "unsourced": false,
      "pastProgress": true,
      "spoilerAhead": true,
-     "synopsisPending": false
+     "synopsisPending": false,
+     "followed": []
     },
     {
      "number": "12",
@@ -35810,7 +35890,8 @@
      "unsourced": false,
      "pastProgress": true,
      "spoilerAhead": true,
-     "synopsisPending": false
+     "synopsisPending": false,
+     "followed": []
     }
    ],
    "failed": null
@@ -37683,7 +37764,8 @@
      "unsourced": false,
      "pastProgress": true,
      "spoilerAhead": false,
-     "synopsisPending": false
+     "synopsisPending": false,
+     "followed": []
     },
     {
      "number": "2",
@@ -37702,7 +37784,8 @@
      "unsourced": false,
      "pastProgress": true,
      "spoilerAhead": true,
-     "synopsisPending": false
+     "synopsisPending": false,
+     "followed": []
     },
     {
      "number": "3",
@@ -37721,7 +37804,8 @@
      "unsourced": false,
      "pastProgress": true,
      "spoilerAhead": true,
-     "synopsisPending": false
+     "synopsisPending": false,
+     "followed": []
     },
     {
      "number": "4",
@@ -37740,7 +37824,8 @@
      "unsourced": false,
      "pastProgress": true,
      "spoilerAhead": true,
-     "synopsisPending": false
+     "synopsisPending": false,
+     "followed": []
     },
     {
      "number": "5",
@@ -37759,7 +37844,8 @@
      "unsourced": false,
      "pastProgress": true,
      "spoilerAhead": true,
-     "synopsisPending": false
+     "synopsisPending": false,
+     "followed": []
     },
     {
      "number": "6",
@@ -37778,7 +37864,8 @@
      "unsourced": false,
      "pastProgress": true,
      "spoilerAhead": true,
-     "synopsisPending": false
+     "synopsisPending": false,
+     "followed": []
     },
     {
      "number": "7",
@@ -37797,7 +37884,8 @@
      "unsourced": false,
      "pastProgress": true,
      "spoilerAhead": true,
-     "synopsisPending": false
+     "synopsisPending": false,
+     "followed": []
     },
     {
      "number": "8",
@@ -37816,7 +37904,8 @@
      "unsourced": false,
      "pastProgress": true,
      "spoilerAhead": true,
-     "synopsisPending": false
+     "synopsisPending": false,
+     "followed": []
     },
     {
      "number": "9",
@@ -37835,7 +37924,8 @@
      "unsourced": false,
      "pastProgress": true,
      "spoilerAhead": true,
-     "synopsisPending": false
+     "synopsisPending": false,
+     "followed": []
     },
     {
      "number": "10",
@@ -37854,7 +37944,8 @@
      "unsourced": false,
      "pastProgress": true,
      "spoilerAhead": true,
-     "synopsisPending": false
+     "synopsisPending": false,
+     "followed": []
     },
     {
      "number": "11",
@@ -37873,7 +37964,8 @@
      "unsourced": false,
      "pastProgress": true,
      "spoilerAhead": true,
-     "synopsisPending": false
+     "synopsisPending": false,
+     "followed": []
     },
     {
      "number": "12",
@@ -37892,7 +37984,8 @@
      "unsourced": false,
      "pastProgress": true,
      "spoilerAhead": true,
-     "synopsisPending": false
+     "synopsisPending": false,
+     "followed": []
     }
    ],
    "failed": null
@@ -39758,7 +39851,8 @@
      "unsourced": false,
      "pastProgress": true,
      "spoilerAhead": false,
-     "synopsisPending": false
+     "synopsisPending": false,
+     "followed": []
     },
     {
      "number": "2",
@@ -39777,7 +39871,8 @@
      "unsourced": false,
      "pastProgress": true,
      "spoilerAhead": true,
-     "synopsisPending": false
+     "synopsisPending": false,
+     "followed": []
     },
     {
      "number": "3",
@@ -39796,7 +39891,8 @@
      "unsourced": false,
      "pastProgress": true,
      "spoilerAhead": true,
-     "synopsisPending": false
+     "synopsisPending": false,
+     "followed": []
     },
     {
      "number": "4",
@@ -39815,7 +39911,8 @@
      "unsourced": false,
      "pastProgress": true,
      "spoilerAhead": true,
-     "synopsisPending": false
+     "synopsisPending": false,
+     "followed": []
     },
     {
      "number": "5",
@@ -39834,7 +39931,8 @@
      "unsourced": false,
      "pastProgress": true,
      "spoilerAhead": true,
-     "synopsisPending": false
+     "synopsisPending": false,
+     "followed": []
     },
     {
      "number": "6",
@@ -39853,7 +39951,8 @@
      "unsourced": false,
      "pastProgress": true,
      "spoilerAhead": true,
-     "synopsisPending": false
+     "synopsisPending": false,
+     "followed": []
     },
     {
      "number": "7",
@@ -39872,7 +39971,8 @@
      "unsourced": false,
      "pastProgress": true,
      "spoilerAhead": true,
-     "synopsisPending": false
+     "synopsisPending": false,
+     "followed": []
     },
     {
      "number": "8",
@@ -39891,7 +39991,8 @@
      "unsourced": false,
      "pastProgress": true,
      "spoilerAhead": true,
-     "synopsisPending": false
+     "synopsisPending": false,
+     "followed": []
     },
     {
      "number": "9",
@@ -39910,7 +40011,8 @@
      "unsourced": false,
      "pastProgress": true,
      "spoilerAhead": true,
-     "synopsisPending": false
+     "synopsisPending": false,
+     "followed": []
     },
     {
      "number": "10",
@@ -39929,7 +40031,8 @@
      "unsourced": false,
      "pastProgress": true,
      "spoilerAhead": true,
-     "synopsisPending": false
+     "synopsisPending": false,
+     "followed": []
     },
     {
      "number": "11",
@@ -39948,7 +40051,8 @@
      "unsourced": false,
      "pastProgress": true,
      "spoilerAhead": true,
-     "synopsisPending": false
+     "synopsisPending": false,
+     "followed": []
     },
     {
      "number": "12",
@@ -39967,7 +40071,8 @@
      "unsourced": false,
      "pastProgress": true,
      "spoilerAhead": true,
-     "synopsisPending": false
+     "synopsisPending": false,
+     "followed": []
     },
     {
      "number": "13",
@@ -39986,7 +40091,8 @@
      "unsourced": false,
      "pastProgress": true,
      "spoilerAhead": true,
-     "synopsisPending": false
+     "synopsisPending": false,
+     "followed": []
     }
    ],
    "failed": null
@@ -41845,7 +41951,8 @@
      "unsourced": false,
      "pastProgress": true,
      "spoilerAhead": false,
-     "synopsisPending": false
+     "synopsisPending": false,
+     "followed": []
     },
     {
      "number": "2",
@@ -41864,7 +41971,8 @@
      "unsourced": false,
      "pastProgress": true,
      "spoilerAhead": true,
-     "synopsisPending": false
+     "synopsisPending": false,
+     "followed": []
     },
     {
      "number": "3",
@@ -41883,7 +41991,8 @@
      "unsourced": false,
      "pastProgress": true,
      "spoilerAhead": true,
-     "synopsisPending": false
+     "synopsisPending": false,
+     "followed": []
     },
     {
      "number": "4",
@@ -41902,7 +42011,8 @@
      "unsourced": false,
      "pastProgress": true,
      "spoilerAhead": true,
-     "synopsisPending": false
+     "synopsisPending": false,
+     "followed": []
     },
     {
      "number": "5",
@@ -41921,7 +42031,8 @@
      "unsourced": false,
      "pastProgress": true,
      "spoilerAhead": true,
-     "synopsisPending": false
+     "synopsisPending": false,
+     "followed": []
     },
     {
      "number": "6",
@@ -41940,7 +42051,8 @@
      "unsourced": false,
      "pastProgress": true,
      "spoilerAhead": true,
-     "synopsisPending": false
+     "synopsisPending": false,
+     "followed": []
     },
     {
      "number": "7",
@@ -41959,7 +42071,8 @@
      "unsourced": false,
      "pastProgress": true,
      "spoilerAhead": true,
-     "synopsisPending": false
+     "synopsisPending": false,
+     "followed": []
     },
     {
      "number": "8",
@@ -41978,7 +42091,8 @@
      "unsourced": false,
      "pastProgress": true,
      "spoilerAhead": true,
-     "synopsisPending": false
+     "synopsisPending": false,
+     "followed": []
     },
     {
      "number": "9",
@@ -41997,7 +42111,8 @@
      "unsourced": false,
      "pastProgress": true,
      "spoilerAhead": true,
-     "synopsisPending": false
+     "synopsisPending": false,
+     "followed": []
     },
     {
      "number": "10",
@@ -42016,7 +42131,8 @@
      "unsourced": false,
      "pastProgress": true,
      "spoilerAhead": true,
-     "synopsisPending": false
+     "synopsisPending": false,
+     "followed": []
     },
     {
      "number": "11",
@@ -42035,7 +42151,8 @@
      "unsourced": false,
      "pastProgress": true,
      "spoilerAhead": true,
-     "synopsisPending": false
+     "synopsisPending": false,
+     "followed": []
     },
     {
      "number": "12",
@@ -42054,7 +42171,8 @@
      "unsourced": false,
      "pastProgress": true,
      "spoilerAhead": true,
-     "synopsisPending": false
+     "synopsisPending": false,
+     "followed": []
     }
    ],
    "failed": null
@@ -43872,7 +43990,8 @@
      "unsourced": false,
      "pastProgress": true,
      "spoilerAhead": false,
-     "synopsisPending": false
+     "synopsisPending": false,
+     "followed": []
     },
     {
      "number": "2",
@@ -43891,7 +44010,8 @@
      "unsourced": false,
      "pastProgress": true,
      "spoilerAhead": true,
-     "synopsisPending": false
+     "synopsisPending": false,
+     "followed": []
     },
     {
      "number": "3",
@@ -43910,7 +44030,8 @@
      "unsourced": false,
      "pastProgress": true,
      "spoilerAhead": true,
-     "synopsisPending": false
+     "synopsisPending": false,
+     "followed": []
     },
     {
      "number": "4",
@@ -43929,7 +44050,8 @@
      "unsourced": false,
      "pastProgress": true,
      "spoilerAhead": true,
-     "synopsisPending": false
+     "synopsisPending": false,
+     "followed": []
     },
     {
      "number": "5",
@@ -43948,7 +44070,8 @@
      "unsourced": false,
      "pastProgress": true,
      "spoilerAhead": true,
-     "synopsisPending": false
+     "synopsisPending": false,
+     "followed": []
     },
     {
      "number": "6",
@@ -43967,7 +44090,8 @@
      "unsourced": false,
      "pastProgress": true,
      "spoilerAhead": true,
-     "synopsisPending": false
+     "synopsisPending": false,
+     "followed": []
     },
     {
      "number": "7",
@@ -43986,7 +44110,8 @@
      "unsourced": false,
      "pastProgress": true,
      "spoilerAhead": true,
-     "synopsisPending": false
+     "synopsisPending": false,
+     "followed": []
     },
     {
      "number": "8",
@@ -44005,7 +44130,8 @@
      "unsourced": false,
      "pastProgress": true,
      "spoilerAhead": true,
-     "synopsisPending": false
+     "synopsisPending": false,
+     "followed": []
     },
     {
      "number": "9",
@@ -44024,7 +44150,8 @@
      "unsourced": false,
      "pastProgress": true,
      "spoilerAhead": true,
-     "synopsisPending": false
+     "synopsisPending": false,
+     "followed": []
     },
     {
      "number": "10",
@@ -44043,7 +44170,8 @@
      "unsourced": false,
      "pastProgress": true,
      "spoilerAhead": true,
-     "synopsisPending": false
+     "synopsisPending": false,
+     "followed": []
     },
     {
      "number": "11",
@@ -44062,7 +44190,8 @@
      "unsourced": false,
      "pastProgress": true,
      "spoilerAhead": true,
-     "synopsisPending": false
+     "synopsisPending": false,
+     "followed": []
     },
     {
      "number": "12",
@@ -44081,7 +44210,8 @@
      "unsourced": false,
      "pastProgress": true,
      "spoilerAhead": true,
-     "synopsisPending": false
+     "synopsisPending": false,
+     "followed": []
     },
     {
      "number": "13",
@@ -44100,7 +44230,8 @@
      "unsourced": false,
      "pastProgress": true,
      "spoilerAhead": true,
-     "synopsisPending": false
+     "synopsisPending": false,
+     "followed": []
     }
    ],
    "failed": null
@@ -44524,10 +44655,10 @@
       "availableOn": [],
       "availableAt": null,
       "progress": null,
-      "airingIn": "216000",
+      "airingIn": "219600",
       "airingEpisode": null,
       "nextEpisode": "6",
-      "nextAiringIn": "216000",
+      "nextAiringIn": "219600",
       "lastAired": null,
       "resume": null,
       "related": [],
@@ -44604,10 +44735,10 @@
       "availableOn": [],
       "availableAt": null,
       "progress": null,
-      "airingIn": "306000",
+      "airingIn": "309600",
       "airingEpisode": null,
       "nextEpisode": "4",
-      "nextAiringIn": "306000",
+      "nextAiringIn": "309600",
       "lastAired": null,
       "resume": null,
       "related": [],
@@ -44773,10 +44904,10 @@
       "availableOn": [],
       "availableAt": null,
       "progress": null,
-      "airingIn": "394200",
+      "airingIn": "397800",
       "airingEpisode": null,
       "nextEpisode": "6",
-      "nextAiringIn": "394200",
+      "nextAiringIn": "397800",
       "lastAired": null,
       "resume": null,
       "related": [],
@@ -44941,10 +45072,10 @@
       "availableOn": [],
       "availableAt": null,
       "progress": null,
-      "airingIn": "552600",
+      "airingIn": "556200",
       "airingEpisode": null,
       "nextEpisode": "4",
-      "nextAiringIn": "552600",
+      "nextAiringIn": "556200",
       "lastAired": null,
       "resume": null,
       "related": [],
@@ -45465,28 +45596,28 @@
      "id": "950004",
      "aired": {
       "episode": "5",
-      "ago": "388800"
+      "ago": "385200"
      }
     },
     {
      "id": "950005",
      "aired": {
       "episode": "3",
-      "ago": "298800"
+      "ago": "295200"
      }
     },
     {
      "id": "950006",
      "aired": {
       "episode": "5",
-      "ago": "210600"
+      "ago": "207000"
      }
     },
     {
      "id": "950014",
      "aired": {
       "episode": "3",
-      "ago": "52200"
+      "ago": "48600"
      }
     },
     {

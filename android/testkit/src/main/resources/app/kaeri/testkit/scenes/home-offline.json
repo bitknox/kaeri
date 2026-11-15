@@ -560,6 +560,15 @@
       }
      },
      {
+      "key": "SHOW_FOLLOWING",
+      "value": "on",
+      "change": {
+       "@type": "Steps",
+       "back": true,
+       "forward": false
+      }
+     },
+     {
       "key": "COMMENT_IMAGES",
       "value": "off",
       "change": {
