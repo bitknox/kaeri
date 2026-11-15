@@ -151,6 +151,7 @@ impl Rig {
             host: Arc::new(NoHost),
             power: Arc::new(ReportedPower::default()),
             offline: Default::default(),
+            sources: None,
         };
         let (tx, mut rx) = mpsc::unbounded_channel();
         let (_controls, commands) = mpsc::unbounded_channel::<PlayerCommand>();

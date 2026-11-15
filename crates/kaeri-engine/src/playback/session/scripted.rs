@@ -225,6 +225,7 @@ impl Rig {
             host: self.links.clone(),
             power: self.power.clone(),
             offline: Default::default(),
+            sources: None,
         };
         let (tx, mut rx) = mpsc::unbounded_channel();
         let playing = play(

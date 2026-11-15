@@ -549,6 +549,7 @@ fn machine(opener: Arc<dyn PlayerOpener>, services: &Services) -> playback::Mach
         host: services.host.clone(),
         power: services.power.clone(),
         offline: services.offline.clone(),
+        sources: Some(services.registry.clone()),
     }
 }
 

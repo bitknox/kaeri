@@ -203,6 +203,10 @@ pub struct Machine {
     /// Whether the device has no network path, as its front end last said: Stats for nerds'
     /// Network row.
     pub offline: Arc<std::sync::atomic::AtomicBool>,
+    /// The sources, for the one a stream came from when it transforms parts of its streams on
+    /// the way to the player: see [`kaeri_core::traits::Provider::stream_transforms`]. `None`
+    /// serves every stream as its host sent it.
+    pub sources: Option<kaeri_providers::ProviderRegistry>,
 }
 
 #[cfg(feature = "desktop")]
@@ -217,6 +221,7 @@ impl Machine {
             host,
             power: Arc::new(super::power::SystemPower),
             offline: Arc::default(),
+            sources: None,
         }
     }
 }
@@ -270,7 +275,7 @@ pub async fn play(
     tx: Outbox,
     mut commands: mpsc::UnboundedReceiver<PlayerCommand>,
 ) {
-    let Machine { opener, slot, host, power, offline } = machine;
+    let Machine { opener, slot, host, power, offline, sources } = machine;
     let Some(first) = streams.first() else {
         slot.release();
         // Its controls closed before its ending is said: see `Handoff::live`.
@@ -415,14 +420,25 @@ pub async fn play(
         let mut stream = streams[index].clone();
 
         // HLS goes through the stream proxy, which sends the stream's headers with every
-        // request and holds playback through a rate limit; segments pass through unchanged.
+        // request and holds playback through a rate limit; segments pass through unchanged
+        // unless the stream's source transforms them.
         // Held for the whole attempt — dropping it would kill the proxy mid
         // playback — and replaced on the next, so a stream that failed leaves nothing behind.
         let mut proxies = crate::playback::proxy::Proxies::default();
         if stream.kind == StreamKind::Hls {
             let original = stream.url.clone();
+            let source = sources
+                .as_ref()
+                .and_then(|sources| sources.get(&stream.provider_id))
+                .filter(|source| source.stream_transforms().any());
             stream.url = proxies
-                .route(&http, &original, &stream.headers, &proxy_token(&context, attempt))
+                .route(
+                    &http,
+                    &original,
+                    &stream.headers,
+                    source,
+                    &proxy_token(&context, attempt),
+                )
                 .await;
             // The seek bar's thumbnailer reads the same stream through its own entry, which
             // answers from what playback already fetched and never waits out a rate limit.
