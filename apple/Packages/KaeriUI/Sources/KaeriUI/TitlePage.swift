@@ -1495,3 +1495,12 @@ struct TitleToolbar: ToolbarContent {
         CastToolbarItem()
     }
 }
+
+extension TitlePage {
+    /// Whether the list already says the row above an iPhone page's episodes will be there: the
+    /// watched run folds away from three episodes watched, a long series has its range menu, and a
+    /// dubbed title has its dub line.
+    static func rowAboveEpisodes(_ entry: Entry, dub: String?) -> Bool {
+        (entry.progress?.done ?? 0) >= 3 || (entry.episodes ?? 0) > 100 || entry.dub != nil || dub != nil
+    }
+}

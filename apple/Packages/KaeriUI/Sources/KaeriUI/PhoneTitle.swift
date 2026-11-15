@@ -545,7 +545,7 @@ struct PhoneEpisodes: View {
             } else {
                 // The row above the episodes, where the list already says it will be there.
                 let folds = (entry.progress?.done ?? 0) >= 3
-                if Self.rowAboveEpisodes(entry, dub: dub) {
+                if TitlePage.rowAboveEpisodes(entry, dub: dub) {
                     Text(folds ? "Episodes 1 to 2 watched" : "Dubbed") // i18n-skip
                         .font(.ui(15))
                         .foregroundStyle(.haze)
@@ -775,12 +775,3 @@ extension TitleAction {
     }
 }
 #endif
-
-extension PhoneEpisodes {
-    /// Whether the list already says the row above the episodes will be there: the watched run
-    /// folds away from three episodes watched, a long series has its range menu, and a dubbed
-    /// title has its dub line.
-    static func rowAboveEpisodes(_ entry: Entry, dub: String?) -> Bool {
-        (entry.progress?.done ?? 0) >= 3 || (entry.episodes ?? 0) > 100 || entry.dub != nil || dub != nil
-    }
-}
