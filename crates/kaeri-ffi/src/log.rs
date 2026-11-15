@@ -113,9 +113,11 @@ mod tests {
         log_line(FfiLogLevel::Info, "player".into(), "opened in 12 ms".into());
         // The writer is a thread of its own: give it the line.
         std::thread::sleep(std::time::Duration::from_millis(200));
+        // The player log's mirror sits beside it, made the first time a line comes in.
         let written: Vec<_> = std::fs::read_dir(dir.path().join("logs"))
             .expect("the logs directory")
             .map(|entry| entry.expect("an entry").file_name().to_string_lossy().into_owned())
+            .filter(|name| name != kaeri_engine::player_log::FILE)
             .collect();
         assert_eq!(written.len(), 1, "{written:?}");
         assert!(written[0].starts_with("app.log."), "{written:?}");

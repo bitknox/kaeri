@@ -505,7 +505,7 @@ impl PlayerLog {
             state.load(now_ms);
             (state.changes, state.stats.clone())
         };
-        if let Some((at, stats)) = kept.filter(|(at, _)| *at == changes) {
+        if let Some((_, stats)) = kept.filter(|(at, _)| *at == changes) {
             return PlayerLogStats { file_name, ..stats };
         }
         let (playbacks, names) = self.snapshot(zone, now_ms);
@@ -1173,7 +1173,10 @@ mod tests {
         let text = log.text(&BugReport::default(), &utc(), T0);
         assert!(!text.contains("Stardust"), "titles are removed");
         assert!(!text.contains("127.0.0.1"), "addresses are cut");
-        assert!(text.contains("── Playback 1 of 3 · Episode 3"), "newest first");
+        // Numbered oldest first, listed newest first.
+        let newest = text.find("── Playback 3 of 3 · Episode 3").expect("the newest playback");
+        let oldest = text.find("── Playback 1 of 3 · Episode 1").expect("the oldest playback");
+        assert!(newest < oldest, "newest first");
         assert!(text.contains("the stream stopped"));
         log.clear(T0);
         assert_eq!(log.stats(&utc(), T0).playbacks, 0, "zero is the empty state");
