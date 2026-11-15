@@ -15,9 +15,11 @@ import app.kaeri.engine.model.NoticeKind
 import app.kaeri.engine.model.ReadWeekDay
 import app.kaeri.engine.model.ReadWeekEntry
 import app.kaeri.engine.model.ReadingEvent
+import app.kaeri.engine.model.ReadingHomeView
 import app.kaeri.store.AppStore
 import app.kaeri.store.FixtureScene
 import kotlin.math.abs
+import kotlinx.coroutines.launch
 import org.junit.Test
 import org.robolectric.annotation.Config
 
@@ -101,10 +103,14 @@ class EinkLargeHomeShots : ReadingShotHarness() {
     )
 
     /** Continue and This week made from Home's discovery rows, renamed, as a reader with a full shelf has them. */
-    private fun fill(store: AppStore) {
-        val view = store.reading.home.value ?: return
+    private fun fill(store: AppStore) = keep(store, done = { filled(it) }) { view -> filledFrom(view) }
+
+    /** Whether [view] already has the made-up Continue series. */
+    private fun filled(view: ReadingHomeView) = view.continueReading.any { it.title == CONTINUE_TITLES.last() }
+
+    private fun filledFrom(view: ReadingHomeView): ReadingHomeView? {
         val art = view.rows.flatMap { it.tiles }.distinctBy { it.work }
-        if (art.isEmpty()) return
+        if (art.isEmpty()) return null
         val continuing = view.continueReading + CONTINUE_TITLES.mapIndexed { i, title -> art[i % art.size].copy(title = title) }
         val now = System.currentTimeMillis() / 1000
         val entries = NEW_TITLES.mapIndexed { i, title ->
@@ -112,7 +118,20 @@ class EinkLargeHomeShots : ReadingShotHarness() {
         }
         val today = view.week.firstOrNull { it.today } ?: ReadWeekDay(day = now - now % 86_400, today = true, entries = emptyList())
         val week = listOf(today.copy(entries = today.entries + entries)) + view.week.filter { !it.today }
-        store.apply(Event.Reading(ReadingEvent.Home(view.copy(continueReading = continuing, week = week))))
+        return view.copy(continueReading = continuing, week = week)
+    }
+
+    /**
+     * Applies [change] to Home now, and again to any Home the engine sends after it that is not
+     * [done]. The engine sends Home as its last part lands and once more as its launch work ends,
+     * so a change applied between the two would be taken away.
+     */
+    private fun keep(store: AppStore, done: (ReadingHomeView) -> Boolean, change: (ReadingHomeView) -> ReadingHomeView?) {
+        fun put(view: ReadingHomeView) {
+            change(view)?.let { store.apply(Event.Reading(ReadingEvent.Home(it))) }
+        }
+        store.reading.home.value?.let(::put)
+        scope.launch { store.reading.home.collect { view -> if (view != null && !done(view)) put(view) } }
     }
 
     /**
@@ -122,11 +141,9 @@ class EinkLargeHomeShots : ReadingShotHarness() {
     private fun quietHome(name: String) = shoot(
         name, FixtureScene.READING_HOME, Destination.Home, medium = KaeriIsFor.READ, eink = EinkLook(),
         then = { store ->
-            fill(store)
-            val view = store.reading.home.value
-            if (view != null) {
-                val since = System.currentTimeMillis() / 1000 - 3600
-                store.apply(Event.Reading(ReadingEvent.Home(view.copy(week = emptyList(), offline = true, offlineSince = since))))
+            val since = System.currentTimeMillis() / 1000 - 3600
+            keep(store, done = { it.offline && filled(it) }) { view ->
+                (if (filled(view)) view else filledFrom(view))?.copy(week = emptyList(), offline = true, offlineSince = since)
             }
         },
         after = {
