@@ -114,7 +114,11 @@ enum EpisodeFacts {
     /// length, or what is left of it or Watched, then when it aired, then what marks it. On phones
     /// the episode's number leads it ("E7 · 14 min left"), where the row has no column for it, unless
     /// the row has no title of its own and its title is the number already.
-    static func line(_ row: EpisodeRow, current: Bool, minutesLeft: Int?, leadsWithNumber: Bool) -> String {
+    ///
+    /// An aired episode no source lists says so after its date: within a day of airing the date
+    /// is the time since ("Aired 25 min ago · Not in your sources yet"), for a week "Not in your
+    /// sources yet", then "No source has this episode".
+    static func line(_ row: EpisodeRow, current: Bool, minutesLeft: Int?, leadsWithNumber: Bool, now: Date = .now) -> String {
         var parts: [String] = []
         if leadsWithNumber, row.title != nil { parts.append(L.episodeShort(episode: Int(episode: row.number))) }
         if row.completed {
@@ -125,12 +129,30 @@ enum EpisodeFacts {
             parts.append(L.episodeFactsLength(minutes: max(1, Int((Double(seconds) / 60).rounded()))))
         }
         // The length and the date read as one part: the first part and then Aired.
-        if let aired = row.airsDate, !row.isUnaired() { parts.append(L.episodeAired(date: day(aired))) }
+        if let aired = row.airsDate, !row.isUnaired(now: now) {
+            parts.append(row.unsourced ? airedAgo(row, aired: aired, now: now) : L.episodeAired(date: day(aired)))
+        }
         if row.kind == .filler { parts.append(L.episodeFiller) }
-        if row.unsourced { parts.append(L.episodeUnsourced) }
+        if row.unsourced { parts.append(unsourced(row, now: now)) }
         guard var line = parts.first else { return "" }
         for part in parts.dropFirst() { line = L.episodeFactsJoin(first: line, second: part) }
         return line
+    }
+
+    /// When an unsourced episode aired: "Aired 25 min ago", "Aired 3 h ago", then the date.
+    static func airedAgo(_ row: EpisodeRow, aired: Date, now: Date) -> String {
+        guard let at = row.airsAt else { return L.episodeAired(date: day(aired)) }
+        switch KaeriKit.airedAgo(airedAt: at, now: MissingWords.unix(now)) {
+        case .minutes(let minutes): return L.episodeRowAiredAgo(ago: L.timeAgo(span: L.timeMinutes(minutes: Int(minutes))))
+        case .hours(let hours): return L.episodeRowAiredAgo(ago: L.timeAgo(span: L.timeHours(hours: Int(hours))))
+        case .onDate: return L.episodeAired(date: day(aired))
+        }
+    }
+
+    /// "Not in your sources yet" for a week after airing, "No source has this episode" after it
+    /// or with no airing time.
+    static func unsourced(_ row: EpisodeRow, now: Date) -> String {
+        unsourcedYet(airedAt: row.airsAt, now: MissingWords.unix(now)) ? L.episodeUnsourcedYet : L.episodeUnsourced
     }
 
     /// "21 May 2014", in the person's language.

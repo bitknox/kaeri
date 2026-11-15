@@ -12,7 +12,8 @@ extension EngineLaunch {
     /// server saved), `library` (a folder of episodes added), `storeowner` (a plugin store of
     /// yours, with invites in use, used up and cancelled), `storeinvited` (a link for five people
     /// to join), or one of the demo and crash scenes: `demoonly`, `demoplayed`, `demoandstore`,
-    /// `demoremoved`, `subtitlestyled`, `crashoff`, `crashsaved`, `crashheld`.
+    /// `demoremoved`, `subtitlestyled`, `crashoff`, `crashsaved`, `crashheld`, or `missingepisode`
+    /// (900002's episode 6 aired 25 minutes ago and no source lists it yet).
     public static let sceneArgument = "-KaeriScene"
 
     /// The launch argument that turns on the Home world, `-KaeriHomeWorld 1`: about ten
@@ -77,6 +78,7 @@ extension EngineLaunch {
         case "sourcesbusy": return .sourcesBusy
         case "available": return .available
         case "together": return .together
+        case "missingepisode": return .missingEpisode
         case "playing": return .playing(media: media(arguments: arguments))
         case "storeowner": return .storeOwner
         case "storeinvited": return .storeInvited

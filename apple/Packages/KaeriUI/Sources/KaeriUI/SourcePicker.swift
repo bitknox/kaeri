@@ -186,14 +186,42 @@ enum PickerType {
 enum SourcePickerWords {
     /// A source's coverage ("6 of 13 episodes"), or why it has none. A failure says what the
     /// source itself said, as it said it.
-    static func detail(_ option: SourceOption) -> String {
+    static func detail(_ option: SourceOption, now: Date = .now) -> String {
         switch option.note {
-        case nil: L.sourcePickerCoverage(covered: Int(option.covered), of: Int(option.of))
+        case nil: coverage(option, now: now)
         case .off: L.sourceNoteOff
         case .resting: L.sourceNoteResting
         case .gone: L.sourceNoteGone
         case .ambiguous: L.sourceNoteAmbiguous
         case .failed(let reason): reason
+        }
+    }
+
+    /// What a source has of the title: "Episodes 1 to 6", "Episodes 1 to 5. Not 6 yet", "5 of 6
+    /// episodes. Not 3", or the count.
+    static func coverage(_ option: SourceOption, now: Date) -> String {
+        switch coverageLine(option: option, now: Int64(now.timeIntervalSince1970)) {
+        case .episodes(let first, let last, let count)?:
+            L.sourcePickerEpisodes(count: Int(count), first: Int(first), last: Int(last))
+        case .notYet(let first, let last, let lacking)?:
+            L.sourcePickerEpisodesNotYet(first: Int(first), last: Int(last), missing: words(lacking))
+        case .not(let first, let last, let lacking)?:
+            L.sourcePickerEpisodesNot(first: Int(first), last: Int(last), missing: words(lacking))
+        case .gap(let covered, let of, let lacking)?:
+            L.sourcePickerCoverageMissing(covered: Int(covered), of: Int(of), missing: words(lacking))
+        case .count(let covered, let of)?:
+            L.sourcePickerCoverage(covered: Int(covered), of: Int(of))
+        case nil:
+            L.sourcePickerCoverage(covered: Int(option.covered), of: Int(option.of))
+        }
+    }
+
+    /// The episodes a source lacks: "6", "5 or 6", "4 to 6".
+    static func words(_ lacking: Lacking) -> String {
+        switch lacking {
+        case .one(let episode): String(episode)
+        case .pair(let first, let second): L.sourcePickerMissingPair(a: Int(first), b: Int(second))
+        case .range(let first, let last): L.sourcePickerMissingRange(first: Int(first), last: Int(last))
         }
     }
 

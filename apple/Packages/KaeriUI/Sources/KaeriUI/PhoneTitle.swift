@@ -84,46 +84,52 @@ struct PhoneTitle: View {
                 .padding(.top, art.isCompact || typeSize.isAccessibilitySize ? 8 : -60)
 
                 VStack(alignment: .leading, spacing: 16) {
-                    // No source has it: nothing to play, and the way to one in Play's place.
-                    if let main = serviceMain {
-                        Button { store.openService(entry.id, link: main, episode: nil) } label: {
-                            HStack(spacing: 8) {
-                                Text(L.licensedWatchOn(service: main.service))
-                                Image(systemName: "arrow.up.right").font(.ui(13, weight: .semibold))
-                            }
-                            .frame(maxWidth: .infinity)
-                        }
-                        .buttonStyle(PrimaryCapsuleStyle(height: 50, fontSize: 17))
-                        .accessibilityHint(L.licensedOpensOutside)
-                    } else if action.playable, store.match.asks(entry.id) {
-                        ChooseMatchButton(id: entry.id, height: 50, fontSize: 17, fills: true)
-                        MatchUncertainLine(id: entry.id, font: .ui(14))
-                    } else if action.playable, store.titles.unlisted(entry.id) {
-                        AddSourceButton(sentence: true, height: 50, fontSize: 17, fills: true)
-                    } else if action.playable {
-                        Button {
-                            action.play(entry.id, store: store, navigator: navigator)
-                        } label: {
-                            HStack(spacing: 8) {
-                                if store.tv.cast.connected {
-                                    CastButtonGlyph(look: .connected, size: 17, color: Palette.ground)
-                                } else {
-                                    Image(systemName: "play.fill").font(.ui(13))
+                    // An aired episode no source lists says so in Play's place, with Check
+                    // again (MissingSlot).
+                    MissingSlot(entry: entry, action: action, metrics: .phone, allowed: serviceMain == nil) {
+                        // No source has it: nothing to play, and the way to one in Play's place.
+                        if let main = serviceMain {
+                            Button { store.openService(entry.id, link: main, episode: nil) } label: {
+                                HStack(spacing: 8) {
+                                    Text(L.licensedWatchOn(service: main.service))
+                                    Image(systemName: "arrow.up.right").font(.ui(13, weight: .semibold))
                                 }
-                                // One line that shrinks a little for a longer translation; wrapped at the
-                                // accessibility sizes. Never wider than the screen.
-                                Text(action.sentence)
-                                    .lineLimit(typeSize.isAccessibilitySize ? nil : 1)
-                                    .minimumScaleFactor(typeSize.isAccessibilitySize ? 1 : 0.7)
+                                .frame(maxWidth: .infinity)
                             }
-                            .frame(maxWidth: .infinity)
+                            .buttonStyle(PrimaryCapsuleStyle(height: 50, fontSize: 17))
+                            .accessibilityHint(L.licensedOpensOutside)
+                        } else if action.playable, store.match.asks(entry.id) {
+                            ChooseMatchButton(id: entry.id, height: 50, fontSize: 17, fills: true)
+                            MatchUncertainLine(id: entry.id, font: .ui(14))
+                        } else if action.playable, store.titles.unlisted(entry.id) {
+                            AddSourceButton(sentence: true, height: 50, fontSize: 17, fills: true)
+                        } else if action.playable {
+                            Button {
+                                action.play(entry.id, store: store, navigator: navigator)
+                            } label: {
+                                HStack(spacing: 8) {
+                                    if store.tv.cast.connected {
+                                        CastButtonGlyph(look: .connected, size: 17, color: Palette.ground)
+                                    } else {
+                                        Image(systemName: "play.fill").font(.ui(13))
+                                    }
+                                    // One line that shrinks a little for a longer translation; wrapped at the
+                                    // accessibility sizes. Never wider than the screen.
+                                    Text(action.sentence)
+                                        .lineLimit(typeSize.isAccessibilitySize ? nil : 1)
+                                        .minimumScaleFactor(typeSize.isAccessibilitySize ? 1 : 0.7)
+                                }
+                                .frame(maxWidth: .infinity)
+                            }
+                            .buttonStyle(PrimaryCapsuleStyle(height: 50, fontSize: 17))
+                            .contextMenu { FromStartItem(id: entry.id, action: action) }
+                            .onScrollVisibilityChange(threshold: 0.2) { visible in mainButtonGone = !visible }
+                        } else {
+                            // Still to air: when, in the button's place.
+                            AirsStatus(text: action.sentence, height: 50, fontSize: 17, fills: true)
                         }
-                        .buttonStyle(PrimaryCapsuleStyle(height: 50, fontSize: 17))
-                        .contextMenu { FromStartItem(id: entry.id, action: action) }
-                        .onScrollVisibilityChange(threshold: 0.2) { visible in mainButtonGone = !visible }
-                    } else {
-                        // Still to air: when, in the button's place.
-                        AirsStatus(text: action.sentence, height: 50, fontSize: 17, fills: true)
+                    } trailing: {
+                        EmptyView()
                     }
                     // While private: why, and what it means, 10 under the main button.
                     if let line = store.privacy.line(show: entry.id) {
@@ -575,7 +581,9 @@ struct PhoneEpisodeRow: View {
                     withAnimation(.standard) { navigator.showAllSynopses(entry.id, !shown) }
                 }
             }
-            rowBody
+            // Once a source lists the episode, the row lifts: the two crossfade in place.
+            ZStack { rowBody }
+                .animation(.reveal, value: row.unsourced)
             DiscussionLine(entry: entry, row: row, inset: 156)
         }
         .episodeSwipes(entry, row)

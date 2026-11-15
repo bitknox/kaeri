@@ -336,6 +336,8 @@ final class AppDelegate: NSObject {
         if let scene = TogetherScene.named() {
             ready = await store.party.stage(scene, store: store) && ready
         }
+        // A screenshot of a missing episode: Check again pressed, and its answer in.
+        ready = await store.stageCheckAgain() && ready
         #endif
         if ready {
             print("KAERI_READY")
