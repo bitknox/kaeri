@@ -51,17 +51,17 @@ struct PhoneTitle: View {
         // decided once the page is here; a title with none, or with trailers held, keeps today's.
         let mayPlay = !art.isCompact && store.trailerMayAutoplay(entry)
         let measured = trailerPlace.width > 0
-        let room = measured && !art.isCompact
+        let made = measured && !art.isCompact
             && (trailerRoom.flatMap { $0.id == entry.id ? $0.room : nil } ?? mayPlay)
-        let here = measured && TitlePage.pageHere(entry.id, in: store)
+        let here = measured && TitlePage.trailerKnown(entry.id, in: store)
         let video = TrailerLayout.phoneVideo(width: trailerPlace.width)
-        let band = room ? TrailerLayout.phoneBand(width: trailerPlace.width, barBottom: trailerPlace.barBottom)
+        let band = made ? TrailerLayout.phoneBand(width: trailerPlace.width, barBottom: trailerPlace.barBottom)
             : TrailerLayout.phoneBanner
         // A list, so the episodes take their swipes (native-ux), drawn as the scroll view was.
         ScrollViewReader { reader in
         List {
             VStack(alignment: .leading, spacing: 0) {
-                header(entry: entry, art: art, room: room, band: band, video: video)
+                header(entry: entry, art: art, room: made, band: band, video: video)
 
                 VStack(alignment: .leading, spacing: 16) {
                     // No source has it: nothing to play, and the way to one in Play's place.
@@ -257,7 +257,7 @@ struct PhoneTitle: View {
             pickers.offset = offset
         }
         .modifier(PhoneTitleTrailer(
-            visit: visit, entry: entry, room: room, here: here, mayPlay: mayPlay, decided: $trailerRoom
+            visit: visit, entry: entry, room: made, here: here, mayPlay: mayPlay, decided: $trailerRoom
         ))
         .nudgeableScroll()
         .ignoresSafeArea(edges: art.isCompact ? [] : .top)
@@ -476,7 +476,10 @@ private struct PhoneTitleTrailer: ViewModifier {
             }
             .onChange(of: scrolledAway) { _, now in visit.scrolledAway(now) }
             .onChange(of: TitlePage.TrailerRoom(id: entry.id, room: here), initial: true) {
-                if here, decided?.id != entry.id { decided = TitlePage.TrailerRoom(id: entry.id, room: mayPlay) }
+                if here, decided?.id != entry.id {
+                    decided = TitlePage.TrailerRoom(id: entry.id, room: mayPlay)
+                    AppLog.info("trailer", "\(entry.id): \(mayPlay ? "room for a trailer" : "banner only")")
+                }
             }
             .titleTrailer(visit: visit, entry: entry, room: room, mayPlay: mayPlay)
     }

@@ -35,6 +35,9 @@ public final class AppStore {
     /// Whether trailers may start by themselves now, as the engine says it from the Play trailers
     /// setting, the network and what the device says of itself (`Event::Autoplay`).
     public private(set) var trailersMayAutoplay = false
+    /// Whether the engine has said that yet: a title page decides its room for a trailer once
+    /// it has.
+    public private(set) var autoplayKnown = false
 
     public let titles = TitleCache()
     public let continuing = ContinueModel()
@@ -1099,6 +1102,7 @@ public final class AppStore {
 
         case .autoplay(let view):
             trailersMayAutoplay = view.trailers
+            autoplayKnown = true
             AppLog.info("store", view.trailers ? "trailers may play" : "trailers held: \(String(describing: view.heldBy))")
 
         case .settings(let view):

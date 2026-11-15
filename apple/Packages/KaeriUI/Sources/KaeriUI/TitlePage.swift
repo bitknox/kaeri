@@ -214,7 +214,7 @@ struct TitlePage: View {
         // once the page is here; a title with none, or with trailers held, keeps today's banner.
         let mayPlay = !art.isCompact && store.trailerMayAutoplay(entry)
         let room = !art.isCompact && (trailerRoom.flatMap { $0.id == entry.id ? $0.room : nil } ?? mayPlay)
-        let here = ready && Self.pageHere(entry.id, in: store)
+        let here = ready && Self.trailerKnown(entry.id, in: store)
         let away = scrolledAway || navigator.typedEpisode?.title == entry.id
         ScrollView {
             // Inside the scroll view, which the reader's proxy finds as the one holding the
@@ -323,7 +323,10 @@ struct TitlePage: View {
         }
         .onChange(of: away) { _, now in visit.scrolledAway(now) }
         .onChange(of: TrailerRoom(id: entry.id, room: here), initial: true) {
-            if here, trailerRoom?.id != entry.id { trailerRoom = TrailerRoom(id: entry.id, room: mayPlay) }
+            if here, trailerRoom?.id != entry.id {
+                trailerRoom = TrailerRoom(id: entry.id, room: mayPlay)
+                AppLog.info("trailer", "\(entry.id): \(mayPlay ? "room for a trailer" : "banner only")")
+            }
         }
         .titleTrailer(visit: visit, entry: entry, room: room, mayPlay: mayPlay)
         #if os(iOS)
@@ -401,6 +404,12 @@ struct TitlePage: View {
     /// A season whose header the engine kept is here at once: its words, facts, synopsis and art
     /// are the page's own, so the page crossfades to it on the click, and its rows crossfade in
     /// from their placeholders when the table comes.
+    /// Whether the page can decide its room for a trailer: the title's full record, which says
+    /// whether it has one, and the engine's word on whether trailers may play here.
+    static func trailerKnown(_ id: AnilistId, in store: AppStore) -> Bool {
+        store.titles.detailed.contains(id) && store.autoplayKnown
+    }
+
     static func pageHere(_ id: AnilistId, in store: AppStore) -> Bool {
         store.titles.detailed.contains(id) && store.titles.episodes[id] != nil
             || store.titles.headed.contains(id)
