@@ -128,14 +128,14 @@ pub fn unstage(shell: &Rc<Shell>, shot: &str) {
         return;
     }
     shell.ctx.notices.dismiss_each();
-    for button in [
-        mapped_badge(shell.ctx.window.upcast_ref()),
-        mapped_more(shell.ctx.window.upcast_ref()),
-    ]
-    .into_iter()
-    .flatten()
-    {
+    // Whichever menu is open: the main menu, the badge's popover or a title's More.
+    while let Some(button) = find(shell.ctx.window.upcast_ref(), &|button| {
+        button.popover().is_some_and(|p| p.is_visible())
+    }) {
         button.popdown();
+        if let Some(popover) = button.popover() {
+            popover.set_visible(false);
+        }
     }
     if shot.starts_with("private-title") {
         let _ = WidgetExt::activate_action(&shell.ctx.window, "win.back", None);
