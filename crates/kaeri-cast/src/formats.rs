@@ -93,11 +93,12 @@ impl VideoFormat {
 }
 
 /// How tall the picture is, as a TV's answer differs by it: up to 720 lines, up to 1080, or
-/// more. A height nobody read is taken as 1080, what most sources send.
+/// more. A height nobody read is taken as 1080, what most sources send. A 1080-line picture
+/// coded in whole macroblocks is 1088 lines tall, and some files say so.
 pub fn height_class(height: Option<u32>) -> u32 {
     match height.unwrap_or(1080) {
         0..=720 => 720,
-        721..=1080 => 1080,
+        721..=1088 => 1080,
         _ => 2160,
     }
 }

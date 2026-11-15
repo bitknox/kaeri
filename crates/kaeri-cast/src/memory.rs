@@ -23,7 +23,10 @@ pub const REFUSAL_KEPT: i64 = 30 * 24 * 60 * 60;
 ///
 /// 2: a segment its host names as an image is served as the media it is, and a refusal after
 /// bytes no receiver plays blames nothing. Under 1, both counted against the video codec.
-pub const JUDGEMENT: u32 = 2;
+///
+/// 3: a master that declares HE-AAC is relayed declaring AAC-LC. Under 2, a Chromecast's
+/// refusal of the HE-AAC declaration counted against H.264 at that height.
+pub const JUDGEMENT: u32 = 3;
 
 /// What happened when a TV was handed one format part, and when.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
