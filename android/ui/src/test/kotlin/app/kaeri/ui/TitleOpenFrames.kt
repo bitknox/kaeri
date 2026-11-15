@@ -23,7 +23,10 @@ import org.robolectric.annotation.Config
 import org.robolectric.annotation.GraphicsMode
 import app.kaeri.design.KaeriTheme
 import app.kaeri.engine.core.AnilistId
+import app.kaeri.engine.model.AvailabilityCase
 import app.kaeri.engine.model.Event
+import app.kaeri.engine.model.ServiceLink
+import app.kaeri.engine.model.TitleAvailability
 import app.kaeri.store.AppClock
 import app.kaeri.store.AppStore
 import app.kaeri.store.HAS_TESTING_ENGINE
@@ -80,14 +83,24 @@ abstract class TitleOpenRecording(private val device: String) {
         val page = recorded.events.filterIsInstance<Event.Detail>().last { it.v1.id == TITLE && it.v1.detail?.partial != true }
         val rows = recorded.events.filterIsInstance<Event.Episodes>().last { it.id == TITLE }
         // Everything else the scene knew, the lists with this title's row among them.
-        store.apply(recorded.events.filter { !(it is Event.Detail && it.v1.id == TITLE) && !(it is Event.Episodes && it.id == TITLE) })
+        store.apply(
+            recorded.events.filter {
+                !(it is Event.Detail && it.v1.id == TITLE) && !(it is Event.Episodes && it.id == TITLE) && !(it is Event.Availability && it.v1.id == TITLE)
+            },
+        )
+        // Where it is listed comes with its page, as the engine answers both from one fetch.
+        val listed = TitleAvailability(
+            id = TITLE,
+            case = AvailabilityCase.PLAYS_ALSO_ON,
+            alsoOn = listOf(ServiceLink(service = "Lantern Library", url = "https://lantern.example/title")), // i18n-skip
+        )
         compose.setContent { KaeriTheme { AppRoot(store, startTitle = TITLE) } }
         compose.mainClock.autoAdvance = false
         val dir = File(out, "$device-$name").apply { deleteRecursively(); mkdirs() }
         var now = 0L
         while (now <= clipMs) {
             if (now == episodesMs) compose.runOnUiThread { store.apply(listOf(rows)) }
-            if (now == detailMs) compose.runOnUiThread { store.apply(listOf(Event.Detail(page.v1))) }
+            if (now == detailMs) compose.runOnUiThread { store.apply(listOf(Event.Detail(page.v1), Event.Availability(listed))) }
             if (now % (2 * FRAME_MS) == 0L) {
                 val frame = compose.onRoot().captureToImage().asAndroidBitmap()
                 File(dir, "frame-%04d.png".format(now)).outputStream().use { frame.compress(android.graphics.Bitmap.CompressFormat.PNG, 100, it) }
