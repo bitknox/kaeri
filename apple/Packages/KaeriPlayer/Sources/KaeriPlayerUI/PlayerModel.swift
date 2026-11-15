@@ -107,6 +107,8 @@ public final class PlayerModel {
             configuration.shaderCache = shaderCache
         }
         configuration.options = options
+        // mpv's lines from info up, for the player log (see `handle`).
+        configuration.logLevel = "info"
         // The demuxer's audio tap for finding skip times: the engine's callback, on this core.
         configuration.audioTap = audioTapCallback()
         return MpvClient(configuration: configuration)
@@ -986,6 +988,8 @@ public final class PlayerModel {
 
     private func handle(_ event: MpvEvent, from backend: any PlayerBackend) {
         guard backend === self.backend else { return }
+        // Every line from info up goes to the player log, which keeps them by playback.
+        if case .log(let line) = event { AppLog.mpv(level: line.level, module: line.prefix, line.text) }
         switch event {
         case .startFile(let entry):
             mpvSaid = []

@@ -75,4 +75,26 @@ private func formIds() throws -> Set<String> {
         let context = BugContext(kind: "load", message: String(repeating: "word ", count: 5000))
         #expect(BugReports.url(device: phone, providers: [], context: context).absoluteString.utf8.count <= 7_500)
     }
+
+    @Test func theSummarySaysTheLogIsAttachedOnlyWhenItIs() {
+        let without = parameters(BugReports.url(device: phone, providers: [], context: nil))["diagnostics"] ?? ""
+        let with = parameters(BugReports.url(device: phone, providers: [], context: nil, playerLog: true))["diagnostics"] ?? ""
+        #expect(!without.contains("Player log"))
+        #expect(with.contains("Player log: attached by hand"))
+    }
+
+    @Test func aPlaybackErrorStartsWithThePlayerLogTicked() {
+        let playback = BugContext(kind: BugReports.playbackError, message: "no stream", title: "Stardust Wayfarer")
+        let message = BugContext(kind: "message", message: "Couldn't reach a source")
+        #expect(BugReports.playerLogStartsTicked(BugReports.report(device: phone, providers: [], context: playback, crashes: [])))
+        #expect(!BugReports.playerLogStartsTicked(BugReports.report(device: phone, providers: [], context: message, crashes: [])))
+        #expect(!BugReports.playerLogStartsTicked(BugReports.report(device: phone, providers: [], context: nil, crashes: [])))
+    }
+
+    @Test func thePlayerLogFileStartsWithTheSummaryAndNeverTheTitle() async {
+        let context = BugContext(kind: BugReports.playbackError, message: "Stardust Wayfarer stalled", title: "Stardust Wayfarer")
+        let text = await BugReports.playerLogText(BugReports.report(device: phone, providers: [], context: context, crashes: []))
+        #expect(text.contains("iOS 26.1, phone"))
+        #expect(!text.contains("Stardust Wayfarer"))
+    }
 }
