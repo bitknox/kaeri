@@ -8135,6 +8135,21 @@ pub fn tui_read_keys_next() -> String {
     text("tui-read-keys-next", &[])
 }
 
+/// A row of the reader settings: the space between a webtoon strip's images, None or Small.
+pub fn tui_reader_setting_strip_gap() -> String {
+    text("tui-reader-setting-strip-gap", &[])
+}
+
+/// A choice for how a page is fitted in the reader settings: the page fills the window's height and moves sideways when it is wider than the window.
+pub fn tui_reader_value_height() -> String {
+    text("tui-reader-value-height", &[])
+}
+
+/// After the page count in the reader's status line while the page fills the window's height and moves sideways.
+pub fn tui_reader_fit_height() -> String {
+    text("tui-reader-fit-height", &[])
+}
+
 /// AniList's name, in the line that says it is still being asked.
 pub fn tui_read_anilist() -> String {
     text("tui-read-anilist", &[])

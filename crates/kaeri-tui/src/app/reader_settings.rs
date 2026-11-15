@@ -2,10 +2,11 @@
 //! the place a change is kept, changed in place with the arrows and applied at once.
 //!
 //! A light novel has its mode, the text width, the line spacing and justify, all under the
-//! novels on this computer as the board groups them. Manga has its
-//! mode and direction, fit, page layout, spreads, crop borders, the strip's width and skipping
-//! credit pages. Font, size, look, colour and tap zones follow the terminal or need a touch
-//! screen; the overlay says so in a note rather than offering rows that would do nothing.
+//! novels on this computer as the board groups them. Manga has its mode and direction, fit,
+//! page layout, spreads, crop borders, skipping credit pages and the strip's gap, the board's
+//! rows under the engine's scopes. Font, size, look, colour and tap zones follow the terminal
+//! or need a touch screen; the overlay says so in a note rather than offering rows that would
+//! do nothing.
 
 use kaeri_core::media::Medium;
 use kaeri_i18n::t;
@@ -18,14 +19,14 @@ use kaeri_model::{
 
 use super::{
     App, OPEN_AMOUNT, OPEN_SPACING, TEXT_MARGIN, TEXT_WIDTH, TEXT_WIDTH_MIN, TEXT_WIDTH_STEP,
-    TIGHT_AMOUNT, strip_cols,
+    TIGHT_AMOUNT,
 };
 use crate::{keymap::Action, nav::Overlay};
 
 /// The settings a light novel offers in the terminal, in the board's order.
 const NOVEL_KEYS: &[Key] = &[Key::Mode, Key::TextWidth, Key::LineSpacing, Key::Justify];
 
-/// The settings manga offers in the terminal.
+/// The settings manga offers in the terminal, in the board's order.
 const MANGA_KEYS: &[Key] = &[
     Key::Mode,
     Key::Direction,
@@ -33,13 +34,9 @@ const MANGA_KEYS: &[Key] = &[
     Key::PageLayout,
     Key::Spreads,
     Key::CropBorders,
-    Key::StripWidth,
     Key::SkipCreditPages,
+    Key::StripGap,
 ];
-
-/// The strip's width moves a tenth of the window at a time, from three tenths to all of it.
-const STRIP_STEP: f64 = 0.1;
-const STRIP_LEAST: f64 = 0.3;
 
 /// Where a change to a row is kept, which is the heading the row sits under.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
@@ -99,7 +96,7 @@ fn label(key: Key) -> String {
         Key::PageLayout => t::tui_reader_setting_page_layout(),
         Key::Spreads => t::tui_reader_setting_spreads(),
         Key::CropBorders => t::tui_reader_setting_crop(),
-        Key::StripWidth => t::tui_reader_setting_strip_width(),
+        Key::StripGap => t::tui_reader_setting_strip_gap(),
         Key::SkipCreditPages => t::settings_skip_credits(),
         Key::TextWidth => t::tui_reader_setting_text_width(),
         Key::LineSpacing => t::tui_reader_setting_line_spacing(),
@@ -120,18 +117,20 @@ fn choice_words(key: Key, name: &str) -> String {
         (Key::Direction, "ltr") => t::reader_mode_ltr(),     // i18n-skip: a value
         (Key::Fit, "screen") => t::reader_fit_screen(),      // i18n-skip: a value
         (Key::Fit, "width") => t::reader_fit_width(),        // i18n-skip: a value
+        (Key::Fit, "height") => t::tui_reader_value_height(), // i18n-skip: a value
         (Key::PageLayout, "auto") => t::reader_layout_auto(), // i18n-skip: a value
         (Key::PageLayout, "single") => t::reader_layout_single(), // i18n-skip: a value
         (Key::PageLayout, "double") => t::reader_layout_double(), // i18n-skip: a value
         (Key::Spreads, "split") => t::reader_spreads_split(), // i18n-skip: a value
         (Key::Spreads, "rotate") => t::reader_spreads_rotate(), // i18n-skip: a value
         (Key::Spreads, "whole") => t::reader_spreads_whole(), // i18n-skip: a value
+        (Key::StripGap, "none") => t::reader_gap_none(),     // i18n-skip: a value
+        (Key::StripGap, "small") => t::reader_gap_small(),   // i18n-skip: a value
         _ => name.to_owned(),
     }
 }
 
-/// The choices a row offers in the terminal: the engine's, less the fits a terminal can't
-/// show (height), else the ones the terminal knows.
+/// The choices a row offers in the terminal: the engine's, else the ones the terminal knows.
 fn choice_names(row: &ReaderSettingRow, medium: Medium) -> Vec<String> {
     let mut names: Vec<String> = row
         .choices
@@ -147,15 +146,13 @@ fn choice_names(row: &ReaderSettingRow, medium: Medium) -> Vec<String> {
             (Key::Mode, Medium::Novel) => &["paged", "scrolled"], // i18n-skip: values
             (Key::Mode, _) => &["paged", "strip"],                // i18n-skip: values
             (Key::Direction, _) => &["rtl", "ltr"],               // i18n-skip: values
-            (Key::Fit, _) => &["screen", "width"],                // i18n-skip: values
+            (Key::Fit, _) => &["screen", "width", "height"],      // i18n-skip: values
             (Key::PageLayout, _) => &["auto", "single", "double"], // i18n-skip: values
             (Key::Spreads, _) => &["split", "rotate", "whole"],   // i18n-skip: values
+            (Key::StripGap, _) => &["none", "small"],             // i18n-skip: values
             _ => &[],
         };
         names = known.iter().map(|n| (*n).to_owned()).collect();
-    }
-    if row.key == Key::Fit {
-        names.retain(|n| n == "screen" || n == "width"); // i18n-skip: values
     }
     names
 }
@@ -171,7 +168,6 @@ impl App {
             return Vec::new();
         };
         let keys = if medium == Medium::Novel { NOVEL_KEYS } else { MANGA_KEYS };
-        let width = self.window.map_or(80, |(w, _)| w);
         let mut items: Vec<SettingItem> = keys
             .iter()
             .filter_map(|key| {
@@ -194,10 +190,6 @@ impl App {
                     }
                     (Key::TextWidth, ReaderValue::Amount { value }) => {
                         SettingShown::Amount(t::tui_reader_value_columns(value.round() as i64))
-                    }
-                    (Key::StripWidth, ReaderValue::Amount { .. }) => {
-                        let cols = strip_cols(reader, width);
-                        SettingShown::Amount(t::tui_reader_value_columns(i64::from(cols)))
                     }
                     (_, ReaderValue::Choice { name }) => SettingShown::Choices(
                         choice_names(row, medium)
@@ -306,12 +298,6 @@ impl App {
                 };
                 ReaderValue::Amount { value: f64::from(width) }
             }
-            (SettingShown::Amount(_), Key::StripWidth) => {
-                let now = reader.amount(Key::StripWidth).unwrap_or(0.6);
-                let step = if on { STRIP_STEP } else { -STRIP_STEP };
-                let value = ((now + step) * 10.0).round() / 10.0;
-                ReaderValue::Amount { value: value.clamp(STRIP_LEAST, 1.0) }
-            }
             (SettingShown::Amount(_), _) => return None,
         };
         let same = match (
@@ -323,6 +309,12 @@ impl App {
         };
         if same {
             return None;
+        }
+        // A new fit starts the page at its reading side, as `f` does.
+        if item.key == Key::Fit {
+            let reader = self.reader_mut()?;
+            reader.zoom = None;
+            reader.scroll = 0;
         }
         self.set_reader_setting(item.key, item.scope, value)
     }

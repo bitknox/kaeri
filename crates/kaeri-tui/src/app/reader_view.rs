@@ -2,8 +2,8 @@
 //! a page zoomed in and moved about with a map of where the view is, and a webtoon strip that
 //! runs on from one chapter into the next.
 //!
-//! Fit width and zoom lay the leaf out on a canvas larger than the stage, in cells, and show the
-//! part of it the view is on. A strip is one canvas from the chapters it ran on from down to the
+//! Fit width, fit height and zoom lay the leaf out on a canvas larger than the stage, in cells,
+//! and show the part of it the view is on. A strip is one canvas from the chapters it ran on from down to the
 //! next chapter's first image. The engine hears where a strip settled with `StripAt`, half a
 //! second after it stopped, and the next chapter opens once the divider into it crosses the
 //! middle of the window, with the chapter left kept above.
@@ -348,9 +348,20 @@ impl Reader {
 
     /// The page fits the window's width and scrolls: paged, not zoomed, Fit set to width.
     pub fn fits_width(&self) -> bool {
+        self.fits_side() && self.choice(ReaderSettingKey::Fit) == Some("width") // i18n-skip: a value
+    }
+
+    /// The page fills the stage's height and a page wider than the stage moves along it: paged,
+    /// not zoomed, Fit set to height.
+    pub fn fits_height(&self) -> bool {
+        self.fits_side() && self.choice(ReaderSettingKey::Fit) == Some("height") // i18n-skip: a value
+    }
+
+    /// The page fills one side of the stage and moves along the other: fit width or height.
+    pub fn fits_side(&self) -> bool {
         !self.strips()
             && self.zoom.is_none()
-            && self.choice(ReaderSettingKey::Fit) == Some("width") // i18n-skip: a setting's value
+            && matches!(self.choice(ReaderSettingKey::Fit), Some("width" | "height")) // i18n-skip: values
     }
 
     /// The page in view, for a layout in another mode to keep.
@@ -379,9 +390,32 @@ impl App {
     }
 
     /// The leaf in view at fit width on `stage`: as wide as the stage less its margins, scrolled.
+    /// At fit height: as tall as the stage, moved along from its reading side.
     pub fn fit_view(&self, reader: &Reader, stage: Rect) -> Option<Viewport> {
         let leaf = reader.leaf().filter(|l| !l.end_page && !l.parts.is_empty())?;
         let cell = self.cell();
+        if reader.fits_height() {
+            let (_, _, h) = leaf_shape(reader, leaf);
+            let scale = f32::from(stage.height) * cell.1 / h;
+            let (boxes, cols, rows) = leaf_canvas(reader, leaf, cell, scale);
+            let max = cols.saturating_sub(u32::from(stage.width));
+            let along = reader.scroll.min(max);
+            let x = if max == 0 {
+                offset_of(0.5, cols, stage.width)
+            } else if reader.rtl() {
+                (max - along) as i32
+            } else {
+                along as i32
+            };
+            return Some(Viewport {
+                boxes,
+                width: cols,
+                height: rows,
+                x,
+                y: offset_of(0.5, rows, stage.height),
+                area: stage,
+            });
+        }
         let width = stage.width.saturating_sub(FIT_MARGIN).max(1);
         let (_, w, _) = leaf_shape(reader, leaf);
         let scale = f32::from(width) * cell.0 / w;
@@ -552,7 +586,7 @@ impl App {
                 _ => return None,
             });
         }
-        if reader.fits_width() {
+        if reader.fits_side() {
             return match action {
                 A::ReaderScrollDown => Some(self.fit_scroll(SCROLL_ROWS)),
                 A::ReaderScrollUp => Some(self.fit_scroll(-SCROLL_ROWS)),
@@ -564,13 +598,14 @@ impl App {
         None
     }
 
-    /// `f`: fit screen or fit width, kept on this computer through the engine's Fit setting.
+    /// `f`: fit screen or fit width, kept on this computer through the engine's Fit setting. Fit
+    /// height, set in the reader settings, goes back to fit screen.
     pub(super) fn switch_fit(&mut self) -> Option<Command> {
         let reader = self.reader_mut()?;
         if reader.strips() || reader.session == 0 {
             return None;
         }
-        let name = if reader.fits_width() { "screen" } else { "width" }; // i18n-skip: values
+        let name = if reader.fits_side() { "screen" } else { "width" }; // i18n-skip: values
         reader.set_choice(ReaderSettingKey::Fit, name, SettingScope::Device);
         reader.zoom = None;
         reader.scroll = 0;
@@ -665,31 +700,43 @@ impl App {
         reader.page_here()
     }
 
-    /// `j` and `k` at fit width.
-    fn fit_scroll(&mut self, by: i64) -> Option<Command> {
+    /// How far the view at fit width or height moves along the page, and a screen of that.
+    pub(super) fn fit_extent(&self) -> Option<(u32, i64)> {
         let stage = self.reader_stage()?;
-        let view = self.fit_view(self.reader_here()?, stage)?;
-        let max = view.height.saturating_sub(u32::from(stage.height));
+        let reader = self.reader_here()?;
+        let view = self.fit_view(reader, stage)?;
+        Some(if reader.fits_height() {
+            let max = view.width.saturating_sub(u32::from(stage.width));
+            (max, i64::from(stage.width) * 9 / 10)
+        } else {
+            let max = view.height.saturating_sub(u32::from(stage.height));
+            (max, i64::from(stage.height) * 9 / 10)
+        })
+    }
+
+    /// `j` and `k` at fit width: three rows. At fit height: six columns along the reading side,
+    /// as cells are twice as tall as they are wide.
+    fn fit_scroll(&mut self, by: i64) -> Option<Command> {
+        let (max, _) = self.fit_extent()?;
         let reader = self.reader_mut()?;
+        let by = if reader.fits_height() { by * 2 } else { by };
         reader.scroll =
             (i64::from(reader.scroll.min(max)) + by).clamp(0, i64::from(max)) as u32;
         None
     }
 
     /// Space and Backspace at fit width: most of a screen down or up, and at the foot of the
-    /// page the next page at its top, as the turn keys go.
+    /// page the next page at its top, as the turn keys go. At fit height the same along the
+    /// page from its reading side.
     fn fit_screen(&mut self, forward: bool) -> Option<Command> {
-        let stage = self.reader_stage()?;
+        let (max, by) = self.fit_extent()?;
         let reader = self.reader_here()?;
-        let view = self.fit_view(reader, stage)?;
-        let max = view.height.saturating_sub(u32::from(stage.height));
         let at = reader.scroll.min(max);
-        let by = i64::from(stage.height) * 9 / 10;
-        if forward && at < max {
-            return self.fit_scroll(by.max(1));
-        }
-        if !forward && at > 0 {
-            return self.fit_scroll(-by.max(1));
+        if (forward && at < max) || (!forward && at > 0) {
+            let reader = self.reader_mut()?;
+            let by = if forward { by.max(1) } else { -by.max(1) };
+            reader.scroll = (i64::from(at) + by).clamp(0, i64::from(max)) as u32;
+            return None;
         }
         self.turn(forward)
     }
@@ -1365,6 +1412,98 @@ mod tests {
                 _ => None,
             })
             .collect()
+    }
+
+    /// The reader settings open on manga's rows: mode, fit and the strip gap as given.
+    fn manga_settings(a: &mut App, mode: &str) {
+        press(a, KeyCode::Char(','));
+        let row = |key, name: &str| ReaderSettingRow {
+            key,
+            value: ReaderValue::Choice { name: name.into() },
+            scope: SettingScope::Device,
+            detected: false,
+            overridden: false,
+            choices: Vec::new(),
+        };
+        a.apply(Event::Reader(ReaderEvent::Settings(ReaderSettingsView {
+            medium: Medium::Manga,
+            work: Some(WorkId::new("a:1")),
+            rows: vec![
+                row(ReaderSettingKey::Mode, mode),
+                row(ReaderSettingKey::Fit, "screen"),
+                row(ReaderSettingKey::StripGap, "none"),
+            ],
+            tap_zones: None,
+        })));
+        a.take_commands();
+    }
+
+    #[test]
+    fn the_settings_offer_every_fit_and_at_fit_height_a_wide_page_moves_from_its_reading_side()
+    {
+        let mut a = reading(ReadDirection::RightToLeft, 120, 34);
+        let mut wide = leaves();
+        for part in wide.iter_mut().flat_map(|l| l.parts.iter_mut()) {
+            part.ratio = Some(3.0);
+        }
+        a.apply(Event::Reader(ReaderEvent::Leaves {
+            session: SESSION,
+            chapter: ChapterId("c14".into()),
+            leaves: wide,
+        }));
+        manga_settings(&mut a, "paged");
+        let items = a.reader_setting_items();
+        let row = items.iter().find(|i| i.key == ReaderSettingKey::Fit).unwrap();
+        let words: Vec<&str> = match &row.shown {
+            crate::app::SettingShown::Choices(c) => c.iter().map(|(w, _)| w.as_str()).collect(),
+            other => panic!("{other:?}"),
+        };
+        assert_eq!(words, ["Screen", "Width", "Height"]);
+        let at = items.iter().position(|i| i.key == ReaderSettingKey::Fit).unwrap();
+        for _ in 0..at {
+            press(&mut a, KeyCode::Char('j'));
+        }
+        let task = press(&mut a, KeyCode::Left);
+        assert!(reader(&a).fits_height());
+        assert!(
+            matches!(
+                &task,
+                Some(Command::Reader(ReaderCommand::SetSetting {
+                    key: ReaderSettingKey::Fit,
+                    scope: SettingScope::Device,
+                    value: ReaderValue::Choice { name },
+                    ..
+                })) if name == "height"
+            ),
+            "{task:?}"
+        );
+        press(&mut a, KeyCode::Esc);
+
+        let stage = a.reader_stage().unwrap();
+        let view = a.fit_view(reader(&a), stage).unwrap();
+        assert_eq!(view.height, u32::from(stage.height), "as tall as the stage");
+        let max = view.width - u32::from(stage.width);
+        assert!(max > 0, "wider than the stage: {view:?}");
+        assert_eq!(view.x, max as i32, "right to left starts at the right");
+        press(&mut a, KeyCode::Char('j'));
+        let view = a.fit_view(reader(&a), stage).unwrap();
+        assert_eq!(view.x, max as i32 - 6, "six columns along");
+        let mut turned = None;
+        for _ in 0..20 {
+            turned = press(&mut a, KeyCode::Char(' '));
+            if turned.is_some() {
+                break;
+            }
+        }
+        assert!(
+            matches!(turned, Some(Command::Reader(ReaderCommand::Shown { leaf: 2, .. }))),
+            "{turned:?}"
+        );
+        assert_eq!(
+            press(&mut a, KeyCode::Char('f')),
+            fit("screen"),
+            "f goes back to the screen"
+        );
     }
 
     #[test]

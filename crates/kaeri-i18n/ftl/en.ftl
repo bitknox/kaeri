@@ -5142,6 +5142,15 @@ tui-read-row-date-year = { $day } { $month } { $year }
 # A row of the key reference on the series page: put the cursor back on the chapter to read next, the one in progress or the next unread. Its status line hint reads "chapters".
 tui-read-keys-next = Go to the chapter to read next
 
+# A row of the reader settings: the space between a webtoon strip's images, None or Small.
+tui-reader-setting-strip-gap = Strip gap
+
+# A choice for how a page is fitted in the reader settings: the page fills the window's height and moves sideways when it is wider than the window.
+tui-reader-value-height = Height
+
+# After the page count in the reader's status line while the page fills the window's height and moves sideways.
+tui-reader-fit-height = Fit height
+
 # AniList's name, in the line that says it is still being asked.
 tui-read-anilist = AniList
 

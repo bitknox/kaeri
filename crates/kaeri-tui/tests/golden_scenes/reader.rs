@@ -848,8 +848,8 @@ pub(super) fn reader_manga_settings(s: &mut Screen) {
         novel_setting(ReaderSettingKey::PageLayout, choice("auto")),
         novel_setting(ReaderSettingKey::Spreads, choice("split")),
         novel_setting(ReaderSettingKey::CropBorders, ReaderValue::Toggle { on: false }),
-        novel_setting(ReaderSettingKey::StripWidth, ReaderValue::Amount { value: 0.6 }),
         novel_setting(ReaderSettingKey::SkipCreditPages, ReaderValue::Toggle { on: true }),
+        novel_setting(ReaderSettingKey::StripGap, choice("none")),
     ];
     rows[1].scope = SettingScope::Series;
     rows[1].overridden = true;

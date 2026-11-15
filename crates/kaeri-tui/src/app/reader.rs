@@ -534,7 +534,8 @@ impl App {
 
     /// The most pixels across and down a page is drawn at in the window the last frame was
     /// drawn in: the stage, times the zoom when zoomed in; at fit width the stage's width and a
-    /// strip's column, however long the page. A page is shrunk to fit before it is kept.
+    /// strip's column, however long the page; at fit height the stage's height, however wide.
+    /// A page is shrunk to fit before it is kept.
     pub(super) fn page_within(&self, reader: &Reader) -> (u32, u32) {
         let Some((w, h)) = self.window else { return UNBOUNDED };
         let surface = self.surface_in(reader, (w, h));
@@ -550,6 +551,9 @@ impl App {
         }
         if reader.fits_width() {
             return (surface.width_px, u32::MAX);
+        }
+        if reader.fits_height() {
+            return (u32::MAX, surface.height_px);
         }
         (surface.width_px, surface.height_px)
     }
@@ -1568,7 +1572,9 @@ fn mode_hints(
             (one(Action::ReaderZoom), said(t::tui_reader_hint_leave_zoom())),
             keys,
         ]
-    } else if reader.fits_width() {
+    } else if reader.fits_width()
+        || (reader.fits_height() && app.fit_extent().is_some_and(|(along, _)| along > 0))
+    {
         let next = (one(forward), said(t::tui_reader_hint_next()));
         let fit = (one(Action::ReaderFit), said(t::tui_reader_hint_fit_screen()));
         if width >= 100 {

@@ -9,11 +9,11 @@ Kaeri   Harbor Light Recipes · Chapter 14 · Tide Tables                       
 ▌   Direction           Right to left  ·  Left to right
 
   Manga on this computer  ──────────────────────────────────
-    Fit                 Screen  ·  Width
+    Fit                 Screen  ·  Width  ·  Height
     Page layout         Auto  ·  One  ·  Two
     Spreads             Split  ·  Turn  ·  Whole
     Crop borders        Off
-    Strip width         ‹ 48 columns ›
+    Strip gap           None  ·  Small
 
   All manga  ───────────────────────────────────────────────
     Skip credit pages   On
@@ -60,7 +60,7 @@ r10 c02-23 fg=text-dim
 r10 c26-59 fg=rule
 r11 c04-06 fg=text-dim
 r11 c24-29 fg=text mod=BOLD
-r11 c30-39 fg=text-dim
+r11 c30-50 fg=text-dim
 r12 c04-14 fg=text-dim
 r12 c24-27 fg=text mod=BOLD
 r12 c28-43 fg=text-dim
@@ -69,10 +69,9 @@ r13 c24-28 fg=text mod=BOLD
 r13 c29-47 fg=text-dim
 r14 c04-15 fg=text-dim
 r14 c24-26 fg=text mod=BOLD
-r15 c04-14 fg=text-dim
-r15 c24-25 fg=text-dim
-r15 c26-35 fg=text mod=BOLD
-r15 c36-37 fg=text-dim
+r15 c04-12 fg=text-dim
+r15 c24-27 fg=text mod=BOLD
+r15 c28-37 fg=text-dim
 r17 c02-10 fg=text-dim
 r17 c13-59 fg=rule
 r18 c04-20 fg=text-dim

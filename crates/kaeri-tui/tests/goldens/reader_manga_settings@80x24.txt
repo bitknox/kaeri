@@ -8,11 +8,11 @@ Kaeri   Harbor Light Recipes · Chapter 14            sources ● 3  ·  anilist
     Mode                Paged  ·  Strip
 ▌   Direction           Right to left  ·  Left to right
   Manga on this computer  ────────────────────────────────────────────────────
-    Fit                 Screen  ·  Width
+    Fit                 Screen  ·  Width  ·  Height
     Page layout         Auto  ·  One  ·  Two
     Spreads             Split  ·  Turn  ·  Whole
     Crop borders        Off
-    Strip width         ‹ 32 columns ›
+    Strip gap           None  ·  Small
   All manga  ─────────────────────────────────────────────────────────────────
     Skip credit pages   On
   Not in the terminal  ───────────────────────────────────────────────────────
@@ -50,7 +50,7 @@ r09 c02-23 fg=text-dim
 r09 c26-77 fg=rule
 r10 c04-06 fg=text-dim
 r10 c24-29 fg=text mod=BOLD
-r10 c30-39 fg=text-dim
+r10 c30-50 fg=text-dim
 r11 c04-14 fg=text-dim
 r11 c24-27 fg=text mod=BOLD
 r11 c28-43 fg=text-dim
@@ -59,10 +59,9 @@ r12 c24-28 fg=text mod=BOLD
 r12 c29-47 fg=text-dim
 r13 c04-15 fg=text-dim
 r13 c24-26 fg=text mod=BOLD
-r14 c04-14 fg=text-dim
-r14 c24-25 fg=text-dim
-r14 c26-35 fg=text mod=BOLD
-r14 c36-37 fg=text-dim
+r14 c04-12 fg=text-dim
+r14 c24-27 fg=text mod=BOLD
+r14 c28-37 fg=text-dim
 r15 c02-10 fg=text-dim
 r15 c13-77 fg=rule
 r16 c04-20 fg=text-dim

@@ -726,3 +726,22 @@ tui-read-row-date-year = { $day } { $month } { $year }
 # next, the one in progress or the next unread. Its status line hint reads "chapters".
 # @only tui
 tui-read-keys-next = Go to the chapter to read next
+
+## Reader settings board fixes
+
+# A row of the reader settings: the space between a webtoon strip's images, None or Small.
+# @max 20
+# @only tui
+tui-reader-setting-strip-gap = Strip gap
+
+# A choice for how a page is fitted in the reader settings: the page fills the window's height
+# and moves sideways when it is wider than the window.
+# @max 12
+# @only tui
+tui-reader-value-height = Height
+
+# After the page count in the reader's status line while the page fills the window's height and
+# moves sideways.
+# @max 16
+# @only tui
+tui-reader-fit-height = Fit height

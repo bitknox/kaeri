@@ -263,9 +263,14 @@ fn status_left(
             }
             vec![(blocks_said(app, words), Role::TextDim)]
         }
-        ReaderScreen::Pages if reader.fits_width() => {
+        ReaderScreen::Pages if reader.fits_side() => {
             let Some(count) = count else { return Vec::new() };
-            let words = format!("{count} · {}", t::tui_reader_fit_width()); // i18n-skip: layout
+            let fit = if reader.fits_height() {
+                t::tui_reader_fit_height()
+            } else {
+                t::tui_reader_fit_width()
+            };
+            let words = format!("{count} · {fit}"); // i18n-skip: layout
             if w < WIDE {
                 return vec![(blocks_said(app, words), Role::TextDim)];
             }
@@ -452,11 +457,13 @@ fn pages(buf: &mut Buffer, app: &App, reader: &Reader, stage: Rect, now: Instant
         zoom_map(buf, app, &view, stage);
         return;
     }
-    if reader.fits_width()
+    if reader.fits_side()
         && let Some(view) = app.fit_view(reader, stage)
     {
         viewport(buf, app, reader, &view, now);
-        scroll_bar(buf, app, &view, stage);
+        if reader.fits_width() {
+            scroll_bar(buf, app, &view, stage);
+        }
         return;
     }
     let Some(leaf) = reader.leaf() else { return };
