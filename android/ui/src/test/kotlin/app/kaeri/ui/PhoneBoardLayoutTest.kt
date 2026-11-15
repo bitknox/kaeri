@@ -165,7 +165,7 @@ class PhoneBoardLayoutTest {
             // The text fills the room it was given: every line the row made room for shows.
             val text = row.description ?: continue
             val laid = mutableListOf<androidx.compose.ui.text.TextLayoutResult>()
-            compose.onNodeWithText(text.take(16), substring = true).fetchSemanticsNode()
+            compose.onNodeWithText(text.take(16), substring = true, useUnmergedTree = true).fetchSemanticsNode()
                 .config[androidx.compose.ui.semantics.SemanticsActions.GetTextLayoutResult].action?.invoke(laid)
             assertEquals("the lines shown in the $dp dp row", if (dp == 142) 1 else 3, laid.first().lineCount)
         }
