@@ -2505,6 +2505,7 @@ mod reader_page_tests {
                 read_view_all_from: RefCell::default(),
                 read_search_focus: RefCell::default(),
                 read_from_home: Cell::new(false),
+                private: crate::private::Private::default(),
             });
             let reader = crate::reading::reader::Reader::new(&ctx, Rc::new(|_: bool| {}));
             for property in
