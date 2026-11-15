@@ -257,10 +257,12 @@ pub fn is_on() -> bool {
 fn set_badges(on: bool) {
     ON.set(on);
     BADGES.with_borrow_mut(|badges| {
-        badges.retain(|(b, _)| b.upgrade().is_some());
+        // A badge out of its header bar belongs to a page that has gone: its insides are torn
+        // down, and asking it to close its popover crashes, so it leaves the list.
+        badges.retain(|(b, _)| b.upgrade().is_some_and(|b| b.parent().is_some()));
         for (button, fader) in badges.iter() {
             let Some(button) = button.upgrade() else { continue };
-            if !on {
+            if !on && button.is_mapped() {
                 button.popdown();
             }
             fader.set(&button, on);
