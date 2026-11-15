@@ -2327,6 +2327,9 @@
   <data name="MessagesAlert" xml:space="preserve">
     <value>Sự cố</value>
   </data>
+  <data name="TvOnThisNetwork" xml:space="preserve">
+    <value>Trên mạng này</value>
+  </data>
   <data name="TvPickerEpisodeOf" xml:space="preserve">
     <value>{title}, tập {episode}</value>
   </data>

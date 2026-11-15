@@ -2327,6 +2327,9 @@
   <data name="MessagesAlert" xml:space="preserve">
     <value>問題</value>
   </data>
+  <data name="TvOnThisNetwork" xml:space="preserve">
+    <value>このネットワーク上</value>
+  </data>
   <data name="TvPickerEpisodeOf" xml:space="preserve">
     <value>{title}、第{episode}話</value>
   </data>

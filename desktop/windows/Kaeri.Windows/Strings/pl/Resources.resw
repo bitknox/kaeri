@@ -2714,6 +2714,9 @@
   <data name="MessagesAlert" xml:space="preserve">
     <value>Problem</value>
   </data>
+  <data name="TvOnThisNetwork" xml:space="preserve">
+    <value>W tej sieci</value>
+  </data>
   <data name="TvPickerEpisodeOf" xml:space="preserve">
     <value>{title}, odcinek {episode}</value>
   </data>

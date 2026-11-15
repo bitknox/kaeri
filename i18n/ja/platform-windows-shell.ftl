@@ -56,3 +56,4 @@ titlebar-open-devices = { -device-cap-pl }を開く
 messages-title = メッセージ
 messages-none = メッセージはまだありません
 messages-alert = 問題
+tv-on-this-network = このネットワーク上

@@ -2442,6 +2442,9 @@ public static partial class T
     /// <summary>Name of the dot before a notice that was an alert, for Narrator.</summary>
     public static string MessagesAlert => Get("MessagesAlert");
 
+    /// <summary>The heading over the TVs running Kaeri in the title bar's Play on TV menu, under the TVs with Chromecast built in.</summary>
+    public static string TvOnThisNetwork => Get("TvOnThisNetwork");
+
     /// <summary>Under the TV picker's title: the episode about to play on the TV, with its show's title.</summary>
     public static string TvPickerEpisodeOf(string title, string episode) => Fill(Get("TvPickerEpisodeOf"), ("title", title), ("episode", episode));
 
@@ -12951,6 +12954,7 @@ public static partial class T
         ["MessagesTitle"] = "Messages",
         ["MessagesNone"] = "No messages yet",
         ["MessagesAlert"] = "Problem",
+        ["TvOnThisNetwork"] = "On this network",
         ["TvPickerEpisodeOf"] = "{title}, episode {episode}",
         ["EpisodeLabel"] = "Episode {episode}",
         ["EpisodeLabelOf"] = "Episode {episode} of {title}",
