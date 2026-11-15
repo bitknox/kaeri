@@ -701,7 +701,7 @@ private fun CastSeekLine(cast: CastModel, now: FfiNowCard, shown: CastShown, wai
     val time = MaterialTheme.typography.labelMedium.tabular()
     Column(Modifier.padding(top = 12.dp)) {
         val range = 0f..maxOf(duration.toFloat(), 1f)
-        val slider = remember(range) { SliderState(value = at.toFloat(), valueRange = range) }
+        val slider = remember(range) { SliderState(at.toFloat(), 0, range) }
         if (dragging == null && slider.value != at.toFloat()) slider.value = at.toFloat()
         Slider(
             state = slider,
@@ -720,7 +720,7 @@ private fun CastSeekLine(cast: CastModel, now: FfiNowCard, shown: CastShown, wai
             thumb = {
                 if (usable) Box(Modifier.size(4.dp, 44.dp).background(colors.primary, RoundedCornerShape(2.dp)))
             },
-            track = { CastSeekTrack(it.fraction(), thumb = usable) },
+            track = { CastSeekTrack(it.coercedValueAsFraction, thumb = usable) },
             modifier = Modifier.fillMaxWidth().height(44.dp).semantics {
                 contentDescription = label
                 if (playing) stateDescription = state
@@ -750,12 +750,6 @@ private fun CastSeekLine(cast: CastModel, now: FfiNowCard, shown: CastShown, wai
             }
         }
     }
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-private fun SliderState.fraction(): Float {
-    val span = valueRange.endInclusive - valueRange.start
-    return if (span <= 0f) 0f else ((value - valueRange.start) / span).coerceIn(0f, 1f)
 }
 
 /** The seek bar's track: amber 16 high up to the thumb's gap, 4 high in RaisedSelected after it. */
