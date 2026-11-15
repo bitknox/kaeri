@@ -19,8 +19,8 @@ Kaeri                                                                           
     Read or unread                       u      Quit                        Q / ctrl+c    │
     Download this chapter                d      Recent messages                      !    │
     Bare page                            ↵                                                │
-                                                                                          │
-                                                                                          │
+    Try again                            r                                                │
+    Skip the extras                      s                                                │
                                                                                           │
                                                                                           │
                                                                                           │
@@ -124,7 +124,11 @@ r19 c90-90 fg=rule
 r20 c04-12 fg=text
 r20 c41-41 fg=text
 r20 c90-90 fg=rule
+r21 c04-12 fg=text
+r21 c41-41 fg=text
 r21 c90-90 fg=rule
+r22 c04-18 fg=text
+r22 c41-41 fg=text
 r22 c90-90 fg=rule
 r23 c90-90 fg=rule
 r24 c90-90 fg=rule

@@ -73,8 +73,8 @@ impl Keymap {
     }
 }
 
-/// The reader's key reference, in the order its columns list them. Keys that only work in one
-/// state, Try again and Skip, are left out: the status line names them where they work.
+/// The reader's key reference, in the order its columns list them. Try again and Skip work in
+/// one state each, and come last.
 const READER_ROWS: &[Action] = &[
     Action::ReaderNext,
     Action::ReaderPrevious,
@@ -91,6 +91,8 @@ const READER_ROWS: &[Action] = &[
     Action::ReaderMarkRead,
     Action::ReaderDownload,
     Action::ReaderBare,
+    Action::ReaderAgain,
+    Action::ReaderSkip,
 ];
 
 const READER_VIEW_ROWS: &[Action] = &[
@@ -119,9 +121,27 @@ impl Keymap {
     /// so a rebind shows; an action with no key is left out.
     ///
     /// Keys that do nothing in the open chapter are left out: no fit, zoom or two pages in a
-    /// light novel (`novel`), and no text width in manga.
-    pub fn reader_help(&self, novel: bool) -> Vec<(&'static str, Vec<(String, &'static str)>)> {
+    /// light novel (`novel`), no text width in manga, and no page to the left or right, fit or
+    /// zoom in a strip (`strip`).
+    pub fn reader_help(
+        &self,
+        novel: bool,
+        strip: bool,
+    ) -> Vec<(&'static str, Vec<(String, &'static str)>)> {
         let here = |action: &Action| {
+            if strip
+                && matches!(
+                    action,
+                    Action::ReaderLeft
+                        | Action::ReaderRight
+                        | Action::ReaderFit
+                        | Action::ReaderZoom
+                        | Action::ReaderZoomIn
+                        | Action::ReaderZoomOut
+                )
+            {
+                return false;
+            }
             if novel {
                 !matches!(
                     action,
@@ -270,7 +290,7 @@ mod tests {
 
     #[test]
     fn the_reader_s_reference_lists_its_keys_then_the_global_ones() {
-        let help = Keymap::new().reader_help(false);
+        let help = Keymap::new().reader_help(false, false);
         let headings: Vec<&str> = help.iter().map(|(h, _)| *h).collect();
         assert_eq!(
             headings,
@@ -291,8 +311,39 @@ mod tests {
     }
 
     #[test]
+    fn the_reader_s_reference_ends_its_column_with_try_again_and_skip() {
+        let help = Keymap::new().reader_help(false, false);
+        let reader = &help[0].1;
+        let last: Vec<_> = reader.iter().rev().take(2).rev().cloned().collect();
+        assert_eq!(
+            last,
+            [
+                ("r".to_string(), Action::ReaderAgain.label()),
+                ("s".to_string(), Action::ReaderSkip.label()),
+            ]
+        );
+    }
+
+    #[test]
+    fn a_strip_s_reference_has_no_page_to_the_left_or_right_and_no_zoom() {
+        let help = Keymap::new().reader_help(false, true);
+        let reader = &help[0].1;
+        for gone in [Action::ReaderLeft, Action::ReaderRight] {
+            assert!(
+                !reader.iter().any(|(_, label)| *label == gone.label()),
+                "{gone:?} left out"
+            );
+        }
+        let view = &help[1].1;
+        for gone in [Action::ReaderFit, Action::ReaderZoom, Action::ReaderZoomIn] {
+            assert!(!view.iter().any(|(_, label)| *label == gone.label()), "{gone:?} left out");
+        }
+        assert!(reader.contains(&("j / ↓".to_string(), Action::ReaderScrollDown.label())));
+    }
+
+    #[test]
     fn a_novel_s_reference_has_the_width_keys_and_no_zoom() {
-        let help = Keymap::new().reader_help(true);
+        let help = Keymap::new().reader_help(true, false);
         let view = &help[1].1;
         assert!(view.contains(&("[".to_string(), Action::ReaderNarrower.label())));
         assert!(view.contains(&("]".to_string(), Action::ReaderWider.label())));

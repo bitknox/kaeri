@@ -1195,7 +1195,8 @@ fn help(buf: &mut Buffer, app: &App, reader: &Reader, area: Rect) {
     let aside_at = 2 + 2 * 44 + 2;
     let aside = w >= aside_at + 24;
     let col = if aside { 44 } else { ((w.saturating_sub(4)) / 2).min(44) };
-    let groups = app.keymap.reader_help(app.reads_novel());
+    let strip = reader.novel.is_none() && reader.strips();
+    let groups = app.keymap.reader_help(app.reads_novel(), strip);
     let bottom = area.bottom().saturating_sub(3);
     // The reader's own keys fill the first column, the rest the second.
     let mut columns: [Vec<(Option<&str>, String)>; 2] = [Vec::new(), Vec::new()];
@@ -1240,8 +1241,9 @@ fn help(buf: &mut Buffer, app: &App, reader: &Reader, area: Rect) {
         let ax = area.x + aside_at;
         let room = area.right().saturating_sub(ax + 1) as usize;
         let mut y = area.y + 5;
-        // The turn keys' note is about manga's pages; text always reads on to the right.
-        let notes = if reader.novel.is_some() {
+        // The turn keys' note is about manga's pages; text always reads on to the right, and a
+        // strip has no pages to turn.
+        let notes = if reader.novel.is_some() || strip {
             vec![t::tui_reader_keys_left_out()]
         } else {
             vec![t::tui_reader_keys_rtl(), t::tui_reader_keys_left_out()]

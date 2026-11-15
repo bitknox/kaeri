@@ -563,8 +563,10 @@ impl App {
             return Some(match action {
                 A::ReaderScrollDown => self.strip_scroll(SCROLL_ROWS),
                 A::ReaderScrollUp => self.strip_scroll(-SCROLL_ROWS),
-                A::ReaderNext | A::ReaderRight => self.strip_scroll(screenful.max(1)),
-                A::ReaderPrevious | A::ReaderLeft => self.strip_scroll(-screenful.max(1)),
+                A::ReaderNext => self.strip_scroll(screenful.max(1)),
+                A::ReaderPrevious => self.strip_scroll(-screenful.max(1)),
+                // Left and Right turn pages, and a strip has none to turn.
+                A::ReaderLeft | A::ReaderRight => None,
                 A::ReaderFirst => self.strip_jump(false),
                 A::ReaderLast => self.strip_jump(true),
                 A::ReaderNextChapter => self.strip_next_chapter(),
@@ -1623,6 +1625,17 @@ mod tests {
         assert_eq!(reader(&a).strip.top, top - 3 + rows * 9 / 10);
         press(&mut a, KeyCode::Backspace);
         assert_eq!(reader(&a).strip.top, top - 3);
+    }
+
+    #[test]
+    fn left_and_right_do_nothing_in_a_strip() {
+        let mut a = strip();
+        a.take_commands();
+        let top = reader(&a).strip.top;
+        for code in [KeyCode::Left, KeyCode::Right, KeyCode::Char('h'), KeyCode::Char('l')] {
+            assert_eq!(press(&mut a, code), None, "{code:?}");
+            assert_eq!(reader(&a).strip.top, top, "{code:?}");
+        }
     }
 
     #[test]

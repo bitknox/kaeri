@@ -445,6 +445,12 @@ pub(super) fn reader_go_to_page(s: &mut Screen) {
     s.type_text("15");
 }
 
+/// `?` in a strip: no page to the left or right, and no note on how the arrows turn.
+pub(super) fn reader_strip_help(s: &mut Screen) {
+    reader_strip(s);
+    s.press(&["?"]);
+}
+
 /// The smallest comfortable page.
 pub(super) fn reader_small_page(s: &mut Screen) {
     reader_one_page(s);
