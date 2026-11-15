@@ -707,6 +707,24 @@ pub struct Read {
 }
 
 impl Read {
+    /// As a private read held in memory left it: the chapter it was in and where, or with that
+    /// chapter finished. The chapters' own marks stay as they were saved.
+    pub fn with_kept(mut self, kept: Option<&kaeri_store::reading::ReadEvent>) -> Self {
+        let Some(kept) = kept else { return self };
+        if kept.completed {
+            self.marked.insert(kept.chapter.clone());
+            if self.in_progress.as_ref().is_some_and(|(c, ..)| *c == kept.chapter) {
+                self.in_progress = None;
+            }
+            if let Some(range) = ChapterId::new(&kept.chapter).key().and_then(|k| k.range()) {
+                self.furthest = self.furthest.max(Some(range));
+            }
+        } else {
+            self.in_progress = Some((kept.chapter.clone(), kept.page, kept.of_pages));
+        }
+        self
+    }
+
     pub fn of(store: &Store, work: &str) -> Self {
         let folds = Folds::of_work(store, work);
         let marks = folds.marks(store.read_marks(work).unwrap_or_default());

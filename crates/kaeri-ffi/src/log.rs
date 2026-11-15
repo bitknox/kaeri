@@ -39,7 +39,8 @@ pub fn start_log(cache: String) -> bool {
     let (writer, guard) =
         tracing_appender::non_blocking(tracing_appender::rolling::daily(&dir, "app.log"));
     let started = fmt()
-        .with_writer(writer)
+        // What is private is taken out of each line: see `kaeri_engine::private::redact`.
+        .with_writer(move || kaeri_engine::private::redact::Redacting(writer.clone()))
         .with_ansi(false)
         .with_env_filter(
             EnvFilter::try_from_env("KAERI_LOG").unwrap_or_else(|_| EnvFilter::new("info")),

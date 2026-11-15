@@ -544,6 +544,7 @@ pub fn to_row(download: &Download) -> kaeri_model::downloads::DownloadRow {
         error: download.error.clone(),
         path: download.path.clone(),
         ahead: download.ahead,
+        private: false,
     }
 }
 

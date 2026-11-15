@@ -121,6 +121,7 @@ pub(super) fn staged(
         episode_title: episode_title.map(Into::into),
         speed: 1.0,
         resume: None,
+        always_private: false,
     }
 }
 

@@ -2715,6 +2715,12 @@ public enum L {
     /// Playback menu item that opens the chat field in a watch party. Key C.
     public static var menuSaySomething: String { string("menu-say-something", fallback: "Say Something…") }
 
+    /// Mac Kaeri menu item, ⇧⌘N, with a check while private mode is on. Title case like the rest of the menu bar.
+    public static var menuPrivateMode: String { string("menu-private-mode", fallback: "Private Mode") }
+
+    /// Mac Episode menu, show section: a check item for keeping the show private on this device.
+    public static var menuAlwaysPrivate: String { string("menu-always-private", fallback: "Always Private") }
+
     /// Button in the reader's control group that opens the reader's settings. Aa is the glyph.
     public static var readerSettingsOpen: String { string("reader-settings-open", fallback: "Reader settings") }
 
@@ -8378,6 +8384,56 @@ public enum L {
 
     /// Button in the subtitles panel that opens Settings.
     public static var playerSubsMore: String { string("player-subs-more", fallback: "More in Settings…") }
+
+    /// The private mode switch: under the account card on phones, first in Settings › Accounts on the desktops and the TV, and a check item in the Linux main menu.
+    public static var privateMode: String { string("private-mode", fallback: "Private mode") }
+
+    /// The switch's description: the footer on Apple, supporting text on Android and the TV, the SettingsCard description on Windows, the AdwSwitchRow subtitle on Linux.
+    public static var privateModeDetail: String { string("private-mode-detail", fallback: "Nothing you watch or read is saved or synced until you turn it off or quit Kaeri.") }
+
+    /// Second line under the switch. Private mode only stops what the app keeps; it hides nothing from anyone else.
+    public static var privateModeLimits: String { string("private-mode-limits", fallback: "Your sources and watch parties still see what you open.") }
+
+    /// Notice after the menu item or the shortcut turns private mode on, and the words of the badge's popover, flyout and TV dialog. Also the badge's screen reader hint.
+    public static var privateModeOnNotice: String { string("private-mode-on-notice", fallback: "Private mode is on. Nothing is saved or synced until Kaeri quits.") }
+
+    /// Button in the notice, the badge's popover and flyout, and the TV dialog: turns private mode off.
+    public static var actionTurnOff: String { string("action-turn-off", fallback: "Turn off") }
+
+    /// Under the switch on the desktops. The keys are the platform's own: ⇧⌘N on the Mac, Ctrl+Shift+N on Windows and Linux.
+    public static func privateModeShortcutHint(keys: String) -> String {
+        Self.format("private-mode-shortcut-hint", fallback: "Shortcut: %1$@", keys)
+    }
+
+    /// The badge while private mode is on, the player label, and the head of the title page line.
+    public static var privateBadge: String { string("private-badge", fallback: "Private") }
+
+    /// Screen reader label of the badge.
+    public static var privateBadgeLabel: String { string("private-badge-label", fallback: "Private mode is on") }
+
+    /// Line under a title or series page's main action, after "Private" or "Always private".
+    public static var privateLineNotSaved: String { string("private-line-not-saved", fallback: "Not saved or synced") }
+
+    /// Line under a title or series page's main action when a place is held in memory, after "Private".
+    public static var privateLineKept: String { string("private-line-kept", fallback: "Your place is kept until Kaeri quits") }
+
+    /// A title kept private on this device: the More menu item with a check, the switch in the show's settings, and the head of the title page line.
+    public static var titleAlwaysPrivate: String { string("title-always-private", fallback: "Always private") }
+
+    /// Under the Always private switch in a show's settings.
+    public static var showAlwaysPrivateDetail: String { string("show-always-private-detail", fallback: "Nothing from this show is saved or synced on this device. What is already saved stays.") }
+
+    /// Under the Always private switch in a series page's settings.
+    public static var seriesAlwaysPrivateDetail: String { string("series-always-private-detail", fallback: "Nothing from this series is saved or synced on this device. What is already saved stays.") }
+
+    /// What the system's media controls, the lock screen, the media card and the player window show while private: no show, episode, artist or artwork.
+    public static var nowPlayingPrivate: String { string("now-playing-private", fallback: "Playing in Kaeri") }
+
+    /// Announced to screen readers once when private mode turns on.
+    public static var privateModeOnAnnouncement: String { string("private-mode-on-announcement", fallback: "Private mode on") }
+
+    /// Announced to screen readers once when private mode turns off.
+    public static var privateModeOffAnnouncement: String { string("private-mode-off-announcement", fallback: "Private mode off") }
 
     /// Under a page that is still loading after four seconds.
     public static func readerPageLoading(page: Int) -> String {

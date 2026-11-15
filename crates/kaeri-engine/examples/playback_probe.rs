@@ -204,6 +204,7 @@ async fn main() {
             untracked: false,
             swarm: Default::default(),
             begin: Default::default(),
+            privacy: Default::default(),
         };
         kaeri_engine::playback::play(
             vec![stream],

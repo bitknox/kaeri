@@ -1088,8 +1088,15 @@ impl Home {
     /// Where Continue opens a series: the chapter in progress, or the next one.
     fn continue_action(&self, book: &Book) -> Option<SeriesAction> {
         let work = tiles::work_of(book.id);
-        Some(tiles::action(&self.store, &self.sources, &work, book.medium(), &self.plugins))
-            .filter(|a| !matches!(a, SeriesAction::NoSource | SeriesAction::ReadAgain))
+        Some(tiles::action(
+            &self.store,
+            &self.sources,
+            &work,
+            book.medium(),
+            &self.plugins,
+            None,
+        ))
+        .filter(|a| !matches!(a, SeriesAction::NoSource | SeriesAction::ReadAgain))
     }
 }
 
@@ -1247,6 +1254,7 @@ mod tests {
             plugins: crate::book_plugins::BookPlugins::default(),
             clock: crate::clock::Clock::in_zone(zone),
             offline: Arc::new(AtomicBool::new(false)),
+            privacy: Default::default(),
         }
     }
 

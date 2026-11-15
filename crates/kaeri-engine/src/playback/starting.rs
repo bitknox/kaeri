@@ -248,6 +248,7 @@ pub fn fixture(
         episode_title: Some("The Lamp Seller".into()),
         speed: 1.0,
         resume,
+        always_private: false,
     };
     let step = |step: StartStep, line: Option<Msg>| Event::StartingStep {
         id,

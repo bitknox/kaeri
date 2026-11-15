@@ -5947,6 +5947,54 @@ public static partial class T
     /// <summary>Button in the subtitles panel that opens Settings.</summary>
     public static string PlayerSubsMore => Get("PlayerSubsMore");
 
+    /// <summary>The private mode switch: under the account card on phones, first in Settings › Accounts on the desktops and the TV, and a check item in the Linux main menu.</summary>
+    public static string PrivateMode => Get("PrivateMode");
+
+    /// <summary>The switch's description: the footer on Apple, supporting text on Android and the TV, the SettingsCard description on Windows, the AdwSwitchRow subtitle on Linux.</summary>
+    public static string PrivateModeDetail => Get("PrivateModeDetail");
+
+    /// <summary>Second line under the switch. Private mode only stops what the app keeps; it hides nothing from anyone else.</summary>
+    public static string PrivateModeLimits => Get("PrivateModeLimits");
+
+    /// <summary>Notice after the menu item or the shortcut turns private mode on, and the words of the badge's popover, flyout and TV dialog. Also the badge's screen reader hint.</summary>
+    public static string PrivateModeOnNotice => Get("PrivateModeOnNotice");
+
+    /// <summary>Button in the notice, the badge's popover and flyout, and the TV dialog: turns private mode off.</summary>
+    public static string ActionTurnOff => Get("ActionTurnOff");
+
+    /// <summary>Under the switch on the desktops. The keys are the platform's own: ⇧⌘N on the Mac, Ctrl+Shift+N on Windows and Linux.</summary>
+    public static string PrivateModeShortcutHint(string keys) => Fill(Get("PrivateModeShortcutHint"), ("keys", keys));
+
+    /// <summary>The badge while private mode is on, the player label, and the head of the title page line.</summary>
+    public static string PrivateBadge => Get("PrivateBadge");
+
+    /// <summary>Screen reader label of the badge.</summary>
+    public static string PrivateBadgeLabel => Get("PrivateBadgeLabel");
+
+    /// <summary>Line under a title or series page's main action, after "Private" or "Always private".</summary>
+    public static string PrivateLineNotSaved => Get("PrivateLineNotSaved");
+
+    /// <summary>Line under a title or series page's main action when a place is held in memory, after "Private".</summary>
+    public static string PrivateLineKept => Get("PrivateLineKept");
+
+    /// <summary>A title kept private on this device: the More menu item with a check, the switch in the show's settings, and the head of the title page line.</summary>
+    public static string TitleAlwaysPrivate => Get("TitleAlwaysPrivate");
+
+    /// <summary>Under the Always private switch in a show's settings.</summary>
+    public static string ShowAlwaysPrivateDetail => Get("ShowAlwaysPrivateDetail");
+
+    /// <summary>Under the Always private switch in a series page's settings.</summary>
+    public static string SeriesAlwaysPrivateDetail => Get("SeriesAlwaysPrivateDetail");
+
+    /// <summary>What the system's media controls, the lock screen, the media card and the player window show while private: no show, episode, artist or artwork.</summary>
+    public static string NowPlayingPrivate => Get("NowPlayingPrivate");
+
+    /// <summary>Announced to screen readers once when private mode turns on.</summary>
+    public static string PrivateModeOnAnnouncement => Get("PrivateModeOnAnnouncement");
+
+    /// <summary>Announced to screen readers once when private mode turns off.</summary>
+    public static string PrivateModeOffAnnouncement => Get("PrivateModeOffAnnouncement");
+
     /// <summary>Under a page that is still loading after four seconds.</summary>
     public static string ReaderPageLoading(long page) => Fill(Get("ReaderPageLoading"), ("page", page.ToString(System.Globalization.CultureInfo.CurrentCulture)));
 
@@ -14116,6 +14164,22 @@ public static partial class T
         ["PlayerSubsBgShadow"] = "Shadow",
         ["PlayerSubsBgBox"] = "Box",
         ["PlayerSubsMore"] = "More in Settings…",
+        ["PrivateMode"] = "Private mode",
+        ["PrivateModeDetail"] = "Nothing you watch or read is saved or synced until you turn it off or quit Kaeri.",
+        ["PrivateModeLimits"] = "Your sources and watch parties still see what you open.",
+        ["PrivateModeOnNotice"] = "Private mode is on. Nothing is saved or synced until Kaeri quits.",
+        ["ActionTurnOff"] = "Turn off",
+        ["PrivateModeShortcutHint"] = "Shortcut: {keys}",
+        ["PrivateBadge"] = "Private",
+        ["PrivateBadgeLabel"] = "Private mode is on",
+        ["PrivateLineNotSaved"] = "Not saved or synced",
+        ["PrivateLineKept"] = "Your place is kept until Kaeri quits",
+        ["TitleAlwaysPrivate"] = "Always private",
+        ["ShowAlwaysPrivateDetail"] = "Nothing from this show is saved or synced on this device. What is already saved stays.",
+        ["SeriesAlwaysPrivateDetail"] = "Nothing from this series is saved or synced on this device. What is already saved stays.",
+        ["NowPlayingPrivate"] = "Playing in Kaeri",
+        ["PrivateModeOnAnnouncement"] = "Private mode on",
+        ["PrivateModeOffAnnouncement"] = "Private mode off",
         ["ReaderPageLoading"] = "Loading page {page}",
         ["ReaderPagePlate"] = "Page {page}",
         ["ReaderImagePlate"] = "Image {image}",

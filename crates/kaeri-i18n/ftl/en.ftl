@@ -4735,6 +4735,21 @@ settings-note-upload-limit = Caps all torrent upload, so seeding never slows pla
 # Note under the token storage row. The option is a command-line flag and is not translated.
 settings-note-token-storage = Use --token-to-file to move an existing token.
 
+# Header chip while private mode is on, in the state colour, lower case.
+tui-private-chip = private
+
+# Footer hint for Ctrl+P, lower case to match the header chip.
+keys-hint-private = private
+
+# Command palette entry that turns private mode on or off; its state shows beside it.
+palette-private-mode = Private mode
+
+# Command palette entry on a title page: keep the show private on this device.
+palette-always-private = Always private for this show
+
+# Help for the --private flag.
+cli-private-help = Start in private mode. Nothing is saved or synced until Kaeri quits.
+
 # AniList's name, in the line that says it is still being asked.
 tui-read-anilist = AniList
 
@@ -8944,6 +8959,54 @@ player-subs-bg-box = Box
 
 # Button in the subtitles panel that opens Settings.
 player-subs-more = More in Settings…
+
+# The private mode switch: under the account card on phones, first in Settings › Accounts on the desktops and the TV, and a check item in the Linux main menu.
+private-mode = Private mode
+
+# The switch's description: the footer on Apple, supporting text on Android and the TV, the SettingsCard description on Windows, the AdwSwitchRow subtitle on Linux.
+private-mode-detail = Nothing you watch or read is saved or synced until you turn it off or quit Kaeri.
+
+# Second line under the switch. Private mode only stops what the app keeps; it hides nothing from anyone else.
+private-mode-limits = Your sources and watch parties still see what you open.
+
+# Notice after the menu item or the shortcut turns private mode on, and the words of the badge's popover, flyout and TV dialog. Also the badge's screen reader hint.
+private-mode-on-notice = Private mode is on. Nothing is saved or synced until Kaeri quits.
+
+# Button in the notice, the badge's popover and flyout, and the TV dialog: turns private mode off.
+action-turn-off = Turn off
+
+# Under the switch on the desktops. The keys are the platform's own: ⇧⌘N on the Mac, Ctrl+Shift+N on Windows and Linux.
+private-mode-shortcut-hint = Shortcut: { $keys }
+
+# The badge while private mode is on, the player label, and the head of the title page line.
+private-badge = Private
+
+# Screen reader label of the badge.
+private-badge-label = Private mode is on
+
+# Line under a title or series page's main action, after "Private" or "Always private".
+private-line-not-saved = Not saved or synced
+
+# Line under a title or series page's main action when a place is held in memory, after "Private".
+private-line-kept = Your place is kept until Kaeri quits
+
+# A title kept private on this device: the More menu item with a check, the switch in the show's settings, and the head of the title page line.
+title-always-private = Always private
+
+# Under the Always private switch in a show's settings.
+show-always-private-detail = Nothing from this show is saved or synced on this device. What is already saved stays.
+
+# Under the Always private switch in a series page's settings.
+series-always-private-detail = Nothing from this series is saved or synced on this device. What is already saved stays.
+
+# What the system's media controls, the lock screen, the media card and the player window show while private: no show, episode, artist or artwork.
+now-playing-private = Playing in Kaeri
+
+# Announced to screen readers once when private mode turns on.
+private-mode-on-announcement = Private mode on
+
+# Announced to screen readers once when private mode turns off.
+private-mode-off-announcement = Private mode off
 
 # Under a page that is still loading after four seconds.
 reader-page-loading = Loading page { $page }

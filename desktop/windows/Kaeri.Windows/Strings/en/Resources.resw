@@ -8250,6 +8250,70 @@
     <value>More in Settings…</value>
     <comment>Button in the subtitles panel that opens Settings.</comment>
   </data>
+  <data name="PrivateMode" xml:space="preserve">
+    <value>Private mode</value>
+    <comment>The private mode switch: under the account card on phones, first in Settings › Accounts on the desktops and the TV, and a check item in the Linux main menu.</comment>
+  </data>
+  <data name="PrivateModeDetail" xml:space="preserve">
+    <value>Nothing you watch or read is saved or synced until you turn it off or quit Kaeri.</value>
+    <comment>The switch's description: the footer on Apple, supporting text on Android and the TV, the SettingsCard description on Windows, the AdwSwitchRow subtitle on Linux.</comment>
+  </data>
+  <data name="PrivateModeLimits" xml:space="preserve">
+    <value>Your sources and watch parties still see what you open.</value>
+    <comment>Second line under the switch. Private mode only stops what the app keeps; it hides nothing from anyone else.</comment>
+  </data>
+  <data name="PrivateModeOnNotice" xml:space="preserve">
+    <value>Private mode is on. Nothing is saved or synced until Kaeri quits.</value>
+    <comment>Notice after the menu item or the shortcut turns private mode on, and the words of the badge's popover, flyout and TV dialog. Also the badge's screen reader hint.</comment>
+  </data>
+  <data name="ActionTurnOff" xml:space="preserve">
+    <value>Turn off</value>
+    <comment>Button in the notice, the badge's popover and flyout, and the TV dialog: turns private mode off.</comment>
+  </data>
+  <data name="PrivateModeShortcutHint" xml:space="preserve">
+    <value>Shortcut: {keys}</value>
+    <comment>Under the switch on the desktops. The keys are the platform's own: ⇧⌘N on the Mac, Ctrl+Shift+N on Windows and Linux.</comment>
+  </data>
+  <data name="PrivateBadge" xml:space="preserve">
+    <value>Private</value>
+    <comment>The badge while private mode is on, the player label, and the head of the title page line.</comment>
+  </data>
+  <data name="PrivateBadgeLabel" xml:space="preserve">
+    <value>Private mode is on</value>
+    <comment>Screen reader label of the badge.</comment>
+  </data>
+  <data name="PrivateLineNotSaved" xml:space="preserve">
+    <value>Not saved or synced</value>
+    <comment>Line under a title or series page's main action, after "Private" or "Always private".</comment>
+  </data>
+  <data name="PrivateLineKept" xml:space="preserve">
+    <value>Your place is kept until Kaeri quits</value>
+    <comment>Line under a title or series page's main action when a place is held in memory, after "Private".</comment>
+  </data>
+  <data name="TitleAlwaysPrivate" xml:space="preserve">
+    <value>Always private</value>
+    <comment>A title kept private on this device: the More menu item with a check, the switch in the show's settings, and the head of the title page line.</comment>
+  </data>
+  <data name="ShowAlwaysPrivateDetail" xml:space="preserve">
+    <value>Nothing from this show is saved or synced on this device. What is already saved stays.</value>
+    <comment>Under the Always private switch in a show's settings.</comment>
+  </data>
+  <data name="SeriesAlwaysPrivateDetail" xml:space="preserve">
+    <value>Nothing from this series is saved or synced on this device. What is already saved stays.</value>
+    <comment>Under the Always private switch in a series page's settings.</comment>
+  </data>
+  <data name="NowPlayingPrivate" xml:space="preserve">
+    <value>Playing in Kaeri</value>
+    <comment>What the system's media controls, the lock screen, the media card and the player window show while private: no show, episode, artist or artwork.</comment>
+  </data>
+  <data name="PrivateModeOnAnnouncement" xml:space="preserve">
+    <value>Private mode on</value>
+    <comment>Announced to screen readers once when private mode turns on.</comment>
+  </data>
+  <data name="PrivateModeOffAnnouncement" xml:space="preserve">
+    <value>Private mode off</value>
+    <comment>Announced to screen readers once when private mode turns off.</comment>
+  </data>
   <data name="ReaderPageLoading" xml:space="preserve">
     <value>Loading page {page}</value>
     <comment>Under a page that is still loading after four seconds.</comment>

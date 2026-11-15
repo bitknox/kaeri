@@ -40,12 +40,17 @@ pub fn download_episode(
     let (store, registry, meta, tx) =
         (store.clone(), registry.clone(), meta.clone(), tx.clone());
     let wanted = downloads::Wanted::of(config);
+    let private = services.privacy.holds_show(id).then(|| services.privacy.clone());
     tokio::spawn(async move {
         let _job = job;
         // Resolving needs the provider chain, so this is a task rather than inline — the
         // same walk playback does, which is the point: a download is "play it, to disk".
         let queued = downloads::enqueue(&store, &registry, &meta, id, &episode, wanted, false);
-        let _ = tx.send(Event::Toast(downloads::queued_notice(queued.await)));
+        let queued = queued.await;
+        if let (Some(privacy), Ok((download, _))) = (&private, &queued) {
+            privacy.note_download(download.id);
+        }
+        let _ = tx.send(Event::Toast(downloads::queued_notice(queued)));
         downloads::publish_now(&store, &tx);
     });
 }
@@ -68,16 +73,21 @@ pub fn download_many(
     let (store, registry, meta, tx) =
         (store.clone(), registry.clone(), meta.clone(), tx.clone());
     let wanted = downloads::Wanted::of(config);
+    let private = services.privacy.holds_show(id).then(|| services.privacy.clone());
     tokio::spawn(async move {
         let _job = job;
         // Sequential enqueues, not parallel: each one is only a resolve + a queue
         // row, and the download manager's own concurrency cap paces the fetches.
         let outcome = downloads::enqueue_each(&episodes, |episode| {
-            let (store, registry, meta, tx) = (&store, &registry, &meta, &tx);
+            let (store, registry, meta, tx, private) =
+                (&store, &registry, &meta, &tx, &private);
             async move {
-                let (_, queued) =
+                let (download, queued) =
                     downloads::enqueue(store, registry, meta, id, &episode, wanted, false)
                         .await?;
+                if let Some(privacy) = private {
+                    privacy.note_download(download.id);
+                }
                 // Each row as it lands, so the Downloads screen fills while the rest
                 // resolve rather than saying nothing is queued until the end.
                 downloads::publish_now(store, tx);

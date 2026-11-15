@@ -138,7 +138,8 @@ fn main() -> glib::ExitCode {
             tracing_subscriber::EnvFilter::try_from_default_env()
                 .unwrap_or_else(|_| "info,kaeri_engine=warn".into()),
         )
-        .with_writer(std::io::stderr)
+        // What is private is taken out of each line: see `kaeri_engine::private::redact`.
+        .with_writer(|| kaeri_engine::private::redact::Redacting(std::io::stderr()))
         .init();
     let args = args();
     // The language chosen in Settings (the config's own key, the one the terminal app reads),

@@ -157,6 +157,7 @@ pub(super) fn settings() -> PlaySettings {
         up_next_countdown: 10,
         mpv_options: Vec::new(),
         untracked: false,
+        privacy: Default::default(),
         swarm: Default::default(),
         begin: Default::default(),
     }
@@ -1534,4 +1535,60 @@ async fn undo_after_a_found_skip_takes_the_trust_back() {
     let found = rig.store.found_skips(show, "2").unwrap();
     assert_eq!(found[0].state, kaeri_store::skip_found::state::REJECTED);
     assert!(prompts(&rig.opener.calls()).is_empty(), "no card after an Undo");
+}
+
+/// A play while private: it plays as any other, and Kaeri keeps nothing of it but its place in
+/// memory. No history, no resume point, no tracker progress, no track memory, and the window
+/// names no show.
+#[tokio::test]
+async fn a_private_play_keeps_its_place_in_memory_and_writes_nothing_down() {
+    let rig = Rig::new(vec![file(&[("Opening", 0.0), ("Part A", 30.0)], (1920, 1080))]);
+    let privacy = Arc::new(crate::private::Privacy::default());
+    privacy.set(true);
+    let id = AnilistId::new(900_001);
+    let settings = PlaySettings {
+        tracker_ids: vec!["anilist".into()],
+        remember_tracks: true,
+        share_skip_times: Some(true),
+        privacy: privacy.gate(id),
+        ..settings()
+    };
+    let events = rig.play(stream(StreamKind::Mp4), context("1", None), settings).await;
+
+    assert_eq!(ending(&events), Some(Ending::Complete { next: None }));
+    let calls = rig.opener.calls();
+    let options = calls.iter().find_map(|c| match c {
+        Call::Load { options, .. } => Some(options.clone()),
+        _ => None,
+    });
+    let title = options.unwrap_or_default().into_iter().find(|(k, _)| k == "force-media-title");
+    assert_eq!(title.map(|(_, v)| v), Some(kaeri_i18n::t::now_playing_private()));
+    assert!(rig.store.completed_episodes(id).unwrap().is_empty(), "no history");
+    assert_eq!(rig.store.resume_position(id, "1").unwrap(), None, "no resume point");
+    assert_eq!(rig.store.outbox_depth(None).unwrap(), 0, "no tracker progress");
+    assert_eq!(rig.store.track_memory(id, Translation::Sub).unwrap(), None, "no track memory");
+    let kept = privacy.watch_kept(id).expect("the place is kept in memory");
+    assert!(kept.completed && kept.episode == "1");
+    assert!(!events.iter().any(|e| matches!(e, Event::ProgressQueued)), "no tracker is told");
+}
+
+/// An always-private show is held with the mode off, and recorded again once it is not.
+#[tokio::test]
+async fn an_always_private_show_is_held_with_the_mode_off() {
+    let privacy = Arc::new(crate::private::Privacy::default());
+    let id = AnilistId::new(900_001);
+    let title = kaeri_model::private::PrivateTitle::Show { id };
+    let flags = Store::open_in_memory().unwrap();
+    privacy.set_always(&flags, &title, true).unwrap();
+    let rig = Rig::new(vec![file(&[("Opening", 0.0)], (1920, 1080))]);
+    let held = PlaySettings { privacy: privacy.gate(id), ..settings() };
+    rig.play(stream(StreamKind::Mp4), context("1", None), held).await;
+    assert!(rig.store.completed_episodes(id).unwrap().is_empty(), "no history");
+    assert!(privacy.watch_kept(id).is_some());
+
+    privacy.set_always(&flags, &title, false).unwrap();
+    let rig = Rig::new(vec![file(&[("Opening", 0.0)], (1920, 1080))]);
+    let free = PlaySettings { privacy: privacy.gate(id), ..settings() };
+    rig.play(stream(StreamKind::Mp4), context("1", None), free).await;
+    assert_eq!(rig.store.completed_episodes(id).unwrap(), ["1"], "recorded again");
 }

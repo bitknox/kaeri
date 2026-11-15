@@ -835,6 +835,8 @@ pub fn name(update: &Event) -> &'static str {
         Event::BookSources(_) => "BookSources",
         Event::Medium(_) => "Medium",
         Event::RecentSearches(_) => "RecentSearches",
+        Event::Private(_) => "Private",
+        Event::AlwaysPrivate { .. } => "AlwaysPrivate",
         Event::CalendarWindow { .. } => "CalendarWindow",
         Event::CalendarBackfill { .. } => "CalendarBackfill",
         Event::CalendarAhead { .. } => "CalendarAhead",
@@ -1010,6 +1012,10 @@ fn copy(update: &Event) -> Event {
         Event::SetupFrom(setup) => Event::SetupFrom(setup.clone()),
         Event::CameIn(came) => Event::CameIn(came.clone()),
         Event::RecentSearches(recent) => Event::RecentSearches(recent.clone()),
+        Event::Private(on) => Event::Private(*on),
+        Event::AlwaysPrivate { title, on } => {
+            Event::AlwaysPrivate { title: title.clone(), on: *on }
+        }
         Event::CalendarWindow {
             anchor,
             pages,
@@ -1121,16 +1127,23 @@ fn copy(update: &Event) -> Event {
             rolling_on: *rolling_on,
             failure: failure.clone(),
         },
-        Event::PlaybackStaged { id, title, episode, episode_title, speed, resume } => {
-            Event::PlaybackStaged {
-                id: *id,
-                title: title.clone(),
-                episode: episode.clone(),
-                episode_title: episode_title.clone(),
-                speed: *speed,
-                resume: *resume,
-            }
-        }
+        Event::PlaybackStaged {
+            id,
+            title,
+            episode,
+            episode_title,
+            speed,
+            resume,
+            always_private,
+        } => Event::PlaybackStaged {
+            id: *id,
+            title: title.clone(),
+            episode: episode.clone(),
+            episode_title: episode_title.clone(),
+            speed: *speed,
+            resume: *resume,
+            always_private: *always_private,
+        },
         Event::StartingStep { id, episode, step, line } => Event::StartingStep {
             id: *id,
             episode: episode.clone(),
@@ -1189,11 +1202,13 @@ fn copy(update: &Event) -> Event {
         Event::Surprise { pool, outcome } => {
             Event::Surprise { pool: pool.clone(), outcome: outcome.clone() }
         }
-        Event::Progress { id, progress, resume, episodes } => Event::Progress {
+        Event::Progress { id, progress, resume, episodes, private, kept } => Event::Progress {
             id: *id,
             progress: *progress,
             resume: *resume,
             episodes: episodes.clone(),
+            private: *private,
+            kept: *kept,
         },
         Event::TorrentProxy(status) => Event::TorrentProxy(*status),
         Event::ProxyChecked(status) => Event::ProxyChecked(*status),

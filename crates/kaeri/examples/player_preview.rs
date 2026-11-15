@@ -89,6 +89,7 @@ async fn main() -> anyhow::Result<()> {
             episode_total: None,
         };
         let settings = PlaySettings {
+            privacy: Default::default(),
             threshold: config.playback.commit_threshold,
             auto_skip: false,
             auto_skip_recap: false,

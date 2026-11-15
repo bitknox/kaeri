@@ -27,6 +27,7 @@ mod lists;
 mod local;
 mod medium;
 mod preview;
+mod private;
 mod progress;
 mod servers;
 mod settings;

@@ -112,6 +112,9 @@ pub struct Services {
     /// Casting's devices, memory and the cast running now.
     #[cfg(feature = "cast")]
     pub casts: Arc<crate::cast::CastHub>,
+    /// Private mode, the titles kept always private and the places held in memory: see
+    /// [`crate::private`].
+    pub privacy: Arc<crate::private::Privacy>,
 }
 
 impl Services {
@@ -152,6 +155,8 @@ impl Services {
             .on_budget_of(meta.anilist())
             .with_titles(meta.titles().clone());
         let (power, hosted) = players(&paths);
+        let privacy = crate::private::Privacy::default();
+        privacy.load(&store);
         #[cfg(feature = "cast")]
         let casts =
             Arc::new(crate::cast::CastHub::new(paths.data_dir.join("remote"), http.clone()));
@@ -186,6 +191,7 @@ impl Services {
             book_plugins: Default::default(),
             novels: Default::default(),
             book_sources,
+            privacy: Arc::new(privacy),
             #[cfg(feature = "testing")]
             windows: None,
             #[cfg(feature = "cast")]

@@ -114,6 +114,7 @@ fn context(episode: &str, next: Option<&str>) -> PlaybackContext {
 
 fn settings(auto_next: bool) -> PlaySettings {
     PlaySettings {
+        privacy: Default::default(),
         threshold: 0.85,
         auto_skip: false,
         auto_skip_recap: false,

@@ -30,11 +30,12 @@ impl Rpc {
     pub(super) async fn start(
         _: &kaeri_core::config::PresenceConfig,
         _: &PlaybackContext,
+        _: bool,
     ) -> Self {
         Self
     }
 
-    pub(super) async fn observe(&mut self, _: Playhead) {}
+    pub(super) async fn observe(&mut self, _: Playhead, _: bool) {}
 
     pub(super) async fn finish(&mut self) {}
 }

@@ -1083,6 +1083,10 @@ pub(crate) fn dispatch(
             }
         }
         Command::SetTranslation { translation } => set_translation(translation, engine, tx),
+        Command::SetPrivate { on } => crate::private::set(on, engine, services, tx),
+        Command::SetAlwaysPrivate { title, on } => {
+            crate::private::set_always(title, on, engine, services, tx);
+        }
         Command::SetTorrentProxy { proxy } => set_torrent_proxy(proxy, engine, services, tx),
         // Off the loop, with no job: the verdict is the answer.
         Command::CheckTorrentProxy { proxy } => {

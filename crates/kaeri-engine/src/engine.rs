@@ -299,6 +299,8 @@ impl Engine {
                     http.clone(),
                 );
                 let local = crate::local::Local::new(store.clone());
+                let privacy = Arc::new(crate::private::Privacy::default());
+                privacy.load(&store);
                 let book_sources = crate::read_sources::BookSources::new(
                     store.clone(),
                     kaeri_track::TokenStore::over(crate::host::file_secrets(&paths)),
@@ -339,6 +341,7 @@ impl Engine {
                     windows: parts.windows,
                     #[cfg(feature = "cast")]
                     casts,
+                    privacy,
                 }
             }
             None => Services::build(&tracked, paths, http, store, registry, player_theme, host)
@@ -395,6 +398,7 @@ impl Engine {
             state.config.use_overlay(Some(overlay), &services.paths);
         }
         state.config.set_sync(services.store.clone());
+        state.cache.use_privacy(services.privacy.clone());
         crate::tracking::commands::announce_signed_in(&services.store, &services.sync);
         state.config.set_handheld(handheld);
         state.config.set_phone(phone);
@@ -442,6 +446,8 @@ impl Engine {
         // The settings first: everything after is drawn under the config they say.
         state.config.set_skip_find_paused(services.skip_find.paused(state.config.effective()));
         launch.push_back(Event::Settings(state.config.view()));
+        // Private mode starts off on every launch: it is never kept.
+        launch.push_back(Event::Private(services.privacy.is_on()));
         // Whether trailers may start, on that config, before the front end says anything.
         launch.push_back(crate::autoplay::at_launch(&mut state));
         // A database found damaged was moved aside and this one is new: why the history is empty.
@@ -1108,6 +1114,7 @@ impl Actor {
         if self.state.network.offline {
             self.state.missed.note(&command);
         }
+        crate::private::note_command(&self.services.privacy, &command);
         let job = job.map(|(id, activity)| JobGuard::announce(id, activity, &tx));
         dispatch(command, job, &mut self.state, &self.services, &tx);
         for again in self.state.missed.take_due() {
@@ -1213,6 +1220,8 @@ impl Actor {
                 played.as_ref().filter(|_| crate::downloads::ahead::after(&event)).map(|p| p.id)
             }
         };
+        // Private: downloading the next episodes ahead would say what is being watched.
+        let kept = kept.filter(|id| !self.services.privacy.holds_show(*id));
         // Where a viewer is in a show: what the Continue queue is made of.
         let queue_moves = matches!(
             event,
@@ -1380,6 +1389,7 @@ impl Actor {
 
     fn pass_on(&self, mut event: Event) {
         crate::title_language::retitle(&mut event, self.services.meta.titles().language());
+        self.services.privacy.overlay(&mut event);
         let _ = self.out.send(Out::Event(event));
     }
 

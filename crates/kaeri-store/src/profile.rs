@@ -63,6 +63,7 @@ pub const PERSONAL_TABLES: &[&str] = &[
     "book_source_match",
     "book_edition_pref",
     "book_credit_keep",
+    "private_title",
 ];
 
 /// Tables that belong to the device and are shared by every profile.

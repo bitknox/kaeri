@@ -85,6 +85,10 @@ pub struct TitleCache {
     /// Each playback started, by its number: where it last said it was. Kept once it has
     /// ended, a few bytes each, so that what it says after is known for a straggler.
     playbacks: HashMap<PlaybackId, Playhead>,
+    /// Private mode and the titles kept private: what a private play says moves nothing here,
+    /// as it writes nothing. Its place is held in memory and put on what is said of the title
+    /// on its way out (see [`crate::private::Privacy::overlay`]).
+    privacy: Option<std::sync::Arc<crate::private::Privacy>>,
 }
 
 /// One title, as the record holds it.
@@ -175,10 +179,14 @@ impl TitleCache {
             }
             Event::Playback { position, duration, .. } => {
                 let played = played?;
+                let held = self.held(played.id);
                 let playhead = self.playing(played)?;
                 playhead.position = *position;
                 if duration.is_some() {
                     playhead.duration = *duration;
+                }
+                if held {
+                    return None;
                 }
                 // Keeps the table honest while detached: `q` leaves mpv running and drops the
                 // viewer back on the episode list, which would otherwise sit frozen at the
@@ -203,6 +211,9 @@ impl TitleCache {
                 if let Some(playhead) = played.and_then(|played| self.playing(played)) {
                     playhead.ended = true;
                 }
+                if self.held(*id) {
+                    return Some(*id);
+                }
                 let watch = Watch {
                     episode: episode.clone(),
                     position: *position,
@@ -213,8 +224,12 @@ impl TitleCache {
             }
             Event::PlaybackEnded { watched, .. } => {
                 let played = played?;
+                let held = self.held(played.id);
                 let playhead = self.playing(played)?;
                 playhead.ended = true;
+                if held {
+                    return Some(played.id);
+                }
                 let watch = Watch {
                     episode: played.episode.clone(),
                     position: playhead.position,
@@ -225,6 +240,16 @@ impl TitleCache {
             }
             _ => None,
         }
+    }
+
+    /// Read private mode and the titles kept private from `privacy`: see [`Self::privacy`].
+    pub(crate) fn use_privacy(&mut self, privacy: std::sync::Arc<crate::private::Privacy>) {
+        self.privacy = Some(privacy);
+    }
+
+    /// Whether what a play of `id` says is held now.
+    fn held(&self, id: AnilistId) -> bool {
+        self.privacy.as_ref().is_some_and(|privacy| privacy.holds_show(id))
     }
 
     /// A playback is starting: what it says is taken in from now until it says it ended.
@@ -358,7 +383,7 @@ impl TitleCache {
                     && episode.number.trim().parse::<u32>().is_ok_and(|n| n > next);
             }
         }
-        Event::Progress { id, progress, resume, episodes }
+        Event::Progress { id, progress, resume, episodes, private: None, kept: false }
     }
 
     /// How many episodes of a title are done, as its page or a list last said: `None` for a
