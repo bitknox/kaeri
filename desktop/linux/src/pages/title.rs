@@ -165,6 +165,9 @@ struct Page {
     offers_waited: Cell<bool>,
     /// What the availability line's room last showed, once the head was drawn.
     offers: Cell<Option<OffersRoom>>,
+    /// Whether a source plays the title, as the page last asked the engine once the episodes
+    /// said: an answer for the other case does not count.
+    plays: Cell<Option<bool>>,
     columns: gtk::Box,
     rows: Rc<RefCell<Vec<EpisodeRow>>>,
     /// The page's status action, its state the list the title is on.
@@ -409,6 +412,7 @@ pub fn page(ctx: &Rc<Ctx>, id: AnilistId) -> adw::NavigationPage {
         listed: Cell::new(false),
         offers_waited: Cell::new(false),
         offers: Cell::new(None),
+        plays: Cell::new(None),
         columns,
         rows: Rc::default(),
         listening: RefCell::default(),
@@ -479,7 +483,8 @@ pub fn page(ctx: &Rc<Ctx>, id: AnilistId) -> adw::NavigationPage {
         move || {
             let Some(page) = weak.upgrade() else { return };
             page.offers_waited.set(true);
-            if page.availability().is_none() {
+            // Still held: whatever is known now counts, or the room closes.
+            if !matches!(page.offers.get(), Some(OffersRoom::Lines | OffersRoom::Closed)) {
                 page.redraw_head();
             }
         }
@@ -661,6 +666,7 @@ impl Page {
     /// here.
     fn ask_availability(&self) {
         let plays_here = self.rows.borrow().iter().any(choices::playable);
+        self.plays.set(Some(plays_here));
         self.ctx.hub.send(Command::Licensed(LicensedCommand::LoadAvailability {
             id: self.id,
             plays_here,
@@ -704,7 +710,15 @@ impl Page {
         availability: Option<&TitleAvailability>,
     ) -> (OffersRoom, Vec<gtk::Widget>) {
         let lines = availability.map(|a| licensed::lines(&self.ctx, a));
-        let room = offers_room(lines.as_ref().map(Vec::len), self.offers_waited.get());
+        let answer = availability.zip(lines.as_ref()).map(|(a, lines)| Answer {
+            plays_here: matches!(
+                a.case,
+                AvailabilityCase::PlaysHere | AvailabilityCase::PlaysAlsoOn
+            ),
+            lines: lines.len(),
+        });
+        let settled = matches!(self.offers.get(), Some(OffersRoom::Lines | OffersRoom::Closed));
+        let room = offers_room(self.plays.get(), answer, self.offers_waited.get(), settled);
         (room, lines.unwrap_or_default())
     }
 
@@ -1176,7 +1190,7 @@ impl Page {
         let (room, lines) = self.offers_room(availability.as_ref());
         let mut landed = None;
         match room {
-            OffersRoom::Held => text.append(&offers_placeholder()),
+            OffersRoom::Held { rows } => text.append(&offers_placeholder(rows)),
             OffersRoom::Lines => {
                 let under = gtk::Box::new(gtk::Orientation::Vertical, 0);
                 under.set_margin_top(4);
@@ -1189,7 +1203,7 @@ impl Page {
             OffersRoom::Closed => {}
         }
         let before = self.offers.replace(Some(room));
-        let fades = matches!(before, Some(OffersRoom::Held | OffersRoom::Closed));
+        let fades = matches!(before, Some(OffersRoom::Held { .. } | OffersRoom::Closed));
 
         let line = gtk::Box::new(gtk::Orientation::Horizontal, 20);
         line.set_margin_top(18);
@@ -1229,7 +1243,12 @@ impl Page {
         clear(&self.head);
         // The availability line's room too, unless it is known to close.
         let (room, _) = self.offers_room(self.availability().as_ref());
-        self.head.append(&head_placeholder(size == Size::Narrow, room != OffersRoom::Closed));
+        let rows = match room {
+            OffersRoom::Held { rows } => rows,
+            OffersRoom::Lines => 1,
+            OffersRoom::Closed => 0,
+        };
+        self.head.append(&head_placeholder(size == Size::Narrow, rows));
         self.held.head.set(true);
         clear(&self.synopsis);
         self.synopsis.append(&synopsis_placeholder());
@@ -2792,37 +2811,65 @@ fn text_bar(width: i32, height: i32, room: i32) -> gtk::Box {
 /// What stands in the availability line's room under the head's actions.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 enum OffersRoom {
-    /// Where the title is listed is not known yet: a placeholder line keeps the room.
-    Held,
+    /// Where the title is listed is not known yet: placeholder rows keep the room the answer
+    /// will take, two while no source plays the title ("Listed on" and Choose your services),
+    /// one otherwise ("Also on").
+    Held { rows: usize },
     /// The answer's lines.
     Lines,
     /// The answer has no line, or none came in time: the room closes.
     Closed,
 }
 
-/// The availability line's room, from how many lines the engine's answer has (none until it
-/// answers) and whether the page waited its longest for it. An answer already known, as the last
-/// one while a newer one is asked for, stands until the newer one replaces it.
-fn offers_room(lines: Option<usize>, waited: bool) -> OffersRoom {
-    match lines {
-        Some(0) => OffersRoom::Closed,
+/// What the engine answered about where the title is listed, as the room needs it.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+struct Answer {
+    /// It was worked out for a title a source plays.
+    plays_here: bool,
+    /// The lines it draws under the actions.
+    lines: usize,
+}
+
+/// The availability line's room. `plays` is whether a source plays the title, once the
+/// episodes say; an answer counts when it was worked out for that case, once the page waited
+/// its longest, or once the room has shown an answer, which then stands until a newer answer
+/// replaces it.
+fn offers_room(
+    plays: Option<bool>,
+    answer: Option<Answer>,
+    waited: bool,
+    settled: bool,
+) -> OffersRoom {
+    let counts = |a: &Answer| waited || settled || plays == Some(a.plays_here);
+    match answer.filter(counts) {
+        Some(Answer { lines: 0, .. }) => OffersRoom::Closed,
         Some(_) => OffersRoom::Lines,
         None if waited => OffersRoom::Closed,
-        None => OffersRoom::Held,
+        None => OffersRoom::Held { rows: if plays == Some(false) { 2 } else { 1 } },
     }
 }
 
-/// The availability line's room while it is on its way: one line of text, under the actions.
-fn offers_placeholder() -> gtk::Box {
-    let line = holding(gtk::Orientation::Vertical, 0);
-    line.set_margin_top(4);
-    line.append(&text_bar(200, 12, 21));
-    line
+/// The availability line's room while it is on its way: `rows` lines, each as tall as the line
+/// that lands there, with a bar standing in its place.
+fn offers_placeholder(rows: usize) -> gtk::Box {
+    let room = holding(gtk::Orientation::Vertical, 0);
+    room.set_margin_top(4);
+    let widths = [220, 150];
+    for (shape, width) in licensed::shapes(rows > 1).iter().zip(widths) {
+        // The line's own shape, unseen, sets the height; the bar stands over it.
+        let row = gtk::Grid::new();
+        row.attach(shape, 0, 0, 1, 1);
+        let bar = states::plate(if rows > 1 { width } else { 180 }, 12, "bar");
+        bar.set_valign(gtk::Align::Center);
+        row.attach(&bar, 0, 0, 1, 1);
+        room.append(&row);
+    }
+    room
 }
 
 /// The head's room while nothing of the title is known: the cover, the title, its line and the
-/// actions, and the availability line's room while `offers` waits.
-fn head_placeholder(narrow: bool, offers: bool) -> gtk::Box {
+/// actions, and the availability line's room in `offers` rows.
+fn head_placeholder(narrow: bool, offers: usize) -> gtk::Box {
     let line = holding(gtk::Orientation::Horizontal, 20);
     line.set_margin_top(18);
     if !narrow {
@@ -2844,8 +2891,8 @@ fn head_placeholder(narrow: bool, offers: bool) -> gtk::Box {
         actions.append(&states::plate(34, 34, "round"));
     }
     text.append(&actions);
-    if offers {
-        text.append(&offers_placeholder());
+    if offers > 0 {
+        text.append(&offers_placeholder(offers));
     }
     line.append(&text);
     line
@@ -3118,29 +3165,50 @@ mod waiting_tests {
 
     #[test]
     fn the_availability_line_keeps_its_room_until_the_answer() {
-        // Before the answer, the room is held from the first frame.
-        assert_eq!(offers_room(None, false), OffersRoom::Held);
-        // An answer with a line takes the room; one without closes it.
-        assert_eq!(offers_room(Some(1), false), OffersRoom::Lines);
-        assert_eq!(offers_room(Some(2), true), OffersRoom::Lines);
-        assert_eq!(offers_room(Some(0), false), OffersRoom::Closed);
-        // No answer within 2 s, as offline: the room closes.
-        assert_eq!(offers_room(None, true), OffersRoom::Closed);
+        let says = |plays_here, lines| Some(Answer { plays_here, lines });
+        let one = OffersRoom::Held { rows: 1 };
+        let two = OffersRoom::Held { rows: 2 };
+        // Before the episodes say, the room is held from the first frame, even over an answer
+        // known from before.
+        assert_eq!(offers_room(None, None, false, false), one);
+        assert_eq!(offers_room(None, says(true, 1), false, false), one);
+        // No source plays it: two rows, for "Listed on" and Choose your services.
+        assert_eq!(offers_room(Some(false), None, false, false), two);
+        assert_eq!(offers_room(Some(true), None, false, false), one);
+        // An answer for the other case does not count.
+        assert_eq!(offers_room(Some(false), says(true, 1), false, false), two);
+        assert_eq!(offers_room(Some(true), says(false, 2), false, false), one);
+        // An answer for this case with a line takes the room; one without closes it.
+        assert_eq!(offers_room(Some(true), says(true, 1), false, false), OffersRoom::Lines);
+        assert_eq!(offers_room(Some(false), says(false, 2), false, false), OffersRoom::Lines);
+        assert_eq!(offers_room(Some(true), says(true, 0), false, false), OffersRoom::Closed);
+        // Once shown, an answer stands while a newer one is asked for.
+        assert_eq!(offers_room(Some(true), says(false, 2), false, true), OffersRoom::Lines);
+        // No answer within 2 s, as offline: the room closes; any answer counts from then.
+        assert_eq!(offers_room(None, None, true, false), OffersRoom::Closed);
+        assert_eq!(offers_room(Some(false), None, true, false), OffersRoom::Closed);
+        assert_eq!(offers_room(Some(true), says(false, 1), true, false), OffersRoom::Lines);
         assert_eq!(OFFERS_WAIT_FOR, Duration::from_secs(2));
     }
 
-    /// The availability line's room is one line of text with the line's own spacing, and the
-    /// head's placeholder keeps it while the answer is on its way.
+    /// The availability line's room is as tall as the lines that land there, with their own
+    /// spacing, and the head's placeholder keeps it while the answer is on its way.
     #[test]
     fn the_availability_line_has_its_room_at_once() {
         crate::gtk_test::run(|| {
-            let line = offers_placeholder().measure(gtk::Orientation::Vertical, 600).1;
-            assert!((4 + 21..=30).contains(&line), "the line's room takes {line} px");
+            let tall = |widget: &gtk::Widget| widget.measure(gtk::Orientation::Vertical, 600).1;
+            let also_on = licensed::external_link("Also on Hikari Library").upcast();
+            let one = offers_placeholder(1).upcast();
+            assert_eq!(tall(&one), 4 + tall(&also_on), "one row");
+            let listed = licensed::listed_line("Listed on Tsuki TV.").upcast();
+            let choose = licensed::choose_link("Choose your services").upcast();
+            let two = offers_placeholder(2).upcast();
+            assert_eq!(tall(&two), 4 + tall(&listed) + tall(&choose), "two rows");
+            assert!(tall(&two) > tall(&one));
             // Narrow, where no cover beside the text sets the head's height.
-            let with = head_placeholder(true, true).measure(gtk::Orientation::Vertical, 400).1;
-            let without =
-                head_placeholder(true, false).measure(gtk::Orientation::Vertical, 400).1;
-            assert!(with >= without + line, "the head keeps {with} px against {without} px");
+            let head = |rows| tall(&head_placeholder(true, rows).upcast());
+            assert!(head(1) >= head(0) + tall(&one), "the head keeps one row");
+            assert!(head(2) >= head(0) + tall(&two), "the head keeps two rows");
         });
     }
 
