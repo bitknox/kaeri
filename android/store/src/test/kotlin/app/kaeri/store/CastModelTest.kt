@@ -5,6 +5,7 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.async
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceUntilIdle
@@ -254,5 +255,111 @@ class CastModelTest {
         link.cards.send(card(loading = false, over = true))
         advanceUntilIdle()
         assertEquals(0, browser.relooked)
+    }
+
+    /** A held TV's session that says what the test tells it to. */
+    private class ScriptedSessions(private val link: ScriptedLink) : CastSessionSource {
+        var view = CastSession.IDLE
+        val views = Channel<CastSession?>(Channel.UNLIMITED)
+        override fun state() = view
+        override suspend fun next(): CastSession? = views.receive()?.also { view = it }
+        override fun connect(key: String, from: CastFrom?) {}
+        override fun disconnect() {}
+        override fun command(command: FfiTvCommand) {}
+        override fun play(request: TvPlayRequest) {}
+        override val queues = false
+        override fun playNext(id: AnilistId, episode: String) = false
+        override fun playHere(): CastFrom? = null
+        override fun leftOn(): String? = "cast:fixture-living"
+        override fun card(): CastLink = link
+    }
+
+    private val item = CastItem(
+        id = 900001u, title = "The Lantern Road", episode = "7", episodeTitle = null, image = null, position = 21.4,
+        duration = 1420.0, paused = false, loading = false, waiting = null,
+    )
+
+    private fun view(state: CastSessionState, notice: Msg? = null) = CastSession(
+        state = state, button = null, rev = 1u, deviceKey = row.key, deviceName = "Living room",
+        item = item.takeIf { state == CastSessionState.Playing }, queue = emptyList(), notice = notice, note = null,
+        level = 0.4, muted = false, levelControl = true,
+    )
+
+    /** A held TV playing the card's episode, its controller down, as with the phone locked. */
+    private fun TestScope.playingOnAHeldTv(link: ScriptedLink): Pair<CastModel, ScriptedSessions> {
+        val cast = model(link)
+        val sessions = ScriptedSessions(link)
+        cast.sessions = sessions
+        sessions.views.trySend(view(CastSessionState.Connected))
+        runCurrent()
+        assertTrue(cast.playOnTv(request))
+        sessions.views.trySend(view(CastSessionState.Playing))
+        runCurrent()
+        cast.closeCard()
+        runCurrent()
+        return cast to sessions
+    }
+
+    @Test
+    fun a_held_tv_lost_with_the_controller_down_ends_with_a_notice_and_plays_on_nowhere() = runTest {
+        val link = ScriptedLink(card(loading = false))
+        val (cast, sessions) = playingOnAHeldTv(link)
+        assertEquals(CastStage.Playing, cast.shown.value?.stage)
+        assertTrue("the session is kept up while it plays", cast.casting.value)
+        val ended = backgroundScope.async { cast.ended.first() }
+        runCurrent()
+
+        sessions.views.trySend(view(CastSessionState.Error, Msg.NoticeCastLost("Living room")))
+        advanceUntilIdle()
+        assertNull(cast.shown.value)
+        assertFalse("nothing claims to play on", cast.casting.value)
+        assertNull("never a Reconnecting that waits on nothing", cast.joining.value)
+        val said = ended.await()
+        assertEquals(Msg.NoticeCastLost("Living room"), said.notice)
+        assertEquals("7", said.episode)
+    }
+
+    @Test
+    fun a_held_tv_lost_with_the_controller_up_keeps_a_card_that_says_so() = runTest {
+        val link = ScriptedLink(card(loading = false))
+        val (cast, sessions) = playingOnAHeldTv(link)
+        cast.openCard()
+        sessions.views.trySend(view(CastSessionState.Error, Msg.NoticeCastLost("Living room")))
+        advanceUntilIdle()
+        val shown = cast.shown.value
+        assertEquals(CastStage.Lost, shown?.stage)
+        assertFalse(shown!!.live)
+        assertFalse(cast.casting.value)
+        // A card the engine sends late changes nothing: the card no longer follows it.
+        link.cards.send(card(loading = false))
+        advanceUntilIdle()
+        assertEquals(CastStage.Lost, cast.shown.value?.stage)
+        cast.dismiss()
+        assertNull(cast.shown.value)
+    }
+
+    @Test
+    fun a_cast_lost_with_the_controller_down_says_so_once() = runTest {
+        val link = ScriptedLink(card(loading = false))
+        val cast = model(link)
+        cast.cast(row, request)
+        cast.closeCard()
+        val said = mutableListOf<CastEnded>()
+        backgroundScope.launch { cast.ended.collect { said += it } }
+        runCurrent()
+        link.cards.send(card(loading = false, over = true, notice = Msg.NoticeCastLost("Living room")))
+        advanceUntilIdle()
+        assertNull(cast.shown.value)
+        assertEquals(listOf(Msg.NoticeCastLost("Living room")), said.map { it.notice })
+    }
+
+    @Test
+    fun only_a_session_with_nothing_held_or_ended_is_joined_again() {
+        val rows = listOf(row)
+        assertEquals("Living room", CastModel.joining(view(CastSessionState.Idle), row.key, rows))
+        assertNull(CastModel.joining(view(CastSessionState.Error, Msg.NoticeCastLost("Living room")), row.key, rows))
+        assertNull(CastModel.joining(view(CastSessionState.Playing), row.key, rows))
+        assertNull(CastModel.joining(view(CastSessionState.Idle), row.key, emptyList()))
+        assertNull(CastModel.joining(view(CastSessionState.Idle), null, rows))
     }
 }
