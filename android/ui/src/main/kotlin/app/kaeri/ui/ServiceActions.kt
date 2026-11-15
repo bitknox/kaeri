@@ -11,6 +11,8 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.heightIn
@@ -31,6 +33,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -91,8 +94,10 @@ internal val TitleAvailability?.hasLine: Boolean
 /**
  * The haze line under the actions. Case A and B name the person's other services, each case C
  * names where the title is listed, and offers the choice of services while none is ticked.
- * Nothing at all while there is no line. An answer that comes after the page opens the line on
- * standard and fades it in, so what is below moves down with it, as Home's "Not found" line does.
+ * Until it is known where the title is listed, a placeholder line keeps the line's room from the
+ * first frame, like the title page's other placeholders, and the answer replaces it in one
+ * crossfade. An answer with no line, or none by [OFFERS_WAIT], closes the room in that crossfade,
+ * on standard, as rows fit once known.
  */
 @Composable
 internal fun ServiceLines(availability: TitleAvailability?, entry: app.kaeri.engine.model.Entry, modifier: Modifier = Modifier) {
@@ -102,18 +107,28 @@ internal fun ServiceLines(availability: TitleAvailability?, entry: app.kaeri.eng
     // The last answer that had a line, which the lines keep showing while they close.
     var kept by remember(entry.id) { mutableStateOf(availability?.takeIf { it.hasLine }) }
     if (availability.hasLine) kept = availability
-    // The line opens on standard as the page's items below move down on standard, so the two
-    // keep together: nothing below is drawn over, and nothing jumps.
+    // No answer comes when AniList cannot be reached: the room closes once the main button stops
+    // waiting for one.
+    var waited by remember(entry.id) { mutableStateOf(false) }
+    LaunchedEffect(entry.id) {
+        kotlinx.coroutines.delay(OFFERS_WAIT)
+        waited = true
+    }
+    val pending = availability == null && kept == null && !waited
     AnimatedVisibility(
-        availability.hasLine,
+        pending || availability.hasLine,
         modifier = modifier,
         enter = expandVertically(Motion.standard(), expandFrom = Alignment.Top) + fadeIn(Motion.fadeIn()),
-        exit = shrinkVertically(Motion.standard(), shrinkTowards = Alignment.Top) + fadeOut(Motion.fadeOut()),
+        exit = shrinkVertically(Motion.standard(), shrinkTowards = Alignment.Top) + fadeOut(Motion.standard()),
         label = "service-lines", // i18n-skip
     ) {
-        val lines = kept ?: return@AnimatedVisibility
-        // One answer with a line giving way to another crossfades in place.
-        Crossfade(lines, animationSpec = Motion.standard(), label = "service-lines-change") { shown -> // i18n-skip
+        // The placeholder giving way to the answer, or one answer with a line to another,
+        // crossfades in place.
+        Crossfade(kept, animationSpec = Motion.standard(), label = "service-lines-change") { shown -> // i18n-skip
+            if (shown == null) {
+                ServiceLinePlaceholder()
+                return@Crossfade
+            }
             Column(Modifier.padding(top = 8.dp)) {
                 val also = shown.alsoOn
                 when (shown.case) {
@@ -149,5 +164,19 @@ internal fun ServiceLines(availability: TitleAvailability?, entry: app.kaeri.eng
                 }
             }
         }
+    }
+}
+
+/** How long the services line waits for its answer before its room closes: the Apple app's 2 s. */
+internal const val OFFERS_WAIT = 2_000L
+
+/** The services line's room while it is not yet known where the title is listed. */
+@Composable
+private fun ServiceLinePlaceholder() {
+    Box(
+        Modifier.testTag(TITLE_PLACEHOLDER).padding(top = 8.dp).fillMaxWidth().heightIn(min = 48.dp),
+        contentAlignment = Alignment.CenterStart,
+    ) {
+        TextPlaceholder(0.5f, 20.dp)
     }
 }

@@ -26,7 +26,10 @@ import org.robolectric.annotation.Config
 import org.robolectric.annotation.GraphicsMode
 import app.kaeri.design.KaeriTheme
 import app.kaeri.engine.core.AnilistId
+import app.kaeri.engine.model.AvailabilityCase
 import app.kaeri.engine.model.Event
+import app.kaeri.engine.model.ServiceLink
+import app.kaeri.engine.model.TitleAvailability
 import app.kaeri.store.AppClock
 import app.kaeri.store.AppStore
 import app.kaeri.store.HAS_TESTING_ENGINE
@@ -78,6 +81,19 @@ abstract class TitleOpenGeometry {
     @Test
     fun nothing_moves_when_the_page_lands_between_600_ms_and_the_old_hold() = assertStill(detailMs = 704L)
 
+    /** Where the title is listed, landing well after its page: its line takes the room kept for it. */
+    @Test
+    fun nothing_below_the_actions_moves_when_the_listing_lands() = assertStill(detailMs = 304L, listedMs = 1_504L)
+
+    @Test
+    fun the_listing_line_keeps_its_room_from_the_first_frame() {
+        val (_, frames) = run(detailMs = 304L, listedMs = 1_504L)
+        assertTrue("a placeholder before the page", frames.first().placeholders > 0)
+        val waiting = frames.filter { it.at in 400L until 1_504L }
+        assertTrue("the line's placeholder stands until the listing lands", waiting.all { it.placeholders > 0 })
+        assertTrue("no placeholder once it has landed", frames.last().placeholders == 0)
+    }
+
     @Test
     fun placeholders_show_at_the_first_frame_and_go_when_the_page_lands() {
         // Past 600 ms, where other screens would only now show their placeholders, and before
@@ -93,8 +109,8 @@ abstract class TitleOpenGeometry {
         assertTrue("More about this show stands: $more", more.isNotEmpty())
     }
 
-    private fun assertStill(detailMs: Long) {
-        val (_, frames) = run(detailMs)
+    private fun assertStill(detailMs: Long, listedMs: Long = detailMs) {
+        val (_, frames) = run(detailMs, listedMs)
         val tops = frames.mapNotNull { f -> f.more?.let { f.at to it } }
         assertTrue("More about this show shows", tops.isNotEmpty())
         val last = tops.last().second
@@ -105,15 +121,27 @@ abstract class TitleOpenGeometry {
     /** One frame of the page: when, how many placeholders, whether one drew, and More about's top. */
     private data class Frame(val at: Long, val placeholders: Int, val drawn: Boolean, val more: Float?)
 
-    /** Opens the title from its list's row and steps it frame by frame, the page landing at [detailMs]. */
-    private fun run(detailMs: Long): Pair<String, List<Frame>> {
+    /**
+     * Opens the title from its list's row and steps it frame by frame, the page landing at
+     * [detailMs] and where it is listed at [listedMs]: one service of the viewer's, a line of its own.
+     */
+    private fun run(detailMs: Long, listedMs: Long = detailMs): Pair<String, List<Frame>> {
         val recorded = Scene.named("watching")
         AppClock.clock = Clock.fixed(recorded.recordedAt, ZoneId.of("Europe/Copenhagen"))
         val store = AppStore(scope, clock = { 0L }, artworkWithoutEngine = FixtureArt::bytes)
         val page = recorded.events.filterIsInstance<Event.Detail>().last { it.v1.id == TITLE && it.v1.detail?.partial != true }
         val rows = recorded.events.filterIsInstance<Event.Episodes>().last { it.id == TITLE }
         // Everything else the scene knew, the lists with this title's row among them.
-        store.apply(recorded.events.filter { !(it is Event.Detail && it.v1.id == TITLE) && !(it is Event.Episodes && it.id == TITLE) })
+        store.apply(
+            recorded.events.filter {
+                !(it is Event.Detail && it.v1.id == TITLE) && !(it is Event.Episodes && it.id == TITLE) && !(it is Event.Availability && it.v1.id == TITLE)
+            },
+        )
+        val listed = TitleAvailability(
+            id = TITLE,
+            case = AvailabilityCase.PLAYS_ALSO_ON,
+            alsoOn = listOf(ServiceLink(service = "Lantern Library", url = "https://lantern.example/title")), // i18n-skip
+        )
         assertTrue("the list's row is here", store.titles[TITLE] != null)
         compose.setContent { KaeriTheme { AppRoot(store, startTitle = TITLE) } }
         compose.mainClock.autoAdvance = false
@@ -123,6 +151,7 @@ abstract class TitleOpenGeometry {
         while (now < SETTLE_MS) {
             if (now == EPISODES_MS) compose.runOnUiThread { store.apply(listOf(rows)) }
             if (now == detailMs) compose.runOnUiThread { store.apply(listOf(Event.Detail(page.v1))) }
+            if (now == listedMs) compose.runOnUiThread { store.apply(listOf(Event.Availability(listed))) }
             compose.mainClock.advanceTimeBy(FRAME_MS)
             now += FRAME_MS
             val held = compose.onAllNodesWithTag(TITLE_PLACEHOLDER, useUnmergedTree = true)
