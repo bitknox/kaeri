@@ -31,37 +31,37 @@ receiver-ready-computer = Ready. Choose an episode on the computer.
 # Replaces the ready line in the last 30 seconds before the TV goes back to its own screen. The
 # seconds count down once a second.
 # @arg seconds: int
-# @max 72
+# @max 84
 receiver-closing-iphone = Closing in { $seconds } s. Choose an episode on the iPhone to stay.
 
 # Replaces the ready line in the last 30 seconds before the TV goes back to its own screen. The
 # seconds count down once a second.
 # @arg seconds: int
-# @max 72
+# @max 84
 receiver-closing-ipad = Closing in { $seconds } s. Choose an episode on the iPad to stay.
 
 # Replaces the ready line in the last 30 seconds before the TV goes back to its own screen. The
 # seconds count down once a second.
 # @arg seconds: int
-# @max 72
+# @max 84
 receiver-closing-mac = Closing in { $seconds } s. Choose an episode on the Mac to stay.
 
 # Replaces the ready line in the last 30 seconds before the TV goes back to its own screen. The
 # seconds count down once a second.
 # @arg seconds: int
-# @max 72
+# @max 84
 receiver-closing-phone = Closing in { $seconds } s. Choose an episode on the phone to stay.
 
 # Replaces the ready line in the last 30 seconds before the TV goes back to its own screen. The
 # seconds count down once a second.
 # @arg seconds: int
-# @max 72
+# @max 84
 receiver-closing-tablet = Closing in { $seconds } s. Choose an episode on the tablet to stay.
 
 # Replaces the ready line in the last 30 seconds before the TV goes back to its own screen. The
 # seconds count down once a second.
 # @arg seconds: int
-# @max 72
+# @max 84
 receiver-closing-computer = Closing in { $seconds } s. Choose an episode on the computer to stay.
 
 # Beside four small lights while an episode starts, under the show and episode.
