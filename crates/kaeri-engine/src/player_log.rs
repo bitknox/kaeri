@@ -592,7 +592,7 @@ where
     S: Subscriber + for<'a> LookupSpan<'a>,
 {
     let log = Arc::clone(LOG.get_or_init(Arc::default));
-    Keeper { log }.with_filter(filter_fn(wanted))
+    Keeper { log, redact: crate::private::redact::log() }.with_filter(filter_fn(wanted))
 }
 
 /// Mirror the process's log to [`FILE`] in `dir`, the cache's `logs` folder: see
@@ -881,6 +881,9 @@ impl Visit for Said {
 /// The layer itself, over the process's log.
 struct Keeper {
     log: Arc<PlayerLog>,
+    /// The process's redactor, or a test's own: other tests open private playbacks on the
+    /// process's at the same time.
+    redact: &'static crate::private::redact::Redactor,
 }
 
 impl<S: Subscriber> Layer<S> for Keeper {
@@ -900,10 +903,10 @@ impl<S: Subscriber> Layer<S> for Keeper {
         // Private mode's redaction first, as the file and stderr layers have it: nothing while a
         // private play or read is open, and the private words and ids learnt taken out of the
         // rest.
-        if crate::private::redact::active() {
+        if self.redact.active() {
             return;
         }
-        let text = crate::private::redact::line(&said.text());
+        let text = self.redact.line(&said.text());
         self.log.line(now_ms(), severity, source, &text);
     }
 }
@@ -1127,13 +1130,19 @@ mod tests {
         assert_eq!(texts(&log).len(), 2);
     }
 
+    /// A redactor for one test, apart from the process's.
+    fn own_redactor() -> &'static crate::private::redact::Redactor {
+        Box::leak(Box::new(crate::private::redact::Redactor::new()))
+    }
+
     #[test]
     fn the_layer_takes_out_what_private_mode_has_learnt() {
-        // A word only this test teaches the process's redactor.
-        crate::private::redact::word("Quiet Bellflower Annex");
+        // A redactor of this test's own, which no other test's private playback turns on.
+        let redact = own_redactor();
+        redact.word("Quiet Bellflower Annex");
         let log = Arc::new(PlayerLog::new());
         let subscriber = tracing_subscriber::registry()
-            .with(Keeper { log: Arc::clone(&log) }.with_filter(filter_fn(wanted)));
+            .with(Keeper { log: Arc::clone(&log), redact }.with_filter(filter_fn(wanted)));
         tracing::subscriber::with_default(subscriber, || {
             log.begin("2", &[], T0);
             tracing::info!(target: "app", source = "mpv", "[cplayer] title: Quiet Bellflower Annex 02");
@@ -1147,8 +1156,10 @@ mod tests {
     #[test]
     fn the_layer_keeps_playback_lines_and_the_apps_mpv_lines_only() {
         let log = Arc::new(PlayerLog::new());
-        let subscriber = tracing_subscriber::registry()
-            .with(Keeper { log: Arc::clone(&log) }.with_filter(filter_fn(wanted)));
+        let subscriber = tracing_subscriber::registry().with(
+            Keeper { log: Arc::clone(&log), redact: own_redactor() }
+                .with_filter(filter_fn(wanted)),
+        );
         tracing::subscriber::with_default(subscriber, || {
             tracing::info!(target: "kaeri_engine::playback::resolve", "before any playback");
             log.begin("8", &["Moonlit Harbor".into()], T0);

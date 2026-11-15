@@ -420,6 +420,11 @@ pub mod redact {
         LOG.active()
     }
 
+    /// The log's own redactor, for a layer that takes it as a value.
+    pub fn log() -> &'static Redactor {
+        &LOG
+    }
+
     /// A private play or read is open: addresses are left out until the guard goes.
     pub fn open() -> Open<'static> {
         LOG.open()
