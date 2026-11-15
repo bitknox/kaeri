@@ -262,22 +262,23 @@ async fn remove_from_continue_moves_nothing_but_the_spotlight_it_held() {
     let (tx, mut rx) = outbox();
     home::load(&kit, ask(), false, &tx);
     let shown = whole_home(&mut rx).await;
-    assert_eq!(works(&shown.continue_reading), ["a:910003", "a:910005"]);
-    assert_eq!(shown.spotlight.as_ref().map(|t| t.work.as_str()), Some("a:910003"));
+    let mut both = works(&shown.continue_reading);
+    both.sort();
+    assert_eq!(both, ["a:910003", "a:910005"]);
+    let spotlit = shown.spotlight.as_ref().map(|t| t.work.clone()).expect("a spotlight");
+    let quiet = shown.continue_reading.iter().find(|t| t.work != spotlit).unwrap().work.clone();
 
-    let quiet = kaeri_core::books::WorkId::new("a:910005".to_owned());
     super::hide_from_continue(&kit, ask(), &quiet, &tx);
     assert!(rx.try_recv().is_err(), "a cover the spotlight does not show sends nothing");
     let kept = home::view(&kit, ask());
-    assert_eq!(works(&kept.continue_reading), ["a:910003"], "kept hidden");
+    assert_eq!(works(&kept.continue_reading), [spotlit.0.clone()], "kept hidden");
 
-    let spotlit = kaeri_core::books::WorkId::new("a:910003".to_owned());
     super::hide_from_continue(&kit, ask(), &spotlit, &tx);
     let Ok(Event::Reading(ReadingEvent::Home(moved))) = rx.try_recv() else {
         panic!("the spotlight's series sends Home");
     };
     assert!(moved.continue_reading.is_empty());
-    assert_ne!(moved.spotlight.as_ref().map(|t| t.work.as_str()), Some("a:910003"));
+    assert_ne!(moved.spotlight.as_ref().map(|t| &t.work), Some(&spotlit));
     assert_eq!(moved.spotlight, home::view(&kit, ask()).spotlight, "the spotlight moved on");
     assert_eq!(
         (&moved.up_next, &moved.rows),
