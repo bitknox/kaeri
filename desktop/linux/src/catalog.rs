@@ -73,6 +73,7 @@ pub fn label(key: SettingKey) -> String {
         K::TokenStorage => t::settings_label_token_storage(),
         K::SourceOrder => t::settings_label_source_order(),
         K::UpNextCountdown => t::settings_label_up_next_countdown(),
+        K::PreloadMetered => t::settings_preload_metered(),
         K::SpoilerProtection => t::settings_label_spoiler_protection(),
         K::PictureInPictureOnLeave => t::settings_label_picture_in_picture_on_leave(),
         K::DownloadQuality => t::settings_label_download_quality(),
@@ -163,6 +164,7 @@ pub fn is_switch(key: SettingKey) -> bool {
         key,
         K::Motion
             | K::AutoNext
+            | K::PreloadMetered
             | K::SkipOpening
             | K::SkipRecap
             | K::AskWasOpening

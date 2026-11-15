@@ -19,7 +19,7 @@ const TITLE: u32 = 900_001;
 const PLAYING: (u32, &str) = (900_002, "4");
 
 /// Every shot by name, in the order a run takes them.
-pub const ALL: [&str; 111] = [
+pub const ALL: [&str; 113] = [
     "home",
     "welcome",
     "offline",
@@ -87,6 +87,8 @@ pub const ALL: [&str; 111] = [
     "join-group",
     "join-ended",
     "settings",
+    "settings-preload-off",
+    "settings-preload-torrents",
     "settings-general",
     "settings-language",
     "settings-integrations",
@@ -1004,6 +1006,18 @@ fn stage(shell: &Rc<Shell>, shot: &str) -> f64 {
             shell.settings_pane("playback");
             1.5
         }
+        // Preload video on metered connections dimmed with Up next countdown, Auto-play next off.
+        "settings-preload-off" => {
+            set_switch(shell, kaeri_model::settings::SettingKey::AutoNext, false);
+            shell.settings_pane("playback");
+            1.5
+        }
+        // The torrent sentence joins the row's line while torrent playback is on.
+        "settings-preload-torrents" => {
+            set_switch(shell, kaeri_model::settings::SettingKey::Torrents, true);
+            shell.settings_pane("playback");
+            1.5
+        }
         "pad-continue" => {
             shell.go(Dest::Home);
             pad_press(
@@ -1500,6 +1514,12 @@ fn unstage(shell: &Rc<Shell>, shot: &str) {
                 nav.pop();
             }
         }
+        "settings-preload-off" => {
+            set_switch(shell, kaeri_model::settings::SettingKey::AutoNext, true);
+        }
+        "settings-preload-torrents" => {
+            set_switch(shell, kaeri_model::settings::SettingKey::Torrents, false);
+        }
         #[cfg(feature = "fixtures")]
         owner if owner.starts_with("store-") => {
             crate::showcase::set_mood(crate::showcase::Mood::Usual);
@@ -1597,6 +1617,14 @@ fn offer_update(shell: &Rc<Shell>) {
         }),
         notify: true,
     })]);
+}
+
+/// Turn a switch setting on or off, as its row would.
+fn set_switch(shell: &Rc<Shell>, key: kaeri_model::settings::SettingKey, on: bool) {
+    shell
+        .ctx
+        .hub
+        .send(Command::SetSetting { key, value: kaeri_core::settings::SettingValue::Bool(on) });
 }
 
 /// Set upscaling, which the fixture scene keeps off for the player shots.

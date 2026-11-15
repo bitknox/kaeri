@@ -26,6 +26,18 @@ pub const TOOLS_AT: Duration = Duration::from_secs(3);
 pub const SKIP_AFTER: Duration = Duration::from_secs(8);
 /// When the step line says plainly that it is still waiting.
 pub const SLOW_AT: Duration = Duration::from_secs(20);
+/// On a roll-on, how long the starting screen waits before it shows, so a next episode warmed
+/// during the ending goes from the ground straight to its picture.
+pub const ROLL_ON_WAIT: Duration = Duration::from_millis(600);
+/// The least a roll-on's starting screen stays once it shows, so it never flashes.
+pub const ROLL_ON_HOLD: Duration = Duration::from_millis(600);
+
+/// When a roll-on's starting screen gives way to a first frame that came at `picture`: at once
+/// when the screen never showed, else not before it has held for [`ROLL_ON_HOLD`] since it
+/// showed at `shown`. Both are times since the roll-on.
+pub fn roll_on_leaves(shown: Option<Duration>, picture: Duration) -> Duration {
+    shown.map_or(picture, |shown| picture.max(shown + ROLL_ON_HOLD))
+}
 
 const JOIN: &str = " · "; // i18n-skip
 
@@ -740,6 +752,20 @@ fn miss_note(miss: SourceMiss, episode: &str) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn a_roll_on_goes_straight_to_a_picture_that_comes_inside_the_wait_and_holds_a_late_screen()
+    {
+        let ms = Duration::from_millis;
+        // Warmed: the first frame at 450 ms, no screen ever shown.
+        assert!(ms(450) < ROLL_ON_WAIT);
+        assert_eq!(roll_on_leaves(None, ms(450)), ms(450));
+        // A late arrival: the screen showed at 600 ms and the frame came at 700 ms, so the
+        // screen holds to 1.2 s rather than flash for a tenth of a second.
+        assert_eq!(roll_on_leaves(Some(ROLL_ON_WAIT), ms(700)), ms(1200));
+        // A light warm-up: the frame at 1.5 s, past the hold, goes at once.
+        assert_eq!(roll_on_leaves(Some(ROLL_ON_WAIT), ms(1500)), ms(1500));
+    }
     use kaeri_model::starting::StartStep as S;
 
     fn ms(n: u64) -> Duration {
