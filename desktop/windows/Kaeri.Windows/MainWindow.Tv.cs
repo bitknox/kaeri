@@ -248,14 +248,13 @@ public sealed partial class MainWindow
         }
     }
 
-    /// <summary>The title bar's end: the cast button in a slot of its own, then where sync stands.</summary>
+    /// <summary>The title bar's end: the cast button in a slot of its own, then where sync stands and the private badge.</summary>
     StackPanel TitleBarEnd()
     {
-        var end = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 4, VerticalAlignment = VerticalAlignment.Center };
+        // The status and the private badge are there from the start; the cast button goes first.
         AppTitleBar.RightHeader = null;
-        end.Children.Add(castButton!);
-        end.Children.Add(status);
-        return end;
+        titleEnd.Children.Insert(0, castButton!);
+        return titleEnd;
     }
 
     /// <summary>Browsing for TVs from launch while the window is up; off while it sits in the notification area.</summary>

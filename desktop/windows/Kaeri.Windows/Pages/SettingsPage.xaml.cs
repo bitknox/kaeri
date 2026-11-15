@@ -280,6 +280,8 @@ public sealed partial class SettingsPage : Page
 
     void Heard(IReadOnlyList<Event> batch)
     {
+        if (privateToggle is { } toggle && batch.Any(e => e is Event.Private))
+            toggle.IsOn = ctx.Known.Private.On;
         if (batch.Any(e => e is Event.HiddenTitles) && pane.Name == "general")
             FillHidden();
         if (batch.Any(e => e is Event.Settings || e is Event.Profiles && pane.Name == "profiles"
@@ -1477,6 +1479,11 @@ public sealed partial class SettingsPage : Page
 
     void ShowAccounts()
     {
+        Cards.Children.Add(PrivateCard());
+        // What private mode leaves alone, then its shortcut, under the card as the board has it.
+        var under = Ui.Text(Privately.Under, "HazeCaptionStyle");
+        under.Margin = new Thickness(2, 8, 0, 0);
+        Cards.Children.Add(under);
         Cards.Children.Add(Heading(T.SettingsTrackers));
         // Each card keeps itself current: sync, an expired sign-in, and one under way.
         foreach (var tracker in new[] { "anilist", "mal", "kitsu", "simkl", "trakt" })
@@ -1503,6 +1510,28 @@ public sealed partial class SettingsPage : Page
         sync.Click += (_, _) => ctx.Send(new Command.SyncNow());
         Cards.Children.Add(Heading(T.SettingsSync));
         Cards.Children.Add(CardFrame(T.AccountsSyncAll, T.SettingsSyncDetail, sync));
+    }
+
+    ToggleSwitch? privateToggle;
+
+    /// <summary>
+    /// Private mode, first in Accounts: the engine's state as it last said it, never saved, so
+    /// every launch shows it off. The switch is silk, since private is a state and not an accent.
+    /// </summary>
+    SettingsCard PrivateCard()
+    {
+        var toggle = PrivateUi.Silk(new ToggleSwitch { IsOn = ctx.Known.Private.On, OnContent = "", OffContent = "", MinWidth = 0 });
+        Microsoft.UI.Xaml.Automation.AutomationProperties.SetName(toggle, T.PrivateMode);
+        // A redraw from the engine's word sets what it already is, so only a hand on the switch asks.
+        toggle.Toggled += (_, _) =>
+        {
+            if (toggle.IsOn != ctx.Known.Private.On)
+                ctx.Window.SetPrivate(toggle.IsOn);
+        };
+        privateToggle = toggle;
+        var card = CardFrame(T.PrivateMode, T.PrivateModeDetail, toggle);
+        card.HeaderIcon = new FontIcon { Glyph = PrivateUi.Glyph, FontSize = 20 };
+        return card;
     }
 
     /// <summary>
@@ -1559,7 +1588,7 @@ public sealed partial class SettingsPage : Page
                 "playback" => [T.SettingsClearSkips, T.SettingsHideChat, T.SettingsSmoothScrolling],
                 "downloads" => [T.DownloadsBackgroundTitle],
                 "sources" => [T.TorrentsProxyRoute],
-                "accounts" => [.. new[] { "anilist", "mal", "kitsu", "simkl", "trakt" }.Select(KaeriFfiMethods.TrackerName), T.AccountsSyncAll,
+                "accounts" => [T.PrivateMode, .. new[] { "anilist", "mal", "kitsu", "simkl", "trakt" }.Select(KaeriFfiMethods.TrackerName), T.AccountsSyncAll,
                     .. Following.SignedIn(ctx.Known) && ctx.Known.Setting(K.ShowFollowing) is not null ? [T.SettingsAnilistFollowing] : Array.Empty<string>()],
                 "devices" => [T.DevicesName, T.CloudGroup, T.TvPlayOn],
                 "integrations" => [T.SettingsDiscord],

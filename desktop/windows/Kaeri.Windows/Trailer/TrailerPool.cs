@@ -108,7 +108,7 @@ static class TrailerPool
             var word = text?.Trim() ?? "";
             if (word == "playing" || word.StartsWith("error:", StringComparison.Ordinal))
             {
-                Log($"primed with {id}: {word} after {Environment.TickCount64 - began} ms");
+                Log($"primed with {Privately.Logged(id)}: {word} after {Environment.TickCount64 - began} ms");
                 EndPrime();
             }
         };
@@ -119,7 +119,7 @@ static class TrailerPool
         primeTimeout.IsRepeating = false;
         primeTimeout.Tick += (_, _) =>
         {
-            Log($"priming with {id} did not play in {PrimeLimit.TotalSeconds:0} s");
+            Log($"priming with {Privately.Logged(id)} did not play in {PrimeLimit.TotalSeconds:0} s");
             EndPrime();
         };
         primeTimeout.Start();

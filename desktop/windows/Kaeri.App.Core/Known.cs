@@ -55,6 +55,9 @@ public sealed class Known
         Reading.Sending.Send = send;
     }
 
+    /// <summary>Private mode, the titles kept always private and the places held in memory.</summary>
+    public Privately Private { get; } = new();
+
     /// <summary>Each show's own settings sheet, as the engine last sent it, by AniList id.</summary>
     public Dictionary<uint, ShowSettingsView> ShowSheets { get; } = [];
 
@@ -373,6 +376,7 @@ public sealed class Known
     public void Take(Event e)
     {
         Jobs.Take(e, DateTimeOffset.UtcNow);
+        Private.Take(e);
         switch (e)
         {
             case Event.Medium medium:

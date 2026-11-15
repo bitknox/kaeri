@@ -103,6 +103,8 @@
                       <MenuFlyoutItem Text="{x:Bind s:T.TitleShowSettingsMenu}" Click="OnShowSettings" KeyboardAcceleratorTextOverride="Ctrl+I">
                         <MenuFlyoutItem.Icon><FontIcon Glyph="&#xE713;" /></MenuFlyoutItem.Icon>
                       </MenuFlyoutItem>
+                      <!-- Nothing from this show is saved or synced on this device, checked while it is so. -->
+                      <ToggleMenuFlyoutItem x:Name="AlwaysPrivateItem" Text="{x:Bind s:T.TitleAlwaysPrivate}" Click="OnAlwaysPrivate" />
                       <MenuFlyoutItem x:Name="DownloadItem" Text="{x:Bind s:T.TitleDownloadMenu}" Click="OnDownloadRange">
                         <MenuFlyoutItem.Icon><FontIcon Glyph="&#xE896;" /></MenuFlyoutItem.Icon>
                       </MenuFlyoutItem>
@@ -129,6 +131,8 @@
                   </Button.Flyout>
                 </Button>
               </Grid>
+              <!-- Private · Not saved or synced, under the main action while what plays here is private. -->
+              <ContentPresenter x:Name="PrivateSlot" />
               <TextBlock x:Name="WaitingLine" Style="{StaticResource HazeBodyStyle}" Visibility="Collapsed" />
               <!-- The missing episode's status, under the buttons where the waiting line stands: a water dot,
                    the head in silk and the tail in haze, read by Narrator as one line. -->

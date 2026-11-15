@@ -546,7 +546,7 @@ static class HoverPreview
                 {
                     // The time from the pointer resting on the cover to the first frame, for the log.
                     if (rested > 0)
-                        KaeriFfiMethods.LogLine(FfiLogLevel.Debug, "trailer", $"hover card {id}: video shown {Environment.TickCount64 - rested} ms after the pointer rested");
+                        KaeriFfiMethods.LogLine(FfiLogLevel.Debug, "trailer", $"hover card {Privately.Logged(id)}: video shown {Environment.TickCount64 - rested} ms after the pointer rested");
                     (sound.Content as FontIcon)!.Glyph = "\uE74F";
                     Motion.Fade(sound, 1);
                 }
