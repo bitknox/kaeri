@@ -7,6 +7,16 @@ source-picker-automatic-detail = Mỗi tập lấy từ { -source } đầu tiên
 source-picker-coverage = { $of ->
    *[other] { $covered } trên { $of } tập
  }
+source-picker-episodes = { $count ->
+   *[other] Tập { $first }–{ $last }
+ }
+source-picker-episodes-not-yet = Tập { $first }–{ $last }. Chưa có { $missing }
+source-picker-episodes-not = Tập { $first }–{ $last }. Không có { $missing }
+source-picker-missing-pair = { $a } và { $b }
+source-picker-missing-range = { $first }–{ $last }
+source-picker-coverage-missing = { $of ->
+   *[other] { $covered } trên { $of } tập. Không có { $missing }
+ }
 source-note-off = Đã tắt
 source-note-resting = Không phản hồi, sẽ thử lại sớm
 source-note-gone = Chưa cài đặt

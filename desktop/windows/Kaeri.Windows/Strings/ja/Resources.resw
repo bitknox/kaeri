@@ -2924,6 +2924,9 @@
   <data name="ActionCheckAgain" xml:space="preserve">
     <value>再確認</value>
   </data>
+  <data name="ActionChecking" xml:space="preserve">
+    <value>確認中</value>
+  </data>
   <data name="ActionOpenSettings" xml:space="preserve">
     <value>設定を開く</value>
   </data>
@@ -2989,6 +2992,9 @@
   </data>
   <data name="TimeMinutes" xml:space="preserve">
     <value>{minutes}分</value>
+  </data>
+  <data name="TimeHours" xml:space="preserve">
+    <value>{hours}時間</value>
   </data>
   <data name="TimeNowInline" xml:space="preserve">
     <value>今</value>
@@ -8867,6 +8873,24 @@
   <data name="SourcePickerCoverage_other" xml:space="preserve">
     <value>{covered} / {of}エピソード</value>
   </data>
+  <data name="SourcePickerEpisodes_other" xml:space="preserve">
+    <value>エピソード {first}–{last}</value>
+  </data>
+  <data name="SourcePickerEpisodesNotYet" xml:space="preserve">
+    <value>エピソード {first}–{last}。{missing}はまだありません</value>
+  </data>
+  <data name="SourcePickerEpisodesNot" xml:space="preserve">
+    <value>エピソード {first}–{last}。{missing}はありません</value>
+  </data>
+  <data name="SourcePickerMissingPair" xml:space="preserve">
+    <value>{a}と{b}</value>
+  </data>
+  <data name="SourcePickerMissingRange" xml:space="preserve">
+    <value>{first}–{last}</value>
+  </data>
+  <data name="SourcePickerCoverageMissing_other" xml:space="preserve">
+    <value>{covered} / {of}エピソード。{missing}はありません</value>
+  </data>
   <data name="SourceNoteOff" xml:space="preserve">
     <value>オフになっています</value>
   </data>
@@ -10714,6 +10738,42 @@
   </data>
   <data name="EpisodeGoToNotOut" xml:space="preserve">
     <value>エピソード{number}はまだ公開されていません。最新は{latest}です。</value>
+  </data>
+  <data name="EpisodeMissingAired" xml:space="preserve">
+    <value>エピソード {episode} は{ago}に公開されました。</value>
+  </data>
+  <data name="EpisodeMissingAiredOn" xml:space="preserve">
+    <value>エピソード {episode} は{date}に公開されました。</value>
+  </data>
+  <data name="EpisodeMissingNotYet" xml:space="preserve">
+    <value>ソースにはまだありません。</value>
+  </data>
+  <data name="EpisodeMissingStill" xml:space="preserve">
+    <value>ソースには今もありません。</value>
+  </data>
+  <data name="EpisodeMissingNoAnswer" xml:space="preserve">
+    <value>ソースから応答がありませんでした。</value>
+  </data>
+  <data name="EpisodeMissingLooksAgain" xml:space="preserve">
+    <value>Kaeriが{minutes}分ごとに探し直します。</value>
+  </data>
+  <data name="EpisodeMissingNone" xml:space="preserve">
+    <value>どのソースにもありません。</value>
+  </data>
+  <data name="EpisodeMissingOffline" xml:space="preserve">
+    <value>オンラインに戻るとKaeriが探します。</value>
+  </data>
+  <data name="EpisodeRowAiredAgo" xml:space="preserve">
+    <value>{ago}に公開</value>
+  </data>
+  <data name="EpisodeUnsourcedYet" xml:space="preserve">
+    <value>まだソースにありません</value>
+  </data>
+  <data name="EpisodeFoundAnnouncement" xml:space="preserve">
+    <value>エピソード {episode} がソースで見つかりました。</value>
+  </data>
+  <data name="EpisodeCheckAgainHelp" xml:space="preserve">
+    <value>エピソードの公開後{hours}時間は、Kaeriも{minutes}分ごとに自動で探します。</value>
   </data>
   <data name="TorrentsTitle" xml:space="preserve">
     <value>トレント</value>

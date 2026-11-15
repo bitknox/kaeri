@@ -2886,6 +2886,9 @@ episodes-release-dub = Lồng tiếng
 # After a { -release } in the picker: it is the one Kaeri would play on its own.
 episodes-release-current-pick = Lựa chọn hiện tại
 
+# Replaces the missing-episode status on the title page while a check runs.
+episode-missing-checking = Đang kiểm tra các nguồn của bạn…
+
 # Action label in the help overlay and the command palette.
 keys-action-show-keys = Hiện phím tắt
 
@@ -3137,6 +3140,12 @@ keys-hint-stop = Dừng
 
 # Short form of an action for the status line's hints, drawn beside its key. Room is tight, so keep it to a word or two.
 keys-hint-play-next = Phát tiếp
+
+# Hint for the Refresh key on a title page whose next episode no source has yet. Keep it to a word or two.
+keys-hint-check-again = Kiểm tra lại
+
+# Hint for the play key on a title page whose next episode no source has yet: it plays the one before.
+keys-hint-play-episode = Phát tập { $episode }
 
 # Short form of an action for the status line's hints, drawn beside its key. Room is tight, so keep it to a word or two.
 keys-hint-episodes = Tập
@@ -5560,6 +5569,9 @@ action-check-now = Kiểm tra ngay
 # Button that checks a { -source } again after it did not answer.
 action-check-again = Kiểm tra lại
 
+# Check again while the check runs. Keep it about as short as "Check again": the button keeps its width.
+action-checking = Đang kiểm tra
+
 # Button that opens the system's own settings for the app.
 action-open-settings = Mở cài đặt
 
@@ -5625,6 +5637,9 @@ time-minutes-left = còn { $minutes } phút
 
 # A length in minutes, for an episode.
 time-minutes = { $minutes } phút
+
+# A length in hours, inside time-ago.
+time-hours = { $hours } giờ
 
 # A countdown that has run out: the thing is happening now. Lower case, as it stands inside a line.
 time-now-inline = bây giờ
@@ -11721,6 +11736,30 @@ source-picker-coverage =
        *[other] { $covered } trên { $of } tập
     }
 
+# Under a source that lists every episode that is out.
+source-picker-episodes =
+    { $count ->
+       *[other] Tập { $first }–{ $last }
+    }
+
+# Under a source that lacks the newest episodes, within a week of them airing. $missing is one number, source-picker-missing-pair or source-picker-missing-range.
+source-picker-episodes-not-yet = Tập { $first }–{ $last }. Chưa có { $missing }
+
+# The same, more than a week after the episodes aired.
+source-picker-episodes-not = Tập { $first }–{ $last }. Không có { $missing }
+
+# Two episodes a source lacks, inside the missing part of a source's line.
+source-picker-missing-pair = { $a } và { $b }
+
+# Three or more episodes in a row a source lacks, inside the missing part of a source's line.
+source-picker-missing-range = { $first }–{ $last }
+
+# Under a source with a gap in the middle, such as "5 of 6 episodes. Not 3".
+source-picker-coverage-missing =
+    { $of ->
+       *[other] { $covered } trên { $of } tập. Không có { $missing }
+    }
+
 # Under a source that is switched off in Settings.
 source-note-off = Đã tắt
 
@@ -13596,6 +13635,42 @@ episode-go-to-none = Không có tập { $number }. Phim này có { $last } tập
 
 # Shown when the number typed is an episode with no date that has not come out.
 episode-go-to-not-out = Tập { $number } chưa ra mắt. Tập mới nhất là { $latest }.
+
+# Status, first sentence, within a day of the episode airing.
+episode-missing-aired = Tập { $episode } đã phát sóng { $ago }.
+
+# Status, first sentence, a day or more after the episode aired.
+episode-missing-aired-on = Tập { $episode } đã phát sóng vào { $date }.
+
+# Status, second sentence, until a check the person asked for comes back empty.
+episode-missing-not-yet = Các nguồn của bạn chưa có tập này.
+
+# Status, second sentence, after a check the person asked for came back empty, and once Kaeri has stopped looking by itself.
+episode-missing-still = Các nguồn của bạn vẫn chưa có tập này.
+
+# Status, second sentence, after a check where none of the person's sources answered.
+episode-missing-no-answer = Các nguồn của bạn không phản hồi.
+
+# Status, last sentence, during the hours Kaeri looks for the episode by itself.
+episode-missing-looks-again = Kaeri tìm lại sau mỗi { $minutes } phút.
+
+# Status a week after the episode aired, when no source has listed it.
+episode-missing-none = Không nguồn nào của bạn có tập này.
+
+# Status, last sentence, while the device is offline during the hours Kaeri looks by itself.
+episode-missing-offline = Kaeri sẽ tìm khi bạn có mạng trở lại.
+
+# Row note of an episode that aired within the last day. The span is already worded ("25 min", "3 h").
+episode-row-aired-ago = Đã phát sóng { $ago }
+
+# Row note beside when it aired, for an episode that aired in the last week and no source lists yet.
+episode-unsourced-yet = Chưa có trong các nguồn của bạn
+
+# Announced once to screen readers when a check finds the missing episode while its page is open.
+episode-found-announcement = Tập { $episode } đã có trong các nguồn của bạn.
+
+# Tooltip and screen reader hint of Check again, while Kaeri looks for the episode by itself.
+episode-check-again-help = Kaeri cũng tự tìm sau mỗi { $minutes } phút, trong { $hours } giờ sau khi một tập phát sóng.
 
 # Title of the settings group and the screen.
 torrents-title = Torrent

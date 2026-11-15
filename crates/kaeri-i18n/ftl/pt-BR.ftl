@@ -2994,6 +2994,9 @@ episodes-release-dub = Dublado
 # After a { -release } in the picker: it is the one Kaeri would play on its own.
 episodes-release-current-pick = Escolha atual
 
+# Replaces the missing-episode status on the title page while a check runs.
+episode-missing-checking = Verificando suas fontes…
+
 # Action label in the help overlay and the command palette.
 keys-action-show-keys = Mostrar teclas
 
@@ -3245,6 +3248,12 @@ keys-hint-stop = Parar
 
 # Short form of an action for the status line's hints, drawn beside its key. Room is tight, so keep it to a word or two.
 keys-hint-play-next = Reproduzir próximo
+
+# Hint for the Refresh key on a title page whose next episode no source has yet. Keep it to a word or two.
+keys-hint-check-again = Verificar de novo
+
+# Hint for the play key on a title page whose next episode no source has yet: it plays the one before.
+keys-hint-play-episode = Assistir episódio { $episode }
 
 # Short form of an action for the status line's hints, drawn beside its key. Room is tight, so keep it to a word or two.
 keys-hint-episodes = Episódios
@@ -5698,6 +5707,9 @@ action-check-now = Verificar agora
 # Button that checks a { -source } again after it did not answer.
 action-check-again = Verificar de novo
 
+# Check again while the check runs. Keep it about as short as "Check again": the button keeps its width.
+action-checking = Verificando
+
 # Button that opens the system's own settings for the app.
 action-open-settings = Abrir ajustes
 
@@ -5763,6 +5775,9 @@ time-minutes-left = { $minutes } min restantes
 
 # A length in minutes, for an episode.
 time-minutes = { $minutes } min
+
+# A length in hours, inside time-ago.
+time-hours = { $hours } h
 
 # A countdown that has run out: the thing is happening now. Lower case, as it stands inside a line.
 time-now-inline = agora
@@ -12019,6 +12034,34 @@ source-picker-coverage =
        *[other] { $covered } de { $of } episódios
     }
 
+# Under a source that lists every episode that is out.
+source-picker-episodes =
+    { $count ->
+        [one] Episódio { $first }
+        [many] Episódios { $first } a { $last }
+       *[other] Episódios { $first } a { $last }
+    }
+
+# Under a source that lacks the newest episodes, within a week of them airing. $missing is one number, source-picker-missing-pair or source-picker-missing-range.
+source-picker-episodes-not-yet = Episódios { $first } a { $last }. Ainda sem { $missing }
+
+# The same, more than a week after the episodes aired.
+source-picker-episodes-not = Episódios { $first } a { $last }. Sem { $missing }
+
+# Two episodes a source lacks, inside the missing part of a source's line.
+source-picker-missing-pair = { $a } e { $b }
+
+# Three or more episodes in a row a source lacks, inside the missing part of a source's line.
+source-picker-missing-range = { $first } a { $last }
+
+# Under a source with a gap in the middle, such as "5 of 6 episodes. Not 3".
+source-picker-coverage-missing =
+    { $of ->
+        [one] { $covered } de { $of } episódio. Sem { $missing }
+        [many] { $covered } de { $of } episódios. Sem { $missing }
+       *[other] { $covered } de { $of } episódios. Sem { $missing }
+    }
+
 # Under a source that is switched off in Settings.
 source-note-off = Desligada
 
@@ -13918,6 +13961,42 @@ episode-go-to-none = Não existe o episódio { $number }. Esta série tem { $las
 
 # Shown when the number typed is an episode with no date that has not come out.
 episode-go-to-not-out = O episódio { $number } ainda não foi lançado. O mais recente é o { $latest }.
+
+# Status, first sentence, within a day of the episode airing.
+episode-missing-aired = O episódio { $episode } foi ao ar { $ago }.
+
+# Status, first sentence, a day or more after the episode aired.
+episode-missing-aired-on = O episódio { $episode } foi ao ar em { $date }.
+
+# Status, second sentence, until a check the person asked for comes back empty.
+episode-missing-not-yet = Suas fontes ainda não têm o episódio.
+
+# Status, second sentence, after a check the person asked for came back empty, and once Kaeri has stopped looking by itself.
+episode-missing-still = Suas fontes continuam sem o episódio.
+
+# Status, second sentence, after a check where none of the person's sources answered.
+episode-missing-no-answer = Suas fontes não responderam.
+
+# Status, last sentence, during the hours Kaeri looks for the episode by itself.
+episode-missing-looks-again = Kaeri procura de novo a cada { $minutes } min.
+
+# Status a week after the episode aired, when no source has listed it.
+episode-missing-none = Nenhuma das suas fontes tem o episódio.
+
+# Status, last sentence, while the device is offline during the hours Kaeri looks by itself.
+episode-missing-offline = Kaeri vai procurar quando a conexão voltar.
+
+# Row note of an episode that aired within the last day. The span is already worded ("25 min", "3 h").
+episode-row-aired-ago = Foi ao ar { $ago }
+
+# Row note beside when it aired, for an episode that aired in the last week and no source lists yet.
+episode-unsourced-yet = Ainda não está nas suas fontes
+
+# Announced once to screen readers when a check finds the missing episode while its page is open.
+episode-found-announcement = O episódio { $episode } já está nas suas fontes.
+
+# Tooltip and screen reader hint of Check again, while Kaeri looks for the episode by itself.
+episode-check-again-help = Kaeri também procura sozinho a cada { $minutes } min, por { $hours } h depois que um episódio vai ao ar.
 
 # Title of the settings group and the screen.
 torrents-title = Torrents

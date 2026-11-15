@@ -1043,6 +1043,12 @@
     "by": "haiku",
     "at": "2026-10-31"
   },
+  "action-checking": {
+    "source": "29d3b9fb142c",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
+  },
   "action-clear": {
     "source": "b4f1dffbb6be",
     "state": "draft",
@@ -5957,6 +5963,12 @@
     "by": "haiku",
     "at": "2026-10-31"
   },
+  "episode-check-again-help": {
+    "source": "ab424500b9d1",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
+  },
   "episode-download-done": {
     "source": "b87a1067596d",
     "state": "draft",
@@ -6066,6 +6078,12 @@
       "Plural wording; the \"many\" form only counts millions"
     ],
     "back": "One watched episode / {count} watched episodes"
+  },
+  "episode-found-announcement": {
+    "source": "b09cc9672859",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
   },
   "episode-go-to": {
     "source": "7d2a5e4c193a",
@@ -6199,6 +6217,60 @@
     "by": "haiku",
     "at": "2026-10-31"
   },
+  "episode-missing-aired": {
+    "source": "4c3342b91f58",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
+  },
+  "episode-missing-aired-on": {
+    "source": "816c237e58a2",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
+  },
+  "episode-missing-checking": {
+    "source": "cab50d34fd42",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
+  },
+  "episode-missing-looks-again": {
+    "source": "e8b3650504ae",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
+  },
+  "episode-missing-no-answer": {
+    "source": "62385c9ecad5",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
+  },
+  "episode-missing-none": {
+    "source": "da5bd4ae708e",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
+  },
+  "episode-missing-not-yet": {
+    "source": "adb935a3099b",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
+  },
+  "episode-missing-offline": {
+    "source": "551028406e7f",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
+  },
+  "episode-missing-still": {
+    "source": "528aa04f4ec4",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
+  },
   "episode-not-out": {
     "source": "4cef0c89d19f",
     "state": "draft",
@@ -6323,6 +6395,12 @@
     "at": "2026-11-03",
     "back": "{ $from }–{ $to }"
   },
+  "episode-row-aired-ago": {
+    "source": "0124b3f2d411",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
+  },
   "episode-row-airs": {
     "source": "8ad9d45ed7c2",
     "state": "draft",
@@ -6428,6 +6506,12 @@
     "state": "draft",
     "by": "haiku",
     "at": "2026-10-31"
+  },
+  "episode-unsourced-yet": {
+    "source": "21955be8f848",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
   },
   "episode-watched": {
     "source": "fbe199a56777",
@@ -8710,6 +8794,12 @@
     "by": "haiku",
     "at": "2026-10-31"
   },
+  "keys-hint-check-again": {
+    "source": "c0c8035281ee",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
+  },
   "keys-hint-choose": {
     "source": "bf4808a055e7",
     "state": "draft",
@@ -8895,6 +8985,12 @@
     "state": "draft",
     "by": "haiku",
     "at": "2026-10-31"
+  },
+  "keys-hint-play-episode": {
+    "source": "36363bef36a6",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
   },
   "keys-hint-play-next": {
     "source": "244a15376190",
@@ -27796,17 +27892,53 @@
     "by": "haiku",
     "at": "2026-10-31"
   },
+  "source-picker-coverage-missing": {
+    "source": "b9821f09f58c",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
+  },
   "source-picker-empty": {
     "source": "9548ee1fdcfb",
     "state": "draft",
     "by": "haiku",
     "at": "2026-10-31"
   },
+  "source-picker-episodes": {
+    "source": "1fb791616367",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
+  },
+  "source-picker-episodes-not": {
+    "source": "8fcf096a2a5c",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
+  },
+  "source-picker-episodes-not-yet": {
+    "source": "0396edd201e0",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
+  },
   "source-picker-finding": {
     "source": "cfebb42bd0d6",
     "state": "draft",
     "by": "haiku",
     "at": "2026-10-31"
+  },
+  "source-picker-missing-pair": {
+    "source": "50c1b8c42eaf",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
+  },
+  "source-picker-missing-range": {
+    "source": "5dca6d3bec4f",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
   },
   "source-picker-releases": {
     "source": "bc1bea103654",
@@ -32169,6 +32301,12 @@
     "state": "draft",
     "by": "haiku",
     "at": "2026-10-31"
+  },
+  "time-hours": {
+    "source": "fb12680c5861",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
   },
   "time-in": {
     "source": "34349cc4e008",

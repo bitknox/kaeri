@@ -1384,6 +1384,7 @@
     <string name="action_disable">Devre dışı bırak</string>
     <string name="action_check_now">Şimdi denetle</string>
     <string name="action_check_again">Yeniden denetle</string>
+    <string name="action_checking">Denetleniyor</string>
     <string name="action_open_settings">Ayarları aç</string>
     <string name="action_report">Bildir</string>
     <string name="action_play_now">Şimdi oynat</string>
@@ -1406,6 +1407,7 @@
     <string name="time_in">%1$s içinde</string>
     <string name="time_minutes_left">%1$,d dk kaldı</string>
     <string name="time_minutes">%1$,d dk</string>
+    <string name="time_hours">%1$,d sa</string>
     <string name="time_now_inline">şimdi</string>
     <string name="time_just_now_inline">az önce</string>
     <string name="when_today">bugün %1$s</string>
@@ -3606,6 +3608,18 @@
         <item quantity="one">%1$,d / %2$,d bölüm</item>
         <item quantity="other">%1$,d / %2$,d bölüm</item>
     </plurals>
+    <plurals name="source_picker_episodes">
+        <item quantity="one">Bölüm %2$d</item>
+        <item quantity="other">Bölüm %2$d-%3$d</item>
+    </plurals>
+    <string name="source_picker_episodes_not_yet">Bölüm %1$d-%2$d. %3$s henüz yok</string>
+    <string name="source_picker_episodes_not">Bölüm %1$d-%2$d. %3$s yok</string>
+    <string name="source_picker_missing_pair">%1$d ve %2$d</string>
+    <string name="source_picker_missing_range">%1$d-%2$d</string>
+    <plurals name="source_picker_coverage_missing">
+        <item quantity="one">%1$,d / %2$,d bölüm. %3$s yok</item>
+        <item quantity="other">%1$,d / %2$,d bölüm. %3$s yok</item>
+    </plurals>
     <string name="source_note_off">Kapalı</string>
     <string name="source_note_resting">Yanıt vermiyor, yakında yeniden denenecek</string>
     <string name="source_note_gone">Yüklü değil</string>
@@ -4259,6 +4273,18 @@
     <string name="episode_go_to_label">Bölüm, %1$d - %2$d</string>
     <string name="episode_go_to_none">%1$d. bölüm yok. Bu dizide %2$d bölüm var.</string>
     <string name="episode_go_to_not_out">%1$d. bölüm henüz çıkmadı. En son bölüm %2$d.</string>
+    <string name="episode_missing_aired">Bölüm %1$d %2$s yayınlandı.</string>
+    <string name="episode_missing_aired_on">Bölüm %1$d %2$s tarihinde yayınlandı.</string>
+    <string name="episode_missing_not_yet">Kaynaklarınızda henüz yok.</string>
+    <string name="episode_missing_still">Kaynaklarınızda hâlâ yok.</string>
+    <string name="episode_missing_no_answer">Kaynaklarınız yanıt vermedi.</string>
+    <string name="episode_missing_looks_again">Kaeri her %1$,d dakikada bir yeniden bakıyor.</string>
+    <string name="episode_missing_none">Kaynaklarınızın hiçbirinde yok.</string>
+    <string name="episode_missing_offline">Kaeri, yeniden çevrimiçi olduğunuzda bakacak.</string>
+    <string name="episode_row_aired_ago">%1$s yayınlandı</string>
+    <string name="episode_unsourced_yet">Henüz kaynaklarınızda yok</string>
+    <string name="episode_found_announcement">Bölüm %1$d artık kaynaklarınızda.</string>
+    <string name="episode_check_again_help">Kaeri, bir bölüm yayınlandıktan sonra %2$,d saat boyunca her %1$,d dakikada bir kendisi de bakar.</string>
     <string name="torrents_title">Torrentler</string>
     <string name="torrents_on">Torrentler açık</string>
     <string name="torrents_off_detail">Varsayılan olarak kapalı. Bir proxy üzerinden yönlendirmediğiniz sürece torrent\'ler doğrudan bağlanır.</string>

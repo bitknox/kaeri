@@ -2886,6 +2886,9 @@ episodes-release-dub = Berdubbing
 # After a { -release } in the picker: it is the one Kaeri would play on its own.
 episodes-release-current-pick = Pilihan saat ini
 
+# Replaces the missing-episode status on the title page while a check runs.
+episode-missing-checking = Memeriksa sumber-sumber Anda…
+
 # Action label in the help overlay and the command palette.
 keys-action-show-keys = Tampilkan tombol
 
@@ -3137,6 +3140,12 @@ keys-hint-stop = Berhenti
 
 # Short form of an action for the status line's hints, drawn beside its key. Room is tight, so keep it to a word or two.
 keys-hint-play-next = Putar selanjutnya
+
+# Hint for the Refresh key on a title page whose next episode no source has yet. Keep it to a word or two.
+keys-hint-check-again = Periksa lagi
+
+# Hint for the play key on a title page whose next episode no source has yet: it plays the one before.
+keys-hint-play-episode = Putar episode { $episode }
 
 # Short form of an action for the status line's hints, drawn beside its key. Room is tight, so keep it to a word or two.
 keys-hint-episodes = Episode
@@ -5560,6 +5569,9 @@ action-check-now = Periksa sekarang
 # Button that checks a { -source } again after it did not answer.
 action-check-again = Periksa lagi
 
+# Check again while the check runs. Keep it about as short as "Check again": the button keeps its width.
+action-checking = Memeriksa
+
 # Button that opens the system's own settings for the app.
 action-open-settings = Buka pengaturan
 
@@ -5625,6 +5637,9 @@ time-minutes-left = { $minutes } mnt tersisa
 
 # A length in minutes, for an episode.
 time-minutes = { $minutes } mnt
+
+# A length in hours, inside time-ago.
+time-hours = { $hours } jam
 
 # A countdown that has run out: the thing is happening now. Lower case, as it stands inside a line.
 time-now-inline = sekarang
@@ -11721,6 +11736,30 @@ source-picker-coverage =
        *[other] { $covered } dari { $of } episode
     }
 
+# Under a source that lists every episode that is out.
+source-picker-episodes =
+    { $count ->
+       *[other] Episode { $first }–{ $last }
+    }
+
+# Under a source that lacks the newest episodes, within a week of them airing. $missing is one number, source-picker-missing-pair or source-picker-missing-range.
+source-picker-episodes-not-yet = Episode { $first }–{ $last }. Belum ada { $missing }
+
+# The same, more than a week after the episodes aired.
+source-picker-episodes-not = Episode { $first }–{ $last }. Tanpa { $missing }
+
+# Two episodes a source lacks, inside the missing part of a source's line.
+source-picker-missing-pair = { $a } dan { $b }
+
+# Three or more episodes in a row a source lacks, inside the missing part of a source's line.
+source-picker-missing-range = { $first }–{ $last }
+
+# Under a source with a gap in the middle, such as "5 of 6 episodes. Not 3".
+source-picker-coverage-missing =
+    { $of ->
+       *[other] { $covered } dari { $of } episode. Tanpa { $missing }
+    }
+
 # Under a source that is switched off in Settings.
 source-note-off = Dimatikan
 
@@ -13596,6 +13635,42 @@ episode-go-to-none = Tidak ada episode { $number }. Serial ini punya { $last }.
 
 # Shown when the number typed is an episode with no date that has not come out.
 episode-go-to-not-out = Episode { $number } belum tayang. Yang terbaru adalah { $latest }.
+
+# Status, first sentence, within a day of the episode airing.
+episode-missing-aired = Episode { $episode } tayang { $ago }.
+
+# Status, first sentence, a day or more after the episode aired.
+episode-missing-aired-on = Episode { $episode } tayang pada { $date }.
+
+# Status, second sentence, until a check the person asked for comes back empty.
+episode-missing-not-yet = Sumber-sumber Anda belum memilikinya.
+
+# Status, second sentence, after a check the person asked for came back empty, and once Kaeri has stopped looking by itself.
+episode-missing-still = Sumber-sumber Anda masih belum memilikinya.
+
+# Status, second sentence, after a check where none of the person's sources answered.
+episode-missing-no-answer = Sumber-sumber Anda tidak merespons.
+
+# Status, last sentence, during the hours Kaeri looks for the episode by itself.
+episode-missing-looks-again = Kaeri mencarinya lagi setiap { $minutes } menit.
+
+# Status a week after the episode aired, when no source has listed it.
+episode-missing-none = Tidak ada sumber Anda yang memilikinya.
+
+# Status, last sentence, while the device is offline during the hours Kaeri looks by itself.
+episode-missing-offline = Kaeri akan mencarinya setelah Anda kembali daring.
+
+# Row note of an episode that aired within the last day. The span is already worded ("25 min", "3 h").
+episode-row-aired-ago = Tayang { $ago }
+
+# Row note beside when it aired, for an episode that aired in the last week and no source lists yet.
+episode-unsourced-yet = Belum ada di sumber-sumber Anda
+
+# Announced once to screen readers when a check finds the missing episode while its page is open.
+episode-found-announcement = Episode { $episode } kini ada di sumber-sumber Anda.
+
+# Tooltip and screen reader hint of Check again, while Kaeri looks for the episode by itself.
+episode-check-again-help = Kaeri juga mencarinya sendiri setiap { $minutes } menit selama { $hours } jam setelah episode tayang.
 
 # Title of the settings group and the screen.
 torrents-title = Torrent

@@ -7,6 +7,16 @@ source-picker-automatic-detail = 各エピソードを、配信している最�
 source-picker-coverage = { $of ->
    *[other] { $covered } / { $of }エピソード
  }
+source-picker-episodes = { $count ->
+   *[other] エピソード { $first }–{ $last }
+ }
+source-picker-episodes-not-yet = エピソード { $first }–{ $last }。{ $missing }はまだありません
+source-picker-episodes-not = エピソード { $first }–{ $last }。{ $missing }はありません
+source-picker-missing-pair = { $a }と{ $b }
+source-picker-missing-range = { $first }–{ $last }
+source-picker-coverage-missing = { $of ->
+   *[other] { $covered } / { $of }エピソード。{ $missing }はありません
+ }
 source-note-off = オフになっています
 source-note-resting = 応答がなく、まもなく再試行します
 source-note-gone = 未インストール

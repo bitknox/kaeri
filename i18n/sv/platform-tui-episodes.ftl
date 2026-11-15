@@ -87,3 +87,4 @@ episodes-matched = Matchad med { $title }.
 episodes-release-dual = { -subbed-cap } och { -dubbed }
 episodes-release-dub = { -dubbed-cap }
 episodes-release-current-pick = Nuvarande val
+episode-missing-checking = Kontrollerar dina { -source-pl }…

@@ -2924,6 +2924,9 @@
   <data name="ActionCheckAgain" xml:space="preserve">
     <value>Periksa lagi</value>
   </data>
+  <data name="ActionChecking" xml:space="preserve">
+    <value>Memeriksa</value>
+  </data>
   <data name="ActionOpenSettings" xml:space="preserve">
     <value>Buka pengaturan</value>
   </data>
@@ -2989,6 +2992,9 @@
   </data>
   <data name="TimeMinutes" xml:space="preserve">
     <value>{minutes} mnt</value>
+  </data>
+  <data name="TimeHours" xml:space="preserve">
+    <value>{hours} jam</value>
   </data>
   <data name="TimeNowInline" xml:space="preserve">
     <value>sekarang</value>
@@ -8867,6 +8873,24 @@
   <data name="SourcePickerCoverage_other" xml:space="preserve">
     <value>{covered} dari {of} episode</value>
   </data>
+  <data name="SourcePickerEpisodes_other" xml:space="preserve">
+    <value>Episode {first}–{last}</value>
+  </data>
+  <data name="SourcePickerEpisodesNotYet" xml:space="preserve">
+    <value>Episode {first}–{last}. Belum ada {missing}</value>
+  </data>
+  <data name="SourcePickerEpisodesNot" xml:space="preserve">
+    <value>Episode {first}–{last}. Tanpa {missing}</value>
+  </data>
+  <data name="SourcePickerMissingPair" xml:space="preserve">
+    <value>{a} dan {b}</value>
+  </data>
+  <data name="SourcePickerMissingRange" xml:space="preserve">
+    <value>{first}–{last}</value>
+  </data>
+  <data name="SourcePickerCoverageMissing_other" xml:space="preserve">
+    <value>{covered} dari {of} episode. Tanpa {missing}</value>
+  </data>
   <data name="SourceNoteOff" xml:space="preserve">
     <value>Dimatikan</value>
   </data>
@@ -10714,6 +10738,42 @@
   </data>
   <data name="EpisodeGoToNotOut" xml:space="preserve">
     <value>Episode {number} belum tayang. Yang terbaru adalah {latest}.</value>
+  </data>
+  <data name="EpisodeMissingAired" xml:space="preserve">
+    <value>Episode {episode} tayang {ago}.</value>
+  </data>
+  <data name="EpisodeMissingAiredOn" xml:space="preserve">
+    <value>Episode {episode} tayang pada {date}.</value>
+  </data>
+  <data name="EpisodeMissingNotYet" xml:space="preserve">
+    <value>Sumber-sumber Anda belum memilikinya.</value>
+  </data>
+  <data name="EpisodeMissingStill" xml:space="preserve">
+    <value>Sumber-sumber Anda masih belum memilikinya.</value>
+  </data>
+  <data name="EpisodeMissingNoAnswer" xml:space="preserve">
+    <value>Sumber-sumber Anda tidak merespons.</value>
+  </data>
+  <data name="EpisodeMissingLooksAgain" xml:space="preserve">
+    <value>Kaeri mencarinya lagi setiap {minutes} menit.</value>
+  </data>
+  <data name="EpisodeMissingNone" xml:space="preserve">
+    <value>Tidak ada sumber Anda yang memilikinya.</value>
+  </data>
+  <data name="EpisodeMissingOffline" xml:space="preserve">
+    <value>Kaeri akan mencarinya setelah Anda kembali daring.</value>
+  </data>
+  <data name="EpisodeRowAiredAgo" xml:space="preserve">
+    <value>Tayang {ago}</value>
+  </data>
+  <data name="EpisodeUnsourcedYet" xml:space="preserve">
+    <value>Belum ada di sumber-sumber Anda</value>
+  </data>
+  <data name="EpisodeFoundAnnouncement" xml:space="preserve">
+    <value>Episode {episode} kini ada di sumber-sumber Anda.</value>
+  </data>
+  <data name="EpisodeCheckAgainHelp" xml:space="preserve">
+    <value>Kaeri juga mencarinya sendiri setiap {minutes} menit selama {hours} jam setelah episode tayang.</value>
   </data>
   <data name="TorrentsTitle" xml:space="preserve">
     <value>Torrent</value>

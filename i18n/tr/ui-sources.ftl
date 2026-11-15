@@ -8,6 +8,18 @@ source-picker-coverage = { $of ->
     [one] { $covered } / { $of } bölüm
    *[other] { $covered } / { $of } bölüm
  }
+source-picker-episodes = { $count ->
+    [one] Bölüm { $first }
+   *[other] Bölüm { $first }-{ $last }
+ }
+source-picker-episodes-not-yet = Bölüm { $first }-{ $last }. { $missing } henüz yok
+source-picker-episodes-not = Bölüm { $first }-{ $last }. { $missing } yok
+source-picker-missing-pair = { $a } ve { $b }
+source-picker-missing-range = { $first }-{ $last }
+source-picker-coverage-missing = { $of ->
+    [one] { $covered } / { $of } bölüm. { $missing } yok
+   *[other] { $covered } / { $of } bölüm. { $missing } yok
+ }
 source-note-off = Kapalı
 source-note-resting = Yanıt vermiyor, yakında yeniden denenecek
 source-note-gone = Yüklü değil

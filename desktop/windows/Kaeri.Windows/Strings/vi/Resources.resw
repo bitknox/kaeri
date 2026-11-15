@@ -2924,6 +2924,9 @@
   <data name="ActionCheckAgain" xml:space="preserve">
     <value>Kiểm tra lại</value>
   </data>
+  <data name="ActionChecking" xml:space="preserve">
+    <value>Đang kiểm tra</value>
+  </data>
   <data name="ActionOpenSettings" xml:space="preserve">
     <value>Mở cài đặt</value>
   </data>
@@ -2989,6 +2992,9 @@
   </data>
   <data name="TimeMinutes" xml:space="preserve">
     <value>{minutes} phút</value>
+  </data>
+  <data name="TimeHours" xml:space="preserve">
+    <value>{hours} giờ</value>
   </data>
   <data name="TimeNowInline" xml:space="preserve">
     <value>bây giờ</value>
@@ -8867,6 +8873,24 @@
   <data name="SourcePickerCoverage_other" xml:space="preserve">
     <value>{covered} trên {of} tập</value>
   </data>
+  <data name="SourcePickerEpisodes_other" xml:space="preserve">
+    <value>Tập {first}–{last}</value>
+  </data>
+  <data name="SourcePickerEpisodesNotYet" xml:space="preserve">
+    <value>Tập {first}–{last}. Chưa có {missing}</value>
+  </data>
+  <data name="SourcePickerEpisodesNot" xml:space="preserve">
+    <value>Tập {first}–{last}. Không có {missing}</value>
+  </data>
+  <data name="SourcePickerMissingPair" xml:space="preserve">
+    <value>{a} và {b}</value>
+  </data>
+  <data name="SourcePickerMissingRange" xml:space="preserve">
+    <value>{first}–{last}</value>
+  </data>
+  <data name="SourcePickerCoverageMissing_other" xml:space="preserve">
+    <value>{covered} trên {of} tập. Không có {missing}</value>
+  </data>
   <data name="SourceNoteOff" xml:space="preserve">
     <value>Đã tắt</value>
   </data>
@@ -10714,6 +10738,42 @@
   </data>
   <data name="EpisodeGoToNotOut" xml:space="preserve">
     <value>Tập {number} chưa ra mắt. Tập mới nhất là {latest}.</value>
+  </data>
+  <data name="EpisodeMissingAired" xml:space="preserve">
+    <value>Tập {episode} đã phát sóng {ago}.</value>
+  </data>
+  <data name="EpisodeMissingAiredOn" xml:space="preserve">
+    <value>Tập {episode} đã phát sóng vào {date}.</value>
+  </data>
+  <data name="EpisodeMissingNotYet" xml:space="preserve">
+    <value>Các nguồn của bạn chưa có tập này.</value>
+  </data>
+  <data name="EpisodeMissingStill" xml:space="preserve">
+    <value>Các nguồn của bạn vẫn chưa có tập này.</value>
+  </data>
+  <data name="EpisodeMissingNoAnswer" xml:space="preserve">
+    <value>Các nguồn của bạn không phản hồi.</value>
+  </data>
+  <data name="EpisodeMissingLooksAgain" xml:space="preserve">
+    <value>Kaeri tìm lại sau mỗi {minutes} phút.</value>
+  </data>
+  <data name="EpisodeMissingNone" xml:space="preserve">
+    <value>Không nguồn nào của bạn có tập này.</value>
+  </data>
+  <data name="EpisodeMissingOffline" xml:space="preserve">
+    <value>Kaeri sẽ tìm khi bạn có mạng trở lại.</value>
+  </data>
+  <data name="EpisodeRowAiredAgo" xml:space="preserve">
+    <value>Đã phát sóng {ago}</value>
+  </data>
+  <data name="EpisodeUnsourcedYet" xml:space="preserve">
+    <value>Chưa có trong các nguồn của bạn</value>
+  </data>
+  <data name="EpisodeFoundAnnouncement" xml:space="preserve">
+    <value>Tập {episode} đã có trong các nguồn của bạn.</value>
+  </data>
+  <data name="EpisodeCheckAgainHelp" xml:space="preserve">
+    <value>Kaeri cũng tự tìm sau mỗi {minutes} phút, trong {hours} giờ sau khi một tập phát sóng.</value>
   </data>
   <data name="TorrentsTitle" xml:space="preserve">
     <value>Torrent</value>

@@ -2940,6 +2940,9 @@ episodes-release-dub = Dubbat
 # After a { -release } in the picker: it is the one Kaeri would play on its own.
 episodes-release-current-pick = Nuvarande val
 
+# Replaces the missing-episode status on the title page while a check runs.
+episode-missing-checking = Kontrollerar dina källor…
+
 # Action label in the help overlay and the command palette.
 keys-action-show-keys = Visa tangenter
 
@@ -3191,6 +3194,12 @@ keys-hint-stop = Stoppa
 
 # Short form of an action for the status line's hints, drawn beside its key. Room is tight, so keep it to a word or two.
 keys-hint-play-next = Spela nästa
+
+# Hint for the Refresh key on a title page whose next episode no source has yet. Keep it to a word or two.
+keys-hint-check-again = Kontrollera igen
+
+# Hint for the play key on a title page whose next episode no source has yet: it plays the one before.
+keys-hint-play-episode = Spela avsnitt { $episode }
 
 # Short form of an action for the status line's hints, drawn beside its key. Room is tight, so keep it to a word or two.
 keys-hint-episodes = Avsnitt
@@ -5629,6 +5638,9 @@ action-check-now = Kontrollera nu
 # Button that checks a { -source } again after it did not answer.
 action-check-again = Kontrollera igen
 
+# Check again while the check runs. Keep it about as short as "Check again": the button keeps its width.
+action-checking = Kontrollerar
+
 # Button that opens the system's own settings for the app.
 action-open-settings = Öppna inställningarna
 
@@ -5694,6 +5706,9 @@ time-minutes-left = { $minutes } min kvar
 
 # A length in minutes, for an episode.
 time-minutes = { $minutes } min
+
+# A length in hours, inside time-ago.
+time-hours = { $hours } tim
 
 # A countdown that has run out: the thing is happening now. Lower case, as it stands inside a line.
 time-now-inline = nu
@@ -11870,6 +11885,32 @@ source-picker-coverage =
        *[other] { $covered } av { $of } avsnitt
     }
 
+# Under a source that lists every episode that is out.
+source-picker-episodes =
+    { $count ->
+        [one] Avsnitt { $first }
+       *[other] Avsnitt { $first } till { $last }
+    }
+
+# Under a source that lacks the newest episodes, within a week of them airing. $missing is one number, source-picker-missing-pair or source-picker-missing-range.
+source-picker-episodes-not-yet = Avsnitt { $first } till { $last }. Inte { $missing } än
+
+# The same, more than a week after the episodes aired.
+source-picker-episodes-not = Avsnitt { $first } till { $last }. Inte { $missing }
+
+# Two episodes a source lacks, inside the missing part of a source's line.
+source-picker-missing-pair = { $a } eller { $b }
+
+# Three or more episodes in a row a source lacks, inside the missing part of a source's line.
+source-picker-missing-range = { $first } till { $last }
+
+# Under a source with a gap in the middle, such as "5 of 6 episodes. Not 3".
+source-picker-coverage-missing =
+    { $of ->
+        [one] { $covered } av { $of } avsnitt. Inte { $missing }
+       *[other] { $covered } av { $of } avsnitt. Inte { $missing }
+    }
+
 # Under a source that is switched off in Settings.
 source-note-off = Avstängd
 
@@ -13757,6 +13798,42 @@ episode-go-to-none = Inget avsnitt { $number }. Den här serien har { $last }.
 
 # Shown when the number typed is an episode with no date that has not come out.
 episode-go-to-not-out = Avsnitt { $number } är inte ute än. Det senaste är { $latest }.
+
+# Status, first sentence, within a day of the episode airing.
+episode-missing-aired = Avsnitt { $episode } sändes { $ago }.
+
+# Status, first sentence, a day or more after the episode aired.
+episode-missing-aired-on = Avsnitt { $episode } sändes den { $date }.
+
+# Status, second sentence, until a check the person asked for comes back empty.
+episode-missing-not-yet = Dina källor har det inte än.
+
+# Status, second sentence, after a check the person asked for came back empty, and once Kaeri has stopped looking by itself.
+episode-missing-still = Dina källor har det fortfarande inte.
+
+# Status, second sentence, after a check where none of the person's sources answered.
+episode-missing-no-answer = Dina källor svarade inte.
+
+# Status, last sentence, during the hours Kaeri looks for the episode by itself.
+episode-missing-looks-again = Kaeri letar igen med { $minutes } min mellanrum.
+
+# Status a week after the episode aired, when no source has listed it.
+episode-missing-none = Ingen av dina källor har det.
+
+# Status, last sentence, while the device is offline during the hours Kaeri looks by itself.
+episode-missing-offline = Kaeri letar efter det när du är online igen.
+
+# Row note of an episode that aired within the last day. The span is already worded ("25 min", "3 h").
+episode-row-aired-ago = Sändes { $ago }
+
+# Row note beside when it aired, for an episode that aired in the last week and no source lists yet.
+episode-unsourced-yet = Inte i dina källor än
+
+# Announced once to screen readers when a check finds the missing episode while its page is open.
+episode-found-announcement = Avsnitt { $episode } finns nu i dina källor.
+
+# Tooltip and screen reader hint of Check again, while Kaeri looks for the episode by itself.
+episode-check-again-help = Kaeri letar också själv med { $minutes } min mellanrum i { $hours } tim efter att ett avsnitt har sänts.
 
 # Title of the settings group and the screen.
 torrents-title = Torrenter

@@ -1384,6 +1384,7 @@
     <string name="action_disable">Inaktivera</string>
     <string name="action_check_now">Kontrollera nu</string>
     <string name="action_check_again">Kontrollera igen</string>
+    <string name="action_checking">Kontrollerar</string>
     <string name="action_open_settings">Öppna inställningarna</string>
     <string name="action_report">Rapportera</string>
     <string name="action_play_now">Spela upp nu</string>
@@ -1406,6 +1407,7 @@
     <string name="time_in">om %1$s</string>
     <string name="time_minutes_left">%1$,d min kvar</string>
     <string name="time_minutes">%1$,d min</string>
+    <string name="time_hours">%1$,d tim</string>
     <string name="time_now_inline">nu</string>
     <string name="time_just_now_inline">precis nyss</string>
     <string name="when_today">idag %1$s</string>
@@ -3606,6 +3608,18 @@
         <item quantity="one">%1$,d av %2$,d avsnitt</item>
         <item quantity="other">%1$,d av %2$,d avsnitt</item>
     </plurals>
+    <plurals name="source_picker_episodes">
+        <item quantity="one">Avsnitt %2$d</item>
+        <item quantity="other">Avsnitt %2$d till %3$d</item>
+    </plurals>
+    <string name="source_picker_episodes_not_yet">Avsnitt %1$d till %2$d. Inte %3$s än</string>
+    <string name="source_picker_episodes_not">Avsnitt %1$d till %2$d. Inte %3$s</string>
+    <string name="source_picker_missing_pair">%1$d eller %2$d</string>
+    <string name="source_picker_missing_range">%1$d till %2$d</string>
+    <plurals name="source_picker_coverage_missing">
+        <item quantity="one">%1$,d av %2$,d avsnitt. Inte %3$s</item>
+        <item quantity="other">%1$,d av %2$,d avsnitt. Inte %3$s</item>
+    </plurals>
     <string name="source_note_off">Avstängd</string>
     <string name="source_note_resting">Svarar inte, provar igen snart</string>
     <string name="source_note_gone">Inte installerad</string>
@@ -4259,6 +4273,18 @@
     <string name="episode_go_to_label">Avsnitt, %1$d till %2$d</string>
     <string name="episode_go_to_none">Inget avsnitt %1$d. Den här serien har %2$d.</string>
     <string name="episode_go_to_not_out">Avsnitt %1$d är inte ute än. Det senaste är %2$d.</string>
+    <string name="episode_missing_aired">Avsnitt %1$d sändes %2$s.</string>
+    <string name="episode_missing_aired_on">Avsnitt %1$d sändes den %2$s.</string>
+    <string name="episode_missing_not_yet">Dina källor har det inte än.</string>
+    <string name="episode_missing_still">Dina källor har det fortfarande inte.</string>
+    <string name="episode_missing_no_answer">Dina källor svarade inte.</string>
+    <string name="episode_missing_looks_again">Kaeri letar igen med %1$,d min mellanrum.</string>
+    <string name="episode_missing_none">Ingen av dina källor har det.</string>
+    <string name="episode_missing_offline">Kaeri letar efter det när du är online igen.</string>
+    <string name="episode_row_aired_ago">Sändes %1$s</string>
+    <string name="episode_unsourced_yet">Inte i dina källor än</string>
+    <string name="episode_found_announcement">Avsnitt %1$d finns nu i dina källor.</string>
+    <string name="episode_check_again_help">Kaeri letar också själv med %1$,d min mellanrum i %2$,d tim efter att ett avsnitt har sänts.</string>
     <string name="torrents_title">Torrenter</string>
     <string name="torrents_on">Torrenter är på</string>
     <string name="torrents_off_detail">Av som standard. Torrenter ansluter direkt om du inte skickar dem via en proxy.</string>

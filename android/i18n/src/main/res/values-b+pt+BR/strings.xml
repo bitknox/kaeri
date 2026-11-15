@@ -1446,6 +1446,7 @@
     <string name="action_disable">Desativar</string>
     <string name="action_check_now">Verificar agora</string>
     <string name="action_check_again">Verificar de novo</string>
+    <string name="action_checking">Verificando</string>
     <string name="action_open_settings">Abrir ajustes</string>
     <string name="action_report">Reportar</string>
     <string name="action_play_now">Reproduzir agora</string>
@@ -1468,6 +1469,7 @@
     <string name="time_in">em %1$s</string>
     <string name="time_minutes_left">%1$,d min restantes</string>
     <string name="time_minutes">%1$,d min</string>
+    <string name="time_hours">%1$,d h</string>
     <string name="time_now_inline">agora</string>
     <string name="time_just_now_inline">agora mesmo</string>
     <string name="when_today">hoje %1$s</string>
@@ -3748,6 +3750,20 @@
         <item quantity="many">%1$,d de %2$,d episódios</item>
         <item quantity="other">%1$,d de %2$,d episódios</item>
     </plurals>
+    <plurals name="source_picker_episodes">
+        <item quantity="one">Episódio %2$d</item>
+        <item quantity="many">Episódios %2$d a %3$d</item>
+        <item quantity="other">Episódios %2$d a %3$d</item>
+    </plurals>
+    <string name="source_picker_episodes_not_yet">Episódios %1$d a %2$d. Ainda sem %3$s</string>
+    <string name="source_picker_episodes_not">Episódios %1$d a %2$d. Sem %3$s</string>
+    <string name="source_picker_missing_pair">%1$d e %2$d</string>
+    <string name="source_picker_missing_range">%1$d a %2$d</string>
+    <plurals name="source_picker_coverage_missing">
+        <item quantity="one">%1$,d de %2$,d episódio. Sem %3$s</item>
+        <item quantity="many">%1$,d de %2$,d episódios. Sem %3$s</item>
+        <item quantity="other">%1$,d de %2$,d episódios. Sem %3$s</item>
+    </plurals>
     <string name="source_note_off">Desligada</string>
     <string name="source_note_resting">Não responde, tentando de novo em breve</string>
     <string name="source_note_gone">Não instalada</string>
@@ -4413,6 +4429,18 @@
     <string name="episode_go_to_label">Episódio, de %1$d a %2$d</string>
     <string name="episode_go_to_none">Não existe o episódio %1$d. Esta série tem %2$d.</string>
     <string name="episode_go_to_not_out">O episódio %1$d ainda não foi lançado. O mais recente é o %2$d.</string>
+    <string name="episode_missing_aired">O episódio %1$d foi ao ar %2$s.</string>
+    <string name="episode_missing_aired_on">O episódio %1$d foi ao ar em %2$s.</string>
+    <string name="episode_missing_not_yet">Suas fontes ainda não têm o episódio.</string>
+    <string name="episode_missing_still">Suas fontes continuam sem o episódio.</string>
+    <string name="episode_missing_no_answer">Suas fontes não responderam.</string>
+    <string name="episode_missing_looks_again">Kaeri procura de novo a cada %1$,d min.</string>
+    <string name="episode_missing_none">Nenhuma das suas fontes tem o episódio.</string>
+    <string name="episode_missing_offline">Kaeri vai procurar quando a conexão voltar.</string>
+    <string name="episode_row_aired_ago">Foi ao ar %1$s</string>
+    <string name="episode_unsourced_yet">Ainda não está nas suas fontes</string>
+    <string name="episode_found_announcement">O episódio %1$d já está nas suas fontes.</string>
+    <string name="episode_check_again_help">Kaeri também procura sozinho a cada %1$,d min, por %2$,d h depois que um episódio vai ao ar.</string>
     <string name="torrents_title">Torrents</string>
     <string name="torrents_on">Torrents ativados</string>
     <string name="torrents_off_detail">Desativados por padrão. Os torrents se conectam diretamente, a menos que você os passe por um proxy.</string>

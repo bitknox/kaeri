@@ -2886,6 +2886,9 @@ episodes-release-dub = 吹替版
 # After a { -release } in the picker: it is the one Kaeri would play on its own.
 episodes-release-current-pick = 現在の選択
 
+# Replaces the missing-episode status on the title page while a check runs.
+episode-missing-checking = ソースを確認しています…
+
 # Action label in the help overlay and the command palette.
 keys-action-show-keys = キーを表示
 
@@ -3137,6 +3140,12 @@ keys-hint-stop = 停止
 
 # Short form of an action for the status line's hints, drawn beside its key. Room is tight, so keep it to a word or two.
 keys-hint-play-next = 次を再生
+
+# Hint for the Refresh key on a title page whose next episode no source has yet. Keep it to a word or two.
+keys-hint-check-again = 再確認
+
+# Hint for the play key on a title page whose next episode no source has yet: it plays the one before.
+keys-hint-play-episode = エピソード { $episode } を再生
 
 # Short form of an action for the status line's hints, drawn beside its key. Room is tight, so keep it to a word or two.
 keys-hint-episodes = エピソード
@@ -5560,6 +5569,9 @@ action-check-now = 今すぐ確認
 # Button that checks a { -source } again after it did not answer.
 action-check-again = 再確認
 
+# Check again while the check runs. Keep it about as short as "Check again": the button keeps its width.
+action-checking = 確認中
+
 # Button that opens the system's own settings for the app.
 action-open-settings = 設定を開く
 
@@ -5625,6 +5637,9 @@ time-minutes-left = 残り{ $minutes }分
 
 # A length in minutes, for an episode.
 time-minutes = { $minutes }分
+
+# A length in hours, inside time-ago.
+time-hours = { $hours }時間
 
 # A countdown that has run out: the thing is happening now. Lower case, as it stands inside a line.
 time-now-inline = 今
@@ -11721,6 +11736,30 @@ source-picker-coverage =
        *[other] { $covered } / { $of }エピソード
     }
 
+# Under a source that lists every episode that is out.
+source-picker-episodes =
+    { $count ->
+       *[other] エピソード { $first }–{ $last }
+    }
+
+# Under a source that lacks the newest episodes, within a week of them airing. $missing is one number, source-picker-missing-pair or source-picker-missing-range.
+source-picker-episodes-not-yet = エピソード { $first }–{ $last }。{ $missing }はまだありません
+
+# The same, more than a week after the episodes aired.
+source-picker-episodes-not = エピソード { $first }–{ $last }。{ $missing }はありません
+
+# Two episodes a source lacks, inside the missing part of a source's line.
+source-picker-missing-pair = { $a }と{ $b }
+
+# Three or more episodes in a row a source lacks, inside the missing part of a source's line.
+source-picker-missing-range = { $first }–{ $last }
+
+# Under a source with a gap in the middle, such as "5 of 6 episodes. Not 3".
+source-picker-coverage-missing =
+    { $of ->
+       *[other] { $covered } / { $of }エピソード。{ $missing }はありません
+    }
+
 # Under a source that is switched off in Settings.
 source-note-off = オフになっています
 
@@ -13596,6 +13635,42 @@ episode-go-to-none = エピソード{ $number }はありません。この作品
 
 # Shown when the number typed is an episode with no date that has not come out.
 episode-go-to-not-out = エピソード{ $number }はまだ公開されていません。最新は{ $latest }です。
+
+# Status, first sentence, within a day of the episode airing.
+episode-missing-aired = エピソード { $episode } は{ $ago }に公開されました。
+
+# Status, first sentence, a day or more after the episode aired.
+episode-missing-aired-on = エピソード { $episode } は{ $date }に公開されました。
+
+# Status, second sentence, until a check the person asked for comes back empty.
+episode-missing-not-yet = ソースにはまだありません。
+
+# Status, second sentence, after a check the person asked for came back empty, and once Kaeri has stopped looking by itself.
+episode-missing-still = ソースには今もありません。
+
+# Status, second sentence, after a check where none of the person's sources answered.
+episode-missing-no-answer = ソースから応答がありませんでした。
+
+# Status, last sentence, during the hours Kaeri looks for the episode by itself.
+episode-missing-looks-again = Kaeriが{ $minutes }分ごとに探し直します。
+
+# Status a week after the episode aired, when no source has listed it.
+episode-missing-none = どのソースにもありません。
+
+# Status, last sentence, while the device is offline during the hours Kaeri looks by itself.
+episode-missing-offline = オンラインに戻るとKaeriが探します。
+
+# Row note of an episode that aired within the last day. The span is already worded ("25 min", "3 h").
+episode-row-aired-ago = { $ago }に公開
+
+# Row note beside when it aired, for an episode that aired in the last week and no source lists yet.
+episode-unsourced-yet = まだソースにありません
+
+# Announced once to screen readers when a check finds the missing episode while its page is open.
+episode-found-announcement = エピソード { $episode } がソースで見つかりました。
+
+# Tooltip and screen reader hint of Check again, while Kaeri looks for the episode by itself.
+episode-check-again-help = エピソードの公開後{ $hours }時間は、Kaeriも{ $minutes }分ごとに自動で探します。
 
 # Title of the settings group and the screen.
 torrents-title = トレント
