@@ -303,6 +303,7 @@ fn stream(episode: &str) -> Stream {
 fn settings() -> PlaySettings {
     PlaySettings {
         privacy: Default::default(),
+        further: Default::default(),
         threshold: 0.85,
         auto_skip: false,
         auto_skip_recap: false,

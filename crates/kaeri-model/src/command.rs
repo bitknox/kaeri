@@ -1149,8 +1149,9 @@ pub enum PlayerCommand {
     /// A pick in the player's menus.
     Choose(PlayerChoice),
     /// Skip the source being asked while a play looks for its stream: the walk moves on to the
-    /// next source in the viewer's order. Heard only while the stream is being found; once the
-    /// player opens, it does nothing.
+    /// next source in the viewer's order. Heard until the first frame: once the player opens,
+    /// the next stream found plays in its place, or with none left, the walk goes on to the
+    /// sources after the one that answered. Once a frame shows, it does nothing.
     SkipSource,
     /// Begin the episode being started at 0, in place of its resume point, without asking the
     /// sources again. Heard while the walk runs (the file opens at 0), and once the file has

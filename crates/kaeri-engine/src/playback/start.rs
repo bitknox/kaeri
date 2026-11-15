@@ -22,6 +22,7 @@ use crate::{
     playback::{
         self,
         autonext::{Follow, Staged},
+        further::{Further, Lookup},
         handoff::{Handoff, successor, take_controls},
         link::{PlayerOpener, PlayerTarget, opener},
         prefetch::Warm,
@@ -605,7 +606,8 @@ pub fn control_player(command: PlayerCommand, engine: &EngineState) {
     {
         finding.send_replace(true);
     }
-    // Heard by the walk through the sources while one is under way, and by nothing after.
+    // Heard by the walk through the sources while one is under way, and by the playback until
+    // its first frame.
     if command == PlayerCommand::SkipSource {
         if let Some(skipping) = skipping.as_ref().filter(|skipping| !skipping.is_closed()) {
             skipping.send_modify(|count| *count += 1);
@@ -784,6 +786,8 @@ fn spawn_playback(
 
     tokio::spawn(async move {
         let playback = config.playback.clone();
+        // The skip as the playback hears it once its streams are found, beside the walk's.
+        let skips = skip.clone();
         let starting = Starting::new(&tx, id, &episode, Some(skip));
         // A torrent looked up ahead on a limited network starts now, as it would have had it
         // been found now. One that does not start sends the play looking again.
@@ -921,6 +925,23 @@ fn spawn_playback(
             }
         };
         let (streams, mut context) = context;
+        // A skip, or Switch source on a stall, with no stream of these left goes on to the
+        // sources after the one that answered, as the walk would have. Not past a release the
+        // viewer picked or a link they opened: those are the stream they asked for.
+        let further = if pick.is_none() {
+            let onward = Onward {
+                meta: meta.clone(),
+                store: store.clone(),
+                registry: registry.clone(),
+                id,
+                episode: episode.clone(),
+                playback: playback.clone(),
+                starting: starting.clone(),
+            };
+            Further::new(skips, Arc::new(onward))
+        } else {
+            Further::skips_only(skips)
+        };
         // Streams from a source, not a link the viewer opened: a miss Home kept is a find now.
         if from_sources && !streams.is_empty() {
             crate::catalog::probe::listed(&store, &tx, id);
@@ -973,6 +994,7 @@ fn spawn_playback(
             begin,
             ahead,
             privacy: privacy.gate(id),
+            further,
             ..play_settings(&config, tracker_ids, hub)
         };
         let settings = if untracked { settings.untracked() } else { settings };
@@ -992,6 +1014,98 @@ fn spawn_playback(
         drop(stopped);
         playback::play(streams, context, store, http, machine, settings, tx, commands).await;
     });
+}
+
+/// The sources a playback asks once the viewer has moved on from every stream it found: the
+/// same lookup its start made, past the sources it has already asked or played from.
+struct Onward {
+    meta: kaeri_meta::Meta,
+    store: kaeri_store::Store,
+    registry: kaeri_providers::ProviderRegistry,
+    id: AnilistId,
+    episode: String,
+    playback: kaeri_core::config::PlaybackConfig,
+    starting: Starting,
+}
+
+impl Onward {
+    /// The sources passed over: those `streams` came from, and those already asked.
+    fn passed(&self, streams: &[kaeri_core::stream::Stream]) -> Vec<String> {
+        let asked = self.starting.asked();
+        let mut passed: Vec<String> = streams.iter().map(|s| s.provider_id.clone()).collect();
+        passed.extend(self.registry.ids().into_iter().filter(|id| {
+            self.registry
+                .get(id)
+                .is_some_and(|source| asked.contains(&source.manifest().display_name))
+        }));
+        passed
+    }
+
+    /// A source by the name it goes by on screen.
+    fn name(&self, provider_id: &str) -> String {
+        self.registry
+            .get(provider_id)
+            .map_or_else(|| provider_id.to_owned(), |s| s.manifest().display_name.clone())
+    }
+}
+
+#[async_trait::async_trait]
+impl Lookup for Onward {
+    fn beyond(&self, streams: &[kaeri_core::stream::Stream]) -> bool {
+        !self.registry.without(&self.passed(streams)).usable_ids().is_empty()
+    }
+
+    async fn after(
+        &self,
+        streams: &[kaeri_core::stream::Stream],
+        skipped: Option<&str>,
+    ) -> Result<Vec<kaeri_core::stream::Stream>, kaeri_model::starting::StartFailure> {
+        use kaeri_model::starting::{SourceMiss, StartStep};
+        if let Some(skipped) = skipped {
+            let name = self.name(skipped);
+            self.starting
+                .step(StartStep::SourceMissed { name, miss: SourceMiss::Skipped }, None);
+        }
+        let registry = self.registry.without(&self.passed(streams));
+        tracing::info!(sources = ?registry.usable_ids(), "asking the sources after the streams passed");
+        let found = resolve_for_playback(
+            &self.meta,
+            &self.store,
+            &registry,
+            self.id,
+            &self.episode,
+            None,
+            &self.playback,
+            None,
+            Some(&self.starting),
+        )
+        .await;
+        match found {
+            Ok((streams, context)) if !streams.is_empty() => {
+                let first = &streams[0];
+                self.starting.step(
+                    StartStep::Found {
+                        count: u32::try_from(streams.len()).unwrap_or(u32::MAX),
+                        source: Some(self.name(&first.provider_id)),
+                        quality: first.quality,
+                        translation: context.translation,
+                    },
+                    Some(Msg::StartOpeningStream),
+                );
+                Ok(streams)
+            }
+            Ok(_) => Err(kaeri_model::starting::StartFailure {
+                why: kaeri_model::party::NoSourceWhy::NotFound,
+                text: crate::playback::resolve::explained(kaeri_model::Cause::NoSources),
+                asked: self.starting.asked(),
+            }),
+            Err(reason) => Err(kaeri_model::starting::StartFailure {
+                why: reason.why,
+                text: reason.text,
+                asked: self.starting.asked(),
+            }),
+        }
+    }
 }
 
 /// What one playback runs under, from the config as it stands now.
@@ -1032,6 +1146,7 @@ pub fn play_settings(
         begin: Default::default(),
         ahead: Default::default(),
         privacy: Default::default(),
+        further: Default::default(),
     }
 }
 

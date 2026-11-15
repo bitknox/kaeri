@@ -206,6 +206,7 @@ async fn main() {
             begin: Default::default(),
             ahead: Default::default(),
             privacy: Default::default(),
+            further: Default::default(),
         };
         kaeri_engine::playback::play(
             vec![stream],

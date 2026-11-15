@@ -286,7 +286,7 @@ libmpv draws into the app's own view and SwiftUI controls sit on top, which keep
 ### Stall prompt
 
 - Buffering for under 1 s shows nothing. From 1 s a system `ProgressView` sits in the middle of the video.
-- After 8 s, the engine's threshold, the corner card reads “Source is buffering · 9 s” and counts up, with Switch source as the primary button and Keep waiting. Switching resumes at the same position behind the starting screen. Keep waiting hides the card until the next stall. With no first frame after 20 s, the starting screen offers Choose source and Stop.
+- After 8 s, the engine's threshold, the corner card reads “Source is buffering · 9 s” and counts up, with Switch source as the primary button and Keep waiting. Switching resumes at the same position behind the starting screen. With no other stream found, the sources after the one playing are asked, and with none of those the same stream opens again. Keep waiting hides the card until the next stall. With no first frame after 20 s, the starting screen offers Choose source and Stop.
 
 ### Resume
 

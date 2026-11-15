@@ -838,14 +838,19 @@ public final class PlayerModel {
     }
     #endif
 
-    /// Stop what the engine is finding for this player: aimed at the playback on screen, unless
-    /// one has been staged since that has said nothing yet. Aimed at the one before, a Stop would
-    /// miss it, so it goes to whatever plays, which is the one staged last.
+    /// Stop what the engine is finding for this player.
     private func stopFinding() {
+        startCommand(.stop)
+    }
+
+    /// A command for the start under way: aimed at the playback on screen, unless one has been
+    /// staged since that has said nothing yet. Aimed at the one before, the engine would let it
+    /// go, so it goes to whatever plays, which is the one staged last.
+    private func startCommand(_ command: PlayerCommand) {
         if stagedAhead || playback == nil {
-            send(.player(.stop))
+            send(.player(command))
         } else {
-            control(.stop)
+            control(command)
         }
     }
 
@@ -1518,7 +1523,7 @@ public final class PlayerModel {
     /// Skip the source (or stream) being tried: the walk moves on to the next.
     public func skipSource() {
         input()
-        control(.skipSource)
+        startCommand(.skipSource)
     }
 
     /// Begin the episode at 0 in place of where it was left. The sources are not asked again;
@@ -1527,7 +1532,7 @@ public final class PlayerModel {
         input()
         guard walk?.fromBeginning == false else { return }
         walk?.fromBeginning = true
-        control(.playFromBeginning)
+        startCommand(.playFromBeginning)
     }
 
     /// Start the episode again, asking the same sources.

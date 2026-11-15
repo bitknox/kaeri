@@ -374,6 +374,24 @@ impl ProviderRegistry {
         }
     }
 
+    /// The same registry without the sources `ids` names, as a view like [`Self::pinned`] that
+    /// shares the health record: the sources a playback walks on to once the viewer has moved
+    /// on from the ones it asked.
+    pub fn without(&self, ids: &[String]) -> Self {
+        let providers = self
+            .snapshot()
+            .into_iter()
+            .filter(|p| !ids.iter().any(|id| *id == p.manifest().id))
+            .collect();
+        Self {
+            providers: Arc::new(std::sync::RwLock::new(providers)),
+            health: self.health.clone(),
+            disabled: self.disabled.clone(),
+            arriving: Arc::clone(&self.arriving),
+            torrents: self.torrents.clone(),
+        }
+    }
+
     /// Give every source that went down another chance, for a change to the sources the user
     /// made: see [`HealthTracker::reset_down`].
     pub fn retry_down(&self) {
@@ -733,6 +751,20 @@ mod tests {
             .await;
         assert_eq!(attempt.provider.as_deref(), Some("site"));
         r.set_disabled(["site".to_owned()]);
+        assert!(view.usable_ids().is_empty(), "switched off in the view too");
+    }
+
+    #[test]
+    fn a_view_without_some_sources_keeps_the_rest_in_order() {
+        let r = registry(vec![
+            MockProvider::new("a").arc(),
+            MockProvider::new("b").arc(),
+            MockProvider::new("c").arc(),
+        ]);
+        let view = r.without(&["a".to_owned(), "b".to_owned()]);
+        assert_eq!(view.ids(), ["c"]);
+        assert_eq!(r.ids(), ["a", "b", "c"], "the registry itself keeps them");
+        r.set_disabled(["c".to_owned()]);
         assert!(view.usable_ids().is_empty(), "switched off in the view too");
     }
 

@@ -158,6 +158,7 @@ pub(super) fn settings() -> PlaySettings {
         mpv_options: Vec::new(),
         untracked: false,
         privacy: Default::default(),
+        further: Default::default(),
         swarm: Default::default(),
         begin: Default::default(),
         ahead: Default::default(),
@@ -1810,4 +1811,175 @@ async fn an_always_private_show_is_held_with_the_mode_off() {
     let free = PlaySettings { privacy: privacy.gate(id), ..settings() };
     rig.play(stream(StreamKind::Mp4), context("1", None), free).await;
     assert_eq!(rig.store.completed_episodes(id).unwrap(), ["1"], "recorded again");
+}
+
+/// The sources after the pool, as a test has them: `more` for the first ask, then nothing.
+/// What each ask passed over and skipped is written down.
+#[derive(Default)]
+struct Onward {
+    more: Mutex<Option<Vec<Stream>>>,
+    asks: Mutex<Vec<(Vec<String>, Option<String>)>>,
+}
+
+#[async_trait::async_trait]
+impl crate::playback::further::Lookup for Onward {
+    fn beyond(&self, _: &[Stream]) -> bool {
+        self.more.lock().unwrap().is_some()
+    }
+
+    async fn after(
+        &self,
+        streams: &[Stream],
+        skipped: Option<&str>,
+    ) -> Result<Vec<Stream>, kaeri_model::starting::StartFailure> {
+        let passed = streams.iter().map(|s| s.provider_id.clone()).collect();
+        self.asks.lock().unwrap().push((passed, skipped.map(str::to_owned)));
+        self.more.lock().unwrap().take().filter(|more| !more.is_empty()).ok_or_else(|| {
+            kaeri_model::starting::StartFailure {
+                why: kaeri_model::party::NoSourceWhy::NotFound,
+                text: kaeri_model::Msg::verbatim("No source has episode 1."),
+                asked: vec!["kodama".into()],
+            }
+        })
+    }
+}
+
+/// A playback's further sources, `more` for the first ask, and the starting screen's Skip as
+/// the test presses it.
+fn onward(
+    more: Option<Vec<Stream>>,
+) -> (Arc<Onward>, tokio::sync::watch::Sender<u64>, crate::playback::further::Further) {
+    let onward = Arc::new(Onward { more: Mutex::new(more), ..Default::default() });
+    let (skip, skips) = tokio::sync::watch::channel(0);
+    let further = crate::playback::further::Further::new(skips, onward.clone());
+    (onward, skip, further)
+}
+
+#[tokio::test]
+async fn switch_source_on_a_stall_with_a_pool_of_one_plays_on_from_the_next_source() {
+    // The only stream found plays, then holds for data until the viewer presses Switch source.
+    let stalling = vec![
+        PlaybackEvent::Loaded,
+        at_second(600.0),
+        PlaybackEvent::Buffering(true),
+        PlaybackEvent::Script(ScriptEvent::StallSwitch),
+    ];
+    let rig = Rig::new(vec![stalling, taking_over(600.0)]);
+    let (onward, _skip, further) = onward(Some(vec![from("kodama", "cdn-b.example", 1080)]));
+    let settings = PlaySettings { further, ..settings() };
+    let streams = vec![from("yamabiko", "cdn-a.example", 1080)];
+    let events = rig.play_all(streams, context("1", None), settings).await;
+
+    // The source after it was asked, past the one that stalled, and its stream opened where
+    // the stall was, in the same window, once the stalled one had stopped.
+    assert_eq!(*onward.asks.lock().unwrap(), [(vec!["yamabiko".to_owned()], None)]);
+    let calls = rig.opener.calls();
+    let loads = loads(&calls);
+    assert_eq!(loads.len(), 2, "{calls:#?}");
+    assert!(loads[1].1.contains("cdn-b.example"), "{loads:?}");
+    assert_eq!(loads[1].2.as_deref(), Some("600"));
+    let stopped = position(&calls, |c| *c == Call::Stop).expect("the stalled stream stopped");
+    assert!(stopped < loads[1].0);
+    assert_eq!(calls.iter().filter(|c| matches!(c, Call::Open { .. })).count(), 1);
+    assert!(toasts(&events).is_empty(), "the viewer asked for it: {:?}", toasts(&events));
+    assert_eq!(ending(&events), Some(Ending::Complete { next: None }));
+}
+
+#[tokio::test]
+async fn switch_source_on_a_stall_with_nothing_further_opens_the_stream_again_where_it_was() {
+    let stalling = vec![
+        PlaybackEvent::Loaded,
+        at_second(600.0),
+        PlaybackEvent::Buffering(true),
+        PlaybackEvent::Script(ScriptEvent::StallSwitch),
+    ];
+    let rig = Rig::new(vec![stalling, taking_over(600.0)]);
+    let streams = vec![from("yamabiko", "cdn-a.example", 1080)];
+    let events = rig.play_all(streams, context("1", None), settings()).await;
+
+    let loads = loads(&rig.opener.calls());
+    assert_eq!(loads.len(), 2, "{loads:?}");
+    assert!(loads[1].1.contains("cdn-a.example"), "{loads:?}");
+    assert_eq!(loads[1].2.as_deref(), Some("600"));
+    assert_eq!(ending(&events), Some(Ending::Complete { next: None }));
+}
+
+/// Plays `streams` with `further`, pressing Skip once the first file has loaded and before it
+/// shows a frame.
+async fn skipped_before_a_frame(
+    rig: &Rig,
+    streams: Vec<Stream>,
+    skip: tokio::sync::watch::Sender<u64>,
+    further: crate::playback::further::Further,
+) -> Vec<Event> {
+    let settings = PlaySettings { further, ..settings() };
+    let pressing = async {
+        until_called(rig, |call| matches!(call, Call::Load { .. })).await;
+        skip.send_modify(|count| *count += 1);
+    };
+    let (events, ()) =
+        tokio::join!(rig.play_all(streams, context("1", None), settings), pressing);
+    events
+}
+
+#[tokio::test]
+async fn skip_before_the_first_frame_opens_the_next_stream_at_once() {
+    // The first stream only loads; nothing would come of it.
+    let rig = Rig::new(vec![vec![PlaybackEvent::Loaded], file(&[], (1920, 1080))]);
+    let (onward, skip, further) = onward(None);
+    let streams =
+        vec![from("yamabiko", "cdn-a.example", 1080), from("yamabiko", "cdn-b.example", 1080)];
+    let events = skipped_before_a_frame(&rig, streams, skip, further).await;
+
+    let loads = loads(&rig.opener.calls());
+    assert_eq!(loads.len(), 2, "{loads:?}");
+    assert!(loads[1].1.contains("cdn-b.example"), "{loads:?}");
+    assert!(onward.asks.lock().unwrap().is_empty(), "the pool had another stream");
+    // The starting screen counts the stream it opens now.
+    assert!(events.iter().any(|e| matches!(
+        e,
+        Event::StartingStep {
+            step: kaeri_model::starting::StartStep::OpeningStream { attempt: 2, total: 2 },
+            ..
+        }
+    )));
+    assert_eq!(ending(&events), Some(Ending::Complete { next: None }));
+    // The viewer moved on: nothing is held against the server it skipped.
+    assert!(server(&rig, "cdn-a.example").is_none_or(|a| a.failures == 0));
+}
+
+#[tokio::test]
+async fn skip_before_the_first_frame_with_a_pool_of_one_asks_the_next_source() {
+    let rig = Rig::new(vec![vec![PlaybackEvent::Loaded], file(&[], (1920, 1080))]);
+    let (onward, skip, further) = onward(Some(vec![from("kodama", "cdn-b.example", 1080)]));
+    let streams = vec![from("yamabiko", "cdn-a.example", 1080)];
+    let events = skipped_before_a_frame(&rig, streams, skip, further).await;
+
+    assert_eq!(
+        *onward.asks.lock().unwrap(),
+        [(vec!["yamabiko".to_owned()], Some("yamabiko".to_owned()))]
+    );
+    let calls = rig.opener.calls();
+    let loads = loads(&calls);
+    assert_eq!(loads.len(), 2, "{calls:#?}");
+    assert!(loads[1].1.contains("cdn-b.example"), "{loads:?}");
+    assert_eq!(loads[1].2, None, "it opens where the episode was to start");
+    assert!(position(&calls, |c| *c == Call::Stop).is_some_and(|stop| stop < loads[1].0));
+    assert_eq!(ending(&events), Some(Ending::Complete { next: None }));
+}
+
+#[tokio::test]
+async fn skip_past_the_last_source_fails_the_start_as_the_walk_would() {
+    let rig = Rig::new(vec![vec![PlaybackEvent::Loaded]]);
+    let (_, skip, further) = onward(Some(Vec::new()));
+    let streams = vec![from("yamabiko", "cdn-a.example", 1080)];
+    let events = skipped_before_a_frame(&rig, streams, skip, further).await;
+
+    assert_eq!(loads(&rig.opener.calls()).len(), 1);
+    assert_eq!(toasts(&events), ["No source has episode 1."]);
+    let failure = events.iter().rev().find_map(|event| match event {
+        Event::PlaybackEnded { ending: Ending::Failed, failure, .. } => failure.clone(),
+        _ => None,
+    });
+    assert_eq!(failure.map(|f| f.asked), Some(vec!["kodama".to_owned()]));
 }

@@ -144,6 +144,23 @@ struct StartingStepsTests {
         #expect(rig.sent.last == .player(.skipSource))
     }
 
+    @Test func skipAfterAnEarlierPlaybackReachesTheStartUnderWay() async throws {
+        // The player showed playback 1; the play after it is still being found, so a skip or a
+        // start from the beginning aimed at playback 1 would be let go by the engine.
+        let rig = Rig()
+        try await rig.opened(1)
+        _ = run(.slow, to: 12, rig)
+        rig.model.skipSource()
+        #expect(rig.sent.last == .player(.skipSource))
+        rig.model.playFromBeginning()
+        #expect(rig.sent.last == .player(.playFromBeginning))
+
+        // Once the new playback drives the player, its own controls hear the skip.
+        rig.ops(2, [.load(url: "/media/7.mkv", options: [])])
+        rig.model.skipSource()
+        #expect(rig.sent.last == .control(playback: 2, command: .skipSource))
+    }
+
     @Test func detailsRowsFollowTheWalk() {
         let rig = run(.sourceMissed, to: 4)
         let rows = rig.model.walk?.detailRows ?? []

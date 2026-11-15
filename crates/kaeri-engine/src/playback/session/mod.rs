@@ -175,6 +175,10 @@ pub struct PlaySettings {
     /// always private: read at every write, so switching applies at once. See
     /// [`crate::private`].
     pub privacy: crate::private::Gate,
+    /// The starting screen's Skip, heard until a file shows its first frame, and the sources
+    /// beyond the streams found: where Skip and Switch source go once the pool has nothing
+    /// left. See [`crate::playback::further`].
+    pub further: crate::playback::further::Further,
 }
 
 impl PlaySettings {
@@ -262,6 +266,8 @@ enum FileOutcome {
     Switch { to: usize, at: f64 },
     /// The viewer accepted the stall prompt's offer of another stream.
     Stalled { at: f64 },
+    /// The viewer skipped the stream before it showed a frame, from the starting screen.
+    Skipped,
     /// A newer playback is taking over this window, for this.
     Handover(Successor),
 }
@@ -373,6 +379,7 @@ pub async fn play(
         seat: None,
         in_party: false,
         failed_over_from: None,
+        skipping: settings.further.skips(),
     };
 
     // Read once: every stream this playback tries is the same series in the same translation.
@@ -393,7 +400,8 @@ pub async fn play(
         None
     };
 
-    let total = streams.len();
+    // Grows when the sources after the pool are asked: see `Further`.
+    let mut total = streams.len();
     // Named in the log so "did fallback have anything to work with" is answerable after the
     // fact — a pool of one behaves exactly like the old single-stream path.
     tracing::info!(streams = total, "starting playback");
@@ -652,6 +660,78 @@ pub async fn play(
         }
         memory = Some(carried);
 
+        // Skipped before a frame, the stream's server is not to blame: the viewer moved on.
+        if matches!(outcome, FileOutcome::Skipped) {
+            let refused = proxies.refused(&streams[index].url);
+            run.servers.unplayed(&store, &streams[index], true, refused);
+        }
+        // A skip, or Switch source on a stall, with no stream left in the pool to go to: the
+        // sources after the ones played from are asked, behind the starting screen, as the walk
+        // would have asked them.
+        let outcome = match outcome {
+            FileOutcome::Skipped | FileOutcome::Stalled { .. }
+                if failover::next_like(&streams, &tried, index, target).is_none()
+                    && settings.further.beyond(&streams) =>
+            {
+                let stalled_at = match outcome {
+                    FileOutcome::Stalled { at } => Some(at),
+                    _ => None,
+                };
+                let skipped = stalled_at.is_none().then(|| streams[index].provider_id.clone());
+                let asked = onward(
+                    &mut run,
+                    current,
+                    &streams,
+                    index,
+                    skipped.as_deref(),
+                    stalled_at,
+                    &mut commands,
+                )
+                .await;
+                match asked {
+                    Onward::Found(more) => {
+                        tracing::info!(
+                            streams = more.len(),
+                            provider = %more[0].provider_id,
+                            "playing on from the sources after the pool"
+                        );
+                        index = streams.len();
+                        streams.extend(more);
+                        total = streams.len();
+                        tried.resize(total, false);
+                        localised.resize(total, false);
+                        if let Some(at) = stalled_at {
+                            resume_at = Some(at);
+                        }
+                        run.failed_over_from = None;
+                        continue;
+                    }
+                    Onward::Ended(outcome) => outcome,
+                    // A stall has played: the same stream opens again where it was.
+                    Onward::Failed(_) if stalled_at.is_some() => {
+                        FileOutcome::Stalled { at: stalled_at.unwrap_or_default() }
+                    }
+                    // Skipped past the last source, the start fails as the walk would have.
+                    Onward::Failed(failure) => {
+                        tracing::info!("skipped, and no source after it answered");
+                        let _ = tx.send(Event::Toast(Notice::alert(failure.text.clone())));
+                        if let Some(seat) = run.seat.take() {
+                            seat.report(SeatReport::Ended { leave: false, finished: false });
+                        }
+                        if let Some(player) = player.take() {
+                            player.link.shutdown().await;
+                        }
+                        run.servers.settle().await;
+                        // Its controls closed before its ending is said: see `Handoff::live`.
+                        commands.close();
+                        let _ = tx.send(Event::playback_failed(failure));
+                        return;
+                    }
+                }
+            }
+            outcome => outcome,
+        };
+
         match outcome {
             FileOutcome::Switch { to, at } => {
                 tracing::info!(from = index, to, at, "switching stream in place");
@@ -679,6 +759,17 @@ pub async fn play(
                 tracing::info!(from = index, to, at, "switching away from a stall");
                 index = to;
                 resume_at = Some(at);
+            }
+            FileOutcome::Skipped => {
+                // The next stream like this one, the pool from the top once each has been tried.
+                let to = failover::next_like(&streams, &tried, index, target).or_else(|| {
+                    tried = vec![false; total];
+                    tried[index] = true;
+                    failover::next_like(&streams, &tried, index, target)
+                });
+                let to = to.unwrap_or(index);
+                tracing::info!(from = index, to, "skipping to another stream");
+                index = to;
             }
             FileOutcome::Handover(successor) => {
                 // The playback taking the window takes the seat too.
@@ -896,6 +987,90 @@ pub async fn play(
     }
 }
 
+/// What came of asking the sources after the pool.
+enum Onward {
+    /// The streams of the next source that answered.
+    Found(Vec<Stream>),
+    /// None answered, as the start would have failed.
+    Failed(StartFailure),
+    /// The viewer stopped, closed the window, or a newer playback took it over meanwhile.
+    Ended(FileOutcome),
+}
+
+/// Ask the sources after `streams` for the episode, with the starting screen up over the
+/// player, which stops playing the stream passed. `skipped` is the source the viewer skipped,
+/// and `stalled_at` where a stalled file was when Switch source was pressed. A Stop, a closed
+/// window or a newer playback ends the asking.
+async fn onward(
+    run: &mut Run<'_>,
+    player: &mut Player,
+    streams: &[Stream],
+    index: usize,
+    skipped: Option<&str>,
+    stalled_at: Option<f64>,
+    commands: &mut mpsc::UnboundedReceiver<PlayerCommand>,
+) -> Onward {
+    let link = player.link.as_ref();
+    run.publish(link, streams, index).await;
+    if stalled_at.is_some() {
+        let _ = link.overlay(Overlay::StallCleared).await;
+    }
+    let _ = link.stop().await;
+    let ended = |stopped: bool, exited: bool, quit: bool| FileOutcome::Ended {
+        watched: None,
+        complete: false,
+        exited,
+        stopped,
+        quit,
+        no_frames: stalled_at.is_none(),
+        errored: false,
+        at: stalled_at.unwrap_or_default(),
+        duration: None,
+    };
+    let settings = run.settings;
+    let asking = settings.further.after(streams, skipped);
+    tokio::pin!(asking);
+    loop {
+        tokio::select! {
+            asked = &mut asking => {
+                return match asked {
+                    Ok(more) if !more.is_empty() => Onward::Found(more),
+                    Ok(_) => Onward::Failed(StartFailure {
+                        why: NoSourceWhy::NotFound,
+                        text: Msg::NoticeReason { reason: kaeri_model::Cause::NoSources },
+                        asked: Vec::new(),
+                    }),
+                    Err(failure) => Onward::Failed(failure),
+                };
+            }
+            command = commands.recv(), if run.controls_open => match command {
+                None => run.controls_open = false,
+                Some(PlayerCommand::Stop) => return Onward::Ended(ended(true, false, true)),
+                Some(PlayerCommand::Handover(successor)) => {
+                    if let Some(at) = stalled_at {
+                        let context = run.context;
+                        let _ = run.tx.send(Event::EpisodeLeft {
+                            id: context.anilist_id,
+                            episode: context.episode.clone(),
+                            position: at,
+                            duration: None,
+                            watched: false,
+                        });
+                    }
+                    return Onward::Ended(FileOutcome::Handover(successor));
+                }
+                // The walk hears a skip itself; the rest waits for a stream to play.
+                Some(_) => {}
+            },
+            event = player.events.recv() => {
+                if event.is_none() {
+                    return Onward::Ended(ended(false, true, link.has_quit()));
+                }
+            }
+        }
+    }
+}
+
 /// Open `stream` in the player, in place of whatever was playing.
 ///
 /// Everything that belongs to the file travels with it, so the previous file's never leak into
@@ -984,6 +1159,9 @@ struct Run<'a> {
     /// The source of the stream that broke off, while another is failing over for it: the
     /// notice naming the stream that took over is said once that one shows a frame.
     failed_over_from: Option<String>,
+    /// The starting screen's Skip, heard until a file shows its first frame: see
+    /// [`PlaySettings::further`].
+    skipping: Option<tokio::sync::watch::Receiver<u64>>,
 }
 
 #[cfg(all(test, feature = "cast"))]

@@ -47,7 +47,8 @@ pub struct EngineState {
     /// that opens at once.
     pub finding: Option<tokio::sync::watch::Sender<bool>>,
     /// The same playback's skip of the source being asked: each `SkipSource` moves the count,
-    /// which the walk through the sources watches. Set where `finding` is.
+    /// which the walk through the sources watches, and the playback until its first frame. Set
+    /// where `finding` is.
     pub skipping: Option<tokio::sync::watch::Sender<u64>>,
     /// Whether the viewer asked this playback to begin at 0 (`PlayFromBeginning`). Set where
     /// `finding` is.
