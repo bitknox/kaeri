@@ -430,8 +430,14 @@ struct PhonePlaybackPage: View {
             Section {
                 PhoneSettingPicker(key: .upscaling, note: upscalingNote)
                 PhoneSettingSwitch(key: .nightMode, note: L.playerNightModeDetail)
+                // iOS's own Start PiP Automatically wins over this switch, so the footnote
+                // names it, and VoiceOver reads it after the value.
+                PhoneSettingSwitch(key: .pictureInPictureOnLeave)
+                    .accessibilityHint(L.settingsPictureInPictureOnLeaveIos)
             } header: {
                 PhoneSectionHeader(L.playerPictureAndSound)
+            } footer: {
+                Text(L.settingsPictureInPictureOnLeaveIos)
             }
             Section {
                 Toggle(isOn: Binding(
