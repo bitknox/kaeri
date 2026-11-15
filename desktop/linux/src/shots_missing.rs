@@ -186,7 +186,7 @@ fn save(dir: &std::path::Path, start: i64, frames: &[(i64, gdk::Texture)]) {
         tracing::error!(error = %e, "the clip's folder");
         return;
     }
-    let mut list = String::from("ffconcat version 1.0\n");
+    let mut list = String::from("ffconcat version 1.0\n"); // i18n-skip
     for (n, (at, texture)) in frames.iter().enumerate() {
         let name = format!("frame-{n:04}.png");
         if let Err(e) = texture.save_to_png(dir.join(&name)) {
@@ -195,14 +195,14 @@ fn save(dir: &std::path::Path, start: i64, frames: &[(i64, gdk::Texture)]) {
         }
         let next = frames.get(n + 1).map_or(*at + 33_000, |(next, _)| *next);
         list.push_str(&format!(
-            "file '{name}'\nduration {:.4}\n# at {:.3}\n",
+            "file '{name}'\nduration {:.4}\n# at {:.3}\n", // i18n-skip
             (next - at) as f64 / 1e6,
             (at - start) as f64 / 1e6
         ));
     }
     if let Some(last) = frames.len().checked_sub(1) {
         // The concat demuxer takes the last frame's duration only when it is named again.
-        list.push_str(&format!("file 'frame-{last:04}.png'\n"));
+        list.push_str(&format!("file 'frame-{last:04}.png'\n")); // i18n-skip
     }
     match std::fs::write(dir.join("frames.txt"), list) {
         Ok(()) => tracing::info!(frames = frames.len(), "the clip's frames"),
