@@ -335,17 +335,17 @@ medium-choice-position = { $n } sur { $total }
 medium-change-later = Vous pouvez le changer dans Réglages.
 medium-update-line = { -app-name } peut maintenant lire des mangas, webtoons et light novels de vos { -source-pl }. Choisissez à quoi sert { -app-name } sur { $device }.
 medium-join-title-watch = { $n ->
-    [one] { $devices } est réglé sur regarder
+    [one] { $n } { -device } réglé sur regarder : { $devices }
     [many] { $devices } sont réglés sur regarder
    *[other] { $devices } sont réglés sur regarder
  }
 medium-join-title-read = { $n ->
-    [one] { $devices } est réglé sur lire
+    [one] { $n } { -device } réglé sur lire : { $devices }
     [many] { $devices } sont réglés sur lire
    *[other] { $devices } sont réglés sur lire
  }
 medium-join-title-both = { $n ->
-    [one] { $devices } est réglé sur regarder et lire
+    [one] { $n } { -device } réglé sur regarder et lire : { $devices }
     [many] { $devices } sont réglés sur regarder et lire
    *[other] { $devices } sont réglés sur regarder et lire
  }

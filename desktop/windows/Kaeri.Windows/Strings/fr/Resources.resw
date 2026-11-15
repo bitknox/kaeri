@@ -1092,7 +1092,7 @@
     <value>Hors ligne</value>
   </data>
   <data name="ReadingDlNoRoom_one" xml:space="preserve">
-    <value>Plus d'espace. Il se télécharge dès qu'il y a de l'espace libre.</value>
+    <value>Plus d'espace. {count} chapitre se télécharge dès qu'il y a de l'espace libre.</value>
   </data>
   <data name="ReadingDlNoRoom_many" xml:space="preserve">
     <value>Plus d'espace. Ils se téléchargent dès qu'il y a de l'espace libre.</value>
@@ -1335,7 +1335,7 @@
     <value>{count} plugins ont été conçus pour une version plus ancienne de Kaeri et doivent être mis à jour : {names}.</value>
   </data>
   <data name="PluginUpdatesReady_one" xml:space="preserve">
-    <value>Mise à jour prête : {names}.</value>
+    <value>{count} mise à jour de plugin prête : {names}.</value>
   </data>
   <data name="PluginUpdatesReady_many" xml:space="preserve">
     <value>Mises à jour prêtes : {names}.</value>
@@ -5385,7 +5385,7 @@
     <value>Retirer des salons récents</value>
   </data>
   <data name="TogetherSomeoneHere_one" xml:space="preserve">
-    <value>{names} est dans le salon</value>
+    <value>{count} personne dans le salon : {names}</value>
   </data>
   <data name="TogetherSomeoneHere_many" xml:space="preserve">
     <value>{names} sont dans le salon</value>
@@ -7695,7 +7695,7 @@
     <value>Kaeri peut maintenant lire des mangas, webtoons et light novels de vos sources. Choisissez à quoi sert Kaeri sur {device}.</value>
   </data>
   <data name="MediumJoinTitleWatch_one" xml:space="preserve">
-    <value>{devices} est réglé sur regarder</value>
+    <value>{n} appareil réglé sur regarder : {devices}</value>
   </data>
   <data name="MediumJoinTitleWatch_many" xml:space="preserve">
     <value>{devices} sont réglés sur regarder</value>
@@ -7704,7 +7704,7 @@
     <value>{devices} sont réglés sur regarder</value>
   </data>
   <data name="MediumJoinTitleRead_one" xml:space="preserve">
-    <value>{devices} est réglé sur lire</value>
+    <value>{n} appareil réglé sur lire : {devices}</value>
   </data>
   <data name="MediumJoinTitleRead_many" xml:space="preserve">
     <value>{devices} sont réglés sur lire</value>
@@ -7713,7 +7713,7 @@
     <value>{devices} sont réglés sur lire</value>
   </data>
   <data name="MediumJoinTitleBoth_one" xml:space="preserve">
-    <value>{devices} est réglé sur regarder et lire</value>
+    <value>{n} appareil réglé sur regarder et lire : {devices}</value>
   </data>
   <data name="MediumJoinTitleBoth_many" xml:space="preserve">
     <value>{devices} sont réglés sur regarder et lire</value>
@@ -9822,7 +9822,7 @@
     <value>{covered} sur {of} épisodes</value>
   </data>
   <data name="SourcePickerEpisodes_one" xml:space="preserve">
-    <value>Épisode {first}</value>
+    <value>{count} épisode : {first}</value>
   </data>
   <data name="SourcePickerEpisodes_many" xml:space="preserve">
     <value>Épisodes {first} à {last}</value>

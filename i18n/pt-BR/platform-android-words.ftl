@@ -13,12 +13,12 @@ downloads-live-waiting = Aguardando
 settings-seed-ratio-until = Até a razão { $ratio }
 settings-upload-rate = { $size }/s
 settings-coming-up-dubbed = { $count ->
-    [one] { $names } avisa quando a dublagem sair.
+    [one] { $count } título avisa quando a dublagem sair: { $names }.
     [many] { $names } avisam quando as dublagens saírem.
    *[other] { $names } avisam quando as dublagens saírem.
  }
 settings-coming-up-switched-off = { $count ->
-    [one] { $names } está desativado nas próprias configurações.
+    [one] { $count } título desativado nas próprias configurações: { $names }.
     [many] { $names } estão desativados nas próprias configurações.
    *[other] { $names } estão desativados nas próprias configurações.
  }

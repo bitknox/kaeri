@@ -99,10 +99,10 @@ together-recent-empty = Здесь появятся последние деся�
 together-rejoin = Вернуться
 together-forget-room = Убрать из недавних комнат
 together-someone-here = { $count ->
-    [one] В комнате: { $names }
-    [few] В комнате: { $names }
-    [many] В комнате: { $names }
-   *[other] В комнате: { $names }
+    [one] В комнате { $count } человек: { $names }
+    [few] В комнате { $count } человека: { $names }
+    [many] В комнате { $count } человек: { $names }
+   *[other] В комнате { $count } человека: { $names }
  }
 together-nobody-here = Сейчас здесь никого нет
 together-servers = Серверы

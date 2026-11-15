@@ -395,7 +395,7 @@
     <string name="reading_dl_failed">Le chapitre %1$s n\'a pas pu être téléchargé</string>
     <string name="reading_dl_offline">Hors ligne</string>
     <plurals name="reading_dl_no_room">
-        <item quantity="one">Plus d\'espace. Il se télécharge dès qu\'il y a de l\'espace libre.</item>
+        <item quantity="one">Plus d\'espace. %1$,d chapitre se télécharge dès qu\'il y a de l\'espace libre.</item>
         <item quantity="many">Plus d\'espace. Ils se téléchargent dès qu\'il y a de l\'espace libre.</item>
         <item quantity="other">Plus d\'espace. Ils se téléchargent dès qu\'il y a de l\'espace libre.</item>
     </plurals>
@@ -494,7 +494,7 @@
         <item quantity="other">%1$,d plugins ont été conçus pour une version plus ancienne de Kaeri et doivent être mis à jour : %2$s.</item>
     </plurals>
     <plurals name="plugin_updates_ready">
-        <item quantity="one">Mise à jour prête : %2$s.</item>
+        <item quantity="one">%1$,d mise à jour de plugin prête : %2$s.</item>
         <item quantity="many">Mises à jour prêtes : %2$s.</item>
         <item quantity="other">Mises à jour prêtes : %2$s.</item>
     </plurals>
@@ -1076,12 +1076,12 @@
     <string name="settings_seed_ratio_until">Jusqu’à un ratio de %1$s</string>
     <string name="settings_upload_rate">%1$s/s</string>
     <plurals name="settings_coming_up_dubbed">
-        <item quantity="one">%1$s prévient quand le doublage sort.</item>
+        <item quantity="one">%2$,d série prévient quand son doublage sort : %1$s.</item>
         <item quantity="many">%1$s préviennent quand leurs doublages sortent.</item>
         <item quantity="other">%1$s préviennent quand leurs doublages sortent.</item>
     </plurals>
     <plurals name="settings_coming_up_switched_off">
-        <item quantity="one">%1$s est désactivé dans ses propres réglages.</item>
+        <item quantity="one">%2$,d série désactivée dans ses propres réglages : %1$s.</item>
         <item quantity="many">%1$s sont désactivés dans leurs propres réglages.</item>
         <item quantity="other">%1$s sont désactivés dans leurs propres réglages.</item>
     </plurals>
@@ -2224,7 +2224,7 @@
     <string name="together_rejoin">Revenir</string>
     <string name="together_forget_room">Retirer des salons récents</string>
     <plurals name="together_someone_here">
-        <item quantity="one">%1$s est dans le salon</item>
+        <item quantity="one">%2$,d personne dans le salon : %1$s</item>
         <item quantity="many">%1$s sont dans le salon</item>
         <item quantity="other">%1$s sont dans le salon</item>
     </plurals>
@@ -3055,17 +3055,17 @@
     <string name="medium_change_later">Vous pouvez le changer dans Réglages.</string>
     <string name="medium_update_line">Kaeri peut maintenant lire des mangas, webtoons et light novels de vos sources. Choisissez à quoi sert Kaeri sur %1$s.</string>
     <plurals name="medium_join_title_watch">
-        <item quantity="one">%1$s est réglé sur regarder</item>
+        <item quantity="one">%2$,d appareil réglé sur regarder : %1$s</item>
         <item quantity="many">%1$s sont réglés sur regarder</item>
         <item quantity="other">%1$s sont réglés sur regarder</item>
     </plurals>
     <plurals name="medium_join_title_read">
-        <item quantity="one">%1$s est réglé sur lire</item>
+        <item quantity="one">%2$,d appareil réglé sur lire : %1$s</item>
         <item quantity="many">%1$s sont réglés sur lire</item>
         <item quantity="other">%1$s sont réglés sur lire</item>
     </plurals>
     <plurals name="medium_join_title_both">
-        <item quantity="one">%1$s est réglé sur regarder et lire</item>
+        <item quantity="one">%2$,d appareil réglé sur regarder et lire : %1$s</item>
         <item quantity="many">%1$s sont réglés sur regarder et lire</item>
         <item quantity="other">%1$s sont réglés sur regarder et lire</item>
     </plurals>
@@ -3831,7 +3831,7 @@
         <item quantity="other">%1$,d sur %2$,d épisodes</item>
     </plurals>
     <plurals name="source_picker_episodes">
-        <item quantity="one">Épisode %2$d</item>
+        <item quantity="one">%1$,d épisode : %2$d</item>
         <item quantity="many">Épisodes %2$d à %3$d</item>
         <item quantity="other">Épisodes %2$d à %3$d</item>
     </plurals>

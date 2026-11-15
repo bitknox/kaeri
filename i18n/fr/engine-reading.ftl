@@ -182,7 +182,7 @@ reading-dl-waits-wifi = attend le Wi-Fi
 reading-dl-failed = Le chapitre { $chapter } n'a pas pu être téléchargé
 reading-dl-offline = Hors ligne
 reading-dl-no-room = { $count ->
-    [one] Plus d'espace. Il se télécharge dès qu'il y a de l'espace libre.
+    [one] Plus d'espace. { $count } chapitre se télécharge dès qu'il y a de l'espace libre.
     [many] Plus d'espace. Ils se téléchargent dès qu'il y a de l'espace libre.
    *[other] Plus d'espace. Ils se téléchargent dès qu'il y a de l'espace libre.
  }

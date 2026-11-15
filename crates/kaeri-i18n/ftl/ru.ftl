@@ -1059,10 +1059,10 @@ reading-dl-offline = Нет сети
 # After "3 queued" on a series' Downloads row when a full device paused the downloads. They go on by themselves once some space is free; the count is the queued chapters.
 reading-dl-no-room =
     { $count ->
-        [one] Нет места. Загрузка начнётся, когда освободится место.
-        [few] Нет места. Загрузка начнётся, когда освободится место.
-        [many] Нет места. Загрузка начнётся, когда освободится место.
-       *[other] Нет места. Загрузка начнётся, когда освободится место.
+        [one] Нет места. { $count } глава загрузится, когда освободится место.
+        [few] Нет места. { $count } главы загрузятся, когда освободится место.
+        [many] Нет места. { $count } глав загрузятся, когда освободится место.
+       *[other] Нет места. { $count } главы загрузятся, когда освободится место.
     }
 
 # How much the chosen chapters will take, from their pages and the size of pages downloaded before.
@@ -1302,10 +1302,10 @@ plugins-outdated =
 # Toast at launch when joined plugin stores offer newer versions of installed plugins.
 plugin-updates-ready =
     { $count ->
-        [one] Плагин: готово обновление. { $names }.
-        [few] Плагины: готовы обновления. { $names }.
-        [many] Плагины: готовы обновления. { $names }.
-       *[other] Плагины: готовы обновления. { $names }.
+        [one] Плагины: готово { $count } обновление. { $names }.
+        [few] Плагины: готовы { $count } обновления. { $names }.
+        [many] Плагины: готово { $count } обновлений. { $names }.
+       *[other] Плагины: готово { $count } обновления. { $names }.
     }
 
 # Note on the sources screen when the plugins could not be loaded. The reason comes from the plugin host.
@@ -8434,10 +8434,10 @@ together-forget-room = Убрать из недавних комнат
 # Line that says who is in a recent room now, after looking in. The names are already joined.
 together-someone-here =
     { $count ->
-        [one] В комнате: { $names }
-        [few] В комнате: { $names }
-        [many] В комнате: { $names }
-       *[other] В комнате: { $names }
+        [one] В комнате { $count } человек: { $names }
+        [few] В комнате { $count } человека: { $names }
+        [many] В комнате { $count } человек: { $names }
+       *[other] В комнате { $count } человека: { $names }
     }
 
 # Line that says a recent room has nobody in it now.
@@ -10719,28 +10719,28 @@ medium-update-line = Kaeri теперь умеет читать мангу, ве
 # Title of the sheet when the other devices answer Watch. The devices are their names, joined; n is how many there are.
 medium-join-title-watch =
     { $n ->
-        [one] На { $devices } выбран просмотр
-        [few] На { $devices } выбран просмотр
-        [many] На { $devices } выбран просмотр
-       *[other] На { $devices } выбран просмотр
+        [one] Просмотр выбран на { $n } устройстве: { $devices }
+        [few] Просмотр выбран на { $n } устройствах: { $devices }
+        [many] Просмотр выбран на { $n } устройствах: { $devices }
+       *[other] Просмотр выбран на { $n } устройствах: { $devices }
     }
 
 # Title of the sheet when the other devices answer Read.
 medium-join-title-read =
     { $n ->
-        [one] На { $devices } выбрано чтение
-        [few] На { $devices } выбрано чтение
-        [many] На { $devices } выбрано чтение
-       *[other] На { $devices } выбрано чтение
+        [one] Чтение выбрано на { $n } устройстве: { $devices }
+        [few] Чтение выбрано на { $n } устройствах: { $devices }
+        [many] Чтение выбрано на { $n } устройствах: { $devices }
+       *[other] Чтение выбрано на { $n } устройствах: { $devices }
     }
 
 # Title of the sheet when the other devices answer Both.
 medium-join-title-both =
     { $n ->
-        [one] На { $devices } выбраны просмотр и чтение
-        [few] На { $devices } выбраны просмотр и чтение
-        [many] На { $devices } выбраны просмотр и чтение
-       *[other] На { $devices } выбраны просмотр и чтение
+        [one] Просмотр и чтение выбраны на { $n } устройстве: { $devices }
+        [few] Просмотр и чтение выбраны на { $n } устройствах: { $devices }
+        [many] Просмотр и чтение выбраны на { $n } устройствах: { $devices }
+       *[other] Просмотр и чтение выбраны на { $n } устройствах: { $devices }
     }
 
 # Line of the sheet on joining.
@@ -12846,10 +12846,10 @@ source-picker-coverage =
 # Under a source that lists every episode that is out.
 source-picker-episodes =
     { $count ->
-        [one] Эпизоды { $first }–{ $last }
-        [few] Эпизоды { $first }–{ $last }
-        [many] Эпизоды { $first }–{ $last }
-       *[other] Эпизоды { $first }–{ $last }
+        [one] { $count } эпизод: { $first }–{ $last }
+        [few] { $count } эпизода: { $first }–{ $last }
+        [many] { $count } эпизодов: { $first }–{ $last }
+       *[other] { $count } эпизода: { $first }–{ $last }
     }
 
 # Under a source that lacks the newest episodes, within a week of them airing. $missing is one number, source-picker-missing-pair or source-picker-missing-range.
