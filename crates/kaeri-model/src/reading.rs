@@ -580,6 +580,23 @@ pub struct ReadingHomeView {
     pub rows: Vec<ReadHomeRow>,
 }
 
+impl ReadingHomeView {
+    /// Remove from Continue as the screen shows it at once: the cover leaves Continue and
+    /// nothing else on Home moves. The engine keeps it hidden without sending Home again, as
+    /// watching's Continue does; when Continue empties, its gap closes.
+    pub fn without_continue(mut self, work: &WorkId) -> Self {
+        self.continue_reading.retain(|tile| &tile.work != work);
+        self
+    }
+}
+
+/// [`ReadingHomeView::without_continue`] for a front end: every app drops the cover from
+/// reading's Home with this as it sends [`ReadingCommand::HideFromContinue`].
+#[cfg_attr(feature = "ffi", uniffi::export)]
+pub fn read_home_without_continue(home: ReadingHomeView, work: WorkId) -> ReadingHomeView {
+    home.without_continue(&work)
+}
+
 /// The most discovery rows reading's Home shows.
 pub const READ_HOME_ROWS: u32 = 8;
 
@@ -2104,6 +2121,66 @@ pub fn anilist_of(work: &WorkId) -> Option<AnilistId> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    fn tile(work: &str) -> WorkTile {
+        WorkTile {
+            work: WorkId(work.into()),
+            title: format!("Series {work}"),
+            medium: Medium::Manga,
+            cover: None,
+            format_label: None,
+            progress: None,
+            next: None,
+            new_chapter: false,
+            adult: false,
+            facts: vec![],
+            demo: false,
+            not_in_sources: false,
+            origin: None,
+            amount: None,
+            started: None,
+        }
+    }
+
+    #[test]
+    fn remove_from_continue_drops_only_the_cover_and_leaves_the_rest_of_home_still() {
+        let home = ReadingHomeView {
+            spotlight: Some(tile("a:1")),
+            continue_reading: vec![tile("a:1"), tile("a:2")],
+            up_next: vec![tile("a:3")],
+            rows: vec![ReadHomeRow {
+                id: "trending-manga".into(),
+                kind: ReadRowKind::Trending,
+                format: Some(ReadRowFormat::Manga),
+                title: Msg::Reading(ReadingMsg::ReadingSpotlightPopular),
+                side: None,
+                tiles: vec![tile("a:4")],
+                view_all: None,
+                view_all_title: None,
+                pending: false,
+            }],
+            ..ReadingHomeView::default()
+        };
+
+        let one_left = read_home_without_continue(home.clone(), WorkId("a:2".into()));
+        assert_eq!(one_left.continue_reading, vec![tile("a:1")]);
+        assert_eq!(
+            ReadingHomeView {
+                continue_reading: home.continue_reading.clone(),
+                ..one_left.clone()
+            },
+            home,
+            "nothing but Continue changes"
+        );
+
+        let empty = one_left.clone().without_continue(&WorkId("a:1".into()));
+        assert!(empty.continue_reading.is_empty(), "the last cover empties Continue");
+        assert_eq!(empty.up_next, home.up_next);
+        assert_eq!(empty.rows, home.rows);
+
+        let unknown = one_left.clone().without_continue(&WorkId("a:9".into()));
+        assert_eq!(unknown, one_left, "a series not in Continue changes nothing");
+    }
 
     #[test]
     fn a_part_says_its_percent_only_when_there_is_one_worth_saying() {

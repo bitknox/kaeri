@@ -261,7 +261,10 @@ public final class ReadingModel {
         send?(.reading(.loadChapters(work: work, edition: chapters[work]?.edition?.sourceId)))
     }
 
+    /// Take a series off Continue: the cover goes at once and nothing else on Home moves, and the
+    /// engine keeps it hidden.
     public func hideFromContinue(_ work: String) {
+        if let home { self.home = readHomeWithoutContinue(home: home, work: work) }
         send?(.reading(.hideFromContinue(work: work)))
     }
 

@@ -153,6 +153,11 @@ pub fn resend(kit: &Kit, ask: Ask, tx: &Outbox) {
     Home::of(kit, ask).send(tx);
 }
 
+/// The series the spotlight shows now, from what is kept, asking for nothing.
+pub fn spotlight(kit: &Kit, ask: Ask) -> Option<kaeri_core::books::WorkId> {
+    Home::of(kit, ask).view().spotlight.map(|tile| tile.work)
+}
+
 /// What a Home load works with.
 #[derive(Clone)]
 struct Home {
