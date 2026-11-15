@@ -391,6 +391,22 @@ impl BookDownloads {
         !setup.hold
     }
 
+    /// The network came back: chapters that failed for want of one go back in the queue, to run
+    /// with the rest. Says whether any did.
+    pub fn network_back(&self, store: &Store, now: i64) -> bool {
+        match store.book_downloads_retry_offline(now) {
+            Ok(0) => false,
+            Ok(n) => {
+                tracing::info!(n, "chapter downloads that failed offline are queued again");
+                true
+            }
+            Err(e) => {
+                tracing::warn!(error = %e, "downloads that failed offline were not queued again");
+                false
+            }
+        }
+    }
+
     /// Changes to the setup, as [`Self::configure`] takes them in.
     pub(crate) fn changes(&self) -> tokio::sync::watch::Receiver<Setup> {
         self.0.changed.subscribe()
@@ -1205,6 +1221,15 @@ impl BookDownloads {
                 self.publish(store, &lent.tx);
                 (true, false)
             }
+            // A fetch that failed as the network went or the setting changed under it was held,
+            // not failed: the source could not be reached because the queue may not reach it.
+            // It goes back in the queue and on once the hold lifts.
+            Err(Stop::Failed(_)) if self.setup().hold => {
+                let _ = std::fs::remove_file(part_of(&self.file_stem(row)));
+                let _ = store.book_download_requeue(row.id, now);
+                self.publish(store, &lent.tx);
+                (true, false)
+            }
             Err(Stop::Failed(failure)) => {
                 if !Self::taken(store, lent, row) {
                     let _ = std::fs::remove_file(part_of(&self.file_stem(row)));
@@ -1993,12 +2018,15 @@ pub fn resume(engine: &crate::state::EngineState, services: &Services, tx: &Outb
     );
     let downloads = &services.book_sources.downloads;
     let before = downloads.setup();
+    let back = before.offline
+        && !setup.offline
+        && downloads.network_back(services.book_sources.store(), services.clock.now());
     if downloads.configure(setup) {
         // An engine that does only what it is sent leaves the queue as it is.
         if engine.ahead.on() {
             downloads.start(&Lent::of(services, tx));
         }
-    } else if before != setup {
+    } else if before != setup || back {
         // Rows that wait for Wi-Fi say so; with none, there is nothing to tell.
         let store = services.book_sources.store();
         if store.book_downloads(None).is_ok_and(|rows| !rows.is_empty()) {

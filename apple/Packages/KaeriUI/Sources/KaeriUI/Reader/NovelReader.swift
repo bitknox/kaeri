@@ -100,10 +100,19 @@ struct NovelReader: View {
         .accessibilityHidden(true)
     }
 
-    /// A sideways swipe on the end page, towards the side the book reads to for forward.
+    /// A sideways swipe on the end page, towards the side the book reads to for forward. A
+    /// scrolled chapter's end page also takes the drag that scrolls: up goes on, down goes back.
     private func endSwipe(_ controller: NovelWebController) -> some Gesture {
-        DragGesture(minimumDistance: 14).onEnded { value in
+        let scrolled = model.choice(.mode) == "scrolled"
+        return DragGesture(minimumDistance: 14).onEnded { value in
             let x = value.translation.width
+            let y = value.translation.height
+            if scrolled, abs(y) > abs(x) {
+                let flick = abs(value.velocity.height) > 450 && value.velocity.height * y > 0
+                guard abs(y) > size.height * 0.15 || flick else { return }
+                controller.turn(forward: y < 0, how: "swipe")
+                return
+            }
             guard abs(x) > abs(value.translation.height) else { return }
             let flick = abs(value.velocity.width) > 450 && value.velocity.width * x > 0
             guard abs(x) > size.width * 0.25 || flick else { return }
@@ -217,6 +226,7 @@ final class NovelWebController: NSObject, WKNavigationDelegate, WKScriptMessageH
         let pan = UIPanGestureRecognizer(target: self, action: #selector(panned(_:)))
         pan.delegate = self
         webView.addGestureRecognizer(pan)
+        webView.scrollView.panGestureRecognizer.addTarget(self, action: #selector(scrollPanned(_:)))
         #else
         webView.setValue(false, forKey: "drawsBackground")
         #endif
@@ -341,7 +351,34 @@ final class NovelWebController: NSObject, WKNavigationDelegate, WKScriptMessageH
         call("window.kaeriReader && window.kaeriReader.input && window.kaeriReader.input(\(now))")
     }
 
+    /// Which way a drag let go pulled a scrolled chapter past its ends: forward past its foot,
+    /// back past its top, and nil short of either by `pull` points. The insets are the scroll
+    /// view's own, at its top and bottom.
+    nonisolated static func pulledPast(
+        offset: CGFloat, content: CGFloat, view: CGFloat, top: CGFloat = 0, bottom: CGFloat = 0, pull: CGFloat = 48
+    ) -> Bool? {
+        let first = -top
+        let last = max(content + bottom - view, first)
+        if offset > last + pull { return true }
+        if offset < first - pull { return false }
+        return nil
+    }
+
     #if os(iOS)
+    /// A scrolled chapter goes on as the strip does, by scrolling: let go of a drag pulled past
+    /// the foot and the next document or the end page comes, past the top and the document
+    /// before it. The scroll view's own drag, which scrolls the page as usual.
+    @objc private func scrollPanned(_ gesture: UIPanGestureRecognizer) {
+        let scroll = webView.scrollView
+        guard gesture.state == .ended, scroll.isScrollEnabled, !shown.end else { return }
+        let inset = scroll.adjustedContentInset
+        guard let forward = Self.pulledPast(
+            offset: scroll.contentOffset.y, content: scroll.contentSize.height, view: scroll.bounds.height,
+            top: inset.top, bottom: inset.bottom)
+        else { return }
+        if forward { next() } else { previous() }
+    }
+
     /// A paged drag, as the manga reader has: the page follows the finger, the next one is
     /// already under it, and letting go short of a quarter of the width brings it back. A drag
     /// to the left moves forward, unless the book runs right to left.
