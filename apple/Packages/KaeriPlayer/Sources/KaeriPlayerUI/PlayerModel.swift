@@ -393,7 +393,7 @@ public final class PlayerModel {
             for op in ops { apply(op, for: playback) }
         case .playerUi(let playback, let ui):
             apply(ui, for: playback)
-        case .playbackStaged(let id, let title, let episode, let episodeTitle, _, let resume):
+        case .playbackStaged(let id, let title, let episode, let episodeTitle, _, let resume, let alwaysPrivate):
             since = time.now()
             // Said again for the same play (idempotent), it keeps what the start has told.
             if walk?.id != id || walk?.episode != episode {
@@ -407,7 +407,8 @@ public final class PlayerModel {
             sourceChoices = nil
             verdictPending = false
             partySaysWhy = false
-            staged = StagedPlayback(id: id, title: title, episode: episode, episodeTitle: episodeTitle)
+            staged = StagedPlayback(
+                id: id, title: title, episode: episode, episodeTitle: episodeTitle, alwaysPrivate: alwaysPrivate)
             present()
         case .startingStep(let id, let episode, let step, let line):
             guard isPresented, !closedByViewer, walk?.id == id, walk?.episode == episode else { return }
@@ -459,10 +460,23 @@ public final class PlayerModel {
         case .clipboard(let text):
             copy(text)
             statsCopiedAt = time.now()
+        case .private(let on):
+            privateOn = on
+            nowPlaying.update()
+        case .alwaysPrivate(.show(let id), let on):
+            guard staged?.id == id else { return }
+            staged?.alwaysPrivate = on
+            nowPlaying.update()
         default:
             break
         }
     }
+
+    /// Whether private mode is on, as the engine last said it.
+    public private(set) var privateOn = false
+    /// Whether what plays is private: the mode is on, or the show is always private. Now Playing
+    /// then says only "Playing in Kaeri", with no art, and no Live Activity or Handoff names it.
+    public var isPrivate: Bool { privateOn || staged?.alwaysPrivate == true }
 
     func apply(_ op: PlayerOp, for playback: PlaybackId) {
         guard accepts(playback) else {

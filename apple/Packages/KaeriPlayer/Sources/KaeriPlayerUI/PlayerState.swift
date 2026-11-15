@@ -59,6 +59,8 @@ public struct StagedPlayback: Equatable, Sendable {
     public var title: String
     public var episode: String
     public var episodeTitle: String?
+    /// The show is always private on this device: Now Playing names nothing of it.
+    public var alwaysPrivate = false
 }
 
 /// The starting screen: what is being found or opened, since when.

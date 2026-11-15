@@ -283,6 +283,7 @@ public final class SpotlightIndexer {
         generation += 1
         let watch = generation
         withObservationTracking {
+            _ = store.privacy.on
             _ = Shelf.current(store, over: saved ?? Shelf())
             for url in asked { _ = covers.image(url) }
         } onChange: { [weak self] in
@@ -349,6 +350,8 @@ public final class SpotlightIndexer {
             }
             return
         }
+        // Nothing reaches Spotlight while private mode is on: the first pass after it catches up.
+        if store.privacy.on { return }
         // Nothing an answered list says yet, and nothing saved: wait, rather than clear.
         let before = saved ?? Shelf()
         var shelf = Shelf.current(store, over: before)

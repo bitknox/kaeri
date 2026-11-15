@@ -14,11 +14,14 @@ import Observation
 public final class TVNowPlaying {
     private let tv: TVRemoteModel
     private weak var player: PlayerModel?
+    /// Whether nothing of a show may show outside the app: private mode, or always private.
+    private let holds: @MainActor (AnilistId) -> Bool
     private var targets: [(MPRemoteCommand, Any)] = []
 
-    public init(tv: TVRemoteModel, player: PlayerModel) {
+    public init(tv: TVRemoteModel, player: PlayerModel, holds: @escaping @MainActor (AnilistId) -> Bool = { _ in false }) {
         self.tv = tv
         self.player = player
+        self.holds = holds
         watch()
     }
 
@@ -42,7 +45,8 @@ public final class TVNowPlaying {
         }
         if targets.isEmpty { bind() }
         let center = MPNowPlayingInfoCenter.default()
-        center.nowPlayingInfo = Self.info(now, tvName: tvName, playhead: tv.playhead() ?? now.position, live: tv.live)
+        center.nowPlayingInfo = Self.info(
+            now, tvName: tvName, playhead: tv.playhead() ?? now.position, live: tv.live, private: holds(now.id))
         center.playbackState = Self.playing(now, live: tv.live) ? .playing : .paused
     }
 
@@ -52,17 +56,20 @@ public final class TVNowPlaying {
     }
 
     /// What Now Playing shows of the TV's episode. The system runs the clock from the playhead
-    /// at the rate given, so it is written as the card changes, never on a timer.
-    static func info(_ now: FfiNowCard, tvName: String, playhead: Double, live: Bool) -> [String: Any] {
+    /// at the rate given, so it is written as the card changes, never on a timer. While
+    /// `private`, it names nothing: "Playing in Kaeri", with no show, episode or TV.
+    static func info(_ now: FfiNowCard, tvName: String, playhead: Double, live: Bool, private: Bool = false) -> [String: Any] {
         var info: [String: Any] = [
-            MPMediaItemPropertyTitle: now.episodeLine,
-            MPMediaItemPropertyArtist: now.title,
-            MPMediaItemPropertyAlbumTitle: L.tvStatusPlaying(name: tvName),
+            MPMediaItemPropertyTitle: `private` ? L.nowPlayingPrivate : now.episodeLine,
             MPNowPlayingInfoPropertyMediaType: MPNowPlayingInfoMediaType.video.rawValue,
             MPNowPlayingInfoPropertyElapsedPlaybackTime: playhead,
             MPNowPlayingInfoPropertyPlaybackRate: playing(now, live: live) ? now.speed : 0.0,
             MPNowPlayingInfoPropertyDefaultPlaybackRate: 1.0,
         ]
+        if !`private` {
+            info[MPMediaItemPropertyArtist] = now.title
+            info[MPMediaItemPropertyAlbumTitle] = L.tvStatusPlaying(name: tvName)
+        }
         if let duration = now.duration { info[MPMediaItemPropertyPlaybackDuration] = duration }
         return info
     }

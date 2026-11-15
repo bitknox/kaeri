@@ -93,6 +93,13 @@ struct TitleMoreItems: View {
         Button(L.sourcePickerTitle) { navigator.sourcePicker = entry.id }
         Button(L.matchFix) { navigator.fixMatch(entry.id, store: store) }
             .disabled(!store.match.canFix(store.providers))
+        // Per device and never synced: what was saved before stays.
+        Toggle(isOn: Binding(
+            get: { store.privacy.isAlways(show: entry.id) },
+            set: { store.setAlwaysPrivate(show: entry.id, $0) }
+        )) {
+            Label(L.titleAlwaysPrivate, systemImage: "eye.slash")
+        }
         Button(L.shellShowSettings) {
             navigator.showSettings = entry.id
         }

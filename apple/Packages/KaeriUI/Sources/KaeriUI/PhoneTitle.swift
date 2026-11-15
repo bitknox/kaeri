@@ -121,6 +121,12 @@ struct PhoneTitle: View {
                         // Still to air: when, in the button's place.
                         AirsStatus(text: action.sentence, height: 50, fontSize: 17, fills: true)
                     }
+                    // While private: why, and what it means, 10 under the main button.
+                    if let line = store.privacy.line(show: entry.id) {
+                        PrivateLineView(line: line)
+                            .padding(.top, -16)
+                            .transition(PrivateLineView.transition(reduceMotion: reduceMotion))
+                    }
 
                     HStack(spacing: 12) {
                         Menu {
@@ -239,6 +245,7 @@ struct PhoneTitle: View {
                         }
                     }
                 }
+                .animation(reduceMotion ? nil : .standard, value: store.privacy.line(show: entry.id))
                 .accessibilityElement(children: .contain)
                 .padding(.horizontal, 16)
                 .padding(.top, 16)

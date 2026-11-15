@@ -254,6 +254,12 @@ struct PhoneSettingsRoot: View {
                 }
                 .listRowBackground(Palette.raised)
             }
+            // Private mode sits with the account: it says what is saved and synced.
+            Section {
+                PhonePrivateSwitch(title: L.privateMode, isOn: store.privateSwitch)
+            } footer: {
+                Text(L.privateModeDetail + " " + L.privateModeLimits) // i18n-skip: two sentences joined
+            }
             Section {
                 link(.general, L.settingsGroupGeneral, "gearshape", value: store.titleChoice.label)
                 if store.medium.watches {

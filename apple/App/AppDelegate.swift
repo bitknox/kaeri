@@ -54,7 +54,7 @@ final class AppDelegate: NSObject {
         device = DeviceWatch(send: { [weak store] command in store?.send(command) })
         playing = player.playingActivity { [weak store] id in store?.titles[id]?.showTitle }
         #if os(macOS)
-        tvNowPlaying = TVNowPlaying(tv: store.tv, player: player)
+        tvNowPlaying = TVNowPlaying(tv: store.tv, player: player) { [weak store] in store?.privacy.holds(show: $0) ?? false }
         #endif
         super.init()
         player.skipFindPause = { [weak store] in store?.settings.pausedOverride ?? store?.settings.view?.skipFindPaused }
@@ -313,6 +313,8 @@ final class AppDelegate: NSObject {
         if let scene = SyncScene.named() {
             ready = await store.sync.stage(scene, store: store) && ready
         }
+        // A screenshot of private mode: on, with its notice, or a title always private.
+        if let scene = PrivateScene.named() { await store.stage(scene) }
         // A screenshot of a prelaunch state: what came in, the demo, or the first-run join.
         if let scene = PrelaunchScene.named() {
             store.cameIn.stage(scene)

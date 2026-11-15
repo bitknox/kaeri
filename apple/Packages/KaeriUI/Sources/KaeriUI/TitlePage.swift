@@ -537,6 +537,8 @@ struct TitleHero: View {
                 }
                 .animation(.fadeIn, value: playsOnTV)
                 .padding(.top, Self.pad ? 16 : 12)
+                // While private: why, and what it means. The main button is as it would be.
+                PrivateLineSlot(line: store.privacy.line(show: entry.id))
                 LicensedLines(id: entry.id, font: Self.pad ? .ui(15) : .mac(13))
                 MatchUncertainLine(id: entry.id, font: Self.pad ? .ui(15) : .mac(13), top: 10)
             }

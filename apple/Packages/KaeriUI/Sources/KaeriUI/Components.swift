@@ -376,34 +376,58 @@ struct SyncCapsule: View {
     /// Accounts in Settings, from the popover's foot.
     let open: () -> Void
     @State private var showing = false
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    /// Each face's width, for the capsule to change between them.
+    @State private var syncWidth: CGFloat?
+    @State private var privateWidth: CGFloat?
 
     var body: some View {
         let summary = shown
+        let on = store.privacy.on
         Button { showing.toggle() } label: {
-            HStack(spacing: 6) {
-                StateDot(state: summary.state)
-                Text(summary.text)
-                    .font(.mac(12, weight: .medium))
-                    .foregroundStyle(summary.state == .signedOut ? .haze : .silk)
+            // While private mode is on the badge takes the capsule's place: the faces crossfade
+            // in place as the capsule's width moves between them, never through an empty one.
+            ZStack(alignment: .leading) {
+                HStack(spacing: 6) {
+                    StateDot(state: summary.state)
+                    Text(summary.text)
+                        .font(.mac(12, weight: .medium))
+                        .foregroundStyle(summary.state == .signedOut ? .haze : .silk)
+                }
+                .fixedSize()
+                .onGeometryChange(for: CGFloat.self, of: \.size.width) { syncWidth = $0 }
+                .animation(.reveal) { $0.opacity(on ? 0 : 1) }
+                PrivateBadgeLabel()
+                    .fixedSize()
+                    .onGeometryChange(for: CGFloat.self, of: \.size.width) { privateWidth = $0 }
+                    .animation(.reveal) { $0.opacity(on ? 1 : 0) }
             }
+            .animation(reduceMotion ? .reveal : .standard) {
+                $0.frame(width: on ? privateWidth : syncWidth, alignment: .leading)
+            }
+            .clipped()
             .padding(.horizontal, 4)
         }
-        .accessibilityLabel(accessibilityLabel(summary))
-        .accessibilityHint(L.shellSyncHint)
+        .accessibilityLabel(on ? L.privateBadgeLabel : accessibilityLabel(summary))
+        .accessibilityHint(on ? L.privateModeOnNotice : L.shellSyncHint)
         .onAppear {
-            // `sheet=sync-status`: the popover open, for its shot.
+            // `sheet=sync-status`: the popover open, for its shot; the badge's while private.
             guard navigator.launchSheet == "sync-status" else { return }
             navigator.launchSheet = nil
             showing = true
         }
         .popover(isPresented: $showing, arrowEdge: .bottom) {
-            JobsPopover(openAccounts: {
-                showing = false
-                open()
-            }, openDevices: {
-                showing = false
-                navigator.openSettings(.devices)
-            })
+            if on {
+                PrivatePopover { showing = false }
+            } else {
+                JobsPopover(openAccounts: {
+                    showing = false
+                    open()
+                }, openDevices: {
+                    showing = false
+                    navigator.openSettings(.devices)
+                })
+            }
         }
     }
 

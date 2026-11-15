@@ -114,6 +114,14 @@ public enum MotionDemo: String, CaseIterable, Sendable {
     case groupPick
     /// The cut synopsis on screen opened, as its More does: a show's page or a series' page.
     case synopsisMore
+    /// Private mode turned on from the switch, as a click on it does: the switch, the Mac's
+    /// capsule crossfading to the badge, the title page's line growing in. No notice.
+    case privateOn
+    /// Private mode turned on from the menu item or ⇧⌘N: the same, and the notice for 8 s.
+    case privateNotice
+    /// Private mode turned off, as Turn off does, after `-KaeriPrivate on`: the badge
+    /// crossfading back to the sync status.
+    case privateOff
 
     /// Reduce Motion, as the views read it: the strip grows its credit row at once with it on.
     @MainActor private static var reduceMotion: Bool {
@@ -395,6 +403,12 @@ public enum MotionDemo: String, CaseIterable, Sendable {
             store.reading.chooseGroup(view.work, group: other.label)
         case .synopsisMore:
             navigator.synopsisMoreAsked += 1
+        case .privateOn:
+            store.setPrivate(true)
+        case .privateNotice:
+            store.setPrivate(true, notice: true)
+        case .privateOff:
+            store.setPrivate(false)
         }
     }
 }

@@ -400,6 +400,8 @@ struct AccountsPane: View {
 
     var body: some View {
         let anilist = store.accounts.tracker("anilist")
+        // Private mode comes first, with the account: it says what is saved and synced.
+        PrivateModeGroup()
         SettingsGroup(
             title: AccountsModel.name("anilist"),
             footnote: store.medium.answer == .read
