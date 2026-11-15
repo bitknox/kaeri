@@ -515,6 +515,7 @@ fn help_rows(app: &App) -> Vec<(String, String)> {
         rows.push((String::new(), t::tui_read_keys_series()));
         for (action, label) in [
             (Action::Open, t::tui_read_keys_read()),
+            (Action::ShowEpisodes, t::tui_read_keys_next()),
             (Action::ToggleWatched, t::tui_read_read_unread()),
             (Action::Download, t::tui_read_keys_download()),
             (Action::SetListStatus, t::tui_read_keys_status()),

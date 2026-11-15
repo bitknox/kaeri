@@ -5139,6 +5139,9 @@ tui-read-row-date = [{ $day } { $month }~~~]
 # On a series page's chapter row, when the chapter was read or came out in an earlier year: the day, the short month name and the year, as in "Read · 9 Nov 2025".
 tui-read-row-date-year = [{ $day } { $month } { $year }~~~~]
 
+# A row of the key reference on the series page: put the cursor back on the chapter to read next, the one in progress or the next unread. Its status line hint reads "chapters".
+tui-read-keys-next = [Ĝö ţö ţĥé çĥàþţéŕ ţö ŕéàð ñéẋţ~~~~~~~~~]
+
 # AniList's name, in the line that says it is still being asked.
 tui-read-anilist = [ÅñîĻîšţ~~~]
 

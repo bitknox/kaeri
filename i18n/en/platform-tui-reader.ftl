@@ -721,3 +721,8 @@ tui-read-row-date = { $day } { $month }
 # @max 16
 # @only tui
 tui-read-row-date-year = { $day } { $month } { $year }
+
+# A row of the key reference on the series page: put the cursor back on the chapter to read
+# next, the one in progress or the next unread. Its status line hint reads "chapters".
+# @only tui
+tui-read-keys-next = Go to the chapter to read next

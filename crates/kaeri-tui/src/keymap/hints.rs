@@ -5,7 +5,7 @@
 use kaeri_i18n::t;
 
 use super::{Action, Binding, Keymap, said};
-use crate::nav::Section;
+use crate::{app::SeriesPage, nav::Section};
 
 /// Two keys drawn as one hint.
 fn pair(first: &str, second: &str) -> String {
@@ -288,15 +288,25 @@ pub(crate) fn status_hints_paged(
         V::Stores | V::Store(_) | V::StoreMembers(_) => {
             vec![(Action::Open, Action::Open.hint()), (Action::Back, Action::Back.hint())]
         }
-        // A series' page: its chapter's keys. Offline nothing downloads, so `d` is left out.
+        // A series' page: its chapter's keys. Offline, as the board has it, Enter and the way
+        // back to the chapter to read next: only downloaded chapters open, and nothing
+        // downloads.
+        V::Series(_) if app.series_offline() => {
+            let mut wanted = Vec::new();
+            if app.series_selected().is_some() {
+                wanted.push((Action::Open, said(t::series_read_chapter_menu())));
+            }
+            if app.series_here().and_then(SeriesPage::next_up).is_some() {
+                wanted.push((Action::ShowEpisodes, said(t::series_chapters())));
+            }
+            wanted
+        }
         V::Series(_) => {
             let mut wanted = Vec::new();
             if app.series_selected().is_some() {
                 wanted.push((Action::Open, said(t::series_read_chapter_menu())));
                 wanted.push((Action::ToggleWatched, said(t::tui_read_read_unread())));
-                if !app.series_offline() {
-                    wanted.push((Action::Download, said(t::series_download())));
-                }
+                wanted.push((Action::Download, said(t::series_download())));
             }
             if app.series_here().is_some_and(|page| page.view.is_some()) {
                 wanted.push((Action::SetListStatus, said(t::tui_read_hint_status())));

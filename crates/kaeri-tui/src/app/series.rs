@@ -3,7 +3,8 @@
 //!
 //! The page is asked for with `LoadSeries`, which the engine answers with the header at once and
 //! the chapters once a source does. The chapter under the cursor is what Enter reads, `u` marks
-//! read or unread, `d` downloads; `a` picks the list the series is on.
+//! read or unread, `d` downloads; `a` picks the list the series is on, and `e` goes back to the
+//! chapter to read next.
 
 use chrono::Datelike;
 use kaeri_core::books::{ChapterId, WorkId};
@@ -125,6 +126,15 @@ impl SeriesPage {
     /// Where a chapter row is in the list.
     pub(crate) fn position(&self, chapter: &ChapterId) -> Option<usize> {
         self.rows().iter().position(|row| row.id == *chapter)
+    }
+
+    /// Where the chapter to read next is listed: the one the page's action reads, or the first
+    /// chapter when the series is read again. `e` puts the cursor there.
+    pub(crate) fn next_up(&self) -> Option<usize> {
+        match &self.view.as_ref()?.action {
+            SeriesAction::ReadAgain => self.rows().len().checked_sub(1),
+            action => self.position(action_chapter(action)?),
+        }
     }
 }
 
@@ -477,6 +487,13 @@ impl App {
             }
             Action::Refresh => self.reload_series(),
             Action::ToggleSynopsis => return None,
+            // `e`: back to the chapter to read next, wherever the cursor wandered.
+            Action::ShowEpisodes => {
+                if let Some(at) = page.next_up() {
+                    self.cursors.chapters.selected = at;
+                }
+                None
+            }
             _ if action.acts_on_a_title() => {
                 self.works_elsewhere(action);
                 None
@@ -861,6 +878,41 @@ mod tests {
         assert_eq!(a.nav.current(), &StageView::Series(WorkId::new("a:2")));
         let said: Vec<&str> = a.toasts.iter().map(|t| t.notice.text.as_str()).collect();
         assert_eq!(said, vec!["Chapter 2 isn't downloaded"]);
+    }
+
+    #[test]
+    fn e_puts_the_cursor_back_on_the_chapter_to_read_next() {
+        let mut a = home();
+        a.handle(Action::Down, 10);
+        a.handle(Action::Open, 10);
+        answer(&mut a, "a:2");
+        // Newest first: 3, then 2 in progress, then 1.
+        a.handle(Action::Up, 10);
+        assert_eq!(a.series_selected().map(|r| r.id.0.as_str()), Some("c3"));
+        a.toasts.clear();
+        assert_eq!(a.handle(Action::ShowEpisodes, 10), None);
+        assert_eq!(a.series_selected().map(|r| r.id.0.as_str()), Some("c2"));
+        assert!(a.toasts.is_empty(), "e works here: {:?}", a.toasts);
+    }
+
+    #[test]
+    fn offline_the_hints_are_read_and_chapters() {
+        let hints = |a: &App| -> Vec<&'static str> {
+            crate::keymap::status_hints(a).into_iter().map(|(_, hint)| hint).collect()
+        };
+        let mut a = home();
+        a.handle(Action::Down, 10);
+        a.handle(Action::Open, 10);
+        answer(&mut a, "a:2");
+        let online = hints(&a);
+        assert!(online.contains(&"Download") && !online.contains(&"Chapters"), "{online:?}");
+        a.apply(Event::Reading(ReadingEvent::Failed {
+            about: kaeri_model::reading::ReadingAbout::Chapters,
+            failure: ReadingFailure::Offline,
+        }));
+        let offline = hints(&a);
+        assert_eq!(&offline[..2], ["Read", "Chapters"], "{offline:?}");
+        assert!(!offline.contains(&"Download") && !offline.contains(&"Status"), "{offline:?}");
     }
 
     #[test]

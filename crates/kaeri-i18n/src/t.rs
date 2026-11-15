@@ -8130,6 +8130,11 @@ pub fn tui_read_row_date_year(day: i64, month: &str, year: i64) -> String {
     text("tui-read-row-date-year", &[("day", Arg::Plain(day)), ("month", Arg::Text(month)), ("year", Arg::Plain(year))])
 }
 
+/// A row of the key reference on the series page: put the cursor back on the chapter to read next, the one in progress or the next unread. Its status line hint reads "chapters".
+pub fn tui_read_keys_next() -> String {
+    text("tui-read-keys-next", &[])
+}
+
 /// AniList's name, in the line that says it is still being asked.
 pub fn tui_read_anilist() -> String {
     text("tui-read-anilist", &[])
