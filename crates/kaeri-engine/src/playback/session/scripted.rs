@@ -1811,3 +1811,75 @@ async fn an_always_private_show_is_held_with_the_mode_off() {
     rig.play(stream(StreamKind::Mp4), context("1", None), free).await;
     assert_eq!(rig.store.completed_episodes(id).unwrap(), ["1"], "recorded again");
 }
+
+/// A torrent's open Stats for nerds says the swarm after the buffer, asked of the swarm rather
+/// than read from mpv's pace on the loopback server, and says nothing of the release.
+#[tokio::test]
+async fn a_torrent_s_stats_say_the_swarm() {
+    use crate::playback::starting::{Held, Pace, Swarm};
+    use kaeri_model::hosted::PlayerStats;
+
+    let rig = Rig::new(vec![opening(&[])]);
+    let (controls, commands) = mpsc::unbounded_channel::<PlayerCommand>();
+    let said = |call: &Call| match call {
+        Call::Overlay(Overlay::Stats(stats @ PlayerStats { waiting: false, .. }))
+            if stats.rows.iter().any(|r| r.label == "Peers") =>
+        {
+            Some(stats.clone())
+        }
+        _ => None,
+    };
+    let driving = async {
+        until_called(&rig, |call| matches!(call, Call::Load { .. })).await;
+        let window = rig.opener.window().expect("a window is open");
+        window.send(playing((1920, 1080))[0].clone()).unwrap();
+        window
+            .send(PlaybackEvent::Progress { position: 5.0, duration: Some(RUNTIME) })
+            .unwrap();
+        controls.send(PlayerCommand::Stats(true)).unwrap();
+        until_called(&rig, |call| matches!(call, Call::Sample(_))).await;
+        // mpv's read of the loopback server, which the swarm's pace stands in for.
+        let sampled = |name: &str, value| PlaybackEvent::Sampled { name: name.into(), value };
+        window.send(sampled("cache-speed", json!(90_000_000))).unwrap();
+        window.send(sampled("demuxer-cache-duration", json!(30.0))).unwrap();
+        until_called(&rig, |call| said(call).is_some()).await;
+        window.send(PlaybackEvent::Ended { complete: false }).unwrap();
+    };
+    let swarm = Swarm::fixed(Pace {
+        peers: 7,
+        bytes_per_second: 1_200_000,
+        found: 31,
+        upload_bytes_per_second: 64_000,
+        uploaded_bytes: 5_500_000,
+        pieces: Some(Held { held: 250, total: 1000, ahead: Some(14) }),
+    });
+    let torrent = Stream {
+        provider_id: "yamabiko".into(),
+        ..Stream::new("http://127.0.0.1:9/s/0f3a", StreamKind::TorrentHttp)
+    };
+    tokio::join!(
+        rig.play_steered(
+            vec![torrent],
+            context("1", None),
+            PlaySettings { swarm, ..settings() },
+            commands
+        ),
+        driving
+    );
+    let stats = rig.opener.calls().iter().find_map(said).expect("the swarm said");
+    let rows: Vec<_> =
+        stats.rows.iter().map(|r| (r.label.as_str(), r.value.as_str())).collect();
+    let at = rows.iter().position(|(label, _)| *label == "Network").expect("a network row");
+    assert_eq!(
+        rows[at..at + 4],
+        [
+            ("Network", "1.2 MB/s down · 64 kB/s up"),
+            ("Peers", "7 connected · 31 found"),
+            ("Pieces", "25% held · 14 ahead"),
+            ("Uploaded", "5.5 MB"),
+        ]
+    );
+    assert_eq!(rows[at - 1].0, "Buffer");
+    // The TV's summary has no swarm line.
+    assert!(stats.summary.iter().all(|line| !line.contains("connected")));
+}

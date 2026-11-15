@@ -934,6 +934,19 @@ class TvShots {
         assertEquals("Info closed", 0, compose.onAllNodes(hasText("Info") and SemanticsMatcher.keyIsDefined(SemanticsProperties.Heading)).fetchSemanticsNodes().size)
     }
 
+    /** The live stats of a torrent: the swarm's rows after Buffer, as on every other app. */
+    @Test
+    fun player_live_stats_torrent() = playerShot("tv-player-live-stats-torrent") { model ->
+        repeat(6) { if (focusedText() != "Info") press(Key.DirectionRight) }
+        press(Key.DirectionCenter)
+        press(Key.DirectionCenter)
+        assertTrue("live stats are on", model.statsShown)
+        compose.runOnUiThread { model.apply(Event.PlayerStats(1u, playerStatsFixture(StatsFixture.TORRENT))) }
+        compose.mainClock.advanceTimeBy(1_000)
+        compose.waitForIdle()
+        compose.onNodeWithText("Peers").assertExists()
+    }
+
     /** Back closes the live stats before anything else; the player stays. */
     @Test
     fun back_closes_live_stats_first() = playerShot(null) { model ->

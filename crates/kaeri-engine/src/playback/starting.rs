@@ -147,13 +147,14 @@ impl Starting {
     }
 }
 
-type PaceOf = std::sync::Arc<dyn Fn(&str) -> Option<Pace> + Send + Sync>;
+/// The pace of the stream at a URL, with how much of its file is held when asked.
+type PaceOf = std::sync::Arc<dyn Fn(&str, bool) -> Option<Pace> + Send + Sync>;
 
 /// What a playback asks how a torrent stream it plays is doing. Answers nothing by default.
 #[derive(Clone, Default)]
 pub struct Swarm(Option<PaceOf>);
 
-pub use kaeri_providers::torrent::session::Pace;
+pub use kaeri_providers::torrent::{pieces::Held, session::Pace};
 
 impl std::fmt::Debug for Swarm {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
@@ -164,18 +165,27 @@ impl std::fmt::Debug for Swarm {
 impl Swarm {
     /// A probe that asks the torrent session `torrents` currently holds.
     pub fn of(torrents: kaeri_providers::torrent::bridge::TorrentPlayback) -> Self {
-        Self(Some(std::sync::Arc::new(move |url| torrents.session()?.pace_of(url))))
+        Self(Some(std::sync::Arc::new(move |url, pieces| {
+            torrents.session()?.pace_of(url, pieces)
+        })))
     }
 
     /// A probe that answers with `pace`, for a test.
     #[cfg(any(test, feature = "testing"))]
     pub fn fixed(pace: Pace) -> Self {
-        Self(Some(std::sync::Arc::new(move |_| Some(pace))))
+        Self(Some(std::sync::Arc::new(move |_, pieces| {
+            Some(Pace { pieces: pace.pieces.filter(|_| pieces), ..pace })
+        })))
     }
 
     /// How the stream served at `url` is doing, when it is a torrent's and live.
     pub fn pace(&self, url: &str) -> Option<Pace> {
-        self.0.as_ref()?(url)
+        self.0.as_ref()?(url, false)
+    }
+
+    /// [`Self::pace`] with how much of the file is held, for Stats for nerds.
+    pub fn stats(&self, url: &str) -> Option<Pace> {
+        self.0.as_ref()?(url, true)
     }
 }
 
