@@ -1,7 +1,8 @@
-// A title's wide art: the banner, else a still from an episode already seen, else nothing wide,
-// and the screens set the cover beside the title instead. The player's starting screen follows
-// the same rule. The still comes from the episode table once it is here, and before that from the
-// one the engine sends with the title (`Entry.seenStill`), by the same rule.
+// A title's wide art: the banner, else a still from an episode already seen, else, where the frame
+// asks for it (Continue cards, the spotlight and the party screens), the cover filling the frame,
+// else nothing wide, and the screens set the cover beside the title instead. The player's starting
+// screen follows the same rule. The still comes from the episode table once it is here, and before
+// that from the one the engine sends with the title (`Entry.seenStill`), by the same rule.
 
 package app.kaeri.store
 
@@ -11,6 +12,9 @@ import app.kaeri.engine.model.EpisodeRow
 sealed interface HeroArt {
     data class Banner(override val url: String) : HeroArt
     data class Still(override val url: String) : HeroArt
+
+    /** No banner and no still: the cover, [cover], fills the frame, cropped or blurred behind itself. */
+    data class Cover(val cover: String) : HeroArt
 
     /**
      * No banner and no still known, and the episodes whose stills might stand in are on their
@@ -35,14 +39,22 @@ sealed interface HeroArt {
         /**
          * The art for [entry], with its episode table as far as it is known: `null` while it
          * loads. [waited] says the plate has shown for [WAIT_MS]: the art is then what it would
-         * be with no still.
+         * be with no still. [coverFills] lets the cover fill the frame when there is nothing wider.
          */
-        fun of(entry: Entry, episodes: List<EpisodeRow>?, waited: Boolean = false): HeroArt {
+        fun of(entry: Entry, episodes: List<EpisodeRow>?, waited: Boolean = false, coverFills: Boolean = false): HeroArt {
             entry.bannerUrl?.let { return Banner(it) }
             episodes?.let { seenStill(it, entry.progress?.done ?: 0u) }?.let { return Still(it) }
             entry.seenStill?.let { return Still(it) }
-            return if (episodes == null && !waited) Waiting else Compact
+            if (episodes == null && !waited) return Waiting
+            if (coverFills) entry.coverUrl?.let { return Cover(it) }
+            return Compact
         }
+
+        /**
+         * A card's wide art, where no episode table is loaded: the banner, the still the engine
+         * sent, the cover filling the frame, else [Compact], a plate in the cover's colour.
+         */
+        fun card(entry: Entry): HeroArt = of(entry, null, waited = true, coverFills = true)
 
         /**
          * The still of the latest episode watched that has one, else episode 1's: never one from

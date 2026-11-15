@@ -19,6 +19,8 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -29,7 +31,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
-import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBars
@@ -1832,11 +1833,14 @@ private fun LazyListScope.episodeRows(
     shown: Boolean,
     /** The placeholders' keys: another set crossfades with this one rather than moving it. */
     placeholders: String = "placeholder",
-    /** How far the dub goes: on the fold row's own line, or a row of its own without a fold. */
+    /** How far the dub goes, beside the list's heading. */
     dub: String? = null,
     /** The page's synopsis state: the text outlook, the ranges and the reveals. */
     page: SynopsisPage,
 ) {
+    // "Episodes" over the list as every other part of the app has a heading, with the dub line
+    // beside it, so the fold row has its line to itself. It stands while the table loads too.
+    item(key = "episodes-heading", contentType = "episodes-heading") { EpisodesHeading(dub, itemMotion()) }
     if (episodes == null) {
         // Crossfading with the rows as they arrive (T8), as every item comes and goes.
         items(4, key = { "$placeholders-$it" }, contentType = { "placeholder" }) {
@@ -1856,35 +1860,26 @@ private fun LazyListScope.episodeRows(
     val ranged = page.ranges.isNotEmpty()
     val inRange = page.rows
     val folded = page.folded(entry)
-    val rangeDub = if (ranged) null else dub
+    // The range row is declared after the heading.
+    val rangeAt = headerAt + 1
     if (ranged) {
         // The range row pins under the floating bar while the rows of its range scroll, so the
         // chip stays in view after Go to lands far into a range.
         stickyHeader(key = "range-row", contentType = "range-row") {
             // Pinned from the first pixel it scrolls past the top, wherever the list was left: the
             // pinned row is not among the visible items, so the index it was declared at says.
-            val stuck by remember(list, headerAt) {
-                derivedStateOf { list.firstVisibleItemIndex > headerAt || (list.firstVisibleItemIndex == headerAt && list.firstVisibleItemScrollOffset > 0) }
+            val stuck by remember(list, rangeAt) {
+                derivedStateOf { list.firstVisibleItemIndex > rangeAt || (list.firstVisibleItemIndex == rangeAt && list.firstVisibleItemScrollOffset > 0) }
             }
             Column(Modifier.fillMaxWidth().background(MaterialTheme.colorScheme.surface)) {
                 if (stuck) Spacer(Modifier.height(pinnedBelow))
-                Box(itemMotion()) { RangeRow(listed, page.ranges, page.selected, page.pick, dub, onGoTo = page.openGoTo) }
+                Box(itemMotion()) { RangeRow(listed, page.ranges, page.selected, page.pick, null, onGoTo = page.openGoTo) }
             }
         }
     }
     if (folded.isNotEmpty()) {
         val anchor = page.key(entry.id, inRange[folded.size])
-        item(key = watchedFold(entry.id), contentType = "fold") { WatchedFoldRow(folded, unfolded, itemMotion().padding(horizontal = 16.dp), dub = rangeDub, marked = page.marked) { onFold(anchor) } }
-    }
-    if (folded.isEmpty() && rangeDub != null) {
-        item(key = "dub-line", contentType = "dub-line") {
-            Text(
-                rangeDub,
-                style = MaterialTheme.typography.bodyLarge,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = itemMotion().fillMaxWidth().heightIn(min = 56.dp).wrapContentHeight(Alignment.CenterVertically).padding(horizontal = 16.dp),
-            )
-        }
+        item(key = watchedFold(entry.id), contentType = "fold") { WatchedFoldRow(folded, unfolded, itemMotion().padding(horizontal = 16.dp), marked = page.marked, ruled = true) { onFold(anchor) } }
     }
     val shown = if (folded.isNotEmpty() && !unfolded) inRange.drop(folded.size) else inRange
     // The line where protection starts goes over the first row it hides; after Show it stays,
@@ -1897,7 +1892,7 @@ private fun LazyListScope.episodeRows(
     val protection: androidx.compose.foundation.lazy.LazyListScope.() -> Unit = {
         val episode = protectionStart(listed, shown[line]) ?: next.toInt()
         item(key = "protection-${entry.id}", contentType = "protection") {
-            Box(itemMotion()) { ProtectionLine(episode, page.reveals.everything, page.reveals::showAll, page.reveals::hideAll) }
+            Box(itemMotion()) { ProtectionLine(episode, page.reveals.everything, page.reveals::showAll, page.reveals::hideAll, ruled = true) }
         }
     }
     if (line >= 0) {
@@ -2122,6 +2117,11 @@ private fun WatchedFoldRow(
     dub: String? = null,
     /** Whether the table's rows keep the marks' column, so this row keeps it too. */
     marked: Boolean = false,
+    /**
+     * The phone's row: a faint rule at its foot as the rows below have, and the folded episodes'
+     * marks at their own width before the chevron, since the phone's rows carry theirs on the still.
+     */
+    ruled: Boolean = false,
     onToggle: () -> Unit,
 ) {
     val colors = MaterialTheme.colorScheme
@@ -2135,7 +2135,9 @@ private fun WatchedFoldRow(
             .fillMaxWidth()
             .heightIn(min = 56.dp)
             .clickable(onClickLabel = if (unfolded) hide else show, onClick = onToggle)
+            .then(if (ruled) Modifier.endRule() else Modifier)
             .semantics { stateDescription = if (unfolded) expanded else collapsed },
+        horizontalArrangement = if (ruled) Arrangement.spacedBy(8.dp) else Arrangement.Start,
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Text(
@@ -2149,7 +2151,12 @@ private fun WatchedFoldRow(
             Text(dub.orEmpty(), style = MaterialTheme.typography.bodyMedium, color = colors.onSurfaceVariant, maxLines = 1, modifier = Modifier.padding(end = 12.dp))
         }
         // Folded, the row carries the marks of the episodes inside it; unfolded, those rows carry their own.
-        if (marked) MarkSlot(if (unfolded) emptyList() else FollowingWords.folded(folded), Modifier.padding(end = 8.dp))
+        val marks = if (unfolded) emptyList() else FollowingWords.folded(folded)
+        if (marked && ruled) {
+            Box(spokenMarks(marks)) { MarksFading(marks) { FollowedStack(it, MarkPicture, colors.surface) } }
+        } else if (marked) {
+            MarkSlot(marks, Modifier.padding(end = 8.dp))
+        }
         Icon(Icons.Down, contentDescription = null, tint = colors.onSurfaceVariant, modifier = Modifier.graphicsLayer { rotationZ = turn })
     }
 }
@@ -2212,6 +2219,8 @@ private fun EpisodeRowView(entry: Entry, row: EpisodeRow, next: UInt, actions: A
                 opensService = link != null && !unaired,
                 beside = beside,
                 followed = if (page.marked) row.followed else null,
+                // A watched episode's thread line goes under its row, and the rule under that.
+                ruled = comments == null,
             )
         } else {
             EpisodeLine(
@@ -2229,7 +2238,37 @@ private fun EpisodeRowView(entry: Entry, row: EpisodeRow, next: UInt, actions: A
             EpisodeSheet(entry, row, hidden = hidden, onShow = { reveals.show(row.number) }, onDismiss = { sheet = false }, actions = actions, current = current)
         }
         // The quiet line under a watched episode that has a thread.
-        if (comments != null) DiscussionRow(entry, row, comments)
+        if (comments != null) {
+            DiscussionRow(entry, row, comments)
+            if (page != null && !beside) Spacer(Modifier.fillMaxWidth().height(RowDims.Rule).endRule(inset = 16.dp))
+        }
+    }
+}
+
+/**
+ * "Episodes" in the section style over the phone's list, with how far the dub goes beside it as
+ * secondary words, the way Home sets a count beside Continue. The dub line fades in when it comes.
+ */
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+private fun EpisodesHeading(dub: String?, modifier: Modifier = Modifier) {
+    val colors = MaterialTheme.colorScheme
+    // The last dub line shown, kept while it fades.
+    var kept by remember { mutableStateOf(dub) }
+    if (dub != null) kept = dub
+    FlowRow(
+        modifier.fillMaxWidth().heightIn(min = 48.dp).padding(top = 12.dp, start = 16.dp, end = 16.dp),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        Text(
+            stringResource(R.string.title_episodes),
+            style = MaterialTheme.typography.titleMedium,
+            color = colors.onSurface,
+            modifier = Modifier.alignByBaseline().semantics { heading() },
+        )
+        androidx.compose.animation.AnimatedVisibility(dub != null, Modifier.alignByBaseline(), enter = fadeIn(Motion.fadeIn()), exit = ExitTransition.None) {
+            Text(kept.orEmpty(), style = MaterialTheme.typography.bodyMedium, color = colors.onSurfaceVariant)
+        }
     }
 }
 

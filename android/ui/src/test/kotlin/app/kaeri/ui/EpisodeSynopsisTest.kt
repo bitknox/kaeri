@@ -37,11 +37,11 @@ class EpisodeSynopsisTest {
     }
 
     @Test
-    fun rows_are_172_dp_tall_and_100_short_at_the_default_text_size() {
+    fun rows_are_182_dp_tall_and_114_short_at_the_default_text_size_rule_included() {
         val header = RowDims.StillHeight
         val band = 60.dp
-        assertEquals(172.dp, rowHeight(RowForm.TALL, header, band))
-        assertEquals(100.dp, rowHeight(RowForm.SHORT, header, band))
+        assertEquals(182.dp, rowHeight(RowForm.TALL, header, band))
+        assertEquals(114.dp, rowHeight(RowForm.SHORT, header, band))
     }
 
     @Test

@@ -12,6 +12,7 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.animation.togetherWith
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.material3.ButtonDefaults
@@ -131,7 +132,7 @@ internal fun SpotlightBlock(spot: Spotlight, h: HomeHandlers) {
     val line = app.kaeri.store.continueFromDeviceLine(context, spot.lastDevice, spot.episode.toInt(), spot.resume)
         ?: spot.line?.text(context) ?: spot.starts?.words()?.let { Strings.upNextStarts(context, it) }
     val art: @Composable (Modifier) -> Unit = { m ->
-        BannerArt(entry, m.aspectRatio(16f / 9f).shared(Shared.Art, id, "home-spotlight").shared(Shared.Player, id).clip(ArtShape.banner))
+        BannerArt(entry, m.aspectRatio(16f / 9f).shared(Shared.Art, id, "home-spotlight").shared(Shared.Player, id).clip(ArtShape.banner).border(1.dp, ArtEdge, ArtShape.banner))
     }
     val text: @Composable (Modifier) -> Unit = { m ->
         Column(m, verticalArrangement = Arrangement.spacedBy(4.dp)) {
