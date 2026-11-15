@@ -93,11 +93,15 @@ import app.kaeri.design.SwapFade
 import app.kaeri.engine.core.ChapterId
 import app.kaeri.engine.core.Medium
 import app.kaeri.engine.core.WorkId
+import app.kaeri.ui.AlwaysPrivateItem
+import app.kaeri.ui.PrivatePageLine
+import app.kaeri.ui.privateLine
 import app.kaeri.engine.model.ChapterDownloadState
 import app.kaeri.engine.model.ChapterReadState
 import app.kaeri.engine.model.ChapterRow
 import app.kaeri.engine.model.DownloadPick
 import app.kaeri.engine.model.KaeriIsFor
+import app.kaeri.engine.model.PrivateTitle
 import app.kaeri.engine.model.ReadingAbout
 import app.kaeri.engine.model.ReadingFailure
 import app.kaeri.engine.model.SeriesAction
@@ -242,6 +246,7 @@ internal fun SeriesScreen(work: WorkId, actions: AppActions) {
                             sheet = SeriesSheet.ReadAgain
                         })
                     }
+                    AlwaysPrivateItem(PrivateTitle.Series(work)) { moreOpen = false }
                 }
             }
         }
@@ -654,6 +659,8 @@ private fun SeriesActions(
                 modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp),
             ) { Text(words, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold, textAlign = TextAlign.Center) }
         }
+        // Private: under the main action, while private mode is on or the series is always private.
+        PrivatePageLine(privateLine(PrivateTitle.Series(series.work)), top = 2.dp)
         if (!failed && (words != null || asking)) {
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 Box(Modifier.weight(1f)) {

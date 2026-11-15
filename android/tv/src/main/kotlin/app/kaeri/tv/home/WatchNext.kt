@@ -20,6 +20,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.combine
+import app.kaeri.engine.model.PrivateTitle
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.first
@@ -153,14 +154,28 @@ class WatchNext(
                 store.continuing.list.state,
                 store.continuing.hidden,
                 store.titles.episodes,
-            ) { entries, _, _, episodes -> WatchNextCard.of(context, store.continuing.queue(entries, episodes), episodes) }
+                store.privacy.on,
+            ) { entries, _, _, episodes, private -> if (private) null else WatchNextCard.of(context, store.continuing.queue(entries, episodes), episodes) }
                 .distinctUntilChanged()
                 .debounce(SETTLE_MILLIS)
-                .collect { cards ->
+                .collect { found ->
+                    // While private mode is on the row is left as it was; after it, a show that
+                    // is always private, or whose place is held in memory, keeps its last card.
+                    val cards = found?.let(::heldBack) ?: return@collect
                     latest = cards
                     if (enabled) withContext(Dispatchers.IO) { write(cards) }
                 }
         }
+    }
+
+    /** [cards] with each private show's card as it was last written, or none when it had none. */
+    private fun heldBack(cards: List<WatchNextCard>): List<WatchNextCard> {
+        val before = latest.associateBy { it.id }
+        val held = { card: WatchNextCard -> store.privacy.holds(PrivateTitle.Show(card.id)) }
+        val kept = cards.mapNotNull { card -> if (held(card)) before[card.id] else card }
+        // A held show the queue no longer gives keeps its card too: nothing moved where it shows.
+        val gone = latest.filter { old -> held(old) && cards.none { it.id == old.id } }
+        return kept + gone
     }
 
     /** Make the row hold [cards]: insert the new, update the changed, delete the gone. */

@@ -101,8 +101,12 @@ class DownloadNotifier(private val context: Context, private val sdk: Int = Buil
         .addAction(0, context.getString(R.string.download_play), open(AppLink.Download(row.id)))
         .build()
 
-    /** Post [row]'s finished notification, which stays once the job's own goes. */
+    /**
+     * Post [row]'s finished notification, which stays once the job's own goes. A private episode
+     * has none: only the ongoing notification the system requires, and that one names nothing.
+     */
     fun postFinished(row: DownloadRow) {
+        if (row.private) return
         manager.notify(finishedTag(row.id), FINISHED_ID, finished(row))
     }
 

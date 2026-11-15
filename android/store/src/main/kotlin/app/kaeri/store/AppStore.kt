@@ -25,6 +25,7 @@ import app.kaeri.engine.core.SettingValue
 import app.kaeri.engine.core.SubtitleBackground
 import app.kaeri.engine.core.SubtitleEdge
 import app.kaeri.engine.core.WorkId
+import app.kaeri.engine.model.PrivateTitle
 import app.kaeri.engine.model.DemoState
 import app.kaeri.engine.model.ReadingAbout
 import app.kaeri.engine.model.ReadingEvent
@@ -198,6 +199,9 @@ class AppStore(
     /** Media servers: the saved ones and the Add a media server flow. */
     val servers = ServersModel()
     val showSettings = ShowSettingsModel()
+
+    /** Private mode, and which titles are always private on this device or hold a place in memory. */
+    val privacy = PrivacyModel()
 
     /** The source picker's options per title. */
     val sourceChoices = SourceChoiceModel()
@@ -758,6 +762,21 @@ class AppStore(
      */
     private fun sourcesArrived() {
         for (id in titles.unlistedTitles()) loadEpisodes(id, force = true)
+    }
+
+    /**
+     * Private mode on or off, at once, for what has not been written yet. The switch shows it
+     * straight away; the engine's `Private` says it back.
+     */
+    fun setPrivate(on: Boolean) {
+        privacy.mode(on)
+        send(Command.SetPrivate(on))
+    }
+
+    /** [title] always private on this device, or not; the engine's `AlwaysPrivate` says it back. */
+    fun setAlwaysPrivate(title: PrivateTitle, on: Boolean) {
+        privacy.flag(title, on)
+        send(Command.SetAlwaysPrivate(title, on))
     }
 
     /** [id]'s own settings sheet, answered with `ShowSettings`. */
@@ -1419,7 +1438,19 @@ class AppStore(
             is Event.Detail -> titles.merge(detail = event.v1)
             is Event.Cards -> titles.merge(list = event.v1)
             is Event.TitlesChanged -> titlesChanged()
-            is Event.Progress -> titles.progress(event.id, event.progress, event.resume, event.episodes)
+            is Event.Progress -> {
+                titles.progress(event.id, event.progress, event.resume, event.episodes)
+                privacy.show(event.id, event.private, event.kept)
+            }
+            // Private mode, said at launch and on every change; the player follows it too.
+            is Event.Private -> {
+                privacy.mode(event.v1)
+                onPlayback?.invoke(event)
+            }
+            is Event.AlwaysPrivate -> {
+                privacy.flag(event.title, event.on)
+                onPlayback?.invoke(event)
+            }
             is Event.LastAired -> titles.lastAired(event.v1)
             is Event.Episodes -> {
                 titles.episodes(event.id, event.rows, event.failed)
@@ -1501,7 +1532,10 @@ class AppStore(
             is Event.StoreMembers -> stores.membersSaid(StoresModel.Members(event.store, event.members, event.invites, event.ended, event.inviteChoices))
             is Event.Downloads -> downloads.apply(event.v1)
             is Event.Seeding -> downloads.seeding(event.v1)
-            is Event.ShowSettings -> showSettings.apply(event.v1)
+            is Event.ShowSettings -> {
+                showSettings.apply(event.v1)
+                privacy.flag(PrivateTitle.Show(event.v1.id), event.v1.alwaysPrivate)
+            }
             is Event.NewEpisodes, is Event.WidgetSnapshot -> _answers.tryEmit(event)
             is Event.UpcomingNotices -> coming.apply(event.v1)
             is Event.Update -> updates.apply(event.v1)
@@ -1535,6 +1569,10 @@ class AppStore(
                 }
                 is ReadingEvent.ExportTargets, is ReadingEvent.ExportProgress, is ReadingEvent.ExportReady,
                 is ReadingEvent.ExportWaiting, is ReadingEvent.ExportFailed -> export.apply(said)
+                is ReadingEvent.Series -> {
+                    privacy.series(said.v1.work, said.v1.private, said.v1.placeKept)
+                    reading.apply(said)
+                }
                 else -> reading.apply(said)
             }
             is Event.Medium -> {

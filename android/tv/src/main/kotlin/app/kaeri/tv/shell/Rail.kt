@@ -44,6 +44,7 @@ import androidx.tv.material3.Surface
 import androidx.tv.material3.Text
 import app.kaeri.design.ObiSilk
 import app.kaeri.tv.ui.Canvas
+import app.kaeri.tv.ui.PrivateRailBadge
 import app.kaeri.tv.ui.tryFocus
 
 /** The rail's items' requesters, so Back and Left can open it on the current destination. */
@@ -65,6 +66,8 @@ fun NavigationDrawerScope.Rail(
     focus: RailFocus,
     onSelect: (Destination) -> Unit,
     modifier: Modifier = Modifier,
+    /** The private mode badge at the rail's foot was selected: it asks whether to turn it off. */
+    onPrivate: () -> Unit = {},
 ) {
     val open = hasFocus
     Column(
@@ -92,6 +95,8 @@ fun NavigationDrawerScope.Rail(
             )
             if (destination == Destination.Search) Spacer(Modifier.height(16.dp))
         }
+        // While private mode is on, its badge at the foot, under Settings.
+        PrivateRailBadge(onPrivate)
     }
 }
 

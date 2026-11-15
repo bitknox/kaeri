@@ -731,6 +731,30 @@ private fun storeSheet(context: Context, store: AppStore, row: StoreRow): Action
 )
 
 private fun LazyListScope.accounts(nav: TvNavigator, memory: FocusMemory, first: Modifier) {
+    // Private mode first: nothing watched is saved or synced until it is off or Kaeri quits. The
+    // rail's badge comes back here, focus on the switch.
+    item(key = "private-mode", contentType = "setting") {
+        val store = LocalAppStore.current
+        val on by store.privacy.on.collectAsStateWithLifecycle()
+        Column {
+            TvListRow(
+                stringResource(R.string.private_mode),
+                onClick = { store.setPrivate(!on) },
+                supporting = stringResource(R.string.private_mode_detail),
+                supportingLines = 2,
+                switch = on,
+                icon = app.kaeri.design.PrivateGlyph.EyeSlash,
+                height = 88.dp,
+                modifier = first.remembered(memory, "account/private"),
+            )
+            Text(
+                stringResource(R.string.private_mode_limits),
+                style = MaterialTheme.typography.bodyMedium,
+                color = ObiSilk.Haze,
+                modifier = Modifier.padding(start = 56.dp, end = 16.dp, top = 4.dp, bottom = 12.dp),
+            )
+        }
+    }
     item(key = "accounts", contentType = "list") {
         val store = LocalAppStore.current
         val trackers by store.accounts.trackers.collectAsStateWithLifecycle()
@@ -746,7 +770,7 @@ private fun LazyListScope.accounts(nav: TvNavigator, memory: FocusMemory, first:
                         if (state?.connected == true && !state.needsReauth) signingOut = id else nav.openSignIn(id)
                     },
                     supporting = accountLine(context, trackers[id]),
-                    modifier = (if (index == 0) first else Modifier).remembered(memory, "account/$id"),
+                    modifier = Modifier.remembered(memory, "account/$id"),
                 )
             }
             if (trackers.values.any { it.connected && !it.needsReauth }) {

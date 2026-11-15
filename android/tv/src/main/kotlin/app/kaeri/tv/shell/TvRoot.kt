@@ -84,6 +84,8 @@ import app.kaeri.tv.ui.ActionsPanel
 import app.kaeri.tv.ui.KeyRepeat
 import app.kaeri.tv.ui.LocalActions
 import app.kaeri.tv.ui.LocalAppStore
+import app.kaeri.tv.ui.PrivateModeAnnouncer
+import app.kaeri.tv.ui.PrivateModeDialog
 import app.kaeri.tv.ui.OpenedDialog
 import app.kaeri.tv.ui.LocalKeyRepeat
 import app.kaeri.i18n.R
@@ -272,6 +274,7 @@ private fun Browse(nav: TvNavigator, play: (AnilistId, UInt) -> Unit, playFromSt
     val screens = rememberSaveableStateHolder()
     SideEffect { nav.forget = screens::removeState }
     val open = drawer.currentValue == DrawerValue.Open
+    var askPrivate by remember { mutableStateOf(false) }
     val actions = remember { ActionsHost() }
     SideEffect { actions.onClosed = { nav.focus.enter() } }
 
@@ -303,9 +306,17 @@ private fun Browse(nav: TvNavigator, play: (AnilistId, UInt) -> Unit, playFromSt
                     // Right from the rail returns to the content's last focused item.
                     event.type == KeyEventType.KeyDown && event.key == Key.DirectionRight && nav.focus.enter()
                 },
+                onPrivate = { askPrivate = true },
             )
         },
     ) {
+        PrivateModeAnnouncer()
+        val privacy = LocalAppStore.current.privacy
+        if (askPrivate) PrivateModeDialog(onDismiss = {
+            askPrivate = false
+            // Turned off, the badge is gone: focus goes back to the content.
+            if (!privacy.on.value) nav.focus.enter()
+        })
         val shown: Any = nav.top ?: nav.destination
         CompositionLocalProvider(LocalActions provides actions) {
             Box(Modifier.fillMaxSize()) {

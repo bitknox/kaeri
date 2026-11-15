@@ -17,6 +17,7 @@ import androidx.media3.common.Player
 import androidx.media3.common.SimpleBasePlayer
 import androidx.annotation.OptIn
 import androidx.media3.common.util.UnstableApi
+import app.kaeri.i18n.Strings
 import com.google.common.util.concurrent.Futures
 import com.google.common.util.concurrent.ListenableFuture
 
@@ -59,15 +60,27 @@ class SessionPlayer(
             .setSeekBackIncrementMs(SEEK_STEP_MS)
             .setSeekForwardIncrementMs(SEEK_STEP_MS)
         if (!model.isPresented) return state.setPlaybackState(Player.STATE_IDLE).build()
-        val metadata = MediaMetadata.Builder()
-            .setTitle(model.episodeLine(context))
-            .setArtist(model.showTitle)
-            .setDisplayTitle(model.episodeLine(context))
-            .setSubtitle(model.showTitle)
-            .setMediaType(MediaMetadata.MEDIA_TYPE_TV_SHOW)
-            .apply { artworkBytes()?.let { setArtworkData(it, MediaMetadata.PICTURE_TYPE_FRONT_COVER) } }
-            .build()
-        val id = "${model.titleId ?: 0u}-${model.startingEpisode ?: model.episode?.number ?: ""}"
+        // Private: "Playing in Kaeri", with no show, episode or art, on the lock screen, the
+        // notification and Bluetooth alike. The controls keep working.
+        val private = model.playsPrivately
+        val metadata = if (private) {
+            val words = Strings.nowPlayingPrivate(context)
+            MediaMetadata.Builder()
+                .setTitle(words)
+                .setDisplayTitle(words)
+                .setMediaType(MediaMetadata.MEDIA_TYPE_VIDEO)
+                .build()
+        } else {
+            MediaMetadata.Builder()
+                .setTitle(model.episodeLine(context))
+                .setArtist(model.showTitle)
+                .setDisplayTitle(model.episodeLine(context))
+                .setSubtitle(model.showTitle)
+                .setMediaType(MediaMetadata.MEDIA_TYPE_TV_SHOW)
+                .apply { artworkBytes()?.let { setArtworkData(it, MediaMetadata.PICTURE_TYPE_FRONT_COVER) } }
+                .build()
+        }
+        val id = if (private) PRIVATE_MEDIA_ID else "${model.titleId ?: 0u}-${model.startingEpisode ?: model.episode?.number ?: ""}"
         val item = MediaItem.Builder().setMediaId(id).setMediaMetadata(metadata).build()
         val duration = model.duration
         val data = MediaItemData.Builder(id)
@@ -138,6 +151,9 @@ class SessionPlayer(
     companion object {
         /** Back and forward 10 s, as the player's own buttons. */
         const val SEEK_STEP_MS = 10_000L
+
+        /** The media id of a private playback: nothing in it says which show or episode. */
+        const val PRIVATE_MEDIA_ID = "private" // i18n-skip
 
         /** The longest side the session's art is sent at: more than the lock screen draws. */
         private const val ART_SIDE = 1024

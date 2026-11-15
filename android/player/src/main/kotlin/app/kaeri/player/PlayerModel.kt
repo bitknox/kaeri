@@ -24,6 +24,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeoutOrNull
 import app.kaeri.engine.core.AnilistId
+import app.kaeri.engine.model.PrivateTitle
 import app.kaeri.engine.model.Command
 import app.kaeri.engine.model.Ending
 import app.kaeri.engine.model.Event
@@ -202,6 +203,21 @@ class PlayerModel(
 
     var staged by mutableStateOf<StagedPlayback?>(null)
         private set
+
+    /** Whether private mode is on: the engine says it as it changes, and once as it starts. */
+    var privateMode by mutableStateOf(false)
+        private set
+
+    /** Whether the show staged last is always private on this device. */
+    var stagedAlwaysPrivate by mutableStateOf(false)
+        private set
+
+    /**
+     * Whether this playback is private: the top bar says Private, and the system's media controls
+     * say only "Playing in Kaeri", with no title, episode or art.
+     */
+    val playsPrivately: Boolean
+        get() = privateMode || stagedAlwaysPrivate
     var starting by mutableStateOf<StartingScreen?>(null)
         private set
 
@@ -462,6 +478,7 @@ class PlayerModel(
                 sourceChoices = null
                 verdictPending = false
                 staged = StagedPlayback(event.id, event.title, event.episode, event.episodeTitle)
+                stagedAlwaysPrivate = event.alwaysPrivate
                 titleOnScreen = event.id
                 // Said again for a play already starting, it changes nothing.
                 val again = progress?.let { it.id == event.id && it.episode == event.episode } == true
@@ -504,6 +521,17 @@ class PlayerModel(
             }
             is Event.StartingStep -> progress = progress?.takeIf { it.id == event.id && it.episode == event.episode }?.heard(event.step, event.line, now()) ?: progress
             is Event.Connectivity -> offline = event.offline
+            is Event.Private -> if (privateMode != event.v1) {
+                privateMode = event.v1
+                changed()
+            }
+            is Event.AlwaysPrivate -> {
+                val title = event.title
+                if (title is PrivateTitle.Show && title.id == staged?.id && stagedAlwaysPrivate != event.on) {
+                    stagedAlwaysPrivate = event.on
+                    changed()
+                }
+            }
             // The alerts that come while the player is up: the one before a failed ending says why.
             is Event.Toast -> if (event.v1.kind == NoticeKind.ALERT) {
                 if (isPresented) {
