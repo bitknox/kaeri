@@ -305,4 +305,36 @@ public class StartScreenTests
         Assert.Equal(StartGround.Deep, StartGround.For(StartGround.Luminance(Field(240), 64, 64)));
         Assert.Equal(StartGround.Normal, StartGround.For(StartGround.Luminance(Field(20), 64, 64)));
     }
+
+    [Fact]
+    public void ARollOnWarmedInTimeGoesFromTheGroundStraightToThePicture()
+    {
+        var hold = new RollOnHold();
+        Assert.False(hold.Due(Ms(300), failed: false));
+        // The first frame at 450 ms: nothing showed, so the ground leaves at once.
+        Assert.Equal(Ms(450), hold.LeavesAt(Ms(450)));
+        Assert.False(hold.Shown);
+    }
+
+    [Fact]
+    public void ARollOnsScreenShowsAt600MsAndStandsItsHold()
+    {
+        var hold = new RollOnHold();
+        Assert.False(hold.Due(Ms(599), failed: false));
+        Assert.True(hold.Due(Ms(600), failed: false));
+        Assert.False(hold.Due(Ms(700), failed: false));
+        Assert.True(hold.Shown);
+        // A first frame at 0.7 s waits for the screen's 0.6 s: the picture shows at 1.2 s.
+        Assert.Equal(Ms(1200), hold.LeavesAt(Ms(700)));
+        // A slow one leaves as it comes.
+        Assert.Equal(Ms(1500), hold.LeavesAt(Ms(1500)));
+    }
+
+    [Fact]
+    public void ARollOnThatFailsShowsItsScreenAtOnce()
+    {
+        var hold = new RollOnHold();
+        Assert.True(hold.Due(Ms(200), failed: true));
+        Assert.Equal(Ms(800), hold.LeavesAt(Ms(300)));
+    }
 }

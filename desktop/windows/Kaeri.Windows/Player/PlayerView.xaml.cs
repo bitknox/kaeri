@@ -333,6 +333,7 @@ public sealed partial class PlayerView : UserControl
         statsUp = false;
         startingShown = skipShown = stallShown = upNextShown = false;
         EndStart();
+        ForgetRollOn();
         start = null;
         undo = null;
         upNext = null;
@@ -1162,18 +1163,9 @@ public sealed partial class PlayerView : UserControl
 
     void ShowState(FfiPlayerState state)
     {
-        if (state.HasPicture && startingShown && !startingHeld)
-        {
-            // The first frame comes in under the starting screen, which leaves on the fade-in
-            // token (200 ms, decelerating), as the Mac's curtain does.
-            startingShown = false;
-            EndStart();
-            Motion.Cover(Starting, false, () =>
-            {
-                if (!startingShown)
-                    Motion.Set(Starting, false);
-            });
-        }
+        // The first frame comes in under the starting screen, which leaves for it.
+        if (state.HasPicture && startingShown && !startingHeld && !startLeaving)
+            FirstFrameUnderStart();
         if (state.HasPicture && !pictureSeen)
         {
             pictureSeen = true;
@@ -1902,6 +1894,8 @@ public sealed partial class PlayerView : UserControl
                 PlayInRoom(card.Number);
             return;
         }
+        // The next play is a roll-on: its starting screen waits 600 ms.
+        AskedRollOn();
         if (auto && upNext is not { Sought: true })
         {
             movingOn = true;
@@ -1934,6 +1928,7 @@ public sealed partial class PlayerView : UserControl
     /// <summary>N and Shift+N, the media keys' Next and Previous: the next or previous episode in the player's list.</summary>
     void Step(int by)
     {
+        ForgetRollOn();
         if (!InParty)
         {
             SendControl(new PlayerCommand.Step(by));
@@ -1950,6 +1945,7 @@ public sealed partial class PlayerView : UserControl
     /// <summary>An episode picked in the Episodes panel.</summary>
     void ChooseEpisode(string number)
     {
+        ForgetRollOn();
         if (InParty)
             PlayInRoom(number);
         else
@@ -1971,6 +1967,7 @@ public sealed partial class PlayerView : UserControl
     {
         if (upNext is not null)
             upNext.Cancelled = true;
+        ForgetRollOn();
         ShowUpNext();
         SendControl(new PlayerCommand.CancelNext());
     }

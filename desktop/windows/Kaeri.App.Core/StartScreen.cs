@@ -517,6 +517,42 @@ public sealed class StartScreen(uint id, string episode, double? resume)
     };
 }
 
+/// <summary>
+/// The starting screen on a roll-on (the next-preload board): the next episode, started by Up
+/// next or by the engine at the end, mostly comes warmed, so the screen waits 600 ms on the
+/// ground before it shows. A first frame inside that wait goes from the ground straight to the
+/// picture; once shown, the screen stays at least 0.6 s, so it never flashes. Times are the time
+/// since the roll-on, passed in by the caller.
+/// </summary>
+public sealed class RollOnHold
+{
+    /// <summary>How long the ground waits before the starting screen shows.</summary>
+    public static readonly TimeSpan Wait = TimeSpan.FromMilliseconds(600);
+
+    /// <summary>The shortest the starting screen stays once it shows.</summary>
+    public static readonly TimeSpan Held = TimeSpan.FromMilliseconds(600);
+
+    TimeSpan? shownAt;
+
+    /// <summary>Whether the starting screen is showing.</summary>
+    public bool Shown => shownAt is not null;
+
+    /// <summary>
+    /// The clock moved: true, once, when the screen should show now: the wait is over, or the start
+    /// failed, whose screen shows at once.
+    /// </summary>
+    public bool Due(TimeSpan at, bool failed)
+    {
+        if (shownAt is not null || at < Wait && !failed)
+            return false;
+        shownAt = at;
+        return true;
+    }
+
+    /// <summary>When the screen may leave for a first frame that came at <paramref name="at"/>.</summary>
+    public TimeSpan LeavesAt(TimeSpan at) => shownAt is { } shown && shown + Held > at ? shown + Held : at;
+}
+
 /// <summary>The ground under the starting screen: 55% of the dark, or 80% over art that is bright.</summary>
 public static class StartGround
 {
