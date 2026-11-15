@@ -416,7 +416,36 @@ sealed class ReaderChrome
         topTitle.Visibility = demoCredit is null ? Visibility.Visible : Visibility.Collapsed;
     }
 
-    public void Line(string text) => line.Text = text;
+    public void Line(string text)
+    {
+        if (text == lineWords && line.Inlines.Count > 0)
+            return;
+        lineWords = text;
+        DrawLine();
+    }
+
+    string lineWords = "";
+    bool linePrivate;
+
+    /// <summary>Private after the line, with the eye, while reading here is private; it hides with the chrome.</summary>
+    public void Private(bool on)
+    {
+        if (on == linePrivate)
+            return;
+        linePrivate = on;
+        DrawLine();
+    }
+
+    void DrawLine()
+    {
+        line.Inlines.Clear();
+        line.Inlines.Add(new Microsoft.UI.Xaml.Documents.Run { Text = lineWords });
+        if (!linePrivate)
+            return;
+        line.Inlines.Add(new Microsoft.UI.Xaml.Documents.Run { Text = " · " });
+        line.Inlines.Add(new Microsoft.UI.Xaml.Documents.Run { Text = PrivateUi.Glyph, FontFamily = (FontFamily)Application.Current.Resources["SymbolThemeFontFamily"] });
+        line.Inlines.Add(new Microsoft.UI.Xaml.Documents.Run { Text = " " + T.PrivateBadge });
+    }
 
     public void FullscreenShown(bool on)
     {

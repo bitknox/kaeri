@@ -78,7 +78,14 @@
           </Button>
           <StackPanel x:Name="TitleArea" Grid.Column="1" VerticalAlignment="Center" Spacing="0" Background="Transparent">
             <TextBlock x:Name="ShowTitle" Style="{StaticResource ShowTitleStyle}" />
-            <TextBlock x:Name="EpisodeTitle" Style="{StaticResource HazeCaptionStyle}" Foreground="{ThemeResource TextFillColorPrimaryBrush}" Opacity="0.8" />
+            <!-- The episode, then Private with the eye while what plays is private. -->
+            <StackPanel Orientation="Horizontal" Spacing="12">
+              <TextBlock x:Name="EpisodeTitle" Style="{StaticResource HazeCaptionStyle}" Foreground="{ThemeResource TextFillColorPrimaryBrush}" Opacity="0.8" TextTrimming="CharacterEllipsis" TextWrapping="NoWrap" />
+              <StackPanel x:Name="PrivateLabel" Orientation="Horizontal" Spacing="6" Opacity="0.8" Visibility="Collapsed">
+                <FontIcon Glyph="&#xED1A;" FontSize="14" Foreground="{ThemeResource TextFillColorPrimaryBrush}" />
+                <TextBlock Text="{x:Bind app:T.PrivateBadge}" Style="{StaticResource HazeCaptionStyle}" Foreground="{ThemeResource TextFillColorPrimaryBrush}" VerticalAlignment="Center" />
+              </StackPanel>
+            </StackPanel>
           </StackPanel>
           <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="2">
             <!-- Play on TV: what plays here, handed to a TV. There once the engine gives a sender. First

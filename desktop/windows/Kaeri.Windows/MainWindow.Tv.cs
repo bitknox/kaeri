@@ -201,7 +201,7 @@ public sealed partial class MainWindow
             castMenu = new MenuFlyout { Items = { another } };
             tvBar.SizeChanged += (_, _) => KeepSearchInPlace();
             AppTitleBar.SizeChanged += (_, _) => KeepSearchInPlace();
-            AppTitleBar.RightHeader = tvBar;
+            titleStatus.Content = tvBar;
         }
         var parts = ((StackPanel)tvBar.Content).Children;
         // The TV's glyph while the link is up or the cast plays; the dot, as the card's line draws it, while not.
@@ -231,7 +231,8 @@ public sealed partial class MainWindow
     /// </summary>
     void KeepSearchInPlace()
     {
-        var width = tvBar is { Visibility: Visibility.Visible } bar ? bar.ActualWidth + bar.Margin.Left + bar.Margin.Right : 0;
+        var width = (tvBar is { Visibility: Visibility.Visible } bar ? bar.ActualWidth + bar.Margin.Left + bar.Margin.Right : 0)
+            + (privateBadge is { Visibility: Visibility.Visible } badge ? badge.ActualWidth + badge.Margin.Left + badge.Margin.Right : 0);
         var left = AppTitleBar.ActualWidth >= 1000 ? width : 0;
         if (SearchBox.Margin.Left != left)
             SearchBox.Margin = new Thickness(left, 0, 0, 0);

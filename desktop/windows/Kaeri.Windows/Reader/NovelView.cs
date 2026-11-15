@@ -271,7 +271,7 @@ sealed class NovelView : Grid
                 // The host alone: it names the session, and a changed one (a web view that
                 // rewrote it) is what leaves a book blank.
                 if (answer is null && !closed)
-                    KaeriFfiMethods.LogLine(FfiLogLevel.Info, "windows", $"no book resource for host {HostOf(uri)}");
+                    KaeriFfiMethods.LogLine(FfiLogLevel.Info, "windows", $"no book resource for host {Privately.Logged(HostOf(uri))}");
                 body?.Dispose();
                 e.Response = env.CreateWebResourceResponse(null, 404, "Not Found", "");
                 return;

@@ -123,7 +123,7 @@ public sealed partial class MainWindow : Window
         StartReading();
         // Where sync stands and what is running, at the title bar's end.
         status = new ShellStatus(ctx, () => ShowSettings("accounts"), () => ShowSettings("devices"), ShowMessages);
-        AppTitleBar.RightHeader = status;
+        StartPrivate();
 #if KAERI_TESTING
         // The found skip times' shots: finding paused as a fixture says, whatever this machine does.
         session.Known.ForcedPause = options.Show switch
@@ -227,7 +227,7 @@ public sealed partial class MainWindow : Window
         taskbar = Taskbar.For(WinRT.Interop.WindowNative.GetWindowHandle(this));
         // The media overlay, the media keys and the thumbnail's buttons, while an episode plays.
         // Aimed at the playback on screen, and in a party Next and Previous are the room's pick.
-        media = MediaControls.Start(WinRT.Interop.WindowNative.GetWindowHandle(this), taskbar, art, ui, Player.MediaCommand);
+        media = MediaControls.Start(WinRT.Interop.WindowNative.GetWindowHandle(this), taskbar, art, ui, Player.MediaCommand, session.Known.Private);
         StartNotifications(art);
         Keys();
 #if KAERI_TESTING
@@ -592,6 +592,7 @@ public sealed partial class MainWindow : Window
                 ctx.Inject(new Event.Sync(new SyncState("mal", true, 0, 0, User: "mika", Last: "pulled", PullError: new PullError("the server did not answer", 0))));
                 ctx.Inject(new Event.Sync(new SyncState("simkl", true, 0, 0, User: "mika", Last: "pulled")));
             });
+        PrivateScene();
         // --show=jobs[-open]: two jobs past 600 ms, one held up on a wait, as the engine would say
         // them; -open opens the status flyout. --show=messages: a notice and an alert, then Messages.
         if (options.Show is "jobs" or "jobs-open")
@@ -801,6 +802,13 @@ public sealed partial class MainWindow : Window
                 case Event.Sync or Event.SyncStatus or Event.Profiles:
                     ShowAccount();
                     break;
+                case Event.Private p:
+                    PrivateHeard(p.V1);
+                    ReaderLayer.ShowPrivate();
+                    break;
+                case Event.AlwaysPrivate { Title: PrivateTitle.Series }:
+                    ReaderLayer.ShowPrivate();
+                    break;
                 case Event.Content { View: ContentFor.Continue } when !crashAsked:
                     crashAsked = true;
                     AskAboutCrash();
@@ -996,7 +1004,9 @@ public sealed partial class MainWindow : Window
         ShowToast(notice.Kind == NoticeKind.Alert ? InfoBarSeverity.Warning : InfoBarSeverity.Informational, text, button, act);
     }
 
-    void ShowToast(InfoBarSeverity severity, string text, string? button = null, Action? act = null)
+    /// <param name="hold">How long it stays, even with a button: the private notice's 8 s.</param>
+    /// <param name="icon">Its own mark in place of the severity's: the private notice's eye.</param>
+    void ShowToast(InfoBarSeverity severity, string text, string? button = null, Action? act = null, TimeSpan? hold = null, IconSource? icon = null)
     {
         var shown = ++toastShown;
         var alert = severity == InfoBarSeverity.Warning;
@@ -1011,6 +1021,7 @@ public sealed partial class MainWindow : Window
         }
         // An alert takes the vermilion mark, as on the Mac; Warning's icon is haze.
         Toast.Severity = alert ? InfoBarSeverity.Error : severity;
+        Toast.IconSource = icon;
         Toast.Message = text;
         if (button is not null && act is not null)
         {
@@ -1030,7 +1041,9 @@ public sealed partial class MainWindow : Window
             peer.RaiseNotificationEvent(AutomationNotificationKind.Other, AutomationNotificationProcessing.ImportantMostRecent, text, "kaeri-alert"); // i18n-skip
         // A notice with a button stays until it is dismissed or acted on; the others stay twice as
         // long while a screen reader runs.
-        var stays = NoticeTime.Stays(text, alert, button is not null && act is not null, DeviceWatch.ScreenReaderRunning());
+        var stays = hold is { } held
+            ? held * NoticeTime.Scale(DeviceWatch.ScreenReaderRunning())
+            : NoticeTime.Stays(text, alert, button is not null && act is not null, DeviceWatch.ScreenReaderRunning());
         if (stays is not { } time)
         {
             toastUntil = DateTimeOffset.MaxValue;
@@ -2028,6 +2041,8 @@ public sealed partial class MainWindow : Window
         Key((VirtualKey)0xBF, VirtualKeyModifiers.Control, ShowShortcuts);
         Key(VirtualKey.F1, VirtualKeyModifiers.None, ShowShortcuts, inPlayer: true);
         Key(VirtualKey.L, VirtualKeyModifiers.Control | VirtualKeyModifiers.Shift, ShowMessages);
+        // Private mode, anywhere in the app, the player and the reader included.
+        Key(VirtualKey.N, VirtualKeyModifiers.Control | VirtualKeyModifiers.Shift, TogglePrivate, inPlayer: true);
         // Search's filters panel, the Mac's Option-Command-F: Ctrl+F and Ctrl+E are the box's.
         Key(VirtualKey.F, VirtualKeyModifiers.Control | VirtualKeyModifiers.Shift, ToggleSearchFilters);
         // The mouse's back button, as Alt+Left.
@@ -2126,6 +2141,7 @@ public sealed partial class MainWindow : Window
         Line(T.ShortcutsContextMenu, T.ShortcutsKeysMenu("Shift+F10"));
         Line(T.ShortcutsTitle, "Ctrl+/");
         Line(T.MessagesTitle, "Ctrl+Shift+L");
+        Line(T.PrivateMode, Privately.Keys);
         Section(T.SettingsGroupPlayer);
         Line(T.ShortcutsPlayPause, "Space, K");
         Line(T.ShortcutsSeek, "Left, Right");

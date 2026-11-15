@@ -37,6 +37,7 @@ sealed class ShowSettingsDialog
     readonly List<(ShowSettingKey Key, ComboBox Box)> rows = [];
     readonly TextBlock subtitles = Ui.Text("–", "HazeBodyStyle", wrap: false);
     readonly ComboBox source = new() { MinWidth = 200 };
+    readonly ToggleSwitch always = PrivateUi.Silk(new ToggleSwitch { OnContent = "", OffContent = "", MinWidth = 0 });
     readonly Button reset = new() { Content = T.ShowSettingsReset, Margin = new Thickness(0, 4, 0, 0), IsEnabled = false };
     readonly string[] sources;
     readonly Grid status = new() { Height = 20, Margin = new Thickness(0, 0, 0, -8) };
@@ -51,6 +52,15 @@ sealed class ShowSettingsDialog
         var body = new StackPanel { Spacing = 20, MinWidth = 440 };
         AutomationProperties.SetLiveSetting(status, AutomationLiveSetting.Polite);
         body.Children.Add(status);
+        // Always private first, as the board has it: nothing from this show is saved or synced here.
+        always.IsOn = ctx.Known.Private.ShowAlways(id);
+        AutomationProperties.SetName(always, T.TitleAlwaysPrivate);
+        always.Toggled += (_, _) =>
+        {
+            if (always.IsOn != ctx.Known.Private.ShowAlways(id))
+                ctx.Send(new Command.SetAlwaysPrivate(new PrivateTitle.Show(id), always.IsOn));
+        };
+        body.Children.Add(Row(T.TitleAlwaysPrivate, T.ShowAlwaysPrivateDetail, always));
         foreach (var (heading, keys) in Groups)
         {
             var group = Group(heading);
@@ -204,6 +214,9 @@ sealed class ShowSettingsDialog
                 case Event.Settings when view is not null:
                     Fill(view);
                     break;
+                case Event.AlwaysPrivate { Title: PrivateTitle.Show shown } flag when shown.Id == id:
+                    always.IsOn = flag.On;
+                    break;
             }
         }
     }
@@ -232,6 +245,7 @@ sealed class ShowSettingsDialog
         var chosen = sheet.Source is { } s ? Array.IndexOf(sources, s) : -1;
         source.SelectedIndex = chosen + 1;
         source.IsEnabled = sources.Length > 0;
+        always.IsOn = sheet.AlwaysPrivate;
         reset.IsEnabled = true;
         quiet = false;
     }

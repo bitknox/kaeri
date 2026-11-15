@@ -39,7 +39,8 @@ public static class Notices
     /// <summary>
     /// The downloads finished between two lists of the queue, a notification per show: "Episode 3
     /// downloaded." or "4 episodes downloaded.". None for the first list, which only says where
-    /// things stand.
+    /// things stand, and none for a private download (asked for while private, or of a show
+    /// always private), which no notification names.
     /// </summary>
     public static SystemNotice[] Downloaded(DownloadRow[]? before, DownloadRow[] now)
     {
@@ -47,7 +48,7 @@ public static class Notices
             return [];
         var was = before.ToDictionary(r => r.Id, r => r.State);
         return [.. now
-            .Where(r => r.State == DownloadState.Done && was.TryGetValue(r.Id, out var s) && s != DownloadState.Done)
+            .Where(r => !r.Private && r.State == DownloadState.Done && was.TryGetValue(r.Id, out var s) && s != DownloadState.Done)
             .GroupBy(r => r.AnilistId)
             .Select(g =>
             {
