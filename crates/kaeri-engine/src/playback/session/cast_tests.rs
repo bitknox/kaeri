@@ -17,7 +17,12 @@ use kaeri_core::{
     media::Translation,
     stream::{Stream, StreamKind, Subtitle},
 };
-use kaeri_model::{Msg, command::PlayerCommand, event::Event, playback::Ending};
+use kaeri_model::{
+    Msg,
+    command::{Command, PlayerCommand},
+    event::Event,
+    playback::Ending,
+};
 use kaeri_net::HttpClient;
 use kaeri_store::Store;
 use tokio::sync::mpsc;
@@ -477,4 +482,109 @@ async fn a_held_tv_lost_mid_episode_says_so_and_is_looked_for_once_found_again()
     rig.hub.rejoin(&rig.device());
     session_until(&rig.hub, |v| v.state == SessionState::Idle).await;
     assert_eq!(rig.hub.left_on(), None);
+}
+
+/// A TV whose dropped connection is taken for lost at once, with no tries to connect again: the
+/// receiver plays on while this device has let it go.
+fn lost_at_once() -> Timings {
+    Timings { silence: Duration::from_secs(1), reconnect: Duration::ZERO, ..timings() }
+}
+
+/// A rig on a TV that keeps its receiver playing across connections, with episode 1 playing on
+/// it, and the playback that drives it.
+async fn playing_on_a_tv_that_plays_on() -> (Arc<Rig>, tokio::task::JoinHandle<Vec<Event>>) {
+    let options = FakeOptions { remembers: true, duration: 600.0, ..FakeOptions::default() };
+    let rig = Arc::new(Rig::on(true, options, false, lost_at_once()).await);
+    rig.hub.found(rig.device());
+    rig.hub.connect(rig.device());
+    session_until(&rig.hub, |v| v.state == SessionState::Connected).await;
+    let file = rig.file("1.mkv", &Fixture::default());
+    let playing = {
+        let rig = Arc::clone(&rig);
+        tokio::spawn(async move { rig.play(vec![file], context("1", None)).await })
+    };
+    session_until(&rig.hub, |v| {
+        v.state == SessionState::Playing && v.item.as_ref().is_some_and(|i| !i.loading)
+    })
+    .await;
+    (rig, playing)
+}
+
+/// A TvSender on the rig's hub, and the commands it sends the engine.
+fn sender_on(rig: &Rig) -> (crate::remote::sender::TvSender, impl FnMut() -> Vec<Command>) {
+    let sender = crate::remote::sender::TvSender::new(
+        kaeri_remote::identity::Identity::generate().unwrap(),
+        kaeri_remote::client::Hello { name: "Phone".into(), app: "kaeri-test/1".into() },
+        kaeri_remote::known::KnownTvs::memory(),
+    );
+    let (engine, sent) = crate::engine::RemoteSender::recording();
+    sender.attach_casting(Arc::clone(&rig.hub), engine);
+    (sender, sent)
+}
+
+#[tokio::test(flavor = "multi_thread", worker_threads = 4)]
+async fn a_tv_picked_again_after_a_lost_connection_joins_the_receiver_still_playing() {
+    let (rig, playing) = playing_on_a_tv_that_plays_on().await;
+    rig.receiver.drop_connection();
+    let view = session_until(&rig.hub, |v| v.state == SessionState::Error).await;
+    assert_eq!(view.notice, Some(Msg::NoticeCastLost { name: "Living room".into() }));
+    playing.await.unwrap();
+    let launches = rig.receiver.heard("LAUNCH").len();
+    let loads = rig.receiver.heard("LOAD").len();
+
+    // Picked again from the cast button: the receiver still plays the episode, and is joined.
+    rig.hub.connect(rig.device());
+    let view = session_until(&rig.hub, |v| v.state == SessionState::Playing).await;
+    assert!(view.item.is_some(), "{view:?}");
+    assert!(view.own_receiver);
+    assert_eq!(rig.receiver.heard("LAUNCH").len(), launches, "joined, never launched again");
+    assert_eq!(rig.receiver.heard("LOAD").len(), loads, "nothing loaded again");
+    assert!(rig.hub.disconnect());
+}
+
+#[tokio::test(flavor = "multi_thread", worker_threads = 4)]
+async fn play_here_after_a_lost_connection_plays_the_episode_on_here() {
+    let (rig, playing) = playing_on_a_tv_that_plays_on().await;
+    let (sender, mut sent) = sender_on(&rig);
+    tokio::time::sleep(Duration::from_millis(500)).await;
+    rig.receiver.drop_connection();
+    session_until(&rig.hub, |v| v.state == SessionState::Error).await;
+    playing.await.unwrap();
+    sent();
+
+    let from = sender.cast_play_here().expect("the episode comes back to play here");
+    assert_eq!(from.episode, "1");
+    assert!(from.position >= 0.0);
+    assert!(sent().iter().any(|c| matches!(c, Command::StopCasting)), "the TV is let go");
+}
+
+#[tokio::test(flavor = "multi_thread", worker_threads = 4)]
+async fn back_after_the_session_ended_away_the_receiver_is_joined_and_plays_on() {
+    let (rig, playing) = playing_on_a_tv_that_plays_on().await;
+    let (sender, mut sent) = sender_on(&rig);
+    // The app leaves the screen: the TV pauses for it.
+    sender.cast_away(true);
+    session_until(&rig.hub, |v| v.item.as_ref().is_some_and(|i| i.paused)).await;
+    // Away long enough that the connection dies and the session ends.
+    rig.receiver.drop_connection();
+    session_until(&rig.hub, |v| v.state == SessionState::Error).await;
+    playing.await.unwrap();
+    sent();
+    let launches = rig.receiver.heard("LAUNCH").len();
+    let loads = rig.receiver.heard("LOAD").len();
+
+    // Back: the receiver still holds the episode where it paused, and plays on.
+    sender.cast_away(false);
+    let view = session_until(&rig.hub, |v| {
+        v.state == SessionState::Playing && v.item.as_ref().is_some_and(|i| !i.paused)
+    })
+    .await;
+    assert!(view.item.is_some());
+    assert_eq!(rig.receiver.heard("LAUNCH").len(), launches, "joined, never launched again");
+    assert_eq!(rig.receiver.heard("LOAD").len(), loads, "never loaded again");
+    assert!(
+        !sent().iter().any(|c| matches!(c, Command::CastTo { .. })),
+        "the episode isn't cast again"
+    );
+    assert!(rig.hub.disconnect());
 }

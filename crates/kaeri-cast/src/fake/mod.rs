@@ -191,6 +191,8 @@ enum Control {
     Silence,
     /// This connection only: the TV goes on and answers the next.
     Drop,
+    /// This connection is closed, and the TV goes on and answers the next.
+    Close,
     Buffering(bool),
     Say(Value),
 }
@@ -359,6 +361,12 @@ impl FakeReceiver {
         let _ = self.control.send(Control::Drop);
     }
 
+    /// The TV closes the connection this sender holds, with a FIN, and plays on and answers the
+    /// next one: a TV that drops its senders when its Wi-Fi roams.
+    pub fn close_connection(&self) {
+        let _ = self.control.send(Control::Close);
+    }
+
     /// Wait for data, or stop waiting, and say so as the receiver's Shaka player does:
     /// `BUFFERING` with a `playbackRate` of 0, then the rate it plays at again.
     pub fn buffer(&self, waiting: bool) {
@@ -453,6 +461,8 @@ async fn serve(
                     let _held = (&read, &tx);
                     std::future::pending::<()>().await;
                 }
+                // Kept above, so the next connection finds the TV as it was.
+                Control::Close => return Ok(()),
                 Control::Buffering(waiting) => {
                     if let Some(p) = playing.as_mut() {
                         p.advance(options.speed);

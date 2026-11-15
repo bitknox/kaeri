@@ -93,6 +93,8 @@ struct Session {
     generation: u64,
     /// The link that plays on the held player now.
     link: u64,
+    /// What played when the TV or the network ended the session, for Play here.
+    ended: Option<SessionItem>,
 }
 
 /// A session this device left running on a TV: its TXT `id` and the receiver app's session.
@@ -382,9 +384,22 @@ impl CastHub {
     }
 
     /// Connect to `device` and hold it: the receiver launches, and every play goes to the TV
-    /// until [`Self::disconnect`]. A session held on another TV is let go first; one on this TV
-    /// already is kept. Returns at once: [`Self::session`] follows it.
+    /// until [`Self::disconnect`]. A receiver this device left running there and that still
+    /// runs is joined instead, as it plays, never launched again. A session held on another TV
+    /// is let go first; one on this TV already is kept. Returns at once: [`Self::session`]
+    /// follows it.
     pub fn connect(self: &Arc<Self>, device: CastDevice) {
+        self.connect_then(device, |_, _| {});
+    }
+
+    /// [`Self::connect`], then `then` with the player held and whether it joined the receiver
+    /// left running rather than launching one. Not called when the connect fails or a newer
+    /// one came first.
+    pub(crate) fn connect_then(
+        self: &Arc<Self>,
+        device: CastDevice,
+        then: impl FnOnce(&Arc<CastPlayer>, bool) + Send + 'static,
+    ) {
         let (generation, old) = {
             let mut session = lock(&self.session);
             let same = session.device.as_ref().is_some_and(|d| d.id == device.id);
@@ -410,8 +425,28 @@ impl CastHub {
         // The card is for this TV from now, with nothing starting on it yet.
         *lock(&self.cast) = Current { device: Some(device.clone()), ..Current::default() };
         self.bump();
+        let left = self.left().filter(|left| left.device == device.id);
         let hub = Arc::clone(self);
         self.spawn(async move {
+            if let Some(left) = left {
+                match CastPlayer::join(hub.setup(device.clone()), &left.session).await {
+                    Ok(Some((player, _events))) => {
+                        player.use_receiver(hub.receiver());
+                        tracing::info!("joined the receiver this device left running");
+                        let player = Arc::new(player);
+                        if hub.connected(generation, Ok(Arc::clone(&player))) {
+                            then(&player, true);
+                        }
+                        return;
+                    }
+                    // The receiver closed meanwhile: a new one launches.
+                    Ok(None) => {}
+                    Err(failure) => {
+                        hub.connected(generation, Err(failure));
+                        return;
+                    }
+                }
+            }
             let connected = async {
                 let (player, _events) = CastPlayer::connect(hub.setup(device)).await?;
                 player.use_receiver(hub.receiver());
@@ -419,16 +454,23 @@ impl CastHub {
                 Ok::<_, CastFailure>(Arc::new(player))
             }
             .await;
-            hub.connected(generation, connected);
+            if let Ok(player) = &connected {
+                if hub.connected(generation, Ok(Arc::clone(player))) {
+                    then(player, false);
+                }
+            } else {
+                hub.connected(generation, connected);
+            }
         });
     }
 
-    /// A connect finished: the session holds the player, or says why it couldn't.
+    /// A connect finished: the session holds the player, or says why it couldn't. Whether it
+    /// holds it.
     fn connected(
         self: &Arc<Self>,
         generation: u64,
         connected: Result<Arc<CastPlayer>, CastFailure>,
-    ) {
+    ) -> bool {
         {
             let mut session = lock(&self.session);
             if session.generation != generation {
@@ -439,7 +481,7 @@ impl CastHub {
                         let _ = player.quit().await;
                     });
                 }
-                return;
+                return false;
             }
             session.connecting = false;
             match &connected {
@@ -457,9 +499,12 @@ impl CastHub {
             Err(failure) => {
                 tracing::warn!(%failure, "couldn't connect to the TV");
                 self.failed(failure);
+                self.bump();
+                return false;
             }
         }
         self.bump();
+        true
     }
 
     /// Watch the held player for the TV ending the session by itself.
@@ -504,6 +549,7 @@ impl CastHub {
         lost: bool,
         busy: bool,
     ) {
+        let item = Self::item(&self.view(), Some(&player.current()));
         {
             let mut session = lock(&self.session);
             if !session.player.as_ref().is_some_and(|p| Arc::ptr_eq(p, player)) {
@@ -511,6 +557,7 @@ impl CastHub {
             }
             tracing::info!(?failure, "the TV ended the cast session");
             session.player = None;
+            session.ended = item.filter(|_| failure.is_some());
             if failure.is_none() {
                 session.device = None;
             }
@@ -616,45 +663,7 @@ impl CastHub {
         };
         let view = self.view();
         let status = player.as_ref().map(|p| p.current());
-        let now = view.state.as_ref().and_then(|s| s.now_playing.clone());
-        let item = match (&now, status.as_ref()) {
-            (Some(now), status) => Some(SessionItem {
-                id: Some(now.id),
-                title: now.title.clone(),
-                episode: Some(now.episode.clone()),
-                episode_title: now.episode_title.clone(),
-                image: status.and_then(|s| s.metadata.as_ref()?.image.clone()),
-                position: status.map_or(now.position, |s| s.position),
-                duration: status.and_then(|s| s.duration).or(now.duration),
-                paused: status.map_or(now.paused, |s| s.state == CastState::Paused),
-                waiting: status.and_then(waited),
-                loading: now.loading
-                    || status.is_none_or(|s| {
-                        s.step.is_some() || s.plan.is_none() && s.metadata.is_none()
-                    }),
-            }),
-            // What the receiver plays that this device didn't start: a session joined again.
-            (None, Some(status))
-                if matches!(
-                    status.state,
-                    CastState::Playing | CastState::Paused | CastState::Buffering
-                ) =>
-            {
-                status.metadata.as_ref().map(|metadata| SessionItem {
-                    id: None,
-                    title: metadata.series.clone(),
-                    episode: None,
-                    episode_title: Some(metadata.title.clone()).filter(|t| !t.is_empty()),
-                    image: metadata.image.clone(),
-                    position: status.position,
-                    duration: status.duration,
-                    paused: status.state == CastState::Paused,
-                    waiting: waited(status),
-                    loading: false,
-                })
-            }
-            _ => None,
-        };
+        let item = Self::item(&view, status.as_ref());
         let state = if device.is_none() {
             SessionState::Idle
         } else if connecting {
@@ -714,6 +723,54 @@ impl CastHub {
                 .and_then(|s| s.receiver.as_deref())
                 .is_some_and(|r| r != DEFAULT_MEDIA_RECEIVER),
         }
+    }
+
+    /// What plays on the TV: what this device started, or what a joined receiver plays.
+    fn item(view: &CastView, status: Option<&CastStatus>) -> Option<SessionItem> {
+        let now = view.state.as_ref().and_then(|s| s.now_playing.clone());
+        match (&now, status) {
+            (Some(now), status) => Some(SessionItem {
+                id: Some(now.id),
+                title: now.title.clone(),
+                episode: Some(now.episode.clone()),
+                episode_title: now.episode_title.clone(),
+                image: status.and_then(|s| s.metadata.as_ref()?.image.clone()),
+                position: status.map_or(now.position, |s| s.position),
+                duration: status.and_then(|s| s.duration).or(now.duration),
+                paused: status.map_or(now.paused, |s| s.state == CastState::Paused),
+                waiting: status.and_then(waited),
+                loading: now.loading
+                    || status.is_none_or(|s| {
+                        s.step.is_some() || s.plan.is_none() && s.metadata.is_none()
+                    }),
+            }),
+            // What the receiver plays that this device didn't start: a session joined again.
+            (None, Some(status))
+                if matches!(
+                    status.state,
+                    CastState::Playing | CastState::Paused | CastState::Buffering
+                ) =>
+            {
+                status.metadata.as_ref().map(|metadata| SessionItem {
+                    id: None,
+                    title: metadata.series.clone(),
+                    episode: None,
+                    episode_title: Some(metadata.title.clone()).filter(|t| !t.is_empty()),
+                    image: metadata.image.clone(),
+                    position: status.position,
+                    duration: status.duration,
+                    paused: status.state == CastState::Paused,
+                    waiting: waited(status),
+                    loading: false,
+                })
+            }
+            _ => None,
+        }
+    }
+
+    /// What played when the TV or the network ended the session: Play here plays it on.
+    pub fn ended_item(&self) -> Option<SessionItem> {
+        lock(&self.session).ended.clone()
     }
 
     /// Note the receiver `player` launched, so a later run joins it again.

@@ -923,6 +923,43 @@ async fn a_connection_that_drops_while_the_tv_plays_on_is_made_again() {
 }
 
 #[tokio::test(flavor = "multi_thread", worker_threads = 4)]
+async fn a_connection_the_tv_closes_while_it_plays_on_is_made_again_and_joins_its_receiver() {
+    let receiver = FakeReceiver::start(FakeOptions {
+        duration: 600.0,
+        remembers: true,
+        ..FakeOptions::default()
+    })
+    .await
+    .unwrap();
+    let (player, mut events) = playing_quick_to_notice(&receiver, Duration::from_secs(6)).await;
+    let connects = receiver.heard("CONNECT").len();
+    let launches = receiver.heard("LAUNCH").len();
+    let loads = receiver.heard("LOAD").len();
+
+    // The TV closes the socket, with a FIN, and plays on.
+    receiver.close_connection();
+    let deadline = tokio::time::Instant::now() + Duration::from_secs(8);
+    while receiver.heard("CONNECT").len() <= connects + 1 {
+        assert!(tokio::time::Instant::now() < deadline, "connected again in time");
+        tokio::time::sleep(Duration::from_millis(50)).await;
+    }
+    tokio::time::sleep(Duration::from_millis(1500)).await;
+    assert!(player.is_alive(), "the cast goes on");
+    assert_eq!(player.failure(), None);
+    assert_eq!(player.current().state, CastState::Playing, "{:?}", player.current());
+    assert_eq!(
+        receiver.heard("LAUNCH").len(),
+        launches,
+        "the receiver is joined, not launched"
+    );
+    assert_eq!(receiver.heard("LOAD").len(), loads, "nothing loads again");
+    while let Ok(event) = events.try_recv() {
+        assert!(!matches!(event, PlaybackEvent::Ended { .. }), "never ended: {event:?}");
+    }
+    player.quit().await.unwrap();
+}
+
+#[tokio::test(flavor = "multi_thread", worker_threads = 4)]
 async fn a_connection_made_again_to_a_tv_that_closed_the_app_ends_the_cast() {
     // A TV that forgets between connections: the app it ran is gone on the next one.
     let receiver =

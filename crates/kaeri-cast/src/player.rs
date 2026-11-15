@@ -1316,6 +1316,17 @@ impl CastPlayer {
         result
     }
 
+    /// Wait while the connection to the TV is made again, and say whether the cast goes on: a
+    /// control sent meanwhile would find the connection closed.
+    pub async fn settled(&self) -> bool {
+        let timings = &self.inner.setup.timings;
+        let deadline = Instant::now() + timings.reconnect + timings.silence;
+        while lock(&self.inner.state).reconnecting && Instant::now() < deadline {
+            tokio::time::sleep(Duration::from_millis(100)).await;
+        }
+        self.is_alive()
+    }
+
     pub fn is_alive(&self) -> bool {
         let state = lock(&self.inner.state);
         (state.reconnecting || self.inner.device().channel.is_open())
