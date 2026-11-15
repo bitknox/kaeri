@@ -31,12 +31,21 @@ struct ReadGridWidthTests {
 
     private static func turn() { RunLoop.main.run(until: Date().addingTimeInterval(0.01)) }
 
-    private func settle(_ window: NSWindow) async throws {
-        for _ in 0..<30 {
+    private func settle(_ window: NSWindow, _ seen: Seen) async throws {
+        var last: CGFloat = -1
+        var held = 0
+        for _ in 0..<60 {
             window.layoutIfNeeded()
             window.displayIfNeeded()
             Self.turn()
             try await Task.sleep(for: .milliseconds(1))
+            if seen.width > 0, seen.width == last {
+                held += 1
+                if held == 3 { return }
+            } else {
+                held = 0
+                last = seen.width
+            }
         }
     }
 
@@ -56,7 +65,7 @@ struct ReadGridWidthTests {
         window.setFrameOrigin(NSPoint(x: -20_000, y: -20_000))
         window.orderFrontRegardless()
         defer { window.close() }
-        try await settle(window)
+        try await settle(window, seen)
         #expect(seen.width > 1_100)
 
         // In 16 pt steps down to 700, as a drag goes.
@@ -64,7 +73,7 @@ struct ReadGridWidthTests {
         while width > 700 {
             width = max(700, width - 16)
             window.setContentSize(NSSize(width: width, height: 700))
-            try await settle(window)
+            try await settle(window, seen)
         }
         #expect(seen.width <= 700, "the grid kept \(seen.width) pt in a 700 pt window")
         #expect(ReadGrid.columns(seen.width).0 <= 4)
