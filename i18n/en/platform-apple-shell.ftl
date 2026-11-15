@@ -42,6 +42,11 @@ menu-next-episodes = Next Episodes
 # Mac menu bar item that syncs with the tracker accounts now.
 menu-sync-now = Sync Now
 
+# Mac and iPad menu bar item that takes Sync Now's place while a title page says its next
+# episode aired and no source has it yet: it asks the sources again, as the page's Check again
+# button does. Everywhere else it is action-check-again.
+menu-check-again = Check Again
+
 # Mac menu bar item that pauses every download.
 menu-pause-all-downloads = Pause All Downloads
 
