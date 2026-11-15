@@ -8472,7 +8472,7 @@
     <value>Under avslutningen hittas nästa avsnitts ström, undertexter och hopptider. Dess första sekunder laddas också, och på en anslutning med datapriser bara när det här är på.</value>
   </data>
   <data name="SettingsPreloadTorrents" xml:space="preserve">
-    <value>Torrenter laddar sina första delar på samma sätt och laddar inte upp något förrän avsnittet spelas.</value>
+    <value>Torrenter laddar sina första delar på samma sätt.</value>
   </data>
   <data name="SettingsPreloadA11yDimmed" xml:space="preserve">
     <value>Kräver ”Spela nästa automatiskt”</value>

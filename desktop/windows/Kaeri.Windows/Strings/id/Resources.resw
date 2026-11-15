@@ -8142,7 +8142,7 @@
     <value>Selama penutup, stream, subtitle, dan waktu lewati episode berikutnya dicari. Detik-detik pertamanya juga dimuat, dan di koneksi terukur hanya jika ini aktif.</value>
   </data>
   <data name="SettingsPreloadTorrents" xml:space="preserve">
-    <value>Torrent memuat potongan pertamanya dengan cara yang sama dan tidak mengunggah apa pun sampai episode diputar.</value>
+    <value>Torrent memuat potongan pertamanya dengan cara yang sama.</value>
   </data>
   <data name="SettingsPreloadA11yDimmed" xml:space="preserve">
     <value>Perlu "Putar episode berikutnya otomatis"</value>

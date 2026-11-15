@@ -3574,7 +3574,7 @@
     <string name="settings_preload_metered">Предзагружать видео по лимитным подключениям</string>
     <string name="settings_preload_detail_android">Во время эндинга находятся поток, субтитры и моменты пропуска следующей серии. Её первые секунды тоже загружаются, а по мобильной сети или лимитному Wi-Fi только когда это включено.</string>
     <string name="settings_preload_detail_metered">Во время эндинга находятся поток, субтитры и моменты пропуска следующей серии. Её первые секунды тоже загружаются, а по лимитному подключению только когда это включено.</string>
-    <string name="settings_preload_torrents">Торренты так же загружают первые части и ничего не отдают, пока серия не начнётся.</string>
+    <string name="settings_preload_torrents">Торренты так же загружают первые части.</string>
     <string name="settings_preload_a11y_dimmed">Нужно включить «Автоматически включать следующую серию»</string>
     <string name="settings_skip_opening">Пропускать опенинг автоматически</string>
     <string name="settings_skip_recap">Пропускать рекапы автоматически</string>

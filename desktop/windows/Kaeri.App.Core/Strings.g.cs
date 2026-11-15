@@ -15074,7 +15074,7 @@ public static partial class T
         ["SettingsPreloadCellular"] = "Preload video on mobile data",
         ["SettingsPreloadMetered"] = "Preload video on metered connections",
         ["SettingsPreloadDetailMetered"] = "During the ending, the next episode's stream, subtitles and skip times are found. Its first seconds load too, and on a metered connection only when this is on.",
-        ["SettingsPreloadTorrents"] = "Torrents load their first pieces the same way and upload nothing until the episode plays.",
+        ["SettingsPreloadTorrents"] = "Torrents load their first pieces the same way.",
         ["SettingsPreloadA11yDimmed"] = "Needs Auto-play next",
         ["SettingsSkipOpening"] = "Skip opening automatically",
         ["SettingsSkipRecap"] = "Skip recaps automatically",

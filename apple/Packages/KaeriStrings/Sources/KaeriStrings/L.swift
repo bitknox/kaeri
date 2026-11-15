@@ -11560,7 +11560,7 @@ public enum L {
     public static var settingsPreloadDetailMetered: String { string("settings-preload-detail-metered", fallback: "During the ending, the next episode's stream, subtitles and skip times are found. Its first seconds load too, and on a metered connection only when this is on.") }
 
     /// Sentence added after the line under the row while torrent playback is on.
-    public static var settingsPreloadTorrents: String { string("settings-preload-torrents", fallback: "Torrents load their first pieces the same way and upload nothing until the episode plays.") }
+    public static var settingsPreloadTorrents: String { string("settings-preload-torrents", fallback: "Torrents load their first pieces the same way.") }
 
     /// Screen reader hint on the preload row while it is dimmed because Auto-play next is off. The terminal shows it at the start of the note.
     public static var settingsPreloadA11yDimmed: String { string("settings-preload-a11y-dimmed", fallback: "Needs Auto-play next") }

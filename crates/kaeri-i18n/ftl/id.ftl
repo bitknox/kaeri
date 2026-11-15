@@ -10954,7 +10954,7 @@ settings-preload-metered = Muat awal video di koneksi terukur
 settings-preload-detail-metered = Selama penutup, stream, subtitle, dan waktu lewati episode berikutnya dicari. Detik-detik pertamanya juga dimuat, dan di koneksi terukur hanya jika ini aktif.
 
 # Sentence added after the line under the row while torrent playback is on.
-settings-preload-torrents = Torrent memuat potongan pertamanya dengan cara yang sama dan tidak mengunggah apa pun sampai episode diputar.
+settings-preload-torrents = Torrent memuat potongan pertamanya dengan cara yang sama.
 
 # Screen reader hint on the preload row while it is dimmed because Auto-play next is off. The terminal shows it at the start of the note.
 settings-preload-a11y-dimmed = Perlu "Putar episode berikutnya otomatis"

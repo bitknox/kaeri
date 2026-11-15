@@ -9132,7 +9132,7 @@
     <value>Podczas zakończenia wyszukiwane są strumień, napisy i czasy pominięć następnego odcinka. Jego pierwsze sekundy też się wczytują, a przez połączenie taryfowe tylko wtedy, gdy to jest włączone.</value>
   </data>
   <data name="SettingsPreloadTorrents" xml:space="preserve">
-    <value>Torrenty wczytują swoje pierwsze części tak samo i nic nie wysyłają, dopóki odcinek nie ruszy.</value>
+    <value>Torrenty wczytują swoje pierwsze części tak samo.</value>
   </data>
   <data name="SettingsPreloadA11yDimmed" xml:space="preserve">
     <value>Wymaga opcji „Automatycznie odtwarzaj następny odcinek”</value>

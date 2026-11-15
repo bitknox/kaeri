@@ -11222,7 +11222,7 @@ settings-preload-metered = Precargar video en conexiones de uso medido
 settings-preload-detail-metered = Durante el cierre se buscan el stream, los subtítulos y los tiempos de salto del episodio siguiente. Sus primeros segundos también se cargan, y en una conexión de uso medido solo cuando esto está activado.
 
 # Sentence added after the line under the row while torrent playback is on.
-settings-preload-torrents = Los torrents cargan sus primeras piezas de la misma forma y no suben nada hasta que se reproduce el episodio.
+settings-preload-torrents = Los torrents cargan sus primeras piezas de la misma forma.
 
 # Screen reader hint on the preload row while it is dimmed because Auto-play next is off. The terminal shows it at the start of the note.
 settings-preload-a11y-dimmed = Requiere «Reproducir el siguiente automáticamente»

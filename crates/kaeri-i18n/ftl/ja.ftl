@@ -10954,7 +10954,7 @@ settings-preload-metered = 従量制課金接続でビデオを先読み
 settings-preload-detail-metered = エンディング中に、次のエピソードのストリーム、字幕、スキップ位置を探します。最初の数秒も読み込みますが、従量制課金接続ではこれがオンのときだけです。
 
 # Sentence added after the line under the row while torrent playback is on.
-settings-preload-torrents = トレントも同じように最初のピースを読み込み、エピソードが再生されるまで何もアップロードしません。
+settings-preload-torrents = トレントも同じように最初のピースを読み込みます。
 
 # Screen reader hint on the preload row while it is dimmed because Auto-play next is off. The terminal shows it at the start of the note.
 settings-preload-a11y-dimmed = 「次のエピソードを自動再生」が必要です

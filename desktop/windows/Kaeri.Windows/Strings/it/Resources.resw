@@ -8802,7 +8802,7 @@
     <value>Durante la sigla di chiusura vengono trovati lo stream, i sottotitoli e i tempi di salto dell'episodio successivo. Si caricano anche i suoi primi secondi, e su una connessione a consumo solo se questa opzione è attiva.</value>
   </data>
   <data name="SettingsPreloadTorrents" xml:space="preserve">
-    <value>I torrent caricano i primi pezzi allo stesso modo e non inviano nulla finché l'episodio non parte.</value>
+    <value>I torrent caricano i primi pezzi allo stesso modo.</value>
   </data>
   <data name="SettingsPreloadA11yDimmed" xml:space="preserve">
     <value>Richiede «Riproduci il successivo automaticamente»</value>

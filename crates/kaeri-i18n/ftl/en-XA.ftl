@@ -11804,7 +11804,7 @@ settings-preload-metered = [Þŕéļöàð ṽîðéö öñ ɱéţéŕéð çö�
 settings-preload-detail-metered = [Ðüŕîñĝ ţĥé éñðîñĝ, ţĥé ñéẋţ éþîšöðé'š šţŕéàɱ, šüƀţîţļéš àñð šķîþ ţîɱéš àŕé ƒöüñð. Îţš ƒîŕšţ šéçöñðš ļöàð ţöö, àñð öñ à ɱéţéŕéð çöññéçţîöñ öñļý ŵĥéñ ţĥîš îš öñ.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]
 
 # Sentence added after the line under the row while torrent playback is on.
-settings-preload-torrents = [Ţöŕŕéñţš ļöàð ţĥéîŕ ƒîŕšţ þîéçéš ţĥé šàɱé ŵàý àñð üþļöàð ñöţĥîñĝ üñţîļ ţĥé éþîšöðé þļàýš.~~~~~~~~~~~~~~~~~~~~~~~~~~~]
+settings-preload-torrents = [Ţöŕŕéñţš ļöàð ţĥéîŕ ƒîŕšţ þîéçéš ţĥé šàɱé ŵàý.~~~~~~~~~~~~~~]
 
 # Screen reader hint on the preload row while it is dimmed because Auto-play next is off. The terminal shows it at the start of the note.
 settings-preload-a11y-dimmed = [Ñééðš Åüţö-þļàý ñéẋţ~~~~~~]

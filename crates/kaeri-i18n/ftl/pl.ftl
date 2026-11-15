@@ -11356,7 +11356,7 @@ settings-preload-metered = Wczytuj wideo z wyprzedzeniem przez połączenia tary
 settings-preload-detail-metered = Podczas zakończenia wyszukiwane są strumień, napisy i czasy pominięć następnego odcinka. Jego pierwsze sekundy też się wczytują, a przez połączenie taryfowe tylko wtedy, gdy to jest włączone.
 
 # Sentence added after the line under the row while torrent playback is on.
-settings-preload-torrents = Torrenty wczytują swoje pierwsze części tak samo i nic nie wysyłają, dopóki odcinek nie ruszy.
+settings-preload-torrents = Torrenty wczytują swoje pierwsze części tak samo.
 
 # Screen reader hint on the preload row while it is dimmed because Auto-play next is off. The terminal shows it at the start of the note.
 settings-preload-a11y-dimmed = Wymaga opcji „Automatycznie odtwarzaj następny odcinek”

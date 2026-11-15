@@ -3320,7 +3320,7 @@
     <string name="settings_preload_metered">Förladda video på anslutningar med datapriser</string>
     <string name="settings_preload_detail_android">Under avslutningen hittas nästa avsnitts ström, undertexter och hopptider. Dess första sekunder laddas också, och via mobildata eller Wi-Fi med datapriser bara när det här är på.</string>
     <string name="settings_preload_detail_metered">Under avslutningen hittas nästa avsnitts ström, undertexter och hopptider. Dess första sekunder laddas också, och på en anslutning med datapriser bara när det här är på.</string>
-    <string name="settings_preload_torrents">Torrenter laddar sina första delar på samma sätt och laddar inte upp något förrän avsnittet spelas.</string>
+    <string name="settings_preload_torrents">Torrenter laddar sina första delar på samma sätt.</string>
     <string name="settings_preload_a11y_dimmed">Kräver ”Spela nästa automatiskt”</string>
     <string name="settings_skip_opening">Hoppa över öppningen automatiskt</string>
     <string name="settings_skip_recap">Hoppa över återblickar automatiskt</string>

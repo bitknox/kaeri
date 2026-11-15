@@ -289050,79 +289050,79 @@
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Torrents laden ihre ersten Teile genauso und laden nichts hoch, bis die Folge läuft."
+            "value" : "Torrents laden ihre ersten Teile genauso."
           }
         },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Torrents load their first pieces the same way and upload nothing until the episode plays."
+            "value" : "Torrents load their first pieces the same way."
           }
         },
         "es-419" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Los torrents cargan sus primeras piezas de la misma forma y no suben nada hasta que se reproduce el episodio."
+            "value" : "Los torrents cargan sus primeras piezas de la misma forma."
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Les torrents chargent leurs premiers morceaux de la même façon et n’envoient rien tant que l’épisode ne joue pas."
+            "value" : "Les torrents chargent leurs premiers morceaux de la même façon."
           }
         },
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Torrent memuat potongan pertamanya dengan cara yang sama dan tidak mengunggah apa pun sampai episode diputar."
+            "value" : "Torrent memuat potongan pertamanya dengan cara yang sama."
           }
         },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "I torrent caricano i primi pezzi allo stesso modo e non inviano nulla finché l'episodio non parte."
+            "value" : "I torrent caricano i primi pezzi allo stesso modo."
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "トレントも同じように最初のピースを読み込み、エピソードが再生されるまで何もアップロードしません。"
+            "value" : "トレントも同じように最初のピースを読み込みます。"
           }
         },
         "pl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Torrenty wczytują swoje pierwsze części tak samo i nic nie wysyłają, dopóki odcinek nie ruszy."
+            "value" : "Torrenty wczytują swoje pierwsze części tak samo."
           }
         },
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Torrents carregam as primeiras partes do mesmo jeito e não enviam nada até o episódio começar."
+            "value" : "Torrents carregam as primeiras partes do mesmo jeito."
           }
         },
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Торренты так же загружают первые части и ничего не отдают, пока серия не начнётся."
+            "value" : "Торренты так же загружают первые части."
           }
         },
         "sv" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Torrenter laddar sina första delar på samma sätt och laddar inte upp något förrän avsnittet spelas."
+            "value" : "Torrenter laddar sina första delar på samma sätt."
           }
         },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Torrentler ilk parçalarını aynı şekilde yükler ve bölüm oynayana kadar hiçbir şey yüklemez."
+            "value" : "Torrentler ilk parçalarını aynı şekilde yükler."
           }
         },
         "vi" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Torrent cũng tải các mảnh đầu tiên như vậy và không tải lên gì cho đến khi tập phát."
+            "value" : "Torrent cũng tải các mảnh đầu tiên như vậy."
           }
         }
       }

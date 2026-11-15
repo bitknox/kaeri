@@ -11804,7 +11804,7 @@ settings-preload-metered = Preload video on metered connections
 settings-preload-detail-metered = During the ending, the next episode's stream, subtitles and skip times are found. Its first seconds load too, and on a metered connection only when this is on.
 
 # Sentence added after the line under the row while torrent playback is on.
-settings-preload-torrents = Torrents load their first pieces the same way and upload nothing until the episode plays.
+settings-preload-torrents = Torrents load their first pieces the same way.
 
 # Screen reader hint on the preload row while it is dimmed because Auto-play next is off. The terminal shows it at the start of the note.
 settings-preload-a11y-dimmed = Needs Auto-play next

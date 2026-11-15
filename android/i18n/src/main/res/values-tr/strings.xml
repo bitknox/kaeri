@@ -3320,7 +3320,7 @@
     <string name="settings_preload_metered">Tarifeli bağlantılarda videoyu önceden yükle</string>
     <string name="settings_preload_detail_android">Bitiş sırasında sonraki bölümün yayını, altyazıları ve atlama zamanları bulunur. İlk saniyeleri de yüklenir; mobil veride ya da tarifeli Wi-Fi\'da yalnızca bu açıkken.</string>
     <string name="settings_preload_detail_metered">Bitiş sırasında sonraki bölümün yayını, altyazıları ve atlama zamanları bulunur. İlk saniyeleri de yüklenir; tarifeli bir bağlantıda yalnızca bu açıkken.</string>
-    <string name="settings_preload_torrents">Torrentler ilk parçalarını aynı şekilde yükler ve bölüm oynayana kadar hiçbir şey yüklemez.</string>
+    <string name="settings_preload_torrents">Torrentler ilk parçalarını aynı şekilde yükler.</string>
     <string name="settings_preload_a11y_dimmed">\"Sonrakini otomatik oynat\" gerekli</string>
     <string name="settings_skip_opening">Açılışı otomatik atla</string>
     <string name="settings_skip_recap">Özetleri otomatik atla</string>

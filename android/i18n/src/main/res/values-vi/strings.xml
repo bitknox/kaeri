@@ -3193,7 +3193,7 @@
     <string name="settings_preload_metered">Tải trước video trên kết nối có đo lưu lượng</string>
     <string name="settings_preload_detail_android">Trong phần kết thúc, luồng phát, phụ đề và mốc bỏ qua của tập tiếp theo được tìm sẵn. Vài giây đầu của tập cũng được tải, và khi dùng dữ liệu di động hoặc Wi-Fi có đo lưu lượng thì chỉ khi mục này bật.</string>
     <string name="settings_preload_detail_metered">Trong phần kết thúc, luồng phát, phụ đề và mốc bỏ qua của tập tiếp theo được tìm sẵn. Vài giây đầu của tập cũng được tải, và trên kết nối có đo lưu lượng thì chỉ khi mục này bật.</string>
-    <string name="settings_preload_torrents">Torrent cũng tải các mảnh đầu tiên như vậy và không tải lên gì cho đến khi tập phát.</string>
+    <string name="settings_preload_torrents">Torrent cũng tải các mảnh đầu tiên như vậy.</string>
     <string name="settings_preload_a11y_dimmed">Cần bật \"Tự động phát tập tiếp\"</string>
     <string name="settings_skip_opening">Tự động bỏ qua phần mở đầu</string>
     <string name="settings_skip_recap">Tự động bỏ qua phần tóm tắt</string>

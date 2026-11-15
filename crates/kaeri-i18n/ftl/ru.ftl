@@ -11356,7 +11356,7 @@ settings-preload-metered = Предзагружать видео по лимит
 settings-preload-detail-metered = Во время эндинга находятся поток, субтитры и моменты пропуска следующей серии. Её первые секунды тоже загружаются, а по лимитному подключению только когда это включено.
 
 # Sentence added after the line under the row while torrent playback is on.
-settings-preload-torrents = Торренты так же загружают первые части и ничего не отдают, пока серия не начнётся.
+settings-preload-torrents = Торренты так же загружают первые части.
 
 # Screen reader hint on the preload row while it is dimmed because Auto-play next is off. The terminal shows it at the start of the note.
 settings-preload-a11y-dimmed = Нужно включить «Автоматически включать следующую серию»

@@ -3447,7 +3447,7 @@
     <string name="settings_preload_metered">Pré-carregar vídeo em conexões limitadas</string>
     <string name="settings_preload_detail_android">Durante o encerramento, o stream, as legendas e os tempos de pulo do episódio seguinte são encontrados. Os primeiros segundos também carregam, e com dados móveis ou Wi-Fi limitado só quando isto está ativado.</string>
     <string name="settings_preload_detail_metered">Durante o encerramento, o stream, as legendas e os tempos de pulo do episódio seguinte são encontrados. Os primeiros segundos também carregam, e em uma conexão limitada só quando isto está ativado.</string>
-    <string name="settings_preload_torrents">Torrents carregam as primeiras partes do mesmo jeito e não enviam nada até o episódio começar.</string>
+    <string name="settings_preload_torrents">Torrents carregam as primeiras partes do mesmo jeito.</string>
     <string name="settings_preload_a11y_dimmed">Requer \"Reproduzir o próximo automaticamente\"</string>
     <string name="settings_skip_opening">Pular abertura automaticamente</string>
     <string name="settings_skip_recap">Pular resumos automaticamente</string>

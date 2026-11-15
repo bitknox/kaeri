@@ -8142,7 +8142,7 @@
     <value>エンディング中に、次のエピソードのストリーム、字幕、スキップ位置を探します。最初の数秒も読み込みますが、従量制課金接続ではこれがオンのときだけです。</value>
   </data>
   <data name="SettingsPreloadTorrents" xml:space="preserve">
-    <value>トレントも同じように最初のピースを読み込み、エピソードが再生されるまで何もアップロードしません。</value>
+    <value>トレントも同じように最初のピースを読み込みます。</value>
   </data>
   <data name="SettingsPreloadA11yDimmed" xml:space="preserve">
     <value>「次のエピソードを自動再生」が必要です</value>

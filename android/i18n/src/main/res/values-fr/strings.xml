@@ -3447,7 +3447,7 @@
     <string name="settings_preload_metered">Précharger la vidéo sur les connexions limitées</string>
     <string name="settings_preload_detail_android">Pendant le générique de fin, le flux, les sous-titres et les repères de saut de l’épisode suivant sont trouvés. Ses premières secondes se chargent aussi, et en données mobiles ou sur un Wi-Fi limité seulement si ceci est activé.</string>
     <string name="settings_preload_detail_metered">Pendant le générique de fin, le flux, les sous-titres et les repères de saut de l’épisode suivant sont trouvés. Ses premières secondes se chargent aussi, et sur une connexion limitée seulement si ceci est activé.</string>
-    <string name="settings_preload_torrents">Les torrents chargent leurs premiers morceaux de la même façon et n’envoient rien tant que l’épisode ne joue pas.</string>
+    <string name="settings_preload_torrents">Les torrents chargent leurs premiers morceaux de la même façon.</string>
     <string name="settings_preload_a11y_dimmed">Nécessite « Lecture automatique de la suite »</string>
     <string name="settings_skip_opening">Passer le générique d’ouverture automatiquement</string>
     <string name="settings_skip_recap">Passer les résumés automatiquement</string>

@@ -11088,7 +11088,7 @@ settings-preload-metered = Tarifeli bağlantılarda videoyu önceden yükle
 settings-preload-detail-metered = Bitiş sırasında sonraki bölümün yayını, altyazıları ve atlama zamanları bulunur. İlk saniyeleri de yüklenir; tarifeli bir bağlantıda yalnızca bu açıkken.
 
 # Sentence added after the line under the row while torrent playback is on.
-settings-preload-torrents = Torrentler ilk parçalarını aynı şekilde yükler ve bölüm oynayana kadar hiçbir şey yüklemez.
+settings-preload-torrents = Torrentler ilk parçalarını aynı şekilde yükler.
 
 # Screen reader hint on the preload row while it is dimmed because Auto-play next is off. The terminal shows it at the start of the note.
 settings-preload-a11y-dimmed = "Sonrakini otomatik oynat" gerekli

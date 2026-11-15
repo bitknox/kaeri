@@ -3193,7 +3193,7 @@
     <string name="settings_preload_metered">従量制課金接続でビデオを先読み</string>
     <string name="settings_preload_detail_android">エンディング中に、次のエピソードのストリーム、字幕、スキップ位置を探します。最初の数秒も読み込みますが、モバイルデータ通信や従量制のWi-Fiではこれがオンのときだけです。</string>
     <string name="settings_preload_detail_metered">エンディング中に、次のエピソードのストリーム、字幕、スキップ位置を探します。最初の数秒も読み込みますが、従量制課金接続ではこれがオンのときだけです。</string>
-    <string name="settings_preload_torrents">トレントも同じように最初のピースを読み込み、エピソードが再生されるまで何もアップロードしません。</string>
+    <string name="settings_preload_torrents">トレントも同じように最初のピースを読み込みます。</string>
     <string name="settings_preload_a11y_dimmed">「次のエピソードを自動再生」が必要です</string>
     <string name="settings_skip_opening">オープニングを自動でスキップ</string>
     <string name="settings_skip_recap">前回のあらすじを自動でスキップ</string>

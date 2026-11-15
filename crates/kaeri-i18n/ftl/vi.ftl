@@ -10954,7 +10954,7 @@ settings-preload-metered = Tải trước video trên kết nối có đo lưu l
 settings-preload-detail-metered = Trong phần kết thúc, luồng phát, phụ đề và mốc bỏ qua của tập tiếp theo được tìm sẵn. Vài giây đầu của tập cũng được tải, và trên kết nối có đo lưu lượng thì chỉ khi mục này bật.
 
 # Sentence added after the line under the row while torrent playback is on.
-settings-preload-torrents = Torrent cũng tải các mảnh đầu tiên như vậy và không tải lên gì cho đến khi tập phát.
+settings-preload-torrents = Torrent cũng tải các mảnh đầu tiên như vậy.
 
 # Screen reader hint on the preload row while it is dimmed because Auto-play next is off. The terminal shows it at the start of the note.
 settings-preload-a11y-dimmed = Cần bật "Tự động phát tập tiếp"

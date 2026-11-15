@@ -11997,7 +11997,7 @@
     <comment>Line under the row on Windows and Linux, and the note under the terminal's settings list.</comment>
   </data>
   <data name="SettingsPreloadTorrents" xml:space="preserve">
-    <value>Torrents load their first pieces the same way and upload nothing until the episode plays.</value>
+    <value>Torrents load their first pieces the same way.</value>
     <comment>Sentence added after the line under the row while torrent playback is on.</comment>
   </data>
   <data name="SettingsPreloadA11yDimmed" xml:space="preserve">

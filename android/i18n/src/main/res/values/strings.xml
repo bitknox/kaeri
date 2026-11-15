@@ -6864,7 +6864,7 @@
     <!-- Line under the row on Windows and Linux, and the note under the terminal's settings list. -->
     <string name="settings_preload_detail_metered">During the ending, the next episode\'s stream, subtitles and skip times are found. Its first seconds load too, and on a metered connection only when this is on.</string>
     <!-- Sentence added after the line under the row while torrent playback is on. -->
-    <string name="settings_preload_torrents">Torrents load their first pieces the same way and upload nothing until the episode plays.</string>
+    <string name="settings_preload_torrents">Torrents load their first pieces the same way.</string>
     <!-- Screen reader hint on the preload row while it is dimmed because Auto-play next is off. The terminal shows it at the start of the note. -->
     <string name="settings_preload_a11y_dimmed">Needs Auto-play next</string>
     <!-- Row: skip the opening. -->

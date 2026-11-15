@@ -11088,7 +11088,7 @@ settings-preload-metered = Förladda video på anslutningar med datapriser
 settings-preload-detail-metered = Under avslutningen hittas nästa avsnitts ström, undertexter och hopptider. Dess första sekunder laddas också, och på en anslutning med datapriser bara när det här är på.
 
 # Sentence added after the line under the row while torrent playback is on.
-settings-preload-torrents = Torrenter laddar sina första delar på samma sätt och laddar inte upp något förrän avsnittet spelas.
+settings-preload-torrents = Torrenter laddar sina första delar på samma sätt.
 
 # Screen reader hint on the preload row while it is dimmed because Auto-play next is off. The terminal shows it at the start of the note.
 settings-preload-a11y-dimmed = Kräver ”Spela nästa automatiskt”

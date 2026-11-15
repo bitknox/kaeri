@@ -8802,7 +8802,7 @@
     <value>Durante o encerramento, o stream, as legendas e os tempos de pulo do episódio seguinte são encontrados. Os primeiros segundos também carregam, e em uma conexão limitada só quando isto está ativado.</value>
   </data>
   <data name="SettingsPreloadTorrents" xml:space="preserve">
-    <value>Torrents carregam as primeiras partes do mesmo jeito e não enviam nada até o episódio começar.</value>
+    <value>Torrents carregam as primeiras partes do mesmo jeito.</value>
   </data>
   <data name="SettingsPreloadA11yDimmed" xml:space="preserve">
     <value>Requer "Reproduzir o próximo automaticamente"</value>
