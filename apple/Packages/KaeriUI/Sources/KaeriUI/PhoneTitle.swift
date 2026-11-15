@@ -543,16 +543,15 @@ struct PhoneEpisodes: View {
                         .onDisappear { pickers?.onScreen.remove(row.number) }
                 }
             } else {
-                // The row above the episodes, where the list already says it will be there: the
-                // watched run folds away from three episodes watched, and a long series has its
-                // range menu.
-                if (entry.progress?.done ?? 0) >= 3 || (entry.episodes ?? 0) > 100 {
-                    Text("Episodes 1 to 2 watched") // i18n-skip
+                // The row above the episodes, where the list already says it will be there.
+                let folds = (entry.progress?.done ?? 0) >= 3
+                if Self.rowAboveEpisodes(entry, dub: dub) {
+                    Text(folds ? "Episodes 1 to 2 watched" : "Dubbed") // i18n-skip
                         .font(.ui(15))
                         .foregroundStyle(.haze)
                         .redacted(reason: .placeholder)
                         .accessibilityHidden(true)
-                        .padding(.leading, 34)
+                        .padding(.leading, folds ? 34 : 0)
                         .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
                         .bareRow(inset)
                 }
@@ -776,3 +775,12 @@ extension TitleAction {
     }
 }
 #endif
+
+extension PhoneEpisodes {
+    /// Whether the list already says the row above the episodes will be there: the watched run
+    /// folds away from three episodes watched, a long series has its range menu, and a dubbed
+    /// title has its dub line.
+    static func rowAboveEpisodes(_ entry: Entry, dub: String?) -> Bool {
+        (entry.progress?.done ?? 0) >= 3 || (entry.episodes ?? 0) > 100 || entry.dub != nil || dub != nil
+    }
+}

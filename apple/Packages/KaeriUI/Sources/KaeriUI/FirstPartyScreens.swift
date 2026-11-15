@@ -800,13 +800,14 @@ struct LicensedLines: View {
                     .accessibilityHidden(known == nil)
                     .transition(.opacity)
             } else if pending {
-                LicensedLinePlaceholder()
+                LicensedLinePlaceholder(unlisted: Self.placeholderUnlisted(id, in: store))
                     .transition(.opacity)
             }
         }
         .font(font)
         .padding(.top, pending || drawn != nil ? 10 : 0)
         .animation(.standard, value: pending)
+        .animation(.standard, value: Self.placeholderUnlisted(id, in: store))
         .animation(.standard, value: drawn)
         .animation(.fadeIn, value: known)
         .animation(.fadeIn, value: waited)
@@ -864,6 +865,12 @@ struct LicensedLines: View {
         }
     }
 
+    /// Whether the placeholder holds the two lines of the answer for a title no source plays:
+    /// once its episodes say so, that answer is the one on its way.
+    static func placeholderUnlisted(_ id: AnilistId, in store: AppStore) -> Bool {
+        store.titles.unlisted(id)
+    }
+
     /// Whether `lines` draws anything for an answer.
     static func hasLines(_ a: TitleAvailability) -> Bool {
         switch a.case {
@@ -877,11 +884,22 @@ struct LicensedLines: View {
 /// The room of a title's services line while it is not yet known where the title is listed: one
 /// line in the page's placeholder style.
 struct LicensedLinePlaceholder: View {
+    /// The episodes say no source set up plays the title, so the answer will be the listing line
+    /// and the link to choose services: the placeholder holds both, wrapped as they will be.
+    var unlisted = false
+
     var body: some View {
-        Text("Also on Lantern Library") // i18n-skip
-            .foregroundStyle(.haze)
-            .lineLimit(1)
-            .redacted(reason: .placeholder)
-            .accessibilityHidden(true)
+        VStack(alignment: .leading, spacing: 4) {
+            if unlisted {
+                Text(L.licensedListedOn(services: "Lantern Library")) // i18n-skip
+                Text(L.licensedChooseServices)
+            } else {
+                Text("Also on Lantern Library") // i18n-skip
+                    .lineLimit(1)
+            }
+        }
+        .foregroundStyle(.haze)
+        .redacted(reason: .placeholder)
+        .accessibilityHidden(true)
     }
 }

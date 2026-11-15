@@ -85,6 +85,14 @@ abstract class TitleOpenGeometry {
     @Test
     fun nothing_below_the_actions_moves_when_the_listing_lands() = assertStill(detailMs = 304L, listedMs = 1_504L)
 
+    /**
+     * A title no source plays: the episodes say so before the page lands, and where it is listed
+     * comes later in two lines, which the placeholder holds from the episodes on.
+     */
+    @Test
+    fun nothing_below_the_actions_moves_when_a_title_no_source_plays_is_listed() =
+        assertStill(detailMs = 704L, listedMs = 1_504L, unlisted = true)
+
     @Test
     fun the_listing_line_keeps_its_room_from_the_first_frame() {
         val (_, frames) = run(detailMs = 304L, listedMs = 1_504L)
@@ -109,8 +117,8 @@ abstract class TitleOpenGeometry {
         assertTrue("More about this show stands: $more", more.isNotEmpty())
     }
 
-    private fun assertStill(detailMs: Long, listedMs: Long = detailMs) {
-        val (_, frames) = run(detailMs, listedMs)
+    private fun assertStill(detailMs: Long, listedMs: Long = detailMs, unlisted: Boolean = false) {
+        val (_, frames) = run(detailMs, listedMs, unlisted)
         val tops = frames.mapNotNull { f -> f.more?.let { f.at to it } }
         assertTrue("More about this show shows", tops.isNotEmpty())
         val last = tops.last().second
@@ -123,25 +131,37 @@ abstract class TitleOpenGeometry {
 
     /**
      * Opens the title from its list's row and steps it frame by frame, the page landing at
-     * [detailMs] and where it is listed at [listedMs]: one service of the viewer's, a line of its own.
+     * [detailMs] and where it is listed at [listedMs]: one service of the viewer's, a line of its own,
+     * or with the episodes AniList's alone, [unlisted], a service it is listed on and the way to
+     * choose services.
      */
-    private fun run(detailMs: Long, listedMs: Long = detailMs): Pair<String, List<Frame>> {
+    private fun run(detailMs: Long, listedMs: Long = detailMs, unlisted: Boolean = false): Pair<String, List<Frame>> {
         val recorded = Scene.named("watching")
         AppClock.clock = Clock.fixed(recorded.recordedAt, ZoneId.of("Europe/Copenhagen"))
         val store = AppStore(scope, clock = { 0L }, artworkWithoutEngine = FixtureArt::bytes)
         val page = recorded.events.filterIsInstance<Event.Detail>().last { it.v1.id == TITLE && it.v1.detail?.partial != true }
-        val rows = recorded.events.filterIsInstance<Event.Episodes>().last { it.id == TITLE }
+        val recordedRows = recorded.events.filterIsInstance<Event.Episodes>().last { it.id == TITLE }
+        val rows = if (unlisted) Event.Episodes(TITLE, recordedRows.rows.map { it.copy(metadataOnly = true) }) else recordedRows
         // Everything else the scene knew, the lists with this title's row among them.
         store.apply(
             recorded.events.filter {
                 !(it is Event.Detail && it.v1.id == TITLE) && !(it is Event.Episodes && it.id == TITLE) && !(it is Event.Availability && it.v1.id == TITLE)
             },
         )
-        val listed = TitleAvailability(
-            id = TITLE,
-            case = AvailabilityCase.PLAYS_ALSO_ON,
-            alsoOn = listOf(ServiceLink(service = "Lantern Library", url = "https://lantern.example/title")), // i18n-skip
-        )
+        val listed = if (unlisted) {
+            TitleAvailability(
+                id = TITLE,
+                case = AvailabilityCase.NOT_IN_SOURCES,
+                others = listOf("Lantern Library"), // i18n-skip
+                chooseServices = true,
+            )
+        } else {
+            TitleAvailability(
+                id = TITLE,
+                case = AvailabilityCase.PLAYS_ALSO_ON,
+                alsoOn = listOf(ServiceLink(service = "Lantern Library", url = "https://lantern.example/title")), // i18n-skip
+            )
+        }
         assertTrue("the list's row is here", store.titles[TITLE] != null)
         compose.setContent { KaeriTheme { AppRoot(store, startTitle = TITLE) } }
         compose.mainClock.autoAdvance = false

@@ -5,6 +5,7 @@
 package app.kaeri.ui
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
@@ -33,8 +34,10 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import app.kaeri.design.Motion
@@ -104,9 +107,6 @@ internal fun ServiceLines(availability: TitleAvailability?, entry: app.kaeri.eng
     val store = LocalAppStore.current
     val navigator = LocalNavigator.current
     val colors = MaterialTheme.colorScheme
-    // The last answer that had a line, which the lines keep showing while they close.
-    var kept by remember(entry.id) { mutableStateOf(availability?.takeIf { it.hasLine }) }
-    if (availability.hasLine) kept = availability
     // No answer comes when AniList cannot be reached: the room closes once the main button stops
     // waiting for one.
     var waited by remember(entry.id) { mutableStateOf(false) }
@@ -114,9 +114,17 @@ internal fun ServiceLines(availability: TitleAvailability?, entry: app.kaeri.eng
         kotlinx.coroutines.delay(OFFERS_WAIT)
         waited = true
     }
-    val pending = availability == null && kept == null && !waited
+    // The answer counts once it is for what the episodes say of the sources. Before they come the
+    // title is taken to play here, and the answer for that would show only to give way to the next.
+    val rows = store.titles.episodes.collectAsStateWithLifecycle().value[entry.id]
+    val unlisted = rows?.firstOrNull()?.metadataOnly == true
+    val counted = availability?.takeIf { if (rows != null) it.playsHere == !unlisted else waited }
+    // The last answer that had a line, which the lines keep showing while they close.
+    var kept by remember(entry.id) { mutableStateOf(counted?.takeIf { it.hasLine }) }
+    if (counted.hasLine) kept = counted
+    val pending = counted == null && kept == null && !waited
     AnimatedVisibility(
-        pending || availability.hasLine,
+        pending || counted.hasLine,
         modifier = modifier,
         enter = expandVertically(Motion.standard(), expandFrom = Alignment.Top) + fadeIn(Motion.fadeIn()),
         exit = shrinkVertically(Motion.standard(), shrinkTowards = Alignment.Top) + fadeOut(Motion.standard()),
@@ -126,7 +134,7 @@ internal fun ServiceLines(availability: TitleAvailability?, entry: app.kaeri.eng
         // crossfades in place.
         Crossfade(kept, animationSpec = Motion.standard(), label = "service-lines-change") { shown -> // i18n-skip
             if (shown == null) {
-                ServiceLinePlaceholder()
+                ServiceLinePlaceholder(unlisted)
                 return@Crossfade
             }
             Column(Modifier.padding(top = 8.dp)) {
@@ -170,13 +178,31 @@ internal fun ServiceLines(availability: TitleAvailability?, entry: app.kaeri.eng
 /** How long the services line waits for its answer before its room closes: the Apple app's 2 s. */
 internal const val OFFERS_WAIT = 2_000L
 
-/** The services line's room while it is not yet known where the title is listed. */
+/** Whether a source set up plays the title, by the answer's case. */
+internal val TitleAvailability.playsHere: Boolean
+    get() = case == AvailabilityCase.PLAYS_HERE || case == AvailabilityCase.PLAYS_ALSO_ON
+
+/**
+ * The services line's room while it is not yet known where the title is listed. Once the episodes
+ * say no source plays it, [unlisted], the answer will be where it is listed and the way to choose
+ * services: the room holds both, the first wrapped as its words will be.
+ */
 @Composable
-private fun ServiceLinePlaceholder() {
-    Box(
-        Modifier.testTag(TITLE_PLACEHOLDER).padding(top = 8.dp).fillMaxWidth().heightIn(min = 48.dp),
-        contentAlignment = Alignment.CenterStart,
-    ) {
-        TextPlaceholder(0.5f, 20.dp)
+private fun ServiceLinePlaceholder(unlisted: Boolean) {
+    Column(Modifier.testTag(TITLE_PLACEHOLDER).padding(top = 8.dp).fillMaxWidth().animateContentSize(Motion.standard())) {
+        if (unlisted) {
+            Box {
+                Text(
+                    stringResource(R.string.title_listed_on, "Lantern Library"), // i18n-skip
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = Color.Transparent,
+                    modifier = Modifier.clearAndSetSemantics {},
+                )
+                TextPlaceholder(0.85f, 20.dp)
+            }
+        }
+        Box(Modifier.fillMaxWidth().heightIn(min = 48.dp), contentAlignment = Alignment.CenterStart) {
+            TextPlaceholder(if (unlisted) 0.4f else 0.5f, 20.dp)
+        }
     }
 }
