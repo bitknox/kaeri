@@ -3169,6 +3169,9 @@ episodes-release-dub = Dubbed
 # After a { -release } in the picker: it is the one Kaeri would play on its own.
 episodes-release-current-pick = Current pick
 
+# Replaces the missing-episode status on the title page while a check runs.
+episode-missing-checking = Checking your sources…
+
 # Action label in the help overlay and the command palette.
 keys-action-show-keys = Show keys
 
@@ -3420,6 +3423,12 @@ keys-hint-stop = Stop
 
 # Short form of an action for the status line's hints, drawn beside its key. Room is tight, so keep it to a word or two.
 keys-hint-play-next = Play next
+
+# Hint for the Refresh key on a title page whose next episode no source has yet. Keep it to a word or two.
+keys-hint-check-again = Check again
+
+# Hint for the play key on a title page whose next episode no source has yet: it plays the one before.
+keys-hint-play-episode = Play episode { $episode }
 
 # Short form of an action for the status line's hints, drawn beside its key. Room is tight, so keep it to a word or two.
 keys-hint-episodes = Episodes
@@ -6434,6 +6443,9 @@ action-check-now = Check now
 # Button that checks a { -source } again after it did not answer.
 action-check-again = Check again
 
+# Check again while the check runs. Keep it about as short as "Check again": the button keeps its width.
+action-checking = Checking
+
 # Button that opens the system's own settings for the app.
 action-open-settings = Open settings
 
@@ -6499,6 +6511,9 @@ time-minutes-left = { $minutes } min left
 
 # A length in minutes, for an episode.
 time-minutes = { $minutes } min
+
+# A length in hours, inside time-ago.
+time-hours = { $hours } h
 
 # A countdown that has run out: the thing is happening now. Lower case, as it stands inside a line.
 time-now-inline = now
@@ -13179,6 +13194,32 @@ source-picker-coverage =
        *[other] { $covered } of { $of } episodes
     }
 
+# Under a source that lists every episode that is out.
+source-picker-episodes =
+    { $count ->
+        [one] Episode { $first }
+       *[other] Episodes { $first } to { $last }
+    }
+
+# Under a source that lacks the newest episodes, within a week of them airing. $missing is one number, source-picker-missing-pair or source-picker-missing-range.
+source-picker-episodes-not-yet = Episodes { $first } to { $last }. Not { $missing } yet
+
+# The same, more than a week after the episodes aired.
+source-picker-episodes-not = Episodes { $first } to { $last }. Not { $missing }
+
+# Two episodes a source lacks, inside the missing part of a source's line.
+source-picker-missing-pair = { $a } or { $b }
+
+# Three or more episodes in a row a source lacks, inside the missing part of a source's line.
+source-picker-missing-range = { $first } to { $last }
+
+# Under a source with a gap in the middle, such as "5 of 6 episodes. Not 3".
+source-picker-coverage-missing =
+    { $of ->
+        [one] { $covered } of { $of } episode. Not { $missing }
+       *[other] { $covered } of { $of } episodes. Not { $missing }
+    }
+
 # Under a source that is switched off in Settings.
 source-note-off = Switched off
 
@@ -15092,6 +15133,42 @@ episode-go-to-none = No episode { $number }. This show has { $last }.
 
 # Shown when the number typed is an episode with no date that has not come out.
 episode-go-to-not-out = Episode { $number } isn't out yet. The latest is { $latest }.
+
+# Status, first sentence, within a day of the episode airing.
+episode-missing-aired = Episode { $episode } aired { $ago }.
+
+# Status, first sentence, a day or more after the episode aired.
+episode-missing-aired-on = Episode { $episode } aired on { $date }.
+
+# Status, second sentence, until a check the person asked for comes back empty.
+episode-missing-not-yet = Your sources don't have it yet.
+
+# Status, second sentence, after a check the person asked for came back empty, and once Kaeri has stopped looking by itself.
+episode-missing-still = Your sources still don't have it.
+
+# Status, second sentence, after a check where none of the person's sources answered.
+episode-missing-no-answer = Your sources didn't answer.
+
+# Status, last sentence, during the hours Kaeri looks for the episode by itself.
+episode-missing-looks-again = Kaeri looks again every { $minutes } minutes.
+
+# Status a week after the episode aired, when no source has listed it.
+episode-missing-none = None of your sources has it.
+
+# Status, last sentence, while the device is offline during the hours Kaeri looks by itself.
+episode-missing-offline = Kaeri looks for it when you're back online.
+
+# Row note of an episode that aired within the last day. The span is already worded ("25 min", "3 h").
+episode-row-aired-ago = Aired { $ago }
+
+# Row note beside when it aired, for an episode that aired in the last week and no source lists yet.
+episode-unsourced-yet = Not in your sources yet
+
+# Announced once to screen readers when a check finds the missing episode while its page is open.
+episode-found-announcement = Episode { $episode } is in your sources now.
+
+# Tooltip and screen reader hint of Check again, while Kaeri looks for the episode by itself.
+episode-check-again-help = Kaeri also looks by itself every { $minutes } minutes for { $hours } hours after an episode airs.
 
 # Title of the settings group and the screen.
 torrents-title = Torrents

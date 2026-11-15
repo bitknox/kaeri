@@ -4892,6 +4892,11 @@ pub fn episodes_release_current_pick() -> String {
     text("episodes-release-current-pick", &[])
 }
 
+/// Replaces the missing-episode status on the title page while a check runs.
+pub fn episode_missing_checking() -> String {
+    text("episode-missing-checking", &[])
+}
+
 /// Action label in the help overlay and the command palette.
 pub fn keys_action_show_keys() -> String {
     text("keys-action-show-keys", &[])
@@ -5310,6 +5315,16 @@ pub fn keys_hint_stop() -> String {
 /// Short form of an action for the status line's hints, drawn beside its key. Room is tight, so keep it to a word or two.
 pub fn keys_hint_play_next() -> String {
     text("keys-hint-play-next", &[])
+}
+
+/// Hint for the Refresh key on a title page whose next episode no source has yet. Keep it to a word or two.
+pub fn keys_hint_check_again() -> String {
+    text("keys-hint-check-again", &[])
+}
+
+/// Hint for the play key on a title page whose next episode no source has yet: it plays the one before.
+pub fn keys_hint_play_episode(episode: i64) -> String {
+    text("keys-hint-play-episode", &[("episode", Arg::Plain(episode))])
 }
 
 /// Short form of an action for the status line's hints, drawn beside its key. Room is tight, so keep it to a word or two.
@@ -10215,6 +10230,11 @@ pub fn action_check_again() -> String {
     text("action-check-again", &[])
 }
 
+/// Check again while the check runs. Keep it about as short as "Check again": the button keeps its width.
+pub fn action_checking() -> String {
+    text("action-checking", &[])
+}
+
 /// Button that opens the system's own settings for the app.
 pub fn action_open_settings() -> String {
     text("action-open-settings", &[])
@@ -10323,6 +10343,11 @@ pub fn time_minutes_left(minutes: i64) -> String {
 /// A length in minutes, for an episode.
 pub fn time_minutes(minutes: i64) -> String {
     text("time-minutes", &[("minutes", Arg::Int(minutes))])
+}
+
+/// A length in hours, inside time-ago.
+pub fn time_hours(hours: i64) -> String {
+    text("time-hours", &[("hours", Arg::Int(hours))])
 }
 
 /// A countdown that has run out: the thing is happening now. Lower case, as it stands inside a line.
@@ -20900,6 +20925,36 @@ pub fn source_picker_coverage(covered: i64, of: i64) -> String {
     text("source-picker-coverage", &[("covered", Arg::Int(covered)), ("of", Arg::Int(of))])
 }
 
+/// Under a source that lists every episode that is out.
+pub fn source_picker_episodes(count: i64, first: i64, last: i64) -> String {
+    text("source-picker-episodes", &[("count", Arg::Int(count)), ("first", Arg::Plain(first)), ("last", Arg::Plain(last))])
+}
+
+/// Under a source that lacks the newest episodes, within a week of them airing. $missing is one number, source-picker-missing-pair or source-picker-missing-range.
+pub fn source_picker_episodes_not_yet(first: i64, last: i64, missing: &str) -> String {
+    text("source-picker-episodes-not-yet", &[("first", Arg::Plain(first)), ("last", Arg::Plain(last)), ("missing", Arg::Text(missing))])
+}
+
+/// The same, more than a week after the episodes aired.
+pub fn source_picker_episodes_not(first: i64, last: i64, missing: &str) -> String {
+    text("source-picker-episodes-not", &[("first", Arg::Plain(first)), ("last", Arg::Plain(last)), ("missing", Arg::Text(missing))])
+}
+
+/// Two episodes a source lacks, inside the missing part of a source's line.
+pub fn source_picker_missing_pair(a: i64, b: i64) -> String {
+    text("source-picker-missing-pair", &[("a", Arg::Plain(a)), ("b", Arg::Plain(b))])
+}
+
+/// Three or more episodes in a row a source lacks, inside the missing part of a source's line.
+pub fn source_picker_missing_range(first: i64, last: i64) -> String {
+    text("source-picker-missing-range", &[("first", Arg::Plain(first)), ("last", Arg::Plain(last))])
+}
+
+/// Under a source with a gap in the middle, such as "5 of 6 episodes. Not 3".
+pub fn source_picker_coverage_missing(covered: i64, of: i64, missing: &str) -> String {
+    text("source-picker-coverage-missing", &[("covered", Arg::Int(covered)), ("of", Arg::Int(of)), ("missing", Arg::Text(missing))])
+}
+
 /// Under a source that is switched off in Settings.
 pub fn source_note_off() -> String {
     text("source-note-off", &[])
@@ -24009,6 +24064,66 @@ pub fn episode_go_to_none(number: i64, last: i64) -> String {
 /// Shown when the number typed is an episode with no date that has not come out.
 pub fn episode_go_to_not_out(number: i64, latest: i64) -> String {
     text("episode-go-to-not-out", &[("number", Arg::Plain(number)), ("latest", Arg::Plain(latest))])
+}
+
+/// Status, first sentence, within a day of the episode airing.
+pub fn episode_missing_aired(episode: i64, ago: &str) -> String {
+    text("episode-missing-aired", &[("episode", Arg::Plain(episode)), ("ago", Arg::Text(ago))])
+}
+
+/// Status, first sentence, a day or more after the episode aired.
+pub fn episode_missing_aired_on(episode: i64, date: &str) -> String {
+    text("episode-missing-aired-on", &[("episode", Arg::Plain(episode)), ("date", Arg::Text(date))])
+}
+
+/// Status, second sentence, until a check the person asked for comes back empty.
+pub fn episode_missing_not_yet() -> String {
+    text("episode-missing-not-yet", &[])
+}
+
+/// Status, second sentence, after a check the person asked for came back empty, and once Kaeri has stopped looking by itself.
+pub fn episode_missing_still() -> String {
+    text("episode-missing-still", &[])
+}
+
+/// Status, second sentence, after a check where none of the person's sources answered.
+pub fn episode_missing_no_answer() -> String {
+    text("episode-missing-no-answer", &[])
+}
+
+/// Status, last sentence, during the hours Kaeri looks for the episode by itself.
+pub fn episode_missing_looks_again(minutes: i64) -> String {
+    text("episode-missing-looks-again", &[("minutes", Arg::Int(minutes))])
+}
+
+/// Status a week after the episode aired, when no source has listed it.
+pub fn episode_missing_none() -> String {
+    text("episode-missing-none", &[])
+}
+
+/// Status, last sentence, while the device is offline during the hours Kaeri looks by itself.
+pub fn episode_missing_offline() -> String {
+    text("episode-missing-offline", &[])
+}
+
+/// Row note of an episode that aired within the last day. The span is already worded ("25 min", "3 h").
+pub fn episode_row_aired_ago(ago: &str) -> String {
+    text("episode-row-aired-ago", &[("ago", Arg::Text(ago))])
+}
+
+/// Row note beside when it aired, for an episode that aired in the last week and no source lists yet.
+pub fn episode_unsourced_yet() -> String {
+    text("episode-unsourced-yet", &[])
+}
+
+/// Announced once to screen readers when a check finds the missing episode while its page is open.
+pub fn episode_found_announcement(episode: i64) -> String {
+    text("episode-found-announcement", &[("episode", Arg::Plain(episode))])
+}
+
+/// Tooltip and screen reader hint of Check again, while Kaeri looks for the episode by itself.
+pub fn episode_check_again_help(minutes: i64, hours: i64) -> String {
+    text("episode-check-again-help", &[("minutes", Arg::Int(minutes)), ("hours", Arg::Int(hours))])
 }
 
 /// Title of the settings group and the screen.

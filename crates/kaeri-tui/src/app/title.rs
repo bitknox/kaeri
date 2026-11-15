@@ -947,6 +947,10 @@ mod tests {
             note: None,
             releases,
             pinned_release: None,
+            first: None,
+            last: None,
+            lacking: Vec::new(),
+            lacking_since: None,
         };
         a.apply(Event::SourceOptions {
             id,

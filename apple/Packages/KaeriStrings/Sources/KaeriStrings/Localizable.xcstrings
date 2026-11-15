@@ -11547,6 +11547,18 @@
         }
       }
     },
+    "action-checking" : {
+      "comment" : "Check again while the check runs. Keep it about as short as \"Check again\": the button keeps its width.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Checking"
+          }
+        }
+      }
+    },
     "action-clear" : {
       "comment" : "Button that empties a list or a field.",
       "extractionState" : "manual",
@@ -68027,6 +68039,18 @@
         }
       }
     },
+    "episode-check-again-help" : {
+      "comment" : "Tooltip and screen reader hint of Check again, while Kaeri looks for the episode by itself. Argument 1: minutes (Int). Argument 2: hours (Int).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kaeri also looks by itself every %1$lld minutes for %2$lld hours after an episode airs."
+          }
+        }
+      }
+    },
     "episode-download-done" : {
       "comment" : "Line under that button once the file is saved.",
       "extractionState" : "manual",
@@ -69603,6 +69627,18 @@
         }
       }
     },
+    "episode-found-announcement" : {
+      "comment" : "Announced once to screen readers when a check finds the missing episode while its page is open. Argument 1: episode (Plain).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Episode %1$@ is in your sources now."
+          }
+        }
+      }
+    },
     "episode-go-to" : {
       "comment" : "Item of the episode range menu, and the title of its number field. The ellipsis marks that it asks for a number.",
       "extractionState" : "manual",
@@ -70859,6 +70895,102 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Đã đánh dấu tập %1$@ là đã xem."
+          }
+        }
+      }
+    },
+    "episode-missing-aired" : {
+      "comment" : "Status, first sentence, within a day of the episode airing. Argument 1: episode (Plain). Argument 2: ago (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Episode %1$@ aired %2$@."
+          }
+        }
+      }
+    },
+    "episode-missing-aired-on" : {
+      "comment" : "Status, first sentence, a day or more after the episode aired. Argument 1: episode (Plain). Argument 2: date (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Episode %1$@ aired on %2$@."
+          }
+        }
+      }
+    },
+    "episode-missing-looks-again" : {
+      "comment" : "Status, last sentence, during the hours Kaeri looks for the episode by itself. Argument 1: minutes (Int).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kaeri looks again every %1$lld minutes."
+          }
+        }
+      }
+    },
+    "episode-missing-no-answer" : {
+      "comment" : "Status, second sentence, after a check where none of the person's sources answered.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Your sources didn't answer."
+          }
+        }
+      }
+    },
+    "episode-missing-none" : {
+      "comment" : "Status a week after the episode aired, when no source has listed it.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "None of your sources has it."
+          }
+        }
+      }
+    },
+    "episode-missing-not-yet" : {
+      "comment" : "Status, second sentence, until a check the person asked for comes back empty.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Your sources don't have it yet."
+          }
+        }
+      }
+    },
+    "episode-missing-offline" : {
+      "comment" : "Status, last sentence, while the device is offline during the hours Kaeri looks by itself.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kaeri looks for it when you're back online."
+          }
+        }
+      }
+    },
+    "episode-missing-still" : {
+      "comment" : "Status, second sentence, after a check the person asked for came back empty, and once Kaeri has stopped looking by itself.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Your sources still don't have it."
           }
         }
       }
@@ -72207,6 +72339,18 @@
         }
       }
     },
+    "episode-row-aired-ago" : {
+      "comment" : "Row note of an episode that aired within the last day. The span is already worded (\"25 min\", \"3 h\"). Argument 1: ago (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aired %1$@"
+          }
+        }
+      }
+    },
     "episode-row-airs" : {
       "comment" : "Row note for an episode that has not aired, with when it does. Argument 1: when (Text).",
       "extractionState" : "manual",
@@ -72959,6 +73103,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Không có nguồn nào có tập này"
+          }
+        }
+      }
+    },
+    "episode-unsourced-yet" : {
+      "comment" : "Row note beside when it aired, for an episode that aired in the last week and no source lists yet.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Not in your sources yet"
           }
         }
       }
@@ -316201,6 +316357,40 @@
         }
       }
     },
+    "source-picker-coverage-missing" : {
+      "comment" : "Under a source with a gap in the middle, such as \"5 of 6 episodes. Not 3\". Argument 1: covered (Int). Argument 2: of (Int). Argument 3: missing (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%#@of@"
+          },
+          "substitutions" : {
+            "of" : {
+              "argNum" : 2,
+              "formatSpecifier" : "lld",
+              "variations" : {
+                "plural" : {
+                  "one" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%1$lld of %2$lld episode. Not %3$@"
+                    }
+                  },
+                  "other" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%1$lld of %2$lld episodes. Not %3$@"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "source-picker-empty" : {
       "comment" : "Line when the picker found no stream for the episode.",
       "extractionState" : "manual",
@@ -316285,6 +316475,64 @@
         }
       }
     },
+    "source-picker-episodes" : {
+      "comment" : "Under a source that lists every episode that is out. Argument 1: count (Int). Argument 2: first (Plain). Argument 3: last (Plain).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%#@count@"
+          },
+          "substitutions" : {
+            "count" : {
+              "argNum" : 1,
+              "formatSpecifier" : "lld",
+              "variations" : {
+                "plural" : {
+                  "one" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "Episode %2$@"
+                    }
+                  },
+                  "other" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "Episodes %2$@ to %3$@"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "source-picker-episodes-not" : {
+      "comment" : "The same, more than a week after the episodes aired. Argument 1: first (Plain). Argument 2: last (Plain). Argument 3: missing (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Episodes %1$@ to %2$@. Not %3$@"
+          }
+        }
+      }
+    },
+    "source-picker-episodes-not-yet" : {
+      "comment" : "Under a source that lacks the newest episodes, within a week of them airing. $missing is one number, source-picker-missing-pair or source-picker-missing-range. Argument 1: first (Plain). Argument 2: last (Plain). Argument 3: missing (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Episodes %1$@ to %2$@. Not %3$@ yet"
+          }
+        }
+      }
+    },
     "source-picker-finding" : {
       "comment" : "Line while the picker looks for streams.",
       "extractionState" : "manual",
@@ -316365,6 +316613,30 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Đang tìm các nguồn…"
+          }
+        }
+      }
+    },
+    "source-picker-missing-pair" : {
+      "comment" : "Two episodes a source lacks, inside the missing part of a source's line. Argument 1: a (Plain). Argument 2: b (Plain).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ or %2$@"
+          }
+        }
+      }
+    },
+    "source-picker-missing-range" : {
+      "comment" : "Three or more episodes in a row a source lacks, inside the missing part of a source's line. Argument 1: first (Plain). Argument 2: last (Plain).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ to %2$@"
           }
         }
       }
@@ -359121,6 +359393,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "%1$@ trước"
+          }
+        }
+      }
+    },
+    "time-hours" : {
+      "comment" : "A length in hours, inside time-ago. Argument 1: hours (Int).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$lld h"
           }
         }
       }

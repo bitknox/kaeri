@@ -719,6 +719,8 @@ pub enum Event {
     SetupFrom(crate::group::JoinedSetup),
     /// What came in after adding a store, a book server or a folder, or why nothing did.
     CameIn(crate::came_in::CameIn),
+    // What a check of a missing episode came to: see `crate::missing`.
+    EpisodeChecked(crate::missing::EpisodeCheck),
     /// What a pasted invite link leads to, or why it leads nowhere.
     StorePreview(InvitePreview),
     /// A store was joined. The view moves into it if the user is still on the store list.

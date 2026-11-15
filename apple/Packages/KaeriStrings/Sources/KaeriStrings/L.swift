@@ -5054,6 +5054,9 @@ public enum L {
     /// Button that checks a { -source } again after it did not answer.
     public static var actionCheckAgain: String { string("action-check-again", fallback: "Check again") }
 
+    /// Check again while the check runs. Keep it about as short as "Check again": the button keeps its width.
+    public static var actionChecking: String { string("action-checking", fallback: "Checking") }
+
     /// Button that opens the system's own settings for the app.
     public static var actionOpenSettings: String { string("action-open-settings", fallback: "Open settings") }
 
@@ -5130,6 +5133,11 @@ public enum L {
     /// A length in minutes, for an episode.
     public static func timeMinutes(minutes: Int) -> String {
         Self.format("time-minutes", fallback: "%1$lld min", minutes)
+    }
+
+    /// A length in hours, inside time-ago.
+    public static func timeHours(hours: Int) -> String {
+        Self.format("time-hours", fallback: "%1$lld h", hours)
     }
 
     /// A countdown that has run out: the thing is happening now. Lower case, as it stands inside a line.
@@ -12591,6 +12599,36 @@ public enum L {
         Self.format("source-picker-coverage", fallback: "%1$lld of %2$lld episodes", covered, of)
     }
 
+    /// Under a source that lists every episode that is out.
+    public static func sourcePickerEpisodes(count: Int, first: Int, last: Int) -> String {
+        Self.format("source-picker-episodes", fallback: "Episodes %2$@ to %3$@", count, String(first), String(last))
+    }
+
+    /// Under a source that lacks the newest episodes, within a week of them airing. $missing is one number, source-picker-missing-pair or source-picker-missing-range.
+    public static func sourcePickerEpisodesNotYet(first: Int, last: Int, missing: String) -> String {
+        Self.format("source-picker-episodes-not-yet", fallback: "Episodes %1$@ to %2$@. Not %3$@ yet", String(first), String(last), missing)
+    }
+
+    /// The same, more than a week after the episodes aired.
+    public static func sourcePickerEpisodesNot(first: Int, last: Int, missing: String) -> String {
+        Self.format("source-picker-episodes-not", fallback: "Episodes %1$@ to %2$@. Not %3$@", String(first), String(last), missing)
+    }
+
+    /// Two episodes a source lacks, inside the missing part of a source's line.
+    public static func sourcePickerMissingPair(a: Int, b: Int) -> String {
+        Self.format("source-picker-missing-pair", fallback: "%1$@ or %2$@", String(a), String(b))
+    }
+
+    /// Three or more episodes in a row a source lacks, inside the missing part of a source's line.
+    public static func sourcePickerMissingRange(first: Int, last: Int) -> String {
+        Self.format("source-picker-missing-range", fallback: "%1$@ to %2$@", String(first), String(last))
+    }
+
+    /// Under a source with a gap in the middle, such as "5 of 6 episodes. Not 3".
+    public static func sourcePickerCoverageMissing(covered: Int, of: Int, missing: String) -> String {
+        Self.format("source-picker-coverage-missing", fallback: "%1$lld of %2$lld episodes. Not %3$@", covered, of, missing)
+    }
+
     /// Under a source that is switched off in Settings.
     public static var sourceNoteOff: String { string("source-note-off", fallback: "Switched off") }
 
@@ -14824,6 +14862,54 @@ public enum L {
     /// Shown when the number typed is an episode with no date that has not come out.
     public static func episodeGoToNotOut(number: Int, latest: Int) -> String {
         Self.format("episode-go-to-not-out", fallback: "Episode %1$@ isn't out yet. The latest is %2$@.", String(number), String(latest))
+    }
+
+    /// Status, first sentence, within a day of the episode airing.
+    public static func episodeMissingAired(episode: Int, ago: String) -> String {
+        Self.format("episode-missing-aired", fallback: "Episode %1$@ aired %2$@.", String(episode), ago)
+    }
+
+    /// Status, first sentence, a day or more after the episode aired.
+    public static func episodeMissingAiredOn(episode: Int, date: String) -> String {
+        Self.format("episode-missing-aired-on", fallback: "Episode %1$@ aired on %2$@.", String(episode), date)
+    }
+
+    /// Status, second sentence, until a check the person asked for comes back empty.
+    public static var episodeMissingNotYet: String { string("episode-missing-not-yet", fallback: "Your sources don't have it yet.") }
+
+    /// Status, second sentence, after a check the person asked for came back empty, and once Kaeri has stopped looking by itself.
+    public static var episodeMissingStill: String { string("episode-missing-still", fallback: "Your sources still don't have it.") }
+
+    /// Status, second sentence, after a check where none of the person's sources answered.
+    public static var episodeMissingNoAnswer: String { string("episode-missing-no-answer", fallback: "Your sources didn't answer.") }
+
+    /// Status, last sentence, during the hours Kaeri looks for the episode by itself.
+    public static func episodeMissingLooksAgain(minutes: Int) -> String {
+        Self.format("episode-missing-looks-again", fallback: "Kaeri looks again every %1$lld minutes.", minutes)
+    }
+
+    /// Status a week after the episode aired, when no source has listed it.
+    public static var episodeMissingNone: String { string("episode-missing-none", fallback: "None of your sources has it.") }
+
+    /// Status, last sentence, while the device is offline during the hours Kaeri looks by itself.
+    public static var episodeMissingOffline: String { string("episode-missing-offline", fallback: "Kaeri looks for it when you're back online.") }
+
+    /// Row note of an episode that aired within the last day. The span is already worded ("25 min", "3 h").
+    public static func episodeRowAiredAgo(ago: String) -> String {
+        Self.format("episode-row-aired-ago", fallback: "Aired %1$@", ago)
+    }
+
+    /// Row note beside when it aired, for an episode that aired in the last week and no source lists yet.
+    public static var episodeUnsourcedYet: String { string("episode-unsourced-yet", fallback: "Not in your sources yet") }
+
+    /// Announced once to screen readers when a check finds the missing episode while its page is open.
+    public static func episodeFoundAnnouncement(episode: Int) -> String {
+        Self.format("episode-found-announcement", fallback: "Episode %1$@ is in your sources now.", String(episode))
+    }
+
+    /// Tooltip and screen reader hint of Check again, while Kaeri looks for the episode by itself.
+    public static func episodeCheckAgainHelp(minutes: Int, hours: Int) -> String {
+        Self.format("episode-check-again-help", fallback: "Kaeri also looks by itself every %1$lld minutes for %2$lld hours after an episode airs.", minutes, hours)
     }
 
     /// Title of the settings group and the screen.

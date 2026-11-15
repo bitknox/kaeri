@@ -2973,6 +2973,8 @@
     <string name="action_check_now">Check now</string>
     <!-- Button that checks a { -source } again after it did not answer. -->
     <string name="action_check_again">Check again</string>
+    <!-- Check again while the check runs. Keep it about as short as "Check again": the button keeps its width. -->
+    <string name="action_checking">Checking</string>
     <!-- Button that opens the system's own settings for the app. -->
     <string name="action_open_settings">Open settings</string>
     <!-- Button that reports an error as a bug. -->
@@ -3017,6 +3019,8 @@
     <string name="time_minutes_left">%1$,d min left</string>
     <!-- A length in minutes, for an episode. -->
     <string name="time_minutes">%1$,d min</string>
+    <!-- A length in hours, inside time-ago. -->
+    <string name="time_hours">%1$,d h</string>
     <!-- A countdown that has run out: the thing is happening now. Lower case, as it stands inside a line. -->
     <string name="time_now_inline">now</string>
     <!-- How long ago, under a minute. Lower case, as it stands inside a line. -->
@@ -7508,6 +7512,24 @@
         <item quantity="one">%1$,d of %2$,d episode</item>
         <item quantity="other">%1$,d of %2$,d episodes</item>
     </plurals>
+    <!-- Under a source that lists every episode that is out. -->
+    <plurals name="source_picker_episodes">
+        <item quantity="one">Episode %2$d</item>
+        <item quantity="other">Episodes %2$d to %3$d</item>
+    </plurals>
+    <!-- Under a source that lacks the newest episodes, within a week of them airing. $missing is one number, source-picker-missing-pair or source-picker-missing-range. -->
+    <string name="source_picker_episodes_not_yet">Episodes %1$d to %2$d. Not %3$s yet</string>
+    <!-- The same, more than a week after the episodes aired. -->
+    <string name="source_picker_episodes_not">Episodes %1$d to %2$d. Not %3$s</string>
+    <!-- Two episodes a source lacks, inside the missing part of a source's line. -->
+    <string name="source_picker_missing_pair">%1$d or %2$d</string>
+    <!-- Three or more episodes in a row a source lacks, inside the missing part of a source's line. -->
+    <string name="source_picker_missing_range">%1$d to %2$d</string>
+    <!-- Under a source with a gap in the middle, such as "5 of 6 episodes. Not 3". -->
+    <plurals name="source_picker_coverage_missing">
+        <item quantity="one">%1$,d of %2$,d episode. Not %3$s</item>
+        <item quantity="other">%1$,d of %2$,d episodes. Not %3$s</item>
+    </plurals>
     <!-- Under a source that is switched off in Settings. -->
     <string name="source_note_off">Switched off</string>
     <!-- Under a source that failed a few times in a row. It is tried again shortly. -->
@@ -8789,6 +8811,30 @@
     <string name="episode_go_to_none">No episode %1$d. This show has %2$d.</string>
     <!-- Shown when the number typed is an episode with no date that has not come out. -->
     <string name="episode_go_to_not_out">Episode %1$d isn\'t out yet. The latest is %2$d.</string>
+    <!-- Status, first sentence, within a day of the episode airing. -->
+    <string name="episode_missing_aired">Episode %1$d aired %2$s.</string>
+    <!-- Status, first sentence, a day or more after the episode aired. -->
+    <string name="episode_missing_aired_on">Episode %1$d aired on %2$s.</string>
+    <!-- Status, second sentence, until a check the person asked for comes back empty. -->
+    <string name="episode_missing_not_yet">Your sources don\'t have it yet.</string>
+    <!-- Status, second sentence, after a check the person asked for came back empty, and once Kaeri has stopped looking by itself. -->
+    <string name="episode_missing_still">Your sources still don\'t have it.</string>
+    <!-- Status, second sentence, after a check where none of the person's sources answered. -->
+    <string name="episode_missing_no_answer">Your sources didn\'t answer.</string>
+    <!-- Status, last sentence, during the hours Kaeri looks for the episode by itself. -->
+    <string name="episode_missing_looks_again">Kaeri looks again every %1$,d minutes.</string>
+    <!-- Status a week after the episode aired, when no source has listed it. -->
+    <string name="episode_missing_none">None of your sources has it.</string>
+    <!-- Status, last sentence, while the device is offline during the hours Kaeri looks by itself. -->
+    <string name="episode_missing_offline">Kaeri looks for it when you\'re back online.</string>
+    <!-- Row note of an episode that aired within the last day. The span is already worded ("25 min", "3 h"). -->
+    <string name="episode_row_aired_ago">Aired %1$s</string>
+    <!-- Row note beside when it aired, for an episode that aired in the last week and no source lists yet. -->
+    <string name="episode_unsourced_yet">Not in your sources yet</string>
+    <!-- Announced once to screen readers when a check finds the missing episode while its page is open. -->
+    <string name="episode_found_announcement">Episode %1$d is in your sources now.</string>
+    <!-- Tooltip and screen reader hint of Check again, while Kaeri looks for the episode by itself. -->
+    <string name="episode_check_again_help">Kaeri also looks by itself every %1$,d minutes for %2$,d hours after an episode airs.</string>
     <!-- Title of the settings group and the screen. -->
     <string name="torrents_title">Torrents</string>
     <!-- Label and short value for the switch. -->

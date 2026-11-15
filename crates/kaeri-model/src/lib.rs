@@ -61,6 +61,7 @@ pub mod jobs;
 pub mod licensed;
 pub mod local;
 pub mod medium;
+pub mod missing;
 pub mod servers;
 #[rustfmt::skip]
 mod msg;

@@ -31,6 +31,50 @@ source-picker-coverage = { $covered } of { $of ->
    *[other] { $of } episodes
  }
 
+# Under a source that lists every episode that is out.
+# @arg count: int
+# @arg first: plain
+# @arg last: plain
+# @max 32
+source-picker-episodes = { $count ->
+    [one] Episode { $first }
+   *[other] Episodes { $first } to { $last }
+ }
+
+# Under a source that lacks the newest episodes, within a week of them airing. $missing is one number, source-picker-missing-pair or source-picker-missing-range.
+# @arg first: plain
+# @arg last: plain
+# @arg missing: text
+# @max 48
+source-picker-episodes-not-yet = Episodes { $first } to { $last }. Not { $missing } yet
+
+# The same, more than a week after the episodes aired.
+# @arg first: plain
+# @arg last: plain
+# @arg missing: text
+# @max 44
+source-picker-episodes-not = Episodes { $first } to { $last }. Not { $missing }
+
+# Two episodes a source lacks, inside the missing part of a source's line.
+# @arg a: plain
+# @arg b: plain
+source-picker-missing-pair = { $a } or { $b }
+
+# Three or more episodes in a row a source lacks, inside the missing part of a source's line.
+# @arg first: plain
+# @arg last: plain
+source-picker-missing-range = { $first } to { $last }
+
+# Under a source with a gap in the middle, such as "5 of 6 episodes. Not 3".
+# @arg covered: int
+# @arg of: int
+# @arg missing: text
+# @max 44
+source-picker-coverage-missing = { $covered } of { $of ->
+    [one] { $of } episode
+   *[other] { $of } episodes
+ }. Not { $missing }
+
 # Under a source that is switched off in Settings.
 # @max 24
 source-note-off = Switched off
