@@ -61697,6 +61697,64 @@
         }
       }
     },
+    "downloads-continued-both-title" : {
+      "comment" : "Title of that window while episodes and chapters download together.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Downloading episodes and chapters"
+          }
+        }
+      }
+    },
+    "downloads-continued-chapters-left" : {
+      "comment" : "Line in that window: how many chapters are still to finish. Beside the episodes' line when both download, as \"2 episodes left · 3 chapters left\". Argument 1: count (Int).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%#@count@"
+          },
+          "substitutions" : {
+            "count" : {
+              "argNum" : 1,
+              "formatSpecifier" : "lld",
+              "variations" : {
+                "plural" : {
+                  "one" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "One chapter left"
+                    }
+                  },
+                  "other" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%1$lld chapters left"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "downloads-continued-chapters-title" : {
+      "comment" : "Title of that window while only chapters download.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Downloading chapters"
+          }
+        }
+      }
+    },
     "downloads-continued-left" : {
       "comment" : "Line in that window: how many downloads are still to finish. Argument 1: count (Int).",
       "extractionState" : "manual",
