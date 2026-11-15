@@ -117,9 +117,9 @@ html.typeset #video::cue {
 	left: 0;
 }
 
-/* Ready's city at dusk: a gradient sky that src/cast-receiver/city.ts restyles a step at a time,
-   and two canvases that take turns, one fading in over the other. Nothing here runs an
-   animation of its own. The city is its own stacking context, so the canvases' order stays
+/* Ready's city at dusk: a gradient sky that stands in until src/cast-receiver/city.ts has its
+   first drawing, and two canvases that take turns, one fading in over the other. Nothing here
+   runs an animation of its own. The city is its own stacking context, so the canvases' order stays
    inside it and every later layer, the black one included, covers them. */
 #city {
 	isolation: isolate;

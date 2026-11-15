@@ -87,7 +87,7 @@ let player: Player | null = null;
 const video = $<HTMLVideoElement>('video');
 const typeset = new Typeset(video, base);
 const silent = new SilentPicture();
-const city = new City($('city'), now);
+const city = new City($('city'), now, new URL('city.js', base).href);
 let shown: ShownFrames | null = null;
 let debug: DebugStatusLine | null = null;
 // Files and playlists unpacked on the receiver; their errors count like the player's own.
@@ -296,7 +296,9 @@ function render() {
 	text('ready-line', t(`receiver-ready-${S.device}`));
 	$('ready-line').classList.toggle('on', !closing && (S.deviceKnown || at - S.startedAt >= T.hello));
 	$('closing-line').classList.toggle('on', closing);
-	if (closing) text('closing-line', t(`receiver-closing-${S.device}`, { seconds: Math.max(0, Math.ceil(T.close / 1000 - idleFor)) }));
+	// The closing line is set from the start of Ready, so its first showing has nothing new to
+	// format or lay out.
+	if (idle) text('closing-line', t(`receiver-closing-${S.device}`, { seconds: closing ? Math.max(0, Math.ceil(T.close / 1000 - idleFor)) : 30 }));
 
 	// Ten minutes with nothing to play: the page fades to black, then closes.
 	const resting = p === 'idle' || p === 'error' || p === 'gone';

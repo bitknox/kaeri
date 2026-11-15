@@ -3,6 +3,7 @@
 // The page (index.html, receiver.css) and its strings (i18n/, from tools/i18n) are committed.
 // This writes what is built from source or packages, which git ignores:
 //   app.js           the receiver, from src/cast-receiver/
+//   city.js          the worker that draws Ready's city, from src/cast-receiver/city-worker.ts
 //   vendor/jassub/   JASSUB for typeset subtitles, as separate files with their notices
 //   fonts/           Inter and Zen Kaku Gothic New, self-served, with fonts.css
 //   pcm/worker.js    the audio decoders' worker and the AudioWorklet, from src/cast-receiver/formats/
@@ -62,6 +63,7 @@ async function receiver() {
 	await bundle(join(site, 'src/cast-receiver/main.ts'), join(out, 'app.js'), [], {
 		__BUILD__: JSON.stringify(build()),
 	});
+	await bundle(join(site, 'src/cast-receiver/city-worker.ts'), join(out, 'city.js'));
 }
 
 async function pcm() {

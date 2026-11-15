@@ -308,7 +308,8 @@ try {
 	expect((await shown()).join() === 'city,ready', 'Ready shows the city, the name and its line only');
 	expect((await textOf('ready-line')) === 'Ready. Choose an episode on the iPhone.', 'Ready names the iPhone');
 	expect(await js<boolean>(`/^translate\\(-?\\d+px, -?\\d+px\\)$/.test(document.getElementById('ready').style.transform)`), 'Ready drifts against burn-in, a whole pixel at a time');
-	expect(await js<boolean>(`__receiver.city.visible && __receiver.city.draws > 0 && document.querySelector('#city canvas').width === 1920`), 'the city is drawn at the TV\'s pixels');
+	expect(await js<boolean>(`__receiver.city.visible && __receiver.city.draws > 0 && __receiver.city.pixels === 1280`), 'the city is drawn at the scene\'s 1280 px, light enough for the TV to take in a frame');
+	expect(await js<boolean>(`__receiver.city.offThread`), 'the city is drawn in a worker, off the main thread');
 	// Only the city's short crossfades every few seconds; nothing that runs on and on.
 	const running = await js<string[]>(`document.getAnimations().filter((a) => a.playState === 'running' && (a.effect.getTiming().iterations === Infinity || Number(a.effect.getTiming().duration) > 1500)).map((a) => (a.animationName ?? a.transitionProperty ?? 'animation') + ' on ' + (a.effect?.target?.id || a.effect?.target?.className || a.effect?.target?.tagName))`);
 	expect(running.length === 0, `Ready runs no long or endless animation (${running.join(', ')})`);

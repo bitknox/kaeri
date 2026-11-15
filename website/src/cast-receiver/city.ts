@@ -3,10 +3,13 @@
 // that switch slowly. Against burn-in the city pans: the near skyline 24 px every 2 min, the
 // far one 10, the stars 4. In the last 30 s the windows go out.
 //
-// Kept light for a TV: nothing runs an animation of its own. The sky is a CSS gradient restyled
-// a step at a time. Stars, moon and skylines are drawn into one of two canvases every few
-// seconds, and the new one fades in over the old with an opacity transition, so the compositor
-// does the in-between frames. The canvases are let go while the city is hidden.
+// Kept light for a TV: nothing runs an animation of its own. The sky, stars, moon and skylines
+// are drawn into one of two canvases every few seconds by a worker (city-worker.ts), off the
+// page's main thread, and the new one fades in over the old with an opacity transition, so the
+// compositor does the in-between frames. A CSS sky stands in until the first drawing lands. The
+// canvases are let go while the city is hidden.
+
+import type { CityReply, CityRequest } from './city-worker';
 
 export const SCENE = { W: 1280, H: 720, horizon: 590 };
 /** The idle minutes, and when the closing starts. */
@@ -126,7 +129,7 @@ export function skyStyle(dusk: number): string {
 	].join(', ');
 }
 
-type Ctx = CanvasRenderingContext2D;
+type Ctx = CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D;
 function rounded(g: Ctx, x: number, y: number, w: number, h: number, r: number) {
 	g.beginPath();
 	if (typeof g.roundRect === 'function') g.roundRect(x, y, w, h, r);
@@ -134,12 +137,39 @@ function rounded(g: Ctx, x: number, y: number, w: number, h: number, r: number) 
 	g.fill();
 }
 
-/** Stars, the moon and both skylines, over a clear canvas (the sky shows through). */
+/** The sky of skyStyle, drawn: the gradient, haze on the horizon, the last light in the west. */
+function drawSky(g: Ctx, dusk: number) {
+	const { W, H, horizon } = SCENE;
+	const qs = [...new Set([...SKY_DUSK.map((s) => s[0]), ...SKY_NIGHT.map((s) => s[0])])].sort((a, b) => a - b);
+	const sky = g.createLinearGradient(0, 0, 0, horizon);
+	for (const q of qs) sky.addColorStop(q, rgb(mix(ramp(SKY_DUSK, q), ramp(SKY_NIGHT, q), dusk)));
+	g.fillStyle = sky;
+	g.fillRect(0, 0, W, H);
+	const haze = mix([206, 130, 110], [44, 48, 84], dusk);
+	const hz = g.createLinearGradient(0, horizon - 150, 0, horizon + 10);
+	hz.addColorStop(0, rgb(haze, 0));
+	hz.addColorStop(1, rgb(haze, 0.35));
+	g.fillStyle = hz;
+	g.fillRect(0, horizon - 150, W, 160);
+	const glow = (1 - dusk) * 0.55;
+	if (glow > 0.001) {
+		const gl = g.createRadialGradient(980, horizon + 30, 0, 980, horizon + 30, 620);
+		gl.addColorStop(0, rgb(AMBER, glow));
+		gl.addColorStop(1, rgb(AMBER, 0));
+		g.fillStyle = gl;
+		g.fillRect(0, 0, W, H);
+	}
+}
+
+/**
+ * The whole scene: the sky, stars, the moon and both skylines. The sky is in the drawing so a
+ * step of it changes with the crossfade, rather than by repainting a full-screen gradient.
+ */
 export function drawCity(g: Ctx, m: Moment) {
 	const { W, H, horizon } = SCENE;
 	const t = m.t;
 	const dusk = m.dusk;
-	g.clearRect(0, 0, W, H);
+	drawSky(g, dusk);
 
 	// Stars come out as it darkens.
 	const sx = -t * 0.03;
@@ -271,11 +301,13 @@ export function drift(seconds: number): [number, number] {
 }
 
 const REVEAL_FROM = 0.2;
+
 const REVEAL_FOR = 1.6;
 
 export class City {
 	private sky: HTMLElement;
 	private canvases: HTMLCanvasElement[];
+	private worker: Worker | null = null;
 	private front = 0;
 	private drawn: string | null = null;
 	private skyKey = -1;
@@ -284,15 +316,62 @@ export class City {
 	private releaseTimer: ReturnType<typeof setTimeout> | null = null;
 	private revealStart: number | null = null;
 	private revealTimer: ReturnType<typeof setTimeout> | null = null;
+	/** The drawing the worker is on, and what to do when it lands. */
+	private pending: { id: number; then: () => void } | null = null;
+	private nextId = 0;
 	/** Draws, for the debug status and the checks. */
 	draws = 0;
+	/** The canvases' width in device pixels, 0 while let go. */
+	pixels = 0;
 
 	constructor(
 		private root: HTMLElement,
 		private clock: () => number = () => performance.now(),
+		workerUrl: string | null = null,
 	) {
 		this.sky = root.querySelector('.sky') as HTMLElement;
 		this.canvases = [...root.querySelectorAll('canvas')] as HTMLCanvasElement[];
+		if (workerUrl) this.startWorker(workerUrl);
+	}
+
+	/** Whether the drawing runs in a worker, off the page's main thread. */
+	get offThread() {
+		return this.worker != null;
+	}
+
+	private startWorker(url: string) {
+		if (typeof Worker === 'undefined' || typeof OffscreenCanvas === 'undefined') return;
+		if (!this.canvases.every((c) => typeof c.transferControlToOffscreen === 'function')) return;
+		try {
+			const worker = new Worker(url, { type: 'module' });
+			const offscreen = this.canvases.map((c) => c.transferControlToOffscreen());
+			worker.postMessage({ type: 'canvases', canvases: offscreen } satisfies CityRequest, offscreen);
+			worker.onmessage = (e: MessageEvent<CityReply>) => this.landed(e.data);
+			worker.onerror = () => this.lostWorker();
+			this.worker = worker;
+		} catch {
+			this.worker = null;
+		}
+	}
+
+	/** The worker failed to load or broke: the city is left out rather than drawn half. */
+	private lostWorker() {
+		this.worker?.terminate();
+		this.worker = null;
+		this.pending = null;
+		this.workerBroken = true;
+		for (const c of this.canvases) c.style.opacity = '0';
+	}
+	private workerBroken = false;
+
+	private landed(r: CityReply) {
+		if (r.type !== 'drawn') return;
+		this.draws++;
+		const p = this.pending;
+		if (!p || p.id !== r.id) return;
+		this.pending = null;
+		// The worker's frame reaches the screen on the next frames; the fade starts after it.
+		requestAnimationFrame(() => requestAnimationFrame(() => p.then()));
 	}
 
 	/**
@@ -307,6 +386,7 @@ export class City {
 			this.allocate();
 			this.revealStart = reveal ? this.clock() : null;
 			this.drawn = null;
+			this.pending = null;
 			this.paint(t, still, true);
 			if (reveal) this.revealTick(t, still);
 			return;
@@ -320,6 +400,7 @@ export class City {
 		if (!this.shown) return;
 		this.shown = false;
 		this.revealStart = null;
+		this.pending = null;
 		if (this.revealTimer) clearTimeout(this.revealTimer);
 		this.revealTimer = null;
 		this.releaseTimer = setTimeout(() => this.release(), 600);
@@ -331,14 +412,21 @@ export class City {
 
 	private allocate() {
 		const k = this.scale();
-		for (const c of this.canvases) {
-			const w = Math.round(SCENE.W * k);
-			const h = Math.round(SCENE.H * k);
-			if (c.width !== w || c.height !== h) {
-				c.width = w;
-				c.height = h;
+		const w = Math.round(SCENE.W * k);
+		if (this.worker) {
+			this.worker.postMessage({ type: 'size', k } satisfies CityRequest);
+		} else if (!this.workerBroken) {
+			for (const c of this.canvases) {
+				const h = Math.round(SCENE.H * k);
+				if (c.width !== w || c.height !== h) {
+					c.width = w;
+					c.height = h;
+				}
+				c.getContext('2d')?.setTransform(k, 0, 0, k, 0, 0);
 			}
-			c.getContext('2d')?.setTransform(k, 0, 0, k, 0, 0);
+		}
+		this.pixels = this.workerBroken ? 0 : w;
+		for (const c of this.canvases) {
 			c.style.transition = 'none';
 			c.style.opacity = '0';
 		}
@@ -346,18 +434,24 @@ export class City {
 
 	private release() {
 		this.releaseTimer = null;
-		for (const c of this.canvases) {
-			c.width = 0;
-			c.height = 0;
-		}
+		if (this.worker) this.worker.postMessage({ type: 'release' } satisfies CityRequest);
+		else if (!this.workerBroken)
+			for (const c of this.canvases) {
+				c.width = 0;
+				c.height = 0;
+			}
+		this.pixels = 0;
 		this.drawn = null;
 		this.skyKey = -1;
 	}
 
-	/** Device pixels per scene pixel: the TV's 1.5 at most. */
+	/**
+	 * Device pixels per scene pixel, 1 at most: the TV scales the 1280 px drawing up. At its own
+	 * 1920 px the TV took a frame of 33 to 67 ms to take in each new drawing as its fade began.
+	 */
 	private scale(): number {
 		const s = Number(getComputedStyle(this.root.parentElement ?? this.root).getPropertyValue('--s')) || 1;
-		return Math.min(1.5, Math.max(0.5, s * (devicePixelRatio || 1)));
+		return Math.min(1.0, Math.max(0.5, s * (devicePixelRatio || 1)));
 	}
 
 	private revealTick(t: number, still: boolean) {
@@ -365,7 +459,8 @@ export class City {
 		if (start == null || !this.shown) return;
 		const e = (this.clock() - start) / 1000;
 		const r = still ? 1 : clamp((e - REVEAL_FROM) / REVEAL_FOR);
-		this.drawInto(this.front, momentAt(stepOf(t, still), still, r));
+		// The front canvas shows already; each step of the reveal lands in it as it is drawn.
+		if (!this.pending) this.drawInto(this.front, momentAt(stepOf(t, still), still, r), () => {});
 		if (r >= 1) {
 			this.revealStart = null;
 			return;
@@ -375,55 +470,62 @@ export class City {
 
 	private paint(t: number, still: boolean, first: boolean) {
 		const step = stepOf(t, still);
-		const dusk = clamp(step / IDLE);
-		const skyKey = Math.round(dusk * 120);
-		if (skyKey !== this.skyKey) {
-			this.skyKey = skyKey;
-			this.sky.style.background = skyStyle(skyKey / 120);
+		// The CSS sky shows while the first drawing is on its way; the drawings carry the sky
+		// after that, so it is set only when the city appears.
+		if (first) {
+			const skyKey = Math.round(clamp(step / IDLE) * 120);
+			if (skyKey !== this.skyKey) {
+				this.skyKey = skyKey;
+				this.sky.style.background = skyStyle(skyKey / 120);
+			}
 		}
+		if (this.workerBroken) return;
 		const m = momentAt(step, still, first && this.revealStart != null ? 0 : 1);
 		const key = `${step}|${still}`;
 		if (key === this.drawn) return;
 		const now = this.clock();
+		if (this.pending) return; // the last drawing is still on its way
 		if (!first && now < this.fadeUntil) return; // the last fade is still running
 		this.drawn = key;
+		// Every drawing is opaque, sky and all. The lower canvas stays shown; the upper one fades
+		// in over it or out to show it, so the canvases never change places and nothing but one
+		// opacity moves.
+		const [lower, upper] = this.canvases;
 		if (first) {
-			this.drawInto(this.front, m);
-			const c = this.canvases[this.front];
-			c.style.transition = 'none';
-			c.style.opacity = '1';
-			this.canvases[1 - this.front].style.opacity = '0';
+			this.front = 0;
+			this.drawInto(0, m, () => {
+				// Off the main thread the first drawing can land a few frames after the sky, so it
+				// comes in on a short fade rather than at once.
+				lower.style.transition = this.worker ? 'opacity 200ms ease-out' : 'none';
+				lower.style.opacity = '1';
+				upper.style.transition = 'none';
+				upper.style.opacity = '0';
+			});
 			return;
 		}
-		// The new drawing fades in over the old one, then takes its place.
 		const back = 1 - this.front;
-		this.drawInto(back, m);
 		const { fade } = cadence(t, still);
-		const b = this.canvases[back];
-		const f = this.canvases[this.front];
-		b.style.zIndex = '2';
-		f.style.zIndex = '1';
-		b.style.transition = 'none';
-		b.style.opacity = '0';
-		void b.offsetWidth;
-		b.style.transition = `opacity ${fade * 1000}ms ease-in-out`;
-		b.style.opacity = '1';
-		this.fadeUntil = now + fade * 1000 + 50;
-		const was = this.front;
-		this.front = back;
-		setTimeout(() => {
-			if (this.front !== was) {
-				const old = this.canvases[was];
-				old.style.transition = 'none';
-				old.style.opacity = '0';
-			}
-		}, fade * 1000 + 50);
+		this.drawInto(back, m, () => {
+			if (!this.shown) return;
+			upper.style.transition = `opacity ${fade * 1000}ms ease-in-out`;
+			upper.style.opacity = back === 1 ? '1' : '0';
+			this.fadeUntil = this.clock() + fade * 1000 + 50;
+			this.front = back;
+		});
 	}
 
-	private drawInto(i: number, m: Moment) {
+	/** Draws `m` into canvas `i`, in the worker when there is one, then runs `then`. */
+	private drawInto(i: number, m: Moment, then: () => void) {
+		if (this.worker) {
+			const id = ++this.nextId;
+			this.pending = { id, then };
+			this.worker.postMessage({ type: 'draw', i, m, id } satisfies CityRequest);
+			return;
+		}
 		const g = this.canvases[i].getContext('2d');
 		if (!g) return;
 		drawCity(g, m);
 		this.draws++;
+		then();
 	}
 }
