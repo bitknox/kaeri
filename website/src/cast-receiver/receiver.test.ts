@@ -1,10 +1,10 @@
 import { describe, expect, test } from 'bun:test';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { classify, codecPart, codecsInMaster } from './errors';
+import { classify, codecPart, refusedOf } from './errors';
 import { FrameClock, BEHIND_SECONDS } from './frame-clock';
 import { Strings, loadStrings, pickLanguage, type Index, type Pack } from './i18n';
-import { asDevice, deviceFromAgent, message, readExtras } from './protocol';
+import { asDevice, deviceFromAgent, message, readExtras, typesetFiles } from './protocol';
 import { SilentPicture } from './silent';
 
 const names = { 104: 'LOAD_FAILED', 301: 'MEDIA_SRC_NOT_SUPPORTED', 311: 'HLS_NETWORK_MASTER_PLAYLIST', 315: 'HLS_NETWORK_KEY_LOAD', 905: 'SEGMENT_NETWORK', 102: 'MEDIA_DECODE' };
@@ -50,9 +50,14 @@ describe('errors', () => {
 		expect(classify({ detailedErrorCode: 301 }, names, ['hvc1.2.4.L120.90']).part).toBe('video');
 	});
 
-	test('codecs from an HLS master', () => {
-		const master = '#EXTM3U\n#EXT-X-STREAM-INF:BANDWIDTH=1,CODECS="avc1.640028,mp4a.40.2"\nv.m3u8\n#EXT-X-STREAM-INF:BANDWIDTH=2,CODECS="hvc1.1.6.L120.90,mp4a.40.2"\nh.m3u8\n';
-		expect(codecsInMaster(master)).toEqual(['avc1.640028', 'mp4a.40.2', 'hvc1.1.6.L120.90']);
+	test("the engine's codec words, asked after a failure", () => {
+		const tv = (type: string) => !/dtsc|hvc1\.2/.test(type);
+		expect(refusedOf(['hevc-main10', 'dts'], tv)).toEqual(['hevc-main10', 'dts']);
+		expect(refusedOf(['h264', 'dts'], tv)).toEqual(['dts']);
+		expect(refusedOf(['video:mystery', null, undefined], tv)).toEqual([]);
+		expect(classify({ detailedErrorCode: 102 }, names, refusedOf(['h264', 'dts'], tv))).toMatchObject({ part: 'audio', codec: 'dts' });
+		expect(codecPart('hevc-main10')).toBe('video');
+		expect(codecPart('truehd')).toBe('audio');
 		expect(codecPart('opus')).toBe('audio');
 		expect(codecPart('av01.0.08M.08')).toBe('video');
 		expect(codecPart('wvtt')).toBeNull();
@@ -162,6 +167,21 @@ describe('silent picture', () => {
 describe('protocol', () => {
 	test('messages carry the version', () => {
 		expect(message('subtitles-plain', { reason: 'slow' })).toEqual({ type: 'subtitles-plain', version: 1, reason: 'slow' });
+	});
+
+	test('typeset files are the ASS and SSA ones, with the fonts', () => {
+		const files = typesetFiles({
+			fonts: ['http://relay.example/f/1.ttf'],
+			subtitles: [
+				{ id: 1, url: 'http://relay.example/x/1.ass', format: 'ass', language: 'en' },
+				{ id: 2, url: 'http://relay.example/x/2.srt', format: 'srt' },
+				{ id: 3, url: 'http://relay.example/x/3.ssa', format: 'ssa', fonts: [] },
+			],
+		});
+		expect(files).toEqual([
+			{ trackId: 1, ass: 'http://relay.example/x/1.ass', fonts: ['http://relay.example/f/1.ttf'] },
+			{ trackId: 3, ass: 'http://relay.example/x/3.ssa', fonts: [] },
+		]);
 	});
 
 	test('Kaeri extras come from the media or the request', () => {

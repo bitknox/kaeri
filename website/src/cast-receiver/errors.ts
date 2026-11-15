@@ -25,8 +25,40 @@ export interface Report {
 	lost: boolean;
 }
 
-const AUDIO = /^(mp4a|opus|flac|ac-3|ec-3|mp3|\.mp3|alac|dts|vorbis)/i;
-const VIDEO = /^(avc[13]|hvc1|hev1|dvh1|dvhe|vp0?[89]|vp09|av01)/i;
+const AUDIO = /^(mp4a|opus|flac|ac-3|ec-3|mp3|\.mp3|alac|dts|vorbis|mlpa|aac|ac3|eac3|truehd|audio:)/i;
+const VIDEO = /^(avc[13]|hvc1|hev1|dvh1|dvhe|vp0?[89]|vp09|av01|h264|hevc|av1|video:)/i;
+
+/** A codec string the TV's MediaSource can be asked about, for each of the engine's codec words. */
+const PROBES: Record<string, string> = {
+	h264: 'video/mp4; codecs="avc1.640028"',
+	hevc: 'video/mp4; codecs="hvc1.1.6.L120.90"',
+	'hevc-main10': 'video/mp4; codecs="hvc1.2.4.L120.90"',
+	vp9: 'video/webm; codecs="vp09.00.40.08"',
+	av1: 'video/mp4; codecs="av01.0.08M.08"',
+	aac: 'audio/mp4; codecs="mp4a.40.2"',
+	opus: 'audio/webm; codecs="opus"',
+	flac: 'audio/mp4; codecs="flac"',
+	ac3: 'audio/mp4; codecs="ac-3"',
+	eac3: 'audio/mp4; codecs="ec-3"',
+	dts: 'audio/mp4; codecs="dtsc"',
+	truehd: 'audio/mp4; codecs="mlpa"',
+};
+
+/**
+ * After a failure only: which of the load's codecs (the engine's words, video first) this TV
+ * says no to. A word with no probe is never blamed.
+ */
+export function refusedOf(codecs: (string | null | undefined)[], supported: (type: string) => boolean): string[] {
+	return codecs.filter((c): c is string => {
+		const probe = c ? PROBES[c.toLowerCase()] : undefined;
+		if (!probe) return false;
+		try {
+			return !supported(probe);
+		} catch {
+			return false;
+		}
+	});
+}
 const CODEC_IN_TEXT = /\b(avc[13]\.[0-9a-f]{6}|hvc1\.[\w.]+|hev1\.[\w.]+|vp09\.[\d.]+|av01\.[\w.]+|mp4a\.[\da-f.]+|opus|flac|ac-3|ec-3)\b/i;
 
 export function codecPart(codec: string): 'video' | 'audio' | null {
@@ -69,8 +101,8 @@ function shakaOf(error: unknown): { code: number | null; data: unknown[] } {
 
 /**
  * The report for one player error. `names` maps CAF's detailed codes to their names
- * (`cast.framework.events.DetailedErrorCode` reversed); `refused` are the stream's codecs the
- * TV's MediaSource says no to, from the check at load.
+ * (`cast.framework.events.DetailedErrorCode` reversed); `refused` are the load's codecs the
+ * TV's MediaSource says no to, asked after the failure (`refusedOf`).
  */
 export function classify(raw: Raw, names: Record<number, string>, refused: string[] = []): Report {
 	const detailed = typeof raw.detailedErrorCode === 'number' ? raw.detailedErrorCode : null;
@@ -141,12 +173,4 @@ function statusIn(values: unknown[]): number {
 		}
 	}
 	return 0;
-}
-
-/** The codecs an HLS master names in its CODECS attributes. */
-export function codecsInMaster(text: string): string[] {
-	const out = new Set<string>();
-	for (const m of text.matchAll(/CODECS="([^"]+)"/g))
-		for (const c of m[1].split(',')) if (c.trim()) out.add(c.trim());
-	return [...out];
 }

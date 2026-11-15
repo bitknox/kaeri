@@ -3,7 +3,7 @@
 // Paused, Waiting for the stream, Up next, Skipped, Waiting for the device, Couldn't play and
 // Finished. It never fetches media of its own; the sender's relay or the source serves every byte.
 
-import { classify, codecPart, codecsInMaster, type Report } from './errors';
+import { classify, refusedOf, type Report } from './errors';
 import { loadStrings, type Strings } from './i18n';
 import { startPlayer, type ErrorEventLike, type Player } from './player';
 import {
@@ -11,6 +11,7 @@ import {
 	deviceFromAgent,
 	message,
 	readExtras,
+	typesetFiles,
 	type Device,
 	type LoadExtras,
 } from './protocol';
@@ -57,6 +58,7 @@ const S = {
 	startedAt: now(),
 	goneAt: 0,
 	error: null as Report | null,
+	tracksEdited: false,
 	fatalSent: false,
 	language: navigator.language as string | null,
 };
@@ -106,7 +108,8 @@ function sendError(r: Report) {
 	send(
 		message('error', {
 			part: r.part,
-			codec: r.codec,
+			// As the receiver names it (`hev1`, `ec-3`, or the engine's own word); left out when unknown.
+			...(r.codec ? { codec: r.codec.split('.')[0] } : {}),
 			detail: r.detail,
 			fetched: r.fetched,
 			status: r.status,
@@ -320,8 +323,10 @@ function plainSubtitles(reason: 'slow' | Failure) {
 }
 
 async function applyTypeset() {
-	const active = player?.activeTextTracks() ?? [];
-	const twin = (S.extras.subtitles ?? []).find((s) => active.includes(s.trackId));
+	let active = player?.activeTextTracks() ?? [];
+	// Until the sender changes tracks, the load's own pick counts when CAF hasn't turned it on.
+	if (!S.tracksEdited && !active.length && S.extras.subtitle != null) active = [S.extras.subtitle];
+	const twin = typesetFiles(S.extras).find((s) => active.includes(s.trackId));
 	if (!twin || S.plainSubs || !canTypeset()) {
 		document.documentElement.classList.remove('typeset');
 		await typeset.hide();
@@ -329,7 +334,7 @@ async function applyTypeset() {
 	}
 	document.documentElement.classList.add('typeset');
 	try {
-		await typeset.show(twin.ass, twin.fonts ?? []);
+		await typeset.show(twin.ass, twin.fonts);
 	} catch (reason) {
 		plainSubtitles(reason as Failure);
 	}
@@ -337,40 +342,18 @@ async function applyTypeset() {
 
 // ---------- Errors ----------
 
-/** After a failure only: the stream's codecs this TV's MediaSource refuses, to name the culprit. */
-async function refusedCodecs(): Promise<{ refused: string[]; all: string[] }> {
-	if (!/mpegurl/i.test(S.media.type) || !S.media.url) return { refused: [], all: [] };
-	try {
-		const r = await fetch(S.media.url);
-		const all = codecsInMaster(await r.text());
-		const refused = all.filter((c) => {
-			const kind = codecPart(c);
-			const type = `${kind === 'audio' ? 'audio' : 'video'}/mp4; codecs="${c}"`;
-			try {
-				return !MediaSource.isTypeSupported(type);
-			} catch {
-				return false;
-			}
-		});
-		return { refused, all };
-	} catch {
-		return { refused: [], all: [] };
-	}
+/** After a failure only: the load's codecs this TV's MediaSource says no to, video first. */
+function refused(): string[] {
+	if (typeof MediaSource === 'undefined') return [];
+	return refusedOf([S.extras.video?.codec, S.extras.audio?.codec], (type) => MediaSource.isTypeSupported(type));
 }
 
-async function fatal() {
+/** The episode can't go on: tell the sender why, then show it. */
+function fatal(report: Report) {
 	if (S.fatalSent) return;
 	S.fatalSent = true;
-	const report = S.error ?? classify({}, player?.errorNames ?? {});
-	if (!report.codec && (report.part === 'unknown' || report.part === 'video' || report.part === 'audio')) {
-		const { refused } = await refusedCodecs();
-		if (refused.length) {
-			report.codec = refused[0];
-			report.part = codecPart(refused[0]) ?? report.part;
-		}
-	}
 	sendError(report);
-	await typeset.hide();
+	void typeset.hide();
 	if (report.lost && (S.phase === 'playing' || S.phase === 'gone')) {
 		// The relay or the source stopped answering mid-episode: hold the picture and wait for
 		// the sender, which loads the episode again where it stopped.
@@ -382,12 +365,10 @@ async function fatal() {
 	}
 }
 
-async function silentPicture() {
-	const { all } = await refusedCodecs();
-	const codec = all.find((c) => codecPart(c) === 'video') ?? null;
+function silentPicture() {
 	sendError({
 		part: 'video',
-		codec,
+		codec: S.extras.video?.codec ?? null,
 		detail: `sound without picture: no decoded video frame for 3 s (videoWidth ${video.videoWidth})`,
 		fetched: null,
 		status: null,
@@ -420,6 +401,7 @@ function onLoad(request: any) {
 	S.skipped = null;
 	S.error = null;
 	S.fatalSent = false;
+	S.tracksEdited = false;
 	S.plainSubs = !!extras.plainSubtitles;
 	silent.reset();
 	releasePicture();
@@ -449,7 +431,7 @@ function onPlaying() {
 
 function onFinished(reason: 'end' | 'stopped' | 'error' | 'interrupted' | 'other') {
 	if (reason === 'error') {
-		void fatal();
+		fatal(S.error ?? classify({}, player?.errorNames ?? {}, refused()));
 		return;
 	}
 	if (reason === 'interrupted') return;
@@ -469,6 +451,7 @@ function onSenderMessage(data: unknown, senderId: string) {
 		case 'hello': {
 			useDevice(m.device);
 			void useLanguage(typeof m.language === 'string' ? m.language : null);
+			ready(senderId);
 			if (S.phase === 'gone') {
 				send(message('sender-gone', { waited: Math.round((now() - S.goneAt) / 1000) }), senderId);
 				releasePicture();
@@ -516,17 +499,32 @@ function onSenderMessage(data: unknown, senderId: string) {
 }
 
 function onError(e: ErrorEventLike, isFatal: () => boolean) {
-	const report = classify(e, player?.errorNames ?? {});
+	const report = classify(e, player?.errorNames ?? {}, refused());
 	console.warn('player error', report.detail);
 	if (report.part === 'subtitles') {
 		sendError(report); // the episode plays on without them
 		return;
 	}
 	S.error = report;
-	// A fatal error leaves the player idle; a recovered one doesn't.
+	// A failed load is told at once, before CAF's LOAD_FAILED reaches the sender.
+	if (S.phase === 'loading') return fatal(report);
+	// Mid-episode, a fatal error leaves the player idle; a recovered one doesn't.
 	setTimeout(() => {
-		if (isFatal()) void fatal();
+		if (isFatal()) fatal(report);
 	}, T.fatal);
+}
+
+/** The TV remote while Up next counts: select plays it now, back cancels it. */
+function onKey(e: KeyboardEvent) {
+	if (S.phase !== 'playing' || !S.upNext) return;
+	const action = e.key === 'Enter' || e.key === 'MediaTrackNext' ? 'play' : e.key === 'Escape' || e.key === 'GoBack' || e.key === 'BrowserBack' ? 'cancel' : null;
+	if (!action) return;
+	e.preventDefault();
+	send(message('up-next', { action }));
+	if (action === 'cancel') {
+		S.upNext = null;
+		render();
+	}
 }
 
 // ---------- Once a second ----------
@@ -560,6 +558,7 @@ function everySecond() {
 async function start() {
 	fit();
 	addEventListener('resize', fit);
+	addEventListener('keydown', onKey);
 	player = startPlayer(video, {
 		load: onLoad,
 		playing: onPlaying,
@@ -579,7 +578,10 @@ async function start() {
 		},
 		finished: onFinished,
 		error: onError,
-		tracksChanged: () => void applyTypeset(),
+		tracksChanged: () => {
+			S.tracksEdited = true;
+			void applyTypeset();
+		},
 		senderMessage: onSenderMessage,
 		senderConnected: (senderId, userAgent) => {
 			if (!S.deviceKnown) S.device = deviceFromAgent(userAgent);

@@ -254,7 +254,12 @@ const episode = (extra: Record<string, unknown> = {}, media: Record<string, unkn
 			kaeri: {
 				episode: 3,
 				still: at('still.png'),
-				subtitles: [{ trackId: 1, ass: at('ep.ass'), fonts: [at('font.woff2')] }],
+				container: 'mp4',
+				video: { codec: 'h264', height: 720 },
+				audio: { index: 0, language: 'en', codec: 'aac' },
+				subtitles: [{ id: 1, url: at('ep.ass'), format: 'ass', language: 'en', title: 'Full' }],
+				subtitle: null,
+				fonts: [at('font.woff2')],
 				device: 'iphone',
 				...extra,
 			},
@@ -281,8 +286,10 @@ try {
 	expect(ready?.version === 1 && typeof ready?.build === 'string', 'ready carries version 1 and the build');
 	const caps = ready?.caps as { typeset?: boolean; audioSwitch?: boolean; codecs?: unknown[]; screen?: number[] } | undefined;
 	expect(caps?.typeset === true && caps.audioSwitch === true && Array.isArray(caps.codecs) && caps.codecs.length === 0 && caps.screen?.length === 2, 'ready caps: typeset, audioSwitch, no codec list, screen');
+	const readies = (await sent()).filter((m) => m.body.type === 'ready').length;
 	await say({ type: 'hello', version: 1, language: 'en-US', device: 'iphone' });
 	await sleep(400);
+	expect((await sent()).filter((m) => m.body.type === 'ready').length === readies + 1, 'hello is answered with ready');
 	expect((await shown()).join() === 'ready', 'Ready shows the wordmark and its line only');
 	expect((await textOf('ready-line')) === 'Ready. Choose an episode on the iPhone.', 'Ready names the iPhone');
 	expect(await js<boolean>(`getComputedStyle(document.getElementById('ready')).animationName === 'drift'`), 'Ready drifts against burn-in');
@@ -326,7 +333,8 @@ try {
 	// Waiting for the stream
 	await js('__caf.buffering(true)');
 	await sleep(700);
-	expect((await shown()).includes('spin') && !(await shown()).includes('waiting'), 'the spinner first');
+	const early = await shown();
+	expect(early.includes('spin') && !early.includes('waiting'), `the spinner first (${early.join()})`);
 	await sleep(3800);
 	expect((await shown()).includes('waiting') && /^Waiting for the stream · [45] s$/.test(await textOf('waiting')), 'then the count');
 	await shot('06-waiting');
@@ -344,6 +352,10 @@ try {
 	expect((await textOf('upnext-title')) === 'Episode 4 · Lights on the Water', 'Up next names the episode');
 	expect(/^Up next · plays in 1[45] s$/.test(await textOf('upnext-count')), 'Up next counts down');
 	await shot('08-up-next');
+	await page('Input.dispatchKeyEvent', { type: 'keyDown', key: 'Enter', code: 'Enter', windowsVirtualKeyCode: 13 });
+	await page('Input.dispatchKeyEvent', { type: 'keyUp', key: 'Enter', code: 'Enter', windowsVirtualKeyCode: 13 });
+	await sleep(100);
+	expect((await lastSent('up-next'))?.action === 'play', 'select on the remote plays the next episode now');
 	await say({ type: 'up-next', version: 1 });
 	await sleep(400);
 	expect(!(await shown()).includes('upnext'), 'an empty up-next hides it');
@@ -374,11 +386,11 @@ try {
 	await js(`__caf.error({ detailedErrorCode: 314, error: { shakaErrorCode: 1002, shakaErrorData: ['http://relay.example/s7.ts', {}, 1] } })`);
 	await sleep(900);
 	const lost = await lastSent('error');
-	expect(lost?.part === 'network' && lost.fetched === 'segment' && lost.status === 0 && 'codec' in lost && typeof lost.detail === 'string', 'a lost segment is a network error');
+	expect(lost?.part === 'network' && lost.fetched === 'segment' && lost.status === 0 && !('codec' in lost) && typeof lost.detail === 'string', 'a lost segment is a network error');
 	expect((await phase()) === 'gone', 'a lost stream waits with the picture held');
 
 	// A subtitle file that does not load is not fatal
-	await load(episode({ subtitles: [{ trackId: 1, ass: at('missing.ass'), fonts: [] }] }));
+	await load(episode({ subtitles: [{ id: 1, url: at('missing.ass'), format: 'ass' }] }));
 	await until(`document.getElementById('ui').dataset.phase === 'playing'`, 'the next load plays');
 	await js('__caf.editTracks([1])');
 	await sleep(1000);
@@ -399,8 +411,12 @@ try {
 	expect((await textOf('error-title')) === "Couldn't play episode 3", "Couldn't play episode 3");
 	expect((await textOf('error-hint')) === 'Choose another source on the iPhone.', 'the error hint');
 	const failed = await lastSent('error');
-	expect(failed?.version === 1 && ['part', 'codec', 'detail', 'position'].every((k) => k in failed), 'the error carries part, codec and detail');
+	expect(failed?.version === 1 && ['part', 'detail', 'position'].every((k) => k in failed), 'the error carries part and detail');
 	await shot('11-error');
+	await load(episode({ audio: { index: 0, codec: 'truehd' } }, { contentId: at('missing.mp4') }));
+	await until(`document.getElementById('ui').dataset.phase === 'error'`, "Couldn't play again");
+	const refusedAudio = await lastSent('error');
+	expect(refusedAudio?.part === 'audio' && refusedAudio.codec === 'truehd', 'an audio codec the TV refuses is an audio error, never video');
 	await say({ type: 'hello', version: 1, language: 'de', device: 'tablet' });
 	await until(`document.documentElement.lang === 'de'`, 'German');
 	await shot('11b-error-de');

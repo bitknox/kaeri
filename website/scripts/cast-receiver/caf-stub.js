@@ -28,6 +28,8 @@
 	let video = null;
 	let state = PlayerState.IDLE;
 	let finishedSent = false;
+	// While the check holds a stall, the real video's own playing and waiting events don't count.
+	let held = false;
 	const sent = [];
 	const text = { active: [] };
 	const audio = { tracks: [], active: null };
@@ -42,6 +44,7 @@
 
 	function wire(v) {
 		v.addEventListener('playing', () => {
+			if (held) return;
 			state = PlayerState.PLAYING;
 			emit(EventType.PLAYING);
 		});
@@ -50,7 +53,7 @@
 			state = PlayerState.PAUSED;
 			emit(EventType.PAUSE);
 		});
-		v.addEventListener('waiting', () => emit(EventType.BUFFERING, { isBuffering: true }));
+		v.addEventListener('waiting', () => !held && emit(EventType.BUFFERING, { isBuffering: true }));
 		v.addEventListener('seeked', () => emit(EventType.SEEKED));
 		v.addEventListener('ended', () => finish('END_OF_STREAM'));
 		v.addEventListener('error', () => {
@@ -140,7 +143,8 @@
 		},
 		play() {
 			const r = window.__caf.pending;
-			if (!video.getAttribute('src') || video.getAttribute('src') !== r.media.contentId) {
+			if (window.__caf.playing !== r) {
+				window.__caf.playing = r;
 				video.src = r.media.contentId;
 				if (r.currentTime) video.currentTime = r.currentTime;
 			}
@@ -161,6 +165,7 @@
 			emit(EventType.ERROR, event);
 		},
 		buffering(isBuffering) {
+			held = isBuffering;
 			emit(EventType.BUFFERING, { isBuffering });
 		},
 	};
