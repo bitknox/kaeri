@@ -4,12 +4,17 @@
 //! The terminal writes `kaeri.log.<date>`; the app writes `app.log.<date>` next to it, so the
 //! two never interleave and either can be read on its own. `KAERI_LOG` sets the filter, as
 //! for the terminal; the default is `info`.
+//!
+//! Beside the file, the engine's player log keeps the last few playbacks for Report a bug
+//! ([`kaeri_engine::player_log`]), whatever `KAERI_LOG` says, mirrored to its own file in the same
+//! folder. A hosted player feeds it mpv's lines at info level with
+//! `log_line(Info, "mpv", line)` while a playback runs.
 
 use std::path::Path;
 use std::sync::OnceLock;
 
 use tracing_appender::non_blocking::WorkerGuard;
-use tracing_subscriber::{EnvFilter, fmt};
+use tracing_subscriber::{EnvFilter, Layer, fmt, layer::SubscriberExt, util::SubscriberInitExt};
 
 /// Keeps the log's writer thread for the life of the process: lines are written off the
 /// engine's threads and the app's main thread, and flushed as the process exits.
@@ -38,16 +43,19 @@ pub fn start_log(cache: String) -> bool {
     }
     let (writer, guard) =
         tracing_appender::non_blocking(tracing_appender::rolling::daily(&dir, "app.log"));
-    let started = fmt()
-        .with_writer(writer)
-        .with_ansi(false)
-        .with_env_filter(
-            EnvFilter::try_from_env("KAERI_LOG").unwrap_or_else(|_| EnvFilter::new("info")),
-        )
+    // Each layer filters for itself: `KAERI_LOG` is the file's, and the player log keeps the
+    // player's info lines whatever it says.
+    let file = fmt::layer().with_writer(writer).with_ansi(false).with_filter(
+        EnvFilter::try_from_env("KAERI_LOG").unwrap_or_else(|_| EnvFilter::new("info")),
+    );
+    let started = tracing_subscriber::registry()
+        .with(file)
+        .with(kaeri_engine::player_log::layer())
         .try_init()
         .is_ok();
     if started {
         let _ = WRITER.set(guard);
+        kaeri_engine::player_log::mirror_to(&dir);
         log_panics();
     }
     started
@@ -72,6 +80,11 @@ fn log_panics() {
 }
 
 /// One line from the app, under `source` (`player`, `store`), into the same log.
+///
+/// Lines under source `player` or `mpv` at info level and above also go into the player log,
+/// under the playback under way: a hosted player sends each of mpv's info lines as
+/// `log_line(Info, "mpv", "[cplayer] Playing: ...")`, its prefix in brackets as mpv names it.
+/// Addresses in them are cut to their host as they come in.
 #[uniffi::export]
 pub fn log_line(level: FfiLogLevel, source: String, message: String) {
     match level {

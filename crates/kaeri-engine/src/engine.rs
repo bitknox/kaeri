@@ -419,6 +419,8 @@ impl Engine {
             services.book_sources.put_demo(services.clock.now());
         }
         crate::crash::arm_from(&services.paths.data_dir, state.config.effective());
+        // Where the player log is mirrored: read back only when it is first written or asked for.
+        crate::player_log::mirror_to(&services.paths.cache_dir.join("logs"));
         services.syncing.set_language(language.clone());
         // The terminal sets the process's language and passes none.
         let tag = language.clone().unwrap_or_else(|| kaeri_i18n::language().to_owned());
@@ -626,6 +628,9 @@ impl Engine {
             #[cfg(feature = "testing")]
             sent: AtomicU64::new(0),
         };
+        for event in &launch {
+            crate::player_log::note(event);
+        }
         Ok((engine, EventStream { launch, checking, live }))
     }
 
@@ -1380,6 +1385,7 @@ impl Actor {
 
     fn pass_on(&self, mut event: Event) {
         crate::title_language::retitle(&mut event, self.services.meta.titles().language());
+        crate::player_log::note(&event);
         let _ = self.out.send(Out::Event(event));
     }
 

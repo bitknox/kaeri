@@ -221,6 +221,8 @@ fn stage(
     engine: &mut EngineState,
 ) -> Event {
     engine.cache.announce(played.id, title.clone());
+    // The player log's lines go under this playback from now on.
+    crate::player_log::begin(&played.episode, &title, episode_title.as_deref());
     engine.staging.staged(Staged {
         serial: played.serial,
         id: played.id,
