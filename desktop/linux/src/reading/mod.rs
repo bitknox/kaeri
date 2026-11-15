@@ -790,7 +790,13 @@ mod grid_tests {
                 focused(&window)
             );
             assert!(cards[1].activate(), "Return activates the card");
-            pump(20);
+            // GTK shows an activated button pressed and clicks it 250 ms later.
+            for _ in 0..20 {
+                if !opened.borrow().is_empty() {
+                    break;
+                }
+                pump(50);
+            }
             assert_eq!(*opened.borrow(), vec!["a:2".to_owned()]);
             window.destroy();
         });
