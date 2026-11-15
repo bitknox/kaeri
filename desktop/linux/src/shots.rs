@@ -2052,23 +2052,41 @@ thread_local! {
 fn frames(window: &adw::ApplicationWindow, name: &'static str, count: u32) {
     let Some(dir) = FRAMES.with(|f| f.borrow().clone()) else { return };
     let taken = std::cell::Cell::new(0u32);
+    let held = std::cell::RefCell::new(Vec::<(i64, gtk::gdk::Texture)>::new());
     let first = std::cell::Cell::new(None::<i64>);
     window.add_tick_callback(move |window, clock| {
         let now = clock.frame_time();
         let start = *first.get().get_or_insert(now);
         first.set(Some(start));
         let ms = (now - start) / 1000;
-        let path = dir.join(name).join(format!("{ms:04}.png"));
-        if let Err(error) = capture(window, &path, None) {
-            tracing::warn!(%error, "a frame did not save");
+        // Drawn now and saved once the motion is over, so saving never holds a frame up.
+        if let Some(texture) = render(window) {
+            held.borrow_mut().push((ms, texture));
         }
         taken.set(taken.get() + 1);
-        if taken.get() >= count {
-            glib::ControlFlow::Break
-        } else {
-            glib::ControlFlow::Continue
+        if taken.get() < count {
+            return glib::ControlFlow::Continue;
         }
+        for (ms, texture) in held.take() {
+            let path = dir.join(name).join(format!("{ms:04}.png"));
+            if let Err(error) = save_png(&texture, &path) {
+                tracing::warn!(%error, "a frame did not save");
+            }
+        }
+        glib::ControlFlow::Break
     });
+}
+
+/// The window drawn into a texture, for a motion's frames.
+#[cfg(feature = "fixtures")]
+fn render(window: &adw::ApplicationWindow) -> Option<gtk::gdk::Texture> {
+    let (width, height) = (window.width(), window.height());
+    let paintable = gtk::WidgetPaintable::new(Some(window));
+    let snapshot = gtk::Snapshot::new();
+    paintable.snapshot(&snapshot, f64::from(width), f64::from(height));
+    let node = snapshot.to_node()?;
+    let bounds = gtk::graphene::Rect::new(0.0, 0.0, width as f32, height as f32);
+    Some(window.renderer()?.render_texture(&node, Some(&bounds)))
 }
 
 fn close_dialogs(window: &adw::ApplicationWindow) {
@@ -2128,6 +2146,10 @@ fn capture(
     let renderer = window.renderer().ok_or("no renderer")?;
     let bounds = gtk::graphene::Rect::new(0.0, 0.0, width as f32, height as f32);
     let texture = renderer.render_texture(&node, Some(&bounds));
+    save_png(&texture, path)
+}
+
+fn save_png(texture: &gtk::gdk::Texture, path: &std::path::Path) -> Result<(), String> {
     if let Some(dir) = path.parent() {
         std::fs::create_dir_all(dir).map_err(|e| e.to_string())?;
     }
@@ -3312,7 +3334,16 @@ fn cast_stage(shell: &Rc<Shell>, shot: &str) -> f64 {
             open();
             pick(LIVING_ROOM, 1800);
             let closing = Rc::clone(&tv);
-            later(9500, Box::new(move || closing.sheet_closed()));
+            let window = shell.ctx.window.clone();
+            // The first launch's question and the picker go first: only the bar is left.
+            later(
+                9500,
+                Box::new(move || {
+                    close_dialogs(&window);
+                    closing.sheet_closed();
+                    close_dialogs(&window);
+                }),
+            );
             let (open_name, close_name) = if shot == "cast-morph" {
                 ("cast-morph/open", "cast-morph/close")
             } else {

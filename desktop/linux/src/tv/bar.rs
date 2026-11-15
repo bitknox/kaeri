@@ -32,14 +32,20 @@ struct Bar {
 
 impl Bar {
     fn new() -> Self {
+        // The art sits over a 64 x 36 plate, so a large picture never sets the bar's size.
         let art = gtk::Picture::builder()
             .content_fit(gtk::ContentFit::Cover)
-            .width_request(64)
-            .height_request(36)
-            .valign(gtk::Align::Center)
-            .overflow(gtk::Overflow::Hidden)
+            .can_shrink(true)
+            .accessible_role(gtk::AccessibleRole::Presentation)
             .build();
-        art.add_css_class("cast-bar-art");
+        let plate = gtk::Box::new(gtk::Orientation::Horizontal, 0);
+        plate.set_size_request(64, 36);
+        let frame = gtk::Overlay::new();
+        frame.set_child(Some(&plate));
+        frame.add_overlay(&art);
+        frame.set_overflow(gtk::Overflow::Hidden);
+        frame.set_valign(gtk::Align::Center);
+        frame.add_css_class("cast-bar-art");
         let title = gtk::Label::builder()
             .xalign(0.0)
             .ellipsize(gtk::pango::EllipsizeMode::End)
@@ -62,7 +68,7 @@ impl Bar {
         next.set_tooltip_text(Some(&t::player_up_next()));
         let row = gtk::Box::new(gtk::Orientation::Horizontal, 12);
         row.add_css_class("cast-bar");
-        row.append(&art);
+        row.append(&frame);
         row.append(&text);
         row.append(&play);
         row.append(&next);
