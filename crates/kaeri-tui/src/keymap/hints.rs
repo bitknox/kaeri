@@ -305,10 +305,11 @@ pub(crate) fn status_hints_paged(
             hints
         }
         V::Section(Section::Home) => vec![
+            // Private mode first, so a narrow line drops it before the keys for the row.
+            (Action::TogglePrivate, Action::TogglePrivate.hint()),
             // A part-watched row resumes on Enter rather than opening.
             (Action::Open, if app.resumes_on_enter() { hint_play() } else { hint_open() }),
             (Action::ShowEpisodes, Action::ShowEpisodes.hint()),
-            (Action::TogglePrivate, Action::TogglePrivate.hint()),
         ],
         // The segment keys go first so they are dropped first; Enter is what a row is for.
         V::Section(Section::Library) => {

@@ -1,0 +1,125 @@
+Kaeri                                                                   ◌ private  ·  plugins ●  ·  anilist ⇅ 2  kitsu ○
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+  ▸  Home                   │  ▌ Private mode  [on]
+  ▤  Calendar               │    Nothing you watch or read is saved or synced until you turn it off or quit Kaeri.
+  ▦  Seasonal               │    Your sources and watch parties still see what you open.
+  /  Search                 │
+  ▥  Library                │  Tracker         State             Queued    Token
+  ↓  Downloads              │  ───────────────────────────────────────────────────────────────────────────────────────
+  ◇  Sources                │    AniList       ● Connected       2         OS keychain
+▌ ◎  Accounts               │    Kitsu         ○ Not connected   0
+  ≡  Settings               │
+  ⇄  Together               │
+                            │
+                            │
+                            │
+                            │
+                            │
+                            │
+                            │
+                            │
+                            │
+                            │
+                            │
+                            │
+                            │
+                            │
+                            │
+                            │
+                            │
+                            │
+                            │
+                            │
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+plugins · Subbed · 1080p                                                              ↵ change   ctrl+p private   ? keys
+=== styles ===
+colours text=#e4e0d6 text-dim=#a8aec9 rule=#46464d obi=#f2a64b state=#7fc7d9 alert=#f59b85 ground=#1a1b26
+r00 c00-04 fg=text mod=BOLD
+r00 c72-80 fg=state
+r00 c81-82 fg=text-dim
+r00 c83-83 fg=rule
+r00 c84-85 fg=text-dim
+r00 c86-94 fg=state
+r00 c95-96 fg=text-dim
+r00 c97-97 fg=rule
+r00 c98-99 fg=text-dim
+r00 c100-110 fg=state
+r00 c111-112 fg=text-dim
+r00 c113-119 fg=state
+r01 c00-119 fg=rule
+r02 c02-02 fg=text-dim
+r02 c05-08 fg=text-dim
+r02 c28-28 fg=rule
+r02 c31-31 fg=obi
+r02 c33-44 fg=text mod=BOLD
+r02 c47-50 fg=state mod=BOLD
+r03 c02-02 fg=text-dim
+r03 c05-12 fg=text-dim
+r03 c28-28 fg=rule
+r03 c33-113 fg=text-dim
+r04 c02-02 fg=text-dim
+r04 c05-12 fg=text-dim
+r04 c28-28 fg=rule
+r04 c33-87 fg=text-dim
+r05 c02-02 fg=text-dim
+r05 c05-10 fg=text-dim
+r05 c28-28 fg=rule
+r06 c02-02 fg=text-dim
+r06 c05-11 fg=text-dim
+r06 c28-28 fg=rule
+r06 c31-37 fg=text-dim
+r06 c47-51 fg=text-dim
+r06 c65-70 fg=text-dim
+r06 c75-79 fg=text-dim
+r07 c02-02 fg=text-dim
+r07 c05-13 fg=text-dim
+r07 c28-28 fg=rule
+r07 c31-117 fg=rule
+r08 c02-02 fg=text-dim
+r08 c05-11 fg=text-dim
+r08 c28-28 fg=rule
+r08 c33-39 fg=text
+r08 c47-57 fg=state
+r08 c65-65 fg=state
+r08 c75-85 fg=text-dim
+r09 c00-00 fg=text-dim
+r09 c02-02 fg=text
+r09 c05-12 fg=text mod=BOLD
+r09 c28-28 fg=rule
+r09 c33-37 fg=text
+r09 c47-61 fg=text-dim
+r09 c65-65 fg=text-dim
+r10 c02-02 fg=text-dim
+r10 c05-12 fg=text-dim
+r10 c28-28 fg=rule
+r11 c02-02 fg=text-dim
+r11 c05-12 fg=text-dim
+r11 c28-28 fg=rule
+r12 c28-28 fg=rule
+r13 c28-28 fg=rule
+r14 c28-28 fg=rule
+r15 c28-28 fg=rule
+r16 c28-28 fg=rule
+r17 c28-28 fg=rule
+r18 c28-28 fg=rule
+r19 c28-28 fg=rule
+r20 c28-28 fg=rule
+r21 c28-28 fg=rule
+r22 c28-28 fg=rule
+r23 c28-28 fg=rule
+r24 c28-28 fg=rule
+r25 c28-28 fg=rule
+r26 c28-28 fg=rule
+r27 c28-28 fg=rule
+r28 c28-28 fg=rule
+r29 c28-28 fg=rule
+r30 c28-28 fg=rule
+r31 c28-28 fg=rule
+r32 c00-119 fg=rule
+r33 c00-23 fg=text-dim
+r33 c86-86 fg=text
+r33 c87-96 fg=text-dim
+r33 c97-102 fg=text
+r33 c103-113 fg=text-dim
+r33 c114-114 fg=text
+r33 c115-119 fg=text-dim

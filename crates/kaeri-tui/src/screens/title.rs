@@ -106,7 +106,11 @@ pub(super) fn render_title(buf: &mut Buffer, app: &App, area: Rect) {
     }
 
     let budget = if app.synopsis_expanded { 12 } else { 5 };
-    let room = area.bottom().saturating_sub(y).saturating_sub(4) as usize;
+    // The private line under the progress line takes a row of its own, given up by the synopsis
+    // on a short terminal.
+    let private = app.private_line(entry.id);
+    let reserved = if private.is_some() { 5 } else { 4 };
+    let room = area.bottom().saturating_sub(y).saturating_sub(reserved) as usize;
     let lines = wrap(&entry.synopsis, area.width as usize, budget.min(room));
     for (i, line) in lines.iter().enumerate() {
         buf.set_string(area.left(), y + i as u16, line, app.palette.style(Role::TextDim));
@@ -158,7 +162,7 @@ pub(super) fn render_title(buf: &mut Buffer, app: &App, area: Rect) {
 
     // Private, under the line that leads to the next episode: whether this title is saved
     // now. The play keys, the list status and the episodes stay as they are.
-    if let Some(private) = app.private_line(entry.id) {
+    if let Some(private) = private {
         render_private_line(buf, app, area, action_y + 1, &private);
     }
 }

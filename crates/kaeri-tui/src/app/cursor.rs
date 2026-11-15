@@ -487,10 +487,11 @@ mod tests {
         a.handle(Action::JumpSection(8), 5);
         a.apply(Event::Sync(Box::new(SyncState::new("anilist"))));
         a.apply(Event::Sync(Box::new(SyncState::new("mal"))));
+        // The private mode switch, then the two trackers.
         a.handle(Action::Bottom, 5);
-        assert_eq!(a.cursor(), 1);
+        assert_eq!(a.cursor(), 2);
         a.handle(Action::PageDown, 5);
-        assert_eq!(a.cursor(), 1, "past the last tracker");
+        assert_eq!(a.cursor(), 2, "past the last tracker");
         for action in title_keys.into_iter().chain([Action::PlayNext]) {
             assert_eq!(a.handle(action, 5), None, "{action:?}");
             assert_eq!(a.nav.overlay(), None, "{action:?}");

@@ -2167,7 +2167,8 @@ fn manual_query(s: &mut Screen) {
 fn kitsu_username(s: &mut Screen) {
     settled_on(s, 8);
     three_trackers(s);
-    s.press(&["j", "enter"]);
+    // Past the private mode switch and AniList, onto Kitsu.
+    s.press(&["j", "j", "enter"]);
     s.type_text("hotaru@mail.example");
 }
 
