@@ -1013,6 +1013,9 @@ public final class AppStore {
     }
 
     public func apply(_ event: Event) {
+        #if FIXTURES
+        let event = Showcase.withTrailer(event)
+        #endif
         if !held.isEmpty, let kind = event.showcaseKind, held.contains(kind) { return }
         notifications.observe(event)
         reader.observe(event)

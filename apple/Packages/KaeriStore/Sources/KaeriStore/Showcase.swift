@@ -29,6 +29,18 @@ public enum Showcase: String, CaseIterable, Sendable {
     case sources, stores, downloads, invite, update, pale, trailer, offline, stranded, failed, messages, calendar,
          signin, expired, proxy, checking, unsaved, picker, held, stuck, all
 
+    /// `trailer`: the engine's own records of 900001 and 900002 come with the stand-in trailer,
+    /// so a title page opened at launch knows of it when it makes room for one.
+    static let trailerAsked = from(arguments: ProcessInfo.processInfo.arguments) == .trailer
+
+    static func withTrailer(_ event: Event) -> Event {
+        guard trailerAsked, case .detail(var title) = event, [900_001, 900_002].contains(title.id),
+              title.trailer == nil else { return event }
+        title.trailer = Trailer(host: .youTube, id: "stand-in\(title.id)")
+        title.trailerUrl = "https://video.example/trailer/\(title.id)"
+        return .detail(title)
+    }
+
     /// The one the launch arguments name.
     public static func from(arguments: [String]) -> Showcase? {
         guard let index = arguments.firstIndex(of: "-KaeriShowcase"), arguments.indices.contains(index + 1)
