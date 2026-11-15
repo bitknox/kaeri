@@ -4108,7 +4108,6 @@
     <string name="title_fact_after">第%1$d話まで放送</string>
     <string name="title_fact_now">放送中</string>
     <string name="title_fact_tba">未定</string>
-    <string name="more_following_line">%1$s · %2$,d/10</string>
     <string name="episode_go_to">エピソードへ移動…</string>
     <string name="episode_go_to_title">エピソードへ移動</string>
     <string name="episode_go_to_go">移動</string>

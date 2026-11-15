@@ -11210,9 +11210,6 @@ public static partial class T
     /// <summary>Value of the fact on a show with no announced start.</summary>
     public static string TitleFactTba => Get("TitleFactTba");
 
-    /// <summary>A followed person's status and score, such as "Completed · 9/10". The status is already worded.</summary>
-    public static string MoreFollowingLine(string status, long score) => Fill(Get("MoreFollowingLine"), ("status", status), ("score", score.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
-
     /// <summary>Item of the episode range menu, and the title of its number field. The ellipsis marks that it asks for a number.</summary>
     public static string EpisodeGoTo => Get("EpisodeGoTo");
 
@@ -15976,7 +15973,6 @@ public static partial class T
         ["TitleFactAfter"] = "After episode {episode}",
         ["TitleFactNow"] = "Now",
         ["TitleFactTba"] = "To be announced",
-        ["MoreFollowingLine"] = "{status} · {score}/10",
         ["EpisodeGoTo"] = "Go to episode…",
         ["EpisodeGoToTitle"] = "Go to episode",
         ["EpisodeGoToGo"] = "Go",

@@ -23061,11 +23061,6 @@ pub fn title_fact_tba() -> String {
     text("title-fact-tba", &[])
 }
 
-/// A followed person's status and score, such as "Completed · 9/10". The status is already worded.
-pub fn more_following_line(status: &str, score: i64) -> String {
-    text("more-following-line", &[("status", Arg::Text(status)), ("score", Arg::Int(score))])
-}
-
 /// Item of the episode range menu, and the title of its number field. The ellipsis marks that it asks for a number.
 pub fn episode_go_to() -> String {
     text("episode-go-to", &[])

@@ -14610,11 +14610,6 @@ public enum L {
     /// Value of the fact on a show with no announced start.
     public static var titleFactTba: String { string("title-fact-tba", fallback: "To be announced") }
 
-    /// A followed person's status and score, such as "Completed · 9/10". The status is already worded.
-    public static func moreFollowingLine(status: String, score: Int) -> String {
-        Self.format("more-following-line", fallback: "%1$@ · %2$lld/10", status, score)
-    }
-
     /// Item of the episode range menu, and the title of its number field. The ellipsis marks that it asks for a number.
     public static var episodeGoTo: String { string("episode-go-to", fallback: "Go to episode…") }
 

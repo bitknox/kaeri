@@ -8679,8 +8679,6 @@
     <string name="title_fact_now">Now</string>
     <!-- Value of the fact on a show with no announced start. -->
     <string name="title_fact_tba">To be announced</string>
-    <!-- A followed person's status and score, such as "Completed · 9/10". The status is already worded. -->
-    <string name="more_following_line">%1$s · %2$,d/10</string>
     <!-- Item of the episode range menu, and the title of its number field. The ellipsis marks that it asks for a number. -->
     <string name="episode_go_to">Go to episode…</string>
     <!-- Title of the Go to episode field. -->

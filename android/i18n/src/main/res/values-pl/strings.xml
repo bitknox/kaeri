@@ -4573,7 +4573,6 @@
     <string name="title_fact_after">Po odcinku %1$d</string>
     <string name="title_fact_now">Trwa</string>
     <string name="title_fact_tba">Do ogłoszenia</string>
-    <string name="more_following_line">%1$s · %2$,d/10</string>
     <string name="episode_go_to">Przejdź do odcinka…</string>
     <string name="episode_go_to_title">Przejdź do odcinka</string>
     <string name="episode_go_to_go">Idź</string>
