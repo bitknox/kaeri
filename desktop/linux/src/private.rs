@@ -177,10 +177,6 @@ impl Line {
         })
     }
 
-    pub fn widget(&self) -> &gtk::Revealer {
-        &self.revealer
-    }
-
     /// Put the line at the end of `parent`, out of the layout it was in before.
     pub fn place(&self, parent: &gtk::Box) {
         if let Some(old) = self.revealer.parent().and_downcast::<gtk::Box>() {
@@ -241,12 +237,6 @@ impl Line {
                 }
             });
         self.due.replace(Some(due));
-    }
-
-    /// Whether the line shows now, for a test.
-    #[cfg(test)]
-    pub fn shown(&self) -> Option<(PrivateMode, bool)> {
-        self.shown.get()
     }
 }
 
