@@ -1,0 +1,3 @@
+android/testkit/src/main/resources/app/kaeri/testkit/scenes/home-*.json
+android/.shots/roborazzi/*ollowing*.png
+android/*/build/test-results/testFixturesDebugUnitTest/*.xml
