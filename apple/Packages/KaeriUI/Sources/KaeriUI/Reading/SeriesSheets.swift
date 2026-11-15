@@ -410,6 +410,29 @@ struct SeriesTrackingSheet: View {
         let newest = tracked.filter { !$0.divergent }.map(\.chapters).max() ?? tracked.map(\.chapters).max() ?? 0
         ReadSheetFrame(title: L.seriesTracking, subtitle: series?.titles.display, close: L.actionDone) {
             VStack(alignment: .leading, spacing: 0) {
+                // Per device and never synced: nothing of it reaches a tracker from here on.
+                SheetRows {
+                    HStack(spacing: 12) {
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(L.titleAlwaysPrivate)
+                                .font(.plat(mac: 13, touch: 17, weight: .semibold))
+                                .foregroundStyle(.silk)
+                            Text(L.seriesAlwaysPrivateDetail)
+                                .font(.plat(mac: 12, touch: 15))
+                                .foregroundStyle(.haze)
+                                .fixedSize(horizontal: false, vertical: true)
+                        }
+                        Spacer(minLength: 0)
+                        Toggle(L.titleAlwaysPrivate, isOn: store.alwaysPrivate(series: work))
+                            .toggleStyle(.switch)
+                            .tint(.amber)
+                            .labelsHidden()
+                    }
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, Device.isMac ? 9 : 12)
+                    .accessibilityElement(children: .combine)
+                }
+                .padding(.bottom, 18)
                 if !tracked.isEmpty, let series {
                     SheetRows {
                         ForEach(tracked, id: \.tracker) { row in

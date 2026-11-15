@@ -316,6 +316,35 @@ extension Snapshot {
         }
     }
 
+    /// Pop the app's own menu (the first of the menu bar, Kaeri) up over `window` at `point`, in
+    /// points from its top left, and write the window with it to `url`. Its items are the menu
+    /// bar's, checks and shortcuts included; nothing moves the pointer, and the menu bar itself
+    /// is left out of the picture.
+    @MainActor
+    static func withAppMenu(at point: CGPoint, over window: NSWindow, to url: URL) async {
+        guard let menu = NSApp.mainMenu?.items.first?.submenu, let view = window.contentView else {
+            print("KaeriDev: no app menu")
+            return
+        }
+        await withCheckedContinuation { (done: CheckedContinuation<Void, Never>) in
+            let timer = Timer(timeInterval: 0.8, repeats: false) { _ in
+                MainActor.assumeIsolated {
+                    if let image = composedWithMenus(window), let png = NSBitmapImageRep(cgImage: image)
+                        .representation(using: .png, properties: [:]) {
+                        try? png.write(to: url)
+                        print("KaeriDev: wrote \(url.path)")
+                    }
+                    // Found again: the menu, not Sendable, stays out of the timer's closure.
+                    NSApp.mainMenu?.items.first?.submenu?.cancelTracking()
+                    done.resume()
+                }
+            }
+            RunLoop.main.add(timer, forMode: .common)
+            let location = NSPoint(x: point.x, y: view.isFlipped ? point.y : view.bounds.height - point.y)
+            menu.popUp(positioning: nil, at: location, in: view)
+        }
+    }
+
     /// `window` and this process's menus on screen over it, in the window server's coordinates,
     /// top left first.
     @MainActor

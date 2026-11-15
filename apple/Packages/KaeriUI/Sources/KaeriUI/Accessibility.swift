@@ -253,10 +253,24 @@ struct NoticeAnnouncer: ViewModifier {
 
     func body(content: Content) -> some View {
         content.onChange(of: store.notices.current?.id) { _, id in
-            guard enabled, id != nil, let item = store.notices.current else { return }
+            guard enabled, id != nil, let item = store.notices.current, item.spoken else { return }
             var words = AttributedString(item.notice.words.firstCapitalized)
             words.accessibilitySpeechAnnouncementPriority = item.isAlert ? .high : .default
             AccessibilityNotification.Announcement(words).post()
+        }
+    }
+}
+
+/// "Private mode on" and "Private mode off", once each time the mode changes, wherever it was
+/// changed from.
+struct PrivateAnnouncer: ViewModifier {
+    @Environment(AppStore.self) private var store
+    var enabled = true
+
+    func body(content: Content) -> some View {
+        content.onChange(of: store.privacy.on) { _, on in
+            guard enabled else { return }
+            AccessibilityNotification.Announcement(on ? L.privateModeOnAnnouncement : L.privateModeOffAnnouncement).post()
         }
     }
 }

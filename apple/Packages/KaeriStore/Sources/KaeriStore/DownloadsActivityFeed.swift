@@ -85,7 +85,8 @@ public final class DownloadsActivityFeed {
     /// The queue changed: show it.
     func downloadsChanged(_ model: DownloadsModel, titles: TitleCache, artwork: ArtworkStore?) {
         guard let host else { return }
-        let rows = model.rows
+        // A private download never shows on the lock screen or in the Dynamic Island.
+        let rows = model.rows.filter { !$0.private }
         let current = rows.filter { $0.state == .active || $0.state == .queued || $0.state == .paused }
         let finished = rows.first { $0.state == .done && inProgress[$0.id] != nil }
         let started = !inProgress.isEmpty || rows.contains { $0.state == .active }

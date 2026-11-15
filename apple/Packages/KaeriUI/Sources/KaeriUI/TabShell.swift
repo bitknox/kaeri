@@ -311,6 +311,13 @@ struct TabStack<Screen: View>: View {
                     if store.tv.connected != nil {
                         ToolbarItem(placement: .topBarLeading) { TVNowPlayingButton() }
                     }
+                    // While private mode is on: on iPhone at the leading edge of Home and
+                    // Library, opposite the account; on iPad at the trailing edge of each place.
+                    if store.privacy.on, sizeClass == .regular || [.home, .read, .library].contains(section) {
+                        ToolbarItem(placement: sizeClass == .regular ? .topBarTrailing : .topBarLeading) {
+                            PrivateToolbarBadge()
+                        }
+                    }
                 }
                 .navigationTitle(section.title)
                 .boardTitle(section.title)

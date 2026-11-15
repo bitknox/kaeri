@@ -57,6 +57,11 @@ struct NoticeCapsule: View {
                                     .overlay { Circle().fill(.vermilion).frame(width: 6, height: 6) }
                             } else if item.isAlert {
                                 Circle().fill(.vermilion).frame(width: 6, height: 6)
+                            } else if let glyph = item.glyph {
+                                Image(systemName: glyph)
+                                    .font(.mac(13, weight: .medium))
+                                    .foregroundStyle(.silk)
+                                    .accessibilityHidden(true)
                             }
                             Text(item.notice.words.firstCapitalized)
                                 .font(.mac(13))
@@ -137,6 +142,7 @@ struct NoticeCapsule: View {
         .animation(.fadeIn, value: store.notices.current?.id)
         .animation(.fadeIn, value: store.updates.notice?.version)
         .modifier(NoticeAnnouncer(enabled: here))
+        .modifier(PrivateAnnouncer(enabled: here))
     }
 
     /// Whether the text is larger than the default size, where the words can run past two

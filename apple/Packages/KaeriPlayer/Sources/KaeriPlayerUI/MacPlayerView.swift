@@ -318,7 +318,12 @@ public struct MacPlayerView: View {
                 Text(model.episodeLine)
                     .contentTransition(.opacity)
                     .animation(.standard, value: model.episodeLine)
+                if model.isPrivate {
+                    PlayerPrivateLabel(size: 13)
+                        .transition(.opacity)
+                }
             }
+            .animation(.fadeIn, value: model.isPrivate)
             .lineLimit(1)
             .overVideoText()
             .frame(maxWidth: .infinity, alignment: .leading)

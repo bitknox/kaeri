@@ -62,6 +62,8 @@ public final class AppStore {
     /// Did my server get it: the reading progress sent back to book servers.
     public let serverProgress = ServerProgressModel()
     public let showSettings = ShowSettingsModel()
+    /// Private mode, and the titles always private on this device.
+    public let privacy = PrivacyModel()
     public let accounts = AccountsModel()
     public let providers = ProvidersModel()
     /// Licensed services: the page, each title's availability and the return notice.
@@ -1014,6 +1016,7 @@ public final class AppStore {
         notifications.observe(event)
         reader.observe(event)
         reading.observe(event)
+        privacy.apply(event)
         // A download that fails before it starts has no row to say so on: a notice says why.
         if case .reading(.failed(.downloads, let failure)) = event {
             notices.post(Notice(kind: .alert, text: L.readDownloadNotStarted(reason: failure.words), hint: nil))
@@ -1029,7 +1032,11 @@ public final class AppStore {
         if case .downloads(let rows) = event { continued.update(rows) }
         if case .reading(.downloads(let view)) = event { continued.update(chapters: view.rows) }
         if wantsWeek, NotificationsModel.reschedules(after: event) { refreshNotices() }
-        if case .upcomingNotices(let week) = event { airingActivity.weekChanged(week, titles: titles, artwork: artwork) }
+        if case .upcomingNotices(var week) = event {
+            // The engine leaves always-private titles out; one made so this session goes too.
+            week.airings.removeAll { privacy.isAlways(show: $0.id) }
+            airingActivity.weekChanged(week, titles: titles, artwork: artwork)
+        }
         if tv.cast.active, Self.playsHere(event) {
             // A cast plays through the engine as any play does, on the TV: the player here stays shut.
             AppLog.info("store", "casting: \(String(String(describing: event).prefix { $0 != "(" }))")
@@ -1071,7 +1078,7 @@ public final class AppStore {
         case .cards(let entries):
             titles.merge(entries)
             titles.carded(entries.map(\.id))
-        case .progress(let id, let progress, let resume, let episodes):
+        case .progress(let id, let progress, let resume, let episodes, _, _):
             titles.progress(id: id, progress: progress, resume: resume, episodes: episodes)
             widgetsChanged()
         case .lastAired(let rows):
@@ -1185,7 +1192,7 @@ public final class AppStore {
         case .imageFailed(let url, _):
             artwork.failed(url: url)
 
-        case .playbackStaged(let id, _, let episode, _, _, _):
+        case .playbackStaged(let id, _, let episode, _, _, _, _):
             if startAt?.staged(id: id, episode: episode) == false { startAt = nil }
             let after = playSent.map { " \(AppLog.ms(since: $0)) ms after play" } ?? ""
             AppLog.info("store", "staged \(id) episode \(episode)\(after)")
@@ -1214,7 +1221,13 @@ public final class AppStore {
             onPlayback?(event)
 
         case .widgetSnapshot(let data):
-            widgets.received(data, art: artwork)
+            // The engine sends none while private; one asked for before the switch stays unshown.
+            if !privacy.on { widgets.received(data, art: artwork) }
+        case .private(let on):
+            privacyChanged(on)
+            onPlayback?(event)
+        case .alwaysPrivate:
+            onPlayback?(event)
 
         case .update(let status):
             updates.apply(status)
@@ -1254,6 +1267,8 @@ public final class AppStore {
 
     /// What the widgets show may have changed: ask for their snapshot once things settle.
     private func widgetsChanged() {
+        // Nothing watched while private reaches the widgets: they keep what they showed before.
+        guard !privacy.on else { return }
         widgets.changed { [weak self] in self?.send(.widgetSnapshot) }
     }
 

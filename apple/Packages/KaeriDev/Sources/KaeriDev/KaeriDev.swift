@@ -147,6 +147,7 @@ final class Delegate: NSObject, NSApplicationDelegate {
         if store.applyGoOfflineArgument() { settled = await store.settle() }
         store.applyShowcase()
         if let scene = SyncScene.named() { _ = await store.sync.stage(scene, store: store) }
+        if let scene = PrivateScene.named() { await store.stage(scene) }
         if let scene = PrelaunchScene.named() {
             store.cameIn.stage(scene)
             store.sync.stage(prelaunch: scene)
@@ -252,6 +253,11 @@ final class Delegate: NSObject, NSApplicationDelegate {
         }
         if let point = options.openMenu, let window = Snapshot.window {
             await Snapshot.withMenu(at: point, open: window, to: url)
+            exitAfterSnapshot()
+            return
+        }
+        if let point = options.appMenu, let window = Snapshot.window {
+            await Snapshot.withAppMenu(at: point, over: window, to: url)
             exitAfterSnapshot()
             return
         }

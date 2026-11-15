@@ -2,6 +2,7 @@
 // display kept awake, the audio session, and the power the device runs on.
 
 import KaeriStore
+import KaeriStrings
 import Foundation
 import MediaPlayer
 
@@ -24,14 +25,15 @@ final class NowPlaying {
     func update() {
         guard let model, model.isPresented else { return }
         if targets.isEmpty { bind() }
+        // While private, the system's media controls name nothing: no show, episode or art.
         var info: [String: Any] = [
-            MPMediaItemPropertyTitle: model.episodeLine,
-            MPMediaItemPropertyArtist: model.showTitle,
+            MPMediaItemPropertyTitle: model.isPrivate ? L.nowPlayingPrivate : model.episodeLine,
             MPNowPlayingInfoPropertyMediaType: MPNowPlayingInfoMediaType.video.rawValue,
             MPNowPlayingInfoPropertyElapsedPlaybackTime: model.playhead,
             MPNowPlayingInfoPropertyPlaybackRate: model.paused ? 0.0 : model.speed,
             MPNowPlayingInfoPropertyDefaultPlaybackRate: 1.0,
         ]
+        if !model.isPrivate { info[MPMediaItemPropertyArtist] = model.showTitle }
         if let duration = model.duration { info[MPMediaItemPropertyPlaybackDuration] = duration }
         let center = MPNowPlayingInfoCenter.default()
         center.nowPlayingInfo = info
@@ -43,7 +45,7 @@ final class NowPlaying {
 
     /// What the Live Activity shows: once the episode's first picture is up and its length known.
     static func playing(_ model: PlayerModel) -> PlaybackActivityFeed.Playing? {
-        guard model.hasPicture, let duration = model.duration, duration > 0,
+        guard !model.isPrivate, model.hasPicture, let duration = model.duration, duration > 0,
               let id = model.staged?.id ?? model.starting?.id
         else { return nil }
         let episode = model.episode?.number ?? model.staged?.episode ?? model.starting?.episode ?? ""

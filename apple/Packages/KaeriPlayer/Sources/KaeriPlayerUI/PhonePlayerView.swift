@@ -271,10 +271,17 @@ public struct PhonePlayerView: View {
                 Text(model.showTitle)
                     .font(.showTitle(size: 15))
                     .fixedLineHeight(20)
-                Text(model.episodeLine)
-                    .font(.system(size: 13))
-                    .contentTransition(.opacity)
-                    .animation(.standard, value: model.episodeLine)
+                HStack(alignment: .firstTextBaseline, spacing: 8) {
+                    Text(model.episodeLine)
+                        .font(.system(size: 13))
+                        .contentTransition(.opacity)
+                        .animation(.standard, value: model.episodeLine)
+                    if model.isPrivate {
+                        PlayerPrivateLabel(size: 13)
+                            .transition(.opacity)
+                    }
+                }
+                .animation(.fadeIn, value: model.isPrivate)
             }
             .lineLimit(1)
             .frame(maxWidth: .infinity, alignment: .leading)
