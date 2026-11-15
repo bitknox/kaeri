@@ -368,6 +368,7 @@ fn stage(server: &RemoteServer, playing: &Playing) {
         episode_title,
         speed: 1.0,
         resume: None,
+        always_private: false,
     });
     tracks(server, playing);
     server.observe(&position(playing));
