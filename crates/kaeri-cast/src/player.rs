@@ -1701,7 +1701,7 @@ async fn attempt(inner: &Arc<Inner>, load: CastLoad) -> Result<CastPlan, CastFai
                 tracing::info!(route = ?plan.route, ?said, "Kaeri's receiver didn't play a plan");
                 // No device converts video: a picture the TV can't decode ends it at once.
                 if let Some(said) = said.as_ref().filter(|said| said.part == "video") {
-                    return Err(said_failure(Some(said)));
+                    return Err(said_failure(Some(said), Some(&plan)));
                 }
                 if said.as_ref().is_some_and(|said| said.part == "unknown") {
                     if same_again {
@@ -1734,7 +1734,7 @@ async fn attempt(inner: &Arc<Inner>, load: CastLoad) -> Result<CastPlan, CastFai
         }
     }
     if own {
-        return Err(said_failure(reported.as_ref()));
+        return Err(said_failure(reported.as_ref(), None));
     }
     // When what this load taught leaves nothing, the reason is the part the TV refused.
     let caps = setup.memory.caps(&setup.device.id);
@@ -1755,13 +1755,47 @@ async fn what_the_receiver_said(inner: &Inner) -> Option<ReceiverError> {
 }
 
 /// Why a cast on Kaeri's receiver didn't play: the codec it named, or the plain sentence.
-fn said_failure(said: Option<&ReceiverError>) -> CastFailure {
+fn said_failure(said: Option<&ReceiverError>, plan: Option<&CastPlan>) -> CastFailure {
     let Some(said) = said else { return CastFailure::Refused };
-    match (said.part.as_str(), said.codec.clone()) {
-        ("video", Some(codec)) => Uncastable::VideoCodec(codec).into(),
-        ("audio", Some(codec)) => Uncastable::AudioCodec(codec).into(),
+    match (said.part.as_str(), said.codec.as_deref()) {
+        ("video", Some(codec)) => Uncastable::VideoCodec(named_codec(codec, plan, true)).into(),
+        ("audio", Some(codec)) => {
+            Uncastable::AudioCodec(named_codec(codec, plan, false)).into()
+        }
         _ => CastFailure::Refused,
     }
+}
+
+/// The name a notice shows for a codec Kaeri's receiver named. The receiver gives the base of
+/// the TV's codec string (`hev1`, `ec-3`) or echoes the load's own word (`video:mpeg2`), so the
+/// loaded part keeps its own name and a codec string's base gets the common one.
+fn named_codec(said: &str, plan: Option<&CastPlan>, video: bool) -> String {
+    match plan {
+        Some(plan) if video && said == plan.video.part() => return plan.video.to_string(),
+        Some(CastPlan { audio: AudioPlan::Copy(codec), .. })
+            if !video && said == codec.part() =>
+        {
+            return codec.to_string();
+        }
+        _ => {}
+    }
+    let base = said.strip_prefix(if video { "video:" } else { "audio:" }).unwrap_or(said);
+    let name = match base.to_ascii_lowercase().as_str() {
+        "avc1" | "avc3" | "h264" => "H.264",
+        "hev1" | "hvc1" | "hevc" => "HEVC",
+        "vp09" | "vp9" => "VP9",
+        "vp08" | "vp8" => "VP8",
+        "av01" | "av1" => "AV1",
+        "mp4a" | "aac" => "AAC",
+        "ac-3" | "ac3" => "AC-3",
+        "ec-3" | "eac3" => "E-AC-3",
+        "dts" | "dtsc" | "dtse" | "dtsh" | "dtsl" | "dtsx" => "DTS",
+        "mlpa" | "truehd" => "TrueHD",
+        "opus" => "Opus",
+        "flac" => "FLAC",
+        _ => return base.to_ascii_uppercase(),
+    };
+    name.to_owned()
 }
 
 /// A subtitle file as it is, for Kaeri's receiver to draw: served by the relay with its
@@ -2513,12 +2547,7 @@ fn from_kaeris_receiver(inner: &Inner, state: &mut State, message: &Incoming, ou
                 part if !state.ended && state.plan.is_some() => {
                     let relayed = state.plan.as_ref().is_some_and(CastPlan::relayed);
                     let failure = match part {
-                        "video" => error.codec.clone().map_or(CastFailure::Refused, |codec| {
-                            Uncastable::VideoCodec(codec).into()
-                        }),
-                        "audio" => error.codec.clone().map_or(CastFailure::Refused, |codec| {
-                            Uncastable::AudioCodec(codec).into()
-                        }),
+                        "video" | "audio" => said_failure(Some(&error), state.plan.as_ref()),
                         "network" | "manifest"
                             if relayed && (error.lost || error.status == Some(0)) =>
                         {

@@ -1351,12 +1351,29 @@ async fn a_picture_kaeris_receiver_cant_decode_ends_naming_its_codec() {
     .await;
     assert_eq!(
         player.failure(),
-        Some(CastFailure::Uncastable(Uncastable::VideoCodec("hev1".into())))
+        Some(CastFailure::Uncastable(Uncastable::VideoCodec("HEVC".into())))
     );
     // No device converts video, and the standard receiver wouldn't play it either.
     assert_eq!(receiver.heard("LOAD").len(), 1);
     assert_eq!(launched(&receiver), ["0A1B2C3D"]);
     player.quit().await.unwrap();
+}
+
+#[test]
+fn a_codec_kaeris_receiver_names_reads_as_the_notice_names_it() {
+    let plan = CastPlan {
+        route: CastRoute::Relayed { remux: false },
+        video: crate::formats::VideoFormat::Other("MPEG2".into()),
+        height: Some(720),
+        audio: AudioPlan::Copy(crate::formats::AudioCodec::Dts),
+        delivery: Delivery::Mkv,
+    };
+    // The load's own word comes back as the part's name; a codec string's base as the common one.
+    assert_eq!(super::named_codec("video:mpeg2", Some(&plan), true), "MPEG2");
+    assert_eq!(super::named_codec("dts", Some(&plan), false), "DTS");
+    assert_eq!(super::named_codec("hev1", Some(&plan), true), "HEVC");
+    assert_eq!(super::named_codec("ec-3", None, false), "E-AC-3");
+    assert_eq!(super::named_codec("video:vc1", None, true), "VC1");
 }
 
 #[tokio::test(flavor = "multi_thread", worker_threads = 4)]
@@ -1368,7 +1385,7 @@ async fn an_audio_error_on_kaeris_receiver_never_blames_the_video() {
     .await;
     assert_eq!(
         player.failure(),
-        Some(CastFailure::Uncastable(Uncastable::AudioCodec("opus".into())))
+        Some(CastFailure::Uncastable(Uncastable::AudioCodec("Opus".into())))
     );
     // Kaeri's receiver said what failed: nothing is guessed, so nothing is marked.
     let caps = memory.caps("tv-1");
