@@ -5,7 +5,7 @@
 use std::{sync::Arc, time::Duration};
 
 use kaeri_cast::{
-    CastDevice, CastFailure, PlainHttp, Timings,
+    CastDevice, CastFailure, DEFAULT_MEDIA_RECEIVER, PlainHttp, Timings,
     aac::FakeEncoder,
     fake::{
         FakeOptions, FakeReceiver,
@@ -93,7 +93,17 @@ impl Rig {
         Self::with(encoder, FakeOptions { speed: 8.0, ..FakeOptions::default() }).await
     }
 
+    /// A TV cast to through the Default Media Receiver, as `cast.receiver` can name it: the
+    /// relay's conversions and the encoder are what it plays with.
+    async fn standard(encoder: bool) -> Self {
+        Self::on(encoder, FakeOptions { speed: 8.0, ..FakeOptions::default() }, true).await
+    }
+
     async fn with(encoder: bool, options: FakeOptions) -> Self {
+        Self::on(encoder, options, false).await
+    }
+
+    async fn on(encoder: bool, options: FakeOptions, standard: bool) -> Self {
         let receiver = FakeReceiver::start(options).await.unwrap();
         let dir = tempfile::tempdir().unwrap();
         let hub = Arc::new(CastHub::with(
@@ -101,6 +111,9 @@ impl Rig {
             Arc::new(PlainHttp),
             timings(),
         ));
+        if standard {
+            hub.set_receiver(Some(DEFAULT_MEDIA_RECEIVER.into()));
+        }
         if encoder {
             hub.set_encoder(Arc::new(FakeEncoder::default()));
         }
@@ -264,7 +277,7 @@ async fn a_tv_kept_for_the_next_episode_is_let_go_by_a_play_on_this_device() {
 
 #[tokio::test(flavor = "multi_thread", worker_threads = 4)]
 async fn audio_the_tv_cant_play_says_so_and_never_takes_the_tv_over() {
-    let rig = Rig::new(false).await;
+    let rig = Rig::standard(false).await;
     let stream = rig.file("1.mkv", &Fixture::default());
     let events = rig.play(vec![stream], context("1", None)).await;
     assert_eq!(ending(&events), Some(Ending::Failed));
@@ -275,8 +288,23 @@ async fn audio_the_tv_cant_play_says_so_and_never_takes_the_tv_over() {
 }
 
 #[tokio::test(flavor = "multi_thread", worker_threads = 4)]
-async fn a_stream_the_tv_cant_play_fails_over_to_one_it_can() {
+async fn kaeris_receiver_plays_the_audio_the_standard_one_cant() {
     let rig = Rig::new(false).await;
+    let stream = rig.file("1.mkv", &Fixture::default());
+    let events = rig.play(vec![stream], context("1", None)).await;
+    assert_eq!(ending(&events), Some(Ending::Complete { next: None }), "{events:?}");
+    let said = Msg::NoticeCastAudioCodec { name: "Living room".into(), codec: "AC-3".into() }
+        .english();
+    assert!(!toasts(&events).contains(&said), "{:?}", toasts(&events));
+    // Handed over as it is: no AAC on the way.
+    let loaded = rig.receiver.heard("LOAD");
+    assert_eq!(loaded.len(), 1);
+    assert_eq!(loaded[0]["media"]["customData"]["kaeri"]["audio"]["codec"], "ac3");
+}
+
+#[tokio::test(flavor = "multi_thread", worker_threads = 4)]
+async fn a_stream_the_tv_cant_play_fails_over_to_one_it_can() {
+    let rig = Rig::standard(false).await;
     let ac3 = rig.file("1-ac3.mkv", &Fixture::default());
     let aac = rig
         .file("1-aac.mkv", &Fixture { audio: Some(FixtureAudio::aac()), ..Fixture::default() });
