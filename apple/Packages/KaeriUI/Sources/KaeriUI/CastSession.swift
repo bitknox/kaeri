@@ -634,7 +634,7 @@ struct CastSessionSeek: View {
                 .foregroundStyle(.haze)
                 .opacity(live ? 1 : 0)
                 if let waiting = cast.waitingSeconds, live {
-                    Text(Msg.castPhaseWaiting(name: cast.heldName, seconds: waiting).text)
+                    Text(Msg.castPhaseWaiting(name: cast.heldName, seconds: Int64(waiting)).text)
                         .font(touch ? .ui(13) : .mac(11))
                         .foregroundStyle(.haze)
                         .monospacedDigit()
