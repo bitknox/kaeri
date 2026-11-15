@@ -11,7 +11,9 @@ use kaeri_model::{
     search::SearchQuery,
 };
 use kaeri_testkit::fixtures::FINISHED;
+use kaeri_tui::keymap::Action;
 
+use super::progress::{opened, seed_partway};
 use crate::harness::{Harness, names};
 
 fn private_said(updates: &[Event]) -> Vec<bool> {
@@ -81,4 +83,46 @@ async fn always_private_is_kept_on_this_device_and_never_synced() {
     );
     assert_eq!(h.store().private_titles().unwrap(), [title.key()]);
     assert_eq!(h.store().sync_op_count().unwrap(), before, "nothing for the sync log");
+}
+
+#[tokio::test]
+async fn ctrl_p_puts_the_chip_in_the_header_once_the_engine_says_so() {
+    let mut h = Harness::new().await;
+    h.settle().await;
+    assert!(!h.app().private_on(), "a launch starts with the mode off");
+    h.press(Action::TogglePrivate);
+    assert_eq!(private_said(&h.settle().await), [true]);
+    assert!(h.app().private_on());
+    let screen = h.screen();
+    let header = screen.lines().next().unwrap_or_default();
+    assert!(header.contains("◌ private"), "{header}");
+    assert!(screen.contains("Private mode is on."), "the notice:\n{screen}");
+
+    h.press(Action::TogglePrivate);
+    assert_eq!(private_said(&h.settle().await), [false]);
+    assert!(!h.screen().lines().next().unwrap_or_default().contains("private"));
+}
+
+#[tokio::test]
+async fn always_private_from_the_title_page_says_so_under_its_main_action() {
+    let mut h = Harness::new().await;
+    seed_partway(&h);
+    opened(&mut h).await;
+    assert_eq!(h.app().private_line(FINISHED), None, "nothing private yet");
+
+    h.press(Action::ToggleAlwaysPrivate);
+    let updates = h.settle().await;
+    assert!(
+        updates.iter().any(|u| matches!(u, Event::AlwaysPrivate { on: true, .. })),
+        "{:?}",
+        names(&updates)
+    );
+    assert!(h.app().always_private(FINISHED));
+    let screen = h.screen();
+    assert!(screen.contains("◌ Always private · Not saved or synced"), "{screen}");
+
+    h.press(Action::ToggleAlwaysPrivate);
+    h.settle().await;
+    assert!(!h.app().always_private(FINISHED));
+    assert!(!h.screen().contains("Always private"));
 }

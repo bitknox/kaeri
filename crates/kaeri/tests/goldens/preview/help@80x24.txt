@@ -3,22 +3,22 @@ Kaeri                                                      plugins ·  ·  kitsu
 ────────────────────────────────────────────────────────────────────────────────
 ▌ Keys                                                             Page 1 of 3
 ────────────────────────────────────────────────────────────────────────────────
-  Global                              Movement
-    Show keys                      ?    Move up                    k / ↑
-    Run a command         : / ctrl+k    Move down                  j / ↓
-    Quit                  Q / ctrl+c    Move left                  h / ←
-    Back                     q / esc    Move right                 l / →
-    Toggle rail width            tab    Jump to top                    g
-    Refresh this view              r    Jump to bottom                 G
-    Force a full resync            R    Jump to today                  T
-    Subbed or dubbed               t    Jump to previous day           {
-    Kaeri is for                   I    Jump to next day               }
-    Shows or reading               W    Page up                   ctrl+u
-    Go to section                1–0    Page down                 ctrl+d
-    Search                         /  Lists
-    Recent messages                !    Open                           ↵
+  Global                                Delete the crash report        E
+    Show keys                      ?  Movement
+    Run a command         : / ctrl+k    Move up                    k / ↑
+    Quit                  Q / ctrl+c    Move down                  j / ↓
+    Back                     q / esc    Move left                  h / ←
+    Toggle rail width            tab    Move right                 l / →
+    Refresh this view              r    Jump to top                    g
+    Force a full resync            R    Jump to bottom                 G
+    Subbed or dubbed               t    Jump to today                  T
+    Kaeri is for                   I    Jump to previous day           {
+    Shows or reading               W    Jump to next day               }
+    Go to section                1–0    Page up                   ctrl+u
+    Search                         /    Page down                 ctrl+d
+    Recent messages                !  Lists
+    Private mode              ctrl+p    Open                           ↵
     Copy the bug report            C    Play next unwatched        space
-    Delete the crash report        E    Set list status                a
 
 ────────────────────────────────────────────────────────────────────────────────
 plugins · Subbed · 1080p                                     ↑↓ page   esc close

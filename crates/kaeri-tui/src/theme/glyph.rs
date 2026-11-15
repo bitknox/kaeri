@@ -45,6 +45,11 @@ pub const FOLLOWED: char = '◆';
 /// Sync indicator for the status line.
 pub const SYNC: char = '⇅';
 
+/// Private mode: the header chip, the title page's line and the notice lead with it, so the
+/// state colour is never the only sign. Hollow and dotted, apart from the filled and hollow
+/// marks of a source or a tracker.
+pub const PRIVATE: char = '◌';
+
 /// Back-navigation marker used in pushed-view headers.
 pub const BACK: char = '←';
 

@@ -52,6 +52,7 @@ mod missing;
 mod notices;
 mod overlays;
 mod playback;
+mod private;
 mod providers;
 mod reader;
 mod reader_novel;
@@ -86,6 +87,7 @@ pub use self::{
     },
     overlays::{FrameReport, PALETTE_ROWS},
     playback::NowPlaying,
+    private::PrivateLine,
     providers::proxy_badge,
     reader::{
         CHROME_ROWS, EndFacts, MIN_COLUMNS, MIN_ROWS, PLATE_AFTER, PageJob, PartKey, Reader,
@@ -444,6 +446,8 @@ pub struct App {
     pub window: Option<(u16, u16)>,
     /// The engine says the computer is offline.
     pub offline: bool,
+    /// Private watching and reading: the mode, the titles kept private, and the notice.
+    pub(crate) private: private::Private,
 }
 
 impl App {
@@ -588,6 +592,7 @@ impl App {
             blocks_owed: false,
             window: None,
             offline: false,
+            private: private::Private::default(),
         }
     }
 
@@ -637,9 +642,9 @@ impl App {
             Event::LiveSearch { .. }
             | Event::Browse(_)
             | Event::Facets(_)
-            | Event::RecentSearches(_)
-            | Event::Private(_)
-            | Event::AlwaysPrivate { .. } => {}
+            | Event::RecentSearches(_) => {}
+            Event::Private(on) => self.apply_private(on),
+            Event::AlwaysPrivate { title, on } => self.apply_always_private(&title, on),
             // The periods' rail is the native apps'; the terminal has them in the Sort row.
             Event::Trending { .. } => {}
             Event::Surprise { pool, outcome } => self.apply_surprise(pool, outcome),
@@ -817,7 +822,16 @@ impl App {
             Event::PlaybackSpeed(speed) => self.apply_playback_speed(speed),
             Event::ActiveProvider(provider) => self.active_provider = Some(provider),
             Event::PlaybackKept => self.apply_playback_kept(),
-            Event::PlaybackStaged { id, title, episode, episode_title, speed, .. } => {
+            Event::PlaybackStaged {
+                id,
+                title,
+                episode,
+                episode_title,
+                speed,
+                always_private,
+                ..
+            } => {
+                self.private.take_flag(id, always_private);
                 self.playback_failed = false;
                 self.take_staged(id, title, episode, episode_title, speed);
             }
@@ -896,7 +910,8 @@ impl App {
             Event::Resumed { position } => self.apply_resumed(position),
             Event::TorrentProxy(status) => self.apply_proxy(status),
             Event::Episodes { id, rows, .. } => self.apply_episodes(id, rows),
-            Event::Progress { id, progress, resume, episodes, .. } => {
+            Event::Progress { id, progress, resume, episodes, private, kept } => {
+                self.private.take_standing(id, private, kept);
                 self.apply_progress(id, progress, resume, episodes)
             }
             Event::SyncPairFailed { problem, device } => {

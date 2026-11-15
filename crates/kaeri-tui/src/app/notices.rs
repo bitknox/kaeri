@@ -336,6 +336,7 @@ impl App {
             toast.ttl = toast.ttl.saturating_sub(1);
         }
         self.toasts.retain(|t| t.ttl > 0);
+        self.tick_private_notice();
         self.tick_pending_reload();
         self.pay_blocks();
         self.tick_strip();

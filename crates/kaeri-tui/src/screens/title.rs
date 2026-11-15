@@ -115,7 +115,11 @@ pub(super) fn render_title(buf: &mut Buffer, app: &App, area: Rect) {
         .unwrap_or_default();
     let status_room = if status_lines.is_empty() { 0 } else { status_lines.len() + 1 };
     let budget = if app.synopsis_expanded { 12 } else { 5 };
-    let room = (area.bottom().saturating_sub(y).saturating_sub(4) as usize)
+    // The private line under the progress line takes a row of its own, given up by the synopsis
+    // on a short terminal.
+    let private = app.private_line(entry.id);
+    let reserved = if private.is_some() { 5 } else { 4 };
+    let room = (area.bottom().saturating_sub(y).saturating_sub(reserved) as usize)
         .saturating_sub(status_room);
     let lines = wrap(&entry.synopsis, area.width as usize, budget.min(room));
     for (i, line) in lines.iter().enumerate() {
@@ -166,9 +170,15 @@ pub(super) fn render_title(buf: &mut Buffer, app: &App, area: Rect) {
         }
     }
 
+    // Private, under the line that leads to the next episode: whether this title is saved
+    // now. The play keys, the list status and the episodes stay as they are.
+    if let Some(private) = &private {
+        render_private_line(buf, app, area, meter_y + 1, private);
+    }
+
     // A next episode that aired and no source lists: said a line under the meter, and the
     // people followed under that.
-    let mut top = meter_y.saturating_add(2);
+    let mut top = meter_y.saturating_add(if private.is_some() { 3 } else { 2 });
     if !status_lines.is_empty() {
         let room = area.bottom().saturating_sub(top) as usize;
         for (i, words) in status_lines.iter().take(room).enumerate() {
@@ -378,6 +388,35 @@ fn missing_tail(missing: &MissingEpisode, answer: Option<CheckOutcome>) -> Strin
         (MissingPhase::Quiet, Some(CheckOutcome::Found) | None) => {
             joined(t::episode_missing_not_yet())
         }
+    }
+}
+
+/// A title's private line: its head in the state colour, then what is kept, dim. Shared with
+/// Now Playing, so the two say it the same way.
+pub(super) fn render_private_line(
+    buf: &mut Buffer,
+    app: &App,
+    area: Rect,
+    y: u16,
+    private: &crate::app::PrivateLine,
+) {
+    if y >= area.bottom() {
+        return;
+    }
+    let width = area.width as usize;
+    let head = truncate(&private.head, width);
+    let x = area.left() + head.cells() as u16;
+    line(
+        buf,
+        area.left(),
+        y,
+        head,
+        app.palette.style(Role::State).add_modifier(Modifier::BOLD),
+    );
+    let rest = [" · ", private.rest.as_str()].concat();
+    let room = area.right().saturating_sub(x) as usize;
+    if room > 0 {
+        line(buf, x, y, truncate(&rest, room), app.palette.style(Role::TextDim));
     }
 }
 

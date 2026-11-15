@@ -43,17 +43,28 @@ impl App {
             && matches!(self.nav.current(), StageView::Section(Section::Accounts))
     }
 
-    /// Sign the selected tracker in or out.
+    /// Enter on an Accounts row: the private mode switch on the first, then the selected
+    /// tracker signed in or out.
     ///
-    /// The same decision the Accounts overlay made, kept in one place so the screen and the overlay
-    /// cannot disagree about what Enter does.
+    /// The tracker's decision is the one the Accounts overlay makes, kept in one place so the
+    /// screen and the overlay cannot disagree about what Enter does. The switch brings no
+    /// notice: its description is in view beside it.
     pub(super) fn toggle_account(&mut self) -> Option<Command> {
+        let Some(row) = self.cursors.accounts.selected.checked_sub(1) else {
+            return self.toggle_private(false);
+        };
         // The row after the trackers is Show people you follow, while AniList is signed in.
-        if self.cursors.accounts.selected == self.sync.len() && self.following_row() {
+        if row == self.sync.len() && self.following_row() {
             return Some(Command::StepSetting { key: SettingKey::ShowFollowing, delta: 1 });
         }
-        let tracker = self.sync.get(self.cursors.accounts.selected)?.clone();
+        let tracker = self.sync.get(row)?.clone();
         self.account_action(tracker)
+    }
+
+    /// The tracker on the highlighted Accounts row, if the row is one: the first row is the
+    /// private mode switch.
+    pub fn account_tracker(&self) -> Option<&SyncState> {
+        self.sync.get(self.cursors.accounts.selected.checked_sub(1)?)
     }
 
     /// Whether Accounts has the Show people you follow row: only while AniList is signed in, as
@@ -340,6 +351,8 @@ mod tests {
         a.handle(Action::ShowAccounts, 20);
         // A section, so the rail holds focus until you step into it — the same as everywhere else.
         a.nav.focus_stage();
+        // Past the private mode switch.
+        a.handle(Action::Down, 20);
         assert_eq!(
             a.handle(Action::Open, 20),
             Some(Command::Connect { tracker: "anilist".into() })
@@ -359,6 +372,7 @@ mod tests {
         a.apply(Event::Sync(Box::new(SyncState { needs_reauth: true, ..connected(1) })));
         a.handle(Action::ShowAccounts, 20);
         a.nav.focus_stage();
+        a.handle(Action::Down, 20);
         assert_eq!(
             a.handle(Action::Open, 20),
             Some(Command::Connect { tracker: "anilist".into() })
@@ -372,6 +386,7 @@ mod tests {
         a.apply(Event::Sync(Box::new(SyncState::new("kitsu"))));
         a.handle(Action::ShowAccounts, 10);
         a.nav.focus_stage();
+        a.handle(Action::Down, 10);
 
         assert_eq!(a.handle(Action::Open, 10), None);
         assert_eq!(a.nav.overlay(), Some(&Overlay::KitsuUsername));
@@ -405,6 +420,7 @@ mod tests {
         a.apply(Event::Sync(Box::new(SyncState::new("kitsu"))));
         a.handle(Action::ShowAccounts, 10);
         a.nav.focus_stage();
+        a.handle(Action::Down, 10);
         a.handle(Action::Open, 10);
 
         // Enter on an empty field is a slip, not an answer.
@@ -452,6 +468,9 @@ mod tests {
         assert!(!a.nav.has_overlay());
 
         a.nav.focus_stage();
+        // The private mode switch comes first.
+        assert_eq!(a.handle(Action::Open, 10), Some(Command::SetPrivate { on: true }));
+        a.handle(Action::Down, 10);
         // A connected tracker signs out; an unconnected one signs in.
         assert_eq!(
             a.handle(Action::Open, 10),
@@ -467,7 +486,7 @@ mod tests {
         for _ in 0..10 {
             a.handle(Action::Down, 10);
         }
-        assert_eq!(a.cursor(), 2);
+        assert_eq!(a.cursor(), 3);
         assert_eq!(
             a.handle(Action::Open, 10),
             Some(Command::StepSetting { key: SettingKey::ShowFollowing, delta: 1 })
@@ -483,7 +502,11 @@ mod tests {
         for _ in 0..10 {
             a.handle(Action::Down, 10);
         }
-        assert_eq!(a.cursor(), 0, "signed out, AniList's row is the only one");
+        assert_eq!(
+            a.cursor(),
+            1,
+            "signed out, AniList's row is the only one after private mode"
+        );
         assert!(a.shows_following(), "on until it is turned off");
     }
 

@@ -337,10 +337,13 @@ impl App {
         let context = self.screen_context();
         // A novel has no pages to number.
         let novel = self.reads_novel();
+        // A title's own switch is listed on its page, where "this show" has one meaning.
+        let on_a_title = self.title_on_screen().is_some();
         self.keymap
             .palette_entries(self.text(Field::Palette), context)
             .into_iter()
             .filter(|(action, _)| !(novel && *action == Action::ReaderGoToPage))
+            .filter(|(action, _)| on_a_title || *action != Action::ToggleAlwaysPrivate)
             .take(PALETTE_ROWS)
             .collect()
     }

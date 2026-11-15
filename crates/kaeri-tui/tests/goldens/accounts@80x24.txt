@@ -8,20 +8,20 @@ Kaeri                          plugins ●  ·  anilist ⇅ 2  kitsu ○  mal �
  ↓ │
  ◇ │  ────────────────────────────────────────────────────────────────────────
 ▌◎ │
- ≡ │  Tracker         State             Queued    Token
- ⇄ │  ────────────────────────────────────────────────────────────────────────
+ ≡ │    Private mode  [off]
+ ⇄ │    Nothing you watch or read is saved or synced until you turn it off
+   │    or quit Kaeri.
+   │    Your sources and watch parties still see what you open.
+   │
+   │  Tracker         State             Queued    Token
+   │  ────────────────────────────────────────────────────────────────────────
    │    AniList       ● Connected       2         OS keychain
    │    Kitsu         ○ Not connected   0         0600 file
    │  ▌ MyAnimeList   ✕ Sign in again   0         OS keychain
-   │                  Fetching your list failed at 19:24: the token was
-   │                  refused
-   │
-   │    [x] Show people you follow
-   │        Shows where people you follow on AniList are in a show, on its
    │
    │    Tokens are stored in files with 0600 permissions because the OS
 ────────────── ▌ MyAnimeList needs signing in again. Press 8 to open Accounts. ─
-plugins · Subbed · 1080p                                      ↵ sign in   ? keys
+plugins · Subbed · 1080p                     ↵ sign in   ctrl+p private   ? keys
 === styles ===
 colours text=#e4e0d6 text-dim=#a8aec9 rule=#46464d obi=#f2a64b state=#7fc7d9 alert=#f59b85 ground=#1a1b26
 r00 c00-04 fg=text mod=BOLD
@@ -61,38 +61,39 @@ r09 c01-01 fg=text mod=BOLD
 r09 c03-03 fg=rule
 r10 c01-01 fg=text-dim
 r10 c03-03 fg=rule
-r10 c06-12 fg=text-dim
+r10 c08-19 fg=text
 r10 c22-26 fg=text-dim
-r10 c40-45 fg=text-dim
-r10 c50-54 fg=text-dim
 r11 c01-01 fg=text-dim
 r11 c03-03 fg=rule
-r11 c06-77 fg=rule
+r11 c08-73 fg=text-dim
 r12 c03-03 fg=rule
-r12 c08-14 fg=text
-r12 c22-32 fg=state
-r12 c40-40 fg=state
-r12 c50-60 fg=text-dim
+r12 c08-21 fg=text-dim
 r13 c03-03 fg=rule
-r13 c08-12 fg=text
-r13 c22-36 fg=text-dim
-r13 c40-40 fg=text-dim
-r13 c50-58 fg=text-dim
+r13 c08-62 fg=text-dim
 r14 c03-03 fg=rule
-r14 c06-06 fg=obi
-r14 c08-18 fg=text mod=BOLD
-r14 c22-36 fg=alert
-r14 c40-40 fg=text-dim
-r14 c50-60 fg=text-dim
 r15 c03-03 fg=rule
-r15 c22-70 fg=alert
+r15 c06-12 fg=text-dim
+r15 c22-26 fg=text-dim
+r15 c40-45 fg=text-dim
+r15 c50-54 fg=text-dim
 r16 c03-03 fg=rule
-r16 c22-28 fg=alert
+r16 c06-77 fg=rule
 r17 c03-03 fg=rule
+r17 c08-14 fg=text
+r17 c22-32 fg=state
+r17 c40-40 fg=state
+r17 c50-60 fg=text-dim
 r18 c03-03 fg=rule
-r18 c08-33 fg=text
+r18 c08-12 fg=text
+r18 c22-36 fg=text-dim
+r18 c40-40 fg=text-dim
+r18 c50-58 fg=text-dim
 r19 c03-03 fg=rule
-r19 c12-73 fg=text-dim
+r19 c06-06 fg=obi
+r19 c08-18 fg=text mod=BOLD
+r19 c22-36 fg=alert
+r19 c40-40 fg=text-dim
+r19 c50-60 fg=text-dim
 r20 c03-03 fg=rule
 r21 c03-03 fg=rule
 r21 c08-70 fg=text-dim
@@ -102,7 +103,9 @@ r22 c15-15 fg=alert
 r22 c16-78 fg=text
 r22 c79-79 fg=rule
 r23 c00-23 fg=text-dim
-r23 c62-62 fg=text
+r23 c45-45 fg=text
+r23 c46-56 fg=text-dim
+r23 c57-62 fg=text
 r23 c63-73 fg=text-dim
 r23 c74-74 fg=text
 r23 c75-79 fg=text-dim
