@@ -401,23 +401,29 @@ pub fn by_id(following: bool) -> String {
     )
 }
 
-/// How many of the people the viewer follows the title page asks after.
+/// How many of the people the viewer follows the title page shows. It asks for one more, as the
+/// viewer's own entry can be among them.
 pub const FOLLOWING_LIMIT: u32 = 10;
 
 /// The entries of the people the signed-in viewer follows, newest update first, as a third root
 /// of [`by_id`]: no request of its own. Scores come out of a hundred whatever scale each person
 /// keeps their list in. Left out of the document when nobody is signed in to AniList, since the
 /// filter needs an authenticated viewer.
+///
+/// AniList counts the viewer among the people they follow, so their own entry comes back too.
+/// The viewer's id rides along as a fourth root, and each entry's user id, so the client can
+/// leave that entry out.
 const FOLLOWING: &str = r"
-            following: Page(perPage: 10) {
+            following: Page(perPage: 11) {
                 mediaList(mediaId: $id, isFollowing: true, sort: [UPDATED_TIME_DESC]) {
                     status
                     score(format: POINT_100)
                     progress
                     private
-                    user { name avatar { medium } }
+                    user { id name avatar { medium } }
                 }
             }
+            Viewer { id }
 ";
 
 /// Several titles' relations at once, two levels deep: the season walk's question of what
@@ -938,7 +944,9 @@ mod tests {
         // One request either way: the people are a root beside the title, not a second query.
         assert_eq!(signed_in.matches("query ").count(), 1);
         assert!(signed_in.contains("Media(id: $id, type: ANIME)"));
-        assert!(signed_in.contains(&format!("perPage: {FOLLOWING_LIMIT}")));
+        // One more than are shown, for the viewer's own entry, which is left out.
+        assert!(signed_in.contains(&format!("perPage: {}", FOLLOWING_LIMIT + 1)));
+        assert!(signed_in.contains("Viewer { id }") && signed_in.contains("user { id name"));
         assert!(
             signed_in.contains("score(format: POINT_100)"),
             "a score on one scale whatever each person's list uses"

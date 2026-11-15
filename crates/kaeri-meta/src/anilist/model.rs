@@ -636,8 +636,21 @@ pub struct Follower {
     pub user: FollowerUser,
 }
 
+impl Follower {
+    /// The people a cached page kept, when they were told apart from the viewer: a page cached
+    /// before each person's id was asked for may hold the viewer's own entry, so it holds nobody
+    /// known until the page is asked again.
+    pub(crate) fn told_apart(following: Option<Vec<Self>>) -> Option<Vec<Self>> {
+        following.filter(|people| people.iter().all(|person| person.user.id.is_some()))
+    }
+}
+
 #[derive(Debug, Clone, Default, Deserialize, Serialize, PartialEq)]
 pub struct FollowerUser {
+    /// Their AniList id, which tells the viewer's own entry apart: AniList counts the viewer
+    /// among the people they follow. `None` in a page cached before it was asked for.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub id: Option<u32>,
     #[serde(default)]
     pub name: String,
     #[serde(default)]

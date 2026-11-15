@@ -728,7 +728,8 @@ impl Meta {
         let Ok(cached) = serde_json::from_str::<Extras>(&payload) else { return (None, None) };
         let listings = Some(cached.streaming_episodes)
             .filter(|listings| wants_listings && !listings.is_empty());
-        (listings, cached.following.filter(|_| wants_following))
+        let following = crate::anilist::model::Follower::told_apart(cached.following);
+        (listings, following.filter(|_| wants_following))
     }
 
     /// The people the viewer follows as the cache last had them for `id`, for a page answered
@@ -772,6 +773,7 @@ impl Meta {
         if !self.anilist.asks_following() {
             media.following = None;
         }
+        media.following = crate::anilist::model::Follower::told_apart(media.following.take());
         // The stored countdown froze at fetch time; the air date did not move.
         if let Some(next) = &mut media.next_airing_episode {
             next.time_until_airing = next.airing_at - kaeri_store::now();
