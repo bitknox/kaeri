@@ -197,8 +197,10 @@ fun NovelScreen(
         place.ready = false
         if (novel != null) {
             // A new host for the same chapter, after its renderer went: back to the last place shown.
+            // A new screen around the same session, after a change of font size or language: back
+            // to the text the session last showed, not to where the chapter opened.
             val chapter = novel.session to novel.chapter
-            val restore = if (last.chapter == chapter) last.pos ?: novel.restore else novel.restore
+            val restore = novelOpenAt(last.pos.takeIf { last.chapter == chapter }, session.novelPos(novel.chapter), novel.restore)
             if (last.chapter != chapter) last.pos = null
             last.chapter = chapter
             place.reload = { host.open(novel.spine, novel.entry, novel.restore) }
@@ -250,6 +252,14 @@ fun NovelScreen(
         }
     }
 }
+
+/**
+ * Where a novel chapter's web view opens: the last place its own screen showed ([hostLast], after
+ * a renderer went), else the last place the session showed ([shown], after the screen was made
+ * anew), else where the engine opened the chapter ([restore]). Each is a text position, so the
+ * paginator finds the same words at any text size.
+ */
+internal fun novelOpenAt(hostLast: NovelPos?, shown: NovelPos?, restore: NovelPos?): NovelPos? = hostLast ?: shown ?: restore
 
 /** The chapter open and the last place its paginator reported, for a host that takes over. */
 private class LastPlace {

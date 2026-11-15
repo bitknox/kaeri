@@ -576,6 +576,12 @@ reader-opening-chapter = Opening chapter { $chapter }
 # @max 50
 reader-failed-chapter = Couldn't open chapter { $chapter }
 
+# Heading when a chapter could not open before the reader learned which chapter it was, as when
+# Continue asked for the next chapter and the source did not answer.
+# @only android
+# @max 50
+reader-failed-chapter-plain = Couldn't open this chapter
+
 # Heading in the reader's settings above the choices that belong to this series only.
 # @only android
 # @max 20

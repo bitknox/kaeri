@@ -87,6 +87,7 @@ reader-end-series = Kembali ke seri
 reader-end-again = Baca ulang dari awal
 reader-opening-chapter = Membuka bab { $chapter }
 reader-failed-chapter = Bab { $chapter } tidak bisa dibuka
+reader-failed-chapter-plain = Bab ini tidak bisa dibuka
 reader-sheet-series = Seri ini
 reader-sheet-all-manga = Semua manga
 reader-sheet-all-webtoons = Semua webtoon

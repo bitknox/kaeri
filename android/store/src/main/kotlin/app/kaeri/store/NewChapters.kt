@@ -111,12 +111,17 @@ suspend fun ReadingModel.checkNow(timeoutMillis: Long): List<NewChapter>? = coro
 
 /**
  * The chapters waiting or downloading in [view], which keep the download job as episodes do: those
- * waiting for Wi-Fi too, which the job's network rule waits on.
+ * waiting for Wi-Fi too, which the job's network rule waits on. A queue the engine stopped for a
+ * full device fetches nothing until Retry or another download starts it, so what it still holds
+ * keeps nothing.
  */
-fun chaptersBusy(view: BookDownloadsView?): Int = view?.rows?.count {
-    when (it.state) {
-        is ChapterDownloadState.Queued, is ChapterDownloadState.WaitsForWifi, is ChapterDownloadState.Downloading -> true
-        else -> false
+fun chaptersBusy(view: BookDownloadsView?): Int = view?.let { books ->
+    books.rows.count {
+        when (it.state) {
+            is ChapterDownloadState.Queued, is ChapterDownloadState.WaitsForWifi -> !books.stoppedFull
+            is ChapterDownloadState.Downloading -> true
+            else -> false
+        }
     }
 } ?: 0
 

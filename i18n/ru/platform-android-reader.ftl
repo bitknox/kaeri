@@ -93,6 +93,7 @@ reader-end-series = Назад к серии
 reader-end-again = Прочитать заново
 reader-opening-chapter = Открывается глава { $chapter }
 reader-failed-chapter = Не удалось открыть главу { $chapter }
+reader-failed-chapter-plain = Не удалось открыть главу
 reader-sheet-series = Эта серия
 reader-sheet-all-manga = Вся манга
 reader-sheet-all-webtoons = Все вебтуны

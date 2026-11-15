@@ -174,15 +174,28 @@ data class ReaderState(
     val keeping: CreditKeep? = null,
     /** A keep the engine has heard, until the chapter comes laid out with the page in it. */
     val committed: CreditKeep? = null,
+    /** The engine's one offline state, which says whether the chapter after this one can be had before the end page does. */
+    val offline: Boolean = false,
 ) {
     val session: ULong? get() = view?.session
     val chapter: ChapterId? get() = view?.chapter?.id
 
     /**
-     * The chapter the end page leads into: the engine's answer once the end page is said, which
-     * offline is the next one on the device or none, and the one after this until then.
+     * Whether the open chapter is already a file on this device, as a picked folder's books are:
+     * the reader then offers no download for it. The engine marks the row; the series' chapter
+     * list is asked too, as it marks the rows the Contents shows.
      */
-    val endNext: ChapterRow? get() = end.let { if (it != null) it.next else view?.next }
+    val chapterOnDevice: Boolean get() = view?.chapter?.let { open ->
+        open.onDevice || volumes.any { group -> group.chapters.any { it.id == open.id && it.onDevice } }
+    } ?: false
+
+    /**
+     * The chapter the end page leads into: the engine's answer once the end page is said, which
+     * offline is the next one on the device or none. Until then the one after this online, and
+     * offline none, since only the engine knows which chapter is on the device: a strip flung to
+     * its foot before the answer comes must not flow into a chapter that cannot open.
+     */
+    val endNext: ChapterRow? get() = end.let { if (it != null) it.next else if (offline) null else view?.next }
 
     /**
      * The chapter's pages, without the end page: as many as the leaves on one page a leaf, more
@@ -307,6 +320,7 @@ class ReaderSession(private val send: (Command) -> Unit) {
      */
     fun bind(store: AppStore): () -> Unit {
         val unbind = store.listenToReading(::apply)
+        offline(store.offline.value)
         return {
             if (closedUnnamed) unbindLater = unbind else unbind()
         }
@@ -314,7 +328,19 @@ class ReaderSession(private val send: (Command) -> Unit) {
 
     // What the screen sends.
 
-    fun open(work: WorkId, surface: ReaderSurface, chapter: ChapterId? = null, at: OpenAt = OpenAt.Resume, title: String? = null) {
+    /**
+     * Open [work] at [chapter], or where reading got to. [row] is the chapter as the screen that
+     * asked lists it: the reader names it while it opens, and if it fails to, before the engine
+     * says which chapter it is.
+     */
+    fun open(
+        work: WorkId,
+        surface: ReaderSurface,
+        chapter: ChapterId? = null,
+        at: OpenAt = OpenAt.Resume,
+        title: String? = null,
+        row: ChapterRow? = null,
+    ) {
         this.work = work
         this.asked = chapter to at
         // The engine closes the session it had as it opens the next.
@@ -338,9 +364,11 @@ class ReaderSession(private val send: (Command) -> Unit) {
         commitKeep()
         _state.value = ReaderState(
             opening = true,
-            openingChapter = state.value.openingChapter?.takeIf { it.id == chapter },
+            openingChapter = row?.takeIf { chapter != null && it.id == chapter }
+                ?: state.value.openingChapter?.takeIf { it.id == chapter },
             openingTitle = title,
             openingSince = openingClock(),
+            offline = state.value.offline,
         )
         reader(ReaderCommand.Open(work, chapter, at, surface))
     }
@@ -503,7 +531,9 @@ class ReaderSession(private val send: (Command) -> Unit) {
      * chapter's images follow in the same scroll.
      */
     fun flowInto(chapter: ChapterId) {
-        if (flowTo == chapter) return
+        // One flow at a time: the divider can name another chapter while one is on its way (the
+        // engine's end page answers late), and that flow's failure must still land at the join.
+        if (flowTo != null) return
         val now = state.value
         // A flow that failed into this chapter waits for Try again, rather than asking on every scroll past.
         if (now.flowFailed?.chapter == chapter) return
@@ -531,6 +561,11 @@ class ReaderSession(private val send: (Command) -> Unit) {
             backTo = null
             backFrom = null
         }
+    }
+
+    /** The engine's offline state, as the store has it when the reader binds and as it changes. */
+    fun offline(offline: Boolean) {
+        if (state.value.offline != offline) _state.value = state.value.copy(offline = offline)
     }
 
     /** Try again on the end page a failed flow left at the join: the strip flows on into that chapter. */
@@ -638,6 +673,13 @@ class ReaderSession(private val send: (Command) -> Unit) {
      * screen and the page, strip spot or text place it shows. Null before a chapter opened.
      */
     fun place(): ReadPlace? = here
+
+    /**
+     * Where [chapter]'s text was last shown, as its paginator reported it. A text position, not a
+     * page: a screen made anew around this session (a new font size or language) opens the chapter
+     * there, on whichever page that text now falls.
+     */
+    fun novelPos(chapter: ChapterId): NovelPos? = here?.takeIf { it.chapter == chapter }?.novel
 
     /**
      * The screen was made anew around this session, as for a change of font size: its pager
@@ -802,6 +844,7 @@ class ReaderSession(private val send: (Command) -> Unit) {
     fun apply(event: Event) {
         when (event) {
             is Event.Reader -> apply(event.v1)
+            is Event.Connectivity -> offline(event.offline)
             is Event.Reading -> {
                 val chapters = event.v1 as? ReadingEvent.Chapters
                 if (chapters != null) {
@@ -854,6 +897,7 @@ class ReaderSession(private val send: (Command) -> Unit) {
                     readTrackers = now.readTrackers,
                     volumes = now.volumes,
                     settings = now.settings,
+                    offline = now.offline,
                 )
             }
             else -> {}
@@ -917,6 +961,7 @@ class ReaderSession(private val send: (Command) -> Unit) {
                     revealed = if (previous != null || back != null) now.revealed else emptySet(),
                     // A novel's text comes after this; the wait it shows counts from the ask.
                     openingSince = now.openingSince,
+                    offline = now.offline,
                 )
             }
             is ReaderEvent.Leaves -> {

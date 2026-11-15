@@ -854,6 +854,9 @@
   <data name="ReadingRowWaitsWifi" xml:space="preserve">
     <value>Đang chờ · cần Wi-Fi</value>
   </data>
+  <data name="ReadingRowWaitsRoom" xml:space="preserve">
+    <value>Đang chờ · cần dung lượng trống</value>
+  </data>
   <data name="ReadingRowDownloading" xml:space="preserve">
     <value>Đang tải · {done}/{total} trang</value>
   </data>
@@ -958,6 +961,9 @@
   </data>
   <data name="ReadingDlOffline" xml:space="preserve">
     <value>Ngoại tuyến</value>
+  </data>
+  <data name="ReadingDlNoRoom_other" xml:space="preserve">
+    <value>Hết dung lượng. Sẽ tải khi có dung lượng trống.</value>
   </data>
   <data name="ReadingEstimateSize" xml:space="preserve">
     <value>Khoảng {size}</value>

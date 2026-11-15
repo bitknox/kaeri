@@ -78,6 +78,7 @@ import app.kaeri.engine.model.ChapterDownloadState
 import app.kaeri.engine.model.ReaderAction as NoticeAction
 import app.kaeri.i18n.Strings
 import app.kaeri.reader.phone.ReaderLook
+import app.kaeri.reader.phone.failedChapterTitle
 import app.kaeri.reader.BrokenPageGlyph
 import app.kaeri.reader.PageImages
 import app.kaeri.reader.PagedReader
@@ -479,14 +480,13 @@ fun EinkReader(
                 failure != null && state.leaves.isEmpty() && state.novel == null -> {
                     // The chapter that would not open is named, as on the phone.
                     val context = LocalContext.current
-                    val row = state.openingChapter ?: view?.chapter
                     EinkChapterFailed(
                         failure.text(context),
                         state,
                         session,
                         onRetry = session::retryOpen,
                         onBack = actions.onBack,
-                        title = Strings.readerFailedChapter(context, row?.let(::chapterNumber) ?: ""),
+                        title = failedChapterTitle(context, state.openingChapter ?: view?.chapter),
                     )
                 }
                 novelOpen && view != null && novel != null -> EinkNovel(state, session, place, actions, chrome, { paint(it) }, ::toggleChrome, novel)
@@ -583,7 +583,7 @@ fun EinkReader(
             // The bars, in one focus group the D-pad's arrows stay in.
             if (chrome && view != null && layer != EinkLayer.Contents) Box(Modifier.fillMaxSize().keepsArrows(tab = false)) {
             val large = einkLargePanel
-            val onDownload = actions.onDownload?.takeIf { large && view.demoCredit == null }
+            val onDownload = actions.onDownload?.takeIf { large && view.demoCredit == null && !state.chapterOnDevice }
                 EinkTopBar(
                     title = view.title,
                     chapter = view.chapter,

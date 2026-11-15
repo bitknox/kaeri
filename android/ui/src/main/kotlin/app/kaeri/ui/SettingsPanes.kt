@@ -632,7 +632,15 @@ internal fun SourcesPane(actions: AppActions) {
     // Reading alone: the book sources are the pane.
     if (!answer.watches) {
         var adding by rememberSaveable { mutableStateOf(false) }
-        Pane { app.kaeri.ui.reading.BookSourcesList(onAdd = { adding = true }) }
+        val books by LocalAppStore.current.bookSources.view.collectAsStateWithLifecycle()
+        Pane {
+            // Add a source leads the pane once a source is there, as the Book sources page's top
+            // bar has it; with none, the empty state's own button is the one Add.
+            if (!app.kaeri.ui.reading.bookSourcesEmpty(books)) {
+                SettingsGroup(rows = listOf { place -> ActionRow(place, stringResource(R.string.sources_add_title)) { adding = true } })
+            }
+            app.kaeri.ui.reading.BookSourcesList(onAdd = { adding = true })
+        }
         if (adding) app.kaeri.ui.reading.AddSourceSheet { adding = false }
         return
     }
