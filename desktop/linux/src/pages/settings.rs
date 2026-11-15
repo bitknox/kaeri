@@ -112,6 +112,7 @@ const PANES: [Pane; 13] = [
                 &[
                     K::AutoNext,
                     K::UpNextCountdown,
+                    K::PreloadMetered,
                     K::SkipOpening,
                     K::SkipRecap,
                     K::SkipFiller,
@@ -214,7 +215,41 @@ fn follows(switch: SettingKey) -> Option<&'static [SettingKey]> {
         K::Syncplay => Some(&[K::SyncplayServer, K::SyncplayRoom]),
         K::Presence => Some(&[K::PresenceTitle]),
         K::EpisodeDiscussions => Some(&[K::CommentImages]),
+        K::AutoNext => Some(&[K::UpNextCountdown, K::PreloadMetered]),
         _ => None,
+    }
+}
+
+/// What a screen reader hears on a row that follows `switch` while the switch is off, for the
+/// rows that dim to 45% rather than libadwaita's own insensitive look.
+fn follows_hint(switch: SettingKey) -> Option<String> {
+    match switch {
+        K::AutoNext => Some(t::settings_preload_a11y_dimmed()),
+        _ => None,
+    }
+}
+
+/// A row that follows its switch: disabled while the switch is off and, with a hint, dimmed to
+/// 45% with the hint as its description.
+fn follow_switch(row: &gtk::Widget, on: bool, hint: Option<&str>) {
+    row.set_sensitive(on);
+    let Some(hint) = hint else { return };
+    if on {
+        row.remove_css_class("follows-off");
+        row.reset_property(gtk::AccessibleProperty::Description);
+    } else {
+        row.add_css_class("follows-off");
+        row.update_property(&[gtk::accessible::Property::Description(hint)]);
+    }
+}
+
+/// The line under Preload video on metered connections, with the torrent sentence while
+/// torrent playback is on.
+fn preload_line(torrents: bool) -> String {
+    if torrents {
+        format!("{} {}", t::settings_preload_detail_metered(), t::settings_preload_torrents())
+    } else {
+        t::settings_preload_detail_metered()
     }
 }
 
@@ -607,13 +642,14 @@ impl Inner {
                     .filter(|(key, _)| children.contains(key))
                     .map(|(_, widget)| widget.clone())
                     .collect();
+                let hint = follows_hint(*parent);
                 let on = known.setting(*parent).is_some_and(|r| catalog::is_on(&r));
                 for child in &children {
-                    child.set_sensitive(on);
+                    follow_switch(child, on, hint.as_deref());
                 }
                 self.keep(*parent, move |row| {
                     for child in &children {
-                        child.set_sensitive(catalog::is_on(row));
+                        follow_switch(child, catalog::is_on(row), hint.as_deref());
                     }
                 });
             }
@@ -815,6 +851,14 @@ impl Inner {
                 K::ShareSkipTimes => Some(t::settings_share_skips_detail()),
                 K::CastTvs => Some(t::settings_note_cast_tvs_computer()),
                 K::ShowVolumes => Some(t::settings_show_volumes_note()),
+                K::PreloadMetered => Some(preload_line(
+                    self.ctx
+                        .hub
+                        .known
+                        .borrow()
+                        .setting(K::Torrents)
+                        .is_some_and(|r| catalog::is_on(&r)),
+                )),
                 K::TorrentsWhileCasting => {
                     Some(t::settings_note_torrents_while_casting_computer())
                 }
@@ -866,6 +910,13 @@ impl Inner {
                     }
                 }
             });
+            if key == K::PreloadMetered && overridden.is_none() {
+                // The torrent sentence joins the line while torrent playback is on.
+                self.keep(K::Torrents, {
+                    let line = line.clone();
+                    move |row| line.set_subtitle(&preload_line(catalog::is_on(row)))
+                });
+            }
             return line.upcast();
         }
 
@@ -1809,10 +1860,32 @@ mod tests {
     fn title_language_sits_in_general_and_the_rows_that_follow_a_switch_share_its_pane() {
         assert_eq!(pane_of(K::Titles), Some("general"));
         assert_eq!(PANES[0].name, "general");
-        for switch in [K::Syncplay, K::Presence] {
+        for switch in [K::Syncplay, K::Presence, K::AutoNext] {
             for child in follows(switch).unwrap_or_default() {
                 assert_eq!(pane_of(*child), pane_of(switch));
             }
         }
+    }
+
+    #[test]
+    fn preload_sits_under_up_next_countdown_needs_auto_play_next_and_names_torrents_when_on() {
+        let player = PANES
+            .iter()
+            .flat_map(|p| p.groups.iter())
+            .find(|(group, _)| *group == Group::Player)
+            .map(|(_, keys)| *keys)
+            .unwrap_or_default();
+        let at = player.iter().position(|k| *k == K::PreloadMetered);
+        assert_eq!(at, player.iter().position(|k| *k == K::UpNextCountdown).map(|at| at + 1));
+        assert_eq!(player.first(), Some(&K::AutoNext));
+        let children = follows(K::AutoNext).unwrap_or_default();
+        assert!(
+            children.contains(&K::UpNextCountdown) && children.contains(&K::PreloadMetered)
+        );
+        assert_eq!(follows_hint(K::AutoNext), Some(t::settings_preload_a11y_dimmed()));
+        assert!(follows_hint(K::Syncplay).is_none());
+        assert_eq!(preload_line(false), t::settings_preload_detail_metered());
+        assert!(preload_line(true).ends_with(&t::settings_preload_torrents()));
+        assert!(crate::catalog::is_switch(K::PreloadMetered));
     }
 }

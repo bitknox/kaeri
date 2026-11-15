@@ -225,6 +225,10 @@ banner > revealer > widget { background: var(--raised); color: var(--haze); }
 
 /* Settings' preview column: a raised card on the pane's end. */
 .settings-preview { background: var(--raised); border-radius: 12px; padding: 16px; }
+/* A row that needs Auto-play next while it is off: 45% as one row, without libadwaita's own
+   disabled dimming on its parts as well. */
+row.follows-off, row.follows-off:disabled { opacity: 0.45; filter: none; }
+row.follows-off :disabled { filter: none; }
 .preview-frame { border-radius: 8px; }
 .chip {
   font-size: 0.79em; font-weight: 500; padding: 1px 8px; border-radius: 999px;
