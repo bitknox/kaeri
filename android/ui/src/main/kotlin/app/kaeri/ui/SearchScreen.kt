@@ -5,8 +5,6 @@
 package app.kaeri.ui
 
 import android.content.res.Configuration
-import android.view.View
-import android.view.ViewTreeObserver
 import app.kaeri.engine.model.KaeriIsFor
 import app.kaeri.ui.reading.ReadPlaces
 import app.kaeri.ui.reading.ReadSearchScreen
@@ -96,11 +94,11 @@ import androidx.compose.material3.SearchBarValue
 import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.input.InputMode
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalInputModeManager
-import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.semantics.contentDescription
@@ -118,8 +116,6 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.suspendCancellableCoroutine
-import kotlin.coroutines.resume
 import kotlinx.coroutines.withTimeoutOrNull
 import app.kaeri.design.Motion
 import app.kaeri.design.SwapFade
@@ -356,11 +352,11 @@ private fun ShowsSearch(start: SearchQuery?, startFilters: Boolean, open: Boolea
     // a docked field focused by touch opens the search view again. Touch alone keeps the old way.
     val dockedField = remember { FocusRequester() }
     val inputMode = LocalInputModeManager.current
-    val view = LocalView.current
     val configuration = LocalConfiguration.current
     val keyboardAttached = configuration.keyboard == Configuration.KEYBOARD_QWERTY &&
         configuration.hardKeyboardHidden != Configuration.HARDKEYBOARDHIDDEN_YES
     var refocus by remember { mutableStateOf(false) }
+    var fieldFocused by remember { mutableStateOf(false) }
     LaunchedEffect(refocus, bar.currentValue) {
         if (!refocus || bar.currentValue != SearchBarValue.Collapsed) return@LaunchedEffect
         // Cleared once done: a key changed while the effect waits would cancel it.
@@ -371,9 +367,10 @@ private fun ShowsSearch(start: SearchQuery?, startFilters: Boolean, open: Boolea
                 withTimeoutOrNull(500) { snapshotFlow { inputMode.inputMode }.first { it == InputMode.Keyboard } }
                     ?: return@LaunchedEffect
             }
-            // The window leaves touch mode after Compose's input mode changes, and a window that
-            // leaves it gives the focus to its first control, so the field asks after that.
-            if (view.isInTouchMode) withTimeoutOrNull(500) { view.touchModeLeft() }
+            // A field still focused from the tap that opened the search view loses the focus a
+            // moment after the bar collapses, when the bar clears it, and the window then gives it
+            // to its first control. The field asks once that is done.
+            if (fieldFocused) withTimeoutOrNull(1_000) { snapshotFlow { fieldFocused }.first { !it } }
             dockedField.requestFocus()
         } finally {
             refocus = false
@@ -430,7 +427,7 @@ private fun ShowsSearch(start: SearchQuery?, startFilters: Boolean, open: Boolea
     Column(Modifier.semantics { paneTitle = searchTitle }) {
         SearchTop(
             phone, scrolledUnder, both, reading = false,
-            field = { SearchBar(state = bar, inputField = input, colors = colors, modifier = SearchFieldPlace.focusRequester(dockedField)) },
+            field = { SearchBar(state = bar, inputField = input, colors = colors, modifier = SearchFieldPlace.focusRequester(dockedField).onFocusChanged { fieldFocused = it.hasFocus }) },
             row = { FilterRow(status.query, phone, rowScroll, onFilters = { filtersShown = true }) },
         )
         // While the demo is the only source: other titles play once a plugin store is joined.
@@ -1592,18 +1589,4 @@ internal fun FilterNote(text: String) {
         color = MaterialTheme.colorScheme.onSurfaceVariant,
         modifier = Modifier.padding(horizontal = 16.dp).padding(top = 8.dp, bottom = 4.dp),
     )
-}
-
-/** Waits until the window leaves touch mode. */
-private suspend fun View.touchModeLeft() = suspendCancellableCoroutine { going ->
-    val observer = viewTreeObserver
-    val listener = object : ViewTreeObserver.OnTouchModeChangeListener {
-        override fun onTouchModeChanged(isInTouchMode: Boolean) {
-            if (isInTouchMode) return
-            observer.removeOnTouchModeChangeListener(this)
-            going.resume(Unit)
-        }
-    }
-    observer.addOnTouchModeChangeListener(listener)
-    going.invokeOnCancellation { observer.removeOnTouchModeChangeListener(listener) }
 }
