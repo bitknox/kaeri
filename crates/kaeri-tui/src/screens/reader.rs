@@ -146,6 +146,13 @@ pub(super) fn header(
     // Opening, and in a small window, the whole title is quiet.
     let strong = w >= ROOMY && screen != ReaderScreen::Opening;
     let whole = format!("{series}{rest}"); // i18n-skip: layout
+    // Once the chips have gone the title keeps to half the header, so a small window's header
+    // stays quiet over the page. The page between chapters is text, and keeps it whole.
+    let room = if w < ROOMY && screen != ReaderScreen::End {
+        room.min(w.saturating_sub(TITLE_X) / 2)
+    } else {
+        room
+    };
     let room = room as usize;
     if strong && whole.cells() <= room {
         let x = TITLE_X + series.cells() as u16;
