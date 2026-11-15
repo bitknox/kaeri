@@ -29,6 +29,12 @@ use kaeri_cast::{
 
 #[tokio::main]
 async fn main() {
+    // `RUST_LOG=kaeri_cast=debug` shows the relay's requests and the player's steps, timed.
+    tracing_subscriber::fmt()
+        .with_env_filter(tracing_subscriber::EnvFilter::from_default_env())
+        .with_timer(tracing_subscriber::fmt::time::uptime())
+        .with_target(false)
+        .init();
     let mut args = std::env::args().skip(1);
     let ip: IpAddr = args.next().expect("the TV's address").parse().expect("an IP address");
     let mut rest: Vec<String> = args.collect();
@@ -124,6 +130,28 @@ async fn cast_one(
         println!("launch failed: {e}");
         return;
     }
+    println!("  [{:>5.1}s] launched", started.elapsed().as_secs_f64());
+    // Each change of the load's step and the TV's state, timed from the launch's start.
+    let mut status = player.status();
+    tokio::spawn(async move {
+        let mut last = None;
+        let mut moved = false;
+        while status.changed().await.is_ok() {
+            let now = status.borrow().clone();
+            let seen = (now.step, now.state);
+            if last != Some(seen) || (!moved && now.position > 0.0) {
+                moved |= now.position > 0.0;
+                println!(
+                    "  [{:>5.1}s] step={:?} state={:?} position={:.2}",
+                    started.elapsed().as_secs_f64(),
+                    now.step,
+                    now.state,
+                    now.position
+                );
+                last = Some(seen);
+            }
+        }
+    });
     let was_muted = player.current().muted.unwrap_or(false);
     let _ = player.set_muted(true).await;
     player.set_greeting(Some("en".into()), Some("computer".into()));
@@ -139,6 +167,7 @@ async fn cast_one(
         })
         .collect();
     let subtitle_on = (!subtitles.is_empty()).then_some(0);
+    println!("  [{:>5.1}s] load", started.elapsed().as_secs_f64());
     player.load(CastLoad {
         source: CastSource { url: url.clone(), kind: SourceKind::File, headers: Vec::new() },
         url,

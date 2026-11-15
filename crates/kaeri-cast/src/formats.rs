@@ -51,8 +51,13 @@ impl VideoFormat {
             "av01" => Self::Av1,
             "mp4a" | "opus" | "Opus" | "fLaC" | "flac" | "ac-3" | "ec-3" | "dtsc" | "dtsh"
             | "dtsl" | "mlpa" => return None,
-            other => Self::Other(other.to_owned()),
+            other => Self::Other(known_name(other).unwrap_or(other).to_owned()),
         })
+    }
+
+    /// From a Matroska codec id the TV path has no variant for, by the name people know.
+    pub fn other_from_matroska(id: &str) -> Self {
+        Self::Other(known_name(id).unwrap_or_else(|| id.trim_start_matches("V_")).to_owned())
     }
 
     /// H.264 by its `profile_idc`: High 10 and above are a different decoder.
@@ -116,6 +121,24 @@ impl fmt::Display for VideoFormat {
     }
 }
 
+/// The name people know a codec by, for an id the TV path has no variant for: what a notice
+/// shows in its sentence.
+fn known_name(id: &str) -> Option<&'static str> {
+    Some(match id {
+        "V_MPEG2" | "mp2v" => "MPEG-2",
+        "V_MPEG1" => "MPEG-1",
+        "V_MPEG4/ISO/ASP" | "V_MPEG4/ISO/SP" | "V_MPEG4/ISO/AP" | "mp4v" => "MPEG-4 Part 2",
+        "V_VP8" | "vp08" => "VP8",
+        "V_THEORA" => "Theora",
+        "V_PRORES" => "ProRes",
+        "A_MPEG/L3" | ".mp3" => "MP3",
+        "A_MPEG/L2" => "MP2",
+        "A_VORBIS" => "Vorbis",
+        "A_PCM/INT/LIT" | "A_PCM/INT/BIG" | "A_PCM/FLOAT/IEEE" => "PCM",
+        _ => return None,
+    })
+}
+
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub enum AudioCodec {
     Aac,
@@ -153,7 +176,9 @@ impl AudioCodec {
             "A_EAC3" => Self::Eac3,
             id if id.starts_with("A_DTS") => Self::Dts,
             "A_TRUEHD" => Self::TrueHd,
-            other => Self::Other(other.trim_start_matches("A_").to_owned()),
+            other => Self::Other(
+                known_name(other).unwrap_or_else(|| other.trim_start_matches("A_")).to_owned(),
+            ),
         }
     }
 
