@@ -527,23 +527,21 @@ impl App {
                 push_detail(&mut label, &row.kind);
             }
             if row.held_back_for == Some(HoldReason::TorrentsOff) {
-                push_detail(&mut label, &t::source_note_torrents_off());
+                push_column(&mut label, &t::source_note_torrents_off());
             } else if row.held_back {
-                push_detail(&mut label, &t::source_note_held_back());
+                push_column(&mut label, &t::source_note_held_back());
             } else if !row.usable {
-                push_detail(&mut label, &t::title_source_failing());
+                push_column(&mut label, &t::title_source_failing());
             } else if let Some(option) =
                 self.source_options.iter().find(|option| option.provider_id == row.id)
             {
-                // What it has of this title, so the choice is an informed one.
+                // What it has of this title, so the choice is an informed one: which episodes,
+                // in a column of their own.
                 let detail = match &option.note {
                     Some(note) => source_note(note),
-                    None => t::source_picker_coverage(
-                        i64::from(option.covered),
-                        i64::from(option.of),
-                    ),
+                    None => coverage_text(option, self.clock.now_epoch()),
                 };
-                push_detail(&mut label, &detail);
+                push_column(&mut label, &detail);
             }
             (Some(row.id.clone()), label)
         }));
@@ -555,6 +553,59 @@ impl App {
 pub(crate) fn push_detail(label: &mut String, detail: &str) {
     label.push_str("  ·  ");
     label.push_str(detail);
+}
+
+/// Where the source picker's column of what each source has starts, in cells.
+const COVERAGE_COLUMN: usize = 40;
+
+/// A source's name with what it has of the title in the column after it, or a gap of two cells
+/// after a name too long for the column.
+fn push_column(label: &mut String, detail: &str) {
+    use crate::widgets::Cells;
+    let gap = COVERAGE_COLUMN.saturating_sub(label.cells()).max(2);
+    label.push_str(&" ".repeat(gap));
+    label.push_str(detail);
+}
+
+/// What a source has of the title, as its line in the picker says it: "Episodes 1 to 5. Not 6
+/// yet", or the count it always was when its episodes make no shape a line can say.
+fn coverage_text(option: &kaeri_model::sources::SourceOption, now: i64) -> String {
+    use kaeri_model::missing::{CoverageLine, Lacking, coverage_of};
+    let lacking = |lacking: Lacking| match lacking {
+        Lacking::One { episode } => episode.to_string(),
+        Lacking::Pair { first, second } => {
+            t::source_picker_missing_pair(i64::from(first), i64::from(second))
+        }
+        Lacking::Range { first, last } => {
+            t::source_picker_missing_range(i64::from(first), i64::from(last))
+        }
+    };
+    let count =
+        |covered: u32, of: u32| t::source_picker_coverage(i64::from(covered), i64::from(of));
+    match coverage_of(option, now) {
+        Some(CoverageLine::Episodes { first, last, count }) => {
+            t::source_picker_episodes(i64::from(count), i64::from(first), i64::from(last))
+        }
+        Some(CoverageLine::NotYet { first, last, lacking: missing }) => {
+            t::source_picker_episodes_not_yet(
+                i64::from(first),
+                i64::from(last),
+                &lacking(missing),
+            )
+        }
+        Some(CoverageLine::Not { first, last, lacking: missing }) => {
+            t::source_picker_episodes_not(i64::from(first), i64::from(last), &lacking(missing))
+        }
+        Some(CoverageLine::Gap { covered, of, lacking: missing }) => {
+            t::source_picker_coverage_missing(
+                i64::from(covered),
+                i64::from(of),
+                &lacking(missing),
+            )
+        }
+        Some(CoverageLine::Count { covered, of }) => count(covered, of),
+        None => count(option.covered, option.of),
+    }
 }
 
 /// How the terminal words why a source has no episode count.

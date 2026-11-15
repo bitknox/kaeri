@@ -166,6 +166,24 @@ fn hint_use() -> &'static str {
     said(t::keys_hint_use())
 }
 
+/// A title page's keys while its next episode is missing: Refresh checks for it again until a
+/// week on, and Space plays the episode before it when a source has one.
+fn missing_hints(
+    missing: &kaeri_model::missing::MissingEpisode,
+) -> Vec<(Action, &'static str)> {
+    [
+        missing.checkable().then(|| (Action::Refresh, said(t::keys_hint_check_again()))),
+        missing.previous.map(|previous| {
+            (Action::PlayNext, said(t::keys_hint_play_episode(i64::from(previous))))
+        }),
+        Some((Action::Open, Action::ShowEpisodes.hint())),
+        Some((Action::Back, Action::Back.hint())),
+    ]
+    .into_iter()
+    .flatten()
+    .collect()
+}
+
 /// The two or three contextual hints shown at the right of the status line.
 ///
 /// Deliberately short. A full footer of bindings is the templated look this design avoids;
@@ -224,6 +242,7 @@ pub(crate) fn status_hints_paged(
         Some(pair(&key(Action::Left)?, &key(Action::Right)?))
     };
     let in_stage = app.nav.focus() == crate::nav::Focus::Stage;
+    let missing = app.missing_here().filter(|_| app.playing.is_none());
     let wanted: Vec<(Action, &'static str)> = match app.nav.current() {
         // The reader draws its own status line, with the keys for the open state.
         V::Reader(_) => return crate::app::reader_hints(app, usize::MAX),
@@ -265,6 +284,11 @@ pub(crate) fn status_hints_paged(
         ],
         // Enter on a title page goes one deeper, into its episodes. Space is play next only
         // while nothing plays; then it pauses the player, as on every other screen.
+        // While the next episode is missing, Refresh checks for it again and Space plays the one
+        // before it, when a source has one: each named only where it does that.
+        V::Title(_) if missing.is_some() => {
+            missing.as_ref().map(missing_hints).unwrap_or_default()
+        }
         V::Title(id) => [
             // Another, on the page Surprise me opened, while its pool has one to pick.
             app.surprised_here()
