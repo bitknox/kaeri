@@ -217,14 +217,19 @@ fun TitleScreen(id: AnilistId, actions: AppActions) {
     val inset = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
     val wide = wideWindow()
     PrefetchSeasons(family, marked, wide, ask)
+    // The title the page was opened as gets room for its trailer when one may play, decided once
+    // for the visit; another season picked here keeps today's banner.
+    val trailerRoom = if (rememberTrailerRoom(rememberTitle(titlesState, id))) id else null
     if (wide) {
         val familyIds = family.seasons.map { it.id } + shown
         val episodes by remember(familyIds) {
             derivedStateOf(structuralEqualityPolicy()) { episodesState.value.filterKeys { it in familyIds } }
         }
-        TabletTitle(id, entry, family, episodes, actions) {
-            picked = it.toLong()
-            marked.longValue = it.toLong()
+        androidx.compose.runtime.CompositionLocalProvider(LocalTrailerRoom provides trailerRoom) {
+            TabletTitle(id, entry, family, episodes, actions) {
+                picked = it.toLong()
+                marked.longValue = it.toLong()
+            }
         }
         return
     }
@@ -460,6 +465,19 @@ fun TitleScreen(id: AnilistId, actions: AppActions) {
     val onLift = remember(id) { { lifts.value() } }
     val onAbout = remember(id) { { aboutOpen = true } }
     val onScreenPage = base.longValue.toUInt()
+    // The visit's trailer, on the page opened while it is the one on screen with no pick under way:
+    // a season picked stops it for the visit.
+    val bannerTrailer = if (trailerRoom != null) {
+        val opened = rememberTitle(titlesState, id)
+        val limit = with(LocalDensity.current) { TrailerRoom.scrollAway.toPx() }
+        val away = remember(id) {
+            derivedStateOf { lists[id]?.let { it.firstVisibleItemIndex > 0 || it.firstVisibleItemScrollOffset > limit } ?: false }
+        }
+        opened?.let { rememberBannerTrailer(it, active = base.longValue == id.toLong() && top.longValue == base.longValue, away = away) }
+    } else {
+        null
+    }
+    androidx.compose.runtime.CompositionLocalProvider(LocalTrailerRoom provides trailerRoom, LocalBannerTrailer provides bannerTrailer) {
     Box(Modifier.fillMaxSize().shared(Shared.Page, id, ground = MaterialTheme.colorScheme.surface)) {
         for (season in composed) {
             key(season) {
@@ -505,6 +523,7 @@ fun TitleScreen(id: AnilistId, actions: AppActions) {
             }
         }
         TitleTopBar(entry, pick = surprisePick(id), onBack = navigator::back, modifier = Modifier.padding(top = inset).zIndex(3f))
+    }
     }
     if (aboutOpen) {
         MoreAboutSheet(entry, onDismiss = { aboutOpen = false }) { other ->
@@ -1003,6 +1022,33 @@ private fun artWaited(id: UInt): Boolean {
 @Composable
 private fun TitleHead(entry: Entry, episodes: List<EpisodeRow>?, list: LazyListState, inset: Dp, shared: Boolean) {
     val art = HeroArt.of(entry, episodes, artWaited(entry.id))
+    // A title whose trailer may play has its taller banner from the first frame, so the page never
+    // moves when the video arrives. Only the page on screen plays it.
+    if (LocalTrailerRoom.current == entry.id) {
+        TrailerHead(
+            trailer = LocalBannerTrailer.current.takeIf { shared },
+            list = list,
+            inset = inset,
+            art = { modifier ->
+                if (art != HeroArt.Compact) {
+                    // The art and its scrim fade together, so the band is plain video while it plays.
+                    Box(modifier) {
+                        ArtworkImage(
+                            url = art.url,
+                            plate = null,
+                            maxPixelSize = pixels(412.dp),
+                            modifier = Modifier.fillMaxSize().then(if (shared) Modifier.shared(Shared.Player, entry.id).shared(Shared.Art, entry.id) else Modifier),
+                        )
+                        BannerScrim(Modifier.fillMaxSize())
+                    }
+                } else {
+                    Box(modifier)
+                }
+            },
+            header = { modifier -> TitleHeader(entry, shared, modifier, trailingGap = TrailerRoom.titleGap) },
+        )
+        return
+    }
     Box {
         if (art != HeroArt.Compact) {
             ArtworkImage(
@@ -2180,6 +2226,15 @@ private fun TabletTitle(
     val unfolded by store.episodeFolds.unfolded.collectAsStateWithLifecycle()
     val grid = androidx.compose.foundation.lazy.grid.rememberLazyGridState()
     val fold = rememberEpisodeFold(entry.id, grid)
+    // The visit's trailer, held here so it outlives the head leaving the grid, and played while the
+    // title opened is the season on screen; a season picked stops it for the visit.
+    val roomFor = LocalTrailerRoom.current
+    val trailer = if (roomFor == id) {
+        val titles = store.titles.entries.collectAsStateWithLifecycle()
+        rememberTitle(titles, id)?.let { opened -> rememberBannerTrailer(opened, active = entry.id == id, away = rememberScrolledAway(grid)) }
+    } else {
+        null
+    }
     LaunchedEffect(page.goal, page.selected) {
         val row = page.rows.firstOrNull { it.number == page.goal } ?: return@LaunchedEffect
         grid.landOn(page.key(entry.id, row))
@@ -2199,22 +2254,52 @@ private fun TabletTitle(
                 fullWidth("head") {
                   SeasonFade(entry) { entry ->
                     val art = HeroArt.of(entry, allEpisodes[entry.id], artWaited(entry.id))
+                    // A title whose trailer may play has the wide layout's taller band from the
+                    // first frame, the video at its trailing end below the top bar.
+                    val room = roomFor == entry.id
+                    val band = if (room) TrailerRoom.wideBand else 208.dp
+                    val artAlpha = { if (room) trailer?.art?.value ?: 1f else 1f }
                     Box {
+                        if (room) {
+                            trailer?.player?.let { player ->
+                                TrailerVideo(
+                                    player,
+                                    Modifier
+                                        .align(Alignment.TopEnd)
+                                        .padding(top = inset + TrailerRoom.videoTop, end = TrailerRoom.wideVideoEnd)
+                                        .size(TrailerRoom.wideVideoWidth, TrailerRoom.wideVideoHeight),
+                                )
+                            }
+                        }
                         if (art != HeroArt.Compact) {
                             ArtworkImage(
                                 art.url,
                                 plate = null,
                                 maxPixelSize = 1600,
-                                modifier = Modifier.fillMaxWidth().height(inset + 208.dp).shared(Shared.Art, entry.id),
+                                modifier = Modifier.fillMaxWidth().height(inset + band).graphicsLayer { alpha = artAlpha() }.shared(Shared.Art, entry.id),
                             )
-                            BannerScrim(Modifier.fillMaxWidth().height(inset + 208.dp))
+                            BannerScrim(Modifier.fillMaxWidth().height(inset + band).graphicsLayer { alpha = artAlpha() })
+                        }
+                        if (room && trailer != null) {
+                            TrailerSoundButton(
+                                trailer,
+                                Modifier
+                                    .align(Alignment.TopEnd)
+                                    .padding(top = inset + TrailerRoom.videoTop + TrailerRoom.wideVideoHeight + TrailerRoom.soundGap, end = TrailerRoom.wideVideoEnd),
+                            )
                         }
                         // The cover overlaps the banner's foot, the title block sits level with
                         // the cover's foot, and the details column starts below the banner, so it
-                        // grows down the page and never up over the art.
-                        val below = if (art == HeroArt.Compact) 0.dp else 208.dp - 135.dp + 24.dp
+                        // grows down the page and never up over the art. With room for a trailer
+                        // the details start below the sound button under the video.
+                        val coverTop = band - 73.dp
+                        val below = when {
+                            art == HeroArt.Compact && !room -> 0.dp
+                            room -> TrailerRoom.videoTop + TrailerRoom.wideVideoHeight + TrailerRoom.soundGap + TrailerRoom.sound + 16.dp - coverTop
+                            else -> band - coverTop + 24.dp
+                        }
                         Row(
-                            Modifier.padding(top = inset + if (art == HeroArt.Compact) 64.dp else 135.dp).padding(start = 16.dp),
+                            Modifier.padding(top = inset + if (art == HeroArt.Compact && !room) 64.dp else coverTop).padding(start = 16.dp),
                             horizontalArrangement = Arrangement.spacedBy(24.dp),
                             verticalAlignment = Alignment.Top,
                         ) {

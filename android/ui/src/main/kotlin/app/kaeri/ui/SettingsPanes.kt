@@ -283,6 +283,8 @@ internal fun GeneralPane() {
             title = stringResource(R.string.settings_group_titles),
             rows = listOf(
                 { place -> TitleLanguageRow(place) },
+                // When a title page's banner trailer plays by itself: Always, Wi-Fi only or Off.
+                { place -> SettingMenu(place, SettingKey.TRAILERS, stringResource(R.string.settings_label_trailers), note = stringResource(R.string.settings_trailers_note_android)) },
                 { place -> SettingSwitch(place, SettingKey.ADULT_TITLES, stringResource(R.string.settings_adult), note = stringResource(if (answer == app.kaeri.engine.model.KaeriIsFor.READ) R.string.settings_adult_detail_read else R.string.settings_adult_detail, "AniList")) },
             ),
         )
