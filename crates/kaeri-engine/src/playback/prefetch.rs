@@ -30,7 +30,7 @@ use crate::{
     phases::Network,
     playback::{
         PlaybackContext,
-        link::{PlayerOpener, PlayerTarget},
+        link::PlayerTarget,
         proxy::{ProxyServer, Release},
         resolve::{Resolved, resolve_for_playback},
     },
