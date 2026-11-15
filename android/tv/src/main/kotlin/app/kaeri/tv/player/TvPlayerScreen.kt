@@ -4,6 +4,9 @@
 
 package app.kaeri.tv.player
 
+import androidx.compose.ui.semantics.liveRegion
+import androidx.compose.ui.semantics.LiveRegionMode
+import androidx.compose.ui.text.font.FontWeight
 import app.kaeri.tv.ui.TvTab
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.ui.platform.LocalContext
@@ -240,6 +243,7 @@ fun TvPlayerScreen(
             model.marking != null -> model.cancelMark()
             tray -> closeTray()
             panel != null -> closePanel()
+            model.statsShown -> model.showStats(false)
             model.corner == PlayerModel.Corner.Prompt -> model.dismissSkipPrompt()
             model.corner == PlayerModel.Corner.Stall -> model.keepWaiting()
             headAt != null -> {
@@ -504,6 +508,8 @@ fun TvPlayerScreen(
         LaunchedEffect(stall != null, upNext != null, prompt != null) {
             if (stall == null && upNext == null && prompt == null && !chrome && panel == null) root.tryFocus()
         }
+        // Live stats, top leading under the show's name, staying put as the chrome comes and goes.
+        app.kaeri.design.KeptFade(model.statsPanel, Modifier.align(Alignment.TopStart).padding(start = 48.dp, top = 104.dp)) { LivePanel(it) }
         panel?.let { open ->
             Panel(model, open, onDone = { closePanel() }, modifier = Modifier.align(Alignment.CenterEnd))
         }
@@ -912,7 +918,7 @@ private fun Panel(model: PlayerModel, panel: PlayerPanel, onDone: () -> Unit, mo
                     subtitleStyleRows(store, settings?.subtitleStyle)
                 }
                 PlayerPanel.SkipTimes -> skipTimesRows(model, current, onDone)
-                PlayerPanel.Info -> item(key = "info") { InfoPanel(model, Modifier.focusRequester(current)) }
+                PlayerPanel.Info -> item(key = "info") { InfoPanel(model, Modifier.focusRequester(current), onDone) }
                 PlayerPanel.Sources -> items(model.menus?.sources.orEmpty(), key = { it.id }) { source ->
                     TvListRow(
                         source.label,
@@ -1061,18 +1067,22 @@ private fun StillWatchingDialog(model: PlayerModel) {
     }
 }
 
-/** TVPlayerInfo: the episode, then how it plays, where heavy subtitles show their cost. */
+/**
+ * TVPlayerInfo: the episode, then how it plays, where heavy subtitles show their cost, and Show
+ * live stats under the stats lines, which closes the panel and puts the live panel up. Focus
+ * starts on that row, so Back and the D-pad stay in the panel.
+ */
 @Composable
-private fun InfoPanel(model: PlayerModel, modifier: Modifier) {
+private fun InfoPanel(model: PlayerModel, modifier: Modifier, onDone: () -> Unit) {
     val store = LocalAppStore.current
     val episodes by store.titles.episodes.collectAsStateWithLifecycle()
     val number = model.episode?.number
     val row = model.titleId?.let { episodes[it] }?.firstOrNull { it.number == number }
-    Column(
-        // Focusable, so Back and the D-pad stay in the panel.
-        modifier.focusable().padding(horizontal = 16.dp),
+    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+      Column(
+        Modifier.padding(horizontal = 16.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp),
-    ) {
+      ) {
         Text(model.episodeLine(LocalContext.current), style = TvTitle.player, color = ObiSilk.Silk)
         row?.description?.takeIf { it.isNotBlank() }?.let {
             Text(it, style = MaterialTheme.typography.bodyMedium, color = ObiSilk.Haze, maxLines = 8, overflow = TextOverflow.Ellipsis)
@@ -1085,6 +1095,46 @@ private fun InfoPanel(model: PlayerModel, modifier: Modifier) {
         model.statsSummary.forEach { line ->
             Text(line, style = MaterialTheme.typography.labelMedium, color = ObiSilk.Silk)
         }
+      }
+        TvListRow(
+            stringResource(if (model.statsShown) R.string.player_stats_hide_live else R.string.player_stats_show_live),
+            onClick = {
+                model.toggleStats()
+                onDone()
+            },
+            modifier = modifier.padding(top = 4.dp),
+        )
+    }
+}
+
+/**
+ * Stats for nerds live, over the picture at the top leading corner below the show's name, where
+ * nothing else on the TV's player stands: the engine's rows, said once a second, the Buffer row
+ * amber when starved. It takes no focus; Back closes it. TalkBack reads it once as it opens.
+ */
+@Composable
+private fun LivePanel(panel: app.kaeri.player.StatsPanelState) {
+    val title = stringResource(R.string.player_stats)
+    // What TalkBack reads, taken as the panel opens and never again while it ticks.
+    val said = remember { "$title. " + panel.rows.joinToString(". ") { "${it.label}, ${it.value}" } } // i18n-skip
+    val style = MaterialTheme.typography.labelMedium.copy(fontSize = 13.sp, lineHeight = 20.sp, fontWeight = FontWeight.Normal)
+    Column(
+        Modifier
+            .width(340.dp)
+            .background(ObiSilk.RaisedHigh.copy(alpha = 0.94f), RoundedCornerShape(16.dp))
+            .padding(start = 18.dp, end = 18.dp, top = 14.dp, bottom = 16.dp)
+            .clearAndSetSemantics {
+                contentDescription = said
+                liveRegion = LiveRegionMode.Polite
+            },
+    ) {
+        Row(Modifier.padding(bottom = 8.dp).fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            Text(title, style = MaterialTheme.typography.titleMedium.copy(fontSize = 16.sp, lineHeight = 22.sp), color = ObiSilk.Silk, modifier = Modifier.weight(1f).alignByBaseline())
+            if (panel.waitingLine) {
+                Text(stringResource(R.string.player_stats_waiting), style = style.copy(lineHeight = 18.sp), color = ObiSilk.Haze, modifier = Modifier.alignByBaseline())
+            }
+        }
+        app.kaeri.design.StatsRows(panel.rows.map { app.kaeri.design.StatsLine(it.label, it.value, it.warn) }, style, rowGap = 0.dp, labelGap = 12.dp)
     }
 }
 

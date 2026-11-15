@@ -336,11 +336,14 @@ internal fun PlaybackPane() {
                 { place -> SettingSwitch(place, SettingKey.SPOILER_PROTECTION, stringResource(R.string.settings_spoiler), note = stringResource(R.string.settings_spoiler_detail)) },
             ),
         )
+        // Picture in picture when leaving the app, last, on devices that have the floating window.
+        val floating = remember(context) { PictureInPictureAccess.supported(context) }
         SettingsGroup(
             title = stringResource(R.string.player_picture_and_sound),
-            rows = listOf(
+            rows = listOfNotNull<@Composable (Place) -> Unit>(
                 { place -> SettingMenu(place, SettingKey.UPSCALING, stringResource(R.string.player_upscaling), focus = FOCUS_UPSCALING) },
                 { place -> SettingSwitch(place, SettingKey.NIGHT_MODE, stringResource(R.string.player_night_mode), note = stringResource(R.string.player_night_mode_detail)) },
+                if (floating) ({ place -> PictureInPictureRow(place) }) else null,
             ),
         )
         // Hide chat is this device's own: the engine always sends the room's words.

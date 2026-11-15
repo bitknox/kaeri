@@ -88,6 +88,8 @@ import androidx.compose.ui.semantics.progressBarRangeInfo
 import androidx.compose.ui.semantics.setProgress
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
+import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.toggleableState
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -229,6 +231,20 @@ private fun MoreMenu(model: PlayerModel, discussion: DiscussionEntry?, onSkipTim
                 onClick = {
                     open = false
                     onSkipTimes()
+                },
+            )
+            // Checked while the panel is up; choosing it shows or hides the panel, and the menu closes.
+            val stats = model.statsShown
+            DropdownMenuItem(
+                text = { Text(stringResource(R.string.player_stats)) },
+                trailingIcon = { if (stats) Icon(PlayerIcons.Check, contentDescription = null) },
+                modifier = Modifier.semantics {
+                    role = androidx.compose.ui.semantics.Role.Checkbox
+                    toggleableState = androidx.compose.ui.state.ToggleableState(stats)
+                },
+                onClick = {
+                    open = false
+                    model.toggleStats()
                 },
             )
             if (discussion != null) DropdownMenuItem(

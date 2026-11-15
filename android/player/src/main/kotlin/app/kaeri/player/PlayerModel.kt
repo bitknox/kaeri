@@ -36,6 +36,9 @@ import app.kaeri.engine.model.PlayerCommand
 import app.kaeri.engine.model.PlayerEnd
 import app.kaeri.engine.model.PlayerOp
 import app.kaeri.engine.model.PlayerReport
+import app.kaeri.engine.model.PlayerStats
+import app.kaeri.engine.model.StatsAbout
+import app.kaeri.engine.model.StatsFixture
 import app.kaeri.engine.model.PlayerUi
 import app.kaeri.engine.model.SkipEdge
 import app.kaeri.engine.model.SkipKind
@@ -367,6 +370,30 @@ class PlayerModel(
     var statsSummary by mutableStateOf<List<String>>(emptyList())
         private set
 
+    // Stats for nerds
+
+    /** Stats for nerds is up: remembered while the app runs, so every playback after opens with it. */
+    var statsShown by mutableStateOf(false)
+        private set
+
+    /** The panel's stats as the engine last said them while it was up. */
+    var stats by mutableStateOf<PlayerStats?>(null)
+        private set
+
+    /** Since when the panel has had no file's figures, while it has none: opened, or a file started, before the file opened. */
+    var statsWaitingSince by mutableStateOf<Long?>(null)
+        private set
+
+    /** When Copy stats last put the lines on the clipboard, for "Copied". */
+    var statsCopiedAt by mutableStateOf<Long?>(null)
+        private set
+
+    /** Puts Copy stats' lines on the clipboard: the system's, set by the screen, or the tests' own. */
+    var copyText: (String) -> Unit = {}
+
+    /** The app, the system and the device, for Copy stats. */
+    var statsAbout: () -> StatsAbout = { StatsAbout(appVersion = "", system = "", device = "") }
+
     // The viewer
 
     /** Now, a few times a second while the player is up: what the cards' timing reads. */
@@ -494,9 +521,17 @@ class PlayerModel(
                 }
             }
             is Event.Sources -> if (choosingSource) sourceChoices = event.candidates
-            // The summary the engine says as it changes; the live panel's rows are for later.
-            is Event.PlayerStats ->
-                if (accepts(event.playback) && event.playback >= (playback ?: event.playback)) statsSummary = event.stats.summary
+            // The summary the engine says as it changes, and the panel's rows while it is up.
+            is Event.PlayerStats -> if (accepts(event.playback) && event.playback >= (playback ?: event.playback)) {
+                statsSummary = event.stats.summary
+                tookStats(event.stats)
+            }
+            // Copy stats' lines, as the engine words them.
+            is Event.Clipboard -> if (statsShown) {
+                copyText(event.text)
+                statsCopiedAt = now()
+                clock = now()
+            }
             // The playback staged found nothing; the one before plays on.
             Event.PlaybackKept -> {
                 starting = null
@@ -650,6 +685,12 @@ class PlayerModel(
         stallWaived = false
         resume = null
         alert = null
+        // The engine's player starts shut for a playback of its own: open it again, waiting.
+        if (statsShown) {
+            stats = null
+            statsWaitingSince = now()
+            control(PlayerCommand.Stats(true))
+        }
         if (rollPending) {
             rollPending = false
             rolledOn += 1
@@ -923,6 +964,9 @@ class PlayerModel(
     /** The player comes down, with everything it showed. */
     private fun dismiss() {
         isPresented = false
+        stats = null
+        statsWaitingSince = null
+        statsCopiedAt = null
         failure = null
         failedWith = null
         failedMsg = null
@@ -1307,6 +1351,7 @@ class PlayerModel(
         if (!resting(now)) clock = now
         undo?.let { if (!assisted && now - it.since >= noticeMillis(PlayerTiming.UNDO_PAUSED)) undo = null }
         alert?.let { if (now - it.since >= noticeMillis(PlayerTiming.ALERT_STAYS)) alert = null }
+        statsCopiedAt?.let { if (now - it >= PlayerTiming.STATS_COPIED) statsCopiedAt = null }
         skipNotice?.let { if (now - it.since >= noticeMillis(PlayerTiming.ALERT_STAYS)) skipNotice = null }
         // A question holds for 12 s of playback: a pause waits, and a screen reader never times it out.
         val since = promptTickedAt
@@ -1332,7 +1377,8 @@ class PlayerModel(
      */
     private fun resting(now: Long): Boolean = failure != null ||
         paused && starting == null && progress == null && stall == null && upNext == null && skip == null && undo == null &&
-        alert == null && skipNotice == null && skipPrompt == null && marking == null && holds.isEmpty() && scrubbing == null && now - lastInput >= PlayerTiming.CONTROLS_HIDE
+        alert == null && skipNotice == null && skipPrompt == null && marking == null && holds.isEmpty() && scrubbing == null &&
+        statsCopiedAt == null && (!statsShown || statsWaitingSince == null) && now - lastInput >= PlayerTiming.CONTROLS_HIDE
 
     // What the screens read
 
@@ -1698,6 +1744,74 @@ class PlayerModel(
         note("#${playback ?: "?"} skip card answered: ${if (share) "share" else "don't share"}, on share skip times")
         asksToShare = false
         control(PlayerCommand.AnswerShareSkipTimes(share))
+    }
+
+    // Stats for nerds
+
+    /** The More menu's Stats for nerds, or the TV's Show live stats: the panel up or away. */
+    fun toggleStats() = showStats(!statsShown)
+
+    fun showStats(shown: Boolean) {
+        if (shown == statsShown) return
+        statsShown = shown
+        stats = null
+        statsCopiedAt = null
+        statsWaitingSince = if (shown) now() else null
+        clock = now()
+        note("stats for nerds ${if (shown) "up" else "away"}") // i18n-skip
+        if (isPresented) control(PlayerCommand.Stats(shown))
+    }
+
+    /** Copy stats: the engine words the lines, and they come back as `Clipboard`. */
+    fun copyStats() {
+        if (!statsShown || !isPresented) return
+        control(PlayerCommand.CopyStats(statsAbout()))
+    }
+
+    /**
+     * What the panel shows now (player-stats.md, States): nothing for a moment before the file
+     * opens, then the rows with dashes, then the waiting line too.
+     */
+    val statsPanel: StatsPanelState?
+        get() {
+            if (!statsShown || !isPresented) return null
+            val rows = stats?.rows.orEmpty()
+            val since = statsWaitingSince ?: return if (rows.isEmpty()) null else StatsPanelState(rows, waitingLine = false)
+            val waited = clock - since
+            if (waited < PlayerTiming.STATS_DASHES) return null
+            // The engine's dashes when it has said them, which know a file on the device has no
+            // Network row; the fixture's before it has.
+            val dashes = rows.ifEmpty { waitingRows }
+            return StatsPanelState(dashes, waitingLine = waited >= PlayerTiming.STATS_WAITING_LINE)
+        }
+
+    /** The rows with dashes, as the engine words them before it knows the stream. */
+    private val waitingRows by lazy {
+        runCatching { app.kaeri.engine.ffi.playerStatsFixture(StatsFixture.WAITING).rows }.getOrDefault(emptyList())
+    }
+
+    /** The engine's stats: the rows while the panel is up, which leave the dashes once the file is known. */
+    private fun tookStats(stats: PlayerStats) {
+        if (!statsShown || stats.rows.isEmpty()) return
+        this.stats = stats
+        if (!stats.waiting) {
+            statsWaitingSince = null
+        } else if (statsWaitingSince == null) {
+            // A new file, before it opens: the dashes again, after a moment.
+            statsWaitingSince = now()
+        }
+    }
+
+    /**
+     * Stats for nerds as a screenshot shows them: [stats] held, with the engine never asked;
+     * [waited] before the file opened puts up the dashes and the waiting line.
+     */
+    fun stageStats(stats: PlayerStats, waited: Long? = null, copied: Boolean = false) {
+        statsShown = true
+        this.stats = stats
+        statsWaitingSince = waited?.let { now() - it }
+        statsCopiedAt = if (copied) now() + 60_000 else null
+        clock = now()
     }
 
     fun takeSkip() {

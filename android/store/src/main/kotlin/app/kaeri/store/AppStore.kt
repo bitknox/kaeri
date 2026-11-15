@@ -1560,7 +1560,7 @@ class AppStore(
             is Event.PlayerOps, is Event.PlayerUi, is Event.PlayerTimeline, is Event.PlayerBuffered,
             is Event.PlaybackStaged, is Event.PlaybackEnded, Event.PlaybackKept,
             is Event.PlayerSkipMark, is Event.PlayerSkipPrompt, is Event.PlayerSkipNotice,
-            is Event.PlayerStats -> onPlayback?.invoke(event)
+            is Event.PlayerStats, is Event.Clipboard -> onPlayback?.invoke(event)
 
             // Everything else is said in the events above, or has no screen yet.
             else -> {}
