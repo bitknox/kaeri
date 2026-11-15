@@ -7470,6 +7470,716 @@ pub fn settings_note_token_storage() -> String {
     text("settings-note-token-storage", &[])
 }
 
+/// Under a series' title on the terminal's series page: the source its chapters are read from.
+pub fn tui_read_series_from(source: &str) -> String {
+    text("tui-read-series-from", &[("source", Arg::Text(source))])
+}
+
+/// After the source on the series page: the list the series is on and the trackers that keep that list, such as "Reading on AniList". The list is its name, such as "Reading" or "Planning"; the trackers are already joined.
+pub fn tui_read_series_list_on(list: &str, trackers: &str) -> String {
+    text("tui-read-series-list-on", &[("list", Arg::Text(list)), ("trackers", Arg::Text(trackers))])
+}
+
+/// After the source on the series page, when no tracker keeps the list: "On your Reading list".
+pub fn tui_read_series_list(list: &str) -> String {
+    text("tui-read-series-list", &[("list", Arg::Text(list))])
+}
+
+/// Beside the progress meter on the series page: how many of the chapters listed are read.
+pub fn tui_read_series_read(read: i64, total: i64) -> String {
+    text("tui-read-series-read", &[("read", Arg::Int(read)), ("total", Arg::Int(total))])
+}
+
+/// At the top of the series page while the computer is offline: the chapters listed are the ones kept from before, and only the downloaded ones open.
+pub fn tui_read_series_offline() -> String {
+    text("tui-read-series-offline", &[])
+}
+
+/// Left of the status line on the series page while the computer is offline.
+pub fn tui_read_status_offline() -> String {
+    text("tui-read-status-offline", &[])
+}
+
+/// Header chip on the series page while the computer is offline, in place of how many sources are on. The mark is a cross. Lower case, as the header's other chips are.
+pub fn tui_read_header_offline(mark: &str) -> String {
+    text("tui-read-header-offline", &[("mark", Arg::Text(mark))])
+}
+
+/// Hint in the status line on the series page: the key that marks the chapter under the cursor read, or unread when it is read. Shown in lower case. Also a row of the key reference.
+pub fn tui_read_read_unread() -> String {
+    text("tui-read-read-unread", &[])
+}
+
+/// Hint in the status line on the series page: the key that picks the list the series is on. Shown in lower case.
+pub fn tui_read_hint_status() -> String {
+    text("tui-read-hint-status", &[])
+}
+
+/// Hint in the status line on reading's Home, on a series in Continue: the key that opens the chapter where reading stopped. Shown in lower case.
+pub fn tui_read_hint_continue() -> String {
+    text("tui-read-hint-continue", &[])
+}
+
+/// Heading of the series page's keys in the key reference.
+pub fn tui_read_keys_series() -> String {
+    text("tui-read-keys-series", &[])
+}
+
+/// A row of the key reference: open the chapter under the cursor on the series page.
+pub fn tui_read_keys_read() -> String {
+    text("tui-read-keys-read", &[])
+}
+
+/// A row of the key reference: download the chapter under the cursor on the series page.
+pub fn tui_read_keys_download() -> String {
+    text("tui-read-keys-download", &[])
+}
+
+/// A row of the key reference: pick the list the series is on, such as Reading or Planning.
+pub fn tui_read_keys_status() -> String {
+    text("tui-read-keys-status", &[])
+}
+
+/// A row of the key reference on reading's Home: open a series' page with its chapters, from a series in Continue, where Enter opens the chapter itself.
+pub fn tui_read_keys_chapters() -> String {
+    text("tui-read-keys-chapters", &[])
+}
+
+/// Left of the status line while a chapter opens in the terminal's reader. The chapter is its number, such as 14.
+pub fn tui_reader_opening(chapter: &str) -> String {
+    text("tui-reader-opening", &[("chapter", Arg::Text(chapter))])
+}
+
+/// The reader's opening line while no source has been picked for the series yet.
+pub fn tui_reader_finding() -> String {
+    text("tui-reader-finding", &[])
+}
+
+/// Left of the reader's status line: the page in view and how many the chapter has.
+pub fn tui_reader_page_of(page: i64, pages: i64) -> String {
+    text("tui-reader-page-of", &[("page", Arg::Plain(page)), ("pages", Arg::Plain(pages))])
+}
+
+/// Left of the reader's status line while two pages show side by side.
+pub fn tui_reader_pages_of(first: i64, second: i64, pages: i64) -> String {
+    text("tui-reader-pages-of", &[("first", Arg::Plain(first)), ("second", Arg::Plain(second)), ("pages", Arg::Plain(pages))])
+}
+
+/// After the page count in the reader's status line, when the terminal draws pages as coloured blocks because it has no image protocol.
+pub fn tui_reader_blocks() -> String {
+    text("tui-reader-blocks", &[])
+}
+
+/// Said once a run on the reader's status rule, the first time a chapter opens in a terminal with no image protocol: the pages show as coloured blocks.
+pub fn tui_reader_blocks_notice() -> String {
+    text("tui-reader-blocks-notice", &[])
+}
+
+/// Hint after "Resumed at page 8" on the reader's status rule: the key that starts the chapter from its first page. Shown in lower case.
+pub fn tui_reader_start_over() -> String {
+    text("tui-reader-start-over", &[])
+}
+
+/// Hint after the notice that the chapter moved to where another device read to: the key that goes back to the page this computer was on. Shown in lower case.
+pub fn tui_reader_go_back() -> String {
+    text("tui-reader-go-back", &[])
+}
+
+/// Hint after the notice that the reader guessed how this series reads: the key that opens the reader settings to change it. Shown in lower case.
+pub fn tui_reader_change() -> String {
+    text("tui-reader-change", &[])
+}
+
+/// Middle of the reader when the terminal was started with images turned off, and a chapter of manga or webtoon pages opens. The option is typed as it is on the command line.
+pub fn tui_reader_images_off() -> String {
+    text("tui-reader-images-off", &[])
+}
+
+/// Under that line.
+pub fn tui_reader_images_off_how() -> String {
+    text("tui-reader-images-off-how", &[])
+}
+
+/// Under that line.
+pub fn tui_reader_images_off_novels() -> String {
+    text("tui-reader-images-off-novels", &[])
+}
+
+/// Heading in the reader when a chapter couldn't open. The chapter is its number, such as 16.
+pub fn tui_reader_chapter_failed(chapter: &str) -> String {
+    text("tui-reader-chapter-failed", &[("chapter", Arg::Text(chapter))])
+}
+
+/// Top line of the page after the last chapter of a finished series.
+pub fn tui_reader_end_series() -> String {
+    text("tui-reader-end-series", &[])
+}
+
+/// Under that line.
+pub fn tui_reader_end_no_more() -> String {
+    text("tui-reader-end-no-more", &[])
+}
+
+/// Under "You're caught up" on the page after the last chapter there is.
+pub fn tui_reader_end_caught_up_line() -> String {
+    text("tui-reader-end-caught-up-line", &[])
+}
+
+/// On the page after the last chapter there is, when the series goes on. The chapter is the next one's number, such as 18.
+pub fn tui_reader_end_not_out(chapter: &str) -> String {
+    text("tui-reader-end-not-out", &[("chapter", Arg::Text(chapter))])
+}
+
+/// The same, when the next chapter's number isn't known.
+pub fn tui_reader_end_not_out_next() -> String {
+    text("tui-reader-end-not-out-next", &[])
+}
+
+/// Under either of those lines.
+pub fn tui_reader_end_not_out_line() -> String {
+    text("tui-reader-end-not-out-line", &[])
+}
+
+/// On the page between chapters when no source has the next chapter. The chapter is its number, such as 18.
+pub fn tui_reader_end_no_source(chapter: &str) -> String {
+    text("tui-reader-end-no-source", &[("chapter", Arg::Text(chapter))])
+}
+
+/// The same, when the next chapter's number isn't known.
+pub fn tui_reader_end_no_source_next() -> String {
+    text("tui-reader-end-no-source-next", &[])
+}
+
+/// On the page between chapters while offline, and as a toast when a chapter that isn't on this computer is opened offline. The chapter is its number, such as 16.
+pub fn tui_reader_end_offline(chapter: &str) -> String {
+    text("tui-reader-end-offline", &[("chapter", Arg::Text(chapter))])
+}
+
+/// The same, when the chapter's number isn't known.
+pub fn tui_reader_end_offline_next() -> String {
+    text("tui-reader-end-offline-next", &[])
+}
+
+/// Under that line on the page between chapters.
+pub fn tui_reader_end_offline_line() -> String {
+    text("tui-reader-end-offline-line", &[])
+}
+
+/// Under the next chapter on the page between chapters when it is an extra, such as 16.5 between 16 and 17: skipping to the next numbered chapter leaves the extra unread. The chapter is the extra's number.
+pub fn tui_reader_end_skip_unread(chapter: &str) -> String {
+    text("tui-reader-end-skip-unread", &[("chapter", Arg::Text(chapter))])
+}
+
+/// Under the next chapter's first page on the page between chapters. The chapter is its number.
+pub fn tui_reader_end_first_page(chapter: &str) -> String {
+    text("tui-reader-end-first-page", &[("chapter", Arg::Text(chapter))])
+}
+
+/// The reader's heading when the terminal is too small to show a page.
+pub fn tui_reader_too_small() -> String {
+    text("tui-reader-too-small", &[])
+}
+
+/// Under that heading: the smallest size the reader shows pages at, in columns and rows.
+pub fn tui_reader_too_small_line(columns: i64, rows: i64) -> String {
+    text("tui-reader-too-small-line", &[("columns", Arg::Plain(columns)), ("rows", Arg::Plain(rows))])
+}
+
+/// Hint in the reader's status line: the key that turns to the next page. Shown in lower case.
+pub fn tui_reader_hint_next() -> String {
+    text("tui-reader-hint-next", &[])
+}
+
+/// Hint in the reader's status line: the key that turns back a page. Shown in lower case.
+pub fn tui_reader_hint_back() -> String {
+    text("tui-reader-hint-back", &[])
+}
+
+/// Hint in the reader's status line while a chapter opens: the key that stops it and goes back. Shown in lower case.
+pub fn tui_reader_hint_stop() -> String {
+    text("tui-reader-hint-stop", &[])
+}
+
+/// Hint in the reader's status line: the key that opens the reader settings. Shown in lower case.
+pub fn tui_reader_hint_settings() -> String {
+    text("tui-reader-hint-settings", &[])
+}
+
+/// Hint in the reader's status line on a page that couldn't load: the turn key goes on to the next page without it. Shown in lower case.
+pub fn tui_reader_hint_without() -> String {
+    text("tui-reader-hint-without", &[])
+}
+
+/// Hint in the reader's status line on the page between chapters. Shown in lower case.
+pub fn tui_reader_hint_next_chapter() -> String {
+    text("tui-reader-hint-next-chapter", &[])
+}
+
+/// Hint in the reader's status line: the key that leaves the reader for the series page it was opened from. Shown in lower case.
+pub fn tui_reader_hint_series() -> String {
+    text("tui-reader-hint-series", &[])
+}
+
+/// Hint in the reader's status line after the last chapter of a finished series: the key that opens its first chapter. Shown in lower case.
+pub fn tui_reader_hint_again() -> String {
+    text("tui-reader-hint-again", &[])
+}
+
+/// Heading of the reader's keys in the key reference.
+pub fn tui_reader_keys_reader() -> String {
+    text("tui-reader-keys-reader", &[])
+}
+
+/// Heading of the keys that change how the reader shows pages, in the key reference.
+pub fn tui_reader_keys_view() -> String {
+    text("tui-reader-keys-view", &[])
+}
+
+/// Beside the reader's keys in the key reference.
+pub fn tui_reader_keys_rtl() -> String {
+    text("tui-reader-keys-rtl", &[])
+}
+
+/// Beside the reader's keys in the key reference, under that.
+pub fn tui_reader_keys_left_out() -> String {
+    text("tui-reader-keys-left-out", &[])
+}
+
+/// Ends the toast that says a command does nothing on this screen, as "on the Downloads screen" does: the command works in the reader.
+pub fn tui_reader_where() -> String {
+    text("tui-reader-where", &[])
+}
+
+/// A row of the key reference and the command palette: turn to the next page.
+pub fn tui_reader_action_next() -> String {
+    text("tui-reader-action-next", &[])
+}
+
+/// A row of the key reference and the command palette: turn back a page.
+pub fn tui_reader_action_previous() -> String {
+    text("tui-reader-action-previous", &[])
+}
+
+/// A row of the key reference: turn to the page on the left, which is the next one in right-to-left manga.
+pub fn tui_reader_action_left() -> String {
+    text("tui-reader-action-left", &[])
+}
+
+/// A row of the key reference: turn to the page on the right.
+pub fn tui_reader_action_right() -> String {
+    text("tui-reader-action-right", &[])
+}
+
+/// A row of the key reference: go to the chapter's first page.
+pub fn tui_reader_action_first() -> String {
+    text("tui-reader-action-first", &[])
+}
+
+/// A row of the key reference: go to the chapter's last page.
+pub fn tui_reader_action_last() -> String {
+    text("tui-reader-action-last", &[])
+}
+
+/// A row of the key reference: open the next chapter.
+pub fn tui_reader_action_next_chapter() -> String {
+    text("tui-reader-action-next-chapter", &[])
+}
+
+/// A row of the key reference: open the chapter before this one.
+pub fn tui_reader_action_previous_chapter() -> String {
+    text("tui-reader-action-previous-chapter", &[])
+}
+
+/// A row of the key reference: go back to the page read before a jump.
+pub fn tui_reader_action_back_to_page() -> String {
+    text("tui-reader-action-back-to-page", &[])
+}
+
+/// A row of the key reference: hide the header and status line for a bare page, or show them.
+pub fn tui_reader_action_bare() -> String {
+    text("tui-reader-action-bare", &[])
+}
+
+/// A row of the key reference: show one page or two side by side.
+pub fn tui_reader_action_pages() -> String {
+    text("tui-reader-action-pages", &[])
+}
+
+/// A row of the key reference: open the reader settings.
+pub fn tui_reader_action_settings() -> String {
+    text("tui-reader-action-settings", &[])
+}
+
+/// A row of the key reference: leave the reader for the screen it was opened from.
+pub fn tui_reader_action_leave() -> String {
+    text("tui-reader-action-leave", &[])
+}
+
+/// A row of the key reference: on the page between chapters, open the next numbered chapter past the extras.
+pub fn tui_reader_action_skip() -> String {
+    text("tui-reader-action-skip", &[])
+}
+
+/// A row of the key reference: scroll a page shown at fit width, a zoomed page or a strip down.
+pub fn tui_reader_action_scroll_down() -> String {
+    text("tui-reader-action-scroll-down", &[])
+}
+
+/// A row of the key reference: scroll up.
+pub fn tui_reader_action_scroll_up() -> String {
+    text("tui-reader-action-scroll-up", &[])
+}
+
+/// A row of the key reference: read the series as pages that turn, or as one long strip.
+pub fn tui_reader_action_mode() -> String {
+    text("tui-reader-action-mode", &[])
+}
+
+/// A row of the key reference: fit the page to the window, or to its width and scroll it.
+pub fn tui_reader_action_fit() -> String {
+    text("tui-reader-action-fit", &[])
+}
+
+/// A row of the key reference: zoom in on the page, or leave the zoom.
+pub fn tui_reader_action_zoom() -> String {
+    text("tui-reader-action-zoom", &[])
+}
+
+/// A row of the key reference: zoom in a step.
+pub fn tui_reader_action_zoom_in() -> String {
+    text("tui-reader-action-zoom-in", &[])
+}
+
+/// A row of the key reference: zoom out a step.
+pub fn tui_reader_action_zoom_out() -> String {
+    text("tui-reader-action-zoom-out", &[])
+}
+
+/// Hint in the reader's status line: the keys that scroll the page or the strip. Shown in lower case.
+pub fn tui_reader_hint_scroll() -> String {
+    text("tui-reader-hint-scroll", &[])
+}
+
+/// Hint in the reader's status line at fit width: the key that fits the page to the window again. Shown in lower case.
+pub fn tui_reader_hint_fit_screen() -> String {
+    text("tui-reader-hint-fit-screen", &[])
+}
+
+/// Hint in the reader's status line while zoomed: the keys that move the view about the page. Shown in lower case.
+pub fn tui_reader_hint_move() -> String {
+    text("tui-reader-hint-move", &[])
+}
+
+/// Hint in the reader's status line while zoomed: the keys that zoom in and out. Shown in lower case.
+pub fn tui_reader_hint_zoom() -> String {
+    text("tui-reader-hint-zoom", &[])
+}
+
+/// Hint in the reader's status line while zoomed: the key that leaves the zoom. Shown in lower case.
+pub fn tui_reader_hint_leave_zoom() -> String {
+    text("tui-reader-hint-leave-zoom", &[])
+}
+
+/// Hint in the reader's status line in a strip: the key that scrolls on by most of a screen. Shown in lower case.
+pub fn tui_reader_hint_next_screen() -> String {
+    text("tui-reader-hint-next-screen", &[])
+}
+
+/// Hint in the reader's status line in a wide window with two pages side by side: the key that shows one page at a time. Shown in lower case.
+pub fn tui_reader_hint_one_page() -> String {
+    text("tui-reader-hint-one-page", &[])
+}
+
+/// Hint in the reader's status line in a wide window with one page: the key that shows two side by side. Shown in lower case.
+pub fn tui_reader_hint_two_pages() -> String {
+    text("tui-reader-hint-two-pages", &[])
+}
+
+/// After the page count in the reader's status line while the page fits the window's width and scrolls.
+pub fn tui_reader_fit_width() -> String {
+    text("tui-reader-fit-width", &[])
+}
+
+/// Left of the reader's status line while zoomed in, before the page count: "Zoom 300%".
+pub fn tui_reader_zoom(percent: i64) -> String {
+    text("tui-reader-zoom", &[("percent", Arg::Plain(percent))])
+}
+
+/// Under the small map of the page at the right while zoomed in: which page it is.
+pub fn tui_reader_zoom_page(page: i64) -> String {
+    text("tui-reader-zoom-page", &[("page", Arg::Plain(page))])
+}
+
+/// Left of the reader's status line in a webtoon strip: the chapter, and the image at the top of the window out of the chapter's images. The chapter is its number, such as 15.
+pub fn tui_reader_strip_at(chapter: &str, image: i64, images: i64) -> String {
+    text("tui-reader-strip-at", &[("chapter", Arg::Text(chapter)), ("image", Arg::Plain(image)), ("images", Arg::Plain(images))])
+}
+
+/// On the reader's status rule in a strip, once the chapter it ran on from counted as read. The chapter is its number, such as 14.
+pub fn tui_reader_strip_read(chapter: &str) -> String {
+    text("tui-reader-strip-read", &[("chapter", Arg::Text(chapter))])
+}
+
+/// On the reader's status rule in a strip, once the chapter counted as read and the trackers were updated. The trackers are already joined, such as "AniList".
+pub fn tui_reader_strip_read_tracker(chapter: &str, trackers: &str) -> String {
+    text("tui-reader-strip-read-tracker", &[("chapter", Arg::Text(chapter)), ("trackers", Arg::Text(trackers))])
+}
+
+/// On the reader's status rule in a strip, once the chapter counted as read while the computer is offline: the trackers are told once it is back online.
+pub fn tui_reader_strip_read_offline(chapter: &str, trackers: &str) -> String {
+    text("tui-reader-strip-read-offline", &[("chapter", Arg::Text(chapter)), ("trackers", Arg::Text(trackers))])
+}
+
+/// A row of the key reference: make a light novel's text column narrower.
+pub fn tui_reader_action_narrower() -> String {
+    text("tui-reader-action-narrower", &[])
+}
+
+/// A row of the key reference: make a light novel's text column wider.
+pub fn tui_reader_action_wider() -> String {
+    text("tui-reader-action-wider", &[])
+}
+
+/// A row of the key reference in a light novel: switch between turning screens and scrolling lines.
+pub fn tui_reader_action_mode_novel() -> String {
+    text("tui-reader-action-mode-novel", &[])
+}
+
+/// Hint in the reader's status line in a light novel: the keys that change the text's width. Shown in lower case.
+pub fn tui_reader_hint_width() -> String {
+    text("tui-reader-hint-width", &[])
+}
+
+/// Hint in the settings over the reader: the keys that change the setting in the row. Shown in lower case.
+pub fn tui_reader_hint_change() -> String {
+    text("tui-reader-hint-change", &[])
+}
+
+/// A light novel's picture, on a line of its own in the text: the picture's description.
+pub fn tui_reader_novel_picture(alt: &str) -> String {
+    text("tui-reader-novel-picture", &[("alt", Arg::Text(alt))])
+}
+
+/// A light novel's picture with no description, on a line of its own in the text.
+pub fn tui_reader_novel_picture_plain() -> String {
+    text("tui-reader-novel-picture-plain", &[])
+}
+
+/// In the reader's status line in a light novel, after the part's name: how far through the part the text in view reaches, such as "34%".
+pub fn tui_reader_novel_through(percent: i64) -> String {
+    text("tui-reader-novel-through", &[("percent", Arg::Plain(percent))])
+}
+
+/// Heading in the reader settings over what this series keeps for itself.
+pub fn tui_reader_settings_series() -> String {
+    text("tui-reader-settings-series", &[])
+}
+
+/// Heading in the reader settings over what applies to every light novel on this computer.
+pub fn tui_reader_settings_novels_here() -> String {
+    text("tui-reader-settings-novels-here", &[])
+}
+
+/// Heading in the reader settings over what applies to every light novel, on every device.
+pub fn tui_reader_settings_novels_all() -> String {
+    text("tui-reader-settings-novels-all", &[])
+}
+
+/// Heading in the reader settings over what applies to every manga and webtoon on this computer.
+pub fn tui_reader_settings_manga_here() -> String {
+    text("tui-reader-settings-manga-here", &[])
+}
+
+/// Heading in the reader settings over what applies to every manga and webtoon, on every device.
+pub fn tui_reader_settings_manga_all() -> String {
+    text("tui-reader-settings-manga-all", &[])
+}
+
+/// Heading in the reader settings over the settings the apps have and the terminal leaves to itself.
+pub fn tui_reader_settings_not_here() -> String {
+    text("tui-reader-settings-not-here", &[])
+}
+
+/// Under that heading in a light novel's reader settings.
+pub fn tui_reader_settings_novel_note() -> String {
+    text("tui-reader-settings-novel-note", &[])
+}
+
+/// Under that heading in a manga's reader settings.
+pub fn tui_reader_settings_manga_note() -> String {
+    text("tui-reader-settings-manga-note", &[])
+}
+
+/// Heading over the sample of the text at the width being set, beside a light novel's reader settings.
+pub fn tui_reader_settings_preview() -> String {
+    text("tui-reader-settings-preview", &[])
+}
+
+/// At the foot of a light novel's reader settings.
+pub fn tui_reader_settings_novel_foot() -> String {
+    text("tui-reader-settings-novel-foot", &[])
+}
+
+/// At the foot of a manga's reader settings.
+pub fn tui_reader_settings_manga_foot() -> String {
+    text("tui-reader-settings-manga-foot", &[])
+}
+
+/// A row of the reader settings: paged or scrolled, or paged or a strip.
+pub fn tui_reader_setting_mode() -> String {
+    text("tui-reader-setting-mode", &[])
+}
+
+/// A row of the reader settings: right to left or left to right.
+pub fn tui_reader_setting_direction() -> String {
+    text("tui-reader-setting-direction", &[])
+}
+
+/// A row of the reader settings: a page fitted to the screen or to its width.
+pub fn tui_reader_setting_fit() -> String {
+    text("tui-reader-setting-fit", &[])
+}
+
+/// A row of the reader settings: one page at a time, two, or as the window allows.
+pub fn tui_reader_setting_page_layout() -> String {
+    text("tui-reader-setting-page-layout", &[])
+}
+
+/// A row of the reader settings: what a page printed across two pages does on a one-page screen.
+pub fn tui_reader_setting_spreads() -> String {
+    text("tui-reader-setting-spreads", &[])
+}
+
+/// A row of the reader settings: white borders cut from the pages.
+pub fn tui_reader_setting_crop() -> String {
+    text("tui-reader-setting-crop", &[])
+}
+
+/// A row of the reader settings: how many columns a light novel's lines run to.
+pub fn tui_reader_setting_text_width() -> String {
+    text("tui-reader-setting-text-width", &[])
+}
+
+/// A row of the reader settings: a blank line between paragraphs or none.
+pub fn tui_reader_setting_line_spacing() -> String {
+    text("tui-reader-setting-line-spacing", &[])
+}
+
+/// A row of the reader settings: lines spaced out to end together at the text width.
+pub fn tui_reader_setting_justify() -> String {
+    text("tui-reader-setting-justify", &[])
+}
+
+/// A reading mode: a screen of text or pages at a time.
+pub fn tui_reader_value_paged() -> String {
+    text("tui-reader-value-paged", &[])
+}
+
+/// A reading mode for light novels: the text scrolls a line at a time.
+pub fn tui_reader_value_scrolled() -> String {
+    text("tui-reader-value-scrolled", &[])
+}
+
+/// A reading mode for manga: whole pages one under another.
+pub fn tui_reader_value_vertical() -> String {
+    text("tui-reader-value-vertical", &[])
+}
+
+/// A line spacing in the terminal: a blank line between paragraphs.
+pub fn tui_reader_value_open() -> String {
+    text("tui-reader-value-open", &[])
+}
+
+/// A line spacing in the terminal: no line between paragraphs.
+pub fn tui_reader_value_tight() -> String {
+    text("tui-reader-value-tight", &[])
+}
+
+/// A width in the reader settings, in the terminal's columns, such as "66 columns".
+pub fn tui_reader_value_columns(columns: i64) -> String {
+    text("tui-reader-value-columns", &[("columns", Arg::Int(columns))])
+}
+
+/// A short notice on the reader's status rule after the key that marks the open chapter read. The chapter is its number, such as 12.
+pub fn tui_reader_marked_read(chapter: &str) -> String {
+    text("tui-reader-marked-read", &[("chapter", Arg::Text(chapter))])
+}
+
+/// A short notice on the reader's status rule after the key that marks the open chapter unread. The chapter is its number, such as 12.
+pub fn tui_reader_marked_unread(chapter: &str) -> String {
+    text("tui-reader-marked-unread", &[("chapter", Arg::Text(chapter))])
+}
+
+/// A short notice on the reader's status rule after the key that downloads the open chapter. The download runs in the background. The chapter is its number, such as 12.
+pub fn tui_reader_downloading(chapter: &str) -> String {
+    text("tui-reader-downloading", &[("chapter", Arg::Text(chapter))])
+}
+
+/// On a series page's chapter row, when the chapter was read or came out a week or more ago this year: the day and the month, as in "Read · 9 Nov". The month is the short month name.
+pub fn tui_read_row_date(day: i64, month: &str) -> String {
+    text("tui-read-row-date", &[("day", Arg::Plain(day)), ("month", Arg::Text(month))])
+}
+
+/// On a series page's chapter row, when the chapter was read or came out in an earlier year: the day, the short month name and the year, as in "Read · 9 Nov 2025".
+pub fn tui_read_row_date_year(day: i64, month: &str, year: i64) -> String {
+    text("tui-read-row-date-year", &[("day", Arg::Plain(day)), ("month", Arg::Text(month)), ("year", Arg::Plain(year))])
+}
+
+/// A row of the key reference on the series page: put the cursor back on the chapter to read next, the one in progress or the next unread. Its status line hint reads "chapters".
+pub fn tui_read_keys_next() -> String {
+    text("tui-read-keys-next", &[])
+}
+
+/// A row of the reader settings: the space between a webtoon strip's images, None or Small.
+pub fn tui_reader_setting_strip_gap() -> String {
+    text("tui-reader-setting-strip-gap", &[])
+}
+
+/// A choice for how a page is fitted in the reader settings: the page fills the window's height and moves sideways when it is wider than the window.
+pub fn tui_reader_value_height() -> String {
+    text("tui-reader-value-height", &[])
+}
+
+/// After the page count in the reader's status line while the page fills the window's height and moves sideways.
+pub fn tui_reader_fit_height() -> String {
+    text("tui-reader-fit-height", &[])
+}
+
+/// A row of the command palette in the reader: a field for a page's number, then the jump to that page. Also the field's title.
+pub fn tui_reader_action_go_to_page() -> String {
+    text("tui-reader-action-go-to-page", &[])
+}
+
+/// Under the Go to page field: the pages it can go to.
+pub fn tui_reader_go_to_pages(total: i64) -> String {
+    text("tui-reader-go-to-pages", &[("total", Arg::Int(total))])
+}
+
+/// Under the Go to page field in a strip, where each image counts as a page: the images it can go to.
+pub fn tui_reader_go_to_images(total: i64) -> String {
+    text("tui-reader-go-to-images", &[("total", Arg::Int(total))])
+}
+
+/// Hint in the Go to page field's footer: Enter goes to the page typed. Shown in lower case.
+pub fn tui_reader_hint_go() -> String {
+    text("tui-reader-hint-go", &[])
+}
+
+/// In the reader, on a page that couldn't load, under "Couldn't load page 9": the server of the source answered with an HTTP error. The status is its code, such as 503.
+pub fn tui_reader_page_failed_status(status: i64) -> String {
+    text("tui-reader-page-failed-status", &[("status", Arg::Plain(status))])
+}
+
+/// In the reader, under "Couldn't open chapter 16": the source didn't answer the request. The source is its name.
+pub fn tui_reader_no_answer(source: &str) -> String {
+    text("tui-reader-no-answer", &[("source", Arg::Text(source))])
+}
+
+/// In the reader, under "Couldn't open chapter 16": the source didn't answer, after a wait of some seconds. The source is its name; "s" is the short unit for seconds.
+pub fn tui_reader_no_answer_in(source: &str, seconds: i64) -> String {
+    text("tui-reader-no-answer-in", &[("source", Arg::Text(source)), ("seconds", Arg::Int(seconds))])
+}
+
 /// AniList's name, in the line that says it is still being asked.
 pub fn tui_read_anilist() -> String {
     text("tui-read-anilist", &[])
@@ -7523,11 +8233,6 @@ pub fn tui_read_source_offline(source: &str) -> String {
 /// Names in a sentence, the last joined with "and": "Home library and Northwind", "A, B and C". The names before the last are already joined with commas. Used in "Nothing found in …".
 pub fn tui_read_names_and(names: &str, last: &str) -> String {
     text("tui-read-names-and", &[("names", Arg::Text(names)), ("last", Arg::Text(last))])
-}
-
-/// Toast after Enter on a series in reading's Home or Search. The terminal has no reader.
-pub fn tui_read_opens_in_apps() -> String {
-    text("tui-read-opens-in-apps", &[])
 }
 
 /// On reading's Home when no book source is set up. The terminal cannot add one; the apps can.
@@ -8655,12 +9360,7 @@ pub fn tui_together_recent_alone(episode: &str, when: &str) -> String {
     text("tui-together-recent-alone", &[("episode", Arg::Text(episode)), ("when", Arg::Text(when))])
 }
 
-/// Line under the title of that page.
-pub fn tui_medium_read_line() -> String {
-    text("tui-medium-read-line", &[])
-}
-
-/// Line under that page: the key that opens the choice of what { -app-name } is for. The key is the one bound to it, as the key map draws it.
+/// Last line of reading's Home: the key that opens the choice of what { -app-name } is for. The key is the one bound to it, as the key map draws it.
 pub fn tui_medium_read_change(key: &str) -> String {
     text("tui-medium-read-change", &[("key", Arg::Text(key))])
 }

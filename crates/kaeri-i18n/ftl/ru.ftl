@@ -4648,6 +4648,444 @@ settings-note-upload-limit = Ограничивает всю отдачу тор
 # Note under the token storage row. The option is a command-line flag and is not translated.
 settings-note-token-storage = Чтобы перенести существующий токен, используйте --token-to-file.
 
+# Under a series' title on the terminal's series page: the source its chapters are read from.
+tui-read-series-from = Чтение: { $source }
+
+# After the source on the series page: the list the series is on and the trackers that keep that list, such as "Reading on AniList". The list is its name, such as "Reading" or "Planning"; the trackers are already joined.
+tui-read-series-list-on = { $list } на { $trackers }
+
+# After the source on the series page, when no tracker keeps the list: "On your Reading list".
+tui-read-series-list = В вашем списке «{ $list }»
+
+# Beside the progress meter on the series page: how many of the chapters listed are read.
+tui-read-series-read =
+    { $total ->
+        [one] Прочитано { $read } из { $total } главы
+        [few] Прочитано { $read } из { $total } глав
+        [many] Прочитано { $read } из { $total } глав
+       *[other] Прочитано { $read } из { $total } главы
+    }
+
+# At the top of the series page while the computer is offline: the chapters listed are the ones kept from before, and only the downloaded ones open.
+tui-read-series-offline = Нет подключения. Скачанные главы по-прежнему открываются.
+
+# Left of the status line on the series page while the computer is offline.
+tui-read-status-offline = Чтение · не в сети
+
+# Header chip on the series page while the computer is offline, in place of how many sources are on. The mark is a cross. Lower case, as the header's other chips are.
+tui-read-header-offline = источники { $mark }
+
+# Hint in the status line on the series page: the key that marks the chapter under the cursor read, or unread when it is read. Shown in lower case. Also a row of the key reference.
+tui-read-read-unread = Прочитано или нет
+
+# Hint in the status line on the series page: the key that picks the list the series is on. Shown in lower case.
+tui-read-hint-status = Статус
+
+# Hint in the status line on reading's Home, on a series in Continue: the key that opens the chapter where reading stopped. Shown in lower case.
+tui-read-hint-continue = Дальше
+
+# Heading of the series page's keys in the key reference.
+tui-read-keys-series = Серия
+
+# A row of the key reference: open the chapter under the cursor on the series page.
+tui-read-keys-read = Читать главу
+
+# A row of the key reference: download the chapter under the cursor on the series page.
+tui-read-keys-download = Скачать эту главу
+
+# A row of the key reference: pick the list the series is on, such as Reading or Planning.
+tui-read-keys-status = Задать статус в списке
+
+# A row of the key reference on reading's Home: open a series' page with its chapters, from a series in Continue, where Enter opens the chapter itself.
+tui-read-keys-chapters = Открыть страницу серии
+
+# Left of the status line while a chapter opens in the terminal's reader. The chapter is its number, such as 14.
+tui-reader-opening = Открывается глава { $chapter }
+
+# The reader's opening line while no source has been picked for the series yet.
+tui-reader-finding = Поиск источника
+
+# Left of the reader's status line: the page in view and how many the chapter has.
+tui-reader-page-of = Страница { $page } из { $pages }
+
+# Left of the reader's status line while two pages show side by side.
+tui-reader-pages-of = Страницы { $first } и { $second } из { $pages }
+
+# After the page count in the reader's status line, when the terminal draws pages as coloured blocks because it has no image protocol.
+tui-reader-blocks = Блоки
+
+# Said once a run on the reader's status rule, the first time a chapter opens in a terminal with no image protocol: the pages show as coloured blocks.
+tui-reader-blocks-notice = Протокол изображений недоступен. Страницы показаны блоками.
+
+# Hint after "Resumed at page 8" on the reader's status rule: the key that starts the chapter from its first page. Shown in lower case.
+tui-reader-start-over = С начала
+
+# Hint after the notice that the chapter moved to where another device read to: the key that goes back to the page this computer was on. Shown in lower case.
+tui-reader-go-back = Вернуться
+
+# Hint after the notice that the reader guessed how this series reads: the key that opens the reader settings to change it. Shown in lower case.
+tui-reader-change = Изменить
+
+# Middle of the reader when the terminal was started with images turned off, and a chapter of manga or webtoon pages opens. The option is typed as it is on the command line.
+tui-reader-images-off = Страницы состоят из картинок, а Kaeri запущен с --no-images.
+
+# Under that line.
+tui-reader-images-off-how = Запустите его без этого параметра, чтобы читать здесь мангу и вебтуны.
+
+# Under that line.
+tui-reader-images-off-novels = Ранобэ в любом случае открываются как текст.
+
+# Heading in the reader when a chapter couldn't open. The chapter is its number, such as 16.
+tui-reader-chapter-failed = Не удалось открыть главу { $chapter }
+
+# Top line of the page after the last chapter of a finished series.
+tui-reader-end-series = Конец серии
+
+# Under that line.
+tui-reader-end-no-more = Больше глав нет.
+
+# Under "You're caught up" on the page after the last chapter there is.
+tui-reader-end-caught-up-line = Новые главы появятся на главной, как только ваши источники их получат.
+
+# On the page after the last chapter there is, when the series goes on. The chapter is the next one's number, such as 18.
+tui-reader-end-not-out = Глава { $chapter } ещё не вышла
+
+# The same, when the next chapter's number isn't known.
+tui-reader-end-not-out-next = Следующая глава ещё не вышла
+
+# Under either of those lines.
+tui-reader-end-not-out-line = Kaeri проверяет новые главы в фоне. Новые появятся на главной.
+
+# On the page between chapters when no source has the next chapter. The chapter is its number, such as 18.
+tui-reader-end-no-source = Ваши источники пока без главы { $chapter }
+
+# The same, when the next chapter's number isn't known.
+tui-reader-end-no-source-next = Ваши источники пока без следующей главы
+
+# On the page between chapters while offline, and as a toast when a chapter that isn't on this computer is opened offline. The chapter is its number, such as 16.
+tui-reader-end-offline = Глава { $chapter } не скачана
+
+# The same, when the chapter's number isn't known.
+tui-reader-end-offline-next = Следующая глава не скачана
+
+# Under that line on the page between chapters.
+tui-reader-end-offline-line = Вы не в сети. Глава откроется здесь, когда появится подключение.
+
+# Under the next chapter on the page between chapters when it is an extra, such as 16.5 between 16 and 17: skipping to the next numbered chapter leaves the extra unread. The chapter is the extra's number.
+tui-reader-end-skip-unread = Если пропустить, глава { $chapter } останется непрочитанной.
+
+# Under the next chapter's first page on the page between chapters. The chapter is its number.
+tui-reader-end-first-page = Первая страница главы { $chapter }
+
+# The reader's heading when the terminal is too small to show a page.
+tui-reader-too-small = Нужен терминал побольше
+
+# Under that heading: the smallest size the reader shows pages at, in columns and rows.
+tui-reader-too-small-line = Не меньше { $columns } на { $rows }
+
+# Hint in the reader's status line: the key that turns to the next page. Shown in lower case.
+tui-reader-hint-next = Вперёд
+
+# Hint in the reader's status line: the key that turns back a page. Shown in lower case.
+tui-reader-hint-back = Назад
+
+# Hint in the reader's status line while a chapter opens: the key that stops it and goes back. Shown in lower case.
+tui-reader-hint-stop = Стоп
+
+# Hint in the reader's status line: the key that opens the reader settings. Shown in lower case.
+tui-reader-hint-settings = Настройки
+
+# Hint in the reader's status line on a page that couldn't load: the turn key goes on to the next page without it. Shown in lower case.
+tui-reader-hint-without = Дальше без неё
+
+# Hint in the reader's status line on the page between chapters. Shown in lower case.
+tui-reader-hint-next-chapter = Следующая глава
+
+# Hint in the reader's status line: the key that leaves the reader for the series page it was opened from. Shown in lower case.
+tui-reader-hint-series = Назад к серии
+
+# Hint in the reader's status line after the last chapter of a finished series: the key that opens its first chapter. Shown in lower case.
+tui-reader-hint-again = Читать снова с начала
+
+# Heading of the reader's keys in the key reference.
+tui-reader-keys-reader = Чтение
+
+# Heading of the keys that change how the reader shows pages, in the key reference.
+tui-reader-keys-view = Вид при чтении
+
+# Beside the reader's keys in the key reference.
+tui-reader-keys-rtl = В манге справа налево ← листает вперёд, а → назад, вслед за страницей. Space всегда листает вперёд.
+
+# Beside the reader's keys in the key reference, under that.
+tui-reader-keys-left-out = Клавиши, которые в открытой главе ничего не делают, не показаны: в ранобэ нет масштаба, в манге нет ширины.
+
+# Ends the toast that says a command does nothing on this screen, as "on the Downloads screen" does: the command works in the reader.
+tui-reader-where = в режиме чтения
+
+# A row of the key reference and the command palette: turn to the next page.
+tui-reader-action-next = Следующая страница
+
+# A row of the key reference and the command palette: turn back a page.
+tui-reader-action-previous = Предыдущая страница
+
+# A row of the key reference: turn to the page on the left, which is the next one in right-to-left manga.
+tui-reader-action-left = Страница слева
+
+# A row of the key reference: turn to the page on the right.
+tui-reader-action-right = Страница справа
+
+# A row of the key reference: go to the chapter's first page.
+tui-reader-action-first = Первая страница
+
+# A row of the key reference: go to the chapter's last page.
+tui-reader-action-last = Последняя страница
+
+# A row of the key reference: open the next chapter.
+tui-reader-action-next-chapter = Следующая глава
+
+# A row of the key reference: open the chapter before this one.
+tui-reader-action-previous-chapter = Предыдущая глава
+
+# A row of the key reference: go back to the page read before a jump.
+tui-reader-action-back-to-page = Назад к странице
+
+# A row of the key reference: hide the header and status line for a bare page, or show them.
+tui-reader-action-bare = Только страница
+
+# A row of the key reference: show one page or two side by side.
+tui-reader-action-pages = Одна или две страницы
+
+# A row of the key reference: open the reader settings.
+tui-reader-action-settings = Настройки чтения
+
+# A row of the key reference: leave the reader for the screen it was opened from.
+tui-reader-action-leave = Выйти из чтения
+
+# A row of the key reference: on the page between chapters, open the next numbered chapter past the extras.
+tui-reader-action-skip = Пропустить экстры
+
+# A row of the key reference: scroll a page shown at fit width, a zoomed page or a strip down.
+tui-reader-action-scroll-down = Прокрутить вниз
+
+# A row of the key reference: scroll up.
+tui-reader-action-scroll-up = Прокрутить вверх
+
+# A row of the key reference: read the series as pages that turn, or as one long strip.
+tui-reader-action-mode = Листание или лента
+
+# A row of the key reference: fit the page to the window, or to its width and scroll it.
+tui-reader-action-fit = По экрану или по ширине
+
+# A row of the key reference: zoom in on the page, or leave the zoom.
+tui-reader-action-zoom = Увеличение
+
+# A row of the key reference: zoom in a step.
+tui-reader-action-zoom-in = Увеличить
+
+# A row of the key reference: zoom out a step.
+tui-reader-action-zoom-out = Уменьшить
+
+# Hint in the reader's status line: the keys that scroll the page or the strip. Shown in lower case.
+tui-reader-hint-scroll = Прокрутка
+
+# Hint in the reader's status line at fit width: the key that fits the page to the window again. Shown in lower case.
+tui-reader-hint-fit-screen = По экрану
+
+# Hint in the reader's status line while zoomed: the keys that move the view about the page. Shown in lower case.
+tui-reader-hint-move = Сдвиг
+
+# Hint in the reader's status line while zoomed: the keys that zoom in and out. Shown in lower case.
+tui-reader-hint-zoom = Масштаб
+
+# Hint in the reader's status line while zoomed: the key that leaves the zoom. Shown in lower case.
+tui-reader-hint-leave-zoom = Без увеличения
+
+# Hint in the reader's status line in a strip: the key that scrolls on by most of a screen. Shown in lower case.
+tui-reader-hint-next-screen = Следующий экран
+
+# Hint in the reader's status line in a wide window with two pages side by side: the key that shows one page at a time. Shown in lower case.
+tui-reader-hint-one-page = Одна страница
+
+# Hint in the reader's status line in a wide window with one page: the key that shows two side by side. Shown in lower case.
+tui-reader-hint-two-pages = Две страницы
+
+# After the page count in the reader's status line while the page fits the window's width and scrolls.
+tui-reader-fit-width = По ширине
+
+# Left of the reader's status line while zoomed in, before the page count: "Zoom 300%".
+tui-reader-zoom = Масштаб { $percent }%
+
+# Under the small map of the page at the right while zoomed in: which page it is.
+tui-reader-zoom-page = Стр. { $page }
+
+# Left of the reader's status line in a webtoon strip: the chapter, and the image at the top of the window out of the chapter's images. The chapter is its number, such as 15.
+tui-reader-strip-at = Глава { $chapter } · картинка { $image } из { $images }
+
+# On the reader's status rule in a strip, once the chapter it ran on from counted as read. The chapter is its number, such as 14.
+tui-reader-strip-read = Глава { $chapter } отмечена прочитанной
+
+# On the reader's status rule in a strip, once the chapter counted as read and the trackers were updated. The trackers are already joined, such as "AniList".
+tui-reader-strip-read-tracker = Глава { $chapter } отмечена прочитанной · обновлено: { $trackers }
+
+# On the reader's status rule in a strip, once the chapter counted as read while the computer is offline: the trackers are told once it is back online.
+tui-reader-strip-read-offline = Глава { $chapter } отмечена прочитанной · { $trackers }: обновление после подключения
+
+# A row of the key reference: make a light novel's text column narrower.
+tui-reader-action-narrower = Текст уже
+
+# A row of the key reference: make a light novel's text column wider.
+tui-reader-action-wider = Текст шире
+
+# A row of the key reference in a light novel: switch between turning screens and scrolling lines.
+tui-reader-action-mode-novel = Листание или прокрутка
+
+# Hint in the reader's status line in a light novel: the keys that change the text's width. Shown in lower case.
+tui-reader-hint-width = Ширина
+
+# Hint in the settings over the reader: the keys that change the setting in the row. Shown in lower case.
+tui-reader-hint-change = Изменить
+
+# A light novel's picture, on a line of its own in the text: the picture's description.
+tui-reader-novel-picture = Иллюстрация: { $alt }
+
+# A light novel's picture with no description, on a line of its own in the text.
+tui-reader-novel-picture-plain = Иллюстрация
+
+# In the reader's status line in a light novel, after the part's name: how far through the part the text in view reaches, such as "34%".
+tui-reader-novel-through = { $percent }%
+
+# Heading in the reader settings over what this series keeps for itself.
+tui-reader-settings-series = Эта серия
+
+# Heading in the reader settings over what applies to every light novel on this computer.
+tui-reader-settings-novels-here = Ранобэ на этом компьютере
+
+# Heading in the reader settings over what applies to every light novel, on every device.
+tui-reader-settings-novels-all = Все ранобэ
+
+# Heading in the reader settings over what applies to every manga and webtoon on this computer.
+tui-reader-settings-manga-here = Манга на этом компьютере
+
+# Heading in the reader settings over what applies to every manga and webtoon, on every device.
+tui-reader-settings-manga-all = Вся манга
+
+# Heading in the reader settings over the settings the apps have and the terminal leaves to itself.
+tui-reader-settings-not-here = Нет в терминале
+
+# Under that heading in a light novel's reader settings.
+tui-reader-settings-novel-note = Шрифт, размер текста и оформление берутся из настроек терминала. Поля зависят от ширины текста.
+
+# Under that heading in a manga's reader settings.
+tui-reader-settings-manga-note = Оформление, цвета и фон берутся из настроек терминала. Зоны касания нужны для сенсорных экранов.
+
+# Heading over the sample of the text at the width being set, beside a light novel's reader settings.
+tui-reader-settings-preview = Предпросмотр
+
+# At the foot of a light novel's reader settings.
+tui-reader-settings-novel-foot = Изменения применяются сразу. Место в тексте сохраняется.
+
+# At the foot of a manga's reader settings.
+tui-reader-settings-manga-foot = Изменения применяются сразу. Текущая страница остаётся.
+
+# A row of the reader settings: paged or scrolled, or paged or a strip.
+tui-reader-setting-mode = Режим
+
+# A row of the reader settings: right to left or left to right.
+tui-reader-setting-direction = Направление
+
+# A row of the reader settings: a page fitted to the screen or to its width.
+tui-reader-setting-fit = Масштаб
+
+# A row of the reader settings: one page at a time, two, or as the window allows.
+tui-reader-setting-page-layout = Расположение страниц
+
+# A row of the reader settings: what a page printed across two pages does on a one-page screen.
+tui-reader-setting-spreads = Широкие страницы
+
+# A row of the reader settings: white borders cut from the pages.
+tui-reader-setting-crop = Обрезать поля
+
+# A row of the reader settings: how many columns a light novel's lines run to.
+tui-reader-setting-text-width = Ширина текста
+
+# A row of the reader settings: a blank line between paragraphs or none.
+tui-reader-setting-line-spacing = Межстрочный интервал
+
+# A row of the reader settings: lines spaced out to end together at the text width.
+tui-reader-setting-justify = По ширине
+
+# A reading mode: a screen of text or pages at a time.
+tui-reader-value-paged = Листание
+
+# A reading mode for light novels: the text scrolls a line at a time.
+tui-reader-value-scrolled = Прокрутка
+
+# A reading mode for manga: whole pages one under another.
+tui-reader-value-vertical = Вертикально
+
+# A line spacing in the terminal: a blank line between paragraphs.
+tui-reader-value-open = Свободно
+
+# A line spacing in the terminal: no line between paragraphs.
+tui-reader-value-tight = Плотно
+
+# A width in the reader settings, in the terminal's columns, such as "66 columns".
+tui-reader-value-columns =
+    { $columns ->
+        [one] { $columns } столбец
+        [few] { $columns } столбца
+        [many] { $columns } столбцов
+       *[other] { $columns } столбца
+    }
+
+# A short notice on the reader's status rule after the key that marks the open chapter read. The chapter is its number, such as 12.
+tui-reader-marked-read = Глава { $chapter } отмечена прочитанной
+
+# A short notice on the reader's status rule after the key that marks the open chapter unread. The chapter is its number, such as 12.
+tui-reader-marked-unread = Глава { $chapter } отмечена непрочитанной
+
+# A short notice on the reader's status rule after the key that downloads the open chapter. The download runs in the background. The chapter is its number, such as 12.
+tui-reader-downloading = Скачивается глава { $chapter }
+
+# On a series page's chapter row, when the chapter was read or came out a week or more ago this year: the day and the month, as in "Read · 9 Nov". The month is the short month name.
+tui-read-row-date = { $day } { $month }
+
+# On a series page's chapter row, when the chapter was read or came out in an earlier year: the day, the short month name and the year, as in "Read · 9 Nov 2025".
+tui-read-row-date-year = { $day } { $month } { $year }
+
+# A row of the key reference on the series page: put the cursor back on the chapter to read next, the one in progress or the next unread. Its status line hint reads "chapters".
+tui-read-keys-next = Перейти к главе, которую читать следующей
+
+# A row of the reader settings: the space between a webtoon strip's images, None or Small.
+tui-reader-setting-strip-gap = Промежуток в ленте
+
+# A choice for how a page is fitted in the reader settings: the page fills the window's height and moves sideways when it is wider than the window.
+tui-reader-value-height = По высоте
+
+# After the page count in the reader's status line while the page fills the window's height and moves sideways.
+tui-reader-fit-height = По высоте
+
+# A row of the command palette in the reader: a field for a page's number, then the jump to that page. Also the field's title.
+tui-reader-action-go-to-page = Перейти к странице
+
+# Under the Go to page field: the pages it can go to.
+tui-reader-go-to-pages = Страницы с 1 по { $total }
+
+# Under the Go to page field in a strip, where each image counts as a page: the images it can go to.
+tui-reader-go-to-images = Картинки с 1 по { $total }
+
+# Hint in the Go to page field's footer: Enter goes to the page typed. Shown in lower case.
+tui-reader-hint-go = перейти
+
+# In the reader, on a page that couldn't load, under "Couldn't load page 9": the server of the source answered with an HTTP error. The status is its code, such as 503.
+tui-reader-page-failed-status = Источник ответил ошибкой { $status }.
+
+# In the reader, under "Couldn't open chapter 16": the source didn't answer the request. The source is its name.
+tui-reader-no-answer = { $source } не отвечает.
+
+# In the reader, under "Couldn't open chapter 16": the source didn't answer, after a wait of some seconds. The source is its name; "s" is the short unit for seconds.
+tui-reader-no-answer-in = { $source } не отвечает. Нет ответа за { $seconds } с.
+
 # Heading of the { -plugin-store } screens when the terminal is too small to draw them.
 stores-needs-larger-terminal = Нужен терминал большего размера
 
@@ -5311,10 +5749,7 @@ tui-together-not-a-link = Это не ссылка и не код комнаты
 # Second line of a recent room nobody else was in. The time is already formatted, such as Tuesday.
 tui-together-recent-alone = Эпизод { $episode } · { $when }
 
-# Line under the title of that page.
-tui-medium-read-line = В терминале нет читалки. Манга, вебтуны и ранобэ открываются в приложениях Kaeri, а синхронизация переносит ваш прогресс между ними.
-
-# Line under that page: the key that opens the choice of what { -app-name } is for. The key is the one bound to it, as the key map draws it.
+# Last line of reading's Home: the key that opens the choice of what { -app-name } is for. The key is the one bound to it, as the key map draws it.
 tui-medium-read-change = Нажмите { $key }, чтобы выбрать, для чего нужен Kaeri.
 
 # Hint beside the Kaeri is for line on the Settings screen. The key is the one bound to it, as the key map draws it.

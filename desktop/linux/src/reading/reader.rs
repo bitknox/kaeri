@@ -985,6 +985,9 @@ impl Reader {
             eink: false,
             two_pages: width_px >= height_px * 13 / 10,
             dark,
+            decodes: None,
+            zoom: 0.0,
+            text: false,
         }
     }
 

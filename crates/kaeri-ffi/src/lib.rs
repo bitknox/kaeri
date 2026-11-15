@@ -305,6 +305,9 @@ mod tests {
             eink: true,
             two_pages: false,
             dark: false,
+            decodes: None,
+            zoom: 0.0,
+            text: false,
         };
         let commands = [
             Command::Medium(MediumCommand::Answer {

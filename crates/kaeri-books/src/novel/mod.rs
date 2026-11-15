@@ -8,13 +8,18 @@
 //! response carries [`csp`]. A source's chapter opening with its title twice says it once
 //! ([`heading_once`]). The paginator ([`script`]) lays the pages out and reports positions; its
 //! messages and calls are described at the top of `web/paginator.js`.
+//!
+//! A front end with no web view reads each cleaned document as [`text_blocks`] instead, with
+//! places named as the paginator names them.
 
+mod blocks;
 mod css;
 mod headings;
 mod hyphen;
 mod images;
 mod sanitize;
 
+pub use blocks::{Block, BlockKind, Run, text_blocks};
 pub use headings::heading_once;
 pub use hyphen::{BUILT_IN as HYPHENATES, SHY};
 pub use images::{MOST_WEB_IMAGES, web_images, with_local_images};

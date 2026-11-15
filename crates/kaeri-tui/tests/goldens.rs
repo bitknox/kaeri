@@ -445,9 +445,27 @@ fn modifiers(set: Modifier) -> String {
 }
 
 /// Every scenario, by name: a test each, and the list the stale-file check reads.
+#[path = "golden_scenes/series.rs"]
+mod series_scenes;
+use series_scenes::{series_chapters_loading, series_failed, series_offline, series_page};
+#[path = "golden_scenes/reader.rs"]
+mod reader_scenes;
+use reader_scenes::{
+    reader_blocks_after_resumed, reader_chapter_failed, reader_end_caught_up,
+    reader_end_extras, reader_end_finished, reader_end_not_out, reader_end_offline,
+    reader_end_page, reader_fit_width, reader_go_to_page, reader_help, reader_images_off,
+    reader_manga_settings, reader_novel, reader_novel_help, reader_novel_settings,
+    reader_novel_small, reader_one_page, reader_opening, reader_page_failed,
+    reader_page_loading, reader_spread_bare, reader_strip, reader_strip_gap, reader_strip_help,
+    reader_two_pages, reader_two_pages_blocks, reader_two_pages_wide, reader_zoom,
+};
+
 macro_rules! scenarios {
     ($($name:ident),+ $(,)?) => {
         const SCENARIOS: &[&str] = &[$(stringify!($name)),+];
+
+        /// Every scenario with the function that sets it up.
+        const SCENARIO_FNS: &[(&str, fn(&mut Screen))] = &[$((stringify!($name), $name)),+];
 
         mod golden {
             $(
@@ -474,6 +492,10 @@ scenarios! {
     read_search_nothing,
     read_search_filters,
     read_keys,
+    series_page,
+    series_offline,
+    series_chapters_loading,
+    series_failed,
     both_home_shows,
     both_home_reading,
     medium_first_run,
@@ -599,6 +621,68 @@ scenarios! {
     turn_off_confirm,
     profiles_two,
     add_profile,
+    reader_opening,
+    reader_two_pages,
+    reader_two_pages_blocks,
+    reader_blocks_after_resumed,
+    reader_one_page,
+    reader_images_off,
+    reader_page_loading,
+    reader_page_failed,
+    reader_chapter_failed,
+    reader_end_page,
+    reader_end_caught_up,
+    reader_end_not_out,
+    reader_end_offline,
+    reader_end_extras,
+    reader_end_finished,
+    reader_help,
+    reader_go_to_page,
+    reader_fit_width,
+    reader_zoom,
+    reader_strip,
+    reader_strip_gap,
+    reader_strip_help,
+    reader_two_pages_wide,
+    reader_spread_bare,
+    reader_novel,
+    reader_novel_small,
+    reader_novel_settings,
+    reader_novel_help,
+    reader_manga_settings,
+}
+
+/// The reader's scenes at the size the board draws them, where that is neither of the two.
+#[test]
+fn reader_scenes_at_the_board_s_sizes() {
+    for (name, scenario, (width, height)) in reader_scenes::BOARD {
+        let mut screen = Screen::new(*width, *height);
+        scenario(&mut screen);
+        golden(name, &screen.draw());
+    }
+}
+
+/// The window can shrink to almost nothing between frames. Every reader screen, set up at a
+/// normal size, then drawn at 1x1, 2x2 and just under the smallest it shows a page in, draws
+/// without a panic.
+#[test]
+fn reader_screens_draw_in_a_tiny_window() {
+    let scenes = SCENARIO_FNS
+        .iter()
+        .filter(|(name, _)| name.starts_with("reader_"))
+        .map(|(name, scenario)| (*name, *scenario))
+        .chain(reader_scenes::BOARD.iter().map(|(name, scenario, _)| (*name, *scenario)));
+    for (name, scenario) in scenes {
+        let mut screen = Screen::new(120, 34);
+        scenario(&mut screen);
+        for (width, height) in [(1, 1), (2, 2), (39, 11), (120, 34)] {
+            screen.width = width;
+            screen.height = height;
+            let drawn =
+                std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| screen.draw()));
+            assert!(drawn.is_ok(), "{name} panicked at {width}x{height}");
+        }
+    }
 }
 
 /// A golden left behind by a renamed or removed scenario is a file nothing checks, and reads as
@@ -608,6 +692,9 @@ fn every_golden_belongs_to_a_scenario() {
     let wanted: Vec<String> = SCENARIOS
         .iter()
         .flat_map(|name| SIZES.iter().map(move |(w, h)| format!("{name}@{w}x{h}.txt")))
+        .chain(
+            reader_scenes::BOARD.iter().map(|(name, _, (w, h))| format!("{name}@{w}x{h}.txt")),
+        )
         .collect();
     let Ok(dir) = std::fs::read_dir(goldens_dir()) else { return };
     let mut stale = Vec::new();

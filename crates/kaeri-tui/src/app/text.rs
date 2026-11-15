@@ -18,6 +18,8 @@ pub enum Field {
     ManualQuery,
     /// The episodes a download range asks for: `4`, `1-12`, `7-`.
     Range,
+    /// The page the reader goes to, or a strip's image: a number from 1.
+    Page,
     /// The value a text setting is being given.
     Setting,
     /// Who signs in to Kitsu.
@@ -53,11 +55,12 @@ pub enum Field {
 }
 
 impl Field {
-    pub const ALL: [Self; 20] = [
+    pub const ALL: [Self; 21] = [
         Self::Search,
         Self::Palette,
         Self::ManualQuery,
         Self::Range,
+        Self::Page,
         Self::Setting,
         Self::KitsuUser,
         Self::KitsuPassword,
@@ -83,6 +86,8 @@ impl Field {
             // A range is digits and one dash; letting anything else in would make the parse
             // failure the user's puzzle instead of the input's boundary.
             Self::Range => ch.is_ascii_digit() || ch == '-',
+            // A page number: no chapter runs to five digits.
+            Self::Page => ch.is_ascii_digit() && field.len() < 4,
             // The server takes up to 64; stopping here says so before it is refused.
             Self::InviteName => field.len() < 64,
             Self::DeviceLabel => field.len() < kaeri_model::stores::DEVICE_LABEL_MAX,
@@ -178,6 +183,7 @@ impl App {
             Some(Overlay::CommandPalette) => Field::Palette,
             Some(Overlay::ManualQuery) => Field::ManualQuery,
             Some(Overlay::DownloadRange) => Field::Range,
+            Some(Overlay::ReaderGoTo) => Field::Page,
             Some(Overlay::EditSetting) => Field::Setting,
             Some(Overlay::KitsuUsername) => Field::KitsuUser,
             Some(Overlay::KitsuPassword) => Field::KitsuPassword,

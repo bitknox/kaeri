@@ -1,0 +1,46 @@
+Kaeri   Harbor Light Recipes · Chapter 14            sources ● 3  ·  anilist ⇅ 2
+────────────────────────────────────────────────────────────────────────────────
+
+
+
+
+
+
+
+
+            Pages are pictures, and Kaeri started with --no-images.
+
+         Start it without that option to read manga and webtoons here.
+                     Light novels open as text either way.
+
+
+
+
+
+
+
+
+────────────────────────────────────────────────────────────────────────────────
+Page 8 of 22                                        e chapters   q back   ? keys
+=== styles ===
+colours text=#e4e0d6 text-dim=#a8aec9 rule=#46464d obi=#f2a64b state=#7fc7d9 alert=#f59b85 ground=#1a1b26
+r00 c00-04 fg=text mod=BOLD
+r00 c08-27 fg=text
+r00 c28-40 fg=text-dim
+r00 c53-63 fg=state
+r00 c64-65 fg=text-dim
+r00 c66-66 fg=rule
+r00 c67-68 fg=text-dim
+r00 c69-79 fg=state
+r01 c00-79 fg=rule
+r10 c12-66 fg=text mod=BOLD
+r12 c09-69 fg=text-dim
+r13 c21-57 fg=text-dim
+r22 c00-79 fg=rule
+r23 c00-11 fg=text-dim
+r23 c52-52 fg=text
+r23 c53-64 fg=text-dim
+r23 c65-65 fg=text
+r23 c66-73 fg=text-dim
+r23 c74-74 fg=text
+r23 c75-79 fg=text-dim

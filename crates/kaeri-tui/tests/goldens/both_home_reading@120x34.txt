@@ -25,9 +25,9 @@ Kaeri                                                                           
                             │    ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
                             │    ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
                             │
-                            │    The terminal has no reader. Manga, webtoons and light novels open in the Kaeri apps,
-                            │    and sync keeps your progress in step.
                             │    Press I to change what Kaeri is for.
+                            │
+                            │
                             │
                             │
 ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
@@ -128,11 +128,9 @@ r25 c28-28 fg=rule
 r25 c33-68 fg=text-dim
 r26 c28-28 fg=rule
 r27 c28-28 fg=rule
-r27 c33-116 fg=text-dim
+r27 c33-68 fg=text-dim
 r28 c28-28 fg=rule
-r28 c33-69 fg=text-dim
 r29 c28-28 fg=rule
-r29 c33-68 fg=text-dim
 r30 c28-28 fg=rule
 r31 c28-28 fg=rule
 r32 c00-119 fg=rule
