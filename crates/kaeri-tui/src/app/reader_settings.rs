@@ -310,11 +310,21 @@ impl App {
         if same {
             return None;
         }
-        // A new fit starts the page at its reading side, as `f` does.
-        if item.key == Key::Fit {
-            let reader = self.reader_mut()?;
-            reader.zoom = None;
-            reader.scroll = 0;
+        match item.key {
+            // A new fit starts the page at its reading side, as `f` does.
+            Key::Fit => {
+                let reader = self.reader_mut()?;
+                reader.zoom = None;
+                reader.scroll = 0;
+            }
+            // The strip keeps the image at the top, a gap or none between them.
+            Key::StripGap => {
+                let place = self.strip_place();
+                let task = self.set_reader_setting(item.key, item.scope, value);
+                self.keep_strip_place_at(place);
+                return task;
+            }
+            _ => {}
         }
         self.set_reader_setting(item.key, item.scope, value)
     }

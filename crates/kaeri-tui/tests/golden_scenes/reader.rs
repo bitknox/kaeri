@@ -627,6 +627,35 @@ pub(super) fn reader_strip(s: &mut Screen) {
     every_strip_image_fills_the_column(s);
 }
 
+/// A strip with the Strip gap setting at small: a blank row between two images.
+pub(super) fn reader_strip_gap(s: &mut Screen) {
+    let work = open(s, ImageEngine::drawn_as_blocks(), 0);
+    web_opened(s, &work, "14", 6, Some(web_row("15", 64)));
+    let choice = |name: &str| ReaderValue::Choice { name: name.into() };
+    let mut mode = novel_setting(ReaderSettingKey::Mode, choice("strip"));
+    mode.scope = SettingScope::Series;
+    s.apply(Event::Reader(ReaderEvent::Settings(ReaderSettingsView {
+        medium: Medium::Manga,
+        work: Some(work),
+        rows: vec![mode, novel_setting(ReaderSettingKey::StripGap, choice("small"))],
+        tap_zones: None,
+    })));
+    web_images(s, "14", 6);
+    s.press(&["j", "j", "j", "j"]);
+    one_blank_row_parts_two_images(s);
+}
+
+/// In the strip's column, one row without a picture sits between two rows with one.
+fn one_blank_row_parts_two_images(s: &mut Screen) {
+    let buf = s.draw();
+    let left = s.width / 2;
+    let picture = |y: u16| matches!(buf[(left, y)].bg, ratatui::style::Color::Rgb(..));
+    let gaps: Vec<u16> = (3..s.height - 3)
+        .filter(|y| !picture(*y) && picture(y - 1) && picture(y + 1))
+        .collect();
+    assert_eq!(gaps.len(), 1, "one gap row in view: {gaps:?}");
+}
+
 /// Every row of the stage that shows a strip image shows it across the whole column, as the
 /// board draws it: 48 columns of 120 and 32 of 80, in the middle. The image above the divider is
 /// cut by the top of the window, and its box was shaped before its picture came.

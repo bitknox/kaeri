@@ -47,6 +47,8 @@ const STRIP_COLUMNS: f64 = 2.0 / 3.0;
 const STRIP_MIN: u16 = 24;
 /// A strip image's width over its height before its picture is known.
 const IMAGE_RATIO: f32 = 0.6;
+/// The blank rows between two images of a strip with the Strip gap setting at small.
+pub const STRIP_GAP_ROWS: u32 = 1;
 
 /// The zoom while it is on: its step, and where the view's centre is on the leaf.
 #[derive(Debug, Clone, Copy, PartialEq)]
@@ -466,12 +468,20 @@ impl App {
 
     /// The strip at `cols` wide: the chapters ran on from with their dividers, the open
     /// chapter's images, then the divider into the next chapter with its first image, or the
-    /// foot after the last chapter there is.
+    /// foot after the last chapter there is. With the Strip gap setting at small, blank rows
+    /// part two images that follow each other; a divider has blank rows of its own.
     pub fn strip_layout(&self, reader: &Reader, cols: u16) -> StripLayout {
         let cell = self.cell();
-        let mut items = Vec::new();
+        let small = reader.choice(ReaderSettingKey::StripGap) == Some("small"); // i18n-skip: a value
+        let gap = if small { STRIP_GAP_ROWS } else { 0 };
+        let mut items: Vec<StripItem> = Vec::new();
         let mut top = 0;
         let mut push = |piece: Piece, rows: u32| {
+            let after_image =
+                items.last().is_some_and(|i| matches!(i.piece, Piece::Image { .. }));
+            if after_image && matches!(piece, Piece::Image { .. }) {
+                top += gap;
+            }
             items.push(StripItem { top, rows, piece });
             top += rows;
         };
@@ -1152,6 +1162,19 @@ impl App {
         layout.place_at(reader.strip.top)
     }
 
+    /// Put the strip's top back on `place`, an image of the open chapter and how far into it,
+    /// once the strip is laid out again.
+    pub(super) fn keep_strip_place_at(&mut self, place: Option<(u32, f32)>) {
+        let Some((page, offset)) = place else { return };
+        let Some((layout, rows)) = self.strip_now() else { return };
+        let Some(top) = layout.row_of(page, offset) else { return };
+        let max = layout.total.saturating_sub(rows);
+        if let Some(reader) = self.reader_mut() {
+            reader.strip.top = top.min(max);
+            reader.strip.cols = layout.cols;
+        }
+    }
+
     /// The window changed: a strip keeps its place when its column changes width.
     pub(super) fn keep_strip_place(&mut self, window: (u16, u16)) {
         let Some(reader) = self.reader_here() else { return };
@@ -1504,6 +1527,49 @@ mod tests {
             fit("screen"),
             "f goes back to the screen"
         );
+    }
+
+    #[test]
+    fn a_small_strip_gap_parts_the_images_and_the_strip_keeps_its_place() {
+        let mut a = strip();
+        for _ in 0..4 {
+            press(&mut a, KeyCode::Char('j'));
+        }
+        let place = a.strip_place();
+        let (before, _) = a.strip_now().unwrap();
+        let tops = |layout: &StripLayout| -> Vec<(u32, u32)> {
+            layout.open().map(|(item, _, _)| (item.top, item.rows)).collect()
+        };
+        for pair in tops(&before).windows(2) {
+            assert_eq!(pair[1].0, pair[0].0 + pair[0].1, "no gap at first");
+        }
+        manga_settings(&mut a, "strip");
+        let at = a
+            .reader_setting_items()
+            .iter()
+            .position(|i| i.key == ReaderSettingKey::StripGap)
+            .unwrap();
+        for _ in 0..at {
+            press(&mut a, KeyCode::Char('j'));
+        }
+        let task = press(&mut a, KeyCode::Right);
+        assert!(
+            matches!(
+                &task,
+                Some(Command::Reader(ReaderCommand::SetSetting {
+                    key: ReaderSettingKey::StripGap,
+                    scope: SettingScope::Device,
+                    value: ReaderValue::Choice { name },
+                    ..
+                })) if name == "small"
+            ),
+            "{task:?}"
+        );
+        let (after, _) = a.strip_now().unwrap();
+        for pair in tops(&after).windows(2) {
+            assert_eq!(pair[1].0, pair[0].0 + pair[0].1 + STRIP_GAP_ROWS, "a row between");
+        }
+        assert_eq!(a.strip_place(), place, "the same image, as far into it");
     }
 
     #[test]
