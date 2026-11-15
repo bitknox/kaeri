@@ -32,8 +32,8 @@ use futures::StreamExt;
 pub use kaeri_cast as protocol;
 use kaeri_cast::{
     AacEncoder, CastDevice, CastFailure, CastMemory, CastPlayer, CastSetup, CastState,
-    CastStatus, DEFAULT_MEDIA_RECEIVER, FromReceiver, NoEncoder, PlainHttp, Timings, UpNextCard,
-    Upstream, UpstreamResponse, VolumeControl, formats::is_loopback_url,
+    CastStatus, DEFAULT_MEDIA_RECEIVER, FromReceiver, NoEncoder, PlainHttp, Timings,
+    UpNextCard, Upstream, UpstreamResponse, VolumeControl, formats::is_loopback_url,
 };
 use kaeri_core::ids::AnilistId;
 use kaeri_model::{event::Event, playback::SkipKind};
@@ -693,7 +693,7 @@ impl CastHub {
             state,
             button,
             rev: self.rev(),
-            device: device.filter(|_| state != SessionState::Idle),
+            device: device.clone().filter(|_| state != SessionState::Idle),
             item: item.filter(|_| state == SessionState::Playing),
             queue,
             notice: failure.as_ref().filter(|_| state == SessionState::Error).and_then(|f| {
@@ -1113,6 +1113,8 @@ impl CastHub {
     /// the skip on offer and the Undo note, and that the next episode is starting.
     pub(crate) fn overlay(&self, overlay: &crate::playback::link::Overlay) {
         use crate::playback::{link::Overlay, offered};
+        use kaeri_model::playback::SkipKind;
+        let mut skipped = None;
         {
             let mut cast = lock(&self.cast);
             match overlay {
@@ -1135,6 +1137,12 @@ impl CastHub {
                 Overlay::SkipOffer { kind, to } => cast.skip = Some((offered(*kind), *to)),
                 Overlay::SkipCleared => cast.skip = None,
                 Overlay::Skipped { kind, from, .. } => {
+                    // Kaeri's receiver shows the skip on the TV too.
+                    skipped = match offered(*kind) {
+                        SkipKind::Opening => Some("opening"),
+                        SkipKind::Ending => Some("ending"),
+                        SkipKind::Recap => None,
+                    };
                     cast.undo = Some(Undo {
                         kind: offered(*kind),
                         to: *from,
@@ -1155,6 +1163,11 @@ impl CastHub {
                 }
                 _ => return,
             }
+        }
+        if let Some(part) = skipped
+            && let Some(player) = self.player()
+        {
+            player.tell_skipped(part);
         }
         self.bump();
     }

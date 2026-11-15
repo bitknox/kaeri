@@ -71,6 +71,8 @@ pub struct Refuse {
     pub sound_alone: bool,
     /// HLS whose picture is taller than this is `LOAD_FAILED`: the Nest Hub stops at 720 lines.
     pub hls_taller_than: Option<u32>,
+    /// What Kaeri's receiver says on its namespace as it refuses: `error {part, codec}`.
+    pub says: Option<Value>,
 }
 
 /// What the fake does when asked to launch an app other than the Default Media Receiver: Kaeri's
@@ -214,6 +216,8 @@ struct Playing {
     stalled: bool,
     /// Waiting for data, as [`FakeReceiver::buffer`] says.
     buffering: bool,
+    /// The LOAD's metadata, said back with the media as a receiver does.
+    metadata: Value,
 }
 
 impl Playing {
@@ -243,7 +247,8 @@ impl Playing {
             "supportedMediaCommands": 12303,
             "volume": volume,
             "activeTrackIds": self.tracks,
-            "media": {"contentId": self.url, "duration": self.duration, "streamType": "BUFFERED"},
+            "media": {"contentId": self.url, "duration": self.duration, "streamType": "BUFFERED",
+                      "metadata": self.metadata},
         });
         if let Some(reason) = idle_reason {
             status["idleReason"] = json!(reason);
@@ -531,6 +536,9 @@ async fn serve(
                                 .filter(|_| options.refuse.content_types.contains(&content_type)),
                             Err(_) => Some(Refusal::LoadFailed),
                         };
+                        if let Some(said) = options.refuse.says.clone().filter(|_| custom && refused.is_some()) {
+                            send(&transport, "*", NS_KAERI, said);
+                        }
                         if refused == Some(Refusal::LoadFailed) {
                             send(&transport, &sender, NS_MEDIA, json!({
                                 "type": "LOAD_FAILED", "requestId": request, "detailedErrorCode": 104}));
@@ -554,6 +562,7 @@ async fn serve(
                             since: Instant::now(),
                             stalled: refused == Some(Refusal::Stall),
                             buffering: false,
+                            metadata: payload["media"]["metadata"].clone(),
                         };
                         send(&transport, &sender, NS_MEDIA, json!({"type": "MEDIA_STATUS", "requestId": request, "status": [p.status(None, &volume(level, muted))]}));
                         if refused == Some(Refusal::Error) {

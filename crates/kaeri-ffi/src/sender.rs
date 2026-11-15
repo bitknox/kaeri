@@ -27,9 +27,9 @@ use kaeri_engine::remote::{
         state::{Screen, TrackInfo},
     },
     sender::{
-        CastBrowser, CastCard, CastFrom, CastRouteHint, CastRow, CastSession, CastSink, CastUndo,
-        CastUpNext, FoundCast, LinkPhase, NowCard, Pairing, Problem, RemoteCard, TvLink, TvRow,
-        TvRowKind, TvSender,
+        CastBrowser, CastCard, CastFrom, CastRouteHint, CastRow, CastSession, CastSink,
+        CastUndo, CastUpNext, FoundCast, LinkPhase, NowCard, Pairing, Problem, RemoteCard,
+        TvLink, TvRow, TvRowKind, TvSender,
     },
 };
 use kaeri_model::{Msg, playback::SkipKind};
@@ -1732,9 +1732,14 @@ impl FfiTvSender {
     /// Connect to the Cast row `key` and hold its TV: the receiver launches, and whatever
     /// plays from here on goes to the TV until `cast_disconnect`. Returns at once;
     /// `cast_watch` follows it.
-    pub fn cast_connect(&self, key: String, from: Option<FfiCastFrom>) -> Result<(), FfiTvError> {
+    pub fn cast_connect(
+        &self,
+        key: String,
+        from: Option<FfiCastFrom>,
+    ) -> Result<(), FfiTvError> {
         let _entered = self.handle.enter();
-        let from = from.map(|f| CastFrom { id: f.id, episode: f.episode, position: f.position });
+        let from =
+            from.map(|f| CastFrom { id: f.id, episode: f.episode, position: f.position });
         self.sender.connect_cast(&key, from).map_err(tv_error)
     }
 
