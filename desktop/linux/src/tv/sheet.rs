@@ -63,26 +63,44 @@ pub fn attach(ctx: &Rc<Ctx>) {
     // A cast's controls are the bottom sheet over the page, grown from the bar under it; the
     // picker, pairing and a TV running Kaeri are a dialog.
     crate::tv::bar::attach(ctx);
+    // The cast's controls are made while the cast runs and kept between openings, so the
+    // first frames of the sheet growing are never spent building it.
+    let warm: Rc<RefCell<Option<Rc<Dialog>>>> = Rc::default();
     let weak = Rc::downgrade(ctx);
     ctx.tv.listen(move || {
         let Some(ctx) = weak.upgrade() else { return };
+        let casting = ctx.tv.casting();
+        if !casting {
+            warm.replace(None);
+        }
+        let keep = |dialog: Rc<Dialog>| {
+            if dialog.in_bar && casting {
+                warm.replace(Some(dialog));
+            }
+        };
         let mut up = showing.borrow().clone();
-        let in_bar = ctx.tv.casting() && ctx.tv.sheet() == Some(Shown::Remote);
+        let in_bar = casting && ctx.tv.sheet() == Some(Shown::Remote);
         if let Some(dialog) = up.clone().filter(|d| d.in_bar != in_bar) {
             showing.replace(None);
             dialog.dismiss();
+            keep(dialog);
             up = None;
         }
         match (ctx.tv.sheet(), up) {
             (Some(_), Some(dialog)) => dialog.update(),
             (Some(_), None) => {
-                let dialog = Dialog::new(&ctx, &showing, in_bar);
+                let ready = if in_bar { warm.take() } else { None };
+                let dialog = ready.unwrap_or_else(|| Dialog::new(&ctx, &showing, in_bar));
                 showing.replace(Some(Rc::clone(&dialog)));
                 #[cfg(feature = "fixtures")]
                 SHOWN.with(|s| s.replace(Rc::downgrade(&dialog)));
                 dialog.update();
                 if in_bar {
-                    ctx.cast_sheet.set_sheet(Some(&dialog.stack));
+                    if ctx.cast_sheet.sheet().as_ref()
+                        != Some(dialog.stack.upcast_ref::<gtk::Widget>())
+                    {
+                        ctx.cast_sheet.set_sheet(Some(&dialog.stack));
+                    }
                     ctx.cast_sheet.set_open(true);
                     // The remote itself, so Space and the arrows reach the TV at once.
                     dialog.remote.view.grab_focus();
@@ -93,8 +111,15 @@ pub fn attach(ctx: &Rc<Ctx>) {
             (None, Some(dialog)) => {
                 showing.replace(None);
                 dialog.dismiss();
+                keep(dialog);
             }
-            (None, None) => {}
+            (None, None) => {
+                if casting && warm.borrow().is_none() {
+                    let dialog = Dialog::new(&ctx, &showing, true);
+                    ctx.cast_sheet.set_sheet(Some(&dialog.stack));
+                    warm.replace(Some(dialog));
+                }
+            }
         }
     });
     // The window back at the front: a TV lost meanwhile is tried at once.
@@ -261,9 +286,7 @@ impl Dialog {
     /// Let the sheet go: the dialog closes, or the bottom sheet shrinks back into the bar.
     fn dismiss(&self) {
         if self.in_bar {
-            if let Some(id) = self.tick.take() {
-                id.remove();
-            }
+            // Kept for the next opening: its tick goes on, drawing only while it shows.
             self.browse(false);
             self.ctx.cast_sheet.set_open(false);
         } else {
