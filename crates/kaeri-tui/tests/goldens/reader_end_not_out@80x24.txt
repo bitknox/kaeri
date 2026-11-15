@@ -1,12 +1,12 @@
 Kaeri   Harbor Light Recipes · Chapter 17            sources ● 3  ·  anilist ⇅ 2
 ────────────────────────────────────────────────────────────────────────────────
 
-    End of chapter 17
+          End of chapter 17
+          Chapter 17 · Salt and Paper · 22 pages
 
-    Chapter 18 isn't out yet
-    Kaeri checks for new chapters in the
-    background. New ones show on Home.
-
+          Chapter 18 isn't out yet
+          Kaeri checks for new chapters in the background. New ones
+          show on Home.
 
 
 
@@ -33,10 +33,11 @@ r00 c66-66 fg=rule
 r00 c67-68 fg=text-dim
 r00 c69-79 fg=state
 r01 c00-79 fg=rule
-r03 c04-20 fg=text mod=BOLD
-r05 c04-27 fg=text mod=BOLD
-r06 c04-39 fg=text-dim
-r07 c04-37 fg=text-dim
+r03 c10-26 fg=text mod=BOLD
+r04 c10-47 fg=text-dim
+r06 c10-33 fg=text mod=BOLD
+r07 c10-66 fg=text-dim
+r08 c10-22 fg=text-dim
 r22 c00-79 fg=rule
 r23 c00-09 fg=text
 r23 c10-28 fg=text-dim

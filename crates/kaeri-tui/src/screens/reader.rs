@@ -31,6 +31,9 @@ const WIDE: u16 = 100;
 const ROOMY: u16 = 72;
 /// The end page's column at full size, and the width its Next heading rules to.
 const END_WIDTH: u16 = 60;
+/// From this many stage rows the end page has its Next heading and the next chapter's first
+/// page: a classic 80 by 24 window has 20.
+const END_ROWS: u16 = 18;
 /// From this width the meter is 24 cells long.
 const VERY_WIDE: u16 = 160;
 /// The zoom's map at most this many rows tall, and this many columns wide.
@@ -887,14 +890,17 @@ fn page_failed(
 fn end_page(buf: &mut Buffer, app: &App, reader: &Reader, stage: Rect) {
     let p = &app.palette;
     let bold = p.style(Role::Text).add_modifier(Modifier::BOLD);
-    let wide = stage.width >= WIDE && stage.height >= 24;
+    // The board's layout at full size, and scaled down to a classic 80 by 24 with a row less
+    // above each block and a shorter picture. Below that, the column alone.
+    let full = stage.width >= WIDE && stage.height >= 24;
+    let wide = stage.width >= END_WIDTH + 4 && stage.height >= END_ROWS;
     let x = if wide { stage.x + (stage.width - END_WIDTH) / 2 } else { stage.x + 4 };
     let width = if wide {
         END_WIDTH as usize
     } else {
         (stage.width as usize).saturating_sub(8).min(40)
     };
-    let mut y = stage.y + if wide { 2 } else { 1 };
+    let mut y = stage.y + if full { 2 } else { 1 };
     let number = reader.chapter_number().unwrap_or_default();
     let finished = reader.end.next.is_none() && reader.end.why_none == Some(NoNext::Finished);
     if finished {
@@ -943,7 +949,10 @@ fn end_page(buf: &mut Buffer, app: &App, reader: &Reader, stage: Rect) {
         y += 1;
     }
     match &reader.end.next {
-        Some(next) if wide => next_wide(buf, app, reader, next, stage, x, stage.y + 9),
+        Some(next) if wide => {
+            let heading = y.max(stage.y + if full { 9 } else { 7 });
+            next_wide(buf, app, reader, next, stage, x, heading);
+        }
         Some(next) => next_compact(buf, app, reader, next, stage, y),
         None => why_none(buf, app, reader, x, y, width),
     }
@@ -1038,9 +1047,13 @@ fn next_wide(
             p.style(Role::TextDim),
         );
     }
-    let number = next.number.clone().unwrap_or_else(|| next.label.clone());
-    let foot = t::tui_reader_end_first_page(&number);
-    line(buf, tx, top + rows.saturating_sub(2), truncate(&foot, room), p.style(Role::TextDim));
+    // Under the picture's foot, while the picture is tall enough to keep it clear of the lines
+    // above.
+    if rows >= 8 {
+        let number = next.number.clone().unwrap_or_else(|| next.label.clone());
+        let foot = t::tui_reader_end_first_page(&number);
+        line(buf, tx, top + rows - 2, truncate(&foot, room), p.style(Role::TextDim));
+    }
 }
 
 /// Next in a small window: the obi, the chapter and its facts, and what a skip leaves unread.

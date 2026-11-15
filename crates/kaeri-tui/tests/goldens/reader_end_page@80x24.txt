@@ -1,23 +1,23 @@
 Kaeri   Harbor Light Recipes · Chapter 14            sources ● 3  ·  anilist ⇅ 2
 ────────────────────────────────────────────────────────────────────────────────
 
-    End of chapter 14
+          End of chapter 14
+          Chapter 14 · Tide Tables · 22 pages
 
-    ● Counted as read · AniList updated
-    ● Saved to books.home.example
+          ● Counted as read · AniList updated
+          ● Saved to books.home.example
 
-  ▌ Chapter 15 · The Night Market
-    22 pages · From Home library · Downloaded
+          Next  ──────────────────────────────────────────────────────
 
+                        ▌ Chapter 15 · The Night Market
+                          22 pages · From Home library · Downloaded
 
-
-
-
-
-
+                          ↵ continue
 
 
 
+
+                          First page of chapter 15
 
 
 ────────────────────────────────────────────────────────────────────────────────
@@ -33,14 +33,30 @@ r00 c66-66 fg=rule
 r00 c67-68 fg=text-dim
 r00 c69-79 fg=state
 r01 c00-79 fg=rule
-r03 c04-20 fg=text mod=BOLD
-r05 c04-04 fg=state
-r05 c06-38 fg=text
-r06 c04-04 fg=state
-r06 c06-32 fg=text
-r08 c02-02 fg=obi
-r08 c04-32 fg=text mod=BOLD
-r09 c04-44 fg=text-dim
+r03 c10-26 fg=text mod=BOLD
+r04 c10-44 fg=text-dim
+r06 c10-10 fg=state
+r06 c12-44 fg=text
+r07 c10-10 fg=state
+r07 c12-38 fg=text
+r09 c10-13 fg=text-dim
+r09 c16-69 fg=rule
+r11 c10-22 fg=#2db95f bg=#2db95f
+r11 c24-24 fg=obi
+r11 c26-54 fg=text mod=BOLD
+r12 c10-22 fg=#2db95f bg=#2db95f
+r12 c26-66 fg=text-dim
+r13 c10-22 fg=#2db95f bg=#2db95f
+r14 c10-22 fg=#2db95f bg=#2db95f
+r14 c26-26 fg=text
+r14 c27-35 fg=text-dim
+r15 c10-22 fg=#2db95f bg=#2db95f
+r16 c10-22 fg=#2db95f bg=#2db95f
+r17 c10-22 fg=#2db95f bg=#2db95f
+r18 c10-22 fg=#2db95f bg=#2db95f
+r19 c10-22 fg=#2db95f bg=#2db95f
+r19 c26-49 fg=text-dim
+r20 c10-22 fg=#2db95f bg=#2db95f
 r22 c00-79 fg=rule
 r23 c00-09 fg=text
 r23 c21-21 fg=text
