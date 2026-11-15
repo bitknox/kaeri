@@ -35,7 +35,8 @@ Reading · offline                                                          ↵ 
 === styles ===
 colours text=#e4e0d6 text-dim=#a8aec9 rule=#46464d obi=#f2a64b state=#7fc7d9 alert=#f59b85 ground=#1a1b26
 r00 c00-04 fg=text mod=BOLD
-r00 c95-103 fg=alert
+r00 c95-102 fg=text-dim
+r00 c103-103 fg=alert
 r00 c104-105 fg=text-dim
 r00 c106-106 fg=rule
 r00 c107-108 fg=text-dim

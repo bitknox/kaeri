@@ -30,6 +30,30 @@ pub(super) fn render_header(buf: &mut Buffer, app: &App, geometry: &Frame) {
         t::chrome_header_section(app.section_label(app.nav.section()))
     };
     Header::new(&app.palette, &title).chips(&chips).render(geometry.header, buf);
+    if offline_chip(app) {
+        alert_mark(buf, app, geometry.header, glyph::STATE_DOWN);
+    }
+}
+
+/// The series page is offline in reading alone: the sources chip says no source can be asked.
+fn offline_chip(app: &App) -> bool {
+    app.reading_only() && app.series_offline()
+}
+
+/// The offline chip's cross in the alert role, its words dim, as the board draws "sources ✕":
+/// the first `mark` after the wordmark, which is the first chip's.
+fn alert_mark(buf: &mut Buffer, app: &App, area: Rect, mark: char) {
+    let mut glyph = [0; 4];
+    let mark = mark.encode_utf8(&mut glyph);
+    let y = area.top();
+    for x in area.left()..area.right() {
+        if let Some(cell) = buf.cell_mut((x, y))
+            && cell.symbol() == mark
+        {
+            cell.set_style(app.palette.style(Role::Alert));
+            return;
+        }
+    }
 }
 
 /// The header's chips, right-aligned: the sources and how they stand, the proxy, the metadata
@@ -43,9 +67,10 @@ pub(super) fn header_chips(app: &App) -> Vec<(String, Role)> {
     // alert colour. Off is a choice and is said quietly; only a source that is failing alerts.
     // While Kaeri is for reading alone, the shows' sources say nothing about it: one chip says
     // how many of the person's book sources are on.
-    if app.reading_only() && app.series_offline() {
-        // Offline on a series page: no source can be asked.
-        chips.push((t::tui_read_header_offline(&glyph::STATE_DOWN.to_string()), Role::Alert));
+    if offline_chip(app) {
+        // Offline on a series page: no source can be asked. The cross alone alerts; see
+        // `alert_mark`.
+        chips.push((t::tui_read_header_offline(&glyph::STATE_DOWN.to_string()), Role::TextDim));
     } else if app.reading_only() {
         let on = app.read_sources_on();
         let (mark, role) = if on > 0 {
