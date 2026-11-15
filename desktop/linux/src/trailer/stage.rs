@@ -119,11 +119,6 @@ impl Stage {
         self.changed.replace(Some(Rc::new(f)));
     }
 
-    /// Whether a trailer is on screen.
-    pub fn showing(&self) -> bool {
-        self.state.get() == State::Playing
-    }
-
     /// Whether a view is held at all: loading, playing or paused.
     pub fn active(&self) -> bool {
         matches!(self.state.get(), State::Loading | State::Playing | State::Paused)
