@@ -91,6 +91,9 @@ pub async fn run(
     let (engine, mut from_engine) = Engine::start(options, host).await?;
     engine.send(network_at_launch());
     engine.send(medium_at_launch());
+    // What the system says of the connection, once it has said it: off the launch, so a slow
+    // or missing system bus never holds the first frame.
+    let mut network_rx = network_from_system();
 
     // The settings as the engine starts on them, which it says again at launch.
     let settings = kaeri_model::settings::view(&config, &saved);
@@ -262,6 +265,9 @@ pub async fn run(
                 }
             }
             Some(decoded) = covers_rx.recv() => covers::hand_over(&mut app, decoded),
+            Some(path) = network_rx.recv() => {
+                engine.send(path);
+            }
             // Asked to end from outside — a kill, the terminal closing — which leaves the way
             // Q does, so the player is closed rather than orphaned and playing on.
             signal = signals.recv() => {
@@ -425,9 +431,49 @@ fn restore_terminal(terminal: &mut Tui) -> Result<()> {
 
 /// What the terminal says of the network at launch: Wi-Fi. It has no network monitor, and a
 /// computer is rarely on a metered link. Until some front end says the network, the engine
-/// keeps what is kept to Wi-Fi waiting.
+/// keeps what is kept to Wi-Fi waiting. On Linux, NetworkManager may say otherwise a moment
+/// later: see [`network_from_system`].
 pub(crate) fn network_at_launch() -> Command {
     Command::NetworkPath { cellular: false, constrained: false, offline: false }
+}
+
+/// A metered connection as the engine is told it, as the Linux app tells it: constrained.
+#[cfg(target_os = "linux")]
+fn metered_network() -> Command {
+    Command::NetworkPath { cellular: false, constrained: true, offline: false }
+}
+
+/// The network path the system gives once asked, if it differs from [`network_at_launch`]:
+/// on Linux, a connection NetworkManager calls metered. Asked once, on the blocking pool;
+/// elsewhere, and with no NetworkManager, nothing comes.
+fn network_from_system() -> mpsc::UnboundedReceiver<Command> {
+    let (tx, rx) = mpsc::unbounded_channel();
+    #[cfg(target_os = "linux")]
+    tokio::task::spawn_blocking(move || {
+        if metered_now() {
+            let _ = tx.send(metered_network());
+        }
+    });
+    #[cfg(not(target_os = "linux"))]
+    drop(tx);
+    rx
+}
+
+/// Whether NetworkManager calls the connection metered, read from its `Metered` property: 1
+/// is yes and 3 a guessed yes; unknown, no and a guessed no stay Wi-Fi, as does any error.
+#[cfg(target_os = "linux")]
+fn metered_now() -> bool {
+    let ask = || -> zbus::Result<u32> {
+        let bus = zbus::blocking::Connection::system()?;
+        let manager = zbus::blocking::Proxy::new(
+            &bus,
+            "org.freedesktop.NetworkManager",
+            "/org/freedesktop/NetworkManager",
+            "org.freedesktop.NetworkManager",
+        )?;
+        manager.get_property("Metered")
+    };
+    matches!(ask(), Ok(1 | 3))
 }
 
 /// What the terminal asks the engine at launch, as the apps' stores do: what Kaeri is for on
