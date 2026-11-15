@@ -5958,6 +5958,27 @@ cast-stop = Übertragung beenden
 # Line under TV volume on the card, for a TV whose volume only its own remote sets.
 cast-volume-fixed = Am Fernseher eingestellt
 
+# The cast button's spoken label while it connects to a TV. The name is the TV's.
+cast-button-connecting = Verbindung zu { $name } wird hergestellt
+
+# The cast button's spoken label once a TV is connected, and the title of the dialog it opens. The name is the TV's.
+cast-button-connected = Mit { $name } verbunden
+
+# Line on a title page under its buttons while a TV is connected: what is played goes to it. The name is the TV's.
+cast-plays-on = Läuft auf { $name }
+
+# Row in the connected dialog while the TV has nothing loaded.
+cast-idle = Noch nichts wird abgespielt
+
+# The casting controller's line while the episode is paused on the TV. The name is the TV's.
+cast-status-paused = Auf { $name } pausiert
+
+# Spoken label of the show's name in the casting controller: it opens the show's page.
+cast-open-show = { $title } öffnen
+
+# Line under the episode in the system's Now Playing while it plays on a TV. The name is the TV's.
+cast-notification-line = Wird auf { $name } übertragen
+
 # Button that runs a failed action again.
 action-try-again = Erneut versuchen
 

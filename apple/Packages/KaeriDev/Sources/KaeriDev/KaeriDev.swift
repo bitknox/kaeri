@@ -220,6 +220,10 @@ final class Delegate: NSObject, NSApplicationDelegate {
             let there = await store.party.stage(scene, store: store)
             print(there ? "KaeriDev: Watch together is at \(scene.rawValue)" : "KaeriDev: Watch together did not reach \(scene.rawValue)")
         }
+        // A cast scene's loop (morph, pause): frames from the moment the window is up.
+        if CastScene.named() != nil, !options.frames.isEmpty, let url = options.snapshot, let window = Snapshot.window {
+            await frames(of: nil, in: window, to: url)
+        }
         // `KAERI_PROBE_TOOLTIPS=1`: every tooltip the window could show now (TooltipProbe).
         if TooltipProbe.asked, let window = Snapshot.window {
             try? await Task.sleep(for: .milliseconds(600))

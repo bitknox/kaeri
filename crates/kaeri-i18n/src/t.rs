@@ -9935,6 +9935,41 @@ pub fn cast_volume_fixed() -> String {
     text("cast-volume-fixed", &[])
 }
 
+/// The cast button's spoken label while it connects to a TV. The name is the TV's.
+pub fn cast_button_connecting(name: &str) -> String {
+    text("cast-button-connecting", &[("name", Arg::Text(name))])
+}
+
+/// The cast button's spoken label once a TV is connected, and the title of the dialog it opens. The name is the TV's.
+pub fn cast_button_connected(name: &str) -> String {
+    text("cast-button-connected", &[("name", Arg::Text(name))])
+}
+
+/// Line on a title page under its buttons while a TV is connected: what is played goes to it. The name is the TV's.
+pub fn cast_plays_on(name: &str) -> String {
+    text("cast-plays-on", &[("name", Arg::Text(name))])
+}
+
+/// Row in the connected dialog while the TV has nothing loaded.
+pub fn cast_idle() -> String {
+    text("cast-idle", &[])
+}
+
+/// The casting controller's line while the episode is paused on the TV. The name is the TV's.
+pub fn cast_status_paused(name: &str) -> String {
+    text("cast-status-paused", &[("name", Arg::Text(name))])
+}
+
+/// Spoken label of the show's name in the casting controller: it opens the show's page.
+pub fn cast_open_show(title: &str) -> String {
+    text("cast-open-show", &[("title", Arg::Text(title))])
+}
+
+/// Line under the episode in the system's Now Playing while it plays on a TV. The name is the TV's.
+pub fn cast_notification_line(name: &str) -> String {
+    text("cast-notification-line", &[("name", Arg::Text(name))])
+}
+
 /// Button that runs a failed action again.
 pub fn action_try_again() -> String {
     text("action-try-again", &[])

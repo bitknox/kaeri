@@ -3239,6 +3239,27 @@
   <data name="CastVolumeFixed" xml:space="preserve">
     <value>Задаётся на ТВ</value>
   </data>
+  <data name="CastButtonConnecting" xml:space="preserve">
+    <value>Подключаемся к {name}</value>
+  </data>
+  <data name="CastButtonConnected" xml:space="preserve">
+    <value>Подключено к {name}</value>
+  </data>
+  <data name="CastPlaysOn" xml:space="preserve">
+    <value>Воспроизводится на {name}</value>
+  </data>
+  <data name="CastIdle" xml:space="preserve">
+    <value>Пока ничего не воспроизводится</value>
+  </data>
+  <data name="CastStatusPaused" xml:space="preserve">
+    <value>Пауза на {name}</value>
+  </data>
+  <data name="CastOpenShow" xml:space="preserve">
+    <value>Открыть {title}</value>
+  </data>
+  <data name="CastNotificationLine" xml:space="preserve">
+    <value>Трансляция на {name}</value>
+  </data>
   <data name="ActionTryAgain" xml:space="preserve">
     <value>Попробовать снова</value>
   </data>

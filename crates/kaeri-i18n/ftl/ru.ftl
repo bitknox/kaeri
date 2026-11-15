@@ -6106,6 +6106,27 @@ cast-stop = Остановить трансляцию
 # Line under TV volume on the card, for a TV whose volume only its own remote sets.
 cast-volume-fixed = Задаётся на ТВ
 
+# The cast button's spoken label while it connects to a TV. The name is the TV's.
+cast-button-connecting = Подключаемся к { $name }
+
+# The cast button's spoken label once a TV is connected, and the title of the dialog it opens. The name is the TV's.
+cast-button-connected = Подключено к { $name }
+
+# Line on a title page under its buttons while a TV is connected: what is played goes to it. The name is the TV's.
+cast-plays-on = Воспроизводится на { $name }
+
+# Row in the connected dialog while the TV has nothing loaded.
+cast-idle = Пока ничего не воспроизводится
+
+# The casting controller's line while the episode is paused on the TV. The name is the TV's.
+cast-status-paused = Пауза на { $name }
+
+# Spoken label of the show's name in the casting controller: it opens the show's page.
+cast-open-show = Открыть { $title }
+
+# Line under the episode in the system's Now Playing while it plays on a TV. The name is the TV's.
+cast-notification-line = Трансляция на { $name }
+
 # Button that runs a failed action again.
 action-try-again = Попробовать снова
 

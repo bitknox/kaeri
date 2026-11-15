@@ -1358,6 +1358,13 @@
     <string name="cast_play_here">Burada oynat</string>
     <string name="cast_stop">Yayını durdur</string>
     <string name="cast_volume_fixed">TV\'den ayarlanır</string>
+    <string name="cast_button_connecting">%1$s cihazına bağlanılıyor</string>
+    <string name="cast_button_connected">%1$s cihazına bağlı</string>
+    <string name="cast_plays_on">%1$s üzerinde oynatılır</string>
+    <string name="cast_idle">Henüz bir şey oynatılmıyor</string>
+    <string name="cast_status_paused">%1$s üzerinde duraklatıldı</string>
+    <string name="cast_open_show">%1$s aç</string>
+    <string name="cast_notification_line">%1$s cihazına yayınlanıyor</string>
     <string name="action_try_again">Yeniden dene</string>
     <string name="action_cancel">Vazgeç</string>
     <string name="action_go">Git</string>

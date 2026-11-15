@@ -105,7 +105,11 @@ struct PhoneTitle: View {
                             action.play(entry.id, store: store, navigator: navigator)
                         } label: {
                             HStack(spacing: 8) {
-                                Image(systemName: "play.fill").font(.ui(13))
+                                if store.tv.cast.connected {
+                                    CastButtonGlyph(look: .connected, size: 17, color: Palette.ground)
+                                } else {
+                                    Image(systemName: "play.fill").font(.ui(13))
+                                }
                                 // One line that shrinks a little for a longer translation; wrapped at the
                                 // accessibility sizes. Never wider than the screen.
                                 Text(action.sentence)
@@ -147,7 +151,8 @@ struct PhoneTitle: View {
                             }
                             .buttonStyle(SecondaryCapsuleStyle(height: 44, fontSize: 15))
                         }
-                        if action.playable, !store.titles.unlisted(entry.id), store.tv.available {
+                        // The cast button in the bar takes Play on TV's place once a TV is found.
+                        if action.playable, !store.titles.unlisted(entry.id), store.tv.available, store.tv.castButton == .hidden {
                             Button {
                                 store.playOnTV(entry.id, episode: String(action.episode), from: action.resume?.position)
                             } label: {
@@ -163,6 +168,8 @@ struct PhoneTitle: View {
                         FollowingPhoneRow(entry: entry)
                             .transition(.asymmetric(insertion: .opacity.animation(.fadeIn), removal: .opacity.animation(.fadeOut)))
                     }
+                    CastPlaysOnLine(touch: true)
+                        .animation(.fadeIn, value: store.tv.cast.connected)
                     LicensedLines(id: entry.id, font: .ui(14))
 
                     VStack(alignment: .leading, spacing: 12) {
@@ -312,6 +319,7 @@ struct PhoneTitle: View {
         }
         .animation(reduceMotion ? nil : .standard, value: mainButtonGone)
         .toolbar {
+            CastToolbarItem()
             ToolbarItem(placement: .topBarTrailing) { AnotherButton(id: id) }
             ToolbarItem(placement: .topBarTrailing) {
                 Menu {

@@ -1293,6 +1293,13 @@
     <string name="cast_play_here">Phát tại đây</string>
     <string name="cast_stop">Dừng chiếu</string>
     <string name="cast_volume_fixed">Đặt trên TV</string>
+    <string name="cast_button_connecting">Đang kết nối tới %1$s</string>
+    <string name="cast_button_connected">Đã kết nối tới %1$s</string>
+    <string name="cast_plays_on">Phát trên %1$s</string>
+    <string name="cast_idle">Chưa phát gì</string>
+    <string name="cast_status_paused">Đã tạm dừng trên %1$s</string>
+    <string name="cast_open_show">Mở %1$s</string>
+    <string name="cast_notification_line">Đang chiếu tới %1$s</string>
     <string name="action_try_again">Thử lại</string>
     <string name="action_cancel">Hủy</string>
     <string name="action_go">Đi</string>

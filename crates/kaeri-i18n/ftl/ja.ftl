@@ -5884,6 +5884,27 @@ cast-stop = キャストを停止
 # Line under TV volume on the card, for a TV whose volume only its own remote sets.
 cast-volume-fixed = テレビ側で設定
 
+# The cast button's spoken label while it connects to a TV. The name is the TV's.
+cast-button-connecting = { $name }に接続中
+
+# The cast button's spoken label once a TV is connected, and the title of the dialog it opens. The name is the TV's.
+cast-button-connected = { $name }に接続済み
+
+# Line on a title page under its buttons while a TV is connected: what is played goes to it. The name is the TV's.
+cast-plays-on = { $name }で再生
+
+# Row in the connected dialog while the TV has nothing loaded.
+cast-idle = まだ何も再生していません
+
+# The casting controller's line while the episode is paused on the TV. The name is the TV's.
+cast-status-paused = { $name }で一時停止中
+
+# Spoken label of the show's name in the casting controller: it opens the show's page.
+cast-open-show = { $title }を開く
+
+# Line under the episode in the system's Now Playing while it plays on a TV. The name is the TV's.
+cast-notification-line = { $name }にキャスト中
+
 # Button that runs a failed action again.
 action-try-again = 再試行
 

@@ -4109,6 +4109,34 @@
     <value>Set on the TV</value>
     <comment>Line under TV volume on the card, for a TV whose volume only its own remote sets.</comment>
   </data>
+  <data name="CastButtonConnecting" xml:space="preserve">
+    <value>Connecting to {name}</value>
+    <comment>The cast button's spoken label while it connects to a TV. The name is the TV's.</comment>
+  </data>
+  <data name="CastButtonConnected" xml:space="preserve">
+    <value>Connected to {name}</value>
+    <comment>The cast button's spoken label once a TV is connected, and the title of the dialog it opens. The name is the TV's.</comment>
+  </data>
+  <data name="CastPlaysOn" xml:space="preserve">
+    <value>Plays on {name}</value>
+    <comment>Line on a title page under its buttons while a TV is connected: what is played goes to it. The name is the TV's.</comment>
+  </data>
+  <data name="CastIdle" xml:space="preserve">
+    <value>Nothing playing yet</value>
+    <comment>Row in the connected dialog while the TV has nothing loaded.</comment>
+  </data>
+  <data name="CastStatusPaused" xml:space="preserve">
+    <value>Paused on {name}</value>
+    <comment>The casting controller's line while the episode is paused on the TV. The name is the TV's.</comment>
+  </data>
+  <data name="CastOpenShow" xml:space="preserve">
+    <value>Open {title}</value>
+    <comment>Spoken label of the show's name in the casting controller: it opens the show's page.</comment>
+  </data>
+  <data name="CastNotificationLine" xml:space="preserve">
+    <value>Casting to {name}</value>
+    <comment>Line under the episode in the system's Now Playing while it plays on a TV. The name is the TV's.</comment>
+  </data>
   <data name="ActionTryAgain" xml:space="preserve">
     <value>Try again</value>
     <comment>Button that runs a failed action again.</comment>

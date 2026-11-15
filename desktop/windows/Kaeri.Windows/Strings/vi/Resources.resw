@@ -2807,6 +2807,27 @@
   <data name="CastVolumeFixed" xml:space="preserve">
     <value>Đặt trên TV</value>
   </data>
+  <data name="CastButtonConnecting" xml:space="preserve">
+    <value>Đang kết nối tới {name}</value>
+  </data>
+  <data name="CastButtonConnected" xml:space="preserve">
+    <value>Đã kết nối tới {name}</value>
+  </data>
+  <data name="CastPlaysOn" xml:space="preserve">
+    <value>Phát trên {name}</value>
+  </data>
+  <data name="CastIdle" xml:space="preserve">
+    <value>Chưa phát gì</value>
+  </data>
+  <data name="CastStatusPaused" xml:space="preserve">
+    <value>Đã tạm dừng trên {name}</value>
+  </data>
+  <data name="CastOpenShow" xml:space="preserve">
+    <value>Mở {title}</value>
+  </data>
+  <data name="CastNotificationLine" xml:space="preserve">
+    <value>Đang chiếu tới {name}</value>
+  </data>
   <data name="ActionTryAgain" xml:space="preserve">
     <value>Thử lại</value>
   </data>

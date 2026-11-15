@@ -1421,6 +1421,13 @@
     <string name="cast_play_here">Riproduci qui</string>
     <string name="cast_stop">Interrompi trasmissione</string>
     <string name="cast_volume_fixed">Impostato sulla TV</string>
+    <string name="cast_button_connecting">Connessione a %1$s</string>
+    <string name="cast_button_connected">Connesso a %1$s</string>
+    <string name="cast_plays_on">Si riproduce su %1$s</string>
+    <string name="cast_idle">Ancora niente in riproduzione</string>
+    <string name="cast_status_paused">In pausa su %1$s</string>
+    <string name="cast_open_show">Apri %1$s</string>
+    <string name="cast_notification_line">Trasmissione su %1$s</string>
     <string name="action_try_again">Riprova</string>
     <string name="action_cancel">Annulla</string>
     <string name="action_go">Vai</string>
