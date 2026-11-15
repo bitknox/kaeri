@@ -2,14 +2,17 @@
 //! fake AniList: said when it is true, by what someone is looking at, and once.
 
 use kaeri_core::ids::AnilistId;
-use kaeri_meta::in_background;
+use kaeri_meta::{AniList, BrowseFilter, Meta, Tenrai, in_background};
+use kaeri_store::Store;
 use kaeri_testkit::{
-    Failure, MetaKit, Operation,
+    Failure, FakeAniList, MetaKit, Operation, TEST_RATE_LIMIT,
     fixtures::{AIRING, FINISHED, MOVIE, SEQUEL},
+    seed,
 };
 
 const CACHED: &str = "no metadata source answered — showing what was last cached";
 const BACK: &str = "anilist is back";
+const UNREACHABLE: &str = "anilist is unreachable — fresh data via tenrai for now";
 const IDS: [AnilistId; 3] = [FINISHED, SEQUEL, AIRING];
 
 /// A ladder whose titles an earlier answer cached, so the cache rung has something to show.
@@ -122,4 +125,122 @@ async fn a_background_outage_is_said_once_anilist_is_skipped() {
     }
     assert_eq!(toasts, [vec![], vec![], vec![CACHED.to_owned()]]);
     assert_eq!(kit.meta.health()[0].state, "backing off");
+}
+
+/// An address nothing listens on, so a connection there is refused.
+fn refusing() -> String {
+    let listener = std::net::TcpListener::bind("127.0.0.1:0").expect("a loopback port");
+    let address = listener.local_addr().expect("its address");
+    drop(listener);
+    address.to_string()
+}
+
+/// A ladder over `store` asking AniList at `anilist` and Tenrai at `tenrai`, through one
+/// client, as the app asks both, with every fixture title mapped so Tenrai is asked for each.
+fn ladder(store: &Store, anilist: String, tenrai: Option<String>) -> Meta {
+    seed::mappings(store);
+    let http = kaeri_testkit::http();
+    Meta::new(
+        AniList::new(http.clone(), TEST_RATE_LIMIT).with_endpoint(anilist),
+        tenrai.map(|at| Tenrai::new(http, store.clone()).with_endpoint(at)),
+        store.clone(),
+    )
+}
+
+/// Each title once from `meta`, kept, and what it said meanwhile.
+async fn ask_each(meta: &Meta) -> Vec<String> {
+    let mut toasts = Vec::new();
+    for id in IDS {
+        let kept = meta.media(id).await;
+        assert_eq!(kept.map(|m| m.id).ok(), Some(id), "the cache stands in");
+        toasts.extend(meta.take_notice());
+    }
+    toasts
+}
+
+/// A device that lost its path fails every host together: AniList and a second host both
+/// refusing is the connection, not AniList, and the app's offline state is what says it. The
+/// breaker still rests AniList for its cooldown.
+#[tokio::test]
+async fn every_host_refusing_together_blames_no_source() {
+    let kit = cached().await;
+    let meta = ladder(
+        &kit.store,
+        format!("http://{}/graphql", refusing()),
+        Some(format!("http://{}/tenrai/v1", refusing())),
+    );
+    let mut toasts = Vec::new();
+    for _ in 0..3 {
+        toasts.extend(ask_each(&meta).await);
+    }
+    assert_eq!(toasts, Vec::<String>::new());
+    assert_eq!(meta.health()[0].state, "backing off");
+}
+
+/// AniList refusing while another host answers is AniList's outage, said as ever.
+#[tokio::test]
+async fn anilist_refusing_while_another_host_answers_is_said() {
+    let kit = cached().await;
+    let meta = ladder(
+        &kit.store,
+        format!("http://{}/graphql", refusing()),
+        Some(kit.server.tenrai_endpoint()),
+    );
+    let found = meta.find("wayfarer", &BrowseFilter::default(), 1, 20).await;
+    assert!(found.is_ok(), "Tenrai answers: {found:?}");
+    assert_eq!(said_by(&meta), [UNREACHABLE]);
+
+    // Tenrai knows none of the titles, but its answer still says the device is online.
+    let meta = ladder(
+        &kit.store,
+        format!("http://{}/graphql", refusing()),
+        Some(kit.server.tenrai_endpoint()),
+    );
+    assert_eq!(ask_each(&meta).await, [CACHED]);
+}
+
+/// The platform saying there is no path is enough, with no other host asked.
+#[tokio::test]
+async fn no_path_from_the_platform_blames_no_source() {
+    let kit = cached().await;
+    let meta = ladder(&kit.store, format!("http://{}/graphql", refusing()), None);
+    meta.path(true);
+    assert_eq!(ask_each(&meta).await, Vec::<String>::new());
+
+    // With the path back and no other host asked, AniList refusing is AniList's, as before.
+    meta.path(false);
+    let meta = ladder(&kit.store, format!("http://{}/graphql", refusing()), None);
+    assert_eq!(ask_each(&meta).await, [CACHED]);
+}
+
+/// The path comes back while AniList's breaker still rests it: the other host answers first, and
+/// AniList, skipped, is not said to be down for the outage that was the device's. The asks
+/// between, which only AniList heard, are weighed as the one before them was.
+#[tokio::test]
+async fn a_skip_after_the_path_came_back_blames_no_source() {
+    let kit = cached().await;
+    let other = FakeAniList::start().await;
+    kit.server.fail_always(Failure::Disconnect);
+    other.fail_operation(Operation::Tenrai, Failure::Disconnect);
+    let meta = ladder(&kit.store, kit.server.endpoint(), Some(other.tenrai_endpoint()));
+    let kept = meta.media(FINISHED).await;
+    assert_eq!(kept.map(|m| m.id).ok(), Some(FINISHED));
+    let mut toasts: Vec<String> = meta.take_notice().into_iter().collect();
+    // Every title is kept, so these ask AniList alone, until it is skipped.
+    for _ in 0..3 {
+        let kept = meta.media_many(&IDS).await;
+        assert_eq!(kept.map(|m| m.len()).ok(), Some(IDS.len()));
+        toasts.extend(meta.take_notice());
+    }
+    assert_eq!(meta.health()[0].state, "backing off");
+
+    other.heal();
+    let found = meta.find("wayfarer", &BrowseFilter::default(), 1, 20).await;
+    assert!(found.is_ok(), "Tenrai answers again: {found:?}");
+    toasts.extend(meta.take_notice());
+    assert_eq!(toasts, Vec::<String>::new());
+}
+
+fn said_by(meta: &Meta) -> Vec<String> {
+    meta.take_notice().into_iter().collect()
 }

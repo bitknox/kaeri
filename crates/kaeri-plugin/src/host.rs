@@ -245,8 +245,12 @@ impl Capabilities {
             builder = builder.body(body);
         }
 
-        let response = tokio::time::timeout(self.limits.deadline, builder.send())
-            .await
+        let sent = tokio::time::timeout(self.limits.deadline, builder.send()).await;
+        // Whether the host answered, beside the metadata sources' own: a device that lost its
+        // path fails every host together, which is how the metadata ladder tells it from a
+        // source being down.
+        http.reach().note(&request.url, matches!(sent, Ok(Ok(_))));
+        let response = sent
             .map_err(|_| HostError::Timeout)?
             .map_err(|e| HostError::Transport(kaeri_net::reach::described(&e)))?;
 

@@ -545,6 +545,12 @@ impl AniList {
         self
     }
 
+    /// What the requests through this client's HTTP client found lately, AniList's own among
+    /// them, and where AniList is, to tell its outcomes from the other hosts'.
+    pub(crate) fn reach(&self) -> (&kaeri_net::reach::Ledger, &str) {
+        (self.http.reach(), &self.endpoint)
+    }
+
     /// Attach an OAuth token for library and mutation access.
     pub fn with_token(self, token: Option<String>) -> Self {
         self.set_token(token);
@@ -669,11 +675,13 @@ impl AniList {
                 request = request.header("authorization", format!("Bearer {token}"));
             }
 
-            let response = request
+            let sent = request
                 .json(&serde_json::json!({ "query": document, "variables": variables }))
                 .send()
-                .await
-                .map_err(|e| AniListError::Network(e.to_string()))?;
+                .await;
+            self.http.reach().note(&self.endpoint, sent.is_ok());
+            let response =
+                sent.map_err(|e| AniListError::Network(kaeri_net::reach::described(&e)))?;
 
             let status = response.status();
 
