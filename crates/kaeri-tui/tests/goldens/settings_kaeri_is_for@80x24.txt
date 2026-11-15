@@ -15,8 +15,8 @@ Kaeri                                                  plugins ●  ·  anilist 
    │    Subtitles                   eng
    │    Counts as watched at        85%
    │    Auto-play next              On
+   │    Preload on metered          Off
    │    Skip opening automatically  On
-   │    Skip recaps automatically   Off
    │
    │
    │
@@ -85,11 +85,11 @@ r16 c03-03 fg=rule
 r16 c08-21 fg=text-dim
 r16 c36-37 fg=text
 r17 c03-03 fg=rule
-r17 c08-33 fg=text-dim
-r17 c36-37 fg=text
+r17 c08-25 fg=text-dim
+r17 c36-38 fg=text
 r18 c03-03 fg=rule
-r18 c08-32 fg=text-dim
-r18 c36-38 fg=text
+r18 c08-33 fg=text-dim
+r18 c36-37 fg=text
 r19 c03-03 fg=rule
 r20 c03-03 fg=rule
 r21 c03-03 fg=rule

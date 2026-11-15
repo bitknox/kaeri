@@ -13,6 +13,7 @@ Kaeri                                                                           
 ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
   Type a new value for subtitles.
 
+                            │    Skip opening automatically  On
                             │    Skip recaps automatically   Off
                             │    Ask about skips by hand     On
                             │    Share skips with AniSkip    Off
@@ -26,7 +27,6 @@ Kaeri                                                                           
                             │    Size                        100%
                             │    Font                        default
                             │    Text colour                 white
-                            │    Edge                        outline
                             │  ───────────────────────────────────────────────────────────────────────────────────────
                             │    Press Enter to type a language code. There are too many values to cycle through.
                             │
