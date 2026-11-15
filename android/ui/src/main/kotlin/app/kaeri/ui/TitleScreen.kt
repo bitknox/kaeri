@@ -954,6 +954,9 @@ private fun FactsPlaceholder() {
 /** The tag a title page's placeholders carry, so a test can find them at its first frame. */
 internal const val TITLE_PLACEHOLDER = "title-placeholder" // i18n-skip
 
+/** The services line's placeholder, one of the title page's, told apart for the geometry tests. */
+internal const val SERVICES_PLACEHOLDER = "services-placeholder" // i18n-skip
+
 /** More about this show's row while a season's title is on its way: its place, its words as a bar. */
 @Composable
 private fun MoreAboutPlaceholder() {

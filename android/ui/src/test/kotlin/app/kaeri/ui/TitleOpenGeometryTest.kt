@@ -96,10 +96,10 @@ abstract class TitleOpenGeometry {
     @Test
     fun the_listing_line_keeps_its_room_from_the_first_frame() {
         val (_, frames) = run(detailMs = 304L, listedMs = 1_504L)
-        assertTrue("a placeholder before the page", frames.first().placeholders > 0)
-        val waiting = frames.filter { it.at in 400L until 1_504L }
-        assertTrue("the line's placeholder stands until the listing lands", waiting.all { it.placeholders > 0 })
-        assertTrue("no placeholder once it has landed", frames.last().placeholders == 0)
+        assertTrue("the line's placeholder at the first frame", frames.first().services > 0)
+        val waiting = frames.filter { it.at < 1_504L }
+        assertTrue("the line's placeholder stands until the listing lands", waiting.all { it.services > 0 })
+        assertTrue("the line's placeholder gone once it has landed", frames.last().services == 0)
     }
 
     @Test
@@ -126,8 +126,11 @@ abstract class TitleOpenGeometry {
         for ((at, top) in tops) assertEquals("More about this show at $at ms", last, top, 0.5f)
     }
 
-    /** One frame of the page: when, how many placeholders, whether one drew, and More about's top. */
-    private data class Frame(val at: Long, val placeholders: Int, val drawn: Boolean, val more: Float?)
+    /**
+     * One frame of the page: when, how many placeholders, whether one drew, More about's top, and
+     * how many of the services line's placeholders.
+     */
+    private data class Frame(val at: Long, val placeholders: Int, val drawn: Boolean, val more: Float?, val services: Int)
 
     /**
      * Opens the title from its list's row and steps it frame by frame, the page landing at
@@ -187,7 +190,11 @@ abstract class TitleOpenGeometry {
             }
             val count = seen.size
             val top = compose.onAllNodesWithText(more).fetchSemanticsNodes().firstOrNull()?.boundsInRoot?.top
-            frames += Frame(now, count, drawn, top)
+            val services = compose.onAllNodesWithTag(SERVICES_PLACEHOLDER, useUnmergedTree = true).fetchSemanticsNodes().count { node ->
+                val b = node.boundsInRoot
+                b.width > 0f && b.height > 0f && b.left >= window.left && b.right <= window.right
+            }
+            frames += Frame(now, count, drawn, top, services)
         }
         return more to frames
     }

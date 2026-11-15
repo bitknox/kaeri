@@ -201,7 +201,7 @@ private fun ServiceLinePlaceholder(unlisted: Boolean) {
                 TextPlaceholder(0.85f, 20.dp)
             }
         }
-        Box(Modifier.fillMaxWidth().heightIn(min = 48.dp), contentAlignment = Alignment.CenterStart) {
+        Box(Modifier.testTag(SERVICES_PLACEHOLDER).fillMaxWidth().heightIn(min = 48.dp), contentAlignment = Alignment.CenterStart) {
             TextPlaceholder(if (unlisted) 0.4f else 0.5f, 20.dp)
         }
     }
