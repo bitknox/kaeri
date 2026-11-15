@@ -40,8 +40,10 @@ use tokio::{
 mod playlist;
 mod thumbnail;
 mod upstream;
+mod warm;
 
 pub use playlist::{resolve_url, rewrite_playlist};
+pub use warm::Release;
 
 use playlist::looks_like_playlist;
 use upstream::{Cache, send, send_once};
@@ -63,6 +65,10 @@ const CACHE_BYTES: usize = 200 * 1024 * 1024;
 pub struct ProxyServer {
     url: String,
     thumbnail_url: String,
+    /// The stream's own URL, which `url` fronts.
+    origin: String,
+    /// The segments fetched ahead, before the player asked: see [`ProxyServer::warm`].
+    warmed: Vec<String>,
     upstream: Arc<Upstream>,
     /// The listener and its accept loop, which a phone's app binds again on the same port when
     /// it comes back from the background: see `kaeri_net::loopback`.
@@ -314,6 +320,8 @@ pub async fn serve(
     Ok(ProxyServer {
         url: entry,
         thumbnail_url: thumbnail_entry,
+        origin: url.to_owned(),
+        warmed: Vec::new(),
         upstream: proxy,
         _listener: listener,
     })
@@ -570,6 +578,14 @@ impl Proxies {
                 url.to_owned()
             }
         }
+    }
+
+    /// Keep `server`, started ahead for `url` (see [`ProxyServer::warm`]), as the proxy
+    /// fronting it, and return the URL to play instead.
+    pub fn adopt(&mut self, url: &str, server: ProxyServer) -> String {
+        let proxied = server.url().to_owned();
+        self.0.insert(url.to_owned(), server);
+        proxied
     }
 
     /// The thumbnailer's entry to the proxy fronting `url`, when one is running.

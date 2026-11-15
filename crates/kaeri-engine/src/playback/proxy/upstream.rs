@@ -49,6 +49,13 @@ impl Cache {
         })
     }
 
+    /// Let go of `url`, if it is kept.
+    pub(super) fn remove(&mut self, url: &str) {
+        if let Some((fetched, _)) = self.entries.remove(url) {
+            self.bytes -= fetched.body.len();
+        }
+    }
+
     fn insert(&mut self, url: &str, fetched: Arc<Fetched>, limit: usize) {
         let size = fetched.body.len();
         if size > CACHE_ENTRY_LIMIT || size > limit || self.entries.contains_key(url) {
