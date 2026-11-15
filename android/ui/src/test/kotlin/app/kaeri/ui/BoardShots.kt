@@ -961,9 +961,9 @@ class BoardShots {
     @Config(qualifiers = PHONE)
     fun phone_board_unfolded() = shoot("phone-board-unfolded", FOLLOWING, title = 900001u, episodes = fillerEight, party = protectionOff + dubbedToSix) {
         toHeading()
+        // The rows open under the fold, so the heading stays at the top.
         compose.onNodeWithText("watched", substring = true).performClick()
         compose.waitForIdle()
-        toHeading()
     }
 
     @Test

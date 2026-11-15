@@ -110,7 +110,8 @@ class PhoneBoardLayoutTest {
         card(row(null, listOf(FollowedMark("Ines", null))))
         val width = compose.onNodeWithText(row(null, emptyList()).title!!, useUnmergedTree = true).fetchSemanticsNode().size.width
         // 412 less the 16 dp sides, the 144 dp still and the 12 dp gap.
-        assertEquals(with(compose.density) { 224.dp.roundToPx() }, width)
+        // Within a pixel: the row's sides and gap round on their own at 2.625.
+        assertNear("the title's width", with(compose.density) { 224.dp.roundToPx() }, width)
     }
 
     @Test
