@@ -4969,6 +4969,46 @@ object Strings {
     fun reportCrashSettings(context: Context): String =
         context.getString(R.string.report_crash_settings)
 
+    /** Report item, the last row under Included: a file of what the player did in the last few playbacks, saved by hand and attached to the issue. Also the name of the second tab in the report's preview, beside Report. */
+    fun reportPlayerLog(context: Context): String =
+        context.getString(R.string.report_player_log)
+
+    /** Line under the Player log item: how many playbacks the log holds and the size of the file. The size is already formatted, such as 412 KB. */
+    fun reportPlayerLogDetail(context: Context, playbacks: Int, size: String): String =
+        context.resources.getQuantityString(R.plurals.report_player_log_detail, playbacks, playbacks, size)
+
+    /** Line under the Player log item while nothing has played since the app started. The item cannot be ticked then. */
+    fun reportPlayerLogEmpty(context: Context): String =
+        context.getString(R.string.report_player_log_empty)
+
+    /** Button under the ticked Player log item. Opens the system's save dialog for the log file. */
+    fun reportPlayerLogSave(context: Context): String =
+        context.getString(R.string.report_player_log_save)
+
+    /** Line under the Save log button: the file is not sent by itself, the person attaches it on GitHub. */
+    fun reportPlayerLogAttach(context: Context): String =
+        context.getString(R.string.report_player_log_attach)
+
+    /** Replaces the Save log button once the file is written. File is the file's name, such as kaeri-player-log-2026-11-15-1432.txt. */
+    fun reportPlayerLogSaved(context: Context, file: String): String =
+        context.getString(R.string.report_player_log_saved, file)
+
+    /** Shown beside the Save log button when the file could not be written. */
+    fun reportPlayerLogFailed(context: Context): String =
+        context.getString(R.string.report_player_log_failed)
+
+    /** First tab of the report's preview, beside Player log: the text of the report itself. Shown only while Player log is ticked. */
+    fun reportSentReport(context: Context): String =
+        context.getString(R.string.report_sent_report)
+
+    /** Screen readers announce this once the player log file is written. */
+    fun reportPlayerLogA11ySaved(context: Context): String =
+        context.getString(R.string.report_player_log_a11y_saved)
+
+    /** Screen reader hint on the Player log item. */
+    fun reportPlayerLogA11yHint(context: Context): String =
+        context.getString(R.string.report_player_log_a11y_hint)
+
     /** Heading of the Crash reports group in Settings, About. */
     fun settingsGroupCrashes(context: Context): String =
         context.getString(R.string.settings_group_crashes)

@@ -1332,6 +1332,20 @@
     <string name="report_tv_scan">Inquadra il codice per aprire la segnalazione sul telefono.</string>
     <string name="report_crash_off">I rapporti di arresto sono disattivati, quindi non ne viene incluso nessuno. Puoi attivarli in Impostazioni, Informazioni.</string>
     <string name="report_crash_settings">Impostazioni rapporti di arresto</string>
+    <string name="report_player_log">Registro del player</string>
+    <plurals name="report_player_log_detail">
+        <item quantity="one">L’ultima riproduzione · %2$s</item>
+        <item quantity="many">Le ultime %1$,d riproduzioni · %2$s</item>
+        <item quantity="other">Le ultime %1$,d riproduzioni · %2$s</item>
+    </plurals>
+    <string name="report_player_log_empty">Ancora nessuna riproduzione registrata</string>
+    <string name="report_player_log_save">Salva registro…</string>
+    <string name="report_player_log_attach">Allega il file alla segnalazione quando si apre su GitHub.</string>
+    <string name="report_player_log_saved">Salvato come %1$s</string>
+    <string name="report_player_log_failed">Impossibile salvare il registro. Prova un’altra cartella.</string>
+    <string name="report_sent_report">Segnalazione</string>
+    <string name="report_player_log_a11y_saved">Registro del player salvato</string>
+    <string name="report_player_log_a11y_hint">Salva un file da allegare alla segnalazione</string>
     <string name="settings_group_crashes">Rapporti di arresto</string>
     <string name="settings_crash_save">Salva i rapporti di arresto su questo dispositivo</string>
     <string name="settings_crash_save_detail">Kaeri conserva su questo dispositivo una breve traccia di ogni arresto per Segnala un bug, senza titoli, indirizzi e nomi. Non viene inviato nulla in automatico.</string>

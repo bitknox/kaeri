@@ -1394,6 +1394,21 @@
     <string name="report_tv_scan">Отсканируйте код, чтобы открыть отчёт на телефоне.</string>
     <string name="report_crash_off">Отчёты о сбоях выключены, поэтому ни один не включён. Включить их можно в настройках, в разделе «О программе».</string>
     <string name="report_crash_settings">Настройки отчётов о сбоях</string>
+    <string name="report_player_log">Журнал плеера</string>
+    <plurals name="report_player_log_detail">
+        <item quantity="one">Последние воспроизведения: %1$,d · %2$s</item>
+        <item quantity="few">Последние воспроизведения: %1$,d · %2$s</item>
+        <item quantity="many">Последние воспроизведения: %1$,d · %2$s</item>
+        <item quantity="other">Последние воспроизведения: %1$,d · %2$s</item>
+    </plurals>
+    <string name="report_player_log_empty">Воспроизведений пока не было</string>
+    <string name="report_player_log_save">Сохранить журнал…</string>
+    <string name="report_player_log_attach">Приложите файл к задаче, когда она откроется на GitHub.</string>
+    <string name="report_player_log_saved">Сохранено как %1$s</string>
+    <string name="report_player_log_failed">Не удалось сохранить журнал. Выберите другую папку.</string>
+    <string name="report_sent_report">Отчёт</string>
+    <string name="report_player_log_a11y_saved">Журнал плеера сохранён</string>
+    <string name="report_player_log_a11y_hint">Сохраняет файл, который можно приложить к задаче</string>
     <string name="settings_group_crashes">Отчёты о сбоях</string>
     <string name="settings_crash_save">Сохранять отчёты о сбоях на этом устройстве</string>
     <string name="settings_crash_save_detail">Kaeri хранит на этом устройстве краткую запись о каждом сбое для «Сообщить об ошибке», убирая из неё названия, адреса и имена. Ничего не отправляется само по себе.</string>

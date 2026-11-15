@@ -2852,6 +2852,42 @@
   <data name="ReportCrashSettings" xml:space="preserve">
     <value>Impostazioni rapporti di arresto</value>
   </data>
+  <data name="ReportPlayerLog" xml:space="preserve">
+    <value>Registro del player</value>
+  </data>
+  <data name="ReportPlayerLogDetail_one" xml:space="preserve">
+    <value>L’ultima riproduzione · {size}</value>
+  </data>
+  <data name="ReportPlayerLogDetail_many" xml:space="preserve">
+    <value>Le ultime {playbacks} riproduzioni · {size}</value>
+  </data>
+  <data name="ReportPlayerLogDetail_other" xml:space="preserve">
+    <value>Le ultime {playbacks} riproduzioni · {size}</value>
+  </data>
+  <data name="ReportPlayerLogEmpty" xml:space="preserve">
+    <value>Ancora nessuna riproduzione registrata</value>
+  </data>
+  <data name="ReportPlayerLogSave" xml:space="preserve">
+    <value>Salva registro…</value>
+  </data>
+  <data name="ReportPlayerLogAttach" xml:space="preserve">
+    <value>Allega il file alla segnalazione quando si apre su GitHub.</value>
+  </data>
+  <data name="ReportPlayerLogSaved" xml:space="preserve">
+    <value>Salvato come {file}</value>
+  </data>
+  <data name="ReportPlayerLogFailed" xml:space="preserve">
+    <value>Impossibile salvare il registro. Prova un’altra cartella.</value>
+  </data>
+  <data name="ReportSentReport" xml:space="preserve">
+    <value>Segnalazione</value>
+  </data>
+  <data name="ReportPlayerLogA11ySaved" xml:space="preserve">
+    <value>Registro del player salvato</value>
+  </data>
+  <data name="ReportPlayerLogA11yHint" xml:space="preserve">
+    <value>Salva un file da allegare alla segnalazione</value>
+  </data>
   <data name="SettingsGroupCrashes" xml:space="preserve">
     <value>Rapporti di arresto</value>
   </data>

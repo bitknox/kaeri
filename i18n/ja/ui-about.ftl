@@ -33,6 +33,18 @@ report-privacy = GitHubでレポートを開くまで、この{ -device }から�
 report-tv-scan = コードをスキャンして、スマートフォンでレポートを開きます。
 report-crash-off = クラッシュレポートがオフのため、含まれていません。設定の「情報」でオンにできます。
 report-crash-settings = クラッシュレポートの設定
+report-player-log = プレーヤーログ
+report-player-log-detail = { $playbacks ->
+   *[other] 直近{ $playbacks }回の再生 · { $size }
+ }
+report-player-log-empty = まだ再生の記録はありません
+report-player-log-save = ログを保存…
+report-player-log-attach = GitHubでissueが開いたら、このファイルを添付してください。
+report-player-log-saved = { $file } として保存しました
+report-player-log-failed = ログを保存できませんでした。別のフォルダを試してください。
+report-sent-report = レポート
+report-player-log-a11y-saved = プレーヤーログを保存しました
+report-player-log-a11y-hint = issueに添付するファイルを保存します
 settings-group-crashes = クラッシュレポート
 settings-crash-save = この{ -device }にクラッシュレポートを保存
 settings-crash-save-detail = { -app-name }はバグ報告用に、クラッシュのたびにタイトル、アドレス、名前を除いた短い記録をこの{ -device }に保存します。自動では何も送信されません。

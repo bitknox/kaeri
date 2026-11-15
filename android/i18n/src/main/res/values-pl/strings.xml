@@ -1394,6 +1394,21 @@
     <string name="report_tv_scan">Zeskanuj kod, aby otworzyć zgłoszenie na telefonie.</string>
     <string name="report_crash_off">Raporty awarii są wyłączone, więc żaden nie jest dołączony. Możesz je włączyć w Ustawieniach, w sekcji O aplikacji.</string>
     <string name="report_crash_settings">Ustawienia raportów awarii</string>
+    <string name="report_player_log">Dziennik odtwarzacza</string>
+    <plurals name="report_player_log_detail">
+        <item quantity="one">Ostatnie odtworzenie · %2$s</item>
+        <item quantity="few">Ostatnie %1$,d odtworzenia · %2$s</item>
+        <item quantity="many">Ostatnie %1$,d odtworzeń · %2$s</item>
+        <item quantity="other">Ostatnie %1$,d odtworzenia · %2$s</item>
+    </plurals>
+    <string name="report_player_log_empty">Nie zapisano jeszcze żadnego odtworzenia</string>
+    <string name="report_player_log_save">Zapisz dziennik…</string>
+    <string name="report_player_log_attach">Dołącz plik do zgłoszenia, gdy otworzy się na GitHubie.</string>
+    <string name="report_player_log_saved">Zapisano jako %1$s</string>
+    <string name="report_player_log_failed">Nie udało się zapisać dziennika. Wybierz inny folder.</string>
+    <string name="report_sent_report">Zgłoszenie</string>
+    <string name="report_player_log_a11y_saved">Dziennik odtwarzacza zapisany</string>
+    <string name="report_player_log_a11y_hint">Zapisuje plik do dołączenia do zgłoszenia</string>
     <string name="settings_group_crashes">Raporty awarii</string>
     <string name="settings_crash_save">Zapisuj raporty awarii lokalnie</string>
     <string name="settings_crash_save_detail">Kaeri zachowuje na tym urządzeniu krótki zapis każdej awarii do zgłoszenia błędu, bez tytułów, adresów i nazw. Nic nie jest wysyłane samo.</string>

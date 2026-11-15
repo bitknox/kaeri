@@ -5251,6 +5251,15 @@ tui-medium-read-change = Presiona { $key } para cambiar para qué sirve Kaeri.
 # Hint beside the Kaeri is for line on the Settings screen. The key is the one bound to it, as the key map draws it.
 tui-medium-settings-hint = { $key } para cambiar
 
+# Row in the terminal's Report a bug band, under Open on GitHub: Enter writes the player log file beside the terminal's own logs. Lower-cased, the same words are the key hint for it.
+report-player-log-save-here = Guardar registro del reproductor
+
+# That row once the file is written, and the notice in the status line. Path is where the file is, such as ~/.cache/kaeri/logs/kaeri-player-log-2026-11-15-1432.txt.
+report-player-log-saved-to = Registro del reproductor guardado en { $path }
+
+# That row when the file could not be written. Folder is where it was to go, such as ~/.cache/kaeri/logs.
+report-player-log-failed-here = No se pudo guardar el registro en { $folder }.
+
 # Title of the about page.
 about-title = Acerca de
 
@@ -5355,6 +5364,41 @@ report-crash-off = Los reportes de fallos están desactivados, así que no se in
 
 # Link from that line to the crash report settings.
 report-crash-settings = Ajustes de reportes de fallos
+
+# Report item, the last row under Included: a file of what the player did in the last few playbacks, saved by hand and attached to the issue. Also the name of the second tab in the report's preview, beside Report.
+report-player-log = Registro del reproductor
+
+# Line under the Player log item: how many playbacks the log holds and the size of the file. The size is already formatted, such as 412 KB.
+report-player-log-detail =
+    { $playbacks ->
+        [one] La última reproducción · { $size }
+        [many] Las últimas { $playbacks } reproducciones · { $size }
+       *[other] Las últimas { $playbacks } reproducciones · { $size }
+    }
+
+# Line under the Player log item while nothing has played since the app started. The item cannot be ticked then.
+report-player-log-empty = Aún no hay reproducciones registradas
+
+# Button under the ticked Player log item. Opens the system's save dialog for the log file.
+report-player-log-save = Guardar registro…
+
+# Line under the Save log button: the file is not sent by itself, the person attaches it on GitHub.
+report-player-log-attach = Adjunta el archivo al issue cuando se abra en GitHub.
+
+# Replaces the Save log button once the file is written. File is the file's name, such as kaeri-player-log-2026-11-15-1432.txt.
+report-player-log-saved = Guardado como { $file }
+
+# Shown beside the Save log button when the file could not be written.
+report-player-log-failed = No se pudo guardar el registro. Prueba otra carpeta.
+
+# First tab of the report's preview, beside Player log: the text of the report itself. Shown only while Player log is ticked.
+report-sent-report = Reporte
+
+# Screen readers announce this once the player log file is written.
+report-player-log-a11y-saved = Registro del reproductor guardado
+
+# Screen reader hint on the Player log item.
+report-player-log-a11y-hint = Guarda un archivo para adjuntar al issue
 
 # Heading of the Crash reports group in Settings, About.
 settings-group-crashes = Reportes de fallos

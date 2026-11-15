@@ -2582,6 +2582,36 @@
   <data name="ReportCrashSettings" xml:space="preserve">
     <value>クラッシュレポートの設定</value>
   </data>
+  <data name="ReportPlayerLog" xml:space="preserve">
+    <value>プレーヤーログ</value>
+  </data>
+  <data name="ReportPlayerLogDetail_other" xml:space="preserve">
+    <value>直近{playbacks}回の再生 · {size}</value>
+  </data>
+  <data name="ReportPlayerLogEmpty" xml:space="preserve">
+    <value>まだ再生の記録はありません</value>
+  </data>
+  <data name="ReportPlayerLogSave" xml:space="preserve">
+    <value>ログを保存…</value>
+  </data>
+  <data name="ReportPlayerLogAttach" xml:space="preserve">
+    <value>GitHubでissueが開いたら、このファイルを添付してください。</value>
+  </data>
+  <data name="ReportPlayerLogSaved" xml:space="preserve">
+    <value>{file} として保存しました</value>
+  </data>
+  <data name="ReportPlayerLogFailed" xml:space="preserve">
+    <value>ログを保存できませんでした。別のフォルダを試してください。</value>
+  </data>
+  <data name="ReportSentReport" xml:space="preserve">
+    <value>レポート</value>
+  </data>
+  <data name="ReportPlayerLogA11ySaved" xml:space="preserve">
+    <value>プレーヤーログを保存しました</value>
+  </data>
+  <data name="ReportPlayerLogA11yHint" xml:space="preserve">
+    <value>issueに添付するファイルを保存します</value>
+  </data>
   <data name="SettingsGroupCrashes" xml:space="preserve">
     <value>クラッシュレポート</value>
   </data>

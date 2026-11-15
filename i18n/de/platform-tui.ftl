@@ -13,3 +13,6 @@ tui-together-recent-alone = Folge { $episode } · { $when }
 tui-medium-read-line = Das Terminal hat keinen Reader. Manga, Webtoons und Light Novels öffnen sich in den { -app-name }-Apps, und die Synchronisierung hält deinen Fortschritt auf Stand.
 tui-medium-read-change = Drücke { $key }, um zu ändern, wofür { -app-name } gedacht ist.
 tui-medium-settings-hint = { $key } zum Ändern
+report-player-log-save-here = Player-Protokoll speichern
+report-player-log-saved-to = Player-Protokoll gespeichert in { $path }
+report-player-log-failed-here = Das Protokoll konnte nicht in { $folder } gespeichert werden.

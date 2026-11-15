@@ -2987,6 +2987,45 @@
   <data name="ReportCrashSettings" xml:space="preserve">
     <value>Настройки отчётов о сбоях</value>
   </data>
+  <data name="ReportPlayerLog" xml:space="preserve">
+    <value>Журнал плеера</value>
+  </data>
+  <data name="ReportPlayerLogDetail_one" xml:space="preserve">
+    <value>Последние воспроизведения: {playbacks} · {size}</value>
+  </data>
+  <data name="ReportPlayerLogDetail_few" xml:space="preserve">
+    <value>Последние воспроизведения: {playbacks} · {size}</value>
+  </data>
+  <data name="ReportPlayerLogDetail_many" xml:space="preserve">
+    <value>Последние воспроизведения: {playbacks} · {size}</value>
+  </data>
+  <data name="ReportPlayerLogDetail_other" xml:space="preserve">
+    <value>Последние воспроизведения: {playbacks} · {size}</value>
+  </data>
+  <data name="ReportPlayerLogEmpty" xml:space="preserve">
+    <value>Воспроизведений пока не было</value>
+  </data>
+  <data name="ReportPlayerLogSave" xml:space="preserve">
+    <value>Сохранить журнал…</value>
+  </data>
+  <data name="ReportPlayerLogAttach" xml:space="preserve">
+    <value>Приложите файл к задаче, когда она откроется на GitHub.</value>
+  </data>
+  <data name="ReportPlayerLogSaved" xml:space="preserve">
+    <value>Сохранено как {file}</value>
+  </data>
+  <data name="ReportPlayerLogFailed" xml:space="preserve">
+    <value>Не удалось сохранить журнал. Выберите другую папку.</value>
+  </data>
+  <data name="ReportSentReport" xml:space="preserve">
+    <value>Отчёт</value>
+  </data>
+  <data name="ReportPlayerLogA11ySaved" xml:space="preserve">
+    <value>Журнал плеера сохранён</value>
+  </data>
+  <data name="ReportPlayerLogA11yHint" xml:space="preserve">
+    <value>Сохраняет файл, который можно приложить к задаче</value>
+  </data>
   <data name="SettingsGroupCrashes" xml:space="preserve">
     <value>Отчёты о сбоях</value>
   </data>

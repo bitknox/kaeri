@@ -33,6 +33,18 @@ report-privacy = Không có gì rời khỏi { -device } này cho đến khi b�
 report-tv-scan = Quét mã để mở báo cáo trên điện thoại của bạn.
 report-crash-off = Báo cáo sự cố đang tắt nên không có gì được đính kèm. Bạn có thể bật trong Cài đặt, Giới thiệu.
 report-crash-settings = Cài đặt báo cáo sự cố
+report-player-log = Nhật ký trình phát
+report-player-log-detail = { $playbacks ->
+   *[other] { $playbacks } lượt phát gần nhất · { $size }
+ }
+report-player-log-empty = Chưa có lượt phát nào được ghi lại
+report-player-log-save = Lưu nhật ký…
+report-player-log-attach = Đính kèm tệp vào issue khi issue mở trên GitHub.
+report-player-log-saved = Đã lưu thành { $file }
+report-player-log-failed = Không lưu được nhật ký. Hãy thử thư mục khác.
+report-sent-report = Báo cáo
+report-player-log-a11y-saved = Đã lưu nhật ký trình phát
+report-player-log-a11y-hint = Lưu một tệp để đính kèm vào issue
 settings-group-crashes = Báo cáo sự cố
 settings-crash-save = Lưu báo cáo sự cố trên { -device } này
 settings-crash-save-detail = { -app-name } giữ một bản ghi ngắn về mỗi sự cố trên { -device } này để dùng cho Báo lỗi, đã xóa tựa, địa chỉ và tên. Không có gì tự động được gửi đi.

@@ -2697,6 +2697,36 @@ public static partial class T
     /// <summary>Link from that line to the crash report settings.</summary>
     public static string ReportCrashSettings => Get("ReportCrashSettings");
 
+    /// <summary>Report item, the last row under Included: a file of what the player did in the last few playbacks, saved by hand and attached to the issue. Also the name of the second tab in the report's preview, beside Report.</summary>
+    public static string ReportPlayerLog => Get("ReportPlayerLog");
+
+    /// <summary>Line under the Player log item: how many playbacks the log holds and the size of the file. The size is already formatted, such as 412 KB.</summary>
+    public static string ReportPlayerLogDetail(long playbacks, string size) => Fill(GetPlural("ReportPlayerLogDetail", playbacks), ("playbacks", playbacks.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)), ("size", size));
+
+    /// <summary>Line under the Player log item while nothing has played since the app started. The item cannot be ticked then.</summary>
+    public static string ReportPlayerLogEmpty => Get("ReportPlayerLogEmpty");
+
+    /// <summary>Button under the ticked Player log item. Opens the system's save dialog for the log file.</summary>
+    public static string ReportPlayerLogSave => Get("ReportPlayerLogSave");
+
+    /// <summary>Line under the Save log button: the file is not sent by itself, the person attaches it on GitHub.</summary>
+    public static string ReportPlayerLogAttach => Get("ReportPlayerLogAttach");
+
+    /// <summary>Replaces the Save log button once the file is written. File is the file's name, such as kaeri-player-log-2026-11-15-1432.txt.</summary>
+    public static string ReportPlayerLogSaved(string file) => Fill(Get("ReportPlayerLogSaved"), ("file", file));
+
+    /// <summary>Shown beside the Save log button when the file could not be written.</summary>
+    public static string ReportPlayerLogFailed => Get("ReportPlayerLogFailed");
+
+    /// <summary>First tab of the report's preview, beside Player log: the text of the report itself. Shown only while Player log is ticked.</summary>
+    public static string ReportSentReport => Get("ReportSentReport");
+
+    /// <summary>Screen readers announce this once the player log file is written.</summary>
+    public static string ReportPlayerLogA11ySaved => Get("ReportPlayerLogA11ySaved");
+
+    /// <summary>Screen reader hint on the Player log item.</summary>
+    public static string ReportPlayerLogA11yHint => Get("ReportPlayerLogA11yHint");
+
     /// <summary>Heading of the Crash reports group in Settings, About.</summary>
     public static string SettingsGroupCrashes => Get("SettingsGroupCrashes");
 
@@ -13002,6 +13032,17 @@ public static partial class T
         ["ReportTvScan"] = "Scan the code to open the report on your phone.",
         ["ReportCrashOff"] = "Crash reports are off, so none is included. You can turn them on in Settings, About.",
         ["ReportCrashSettings"] = "Crash report settings",
+        ["ReportPlayerLog"] = "Player log",
+        ["ReportPlayerLogDetail_one"] = "The last playback · {size}",
+        ["ReportPlayerLogDetail_other"] = "The last {playbacks} playbacks · {size}",
+        ["ReportPlayerLogEmpty"] = "No playback logged yet",
+        ["ReportPlayerLogSave"] = "Save log…",
+        ["ReportPlayerLogAttach"] = "Attach the file to the issue once it opens on GitHub.",
+        ["ReportPlayerLogSaved"] = "Saved as {file}",
+        ["ReportPlayerLogFailed"] = "Couldn't save the log. Try another folder.",
+        ["ReportSentReport"] = "Report",
+        ["ReportPlayerLogA11ySaved"] = "Player log saved",
+        ["ReportPlayerLogA11yHint"] = "Saves a file to attach to the issue",
         ["SettingsGroupCrashes"] = "Crash reports",
         ["SettingsCrashSave"] = "Save crash reports on this device",
         ["SettingsCrashSaveDetail"] = "Kaeri keeps a short record of each crash on this device for Report a bug, with titles, addresses and names removed. Nothing is sent by itself.",

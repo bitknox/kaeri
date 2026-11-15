@@ -13,3 +13,6 @@ tui-together-recent-alone = Épisode { $episode } · { $when }
 tui-medium-read-line = Le terminal n’a pas de lecteur. Les mangas, webtoons et light novels s’ouvrent dans les applications { -app-name }, et la synchronisation garde votre progression à jour.
 tui-medium-read-change = Appuyez sur { $key } pour changer ce à quoi sert { -app-name }.
 tui-medium-settings-hint = { $key } pour changer
+report-player-log-save-here = Enregistrer le journal du lecteur
+report-player-log-saved-to = Journal du lecteur enregistré dans { $path }
+report-player-log-failed-here = Impossible d’enregistrer le journal dans { $folder }.

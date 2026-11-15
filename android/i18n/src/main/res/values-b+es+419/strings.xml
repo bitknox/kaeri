@@ -1332,6 +1332,20 @@
     <string name="report_tv_scan">Escanea el código para abrir el reporte en tu teléfono.</string>
     <string name="report_crash_off">Los reportes de fallos están desactivados, así que no se incluye ninguno. Puedes activarlos en Ajustes, Acerca de.</string>
     <string name="report_crash_settings">Ajustes de reportes de fallos</string>
+    <string name="report_player_log">Registro del reproductor</string>
+    <plurals name="report_player_log_detail">
+        <item quantity="one">La última reproducción · %2$s</item>
+        <item quantity="many">Las últimas %1$,d reproducciones · %2$s</item>
+        <item quantity="other">Las últimas %1$,d reproducciones · %2$s</item>
+    </plurals>
+    <string name="report_player_log_empty">Aún no hay reproducciones registradas</string>
+    <string name="report_player_log_save">Guardar registro…</string>
+    <string name="report_player_log_attach">Adjunta el archivo al issue cuando se abra en GitHub.</string>
+    <string name="report_player_log_saved">Guardado como %1$s</string>
+    <string name="report_player_log_failed">No se pudo guardar el registro. Prueba otra carpeta.</string>
+    <string name="report_sent_report">Reporte</string>
+    <string name="report_player_log_a11y_saved">Registro del reproductor guardado</string>
+    <string name="report_player_log_a11y_hint">Guarda un archivo para adjuntar al issue</string>
     <string name="settings_group_crashes">Reportes de fallos</string>
     <string name="settings_crash_save">Guardar reportes de fallos en este dispositivo</string>
     <string name="settings_crash_save_detail">Kaeri guarda un registro breve de cada fallo en este dispositivo para Reportar un error, sin títulos, direcciones ni nombres. No se envía nada por sí solo.</string>

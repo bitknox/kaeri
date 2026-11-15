@@ -13,3 +13,6 @@ tui-together-recent-alone = Avsnitt { $episode } · { $when }
 tui-medium-read-line = Terminalen har ingen läsare. Manga, webtoons och light novels öppnas i { -app-name }-apparna, och synk håller ditt förlopp i takt.
 tui-medium-read-change = Tryck { $key } för att ändra vad { -app-name } är till för.
 tui-medium-settings-hint = { $key } för att ändra
+report-player-log-save-here = Spara spelarlogg
+report-player-log-saved-to = Spelarloggen sparades i { $path }
+report-player-log-failed-here = Loggen kunde inte sparas i { $folder }.

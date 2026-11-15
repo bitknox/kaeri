@@ -2852,6 +2852,42 @@
   <data name="ReportCrashSettings" xml:space="preserve">
     <value>Ajustes de reportes de fallos</value>
   </data>
+  <data name="ReportPlayerLog" xml:space="preserve">
+    <value>Registro del reproductor</value>
+  </data>
+  <data name="ReportPlayerLogDetail_one" xml:space="preserve">
+    <value>La última reproducción · {size}</value>
+  </data>
+  <data name="ReportPlayerLogDetail_many" xml:space="preserve">
+    <value>Las últimas {playbacks} reproducciones · {size}</value>
+  </data>
+  <data name="ReportPlayerLogDetail_other" xml:space="preserve">
+    <value>Las últimas {playbacks} reproducciones · {size}</value>
+  </data>
+  <data name="ReportPlayerLogEmpty" xml:space="preserve">
+    <value>Aún no hay reproducciones registradas</value>
+  </data>
+  <data name="ReportPlayerLogSave" xml:space="preserve">
+    <value>Guardar registro…</value>
+  </data>
+  <data name="ReportPlayerLogAttach" xml:space="preserve">
+    <value>Adjunta el archivo al issue cuando se abra en GitHub.</value>
+  </data>
+  <data name="ReportPlayerLogSaved" xml:space="preserve">
+    <value>Guardado como {file}</value>
+  </data>
+  <data name="ReportPlayerLogFailed" xml:space="preserve">
+    <value>No se pudo guardar el registro. Prueba otra carpeta.</value>
+  </data>
+  <data name="ReportSentReport" xml:space="preserve">
+    <value>Reporte</value>
+  </data>
+  <data name="ReportPlayerLogA11ySaved" xml:space="preserve">
+    <value>Registro del reproductor guardado</value>
+  </data>
+  <data name="ReportPlayerLogA11yHint" xml:space="preserve">
+    <value>Guarda un archivo para adjuntar al issue</value>
+  </data>
   <data name="SettingsGroupCrashes" xml:space="preserve">
     <value>Reportes de fallos</value>
   </data>

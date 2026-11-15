@@ -2717,6 +2717,39 @@
   <data name="ReportCrashSettings" xml:space="preserve">
     <value>Kraschrapportinställningar</value>
   </data>
+  <data name="ReportPlayerLog" xml:space="preserve">
+    <value>Spelarlogg</value>
+  </data>
+  <data name="ReportPlayerLogDetail_one" xml:space="preserve">
+    <value>Den senaste uppspelningen · {size}</value>
+  </data>
+  <data name="ReportPlayerLogDetail_other" xml:space="preserve">
+    <value>De senaste {playbacks} uppspelningarna · {size}</value>
+  </data>
+  <data name="ReportPlayerLogEmpty" xml:space="preserve">
+    <value>Ingen uppspelning loggad än</value>
+  </data>
+  <data name="ReportPlayerLogSave" xml:space="preserve">
+    <value>Spara logg…</value>
+  </data>
+  <data name="ReportPlayerLogAttach" xml:space="preserve">
+    <value>Bifoga filen i ärendet när det öppnas på GitHub.</value>
+  </data>
+  <data name="ReportPlayerLogSaved" xml:space="preserve">
+    <value>Sparad som {file}</value>
+  </data>
+  <data name="ReportPlayerLogFailed" xml:space="preserve">
+    <value>Loggen kunde inte sparas. Prova en annan mapp.</value>
+  </data>
+  <data name="ReportSentReport" xml:space="preserve">
+    <value>Rapport</value>
+  </data>
+  <data name="ReportPlayerLogA11ySaved" xml:space="preserve">
+    <value>Spelarloggen sparades</value>
+  </data>
+  <data name="ReportPlayerLogA11yHint" xml:space="preserve">
+    <value>Sparar en fil att bifoga i ärendet</value>
+  </data>
   <data name="SettingsGroupCrashes" xml:space="preserve">
     <value>Kraschrapporter</value>
   </data>

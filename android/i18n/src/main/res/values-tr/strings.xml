@@ -1270,6 +1270,19 @@
     <string name="report_tv_scan">Raporu telefonunuzda açmak için kodu tarayın.</string>
     <string name="report_crash_off">Çökme raporları kapalı, bu yüzden hiçbiri eklenmedi. Ayarlar, Hakkında bölümünden açabilirsiniz.</string>
     <string name="report_crash_settings">Çökme raporu ayarları</string>
+    <string name="report_player_log">Oynatıcı günlüğü</string>
+    <plurals name="report_player_log_detail">
+        <item quantity="one">Son oynatma · %2$s</item>
+        <item quantity="other">Son %1$,d oynatma · %2$s</item>
+    </plurals>
+    <string name="report_player_log_empty">Henüz kaydedilmiş oynatma yok</string>
+    <string name="report_player_log_save">Günlüğü kaydet…</string>
+    <string name="report_player_log_attach">Kayıt GitHub\'da açıldığında dosyayı ekleyin.</string>
+    <string name="report_player_log_saved">%1$s olarak kaydedildi</string>
+    <string name="report_player_log_failed">Günlük kaydedilemedi. Başka bir klasör deneyin.</string>
+    <string name="report_sent_report">Rapor</string>
+    <string name="report_player_log_a11y_saved">Oynatıcı günlüğü kaydedildi</string>
+    <string name="report_player_log_a11y_hint">Kayda eklenecek bir dosya kaydeder</string>
     <string name="settings_group_crashes">Çökme raporları</string>
     <string name="settings_crash_save">Çökme raporlarını bu cihaz üzerinde sakla</string>
     <string name="settings_crash_save_detail">Kaeri, Hata bildir için her çökmenin kısa bir kaydını bu cihazda tutar; başlıklar, adresler ve adlar çıkarılır. Kendiliğinden hiçbir şey gönderilmez.</string>

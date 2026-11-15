@@ -13,3 +13,6 @@ tui-together-recent-alone = Episode { $episode } · { $when }
 tui-medium-read-line = Terminal tidak punya pembaca. Manga, webtoon, dan light novel dibuka di aplikasi { -app-name }, dan sinkronisasi menjaga kemajuan Anda tetap sama.
 tui-medium-read-change = Tekan { $key } untuk mengubah fungsi { -app-name }.
 tui-medium-settings-hint = { $key } untuk mengubah
+report-player-log-save-here = Simpan log pemutar
+report-player-log-saved-to = Log pemutar disimpan ke { $path }
+report-player-log-failed-here = Log tidak bisa disimpan ke { $folder }.

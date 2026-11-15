@@ -2852,6 +2852,42 @@
   <data name="ReportCrashSettings" xml:space="preserve">
     <value>Réglages des plantages</value>
   </data>
+  <data name="ReportPlayerLog" xml:space="preserve">
+    <value>Journal du lecteur</value>
+  </data>
+  <data name="ReportPlayerLogDetail_one" xml:space="preserve">
+    <value>{playbacks} lecture récente · {size}</value>
+  </data>
+  <data name="ReportPlayerLogDetail_many" xml:space="preserve">
+    <value>Les {playbacks} dernières lectures · {size}</value>
+  </data>
+  <data name="ReportPlayerLogDetail_other" xml:space="preserve">
+    <value>Les {playbacks} dernières lectures · {size}</value>
+  </data>
+  <data name="ReportPlayerLogEmpty" xml:space="preserve">
+    <value>Aucune lecture enregistrée pour l’instant</value>
+  </data>
+  <data name="ReportPlayerLogSave" xml:space="preserve">
+    <value>Exporter le journal…</value>
+  </data>
+  <data name="ReportPlayerLogAttach" xml:space="preserve">
+    <value>Joignez le fichier au ticket une fois qu’il s’ouvre sur GitHub.</value>
+  </data>
+  <data name="ReportPlayerLogSaved" xml:space="preserve">
+    <value>Enregistré sous {file}</value>
+  </data>
+  <data name="ReportPlayerLogFailed" xml:space="preserve">
+    <value>Impossible d’enregistrer le journal. Essayez un autre dossier.</value>
+  </data>
+  <data name="ReportSentReport" xml:space="preserve">
+    <value>Rapport</value>
+  </data>
+  <data name="ReportPlayerLogA11ySaved" xml:space="preserve">
+    <value>Journal du lecteur enregistré</value>
+  </data>
+  <data name="ReportPlayerLogA11yHint" xml:space="preserve">
+    <value>Enregistre un fichier à joindre au ticket</value>
+  </data>
   <data name="SettingsGroupCrashes" xml:space="preserve">
     <value>Rapports de plantage</value>
   </data>

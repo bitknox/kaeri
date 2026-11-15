@@ -1208,6 +1208,18 @@
     <string name="report_tv_scan">コードをスキャンして、スマートフォンでレポートを開きます。</string>
     <string name="report_crash_off">クラッシュレポートがオフのため、含まれていません。設定の「情報」でオンにできます。</string>
     <string name="report_crash_settings">クラッシュレポートの設定</string>
+    <string name="report_player_log">プレーヤーログ</string>
+    <plurals name="report_player_log_detail">
+        <item quantity="other">直近%1$,d回の再生 · %2$s</item>
+    </plurals>
+    <string name="report_player_log_empty">まだ再生の記録はありません</string>
+    <string name="report_player_log_save">ログを保存…</string>
+    <string name="report_player_log_attach">GitHubでissueが開いたら、このファイルを添付してください。</string>
+    <string name="report_player_log_saved">%1$s として保存しました</string>
+    <string name="report_player_log_failed">ログを保存できませんでした。別のフォルダを試してください。</string>
+    <string name="report_sent_report">レポート</string>
+    <string name="report_player_log_a11y_saved">プレーヤーログを保存しました</string>
+    <string name="report_player_log_a11y_hint">issueに添付するファイルを保存します</string>
     <string name="settings_group_crashes">クラッシュレポート</string>
     <string name="settings_crash_save">このデバイスにクラッシュレポートを保存</string>
     <string name="settings_crash_save_detail">Kaeriはバグ報告用に、クラッシュのたびにタイトル、アドレス、名前を除いた短い記録をこのデバイスに保存します。自動では何も送信されません。</string>

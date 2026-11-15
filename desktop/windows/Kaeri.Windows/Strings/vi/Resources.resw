@@ -2582,6 +2582,36 @@
   <data name="ReportCrashSettings" xml:space="preserve">
     <value>Cài đặt báo cáo sự cố</value>
   </data>
+  <data name="ReportPlayerLog" xml:space="preserve">
+    <value>Nhật ký trình phát</value>
+  </data>
+  <data name="ReportPlayerLogDetail_other" xml:space="preserve">
+    <value>{playbacks} lượt phát gần nhất · {size}</value>
+  </data>
+  <data name="ReportPlayerLogEmpty" xml:space="preserve">
+    <value>Chưa có lượt phát nào được ghi lại</value>
+  </data>
+  <data name="ReportPlayerLogSave" xml:space="preserve">
+    <value>Lưu nhật ký…</value>
+  </data>
+  <data name="ReportPlayerLogAttach" xml:space="preserve">
+    <value>Đính kèm tệp vào issue khi issue mở trên GitHub.</value>
+  </data>
+  <data name="ReportPlayerLogSaved" xml:space="preserve">
+    <value>Đã lưu thành {file}</value>
+  </data>
+  <data name="ReportPlayerLogFailed" xml:space="preserve">
+    <value>Không lưu được nhật ký. Hãy thử thư mục khác.</value>
+  </data>
+  <data name="ReportSentReport" xml:space="preserve">
+    <value>Báo cáo</value>
+  </data>
+  <data name="ReportPlayerLogA11ySaved" xml:space="preserve">
+    <value>Đã lưu nhật ký trình phát</value>
+  </data>
+  <data name="ReportPlayerLogA11yHint" xml:space="preserve">
+    <value>Lưu một tệp để đính kèm vào issue</value>
+  </data>
   <data name="SettingsGroupCrashes" xml:space="preserve">
     <value>Báo cáo sự cố</value>
   </data>

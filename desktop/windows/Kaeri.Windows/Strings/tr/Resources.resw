@@ -2717,6 +2717,39 @@
   <data name="ReportCrashSettings" xml:space="preserve">
     <value>Çökme raporu ayarları</value>
   </data>
+  <data name="ReportPlayerLog" xml:space="preserve">
+    <value>Oynatıcı günlüğü</value>
+  </data>
+  <data name="ReportPlayerLogDetail_one" xml:space="preserve">
+    <value>Son oynatma · {size}</value>
+  </data>
+  <data name="ReportPlayerLogDetail_other" xml:space="preserve">
+    <value>Son {playbacks} oynatma · {size}</value>
+  </data>
+  <data name="ReportPlayerLogEmpty" xml:space="preserve">
+    <value>Henüz kaydedilmiş oynatma yok</value>
+  </data>
+  <data name="ReportPlayerLogSave" xml:space="preserve">
+    <value>Günlüğü kaydet…</value>
+  </data>
+  <data name="ReportPlayerLogAttach" xml:space="preserve">
+    <value>Kayıt GitHub'da açıldığında dosyayı ekleyin.</value>
+  </data>
+  <data name="ReportPlayerLogSaved" xml:space="preserve">
+    <value>{file} olarak kaydedildi</value>
+  </data>
+  <data name="ReportPlayerLogFailed" xml:space="preserve">
+    <value>Günlük kaydedilemedi. Başka bir klasör deneyin.</value>
+  </data>
+  <data name="ReportSentReport" xml:space="preserve">
+    <value>Rapor</value>
+  </data>
+  <data name="ReportPlayerLogA11ySaved" xml:space="preserve">
+    <value>Oynatıcı günlüğü kaydedildi</value>
+  </data>
+  <data name="ReportPlayerLogA11yHint" xml:space="preserve">
+    <value>Kayda eklenecek bir dosya kaydeder</value>
+  </data>
   <data name="SettingsGroupCrashes" xml:space="preserve">
     <value>Çökme raporları</value>
   </data>

@@ -1332,6 +1332,20 @@
     <string name="report_tv_scan">Escaneie o código para abrir o relatório no celular.</string>
     <string name="report_crash_off">Os relatórios de falha estão desativados, então nenhum foi incluído. Você pode ativá-los em Configurações, Sobre.</string>
     <string name="report_crash_settings">Ajustes dos relatórios de falha</string>
+    <string name="report_player_log">Log do player</string>
+    <plurals name="report_player_log_detail">
+        <item quantity="one">%1$,d reprodução recente · %2$s</item>
+        <item quantity="many">%1$,d reproduções recentes · %2$s</item>
+        <item quantity="other">%1$,d reproduções recentes · %2$s</item>
+    </plurals>
+    <string name="report_player_log_empty">Nenhuma reprodução registrada ainda</string>
+    <string name="report_player_log_save">Salvar log…</string>
+    <string name="report_player_log_attach">Anexe o arquivo à issue quando ela abrir no GitHub.</string>
+    <string name="report_player_log_saved">Salvo como %1$s</string>
+    <string name="report_player_log_failed">Não foi possível salvar o log. Tente outra pasta.</string>
+    <string name="report_sent_report">Relatório</string>
+    <string name="report_player_log_a11y_saved">Log do player salvo</string>
+    <string name="report_player_log_a11y_hint">Salva um arquivo para anexar à issue</string>
     <string name="settings_group_crashes">Relatórios de falha</string>
     <string name="settings_crash_save">Salvar relatórios de falha neste dispositivo</string>
     <string name="settings_crash_save_detail">O Kaeri guarda um breve registro de cada falha neste dispositivo para Relatar um erro, sem títulos, endereços e nomes. Nada é enviado automaticamente.</string>
