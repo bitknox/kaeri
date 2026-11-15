@@ -29,7 +29,7 @@ use kaeri_model::{
     event::Event,
     medium::KaeriIsFor,
     notice::Notice,
-    reading::{ReadingCommand, ReadingEvent, ReadingFailure, ReadingHomeView},
+    reading::{ReadingCommand, ReadingEvent, ReadingFailure},
 };
 
 use crate::{outbox::Outbox, services::Services, state::EngineState};
@@ -174,7 +174,7 @@ pub(crate) fn command(
     let kit = &Kit::of(services);
     match command {
         ReadingCommand::LoadHome { refresh } => home::load(kit, ask, refresh, tx),
-        ReadingCommand::HideFromContinue { work } => hide_from_continue(kit, ask, &work, tx),
+        ReadingCommand::HideFromContinue { work } => hide_from_continue(kit, &work, tx),
         ReadingCommand::LoadUpdates => updates::load(kit, ask, tx),
         ReadingCommand::CheckUpdates => updates::check(kit, ask, tx),
         ReadingCommand::LoadLibrary { segment } => search::library(kit, ask, segment, tx),
@@ -211,23 +211,15 @@ pub(crate) fn command(
     }
 }
 
-/// Take a series off Continue for good. The app has already dropped the cover from the screen
-/// ([`kaeri_model::reading::read_home_without_continue`]), so Home is not sent again and nothing
-/// else on it moves, as on watching's Continue. A series the spotlight shows sends Home as it
-/// stood with only the spotlight moved on, so the shelves under it stay as they are. A failure
-/// to keep it is named, as it would come back on the next Home.
-fn hide_from_continue(kit: &Kit, ask: Ask, work: &kaeri_core::books::WorkId, tx: &Outbox) {
-    let shown = home::view(kit, ask);
+/// Take a series off Continue for good. The app has already dropped the cover, and a spotlight
+/// on the same series, from the screen ([`kaeri_model::reading::read_home_without_continue`]), so
+/// Home is not sent again and nothing else on it moves, as on watching's Continue. The next Home
+/// brings a new spotlight. A failure to keep it is named, as it would come back on that Home.
+fn hide_from_continue(kit: &Kit, work: &kaeri_core::books::WorkId, tx: &Outbox) {
     if let Err(e) = kit.store.set_read_hidden(work.as_str(), true) {
         let _ = tx.send(Event::Toast(Notice::alert(Msg::NoticeContinueHideFailed {
             reason: e.to_string(),
         })));
-        return;
-    }
-    if shown.spotlight.as_ref().is_some_and(|tile| &tile.work == work) {
-        let now = home::view(kit, ask);
-        let moved = ReadingHomeView { spotlight: now.spotlight, spot: now.spot, ..shown };
-        send(tx, ReadingEvent::Home(Box::new(moved.without_continue(work))));
     }
 }
 

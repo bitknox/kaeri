@@ -153,11 +153,6 @@ pub fn resend(kit: &Kit, ask: Ask, tx: &Outbox) {
     Home::of(kit, ask).send(tx);
 }
 
-/// Home as it stands, from what is kept, asking for nothing and sending nothing.
-pub fn view(kit: &Kit, ask: Ask) -> ReadingHomeView {
-    Home::of(kit, ask).view()
-}
-
 /// What a Home load works with.
 #[derive(Clone)]
 struct Home {
