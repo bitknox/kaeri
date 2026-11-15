@@ -441,8 +441,15 @@ mod tests {
         let ines = line("Ines");
         assert!(ines.contains("Episode 7") && ines.contains("8/10"), "{ines}");
         assert!(ines.contains("Oskar"), "the sixth beside the first: {ines}");
-        assert!(line("Rowanpaper").contains("9/10"));
-        assert!(!line("Rowanpaper").contains("Episode"), "Completed says only that");
+        // The fifth shares a line with the tenth, so look at the fifth's own cell only.
+        let fifth = line("Rowanpaper");
+        let cell = fifth
+            .split_once("Rowanpaper")
+            .and_then(|(_, rest)| rest.split_once("Yunami"))
+            .map(|(cell, _)| cell)
+            .unwrap_or_else(|| panic!("the tenth beside the fifth: {fifth}"));
+        assert!(cell.contains("9/10"), "{cell}");
+        assert!(!cell.contains("Episode"), "Completed says only that: {cell}");
         assert!(line("Yunami").contains("Episode 2"), "Dropped says where");
     }
 
