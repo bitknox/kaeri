@@ -267,6 +267,7 @@ async fn remove_from_continue_moves_nothing_but_the_spotlight_it_held() {
     assert_eq!(both, ["a:910003", "a:910005"]);
     let spotlit = shown.spotlight.as_ref().map(|t| t.work.clone()).expect("a spotlight");
     let quiet = shown.continue_reading.iter().find(|t| t.work != spotlit).unwrap().work.clone();
+    loaded(&kit, &mut rx).await;
 
     super::hide_from_continue(&kit, ask(), &quiet, &tx);
     assert!(rx.try_recv().is_err(), "a cover the spotlight does not show sends nothing");
