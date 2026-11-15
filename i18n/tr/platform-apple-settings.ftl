@@ -121,3 +121,6 @@ settings-trailers-row = Fragmanları oynat
 settings-trailers-note-apple = Fragmanlar YouTube'dan sessiz oynatılır. YouTube IP adresinizi görür. Düşük Veri Modu'nda, Hareketi Azalt açıkken veya Düşük Güç Modu'nda oynatılmazlar.
 language-restart = Yeniden başlat
 language-next-open-note = { -app-name } yeni dili uygulama yeniden açıldığında kullanır.
+settings-picture-in-picture-on-leave-apple = Uygulamadan çıkarken Resim İçinde Resim
+settings-picture-in-picture-on-leave-mac = Pencere küçültüldüğünde veya { -app-name } gizlendiğinde başlar.
+settings-picture-in-picture-on-leave-ios = Ayarlar > Genel > Resim İçinde Resim altındaki PiP'yi Otomatik Olarak Başlat da açık olmalı.

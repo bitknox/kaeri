@@ -4511,7 +4511,7 @@ settings-label-calendar-mine = Le calendrier n’affiche que votre liste
 settings-note-titles = Le choix d’AniList suit votre compte AniList et passe en anglais lorsque vous êtes déconnecté.
 
 # Note under the trailers row. The terminal never plays trailers by itself; the setting is shared with the apps.
-settings-note-trailers = Les applications de bureau lisent les bandes-annonces en sourdine dans les aperçus au survol. Le terminal garde ce réglage et n’en lit aucune.
+settings-note-trailers = Les apps lisent les bandes-annonces sans le son sur les pages des titres et dans les aperçus au survol. Le terminal garde le réglage et n'en lit aucune.
 
 # Note under the subtitles row.
 settings-note-subtitles = Appuyez sur Entrée pour saisir un code de langue. Il y a trop de valeurs pour les parcourir.
@@ -11746,6 +11746,9 @@ settings-opds-password = Mot de passe du flux
 
 # Row: the port the shared catalogue listens on. Empty picks a free one.
 settings-opds-port = Port du flux
+
+# Settings row: whether leaving the app while an episode plays opens the system's floating window. The engine's label, and the Android row's. Sentence case, as Android writes it.
+settings-label-picture-in-picture-on-leave = Picture-in-picture en quittant l'app
 
 # Label of the address field in the Add a server sheet.
 book-server-address = Adresse

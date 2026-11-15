@@ -123,3 +123,5 @@ tv-discussion-likes = { $count ->
 tv-discussion-select-spoiler = Välj för att visa spoilern
 updates-unknown-sources-path = Inställningar › Appar › Säkerhet och begränsningar › Okända källor
 tv-remote-default-name = { -app-name } TV
+player-stats-show-live = Visa livestatistik
+player-stats-hide-live = Dölj livestatistik

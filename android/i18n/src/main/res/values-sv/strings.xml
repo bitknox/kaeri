@@ -988,6 +988,8 @@
     <string name="tv_discussion_select_spoiler">Välj för att visa spoilern</string>
     <string name="updates_unknown_sources_path">Inställningar › Appar › Säkerhet och begränsningar › Okända källor</string>
     <string name="tv_remote_default_name">Kaeri TV</string>
+    <string name="player_stats_show_live">Visa livestatistik</string>
+    <string name="player_stats_hide_live">Dölj livestatistik</string>
     <string name="episode_short_dubbed">E%1$d · Dubbat</string>
     <string name="episode_long_dubbed">Avsnitt %1$d · Dubbat</string>
     <plurals name="downloads_live_paused">
@@ -1235,6 +1237,8 @@
     <string name="engine_down_title">Kaeri har stannat</string>
     <string name="engine_down_stopped">Inget nytt laddas förrän den startar igen. Försök igen, eller avsluta och öppna appen en gång till.</string>
     <string name="engine_down_quit">Avsluta</string>
+    <string name="settings_picture_in_picture_system_off">Av i Android-inställningarna</string>
+    <string name="settings_trailers_note_android">Trailrar spelas utan ljud från YouTube, som ser din IP-adress. De spelas inte med Databesparing eller Batterisparläge på, eller med animationer borttagna.</string>
     <string name="about_title">Om</string>
     <string name="about_title_app">Om Kaeri</string>
     <string name="about_version">Version %1$s</string>
@@ -3498,6 +3502,7 @@
     <string name="settings_opds_feed">Dela i det här nätverket</string>
     <string name="settings_opds_password">Flödeslösenord</string>
     <string name="settings_opds_port">Flödesport</string>
+    <string name="settings_label_picture_in_picture_on_leave">Bild-i-bild när du lämnar appen</string>
     <string name="book_server_address">Adress</string>
     <string name="book_server_address_hint">En adress, eller hela OPDS-länken från Kavita.</string>
     <string name="book_server_kavita_key">Det här är en OPDS-länk från Kavita. Nyckeln loggar in dig, så inget lösenord behövs.</string>

@@ -1207,9 +1207,12 @@ fn copy(update: &Event) -> Event {
         Event::Seeding(rows) => Event::Seeding(rows.clone()),
         Event::DeviceCode(prompt) => Event::DeviceCode(prompt.clone()),
         Event::LastAired(rows) => Event::LastAired(rows.clone()),
-        Event::DiscussionFound { media, episode, comments } => {
-            Event::DiscussionFound { media: *media, episode: *episode, comments: *comments }
-        }
+        Event::DiscussionFound { media, episode, comments, url } => Event::DiscussionFound {
+            media: *media,
+            episode: *episode,
+            comments: *comments,
+            url: url.clone(),
+        },
         Event::Discussion(view) => Event::Discussion(view.clone()),
         Event::Stores(rows) => Event::Stores(rows.clone()),
         Event::Profiles(view) => Event::Profiles(view.clone()),

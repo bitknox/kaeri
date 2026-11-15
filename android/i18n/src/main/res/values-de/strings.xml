@@ -988,6 +988,8 @@
     <string name="tv_discussion_select_spoiler">Auswählen zum Anzeigen des Spoilers</string>
     <string name="updates_unknown_sources_path">Einstellungen › Apps › Sicherheit &amp; Einschränkungen › unbekannte Quellen</string>
     <string name="tv_remote_default_name">Kaeri TV</string>
+    <string name="player_stats_show_live">Live-Statistiken zeigen</string>
+    <string name="player_stats_hide_live">Live-Statistiken ausblenden</string>
     <string name="episode_short_dubbed">E%1$d · Synchronisiert</string>
     <string name="episode_long_dubbed">Episode %1$d · Synchronisiert</string>
     <plurals name="downloads_live_paused">
@@ -1235,6 +1237,8 @@
     <string name="engine_down_title">Kaeri wurde beendet</string>
     <string name="engine_down_stopped">Bis es wieder läuft, lädt nichts Neues. Versuche es erneut oder beende die App und öffne sie noch einmal.</string>
     <string name="engine_down_quit">Beenden</string>
+    <string name="settings_picture_in_picture_system_off">In den Android-Einstellungen aus</string>
+    <string name="settings_trailers_note_android">Trailer laufen stumm von YouTube, das deine IP-Adresse sieht. Mit Datensparmodus, Energiesparmodus oder entfernten Animationen laufen sie nicht.</string>
     <string name="about_title">Über</string>
     <string name="about_title_app">Über Kaeri</string>
     <string name="about_version">Version %1$s</string>
@@ -3498,6 +3502,7 @@
     <string name="settings_opds_feed">Im Netzwerk teilen</string>
     <string name="settings_opds_password">Feed-Passwort</string>
     <string name="settings_opds_port">Feed-Port</string>
+    <string name="settings_label_picture_in_picture_on_leave">Bild-im-Bild beim Verlassen der App</string>
     <string name="book_server_address">Adresse</string>
     <string name="book_server_address_hint">Eine Adresse oder der vollständige OPDS-Link von Kavita.</string>
     <string name="book_server_kavita_key">Das ist ein OPDS-Link von Kavita. Sein Schlüssel meldet dich an, ein Passwort ist also nicht nötig.</string>

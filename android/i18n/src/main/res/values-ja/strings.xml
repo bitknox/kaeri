@@ -940,6 +940,8 @@
     <string name="tv_discussion_select_spoiler">決定でネタバレを表示</string>
     <string name="updates_unknown_sources_path">設定 › アプリ › セキュリティと制限 › 提供元不明のアプリ</string>
     <string name="tv_remote_default_name">Kaeri TV</string>
+    <string name="player_stats_show_live">ライブ統計を表示</string>
+    <string name="player_stats_hide_live">ライブ統計を隠す</string>
     <string name="episode_short_dubbed">E%1$d · 吹替版</string>
     <string name="episode_long_dubbed">エピソード %1$d · 吹替版</string>
     <plurals name="downloads_live_paused">
@@ -1173,6 +1175,8 @@
     <string name="engine_down_title">Kaeriが停止しました</string>
     <string name="engine_down_stopped">再び動き出すまで、新しい内容は読み込まれません。もう一度試すか、アプリを終了してから開き直してください。</string>
     <string name="engine_down_quit">終了</string>
+    <string name="settings_picture_in_picture_system_off">Android の設定でオフ</string>
+    <string name="settings_trailers_note_android">予告編は YouTube からミュートで再生され、YouTube には IP アドレスが見えます。データセーバーやバッテリー セーバーがオンのとき、アニメーションを削除しているときは再生されません。</string>
     <string name="about_title">概要</string>
     <string name="about_title_app">Kaeriについて</string>
     <string name="about_version">バージョン %1$s</string>
@@ -3369,6 +3373,7 @@
     <string name="settings_opds_feed">このネットワークで共有</string>
     <string name="settings_opds_password">フィードのパスワード</string>
     <string name="settings_opds_port">フィードのポート</string>
+    <string name="settings_label_picture_in_picture_on_leave">アプリを離れるときにピクチャー イン ピクチャー</string>
     <string name="book_server_address">アドレス</string>
     <string name="book_server_address_hint">アドレス、またはKavitaのOPDSリンク全体を入力します。</string>
     <string name="book_server_kavita_key">これはKavitaのOPDSリンクです。キーでサインインするため、パスワードは不要です。</string>

@@ -200,6 +200,7 @@ impl App {
             // The native apps' own rows, which this screen does not draw.
             S::UpNextCountdown
             | S::SpoilerProtection
+            | S::PictureInPictureOnLeave
             | S::DownloadQuality
             | S::KeepNextEpisodes
             | S::DownloadsOnCellular
@@ -346,6 +347,7 @@ fn label_text(key: SettingKey) -> String {
         S::SourceOrder => t::settings_label_source_order(),
         S::UpNextCountdown => t::settings_label_up_next_countdown(),
         S::SpoilerProtection => t::settings_label_spoiler_protection(),
+        S::PictureInPictureOnLeave => t::settings_label_picture_in_picture_on_leave(),
         S::DownloadQuality => t::settings_label_download_quality(),
         S::KeepNextEpisodes => t::settings_label_keep_next_episodes(),
         S::DownloadsOnCellular => t::settings_label_downloads_on_cellular(),

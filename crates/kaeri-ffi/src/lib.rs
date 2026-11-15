@@ -1894,7 +1894,12 @@ mod tests {
             signed_in: true,
             load_images: false,
         }));
-        crosses_intact(Event::DiscussionFound { media, episode: 3, comments: 140 });
+        crosses_intact(Event::DiscussionFound {
+            media,
+            episode: 3,
+            comments: 140,
+            url: "https://anilist.co/forum/thread/60000".into(),
+        });
         let commands = [
             Command::OpenDiscussion { media, episode: 3 },
             Command::MoreComments,

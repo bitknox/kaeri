@@ -221,3 +221,4 @@ settings-subs-reset = Untertitelstil zurücksetzen
 settings-opds-feed = Im Netzwerk teilen
 settings-opds-password = Feed-Passwort
 settings-opds-port = Feed-Port
+settings-label-picture-in-picture-on-leave = Bild-im-Bild beim Verlassen der App

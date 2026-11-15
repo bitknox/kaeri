@@ -8660,6 +8660,9 @@
   <data name="SettingsOpdsPort" xml:space="preserve">
     <value>Cổng của feed</value>
   </data>
+  <data name="SettingsLabelPictureInPictureOnLeave" xml:space="preserve">
+    <value>Hình trong hình khi rời ứng dụng</value>
+  </data>
   <data name="BookServerAddress" xml:space="preserve">
     <value>Địa chỉ</value>
   </data>

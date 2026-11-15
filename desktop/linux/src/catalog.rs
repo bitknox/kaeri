@@ -74,6 +74,7 @@ pub fn label(key: SettingKey) -> String {
         K::SourceOrder => t::settings_label_source_order(),
         K::UpNextCountdown => t::settings_label_up_next_countdown(),
         K::SpoilerProtection => t::settings_label_spoiler_protection(),
+        K::PictureInPictureOnLeave => t::settings_label_picture_in_picture_on_leave(),
         K::DownloadQuality => t::settings_label_download_quality(),
         K::KeepNextEpisodes => t::settings_label_keep_next_episodes(),
         K::DownloadsOnCellular => t::settings_label_downloads_on_cellular(),
@@ -181,6 +182,7 @@ pub fn is_switch(key: SettingKey) -> bool {
             | K::UpdateCheck
             | K::UpdateBeta
             | K::SpoilerProtection
+            | K::PictureInPictureOnLeave
             | K::DownloadsOnCellular
             | K::TorrentsOnCellular
             | K::ChapterDownloadsOnCellular

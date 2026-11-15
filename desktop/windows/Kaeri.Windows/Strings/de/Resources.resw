@@ -8996,6 +8996,9 @@
   <data name="SettingsOpdsPort" xml:space="preserve">
     <value>Feed-Port</value>
   </data>
+  <data name="SettingsLabelPictureInPictureOnLeave" xml:space="preserve">
+    <value>Bild-im-Bild beim Verlassen der App</value>
+  </data>
   <data name="BookServerAddress" xml:space="preserve">
     <value>Adresse</value>
   </data>

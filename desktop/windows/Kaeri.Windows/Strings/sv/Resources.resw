@@ -8996,6 +8996,9 @@
   <data name="SettingsOpdsPort" xml:space="preserve">
     <value>Flödesport</value>
   </data>
+  <data name="SettingsLabelPictureInPictureOnLeave" xml:space="preserve">
+    <value>Bild-i-bild när du lämnar appen</value>
+  </data>
   <data name="BookServerAddress" xml:space="preserve">
     <value>Adress</value>
   </data>

@@ -9332,6 +9332,9 @@
   <data name="SettingsOpdsPort" xml:space="preserve">
     <value>Puerto del catálogo</value>
   </data>
+  <data name="SettingsLabelPictureInPictureOnLeave" xml:space="preserve">
+    <value>Imagen en imagen al salir de la app</value>
+  </data>
   <data name="BookServerAddress" xml:space="preserve">
     <value>Dirección</value>
   </data>

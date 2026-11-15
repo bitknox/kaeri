@@ -724,3 +724,7 @@ settings-opds-password = Feed password
 
 # Row: the port the shared catalogue listens on. Empty picks a free one.
 settings-opds-port = Feed port
+
+# Settings row: whether leaving the app while an episode plays opens the system's floating window. The engine's label, and the Android row's. Sentence case, as Android writes it.
+# @max 56
+settings-label-picture-in-picture-on-leave = Picture in picture when leaving the app

@@ -121,3 +121,6 @@ settings-trailers-row = Spela upp trailers
 settings-trailers-note-apple = Trailers spelas upp utan ljud från YouTube, som ser din IP-adress. De spelas inte upp i läget Lite data, med Minska rörelse på eller i strömsparläge.
 language-restart = Starta om
 language-next-open-note = { -app-name } använder det nya språket när appen öppnas igen.
+settings-picture-in-picture-on-leave-apple = Bild-i-bild när du lämnar appen
+settings-picture-in-picture-on-leave-mac = Startar när fönstret minimeras eller { -app-name } göms.
+settings-picture-in-picture-on-leave-ios = Kräver också Starta BiB automatiskt i Inställningar > Allmänt > Bild-i-bild.

@@ -1171,6 +1171,30 @@ mod tests {
     }
 
     #[test]
+    fn open_in_browser_on_an_episode_with_a_found_thread_opens_the_thread() {
+        let mut a = app_at_episodes();
+        a.set_episode_cursor(2);
+        let title = Some(Command::OpenExternal { url: "https://anilist.co/anime/1".into() });
+        assert_eq!(a.handle(Action::OpenInBrowser, 5), title, "no thread known yet");
+
+        a.apply(Event::DiscussionFound {
+            media: AnilistId::new(1),
+            episode: 3,
+            comments: 214,
+            url: "https://anilist.co/forum/thread/9003".into(),
+        });
+        assert_eq!(
+            a.handle(Action::OpenInBrowser, 5),
+            Some(Command::OpenExternal { url: "https://anilist.co/forum/thread/9003".into() })
+        );
+
+        a.set_episode_cursor(3);
+        assert_eq!(a.handle(Action::OpenInBrowser, 5), title, "the next episode has none");
+        a.handle(Action::Back, 5);
+        assert_eq!(a.handle(Action::OpenInBrowser, 5), title, "the title page opens the title");
+    }
+
+    #[test]
     fn the_filter_keeps_the_same_episode_under_the_cursor() {
         let mut a = app_at_episodes();
         for n in ["1", "2", "3"] {

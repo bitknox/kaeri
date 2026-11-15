@@ -624,6 +624,10 @@ pub enum Event {
         episode: u32,
         /// Every comment in the thread, replies included.
         comments: u32,
+        /// The thread on AniList's site, for a front end that hands it to the browser rather
+        /// than opening it: the terminal.
+        #[cfg_attr(feature = "ffi", uniffi(default))]
+        url: String,
     },
     /// The discussion [`Command::OpenDiscussion`] opened, whole, on every change until
     /// [`Command::CloseDiscussion`].

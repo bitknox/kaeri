@@ -162,14 +162,27 @@ impl App {
         }
     }
 
-    /// The title here, on AniList in a browser.
+    /// The title here, on AniList in a browser. On the Episodes screen, an episode whose
+    /// discussion the engine found opens its thread instead.
     pub(super) fn open_in_browser(&mut self) -> Option<Command> {
+        if let Some(url) = self.selected_thread() {
+            return Some(Command::OpenExternal { url });
+        }
         let Some(id) = self.target().map(|e| e.id) else {
             self.push_toast(info(t::title_nothing_selected()));
             return None;
         };
         let url = format!("https://anilist.co/anime/{}", id.get()); // i18n-skip
         Some(Command::OpenExternal { url })
+    }
+
+    /// The discussion thread of the episode selected on the Episodes screen, when the engine
+    /// found one.
+    fn selected_thread(&self) -> Option<String> {
+        let StageView::Episodes(id) = self.nav.current() else { return None };
+        let row = self.episodes.get(self.cursors.episodes.selected)?;
+        let episode = row.number.parse::<u32>().ok()?;
+        self.threads.get(&(*id, episode)).cloned()
     }
 
     /// The source picker for the title on screen, opened on the choice in force.

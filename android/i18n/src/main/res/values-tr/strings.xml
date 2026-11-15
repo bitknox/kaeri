@@ -988,6 +988,8 @@
     <string name="tv_discussion_select_spoiler">Spoiler\'ı göstermek için Seç</string>
     <string name="updates_unknown_sources_path">Ayarlar › Uygulamalar › Güvenlik ve kısıtlamalar › Bilinmeyen kaynaklar</string>
     <string name="tv_remote_default_name">Kaeri TV</string>
+    <string name="player_stats_show_live">Canlı istatistikleri göster</string>
+    <string name="player_stats_hide_live">Canlı istatistikleri gizle</string>
     <string name="episode_short_dubbed">E%1$d · Dublajlı</string>
     <string name="episode_long_dubbed">Bölüm %1$d · Dublajlı</string>
     <plurals name="downloads_live_paused">
@@ -1235,6 +1237,8 @@
     <string name="engine_down_title">Kaeri durdu</string>
     <string name="engine_down_stopped">Yeniden başlayana kadar yeni bir şey yüklenmez. Yeniden deneyin ya da uygulamayı kapatıp bir kez daha açın.</string>
     <string name="engine_down_quit">Kapat</string>
+    <string name="settings_picture_in_picture_system_off">Android ayarlarında kapalı</string>
+    <string name="settings_trailers_note_android">Fragmanlar YouTube\'dan sessiz oynatılır ve YouTube IP adresini görür. Veri Tasarrufu veya Pil Tasarrufu açıkken ya da animasyonlar kaldırılmışken oynatılmaz.</string>
     <string name="about_title">Hakkında</string>
     <string name="about_title_app">Kaeri hakkında</string>
     <string name="about_version">Versiyon %1$s</string>
@@ -3498,6 +3502,7 @@
     <string name="settings_opds_feed">Bu ağda paylaş</string>
     <string name="settings_opds_password">Akış parolası</string>
     <string name="settings_opds_port">Akış portu</string>
+    <string name="settings_label_picture_in_picture_on_leave">Uygulamadan çıkarken pencere içinde pencere</string>
     <string name="book_server_address">Adres</string>
     <string name="book_server_address_hint">Bir adres veya Kavita’daki OPDS bağlantısının tamamı.</string>
     <string name="book_server_kavita_key">Bu bir Kavita OPDS bağlantısı. Anahtarı oturum açmayı sağlar, bu yüzden parola gerekmez.</string>

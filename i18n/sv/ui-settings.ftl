@@ -221,3 +221,4 @@ settings-subs-reset = Återställ undertextstil
 settings-opds-feed = Dela i det här nätverket
 settings-opds-password = Flödeslösenord
 settings-opds-port = Flödesport
+settings-label-picture-in-picture-on-leave = Bild-i-bild när du lämnar appen

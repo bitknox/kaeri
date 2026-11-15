@@ -4391,7 +4391,7 @@ settings-label-calendar-mine = カレンダーにあなたのリストの作品�
 settings-note-titles = AniListの選択は、AniListアカウントの設定に従います。サインアウト中は英語になります。
 
 # Note under the trailers row. The terminal never plays trailers by itself; the setting is shared with the apps.
-settings-note-trailers = デスクトップアプリでは、ホバープレビューで予告編をミュートで再生します。ターミナルでは設定を保持しますが、予告編は再生しません。
+settings-note-trailers = アプリでは作品ページとホバー時のプレビューで予告編をミュート再生します。ターミナルは設定を保持しますが、再生はしません。
 
 # Note under the subtitles row.
 settings-note-subtitles = Enterキーを押すと言語コードを入力できます。選択肢が多いため、順に切り替えることはできません。
@@ -11474,6 +11474,9 @@ settings-opds-password = フィードのパスワード
 
 # Row: the port the shared catalogue listens on. Empty picks a free one.
 settings-opds-port = フィードのポート
+
+# Settings row: whether leaving the app while an episode plays opens the system's floating window. The engine's label, and the Android row's. Sentence case, as Android writes it.
+settings-label-picture-in-picture-on-leave = アプリを離れるときにピクチャー イン ピクチャー
 
 # Label of the address field in the Add a server sheet.
 book-server-address = アドレス

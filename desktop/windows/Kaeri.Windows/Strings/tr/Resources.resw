@@ -8996,6 +8996,9 @@
   <data name="SettingsOpdsPort" xml:space="preserve">
     <value>Akış portu</value>
   </data>
+  <data name="SettingsLabelPictureInPictureOnLeave" xml:space="preserve">
+    <value>Uygulamadan çıkarken pencere içinde pencere</value>
+  </data>
   <data name="BookServerAddress" xml:space="preserve">
     <value>Adres</value>
   </data>

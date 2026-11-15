@@ -118,3 +118,5 @@ tv-discussion-likes = { $count ->
 tv-discussion-select-spoiler = 決定でネタバレを表示
 updates-unknown-sources-path = 設定 › アプリ › セキュリティと制限 › 提供元不明のアプリ
 tv-remote-default-name = { -app-name } TV
+player-stats-show-live = ライブ統計を表示
+player-stats-hide-live = ライブ統計を隠す

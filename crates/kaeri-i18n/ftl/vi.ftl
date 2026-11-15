@@ -4391,7 +4391,7 @@ settings-label-calendar-mine = Lịch chỉ hiện danh sách của bạn
 settings-note-titles = Theo AniList làm theo tài khoản AniList của bạn; khi chưa đăng nhập thì dùng tiếng Anh.
 
 # Note under the trailers row. The terminal never plays trailers by itself; the setting is shared with the apps.
-settings-note-trailers = Ứng dụng trên máy tính phát trailer tắt tiếng khi xem trước bằng cách di chuột. Terminal giữ thiết lập này nhưng không tự phát trailer nào.
+settings-note-trailers = Các ứng dụng phát trailer không tiếng trên trang tựa phim và trong bản xem trước khi rê chuột. Terminal giữ cài đặt này và không phát gì.
 
 # Note under the subtitles row.
 settings-note-subtitles = Nhấn Enter để nhập mã ngôn ngữ. Có quá nhiều giá trị để chọn lần lượt.
@@ -11474,6 +11474,9 @@ settings-opds-password = Mật khẩu của feed
 
 # Row: the port the shared catalogue listens on. Empty picks a free one.
 settings-opds-port = Cổng của feed
+
+# Settings row: whether leaving the app while an episode plays opens the system's floating window. The engine's label, and the Android row's. Sentence case, as Android writes it.
+settings-label-picture-in-picture-on-leave = Hình trong hình khi rời ứng dụng
 
 # Label of the address field in the Add a server sheet.
 book-server-address = Địa chỉ

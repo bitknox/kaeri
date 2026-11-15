@@ -3558,6 +3558,15 @@ public enum L {
     /// Note under the app language row on iPhone and iPad after a new language is picked. The app can't restart itself there, so the language changes once it has been closed and opened again.
     public static var languageNextOpenNote: String { string("language-next-open-note", fallback: "Kaeri uses the new language the next time it opens.") }
 
+    /// Settings row on the Mac, iPhone and iPad: whether leaving the app while an episode plays opens Picture in Picture. "Picture in Picture" in the system's own capitals.
+    public static var settingsPictureInPictureOnLeaveApple: String { string("settings-picture-in-picture-on-leave-apple", fallback: "Picture in Picture when leaving the app") }
+
+    /// Note under that row on the Mac: when the Mac counts as leaving.
+    public static var settingsPictureInPictureOnLeaveMac: String { string("settings-picture-in-picture-on-leave-mac", fallback: "Starts when the window is minimised or Kaeri is hidden.") }
+
+    /// Footnote under the iPhone and iPad group that holds that row: the system's own switch, which wins over the app's. Name the switch and the path as iOS names them in this language.
+    public static var settingsPictureInPictureOnLeaveIos: String { string("settings-picture-in-picture-on-leave-ios", fallback: "Also needs Start PiP Automatically in Settings > General > Picture in Picture.") }
+
     /// Mac menu bar item that opens Settings.
     public static var menuSettings: String { string("menu-settings", fallback: "Settings…") }
 
@@ -12096,6 +12105,9 @@ public enum L {
 
     /// Row: the port the shared catalogue listens on. Empty picks a free one.
     public static var settingsOpdsPort: String { string("settings-opds-port", fallback: "Feed port") }
+
+    /// Settings row: whether leaving the app while an episode plays opens the system's floating window. The engine's label, and the Android row's. Sentence case, as Android writes it.
+    public static var settingsLabelPictureInPictureOnLeave: String { string("settings-label-picture-in-picture-on-leave", fallback: "Picture in picture when leaving the app") }
 
     /// Label of the address field in the Add a server sheet.
     public static var bookServerAddress: String { string("book-server-address", fallback: "Address") }

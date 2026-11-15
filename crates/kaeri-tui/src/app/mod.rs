@@ -236,6 +236,10 @@ pub struct App {
     /// Not only on the rows, which every reload rebuilds: Home reloaded, and `a` opened at the
     /// top of the picker rather than on the status just given.
     statuses_set: std::collections::HashMap<AnilistId, LibrarySegment>,
+    /// Each episode's discussion thread on AniList, by title and episode number, as the engine
+    /// found them once the episode counted as watched. Open in browser on that episode's row
+    /// opens its thread; the terminal neither reads nor posts in it.
+    pub(crate) threads: std::collections::HashMap<(AnilistId, u32), String>,
     /// The help overlay's page. Its own field because Help opens on top of a picker, and paging
     /// through it must not move the picker's selection underneath.
     pub help_page: usize,
@@ -442,6 +446,7 @@ impl App {
             sync: Vec::new(),
             conflicts: Vec::new(),
             statuses_set: std::collections::HashMap::new(),
+            threads: std::collections::HashMap::new(),
             help_page: 0,
             help_pages: 1,
             pulse: 0,
@@ -622,8 +627,14 @@ impl App {
             // A native app's notifications and widgets, which the terminal never asks for: what
             // aired while it was closed is the digest's to say, at launch.
             Event::NewEpisodes(_) | Event::WidgetSnapshot(_) | Event::UpcomingNotices(_) => {}
-            // The native apps' discussion sheet; the terminal opens a thread in the browser.
-            Event::DiscussionFound { .. } | Event::Discussion(_) => {}
+            // The terminal reads no thread: Open in browser on the episode's row opens it.
+            Event::DiscussionFound { media, episode, url, .. } => {
+                if !url.is_empty() {
+                    self.threads.insert((media, episode), url);
+                }
+            }
+            // The native apps' discussion sheet.
+            Event::Discussion(_) => {}
             // What the update check found, for an app's Settings: the terminal's own notice
             // comes as a toast, naming `kaeri --update`.
             Event::Update(_) => {}

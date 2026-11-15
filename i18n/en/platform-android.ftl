@@ -29,3 +29,13 @@ engine-down-stopped = Nothing new will load until it starts again. Try again, or
 # @only android
 # @max 16
 engine-down-quit = Quit
+
+# Words in place of the Picture in picture when leaving the app switch, when Android's own per-app Picture in picture permission is off. An Open settings button sits beside it.
+# @only android
+# @max 32
+settings-picture-in-picture-system-off = Off in Android settings
+
+# Note under the Play trailers setting on Android: what the trailers are and when they do not play.
+# @only android
+# @max 240
+settings-trailers-note-android = Trailers play muted from YouTube, which sees your IP address. They don't play with Data Saver or Battery Saver on, or with animations removed.

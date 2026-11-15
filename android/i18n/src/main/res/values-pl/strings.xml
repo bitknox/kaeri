@@ -1084,6 +1084,8 @@
     <string name="tv_discussion_select_spoiler">Wybierz, aby pokazać spojler</string>
     <string name="updates_unknown_sources_path">Ustawienia › Aplikacje › Zabezpieczenia i ograniczenia › Nieznane źródła</string>
     <string name="tv_remote_default_name">Telewizor Kaeri</string>
+    <string name="player_stats_show_live">Pokaż statystyki na żywo</string>
+    <string name="player_stats_hide_live">Ukryj statystyki na żywo</string>
     <string name="episode_short_dubbed">Odc. %1$d · Z dubbingiem</string>
     <string name="episode_long_dubbed">Odcinek %1$d · Z dubbingiem</string>
     <plurals name="downloads_live_paused">
@@ -1359,6 +1361,8 @@
     <string name="engine_down_title">Kaeri zatrzymany</string>
     <string name="engine_down_stopped">Nic nowego się nie wczyta, dopóki znów nie ruszy. Spróbuj ponownie albo zamknij i otwórz aplikację jeszcze raz.</string>
     <string name="engine_down_quit">Zamknij</string>
+    <string name="settings_picture_in_picture_system_off">Wyłączone w Androidzie</string>
+    <string name="settings_trailers_note_android">Zwiastuny odtwarzają się bez dźwięku z YouTube, który widzi Twój adres IP. Nie odtwarzają się przy włączonym Oszczędzaniu danych lub Oszczędzaniu baterii ani przy usuniętych animacjach.</string>
     <string name="about_title">O aplikacji</string>
     <string name="about_title_app">O Kaeri</string>
     <string name="about_version">Wersja %1$s</string>
@@ -3756,6 +3760,7 @@
     <string name="settings_opds_feed">Udostępniaj w tej sieci</string>
     <string name="settings_opds_password">Hasło kanału</string>
     <string name="settings_opds_port">Port kanału</string>
+    <string name="settings_label_picture_in_picture_on_leave">Obraz w obrazie po wyjściu z aplikacji</string>
     <string name="book_server_address">Adres</string>
     <string name="book_server_address_hint">Adres albo cały link OPDS z Kavita.</string>
     <string name="book_server_kavita_key">To link OPDS z Kavita. Jego klucz loguje, więc hasło nie jest potrzebne.</string>

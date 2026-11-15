@@ -116,3 +116,6 @@ settings-trailers-row = Phát trailer
 settings-trailers-note-apple = Trailer phát không tiếng từ YouTube, nơi sẽ thấy địa chỉ IP của bạn. Trailer không phát trong Chế độ dữ liệu thấp, khi bật Giảm chuyển động hoặc ở Chế độ tiết kiệm pin.
 language-restart = Khởi động lại
 language-next-open-note = { -app-name } sẽ dùng ngôn ngữ mới khi bạn mở lại ứng dụng.
+settings-picture-in-picture-on-leave-apple = Hình trong hình khi rời ứng dụng
+settings-picture-in-picture-on-leave-mac = Bắt đầu khi cửa sổ được thu nhỏ hoặc { -app-name } bị ẩn.
+settings-picture-in-picture-on-leave-ios = Cũng cần bật Tự động bắt đầu PiP trong Cài đặt > Cài đặt chung > Hình trong hình.

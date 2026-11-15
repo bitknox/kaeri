@@ -1036,6 +1036,8 @@
     <string name="tv_discussion_select_spoiler">Sélectionnez pour afficher le spoiler</string>
     <string name="updates_unknown_sources_path">Paramètres › Applications › Sécurité et restrictions › Sources inconnues</string>
     <string name="tv_remote_default_name">TV Kaeri</string>
+    <string name="player_stats_show_live">Afficher les stats en direct</string>
+    <string name="player_stats_hide_live">Masquer les stats en direct</string>
     <string name="episode_short_dubbed">E%1$d · Doublé</string>
     <string name="episode_long_dubbed">Épisode %1$d · Doublé</string>
     <plurals name="downloads_live_paused">
@@ -1297,6 +1299,8 @@
     <string name="engine_down_title">Kaeri ne fonctionne plus</string>
     <string name="engine_down_stopped">Rien de nouveau ne se charge avant son redémarrage. Réessayez, ou quittez l\'application et rouvrez-la.</string>
     <string name="engine_down_quit">Quitter</string>
+    <string name="settings_picture_in_picture_system_off">Désactivé dans Android</string>
+    <string name="settings_trailers_note_android">Les bandes-annonces sont lues sans le son depuis YouTube, qui voit votre adresse IP. Elles ne sont pas lues avec l\'Économiseur de données ou l\'Économiseur de batterie activé, ni avec les animations supprimées.</string>
     <string name="about_title">À propos</string>
     <string name="about_title_app">À propos de Kaeri</string>
     <string name="about_version">Version %1$s</string>
@@ -3627,6 +3631,7 @@
     <string name="settings_opds_feed">Partager sur ce réseau</string>
     <string name="settings_opds_password">Mot de passe du flux</string>
     <string name="settings_opds_port">Port du flux</string>
+    <string name="settings_label_picture_in_picture_on_leave">Picture-in-picture en quittant l\'app</string>
     <string name="book_server_address">Adresse</string>
     <string name="book_server_address_hint">Une adresse, ou le lien OPDS complet de Kavita.</string>
     <string name="book_server_kavita_key">Ceci est un lien OPDS de Kavita. Sa clé vous connecte, aucun mot de passe n’est donc nécessaire.</string>

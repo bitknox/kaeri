@@ -94,6 +94,10 @@ pub enum SettingKey {
     UpNextCountdown,
     /// Blur the stills of unwatched episodes after the next one.
     SpoilerProtection,
+    /// Open the system's floating window when the person leaves the app while an episode
+    /// plays. On by default, this device's own. A row on the Mac, iPhone, iPad and Android
+    /// phone only: the terminal, the TV, Windows and Linux have no floating window.
+    PictureInPictureOnLeave,
     /// Which version of an episode a download takes: standard or higher.
     DownloadQuality,
     /// How many of a show's next episodes downloads keep, `0` for none.
@@ -271,9 +275,10 @@ impl SettingKey {
     /// The native apps' own rows, which the terminal's Settings screen does not show: a front
     /// end finds the rows both show among [`Self::ROWS`]. In no order of their own, since each
     /// app lays them out on its own panes; grouped by [`Self::category`] all the same.
-    pub const NATIVE_ROWS: [Self; 32] = [
+    pub const NATIVE_ROWS: [Self; 33] = [
         Self::UpNextCountdown,
         Self::SpoilerProtection,
+        Self::PictureInPictureOnLeave,
         Self::DownloadQuality,
         Self::KeepNextEpisodes,
         Self::DownloadsOnCellular,
@@ -373,6 +378,7 @@ impl SettingKey {
             Self::SourceOrder => (&["providers"], "order"),
             Self::UpNextCountdown => (&["playback"], "up_next_countdown"),
             Self::SpoilerProtection => (&["playback"], "spoiler_protection"),
+            Self::PictureInPictureOnLeave => (&["playback"], "picture_in_picture"),
             Self::DownloadQuality => (&["downloads"], "quality"),
             Self::KeepNextEpisodes => (&["downloads"], "keep_next"),
             Self::DownloadsOnCellular => (&["downloads"], "on_cellular"),
@@ -512,6 +518,7 @@ impl SettingKey {
             Self::SourceOrder => to.providers.order.clone_from(&from.providers.order),
             Self::UpNextCountdown => dst.up_next_countdown = src.up_next_countdown,
             Self::SpoilerProtection => dst.spoiler_protection = src.spoiler_protection,
+            Self::PictureInPictureOnLeave => dst.picture_in_picture = src.picture_in_picture,
             Self::DownloadQuality => to.downloads.quality = from.downloads.quality,
             Self::KeepNextEpisodes => to.downloads.keep_next = from.downloads.keep_next,
             Self::DownloadsOnCellular => to.downloads.on_cellular = from.downloads.on_cellular,
@@ -607,7 +614,8 @@ impl SettingKey {
             | Self::StyledSubtitles
             | Self::FollowSystemCaptions
             | Self::UpNextCountdown
-            | Self::SpoilerProtection => "playback",
+            | Self::SpoilerProtection
+            | Self::PictureInPictureOnLeave => "playback",
             Self::DownloadDir
             | Self::MergeSubtitles
             | Self::KeepSeeding
@@ -700,6 +708,7 @@ impl SettingKey {
             Self::SourceOrder => "source order",
             Self::UpNextCountdown => "up next countdown",
             Self::SpoilerProtection => "spoiler protection",
+            Self::PictureInPictureOnLeave => "picture in picture when leaving the app",
             // Not "quality", which is playback's: the toast that says it was saved would not
             // say which.
             Self::DownloadQuality => "download quality",
@@ -1066,6 +1075,7 @@ pub fn step(
             V::Int(i64::from(step_through(&LADDER, playback.up_next_countdown, delta)))
         }
         SettingKey::SpoilerProtection => V::Bool(!playback.spoiler_protection),
+        SettingKey::PictureInPictureOnLeave => V::Bool(!playback.picture_in_picture),
         SettingKey::DownloadQuality => V::Str(
             match effective.downloads.quality {
                 DownloadQuality::Standard => "higher",
@@ -1301,6 +1311,7 @@ pub fn put(config: &mut Config, key: SettingKey, value: &SettingValue) -> bool {
             playback.up_next_countdown = seconds;
         }
         (SettingKey::SpoilerProtection, V::Bool(on)) => playback.spoiler_protection = *on,
+        (SettingKey::PictureInPictureOnLeave, V::Bool(on)) => playback.picture_in_picture = *on,
         (SettingKey::DownloadQuality, V::Str(name)) => {
             config.downloads.quality = match name.as_str() {
                 "standard" => DownloadQuality::Standard,
@@ -1541,6 +1552,7 @@ pub(crate) fn value(effective: &Config, saved: &Config, key: SettingKey) -> Stri
             seconds => format!("{seconds} s"),
         },
         SettingKey::SpoilerProtection => on_off(playback.spoiler_protection),
+        SettingKey::PictureInPictureOnLeave => on_off(playback.picture_in_picture),
         SettingKey::DownloadQuality => match effective.downloads.quality {
             DownloadQuality::Standard => "standard",
             DownloadQuality::Higher => "higher",
@@ -1681,6 +1693,7 @@ fn two_state(effective: &Config, saved: &Config, key: SettingKey) -> Option<bool
         S::UpdateCheck => c.updates.check,
         S::UpdateBeta => c.updates.beta,
         S::SpoilerProtection => c.playback.spoiler_protection,
+        S::PictureInPictureOnLeave => c.playback.picture_in_picture,
         S::DownloadQuality => {
             c.downloads.quality == kaeri_core::config::DownloadQuality::Higher
         }
@@ -1954,6 +1967,30 @@ mod tests {
     }
 
     #[test]
+    fn picture_in_picture_on_leave_is_a_playback_switch_kept_on_this_device() {
+        let default = Config::default();
+        let key = SettingKey::PictureInPictureOnLeave;
+        assert_eq!(value(&default, &default, key), "on");
+        assert_eq!(SettingKey::at(&["playback"], "picture_in_picture"), Some(key));
+        assert_eq!(key.category(), "playback");
+        assert!(!SettingKey::ROWS.contains(&key), "the terminal shows no row");
+        assert_eq!(step(&default, &default, key, 1), Some(SettingValue::Bool(false)));
+
+        let mut off = Config::default();
+        assert!(put(&mut off, key, &SettingValue::Bool(false)));
+        assert!(!off.playback.picture_in_picture);
+        assert_eq!(value(&off, &off, key), "off");
+        assert!(
+            !kaeri_core::shared_settings::is_shared(&["playback"], "picture_in_picture"),
+            "a device's own: it never follows the person to another device"
+        );
+
+        let mut copied = Config::default();
+        key.copy(&off, &mut copied);
+        assert!(!copied.playback.picture_in_picture);
+    }
+
+    #[test]
     fn trailers_step_from_always_to_wifi_only_to_off_under_the_titles_row() {
         let default = Config::default();
         let trailers = |config: &Config| value(config, config, SettingKey::Trailers);
@@ -2032,6 +2069,7 @@ mod tests {
             [
                 (SettingKey::UpNextCountdown, "10 s"),
                 (SettingKey::SpoilerProtection, "on"),
+                (SettingKey::PictureInPictureOnLeave, "on"),
                 (SettingKey::DownloadQuality, "standard"),
                 (SettingKey::KeepNextEpisodes, "off"),
                 (SettingKey::DownloadsOnCellular, "off"),

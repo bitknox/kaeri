@@ -704,6 +704,7 @@ pub(crate) fn watched(
                     media,
                     episode,
                     comments: thread.reply_count,
+                    url: thread.url,
                 });
             }
             Ok(None) => {}

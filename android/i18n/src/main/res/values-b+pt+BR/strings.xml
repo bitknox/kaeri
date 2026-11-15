@@ -1036,6 +1036,8 @@
     <string name="tv_discussion_select_spoiler">Selecione para mostrar o spoiler</string>
     <string name="updates_unknown_sources_path">Configurações › Apps › Segurança e restrições › Fontes desconhecidas</string>
     <string name="tv_remote_default_name">TV Kaeri</string>
+    <string name="player_stats_show_live">Mostrar estatísticas ao vivo</string>
+    <string name="player_stats_hide_live">Ocultar estatísticas ao vivo</string>
     <string name="episode_short_dubbed">E%1$d · Dublado</string>
     <string name="episode_long_dubbed">Episódio %1$d · Dublado</string>
     <plurals name="downloads_live_paused">
@@ -1297,6 +1299,8 @@
     <string name="engine_down_title">O Kaeri parou</string>
     <string name="engine_down_stopped">Nada novo vai carregar até ele voltar a funcionar. Tente de novo ou feche e abra o app mais uma vez.</string>
     <string name="engine_down_quit">Sair</string>
+    <string name="settings_picture_in_picture_system_off">Desativado no Android</string>
+    <string name="settings_trailers_note_android">Os trailers tocam sem som pelo YouTube, que vê seu endereço IP. Eles não tocam com a Economia de dados ou a Economia de bateria ativada, nem com as animações removidas.</string>
     <string name="about_title">Sobre</string>
     <string name="about_title_app">Sobre o Kaeri</string>
     <string name="about_version">Versão %1$s</string>
@@ -3627,6 +3631,7 @@
     <string name="settings_opds_feed">Compartilhar nesta rede</string>
     <string name="settings_opds_password">Senha do feed</string>
     <string name="settings_opds_port">Porta do feed</string>
+    <string name="settings_label_picture_in_picture_on_leave">Picture-in-picture ao sair do app</string>
     <string name="book_server_address">Endereço</string>
     <string name="book_server_address_hint">Um endereço, ou o link OPDS completo do Kavita.</string>
     <string name="book_server_kavita_key">Este é um link OPDS do Kavita. A chave dele faz seu login, então não precisa de senha.</string>
