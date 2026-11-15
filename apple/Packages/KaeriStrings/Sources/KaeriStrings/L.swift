@@ -2309,6 +2309,17 @@ public enum L {
         Self.format("downloads-continued-left", fallback: "%1$lld episodes left", count)
     }
 
+    /// Title of that window while only chapters download.
+    public static var downloadsContinuedChaptersTitle: String { string("downloads-continued-chapters-title", fallback: "Downloading chapters") }
+
+    /// Title of that window while episodes and chapters download together.
+    public static var downloadsContinuedBothTitle: String { string("downloads-continued-both-title", fallback: "Downloading episodes and chapters") }
+
+    /// Line in that window: how many chapters are still to finish. Beside the episodes' line when both download, as "2 episodes left · 3 chapters left".
+    public static func downloadsContinuedChaptersLeft(count: Int) -> String {
+        Self.format("downloads-continued-chapters-left", fallback: "%1$lld chapters left", count)
+    }
+
     /// Line on the title page and in a Continue preview: where else the show streams. The places are already joined, such as "Lantern Library and Hikari Library".
     public static func titleAlsoOn(places: String) -> String {
         Self.format("title-also-on", fallback: "Also on %1$@", places)

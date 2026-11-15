@@ -73,10 +73,10 @@ private final class SystemDownloadWindow: DownloadWindow {
         self.task = task
     }
 
-    func report(completed: Int64, total: Int64, subtitle: String) {
+    func report(completed: Int64, total: Int64, title: String, subtitle: String) {
         task.progress.totalUnitCount = total
         task.progress.completedUnitCount = completed
-        task.updateTitle(task.title, subtitle: subtitle)
+        task.updateTitle(title, subtitle: subtitle)
     }
 
     func end(success: Bool) {
