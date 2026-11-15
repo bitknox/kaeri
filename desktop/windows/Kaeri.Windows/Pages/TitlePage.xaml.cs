@@ -599,7 +599,7 @@ public sealed partial class TitlePage : Page, IPageKeys
             _ = Task.Delay(3500).ContinueWith(_ => DispatcherQueue.TryEnqueue(() => StageSynopsis(synopsisShot)));
         // --show=following-...: the people you follow, for the board's frames (StageFollowing).
         if (ctx.Options.Show is { } followingShot && followingShot.StartsWith("following-", StringComparison.Ordinal) && ctx.Options.Title == id)
-            _ = Task.Delay(3000).ContinueWith(_ => DispatcherQueue.TryEnqueue(() => StageFollowing(followingShot)));
+            _ = Task.Delay(followingShot == "following-early" ? 300 : 3000).ContinueWith(_ => DispatcherQueue.TryEnqueue(() => StageFollowing(followingShot)));
         // --show=source-menu: the More menu open, for a screenshot.
         if (ctx.Options.Show == "source-menu" && ctx.Options.Title == id)
             _ = Task.Delay(1500).ContinueWith(_ => DispatcherQueue.TryEnqueue(() => MoreButton.Flyout.ShowAt(MoreButton)));
@@ -698,17 +698,30 @@ public sealed partial class TitlePage : Page, IPageKeys
     }
 
     /// <summary>
-    /// following-section: the section in view. following-all: Show all pressed, then in view.
+    /// following-section: the section in view. following-early: the column's end in view from
+    /// the start, for the placeholders of a slow answer. following-all: Show all pressed, then in view.
     /// following-tip: episode 8's marks in view with their tooltip open. following-off: the
     /// switch turned off from here, so the section and the marks fade away.
     /// </summary>
     void StageFollowing(string shot)
     {
-        void InView() => following.Root.StartBringIntoView(new BringIntoViewOptions { AnimationDesired = false, VerticalAlignmentRatio = 0.5 });
+        // The section, or before it shows, the end of the column it will stand under.
+        void InView()
+        {
+            var host = Side.Visibility == Visibility.Visible ? Side : DetailsBelow;
+            var at = following.Root.Visibility == Visibility.Visible ? following.Root
+                : host.Children.OfType<FrameworkElement>().LastOrDefault(c => c != following.Root && c.Visibility == Visibility.Visible);
+            at?.StartBringIntoView(new BringIntoViewOptions { AnimationDesired = false, VerticalAlignmentRatio = 0.5 });
+        }
         switch (shot)
         {
             case "following-section":
                 InView();
+                break;
+            case "following-early":
+                // A slow answer: kept in view as the placeholders and then the people come.
+                for (var n = 0; n < 10; n++)
+                    Later(0.4 * n, InView);
                 break;
             case "following-all":
                 following.PressShowAll();
