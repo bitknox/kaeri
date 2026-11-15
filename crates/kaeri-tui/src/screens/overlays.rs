@@ -168,6 +168,7 @@ pub(super) fn render_overlay(
         }
         Overlay::KitsuPassword => vec![(String::new(), t::overlays_hint_kitsu_password())],
         Overlay::DownloadRange => vec![(String::new(), t::overlays_hint_download_range())],
+        Overlay::ReaderGoTo => vec![(String::new(), go_to_reach(app))],
         // The footer names the keys; the body names what is being changed.
         Overlay::EditSetting => app
             .edit_target
@@ -335,6 +336,7 @@ pub(super) fn render_overlay(
         Overlay::CommandPalette => typed(Field::Palette),
         Overlay::ManualQuery => typed(Field::ManualQuery),
         Overlay::DownloadRange => typed(Field::Range),
+        Overlay::ReaderGoTo => typed(Field::Page),
         Overlay::EditSetting => typed(Field::Setting),
         Overlay::KitsuUsername => typed(Field::KitsuUser),
         // A link is longer than the band, and the end is where the cursor is, so the end is
@@ -583,6 +585,16 @@ fn palette_rows(app: &App) -> Vec<(String, String)> {
         .into_iter()
         .map(|(action, key)| (key, action.label().to_string()))
         .collect()
+}
+
+/// Under Go to page: the pages it reaches, or a strip's images.
+fn go_to_reach(app: &App) -> String {
+    let count = i64::from(app.go_to_count());
+    if app.reader_here().is_some_and(|r| r.strips()) {
+        t::tui_reader_go_to_images(count)
+    } else {
+        t::tui_reader_go_to_pages(count)
+    }
 }
 
 /// Recent errors and notices, newest first.

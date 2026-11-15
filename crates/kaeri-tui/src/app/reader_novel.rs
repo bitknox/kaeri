@@ -305,12 +305,13 @@ impl App {
             A::ReaderNarrower => self.novel_width(false),
             A::ReaderWider => self.novel_width(true),
             A::ReaderMode => self.novel_mode(),
-            // Nothing to fit, zoom or put side by side in text.
+            // Nothing to fit, zoom or put side by side in text, and no pages to number.
             A::ReaderFit
             | A::ReaderZoom
             | A::ReaderZoomIn
             | A::ReaderZoomOut
-            | A::ReaderPages => None,
+            | A::ReaderPages
+            | A::ReaderGoToPage => None,
             _ => return None,
         })
     }

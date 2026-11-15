@@ -173,6 +173,8 @@ pub enum Overlay {
     Help,
     /// The reader's settings, `,` in the reader.
     ReaderSettings,
+    /// The number of a page to go to, from the reader's palette.
+    ReaderGoTo,
     Sources,
     SourceProvider,
     /// Which release of the pinned source to use, for a source that offers several.
@@ -263,6 +265,7 @@ impl Overlay {
             Self::CommandPalette => t::nav_overlay_palette(),
             Self::Help => t::nav_overlay_help(),
             Self::ReaderSettings => t::tui_reader_action_settings(),
+            Self::ReaderGoTo => t::tui_reader_action_go_to_page(),
             Self::Sources => t::sources_title(),
             Self::SourceProvider => t::source_picker_title(),
             Self::SourceRelease => t::nav_overlay_release_for_title(),
@@ -344,6 +347,7 @@ impl Overlay {
             Self::CommandPalette
                 | Self::ManualQuery
                 | Self::DownloadRange
+                | Self::ReaderGoTo
                 | Self::EditSetting
                 | Self::KitsuUsername
                 | Self::KitsuPassword

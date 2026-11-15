@@ -150,6 +150,8 @@ pub enum Action {
     ReaderChapters,
     /// Back to the page a jump left, while the engine offers it.
     ReaderBackToPage,
+    /// A field for a page's number, from the palette, and the jump to it; a strip's image.
+    ReaderGoToPage,
     ReaderMarkRead,
     ReaderDownload,
     /// Hide the header and status line for a bare page, or show them; Continue on the end page.
@@ -284,6 +286,7 @@ impl Action {
         Self::ReaderPreviousChapter,
         Self::ReaderChapters,
         Self::ReaderBackToPage,
+        Self::ReaderGoToPage,
         Self::ReaderMarkRead,
         Self::ReaderDownload,
         Self::ReaderBare,
@@ -407,6 +410,7 @@ impl Action {
             Self::ReaderPreviousChapter => t::tui_reader_action_previous_chapter(),
             Self::ReaderChapters => t::series_chapters(),
             Self::ReaderBackToPage => t::tui_reader_action_back_to_page(),
+            Self::ReaderGoToPage => t::tui_reader_action_go_to_page(),
             Self::ReaderMarkRead => t::tui_read_read_unread(),
             Self::ReaderDownload => t::tui_read_keys_download(),
             Self::ReaderBare => t::tui_reader_action_bare(),
@@ -549,6 +553,7 @@ impl Action {
             | Self::ReaderPreviousChapter
             | Self::ReaderChapters
             | Self::ReaderBackToPage
+            | Self::ReaderGoToPage
             | Self::ReaderMarkRead
             | Self::ReaderDownload
             | Self::ReaderBare

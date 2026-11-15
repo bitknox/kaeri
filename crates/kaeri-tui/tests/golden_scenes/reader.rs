@@ -436,6 +436,15 @@ pub(super) fn reader_help(s: &mut Screen) {
     s.press(&["?"]);
 }
 
+/// Go to page from the palette, with 15 typed.
+pub(super) fn reader_go_to_page(s: &mut Screen) {
+    reading(s, ImageEngine::drawn_as_blocks());
+    s.press(&[":"]);
+    s.type_text("go to page");
+    s.press(&["enter"]);
+    s.type_text("15");
+}
+
 /// The smallest comfortable page.
 pub(super) fn reader_small_page(s: &mut Screen) {
     reader_one_page(s);

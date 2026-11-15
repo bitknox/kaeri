@@ -911,6 +911,25 @@ impl App {
         let mut open = layout.open();
         let (item, leaf, _) = if last { open.last()? } else { open.next()? };
         let top = if last { (item.top + item.rows).saturating_sub(rows) } else { item.top };
+        self.strip_land(&layout, rows, top, leaf)
+    }
+
+    /// Go to page in a strip: image `leaf` of the open chapter at the top of the window, told
+    /// to the engine as a jump.
+    pub(super) fn strip_to_leaf(&mut self, leaf: usize) -> Option<Command> {
+        let (layout, rows) = self.strip_now()?;
+        let top = layout.open().find(|(_, at, _)| *at == leaf)?.0.top;
+        self.strip_land(&layout, rows, top, leaf)
+    }
+
+    /// The strip at row `top`, as far as it goes, with image `leaf` the jump's place.
+    fn strip_land(
+        &mut self,
+        layout: &StripLayout,
+        rows: u32,
+        top: u32,
+        leaf: usize,
+    ) -> Option<Command> {
         let max = layout.total.saturating_sub(rows);
         let reader = self.reader_mut()?;
         reader.strip.top = top.min(max);
@@ -1604,6 +1623,29 @@ mod tests {
         assert_eq!(reader(&a).strip.top, top - 3 + rows * 9 / 10);
         press(&mut a, KeyCode::Backspace);
         assert_eq!(reader(&a).strip.top, top - 3);
+    }
+
+    #[test]
+    fn go_to_page_in_a_strip_puts_that_image_at_the_top() {
+        let mut a = strip();
+        a.take_commands();
+        a.handle(crate::keymap::Action::ReaderGoToPage, 20);
+        assert_eq!(a.go_to_count(), 4, "the images, not the end page");
+        a.type_char('3');
+        let task = a.handle(crate::keymap::Action::Open, 20);
+        let (layout, _) = a.strip_now().unwrap();
+        let third = layout.open().nth(2).map(|(item, _, _)| item.top).unwrap();
+        let max = layout.total.saturating_sub(u32::from(a.reader_stage().unwrap().height));
+        assert_eq!(reader(&a).strip.top, third.min(max));
+        assert_eq!(
+            task,
+            Some(Command::Reader(ReaderCommand::Shown {
+                session: SESSION,
+                chapter: ChapterId("c14".into()),
+                leaf: 2,
+                how: TurnHow::Jump,
+            }))
+        );
     }
 
     #[test]

@@ -469,6 +469,9 @@ impl App {
             Action::Open if self.nav.overlay() == Some(&Overlay::DownloadRange) => {
                 return self.submit_range();
             }
+            Action::Open if self.nav.overlay() == Some(&Overlay::ReaderGoTo) => {
+                return self.submit_go_to_page();
+            }
             // Enter runs the manual search; the results come back as ordinary match
             // choices, so the whole Disambiguate tail is reused unchanged.
             Action::Open if self.nav.overlay() == Some(&Overlay::ManualQuery) => {

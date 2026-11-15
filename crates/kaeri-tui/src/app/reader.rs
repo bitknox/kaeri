@@ -33,7 +33,7 @@ use kaeri_model::{
 };
 
 use super::{
-    App, info,
+    App, Field, info,
     reader_view::{Strip, Zoom},
     say,
     series::downloaded,
@@ -41,7 +41,7 @@ use super::{
 use crate::{
     image::Graphics,
     keymap::{Action, Binding, Context, said},
-    nav::StageView,
+    nav::{Overlay, StageView},
 };
 
 /// The smallest window the reader shows a page in; below it, it says it needs a larger one.
@@ -1117,6 +1117,7 @@ impl App {
             (ReaderScreen::ChapterFailed, Action::ReaderAgain) => self.open_again(),
             (_, Action::ReaderChapters) => self.reader_to_series(),
             (ReaderScreen::ChapterFailed | ReaderScreen::ImagesOff, _) => None,
+            (_, Action::ReaderGoToPage) => self.open_go_to_page(),
             (_, Action::ReaderNext) => self.turn(true),
             (_, Action::ReaderPrevious) => self.turn(false),
             // As the page moves: in a right-to-left book the page to the left is the next one.
@@ -1216,6 +1217,46 @@ impl App {
         }
         reader.back_to.take()?;
         Some(Command::Reader(ReaderCommand::BackTo { session: reader.session }))
+    }
+
+    /// Go to page, from the palette: a field for the number of a page, or of a strip's image.
+    fn open_go_to_page(&mut self) -> Option<Command> {
+        if self.go_to_count() == 0 {
+            return None;
+        }
+        self.field_mut(Field::Page).clear();
+        self.nav.open_overlay(Overlay::ReaderGoTo);
+        None
+    }
+
+    /// How far Go to page reaches: the chapter's pages, or a strip's images. Nought in a novel,
+    /// which has no pages to number.
+    pub fn go_to_count(&self) -> u32 {
+        let Some(reader) = self.reader_here().filter(|r| r.novel.is_none()) else { return 0 };
+        if reader.strips() {
+            reader.leaves.iter().filter(|l| !l.end_page).count() as u32
+        } else {
+            reader.story_pages()
+        }
+    }
+
+    /// Enter in Go to page: the page typed in view, as a jump, so the engine offers Back to
+    /// page. A number past the end goes to the last; Enter with nothing typed stays put.
+    pub(super) fn submit_go_to_page(&mut self) -> Option<Command> {
+        let typed: u32 = self.text(Field::Page).parse().ok()?;
+        let count = self.go_to_count();
+        self.nav.close_overlay();
+        self.field_mut(Field::Page).clear();
+        if count == 0 {
+            return None;
+        }
+        let index = typed.clamp(1, count) - 1;
+        let reader = self.reader_here()?;
+        if reader.strips() {
+            return self.strip_to_leaf(index as usize);
+        }
+        let at = reader.leaf_of(index)?;
+        self.show_leaf(at, TurnHow::Jump)
     }
 
     /// `g`: the chapter from its start, as the resumed notice offers, else its first page.
@@ -1440,6 +1481,10 @@ pub(crate) fn reader_hints(app: &App, width: usize) -> Vec<(String, &'static str
     }
     if app.nav.overlay() == Some(&crate::nav::Overlay::ReaderSettings) {
         return app.reader_settings_hints();
+    }
+    // Any other overlay over the reader, Go to page among them, has the keys: its own hints.
+    if app.nav.has_overlay() {
+        return crate::keymap::status_hints(app);
     }
     if screen == ReaderScreen::Pages && reader.novel.is_some() {
         return app.novel_hints(width);
@@ -2138,6 +2183,56 @@ pub(super) mod tests {
                 page: None,
             }))
         );
+    }
+
+    /// Go to page from the palette, with `typed` typed into its field and Enter.
+    fn go_to(a: &mut App, typed: &str) -> Option<Command> {
+        a.handle(Action::CommandPalette, 20);
+        for ch in "go to page".chars() {
+            a.type_char(ch);
+        }
+        assert_eq!(a.palette_matches().first().map(|m| m.0), Some(Action::ReaderGoToPage));
+        assert_eq!(a.handle(Action::Open, 20), None);
+        assert_eq!(a.nav.overlay(), Some(&Overlay::ReaderGoTo));
+        assert!(a.is_typing(), "the field takes the digits");
+        for ch in typed.chars() {
+            a.type_char(ch);
+        }
+        a.handle(Action::Open, 20)
+    }
+
+    #[test]
+    fn go_to_page_from_the_palette_jumps_so_the_engine_offers_back_to_page() {
+        let mut a = reading(ReadDirection::RightToLeft, 120, 34);
+        a.take_commands();
+        assert_eq!(go_to(&mut a, "3"), shown(2, TurnHow::Jump));
+        assert_eq!(a.nav.overlay(), None);
+        assert_eq!(a.reader_here().unwrap().at, 2);
+        // Past the end goes to the last page, not the end page.
+        assert_eq!(go_to(&mut a, "40"), shown(3, TurnHow::Jump));
+    }
+
+    #[test]
+    fn go_to_page_takes_only_digits_and_waits_for_one() {
+        let mut a = reading(ReadDirection::RightToLeft, 120, 34);
+        a.take_commands();
+        assert_eq!(go_to(&mut a, "x"), None, "nothing typed");
+        assert_eq!(a.nav.overlay(), Some(&Overlay::ReaderGoTo), "still asking");
+        assert_eq!(a.text(Field::Page), "");
+        a.handle(Action::Back, 20);
+        assert_eq!(a.nav.overlay(), None);
+        assert_eq!(a.reader_here().unwrap().at, 1, "the page stays");
+    }
+
+    #[test]
+    fn a_novel_s_palette_has_no_go_to_page() {
+        let mut a = reading(ReadDirection::RightToLeft, 120, 34);
+        a.reader.as_mut().unwrap().view.as_mut().unwrap().medium = Medium::Novel;
+        a.handle(Action::CommandPalette, 20);
+        for ch in "go to page".chars() {
+            a.type_char(ch);
+        }
+        assert!(a.palette_matches().iter().all(|m| m.0 != Action::ReaderGoToPage));
     }
 
     #[test]

@@ -331,9 +331,12 @@ impl App {
     pub fn palette_matches(&self) -> Vec<(Action, String)> {
         // The keys the screen will read once the palette is closed, not the palette's own.
         let context = self.screen_context();
+        // A novel has no pages to number.
+        let novel = self.reads_novel();
         self.keymap
             .palette_entries(self.text(Field::Palette), context)
             .into_iter()
+            .filter(|(action, _)| !(novel && *action == Action::ReaderGoToPage))
             .take(PALETTE_ROWS)
             .collect()
     }

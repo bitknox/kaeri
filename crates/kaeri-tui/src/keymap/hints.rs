@@ -660,6 +660,7 @@ fn overlay_hints(
                 O::StoreConfirm => hint_confirm(),
                 O::ManualQuery => hint_search(),
                 O::DownloadRange => hint_queue(),
+                O::ReaderGoTo => said(t::tui_reader_hint_go()),
                 O::EditSetting => hint_save(),
                 O::KitsuUsername => hint_next(),
                 O::KitsuPassword => hint_sign_in(),
