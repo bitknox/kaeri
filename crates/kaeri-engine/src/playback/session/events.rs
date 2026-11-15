@@ -127,6 +127,9 @@ impl Run<'_> {
         let mut stall_dismissed = false;
         let mut stall_tick = tokio::time::interval(Duration::from_secs(1));
         let mut still_fetch = self.still_fetch.take();
+        // The starting screen's Skip, heard until the first frame: with another stream to go to,
+        // in the pool or from the sources beyond it, the file is let go for it.
+        let mut skipping = self.skipping.take();
         // The picture: what the file is, and what the GPU is saying about the chain.
         let mut source: Option<shaders::Source> = None;
         let mut video_params = serde_json::Value::Null;
@@ -221,6 +224,20 @@ impl Run<'_> {
                     // stop it.
                     warned = true;
                     self.servers.late();
+                    continue;
+                }
+                skipped = async { skipping.as_mut().expect("guarded").changed().await },
+                    if skipping.is_some() && !ever_played =>
+                {
+                    match skipped {
+                        // The engine has gone on to a newer playback: no skip is coming.
+                        Err(_) => skipping = None,
+                        Ok(()) if streams.len() > 1 || settings.further.beyond(streams) => {
+                            tracing::info!(provider = %stream.provider_id, "skipped before its first frame");
+                            break FileOutcome::Skipped;
+                        }
+                        Ok(()) => tracing::info!("a skip with no other stream to go to"),
+                    }
                     continue;
                 }
                 fetched = async { still_fetch.as_mut().expect("guarded").await },
@@ -640,7 +657,9 @@ impl Run<'_> {
                             stall_dismissed = true;
                             let _ = link.overlay(Overlay::StallCleared).await;
                         }
-                        ScriptEvent::StallSwitch if streams.len() > 1 => {
+                        // With no other stream in the pool, the sources beyond it are asked, and
+                        // with none of those, the same stream opens again where it was.
+                        ScriptEvent::StallSwitch => {
                             let stalled = ServerFailure::Stalled;
                             self.servers.failed(self.store, &streams[index], stalled);
                             break FileOutcome::Stalled { at: tracker.position() };
@@ -710,6 +729,10 @@ impl Run<'_> {
                     }
                     if !ever_played {
                         ever_played = true;
+                        // A skip from here on is not this file's: the screen offers none.
+                        if let Some(skipping) = skipping.as_mut() {
+                            skipping.mark_unchanged();
+                        }
                         let _ = link.overlay(Overlay::Playing).await;
                         self.servers.served(self.store, &streams[index]);
                         // Beside the server's first frame, the time from the roll-on.
@@ -891,6 +914,7 @@ impl Run<'_> {
         // with it.
         self.still_fetch = still_fetch;
         self.seat = seat;
+        self.skipping = skipping;
         // Cleared before anything else, so quitting never leaves a stale "watching" up.
         rpc.finish().await;
         if let Some(report) = report.filter(|_| !settings.privacy.holds()) {
