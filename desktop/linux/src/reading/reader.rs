@@ -602,6 +602,7 @@ impl Reader {
         widget.add_overlay(&part_tip);
         widget.set_focusable(true);
         widget.add_css_class("reader");
+        name_page(&widget, &t::linux_reader_opening());
         let this = Rc::new_cyclic(|weak: &std::rc::Weak<Self>| {
             let go_on: Rc<dyn Fn()> = Rc::new({
                 let weak = weak.clone();
@@ -3310,6 +3311,7 @@ impl Reader {
             .part_said(at)
             .unwrap_or_else(|| t::linux_reader_page_of(at as i64, total as i64));
         self.scrub.update_property(&[gtk::accessible::Property::ValueText(&said)]);
+        name_page(&self.widget, &said);
         self.go_to_field.set_range(1.0, total as f64);
         let hint = t::linux_reader_go_to_page_field(total as i64);
         self.go_to_field.set_tooltip_text(Some(&hint));
@@ -3715,6 +3717,18 @@ impl Reader {
         true
     }
 }
+
+/// Name the reader's page for a screen reader: where the place is, and the keys that turn, as
+/// GTK has no custom actions to offer Next page, Previous page and Show controls.
+fn name_page(page: &impl IsA<gtk::Accessible>, said: &str) {
+    page.update_property(&[
+        gtk::accessible::Property::Label(said),
+        gtk::accessible::Property::KeyShortcuts(PAGE_KEYS_SPOKEN),
+    ]);
+}
+
+/// Next page, Previous page and the way into the controls, as ARIA writes keys.
+const PAGE_KEYS_SPOKEN: &str = "PageDown PageUp Tab"; // i18n-skip
 
 /// The part of `texture` that `crop` names, in the texture's pixels, as a picture that size.
 fn cropped(texture: &gdk::Texture, crop: kaeri_model::reader::PixelRect) -> gdk::Paintable {

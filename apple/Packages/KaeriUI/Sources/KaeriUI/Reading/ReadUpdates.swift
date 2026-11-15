@@ -202,20 +202,24 @@ private struct UpdateRowView: View {
             .pointerHover()
             .accessibilityElement(children: .combine)
             .accessibilityHint(L.chapterUpdatesOpenChapterHint)
+            // The menu's items as the row's screen reader actions.
+            .accessibilityActions { menu(unread: unread) }
         }
         .padding(.horizontal, UpdatesScreen.inset)
         .padding(.vertical, 8)
-        .contextMenu {
-            if unread {
-                Button(L.seriesMarkRead) { store.reading.markRead(row.tile.work, chapters: [row.chapter.id], read: true) }
-            } else {
-                Button(L.seriesMarkUnread) { store.reading.markRead(row.tile.work, chapters: [row.chapter.id], read: false) }
-            }
-            if row.chapter.download == nil {
-                Button(L.seriesDownload) { store.reading.download(row.tile.work, .chapters(ids: [row.chapter.id])) }
-            }
-            Button(L.chapterUpdatesOpenSeriesMenu) { navigator.openSeries(row.tile.work) }
+        .contextMenu { menu(unread: unread) }
+    }
+
+    @ViewBuilder private func menu(unread: Bool) -> some View {
+        if unread {
+            Button(L.seriesMarkRead) { store.reading.markRead(row.tile.work, chapters: [row.chapter.id], read: true) }
+        } else {
+            Button(L.seriesMarkUnread) { store.reading.markRead(row.tile.work, chapters: [row.chapter.id], read: false) }
         }
+        if row.chapter.download == nil {
+            Button(L.seriesDownload) { store.reading.download(row.tile.work, .chapters(ids: [row.chapter.id])) }
+        }
+        Button(L.chapterUpdatesOpenSeriesMenu) { navigator.openSeries(row.tile.work) }
     }
 
     #if os(macOS)

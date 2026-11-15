@@ -342,7 +342,7 @@ internal fun TileStrip(
                 if (planning) {
                     var menu by remember { mutableStateOf(false) }
                     ReadTile(
-                        tile, width, from = from, lines = 1, reserveLine = true, planning = true,
+                        tile, width, from = from, lines = 1, reserveLine = true, actions = readTileActions(tile, current = null),
                         caption = words?.shown, spoken = words?.spoken, onLongClick = { menu = true }, titleMax = titleMax,
                     )
                     ReadTileMenu(tile, menu, current = null) { menu = false }
@@ -596,7 +596,7 @@ private fun BrowseCell(tile: WorkTile, grid: ReadGridShape, from: String, titleM
     var menu by remember { mutableStateOf(false) }
     BoxWithConstraints {
         ReadTile(
-            tile, maxWidth, from = from, lines = grid.lines, reserveLine = true, planning = true,
+            tile, maxWidth, from = from, lines = grid.lines, reserveLine = true, actions = readTileActions(tile, current = null),
             onLongClick = { menu = true }, list = grid.list, titleMax = titleMax,
         )
         ReadTileMenu(tile, menu, current = null) { menu = false }

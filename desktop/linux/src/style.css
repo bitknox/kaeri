@@ -339,10 +339,11 @@ progressbar.home-progress progress { min-height: 3px; border-radius: 2px; backgr
 progressbar.read-track { min-height: 3px; }
 progressbar.read-track trough { min-height: 3px; min-width: 0; border-radius: 2px; background: var(--rule); }
 progressbar.read-track progress { min-height: 3px; border-radius: 2px; background: var(--silk); }
-.read-card { padding: 2px; border-radius: 10px; }
+button.read-card { padding: 2px; min-height: 0; min-width: 0; border-radius: 10px; font-weight: 400; }
 .read-grid { margin: 8px 24px 24px 24px; }
-.read-card:hover { background: var(--raised-selected); }
-.read-card:focus-visible { outline: 2px solid var(--silk); outline-offset: 2px; }
+button.read-card:hover { background: var(--raised-selected); }
+button.read-card:active { background: var(--raised-selected); }
+button.read-card:focus-visible { outline: 2px solid var(--silk); outline-offset: 2px; }
 .read-spotlight { padding: 12px 0 8px; }
 
 /* Read's discovery rows and Search: covers at 128 by 192 with radius 12, a plate with the title

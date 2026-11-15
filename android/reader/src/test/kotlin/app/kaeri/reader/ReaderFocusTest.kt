@@ -69,7 +69,7 @@ class ReaderFocusTest {
         compose.waitForIdle()
         assertEquals("Page 1 of 3", words("Scroll down"))
         compose.onNode(placeWith("Scroll up"), useUnmergedTree = true).assertExists()
-        compose.onNode(placeWith("Controls"), useUnmergedTree = true).assertExists()
+        compose.onNode(placeWith("Show controls"), useUnmergedTree = true).assertExists()
     }
 
     @Test
@@ -84,7 +84,7 @@ class ReaderFocusTest {
         // Before the paginator counts its pages, the chapter.
         assertEquals("Chapter 12 · The Long Stair", words("Next page"))
         compose.onNode(placeWith("Previous page"), useUnmergedTree = true).assertExists()
-        compose.onNode(placeWith("Controls"), useUnmergedTree = true).assertExists()
+        compose.onNode(placeWith("Show controls"), useUnmergedTree = true).assertExists()
     }
 
     @Test

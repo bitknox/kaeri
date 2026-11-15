@@ -600,7 +600,7 @@ fun PhoneReader(
                     }
                     val scrollDown = Strings.readerZoneScrollDown(context)
                     val scrollUp = Strings.readerZoneScrollUp(context)
-                    val showControls = Strings.readerActionControls(context)
+                    val showControls = Strings.readerZoneShowControls(context)
                     StripReader(
                         state = state,
                         images = images,
