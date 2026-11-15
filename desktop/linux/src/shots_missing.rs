@@ -200,7 +200,7 @@ fn save(dir: &std::path::Path, start: i64, frames: &[(i64, gdk::Texture)]) {
             (at - start) as f64 / 1e6
         ));
     }
-    if let Some((_, last)) = frames.last().map(|(n, _)| (n, frames.len() - 1)) {
+    if let Some(last) = frames.len().checked_sub(1) {
         // The concat demuxer takes the last frame's duration only when it is named again.
         list.push_str(&format!("file 'frame-{last:04}.png'\n"));
     }

@@ -165,7 +165,7 @@ impl Page {
                 item.resume.is_some(),
                 now(),
             );
-            (computed, item.button.is_some())
+            (computed, item.button.is_some().then_some(item.episode))
         };
         let m = &self.missing;
         let shown = m.shown.borrow().clone();
@@ -182,8 +182,8 @@ impl Page {
                 m.found_waits.set(false);
                 m.shown.replace(Some(computed));
             }
-            (Some(_), None) if m.found.get().is_none() && !m.found_waits.get() => {
-                if !plays {
+            (Some(shown), None) if m.found.get().is_none() && !m.found_waits.get() => {
+                if plays != Some(shown.episode) {
                     // Something else changed what plays next (a mark): the page as it is.
                     m.shown.replace(None);
                     m.answer.set(None);
