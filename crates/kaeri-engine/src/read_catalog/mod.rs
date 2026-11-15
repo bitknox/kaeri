@@ -211,10 +211,10 @@ pub(crate) fn command(
     }
 }
 
-/// Take a series off Continue for good. The app has already dropped the cover, and a spotlight
-/// on the same series, from the screen ([`kaeri_model::reading::read_home_without_continue`]), so
-/// Home is not sent again and nothing else on it moves, as on watching's Continue. The next Home
-/// brings a new spotlight. A failure to keep it is named, as it would come back on that Home.
+/// Take a series off Continue for good. The app has already dropped the cover from the screen
+/// ([`kaeri_model::reading::read_home_without_continue`]), so Home is not sent again and nothing
+/// else on it moves, as on watching's Continue. The next Home brings a new spotlight. A failure
+/// to keep it is named, as it would come back on that Home.
 fn hide_from_continue(kit: &Kit, work: &kaeri_core::books::WorkId, tx: &Outbox) {
     if let Err(e) = kit.store.set_read_hidden(work.as_str(), true) {
         let _ = tx.send(Event::Toast(Notice::alert(Msg::NoticeContinueHideFailed {
