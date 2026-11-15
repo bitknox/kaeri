@@ -116,6 +116,7 @@ async fn main() -> anyhow::Result<()> {
             swarm: Default::default(),
             begin: Default::default(),
             ahead: Default::default(),
+            further: Default::default(),
         };
         let stream = Stream {
             provider_id: "preview".into(),
