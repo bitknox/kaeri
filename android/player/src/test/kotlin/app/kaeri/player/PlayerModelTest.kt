@@ -17,6 +17,7 @@ import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import app.kaeri.engine.model.Command
+import app.kaeri.engine.model.DetailRow
 import app.kaeri.engine.model.Ending
 import app.kaeri.engine.model.Event
 import app.kaeri.engine.model.MpvOption
@@ -136,6 +137,67 @@ class OpsTest {
         // A playback that is over says nothing to the panel.
         rig.model.apply(Event.PlayerStats(0u, PlayerStats(emptyList(), listOf("720p"), false)))
         assertEquals(summary, rig.model.statsSummary)
+    }
+
+    private val dashes = listOf(DetailRow("Video", "\u2013", false), DetailRow("Buffer", "\u2013", false))
+    private val figures = listOf(DetailRow("Video", "1920 \u00d7 1080", false), DetailRow("Buffer", "0 s ahead, waiting", true))
+
+    @Test
+    fun statsForNerdsWaitsThenShowsDashesThenSaysItIsWaiting() = runTest {
+        val rig = Rig(this)
+        rig.opened()
+        rig.model.showStats(true)
+        assertEquals(PlayerCommand.Stats(true), rig.controls.last())
+        // Nothing for the first 600 ms.
+        rig.model.apply(Event.PlayerStats(1u, PlayerStats(dashes, emptyList(), true)))
+        assertNull(rig.model.statsPanel)
+        advanceTimeBy(PlayerTiming.STATS_DASHES + 300)
+        rig.settle()
+        assertEquals(dashes, rig.model.statsPanel?.rows)
+        assertEquals(false, rig.model.statsPanel?.waitingLine)
+        advanceTimeBy(PlayerTiming.STATS_WAITING_LINE)
+        rig.settle()
+        assertEquals(true, rig.model.statsPanel?.waitingLine)
+        // The file's figures: the rows, and the waiting line gone.
+        rig.model.apply(Event.PlayerStats(1u, PlayerStats(figures, emptyList(), false)))
+        assertEquals(StatsPanelState(figures, waitingLine = false), rig.model.statsPanel)
+        rig.model.showStats(false)
+        assertEquals(PlayerCommand.Stats(false), rig.controls.last())
+        assertNull(rig.model.statsPanel)
+    }
+
+    @Test
+    fun copyStatsPutsTheEnginesLinesOnTheClipboardAndSaysCopiedAMoment() = runTest {
+        val rig = Rig(this)
+        val copied = mutableListOf<String>()
+        rig.model.copyText = { copied += it }
+        rig.opened()
+        rig.model.showStats(true)
+        rig.model.apply(Event.PlayerStats(1u, PlayerStats(figures, emptyList(), false)))
+        rig.model.copyStats()
+        assertTrue(rig.controls.last() is PlayerCommand.CopyStats)
+        rig.model.apply(Event.Clipboard("Video 1920 \u00d7 1080"))
+        assertEquals(listOf("Video 1920 \u00d7 1080"), copied)
+        assertNotNull(rig.model.statsCopiedAt)
+        advanceTimeBy(PlayerTiming.STATS_COPIED + 300)
+        rig.settle()
+        assertNull(rig.model.statsCopiedAt)
+        // With the panel away, the clipboard is left alone.
+        rig.model.showStats(false)
+        rig.model.apply(Event.Clipboard("later"))
+        assertEquals(1, copied.size)
+    }
+
+    @Test
+    fun statsForNerdsOpensAgainForTheNextPlayback() = runTest {
+        val rig = Rig(this)
+        rig.opened()
+        rig.model.showStats(true)
+        rig.model.apply(Event.PlayerStats(1u, PlayerStats(figures, emptyList(), false)))
+        rig.ui(2u, PlayerUi.SkipCleared)
+        assertEquals(PlayerCommand.Stats(true), rig.controls.last())
+        assertEquals(2uL, rig.aims.last())
+        assertNotNull(rig.model.statsWaitingSince)
     }
 }
 
