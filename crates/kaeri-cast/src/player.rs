@@ -939,9 +939,16 @@ impl CastPlayer {
             state.app = Some(app);
             state.played_in_app = true;
         }
-        // Its media session, when something plays: the answer is also the first status.
-        if let Err(e) = media.status().await {
-            tracing::debug!(error = %e, "the joined receiver didn't say what plays");
+        // Its media session, when something plays: the answer is the first status. It is taken
+        // here, as the receive task may read the same message only after this returns.
+        match media.status().await {
+            Ok(Some(status)) => {
+                let mut state = lock(&player.inner.state);
+                state.last = Some(status.clone());
+                apply(&player.inner, &mut state, &status);
+            }
+            Ok(None) => {}
+            Err(e) => tracing::debug!(error = %e, "the joined receiver didn't say what plays"),
         }
         *lock(&player.inner.media) = Some(media);
         player.inner.publish();
