@@ -12,3 +12,6 @@ tui-together-not-a-link = Đây không phải liên kết hay mã { -watch-party
 tui-together-recent-alone = Tập { $episode } · { $when }
 tui-medium-read-change = Nhấn { $key } để đổi cách dùng { -app-name }.
 tui-medium-settings-hint = { $key } để đổi
+report-player-log-save-here = Lưu nhật ký trình phát
+report-player-log-saved-to = Đã lưu nhật ký trình phát vào { $path }
+report-player-log-failed-here = Không lưu được nhật ký vào { $folder }.

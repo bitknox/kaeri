@@ -3853,6 +3853,50 @@
     <value>[Çŕàšĥ ŕéþöŕţ šéţţîñĝš~~~~~~~]</value>
     <comment>Link from that line to the crash report settings.</comment>
   </data>
+  <data name="ReportPlayerLog" xml:space="preserve">
+    <value>[Þļàýéŕ ļöĝ~~~]</value>
+    <comment>Report item, the last row under Included: a file of what the player did in the last few playbacks, saved by hand and attached to the issue. Also the name of the second tab in the report's preview, beside Report.</comment>
+  </data>
+  <data name="ReportPlayerLogDetail_one" xml:space="preserve">
+    <value>[Ţĥé ļàšţ þļàýƀàçķ · {size}~~~~~~~]</value>
+    <comment>Line under the Player log item: how many playbacks the log holds and the size of the file. The size is already formatted, such as 412 KB.</comment>
+  </data>
+  <data name="ReportPlayerLogDetail_other" xml:space="preserve">
+    <value>[Ţĥé ļàšţ {playbacks} þļàýƀàçķš · {size}~~~~~~~~~]</value>
+    <comment>Line under the Player log item: how many playbacks the log holds and the size of the file. The size is already formatted, such as 412 KB.</comment>
+  </data>
+  <data name="ReportPlayerLogEmpty" xml:space="preserve">
+    <value>[Ñö þļàýƀàçķ ļöĝĝéð ýéţ~~~~~~~]</value>
+    <comment>Line under the Player log item while nothing has played since the app started. The item cannot be ticked then.</comment>
+  </data>
+  <data name="ReportPlayerLogSave" xml:space="preserve">
+    <value>[Šàṽé ļöĝ…~~~]</value>
+    <comment>Button under the ticked Player log item. Opens the system's save dialog for the log file.</comment>
+  </data>
+  <data name="ReportPlayerLogAttach" xml:space="preserve">
+    <value>[Åţţàçĥ ţĥé ƒîļé ţö ţĥé îššüé öñçé îţ öþéñš öñ ĜîţĤüƀ.~~~~~~~~~~~~~~~~]</value>
+    <comment>Line under the Save log button: the file is not sent by itself, the person attaches it on GitHub.</comment>
+  </data>
+  <data name="ReportPlayerLogSaved" xml:space="preserve">
+    <value>[Šàṽéð àš {file}~~~~]</value>
+    <comment>Replaces the Save log button once the file is written. File is the file's name, such as kaeri-player-log-2026-11-15-1432.txt.</comment>
+  </data>
+  <data name="ReportPlayerLogFailed" xml:space="preserve">
+    <value>[Çöüļðñ'ţ šàṽé ţĥé ļöĝ. Ţŕý àñöţĥéŕ ƒöļðéŕ.~~~~~~~~~~~~~]</value>
+    <comment>Shown beside the Save log button when the file could not be written.</comment>
+  </data>
+  <data name="ReportSentReport" xml:space="preserve">
+    <value>[Ŕéþöŕţ~~]</value>
+    <comment>First tab of the report's preview, beside Player log: the text of the report itself. Shown only while Player log is ticked.</comment>
+  </data>
+  <data name="ReportPlayerLogA11ySaved" xml:space="preserve">
+    <value>[Þļàýéŕ ļöĝ šàṽéð~~~~~]</value>
+    <comment>Screen readers announce this once the player log file is written.</comment>
+  </data>
+  <data name="ReportPlayerLogA11yHint" xml:space="preserve">
+    <value>[Šàṽéš à ƒîļé ţö àţţàçĥ ţö ţĥé îššüé~~~~~~~~~~~]</value>
+    <comment>Screen reader hint on the Player log item.</comment>
+  </data>
   <data name="SettingsGroupCrashes" xml:space="preserve">
     <value>[Çŕàšĥ ŕéþöŕţš~~~~]</value>
     <comment>Heading of the Crash reports group in Settings, About.</comment>

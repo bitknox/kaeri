@@ -33,6 +33,20 @@ report-privacy = Nulla lascia questo { -device } finché non apri la segnalazion
 report-tv-scan = Inquadra il codice per aprire la segnalazione sul telefono.
 report-crash-off = I rapporti di arresto sono disattivati, quindi non ne viene incluso nessuno. Puoi attivarli in Impostazioni, Informazioni.
 report-crash-settings = Impostazioni rapporti di arresto
+report-player-log = Registro del player
+report-player-log-detail = { $playbacks ->
+    [one] L’ultima riproduzione · { $size }
+    [many] Le ultime { $playbacks } riproduzioni · { $size }
+   *[other] Le ultime { $playbacks } riproduzioni · { $size }
+ }
+report-player-log-empty = Ancora nessuna riproduzione registrata
+report-player-log-save = Salva registro…
+report-player-log-attach = Allega il file alla segnalazione quando si apre su GitHub.
+report-player-log-saved = Salvato come { $file }
+report-player-log-failed = Impossibile salvare il registro. Prova un’altra cartella.
+report-sent-report = Segnalazione
+report-player-log-a11y-saved = Registro del player salvato
+report-player-log-a11y-hint = Salva un file da allegare alla segnalazione
 settings-group-crashes = Rapporti di arresto
 settings-crash-save = Salva i rapporti di arresto su questo { -device }
 settings-crash-save-detail = { -app-name } conserva su questo { -device } una breve traccia di ogni arresto per Segnala un bug, senza titoli, indirizzi e nomi. Non viene inviato nulla in automatico.

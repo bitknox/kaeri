@@ -3044,6 +3044,45 @@
   <data name="ReportCrashSettings" xml:space="preserve">
     <value>Ustawienia raportów awarii</value>
   </data>
+  <data name="ReportPlayerLog" xml:space="preserve">
+    <value>Dziennik odtwarzacza</value>
+  </data>
+  <data name="ReportPlayerLogDetail_one" xml:space="preserve">
+    <value>Ostatnie odtworzenie · {size}</value>
+  </data>
+  <data name="ReportPlayerLogDetail_few" xml:space="preserve">
+    <value>Ostatnie {playbacks} odtworzenia · {size}</value>
+  </data>
+  <data name="ReportPlayerLogDetail_many" xml:space="preserve">
+    <value>Ostatnie {playbacks} odtworzeń · {size}</value>
+  </data>
+  <data name="ReportPlayerLogDetail_other" xml:space="preserve">
+    <value>Ostatnie {playbacks} odtworzenia · {size}</value>
+  </data>
+  <data name="ReportPlayerLogEmpty" xml:space="preserve">
+    <value>Nie zapisano jeszcze żadnego odtworzenia</value>
+  </data>
+  <data name="ReportPlayerLogSave" xml:space="preserve">
+    <value>Zapisz dziennik…</value>
+  </data>
+  <data name="ReportPlayerLogAttach" xml:space="preserve">
+    <value>Dołącz plik do zgłoszenia, gdy otworzy się na GitHubie.</value>
+  </data>
+  <data name="ReportPlayerLogSaved" xml:space="preserve">
+    <value>Zapisano jako {file}</value>
+  </data>
+  <data name="ReportPlayerLogFailed" xml:space="preserve">
+    <value>Nie udało się zapisać dziennika. Wybierz inny folder.</value>
+  </data>
+  <data name="ReportSentReport" xml:space="preserve">
+    <value>Zgłoszenie</value>
+  </data>
+  <data name="ReportPlayerLogA11ySaved" xml:space="preserve">
+    <value>Dziennik odtwarzacza zapisany</value>
+  </data>
+  <data name="ReportPlayerLogA11yHint" xml:space="preserve">
+    <value>Zapisuje plik do dołączenia do zgłoszenia</value>
+  </data>
   <data name="SettingsGroupCrashes" xml:space="preserve">
     <value>Raporty awarii</value>
   </data>

@@ -1228,6 +1228,18 @@
     <string name="report_tv_scan">Pindai kode untuk membuka laporan di ponsel Anda.</string>
     <string name="report_crash_off">Laporan crash nonaktif, jadi tidak ada yang disertakan. Anda bisa mengaktifkannya di Pengaturan, Tentang.</string>
     <string name="report_crash_settings">Pengaturan laporan crash</string>
+    <string name="report_player_log">Log pemutar</string>
+    <plurals name="report_player_log_detail">
+        <item quantity="other">%1$,d pemutaran terakhir · %2$s</item>
+    </plurals>
+    <string name="report_player_log_empty">Belum ada pemutaran yang tercatat</string>
+    <string name="report_player_log_save">Simpan log…</string>
+    <string name="report_player_log_attach">Lampirkan berkas ke isu setelah terbuka di GitHub.</string>
+    <string name="report_player_log_saved">Disimpan sebagai %1$s</string>
+    <string name="report_player_log_failed">Log tidak bisa disimpan. Coba folder lain.</string>
+    <string name="report_sent_report">Laporan</string>
+    <string name="report_player_log_a11y_saved">Log pemutar disimpan</string>
+    <string name="report_player_log_a11y_hint">Menyimpan berkas untuk dilampirkan ke isu</string>
     <string name="settings_group_crashes">Laporan crash</string>
     <string name="settings_crash_save">Simpan laporan crash di perangkat ini</string>
     <string name="settings_crash_save_detail">Kaeri menyimpan catatan singkat setiap crash di perangkat ini untuk Laporkan bug, dengan judul, alamat, dan nama dihapus. Tidak ada yang dikirim otomatis.</string>

@@ -2756,6 +2756,39 @@
   <data name="ReportCrashSettings" xml:space="preserve">
     <value>Absturzbericht-Einstellungen</value>
   </data>
+  <data name="ReportPlayerLog" xml:space="preserve">
+    <value>Player-Protokoll</value>
+  </data>
+  <data name="ReportPlayerLogDetail_one" xml:space="preserve">
+    <value>Die letzte Wiedergabe · {size}</value>
+  </data>
+  <data name="ReportPlayerLogDetail_other" xml:space="preserve">
+    <value>Die letzten {playbacks} Wiedergaben · {size}</value>
+  </data>
+  <data name="ReportPlayerLogEmpty" xml:space="preserve">
+    <value>Noch keine Wiedergabe protokolliert</value>
+  </data>
+  <data name="ReportPlayerLogSave" xml:space="preserve">
+    <value>Protokoll speichern…</value>
+  </data>
+  <data name="ReportPlayerLogAttach" xml:space="preserve">
+    <value>Hänge die Datei an das Issue an, sobald es sich auf GitHub öffnet.</value>
+  </data>
+  <data name="ReportPlayerLogSaved" xml:space="preserve">
+    <value>Gespeichert als {file}</value>
+  </data>
+  <data name="ReportPlayerLogFailed" xml:space="preserve">
+    <value>Das Protokoll konnte nicht gespeichert werden. Versuche einen anderen Ordner.</value>
+  </data>
+  <data name="ReportSentReport" xml:space="preserve">
+    <value>Bericht</value>
+  </data>
+  <data name="ReportPlayerLogA11ySaved" xml:space="preserve">
+    <value>Player-Protokoll gespeichert</value>
+  </data>
+  <data name="ReportPlayerLogA11yHint" xml:space="preserve">
+    <value>Speichert eine Datei, die du an das Issue anhängst</value>
+  </data>
   <data name="SettingsGroupCrashes" xml:space="preserve">
     <value>Absturzberichte</value>
   </data>

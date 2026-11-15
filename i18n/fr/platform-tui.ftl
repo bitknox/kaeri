@@ -12,3 +12,6 @@ tui-together-not-a-link = Ce n’est ni un lien ni un code de groupe.
 tui-together-recent-alone = Épisode { $episode } · { $when }
 tui-medium-read-change = Appuyez sur { $key } pour changer ce à quoi sert { -app-name }.
 tui-medium-settings-hint = { $key } pour changer
+report-player-log-save-here = Enregistrer le journal du lecteur
+report-player-log-saved-to = Journal du lecteur enregistré dans { $path }
+report-player-log-failed-here = Impossible d’enregistrer le journal dans { $folder }.

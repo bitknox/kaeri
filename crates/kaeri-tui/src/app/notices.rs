@@ -5,7 +5,10 @@ use std::time::{Duration, Instant};
 use kaeri_i18n::t;
 use kaeri_model::{
     Msg,
-    bug_report::{BugError, BugReport, DeviceClass, issue_url},
+    bug_report::{
+        BugError, BugReport, DeviceClass, PLAYBACK_ERROR, PlayerLogStats, issue_url,
+        player_log_ticked,
+    },
     command::Command,
     downloads::DownloadState,
     jobs::JobId,
@@ -102,21 +105,42 @@ pub fn worded(notice: Notice, keymap: &Keymap) -> Notice {
     Notice { kind: notice.kind, text, hint: None, msg: None }
 }
 
+/// Report a bug's rows: the report alone, the player log, then the saved crashes.
+pub(crate) const LOG_ROW: usize = 1;
+pub(crate) const FIRST_CRASH_ROW: usize = 2;
+
+/// Report a bug's Save player log row.
+#[derive(Debug, Clone, Default, PartialEq)]
+pub struct PlayerLogRow {
+    /// The playbacks kept and the size of the file, as the host last said.
+    pub stats: PlayerLogStats,
+    /// The folder a save goes to, as shown.
+    pub folder: String,
+    /// Where the log was saved, as shown, once it was.
+    pub saved: Option<String>,
+    /// The last save failed.
+    pub failed: bool,
+    /// Report a bug opened and wants fresh stats from the host.
+    wanted: bool,
+    /// The report to save the log with, for the host.
+    save: Option<BugReport>,
+}
+
 impl App {
-    /// The bug report: the last problem the interface told of, in a pre-filled GitHub issue. The
-    /// link goes into the log whole, for a terminal that cannot open it, and the browser opens it.
+    /// Report a bug: Open on GitHub, Save player log, then one row per saved crash. Opened after
+    /// a playback error or a crash in the player, it starts on Save player log.
     pub(super) fn report_bug(&mut self) -> Option<Command> {
-        // With crash reports saved, the pane asks which to add; without, the last error goes alone.
-        if !self.crashes.is_empty() {
-            self.cursors.overlay.selected = 0;
-            self.nav.open_overlay(Overlay::BugReport);
-            return None;
-        }
-        let url = issue_url(&self.bug_report());
-        self.open_report(url)
+        self.player_log.saved = None;
+        self.player_log.failed = false;
+        self.player_log.wanted = true;
+        let ticked = player_log_ticked(&self.bug_report(), &self.crashes);
+        self.cursors.overlay.selected = if ticked { LOG_ROW } else { 0 };
+        self.nav.open_overlay(Overlay::BugReport);
+        None
     }
 
-    /// Open `url`, a report, in the browser and keep it in the log.
+    /// Open `url`, a report, in the browser and keep it in the log. The link goes into the log
+    /// whole, for a terminal that cannot open it.
     fn open_report(&mut self, url: String) -> Option<Command> {
         self.push_toast(info(t::toast_bug_report_opening()));
         self.log(NoticeKind::Info, t::tui_log_bug_report_link(&url));
@@ -125,13 +149,14 @@ impl App {
 
     /// What a report from here says: this build, the sources, and the newest alert.
     pub fn bug_report(&self) -> BugReport {
-        let error =
-            self.logs.iter().rev().find(|row| row.kind == NoticeKind::Alert).map(|row| {
-                BugError {
-                    kind: "message".into(), // i18n-skip
-                    message: row.text.clone(),
-                }
-            });
+        // An alert after a playback that could not play is a playback error.
+        let kind = if self.playback_failed { PLAYBACK_ERROR } else { "message" }; // i18n-skip
+        let error = self
+            .logs
+            .iter()
+            .rev()
+            .find(|row| row.kind == NoticeKind::Alert)
+            .map(|row| BugError { kind: kind.into(), message: row.text.clone() });
         BugReport {
             app_version: env!("CARGO_PKG_VERSION").into(),
             platform: "Terminal".into(), // i18n-skip
@@ -142,6 +167,7 @@ impl App {
             error,
             private: Vec::new(),
             crashes: self.crashes.iter().map(|c| c.id.clone()).collect(),
+            player_log: self.player_log.saved.is_some(),
         }
     }
 
@@ -154,7 +180,7 @@ impl App {
     /// Copy the report and the chosen crash, whole, to the clipboard.
     pub(super) fn copy_report(&mut self) {
         let report = self.bug_report();
-        let crashes: Vec<_> = match self.cursors.overlay.selected.checked_sub(1) {
+        let crashes: Vec<_> = match self.cursors.overlay.selected.checked_sub(FIRST_CRASH_ROW) {
             Some(at) => self.crashes.get(at).cloned().into_iter().collect(),
             None => Vec::new(),
         };
@@ -162,34 +188,87 @@ impl App {
         self.push_toast(info(t::report_copied()));
     }
 
-    /// Delete the chosen crash report. The first row is the report alone and deletes nothing.
+    /// Delete the chosen crash report. The first two rows are the report and the player log, and
+    /// delete nothing.
     pub(super) fn delete_crash(&mut self) {
-        let Some(at) = self.cursors.overlay.selected.checked_sub(1) else { return };
+        let Some(at) = self.cursors.overlay.selected.checked_sub(FIRST_CRASH_ROW) else {
+            return;
+        };
         if at >= self.crashes.len() {
             return;
         }
         let gone = self.crashes.remove(at);
         self.deleted_crashes.push(gone.id);
-        if self.crashes.is_empty() {
-            self.nav.close_overlay();
-        } else {
-            self.cursors.overlay.selected =
-                self.cursors.overlay.selected.min(self.crashes.len());
-        }
+        let last = FIRST_CRASH_ROW + self.crashes.len() - 1;
+        self.cursors.overlay.selected = self.cursors.overlay.selected.min(last);
+        self.step_off_empty_log(false);
     }
 
-    /// The Report a bug pane's Enter: the report alone on the first row, or with one crash.
+    /// The Report a bug pane's Enter: the report alone, the player log saved, or the report
+    /// with one crash.
     pub(super) fn confirm_bug_report(&mut self) -> Option<Command> {
         let report = self.bug_report();
-        let url = match self.cursors.overlay.selected.checked_sub(1) {
-            None => issue_url(&report),
-            Some(at) => {
-                let crash = self.crashes.get(at)?.clone();
-                kaeri_model::bug_report::issue_url_with(&report, &[crash])
+        let url = match self.cursors.overlay.selected {
+            LOG_ROW => {
+                self.save_player_log();
+                return None;
             }
+            at => match at.checked_sub(FIRST_CRASH_ROW) {
+                None => issue_url(&report),
+                Some(at) => {
+                    let crash = self.crashes.get(at)?.clone();
+                    kaeri_model::bug_report::issue_url_with(&report, &[crash])
+                }
+            },
         };
         self.nav.close_overlay();
         self.open_report(url)
+    }
+
+    /// Ask the host to save the player log, unless nothing has played or it is saved already.
+    fn save_player_log(&mut self) {
+        if self.player_log.stats.playbacks == 0 || self.player_log.saved.is_some() {
+            return;
+        }
+        self.player_log.save = Some(self.bug_report());
+    }
+
+    /// The Save player log row cannot be picked before anything has played: the cursor moves
+    /// past it, down when `down`, or back to Open on GitHub.
+    pub(super) fn step_off_empty_log(&mut self, down: bool) {
+        if self.cursors.overlay.selected != LOG_ROW || self.player_log.stats.playbacks > 0 {
+            return;
+        }
+        self.cursors.overlay.selected =
+            if down && !self.crashes.is_empty() { FIRST_CRASH_ROW } else { 0 };
+    }
+
+    /// Whether Report a bug wants the player log's playbacks and size. Asked once each time it
+    /// opens, so the size is not worked out while nobody looks at it.
+    pub fn take_player_log_wanted(&mut self) -> bool {
+        std::mem::take(&mut self.player_log.wanted)
+    }
+
+    /// The player log's playbacks and size, and the folder a save goes to as it is shown, such
+    /// as `~/.cache/kaeri/logs`.
+    pub fn set_player_log_stats(&mut self, stats: PlayerLogStats, folder: String) {
+        self.player_log.stats = stats;
+        self.player_log.folder = folder;
+        self.step_off_empty_log(false);
+    }
+
+    /// The report a player log is to be saved for, once: the host writes the file.
+    pub fn take_player_log_save(&mut self) -> Option<BugReport> {
+        self.player_log.save.take()
+    }
+
+    /// Where the host saved the player log, as shown, or `None` when it could not.
+    pub fn player_log_saved(&mut self, path: Option<String>) {
+        self.player_log.failed = path.is_none();
+        if path.is_some() {
+            self.push_toast(info(t::report_player_log_a11y_saved()));
+        }
+        self.player_log.saved = path;
     }
 
     pub fn push_toast(&mut self, notice: Notice) {
@@ -372,7 +451,9 @@ mod tests {
     fn reporting_a_bug_opens_an_issue_with_the_last_alert_and_keeps_the_link() {
         let mut a = app();
         a.apply(Event::Toast(alert("no stream from lantern.example for \"Hidden Title\"")));
-        let Some(Command::OpenExternal { url }) = a.handle(Action::ReportBug, 5) else {
+        assert!(a.handle(Action::ReportBug, 5).is_none(), "the pane opens first");
+        assert_eq!(a.nav.overlay(), Some(&Overlay::BugReport));
+        let Some(Command::OpenExternal { url }) = a.handle(Action::Open, 5) else {
             panic!("the browser opens");
         };
         assert!(url.starts_with(
@@ -395,6 +476,7 @@ mod tests {
         assert_eq!(a.nav.overlay(), Some(&Overlay::BugReport));
         assert_eq!(a.bug_report().crashes, vec!["c1".to_string()]);
         a.handle(Action::Down, 5);
+        assert_eq!(a.cursors.overlay.selected, FIRST_CRASH_ROW, "past the empty player log");
         a.handle(Action::CopyReport, 5);
         assert!(a.take_clipboard().is_some_and(|text| text.contains("0.0.0")));
         let Some(Command::OpenExternal { url }) = a.handle(Action::Open, 5) else {
@@ -416,7 +498,99 @@ mod tests {
         assert_eq!(a.take_deleted_crashes(), vec!["c1".to_string()]);
         a.handle(Action::DeleteCrash, 5);
         assert_eq!(a.take_deleted_crashes(), vec!["c2".to_string()]);
-        assert!(a.nav.overlay().is_none(), "the pane closes with nothing left to pick");
+        assert_eq!(a.nav.overlay(), Some(&Overlay::BugReport), "the report and the log stay");
+        assert_eq!(a.cursors.overlay.selected, 0, "back on Open on GitHub");
+    }
+
+    fn logged(playbacks: u32) -> PlayerLogStats {
+        PlayerLogStats {
+            playbacks,
+            bytes: 412_000,
+            file_name: "kaeri-player-log-2026-11-15-1432.txt".into(),
+        }
+    }
+
+    #[test]
+    fn the_player_log_is_saved_from_its_row_once() {
+        let mut a = app();
+        a.handle(Action::ReportBug, 5);
+        assert!(a.take_player_log_wanted(), "the pane asks for the log's size");
+        assert!(!a.take_player_log_wanted(), "once");
+        a.set_player_log_stats(logged(3), "~/.cache/kaeri/logs".into());
+        a.handle(Action::Down, 5);
+        assert_eq!(a.cursors.overlay.selected, LOG_ROW);
+        assert!(a.handle(Action::Open, 5).is_none(), "Enter saves, nothing opens");
+        let report = a.take_player_log_save().expect("the host is asked to save");
+        assert!(!report.player_log, "not attached until it is saved");
+        a.player_log_saved(Some(
+            "~/.cache/kaeri/logs/kaeri-player-log-2026-11-15-1432.txt".into(),
+        ));
+        assert!(a.bug_report().player_log, "the report says it is attached by hand");
+        assert!(
+            a.toasts.last().is_some_and(|t| t.notice.text == t::report_player_log_a11y_saved())
+        );
+        a.handle(Action::Open, 5);
+        assert!(a.take_player_log_save().is_none(), "saved once");
+        assert_eq!(a.nav.overlay(), Some(&Overlay::BugReport));
+        // Copy report carries the summary, never the log.
+        a.handle(Action::CopyReport, 5);
+        let copied = a.take_clipboard().expect("copied");
+        assert!(copied.contains("Player log: attached by hand"), "{copied}");
+        assert!(!copied.contains("Playback 1 of"), "{copied}");
+    }
+
+    #[test]
+    fn a_failed_save_can_be_tried_again() {
+        let mut a = app();
+        a.handle(Action::ReportBug, 5);
+        a.set_player_log_stats(logged(1), "~/.cache/kaeri/logs".into());
+        a.handle(Action::Down, 5);
+        a.handle(Action::Open, 5);
+        assert!(a.take_player_log_save().is_some());
+        let alerts = a.logs.iter().filter(|row| row.kind == NoticeKind::Alert).count();
+        a.player_log_saved(None);
+        assert!(a.player_log.failed);
+        assert!(!a.bug_report().player_log);
+        assert_eq!(
+            a.logs.iter().filter(|row| row.kind == NoticeKind::Alert).count(),
+            alerts,
+            "a failed save is not the last error the report carries"
+        );
+        a.handle(Action::Open, 5);
+        assert!(a.take_player_log_save().is_some(), "Enter tries again");
+    }
+
+    #[test]
+    fn the_player_log_row_cannot_be_picked_before_anything_played() {
+        let mut a = app();
+        a.handle(Action::ReportBug, 5);
+        a.set_player_log_stats(PlayerLogStats::default(), "~/.cache/kaeri/logs".into());
+        a.handle(Action::Down, 5);
+        assert_eq!(a.cursors.overlay.selected, 0);
+        a.handle(Action::Bottom, 5);
+        assert_eq!(a.cursors.overlay.selected, 0);
+    }
+
+    #[test]
+    fn after_a_playback_error_the_pane_starts_on_the_player_log() {
+        let mut a = app();
+        a.apply(Event::PlaybackEnded {
+            watched: false,
+            ending: kaeri_model::playback::Ending::Failed,
+            rolling_on: false,
+            failure: None,
+        });
+        a.apply(Event::Toast(alert("no stream found")));
+        assert_eq!(a.bug_report().error.map(|e| e.kind), Some(PLAYBACK_ERROR.to_string()));
+        a.handle(Action::ReportBug, 5);
+        a.set_player_log_stats(logged(2), "~/.cache/kaeri/logs".into());
+        assert_eq!(a.cursors.overlay.selected, LOG_ROW);
+        // From anywhere else, it starts on Open on GitHub.
+        let mut b = app();
+        b.apply(Event::Toast(alert("a plugin failed")));
+        b.handle(Action::ReportBug, 5);
+        b.set_player_log_stats(logged(2), "~/.cache/kaeri/logs".into());
+        assert_eq!(b.cursors.overlay.selected, 0);
     }
 
     #[test]

@@ -2900,6 +2900,42 @@
   <data name="ReportCrashSettings" xml:space="preserve">
     <value>Ajustes dos relatórios de falha</value>
   </data>
+  <data name="ReportPlayerLog" xml:space="preserve">
+    <value>Log do player</value>
+  </data>
+  <data name="ReportPlayerLogDetail_one" xml:space="preserve">
+    <value>{playbacks} reprodução recente · {size}</value>
+  </data>
+  <data name="ReportPlayerLogDetail_many" xml:space="preserve">
+    <value>{playbacks} reproduções recentes · {size}</value>
+  </data>
+  <data name="ReportPlayerLogDetail_other" xml:space="preserve">
+    <value>{playbacks} reproduções recentes · {size}</value>
+  </data>
+  <data name="ReportPlayerLogEmpty" xml:space="preserve">
+    <value>Nenhuma reprodução registrada ainda</value>
+  </data>
+  <data name="ReportPlayerLogSave" xml:space="preserve">
+    <value>Salvar log…</value>
+  </data>
+  <data name="ReportPlayerLogAttach" xml:space="preserve">
+    <value>Anexe o arquivo à issue quando ela abrir no GitHub.</value>
+  </data>
+  <data name="ReportPlayerLogSaved" xml:space="preserve">
+    <value>Salvo como {file}</value>
+  </data>
+  <data name="ReportPlayerLogFailed" xml:space="preserve">
+    <value>Não foi possível salvar o log. Tente outra pasta.</value>
+  </data>
+  <data name="ReportSentReport" xml:space="preserve">
+    <value>Relatório</value>
+  </data>
+  <data name="ReportPlayerLogA11ySaved" xml:space="preserve">
+    <value>Log do player salvo</value>
+  </data>
+  <data name="ReportPlayerLogA11yHint" xml:space="preserve">
+    <value>Salva um arquivo para anexar à issue</value>
+  </data>
   <data name="SettingsGroupCrashes" xml:space="preserve">
     <value>Relatórios de falha</value>
   </data>

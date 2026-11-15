@@ -2612,6 +2612,36 @@
   <data name="ReportCrashSettings" xml:space="preserve">
     <value>Pengaturan laporan crash</value>
   </data>
+  <data name="ReportPlayerLog" xml:space="preserve">
+    <value>Log pemutar</value>
+  </data>
+  <data name="ReportPlayerLogDetail_other" xml:space="preserve">
+    <value>{playbacks} pemutaran terakhir · {size}</value>
+  </data>
+  <data name="ReportPlayerLogEmpty" xml:space="preserve">
+    <value>Belum ada pemutaran yang tercatat</value>
+  </data>
+  <data name="ReportPlayerLogSave" xml:space="preserve">
+    <value>Simpan log…</value>
+  </data>
+  <data name="ReportPlayerLogAttach" xml:space="preserve">
+    <value>Lampirkan berkas ke isu setelah terbuka di GitHub.</value>
+  </data>
+  <data name="ReportPlayerLogSaved" xml:space="preserve">
+    <value>Disimpan sebagai {file}</value>
+  </data>
+  <data name="ReportPlayerLogFailed" xml:space="preserve">
+    <value>Log tidak bisa disimpan. Coba folder lain.</value>
+  </data>
+  <data name="ReportSentReport" xml:space="preserve">
+    <value>Laporan</value>
+  </data>
+  <data name="ReportPlayerLogA11ySaved" xml:space="preserve">
+    <value>Log pemutar disimpan</value>
+  </data>
+  <data name="ReportPlayerLogA11yHint" xml:space="preserve">
+    <value>Menyimpan berkas untuk dilampirkan ke isu</value>
+  </data>
   <data name="SettingsGroupCrashes" xml:space="preserve">
     <value>Laporan crash</value>
   </data>

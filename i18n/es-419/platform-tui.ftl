@@ -12,3 +12,6 @@ tui-together-not-a-link = Eso no es un enlace ni un código de sala.
 tui-together-recent-alone = Episodio { $episode } · { $when }
 tui-medium-read-change = Presiona { $key } para cambiar para qué sirve { -app-name }.
 tui-medium-settings-hint = { $key } para cambiar
+report-player-log-save-here = Guardar registro del reproductor
+report-player-log-saved-to = Registro del reproductor guardado en { $path }
+report-player-log-failed-here = No se pudo guardar el registro en { $folder }.

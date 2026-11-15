@@ -9450,6 +9450,21 @@ pub fn tui_medium_settings_hint(key: &str) -> String {
     text("tui-medium-settings-hint", &[("key", Arg::Text(key))])
 }
 
+/// Row in the terminal's Report a bug band, under Open on GitHub: Enter writes the player log file beside the terminal's own logs. Lower-cased, the same words are the key hint for it.
+pub fn report_player_log_save_here() -> String {
+    text("report-player-log-save-here", &[])
+}
+
+/// That row once the file is written, and the notice in the status line. Path is where the file is, such as ~/.cache/kaeri/logs/kaeri-player-log-2026-11-15-1432.txt.
+pub fn report_player_log_saved_to(path: &str) -> String {
+    text("report-player-log-saved-to", &[("path", Arg::Text(path))])
+}
+
+/// That row when the file could not be written. Folder is where it was to go, such as ~/.cache/kaeri/logs.
+pub fn report_player_log_failed_here(folder: &str) -> String {
+    text("report-player-log-failed-here", &[("folder", Arg::Text(folder))])
+}
+
 /// Title of the about page.
 pub fn about_title() -> String {
     text("about-title", &[])
@@ -9623,6 +9638,56 @@ pub fn report_crash_off() -> String {
 /// Link from that line to the crash report settings.
 pub fn report_crash_settings() -> String {
     text("report-crash-settings", &[])
+}
+
+/// Report item, the last row under Included: a file of what the player did in the last few playbacks, saved by hand and attached to the issue. Also the name of the second tab in the report's preview, beside Report.
+pub fn report_player_log() -> String {
+    text("report-player-log", &[])
+}
+
+/// Line under the Player log item: how many playbacks the log holds and the size of the file. The size is already formatted, such as 412 KB.
+pub fn report_player_log_detail(playbacks: i64, size: &str) -> String {
+    text("report-player-log-detail", &[("playbacks", Arg::Int(playbacks)), ("size", Arg::Text(size))])
+}
+
+/// Line under the Player log item while nothing has played since the app started. The item cannot be ticked then.
+pub fn report_player_log_empty() -> String {
+    text("report-player-log-empty", &[])
+}
+
+/// Button under the ticked Player log item. Opens the system's save dialog for the log file.
+pub fn report_player_log_save() -> String {
+    text("report-player-log-save", &[])
+}
+
+/// Line under the Save log button: the file is not sent by itself, the person attaches it on GitHub.
+pub fn report_player_log_attach() -> String {
+    text("report-player-log-attach", &[])
+}
+
+/// Replaces the Save log button once the file is written. File is the file's name, such as kaeri-player-log-2026-11-15-1432.txt.
+pub fn report_player_log_saved(file: &str) -> String {
+    text("report-player-log-saved", &[("file", Arg::Text(file))])
+}
+
+/// Shown beside the Save log button when the file could not be written.
+pub fn report_player_log_failed() -> String {
+    text("report-player-log-failed", &[])
+}
+
+/// First tab of the report's preview, beside Player log: the text of the report itself. Shown only while Player log is ticked.
+pub fn report_sent_report() -> String {
+    text("report-sent-report", &[])
+}
+
+/// Screen readers announce this once the player log file is written.
+pub fn report_player_log_a11y_saved() -> String {
+    text("report-player-log-a11y-saved", &[])
+}
+
+/// Screen reader hint on the Player log item.
+pub fn report_player_log_a11y_hint() -> String {
+    text("report-player-log-a11y-hint", &[])
 }
 
 /// Heading of the Crash reports group in Settings, About.

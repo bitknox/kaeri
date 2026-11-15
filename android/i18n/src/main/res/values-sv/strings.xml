@@ -1293,6 +1293,19 @@
     <string name="report_tv_scan">Skanna koden för att öppna rapporten på din telefon.</string>
     <string name="report_crash_off">Kraschrapporter är avstängda, så ingen ingår. Du kan slå på dem under Inställningar, Om.</string>
     <string name="report_crash_settings">Kraschrapportinställningar</string>
+    <string name="report_player_log">Spelarlogg</string>
+    <plurals name="report_player_log_detail">
+        <item quantity="one">Den senaste uppspelningen · %2$s</item>
+        <item quantity="other">De senaste %1$,d uppspelningarna · %2$s</item>
+    </plurals>
+    <string name="report_player_log_empty">Ingen uppspelning loggad än</string>
+    <string name="report_player_log_save">Spara logg…</string>
+    <string name="report_player_log_attach">Bifoga filen i ärendet när det öppnas på GitHub.</string>
+    <string name="report_player_log_saved">Sparad som %1$s</string>
+    <string name="report_player_log_failed">Loggen kunde inte sparas. Prova en annan mapp.</string>
+    <string name="report_sent_report">Rapport</string>
+    <string name="report_player_log_a11y_saved">Spelarloggen sparades</string>
+    <string name="report_player_log_a11y_hint">Sparar en fil att bifoga i ärendet</string>
     <string name="settings_group_crashes">Kraschrapporter</string>
     <string name="settings_crash_save">Spara kraschrapporter på den här enheten</string>
     <string name="settings_crash_save_detail">Kaeri sparar en kort logg över varje krasch på den här enheten för Rapportera ett fel, utan titlar, adresser och namn. Inget skickas av sig självt.</string>

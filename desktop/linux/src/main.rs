@@ -138,14 +138,23 @@ fn main() -> glib::ExitCode {
         println!("Kaeri {}", kaeri_engine::updates::CURRENT); // i18n-skip
         return glib::ExitCode::SUCCESS;
     }
-    tracing_subscriber::fmt()
-        .with_env_filter(
-            tracing_subscriber::EnvFilter::try_from_default_env()
-                .unwrap_or_else(|_| "info,kaeri_engine=warn".into()),
-        )
-        // What is private is taken out of each line: see `kaeri_engine::private::redact`.
-        .with_writer(|| kaeri_engine::private::redact::Redacting(std::io::stderr()))
-        .init();
+    {
+        use tracing_subscriber::{Layer, layer::SubscriberExt, util::SubscriberInitExt};
+        // Each layer filters for itself: the player log for Report a bug keeps the engine's
+        // playback lines at info, where stderr has only its warnings. The engine mirrors the log
+        // to the cache once it starts.
+        // What is private is taken out of each stderr line: see `kaeri_engine::private::redact`.
+        let stderr = tracing_subscriber::fmt::layer()
+            .with_writer(|| kaeri_engine::private::redact::Redacting(std::io::stderr()))
+            .with_filter(
+                tracing_subscriber::EnvFilter::try_from_default_env()
+                    .unwrap_or_else(|_| "info,kaeri_engine=warn".into()),
+            );
+        tracing_subscriber::registry()
+            .with(stderr)
+            .with(kaeri_engine::player_log::layer())
+            .init();
+    }
     let args = args();
     // The language chosen in Settings (the config's own key, the one the terminal app reads),
     // else the system's. `KAERI_LANG` still wins over both.

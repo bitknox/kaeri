@@ -12,3 +12,6 @@ tui-together-not-a-link = Det där är varken en länk eller en kod för { -watc
 tui-together-recent-alone = Avsnitt { $episode } · { $when }
 tui-medium-read-change = Tryck { $key } för att ändra vad { -app-name } är till för.
 tui-medium-settings-hint = { $key } för att ändra
+report-player-log-save-here = Spara spelarlogg
+report-player-log-saved-to = Spelarloggen sparades i { $path }
+report-player-log-failed-here = Loggen kunde inte sparas i { $folder }.

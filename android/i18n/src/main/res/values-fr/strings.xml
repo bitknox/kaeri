@@ -1358,6 +1358,20 @@
     <string name="report_tv_scan">Scannez le code pour ouvrir le rapport sur votre téléphone.</string>
     <string name="report_crash_off">Les rapports de plantage sont désactivés, aucun n’est donc inclus. Vous pouvez les activer dans Paramètres, À propos.</string>
     <string name="report_crash_settings">Réglages des plantages</string>
+    <string name="report_player_log">Journal du lecteur</string>
+    <plurals name="report_player_log_detail">
+        <item quantity="one">%1$,d lecture récente · %2$s</item>
+        <item quantity="many">Les %1$,d dernières lectures · %2$s</item>
+        <item quantity="other">Les %1$,d dernières lectures · %2$s</item>
+    </plurals>
+    <string name="report_player_log_empty">Aucune lecture enregistrée pour l’instant</string>
+    <string name="report_player_log_save">Exporter le journal…</string>
+    <string name="report_player_log_attach">Joignez le fichier au ticket une fois qu’il s’ouvre sur GitHub.</string>
+    <string name="report_player_log_saved">Enregistré sous %1$s</string>
+    <string name="report_player_log_failed">Impossible d’enregistrer le journal. Essayez un autre dossier.</string>
+    <string name="report_sent_report">Rapport</string>
+    <string name="report_player_log_a11y_saved">Journal du lecteur enregistré</string>
+    <string name="report_player_log_a11y_hint">Enregistre un fichier à joindre au ticket</string>
     <string name="settings_group_crashes">Rapports de plantage</string>
     <string name="settings_crash_save">Enregistrer les rapports de plantage sur cet appareil</string>
     <string name="settings_crash_save_detail">Kaeri garde une courte trace de chaque plantage sur cet appareil pour Signaler un bug, sans titres, adresses ni noms. Rien n’est envoyé automatiquement.</string>

@@ -33,6 +33,20 @@ report-privacy = Rien ne quitte cet { -device } avant que vous n’ouvriez le ra
 report-tv-scan = Scannez le code pour ouvrir le rapport sur votre téléphone.
 report-crash-off = Les rapports de plantage sont désactivés, aucun n’est donc inclus. Vous pouvez les activer dans Paramètres, À propos.
 report-crash-settings = Réglages des plantages
+report-player-log = Journal du lecteur
+report-player-log-detail = { $playbacks ->
+    [one] { $playbacks } lecture récente · { $size }
+    [many] Les { $playbacks } dernières lectures · { $size }
+   *[other] Les { $playbacks } dernières lectures · { $size }
+ }
+report-player-log-empty = Aucune lecture enregistrée pour l’instant
+report-player-log-save = Exporter le journal…
+report-player-log-attach = Joignez le fichier au ticket une fois qu’il s’ouvre sur GitHub.
+report-player-log-saved = Enregistré sous { $file }
+report-player-log-failed = Impossible d’enregistrer le journal. Essayez un autre dossier.
+report-sent-report = Rapport
+report-player-log-a11y-saved = Journal du lecteur enregistré
+report-player-log-a11y-hint = Enregistre un fichier à joindre au ticket
 settings-group-crashes = Rapports de plantage
 settings-crash-save = Enregistrer les rapports de plantage sur cet { -device }
 settings-crash-save-detail = { -app-name } garde une courte trace de chaque plantage sur cet { -device } pour Signaler un bug, sans titres, adresses ni noms. Rien n’est envoyé automatiquement.

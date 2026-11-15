@@ -4630,6 +4630,40 @@ public enum L {
     /// Link from that line to the crash report settings.
     public static var reportCrashSettings: String { string("report-crash-settings", fallback: "Crash report settings") }
 
+    /// Report item, the last row under Included: a file of what the player did in the last few playbacks, saved by hand and attached to the issue. Also the name of the second tab in the report's preview, beside Report.
+    public static var reportPlayerLog: String { string("report-player-log", fallback: "Player log") }
+
+    /// Line under the Player log item: how many playbacks the log holds and the size of the file. The size is already formatted, such as 412 KB.
+    public static func reportPlayerLogDetail(playbacks: Int, size: String) -> String {
+        Self.format("report-player-log-detail", fallback: "The last %1$lld playbacks · %2$@", playbacks, size)
+    }
+
+    /// Line under the Player log item while nothing has played since the app started. The item cannot be ticked then.
+    public static var reportPlayerLogEmpty: String { string("report-player-log-empty", fallback: "No playback logged yet") }
+
+    /// Button under the ticked Player log item. Opens the system's save dialog for the log file.
+    public static var reportPlayerLogSave: String { string("report-player-log-save", fallback: "Save log…") }
+
+    /// Line under the Save log button: the file is not sent by itself, the person attaches it on GitHub.
+    public static var reportPlayerLogAttach: String { string("report-player-log-attach", fallback: "Attach the file to the issue once it opens on GitHub.") }
+
+    /// Replaces the Save log button once the file is written. File is the file's name, such as kaeri-player-log-2026-11-15-1432.txt.
+    public static func reportPlayerLogSaved(file: String) -> String {
+        Self.format("report-player-log-saved", fallback: "Saved as %1$@", file)
+    }
+
+    /// Shown beside the Save log button when the file could not be written.
+    public static var reportPlayerLogFailed: String { string("report-player-log-failed", fallback: "Couldn't save the log. Try another folder.") }
+
+    /// First tab of the report's preview, beside Player log: the text of the report itself. Shown only while Player log is ticked.
+    public static var reportSentReport: String { string("report-sent-report", fallback: "Report") }
+
+    /// Screen readers announce this once the player log file is written.
+    public static var reportPlayerLogA11ySaved: String { string("report-player-log-a11y-saved", fallback: "Player log saved") }
+
+    /// Screen reader hint on the Player log item.
+    public static var reportPlayerLogA11yHint: String { string("report-player-log-a11y-hint", fallback: "Saves a file to attach to the issue") }
+
     /// Heading of the Crash reports group in Settings, About.
     public static var settingsGroupCrashes: String { string("settings-group-crashes", fallback: "Crash reports") }
 

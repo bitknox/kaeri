@@ -1,7 +1,7 @@
 //! "Report a bug" for the native apps: the same address the terminal builds.
 
 use kaeri_model::bug_report::{
-    BugReport, issue_url_capped, issue_url_with, report_text as text,
+    BugReport, PlayerLogStats, issue_url_capped, issue_url_with, report_text as text,
 };
 use kaeri_model::crash::CrashRecord;
 
@@ -26,6 +26,33 @@ pub fn bug_report_url_capped(report: BugReport, max_bytes: u32) -> String {
 pub fn report_text(report: BugReport) -> String {
     let crashes = crashes_of(&report);
     text(&report, &crashes)
+}
+
+/// The player log as the file Save log writes: the report's summary, then the last playbacks,
+/// newest first, redacted. For What is sent's Player log segment and for saving. Off the main
+/// thread: it redacts up to a megabyte.
+#[uniffi::export]
+pub fn player_log(report: BugReport) -> String {
+    kaeri_engine::player_log::text(&report)
+}
+
+/// What the Player log row says ("The last 3 playbacks · 412 KB", or nothing logged yet when
+/// `playbacks` is 0) and the name Save log fills in, in local time. The size is worked out again
+/// only after the log has changed.
+#[uniffi::export]
+pub fn player_log_stats() -> PlayerLogStats {
+    kaeri_engine::player_log::stats()
+}
+
+/// Whether Player log starts ticked as Report opens: from a playback error (a [`BugError`] of
+/// kind `playback`) or with a crash in the player among the report's crashes. Unticked from
+/// anywhere else, Settings among them.
+///
+/// [`BugError`]: kaeri_model::bug_report::BugError
+#[uniffi::export]
+pub fn player_log_starts_ticked(report: BugReport) -> bool {
+    let crashes = crashes_of(&report);
+    kaeri_model::bug_report::player_log_ticked(&report, &crashes)
 }
 
 /// The saved crashes the report names; an id that is gone is left out.

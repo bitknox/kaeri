@@ -2731,6 +2731,29 @@
     <string name="report_crash_off">Crash reports are off, so none is included. You can turn them on in Settings, About.</string>
     <!-- Link from that line to the crash report settings. -->
     <string name="report_crash_settings">Crash report settings</string>
+    <!-- Report item, the last row under Included: a file of what the player did in the last few playbacks, saved by hand and attached to the issue. Also the name of the second tab in the report's preview, beside Report. -->
+    <string name="report_player_log">Player log</string>
+    <!-- Line under the Player log item: how many playbacks the log holds and the size of the file. The size is already formatted, such as 412 KB. -->
+    <plurals name="report_player_log_detail">
+        <item quantity="one">The last playback · %2$s</item>
+        <item quantity="other">The last %1$,d playbacks · %2$s</item>
+    </plurals>
+    <!-- Line under the Player log item while nothing has played since the app started. The item cannot be ticked then. -->
+    <string name="report_player_log_empty">No playback logged yet</string>
+    <!-- Button under the ticked Player log item. Opens the system's save dialog for the log file. -->
+    <string name="report_player_log_save">Save log…</string>
+    <!-- Line under the Save log button: the file is not sent by itself, the person attaches it on GitHub. -->
+    <string name="report_player_log_attach">Attach the file to the issue once it opens on GitHub.</string>
+    <!-- Replaces the Save log button once the file is written. File is the file's name, such as kaeri-player-log-2026-11-15-1432.txt. -->
+    <string name="report_player_log_saved">Saved as %1$s</string>
+    <!-- Shown beside the Save log button when the file could not be written. -->
+    <string name="report_player_log_failed">Couldn\'t save the log. Try another folder.</string>
+    <!-- First tab of the report's preview, beside Player log: the text of the report itself. Shown only while Player log is ticked. -->
+    <string name="report_sent_report">Report</string>
+    <!-- Screen readers announce this once the player log file is written. -->
+    <string name="report_player_log_a11y_saved">Player log saved</string>
+    <!-- Screen reader hint on the Player log item. -->
+    <string name="report_player_log_a11y_hint">Saves a file to attach to the issue</string>
     <!-- Heading of the Crash reports group in Settings, About. -->
     <string name="settings_group_crashes">Crash reports</string>
     <!-- Switch that turns saving crash reports on this device on or off. -->

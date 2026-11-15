@@ -166,6 +166,8 @@ pub async fn run(
 
     // Painting on change rather than on every tick: see `Repaint`. `idle_tick` is whether
     // nothing but the ticker woke this pass, the one case that may skip it.
+    // Where Save player log in Report a bug writes: the logs folder in the cache.
+    let logs_dir = paths.cache_dir.join("logs");
     let mut repaint = tui::terminal::Repaint::default();
     let mut idle_tick = false;
     // Until when the screen waits on the engine's word: see `ENGINE_WAIT`.
@@ -179,6 +181,17 @@ pub async fn run(
         }
         for id in app.take_deleted_crashes() {
             kaeri_engine::crash::delete_saved(&id);
+        }
+        // Report a bug's Save player log row: its size when the pane opens, the file when asked.
+        if app.take_player_log_wanted() {
+            app.set_player_log_stats(kaeri_engine::player_log::stats(), shown(&logs_dir));
+        }
+        if let Some(report) = app.take_player_log_save() {
+            let saved = save_player_log(&logs_dir, &report);
+            if let Err(e) = &saved {
+                tracing::warn!(error = %e, "player log not saved");
+            }
+            app.player_log_saved(saved.ok().map(|path| shown(&path)));
         }
         let now = std::time::Instant::now();
         // A mark is the engine's to make: the table shows it once the engine has written it
@@ -511,6 +524,26 @@ fn metered_now() -> bool {
 /// from before reading.
 pub(crate) fn medium_at_launch() -> Command {
     Command::Medium(kaeri_model::medium::MediumCommand::Load)
+}
+
+/// Write the player log for `report` to a file of its own in `dir`, and say where it went.
+fn save_player_log(
+    dir: &std::path::Path,
+    report: &kaeri_model::bug_report::BugReport,
+) -> std::io::Result<std::path::PathBuf> {
+    std::fs::create_dir_all(dir)?;
+    let path = dir.join(kaeri_engine::player_log::stats().file_name);
+    std::fs::write(&path, kaeri_engine::player_log::text(report))?;
+    Ok(path)
+}
+
+/// `path` as the terminal shows it, with the home folder as `~`.
+fn shown(path: &std::path::Path) -> String {
+    let home = std::env::var_os("HOME").map(std::path::PathBuf::from);
+    match home.as_deref().and_then(|home| path.strip_prefix(home).ok()) {
+        Some(rest) => format!("~/{}", rest.display()),
+        None => path.display().to_string(),
+    }
 }
 
 #[cfg(test)]

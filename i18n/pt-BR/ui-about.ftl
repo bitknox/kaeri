@@ -33,6 +33,20 @@ report-privacy = Nada sai deste { -device } até você abrir o relatório no Git
 report-tv-scan = Escaneie o código para abrir o relatório no celular.
 report-crash-off = Os relatórios de falha estão desativados, então nenhum foi incluído. Você pode ativá-los em Configurações, Sobre.
 report-crash-settings = Ajustes dos relatórios de falha
+report-player-log = Log do player
+report-player-log-detail = { $playbacks ->
+    [one] { $playbacks } reprodução recente · { $size }
+    [many] { $playbacks } reproduções recentes · { $size }
+   *[other] { $playbacks } reproduções recentes · { $size }
+ }
+report-player-log-empty = Nenhuma reprodução registrada ainda
+report-player-log-save = Salvar log…
+report-player-log-attach = Anexe o arquivo à issue quando ela abrir no GitHub.
+report-player-log-saved = Salvo como { $file }
+report-player-log-failed = Não foi possível salvar o log. Tente outra pasta.
+report-sent-report = Relatório
+report-player-log-a11y-saved = Log do player salvo
+report-player-log-a11y-hint = Salva um arquivo para anexar à issue
 settings-group-crashes = Relatórios de falha
 settings-crash-save = Salvar relatórios de falha neste { -device }
 settings-crash-save-detail = O { -app-name } guarda um breve registro de cada falha neste { -device } para Relatar um erro, sem títulos, endereços e nomes. Nada é enviado automaticamente.

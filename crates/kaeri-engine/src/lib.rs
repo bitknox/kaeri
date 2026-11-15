@@ -133,6 +133,7 @@ mod party_chat;
 mod party_identify;
 pub mod phases;
 pub mod playback;
+pub mod player_log;
 pub mod plugin_stores;
 pub mod private;
 pub mod profile;

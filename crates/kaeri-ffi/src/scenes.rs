@@ -175,7 +175,8 @@ pub enum FfiScene {
     SubtitleStyled,
     /// A first launch with crash reports off, as they are until turned on.
     CrashOff,
-    /// Crash reports on, with one saved report in the list.
+    /// Crash reports on, with one saved report in the list, a crash in the player, and three
+    /// playbacks in the player log.
     CrashSaved,
     /// Crash reports on, turned on a day ago. The app offers its system's own records from the
     /// week before; the scene has none of its own.
@@ -1066,12 +1067,15 @@ fn crash_config(since: i64) -> String {
     )
 }
 
-/// The one saved report of [`FfiScene::CrashSaved`], in the crash store of the scene's data.
+/// The one saved report of [`FfiScene::CrashSaved`], in the crash store of the scene's data, and
+/// three playbacks in the player log.
 fn seed_crashes(data_dir: &std::path::Path, scene: &FfiScene, now: i64) {
     use kaeri_model::crash::{CrashFrame, CrashPlace, CrashRecord};
     if *scene != FfiScene::CrashSaved {
         return;
     }
+    // A crash in the player, after three playbacks: Report opens with the log ticked.
+    kaeri_engine::player_log::seed_fixture(3);
     let record = CrashRecord {
         id: "scene-1".into(),
         at_ms: (now - 2 * 3_600) * 1_000,

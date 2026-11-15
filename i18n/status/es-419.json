@@ -24003,11 +24003,89 @@
     "by": "agent",
     "at": "2026-11-01"
   },
+  "report-player-log": {
+    "source": "d9805819a6cc",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
+  },
+  "report-player-log-a11y-hint": {
+    "source": "6cc493e385d7",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
+  },
+  "report-player-log-a11y-saved": {
+    "source": "e0a4affbf62f",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
+  },
+  "report-player-log-attach": {
+    "source": "3344c82e0e12",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
+  },
+  "report-player-log-detail": {
+    "source": "88bd4b3c1dd5",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
+  },
+  "report-player-log-empty": {
+    "source": "f5094de907da",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
+  },
+  "report-player-log-failed": {
+    "source": "020348ac937e",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
+  },
+  "report-player-log-failed-here": {
+    "source": "8cce9a2ed1a9",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
+  },
+  "report-player-log-save": {
+    "source": "3ca12ecc006b",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
+  },
+  "report-player-log-save-here": {
+    "source": "914e839c9934",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
+  },
+  "report-player-log-saved": {
+    "source": "69e1c610e040",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
+  },
+  "report-player-log-saved-to": {
+    "source": "3f22c123c3fd",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
+  },
   "report-privacy": {
     "source": "2a66bd1f65ce",
     "state": "draft",
     "by": "agent",
     "at": "2026-11-01"
+  },
+  "report-sent-report": {
+    "source": "9b6b14220271",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-15"
   },
   "report-show-sent": {
     "source": "23afb946a4f5",

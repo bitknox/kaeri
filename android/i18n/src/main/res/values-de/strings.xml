@@ -1293,6 +1293,19 @@
     <string name="report_tv_scan">Scanne den Code, um den Bericht auf deinem Smartphone zu öffnen.</string>
     <string name="report_crash_off">Absturzberichte sind aus, daher ist keiner enthalten. Du kannst sie unter Einstellungen, Über einschalten.</string>
     <string name="report_crash_settings">Absturzbericht-Einstellungen</string>
+    <string name="report_player_log">Player-Protokoll</string>
+    <plurals name="report_player_log_detail">
+        <item quantity="one">Die letzte Wiedergabe · %2$s</item>
+        <item quantity="other">Die letzten %1$,d Wiedergaben · %2$s</item>
+    </plurals>
+    <string name="report_player_log_empty">Noch keine Wiedergabe protokolliert</string>
+    <string name="report_player_log_save">Protokoll speichern…</string>
+    <string name="report_player_log_attach">Hänge die Datei an das Issue an, sobald es sich auf GitHub öffnet.</string>
+    <string name="report_player_log_saved">Gespeichert als %1$s</string>
+    <string name="report_player_log_failed">Das Protokoll konnte nicht gespeichert werden. Versuche einen anderen Ordner.</string>
+    <string name="report_sent_report">Bericht</string>
+    <string name="report_player_log_a11y_saved">Player-Protokoll gespeichert</string>
+    <string name="report_player_log_a11y_hint">Speichert eine Datei, die du an das Issue anhängst</string>
     <string name="settings_group_crashes">Absturzberichte</string>
     <string name="settings_crash_save">Absturzberichte auf diesem Gerät speichern</string>
     <string name="settings_crash_save_detail">Kaeri speichert zu jedem Absturz eine kurze Aufzeichnung auf diesem Gerät für „Fehler melden“, ohne Titel, Adressen und Namen. Es wird nichts von selbst gesendet.</string>

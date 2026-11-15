@@ -112,6 +112,14 @@ impl FfiEngine {
         self.kept::<Testing>().and_then(|kept| kept.store_invite.get().cloned())
     }
 
+    /// Fill the player log with `playbacks` made-up playbacks, the newest ending in a playback
+    /// error, for Report a bug's Player log row: 3 shows "The last 3 playbacks · 316 kB", 0 shows
+    /// "No playback logged yet". What the log held before is forgotten. The Crash saved scene
+    /// starts with 3. Only in a build with the `testing` feature.
+    pub fn testing_player_log(&self, playbacks: u32) {
+        kaeri_engine::player_log::seed_fixture(playbacks);
+    }
+
     /// Serve the fixtures' art badly from now on, as a busy CDN would: every second image is
     /// answered `503` its first `fail_first` times, and every image waits `delay_ms` before it
     /// is answered. For a test or the dev harness that art on screen still arrives. Does nothing

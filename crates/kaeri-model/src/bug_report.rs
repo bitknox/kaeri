@@ -12,8 +12,12 @@
 //!
 //! The text is bounded so the address stays under [`MAX_URL_BYTES`]: the error's message is cut
 //! first.
+//!
+//! The player log is a file of its own, never in the address or in Copy report: the reporter
+//! saves it and attaches it to the issue by hand. [`player_log_text`] is its text, redacted with
+//! the same rules and headed with the report's summary.
 
-use crate::crash::CrashRecord;
+use crate::crash::{CrashPlace, CrashRecord};
 
 /// The project's tracker, where the link goes.
 pub const REPO: &str = "bitknox/kaeri";
@@ -91,6 +95,164 @@ pub struct BugReport {
     /// asks for the report's text or address through the calls that read them.
     #[cfg_attr(feature = "ffi", uniffi(default))]
     pub crashes: Vec<String>,
+    /// Whether Player log is ticked: the summary then says the log is attached by hand. The log
+    /// itself never rides in the address or in Copy report.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub player_log: bool,
+}
+
+/// The [`BugError::kind`] of an error a playback ended in: a report opened from one starts with
+/// Player log ticked (see [`player_log_ticked`]).
+pub const PLAYBACK_ERROR: &str = "playback";
+
+/// What the player log holds, for the Player log row: "The last 3 playbacks · 412 KB".
+#[derive(Debug, Clone, PartialEq, Eq, Default)]
+#[cfg_attr(feature = "ffi", derive(uniffi::Record))]
+pub struct PlayerLogStats {
+    /// How many playbacks it holds: 0 before anything has played, when the row is disabled.
+    pub playbacks: u32,
+    /// The size of the redacted file, in bytes.
+    pub bytes: u64,
+    /// What the saved file is called, in local time: `kaeri-player-log-2026-11-15-1432.txt`.
+    pub file_name: String,
+}
+
+/// One line of the player log as the engine kept it, its addresses already cut: when, how much
+/// it mattered, which part said it, and what it said.
+#[derive(Debug, Clone, PartialEq, Eq, Default)]
+pub struct LoggedLine {
+    /// Local time with milliseconds: `14:21:07.412`.
+    pub time: String,
+    /// `ERROR`, `WARN` or `INFO`.
+    pub level: String,
+    /// `resolve`, `proxy`, `player` or `mpv`.
+    pub source: String,
+    pub message: String,
+}
+
+/// One playback in the player log, oldest line first.
+#[derive(Debug, Clone, PartialEq, Eq, Default)]
+pub struct LoggedPlayback {
+    /// The episode's number as the playback named it: `8`.
+    pub episode: String,
+    /// When it started, in local time: `14:21`.
+    pub started: String,
+    /// The show's title and the episode's own, removed wherever they appear.
+    pub titles: Vec<String>,
+    pub lines: Vec<LoggedLine>,
+    /// How many of its oldest lines were dropped to keep the log under its cap.
+    pub dropped: u64,
+}
+
+/// The longest a line of the player log may be, in characters.
+const LOG_LINE_CHARS: usize = 600;
+
+/// The player log's file: the report's summary (versions, system, build and sources), then each
+/// playback, newest first, every line redacted.
+///
+/// Removed wherever they appear: the report's private strings and sources, as in the summary, the
+/// playbacks' titles, and `private`, what the engine knows to be private (tracker account names,
+/// synced device names, party rooms, store links, server addresses, search words). Then
+/// [`redact`]'s rules take the addresses, hosts, paths, tokens and quoted text that are left.
+pub fn player_log_text(
+    report: &BugReport,
+    playbacks: &[LoggedPlayback],
+    private: &[String],
+) -> String {
+    let mut remove = names(report);
+    for playback in playbacks {
+        remove.extend(playback.titles.iter().map(|title| (title.clone(), "[title]")));
+    }
+    remove.extend(private.iter().map(|text| (text.clone(), "[removed]")));
+    let mut out = head_lines(report).join("\n");
+    out.push('\n');
+    let total = playbacks.len();
+    for (n, playback) in playbacks.iter().enumerate().rev() {
+        out.push('\n');
+        let mut heading = format!("── Playback {} of {total}", n + 1);
+        let episode = cut(&clean(&redact(&playback.episode, &remove)), 20);
+        if !episode.is_empty() {
+            heading.push_str(&format!(" · Episode {episode}"));
+        }
+        if !playback.started.is_empty() {
+            heading.push_str(&format!(" · {}", playback.started));
+        }
+        heading.push_str(" ──\n");
+        out.push_str(&heading);
+        match playback.dropped {
+            0 => {}
+            1 => out.push_str("(1 earlier line was dropped to keep the log small)\n"),
+            n => out
+                .push_str(&format!("({n} earlier lines were dropped to keep the log small)\n")),
+        }
+        for line in &playback.lines {
+            let message: String = redact(&line.message, &remove)
+                .chars()
+                .map(|c| if c.is_control() { ' ' } else { c })
+                .collect();
+            let message = cut(message.trim_end(), LOG_LINE_CHARS);
+            out.push_str(&format!(
+                "{} {:<5} {:<8} {message}\n",
+                line.time, line.level, line.source
+            ));
+        }
+    }
+    out
+}
+
+/// Whether Player log starts ticked as Report opens: from a playback error (an error of kind
+/// [`PLAYBACK_ERROR`]) or with a crash in the player among `crashes`. From anywhere else, such as
+/// Settings, it starts unticked.
+pub fn player_log_ticked(report: &BugReport, crashes: &[CrashRecord]) -> bool {
+    report.error.as_ref().is_some_and(|error| error.kind.trim() == PLAYBACK_ERROR)
+        || crashes.iter().any(|crash| crash.place == CrashPlace::Player)
+}
+
+/// `text` with every address in it cut to its scheme and host, as the app log keeps mpv's lines:
+/// a stream's address carries its signed token in its path or query. An address is a scheme and
+/// `://`, and everything up to a space or a quote.
+pub fn cut_addresses(text: &str) -> String {
+    let mut out = String::with_capacity(text.len());
+    let mut rest = text;
+    while let Some(at) = rest.find("://") {
+        // The scheme runs back from `://` over letters, digits, `+`, `.` and `-`, and starts
+        // with a letter.
+        let before = &rest[..at];
+        let start = before
+            .char_indices()
+            .rev()
+            .take_while(|(_, c)| c.is_ascii_alphanumeric() || matches!(c, '+' | '.' | '-'))
+            .last()
+            .map_or(at, |(i, _)| i);
+        let start = before[start..]
+            .char_indices()
+            .find(|(_, c)| c.is_ascii_alphabetic())
+            .map_or(at, |(i, _)| start + i);
+        if start == at {
+            out.push_str(&rest[..at + 3]);
+            rest = &rest[at + 3..];
+            continue;
+        }
+        let end = rest[at + 3..]
+            .find(|c: char| c.is_whitespace() || matches!(c, '"' | '\'' | '<' | '>'))
+            .map_or(rest.len(), |i| at + 3 + i);
+        out.push_str(&rest[..start]);
+        out.push_str(&cut_address(&rest[start..end]));
+        rest = &rest[end..];
+    }
+    out.push_str(rest);
+    out
+}
+
+/// `https://cdn.example`, from `https://cdn.example/a/b.m3u8?token=...`: the scheme, the host and
+/// the port, never the credentials, the path or the query.
+pub fn cut_address(url: &str) -> String {
+    let Some((scheme, rest)) = url.split_once("://").filter(|(s, _)| !s.is_empty()) else {
+        return if url.starts_with('/') { "a local file".into() } else { "an address".into() };
+    };
+    let authority = rest.split(['/', '?', '#']).next().unwrap_or_default();
+    let host = authority.rsplit('@').next().unwrap_or_default();
+    format!("{scheme}://{host}")
 }
 
 /// The form field the crash summaries fill.
@@ -201,23 +363,35 @@ fn build(
     url
 }
 
-fn summary_with(report: &BugReport, message_chars: usize) -> String {
-    let field = |value: &str| {
-        let value = short(value, report);
-        if value.is_empty() { "unknown".to_owned() } else { value }
-    };
+/// A short field of the report, or "unknown".
+fn field(value: &str, report: &BugReport) -> String {
+    let value = short(value, report);
+    if value.is_empty() { "unknown".to_owned() } else { value }
+}
+
+/// The summary's first lines, which head the player log too: versions, system, build, sources.
+fn head_lines(report: &BugReport) -> Vec<String> {
     let (built_in, plugins) = sources(&report.providers);
-    let mut lines = vec![
-        format!("Kaeri {}, engine {}", field(&report.app_version), env!("CARGO_PKG_VERSION")),
+    vec![
+        format!(
+            "Kaeri {}, engine {}",
+            field(&report.app_version, report),
+            env!("CARGO_PKG_VERSION")
+        ),
         format!(
             "{} {}, {}",
-            field(&report.platform),
-            field(&report.os_version),
+            field(&report.platform, report),
+            field(&report.os_version, report),
             report.device.word()
         ),
-        format!("Build: {}", field(&report.build)),
+        format!("Build: {}", field(&report.build, report)),
         format!("Sources: {}", sources_line(&built_in, plugins)),
-    ];
+    ]
+}
+
+fn summary_with(report: &BugReport, message_chars: usize) -> String {
+    let field = |value: &str| field(value, report);
+    let mut lines = head_lines(report);
     match &report.error {
         Some(error) => {
             lines.push(format!("Last error: {}", field(&error.kind)));
@@ -227,6 +401,9 @@ fn summary_with(report: &BugReport, message_chars: usize) -> String {
             }
         }
         None => lines.push("Last error: none".to_owned()),
+    }
+    if report.player_log {
+        lines.push("Player log: attached by hand".to_owned());
     }
     lines.join("\n")
 }
@@ -458,6 +635,8 @@ fn redact_core(core: &str) -> String {
             .map(|pair| match pair.split_once('=') {
                 Some((k, v)) => {
                     let key = k.to_lowercase();
+                    // The key is redacted too: a path or an address can sit before the `=`.
+                    let k = redact_core(k);
                     if SECRET_KEYS.iter().any(|s| key.contains(s)) && !v.is_empty() {
                         format!("{k}=[secret]")
                     } else {
@@ -511,6 +690,13 @@ fn is_drive(s: &str) -> bool {
 }
 
 fn strip_port(s: &str) -> &str {
+    // `[::1]:7000`, an IPv6 address with a port, its opening bracket already taken as a lead.
+    if let Some((host, port)) = s.rsplit_once("]:")
+        && !port.is_empty()
+        && port.bytes().all(|b| b.is_ascii_digit())
+    {
+        return host.trim_start_matches('[');
+    }
     match s.rsplit_once(':') {
         Some((host, port))
             if !host.contains(':')
@@ -611,6 +797,7 @@ mod tests {
             error: Some(BugError { kind: "playback".into(), message: "no stream".into() }),
             private: vec![],
             crashes: vec![],
+            player_log: false,
         }
     }
 
@@ -914,5 +1101,220 @@ mod tests {
                 }
             }
         }
+    }
+
+    #[test]
+    fn a_ticked_player_log_says_so_in_the_summary_and_nowhere_else() {
+        let mut r = report();
+        assert!(!summary(&r).contains("Player log"));
+        r.player_log = true;
+        assert!(summary(&r).ends_with("\nPlayer log: attached by hand"), "{}", summary(&r));
+        let text = report_text(&r, &[]);
+        assert!(text.contains("Player log: attached by hand"));
+        assert!(!text.contains("── Playback"), "Copy report never carries the log: {text}");
+    }
+
+    #[test]
+    fn the_log_starts_ticked_after_a_playback_error_or_a_crash_in_the_player() {
+        let mut r = report();
+        r.error = Some(BugError { kind: PLAYBACK_ERROR.into(), message: "x".into() });
+        assert!(player_log_ticked(&r, &[]));
+        r.error = Some(BugError { kind: "message".into(), message: "x".into() });
+        assert!(!player_log_ticked(&r, &[]));
+        let mut player = crash(1);
+        player.place = CrashPlace::Player;
+        assert!(player_log_ticked(&r, &[player]));
+        let mut home = crash(2);
+        home.place = CrashPlace::Home;
+        assert!(!player_log_ticked(&r, &[home]));
+        r.error = None;
+        assert!(!player_log_ticked(&r, &[]), "from Settings it starts unticked");
+    }
+
+    #[test]
+    fn every_address_in_a_line_is_cut_to_its_host() {
+        assert_eq!(
+            cut_address("https://cdn.example/a/b.m3u8?token=secret"),
+            "https://cdn.example"
+        );
+        assert_eq!(cut_address("http://user:pw@127.0.0.1:8123/m/x"), "http://127.0.0.1:8123");
+        assert_eq!(cut_address("/home/viewer/episode.mkv"), "a local file");
+        assert_eq!(cut_address("episode.mkv"), "an address");
+        let line = "Opening https://cdn.example/seg/1.ts?sig=abc failed, retrying \"http://b.example:81/x\"";
+        assert_eq!(
+            cut_addresses(line),
+            "Opening https://cdn.example failed, retrying \"http://b.example:81\""
+        );
+        assert_eq!(cut_addresses("no address here"), "no address here");
+        assert_eq!(cut_addresses("odd ://thing"), "odd ://thing");
+    }
+
+    fn logged(time: &str, level: &str, source: &str, message: &str) -> LoggedLine {
+        LoggedLine {
+            time: time.into(),
+            level: level.into(),
+            source: source.into(),
+            message: message.into(),
+        }
+    }
+
+    /// A playback whose lines carry what the hostile plugin fixture
+    /// (`plugins/test-hostile`) tries: a host it never declared, a credential it was never
+    /// granted, its own name and id, and the title, signed links and paths around it.
+    fn hostile_playback() -> LoggedPlayback {
+        LoggedPlayback {
+            episode: "8".into(),
+            started: "14:21".into(),
+            titles: vec!["Moonlit Harbor".into(), "The Lantern Festival".into()],
+            lines: vec![
+                logged(
+                    "14:21:07.412",
+                    "INFO",
+                    "resolve",
+                    "resolving a play id=[removed] episode=8 sources=[\"test-hostile\", \"torrents\"]",
+                ),
+                logged(
+                    "14:21:07.500",
+                    "WARN",
+                    "resolve",
+                    "denied: https://exfiltrate.example/steal is not an allowed host",
+                ),
+                logged(
+                    "14:21:07.501",
+                    "WARN",
+                    "resolve",
+                    "ESCAPED: config-get leaked \"credential-that-does-not-exist\"",
+                ),
+                logged(
+                    "14:21:07.502",
+                    "INFO",
+                    "resolve",
+                    "Hostile (test only) answered from allowed.example with 3 streams",
+                ),
+                logged("14:21:07.630", "INFO", "proxy", "listening on 127.0.0.1:52811"),
+                logged(
+                    "14:21:07.702",
+                    "INFO",
+                    "player",
+                    "open https://cdn.allowed.example/v/Moonlit%20Harbor/08.m3u8?token=eyJhbGciOiJIUzI1NiJ9.abc.def",
+                ),
+                logged(
+                    "14:21:07.940",
+                    "INFO",
+                    "mpv",
+                    "[cplayer] Playing: Moonlit Harbor - 08 [1080p].mkv",
+                ),
+                logged(
+                    "14:21:08.613",
+                    "INFO",
+                    "mpv",
+                    "[cplayer]  (+) Subs  --sid=1 --slang=eng /Users/viewer/Movies/Moonlit Harbor/08.ass",
+                ),
+                logged("14:21:08.700", "INFO", "mpv", "[osd] The Lantern Festival"),
+                logged(
+                    "14:21:09.000",
+                    "INFO",
+                    "player",
+                    "signed in as viewer-handle on [::1]:7000 room LAMP-8812 for viewer@mail.example",
+                ),
+                logged(
+                    "14:33:58.004",
+                    "ERROR",
+                    "proxy",
+                    "segment 212 failed after 3 tries (cdn.allowed.example)",
+                ),
+            ],
+            dropped: 0,
+        }
+    }
+
+    #[test]
+    fn a_hostile_player_log_leaves_nothing_private_behind() {
+        let mut r = report();
+        r.providers.push(ProviderRow {
+            id: "test-hostile".into(),
+            name: "Hostile (test only)".into(),
+            kind: "plugin".into(),
+            usable: true,
+            hosts: vec!["allowed.example".into()],
+            origin: ProviderOrigin::ByHand,
+            ..ProviderRow::default()
+        });
+        let private = vec!["viewer-handle".into(), "LAMP-8812".into()];
+        let text = player_log_text(&r, &[hostile_playback()], &private);
+        for leak in [
+            "Moonlit",
+            "Lantern",
+            "exfiltrate.example",
+            "allowed.example",
+            "credential-that-does-not-exist",
+            "test-hostile",
+            "Hostile",
+            "127.0.0.1",
+            "52811",
+            "eyJ",
+            "token",
+            "/Users",
+            "08.ass",
+            "viewer-handle",
+            "LAMP-8812",
+            "::1",
+            "mail.example",
+        ] {
+            assert!(!text.contains(leak), "{leak} in\n{text}");
+        }
+        // What helps a report stays: the times, levels, sources and plain words.
+        assert!(
+            text.contains("14:33:58.004 ERROR proxy    segment 212 failed after 3 tries"),
+            "{text}"
+        );
+        assert!(
+            text.contains(
+                "14:21:08.613 INFO  mpv      [cplayer]  (+) Subs  --sid=1 --slang=eng"
+            ),
+            "{text}"
+        );
+    }
+
+    #[test]
+    fn the_log_is_headed_by_the_summary_and_runs_newest_playback_first() {
+        let mut r = report();
+        r.player_log = true;
+        let older = LoggedPlayback {
+            episode: "7".into(),
+            started: "13:48".into(),
+            titles: vec!["Moonlit Harbor".into()],
+            lines: vec![logged("13:48:02.118", "INFO", "resolve", "2 streams")],
+            dropped: 0,
+        };
+        let newer = LoggedPlayback {
+            episode: "8".into(),
+            started: "14:21".into(),
+            titles: vec!["Moonlit Harbor".into()],
+            lines: vec![
+                logged("14:21:07.412", "INFO", "resolve", "3 streams"),
+                logged("14:21:08.902", "INFO", "player", "first_frame_ms=1290"),
+            ],
+            dropped: 1204,
+        };
+        let text = player_log_text(&r, &[older, newer], &[]);
+        let engine = env!("CARGO_PKG_VERSION");
+        assert_eq!(
+            text,
+            format!(
+                "Kaeri 0.10.0, engine {engine}\n\
+                 macOS 26.1, computer\n\
+                 Build: release\n\
+                 Sources: torrent, 2 plugin sources\n\
+                 \n\
+                 ── Playback 2 of 2 · Episode 8 · 14:21 ──\n\
+                 (1204 earlier lines were dropped to keep the log small)\n\
+                 14:21:07.412 INFO  resolve  3 streams\n\
+                 14:21:08.902 INFO  player   first_frame_ms=1290\n\
+                 \n\
+                 ── Playback 1 of 2 · Episode 7 · 13:48 ──\n\
+                 13:48:02.118 INFO  resolve  2 streams\n"
+            )
+        );
     }
 }
