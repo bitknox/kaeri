@@ -70,11 +70,11 @@ public class TvWordsTests
         Assert.Equal("Pair again with Living room", TvWords.BarLine(Card(FfiLinkPhase.Unpaired), playing: true));
     }
 
-    static FfiCastCard Cast(FfiLinkPhase phase, FfiNowCard? now, Msg? notice = null, string? phaseLine = null) =>
+    internal static FfiCastCard Cast(FfiLinkPhase phase, FfiNowCard? now, Msg? notice = null, string? phaseLine = null) =>
         new(new FfiRemoteCard("Living room", phase, phaseLine, new FfiScreen.Home(), now, 1, Over: notice is not null, Reached: false),
             FfiVolumeControl.MuteOnly, false, notice);
 
-    static FfiNowCard Now(bool loading) => new(900_001, "The Lantern Road", "7", "Episode 7 · The Lantern Road", loading,
+    internal static FfiNowCard Now(bool loading) => new(900_001, "The Lantern Road", "7", "Episode 7 · The Lantern Road", loading,
         492, loading ? null : 1420, false, 1, null, [], [], false, null);
 
     [Fact]
@@ -281,14 +281,14 @@ public class TvRemoteTests
     {
         var remote = new TvRemote();
         Assert.Null(remote.CastNote);
-        remote.TakeCast(Cast(FfiLinkPhase.Connected, Now(loading: false)));
+        remote.TakeCast(TvWordsTests.Cast(FfiLinkPhase.Connected, TvWordsTests.Now(loading: false)));
         Assert.Null(remote.CastNote);
         var fallback = new Msg.NoticeCastFallback("Living room");
-        remote.TakeCast(Cast(FfiLinkPhase.Connected, Now(loading: false)) with { Note = fallback });
+        remote.TakeCast(TvWordsTests.Cast(FfiLinkPhase.Connected, TvWordsTests.Now(loading: false)) with { Note = fallback });
         Assert.Equal(fallback, remote.CastNote);
         Assert.Equal("Living room plays this in its own player. Subtitles show as plain text.", remote.CastNote?.Text());
         // An ended cast's card says its ending, not the note.
-        remote.TakeCast(Cast(FfiLinkPhase.Connected, Now(false), new Msg.NoticeCastLost("Living room")) with { Note = fallback });
+        remote.TakeCast(TvWordsTests.Cast(FfiLinkPhase.Connected, TvWordsTests.Now(false), new Msg.NoticeCastLost("Living room")) with { Note = fallback });
         Assert.Null(remote.CastNote);
     }
 
