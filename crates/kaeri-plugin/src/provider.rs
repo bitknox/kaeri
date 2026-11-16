@@ -309,6 +309,7 @@ impl Provider for WasmProvider {
                 // Stamped by the host for the same reason as on streams: a pick is routed back
                 // by this id, and a guest must not be able to route it to another provider.
                 provider_id: self.manifest.id.clone(),
+                provider_name: String::new(),
                 title: candidate.title,
                 quality: candidate.quality,
                 label: candidate.label,

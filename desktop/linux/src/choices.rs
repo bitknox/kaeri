@@ -218,6 +218,7 @@ mod tests {
         SourceCandidate {
             id: id.into(),
             provider_id: "torrent".into(),
+            provider_name: String::new(),
             title: title.into(),
             quality: Some(1080),
             label: Some("84 seeders".into()),

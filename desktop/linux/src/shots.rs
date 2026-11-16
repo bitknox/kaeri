@@ -2890,6 +2890,7 @@ fn choices() -> Vec<kaeri_core::traits::SourceCandidate> {
         |id: &str, title: &str, quality, size: &str, seeders: u32, auto_pick| SourceCandidate {
             id: id.into(),
             provider_id: "sample-source".into(),
+            provider_name: String::new(),
             title: title.into(),
             quality: Some(quality),
             label: Some(format!("{seeders} seeders")),
@@ -3635,6 +3636,7 @@ fn source_options(
         |id: &str, title: &str, quality, seeders: u32, size: &str| SourceCandidate {
             id: id.into(),
             provider_id: "torrent".into(),
+            provider_name: String::new(),
             title: title.into(),
             quality: Some(quality),
             label: Some(format!("{seeders} seeders")),

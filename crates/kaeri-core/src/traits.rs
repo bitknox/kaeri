@@ -112,6 +112,10 @@ pub struct SourceCandidate {
     /// The provider that produced this candidate, so a pick can be routed straight
     /// back to it rather than re-entering failover.
     pub provider_id: String,
+    /// The name the provider goes by on screen, for a picker's row. Filled in by the engine as
+    /// it lists; empty as a provider makes the candidate.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub provider_name: String,
     /// The release title as listed at the source.
     pub title: String,
     /// Vertical resolution, when the listing states one.

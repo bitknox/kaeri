@@ -79,8 +79,17 @@ player-start-miss-timed-out = { $name } took too long
 # @arg name: text
 player-start-miss-skipped = You skipped { $name }
 
-# Details row for sources passed over because they failed lately. The name goes before it.
-player-start-resting = Skipped after recent failures
+# Details row for a source not asked while torrent playback is off. The name goes before it.
+player-start-row-held-torrents-off = Not asked · Torrent playback is off
+
+# Details row for a source not asked while the proxy check for torrents hasn't passed. The name goes before it.
+player-start-row-held-proxy = Not asked · Waiting for the proxy check
+
+# Details row for a source not asked on cellular, where torrents are off. The name goes before it.
+player-start-row-held-cellular = Not asked · Torrents are off on cellular
+
+# Details row for a source not asked because it says it can't be used right now. The name goes before it.
+player-start-row-held-other = Not asked · Not available right now
 
 # Detail line once the streams are found and the player opens one. The name is the source's.
 # @arg name: text
@@ -198,6 +207,42 @@ player-start-row-skipped = Skipped
 # Second clause of a failure: the sources that were asked, joined as a list by the app.
 # @arg names: text
 player-start-asked = { $names } were asked.
+
+# First sentence of a failure when some sources gave no real answer: they failed, took too long or weren't asked. The names are joined as a list by the app.
+# @arg names: text
+player-start-unreached = Couldn't reach { $names }.
+
+# Sentence of a failure naming the sources not asked while torrent playback is off, joined as a list by the app.
+# @arg count: int
+# @arg names: text
+player-start-not-asked-torrents-off = { $count ->
+    [one] { $names } wasn't asked: torrent playback is off.
+   *[other] { $names } weren't asked: torrent playback is off.
+ }
+
+# Sentence of a failure naming the sources not asked while the proxy check for torrents hasn't passed, joined as a list by the app.
+# @arg count: int
+# @arg names: text
+player-start-not-asked-proxy = { $count ->
+    [one] { $names } wasn't asked: the proxy check hasn't passed.
+   *[other] { $names } weren't asked: the proxy check hasn't passed.
+ }
+
+# Sentence of a failure naming the sources not asked on cellular, where torrents are off, joined as a list by the app.
+# @arg count: int
+# @arg names: text
+player-start-not-asked-cellular = { $count ->
+    [one] { $names } wasn't asked: torrents are off on cellular.
+   *[other] { $names } weren't asked: torrents are off on cellular.
+ }
+
+# Sentence of a failure naming the sources not asked because they say they can't be used right now, joined as a list by the app.
+# @arg count: int
+# @arg names: text
+player-start-not-asked-other = { $count ->
+    [one] { $names } wasn't asked: it isn't available right now.
+   *[other] { $names } weren't asked: they aren't available right now.
+ }
 
 # Label of the switch in the Details list that plays the episode with its subtitles.
 # @max 16
@@ -626,6 +671,26 @@ source-picker-finding = Finding { -source-pl }…
 
 # Line when the picker found no stream for the episode.
 source-picker-empty = No { -source } has a stream for this episode.
+
+# Line over the reasons when no source lists a release of the episode. The episode is its label.
+# @arg episode: text
+source-picker-none-lists = No { -source } lists episode { $episode }.
+
+# Line of the picker for a source not asked while torrent playback is off.
+# @arg name: text
+source-picker-held-torrents-off = { $name } isn't asked while torrent playback is off
+
+# Line of the picker for a source not asked while the proxy check for torrents hasn't passed.
+# @arg name: text
+source-picker-held-proxy = { $name } isn't asked until the proxy check passes
+
+# Line of the picker for a source not asked on cellular, where torrents are off.
+# @arg name: text
+source-picker-held-cellular = { $name } isn't asked on cellular
+
+# Line of the picker for a source that says it can't be used right now.
+# @arg name: text
+source-picker-held-other = { $name } isn't available right now
 
 # Title of the picker sheet in the player.
 player-sources = { -source-cap-pl }

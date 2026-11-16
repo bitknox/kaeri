@@ -518,6 +518,7 @@ async fn an_episodes_releases_are_listed_for_the_picker() {
     let release = SourceCandidate {
         id: "release-1".into(),
         provider_id: sources::PROVIDER_ID.into(),
+        provider_name: String::new(),
         title: "Stardust Wayfarer - 01 (1080p)".into(),
         quality: Some(1080),
         label: None,

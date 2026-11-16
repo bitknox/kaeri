@@ -981,6 +981,7 @@ mod tests {
         let release = SourceCandidate {
             id: "r1".into(),
             provider_id: "torrent".into(),
+            provider_name: String::new(),
             title: "Batch".into(),
             quality: Some(1080),
             label: Some("9 peers".into()),
@@ -1031,6 +1032,7 @@ mod tests {
                 vec![SourceCandidate {
                     id: "r1".into(),
                     provider_id: "torrent".into(),
+                    provider_name: String::new(),
                     title: "Batch".into(),
                     quality: None,
                     label: None,

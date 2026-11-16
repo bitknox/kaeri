@@ -712,6 +712,7 @@ mod tests {
         SourceCandidate {
             id: format!("https://indexer.example/view/{title}"),
             provider_id: "torrent".into(),
+            provider_name: String::new(),
             title: title.into(),
             quality: Some(1080),
             label: Some("120 peers".into()),

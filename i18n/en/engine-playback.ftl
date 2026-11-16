@@ -61,6 +61,10 @@ cause-release-failed = Couldn't start that { -release }: { $detail }
 # Reason: a play waited too long for its sources to give it a stream, and gave up.
 cause-sources-timed-out = The { -source-pl } took too long to answer. Try again, or choose another { -source }.
 
+# Reason: some sources gave no real answer for the episode: they failed, took too long or weren't asked, and the rest don't have it. The names are joined with commas.
+# @arg names: text
+cause-sources-unreached = Couldn't reach { $names }. Try again, or choose another { -source }.
+
 # Reason: every source matched the title but none has the episode. The detail is what each said.
 # @arg episode: text
 # @arg detail: text
