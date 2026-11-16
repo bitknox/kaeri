@@ -6,7 +6,6 @@ tv-unnamed = TV
 tv-another-short = TV lain…
 tv-volume-label = Volume TV
 tv-waiting = Menunggu TV
-tv-waiting-for = Menunggu { $name }
 tv-row-name = { $name }, { $detail }
 tv-row-name-connected = { $name }, { $detail }, tersambung
 tv-row-pair-help = Dipasangkan dengan TV ini

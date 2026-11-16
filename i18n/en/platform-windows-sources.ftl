@@ -38,11 +38,6 @@ tv-volume-label = TV volume
 # @only windows
 tv-waiting = Waiting for the TV
 
-# While pairing, until the named TV answers.
-# @only windows
-# @arg name: text
-tv-waiting-for = Waiting for { $name }
-
 # Name read by a screen reader for a TV in the picker: its name, then the line under it.
 # @only windows
 # @arg name: text

@@ -41,6 +41,7 @@ tv-show-remote = Visa fjärrkontrollen för { $name }
 tv-status-playing = Spelar på { $name }
 tv-status-connecting = Ansluter till { $name }
 tv-status-reconnecting = Ansluter om till { $name }
+tv-waiting-for = Väntar på { $name }
 tv-status-connected = Ansluten
 tv-search-on-tv = Sök på TV:n
 tv-type-search = Skriv en sökning

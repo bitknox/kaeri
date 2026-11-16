@@ -6,7 +6,6 @@ tv-unnamed = Телевизор
 tv-another-short = Другой ТВ…
 tv-volume-label = Громкость телевизора
 tv-waiting = Ожидание телевизора
-tv-waiting-for = Ожидание { $name }
 tv-row-name = { $name }, { $detail }
 tv-row-name-connected = { $name }, { $detail }, подключено
 tv-row-pair-help = Сопряжение с этим телевизором

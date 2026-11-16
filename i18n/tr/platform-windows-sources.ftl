@@ -6,7 +6,6 @@ tv-unnamed = TV
 tv-another-short = Başka TV…
 tv-volume-label = TV sesi
 tv-waiting = TV yanıtı bekleniyor
-tv-waiting-for = { $name } yanıtı bekleniyor
 tv-row-name = { $name }, { $detail }
 tv-row-name-connected = { $name }, { $detail }, bağlı
 tv-row-pair-help = Bu TV ile eşleştirilir
