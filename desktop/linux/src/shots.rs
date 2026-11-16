@@ -167,6 +167,7 @@ pub const PARTY: [&str; 32] = [
     "party-close",
     "party-nosource",
     "party-choose",
+    "party-choose-missed",
     "party-unaired",
     "party-nosources",
     "party-title-menu",
@@ -2590,7 +2591,7 @@ fn party_stage(shell: &Rc<Shell>, shot: &str) -> f64 {
             }
             3.5
         }
-        "party-nosource" | "party-nosources" | "party-choose" => {
+        "party-nosource" | "party-nosources" | "party-choose" | "party-choose-missed" => {
             let Some(server) = serve(None) else { return 0.0 };
             ctx.hub.send(Command::PartyJoin {
                 server,
@@ -2621,6 +2622,15 @@ fn party_stage(shell: &Rc<Shell>, shot: &str) -> f64 {
                         NoSourceWhy::NotFound,
                         "could not match this title: sample-source has no episode 7",
                     ),
+                    "party-choose-missed" => {
+                        source::rehearse_choose(&ctx, title, "7");
+                        ctx.hub.take(vec![kaeri_model::event::Event::Sources {
+                            id: title,
+                            episode: "7".into(),
+                            candidates: Vec::new(),
+                            missed: missed(),
+                        }]);
+                    }
                     _ => {
                         source::rehearse_choose(&ctx, title, "7");
                         // Before the engine's own answer, which has no sources to give.
@@ -2628,6 +2638,7 @@ fn party_stage(shell: &Rc<Shell>, shot: &str) -> f64 {
                             id: title,
                             episode: "7".into(),
                             candidates: choices(),
+                            missed: Vec::new(),
                         }]);
                     }
                 }
@@ -2869,7 +2880,7 @@ fn party_unstage(shell: &Rc<Shell>, shot: &str) {
     if shell.is_player() {
         shell.player.close();
     }
-    if !matches!(shot, "party-nosource" | "party-nosources" | "party-choose") {
+    if !matches!(shot, "party-nosource" | "party-nosources" | "party-choose" | "party-choose-missed") {
         let _ = WidgetExt::activate_action(&shell.ctx.window, "win.back", None);
     }
     shell.player.hold_up_next.set(false);
@@ -2890,7 +2901,7 @@ fn choices() -> Vec<kaeri_core::traits::SourceCandidate> {
         |id: &str, title: &str, quality, size: &str, seeders: u32, auto_pick| SourceCandidate {
             id: id.into(),
             provider_id: "sample-source".into(),
-            provider_name: String::new(),
+            provider_name: "Sample Source".into(),
             title: title.into(),
             quality: Some(quality),
             label: Some(format!("{seeders} seeders")),
@@ -2903,6 +2914,21 @@ fn choices() -> Vec<kaeri_core::traits::SourceCandidate> {
         choice("a", "Stardust Wayfarer - 07 (1080p)", 1080, "1.4 GiB", 42, true),
         choice("b", "Stardust Wayfarer - 07 (720p)", 720, "690 MiB", 18, false),
         choice("c", "Stardust Wayfarer - 07 (480p)", 480, "310 MiB", 5, false),
+    ]
+}
+
+/// What each source said when none listed episode 7: one failed, one is held back while
+/// torrent playback is off, and one lacks the episode.
+#[cfg(feature = "fixtures")]
+fn missed() -> Vec<kaeri_model::starting::MissedListing> {
+    use kaeri_model::starting::{ListingMiss, MissedListing, SourceHold};
+    vec![
+        MissedListing { name: "Alpha".into(), miss: ListingMiss::Failed },
+        MissedListing { name: "Brook".into(), miss: ListingMiss::NoEpisode },
+        MissedListing {
+            name: "Harbor".into(),
+            miss: ListingMiss::HeldBack { why: SourceHold::TorrentsOff },
+        },
     ]
 }
 

@@ -71,7 +71,8 @@ impl Walk {
         self
     }
 
-    pub(crate) fn say(&self, step: Step) {
+    /// Tell the observer a step, as the walk through the sources does.
+    pub fn say(&self, step: Step) {
         if let Some(observer) = &self.observer {
             observer(step);
         }

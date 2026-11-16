@@ -84,6 +84,8 @@ impl Further {
                 why: kaeri_model::party::NoSourceWhy::NotFound,
                 text: kaeri_model::Msg::NoticeReason { reason: kaeri_model::Cause::NoSources },
                 asked: Vec::new(),
+                unreached: Vec::new(),
+                held_back: Vec::new(),
             }),
         }
     }

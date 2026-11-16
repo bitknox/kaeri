@@ -73,6 +73,8 @@ pub struct Services {
     pub every_play_a_party: bool,
     /// The next episode's streams, found while the current one's ending plays.
     pub prefetch: Prefetch,
+    /// The sources the last failed start couldn't reach, for Try again to give another chance.
+    pub unreached: crate::playback::starting::Unreached,
     /// Every token store the device keeps, under the bare names: the profiles' tracker tokens
     /// are `p-<id>/` ones beside them, moved and removed through this.
     pub tokens: TokenStore,
@@ -178,6 +180,7 @@ impl Services {
             hosted_player: !cfg!(feature = "desktop"),
             every_play_a_party: false,
             prefetch: Prefetch::default(),
+            unreached: Default::default(),
             tokens,
             syncing: Default::default(),
             artwork: Default::default(),

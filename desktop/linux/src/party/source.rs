@@ -9,7 +9,13 @@ use std::{cell::Cell, rc::Rc};
 use adw::prelude::*;
 use kaeri_core::{ids::AnilistId, traits::SourceCandidate};
 use kaeri_i18n::t;
-use kaeri_model::{command::Command, event::Event, notice::NoticeKind, party::NoSourceWhy};
+use kaeri_model::{
+    command::Command,
+    event::Event,
+    notice::NoticeKind,
+    party::NoSourceWhy,
+    starting::{ListingMiss, MissedListing, SourceHold},
+};
 
 use crate::{
     widgets,
@@ -232,10 +238,10 @@ pub fn choose(ctx: &Rc<Ctx>, id: AnilistId, episode: &str) {
         move |event| {
             let Some(state) = weak.upgrade() else { return };
             match event {
-                Event::Sources { id, episode, candidates }
+                Event::Sources { id, episode, candidates, missed }
                     if state.looking.get() && *id == state.id && *episode == state.episode =>
                 {
-                    state.listed(candidates);
+                    state.listed(candidates, missed);
                 }
                 // The engine says why it found nothing as an alert, not as an empty list.
                 Event::Toast(notice)
@@ -285,11 +291,29 @@ impl Choose {
         self.again.set_visible(true);
     }
 
-    fn listed(self: &Rc<Self>, found: &[SourceCandidate]) {
+    fn listed(self: &Rc<Self>, found: &[SourceCandidate], missed: &[MissedListing]) {
         self.looking.set(false);
         self.spinner.set_visible(false);
         while let Some(row) = self.list.first_child() {
             self.list.remove(&row);
+        }
+        if found.is_empty() && !missed.is_empty() {
+            // What each source said: one that failed or was held back is not one without the
+            // episode, and Try again asks it anew.
+            self.line.set_label(&t::source_picker_none_lists(&self.episode));
+            for miss in missed {
+                let row = adw::ActionRow::builder()
+                    .title(gtk::glib::markup_escape_text(&missed_line(miss, &self.episode)))
+                    .activatable(false)
+                    .build();
+                row.set_title_lines(2);
+                self.list.append(&row);
+            }
+            self.list.set_visible(true);
+            let reachable = missed.iter().any(|m| unreached(&m.miss));
+            self.again.set_visible(reachable);
+            self.providers.set_visible(!reachable);
+            return;
         }
         if found.is_empty() {
             self.line.set_label(&t::party_sources_none_listed(super::number(&self.episode)));
@@ -326,9 +350,40 @@ impl Choose {
     }
 }
 
-/// "sample-source · 1080p · 1.4 GiB · 12 seeders", the last being the source's own label.
+/// Whether a source's miss was one where it gave no real answer: Try again may reach it.
+fn unreached(miss: &ListingMiss) -> bool {
+    matches!(miss, ListingMiss::Failed | ListingMiss::TimedOut | ListingMiss::HeldBack { .. })
+}
+
+/// Why one source listed no release: its name once, as it goes by.
+pub(crate) fn missed_line(missed: &MissedListing, episode: &str) -> String {
+    let name = missed.name.as_str();
+    match &missed.miss {
+        ListingMiss::NoMatch => t::player_start_miss_no_match(name),
+        ListingMiss::NoEpisode => t::player_start_miss_no_episode(name, episode),
+        ListingMiss::Failed => t::player_start_miss_failed(name),
+        ListingMiss::TimedOut => t::player_start_miss_timed_out(name),
+        ListingMiss::HeldBack { why } => match why {
+            SourceHold::TorrentsOff => t::source_picker_held_torrents_off(name),
+            SourceHold::ProxyCheck => t::source_picker_held_proxy(name),
+            SourceHold::Cellular => t::source_picker_held_cellular(name),
+            SourceHold::Other => t::source_picker_held_other(name),
+        },
+    }
+}
+
+/// The name a release's source goes by, and its id when the engine gave none.
+fn source_name(candidate: &SourceCandidate) -> String {
+    if candidate.provider_name.is_empty() {
+        candidate.provider_id.clone()
+    } else {
+        candidate.provider_name.clone()
+    }
+}
+
+/// "Sample Source · 1080p · 1.4 GiB · 12 seeders", the last being the source's own label.
 fn detail(candidate: &SourceCandidate) -> String {
-    let mut parts = vec![candidate.provider_id.clone()];
+    let mut parts = vec![source_name(candidate)];
     if let Some(quality) = candidate.quality {
         parts.push(format!("{quality}p"));
     }

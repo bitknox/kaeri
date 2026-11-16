@@ -13,6 +13,7 @@ use kaeri_model::{
     notice::Notice,
     progress::{EpisodeProgress, TitleProgress},
     sources::{MatchCandidate, MatchQuestion},
+    starting::{ListingMiss, MissedListing, SourceHold},
 };
 
 use super::{App, Cursor, Field, info};
@@ -170,16 +171,26 @@ impl App {
         id: AnilistId,
         episode: String,
         candidates: Vec<SourceCandidate>,
+        missed: &[MissedListing],
     ) {
         // A stale answer — the user has navigated away since asking, or asked about
         // another episode — is not a question worth interrupting them with, and offering
         // one episode's releases under another's context would play the wrong one.
-        if self.source_context.as_ref() != Some(&(id, episode)) {
+        if self.source_context.as_ref() != Some(&(id, episode.clone())) {
             return;
         }
         if candidates.is_empty() {
             self.source_context = None;
-            self.push_toast(info(t::episodes_no_releases()));
+            // What each source said, when one said something: a source that failed is not one
+            // without the episode.
+            if missed.is_empty() {
+                self.push_toast(info(t::episodes_no_releases()));
+            } else {
+                let reasons: Vec<String> =
+                    missed.iter().map(|m| missed_line(m, &episode)).collect();
+                let line = format!("{} {}.", t::source_picker_none_lists(&episode), reasons.join(". "));
+                self.push_toast(Notice::alert(Msg::verbatim(line)));
+            }
             return;
         }
         self.sources = candidates;
@@ -611,7 +622,24 @@ impl App {
     pub fn sources_here(&self, candidates: Vec<SourceCandidate>) -> Event {
         let (id, episode) =
             self.source_context.clone().unwrap_or((AnilistId::new(0), String::new()));
-        Event::Sources { id, episode, candidates }
+        Event::Sources { id, episode, candidates, missed: Vec::new() }
+    }
+}
+
+/// Why one source listed no release, in the picker's words: its name once, as it goes by.
+fn missed_line(missed: &MissedListing, episode: &str) -> String {
+    let name = missed.name.as_str();
+    match &missed.miss {
+        ListingMiss::NoMatch => t::player_start_miss_no_match(name),
+        ListingMiss::NoEpisode => t::player_start_miss_no_episode(name, episode),
+        ListingMiss::Failed => t::player_start_miss_failed(name),
+        ListingMiss::TimedOut => t::player_start_miss_timed_out(name),
+        ListingMiss::HeldBack { why } => match why {
+            SourceHold::TorrentsOff => t::source_picker_held_torrents_off(name),
+            SourceHold::ProxyCheck => t::source_picker_held_proxy(name),
+            SourceHold::Cellular => t::source_picker_held_cellular(name),
+            SourceHold::Other => t::source_picker_held_other(name),
+        },
     }
 }
 
@@ -1565,6 +1593,30 @@ mod tests {
     }
 
     #[test]
+    fn a_source_that_failed_to_list_says_so_rather_than_lacking_the_episode() {
+        let mut a = app_at_episodes();
+        a.handle(Action::ShowSources, 20);
+        let (id, episode) = a.source_context.clone().expect("a pending question");
+        a.apply(Event::Sources {
+            id,
+            episode: episode.clone(),
+            candidates: Vec::new(),
+            missed: vec![
+                MissedListing { name: "Alpha".into(), miss: ListingMiss::Failed },
+                MissedListing {
+                    name: "Harbor".into(),
+                    miss: ListingMiss::HeldBack { why: SourceHold::TorrentsOff },
+                },
+            ],
+        });
+        let said: Vec<&str> = a.toasts.iter().map(|t| t.notice.text.as_str()).collect();
+        let said = said.join("\n");
+        assert!(said.contains(&t::player_start_miss_failed("Alpha")), "{said}");
+        assert!(said.contains(&t::source_picker_held_torrents_off("Harbor")), "{said}");
+        assert!(!said.contains("alpha"), "a raw id: {said}");
+    }
+
+    #[test]
     fn releases_for_another_episode_are_not_offered_against_this_one() {
         let mut a = app_at_episodes();
         a.handle(Action::ShowSources, 20);
@@ -1573,6 +1625,7 @@ mod tests {
             id,
             episode: format!("{asked}0"),
             candidates: vec![source("[A] Show - 10 (1080p)", true)],
+            missed: Vec::new(),
         });
         assert_ne!(
             a.nav.overlay(),

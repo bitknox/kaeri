@@ -1857,6 +1857,8 @@ impl crate::playback::further::Lookup for Onward {
                 why: kaeri_model::party::NoSourceWhy::NotFound,
                 text: kaeri_model::Msg::verbatim("No source has episode 1."),
                 asked: vec!["kodama".into()],
+                unreached: Vec::new(),
+                held_back: Vec::new(),
             }
         })
     }

@@ -10,7 +10,7 @@ use kaeri_i18n::t;
 use kaeri_model::{
     Cause, Msg,
     party::NoSourceWhy,
-    starting::{SourceMiss, StartFailure, StartStep},
+    starting::{HeldSources, SourceHold, SourceMiss, StartFailure, StartStep},
 };
 
 use crate::say;
@@ -183,9 +183,9 @@ pub struct Start {
     rung_at: Duration,
     looked_up_at: Option<Duration>,
     asking: Option<Asking>,
-    /// What came of the sources asked, in order, and the ones resting.
+    /// What came of the sources asked, in order, and the ones held back, never asked.
     seen: Vec<Seen>,
-    resting: Vec<String>,
+    held: Vec<HeldSources>,
     last_miss: Option<(String, SourceMiss)>,
     /// The pinned source that did not have the episode, once another source answered.
     pin_missed: Option<String>,
@@ -219,7 +219,7 @@ impl Start {
             looked_up_at: None,
             asking: None,
             seen: Vec::new(),
-            resting: Vec::new(),
+            held: Vec::new(),
             last_miss: None,
             pin_missed: None,
             peers: None,
@@ -323,7 +323,12 @@ impl Start {
                 self.close_asking(at, Some(*miss));
                 self.last_miss = Some((name.clone(), *miss));
             }
-            StartStep::SourcesResting { names } => self.resting = names.clone(),
+            StartStep::SourcesHeldBack { names, why } => {
+                match self.held.iter_mut().find(|held| held.why == *why) {
+                    Some(held) => held.names.extend(names.iter().cloned()),
+                    None => self.held.push(HeldSources { names: names.clone(), why: *why }),
+                }
+            }
             StartStep::PinMissed { name } => self.pin_missed = Some(name.clone()),
             StartStep::FindingPeers { name } => {
                 self.finding_peers = Some(name.clone());
@@ -565,28 +570,28 @@ impl Start {
                 skip,
             });
         }
-        for name in &self.resting {
-            rows.push(Row {
-                mark: Mark::Rest,
-                name: name.clone(),
-                note: t::player_start_resting(),
-                time: String::new(),
-                skip: None,
-            });
+        // Held back by a setting or a check, so never asked: after the asked ones, hollow, with
+        // no seconds.
+        for held in &self.held {
+            for name in &held.names {
+                rows.push(Row {
+                    mark: Mark::Rest,
+                    name: name.clone(),
+                    note: held_note(held.why),
+                    time: String::new(),
+                    skip: None,
+                });
+            }
         }
         rows
     }
 
     /// Everything the screen shows at `at`.
     pub fn frame(&self, at: Duration) -> Frame {
-        let failure = self.failure.as_ref().map(|failure| {
-            let reason = failure_reason(&failure.text);
-            let second = match names(&failure.asked) {
-                Some(names) => [reason, t::player_start_asked(&names)].join(" "),
-                None => reason,
-            };
-            (t::player_failed_title_text(&self.episode), second)
-        });
+        let failure = self
+            .failure
+            .as_ref()
+            .map(|failure| (t::player_failed_title_text(&self.episode), failure_line(failure)));
         let offline = self.offline();
         let lead = if failure.is_some() || at < DETAIL_AT && !offline {
             String::new()
@@ -623,6 +628,40 @@ impl Start {
     }
 }
 
+/// A failure's second line: why, who was asked, and who was held back and why. A source that
+/// failed or was held back is one the start couldn't reach, never one without the episode.
+fn failure_line(failure: &StartFailure) -> String {
+    let reason = match names(&failure.unreached) {
+        Some(unreached) => t::player_start_unreached(&unreached),
+        None => failure_reason(&failure.text),
+    };
+    let mut line = vec![reason];
+    if let Some(asked) = names(&failure.asked) {
+        line.push(t::player_start_asked(&asked));
+    }
+    for held in &failure.held_back {
+        let Some(listed) = names(&held.names) else { continue };
+        let count = held.names.len() as i64;
+        line.push(match held.why {
+            SourceHold::TorrentsOff => t::player_start_not_asked_torrents_off(count, &listed),
+            SourceHold::ProxyCheck => t::player_start_not_asked_proxy(count, &listed),
+            SourceHold::Cellular => t::player_start_not_asked_cellular(count, &listed),
+            SourceHold::Other => t::player_start_not_asked_other(count, &listed),
+        });
+    }
+    line.join(" ")
+}
+
+/// A held-back source's row note: not asked, and why.
+fn held_note(why: SourceHold) -> String {
+    match why {
+        SourceHold::TorrentsOff => t::player_start_row_held_torrents_off(),
+        SourceHold::ProxyCheck => t::player_start_row_held_proxy(),
+        SourceHold::Cellular => t::player_start_row_held_cellular(),
+        SourceHold::Other => t::player_start_row_held_other(),
+    }
+}
+
 /// The buttons of a failure: the primary first, by what went wrong.
 fn failure_buttons(failure: &StartFailure) -> Vec<Button> {
     let button = |action, label, look| Button { action, label, look, shown: true };
@@ -640,6 +679,10 @@ fn failure_buttons(failure: &StartFailure) -> Vec<Button> {
             button(Action::ShowDownloads, t::state_offline_show_downloads(), Look::Tonal),
             close,
         ],
+        // A source failed or was held back: asking again may reach it, so that leads.
+        NoSourceWhy::NotFound if !failure.unreached.is_empty() || !failure.held_back.is_empty() => {
+            vec![again(Look::Primary), another(Look::Tonal), details, close]
+        }
         NoSourceWhy::NotFound => match &failure.text {
             Msg::NoticeReason { reason: Cause::TitleNoMatch { .. } } => vec![
                 button(Action::FixMatch, t::player_start_fix_match(), Look::Primary),
@@ -976,6 +1019,8 @@ mod tests {
                 },
             },
             asked: vec!["Alpha".into(), "Brook".into()],
+            unreached: Vec::new(),
+            held_back: Vec::new(),
         });
         let (title, reason) = s.frame(ms(3_000)).failure.expect("failure");
         assert_eq!(title, "Couldn't play episode 7");
@@ -987,12 +1032,54 @@ mod tests {
     }
 
     #[test]
+    fn a_source_that_failed_or_was_held_back_is_one_not_reached_and_try_again_leads() {
+        let mut s = start();
+        s.step(
+            &StartStep::SourcesHeldBack {
+                names: vec!["Harbor".into()],
+                why: SourceHold::TorrentsOff,
+            },
+            None,
+            ms(100),
+        );
+        s.fail(StartFailure {
+            why: NoSourceWhy::NotFound,
+            text: Msg::NoticeReason {
+                reason: Cause::SourcesUnreached { names: "Alpha, Harbor".into() },
+            },
+            asked: vec!["Alpha".into(), "Brook".into()],
+            unreached: vec!["Alpha".into(), "Harbor".into()],
+            held_back: vec![HeldSources {
+                names: vec!["Harbor".into()],
+                why: SourceHold::TorrentsOff,
+            }],
+        });
+        let f = s.frame(ms(3_000));
+        let reason = f.failure.clone().expect("failure").1;
+        assert_eq!(
+            reason,
+            "Couldn't reach Alpha and Harbor. Alpha and Brook were asked. \
+             Harbor wasn't asked: torrent playback is off."
+        );
+        assert!(!reason.contains("No source has"), "{reason}");
+        assert_eq!(
+            actions(&f),
+            [Action::TryAgain, Action::ChooseAnother, Action::Details, Action::Close]
+        );
+        let held = f.rows.iter().find(|row| row.name == "Harbor").expect("a held row");
+        assert_eq!(held.note, "Not asked · Torrent playback is off");
+        assert!(held.time.is_empty(), "never asked, so no seconds");
+    }
+
+    #[test]
     fn a_failure_on_a_half_episode_names_it() {
         let mut s = Start::new(AnilistId::new(1), "7.5", None);
         s.fail(StartFailure {
             why: NoSourceWhy::NoSources,
             text: Msg::NoticeReason { reason: Cause::NoSources },
             asked: Vec::new(),
+            unreached: Vec::new(),
+            held_back: Vec::new(),
         });
         let f = s.frame(ms(500));
         let (title, reason) = f.failure.clone().expect("failure");
@@ -1010,6 +1097,8 @@ mod tests {
                 reason: Cause::TitleNoMatch { detail: "alpha: no match".into() },
             },
             asked: vec!["Alpha".into()],
+            unreached: Vec::new(),
+            held_back: Vec::new(),
         });
         let f = s.frame(ms(2_000));
         assert_eq!(actions(&f)[0], Action::FixMatch);
@@ -1029,6 +1118,8 @@ mod tests {
                 when: Cause::AirsTomorrow { time: "18:30".into() },
             },
             asked: Vec::new(),
+            unreached: Vec::new(),
+            held_back: Vec::new(),
         });
         let f = s.frame(ms(700));
         assert_eq!(
@@ -1065,6 +1156,8 @@ mod tests {
             why: NoSourceWhy::NoConnection,
             text: Msg::NoticeReason { reason: Cause::NoConnection },
             asked: Vec::new(),
+            unreached: Vec::new(),
+            held_back: Vec::new(),
         });
         let f = s.frame(ms(120_000));
         assert_eq!(f.failure.expect("failure").1, "No connection.");

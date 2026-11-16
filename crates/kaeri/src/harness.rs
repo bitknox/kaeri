@@ -1087,9 +1087,12 @@ fn copy(update: &Event) -> Event {
         Event::TitleMatch { id, current } => {
             Event::TitleMatch { id: *id, current: current.clone() }
         }
-        Event::Sources { id, episode, candidates } => {
-            Event::Sources { id: *id, episode: episode.clone(), candidates: candidates.clone() }
-        }
+        Event::Sources { id, episode, candidates, missed } => Event::Sources {
+            id: *id,
+            episode: episode.clone(),
+            candidates: candidates.clone(),
+            missed: missed.clone(),
+        },
         Event::PinUnavailable { id, provider_id, name } => Event::PinUnavailable {
             id: *id,
             provider_id: provider_id.clone(),
