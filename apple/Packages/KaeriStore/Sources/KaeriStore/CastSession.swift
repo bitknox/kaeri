@@ -98,6 +98,7 @@ extension CastModel {
     func take(view: FfiCastSessionView) {
         let before = held?.state ?? .idle
         let noteBefore = held?.note
+        remember(view)
         if button != view.button { button = view.button }
         guard view.state != .idle else {
             if held != nil {
@@ -132,6 +133,11 @@ extension CastModel {
             // The episode ended on the TV, which stays held with nothing loaded.
             end()
         }
+        if view.state == .connected, before == .playing, view.item == nil, !active {
+            // Nothing plays any more: the episode ended with none after it, or a play could not
+            // start. The TV stays connected, as the cast button says, and the controller closes.
+            expanded = false
+        }
         if let item = view.item {
             let last = CastLastItem(
                 id: item.id, title: item.title, episode: item.episode, episodeTitle: item.episodeTitle,
@@ -151,6 +157,18 @@ extension CastModel {
             chooserShown = false
             dialogShown = false
             expanded = true
+        }
+    }
+
+    /// What the TV played and where, kept past its end: Play here once the TV dropped off, when
+    /// neither the engine nor the card still names it. Where it was is moved on to the moment the
+    /// episode left the view.
+    private func remember(_ view: FfiCastSessionView) {
+        if let item = view.item, view.state == .playing, !item.loading, let id = item.id, let episode = item.episode {
+            lastPlayed = TVPlayRequest(id: id, title: item.title, episode: episode, from: item.position)
+        } else if itemLive, var last = lastPlayed, item?.id == last.id, item?.episode == last.episode {
+            last.from = itemPosition()
+            lastPlayed = last
         }
     }
 
@@ -201,17 +219,21 @@ extension CastModel {
         return min(moved, item.duration ?? moved)
     }
 
+    /// What the TV last played stands in for what it plays: while a session left running is
+    /// joined again, and on the card of a cast that stopped, which keeps its episode.
+    private var showsLast: Bool { rejoining || (active && stage == .stopped) }
+
     /// The show's title, as the mini and the controller show it.
-    public var showTitle: String { item?.title ?? now?.title ?? (rejoining ? lastItem?.title : nil) ?? "" }
+    public var showTitle: String { item?.title ?? now?.title ?? (showsLast ? lastItem?.title : nil) ?? "" }
 
     /// The show to open from the controller.
-    public var showID: AnilistId? { item?.id ?? now?.id ?? (rejoining ? lastItem?.id : nil) }
+    public var showID: AnilistId? { item?.id ?? now?.id ?? (showsLast ? lastItem?.id : nil) }
 
     /// The episode line under the show's name.
     public var episodeLine: String {
         if let line = now?.episodeLine, active { return line }
-        let episode = item?.episode ?? (rejoining ? lastItem?.episode : nil)
-        let title = item?.episodeTitle ?? (rejoining ? lastItem?.episodeTitle : nil)
+        let episode = item?.episode ?? (showsLast ? lastItem?.episode : nil)
+        let title = item?.episodeTitle ?? (showsLast ? lastItem?.episodeTitle : nil)
         if let episode {
             if let title, !title.isEmpty { return L.castEpisodeTitled(episode: episode, title: title) }
             return L.castEpisode(episode: episode)
@@ -219,10 +241,17 @@ extension CastModel {
         return title ?? ""
     }
 
+    /// The TV is held with nothing loaded and no card follows it: connected, not starting.
+    public var heldIdle: Bool {
+        guard let held, held.state == .connected, held.item == nil else { return false }
+        return !rejoining && !active
+    }
+
     /// The mini's and the controller's line: the TV, and how it goes.
     public var sessionLine: String {
         let name = heldName
         if rejoining { return L.tvStatusReconnecting(name: name) }
+        if heldIdle { return L.castButtonConnected(name: name) }
         if active {
             switch stage {
             case .starting: return card?.phaseLine?.text ?? L.tvStartingOn(name: name)
@@ -250,6 +279,9 @@ extension CastModel {
     public func connect(_ row: FfiCastRow, play request: TVPlayRequest? = nil) {
         guard let link else { return }
         problem = nil
+        // The card of a cast that ended is put away: it would read Starting on the new
+        // connection, with nothing asked of it.
+        if active, stage == .stopped || stage == .failed { end() }
         let from = request.map { FfiCastFrom(id: $0.id, episode: $0.episode, position: $0.from ?? 0) }
         asked = true
         do {
@@ -281,6 +313,7 @@ extension CastModel {
         }
         CastLastItem.save(nil)
         lastItem = nil
+        lastPlayed = nil
     }
 
     /// A play the engine takes to the held TV: the controller opens as it starts.
@@ -307,7 +340,9 @@ extension CastModel {
         }
         expanded = false
         dialogShown = false
-        let fallback = active ? carried : nil
+        // Once the TV dropped off, neither the engine nor the card may still name the episode:
+        // then what it last played, where it was.
+        let fallback = (active ? carried : nil) ?? lastPlayed
         if active { end() }
         let from = link.playHere()
         // The TV is let go now: the play below opens here, ahead of the session's next view.
@@ -315,6 +350,7 @@ extension CastModel {
         heldAt = .now
         CastLastItem.save(nil)
         lastItem = nil
+        lastPlayed = nil
         if let from {
             playLocally?(from.id, from.episode, from.position > 0 ? from.position : nil)
         } else if let fallback {
@@ -322,11 +358,29 @@ extension CastModel {
         }
     }
 
-    /// iPhone and iPad relay the stream, which iOS stops soon after the app leaves the screen:
-    /// the engine pauses the TV on the way out, which says it waits for this device, and plays on
-    /// once the app is back, joining again if the session dropped meanwhile.
+    /// iPhone and iPad: the app leaves the screen, or is back.
     public func scene(active: Bool) {
-        link?.away(!active)
+        inBackground = !active
+        settleAway()
+    }
+
+    /// iPhone and iPad: the cast's audio session runs, or stopped. While it runs, iOS keeps the
+    /// app going in the background, so it goes on serving the TV and the TV plays on.
+    public func audioHeld(_ running: Bool) {
+        audioRunning = running
+        settleAway()
+    }
+
+    /// iOS stops an app soon after it leaves the screen unless it plays audio, and with it the
+    /// stream this device relays. Away with the cast's audio stopped (it could not start, or a
+    /// call took it), the engine pauses the TV, which says it waits for this device, and plays on
+    /// once the app is back or the audio runs again, joining again if the session dropped
+    /// meanwhile. Away with the audio running, the TV plays on.
+    private func settleAway() {
+        let away = inBackground && !audioRunning
+        guard away != sentAway else { return }
+        sentAway = away
+        link?.away(away)
     }
 }
 

@@ -1,7 +1,9 @@
 // iPhone and iPad while casting: the mini as the tab bar's bottom accessory, and the controller
 // it grows into, full screen. One box carries the mini's frame and corners into the controller's
-// and back, read from where the accessory really is, and a drag down closes it with the finger;
-// under Reduce Motion it crossfades in place. On iPad the controller lays the art beside the
+// and back, read from where the accessory really is. A tap on the mini opens it; a drag up from
+// the mini opens it and a drag down on the controller closes it, the box following the finger
+// and settling with the release's speed (`CastDrawer`), and a drawer on its way can be caught.
+// Under Reduce Motion it crossfades in place. On iPad the controller lays the art beside the
 // controls.
 
 #if os(iOS)
@@ -12,11 +14,13 @@ import KaeriStrings
 import SwiftUI
 
 /// The mini: the art, the show and the TV, play or pause and next, and the TV's progress along
-/// its foot. While a session left running is joined again, a spinner and Reconnecting. A tap
-/// opens the controller.
+/// its foot. While a session left running is joined again, a spinner and Reconnecting. A tap or
+/// a drag up opens the controller.
 struct CastMini: View {
     @Environment(AppStore.self) private var store
     @Environment(\.tabViewBottomAccessoryPlacement) private var placement
+    @Environment(CastDrawer.self) private var drawer: CastDrawer?
+    @GestureState private var dragging = false
 
     var body: some View {
         let cast = store.tv.cast
@@ -86,10 +90,44 @@ struct CastMini: View {
         }
         .contentShape(.rect)
         .onTapGesture { cast.expanded = true }
+        .simultaneousGesture(rise, isEnabled: drawer != nil)
+        .onChange(of: dragging) { _, on in
+            // The system took the drag: no release came.
+            if !on, let drawer { settle(drawer, speed: 0) }
+        }
         .accessibilityElement(children: .contain)
         .accessibilityLabel(cast.showTitle)
         .accessibilityHint(L.tvRemoteAction)
         .accessibilityAction(named: L.tvRemoteAction) { cast.expanded = true }
+    }
+
+    /// A drag up opens the controller with the finger: the box's top travels from the mini's top
+    /// to the screen's, one to one.
+    private var rise: some Gesture {
+        DragGesture(minimumDistance: 8, coordinateSpace: .global)
+            .updating($dragging) { _, state, _ in state = true }
+            .onChanged { value in
+                guard let drawer else { return }
+                if drawer.owner == nil {
+                    drawer.travel = drawer.anchor?.frame?.minY ?? 600
+                    guard drawer.begin(DrawerDrag(value.translation), fromMini: true, rise: -value.translation.height) else { return }
+                    store.tv.cast.expanded = true
+                }
+                if drawer.owner == true { drawer.drag(rise: -value.translation.height) }
+            }
+            .onEnded { value in
+                guard let drawer else { return }
+                settle(drawer, speed: -value.velocity.height)
+            }
+    }
+
+    private func settle(_ drawer: CastDrawer, speed: CGFloat) {
+        guard drawer.held else {
+            drawer.cancel()
+            return
+        }
+        let open = drawer.release(speed: speed)
+        if store.tv.cast.expanded != open { store.tv.cast.expanded = open }
     }
 }
 
@@ -112,18 +150,18 @@ struct CastMiniProgress: View {
 }
 
 /// The controller, full screen: the line and the TV, the art, the show and the episode, the seek
-/// line and transport, the note to keep the app open, the rows and the buttons. The screen stays
-/// awake while it is up, as the iPhone relays the stream.
+/// line and transport, the rows and the buttons. The screen stays awake while it is up.
 struct CastController: View {
     @Environment(AppStore.self) private var store
     @Environment(Navigator.self) private var navigator
     @Environment(\.horizontalSizeClass) private var sizeClass
-    /// The controls fade in after the frame has started to grow, and out at once on the way back.
-    @State private var controlsIn = false
+    @Environment(CastDrawer.self) private var drawer: CastDrawer?
 
     var body: some View {
         let cast = store.tv.cast
         let shown = CastShown(cast)
+        // The controls fade in once the box is a third of the way open, and out below that.
+        let controlsIn = drawer?.revealed ?? true
         VStack(spacing: 0) {
             if sizeClass != .regular {
                 // A drag down closes it, as the grabber says.
@@ -139,6 +177,7 @@ struct CastController: View {
                     }
                     .frame(maxWidth: 420)
                     .opacity(controlsIn ? 1 : 0)
+                    .animation(controlsIn ? .easeOut(duration: 0.2) : .easeIn(duration: 0.1), value: controlsIn)
                 }
                 .padding(.horizontal, 32)
                 .padding(.top, 20)
@@ -152,6 +191,7 @@ struct CastController: View {
                             controls(shown)
                         }
                         .opacity(controlsIn ? 1 : 0)
+                        .animation(controlsIn ? .easeOut(duration: 0.2) : .easeIn(duration: 0.1), value: controlsIn)
                     }
                     .padding(.horizontal, 20)
                     .padding(.top, 12)
@@ -159,22 +199,25 @@ struct CastController: View {
                 }
                 .scrollBounceBehavior(.basedOnSize)
                 .scrollIndicators(.hidden)
+                // At the top, a drag down closes the drawer rather than scrolling; while the
+                // drawer has the finger, the scroll stays where it is.
+                .onScrollGeometryChange(for: Bool.self) { geometry in
+                    geometry.contentOffset.y <= -geometry.contentInsets.top + 1
+                } action: { _, top in
+                    drawer?.atTop = top
+                }
+                .scrollDisabled(drawer?.held ?? false)
             }
         }
         .background(Palette.ground.ignoresSafeArea())
         .preferredColorScheme(.dark)
         .animation(.standard, value: shown)
-        .onAppear {
-            UIApplication.shared.isIdleTimerDisabled = true
-            withAnimation(.easeOut(duration: 0.2).delay(0.1)) { controlsIn = true }
-        }
+        .environment(\.castSliding, CastSliding { drawer?.sliding = $0 })
+        .onAppear { UIApplication.shared.isIdleTimerDisabled = true }
         .onDisappear { UIApplication.shared.isIdleTimerDisabled = false }
         .onChange(of: cast.miniShown) { _, shown in
             // The session ended on the TV or elsewhere: nothing left to drive.
             if !shown, !cast.connected { cast.expanded = false }
-        }
-        .onChange(of: cast.expanded) { _, open in
-            if !open { withAnimation(.easeIn(duration: 0.1)) { controlsIn = false } }
         }
     }
 
@@ -182,7 +225,6 @@ struct CastController: View {
         let cast = store.tv.cast
         return HStack(spacing: 12) {
             Button {
-                withAnimation(.easeIn(duration: 0.1)) { controlsIn = false }
                 cast.expanded = false
             } label: {
                 Image(systemName: "chevron.down")
@@ -228,16 +270,6 @@ struct CastController: View {
                 CastUpNextRow(next: next, touch: true).transition(.opacity)
             } else if let undo = cast.card?.undo, shown == .playing {
                 CastUndoNote(undo: undo, touch: true).transition(.opacity)
-            }
-            if shown == .playing {
-                HStack(alignment: .firstTextBaseline, spacing: 8) {
-                    Image(systemName: "info.circle").font(.ui(13)).foregroundStyle(.water).accessibilityHidden(true)
-                    Text(L.castKeepOpen(device: TVRemoteModel.deviceName, name: cast.heldName))
-                        .font(.ui(13))
-                        .foregroundStyle(.haze)
-                        .fixedSize(horizontal: false, vertical: true)
-                }
-                .transition(.opacity)
             }
         }
         CastSessionRows(touch: true)
@@ -289,49 +321,58 @@ struct CastMiniProbe: UIViewRepresentable {
 }
 
 /// The controller over everything, opened from the mini. The cover itself appears and goes at
-/// once on a clear background; the box inside it does the travelling.
+/// once on a clear background; the box inside it does the travelling, and the cover goes once
+/// the drawer rests closed.
 struct CastAccessoryCover: ViewModifier {
     @Environment(AppStore.self) private var store
     @Environment(Navigator.self) private var navigator
     let anchor: CastMiniAnchor
+    let drawer: CastDrawer
     @State private var presented = false
 
     func body(content: Content) -> some View {
         let cast = store.tv.cast
         content
             .fullScreenCover(isPresented: $presented) {
-                CastMorph(anchor: anchor) {
-                    withTransaction(\.disablesAnimations, true) { presented = false }
-                }
-                .environment(store)
-                .environment(navigator)
-                .presentationBackground(.clear)
+                CastMorph(anchor: anchor, drawer: drawer)
+                    .environment(store)
+                    .environment(navigator)
+                    .environment(drawer)
+                    .presentationBackground(.clear)
             }
             .onChange(of: cast.expanded, initial: true) { _, open in
                 if open, !presented {
                     withTransaction(\.disablesAnimations, true) { presented = true }
+                } else if !open, presented, drawer.shut {
+                    // Closed before it had moved: nothing will settle.
+                    withTransaction(\.disablesAnimations, true) { presented = false }
+                }
+            }
+            .onChange(of: drawer.shut) { _, shut in
+                if shut, !cast.expanded, presented {
+                    withTransaction(\.disablesAnimations, true) { presented = false }
                 }
             }
     }
 }
 
 /// One box that grows from the mini into the controller and shrinks back: its frame and corners
-/// move on the standard spring with the controller drawn inside it at full opacity, the mini's
-/// row fades out over the first 100 ms and the controls fade in from 100 ms. A drag down from
-/// the top closes it with the finger. Under Reduce Motion the controller crossfades in place.
+/// follow the drawer, the finger or the standard spring, with the controller drawn inside it at
+/// full opacity; the mini's row fades out over the first quarter of the way and the controls
+/// fade in past a third. A drag down closes it and a drag while it moves catches it. Under
+/// Reduce Motion the controller crossfades in place, with the finger too.
 private struct CastMorph: View {
     @Environment(AppStore.self) private var store
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     let anchor: CastMiniAnchor
-    let closed: () -> Void
+    let drawer: CastDrawer
     @State private var from: CGRect?
     @State private var insets: EdgeInsets?
-    @State private var open = false
-    @State private var drag: CGFloat = 0
+    @GestureState private var dragging = false
 
-    init(anchor: CastMiniAnchor, closed: @escaping () -> Void) {
+    init(anchor: CastMiniAnchor, drawer: CastDrawer) {
         self.anchor = anchor
-        self.closed = closed
+        self.drawer = drawer
         _from = State(initialValue: anchor.frame)
         _insets = State(initialValue: anchor.insets)
     }
@@ -341,11 +382,11 @@ private struct CastMorph: View {
         GeometryReader { proxy in
             let origin = proxy.frame(in: .global).origin
             let full = CGRect(origin: .zero, size: proxy.size)
-            let mini = from.map { $0.offsetBy(dx: -origin.x, dy: -origin.y) }
-            let travels = !reduceMotion && mini != nil
-            let box = travels && !open ? (mini ?? full) : dragged(full)
+            let mini = reduceMotion ? nil : from.map { $0.offsetBy(dx: -origin.x, dy: -origin.y) }
+            let p = drawer.progress
+            let box = mini.map { Self.box(from: $0, to: full, at: p) } ?? full
             let scale = box.width / max(full.width, 1)
-            let radius = open ? (drag > 0 ? 38 : 0) : (mini?.height ?? 0) / 2
+            let radius = mini.map { Self.radius(mini: $0.height / 2, at: p) } ?? 0
             ZStack(alignment: .topLeading) {
                 // The box spans the whole screen, so the controller gets the safe area back.
                 CastController()
@@ -353,12 +394,11 @@ private struct CastMorph: View {
                     .frame(width: full.width, height: full.height)
                     .scaleEffect(scale, anchor: .topLeading)
                     .offset(x: box.minX, y: box.minY)
-                if travels, let mini {
+                if let mini {
                     CastMini()
                         .frame(width: box.width, height: mini.height)
                         .offset(x: box.minX, y: box.minY)
-                        .opacity(open ? 0 : 1)
-                        .animation(open ? .easeIn(duration: 0.1) : .easeOut(duration: 0.2).delay(0.1), value: open)
+                        .opacity(max(0, 1 - p / 0.25))
                         .allowsHitTesting(false)
                         .accessibilityHidden(true)
                 }
@@ -369,53 +409,68 @@ private struct CastMorph: View {
                     .frame(width: box.width, height: box.height)
                     .offset(x: box.minX, y: box.minY)
             }
-            .opacity(travels || open ? 1 : 0)
-            .simultaneousGesture(
-                DragGesture(minimumDistance: 12)
-                    .onChanged { value in
-                        guard open, value.startLocation.y < 170 else { return }
-                        drag = max(0, value.translation.height)
-                    }
-                    .onEnded { value in
-                        guard open, drag > 0 else { return }
-                        if value.translation.height > 120 || value.predictedEndTranslation.height > 260 {
-                            cast.expanded = false
-                        } else {
-                            withAnimation(.standard) { drag = 0 }
-                        }
-                    }
-            )
+            .opacity(mini == nil ? p : 1)
+            .simultaneousGesture(close(travel: mini?.minY ?? full.height / 2))
         }
         .ignoresSafeArea()
         .accessibilityAction(.escape) { cast.expanded = false }
         .onAppear {
-            // One frame on the mini first, then the box grows.
-            Task { @MainActor in
-                withAnimation(reduceMotion ? .easeInOut(duration: 0.25) : .standard) { open = true }
-            }
+            // One frame on the mini first, then the box grows. A finger already holding it (a
+            // drag up from the mini) keeps it.
+            Task { @MainActor in if cast.expanded { drawer.settle(open: true) } }
         }
         .onChange(of: cast.expanded) { _, expanded in
-            if expanded {
-                if !open { withAnimation(reduceMotion ? .easeInOut(duration: 0.25) : .standard) { open = true } }
-                return
-            }
-            from = anchor.frame
-            withAnimation(reduceMotion || from == nil ? .easeInOut(duration: 0.25) : .standard) {
-                open = false
-                drag = 0
-            } completion: {
-                if !cast.expanded { closed() }
-            }
+            // It lands on the mini where it is drawn now.
+            if !expanded, let frame = anchor.frame { from = frame }
+            drawer.settle(open: expanded)
+        }
+        .onChange(of: dragging) { _, on in
+            // The system took the drag: no release came.
+            if !on { settle(speed: 0) }
         }
     }
 
-    /// The open box, following the finger down and shrinking a little as it goes.
-    private func dragged(_ full: CGRect) -> CGRect {
-        guard drag > 0 else { return full }
-        let k = min(drag / max(full.height, 1), 1)
-        let width = full.width * (1 - 0.2 * k)
-        let height = full.height * (1 - 0.2 * k)
-        return CGRect(x: (full.width - width) / 2, y: drag, width: width, height: height)
+    /// A drag on the controller: down from the top of its scroll closes it, and up or down
+    /// while it moves catches it; the box's top follows the finger one to one.
+    private func close(travel: CGFloat) -> some Gesture {
+        DragGesture(minimumDistance: 10, coordinateSpace: .global)
+            .updating($dragging) { _, state, _ in state = true }
+            .onChanged { value in
+                let rise = -value.translation.height
+                if drawer.owner == nil {
+                    drawer.travel = travel
+                    guard drawer.begin(DrawerDrag(value.translation), fromMini: false, rise: rise) else { return }
+                }
+                if drawer.owner == true { drawer.drag(rise: rise) }
+            }
+            .onEnded { value in settle(speed: -value.velocity.height) }
+    }
+
+    private func settle(speed: CGFloat) {
+        guard drawer.held else {
+            drawer.cancel()
+            return
+        }
+        let cast = store.tv.cast
+        let open = drawer.release(speed: speed)
+        if cast.expanded != open { cast.expanded = open }
+    }
+
+    /// The box at `p` of the way from the mini to the full screen.
+    static func box(from mini: CGRect, to full: CGRect, at p: CGFloat) -> CGRect {
+        let p = min(max(p, 0), 1)
+        func mix(_ a: CGFloat, _ b: CGFloat) -> CGFloat { a + (b - a) * p }
+        return CGRect(
+            x: mix(mini.minX, full.minX), y: mix(mini.minY, full.minY),
+            width: mix(mini.width, full.width), height: mix(mini.height, full.height))
+    }
+
+    /// The box's corners: the mini's capsule, opening to the screen's own curve and squaring off
+    /// over the last stretch, where the screen's corners hide them.
+    static func radius(mini: CGFloat, at p: CGFloat) -> CGFloat {
+        let open: CGFloat = 38
+        if p <= 0.85 { return mini + (open - mini) * max(p, 0) / 0.85 }
+        return open * (1 - min(p, 1)) / 0.15
     }
 }
 #endif

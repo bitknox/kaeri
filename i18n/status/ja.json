@@ -2701,12 +2701,6 @@
     "by": "agent",
     "at": "2026-11-15"
   },
-  "cast-keep-open": {
-    "source": "794b6a21c977",
-    "state": "draft",
-    "by": "agent",
-    "at": "2026-11-01"
-  },
   "cast-local-network": {
     "source": "059d43ff4564",
     "state": "draft",

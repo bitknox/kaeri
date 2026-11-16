@@ -358,12 +358,30 @@ pub fn read_sample_entries(data: &[u8], info: &mut MediaInfo) {
                     info.audio.push(AudioTrack {
                         codec: Some(codec),
                         channels,
+                        language: media_language(&data[..at]),
                         ..AudioTrack::default()
                     });
                 }
             }
         }
     }
+}
+
+/// The language of the track whose `stsd` follows `before`: the packed ISO 639-2 code in the
+/// last `mdhd` ahead of it, since a track's media header comes before its sample entries. None
+/// for "und" or a code that does not unpack to letters.
+fn media_language(before: &[u8]) -> Option<String> {
+    let at = before.windows(4).rposition(|w| w == b"mdhd")?;
+    // After the type: version and flags, then the times (32 or 64 bits each), the timescale and
+    // the duration.
+    let offset = if *before.get(at + 4)? == 1 { 36 } else { 24 };
+    let packed = before.get(at + offset..at + offset + 2)?;
+    let packed = u16::from_be_bytes([packed[0], packed[1]]);
+    let code: String = [10u16, 5, 0]
+        .iter()
+        .map(|shift| char::from(((packed >> shift) & 0x1f) as u8 + 0x60))
+        .collect();
+    (code.chars().all(|c| c.is_ascii_lowercase()) && code != "und").then_some(code)
 }
 
 fn find(haystack: &[u8], needle: &[u8]) -> Option<usize> {
@@ -568,6 +586,35 @@ mod tests {
         assert_eq!(info.height, Some(2160));
         assert_eq!(info.audio[0].codec, Some(AudioCodec::Ac3));
         assert_eq!(info.audio[0].channels, 6);
+    }
+
+    #[test]
+    fn an_mp4s_audio_tracks_carry_their_media_headers_language() {
+        // mdhd, version 0: times, timescale, duration, then the packed language.
+        let mdhd = |language: [u8; 3]| {
+            let packed = language.iter().fold(0u16, |acc, c| (acc << 5) | u16::from(c - 0x60));
+            let mut b = b"\0\0\0\x20mdhd\0\0\0\0".to_vec();
+            b.extend([0u8; 16]);
+            b.extend(packed.to_be_bytes());
+            b.extend([0u8; 2]);
+            b
+        };
+        let stsd = || {
+            let mut b = b"\0\0\0\0stsd\0\0\0\0\0\0\0\x01\0\0\0\x24mp4a".to_vec();
+            b.extend([0u8; 16]);
+            b.extend(2u16.to_be_bytes());
+            b.extend([0u8; 10]);
+            b
+        };
+        let mut moov = Vec::new();
+        for language in [*b"jpn", *b"eng", *b"und"] {
+            moov.extend(mdhd(language));
+            moov.extend(stsd());
+        }
+        let mut info = MediaInfo::default();
+        read_sample_entries(&moov, &mut info);
+        let languages: Vec<_> = info.audio.iter().map(|t| t.language.as_deref()).collect();
+        assert_eq!(languages, [Some("jpn"), Some("eng"), None]);
     }
 
     #[test]

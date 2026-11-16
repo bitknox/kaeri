@@ -207,4 +207,123 @@ struct CastTests {
         #expect(AppStore.playsHere(.playerSkipPrompt(playback: 1, prompt: .foundEdges(kind: .opening, episode: 7))))
         #expect(!AppStore.playsHere(.toast(Notice(kind: .info, text: "", hint: nil))))
     }
+
+    // MARK: The session through a link
+
+    nonisolated static func view(_ state: FfiCastSessionState, item: FfiCastItem? = nil) -> FfiCastSessionView {
+        FfiCastSessionView(
+            state: state, button: .connected, rev: 1, deviceKey: "cast:living", deviceName: "Living room",
+            item: item, queue: [], notice: nil, note: nil, level: nil, muted: nil,
+            volumeControl: .muteOnly, ownReceiver: true)
+    }
+
+    nonisolated static func item(at position: Double) -> FfiCastItem {
+        FfiCastItem(
+            id: 900_001, title: "Lanterns", episode: "3", episodeTitle: nil, image: nil,
+            position: position, duration: 1420, paused: false, waiting: nil, loading: false)
+    }
+
+    @Test func leavingTheScreenWithoutTheCastsAudioPausesTheTvUntilTheAppIsBack() {
+        let model = CastModel()
+        let link = RecordingLink()
+        model.link = link
+        model.scene(active: false)
+        #expect(link.aways == [true])
+        model.scene(active: true)
+        #expect(link.aways == [true, false])
+    }
+
+    @Test func whileTheCastsAudioRunsTheTvPlaysOnWithTheAppAway() {
+        let model = CastModel()
+        let link = RecordingLink()
+        model.link = link
+        model.audioHeld(true)
+        model.scene(active: false)
+        model.scene(active: true)
+        model.scene(active: false)
+        #expect(link.aways.isEmpty)
+    }
+
+    @Test func aCallThatStopsTheCastsAudioAwayPausesTheTvUntilItRunsAgain() {
+        let model = CastModel()
+        let link = RecordingLink()
+        model.link = link
+        model.audioHeld(true)
+        model.scene(active: false)
+        model.audioHeld(false)
+        #expect(link.aways == [true])
+        model.audioHeld(true)
+        #expect(link.aways == [true, false])
+        // The audio stopping in front says nothing: the app runs while it is in front.
+        model.scene(active: true)
+        model.audioHeld(false)
+        #expect(link.aways == [true, false])
+    }
+
+    @Test func playHereOnceTheTvDroppedOffPlaysWhereItWas() {
+        let model = CastModel()
+        let link = RecordingLink()
+        model.link = link
+        var played: (AnilistId, String, Double?)?
+        model.playLocally = { played = ($0, $1, $2) }
+        model.take(view: Self.view(.playing, item: Self.item(at: 600)))
+        // Lost: the engine names no episode any more, and has none to carry here.
+        model.take(view: Self.view(.error))
+        model.playHereFromSession()
+        #expect(played?.0 == 900_001)
+        #expect(played?.1 == "3")
+        #expect((played?.2 ?? 0) >= 600)
+    }
+
+    @Test func stoppingTheCastForgetsWhatItPlayed() {
+        let model = CastModel()
+        let link = RecordingLink()
+        model.link = link
+        model.take(view: Self.view(.playing, item: Self.item(at: 600)))
+        model.disconnect()
+        var played = false
+        model.playLocally = { _, _, _ in played = true }
+        model.playHereFromSession()
+        #expect(!played)
+    }
+
+    @Test func aTvLeftWithNothingLoadedReadsConnectedNotStarting() {
+        let model = CastModel()
+        model.link = RecordingLink()
+        // The last episode plays to its end, with none after it.
+        model.take(view: Self.view(.playing, item: Self.item(at: 1400)))
+        model.expanded = true
+        model.take(view: Self.view(.connected))
+        #expect(model.heldIdle)
+        #expect(model.sessionLine == L.castButtonConnected(name: "Living room"))
+        #expect(!model.expanded)
+        #expect(!model.miniShown)
+
+        // A play that could not start: starting, then nothing.
+        let starting = FfiCastItem(
+            id: 900_001, title: "Lanterns", episode: "4", episodeTitle: nil, image: nil,
+            position: 0, duration: nil, paused: false, waiting: nil, loading: true)
+        model.take(view: Self.view(.playing, item: starting))
+        #expect(!model.heldIdle)
+        #expect(model.sessionLine == L.tvStartingOn(name: "Living room"))
+        model.expanded = true
+        model.take(view: Self.view(.connected))
+        #expect(model.sessionLine == L.castButtonConnected(name: "Living room"))
+        #expect(!model.expanded)
+    }
+}
+
+/// A link that records what the model tells the engine of the app's place.
+private final class RecordingLink: CastSessionLink, @unchecked Sendable {
+    var aways: [Bool] = []
+
+    func state() -> FfiCastSessionView { CastTests.view(.idle) }
+    func next() async -> FfiCastSessionView? { nil }
+    func connect(key: String, from: FfiCastFrom?) throws {}
+    func disconnect() {}
+    func playHere() -> FfiCastFrom? { nil }
+    func command(_ command: FfiTvCommand) {}
+    func card() -> (any FfiCastSessionProtocol)? { nil }
+    func away(_ away: Bool) { aways.append(away) }
+    func played(_ request: TVPlayRequest) {}
 }

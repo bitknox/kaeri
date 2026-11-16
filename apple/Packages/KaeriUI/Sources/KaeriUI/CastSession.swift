@@ -504,6 +504,8 @@ struct CastSessionStatus: View {
                     Circle().fill(.water).frame(width: 7, height: 7)
                 case .failed:
                     Circle().fill(.vermilion).frame(width: 7, height: 7)
+                case .connected:
+                    CastButtonGlyph(look: .connected, size: 12, color: .haze)
                 }
             }
             .frame(width: 14, height: 14)
@@ -519,16 +521,19 @@ struct CastSessionStatus: View {
     }
 }
 
-/// How the controller is laid out. It changes only as an episode starts, as it fails and as a
-/// session is joined; within playing it holds, paused or waiting.
+/// How the controller is laid out. It changes only as an episode starts, as it fails, as a
+/// session is joined and as the TV is left with nothing loaded; within playing it holds, paused
+/// or waiting.
 enum CastShown: Equatable {
-    case starting, playing, failed, joining
+    case starting, playing, failed, joining, connected
 
     @MainActor init(_ cast: CastModel) {
         if cast.rejoining {
             self = .joining
         } else if cast.active, cast.stage == .failed || cast.stage == .stopped {
             self = .failed
+        } else if cast.heldIdle {
+            self = .connected
         } else if cast.itemLive {
             self = .playing
         } else {
@@ -579,6 +584,7 @@ struct CastShowLines: View {
 /// no thumb and no times; waiting holds the played part and counts under the line.
 struct CastSessionSeek: View {
     @Environment(AppStore.self) private var store
+    @Environment(\.castSliding) private var sliding
     let touch: Bool
     @State private var dragging: Double?
     @State private var held: Double?
@@ -611,9 +617,11 @@ struct CastSessionSeek: View {
                         DragGesture(minimumDistance: 0)
                             .onChanged { drag in
                                 guard live else { return }
+                                if dragging == nil { sliding?.changed(true) }
                                 dragging = min(max(0, drag.location.x / max(width, 1)), 1) * duration
                             }
                             .onEnded { _ in
+                                sliding?.changed(false)
                                 if let to = dragging {
                                     held = to
                                     heldRev = cast.held?.rev
@@ -733,6 +741,7 @@ struct CastSessionRows: View {
 /// takes a level.
 struct CastSessionVolumeRow: View {
     @Environment(AppStore.self) private var store
+    @Environment(\.castSliding) private var sliding
     @State private var dragging: Double?
 
     var body: some View {
@@ -747,6 +756,7 @@ struct CastSessionVolumeRow: View {
                     get: { dragging ?? level },
                     set: { dragging = $0 }
                 ), in: 0...1) { editing in
+                    sliding?.changed(editing)
                     if !editing, let to = dragging {
                         cast.command(.volume(step: ((to - level) * 100).rounded()))
                         dragging = nil
@@ -910,4 +920,14 @@ struct CastToolbarItem: ToolbarContent {
             #endif
         }
     }
+}
+
+/// Told as a slider in the cast controller starts and stops being dragged: the drawer around it
+/// leaves that drag alone.
+struct CastSliding {
+    let changed: @MainActor (Bool) -> Void
+}
+
+extension EnvironmentValues {
+    @Entry var castSliding: CastSliding?
 }

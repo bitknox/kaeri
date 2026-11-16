@@ -6,12 +6,6 @@
 # @arg device: text
 cast-row-through = Plays through this { $device }
 
-# Note on the iPhone and iPad casting card: the cast stops when the app leaves the screen. The
-# device is iPhone or iPad; the name is the TV's.
-# @arg device: text
-# @arg name: text
-cast-keep-open = Keep { -app-name } open on this { $device } while { $name } plays.
-
 # Title of the Mac's confirmation when the app quits while it casts. The name is the TV's.
 # @arg name: text
 cast-quit-title = Stop casting to { $name }?

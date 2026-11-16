@@ -117,6 +117,7 @@ struct TVAccessory: ViewModifier {
     }
 
     @State private var anchor = CastMiniAnchor()
+    @State private var drawer = CastDrawer()
 
     func body(content: Content) -> some View {
         if #available(iOS 26.1, *) {
@@ -128,16 +129,19 @@ struct TVAccessory: ViewModifier {
             content
                 .tabViewBottomAccessory(isEnabled: mini || tv || partyBar) {
                     if mini {
-                        CastMini().background(CastMiniProbe(anchor: anchor))
+                        CastMini()
+                            .background(CastMiniProbe(anchor: anchor))
+                            .environment(drawer)
                     } else if tv {
                         TVNowPlayingBar()
                     } else {
                         PartyBar()
                     }
                 }
-                .modifier(CastAccessoryCover(anchor: anchor))
+                .modifier(CastAccessoryCover(anchor: anchor, drawer: drawer))
+                .onAppear { drawer.anchor = anchor }
         } else {
-            content.modifier(CastAccessoryCover(anchor: anchor))
+            content.modifier(CastAccessoryCover(anchor: anchor, drawer: drawer))
         }
     }
 }

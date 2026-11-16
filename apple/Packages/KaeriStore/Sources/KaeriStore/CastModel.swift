@@ -96,6 +96,8 @@ public final class CastModel {
     public internal(set) var rejoining = false
     /// What the TV last played, kept across launches, for the mini while it joins again.
     public internal(set) var lastItem: CastLastItem?
+    /// What the TV last played and where, for Play here once it dropped off.
+    @ObservationIgnored var lastPlayed: TVPlayRequest?
     /// The chooser, the connected dialog and the expanded controller, as the button and the
     /// mini open them.
     public var chooserShown = false
@@ -110,6 +112,11 @@ public final class CastModel {
     @ObservationIgnored var asked = false
     /// Open the controller when the next play starts on the TV.
     @ObservationIgnored var expandOnPlay = false
+    /// iPhone and iPad: the app is in the background, the cast's audio session runs, and the
+    /// engine was told the app is away. See `scene(active:)`.
+    @ObservationIgnored var inBackground = false
+    @ObservationIgnored var audioRunning = false
+    @ObservationIgnored var sentAway = false
 
     @ObservationIgnored private var cards: Task<Void, Never>?
     @ObservationIgnored private var leaving: [String: Task<Void, Never>] = [:]
