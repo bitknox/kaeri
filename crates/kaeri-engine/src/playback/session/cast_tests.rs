@@ -595,6 +595,14 @@ async fn playing_on_a_tv_that_plays_on() -> (Arc<Rig>, tokio::task::JoinHandle<V
     rig.hub.connect(rig.device());
     session_until(&rig.hub, |v| v.state == SessionState::Connected).await;
     let file = rig.file("1.mkv", &Fixture::default());
+    // The engine stages the cast before its playback starts, as a play sent to a TV does.
+    rig.hub.observe(&Event::CastStaged {
+        id: AnilistId::new(900_002),
+        title: "Stardust Wayfarer".into(),
+        episode: "1".into(),
+        episode_title: None,
+        speed: 1.0,
+    });
     let playing = {
         let rig = Arc::clone(&rig);
         tokio::spawn(async move { rig.play_seen(vec![file], context("1", None)).await })
