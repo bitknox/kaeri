@@ -1489,6 +1489,30 @@ async fn kaeris_receiver_stopped_on_the_tv_at_a_load_ends_the_cast_and_launches_
 }
 
 #[tokio::test(flavor = "multi_thread", worker_threads = 4)]
+async fn a_cast_stopped_before_the_tv_played_it_is_still_where_its_load_starts() {
+    // The card carries this to another TV, where 0 s would start the episode over.
+    let receiver = FakeReceiver::start(FakeOptions {
+        custom: CustomReceiver::StoppedAtLoad,
+        ..FakeOptions::default()
+    })
+    .await
+    .unwrap();
+    let file = matroska(&Fixture::default());
+    let base = serve(HashMap::from([("/episode.mkv".to_owned(), file)])).await;
+    let mut setup =
+        setup(&receiver, Arc::new(CastMemory::memory()), Arc::new(FakeEncoder::default()));
+    setup.timings.ready = Duration::from_millis(800);
+    let (player, mut events) = connect_standard(setup).await.unwrap();
+    player.use_receiver(Some("0A1B2C3D".into()));
+    player.load(CastLoad { start: Some(600.0), ..torrent(format!("{base}/episode.mkv")) });
+    assert_eq!(player.current().position, 600.0, "where the load starts while it loads");
+    next(&mut events, |e| matches!(e, PlaybackEvent::Ended { complete: false })).await;
+    assert_eq!(player.current().state, CastState::Ended);
+    assert_eq!(player.current().position, 600.0);
+    assert_eq!(player.position(), Some(600.0));
+}
+
+#[tokio::test(flavor = "multi_thread", worker_threads = 4)]
 async fn a_cast_stopped_on_the_tv_while_it_loads_says_no_progress_from_its_start() {
     // The receiver reports the file at 0 s before it seeks to the resume point; a stop then must
     // leave the session no position to save over where the episode was left.

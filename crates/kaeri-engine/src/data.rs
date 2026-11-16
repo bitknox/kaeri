@@ -621,6 +621,8 @@ pub fn watched_in(
 }
 
 /// Where `episode` of `id` was left, and how far through it that is when its length is known.
+/// The length is the latest the episode's watches said: a position carried to a TV is written
+/// without one, and says nothing of how long the episode is.
 fn resume_point(
     store: &Store,
     id: kaeri_core::ids::AnilistId,
@@ -631,8 +633,8 @@ fn resume_point(
         .events_for(id, 50)
         .ok()?
         .into_iter()
-        .find(|e| e.episode == episode)
-        .and_then(|e| e.duration_secs);
+        .filter(|e| e.episode == episode)
+        .find_map(|e| e.duration_secs);
     Some(kaeri_model::catalog::ResumePoint {
         position,
         fraction: duration.filter(|d| *d > 0.0).map(|d| (position / d).clamp(0.0, 1.0)),
@@ -2087,6 +2089,22 @@ mod tests {
         let e = entry_from(&media(), Some(&store));
         assert_eq!(e.progress, Some(TitleProgress { done: 5, next: 8 }));
         assert_eq!(e.resume.map(|r| r.position), Some(510.0));
+    }
+
+    #[test]
+    fn a_position_carried_to_a_tv_keeps_how_far_through_the_episode_is() {
+        // Episode 8 left at 8:30 of 24:00, then carried to a TV at 10:24, which writes the
+        // position with no length: Continue still says how far through it is.
+        let store = Store::open_in_memory().unwrap();
+        watch(&store, "8", 510.0, false, 10);
+        let carried = kaeri_store::WatchEvent {
+            at: 11,
+            ..kaeri_store::WatchEvent::new(AnilistId::new(154_587), "8", 624.0)
+        };
+        store.record_event(&carried).unwrap();
+        let resume = entry_from(&media(), Some(&store)).resume.expect("a resume point");
+        assert_eq!(resume.position, 624.0);
+        assert_eq!(resume.fraction, Some(624.0 / 1440.0));
     }
 
     #[test]

@@ -455,6 +455,19 @@ struct Gone {
 }
 
 impl State {
+    /// Where the TV is in the file: where it was asked to seek to and hasn't said yet, else
+    /// where it said. Until the file loaded has played, where its load starts: a cast stopped
+    /// before the TV played it is still where the episode was left, and goes to another TV from
+    /// there.
+    fn at(&self) -> Option<f64> {
+        let unplayed = self.asked.as_ref().filter(|_| !self.played);
+        self.want
+            .position
+            .map(|(p, _)| p)
+            .or_else(|| unplayed.map(|load| load.start.unwrap_or(0.0)))
+            .or(self.last.as_ref().map(|s| s.position))
+    }
+
     /// Whether the TV is paused, or asked to pause and not yet heard from.
     fn paused_now(&self) -> bool {
         self.want.paused.map(|(p, _)| p).or(self.paused).unwrap_or(false)
@@ -496,10 +509,9 @@ impl State {
             (CastState::Paused, Some((false, _))) => CastState::Playing,
             (state, _) => state,
         };
-        let position = self.want.position.map(|(p, _)| p);
         CastStatus {
             state,
-            position: position.or(self.last.as_ref().map(|s| s.position)).unwrap_or(0.0),
+            position: self.at().unwrap_or(0.0),
             duration: self.last.as_ref().and_then(|s| s.duration),
             level: self.want.level.map(|(l, _)| l).or(self.level),
             muted: self.want.muted.map(|(m, _)| m).or(self.muted),
@@ -1021,10 +1033,10 @@ impl CastPlayer {
         self.inner.status.borrow().clone()
     }
 
-    /// Where the TV is in the file, or where it was asked to seek to and hasn't said yet.
+    /// Where the TV is in the file, or where it was asked to seek to and hasn't said yet: see
+    /// `State::at`.
     pub fn position(&self) -> Option<f64> {
-        let state = lock(&self.inner.state);
-        state.want.position.map(|(p, _)| p).or(state.last.as_ref().map(|s| s.position))
+        lock(&self.inner.state).at()
     }
 
     /// Say `event` to the session as if the TV had: what the sender's card asks of the session
