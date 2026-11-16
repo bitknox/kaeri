@@ -366,9 +366,14 @@ public enum L {
     /// Reason: a play waited too long for its sources to give it a stream, and gave up.
     public static var causeSourcesTimedOut: String { string("cause-sources-timed-out", fallback: "The sources took too long to answer. Try again, or choose another source.") }
 
-    /// Reason: some sources gave no real answer for the episode: they failed, took too long or weren't asked, and the rest don't have it. The names are joined with commas.
+    /// Reason: some sources asked gave no real answer for the episode: they failed, took too long or were skipped, and the rest don't have it. The names are joined with commas.
     public static func causeSourcesUnreached(names: String) -> String {
         Self.format("cause-sources-unreached", fallback: "Couldn't reach %1$@. Try again, or choose another source.", names)
+    }
+
+    /// Reason: every source asked lacks the episode, and some sources weren't asked while local settings hold them back. The names are joined with commas. The episode is its label.
+    public static func causeSourcesNotAsked(count: Int, names: String, episode: String) -> String {
+        Self.format("cause-sources-not-asked", fallback: "No source that was asked has episode %3$@. %2$@ weren't asked.", count, names, episode)
     }
 
     /// Reason: every source matched the title but none has the episode. The detail is what each said.
@@ -8079,29 +8084,34 @@ public enum L {
         Self.format("player-start-asked", fallback: "%1$@ were asked.", names)
     }
 
-    /// First sentence of a failure when some sources gave no real answer: they failed, took too long or weren't asked. The names are joined as a list by the app.
+    /// Sentence of a failure naming the sources asked that answered without the episode, while others couldn't be reached or weren't asked. The names are joined as a list by the app. The episode is its label.
+    public static func playerStartLacking(count: Int, names: String, episode: String) -> String {
+        Self.format("player-start-lacking", fallback: "%2$@ don't have episode %3$@.", count, names, episode)
+    }
+
+    /// First sentence of a failure when some sources asked gave no real answer: they failed, took too long or were skipped. A source not asked is never among them. The names are joined as a list by the app.
     public static func playerStartUnreached(names: String) -> String {
         Self.format("player-start-unreached", fallback: "Couldn't reach %1$@.", names)
     }
 
     /// Sentence of a failure naming the sources not asked while torrent playback is off, joined as a list by the app.
     public static func playerStartNotAskedTorrentsOff(count: Int, names: String) -> String {
-        Self.format("player-start-not-asked-torrents-off", fallback: "%2$@ weren't asked: torrent playback is off.", count, names)
+        Self.format("player-start-not-asked-torrents-off", fallback: "%2$@ aren't asked while torrent playback is off.", count, names)
     }
 
     /// Sentence of a failure naming the sources not asked while the proxy check for torrents hasn't passed, joined as a list by the app.
     public static func playerStartNotAskedProxy(count: Int, names: String) -> String {
-        Self.format("player-start-not-asked-proxy", fallback: "%2$@ weren't asked: the proxy check hasn't passed.", count, names)
+        Self.format("player-start-not-asked-proxy", fallback: "%2$@ aren't asked until the proxy check passes.", count, names)
     }
 
     /// Sentence of a failure naming the sources not asked on cellular, where torrents are off, joined as a list by the app.
     public static func playerStartNotAskedCellular(count: Int, names: String) -> String {
-        Self.format("player-start-not-asked-cellular", fallback: "%2$@ weren't asked: torrents are off on cellular.", count, names)
+        Self.format("player-start-not-asked-cellular", fallback: "%2$@ aren't asked on cellular.", count, names)
     }
 
     /// Sentence of a failure naming the sources not asked because they say they can't be used right now, joined as a list by the app.
     public static func playerStartNotAskedOther(count: Int, names: String) -> String {
-        Self.format("player-start-not-asked-other", fallback: "%2$@ weren't asked: they aren't available right now.", count, names)
+        Self.format("player-start-not-asked-other", fallback: "%2$@ aren't available right now.", count, names)
     }
 
     /// Label of the switch in the Details list that plays the episode with its subtitles.
@@ -8532,6 +8542,11 @@ public enum L {
     /// Line over the reasons when no source lists a release of the episode. The episode is its label.
     public static func sourcePickerNoneLists(episode: String) -> String {
         Self.format("source-picker-none-lists", fallback: "No source lists episode %1$@.", episode)
+    }
+
+    /// Line over the reasons when no source lists a release of the episode and some sources failed or weren't asked. The episode is its label.
+    public static func sourcePickerNoneAnsweredLists(episode: String) -> String {
+        Self.format("source-picker-none-answered-lists", fallback: "No source that answered lists episode %1$@.", episode)
     }
 
     /// Line of the picker for a source not asked while torrent playback is off.

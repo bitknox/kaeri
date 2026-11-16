@@ -187,8 +187,13 @@
     <string name="cause_release_failed">Couldn\'t start that release: %1$s</string>
     <!-- Reason: a play waited too long for its sources to give it a stream, and gave up. -->
     <string name="cause_sources_timed_out">The sources took too long to answer. Try again, or choose another source.</string>
-    <!-- Reason: some sources gave no real answer for the episode: they failed, took too long or weren't asked, and the rest don't have it. The names are joined with commas. -->
+    <!-- Reason: some sources asked gave no real answer for the episode: they failed, took too long or were skipped, and the rest don't have it. The names are joined with commas. -->
     <string name="cause_sources_unreached">Couldn\'t reach %1$s. Try again, or choose another source.</string>
+    <!-- Reason: every source asked lacks the episode, and some sources weren't asked while local settings hold them back. The names are joined with commas. The episode is its label. -->
+    <plurals name="cause_sources_not_asked">
+        <item quantity="one">No source that was asked has episode %3$s. %2$s wasn\'t asked.</item>
+        <item quantity="other">No source that was asked has episode %3$s. %2$s weren\'t asked.</item>
+    </plurals>
     <!-- Reason: every source matched the title but none has the episode. The detail is what each said. -->
     <string name="cause_no_source_has_episode">No source has episode %1$s: %2$s</string>
     <!-- Reason: the source streams episodes but only torrents can be downloaded. -->
@@ -4740,27 +4745,32 @@
     <string name="player_start_row_skipped">Skipped</string>
     <!-- Second clause of a failure: the sources that were asked, joined as a list by the app. -->
     <string name="player_start_asked">%1$s were asked.</string>
-    <!-- First sentence of a failure when some sources gave no real answer: they failed, took too long or weren't asked. The names are joined as a list by the app. -->
+    <!-- Sentence of a failure naming the sources asked that answered without the episode, while others couldn't be reached or weren't asked. The names are joined as a list by the app. The episode is its label. -->
+    <plurals name="player_start_lacking">
+        <item quantity="one">%2$s doesn\'t have episode %3$s.</item>
+        <item quantity="other">%2$s don\'t have episode %3$s.</item>
+    </plurals>
+    <!-- First sentence of a failure when some sources asked gave no real answer: they failed, took too long or were skipped. A source not asked is never among them. The names are joined as a list by the app. -->
     <string name="player_start_unreached">Couldn\'t reach %1$s.</string>
     <!-- Sentence of a failure naming the sources not asked while torrent playback is off, joined as a list by the app. -->
     <plurals name="player_start_not_asked_torrents_off">
-        <item quantity="one">%2$s wasn\'t asked: torrent playback is off.</item>
-        <item quantity="other">%2$s weren\'t asked: torrent playback is off.</item>
+        <item quantity="one">%2$s isn\'t asked while torrent playback is off.</item>
+        <item quantity="other">%2$s aren\'t asked while torrent playback is off.</item>
     </plurals>
     <!-- Sentence of a failure naming the sources not asked while the proxy check for torrents hasn't passed, joined as a list by the app. -->
     <plurals name="player_start_not_asked_proxy">
-        <item quantity="one">%2$s wasn\'t asked: the proxy check hasn\'t passed.</item>
-        <item quantity="other">%2$s weren\'t asked: the proxy check hasn\'t passed.</item>
+        <item quantity="one">%2$s isn\'t asked until the proxy check passes.</item>
+        <item quantity="other">%2$s aren\'t asked until the proxy check passes.</item>
     </plurals>
     <!-- Sentence of a failure naming the sources not asked on cellular, where torrents are off, joined as a list by the app. -->
     <plurals name="player_start_not_asked_cellular">
-        <item quantity="one">%2$s wasn\'t asked: torrents are off on cellular.</item>
-        <item quantity="other">%2$s weren\'t asked: torrents are off on cellular.</item>
+        <item quantity="one">%2$s isn\'t asked on cellular.</item>
+        <item quantity="other">%2$s aren\'t asked on cellular.</item>
     </plurals>
     <!-- Sentence of a failure naming the sources not asked because they say they can't be used right now, joined as a list by the app. -->
     <plurals name="player_start_not_asked_other">
-        <item quantity="one">%2$s wasn\'t asked: it isn\'t available right now.</item>
-        <item quantity="other">%2$s weren\'t asked: they aren\'t available right now.</item>
+        <item quantity="one">%2$s isn\'t available right now.</item>
+        <item quantity="other">%2$s aren\'t available right now.</item>
     </plurals>
     <!-- Label of the switch in the Details list that plays the episode with its subtitles. -->
     <string name="player_start_subtitled">Subtitled</string>
@@ -5016,6 +5026,8 @@
     <string name="source_picker_empty">No source has a stream for this episode.</string>
     <!-- Line over the reasons when no source lists a release of the episode. The episode is its label. -->
     <string name="source_picker_none_lists">No source lists episode %1$s.</string>
+    <!-- Line over the reasons when no source lists a release of the episode and some sources failed or weren't asked. The episode is its label. -->
+    <string name="source_picker_none_answered_lists">No source that answered lists episode %1$s.</string>
     <!-- Line of the picker for a source not asked while torrent playback is off. -->
     <string name="source_picker_held_torrents_off">%1$s isn\'t asked while torrent playback is off</string>
     <!-- Line of the picker for a source not asked while the proxy check for torrents hasn't passed. -->

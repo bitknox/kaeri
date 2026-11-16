@@ -373,9 +373,13 @@ object Strings {
     fun causeSourcesTimedOut(context: Context): String =
         context.getString(R.string.cause_sources_timed_out)
 
-    /** Reason: some sources gave no real answer for the episode: they failed, took too long or weren't asked, and the rest don't have it. The names are joined with commas. */
+    /** Reason: some sources asked gave no real answer for the episode: they failed, took too long or were skipped, and the rest don't have it. The names are joined with commas. */
     fun causeSourcesUnreached(context: Context, names: String): String =
         context.getString(R.string.cause_sources_unreached, names)
+
+    /** Reason: every source asked lacks the episode, and some sources weren't asked while local settings hold them back. The names are joined with commas. The episode is its label. */
+    fun causeSourcesNotAsked(context: Context, count: Int, names: String, episode: String): String =
+        context.resources.getQuantityString(R.plurals.cause_sources_not_asked, count, count, names, episode)
 
     /** Reason: every source matched the title but none has the episode. The detail is what each said. */
     fun causeNoSourceHasEpisode(context: Context, episode: String, detail: String): String =
@@ -8897,7 +8901,11 @@ object Strings {
     fun playerStartAsked(context: Context, names: String): String =
         context.getString(R.string.player_start_asked, names)
 
-    /** First sentence of a failure when some sources gave no real answer: they failed, took too long or weren't asked. The names are joined as a list by the app. */
+    /** Sentence of a failure naming the sources asked that answered without the episode, while others couldn't be reached or weren't asked. The names are joined as a list by the app. The episode is its label. */
+    fun playerStartLacking(context: Context, count: Int, names: String, episode: String): String =
+        context.resources.getQuantityString(R.plurals.player_start_lacking, count, count, names, episode)
+
+    /** First sentence of a failure when some sources asked gave no real answer: they failed, took too long or were skipped. A source not asked is never among them. The names are joined as a list by the app. */
     fun playerStartUnreached(context: Context, names: String): String =
         context.getString(R.string.player_start_unreached, names)
 
@@ -9441,6 +9449,10 @@ object Strings {
     /** Line over the reasons when no source lists a release of the episode. The episode is its label. */
     fun sourcePickerNoneLists(context: Context, episode: String): String =
         context.getString(R.string.source_picker_none_lists, episode)
+
+    /** Line over the reasons when no source lists a release of the episode and some sources failed or weren't asked. The episode is its label. */
+    fun sourcePickerNoneAnsweredLists(context: Context, episode: String): String =
+        context.getString(R.string.source_picker_none_answered_lists, episode)
 
     /** Line of the picker for a source not asked while torrent playback is off. */
     fun sourcePickerHeldTorrentsOff(context: Context, name: String): String =

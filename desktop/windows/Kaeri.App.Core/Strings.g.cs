@@ -288,8 +288,11 @@ public static partial class T
     /// <summary>Reason: a play waited too long for its sources to give it a stream, and gave up.</summary>
     public static string CauseSourcesTimedOut => Get("CauseSourcesTimedOut");
 
-    /// <summary>Reason: some sources gave no real answer for the episode: they failed, took too long or weren't asked, and the rest don't have it. The names are joined with commas.</summary>
+    /// <summary>Reason: some sources asked gave no real answer for the episode: they failed, took too long or were skipped, and the rest don't have it. The names are joined with commas.</summary>
     public static string CauseSourcesUnreached(string names) => Fill(Get("CauseSourcesUnreached"), ("names", names));
+
+    /// <summary>Reason: every source asked lacks the episode, and some sources weren't asked while local settings hold them back. The names are joined with commas. The episode is its label.</summary>
+    public static string CauseSourcesNotAsked(long count, string names, string episode) => Fill(GetPlural("CauseSourcesNotAsked", count), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)), ("names", names), ("episode", episode));
 
     /// <summary>Reason: every source matched the title but none has the episode. The detail is what each said.</summary>
     public static string CauseNoSourceHasEpisode(string episode, string detail) => Fill(Get("CauseNoSourceHasEpisode"), ("episode", episode), ("detail", detail));
@@ -5628,7 +5631,10 @@ public static partial class T
     /// <summary>Second clause of a failure: the sources that were asked, joined as a list by the app.</summary>
     public static string PlayerStartAsked(string names) => Fill(Get("PlayerStartAsked"), ("names", names));
 
-    /// <summary>First sentence of a failure when some sources gave no real answer: they failed, took too long or weren't asked. The names are joined as a list by the app.</summary>
+    /// <summary>Sentence of a failure naming the sources asked that answered without the episode, while others couldn't be reached or weren't asked. The names are joined as a list by the app. The episode is its label.</summary>
+    public static string PlayerStartLacking(long count, string names, string episode) => Fill(GetPlural("PlayerStartLacking", count), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)), ("names", names), ("episode", episode));
+
+    /// <summary>First sentence of a failure when some sources asked gave no real answer: they failed, took too long or were skipped. A source not asked is never among them. The names are joined as a list by the app.</summary>
     public static string PlayerStartUnreached(string names) => Fill(Get("PlayerStartUnreached"), ("names", names));
 
     /// <summary>Sentence of a failure naming the sources not asked while torrent playback is off, joined as a list by the app.</summary>
@@ -6030,6 +6036,9 @@ public static partial class T
 
     /// <summary>Line over the reasons when no source lists a release of the episode. The episode is its label.</summary>
     public static string SourcePickerNoneLists(string episode) => Fill(Get("SourcePickerNoneLists"), ("episode", episode));
+
+    /// <summary>Line over the reasons when no source lists a release of the episode and some sources failed or weren't asked. The episode is its label.</summary>
+    public static string SourcePickerNoneAnsweredLists(string episode) => Fill(Get("SourcePickerNoneAnsweredLists"), ("episode", episode));
 
     /// <summary>Line of the picker for a source not asked while torrent playback is off.</summary>
     public static string SourcePickerHeldTorrentsOff(string name) => Fill(Get("SourcePickerHeldTorrentsOff"), ("name", name));
@@ -12445,6 +12454,8 @@ public static partial class T
         ["CauseReleaseFailed"] = "Couldn't start that release: {detail}",
         ["CauseSourcesTimedOut"] = "The sources took too long to answer. Try again, or choose another source.",
         ["CauseSourcesUnreached"] = "Couldn't reach {names}. Try again, or choose another source.",
+        ["CauseSourcesNotAsked_one"] = "No source that was asked has episode {episode}. {names} wasn't asked.",
+        ["CauseSourcesNotAsked_other"] = "No source that was asked has episode {episode}. {names} weren't asked.",
         ["CauseNoSourceHasEpisode"] = "No source has episode {episode}: {detail}",
         ["CauseSourceCannotDownload"] = "This source streams episodes but can't download them.",
         ["CauseNoSourceCouldListShow"] = "No source could list this show, so it can't be downloaded.",
@@ -14300,15 +14311,17 @@ public static partial class T
         ["PlayerStartRowTimedOut"] = "Took too long",
         ["PlayerStartRowSkipped"] = "Skipped",
         ["PlayerStartAsked"] = "{names} were asked.",
+        ["PlayerStartLacking_one"] = "{names} doesn't have episode {episode}.",
+        ["PlayerStartLacking_other"] = "{names} don't have episode {episode}.",
         ["PlayerStartUnreached"] = "Couldn't reach {names}.",
-        ["PlayerStartNotAskedTorrentsOff_one"] = "{names} wasn't asked: torrent playback is off.",
-        ["PlayerStartNotAskedTorrentsOff_other"] = "{names} weren't asked: torrent playback is off.",
-        ["PlayerStartNotAskedProxy_one"] = "{names} wasn't asked: the proxy check hasn't passed.",
-        ["PlayerStartNotAskedProxy_other"] = "{names} weren't asked: the proxy check hasn't passed.",
-        ["PlayerStartNotAskedCellular_one"] = "{names} wasn't asked: torrents are off on cellular.",
-        ["PlayerStartNotAskedCellular_other"] = "{names} weren't asked: torrents are off on cellular.",
-        ["PlayerStartNotAskedOther_one"] = "{names} wasn't asked: it isn't available right now.",
-        ["PlayerStartNotAskedOther_other"] = "{names} weren't asked: they aren't available right now.",
+        ["PlayerStartNotAskedTorrentsOff_one"] = "{names} isn't asked while torrent playback is off.",
+        ["PlayerStartNotAskedTorrentsOff_other"] = "{names} aren't asked while torrent playback is off.",
+        ["PlayerStartNotAskedProxy_one"] = "{names} isn't asked until the proxy check passes.",
+        ["PlayerStartNotAskedProxy_other"] = "{names} aren't asked until the proxy check passes.",
+        ["PlayerStartNotAskedCellular_one"] = "{names} isn't asked on cellular.",
+        ["PlayerStartNotAskedCellular_other"] = "{names} aren't asked on cellular.",
+        ["PlayerStartNotAskedOther_one"] = "{names} isn't available right now.",
+        ["PlayerStartNotAskedOther_other"] = "{names} aren't available right now.",
         ["PlayerStartSubtitled"] = "Subtitled",
         ["PlayerStallTitle"] = "Source is buffering · {seconds} s",
         ["PlayerStallDetail"] = "Another stream may play without waiting.",
@@ -14447,6 +14460,7 @@ public static partial class T
         ["SourcePickerFinding"] = "Finding sources…",
         ["SourcePickerEmpty"] = "No source has a stream for this episode.",
         ["SourcePickerNoneLists"] = "No source lists episode {episode}.",
+        ["SourcePickerNoneAnsweredLists"] = "No source that answered lists episode {episode}.",
         ["SourcePickerHeldTorrentsOff"] = "{name} isn't asked while torrent playback is off",
         ["SourcePickerHeldProxy"] = "{name} isn't asked until the proxy check passes",
         ["SourcePickerHeldCellular"] = "{name} isn't asked on cellular",

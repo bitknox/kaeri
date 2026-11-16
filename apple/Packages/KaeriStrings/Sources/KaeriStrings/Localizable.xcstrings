@@ -32417,6 +32417,40 @@
         }
       }
     },
+    "cause-sources-not-asked" : {
+      "comment" : "Reason: every source asked lacks the episode, and some sources weren't asked while local settings hold them back. The names are joined with commas. The episode is its label. Argument 1: count (Int). Argument 2: names (Text). Argument 3: episode (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%#@count@"
+          },
+          "substitutions" : {
+            "count" : {
+              "argNum" : 1,
+              "formatSpecifier" : "lld",
+              "variations" : {
+                "plural" : {
+                  "one" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "No source that was asked has episode %3$@. %2$@ wasn't asked."
+                    }
+                  },
+                  "other" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "No source that was asked has episode %3$@. %2$@ weren't asked."
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "cause-sources-timed-out" : {
       "comment" : "Reason: a play waited too long for its sources to give it a stream, and gave up.",
       "extractionState" : "manual",
@@ -32502,7 +32536,7 @@
       }
     },
     "cause-sources-unreached" : {
-      "comment" : "Reason: some sources gave no real answer for the episode: they failed, took too long or weren't asked, and the rest don't have it. The names are joined with commas. Argument 1: names (Text).",
+      "comment" : "Reason: some sources asked gave no real answer for the episode: they failed, took too long or were skipped, and the rest don't have it. The names are joined with commas. Argument 1: names (Text).",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
@@ -187391,6 +187425,40 @@
         }
       }
     },
+    "player-start-lacking" : {
+      "comment" : "Sentence of a failure naming the sources asked that answered without the episode, while others couldn't be reached or weren't asked. The names are joined as a list by the app. The episode is its label. Argument 1: count (Int). Argument 2: names (Text). Argument 3: episode (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%#@count@"
+          },
+          "substitutions" : {
+            "count" : {
+              "argNum" : 1,
+              "formatSpecifier" : "lld",
+              "variations" : {
+                "plural" : {
+                  "one" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%2$@ doesn't have episode %3$@."
+                    }
+                  },
+                  "other" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%2$@ don't have episode %3$@."
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "player-start-looked-up" : {
       "comment" : "Details row once the title has been looked up.",
       "extractionState" : "manual",
@@ -187997,13 +188065,13 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "%2$@ wasn't asked: torrents are off on cellular."
+                      "value" : "%2$@ isn't asked on cellular."
                     }
                   },
                   "other" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "%2$@ weren't asked: torrents are off on cellular."
+                      "value" : "%2$@ aren't asked on cellular."
                     }
                   }
                 }
@@ -188031,13 +188099,13 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "%2$@ wasn't asked: it isn't available right now."
+                      "value" : "%2$@ isn't available right now."
                     }
                   },
                   "other" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "%2$@ weren't asked: they aren't available right now."
+                      "value" : "%2$@ aren't available right now."
                     }
                   }
                 }
@@ -188065,13 +188133,13 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "%2$@ wasn't asked: the proxy check hasn't passed."
+                      "value" : "%2$@ isn't asked until the proxy check passes."
                     }
                   },
                   "other" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "%2$@ weren't asked: the proxy check hasn't passed."
+                      "value" : "%2$@ aren't asked until the proxy check passes."
                     }
                   }
                 }
@@ -188099,13 +188167,13 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "%2$@ wasn't asked: torrent playback is off."
+                      "value" : "%2$@ isn't asked while torrent playback is off."
                     }
                   },
                   "other" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "%2$@ weren't asked: torrent playback is off."
+                      "value" : "%2$@ aren't asked while torrent playback is off."
                     }
                   }
                 }
@@ -190496,7 +190564,7 @@
       }
     },
     "player-start-unreached" : {
-      "comment" : "First sentence of a failure when some sources gave no real answer: they failed, took too long or weren't asked. The names are joined as a list by the app. Argument 1: names (Text).",
+      "comment" : "First sentence of a failure when some sources asked gave no real answer: they failed, took too long or were skipped. A source not asked is never among them. The names are joined as a list by the app. Argument 1: names (Text).",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
@@ -321589,6 +321657,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "%1$@–%2$@"
+          }
+        }
+      }
+    },
+    "source-picker-none-answered-lists" : {
+      "comment" : "Line over the reasons when no source lists a release of the episode and some sources failed or weren't asked. The episode is its label. Argument 1: episode (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No source that answered lists episode %1$@."
           }
         }
       }

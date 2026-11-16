@@ -277,8 +277,15 @@ cause-release-failed = Couldn't start that release: { $detail }
 # Reason: a play waited too long for its sources to give it a stream, and gave up.
 cause-sources-timed-out = The sources took too long to answer. Try again, or choose another source.
 
-# Reason: some sources gave no real answer for the episode: they failed, took too long or weren't asked, and the rest don't have it. The names are joined with commas.
+# Reason: some sources asked gave no real answer for the episode: they failed, took too long or were skipped, and the rest don't have it. The names are joined with commas.
 cause-sources-unreached = Couldn't reach { $names }. Try again, or choose another source.
+
+# Reason: every source asked lacks the episode, and some sources weren't asked while local settings hold them back. The names are joined with commas. The episode is its label.
+cause-sources-not-asked =
+    { $count ->
+        [one] No source that was asked has episode { $episode }. { $names } wasn't asked.
+       *[other] No source that was asked has episode { $episode }. { $names } weren't asked.
+    }
 
 # Reason: every source matched the title but none has the episode. The detail is what each said.
 cause-no-source-has-episode = No source has episode { $episode }: { $detail }
@@ -9091,35 +9098,42 @@ player-start-row-skipped = Skipped
 # Second clause of a failure: the sources that were asked, joined as a list by the app.
 player-start-asked = { $names } were asked.
 
-# First sentence of a failure when some sources gave no real answer: they failed, took too long or weren't asked. The names are joined as a list by the app.
+# Sentence of a failure naming the sources asked that answered without the episode, while others couldn't be reached or weren't asked. The names are joined as a list by the app. The episode is its label.
+player-start-lacking =
+    { $count ->
+        [one] { $names } doesn't have episode { $episode }.
+       *[other] { $names } don't have episode { $episode }.
+    }
+
+# First sentence of a failure when some sources asked gave no real answer: they failed, took too long or were skipped. A source not asked is never among them. The names are joined as a list by the app.
 player-start-unreached = Couldn't reach { $names }.
 
 # Sentence of a failure naming the sources not asked while torrent playback is off, joined as a list by the app.
 player-start-not-asked-torrents-off =
     { $count ->
-        [one] { $names } wasn't asked: torrent playback is off.
-       *[other] { $names } weren't asked: torrent playback is off.
+        [one] { $names } isn't asked while torrent playback is off.
+       *[other] { $names } aren't asked while torrent playback is off.
     }
 
 # Sentence of a failure naming the sources not asked while the proxy check for torrents hasn't passed, joined as a list by the app.
 player-start-not-asked-proxy =
     { $count ->
-        [one] { $names } wasn't asked: the proxy check hasn't passed.
-       *[other] { $names } weren't asked: the proxy check hasn't passed.
+        [one] { $names } isn't asked until the proxy check passes.
+       *[other] { $names } aren't asked until the proxy check passes.
     }
 
 # Sentence of a failure naming the sources not asked on cellular, where torrents are off, joined as a list by the app.
 player-start-not-asked-cellular =
     { $count ->
-        [one] { $names } wasn't asked: torrents are off on cellular.
-       *[other] { $names } weren't asked: torrents are off on cellular.
+        [one] { $names } isn't asked on cellular.
+       *[other] { $names } aren't asked on cellular.
     }
 
 # Sentence of a failure naming the sources not asked because they say they can't be used right now, joined as a list by the app.
 player-start-not-asked-other =
     { $count ->
-        [one] { $names } wasn't asked: it isn't available right now.
-       *[other] { $names } weren't asked: they aren't available right now.
+        [one] { $names } isn't available right now.
+       *[other] { $names } aren't available right now.
     }
 
 # Label of the switch in the Details list that plays the episode with its subtitles.
@@ -9513,6 +9527,9 @@ source-picker-empty = No source has a stream for this episode.
 
 # Line over the reasons when no source lists a release of the episode. The episode is its label.
 source-picker-none-lists = No source lists episode { $episode }.
+
+# Line over the reasons when no source lists a release of the episode and some sources failed or weren't asked. The episode is its label.
+source-picker-none-answered-lists = No source that answered lists episode { $episode }.
 
 # Line of the picker for a source not asked while torrent playback is off.
 source-picker-held-torrents-off = { $name } isn't asked while torrent playback is off

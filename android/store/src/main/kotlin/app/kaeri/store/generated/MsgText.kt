@@ -563,6 +563,7 @@ fun Cause.text(context: Context): String =
         is Cause.ReleaseFailed -> Strings.causeReleaseFailed(context, this.detail)
         is Cause.SourcesTimedOut -> Strings.causeSourcesTimedOut(context)
         is Cause.SourcesUnreached -> Strings.causeSourcesUnreached(context, this.names)
+        is Cause.SourcesNotAsked -> Strings.causeSourcesNotAsked(context, this.count.toInt(), this.names, this.episode)
         is Cause.NoSourceHasEpisode -> Strings.causeNoSourceHasEpisode(context, this.episode, this.detail)
         is Cause.SourceCannotDownload -> Strings.causeSourceCannotDownload(context)
         is Cause.NoSourceCouldListShow -> Strings.causeNoSourceCouldListShow(context)

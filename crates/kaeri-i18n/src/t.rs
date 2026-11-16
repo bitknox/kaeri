@@ -460,9 +460,14 @@ pub fn cause_sources_timed_out() -> String {
     text("cause-sources-timed-out", &[])
 }
 
-/// Reason: some sources gave no real answer for the episode: they failed, took too long or weren't asked, and the rest don't have it. The names are joined with commas.
+/// Reason: some sources asked gave no real answer for the episode: they failed, took too long or were skipped, and the rest don't have it. The names are joined with commas.
 pub fn cause_sources_unreached(names: &str) -> String {
     text("cause-sources-unreached", &[("names", Arg::Text(names))])
+}
+
+/// Reason: every source asked lacks the episode, and some sources weren't asked while local settings hold them back. The names are joined with commas. The episode is its label.
+pub fn cause_sources_not_asked(count: i64, names: &str, episode: &str) -> String {
+    text("cause-sources-not-asked", &[("count", Arg::Int(count)), ("names", Arg::Text(names)), ("episode", Arg::Text(episode))])
 }
 
 /// Reason: every source matched the title but none has the episode. The detail is what each said.
@@ -14490,7 +14495,12 @@ pub fn player_start_asked(names: &str) -> String {
     text("player-start-asked", &[("names", Arg::Text(names))])
 }
 
-/// First sentence of a failure when some sources gave no real answer: they failed, took too long or weren't asked. The names are joined as a list by the app.
+/// Sentence of a failure naming the sources asked that answered without the episode, while others couldn't be reached or weren't asked. The names are joined as a list by the app. The episode is its label.
+pub fn player_start_lacking(count: i64, names: &str, episode: &str) -> String {
+    text("player-start-lacking", &[("count", Arg::Int(count)), ("names", Arg::Text(names)), ("episode", Arg::Text(episode))])
+}
+
+/// First sentence of a failure when some sources asked gave no real answer: they failed, took too long or were skipped. A source not asked is never among them. The names are joined as a list by the app.
 pub fn player_start_unreached(names: &str) -> String {
     text("player-start-unreached", &[("names", Arg::Text(names))])
 }
@@ -15175,6 +15185,11 @@ pub fn source_picker_empty() -> String {
 /// Line over the reasons when no source lists a release of the episode. The episode is its label.
 pub fn source_picker_none_lists(episode: &str) -> String {
     text("source-picker-none-lists", &[("episode", Arg::Text(episode))])
+}
+
+/// Line over the reasons when no source lists a release of the episode and some sources failed or weren't asked. The episode is its label.
+pub fn source_picker_none_answered_lists(episode: &str) -> String {
+    text("source-picker-none-answered-lists", &[("episode", Arg::Text(episode))])
 }
 
 /// Line of the picker for a source not asked while torrent playback is off.
