@@ -849,7 +849,7 @@ private fun CastController(cast: CastModel, shown: CastShown, scope: AnimatedVis
                 label = "transport or reason", // i18n-skip
             ) { ended ->
                 if (ended) {
-                    Box(Modifier.fillMaxWidth().padding(top = 12.dp).height(64.dp), contentAlignment = Alignment.CenterStart) {
+                    Box(Modifier.fillMaxWidth().padding(top = 12.dp).heightIn(min = 64.dp), contentAlignment = Alignment.CenterStart) {
                         shown.cast.notice?.let { ProblemLine(it.text(context)) }
                     }
                 } else {
