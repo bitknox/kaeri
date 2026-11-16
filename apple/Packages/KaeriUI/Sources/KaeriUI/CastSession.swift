@@ -724,6 +724,8 @@ struct CastSessionSeek: View {
         }
         .opacity(shown.dimmed(starting: 1))
         .allowsHitTesting(shown == .playing)
+        // Dimmed is off too, and VoiceOver says so.
+        .disabled(shown != .playing)
         .animation(.quick, value: shown.dims)
         .animation(.fadeIn, value: cast.waitingSeconds != nil)
         .onChange(of: cast.held?.rev) { _, rev in
@@ -866,17 +868,28 @@ struct CastSessionVolumeRow: View {
                     .foregroundStyle(.haze)
                     .contentTransition(.opacity)
             }
-            Button {
-                cast.command(.mute(muted: !muted))
-            } label: {
-                Label(muted ? L.playerUnmute : L.playerMute, systemImage: muted ? "speaker.wave.2" : "speaker.slash")
-                    .labelStyle(.titleAndIcon)
-            }
-            .buttonStyle(SecondaryCapsuleStyle(height: touch ? 32 : 22, fontSize: touch ? 15 : 11))
+            // Mute or Unmute keeps its whole label: the line or the slider beside it gives way.
+            CastMuteButton(muted: muted, touch: touch) { cast.command(.mute(muted: !muted)) }
+                .layoutPriority(1)
         }
         .padding(.horizontal, CastMetrics.rowInset)
         .frame(minHeight: touch ? 52 : 32)
         .animation(.standard, value: muted)
+    }
+}
+
+/// The TV's Mute, or Unmute while it is muted, as a pill with its glyph.
+struct CastMuteButton: View {
+    let muted: Bool
+    let touch: Bool
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            Label(muted ? L.playerUnmute : L.playerMute, systemImage: muted ? "speaker.wave.2" : "speaker.slash")
+                .labelStyle(.titleAndIcon)
+        }
+        .buttonStyle(SecondaryCapsuleStyle(height: touch ? 32 : 22, fontSize: touch ? 15 : 11))
     }
 }
 
