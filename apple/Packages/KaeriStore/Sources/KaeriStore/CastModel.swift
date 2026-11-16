@@ -228,6 +228,7 @@ public final class CastModel {
         if tvName.isEmpty || request == nil { tvName = session.deviceName() }
         played = false
         lastPosition = request?.from
+        cardNote = nil
         take(session.card())
         keepAwake(true)
         cards = Task { [weak self, session] in
@@ -251,6 +252,12 @@ public final class CastModel {
         let after = stage
         if after == .playing { played = true }
         if after != before, after == .stopped || after == .failed { keepAwake(false) }
+        if let note = next.note, note != cardNote, !sessionNotes {
+            // A cast from Play on TV holds no session, so its card carries the note: the TV plays
+            // it in its own player. A held session says it itself.
+            say?(Notice(kind: .info, text: note.text, hint: nil, msg: note))
+        }
+        cardNote = next.note
         guard after == .stopped, before != .stopped, let notice = next.notice, Self.offersPlayHere(notice) else { return }
         let said = Notice(kind: .info, text: notice.text, hint: nil, msg: notice)
         if expanded, !Self.takenOver(notice) {
@@ -264,6 +271,12 @@ public final class CastModel {
         offerNotice = said
         offered = carried
     }
+
+    /// The note the cast's last card carried, for saying a new one once as it first reads.
+    @ObservationIgnored private var cardNote: Msg?
+
+    /// The session's view carries the note, as it does while it plays or is connected.
+    private var sessionNotes: Bool { held?.state == .playing || held?.state == .connected }
 
     /// Whether `notice` ends a cast that played by itself, and offers Play here: someone else
     /// took the TV, the TV was lost, or the cast was stopped on the TV.

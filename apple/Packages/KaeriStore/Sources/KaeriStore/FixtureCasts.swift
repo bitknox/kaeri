@@ -157,6 +157,8 @@ final class FixtureCastSession: FfiCastSessionProtocol, @unchecked Sendable {
         var subtitlesOff = false
         var skip: FfiSkipCard?
         var notice: Msg?
+        /// The card's note: the TV plays this cast in its own player, as with Play on TV.
+        var note: Msg?
         var over = false
         /// The connection to the TV closed and is being made again.
         var reconnecting = false
@@ -213,7 +215,7 @@ final class FixtureCastSession: FfiCastSessionProtocol, @unchecked Sendable {
         return FfiCastCard(
             card: card, volumeControl: state.volumeControl, muted: state.muted, notice: state.notice,
             phaseLine: state.phaseLine, upNext: state.upNext, undo: state.undo, waiting: state.waiting,
-            reconnecting: state.reconnecting && !state.over)
+            reconnecting: state.reconnecting && !state.over, note: state.note)
     }
 
     func nextCard() async -> FfiCastCard? {

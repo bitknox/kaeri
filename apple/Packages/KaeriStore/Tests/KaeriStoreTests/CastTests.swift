@@ -447,6 +447,42 @@ extension CastTests {
         model.take(view: connected)
         #expect(said.count == 2)
     }
+
+    @Test func aPlayOnTvCastsFallbackNoteIsSaidOnceEachTimeItComes() async throws {
+        let fallback = Msg.noticeCastFallback(name: "Living room")
+        let (model, session) = casting()
+        var said: [Msg?] = []
+        model.say = { said.append($0.msg) }
+        // The fallback comes as the TV connects, and the card keeps it while it plays.
+        session.change { $0.note = fallback }
+        try await waitFor { said.count == 1 }
+        play(session)
+        try await waitFor { model.stage == .playing }
+        #expect(said == [fallback])
+
+        // It happens again on the next cast: said again.
+        let again = FixtureCastSession(name: "Living room", request: request, episodeLine: "Episode 3")
+        model.opener = { _, _ in again }
+        model.cast("cast:living", name: "Living room", request: request)
+        again.change { $0.note = fallback }
+        try await waitFor { said.count == 2 }
+        #expect(said == [fallback, fallback])
+    }
+
+    @Test func aHeldSessionsCardLeavesTheFallbackNoteToTheSession() {
+        let fallback = Msg.noticeCastFallback(name: "Living room")
+        let model = CastModel()
+        model.link = RecordingLink()
+        var said: [Msg?] = []
+        model.say = { said.append($0.msg) }
+        var playing = Self.view(.playing, item: Self.item(at: 10))
+        playing.note = fallback
+        model.take(view: playing)
+        let card = FixtureCastSession(name: "Living room", request: request, episodeLine: "Episode 3")
+        card.change { $0.note = fallback }
+        model.take(card.card())
+        #expect(said == [fallback])
+    }
 }
 
 /// A link that records what the model tells the engine of the app's place.
