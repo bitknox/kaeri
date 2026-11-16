@@ -297,6 +297,27 @@ final class FeatureVideoFlows: XCTestCase {
     }
     #endif
 
+    #if os(iOS)
+    /// A title page scrolled down past its banner and back up, at a reading pace: the top bar
+    /// over the status bar fills as the banner leaves and clears again. For the bar's before and
+    /// after recordings, not a features page clip.
+    func testTitleTopBar() throws {
+        let app = launch(["-KaeriTitle", "900001"])
+        _ = find(app.buttons.matching(NSPredicate(format: "label BEGINSWITH 'Resume episode 7'")).firstMatch, in: app, timeout: 30)
+        settle()
+        mark("start")
+        pause(0.6)
+        let low = app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.72))
+        let high = app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5))
+        // Down in two strokes, past the banner and on to the synopsis, then back up the same way.
+        for (from, to) in [(low, high), (low, high), (high, low), (high, low)] {
+            from.press(forDuration: 0.05, thenDragTo: to, withVelocity: .slow, thenHoldForDuration: 0.3)
+            pause(0.8)
+        }
+        mark("end")
+    }
+    #endif
+
     /// Explore a screen: launch on KAERI_VIDEO_ARGS and print what is on it. For writing a
     /// flow, never recorded.
     func testExplore() throws {
