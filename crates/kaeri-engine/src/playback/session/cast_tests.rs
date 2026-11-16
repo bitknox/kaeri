@@ -390,7 +390,7 @@ async fn a_held_tv_plays_one_play_after_another_and_stays_until_let_go() {
     assert_eq!(ending(&events), Some(Ending::Complete { next: None }), "{events:?}");
     assert_eq!(rig.receiver.heard("LAUNCH").len(), 1, "one receiver for the whole session");
     assert_eq!(rig.receiver.heard("LOAD").len(), 2);
-    assert_eq!(rig.hub.left_on().as_deref(), Some("tv-1"), "noted for the next launch");
+    assert_eq!(rig.hub.noted_on().as_deref(), Some("tv-1"), "noted for the next launch");
 
     assert!(rig.hub.disconnect());
     assert_eq!(rig.hub.session().state, SessionState::Idle);
@@ -451,8 +451,8 @@ async fn a_session_left_running_is_joined_again_once_its_tv_is_found() {
 /// Wait for `want` of the TV a session was left on, as the hub's note says.
 async fn left_until(hub: &CastHub, want: Option<&str>) {
     let deadline = tokio::time::Instant::now() + Duration::from_secs(10);
-    while hub.left_on().as_deref() != want {
-        assert!(tokio::time::Instant::now() < deadline, "left on {:?}", hub.left_on());
+    while hub.noted_on().as_deref() != want {
+        assert!(tokio::time::Instant::now() < deadline, "left on {:?}", hub.noted_on());
         tokio::time::sleep(Duration::from_millis(50)).await;
     }
 }
@@ -565,6 +565,37 @@ async fn a_tv_stopped_on_the_tv_and_picked_again_is_never_joined_beside_the_new_
     assert!(rig.hub.attached(&player), "the card still follows the play");
     assert_eq!(rig.hub.session().state, SessionState::Idle, "no session joined beside it");
     assert_eq!(rig.receiver.heard("LAUNCH").len(), launches);
+    playing.abort();
+}
+
+#[tokio::test(flavor = "multi_thread", worker_threads = 4)]
+async fn a_tv_picked_again_after_its_cast_stopped_is_not_left_running_while_it_plays() {
+    let options = FakeOptions { duration: 600.0, ..FakeOptions::default() };
+    let rig = Arc::new(Rig::with(true, options).await);
+    rig.hub.connect(rig.device());
+    session_until(&rig.hub, |v| v.state == SessionState::Connected).await;
+    rig.receiver.stop_app();
+    session_until(&rig.hub, |v| v.state != SessionState::Connected).await;
+    left_until(&rig.hub, None).await;
+
+    // Choose another TV: the play goes to the TV on its own, with no session behind it.
+    rig.hub.begin(rig.device());
+    let file = rig.file("1.mkv", &Fixture::default());
+    let playing = {
+        let rig = Arc::clone(&rig);
+        tokio::spawn(async move { rig.play(vec![file], context("1", None)).await })
+    };
+    left_until(&rig.hub, Some("tv-1")).await;
+    let player = rig.hub.player().expect("the play's player");
+    assert!(player.is_alive());
+    // The apps read a TV left running with no session as one joined again: Reconnecting.
+    assert_eq!(rig.hub.session().state, SessionState::Idle);
+    assert_eq!(rig.hub.left_on(), None, "the TV plays the new cast, nothing to join");
+
+    // The play ends: its note is let go, and nothing is left to join.
+    player.quit().await.unwrap();
+    left_until(&rig.hub, None).await;
+    assert_eq!(rig.hub.left_on(), None);
     playing.abort();
 }
 

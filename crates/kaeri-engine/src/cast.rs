@@ -872,9 +872,22 @@ impl CastHub {
     }
 
     /// The TXT `id` of the TV a session was left running on, for the app to browse for at
-    /// launch: once found, the session is joined again.
+    /// launch: once found, the session is joined again. Nothing while a cast connects or plays:
+    /// the note is then that cast's own, kept for a later run, and nothing waits to be joined.
     pub fn left_on(&self) -> Option<String> {
+        self.left().filter(|_| !self.casting_now()).map(|left| left.device)
+    }
+
+    /// The TXT `id` the note of a session left running names, whatever casts now.
+    #[cfg(test)]
+    pub(crate) fn noted_on(&self) -> Option<String> {
         self.left().map(|left| left.device)
+    }
+
+    /// A cast connects outside the session, or the card follows a player that is up.
+    fn casting_now(&self) -> bool {
+        self.opening.load(Ordering::Relaxed) > 0
+            || self.player().is_some_and(|player| player.is_alive())
     }
 
     /// Join the session left running on `device`, when its receiver still runs and no session
@@ -883,9 +896,7 @@ impl CastHub {
     /// TV holds no session, and joining beside it would start its card over and hold the TV twice.
     pub fn rejoin(self: &Arc<Self>, device: &CastDevice) {
         let Some(left) = self.left().filter(|left| left.device == device.id) else { return };
-        if self.opening.load(Ordering::Relaxed) > 0
-            || self.player().is_some_and(|player| player.is_alive())
-        {
+        if self.casting_now() {
             return;
         }
         let generation = {
