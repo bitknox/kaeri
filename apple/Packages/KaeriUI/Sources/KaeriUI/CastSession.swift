@@ -517,6 +517,8 @@ struct CastSessionStatus: View {
                 .font(touch ? .ui(15, weight: .semibold) : .mac(12, weight: .semibold))
                 .foregroundStyle(.silk)
                 .lineLimit(1)
+                .allowsTightening(true)
+                .minimumScaleFactor(0.9)
                 .monospacedDigit()
                 .contentTransition(.opacity)
         }

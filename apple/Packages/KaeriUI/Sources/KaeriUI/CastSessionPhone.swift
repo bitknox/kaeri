@@ -383,46 +383,50 @@ private struct CastMorph: View {
 
     var body: some View {
         let cast = store.tv.cast
-        GeometryReader { proxy in
-            let origin = proxy.frame(in: .global).origin
-            let full = CGRect(origin: .zero, size: proxy.size)
-            let mini = reduceMotion ? nil : from.map { $0.offsetBy(dx: -origin.x, dy: -origin.y) }
-            let p = drawer.progress
-            let box = mini.map { Self.box(from: $0, to: full, at: p) } ?? full
-            let scale = box.width / max(full.width, 1)
-            let radius = mini.map { Self.radius(mini: $0.height / 2, at: p) } ?? 0
-            ZStack(alignment: .topLeading) {
-                // The box spans the whole screen, so the controller gets the safe area back.
-                CastController()
-                    .safeAreaPadding(insets ?? proxy.safeAreaInsets)
-                    .frame(width: full.width, height: full.height)
-                    .scaleEffect(scale, anchor: .topLeading)
-                    .offset(x: box.minX, y: box.minY)
-                if let mini {
-                    CastMini()
-                        .frame(width: box.width, height: mini.height)
+        // The screen's safe area, read before the box spans the whole screen: opened with no
+        // mini to grow from (a TV held with nothing playing), there are no insets kept from it.
+        GeometryReader { screen in
+            GeometryReader { proxy in
+                let origin = proxy.frame(in: .global).origin
+                let full = CGRect(origin: .zero, size: proxy.size)
+                let mini = reduceMotion ? nil : from.map { $0.offsetBy(dx: -origin.x, dy: -origin.y) }
+                let p = drawer.progress
+                let box = mini.map { Self.box(from: $0, to: full, at: p) } ?? full
+                let scale = box.width / max(full.width, 1)
+                let radius = mini.map { Self.radius(mini: $0.height / 2, at: p) } ?? 0
+                ZStack(alignment: .topLeading) {
+                    // The box spans the whole screen, so the controller gets the safe area back.
+                    CastController()
+                        .safeAreaPadding(insets ?? screen.safeAreaInsets)
+                        .frame(width: full.width, height: full.height)
+                        .scaleEffect(scale, anchor: .topLeading)
                         .offset(x: box.minX, y: box.minY)
-                        .opacity(max(0, 1 - p / 0.25))
-                        .allowsHitTesting(false)
-                        .accessibilityHidden(true)
+                    if let mini {
+                        CastMini()
+                            .frame(width: box.width, height: mini.height)
+                            .offset(x: box.minX, y: box.minY)
+                            .opacity(max(0, 1 - p / 0.25))
+                            .allowsHitTesting(false)
+                            .accessibilityHidden(true)
+                    }
+                }
+                .frame(width: full.width, height: full.height, alignment: .topLeading)
+                .mask(alignment: .topLeading) {
+                    RoundedRectangle(cornerRadius: radius, style: .continuous)
+                        .frame(width: box.width, height: box.height)
+                        .offset(x: box.minX, y: box.minY)
+                }
+                .opacity(mini == nil ? p : 1)
+                .simultaneousGesture(close(travel: mini?.minY ?? full.height / 2))
+                // A notice while it is open sits over its foot, above the controller.
+                .overlay(alignment: .bottom) {
+                    NoticeCapsule(here: cast.expanded)
+                        .padding(.horizontal, 16)
+                        .padding(.bottom, 50)
                 }
             }
-            .frame(width: full.width, height: full.height, alignment: .topLeading)
-            .mask(alignment: .topLeading) {
-                RoundedRectangle(cornerRadius: radius, style: .continuous)
-                    .frame(width: box.width, height: box.height)
-                    .offset(x: box.minX, y: box.minY)
-            }
-            .opacity(mini == nil ? p : 1)
-            .simultaneousGesture(close(travel: mini?.minY ?? full.height / 2))
-            // A notice while it is open sits over its foot, above the controller.
-            .overlay(alignment: .bottom) {
-                NoticeCapsule(here: cast.expanded)
-                    .padding(.horizontal, 16)
-                    .padding(.bottom, 50)
-            }
+            .ignoresSafeArea()
         }
-        .ignoresSafeArea()
         .accessibilityAction(.escape) { cast.expanded = false }
         .onAppear {
             // One frame on the mini first, then the box grows. A finger already holding it (a
