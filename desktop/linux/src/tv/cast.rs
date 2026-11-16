@@ -126,6 +126,20 @@ pub fn stage_of(card: &CastCard) -> Stage {
     }
 }
 
+/// Keep in `next`, a card that ended from afar, where the TV got to by `was` read `since`
+/// seconds ago, and the episode's length, when it is still the same episode.
+fn hold_playhead(was: &CastCard, since: f64, next: &mut CastCard) {
+    let (Some(before), Some(now)) = (was.card.now.as_ref(), next.card.now.as_mut()) else {
+        return;
+    };
+    if before.id != now.id || before.episode != now.episode {
+        return;
+    }
+    let moving = stage_of(was) == Stage::Playing && was.waiting.is_none() && !was.reconnecting;
+    now.position = if moving { before.position_after(since) } else { before.position };
+    now.duration = now.duration.or(before.duration);
+}
+
 /// The line and mark of a cast that plays, as it stands: reconnecting, waiting on the TV,
 /// paused, or playing, which reads as `playing` says where the line shows. The mark is a dot's
 /// colour, or [`SPIN`] for a spinner while the app waits on the TV.
@@ -423,7 +437,12 @@ impl Tv {
         let (stage, notice, hand_off) = {
             let mut cast = self.cast.borrow_mut();
             let Some(run) = cast.as_mut() else { return false };
-            let next = run.session.card();
+            let mut next = run.session.card();
+            // A cast that played and ended from afar keeps where the TV got to and the
+            // episode's length: the engine's card forgets both once the TV is gone.
+            if stage_of(&next) == Stage::Lost && stage_of(&run.card) != Stage::Lost {
+                hold_playhead(&run.card, run.card_at.elapsed().as_secs_f64(), &mut next);
+            }
             if next.card.now != run.card.card.now {
                 run.card_at = Instant::now();
             }
@@ -499,7 +518,12 @@ impl Tv {
     /// The engine's note on the TV held, said when it first reads differently: Kaeri's receiver
     /// didn't start, so the TV plays this cast in its own player, or it shows plain subtitles.
     pub(super) fn say_cast_note(&self) {
-        let note = self.cast_session().and_then(|session| session.note);
+        // A cast from Play on TV holds no session: its card has the note.
+        let card = self.cast.borrow().as_ref().and_then(|run| {
+            let _entered = self.handle.enter();
+            run.session.card().note
+        });
+        let note = card.or_else(|| self.cast_session().and_then(|session| session.note));
         if *self.cast_noted.borrow() == note {
             return;
         }
@@ -752,6 +776,7 @@ mod tests {
             route: None,
             waiting: None,
             reconnecting: false,
+            note: None,
         }
     }
 
@@ -830,6 +855,30 @@ mod tests {
         );
         card.notice = Some(Msg::NoticeCastLost { name: "Living room".into() });
         assert_eq!(stage_of(&card), Stage::Lost);
+    }
+
+    #[test]
+    fn a_cast_lost_keeps_where_the_tv_got_to_and_the_length() {
+        let ended = || {
+            let mut card = card(false, None, false);
+            card.notice = Some(Msg::NoticeCastLost { name: "Living room".into() });
+            if let Some(now) = card.card.now.as_mut() {
+                now.position = 492.0;
+            }
+            card
+        };
+        let playing = card(false, Some(1440.0), false);
+        let mut next = ended();
+        hold_playhead(&playing, 5.0, &mut next);
+        let now = next.card.now.expect("the episode");
+        assert!((now.position - 759.0).abs() < 0.01, "{}", now.position);
+        assert_eq!(now.duration, Some(1440.0));
+        // Reconnecting, the clock had stopped where the TV was last heard.
+        let mut reconnecting = card(false, Some(1440.0), false);
+        reconnecting.reconnecting = true;
+        let mut next = ended();
+        hold_playhead(&reconnecting, 20.0, &mut next);
+        assert_eq!(next.card.now.map(|now| now.position), Some(754.0));
     }
 
     #[test]

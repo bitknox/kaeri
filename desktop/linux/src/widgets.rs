@@ -336,40 +336,6 @@ pub fn standing(text: &str, mark: &str) -> gtk::Box {
     line
 }
 
-/// Changes a [`standing`] line in place: its mark's colour and its text, keeping the widget.
-pub fn restand(line: &gtk::Box, text: &str, mark: &str) {
-    let Some(dot) = line.first_child() else { return };
-    for class in dot.css_classes() {
-        if class != "mark" {
-            dot.remove_css_class(&class);
-        }
-    }
-    dot.add_css_class(mark);
-    let label = dot.next_sibling().and_downcast::<gtk::Label>();
-    match (label, text.is_empty()) {
-        (Some(label), true) => line.remove(&label),
-        (Some(label), false) => {
-            label.set_label(text);
-            let haze = matches!(mark, "haze" | "ring");
-            label.remove_css_class(if haze { "standing" } else { "haze" });
-            label.add_css_class(if haze { "haze" } else { "standing" });
-        }
-        (None, true) => {}
-        (None, false) => {
-            let label = gtk::Label::new(Some(text));
-            label.add_css_class(if matches!(mark, "haze" | "ring") {
-                "haze"
-            } else {
-                "standing"
-            });
-            label.set_xalign(0.0);
-            label.set_wrap(true);
-            label.set_natural_wrap_mode(gtk::NaturalWrapMode::Word);
-            line.append(&label);
-        }
-    }
-}
-
 /// An empty boxed list, nothing selectable.
 pub fn boxed_list() -> gtk::ListBox {
     let list = gtk::ListBox::new();

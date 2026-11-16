@@ -25,7 +25,7 @@ const TICK: Duration = Duration::from_millis(500);
 /// A control that waits on the TV is dimmed to this, never hidden: the bar keeps its shape.
 pub(super) const DIMMED: f64 = 0.38;
 /// How long a status line's change crossfades: the fade-in and fade-out tokens, overlapped.
-const CROSSFADE_MS: u32 = 250;
+pub(super) const CROSSFADE_MS: u32 = 300;
 
 /// A cast's status line: a dot or a small spinner, then the words. A new stage crossfades both
 /// in place; the words of the same stage (a count, a pause) change in place. Nothing beside it

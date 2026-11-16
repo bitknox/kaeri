@@ -107,25 +107,23 @@ pub fn stage(shell: &Rc<Shell>, shot: &str) -> Option<f64> {
         "cast-states-clip-reconnect" => {
             cast(shell, &scene, plays());
             hide_remote(shell, remote, PLAYING);
+            // The first frames of a run can come a second late, so the drop waits 1.2 s.
             later(10_000, {
                 let window = shell.ctx.window.clone();
-                move || crate::shots::frames(&window, clip, CLIP_FRAMES)
+                move || crate::shots::frames(&window, clip, CLIP_FRAMES + 60)
             });
-            drop_at(&scene, 10_100, Duration::from_secs(60));
-            13.0
+            drop_at(&scene, 11_200, Duration::from_secs(60));
+            14.0
         }
-        // The TV answers 4 s after the connection closed, and the cast goes on.
+        // The TV answers 4 s after the connection closed, and the cast goes on: the clip starts
+        // just before.
         "cast-states-clip-rejoin" => {
             cast(shell, &scene, plays());
             hide_remote(shell, remote, PLAYING);
             drop_at(&scene, 10_000, Duration::from_secs(4));
-            let reconnecting = Rc::new(std::cell::Cell::new(false));
-            film_when(shell, clip, 10_000, move |tv| {
-                let now = reconnecting_now(tv);
-                // Once it reconnected, the clip starts at the rejoin.
-                let rejoined = reconnecting.get() && !now;
-                reconnecting.set(reconnecting.get() || now);
-                rejoined
+            later(13_700, {
+                let window = shell.ctx.window.clone();
+                move || crate::shots::frames(&window, clip, CLIP_FRAMES)
             });
             18.0
         }
@@ -137,25 +135,26 @@ pub fn stage(shell: &Rc<Shell>, shot: &str) -> Option<f64> {
             34.0
         }
         // Kaeri's receiver isn't published to the TV, so it plays in its own player. The
-        // receiver takes 2 s for each launch, so the notice comes as the episode starts.
+        // receiver takes 3 s for each launch, so the notice comes about 8 s in, as the episode
+        // starts, and stays 4 s.
         "cast-states-fallback" | "cast-states-clip-fallback" => {
             cast(
                 shell,
                 &scene,
                 FakeOptions {
                     custom: CustomReceiver::Unknown,
-                    launch: Duration::from_secs(2),
+                    launch: Duration::from_secs(3),
                     ..plays()
                 },
             );
             hide_remote(shell, remote, 4_000);
             if !clip.is_empty() {
-                film_when(shell, clip, 2_000, |tv| {
-                    tv.cast_session().is_some_and(|s| s.note.is_some())
+                later(7_000, {
+                    let window = shell.ctx.window.clone();
+                    move || crate::shots::frames(&window, clip, CLIP_FRAMES + 60)
                 });
             }
-            // The notice comes about 7.5 s in and stays 4 s.
-            if clip.is_empty() { 9.5 } else { 12.0 }
+            if clip.is_empty() { 9.6 } else { 12.0 }
         }
         // Stopped on the TV at 10 s: the engine hears the TV for up to 4 s before it ends.
         "cast-states-waiting" | "cast-states-stopped-tv" | "cast-states-clip-stopped-tv" => {
@@ -172,14 +171,23 @@ pub fn stage(shell: &Rc<Shell>, shot: &str) -> Option<f64> {
                 _ => 17.0,
             }
         }
+        // The TV held from the header's chooser first, then Play on TV plays there. A cast from
+        // Play on TV alone holds no session, and the chooser's browse would join it again.
         "cast-states-dialog-playing" => {
-            cast(shell, &scene, plays());
-            hide_remote(shell, false, PLAYING);
-            later(10_500, {
+            scene.cast(LIVING_ROOM, plays());
+            tv.start_browsing();
+            connect_when_listed(Rc::clone(&tv), 12);
+            later(4_000, {
+                let tv = Rc::clone(&tv);
+                move || tv.stop_browsing()
+            });
+            cast_after(shell, 4_000);
+            hide_remote(shell, false, 14_000);
+            later(15_000, {
                 let window = shell.ctx.window.clone();
                 move || pop_up(&window, |b| b.has_css_class("cast-button"))
             });
-            11.5
+            16.0
         }
         // The TV chosen from the header's chooser with nothing asked to play.
         "cast-states-dialog-idle" => {
@@ -210,10 +218,31 @@ pub fn unstage(shell: &Rc<Shell>, shot: &str) {
     if !shot.starts_with("cast-states-") {
         return;
     }
+    pop_down(shell.ctx.window.upcast_ref());
     shell.ctx.notices.dismiss_each();
-    shell.ctx.tv.stop_browsing();
+    let tv = &shell.ctx.tv;
+    tv.stop_browsing();
+    // A TV held from the header's chooser is let go as well.
+    if tv.cast_session().is_some_and(|s| s.device.is_some()) {
+        if tv.casting() {
+            tv.cast_stop();
+        }
+        tv.cast_disconnect();
+    }
     if let Some(settings) = gtk::Settings::default() {
         settings.set_gtk_enable_animations(true);
+    }
+}
+
+/// Close every menu button's popover under `widget`.
+fn pop_down(widget: &gtk::Widget) {
+    if let Some(button) = widget.downcast_ref::<gtk::MenuButton>() {
+        button.popdown();
+    }
+    let mut child = widget.first_child();
+    while let Some(next) = child {
+        pop_down(&next);
+        child = next.next_sibling();
     }
 }
 
@@ -236,8 +265,13 @@ fn later(ms: u64, f: impl FnOnce() + 'static) {
 /// Play on TV for episode 3, from 8:12, on the Living room TV set up as `options` say.
 fn cast(shell: &Rc<Shell>, scene: &Rc<Scene>, options: FakeOptions) {
     scene.cast(LIVING_ROOM, options);
+    cast_after(shell, 0);
+}
+
+/// Play on TV for episode 3 `after` ms from now, and the Living room chosen.
+fn cast_after(shell: &Rc<Shell>, after: u64) {
     let window = shell.ctx.window.clone();
-    later(600, move || {
+    later(after + 600, move || {
         let _ = WidgetExt::activate_action(
             &window,
             "win.play-on-tv",
@@ -245,7 +279,7 @@ fn cast(shell: &Rc<Shell>, scene: &Rc<Scene>, options: FakeOptions) {
         );
     });
     let tv = Rc::clone(&shell.ctx.tv);
-    later(1_800, move || choose(tv, 10));
+    later(after + 1_800, move || choose(tv, 10));
 }
 
 /// Choose the cast row once it is listed, asking again until it is.
@@ -290,10 +324,6 @@ fn drop_at(scene: &Rc<Scene>, ms: u64, answer: Duration) {
         scene.cast_answer_after(LIVING_ROOM, answer);
         scene.cast_close_connection(LIVING_ROOM);
     });
-}
-
-fn reconnecting_now(tv: &Tv) -> bool {
-    tv.cast_session().is_some_and(|s| s.reconnecting)
 }
 
 /// From `from` ms, look every 20 ms for `ready`, then save the clip's frames.

@@ -26,7 +26,7 @@ use kaeri_model::{command::Command, hosted::TrackKind};
 
 use super::{
     Sheet as Shown, Tv,
-    bar::{Line, dim},
+    bar::{self, Line, dim},
     cast::{CastView, Offer, Stage, playing_line},
 };
 use crate::{
@@ -1426,7 +1426,7 @@ impl Remote {
         reason_row.append(&reason);
         let tbox = gtk::Stack::builder()
             .transition_type(gtk::StackTransitionType::Crossfade)
-            .transition_duration(250)
+            .transition_duration(bar::CROSSFADE_MS)
             .build();
         tbox.add_named(&transport, Some("transport"));
         tbox.add_named(&reason_row, Some("reason"));
@@ -1504,7 +1504,7 @@ impl Remote {
         let place = || {
             gtk::Stack::builder()
                 .transition_type(gtk::StackTransitionType::Crossfade)
-                .transition_duration(250)
+                .transition_duration(bar::CROSSFADE_MS)
                 .hexpand(true)
                 .build()
         };
