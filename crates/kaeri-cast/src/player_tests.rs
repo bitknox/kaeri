@@ -1432,6 +1432,23 @@ async fn kaeris_receiver_stopped_on_the_tv_mid_episode_ends_the_cast_and_launche
     let (receiver, player, mut events) = cast_with_own_receiver(CustomReceiver::Runs).await;
     // Its connection closes before the receiver's status says nothing runs.
     receiver.stop_app();
+    // While the TV is heard out, the card no longer plays: it waits on the TV, its clock still.
+    let waiting = async {
+        loop {
+            let status = player.current();
+            if status.state != CastState::Playing {
+                return status;
+            }
+            tokio::time::sleep(Duration::from_millis(10)).await;
+        }
+    };
+    let status = tokio::time::timeout(Duration::from_millis(500), waiting)
+        .await
+        .expect("the card stops playing at once");
+    assert_eq!(status.state, CastState::Buffering);
+    assert!(status.waiting_since.is_some());
+    tokio::time::sleep(Duration::from_millis(300)).await;
+    assert_eq!(player.current().position, status.position, "the clock stands still");
     next(&mut events, |e| matches!(e, PlaybackEvent::Ended { complete: false })).await;
     let ended = async {
         while player.is_alive() {

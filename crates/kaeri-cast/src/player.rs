@@ -473,6 +473,16 @@ impl State {
                 None => CastState::Connecting,
             }
         };
+        // The receiver app left and the TV hasn't said why: nothing plays meanwhile, and the
+        // card waits on the TV with its clock still.
+        let state = match state {
+            CastState::Playing | CastState::Paused | CastState::Buffering
+                if self.gone.is_some() =>
+            {
+                CastState::Buffering
+            }
+            state => state,
+        };
         // What the viewer asked shows until the TV says otherwise.
         let state = match (state, self.want.paused) {
             (
@@ -502,7 +512,11 @@ impl State {
                 .collect(),
             metadata: self.last.as_ref().and_then(|s| s.metadata.clone()),
             receiver: self.app.as_ref().map(|a| a.app_id.clone()),
-            waiting_since: self.waiting_since.filter(|_| !self.trying && !self.ended),
+            waiting_since: self
+                .gone
+                .map(|gone| gone.since)
+                .or(self.waiting_since)
+                .filter(|_| !self.trying && !self.ended),
         }
     }
 }
