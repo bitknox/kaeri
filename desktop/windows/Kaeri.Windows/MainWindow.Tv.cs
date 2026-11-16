@@ -195,12 +195,13 @@ public sealed partial class MainWindow
     string? castNoteShown;
 
     /// <summary>
-    /// The cast's line while a TV is held, as a toast each time it comes: the TV's own player took
-    /// over, so the notice says so each cast it happens, and Messages keeps it.
+    /// The cast's note, from the held TV or a cast from Play on TV, as a toast each time it comes:
+    /// the TV's own player took over, so the notice says so each cast it happens, and Messages
+    /// keeps it.
     /// </summary>
     void ToastCastNote()
     {
-        var note = tv.SessionHeld ? tv.Session?.Note?.Text() : null;
+        var note = tv.CastNote?.Text();
         if (note == castNoteShown)
             return;
         castNoteShown = note;

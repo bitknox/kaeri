@@ -547,6 +547,13 @@ public sealed partial class TvRemote(Func<DateTimeOffset>? clock = null)
     public bool CastRelaying => cast is not null && CastCard is { Card.Over: false, Route: FfiCastRouteHint.ThroughThisDevice };
 
     /// <summary>
+    /// The cast's note for its notice: the held TV's session says it, and a cast from Play on TV,
+    /// which holds no session, says it on its card while it runs.
+    /// </summary>
+    public Msg? CastNote =>
+        (SessionHeld ? Session?.Note : null) ?? (CastCard is { Card.Over: false } card ? card.Note : null);
+
+    /// <summary>
     /// A Chromecast row chosen: cast what was asked to it, and show its card at once. A player
     /// that asked closes once the TV plays it.
     /// </summary>
