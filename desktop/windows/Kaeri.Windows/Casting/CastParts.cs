@@ -27,7 +27,7 @@ static class CastParts
             VerticalAlignment = VerticalAlignment.Center,
         };
         Name(button, name);
-        return button;
+        return KeepLookWhenOff(button);
     }
 
     public static FontIcon Glyph(string glyph, double size) => new() { Glyph = glyph, FontSize = size };
@@ -46,7 +46,7 @@ static class CastParts
             BorderThickness = new Thickness(0),
             VerticalAlignment = VerticalAlignment.Center,
         };
-        return button;
+        return KeepLookWhenOff(button);
     }
 
     /// <summary>Sets the play or pause glyph and its name, only when it changes, so focus and a press stay put.</summary>
@@ -88,6 +88,25 @@ static class CastParts
             button.Style = Ui.Res<Style>("AccentButtonStyle");
             button.FontWeight = Microsoft.UI.Text.FontWeights.SemiBold;
         }
+        return button;
+    }
+
+    /// <summary>
+    /// A button the cast dims to 38% while it takes no input keeps its usual fill, border and
+    /// words when disabled, so the dim is the only change, as the board draws it. High contrast
+    /// keeps the system's disabled look.
+    /// </summary>
+    public static Button KeepLookWhenOff(Button button, bool accent = false)
+    {
+        if (new global::Windows.UI.ViewManagement.AccessibilitySettings().HighContrast)
+            return button;
+        var prefix = accent ? "AccentButton" : "Button";
+        var resources = button.Resources;
+        resources[$"{prefix}BackgroundDisabled"] = button.Background ?? Ui.Res<Brush>($"{prefix}Background");
+        resources[$"{prefix}BorderBrushDisabled"] = button.BorderThickness == new Thickness(0)
+            ? new SolidColorBrush(Microsoft.UI.Colors.Transparent)
+            : Ui.Res<Brush>($"{prefix}BorderBrush");
+        resources[$"{prefix}ForegroundDisabled"] = Ui.Res<Brush>($"{prefix}Foreground");
         return button;
     }
 

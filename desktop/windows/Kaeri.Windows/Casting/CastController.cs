@@ -54,7 +54,7 @@ sealed class CastController : Grid
     readonly DropDownButton audio = new() { MinHeight = 32, MinWidth = 140 };
     readonly Slider level = new() { Minimum = 0, Maximum = 100, StepFrequency = 1, Width = 160, VerticalAlignment = VerticalAlignment.Center };
     readonly TextBlock fixedVolume = new() { Text = T.TvCastVolumeOnTv, Style = Ui.Res<Style>("HazeBodyStyle"), VerticalAlignment = VerticalAlignment.Center };
-    readonly Button mute = CastParts.Text(T.TvCastMute);
+    readonly Button mute = CastParts.KeepLookWhenOff(CastParts.Text(T.TvCastMute));
     readonly StackPanel footer = new() { Orientation = Orientation.Horizontal, Spacing = 8, Margin = new Thickness(0, 28, 0, 0) };
     readonly Place first, second;
     readonly Button more;
@@ -66,6 +66,7 @@ sealed class CastController : Grid
     string? tracksDrawn;
     bool quietVolume, wide = true;
     double? volumeAsked;
+    bool? settableSeen;
 
     public CastController(Ctx ctx, TvRemote tv, CastActions act)
     {
@@ -479,10 +480,17 @@ sealed class CastController : Grid
         return menu;
     }
 
-    /// <summary>A slider for a TV with a level; "Set on the TV" and Mute for one whose volume is fixed.</summary>
+    /// <summary>
+    /// A slider for a TV with a level; "Set on the TV" and Mute for one whose volume is fixed. While
+    /// it takes no input the row keeps the shape the TV last reported, so a dim changes nothing else.
+    /// </summary>
     void Volume(FfiCastSessionView? view, bool live)
     {
         var settable = view?.VolumeControl == FfiVolumeControl.Level;
+        if (live || view is null || settableSeen is null)
+            settableSeen = view is null ? null : settable;
+        else
+            settable = settableSeen.Value;
         Set(level, settable);
         Set(fixedVolume, !settable);
         Set(mute, !settable);
@@ -550,8 +558,8 @@ sealed class CastActions
 /// </summary>
 sealed class Place
 {
-    readonly Button plain = CastParts.Text("");
-    readonly Button accent = CastParts.Text("", accent: true);
+    readonly Button plain = CastParts.KeepLookWhenOff(CastParts.Text(""));
+    readonly Button accent = CastParts.KeepLookWhenOff(CastParts.Text("", accent: true), accent: true);
     bool accented;
 
     public Place(Action<CastAction> run)
