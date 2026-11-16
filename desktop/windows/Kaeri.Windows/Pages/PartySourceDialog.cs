@@ -151,9 +151,16 @@ sealed class PartySourceDialog
     /// <summary>A screenshot's answer in which no source lists anything, each with its reason.</summary>
     public void RehearseMissed(MissedListing[] missed)
     {
-        Choose();
+        if (!choosing)
+            Choose();
+        rehearsed = true;
         Listed([], missed);
     }
+
+    /// <summary>A screenshot's answer is on screen: the engine's own, however late, stays out.</summary>
+    bool rehearsed;
+#else
+    const bool rehearsed = false;
 #endif
 
     void OnPrimary(ContentDialog sender, ContentDialogButtonClickEventArgs args)
@@ -217,11 +224,11 @@ sealed class PartySourceDialog
         {
             switch (e)
             {
-                case Event.Sources s when choosing && s.Id == id && s.Episode == episode:
+                case Event.Sources s when choosing && !rehearsed && s.Id == id && s.Episode == episode:
                     Listed(s.Candidates, s.Missed);
                     break;
                 // The engine says why it found nothing as an alert, not as an empty list.
-                case Event.Toast t when choosing && candidates is null && !failed && t.V1.Kind == NoticeKind.Alert:
+                case Event.Toast t when choosing && !rehearsed && candidates is null && !failed && t.V1.Kind == NoticeKind.Alert:
                     Failed(t.V1.Msg is { } said ? said.Text() : T.SourcesLoadFailed);
                     break;
                 case Event.PartyLeft when !alone:
