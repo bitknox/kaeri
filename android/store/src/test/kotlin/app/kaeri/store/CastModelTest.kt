@@ -201,6 +201,19 @@ class CastModelTest {
     }
 
     @Test
+    fun a_cast_that_played_and_then_failed_says_it_stopped_not_that_it_could_not_start() = runTest {
+        val link = ScriptedLink(card(loading = true))
+        val cast = model(link)
+        cast.cast(row, request)
+        link.cards.send(card(loading = false))
+        advanceUntilIdle()
+        assertEquals(CastStage.Playing, cast.shown.value?.stage)
+        link.cards.send(card(loading = false, over = true, notice = Msg.NoticeCastSegment("Living room")))
+        advanceUntilIdle()
+        assertEquals(CastStage.Lost, cast.shown.value?.stage)
+    }
+
+    @Test
     fun try_again_starts_the_failed_cast_over_on_the_same_session() = runTest {
         val link = ScriptedLink(card(loading = true))
         val cast = model(link)

@@ -117,6 +117,8 @@ data class CastShown(
     val tvName: String,
     val request: TvPlayRequest,
     val startedAt: Long,
+    /** Whether the TV played this cast at some point: one that ends after that stopped, not failed to start. */
+    val played: Boolean = false,
 ) {
     val stage: CastStage
         get() {
@@ -124,6 +126,7 @@ data class CastShown(
             val now = cast.card.now
             return when {
                 notice is Msg.NoticeCastLost -> CastStage.Lost
+                notice != null && played -> CastStage.Lost
                 notice != null -> CastStage.Failed
                 now == null || now.loading -> CastStage.Starting
                 else -> CastStage.Playing
@@ -260,6 +263,9 @@ class CastModel(
     private val browsing get() = browsers > 0
     private var watching: Job? = null
     private var foreground = false
+
+    /** Whether the browses that run while the app is in front were started. */
+    private var browsingInFront = false
     private var sessionAt = clock()
     private var pendingGuard: Job? = null
     private var link: CastLink? = null
@@ -304,6 +310,7 @@ class CastModel(
             }
         }
         refresh()
+        browseInFront()
     }
 
     internal fun refresh() {
@@ -344,8 +351,19 @@ class CastModel(
     fun foreground(on: Boolean) {
         if (on == foreground) return
         foreground = on
+        browseInFront()
+    }
+
+    /**
+     * Start or stop the browses that run while the app is in front. Casting may come up after
+     * the app is already in front, as at a cold launch: the browses start then.
+     */
+    private fun browseInFront() {
         val tv = tv ?: return
-        if (on) {
+        val want = foreground && available
+        if (want == browsingInFront) return
+        browsingInFront = want
+        if (want) {
             tv.startBrowsing()
             startBrowsing()
         } else {
@@ -597,7 +615,8 @@ class CastModel(
     private fun take(card: FfiCastCard) {
         val held = _shown.value ?: return
         val same = held.cast.card.now?.position == card.card.now?.position && held.cast.card.now?.paused == card.card.now?.paused
-        _shown.value = held.copy(cast = card, at = if (same) held.at else clock())
+        val playing = card.notice == null && card.card.now?.loading == false
+        _shown.value = held.copy(cast = card, at = if (same) held.at else clock(), played = held.played || playing)
         recast()
         if (!card.card.over) return
         val notice = card.notice
@@ -727,7 +746,7 @@ class CastModel(
         over = null
         link = again
         val now = clock()
-        _shown.value = shown.copy(cast = again.card(), at = now, startedAt = now)
+        _shown.value = shown.copy(cast = again.card(), at = now, startedAt = now, played = false)
         recast()
         follow(again, shown.request)
     }
