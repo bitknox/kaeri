@@ -97,6 +97,10 @@ pub struct Timings {
     /// How long a dropped connection is tried again before the cast counts as lost: the
     /// receiver keeps playing meanwhile, and a new connection joins its session.
     pub reconnect: Duration,
+    /// How long one try at connecting again may take, from the TCP connection to the TV's first
+    /// status: a TV on the same network answers in well under a second, and a try that waits on
+    /// a network the phone has left gives way to the next.
+    pub retry: Duration,
     /// How long the receiver's statuses are heard after the receiver app left the TV before it
     /// counts as stopped there: another sender's app comes up a moment after this one closes,
     /// and a TV that went away is left to [`Timings::reconnect`].
@@ -115,6 +119,7 @@ impl Default for Timings {
             silence: crate::channel::SILENCE,
             ready: Duration::from_secs(8),
             reconnect: Duration::from_secs(20),
+            retry: Duration::from_secs(2),
             gone: Duration::from_secs(4),
         }
     }
@@ -561,6 +566,8 @@ struct Inner {
     heard: broadcast::Sender<FromReceiver>,
     /// The load being tried, aborted by a stop or the next load.
     attempt: Mutex<Option<JoinHandle<()>>>,
+    /// Counts the device's changes of network: a try at connecting again starts over on one.
+    network: watch::Sender<u64>,
 }
 
 impl Inner {
@@ -897,6 +904,7 @@ impl CastPlayer {
             ready: watch::channel(None).0,
             heard: broadcast::channel(16).0,
             attempt: Mutex::new(None),
+            network: watch::channel(0).0,
         });
         let pump = tokio::spawn(pump(incoming, Arc::downgrade(&inner)));
         let poll = tokio::spawn(poll(Arc::downgrade(&inner)));
@@ -1010,6 +1018,13 @@ impl CastPlayer {
     /// End the event stream: the playback reading it is over, and the receiver stays.
     pub fn detach(&self) {
         lock(&self.inner.events).take();
+    }
+
+    /// The device moved to another network, or back to one: a try at connecting again that
+    /// waits on the network it left gives way to a new try at once, so a phone back on the
+    /// TV's Wi-Fi joins again as it comes back.
+    pub fn network_changed(&self) {
+        self.inner.network.send_modify(|changes| *changes += 1);
     }
 
     /// The card's view of the cast, as it changes.
@@ -2616,26 +2631,50 @@ async fn reconnect(inner: &Inner) -> Result<mpsc::UnboundedReceiver<Incoming>, C
     inner.publish();
     tracing::info!("the connection to the TV dropped; connecting again");
     let deadline = Instant::now() + budget;
+    let mut network = inner.network.subscribe();
+    network.borrow_and_update();
     let mut wait = Duration::from_millis(250);
     let result = loop {
         if lock(&inner.state).quit {
             break Err(dropped());
         }
         let left = deadline.saturating_duration_since(Instant::now());
-        let tried = tokio::time::timeout(left.min(inner.setup.timings.silence), rejoin(inner));
-        match tried.await {
-            Ok(Ok(incoming)) => break Ok(incoming),
-            Ok(Err(Rejoin::Over(failure))) => break Err(failure),
-            Ok(Err(Rejoin::Again(e))) => {
-                tracing::debug!(error = %e, "the TV didn't answer yet")
+        // Short tries, one after another: a try made while the phone was off the TV's network
+        // waits on nothing, and the next one, once it is back, answers at once.
+        let tried = tokio::time::timeout(left.min(inner.setup.timings.retry), rejoin(inner));
+        let moved = tokio::select! {
+            tried = tried => {
+                match tried {
+                    Ok(Ok(incoming)) => break Ok(incoming),
+                    Ok(Err(Rejoin::Over(failure))) => break Err(failure),
+                    Ok(Err(Rejoin::Again(e))) => {
+                        tracing::debug!(error = %e, "the TV didn't answer yet");
+                    }
+                    Err(_) => tracing::debug!("the TV didn't answer in time"),
+                }
+                false
             }
-            Err(_) => tracing::debug!("the TV didn't answer in time"),
+            // The network changed under the try: the next one goes out on the new one.
+            Ok(()) = network.changed() => true,
+        };
+        if moved {
+            tracing::debug!("the network changed; trying the TV again at once");
+            wait = Duration::from_millis(250);
+            if Instant::now() >= deadline {
+                break Err(dropped());
+            }
+            continue;
         }
         if Instant::now() + wait >= deadline {
             break Err(dropped());
         }
-        tokio::time::sleep(wait).await;
-        wait = (wait * 2).min(Duration::from_secs(2));
+        tokio::select! {
+            () = tokio::time::sleep(wait) => {}
+            Ok(()) = network.changed() => {
+                tracing::debug!("the network changed; trying the TV again at once");
+            }
+        }
+        wait = (wait * 2).min(Duration::from_secs(1));
     };
     // A connection made again clears it here; tries that ran out clear it as the cast ends, so
     // the status never reads as playing between the two.
@@ -2651,8 +2690,9 @@ async fn reconnect(inner: &Inner) -> Result<mpsc::UnboundedReceiver<Incoming>, C
 
 /// One try at [`reconnect`].
 async fn rejoin(inner: &Inner) -> Result<mpsc::UnboundedReceiver<Incoming>, Rejoin> {
+    let timings = &inner.setup.timings;
     let (device, incoming) =
-        Device::connect(inner.setup.device.address, inner.setup.timings.silence)
+        Device::connect_within(inner.setup.device.address, timings.silence, timings.retry)
             .await
             .map_err(Rejoin::Again)?;
     let receiver = device.status().await.map_err(Rejoin::Again)?;

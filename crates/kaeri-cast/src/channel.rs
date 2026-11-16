@@ -50,6 +50,8 @@ const REPLY_TIMEOUT: Duration = Duration::from_secs(20);
 
 /// How long a device may say nothing before the channel takes it as gone: three heartbeats.
 pub const SILENCE: Duration = Duration::from_secs(15);
+/// How long the TCP connection and the TLS handshake each have on a first connect.
+const CONNECT: Duration = Duration::from_secs(5);
 
 #[derive(Debug, thiserror::Error)]
 pub enum CastError {
@@ -97,7 +99,16 @@ impl Channel {
         address: SocketAddr,
         silence: Duration,
     ) -> Result<(Self, mpsc::UnboundedReceiver<Incoming>), CastError> {
-        let tcp = tokio::time::timeout(Duration::from_secs(5), TcpStream::connect(address))
+        Self::connect_within(address, silence, CONNECT).await
+    }
+
+    /// [`Self::connect`], with the TCP connection and the TLS handshake each given `within`.
+    pub async fn connect_within(
+        address: SocketAddr,
+        silence: Duration,
+        within: Duration,
+    ) -> Result<(Self, mpsc::UnboundedReceiver<Incoming>), CastError> {
+        let tcp = tokio::time::timeout(within, TcpStream::connect(address))
             .await
             .map_err(|_| CastError::Timeout("the TCP connection".into()))??;
         tcp.set_nodelay(true)?;
@@ -110,8 +121,10 @@ impl Channel {
             .with_no_client_auth();
         let connector = TlsConnector::from(Arc::new(config));
         let name = ServerName::IpAddress(address.ip().into());
-        let tls =
-            connector.connect(name, tcp).await.map_err(|e| CastError::Tls(e.to_string()))?;
+        let tls = tokio::time::timeout(within, connector.connect(name, tcp))
+            .await
+            .map_err(|_| CastError::Timeout("the TLS handshake".into()))?
+            .map_err(|e| CastError::Tls(e.to_string()))?;
         let (read, write) = tokio::io::split(tls);
 
         let (writer, outgoing) = mpsc::unbounded_channel();

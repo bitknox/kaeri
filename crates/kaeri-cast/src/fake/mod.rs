@@ -212,6 +212,8 @@ enum Control {
     Say(Value),
     /// Each connection from now waits this long before it is answered.
     AnswerAfter(Duration),
+    /// Connections made in the next while are never answered, and those after are.
+    Unreachable(Duration),
 }
 
 impl Drop for FakeReceiver {
@@ -310,11 +312,14 @@ impl FakeReceiver {
                 let mut gone = false;
                 let mut held = Vec::new();
                 let mut answer_after = Duration::ZERO;
+                let mut unreachable_until: Option<tokio::time::Instant> = None;
                 loop {
                     tokio::select! {
                         accepted = listener.accept() => {
                             let Ok((socket, _)) = accepted else { return };
-                            if gone {
+                            let unreachable = unreachable_until
+                                .is_some_and(|until| tokio::time::Instant::now() < until);
+                            if gone || unreachable {
                                 held.push(socket);
                                 continue;
                             }
@@ -340,6 +345,10 @@ impl FakeReceiver {
                         Some(control) = controls.recv() => {
                             if let Control::AnswerAfter(after) = control {
                                 answer_after = after;
+                                continue;
+                            }
+                            if let Control::Unreachable(span) = control {
+                                unreachable_until = Some(tokio::time::Instant::now() + span);
                                 continue;
                             }
                             gone |= matches!(control, Control::Silence);
@@ -395,6 +404,13 @@ impl FakeReceiver {
     /// the time between a dropped connection and the next one can be seen.
     pub fn answer_after(&self, delay: Duration) {
         let _ = self.control.send(Control::AnswerAfter(delay));
+    }
+
+    /// Leave every connection made in the next `span` unanswered, held open with nothing said,
+    /// and answer those made after: the phone off the TV's network for a while, its tries going
+    /// nowhere, then back on it.
+    pub fn unreachable_for(&self, span: Duration) {
+        let _ = self.control.send(Control::Unreachable(span));
     }
 
     /// The receiver app is stopped on the TV, with its remote or from another phone's Cast card:
@@ -548,7 +564,7 @@ async fn serve(
                 }
                 Control::Say(message) => send(&transport, "*", NS_KAERI, message),
                 // Taken by the listener, never sent to a connection.
-                Control::AnswerAfter(_) => {}
+                Control::AnswerAfter(_) | Control::Unreachable(_) => {}
             },
             frame = read_frame(&mut read) => {
                 let Some(message) = frame? else { return Ok(()) };
