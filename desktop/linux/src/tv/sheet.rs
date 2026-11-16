@@ -48,16 +48,36 @@ const VOLUME_REST: Duration = Duration::from_millis(200);
 /// Where a volume let go is held on the scale until the TV says where it went, or this long.
 const VOLUME_HOLD: Duration = Duration::from_millis(1500);
 
+/// How long the notice that someone else took the TV stays, Play here and all: as long as any
+/// notice with a button.
+const TAKEN_OVER_SECONDS: u32 = 8;
+
 /// Open the sheet whenever the model asks for it, and close it when the model lets it go.
 pub fn attach(ctx: &Rc<Ctx>) {
     let showing: Rc<RefCell<Option<Rc<Dialog>>>> = Rc::default();
-    // Someone else took the TV: the card has gone, and the notice stays 8 s with Play here.
+    // Someone else took the TV: the card has gone, and the notice stays 8 s with Play here, or
+    // until a new cast starts.
+    let taken_over: Rc<RefCell<Option<adw::Toast>>> = Rc::default();
     ctx.tv.on_taken_over({
         let ctx = Rc::downgrade(ctx);
+        let taken_over = Rc::clone(&taken_over);
         move |text| {
             if let Some(ctx) = ctx.upgrade() {
-                ctx.toast_with(text, &t::tv_cast_play_here(), "win.tv-play-here");
+                let toast = ctx.toast_held(
+                    text,
+                    &t::tv_cast_play_here(),
+                    "win.tv-play-here",
+                    TAKEN_OVER_SECONDS,
+                );
+                if let Some(old) = taken_over.replace(Some(toast)) {
+                    old.dismiss();
+                }
             }
+        }
+    });
+    ctx.tv.on_cast_started(move || {
+        if let Some(toast) = taken_over.take() {
+            toast.dismiss();
         }
     });
     // A cast's controls are the bottom sheet over the page, grown from the bar under it; the

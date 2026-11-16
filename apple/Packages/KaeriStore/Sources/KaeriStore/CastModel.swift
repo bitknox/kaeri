@@ -79,6 +79,10 @@ public final class CastModel {
     @ObservationIgnored var closed: (@MainActor () -> Void)?
     /// Post a notice: someone else took the TV.
     @ObservationIgnored public var say: (@MainActor (Notice) -> Void)?
+    /// Take that notice down again, if it still shows: a new cast started.
+    @ObservationIgnored public var unsay: (@MainActor (Notice) -> Void)?
+    /// The notice said when someone else took the TV, until a new cast starts.
+    @ObservationIgnored private var takenOverNotice: Notice?
     /// Play an episode here, from a position when there is one: Play here.
     @ObservationIgnored public var playLocally: (@MainActor (AnilistId, String, Double?) -> Void)?
     /// What a pick starts, on the engine's sender; the Fixtures app scripts it instead.
@@ -198,6 +202,12 @@ public final class CastModel {
     /// Read `session`'s cards until it ends.
     func follow(_ session: any FfiCastSessionProtocol, request: TVPlayRequest?) {
         cards?.cancel()
+        // What the TV was taken from is over: its notice and Play here go.
+        takenOver = nil
+        if let said = takenOverNotice {
+            takenOverNotice = nil
+            unsay?(said)
+        }
         self.session = session
         self.request = request
         if tvName.isEmpty || request == nil { tvName = session.deviceName() }
@@ -228,7 +238,9 @@ public final class CastModel {
             let carried = endedPlay
             end()
             closed?()
-            say?(Notice(kind: .info, text: notice.text, hint: nil, msg: notice))
+            let said = Notice(kind: .info, text: notice.text, hint: nil, msg: notice)
+            say?(said)
+            takenOverNotice = said
             takenOver = carried
         }
     }

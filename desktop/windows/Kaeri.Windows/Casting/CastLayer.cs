@@ -48,6 +48,8 @@ sealed class CastLayer
         MaxWidth = 720,
     };
     readonly Microsoft.UI.Dispatching.DispatcherQueueTimer ticker;
+    /// <summary>Closes the bar by itself, Play here and all, as the other notices go.</summary>
+    readonly Microsoft.UI.Dispatching.DispatcherQueueTimer takenOverGoes;
     TvPlay? takenPlay;
     bool expanded, miniShown;
 
@@ -96,18 +98,27 @@ sealed class CastLayer
         ticker = pane.DispatcherQueue.CreateTimer();
         ticker.Interval = TimeSpan.FromMilliseconds(250);
         ticker.Tick += (_, _) => Refresh();
+        takenOverGoes = pane.DispatcherQueue.CreateTimer();
+        takenOverGoes.IsRepeating = false;
+        takenOverGoes.Tick += (_, _) => takenOver.IsOpen = false;
         controller.PointerPressed += TurnRound;
     }
 
     /// <summary>The controller is open.</summary>
     public bool Expanded => expanded;
 
-    /// <summary>Someone else took the TV: the mini goes, and the bar offers to carry on here.</summary>
+    /// <summary>
+    /// Someone else took the TV: the mini goes, and the bar offers to carry on here. It goes by
+    /// itself after a while, and at once when a new cast draws its mini.
+    /// </summary>
     public void TakenOver(TvPlay play, Msg notice)
     {
         takenPlay = play;
         takenOver.Message = notice.Text();
         takenOver.IsOpen = true;
+        takenOverGoes.Stop();
+        takenOverGoes.Interval = NoticeTime.Timed(takenOver.Message, DeviceWatch.ScreenReaderRunning());
+        takenOverGoes.Start();
         if (expanded)
             Close(at: true);
         Refresh();

@@ -421,6 +421,7 @@ public final class AppStore {
     /// here, from where the TV was.
     private func attachCast() {
         tv.cast.say = { [weak self] notice in self?.notices.post(notice) }
+        tv.cast.unsay = { [weak self] notice in self?.notices.withdraw(notice) }
         tv.cast.playLocally = { [weak self] id, episode, position in
             guard let self else { return }
             if let position, position > 0 {

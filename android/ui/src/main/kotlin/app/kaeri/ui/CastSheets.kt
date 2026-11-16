@@ -30,9 +30,17 @@ import app.kaeri.engine.ffi.FfiCastRouteHint
 import app.kaeri.engine.ffi.FfiCastRow
 import app.kaeri.i18n.R
 import app.kaeri.i18n.Strings
+import app.kaeri.store.CastEnded
 import app.kaeri.store.CastModel
 import app.kaeri.store.TvPlayRequest
 import app.kaeri.store.text
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.launch
 
 // The picker's Chromecast group
 
@@ -112,7 +120,8 @@ internal fun CastLocalNetworkRow() {
 
 /**
  * The cast button's dialogs, and the notice once a cast ended with something to say after its
- * controller had gone: someone else took the TV, with Play here, or the TV dropped off.
+ * controller had gone: someone else took the TV, with Play here, or the TV dropped off. The
+ * notice goes by itself, Play here and all, and at once when a new cast starts.
  */
 @Composable
 internal fun CastSheetHost() {
@@ -120,11 +129,11 @@ internal fun CastSheetHost() {
     val snackbars = LocalSnackbars.current
     val context = LocalContext.current
     LaunchedEffect(cast) {
-        cast.ended.collect { ended ->
+        sayCastEnded(cast.ended, cast.shown.map { it?.startedAt }) { ended ->
             val id = ended.id
             val episode = ended.episode
             if (id != null && episode != null) {
-                snackbars.show(ended.notice.text(context), Strings.castCardPlayHere(context)) { cast.playHere?.invoke(id, episode) }
+                snackbars.show(ended.notice.text(context), Strings.castCardPlayHere(context), timed = true) { cast.playHere?.invoke(id, episode) }
             } else {
                 snackbars.show(ended.notice.text(context))
             }
@@ -132,4 +141,15 @@ internal fun CastSheetHost() {
     }
     LaunchedEffect(cast) { cast.notes.collect { snackbars.show(it.text(context)) } }
     CastDialogHost()
+}
+
+/**
+ * Put up each [ended] cast's notice with [say], and take the last one down as soon as [startedAt]
+ * names a cast it has not named before: what the notice says, and its Play here, are of a cast
+ * that is over.
+ */
+internal suspend fun sayCastEnded(ended: Flow<CastEnded>, startedAt: Flow<Long?>, say: (CastEnded) -> Job): Unit = coroutineScope {
+    var said: Job? = null
+    launch { startedAt.filterNotNull().distinctUntilChanged().collect { said?.cancel() } }
+    ended.collect { said = say(it) }
 }

@@ -315,6 +315,11 @@ impl Tv {
         };
         self.request.replace(None);
         self.problem.replace(None);
+        // What the TV was taken from is over: its notice and Play here go.
+        self.taken.replace(None);
+        if let Some(started) = self.cast_started.borrow().as_ref() {
+            started();
+        }
         let turn = self.cast_turn.get() + 1;
         self.cast_turn.set(turn);
         let card = session.card();
