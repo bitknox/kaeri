@@ -134,7 +134,8 @@ pub struct FakeOptions {
     /// What an app other than the Default Media Receiver does.
     pub custom: CustomReceiver,
     /// Keeps the receiver app, what it plays and the volume from one sender connection to the
-    /// next, as a TV does: for a sender that comes back to a cast it left running.
+    /// next, as a TV does: for a sender that comes back to a cast it left running. A launch of
+    /// the app that runs then joins it, as it does on a TV.
     pub remembers: bool,
     /// How statuses after commands come.
     pub echo: Echo,
@@ -596,9 +597,15 @@ async fn serve(
                                 "type": "LAUNCH_ERROR", "requestId": request, "reason": "NOT_FOUND"}));
                             continue;
                         }
-                        transport = if id == DEFAULT_MEDIA_RECEIVER { "web-1" } else { "web-9" }.to_owned();
-                        playing = None;
-                        app = Some((format!("session-{request}"), id));
+                        // A TV that keeps its app between senders joins the one that runs when
+                        // it is launched again, with what it plays.
+                        let running = options.remembers
+                            && app.as_ref().is_some_and(|(_, running)| *running == id);
+                        if !running {
+                            transport = if id == DEFAULT_MEDIA_RECEIVER { "web-1" } else { "web-9" }.to_owned();
+                            playing = None;
+                            app = Some((format!("session-{request}"), id));
+                        }
                         send("receiver-0", &sender, NS_RECEIVER, receiver_status(&app, request, level, muted));
                     }
                     (NS_KAERI, "hello") => {
