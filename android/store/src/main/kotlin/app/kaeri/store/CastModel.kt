@@ -117,6 +117,8 @@ data class CastShown(
     val tvName: String,
     val request: TvPlayRequest,
     val startedAt: Long,
+    /** The picker row of the TV it plays on, when the cast started from one. */
+    val key: String? = null,
 ) {
     val stage: CastStage
         get() {
@@ -412,8 +414,12 @@ class CastModel(
             else -> CastButtonState.Hidden
         }
         val kaeri = tv?.rows?.value.orEmpty().any { it.kind != FfiTvRowKind.PAIRED_AWAY }
+        // A cast from Play on TV runs without the session: its card says where it plays.
+        val linked = if (link != null) _shown.value?.stage else null
         _button.value = when {
             engine == CastButtonState.Connecting || engine == CastButtonState.Connected -> engine
+            linked == CastStage.Starting -> CastButtonState.Connecting
+            linked == CastStage.Playing -> CastButtonState.Connected
             tv?.connected?.value != null -> CastButtonState.Connected
             engine == CastButtonState.Available || kaeri -> CastButtonState.Available
             else -> CastButtonState.Hidden
@@ -425,11 +431,15 @@ class CastModel(
         tv?.attachedSender?.castSetDevice(word)
     }
 
-    /** The cast button: the chooser, or the held TV's dialog. A Kaeri TV opens its own remote. */
+    /**
+     * The cast button: the chooser, the held TV's dialog, or the card of a cast from Play on TV. A
+     * Kaeri TV opens its own remote.
+     */
     fun pressButton() {
         val tv = tv
         when {
             _session.value.held -> _dialog.value = CastDialog.Connected
+            link != null && _shown.value != null -> _open.value = true
             tv?.connected?.value != null -> tv.openRemote()
             else -> _dialog.value = CastDialog.Chooser
         }
@@ -522,9 +532,10 @@ class CastModel(
         end()
         link = next
         val now = clock()
-        _shown.value = CastShown(next.card(), now, next.tvName, request, now)
+        _shown.value = CastShown(next.card(), now, next.tvName, request, now, key)
         _open.value = true
         tv?.sheetClosed()
+        refreshButton()
         follow(next, request)
     }
 
@@ -553,6 +564,7 @@ class CastModel(
         val held = _shown.value ?: return
         val same = held.cast.card.now?.position == card.card.now?.position && held.cast.card.now?.paused == card.card.now?.paused
         _shown.value = held.copy(cast = card, at = if (same) held.at else clock())
+        if (held.stage != _shown.value?.stage) refreshButton()
         if (!card.card.over) return
         val notice = card.notice
         when {
@@ -571,6 +583,7 @@ class CastModel(
                 cards = null
                 over = link
                 link = null
+                refreshButton()
             }
         }
     }
@@ -585,6 +598,7 @@ class CastModel(
         over = null
         _shown.value = null
         _open.value = false
+        refreshButton()
     }
 
     // The card
@@ -675,6 +689,7 @@ class CastModel(
         link = again
         val now = clock()
         _shown.value = shown.copy(cast = again.card(), at = now, startedAt = now)
+        refreshButton()
         follow(again, shown.request)
     }
 
@@ -749,6 +764,13 @@ class CastModel(
             undo = null,
             route = null,
         )
+
+        /** The picker row of the TV that plays now: the held session's, or that of a cast started from the picker. */
+        fun playingKey(shown: CastShown?, session: CastSession): String? = when {
+            session.held -> session.deviceKey
+            shown?.stage == CastStage.Starting || shown?.stage == CastStage.Playing -> shown.key
+            else -> null
+        }
 
         /** What the TV plays, as the card shows it: what the engine says, else what was asked while it starts. */
         fun now(shown: CastShown): FfiNowCard = shown.cast.card.now ?: FfiNowCard(

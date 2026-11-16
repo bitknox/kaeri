@@ -56,6 +56,9 @@ internal fun CastPickerGroup(cast: CastModel, request: TvPlayRequest?) {
     if (request == null || !cast.available) return
     val rows by cast.rows.collectAsStateWithLifecycle()
     val problem by cast.problem.collectAsStateWithLifecycle()
+    val shown by cast.shown.collectAsStateWithLifecycle()
+    val session by cast.session.collectAsStateWithLifecycle()
+    val playing = CastModel.playingKey(shown, session)
     val colors = MaterialTheme.colorScheme
     DisposableEffect(cast) {
         cast.startBrowsing()
@@ -68,8 +71,14 @@ internal fun CastPickerGroup(cast: CastModel, request: TvPlayRequest?) {
         TvSheetRow(
             row.name,
             castRowDetail(row),
-            leading = { CastGlyph(CastGlyphState.Outline, tint = colors.onSurfaceVariant) },
-            trailing = { Icon(Icons.Chevron, contentDescription = null, tint = colors.onSurfaceVariant) },
+            leading = {
+                if (row.key == playing) CastGlyph(CastGlyphState.Filled, tint = colors.onSurface)
+                else CastGlyph(CastGlyphState.Outline, tint = colors.onSurfaceVariant)
+            },
+            trailing = {
+                if (row.key == playing) Icon(Icons.Check, contentDescription = stringResource(R.string.tv_status_connected), tint = colors.onSurface)
+                else Icon(Icons.Chevron, contentDescription = null, tint = colors.onSurfaceVariant)
+            },
             onClick = { cast.cast(row, request) },
         )
     }

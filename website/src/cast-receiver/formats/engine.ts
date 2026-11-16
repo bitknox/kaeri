@@ -286,6 +286,8 @@ export interface UnpackerStats {
 	readTo: number;
 	buffered: [number, number][];
 	seeks: number;
+	/** Spans stepped over because their segments never came. */
+	skipped: [number, number][];
 	pcm: PcmAudio['stats'] | null;
 }
 
@@ -382,6 +384,7 @@ export class Unpacker {
 			readTo: this.readTo,
 			buffered: this.vout?.ranges() ?? this.aout?.ranges() ?? [],
 			seeks: this.seeks,
+			skipped: this.demux.skipped ?? [],
 			pcm: this.pcm ? this.pcm.stats : null,
 		};
 	}
@@ -672,12 +675,17 @@ export class Unpacker {
 
 	// ---------- The element ----------
 
+	/** Whether the picture, and the sound when MediaSource plays it, are buffered at `t`. */
+	private buffered(t: number) {
+		const main = this.vout ?? this.aout;
+		return !!main && !!main.rangeAt(t) && (!this.aout || !!this.aout.rangeAt(t));
+	}
+
 	private covered(t: number) {
 		if (this.pcm) return false;
 		// Already read, or being read now.
 		if (t >= this.runFrom - 0.01 && t <= this.readTo + 2) return true;
-		const main = this.vout ?? this.aout;
-		return !!main && !!main.rangeAt(t) && (!this.aout || !!this.aout.rangeAt(t));
+		return this.buffered(t);
 	}
 
 	private onSeeking() {
@@ -688,6 +696,7 @@ export class Unpacker {
 		if (this.covered(t)) return;
 		this.seekTo = t;
 		this.gen++;
+		this.demux.interrupt?.();
 		this.poke();
 	}
 
@@ -697,9 +706,16 @@ export class Unpacker {
 		// A small gap at the start or after a seek: step over it.
 		if (!v.seeking && v.readyState < 3 && this.vout) {
 			const t = v.currentTime;
-			if (!this.vout.rangeAt(t)) {
-				const next = this.vout.ranges().find(([s]) => s > t && s - t < 1.5);
-				if (next) v.currentTime = next[0] + 0.01;
+			if (!this.buffered(t)) {
+				// Past a skipped segment the gap runs to the end of its span.
+				const span = this.demux.skipped?.find(([a, b]) => t >= a - 1.5 && t < b);
+				const reach = span ? span[1] - t + 1.5 : 1.5;
+				const next = [this.vout, this.aout]
+					.flatMap((o) => o?.ranges() ?? [])
+					.map(([s]) => s + 0.01)
+					.filter((s) => s > t && s - t < reach && this.buffered(s))
+					.sort((a, b) => a - b)[0];
+				if (next != null) v.currentTime = next;
 			}
 		}
 		if (this.atEnd && this.ms.readyState === 'open' && !this.vout?.sb.updating && !this.aout?.sb.updating) {

@@ -189,6 +189,45 @@ class CastModelTest {
     }
 
     @Test
+    fun a_cast_from_play_on_tv_fills_the_button_and_marks_its_row() = runTest {
+        val link = ScriptedLink(card(loading = true))
+        val cast = model(link)
+        assertEquals(CastButtonState.Hidden, cast.button.value)
+        cast.cast(row, request)
+        assertEquals(CastButtonState.Connecting, cast.button.value)
+        assertEquals(row.key, CastModel.playingKey(cast.shown.value, cast.session.value))
+        link.cards.send(card(loading = false))
+        advanceUntilIdle()
+        assertEquals(CastButtonState.Connected, cast.button.value)
+        // The button opens the cast's card, not the chooser.
+        cast.closeCard()
+        cast.pressButton()
+        assertTrue(cast.open.value)
+        assertNull(cast.dialog.value)
+
+        // Lost: the card stays to say so, and the button and the row let go.
+        link.cards.send(card(loading = false, over = true, notice = Msg.NoticeCastLost("Living room")))
+        advanceUntilIdle()
+        assertEquals(CastStage.Lost, cast.shown.value?.stage)
+        assertEquals(CastButtonState.Hidden, cast.button.value)
+        assertNull(CastModel.playingKey(cast.shown.value, cast.session.value))
+    }
+
+    @Test
+    fun a_stopped_cast_from_play_on_tv_lets_the_button_go() = runTest {
+        val link = ScriptedLink(card(loading = false))
+        val cast = model(link)
+        cast.cast(row, request)
+        link.cards.send(card(loading = false))
+        advanceUntilIdle()
+        assertEquals(CastButtonState.Connected, cast.button.value)
+        cast.stop()
+        assertTrue(link.stopped)
+        assertEquals(CastButtonState.Hidden, cast.button.value)
+        assertNull(CastModel.playingKey(cast.shown.value, cast.session.value))
+    }
+
+    @Test
     fun up_next_and_undo_go_to_the_engine() = runTest {
         val link = ScriptedLink(card(loading = false))
         val cast = model(link)
