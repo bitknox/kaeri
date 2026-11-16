@@ -204,13 +204,9 @@ player-start-row-timed-out = Took too long
 # Details row outcome when the viewer skipped a source.
 player-start-row-skipped = Skipped
 
-# Second clause of a failure when every source asked lacks the episode: the sources that were asked, joined as a list by the app.
-# @arg count: int
+# Second clause of a failure: the sources that were asked, joined as a list by the app.
 # @arg names: text
-player-start-asked = { $count ->
-    [one] { $names } was asked.
-   *[other] { $names } were asked.
- }
+player-start-asked = { $names } were asked.
 
 # Sentence of a failure naming the sources asked that answered without the episode, while others couldn't be reached or weren't asked. The names are joined as a list by the app. The episode is its label.
 # @arg count: int

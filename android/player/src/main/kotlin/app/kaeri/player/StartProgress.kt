@@ -428,7 +428,7 @@ internal fun failureDetail(context: Context, failure: PlaybackFailure): String {
             else -> failure.reasonText(context)?.let { "$it." } ?: Strings.playerFailedDetail(context)
         }
         val line = mutableListOf(reason)
-        if (failure.asked.isNotEmpty()) line += Strings.playerStartAsked(context, failure.asked.size, list.format(failure.asked))
+        if (failure.asked.isNotEmpty()) line += Strings.playerStartAsked(context, list.format(failure.asked))
         return line.joinToString(" ")
     }
     val line = mutableListOf<String>()

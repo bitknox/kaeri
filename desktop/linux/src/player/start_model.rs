@@ -637,7 +637,7 @@ fn failure_line(failure: &StartFailure, episode: &str) -> String {
     if failure.unreached.is_empty() && !held {
         let mut line = vec![failure_reason(&failure.text)];
         if let Some(asked) = names(&failure.asked) {
-            line.push(t::player_start_asked(failure.asked.len() as i64, &asked));
+            line.push(t::player_start_asked(&asked));
         }
         return line.join(" ");
     }

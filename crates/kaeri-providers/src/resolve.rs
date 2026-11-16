@@ -205,7 +205,12 @@ pub enum Answer<T> {
     /// failed, took too long or were skipped. `held` are the ids of the sources local policy held
     /// back, which were never asked, so never unreached. Both are empty when every source said it
     /// lacks the title or the episode, the only case in which none has it.
-    Unanswered { reasons: Vec<String>, matched: bool, unreached: Vec<String>, held: Vec<String> },
+    Unanswered {
+        reasons: Vec<String>,
+        matched: bool,
+        unreached: Vec<String>,
+        held: Vec<String>,
+    },
 }
 
 impl<T> Answer<T> {

@@ -459,7 +459,7 @@ public struct StartFailureView: Equatable, Sendable {
         let held = heldBack.contains { !$0.names.isEmpty }
         if unreached.isEmpty && !held {
             reason = Self.reason(of: text)
-            self.asked = asked.isEmpty ? nil : L.playerStartAsked(count: asked.count, names: asked.formatted(.list(type: .and)))
+            self.asked = asked.isEmpty ? nil : L.playerStartAsked(names: asked.formatted(.list(type: .and)))
         } else {
             let answered = asked.filter { !unreached.contains($0) }
             let lacking = answered.isEmpty

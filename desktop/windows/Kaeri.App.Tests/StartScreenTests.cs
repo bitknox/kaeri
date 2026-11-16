@@ -232,7 +232,7 @@ public class StartScreenTests
         Assert.Equal(StartAction.FixMatch, frame.Buttons[0].Action);
         Assert.Equal(StartLook.Primary, frame.Buttons[0].Look);
         Assert.DoesNotContain("alpha: no match", frame.Failure?.Reason);
-        Assert.EndsWith("Alpha was asked.", frame.Failure?.Reason);
+        Assert.EndsWith("Alpha were asked.", frame.Failure?.Reason);
     }
 
     [Fact]

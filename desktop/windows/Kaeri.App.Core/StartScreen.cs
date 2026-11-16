@@ -497,7 +497,7 @@ public sealed class StartScreen(uint id, string episode, double? resume)
         {
             line.Add(FailureReason(f.Text));
             if (Names(f.Asked) is { } asked)
-                line.Add(T.PlayerStartAsked(f.Asked.Length, asked));
+                line.Add(T.PlayerStartAsked(asked));
             return string.Join(" ", line);
         }
         if (Names(f.Unreached) is { } unreached)
