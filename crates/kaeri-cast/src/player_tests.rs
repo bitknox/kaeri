@@ -1489,7 +1489,7 @@ async fn kaeris_receiver_stopped_on_the_tv_at_a_load_ends_the_cast_and_launches_
 }
 
 #[tokio::test(flavor = "multi_thread", worker_threads = 4)]
-async fn a_cast_stopped_on_the_tv_while_it_loads_says_no_progress_at_where_the_receiver_began() {
+async fn a_cast_stopped_on_the_tv_while_it_loads_says_no_progress_from_its_start() {
     // The receiver reports the file at 0 s before it seeks to the resume point; a stop then must
     // leave the session no position to save over where the episode was left.
     let receiver = FakeReceiver::start(FakeOptions {
