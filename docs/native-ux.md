@@ -314,7 +314,7 @@ libmpv draws with the GPU into its own layer, and Picture in Picture accepts onl
 
 ### Casting
 
-- On every touch platform the cast drawer opens and closes by drag as well as by tap: up from the mini player opens the remote, and down on the remote outside its sliders closes it, following the finger and settling with the release's speed.
+Casting to a TV with Chromecast built in has its own section, Casting, after this one.
 
 ### Now Playing and remote commands
 
@@ -334,6 +334,268 @@ libmpv draws with the GPU into its own layer, and Picture in Picture accepts onl
 - iPhone and iPad use the `.playback` category, the `.moviePlayback` mode and the audio background mode, which free signing allows. Locking or going home keeps the audio and turns the video track off (`vid=no`); coming back re-syncs in under 0.5 s.
 - Calls and Siri pause, and playback resumes when the interruption allows it. Unplugging headphones pauses.
 - While playing, Mac keeps the display awake (`ProcessInfo.beginActivity` with `.idleDisplaySleepDisabled`) and iPhone disables the idle timer. Pausing releases both.
+
+## Casting
+
+Written 16 November 2026. The Android phone and tablet, iPhone, iPad, Mac, Windows and Linux apps cast to TVs with Chromecast built in. Android TV and the terminal do not cast. The engine's own Cast v2 sender (`crates/kaeri-cast`) talks to the TV, and Kaeri's own receiver (`website/src/cast-receiver`) draws what the TV shows. No app uses Google's Cast library. The apps draw what the engine reports (the cast session, its card, its notices) and send commands; they keep no cast rules of their own.
+
+Google's Cast design checklist for senders is a list to compare against, not the rule. Kaeri's design language and each platform's conventions decide, and where Kaeri differs on purpose the line says so. A TV running Kaeri's Android TV app is reached through Play on TV and keeps its own remote sheet; the mini player and the remote below are for Chromecast only.
+
+Words used here: the cast button is the toolbar button with the cast glyph. The picker lists TVs. The mini player is the bar that shows a cast while browsing. The remote is the full controller the mini player opens (the code calls it the controller). The connected dialog is what the cast button opens while a TV is held. A TV is held while the app is connected to it, whether or not anything plays.
+
+### Rules
+
+1. The TV is the truth. The apps show what the TV reports, within a second, and never a guess of their own. The clock stops while the TV waits.
+2. Only the viewer stops the TV: Stop casting, Play here, the TV's own remote, another sender, or quitting a desktop app after its question. Leaving the app, locking the phone, closing the remote, a swipe from Recents and a dropped connection all leave the TV playing.
+3. Every end says why and offers a way on: Play here, Choose another TV, Choose source or Try again. Nothing needs a second try, a restart or picking the TV again. A state that never resolves is a bug of the highest severity.
+4. A cast that did not play never lowers a resume point.
+
+### Cast button
+
+| Platform | Where it shows |
+| --- | --- |
+| Android | The top bar of Home, Library, Calendar and Seasonal, and the title page in a 40 dp circle while the title can play. Not in Search |
+| iPhone and iPad | The trailing toolbar of each tab's root screen and of the title page |
+| Mac | The window toolbar and the title page |
+| Windows | The title bar, before the sync status |
+| Linux | The header bar of each page and the title page |
+
+- Hidden: no TV with Chromecast built in has answered, or Show TVs with Chromecast built in is off. It fades in when the first TV answers and out when the last leaves (fade-in, fade-out). On Windows its slot stays, so the title bar never shifts.
+- Available: the outline glyph.
+- Connecting: the dot and the two waves light in turn, each from 30% to full over 1.2 s, 0.2 s apart. With reduced motion they hold still at full.
+- Connected: the screen filled inside its outline frame. Playing looks the same; the mini player says what plays.
+- There is no searching state. The apps look for TVs while they are in front, and the button appears once one answers.
+- A tap opens the picker with no TV held, the connected dialog with one held, and a Kaeri TV's own remote when that is what is held.
+- The spoken label is “Play on TV”, “Connecting to Living room” or “Connected to Living room” (`tv-play-on`, `cast-button-connecting`, `cast-button-connected`). Connecting and Connected are announced once each.
+- While a TV is held, the title page's main button carries the cast glyph with “Plays on Living room” under it (`cast-plays-on`), Play plays there, and the separate Play on TV button hides.
+- Kaeri differs from Google here: Google keeps the button on screen whenever the device is on Wi-Fi. Kaeri hides it with no TV, as an empty picker helps nobody, and Play on TV on a title or an episode still reaches the picker and its local network row.
+- There is no first-time hint or overlay on the cast button.
+
+### Picker
+
+| Platform | Form |
+| --- | --- |
+| Android | A dialog from the cast button; the Play on TV bottom sheet from a title, an episode or the player |
+| iPhone | A sheet at the medium detent with a grabber, growing to large |
+| iPad and Mac | A popover from the button, 380 pt wide on iPad and 280 pt on Mac |
+| Windows | A `ContentDialog` |
+| Linux | A dialog, a bottom sheet in a narrow window |
+
+- From the cast button, the Chromecast group comes first, then On this network with the Kaeri TVs. From Play on TV, On this network comes first, then Chromecast.
+- Each row is the TV's own name. The line under it is “Plays through this phone” (tablet, iPhone, iPad, Mac, PC, computer) when the last cast to that TV went through this device, or the TV's model otherwise. It is a forecast from the last cast, and the engine still picks the route each time.
+- Only TVs that show video are listed. Speaker groups and audio-only speakers are left out.
+- An empty picker shows nothing for 600 ms, then “Looking for TVs on this network” (`tv-looking`), and after 10 s “No TVs found” with its check line and “TVs with Chromecast built in show here too.” (`cast-none-found-extra`).
+- With local network access turned down, the picker holds one row, “Allow Kaeri to find devices on your local network” (`cast-local-network`), with Open Settings.
+- A TV that leaves the network stays 4 s, dimmed, reading “That TV is no longer on the network.” (`notice-cast-no-device`).
+- The TV that plays carries the filled glyph and a check, spoken as Connected (`tv-status-connected`).
+- On Windows, “Windows will ask to let Kaeri reach your TV.” (`tv-cast-firewall-ahead`) shows until the first cast has played.
+- A pick closes the picker. The cast button goes to Connecting, and when the pick came with an episode the remote opens at once in its starting state.
+- Picking the TV that already plays joins its cast and opens the remote. It never starts the episode again.
+
+### Connected dialog
+
+- The title is “Connected to Living room”. Under it, a row with the art, show and episode that opens the remote, or “Nothing playing yet” (`cast-idle`). Then the TV volume row, then one button.
+- While something plays, the button is Stop casting (`cast-stop`). It stops the episode and the receiver, and the TV goes back to its own screen.
+- While nothing plays, the button is Disconnect (`action-disconnect`). It lets go of the TV, and the cast button goes back to Available.
+
+### Starting a cast
+
+- A title page's Play plays on the held TV. Play on TV on a title or in an episode's menu opens the picker with that episode.
+- From the local player, Play on TV sits in the player's top bar. The player pauses, and the cast starts at the player's position once it is past 5 s. The player closes only once the TV plays, so a cast that fails leaves the player where it was. An iPhone or Android phone then turns back to portrait and shows the remote in portrait; on Mac, Windows and Linux the player window closes.
+- The mini player only drives the cast that runs; nothing starts from it.
+- “Play next on Living room” (`cast-play-next-on`) in an episode's menu queues it after the one playing. It shows once the engine can queue on a TV, and stays hidden until then.
+- The remote's line says how the start goes. For the first 4 s it reads “Starting on Living room” (`cast-phase-starting`); past that the line counts: “Starting on Living room · 6 s”, “Preparing the stream · 6 s” while this device readies the stream, or “Waiting for Living room · 6 s” while the TV opens it (`cast-phase-starting-for`, `cast-phase-preparing`, `cast-phase-waiting`).
+- The aim is the first frame on the TV within 5 s of the pick when the receiver has to start, and within 1 s when it already runs. A start that fails ends in the failed state with its reason and actions (see Errors) within 60 s, never later.
+- The cast plays at the speed the player keeps (Remember speed). The remote has no speed control.
+
+### Mini player
+
+| Platform | Where |
+| --- | --- |
+| Android | A 66 dp bar at the bottom of the window, above the tab bar on phones |
+| iPhone and iPad | The tab bar's bottom accessory (`tabViewBottomAccessory`). Inline, it keeps only the title and play or pause |
+| Mac | A 200 × 60 pt card at the sidebar's foot |
+| Windows | A 76 epx bar at the bottom of the window |
+| Linux | The bottom bar of the window's `AdwBottomSheet` |
+
+- It holds the art, the show, a line with the TV's name or its state (“Paused on Living room”, “Reconnecting to Living room” beside a small spinner), play or pause, Next, and a 2 pt line of the position along its edge.
+- It shows on every screen while a cast plays or is paused, except while the local player or the remote is up. With a TV held and nothing playing it hides, and the cast button stays Connected.
+- A tap anywhere outside its buttons opens the remote, and on touch a drag up opens it too. While it reconnects, tap and drag do nothing.
+
+### Remote
+
+- From the top: Close (a chevron, `cast-controller-close`), the status line and the cast glyph, the art at 16:9, the show (it opens its title page, spoken “Open Hoshikuzu no Tabibito”, `cast-open-show`) and the episode, the seek line with elapsed and remaining time, then back 10 s, play or pause, forward 10 s and Next. Then the corner card (Skip opening, the Undo note or Up next), Subtitles, Audio, TV volume, and the footer: the state's two actions, and More with Choose another TV… and Stop casting.
+- Subtitles lists Off and each track, applied on the TV at once. Audio shows only with more than one track; a change reloads at the same position. A track list with nothing in it reads None and cannot be opened.
+- Every row is there from the first frame of the starting state. Between starting, playing, paused, reconnecting and ended, rows dim or change their words in place and never move. The art shrinks to make room for Up next on standard.
+- Commands reach the TV within a second, and the remote shows the TV's answer, not the tap.
+
+| Platform | Form |
+| --- | --- |
+| iPhone | A full screen cover grown from the mini player |
+| iPad | Full screen, with the art beside the controls at regular width and above them in portrait |
+| Android | The whole window, grown from the mini player or the button that started the cast |
+| Mac | A 400 pt panel over the content, grown from the sidebar card. A click outside closes it |
+| Windows | A panel morphing from the mini bar, the art flying across. Below 1000 epx the controls stack under the art |
+| Linux | The bottom sheet grown from its bar, 440 px wide, or full width in a narrow window |
+
+- The drawer: on every touch platform the remote opens and closes by drag as well as by tap. Up from the mini player opens it, and down on the remote outside its sliders closes it. It follows the finger one to one and settles with the release's speed on the standard spring, open past half the way or on a flick. It can be caught while it moves either way. Sliders and a list not scrolled to its top keep their own drags.
+- Back on Android, the escape gesture on iPhone and iPad, and Esc on Mac, Windows and Linux close the remote. Closing it never stops the cast.
+- On Mac, Windows and Linux, Space plays or pauses and Left and Right step 10 s while the remote is open.
+- Kaeri differs from Google here: Google's mini controller and expanded controller are separate screens. Kaeri's are one surface, the drawer, so the move between them follows the hand.
+
+The status line, from the engine's state:
+
+| State | Line |
+| --- | --- |
+| Starting | “Starting on Living room”, counting past 4 s |
+| The TV loads or waits for the stream | “Waiting for Living room · 6 s”, under the seek line, with the clock stopped |
+| Playing | “Playing on Living room” (`tv-status-playing`) |
+| Paused | “Paused on Living room” (`cast-status-paused`) |
+| Reconnecting | “Reconnecting to Living room” (`tv-status-reconnecting`) |
+| Held, nothing playing | “Connected to Living room” (`cast-button-connected`), with no spinner |
+| Never played | “Couldn't start on Living room” (`cast-couldnt-start`) |
+| Played, then ended | “Casting stopped” (`cast-stopped`) |
+| Up next counting | “Up next · plays in 8 s” (`cast-up-next-plays-in`) |
+
+### System surfaces
+
+These show while a cast plays or is paused and the local player is down, and go when the cast ends or the local player takes over. Commands from them reach the TV within a second.
+
+| Platform | Surface | Holds |
+| --- | --- | --- |
+| Android | A Media3 `MediaSession` in a `mediaPlayback` foreground service: the notification, the media card in the shade and on the lock screen | The art, the show, the episode and “Casting to Living room” (`cast-notification-line`). Back 10 s, play or pause, forward 10 s, Next and Stop. A tap opens the remote. The session is a remote one, so the volume keys reach the TV |
+| iPhone and iPad | Now Playing on the lock screen and in Control Center (`MPNowPlayingInfoCenter`, `MPRemoteCommandCenter`) | Title, episode and “Casting to Living room” as the album. Play, pause, toggle, change position, skip 10 s |
+| Mac | Now Playing and the media keys | As iPhone, with next and previous episode in place of the 10 s skips |
+| Windows | System media transport controls and the taskbar thumbnail buttons, as video | The show, the episode and “Casting to Living room”. Play, pause, seek, and Previous and Next as the previous and next episode, as on the Mac. The remote keeps its 10 s steps |
+| Linux | MPRIS | The show, the episode and the art. Play, pause, Next, Seek. Stop stops the cast, Raise opens the remote, Volume sets the TV |
+
+- Every one of these follows the title page's spoiler rule: an episode title the title page hides shows as “Episode 8”. Private mode hides the show too, as for local playback.
+- Android's notification stays while the TV is paused.
+- Kaeri differs from Google here: Google says a lock screen is not possible for a cast on iOS. Kaeri holds a silent audio session while a cast runs (see Background), so iOS gives the cast a lock screen and Control Center like any player.
+- Android's output switcher: once the routing spike lands (a `MediaRoute2ProviderService`, or Media3's routing controller id), the media card's output chip names the TV and the switcher can stop the cast or move it back to the phone. Until then the chip stays as it is.
+
+### Volume
+
+- The remote and the connected dialog hold the TV volume row. A TV that takes a level gets a slider, sent when the finger or pointer lets go, and a Mute button. A TV whose volume only its own remote sets (fixed volume) reads “Set on the TV” (`cast-volume-fixed`) with Mute or Unmute.
+- Mute shows the TV's own mute, read from the TV's receiver status, never from the stream's volume. A change made with the TV's remote or another sender shows within a second.
+- Kaeri never sets a level of its own. Only the viewer's changes are sent.
+- Android: the volume keys step the TV by 5% while it takes a level, in the app and, through the media session, with the screen locked or the app in the background. The system's volume panel shows the TV's row.
+- iPhone and iPad: the volume buttons change only the phone. The TV's volume is set from the remote's slider and Mute. iOS gives apps no dependable way to take the buttons in the background or on the lock screen, and Google's own iOS guide no longer supports it either. The lock screen's volume slider is the phone's.
+- Android with a fixed-volume TV: the volume keys show the system's volume panel with the TV's fixed row and change nothing, in the app and through the media session alike. Mute stays on the remote.
+- Windows and Linux: the keyboard's volume keys stay the computer's. The remote's slider sets the TV.
+
+### Next episode and the end of a show
+
+- Up next follows Auto-play next, as in the player. The remote's corner card reads “Up next · plays in 8 s” with Cancel and Play now, and the TV shows its own Up next card with the same count. With Auto-play next off, the card waits for Play now.
+- The engine finds the next episode ahead, so the next one plays within about 2 s, in the background and with the phone locked too.
+- Skip opening, Skip ending and the automatic skip's Undo work as in the player, and the TV shows “Skipped opening” for 3 s.
+- After the last episode the TV shows “Finished episode 12”, the remote closes, the mini player hides, the cast button stays Connected and the connected dialog reads “Nothing playing yet”.
+- Kaeri's receiver waits 10 minutes with nothing playing. In its last 30 s it counts down, “Closing in 30 s. Choose an episode on the iPhone to stay.”, then it closes and the cast button goes back to Available.
+- A cast paused for 10 minutes ends as if stopped, with its position saved.
+
+### Background and lock
+
+A TV that fetches the stream itself needs nothing from the device once it plays. A stream that goes through this device (a remux, a local file, a torrent) needs the app running for as long as the TV plays, so each platform keeps it running.
+
+| Platform | While a cast plays |
+| --- | --- |
+| Android | A `mediaPlayback` foreground service holds a low-latency Wi-Fi lock and a partial wake lock. The cast counts as playing, so torrents keep running with the screen off. Swiping Kaeri away from Recents leaves the cast and its notification |
+| iPhone and iPad | A silent, non-mixable `.playback` audio session keeps the app running with the phone locked or Kaeri in the background (Johan's “Take over”, 16 November). Other apps' audio stops when a cast starts. The idle timer is off only while the remote is up |
+| Mac | Idle sleep is held off while a cast plays |
+| Windows | Closing the window hides Kaeri in the notification area while a cast plays, and says so the first time. The system stays awake while the stream goes through this PC; the display may sleep |
+| Linux | Suspend is inhibited while the stream goes through this computer, with the reason “Sending an episode to a TV” (`tv-cast-inhibit-reason`) |
+
+- When an app can't stay running and the stream goes through it, it tells the TV it is away and the TV pauses. Kaeri's receiver holds the picture with “Waiting for the iPhone” and “Open Kaeri on the iPhone to keep watching.” (`receiver-sender-gone-*`), and plays on when the app is back.
+- A Mac quit while casting asks “Stop casting to Living room?”, “Quitting Kaeri stops the episode on Living room.”, with Cancel and Stop and quit (`cast-quit-*`). Windows and Linux ask “Stop casting and quit?”, “Hoshikuzu no Tabibito is playing on Living room. Quitting stops it.” (`desktop-cast-quit-*`). Cancel is the default and Esc.
+- Kaeri differs from Google here: Google leaves the TV playing when a sender goes. A desktop app usually sends the stream itself, so quitting would cut it off anyway, and the question says so first.
+
+### Leaving and coming back
+
+- Back in front, the app joins the receiver session that runs, never launching the receiver again. The cast button shows Connected and the mini player is back within 1 s, at the TV's position.
+- After the system ended the app, opening it finds the cast it left and joins it the same way. On Android the notification comes back. A stream that went through the ended app is loaded again on the TV where it stopped.
+- While it joins, the mini player and the remote read “Reconnecting to Living room” with a small spinner.
+- A silence that spans a suspension, such as an iPhone frozen in the background, is a reconnect and not a loss: “Casting stopped” never flashes on the way back.
+
+### Dropped connection
+
+- The engine pings the TV every 5 s, and 15 s without a word closes the connection. It then connects again for 20 s, joining the same receiver session. The TV plays on meanwhile, and only after those 20 s does the cast count as lost.
+- From the moment the connection closes, the mini player and the remote read “Reconnecting to Living room” (`tv-status-reconnecting`) with a small spinner, for the engine's 20 s.
+- A lost cast reads “Casting stopped” with the notice “Lost Living room, so casting stopped.” (`notice-cast-lost`), and offers Play here and Choose another TV. With the remote closed, the notice carries Play here.
+- A device on another network than the TV, or behind a VPN, gets “This phone isn't on the network Living room is on, or reaches it through a VPN. Connect both to the same network to cast.” (`notice-cast-not-same-network`).
+
+### A stop from outside and another sender
+
+- A stop on the TV (its remote, another phone's cast card or the system's own cast controls) ends the cast. While the engine learns why the receiver left, up to 4 s, the clock stops and the line reads “Waiting for Living room”. Nothing starts on the TV again afterwards.
+- The cast then ends with “Living room stopped the cast.” (proposed) and Play here, for 8 s.
+- Another sender starting something on the TV ends the cast at once with “Another phone started something on Living room, so casting stopped.” (`notice-cast-taken-over`) and Play here. The notice goes after 8 s, and at once when a new cast starts. Another Kaeri device loading its own episode on the same receiver counts as taking the TV. Kaeri never takes the TV back.
+
+### Receiver fallback
+
+- Kaeri's receiver has 8 s to say it is ready. If it doesn't launch or doesn't answer, the TV's Default Media Receiver plays the episode instead. Every cast tries Kaeri's receiver first and falls back only when it fails on that cast; no TV is remembered as one that fails.
+- Only a receiver that fails while an episode loads falls back. One that played and then left ends the cast, and a TV where the viewer stopped the receiver is never handed to another app.
+- On the Default Media Receiver the TV shows none of Kaeri's screens: no Ready, Waiting or Up next cards on the TV, and subtitles show plain. The remote on the device works the same.
+- Kaeri differs from Google here: Kaeri uses its own receiver for its screens, typeset subtitles and formats the Default Media Receiver can't read, and falls back to Google's only to keep the episode playing.
+- Each fallback shows a notice, also kept in Messages: “Living room plays this in its own player. Subtitles show as plain text.” (proposed).
+
+### Errors
+
+The remote's line says whether the cast ever played: “Couldn't start on Living room” before the first frame, “Casting stopped” after it. The notice under it says why, and the footer offers two actions, the first in amber. Vermilion marks the glyph or dot only.
+
+| Cause | Notice | Actions |
+| --- | --- | --- |
+| The TV can't decode the video | `notice-cast-video-codec` | Choose source, Play here |
+| The TV can't play the audio and this device can't convert it | `notice-cast-audio-codec` | Choose source, Play here |
+| A kind of file the TV can't read | `notice-cast-container` | Choose source, Play here |
+| The TV played none of the ways tried | `notice-cast-refused` | Choose source, Play here |
+| The TV never started reading the stream | `notice-cast-never-fetches` | Try again, Play here |
+| The source stopped answering mid-episode | `notice-cast-segment` | Choose source, Play here |
+| The TV lost the stream from this device | `notice-cast-lost-stream` | Try again, Play here |
+| The episode opens in another app | `notice-cast-deep-link` | Choose source |
+| Another network or a VPN | `notice-cast-not-same-network` | Play here, Choose another TV |
+| The TV stopped answering | `notice-cast-lost` | Play here, Choose another TV |
+| The TV left the network | `notice-cast-no-device` | Play here, Choose another TV |
+
+- When a segment does not come, Kaeri's receiver tries it six times over about 12 s, then skips past it and plays on. Three missed in a row end the cast with `notice-cast-segment`.
+- When the TV can't keep up with typeset subtitles, it shows them plain and says so once per TV (`notice-cast-subtitles-plain`). The episode plays on.
+- Kaeri's receiver shows its own error screen on the TV: “Couldn't play episode 8”, the reason (“This TV can't play HEVC video.”) and “Choose another source on the iPhone.” (`receiver-error-*`).
+- Choose source opens the source picker for the episode and casts the new pick to the same TV.
+
+### Play here
+
+- Play here (`cast-play-here`) stops the TV and opens the episode in the player on this device at the TV's last position, behind the starting screen, within about 2 s. On a phone the player turns to landscape as usual.
+- It works after the cast ended, from a lost TV or a takeover too, at the last position the TV reported.
+
+### Progress
+
+- A cast saves its position as local playback does, from the TV's reports: the resume point, the watched mark at 85% and the trackers.
+- The TV's reports count only once it has played or paused. A cast that never played, or ended before the TV moved, leaves the resume point as it was and never saves 0 s over it. A stop from outside keeps the last position the TV reported.
+- After a rejoin the position played meanwhile comes from the TV.
+
+### Accessibility
+
+- The mini player is one element. Its label is the show and the line (“Hoshikuzu no Tabibito, Playing on Living room”), its hint “Opens the controls” (`cast-mini-opens`), and play or pause and Next are its custom actions.
+- The remote's seek line adjusts in 10 s steps and reads as in the player. The volume slider reads its level. An empty track row reads None.
+- Connecting and Connected are announced once. An end is announced with its notice, a failure at high priority. Up next is announced when it appears and once at “Plays in 8 seconds”, as in the player.
+- On Mac, Windows and Linux, focus goes to play or pause when the remote opens and back to what opened it when it closes.
+- Reduced motion: the drawer and the morphs become a crossfade in place (standard), a drag on touch no longer follows the finger and opens or closes past a fifth of the way or on a flick, and the connecting glyph holds still. Linux follows libadwaita, which cuts at once. The app tells Kaeri's receiver, and the TV's moving scene stands still too.
+- Haptics follow the Haptics table: Skip, Undo and Play now on the remote get the light impact, nothing else.
+
+### Kaeri's way against Google's checklist
+
+Google's checklist is a lookup, not the authority. These are the places Kaeri goes its own way.
+
+| Topic | Google's checklist | Kaeri |
+| --- | --- | --- |
+| Receiver | Any receiver | Kaeri's own, with the Default Media Receiver as the fallback |
+| Cast button with no TV | Shown whenever on Wi-Fi | Hidden; Play on TV reaches the picker |
+| First-time hint | An overlay on the cast button | None |
+| Mini player and remote | Separate bar and screen | One drawer, opened and closed by drag or tap |
+| Fixed-volume TVs | Not covered | “Set on the TV” with Mute |
+| Volume buttons on iOS | No longer supported | The phone's only; the TV from the remote |
+| Lock screen on iOS | Not possible | Now Playing, through the cast's audio session |
+| Local playback | Not covered | Play here moves the episode back at the TV's position |
+| Leaving a desktop app | The TV plays on | The app asks, then stops the cast |
+| Desktop volume keys | Not covered | The computer's; the TV from the remote |
 
 ## Home
 
