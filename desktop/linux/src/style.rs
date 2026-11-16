@@ -90,6 +90,10 @@ const PARTY: &str = r##"<svg xmlns="http://www.w3.org/2000/svg" width="16" heigh
 /// A screen with the cast waves in its corner: a TV with Chromecast built in, in the picker.
 const CAST: &str = r##"<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="#222" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><path d="M1.5 5V3.5a1 1 0 0 1 1-1h11a1 1 0 0 1 1 1v8a1 1 0 0 1-1 1H9.5"/><path d="M1.5 13.5h.01M1.5 11a2.5 2.5 0 0 1 2.5 2.5M1.5 8.5a5 5 0 0 1 5 5"/></svg>"##; // i18n-skip
 
+/// The same screen while a TV is held: its frame stays and the screen inside it fills, clear of
+/// the frame and of the outer wave by the stroke's width, as the cast glyph on Android draws it.
+const CAST_CONNECTED: &str = r##"<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="#222" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><path d="M1.5 5V3.5a1 1 0 0 1 1-1h11a1 1 0 0 1 1 1v8a1 1 0 0 1-1 1H9.5"/><path d="M1.5 13.5h.01M1.5 11a2.5 2.5 0 0 1 2.5 2.5M1.5 8.5a5 5 0 0 1 5 5"/><path fill="#222" stroke="none" d="M3.3 4.3H12.7V10.7H7.7A6.8 6.8 0 0 0 3.3 6.94z"/></svg>"##; // i18n-skip
+
 /// A die showing five: Surprise me and Another, as on every other platform.
 const DICE: &str = r##"<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16"><path fill="#222" fill-rule="evenodd" d="M4 1.5h8A2.5 2.5 0 0 1 14.5 4v8a2.5 2.5 0 0 1-2.5 2.5H4A2.5 2.5 0 0 1 1.5 12V4A2.5 2.5 0 0 1 4 1.5zm0 1.25A1.25 1.25 0 0 0 2.75 4v8A1.25 1.25 0 0 0 4 13.25h8A1.25 1.25 0 0 0 13.25 12V4A1.25 1.25 0 0 0 12 2.75z"/><g fill="#222"><circle cx="5.25" cy="5.25" r="1.1"/><circle cx="10.75" cy="5.25" r="1.1"/><circle cx="8" cy="8" r="1.1"/><circle cx="5.25" cy="10.75" r="1.1"/><circle cx="10.75" cy="10.75" r="1.1"/></g></svg>"##; // i18n-skip
 
@@ -104,7 +108,8 @@ const TEXT_LOOK: &str = r##"<svg xmlns="http://www.w3.org/2000/svg" width="16" h
 const BOOK: &str = r##"<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="#222" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M8 4.2C6.6 3 4.6 2.6 1.75 2.75v9.5C4.6 12.1 6.6 12.5 8 13.6c1.4-1.1 3.4-1.5 6.25-1.35v-9.5C11.4 2.6 9.4 3 8 4.2zM8 4.2v9.4"/></svg>"##; // i18n-skip
 
 /// The icons the app draws itself, in the cache's own theme folder: the mini player's, the
-/// people button's, the cast screen's, the die, the reader's Aa and its Chapters, and the book.
+/// people button's, the cast screen's (outline and held), the die, the reader's Aa and its
+/// Chapters, and the book.
 pub fn action_icons(display: &gtk::gdk::Display, cache: &std::path::Path) {
     let root = cache.join("icons");
     let dir = root.join("hicolor/scalable/actions");
@@ -112,6 +117,7 @@ pub fn action_icons(display: &gtk::gdk::Display, cache: &std::path::Path) {
         ("kaeri-mini-player-symbolic", MINI_PLAYER),
         ("kaeri-party-symbolic", PARTY),
         ("kaeri-cast-symbolic", CAST),
+        ("kaeri-cast-connected-symbolic", CAST_CONNECTED),
         ("kaeri-dice-symbolic", DICE),
         ("kaeri-text-look-symbolic", TEXT_LOOK),
         ("kaeri-chapters-symbolic", CHAPTERS),

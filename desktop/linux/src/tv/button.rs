@@ -60,6 +60,14 @@ fn look_of(
     }
 }
 
+/// The glyph for a look: the screen filled inside its frame while a TV is held, else the outline.
+fn icon_of(look: Look) -> &'static str {
+    match look {
+        Look::Connected => "kaeri-cast-connected-symbolic",
+        _ => "kaeri-cast-symbolic",
+    }
+}
+
 /// The name of the TV held, for the tooltip and the popover's heading.
 fn held_name(tv: &Tv) -> Option<String> {
     if let Some(view) = tv.cast_view() {
@@ -115,6 +123,7 @@ pub fn cast_button(ctx: &Rc<Ctx>) -> gtk::MenuButton {
                     Look::Connected => button.add_css_class("connected"),
                     _ => {}
                 }
+                button.set_icon_name(icon_of(look));
                 // What the popover holds follows the look: the chooser, or the TV held.
                 if let (Some(popover), Some(ctx)) = (popover.upgrade(), ctx.upgrade())
                     && popover.is_visible()
@@ -331,6 +340,14 @@ mod tests {
             Look::Connected
         );
         assert_eq!(look_of(true, None, true, None, false), Look::Connected);
+    }
+
+    #[test]
+    fn only_a_held_tv_draws_the_filled_screen() {
+        assert_eq!(icon_of(Look::Connected), "kaeri-cast-connected-symbolic");
+        for look in [Look::Hidden, Look::Available, Look::Connecting] {
+            assert_eq!(icon_of(look), "kaeri-cast-symbolic");
+        }
     }
 
     #[test]
