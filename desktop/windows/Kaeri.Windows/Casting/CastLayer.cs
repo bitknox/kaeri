@@ -45,6 +45,13 @@ sealed class CastLayer
     bool expanded, miniShown, footShown;
     /// <summary>The frame of a cast that ended, kept while the controller stays open on it.</summary>
     CastDrawn? ended;
+    /// <summary>
+    /// When the open controller's session went without a reason. A stop on the TV can pass
+    /// through a moment with no session before the reason comes, so the controller waits a
+    /// second for it before it closes, unless Stop casting here let the TV go.
+    /// </summary>
+    DateTimeOffset? goneAt;
+    bool letGo;
 
     public CastLayer(Ctx ctx, TvRemote tv, Grid pane, CastHost host)
     {
@@ -58,7 +65,11 @@ sealed class CastLayer
             Collapse = Collapse,
             OpenShow = OpenShow,
             PlayHere = PlayHere,
-            Stop = tv.DisconnectCast,
+            Stop = () =>
+            {
+                letGo = true;
+                tv.DisconnectCast();
+            },
             ChooseAnother = () =>
             {
                 Collapse();
@@ -90,8 +101,21 @@ sealed class CastLayer
     public void Refresh()
     {
         var drawn = Frame();
+        if (drawn is null && expanded && !letGo)
+        {
+            var now = DateTimeOffset.UtcNow;
+            goneAt ??= now;
+            if (now - goneAt < TimeSpan.FromSeconds(1))
+            {
+                if (!ticker.IsRunning)
+                    ticker.Start();
+                return;
+            }
+        }
+        goneAt = null;
         if (drawn is null)
         {
+            letGo = false;
             if (expanded)
                 Close(at: true);
             ShowMini(false);
@@ -215,6 +239,8 @@ sealed class CastLayer
             return;
         expanded = false;
         ended = null;
+        letGo = false;
+        goneAt = null;
         Foot();
         if (at)
         {
