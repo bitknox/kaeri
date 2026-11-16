@@ -107,6 +107,7 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.disabled
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.style.TextOverflow
@@ -906,7 +907,7 @@ private fun CastController(cast: CastModel, shown: CastShown, scope: AnimatedVis
                     }
                     Menu(expanded = more, onDismissRequest = { more = false }) {
                         DropdownMenuItem(
-                            text = { Text(another, style = MaterialTheme.typography.labelLarge) },
+                            text = { Text(another, style = MaterialTheme.typography.labelLarge, modifier = Modifier.offWith(!reconnecting)) },
                             enabled = !reconnecting,
                             modifier = Modifier.heightIn(min = 48.dp),
                             onClick = {
@@ -942,14 +943,21 @@ private class LastUpNext {
 }
 
 /** A footer action: amber when it is the view's primary one, else an outlined pill in silk. */
-private data class CastAction(val text: String, val primary: Boolean, val enabled: Boolean, val onClick: () -> Unit)
+internal data class CastAction(val text: String, val primary: Boolean, val enabled: Boolean, val onClick: () -> Unit)
+
+/**
+ * A control's words are off while the control is. Compose lists them as a node of their own
+ * under the control's, and without this one that reads the screen finds them enabled while the
+ * control they name is dimmed and off.
+ */
+internal fun Modifier.offWith(enabled: Boolean): Modifier = if (enabled) this else semantics { disabled() }
 
 /**
  * One of the footer's two places. As the state changes, its fill crossfades between outlined and
  * amber, its words crossfade, and its width follows on standard, or at once with motion reduced.
  */
 @Composable
-private fun CastFooterButton(action: CastAction, reduced: Boolean) {
+internal fun CastFooterButton(action: CastAction, reduced: Boolean) {
     val colors = MaterialTheme.colorScheme
     val container by animateColorAsState(if (action.primary) colors.primary else Color.Transparent, Motion.fadeIn(), label = "footer fill") // i18n-skip
     val content by animateColorAsState(if (action.primary) colors.onPrimary else colors.onSurface, Motion.fadeIn(), label = "footer words") // i18n-skip
@@ -965,7 +973,7 @@ private fun CastFooterButton(action: CastAction, reduced: Boolean) {
                 (fadeIn(Motion.fadeIn()) togetherWith fadeOut(Motion.fadeOut())) using SizeTransform(clip = false) { _, _ -> if (reduced) snap() else Motion.standard() }
             },
             label = "footer action", // i18n-skip
-        ) { Text(it) }
+        ) { Text(it, Modifier.offWith(action.enabled)) }
     }
 }
 
@@ -1183,8 +1191,8 @@ internal fun CastTrackRow(title: String, kind: FfiTvTrackKind, tracks: List<FfiT
                 .semantics(mergeDescendants = true) {},
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            Text(title, style = MaterialTheme.typography.bodyLarge, color = colors.onSurface, modifier = Modifier.weight(1f))
-            Text(value, style = MaterialTheme.typography.bodyMedium, color = colors.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.widthIn(max = 200.dp))
+            Text(title, style = MaterialTheme.typography.bodyLarge, color = colors.onSurface, modifier = Modifier.weight(1f).offWith(enabled))
+            Text(value, style = MaterialTheme.typography.bodyMedium, color = colors.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.widthIn(max = 200.dp).offWith(enabled))
             if (choosable) Icon(Icons.DropDown, contentDescription = null, tint = colors.onSurfaceVariant, modifier = Modifier.size(18.dp))
         }
         Menu(expanded = open, onDismissRequest = { open = false }) {
@@ -1229,18 +1237,21 @@ internal fun CastVolumeRow(cast: CastModel, level: Boolean, muted: Boolean, volu
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(8.dp),
     ) {
-        Text(label, style = MaterialTheme.typography.bodyLarge, color = colors.onSurface)
+        Text(label, style = MaterialTheme.typography.bodyLarge, color = colors.onSurface, modifier = Modifier.offWith(enabled))
         if (!level) {
             Spacer(Modifier.weight(1f))
-            Text(stringResource(R.string.cast_volume_fixed), style = MaterialTheme.typography.bodyMedium, color = colors.onSurfaceVariant, maxLines = 1)
+            Text(stringResource(R.string.cast_volume_fixed), style = MaterialTheme.typography.bodyMedium, color = colors.onSurfaceVariant, maxLines = 1, modifier = Modifier.offWith(enabled))
+            // Off while the row is dimmed; the row's dim alone draws it, so its outline stays.
             OutlinedButton(
-                onClick = { if (enabled) cast.toggleMute() },
+                onClick = cast::toggleMute,
+                enabled = enabled,
+                border = ButtonDefaults.outlinedButtonBorder(enabled = true),
                 contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 14.dp),
                 modifier = Modifier.heightIn(min = 40.dp),
             ) {
                 Icon(if (muted) Icons.SoundOff else Icons.VolumeDown, contentDescription = null, tint = colors.onSurface, modifier = Modifier.size(16.dp))
                 Spacer(Modifier.width(6.dp))
-                Text(muteLabel, color = colors.onSurface)
+                Text(muteLabel, color = colors.onSurface, modifier = Modifier.offWith(enabled))
             }
             return@Row
         }
