@@ -937,16 +937,27 @@ async fn a_cast_another_device_started_takes_the_controls_of_a_phone_that_joins_
         v.state == SessionState::Playing && v.item.as_ref().is_some_and(|i| !i.paused)
     })
     .await;
-    assert_eq!(view.item.and_then(|i| i.id), None, "the other device's cast");
+    // The other device's cast says what it plays, so its card opens here.
+    let item = view.item.unwrap();
+    assert_eq!(item.id, Some(AnilistId::new(900_002)), "the other device's show");
+    assert_eq!(item.episode.as_deref(), Some("1"));
+    assert_eq!(item.title, "Stardust Wayfarer");
     assert_eq!(rig.receiver.heard("LAUNCH").len(), launches + 1);
     assert_eq!(rig.receiver.heard("LOAD").len(), 1, "nothing loaded again");
     // The first phone's connection went as this one came.
     playing.await.unwrap();
+    let session = sender.cast_session().expect("a remote for the joined cast");
+    let now = session.card().card.now.expect("the card of what the TV plays");
+    assert_eq!((now.id, now.episode.as_str()), (AnilistId::new(900_002), "1"));
+    assert_eq!(now.title, "Stardust Wayfarer");
+    assert_eq!(now.episode_line, "Episode 1");
 
+    // The remote's controls drive the TV, as the mini player's do.
     let pauses = rig.receiver.heard("PAUSE").len();
-    sender.cast_command(RemoteCommand::TogglePause);
+    session.command(RemoteCommand::TogglePause);
     session_until(&phone, |v| v.item.as_ref().is_some_and(|i| i.paused)).await;
     assert_eq!(rig.receiver.heard("PAUSE").len(), pauses + 1, "the TV paused");
+    assert!(session.card().card.now.is_some_and(|now| now.paused));
     sender.cast_command(RemoteCommand::TogglePause);
     session_until(&phone, |v| v.item.as_ref().is_some_and(|i| !i.paused)).await;
     sender.cast_command(RemoteCommand::SeekTo { position: 300.0 });
@@ -960,6 +971,99 @@ async fn a_cast_another_device_started_takes_the_controls_of_a_phone_that_joins_
         assert!(tokio::time::Instant::now() < deadline, "the TV stopped the episode");
         tokio::time::sleep(Duration::from_millis(50)).await;
     }
+    assert!(phone.disconnect());
+}
+
+/// A phone joined to another device's cast, the cast as the other device leaves it.
+async fn joined_from_another_phone(
+    rig: &Rig,
+) -> (Arc<CastHub>, crate::remote::sender::TvSender, tempfile::TempDir) {
+    let dir = tempfile::tempdir().unwrap();
+    let phone =
+        Arc::new(CastHub::with(Some(dir.path().to_owned()), Arc::new(PlainHttp), timings()));
+    let (sender, _sent) = sender_for(&phone);
+    phone.connect(rig.device());
+    session_until(&phone, |v| v.state == SessionState::Playing && v.item.is_some()).await;
+    (phone, sender, dir)
+}
+
+/// The device that started the cast casts its next episode: the phone that joined follows it,
+/// its card on the new episode and its controls on what plays now.
+#[tokio::test(flavor = "multi_thread", worker_threads = 4)]
+async fn a_joined_phone_follows_the_next_episode_the_other_device_casts() {
+    let (rig, playing) = playing_on_a_tv_that_plays_on().await;
+    let (phone, sender, _dir) = joined_from_another_phone(&rig).await;
+    playing.await.unwrap();
+
+    rig.receiver.load_elsewhere_with(serde_json::json!({
+        "kaeriCard": {"id": 900_002, "episode": "2", "title": "Stardust Wayfarer",
+            "episodeTitle": "Low Tide"},
+    }));
+    let view = session_until(&phone, |v| {
+        v.item.as_ref().is_some_and(|i| i.episode.as_deref() == Some("2"))
+    })
+    .await;
+    assert_eq!(view.state, SessionState::Playing, "followed, not taken over");
+    assert_eq!(view.notice, None);
+    let item = view.item.unwrap();
+    assert_eq!(item.id, Some(AnilistId::new(900_002)));
+    assert_eq!(item.episode_title.as_deref(), Some("Low Tide"));
+    let session = sender.cast_session().expect("the remote stays open");
+    let now = session.card().card.now.expect("the new episode's card");
+    assert_eq!(now.episode, "2");
+    assert_eq!(now.episode_line, "Episode 2 · Low Tide");
+
+    session.command(RemoteCommand::TogglePause);
+    session_until(&phone, |v| v.item.as_ref().is_some_and(|i| i.paused)).await;
+    let pause = rig.receiver.heard("PAUSE").pop().expect("a pause");
+    assert_eq!(pause["mediaSessionId"], 2, "the new episode's media session");
+    assert!(phone.disconnect());
+}
+
+/// Another app casts over what the joined phone followed: the TV is theirs, and the phone
+/// says so.
+#[tokio::test(flavor = "multi_thread", worker_threads = 4)]
+async fn another_apps_cast_over_a_joined_phone_is_a_takeover() {
+    let (rig, playing) = playing_on_a_tv_that_plays_on().await;
+    let (phone, _sender, _dir) = joined_from_another_phone(&rig).await;
+    playing.await.unwrap();
+
+    rig.receiver.load_elsewhere();
+    let view = session_until(&phone, |v| v.state == SessionState::Error).await;
+    let said = crate::playback::link::cast::notice(&CastFailure::TakenOver, "Living room");
+    assert_eq!(view.notice, Some(said));
+    assert!(phone.session_device().is_none(), "plays open here again");
+}
+
+/// A cast that doesn't say what it plays, another app's or an older Kaeri's: the mini player's
+/// controls work, and there is no card to open.
+#[tokio::test(flavor = "multi_thread", worker_threads = 4)]
+async fn a_joined_cast_that_does_not_say_what_it_plays_has_controls_and_no_card() {
+    let (rig, playing) = playing_on_a_tv_that_plays_on().await;
+    let (phone, _first, _dir) = joined_from_another_phone(&rig).await;
+    playing.await.unwrap();
+    // An older Kaeri's next episode, with no card: a takeover, so join it afresh.
+    rig.receiver.load_elsewhere();
+    session_until(&phone, |v| v.state == SessionState::Error).await;
+    drop(phone);
+    let dir = tempfile::tempdir().unwrap();
+    let phone =
+        Arc::new(CastHub::with(Some(dir.path().to_owned()), Arc::new(PlainHttp), timings()));
+    let (sender, _sent) = sender_for(&phone);
+    phone.connect(rig.device());
+    let view = session_until(&phone, |v| {
+        v.state == SessionState::Playing && v.item.as_ref().is_some_and(|i| !i.paused)
+    })
+    .await;
+    let item = view.item.unwrap();
+    assert_eq!((item.id, item.episode), (None, None), "nothing to open a card by");
+    let session = sender.cast_session().expect("a cast to control");
+    assert_eq!(session.card().card.now, None, "no card");
+
+    let pauses = rig.receiver.heard("PAUSE").len();
+    sender.cast_command(RemoteCommand::TogglePause);
+    session_until(&phone, |v| v.item.as_ref().is_some_and(|i| i.paused)).await;
+    assert_eq!(rig.receiver.heard("PAUSE").len(), pauses + 1, "the TV paused");
     assert!(phone.disconnect());
 }
 

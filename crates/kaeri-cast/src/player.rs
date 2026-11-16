@@ -55,8 +55,8 @@ use crate::{
     aac::AacEncoder,
     channel::{CastError, Incoming, NS_CONNECTION, NS_MEDIA, NS_RECEIVER},
     client::{
-        App, DEFAULT_MEDIA_RECEIVER, Device, KAERI_PROTOCOL, KAERI_RECEIVER, Load, Media,
-        MediaStatus, Metadata, NS_KAERI, ReceiverStatus, TextTrack, VolumeControl,
+        App, DEFAULT_MEDIA_RECEIVER, Device, JoinCard, KAERI_PROTOCOL, KAERI_RECEIVER, Load,
+        Media, MediaStatus, Metadata, NS_KAERI, ReceiverStatus, TextTrack, VolumeControl,
     },
     clips::{Clip, clip},
     device::{CastDevice, local_address_towards, same_network},
@@ -165,6 +165,8 @@ pub struct CastLoad {
     /// The audio track the series remembers, found again by what it is, as the app's player
     /// finds it: ahead of the language.
     pub audio_memory: Option<TrackPrint>,
+    /// What another Kaeri device that joins the cast draws its card from, sent beside the media.
+    pub card: Option<JoinCard>,
 }
 
 /// Why a cast didn't play, or stopped.
@@ -268,6 +270,9 @@ pub struct CastStatus {
     pub subtitles: Vec<CastText>,
     /// What the receiver shows of the media: the show, the episode line and the art.
     pub metadata: Option<Metadata>,
+    /// The card the media was loaded with by a Kaeri device, this one or another: none for
+    /// another app's media or an older Kaeri's.
+    pub card: Option<JoinCard>,
     /// The receiver app's ID while it runs for this cast: Kaeri's own or the Default Media
     /// Receiver.
     pub receiver: Option<String>,
@@ -534,6 +539,7 @@ impl State {
                 .map(|t| CastText { selected: Some(t.id) == self.subtitle, ..t.clone() })
                 .collect(),
             metadata: self.last.as_ref().and_then(|s| s.metadata.clone()),
+            card: self.last.as_ref().and_then(|s| s.card.clone()),
             receiver: self.app.as_ref().map(|a| a.app_id.clone()),
             waiting_since: self
                 .gone
@@ -1774,6 +1780,7 @@ async fn attempt(inner: &Arc<Inner>, load: CastLoad) -> Result<CastPlan, CastFai
             style: None,
             autoplay: !lock(&inner.state).hold_paused,
             kaeri,
+            card: load.card.clone(),
         };
         let tried = try_plan(inner, plan.relayed(), cast, own).await?;
         if own && !inner.runs_own() {
@@ -2178,6 +2185,7 @@ async fn ask_with_clip(
         style: None,
         autoplay: true,
         kaeri: None,
+        card: None,
     };
     let part = plan.video_part();
     // A clip has no sound, so only the receiver's own refusal says it lacks the decoder.

@@ -251,6 +251,7 @@ fn load_of(target: &str, sub: Option<&Path>) -> CastLoad {
         audio_language: None,
         audio_track: None,
         audio_memory: None,
+        card: None,
     }
 }
 

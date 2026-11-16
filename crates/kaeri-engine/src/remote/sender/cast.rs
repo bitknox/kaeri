@@ -1117,7 +1117,8 @@ mod tests {
         session.command(RemoteCommand::Volume { step: 10.0 });
         session.command(RemoteCommand::Mute { muted: true });
         let deadline = tokio::time::Instant::now() + Duration::from_secs(5);
-        while session.card().muted != Some(true) {
+        // The card says the mute as it is asked, before the TV has heard it.
+        while session.card().muted != Some(true) || receiver.heard("SET_VOLUME").is_empty() {
             assert!(tokio::time::Instant::now() < deadline, "the mute reached the TV");
             tokio::time::sleep(Duration::from_millis(20)).await;
         }

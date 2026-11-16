@@ -556,6 +556,44 @@ extension CastTests {
     }
 }
 
+extension CastTests {
+    /// A phone that joins a cast another device started: the engine's card says what plays, so
+    /// the mini player opens the remote on it, playing.
+    @Test func aCastAnotherDeviceStartedOpensTheRemoteOnAPhoneThatJoinsIt() {
+        let tv = TVRemoteModel()
+        let session = FixtureCastSession(name: "Living room", request: request, episodeLine: "Episode 3")
+        play(session)
+        tv.cast.link = JoinedLink(session: session)
+        tv.cast.take(view: Self.view(.playing, item: Self.item(at: 492)))
+        #expect(tv.cast.miniShown)
+
+        tv.openRemote()
+        #expect(tv.cast.expanded)
+        #expect(tv.cast.stage == .playing)
+        #expect(tv.cast.card?.card.now?.id == 900_001)
+        #expect(tv.cast.card?.card.now?.episode == "3")
+    }
+}
+
+/// A held session another device started, whose card the engine reads from the TV.
+private final class JoinedLink: CastSessionLink, @unchecked Sendable {
+    let session: FixtureCastSession
+
+    init(session: FixtureCastSession) {
+        self.session = session
+    }
+
+    func state() -> FfiCastSessionView { CastTests.view(.playing, item: CastTests.item(at: 492)) }
+    func next() async -> FfiCastSessionView? { nil }
+    func connect(key: String, from: FfiCastFrom?) throws {}
+    func disconnect() {}
+    func playHere() -> FfiCastFrom? { nil }
+    func command(_ command: FfiTvCommand) {}
+    func card() -> (any FfiCastSessionProtocol)? { session }
+    func away(_ away: Bool) {}
+    func played(_ request: TVPlayRequest) {}
+}
+
 /// A link that records what the model tells the engine of the app's place.
 private final class RecordingLink: CastSessionLink, @unchecked Sendable {
     var aways: [Bool] = []

@@ -98,6 +98,13 @@ pub struct CastRun {
     reopened: bool,
 }
 
+/// What a cast this computer joined plays, by its card: none for another app's cast or an older
+/// Kaeri's, which don't say, and none once it ended.
+#[cfg_attr(not(test), allow(dead_code))]
+fn joined_now(_card: &CastCard) -> Option<&NowCard> {
+    None
+}
+
 /// Whether the TV shows a picture: the engine has said what plays, and the TV has loaded it.
 /// `loading` is a start or a reload only; the length is not asked for, since a TV's status
 /// after a pause, play or seek can leave it out, and the card must not flip back to starting.
@@ -674,6 +681,21 @@ mod tests {
             route: None,
             waiting: None,
         }
+    }
+
+    #[test]
+    fn a_joined_cast_opens_its_remote_only_when_it_says_what_plays() {
+        let playing = card(false, Some(1440.0), false);
+        assert_eq!(joined_now(&playing).map(|now| now.episode.as_str()), Some("7"));
+        let mut unsaid = playing.clone();
+        unsaid.card.now = None;
+        assert!(joined_now(&unsaid).is_none(), "another app's cast");
+        let mut over = playing.clone();
+        over.card.over = true;
+        assert!(joined_now(&over).is_none());
+        let mut taken = playing;
+        taken.notice = Some(Msg::NoticeCastTakenOver { name: "Living room".into() });
+        assert!(joined_now(&taken).is_none());
     }
 
     #[test]

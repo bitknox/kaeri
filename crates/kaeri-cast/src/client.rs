@@ -217,6 +217,34 @@ pub struct Metadata {
     pub image: Option<String>,
 }
 
+/// The key under the media's `customData` that carries a [`JoinCard`].
+pub const JOIN_CARD: &str = "kaeriCard";
+
+/// What a Kaeri sender says of the episode it casts, beside the media, so another Kaeri device
+/// that joins the cast draws the same card: AniList's id, the episode, and the names the card
+/// shows. Nothing of where the stream comes from or of who casts it. A receiver says the media's
+/// `customData` back to every sender with the media, the Default Media Receiver and Kaeri's
+/// alike, so a device that joins reads it from the media status.
+#[derive(Debug, Clone, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct JoinCard {
+    /// The title's AniList id.
+    pub id: u32,
+    pub episode: String,
+    /// The show, as the card names it.
+    pub title: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub episode_title: Option<String>,
+}
+
+impl JoinCard {
+    /// The card a media description carries, when it carries a whole one.
+    fn read(media: &Value) -> Option<Self> {
+        let card: Self = serde_json::from_value(media["customData"][JOIN_CARD].clone()).ok()?;
+        (!card.episode.is_empty()).then_some(card)
+    }
+}
+
 /// What to load, as the `LOAD` message's media.
 #[derive(Debug, Clone, Default, PartialEq)]
 pub struct Load {
@@ -232,6 +260,9 @@ pub struct Load {
     pub autoplay: bool,
     /// What Kaeri's receiver reads beside the media, under `customData.kaeri`.
     pub kaeri: Option<Value>,
+    /// What another Kaeri device that joins reads beside the media, under
+    /// `customData.kaeriCard`: for every receiver, which says it back.
+    pub card: Option<JoinCard>,
 }
 
 impl Load {
@@ -252,7 +283,7 @@ impl Load {
             "metadata": metadata,
         });
         if let Some(kaeri) = &self.kaeri {
-            media["customData"] = json!({ "kaeri": kaeri });
+            media["customData"]["kaeri"] = kaeri.clone();
         }
         if let Some(format) = &self.hls_segment_format {
             media["hlsSegmentFormat"] = json!(format);
@@ -413,6 +444,8 @@ pub struct MediaStatus {
     /// changed and in answer to `GET_STATUS`, so the statuses that follow a pause, a seek or a
     /// buffering spell come without it: the duration and the title are the last ones heard.
     pub has_media: bool,
+    /// The card a Kaeri sender loaded the media with: none from another app or an older Kaeri.
+    pub card: Option<JoinCard>,
 }
 
 impl MediaStatus {
@@ -447,6 +480,7 @@ impl MediaStatus {
                 image: m.get("images").and_then(|i| i[0]["url"].as_str()).map(str::to_owned),
             }),
             has_media: status["media"].is_object(),
+            card: JoinCard::read(&status["media"]),
         })
     }
 
@@ -460,6 +494,10 @@ impl MediaStatus {
         // A receiver that describes the media without its metadata hasn't changed the title.
         if self.metadata.is_none() {
             self.metadata.clone_from(&earlier.metadata);
+        }
+        // Nor the card, which goes with the media session.
+        if self.card.is_none() {
+            self.card.clone_from(&earlier.card);
         }
         if self.has_media {
             return;
@@ -505,6 +543,7 @@ mod tests {
             style: None,
             autoplay: true,
             kaeri: None,
+            card: None,
         };
         let message = load.message("s");
         assert_eq!(message["currentTime"], 42.0);
@@ -553,6 +592,68 @@ mod tests {
         let mut status = MediaStatus::first(&described).unwrap();
         status.fill_from(&earlier);
         assert_eq!(status.metadata.map(|m| m.series).as_deref(), Some("A Made-up Show"));
+    }
+
+    #[test]
+    fn the_card_goes_beside_the_media_and_comes_back_with_its_status() {
+        let card = JoinCard {
+            id: 900_002,
+            episode: "7".into(),
+            title: "A Made-up Show".into(),
+            episode_title: Some("Low Tide".into()),
+        };
+        let load = Load {
+            url: "http://192.0.2.1:1/t/x/r/episode.mp4".into(),
+            content_type: "video/mp4".into(),
+            kaeri: Some(json!({"version": 1, "container": "mp4"})),
+            card: Some(card.clone()),
+            ..Load::default()
+        };
+        let message = load.message("s");
+        let custom = &message["media"]["customData"];
+        assert_eq!(custom["kaeri"]["container"], "mp4", "Kaeri's receiver still reads its own");
+        assert_eq!(
+            custom["kaeriCard"],
+            json!({"id": 900_002, "episode": "7", "title": "A Made-up Show",
+                   "episodeTitle": "Low Tide"})
+        );
+        // Without Kaeri's part, as for the Default Media Receiver, the card goes alone.
+        let plain = Load { kaeri: None, ..load.clone() }.message("s");
+        assert_eq!(plain["media"]["customData"], json!({"kaeriCard": custom["kaeriCard"]}));
+        // And none at all without a card.
+        let bare = Load { kaeri: None, card: None, ..load }.message("s");
+        assert!(bare["media"].get("customData").is_none(), "{bare}");
+
+        // A receiver says the media back with its customData.
+        let full = json!({"type": "MEDIA_STATUS", "status": [{
+            "mediaSessionId": 3, "playerState": "PLAYING", "currentTime": 10.0,
+            "media": message["media"].clone(),
+        }]});
+        let earlier = MediaStatus::first(&full).unwrap();
+        assert_eq!(earlier.card.as_ref(), Some(&card));
+        // A status after a pause leaves the media out: the card stands, for that media only.
+        let paused = json!({"type": "MEDIA_STATUS", "status": [{
+            "mediaSessionId": 3, "playerState": "PAUSED", "currentTime": 12.5,
+        }]});
+        let mut status = MediaStatus::first(&paused).unwrap();
+        assert_eq!(status.card, None);
+        status.fill_from(&earlier);
+        assert_eq!(status.card.as_ref(), Some(&card));
+        let mut other = MediaStatus::first(&paused).unwrap();
+        other.media_session_id = 4;
+        other.fill_from(&earlier);
+        assert_eq!(other.card, None);
+        // Another app's media, or a card missing its episode, carries none.
+        for media in [
+            json!({"contentId": "x", "customData": {"theirs": 1}}),
+            json!({"contentId": "x", "customData": {"kaeriCard": {"id": 1, "title": "x"}}}),
+            json!({"contentId": "x", "customData": {"kaeriCard": {"id": 1, "episode": "", "title": "x"}}}),
+        ] {
+            let status = json!({"type": "MEDIA_STATUS", "status": [{
+                "mediaSessionId": 5, "playerState": "PLAYING", "media": media,
+            }]});
+            assert_eq!(MediaStatus::first(&status).unwrap().card, None, "{status}");
+        }
     }
 
     #[test]

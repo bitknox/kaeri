@@ -92,6 +92,7 @@ class CastModelTest {
         reconnecting: Boolean = false,
         waiting: UInt? = null,
         note: Msg? = null,
+        episode: String = "7",
     ) = FfiCastCard(
         card = FfiRemoteCard(
             tvName = "Living room",
@@ -99,7 +100,7 @@ class CastModelTest {
             phaseLine = null,
             screen = FfiScreen.Player,
             now = FfiNowCard(
-                id = 900001u, title = "The Lantern Road", episode = "7", episodeLine = "Episode 7", loading = loading,
+                id = 900001u, title = "The Lantern Road", episode = episode, episodeLine = "Episode $episode", loading = loading,
                 position = position, duration = 1420.0, paused = false, speed = 1.0, volume = volume, audio = emptyList(),
                 subtitles = emptyList(), subtitlesOff = false, skip = null,
             ),
@@ -590,5 +591,57 @@ class CastModelTest {
         advanceUntilIdle()
         time = 13_000
         assertEquals(24.4, cast.itemPlayhead()!!, 0.001)
+    }
+
+    /** A phone that joins a cast another device started: no play of its own, the session's item alone. */
+    private fun TestScope.joined(link: ScriptedLink, item: CastItem?): Pair<CastModel, ScriptedSessions> {
+        val cast = model(link)
+        val sessions = ScriptedSessions(link)
+        cast.sessions = sessions
+        sessions.views.trySend(view(CastSessionState.Connected))
+        runCurrent()
+        sessions.views.trySend(view(CastSessionState.Playing).copy(item = item))
+        runCurrent()
+        return cast to sessions
+    }
+
+    @Test
+    fun a_cast_another_device_started_opens_the_remote_on_a_phone_that_joins_it() = runTest {
+        val link = ScriptedLink(card(loading = false))
+        val (cast, _) = joined(link, item)
+        assertEquals(CastStage.Playing, cast.shown.value?.stage)
+        assertEquals("7", cast.shown.value?.request?.episode)
+        cast.openCard()
+        assertTrue("the remote opens", cast.open.value)
+    }
+
+    @Test
+    fun a_joined_cast_that_does_not_say_what_it_plays_opens_no_remote() = runTest {
+        val link = ScriptedLink(card(loading = false))
+        val (cast, _) = joined(link, item.copy(id = null, episode = null))
+        assertNull("no card to open", cast.shown.value)
+        cast.openCard()
+        assertFalse(cast.open.value)
+    }
+
+    @Test
+    fun a_joined_cast_follows_the_next_episode_the_other_device_casts() = runTest {
+        val link = ScriptedLink(card(loading = false))
+        val (cast, sessions) = joined(link, item)
+        cast.openCard()
+        link.cards.send(card(loading = false, episode = "8"))
+        advanceUntilIdle()
+        val shown = cast.shown.value
+        assertEquals(CastStage.Playing, shown?.stage)
+        assertEquals("8", shown?.cast?.card?.now?.episode)
+        assertEquals("8", shown?.request?.episode)
+        assertTrue(cast.open.value)
+        // Ended later, it says the episode the TV was on.
+        val ended = backgroundScope.async { cast.ended.first() }
+        runCurrent()
+        cast.closeCard()
+        sessions.views.trySend(view(CastSessionState.Error, Msg.NoticeCastLost("Living room")).copy(item = null))
+        advanceUntilIdle()
+        assertEquals("8", ended.await().episode)
     }
 }

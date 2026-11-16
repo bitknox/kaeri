@@ -207,8 +207,9 @@ enum Control {
     Close,
     /// The receiver app is stopped on the TV.
     StopApp,
-    /// Another sender loads its own file on the same receiver session.
-    LoadElsewhere,
+    /// Another sender loads its own file on the same receiver session, with this `customData`
+    /// beside the media.
+    LoadElsewhere(Value),
     Buffering(bool),
     Say(Value),
     /// Each connection from now waits this long before it is answered.
@@ -242,6 +243,8 @@ struct Playing {
     buffering: bool,
     /// The LOAD's metadata, said back with the media as a receiver does.
     metadata: Value,
+    /// The LOAD's media `customData`, said back with the media to every sender as CAF does.
+    custom: Value,
 }
 
 impl Playing {
@@ -274,6 +277,9 @@ impl Playing {
             "media": {"contentId": self.url, "duration": self.duration, "streamType": "BUFFERED",
                       "metadata": self.metadata},
         });
+        if !self.custom.is_null() {
+            status["media"]["customData"] = self.custom.clone();
+        }
         if let Some(reason) = idle_reason {
             status["idleReason"] = json!(reason);
         }
@@ -386,7 +392,13 @@ impl FakeReceiver {
 
     /// Another sender loads its own file on the receiver session this one plays on.
     pub fn load_elsewhere(&self) {
-        let _ = self.control.send(Control::LoadElsewhere);
+        let _ = self.control.send(Control::LoadElsewhere(Value::Null));
+    }
+
+    /// Another sender loads its own file on the receiver session this one plays on, with
+    /// `custom` as the media's `customData`: another Kaeri device casting its next episode.
+    pub fn load_elsewhere_with(&self, custom: Value) {
+        let _ = self.control.send(Control::LoadElsewhere(custom));
     }
 
     /// Say nothing more and read nothing more, with the connection left open: a TV switched
@@ -538,7 +550,7 @@ async fn serve(
                     playing = None;
                     send("receiver-0", "*", NS_RECEIVER, receiver_status(&app, 0, level, muted));
                 }
-                Control::LoadElsewhere => {
+                Control::LoadElsewhere(custom) => {
                     if let Some(old) = playing.take() {
                         send(&transport, "*", NS_MEDIA, json!({"type": "MEDIA_STATUS", "requestId": 0,
                             "status": [old.status(Some("INTERRUPTED"), &stream)]}));
@@ -547,6 +559,7 @@ async fn serve(
                             url: "http://elsewhere.example/theirs.mp4".into(),
                             position: 0.0,
                             since: Instant::now(),
+                            custom,
                             ..old
                         };
                         next_session += 1;
@@ -710,6 +723,7 @@ async fn serve(
                             stalled: refused == Some(Refusal::Stall),
                             buffering: false,
                             metadata: payload["media"]["metadata"].clone(),
+                            custom: payload["media"]["customData"].clone(),
                         };
                         send(&transport, &sender, NS_MEDIA, json!({"type": "MEDIA_STATUS", "requestId": request, "status": [p.status(None, &stream)]}));
                         if refused == Some(Refusal::Error) {

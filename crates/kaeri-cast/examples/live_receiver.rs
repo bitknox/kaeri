@@ -183,6 +183,7 @@ async fn cast_one(
         audio_language: None,
         audio_track: None,
         audio_memory: None,
+        card: None,
     });
 
     // Up to 40 s for a moving position or a failure.
