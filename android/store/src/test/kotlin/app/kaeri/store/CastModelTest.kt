@@ -629,7 +629,9 @@ class CastModelTest {
         val link = ScriptedLink(card(loading = false))
         val (cast, sessions) = joined(link, item)
         cast.openCard()
+        // The engine's card and the session's item both move to the episode the TV plays.
         link.cards.send(card(loading = false, episode = "8"))
+        sessions.views.trySend(view(CastSessionState.Playing).copy(item = item.copy(episode = "8")))
         advanceUntilIdle()
         val shown = cast.shown.value
         assertEquals(CastStage.Playing, shown?.stage)
