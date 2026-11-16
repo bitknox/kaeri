@@ -10,7 +10,10 @@ use gtk::glib;
 use kaeri_engine::remote::protocol::command::RemoteCommand;
 use kaeri_i18n::t;
 
-use super::{Sheet, Tv, cast::Stage};
+use super::{
+    Sheet, Tv,
+    cast::{Stage, playing_line},
+};
 use crate::{widgets, window::Ctx};
 
 /// The bar's progress moves on this often while it shows.
@@ -106,8 +109,7 @@ impl Bar {
         }
         let (line, mark) = match view.stage {
             Stage::Starting => (view.starting.clone(), "haze"),
-            Stage::Playing if now.paused => (t::cast_status_paused(&view.name), "haze"),
-            Stage::Playing => (view.name.clone(), "water"),
+            Stage::Playing => playing_line(&view, || view.name.clone()),
             Stage::Failed => (t::tv_cast_couldnt_start(&view.name), "vermilion"),
             Stage::Lost => (t::tv_cast_stopped(), "vermilion"),
         };
