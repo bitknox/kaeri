@@ -645,8 +645,12 @@ fn failure_line(failure: &StartFailure, episode: &str) -> String {
     if let Some(unreached) = names(&failure.unreached) {
         line.push(t::player_start_unreached(&unreached));
     }
-    let lacking: Vec<String> =
-        failure.asked.iter().filter(|name| !failure.unreached.contains(name)).cloned().collect();
+    let lacking: Vec<String> = failure
+        .asked
+        .iter()
+        .filter(|name| !failure.unreached.contains(name))
+        .cloned()
+        .collect();
     if let Some(listed) = names(&lacking) {
         line.push(t::player_start_lacking(lacking.len() as i64, &listed, episode));
     }
@@ -1045,7 +1049,7 @@ mod tests {
     }
 
     #[test]
-    fn a_source_that_failed_is_one_not_reached_a_held_back_one_is_not_asked_and_try_again_leads() {
+    fn a_failed_source_is_not_reached_a_held_back_one_not_asked_and_try_again_leads() {
         let mut s = start();
         s.step(
             &StartStep::SourcesHeldBack {
@@ -1057,7 +1061,9 @@ mod tests {
         );
         s.fail(StartFailure {
             why: NoSourceWhy::NotFound,
-            text: Msg::NoticeReason { reason: Cause::SourcesUnreached { names: "Alpha".into() } },
+            text: Msg::NoticeReason {
+                reason: Cause::SourcesUnreached { names: "Alpha".into() },
+            },
             asked: vec!["Alpha".into(), "Brook".into()],
             unreached: vec!["Alpha".into()],
             held_back: vec![HeldSources {
