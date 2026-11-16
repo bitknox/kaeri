@@ -242,8 +242,13 @@ fn episode_line(file: &FileFacts, language: Option<&str>) -> String {
 /// What a phone that joins this cast opens its card by: the show and the episode, never the
 /// source. A show of the person's own making has an id only this device knows, so it goes
 /// without.
-fn join_card(_file: &FileFacts) -> Option<JoinCard> {
-    None
+fn join_card(file: &FileFacts) -> Option<JoinCard> {
+    (!file.id.is_own() && !file.episode.is_empty()).then(|| JoinCard {
+        id: file.id.get(),
+        episode: file.episode.clone(),
+        title: file.title.clone(),
+        episode_title: file.episode_title.clone().filter(|t| !t.is_empty()),
+    })
 }
 
 /// The resume point from mpv's per-file options.

@@ -285,6 +285,9 @@ impl Load {
         if let Some(kaeri) = &self.kaeri {
             media["customData"]["kaeri"] = kaeri.clone();
         }
+        if let Some(card) = &self.card {
+            media["customData"][JOIN_CARD] = json!(card);
+        }
         if let Some(format) = &self.hls_segment_format {
             media["hlsSegmentFormat"] = json!(format);
             media["hlsVideoSegmentFormat"] =

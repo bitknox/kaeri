@@ -2516,10 +2516,17 @@ fn apply(inner: &Inner, state: &mut State, status: &MediaStatus) {
         return;
     }
     if new_session && state.loaded.is_some() && !state.reloading {
-        // Another sender loaded its own file on the same receiver session: what plays now isn't
-        // this cast's, and the TV is theirs.
-        end_cast(inner, state, CastFailure::TakenOver);
-        return;
+        if state.load.is_none() && status.card.is_some() {
+            // A cast this device joined, and another Kaeri device cast its next episode: the
+            // controls follow what plays now.
+            follow(inner, status.media_session_id);
+            state.played = false;
+        } else {
+            // Another sender loaded its own file on the same receiver session: what plays now
+            // isn't this cast's, and the TV is theirs.
+            end_cast(inner, state, CastFailure::TakenOver);
+            return;
+        }
     }
     if new_session {
         state.loaded = Some(status.media_session_id);
@@ -2811,6 +2818,14 @@ fn receive(inner: &Arc<Inner>, message: &Incoming) {
 /// What the receiver played when this device connected to it, a cast another sender started
 /// above all: its media session is the one this player's controls go to, as a load or a join
 /// sets it. A media session already in force is kept.
+/// Send this player's controls to the media session a Kaeri device that started the cast went
+/// on to, from the one they went to before.
+fn follow(inner: &Inner, session: i64) {
+    if let Some(media) = lock(&inner.media).as_mut() {
+        media.media_session_id = Some(session);
+    }
+}
+
 fn adopt(inner: &Inner, session: i64) {
     if let Some(media) = lock(&inner.media).as_mut().filter(|m| m.media_session_id.is_none()) {
         media.media_session_id = Some(session);

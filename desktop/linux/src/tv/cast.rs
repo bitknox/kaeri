@@ -100,9 +100,8 @@ pub struct CastRun {
 
 /// What a cast this computer joined plays, by its card: none for another app's cast or an older
 /// Kaeri's, which don't say, and none once it ended.
-#[cfg_attr(not(test), allow(dead_code))]
-fn joined_now(_card: &CastCard) -> Option<&NowCard> {
-    None
+fn joined_now(card: &CastCard) -> Option<&NowCard> {
+    card.card.now.as_ref().filter(|_| !card.card.over && card.notice.is_none())
 }
 
 /// Whether the TV shows a picture: the engine has said what plays, and the TV has loaded it.
@@ -234,6 +233,57 @@ impl Tv {
         let sender = self.sender.as_ref()?;
         let _entered = self.handle.enter();
         Some(sender.cast_state())
+    }
+
+    /// The session's cast when another device started it and this computer joined it, with the
+    /// card that says what plays.
+    fn joined(&self) -> Option<(Arc<CastSession>, CastCard)> {
+        if self.casting() {
+            return None;
+        }
+        let sender = self.sender.as_ref()?;
+        let session = {
+            let _entered = self.handle.enter();
+            sender.cast_session()?
+        };
+        let card = session.card();
+        joined_now(&card)?;
+        Some((session, card))
+    }
+
+    /// What a cast another device started plays, for the header's popover to open its remote by.
+    pub fn cast_joined_now(&self) -> Option<NowCard> {
+        self.joined().and_then(|(_, card)| card.card.now)
+    }
+
+    /// Take a cast another device started as this computer's own, for its remote to open: false
+    /// when there is none, or it doesn't say what plays.
+    pub(super) fn join_cast(&self) -> bool {
+        let Some((session, card)) = self.joined() else { return false };
+        let Some(key) = self.cast_held() else { return false };
+        let Some(now) = joined_now(&card) else { return false };
+        let request = Request {
+            id: now.id,
+            title: now.title.clone(),
+            episode: now.episode.clone(),
+            from: None,
+            from_player: false,
+        };
+        let turn = self.cast_turn.get() + 1;
+        self.cast_turn.set(turn);
+        let played = stage_of(&card) == Stage::Playing;
+        self.cast.replace(Some(CastRun {
+            session: Arc::clone(&session),
+            key,
+            request,
+            card,
+            asked: Instant::now(),
+            card_at: Instant::now(),
+            played,
+            reopened: false,
+        }));
+        self.watch_cast(&session, turn);
+        true
     }
 
     /// The Cast row key of a TV held with nothing cast from here yet: connected first from the

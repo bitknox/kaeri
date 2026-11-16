@@ -261,7 +261,11 @@ fn connected(ctx: &Rc<Ctx>, popover: &gtk::Popover) -> gtk::Widget {
         t::cast_button_connected(&name)
     }));
     let list = boxed();
-    let now = tv.cast_view().and_then(|v| v.now).or_else(|| tv.now());
+    let now = tv
+        .cast_view()
+        .and_then(|v| v.now)
+        .or_else(|| tv.cast_joined_now())
+        .or_else(|| tv.now());
     let idle = tv.cast_session().is_some_and(|s| s.state == SessionState::Connected);
     let row = match now {
         Some(now) => {

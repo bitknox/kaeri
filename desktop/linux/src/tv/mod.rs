@@ -427,7 +427,8 @@ impl Tv {
 
     /// The card of the TV driven, or the picker when there is none.
     pub fn open_remote(&self) {
-        if self.casting() {
+        // A cast another device started and this computer joined has the same remote.
+        if self.casting() || self.join_cast() {
             self.cast_reopened();
             self.sheet.set(Some(Sheet::Remote));
             self.changed();

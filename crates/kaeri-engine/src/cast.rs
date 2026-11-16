@@ -811,6 +811,21 @@ impl CastHub {
                     CastState::Playing | CastState::Paused | CastState::Buffering
                 ) =>
             {
+                // Another Kaeri device's cast says what it plays, so its card can open here.
+                if let Some(card) = &status.card {
+                    return Some(SessionItem {
+                        id: Some(AnilistId::new(card.id)),
+                        title: card.title.clone(),
+                        episode: Some(card.episode.clone()),
+                        episode_title: card.episode_title.clone(),
+                        image: status.metadata.as_ref().and_then(|m| m.image.clone()),
+                        position: status.position,
+                        duration: status.duration,
+                        paused: status.state == CastState::Paused,
+                        waiting: waited(status),
+                        loading: false,
+                    });
+                }
                 status.metadata.as_ref().map(|metadata| SessionItem {
                     id: None,
                     title: metadata.series.clone(),

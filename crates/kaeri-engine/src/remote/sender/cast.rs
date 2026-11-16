@@ -27,7 +27,7 @@ use kaeri_remote::{
 };
 use tokio::task::JoinHandle;
 
-use super::{LinkPhase, NowCard, Problem, RemoteCard, SkipCard, TvSender, lock};
+use super::{LinkPhase, NowCard, Problem, RemoteCard, SkipCard, TvSender, episode_line, lock};
 use crate::{
     cast::{CastHub, CastView, SessionState, SessionView},
     engine::RemoteSender,
@@ -436,30 +436,6 @@ impl TvSender {
     pub fn cast_command(&self, command: RemoteCommand) {
         let Some((hub, engine)) = self.hub() else { return };
         let Some(device) = hub.session_device() else { return };
-        let ours = hub.view().state.is_some_and(|state| state.now_playing.is_some());
-        if !ours && let Some(player) = hub.held(&device.id) {
-            let direct = matches!(
-                command,
-                RemoteCommand::TogglePause
-                    | RemoteCommand::Seek { .. }
-                    | RemoteCommand::SeekTo { .. }
-                    | RemoteCommand::Stop
-            );
-            if direct {
-                hub.spawn(async move {
-                    let done = match command {
-                        RemoteCommand::TogglePause => player.toggle_pause().await,
-                        RemoteCommand::Seek { by } => player.seek(by, false).await,
-                        RemoteCommand::SeekTo { position } => player.seek(position, true).await,
-                        _ => player.stop().await,
-                    };
-                    if let Err(e) = done {
-                        tracing::debug!(error = %e, "the TV didn't take a control");
-                    }
-                });
-                return;
-            }
-        }
         CastSession { hub, engine, device }.command(command);
     }
 
@@ -635,6 +611,32 @@ fn tracks(card: &mut NowCard, status: &CastStatus) {
     card.subtitles_off = !card.subtitles.iter().any(|t| t.selected);
 }
 
+/// The card of what another Kaeri device cast, from what the TV says of it, while it plays.
+fn joined_card(status: &CastStatus) -> Option<NowCard> {
+    if !matches!(status.state, CastState::Playing | CastState::Paused | CastState::Buffering) {
+        return None;
+    }
+    let joined = status.card.as_ref()?;
+    let mut card = NowCard {
+        id: AnilistId::new(joined.id),
+        title: joined.title.clone(),
+        episode: joined.episode.clone(),
+        episode_line: episode_line(&joined.episode, joined.episode_title.as_deref()),
+        loading: false,
+        position: status.position,
+        duration: status.duration,
+        paused: status.state == CastState::Paused,
+        speed: 1.0,
+        volume: status.level.map(|level| (level * 100.0).round()),
+        audio: Vec::new(),
+        subtitles: Vec::new(),
+        subtitles_off: true,
+        skip: None,
+    };
+    tracks(&mut card, status);
+    Some(card)
+}
+
 impl CastSession {
     pub fn device_name(&self) -> &str {
         &self.device.name
@@ -683,6 +685,9 @@ impl CastSession {
                 card
             },
         );
+        // A cast this device joined plays nothing of its own: the card is what the TV says
+        // another Kaeri device cast, when it says.
+        let now = now.or_else(|| status.as_ref().filter(|_| !over).and_then(joined_card));
         let (position, duration) =
             status.as_ref().map_or((0.0, None), |s| (s.position, s.duration));
         let up_next = view
@@ -740,6 +745,32 @@ impl CastSession {
     /// tracks, which a TV takes with its load; the rest to the engine's playback, as the TV's
     /// own front end would send it.
     pub fn command(&self, command: RemoteCommand) {
+        // What the receiver plays from elsewhere (a session joined) is driven on the TV
+        // directly: the engine plays nothing it could pause.
+        let ours = self.hub.view().state.is_some_and(|state| state.now_playing.is_some());
+        if !ours && let Some(player) = self.hub.held(&self.device.id) {
+            let direct = matches!(
+                command,
+                RemoteCommand::TogglePause
+                    | RemoteCommand::Seek { .. }
+                    | RemoteCommand::SeekTo { .. }
+                    | RemoteCommand::Stop
+            );
+            if direct {
+                self.hub.spawn(async move {
+                    let done = match command {
+                        RemoteCommand::TogglePause => player.toggle_pause().await,
+                        RemoteCommand::Seek { by } => player.seek(by, false).await,
+                        RemoteCommand::SeekTo { position } => player.seek(position, true).await,
+                        _ => player.stop().await,
+                    };
+                    if let Err(e) = done {
+                        tracing::debug!(error = %e, "the TV didn't take a control");
+                    }
+                });
+                return;
+            }
+        }
         match command {
             RemoteCommand::Track { kind: Track::Audio, id } => {
                 let Some(player) = self.hub.player() else { return };

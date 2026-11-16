@@ -664,7 +664,14 @@ class CastModel(
         val held = _shown.value ?: return
         val same = held.cast.card.now?.position == card.card.now?.position && held.cast.card.now?.paused == card.card.now?.paused
         val playing = card.notice == null && card.card.now?.loading == false
-        val next = held.copy(cast = card, at = if (same) held.at else clock(), played = held.played || playing)
+        // The TV went on to another episode, as a joined cast does when the device that started it casts the next.
+        val tvNow = card.card.now
+        val request = if (tvNow != null && (tvNow.id != held.request.id || tvNow.episode != held.request.episode)) {
+            held.request.copy(id = tvNow.id, title = tvNow.title, episode = tvNow.episode, from = null)
+        } else {
+            held.request
+        }
+        val next = held.copy(cast = card, at = if (same) held.at else clock(), played = held.played || playing, request = request)
         // The clock stops where it was the moment the TV went quiet, and runs again once it speaks.
         val frozen = when {
             !next.quiet -> null
