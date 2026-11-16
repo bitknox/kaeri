@@ -3,7 +3,11 @@
 //! the bottom bar of the window's `AdwBottomSheet`: a click grows it into the cast's controls,
 //! and closing them shrinks them back into it.
 
-use std::{rc::Rc, time::Duration};
+use std::{
+    cell::{Cell, RefCell},
+    rc::Rc,
+    time::Duration,
+};
 
 use adw::prelude::*;
 use gtk::glib;
@@ -12,25 +16,157 @@ use kaeri_i18n::t;
 
 use super::{
     Sheet, Tv,
-    cast::{Stage, playing_line},
+    cast::{SPIN, Stage, playing_line},
 };
-use crate::{widgets, window::Ctx};
+use crate::window::Ctx;
 
 /// The bar's progress moves on this often while it shows.
 const TICK: Duration = Duration::from_millis(500);
+/// A control that waits on the TV is dimmed to this, never hidden: the bar keeps its shape.
+pub(super) const DIMMED: f64 = 0.38;
+/// How long a status line's change crossfades: the fade-in and fade-out tokens, overlapped.
+const CROSSFADE_MS: u32 = 250;
+
+/// A cast's status line: a dot or a small spinner, then the words. A new stage crossfades both
+/// in place; the words of the same stage (a count, a pause) change in place. Nothing beside it
+/// moves, as the spinner keeps the dot's room.
+pub(super) struct Line {
+    pub root: gtk::Box,
+    lead: gtk::Stack,
+    dot: gtk::Box,
+    words: gtk::Stack,
+    /// The two labels the words crossfade between, and which of them shows.
+    labels: [gtk::Label; 2],
+    front: Cell<usize>,
+    shown: RefCell<(String, &'static str)>,
+}
+
+impl Line {
+    /// `wrap`: a long line wraps, as on the controls; else it ends in an ellipsis, as on the bar.
+    pub fn new(wrap: bool, spinner: i32) -> Self {
+        let root = gtk::Box::new(gtk::Orientation::Horizontal, 6);
+        root.set_valign(gtk::Align::Center);
+        let dot = gtk::Box::new(gtk::Orientation::Horizontal, 0);
+        dot.add_css_class("mark");
+        dot.set_halign(gtk::Align::Center);
+        dot.set_valign(gtk::Align::Center);
+        let spin = adw::Spinner::new();
+        spin.set_size_request(spinner, spinner);
+        spin.add_css_class("haze");
+        let lead = gtk::Stack::builder()
+            .transition_type(gtk::StackTransitionType::Crossfade)
+            .transition_duration(CROSSFADE_MS)
+            .valign(gtk::Align::Center)
+            .build();
+        lead.add_named(&dot, Some("dot"));
+        lead.add_named(&spin, Some(SPIN));
+        let label = || {
+            let label = gtk::Label::builder().xalign(0.0).build();
+            if wrap {
+                label.set_wrap(true);
+                label.set_natural_wrap_mode(gtk::NaturalWrapMode::Word);
+            } else {
+                label.set_ellipsize(gtk::pango::EllipsizeMode::End);
+                label.set_width_chars(1);
+            }
+            label
+        };
+        let labels = [label(), label()];
+        let words = gtk::Stack::builder()
+            .transition_type(gtk::StackTransitionType::Crossfade)
+            .transition_duration(CROSSFADE_MS)
+            .hhomogeneous(false)
+            .hexpand(true)
+            .build();
+        words.add_named(&labels[0], Some("0"));
+        words.add_named(&labels[1], Some("1"));
+        root.append(&lead);
+        root.append(&words);
+        Self {
+            root,
+            lead,
+            dot,
+            words,
+            labels,
+            front: Cell::new(0),
+            shown: RefCell::new((String::new(), "")),
+        }
+    }
+
+    /// Say `text` with `mark`: a dot's colour, or [`SPIN`]. A change of mark crossfades when
+    /// `animate`; the same mark's new words change in place. True when the mark changed.
+    pub fn set(&self, text: &str, mark: &'static str, animate: bool) -> bool {
+        let (was_text, was_mark) = self.shown.borrow().clone();
+        if was_text == text && was_mark == mark {
+            return false;
+        }
+        let moved = was_mark != mark;
+        let instant = !animate || was_mark.is_empty();
+        let haze = matches!(mark, "haze" | "ring" | SPIN);
+        let front = self.front.get();
+        let into = if moved && !instant { 1 - front } else { front };
+        let label = &self.labels[into];
+        label.set_label(text);
+        label.remove_css_class(if haze { "standing" } else { "haze" });
+        label.add_css_class(if haze { "haze" } else { "standing" });
+        let transition = if instant {
+            gtk::StackTransitionType::None
+        } else {
+            gtk::StackTransitionType::Crossfade
+        };
+        if into != front {
+            self.words.set_visible_child_full(&into.to_string(), transition);
+            self.front.set(into);
+        }
+        if mark != SPIN {
+            for class in ["water", "vermilion", "haze", "ring"] {
+                self.dot.remove_css_class(class);
+            }
+            self.dot.add_css_class(mark);
+        }
+        self.lead.set_visible_child_full(if mark == SPIN { SPIN } else { "dot" }, transition);
+        self.shown.replace((text.to_owned(), mark));
+        moved
+    }
+}
+
+/// Dim `widget` to [`DIMMED`] and take its input while the TV can't be reached, or bring it back:
+/// on the quick token when `animate`, else at once.
+pub(super) fn dim(widget: &impl IsA<gtk::Widget>, dimmed: bool, animate: bool) {
+    let widget = widget.as_ref();
+    widget.set_sensitive(!dimmed);
+    let to = if dimmed { DIMMED } else { 1.0 };
+    if (widget.opacity() - to).abs() < f64::EPSILON {
+        return;
+    }
+    if animate && widget.is_mapped() {
+        crate::motion::quick(widget, widget.opacity(), to, crate::motion::opacity(widget)).play();
+    } else {
+        widget.set_opacity(to);
+    }
+}
+
+/// Move `progress` to `to` on the standard token: the TV's playhead after a rejoin, ahead of
+/// where it stopped as the TV played on.
+fn glide(progress: &gtk::ProgressBar, to: f64) {
+    let target = adw::PropertyAnimationTarget::new(progress, "fraction");
+    crate::motion::standard(progress, progress.fraction(), to, target).play();
+}
 
 struct Bar {
     root: gtk::Overlay,
     art: gtk::Picture,
     title: gtk::Label,
-    status: gtk::Box,
+    line: Line,
     play: gtk::Button,
     next: gtk::Button,
     progress: gtk::ProgressBar,
     /// The art's address drawn, so an update draws it once.
-    art_url: std::cell::RefCell<Option<String>>,
-    /// The status line drawn, so an echo changes nothing.
-    shown: std::cell::RefCell<(String, &'static str)>,
+    art_url: RefCell<Option<String>>,
+    /// It was reconnecting when last drawn: a rejoin is said once, and the playhead glides.
+    reconnecting: Cell<bool>,
+    /// The playhead glides to the TV's position until then, and the tick leaves it alone.
+    gliding: Cell<Option<std::time::Instant>>,
 }
 
 impl Bar {
@@ -55,12 +191,13 @@ impl Bar {
             .width_chars(1)
             .build();
         title.add_css_class("heading");
-        let status = gtk::Box::new(gtk::Orientation::Horizontal, 0);
+        let line = Line::new(false, 12);
+        line.root.add_css_class("caption");
         let text = gtk::Box::new(gtk::Orientation::Vertical, 0);
         text.set_hexpand(true);
         text.set_valign(gtk::Align::Center);
         text.append(&title);
-        text.append(&status);
+        text.append(&line.root);
         let play = gtk::Button::from_icon_name("media-playback-pause-symbolic");
         play.add_css_class("circular");
         play.add_css_class("flat");
@@ -84,12 +221,13 @@ impl Bar {
             root,
             art,
             title,
-            status,
+            line,
             play,
             next,
             progress,
-            art_url: std::cell::RefCell::default(),
-            shown: std::cell::RefCell::default(),
+            art_url: RefCell::default(),
+            reconnecting: Cell::new(false),
+            gliding: Cell::new(None),
         }
     }
 
@@ -113,17 +251,30 @@ impl Bar {
             Stage::Failed => (t::tv_cast_couldnt_start(&view.name), "vermilion"),
             Stage::Lost => (t::tv_cast_stopped(), "vermilion"),
         };
-        if *self.shown.borrow() != (line.clone(), mark) {
-            match self.status.first_child().and_downcast::<gtk::Box>() {
-                Some(standing) => widgets::restand(&standing, &line, mark),
-                None => self.status.append(&widgets::standing(&line, mark)),
+        let mapped = self.root.is_mapped();
+        self.line.set(&line, mark, mapped);
+        // While it reconnects the bar has no hint, as a click does nothing.
+        let reconnecting = view.reconnecting;
+        self.root.set_tooltip_text(if reconnecting { None } else { Some(&t::cast_mini_opens()) });
+        if self.reconnecting.replace(reconnecting) != reconnecting {
+            let said = if reconnecting {
+                t::tv_status_reconnecting(&view.name)
+            } else {
+                t::tv_status_playing(&view.name)
+            };
+            if mapped && view.stage == Stage::Playing {
+                self.root.announce(&said, gtk::AccessibleAnnouncementPriority::Medium);
             }
-            self.shown.replace((line, mark));
+            // Back: the playhead moves on to where the TV got to meanwhile.
+            if !reconnecting && mapped {
+                self.gliding.set(Some(std::time::Instant::now() + Duration::from_millis(400)));
+                glide(&self.progress, fraction(tv));
+            }
         }
-        let playing = view.stage == Stage::Playing;
-        // Dimmed, never hidden, while the TV starts: the bar keeps its shape.
+        let playing = view.stage == Stage::Playing && !reconnecting;
+        // Dimmed, never hidden, while the TV starts or can't be heard: the bar keeps its shape.
+        dim(&self.play, !playing && !view.stage.ended(), mapped);
         self.play.set_sensitive(playing);
-        self.play.set_opacity(if playing || view.stage.ended() { 1.0 } else { 0.38 });
         self.play.set_visible(!view.stage.ended());
         self.play.set_icon_name(if now.paused {
             "media-playback-start-symbolic"
@@ -132,16 +283,26 @@ impl Bar {
         });
         let tip = if now.paused { t::action_play() } else { t::action_pause() };
         self.play.set_tooltip_text(Some(&tip));
-        self.next.set_visible(playing && view.up_next.is_some());
+        let up_next = view.stage == Stage::Playing && view.up_next.is_some();
+        self.next.set_visible(up_next);
+        dim(&self.next, reconnecting, mapped);
         self.show_playhead(tv);
     }
 
     fn show_playhead(&self, tv: &Tv) {
-        let length = tv.cast_view().and_then(|v| v.now).and_then(|n| n.duration);
-        let at = tv.cast_playhead().unwrap_or(0.0);
-        let fraction = length.filter(|l| *l > 0.0).map_or(0.0, |l| (at / l).clamp(0.0, 1.0));
-        self.progress.set_fraction(fraction);
+        if self.gliding.get().is_some_and(|until| std::time::Instant::now() < until) {
+            return;
+        }
+        self.gliding.set(None);
+        self.progress.set_fraction(fraction(tv));
     }
+}
+
+/// How far the TV's playhead is through the episode, 0 before its length is known.
+fn fraction(tv: &Tv) -> f64 {
+    let length = tv.cast_view().and_then(|v| v.now).and_then(|n| n.duration);
+    let at = tv.cast_playhead().unwrap_or(0.0);
+    length.filter(|l| *l > 0.0).map_or(0.0, |l| (at / l).clamp(0.0, 1.0))
 }
 
 /// Put the bar under the pages and keep it with the cast: shown while one runs or has ended and
@@ -175,7 +336,10 @@ pub fn attach(ctx: &Rc<Ctx>) {
     click.connect_released({
         let tv = tv.clone();
         move |gesture, _, _, _| {
-            if let Some(tv) = tv.upgrade().filter(|tv| tv.casting() && tv.sheet().is_none()) {
+            if let Some(tv) = tv
+                .upgrade()
+                .filter(|tv| tv.casting() && tv.sheet().is_none() && !tv.cast_reconnecting())
+            {
                 gesture.set_state(gtk::EventSequenceState::Claimed);
                 tv.open_remote();
             }
@@ -217,7 +381,16 @@ pub fn attach(ctx: &Rc<Ctx>) {
             let Some(ctx) = weak.upgrade() else { return };
             let casting = ctx.tv.casting();
             ctx.cast_sheet.set_reveal_bottom_bar(casting);
-            ctx.cast_sheet.set_can_open(casting);
+            // While it reconnects a click or a swipe does nothing; controls already open stay.
+            let open = ctx.tv.sheet() == Some(Sheet::Remote);
+            ctx.cast_sheet.set_can_open(casting && (open || !ctx.tv.cast_reconnecting()));
+            // A notice shows above the bar, and at the window's foot over open controls.
+            let overlay = ctx.notices.overlay();
+            if casting && !open {
+                overlay.add_css_class("cast-bar-up");
+            } else {
+                overlay.remove_css_class("cast-bar-up");
+            }
             if casting {
                 bar.update(&ctx, &ctx.tv);
             }

@@ -1,6 +1,7 @@
 //! The cast button at the end of each page's header bar. Hidden while no TV is found, an
 //! outline while one is there, its waves in turn while it connects, filled while connected.
-//! Its popover chooses a TV, or says what the TV held plays with Stop casting under it.
+//! Its popover chooses a TV, or says what the TV held plays with one button under it: Stop
+//! casting while something plays, Disconnect while nothing does.
 
 use std::{cell::Cell, rc::Rc};
 
@@ -248,7 +249,15 @@ fn chooser(ctx: &Rc<Ctx>, popover: &gtk::Popover) -> gtk::Widget {
     column.upcast()
 }
 
-/// Connected to the TV: what it plays, or that nothing plays yet, then Stop casting.
+/// The popover's one button, by what the TV held does: Disconnect lets go of a Chromecast
+/// TV with nothing playing, and the button goes back to its outline; Stop casting stops what
+/// plays, and the TV goes back to its own screen.
+fn held_action(idle: bool) -> String {
+    if idle { t::action_disconnect() } else { t::cast_stop() }
+}
+
+/// Connected to the TV: what it plays, or that nothing plays yet, then Stop casting or
+/// Disconnect.
 fn connected(ctx: &Rc<Ctx>, popover: &gtk::Popover) -> gtk::Widget {
     let tv = &ctx.tv;
     let column = gtk::Box::new(gtk::Orientation::Vertical, 12);
@@ -262,7 +271,8 @@ fn connected(ctx: &Rc<Ctx>, popover: &gtk::Popover) -> gtk::Widget {
     }));
     let list = boxed();
     let now = tv.cast_view().and_then(|v| v.now).or_else(|| tv.now());
-    let idle = tv.cast_session().is_some_and(|s| s.state == SessionState::Connected);
+    let idle = !tv.casting()
+        && tv.cast_session().is_some_and(|s| s.state == SessionState::Connected);
     let row = match now {
         Some(now) => {
             let private = ctx.hub.known.borrow().holds_show(now.id);
@@ -301,7 +311,7 @@ fn connected(ctx: &Rc<Ctx>, popover: &gtk::Popover) -> gtk::Widget {
         }
     });
     column.append(&list);
-    let stop = gtk::Button::with_label(&t::cast_stop());
+    let stop = gtk::Button::with_label(&held_action(idle));
     stop.connect_clicked({
         let tv = Rc::downgrade(tv);
         let popover = popover.downgrade();
@@ -340,6 +350,13 @@ mod tests {
             Look::Connected
         );
         assert_eq!(look_of(true, None, true, None, false), Look::Connected);
+    }
+
+    #[test]
+    fn a_held_tv_with_nothing_playing_offers_disconnect_and_one_playing_stop_casting() {
+        assert_eq!(held_action(true), t::action_disconnect());
+        assert_eq!(held_action(false), t::cast_stop());
+        assert_ne!(held_action(true), held_action(false));
     }
 
     #[test]
