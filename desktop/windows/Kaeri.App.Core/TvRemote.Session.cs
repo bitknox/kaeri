@@ -70,8 +70,7 @@ public sealed partial class TvRemote
         CastApi.SetDevice(tvSender, "computer");
         try
         {
-            leftOn = tvSender.CastLeftOn();
-            rejoinUntil = clock() + RejoinFor;
+            LeftRunning(tvSender.CastLeftOn);
             if (tvSender.CastWatch() is not { } watch)
                 return;
             sessionWatch = watch;
@@ -81,6 +80,35 @@ public sealed partial class TvRemote
         catch (Exception e)
         {
             KaeriFfiMethods.LogLine(FfiLogLevel.Warn, "cast", $"no cast session: {e.Message}");
+        }
+    }
+
+    Func<string?>? readLeftOn;
+
+    /// <summary>
+    /// The TV a cast was left running on at the last launch, read now and while nothing is held:
+    /// the engine stops naming it once a cast, with a session or without, connects or plays.
+    /// </summary>
+    public void LeftRunning(Func<string?> read)
+    {
+        readLeftOn = read;
+        leftOn = read();
+        rejoinUntil = clock() + RejoinFor;
+    }
+
+    /// <summary>Reads again whether a cast is still left running, while one is waited for.</summary>
+    void ReadLeftOn()
+    {
+        if (leftOn is null || readLeftOn is not { } read)
+            return;
+        try
+        {
+            if (read() is null)
+                leftOn = null;
+        }
+        catch (Exception e)
+        {
+            KaeriFfiMethods.LogLine(FfiLogLevel.Warn, "cast", $"the cast left running wasn't read: {e.Message}");
         }
     }
 
@@ -111,6 +139,8 @@ public sealed partial class TvRemote
         Painter.Take(view);
         if (view.State is FfiCastSessionState.Playing or FfiCastSessionState.Connected or FfiCastSessionState.Error)
             leftOn = null;
+        else if (view.State == FfiCastSessionState.Idle)
+            ReadLeftOn();
         if (view.Item is { Id: { } id, Episode: { Length: > 0 } episode } item)
             lastPlay = new TvPlay(id, item.Title, episode);
         if (view.State is FfiCastSessionState.Connected or FfiCastSessionState.Playing && pendingPlay is { } play)

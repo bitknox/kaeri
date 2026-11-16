@@ -154,6 +154,30 @@ public class CastPainterTests
     }
 
     [Fact]
+    public void ACastLeftRunningIsNoLongerJoinedOnceTheEngineStopsNamingIt()
+    {
+        string? left = "cast:living";
+        var remote = new TvRemote(() => now);
+        remote.LeftRunning(() => left);
+        remote.TakeSession(View(null, FfiCastSessionState.Idle));
+        Assert.True(remote.Rejoining);
+        // A cast sent without a session plays on the TV: the engine names no TV left running.
+        left = null;
+        remote.TakeSession(View(null, FfiCastSessionState.Idle));
+        Assert.False(remote.Rejoining);
+        Assert.False(remote.SessionLoaded);
+
+        // A cast from Play on TV says so on its card, with no new view of the session.
+        left = "cast:living";
+        var playOnTv = new TvRemote(() => now);
+        playOnTv.LeftRunning(() => left);
+        Assert.True(playOnTv.Rejoining);
+        left = null;
+        playOnTv.TakeCast(TvWordsTests.Cast(FfiLinkPhase.Connected, TvWordsTests.Now(loading: true)));
+        Assert.False(playOnTv.Rejoining);
+    }
+
+    [Fact]
     public void AReconnectHoldsTheClockAndRejoinsInPlace()
     {
         var painter = Painter();

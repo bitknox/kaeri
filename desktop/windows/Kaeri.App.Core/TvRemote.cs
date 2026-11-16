@@ -617,6 +617,8 @@ public sealed partial class TvRemote(Func<DateTimeOffset>? clock = null)
         if (was is null || now is null || was.Position != now.Position || was.Paused != now.Paused || was.Loading != now.Loading)
             CastCardAt = clock();
         CastCard = next;
+        // A cast from Play on TV holds no session: as it connects, no cast is left running.
+        ReadLeftOn();
         // Up next played on the TV: the card, Play here and Try again follow the episode it plays.
         if (castPlayed && now is { Loading: false } && CastPlay is { } asked && (now.Id != asked.Id || now.Episode != asked.Episode))
             CastPlay = asked with { Id = now.Id, Title = now.Title, Episode = now.Episode, From = null };
