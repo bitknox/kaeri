@@ -308,6 +308,8 @@ export class Unpacker {
 	private held: Sample[] | null = [];
 	private gen = 0;
 	private seekTo: number | null = null;
+	/** The read loop runs; one per Unpacker. */
+	private started = false;
 	/** The last seek's target and where reading started for it. */
 	private target = 0;
 	private runFrom = 0;
@@ -433,7 +435,10 @@ export class Unpacker {
 	}
 
 	private opened() {
-		if (this.closed || this.ms.readyState !== 'open') return;
+		// A MediaSource that ended opens again when a seek appends to it, and says sourceopen each
+		// time. A second read loop on the same file would feed old audio after the seek.
+		if (this.closed || this.started || this.ms.readyState !== 'open') return;
+		this.started = true;
 		this.setDuration();
 		if (this.target > 0) this.seekTo = this.target;
 		void this.run();

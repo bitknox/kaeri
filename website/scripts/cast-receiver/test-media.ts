@@ -90,6 +90,8 @@ av('mp4-h264-ac3.mp4', x264, 'ac3');
 av('mp4-h264-flac.mp4', x264, 'flac', 8, ['-strict', '-2']);
 av('mp4-h264-opus.mp4', x264, 'opus');
 av('mp4-frag-h264-aac.mp4', x264, 'aac', 8, ['-movflags', 'frag_keyframe+empty_moov+default_base_moof']);
+// A 720p picture played on for a while, for frames that are larger than the test pattern's.
+ff([...video(16).map((x) => x.replace(`size=${W}x${H}`, 'size=1280x720')), ...tone(16), ...x264, ...audio.aac, '-shortest'], 'mp4-720p.mp4');
 
 // MPEG-TS
 for (const a of ['aac', 'ac3', 'mp2', 'dts', 'mp3']) av(`ts-h264-${a}.ts`, x264, a);
