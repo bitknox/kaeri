@@ -131,7 +131,7 @@ sealed class CastButton : Grid
         var held = tv.SessionHeld;
         var drawing = held ? Drawn() : null;
         var key = held
-            ? $"held|{tv.SessionName}|{drawing?.Id}|{drawing?.Title}|{drawing?.EpisodeLine}|{tv.Session?.VolumeControl}|{tv.Session?.Muted}"
+            ? $"held|{tv.SessionName}|{drawing?.Id}|{drawing?.Title}|{drawing?.EpisodeLine}|{tv.Session?.VolumeControl}|{tv.Session?.Muted}|{tv.LetGoWord}"
             : "choose|" + string.Join("|", tv.CastRows.Select(r => $"{r.Key},{r.Name}")) + "#" + string.Join("|", tv.Rows.Select(r => $"{r.Key},{r.Name},{r.Detail},{r.Kind}"));
         if (key == drawn)
         {
@@ -160,7 +160,7 @@ sealed class CastButton : Grid
         {
             menu.Children.Add(Group(T.TvCastGroup));
             foreach (var row in tv.CastRows)
-                menu.Children.Add(Row(row.Name, T.CastRowThroughComputer, enabled: true, () =>
+                menu.Children.Add(Row(row.Name, TvWords.CastRoute(row), enabled: true, () =>
                 {
                     flyout.Hide();
                     tv.ConnectCast(row);
@@ -207,7 +207,7 @@ sealed class CastButton : Grid
     }
 
     /// <summary>A TV: the TV glyph, its name, and the line under it.</summary>
-    static Button Row(string name, string line, bool enabled, Action chosen)
+    static Button Row(string name, string? line, bool enabled, Action chosen)
     {
         var grid = new Grid { ColumnSpacing = 12 };
         grid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
@@ -217,7 +217,9 @@ sealed class CastButton : Grid
         grid.Children.Add(icon);
         var words = new StackPanel { Spacing = 0, VerticalAlignment = VerticalAlignment.Center };
         words.Children.Add(new TextBlock { Text = name, TextTrimming = TextTrimming.CharacterEllipsis });
-        words.Children.Add(new TextBlock { Text = line, Style = Ui.Res<Style>("HazeCaptionStyle"), TextTrimming = TextTrimming.CharacterEllipsis });
+        // A Chromecast row has a line only when this PC serves the episode, as on the page's chooser.
+        if (line is not null)
+            words.Children.Add(new TextBlock { Text = line, Style = Ui.Res<Style>("HazeCaptionStyle"), TextTrimming = TextTrimming.CharacterEllipsis });
         SetColumn(words, 1);
         grid.Children.Add(words);
         var row = new Button
@@ -233,7 +235,7 @@ sealed class CastButton : Grid
             IsEnabled = enabled,
             Opacity = enabled ? 1 : 0.55,
         };
-        AutomationProperties.SetName(row, T.TvRowName(name, line));
+        AutomationProperties.SetName(row, line is null ? name : T.TvRowName(name, line));
         row.Click += (_, _) => chosen();
         return row;
     }
@@ -294,7 +296,8 @@ sealed class CastButton : Grid
         level.Follow(tv.Session);
         menu.Children.Add(level.Root);
 
-        var stop = CastParts.Text(T.CastStop);
+        // Stop casting while something plays, Disconnect while nothing does.
+        var stop = CastParts.Text(tv.LetGoWord);
         stop.HorizontalAlignment = HorizontalAlignment.Stretch;
         stop.Margin = new Thickness(8, 8, 8, 4);
         stop.Click += (_, _) =>

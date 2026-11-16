@@ -70,11 +70,11 @@ public class TvWordsTests
         Assert.Equal("Pair again with Living room", TvWords.BarLine(Card(FfiLinkPhase.Unpaired), playing: true));
     }
 
-    static FfiCastCard Cast(FfiLinkPhase phase, FfiNowCard? now, Msg? notice = null, string? phaseLine = null) =>
+    internal static FfiCastCard Cast(FfiLinkPhase phase, FfiNowCard? now, Msg? notice = null, string? phaseLine = null) =>
         new(new FfiRemoteCard("Living room", phase, phaseLine, new FfiScreen.Home(), now, 1, Over: notice is not null, Reached: false),
             FfiVolumeControl.MuteOnly, false, notice);
 
-    static FfiNowCard Now(bool loading) => new(900_001, "The Lantern Road", "7", "Episode 7 · The Lantern Road", loading,
+    internal static FfiNowCard Now(bool loading) => new(900_001, "The Lantern Road", "7", "Episode 7 · The Lantern Road", loading,
         492, loading ? null : 1420, false, 1, null, [], [], false, null);
 
     [Fact]
@@ -270,6 +270,59 @@ public class TvRemoteTests
         finally
         {
             fake.Stop();
+            engine.Shutdown();
+            engine.Dispose();
+        }
+        SceneTests.DeleteRoot(root);
+    }
+
+    [Fact]
+    public void APlayOnTvCastsNoteIsTheCastsNoticeWhileItRuns()
+    {
+        var remote = new TvRemote();
+        Assert.Null(remote.CastNote);
+        remote.TakeCast(TvWordsTests.Cast(FfiLinkPhase.Connected, TvWordsTests.Now(loading: false)));
+        Assert.Null(remote.CastNote);
+        var fallback = new Msg.NoticeCastFallback("Living room");
+        remote.TakeCast(TvWordsTests.Cast(FfiLinkPhase.Connected, TvWordsTests.Now(loading: false)) with { Note = fallback });
+        Assert.Equal(fallback, remote.CastNote);
+        Assert.Equal("Living room plays this in its own player. Subtitles show as plain text.", remote.CastNote?.Text());
+        // An ended cast's card says its ending, not the note.
+        remote.TakeCast(TvWordsTests.Cast(FfiLinkPhase.Connected, TvWordsTests.Now(false), new Msg.NoticeCastLost("Living room")) with { Note = fallback });
+        Assert.Null(remote.CastNote);
+    }
+
+    [Fact(Timeout = 90_000)]
+    public async Task APlayOnTvCastToATvWithoutKaerisReceiverSaysItFellBack()
+    {
+        HomeGuard.Check();
+        var root = AppDirs.NewScratchRoot("cs-cast-note");
+        var engine = FfiEngine.StartScene(AppDirs.Under(root), new QuietHost(), new FfiScene.Fresh(), EngineSession.AppStart());
+        var living = engine.StartFakeCast("Living room", new FfiFakeCastOptions(FixedVolume: true, Fetches: true, Refuses: false, LaunchMs: 0, OwnReceiverFails: true));
+        _ = Task.Run(async () =>
+        {
+            while ((await engine.NextEvents()).Any())
+            {
+            }
+        });
+        try
+        {
+            var remote = new TvRemote();
+            remote.Attach(engine.TvSender("PC", "kaeri-windows/test"), new NoTvs(), new FakeCastBrowse(living));
+            remote.Offer(new TvPlay(900_001, "", "3", null, FromPlayer: true));
+            remote.StartBrowsing();
+            await Until(() => remote.CastRows.Any(r => r.Name == "Living room"), "the Chromecast row");
+
+            remote.Cast(remote.CastRows.Single(r => r.Name == "Living room"));
+            await Until(() => remote.CastNote is Msg.NoticeCastFallback, "the fallback note", () => remote.CastCard);
+            Assert.False(remote.SessionHeld);
+            remote.PlayHere();
+            Assert.Null(remote.CastNote);
+            remote.StopBrowsing();
+        }
+        finally
+        {
+            living.Stop();
             engine.Shutdown();
             engine.Dispose();
         }

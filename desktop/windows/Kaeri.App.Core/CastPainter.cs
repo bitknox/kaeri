@@ -14,12 +14,23 @@ public enum CastLine
     Failed,
     /// <summary>Joining a cast left running at the last launch, until the TV answers.</summary>
     Rejoining,
+    /// <summary>
+    /// The connection to the TV closed and the engine makes it again, for up to 20 s: the clock
+    /// holds and everything but Stop casting dims.
+    /// </summary>
+    Reconnecting,
+    /// <summary>The TV went away, was stopped on the TV or was taken: Casting stopped, with the reason.</summary>
+    Stopped,
+    /// <summary>A TV held with nothing playing on it: Connected to Living room, Nothing playing yet.</summary>
+    Idle,
 }
 
 /// <summary>
 /// One frame of the mini and the expanded controller, from the session view as the engine gave
-/// it. <see cref="Dim"/> only while the TV loads; a wait mid-episode holds the playhead and says
-/// so under the seek line after 4 s, with nothing dimmed.
+/// it. <see cref="Dim"/> while the TV loads (the seek line without its thumb and times); a
+/// reconnect, an end and a TV held with nothing playing dim the controls in place by their
+/// <see cref="Line"/>. A wait mid-episode holds the playhead and says so under the seek line after
+/// 4 s, with nothing dimmed.
 /// </summary>
 public sealed record CastDrawn(
     CastLine Line,
@@ -53,6 +64,11 @@ public sealed class CastPainter(Func<DateTimeOffset>? clock = null)
     DateTimeOffset? waitingSince;
     (double To, ulong Rev)? seekHeld;
     (bool Paused, ulong Rev)? pauseHeld;
+    /// <summary>What the TV last played, kept once the session ends, for the ended frame's title and seek line.</summary>
+    FfiCastItem? lastItem;
+    double? lastPlayhead;
+    /// <summary>Where the clock holds while the connection is made again.</summary>
+    double? heldAt;
 
     /// <summary>The session as the engine last said it.</summary>
     public FfiCastSessionView? View { get; private set; }
@@ -68,6 +84,11 @@ public sealed class CastPainter(Func<DateTimeOffset>? clock = null)
         var now = clock();
         var was = View?.Item;
         var item = next.Item;
+        // Where the playhead stood as the view came, run on to now: the clock holds there through a
+        // reconnect, and an ended frame keeps it.
+        var standing = Playhead(now);
+        var reconnecting = next is { Reconnecting: true, State: FfiCastSessionState.Playing or FfiCastSessionState.Connected };
+        heldAt = reconnecting ? Reconnecting ? heldAt : standing : null;
         rev = CastApi.Rev(next) ?? rev + 1;
         if (seekHeld is { } seek && rev > seek.Rev)
             seekHeld = null;
@@ -79,14 +100,33 @@ public sealed class CastPainter(Func<DateTimeOffset>? clock = null)
             heardAt = now;
         if (item is { Duration: { } length } && length > 0)
             kept = (item.Id, item.Episode, length);
-        else if (item is null || kept is not { } k || k.Id != item.Id || k.Episode != item.Episode)
+        else if (item is null ? next.State != FfiCastSessionState.Error : kept is not { } k || k.Id != item.Id || k.Episode != item.Episode)
             kept = null;
         if (item is not null && CastApi.Waiting(item) is { } seconds)
             waitingSince ??= now - TimeSpan.FromSeconds(seconds);
         else
             waitingSince = null;
+        // The session ended: the frame keeps the episode and where the TV last was.
+        if (item is null && next.State == FfiCastSessionState.Error && View?.Item is not null)
+            lastPlayhead = standing;
+        if (item is not null)
+        {
+            lastItem = item;
+            lastPlayhead = null;
+        }
+        else if (next.State is FfiCastSessionState.Idle or FfiCastSessionState.Connecting)
+        {
+            lastItem = null;
+            lastPlayhead = null;
+        }
         View = next;
     }
+
+    /// <summary>The connection to the TV is being made again: the clock holds.</summary>
+    public bool Reconnecting => View is { Reconnecting: true, State: FfiCastSessionState.Playing or FfiCastSessionState.Connected };
+
+    /// <summary>The engine's reason a session ended that is an end, not a failure: the TV went away, was stopped there or was taken.</summary>
+    public static bool IsEnd(Msg? notice) => notice is Msg.NoticeCastLost or Msg.NoticeCastStoppedElsewhere or Msg.NoticeCastTakenOver;
 
     static bool Same(FfiCastItem a, FfiCastItem b) => a.Id == b.Id && a.Episode == b.Episode && a.Title == b.Title;
 
@@ -100,7 +140,10 @@ public sealed class CastPainter(Func<DateTimeOffset>? clock = null)
     public bool Paused => pauseHeld?.Paused ?? View?.Item?.Paused ?? false;
 
     /// <summary>The length of what plays: as said, else as last said for the same episode.</summary>
-    public double? Length => View?.Item is { } item ? item.Duration is { } d && d > 0 ? d : kept?.Length : null;
+    public double? Length => Shown is { } item ? item.Duration is { } d && d > 0 ? d : kept?.Length : null;
+
+    /// <summary>What the frame shows: what the TV plays, or once the session ended, what it last played.</summary>
+    FfiCastItem? Shown => View?.Item ?? (View?.State == FfiCastSessionState.Error ? lastItem : null);
 
     /// <summary>Where the TV's playhead is now, moved on from what it last said while it plays.</summary>
     public double? Playhead(DateTimeOffset? at = null)
@@ -108,39 +151,52 @@ public sealed class CastPainter(Func<DateTimeOffset>? clock = null)
         if (seekHeld is { } seek)
             return seek.To;
         if (View?.Item is not { } item)
-            return null;
-        var still = Paused || item.Loading || CastApi.Waiting(item) is not null || View.State != FfiCastSessionState.Playing;
+            return lastItem is null ? null : lastPlayhead ?? lastItem.Position;
+        if (Reconnecting && heldAt is { } held)
+            return held;
+        var still = Paused || item.Loading || CastApi.Waiting(item) is not null || View.State != FfiCastSessionState.Playing || Reconnecting;
         var position = still ? item.Position : item.Position + Math.Max(0, ((at ?? clock()) - heardAt).TotalSeconds);
         return Length is { } d ? Math.Min(position, d) : position;
     }
 
-    /// <summary>The frame for the TV called <paramref name="name"/>; null while nothing is loaded and nothing is joined again.</summary>
-    public CastDrawn? Draw(string name, bool rejoining = false, DateTimeOffset? at = null)
+    /// <summary>
+    /// The frame for the TV called <paramref name="name"/>; null while nothing is loaded and
+    /// nothing is joined again. With <paramref name="idle"/>, a TV held with nothing playing
+    /// draws as well, for the controller that is open as the episode goes.
+    /// </summary>
+    public CastDrawn? Draw(string name, bool rejoining = false, DateTimeOffset? at = null, bool idle = false)
     {
         var view = View;
-        var item = view?.Item;
         var failed = view?.State == FfiCastSessionState.Error;
-        if (item is null && !rejoining && !failed)
+        var item = Shown;
+        var nothing = idle && view?.State == FfiCastSessionState.Connected && view.Item is null && !rejoining;
+        if (item is null && !rejoining && !failed && !nothing)
             return null;
         var line = rejoining && view?.State is not FfiCastSessionState.Playing ? CastLine.Rejoining
-            : failed ? CastLine.Failed
+            : failed ? IsEnd(view?.Notice) ? CastLine.Stopped : CastLine.Failed
+            : nothing ? CastLine.Idle
+            : Reconnecting ? CastLine.Reconnecting
             : item is null || item.Loading || view?.State == FfiCastSessionState.Connecting ? CastLine.Starting
             : Paused ? CastLine.Paused
             : CastLine.Playing;
+        if (line == CastLine.Idle)
+            item = null;
         var status = line switch
         {
-            CastLine.Rejoining => T.TvStatusReconnecting(name),
+            CastLine.Rejoining or CastLine.Reconnecting => T.TvStatusReconnecting(name),
             CastLine.Failed => T.CastCouldntStart(name),
+            CastLine.Stopped => T.CastStopped,
+            CastLine.Idle => T.CastButtonConnected(name),
             CastLine.Starting => T.CastPhaseStarting(name),
             CastLine.Paused => T.CastStatusPaused(name),
             _ => T.TvStatusPlaying(name),
         };
         var dim = line is CastLine.Starting or CastLine.Rejoining;
         var when = at ?? clock();
-        var position = Playhead(when) ?? 0;
-        var length = Length;
+        var position = line == CastLine.Idle ? 0 : Playhead(when) ?? 0;
+        var length = line == CastLine.Idle ? null : Length;
         string? waiting = null;
-        if (!dim && waitingSince is { } since && when - since >= WaitingAfter)
+        if (line is CastLine.Playing or CastLine.Paused && waitingSince is { } since && when - since >= WaitingAfter)
             waiting = T.CastPhaseWaiting(name, (long)Math.Floor((when - since).TotalSeconds));
         return new CastDrawn(
             line, status, dim, item?.Id, item?.Title ?? "", EpisodeLine(item), item?.Image,
@@ -182,4 +238,41 @@ public sealed class CastPainter(Func<DateTimeOffset>? clock = null)
             _ => CastButtonState.Hidden,
         };
     }
+}
+
+/// <summary>What a place in the remote's footer, or an item in its More menu, does.</summary>
+public enum CastAction
+{
+    PlayHere,
+    ChooseAnother,
+    StopCasting,
+    Disconnect,
+    ChooseSource,
+}
+
+/// <summary>
+/// The remote's footer and More menu for a frame: two places that keep their spot and change only
+/// their words, the first in the accent when it is the way on, and More's items. While it
+/// reconnects only Stop casting takes input: Play here waits for Casting stopped.
+/// </summary>
+public sealed record CastFooter(CastAction First, bool FirstAccent, bool FirstLive, CastAction Second, CastAction[] More, bool MoreLive)
+{
+    public static CastFooter For(CastLine line) => line switch
+    {
+        CastLine.Stopped => new(CastAction.PlayHere, FirstAccent: true, FirstLive: true, CastAction.ChooseAnother, [CastAction.ChooseAnother], MoreLive: true),
+        CastLine.Failed => new(CastAction.ChooseSource, FirstAccent: true, FirstLive: true, CastAction.PlayHere, [], MoreLive: true),
+        CastLine.Idle => new(CastAction.ChooseAnother, FirstAccent: false, FirstLive: true, CastAction.Disconnect, [CastAction.ChooseAnother, CastAction.Disconnect], MoreLive: true),
+        CastLine.Reconnecting => new(CastAction.PlayHere, FirstAccent: false, FirstLive: false, CastAction.StopCasting, [CastAction.ChooseAnother, CastAction.StopCasting], MoreLive: false),
+        _ => new(CastAction.PlayHere, FirstAccent: false, FirstLive: true, CastAction.StopCasting, [CastAction.ChooseAnother, CastAction.StopCasting], MoreLive: true),
+    };
+
+    /// <summary>The words of a footer place or a More item.</summary>
+    public static string Words(CastAction action) => action switch
+    {
+        CastAction.PlayHere => T.CastPlayHere,
+        CastAction.ChooseAnother => T.TvChooseAnother,
+        CastAction.StopCasting => T.CastStop,
+        CastAction.Disconnect => T.ActionDisconnect,
+        _ => T.PlayerChooseSource,
+    };
 }
