@@ -1213,6 +1213,7 @@ mod tests {
     fn a_window_handed_over_is_a_watch_by_what_it_said() {
         let mut cache = at_episodes(Some((0, 1)), &[]);
         let played = play(&mut cache, "1");
+        say(&mut cache, &played, tick(120.0, 1_200.0));
         let left = Event::EpisodeLeft {
             id: SHOW,
             episode: "1".into(),
