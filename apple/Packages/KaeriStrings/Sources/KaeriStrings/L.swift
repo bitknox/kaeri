@@ -2440,11 +2440,6 @@ public enum L {
         Self.format("cast-row-through", fallback: "Plays through this %1$@", device)
     }
 
-    /// Note on the iPhone and iPad casting card: the cast stops when the app leaves the screen. The device is iPhone or iPad; the name is the TV's.
-    public static func castKeepOpen(device: String, name: String) -> String {
-        Self.format("cast-keep-open", fallback: "Keep Kaeri open on this %1$@ while %2$@ plays.", device, name)
-    }
-
     /// Title of the Mac's confirmation when the app quits while it casts. The name is the TV's.
     public static func castQuitTitle(name: String) -> String {
         Self.format("cast-quit-title", fallback: "Stop casting to %1$@?", name)
