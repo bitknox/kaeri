@@ -37,6 +37,9 @@ pub struct Casting {
 /// A seconds counter joins the starting line after this long, as under that it is only noise.
 pub const COUNT_AFTER: Duration = Duration::from_secs(4);
 
+/// The status line's mark while the app waits on the TV: a small spinner in the dot's place.
+pub const SPIN: &str = "spin";
+
 /// Where a cast is: starting, playing, or ended in a way the card keeps and explains.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Stage {
@@ -44,7 +47,7 @@ pub enum Stage {
     Playing,
     /// It never started, or the TV stopped it on a stream: the card says why.
     Failed,
-    /// The TV dropped off the network mid-cast.
+    /// It played, then ended from afar: the TV stopped answering, or was stopped on the TV.
     Lost,
 }
 
@@ -80,6 +83,12 @@ pub struct CastView {
     pub up_next: Option<CastUpNext>,
     /// An automatic skip, while it can be undone.
     pub undo: Option<CastUndo>,
+    /// Whole seconds the TV has waited, while it plays: for the stream, or for word of why the
+    /// receiver left.
+    pub waiting: Option<u32>,
+    /// The connection to the TV closed and is being made again: every control but Stop casting
+    /// waits for it.
+    pub reconnecting: bool,
 }
 
 /// The cast running now, and what it last said.
@@ -114,10 +123,50 @@ fn playing(card: &CastCard) -> bool {
 
 pub fn stage_of(card: &CastCard) -> Stage {
     match &card.notice {
-        Some(Msg::NoticeCastLost { .. }) => Stage::Lost,
+        Some(Msg::NoticeCastLost { .. } | Msg::NoticeCastStoppedElsewhere { .. }) => {
+            Stage::Lost
+        }
         Some(_) => Stage::Failed,
         None if playing(card) => Stage::Playing,
         None => Stage::Starting,
+    }
+}
+
+/// Keep in `next`, a card that ended from afar, where the TV got to by `was` read `since`
+/// seconds ago, and the episode's length, when it is still the same episode.
+fn hold_playhead(was: &CastCard, since: f64, next: &mut CastCard) {
+    let Some(before) = was.card.now.as_ref() else { return };
+    // The engine's card can drop the episode itself once the TV is gone.
+    let now = next.card.now.get_or_insert_with(|| before.clone());
+    if before.id != now.id || before.episode != now.episode {
+        return;
+    }
+    let moving = stage_of(was) == Stage::Playing && was.waiting.is_none() && !was.reconnecting;
+    now.position = if moving { before.position_after(since) } else { before.position };
+    now.duration = now.duration.or(before.duration);
+}
+
+/// The line and mark of a cast that plays, as it stands: reconnecting, waiting on the TV,
+/// paused, or playing, which reads as `playing` says where the line shows. The mark is a dot's
+/// colour, or [`SPIN`] for a spinner while the app waits on the TV.
+pub fn playing_line(
+    view: &CastView,
+    playing: impl FnOnce() -> String,
+) -> (String, &'static str) {
+    if view.reconnecting {
+        return (t::tv_status_reconnecting(&view.name), SPIN);
+    }
+    match view.waiting {
+        // "Waiting for Living room", as a stop on the TV is learned within 4 s; a longer wait for
+        // the stream counts its seconds, as the starting line does.
+        Some(seconds) if u64::from(seconds) < COUNT_AFTER.as_secs() => {
+            (t::tv_waiting_for(&view.name), SPIN)
+        }
+        Some(seconds) => (t::cast_phase_waiting(&view.name, i64::from(seconds)), SPIN),
+        None if view.now.as_ref().is_some_and(|now| now.paused) => {
+            (t::cast_status_paused(&view.name), "haze")
+        }
+        None => (playing(), "water"),
     }
 }
 
@@ -166,7 +215,15 @@ impl Tv {
 
     /// The TV shows a picture, so the card's controls reach it.
     pub fn cast_playing(&self) -> bool {
-        self.cast.borrow().as_ref().is_some_and(|run| stage_of(&run.card) == Stage::Playing)
+        self.cast
+            .borrow()
+            .as_ref()
+            .is_some_and(|run| stage_of(&run.card) == Stage::Playing && !run.card.reconnecting)
+    }
+
+    /// The connection to the TV closed and is being made again.
+    pub fn cast_reconnecting(&self) -> bool {
+        self.cast_view().is_some_and(|view| view.reconnecting)
     }
 
     /// This computer sends the TV the episode, so it must stay awake while the cast runs.
@@ -192,6 +249,8 @@ impl Tv {
             muted: run.card.muted.unwrap_or(false),
             up_next: run.card.up_next.clone().filter(|_| !stage.ended()),
             undo: run.card.undo.filter(|_| stage == Stage::Playing),
+            waiting: run.card.waiting.filter(|_| stage == Stage::Playing),
+            reconnecting: run.card.reconnecting && !stage.ended(),
         })
     }
 
@@ -222,7 +281,11 @@ impl Tv {
         let cast = self.cast.borrow();
         let run = cast.as_ref()?;
         let now = run.card.card.now.as_ref()?;
-        if stage_of(&run.card) != Stage::Playing {
+        // The clock stops while the TV waits, and while the app can't hear it.
+        if stage_of(&run.card) != Stage::Playing
+            || run.card.waiting.is_some()
+            || run.card.reconnecting
+        {
             return Some(now.position);
         }
         Some(now.position_after(run.card_at.elapsed().as_secs_f64()))
@@ -344,7 +407,11 @@ impl Tv {
         let view = self.cast_view()?;
         Some(match view.stage {
             Stage::Starting => (view.starting, "haze", false),
-            Stage::Playing => (t::tv_status_playing(&view.name), "water", false),
+            Stage::Playing => {
+                let (line, mark) = playing_line(&view, || t::tv_status_playing(&view.name));
+                // The session button's dot stays a dot, haze while the app waits on the TV.
+                (line, if mark == SPIN { "haze" } else { mark }, false)
+            }
             Stage::Failed => (t::tv_cast_couldnt_start(&view.name), "vermilion", true),
             Stage::Lost => (t::tv_cast_stopped(), "vermilion", true),
         })
@@ -427,7 +494,12 @@ impl Tv {
         let (stage, notice, hand_off) = {
             let mut cast = self.cast.borrow_mut();
             let Some(run) = cast.as_mut() else { return false };
-            let next = run.session.card();
+            let mut next = run.session.card();
+            // A cast that played and ended from afar keeps where the TV got to and the
+            // episode's length: the engine's card forgets both once the TV is gone, on every read.
+            if stage_of(&next) == Stage::Lost {
+                hold_playhead(&run.card, run.card_at.elapsed().as_secs_f64(), &mut next);
+            }
             if next.card.now != run.card.card.now {
                 run.card_at = Instant::now();
             }
@@ -443,7 +515,12 @@ impl Tv {
         match (stage, &notice) {
             // Stopped from the card, or played out: nothing to say.
             (Stage::Starting | Stage::Playing, _) if self.cast_over() => self.finish_cast(),
-            (_, Some(taken @ Msg::NoticeCastTakenOver { .. })) => self.taken_over(taken),
+            (_, Some(taken @ Msg::NoticeCastTakenOver { .. })) => self.ended_away(taken),
+            // Lost, or stopped on the TV, with the controls closed: the bar goes and the notice
+            // offers Play here where it was. With them open, they say it under Casting stopped.
+            (Stage::Lost, Some(ended)) if self.sheet.get() != Some(Sheet::Remote) => {
+                self.ended_away(ended);
+            }
             _ => self.changed(),
         }
         true
@@ -468,9 +545,9 @@ impl Tv {
         self.cast.take()
     }
 
-    /// Someone else started something on the TV: the card closes, and a notice offers to carry
-    /// on here.
-    fn taken_over(&self, notice: &Msg) {
+    /// The cast ended from afar: someone else started something on the TV, it was stopped on
+    /// the TV, or the TV was lost. The card closes, and a notice offers to carry on here.
+    fn ended_away(&self, notice: &Msg) {
         let Some(run) = self.drop_cast() else { return };
         let (id, episode) = Self::episode_of(&run);
         self.taken.replace(Some((id, episode)));
@@ -478,19 +555,44 @@ impl Tv {
             self.sheet.set(None);
         }
         self.changed();
-        if let Some(say) = self.on_taken_over.borrow().as_ref() {
+        if let Some(say) = self.on_ended_away.borrow().as_ref() {
             say(&crate::say::msg(notice));
         }
     }
 
-    /// What the notice for a TV taken over offers: the episode, to play on this computer.
-    pub fn take_taken(&self) -> Option<(AnilistId, String)> {
+    /// What the notice of a cast that ended from afar offers: the episode, to play on this
+    /// computer.
+    pub fn take_ended(&self) -> Option<(AnilistId, String)> {
         self.taken.take()
     }
 
-    /// Run `f` with the words of the notice when someone else takes the TV.
-    pub fn on_taken_over(&self, f: impl Fn(&str) + 'static) {
-        self.on_taken_over.replace(Some(Box::new(f)));
+    /// Run `f` with the words of the engine's note on the TV held, each time it reads anew: an
+    /// information notice, with no button.
+    pub fn on_cast_note(&self, f: impl Fn(&str) + 'static) {
+        self.on_cast_note.replace(Some(Box::new(f)));
+    }
+
+    /// The engine's note on the TV held, said when it first reads differently: Kaeri's receiver
+    /// didn't start, so the TV plays this cast in its own player, or it shows plain subtitles.
+    pub(super) fn say_cast_note(&self) {
+        // A cast from Play on TV holds no session: its card has the note.
+        let card = self.cast.borrow().as_ref().and_then(|run| {
+            let _entered = self.handle.enter();
+            run.session.card().note
+        });
+        let note = card.or_else(|| self.cast_session().and_then(|session| session.note));
+        if *self.cast_noted.borrow() == note {
+            return;
+        }
+        self.cast_noted.replace(note.clone());
+        if let (Some(note), Some(say)) = (note, self.on_cast_note.borrow().as_ref()) {
+            say(&crate::say::msg(&note));
+        }
+    }
+
+    /// Run `f` with the words of the notice when a cast ends from afar.
+    pub fn on_ended_away(&self, f: impl Fn(&str) + 'static) {
+        self.on_ended_away.replace(Some(Box::new(f)));
     }
 
     fn episode_of(run: &CastRun) -> (AnilistId, String) {
@@ -617,14 +719,14 @@ impl Tv {
         }
     }
 
-    /// The sheet closed with a cast on it: running, it goes on. One that ended stays for the
-    /// header button to say so, until the card has been opened again and closed.
+    /// The sheet closed with a cast on it: running, it goes on. One lost or stopped on the TV
+    /// goes, as its controls said why. One that never started stays for the bar to say so,
+    /// until the card has been opened again and closed.
     pub(super) fn cast_sheet_closed(&self) {
-        let dismissed = self
-            .cast
-            .borrow()
-            .as_ref()
-            .is_some_and(|run| stage_of(&run.card).ended() && run.reopened);
+        let dismissed = self.cast.borrow().as_ref().is_some_and(|run| {
+            let stage = stage_of(&run.card);
+            stage == Stage::Lost || (stage.ended() && run.reopened)
+        });
         if dismissed {
             self.drop_cast();
         }
@@ -730,7 +832,125 @@ mod tests {
             undo: None,
             route: None,
             waiting: None,
+            reconnecting: false,
+            note: None,
         }
+    }
+
+    fn view(paused: bool, waiting: Option<u32>) -> CastView {
+        CastView {
+            name: "Living room".into(),
+            stage: Stage::Playing,
+            starting: String::new(),
+            now: card(false, Some(1440.0), paused).card.now,
+            notice: None,
+            offers: Vec::new(),
+            volume: VolumeControl::Level,
+            muted: false,
+            up_next: None,
+            undo: None,
+            waiting,
+            reconnecting: false,
+        }
+    }
+
+    #[test]
+    fn a_paused_cast_reads_as_paused() {
+        let playing = || t::tv_status_playing("Living room");
+        assert_eq!(playing_line(&view(false, None), playing), (playing(), "water"));
+        assert_eq!(
+            playing_line(&view(true, None), playing),
+            (t::cast_status_paused("Living room"), "haze")
+        );
+        // The bottom bar's own words while it plays: only the name.
+        assert_eq!(
+            playing_line(&view(true, None), || "Living room".into()),
+            (t::cast_status_paused("Living room"), "haze")
+        );
+    }
+
+    #[test]
+    fn a_cast_waiting_on_the_tv_says_so_and_counts_past_four_seconds() {
+        // As after a stop on the TV, while the engine hears why the receiver left: up to 4 s.
+        let playing = || t::tv_status_playing("Living room");
+        let line = playing_line(&view(false, Some(3)), playing);
+        assert_eq!(line, (t::tv_waiting_for("Living room"), SPIN));
+        assert_ne!(line.0, playing());
+        // A longer wait for the stream counts, as the starting line does.
+        assert_eq!(
+            playing_line(&view(false, Some(6)), playing),
+            (t::cast_phase_waiting("Living room", 6), SPIN)
+        );
+    }
+
+    #[test]
+    fn a_dropped_connection_reads_as_reconnecting_over_every_other_line() {
+        let playing = || t::tv_status_playing("Living room");
+        for (paused, waiting) in [(false, None), (true, None), (false, Some(2))] {
+            let mut view = view(paused, waiting);
+            view.reconnecting = true;
+            assert_eq!(
+                playing_line(&view, playing),
+                (t::tv_status_reconnecting("Living room"), SPIN)
+            );
+        }
+        let mut card = card(false, Some(1440.0), false);
+        card.reconnecting = true;
+        // Still a cast that plays: the engine only waits on the TV.
+        assert_eq!(stage_of(&card), Stage::Playing);
+    }
+
+    #[test]
+    fn a_stop_on_the_tv_ends_as_casting_stopped_with_play_here() {
+        let mut card = card(false, Some(1440.0), false);
+        card.notice = Some(Msg::NoticeCastStoppedElsewhere { name: "Living room".into() });
+        assert_eq!(stage_of(&card), Stage::Lost);
+        assert!(Stage::Lost.ended());
+        assert_eq!(
+            offers_for(card.notice.as_ref().expect("a notice")),
+            vec![Offer::PlayHere, Offer::ChooseAnother]
+        );
+        card.notice = Some(Msg::NoticeCastLost { name: "Living room".into() });
+        assert_eq!(stage_of(&card), Stage::Lost);
+    }
+
+    #[test]
+    fn a_cast_lost_keeps_where_the_tv_got_to_and_the_length() {
+        let ended = || {
+            let mut card = card(false, None, false);
+            card.notice = Some(Msg::NoticeCastLost { name: "Living room".into() });
+            if let Some(now) = card.card.now.as_mut() {
+                now.position = 492.0;
+            }
+            card
+        };
+        let playing = card(false, Some(1440.0), false);
+        let mut next = ended();
+        hold_playhead(&playing, 5.0, &mut next);
+        let now = next.card.now.expect("the episode");
+        assert!((now.position - 759.0).abs() < 0.01, "{}", now.position);
+        assert_eq!(now.duration, Some(1440.0));
+        // Reconnecting, the clock had stopped where the TV was last heard.
+        let mut reconnecting = card(false, Some(1440.0), false);
+        reconnecting.reconnecting = true;
+        let mut next = ended();
+        hold_playhead(&reconnecting, 20.0, &mut next);
+        assert_eq!(next.card.now.map(|now| now.position), Some(754.0));
+        // Each later read of the lost card keeps what the first one held.
+        let mut held = ended();
+        hold_playhead(&playing, 5.0, &mut held);
+        let mut again = ended();
+        hold_playhead(&held, 30.0, &mut again);
+        let now = again.card.now.expect("the episode");
+        assert!((now.position - 759.0).abs() < 0.01, "{}", now.position);
+        assert_eq!(now.duration, Some(1440.0));
+        // A lost card without the episode takes the one the TV played.
+        let mut bare = ended();
+        bare.card.now = None;
+        hold_playhead(&held, 30.0, &mut bare);
+        let now = bare.card.now.expect("the episode");
+        assert!((now.position - 759.0).abs() < 0.01, "{}", now.position);
+        assert_eq!(now.duration, Some(1440.0));
     }
 
     #[test]

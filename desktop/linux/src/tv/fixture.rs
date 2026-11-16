@@ -182,6 +182,21 @@ impl Scene {
         self.with_receiver(name, FakeReceiver::go_silent);
     }
 
+    /// The TV `name` closes this sender's connection and plays on, as when its Wi-Fi roams.
+    pub fn cast_close_connection(&self, name: &str) {
+        self.with_receiver(name, FakeReceiver::close_connection);
+    }
+
+    /// The TV `name` answers each new connection only after `delay`.
+    pub fn cast_answer_after(&self, name: &str, delay: std::time::Duration) {
+        self.with_receiver(name, |receiver| receiver.answer_after(delay));
+    }
+
+    /// The cast is stopped on the TV `name`, with its own remote.
+    pub fn cast_stop_app(&self, name: &str) {
+        self.with_receiver(name, FakeReceiver::stop_app);
+    }
+
     fn with_receiver(&self, name: &str, act: impl FnOnce(&FakeReceiver)) {
         let receivers = self.receivers.borrow();
         if let Some((_, receiver)) = receivers.iter().find(|(n, _)| n == name) {

@@ -800,12 +800,16 @@ statuspage.demo-end-ground.look-sepia { background: #E9DCC4; }
 .private-player { color: #C9CBD8; font-size: 14px; }
 .private-reader { color: var(--haze); font-size: 0.86em; }
 
-/* A cast's bar under the pages: the raised surface, the TV's playhead a 2 px amber line along
-   its top edge. */
+/* A cast's bar under the pages: the raised surface, the TV's playhead a 2 px silk line along
+   its top edge, as the amber is kept for the view's main action. */
 .cast-bar { min-height: 64px; padding: 0 12px 0 16px; }
 .cast-bar-art { border-radius: 6px; }
 progressbar.cast-bar-progress trough { min-height: 2px; border-radius: 0; background: alpha(currentColor, 0.1); }
-progressbar.cast-bar-progress progress { min-height: 2px; border-radius: 0; }
+progressbar.cast-bar-progress progress { min-height: 2px; border-radius: 0; background: var(--silk); }
+/* The remote's seek and volume fill in silk, for the same reason. */
+.tv-remote scale highlight { background: var(--silk); }
+/* A notice over the window clears the cast's bar while it shows. */
+toastoverlay.cast-bar-up > toast { margin-bottom: 76px; }
 /* The header's cast button: an outline while a TV is there, its waves in turn while it
    connects, filled while connected. */
 .cast-button.connecting image { animation: cast-waves 1.2s ease-in-out infinite; }

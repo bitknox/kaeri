@@ -113,6 +113,38 @@ pub struct Pick {
 type Claim = Rc<dyn Fn(&kaeri_model::Msg, &str) -> bool>;
 
 impl Ctx {
+    /// A window's context with no engine behind its hub, for tests that build a page.
+    #[cfg(test)]
+    pub fn for_tests(runtime: &tokio::runtime::Handle, dir: &std::path::Path) -> Rc<Self> {
+        let toasts = adw::ToastOverlay::new();
+        Rc::new(Ctx {
+            hub: Hub::new(std::sync::Weak::new()),
+            window: adw::ApplicationWindow::builder().build(),
+            split: adw::OverlaySplitView::new(),
+            cast_sheet: adw::BottomSheet::new(),
+            notices: crate::notices::Notices::new(&toasts),
+            prefs: Rc::new(Prefs::open(dir.join("prefs.ini"))),
+            updater: crate::updater::Updater::new(dir, true),
+            tv: crate::tv::Tv::new(runtime.clone(), dir, None, None),
+            size: Cell::new(Size::Wide),
+            sized: RefCell::default(),
+            navs: RefCell::default(),
+            stack: gtk::Stack::new(),
+            claims: RefCell::default(),
+            next_claim: Cell::new(0),
+            controller_mode: Cell::new(false),
+            controller_device: RefCell::default(),
+            content_focus: RefCell::default(),
+            main_menu: RefCell::default(),
+            pick: RefCell::default(),
+            read_view_all: RefCell::default(),
+            read_view_all_from: RefCell::default(),
+            read_search_focus: RefCell::default(),
+            read_from_home: Cell::new(false),
+            private: crate::private::Private::default(),
+        })
+    }
+
     pub fn size(&self) -> Size {
         self.size.get()
     }
@@ -166,6 +198,12 @@ impl Ctx {
     /// A notice of the app's own: information, for 4 s or longer as its words run on.
     pub fn toast(&self, text: &str) {
         self.show_notice(text, false, None, None);
+    }
+
+    /// A notice of the app's own for `seconds`, twice that while a screen reader runs: a cast's
+    /// information notice, timed by its board.
+    pub fn toast_for(&self, text: &str, seconds: u32) -> adw::Toast {
+        self.show_notice(text, false, None, Some(seconds))
     }
 
     /// A notice of the app's own that something went wrong: it stays 8 s.
@@ -945,12 +983,12 @@ impl Shell {
         add("tv-remote", None, Box::new(|s, _| s.ctx.tv.open_remote()));
         // The session button's menu: the cast ends and Play on TV opens on the same episode.
         add("tv-choose-another", None, Box::new(|s, _| s.ctx.tv.cast_choose_another()));
-        // The notice for a TV someone else took: carry on here.
+        // The notice of a cast that ended from afar: carry on here.
         add(
             "tv-play-here",
             None,
             Box::new(|s, _| {
-                if let Some((id, episode)) = s.ctx.tv.take_taken() {
+                if let Some((id, episode)) = s.ctx.tv.take_ended() {
                     s.ctx.hub.send(Command::play(id, episode));
                 }
             }),
@@ -2479,34 +2517,7 @@ mod reader_page_tests {
         run(|| {
             let runtime = tokio::runtime::Runtime::new().expect("a runtime");
             let dir = tempfile::tempdir().expect("a scratch directory");
-            let hub = Hub::new(std::sync::Weak::new());
-            let toasts = adw::ToastOverlay::new();
-            let ctx = Rc::new(Ctx {
-                hub,
-                window: adw::ApplicationWindow::builder().build(),
-                split: adw::OverlaySplitView::new(),
-                cast_sheet: adw::BottomSheet::new(),
-                notices: crate::notices::Notices::new(&toasts),
-                prefs: Rc::new(Prefs::open(dir.path().join("prefs.ini"))),
-                updater: crate::updater::Updater::new(dir.path(), true),
-                tv: crate::tv::Tv::new(runtime.handle().clone(), dir.path(), None, None),
-                size: Cell::new(Size::Wide),
-                sized: RefCell::default(),
-                navs: RefCell::default(),
-                stack: gtk::Stack::new(),
-                claims: RefCell::default(),
-                next_claim: Cell::new(0),
-                controller_mode: Cell::new(false),
-                controller_device: RefCell::default(),
-                content_focus: RefCell::default(),
-                main_menu: RefCell::default(),
-                pick: RefCell::default(),
-                read_view_all: RefCell::default(),
-                read_view_all_from: RefCell::default(),
-                read_search_focus: RefCell::default(),
-                read_from_home: Cell::new(false),
-                private: crate::private::Private::default(),
-            });
+            let ctx = Ctx::for_tests(runtime.handle(), dir.path());
             let reader = crate::reading::reader::Reader::new(&ctx, Rc::new(|_: bool| {}));
             for property in
                 [gtk::AccessibleProperty::Label, gtk::AccessibleProperty::KeyShortcuts]
