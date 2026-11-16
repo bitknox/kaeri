@@ -178,6 +178,19 @@ public class CastPainterTests
     }
 
     [Fact]
+    public void ChooseAnotherTvOpensTheChooserWithTheEpisodeFromWhereTheTvWas()
+    {
+        var remote = new TvRemote(() => now);
+        remote.TakeSession(View(Item(position: 600, paused: true)));
+        remote.TakeSession(View(Item(position: 600, paused: true), FfiCastSessionState.Error, new Msg.NoticeCastStoppedElsewhere("Living room")));
+        remote.ChooseAnotherTv();
+        Assert.Equal(TvSheet.Picker, remote.Sheet);
+        Assert.Equal(900_001u, remote.Request?.Id);
+        Assert.Equal("7", remote.Request?.Episode);
+        Assert.Equal(600.0, remote.Request?.From);
+    }
+
+    [Fact]
     public void AReconnectHoldsTheClockAndRejoinsInPlace()
     {
         var painter = Painter();

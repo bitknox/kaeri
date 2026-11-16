@@ -196,13 +196,30 @@ public sealed partial class MainWindow
         {
             try
             {
-                await MediumDialogs.Ask(ctx, Root.XamlRoot, ask);
+                // Heard from the window's start, before its content may have loaded: a dialog
+                // with no XamlRoot is refused, and the question would be lost.
+                await MediumDialogs.Ask(ctx, await LoadedRoot(), ask);
             }
             finally
             {
                 askingMedium = false;
             }
         });
+    }
+
+    /// <summary>The window's XamlRoot once its content has loaded, for a dialog asked for at the start.</summary>
+    Task<XamlRoot> LoadedRoot()
+    {
+        if (Root.XamlRoot is { } root)
+            return Task.FromResult(root);
+        var ready = new TaskCompletionSource<XamlRoot>();
+        void Loaded(object sender, RoutedEventArgs e)
+        {
+            Root.Loaded -= Loaded;
+            ready.TrySetResult(Root.XamlRoot);
+        }
+        Root.Loaded += Loaded;
+        return ready.Task;
     }
 
     /// <summary>Reading's start: the medium.</summary>

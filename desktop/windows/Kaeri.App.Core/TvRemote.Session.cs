@@ -309,12 +309,17 @@ public sealed partial class TvRemote
         return last is { } play ? play with { From = at is { } s && s >= 5 ? s : null } : null;
     }
 
-    /// <summary>Choose another TV: this one is let go, and the chooser plays the same episode on the next.</summary>
+    /// <summary>
+    /// Choose another TV: this one is let go, and the chooser opens to play the same episode, from
+    /// where the TV was, on the next.
+    /// </summary>
     public void ChooseAnotherTv()
     {
         var play = lastPlay is { } last ? last with { From = Painter.Playhead() } : null;
         DisconnectCast();
         Request = play;
+        Problem = null;
+        Sheet = TvSheet.Picker;
         Say();
     }
 
