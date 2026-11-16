@@ -1,5 +1,5 @@
 // The cast glyph and the cast button in the top bars: an outline screen while TVs are there, its
-// waves pulsing while a TV connects, a filled screen once one is held.
+// waves pulsing while a TV connects, the screen filled inside its frame once one is held.
 
 package app.kaeri.ui
 
@@ -55,7 +55,9 @@ import app.kaeri.store.CastButtonState
 enum class CastGlyphState { Outline, Connecting, Filled }
 
 private val OUTLINE_SCREEN = PathParser().parsePathString("M3 7.4 V3.6 H21 V19.2 H13.6").toPath()
-private val FILLED_SCREEN = PathParser().parsePathString("M3.6 4.4 H20.4 V18.4 H13.2 A10 10 0 0 0 3.6 8.8 Z").toPath()
+// Inside the outline screen, 1.8 clear of its frame all round, its corner cut on a circle about the
+// waves' centre (2.6, 19.4) that keeps the same 1.8 clear of the outer wave.
+private val FILLED_SCREEN = PathParser().parsePathString("M5.7 6.3 H18.3 V16.5 H13.73 A11.5 11.5 0 0 0 5.7 8.33 Z").toPath()
 private val OUTER_WAVE = PathParser().parsePathString("M3 10.4 A9 9 0 0 1 11.6 19.2").toPath()
 private val INNER_WAVE = PathParser().parsePathString("M3 14 A5.4 5.4 0 0 1 8 19.2").toPath()
 
@@ -107,7 +109,9 @@ fun CastGlyph(state: CastGlyphState, modifier: Modifier = Modifier, size: Dp = 2
     Canvas(modifier.size(size)) {
         scale(this.size.width / 24f, pivot = Offset.Zero) {
             val stroke = Stroke(width = 1.8f, cap = StrokeCap.Round, join = StrokeJoin.Round)
-            if (state == CastGlyphState.Filled) drawPath(FILLED_SCREEN, tint) else drawPath(OUTLINE_SCREEN, tint, style = stroke)
+            // Held, the frame stays and the screen inside it fills, as the system's cast icon does.
+            drawPath(OUTLINE_SCREEN, tint, style = stroke)
+            if (state == CastGlyphState.Filled) drawPath(FILLED_SCREEN, tint)
             drawPath(OUTER_WAVE, tint, alpha = outer, style = stroke)
             drawPath(INNER_WAVE, tint, alpha = inner, style = stroke)
             drawCircle(tint, radius = 1.6f, center = Offset(3.9f, 18.3f), alpha = dot)

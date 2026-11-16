@@ -289,10 +289,11 @@ impl TvSender {
     }
 
     /// Play here: what plays on the TV stops, the TV is let go, and the episode and position
-    /// come back for this device to play from. `None` when nothing of Kaeri's played there.
+    /// come back for this device to play from, also once the TV or the network ended the
+    /// session. `None` when nothing of Kaeri's played there.
     pub fn cast_play_here(&self) -> Option<CastFrom> {
         let (hub, engine) = self.hub()?;
-        let from = hub.session().item.and_then(|item| {
+        let from = hub.session().item.or_else(|| hub.ended_item()).and_then(|item| {
             Some(CastFrom {
                 id: item.id?,
                 episode: item.episode?,
@@ -354,24 +355,45 @@ impl TvSender {
         if let Some(player) = hub.held(&left.device).filter(|p| p.is_alive()) {
             if left.paused {
                 hub.spawn(async move {
-                    if let Err(e) = player.set_paused(false).await {
+                    // A connection that dropped while away is made again first.
+                    if player.settled().await
+                        && let Err(e) = player.set_paused(false).await
+                    {
                         tracing::debug!(error = %e, "the TV didn't play on");
                     }
                 });
             }
             return;
         }
-        // The session ended while away: connect again, and the episode follows.
+        // The session ended while away: connect again. A receiver still up holds the episode
+        // where it paused and plays on; a new one loads the episode at that second.
         let Some(device) = hub.device(&left.device) else { return };
-        hub.connect(device);
-        if let Some(from) = left.from {
-            let _ = engine.send(Command::CastTo {
-                device: left.device,
-                id: from.id,
-                episode: from.episode,
-                position: Some(from.position).filter(|p| *p >= CARRY_FROM),
-            });
-        }
+        let Away { device: id, from, paused } = left;
+        hub.connect_then(device, move |player, joined| {
+            let holds = matches!(
+                player.current().state,
+                CastState::Playing | CastState::Paused | CastState::Buffering
+            );
+            if joined && holds {
+                if paused {
+                    let player = Arc::clone(player);
+                    tokio::spawn(async move {
+                        if let Err(e) = player.set_paused(false).await {
+                            tracing::debug!(error = %e, "the joined TV didn't play on");
+                        }
+                    });
+                }
+                return;
+            }
+            if let Some(from) = from {
+                let _ = engine.send(Command::CastTo {
+                    device: id,
+                    id: from.id,
+                    episode: from.episode,
+                    position: Some(from.position).filter(|p| *p >= CARRY_FROM),
+                });
+            }
+        });
     }
 
     /// The cast session as the apps draw it.
@@ -908,7 +930,11 @@ mod tests {
     async fn a_tv_gone_from_the_network_ends_the_card_with_a_notice() {
         let receiver = FakeReceiver::start(FakeOptions::default()).await.unwrap();
         let (sender, _, _sent) = sender();
-        let timings = Timings { silence: Duration::from_secs(1), ..Timings::default() };
+        let timings = Timings {
+            silence: Duration::from_secs(1),
+            reconnect: Duration::from_secs(1),
+            ..Timings::default()
+        };
         let hub = Arc::new(CastHub::with(None, Arc::new(PlainHttp), timings));
         let (engine, _sent) = RemoteSender::recording();
         sender.attach_casting(Arc::clone(&hub), engine);

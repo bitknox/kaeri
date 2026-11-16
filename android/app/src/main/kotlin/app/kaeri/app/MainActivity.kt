@@ -512,8 +512,10 @@ class MainActivity : ComponentActivity() {
     }
 
     override fun onDestroy() {
-        // Back a moment after Play: the engine has not opened the player yet, and must not.
-        if (isFinishing) app.player.hostFinished()
+        // Back a moment after Play: the engine has not opened the player yet, and must not. A
+        // cast plays on the TV with the window gone, as from the recent apps: the notification
+        // drives it.
+        if (isFinishing && !app.store.cast.casting.value) app.player.hostFinished()
         super.onDestroy()
     }
 
