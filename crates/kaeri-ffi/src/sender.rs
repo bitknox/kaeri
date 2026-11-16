@@ -1317,6 +1317,11 @@ pub struct FfiCastCard {
     /// the card reads as it did until it joins again, or the cast ends with its notice.
     #[uniffi(default)]
     pub reconnecting: bool,
+    /// A note on this cast, for a notice when it first reads differently: the TV plays it in
+    /// its own player (`notice-cast-fallback`). A cast from Play on TV holds no session, so the
+    /// session's note never shows it.
+    #[uniffi(default)]
+    pub note: Option<Msg>,
 }
 
 impl From<CastCard> for FfiCastCard {
@@ -1335,6 +1340,7 @@ impl From<CastCard> for FfiCastCard {
             route: card.route.map(route_hint),
             waiting: card.waiting,
             reconnecting: card.reconnecting,
+            note: card.note,
         }
     }
 }
@@ -1864,5 +1870,43 @@ impl FfiCastSessionWatch {
             *last = Some(view.clone());
             return Some(view);
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn a_play_on_tv_cards_note_reaches_the_app() {
+        let card = CastCard {
+            card: RemoteCard {
+                tv_name: "Living room".into(),
+                phase: LinkPhase::Connected,
+                phase_line: None,
+                screen: Screen::Player,
+                now: None,
+                party: None,
+                rev: 1,
+                over: false,
+                reached: true,
+            },
+            volume_control: VolumeControl::Level,
+            muted: None,
+            notice: None,
+            phase_line: None,
+            up_next: None,
+            undo: None,
+            route: None,
+            waiting: None,
+            reconnecting: false,
+            note: Some(Msg::NoticeCastFallback { name: "Living room".into() }),
+        };
+        let quiet = CastCard { note: None, ..card.clone() };
+        assert_eq!(
+            FfiCastCard::from(card).note,
+            Some(Msg::NoticeCastFallback { name: "Living room".into() })
+        );
+        assert_eq!(FfiCastCard::from(quiet).note, None);
     }
 }
