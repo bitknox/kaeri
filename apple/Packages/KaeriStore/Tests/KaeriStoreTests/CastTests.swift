@@ -173,6 +173,28 @@ struct CastTests {
         #expect(model.takenOver == nil)
     }
 
+    @Test func aNewCastTakesTheTakeOverNoticeAndItsPlayHereAway() async throws {
+        let (model, session) = casting()
+        let notices = NoticesModel()
+        model.say = { notices.post($0) }
+        model.unsay = { notices.withdraw($0) }
+        play(session)
+        try await waitFor { model.stage == .playing }
+        session.change {
+            $0.notice = .noticeCastTakenOver(name: "Living room")
+            $0.over = true
+        }
+        try await waitFor { !model.active }
+        #expect(notices.current?.notice.msg == .noticeCastTakenOver(name: "Living room"))
+
+        model.opener = { _, _ in FixtureCastSession(name: "Living room", request: request, episodeLine: "Episode 3") }
+        model.cast("cast:living", name: "Living room", request: request)
+        #expect(model.stage == .starting)
+        #expect(notices.current == nil)
+        #expect(model.takenOver == nil)
+        #expect(notices.log.count == 1, "Messages keeps it")
+    }
+
     @Test func tryAgainCastsTheSameEpisodeToTheSameTv() async throws {
         let (model, session) = casting()
         session.change {

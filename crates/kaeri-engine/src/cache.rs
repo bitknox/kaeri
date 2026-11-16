@@ -115,6 +115,9 @@ struct Playhead {
     duration: Option<f64>,
     /// It has said how it ended, and what it says after is a straggler.
     ended: bool,
+    /// It has played: said a position. One that never did, a cast stopped before it loaded,
+    /// leaves the episode where it was.
+    played: bool,
 }
 
 impl TitleCache {
@@ -182,6 +185,7 @@ impl TitleCache {
                 let held = self.held(played.id);
                 let playhead = self.playing(played)?;
                 playhead.position = *position;
+                playhead.played = true;
                 if duration.is_some() {
                     playhead.duration = *duration;
                 }
@@ -208,11 +212,16 @@ impl TitleCache {
             // The window changed hands mid-episode: a watch like an ending, by what the
             // playback says of where it was.
             Event::EpisodeLeft { id, episode, position, duration, watched } => {
+                let mut never = false;
                 if let Some(playhead) = played.and_then(|played| self.playing(played)) {
                     playhead.ended = true;
+                    never = !playhead.played;
                 }
                 if self.held(*id) {
                     return Some(*id);
+                }
+                if never && !watched {
+                    return None;
                 }
                 let watch = Watch {
                     episode: episode.clone(),
@@ -229,6 +238,9 @@ impl TitleCache {
                 playhead.ended = true;
                 if held {
                     return Some(played.id);
+                }
+                if !playhead.played && !watched {
+                    return None;
                 }
                 let watch = Watch {
                     episode: played.episode.clone(),
@@ -1103,6 +1115,34 @@ mod tests {
     }
 
     #[test]
+    fn a_play_that_never_played_leaves_the_resume_point_where_it_was() {
+        // A cast stopped on the TV while its file loaded ends having said no position: its
+        // ending must not read as a quit at the start and lose where the episode was left.
+        let mut cache = at_episodes(Some((0, 1)), &[]);
+        let played = play(&mut cache, "1");
+        say(&mut cache, &played, tick(600.0, 1_200.0));
+        say(&mut cache, &played, ended(false, kaeri_model::playback::Ending::Closed));
+        for ending in
+            [kaeri_model::playback::Ending::Failed, kaeri_model::playback::Ending::Stopped]
+        {
+            let again = play(&mut cache, "1");
+            assert!(say(&mut cache, &again, ended(false, ending)).is_none(), "nothing moved");
+            let resume = standing(&cache, SHOW).1.expect("a resume point");
+            assert_eq!(resume.position, 600.0);
+        }
+        let left = play(&mut cache, "1");
+        let handed = Event::EpisodeLeft {
+            id: SHOW,
+            episode: "1".into(),
+            position: 0.0,
+            duration: None,
+            watched: false,
+        };
+        assert!(say(&mut cache, &left, handed).is_none(), "nothing moved");
+        assert_eq!(standing(&cache, SHOW).1.expect("a resume point").position, 600.0);
+    }
+
+    #[test]
     fn finishing_an_episode_updates_the_table_without_a_reload() {
         // The episode table shows the new state as soon as an episode finishes.
         let mut cache = at_episodes(None, &[]);
@@ -1173,6 +1213,7 @@ mod tests {
     fn a_window_handed_over_is_a_watch_by_what_it_said() {
         let mut cache = at_episodes(Some((0, 1)), &[]);
         let played = play(&mut cache, "1");
+        say(&mut cache, &played, tick(120.0, 1_200.0));
         let left = Event::EpisodeLeft {
             id: SHOW,
             episode: "1".into(),

@@ -232,7 +232,7 @@ internal fun UpdatePrompts() {
     LaunchedEffect(notice) {
         val offer = notice ?: return@LaunchedEffect
         store.updates.told(offer)
-        snackbars.show(UpdateWords.out(context, offer), UpdateWords.action(context, offer, store.updates.installs(offer)), store::takeUpdate)
+        snackbars.show(UpdateWords.out(context, offer), UpdateWords.action(context, offer, store.updates.installs(offer)), onAction = store::takeUpdate)
     }
     val state by store.updates.state.collectAsStateWithLifecycle()
     val allowing = state as? UpdateState.Allowing ?: return

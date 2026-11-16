@@ -131,6 +131,8 @@ pub struct Tv {
     next_listener: Cell<u64>,
     /// Run once a hand-over from the player has reached the TV: the player closes.
     handed_off: RefCell<Option<Box<dyn Fn()>>>,
+    /// Runs when a cast starts: the notice of one taken over goes.
+    cast_started: RefCell<Option<Box<dyn Fn()>>>,
 }
 
 impl Tv {
@@ -188,6 +190,7 @@ impl Tv {
             listeners: RefCell::default(),
             next_listener: Cell::new(0),
             handed_off: RefCell::default(),
+            cast_started: RefCell::default(),
         });
         tv.refresh();
         tv.follow_changes();
@@ -214,6 +217,11 @@ impl Tv {
     /// What closes the player once a hand-over reached the TV.
     pub fn on_handed_off(&self, f: impl Fn() + 'static) {
         self.handed_off.replace(Some(Box::new(f)));
+    }
+
+    /// Run `f` whenever a cast starts.
+    pub fn on_cast_started(&self, f: impl Fn() + 'static) {
+        self.cast_started.replace(Some(Box::new(f)));
     }
 
     fn changed(&self) {

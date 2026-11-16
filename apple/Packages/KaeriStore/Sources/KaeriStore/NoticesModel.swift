@@ -90,4 +90,9 @@ public final class NoticesModel {
     public func dismiss(_ item: NoticeItem) {
         if current?.id == item.id { current = nil }
     }
+
+    /// Take the capsule down, if it still shows `notice`. Messages keeps it.
+    func withdraw(_ notice: Notice) {
+        if current?.notice == notice { current = nil }
+    }
 }

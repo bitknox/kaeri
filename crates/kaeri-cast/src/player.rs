@@ -386,6 +386,10 @@ struct State {
     reloading: bool,
     /// The media session the session heard `Loaded` for.
     loaded: Option<i64>,
+    /// The file loaded has played on the TV: its load was confirmed, or the receiver said
+    /// `PLAYING` or `PAUSED` for it. Before that, a position is where the receiver began, often
+    /// 0 s before it seeks, and never where the episode got to.
+    played: bool,
     last: Option<MediaStatus>,
     paused: Option<bool>,
     paused_since: Option<Instant>,
@@ -473,6 +477,16 @@ impl State {
                 None => CastState::Connecting,
             }
         };
+        // The receiver app left and the TV hasn't said why: nothing plays meanwhile, and the
+        // card waits on the TV with its clock still.
+        let state = match state {
+            CastState::Playing | CastState::Paused | CastState::Buffering
+                if self.gone.is_some() =>
+            {
+                CastState::Buffering
+            }
+            state => state,
+        };
         // What the viewer asked shows until the TV says otherwise.
         let state = match (state, self.want.paused) {
             (
@@ -502,7 +516,11 @@ impl State {
                 .collect(),
             metadata: self.last.as_ref().and_then(|s| s.metadata.clone()),
             receiver: self.app.as_ref().map(|a| a.app_id.clone()),
-            waiting_since: self.waiting_since.filter(|_| !self.trying && !self.ended),
+            waiting_since: self
+                .gone
+                .map(|gone| gone.since)
+                .or(self.waiting_since)
+                .filter(|_| !self.trying && !self.ended),
         }
     }
 }
@@ -1057,6 +1075,8 @@ fn begin(owner: &Arc<Inner>, load: CastLoad, quiet: bool) {
         state.ended = false;
         state.failure = None;
         state.loaded = None;
+        // The same file again keeps its word; a new one has not played yet.
+        state.played &= quiet;
         state.step = Some(CastStep::Preparing);
         state.since = Some(Instant::now());
         state.asked = Some(load.clone());
@@ -1076,6 +1096,7 @@ fn begin(owner: &Arc<Inner>, load: CastLoad, quiet: bool) {
                     state.plan = Some(plan);
                     // The same file where it was, for the session: no new `Loaded`.
                     state.reloading = quiet;
+                    state.played = true;
                     // The status that confirmed it is the session's first.
                     if let Some(last) = state.last.clone() {
                         apply(&inner, &mut state, &last);
@@ -2484,10 +2505,15 @@ fn apply(inner: &Inner, state: &mut State, status: &MediaStatus) {
             inner.say_locked(state, PlaybackEvent::Loaded);
         }
     }
-    inner.say_locked(
-        &*state,
-        PlaybackEvent::Progress { position: status.position, duration: status.duration },
-    );
+    // Buffering after it played keeps its place; a file still loading says where it began, not
+    // where it got to, and is no progress: a stop then would save 0 s over the resume point.
+    state.played |= matches!(status.state.as_str(), "PLAYING" | "PAUSED");
+    if state.played {
+        inner.say_locked(
+            &*state,
+            PlaybackEvent::Progress { position: status.position, duration: status.duration },
+        );
+    }
     let paused = status.state == "PAUSED";
     if state.paused != Some(paused) {
         state.paused = Some(paused);

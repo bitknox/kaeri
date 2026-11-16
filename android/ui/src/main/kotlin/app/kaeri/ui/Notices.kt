@@ -32,6 +32,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeoutOrNull
 import app.kaeri.design.recommendedNoticeMillis
@@ -61,25 +62,26 @@ class Snackbars(
     /**
      * Show [text], with [action] as its button, and [onAction] run when the button is pressed. A
      * notice without a button goes after [snackbarMillis], or the system's accessibility timeout
-     * when that is longer. One with a button stays until it is dismissed, acted on or replaced.
-     * A newer snackbar replaces this one.
+     * when that is longer. One with a button stays until it is dismissed, acted on or replaced,
+     * unless it is [timed]: then it goes like one without, after the longer time a button gets.
+     * A newer snackbar replaces this one, and cancelling the job this returns takes it down.
      */
-    fun show(text: String, action: String? = null, onAction: () -> Unit = {}) {
+    fun show(text: String, action: String? = null, timed: Boolean = false, onAction: () -> Unit = {}): Job =
         scope.launch {
             host.currentSnackbarData?.dismiss()
-            val millis = if (action != null || context == null) snackbarMillis(text, action != null)
-            else recommendedNoticeMillis(context, snackbarMillis(text, false), hasAction = false)
-            val result = if (action != null) {
+            val button = action != null
+            val millis = if (context == null) snackbarMillis(text, button)
+            else recommendedNoticeMillis(context, snackbarMillis(text, button), hasAction = button)
+            val result = if (button && !timed) {
                 host.showSnackbar(text, actionLabel = action, withDismissAction = true, duration = SnackbarDuration.Indefinite)
             } else {
                 withTimeoutOrNull(millis) {
-                    host.showSnackbar(text, actionLabel = null, duration = SnackbarDuration.Indefinite)
+                    host.showSnackbar(text, actionLabel = action, withDismissAction = button, duration = SnackbarDuration.Indefinite)
                 }
             }
             if (result == null) host.currentSnackbarData?.dismiss()
             if (result == SnackbarResult.ActionPerformed) onAction()
         }
-    }
 }
 
 val LocalSnackbars = staticCompositionLocalOf<Snackbars> { error("no Snackbars in this composition") }

@@ -1432,6 +1432,23 @@ async fn kaeris_receiver_stopped_on_the_tv_mid_episode_ends_the_cast_and_launche
     let (receiver, player, mut events) = cast_with_own_receiver(CustomReceiver::Runs).await;
     // Its connection closes before the receiver's status says nothing runs.
     receiver.stop_app();
+    // While the TV is heard out, the card no longer plays: it waits on the TV, its clock still.
+    let waiting = async {
+        loop {
+            let status = player.current();
+            if status.state != CastState::Playing {
+                return status;
+            }
+            tokio::time::sleep(Duration::from_millis(10)).await;
+        }
+    };
+    let status = tokio::time::timeout(Duration::from_millis(500), waiting)
+        .await
+        .expect("the card stops playing at once");
+    assert_eq!(status.state, CastState::Buffering);
+    assert!(status.waiting_since.is_some());
+    tokio::time::sleep(Duration::from_millis(300)).await;
+    assert_eq!(player.current().position, status.position, "the clock stands still");
     next(&mut events, |e| matches!(e, PlaybackEvent::Ended { complete: false })).await;
     let ended = async {
         while player.is_alive() {
@@ -1469,6 +1486,72 @@ async fn kaeris_receiver_stopped_on_the_tv_at_a_load_ends_the_cast_and_launches_
     tokio::time::sleep(Duration::from_millis(1500)).await;
     assert_eq!(launched(&receiver), ["0A1B2C3D"], "the Default Media Receiver isn't put on");
     assert_eq!(receiver.heard("LOAD").len(), 1, "the episode isn't loaded again");
+}
+
+#[tokio::test(flavor = "multi_thread", worker_threads = 4)]
+async fn a_cast_stopped_on_the_tv_while_it_loads_says_no_progress_from_its_start() {
+    // The receiver reports the file at 0 s before it seeks to the resume point; a stop then must
+    // leave the session no position to save over where the episode was left.
+    let receiver = FakeReceiver::start(FakeOptions {
+        custom: CustomReceiver::StoppedWhileLoading,
+        ..FakeOptions::default()
+    })
+    .await
+    .unwrap();
+    let file = matroska(&Fixture::default());
+    let base = serve(HashMap::from([("/episode.mkv".to_owned(), file)])).await;
+    let mut setup =
+        setup(&receiver, Arc::new(CastMemory::memory()), Arc::new(FakeEncoder::default()));
+    setup.timings.ready = Duration::from_millis(800);
+    let (player, mut events) = connect_standard(setup).await.unwrap();
+    player.use_receiver(Some("0A1B2C3D".into()));
+    player.load(CastLoad { start: Some(600.0), ..torrent(format!("{base}/episode.mkv")) });
+    let mut heard = Vec::new();
+    let deadline = tokio::time::Instant::now() + Duration::from_secs(15);
+    loop {
+        let event = tokio::time::timeout_at(deadline, events.recv())
+            .await
+            .unwrap_or_else(|_| panic!("the cast ended in time; heard {heard:?}"))
+            .expect("the player still there");
+        let ended = matches!(event, PlaybackEvent::Ended { complete: false });
+        heard.push(event);
+        if ended {
+            break;
+        }
+    }
+    assert!(
+        !heard.iter().any(|e| matches!(e, PlaybackEvent::Progress { .. })),
+        "no progress from a file that never played: {heard:?}"
+    );
+    assert!(!player.is_alive());
+}
+
+#[tokio::test(flavor = "multi_thread", worker_threads = 4)]
+async fn buffering_after_the_file_played_still_says_where_it_is() {
+    let (receiver, player, mut events) = cast_with_own_receiver(CustomReceiver::Runs).await;
+    let PlaybackEvent::Progress { position, .. } =
+        next(&mut events, |e| matches!(e, PlaybackEvent::Progress { .. })).await
+    else {
+        unreachable!()
+    };
+    receiver.buffer(true);
+    // The buffering status comes with the place, as it did before it buffered.
+    let mut said = None;
+    let deadline = tokio::time::Instant::now() + Duration::from_secs(15);
+    loop {
+        let event = tokio::time::timeout_at(deadline, events.recv())
+            .await
+            .expect("buffering in time")
+            .expect("the player still there");
+        match event {
+            PlaybackEvent::Progress { position, .. } => said = Some(position),
+            PlaybackEvent::Buffering(true) => break,
+            _ => {}
+        }
+    }
+    let said = said.expect("a place with the buffering status");
+    assert!(said >= position, "buffering keeps the place: {said} < {position}");
+    player.quit().await.unwrap();
 }
 
 #[tokio::test(flavor = "multi_thread", worker_threads = 4)]

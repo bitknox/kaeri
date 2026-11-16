@@ -94,6 +94,9 @@ pub enum CustomReceiver {
     /// Launches it, and it is stopped on the TV at its first `LOAD`, from the TV's remote or
     /// another phone's Cast card: its connection closes and no app runs afterwards.
     StoppedAtLoad,
+    /// Launches it, and at its first `LOAD` it reports the file loading at 0 s, before it seeks
+    /// to where the load starts, and is then stopped on the TV.
+    StoppedWhileLoading,
     /// Launches it, and it never says `ready` nor answers a `LOAD`: a receiver page that
     /// didn't load.
     Silent,
@@ -592,6 +595,21 @@ async fn serve(
                             continue;
                         }
                         if custom && options.custom == CustomReceiver::StoppedAtLoad {
+                            app = None;
+                            playing = None;
+                            send(&transport, &sender, NS_CONNECTION, json!({"type": "CLOSE"}));
+                            send("receiver-0", "*", NS_RECEIVER, receiver_status(&app, 0, level, muted));
+                            continue;
+                        }
+                        if custom && options.custom == CustomReceiver::StoppedWhileLoading {
+                            let session = next_session;
+                            next_session += 1;
+                            send(&transport, "*", NS_MEDIA, json!({"type": "MEDIA_STATUS", "requestId": 0,
+                                "status": [{"mediaSessionId": session, "playbackRate": 1.0, "playerState": "LOADING",
+                                    "currentTime": 0.0, "supportedMediaCommands": 12303, "volume": stream,
+                                    "media": {"contentId": payload["media"]["contentId"], "duration": options.duration,
+                                        "streamType": "BUFFERED"}}]}));
+                            tokio::time::sleep(Duration::from_millis(200)).await;
                             app = None;
                             playing = None;
                             send(&transport, &sender, NS_CONNECTION, json!({"type": "CLOSE"}));

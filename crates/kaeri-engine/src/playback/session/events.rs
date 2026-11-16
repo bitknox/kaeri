@@ -387,7 +387,7 @@ impl Run<'_> {
                     match command {
                         Some(PlayerCommand::Handover(successor)) => {
                             // Flush what was watched before the window changes hands.
-                            self.record_actions(&mut tracker, &PlaybackEvent::Ended { complete: false }, stream, &mut committed, &mut ending).await;
+                            self.record_actions(&mut tracker, &PlaybackEvent::Ended { complete: false }, stream, ever_played, &mut committed, &mut ending).await;
                             let _ = tx.send(Event::EpisodeLeft {
                                 id: context.anilist_id,
                                 episode: context.episode.clone(),
@@ -806,6 +806,10 @@ impl Run<'_> {
                         let _ = link.overlay(Overlay::SkipCleared).await;
                         let _ = tx.send(Event::SkipCleared);
                     }
+                    // A file that never played says nothing of where the episode was left: a
+                    // cast stopped before it loaded would write its start over the position
+                    // kept.
+                    Action::Record { completed: false, .. } if !ever_played => {}
                     other => {
                         let watched_secs = tracker.watched_secs();
                         self.act(
