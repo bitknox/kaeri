@@ -369,7 +369,7 @@ Words used here: the cast button is the toolbar button with the cast glyph. The 
 - The spoken label is “Play on TV”, “Connecting to Living room” or “Connected to Living room” (`tv-play-on`, `cast-button-connecting`, `cast-button-connected`). Connecting and Connected are announced once each.
 - While a TV is held, the title page's main button carries the cast glyph with “Plays on Living room” under it (`cast-plays-on`), Play plays there, and the separate Play on TV button hides.
 - Kaeri differs from Google here: Google keeps the button on screen whenever the device is on Wi-Fi. Kaeri hides it with no TV, as an empty picker helps nobody, and Play on TV on a title or an episode still reaches the picker and its local network row.
-- Open: whether a first-time hint points at the cast button.
+- There is no first-time hint or overlay on the cast button.
 
 ### Picker
 
@@ -394,9 +394,9 @@ Words used here: the cast button is the toolbar button with the cast glyph. The 
 
 ### Connected dialog
 
-- The title is “Connected to Living room”. Under it, a row with the art, show and episode that opens the remote, or “Nothing playing yet” (`cast-idle`). Then the TV volume row, then Stop casting.
-- Stop casting (`cast-stop`) stops the episode and the receiver; the TV goes back to its own screen.
-- Open: whether the dialog also offers Disconnect, which lets go of the TV and leaves it playing.
+- The title is “Connected to Living room”. Under it, a row with the art, show and episode that opens the remote, or “Nothing playing yet” (`cast-idle`). Then the TV volume row, then one button.
+- While something plays, the button is Stop casting (`cast-stop`). It stops the episode and the receiver, and the TV goes back to its own screen.
+- While nothing plays, the button is Disconnect (`action-disconnect`). It lets go of the TV, and the cast button goes back to Available.
 
 ### Starting a cast
 
@@ -466,15 +466,13 @@ These show while a cast plays or is paused and the local player is down, and go 
 | Android | A Media3 `MediaSession` in a `mediaPlayback` foreground service: the notification, the media card in the shade and on the lock screen | The art, the show, the episode and “Casting to Living room” (`cast-notification-line`). Back 10 s, play or pause, forward 10 s, Next and Stop. A tap opens the remote. The session is a remote one, so the volume keys reach the TV |
 | iPhone and iPad | Now Playing on the lock screen and in Control Center (`MPNowPlayingInfoCenter`, `MPRemoteCommandCenter`) | Title, episode and “Casting to Living room” as the album. Play, pause, toggle, change position, skip 10 s |
 | Mac | Now Playing and the media keys | As iPhone, with next and previous episode in place of the 10 s skips |
-| Windows | System media transport controls and the taskbar thumbnail buttons | The show, the episode and “Casting to Living room”. Play, pause, seek |
+| Windows | System media transport controls and the taskbar thumbnail buttons, as video | The show, the episode and “Casting to Living room”. Play, pause, seek, and Previous and Next as the previous and next episode, as on the Mac. The remote keeps its 10 s steps |
 | Linux | MPRIS | The show, the episode and the art. Play, pause, Next, Seek. Stop stops the cast, Raise opens the remote, Volume sets the TV |
 
-- Private mode shows nothing that names the show or episode on any of these, as for local playback.
+- Every one of these follows the title page's spoiler rule: an episode title the title page hides shows as “Episode 8”. Private mode hides the show too, as for local playback.
 - Android's notification stays while the TV is paused.
 - Kaeri differs from Google here: Google says a lock screen is not possible for a cast on iOS. Kaeri holds a silent audio session while a cast runs (see Background), so iOS gives the cast a lock screen and Control Center like any player.
-- Open: Windows media controls show the cast as music, and Previous and Next seek 10 s.
-- Open: the system's output switcher on Android. The media card's output chip names no TV and does nothing when tapped.
-- Open: spoilers and privacy on these surfaces. The notification and lock screen show the episode's title even where the title page hides it, and Android's lock screen shows it in full outside private mode.
+- Android's output switcher: once the routing spike lands (a `MediaRoute2ProviderService`, or Media3's routing controller id), the media card's output chip names the TV and the switcher can stop the cast or move it back to the phone. Until then the chip stays as it is.
 
 ### Volume
 
@@ -483,8 +481,8 @@ These show while a cast plays or is paused and the local player is down, and go 
 - Kaeri never sets a level of its own. Only the viewer's changes are sent.
 - Android: the volume keys step the TV by 5% while it takes a level, in the app and, through the media session, with the screen locked or the app in the background. The system's volume panel shows the TV's row.
 - iPhone and iPad: the volume buttons change only the phone. The TV's volume is set from the remote's slider and Mute. iOS gives apps no dependable way to take the buttons in the background or on the lock screen, and Google's own iOS guide no longer supports it either. The lock screen's volume slider is the phone's.
-- Open: what Android's volume keys do on a fixed-volume TV.
-- Open: whether keyboard volume keys on Windows and Linux drive the TV.
+- Android with a fixed-volume TV: the volume keys show the system's volume panel with the TV's fixed row and change nothing, in the app and through the media session alike. Mute stays on the remote.
+- Windows and Linux: the keyboard's volume keys stay the computer's. The remote's slider sets the TV.
 
 ### Next episode and the end of a show
 
@@ -521,23 +519,23 @@ A TV that fetches the stream itself needs nothing from the device once it plays.
 ### Dropped connection
 
 - The engine pings the TV every 5 s, and 15 s without a word closes the connection. It then connects again for 20 s, joining the same receiver session. The TV plays on meanwhile, and only after those 20 s does the cast count as lost.
-- Open: when Reconnecting shows and how long it tries.
+- From the moment the connection closes, the mini player and the remote read “Reconnecting to Living room” (`tv-status-reconnecting`) with a small spinner, for the engine's 20 s.
 - A lost cast reads “Casting stopped” with the notice “Lost Living room, so casting stopped.” (`notice-cast-lost`), and offers Play here and Choose another TV. With the remote closed, the notice carries Play here.
 - A device on another network than the TV, or behind a VPN, gets “This phone isn't on the network Living room is on, or reaches it through a VPN. Connect both to the same network to cast.” (`notice-cast-not-same-network`).
 
 ### A stop from outside and another sender
 
 - A stop on the TV (its remote, another phone's cast card or the system's own cast controls) ends the cast. While the engine learns why the receiver left, up to 4 s, the clock stops and the line reads “Waiting for Living room”. Nothing starts on the TV again afterwards.
-- Open: whether a stop from outside gets a notice, and its words.
+- The cast then ends with “Living room stopped the cast.” (proposed) and Play here, for 8 s.
 - Another sender starting something on the TV ends the cast at once with “Another phone started something on Living room, so casting stopped.” (`notice-cast-taken-over`) and Play here. The notice goes after 8 s, and at once when a new cast starts. Another Kaeri device loading its own episode on the same receiver counts as taking the TV. Kaeri never takes the TV back.
 
 ### Receiver fallback
 
-- Kaeri's receiver has 8 s to say it is ready. If it doesn't launch or doesn't answer, the TV's Default Media Receiver plays the episode instead, and casts to that TV start on the Default Media Receiver for the next 24 hours.
+- Kaeri's receiver has 8 s to say it is ready. If it doesn't launch or doesn't answer, the TV's Default Media Receiver plays the episode instead. Every cast tries Kaeri's receiver first and falls back only when it fails on that cast; no TV is remembered as one that fails.
 - Only a receiver that fails while an episode loads falls back. One that played and then left ends the cast, and a TV where the viewer stopped the receiver is never handed to another app.
 - On the Default Media Receiver the TV shows none of Kaeri's screens: no Ready, Waiting or Up next cards on the TV, and subtitles show plain. The remote on the device works the same.
 - Kaeri differs from Google here: Kaeri uses its own receiver for its screens, typeset subtitles and formats the Default Media Receiver can't read, and falls back to Google's only to keep the episode playing.
-- Open: whether the fallback gets a notice, and its words.
+- Each fallback shows a notice, also kept in Messages: “Living room plays this in its own player. Subtitles show as plain text.” (proposed).
 
 ### Errors
 
@@ -584,17 +582,20 @@ The remote's line says whether the cast ever played: “Couldn't start on Living
 
 ### Kaeri's way against Google's checklist
 
+Google's checklist is a lookup, not the authority. These are the places Kaeri goes its own way.
+
 | Topic | Google's checklist | Kaeri |
 | --- | --- | --- |
 | Receiver | Any receiver | Kaeri's own, with the Default Media Receiver as the fallback |
 | Cast button with no TV | Shown whenever on Wi-Fi | Hidden; Play on TV reaches the picker |
-| First-time hint | An overlay on the cast button | Open |
+| First-time hint | An overlay on the cast button | None |
 | Mini player and remote | Separate bar and screen | One drawer, opened and closed by drag or tap |
 | Fixed-volume TVs | Not covered | “Set on the TV” with Mute |
 | Volume buttons on iOS | No longer supported | The phone's only; the TV from the remote |
 | Lock screen on iOS | Not possible | Now Playing, through the cast's audio session |
 | Local playback | Not covered | Play here moves the episode back at the TV's position |
 | Leaving a desktop app | The TV plays on | The app asks, then stops the cast |
+| Desktop volume keys | Not covered | The computer's; the TV from the remote |
 
 ## Home
 
