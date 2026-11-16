@@ -106,6 +106,15 @@ struct Left {
 
 const LEFT_FILE: &str = "cast-session.json";
 
+/// What an attached cast last noted of its receiver.
+#[derive(Default)]
+struct Noted {
+    /// The receiver session noted as left running.
+    session: Option<String>,
+    /// Whether something played or loaded at the last status before it ended.
+    busy: bool,
+}
+
 /// Where a cast session is, as the apps' cast button and its sheet draw it.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
 pub enum SessionState {
@@ -516,15 +525,23 @@ impl CastHub {
             // Whether something played when it ended: a receiver that closes itself while idle
             // ends the session quietly.
             let mut busy = false;
+            // The episode last seen playing, for Play here once the playback has let it go.
+            let mut seen: Option<SessionItem> = None;
             loop {
                 let now = status.borrow_and_update().clone();
                 if now.state == CastState::Ended {
                     if let (Some(hub), Some(player)) = (hub.upgrade(), held.upgrade()) {
                         let lost = matches!(now.failure, Some(CastFailure::Lost(_)));
                         let failure = now.failure.filter(|_| busy || !lost);
-                        hub.session_ended(&player, failure, lost, busy);
+                        hub.session_ended(&player, failure, lost, busy, seen);
                     }
                     return;
+                }
+                if let Some(hub) = hub.upgrade()
+                    && let Some(item) =
+                        Self::item(&hub.view(), Some(&now)).filter(|item| item.id.is_some())
+                {
+                    seen = Some(item);
                 }
                 busy = now.step.is_some()
                     || matches!(
@@ -548,8 +565,11 @@ impl CastHub {
         failure: Option<CastFailure>,
         lost: bool,
         busy: bool,
+        seen: Option<SessionItem>,
     ) {
-        let item = Self::item(&self.view(), Some(&player.current()));
+        let item = Self::item(&self.view(), Some(&player.current()))
+            .filter(|item| item.id.is_some())
+            .or(seen);
         {
             let mut session = lock(&self.session);
             if !session.player.as_ref().is_some_and(|p| Arc::ptr_eq(p, player)) {
@@ -1101,14 +1121,47 @@ impl CastHub {
         self.listen(player);
         let mut status = player.status();
         lock(&self.cast).player = Arc::downgrade(player);
-        self.set_status(status.borrow_and_update().clone());
+        let mut noted = Noted::default();
+        let now = status.borrow_and_update().clone();
+        self.note_left(player, &now, &mut noted);
+        self.set_status(now);
         let hub = Arc::downgrade(self);
+        let held = Arc::downgrade(player);
         tokio::spawn(async move {
             while status.changed().await.is_ok() {
-                let Some(hub) = hub.upgrade() else { return };
-                hub.set_status(status.borrow_and_update().clone());
+                let (Some(hub), Some(player)) = (hub.upgrade(), held.upgrade()) else { return };
+                let now = status.borrow_and_update().clone();
+                hub.note_left(&player, &now, &mut noted);
+                hub.set_status(now);
             }
         });
+    }
+
+    /// Keep the note of the receiver a cast plays on, a cast begun from Play on TV included, so a
+    /// run the system ended joins it again once the TV is found: noted as the receiver comes up,
+    /// let go as the cast ends, unless the connection was lost mid-episode.
+    fn note_left(&self, player: &CastPlayer, status: &CastStatus, noted: &mut Noted) {
+        if status.state == CastState::Ended {
+            let lost = matches!(status.failure, Some(CastFailure::Lost(_)));
+            if let Some(session) = noted.session.take()
+                && !(lost && noted.busy)
+                && self.left().is_some_and(|left| left.session == session)
+            {
+                self.forget_left();
+            }
+            return;
+        }
+        noted.busy = status.step.is_some()
+            || matches!(
+                status.state,
+                CastState::Playing | CastState::Paused | CastState::Buffering
+            );
+        if let Some(app) = player.receiver()
+            && noted.session.as_deref() != Some(app.session_id.as_str())
+        {
+            self.leave(player);
+            noted.session = Some(app.session_id);
+        }
     }
 
     pub(crate) fn set_status(&self, status: CastStatus) {

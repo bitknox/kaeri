@@ -99,6 +99,20 @@ class CastService : MediaSessionService() {
 
     override fun onGetSession(controllerInfo: MediaSession.ControllerInfo): MediaSession? = session
 
+    /**
+     * Never brought back by the system after it ended the process: the new process has no cast
+     * to show, so the service goes. The app joins what the TV still plays once it opens and the
+     * TV is found.
+     */
+    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        super.onStartCommand(intent, flags, startId)
+        if (intent == null && !(application as KaeriApp).store.cast.casting.value) {
+            Log.i(KaeriApp.TAG, "no cast to keep up; the cast's session goes")
+            stopSelf(startId)
+        }
+        return START_NOT_STICKY
+    }
+
     /** In the foreground paused too: the stream to the TV goes through this device. */
     override fun onUpdateNotification(session: MediaSession, startInForegroundRequired: Boolean) {
         super.onUpdateNotification(session, true)
