@@ -2206,7 +2206,6 @@
     <string name="player_start_miss_failed">%1$sから応答がありませんでした</string>
     <string name="player_start_miss_timed_out">%1$sの応答に時間がかかりすぎました</string>
     <string name="player_start_miss_skipped">%1$sをスキップしました</string>
-    <string name="player_start_resting">最近の失敗によりスキップ</string>
     <string name="player_start_from">%1$sから</string>
     <string name="player_start_no_video">最初のストリームは映像が表示されませんでした</string>
     <string name="player_start_stream_place">ストリーム %2$,d 件中 %1$,d 件目</string>

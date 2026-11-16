@@ -5831,9 +5831,6 @@
   <data name="PlayerStartMissSkipped" xml:space="preserve">
     <value>Omitiste {name}</value>
   </data>
-  <data name="PlayerStartResting" xml:space="preserve">
-    <value>Omitida por fallas recientes</value>
-  </data>
   <data name="PlayerStartFrom" xml:space="preserve">
     <value>De {name}</value>
   </data>

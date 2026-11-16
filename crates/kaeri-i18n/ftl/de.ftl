@@ -8686,9 +8686,6 @@ player-start-miss-timed-out = { $name } hat zu lange gebraucht
 # Detail line after the viewer skipped the source being asked.
 player-start-miss-skipped = Du hast { $name } übersprungen
 
-# Details row for sources passed over because they failed lately. The name goes before it.
-player-start-resting = Nach jüngsten Fehlern übersprungen
-
 # Detail line once the streams are found and the player opens one. The name is the source's.
 player-start-from = Von { $name }
 

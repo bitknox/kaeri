@@ -2206,7 +2206,6 @@
     <string name="player_start_miss_failed">%1$s tidak merespons</string>
     <string name="player_start_miss_timed_out">%1$s terlalu lama</string>
     <string name="player_start_miss_skipped">Kamu melewati %1$s</string>
-    <string name="player_start_resting">Dilewati karena gagal baru-baru ini</string>
     <string name="player_start_from">Dari %1$s</string>
     <string name="player_start_no_video">Yang pertama tidak menampilkan video</string>
     <string name="player_start_stream_place">Stream %1$,d dari %2$,d</string>

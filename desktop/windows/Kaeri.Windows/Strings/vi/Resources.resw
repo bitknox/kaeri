@@ -5411,9 +5411,6 @@
   <data name="PlayerStartMissSkipped" xml:space="preserve">
     <value>Bạn đã bỏ qua {name}</value>
   </data>
-  <data name="PlayerStartResting" xml:space="preserve">
-    <value>Đã bỏ qua do lỗi gần đây</value>
-  </data>
   <data name="PlayerStartFrom" xml:space="preserve">
     <value>Từ {name}</value>
   </data>

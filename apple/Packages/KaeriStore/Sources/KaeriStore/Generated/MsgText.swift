@@ -563,6 +563,7 @@ extension Cause {
         case .sourceGone(let source): L.causeSourceGone(source: source)
         case .releaseFailed(let detail): L.causeReleaseFailed(detail: detail)
         case .sourcesTimedOut: L.causeSourcesTimedOut
+        case .sourcesUnreached(let names): L.causeSourcesUnreached(names: names)
         case .noSourceHasEpisode(let episode, let detail): L.causeNoSourceHasEpisode(episode: episode, detail: detail)
         case .sourceCannotDownload: L.causeSourceCannotDownload
         case .noSourceCouldListShow: L.causeNoSourceCouldListShow

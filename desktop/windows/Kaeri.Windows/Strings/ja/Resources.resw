@@ -5411,9 +5411,6 @@
   <data name="PlayerStartMissSkipped" xml:space="preserve">
     <value>{name}をスキップしました</value>
   </data>
-  <data name="PlayerStartResting" xml:space="preserve">
-    <value>最近の失敗によりスキップ</value>
-  </data>
   <data name="PlayerStartFrom" xml:space="preserve">
     <value>{name}から</value>
   </data>

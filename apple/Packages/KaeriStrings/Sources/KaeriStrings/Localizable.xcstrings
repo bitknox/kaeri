@@ -32501,6 +32501,18 @@
         }
       }
     },
+    "cause-sources-unreached" : {
+      "comment" : "Reason: some sources gave no real answer for the episode: they failed, took too long or weren't asked, and the rest don't have it. The names are joined with commas. Argument 1: names (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Couldn't reach %1$@. Try again, or choose another source."
+          }
+        }
+      }
+    },
     "cause-subtitles-left-apart" : {
       "comment" : "Part of a finished download's toast: merging failed, so the subtitles stay as files beside it. Argument 1: reason (Text).",
       "extractionState" : "manual",
@@ -187967,6 +187979,142 @@
         }
       }
     },
+    "player-start-not-asked-cellular" : {
+      "comment" : "Sentence of a failure naming the sources not asked on cellular, where torrents are off, joined as a list by the app. Argument 1: count (Int). Argument 2: names (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%#@count@"
+          },
+          "substitutions" : {
+            "count" : {
+              "argNum" : 1,
+              "formatSpecifier" : "lld",
+              "variations" : {
+                "plural" : {
+                  "one" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%2$@ wasn't asked: torrents are off on cellular."
+                    }
+                  },
+                  "other" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%2$@ weren't asked: torrents are off on cellular."
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "player-start-not-asked-other" : {
+      "comment" : "Sentence of a failure naming the sources not asked because they say they can't be used right now, joined as a list by the app. Argument 1: count (Int). Argument 2: names (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%#@count@"
+          },
+          "substitutions" : {
+            "count" : {
+              "argNum" : 1,
+              "formatSpecifier" : "lld",
+              "variations" : {
+                "plural" : {
+                  "one" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%2$@ wasn't asked: it isn't available right now."
+                    }
+                  },
+                  "other" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%2$@ weren't asked: they aren't available right now."
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "player-start-not-asked-proxy" : {
+      "comment" : "Sentence of a failure naming the sources not asked while the proxy check for torrents hasn't passed, joined as a list by the app. Argument 1: count (Int). Argument 2: names (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%#@count@"
+          },
+          "substitutions" : {
+            "count" : {
+              "argNum" : 1,
+              "formatSpecifier" : "lld",
+              "variations" : {
+                "plural" : {
+                  "one" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%2$@ wasn't asked: the proxy check hasn't passed."
+                    }
+                  },
+                  "other" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%2$@ weren't asked: the proxy check hasn't passed."
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "player-start-not-asked-torrents-off" : {
+      "comment" : "Sentence of a failure naming the sources not asked while torrent playback is off, joined as a list by the app. Argument 1: count (Int). Argument 2: names (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%#@count@"
+          },
+          "substitutions" : {
+            "count" : {
+              "argNum" : 1,
+              "formatSpecifier" : "lld",
+              "variations" : {
+                "plural" : {
+                  "one" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%2$@ wasn't asked: torrent playback is off."
+                    }
+                  },
+                  "other" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%2$@ weren't asked: torrent playback is off."
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "player-start-offline" : {
       "comment" : "Step line while the device is offline and the episode will start when it is back.",
       "extractionState" : "manual",
@@ -188871,90 +189019,6 @@
         }
       }
     },
-    "player-start-resting" : {
-      "comment" : "Details row for sources passed over because they failed lately. The name goes before it.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Nach jüngsten Fehlern übersprungen"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Skipped after recent failures"
-          }
-        },
-        "es-419" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Omitida por fallas recientes"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ignorée après des échecs récents"
-          }
-        },
-        "id" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Dilewati karena gagal baru-baru ini"
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Saltata dopo errori recenti"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "最近の失敗によりスキップ"
-          }
-        },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Pominięte po niedawnych błędach"
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ignoradas após falhas recentes"
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Пропущены после недавних сбоев"
-          }
-        },
-        "sv" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Hoppades över efter senaste fel"
-          }
-        },
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Son hatalar nedeniyle atlandı"
-          }
-        },
-        "vi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Đã bỏ qua do lỗi gần đây"
-          }
-        }
-      }
-    },
     "player-start-resuming" : {
       "comment" : "Step line while the episode resumes where it was left. Argument 1: clock (Text).",
       "extractionState" : "manual",
@@ -189203,6 +189267,54 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Không phản hồi"
+          }
+        }
+      }
+    },
+    "player-start-row-held-cellular" : {
+      "comment" : "Details row for a source not asked on cellular, where torrents are off. The name goes before it.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Not asked · Torrents are off on cellular"
+          }
+        }
+      }
+    },
+    "player-start-row-held-other" : {
+      "comment" : "Details row for a source not asked because it says it can't be used right now. The name goes before it.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Not asked · Not available right now"
+          }
+        }
+      }
+    },
+    "player-start-row-held-proxy" : {
+      "comment" : "Details row for a source not asked while the proxy check for torrents hasn't passed. The name goes before it.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Not asked · Waiting for the proxy check"
+          }
+        }
+      }
+    },
+    "player-start-row-held-torrents-off" : {
+      "comment" : "Details row for a source not asked while torrent playback is off. The name goes before it.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Not asked · Torrent playback is off"
           }
         }
       }
@@ -190379,6 +190491,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Âm thanh và phụ đề"
+          }
+        }
+      }
+    },
+    "player-start-unreached" : {
+      "comment" : "First sentence of a failure when some sources gave no real answer: they failed, took too long or weren't asked. The names are joined as a list by the app. Argument 1: names (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Couldn't reach %1$@."
           }
         }
       }
@@ -321253,6 +321377,54 @@
         }
       }
     },
+    "source-picker-held-cellular" : {
+      "comment" : "Line of the picker for a source not asked on cellular, where torrents are off. Argument 1: name (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ isn't asked on cellular"
+          }
+        }
+      }
+    },
+    "source-picker-held-other" : {
+      "comment" : "Line of the picker for a source that says it can't be used right now. Argument 1: name (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ isn't available right now"
+          }
+        }
+      }
+    },
+    "source-picker-held-proxy" : {
+      "comment" : "Line of the picker for a source not asked while the proxy check for torrents hasn't passed. Argument 1: name (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ isn't asked until the proxy check passes"
+          }
+        }
+      }
+    },
+    "source-picker-held-torrents-off" : {
+      "comment" : "Line of the picker for a source not asked while torrent playback is off. Argument 1: name (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ isn't asked while torrent playback is off"
+          }
+        }
+      }
+    },
     "source-picker-missing-pair" : {
       "comment" : "Two episodes a source lacks, inside the missing part of a source's line. Argument 1: a (Plain). Argument 2: b (Plain).",
       "extractionState" : "manual",
@@ -321417,6 +321589,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "%1$@–%2$@"
+          }
+        }
+      }
+    },
+    "source-picker-none-lists" : {
+      "comment" : "Line over the reasons when no source lists a release of the episode. The episode is its label. Argument 1: episode (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No source lists episode %1$@."
           }
         }
       }

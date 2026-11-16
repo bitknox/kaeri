@@ -373,6 +373,10 @@ object Strings {
     fun causeSourcesTimedOut(context: Context): String =
         context.getString(R.string.cause_sources_timed_out)
 
+    /** Reason: some sources gave no real answer for the episode: they failed, took too long or weren't asked, and the rest don't have it. The names are joined with commas. */
+    fun causeSourcesUnreached(context: Context, names: String): String =
+        context.getString(R.string.cause_sources_unreached, names)
+
     /** Reason: every source matched the title but none has the episode. The detail is what each said. */
     fun causeNoSourceHasEpisode(context: Context, episode: String, detail: String): String =
         context.getString(R.string.cause_no_source_has_episode, episode, detail)
@@ -8757,9 +8761,21 @@ object Strings {
     fun playerStartMissSkipped(context: Context, name: String): String =
         context.getString(R.string.player_start_miss_skipped, name)
 
-    /** Details row for sources passed over because they failed lately. The name goes before it. */
-    fun playerStartResting(context: Context): String =
-        context.getString(R.string.player_start_resting)
+    /** Details row for a source not asked while torrent playback is off. The name goes before it. */
+    fun playerStartRowHeldTorrentsOff(context: Context): String =
+        context.getString(R.string.player_start_row_held_torrents_off)
+
+    /** Details row for a source not asked while the proxy check for torrents hasn't passed. The name goes before it. */
+    fun playerStartRowHeldProxy(context: Context): String =
+        context.getString(R.string.player_start_row_held_proxy)
+
+    /** Details row for a source not asked on cellular, where torrents are off. The name goes before it. */
+    fun playerStartRowHeldCellular(context: Context): String =
+        context.getString(R.string.player_start_row_held_cellular)
+
+    /** Details row for a source not asked because it says it can't be used right now. The name goes before it. */
+    fun playerStartRowHeldOther(context: Context): String =
+        context.getString(R.string.player_start_row_held_other)
 
     /** Detail line once the streams are found and the player opens one. The name is the source's. */
     fun playerStartFrom(context: Context, name: String): String =
@@ -8880,6 +8896,26 @@ object Strings {
     /** Second clause of a failure: the sources that were asked, joined as a list by the app. */
     fun playerStartAsked(context: Context, names: String): String =
         context.getString(R.string.player_start_asked, names)
+
+    /** First sentence of a failure when some sources gave no real answer: they failed, took too long or weren't asked. The names are joined as a list by the app. */
+    fun playerStartUnreached(context: Context, names: String): String =
+        context.getString(R.string.player_start_unreached, names)
+
+    /** Sentence of a failure naming the sources not asked while torrent playback is off, joined as a list by the app. */
+    fun playerStartNotAskedTorrentsOff(context: Context, count: Int, names: String): String =
+        context.resources.getQuantityString(R.plurals.player_start_not_asked_torrents_off, count, count, names)
+
+    /** Sentence of a failure naming the sources not asked while the proxy check for torrents hasn't passed, joined as a list by the app. */
+    fun playerStartNotAskedProxy(context: Context, count: Int, names: String): String =
+        context.resources.getQuantityString(R.plurals.player_start_not_asked_proxy, count, count, names)
+
+    /** Sentence of a failure naming the sources not asked on cellular, where torrents are off, joined as a list by the app. */
+    fun playerStartNotAskedCellular(context: Context, count: Int, names: String): String =
+        context.resources.getQuantityString(R.plurals.player_start_not_asked_cellular, count, count, names)
+
+    /** Sentence of a failure naming the sources not asked because they say they can't be used right now, joined as a list by the app. */
+    fun playerStartNotAskedOther(context: Context, count: Int, names: String): String =
+        context.resources.getQuantityString(R.plurals.player_start_not_asked_other, count, count, names)
 
     /** Label of the switch in the Details list that plays the episode with its subtitles. */
     fun playerStartSubtitled(context: Context): String =
@@ -9401,6 +9437,26 @@ object Strings {
     /** Line when the picker found no stream for the episode. */
     fun sourcePickerEmpty(context: Context): String =
         context.getString(R.string.source_picker_empty)
+
+    /** Line over the reasons when no source lists a release of the episode. The episode is its label. */
+    fun sourcePickerNoneLists(context: Context, episode: String): String =
+        context.getString(R.string.source_picker_none_lists, episode)
+
+    /** Line of the picker for a source not asked while torrent playback is off. */
+    fun sourcePickerHeldTorrentsOff(context: Context, name: String): String =
+        context.getString(R.string.source_picker_held_torrents_off, name)
+
+    /** Line of the picker for a source not asked while the proxy check for torrents hasn't passed. */
+    fun sourcePickerHeldProxy(context: Context, name: String): String =
+        context.getString(R.string.source_picker_held_proxy, name)
+
+    /** Line of the picker for a source not asked on cellular, where torrents are off. */
+    fun sourcePickerHeldCellular(context: Context, name: String): String =
+        context.getString(R.string.source_picker_held_cellular, name)
+
+    /** Line of the picker for a source that says it can't be used right now. */
+    fun sourcePickerHeldOther(context: Context, name: String): String =
+        context.getString(R.string.source_picker_held_other, name)
 
     /** Title of the picker sheet in the player. */
     fun playerSources(context: Context): String =

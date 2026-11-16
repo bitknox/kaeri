@@ -6041,9 +6041,6 @@
   <data name="PlayerStartMissSkipped" xml:space="preserve">
     <value>Вы пропустили {name}</value>
   </data>
-  <data name="PlayerStartResting" xml:space="preserve">
-    <value>Пропущены после недавних сбоев</value>
-  </data>
   <data name="PlayerStartFrom" xml:space="preserve">
     <value>Из {name}</value>
   </data>

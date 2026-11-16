@@ -8590,9 +8590,6 @@ player-start-miss-timed-out = { $name }の応答に時間がかかりすぎま�
 # Detail line after the viewer skipped the source being asked.
 player-start-miss-skipped = { $name }をスキップしました
 
-# Details row for sources passed over because they failed lately. The name goes before it.
-player-start-resting = 最近の失敗によりスキップ
-
 # Detail line once the streams are found and the player opens one. The name is the source's.
 player-start-from = { $name }から
 

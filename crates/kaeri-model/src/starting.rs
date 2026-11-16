@@ -42,6 +42,7 @@ pub enum SourceHold {
 #[derive(Debug, Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "ffi", derive(uniffi::Record))]
 pub struct HeldSources {
+    #[cfg_attr(feature = "ffi", uniffi(default))]
     pub names: Vec<String>,
     pub why: SourceHold,
 }

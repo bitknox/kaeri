@@ -2293,7 +2293,6 @@
     <string name="player_start_miss_failed">%1$s yanıt vermedi</string>
     <string name="player_start_miss_timed_out">%1$s çok uzun sürdü</string>
     <string name="player_start_miss_skipped">%1$s atlandı</string>
-    <string name="player_start_resting">Son hatalar nedeniyle atlandı</string>
     <string name="player_start_from">Kaynak: %1$s</string>
     <string name="player_start_no_video">İlki görüntü göstermedi</string>
     <string name="player_start_stream_place">%2$,d akıştan %1$,d.</string>

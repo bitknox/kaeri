@@ -2185,6 +2185,8 @@ pub enum Cause {
     ReleaseFailed { detail: String },
     /// Reason: a play waited too long for its sources to give it a stream, and gave up.
     SourcesTimedOut,
+    /// Reason: some sources gave no real answer for the episode: they failed, took too long or weren't asked, and the rest don't have it. The names are joined with commas.
+    SourcesUnreached { names: String },
     /// Reason: every source matched the title but none has the episode. The detail is what each said.
     NoSourceHasEpisode { episode: String, detail: String },
     /// Reason: the source streams episodes but only torrents can be downloaded.
@@ -2222,6 +2224,7 @@ impl Cause {
             Self::SourceGone { .. } => "cause-source-gone",
             Self::ReleaseFailed { .. } => "cause-release-failed",
             Self::SourcesTimedOut => "cause-sources-timed-out",
+            Self::SourcesUnreached { .. } => "cause-sources-unreached",
             Self::NoSourceHasEpisode { .. } => "cause-no-source-has-episode",
             Self::SourceCannotDownload => "cause-source-cannot-download",
             Self::NoSourceCouldListShow => "cause-no-source-could-list-show",
@@ -2249,6 +2252,7 @@ impl Cause {
             Self::SourceGone { source } => vec![("source", Value::Text(source.clone()))],
             Self::ReleaseFailed { detail } => vec![("detail", Value::Text(detail.clone()))],
             Self::SourcesTimedOut => Vec::new(),
+            Self::SourcesUnreached { names } => vec![("names", Value::Text(names.clone()))],
             Self::NoSourceHasEpisode { episode, detail } => vec![("episode", Value::Text(episode.clone())), ("detail", Value::Text(detail.clone()))],
             Self::SourceCannotDownload => Vec::new(),
             Self::NoSourceCouldListShow => Vec::new(),

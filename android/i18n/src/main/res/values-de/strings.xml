@@ -2293,7 +2293,6 @@
     <string name="player_start_miss_failed">%1$s hat nicht geantwortet</string>
     <string name="player_start_miss_timed_out">%1$s hat zu lange gebraucht</string>
     <string name="player_start_miss_skipped">Du hast %1$s übersprungen</string>
-    <string name="player_start_resting">Nach jüngsten Fehlern übersprungen</string>
     <string name="player_start_from">Von %1$s</string>
     <string name="player_start_no_video">Der erste zeigte kein Video</string>
     <string name="player_start_stream_place">Stream %1$,d von %2$,d</string>

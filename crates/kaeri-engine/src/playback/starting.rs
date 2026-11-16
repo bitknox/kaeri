@@ -32,7 +32,10 @@ pub struct Starting {
 /// (Try again) gives them a fresh chance: a source resting after failures in that start is asked
 /// in its place in the order again, rather than last.
 #[derive(Clone, Default)]
-pub struct Unreached(Arc<Mutex<Option<(AnilistId, String, Vec<String>)>>>);
+pub struct Unreached(Arc<Mutex<Option<UnreachedEpisode>>>);
+
+/// The title and episode a start failed on, and the ids of the sources it couldn't reach.
+type UnreachedEpisode = (AnilistId, String, Vec<String>);
 
 impl std::fmt::Debug for Unreached {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {

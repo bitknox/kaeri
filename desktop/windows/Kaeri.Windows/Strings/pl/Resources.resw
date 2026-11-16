@@ -6041,9 +6041,6 @@
   <data name="PlayerStartMissSkipped" xml:space="preserve">
     <value>Pominięto: {name}</value>
   </data>
-  <data name="PlayerStartResting" xml:space="preserve">
-    <value>Pominięte po niedawnych błędach</value>
-  </data>
   <data name="PlayerStartFrom" xml:space="preserve">
     <value>Z: {name}</value>
   </data>
