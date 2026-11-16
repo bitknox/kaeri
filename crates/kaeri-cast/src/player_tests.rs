@@ -115,6 +115,7 @@ fn timings() -> Timings {
         movement: Duration::from_millis(1500),
         fetch: Duration::from_secs(2),
         idle_close: Duration::from_secs(600),
+        gone: Duration::from_secs(1),
         ..Timings::default()
     }
 }
@@ -1061,6 +1062,42 @@ async fn a_tv_with_fixed_volume_only_mutes_and_a_long_pause_ends_the_cast() {
     tokio::time::timeout(Duration::from_secs(5), closed).await.expect("the app closed");
 }
 
+#[tokio::test(flavor = "multi_thread", worker_threads = 4)]
+async fn a_tv_muted_at_the_receiver_stays_muted_through_media_statuses() {
+    let file = matroska(&Fixture { audio: Some(FixtureAudio::aac()), ..Fixture::default() });
+    let base = serve(HashMap::from([("/episode.mkv".to_owned(), file)])).await;
+    let receiver =
+        FakeReceiver::start(FakeOptions { control: "fixed", ..FakeOptions::default() })
+            .await
+            .unwrap();
+    let (player, mut events) =
+        connect_standard(setup(&receiver, Arc::new(CastMemory::memory()), Arc::new(NoEncoder)))
+            .await
+            .unwrap();
+    player.load(torrent(format!("{base}/episode.mkv")));
+    next(&mut events, |e| *e == PlaybackEvent::Loaded).await;
+    let level = player.current().level;
+    player.set_muted(true).await.unwrap();
+    // Past the time a control is shown unconfirmed, with media statuses polled all along: each
+    // says its stream plays unmuted at full volume.
+    let until = tokio::time::Instant::now() + CONFIRM + Duration::from_millis(500);
+    let mut statuses = 0;
+    while tokio::time::Instant::now() < until {
+        if let Ok(Some(PlaybackEvent::Progress { .. })) =
+            tokio::time::timeout_at(until, events.recv()).await
+        {
+            statuses += 1;
+        }
+    }
+    assert!(statuses > 5, "media statuses came in: {statuses}");
+    assert!(player.muted(), "the TV's mute holds");
+    let status = player.current();
+    assert_eq!(status.muted, Some(true));
+    assert_eq!(status.level, level, "the level stays the receiver's");
+    assert_eq!(status.volume, VolumeControl::MuteOnly);
+    player.quit().await.unwrap();
+}
+
 #[test]
 fn subtitles_become_webvtt() {
     let srt =
@@ -1267,7 +1304,11 @@ fn what_was_asked_holds_until_a_status_agrees_or_a_while_has_passed() {
     let mut after = media_status("PAUSED", 300.4);
     after.volume = Some(0.2);
     want.media(&after);
-    assert!(want.paused.is_none() && want.position.is_none() && want.level.is_none());
+    assert!(want.paused.is_none() && want.position.is_none());
+    // The stream's volume in a media status is not the TV's: only the receiver confirms it.
+    assert!(want.level.is_some(), "a media status never confirms the TV's volume");
+    want.volume(Some(0.2), None);
+    assert!(want.level.is_none());
 
     let long_ago = Instant::now().checked_sub(CONFIRM).unwrap();
     let mut want = Wanted { paused: Some((true, long_ago)), ..Wanted::default() };
@@ -1389,12 +1430,63 @@ async fn kaeris_receiver_closing_at_its_first_load_hands_over_to_the_default_one
 #[tokio::test(flavor = "multi_thread", worker_threads = 4)]
 async fn kaeris_receiver_stopped_on_the_tv_mid_episode_ends_the_cast_and_launches_nothing() {
     let (receiver, player, mut events) = cast_with_own_receiver(CustomReceiver::Runs).await;
+    // Its connection closes before the receiver's status says nothing runs.
     receiver.stop_app();
     next(&mut events, |e| matches!(e, PlaybackEvent::Ended { complete: false })).await;
+    let ended = async {
+        while player.is_alive() {
+            tokio::time::sleep(Duration::from_millis(20)).await;
+        }
+    };
+    tokio::time::timeout(Duration::from_secs(5), ended).await.expect("the cast ended");
     assert!(matches!(player.failure(), Some(CastFailure::Lost(_))), "{:?}", player.failure());
+    assert_eq!(player.current().state, CastState::Ended);
     tokio::time::sleep(Duration::from_millis(1500)).await;
     assert_eq!(launched(&receiver), ["0A1B2C3D"], "no other app is put on the TV");
+    assert_eq!(receiver.heard("LOAD").len(), 1, "the episode isn't loaded again");
     let _ = player.quit().await;
+}
+
+#[tokio::test(flavor = "multi_thread", worker_threads = 4)]
+async fn kaeris_receiver_stopped_on_the_tv_at_a_load_ends_the_cast_and_launches_nothing() {
+    let receiver = FakeReceiver::start(FakeOptions {
+        custom: CustomReceiver::StoppedAtLoad,
+        ..FakeOptions::default()
+    })
+    .await
+    .unwrap();
+    let file = matroska(&Fixture::default());
+    let base = serve(HashMap::from([("/episode.mkv".to_owned(), file)])).await;
+    let mut setup =
+        setup(&receiver, Arc::new(CastMemory::memory()), Arc::new(FakeEncoder::default()));
+    setup.timings.ready = Duration::from_millis(800);
+    let (player, mut events) = connect_standard(setup).await.unwrap();
+    player.use_receiver(Some("0A1B2C3D".into()));
+    player.load(torrent(format!("{base}/episode.mkv")));
+    next(&mut events, |e| matches!(e, PlaybackEvent::Ended { complete: false })).await;
+    assert!(matches!(player.failure(), Some(CastFailure::Lost(_))), "{:?}", player.failure());
+    assert!(!player.is_alive());
+    tokio::time::sleep(Duration::from_millis(1500)).await;
+    assert_eq!(launched(&receiver), ["0A1B2C3D"], "the Default Media Receiver isn't put on");
+    assert_eq!(receiver.heard("LOAD").len(), 1, "the episode isn't loaded again");
+}
+
+#[tokio::test(flavor = "multi_thread", worker_threads = 4)]
+async fn another_sender_taking_over_kaeris_receiver_ends_the_cast_and_loads_nothing() {
+    let (receiver, player, mut events) = cast_with_own_receiver(CustomReceiver::Runs).await;
+    // The TV closes this app's connection and shows nothing running before the other app is up.
+    receiver.take_over();
+    next(&mut events, |e| matches!(e, PlaybackEvent::Ended { complete: false })).await;
+    let ended = async {
+        while player.is_alive() {
+            tokio::time::sleep(Duration::from_millis(20)).await;
+        }
+    };
+    tokio::time::timeout(Duration::from_secs(5), ended).await.expect("the cast ended");
+    assert_eq!(player.failure(), Some(CastFailure::TakenOver));
+    tokio::time::sleep(Duration::from_millis(1500)).await;
+    assert_eq!(launched(&receiver), ["0A1B2C3D"], "nothing is launched over the other app");
+    assert_eq!(receiver.heard("LOAD").len(), 1, "nothing is loaded on the other app");
 }
 
 #[tokio::test(flavor = "multi_thread", worker_threads = 4)]
