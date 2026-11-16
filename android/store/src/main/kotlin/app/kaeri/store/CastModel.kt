@@ -121,6 +121,11 @@ data class CastShown(
     val played: Boolean = false,
     /** The picker row of the TV it plays on, when the cast started from one. */
     val key: String? = null,
+    /**
+     * Where the playhead stopped as the TV went quiet: reconnecting, or waiting while the engine
+     * learns why the receiver left. The clock holds it until the TV says where it is again.
+     */
+    val frozen: Double? = null,
 ) {
     val stage: CastStage
         get() {
@@ -140,6 +145,15 @@ data class CastShown(
 
     /** The cast starts or plays: not a card that says why it stopped. */
     val live: Boolean get() = stage == CastStage.Starting || stage == CastStage.Playing
+
+    /** The connection to the TV closed and the engine makes it again: everything but Stop casting waits. */
+    val reconnecting: Boolean get() = live && cast.reconnecting
+
+    /** Seconds the TV has waited, for the stream or while the engine learns why it stopped; `null` while it plays. */
+    val waiting: UInt? get() = cast.waiting.takeIf { live }
+
+    /** The TV went quiet: its clock holds still. */
+    val quiet: Boolean get() = reconnecting || waiting != null
 }
 
 /**
@@ -190,6 +204,9 @@ class CastModel(
 
     /** A note while a TV plays, once as it first reads differently: a toast. */
     val notes: SharedFlow<Msg> = _notes.asSharedFlow()
+
+    /** Each cast notice, also kept in the notice log: notes, and why a cast ended. */
+    var kept: ((Msg) -> Unit)? = null
 
     private val _problem = MutableStateFlow<String?>(null)
 
@@ -278,6 +295,9 @@ class CastModel(
 
     /** The last ending the snackbar said, so the card's end and the session's end say it once. */
     private var told: CastEnded? = null
+
+    /** Where the session's item stopped as its connection closed, while it is made again. */
+    private var sessionFrozen: Double? = null
 
     /** Whether casting is there: the engine's sender came with a Cast browse to give it. */
     val available: Boolean get() = tv?.attachedSender != null && browser != null
@@ -395,10 +415,18 @@ class CastModel(
     /** A view of the session: the button, the mini and the controller's card follow it. */
     internal fun takeSession(view: CastSession) {
         val was = _session.value
+        val wasAt = sessionAt
         sessionAt = clock()
         _session.value = view
         recast()
-        view.note?.let { if (it != was.note) _notes.tryEmit(it) }
+        view.note?.let {
+            if (it != was.note) {
+                _notes.tryEmit(it)
+                kept?.invoke(it)
+            }
+        }
+        if (view.reconnecting && !was.reconnecting) sessionFrozen = itemPlayhead(sessionAt, was, wasAt)
+        if (!view.reconnecting) sessionFrozen = null
         view.item?.let { _lastItem.value = it }
         if (view.state != CastSessionState.Idle) _joining.value = null
         refreshButton()
@@ -431,8 +459,9 @@ class CastModel(
         cards = null
         over = link
         link = null
-        _shown.value = shown.copy(cast = shown.cast.copy(card = shown.cast.card.copy(over = true), notice = notice))
+        _shown.value = shown.copy(cast = shown.cast.copy(card = shown.cast.card.copy(over = true), notice = notice, reconnecting = false, waiting = null))
         recast()
+        kept?.invoke(notice)
     }
 
     /** The cast ended with [ended] to say once its card has gone: the snackbar, said once. */
@@ -440,6 +469,7 @@ class CastModel(
         if (ended == told) return
         told = ended
         _ended.tryEmit(ended)
+        kept?.invoke(ended.notice)
     }
 
     /** The controller's card for what the held TV plays, from the engine's cast. */
@@ -627,7 +657,14 @@ class CastModel(
         val held = _shown.value ?: return
         val same = held.cast.card.now?.position == card.card.now?.position && held.cast.card.now?.paused == card.card.now?.paused
         val playing = card.notice == null && card.card.now?.loading == false
-        _shown.value = held.copy(cast = card, at = if (same) held.at else clock(), played = held.played || playing)
+        val next = held.copy(cast = card, at = if (same) held.at else clock(), played = held.played || playing)
+        // The clock stops where it was the moment the TV went quiet, and runs again once it speaks.
+        val frozen = when {
+            !next.quiet -> null
+            held.frozen != null -> held.frozen
+            else -> playhead(clock(), held)
+        }
+        _shown.value = next.copy(frozen = frozen)
         recast()
         if (held.stage != _shown.value?.stage) refreshButton()
         if (!card.card.over) return
@@ -649,6 +686,7 @@ class CastModel(
             // Failed or lost: the card says so until it is dismissed. The TV may have moved, which
             // a browse below Android 14 finds only by resolving it again.
             else -> {
+                kept?.invoke(notice)
                 (browser as? NsdRelook)?.relook()
                 cards?.cancel()
                 cards = null
@@ -786,18 +824,23 @@ class CastModel(
     }
 
     /** Where the TV's playhead is now: moved on from the card on this device's clock while it plays. */
-    fun playhead(at: Long = clock()): Double? {
-        val shown = _shown.value ?: return null
+    fun playhead(at: Long = clock()): Double? = playhead(at, _shown.value)
+
+    private fun playhead(at: Long, shown: CastShown?): Double? {
+        shown ?: return null
         val now = shown.cast.card.now ?: return null
-        if (shown.stage != CastStage.Playing) return now.position
+        shown.frozen?.let { return it }
+        if (shown.stage != CastStage.Playing || shown.quiet) return now.position
         return tvPlayhead(now, ((at - shown.at).coerceAtLeast(0)) / 1000.0)
     }
 
     /** Where the session's item is now, moved on from its view on this device's clock while it plays. */
-    fun itemPlayhead(at: Long = clock()): Double? {
-        val item = _session.value.item ?: return null
-        if (item.paused || item.loading || item.waiting != null) return item.position
-        val moved = item.position + (at - sessionAt).coerceAtLeast(0) / 1000.0
+    fun itemPlayhead(at: Long = clock()): Double? = sessionFrozen ?: itemPlayhead(at, _session.value, sessionAt)
+
+    private fun itemPlayhead(at: Long, view: CastSession, since: Long): Double? {
+        val item = view.item ?: return null
+        if (item.paused || item.loading || item.waiting != null || view.reconnecting) return item.position
+        val moved = item.position + (at - since).coerceAtLeast(0) / 1000.0
         return item.duration?.let { moved.coerceAtMost(it) } ?: moved
     }
 

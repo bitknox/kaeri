@@ -218,7 +218,10 @@ class AppStore(
     val tv = TvRemoteModel(scope, clock)
 
     /** Casting to TVs with Chromecast built in: the picker's Chromecast rows and the cast card. */
-    val cast = CastModel(scope, clock)
+    val cast = CastModel(scope, clock).also { model ->
+        // A cast notice shows as a snackbar or on the remote, and stays in the log after.
+        model.kept = { notices.log(EngineNotice(kind = NoticeKind.INFO, text = "", hint = null, msg = it)) }
+    }
 
     /** Watch together: the party this device is in, its room, and the rooms kept. */
     val party = PartyModel().also { model ->
