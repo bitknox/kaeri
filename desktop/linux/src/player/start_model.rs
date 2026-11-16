@@ -588,10 +588,9 @@ impl Start {
 
     /// Everything the screen shows at `at`.
     pub fn frame(&self, at: Duration) -> Frame {
-        let failure = self
-            .failure
-            .as_ref()
-            .map(|failure| (t::player_failed_title_text(&self.episode), failure_line(failure, &self.episode)));
+        let failure = self.failure.as_ref().map(|failure| {
+            (t::player_failed_title_text(&self.episode), failure_line(failure, &self.episode))
+        });
         let offline = self.offline();
         let lead = if failure.is_some() || at < DETAIL_AT && !offline {
             String::new()

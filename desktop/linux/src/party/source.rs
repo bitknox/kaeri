@@ -418,9 +418,11 @@ mod tests {
 
     #[test]
     fn the_line_over_the_reasons_claims_only_what_the_sources_that_answered_said() {
-        let answered = [miss("Brook", ListingMiss::NoEpisode), miss("Kumo", ListingMiss::NoMatch)];
+        let answered =
+            [miss("Brook", ListingMiss::NoEpisode), miss("Kumo", ListingMiss::NoMatch)];
         assert_eq!(none_lists_line(&answered, "7"), "No source lists episode 7.");
-        let failed = [miss("Alpha", ListingMiss::Failed), miss("Brook", ListingMiss::NoEpisode)];
+        let failed =
+            [miss("Alpha", ListingMiss::Failed), miss("Brook", ListingMiss::NoEpisode)];
         assert_eq!(none_lists_line(&failed, "7"), "No source that answered lists episode 7.");
         let held = [
             miss("Brook", ListingMiss::NoEpisode),
