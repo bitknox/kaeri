@@ -286,6 +286,31 @@ struct CastTests {
         model.playHereFromSession()
         #expect(!played)
     }
+
+    @Test func aTvLeftWithNothingLoadedReadsConnectedNotStarting() {
+        let model = CastModel()
+        model.link = RecordingLink()
+        // The last episode plays to its end, with none after it.
+        model.take(view: Self.view(.playing, item: Self.item(at: 1400)))
+        model.expanded = true
+        model.take(view: Self.view(.connected))
+        #expect(model.heldIdle)
+        #expect(model.sessionLine == L.castButtonConnected(name: "Living room"))
+        #expect(!model.expanded)
+        #expect(!model.miniShown)
+
+        // A play that could not start: starting, then nothing.
+        let starting = FfiCastItem(
+            id: 900_001, title: "Lanterns", episode: "4", episodeTitle: nil, image: nil,
+            position: 0, duration: nil, paused: false, waiting: nil, loading: true)
+        model.take(view: Self.view(.playing, item: starting))
+        #expect(!model.heldIdle)
+        #expect(model.sessionLine == L.tvStartingOn(name: "Living room"))
+        model.expanded = true
+        model.take(view: Self.view(.connected))
+        #expect(model.sessionLine == L.castButtonConnected(name: "Living room"))
+        #expect(!model.expanded)
+    }
 }
 
 /// A link that records what the model tells the engine of the app's place.

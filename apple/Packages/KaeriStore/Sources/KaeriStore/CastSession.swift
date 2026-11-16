@@ -133,6 +133,11 @@ extension CastModel {
             // The episode ended on the TV, which stays held with nothing loaded.
             end()
         }
+        if view.state == .connected, before == .playing, view.item == nil, !active {
+            // Nothing plays any more: the episode ended with none after it, or a play could not
+            // start. The TV stays connected, as the cast button says, and the controller closes.
+            expanded = false
+        }
         if let item = view.item {
             let last = CastLastItem(
                 id: item.id, title: item.title, episode: item.episode, episodeTitle: item.episodeTitle,
@@ -236,10 +241,17 @@ extension CastModel {
         return title ?? ""
     }
 
+    /// The TV is held with nothing loaded and no card follows it: connected, not starting.
+    public var heldIdle: Bool {
+        guard let held, held.state == .connected, held.item == nil else { return false }
+        return !rejoining && !active
+    }
+
     /// The mini's and the controller's line: the TV, and how it goes.
     public var sessionLine: String {
         let name = heldName
         if rejoining { return L.tvStatusReconnecting(name: name) }
+        if heldIdle { return L.castButtonConnected(name: name) }
         if active {
             switch stage {
             case .starting: return card?.phaseLine?.text ?? L.tvStartingOn(name: name)

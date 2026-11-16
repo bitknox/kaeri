@@ -504,6 +504,8 @@ struct CastSessionStatus: View {
                     Circle().fill(.water).frame(width: 7, height: 7)
                 case .failed:
                     Circle().fill(.vermilion).frame(width: 7, height: 7)
+                case .connected:
+                    CastButtonGlyph(look: .connected, size: 12, color: .haze)
                 }
             }
             .frame(width: 14, height: 14)
@@ -519,16 +521,19 @@ struct CastSessionStatus: View {
     }
 }
 
-/// How the controller is laid out. It changes only as an episode starts, as it fails and as a
-/// session is joined; within playing it holds, paused or waiting.
+/// How the controller is laid out. It changes only as an episode starts, as it fails, as a
+/// session is joined and as the TV is left with nothing loaded; within playing it holds, paused
+/// or waiting.
 enum CastShown: Equatable {
-    case starting, playing, failed, joining
+    case starting, playing, failed, joining, connected
 
     @MainActor init(_ cast: CastModel) {
         if cast.rejoining {
             self = .joining
         } else if cast.active, cast.stage == .failed || cast.stage == .stopped {
             self = .failed
+        } else if cast.heldIdle {
+            self = .connected
         } else if cast.itemLive {
             self = .playing
         } else {
