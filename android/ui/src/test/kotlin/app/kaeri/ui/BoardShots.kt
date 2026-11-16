@@ -653,15 +653,17 @@ class BoardShots {
         else org.junit.Assert.assertNotEquals("the bar is clear over the art", ground, bar)
         // The bar's bottom: the 24 dp status bar and the 64 dp row.
         val barBottom = 88 * density
-        val inBar = compose.onAllNodesWithText(title, useUnmergedTree = true).fetchSemanticsNodes()
-            .filter { it.boundsInRoot.top < barBottom }
+        val named = compose.onAllNodesWithText(title, useUnmergedTree = true).fetchSemanticsNodes()
+        // On screen and in the bar's band: not a row kept composed above the list's top.
+        val inBar = named.filter { it.boundsInRoot.top < barBottom && it.boundsInRoot.bottom > 0f }
+        val seen = named.joinToString { "${it.boundsInRoot} heading=${it.config.getOrNull(SemanticsProperties.Heading) != null}" }
         if (scrolled) {
-            assertEquals("the show's name in the bar", 1, inBar.size)
+            assertEquals("the show's name in the bar, of: $seen", 1, inBar.size)
             assertEquals("the bar's name is no heading", null, inBar.single().config.getOrNull(SemanticsProperties.Heading))
             val headings = compose.onAllNodes(SemanticsMatcher.keyIsDefined(SemanticsProperties.Heading) and hasText(title), useUnmergedTree = true).fetchSemanticsNodes()
-            org.junit.Assert.assertTrue("no second heading of the show", headings.all { it.boundsInRoot.top >= barBottom })
+            org.junit.Assert.assertTrue("no second heading of the show in the bar, of: $seen", headings.none { it.boundsInRoot.top < barBottom && it.boundsInRoot.bottom > 0f })
         } else {
-            assertEquals("no name in the clear bar", 0, inBar.size)
+            assertEquals("no name in the clear bar, of: $seen", 0, inBar.size)
         }
     }
 
