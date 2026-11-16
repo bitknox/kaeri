@@ -2789,7 +2789,23 @@ fn receive(inner: &Arc<Inner>, message: &Incoming) {
     state.waiting_since = waits.then(|| state.waiting_since.unwrap_or_else(Instant::now));
     state.last = Some(status.clone());
     if !state.trying {
+        if ours
+            && status.idle_reason.is_none()
+            && status.state != "IDLE"
+            && state.loaded.is_none_or(|loaded| loaded == status.media_session_id)
+        {
+            adopt(inner, status.media_session_id);
+        }
         apply(inner, &mut state, &status);
+    }
+}
+
+/// What the receiver played when this device connected to it, a cast another sender started
+/// above all: its media session is the one this player's controls go to, as a load or a join
+/// sets it. A media session already in force is kept.
+fn adopt(inner: &Inner, session: i64) {
+    if let Some(media) = lock(&inner.media).as_mut().filter(|m| m.media_session_id.is_none()) {
+        media.media_session_id = Some(session);
     }
 }
 
