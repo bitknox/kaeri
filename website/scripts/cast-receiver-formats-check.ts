@@ -25,7 +25,8 @@ const report = process.env.FORMATS_REPORT ?? null;
 
 if (!existsSync(join(receiver, 'app.js')) || !existsSync(join(receiver, 'pcm/worker.js')))
 	throw new Error('build the receiver first: bun scripts/cast-receiver.ts');
-if (!existsSync(join(media, 'sync-h264-ac3.mkv'))) {
+// The script makes only what is missing, so media made before a file was added gets it too.
+if (!['sync-h264-ac3.mkv', 'mp4-720p.mp4'].every((f) => existsSync(join(media, f)))) {
 	const r = spawnSync('bun', [join(here, 'cast-receiver/test-media.ts'), media], { stdio: 'inherit' });
 	if (r.status !== 0) throw new Error('making the test media failed');
 }
@@ -395,6 +396,7 @@ async function syncCase() {
 	expect(!!p && Math.abs(p.drift) < 0.03, `${label}: in step at 0.75x (${((p?.drift ?? 0) * 1000).toFixed(1)} ms)`);
 	await js('document.getElementById("video").playbackRate = 1');
 
+	const seeksBefore = (await stats())?.seeks ?? 0;
 	for (const target of [30, 4, 22]) {
 		await js(`document.getElementById("video").currentTime = ${target}`);
 		await until(`document.getElementById('video').currentTime > ${target + 0.5} && !document.getElementById('video').seeking`, 10_000);
@@ -404,6 +406,9 @@ async function syncCase() {
 		if (process.env.FORMATS_DEBUG) console.log(JSON.stringify({ target, t, p, s: await stats() }));
 		expect(!!p && Math.abs(p.drift) < 0.02 && Math.abs(p.time - t) < 0.3, `${label}: in step after a seek to ${target} s (${((p?.drift ?? 0) * 1000).toFixed(1)} ms, audio at ${p?.time?.toFixed(3)}, video at ${t.toFixed(3)}, gen ${p?.gen}, queued ${p?.queued?.toFixed(2)})`);
 	}
+	// Each seek reads the file once: a MediaSource that ended and opened again starts no second reader.
+	const seeks = ((await stats())?.seeks ?? 0) - seeksBefore;
+	expect(seeks === 3, `${label}: one read per seek (${seeks} for 3)`);
 	p = await drift();
 	const cpu = await js<{ cpu: number; decoded: number; heap: number } | null>('__receiver.formats.current?.pcmCpu() ?? null');
 	const heap = await js<number>('performance.memory ? performance.memory.usedJSHeapSize : 0');
