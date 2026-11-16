@@ -428,18 +428,8 @@ struct State {
     /// Kaeri's receiver closed while a plan was tried: the plan is tried again on the Default
     /// Media Receiver.
     relaunch: bool,
-    /// Kaeri's receiver closed with nothing loading: the Default Media Receiver is launched at
-    /// the next poll, so a session stays connected.
-    relaunch_idle: bool,
-    /// The receiver app running played a file.
-    played_in_app: bool,
-    /// When the receiver app running came up.
-    launched: Option<Instant>,
     /// Since when the TV has said it waits for data.
     waiting_since: Option<Instant>,
-    /// Kaeri's receiver closed mid-episode: the poll loads it again on the Default Media
-    /// Receiver where it was.
-    reload_elsewhere: bool,
     /// The language and device word Kaeri's receiver is greeted with.
     language: Option<String>,
     device_word: Option<String>,
@@ -622,8 +612,6 @@ impl Inner {
                 // Under the state's lock, so a quit either sees this media or is seen here.
                 let mut state = lock(&inner.state);
                 if !state.quit {
-                    state.played_in_app = false;
-                    state.launched = Some(Instant::now());
                     state.app = Some(app.clone());
                     let fresh = Media::new(inner.device().channel.clone(), app);
                     *lock(&inner.media) = Some(fresh.clone());
@@ -946,11 +934,7 @@ impl CastPlayer {
         };
         player.inner.device().channel.connect_to(&app.transport_id).map_err(lost)?;
         let mut media = Media::new(player.inner.device().channel.clone(), app.clone());
-        {
-            let mut state = lock(&player.inner.state);
-            state.app = Some(app);
-            state.played_in_app = true;
-        }
+        lock(&player.inner.state).app = Some(app);
         // Its media session, when something plays: the answer is the first status. It is taken
         // here, as the receive task may read the same message only after this returns.
         match media.status().await {
@@ -2465,7 +2449,6 @@ fn apply(inner: &Inner, state: &mut State, status: &MediaStatus) {
     if new_session {
         state.loaded = Some(status.media_session_id);
         state.ended = false;
-        state.played_in_app = true;
         if state.reloading {
             // Our own reload, for a late subtitle: the same file, where it was.
             state.reloading = false;
@@ -2759,48 +2742,19 @@ fn from_kaeris_receiver(inner: &Inner, state: &mut State, message: &Incoming, ou
     let _ = inner.heard.send(heard);
 }
 
-/// Kaeri's receiver closing this soon after it came up, with nothing loading, is a receiver
-/// page that failed: a closed one later was closed on the TV.
-const OWN_RECEIVER_FAILS: Duration = Duration::from_secs(15);
-
-/// Kaeri's receiver closed: the Default Media Receiver takes its place and the cast goes on.
-/// Before it played anything, the next load launches it; mid-episode, the file loads again on it
-/// where it was. `false` for any other app, or Kaeri's closed idle after it played: that
-/// closing ends the cast.
+/// Kaeri's receiver closed while a file was loading on it: a receiver page that failed, so the
+/// Default Media Receiver takes its place and the load is tried again there. `false` for any
+/// other app, and for Kaeri's closed while idle or playing: it said it was ready, so it was
+/// closed on the TV, and the cast ends rather than putting another app on the TV.
 fn falls_back(inner: &Inner, state: &mut State) -> bool {
     let custom = state.app.as_ref().is_some_and(|app| app.app_id != DEFAULT_MEDIA_RECEIVER);
-    if !custom || state.fallen_back {
+    if !custom || state.fallen_back || !state.trying {
         return false;
     }
-    if state.played_in_app {
-        let mid_episode = state.plan.is_some() && !state.ended && state.asked.is_some();
-        if !mid_episode {
-            return false;
-        }
-        tracing::info!(
-            "Kaeri's receiver closed mid-episode; it plays on the Default Media Receiver"
-        );
-        state.app = None;
-        state.fallen_back = true;
-        state.reload_elsewhere = true;
-        *lock(&inner.media) = None;
-        return true;
-    }
-    // Idle a while, it was closed on the TV, as any receiver is: the session ends.
-    let failed = state.launched.is_some_and(|at| at.elapsed() < OWN_RECEIVER_FAILS);
-    if !state.trying && !failed {
-        return false;
-    }
-    tracing::info!(
-        "Kaeri's receiver closed before playing; the Default Media Receiver takes over"
-    );
+    tracing::info!("Kaeri's receiver closed at a load; the Default Media Receiver takes over");
     state.app = None;
     state.fallen_back = true;
-    if state.trying {
-        state.relaunch = true;
-    } else {
-        state.relaunch_idle = true;
-    }
+    state.relaunch = true;
     *lock(&inner.media) = None;
     true
 }
@@ -2839,26 +2793,6 @@ async fn poll(inner: std::sync::Weak<Inner>) {
         };
         if done {
             return;
-        }
-        let elsewhere = {
-            let mut state = lock(&inner.state);
-            let reload = std::mem::take(&mut state.reload_elsewhere);
-            state.asked.clone().filter(|_| reload).map(|mut load| {
-                load.start = state.last.as_ref().map(|s| s.position).or(load.start);
-                load.subtitle =
-                    state.subtitle.and_then(|id| usize::try_from(id).ok()?.checked_sub(1));
-                load
-            })
-        };
-        if let Some(load) = elsewhere {
-            begin(&inner, load, true);
-        }
-        let relaunch = std::mem::take(&mut lock(&inner.state).relaunch_idle);
-        if relaunch {
-            if let Err(e) = inner.app().await {
-                tracing::info!(error = %e, "the Default Media Receiver didn't launch");
-            }
-            inner.publish();
         }
         if idle {
             tracing::info!("paused too long; ending the cast");

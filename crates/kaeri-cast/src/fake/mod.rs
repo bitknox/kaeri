@@ -193,6 +193,8 @@ enum Control {
     Drop,
     /// This connection is closed, and the TV goes on and answers the next.
     Close,
+    /// The receiver app is stopped on the TV.
+    StopApp,
     Buffering(bool),
     Say(Value),
 }
@@ -361,6 +363,12 @@ impl FakeReceiver {
         let _ = self.control.send(Control::Drop);
     }
 
+    /// The receiver app is stopped on the TV, with its remote or from another phone's Cast card:
+    /// no app runs afterwards.
+    pub fn stop_app(&self) {
+        let _ = self.control.send(Control::StopApp);
+    }
+
     /// The TV closes the connection this sender holds, with a FIN, and plays on and answers the
     /// next one: a TV that drops its senders when its Wi-Fi roams.
     pub fn close_connection(&self) {
@@ -463,6 +471,11 @@ async fn serve(
                 }
                 // Kept above, so the next connection finds the TV as it was.
                 Control::Close => return Ok(()),
+                Control::StopApp => {
+                    app = None;
+                    playing = None;
+                    send("receiver-0", "*", NS_RECEIVER, receiver_status(&app, 0, level, muted));
+                }
                 Control::Buffering(waiting) => {
                     if let Some(p) = playing.as_mut() {
                         p.advance(options.speed);

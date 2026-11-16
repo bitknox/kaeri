@@ -1356,6 +1356,42 @@ async fn kaeris_receiver_closing_at_its_first_load_hands_over_to_the_default_one
 }
 
 #[tokio::test(flavor = "multi_thread", worker_threads = 4)]
+async fn kaeris_receiver_stopped_on_the_tv_mid_episode_ends_the_cast_and_launches_nothing() {
+    let (receiver, player, mut events) = cast_with_own_receiver(CustomReceiver::Runs).await;
+    receiver.stop_app();
+    next(&mut events, |e| matches!(e, PlaybackEvent::Ended { complete: false })).await;
+    assert!(matches!(player.failure(), Some(CastFailure::Lost(_))), "{:?}", player.failure());
+    tokio::time::sleep(Duration::from_millis(1500)).await;
+    assert_eq!(launched(&receiver), ["0A1B2C3D"], "no other app is put on the TV");
+    let _ = player.quit().await;
+}
+
+#[tokio::test(flavor = "multi_thread", worker_threads = 4)]
+async fn kaeris_receiver_stopped_on_the_tv_while_idle_ends_the_session_and_launches_nothing() {
+    let receiver = FakeReceiver::start(FakeOptions {
+        custom: CustomReceiver::Runs,
+        ..FakeOptions::default()
+    })
+    .await
+    .unwrap();
+    let mut setup =
+        setup(&receiver, Arc::new(CastMemory::memory()), Arc::new(FakeEncoder::default()));
+    setup.timings.ready = Duration::from_millis(800);
+    let (player, _events) = connect_standard(setup).await.unwrap();
+    player.use_receiver(Some("0A1B2C3D".into()));
+    player.launch().await.unwrap();
+    receiver.stop_app();
+    let deadline = tokio::time::Instant::now() + Duration::from_secs(5);
+    while player.is_alive() {
+        assert!(tokio::time::Instant::now() < deadline, "the session ended");
+        tokio::time::sleep(Duration::from_millis(50)).await;
+    }
+    tokio::time::sleep(Duration::from_millis(1500)).await;
+    assert_eq!(launched(&receiver), ["0A1B2C3D"], "no other app is put on the TV");
+    assert!(matches!(player.failure(), Some(CastFailure::Lost(_))), "{:?}", player.failure());
+}
+
+#[tokio::test(flavor = "multi_thread", worker_threads = 4)]
 async fn kaeris_receiver_that_never_says_ready_hands_over_to_the_default_one() {
     let (receiver, player, _events) = cast_with_own_receiver(CustomReceiver::Silent).await;
     assert_eq!(launched(&receiver), ["0A1B2C3D", DEFAULT_MEDIA_RECEIVER]);
