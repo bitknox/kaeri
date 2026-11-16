@@ -25,21 +25,40 @@ export interface FetchOptions {
 	signal?: AbortSignal;
 	what?: FetchError['what'];
 	range?: [number, number];
-	/** Tries again after this many ms on no answer or a 5xx; 0 to fail at once. */
+	/** Tries again this many times on no answer or a 5xx; 0 to fail at once. */
 	retries?: number;
+	/** The first wait before trying again, in ms; each wait doubles up to four seconds. */
+	backoff?: number;
+	/** Ms to wait for an answer before the try counts as no answer. */
+	timeout?: number;
 }
 
-const wait = (ms: number) => new Promise((r) => setTimeout(r, ms));
+/** A wait that ends early, with the signal's reason, when the signal aborts. */
+function wait(ms: number, signal?: AbortSignal) {
+	return new Promise<void>((resolve, reject) => {
+		if (signal?.aborted) return reject(signal.reason);
+		const done = () => {
+			clearTimeout(timer);
+			reject(signal!.reason);
+		};
+		const timer = setTimeout(() => {
+			signal?.removeEventListener('abort', done);
+			resolve();
+		}, ms);
+		signal?.addEventListener('abort', done, { once: true });
+	});
+}
 
-/** fetch, with the receiver's error and two quiet retries for a relay that hiccuped. */
+/** fetch, with the receiver's error and quiet retries for a relay that hiccuped. */
 export async function get(url: string, o: FetchOptions = {}): Promise<Response> {
 	const headers: Record<string, string> = {};
 	if (o.range) headers.Range = `bytes=${o.range[0]}-${o.range[1]}`;
 	const tries = o.retries ?? 2;
+	const backoff = o.backoff ?? 500;
 	for (let attempt = 0; ; attempt++) {
 		let status = 0;
 		try {
-			const r = await fetch(url, { headers, signal: o.signal });
+			const r = await answer(url, headers, o);
 			if (r.ok) return r;
 			status = r.status;
 			if (status < 500 && status !== 429) throw new FetchError(url, status, o.what ?? 'segment');
@@ -48,7 +67,27 @@ export async function get(url: string, o: FetchOptions = {}): Promise<Response> 
 			if (o.signal?.aborted) throw e;
 		}
 		if (attempt >= tries) throw new FetchError(url, status, o.what ?? 'segment');
-		await wait(500 * 2 ** attempt);
+		await wait(Math.min(backoff * 2 ** attempt, 4000), o.signal);
+	}
+}
+
+/** One fetch, given up when no answer comes within the timeout. */
+async function answer(url: string, headers: Record<string, string>, o: FetchOptions): Promise<Response> {
+	if (!o.timeout) return fetch(url, { headers, signal: o.signal });
+	// The body still reads after the answer, so the outer signal stays wired to it.
+	const ac = new AbortController();
+	const outer = o.signal;
+	const pass = () => ac.abort(outer?.reason);
+	if (outer?.aborted) pass();
+	else outer?.addEventListener('abort', pass, { once: true });
+	const timer = setTimeout(() => ac.abort(), o.timeout);
+	try {
+		return await fetch(url, { headers, signal: ac.signal });
+	} catch (e) {
+		outer?.removeEventListener('abort', pass);
+		throw e;
+	} finally {
+		clearTimeout(timer);
 	}
 }
 

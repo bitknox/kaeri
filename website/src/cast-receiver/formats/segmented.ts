@@ -53,6 +53,12 @@ interface Cursor {
 	last: number;
 }
 
+/**
+ * How hard a segment is tried before it is skipped, and how many missed in a row mean the stream
+ * is gone. Six tries over about twelve seconds stay inside the half minute read ahead.
+ */
+export const patience = { retries: 5, backoff: 500, timeout: 20_000, gone: 3 };
+
 const VIDEO_ID = 1;
 const AUDIO_BASE = 100;
 const TEXT_BASE = 200;
@@ -82,7 +88,13 @@ export class SegmentedStream implements Demuxer {
 	/** Seconds subtracted from media times, per epoch (HLS). */
 	private origins = new Map<number, number>();
 	private abort = new AbortController();
+	/** Aborts the segment being read; a seek starts a new one. */
+	private reading = new AbortController();
 	private seekTime = 0;
+	/** Per rendition, the segments read in a row that never came. */
+	private missed = new Map<number, number>();
+	/** Spans whose segments were skipped, in seconds on the presentation timeline. */
+	readonly skipped: [number, number][] = [];
 
 	constructor(
 		private readonly video: Rendition | null,
@@ -193,6 +205,38 @@ export class SegmentedStream implements Demuxer {
 		return bytesOf(seg.url, { range: seg.range, signal: this.abort.signal, what: 'segment' });
 	}
 
+	/**
+	 * A segment read during playback. One that still fails after its retries is skipped and
+	 * playback steps over its span; several in a row mean the stream is gone, and that error
+	 * ends the session.
+	 */
+	private async fetchOrSkip(seg: Segment, c: Cursor): Promise<Uint8Array | null> {
+		const { retries, backoff, timeout, gone } = patience;
+		const id = c.id;
+		try {
+			const b = await bytesOf(seg.url, { range: seg.range, signal: this.reading.signal, what: 'segment', retries, backoff, timeout });
+			this.missed.delete(id);
+			return b;
+		} catch (e) {
+			if (!(e instanceof FetchError) || this.reading.signal.aborted) throw e;
+			// Missing subtitle cues leave the picture and sound alone.
+			if (c.r.kind === 'text') return null;
+			const missed = (this.missed.get(id) ?? 0) + 1;
+			this.missed.set(id, missed);
+			if (missed >= gone) throw e;
+			console.warn('segment skipped', e.message, seg.start.toFixed(1));
+			const end = seg.start + seg.duration;
+			if (!this.skipped.some(([a, b]) => a === seg.start && b === end)) this.skipped.push([seg.start, end]);
+			return null;
+		}
+	}
+
+	/** Stops the segment being read, for a seek that wants reading elsewhere now. */
+	interrupt() {
+		this.reading.abort();
+		this.reading = new AbortController();
+	}
+
 	/** Loads the setup of the audio renditions about to be read. */
 	async select(ids: number[]) {
 		this.active = new Set(ids);
@@ -238,7 +282,9 @@ export class SegmentedStream implements Demuxer {
 		if (!pick) return null;
 		const index = pick.next++;
 		const seg = pick.r.segments[index];
-		const b = await this.fetch(seg);
+		const b = await this.fetchOrSkip(seg, pick);
+		// A skipped TS segment breaks the run: the next one starts its parser over.
+		if (!b) return [];
 		if (pick.r.format === 'vtt') return this.vtt(utf8(b), seg, pick.id);
 		if (pick.r.format === 'mp4') {
 			const map = await this.init(pick, seg);
@@ -310,6 +356,7 @@ export class SegmentedStream implements Demuxer {
 
 	close() {
 		this.abort.abort();
+		this.reading.abort();
 	}
 }
 

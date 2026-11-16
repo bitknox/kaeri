@@ -65,6 +65,22 @@ function serveFile(path: string, req: Request): Response {
 	return new Response(file, { headers });
 }
 
+/** Answers for the missed segment cases: a dead port where a segment should be, or a 503 twice. */
+let lateTries = 0;
+function missing(mode: string, rest: string, req: Request): Response {
+	if (rest.endsWith('.m3u8')) {
+		const text = readFileSync(join(media, rest), 'utf8').replace(/^seg(\d+)\.ts$/gm, (line, n) => {
+			const k = Number(n);
+			const dead = mode === 'one' ? k === 2 : mode === 'gone' ? k >= 2 : false;
+			// Nothing listens on port 9: the fetch gets no answer at all.
+			return dead ? `http://127.0.0.1:9/${line}` : line;
+		});
+		return new Response(text, { headers: { 'Content-Type': types['.m3u8'], 'Access-Control-Allow-Origin': '*' } });
+	}
+	if (mode === 'late' && rest.endsWith('seg002.ts') && lateTries++ < 2) return new Response('busy', { status: 503, headers: { 'Access-Control-Allow-Origin': '*' } });
+	return serveFile(join(media, rest), req);
+}
+
 const server = Bun.serve({
 	port: 0,
 	idleTimeout: 0,
@@ -80,6 +96,9 @@ const server = Bun.serve({
 		}
 		if (path === '/cast/receiver/caf-stub.js') return new Response(stub, { headers: { 'Content-Type': types['.js'] } });
 		if (path.startsWith('/media/')) requests++;
+		// The HLS stream with segments that do not come: refused, slow to come, or gone from one on.
+		const miss = path.match(/^\/media\/miss-(one|late|gone)\/(.+)$/);
+		if (miss) return missing(miss[1], miss[2], req);
 		// A URL that names no format: the receiver reads it from the bytes.
 		if (path === '/media/stream') return serveFile(join(media, 'mkv-h264-aac.mkv'), req);
 		const [root, rest] = path.startsWith('/media/') ? [media, path.slice(7)] : path.startsWith('/cast/receiver/') ? [receiver, path.slice(15)] : [null, ''];
@@ -473,6 +492,37 @@ async function silentPictureCase() {
 }
 
 /** The testing build's status line proves sound on a muted TV, both audio paths. */
+/** A segment that does not come: playback rides it out, and only a stream gone for good ends it. */
+async function missedCase() {
+	const video = `document.getElementById('video')`;
+	const base: Case = { name: '', file: '', format: 'hls' };
+	const mediaErrors = () => js<number>(`__caf.sent.filter((m) => m.body.type === 'error').length`);
+
+	lateTries = 0;
+	let label = 'missed segment, comes on a retry';
+	await js('__caf.sent.length = 0');
+	await js(`__caf.load(${JSON.stringify(request({ ...base, name: label, file: 'miss-late/hls-ts/index.m3u8' }))})`);
+	let on = await until(`${video}.currentTime > 7`, 25_000);
+	expect(on && lateTries === 3, `${label}: plays through it (at ${(await time()).toFixed(1)} s, ${lateTries} tries)`);
+	expect((await mediaErrors()) === 0, `${label}: no error sent`);
+
+	label = 'missed segment, never comes';
+	await js('__caf.sent.length = 0');
+	await js(`__caf.load(${JSON.stringify(request({ ...base, name: label, file: 'miss-one/hls-ts/index.m3u8' }))})`);
+	on = await until(`${video}.currentTime > 7.5`, 40_000);
+	const skipped = await js<[number, number][]>('__receiver.formats.current?.stats().skipped ?? []');
+	expect(on, `${label}: steps over it and plays on (at ${(await time()).toFixed(1)} s, skipped ${JSON.stringify(skipped)})`);
+	expect((await mediaErrors()) === 0, `${label}: no error sent${(await mediaErrors()) ? ` (${JSON.stringify((await errors())[0])})` : ''}`);
+	expect(await js<boolean>(`${video}.getVideoPlaybackQuality().totalVideoFrames > 100`), `${label}: the picture moves after it`);
+
+	label = 'missed segments, stream gone';
+	await js('__caf.sent.length = 0');
+	await js(`__caf.load(${JSON.stringify(request({ ...base, name: label, file: 'miss-gone/hls-ts/index.m3u8' }))})`);
+	const ended = await until(`__caf.sent.some((m) => m.body.type === 'error')`, 60_000);
+	const err = (await errors())[0];
+	expect(ended, `${label}: ends with an error (${JSON.stringify(err)})`);
+}
+
 async function debugCase() {
 	for (const c of cases.filter((x) => x.name === 'mkv h264 aac' || x.name === 'mkv h264 ac3')) {
 		const label = `debug status, ${c.name}`;
@@ -501,6 +551,7 @@ try {
 	if (!only || 'refused'.includes(only)) await refusedVideoCase();
 	if (!only || 'silent'.includes(only)) await silentPictureCase();
 	if (!only || 'debug'.includes(only)) await debugCase();
+	if (!only || 'missed'.includes(only)) await missedCase();
 } finally {
 	await js('__caf.load({ media: { contentId: "about:blank" } })').catch(() => {});
 	ws.close();

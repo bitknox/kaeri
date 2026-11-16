@@ -1,6 +1,6 @@
 import { afterAll, beforeAll, describe, expect, test } from 'bun:test';
 import { createMuxer } from './mux';
-import { SegmentedStream, type Segment } from './segmented';
+import { FetchError, SegmentedStream, patience, type Segment } from './segmented';
 import type { Sample } from './types';
 
 // An HLS stream of AAC in MPEG-TS whose audio PES packets run on from one segment into the next,
@@ -88,14 +88,30 @@ function segments(): Uint8Array[] {
 
 const bodies = segments();
 const realFetch = globalThis.fetch;
+const realPatience = { ...patience };
+/** Per segment, how many more tries get no answer (Infinity: never), or a status to answer with. */
+const missing = new Map<number, number | { status: number }>();
+const tries = new Map<number, number>();
 beforeAll(() => {
-	globalThis.fetch = (async (url: string) => {
+	// Retries in milliseconds, not seconds.
+	Object.assign(patience, { backoff: 1, timeout: 0 });
+	globalThis.fetch = (async (url: string, init?: RequestInit) => {
 		const k = Number(String(url).match(/seg(\d)\.ts/)?.[1]);
+		tries.set(k, (tries.get(k) ?? 0) + 1);
+		const miss = missing.get(k);
+		if (typeof miss === 'object') return new Response('gone', { status: miss.status });
+		if (miss) {
+			missing.set(k, miss - 1);
+			// What fetch does when no server answers, or when the read is stopped.
+			if (miss === Infinity) await new Promise((_, no) => init?.signal?.addEventListener('abort', () => no(new DOMException('aborted', 'AbortError'))) || setTimeout(() => no(new TypeError('Failed to fetch')), 1));
+			throw new TypeError('Failed to fetch');
+		}
 		return new Response(bodies[k] as Uint8Array<ArrayBuffer>, { headers: { 'Content-Type': 'video/mp2t' } });
 	}) as typeof fetch;
 });
 afterAll(() => {
 	globalThis.fetch = realFetch;
+	Object.assign(patience, realPatience);
 });
 
 function stream() {
@@ -147,6 +163,89 @@ describe('HLS segments cut inside an audio PES', () => {
 		expect(samples.length).toBeLessThan(FRAMES);
 		samples.forEach((x, i) => i && expect(x.pts - samples[i - 1].pts).toBeCloseTo(1024 / RATE, 6));
 		expect(Math.round(samples[0].pts * RATE) % (PER_PES * 1024)).toBe(0);
+	});
+});
+
+describe('a segment that does not come', () => {
+	const each = (FRAMES * 1024) / RATE / 3;
+	const audioOf = async (s: SegmentedStream) => {
+		await s.open();
+		const audio = s.tracks.find((t) => t.kind === 'audio')!;
+		return (await readAll(s)).filter((x) => x.track === audio.id);
+	};
+	const reset = () => {
+		missing.clear();
+		tries.clear();
+		patience.gone = realPatience.gone;
+	};
+
+	test('a few tries with no answer, then it comes and nothing is lost', async () => {
+		reset();
+		missing.set(1, 3);
+		const s = stream();
+		const samples = await audioOf(s);
+		expect(tries.get(1)).toBe(4);
+		expect(samples.length).toBe(FRAMES);
+		expect(s.skipped).toEqual([]);
+	});
+
+	test('one that never answers is skipped and reading goes on after it', async () => {
+		reset();
+		missing.set(1, Infinity);
+		const s = stream();
+		const samples = await audioOf(s);
+		expect(tries.get(1)).toBe(patience.retries + 1);
+		expect(s.skipped).toEqual([[each, 2 * each]]);
+		expect(samples.some((x) => x.pts < each)).toBe(true);
+		expect(samples.some((x) => x.pts >= 2 * each)).toBe(true);
+		// Nothing from inside the gap; after it, frames from the first whole PES, back to back.
+		expect(samples.some((x) => x.pts > each + 0.2 && x.pts < 2 * each - 1e-6)).toBe(false);
+		const after = samples.filter((x) => x.pts >= 2 * each - 1e-6);
+		after.forEach((x, i) => i && expect(x.pts - after[i - 1].pts).toBeCloseTo(1024 / RATE, 6));
+	});
+
+	test('one the server refuses is skipped without retries', async () => {
+		reset();
+		missing.set(1, { status: 404 });
+		const s = stream();
+		await audioOf(s);
+		expect(tries.get(1)).toBe(1);
+		expect(s.skipped).toEqual([[each, 2 * each]]);
+	});
+
+	test('several in a row missing mean the stream is gone', async () => {
+		reset();
+		patience.gone = 2;
+		missing.set(1, Infinity);
+		missing.set(2, Infinity);
+		const s = stream();
+		const err = await audioOf(s).catch((e) => e);
+		expect(err).toBeInstanceOf(FetchError);
+		expect((err as FetchError).status).toBe(0);
+		expect((err as FetchError).what).toBe('segment');
+		expect(s.skipped).toEqual([[each, 2 * each]]);
+	});
+
+	test('a seek stops the retries at once', async () => {
+		reset();
+		missing.set(1, Infinity);
+		const was = patience.backoff;
+		patience.backoff = 60_000;
+		try {
+			const s = stream();
+			await s.open();
+			await s.read();
+			const read = s.read();
+			await Bun.sleep(20);
+			const started = performance.now();
+			s.interrupt();
+			const err = await read.catch((e) => e);
+			expect(err).not.toBeInstanceOf(FetchError);
+			expect(performance.now() - started).toBeLessThan(500);
+			expect(s.skipped).toEqual([]);
+		} finally {
+			patience.backoff = was;
+		}
 	});
 });
 

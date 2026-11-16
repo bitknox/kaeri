@@ -70,5 +70,9 @@ export interface Demuxer {
 	attachments?(): Promise<Attachment[]>;
 	/** Only these tracks are wanted now; segmented sources stop fetching the others. */
 	select?(ids: number[]): void;
+	/** Spans skipped because their segments never came, for playback to step over. */
+	readonly skipped?: [number, number][];
+	/** Stops a read that waits on the network, for a seek elsewhere. */
+	interrupt?(): void;
 	close(): void;
 }

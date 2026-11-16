@@ -128,7 +128,8 @@ fun CastButtonState.glyph(): CastGlyphState = when (this) {
 
 /**
  * The cast button, before the account or More in a top bar: hidden while no TV is found. It
- * opens the chooser, or the held TV's dialog. Connecting and connected are said once each.
+ * opens the chooser, the held TV's dialog, or the card of a cast started from Play on TV.
+ * Connecting and connected are said once each.
  *
  * @param circle on the title page's banner, the 40 circle its neighbours sit in.
  */
@@ -139,7 +140,8 @@ fun CastButton(circle: Boolean = false) {
     val session by cast.session.collectAsStateWithLifecycle()
     val joining by cast.joining.collectAsStateWithLifecycle()
     val tvName by LocalAppStore.current.tv.connected.collectAsStateWithLifecycle()
-    val name = session.deviceName ?: joining ?: tvName?.let { LocalAppStore.current.tv.card.value?.card?.tvName }.orEmpty()
+    val shown by cast.shown.collectAsStateWithLifecycle()
+    val name = session.deviceName ?: joining ?: shown?.tvName ?: tvName?.let { LocalAppStore.current.tv.card.value?.card?.tvName }.orEmpty()
     val label = when (state) {
         CastButtonState.Connecting -> stringResource(R.string.cast_button_connecting, name)
         CastButtonState.Connected -> stringResource(R.string.cast_button_connected, name)
