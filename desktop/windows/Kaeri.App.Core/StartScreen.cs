@@ -189,7 +189,7 @@ public sealed class StartScreen(uint id, string episode, double? resume)
             case StartStep.SourcesHeldBack h:
                 var index = held.FindIndex(g => g.Why == h.Why);
                 if (index < 0)
-                    held.Add(new HeldSources([.. h.Names], h.Why));
+                    held.Add(new HeldSources(Names: [.. h.Names], Why: h.Why));
                 else
                     held[index] = held[index] with { Names = [.. held[index].Names, .. h.Names] };
                 break;

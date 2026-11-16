@@ -181,7 +181,7 @@ public class StartScreenTests
             new Msg.NoticeReason(new Cause.SourcesUnreached("Alpha, Harbor")),
             ["Alpha", "Brook"],
             ["Alpha", "Harbor"],
-            [new HeldSources(["Harbor"], SourceHold.TorrentsOff)]));
+            [new HeldSources(Names: ["Harbor"], Why: SourceHold.TorrentsOff)]));
         var frame = start.Frame(Ms(3000));
         Assert.Equal(
             "Couldn't reach Alpha and Harbor. Alpha and Brook were asked. Harbor wasn't asked: torrent playback is off.",

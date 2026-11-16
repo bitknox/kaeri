@@ -19,7 +19,7 @@ public class SourceChoicesTests
     }
 
     static SourceCandidate Release(string id, string title, uint? quality = null, string? label = null, string? size = null) =>
-        new(id, "torrent", title, quality, Label: label, Size: size);
+        new(id, "torrent", title, Quality: quality, Label: label, Size: size);
 
     static SourceOption Option(string id, uint covered, SourceNote? note = null, bool pinned = false,
         SourceCandidate[]? releases = null, string? pinnedRelease = null) =>
@@ -254,7 +254,7 @@ public class SourceChoicesTests
     }
 
     static SourceCandidate Release(string id, string name) =>
-        new(id, "sample-source", name, $"Stardust Wayfarer - 07 ({id})", 1080u, "12 seeders", "1.4 GiB", false, false, false);
+        new(Id: id, ProviderId: "sample-source", ProviderName: name, Title: $"Stardust Wayfarer - 07 ({id})", Quality: 1080u, Label: "12 seeders", Size: "1.4 GiB");
 
     [Fact]
     public void AReleaseNamesItsSourceAsItGoesByNotByItsId()
