@@ -18,7 +18,6 @@ player-start-pin-missed = { $name } chưa có tập { $episode }. Đang phát t�
 player-start-miss-failed = { $name } không phản hồi
 player-start-miss-timed-out = { $name } mất quá nhiều thời gian
 player-start-miss-skipped = Bạn đã bỏ qua { $name }
-player-start-resting = Đã bỏ qua do lỗi gần đây
 player-start-from = Từ { $name }
 player-start-no-video = Luồng đầu tiên không có hình
 player-start-stream-place = Luồng { $next } trên { $total }

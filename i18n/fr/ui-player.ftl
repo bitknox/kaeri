@@ -18,7 +18,6 @@ player-start-pin-missed = { $name } n'a pas encore l'épisode { $episode }. Lect
 player-start-miss-failed = { $name } n'a pas répondu
 player-start-miss-timed-out = { $name } a mis trop de temps
 player-start-miss-skipped = Vous avez ignoré { $name }
-player-start-resting = Ignorée après des échecs récents
 player-start-from = Depuis { $name }
 player-start-no-video = Le premier n'affichait aucune vidéo
 player-start-stream-place = Flux { $next } sur { $total }

@@ -26,6 +26,8 @@ sealed class PartySourceDialog
     readonly ProgressRing ring = new() { Width = 16, Height = 16, IsActive = true };
     readonly FontIcon mark = new() { Glyph = "\uEA39", FontSize = 16, Opacity = 0 };
     readonly TextBlock line = Ui.Text("", "HazeBodyStyle");
+    /// <summary>What each source said when none listed a release, one line each.</summary>
+    readonly StackPanel reasons = new() { Spacing = 4 };
     SourceCandidate[]? candidates;
     bool choosing, failed, openProviders;
 
@@ -185,11 +187,13 @@ sealed class PartySourceDialog
             Grid.SetColumn(line, 1);
             waiting.Children.Add(line);
             body.Children.Add(waiting);
+            body.Children.Add(reasons);
             body.Children.Add(list);
         }
         choosing = true;
         failed = false;
         candidates = null;
+        reasons.Children.Clear();
         list.Items.Clear();
         list.Opacity = 0;
         ring.IsActive = true;
@@ -207,7 +211,7 @@ sealed class PartySourceDialog
             switch (e)
             {
                 case Event.Sources s when choosing && s.Id == id && s.Episode == episode:
-                    Listed(s.Candidates);
+                    Listed(s.Candidates, s.Missed);
                     break;
                 // The engine says why it found nothing as an alert, not as an empty list.
                 case Event.Toast t when choosing && candidates is null && !failed && t.V1.Kind == NoticeKind.Alert:
@@ -237,7 +241,7 @@ sealed class PartySourceDialog
         dialog.IsPrimaryButtonEnabled = true;
     }
 
-    void Listed(SourceCandidate[] found)
+    void Listed(SourceCandidate[] found, MissedListing[] missed)
     {
         candidates = found;
         ring.IsActive = false;
@@ -247,6 +251,27 @@ sealed class PartySourceDialog
         mark.Glyph = "\uE946";
         mark.Foreground = Ui.Res<Brush>("TextFillColorSecondaryBrush");
         mark.Opacity = 1;
+        reasons.Children.Clear();
+        if (found.Length == 0 && missed.Length > 0)
+        {
+            // What each source said, by the name it goes by: one that failed or was held back
+            // is not one without the episode, and Try again asks it anew.
+            line.Text = T.SourcePickerNoneLists(episode);
+            foreach (var m in missed)
+                reasons.Children.Add(Ui.Text(ReleasePicker.Missed(m, episode), "BodyTextBlockStyle"));
+            if (missed.Any(m => ReleasePicker.Unreached(m.Miss)))
+            {
+                failed = true;
+                dialog.PrimaryButtonText = T.ActionTryAgain;
+            }
+            else
+            {
+                dialog.PrimaryButtonText = T.PartyOpenSources;
+                openProviders = true;
+            }
+            dialog.IsPrimaryButtonEnabled = true;
+            return;
+        }
         if (found.Length == 0)
         {
             line.Text = T.PartyNoSourceLists(episode);
@@ -260,21 +285,12 @@ sealed class PartySourceDialog
         {
             var row = new StackPanel { Padding = new Thickness(0, 4, 0, 4) };
             row.Children.Add(Ui.Text(c.Title, wrap: false));
-            row.Children.Add(Ui.Text(Detail(c), "HazeCaptionStyle", wrap: false));
+            row.Children.Add(Ui.Text(ReleasePicker.Detail(c), "HazeCaptionStyle", wrap: false));
             list.Items.Add(new ListViewItem { Content = row });
         }
+        // The only release is the one to play: picked already, so Play works at once.
+        list.SelectedIndex = ReleasePicker.Preselected(found);
+        dialog.IsPrimaryButtonEnabled = list.SelectedIndex >= 0;
         Motion.Show(list);
-    }
-
-    static string Detail(SourceCandidate c)
-    {
-        var parts = new List<string> { c.ProviderId };
-        if (c.Quality is { } q)
-            parts.Add($"{q}p");
-        if (c.Size is { Length: > 0 } size)
-            parts.Add(size);
-        if (c.Label is { Length: > 0 } label)
-            parts.Add(label);
-        return string.Join(" · ", parts);
     }
 }

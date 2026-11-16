@@ -252,4 +252,35 @@ public class SourceChoicesTests
         Assert.Null(item.Button);
         Assert.Equal("No source has this episode", item.Waiting);
     }
+
+    static SourceCandidate Release(string id, string name) =>
+        new(id, "sample-source", name, $"Stardust Wayfarer - 07 ({id})", 1080u, "12 seeders", "1.4 GiB", false, false, false);
+
+    [Fact]
+    public void AReleaseNamesItsSourceAsItGoesByNotByItsId()
+    {
+        Assert.Equal("Sample Source · 1080p · 1.4 GiB · 12 seeders", ReleasePicker.Detail(Release("a", "Sample Source")));
+        Assert.StartsWith("sample-source ·", ReleasePicker.Detail(Release("a", "")));
+    }
+
+    [Fact]
+    public void EachSourceThatListedNothingSaysWhyOnceByName()
+    {
+        Assert.Equal("Alpha didn't answer", ReleasePicker.Missed(new MissedListing("Alpha", new ListingMiss.Failed()), "7"));
+        Assert.Equal("Alpha took too long", ReleasePicker.Missed(new MissedListing("Alpha", new ListingMiss.TimedOut()), "7"));
+        Assert.Equal("Brook doesn't have episode 7", ReleasePicker.Missed(new MissedListing("Brook", new ListingMiss.NoEpisode()), "7"));
+        Assert.Equal(
+            "Harbor isn't asked while torrent playback is off",
+            ReleasePicker.Missed(new MissedListing("Harbor", new ListingMiss.HeldBack(SourceHold.TorrentsOff)), "7"));
+        Assert.True(ReleasePicker.Unreached(new ListingMiss.Failed()));
+        Assert.True(ReleasePicker.Unreached(new ListingMiss.HeldBack(SourceHold.ProxyCheck)));
+        Assert.False(ReleasePicker.Unreached(new ListingMiss.NoEpisode()));
+    }
+
+    [Fact]
+    public void TheOnlyReleaseIsPickedSoPlayWorksAtOnce()
+    {
+        Assert.Equal(0, ReleasePicker.Preselected([Release("a", "Sample Source")]));
+        Assert.Equal(-1, ReleasePicker.Preselected([Release("a", "Sample Source"), Release("b", "Sample Source")]));
+    }
 }
