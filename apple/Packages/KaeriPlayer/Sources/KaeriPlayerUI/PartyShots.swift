@@ -140,9 +140,9 @@ extension PlayerModel {
             store.send(.partyJoin(server: fake.server(), room: room, name: "Ada"))
             guard await partyWaited(10, { party.inParty }) else { return false }
             quiet(store)
-            store.apply(.partyNoSource(
-                id: 900_001, episode: "7", why: .notFound,
-                reason: .verbatim(text: "could not match this title: sample-source has no episode 7")))
+            party.rehearse(
+                noSource: 900_001, episode: "7", why: .notFound,
+                reason: .verbatim(text: "could not match this title: sample-source has no episode 7"))
             if scene == .choose {
                 try? await Task.sleep(for: .milliseconds(800))
                 party.chooseSource()
