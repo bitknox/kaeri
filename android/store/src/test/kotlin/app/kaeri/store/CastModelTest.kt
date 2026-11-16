@@ -422,6 +422,29 @@ class CastModelTest {
         assertNull(CastModel.joining(view(CastSessionState.Playing), row.key, rows))
         assertNull(CastModel.joining(view(CastSessionState.Idle), row.key, emptyList()))
         assertNull(CastModel.joining(view(CastSessionState.Idle), null, rows))
+        assertNull(CastModel.joining(view(CastSessionState.Idle), row.key, rows, live = true))
+    }
+
+    @Test
+    fun a_tv_picked_again_after_a_lost_cast_plays_without_reading_reconnecting() = runTest {
+        val link = ScriptedLink(card(loading = true))
+        val cast = model(link)
+        val sessions = ScriptedSessions(link)
+        cast.sessions = sessions
+        runCurrent()
+        // The session ended lost and the TV is found again: its left session is joined meanwhile.
+        cast.takeRows(listOf(row))
+        assertEquals("Living room", cast.joining.value)
+
+        // Choose another TV: the play goes to the TV on its own, the session stays idle.
+        cast.cast(row, request)
+        sessions.views.trySend(view(CastSessionState.Idle))
+        link.cards.send(card(loading = false))
+        advanceUntilIdle()
+        assertEquals(CastStage.Playing, cast.shown.value?.stage)
+        assertNull("the TV plays the new cast, never Reconnecting", cast.joining.value)
+        cast.takeRows(listOf(row))
+        assertNull(cast.joining.value)
     }
 
     @Test

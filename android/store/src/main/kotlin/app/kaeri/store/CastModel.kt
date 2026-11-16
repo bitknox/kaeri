@@ -228,6 +228,7 @@ class CastModel(
     /** Kept with the card and the session as they change, with no coroutine of its own. */
     private fun recast() {
         _casting.value = _shown.value?.live == true || _session.value.state == CastSessionState.Playing
+        if (_shown.value?.live == true) _joining.value = null
     }
 
     private val _button = MutableStateFlow(CastButtonState.Hidden)
@@ -337,14 +338,19 @@ class CastModel(
 
     internal fun refresh() {
         val sender = tv?.attachedSender ?: return
-        _rows.value = if (browsing) sender.castRows() else emptyList()
+        takeRows(if (browsing) sender.castRows() else emptyList())
+    }
+
+    /** The TVs the browse found now. */
+    internal fun takeRows(rows: List<FfiCastRow>) {
+        _rows.value = rows
         refreshJoining()
         refreshButton()
     }
 
     /** A session left running is joined again once its TV is found: the mini says so meanwhile. */
     private fun refreshJoining() {
-        _joining.value = joining(_session.value, sessions?.leftOn(), _rows.value)
+        _joining.value = joining(_session.value, sessions?.leftOn(), _rows.value, _shown.value?.live == true)
     }
 
     /**
@@ -423,7 +429,7 @@ class CastModel(
         if (view.reconnecting && !was.reconnecting) sessionFrozen = itemPlayhead(sessionAt, was, wasAt)
         if (!view.reconnecting) sessionFrozen = null
         view.item?.let { _lastItem.value = it }
-        if (view.state != CastSessionState.Idle) _joining.value = null
+        refreshJoining()
         refreshButton()
         when {
             view.state == CastSessionState.Playing && link == null && _shown.value?.stage.let { it == null || it == CastStage.Starting } -> attachCard(view)
@@ -860,11 +866,12 @@ class CastModel(
     companion object {
         /**
          * The TV a session was left running on, by name, while it is joined again: only with no
-         * session at all. One that ended with a notice says so, and is looked for again once the
+         * session at all and no cast of this device's [live] outside it, which is what plays on
+         * that TV then. One that ended with a notice says so, and is looked for again once the
          * browse finds its TV anew, never as a Reconnecting that waits on nothing.
          */
-        internal fun joining(session: CastSession, leftOn: String?, rows: List<FfiCastRow>): String? {
-            if (session.state != CastSessionState.Idle) return null
+        internal fun joining(session: CastSession, leftOn: String?, rows: List<FfiCastRow>, live: Boolean = false): String? {
+            if (session.state != CastSessionState.Idle || live) return null
             return leftOn?.let { left -> rows.firstOrNull { it.key == left }?.name }
         }
 
