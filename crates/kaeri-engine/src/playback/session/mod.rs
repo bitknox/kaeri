@@ -163,7 +163,8 @@ pub struct PlaySettings {
     /// Record nothing: no history, resume point, tracker progress, track choices or presence.
     /// An opened link played without tracking. See [`PlaySettings::untracked`].
     pub untracked: bool,
-    /// How a torrent stream is doing, for the starting screen until its first frame.
+    /// How a torrent stream is doing, for the starting screen until its first frame and for
+    /// Stats for nerds' swarm rows.
     pub swarm: crate::playback::starting::Swarm,
     /// Set when the viewer asked to begin at 0: the file then opens there, whatever the resume
     /// point.

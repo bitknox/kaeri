@@ -60,6 +60,42 @@ impl PieceLayout {
         }
         Some(Range { start: range.start, end: self.last_byte_in(piece).min(range.end) })
     }
+
+    /// How much of a file `length` bytes long is held, as Stats for nerds' Pieces row says it:
+    /// the pieces it spans that are verified, and whole pieces held in a row from `read`, the
+    /// next byte the stream server would send. The piece holding that byte counts as ahead:
+    /// the player has not had it all yet. `read` at or past the end leaves nothing ahead.
+    /// `None` for an empty file, which spans no pieces.
+    pub fn held(
+        &self,
+        length: u64,
+        read: Option<u64>,
+        have: impl Fn(u64) -> bool,
+    ) -> Option<Held> {
+        let last_byte = length.checked_sub(1)?;
+        let (first, last) = (self.piece_of(0), self.piece_of(last_byte));
+        let total = last - first + 1;
+        let held = (first..=last).filter(|&piece| have(piece)).count() as u64;
+        let ahead = read.map(|at| {
+            if at >= length {
+                return 0;
+            }
+            (self.piece_of(at)..=last).take_while(|&piece| have(piece)).count() as u64
+        });
+        let count = |n: u64| u32::try_from(n).unwrap_or(u32::MAX);
+        Some(Held { held: count(held), total: count(total), ahead: ahead.map(count) })
+    }
+}
+
+/// How much of the playing file is held, in its own pieces: see [`PieceLayout::held`].
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct Held {
+    /// The file's pieces that are verified, a piece it shares with a neighbour included.
+    pub held: u32,
+    /// The pieces the file spans.
+    pub total: u32,
+    /// Whole pieces held in a row from where the player reads, once it has read.
+    pub ahead: Option<u32>,
 }
 
 /// A snapshot of which pieces of a torrent have been verified.
@@ -225,6 +261,41 @@ mod tests {
         let layout = PieceLayout::new(u64::MAX - 10, 1 << 20);
         let got = layout.ready_prefix(Range { start: 0, end: 100 }, |_| true);
         assert_eq!(got.map(|r| r.start), Some(0));
+    }
+
+    #[test]
+    fn the_held_pieces_are_the_file_s_own_shared_ends_included() {
+        // A file 2500 bytes long, 500 bytes into piece 0 of a 1000-byte grid: pieces 0 to 2.
+        let layout = PieceLayout::new(500, 1000);
+        let held = layout.held(2500, None, |p| p != 1).unwrap();
+        assert_eq!(held, Held { held: 2, total: 3, ahead: None }, "not read yet");
+        // Pieces of other files do not count: piece 3 is past this one.
+        let all = layout.held(2500, None, |p| p != 3).unwrap();
+        assert_eq!((all.held, all.total), (3, 3));
+        assert_eq!(layout.held(0, Some(0), |_| true), None, "an empty file spans no pieces");
+    }
+
+    #[test]
+    fn pieces_ahead_run_from_the_piece_being_read_to_the_first_gap() {
+        let layout = PieceLayout::new(0, 100);
+        // Ten pieces; 4 is missing.
+        let ahead = |read| layout.held(1000, Some(read), |p| p != 4).unwrap().ahead;
+        assert_eq!(ahead(0), Some(4), "pieces 0 to 3");
+        assert_eq!(ahead(250), Some(2), "the piece being read counts");
+        assert_eq!(ahead(450), Some(0), "reading in the gap");
+        assert_eq!(ahead(500), Some(5), "to the end of the file");
+    }
+
+    #[test]
+    fn at_the_end_of_the_file_nothing_is_ahead() {
+        let layout = PieceLayout::new(0, 100);
+        let ahead = |read| layout.held(950, Some(read), |_| true).unwrap().ahead;
+        assert_eq!(ahead(949), Some(1), "the last, short piece");
+        assert_eq!(ahead(950), Some(0), "everything sent");
+        assert_eq!(ahead(5_000), Some(0), "a read past the end is the end");
+        // A file ending inside piece 2, which the next file shares: pieces past it never count.
+        let held = layout.held(250, Some(0), |_| true).unwrap();
+        assert_eq!((held.total, held.ahead), (3, Some(3)));
     }
 
     #[test]

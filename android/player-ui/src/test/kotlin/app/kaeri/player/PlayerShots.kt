@@ -259,6 +259,25 @@ class PlayerShots {
         compose.onNodeWithText("Copied").assertExists()
     }
 
+    /** A torrent playing: the swarm's Network, Peers, Pieces and Uploaded rows after Buffer, the panel scrolling as before. */
+    @Test
+    fun phone_player_stats_torrent() = shoot("phone-player-stats-torrent") { model, mpv ->
+        mpv.emit(MpvEvent.property("time-pos", MpvValue.Real(612.0)))
+        model.stageStats(playerStatsFixture(StatsFixture.TORRENT))
+    }.also {
+        compose.onNodeWithText("Peers").assertExists()
+        // The value is drawn with no-break spaces; its description reads as the engine said it.
+        compose.onNodeWithContentDescription("Peers, 12 connected · 48 found").assertExists()
+    }
+
+    /** A torrent on a tablet sideways, where every row fits. */
+    @Test
+    @Config(sdk = [36], qualifiers = "w1280dp-h800dp-land-320dpi")
+    fun tablet_player_stats_torrent() = shoot("tablet-player-stats-torrent") { model, mpv ->
+        mpv.emit(MpvEvent.property("time-pos", MpvValue.Real(612.0)))
+        model.stageStats(playerStatsFixture(StatsFixture.TORRENT))
+    }
+
     /** A window held upright: the panel under the picture, at the full width less 16 dp each side, Copy stats under the rows. */
     @Test
     @Config(sdk = [36], qualifiers = PHONE_PORTRAIT)

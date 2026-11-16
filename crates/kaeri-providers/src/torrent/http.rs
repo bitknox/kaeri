@@ -15,7 +15,13 @@
 //! [`ReadySource`] for why that cannot simply be another reader on the first path, and
 //! [`ReadyReply`] for what it answers when the bytes are not there.
 
-use std::{io::SeekFrom, sync::Arc};
+use std::{
+    io::SeekFrom,
+    sync::{
+        Arc,
+        atomic::{AtomicU64, Ordering},
+    },
+};
 
 use tokio::{
     io::{
@@ -305,6 +311,31 @@ pub struct StreamServer {
     /// Held, never sent on. Every connection task waits for this to close, so dropping the
     /// server *is* the cancellation — there is no signal to remember to send.
     cancel: tokio::sync::watch::Sender<()>,
+    /// Where the player reads: see [`ReadHead`].
+    read: Arc<ReadHead>,
+}
+
+/// The next byte of the file the stream path would send, for Stats for nerds' pieces ahead.
+/// Moved by every byte the stream path sends, on whichever connection sent it last, so a
+/// player's seek shows as soon as it asks. The thumbnail path never moves it.
+#[derive(Debug)]
+struct ReadHead(AtomicU64);
+
+impl ReadHead {
+    /// Nothing sent yet.
+    const NONE: u64 = u64::MAX;
+
+    fn new() -> Self {
+        Self(AtomicU64::new(Self::NONE))
+    }
+
+    fn at(&self, next: u64) {
+        self.0.store(next.min(Self::NONE - 1), Ordering::Relaxed);
+    }
+
+    fn get(&self) -> Option<u64> {
+        Some(self.0.load(Ordering::Relaxed)).filter(|&at| at != Self::NONE)
+    }
 }
 
 impl StreamServer {
@@ -317,6 +348,12 @@ impl StreamServer {
     /// `None` when the server was started without a [`ReadySource`].
     pub fn thumbnail_url(&self) -> Option<&str> {
         self.thumbnail_url.as_deref()
+    }
+
+    /// The next byte of the file the player would be sent on the stream path, once it has
+    /// asked for any.
+    pub fn read_position(&self) -> Option<u64> {
+        self.read.get()
     }
 
     /// Stop serving. Playback in progress will end.
@@ -373,6 +410,7 @@ struct Routes<S> {
     stream: S,
     stream_path: String,
     thumbnails: Option<(Box<dyn ReadySource>, String)>,
+    read: Arc<ReadHead>,
 }
 
 /// Which of a server's paths a request named, holding what serves it.
@@ -403,7 +441,13 @@ async fn listen<S: StreamSource>(
     let thumbnails = thumbnails.map(|(ready, token)| (ready, format!("/t/{token}")));
     let thumbnail_path = thumbnails.as_ref().map(|(_, path)| path.clone());
 
-    let routes = Arc::new(Routes { stream: source, stream_path: path.clone(), thumbnails });
+    let read = Arc::new(ReadHead::new());
+    let routes = Arc::new(Routes {
+        stream: source,
+        stream_path: path.clone(),
+        thumbnails,
+        read: Arc::clone(&read),
+    });
     let (cancel, cancel_rx) = tokio::sync::watch::channel(());
 
     // Loopback only. Never bind a torrent stream to a routable interface.
@@ -420,7 +464,7 @@ async fn listen<S: StreamSource>(
         thumbnails = thumbnail_url.is_some(),
         "torrent stream server listening on loopback"
     );
-    Ok(StreamServer { url, thumbnail_url, listener, cancel })
+    Ok(StreamServer { url, thumbnail_url, listener, cancel, read })
 }
 
 /// The accept loop of one server, on `listener`: each connection served by `routes` until
@@ -540,7 +584,12 @@ async fn handle_connection<S: StreamSource>(
             if start > 0 {
                 file.seek(SeekFrom::Start(start)).await?;
             }
-            return copy_exact(&mut file, &mut write_half, remaining).await;
+            routes.read.at(start);
+            let read = &routes.read;
+            return copy_exact(&mut file, &mut write_half, remaining, |sent| {
+                read.at(start + sent);
+            })
+            .await;
         }
         Route::Thumbnails(ready) => ready,
     };
@@ -580,7 +629,7 @@ async fn handle_connection<S: StreamSource>(
             copy_chunked(&mut file, &mut write_half, range.len()).await
         }
         (ReadyReply::Whole(_), Some((mut file, range))) => {
-            copy_exact(&mut file, &mut write_half, range.len()).await
+            copy_exact(&mut file, &mut write_half, range.len(), |_| {}).await
         }
         (ReadyReply::Nothing { .. }, _) => {
             write_half.write_all(LAST_CHUNK).await?;
@@ -635,8 +684,14 @@ async fn read_line<R: AsyncRead + Unpin>(
     Ok(total)
 }
 
-/// Copy exactly `amount` bytes, streaming as they become available.
-async fn copy_exact<R, W>(reader: &mut R, writer: &mut W, amount: u64) -> std::io::Result<()>
+/// Copy exactly `amount` bytes, streaming as they become available, telling `sent` the bytes
+/// written so far after each write.
+async fn copy_exact<R, W>(
+    reader: &mut R,
+    writer: &mut W,
+    amount: u64,
+    mut sent: impl FnMut(u64),
+) -> std::io::Result<()>
 where
     R: AsyncRead + Unpin,
     W: AsyncWrite + Unpin,
@@ -655,6 +710,7 @@ where
         }
         writer.write_all(&buffer[..read]).await?;
         left -= read as u64;
+        sent(amount - left);
     }
     writer.flush().await
 }
@@ -896,6 +952,20 @@ mod tests {
         assert!(head.contains("Content-Range: bytes 1000-1099/4096"));
         assert_eq!(body.len(), 100);
         assert_eq!(body, &data[1000..1100], "wrong bytes returned for the range");
+    }
+
+    #[tokio::test]
+    async fn the_server_keeps_where_the_player_reads() {
+        let data: Vec<u8> = (0..=255u8).cycle().take(4096).collect();
+        let server = serve(MemorySource(data), "tok").await.unwrap();
+        assert_eq!(server.read_position(), None, "nothing asked yet");
+        request(server.url(), Some("bytes=1000-1099")).await;
+        assert_eq!(server.read_position(), Some(1100), "the next byte after the range");
+        // A seek back moves it back; a head request sends nothing and leaves it.
+        request(server.url(), Some("bytes=200-")).await;
+        assert_eq!(server.read_position(), Some(4096), "read to the end");
+        send("HEAD", server.url(), Some("bytes=10-")).await;
+        assert_eq!(server.read_position(), Some(4096));
     }
 
     #[tokio::test]

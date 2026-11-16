@@ -54,7 +54,7 @@
 # Subtitles and audio menu open), player-speed, player-picture (Picture and sound), player-episodes
 # (with the playing episode's sources), player-picture-in-picture and Stats for nerds
 # (player-stats, -stats-hidden, -stats-waiting, -stats-stream, -stats-buffering, -stats-hdr,
-# -stats-paused, -stats-copied) play the Playing scene's generated episode (apple/scripts/player-media.sh) to that state and shoot the player; "player" is
+# -stats-paused, -stats-copied, -stats-torrent) play the Playing scene's generated episode (apple/scripts/player-media.sh) to that state and shoot the player; "player" is
 # all of them. KAERI_POINTED=<row title> draws a menu's row as if the pointer were over it.
 #
 # - mac: the dev harness (apple/Packages/KaeriDev) renders its own window once the store has
@@ -82,7 +82,7 @@ shopt -s inherit_errexit 2>/dev/null || true
 players=(player-starting player-playing player-skip player-up-next player-still-watching player-stall
   player-buffering player-scrubbing player-tracks player-speed player-picture player-episodes
   player-picture-in-picture player-stats player-stats-hidden player-stats-waiting player-stats-stream
-  player-stats-buffering player-stats-hdr player-stats-paused player-stats-copied player-discussion player-discussion-open
+  player-stats-buffering player-stats-hdr player-stats-paused player-stats-copied player-stats-torrent player-discussion player-discussion-open
   player-mark-start player-mark-end player-mark-review player-mark-short player-mark-long player-mark-replaces
   player-mark-shares player-mark-noentry player-mark-editing player-mark-previewing player-prompt-opening
   player-prompt-wrong player-prompt-share player-skip-times player-found-skip player-found-controls

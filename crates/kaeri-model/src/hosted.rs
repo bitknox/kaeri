@@ -246,6 +246,8 @@ pub enum StatsFixture {
     Buffering,
     /// Frames dropping now: the dropped frames in amber.
     Dropping,
+    /// A torrent playing well: the swarm's Network, Peers, Pieces and Uploaded rows.
+    Torrent,
 }
 
 /// One row of the player's Episodes menu.

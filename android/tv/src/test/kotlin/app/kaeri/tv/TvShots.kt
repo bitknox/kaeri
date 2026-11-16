@@ -932,6 +932,27 @@ class TvShots {
         compose.mainClock.advanceTimeBy(1_000)
         compose.waitForIdle()
         assertEquals("Info closed", 0, compose.onAllNodes(hasText("Info") and SemanticsMatcher.keyIsDefined(SemanticsProperties.Heading)).fetchSemanticsNodes().size)
+        // The panel reads as one description, so its columns are checked on the model it draws.
+        val (playback, stream) = app.kaeri.tv.player.liveColumns(model.statsPanel?.rows.orEmpty())
+        assertEquals("the stream's column", listOf("Source", "Buffer", "Network"), stream.map { it.label })
+        assertEquals("playback starts the left column", "Video", playback.first().label)
+        assertTrue("nothing is in both", playback.none { it.label in stream.map { s -> s.label } })
+    }
+
+    /** The live stats of a torrent: the swarm's rows under Buffer in the stream's column. */
+    @Test
+    fun player_live_stats_torrent() = playerShot("tv-player-live-stats-torrent") { model ->
+        repeat(6) { if (focusedText() != "Info") press(Key.DirectionRight) }
+        press(Key.DirectionCenter)
+        press(Key.DirectionCenter)
+        assertTrue("live stats are on", model.statsShown)
+        compose.runOnUiThread { model.apply(Event.PlayerStats(1u, playerStatsFixture(StatsFixture.TORRENT))) }
+        compose.mainClock.advanceTimeBy(1_000)
+        compose.waitForIdle()
+        // The panel reads as one description, so its columns are checked on the model it draws.
+        val (playback, stream) = app.kaeri.tv.player.liveColumns(model.statsPanel?.rows.orEmpty())
+        assertEquals(listOf("Source", "Buffer", "Network", "Peers", "Pieces", "Uploaded"), stream.map { it.label })
+        assertEquals(listOf("Video", "Decoding", "Display", "Upscaling", "Dropped frames", "Audio", "Subtitles", "A/V sync"), playback.map { it.label })
     }
 
     /** Back closes the live stats before anything else; the player stays. */

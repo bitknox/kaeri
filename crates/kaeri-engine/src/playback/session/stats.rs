@@ -3,12 +3,12 @@
 //!
 //! The panel's own wording is [`crate::playback::stats`]. While the panel is open the player is
 //! asked for [`SAMPLED`] once a second, and the rows are said a moment after each ask, once the
-//! answers are in. With it shut nothing is asked, and only the summary is said, from what the
-//! player observes anyway.
+//! answers are in; a torrent's swarm is asked as the rows are said. With it shut nothing is
+//! asked, and only the summary is said, from what the player observes anyway.
 
 use std::{collections::HashMap, time::Duration};
 
-use kaeri_core::stream::Stream;
+use kaeri_core::stream::{Stream, StreamKind};
 use kaeri_model::hosted::PlayerStats;
 use kaeri_playback::PlaybackEvent;
 use serde_json::{Value, json};
@@ -165,6 +165,8 @@ impl Run<'_> {
             })
         });
         let url = &playing.stream.url;
+        let torrent = playing.stream.kind == StreamKind::TorrentHttp;
+        let rows = rows || watch.is_open();
         let figures = Figures {
             mpv: watch.mpv.clone(),
             screen: watch.screen,
@@ -177,8 +179,12 @@ impl Run<'_> {
             paused: playing.paused,
             buffering: playing.buffering,
             drops_rising: watch.drops_rising,
+            torrent,
+            // Only for the rows: the TV's summary has no swarm line, and the have-bitfield is
+            // read only while someone looks.
+            swarm: if torrent && rows { self.settings.swarm.stats(url) } else { None },
         };
-        if rows || watch.is_open() { stats::stats(&figures) } else { stats::closed(&figures) }
+        if rows { stats::stats(&figures) } else { stats::closed(&figures) }
     }
 }
 

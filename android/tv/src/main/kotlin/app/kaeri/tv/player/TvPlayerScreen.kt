@@ -1116,20 +1116,33 @@ private fun InfoPanel(model: PlayerModel, modifier: Modifier, onDone: () -> Unit
     }
 }
 
+/** The engine's labels of the rows about where the stream comes from, in the order they stand. */
+private val liveNetworkRows = listOf("Source", "Buffer", "Network", "Peers", "Pieces", "Uploaded") // i18n-skip
+
+/**
+ * The live panel's two columns: playback on the left in the engine's order, and on the right
+ * the stream's own rows (Source, Buffer and, for a torrent, the swarm's).
+ */
+internal fun liveColumns(rows: List<app.kaeri.engine.model.DetailRow>): Pair<List<app.kaeri.engine.model.DetailRow>, List<app.kaeri.engine.model.DetailRow>> =
+    rows.filter { it.label !in liveNetworkRows } to liveNetworkRows.mapNotNull { label -> rows.firstOrNull { it.label == label } }
+
 /**
  * Stats for nerds live, over the picture at the top leading corner below the show's name, where
- * nothing else on the TV's player stands: the engine's rows, said once a second, the Buffer row
- * amber when starved. It takes no focus; Back closes it. TalkBack reads it once as it opens.
+ * nothing else on the TV's player stands: the engine's rows in two columns, playback on the left
+ * and the stream on the right, said once a second, the Buffer row amber when starved. It grows
+ * wider rather than taller, so it ends above the time and the seek bar. It takes no focus; Back
+ * closes it. TalkBack reads it once as it opens, the left column first.
  */
 @Composable
 private fun LivePanel(panel: app.kaeri.player.StatsPanelState) {
     val title = stringResource(R.string.player_stats)
+    val (playback, stream) = liveColumns(panel.rows)
     // What TalkBack reads, taken as the panel opens and never again while it ticks.
-    val said = remember { "$title. " + panel.rows.joinToString(". ") { "${it.label}, ${it.value}" } } // i18n-skip
+    val said = remember { "$title. " + (playback + stream).joinToString(". ") { "${it.label}, ${it.value}" } } // i18n-skip
     val style = MaterialTheme.typography.labelMedium.copy(fontSize = 13.sp, lineHeight = 20.sp, fontWeight = FontWeight.Normal)
     Column(
         Modifier
-            .width(340.dp)
+            .width(700.dp)
             .background(ObiSilk.RaisedHigh.copy(alpha = 0.94f), RoundedCornerShape(16.dp))
             .padding(start = 18.dp, end = 18.dp, top = 14.dp, bottom = 16.dp)
             .clearAndSetSemantics {
@@ -1143,7 +1156,11 @@ private fun LivePanel(panel: app.kaeri.player.StatsPanelState) {
                 Text(stringResource(R.string.player_stats_waiting), style = style.copy(lineHeight = 18.sp), color = ObiSilk.Haze, modifier = Modifier.alignByBaseline())
             }
         }
-        app.kaeri.design.StatsRows(panel.rows.map { app.kaeri.design.StatsLine(it.label, it.value, it.warn) }, style, rowGap = 0.dp, labelGap = 12.dp)
+        Row(horizontalArrangement = Arrangement.spacedBy(28.dp)) {
+            for (column in listOf(playback, stream)) {
+                app.kaeri.design.StatsRows(column.map { app.kaeri.design.StatsLine(it.label, it.value, it.warn) }, style, rowGap = 0.dp, labelGap = 12.dp, modifier = Modifier.weight(1f))
+            }
+        }
     }
 }
 
