@@ -98,6 +98,7 @@ impl PlayerOpener for CastOpener {
             encoder: self.hub.encoder(),
             timings: self.hub.timings(),
         };
+        let opening = self.hub.opening();
         let (player, events) = match CastPlayer::connect(setup).await {
             Ok(opened) => opened,
             Err(failure) => {
@@ -112,6 +113,7 @@ impl PlayerOpener for CastOpener {
         player.use_receiver(self.hub.receiver());
         let player = Arc::new(player);
         self.hub.attach(&player);
+        drop(opening);
         if let Some(speed) = request.speed.filter(|s| (*s - 1.0).abs() > f64::EPSILON) {
             let _ = player.set_rate(speed).await;
         }

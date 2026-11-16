@@ -81,6 +81,17 @@ pub struct CastHub {
     told_fallback: Mutex<Weak<CastPlayer>>,
     /// The runtime the hub was made on, for work a platform thread starts (a browse's find).
     runtime: Option<tokio::runtime::Handle>,
+    /// Casts connecting to a TV outside the session, until their player is attached.
+    opening: Arc<std::sync::atomic::AtomicUsize>,
+}
+
+/// A cast connecting to a TV outside the session: the hub joins nothing meanwhile.
+pub(crate) struct Opening(Arc<std::sync::atomic::AtomicUsize>);
+
+impl Drop for Opening {
+    fn drop(&mut self) {
+        self.0.fetch_sub(1, Ordering::Relaxed);
+    }
 }
 
 /// The TV this device holds, from connect until disconnect, or until the TV ends it.
@@ -368,6 +379,7 @@ impl CastHub {
             links: std::sync::atomic::AtomicU64::new(0),
             told_fallback: Mutex::new(Weak::new()),
             runtime: tokio::runtime::Handle::try_current().ok(),
+            opening: Arc::default(),
         }
     }
 
@@ -646,6 +658,13 @@ impl CastHub {
         lock(&self.session).player.as_ref().is_some_and(|p| Arc::ptr_eq(p, player))
     }
 
+    /// A cast connects to a TV outside the session, until the guard drops once its player is
+    /// attached or the connect failed.
+    pub(crate) fn opening(&self) -> Opening {
+        self.opening.fetch_add(1, Ordering::Relaxed);
+        Opening(Arc::clone(&self.opening))
+    }
+
     /// A link opens on the held player: it is the one that plays there now.
     pub(crate) fn claim(&self) -> u64 {
         let link = self.links.fetch_add(1, Ordering::Relaxed) + 1;
@@ -859,9 +878,16 @@ impl CastHub {
     }
 
     /// Join the session left running on `device`, when its receiver still runs and no session
-    /// is held, one that ended lost included: the browse found that TV again. Nothing otherwise.
+    /// is held, one that ended lost included: the browse found that TV again. Nothing otherwise,
+    /// and nothing while a cast connects or plays: one begun from Play on TV or a play sent to a
+    /// TV holds no session, and joining beside it would start its card over and hold the TV twice.
     pub fn rejoin(self: &Arc<Self>, device: &CastDevice) {
         let Some(left) = self.left().filter(|left| left.device == device.id) else { return };
+        if self.opening.load(Ordering::Relaxed) > 0
+            || self.player().is_some_and(|player| player.is_alive())
+        {
+            return;
+        }
         let generation = {
             let mut session = lock(&self.session);
             if session.connecting || session.player.is_some() {
