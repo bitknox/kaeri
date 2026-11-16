@@ -211,12 +211,12 @@ struct StartingStepsTests {
         #expect(none.model.failure?.view.asked == nil)
     }
 
-    @Test func aSourceThatFailedOrWasHeldBackIsOneNotReached() {
+    @Test func aSourceThatFailedIsOneNotReachedAndAHeldBackOneIsNotAsked() {
         let rig = run(.failedUnreached, to: 3)
         let view = rig.model.failure?.view
-        #expect(view?.reason == "Couldn't reach Alpha and Harbor.")
-        #expect(view?.asked == "Alpha and Brook were asked.")
-        #expect(view?.notAsked == ["Harbor wasn't asked: torrent playback is off."])
+        #expect(view?.reason == "Couldn't reach Alpha.")
+        #expect(view?.asked == nil)
+        #expect(view?.detail == "Couldn't reach Alpha. Brook doesn't have episode 7. Harbor isn't asked while torrent playback is off.")
         #expect(view?.detail.contains("No source has") == false)
         #expect(view?.lead == .tryAgain)
         // Held back, so never asked: a row of its own after the asked ones, with no time.
@@ -224,6 +224,19 @@ struct StartingStepsTests {
         #expect(rows.last?.title == "Harbor · Not asked · Torrent playback is off")
         #expect(rows.last?.kind == .resting)
         #expect(rows.last?.took == nil)
+    }
+
+    @Test func aHeldBackSourceAloneIsNeverSaidAsNotReached() {
+        let view = StartFailureView(
+            why: .notFound,
+            text: .noticeReason(reason: .sourcesNotAsked(count: 1, names: "Harbor", episode: "7")),
+            episode: "7",
+            asked: ["Brook"],
+            heldBack: [HeldSources(names: ["Harbor"], why: .torrentsOff)]
+        )
+        #expect(view.detail == "Brook doesn't have episode 7. Harbor isn't asked while torrent playback is off.")
+        #expect(view.detail.contains("Couldn't reach") == false)
+        #expect(view.lead == .tryAgain)
     }
 
     @Test func offlineWaitsOnTheEnginesStepAndStartsOnReconnect() {

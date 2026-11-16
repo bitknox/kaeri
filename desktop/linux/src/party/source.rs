@@ -299,8 +299,9 @@ impl Choose {
         }
         if found.is_empty() && !missed.is_empty() {
             // What each source said: one that failed or was held back is not one without the
-            // episode, and Try again asks it anew.
-            self.line.set_label(&t::source_picker_none_lists(&self.episode));
+            // episode, and Try again asks it anew. The line over them claims only what the
+            // sources that answered said.
+            self.line.set_label(&none_lists_line(missed, &self.episode));
             for miss in missed {
                 let row = adw::ActionRow::builder()
                     .title(gtk::glib::markup_escape_text(&missed_line(miss, &self.episode)))
@@ -351,6 +352,17 @@ impl Choose {
 }
 
 /// Whether a source's miss was one where it gave no real answer: Try again may reach it.
+/// The line over the reasons when no source lists the episode: "No source lists episode 7."
+/// only when every source answered, "No source that answered lists episode 7." when any failed,
+/// took too long or wasn't asked.
+pub(crate) fn none_lists_line(missed: &[MissedListing], episode: &str) -> String {
+    if missed.iter().any(|m| unreached(&m.miss)) {
+        t::source_picker_none_answered_lists(episode)
+    } else {
+        t::source_picker_none_lists(episode)
+    }
+}
+
 fn unreached(miss: &ListingMiss) -> bool {
     matches!(miss, ListingMiss::Failed | ListingMiss::TimedOut | ListingMiss::HeldBack { .. })
 }
@@ -394,4 +406,26 @@ fn detail(candidate: &SourceCandidate) -> String {
         parts.push(label.to_owned());
     }
     parts.join(" · ")
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn miss(name: &str, miss: ListingMiss) -> MissedListing {
+        MissedListing { name: name.into(), miss }
+    }
+
+    #[test]
+    fn the_line_over_the_reasons_claims_only_what_the_sources_that_answered_said() {
+        let answered = [miss("Brook", ListingMiss::NoEpisode), miss("Kumo", ListingMiss::NoMatch)];
+        assert_eq!(none_lists_line(&answered, "7"), "No source lists episode 7.");
+        let failed = [miss("Alpha", ListingMiss::Failed), miss("Brook", ListingMiss::NoEpisode)];
+        assert_eq!(none_lists_line(&failed, "7"), "No source that answered lists episode 7.");
+        let held = [
+            miss("Brook", ListingMiss::NoEpisode),
+            miss("Harbor", ListingMiss::HeldBack { why: SourceHold::TorrentsOff }),
+        ];
+        assert_eq!(none_lists_line(&held, "7"), "No source that answered lists episode 7.");
+    }
 }

@@ -195,10 +195,11 @@ struct SourceList: View {
             if let choices = model.sourceChoices {
                 if choices.isEmpty, !model.sourceMisses.isEmpty {
                     // What each source said, by the name it goes by: one that failed or was held
-                    // back is not one without the episode.
+                    // back is not one without the episode, and the line over them claims only what
+                    // the ones that answered said.
                     let episode = model.startingEpisode ?? ""
                     VStack(alignment: .leading, spacing: 4) {
-                        Text(L.sourcePickerNoneLists(episode: episode)).foregroundStyle(.haze)
+                        Text(PartyWords.noneLists(model.sourceMisses, episode: episode)).foregroundStyle(.haze)
                         ForEach(model.sourceMisses, id: \.name) { missed in
                             Text(PartyWords.missed(missed, episode: episode)).foregroundStyle(.silk)
                         }

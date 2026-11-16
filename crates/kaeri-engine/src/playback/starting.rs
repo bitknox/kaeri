@@ -524,7 +524,8 @@ pub fn fixture(
             }
         }
         // Alpha fails, Brook has no episode 7, and Harbor is held back while torrent playback
-        // is off: the start says it couldn't reach Alpha and Harbor.
+        // is off: the start says it couldn't reach Alpha, that Brook lacks the episode and that
+        // Harbor isn't asked. Harbor was never asked, so it is not one unreached.
         State::FailedUnreached => {
             let reason = kaeri_providers::torrent::bridge::PLAYBACK_OFF.to_owned();
             at(700, walk(walk::Step::HeldBack { names: vec![HARBOR.into()], reason }));
@@ -535,9 +536,9 @@ pub fn fixture(
             let held = HeldSources { names: vec![HARBOR.into()], why: SourceHold::TorrentsOff };
             for event in failed_with(
                 NoSourceWhy::NotFound,
-                Cause::SourcesUnreached { names: format!("{ALPHA}, {HARBOR}") },
+                Cause::SourcesUnreached { names: ALPHA.into() },
                 &[ALPHA, BROOK],
-                &[ALPHA, HARBOR],
+                &[ALPHA],
                 vec![held],
             ) {
                 at(2_400, event);

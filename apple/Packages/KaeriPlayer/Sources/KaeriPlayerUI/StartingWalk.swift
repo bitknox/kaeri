@@ -414,15 +414,20 @@ private extension String {
 public struct StartFailureView: Equatable, Sendable {
     public enum Lead: Equatable, Sendable { case chooseSource, tryAgain, fixMatch, addStore, offline, close }
     public var reason: String
-    /// "Alpha and Brook were asked.", when any source was.
+    /// "Alpha and Brook were asked.", when every source asked lacks the episode and any was asked.
     public var asked: String?
-    /// "Harbor wasn't asked: torrent playback is off.", one sentence for each cause a source was
-    /// held back by.
+    /// "Brook doesn't have episode 7.", the sources asked that answered without it, when others
+    /// couldn't be reached or weren't asked.
+    public var lacking: String?
+    /// "Harbor isn't asked while torrent playback is off.", one sentence for each cause a source
+    /// was held back by.
     public var notAsked: [String] = []
     public var lead: Lead
 
-    /// The reason, who was asked and who was held back, as the second line reads and VoiceOver says it.
-    public var detail: String { ([reason, asked].compactMap { $0 } + notAsked).joined(separator: " ") }
+    /// The reason, then source by source what each did, as the second line reads and VoiceOver says it.
+    public var detail: String {
+        ([reason, asked, lacking].compactMap { $0 }.filter { !$0.isEmpty } + notAsked).joined(separator: " ")
+    }
 
     /// The cause as a sentence of its own: what it has of the sources' answers left out, and the
     /// hint after it, which the buttons give. Taken from the cause itself, not cut from its text.
@@ -446,13 +451,27 @@ public struct StartFailureView: Equatable, Sendable {
         return first
     }
 
-    /// A source that failed or was held back is one the start couldn't reach, never one without
-    /// the episode: the reason names it, and Try again leads.
-    public init(why: NoSourceWhy, text: Msg, asked: [String] = [], unreached: [String] = [], heldBack: [HeldSources] = []) {
-        reason = unreached.isEmpty
-            ? Self.reason(of: text)
-            : L.playerStartUnreached(names: unreached.formatted(.list(type: .and)))
-        self.asked = asked.isEmpty ? nil : L.playerStartAsked(names: asked.formatted(.list(type: .and)))
+    /// When every source asked lacks the episode: why, and who was asked. Otherwise source by
+    /// source as the rows say it: the ones asked that couldn't be reached, the ones asked that
+    /// don't have the episode, and the ones held back and why. A source held back was never
+    /// asked, so it is never one the start couldn't reach. Try again leads.
+    public init(why: NoSourceWhy, text: Msg, episode: String = "", asked: [String] = [], unreached: [String] = [], heldBack: [HeldSources] = []) {
+        let held = heldBack.contains { !$0.names.isEmpty }
+        if unreached.isEmpty && !held {
+            reason = Self.reason(of: text)
+            self.asked = asked.isEmpty ? nil : L.playerStartAsked(count: asked.count, names: asked.formatted(.list(type: .and)))
+        } else {
+            let answered = asked.filter { !unreached.contains($0) }
+            let lacking = answered.isEmpty
+                ? nil
+                : L.playerStartLacking(count: answered.count, names: answered.formatted(.list(type: .and)), episode: episode)
+            if unreached.isEmpty {
+                reason = lacking ?? ""
+            } else {
+                reason = L.playerStartUnreached(names: unreached.formatted(.list(type: .and)))
+                self.lacking = lacking
+            }
+        }
         notAsked = heldBack.filter { !$0.names.isEmpty }.map { group in
             let names = group.names.formatted(.list(type: .and))
             let count = group.names.count

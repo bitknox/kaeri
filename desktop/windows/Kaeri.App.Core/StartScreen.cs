@@ -419,7 +419,7 @@ public sealed class StartScreen(uint id, string episode, double? resume)
         (string, string)? failed = null;
         if (failure is { } f)
         {
-            failed = (T.PlayerFailedTitleText(Episode), FailureLine(f));
+            failed = (T.PlayerFailedTitleText(Episode), FailureLine(f, Episode));
         }
         var lead = failed is not null || (at < DetailAt && !Offline) ? "" : Lead();
         long? seconds = at >= ToolsAt && failed is null && !Offline ? (long)at.TotalSeconds : null;
@@ -484,14 +484,27 @@ public sealed class StartScreen(uint id, string episode, double? resume)
     }
 
     /// <summary>
-    /// A failure's second line: why, who was asked, and who was held back and why. A source that
-    /// failed or was held back is one the start couldn't reach, never one without the episode.
+    /// A failure's second line. When every source asked lacks the episode: why, and who was asked.
+    /// Otherwise, source by source as the rows say it: the ones asked that couldn't be reached,
+    /// the ones asked that don't have the episode, and the ones held back and why. A source held
+    /// back was never asked, so it is never one the start couldn't reach.
     /// </summary>
-    public static string FailureLine(StartFailure f)
+    public static string FailureLine(StartFailure f, string episode)
     {
-        List<string> line = [Names(f.Unreached) is { } unreached ? T.PlayerStartUnreached(unreached) : FailureReason(f.Text)];
-        if (Names(f.Asked) is { } asked)
-            line.Add(T.PlayerStartAsked(asked));
+        List<string> line = [];
+        var held = f.HeldBack.Any(group => group.Names.Length > 0);
+        if (f.Unreached.Length == 0 && !held)
+        {
+            line.Add(FailureReason(f.Text));
+            if (Names(f.Asked) is { } asked)
+                line.Add(T.PlayerStartAsked(f.Asked.Length, asked));
+            return string.Join(" ", line);
+        }
+        if (Names(f.Unreached) is { } unreached)
+            line.Add(T.PlayerStartUnreached(unreached));
+        string[] lacking = [.. f.Asked.Where(name => !f.Unreached.Contains(name))];
+        if (Names(lacking) is { } answered)
+            line.Add(T.PlayerStartLacking(lacking.Length, answered, episode));
         foreach (var group in f.HeldBack)
         {
             if (Names(group.Names) is not { } names)

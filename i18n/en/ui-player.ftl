@@ -204,11 +204,24 @@ player-start-row-timed-out = Took too long
 # Details row outcome when the viewer skipped a source.
 player-start-row-skipped = Skipped
 
-# Second clause of a failure: the sources that were asked, joined as a list by the app.
+# Second clause of a failure when every source asked lacks the episode: the sources that were asked, joined as a list by the app.
+# @arg count: int
 # @arg names: text
-player-start-asked = { $names } were asked.
+player-start-asked = { $count ->
+    [one] { $names } was asked.
+   *[other] { $names } were asked.
+ }
 
-# First sentence of a failure when some sources gave no real answer: they failed, took too long or weren't asked. The names are joined as a list by the app.
+# Sentence of a failure naming the sources asked that answered without the episode, while others couldn't be reached or weren't asked. The names are joined as a list by the app. The episode is its label.
+# @arg count: int
+# @arg names: text
+# @arg episode: text
+player-start-lacking = { $count ->
+    [one] { $names } doesn't have episode { $episode }.
+   *[other] { $names } don't have episode { $episode }.
+ }
+
+# First sentence of a failure when some sources asked gave no real answer: they failed, took too long or were skipped. A source not asked is never among them. The names are joined as a list by the app.
 # @arg names: text
 player-start-unreached = Couldn't reach { $names }.
 
@@ -216,32 +229,32 @@ player-start-unreached = Couldn't reach { $names }.
 # @arg count: int
 # @arg names: text
 player-start-not-asked-torrents-off = { $count ->
-    [one] { $names } wasn't asked: torrent playback is off.
-   *[other] { $names } weren't asked: torrent playback is off.
+    [one] { $names } isn't asked while torrent playback is off.
+   *[other] { $names } aren't asked while torrent playback is off.
  }
 
 # Sentence of a failure naming the sources not asked while the proxy check for torrents hasn't passed, joined as a list by the app.
 # @arg count: int
 # @arg names: text
 player-start-not-asked-proxy = { $count ->
-    [one] { $names } wasn't asked: the proxy check hasn't passed.
-   *[other] { $names } weren't asked: the proxy check hasn't passed.
+    [one] { $names } isn't asked until the proxy check passes.
+   *[other] { $names } aren't asked until the proxy check passes.
  }
 
 # Sentence of a failure naming the sources not asked on cellular, where torrents are off, joined as a list by the app.
 # @arg count: int
 # @arg names: text
 player-start-not-asked-cellular = { $count ->
-    [one] { $names } wasn't asked: torrents are off on cellular.
-   *[other] { $names } weren't asked: torrents are off on cellular.
+    [one] { $names } isn't asked on cellular.
+   *[other] { $names } aren't asked on cellular.
  }
 
 # Sentence of a failure naming the sources not asked because they say they can't be used right now, joined as a list by the app.
 # @arg count: int
 # @arg names: text
 player-start-not-asked-other = { $count ->
-    [one] { $names } wasn't asked: it isn't available right now.
-   *[other] { $names } weren't asked: they aren't available right now.
+    [one] { $names } isn't available right now.
+   *[other] { $names } aren't available right now.
  }
 
 # Label of the switch in the Details list that plays the episode with its subtitles.
@@ -675,6 +688,10 @@ source-picker-empty = No { -source } has a stream for this episode.
 # Line over the reasons when no source lists a release of the episode. The episode is its label.
 # @arg episode: text
 source-picker-none-lists = No { -source } lists episode { $episode }.
+
+# Line over the reasons when no source lists a release of the episode and some sources failed or weren't asked. The episode is its label.
+# @arg episode: text
+source-picker-none-answered-lists = No { -source } that answered lists episode { $episode }.
 
 # Line of the picker for a source not asked while torrent playback is off.
 # @arg name: text

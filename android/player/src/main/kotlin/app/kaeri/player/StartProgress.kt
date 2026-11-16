@@ -378,6 +378,17 @@ fun PlayerModel.startWaiting(progress: StartProgress? = this.progress): Boolean 
     progress?.waiting == true || (offline && progress?.trail.isNullOrEmpty())
 
 /** Why one source listed no release for [episode]: its name once, as it goes by. */
+/**
+ * The line over the reasons when no source lists the episode: that none lists it only when every
+ * source answered, and that none that answered lists it when any failed, took too long or wasn't asked.
+ */
+fun noneListsText(context: Context, missed: List<app.kaeri.engine.model.MissedListing>, episode: String): String =
+    if (missed.any { it.miss !is app.kaeri.engine.model.ListingMiss.NoMatch && it.miss !is app.kaeri.engine.model.ListingMiss.NoEpisode }) {
+        Strings.sourcePickerNoneAnsweredLists(context, episode)
+    } else {
+        Strings.sourcePickerNoneLists(context, episode)
+    }
+
 fun missedText(context: Context, missed: app.kaeri.engine.model.MissedListing, episode: String): String {
     val name = missed.name
     return when (val miss = missed.miss) {
@@ -403,18 +414,27 @@ fun heldNote(context: Context, why: SourceHold): String = when (why) {
 }
 
 /**
- * The failure's reason, who was asked, and who was held back and why. A source that failed or was
- * held back is one the start couldn't reach, never one without the episode.
+ * A failure's second line. When every source asked lacks the episode: why, and who was asked.
+ * Otherwise, source by source as the rows say it: the ones asked that couldn't be reached, the ones
+ * asked that don't have the episode, and the ones held back and why. A source held back was never
+ * asked, so it is never one the start couldn't reach.
  */
-private fun failureDetail(context: Context, failure: PlaybackFailure): String {
+internal fun failureDetail(context: Context, failure: PlaybackFailure): String {
     val list = android.icu.text.ListFormatter.getInstance(context.resources.configuration.locales[0])
-    val reason = when {
-        failure.noSources -> Strings.playerFailedNoSources(context)
-        failure.unreached.isNotEmpty() -> Strings.playerStartUnreached(context, list.format(failure.unreached))
-        else -> failure.reasonText(context)?.let { "$it." } ?: Strings.playerFailedDetail(context)
+    val held = failure.heldBack.any { it.names.isNotEmpty() }
+    if (failure.noSources || (failure.unreached.isEmpty() && !held)) {
+        val reason = when {
+            failure.noSources -> Strings.playerFailedNoSources(context)
+            else -> failure.reasonText(context)?.let { "$it." } ?: Strings.playerFailedDetail(context)
+        }
+        val line = mutableListOf(reason)
+        if (failure.asked.isNotEmpty()) line += Strings.playerStartAsked(context, failure.asked.size, list.format(failure.asked))
+        return line.joinToString(" ")
     }
-    val line = mutableListOf(reason)
-    if (failure.asked.isNotEmpty()) line += Strings.playerStartAsked(context, list.format(failure.asked))
+    val line = mutableListOf<String>()
+    if (failure.unreached.isNotEmpty()) line += Strings.playerStartUnreached(context, list.format(failure.unreached))
+    val lacking = failure.asked.filter { it !in failure.unreached }
+    if (lacking.isNotEmpty()) line += Strings.playerStartLacking(context, lacking.size, list.format(lacking), failure.episode)
     for (group in failure.heldBack) {
         if (group.names.isEmpty()) continue
         val names = list.format(group.names)

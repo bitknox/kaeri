@@ -387,6 +387,7 @@ pub(crate) async fn dub_answer(
             reasons: Vec::new(),
             matched: false,
             unreached: Vec::new(),
+            held: Vec::new(),
         };
         return DubAnswer { answer, none: false };
     }

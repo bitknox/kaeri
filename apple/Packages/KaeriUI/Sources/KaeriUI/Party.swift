@@ -314,7 +314,7 @@ struct PartySourceState {
             found.isEmpty
                 ? (L.partyNoSourceLists(episode: ask.episode), false, false)
                 : (PartyWords.found(found.count), false, false)
-        case .missed?: (L.sourcePickerNoneLists(episode: ask.episode), false, false)
+        case .missed(let missed)?: (PartyWords.noneLists(missed, episode: ask.episode), false, false)
         case .failed(let why)?: (why, false, true)
         }
     }

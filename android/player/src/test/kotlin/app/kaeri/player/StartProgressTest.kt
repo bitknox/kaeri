@@ -95,10 +95,10 @@ class StartProgressTest {
 
     @Test
     fun aSourceThatFailedOrWasHeldBackPutsTryAgainFirst() {
-        val unreached = app.kaeri.engine.model.Cause.SourcesUnreached("Alpha, Harbor")
+        val unreached = app.kaeri.engine.model.Cause.SourcesUnreached("Alpha")
         val failure = PlaybackFailure(
             1u, "7", msg = Msg.NoticeReason(unreached), why = app.kaeri.engine.model.NoSourceWhy.NOT_FOUND,
-            asked = listOf("Alpha", "Brook"), unreached = listOf("Alpha", "Harbor"),
+            asked = listOf("Alpha", "Brook"), unreached = listOf("Alpha"),
             heldBack = listOf(app.kaeri.engine.model.HeldSources(listOf("Harbor"), app.kaeri.engine.model.SourceHold.TORRENTS_OFF)),
         )
         val actions = startActions(null, failure, offline = false, now = 0, canFix = true, hasDetails = true)

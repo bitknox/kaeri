@@ -174,6 +174,13 @@ public enum PartyWords {
     }
 
     /// Why one source listed no release for `episode`: its name once, as it goes by.
+    /// The line over the reasons when no source lists the episode: that none lists it only when
+    /// every source answered, and that none that answered lists it when any failed, took too long
+    /// or wasn't asked.
+    public static func noneLists(_ missed: [MissedListing], episode: String) -> String {
+        missed.contains { unreached($0.miss) } ? L.sourcePickerNoneAnsweredLists(episode: episode) : L.sourcePickerNoneLists(episode: episode)
+    }
+
     public static func missed(_ missed: MissedListing, episode: String) -> String {
         let name = missed.name
         switch missed.miss {

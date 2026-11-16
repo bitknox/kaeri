@@ -73,8 +73,9 @@ fn not_aired_in(
 pub struct Unplayable {
     pub why: NoSourceWhy,
     pub text: Msg,
-    /// The ids of the sources that gave no real answer: failed, took too long, skipped or held
-    /// back. What a new start of the same episode gives a fresh chance.
+    /// The ids of the sources asked that gave no real answer: failed, took too long or skipped.
+    /// A source held back was never asked and is not among them. What a new start of the same
+    /// episode gives a fresh chance.
     pub unreached: Vec<String>,
 }
 
@@ -408,7 +409,10 @@ pub async fn resolve_for_playback(
                             return Err(Cause::TitleNoMatch { detail: answer.explain() }.into());
                         }
                         kaeri_providers::Answer::Unanswered {
-                            matched, ref unreached, ..
+                            matched,
+                            ref unreached,
+                            ref held,
+                            ..
                         } => {
                             let unreached = unreached.clone();
                             let cause = no_source_has(
@@ -416,6 +420,7 @@ pub async fn resolve_for_playback(
                                 episode,
                                 matched,
                                 &unreached,
+                                held,
                                 &answer.explain(),
                             );
                             return Err(Unplayable { unreached, ..cause.into() });
@@ -603,19 +608,30 @@ async fn pinned_release(
 }
 
 /// What a play says when no source gave the episode. That none has it only when every source
-/// asked said so: when any gave no real answer (`unreached`: failed, took too long, skipped or
-/// held back), the ones it couldn't reach, since any of them may have it. Otherwise that none has
-/// the episode, when one matched the title, and that none could match the title when none did.
+/// said so: when any asked gave no real answer (`unreached`: failed, took too long or skipped),
+/// the ones it couldn't reach, since any of them may have it. A source held back (`held`) was
+/// never asked, so it is never one it couldn't reach: it is named as not asked. Otherwise that
+/// none has the episode, when one matched the title, and that none could match the title when
+/// none did.
 fn no_source_has(
     registry: &ProviderRegistry,
     episode: &str,
     matched: bool,
     unreached: &[String],
+    held: &[String],
     reasons: &str,
 ) -> Cause {
+    let named = |ids: &[String]| -> Vec<String> {
+        ids.iter().map(|id| display_name(registry, id)).collect()
+    };
     if !unreached.is_empty() {
-        let names: Vec<_> = unreached.iter().map(|id| display_name(registry, id)).collect();
-        Cause::SourcesUnreached { names: names.join(", ") }
+        Cause::SourcesUnreached { names: named(unreached).join(", ") }
+    } else if !held.is_empty() {
+        Cause::SourcesNotAsked {
+            count: held.len() as i64,
+            names: named(held).join(", "),
+            episode: episode.to_owned(),
+        }
     } else if matched {
         Cause::NoSourceHasEpisode { episode: episode.to_owned(), detail: reasons.to_owned() }
     } else {
@@ -931,7 +947,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn a_held_back_source_is_one_not_reached() {
+    async fn a_held_back_source_is_not_asked_never_unreached() {
         let sources = vec![
             lacking("harbor")
                 .named("Harbor")
@@ -939,12 +955,16 @@ mod tests {
             lacking("brook").named("Brook"),
         ];
         let failed = failure(show(false), "3", sources).await;
-        assert_eq!(failed.unreached, ["harbor"]);
-        assert!(
-            failed.text.english().starts_with("Couldn't reach Harbor."),
-            "{}",
-            failed.text.english()
+        assert!(failed.unreached.is_empty(), "Harbor was never asked, so never unreached");
+        assert_eq!(
+            failed.text,
+            explained(Cause::SourcesNotAsked {
+                count: 1,
+                names: "Harbor".into(),
+                episode: "3".into()
+            }),
         );
+        assert!(!failed.text.english().contains("Couldn't reach"), "{}", failed.text.english());
     }
 
     #[tokio::test]

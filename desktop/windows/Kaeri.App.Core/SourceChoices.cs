@@ -289,6 +289,14 @@ public static class ReleasePicker
     /// <summary>Whether a source gave no real answer (it failed, took too long or was held back), so Try again may reach it.</summary>
     public static bool Unreached(ListingMiss miss) => miss is ListingMiss.Failed or ListingMiss.TimedOut or ListingMiss.HeldBack;
 
+    /// <summary>
+    /// The line over the reasons when no source lists the episode: that none lists it only when
+    /// every source answered, and that none that answered lists it when any failed, took too long
+    /// or wasn't asked.
+    /// </summary>
+    public static string NoneLists(IReadOnlyList<MissedListing> missed, string episode) =>
+        missed.Any(m => Unreached(m.Miss)) ? T.SourcePickerNoneAnsweredLists(episode) : T.SourcePickerNoneLists(episode);
+
     /// <summary>The release to start on: the only one, so Play works at once; none when there are several.</summary>
     public static int Preselected(IReadOnlyList<SourceCandidate> found) => found.Count == 1 ? 0 : -1;
 }

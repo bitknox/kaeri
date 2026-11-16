@@ -201,10 +201,11 @@ pub enum Answer<T> {
     Ambiguous { provider_id: String, candidates: Vec<Candidate> },
     /// No source answered. What each one said, in order, and whether any of them matched the
     /// title at all — a title no source has is a different answer from an episode none has.
-    /// `unreached` are the ids of the sources that gave no real answer, in order: held back,
-    /// failed, took too long or skipped. Empty when every source asked said it lacks the title
-    /// or the episode, the only case in which none has it.
-    Unanswered { reasons: Vec<String>, matched: bool, unreached: Vec<String> },
+    /// `unreached` are the ids of the sources asked that gave no real answer, in order: they
+    /// failed, took too long or were skipped. `held` are the ids of the sources local policy held
+    /// back, which were never asked, so never unreached. Both are empty when every source said it
+    /// lacks the title or the episode, the only case in which none has it.
+    Unanswered { reasons: Vec<String>, matched: bool, unreached: Vec<String>, held: Vec<String> },
 }
 
 impl<T> Answer<T> {
@@ -380,6 +381,7 @@ where
     let mut reasons = Vec::new();
     let mut matched = false;
     let mut unreached = Vec::new();
+    let mut held_ids = Vec::new();
     let mut ambiguous: Option<(String, Vec<Candidate>)> = None;
     // A source resting after failures is asked last rather than left out: one that is down for
     // a moment must not make an episode it has look missing.
@@ -404,7 +406,7 @@ where
                     None => held.push((reason, vec![name])),
                 }
                 reasons.push(format!("{provider_id}: held back"));
-                unreached.push(provider_id);
+                held_ids.push(provider_id);
             }
             None => usable.push(provider_id),
         }
@@ -494,10 +496,11 @@ where
     if let Some((provider_id, candidates)) = ambiguous {
         return Answer::Ambiguous { provider_id, candidates };
     }
-    // In the viewer's order, the held back among the rest.
+    // In the viewer's order.
     let order = registry.ids();
     unreached.sort_by_key(|id| order.iter().position(|of| of == id));
-    Answer::Unanswered { reasons, matched, unreached }
+    held_ids.sort_by_key(|id| order.iter().position(|of| of == id));
+    Answer::Unanswered { reasons, matched, unreached, held: held_ids }
 }
 
 /// A source by the name it goes by on screen, and by its id when it is not in the registry.
@@ -1535,7 +1538,10 @@ mod tests {
         );
         assert_eq!(calls.load(std::sync::atomic::Ordering::SeqCst), 0, "no request went out");
         match answer {
-            Answer::Unanswered { unreached, .. } => assert_eq!(unreached, ["alpha"]),
+            Answer::Unanswered { unreached, held, .. } => {
+                assert!(unreached.is_empty(), "a source never asked is not one unreached");
+                assert_eq!(held, ["alpha"]);
+            }
             other => panic!("expected no answer, got {other:?}"),
         }
     }

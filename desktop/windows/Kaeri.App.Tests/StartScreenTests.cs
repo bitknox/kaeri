@@ -172,19 +172,19 @@ public class StartScreenTests
     }
 
     [Fact]
-    public void ASourceThatFailedOrWasHeldBackIsOneNotReachedAndTryAgainLeads()
+    public void ASourceThatFailedIsOneNotReachedAHeldBackOneIsNotAskedAndTryAgainLeads()
     {
         var start = Start();
         start.Step(new StartStep.SourcesHeldBack(["Harbor"], SourceHold.TorrentsOff), null, Ms(100));
         start.Fail(new StartFailure(
             NoSourceWhy.NotFound,
-            new Msg.NoticeReason(new Cause.SourcesUnreached("Alpha, Harbor")),
+            new Msg.NoticeReason(new Cause.SourcesUnreached("Alpha")),
             ["Alpha", "Brook"],
-            ["Alpha", "Harbor"],
+            ["Alpha"],
             [new HeldSources(Names: ["Harbor"], Why: SourceHold.TorrentsOff)]));
         var frame = start.Frame(Ms(3000));
         Assert.Equal(
-            "Couldn't reach Alpha and Harbor. Alpha and Brook were asked. Harbor wasn't asked: torrent playback is off.",
+            "Couldn't reach Alpha. Brook doesn't have episode 7. Harbor isn't asked while torrent playback is off.",
             frame.Failure?.Reason);
         Assert.DoesNotContain("No source has", frame.Failure?.Reason);
         Assert.Equal([StartAction.TryAgain, StartAction.ChooseAnother, StartAction.Details, StartAction.Close], Actions(frame));
@@ -192,6 +192,21 @@ public class StartScreenTests
         Assert.Equal(StartMark.Rest, row.Mark);
         Assert.Equal("Not asked · Torrent playback is off", row.Note);
         Assert.Equal("", row.Time);
+    }
+
+    [Fact]
+    public void AHeldBackSourceAloneIsNeverSaidAsNotReached()
+    {
+        var start = Start();
+        start.Fail(new StartFailure(
+            NoSourceWhy.NotFound,
+            new Msg.NoticeReason(new Cause.SourcesNotAsked(1, "Harbor", "7")),
+            ["Brook"],
+            [],
+            [new HeldSources(Names: ["Harbor"], Why: SourceHold.TorrentsOff)]));
+        var reason = start.Frame(Ms(3000)).Failure?.Reason;
+        Assert.Equal("Brook doesn't have episode 7. Harbor isn't asked while torrent playback is off.", reason);
+        Assert.DoesNotContain("Couldn't reach", reason);
     }
 
     [Fact]
@@ -217,7 +232,7 @@ public class StartScreenTests
         Assert.Equal(StartAction.FixMatch, frame.Buttons[0].Action);
         Assert.Equal(StartLook.Primary, frame.Buttons[0].Look);
         Assert.DoesNotContain("alpha: no match", frame.Failure?.Reason);
-        Assert.EndsWith("Alpha were asked.", frame.Failure?.Reason);
+        Assert.EndsWith("Alpha was asked.", frame.Failure?.Reason);
     }
 
     [Fact]

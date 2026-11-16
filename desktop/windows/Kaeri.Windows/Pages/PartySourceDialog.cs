@@ -269,8 +269,9 @@ sealed class PartySourceDialog
         if (found.Length == 0 && missed.Length > 0)
         {
             // What each source said, by the name it goes by: one that failed or was held back
-            // is not one without the episode, and Try again asks it anew.
-            line.Text = T.SourcePickerNoneLists(episode);
+            // is not one without the episode, and Try again asks it anew. The line over them
+            // claims only what the sources that answered said.
+            line.Text = ReleasePicker.NoneLists(missed, episode);
             foreach (var m in missed)
                 reasons.Children.Add(Ui.Text(ReleasePicker.Missed(m, episode), "BodyTextBlockStyle"));
             if (missed.Any(m => ReleasePicker.Unreached(m.Miss)))

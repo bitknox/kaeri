@@ -7,7 +7,6 @@ package app.kaeri.player.ui
 
 import java.text.NumberFormat
 import androidx.annotation.StringRes
-import app.kaeri.i18n.Strings
 import app.kaeri.i18n.R
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
@@ -429,10 +428,10 @@ private fun LazyListScope.sources(model: PlayerModel, onDismiss: () -> Unit) {
     when {
         choices == null -> item(key = "finding") { Note(stringResource(R.string.player_sheet_finding)) }
         // What each source said, by the name it goes by: one that failed or was held back is not one
-        // without the episode.
+        // without the episode, and the line over them claims only what the ones that answered said.
         choices.isEmpty() && model.sourceMisses.isNotEmpty() -> {
             val episode = model.startingEpisode.orEmpty()
-            item(key = "none") { Note(Strings.sourcePickerNoneLists(LocalContext.current, episode)) }
+            item(key = "none") { Note(app.kaeri.player.noneListsText(LocalContext.current, model.sourceMisses, episode)) }
             items(model.sourceMisses, key = { "missed-${it.name}" }) { missed ->
                 Note(app.kaeri.player.missedText(LocalContext.current, missed, episode))
             }

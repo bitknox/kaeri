@@ -278,6 +278,20 @@ public class SourceChoicesTests
     }
 
     [Fact]
+    public void TheLineOverTheReasonsClaimsOnlyWhatTheSourcesThatAnsweredSaid()
+    {
+        Assert.Equal(
+            "No source lists episode 7.",
+            ReleasePicker.NoneLists([new MissedListing("Brook", new ListingMiss.NoEpisode()), new MissedListing("Kumo", new ListingMiss.NoMatch())], "7"));
+        Assert.Equal(
+            "No source that answered lists episode 7.",
+            ReleasePicker.NoneLists([new MissedListing("Alpha", new ListingMiss.Failed()), new MissedListing("Brook", new ListingMiss.NoEpisode())], "7"));
+        Assert.Equal(
+            "No source that answered lists episode 7.",
+            ReleasePicker.NoneLists([new MissedListing("Harbor", new ListingMiss.HeldBack(SourceHold.TorrentsOff))], "7"));
+    }
+
+    [Fact]
     public void TheOnlyReleaseIsPickedSoPlayWorksAtOnce()
     {
         Assert.Equal(0, ReleasePicker.Preselected([NamedRelease("a", "Sample Source")]));

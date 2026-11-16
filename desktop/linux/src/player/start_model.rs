@@ -591,7 +591,7 @@ impl Start {
         let failure = self
             .failure
             .as_ref()
-            .map(|failure| (t::player_failed_title_text(&self.episode), failure_line(failure)));
+            .map(|failure| (t::player_failed_title_text(&self.episode), failure_line(failure, &self.episode)));
         let offline = self.offline();
         let lead = if failure.is_some() || at < DETAIL_AT && !offline {
             String::new()
@@ -628,16 +628,27 @@ impl Start {
     }
 }
 
-/// A failure's second line: why, who was asked, and who was held back and why. A source that
-/// failed or was held back is one the start couldn't reach, never one without the episode.
-fn failure_line(failure: &StartFailure) -> String {
-    let reason = match names(&failure.unreached) {
-        Some(unreached) => t::player_start_unreached(&unreached),
-        None => failure_reason(&failure.text),
-    };
-    let mut line = vec![reason];
-    if let Some(asked) = names(&failure.asked) {
-        line.push(t::player_start_asked(&asked));
+/// A failure's second line. When every source asked lacks the episode: why, and who was asked.
+/// Otherwise, source by source as the rows say it: the ones asked that couldn't be reached, the
+/// ones asked that don't have the episode, and the ones held back and why. A source held back
+/// was never asked, so it is never one the start couldn't reach.
+fn failure_line(failure: &StartFailure, episode: &str) -> String {
+    let held = failure.held_back.iter().any(|group| !group.names.is_empty());
+    if failure.unreached.is_empty() && !held {
+        let mut line = vec![failure_reason(&failure.text)];
+        if let Some(asked) = names(&failure.asked) {
+            line.push(t::player_start_asked(failure.asked.len() as i64, &asked));
+        }
+        return line.join(" ");
+    }
+    let mut line = Vec::new();
+    if let Some(unreached) = names(&failure.unreached) {
+        line.push(t::player_start_unreached(&unreached));
+    }
+    let lacking: Vec<String> =
+        failure.asked.iter().filter(|name| !failure.unreached.contains(name)).cloned().collect();
+    if let Some(listed) = names(&lacking) {
+        line.push(t::player_start_lacking(lacking.len() as i64, &listed, episode));
     }
     for held in &failure.held_back {
         let Some(listed) = names(&held.names) else { continue };
@@ -1034,7 +1045,7 @@ mod tests {
     }
 
     #[test]
-    fn a_source_that_failed_or_was_held_back_is_one_not_reached_and_try_again_leads() {
+    fn a_source_that_failed_is_one_not_reached_a_held_back_one_is_not_asked_and_try_again_leads() {
         let mut s = start();
         s.step(
             &StartStep::SourcesHeldBack {
@@ -1046,11 +1057,9 @@ mod tests {
         );
         s.fail(StartFailure {
             why: NoSourceWhy::NotFound,
-            text: Msg::NoticeReason {
-                reason: Cause::SourcesUnreached { names: "Alpha, Harbor".into() },
-            },
+            text: Msg::NoticeReason { reason: Cause::SourcesUnreached { names: "Alpha".into() } },
             asked: vec!["Alpha".into(), "Brook".into()],
-            unreached: vec!["Alpha".into(), "Harbor".into()],
+            unreached: vec!["Alpha".into()],
             held_back: vec![HeldSources {
                 names: vec!["Harbor".into()],
                 why: SourceHold::TorrentsOff,
@@ -1060,8 +1069,8 @@ mod tests {
         let reason = f.failure.clone().expect("failure").1;
         assert_eq!(
             reason,
-            "Couldn't reach Alpha and Harbor. Alpha and Brook were asked. \
-             Harbor wasn't asked: torrent playback is off."
+            "Couldn't reach Alpha. Brook doesn't have episode 7. \
+             Harbor isn't asked while torrent playback is off."
         );
         assert!(!reason.contains("No source has"), "{reason}");
         assert_eq!(
@@ -1071,6 +1080,33 @@ mod tests {
         let held = f.rows.iter().find(|row| row.name == "Harbor").expect("a held row");
         assert_eq!(held.note, "Not asked · Torrent playback is off");
         assert!(held.time.is_empty(), "never asked, so no seconds");
+    }
+
+    #[test]
+    fn a_held_back_source_alone_is_never_said_as_not_reached() {
+        let mut s = start();
+        s.fail(StartFailure {
+            why: NoSourceWhy::NotFound,
+            text: Msg::NoticeReason {
+                reason: Cause::SourcesNotAsked {
+                    count: 1,
+                    names: "Harbor".into(),
+                    episode: "7".into(),
+                },
+            },
+            asked: vec!["Brook".into()],
+            unreached: Vec::new(),
+            held_back: vec![HeldSources {
+                names: vec!["Harbor".into()],
+                why: SourceHold::TorrentsOff,
+            }],
+        });
+        let reason = s.frame(ms(3_000)).failure.expect("failure").1;
+        assert_eq!(
+            reason,
+            "Brook doesn't have episode 7. Harbor isn't asked while torrent playback is off."
+        );
+        assert!(!reason.contains("Couldn't reach"), "{reason}");
     }
 
     #[test]

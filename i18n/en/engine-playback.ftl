@@ -61,9 +61,18 @@ cause-release-failed = Couldn't start that { -release }: { $detail }
 # Reason: a play waited too long for its sources to give it a stream, and gave up.
 cause-sources-timed-out = The { -source-pl } took too long to answer. Try again, or choose another { -source }.
 
-# Reason: some sources gave no real answer for the episode: they failed, took too long or weren't asked, and the rest don't have it. The names are joined with commas.
+# Reason: some sources asked gave no real answer for the episode: they failed, took too long or were skipped, and the rest don't have it. The names are joined with commas.
 # @arg names: text
 cause-sources-unreached = Couldn't reach { $names }. Try again, or choose another { -source }.
+
+# Reason: every source asked lacks the episode, and some sources weren't asked while local settings hold them back. The names are joined with commas. The episode is its label.
+# @arg count: int
+# @arg names: text
+# @arg episode: text
+cause-sources-not-asked = { $count ->
+    [one] No { -source } that was asked has episode { $episode }. { $names } wasn't asked.
+   *[other] No { -source } that was asked has episode { $episode }. { $names } weren't asked.
+ }
 
 # Reason: every source matched the title but none has the episode. The detail is what each said.
 # @arg episode: text

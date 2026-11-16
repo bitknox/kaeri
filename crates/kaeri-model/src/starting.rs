@@ -133,18 +133,20 @@ pub enum StartStep {
 pub struct StartFailure {
     pub why: crate::party::NoSourceWhy,
     pub text: crate::Msg,
-    /// The names of the sources that were asked, in the order they were asked: what a failure
-    /// says as "Alpha and Brook were asked." Empty when none was asked. A source held back is
+    /// The names of the sources that were asked, in the order they were asked. Those not
+    /// unreached answered without the episode, said as "Brook doesn't have episode 7." Empty when
+    /// none was asked. A source held back is
     /// never among them.
     #[cfg_attr(feature = "ffi", uniffi(default))]
     pub asked: Vec<String>,
-    /// The names of the sources that gave no real answer, in the viewer's order: they failed,
-    /// took too long, were skipped or were held back. When there are any, the failure says
-    /// "Couldn't reach" them first and offers Try again first, since none of them said it lacks
-    /// the episode. Empty when every source asked said it lacks the show or the episode.
+    /// The names of the sources asked that gave no real answer, in the viewer's order: they
+    /// failed, took too long or were skipped. When there are any, the failure says "Couldn't
+    /// reach" them first and offers Try again first, since none of them said it lacks the
+    /// episode. A source held back was never asked and is never among them. Empty when every
+    /// source asked said it lacks the show or the episode.
     #[cfg_attr(feature = "ffi", uniffi(default))]
     pub unreached: Vec<String>,
-    /// The sources held back and why, said as "Harbor wasn't asked: torrent playback is off."
+    /// The sources held back and why, said as "Harbor isn't asked while torrent playback is off."
     #[cfg_attr(feature = "ffi", uniffi(default))]
     pub held_back: Vec<HeldSources>,
 }
