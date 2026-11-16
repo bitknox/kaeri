@@ -680,7 +680,9 @@ fn failure_buttons(failure: &StartFailure) -> Vec<Button> {
             close,
         ],
         // A source failed or was held back: asking again may reach it, so that leads.
-        NoSourceWhy::NotFound if !failure.unreached.is_empty() || !failure.held_back.is_empty() => {
+        NoSourceWhy::NotFound
+            if !failure.unreached.is_empty() || !failure.held_back.is_empty() =>
+        {
             vec![again(Look::Primary), another(Look::Tonal), details, close]
         }
         NoSourceWhy::NotFound => match &failure.text {

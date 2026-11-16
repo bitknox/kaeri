@@ -54,13 +54,21 @@ impl Unreached {
 
     /// A start of `episode` of `id` begins: the sources the last failed start of it couldn't
     /// reach get a fresh chance in `registry`. A start of anything else lets them be.
-    pub fn retry(&self, id: AnilistId, episode: &str, registry: &kaeri_providers::ProviderRegistry) {
+    pub fn retry(
+        &self,
+        id: AnilistId,
+        episode: &str,
+        registry: &kaeri_providers::ProviderRegistry,
+    ) {
         let Ok(mut kept) = self.0.lock() else { return };
         if !kept.as_ref().is_some_and(|(at, of, _)| *at == id && of == episode) {
             return;
         }
         if let Some((_, _, ids)) = kept.take() {
-            tracing::info!(?ids, "a new start of the episode; its unreached sources get another chance");
+            tracing::info!(
+                ?ids,
+                "a new start of the episode; its unreached sources get another chance"
+            );
             for provider_id in ids {
                 registry.health().reset(&provider_id);
             }
@@ -358,7 +366,8 @@ pub fn fixture(
         )
     };
     let opening = |attempt, total| step(StartStep::OpeningStream { attempt, total }, None);
-    let names = |names: &[&str]| names.iter().map(|name| (*name).to_owned()).collect::<Vec<_>>();
+    let names =
+        |names: &[&str]| names.iter().map(|name| (*name).to_owned()).collect::<Vec<_>>();
     let failed_with = |why: NoSourceWhy,
                        cause: Cause,
                        asked: &[&str],
@@ -614,7 +623,11 @@ mod tests {
         ]);
         let rest = || {
             for _ in 0..3 {
-                registry.health().record_failure("alpha", &ProviderError::Transport("reset".into()), 0);
+                registry.health().record_failure(
+                    "alpha",
+                    &ProviderError::Transport("reset".into()),
+                    0,
+                );
             }
         };
         rest();
@@ -635,7 +648,10 @@ mod tests {
 
     #[test]
     fn a_hold_is_told_by_its_cause() {
-        assert_eq!(hold_of(kaeri_providers::torrent::bridge::PLAYBACK_OFF), SourceHold::TorrentsOff);
+        assert_eq!(
+            hold_of(kaeri_providers::torrent::bridge::PLAYBACK_OFF),
+            SourceHold::TorrentsOff
+        );
         assert_eq!(hold_of(kaeri_providers::proxy::CHECK_PENDING), SourceHold::ProxyCheck);
         assert_eq!(hold_of(crate::phases::CELLULAR), SourceHold::Cellular);
         assert_eq!(hold_of("signed out"), SourceHold::Other);
@@ -661,7 +677,10 @@ mod tests {
         };
         assert_eq!(
             step,
-            StartStep::SourcesHeldBack { names: vec!["Harbor".into()], why: SourceHold::TorrentsOff }
+            StartStep::SourcesHeldBack {
+                names: vec!["Harbor".into()],
+                why: SourceHold::TorrentsOff
+            }
         );
         assert_eq!(line, None, "a hold changes no step line");
     }

@@ -553,10 +553,12 @@ impl ProviderRegistry {
         // the picker waits for the slowest source instead of the sum of them all.
         let listings = self.candidates().into_iter().map(|provider| async move {
             let id = provider.manifest().id.clone();
-            self.listed(provider, key, episode, translation, now).await.unwrap_or_else(|error| {
-                tracing::debug!(provider = %id, %error, "sources listing failed");
-                Vec::new()
-            })
+            self.listed(provider, key, episode, translation, now).await.unwrap_or_else(
+                |error| {
+                    tracing::debug!(provider = %id, %error, "sources listing failed");
+                    Vec::new()
+                },
+            )
         });
         futures::future::join_all(listings).await.concat()
     }

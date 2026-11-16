@@ -143,7 +143,7 @@ pub const ALL: [&str; 118] = [
 /// The watch party's shots, apart from the rest: each holds a party on the scene's own server,
 /// and they take long enough that a run of every shot would not fit its time. `--shot party`
 /// takes them all.
-pub const PARTY: [&str; 32] = [
+pub const PARTY: [&str; 33] = [
     "party-form",
     "party-joining",
     "party-refused",
@@ -2881,7 +2881,10 @@ fn party_unstage(shell: &Rc<Shell>, shot: &str) {
     if shell.is_player() {
         shell.player.close();
     }
-    if !matches!(shot, "party-nosource" | "party-nosources" | "party-choose" | "party-choose-missed") {
+    if !matches!(
+        shot,
+        "party-nosource" | "party-nosources" | "party-choose" | "party-choose-missed"
+    ) {
         let _ = WidgetExt::activate_action(&shell.ctx.window, "win.back", None);
     }
     shell.player.hold_up_next.set(false);

@@ -407,10 +407,17 @@ pub async fn resolve_for_playback(
                         kaeri_providers::Answer::Ambiguous { .. } => {
                             return Err(Cause::TitleNoMatch { detail: answer.explain() }.into());
                         }
-                        kaeri_providers::Answer::Unanswered { matched, ref unreached, .. } => {
+                        kaeri_providers::Answer::Unanswered {
+                            matched, ref unreached, ..
+                        } => {
                             let unreached = unreached.clone();
-                            let cause =
-                                no_source_has(registry, episode, matched, &unreached, &answer.explain());
+                            let cause = no_source_has(
+                                registry,
+                                episode,
+                                matched,
+                                &unreached,
+                                &answer.explain(),
+                            );
                             return Err(Unplayable { unreached, ..cause.into() });
                         }
                     }
@@ -663,7 +670,8 @@ async fn source_slate(
         let miss = match registry.hold(&provider_id, now) {
             Some(reason) => Some(ListingMiss::HeldBack { why: hold_of_error(&reason) }),
             None => {
-                match kaeri_providers::resolve(store, &source, id, &target, translation, now).await
+                match kaeri_providers::resolve(store, &source, id, &target, translation, now)
+                    .await
                 {
                     kaeri_providers::Resolution::Resolved { key, .. } => {
                         match source.listing(&key, episode, translation, now).await {
@@ -894,7 +902,10 @@ mod tests {
         MockProvider::new(id).with_hits(vec![SearchHit {
             episode_count: Some(12),
             format: Some(MediaFormat::Tv),
-            ..SearchHit::new(kaeri_core::ids::ProviderKey::new(format!("{id}-show")), "The Hidden Star")
+            ..SearchHit::new(
+                kaeri_core::ids::ProviderKey::new(format!("{id}-show")),
+                "The Hidden Star",
+            )
         }])
     }
 
@@ -922,12 +933,18 @@ mod tests {
     #[tokio::test]
     async fn a_held_back_source_is_one_not_reached() {
         let sources = vec![
-            lacking("harbor").named("Harbor").unavailable(kaeri_providers::torrent::bridge::PLAYBACK_OFF),
+            lacking("harbor")
+                .named("Harbor")
+                .unavailable(kaeri_providers::torrent::bridge::PLAYBACK_OFF),
             lacking("brook").named("Brook"),
         ];
         let failed = failure(show(false), "3", sources).await;
         assert_eq!(failed.unreached, ["harbor"]);
-        assert!(failed.text.english().starts_with("Couldn't reach Harbor."), "{}", failed.text.english());
+        assert!(
+            failed.text.english().starts_with("Couldn't reach Harbor."),
+            "{}",
+            failed.text.english()
+        );
     }
 
     #[tokio::test]
@@ -935,7 +952,10 @@ mod tests {
         let failed = failure(show(false), "3", vec![lacking("alpha"), lacking("brook")]).await;
         assert!(failed.unreached.is_empty());
         assert!(
-            matches!(&failed.text, Msg::NoticeReason { reason: Cause::NoSourceHasEpisode { .. } }),
+            matches!(
+                &failed.text,
+                Msg::NoticeReason { reason: Cause::NoSourceHasEpisode { .. } }
+            ),
             "{:?}",
             failed.text
         );
@@ -946,7 +966,9 @@ mod tests {
         sources: Vec<MockProvider>,
     ) -> (Vec<kaeri_core::traits::SourceCandidate>, Vec<MissedListing>) {
         let store = Store::open_in_memory().unwrap();
-        store.cache_media(AnilistId::new(900_201), &show(false).to_string(), now_epoch()).unwrap();
+        store
+            .cache_media(AnilistId::new(900_201), &show(false).to_string(), now_epoch())
+            .unwrap();
         let http = kaeri_net::HttpClient::offline(&NetworkConfig::default()).unwrap();
         let meta = Meta::new(AniList::new(http, 30), None, store.clone());
         let registry =
@@ -979,7 +1001,9 @@ mod tests {
         };
         let (listed, missed) = slate(vec![
             lacking("alpha").named("Alpha").failing(transport()),
-            lacking("harbor").named("Harbor").unavailable(kaeri_providers::torrent::bridge::PLAYBACK_OFF),
+            lacking("harbor")
+                .named("Harbor")
+                .unavailable(kaeri_providers::torrent::bridge::PLAYBACK_OFF),
             lacking("cove").named("Cove"),
             lacking("brook").named("Brook").with_sources(vec![release]),
         ])

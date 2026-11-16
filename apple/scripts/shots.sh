@@ -23,7 +23,7 @@
 # work=<id> a series' page by its work id (work=a:900301), reading=1 the Library and Search on their reading side (with filters=set, reading's Fantasy, Manga, Japan and Releasing),
 # sheet=sources-<mid|failed|only|nothing|sourcehits|anilistfailed> on reading's Search with words (search+reading=1+query=lantern) stages its sources' part with made-up sources, sheet=read-filters there opens the iPhone Filters sheet, sheet=viewall on reading's Home opens its first row's View all,
 # send=<preparing|waiting|failed> on a series' Send to e-reader sheet (sheet=send, work=<id>; sheet=stopped asks where you stopped), feed=<on|off> the Mac Reading settings' OPDS feed pane told as if it were (settings+pane=reading+sheet=feed), never switched on,
-# party=<form|joining|refused|invite|panel|ready|sync|chat|chatline|chatbusy|chatreact|chatfield|chatkeys|chatwait|chatoff|chatfail|chatpanel|chatmute|chathidden|chatshort|lost|left|nosource|choose|unaired|quit>, a
+# party=<form|joining|refused|invite|panel|ready|sync|chat|chatline|chatbusy|chatreact|chatfield|chatkeys|chatwait|chatoff|chatfail|chatpanel|chatmute|chathidden|chatshort|lost|left|nosource|choose|missed|unaired|quit>, a
 # watch party on the testing engine's fake Syncplay server (PartyScene; the player's on the playing
 # scene: playing:party=panel), showcase=<sources|stores|downloads|invite|pale|messages|proxy|checking|unsaved|held|stuck|cards|all>, the invented rows of `Showcase`
 # (pale: 900001's page with a long title on a near-white banner; proxy: torrents through a saved proxy,

@@ -533,7 +533,9 @@ async fn an_episodes_releases_are_listed_for_the_picker() {
     let updates = h.settle().await;
 
     assert_eq!(names(&updates), ["Sources", "JobDone"]);
-    let Event::Sources { id, episode, candidates, missed } = &updates[0] else { unreachable!() };
+    let Event::Sources { id, episode, candidates, missed } = &updates[0] else {
+        unreachable!()
+    };
     assert!(missed.is_empty(), "with releases listed, no source's miss is said");
     assert_eq!((*id, episode.as_str()), (FINISHED, "1"));
     let listed: Vec<_> = candidates.iter().map(|c| c.id.as_str()).collect();

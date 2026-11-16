@@ -69,6 +69,9 @@ public enum PartyScene: String, CaseIterable, Sendable {
     case nosource
     /// The same, after Choose source: what each source lists.
     case choose
+    /// The same, when no source lists anything: one failed, one held back, one without the
+    /// episode, each with its reason.
+    case missed
     /// An invite to an episode not out yet: joined, with nothing to choose.
     case unaired
     /// Quitting while in a party (Mac): Leave the party?
@@ -131,7 +134,7 @@ extension PlayerModel {
             quiet(store)
             try? await Task.sleep(for: .milliseconds(1500))
             return there
-        case .nosource, .choose:
+        case .nosource, .choose, .missed:
             // In the room, and an episode the sources were asked for and didn't have.
             guard let fake = PartyScene.server(store) else { return false }
             store.send(.partyJoin(server: fake.server(), room: room, name: "Ada"))
@@ -152,6 +155,15 @@ extension PlayerModel {
                         id: "b", providerId: "night-index", title: "Stardust Wayfarer 07 720p", quality: 720, // i18n-skip
                         label: "night-index", size: "640 MiB", dualAudio: false, dubbed: false, autoPick: false), // i18n-skip
                 ], missed: []))
+                guard await partyWaited(20, { party.choice != .looking }) else { return false }
+            } else if scene == .missed {
+                try? await Task.sleep(for: .milliseconds(800))
+                party.chooseSource()
+                store.apply(.sources(id: 900_001, episode: "7", candidates: [], missed: [
+                    MissedListing(name: "Alpha", miss: .failed), // i18n-skip
+                    MissedListing(name: "Brook", miss: .noEpisode), // i18n-skip
+                    MissedListing(name: "Harbor", miss: .heldBack(why: .torrentsOff)), // i18n-skip
+                ]))
                 guard await partyWaited(20, { party.choice != .looking }) else { return false }
             }
             try? await Task.sleep(for: .milliseconds(900))

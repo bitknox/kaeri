@@ -383,12 +383,11 @@ pub(crate) async fn dub_answer(
     crate::sources::arrived(registry, || ()).await;
     // A title that has not started has no dub to speak of yet, and no source is asked.
     if coverage::unstarted(media, now) {
-        let answer =
-            kaeri_providers::Answer::Unanswered {
-                reasons: Vec::new(),
-                matched: false,
-                unreached: Vec::new(),
-            };
+        let answer = kaeri_providers::Answer::Unanswered {
+            reasons: Vec::new(),
+            matched: false,
+            unreached: Vec::new(),
+        };
         return DubAnswer { answer, none: false };
     }
     let registry = &chain_for(store, registry, id);

@@ -1487,8 +1487,12 @@ mod tests {
         let sink = seen.clone();
         let walk = Walk::observed(move |step| {
             let said = match step {
-                Step::HeldBack { names, reason } => format!("held {}: {reason}", names.join("+")),
-                Step::Asking { name, place, total, .. } => format!("ask {name} {place}/{total}"),
+                Step::HeldBack { names, reason } => {
+                    format!("held {}: {reason}", names.join("+"))
+                }
+                Step::Asking { name, place, total, .. } => {
+                    format!("ask {name} {place}/{total}")
+                }
                 Step::Missed { name, miss } => format!("miss {name} {miss:?}"),
                 Step::FindingPeers { .. } => "peers".into(),
             };
@@ -1583,7 +1587,11 @@ mod tests {
             MockProvider::new("beta").named("Beta").with_hits(vec![]).arc(),
         ]);
         for _ in 0..3 {
-            registry.health().record_failure("alpha", &ProviderError::Transport("reset".into()), 0);
+            registry.health().record_failure(
+                "alpha",
+                &ProviderError::Transport("reset".into()),
+                0,
+            );
         }
         assert_eq!(registry.usable_ids(), ["beta"], "alpha is resting");
         let (answer, seen) = walked(&store, &registry).await;

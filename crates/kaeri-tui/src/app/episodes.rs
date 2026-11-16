@@ -188,7 +188,11 @@ impl App {
             } else {
                 let reasons: Vec<String> =
                     missed.iter().map(|m| missed_line(m, &episode)).collect();
-                let line = format!("{} {}.", t::source_picker_none_lists(&episode), reasons.join(". "));
+                let line = format!(
+                    "{} {}.",
+                    t::source_picker_none_lists(&episode),
+                    reasons.join(". ")
+                );
                 self.push_toast(Notice::alert(Msg::verbatim(line)));
             }
             return;

@@ -149,6 +149,27 @@ class PlayerShots {
     @Test fun phone_start_failed_no_episode() = starting("phone-start-failed-no-episode", StartingFixture.FAILED_NO_EPISODE, extra = 1_500)
     @Test fun phone_start_failed_no_match() = starting("phone-start-failed-no-match", StartingFixture.FAILED_NO_MATCH, extra = 1_500)
     @Test fun phone_start_failed_unreached() = starting("phone-start-failed-unreached", StartingFixture.FAILED_UNREACHED, extra = 1_500)
+    /** The failed start's sources sheet when no source lists anything: each one's reason, by its name. */
+    @Test fun phone_start_failed_unreached_sources() {
+        val events = startingFixture(StartingFixture.FAILED_UNREACHED)
+        shoot("phone-start-failed-unreached-sources", picture = false, fixture = events, after = {
+            compose.onNodeWithText("Choose another source").performClick()
+            compose.waitForIdle()
+            compose.runOnUiThread {
+                model.apply(Event.Sources(900_001u, "7", emptyList(), listOf(
+                    app.kaeri.engine.model.MissedListing("Alpha", app.kaeri.engine.model.ListingMiss.Failed), // i18n-skip
+                    app.kaeri.engine.model.MissedListing("Brook", app.kaeri.engine.model.ListingMiss.NoEpisode), // i18n-skip
+                    app.kaeri.engine.model.MissedListing( // i18n-skip
+                        "Harbor", app.kaeri.engine.model.ListingMiss.HeldBack(app.kaeri.engine.model.SourceHold.TORRENTS_OFF), // i18n-skip
+                    ),
+                )))
+            }
+        }) { model, _ ->
+            time = (events.lastOrNull()?.atMs ?: 0u).toLong() + 1_500
+            model.poke()
+        }
+        compose.onNodeWithText("Alpha", substring = true).assertExists()
+    }
     @Test fun phone_start_failed_no_sources() = starting("phone-start-failed-no-sources", StartingFixture.FAILED_NO_SOURCES, extra = 1_500)
     @Test fun phone_start_failed_not_aired() = starting("phone-start-failed-not-aired", StartingFixture.FAILED_NOT_AIRED, extra = 1_500)
 
