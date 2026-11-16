@@ -195,6 +195,8 @@ enum Control {
     Close,
     /// The receiver app is stopped on the TV.
     StopApp,
+    /// Another sender loads its own file on the same receiver session.
+    LoadElsewhere,
     Buffering(bool),
     Say(Value),
 }
@@ -351,6 +353,11 @@ impl FakeReceiver {
         let _ = self.control.send(Control::TakeOver);
     }
 
+    /// Another sender loads its own file on the receiver session this one plays on.
+    pub fn load_elsewhere(&self) {
+        let _ = self.control.send(Control::LoadElsewhere);
+    }
+
     /// Say nothing more and read nothing more, with the connection left open: a TV switched
     /// off at the wall, or gone from the Wi-Fi, which sends no FIN. It answers no connection again.
     pub fn go_silent(&self) {
@@ -475,6 +482,23 @@ async fn serve(
                     app = None;
                     playing = None;
                     send("receiver-0", "*", NS_RECEIVER, receiver_status(&app, 0, level, muted));
+                }
+                Control::LoadElsewhere => {
+                    if let Some(old) = playing.take() {
+                        send(&transport, "*", NS_MEDIA, json!({"type": "MEDIA_STATUS", "requestId": 0,
+                            "status": [old.status(Some("INTERRUPTED"), &volume(level, muted))]}));
+                        let theirs = Playing {
+                            session: next_session,
+                            url: "http://elsewhere.example/theirs.mp4".into(),
+                            position: 0.0,
+                            since: Instant::now(),
+                            ..old
+                        };
+                        next_session += 1;
+                        send(&transport, "*", NS_MEDIA, json!({"type": "MEDIA_STATUS", "requestId": 0,
+                            "status": [theirs.status(None, &volume(level, muted))]}));
+                        playing = Some(theirs);
+                    }
                 }
                 Control::Buffering(waiting) => {
                     if let Some(p) = playing.as_mut() {

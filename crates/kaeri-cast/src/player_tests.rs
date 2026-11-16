@@ -693,6 +693,37 @@ async fn another_sender_taking_over_ends_the_cast() {
 }
 
 #[tokio::test(flavor = "multi_thread", worker_threads = 4)]
+async fn another_sender_loading_on_the_same_receiver_session_takes_the_tv() {
+    let file = matroska(&Fixture { audio: Some(FixtureAudio::aac()), ..Fixture::default() });
+    let base = serve(HashMap::from([("/episode.mkv".to_owned(), file)])).await;
+    let receiver = FakeReceiver::start(FakeOptions::default()).await.unwrap();
+    let (player, mut events) =
+        connect_standard(setup(&receiver, Arc::new(CastMemory::memory()), Arc::new(NoEncoder)))
+            .await
+            .unwrap();
+    player.load(torrent(format!("{base}/episode.mkv")));
+    next(&mut events, |e| *e == PlaybackEvent::Loaded).await;
+    receiver.load_elsewhere();
+    let deadline = tokio::time::Instant::now() + Duration::from_secs(10);
+    loop {
+        let event = tokio::time::timeout_at(deadline, events.recv())
+            .await
+            .expect("the cast ends")
+            .expect("the events go on until it ends");
+        assert_ne!(event, PlaybackEvent::Loaded, "their file is never taken for this one's");
+        assert!(
+            !matches!(event, PlaybackEvent::Ended { complete: true }),
+            "their file never marks this episode watched"
+        );
+        if matches!(event, PlaybackEvent::Ended { .. }) {
+            break;
+        }
+    }
+    assert_eq!(player.failure(), Some(CastFailure::TakenOver));
+    assert!(!player.is_alive());
+}
+
+#[tokio::test(flavor = "multi_thread", worker_threads = 4)]
 async fn the_speed_asked_for_before_a_load_is_set_once_it_plays() {
     let file = matroska(&Fixture::default());
     let base = serve(HashMap::from([("/episode.mkv".to_owned(), file)])).await;

@@ -2446,6 +2446,12 @@ fn apply(inner: &Inner, state: &mut State, status: &MediaStatus) {
     if status.state == "IDLE" {
         return;
     }
+    if new_session && state.loaded.is_some() && !state.reloading {
+        // Another sender loaded its own file on the same receiver session: what plays now isn't
+        // this cast's, and the TV is theirs.
+        end_cast(inner, state, CastFailure::TakenOver);
+        return;
+    }
     if new_session {
         state.loaded = Some(status.media_session_id);
         state.ended = false;
