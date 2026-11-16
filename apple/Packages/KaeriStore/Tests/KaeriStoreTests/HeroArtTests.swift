@@ -103,6 +103,56 @@ struct HeroArtTests {
         #expect(HeroArt.resolve(covered, episodes: rows(12), coverFills: true, waited: true) == .still("ep/900005/1.jpg"))
     }
 
+    @Test func aFrameThatKeepsItsShapeFallsBackStepByStep() {
+        // The iPhone's cards: banner, then a seen still, then the cover, then a titled plate.
+        let full = entry(900_005, "Hagane no Niwashi") {
+            $0.bannerUrl = "banner/900005.jpg"
+            $0.coverUrl = "cover/900005.jpg"
+            $0.seenStill = "ep/900005/2.jpg"
+        }
+        let stillless = rows(12, completed: 3, stills: false)
+        #expect(HeroArt.resolve(full, episodes: stillless, coverFills: true, plates: true) == .banner("banner/900005.jpg"))
+        var noBanner = full
+        noBanner.bannerUrl = nil
+        #expect(HeroArt.resolve(noBanner, episodes: stillless, coverFills: true, plates: true) == .still("ep/900005/2.jpg"))
+        var coverOnly = noBanner
+        coverOnly.seenStill = nil
+        #expect(HeroArt.resolve(coverOnly, episodes: stillless, coverFills: true, plates: true) == .cover("cover/900005.jpg"))
+        var nothing = coverOnly
+        nothing.coverUrl = nil
+        #expect(HeroArt.resolve(nothing, episodes: stillless, coverFills: true, plates: true) == .plate)
+        #expect(HeroArt.plate.url == nil)
+        #expect(!HeroArt.plate.isCompact)
+        // The plate waits for the episodes as the cover does, and only frames that keep their shape
+        // get one: elsewhere a title with nothing wide is compact.
+        #expect(HeroArt.resolve(nothing, episodes: nil, coverFills: true, plates: true) == .waiting)
+        #expect(HeroArt.resolve(nothing, episodes: nil, coverFills: true, plates: true, waited: true) == .plate)
+        #expect(HeroArt.resolve(nothing, episodes: stillless, coverFills: true) == .compact)
+        #expect(HeroArt.resolve(nothing, episodes: stillless) == .compact)
+    }
+
+    @MainActor @Test func theStoreFillsOnlyTheFramesThatAskForIt() {
+        let store = AppStore()
+        let covered = entry(900_005, "Hagane no Niwashi") {
+            $0.bannerUrl = nil
+            $0.coverUrl = "cover/900005.jpg"
+        }
+        var bare = covered
+        bare.id = 900_006
+        bare.coverUrl = nil
+        store.apply(.episodes(id: 900_005, rows: rows(12, completed: 2, stills: false)))
+        store.apply(.episodes(id: 900_006, rows: rows(12, completed: 2, stills: false)))
+        #expect(store.heroArt(covered, fills: true) == .cover("cover/900005.jpg"))
+        #expect(store.heroArt(bare, fills: true) == .plate)
+        // Elsewhere as before: the Mac fills with the cover, an iPhone sets it beside the title.
+        #if os(macOS)
+        #expect(store.heroArt(covered) == .cover("cover/900005.jpg"))
+        #else
+        #expect(store.heroArt(covered) == .compact)
+        #endif
+        #expect(store.heroArt(bare) == .compact)
+    }
+
     @MainActor @Test func theStoresPlateWaitsSixHundredMillisecondsByItsClock() {
         let store = AppStore()
         var clock = ContinuousClock.now

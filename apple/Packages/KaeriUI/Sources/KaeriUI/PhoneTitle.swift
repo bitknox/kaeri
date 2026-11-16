@@ -284,6 +284,8 @@ struct PhoneTitle: View {
         // its rows in place.
         .animation(.standard, value: loaded)
         .animation(.standard, value: plan.index)
+        // Episode details that arrive fit their rows in the fade the text comes in with.
+        .animation(reduceMotion ? nil : .fadeIn, value: plan.shown.lazy.filter(\.synopsisPending).count)
         // The room for text is settled when the rows are first laid out, and again each time the
         // page comes back or a range is picked: text that turned up meanwhile waits for that.
         .onChange(of: loaded, initial: true) { if loaded { room.settle(plan.shown) } }
@@ -459,45 +461,36 @@ struct PhoneEpisodes: View {
         let dub = store.titles.dubLines[entry.id]
         let ranged = !plan.ranges.isEmpty
         let protectedFrom = EpisodeProtection.start(plan.shown, spoilers: spoilers)
-        // The marks' column, kept on every row while any row has marks.
+        // Whether any row has marks: each row then carries its own on its still.
         let marked = plan.shown.contains { !$0.followed.isEmpty }
         Group {
-            if loaded {
-                // A long series: the dub line and the range menu share a row.
-                if ranged {
-                    HStack(spacing: 12) {
-                        if let dub {
-                            Text(dub)
-                                .font(.ui(15))
-                                .foregroundStyle(.haze)
-                                .lineLimit(1)
-                                .transition(.opacity.animation(.fadeIn))
-                        }
-                        Spacer(minLength: 0)
-                        EpisodeRangeMenu(plan: plan, rows: rows, phone: true, goTo: { typed = ""; goToError = nil; goToOpen = true }) {
-                            navigator.episodeRange[entry.id] = $0
-                        }
-                        .alert(L.episodeGoToTitle, isPresented: $goToOpen) {
-                            TextField(goToHint(rows: rows), text: $typed)
-                                .keyboardType(.numberPad)
-                                .accessibilityLabel(goToLabel(rows: rows))
-                            Button(L.actionCancel, role: .cancel) {}
-                            Button(L.episodeGoToGo) { goTo(rows: rows) }
-                        } message: {
-                            Text(goToError ?? goToHint(rows: rows))
-                        }
+            // The list's heading, as every part of the app has one, with the dub line beside it
+            // as secondary words, and a long series' range menu at its end.
+            PhoneEpisodesHeading(dub: loaded ? dub : nil) {
+                if loaded, ranged {
+                    EpisodeRangeMenu(plan: plan, rows: rows, phone: true, goTo: { typed = ""; goToError = nil; goToOpen = true }) {
+                        navigator.episodeRange[entry.id] = $0
                     }
-                    .frame(minHeight: 44)
-                    .onGeometryChange(for: CGFloat.self) { $0.frame(in: .scrollView).minY } action: { [pickers] top in
-                        pickers?.saw(top)
+                    .alert(L.episodeGoToTitle, isPresented: $goToOpen) {
+                        TextField(goToHint(rows: rows), text: $typed)
+                            .keyboardType(.numberPad)
+                            .accessibilityLabel(goToLabel(rows: rows))
+                        Button(L.actionCancel, role: .cancel) {}
+                        Button(L.episodeGoToGo) { goTo(rows: rows) }
+                    } message: {
+                        Text(goToError ?? goToHint(rows: rows))
                     }
-                    .bareRow(inset)
                 }
+            }
+            .onGeometryChange(for: CGFloat.self) { $0.frame(in: .scrollView).minY } action: { [pickers] top in
+                if ranged { pickers?.saw(top) }
+            }
+            .bareRow(inset)
+            if loaded {
                 // The watched run folds away above the last episode watched.
                 if let fold = plan.fold {
                     WatchedFoldSection(
                         fold: fold, shown: navigator.watchedShown(entry.id), phone: true,
-                        dub: ranged ? nil : dub,
                         marks: marked ? FollowWords.union(plan.shown.prefix(fold.count)) : nil,
                         toggle: { navigator.toggleWatched(entry.id) }
                     ) {
@@ -506,15 +499,6 @@ struct PhoneEpisodes: View {
                         }
                     }
                     .bareRow(inset)
-                }
-                // With no watched run to fold, the line has a row of its own above the episodes.
-                if plan.fold == nil, !ranged, let dub {
-                    Text(dub)
-                        .font(.ui(15))
-                        .foregroundStyle(.haze)
-                        .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
-                        .bareRow(inset)
-                        .transition(.opacity.animation(.fadeIn))
                 }
                 ForEach(plan.shown.dropFirst(plan.fold?.count ?? 0), id: \.number) { row in
                     PhoneEpisodeRow(entry: entry, row: row, spoilers: spoilers, rotor: rotor, room: room, protectedFrom: protectedFrom, marked: marked)
@@ -527,6 +511,53 @@ struct PhoneEpisodes: View {
                 EpisodePlaceholders(count: entry.episodes, metrics: .phone)
                     .bareRow(inset)
             }
+        }
+    }
+}
+
+/// "Episodes" over an iPhone's episode list, in the section style Home's headings have, with how
+/// far the dub goes beside it as secondary words, and what `trailing` adds at the line's end. The
+/// dub line wraps under the heading when the two do not fit on one line, and fades in where it
+/// moves nothing below.
+struct PhoneEpisodesHeading<Trailing: View>: View {
+    let dub: String?
+    @ViewBuilder let trailing: () -> Trailing
+
+    var body: some View {
+        HStack(alignment: .center, spacing: 12) {
+            ViewThatFits(in: .horizontal) {
+                HStack(alignment: .firstTextBaseline, spacing: 8) {
+                    heading
+                    dubLine.lineLimit(1)
+                }
+                VStack(alignment: .leading, spacing: 2) {
+                    heading
+                    dubLine
+                }
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            trailing()
+        }
+        .padding(.top, 12)
+        .padding(.bottom, 4)
+        .animation(.fadeIn, value: dub)
+    }
+
+    private var heading: some View {
+        Text(L.titleEpisodes)
+            .font(.ui(20, weight: .bold))
+            .fixedLineHeight(25, relativeTo: .title3)
+            .foregroundStyle(.silk)
+            .accessibilityAddTraits(.isHeader)
+    }
+
+    @ViewBuilder
+    private var dubLine: some View {
+        if let dub {
+            Text(dub)
+                .font(.ui(15))
+                .foregroundStyle(.haze)
+                .transition(.opacity.animation(.fadeIn))
         }
     }
 }
@@ -585,6 +616,10 @@ struct PhoneEpisodeRow: View {
             ZStack { rowBody }
                 .animation(.reveal, value: row.unsourced)
             DiscussionLine(entry: entry, row: row, inset: 156)
+            // The hairline that ends the row, so each episode reads as one unit. It moves with
+            // the row's foot as the row grows on a reveal.
+            Rectangle().fill(.faintRule).frame(height: EpisodeMetrics.rule)
+                .accessibilityHidden(true)
         }
         .episodeSwipes(entry, row)
     }
@@ -679,8 +714,8 @@ struct PhoneUnairedRow: View {
             }
             Spacer(minLength: 0)
         }
-        .padding(.top, 8)
-        .frame(minHeight: EpisodeMetrics.phone.short, alignment: .top)
+        .padding(.vertical, EpisodeMetrics.phone.pad)
+        .frame(minHeight: EpisodeMetrics.phone.short - EpisodeMetrics.rule, alignment: .top)
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(L.titleEpisodeRowUnaired(title: row.title.map { L.episodeTitledText(number: row.number, title: $0) } ?? L.episodeNumberString(number: row.number), when: when))
     }

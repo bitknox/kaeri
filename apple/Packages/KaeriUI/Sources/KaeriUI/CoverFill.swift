@@ -1,7 +1,8 @@
 // A cover filling a wide frame, for a title with no banner and no seen still: cropped around the
 // part of it that draws the eye, or, where it is too small to crop, blurred behind itself (the
-// hover card board's No wide art rule). Calendar tiles, the hover card's band and the Mac's
-// title page header draw it.
+// hover card board's No wide art rule). Calendar tiles, the hover card's band, the Mac's title
+// page header, and the iPhone's Continue cards, spotlight and party screens draw it. Where a
+// frame on iPhone has no cover to fill it, a plate in the cover's colour carries the title.
 
 import KaeriDesign
 import KaeriKit
@@ -24,11 +25,36 @@ enum CoverFillMode: Equatable {
     /// blurs.
     static let largest: CGFloat = 1.75
 
-    /// The mode for a frame `pixels` wide, from a file `source` pixels wide; a crop while the
-    /// file's size is not known yet, as nearly every cover crops.
-    static func of(pixels: CGFloat, source: Int?) -> CoverFillMode {
+    /// The most a crop may enlarge the file in a card on iPhone and iPad, a frame `cardWidth`
+    /// points wide or less. A 460 px cover in the iPhone's 260 pt card at 3x asks 1.7 times: over
+    /// this, so it blurs, sharp in the middle. At 2x it crops.
+    static let card: CGFloat = 1.6
+    static let cardWidth: CGFloat = 300
+
+    /// How far a crop may enlarge the file in a frame `points` wide. The Mac keeps `largest`
+    /// everywhere: its cards, at 2x, never come near either limit with a full-size cover.
+    static func limit(points: CGFloat?, touch: Bool = CoverFillMode.touch) -> CGFloat {
+        guard touch, let points, points <= cardWidth else { return largest }
+        return card
+    }
+
+    /// Whether this is an iPhone or iPad build.
+    static var touch: Bool {
+        #if os(iOS)
+        true
+        #else
+        false
+        #endif
+    }
+
+    /// The mode for a frame `pixels` wide (`points` at the screen's scale, when the frame's size
+    /// in points is known), from a file `source` pixels wide; a crop while the file's size is not
+    /// known yet, as nearly every cover crops.
+    static func of(
+        pixels: CGFloat, source: Int?, points: CGFloat? = nil, touch: Bool = CoverFillMode.touch
+    ) -> CoverFillMode {
         guard let source, source > 0 else { return .crop }
-        return pixels / CGFloat(source) > largest ? .blur : .crop
+        return pixels / CGFloat(source) > limit(points: points, touch: touch) ? .blur : .crop
     }
 
     /// Where the top of a cover `width` wide sits in a frame `height` high so its focus, a
@@ -125,7 +151,9 @@ struct CoverFill: View {
         GeometryReader { proxy in
             let size = proxy.size
             if let url = entry.coverUrl {
-                let mode = CoverFillMode.of(pixels: size.width * scale, source: store.artwork.sourceWidth(url))
+                let mode = CoverFillMode.of(
+                    pixels: size.width * scale, source: store.artwork.sourceWidth(url), points: size.width
+                )
                 switch mode {
                 case .crop:
                     CoverCrop(entry: entry, url: url, size: size)
@@ -226,5 +254,44 @@ struct SharpCover: View {
             .frame(width: width, height: (width * 3 / 2).rounded())
             .clipShape(.rect(cornerRadius: radius))
             .overlay(RoundedRectangle(cornerRadius: radius).strokeBorder(Palette.glassOverArtEdge, lineWidth: 1))
+    }
+}
+
+/// A frame with no wide art and no cover: the cover's colour as a plate, the title on it in show
+/// type at its foot. The title is the card's own words, said under it, so a screen reader skips
+/// this one. A frame too small to read a title in keeps the plate alone.
+struct TitlePlate: View {
+    let entry: Entry
+
+    var body: some View {
+        GeometryReader { proxy in
+            let size = proxy.size
+            ZStack(alignment: .bottomLeading) {
+                CoverPlate(color: entry.plateColor)
+                if let type = Self.type(for: size) {
+                    Text(entry.showTitle)
+                        .font(.showTitle(size: type.size))
+                        .fixedLineHeight(type.line)
+                        .foregroundStyle(.silk)
+                        .lineLimit(2)
+                        .multilineTextAlignment(.leading)
+                        // The frame keeps its size, so the title grows only so far with the text.
+                        .dynamicTypeSize(...DynamicTypeSize.xLarge)
+                        .padding(.horizontal, 12)
+                        .padding(.bottom, 10)
+                        .frame(width: size.width, alignment: .leading)
+                }
+            }
+            .frame(width: size.width, height: size.height)
+        }
+        .clipped()
+        .accessibilityHidden(true)
+    }
+
+    /// The title's size in a frame of `size`: the page's title size on a frame taller than a
+    /// card, the row's on a card, none where a title would not fit.
+    static func type(for size: CGSize) -> (size: CGFloat, line: CGFloat)? {
+        if size.width < 120 { return nil }
+        return size.height > 150 ? (22, 28) : (16, 24)
     }
 }

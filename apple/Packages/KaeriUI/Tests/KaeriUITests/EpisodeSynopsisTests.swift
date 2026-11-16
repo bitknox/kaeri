@@ -38,11 +38,49 @@ struct EpisodeSynopsisTests {
 
     @Test func aRowIsTallOnlyWhereTextCanLand() {
         let phone = EpisodeMetrics.phone
-        #expect(phone.height(room: true, protected: false) == 172)
-        #expect(phone.height(room: true, protected: true) == 100, "protected rows are short")
-        #expect(phone.height(room: false, protected: false) == 100, "no text coming")
+        #expect(phone.height(room: true, protected: false) == 182)
+        #expect(phone.height(room: true, protected: true) == 114, "protected rows are short")
+        #expect(phone.height(room: false, protected: false) == 114, "no text coming")
         #expect(EpisodeMetrics.macNarrow.height(room: true, protected: false) == 164)
         #expect(EpisodeMetrics.macNarrow.height(room: false, protected: false) == 100)
+    }
+
+    @Test func aPhoneRowEndsInARuleSixteenPointsUnderItsText() {
+        let phone = EpisodeMetrics.phone
+        #expect(phone.ruled)
+        #expect(phone.pad == 16)
+        // 16 over the still, the still, 8, three lines of 20, 16 under them, then the rule.
+        #expect(phone.tall == phone.pad + phone.still.height + 8 + 3 * 20 + phone.pad + EpisodeMetrics.rule)
+        // A short row is the still between the same room and the rule.
+        #expect(phone.short == phone.pad + phone.still.height + phone.pad + EpisodeMetrics.rule)
+        // The Mac and the iPad keep their rows: no rule, 8 over a narrow Mac's still.
+        for metrics in [EpisodeMetrics.macWide, .macNarrow, .pad] {
+            #expect(!metrics.ruled)
+            #expect(metrics.pad == 8)
+        }
+        #expect(EpisodeMetrics.macNarrow.tall == 164)
+    }
+
+    @Test func aPhoneRowKeepsItsRoomOnlyWhileItsTextMayStillCome() {
+        let phone = EpisodeMetrics.phone
+        // Loading: the tall room, so nothing moves while the details come.
+        #expect(phone.least(room: true, protected: false, pending: true) == 182)
+        #expect(phone.holdsText(room: true, protected: false, pending: true, text: nil))
+        // Known with no synopsis: the still, title and facts alone.
+        #expect(phone.least(room: true, protected: false, pending: false) == 114)
+        #expect(!phone.holdsText(room: true, protected: false, pending: false, text: nil))
+        #expect(!phone.holdsText(room: true, protected: false, pending: false, text: ""))
+        // Known with a synopsis: from the short row, as tall as its own lines.
+        #expect(phone.holdsText(room: true, protected: false, pending: false, text: "A storm."))
+        // Protected rows and tables with no text coming stay short and hold none.
+        #expect(phone.least(room: true, protected: true, pending: true) == 114)
+        #expect(!phone.holdsText(room: true, protected: true, pending: false, text: "A storm."))
+        #expect(!phone.holdsText(room: false, protected: false, pending: true, text: nil))
+        // The Mac and the iPad keep the room their kind sets, text or not.
+        for metrics in [EpisodeMetrics.macWide, .macNarrow, .pad] {
+            #expect(metrics.least(room: true, protected: false, pending: false) == metrics.tall)
+            #expect(metrics.holdsText(room: true, protected: false, pending: false, text: nil))
+        }
     }
 
     @Test func whereTextSitsBesideTheStillTheRowDoesNotChangeHeight() {

@@ -366,7 +366,7 @@ struct TitlePage: View {
     static func artReady(_ key: ArtKey, in store: AppStore) -> Bool {
         guard store.titles[key.id] != nil else { return false }
         switch key.art {
-        case .compact: return true
+        case .compact, .plate: return true
         case .waiting: return false
         case .banner(let url), .still(let url), .cover(let url): return store.artwork.image(url) != nil
         }

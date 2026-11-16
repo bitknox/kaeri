@@ -18,7 +18,8 @@ import Foundation
 ///                                   Manga, Japan and Releasing
 ///     -KaeriScroll 420          Search's results scrolled this many points once they are drawn; on
 ///                                   iPhone the title page at its episodes, on the Mac at that episode;
-///                                   a series' page at its Group row
+///                                   a series' page at its Group row; an iPhone's Home at Continue's
+///                                   card of that index
 ///     -KaeriLibrary planning    the Library's list
 ///     -KaeriPalette hoshi       the ⌘K palette, open on these words
 ///     -KaeriPane accounts       Settings' pane, or on iPhone the Settings sheet at its page

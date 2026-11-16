@@ -65,7 +65,7 @@ struct HomeSpotlightView: View {
                         .titleSource(source)
                         .frame(width: width, height: width * 9 / 16, alignment: .center)
                 } else {
-                    HeroArtView(art: store.heroArt(entry), entry: entry)
+                    HeroArtView(art: store.heroArt(entry, fills: !layout.wide), entry: entry)
                         .frame(width: width, height: width * 9 / 16)
                         .clipShape(.rect(cornerRadius: ArtShape.bannerRadius))
                         .titleSource(source)
@@ -80,9 +80,10 @@ struct HomeSpotlightView: View {
     }
 
     /// The spotlight's art, which the title's page grows out of from anywhere on the spotlight:
-    /// a banner, or the cover where there is no wide art.
+    /// a banner, or the cover where there is no wide art. On a phone the frame stays wide, the
+    /// cover filling it.
     private func spotSource(_ entry: Entry) -> TitleSource {
-        TitleSource(entry.id, .spotlight, art: store.heroArt(entry).isCompact ? .poster : .banner)
+        TitleSource(entry.id, .spotlight, art: store.heroArt(entry, fills: !layout.wide).isCompact ? .poster : .banner)
     }
 
     // MARK: Text and actions
@@ -319,7 +320,7 @@ struct HomeMainButton: View {
                 store.send(.setStatus(id: entry.id, status: .planning))
             case .details:
                 navigator.openTitle(entry.id, from: TitleSource(entry.id, .spotlight,
-                                                                art: store.heroArt(entry).isCompact ? .poster : .banner))
+                                                                art: store.heroArt(entry, fills: !layout.wide).isCompact ? .poster : .banner))
             case .nothing:
                 break
             }
