@@ -109,18 +109,19 @@ class FixtureCastSession(
         following = scope.launch {
             tv.changed.collect {
                 val card = tv.card()
+                val notice = card.notice
                 when {
-                    card.card.over && card.notice != null && !card.notice.endsCasting() -> publish(current.copy(item = item(card), reconnecting = false))
+                    card.card.over && notice != null && !notice.endsCasting() -> publish(current.copy(item = item(card), reconnecting = false))
                     // As the engine: casting ends, and Play here still has the item from where the TV was.
-                    card.card.over && card.notice != null -> {
+                    card.card.over && notice != null -> {
                         playing = null
-                        publish(CastSession.IDLE.copy(state = CastSessionState.Error, notice = card.notice, item = item(card)))
+                        publish(CastSession.IDLE.copy(state = CastSessionState.Error, notice = notice, item = item(card)))
                     }
                     card.card.over -> {
                         playing = null
                         publish(current.copy(state = CastSessionState.Connected, item = null))
                     }
-                    else -> publish(current.copy(item = item(card), muted = card.muted ?: current.muted, reconnecting = card.card.reconnecting))
+                    else -> publish(current.copy(item = item(card), muted = card.muted ?: current.muted, reconnecting = card.reconnecting))
                 }
             }
         }
