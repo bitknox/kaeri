@@ -439,8 +439,8 @@ impl Tv {
             let Some(run) = cast.as_mut() else { return false };
             let mut next = run.session.card();
             // A cast that played and ended from afar keeps where the TV got to and the
-            // episode's length: the engine's card forgets both once the TV is gone.
-            if stage_of(&next) == Stage::Lost && stage_of(&run.card) != Stage::Lost {
+            // episode's length: the engine's card forgets both once the TV is gone, on every read.
+            if stage_of(&next) == Stage::Lost {
                 hold_playhead(&run.card, run.card_at.elapsed().as_secs_f64(), &mut next);
             }
             if next.card.now != run.card.card.now {
@@ -879,6 +879,14 @@ mod tests {
         let mut next = ended();
         hold_playhead(&reconnecting, 20.0, &mut next);
         assert_eq!(next.card.now.map(|now| now.position), Some(754.0));
+        // Each later read of the lost card keeps what the first one held.
+        let mut held = ended();
+        hold_playhead(&playing, 5.0, &mut held);
+        let mut again = ended();
+        hold_playhead(&held, 30.0, &mut again);
+        let now = again.card.now.expect("the episode");
+        assert!((now.position - 759.0).abs() < 0.01, "{}", now.position);
+        assert_eq!(now.duration, Some(1440.0));
     }
 
     #[test]

@@ -116,14 +116,14 @@ pub fn stage(shell: &Rc<Shell>, shot: &str) -> Option<f64> {
             14.0
         }
         // The TV answers 4 s after the connection closed, and the cast goes on: the clip starts
-        // just before.
+        // well before.
         "cast-states-clip-rejoin" => {
             cast(shell, &scene, plays());
             hide_remote(shell, remote, PLAYING);
             drop_at(&scene, 10_000, Duration::from_secs(4));
-            later(13_700, {
+            later(12_500, {
                 let window = shell.ctx.window.clone();
-                move || crate::shots::frames(&window, clip, CLIP_FRAMES)
+                move || crate::shots::frames(&window, clip, CLIP_FRAMES + 120)
             });
             18.0
         }
