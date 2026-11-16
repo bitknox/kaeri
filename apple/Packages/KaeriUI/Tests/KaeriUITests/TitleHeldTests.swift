@@ -49,13 +49,12 @@ struct TitleHeldTests {
         #expect(LicensedLines.placeholderUnlisted(900_001, in: store))
     }
 
-    /// The row above the episodes is reserved whenever the list says it will be there, the dub
-    /// line of a title with no watched run among them.
+    /// The row above the episodes is reserved when the watched run will fold. The dub line and
+    /// the range menu sit in the heading, so they reserve nothing.
     @Test func theRowAboveTheEpisodesIsReservedWhenTheListSaysItComes() {
-        #expect(!TitlePage.rowAboveEpisodes(entry { _ in }, dub: nil))
-        #expect(TitlePage.rowAboveEpisodes(entry { $0.dub = DubKnown(through: 4, complete: false) }, dub: nil))
-        #expect(TitlePage.rowAboveEpisodes(entry { _ in }, dub: "Dubbed")) // i18n-skip
-        #expect(TitlePage.rowAboveEpisodes(entry { $0.progress = TitleProgress(done: 3, next: 4) }, dub: nil))
-        #expect(TitlePage.rowAboveEpisodes(entry { $0.episodes = 220 }, dub: nil))
+        #expect(!TitlePage.rowAboveEpisodes(entry { _ in }))
+        #expect(!TitlePage.rowAboveEpisodes(entry { $0.dub = DubKnown(through: 4, complete: false) }))
+        #expect(TitlePage.rowAboveEpisodes(entry { $0.progress = TitleProgress(done: 3, next: 4) }))
+        #expect(!TitlePage.rowAboveEpisodes(entry { $0.episodes = 220 }))
     }
 }

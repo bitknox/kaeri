@@ -527,15 +527,14 @@ struct PhoneEpisodes: View {
                         .onDisappear { pickers?.onScreen.remove(row.number) }
                 }
             } else {
-                // The row above the episodes, where the list already says it will be there.
-                let folds = (entry.progress?.done ?? 0) >= 3
-                if TitlePage.rowAboveEpisodes(entry, dub: dub) {
-                    Text(folds ? "Episodes 1 to 2 watched" : "Dubbed") // i18n-skip
+                // The watched run's fold row, where the list already says it will be there.
+                if TitlePage.rowAboveEpisodes(entry) {
+                    Text("Episodes 1 to 2 watched") // i18n-skip
                         .font(.ui(15))
                         .foregroundStyle(.haze)
                         .redacted(reason: .placeholder)
                         .accessibilityHidden(true)
-                        .padding(.leading, folds ? 34 : 0)
+                        .padding(.leading, 34)
                         .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
                         .bareRow(inset)
                 }
