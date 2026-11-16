@@ -41,6 +41,7 @@ tv-show-remote = Hiện điều khiển cho { $name }
 tv-status-playing = Đang phát trên { $name }
 tv-status-connecting = Đang kết nối tới { $name }
 tv-status-reconnecting = Đang kết nối lại tới { $name }
+tv-waiting-for = Đang chờ { $name }
 tv-status-connected = Đã kết nối
 tv-search-on-tv = Tìm kiếm trên TV
 tv-type-search = Nhập từ khóa tìm kiếm

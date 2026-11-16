@@ -14875,6 +14875,9 @@ tv-status-connecting = Đang kết nối tới { $name }
 # Status on the remote: connection lost, trying again.
 tv-status-reconnecting = Đang kết nối lại tới { $name }
 
+# Status on the remote and the cast mini player while the TV waits: for the stream, or while the app learns why the TV stopped the cast. On Windows also while pairing, until the named TV answers.
+tv-waiting-for = Đang chờ { $name }
+
 # Status on the remote: connected.
 tv-status-connected = Đã kết nối
 

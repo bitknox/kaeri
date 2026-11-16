@@ -6,7 +6,6 @@ tv-unnamed = テレビ
 tv-another-short = 別のテレビ…
 tv-volume-label = テレビの音量
 tv-waiting = テレビの応答を待っています
-tv-waiting-for = { $name }の応答を待っています
 tv-row-name = { $name }、{ $detail }
 tv-row-name-connected = { $name }、{ $detail }、接続済み
 tv-row-pair-help = このテレビとペアリングします
