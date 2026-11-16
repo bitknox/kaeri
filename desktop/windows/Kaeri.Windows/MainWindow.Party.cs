@@ -294,7 +294,7 @@ public sealed partial class MainWindow
         await Task.Delay(1500);
         switch (state)
         {
-            case "party-nosource" or "party-choose":
+            case "party-nosource" or "party-choose" or "party-missed":
             {
                 // An episode the sources were asked for and didn't have, in the room.
                 fakeParty = ctx.Session.Engine.StartFakeParty();
@@ -302,12 +302,23 @@ public sealed partial class MainWindow
                 for (var i = 0; i < 50 && ctx.Known.Party is null; i++)
                     await Task.Delay(200);
                 ShowPartySource(900001, "7", NoSourceWhy.NotFound, "could not match this title: sample-source has no episode 7");
-                if (state == "party-choose")
+                if (state is "party-choose" or "party-missed")
                 {
                     for (var i = 0; i < 50 && PartySourceDialog.Showing is null; i++)
                         await Task.Delay(200);
                     await Task.Delay(800);
                     PartySourceDialog.Showing?.RehearseChoose();
+                }
+                if (state == "party-missed")
+                {
+                    // After the fixture's own answer: one source failed, one lacks the episode
+                    // and one is held back while torrent playback is off.
+                    await Task.Delay(1500);
+                    PartySourceDialog.Showing?.RehearseMissed([
+                        new MissedListing("Alpha", new ListingMiss.Failed()), // i18n-skip
+                        new MissedListing("Brook", new ListingMiss.NoEpisode()), // i18n-skip
+                        new MissedListing("Harbor", new ListingMiss.HeldBack(SourceHold.TorrentsOff)), // i18n-skip
+                    ]);
                 }
                 return;
             }

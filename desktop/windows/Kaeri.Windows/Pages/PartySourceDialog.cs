@@ -147,6 +147,13 @@ sealed class PartySourceDialog
 
 #if KAERI_TESTING
     public void RehearseChoose() => Choose();
+
+    /// <summary>A screenshot's answer in which no source lists anything, each with its reason.</summary>
+    public void RehearseMissed(MissedListing[] missed)
+    {
+        Choose();
+        Listed([], missed);
+    }
 #endif
 
     void OnPrimary(ContentDialog sender, ContentDialogButtonClickEventArgs args)
