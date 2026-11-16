@@ -131,7 +131,7 @@ sealed class CastButton : Grid
         var held = tv.SessionHeld;
         var drawing = held ? Drawn() : null;
         var key = held
-            ? $"held|{tv.SessionName}|{drawing?.Id}|{drawing?.Title}|{drawing?.EpisodeLine}|{tv.Session?.VolumeControl}|{tv.Session?.Muted}"
+            ? $"held|{tv.SessionName}|{drawing?.Id}|{drawing?.Title}|{drawing?.EpisodeLine}|{tv.Session?.VolumeControl}|{tv.Session?.Muted}|{tv.LetGoWord}"
             : "choose|" + string.Join("|", tv.CastRows.Select(r => $"{r.Key},{r.Name}")) + "#" + string.Join("|", tv.Rows.Select(r => $"{r.Key},{r.Name},{r.Detail},{r.Kind}"));
         if (key == drawn)
         {
@@ -294,7 +294,8 @@ sealed class CastButton : Grid
         level.Follow(tv.Session);
         menu.Children.Add(level.Root);
 
-        var stop = CastParts.Text(T.CastStop);
+        // Stop casting while something plays, Disconnect while nothing does.
+        var stop = CastParts.Text(tv.LetGoWord);
         stop.HorizontalAlignment = HorizontalAlignment.Stretch;
         stop.Margin = new Thickness(8, 8, 8, 4);
         stop.Click += (_, _) =>

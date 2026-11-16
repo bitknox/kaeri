@@ -19,7 +19,7 @@ public class CastPainterTests
             Position: position, Duration: duration, Paused: paused, Waiting: waiting ? 0u : null, Loading: loading);
 
     /// <summary>A view as the engine sends it: a higher rev each time unless one is given.</summary>
-    FfiCastSessionView View(FfiCastItem? item, FfiCastSessionState state = FfiCastSessionState.Playing, Msg? notice = null, ulong? sameRev = null) =>
+    FfiCastSessionView View(FfiCastItem? item, FfiCastSessionState state = FfiCastSessionState.Playing, Msg? notice = null, ulong? sameRev = null, bool reconnecting = false) =>
         new(State: state, Button: state switch
             {
                 FfiCastSessionState.Connecting => FfiCastButton.Connecting,
@@ -27,7 +27,7 @@ public class CastPainterTests
                 _ => FfiCastButton.Hidden,
             },
             Rev: sameRev ?? ++rev, DeviceKey: "cast:living", DeviceName: "Living room", Item: item, Queue: [], Notice: notice,
-            Note: null, Level: null, Muted: null, VolumeControl: FfiVolumeControl.Level, OwnReceiver: false);
+            Note: null, Level: null, Muted: null, VolumeControl: FfiVolumeControl.Level, OwnReceiver: false, Reconnecting: reconnecting);
 
     CastPainter Painter() => new(() => now);
 
@@ -151,5 +151,85 @@ public class CastPainterTests
         Assert.Equal(CastButtonState.Connected, CastPainter.Button(View(null, FfiCastSessionState.Connected), tvsFound: true, rejoining: false, driving: false));
         Assert.Equal(CastButtonState.Connected, CastPainter.Button(View(Item()), tvsFound: true, rejoining: false, driving: false));
         Assert.Equal(CastButtonState.Connected, CastPainter.Button(View(null, FfiCastSessionState.Idle), tvsFound: true, rejoining: false, driving: true));
+    }
+
+    [Fact]
+    public void AReconnectHoldsTheClockAndRejoinsInPlace()
+    {
+        var painter = Painter();
+        painter.Take(View(Item()));
+        now += TimeSpan.FromSeconds(4);
+        // The connection closes: the clock holds where it stood, the line says so, nothing dims as a start does.
+        painter.Take(View(Item(), reconnecting: true));
+        now += TimeSpan.FromSeconds(10);
+        var reconnecting = painter.Draw("Living room")!;
+        Assert.Equal(CastLine.Reconnecting, reconnecting.Line);
+        Assert.Equal("Reconnecting to Living room", reconnecting.Status);
+        Assert.False(reconnecting.Dim);
+        Assert.Equal(104, reconnecting.Position);
+        Assert.Null(reconnecting.Waiting);
+        // Joined again: the TV's own playhead, playing on.
+        painter.Take(View(Item(position: 115)));
+        var back = painter.Draw("Living room")!;
+        Assert.Equal(CastLine.Playing, back.Line);
+        Assert.Equal(115, back.Position);
+    }
+
+    [Fact]
+    public void AnEndFromOutsideIsCastingStoppedWithTheEpisodeKept()
+    {
+        foreach (Msg why in new Msg[] { new Msg.NoticeCastLost("Living room"), new Msg.NoticeCastStoppedElsewhere("Living room"), new Msg.NoticeCastTakenOver("Living room") })
+        {
+            var painter = Painter();
+            painter.Take(View(Item()));
+            now += TimeSpan.FromSeconds(2);
+            painter.Take(View(Item(), reconnecting: true));
+            now += TimeSpan.FromSeconds(20);
+            painter.Take(View(null, FfiCastSessionState.Error, why));
+            var stopped = painter.Draw("Living room")!;
+            Assert.Equal(CastLine.Stopped, stopped.Line);
+            Assert.Equal("Casting stopped", stopped.Status);
+            Assert.Equal(why.Text(), stopped.Reason);
+            Assert.Equal("Made-up Show", stopped.Title);
+            Assert.Equal(102, stopped.Position);
+            Assert.Equal(1440, stopped.Duration);
+        }
+    }
+
+    [Fact]
+    public void ATvHeldWithNothingOnItDrawsOnlyForTheOpenController()
+    {
+        var painter = Painter();
+        painter.Take(View(null, FfiCastSessionState.Connected));
+        Assert.Null(painter.Draw("Living room"));
+        var idle = painter.Draw("Living room", idle: true)!;
+        Assert.Equal(CastLine.Idle, idle.Line);
+        Assert.Equal("Connected to Living room", idle.Status);
+        Assert.Null(idle.Id);
+        Assert.Null(idle.Duration);
+    }
+
+    [Fact]
+    public void TheFooterKeepsItsPlacesAndOnlyStopCastingTakesInputWhileReconnecting()
+    {
+        var playing = CastFooter.For(CastLine.Playing);
+        Assert.Equal((CastAction.PlayHere, CastAction.StopCasting), (playing.First, playing.Second));
+        Assert.False(playing.FirstAccent);
+        Assert.Equal(new[] { CastAction.ChooseAnother, CastAction.StopCasting }, playing.More);
+
+        var reconnecting = CastFooter.For(CastLine.Reconnecting);
+        Assert.Equal((CastAction.PlayHere, CastAction.StopCasting), (reconnecting.First, reconnecting.Second));
+        Assert.False(reconnecting.FirstLive);
+        Assert.False(reconnecting.MoreLive);
+
+        var stopped = CastFooter.For(CastLine.Stopped);
+        Assert.Equal((CastAction.PlayHere, CastAction.ChooseAnother), (stopped.First, stopped.Second));
+        Assert.True(stopped.FirstAccent);
+        Assert.Equal(new[] { CastAction.ChooseAnother }, stopped.More);
+
+        var idle = CastFooter.For(CastLine.Idle);
+        Assert.Equal((CastAction.ChooseAnother, CastAction.Disconnect), (idle.First, idle.Second));
+        Assert.DoesNotContain(CastAction.StopCasting, idle.More);
+        Assert.Equal("Disconnect", CastFooter.Words(CastAction.Disconnect));
     }
 }

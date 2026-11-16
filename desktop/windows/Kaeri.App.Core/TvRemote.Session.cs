@@ -59,8 +59,8 @@ public sealed partial class TvRemote
     public string SessionName => Session?.DeviceName is { Length: > 0 } name ? name
         : CastRows.FirstOrDefault(r => r.Key == (Session?.DeviceKey ?? leftOn))?.Name ?? "";
 
-    /// <summary>The frame of the mini and the controller now.</summary>
-    public CastDrawn? Drawn(DateTimeOffset? at = null) => Painter.Draw(SessionName, Rejoining, at);
+    /// <summary>The frame of the mini and the controller now; with <paramref name="idle"/>, also for a TV held with nothing playing.</summary>
+    public CastDrawn? Drawn(DateTimeOffset? at = null, bool idle = false) => Painter.Draw(SessionName, Rejoining, at, idle);
 
     /// <summary>The last episode of Kaeri's the TV played.</summary>
     public TvPlay? SessionPlay => lastPlay;
@@ -131,9 +131,24 @@ public sealed partial class TvRemote
         Controller(view);
         Say();
         if (view.State == FfiCastSessionState.Error && was?.State != FfiCastSessionState.Error
-            && view.Notice is Msg.NoticeCastTakenOver taken && lastPlay is { } last)
-            TakenOver?.Invoke(last, taken);
+            && CastPainter.IsEnd(view.Notice) && view.Notice is { } why && lastPlay is { } last)
+            SessionEnded?.Invoke(last with { From = Painter.Playhead() is { } at && at >= 5 ? at : null }, why);
     }
+
+    /// <summary>
+    /// The held TV went away, was stopped on the TV or was taken by another sender: the episode,
+    /// at the second the TV was last at, and the engine's reason, for the notice with Play here.
+    /// </summary>
+    public Action<TvPlay, Msg>? SessionEnded { get; set; }
+
+    /// <summary>
+    /// Something plays on the held TV, or is starting there: the way to let go is Stop casting.
+    /// With nothing playing it is Disconnect. The two never show together.
+    /// </summary>
+    public bool SessionPlaying => Session is { State: FfiCastSessionState.Playing } or { State: FfiCastSessionState.Connecting, Item: not null };
+
+    /// <summary>The words for letting go of the held TV: Stop casting while something plays, else Disconnect.</summary>
+    public string LetGoWord => SessionPlaying ? T.CastStop : T.ActionDisconnect;
 
     /// <summary>The controller's card follows the play on the TV, and goes when the TV is let go.</summary>
     void Controller(FfiCastSessionView view)
@@ -234,7 +249,7 @@ public sealed partial class TvRemote
         Choose(row);
     }
 
-    /// <summary>Stop casting: what plays on the TV stops, and the TV is let go.</summary>
+    /// <summary>Stop casting or Disconnect: what plays on the TV stops, and the TV is let go.</summary>
     public void DisconnectCast()
     {
         pendingPlay = null;

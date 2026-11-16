@@ -899,7 +899,7 @@ public static class TvWords
     public static CastStage StageOf(FfiCastCard? card) => card switch
     {
         null => CastStage.Starting,
-        { Notice: Msg.NoticeCastLost } => CastStage.Lost,
+        { Notice: Msg.NoticeCastLost or Msg.NoticeCastStoppedElsewhere } => CastStage.Lost,
         { Notice: not null } => CastStage.Failed,
         { Card: { Phase: FfiLinkPhase.Connected, Now: { Loading: false, Duration: not null } } } => CastStage.Playing,
         _ => CastStage.Starting,
@@ -911,7 +911,7 @@ public static class TvWords
     /// </summary>
     public static bool OnCastCard(Msg? notice) => notice is Msg.NoticeCastVideoCodec or Msg.NoticeCastAudioCodec
         or Msg.NoticeCastContainer or Msg.NoticeCastDeepLink or Msg.NoticeCastNeverFetches or Msg.NoticeCastRefused
-        or Msg.NoticeCastTakenOver or Msg.NoticeCastNotSameNetwork or Msg.NoticeCastLost;
+        or Msg.NoticeCastTakenOver or Msg.NoticeCastNotSameNetwork or Msg.NoticeCastLost or Msg.NoticeCastStoppedElsewhere;
 
     /// <summary>What a card that ended offers, by the engine's reason.</summary>
     public static CastOffer[] OffersFor(Msg? notice) => notice switch

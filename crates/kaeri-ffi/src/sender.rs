@@ -945,7 +945,9 @@ pub use fake_cast::{FfiFakeCast, FfiFakeCastOptions};
 mod fake_cast {
     use std::time::Duration;
 
-    use kaeri_cast::fake::{Echo, FakeOptions, FakeReceiver, Refusal, Refuse, advert_txt};
+    use kaeri_cast::fake::{
+        CustomReceiver, Echo, FakeOptions, FakeReceiver, Refusal, Refuse, advert_txt,
+    };
 
     use super::*;
     use crate::remote::FfiAdvert;
@@ -968,6 +970,14 @@ mod fake_cast {
         /// The TV answers each control this many milliseconds late.
         #[uniffi(default)]
         pub answer_late_ms: Option<u32>,
+        /// Keeps the receiver and what it plays from one connection to the next, as a TV does,
+        /// so a connection made again joins the cast still playing.
+        #[uniffi(default)]
+        pub remembers: bool,
+        /// Kaeri's own receiver doesn't launch on this TV, so the cast falls back to the TV's own
+        /// player.
+        #[uniffi(default)]
+        pub own_receiver_fails: bool,
     }
 
     #[derive(uniffi::Object)]
@@ -1015,6 +1025,12 @@ mod fake_cast {
                     (true, _) => Echo::Full,
                     (false, Some(late)) => Echo::Late(Duration::from_millis(u64::from(late))),
                     (false, None) => Echo::Partial,
+                },
+                remembers: options.remembers,
+                custom: if options.own_receiver_fails {
+                    CustomReceiver::Unknown
+                } else {
+                    CustomReceiver::Runs
                 },
                 ..FakeOptions::default()
             };
@@ -1071,6 +1087,20 @@ mod fake_cast {
         /// The TV stops answering, as one switched off at the wall does.
         pub fn go_silent(&self) {
             self.with(FakeReceiver::go_silent);
+        }
+
+        /// The TV closes the connection and plays on, and takes a connection again only after
+        /// `answer_after_ms`: a reconnect that rejoins in time, or one that runs out.
+        pub fn lose_connection(&self, answer_after_ms: u32) {
+            self.with(|r| {
+                r.answer_after(Duration::from_millis(u64::from(answer_after_ms)));
+                r.close_connection();
+            });
+        }
+
+        /// The receiver is stopped on the TV, with its remote or from another phone.
+        pub fn stop_app(&self) {
+            self.with(FakeReceiver::stop_app);
         }
 
         /// The TV waits for the stream mid-episode, or plays on again.

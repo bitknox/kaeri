@@ -59,7 +59,7 @@ public sealed partial class MainWindow
         tv.CastServed = File.Exists(served);
 #if KAERI_TESTING
         if (options.Show is not null && options.Show.StartsWith("cast-", StringComparison.Ordinal))
-            tv.CastServed = options.Show == "cast-picker-allowed";
+            tv.CastServed = CastSceneName == "cast-picker-allowed";
 #endif
         tv.Served = () =>
         {
@@ -82,12 +82,15 @@ public sealed partial class MainWindow
             OpenShow = OpenTitle,
             PlayHere = play => ctx.Play(play.Id, play.Episode),
             ChooseSource = ChooseCastSource,
+            // Over the mini while it shows; at the foot, over the remote, while that is open.
             MiniShown = shown => Toast.Margin = new Thickness(24, 0, 24, shown ? 92 : 16),
             Remembered = RememberedCast,
         });
         AppTitleBar.RightHeader = TitleBarEnd();
-        // Someone else took the TV: the mini goes, and the bar offers to carry on here.
-        tv.TakenOver = (play, notice) => castLayer.TakenOver(play, notice);
+        // The TV went away, was stopped there or was taken: the mini goes, and the notice offers
+        // to carry on here.
+        tv.TakenOver = CastEnded;
+        tv.SessionEnded = CastEnded;
         tv.Changed += TvChanged;
         tv.Attach(tvSender, browser, casts);
         // The button knows whether TVs exist, and a cast left running is joined again, only by
@@ -126,10 +129,55 @@ public sealed partial class MainWindow
 #endif
     }
 
+    /// <summary>The toast that offered Play here after a cast ended, while it may still show.</summary>
+    int? castEndToast;
+    (string Text, DateTimeOffset At)? lastCastEnd;
+
+    /// <summary>
+    /// A cast ended from outside: with the remote open it says so in place, and the message is
+    /// kept; otherwise the notice, 8 s with Play here, takes the mini's place.
+    /// </summary>
+    void CastEnded(TvPlay play, Msg notice)
+    {
+        var text = notice.Text();
+        // The card and the session both tell of a TV taken: one notice.
+        if (lastCastEnd is { } last && last.Text == text && DateTimeOffset.Now - last.At < TimeSpan.FromSeconds(3))
+            return;
+        lastCastEnd = (text, DateTimeOffset.Now);
+        if (castLayer?.Expanded == true)
+        {
+            ctx.Known.Messages.Add(text, false, DateTimeOffset.Now, false);
+            castLayer.Refresh();
+            return;
+        }
+        ShowToast(InfoBarSeverity.Informational, text, T.CastPlayHere, () => ctx.Play(play.Id, play.Episode), hold: NoticeTime.Timed(text, screenReader: false));
+        castEndToast = toastShown;
+        castLayer?.Refresh();
+    }
+
+    /// <summary>Closes the notice now, fading out, unless a newer one comes meanwhile.</summary>
+    void CloseToast()
+    {
+        var shown = ++toastShown;
+        Motion.FadeOutThen(Toast, () =>
+        {
+            if (shown != toastShown)
+                return;
+            Toast.IsOpen = false;
+            Toast.Opacity = 1;
+        });
+    }
+
     void TvChanged()
     {
         castButton?.Update();
         castLayer?.Refresh();
+        // A new cast on its way: the offer to play the last one here goes.
+        if (castEndToast is { } shown && shown == toastShown && Toast.IsOpen && tv.SessionLoaded && tv.Session?.State != FfiCastSessionState.Error)
+        {
+            castEndToast = null;
+            CloseToast();
+        }
         RememberCast();
         ToastCastNote();
         // While this PC relays the stream, it doesn't sleep.
@@ -146,10 +194,13 @@ public sealed partial class MainWindow
 
     string? castNoteShown;
 
-    /// <summary>The cast's one-time line while it plays, as a toast when it first reads differently.</summary>
+    /// <summary>
+    /// The cast's line while a TV is held, as a toast each time it comes: the TV's own player took
+    /// over, so the notice says so each cast it happens, and Messages keeps it.
+    /// </summary>
     void ToastCastNote()
     {
-        var note = tv.SessionLoaded ? tv.Session?.Note?.Text() : null;
+        var note = tv.SessionHeld ? tv.Session?.Note?.Text() : null;
         if (note == castNoteShown)
             return;
         castNoteShown = note;
@@ -341,6 +392,9 @@ public sealed partial class MainWindow
 
     bool CastScene => options.Show?.StartsWith("cast-", StringComparison.Ordinal) == true;
 
+    /// <summary>The cast scene without its -reduced, which runs it with animation effects off.</summary>
+    string CastSceneName => options.Show is { } show && show.EndsWith("-reduced", StringComparison.Ordinal) ? show[..^"-reduced".Length] : options.Show ?? "";
+
     readonly List<FfiFakeCast> fakeCasts = [];
     FixtureCastBrowser? fixtureCasts;
 
@@ -352,7 +406,7 @@ public sealed partial class MainWindow
     /// </summary>
     FfiCastBrowser FixtureCasts(FfiEngine engine)
     {
-        var scene = options.Show ?? "";
+        var scene = CastSceneName;
         fixtureCasts = new FixtureCastBrowser(fakeCasts);
         if (!CastScene || scene == "cast-none-found")
             return fixtureCasts;
@@ -364,6 +418,9 @@ public sealed partial class MainWindow
                 "cast-starting" or "cast-counting" => living with { LaunchMs = 7000 },
                 "cast-refused" => living with { Refuses = true },
                 "cast-never-reads" => living with { Fetches = false },
+                "cast-fallback" or "cast-fallback-remote" or "cast-messages" => living with { OwnReceiverFails = true },
+                _ when scene.StartsWith("cast-reconnecting", StringComparison.Ordinal) || scene.StartsWith("cast-rejoined", StringComparison.Ordinal)
+                    || scene.StartsWith("cast-gave-up", StringComparison.Ordinal) => living with { Remembers = true },
                 _ => living,
             };
             fakeCasts.Add(engine.StartFakeCast("Living room", living));
@@ -412,9 +469,29 @@ public sealed partial class MainWindow
     ///     cast-bar-menu        the same, with the button's menu open on what plays
     ///     cast-stopped         Stop casting from the controller
     ///     cast-up-next         Living room near the end of the episode: Up next counts down
+    ///     cast-reconnecting    the connection closes and is made again for the engine's 20 s: the mini says so
+    ///     cast-reconnecting-remote  the same with the controller open: only Stop casting takes input
+    ///     cast-rejoined        the connection comes back after 4 s: the mini plays on in place
+    ///     cast-rejoined-remote the same with the controller open
+    ///     cast-gave-up         the 20 s run out: the mini goes and the notice offers Play here
+    ///     cast-gave-up-remote  the same with the controller open: Casting stopped in place
+    ///     cast-lost-remote     Living room drops off with the controller open
+    ///     cast-stopped-on-tv   Living room's receiver is stopped on the TV: the notice with Play here
+    ///     cast-stopped-on-tv-remote  the same with the controller open
+    ///     cast-fallback        Kaeri's receiver doesn't launch on Living room: the TV's own player, and the notice
+    ///     cast-fallback-remote the same with the controller open: the notice above it
+    ///     cast-messages        the fallback and a stop on the TV, then Messages
+    ///     cast-remote-more     Living room playing, the controller's More open
+    ///     cast-idle-remote     Living room held with nothing on it, the controller open: Disconnect
+    ///     cast-idle-remote-more  the same with More open
+    ///     cast-menu-idle       the same in the title bar's menu: Disconnect
+    /// Any cast scene ending in -reduced runs with animation effects off.
     /// </summary>
-    async void RehearseCast(string scene)
+    async void RehearseCast(string shown)
     {
+        var scene = CastSceneName;
+        if (shown.EndsWith("-reduced", StringComparison.Ordinal))
+            Motion.Override = false;
         await Task.Delay(1200);
         await Until(() => ctx.Known.Entry(900001) is not null, 5);
         var play = new TvPlay(900001, ctx.Known.Entry(900001)?.Title ?? "", "7", 0);
@@ -424,7 +501,9 @@ public sealed partial class MainWindow
                 castButton?.Open();
             return;
         }
-        tv.Offer(play);
+        var idle = scene is "cast-idle-remote" or "cast-idle-remote-more" or "cast-menu-idle";
+        if (!idle)
+            tv.Offer(play);
         if (scene is "cast-picker" or "cast-picker-allowed" or "cast-none-found")
             return;
         var name = scene == "cast-playing-level" ? "Kitchen display" : "Living room";
@@ -433,6 +512,26 @@ public sealed partial class MainWindow
         await Task.Delay(600);
         tv.ConnectCast(tv.CastRows.First(r => r.Name == name));
         TvDialog.Showing?.Close();
+        if (idle)
+        {
+            // Held with nothing on it.
+            if (!await Until(() => tv.Session is { State: FfiCastSessionState.Connected }, 20))
+                return;
+            await Task.Delay(600);
+            TvDialog.Showing?.Close();
+            if (scene == "cast-menu-idle")
+                castButton?.Open();
+            else
+            {
+                castLayer?.Expand();
+                if (scene == "cast-idle-remote-more")
+                {
+                    await Task.Delay(800);
+                    castLayer?.ShowMore();
+                }
+            }
+            return;
+        }
         if (scene is "cast-starting")
             return;
         if (scene is "cast-counting" or "cast-refused" or "cast-never-reads")
@@ -449,6 +548,54 @@ public sealed partial class MainWindow
             case "cast-lost":
                 await Task.Delay(1500);
                 fake?.GoSilent();
+                break;
+            case "cast-lost-remote":
+                castLayer?.Expand();
+                await Task.Delay(1500);
+                fake?.GoSilent();
+                break;
+            case "cast-reconnecting" or "cast-gave-up":
+                await Task.Delay(1500);
+                fake?.LoseConnection(120_000);
+                break;
+            case "cast-reconnecting-remote" or "cast-gave-up-remote":
+                castLayer?.Expand();
+                await Task.Delay(1500);
+                fake?.LoseConnection(120_000);
+                break;
+            case "cast-rejoined":
+                await Task.Delay(1500);
+                fake?.LoseConnection(4000);
+                break;
+            case "cast-rejoined-remote":
+                castLayer?.Expand();
+                await Task.Delay(1500);
+                fake?.LoseConnection(4000);
+                break;
+            case "cast-stopped-on-tv":
+                await Task.Delay(1500);
+                fake?.StopApp();
+                break;
+            case "cast-stopped-on-tv-remote":
+                castLayer?.Expand();
+                await Task.Delay(1500);
+                fake?.StopApp();
+                break;
+            case "cast-fallback":
+                break;
+            case "cast-fallback-remote":
+                castLayer?.Expand();
+                break;
+            case "cast-messages":
+                await Task.Delay(1500);
+                fake?.StopApp();
+                await Task.Delay(9500);
+                ShowMessages();
+                break;
+            case "cast-remote-more":
+                castLayer?.Expand();
+                await Task.Delay(800);
+                castLayer?.ShowMore();
                 break;
             case "cast-taken-over":
                 await Task.Delay(1500);

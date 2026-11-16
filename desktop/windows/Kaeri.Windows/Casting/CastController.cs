@@ -17,8 +17,10 @@ namespace Kaeri.Windows.Casting;
 /// The expanded controller over the page pane: the header with the chevron down and the status
 /// line, the art on the left, and on the right the title with its way to the show, the episode
 /// line, the seek line, the transport, Up next while the engine counts, subtitles, audio and the
-/// TV's volume, and Play here, Stop casting and More. A failed cast says why in place of the seek
-/// line and the transport. Only a start dims.
+/// TV's volume, and the footer's two places and More. While the connection is made again only
+/// Stop casting takes input and everything else dims in place; an end says why in place of the
+/// transport, with Play here in the accent. A TV held with nothing on it says so, with Choose
+/// another TV and Disconnect. A start dims the transport.
 /// </summary>
 sealed class CastController : Grid
 {
@@ -32,12 +34,15 @@ sealed class CastController : Grid
     readonly Grid body = new() { ColumnSpacing = 40, RowSpacing = 24, MaxWidth = 1100, HorizontalAlignment = HorizontalAlignment.Center, VerticalAlignment = VerticalAlignment.Center };
     readonly StackPanel side = new() { Spacing = 0, MinWidth = 340, MaxWidth = 460, VerticalAlignment = VerticalAlignment.Center };
     readonly Button titleButton;
+    readonly FontIcon titleChevron = CastParts.Glyph("", 14);
     readonly TextBlock title = new() { FontSize = 22, LineHeight = 28, TextWrapping = TextWrapping.Wrap, MaxLines = 2, TextTrimming = TextTrimming.CharacterEllipsis };
     readonly TextBlock episode = new() { Style = Ui.Res<Style>("HazeBodyStyle"), Margin = new Thickness(0, 4, 0, 0), TextTrimming = TextTrimming.CharacterEllipsis };
-    readonly StackPanel failed = new() { Orientation = Orientation.Horizontal, Spacing = 8, Margin = new Thickness(0, 24, 0, 0), Visibility = Visibility.Collapsed };
+    readonly StackPanel failed = new() { Orientation = Orientation.Horizontal, Spacing = 8, VerticalAlignment = VerticalAlignment.Center, Visibility = Visibility.Collapsed };
+    /// <summary>The transport's row, which says why in its place once the cast ended or failed.</summary>
+    readonly Grid transportRow = new() { Margin = new Thickness(0, 12, 0, 0), MinHeight = 48 };
     readonly TextBlock reason = new() { TextWrapping = TextWrapping.Wrap, MaxWidth = 420 };
     readonly SeekLine seek = new(compact: false);
-    readonly StackPanel transport = new() { Orientation = Orientation.Horizontal, Spacing = 12, Margin = new Thickness(0, 12, 0, 0) };
+    readonly StackPanel transport = new() { Orientation = Orientation.Horizontal, Spacing = 12 };
     readonly FontIcon playGlyph = CastParts.Glyph("", 20);
     public readonly Button Play;
     readonly StackPanel upNext = new() { Spacing = 8, Margin = new Thickness(0, 20, 0, 0), Visibility = Visibility.Collapsed };
@@ -51,11 +56,12 @@ sealed class CastController : Grid
     readonly TextBlock fixedVolume = new() { Text = T.TvCastVolumeOnTv, Style = Ui.Res<Style>("HazeBodyStyle"), VerticalAlignment = VerticalAlignment.Center };
     readonly Button mute = CastParts.Text(T.TvCastMute);
     readonly StackPanel footer = new() { Orientation = Orientation.Horizontal, Spacing = 8, Margin = new Thickness(0, 28, 0, 0) };
-    readonly Button playHere = CastParts.Text(T.CastPlayHere);
-    readonly Button stop = CastParts.Text(T.CastStop);
+    readonly Place first, second;
     readonly Button more;
-    readonly Button chooseSource = CastParts.Text(T.PlayerChooseSource, accent: true);
-    readonly Button playHereFailed = CastParts.Text(T.CastPlayHere);
+    readonly MenuFlyout moreMenu = new() { Placement = FlyoutPlacementMode.TopEdgeAlignedLeft };
+    CastFooter? footerDrawn;
+    CastLine? lineDrawn;
+    CastDrawn? lastDrawn;
     readonly Microsoft.UI.Dispatching.DispatcherQueueTimer volumeRest;
     string? tracksDrawn;
     bool quietVolume, wide = true;
@@ -85,10 +91,9 @@ sealed class CastController : Grid
         title.FontFamily = Ui.Res<FontFamily>("ShowFont");
         title.FontWeight = Microsoft.UI.Text.FontWeights.Bold;
         titleRow.Children.Add(title);
-        var chevron = CastParts.Glyph("", 14);
-        chevron.VerticalAlignment = VerticalAlignment.Center;
-        chevron.Foreground = Ui.Res<Brush>("TextFillColorSecondaryBrush");
-        titleRow.Children.Add(chevron);
+        titleChevron.VerticalAlignment = VerticalAlignment.Center;
+        titleChevron.Foreground = Ui.Res<Brush>("TextFillColorSecondaryBrush");
+        titleRow.Children.Add(titleChevron);
         titleButton = new Button
         {
             Content = titleRow,
@@ -102,15 +107,10 @@ sealed class CastController : Grid
         side.Children.Add(titleButton);
         side.Children.Add(episode);
 
-        // A cast that failed says why, with the vermilion dot.
-        failed.Children.Add(new Ellipse { Width = 7, Height = 7, Fill = new SolidColorBrush(Ui.Vermilion), VerticalAlignment = VerticalAlignment.Top, Margin = new Thickness(0, 7, 0, 0) });
-        failed.Children.Add(reason);
-        AutomationProperties.SetLiveSetting(reason, AutomationLiveSetting.Assertive);
-        side.Children.Add(failed);
-
-        // The seek line and the transport.
+        // The seek line, which dims in place while the transport can't be used.
         seek.Root.Margin = new Thickness(0, 20, 0, 0);
         seek.Seek = tv.SessionSeekTo;
+        Motion.QuickOpacity(seek.Root);
         side.Children.Add(seek.Root);
         var back = CastParts.Icon(CastParts.Ten(back: true, 20), T.PlayerBack10, 44, 44);
         back.Click += (_, _) => tv.SessionSeekBy(-10);
@@ -126,7 +126,13 @@ sealed class CastController : Grid
         transport.Children.Add(forward);
         transport.Children.Add(next);
         Motion.QuickOpacity(transport);
-        side.Children.Add(transport);
+        transportRow.Children.Add(transport);
+
+        // A cast that ended or failed says why in the transport's place, with the vermilion dot.
+        failed.Children.Add(new Ellipse { Width = 7, Height = 7, Fill = new SolidColorBrush(Ui.Vermilion), VerticalAlignment = VerticalAlignment.Top, Margin = new Thickness(0, 7, 0, 0) });
+        failed.Children.Add(reason);
+        transportRow.Children.Add(failed);
+        side.Children.Add(transportRow);
 
         // Up next, while the engine counts.
         upNext.Children.Add(upNextLine);
@@ -169,21 +175,14 @@ sealed class CastController : Grid
             volumeRest.Start();
         };
 
-        // Play here, Stop casting and More; Choose source and Play here once it failed.
-        playHere.Click += (_, _) => act.PlayHere();
-        stop.Click += (_, _) => act.Stop();
-        var moreMenu = new MenuFlyout { Placement = FlyoutPlacementMode.TopEdgeAlignedLeft };
-        var another = new MenuFlyoutItem { Text = T.TvChooseAnother };
-        another.Click += (_, _) => act.ChooseAnother();
-        moreMenu.Items.Add(another);
+        // The footer: two places that keep their spot and change their words, and More.
+        first = new Place(Run);
+        second = new Place(Run);
         more = CastParts.Icon(CastParts.Glyph("", 16), T.ActionMore, 40, 32);
         more.Flyout = moreMenu;
-        chooseSource.Click += (_, _) => act.ChooseSource();
-        playHereFailed.Click += (_, _) => act.PlayHere();
-        footer.Children.Add(chooseSource);
-        footer.Children.Add(playHereFailed);
-        footer.Children.Add(playHere);
-        footer.Children.Add(stop);
+        Motion.QuickOpacity(more);
+        footer.Children.Add(first.Root);
+        footer.Children.Add(second.Root);
         footer.Children.Add(more);
         side.Children.Add(footer);
 
@@ -265,63 +264,173 @@ sealed class CastController : Grid
     /// <summary>Draws the frame in place; the card brings the tracks and Up next.</summary>
     public void Show(CastDrawn drawn, FfiCastSessionView? view, FfiCastCard? card)
     {
+        var line = drawn.Line;
+        var turned = lineDrawn is { } was && was != line;
+        var rejoined = lineDrawn == CastLine.Reconnecting && line is CastLine.Playing or CastLine.Paused;
+        var from = lastDrawn?.Position;
+        lineDrawn = line;
+        lastDrawn = drawn;
+        var idle = line == CastLine.Idle;
         Art.Show(ctx, drawn.Id, drawn.Image);
-        status.Show(drawn.Line, drawn.Status);
-        if (title.Text != drawn.Title)
+        status.Show(line, drawn.Status);
+        var heading = idle ? T.CastIdle : drawn.Title;
+        if (title.Text != heading)
         {
-            title.Text = drawn.Title;
-            CastParts.Name(titleButton, T.CastOpenShow(drawn.Title));
+            // The show's name and Nothing playing yet trade places as a crossfade.
+            if (turned && title.Text.Length > 0)
+                Crossfade.Swap(titleButton, () => Heading(heading, idle));
+            else
+                Heading(heading, idle);
         }
         titleButton.IsEnabled = drawn.Id is not null;
         if (episode.Text != drawn.EpisodeLine)
             episode.Text = drawn.EpisodeLine;
-        episode.Visibility = string.IsNullOrEmpty(drawn.EpisodeLine) ? Visibility.Collapsed : Visibility.Visible;
+        episode.Visibility = string.IsNullOrEmpty(drawn.EpisodeLine) && !idle ? Visibility.Collapsed : Visibility.Visible;
 
-        var isFailed = drawn.Line == CastLine.Failed;
-        Set(failed, isFailed);
-        if (isFailed && reason.Text != (drawn.Reason ?? ""))
-            reason.Text = drawn.Reason ?? "";
-        Set(seek.Root, !isFailed);
-        Set(transport, !isFailed);
+        // The transport's row: the transport, or why it ended in its place, crossfading.
+        var ended = line is CastLine.Failed or CastLine.Stopped;
+        var said = ended ? drawn.Reason ?? "" : null;
+        if ((failed.Visibility == Visibility.Visible) != ended || ended && reason.Text != said)
+        {
+            if (turned)
+                Crossfade.Swap(transportRow, () => Reason(said));
+            else
+                Reason(said);
+        }
+
+        // Seek, transport and rows take input only while it plays or is paused; a start dims the
+        // transport, and a reconnect, an end or nothing playing dims them all in place.
+        var live = line is CastLine.Playing or CastLine.Paused;
+        if (rejoined && from is { } at && Math.Abs(at - drawn.Position) >= 1)
+            seek.Glide(at, drawn);
         seek.Show(drawn);
+        Opacity(seek.Root, live || drawn.Dim ? 1 : 0.38);
         CastParts.PlayGlyph(Play, playGlyph, drawn.Paused);
-        var opacity = drawn.Dim ? 0.38 : 1;
-        if (transport.Opacity != opacity)
-            transport.Opacity = opacity;
+        Opacity(transport, live ? 1 : 0.38);
         foreach (var child in transport.Children.OfType<Control>())
-            child.IsEnabled = !drawn.Dim;
+            child.IsEnabled = live;
 
         // Up next while the engine says so.
-        var next = isFailed || drawn.Dim ? null : card?.UpNext;
+        var next = live ? card?.UpNext : null;
         Set(upNext, next is not null);
         if (next is not null)
         {
-            var line = TvWords.CastUpNext(next);
-            if (upNextLine.Text != line)
-                upNextLine.Text = line;
+            var upLine = TvWords.CastUpNext(next);
+            if (upNextLine.Text != upLine)
+                upNextLine.Text = upLine;
             var nextEpisode = TvWords.CastUpNextEpisode(next);
             if (upNextEpisode.Text != nextEpisode)
                 upNextEpisode.Text = nextEpisode;
         }
 
-        // The rows, dimmed while it starts and once it failed.
-        var live = !drawn.Dim && !isFailed;
-        var rowsOpacity = live ? 1 : 0.38;
-        if (rows.Opacity != rowsOpacity)
-            rows.Opacity = rowsOpacity;
+        Opacity(rows, live ? 1 : 0.38);
         var now = card?.Card.Now;
         Tracks(now, live);
         Volume(view, live);
 
-        // The footer.
-        Set(chooseSource, isFailed);
-        Set(playHereFailed, isFailed);
-        Set(playHere, !isFailed);
-        Set(stop, !isFailed);
-        Set(more, !isFailed);
-        playHere.IsEnabled = playHereFailed.IsEnabled = tv.SessionPlay is not null;
-        chooseSource.IsEnabled = tv.SessionPlay is not null;
+        Footer(CastFooter.For(line), turned);
+        first.Live(footerDrawn!.FirstLive && (first.Action is not (CastAction.PlayHere or CastAction.ChooseSource) || tv.SessionPlay is not null));
+        second.Live(second.Action is not (CastAction.PlayHere or CastAction.ChooseSource) || tv.SessionPlay is not null);
+
+        // Casting stopped with focus on a control that dimmed or left: focus goes to Play here.
+        if (ended && turned && first.Action == CastAction.PlayHere && XamlRoot is { } root
+            && FocusManager.GetFocusedElement(root) as DependencyObject is var focused
+            && (focused is null || Within(focused) && focused != Collapse && focused != titleButton))
+            first.Focus();
     }
+
+    /// <summary>The way on, when the footer's first place has the accent: Play here once it ended.</summary>
+    public bool FocusFooter() => footerDrawn is { FirstAccent: true } && first.Focus();
+
+    bool Within(DependencyObject? at)
+    {
+        for (; at is not null; at = VisualTreeHelper.GetParent(at))
+            if (at == this)
+                return true;
+        return false;
+    }
+
+    void Heading(string heading, bool idle)
+    {
+        title.Text = heading;
+        title.FontFamily = idle ? FontFamily.XamlAutoFontFamily : Ui.Res<FontFamily>("ShowFont");
+        title.FontWeight = idle ? Microsoft.UI.Text.FontWeights.Normal : Microsoft.UI.Text.FontWeights.Bold;
+        title.FontSize = idle ? 20 : 22;
+        title.Foreground = idle ? Ui.Res<Brush>("TextFillColorSecondaryBrush") : Ui.Res<Brush>("TextFillColorPrimaryBrush");
+        titleChevron.Visibility = idle ? Visibility.Collapsed : Visibility.Visible;
+        CastParts.Name(titleButton, idle ? heading : T.CastOpenShow(heading));
+    }
+
+    void Reason(string? said)
+    {
+        Set(failed, said is not null);
+        Set(transport, said is null);
+        if (said is not null && reason.Text != said)
+            reason.Text = said;
+    }
+
+    static void Opacity(UIElement element, double to)
+    {
+        if (element.Opacity != to)
+            element.Opacity = to;
+    }
+
+    /// <summary>
+    /// The footer's places change their words in place as a crossfade, each easing to its new
+    /// width on the standard spring; More's items follow.
+    /// </summary>
+    void Footer(CastFooter want, bool turned)
+    {
+        if (footerDrawn is { } had && had.First == want.First && had.FirstAccent == want.FirstAccent && had.Second == want.Second && had.More.SequenceEqual(want.More))
+        {
+            footerDrawn = want;
+            Opacity(more, want.MoreLive ? 1 : 0.38);
+            more.IsEnabled = want.MoreLive && want.More.Length > 0;
+            return;
+        }
+        footerDrawn = want;
+        void Change()
+        {
+            first.Set(want.First, want.FirstAccent);
+            second.Set(want.Second, accented: false);
+        }
+        if (turned && footer.ActualWidth > 0)
+            Crossfade.Swap(footer, Change);
+        else
+            Change();
+        moreMenu.Items.Clear();
+        foreach (var action in want.More)
+        {
+            var item = new MenuFlyoutItem { Text = CastFooter.Words(action) };
+            item.Click += (_, _) => Run(action);
+            moreMenu.Items.Add(item);
+        }
+        Set(more, want.More.Length > 0);
+        Opacity(more, want.MoreLive ? 1 : 0.38);
+        more.IsEnabled = want.MoreLive && want.More.Length > 0;
+    }
+
+    void Run(CastAction action)
+    {
+        switch (action)
+        {
+            case CastAction.PlayHere:
+                act.PlayHere();
+                break;
+            case CastAction.ChooseAnother:
+                act.ChooseAnother();
+                break;
+            case CastAction.ChooseSource:
+                act.ChooseSource();
+                break;
+            default:
+                act.Stop();
+                break;
+        }
+    }
+
+    /// <summary>The More menu as it stands, opened, for the board's frame of it.</summary>
+    public void ShowMore() => moreMenu.ShowAt(more);
 
     public void Tick(CastDrawn drawn) => seek.Show(drawn);
 
@@ -433,4 +542,62 @@ sealed class CastActions
     public required Action Stop { get; init; }
     public required Action ChooseAnother { get; init; }
     public required Action ChooseSource { get; init; }
+}
+
+/// <summary>
+/// One place in the remote's footer: a button that keeps its spot and changes its words, in the
+/// accent when it is the way on. A change of words eases its width on the standard spring.
+/// </summary>
+sealed class Place
+{
+    readonly Button plain = CastParts.Text("");
+    readonly Button accent = CastParts.Text("", accent: true);
+    bool accented;
+
+    public Place(Action<CastAction> run)
+    {
+        plain.Click += (_, _) => run(Action);
+        accent.Click += (_, _) => run(Action);
+        accent.Visibility = Visibility.Collapsed;
+        Root.Children.Add(plain);
+        Root.Children.Add(accent);
+        Motion.QuickOpacity(Root);
+    }
+
+    public Grid Root { get; } = new();
+
+    public CastAction Action { get; private set; }
+
+    Button Shown => accented ? accent : plain;
+
+    public void Set(CastAction action, bool accented)
+    {
+        var before = Root.ActualWidth;
+        Action = action;
+        this.accented = accented;
+        var words = CastFooter.Words(action);
+        foreach (var button in new[] { plain, accent })
+            if (button.Content as string != words)
+                button.Content = words;
+        plain.Visibility = accented ? Visibility.Collapsed : Visibility.Visible;
+        accent.Visibility = accented ? Visibility.Visible : Visibility.Collapsed;
+        Root.Width = double.NaN;
+        if (before <= 0)
+            return;
+        Root.Measure(new global::Windows.Foundation.Size(double.PositiveInfinity, double.PositiveInfinity));
+        var after = Root.DesiredSize.Width;
+        Root.Width = before;
+        Motion.Ease(Root, before, after, width => Root.Width = width);
+    }
+
+    /// <summary>Takes input, or dims to 38% and takes none.</summary>
+    public void Live(bool live)
+    {
+        var opacity = live ? 1 : 0.38;
+        if (Root.Opacity != opacity)
+            Root.Opacity = opacity;
+        plain.IsEnabled = accent.IsEnabled = live;
+    }
+
+    public bool Focus() => Shown.Focus(FocusState.Programmatic);
 }

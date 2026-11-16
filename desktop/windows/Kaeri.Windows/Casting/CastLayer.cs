@@ -1,4 +1,5 @@
 using Kaeri.App;
+using Kaeri.Engine.Ffi;
 using Kaeri.Engine.Model;
 using Kaeri.Windows.Pages;
 using Microsoft.UI.Composition;
@@ -24,8 +25,9 @@ sealed class CastHost
 
 /// <summary>
 /// The cast on the page pane: the mini at its foot on every page while something is on the TV,
-/// the controller grown from it over the pane, and the bar at the top when someone else took the
-/// TV. The controller and the mini morph into each other: the container grows from the mini's
+/// and the controller grown from it over the pane. When the cast ends from outside the mini goes
+/// (the window's notice takes its place), and an open controller says why in place, with Play
+/// here. The controller and the mini morph into each other: the container grows from the mini's
 /// rect on the standard spring with the art flying across, the mini's row fading out in the first
 /// 100 ms and the controls in over the next 200; closing runs the other way. A click mid-morph
 /// turns it round from where it is. With animation effects off the two crossfade in place.
@@ -39,19 +41,10 @@ sealed class CastLayer
     readonly Grid pane;
     readonly CastMini mini;
     readonly CastController controller;
-    readonly InfoBar takenOver = new()
-    {
-        Severity = InfoBarSeverity.Informational,
-        IsClosable = true,
-        VerticalAlignment = VerticalAlignment.Top,
-        Margin = new Thickness(36, 16, 36, 0),
-        MaxWidth = 720,
-    };
     readonly Microsoft.UI.Dispatching.DispatcherQueueTimer ticker;
-    /// <summary>Closes the bar by itself, Play here and all, as the other notices go.</summary>
-    readonly Microsoft.UI.Dispatching.DispatcherQueueTimer takenOverGoes;
-    TvPlay? takenPlay;
-    bool expanded, miniShown;
+    bool expanded, miniShown, footShown;
+    /// <summary>The frame of a cast that ended, kept while the controller stays open on it.</summary>
+    CastDrawn? ended;
 
     public CastLayer(Ctx ctx, TvRemote tv, Grid pane, CastHost host)
     {
@@ -81,50 +74,19 @@ sealed class CastLayer
         { Visibility = Visibility.Collapsed };
         Grid.SetRow(mini, pane.RowDefinitions.Count - 1);
         pane.Children.Add(mini);
-        Grid.SetRowSpan(takenOver, pane.RowDefinitions.Count);
-        pane.Children.Add(takenOver);
         Grid.SetRowSpan(controller, pane.RowDefinitions.Count);
         pane.Children.Add(controller);
-        var playHere = new Button { Content = T.CastPlayHere };
-        playHere.Click += (_, _) =>
-        {
-            takenOver.IsOpen = false;
-            if (takenPlay is { } play)
-                host.PlayHere(play);
-        };
-        takenOver.ActionButton = playHere;
-        takenOver.IsOpen = false;
 
         ticker = pane.DispatcherQueue.CreateTimer();
         ticker.Interval = TimeSpan.FromMilliseconds(250);
         ticker.Tick += (_, _) => Refresh();
-        takenOverGoes = pane.DispatcherQueue.CreateTimer();
-        takenOverGoes.IsRepeating = false;
-        takenOverGoes.Tick += (_, _) => takenOver.IsOpen = false;
         controller.PointerPressed += TurnRound;
     }
 
     /// <summary>The controller is open.</summary>
     public bool Expanded => expanded;
 
-    /// <summary>
-    /// Someone else took the TV: the mini goes, and the bar offers to carry on here. It goes by
-    /// itself after a while, and at once when a new cast draws its mini.
-    /// </summary>
-    public void TakenOver(TvPlay play, Msg notice)
-    {
-        takenPlay = play;
-        takenOver.Message = notice.Text();
-        takenOver.IsOpen = true;
-        takenOverGoes.Stop();
-        takenOverGoes.Interval = NoticeTime.Timed(takenOver.Message, DeviceWatch.ScreenReaderRunning());
-        takenOverGoes.Start();
-        if (expanded)
-            Close(at: true);
-        Refresh();
-    }
-
-    /// <summary>Follows the session: called on every change, and four times a second while the mini shows.</summary>
+    /// <summary>Follows the session: called on every change, and four times a second while the mini or the controller shows.</summary>
     public void Refresh()
     {
         var drawn = Frame();
@@ -136,27 +98,44 @@ sealed class CastLayer
             ticker.Stop();
             return;
         }
-        if (takenOver.IsOpen)
-            takenOver.IsOpen = false;
-        mini.Show(drawn);
+        // The mini is for a cast that goes on: an end, a failure or a TV with nothing on it has none.
+        var onMini = drawn.Line is not (CastLine.Stopped or CastLine.Failed or CastLine.Idle);
+        if (onMini)
+            mini.Show(drawn);
         if (controller.Visibility == Visibility.Visible)
         {
             controller.Heard(tv.Session);
             controller.Show(drawn, tv.Session, tv.ControllerCard);
         }
-        ShowMini(true);
-        if (!ticker.IsRunning)
-            ticker.Start();
+        ShowMini(onMini);
+        if (onMini || expanded)
+        {
+            if (!ticker.IsRunning)
+                ticker.Start();
+        }
+        else
+            ticker.Stop();
     }
 
-    /// <summary>The frame, with the show remembered from the last launch while a cast is joined again.</summary>
+    /// <summary>
+    /// The frame, with the show remembered from the last launch while a cast is joined again.
+    /// Open, the controller also draws a TV held with nothing on it, and keeps an ended frame
+    /// until it closes.
+    /// </summary>
     CastDrawn? Frame()
     {
-        if (!tv.SessionLoaded || tv.Session?.Notice is Msg.NoticeCastTakenOver)
-            return null;
-        var drawn = tv.Drawn();
+        var session = tv.Session;
+        var drawn = tv.SessionLoaded || tv.SessionHeld || session?.State == FfiCastSessionState.Error ? tv.Drawn(idle: expanded) : null;
         if (drawn is { Line: CastLine.Rejoining, Title.Length: 0 } && host.Remembered() is { } kept)
             drawn = drawn with { Id = kept.Id, Title = kept.Title };
+        if (!expanded)
+            return drawn;
+        if (drawn is { Line: CastLine.Stopped or CastLine.Failed })
+            ended = drawn;
+        else if (drawn is null && ended is { } last)
+            return last;
+        else
+            ended = null;
         return drawn;
     }
 
@@ -172,16 +151,35 @@ sealed class CastLayer
         }
         else
             Motion.Hide(mini);
+        Foot();
+    }
+
+    /// <summary>The window's notice stands over the mini while that shows, else at the foot.</summary>
+    void Foot()
+    {
+        var shown = miniShown && !expanded;
+        if (footShown == shown)
+            return;
+        footShown = shown;
         host.MiniShown(shown);
     }
 
     // Opening and closing.
 
+    /// <summary>
+    /// Opens the controller from the mini, or from the cast button while a TV is held with nothing
+    /// on it.
+    /// </summary>
     public void Expand()
     {
-        if (!miniShown || expanded)
+        if (expanded)
             return;
         expanded = true;
+        if (Frame() is not { } drawn)
+        {
+            expanded = false;
+            return;
+        }
         if (controller.Visibility == Visibility.Collapsed)
         {
             controller.Visibility = Visibility.Visible;
@@ -189,17 +187,26 @@ sealed class CastLayer
                 faded.Opacity = 0;
             controller.Art.Root.Opacity = 1;
             controller.Opacity = Motion.Enabled ? 1 : 0;
-            if (Frame() is { } drawn)
-                controller.Show(drawn, tv.Session, tv.ControllerCard);
+            controller.Show(drawn, tv.Session, tv.ControllerCard);
             controller.UpdateLayout();
         }
         Run(open: true);
-        // Into the controller: play or pause, or the chevron down while it starts.
-        if (!controller.Play.Focus(FocusState.Programmatic))
+        Foot();
+        if (!ticker.IsRunning)
+            ticker.Start();
+        // Into the controller: play or pause, else the way on, else the chevron down.
+        if (!controller.Play.Focus(FocusState.Programmatic) && !controller.FocusFooter())
             controller.Collapse.Focus(FocusState.Programmatic);
     }
 
     public void Collapse() => Close(at: false);
+
+    /// <summary>The controller's More menu, opened, for a fixture's frame of it.</summary>
+    public void ShowMore()
+    {
+        if (expanded)
+            controller.ShowMore();
+    }
 
     /// <summary>Closes into the mini; <paramref name="at"/> at once, when the mini itself is going.</summary>
     void Close(bool at)
@@ -207,6 +214,8 @@ sealed class CastLayer
         if (!expanded && running is null)
             return;
         expanded = false;
+        ended = null;
+        Foot();
         if (at)
         {
             Stop();
