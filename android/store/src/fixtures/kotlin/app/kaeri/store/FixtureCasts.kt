@@ -70,17 +70,41 @@ import app.kaeri.i18n.Strings
  *     waiting    the same, the TV waiting for the stream 6 s
  *     mini       the mini over the navigation bar while episode 7 plays
  *     joining    the mini while the session left on Living room is joined again
+ *
+ * The cast states board, on the same session with episode 7 playing on Living room. Each runs
+ * its steps once the episode plays, or `castat` milliseconds later for a recording:
+ *
+ *     reconnecting      the connection to the TV dropped: the remote says Reconnecting
+ *     reconnectingmini  the same with the remote closed: the mini says it
+ *     rejoin            Reconnecting, then the TV answers again 4 s later, ahead of where it was
+ *     giveup            Reconnecting, then the tries run out 4 s later: the remote says why
+ *     giveupmini        the same with the remote closed: the notice with Play here
+ *     fallback          the TV plays this cast in its own player: the info notice over the mini
+ *     fallbackopen      the same with the remote open
+ *     stopwait          the receiver left the TV and the engine learns why: Waiting for Living room
+ *     stopwaitopen      the same with the remote open
+ *     stopped           the cast stopped on the TV, 3 s into the wait: the notice with Play here
+ *     stoppedopen       the same with the remote open: Casting stopped and the reason
+ *     dialogplaying     the cast button's dialog while episode 7 plays: Stop casting
  */
 enum class CastScene {
     PICKER, SEARCHING, NONE, BLOCKED, STARTING, PREPARING, FIXED, LEVEL, FAILED, NEVER, NETWORK, CODEC, DEEPLINK,
     UPNEXT, UNDO, AUDIO, LOST, TAKEN, BAR,
-    CHOOSER, CONNECTING, CONNECTED, DIALOG, OPENING, PLAYING, PAUSED, WAITING, MINI, JOINING;
+    CHOOSER, CONNECTING, CONNECTED, DIALOG, OPENING, PLAYING, PAUSED, WAITING, MINI, JOINING,
+    RECONNECTING, RECONNECTINGMINI, REJOIN, GIVEUP, GIVEUPMINI, FALLBACK, FALLBACKOPEN, STOPWAIT, STOPWAITOPEN,
+    STOPPED, STOPPEDOPEN, DIALOGPLAYING;
 
     /** No TV of either kind answers in this scene. */
     val empty: Boolean get() = this == SEARCHING || this == NONE
 
     /** The scene runs on the cast session rather than a one-off cast from the picker. */
     val session: Boolean get() = ordinal >= CHOOSER.ordinal
+
+    /** A scene of the cast states board: episode 7 plays first, then the scene's steps run. */
+    val states: Boolean get() = ordinal >= RECONNECTING.ordinal
+
+    /** The board's scene runs with the remote closed. */
+    val closed: Boolean get() = this in setOf(RECONNECTINGMINI, GIVEUPMINI, FALLBACK, STOPWAIT, STOPPED, DIALOGPLAYING)
 
     companion object {
         fun named(name: String?): CastScene? = entries.firstOrNull { it.name.equals(name, ignoreCase = true) }
@@ -150,6 +174,13 @@ class FixtureCastLink(
     private var undoShown = undo != null
     private var connected = false
     private var since = System.nanoTime()
+
+    /** The connection to the TV is made again: the card keeps [heldAt] while the TV plays on. */
+    private var reconnecting = false
+    private var heldAt: Double? = null
+
+    /** When the receiver left the TV, while the engine learns why: the TV waits, its clock still. */
+    private var waitingSince: Long? = null
     private val stopped = CompletableDeferred<Unit>()
 
     init {
@@ -171,16 +202,42 @@ class FixtureCastLink(
     }
 
     private fun position(): Double {
-        if (loading || paused) return from
+        if (loading || paused || waitingSince != null) return from
         return from + (System.nanoTime() - since) / 1e9
     }
 
     /** The TV refuses every stream, or drops off: the card says so, and the cast is over. */
     fun end(with: Msg?) {
-        from = position()
+        // A TV that stopped answering ends where it last said it was.
+        from = heldAt ?: position()
+        reconnecting = false
+        heldAt = null
+        waitingSince = null
         notice = with
         over = true
         connected = with !is Msg.NoticeCastLost && connected
+        bump()
+    }
+
+    /** The connection to the TV closed: the card keeps where the TV last was and says Reconnecting. */
+    fun reconnect() {
+        heldAt = position()
+        reconnecting = true
+        bump()
+    }
+
+    /** The TV answers again: the card reads where it is now, ahead of where it was, as it played on. */
+    fun rejoin() {
+        reconnecting = false
+        heldAt = null
+        bump()
+    }
+
+    /** The receiver left the TV: the TV waits, its clock still, while the engine learns why. */
+    fun waitForTv() {
+        from = position()
+        since = System.nanoTime()
+        waitingSince = System.nanoTime()
         bump()
     }
 
@@ -191,7 +248,7 @@ class FixtureCastLink(
         val subtitleTracks = listOf(FfiTvTrack(1L, "en", null, !subtitlesOff && subtitle == 1L))
         val playing = now.copy(
             loading = loading,
-            position = position(),
+            position = heldAt ?: position(),
             paused = paused,
             volume = if (control == FfiVolumeControl.LEVEL) volume else null,
             audio = if (!played) emptyList() else audioTracks,
@@ -217,6 +274,8 @@ class FixtureCastLink(
             upNext = upNext?.takeIf { upNextShown && !loading },
             undo = undo?.takeIf { undoShown && !loading },
             route = if (loading) null else FfiCastRouteHint.THROUGH_THIS_DEVICE,
+            waiting = waitingSince?.takeIf { !over }?.let { ((System.nanoTime() - it) / 1_000_000_000L).toUInt() },
+            reconnecting = reconnecting && !over,
         )
     }
 
@@ -350,7 +409,7 @@ object FixtureCasts {
     }
 
     /** A session scene: Living room held through the scripted session, then the scene's own step. */
-    private suspend fun stageSession(store: AppStore, scene: CastScene, request: TvPlayRequest) {
+    private suspend fun stageSession(store: AppStore, scope: CoroutineScope, scene: CastScene, request: TvPlayRequest) {
         val cast = store.cast
         val session = cast.sessions as? FixtureCastSession ?: return
         val row = waitForRow(store, "Living room") ?: return
@@ -404,8 +463,56 @@ object FixtureCasts {
                     else -> Unit
                 }
             }
+            else -> if (scene.states) {
+                sessionStartsAfter = 300
+                cast.playOnTv(request)
+                while (cast.shown.value?.stage != CastStage.Playing) delay(50)
+                if (scene.closed) cast.closeCard()
+                val tv = session.card() as? FixtureCastLink ?: return
+                val steps = suspend { states(cast, session, tv, scene) }
+                if (stepsAfter > 0) {
+                    scope.launch {
+                        delay(stepsAfter)
+                        steps()
+                    }
+                } else {
+                    steps()
+                }
+            }
+        }
+    }
+
+    /** How long after episode 7 plays a board scene runs its steps, for a recording to roll first. */
+    var stepsAfter = 0L
+
+    /** The board scene's steps ran. */
+    private var stepsDone = false
+
+    /** The board scene [scene]'s steps on the playing [tv]. */
+    private suspend fun states(cast: CastModel, session: FixtureCastSession, tv: FixtureCastLink, scene: CastScene) {
+        when (scene) {
+            CastScene.RECONNECTING, CastScene.RECONNECTINGMINI -> tv.reconnect()
+            CastScene.REJOIN -> {
+                tv.reconnect()
+                delay(4_000)
+                tv.rejoin()
+            }
+            CastScene.GIVEUP, CastScene.GIVEUPMINI -> {
+                tv.reconnect()
+                delay(4_000)
+                tv.end(Msg.NoticeCastLost("Living room"))
+            }
+            CastScene.FALLBACK, CastScene.FALLBACKOPEN -> session.note(Msg.NoticeCastFallback("Living room"))
+            CastScene.STOPWAIT, CastScene.STOPWAITOPEN -> tv.waitForTv()
+            CastScene.STOPPED, CastScene.STOPPEDOPEN -> {
+                tv.waitForTv()
+                delay(3_000)
+                tv.end(Msg.NoticeCastStoppedElsewhere("Living room"))
+            }
+            CastScene.DIALOGPLAYING -> cast.pressButton()
             else -> Unit
         }
+        stepsDone = true
     }
 
     /** The browse for TVs with Chromecast built in, for [scene]. */
@@ -434,7 +541,7 @@ object FixtureCasts {
         val line = episodeTitle?.let { Strings.castEpisodeTitled(context, episode, it) } ?: Strings.castEpisode(context, episode)
         val request = TvPlayRequest(id, title, episode)
         if (scene.session) {
-            stageSession(store, scene, request)
+            stageSession(store, scope, scene, request)
             return
         }
         val now = FfiNowCard(
@@ -549,6 +656,7 @@ object FixtureCasts {
     /** Whether [scene] is on screen, as a shot waits for it. */
     fun reached(store: AppStore, scene: CastScene): Boolean {
         val shown = store.cast.shown.value
+        if (scene.states) return reachedStates(store, scene, shown)
         return when (scene) {
             CastScene.PICKER -> store.cast.rows.value.size == 2 && store.tv.rows.value.isNotEmpty()
             CastScene.SEARCHING, CastScene.NONE, CastScene.BLOCKED -> store.tv.sheet.value == TvRemoteModel.Sheet.Picker
@@ -571,6 +679,27 @@ object FixtureCasts {
             CastScene.WAITING -> store.cast.session.value.item?.waiting == 6L
             CastScene.MINI -> shown?.stage == CastStage.Playing && !store.cast.open.value
             CastScene.JOINING -> store.cast.joining.value != null
+            else -> false
+        }
+    }
+
+    /** Whether the board scene [scene] is on screen: episode 7 playing alone while its steps wait for [stepsAfter]. */
+    private fun reachedStates(store: AppStore, scene: CastScene, shown: CastShown?): Boolean {
+        val open = store.cast.open.value
+        if (stepsAfter > 0) return shown?.stage == CastStage.Playing && !shown.quiet && open != scene.closed
+        if (!stepsDone) return false
+        return when (scene) {
+            CastScene.RECONNECTING -> shown?.reconnecting == true && open
+            CastScene.RECONNECTINGMINI -> shown?.reconnecting == true && !open
+            CastScene.REJOIN -> shown?.stage == CastStage.Playing && !shown.quiet && open
+            CastScene.GIVEUP, CastScene.STOPPEDOPEN -> shown?.stage == CastStage.Lost && open
+            CastScene.GIVEUPMINI, CastScene.STOPPED -> shown == null
+            CastScene.FALLBACK -> shown?.stage == CastStage.Playing && !open
+            CastScene.FALLBACKOPEN -> shown?.stage == CastStage.Playing && open
+            CastScene.STOPWAIT -> shown?.waiting != null && !open
+            CastScene.STOPWAITOPEN -> shown?.waiting != null && open
+            CastScene.DIALOGPLAYING -> store.cast.dialog.value == CastDialog.Connected
+            else -> false
         }
     }
 }

@@ -41,6 +41,7 @@ tv-show-remote = Tampilkan remote untuk { $name }
 tv-status-playing = Memutar di { $name }
 tv-status-connecting = Menghubungkan ke { $name }
 tv-status-reconnecting = Menghubungkan ulang ke { $name }
+tv-waiting-for = Menunggu { $name }
 tv-status-connected = Terhubung
 tv-search-on-tv = Cari di TV
 tv-type-search = Ketik pencarian

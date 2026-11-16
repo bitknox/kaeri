@@ -542,14 +542,16 @@ private fun AppRootFrame(
         // First launch's pages stand over the app, which TalkBack then does not reach.
         var covered by remember { mutableStateOf(false) }
         // The cast controller grows out of its mini over the navigation bar, over the whole app.
+        val castOpen by store.cast.open.collectAsStateWithLifecycle()
         CastMorphHost(hidden = onPlayer) {
             Scaffold(
                 modifier = if (covered) Modifier.clearAndSetSemantics {} else Modifier,
                 containerColor = MaterialTheme.colorScheme.surface,
                 contentWindowInsets = WindowInsets(0),
                 // The player says its own notices on the video; the snackbars wait for it to close.
+                // While the remote is up, its own host shows the notices over it.
                 snackbarHost = {
-                    if (!onPlayer) {
+                    if (!onPlayer && !castOpen) {
                         androidx.compose.foundation.layout.Column {
                             UpdateNotice(hidden = entry?.destination?.route?.startsWith(SETTINGS_ROUTE) == true)
                             SnackbarHost(snackbars.host) { NoticeSnackbar(it) }

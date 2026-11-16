@@ -774,7 +774,7 @@ internal fun TvStep(icon: ImageVector, label: String, enabled: Boolean, onClick:
                 "10",
                 style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
                 color = silk,
-                modifier = Modifier.align(Alignment.Center).offset(y = 2.dp),
+                modifier = Modifier.align(Alignment.Center).offset(y = 2.dp).offWith(enabled),
             )
         }
     }

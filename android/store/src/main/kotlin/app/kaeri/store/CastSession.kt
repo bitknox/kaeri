@@ -78,6 +78,12 @@ data class CastSession(
     val muted: Boolean?,
     /** The TV takes a level; otherwise its volume is fixed and Mute is all there is. */
     val levelControl: Boolean,
+    /**
+     * The connection to the TV closed and is made again, for the engine's 20 s: the mini and the
+     * remote say Reconnecting, and [state] and [item] stay as they were until it joins again or
+     * the session ends.
+     */
+    val reconnecting: Boolean = false,
 ) {
     /** A TV is held: plays go to it. */
     val held: Boolean get() = state == CastSessionState.Connecting || state == CastSessionState.Connected || state == CastSessionState.Playing
@@ -182,6 +188,7 @@ private fun FfiCastSessionView.shown() = CastSession(
     level = level,
     muted = muted,
     levelControl = volumeControl == FfiVolumeControl.LEVEL,
+    reconnecting = reconnecting,
 )
 
 private fun FfiCastItem.shown() = CastItem(

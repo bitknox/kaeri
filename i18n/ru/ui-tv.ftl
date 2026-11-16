@@ -41,6 +41,7 @@ tv-show-remote = Показать пульт для { $name }
 tv-status-playing = Воспроизводится на { $name }
 tv-status-connecting = Подключаемся к { $name }
 tv-status-reconnecting = Переподключаемся к { $name }
+tv-waiting-for = Ожидание { $name }
 tv-status-connected = Подключено
 tv-search-on-tv = Поиск на телевизоре
 tv-type-search = Введите запрос

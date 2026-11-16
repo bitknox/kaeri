@@ -9239,6 +9239,8 @@
     <string name="tv_status_connecting">Connecting to %1$s</string>
     <!-- Status on the remote: connection lost, trying again. -->
     <string name="tv_status_reconnecting">Reconnecting to %1$s</string>
+    <!-- Status on the remote and the cast mini player while the TV waits: for the stream, or while the app learns why the TV stopped the cast. On Windows also while pairing, until the named TV answers. -->
+    <string name="tv_waiting_for">Waiting for %1$s</string>
     <!-- Status on the remote: connected. -->
     <string name="tv_status_connected">Connected</string>
     <!-- Label of the search field on the remote. -->

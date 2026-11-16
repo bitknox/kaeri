@@ -41,6 +41,7 @@ tv-show-remote = { $name }のリモコンを表示
 tv-status-playing = { $name }で再生中
 tv-status-connecting = { $name }に接続中
 tv-status-reconnecting = { $name }に再接続中
+tv-waiting-for = { $name }の応答を待っています
 tv-status-connected = 接続済み
 tv-search-on-tv = テレビで検索
 tv-type-search = 検索語を入力
