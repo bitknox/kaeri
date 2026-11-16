@@ -134,6 +134,8 @@ struct CastTests {
         model.playLocally = { played = ($0, $1, $2) }
         play(session)
         try await waitFor { model.stage == .playing }
+        // With the controller open, the controller says it stopped.
+        model.expanded = true
         session.change {
             $0.notice = .noticeCastLost(name: "Living room")
             $0.over = true
@@ -164,13 +166,13 @@ struct CastTests {
         try await waitFor { !model.active }
         #expect(closed)
         #expect(said.map(\.msg) == [.noticeCastTakenOver(name: "Living room")])
-        #expect(model.takenOver?.from == 492)
+        #expect(model.offered?.from == 492)
 
         var played: Double?
         model.playLocally = { _, _, position in played = position }
-        model.playHereAfterTakeOver()
+        model.playHereFromNotice()
         #expect(played == 492)
-        #expect(model.takenOver == nil)
+        #expect(model.offered == nil)
     }
 
     @Test func aNewCastTakesTheTakeOverNoticeAndItsPlayHereAway() async throws {
@@ -191,7 +193,7 @@ struct CastTests {
         model.cast("cast:living", name: "Living room", request: request)
         #expect(model.stage == .starting)
         #expect(notices.current == nil)
-        #expect(model.takenOver == nil)
+        #expect(model.offered == nil)
         #expect(notices.log.count == 1, "Messages keeps it")
     }
 
@@ -332,6 +334,118 @@ struct CastTests {
         model.take(view: Self.view(.connected))
         #expect(model.sessionLine == L.castButtonConnected(name: "Living room"))
         #expect(!model.expanded)
+    }
+}
+
+extension CastTests {
+    @Test func reconnectingHoldsThePlayheadUntilTheTvAnswersFurtherOn() {
+        let model = CastModel()
+        model.link = RecordingLink()
+        model.take(view: Self.view(.playing, item: Self.item(at: 600)))
+        var dropped = Self.view(.playing, item: Self.item(at: 600))
+        dropped.rev = 2
+        dropped.reconnecting = true
+        model.take(view: dropped)
+        #expect(model.reconnecting)
+        #expect(model.sessionLine == L.tvStatusReconnecting(name: "Living room"))
+        #expect(model.itemPosition(at: model.heldAt.addingTimeInterval(10)) == 600)
+
+        var back = Self.view(.playing, item: Self.item(at: 615))
+        back.rev = 3
+        model.take(view: back)
+        #expect(!model.reconnecting)
+        #expect(model.sessionLine == L.tvStatusPlaying(name: "Living room"))
+        #expect(model.itemPosition(at: model.heldAt) == 615)
+    }
+
+    @Test func aTvLostWithTheControllerClosedSaysSoAndOffersPlayHere() async throws {
+        let (model, session) = casting()
+        var said: [Notice] = []
+        var kept: [Notice] = []
+        model.say = { said.append($0) }
+        model.keep = { kept.append($0) }
+        play(session)
+        try await waitFor { model.stage == .playing }
+        session.change { $0.reconnecting = true }
+        try await waitFor { model.reconnecting }
+        #expect(model.line == L.tvStatusReconnecting(name: "Living room"))
+        #expect(model.playhead(at: .now.addingTimeInterval(30)) == 492)
+
+        session.change {
+            $0.notice = .noticeCastLost(name: "Living room")
+            $0.over = true
+        }
+        try await waitFor { !model.active }
+        #expect(said.map(\.msg) == [.noticeCastLost(name: "Living room")])
+        #expect(kept.isEmpty)
+        #expect(model.offered?.from == 492)
+
+        var played: Double?
+        model.playLocally = { _, _, position in played = position }
+        model.playHereFromNotice()
+        #expect(played == 492)
+    }
+
+    @Test func aStopOnTheTvWithTheControllerOpenShowsThereAndGoesWithIt() async throws {
+        let (model, session) = casting()
+        var said: [Notice] = []
+        var kept: [Notice] = []
+        model.say = { said.append($0) }
+        model.keep = { kept.append($0) }
+        play(session)
+        try await waitFor { model.stage == .playing }
+        model.expanded = true
+        session.change {
+            $0.notice = .noticeCastStoppedElsewhere(name: "Living room")
+            $0.over = true
+        }
+        try await waitFor { model.stage == .stopped }
+        #expect(said.isEmpty)
+        #expect(kept.map(\.msg) == [.noticeCastStoppedElsewhere(name: "Living room")], "Messages keeps it")
+        #expect(model.reason == Msg.noticeCastStoppedElsewhere(name: "Living room").text)
+        #expect(model.actions == [.playHere, .chooseAnotherTV])
+        #expect(model.seekPoint() == 492)
+
+        model.expanded = false
+        #expect(!model.active)
+        #expect(model.offered == nil)
+    }
+
+    @Test func waitingShowsOnlyOnceTheTvHasWaited600Ms() async throws {
+        let model = CastModel()
+        model.link = RecordingLink()
+        model.take(view: Self.view(.playing, item: Self.item(at: 600)))
+        var waits = Self.item(at: 600)
+        waits.waiting = 0
+        model.take(view: Self.view(.playing, item: waits))
+        #expect(!model.waitingShown)
+        // A short wait: over before 600 ms.
+        model.take(view: Self.view(.playing, item: Self.item(at: 600)))
+        try await Task.sleep(for: .milliseconds(800))
+        #expect(!model.waitingShown)
+
+        model.take(view: Self.view(.playing, item: waits))
+        try await waitFor { model.waitingShown }
+        #expect(model.sessionLine == L.tvWaitingFor(name: "Living room"))
+        model.take(view: Self.view(.playing, item: Self.item(at: 602)))
+        #expect(!model.waitingShown)
+    }
+
+    @Test func theFallbackNoteIsSaidEachTimeItComes() {
+        let model = CastModel()
+        model.link = RecordingLink()
+        var said: [Msg?] = []
+        model.say = { said.append($0.msg) }
+        var playing = Self.view(.playing, item: Self.item(at: 10))
+        playing.note = .noticeCastFallback(name: "Living room")
+        model.take(view: playing)
+        model.take(view: playing)
+        #expect(said == [.noticeCastFallback(name: "Living room")])
+        var connected = Self.view(.connected)
+        model.take(view: connected)
+        connected.note = .noticeCastFallback(name: "Living room")
+        model.take(view: connected)
+        #expect(said.count == 2)
     }
 }
 

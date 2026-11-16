@@ -671,19 +671,24 @@ extension CastModel {
             case .gone: rows.contains(where: \.gone)
             case .blocked: tv.sheet == .picker && localNetworkDenied
             case .starting, .counting, .preparing: stage == .starting && expanded
-            case .playing, .muted, .level, .upnext, .skipped, .paused, .waiting, .pause, .waitingtv,
-                 .reconnecting, .fallbackopen, .cliprejoin, .clipgaveup, .clipfallbackopen, .clipoutside:
+            case .playing, .muted, .level, .upnext, .skipped, .paused, .waiting, .pause,
+                 .cliprejoin, .clipgaveup, .clipfallbackopen, .clipoutside:
                 stage == .playing && expanded && (scene != .muted || muted)
-            case .reconnectingbar, .fallback, .messages, .waitingbar, .cliprejoinbar, .clipgaveupbar,
-                 .clipfallback, .clipoutsidebar:
+            case .cliprejoinbar, .clipgaveupbar, .clipfallback, .clipoutsidebar:
                 stage == .playing && miniShown
+            case .reconnecting: stage == .playing && expanded && reconnecting
+            case .reconnectingbar: miniShown && reconnecting
+            case .waitingtv: stage == .playing && expanded && waitingShown
+            case .waitingbar: miniShown && waitingShown
+            case .fallbackopen: expanded && held?.note != nil
+            case .fallback, .messages: miniShown && held?.note != nil
             case .gaveup, .outside: stage == .stopped && expanded
             case .gaveupbar, .outsidebar: !miniShown && held?.state == .error
             case .dialogplaying: dialogShown && stage == .playing
             case .idle: heldIdle && expanded
             case .refused, .never, .network, .codec, .deeplink: stage == .failed
             case .lost: stage == .stopped
-            case .takenover: !active && takenOver != nil
+            case .takenover: !active && offered != nil
             case .bar, .morph: stage == .playing && miniShown
             case .button: button == .available
             case .chooser: chooserShown && rows.count == 2
