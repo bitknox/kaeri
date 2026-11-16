@@ -186,6 +186,11 @@ public sealed partial class MainWindow
         ApplyMedium();
         if (ctx.Known.Medium.Asking is not { } ask || ask is MediumAsk.FirstRun || askingMedium || welcoming is not null)
             return;
+#if KAERI_TESTING
+        // A cast scene's shots show the cast, not the question.
+        if (options.Show?.StartsWith("cast-", StringComparison.Ordinal) == true)
+            return;
+#endif
         askingMedium = true;
         ui.TryEnqueue(DispatcherQueuePriority.Low, async () =>
         {
