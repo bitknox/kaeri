@@ -702,9 +702,10 @@ async fn playing_on_a_tv_that_plays_on() -> (Arc<Rig>, tokio::task::JoinHandle<V
 /// app the system ends mid-cast still resumes near where the TV was.
 #[tokio::test(flavor = "multi_thread", worker_threads = 4)]
 async fn a_cast_saves_its_place_while_it_plays() {
-    let options = FakeOptions { speed: 10.0, ..FakeOptions::default() };
+    // The TV plays the file for ten minutes, ten seconds a second.
+    let options = FakeOptions { duration: 600.0, speed: 10.0, ..FakeOptions::default() };
     let rig = Arc::new(Rig::on(true, options, false, timings()).await);
-    let file = rig.file("1.mkv", &Fixture { seconds: 120, ..Fixture::default() });
+    let file = rig.file("1.mkv", &Fixture::default());
     let playing = {
         let rig = Arc::clone(&rig);
         tokio::spawn(async move { rig.play_seen(vec![file], context("1", None)).await })
