@@ -46,6 +46,10 @@ use crate::{
 const CERT: &[u8] = include_bytes!("cert.der");
 const KEY: &[u8] = include_bytes!("key.der");
 
+/// How long a TV shows nothing running between one sender's app closing and another's coming
+/// up, when the other sender takes over.
+const TAKEOVER_GAP: Duration = Duration::from_millis(300);
+
 /// How the fake turns down what it can't play.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Refusal {
@@ -84,8 +88,12 @@ pub enum CustomReceiver {
     Runs,
     /// Answers `LAUNCH_ERROR`, as a TV does for an app ID that isn't published to it.
     Unknown,
-    /// Launches it, and it closes at its first `LOAD`, as a receiver page that fails does.
+    /// Launches it, and its connection closes at its first `LOAD` while the TV still lists it,
+    /// as a receiver page that fails does.
     ClosesAtLoad,
+    /// Launches it, and it is stopped on the TV at its first `LOAD`, from the TV's remote or
+    /// another phone's Cast card: its connection closes and no app runs afterwards.
+    StoppedAtLoad,
     /// Launches it, and it never says `ready` nor answers a `LOAD`: a receiver page that
     /// didn't load.
     Silent,
@@ -348,7 +356,9 @@ impl FakeReceiver {
         lock(&self.fetched).clone()
     }
 
-    /// Another sender launches its own app, as when someone casts from their phone.
+    /// Another sender launches its own app, as when someone casts from their phone. As a TV
+    /// does, the app running closes first, with nothing running for a moment, before the other
+    /// app is up.
     pub fn take_over(&self) {
         let _ = self.control.send(Control::TakeOver);
     }
@@ -423,6 +433,9 @@ async fn serve(
         let _ = tx.send(CastMessage::text(source, destination, namespace, payload.to_string()));
     };
     let volume = |level: f64, muted: bool| json!({"level": level, "muted": muted, "controlType": options.control, "stepInterval": 0.05});
+    // A media status carries the stream's own volume, never the TV's: a TV muted at the receiver
+    // still says its stream plays unmuted.
+    let stream = json!({"level": 1.0, "muted": false});
     let receiver_status = |app: &Option<(String, String)>, request: u64, level, muted| {
         let applications: Vec<Value> = app
             .iter()
@@ -459,7 +472,7 @@ async fn serve(
                 if let Some(p) = playing.as_mut() {
                     p.advance(options.speed);
                     if p.position >= p.duration {
-                        let done = p.status(Some("FINISHED"), &volume(level, muted));
+                        let done = p.status(Some("FINISHED"), &stream);
                         playing = None;
                         send(&transport, "*", NS_MEDIA, json!({"type": "MEDIA_STATUS", "requestId": 0, "status": [done]}));
                     }
@@ -467,6 +480,11 @@ async fn serve(
             }
             Some(control) = controls.recv() => match control {
                 Control::TakeOver => {
+                    if app.take().is_some() {
+                        send(&transport, &sender, NS_CONNECTION, json!({"type": "CLOSE"}));
+                        send("receiver-0", "*", NS_RECEIVER, receiver_status(&app, 0, level, muted));
+                        tokio::time::sleep(TAKEOVER_GAP).await;
+                    }
                     app = Some(("someone-else".into(), "E0000000".into()));
                     playing = None;
                     send("receiver-0", "*", NS_RECEIVER, receiver_status(&app, 0, level, muted));
@@ -479,14 +497,17 @@ async fn serve(
                 // Kept above, so the next connection finds the TV as it was.
                 Control::Close => return Ok(()),
                 Control::StopApp => {
-                    app = None;
+                    // The app's connection closes first, then the status says nothing runs.
+                    if app.take().is_some() {
+                        send(&transport, &sender, NS_CONNECTION, json!({"type": "CLOSE"}));
+                    }
                     playing = None;
                     send("receiver-0", "*", NS_RECEIVER, receiver_status(&app, 0, level, muted));
                 }
                 Control::LoadElsewhere => {
                     if let Some(old) = playing.take() {
                         send(&transport, "*", NS_MEDIA, json!({"type": "MEDIA_STATUS", "requestId": 0,
-                            "status": [old.status(Some("INTERRUPTED"), &volume(level, muted))]}));
+                            "status": [old.status(Some("INTERRUPTED"), &stream)]}));
                         let theirs = Playing {
                             session: next_session,
                             url: "http://elsewhere.example/theirs.mp4".into(),
@@ -496,7 +517,7 @@ async fn serve(
                         };
                         next_session += 1;
                         send(&transport, "*", NS_MEDIA, json!({"type": "MEDIA_STATUS", "requestId": 0,
-                            "status": [theirs.status(None, &volume(level, muted))]}));
+                            "status": [theirs.status(None, &stream)]}));
                         playing = Some(theirs);
                     }
                 }
@@ -505,7 +526,7 @@ async fn serve(
                         p.advance(options.speed);
                         p.buffering = waiting;
                         send(&transport, "*", NS_MEDIA, json!({"type": "MEDIA_STATUS", "requestId": 0,
-                            "status": [p.status_of(None, &volume(level, muted), options.echo == Echo::Full)]}));
+                            "status": [p.status_of(None, &stream, options.echo == Echo::Full)]}));
                     }
                 }
                 Control::Say(message) => send(&transport, "*", NS_KAERI, message),
@@ -564,7 +585,13 @@ async fn serve(
                             continue;
                         }
                         if custom && options.custom == CustomReceiver::ClosesAtLoad {
-                            // The receiver page failed: the app is gone, the load unanswered.
+                            // The receiver page failed: its connection closes, the load goes
+                            // unanswered, and the TV lists the app still.
+                            playing = None;
+                            send(&transport, &sender, NS_CONNECTION, json!({"type": "CLOSE"}));
+                            continue;
+                        }
+                        if custom && options.custom == CustomReceiver::StoppedAtLoad {
                             app = None;
                             playing = None;
                             send(&transport, &sender, NS_CONNECTION, json!({"type": "CLOSE"}));
@@ -612,7 +639,7 @@ async fn serve(
                         next_session += 1;
                         if let Some(old) = playing.take() {
                             send(&transport, "*", NS_MEDIA, json!({"type": "MEDIA_STATUS", "requestId": 0,
-                                "status": [old.status(Some("INTERRUPTED"), &volume(level, muted))]}));
+                                "status": [old.status(Some("INTERRUPTED"), &stream)]}));
                         }
                         let p = Playing {
                             session,
@@ -627,14 +654,14 @@ async fn serve(
                             buffering: false,
                             metadata: payload["media"]["metadata"].clone(),
                         };
-                        send(&transport, &sender, NS_MEDIA, json!({"type": "MEDIA_STATUS", "requestId": request, "status": [p.status(None, &volume(level, muted))]}));
+                        send(&transport, &sender, NS_MEDIA, json!({"type": "MEDIA_STATUS", "requestId": request, "status": [p.status(None, &stream)]}));
                         if refused == Some(Refusal::Error) {
                             send(&transport, "*", NS_MEDIA, json!({"type": "ERROR", "requestId": 0, "detailedErrorCode": 100}));
                             continue;
                         }
                         if refused == Some(Refusal::IdleError) {
                             send(&transport, "*", NS_MEDIA, json!({"type": "MEDIA_STATUS", "requestId": 0,
-                                "status": [p.status(Some("ERROR"), &volume(level, muted))]}));
+                                "status": [p.status(Some("ERROR"), &stream)]}));
                         } else {
                             playing = Some(p);
                         }
@@ -655,7 +682,7 @@ async fn serve(
                             "STOP" => idle = Some("CANCELLED"),
                             _ => {}
                         }
-                        let status = p.status_of(idle, &volume(level, muted), kind == "GET_STATUS" || options.echo == Echo::Full);
+                        let status = p.status_of(idle, &stream, kind == "GET_STATUS" || options.echo == Echo::Full);
                         if idle.is_some() {
                             playing = None;
                         }

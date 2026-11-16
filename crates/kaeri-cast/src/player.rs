@@ -94,6 +94,10 @@ pub struct Timings {
     /// How long a dropped connection is tried again before the cast counts as lost: the
     /// receiver keeps playing meanwhile, and a new connection joins its session.
     pub reconnect: Duration,
+    /// How long the receiver's statuses are heard after the receiver app left the TV before it
+    /// counts as stopped there: another sender's app comes up a moment after this one closes,
+    /// and a TV that went away is left to [`Timings::reconnect`].
+    pub gone: Duration,
 }
 
 impl Default for Timings {
@@ -108,6 +112,7 @@ impl Default for Timings {
             silence: crate::channel::SILENCE,
             ready: Duration::from_secs(8),
             reconnect: Duration::from_secs(20),
+            gone: Duration::from_secs(4),
         }
     }
 }
@@ -294,7 +299,6 @@ impl Wanted {
                 self.position = None;
             }
         }
-        self.volume(status.volume, status.muted);
     }
 
     /// Check the volume wanted against what the receiver said of it.
@@ -430,9 +434,20 @@ struct State {
     relaunch: bool,
     /// Since when the TV has said it waits for data.
     waiting_since: Option<Instant>,
+    /// The receiver app left the TV and why isn't known yet.
+    gone: Option<Gone>,
     /// The language and device word Kaeri's receiver is greeted with.
     language: Option<String>,
     device_word: Option<String>,
+}
+
+/// The receiver app left the TV: its connection closed, or the receiver's status stopped
+/// listing it. The receiver's statuses over the next [`Timings::gone`] say why.
+#[derive(Debug, Clone, Copy)]
+struct Gone {
+    since: Instant,
+    /// Whether the latest receiver status since lists the app still: `None` while none came.
+    listed: Option<bool>,
 }
 
 impl State {
@@ -613,6 +628,7 @@ impl Inner {
                 let mut state = lock(&inner.state);
                 if !state.quit {
                     state.app = Some(app.clone());
+                    state.gone = None;
                     let fresh = Media::new(inner.device().channel.clone(), app);
                     *lock(&inner.media) = Some(fresh.clone());
                     return Ok(fresh);
@@ -934,7 +950,11 @@ impl CastPlayer {
         };
         player.inner.device().channel.connect_to(&app.transport_id).map_err(lost)?;
         let mut media = Media::new(player.inner.device().channel.clone(), app.clone());
-        lock(&player.inner.state).app = Some(app);
+        {
+            let mut state = lock(&player.inner.state);
+            state.app = Some(app);
+            state.gone = None;
+        }
         // Its media session, when something plays: the answer is the first status. It is taken
         // here, as the receive task may read the same message only after this returns.
         match media.status().await {
@@ -2601,7 +2621,8 @@ async fn rejoin(inner: &Inner) -> Result<mpsc::UnboundedReceiver<Incoming>, Rejo
     let ours = lock(&inner.state).app.clone();
     if let Some(ours) = &ours {
         match receiver.app {
-            Some(app) if app.session_id == ours.session_id => {}
+            // It runs on: whatever closed went with the old connection.
+            Some(app) if app.session_id == ours.session_id => lock(&inner.state).gone = None,
             Some(_) => return Err(Rejoin::Over(CastFailure::TakenOver)),
             None => {
                 return Err(Rejoin::Over(CastFailure::Lost("the TV closed the app".into())));
@@ -2625,41 +2646,43 @@ async fn rejoin(inner: &Inner) -> Result<mpsc::UnboundedReceiver<Incoming>, Rejo
     Ok(incoming)
 }
 
-fn receive(inner: &Inner, message: &Incoming) {
+fn receive(inner: &Arc<Inner>, message: &Incoming) {
     let mut state = lock(&inner.state);
     if message.namespace == NS_RECEIVER && message.payload["type"] == "RECEIVER_STATUS" {
         let Some(receiver) = ReceiverStatus::read(&message.payload) else { return };
+        // The TV's volume and mute are the receiver's alone: a media status carries the
+        // stream's, which a TV muted at the receiver never shows.
         state.control = receiver.volume;
         state.want.volume(receiver.level, receiver.muted);
         volume(inner, &mut state, receiver.level, receiver.muted);
-        let ours = state.app.as_ref().map(|a| a.session_id.clone());
+        let Some(ours) = state.app.as_ref().map(|a| a.session_id.clone()) else { return };
+        if state.quit || state.closed {
+            return;
+        }
         let still_ours =
             message.payload["status"]["applications"].as_array().is_some_and(|apps| {
-                apps.iter().any(|a| {
-                    Some(a["sessionId"].as_str().unwrap_or_default().to_owned()) == ours
-                })
+                apps.iter().any(|a| a["sessionId"].as_str() == Some(ours.as_str()))
             });
-        if ours.is_some() && !still_ours && !state.quit {
-            let taken = receiver.app.is_some();
-            if !taken && falls_back(inner, &mut state) {
-                return;
+        if still_ours {
+            if let Some(gone) = state.gone.as_mut() {
+                gone.listed = Some(true);
             }
-            end_cast(
-                inner,
-                &mut state,
-                if taken {
-                    CastFailure::TakenOver
-                } else {
-                    CastFailure::Lost("the TV closed the app".into())
-                },
-            );
+        } else if receiver.app.is_some() {
+            // Another app runs where this one did: another sender took the TV.
+            end_cast(inner, &mut state, CastFailure::TakenOver);
+        } else if let Some(gone) = state.gone.as_mut() {
+            gone.listed = Some(false);
+        } else {
+            // Nothing runs: stopped on the TV, or about to make way for another sender's app.
+            app_gone(inner, &mut state, Some(false));
         }
         return;
     }
     let ours = state.app.as_ref().is_some_and(|a| a.transport_id == message.source);
     if message.namespace == NS_CONNECTION && message.payload["type"] == "CLOSE" && ours {
-        if !state.quit && !falls_back(inner, &mut state) {
-            end_cast(inner, &mut state, CastFailure::Lost("the TV closed the app".into()));
+        // The receiver's status says why: it may come after the close, or a moment later.
+        if !state.quit && !state.closed && state.gone.is_none() {
+            app_gone(inner, &mut state, None);
         }
         return;
     }
@@ -2684,7 +2707,6 @@ fn receive(inner: &Inner, message: &Incoming) {
         status.fill_from(last);
     }
     state.want.media(&status);
-    volume(inner, &mut state, status.volume, status.muted);
     let waits = status.state == "BUFFERING" || status.state == "LOADING";
     state.waiting_since = waits.then(|| state.waiting_since.unwrap_or_else(Instant::now));
     state.last = Some(status.clone());
@@ -2748,17 +2770,60 @@ fn from_kaeris_receiver(inner: &Inner, state: &mut State, message: &Incoming, ou
     let _ = inner.heard.send(heard);
 }
 
-/// Kaeri's receiver closed while a file was loading on it: a receiver page that failed, so the
-/// Default Media Receiver takes its place and the load is tried again there. `false` for any
-/// other app, and for Kaeri's closed while idle or playing: it said it was ready, so it was
-/// closed on the TV, and the cast ends rather than putting another app on the TV.
+/// The receiver app left the TV: hear the receiver's statuses for [`Timings::gone`], then say
+/// why with [`gone_why`]. Another app showing up ends the cast as taken over at once.
+fn app_gone(inner: &Arc<Inner>, state: &mut State, listed: Option<bool>) {
+    let since = Instant::now();
+    state.gone = Some(Gone { since, listed });
+    tracing::info!("the receiver app left the TV; hearing why");
+    let device = inner.device();
+    let wait = inner.setup.timings.gone;
+    let inner = Arc::downgrade(inner);
+    tokio::spawn(async move {
+        // The answer is heard as any receiver status is.
+        if let Ok(Err(e)) = tokio::time::timeout(wait, device.status()).await {
+            tracing::debug!(error = %e, "couldn't ask the TV what runs");
+        }
+        drop(device);
+        tokio::time::sleep_until((since + wait).into()).await;
+        let Some(inner) = inner.upgrade() else { return };
+        let mut state = lock(&inner.state);
+        // A connection made again joins the app or ends the cast by itself.
+        if state.gone.is_none_or(|gone| gone.since != since) || state.reconnecting {
+            return;
+        }
+        gone_why(&inner, &mut state);
+        drop(state);
+        inner.publish();
+    });
+}
+
+/// Why the receiver app left, by what the TV said since. Nothing running is a stop on the TV
+/// (its remote, another phone's Cast card) and ends the cast. The app still listed, or no word
+/// at all, is an app that failed: the Default Media Receiver takes over a load in flight.
+fn gone_why(inner: &Inner, state: &mut State) {
+    let Some(gone) = state.gone.take() else { return };
+    if state.closed || state.quit {
+        return;
+    }
+    let stopped = gone.listed == Some(false);
+    if stopped || !falls_back(inner, state) {
+        end_cast(inner, state, CastFailure::Lost("the TV closed the app".into()));
+    }
+}
+
+/// Kaeri's receiver failed while a file was loading on it, so the Default Media Receiver takes
+/// its place and the load is tried again there. `false` for any other app, and for Kaeri's
+/// gone while idle or playing: it said it was ready and played, so the cast ends rather than
+/// putting another app on the TV.
 fn falls_back(inner: &Inner, state: &mut State) -> bool {
     let custom = state.app.as_ref().is_some_and(|app| app.app_id != DEFAULT_MEDIA_RECEIVER);
     if !custom || state.fallen_back || !state.trying {
         return false;
     }
-    tracing::info!("Kaeri's receiver closed at a load; the Default Media Receiver takes over");
+    tracing::warn!("Kaeri's receiver failed at a load; the Default Media Receiver takes over");
     state.app = None;
+    state.gone = None;
     state.fallen_back = true;
     state.relaunch = true;
     *lock(&inner.media) = None;
