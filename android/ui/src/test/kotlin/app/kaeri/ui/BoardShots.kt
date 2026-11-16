@@ -20,6 +20,7 @@ import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
 import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.captureToImage
+import androidx.compose.ui.graphics.toPixelMap
 import androidx.compose.ui.test.onFirst
 import androidx.compose.ui.test.onLast
 import androidx.compose.ui.test.onNodeWithContentDescription
@@ -606,6 +607,63 @@ class BoardShots {
     @Test
     @Config(qualifiers = TABLET)
     fun tablet_title_episodes_unfolded() = shoot("tablet-title-episodes-unfolded", WATCHING, title = 900001u) { unfoldInPlace() }
+
+    // The top bar over the title page: clear over the banner at the top, filled with the page's
+    // ground and the show's name once the head has scrolled under it.
+
+    @Test
+    @Config(qualifiers = PHONE)
+    fun phone_title_bar_clear() = titleBar("phone-title-bar-clear", scrolled = false)
+
+    @Test
+    @Config(qualifiers = PHONE)
+    fun phone_title_bar_filled() = titleBar("phone-title-bar-filled", scrolled = true)
+
+    @Test
+    @Config(qualifiers = TABLET)
+    fun tablet_title_bar_clear() = titleBar("tablet-title-bar-clear", scrolled = false)
+
+    @Test
+    @Config(qualifiers = TABLET)
+    fun tablet_title_bar_filled() = titleBar("tablet-title-bar-filled", scrolled = true)
+
+    /** With Remove animations on, the bar is solid once scrolled, as without it. */
+    @Test
+    @Config(qualifiers = PHONE)
+    fun phone_title_bar_filled_removed() = titleBar("phone-title-bar-filled-removed", scrolled = true, removed = true)
+
+    /**
+     * 900001's page, at its top or [scrolled] to its episodes: the strip under the status bar's
+     * icons is the page's ground only when scrolled (the banner's art at the top), and the show's
+     * name stands in the bar only then, as plain text beside the page's one heading.
+     */
+    private fun titleBar(name: String, scrolled: Boolean, removed: Boolean = false) {
+        var title = ""
+        shoot(name, WATCHING, title = 900001u, removed = removed) { store ->
+            title = checkNotNull(store.titles[900001u]).showTitle
+            if (scrolled) toEpisodes()
+        }
+        val density = compose.activity.resources.displayMetrics.density
+        val pixels = compose.onRoot().captureToImage().toPixelMap()
+        // Under the status bar, between Back and More, above the name's letters.
+        val bar = pixels[pixels.width / 2, (4 * density).roundToInt()]
+        // The page's ground, at the left edge low on the page, beside the rows.
+        val ground = pixels[(2 * density).roundToInt(), pixels.height * 3 / 4]
+        if (scrolled) assertEquals("the bar is the page's ground", ground, bar)
+        else org.junit.Assert.assertNotEquals("the bar is clear over the art", ground, bar)
+        // The bar's bottom: the 24 dp status bar and the 64 dp row.
+        val barBottom = 88 * density
+        val inBar = compose.onAllNodesWithText(title, useUnmergedTree = true).fetchSemanticsNodes()
+            .filter { it.boundsInRoot.top < barBottom }
+        if (scrolled) {
+            assertEquals("the show's name in the bar", 1, inBar.size)
+            assertEquals("the bar's name is no heading", null, inBar.single().config.getOrNull(SemanticsProperties.Heading))
+            val headings = compose.onAllNodes(SemanticsMatcher.keyIsDefined(SemanticsProperties.Heading) and hasText(title), useUnmergedTree = true).fetchSemanticsNodes()
+            org.junit.Assert.assertTrue("no second heading of the show", headings.all { it.boundsInRoot.top >= barBottom })
+        } else {
+            assertEquals("no name in the clear bar", 0, inBar.size)
+        }
+    }
 
     // A long franchise's picker: twelve seasons of Cloudcutter Airship, more than fit across, so
     // it scrolls, the season on screen in the middle.

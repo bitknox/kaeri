@@ -73,6 +73,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
@@ -462,6 +463,25 @@ fun TitleScreen(id: AnilistId, actions: AppActions) {
     val onLift = remember(id) { { lifts.value() } }
     val onAbout = remember(id) { { aboutOpen = true } }
     val onScreenPage = base.longValue.toUInt()
+    // The top bar fills as the page on top scrolls its head under it, read as the bar draws, so
+    // a scroll recomposes nothing.
+    val barStarts = remember(id) { TitleBarStarts() }
+    val instantBar = app.kaeri.design.rememberAnimationsRemoved()
+    val density = LocalDensity.current
+    val barFill: () -> Float = remember(id, instantBar, density) {
+        {
+            val list = lists[top.longValue.toUInt()]
+            if (list == null) 0f else with(density) {
+                titleBarFill(
+                    list.firstVisibleItemIndex,
+                    list.firstVisibleItemScrollOffset.toFloat(),
+                    (barStarts[list] ?: PhoneHeaderTop - TitleBarHeight).toPx(),
+                    TitleBarFillSpan.toPx(),
+                    instantBar,
+                )
+            }
+        }
+    }
     Box(Modifier.fillMaxSize().shared(Shared.Page, id, ground = MaterialTheme.colorScheme.surface)) {
         for (season in composed) {
             key(season) {
@@ -473,12 +493,14 @@ fun TitleScreen(id: AnilistId, actions: AppActions) {
                         lists.remove(season)
                         ready.remove(season)
                         grown.remove(season)
+                        barStarts.remove(list)
                     }
                 }
                 LaunchedEffect(list) {
                     kotlinx.coroutines.delay(COMPOSE_AHEAD)
                     grown += season
                 }
+                androidx.compose.runtime.CompositionLocalProvider(LocalTitleBarStarts provides barStarts) {
                 PageSlot(
                     season = season,
                     opened = id,
@@ -504,9 +526,10 @@ fun TitleScreen(id: AnilistId, actions: AppActions) {
                     onLift = onLift,
                     onAbout = onAbout,
                 )
+                }
             }
         }
-        TitleTopBar(entry, pick = surprisePick(id), onBack = navigator::back, modifier = Modifier.padding(top = inset).zIndex(3f))
+        TitleTopBar(entry, pick = surprisePick(id), onBack = navigator::back, inset = inset, fill = barFill, modifier = Modifier.zIndex(3f))
     }
     if (aboutOpen) {
         MoreAboutSheet(entry, onDismiss = { aboutOpen = false }) { other ->
@@ -1052,6 +1075,10 @@ private fun artWaited(id: UInt): Boolean {
 @Composable
 private fun TitleHead(entry: Entry, episodes: List<EpisodeRow>?, list: LazyListState, inset: Dp, shared: Boolean) {
     val art = HeroArt.of(entry, episodes, artWaited(entry.id))
+    val headerTop = if (art == HeroArt.Compact) 64.dp else PhoneHeaderTop
+    // The top bar starts to fill as the header reaches it: over the art until then.
+    val barStarts = LocalTitleBarStarts.current
+    SideEffect { barStarts?.set(list, headerTop - TitleBarHeight) }
     Box {
         if (art != HeroArt.Compact) {
             ArtworkImage(
@@ -1080,7 +1107,7 @@ private fun TitleHead(entry: Entry, episodes: List<EpisodeRow>?, list: LazyListS
                     },
             )
         }
-        TitleHeader(entry, shared, Modifier.padding(top = inset + if (art == HeroArt.Compact) 64.dp else 112.dp))
+        TitleHeader(entry, shared, Modifier.padding(top = inset + headerTop))
     }
 }
 
@@ -1257,27 +1284,39 @@ internal fun titleAction(entry: Entry): TitleAction {
     return TitleAction.of(entry, rows = all[entry.id])
 }
 
-/** Back and More, each a 40 circle on surfaceContainer in a 48 target, over the banner. */
+/**
+ * Back and More, each a 40 circle on surfaceContainer in a 48 target, over the banner. As the head
+ * scrolls under it, the bar [fill]s with the page's ground behind the status bar and the buttons,
+ * the circles give way to plain icons, and the show's name comes in beside Back: Material's
+ * collapsing top bar, tied to the scroll. The name is not a heading; the page's own title is.
+ */
 @Composable
-private fun TitleTopBar(entry: Entry, pick: SurprisePick?, onBack: () -> Unit, modifier: Modifier = Modifier) {
+private fun TitleTopBar(entry: Entry, pick: SurprisePick?, onBack: () -> Unit, inset: Dp, fill: () -> Float, modifier: Modifier = Modifier) {
     val store = LocalAppStore.current
     var more by remember { mutableStateOf(false) }
     var showSettings by rememberSaveable(entry.id) { mutableStateOf(false) }
     if (showSettings) ShowSettingsSheet(entry) { showSettings = false }
     var showSources by rememberSaveable(entry.id) { mutableStateOf(false) }
     if (showSources) SourcePickerSheet(entry) { showSources = false }
+    val ground = MaterialTheme.colorScheme.surface
+    val circle = remember(fill) { { 1f - fill() } }
     Row(
-        modifier.fillMaxWidth().height(64.dp).padding(horizontal = 4.dp),
+        modifier
+            .fillMaxWidth()
+            .drawBehind { drawRect(ground.copy(alpha = ground.alpha * fill())) }
+            .padding(top = inset)
+            .height(TitleBarHeight)
+            .padding(horizontal = 4.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        CircleIconButton(Icons.Back, stringResource(R.string.action_back), onBack)
-        Spacer(Modifier.weight(1f))
+        CircleIconButton(Icons.Back, stringResource(R.string.action_back), onBack, circle)
+        BarName(entry.showTitle, fill, Modifier.weight(1f))
         // A picked title's Another, while the pool has more to pick: a text button, so Surprise me's word stays.
         if (pick != null && pick.more) AnotherButton(pick)
         val action = titleAction(entry)
-        if (action.playable) CastButton(circle = true)
+        if (action.playable) CastButton(circle = true, circleAlpha = circle)
         Box {
-            CircleIconButton(Icons.More, stringResource(R.string.action_more), { more = true })
+            CircleIconButton(Icons.More, stringResource(R.string.action_more), { more = true }, circle)
             Menu(expanded = more, onDismissRequest = { more = false }) {
                 DropdownMenuItem(
                     text = { Text(stringResource(R.string.show_settings_title)) },
@@ -1327,11 +1366,32 @@ private fun TitleTopBar(entry: Entry, pick: SurprisePick?, onBack: () -> Unit, m
     }
 }
 
+/**
+ * The show's name in the filled bar: one line, cut at the end, coming in with the fill. Said by
+ * TalkBack only while it shows, as plain text, so the page keeps one heading.
+ */
 @Composable
-private fun CircleIconButton(icon: androidx.compose.ui.graphics.vector.ImageVector, label: String, onClick: () -> Unit) {
+private fun BarName(name: String, fill: () -> Float, modifier: Modifier = Modifier) {
+    val shown by remember(fill) { derivedStateOf { fill() >= 0.5f } }
+    Text(
+        name,
+        style = MaterialTheme.typography.titleLarge,
+        maxLines = 1,
+        overflow = TextOverflow.Ellipsis,
+        modifier = modifier
+            .padding(horizontal = 4.dp)
+            .graphicsLayer { alpha = titleBarNameAlpha(fill()) }
+            .then(if (shown) Modifier else Modifier.clearAndSetSemantics {}),
+    )
+}
+
+/** A 40 circle on surfaceContainer in a 48 target, the circle drawn at [circle]'s strength. */
+@Composable
+private fun CircleIconButton(icon: androidx.compose.ui.graphics.vector.ImageVector, label: String, onClick: () -> Unit, circle: () -> Float = { 1f }) {
+    val container = MaterialTheme.colorScheme.surfaceContainer
     IconButton(onClick = onClick, modifier = Modifier.semantics { contentDescription = label }) {
         Box(
-            Modifier.size(40.dp).background(MaterialTheme.colorScheme.surfaceContainer, CircleShape),
+            Modifier.size(40.dp).drawBehind { drawCircle(container.copy(alpha = container.alpha * circle())) },
             contentAlignment = Alignment.Center,
         ) { Icon(icon, contentDescription = null) }
     }
@@ -2299,6 +2359,18 @@ private fun TabletTitle(
     val unfolded by store.episodeFolds.unfolded.collectAsStateWithLifecycle()
     val grid = androidx.compose.foundation.lazy.grid.rememberLazyGridState()
     val fold = rememberEpisodeFold(entry.id, grid)
+    // The top bar fills as the banner leaves it, solid once the banner is under it; a head with
+    // no banner starts at once.
+    val barStart = remember { androidx.compose.runtime.mutableStateOf(TabletBannerHeight - TitleBarHeight - TitleBarFillSpan) }
+    val instantBar = app.kaeri.design.rememberAnimationsRemoved()
+    val density = LocalDensity.current
+    val barFill: () -> Float = remember(grid, instantBar, density) {
+        {
+            with(density) {
+                titleBarFill(grid.firstVisibleItemIndex, grid.firstVisibleItemScrollOffset.toFloat(), barStart.value.toPx(), TitleBarFillSpan.toPx(), instantBar)
+            }
+        }
+    }
     // As on a phone (SeasonPage): what only the page brings (Also on, the tags, people you follow,
     // the picker, Related) would push the rest down as it lands, so the facts, the family and the
     // episodes wait for it under placeholders that keep their room from the first frame, and the
@@ -2326,20 +2398,21 @@ private fun TabletTitle(
                 fullWidth("head") {
                   SeasonFade(entry) { entry ->
                     val art = HeroArt.of(entry, allEpisodes[entry.id], artWaited(entry.id))
+                    SideEffect { barStart.value = if (art == HeroArt.Compact) 0.dp else TabletBannerHeight - TitleBarHeight - TitleBarFillSpan }
                     Box {
                         if (art != HeroArt.Compact) {
                             ArtworkImage(
                                 art.url,
                                 plate = null,
                                 maxPixelSize = 1600,
-                                modifier = Modifier.fillMaxWidth().height(inset + 208.dp).shared(Shared.Art, entry.id),
+                                modifier = Modifier.fillMaxWidth().height(inset + TabletBannerHeight).shared(Shared.Art, entry.id),
                             )
-                            BannerScrim(Modifier.fillMaxWidth().height(inset + 208.dp))
+                            BannerScrim(Modifier.fillMaxWidth().height(inset + TabletBannerHeight))
                         }
                         // The cover overlaps the banner's foot, the title block sits level with
                         // the cover's foot, and the details column starts below the banner, so it
                         // grows down the page and never up over the art.
-                        val below = if (art == HeroArt.Compact) 0.dp else 208.dp - 135.dp + 24.dp
+                        val below = if (art == HeroArt.Compact) 0.dp else TabletBannerHeight - 135.dp + 24.dp
                         Row(
                             Modifier.padding(top = inset + if (art == HeroArt.Compact) 64.dp else 135.dp).padding(start = 16.dp),
                             horizontalArrangement = Arrangement.spacedBy(24.dp),
@@ -2435,7 +2508,7 @@ private fun TabletTitle(
                     }
                 }
             }
-            TitleTopBar(entry, pick = surprisePick(id), onBack = navigator::back, modifier = Modifier.padding(top = inset))
+            TitleTopBar(entry, pick = surprisePick(id), onBack = navigator::back, inset = inset, fill = barFill)
         }
         if (aboutOpen) {
             AboutPane(entry, onClose = { aboutOpen = false }) { other ->
