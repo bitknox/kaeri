@@ -21,16 +21,6 @@ struct PhoneTitle: View {
     /// stood on screen. Kept out of the view's state, so scrolling redraws nothing: a page redrawn
     /// on every scroll step takes no scroll to its episodes.
     @State private var pickers = PickersPlace()
-    /// Where the navigation bar ends, in the window: the page's title passing it fills the bar.
-    @State private var barBottom: CGFloat = 0
-    /// Whether the page's own title has scrolled under the navigation bar.
-    @State private var titleUnderBar = false
-    /// Whether the page is scrolled far past its head, which a jump to an episode leaves without
-    /// the title reporting where it went.
-    @State private var pastHead = false
-    /// The bar behind the status bar and the buttons, with the show's name, once the banner has
-    /// left: clear over the art until then (native-ux, Motion).
-    private var barFilled: Bool { titleUnderBar || pastHead }
     let id: AnilistId
 
     /// Case B: the service the main action opens.
@@ -76,11 +66,6 @@ struct PhoneTitle: View {
                         Text(entry.showTitle)
                             .font(.showTitle(size: 22, relativeTo: .title2))
                             .foregroundStyle(.silk)
-                            .onGeometryChange(for: Bool.self) { [barBottom] proxy in
-                                barBottom > 0 && proxy.frame(in: .global).minY < barBottom
-                            } action: { under in
-                                withAnimation(reduceMotion ? nil : .standard) { titleUnderBar = under }
-                            }
                             // As large as `.accessibility3`, in four lines at most.
                             .lineLimit(4)
                             .dynamicTypeSize(...DynamicTypeSize.accessibility3)
@@ -320,18 +305,8 @@ struct PhoneTitle: View {
         .onScrollGeometryChange(for: CGFloat.self) { $0.contentOffset.y } action: { [pickers] _, offset in
             pickers.offset = offset
         }
-        .onScrollGeometryChange(for: Bool.self) { $0.contentOffset.y + $0.contentInsets.top > 600 } action: { _, far in
-            withAnimation(reduceMotion ? nil : .standard) { pastHead = far }
-        }
         .nudgeableScroll()
         .ignoresSafeArea(edges: art.isCompact ? [] : .top)
-        // The navigation bar's foot, where the safe area starts.
-        .overlay(alignment: .top) {
-            Color.clear.frame(height: 0)
-                .onGeometryChange(for: CGFloat.self) { $0.frame(in: .global).minY } action: { barBottom = $0 }
-                .allowsHitTesting(false)
-                .accessibilityHidden(true)
-        }
         .scrollIndicators(.never)
         .background(.ground)
         .unwatchedRotor(store.titles.episodes[id] ?? [], in: rotor)
@@ -351,21 +326,7 @@ struct PhoneTitle: View {
             }
         }
         .animation(reduceMotion ? nil : .standard, value: mainButtonGone)
-        // Once the banner has left, the bar takes the standard material behind the status bar and
-        // the buttons, with the show's name inline: plain text, the page's own title its heading.
-        .toolbarBackground(.bar, for: .navigationBar)
-        .toolbarBackgroundVisibility(barFilled ? .visible : .automatic, for: .navigationBar)
         .toolbar {
-            ToolbarItem(placement: .principal) {
-                Text(entry.showTitle)
-                    .font(.ui(17, weight: .semibold))
-                    .foregroundStyle(.silk)
-                    .lineLimit(1)
-                    .truncationMode(.tail)
-                    .opacity(barFilled ? 1 : 0)
-                    .accessibilityRemoveTraits(.isHeader)
-                    .accessibilityHidden(!barFilled)
-            }
             CastToolbarItem()
             ToolbarItem(placement: .topBarTrailing) { AnotherButton(id: id) }
             ToolbarItem(placement: .topBarTrailing) {
