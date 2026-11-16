@@ -140,7 +140,8 @@ pub(super) fn dim(widget: &impl IsA<gtk::Widget>, dimmed: bool, animate: bool) {
         return;
     }
     if animate && widget.is_mapped() {
-        crate::motion::quick(widget, widget.opacity(), to, crate::motion::opacity(widget)).play();
+        crate::motion::quick(widget, widget.opacity(), to, crate::motion::opacity(widget))
+            .play();
     } else {
         widget.set_opacity(to);
     }
@@ -255,7 +256,8 @@ impl Bar {
         self.line.set(&line, mark, mapped);
         // While it reconnects the bar has no hint, as a click does nothing.
         let reconnecting = view.reconnecting;
-        self.root.set_tooltip_text(if reconnecting { None } else { Some(&t::cast_mini_opens()) });
+        let hint = (!reconnecting).then(t::cast_mini_opens);
+        self.root.set_tooltip_text(hint.as_deref());
         if self.reconnecting.replace(reconnecting) != reconnecting {
             let said = if reconnecting {
                 t::tv_status_reconnecting(&view.name)

@@ -297,7 +297,12 @@ fn reconnecting_now(tv: &Tv) -> bool {
 }
 
 /// From `from` ms, look every 20 ms for `ready`, then save the clip's frames.
-fn film_when(shell: &Rc<Shell>, clip: &'static str, from: u64, ready: impl Fn(&Tv) -> bool + 'static) {
+fn film_when(
+    shell: &Rc<Shell>,
+    clip: &'static str,
+    from: u64,
+    ready: impl Fn(&Tv) -> bool + 'static,
+) {
     let window = shell.ctx.window.clone();
     let tv = Rc::clone(&shell.ctx.tv);
     later(from, move || {
@@ -315,9 +320,7 @@ fn film_when(shell: &Rc<Shell>, clip: &'static str, from: u64, ready: impl Fn(&T
 
 /// The clip of a cast's end: from the moment it ends from afar.
 fn film_before_end(shell: &Rc<Shell>, clip: &'static str, from: u64) {
-    film_when(shell, clip, from, |tv| {
-        tv.cast_view().is_none_or(|view| view.stage.ended())
-    });
+    film_when(shell, clip, from, |tv| tv.cast_view().is_none_or(|view| view.stage.ended()));
 }
 
 /// Open the popover of the first shown menu button `pick` takes.

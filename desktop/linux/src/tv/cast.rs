@@ -117,7 +117,9 @@ fn playing(card: &CastCard) -> bool {
 
 pub fn stage_of(card: &CastCard) -> Stage {
     match &card.notice {
-        Some(Msg::NoticeCastLost { .. } | Msg::NoticeCastStoppedElsewhere { .. }) => Stage::Lost,
+        Some(Msg::NoticeCastLost { .. } | Msg::NoticeCastStoppedElsewhere { .. }) => {
+            Stage::Lost
+        }
         Some(_) => Stage::Failed,
         None if playing(card) => Stage::Playing,
         None => Stage::Starting,
@@ -193,9 +195,10 @@ impl Tv {
 
     /// The TV shows a picture, so the card's controls reach it.
     pub fn cast_playing(&self) -> bool {
-        self.cast.borrow().as_ref().is_some_and(|run| {
-            stage_of(&run.card) == Stage::Playing && !run.card.reconnecting
-        })
+        self.cast
+            .borrow()
+            .as_ref()
+            .is_some_and(|run| stage_of(&run.card) == Stage::Playing && !run.card.reconnecting)
     }
 
     /// The connection to the TV closed and is being made again.

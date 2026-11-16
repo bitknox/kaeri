@@ -2014,7 +2014,8 @@ impl Remote {
         let Some(root) = self.view.root() else { return };
         let Some(focus) = root.focus() else { return };
         let inside = focus.is_ancestor(&self.view);
-        let kept = focus.is_ancestor(&self.cast_foot) || focus == self.view.clone().upcast();
+        let kept = focus.is_ancestor(&self.cast_foot)
+            || focus == *self.view.upcast_ref::<gtk::Widget>();
         if inside && !kept {
             self.play_here.grab_focus();
         }

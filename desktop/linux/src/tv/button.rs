@@ -271,8 +271,8 @@ fn connected(ctx: &Rc<Ctx>, popover: &gtk::Popover) -> gtk::Widget {
     }));
     let list = boxed();
     let now = tv.cast_view().and_then(|v| v.now).or_else(|| tv.now());
-    let idle = !tv.casting()
-        && tv.cast_session().is_some_and(|s| s.state == SessionState::Connected);
+    let idle =
+        !tv.casting() && tv.cast_session().is_some_and(|s| s.state == SessionState::Connected);
     let row = match now {
         Some(now) => {
             let private = ctx.hub.known.borrow().holds_show(now.id);
