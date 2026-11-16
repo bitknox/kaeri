@@ -50,6 +50,10 @@ struct MissingChecksTests {
 
     @Test func checkingShowsAfterTheWaitAndStaysItsLeastTime() async {
         let store = store()
+        // The clock stands still from the start: the answer comes the moment Checking shows,
+        // however late a busy machine wakes the test, and still waits out its least time.
+        let start = ContinuousClock.now
+        store.missing.now = { start }
         store.missing.checkAgain(id, episode: 6)
         await wait { store.missing.showsChecking(id) }
         #expect(store.missing.showsChecking(id))
