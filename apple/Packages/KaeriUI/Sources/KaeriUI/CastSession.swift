@@ -939,7 +939,7 @@ struct CastSessionFooter: View {
                     .font(touch ? .ui(17, weight: .semibold) : .mac(12, weight: .semibold))
                     .foregroundStyle(.silk)
                     .frame(width: touch ? 44 : 26, height: touch ? 44 : 26)
-                    .background(Palette.raised, in: .circle)
+                    .background(touch ? Palette.raised : Palette.raisedSelected, in: .circle)
                     .contentShape(.circle)
             }
             .menuStyle(.button)
@@ -961,7 +961,7 @@ struct CastSessionFooter: View {
                 .lineLimit(1)
                 .minimumScaleFactor(0.8)
                 .frame(maxWidth: .infinity, minHeight: touch ? 44 : 26)
-                .background(primary ? AnyShapeStyle(.amber) : AnyShapeStyle(Palette.raised), in: .capsule)
+                .background(primary ? AnyShapeStyle(.amber) : AnyShapeStyle(touch ? Palette.raised : Palette.raisedSelected), in: .capsule)
                 .contentShape(.capsule)
         }
         .buttonStyle(.plain)
