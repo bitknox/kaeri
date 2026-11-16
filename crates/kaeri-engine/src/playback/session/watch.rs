@@ -92,17 +92,22 @@ impl Run<'_> {
         }
     }
 
-    /// Feed one event through the tracker purely for its bookkeeping.
+    /// Feed one event through the tracker purely for its bookkeeping. A file that never
+    /// `played` writes no position, only a finish.
     pub(super) async fn record_actions(
         &self,
         tracker: &mut PlaybackTracker,
         event: &PlaybackEvent,
         stream: &Stream,
+        played: bool,
         committed: &mut bool,
         ending: &mut Option<bool>,
     ) {
         for action in tracker.observe(event) {
             if let Action::Record { position, duration, completed } = action {
+                if !played && !completed {
+                    continue;
+                }
                 let watch = WatchEvent {
                     duration_secs: duration,
                     watched_secs: tracker.watched_secs(),
