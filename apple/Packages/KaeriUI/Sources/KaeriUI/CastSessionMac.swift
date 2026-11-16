@@ -22,18 +22,27 @@ enum MacCastMetrics {
     static let panelWidth: CGFloat = 400
     /// The room the sidebar keeps at its foot while the mini shows.
     static let sidebarRoom: CGFloat = miniHeight + 14
+
+    /// The panel is open: the mini grown into it, or the held TV with nothing playing.
+    @MainActor static func panelOpen(_ cast: CastModel) -> Bool {
+        cast.expanded && (cast.miniShown || cast.heldIdle)
+    }
 }
 
 /// The mini and the panel, over the whole window: one box that grows from the sidebar's foot
 /// into the panel, with the art travelling inside it.
 struct MacCastMorph: View {
     @Environment(AppStore.self) private var store
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(Navigator.self) private var navigator
+    @Environment(\.accessibilityReduceMotion) private var systemReduceMotion
+
+    private var reduceMotion: Bool { systemReduceMotion || navigator.motionReduced }
 
     var body: some View {
         let cast = store.tv.cast
-        let shown = cast.miniShown
-        let expanded = shown && cast.expanded
+        // The panel also opens on a held TV with nothing playing.
+        let expanded = MacCastMetrics.panelOpen(cast)
+        let shown = cast.miniShown || expanded
         ZStack(alignment: .bottomLeading) {
             if expanded {
                 // A click outside the panel closes it, as a popover's would.
@@ -134,16 +143,21 @@ struct MacCastMini: View {
     var body: some View {
         let cast = store.tv.cast
         let shown = CastShown(cast)
+        let spinning = shown == .reconnecting || shown == .waiting
         VStack(spacing: 0) {
             HStack(spacing: 8) {
                 // The art's place: the box draws the art itself, travelling with it.
                 Color.clear.frame(width: 36, height: 36)
                 VStack(alignment: .leading, spacing: 1) {
                     Text(cast.showTitle).font(.mac(12, weight: .semibold)).foregroundStyle(.silk).lineLimit(1)
-                    HStack(spacing: 4) {
-                        if cast.rejoining {
+                    HStack(alignment: spinning ? .firstTextBaseline : .center, spacing: 4) {
+                        if spinning {
+                            // The whole line has no room beside the art and play: it wraps to
+                            // two, and the card keeps its size.
                             ProgressView().controlSize(.mini).scaleEffect(0.7).frame(width: 10, height: 10)
-                            Text(L.tvStatusReconnecting(name: cast.heldName))
+                                .alignmentGuide(.firstTextBaseline) { $0[.bottom] - 1 }
+                                .transition(CastShown.markFade)
+                            Text(cast.sessionLine).lineLimit(2).fixedSize(horizontal: false, vertical: true)
                         } else if shown == .failed {
                             Circle().fill(.vermilion).frame(width: 5, height: 5)
                             Text(cast.sessionLine)
@@ -154,7 +168,8 @@ struct MacCastMini: View {
                     }
                     .font(.mac(11))
                     .foregroundStyle(.haze)
-                    .lineLimit(1)
+                    .lineLimit(spinning ? 2 : 1)
+                    .animation(.fadeIn, value: shown.mark)
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
                 if shown != .failed {
@@ -170,25 +185,34 @@ struct MacCastMini: View {
                     }
                     .buttonStyle(.plain)
                     .disabled(shown != .playing)
-                    .opacity(shown == .playing ? 1 : 0.4)
+                    .opacity(shown.dimmed(starting: 0.4))
                     .accessibilityLabel(cast.itemPaused ? L.actionPlay : L.actionPause)
                 }
             }
             .padding(.horizontal, 8)
             .padding(.top, 8)
+            Spacer(minLength: 0)
             MacCastProgress()
+                .opacity(shown.dims ? 0.38 : 1)
                 .padding(.horizontal, 10)
                 .padding(.top, 6)
                 .padding(.bottom, 7)
         }
+        .animation(.quick, value: shown)
         .frame(width: MacCastMetrics.miniWidth, height: MacCastMetrics.miniHeight)
         .contentShape(.rect(cornerRadius: 12))
-        .onTapGesture { cast.expanded = true }
-        .pointerStyle(.link)
+        // While the connection is made again, a click does nothing.
+        .onTapGesture { if shown != .reconnecting { cast.expanded = true } }
+        .pointerStyle(shown == .reconnecting ? nil : .link)
         .accessibilityElement(children: .contain)
         .accessibilityLabel(cast.showTitle)
-        .accessibilityHint(L.tvRemoteAction)
-        .accessibilityAction(named: L.tvRemoteAction) { cast.expanded = true }
+        .accessibilityValue(cast.sessionLine)
+        .accessibilityHint(shown == .reconnecting ? "" : L.castMiniOpens)
+        .accessibilityActions {
+            if shown != .reconnecting {
+                Button(L.tvRemoteAction) { cast.expanded = true }
+            }
+        }
     }
 }
 
@@ -204,7 +228,7 @@ private struct MacCastProgress: View {
             GeometryReader { proxy in
                 ZStack(alignment: .leading) {
                     Capsule().fill(.edge)
-                    Capsule().fill(.amber).frame(width: proxy.size.width * fraction)
+                    Capsule().fill(.silk).frame(width: proxy.size.width * fraction)
                 }
             }
             .frame(height: 3)
@@ -245,19 +269,12 @@ struct MacCastPanel: View {
             Color.clear.frame(height: artHeight)
             Group {
                 CastShowLines(touch: false, openShow: openShow)
-                if shown == .failed, let reason = cast.reason {
-                    HStack(alignment: .firstTextBaseline, spacing: 6) {
-                        Circle().fill(.vermilion).frame(width: 6, height: 6)
-                        Text(reason).font(.mac(12)).foregroundStyle(.silk).fixedSize(horizontal: false, vertical: true)
-                    }
-                } else {
-                    CastSessionSeek(touch: false)
-                    CastSessionTransport(touch: false)
-                    if let next = cast.card?.upNext, shown == .playing {
-                        CastUpNextRow(next: next, touch: false)
-                    } else if let undo = cast.card?.undo, shown == .playing {
-                        CastUndoNote(undo: undo, touch: false)
-                    }
+                CastSessionSeek(touch: false)
+                CastSessionTransport(touch: false)
+                if let next = cast.card?.upNext, shown == .playing {
+                    CastUpNextRow(next: next, touch: false)
+                } else if let undo = cast.card?.undo, shown == .playing {
+                    CastUndoNote(undo: undo, touch: false)
                 }
                 CastSessionRows(touch: false)
                 CastSessionFooter(touch: false) { cast.expanded = false }
@@ -270,16 +287,17 @@ struct MacCastPanel: View {
         .focusEffectDisabled()
         .focused($focused)
         .onAppear { focused = true }
+        // The keys reach the TV only while it plays.
         .onKeyPress(.space) {
-            cast.command(.togglePause)
+            if shown == .playing { cast.command(.togglePause) }
             return .handled
         }
         .onKeyPress(.leftArrow) {
-            cast.command(.seek(by: -10))
+            if shown == .playing { cast.command(.seek(by: -10)) }
             return .handled
         }
         .onKeyPress(.rightArrow) {
-            cast.command(.seek(by: 10))
+            if shown == .playing { cast.command(.seek(by: 10)) }
             return .handled
         }
         .onKeyPress(.escape) {

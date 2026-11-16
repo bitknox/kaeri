@@ -37,10 +37,11 @@ struct TabShell: View {
             if now == .compact { narrowed() } else { widened() }
         }
         // At the foot, above the tab bar on iPhone and in a narrow window (Notices).
+        // Over the cast's mini while it shows; the cast's controller, open, shows them itself.
         .overlay(alignment: .bottom) {
-            NoticeCapsule(here: navigator.phoneSettings == nil)
+            NoticeCapsule(here: navigator.phoneSettings == nil && !store.tv.cast.expanded)
                 .padding(.horizontal, 16)
-                .padding(.bottom, sizeClass == .compact ? 64 : 16)
+                .padding(.bottom, (sizeClass == .compact ? 64 : 16) + (store.tv.cast.miniShown ? 50 : 0))
         }
         .sheet(isPresented: $navigator.messagesShown) {
             MessagesView()

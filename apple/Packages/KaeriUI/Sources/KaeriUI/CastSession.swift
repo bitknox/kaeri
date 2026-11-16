@@ -193,7 +193,7 @@ struct CastChooser: View {
                             CastGroupBox {
                                 ForEach(tv.cast.rows) { shown in
                                     CastChooserRow(name: shown.row.name, line: CastWords.route(shown.row), gone: shown.gone) {
-                                        tv.cast.connect(shown.row)
+                                        tv.connectFromChooser(shown.row)
                                     }
                                 }
                             }
@@ -309,15 +309,16 @@ struct CastConnectedDialog: View {
                     .buttonStyle(.plain)
                     CastSessionVolumeRow()
                 }
+                // Disconnect while nothing plays on the TV; Stop casting while something does.
                 Button {
                     dismiss()
                     cast.disconnect()
                 } label: {
-                    Text(L.castStop)
+                    Text(cast.heldIdle ? L.actionDisconnect : L.castStop)
                         .font(touch ? .ui(17, weight: .semibold) : .mac(13, weight: .semibold))
                         .foregroundStyle(.silk)
                         .frame(maxWidth: .infinity, minHeight: touch ? 50 : 30)
-                        .background(Palette.raised, in: .capsule)
+                        .background(Palette.raisedSelected, in: .capsule)
                         .contentShape(.capsule)
                 }
                 .buttonStyle(.plain)
@@ -495,51 +496,92 @@ struct CastSessionStatus: View {
     var body: some View {
         let cast = store.tv.cast
         let line = cast.sessionLine
+        let shown = CastShown(cast)
         HStack(spacing: 8) {
-            Group {
-                switch CastShown(cast) {
-                case .starting, .joining:
-                    ProgressView().controlSize(.mini).tint(.haze)
+            ZStack {
+                // The mark crossfades: the one leaving fades out on 0.3 s, the new one in on 0.2 s.
+                switch shown.mark {
+                case .spinner:
+                    ProgressView().controlSize(.mini).tint(.haze).transition(CastShown.markFade)
                 case .playing:
-                    Circle().fill(.water).frame(width: 7, height: 7)
-                case .failed:
-                    Circle().fill(.vermilion).frame(width: 7, height: 7)
-                case .connected:
-                    CastButtonGlyph(look: .connected, size: 12, color: .haze)
+                    Circle().fill(.water).frame(width: 7, height: 7).transition(CastShown.markFade)
+                case .stopped:
+                    Circle().fill(.vermilion).frame(width: 7, height: 7).transition(CastShown.markFade)
+                case .glyph:
+                    CastButtonGlyph(look: .connected, size: 12, color: .haze).transition(CastShown.markFade)
                 }
             }
             .frame(width: 14, height: 14)
+            .animation(.fadeIn, value: shown.mark)
             Text(line)
                 .font(touch ? .ui(15, weight: .semibold) : .mac(12, weight: .semibold))
                 .foregroundStyle(.silk)
                 .lineLimit(1)
+                .allowsTightening(true)
+                .minimumScaleFactor(0.9)
                 .monospacedDigit()
                 .contentTransition(.opacity)
         }
         .animation(.standard, value: line)
         .accessibilityElement(children: .combine)
+        .onChange(of: shown) { before, now in
+            // Said as it happens: the connection is being made again, it joined again, or the
+            // cast ended by itself.
+            let joined = before == .reconnecting && now == .playing
+            guard now == .reconnecting || now == .failed || joined else { return }
+            AccessibilityNotification.Announcement(cast.sessionLine).post()
+        }
     }
 }
 
-/// How the controller is laid out. It changes only as an episode starts, as it fails, as a
-/// session is joined and as the TV is left with nothing loaded; within playing it holds, paused
-/// or waiting.
+/// How the controller is laid out. It changes as an episode starts, as the TV waits, as the
+/// connection is made again (or a session left running is joined), as the cast fails or stops,
+/// and as the TV is left with nothing loaded; paused or not, playing holds. No row moves between
+/// them: the controls dim in place.
 enum CastShown: Equatable {
-    case starting, playing, failed, joining, connected
+    case starting, playing, waiting, reconnecting, failed, connected
 
     @MainActor init(_ cast: CastModel) {
-        if cast.rejoining {
-            self = .joining
+        if cast.reconnecting {
+            self = .reconnecting
         } else if cast.active, cast.stage == .failed || cast.stage == .stopped {
             self = .failed
         } else if cast.heldIdle {
             self = .connected
         } else if cast.itemLive {
-            self = .playing
+            self = cast.waitingShown ? .waiting : .playing
         } else {
             self = .starting
         }
     }
+
+    /// The controls that reach the TV dim to 38% and take no input: while the TV waits, while
+    /// the connection is made again, once the cast ended, and with nothing playing.
+    var dims: Bool {
+        switch self {
+        case .waiting, .reconnecting, .failed, .connected: true
+        case .starting, .playing: false
+        }
+    }
+
+    /// How far the controls dim: 38% in the states above, and as before while an episode starts.
+    func dimmed(starting: Double) -> Double {
+        dims ? 0.38 : self == .starting ? starting : 1
+    }
+
+    enum Mark { case spinner, playing, stopped, glyph }
+
+    /// The mark before the line: a spinner while it starts, waits or reconnects.
+    var mark: Mark {
+        switch self {
+        case .starting, .waiting, .reconnecting: .spinner
+        case .playing: .playing
+        case .failed: .stopped
+        case .connected: .glyph
+        }
+    }
+
+    @MainActor static var markFade: AnyTransition { .asymmetric(insertion: .opacity.animation(.fadeIn), removal: .opacity.animation(.fadeOut)) }
 }
 
 /// The show's name, which opens its page, and the episode under it.
@@ -550,6 +592,19 @@ struct CastShowLines: View {
 
     var body: some View {
         let cast = store.tv.cast
+        if cast.heldIdle {
+            // Nothing plays on the held TV.
+            Text(L.castIdle)
+                .font(.showTitle(size: touch ? 22 : 15))
+                .foregroundStyle(.haze)
+                .lineLimit(1)
+                .frame(maxWidth: .infinity, alignment: .leading)
+        } else {
+            lines(cast)
+        }
+    }
+
+    private func lines(_ cast: CastModel) -> some View {
         VStack(alignment: .leading, spacing: 3) {
             Button {
                 if let id = cast.showID { openShow(id) }
@@ -579,11 +634,15 @@ struct CastShowLines: View {
     }
 }
 
-/// The TV's playhead: a capsule with the played part in amber and a thumb, dragged to seek, and
+/// The TV's playhead: a capsule with the played part in silk and a thumb, dragged to seek, and
 /// the times under it. A drag holds where it let go until the TV's next revision. Starting has
-/// no thumb and no times; waiting holds the played part and counts under the line.
+/// no thumb and no times; waiting and reconnecting hold the playhead, dimmed, and a cast that
+/// ended keeps where it was. Waiting counts under the line from four seconds. Joined again, the
+/// playhead moves on the standard spring to where the TV is, or jumps under Reduce Motion.
 struct CastSessionSeek: View {
     @Environment(AppStore.self) private var store
+    @Environment(Navigator.self) private var navigator
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.castSliding) private var sliding
     let touch: Bool
     @State private var dragging: Double?
@@ -594,17 +653,21 @@ struct CastSessionSeek: View {
         let cast = store.tv.cast
         let shown = CastShown(cast)
         TimelineView(.periodic(from: .now, by: 0.5)) { context in
-            let duration = max(cast.item?.duration ?? 0, 1)
+            let duration = max(cast.seekDuration ?? 0, 1)
             let live = shown == .playing && cast.item?.duration != nil
-            let position = live ? min(dragging ?? held ?? cast.itemPosition(at: context.date), duration) : 0
+            let point = shown == .starting ? nil : cast.seekPoint(at: context.date)
+            let known = live || (point != nil && cast.seekDuration != nil)
+            let position = live
+                ? min(dragging ?? held ?? cast.itemPosition(at: context.date), duration)
+                : known ? min(point ?? 0, duration) : 0
             VStack(spacing: touch ? 6 : 4) {
                 GeometryReader { proxy in
                     let width = proxy.size.width
                     let x = width * position / duration
                     ZStack(alignment: .leading) {
                         Capsule().fill(.edge).frame(height: touch ? 4 : 3)
-                        Capsule().fill(.amber).frame(width: max(0, x), height: touch ? 4 : 3)
-                        if live {
+                        Capsule().fill(.silk).frame(width: max(0, x), height: touch ? 4 : 3)
+                        if known {
                             Circle()
                                 .fill(.silk)
                                 .frame(width: dragging != nil ? 16 : 12, height: dragging != nil ? 16 : 12)
@@ -612,6 +675,7 @@ struct CastSessionSeek: View {
                         }
                     }
                     .frame(maxHeight: .infinity)
+                    .animation(reduceMotion || navigator.motionReduced ? nil : .standard, value: cast.reconnecting)
                     .contentShape(.rect)
                     .gesture(
                         DragGesture(minimumDistance: 0)
@@ -640,8 +704,8 @@ struct CastSessionSeek: View {
                 .font(touch ? .ui(12) : .mac(10))
                 .monospacedDigit()
                 .foregroundStyle(.haze)
-                .opacity(live ? 1 : 0)
-                if let waiting = cast.waitingSeconds, live {
+                .opacity(known ? 1 : 0)
+                if let waiting = cast.waitingSeconds, live || shown == .waiting {
                     Text(Msg.castPhaseWaiting(name: cast.heldName, seconds: Int64(waiting)).text)
                         .font(touch ? .ui(13) : .mac(11))
                         .foregroundStyle(.haze)
@@ -654,9 +718,15 @@ struct CastSessionSeek: View {
             .accessibilityLabel(L.playerPosition)
             .accessibilityValue(ResumePoint(position: position, fraction: nil).clock)
             .accessibilityAdjustableAction { direction in
+                guard live else { return }
                 cast.command(.seek(by: direction == .increment ? 10 : -10))
             }
         }
+        .opacity(shown.dimmed(starting: 1))
+        .allowsHitTesting(shown == .playing)
+        // Dimmed is off too, and VoiceOver says so.
+        .disabled(shown != .playing)
+        .animation(.quick, value: shown.dims)
         .animation(.fadeIn, value: cast.waitingSeconds != nil)
         .onChange(of: cast.held?.rev) { _, rev in
             if held != nil, rev != heldRev { held = nil }
@@ -664,16 +734,41 @@ struct CastSessionSeek: View {
     }
 }
 
-/// Back 10, play or pause, forward 10 and the next episode. Dimmed only while it starts.
+/// Back 10, play or pause, forward 10 and the next episode, live only while it plays. Once the
+/// cast failed or stopped, the reason takes the row's place, crossfading, at the same height.
 struct CastSessionTransport: View {
     @Environment(AppStore.self) private var store
     let touch: Bool
 
     var body: some View {
         let cast = store.tv.cast
-        let live = CastShown(cast) == .playing
+        let shown = CastShown(cast)
+        let reason = shown == .failed ? cast.reason : nil
+        ZStack {
+            if let reason {
+                HStack(alignment: .firstTextBaseline, spacing: touch ? 8 : 6) {
+                    Circle().fill(.vermilion).frame(width: touch ? 7 : 6, height: touch ? 7 : 6)
+                        .alignmentGuide(.firstTextBaseline) { $0[.bottom] - 1 }
+                    Text(reason)
+                        .font(touch ? .ui(15) : .mac(12))
+                        .foregroundStyle(.silk)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .transition(.opacity)
+            } else {
+                buttons(shown).transition(.opacity)
+            }
+        }
+        .frame(minHeight: touch ? 64 : 32)
+        .animation(.standard, value: reason)
+    }
+
+    private func buttons(_ shown: CastShown) -> some View {
+        let cast = store.tv.cast
+        let live = shown == .playing
         let paused = cast.itemPaused
-        HStack(spacing: touch ? 28 : 14) {
+        return HStack(spacing: touch ? 28 : 14) {
             glyph("gobackward.10", L.playerBack10, size: touch ? 24 : 15) { cast.command(.seek(by: -10)) }
             glyph(paused ? "play.fill" : "pause.fill", paused ? L.actionPlay : L.actionPause, size: touch ? 36 : 22) {
                 cast.command(.togglePause)
@@ -684,8 +779,8 @@ struct CastSessionTransport: View {
         }
         .frame(maxWidth: .infinity)
         .disabled(!live)
-        .opacity(live ? 1 : 0.4)
-        .animation(.fadeIn, value: live)
+        .opacity(shown.dimmed(starting: 0.4))
+        .animation(.quick, value: shown)
     }
 
     private func glyph(_ symbol: String, _ label: String, size: CGFloat, action: @escaping () -> Void) -> some View {
@@ -703,14 +798,15 @@ struct CastSessionTransport: View {
 }
 
 /// Subtitles, Audio and the TV's volume. The rows are there from the start, so nothing below
-/// them moves as the TV reports; they dim while it starts and once it failed.
+/// them moves as the TV reports; they dim while it starts, waits, reconnects and once it ended.
 struct CastSessionRows: View {
     @Environment(AppStore.self) private var store
     let touch: Bool
 
     var body: some View {
         let cast = store.tv.cast
-        let live = CastShown(cast) == .playing
+        let shown = CastShown(cast)
+        let live = shown == .playing
         let now = cast.now
         CastGroupBox {
             row(L.playerSubtitles) {
@@ -722,8 +818,8 @@ struct CastSessionRows: View {
             CastSessionVolumeRow()
         }
         .disabled(!live)
-        .opacity(live ? 1 : 0.5)
-        .animation(.fadeIn, value: live)
+        .opacity(shown.dimmed(starting: 0.5))
+        .animation(.quick, value: shown)
     }
 
     private func row(_ title: String, @ViewBuilder value: () -> some View) -> some View {
@@ -772,13 +868,9 @@ struct CastSessionVolumeRow: View {
                     .foregroundStyle(.haze)
                     .contentTransition(.opacity)
             }
-            Button {
-                cast.command(.mute(muted: !muted))
-            } label: {
-                Label(muted ? L.playerUnmute : L.playerMute, systemImage: muted ? "speaker.wave.2" : "speaker.slash")
-                    .labelStyle(.titleAndIcon)
-            }
-            .buttonStyle(SecondaryCapsuleStyle(height: touch ? 32 : 22, fontSize: touch ? 15 : 11))
+            // Mute or Unmute keeps its whole label: the line or the slider beside it gives way.
+            CastMuteButton(muted: muted, touch: touch) { cast.command(.mute(muted: !muted)) }
+                .layoutPriority(1)
         }
         .padding(.horizontal, CastMetrics.rowInset)
         .frame(minHeight: touch ? 52 : 32)
@@ -786,8 +878,24 @@ struct CastSessionVolumeRow: View {
     }
 }
 
-/// The buttons at the foot: Play here, Stop casting and More while it runs; once a play failed,
-/// what fixes it, the first in amber.
+/// The TV's Mute, or Unmute while it is muted, as a pill with its glyph.
+struct CastMuteButton: View {
+    let muted: Bool
+    let touch: Bool
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            Label(muted ? L.playerUnmute : L.playerMute, systemImage: muted ? "speaker.wave.2" : "speaker.slash")
+                .labelStyle(.titleAndIcon)
+        }
+        .buttonStyle(SecondaryCapsuleStyle(height: touch ? 32 : 22, fontSize: touch ? 15 : 11))
+    }
+}
+
+/// The buttons at the foot: Play here, Stop casting and More while it runs, with Play here dimmed
+/// while the connection is made again; once a play failed or the cast stopped, what fixes it,
+/// the first in amber; with nothing playing on the held TV, Choose another TV and Disconnect.
 struct CastSessionFooter: View {
     @Environment(AppStore.self) private var store
     @Environment(Navigator.self) private var navigator
@@ -796,29 +904,42 @@ struct CastSessionFooter: View {
 
     var body: some View {
         let cast = store.tv.cast
-        let failed = CastShown(cast) == .failed
+        let shown = CastShown(cast)
+        let failed = shown == .failed
+        let idle = shown == .connected
+        let reconnecting = shown == .reconnecting
         HStack(spacing: touch ? 10 : 6) {
             if failed {
                 ForEach(Array(cast.actions.prefix(2).enumerated()), id: \.offset) { index, action in
                     pill(title(action), primary: index == 0) { run(action) }
+                        .transition(.opacity)
+                }
+            } else if idle {
+                pill(L.tvChooseAnother, primary: false) { run(.chooseAnotherTV) }
+                pill(L.actionDisconnect, primary: false) {
+                    close()
+                    cast.disconnect()
                 }
             } else {
                 pill(L.castPlayHere, primary: false) {
                     close()
                     cast.playHereFromSession()
                 }
+                .disabled(reconnecting)
+                .opacity(reconnecting ? 0.38 : 1)
                 pill(L.castStop, primary: false) {
                     close()
                     cast.disconnect()
                 }
             }
             Menu {
-                Button(L.tvChooseAnother) {
-                    close()
-                    cast.expanded = false
-                    cast.chooserShown = true
-                }
-                if !failed {
+                Button(L.tvChooseAnother) { store.tv.chooseAnotherTV() }
+                if idle {
+                    Button(L.actionDisconnect) {
+                        close()
+                        cast.disconnect()
+                    }
+                } else if !failed {
                     Button(L.castStop, role: .destructive) {
                         close()
                         cast.disconnect()
@@ -829,7 +950,7 @@ struct CastSessionFooter: View {
                     .font(touch ? .ui(17, weight: .semibold) : .mac(12, weight: .semibold))
                     .foregroundStyle(.silk)
                     .frame(width: touch ? 44 : 26, height: touch ? 44 : 26)
-                    .background(Palette.raised, in: .circle)
+                    .background(touch ? Palette.raised : Palette.raisedSelected, in: .circle)
                     .contentShape(.circle)
             }
             .menuStyle(.button)
@@ -837,7 +958,10 @@ struct CastSessionFooter: View {
             .menuIndicator(.hidden)
             .fixedSize()
             .accessibilityLabel(L.actionMore)
+            .disabled(reconnecting)
+            .opacity(reconnecting ? 0.38 : 1)
         }
+        .animation(.quick, value: shown)
     }
 
     private func pill(_ title: String, primary: Bool, action: @escaping () -> Void) -> some View {
@@ -848,7 +972,7 @@ struct CastSessionFooter: View {
                 .lineLimit(1)
                 .minimumScaleFactor(0.8)
                 .frame(maxWidth: .infinity, minHeight: touch ? 44 : 26)
-                .background(primary ? AnyShapeStyle(.amber) : AnyShapeStyle(Palette.raised), in: .capsule)
+                .background(primary ? AnyShapeStyle(.amber) : AnyShapeStyle(touch ? Palette.raised : Palette.raisedSelected), in: .capsule)
                 .contentShape(.capsule)
         }
         .buttonStyle(.plain)
@@ -880,8 +1004,8 @@ struct CastSessionFooter: View {
         case .tryAgain:
             cast.tryAgain()
         case .chooseAnotherTV:
-            close()
-            cast.chooserShown = true
+            // The chooser carries the episode on from where the TV is, and closes the controller.
+            store.tv.chooseAnotherTV()
         }
     }
 }

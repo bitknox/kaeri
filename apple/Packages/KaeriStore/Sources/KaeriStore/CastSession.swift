@@ -111,6 +111,7 @@ extension CastModel {
             asked = false
             expandOnPlay = false
             if active { end() }
+            settleWaiting()
             return
         }
         if held != view {
@@ -147,6 +148,7 @@ extension CastModel {
                 CastLastItem.save(last)
             }
         }
+        settleWaiting()
         if let note = view.note, note != noteBefore {
             // A note while it plays, once as it first reads: the TV shows subtitles as plain text.
             say?(Notice(kind: .info, text: note.text, hint: nil, msg: note))
@@ -157,6 +159,28 @@ extension CastModel {
             chooserShown = false
             dialogShown = false
             expanded = true
+        }
+    }
+
+    /// Waiting for shows once the TV has waited 600 ms, counted from when the wait began.
+    private func settleWaiting() {
+        guard let waiting = item?.waiting, held?.state == .playing, !(item?.loading ?? true) else {
+            waitingSoon?.cancel()
+            waitingSoon = nil
+            if waitingShown { waitingShown = false }
+            return
+        }
+        guard !waitingShown, waitingSoon == nil else { return }
+        let left = 0.6 - Double(waiting)
+        guard left > 0 else {
+            waitingShown = true
+            return
+        }
+        waitingSoon = Task { [weak self] in
+            try? await Task.sleep(for: .seconds(left))
+            guard let self, !Task.isCancelled else { return }
+            self.waitingSoon = nil
+            if self.item?.waiting != nil { self.waitingShown = true }
         }
     }
 
@@ -202,6 +226,14 @@ extension CastModel {
         }
     }
 
+    /// The connection to the TV closed and is being made again, or a session left running is
+    /// joined again: the line says Reconnecting, the controls take no input, and the playhead
+    /// holds until the TV answers.
+    public var reconnecting: Bool {
+        if rejoining || held?.reconnecting == true { return true }
+        return active && stage == .playing && card?.reconnecting == true
+    }
+
     /// The TV plays it, paused or not: not starting, failed or joining.
     public var itemLive: Bool {
         guard let item, held?.state == .playing else { return false }
@@ -214,7 +246,7 @@ extension CastModel {
     /// plays.
     public func itemPosition(at date: Date = .now) -> Double {
         guard let item, !item.loading else { return 0 }
-        if item.paused || item.waiting != nil { return item.position }
+        if item.paused || item.waiting != nil || reconnecting { return item.position }
         let moved = item.position + max(0, date.timeIntervalSince(heldAt))
         return min(moved, item.duration ?? moved)
     }
@@ -222,6 +254,17 @@ extension CastModel {
     /// What the TV last played stands in for what it plays: while a session left running is
     /// joined again, and on the card of a cast that stopped, which keeps its episode.
     private var showsLast: Bool { rejoining || (active && stage == .stopped) }
+
+    /// Where the seek line stands: the TV's playhead while it plays, held while it waits or
+    /// reconnects, and where the cast was once it ended.
+    public func seekPoint(at date: Date = .now) -> Double? {
+        if itemLive { return itemPosition(at: date) }
+        if active, let at = playhead(at: date) { return at }
+        return nil
+    }
+
+    /// How long the episode on the seek line is, kept once the cast ended.
+    public var seekDuration: Double? { item?.duration ?? card?.card.now?.duration }
 
     /// The show's title, as the mini and the controller show it.
     public var showTitle: String { item?.title ?? now?.title ?? (showsLast ? lastItem?.title : nil) ?? "" }
@@ -250,7 +293,8 @@ extension CastModel {
     /// The mini's and the controller's line: the TV, and how it goes.
     public var sessionLine: String {
         let name = heldName
-        if rejoining { return L.tvStatusReconnecting(name: name) }
+        if reconnecting { return L.tvStatusReconnecting(name: name) }
+        if waitingShown, itemLive { return L.tvWaitingFor(name: name) }
         if heldIdle { return L.castButtonConnected(name: name) }
         if active {
             switch stage {
@@ -358,6 +402,15 @@ extension CastModel {
         }
     }
 
+    /// What Choose another TV carries to the TV picked next: the episode the TV plays, from
+    /// where it is now, or once the cast ended, the one it played and where it was.
+    public var anotherTVPlay: TVPlayRequest? {
+        if itemLive, let item, let id = item.id, let episode = item.episode {
+            return TVPlayRequest(id: id, title: item.title, episode: episode, from: itemPosition())
+        }
+        return (active ? carried : nil) ?? lastPlayed
+    }
+
     /// iPhone and iPad: the app leaves the screen, or is back.
     public func scene(active: Bool) {
         inBackground = !active
@@ -440,15 +493,32 @@ extension TVRemoteModel {
         } else if connected != nil {
             openRemote()
         } else {
+            request = nil
             cast.chooserShown = true
         }
     }
 
+    /// Choose another TV, from the cast's controller: the controller closes and the chooser opens,
+    /// carrying the episode from where the TV is, so the TV picked plays it on from there. What
+    /// it carries is read first, as the card of a cast that ended goes with the controller.
+    public func chooseAnotherTV() {
+        request = cast.anotherTVPlay
+        cast.expanded = false
+        cast.chooserShown = true
+    }
+
+    /// A Chromecast row picked in the chooser: it connects, and plays there what Choose another
+    /// TV carried. One that could not connect keeps it for the next pick.
+    public func connectFromChooser(_ row: FfiCastRow) {
+        cast.connect(row, play: request)
+        if cast.problem == nil { request = nil }
+    }
+
     /// A Kaeri TV picked in the chooser: a paired one connects, a new one pairs in the sheet.
+    /// What Choose another TV carried plays there, as a Chromecast row plays it.
     public func chooseFromChooser(_ row: FfiTvRow) {
         cast.chooserShown = false
         if cast.connected { cast.disconnect() }
-        request = nil
         switch row.kind {
         case .paired, .pairedAway:
             choose(row)

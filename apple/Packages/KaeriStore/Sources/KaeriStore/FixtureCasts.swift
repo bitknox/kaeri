@@ -41,12 +41,33 @@ import Synchronization
 ///     rejoin     the mini joining a session left running: Reconnecting to Living room
 ///     morph      the mini, opening into the controller and closing again, over and over
 ///     pause      the controller, paused and played again every 2 s, each with the TV's echoes
+///
+/// The cast states (16 November): a scene ending in `bar` has the controller closed, the mini
+/// showing; the others have it open.
+///
+///     reconnecting, reconnectingbar   the connection to Living room dropped: Reconnecting
+///     gaveup, gaveupbar               its tries ran out: Casting stopped, Lost Living room
+///     fallback, fallbackopen          Living room plays this in its own player: the notice
+///     messages                        Messages after a fallback, a stop on the TV and a loss
+///     waitingtv, waitingbar           the TV waits two seconds, as while a stop is heard
+///     outside, outsidebar             Living room stopped the cast on the TV
+///     dialogplaying                   the connected dialog while something plays
+///     idle                            the controller with Living room held and nothing playing
+///
+/// And timed for clips, each starting 4 s after the TV plays: `cliprejoin` (Reconnecting for
+/// 3 s, then the TV answers further on), `clipgaveup` (Reconnecting for 4 s, then lost),
+/// `clipfallback` (the fallback's notice), `clipoutside` (Waiting for Living room for 3 s, then
+/// stopped on the TV), each with the controller open, and with `bar` after it, closed.
 public enum CastScene: String, Sendable, CaseIterable {
     case found, searching, none, gone, blocked
     case starting, counting, preparing, playing, muted, level, upnext, skipped
     case refused, never, network, codec, deeplink
     case lost, takenover, bar
     case button, chooser, connecting, dialog, paused, waiting, rejoin, morph, pause
+    case reconnecting, reconnectingbar, gaveup, gaveupbar, fallback, fallbackopen, messages
+    case waitingtv, waitingbar, outside, outsidebar, dialogplaying, idle
+    case cliprejoin, cliprejoinbar, clipgaveup, clipgaveupbar, clipfallback, clipfallbackopen
+    case clipoutside, clipoutsidebar
 
     public static let argument = "-KaeriCast"
 
@@ -60,6 +81,12 @@ public enum CastScene: String, Sendable, CaseIterable {
     var silent: Bool { self == .searching || self == .none || self == .blocked }
 
     var picker: Bool { [.found, .searching, .none, .gone, .blocked].contains(self) }
+
+    /// The controller stays closed: the mini shows.
+    var mini: Bool {
+        [.bar, .morph, .reconnectingbar, .gaveupbar, .fallback, .messages, .waitingbar, .outsidebar,
+         .dialogplaying, .cliprejoinbar, .clipgaveupbar, .clipfallback, .clipoutsidebar].contains(self)
+    }
 }
 
 /// The made-up device list, found as the network's browse finds TVs.
@@ -130,7 +157,11 @@ final class FixtureCastSession: FfiCastSessionProtocol, @unchecked Sendable {
         var subtitlesOff = false
         var skip: FfiSkipCard?
         var notice: Msg?
+        /// The card's note: the TV plays this cast in its own player, as with Play on TV.
+        var note: Msg?
         var over = false
+        /// The connection to the TV closed and is being made again.
+        var reconnecting = false
         var rev: UInt64 = 0
         /// The revision the last card handed out was made at.
         var handed: UInt64 = 0
@@ -183,7 +214,8 @@ final class FixtureCastSession: FfiCastSessionProtocol, @unchecked Sendable {
             rev: state.rev, over: state.over, reached: true)
         return FfiCastCard(
             card: card, volumeControl: state.volumeControl, muted: state.muted, notice: state.notice,
-            phaseLine: state.phaseLine, upNext: state.upNext, undo: state.undo, waiting: state.waiting)
+            phaseLine: state.phaseLine, upNext: state.upNext, undo: state.undo, waiting: state.waiting,
+            reconnecting: state.reconnecting && !state.over, note: state.note)
     }
 
     func nextCard() async -> FfiCastCard? {
@@ -253,6 +285,8 @@ final class FixtureCastLink: CastSessionLink, @unchecked Sendable {
         var device: FixtureCastBrowser.Device?
         var session: FixtureCastSession?
         var notice: Msg?
+        /// A note while the TV is held: the TV plays this cast in its own player.
+        var note: Msg?
         var rev: UInt64 = 0
     }
 
@@ -297,9 +331,30 @@ final class FixtureCastLink: CastSessionLink, @unchecked Sendable {
         return FfiCastSessionView(
             state: held.state, button: button, rev: held.rev + (card?.rev ?? 0),
             deviceKey: held.device.map { "cast:\($0.id)" }, deviceName: held.device?.name, // i18n-skip
-            item: item, queue: [], notice: held.notice, note: nil,
+            item: item, queue: [], notice: held.notice, note: held.note,
             level: card?.volume.map { $0 / 100 }, muted: card?.muted,
-            volumeControl: card?.volumeControl ?? .muteOnly, ownReceiver: true)
+            volumeControl: card?.volumeControl ?? .muteOnly, ownReceiver: held.note == nil,
+            reconnecting: held.state == .playing && (card?.reconnecting ?? false))
+    }
+
+    /// The TV plays this cast in its own player, as the engine's note says.
+    func note(_ note: Msg?) {
+        change { $0.note = note }
+    }
+
+    /// The cast ends without being asked to: the TV dropped off or was stopped on the TV. The
+    /// session reads as the engine's does, failed with its notice, and so does the card.
+    func end(_ notice: Msg) {
+        held.withLock { $0.session }?.change {
+            $0.notice = notice
+            $0.over = true
+            $0.reconnecting = false
+            $0.waiting = nil
+        }
+        change {
+            $0.state = .error
+            $0.notice = notice
+        }
     }
 
     private var seen: (UInt64, UInt64)?
@@ -466,9 +521,14 @@ extension TVRemoteModel {
         default:
             break
         }
+        if scene == .idle {
+            link.hold(device)
+            try? await Task.sleep(for: .milliseconds(300))
+            cast.expanded = true
+            return
+        }
         link.hold(device)
-        let mini = scene == .bar || scene == .morph
-        cast.expandOnPlay = !mini
+        cast.expandOnPlay = !scene.mini
         guard let session = link.start(play) else { return }
         guard scene != .starting else { return }
         try? await Task.sleep(for: .milliseconds(400))
@@ -507,6 +567,7 @@ extension TVRemoteModel {
             state.muted = scene == .muted
             state.paused = scene == .paused
             if scene == .waiting { state.waiting = 6 }
+            if scene == .waitingtv || scene == .waitingbar { state.waiting = 2 }
             if scene == .upnext {
                 state.position = 1382
                 state.upNext = FfiCastUpNext(
@@ -532,12 +593,61 @@ extension TVRemoteModel {
                 $0.notice = .noticeCastTakenOver(name: device.name)
                 $0.over = true
             }
+        case .reconnecting, .reconnectingbar:
+            try? await Task.sleep(for: .milliseconds(400))
+            session.change { $0.reconnecting = true }
+        case .gaveup, .gaveupbar:
+            try? await Task.sleep(for: .milliseconds(400))
+            link.end(.noticeCastLost(name: device.name))
+        case .outside, .outsidebar:
+            try? await Task.sleep(for: .milliseconds(400))
+            link.end(.noticeCastStoppedElsewhere(name: device.name))
+        case .fallback, .fallbackopen:
+            try? await Task.sleep(for: .milliseconds(400))
+            link.note(.noticeCastFallback(name: device.name))
+        case .messages:
+            // What Messages keeps of casts: a loss, a stop on the TV, then a fallback.
+            for notice in [Msg.noticeCastLost(name: device.name), .noticeCastStoppedElsewhere(name: device.name)] {
+                cast.say?(Notice(kind: .info, text: notice.text, hint: nil, msg: notice))
+            }
+            try? await Task.sleep(for: .milliseconds(400))
+            link.note(.noticeCastFallback(name: device.name))
+        case .dialogplaying:
+            try? await Task.sleep(for: .milliseconds(600))
+            cast.dialogShown = true
+        case .cliprejoin, .cliprejoinbar:
+            try? await Task.sleep(for: .seconds(4))
+            session.change { $0.reconnecting = true }
+            try? await Task.sleep(for: .seconds(3))
+            // The TV played on meanwhile: it answers further on than it was left.
+            session.change {
+                $0.reconnecting = false
+                $0.position += 4
+            }
+        case .clipgaveup, .clipgaveupbar:
+            try? await Task.sleep(for: .seconds(4))
+            session.change { $0.reconnecting = true }
+            // The engine's 20 s, shortened for the clip.
+            try? await Task.sleep(for: .seconds(4))
+            link.end(.noticeCastLost(name: device.name))
+        case .clipfallback, .clipfallbackopen:
+            try? await Task.sleep(for: .seconds(4))
+            link.note(.noticeCastFallback(name: device.name))
+        case .clipoutside, .clipoutsidebar:
+            try? await Task.sleep(for: .seconds(4))
+            // The receiver left the TV: the engine hears why for up to 4 s, the TV's card
+            // waiting with its clock still, then says it was stopped there.
+            for second in 0..<3 {
+                session.change { $0.waiting = UInt32(second) }
+                try? await Task.sleep(for: .seconds(1))
+            }
+            link.end(.noticeCastStoppedElsewhere(name: device.name))
         case .morph:
             // Open and close, with time to look at each end.
             while !Task.isCancelled {
                 try? await Task.sleep(for: .seconds(2))
                 cast.expanded = true
-                try? await Task.sleep(for: .seconds(2.5))
+                try? await Task.sleep(for: .seconds(4))
                 cast.expanded = false
             }
         case .pause:
@@ -563,11 +673,24 @@ extension CastModel {
             case .gone: rows.contains(where: \.gone)
             case .blocked: tv.sheet == .picker && localNetworkDenied
             case .starting, .counting, .preparing: stage == .starting && expanded
-            case .playing, .muted, .level, .upnext, .skipped, .paused, .waiting, .pause:
+            case .playing, .muted, .level, .upnext, .skipped, .paused, .waiting, .pause,
+                 .cliprejoin, .clipgaveup, .clipfallbackopen, .clipoutside:
                 stage == .playing && expanded && (scene != .muted || muted)
+            case .cliprejoinbar, .clipgaveupbar, .clipfallback, .clipoutsidebar:
+                stage == .playing && miniShown
+            case .reconnecting: stage == .playing && expanded && reconnecting
+            case .reconnectingbar: miniShown && reconnecting
+            case .waitingtv: stage == .playing && expanded && waitingShown
+            case .waitingbar: miniShown && waitingShown
+            case .fallbackopen: expanded && held?.note != nil
+            case .fallback, .messages: miniShown && held?.note != nil
+            case .gaveup, .outside: stage == .stopped && expanded
+            case .gaveupbar, .outsidebar: !miniShown && held?.state == .error
+            case .dialogplaying: dialogShown && stage == .playing
+            case .idle: heldIdle && expanded
             case .refused, .never, .network, .codec, .deeplink: stage == .failed
             case .lost: stage == .stopped
-            case .takenover: !active && takenOver != nil
+            case .takenover: !active && offered != nil
             case .bar, .morph: stage == .playing && miniShown
             case .button: button == .available
             case .chooser: chooserShown && rows.count == 2

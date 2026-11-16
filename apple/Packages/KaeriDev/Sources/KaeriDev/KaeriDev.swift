@@ -222,8 +222,10 @@ final class Delegate: NSObject, NSApplicationDelegate {
             let there = await store.party.stage(scene, store: store)
             print(there ? "KaeriDev: Watch together is at \(scene.rawValue)" : "KaeriDev: Watch together did not reach \(scene.rawValue)")
         }
-        // A cast scene's loop (morph, pause): frames from the moment the window is up.
+        // A cast scene's loop (morph, pause) or clip: frames from the moment the window is up,
+        // with --reduce-motion as the app runs under Reduce Motion.
         if CastScene.named() != nil, !options.frames.isEmpty, let url = options.snapshot, let window = Snapshot.window {
+            if options.reduceMotion { navigator.motionReduced = true }
             await frames(of: nil, in: window, to: url)
         }
         // `KAERI_PROBE_TOOLTIPS=1`: every tooltip the window could show now (TooltipProbe).
