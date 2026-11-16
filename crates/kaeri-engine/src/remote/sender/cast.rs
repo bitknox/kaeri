@@ -496,6 +496,10 @@ pub struct CastCard {
     /// The connection to the TV closed and is being made again: "Reconnecting to Living room".
     /// The rest of the card reads as it did until it joins again or the cast ends.
     pub reconnecting: bool,
+    /// The hub's note on this cast, for a notice when it first reads differently: the TV plays
+    /// it in its own player. A cast from Play on TV holds no session, so the session's note
+    /// never shows it.
+    pub note: Option<Msg>,
 }
 
 /// Up Next on the casting card.
@@ -661,6 +665,7 @@ impl CastSession {
             route: status.as_ref().and_then(route_of),
             waiting: status.as_ref().and_then(crate::cast::waited).filter(|_| !over),
             reconnecting: !over && status.as_ref().is_some_and(|s| s.reconnecting),
+            note: view.note.clone().filter(|_| ours && !over),
         }
     }
 
