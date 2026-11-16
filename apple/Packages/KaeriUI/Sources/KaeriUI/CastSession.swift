@@ -579,6 +579,7 @@ struct CastShowLines: View {
 /// no thumb and no times; waiting holds the played part and counts under the line.
 struct CastSessionSeek: View {
     @Environment(AppStore.self) private var store
+    @Environment(\.castSliding) private var sliding
     let touch: Bool
     @State private var dragging: Double?
     @State private var held: Double?
@@ -611,9 +612,11 @@ struct CastSessionSeek: View {
                         DragGesture(minimumDistance: 0)
                             .onChanged { drag in
                                 guard live else { return }
+                                if dragging == nil { sliding?.changed(true) }
                                 dragging = min(max(0, drag.location.x / max(width, 1)), 1) * duration
                             }
                             .onEnded { _ in
+                                sliding?.changed(false)
                                 if let to = dragging {
                                     held = to
                                     heldRev = cast.held?.rev
@@ -733,6 +736,7 @@ struct CastSessionRows: View {
 /// takes a level.
 struct CastSessionVolumeRow: View {
     @Environment(AppStore.self) private var store
+    @Environment(\.castSliding) private var sliding
     @State private var dragging: Double?
 
     var body: some View {
@@ -747,6 +751,7 @@ struct CastSessionVolumeRow: View {
                     get: { dragging ?? level },
                     set: { dragging = $0 }
                 ), in: 0...1) { editing in
+                    sliding?.changed(editing)
                     if !editing, let to = dragging {
                         cast.command(.volume(step: ((to - level) * 100).rounded()))
                         dragging = nil
@@ -910,4 +915,14 @@ struct CastToolbarItem: ToolbarContent {
             #endif
         }
     }
+}
+
+/// Told as a slider in the cast controller starts and stops being dragged: the drawer around it
+/// leaves that drag alone.
+struct CastSliding {
+    let changed: @MainActor (Bool) -> Void
+}
+
+extension EnvironmentValues {
+    @Entry var castSliding: CastSliding?
 }

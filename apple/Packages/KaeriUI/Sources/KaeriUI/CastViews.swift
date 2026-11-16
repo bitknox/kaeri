@@ -567,8 +567,8 @@ struct CastToolbarButton: View {
 #if os(iOS)
 // MARK: - iPhone and iPad's card
 
-/// The TV sheet while a cast is up: the line and Done, the note to keep the app open, the
-/// episode, the seek line and transport, the tracks and the TV's volume, and what else to do.
+/// The TV sheet while a cast is up: the line and Done, the episode, the seek line and transport,
+/// the tracks and the TV's volume, and what else to do.
 /// On iPad a form sheet, with those buttons in a row. The screen stays awake while it is up.
 struct PhoneCastCard: View {
     @Environment(AppStore.self) private var store
@@ -592,19 +592,6 @@ struct PhoneCastCard: View {
                         .foregroundStyle(.silk)
                 }
                 .padding(.top, 4)
-                if running {
-                    HStack(alignment: .firstTextBaseline, spacing: 10) {
-                        Image(systemName: "info.circle")
-                            .font(.ui(15))
-                            .foregroundStyle(.water)
-                            .accessibilityHidden(true)
-                        Text(L.castKeepOpen(device: TVRemoteModel.deviceName, name: cast.tvName))
-                            .font(.ui(13))
-                            .foregroundStyle(.haze)
-                            .fixedSize(horizontal: false, vertical: true)
-                    }
-                    .transition(.opacity)
-                }
                 if let now = cast.now {
                     HStack(spacing: 14) {
                         if let entry = store.titles[now.id] { CoverArt(entry: entry, width: 72) }
