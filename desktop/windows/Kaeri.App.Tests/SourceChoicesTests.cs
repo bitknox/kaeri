@@ -253,14 +253,14 @@ public class SourceChoicesTests
         Assert.Equal("No source has this episode", item.Waiting);
     }
 
-    static SourceCandidate Release(string id, string name) =>
+    static SourceCandidate NamedRelease(string id, string name) =>
         new(Id: id, ProviderId: "sample-source", ProviderName: name, Title: $"Stardust Wayfarer - 07 ({id})", Quality: 1080u, Label: "12 seeders", Size: "1.4 GiB");
 
     [Fact]
     public void AReleaseNamesItsSourceAsItGoesByNotByItsId()
     {
-        Assert.Equal("Sample Source · 1080p · 1.4 GiB · 12 seeders", ReleasePicker.Detail(Release("a", "Sample Source")));
-        Assert.StartsWith("sample-source ·", ReleasePicker.Detail(Release("a", "")));
+        Assert.Equal("Sample Source · 1080p · 1.4 GiB · 12 seeders", ReleasePicker.Detail(NamedRelease("a", "Sample Source")));
+        Assert.StartsWith("sample-source ·", ReleasePicker.Detail(NamedRelease("a", "")));
     }
 
     [Fact]
@@ -280,7 +280,7 @@ public class SourceChoicesTests
     [Fact]
     public void TheOnlyReleaseIsPickedSoPlayWorksAtOnce()
     {
-        Assert.Equal(0, ReleasePicker.Preselected([Release("a", "Sample Source")]));
-        Assert.Equal(-1, ReleasePicker.Preselected([Release("a", "Sample Source"), Release("b", "Sample Source")]));
+        Assert.Equal(0, ReleasePicker.Preselected([NamedRelease("a", "Sample Source")]));
+        Assert.Equal(-1, ReleasePicker.Preselected([NamedRelease("a", "Sample Source"), NamedRelease("b", "Sample Source")]));
     }
 }
