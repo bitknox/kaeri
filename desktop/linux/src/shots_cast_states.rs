@@ -121,9 +121,9 @@ pub fn stage(shell: &Rc<Shell>, shot: &str) -> Option<f64> {
             cast(shell, &scene, plays());
             hide_remote(shell, remote, PLAYING);
             drop_at(&scene, 10_000, Duration::from_secs(4));
-            later(12_500, {
+            later(11_500, {
                 let window = shell.ctx.window.clone();
-                move || crate::shots::frames(&window, clip, CLIP_FRAMES + 120)
+                move || crate::shots::frames(&window, clip, CLIP_FRAMES + 180)
             });
             18.0
         }

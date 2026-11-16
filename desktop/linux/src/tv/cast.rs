@@ -129,9 +129,9 @@ pub fn stage_of(card: &CastCard) -> Stage {
 /// Keep in `next`, a card that ended from afar, where the TV got to by `was` read `since`
 /// seconds ago, and the episode's length, when it is still the same episode.
 fn hold_playhead(was: &CastCard, since: f64, next: &mut CastCard) {
-    let (Some(before), Some(now)) = (was.card.now.as_ref(), next.card.now.as_mut()) else {
-        return;
-    };
+    let Some(before) = was.card.now.as_ref() else { return };
+    // The engine's card can drop the episode itself once the TV is gone.
+    let now = next.card.now.get_or_insert_with(|| before.clone());
     if before.id != now.id || before.episode != now.episode {
         return;
     }
@@ -885,6 +885,13 @@ mod tests {
         let mut again = ended();
         hold_playhead(&held, 30.0, &mut again);
         let now = again.card.now.expect("the episode");
+        assert!((now.position - 759.0).abs() < 0.01, "{}", now.position);
+        assert_eq!(now.duration, Some(1440.0));
+        // A lost card without the episode takes the one the TV played.
+        let mut bare = ended();
+        bare.card.now = None;
+        hold_playhead(&held, 30.0, &mut bare);
+        let now = bare.card.now.expect("the episode");
         assert!((now.position - 759.0).abs() < 0.01, "{}", now.position);
         assert_eq!(now.duration, Some(1440.0));
     }
