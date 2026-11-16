@@ -168,7 +168,8 @@ class PlayerShots {
             time = (events.lastOrNull()?.atMs ?: 0u).toLong() + 1_500
             model.poke()
         }
-        compose.onNodeWithText("Alpha", substring = true).assertExists()
+        // The sheet names the source that failed, apart from the start's own line.
+        compose.onNodeWithText("Alpha didn't answer").assertExists() // i18n-skip
     }
     @Test fun phone_start_failed_no_sources() = starting("phone-start-failed-no-sources", StartingFixture.FAILED_NO_SOURCES, extra = 1_500)
     @Test fun phone_start_failed_not_aired() = starting("phone-start-failed-not-aired", StartingFixture.FAILED_NOT_AIRED, extra = 1_500)
