@@ -32,7 +32,6 @@ import com.google.common.util.concurrent.ListenableFuture
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.cancel
-import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
 import app.kaeri.app.KaeriApp
 import app.kaeri.app.R
@@ -99,6 +98,20 @@ class CastService : MediaSessionService() {
     }
 
     override fun onGetSession(controllerInfo: MediaSession.ControllerInfo): MediaSession? = session
+
+    /**
+     * Never brought back by the system after it ended the process: the new process has no cast
+     * to show, so the service goes. The app joins what the TV still plays once it opens and the
+     * TV is found.
+     */
+    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        super.onStartCommand(intent, flags, startId)
+        if (intent == null && !(application as KaeriApp).store.cast.casting.value) {
+            Log.i(KaeriApp.TAG, "no cast to keep up; the cast's session goes")
+            stopSelf(startId)
+        }
+        return START_NOT_STICKY
+    }
 
     /** In the foreground paused too: the stream to the TV goes through this device. */
     override fun onUpdateNotification(session: MediaSession, startInForegroundRequired: Boolean) {
@@ -179,10 +192,11 @@ class CastSessionPlayer(private val context: Context, private val cast: CastMode
             .setAvailableCommands(commands)
             .setDeviceInfo(if (level) LEVEL else FIXED)
             .setDeviceVolume(now?.volume?.toInt()?.coerceIn(0, 100) ?: 0)
-            .setPlayWhenReady(now?.paused == false, Player.PLAY_WHEN_READY_CHANGE_REASON_REMOTE)
+            .setPlayWhenReady(shown?.live == true && now?.paused == false, Player.PLAY_WHEN_READY_CHANGE_REASON_REMOTE)
             .setSeekBackIncrementMs(STEP_MS)
             .setSeekForwardIncrementMs(STEP_MS)
-        if (shown == null || now == null) return state.setPlaybackState(Player.STATE_IDLE).build()
+        // A cast that stopped plays nothing: the system's controls never show it playing on.
+        if (shown == null || now == null || !shown.live) return state.setPlaybackState(Player.STATE_IDLE).build()
         val starting = shown.stage == CastStage.Starting
         // The episode under the title, and which TV it casts to on the line the system shows under them.
         val episode = if (starting || now.episodeLine.isEmpty()) Strings.tvSessionStarting(context, shown.tvName) else now.episodeLine
@@ -273,11 +287,7 @@ class CastKeeper(private val context: Context, cast: CastModel, scope: Coroutine
 
     init {
         scope.launch {
-            kotlinx.coroutines.flow.combine(cast.shown, cast.session) { shown, session ->
-                shown?.stage == CastStage.Starting || shown?.stage == CastStage.Playing || session.state == app.kaeri.store.CastSessionState.Playing
-            }
-                .distinctUntilChanged()
-                .collect { held -> if (held) bind() else unbind() }
+            cast.casting.collect { held -> if (held) bind() else unbind() }
         }
     }
 

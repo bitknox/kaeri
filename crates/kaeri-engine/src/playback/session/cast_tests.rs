@@ -5,7 +5,7 @@
 use std::{sync::Arc, time::Duration};
 
 use kaeri_cast::{
-    CastDevice, CastFailure, DEFAULT_MEDIA_RECEIVER, PlainHttp, Timings,
+    CastDevice, CastFailure, CastPlayer, CastSetup, DEFAULT_MEDIA_RECEIVER, PlainHttp, Timings,
     aac::FakeEncoder,
     fake::{
         FakeOptions, FakeReceiver,
@@ -17,7 +17,12 @@ use kaeri_core::{
     media::Translation,
     stream::{Stream, StreamKind, Subtitle},
 };
-use kaeri_model::{Msg, command::PlayerCommand, event::Event, playback::Ending};
+use kaeri_model::{
+    Msg,
+    command::{Command, PlayerCommand},
+    event::Event,
+    playback::Ending,
+};
 use kaeri_net::HttpClient;
 use kaeri_store::Store;
 use tokio::sync::mpsc;
@@ -96,21 +101,19 @@ impl Rig {
     /// A TV cast to through the Default Media Receiver, as `cast.receiver` can name it: the
     /// relay's conversions and the encoder are what it plays with.
     async fn standard(encoder: bool) -> Self {
-        Self::on(encoder, FakeOptions { speed: 8.0, ..FakeOptions::default() }, true).await
+        Self::on(encoder, FakeOptions { speed: 8.0, ..FakeOptions::default() }, true, timings())
+            .await
     }
 
     async fn with(encoder: bool, options: FakeOptions) -> Self {
-        Self::on(encoder, options, false).await
+        Self::on(encoder, options, false, timings()).await
     }
 
-    async fn on(encoder: bool, options: FakeOptions, standard: bool) -> Self {
+    async fn on(encoder: bool, options: FakeOptions, standard: bool, timings: Timings) -> Self {
         let receiver = FakeReceiver::start(options).await.unwrap();
         let dir = tempfile::tempdir().unwrap();
-        let hub = Arc::new(CastHub::with(
-            Some(dir.path().to_owned()),
-            Arc::new(PlainHttp),
-            timings(),
-        ));
+        let hub =
+            Arc::new(CastHub::with(Some(dir.path().to_owned()), Arc::new(PlainHttp), timings));
         if standard {
             hub.set_receiver(Some(DEFAULT_MEDIA_RECEIVER.into()));
         }
@@ -174,6 +177,21 @@ impl Rig {
     }
 
     async fn play(&self, streams: Vec<Stream>, context: PlaybackContext) -> Vec<Event> {
+        self.run(streams, context, false).await
+    }
+
+    /// [`Self::play`], with the engine's events reaching the hub as they happen, as the
+    /// engine's own loop hands them on: the card knows the episode it casts.
+    async fn play_seen(&self, streams: Vec<Stream>, context: PlaybackContext) -> Vec<Event> {
+        self.run(streams, context, true).await
+    }
+
+    async fn run(
+        &self,
+        streams: Vec<Stream>,
+        context: PlaybackContext,
+        seen: bool,
+    ) -> Vec<Event> {
         let http = HttpClient::offline(&kaeri_core::config::NetworkConfig::default()).unwrap();
         let machine = Machine {
             opener: self.opener.clone(),
@@ -185,6 +203,20 @@ impl Rig {
         };
         let (tx, mut rx) = mpsc::unbounded_channel();
         let (_controls, commands) = mpsc::unbounded_channel::<PlayerCommand>();
+        let (seeing, mut rx) = if seen {
+            let hub = Arc::clone(&self.hub);
+            let seeing = tokio::spawn(async move {
+                let mut events = Vec::new();
+                while let Some(event) = rx.recv().await {
+                    hub.observe(&event);
+                    events.push(event);
+                }
+                events
+            });
+            (Some(seeing), mpsc::unbounded_channel().1)
+        } else {
+            (None, rx)
+        };
         let mut settings = settings();
         settings.subtitle_language = Some("en".into());
         let playing = play(
@@ -200,6 +232,9 @@ impl Rig {
         tokio::time::timeout(Duration::from_secs(30), playing)
             .await
             .expect("the playback ends");
+        if let Some(seeing) = seeing {
+            return seeing.await.unwrap();
+        }
         let mut events = Vec::new();
         while let Ok(event) = rx.try_recv() {
             events.push(event);
@@ -381,7 +416,10 @@ async fn a_tv_taken_over_ends_the_session_and_says_so() {
 
 #[tokio::test(flavor = "multi_thread", worker_threads = 4)]
 async fn a_session_left_running_is_joined_again_once_its_tv_is_found() {
-    let rig = Rig::with(true, FakeOptions { remembers: true, ..FakeOptions::default() }).await;
+    // The fake TV serves one sender at a time: the first run's connection, closed as the next
+    // one comes, is taken for lost rather than made again, as an ended app's would be.
+    let options = FakeOptions { remembers: true, ..FakeOptions::default() };
+    let rig = Rig::on(true, options, false, lost_at_once()).await;
     rig.hub.connect(rig.device());
     session_until(&rig.hub, |v| v.state == SessionState::Connected).await;
 
@@ -408,4 +446,249 @@ async fn a_session_left_running_is_joined_again_once_its_tv_is_found() {
         timings(),
     ));
     assert_eq!(again.left_on(), None);
+}
+
+/// Wait for `want` of the TV a session was left on, as the hub's note says.
+async fn left_until(hub: &CastHub, want: Option<&str>) {
+    let deadline = tokio::time::Instant::now() + Duration::from_secs(10);
+    while hub.left_on().as_deref() != want {
+        assert!(tokio::time::Instant::now() < deadline, "left on {:?}", hub.left_on());
+        tokio::time::sleep(Duration::from_millis(50)).await;
+    }
+}
+
+#[tokio::test(flavor = "multi_thread", worker_threads = 4)]
+async fn a_cast_begun_from_play_on_tv_is_joined_again_after_the_system_ends_the_app() {
+    let options = FakeOptions { remembers: true, ..FakeOptions::default() };
+    let rig = Rig::on(true, options, false, lost_at_once()).await;
+    // Play on TV opens its own player, as a playback link does, with no session behind it.
+    let (player, _events) = CastPlayer::connect(CastSetup {
+        device: rig.device(),
+        memory: rig.hub.memory(),
+        upstream: rig.hub.upstream(),
+        encoder: rig.hub.encoder(),
+        timings: rig.hub.timings(),
+    })
+    .await
+    .unwrap();
+    let player = Arc::new(player);
+    rig.hub.attach(&player);
+    assert_eq!(rig.hub.left_on(), None, "nothing runs on the TV yet");
+    player.launch().await.unwrap();
+    left_until(&rig.hub, Some("tv-1")).await;
+
+    // The system ends the app with the receiver up: a new run over the same files joins it.
+    let later = Arc::new(CastHub::with(
+        Some(rig.dir.path().to_owned()),
+        Arc::new(PlainHttp),
+        timings(),
+    ));
+    assert_eq!(later.left_on().as_deref(), Some("tv-1"));
+    later.rejoin(&rig.device());
+    session_until(&later, |v| v.state == SessionState::Connected).await;
+    assert_eq!(rig.receiver.heard("LAUNCH").len(), 1, "joined, not launched again");
+    assert!(later.disconnect());
+
+    // A cast the viewer stops leaves nothing to join.
+    let again =
+        Rig::with(true, FakeOptions { remembers: true, ..FakeOptions::default() }).await;
+    let (player, _events) = CastPlayer::connect(CastSetup {
+        device: again.device(),
+        memory: again.hub.memory(),
+        upstream: again.hub.upstream(),
+        encoder: again.hub.encoder(),
+        timings: again.hub.timings(),
+    })
+    .await
+    .unwrap();
+    let player = Arc::new(player);
+    again.hub.attach(&player);
+    player.launch().await.unwrap();
+    left_until(&again.hub, Some("tv-1")).await;
+    player.quit().await.unwrap();
+    left_until(&again.hub, None).await;
+}
+
+/// A TV whose silence is noticed after a second, and connected to again for six.
+fn quick_to_notice() -> Timings {
+    Timings { silence: Duration::from_secs(1), reconnect: Duration::from_secs(6), ..timings() }
+}
+
+#[tokio::test(flavor = "multi_thread", worker_threads = 4)]
+async fn a_held_tv_whose_connection_drops_is_connected_to_again_and_stays_held() {
+    let options = FakeOptions { remembers: true, ..FakeOptions::default() };
+    let rig = Rig::on(true, options, false, quick_to_notice()).await;
+    rig.hub.connect(rig.device());
+    session_until(&rig.hub, |v| v.state == SessionState::Connected).await;
+    let connects = rig.receiver.heard("CONNECT").len();
+
+    // The phone is locked and its Wi-Fi naps: the connection dies, the receiver stays up.
+    rig.receiver.drop_connection();
+    let deadline = tokio::time::Instant::now() + Duration::from_secs(8);
+    while rig.receiver.heard("CONNECT").len() <= connects + 1 {
+        assert!(tokio::time::Instant::now() < deadline, "connected again in time");
+        tokio::time::sleep(Duration::from_millis(50)).await;
+    }
+    tokio::time::sleep(Duration::from_millis(1500)).await;
+    let view = rig.hub.session();
+    assert_eq!(view.state, SessionState::Connected, "{view:?}");
+    assert_eq!(view.notice, None);
+    assert_eq!(rig.receiver.heard("LAUNCH").len(), 1, "joined, not launched again");
+    assert!(rig.hub.disconnect());
+}
+
+#[tokio::test(flavor = "multi_thread", worker_threads = 4)]
+async fn an_idle_held_tv_that_closed_the_receiver_meanwhile_is_let_go_quietly() {
+    let rig = Rig::on(true, FakeOptions::default(), false, quick_to_notice()).await;
+    rig.hub.connect(rig.device());
+    session_until(&rig.hub, |v| v.state == SessionState::Connected).await;
+    // A TV that forgets between connections: the receiver is gone on the next one.
+    rig.receiver.drop_connection();
+    let view = session_until(&rig.hub, |v| v.state == SessionState::Idle).await;
+    assert_eq!(view.notice, None);
+    assert_eq!(rig.hub.left_on(), None, "nothing left to join");
+}
+
+#[tokio::test(flavor = "multi_thread", worker_threads = 4)]
+async fn a_held_tv_lost_mid_episode_says_so_and_is_looked_for_once_found_again() {
+    let options = FakeOptions { duration: 600.0, ..FakeOptions::default() };
+    let rig = Arc::new(Rig::on(true, options, false, quick_to_notice()).await);
+    rig.hub.connect(rig.device());
+    session_until(&rig.hub, |v| v.state == SessionState::Connected).await;
+    let file = rig.file("1.mkv", &Fixture::default());
+    let playing = {
+        let rig = Arc::clone(&rig);
+        tokio::spawn(async move { rig.play(vec![file], context("1", None)).await })
+    };
+    session_until(&rig.hub, |v| {
+        v.state == SessionState::Playing && v.item.as_ref().is_some_and(|i| !i.loading)
+    })
+    .await;
+
+    // The connection drops and the TV that answers next has closed the receiver.
+    rig.receiver.drop_connection();
+    let view = session_until(&rig.hub, |v| v.state == SessionState::Error).await;
+    assert_eq!(view.notice, Some(Msg::NoticeCastLost { name: "Living room".into() }));
+    assert!(rig.hub.session_device().is_none(), "plays open here again");
+    let events = playing.await.unwrap();
+    assert_ne!(ending(&events), Some(Ending::Complete { next: None }), "{events:?}");
+    assert_eq!(rig.hub.left_on().as_deref(), Some("tv-1"), "it may still play there");
+
+    // Found again: the session ended lost is looked for, and let go as its receiver is gone.
+    rig.hub.rejoin(&rig.device());
+    session_until(&rig.hub, |v| v.state == SessionState::Idle).await;
+    assert_eq!(rig.hub.left_on(), None);
+}
+
+/// A TV whose dropped connection is taken for lost at once, with no tries to connect again: the
+/// receiver plays on while this device has let it go.
+fn lost_at_once() -> Timings {
+    Timings { silence: Duration::from_secs(1), reconnect: Duration::ZERO, ..timings() }
+}
+
+/// A rig on a TV that keeps its receiver playing across connections, with episode 1 playing on
+/// it, and the playback that drives it.
+async fn playing_on_a_tv_that_plays_on() -> (Arc<Rig>, tokio::task::JoinHandle<Vec<Event>>) {
+    let options = FakeOptions { remembers: true, duration: 600.0, ..FakeOptions::default() };
+    let rig = Arc::new(Rig::on(true, options, false, lost_at_once()).await);
+    rig.hub.found(rig.device());
+    rig.hub.connect(rig.device());
+    session_until(&rig.hub, |v| v.state == SessionState::Connected).await;
+    let file = rig.file("1.mkv", &Fixture::default());
+    // The engine stages the cast before its playback starts, as a play sent to a TV does.
+    rig.hub.observe(&Event::CastStaged {
+        id: AnilistId::new(900_002),
+        title: "Stardust Wayfarer".into(),
+        episode: "1".into(),
+        episode_title: None,
+        speed: 1.0,
+    });
+    let playing = {
+        let rig = Arc::clone(&rig);
+        tokio::spawn(async move { rig.play_seen(vec![file], context("1", None)).await })
+    };
+    session_until(&rig.hub, |v| {
+        v.state == SessionState::Playing && v.item.as_ref().is_some_and(|i| !i.loading)
+    })
+    .await;
+    (rig, playing)
+}
+
+/// A TvSender on the rig's hub, and the commands it sends the engine.
+fn sender_on(rig: &Rig) -> (crate::remote::sender::TvSender, impl FnMut() -> Vec<Command>) {
+    let sender = crate::remote::sender::TvSender::new(
+        kaeri_remote::identity::Identity::generate().unwrap(),
+        kaeri_remote::client::Hello { name: "Phone".into(), app: "kaeri-test/1".into() },
+        kaeri_remote::known::KnownTvs::memory(),
+    );
+    let (engine, sent) = crate::engine::RemoteSender::recording();
+    sender.attach_casting(Arc::clone(&rig.hub), engine);
+    (sender, sent)
+}
+
+#[tokio::test(flavor = "multi_thread", worker_threads = 4)]
+async fn a_tv_picked_again_after_a_lost_connection_joins_the_receiver_still_playing() {
+    let (rig, playing) = playing_on_a_tv_that_plays_on().await;
+    rig.receiver.drop_connection();
+    let view = session_until(&rig.hub, |v| v.state == SessionState::Error).await;
+    assert_eq!(view.notice, Some(Msg::NoticeCastLost { name: "Living room".into() }));
+    playing.await.unwrap();
+    let launches = rig.receiver.heard("LAUNCH").len();
+    let loads = rig.receiver.heard("LOAD").len();
+
+    // Picked again from the cast button: the receiver still plays the episode, and is joined.
+    rig.hub.connect(rig.device());
+    let view = session_until(&rig.hub, |v| v.state == SessionState::Playing).await;
+    assert!(view.item.is_some(), "{view:?}");
+    assert!(view.own_receiver);
+    assert_eq!(rig.receiver.heard("LAUNCH").len(), launches, "joined, never launched again");
+    assert_eq!(rig.receiver.heard("LOAD").len(), loads, "nothing loaded again");
+    assert!(rig.hub.disconnect());
+}
+
+#[tokio::test(flavor = "multi_thread", worker_threads = 4)]
+async fn play_here_after_a_lost_connection_plays_the_episode_on_here() {
+    let (rig, playing) = playing_on_a_tv_that_plays_on().await;
+    let (sender, mut sent) = sender_on(&rig);
+    tokio::time::sleep(Duration::from_millis(500)).await;
+    rig.receiver.drop_connection();
+    session_until(&rig.hub, |v| v.state == SessionState::Error).await;
+    playing.await.unwrap();
+    sent();
+
+    let from = sender.cast_play_here().expect("the episode comes back to play here");
+    assert_eq!(from.episode, "1");
+    assert!(from.position >= 0.0);
+    assert!(sent().iter().any(|c| matches!(c, Command::StopCasting)), "the TV is let go");
+}
+
+#[tokio::test(flavor = "multi_thread", worker_threads = 4)]
+async fn back_after_the_session_ended_away_the_receiver_is_joined_and_plays_on() {
+    let (rig, playing) = playing_on_a_tv_that_plays_on().await;
+    let (sender, mut sent) = sender_on(&rig);
+    // The app leaves the screen: the TV pauses for it.
+    sender.cast_away(true);
+    session_until(&rig.hub, |v| v.item.as_ref().is_some_and(|i| i.paused)).await;
+    // Away long enough that the connection dies and the session ends.
+    rig.receiver.drop_connection();
+    session_until(&rig.hub, |v| v.state == SessionState::Error).await;
+    playing.await.unwrap();
+    sent();
+    let launches = rig.receiver.heard("LAUNCH").len();
+    let loads = rig.receiver.heard("LOAD").len();
+
+    // Back: the receiver still holds the episode where it paused, and plays on.
+    sender.cast_away(false);
+    let view = session_until(&rig.hub, |v| {
+        v.state == SessionState::Playing && v.item.as_ref().is_some_and(|i| !i.paused)
+    })
+    .await;
+    assert!(view.item.is_some());
+    assert_eq!(rig.receiver.heard("LAUNCH").len(), launches, "joined, never launched again");
+    assert_eq!(rig.receiver.heard("LOAD").len(), loads, "never loaded again");
+    assert!(
+        !sent().iter().any(|c| matches!(c, Command::CastTo { .. })),
+        "the episode isn't cast again"
+    );
+    assert!(rig.hub.disconnect());
 }

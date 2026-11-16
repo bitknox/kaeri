@@ -189,6 +189,14 @@ pub struct FakeReceiver {
 enum Control {
     TakeOver,
     Silence,
+    /// This connection only: the TV goes on and answers the next.
+    Drop,
+    /// This connection is closed, and the TV goes on and answers the next.
+    Close,
+    /// The receiver app is stopped on the TV.
+    StopApp,
+    /// Another sender loads its own file on the same receiver session.
+    LoadElsewhere,
     Buffering(bool),
     Say(Value),
 }
@@ -285,10 +293,17 @@ impl FakeReceiver {
                 // One sender at a time, as the tests have it; the next connection takes over.
                 let mut current: Option<JoinHandle<()>> = None;
                 let mut forward: Option<mpsc::UnboundedSender<Control>> = None;
+                // Gone silent, the TV answers no connection again: the socket is held unread.
+                let mut gone = false;
+                let mut held = Vec::new();
                 loop {
                     tokio::select! {
                         accepted = listener.accept() => {
                             let Ok((socket, _)) = accepted else { return };
+                            if gone {
+                                held.push(socket);
+                                continue;
+                            }
                             let acceptor = acceptor.clone();
                             let (heard, fetched, options, kept) = (
                                 Arc::clone(&heard),
@@ -308,6 +323,7 @@ impl FakeReceiver {
                             }));
                         }
                         Some(control) = controls.recv() => {
+                            gone |= matches!(control, Control::Silence);
                             if let Some(forward) = &forward {
                                 let _ = forward.send(control);
                             }
@@ -337,10 +353,33 @@ impl FakeReceiver {
         let _ = self.control.send(Control::TakeOver);
     }
 
+    /// Another sender loads its own file on the receiver session this one plays on.
+    pub fn load_elsewhere(&self) {
+        let _ = self.control.send(Control::LoadElsewhere);
+    }
+
     /// Say nothing more and read nothing more, with the connection left open: a TV switched
-    /// off at the wall, or gone from the Wi-Fi, which sends no FIN.
+    /// off at the wall, or gone from the Wi-Fi, which sends no FIN. It answers no connection again.
     pub fn go_silent(&self) {
         let _ = self.control.send(Control::Silence);
+    }
+
+    /// The connection this sender holds goes dead, unanswered and with no FIN, while the TV plays
+    /// on and answers the next one: a phone whose Wi-Fi naps with the screen off.
+    pub fn drop_connection(&self) {
+        let _ = self.control.send(Control::Drop);
+    }
+
+    /// The receiver app is stopped on the TV, with its remote or from another phone's Cast card:
+    /// no app runs afterwards.
+    pub fn stop_app(&self) {
+        let _ = self.control.send(Control::StopApp);
+    }
+
+    /// The TV closes the connection this sender holds, with a FIN, and plays on and answers the
+    /// next one: a TV that drops its senders when its Wi-Fi roams.
+    pub fn close_connection(&self) {
+        let _ = self.control.send(Control::Close);
     }
 
     /// Wait for data, or stop waiting, and say so as the receiver's Shaka player does:
@@ -432,10 +471,34 @@ async fn serve(
                     playing = None;
                     send("receiver-0", "*", NS_RECEIVER, receiver_status(&app, 0, level, muted));
                 }
-                Control::Silence => {
+                Control::Silence | Control::Drop => {
                     // Holding the socket, the writer and all, and never touching it again.
                     let _held = (&read, &tx);
                     std::future::pending::<()>().await;
+                }
+                // Kept above, so the next connection finds the TV as it was.
+                Control::Close => return Ok(()),
+                Control::StopApp => {
+                    app = None;
+                    playing = None;
+                    send("receiver-0", "*", NS_RECEIVER, receiver_status(&app, 0, level, muted));
+                }
+                Control::LoadElsewhere => {
+                    if let Some(old) = playing.take() {
+                        send(&transport, "*", NS_MEDIA, json!({"type": "MEDIA_STATUS", "requestId": 0,
+                            "status": [old.status(Some("INTERRUPTED"), &volume(level, muted))]}));
+                        let theirs = Playing {
+                            session: next_session,
+                            url: "http://elsewhere.example/theirs.mp4".into(),
+                            position: 0.0,
+                            since: Instant::now(),
+                            ..old
+                        };
+                        next_session += 1;
+                        send(&transport, "*", NS_MEDIA, json!({"type": "MEDIA_STATUS", "requestId": 0,
+                            "status": [theirs.status(None, &volume(level, muted))]}));
+                        playing = Some(theirs);
+                    }
                 }
                 Control::Buffering(waiting) => {
                     if let Some(p) = playing.as_mut() {

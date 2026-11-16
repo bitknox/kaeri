@@ -311,6 +311,10 @@ libmpv draws with the GPU into its own layer, and Picture in Picture accepts onl
 - Audio: an AirPlay button (`AVRoutePickerView`) sends mpv's audio to AirPlay speakers and headphones.
 - Video: AirPlay video needs `AVPlayer` and a stream the receiver fetches by itself, which rules out MKV, ASS subtitles and the local stream proxy, so v1 has none. Screen mirroring works from Control Center, and a later external display scene will put the video full screen on a mirrored Apple TV while the phone shows the controls.
 
+### Casting
+
+- On every touch platform the cast drawer opens and closes by drag as well as by tap: up from the mini player opens the remote, and down on the remote outside its sliders closes it, following the finger and settling with the release's speed.
+
 ### Now Playing and remote commands
 
 `MPNowPlayingInfoCenter` and `MPRemoteCommandCenter` are set while a playback exists and cleared on Stop.
