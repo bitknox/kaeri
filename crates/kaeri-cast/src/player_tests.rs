@@ -1304,7 +1304,11 @@ fn what_was_asked_holds_until_a_status_agrees_or_a_while_has_passed() {
     let mut after = media_status("PAUSED", 300.4);
     after.volume = Some(0.2);
     want.media(&after);
-    assert!(want.paused.is_none() && want.position.is_none() && want.level.is_none());
+    assert!(want.paused.is_none() && want.position.is_none());
+    // The stream's volume in a media status is not the TV's: only the receiver confirms it.
+    assert!(want.level.is_some(), "a media status never confirms the TV's volume");
+    want.volume(Some(0.2), None);
+    assert!(want.level.is_none());
 
     let long_ago = Instant::now().checked_sub(CONFIRM).unwrap();
     let mut want = Wanted { paused: Some((true, long_ago)), ..Wanted::default() };
