@@ -8,6 +8,7 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestScope
+import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
@@ -358,7 +359,8 @@ class CastModelTest {
         cast.cast(row, request)
         cast.closeCard()
         val said = mutableListOf<CastEnded>()
-        backgroundScope.launch { cast.ended.collect { said += it } }
+        // Collected as it is said: advanceUntilIdle stops once only background work is left.
+        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { cast.ended.collect { said += it } }
         runCurrent()
         link.cards.send(card(loading = false, over = true, notice = Msg.NoticeCastLost("Living room")))
         advanceUntilIdle()
