@@ -485,13 +485,85 @@ extension CastTests {
     }
 }
 
+extension CastTests {
+    /// The hunt's steps: cast, open the controller, the cast is stopped on the TV, then Choose
+    /// another TV and the same TV again. The pick plays the episode on from where it was.
+    @Test func chooseAnotherTvAfterAStopFromOutsideCarriesTheEpisodeToThePick() async throws {
+        let tv = TVRemoteModel()
+        let model = tv.cast
+        let link = RecordingLink()
+        model.link = link
+        let session = FixtureCastSession(name: "Living room", request: request, episodeLine: "Episode 3")
+        model.opener = { _, _ in session }
+        model.cast("cast:living", name: "Living room", request: request)
+        play(session)
+        try await waitFor { model.stage == .playing }
+        model.expanded = true
+        session.change {
+            $0.notice = .noticeCastStoppedElsewhere(name: "Living room")
+            $0.over = true
+        }
+        try await waitFor { model.stage == .stopped }
+        #expect(model.actions == [.playHere, .chooseAnotherTV])
+
+        tv.chooseAnotherTV()
+        #expect(!model.expanded)
+        #expect(!model.active, "the stopped card goes with the controller")
+        #expect(model.chooserShown)
+
+        tv.connectFromChooser(row("living", "Living room"))
+        #expect(link.connects.map(\.key) == ["cast:living"])
+        let from = try #require(link.connects.first?.from)
+        #expect(from.id == 900_001)
+        #expect(from.episode == "3")
+        #expect(from.position == 492)
+        #expect(tv.request == nil)
+        #expect(!model.chooserShown)
+        #expect(model.expandOnPlay, "the controller opens once the TV plays")
+    }
+
+    @Test func chooseAnotherTvWhileItPlaysCarriesTheEpisodeFromTheTvsPlayhead() {
+        let tv = TVRemoteModel()
+        let link = RecordingLink()
+        tv.cast.link = link
+        tv.cast.take(view: Self.view(.playing, item: Self.item(at: 600)))
+        tv.chooseAnotherTV()
+        #expect(tv.request?.episode == "3")
+        #expect((tv.request?.from ?? 0) >= 600)
+
+        tv.connectFromChooser(row("kitchen", "Kitchen"))
+        #expect(link.connects.map(\.key) == ["cast:kitchen"])
+        #expect(link.connects.first?.from?.id == 900_001)
+        #expect((link.connects.first?.from?.position ?? 0) >= 600)
+    }
+
+    @Test func theCastButtonsChooserCarriesNothing() {
+        let tv = TVRemoteModel()
+        let link = RecordingLink()
+        tv.cast.link = link
+        tv.cast.take(view: Self.view(.playing, item: Self.item(at: 600)))
+        // Choose another TV, closed with no pick, then the TV let go.
+        tv.chooseAnotherTV()
+        tv.cast.chooserShown = false
+        tv.cast.disconnect()
+
+        tv.castButtonTapped()
+        #expect(tv.cast.chooserShown)
+        #expect(tv.request == nil)
+        tv.connectFromChooser(row("kitchen", "Kitchen"))
+        #expect(link.connects.count == 1)
+        #expect(link.connects.first?.from == nil)
+    }
+}
+
 /// A link that records what the model tells the engine of the app's place.
 private final class RecordingLink: CastSessionLink, @unchecked Sendable {
     var aways: [Bool] = []
+    var connects: [(key: String, from: FfiCastFrom?)] = []
 
     func state() -> FfiCastSessionView { CastTests.view(.idle) }
     func next() async -> FfiCastSessionView? { nil }
-    func connect(key: String, from: FfiCastFrom?) throws {}
+    func connect(key: String, from: FfiCastFrom?) throws { connects.append((key, from)) }
     func disconnect() {}
     func playHere() -> FfiCastFrom? { nil }
     func command(_ command: FfiTvCommand) {}

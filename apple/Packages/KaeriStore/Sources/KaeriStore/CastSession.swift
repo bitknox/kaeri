@@ -402,6 +402,15 @@ extension CastModel {
         }
     }
 
+    /// What Choose another TV carries to the TV picked next: the episode the TV plays, from
+    /// where it is now, or once the cast ended, the one it played and where it was.
+    public var anotherTVPlay: TVPlayRequest? {
+        if itemLive, let item, let id = item.id, let episode = item.episode {
+            return TVPlayRequest(id: id, title: item.title, episode: episode, from: itemPosition())
+        }
+        return (active ? carried : nil) ?? lastPlayed
+    }
+
     /// iPhone and iPad: the app leaves the screen, or is back.
     public func scene(active: Bool) {
         inBackground = !active
@@ -484,15 +493,32 @@ extension TVRemoteModel {
         } else if connected != nil {
             openRemote()
         } else {
+            request = nil
             cast.chooserShown = true
         }
     }
 
+    /// Choose another TV, from the cast's controller: the controller closes and the chooser opens,
+    /// carrying the episode from where the TV is, so the TV picked plays it on from there. What
+    /// it carries is read first, as the card of a cast that ended goes with the controller.
+    public func chooseAnotherTV() {
+        request = cast.anotherTVPlay
+        cast.expanded = false
+        cast.chooserShown = true
+    }
+
+    /// A Chromecast row picked in the chooser: it connects, and plays there what Choose another
+    /// TV carried. One that could not connect keeps it for the next pick.
+    public func connectFromChooser(_ row: FfiCastRow) {
+        cast.connect(row, play: request)
+        if cast.problem == nil { request = nil }
+    }
+
     /// A Kaeri TV picked in the chooser: a paired one connects, a new one pairs in the sheet.
+    /// What Choose another TV carried plays there, as a Chromecast row plays it.
     public func chooseFromChooser(_ row: FfiTvRow) {
         cast.chooserShown = false
         if cast.connected { cast.disconnect() }
-        request = nil
         switch row.kind {
         case .paired, .pairedAway:
             choose(row)

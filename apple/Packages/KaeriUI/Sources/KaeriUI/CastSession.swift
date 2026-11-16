@@ -193,7 +193,7 @@ struct CastChooser: View {
                             CastGroupBox {
                                 ForEach(tv.cast.rows) { shown in
                                     CastChooserRow(name: shown.row.name, line: CastWords.route(shown.row), gone: shown.gone) {
-                                        tv.cast.connect(shown.row)
+                                        tv.connectFromChooser(shown.row)
                                     }
                                 }
                             }
@@ -920,11 +920,7 @@ struct CastSessionFooter: View {
                 }
             }
             Menu {
-                Button(L.tvChooseAnother) {
-                    close()
-                    cast.expanded = false
-                    cast.chooserShown = true
-                }
+                Button(L.tvChooseAnother) { store.tv.chooseAnotherTV() }
                 if idle {
                     Button(L.actionDisconnect) {
                         close()
@@ -995,8 +991,8 @@ struct CastSessionFooter: View {
         case .tryAgain:
             cast.tryAgain()
         case .chooseAnotherTV:
-            close()
-            cast.chooserShown = true
+            // The chooser carries the episode on from where the TV is, and closes the controller.
+            store.tv.chooseAnotherTV()
         }
     }
 }
