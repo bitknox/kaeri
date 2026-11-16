@@ -188,7 +188,7 @@ extension PlayerModel {
             "another-stream": .anotherStream, "buffering-torrent": .bufferingTorrent,
             "buffering-direct": .bufferingDirect, "offline": .offline, "offline-timed-out": .offlineTimedOut,
             "failed-no-episode": .failedNoEpisode,
-            "failed-no-match": .failedNoMatch, "failed-no-sources": .failedNoSources, "failed-not-aired": .failedNotAired,
+            "failed-no-match": .failedNoMatch, "failed-unreached": .failedUnreached, "failed-no-sources": .failedNoSources, "failed-not-aired": .failedNotAired,
         ]
         guard let state = Self.startParameter("state").flatMap({ states[$0] }) else { return false }
         let hold = Self.startParameter("at").flatMap(Double.init) ?? 2

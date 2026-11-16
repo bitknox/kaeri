@@ -298,6 +298,10 @@ class PlayerModel(
     var sourceChoices by mutableStateOf<List<SourceCandidate>?>(null)
         private set
 
+    /** With no release listed, what each source said, by the name it goes by. */
+    var sourceMisses by mutableStateOf<List<app.kaeri.engine.model.MissedListing>>(emptyList())
+        private set
+
     /** The player closed before a frame: waiting for the engine to say whether it failed. */
     private var verdictPending = false
 
@@ -545,6 +549,7 @@ class PlayerModel(
                     failure = PlaybackFailure(
                         staged?.id, startingEpisode!!, failedWith?.let(PlaybackFailure::reason), told?.text ?: failedMsg,
                         why = told?.why, trail = progress, endedAt = now(), asked = told?.asked.orEmpty(),
+                        unreached = told?.unreached.orEmpty(), heldBack = told?.heldBack.orEmpty(),
                     )
                     progress = null
                     failedWith = null
@@ -558,7 +563,10 @@ class PlayerModel(
                     dismiss()
                 }
             }
-            is Event.Sources -> if (choosingSource) sourceChoices = event.candidates
+            is Event.Sources -> if (choosingSource) {
+                sourceChoices = event.candidates
+                sourceMisses = event.missed
+            }
             // The summary the engine says as it changes, and the panel's rows while it is up.
             is Event.PlayerStats -> if (accepts(event.playback) && event.playback >= (playback ?: event.playback)) {
                 statsSummary = event.stats.summary

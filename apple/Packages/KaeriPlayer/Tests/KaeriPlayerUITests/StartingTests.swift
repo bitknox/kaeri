@@ -27,7 +27,7 @@ struct CouldNotPlayTests {
         rig.model.chooseSource()
         #expect(rig.sent.last == .loadSources(id: 900_001, episode: "7"))
         #expect(rig.model.choosingSource && rig.model.sourceChoices == nil)
-        rig.model.apply(.sources(id: 900_001, episode: "7", candidates: [Self.candidate]))
+        rig.model.apply(.sources(id: 900_001, episode: "7", candidates: [Self.candidate], missed: []))
         #expect(rig.model.sourceChoices == [Self.candidate])
         rig.model.play(Self.candidate)
         #expect(rig.sent.last == .playSource(id: 900_001, episode: "7", providerId: "lantern-archive", sourceId: "release-2"))

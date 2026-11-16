@@ -122,6 +122,10 @@ data class PlaybackFailure(
     val endedAt: Long = 0L,
     /** The names of the sources that were asked, in order. */
     val asked: List<String> = emptyList(),
+    /** The names of the sources that failed, took too long or were held back: Try again may reach them. */
+    val unreached: List<String> = emptyList(),
+    /** The sources held back by a setting or a check, never asked, by why. */
+    val heldBack: List<app.kaeri.engine.model.HeldSources> = emptyList(),
 ) {
     /** The cause behind [msg], when the engine gave one. */
     val cause: app.kaeri.engine.model.Cause?

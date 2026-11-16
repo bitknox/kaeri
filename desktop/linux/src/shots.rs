@@ -1422,6 +1422,7 @@ fn start_state(shot: &str) -> Option<(kaeri_model::starting::StartingFixture, f6
         "offline-timed-out" => S::OfflineTimedOut,
         "failed-no-episode" => S::FailedNoEpisode,
         "failed-no-match" => S::FailedNoMatch,
+        "failed-unreached" => S::FailedUnreached,
         "failed-no-sources" => S::FailedNoSources,
         "failed-not-aired" => S::FailedNotAired,
         _ => return None,

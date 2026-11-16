@@ -103,9 +103,13 @@ struct StartingStepsTests {
     }
 
     @Test func skipWaitsForAnotherSourceToTry() {
-        let rig = run(.sourcesResting, to: 12)
-        // One of two sources asked: another is left, so skipping is offered.
-        #expect(rig.model.walk?.actions(at: rig.model.clock).contains(.skip("Skip Alpha")) == true)
+        let rig = run(.slow, to: 12)
+        // Two of three sources asked: another is left, so skipping is offered.
+        #expect(rig.model.walk?.actions(at: rig.model.clock).contains(.skip("Skip Brook")) == true)
+        // The resting source is asked last, so with it under way nothing is left to skip to.
+        let resting = run(.sourcesResting, to: 12)
+        #expect(lines(resting).step == "Asking Kumo")
+        #expect(resting.model.walk?.actions(at: resting.model.clock).contains { if case .skip = $0 { true } else { false } } == false)
         let last = run(.failedNoMatch, to: 1.2)
         #expect(last.model.walk?.actions(at: last.model.clock).contains { if case .skip = $0 { true } else { false } } == false)
     }
@@ -184,6 +188,7 @@ struct StartingStepsTests {
     @Test(arguments: [
         (StartingFixture.failedNoEpisode, StartFailureView.Lead.chooseSource),
         (.failedNoMatch, .fixMatch),
+        (.failedUnreached, .tryAgain),
         (.failedNoSources, .addStore),
         (.failedNotAired, .close),
     ])
@@ -204,6 +209,21 @@ struct StartingStepsTests {
         #expect(rig.model.failure?.view.detail == "No source has episode 7. Alpha and Brook were asked.")
         let none = run(.failedNoSources, to: 3)
         #expect(none.model.failure?.view.asked == nil)
+    }
+
+    @Test func aSourceThatFailedOrWasHeldBackIsOneNotReached() {
+        let rig = run(.failedUnreached, to: 3)
+        let view = rig.model.failure?.view
+        #expect(view?.reason == "Couldn't reach Alpha and Harbor.")
+        #expect(view?.asked == "Alpha and Brook were asked.")
+        #expect(view?.notAsked == ["Harbor wasn't asked: torrent playback is off."])
+        #expect(view?.detail.contains("No source has") == false)
+        #expect(view?.lead == .tryAgain)
+        // Held back, so never asked: a row of its own after the asked ones, with no time.
+        let rows = rig.model.walk?.detailRows ?? []
+        #expect(rows.last?.title == "Harbor · Not asked · Torrent playback is off")
+        #expect(rows.last?.kind == .resting)
+        #expect(rows.last?.took == nil)
     }
 
     @Test func offlineWaitsOnTheEnginesStepAndStartsOnReconnect() {
@@ -273,7 +293,7 @@ struct StartingStepsTests {
         let all: [StartingFixture] = [
             .titleLookup, .sourcesLoading, .askingFirst, .askingPinned, .sourceMissed, .sourceFailed, .sourcesResting,
             .slow, .findingPeers, .peersKnown, .found, .fetchingSubtitles, .anotherStream, .bufferingTorrent,
-            .bufferingDirect, .offline, .offlineTimedOut, .failedNoEpisode, .failedNoMatch, .failedNoSources, .failedNotAired,
+            .bufferingDirect, .offline, .offlineTimedOut, .failedNoEpisode, .failedNoMatch, .failedUnreached, .failedNoSources, .failedNotAired,
         ]
         for state in all {
             let rig = run(state, to: 30)

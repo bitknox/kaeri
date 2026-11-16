@@ -151,7 +151,7 @@ extension PlayerModel {
                     SourceCandidate(
                         id: "b", providerId: "night-index", title: "Stardust Wayfarer 07 720p", quality: 720, // i18n-skip
                         label: "night-index", size: "640 MiB", dualAudio: false, dubbed: false, autoPick: false), // i18n-skip
-                ]))
+                ], missed: []))
                 guard await partyWaited(20, { party.choice != .looking }) else { return false }
             }
             try? await Task.sleep(for: .milliseconds(900))

@@ -58,6 +58,8 @@ public enum PartyLeaving: Sendable {
 public enum PartySourceChoice: Equatable, Sendable {
     case looking
     case listed([SourceCandidate])
+    /// None listed the episode: what each source said, by the name it goes by.
+    case missed([MissedListing])
     /// The engine said why it found nothing, as an alert rather than an empty list.
     case failed(String)
 }
@@ -392,9 +394,9 @@ public final class PartyModel {
             if lobby != nil, !playerUp() { break }
             noSource = PartyNoSourceAsk(id: id, episode: episode, why: why, reason: reason)
             choice = nil
-        case .sources(let id, let episode, let candidates):
+        case .sources(let id, let episode, let candidates, let missed):
             if choice == .looking, let noSource, noSource.id == id, noSource.episode == episode {
-                choice = .listed(candidates)
+                choice = candidates.isEmpty && !missed.isEmpty ? .missed(missed) : .listed(candidates)
             }
         case .toast(let notice):
             if choice == .looking, notice.kind == .alert {
