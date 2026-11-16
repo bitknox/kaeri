@@ -4390,6 +4390,7 @@
     <string name="tv_status_playing">Đang phát trên %1$s</string>
     <string name="tv_status_connecting">Đang kết nối tới %1$s</string>
     <string name="tv_status_reconnecting">Đang kết nối lại tới %1$s</string>
+    <string name="tv_waiting_for">Đang chờ %1$s</string>
     <string name="tv_status_connected">Đã kết nối</string>
     <string name="tv_search_on_tv">Tìm kiếm trên TV</string>
     <string name="tv_type_search">Nhập từ khóa tìm kiếm</string>

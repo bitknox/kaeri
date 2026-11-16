@@ -25136,6 +25136,11 @@ pub fn tv_status_reconnecting(name: &str) -> String {
     text("tv-status-reconnecting", &[("name", Arg::Text(name))])
 }
 
+/// Status on the remote and the cast mini player while the TV waits: for the stream, or while the app learns why the TV stopped the cast. On Windows also while pairing, until the named TV answers.
+pub fn tv_waiting_for(name: &str) -> String {
+    text("tv-waiting-for", &[("name", Arg::Text(name))])
+}
+
 /// Status on the remote: connected.
 pub fn tv_status_connected() -> String {
     text("tv-status-connected", &[])

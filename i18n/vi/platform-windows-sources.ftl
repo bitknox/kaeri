@@ -6,7 +6,6 @@ tv-unnamed = TV
 tv-another-short = TV khác…
 tv-volume-label = Âm lượng TV
 tv-waiting = Đang chờ TV
-tv-waiting-for = Đang chờ { $name }
 tv-row-name = { $name }, { $detail }
 tv-row-name-connected = { $name }, { $detail }, đã kết nối
 tv-row-pair-help = Ghép đôi với TV này
