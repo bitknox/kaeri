@@ -14,11 +14,13 @@ namespace Kaeri.Windows.Pages;
 /// The five states of one place on a page, after the spec: nothing for the first 600 ms, then
 /// static placeholders in the real layout, the job's activity line under them past 4 s, one
 /// crossfade to the content, and in place of content an empty state, "You're offline" or a
-/// failure with Try again. The first child (from XAML) is the content.
+/// failure with Try again. The first child (from XAML) is the content. A place on the title page
+/// takes <see cref="PlaceholderTiming.TitlePage"/>: its placeholders come at once and give way
+/// the moment the content lands.
 /// </summary>
 public sealed partial class StateHost : Grid
 {
-    static readonly TimeSpan Silence = TimeSpan.FromMilliseconds(600), Activity = TimeSpan.FromSeconds(4), Least = TimeSpan.FromMilliseconds(300);
+    static readonly TimeSpan Activity = TimeSpan.FromSeconds(4);
 
     readonly DispatcherQueueTimer silence, activity;
     readonly StackPanel waiting = new() { Spacing = 12, Visibility = Visibility.Collapsed };
@@ -29,11 +31,25 @@ public sealed partial class StateHost : Grid
 
     public StateHost()
     {
-        silence = Timers.Weak(this, Silence, false, static host => host.ShowWaiting());
+        silence = Timers.Weak(this, timing.After, false, static host => host.ShowWaiting());
         activity = Timers.Weak(this, Activity, false, static host => Motion.Show(host.activityLine));
         activityLine = Ui.Text("", "HazeCaptionStyle");
         activityLine.Visibility = Visibility.Collapsed;
         AutomationProperties.SetLiveSetting(activityLine, AutomationLiveSetting.Polite);
+    }
+
+    PlaceholderTiming timing = PlaceholderTiming.Elsewhere;
+
+    /// <summary>When the placeholders come and how long they stay: 600 ms and 0.3 s unless the page says otherwise.</summary>
+    public PlaceholderTiming Timing
+    {
+        get => timing;
+        set
+        {
+            timing = value;
+            if (!value.AtOnce)
+                silence.Interval = value.After;
+        }
     }
 
     /// <summary>Builds the placeholders in the content's layout.</summary>
@@ -66,6 +82,13 @@ public sealed partial class StateHost : Grid
     /// </summary>
     public void Wait(bool hasContent = false)
     {
+        // Placeholders from the first frame: no wait to start.
+        if (timing.AtOnce && !hasContent)
+        {
+            if (!(loading && placeholdersShown))
+                WaitNow();
+            return;
+        }
         Layer();
         // Already waiting: a second ask does not restart the 600 ms.
         if (loading && !hasContent && (silence.IsRunning || placeholdersShown))
@@ -83,11 +106,12 @@ public sealed partial class StateHost : Grid
     /// <summary>
     /// A new load in place of what shows, such as another season or other filters: what shows
     /// stays for the first 600 ms, then gives way to the placeholders. With nothing showing, the
-    /// placeholders come at once, in the content's own size, so the place is never blank.
+    /// placeholders come at once, in the content's own size, so the place is never blank. On the
+    /// title page they come at once either way.
     /// </summary>
     public void WaitKeeping(bool showing)
     {
-        if (!showing)
+        if (!showing || timing.AtOnce)
         {
             if (!(loading && placeholdersShown))
                 WaitNow();
@@ -194,9 +218,10 @@ public sealed partial class StateHost : Grid
 
     /// <summary>
     /// Ends a load with the content (<paramref name="state"/> null) or a state in its place. When
-    /// the placeholders showed, they stay their 0.3 s and then give way in one crossfade on the
-    /// standard token; otherwise the answer simply shows. A state already showing is replaced in
-    /// place, without fading out and in again. The last answer wins, also inside the 0.3 s.
+    /// the placeholders showed, they stay their hold (0.3 s, none on the title page) and then give
+    /// way in one crossfade on the standard token; otherwise the answer simply shows. A state
+    /// already showing is replaced in place, without fading out and in again. The last answer
+    /// wins, also inside the hold.
     /// </summary>
     async void Settle(UIElement? state)
     {
@@ -209,7 +234,7 @@ public sealed partial class StateHost : Grid
             Motion.Set(message, false);
         if (placeholdersShown)
         {
-            var left = Least - (DateTimeOffset.UtcNow - placeholdersSince);
+            var left = timing.Left(DateTimeOffset.UtcNow - placeholdersSince);
             if (left > TimeSpan.Zero)
                 await Task.Delay(left);
             // A later load or a later answer has this in hand.
@@ -434,6 +459,37 @@ static partial class States
         }
         AutomationProperties.SetAccessibilityView(panel, AccessibilityView.Raw);
         return panel;
+    }
+
+    /// <summary>
+    /// Plates for lines of text, one bar to a line of <paramref name="lineHeight"/>, as wide as the
+    /// place up to <paramref name="width"/> and the last line three fifths of that, so text that
+    /// replaces them takes the room they kept.
+    /// </summary>
+    public static Grid Lines(int lines, double width, double lineHeight = 20, double bar = 12)
+    {
+        var grid = new Grid();
+        grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star), MaxWidth = width });
+        var stack = new StackPanel();
+        for (var i = 0; i < lines; i++)
+        {
+            var line = new Grid { Height = lineHeight };
+            var last = i == lines - 1 && lines > 1;
+            line.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(last ? 3 : 1, GridUnitType.Star) });
+            if (last)
+                line.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(2, GridUnitType.Star) });
+            line.Children.Add(new Border
+            {
+                Height = bar,
+                CornerRadius = new CornerRadius(3),
+                VerticalAlignment = VerticalAlignment.Center,
+                Background = Ui.Res<Brush>("RaisedBrush"),
+            });
+            stack.Children.Add(line);
+        }
+        grid.Children.Add(stack);
+        AutomationProperties.SetAccessibilityView(grid, AccessibilityView.Raw);
+        return grid;
     }
 
     /// <summary>A section heading's plate, where <see cref="Ui.Heading"/> would sit.</summary>

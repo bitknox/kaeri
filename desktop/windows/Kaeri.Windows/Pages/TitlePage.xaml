@@ -153,15 +153,25 @@
                 <Ellipse Width="7" Height="7" Fill="{ThemeResource WaterBrush}" VerticalAlignment="Center" />
                 <TextBlock x:Name="CastLineText" Style="{StaticResource HazeBodyStyle}" TextTrimming="CharacterEllipsis" />
               </StackPanel>
-              <!-- Services that have the title: Also on, or Listed on with a way to choose yours. -->
-              <StackPanel x:Name="AvailLine" Orientation="Horizontal" Spacing="2" Margin="0,6,0,0" Visibility="Collapsed" />
+              <!-- Services that have the title: Also on, or Listed on with a way to choose yours. Until the
+                   sources answer, a placeholder line keeps its room, and the line crossfades over it where
+                   it stands, or the room closes in the same crossfade when the answer has no line. -->
+              <Grid x:Name="AvailRoom" Padding="0,6,0,0" Visibility="Collapsed">
+                <StackPanel x:Name="AvailLine" Orientation="Horizontal" Spacing="2" Visibility="Collapsed" />
+                <Border x:Name="AvailHeld" VerticalAlignment="Top" Visibility="Collapsed" AutomationProperties.AccessibilityView="Raw" />
+              </Grid>
             </StackPanel>
           </Grid>
 
           <StackPanel>
-            <TextBlock x:Name="Synopsis" Style="{StaticResource BodyTextBlockStyle}" TextWrapping="WrapWholeWords" MaxLines="8"
-                       TextTrimming="WordEllipsis" MaxWidth="720" HorizontalAlignment="Left"
-                       IsTextTrimmedChanged="OnSynopsisTrimmed" />
+            <!-- The synopsis, and its room as plates while only the title's own page brings it: the
+                 two share a cell, so the text crossfades over them where they stand. -->
+            <Grid>
+              <TextBlock x:Name="Synopsis" Style="{StaticResource BodyTextBlockStyle}" TextWrapping="WrapWholeWords" MaxLines="8"
+                         TextTrimming="WordEllipsis" MaxWidth="720" HorizontalAlignment="Left"
+                         IsTextTrimmedChanged="OnSynopsisTrimmed" />
+              <Border x:Name="SynopsisHeld" Visibility="Collapsed" AutomationProperties.AccessibilityView="Raw" />
+            </Grid>
             <HyperlinkButton x:Name="SynopsisMore" Style="{StaticResource SilkLinkLeadingStyle}" Visibility="Collapsed" Click="OnSynopsisMore"
                              Content="{x:Bind s:T.ActionMore}" AutomationProperties.Name="{x:Bind s:T.TitleSynopsisMore}" />
             <!-- The demo's credit block, wherever the work shows as a title. -->

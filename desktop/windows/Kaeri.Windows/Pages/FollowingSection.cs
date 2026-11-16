@@ -13,9 +13,10 @@ namespace Kaeri.Windows.Pages;
 /// <summary>
 /// People you follow, at the end of the title page's details column: the heading, "From
 /// AniList", five people (picture, name, line, score at the end), then Show all 10, which grows
-/// the list in place. While AniList is slow to answer, two placeholder rows from 600 ms, held at
-/// least 0.3 s, then one crossfade to the people. Nobody followed has the show: no section.
-/// The page keeps one and puts its <see cref="Root"/> back each time it lays the column.
+/// the list in place. While AniList has not answered, two placeholder rows on the timing the page
+/// gives (the title page's: at once, with no hold), then one crossfade to the people. Nobody
+/// followed has the show: no section. The page keeps one and puts its <see cref="Root"/> back
+/// each time it lays the column.
 /// </summary>
 sealed class FollowingSection
 {
@@ -23,6 +24,7 @@ sealed class FollowingSection
 
     readonly Ctx ctx;
     readonly DispatcherQueueTimer wait;
+    readonly PlaceholderTiming timing;
 
     /// <summary>The section's place in the column: the placeholders and the people in one cell, for the crossfade.</summary>
     public Grid Root { get; } = new() { Margin = new Thickness(0, 4, 0, 0), Visibility = Visibility.Collapsed };
@@ -39,14 +41,17 @@ sealed class FollowingSection
     int turn;
     DateTime placeholdersAt;
 
-    public FollowingSection(Ctx ctx, DispatcherQueue queue)
+    public FollowingSection(Ctx ctx, DispatcherQueue queue, PlaceholderTiming timing)
     {
         this.ctx = ctx;
+        this.timing = timing;
         Root.Children.Add(placeholders);
         Root.Children.Add(section);
         wait = queue.CreateTimer();
         wait.IsRepeating = false;
-        wait.Interval = TimeSpan.FromMilliseconds(600);
+        // At once, the placeholders come without the timer.
+        if (!timing.AtOnce)
+            wait.Interval = timing.After;
         wait.Tick += (_, _) => ShowPlaceholders();
     }
 
@@ -67,12 +72,13 @@ sealed class FollowingSection
 
     /// <summary>
     /// What the page now has: the people when AniList answered with some, the placeholders while
-    /// it has not answered and the page asks, and nothing otherwise.
+    /// it has not answered and the page asks, and nothing otherwise. <paramref name="ended"/>: the
+    /// page's fetch is over, so no answer is coming.
     /// </summary>
-    public void Update(Entry? entry)
+    public void Update(Entry? entry, bool ended = false)
     {
         var people = entry?.Detail?.Following ?? [];
-        var answered = entry?.Detail is { Partial: false };
+        var answered = ended || entry?.Detail is { Partial: false };
         if (people.Length > 0)
             Present(people);
         else if (!answered && Following.Live(ctx.Known))
@@ -86,7 +92,10 @@ sealed class FollowingSection
         if (phase != Phase.None)
             return;
         phase = Phase.Waiting;
-        wait.Start();
+        if (timing.AtOnce)
+            ShowPlaceholders();
+        else
+            wait.Start();
     }
 
     void ShowPlaceholders()
@@ -97,7 +106,11 @@ sealed class FollowingSection
         placeholdersAt = DateTime.UtcNow;
         DrawPlaceholders();
         Root.Visibility = Visibility.Visible;
-        Motion.FadeIn(placeholders);
+        // From the first frame they simply stand, as the rest of the page's room does.
+        if (timing.AtOnce)
+            Motion.Set(placeholders, true);
+        else
+            Motion.FadeIn(placeholders);
     }
 
     void Present(FollowedEntry[] people)
@@ -115,7 +128,7 @@ sealed class FollowingSection
             {
                 phase = Phase.Section;
                 var mine = ++turn;
-                var held = TimeSpan.FromMilliseconds(300) - (DateTime.UtcNow - placeholdersAt);
+                var held = timing.Left(DateTime.UtcNow - placeholdersAt);
                 void Swap()
                 {
                     if (mine != turn)

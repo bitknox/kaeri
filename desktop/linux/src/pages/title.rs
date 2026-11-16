@@ -7,6 +7,7 @@ use std::{
     cell::{Cell, RefCell},
     collections::HashSet,
     rc::{Rc, Weak},
+    time::Duration,
 };
 
 use adw::prelude::*;
@@ -30,7 +31,7 @@ use crate::{
     catalog, choices, matching, motion,
     pages::{following, licensed},
     say,
-    states::{Shape, States},
+    states::{self, Shape, States, Timing},
     synopsis, widgets,
     window::{Ctx, Size},
 };
@@ -40,6 +41,10 @@ const BAND: i32 = 328;
 
 /// How far a watched episode's still dims.
 const WATCHED: f64 = 0.55;
+
+/// How long the availability line's room waits for where the title is listed. The engine says
+/// nothing when it cannot find out, as offline, so past this the room closes.
+const OFFERS_WAIT_FOR: Duration = Duration::from_secs(2);
 
 /// An episode row as drawn, kept so a mark changes it in place: focus stays where it was, and
 /// the still dims on the quick token.
@@ -108,8 +113,15 @@ struct Page {
     banner_filled: Cell<bool>,
     head: gtk::Box,
     side: gtk::Box,
+    /// The side column's details, then its Related titles.
+    facts: gtk::Box,
+    related: gtk::Box,
     seasons: gtk::Box,
     synopsis: gtk::Box,
+    /// The parts that stand as placeholders now, in the room of what lands there.
+    held: Held,
+    /// Another title's season picker has this one, so its own picker is expected.
+    family: bool,
     /// People you follow, at the side column's end.
     people: Rc<following::Section>,
     /// What stands after the marks at a row's end, the same width on every row, so the folded
@@ -149,6 +161,13 @@ struct Page {
     protection: RefCell<Option<Protection>>,
     /// Whether the engine has answered for the episodes, so no table means none.
     listed: Cell<bool>,
+    /// The availability line's room waited its longest for an answer.
+    offers_waited: Cell<bool>,
+    /// What the availability line's room last showed, once the head was drawn.
+    offers: Cell<Option<OffersRoom>>,
+    /// Whether a source plays the title, as the page last asked the engine once the episodes
+    /// said: an answer for the other case does not count.
+    plays: Cell<Option<bool>>,
     columns: gtk::Box,
     rows: Rc<RefCell<Vec<EpisodeRow>>>,
     /// The page's status action, its state the list the title is on.
@@ -203,6 +222,20 @@ pub fn reach(stack: &[Option<String>], tag: &str) -> Reach {
     }
 }
 
+/// The episode list's states, waiting in place from the first frame: four placeholder rows in
+/// the room the list takes, replaced the moment it lands.
+fn episodes_state(hub: &Rc<crate::hub::Hub>, episodes: &gtk::ListBox) -> Rc<States> {
+    let none = widgets::haze(&t::title_no_episodes(), "");
+    none.set_valign(gtk::Align::Start);
+    let shape = Shape::Rows { count: 4, width: 128, height: 72 };
+    let state = States::new(hub, episodes, shape, &none, &t::title_episodes_load_failed());
+    state.widget.set_vhomogeneous(false);
+    state.widget.set_vexpand(false);
+    state.in_place();
+    state.loading(Some(t::activity_episodes()));
+    state
+}
+
 pub fn page(ctx: &Rc<Ctx>, id: AnilistId) -> adw::NavigationPage {
     let entry = ctx.hub.entry(id);
     // Nothing in the header until the title is known, rather than a word standing in for it.
@@ -215,14 +248,7 @@ pub fn page(ctx: &Rc<Ctx>, id: AnilistId) -> adw::NavigationPage {
     // Rows have no dividers: the still anchors each one.
     episodes.add_css_class("episode-list");
     episodes.set_selection_mode(gtk::SelectionMode::None);
-    let none = widgets::haze(&t::title_no_episodes(), "");
-    none.set_valign(gtk::Align::Start);
-    let shape = Shape::Rows { count: 4, width: 128, height: 72 };
-    let episodes_state =
-        States::new(&ctx.hub, &episodes, shape, &none, &t::title_episodes_load_failed());
-    episodes_state.widget.set_vhomogeneous(false);
-    episodes_state.widget.set_vexpand(false);
-    episodes_state.loading(Some(t::activity_episodes()));
+    let episodes_state = episodes_state(&ctx.hub, &episodes);
     episodes_state.on_retry({
         let hub = Rc::downgrade(&ctx.hub);
         let state = Rc::downgrade(&episodes_state);
@@ -264,8 +290,13 @@ pub fn page(ctx: &Rc<Ctx>, id: AnilistId) -> adw::NavigationPage {
 
     let side = gtk::Box::new(gtk::Orientation::Vertical, 18);
     side.set_size_request(260, -1);
+    let facts = gtk::Box::new(gtk::Orientation::Vertical, 0);
+    let related = gtk::Box::new(gtk::Orientation::Vertical, 0);
+    related.set_visible(false);
+    side.append(&facts);
+    side.append(&related);
     // People you follow stand at the column's end, kept while the rest of it is laid out again.
-    let people = following::Section::new(&ctx.hub);
+    let people = following::Section::new(&ctx.hub, Timing::IN_PLACE);
     let side_column = gtk::Box::new(gtk::Orientation::Vertical, 18);
     side_column.append(&side);
     side_column.append(&people.widget);
@@ -353,8 +384,12 @@ pub fn page(ctx: &Rc<Ctx>, id: AnilistId) -> adw::NavigationPage {
         banner_filled: Cell::new(false),
         head,
         side,
+        facts,
+        related,
         seasons,
         synopsis,
+        held: Held::default(),
+        family: in_family(ctx.hub.known.borrow().entries.values(), id),
         people,
         trail: gtk::SizeGroup::new(gtk::SizeGroupMode::Horizontal),
         fold_marks: RefCell::default(),
@@ -375,6 +410,9 @@ pub fn page(ctx: &Rc<Ctx>, id: AnilistId) -> adw::NavigationPage {
         drawn: RefCell::default(),
         protection: RefCell::default(),
         listed: Cell::new(false),
+        offers_waited: Cell::new(false),
+        offers: Cell::new(None),
+        plays: Cell::new(None),
         columns,
         rows: Rc::default(),
         listening: RefCell::default(),
@@ -438,8 +476,22 @@ pub fn page(ctx: &Rc<Ctx>, id: AnilistId) -> adw::NavigationPage {
     page.keys(&view);
     ctx.hub.known.borrow_mut().visit(id);
     page.people.wait();
-    if let Some(entry) = &entry {
-        page.fill(entry);
+    // Where the title is listed has its room until the engine says, or until it waited long
+    // enough that no answer is coming.
+    glib::timeout_add_local_once(OFFERS_WAIT_FOR, {
+        let weak = Rc::downgrade(&page);
+        move || {
+            let Some(page) = weak.upgrade() else { return };
+            page.offers_waited.set(true);
+            // Still held: whatever is known now counts, or the room closes.
+            if !matches!(page.offers.get(), Some(OffersRoom::Lines | OffersRoom::Closed)) {
+                page.redraw_head();
+            }
+        }
+    });
+    match &entry {
+        Some(entry) => page.fill(entry),
+        None => page.hold(),
     }
     page.private_line.set(ctx.hub.known.borrow().show_line(id), false);
     ctx.hub.send(Command::LoadDetail(id));
@@ -614,6 +666,7 @@ impl Page {
     /// here.
     fn ask_availability(&self) {
         let plays_here = self.rows.borrow().iter().any(choices::playable);
+        self.plays.set(Some(plays_here));
         self.ctx.hub.send(Command::Licensed(LicensedCommand::LoadAvailability {
             id: self.id,
             plays_here,
@@ -639,10 +692,34 @@ impl Page {
         self.columns.set_margin_end(margin);
         self.head.set_margin_start(margin);
         self.head.set_margin_end(margin);
-        if let Some(entry) = self.ctx.hub.entry(self.id) {
-            self.fill(&entry);
-        }
+        self.redraw_head();
         self.draw_episodes();
+    }
+
+    /// The head and the side column again, or their placeholders while nothing is known.
+    fn redraw_head(&self) {
+        match self.ctx.hub.entry(self.id) {
+            Some(entry) => self.fill(&entry),
+            None => self.hold(),
+        }
+    }
+
+    /// What stands in the availability line's room, and the answer's lines when it has them.
+    fn offers_room(
+        &self,
+        availability: Option<&TitleAvailability>,
+    ) -> (OffersRoom, Vec<gtk::Widget>) {
+        let lines = availability.map(|a| licensed::lines(&self.ctx, a));
+        let answer = availability.zip(lines.as_ref()).map(|(a, lines)| Answer {
+            plays_here: matches!(
+                a.case,
+                AvailabilityCase::PlaysHere | AvailabilityCase::PlaysAlsoOn
+            ),
+            lines: lines.len(),
+        });
+        let settled = matches!(self.offers.get(), Some(OffersRoom::Lines | OffersRoom::Closed));
+        let room = offers_room(self.plays.get(), answer, self.offers_waited.get(), settled);
+        (room, lines.unwrap_or_default())
     }
 
     /// The page's own actions: the status menu and More.
@@ -841,8 +918,15 @@ impl Page {
         let hub = &self.ctx.hub;
         // The banner, once: its art does not change with the detail.
         if !self.banner_filled.replace(true) {
+            clear(&self.banner);
             let fit = widgets::faded_banner(hub, entry, BAND);
             self.banner.append(&fit);
+        }
+        // The head lands over its placeholders, where they stood.
+        let head_lands = self.held.head.replace(false);
+        if head_lands {
+            motion::crossfade_in(&self.banner);
+            motion::crossfade_in(&self.head);
         }
         let id = entry.id.get();
 
@@ -1100,17 +1184,26 @@ impl Page {
             menus.append(&more);
             text.append(&menus);
         }
-        if let Some(availability) = &availability {
-            let lines = licensed::lines(&self.ctx, availability);
-            if !lines.is_empty() {
+        // Where the title is listed: a placeholder line keeps its room until the engine says,
+        // then the answer's lines replace it in one crossfade, or the room closes when the
+        // answer has none or none came. A newer answer asked for replaces the last in place.
+        let (room, lines) = self.offers_room(availability.as_ref());
+        let mut landed = None;
+        match room {
+            OffersRoom::Held { rows } => text.append(&offers_placeholder(rows)),
+            OffersRoom::Lines => {
                 let under = gtk::Box::new(gtk::Orientation::Vertical, 0);
                 under.set_margin_top(4);
                 for line in lines {
                     under.append(&line);
                 }
                 text.append(&under);
+                landed = Some(under);
             }
+            OffersRoom::Closed => {}
         }
+        let before = self.offers.replace(Some(room));
+        let fades = matches!(before, Some(OffersRoom::Held { .. } | OffersRoom::Closed));
 
         let line = gtk::Box::new(gtk::Orientation::Horizontal, 20);
         line.set_margin_top(18);
@@ -1119,9 +1212,53 @@ impl Page {
         }
         line.append(&text);
         self.head.append(&line);
+        if let Some(under) = landed.filter(|_| fades && !head_lands) {
+            under.set_opacity(0.0);
+            let fading = under.clone();
+            motion::once_mapped(&under, move || {
+                motion::crossfade_in(&fading);
+            });
+        }
         self.apply_missing();
         self.restore_focus(had_focus);
 
+        let waits = waiting(Some(entry), self.family);
+        self.fill_synopsis(entry, waits.synopsis);
+        self.fill_seasons(Some(entry), waits.seasons);
+        self.fill_side(Some(entry), size, waits);
+        self.people.show(entry);
+    }
+
+    /// The page while nothing of the title is known, as when it is opened from a related title:
+    /// every part's placeholders, in the room the title's own parts will take.
+    fn hold(&self) {
+        let size = *self.sized.borrow();
+        let waits = waiting(None, self.family);
+        clear(&self.banner);
+        self.banner.append(&widgets::faded_banner(
+            &self.ctx.hub,
+            &Entry::new(self.id, String::new()),
+            BAND,
+        ));
+        clear(&self.head);
+        // The availability line's room too, unless it is known to close.
+        let (room, _) = self.offers_room(self.availability().as_ref());
+        let rows = match room {
+            OffersRoom::Held { rows } => rows,
+            OffersRoom::Lines => 1,
+            OffersRoom::Closed => 0,
+        };
+        self.head.append(&head_placeholder(size == Size::Narrow, rows));
+        self.held.head.set(true);
+        clear(&self.synopsis);
+        self.synopsis.append(&synopsis_placeholder());
+        self.held.synopsis.set(true);
+        self.fill_seasons(None, waits.seasons);
+        self.fill_side(None, size, waits);
+    }
+
+    /// The synopsis, its placeholder lines while `waits`, or nothing when the title has none.
+    fn fill_synopsis(&self, entry: &Entry, waits: bool) {
         clear(&self.synopsis);
         if !entry.synopsis.is_empty() {
             let synopsis = gtk::Label::new(Some(&entry.synopsis));
@@ -1156,6 +1293,8 @@ impl Page {
                 }
             });
             self.synopsis.append(&more);
+        } else if waits {
+            self.synopsis.append(&synopsis_placeholder());
         }
         // The work's credit and licence, wherever it shows as a title.
         if entry.is_demo {
@@ -1163,15 +1302,21 @@ impl Page {
             credit.set_margin_top(12);
             self.synopsis.append(&credit);
         }
-
-        self.fill_seasons(entry);
-        self.fill_side(entry, size);
-        self.people.show(entry);
+        land(&self.held.synopsis, waits, &self.synopsis);
     }
 
-    /// The franchise's seasons as a picker, when there is more than one.
-    fn fill_seasons(&self, entry: &Entry) {
+    /// The franchise's seasons as a picker, when there is more than one, and the picker's
+    /// placeholder while `waits`.
+    fn fill_seasons(&self, entry: Option<&Entry>, waits: bool) {
         clear(&self.seasons);
+        land(&self.held.seasons, waits, &self.seasons);
+        if waits {
+            let plate = states::plate(120, 34, "");
+            plate.set_can_target(false);
+            self.seasons.append(&plate);
+            return;
+        }
+        let Some(entry) = entry else { return };
         let Some(seasons) = entry.detail.as_ref().and_then(|d| d.seasons.clone()) else {
             return;
         };
@@ -1197,28 +1342,16 @@ impl Page {
         self.seasons.append(&picker);
     }
 
-    /// Details, and Related as small covers.
-    fn fill_side(&self, entry: &Entry, size: Size) {
-        clear(&self.side);
+    /// Details, and Related as small covers, each as placeholders while it `waits`.
+    fn fill_side(&self, entry: Option<&Entry>, size: Size, waits: Waiting) {
+        clear(&self.facts);
         let details = gtk::Box::new(gtk::Orientation::Vertical, 6);
         details.append(&widgets::heading(&t::title_details()));
-        let mut facts: Vec<(String, String)> = Vec::new();
-        if let Some(source) = entry.source {
-            facts.push((t::title_based_on(), say::material(source)));
+        let known = entry.filter(|_| !waits.facts);
+        if known.is_none() {
+            details.append(&facts_placeholder());
         }
-        if let Some(line) = say::airing_fact(entry) {
-            facts.push((t::filter_status(), line));
-        }
-        if let Some(made) = kaeri_model::present::made_in(entry) {
-            facts.push((t::filter_country(), made));
-        }
-        if !entry.genres.is_empty() {
-            facts.push((
-                t::filter_genres(),
-                entry.genres.iter().map(|g| say::genre(g)).collect::<Vec<_>>().join(" · "),
-            ));
-        }
-        for (name, value) in facts {
+        for (name, value) in known.map(facts).unwrap_or_default() {
             let line = gtk::Box::new(gtk::Orientation::Vertical, 0);
             line.append(&widgets::haze(&name, "caption"));
             let value = gtk::Label::new(Some(&value));
@@ -1231,10 +1364,10 @@ impl Page {
         more.add_css_class("pill");
         more.set_halign(gtk::Align::Start);
         more.set_margin_top(6);
-        more.set_sensitive(entry.detail.is_some());
+        more.set_sensitive(entry.is_some_and(|e| e.detail.is_some()));
         more.connect_clicked({
             let ctx = Rc::downgrade(&self.ctx);
-            let id = entry.id;
+            let id = self.id;
             move |_| {
                 let Some(ctx) = ctx.upgrade() else { return };
                 if let Some(entry) = ctx.hub.entry(id) {
@@ -1243,11 +1376,18 @@ impl Page {
             }
         });
         details.append(&more);
-        self.side.append(&details);
+        self.facts.append(&details);
+        land(&self.held.facts, waits.facts, &self.facts);
 
+        clear(&self.related);
+        land(&self.held.related, waits.related, &self.related);
+        if waits.related {
+            self.related.append(&related_placeholder(size));
+            self.related.set_visible(true);
+            return;
+        }
         let related: Vec<LinkedTitle> = entry
-            .detail
-            .as_ref()
+            .and_then(|e| e.detail.as_ref())
             .map(|d| {
                 d.relations
                     .iter()
@@ -1266,6 +1406,7 @@ impl Page {
                     .collect()
             })
             .unwrap_or_default();
+        self.related.set_visible(!related.is_empty());
         if related.is_empty() {
             return;
         }
@@ -1310,7 +1451,7 @@ impl Page {
         let column = gtk::Box::new(gtk::Orientation::Vertical, 8);
         column.append(&widgets::heading(&t::title_related()));
         column.append(&box_);
-        self.side.append(&column);
+        self.related.append(&column);
     }
 
     /// Whether spoiler protection is on for this show: what it sets for itself, else Settings.
@@ -2584,6 +2725,243 @@ fn unwatched(rows: &[EpisodeRow]) -> Vec<String> {
         .collect()
 }
 
+/// Which parts of a title's page stand as placeholders now.
+#[derive(Default)]
+struct Held {
+    head: Cell<bool>,
+    synopsis: Cell<bool>,
+    seasons: Cell<bool>,
+    facts: Cell<bool>,
+    related: Cell<bool>,
+}
+
+/// The parts of a title's page still on their way, which stand as placeholders in their room.
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
+struct Waiting {
+    head: bool,
+    synopsis: bool,
+    seasons: bool,
+    facts: bool,
+    related: bool,
+}
+
+/// What waits for the page, from what is known of the title: every part when nothing is, as for
+/// a title opened from Related; what only the page brings when a list's row is known; and the
+/// rest once the partial page has brought the header. `family` says another title's picker has
+/// this one, so a picker is expected. A picker no other title knew of comes in when the page
+/// says, as does a synopsis the row and the page both lack.
+fn waiting(entry: Option<&Entry>, family: bool) -> Waiting {
+    let Some(entry) = entry else {
+        return Waiting {
+            head: true,
+            synopsis: true,
+            seasons: family,
+            facts: true,
+            related: true,
+        };
+    };
+    let detail = entry.detail.as_ref();
+    Waiting {
+        head: false,
+        synopsis: detail.is_none() && entry.synopsis.is_empty(),
+        // The whole page without its seasons is still walking the franchise: the picker comes
+        // with a later page, and no plate stands for it meanwhile.
+        seasons: family && detail.is_none_or(|d| d.partial && d.seasons.is_none()),
+        facts: detail.is_none(),
+        related: detail.is_none_or(|d| d.partial),
+    }
+}
+
+/// Whether the season picker of a title among `entries` has `id`.
+fn in_family<'a>(entries: impl IntoIterator<Item = &'a Entry>, id: AnilistId) -> bool {
+    entries.into_iter().any(|entry| {
+        entry
+            .detail
+            .as_ref()
+            .and_then(|d| d.seasons.as_ref())
+            .is_some_and(|seasons| seasons.len() > 1 && seasons.iter().any(|s| s.id == id))
+    })
+}
+
+/// `slot` shows its placeholders while `waits`; once what it shows has replaced them, it comes
+/// in with one crossfade where they stood.
+fn land(held: &Cell<bool>, waits: bool, slot: &impl IsA<gtk::Widget>) {
+    if held.replace(waits) && !waits {
+        motion::crossfade_in(slot);
+    }
+}
+
+/// Placeholders, read as one "Loading" and never a target.
+fn holding(orientation: gtk::Orientation, spacing: i32) -> gtk::Box {
+    let held = gtk::Box::new(orientation, spacing);
+    held.set_can_target(false);
+    held.update_property(&[gtk::accessible::Property::Label(&t::state_loading())]);
+    held
+}
+
+/// A bar standing for a line of text `height` high, in the room of a line of `room`.
+fn text_bar(width: i32, height: i32, room: i32) -> gtk::Box {
+    let bar = states::plate(width, height, "bar");
+    let spare = (room - height).max(0);
+    bar.set_margin_top(spare / 2);
+    bar.set_margin_bottom(spare - spare / 2);
+    bar
+}
+
+/// What stands in the availability line's room under the head's actions.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum OffersRoom {
+    /// Where the title is listed is not known yet: placeholder rows keep the room the answer
+    /// will take, two while no source plays the title ("Listed on" and Choose your services),
+    /// one otherwise ("Also on").
+    Held { rows: usize },
+    /// The answer's lines.
+    Lines,
+    /// The answer has no line, or none came in time: the room closes.
+    Closed,
+}
+
+/// What the engine answered about where the title is listed, as the room needs it.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+struct Answer {
+    /// It was worked out for a title a source plays.
+    plays_here: bool,
+    /// The lines it draws under the actions.
+    lines: usize,
+}
+
+/// The availability line's room. `plays` is whether a source plays the title, once the
+/// episodes say; an answer counts when it was worked out for that case, once the page waited
+/// its longest, or once the room has shown an answer, which then stands until a newer answer
+/// replaces it.
+fn offers_room(
+    plays: Option<bool>,
+    answer: Option<Answer>,
+    waited: bool,
+    settled: bool,
+) -> OffersRoom {
+    let counts = |a: &Answer| waited || settled || plays == Some(a.plays_here);
+    match answer.filter(counts) {
+        Some(Answer { lines: 0, .. }) => OffersRoom::Closed,
+        Some(_) => OffersRoom::Lines,
+        None if waited => OffersRoom::Closed,
+        None => OffersRoom::Held { rows: if plays == Some(false) { 2 } else { 1 } },
+    }
+}
+
+/// The availability line's room while it is on its way: `rows` lines, each as tall as the line
+/// that lands there, with a bar standing in its place.
+fn offers_placeholder(rows: usize) -> gtk::Box {
+    let room = holding(gtk::Orientation::Vertical, 0);
+    room.set_margin_top(4);
+    let widths = [220, 150];
+    for (shape, width) in licensed::shapes(rows > 1).iter().zip(widths) {
+        // The line's own shape, unseen, sets the height; the bar stands over it.
+        let row = gtk::Grid::new();
+        row.attach(shape, 0, 0, 1, 1);
+        let bar = states::plate(if rows > 1 { width } else { 180 }, 12, "bar");
+        bar.set_valign(gtk::Align::Center);
+        row.attach(&bar, 0, 0, 1, 1);
+        room.append(&row);
+    }
+    room
+}
+
+/// The head's room while nothing of the title is known: the cover, the title, its line and the
+/// actions, and the availability line's room in `offers` rows.
+fn head_placeholder(narrow: bool, offers: usize) -> gtk::Box {
+    let line = holding(gtk::Orientation::Horizontal, 20);
+    line.set_margin_top(18);
+    if !narrow {
+        line.append(&states::plate(120, 180, ""));
+    }
+    let text = gtk::Box::new(gtk::Orientation::Vertical, 6);
+    text.set_valign(gtk::Align::End);
+    text.set_hexpand(true);
+    text.append(&text_bar(if narrow { 220 } else { 320 }, 26, 40));
+    text.append(&text_bar(180, 12, 20));
+    let actions = gtk::Box::new(gtk::Orientation::Horizontal, 8);
+    actions.set_margin_top(10);
+    let play = states::plate(if narrow { -1 } else { 150 }, 34, "round");
+    play.set_hexpand(narrow);
+    play.set_halign(if narrow { gtk::Align::Fill } else { gtk::Align::Start });
+    actions.append(&play);
+    if !narrow {
+        actions.append(&states::plate(120, 34, "round"));
+        actions.append(&states::plate(34, 34, "round"));
+    }
+    text.append(&actions);
+    if offers > 0 {
+        text.append(&offers_placeholder(offers));
+    }
+    line.append(&text);
+    line
+}
+
+/// The synopsis's room while it is on its way: three lines.
+fn synopsis_placeholder() -> gtk::Box {
+    let lines = holding(gtk::Orientation::Vertical, 0);
+    lines.set_margin_top(6);
+    for end in [0, 48, 220] {
+        let bar = text_bar(-1, 12, 21);
+        bar.set_halign(gtk::Align::Fill);
+        bar.set_hexpand(true);
+        bar.set_margin_end(end);
+        lines.append(&bar);
+    }
+    lines
+}
+
+/// The details' four facts while they are on their way, each a name over its value.
+fn facts_placeholder() -> gtk::Box {
+    let facts = holding(gtk::Orientation::Vertical, 6);
+    for width in [140, 180, 90, 200] {
+        let fact = gtk::Box::new(gtk::Orientation::Vertical, 0);
+        fact.append(&text_bar(70, 9, 16));
+        fact.append(&text_bar(width, 12, 21));
+        facts.append(&fact);
+    }
+    facts
+}
+
+/// Related's room while the page is on its way: its heading and a line of small covers.
+fn related_placeholder(size: Size) -> gtk::Box {
+    let column = holding(gtk::Orientation::Vertical, 8);
+    column.append(&text_bar(90, 14, 24));
+    let covers = gtk::Box::new(gtk::Orientation::Horizontal, 8);
+    let count = if size == Size::Wide { 3 } else { 4 };
+    for _ in 0..count {
+        let tile = gtk::Box::new(gtk::Orientation::Vertical, 4);
+        tile.append(&states::plate(76, 114, ""));
+        tile.append(&text_bar(56, 9, 16));
+        covers.append(&tile);
+    }
+    column.append(&covers);
+    column
+}
+
+/// The details' facts, name and value: what it was based on, its run, where it was made and its
+/// genres, as far as they are known.
+fn facts(entry: &Entry) -> Vec<(String, String)> {
+    let mut facts = Vec::new();
+    if let Some(source) = entry.source {
+        facts.push((t::title_based_on(), say::material(source)));
+    }
+    if let Some(line) = say::airing_fact(entry) {
+        facts.push((t::filter_status(), line));
+    }
+    if let Some(made) = kaeri_model::present::made_in(entry) {
+        facts.push((t::filter_country(), made));
+    }
+    if !entry.genres.is_empty() {
+        facts.push((
+            t::filter_genres(),
+            entry.genres.iter().map(|g| say::genre(g)).collect::<Vec<_>>().join(" · "),
+        ));
+    }
+    facts
+}
+
 fn clear(container: &gtk::Box) {
     while let Some(child) = container.first_child() {
         container.remove(&child);
@@ -2691,6 +3069,159 @@ mod tests {
             row("4", false, true),
         ];
         assert_eq!(unwatched(&rows), ["1", "3"]);
+    }
+}
+
+#[cfg(test)]
+mod waiting_tests {
+    use kaeri_model::catalog::TitleDetail;
+
+    use super::*;
+
+    fn season(id: u32) -> LinkedTitle {
+        LinkedTitle {
+            id: AnilistId::new(id),
+            title: format!("Paper Lantern Road {id}"), // i18n-skip
+            title_romaji: None,
+            title_english: None,
+            title_native: None,
+            relation: None,
+            format: Some("TV".into()),
+            cover_url: None,
+            cover_color: None,
+            season: None,
+            year: None,
+            list_status: None,
+        }
+    }
+
+    fn row(synopsis: &str) -> Entry {
+        let mut entry = Entry::new(AnilistId::new(910_001), "Paper Lantern Road"); // i18n-skip
+        entry.synopsis = synopsis.into();
+        entry
+    }
+
+    fn with_detail(
+        mut entry: Entry,
+        partial: bool,
+        seasons: Option<Vec<LinkedTitle>>,
+    ) -> Entry {
+        entry.detail = Some(TitleDetail { partial, seasons, ..TitleDetail::default() });
+        entry
+    }
+
+    #[test]
+    fn a_title_opened_with_nothing_known_holds_every_part() {
+        let all = waiting(None, true);
+        assert_eq!(
+            all,
+            Waiting { head: true, synopsis: true, seasons: true, facts: true, related: true }
+        );
+        assert!(!waiting(None, false).seasons);
+    }
+
+    #[test]
+    fn a_list_row_shows_its_head_and_holds_what_only_the_page_brings() {
+        let waits = waiting(Some(&row("A lighthouse keeper's last summer.")), false); // i18n-skip
+        assert_eq!(
+            waits,
+            Waiting {
+                head: false,
+                synopsis: false,
+                seasons: false,
+                facts: true,
+                related: true
+            }
+        );
+        assert!(waiting(Some(&row("")), false).synopsis);
+    }
+
+    #[test]
+    fn the_partial_page_brings_the_header_and_the_whole_one_the_rest() {
+        let seasons = Some(vec![season(910_001), season(910_002)]);
+        let partial = with_detail(row(""), true, seasons.clone());
+        let waits = waiting(Some(&partial), true);
+        assert!(!waits.synopsis && !waits.facts && !waits.seasons);
+        assert!(waits.related);
+        // Still walking the franchise: the picker's plate stands until the whole page.
+        assert!(waiting(Some(&with_detail(row(""), true, None)), true).seasons);
+        assert_eq!(waiting(Some(&with_detail(row(""), false, None)), true), Waiting::default());
+        assert_eq!(
+            waiting(Some(&with_detail(row(""), false, seasons)), true),
+            Waiting::default()
+        );
+    }
+
+    #[test]
+    fn a_picker_is_expected_when_another_season_lists_the_title() {
+        let id = AnilistId::new(910_002);
+        let first = with_detail(row(""), false, Some(vec![season(910_001), season(910_002)]));
+        assert!(in_family([&first], id));
+        assert!(!in_family([&first], AnilistId::new(910_003)));
+        let alone = with_detail(row(""), false, Some(vec![season(910_002)]));
+        assert!(!in_family([&alone], id));
+        assert!(!in_family([&row("")], id));
+    }
+
+    #[test]
+    fn the_availability_line_keeps_its_room_until_the_answer() {
+        let says = |plays_here, lines| Some(Answer { plays_here, lines });
+        let one = OffersRoom::Held { rows: 1 };
+        let two = OffersRoom::Held { rows: 2 };
+        // Before the episodes say, the room is held from the first frame, even over an answer
+        // known from before.
+        assert_eq!(offers_room(None, None, false, false), one);
+        assert_eq!(offers_room(None, says(true, 1), false, false), one);
+        // No source plays it: two rows, for "Listed on" and Choose your services.
+        assert_eq!(offers_room(Some(false), None, false, false), two);
+        assert_eq!(offers_room(Some(true), None, false, false), one);
+        // An answer for the other case does not count.
+        assert_eq!(offers_room(Some(false), says(true, 1), false, false), two);
+        assert_eq!(offers_room(Some(true), says(false, 2), false, false), one);
+        // An answer for this case with a line takes the room; one without closes it.
+        assert_eq!(offers_room(Some(true), says(true, 1), false, false), OffersRoom::Lines);
+        assert_eq!(offers_room(Some(false), says(false, 2), false, false), OffersRoom::Lines);
+        assert_eq!(offers_room(Some(true), says(true, 0), false, false), OffersRoom::Closed);
+        // Once shown, an answer stands while a newer one is asked for.
+        assert_eq!(offers_room(Some(true), says(false, 2), false, true), OffersRoom::Lines);
+        // No answer within 2 s, as offline: the room closes; any answer counts from then.
+        assert_eq!(offers_room(None, None, true, false), OffersRoom::Closed);
+        assert_eq!(offers_room(Some(false), None, true, false), OffersRoom::Closed);
+        assert_eq!(offers_room(Some(true), says(false, 1), true, false), OffersRoom::Lines);
+        assert_eq!(OFFERS_WAIT_FOR, Duration::from_secs(2));
+    }
+
+    /// The availability line's room is as tall as the lines that land there, with their own
+    /// spacing, and the head's placeholder keeps it while the answer is on its way.
+    #[test]
+    fn the_availability_line_has_its_room_at_once() {
+        crate::gtk_test::run(|| {
+            let tall = |widget: &gtk::Widget| widget.measure(gtk::Orientation::Vertical, 600).1;
+            let also_on = licensed::external_link("Also on Hikari Library").upcast();
+            let one = offers_placeholder(1).upcast();
+            assert_eq!(tall(&one), 4 + tall(&also_on), "one row");
+            let listed = licensed::listed_line("Listed on Tsuki TV.").upcast();
+            let choose = licensed::choose_link("Choose your services").upcast();
+            let two = offers_placeholder(2).upcast();
+            assert_eq!(tall(&two), 4 + tall(&listed) + tall(&choose), "two rows");
+            assert!(tall(&two) > tall(&one));
+            // Narrow, where no cover beside the text sets the head's height.
+            let head = |rows| tall(&head_placeholder(true, rows).upcast());
+            assert!(head(1) >= head(0) + tall(&one), "the head keeps one row");
+            assert!(head(2) >= head(0) + tall(&two), "the head keeps two rows");
+        });
+    }
+
+    /// The episode area has the placeholders' room on the page's first frame.
+    #[test]
+    fn the_episode_area_has_its_room_at_once() {
+        crate::gtk_test::run(|| {
+            let hub = crate::hub::Hub::new(std::sync::Weak::new());
+            let list = gtk::ListBox::new();
+            let state = episodes_state(&hub, &list);
+            let height = state.widget.measure(gtk::Orientation::Vertical, 800).1;
+            assert!(height >= 4 * 72, "the episode area takes {height} px");
+        });
     }
 }
 

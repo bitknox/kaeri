@@ -5,7 +5,7 @@
 use std::{
     cell::{Cell, RefCell},
     rc::{Rc, Weak},
-    time::{Duration, Instant},
+    time::Instant,
 };
 
 use adw::prelude::*;
@@ -17,14 +17,10 @@ use kaeri_model::{
     settings::SettingKey,
 };
 
-use crate::{catalog, fit::Fit, hub::Hub, motion, widgets};
+use crate::{catalog, fit::Fit, hub::Hub, motion, states::Timing, widgets};
 
 /// How many people the section shows before Show all.
 const FIRST: usize = 5;
-/// How long a title page waits for AniList before it holds the section's place.
-const WAIT: Duration = Duration::from_millis(600);
-/// How long the placeholders stay once shown, so they never flash.
-const HOLD: Duration = Duration::from_millis(300);
 /// A person's picture in the section.
 const FACE: i32 = 32;
 /// A picture on an episode's mark.
@@ -228,10 +224,12 @@ pub fn set_marks(hub: &Hub, slot: &gtk::Box, marks: &[FollowedMark], animate: bo
     }
 }
 
-/// The section on a title page: nothing until AniList answers, two placeholder rows from 0.6 s
-/// while it is slow, then the people, or nothing when nobody followed has the show.
+/// The section on a title page: two placeholder rows while AniList has not answered (from the
+/// first frame on a title's page, `Timing::IN_PLACE`), then the people, or nothing when nobody
+/// followed has the show.
 pub struct Section {
     hub: Rc<Hub>,
+    timing: Timing,
     /// The placeholders and the people in one cell, so one crossfades into the other in place.
     pub widget: gtk::Grid,
     holding: gtk::Box,
@@ -247,7 +245,7 @@ pub struct Section {
 }
 
 impl Section {
-    pub fn new(hub: &Rc<Hub>) -> Rc<Self> {
+    pub fn new(hub: &Rc<Hub>, timing: Timing) -> Rc<Self> {
         let widget = gtk::Grid::new();
         widget.set_visible(false);
         let holding = placeholders();
@@ -258,6 +256,7 @@ impl Section {
         widget.attach(&people, 0, 0, 1, 1);
         let section = Rc::new(Self {
             hub: Rc::clone(hub),
+            timing,
             widget,
             holding,
             people,
@@ -271,25 +270,33 @@ impl Section {
         section
     }
 
-    /// The page opened: from 0.6 s on, placeholders hold the place while AniList has not
-    /// answered.
+    /// The page opened: placeholders hold the place while AniList has not answered, at once in
+    /// place or past the silent wait, faded in then.
     pub fn wait(&self) {
+        if self.timing.at_once() {
+            if on(&self.hub) {
+                self.hold(false);
+            }
+            return;
+        }
         let me = self.me.borrow().clone();
-        let id = glib::timeout_add_local_once(WAIT, move || {
+        let id = glib::timeout_add_local_once(self.timing.silent, move || {
             let Some(section) = me.upgrade() else { return };
             section.waiting.replace(None);
             if section.shown.borrow().is_none() && on(&section.hub) {
-                section.hold();
+                section.hold(true);
             }
         });
         self.waiting.replace(Some(id));
     }
 
-    fn hold(&self) {
+    fn hold(&self, fade: bool) {
         self.held_since.set(Some(Instant::now()));
         self.widget.set_visible(true);
         self.holding.set_visible(true);
-        fade_in(&self.holding);
+        if fade {
+            fade_in(&self.holding);
+        }
     }
 
     /// What the page knows now: the people of a whole answer, or nothing yet.
@@ -300,16 +307,21 @@ impl Section {
         }
         let people = detail.following.clone();
         if let Some(since) = self.held_since.get() {
-            // The placeholders stay their least time, then crossfade to the latest answer.
+            // The placeholders stay their least time, if they have one, then crossfade to the
+            // latest answer.
             let first = self.pending.replace(Some(people)).is_none();
             if first {
-                let me = self.me.borrow().clone();
-                let left = HOLD.saturating_sub(since.elapsed());
-                glib::timeout_add_local_once(left, move || {
-                    if let Some(section) = me.upgrade() {
-                        section.settle();
-                    }
-                });
+                let left = self.timing.hold_left(since.elapsed());
+                if left.is_zero() {
+                    self.settle();
+                } else {
+                    let me = self.me.borrow().clone();
+                    glib::timeout_add_local_once(left, move || {
+                        if let Some(section) = me.upgrade() {
+                            section.settle();
+                        }
+                    });
+                }
             }
             return;
         }

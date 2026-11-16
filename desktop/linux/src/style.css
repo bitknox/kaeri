@@ -238,6 +238,7 @@ list.episode-list > row { border-radius: 8px; }
 /* Placeholders: static raised plates where content will land. */
 .plate { background: var(--raised); border-radius: 8px; }
 .plate.bar { border-radius: 4px; }
+.plate.round { border-radius: 999px; }
 
 /* Nagare on a full-screen empty, at the brief's size. */
 statuspage.nagare image.icon { -gtk-icon-size: 160px; }

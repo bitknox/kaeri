@@ -1,5 +1,6 @@
 // Loading to content (T8): nothing for 600 ms, then static placeholders held at least 0.3 s, then
-// the content in one crossfade. Never a shimmer, a pulse or a stagger.
+// the content in one crossfade. Never a shimmer, a pulse or a stagger. The title page is the
+// exception: its placeholders show from the first frame and are replaced the moment it lands.
 
 package app.kaeri.ui
 
@@ -29,7 +30,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.delay
@@ -142,48 +142,13 @@ fun AfterWait(content: @Composable () -> Unit) {
 }
 
 /**
- * T8's clock for a screen whose placeholders sit in a list, counted from when it first drew:
- * [shown] once 600 ms have passed, [held] once placeholders that came have stayed 0.3 s.
- */
-@androidx.compose.runtime.Stable
-class PlaceholderClock internal constructor(waited: Boolean) {
-    var shown by mutableStateOf(waited)
-        internal set
-    var held by mutableStateOf(waited)
-        internal set
-}
-
-/** A [PlaceholderClock] from now, or one already past its wait with [waited]; a new one for each [key]. */
-@Composable
-fun rememberPlaceholderClock(waited: Boolean = false, key: Any? = null): PlaceholderClock {
-    val clock = remember(key) { PlaceholderClock(waited) }
-    LaunchedEffect(clock) {
-        if (clock.held) return@LaunchedEffect
-        delay(PLACEHOLDERS_AFTER)
-        clock.shown = true
-        delay(PLACEHOLDERS_HOLD)
-        clock.held = true
-    }
-    return clock
-}
-
-/**
- * Whether what [ready] says has come may replace the placeholders: at once before they show, and
- * once they have stayed 0.3 s after. True for good from then on.
+ * Whether what [ready] says has come may replace a title page's placeholders: at once, and true for
+ * good from then on, a new answer for each [key]. The title page is T8's exception: its
+ * placeholders take their room from the first frame, so they show with it and are never held.
  */
 @Composable
-fun PlaceholderClock.settled(ready: Boolean): Boolean {
-    var done by remember(this) { mutableStateOf(ready) }
-    if (!done && ready && (!shown || held)) done = true
+fun rememberSettled(ready: Boolean, key: Any? = null): Boolean {
+    var done by remember(key) { mutableStateOf(ready) }
+    if (!done && ready) done = true
     return done
-}
-
-/**
- * [content] fading in once [shown], on a [PlaceholderClock] a page shares. Unlike [AfterWait] it
- * takes its room from the first frame, unseen, so placeholders coming move nothing below them.
- */
-@Composable
-fun ShownWhen(shown: Boolean, content: @Composable () -> Unit) {
-    val alpha by androidx.compose.animation.core.animateFloatAsState(if (shown) 1f else 0f, Motion.fadeIn(), label = "placeholders") // i18n-skip
-    Box(Modifier.graphicsLayer { this.alpha = alpha }) { content() }
 }

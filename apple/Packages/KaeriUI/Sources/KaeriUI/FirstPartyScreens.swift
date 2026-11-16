@@ -786,14 +786,31 @@ struct LicensedLines: View {
         // season's answer replaces them, so a line both seasons have never blinks. With no
         // answer by the time the main button stops waiting, they fade and keep their room.
         let shown = known ?? held
-        lines(shown)
-            .opacity(known == nil && waited == id ? 0 : 1)
-            .allowsHitTesting(known != nil)
-            .accessibilityHidden(known == nil)
-            .font(font)
-            .padding(.top, shown.map { $0.case == .playsHere && $0.others.isEmpty ? 0 : 10 } ?? 0)
-            .animation(.fadeIn, value: known)
-            .animation(.fadeIn, value: waited)
+        // Until it is known where the title is listed, a placeholder line keeps the line's room,
+        // from the first frame, like the page's other placeholders. The answer replaces it in one
+        // crossfade; an answer with no line, or none by the time the main button stops waiting,
+        // closes the room in that same crossfade.
+        let pending = shown == nil && waited != id
+        let drawn = shown.flatMap { Self.hasLines($0) ? $0 : nil }
+        ZStack(alignment: .topLeading) {
+            if let drawn {
+                lines(drawn)
+                    .opacity(known == nil && waited == id ? 0 : 1)
+                    .allowsHitTesting(known != nil)
+                    .accessibilityHidden(known == nil)
+                    .transition(.opacity)
+            } else if pending {
+                LicensedLinePlaceholder(unlisted: Self.placeholderUnlisted(id, in: store))
+                    .transition(.opacity)
+            }
+        }
+        .font(font)
+        .padding(.top, pending || drawn != nil ? 10 : 0)
+        .animation(.standard, value: pending)
+        .animation(.standard, value: Self.placeholderUnlisted(id, in: store))
+        .animation(.standard, value: drawn)
+        .animation(.fadeIn, value: known)
+        .animation(.fadeIn, value: waited)
             .onChange(of: known, initial: true) { if let known { held = known } }
             .task(id: "\(id)-\(playsHere)-\(store.licensed.yours)") {
                 store.loadAvailability(id, playsHere: playsHere)
@@ -846,5 +863,43 @@ struct LicensedLines: View {
         if !a.others.isEmpty {
             Text(L.licensedOthers(services: a.others.formatted(.list(type: .and)))).foregroundStyle(.haze)
         }
+    }
+
+    /// Whether the placeholder holds the two lines of the answer for a title no source plays:
+    /// once its episodes say so, that answer is the one on its way.
+    static func placeholderUnlisted(_ id: AnilistId, in store: AppStore) -> Bool {
+        store.titles.unlisted(id)
+    }
+
+    /// Whether `lines` draws anything for an answer.
+    static func hasLines(_ a: TitleAvailability) -> Bool {
+        switch a.case {
+        case .playsHere: !a.others.isEmpty
+        case .playsAlsoOn, .onService: !a.alsoOn.isEmpty || !a.others.isEmpty
+        case .notInSources: !a.others.isEmpty || a.chooseServices
+        }
+    }
+}
+
+/// The room of a title's services line while it is not yet known where the title is listed: one
+/// line in the page's placeholder style.
+struct LicensedLinePlaceholder: View {
+    /// The episodes say no source set up plays the title, so the answer will be the listing line
+    /// and the link to choose services: the placeholder holds both, wrapped as they will be.
+    var unlisted = false
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            if unlisted {
+                Text(L.licensedListedOn(services: "Lantern Library")) // i18n-skip
+                Text(L.licensedChooseServices)
+            } else {
+                Text("Also on Lantern Library") // i18n-skip
+                    .lineLimit(1)
+            }
+        }
+        .foregroundStyle(.haze)
+        .redacted(reason: .placeholder)
+        .accessibilityHidden(true)
     }
 }

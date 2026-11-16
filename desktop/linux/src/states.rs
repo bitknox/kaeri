@@ -3,8 +3,10 @@
 //! Waiting is silent for 600 ms: the screen keeps what it showed, or the ground on a first
 //! visit. Past that, static placeholders stand where the result will land, in its shape, and
 //! past 4 s the job's activity line shows above them. Placeholders stay at least 0.3 s and give
-//! way in one crossfade on the standard token. A load that fails says why, with Try Again; one
-//! that fails, or has nothing, while the device is offline says so instead.
+//! way in one crossfade on the standard token. A title's page has its placeholders from the first
+//! frame instead, replaced the moment the answer lands ([`Timing::IN_PLACE`]). A load that fails
+//! says why, with Try Again; one that fails, or has nothing, while the device is offline says so
+//! instead.
 
 use std::{
     cell::{Cell, RefCell},
@@ -26,6 +28,33 @@ pub const SILENT: Duration = Duration::from_millis(600);
 const ACTIVITY: Duration = Duration::from_secs(4);
 /// The least time placeholders stay once shown, so they never flash.
 pub const AT_LEAST: Duration = Duration::from_millis(300);
+
+/// When a wait shows its placeholders, and how long they stay once shown.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct Timing {
+    /// How long a wait is silent before the placeholders come.
+    pub silent: Duration,
+    /// The least time the placeholders stay once shown, so they never flash.
+    pub at_least: Duration,
+}
+
+impl Timing {
+    /// Every screen but a title's page: silent for 600 ms, then placeholders for at least 0.3 s.
+    pub const WAIT: Self = Self { silent: SILENT, at_least: AT_LEAST };
+    /// A title's page: placeholders from the first frame, in the room of what lands there, and
+    /// replaced the moment it lands.
+    pub const IN_PLACE: Self = Self { silent: Duration::ZERO, at_least: Duration::ZERO };
+
+    /// Whether the placeholders show from the first frame.
+    pub fn at_once(self) -> bool {
+        self.silent.is_zero()
+    }
+
+    /// How long an answer waits before it replaces placeholders that have shown for `shown`.
+    pub fn hold_left(self, shown: Duration) -> Duration {
+        self.at_least.saturating_sub(shown)
+    }
+}
 
 /// What the placeholders look like: the shape of what lands there.
 #[derive(Debug, Clone, Copy)]
@@ -56,6 +85,9 @@ pub struct States {
     pub widget: gtk::Stack,
     hub: Rc<Hub>,
     activity: gtk::Label,
+    /// The placeholders, clipped to the room the screen has.
+    clip: gtk::ScrolledWindow,
+    timing: Cell<Timing>,
     failed: adw::StatusPage,
     offline: adw::StatusPage,
     phase: Cell<Phase>,
@@ -147,6 +179,8 @@ impl States {
             widget,
             hub: Rc::clone(hub),
             activity,
+            clip,
+            timing: Cell::new(Timing::WAIT),
             failed,
             offline,
             phase: Cell::new(Phase::Silent),
@@ -208,7 +242,7 @@ impl States {
     }
 
     /// A load started, said by its job's activity ("loading this season"): silent for 600 ms,
-    /// then placeholders, then the activity line.
+    /// then placeholders, then the activity line. In place, the placeholders come at once.
     pub fn loading(self: &Rc<Self>, activity: Option<String>) {
         let label = activity.unwrap_or_default();
         // Already waiting: the wait goes on, with the newer words.
@@ -228,25 +262,40 @@ impl States {
             self.go(Phase::Offline);
             return;
         }
-        self.phase.set(Phase::Silent);
         self.activity.set_label(&label);
         self.activity.set_opacity(0.0);
+        let timing = self.timing.get();
+        if timing.at_once() {
+            // In place: the placeholders are the wait, from the first frame. Faded in only over
+            // something already on screen, such as a failed state asked again.
+            self.show_placeholders(timing, self.widget.is_mapped());
+            return;
+        }
+        self.phase.set(Phase::Silent);
         let weak = Rc::downgrade(self);
-        let show = glib::timeout_add_local_once(SILENT, move || {
+        let show = glib::timeout_add_local_once(timing.silent, move || {
             let Some(states) = weak.upgrade() else { return };
             // This timer has fired: forgotten, so a cancel does not remove it again.
             states.timers.borrow_mut().clear();
             if states.phase.get() != Phase::Silent {
                 return;
             }
-            states.phase.set(Phase::Placeholders);
-            states.since.set(Some(Instant::now()));
-            states.widget.set_visible_child_name("placeholders");
-            if let Some(child) = states.widget.visible_child() {
-                motion::crossfade_in(&child);
-            }
-            let weak = Rc::downgrade(&states);
-            let line = glib::timeout_add_local_once(ACTIVITY - SILENT, move || {
+            states.show_placeholders(timing, true);
+        });
+        self.timers.borrow_mut().push(show);
+    }
+
+    /// The placeholders on screen, crossfaded in when `fade`, and the activity line from 4 s.
+    fn show_placeholders(self: &Rc<Self>, timing: Timing, fade: bool) {
+        self.phase.set(Phase::Placeholders);
+        self.since.set(Some(Instant::now()));
+        self.widget.set_visible_child_name("placeholders");
+        if fade && let Some(child) = self.widget.visible_child() {
+            motion::crossfade_in(&child);
+        }
+        let weak = Rc::downgrade(self);
+        let line =
+            glib::timeout_add_local_once(ACTIVITY.saturating_sub(timing.silent), move || {
                 let Some(states) = weak.upgrade() else { return };
                 states.timers.borrow_mut().clear();
                 if states.phase.get() == Phase::Placeholders
@@ -255,9 +304,16 @@ impl States {
                     motion::fade_in(&states.activity);
                 }
             });
-            states.timers.borrow_mut().push(line);
-        });
-        self.timers.borrow_mut().push(show);
+        self.timers.borrow_mut().push(line);
+    }
+
+    /// Placeholders from the first frame in the room of what lands there, replaced the moment
+    /// it lands, with no least time: for a title's page. Called before the first `loading`.
+    pub fn in_place(&self) {
+        self.timing.set(Timing::IN_PLACE);
+        // The placeholders ask for their own height, so the room is kept where the screen does
+        // not stretch them to fill it.
+        self.clip.set_propagate_natural_height(true);
     }
 
     /// The placeholders at once, with no fade of their own: for a caller that crossfades over
@@ -326,7 +382,7 @@ impl States {
     fn answer(self: &Rc<Self>, phase: Phase) {
         self.cancel();
         let left = match (self.phase.get(), self.since.get()) {
-            (Phase::Placeholders, Some(since)) => AT_LEAST.saturating_sub(since.elapsed()),
+            (Phase::Placeholders, Some(since)) => self.timing.get().hold_left(since.elapsed()),
             _ => Duration::ZERO,
         };
         if left.is_zero() {
@@ -532,6 +588,52 @@ mod tests {
             let grid = placeholders(Shape::Grid);
             let min = grid.measure(gtk::Orientation::Horizontal, -1).0;
             assert!(min <= 300, "the placeholders need {min} px");
+        });
+    }
+
+    #[test]
+    fn screens_wait_600_ms_and_hold_placeholders_0_3_s() {
+        let wait = Timing::WAIT;
+        assert!(!wait.at_once());
+        assert_eq!(wait.silent, Duration::from_millis(600));
+        assert_eq!(wait.hold_left(Duration::ZERO), Duration::from_millis(300));
+        assert_eq!(wait.hold_left(Duration::from_millis(120)), Duration::from_millis(180));
+        assert_eq!(wait.hold_left(Duration::from_secs(2)), Duration::ZERO);
+    }
+
+    #[test]
+    fn a_title_page_shows_placeholders_at_once_and_never_holds_them() {
+        let in_place = Timing::IN_PLACE;
+        assert!(in_place.at_once());
+        assert_eq!(in_place.silent, Duration::ZERO);
+        assert_eq!(in_place.hold_left(Duration::ZERO), Duration::ZERO);
+        assert_eq!(in_place.hold_left(Duration::from_millis(10)), Duration::ZERO);
+    }
+
+    /// In place, the placeholders stand from the first call and ask for their own height, so a
+    /// screen that does not stretch them keeps their room; the usual wait shows nothing yet.
+    #[test]
+    fn in_place_placeholders_take_their_room_at_once() {
+        run(|| {
+            let hub = Hub::new(std::sync::Weak::new());
+            let shape = Shape::Rows { count: 4, width: 128, height: 72 };
+            let make = || {
+                let content = gtk::Box::new(gtk::Orientation::Vertical, 0);
+                let empty = gtk::Box::new(gtk::Orientation::Vertical, 0);
+                let states = States::new(&hub, &content, shape, &empty, "");
+                states.widget.set_vhomogeneous(false);
+                states.widget.set_vexpand(false);
+                states
+            };
+            let waits = make();
+            waits.loading(None);
+            assert_eq!(waits.widget.visible_child_name().as_deref(), Some("silent"));
+            let held = make();
+            held.in_place();
+            held.loading(None);
+            assert_eq!(held.widget.visible_child_name().as_deref(), Some("placeholders"));
+            let height = held.widget.measure(gtk::Orientation::Vertical, 600).1;
+            assert!(height >= 4 * 72, "the placeholders take {height} px");
         });
     }
 

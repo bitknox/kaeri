@@ -126,6 +126,7 @@ import app.kaeri.store.LibraryModel
 import app.kaeri.store.label
 import app.kaeri.store.line
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.platform.LocalResources
 
 /** What a page shows before its title has arrived. */
@@ -792,10 +793,10 @@ private fun SeasonPage(
     // The page opened from a list has the list's row at once: its head and its actions. What
     // only its page brings (people you follow, the tags, the picker, Related) would land between
     // the rest and push it down, so the rest waits for the page under placeholders in its layout,
-    // and the page replaces them in one crossfade, every item below the actions at once (T8).
-    // A page that does not come lets the list's row stand.
-    val clock = rememberPlaceholderClock(waited = ahead)
-    val whole = clock.settled(!loaded || entry.detail?.partial == false || entry.id in failedIds)
+    // and the page replaces them in one crossfade, every item below the actions at once. They
+    // show with the page from the first frame and go the moment it lands, with no 600 ms wait and
+    // no hold (T8's title page exception). A page that does not come lets the list's row stand.
+    val whole = rememberSettled(!loaded || entry.detail?.partial == false || entry.id in failedIds)
     val held = loaded && !whole
     val jumpFade = app.kaeri.design.rememberStillFade()
     val synopses = rememberSynopsisPage(entry, episodes, jumpFade)
@@ -857,10 +858,10 @@ private fun SeasonPage(
                 item(key = "actions", contentType = "actions") { Box(itemMotion()) { TitleActions(entry, actions, episodes?.firstOrNull()?.metadataOnly == true) } }
                 // Keys of their own, so the page fades in over them rather than moving them.
                 if (synopsisWithoutSpoilers(entry.synopsis).isNotEmpty()) {
-                    item(key = "held-synopsis", contentType = "synopsis-placeholder") { Box(itemMotion()) { ShownWhen(clock.shown) { SynopsisPlaceholder() } } }
+                    item(key = "held-synopsis", contentType = "synopsis-placeholder") { Box(itemMotion()) { SynopsisPlaceholder() } }
                 }
-                item(key = "held-facts", contentType = "facts-placeholder") { Box(itemMotion()) { ShownWhen(clock.shown) { FactsPlaceholder() } } }
-                item(key = "held-more-about", contentType = "more-about-placeholder") { Box(itemMotion()) { ShownWhen(clock.shown) { MoreAboutPlaceholder() } } }
+                item(key = "held-facts", contentType = "facts-placeholder") { Box(itemMotion()) { FactsPlaceholder() } }
+                item(key = "held-more-about", contentType = "more-about-placeholder") { Box(itemMotion()) { MoreAboutPlaceholder() } }
             } else if (loaded) {
                 val unlisted = episodes?.firstOrNull()?.metadataOnly == true
                 item(key = "actions", contentType = "actions") { Box(itemMotion()) { TitleActions(entry, actions, unlisted) } }
@@ -881,21 +882,21 @@ private fun SeasonPage(
                     }
                 }
             } else {
-                // In the layout of what replaces them, so the picker stands where it will: at once
-                // on a page composed ahead, and after 600 ms on the one on screen (T8). A head that
-                // came ahead of the page brings its synopsis, in its place among them.
+                // In the layout of what replaces them, so the picker stands where it will, from the
+                // first frame (T8's title page exception). A head that came ahead of the page
+                // brings its synopsis, in its place among them.
                 // A season whose head is here has its buttons from it, as the page will: hold state,
                 // never blank. Play says the season's own episode, and crossfades if the page
                 // says another. Only a season with no head yet has the buttons' places.
                 if (entry.detail != null) {
                     item(key = "actions", contentType = "actions") { Box(itemMotion()) { TitleActions(entry, actions, episodes?.firstOrNull()?.metadataOnly == true) } }
                 } else {
-                    item(key = "actions-placeholder", contentType = "actions-placeholder") { Box(itemMotion()) { ShownWhen(clock.shown) { ActionsPlaceholder() } } }
+                    item(key = "actions-placeholder", contentType = "actions-placeholder") { Box(itemMotion()) { ActionsPlaceholder() } }
                 }
                 val synopsis = synopsisWithoutSpoilers(entry.synopsis)
                 if (synopsis.isNotEmpty()) item(key = "synopsis", contentType = "synopsis") { Box(itemMotion()) { Synopsis(synopsis) } }
-                item(key = "facts-placeholder", contentType = "facts-placeholder") { Box(itemMotion()) { ShownWhen(clock.shown) { FactsPlaceholder() } } }
-                item(key = "more-about-placeholder", contentType = "more-about-placeholder") { Box(itemMotion()) { ShownWhen(clock.shown) { MoreAboutPlaceholder() } } }
+                item(key = "facts-placeholder", contentType = "facts-placeholder") { Box(itemMotion()) { FactsPlaceholder() } }
+                item(key = "more-about-placeholder", contentType = "more-about-placeholder") { Box(itemMotion()) { MoreAboutPlaceholder() } }
             }
             if (hasSeasons && !held) item(key = SEASONS, contentType = SEASONS) {
                 val picked = chosen.longValue.toUInt()
@@ -909,7 +910,7 @@ private fun SeasonPage(
             // with them where they stand, rather than pushing them down.
             episodeRows(
                 list, inset + 64.dp, count, entry, if (held) null else episodes, actions,
-                unfolded = entry.id in unfolded, onFold = fold, shown = clock.shown,
+                unfolded = entry.id in unfolded, onFold = fold,
                 placeholders = if (loaded && !held) "placeholder" else "held-placeholder",
                 dub = dubs[entry.id]?.line(context), page = synopses,
             )
@@ -951,10 +952,16 @@ private fun FactsPlaceholder() {
     }
 }
 
+/** The tag a title page's placeholders carry, so a test can find them at its first frame. */
+internal const val TITLE_PLACEHOLDER = "title-placeholder" // i18n-skip
+
+/** The services line's placeholder, one of the title page's, told apart for the geometry tests. */
+internal const val SERVICES_PLACEHOLDER = "services-placeholder" // i18n-skip
+
 /** More about this show's row while a season's title is on its way: its place, its words as a bar. */
 @Composable
 private fun MoreAboutPlaceholder() {
-    Box(Modifier.padding(top = 4.dp).fillMaxWidth().heightIn(min = 48.dp).padding(horizontal = 16.dp), contentAlignment = Alignment.CenterStart) {
+    Box(Modifier.testTag(TITLE_PLACEHOLDER).padding(top = 4.dp).fillMaxWidth().heightIn(min = 48.dp).padding(horizontal = 16.dp), contentAlignment = Alignment.CenterStart) {
         TextPlaceholder(0.42f, 20.dp)
     }
 }
@@ -1829,8 +1836,6 @@ private fun LazyListScope.episodeRows(
     actions: AppActions,
     unfolded: Boolean,
     onFold: (anchor: String) -> Unit,
-    /** Whether the placeholders show yet, by the page's [PlaceholderClock] (T8): at once on a page composed ahead, off screen. */
-    shown: Boolean,
     /** The placeholders' keys: another set crossfades with this one rather than moving it. */
     placeholders: String = "placeholder",
     /** How far the dub goes, beside the list's heading. */
@@ -1844,9 +1849,7 @@ private fun LazyListScope.episodeRows(
     if (episodes == null) {
         // Crossfading with the rows as they arrive (T8), as every item comes and goes.
         items(4, key = { "$placeholders-$it" }, contentType = { "placeholder" }) {
-            Box(itemMotion()) {
-                ShownWhen(shown) { EpisodePlaceholder() }
-            }
+            Box(itemMotion()) { EpisodePlaceholder() }
         }
         return
     }
@@ -2164,7 +2167,7 @@ private fun WatchedFoldRow(
 @Composable
 private fun EpisodePlaceholder() {
     Row(
-        Modifier.fillMaxWidth().height(72.dp).padding(start = 16.dp, end = 24.dp),
+        Modifier.testTag(TITLE_PLACEHOLDER).fillMaxWidth().height(72.dp).padding(start = 16.dp, end = 24.dp),
         horizontalArrangement = Arrangement.spacedBy(16.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
@@ -2302,10 +2305,9 @@ private fun TabletTitle(
     // As on a phone (SeasonPage): what only the page brings (Also on, the tags, people you follow,
     // the picker, Related) would push the rest down as it lands, so the facts, the family and the
     // episodes wait for it under placeholders that keep their room from the first frame, and the
-    // page replaces them in one crossfade. Another season picked shows its placeholders at once.
+    // page replaces them in one crossfade the moment it lands, with no wait and no hold.
     val failedIds by store.titles.failed.collectAsStateWithLifecycle()
-    val clock = rememberPlaceholderClock(waited = entry.id != id, key = entry.id)
-    val held = !clock.settled(entry.detail?.partial == false || entry.id in failedIds)
+    val held = !rememberSettled(entry.detail?.partial == false || entry.id in failedIds, key = entry.id)
     val heldId = if (held) entry.id else null
     LaunchedEffect(page.goal, page.selected) {
         val row = page.rows.firstOrNull { it.number == page.goal } ?: return@LaunchedEffect
@@ -2373,7 +2375,7 @@ private fun TabletTitle(
                           }
                             if (!aboutOpen) {
                                 Crossfade(entry.id == heldId, Modifier.padding(top = below).width(376.dp), animationSpec = Motion.standard(), label = "facts") { waiting -> // i18n-skip
-                                    if (waiting) TitleFactsPlaceholder(entry, clock.shown) else TitleFacts(entry) { aboutOpen = true }
+                                    if (waiting) TitleFactsPlaceholder(entry) else TitleFacts(entry) { aboutOpen = true }
                                 }
                             }
                         }
@@ -2394,7 +2396,7 @@ private fun TabletTitle(
                 fullWidth("${phase}gap") { Spacer(itemMotion().height(16.dp)) }
                 if (held || episodes == null) {
                     items(4, key = { "${phase}placeholder-$it" }) {
-                        Box(itemMotion()) { Box(Modifier.widthIn(max = BesideDims.MaxWidth)) { ShownWhen(clock.shown) { EpisodePlaceholder() } } }
+                        Box(itemMotion()) { Box(Modifier.widthIn(max = BesideDims.MaxWidth)) { EpisodePlaceholder() } }
                     }
                 } else {
                     val listed = page.listed
@@ -2590,10 +2592,10 @@ private fun TabletActions(entry: Entry, actions: AppActions, unlisted: Boolean, 
 
 /**
  * The details column while the page is on its way: the synopsis the list brought, then the facts'
- * row, the tags and More about as placeholders in [TitleFacts]' own frame, once [shown].
+ * row, the tags and More about as placeholders in [TitleFacts]' own frame.
  */
 @Composable
-private fun TitleFactsPlaceholder(entry: Entry, shown: Boolean) {
+private fun TitleFactsPlaceholder(entry: Entry) {
     val type = MaterialTheme.typography
     val density = LocalDensity.current
     val label = with(density) { type.labelSmall.lineHeight.toDp() }
@@ -2603,19 +2605,17 @@ private fun TitleFactsPlaceholder(entry: Entry, shown: Boolean) {
         if (synopsis.isNotEmpty()) {
             Text(synopsis, style = type.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 4, overflow = TextOverflow.Ellipsis)
         }
-        ShownWhen(shown) {
-            Column {
-                Row(Modifier.padding(top = 20.dp), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-                    repeat(3) {
-                        Column(Modifier.weight(1f)) {
-                            TextPlaceholder(0.5f, label)
-                            TextPlaceholder(0.8f, line)
-                        }
+        Column {
+            Row(Modifier.padding(top = 20.dp), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+                repeat(3) {
+                    Column(Modifier.weight(1f)) {
+                        TextPlaceholder(0.5f, label)
+                        TextPlaceholder(0.8f, line)
                     }
                 }
-                TextPlaceholder(0.6f, line, Modifier.padding(top = 12.dp))
-                Box(Modifier.padding(top = 12.dp).size(168.dp, 40.dp).clip(CircleShape).background(MaterialTheme.colorScheme.surfaceContainer))
             }
+            TextPlaceholder(0.6f, line, Modifier.padding(top = 12.dp))
+            Box(Modifier.testTag(TITLE_PLACEHOLDER).padding(top = 12.dp).size(168.dp, 40.dp).clip(CircleShape).background(MaterialTheme.colorScheme.surfaceContainer))
         }
     }
 }
