@@ -972,8 +972,8 @@ async fn the_tv_picked_again_after_a_lost_connection_carries_on_from_where_it_is
         FakeOptions { remembers: true, duration: 600.0, speed: 10.0, ..FakeOptions::default() };
     let (rig, playing) = playing_on(options).await;
     let (sender, mut sent) = sender_on(&rig);
-    let view = session_until(&rig.hub, |v| v.item.as_ref().is_some_and(|i| i.position >= 10.0))
-        .await;
+    let view =
+        session_until(&rig.hub, |v| v.item.as_ref().is_some_and(|i| i.position >= 10.0)).await;
     let seen = view.item.unwrap().position;
     rig.receiver.drop_connection();
     let view = session_until(&rig.hub, |v| v.state == SessionState::Error).await;
