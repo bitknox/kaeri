@@ -509,6 +509,90 @@ async fn a_cast_begun_from_play_on_tv_is_joined_again_after_the_system_ends_the_
     left_until(&again.hub, None).await;
 }
 
+#[tokio::test(flavor = "multi_thread", worker_threads = 4)]
+async fn finding_the_tv_again_while_a_play_on_tv_cast_plays_keeps_its_card() {
+    let options = FakeOptions { remembers: true, ..FakeOptions::default() };
+    let rig = Rig::on(true, options, false, lost_at_once()).await;
+    let (player, _events) = CastPlayer::connect(CastSetup {
+        device: rig.device(),
+        memory: rig.hub.memory(),
+        upstream: rig.hub.upstream(),
+        encoder: rig.hub.encoder(),
+        timings: rig.hub.timings(),
+    })
+    .await
+    .unwrap();
+    let player = Arc::new(player);
+    rig.hub.attach(&player);
+    player.launch().await.unwrap();
+    left_until(&rig.hub, Some("tv-1")).await;
+
+    // The header's TV picker browses again and finds the TV the cast plays on.
+    rig.hub.rejoin(&rig.device());
+    assert!(rig.hub.attached(&player), "the card still follows the cast");
+    tokio::time::sleep(Duration::from_millis(300)).await;
+    assert!(rig.hub.attached(&player), "the card still follows the cast");
+    assert_eq!(rig.hub.session().state, SessionState::Idle, "no session joined beside it");
+    assert_eq!(rig.receiver.heard("LAUNCH").len(), 1);
+    assert!(player.is_alive());
+}
+
+#[tokio::test(flavor = "multi_thread", worker_threads = 4)]
+async fn a_tv_stopped_on_the_tv_and_picked_again_is_never_joined_beside_the_new_cast() {
+    let options = FakeOptions { duration: 600.0, ..FakeOptions::default() };
+    let rig = Arc::new(Rig::with(true, options).await);
+    rig.hub.connect(rig.device());
+    session_until(&rig.hub, |v| v.state == SessionState::Connected).await;
+    left_until(&rig.hub, Some("tv-1")).await;
+    // The TV stops the cast: nothing is left to join.
+    rig.receiver.stop_app();
+    session_until(&rig.hub, |v| v.state != SessionState::Connected).await;
+    left_until(&rig.hub, None).await;
+
+    // Choose another TV: the play goes to the TV on its own, and the picker's browse finds the
+    // TV while it starts.
+    rig.hub.begin(rig.device());
+    let file = rig.file("1.mkv", &Fixture::default());
+    let playing = {
+        let rig = Arc::clone(&rig);
+        tokio::spawn(async move { rig.play(vec![file], context("1", None)).await })
+    };
+    left_until(&rig.hub, Some("tv-1")).await;
+    let player = rig.hub.player().expect("the play's player");
+    let launches = rig.receiver.heard("LAUNCH").len();
+    rig.hub.rejoin(&rig.device());
+    tokio::time::sleep(Duration::from_millis(300)).await;
+    assert!(rig.hub.attached(&player), "the card still follows the play");
+    assert_eq!(rig.hub.session().state, SessionState::Idle, "no session joined beside it");
+    assert_eq!(rig.receiver.heard("LAUNCH").len(), launches);
+    playing.abort();
+}
+
+#[tokio::test(flavor = "multi_thread", worker_threads = 4)]
+async fn a_tv_found_while_a_cast_connects_to_it_is_left_to_that_cast() {
+    let options = FakeOptions { remembers: true, ..FakeOptions::default() };
+    let rig = Rig::on(true, options, false, lost_at_once()).await;
+    rig.hub.connect(rig.device());
+    session_until(&rig.hub, |v| v.state == SessionState::Connected).await;
+
+    // A later run with the receiver still up casts to that TV, and finds it while connecting.
+    let later = Arc::new(CastHub::with(
+        Some(rig.dir.path().to_owned()),
+        Arc::new(PlainHttp),
+        timings(),
+    ));
+    assert_eq!(later.left_on().as_deref(), Some("tv-1"));
+    later.begin(rig.device());
+    let opening = later.opening();
+    later.rejoin(&rig.device());
+    tokio::time::sleep(Duration::from_millis(300)).await;
+    assert_eq!(later.session().state, SessionState::Idle, "nothing joined while it connects");
+    drop(opening);
+    later.rejoin(&rig.device());
+    session_until(&later, |v| v.state == SessionState::Connected).await;
+    assert!(later.disconnect());
+}
+
 /// A TV whose silence is noticed after a second, and connected to again for six.
 fn quick_to_notice() -> Timings {
     Timings { silence: Duration::from_secs(1), reconnect: Duration::from_secs(6), ..timings() }
