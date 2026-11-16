@@ -7,7 +7,7 @@
 import { City, CLOSING, drift } from './city';
 import { classify, codecLabel, refusedOf, type Report } from './errors';
 import { loadStrings, type Strings } from './i18n';
-import { startPlayer, type ErrorEventLike, type Player } from './player';
+import { staysWithoutSenders, startPlayer, type ErrorEventLike, type Player } from './player';
 import {
 	asDevice,
 	deviceFromAgent,
@@ -733,7 +733,13 @@ function everySecond() {
 		// Ten minutes with nothing to play: the TV goes back to its own screen.
 		player?.close();
 	}
-	if (!resting) S.closing = false;
+	// Paused with no sender left, nothing will play it on: it closes as an idle TV does.
+	const pausedAlone = S.phase === 'playing' && S.paused && (player?.senders() ?? 1) === 0;
+	if (pausedAlone && !S.closing && at - S.pausedAt >= T.close) {
+		S.closing = true;
+		player?.close();
+	}
+	if (!resting && !pausedAlone) S.closing = false;
 }
 
 // ---------- Start ----------
@@ -782,6 +788,7 @@ async function start() {
 			if (!S.deviceKnown) S.device = deviceFromAgent(userAgent);
 			ready(senderId);
 		},
+		lastSenderLeft: () => staysWithoutSenders(S.phase),
 		},
 		formats,
 	);

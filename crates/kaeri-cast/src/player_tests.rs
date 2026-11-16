@@ -1726,6 +1726,79 @@ async fn reconnecting_ends_with_the_cast_when_the_tries_run_out() {
     assert!(!player.is_alive());
 }
 
+/// A player on the TV with the engine's own silence and tries, playing a long file.
+async fn playing_with_the_engines_timings(
+    receiver: &FakeReceiver,
+    change: impl FnOnce(&mut Timings),
+) -> (CastPlayer, mpsc::UnboundedReceiver<PlaybackEvent>) {
+    let file = matroska(&Fixture::default());
+    let base = serve(HashMap::from([("/episode.mkv".to_owned(), file)])).await;
+    let mut setup =
+        setup(receiver, Arc::new(CastMemory::memory()), Arc::new(FakeEncoder::default()));
+    assert_eq!(setup.timings.silence, Timings::default().silence);
+    assert_eq!(setup.timings.reconnect, Duration::from_secs(20));
+    change(&mut setup.timings);
+    let (player, mut events) = connect_standard(setup).await.unwrap();
+    player.load(torrent(format!("{base}/episode.mkv")));
+    next(&mut events, |e| *e == PlaybackEvent::Loaded).await;
+    (player, events)
+}
+
+#[tokio::test(flavor = "multi_thread", worker_threads = 4)]
+async fn a_short_drop_off_the_network_is_ridden_out_within_seconds_of_coming_back() {
+    let receiver = FakeReceiver::start(FakeOptions {
+        duration: 600.0,
+        remembers: true,
+        ..FakeOptions::default()
+    })
+    .await
+    .unwrap();
+    let (player, _events) = playing_with_the_engines_timings(&receiver, |_| {}).await;
+
+    // The phone leaves the Wi-Fi for 3 s: the socket closes at once, and the tries made
+    // meanwhile go nowhere and are never answered.
+    receiver.unreachable_for(Duration::from_secs(3));
+    let dropped = tokio::time::Instant::now();
+    receiver.close_connection();
+    status_until(&player, |s| s.reconnecting).await;
+    let back = status_until(&player, |s| !s.reconnecting).await;
+    let took = dropped.elapsed();
+    assert!(took < Duration::from_secs(6), "joined again {took:?} after the drop");
+    assert_eq!(back.failure, None, "{back:?}");
+    assert!(player.is_alive());
+    player.quit().await.unwrap();
+}
+
+#[tokio::test(flavor = "multi_thread", worker_threads = 4)]
+async fn a_change_of_network_while_reconnecting_tries_the_tv_again_at_once() {
+    let receiver = FakeReceiver::start(FakeOptions {
+        duration: 600.0,
+        remembers: true,
+        ..FakeOptions::default()
+    })
+    .await
+    .unwrap();
+    // Tries long enough that only the change of network brings the next one early.
+    let (player, _events) = playing_with_the_engines_timings(&receiver, |timings| {
+        timings.retry = Duration::from_secs(10);
+    })
+    .await;
+
+    receiver.unreachable_for(Duration::from_secs(1));
+    receiver.close_connection();
+    status_until(&player, |s| s.reconnecting).await;
+    tokio::time::sleep(Duration::from_millis(1300)).await;
+    // Back on the TV's Wi-Fi, as the system says.
+    let changed = tokio::time::Instant::now();
+    player.network_changed();
+    status_until(&player, |s| !s.reconnecting).await;
+    let took = changed.elapsed();
+    assert!(took < Duration::from_secs(2), "joined again {took:?} after the change");
+    assert_eq!(player.failure(), None);
+    assert!(player.is_alive());
+    player.quit().await.unwrap();
+}
+
 #[tokio::test(flavor = "multi_thread", worker_threads = 4)]
 async fn a_stop_on_the_tv_a_takeover_and_a_lost_tv_each_end_the_cast_their_own_way() {
     // Stopped on the TV: no app runs afterwards, and the TV still answers.
@@ -2034,6 +2107,55 @@ async fn a_session_left_running_is_joined_with_what_it_plays() {
     .await
     .unwrap();
     assert!(gone.is_none(), "a session that ended isn't joined");
+}
+
+/// A second sender connects to a TV another one casts to, and launching the receiver joins the
+/// one that runs: its controls drive what the other sender plays there.
+#[tokio::test(flavor = "multi_thread", worker_threads = 4)]
+async fn a_receiver_another_sender_plays_on_takes_this_ones_controls() {
+    let receiver = FakeReceiver::start(FakeOptions {
+        duration: 600.0,
+        remembers: true,
+        ..FakeOptions::default()
+    })
+    .await
+    .unwrap();
+    let (theirs, _events) = playing(&receiver).await;
+    let session = theirs.receiver().unwrap().session_id;
+    let launches = receiver.heard("LAUNCH").len();
+    // The fake serves one sender at a time: the other one's connection goes as this one comes.
+    drop(theirs);
+
+    let (player, _events) = connect_standard(setup(
+        &receiver,
+        Arc::new(CastMemory::memory()),
+        Arc::new(FakeEncoder::default()),
+    ))
+    .await
+    .unwrap();
+    player.launch().await.unwrap();
+    assert_eq!(player.receiver().map(|app| app.session_id), Some(session), "the same receiver");
+    let mut status = player.status();
+    let now = tokio::time::timeout(
+        Duration::from_secs(5),
+        status.wait_for(|s| s.state == CastState::Playing),
+    )
+    .await
+    .expect("the receiver says what plays")
+    .unwrap()
+    .clone();
+    assert_eq!(now.metadata.map(|m| m.title).as_deref(), Some("Episode 1"));
+    assert_eq!(receiver.heard("LAUNCH").len(), launches + 1);
+    assert_eq!(receiver.heard("LOAD").len(), 1, "nothing loaded again");
+
+    player.set_paused(true).await.unwrap();
+    receiver_heard_soon(&receiver, "PAUSE", 1).await;
+    player.seek(300.0, true).await.unwrap();
+    let seek = receiver_heard_soon(&receiver, "SEEK", 1).await;
+    assert_eq!(seek[0]["currentTime"].as_f64(), Some(300.0));
+    player.stop().await.unwrap();
+    let stops = receiver.heard("STOP");
+    assert!(stops.iter().any(|m| m["mediaSessionId"].is_i64()), "{stops:?}");
 }
 
 /// An HLS master with the original and a dub as audio renditions beside one picture, the

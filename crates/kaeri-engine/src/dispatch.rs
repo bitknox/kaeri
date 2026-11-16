@@ -726,6 +726,9 @@ pub(crate) fn dispatch(
             services.meta.path(offline);
             services.book_sources.write_back_network(offline, services.clock.now());
             crate::phases::network_path(network, engine, tx);
+            // A cast whose connection dropped with the Wi-Fi tries the TV again on the new path.
+            #[cfg(feature = "cast")]
+            services.casts.network_changed();
             ahead::resume(engine, services, tx);
             crate::downloads::books::resume(engine, services, tx);
             // A quiet recheck missed while offline runs once now.

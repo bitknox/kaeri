@@ -30,6 +30,8 @@ export interface Hooks {
 	tracksChanged(): void;
 	senderMessage(data: unknown, senderId: string): void;
 	senderConnected(senderId: string, userAgent: string | undefined): void;
+	/** The last sender left on its own word; return true to keep the receiver up. */
+	lastSenderLeft(): boolean;
 }
 
 export interface Player {
@@ -43,11 +45,22 @@ export interface Player {
 	switchAudio(language: string, name?: string): boolean;
 	/** Sends on Kaeri's namespace; to every sender when `to` is left out. */
 	send(body: Record<string, unknown>, to?: string): void;
+	/** How many senders are connected now. */
+	senders(): number;
 	/** Closes the receiver; the TV goes back to its own screen. */
 	close(): void;
 }
 
 /** `formats` unpacks loads on the receiver itself (formats/receiver.ts); without it CAF plays every load. */
+/**
+ * Whether the receiver stays up once its last sender has left: while an episode is loaded or
+ * plays, and through Finished, it does, and the idle close in main.ts ends it once nothing plays.
+ * At Ready or after an error it closes, as CAF would.
+ */
+export function staysWithoutSenders(phase: string): boolean {
+	return phase === 'loading' || phase === 'playing' || phase === 'gone' || phase === 'finished';
+}
+
 export function startPlayer(video: HTMLVideoElement, hooks: Hooks, formats?: Formats): Player {
 	const fw = cast.framework;
 	const context = fw.CastReceiverContext.getInstance();
@@ -120,6 +133,16 @@ export function startPlayer(video: HTMLVideoElement, hooks: Hooks, formats?: For
 		hooks.senderConnected(e.senderId, e.userAgent),
 	);
 
+	// CAF closes the receiver when its last sender leaves on its own word: Play services' Cast
+	// card leaving, or Kaeri's sender ended by the system. The handler takes CAF's place, so an
+	// episode plays on and the sender joins it again when it comes back; nothing on screen closes
+	// as CAF would.
+	if (typeof context.setLastSenderDisconnectedHandler === 'function') {
+		context.setLastSenderDisconnectedHandler(() => {
+			if (!hooks.lastSenderLeft()) context.stop();
+		});
+	}
+
 	const options = new fw.CastReceiverOptions();
 	options.customNamespaces = { [NAMESPACE]: fw.system.MessageType.JSON };
 	// The receiver closes itself after ten minutes with nothing to play (main.ts).
@@ -161,6 +184,7 @@ export function startPlayer(video: HTMLVideoElement, hooks: Hooks, formats?: For
 				console.warn('send', body.type, e);
 			}
 		},
+		senders: () => safe(() => (context.getSenders() ?? []).length, 0),
 		close: () => context.stop(),
 	};
 }
