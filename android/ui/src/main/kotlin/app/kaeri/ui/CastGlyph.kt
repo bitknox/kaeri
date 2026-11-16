@@ -14,11 +14,10 @@ import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.background
+import androidx.compose.ui.draw.drawBehind
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
@@ -132,9 +131,10 @@ fun CastButtonState.glyph(): CastGlyphState = when (this) {
  * Connecting and connected are said once each.
  *
  * @param circle on the title page's banner, the 40 circle its neighbours sit in.
+ * @param circleAlpha how strong that circle is drawn, read as it draws: the title page's bar fades it.
  */
 @Composable
-fun CastButton(circle: Boolean = false) {
+fun CastButton(circle: Boolean = false, circleAlpha: () -> Float = { 1f }) {
     val cast = LocalAppStore.current.cast
     val state by cast.button.collectAsStateWithLifecycle()
     val session by cast.session.collectAsStateWithLifecycle()
@@ -157,7 +157,8 @@ fun CastButton(circle: Boolean = false) {
     AnimatedVisibility(state != CastButtonState.Hidden, enter = fadeIn(Motion.fadeIn()), exit = fadeOut(Motion.fadeOut())) {
         IconButton(onClick = cast::pressButton, modifier = Modifier.semantics { contentDescription = label }) {
             if (circle) {
-                Box(Modifier.size(40.dp).background(MaterialTheme.colorScheme.surfaceContainer, CircleShape), contentAlignment = Alignment.Center) {
+                val container = MaterialTheme.colorScheme.surfaceContainer
+                Box(Modifier.size(40.dp).drawBehind { drawCircle(container.copy(alpha = container.alpha * circleAlpha())) }, contentAlignment = Alignment.Center) {
                     CastGlyph(state.glyph())
                 }
             } else {
