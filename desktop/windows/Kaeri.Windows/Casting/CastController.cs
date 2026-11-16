@@ -104,6 +104,7 @@ sealed class CastController : Grid
             BorderThickness = new Thickness(0),
             HorizontalContentAlignment = HorizontalAlignment.Left,
         };
+        CastParts.KeepLookWhenOff(titleButton);
         titleButton.Click += (_, _) => act.OpenShow();
         side.Children.Add(titleButton);
         side.Children.Add(episode);
@@ -431,7 +432,12 @@ sealed class CastController : Grid
     }
 
     /// <summary>The More menu as it stands, opened, for the board's frame of it.</summary>
-    public void ShowMore() => moreMenu.ShowAt(more);
+    public void ShowMore()
+    {
+        // Inside the window, so a capture of the window has it.
+        moreMenu.ShouldConstrainToRootBounds = true;
+        moreMenu.ShowAt(more);
+    }
 
     public void Tick(CastDrawn drawn) => seek.Show(drawn);
 
