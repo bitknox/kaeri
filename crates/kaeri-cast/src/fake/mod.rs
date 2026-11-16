@@ -210,6 +210,8 @@ enum Control {
     LoadElsewhere,
     Buffering(bool),
     Say(Value),
+    /// Each connection from now waits this long before it is answered.
+    AnswerAfter(Duration),
 }
 
 impl Drop for FakeReceiver {
@@ -307,6 +309,7 @@ impl FakeReceiver {
                 // Gone silent, the TV answers no connection again: the socket is held unread.
                 let mut gone = false;
                 let mut held = Vec::new();
+                let mut answer_after = Duration::ZERO;
                 loop {
                     tokio::select! {
                         accepted = listener.accept() => {
@@ -328,12 +331,17 @@ impl FakeReceiver {
                                 previous.abort();
                             }
                             current = Some(tokio::spawn(async move {
+                                tokio::time::sleep(answer_after).await;
                                 if let Ok(tls) = acceptor.accept(socket).await {
                                     let _ = serve(tls, heard, fetched, options, rx, kept).await;
                                 }
                             }));
                         }
                         Some(control) = controls.recv() => {
+                            if let Control::AnswerAfter(after) = control {
+                                answer_after = after;
+                                continue;
+                            }
                             gone |= matches!(control, Control::Silence);
                             if let Some(forward) = &forward {
                                 let _ = forward.send(control);
@@ -381,6 +389,12 @@ impl FakeReceiver {
     /// on and answers the next one: a phone whose Wi-Fi naps with the screen off.
     pub fn drop_connection(&self) {
         let _ = self.control.send(Control::Drop);
+    }
+
+    /// Answer each connection from now only after `delay`: a TV slow to take a sender back, so
+    /// the time between a dropped connection and the next one can be seen.
+    pub fn answer_after(&self, delay: Duration) {
+        let _ = self.control.send(Control::AnswerAfter(delay));
     }
 
     /// The receiver app is stopped on the TV, with its remote or from another phone's Cast card:
@@ -533,6 +547,8 @@ async fn serve(
                     }
                 }
                 Control::Say(message) => send(&transport, "*", NS_KAERI, message),
+                // Taken by the listener, never sent to a connection.
+                Control::AnswerAfter(_) => {}
             },
             frame = read_frame(&mut read) => {
                 let Some(message) = frame? else { return Ok(()) };

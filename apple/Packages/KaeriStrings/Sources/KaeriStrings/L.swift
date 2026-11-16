@@ -58,6 +58,11 @@ public enum L {
         Self.format("notice-cast-lost", fallback: "Lost %1$@, so casting stopped.", name)
     }
 
+    /// The cast was stopped on the TV while it still answered: with the TV's own remote, another phone's cast controls or the system's. The card closes and this shows for 8 seconds with Play here. The name is the TV's own.
+    public static func noticeCastStoppedElsewhere(name: String) -> String {
+        Self.format("notice-cast-stopped-elsewhere", fallback: "%1$@ stopped the cast.", name)
+    }
+
     /// Kaeri's receiver on the TV couldn't get part of the episode from the source mid-play, so the cast stopped. The card offers Choose source and Play here. The name is the TV's own.
     public static func noticeCastSegment(name: String) -> String {
         Self.format("notice-cast-segment", fallback: "%1$@ stopped getting the stream: the source didn't answer for part of the episode. Try another source.", name)
@@ -71,6 +76,11 @@ public enum L {
     /// Shown once per TV, the first time it can't keep up with styled subtitles and switches to plain ones. Nothing else changes and the episode plays on. The name is the TV's own.
     public static func noticeCastSubtitlesPlain(name: String) -> String {
         Self.format("notice-cast-subtitles-plain", fallback: "Subtitles on %1$@ show as plain text. Typeset subtitles were too much for it.", name)
+    }
+
+    /// Kaeri's receiver on the TV didn't start for this cast, so the TV's own player plays the episode instead. Shown each time it happens; the episode plays on. The name is the TV's own.
+    public static func noticeCastFallback(name: String) -> String {
+        Self.format("notice-cast-fallback", fallback: "%1$@ plays this in its own player. Subtitles show as plain text.", name)
     }
 
     /// The TV picked to cast to has left the network.

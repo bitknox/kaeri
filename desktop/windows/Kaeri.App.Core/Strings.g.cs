@@ -48,6 +48,9 @@ public static partial class T
     /// <summary>The TV stopped answering mid-cast. The name is the TV's own.</summary>
     public static string NoticeCastLost(string name) => Fill(Get("NoticeCastLost"), ("name", name));
 
+    /// <summary>The cast was stopped on the TV while it still answered: with the TV's own remote, another phone's cast controls or the system's. The card closes and this shows for 8 seconds with Play here. The name is the TV's own.</summary>
+    public static string NoticeCastStoppedElsewhere(string name) => Fill(Get("NoticeCastStoppedElsewhere"), ("name", name));
+
     /// <summary>Kaeri's receiver on the TV couldn't get part of the episode from the source mid-play, so the cast stopped. The card offers Choose source and Play here. The name is the TV's own.</summary>
     public static string NoticeCastSegment(string name) => Fill(Get("NoticeCastSegment"), ("name", name));
 
@@ -56,6 +59,9 @@ public static partial class T
 
     /// <summary>Shown once per TV, the first time it can't keep up with styled subtitles and switches to plain ones. Nothing else changes and the episode plays on. The name is the TV's own.</summary>
     public static string NoticeCastSubtitlesPlain(string name) => Fill(Get("NoticeCastSubtitlesPlain"), ("name", name));
+
+    /// <summary>Kaeri's receiver on the TV didn't start for this cast, so the TV's own player plays the episode instead. Shown each time it happens; the episode plays on. The name is the TV's own.</summary>
+    public static string NoticeCastFallback(string name) => Fill(Get("NoticeCastFallback"), ("name", name));
 
     /// <summary>The TV picked to cast to has left the network.</summary>
     public static string NoticeCastNoDevice => Get("NoticeCastNoDevice");
@@ -12321,9 +12327,11 @@ public static partial class T
         ["NoticeCastTakenOver"] = "Another device started something on {name}, so casting stopped.",
         ["NoticeCastNotSameNetwork"] = "This device isn't on the network {name} is on, or reaches it through a VPN. Connect both to the same network to cast.",
         ["NoticeCastLost"] = "Lost {name}, so casting stopped.",
+        ["NoticeCastStoppedElsewhere"] = "{name} stopped the cast.",
         ["NoticeCastSegment"] = "{name} stopped getting the stream: the source didn't answer for part of the episode. Try another source.",
         ["NoticeCastLostStream"] = "{name} lost the stream from this device. Check that both are on the same network.",
         ["NoticeCastSubtitlesPlain"] = "Subtitles on {name} show as plain text. Typeset subtitles were too much for it.",
+        ["NoticeCastFallback"] = "{name} plays this in its own player. Subtitles show as plain text.",
         ["NoticeCastNoDevice"] = "That TV is no longer on the network.",
         ["NoticeCastUnavailable"] = "This version of Kaeri can't cast to TVs.",
         ["CastPhaseStarting"] = "Starting on {name}",

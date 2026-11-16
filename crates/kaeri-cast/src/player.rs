@@ -26,9 +26,12 @@
 //! The receiver app is launched at the first load that has a plan, so a stream that can't be
 //! cast never takes the TV over, unless a cast session launched it first ([`CastPlayer::launch`]).
 //! It is Kaeri's own receiver when one is named, and the Default Media Receiver when there is
-//! none, when Kaeri's doesn't launch, or when it closes before it played anything. The media status is asked for every [`Timings::poll`] for the
-//! whole cast, since the Default Media Receiver reports on changes only. After
-//! [`Timings::idle_close`] paused, the cast ends and the TV goes back to what it showed.
+//! none, when Kaeri's doesn't launch, or when it closes before it played anything. Every cast
+//! tries Kaeri's receiver first: a failure on one cast is never held against the next, and
+//! [`CastStatus::fallen_back`] says when this one fell back. The media status is asked for every
+//! [`Timings::poll`] for the whole cast, since the Default Media Receiver reports on changes
+//! only. After [`Timings::idle_close`] paused, the cast ends and the TV goes back to what it
+//! showed.
 
 use std::{
     collections::HashMap,
@@ -179,6 +182,10 @@ pub enum CastFailure {
     /// The TV stopped answering.
     #[error("the TV went away: {0}")]
     Lost(String),
+    /// The receiver app was stopped from outside while the TV still answered: its own remote,
+    /// another phone's cast controls or the system's. Nothing runs on the TV afterwards.
+    #[error("the cast was stopped on the TV")]
+    StoppedElsewhere,
     /// Kaeri's receiver couldn't get part of the file from the source mid-play.
     #[error("the source didn't answer for part of the episode")]
     Segment,
@@ -262,6 +269,13 @@ pub struct CastStatus {
     /// Since when the TV has waited for the stream, while it waits: a buffering spell in a file
     /// that plays, never a start or a reload.
     pub waiting_since: Option<Instant>,
+    /// Kaeri's receiver didn't launch, never said it was ready, or closed at a load on this cast,
+    /// so the Default Media Receiver plays it. Set once it falls back, for the rest of the cast.
+    pub fallen_back: bool,
+    /// The connection to the TV closed and is being made again, for up to
+    /// [`Timings::reconnect`]: `state` is where the TV was. Cleared when it joins again, or when
+    /// the tries run out and the cast ends.
+    pub reconnecting: bool,
 }
 
 /// How long a control's effect is shown before the TV has said it. A receiver answers within a
@@ -521,6 +535,8 @@ impl State {
                 .map(|gone| gone.since)
                 .or(self.waiting_since)
                 .filter(|_| !self.trying && !self.ended),
+            fallen_back: self.fallen_back,
+            reconnecting: self.reconnecting && !self.closed && !self.quit,
         }
     }
 }
@@ -596,20 +612,12 @@ impl Inner {
         }
         let inner = Arc::clone(self);
         let launch = tokio::spawn(async move {
-            let tv = &inner.setup.device.id;
+            // Kaeri's receiver first on every cast: one that failed on the last says nothing
+            // of this one.
             let receiver = {
                 let state = lock(&inner.state);
                 state.receiver.clone().filter(|_| !state.fallen_back)
             };
-            let receiver = receiver.filter(|r| {
-                let skipped = r != DEFAULT_MEDIA_RECEIVER
-                    && inner.setup.memory.caps(tv).skips_own_receiver();
-                if skipped {
-                    tracing::info!("Kaeri's receiver failed on this TV lately; the Default Media Receiver plays");
-                    lock(&inner.state).fallen_back = true;
-                }
-                !skipped
-            });
             let app = match receiver {
                 Some(receiver) if receiver != DEFAULT_MEDIA_RECEIVER => {
                     inner.ready.send_replace(None);
@@ -626,9 +634,6 @@ impl Inner {
                                     "Kaeri's receiver never said it was ready; the Default Media Receiver plays"
                                 );
                                 lock(&inner.state).fallen_back = true;
-                                if let Err(e) = inner.setup.memory.own_receiver_failed(tv) {
-                                    tracing::warn!(error = %e, "couldn't note the TV");
-                                }
                                 inner.device().launch(DEFAULT_MEDIA_RECEIVER).await?
                             }
                         },
@@ -678,7 +683,7 @@ impl Inner {
                 && !state.fallen_back
                 && state.receiver.as_deref().is_some_and(|r| r != DEFAULT_MEDIA_RECEIVER)
         };
-        if !expected || self.setup.memory.caps(&self.setup.device.id).skips_own_receiver() {
+        if !expected {
             return false;
         }
         match self.app().await {
@@ -2568,6 +2573,7 @@ async fn pump(mut incoming: mpsc::UnboundedReceiver<Incoming>, inner: std::sync:
         };
         // The TV went away, or what ran on it did.
         let mut state = lock(&inner.state);
+        state.reconnecting = false;
         if !state.closed && !state.quit {
             tracing::info!(%failure, "cast ended");
             inner.relay.close();
@@ -2606,6 +2612,8 @@ async fn reconnect(inner: &Inner) -> Result<mpsc::UnboundedReceiver<Incoming>, C
         }
         state.reconnecting = true;
     }
+    // The apps say so from the moment the connection closed.
+    inner.publish();
     tracing::info!("the connection to the TV dropped; connecting again");
     let deadline = Instant::now() + budget;
     let mut wait = Duration::from_millis(250);
@@ -2629,7 +2637,11 @@ async fn reconnect(inner: &Inner) -> Result<mpsc::UnboundedReceiver<Incoming>, C
         tokio::time::sleep(wait).await;
         wait = (wait * 2).min(Duration::from_secs(2));
     };
-    lock(&inner.state).reconnecting = false;
+    // A connection made again clears it here; tries that ran out clear it as the cast ends, so
+    // the status never reads as playing between the two.
+    if result.is_ok() {
+        lock(&inner.state).reconnecting = false;
+    }
     match &result {
         Ok(_) => tracing::info!("connected to the TV again"),
         Err(failure) => tracing::info!(%failure, "couldn't connect to the TV again"),
@@ -2825,15 +2837,17 @@ fn app_gone(inner: &Arc<Inner>, state: &mut State, listed: Option<bool>) {
 }
 
 /// Why the receiver app left, by what the TV said since. Nothing running is a stop on the TV
-/// (its remote, another phone's Cast card) and ends the cast. The app still listed, or no word
-/// at all, is an app that failed: the Default Media Receiver takes over a load in flight.
+/// (its remote, another phone's Cast card, the system's cast controls) and ends the cast as
+/// stopped there. The app still listed, or no word at all, is an app that failed: the Default
+/// Media Receiver takes over a load in flight, and anything else ends the cast as lost.
 fn gone_why(inner: &Inner, state: &mut State) {
     let Some(gone) = state.gone.take() else { return };
     if state.closed || state.quit {
         return;
     }
-    let stopped = gone.listed == Some(false);
-    if stopped || !falls_back(inner, state) {
+    if gone.listed == Some(false) {
+        end_cast(inner, state, CastFailure::StoppedElsewhere);
+    } else if !falls_back(inner, state) {
         end_cast(inner, state, CastFailure::Lost("the TV closed the app".into()));
     }
 }

@@ -33,12 +33,16 @@ pub enum Msg {
     NoticeCastNotSameNetwork { name: String },
     /// The TV stopped answering mid-cast. The name is the TV's own.
     NoticeCastLost { name: String },
+    /// The cast was stopped on the TV while it still answered: with the TV's own remote, another phone's cast controls or the system's. The card closes and this shows for 8 seconds with Play here. The name is the TV's own.
+    NoticeCastStoppedElsewhere { name: String },
     /// Kaeri's receiver on the TV couldn't get part of the episode from the source mid-play, so the cast stopped. The card offers Choose source and Play here. The name is the TV's own.
     NoticeCastSegment { name: String },
     /// The TV stopped reaching this device, which hands it the stream, mid-episode. The card offers Try again and Play here. The name is the TV's own.
     NoticeCastLostStream { name: String },
     /// Shown once per TV, the first time it can't keep up with styled subtitles and switches to plain ones. Nothing else changes and the episode plays on. The name is the TV's own.
     NoticeCastSubtitlesPlain { name: String },
+    /// Kaeri's receiver on the TV didn't start for this cast, so the TV's own player plays the episode instead. Shown each time it happens; the episode plays on. The name is the TV's own.
+    NoticeCastFallback { name: String },
     /// The TV picked to cast to has left the network.
     NoticeCastNoDevice,
     /// This build of the app has no casting.
@@ -490,9 +494,11 @@ impl Msg {
             Self::NoticeCastTakenOver { .. } => "notice-cast-taken-over",
             Self::NoticeCastNotSameNetwork { .. } => "notice-cast-not-same-network",
             Self::NoticeCastLost { .. } => "notice-cast-lost",
+            Self::NoticeCastStoppedElsewhere { .. } => "notice-cast-stopped-elsewhere",
             Self::NoticeCastSegment { .. } => "notice-cast-segment",
             Self::NoticeCastLostStream { .. } => "notice-cast-lost-stream",
             Self::NoticeCastSubtitlesPlain { .. } => "notice-cast-subtitles-plain",
+            Self::NoticeCastFallback { .. } => "notice-cast-fallback",
             Self::NoticeCastNoDevice => "notice-cast-no-device",
             Self::NoticeCastUnavailable => "notice-cast-unavailable",
             Self::CastPhaseStarting { .. } => "cast-phase-starting",
@@ -727,9 +733,11 @@ impl Msg {
             Self::NoticeCastTakenOver { name } => vec![("name", Value::Text(name.clone()))],
             Self::NoticeCastNotSameNetwork { name } => vec![("name", Value::Text(name.clone()))],
             Self::NoticeCastLost { name } => vec![("name", Value::Text(name.clone()))],
+            Self::NoticeCastStoppedElsewhere { name } => vec![("name", Value::Text(name.clone()))],
             Self::NoticeCastSegment { name } => vec![("name", Value::Text(name.clone()))],
             Self::NoticeCastLostStream { name } => vec![("name", Value::Text(name.clone()))],
             Self::NoticeCastSubtitlesPlain { name } => vec![("name", Value::Text(name.clone()))],
+            Self::NoticeCastFallback { name } => vec![("name", Value::Text(name.clone()))],
             Self::NoticeCastNoDevice => Vec::new(),
             Self::NoticeCastUnavailable => Vec::new(),
             Self::CastPhaseStarting { name } => vec![("name", Value::Text(name.clone()))],

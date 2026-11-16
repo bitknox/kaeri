@@ -8,7 +8,7 @@ use kaeri_cast::{
     CastDevice, CastFailure, CastPlayer, CastSetup, DEFAULT_MEDIA_RECEIVER, PlainHttp, Timings,
     aac::FakeEncoder,
     fake::{
-        FakeOptions, FakeReceiver,
+        CustomReceiver, FakeOptions, FakeReceiver,
         matroska::{Fixture, FixtureAudio, matroska},
     },
 };
@@ -691,4 +691,80 @@ async fn back_after_the_session_ended_away_the_receiver_is_joined_and_plays_on()
         "the episode isn't cast again"
     );
     assert!(rig.hub.disconnect());
+}
+
+#[tokio::test(flavor = "multi_thread", worker_threads = 4)]
+async fn each_fall_back_to_the_tvs_own_player_is_said_and_the_next_connect_tries_kaeris_first()
+{
+    let options = FakeOptions { custom: CustomReceiver::Silent, ..FakeOptions::default() };
+    let rig = Rig::on(
+        true,
+        options,
+        false,
+        Timings { ready: Duration::from_millis(800), ..timings() },
+    )
+    .await;
+    let fallback = Msg::NoticeCastFallback { name: "Living room".into() };
+    for connect in 1..=2 {
+        rig.hub.connect(rig.device());
+        let view = session_until(&rig.hub, |v| v.state == SessionState::Connected).await;
+        assert!(!view.own_receiver, "connect {connect}: {view:?}");
+        assert_eq!(view.note.as_ref(), Some(&fallback), "connect {connect} says it");
+        assert!(rig.hub.disconnect());
+        assert_eq!(rig.hub.session().note, None);
+    }
+    let launched: Vec<_> = rig
+        .receiver
+        .heard("LAUNCH")
+        .iter()
+        .map(|m| m["appId"].as_str().unwrap_or_default().to_owned())
+        .collect();
+    assert_eq!(launched.len(), 4, "{launched:?}");
+    assert_ne!(launched[2], DEFAULT_MEDIA_RECEIVER, "the second connect tries Kaeri's first");
+    assert_eq!(launched[3], DEFAULT_MEDIA_RECEIVER);
+}
+
+#[tokio::test(flavor = "multi_thread", worker_threads = 4)]
+async fn a_held_tv_reads_as_reconnecting_while_its_connection_is_made_again() {
+    let options = FakeOptions { remembers: true, ..FakeOptions::default() };
+    let timings = Timings {
+        silence: Duration::from_secs(1),
+        reconnect: Duration::from_secs(6),
+        ..timings()
+    };
+    let rig = Rig::on(true, options, false, timings).await;
+    rig.hub.connect(rig.device());
+    let view = session_until(&rig.hub, |v| v.state == SessionState::Connected).await;
+    assert!(!view.reconnecting);
+    // Every change is read, as an app's watch reads them, and the TV takes a moment to answer
+    // again, so the time between is there to be seen.
+    let mut changes = rig.hub.changes();
+    rig.receiver.answer_after(Duration::from_millis(500));
+    rig.receiver.drop_connection();
+    let deadline = tokio::time::Instant::now() + Duration::from_secs(10);
+    let view = loop {
+        let view = rig.hub.session();
+        if view.reconnecting {
+            break view;
+        }
+        tokio::time::timeout_at(deadline, changes.changed())
+            .await
+            .unwrap_or_else(|_| panic!("reconnecting in time: {view:?}"))
+            .unwrap();
+    };
+    assert_eq!(view.state, SessionState::Connected, "held as it was meanwhile");
+    let view = session_until(&rig.hub, |v| !v.reconnecting).await;
+    assert_eq!(view.state, SessionState::Connected, "joined again: {view:?}");
+    assert!(rig.hub.disconnect());
+}
+
+#[tokio::test(flavor = "multi_thread", worker_threads = 4)]
+async fn a_held_tv_stopped_on_the_tv_with_nothing_playing_lets_go_quietly() {
+    let rig = Rig::new(true).await;
+    rig.hub.connect(rig.device());
+    session_until(&rig.hub, |v| v.state == SessionState::Connected).await;
+    rig.receiver.stop_app();
+    let view = session_until(&rig.hub, |v| v.state != SessionState::Connected).await;
+    assert_eq!(view.state, SessionState::Idle, "nothing to play here: {view:?}");
+    assert_eq!(view.notice, None);
 }

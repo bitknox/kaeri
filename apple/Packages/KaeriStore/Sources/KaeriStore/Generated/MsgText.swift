@@ -20,9 +20,11 @@ extension Msg {
         case .noticeCastTakenOver(let name): L.noticeCastTakenOver(name: name)
         case .noticeCastNotSameNetwork(let name): L.noticeCastNotSameNetwork(name: name)
         case .noticeCastLost(let name): L.noticeCastLost(name: name)
+        case .noticeCastStoppedElsewhere(let name): L.noticeCastStoppedElsewhere(name: name)
         case .noticeCastSegment(let name): L.noticeCastSegment(name: name)
         case .noticeCastLostStream(let name): L.noticeCastLostStream(name: name)
         case .noticeCastSubtitlesPlain(let name): L.noticeCastSubtitlesPlain(name: name)
+        case .noticeCastFallback(let name): L.noticeCastFallback(name: name)
         case .noticeCastNoDevice: L.noticeCastNoDevice
         case .noticeCastUnavailable: L.noticeCastUnavailable
         case .castPhaseStarting(let name): L.castPhaseStarting(name: name)

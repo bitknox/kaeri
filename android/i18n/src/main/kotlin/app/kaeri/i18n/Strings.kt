@@ -53,6 +53,10 @@ object Strings {
     fun noticeCastLost(context: Context, name: String): String =
         context.getString(R.string.notice_cast_lost, name)
 
+    /** The cast was stopped on the TV while it still answered: with the TV's own remote, another phone's cast controls or the system's. The card closes and this shows for 8 seconds with Play here. The name is the TV's own. */
+    fun noticeCastStoppedElsewhere(context: Context, name: String): String =
+        context.getString(R.string.notice_cast_stopped_elsewhere, name)
+
     /** Kaeri's receiver on the TV couldn't get part of the episode from the source mid-play, so the cast stopped. The card offers Choose source and Play here. The name is the TV's own. */
     fun noticeCastSegment(context: Context, name: String): String =
         context.getString(R.string.notice_cast_segment, name)
@@ -64,6 +68,10 @@ object Strings {
     /** Shown once per TV, the first time it can't keep up with styled subtitles and switches to plain ones. Nothing else changes and the episode plays on. The name is the TV's own. */
     fun noticeCastSubtitlesPlain(context: Context, name: String): String =
         context.getString(R.string.notice_cast_subtitles_plain, name)
+
+    /** Kaeri's receiver on the TV didn't start for this cast, so the TV's own player plays the episode instead. Shown each time it happens; the episode plays on. The name is the TV's own. */
+    fun noticeCastFallback(context: Context, name: String): String =
+        context.getString(R.string.notice_cast_fallback, name)
 
     /** The TV picked to cast to has left the network. */
     fun noticeCastNoDevice(context: Context): String =

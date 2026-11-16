@@ -77,6 +77,8 @@ pub struct CastHub {
     left: Mutex<Option<Option<Left>>>,
     /// Counts the cast links opened on a held player: only the latest stops its media.
     links: std::sync::atomic::AtomicU64,
+    /// The player whose fall back to the TV's own player was last said, so it is said once.
+    told_fallback: Mutex<Weak<CastPlayer>>,
     /// The runtime the hub was made on, for work a platform thread starts (a browse's find).
     runtime: Option<tokio::runtime::Handle>,
 }
@@ -181,7 +183,9 @@ pub struct SessionView {
     pub failure: Option<CastFailure>,
     /// Why the session ended, in the engine's words, naming the TV.
     pub notice: Option<kaeri_model::Msg>,
-    /// A note while it plays, for a toast: shown when it first reads differently.
+    /// A note while a TV is held, for a toast: shown when it first reads differently. The TV
+    /// shows plain subtitles, or plays this cast in its own player as Kaeri's receiver didn't
+    /// start.
     pub note: Option<kaeri_model::Msg>,
     /// The receiver's volume, 0 to 1.
     pub level: Option<f64>,
@@ -189,6 +193,9 @@ pub struct SessionView {
     pub volume: VolumeControl,
     /// Kaeri's own receiver runs, rather than the Default Media Receiver.
     pub own_receiver: bool,
+    /// The connection to the TV closed and is being made again: `state` stays what it was until
+    /// it joins again, or the tries run out and the session ends.
+    pub reconnecting: bool,
 }
 
 /// How long Up Next counts down without an ending to start it, when the setting says none:
@@ -298,7 +305,8 @@ struct Current {
     undo: Option<Undo>,
     /// The title and episode the cast was last asked to play, for Try again.
     asked: Option<(AnilistId, String)>,
-    /// A note while it plays, said once: the TV shows plain subtitles.
+    /// A note while it plays, said once: the TV shows plain subtitles, or plays this cast in its
+    /// own player.
     note: Option<kaeri_model::Msg>,
     /// Kaeri's receiver was told to show Up Next's card.
     told_next: bool,
@@ -358,6 +366,7 @@ impl CastHub {
             receiver: Mutex::new(None),
             left: Mutex::new(None),
             links: std::sync::atomic::AtomicU64::new(0),
+            told_fallback: Mutex::new(Weak::new()),
             runtime: tokio::runtime::Handle::try_current().ok(),
         }
     }
@@ -532,7 +541,11 @@ impl CastHub {
                 if now.state == CastState::Ended {
                     if let (Some(hub), Some(player)) = (hub.upgrade(), held.upgrade()) {
                         let lost = matches!(now.failure, Some(CastFailure::Lost(_)));
-                        let failure = now.failure.filter(|_| busy || !lost);
+                        // Kaeri's receiver closes itself after a while with nothing playing,
+                        // which reads as a stop on the TV: idle, either ends quietly.
+                        let quiet =
+                            lost || matches!(now.failure, Some(CastFailure::StoppedElsewhere));
+                        let failure = now.failure.filter(|_| busy || !quiet);
                         hub.session_ended(&player, failure, lost, busy, seen);
                     }
                     return;
@@ -733,7 +746,9 @@ impl CastHub {
                 let name = device.as_ref()?.name.clone();
                 Some(crate::playback::link::cast::notice(f, &name))
             }),
-            note: view.note.filter(|_| state == SessionState::Playing),
+            note: view
+                .note
+                .filter(|_| matches!(state, SessionState::Playing | SessionState::Connected)),
             failure: failure.filter(|_| state == SessionState::Error),
             level: status.as_ref().and_then(|s| s.level),
             muted: status.as_ref().and_then(|s| s.muted),
@@ -742,6 +757,8 @@ impl CastHub {
                 .as_ref()
                 .and_then(|s| s.receiver.as_deref())
                 .is_some_and(|r| r != DEFAULT_MEDIA_RECEIVER),
+            reconnecting: status.as_ref().is_some_and(|s| s.reconnecting)
+                && matches!(state, SessionState::Playing | SessionState::Connected),
         }
     }
 
@@ -1124,6 +1141,7 @@ impl CastHub {
         let mut noted = Noted::default();
         let now = status.borrow_and_update().clone();
         self.note_left(player, &now, &mut noted);
+        self.note_fallback(player, &now);
         self.set_status(now);
         let hub = Arc::downgrade(self);
         let held = Arc::downgrade(player);
@@ -1132,9 +1150,28 @@ impl CastHub {
                 let (Some(hub), Some(player)) = (hub.upgrade(), held.upgrade()) else { return };
                 let now = status.borrow_and_update().clone();
                 hub.note_left(&player, &now, &mut noted);
+                hub.note_fallback(&player, &now);
                 hub.set_status(now);
             }
         });
+    }
+
+    /// Kaeri's receiver didn't start on `player`'s cast, so the TV plays it in its own player:
+    /// the note says so once for each time it happens, however often the card is opened again.
+    fn note_fallback(&self, player: &Arc<CastPlayer>, status: &CastStatus) {
+        if !status.fallen_back {
+            return;
+        }
+        {
+            let mut told = lock(&self.told_fallback);
+            if Weak::ptr_eq(&told, &Arc::downgrade(player)) {
+                return;
+            }
+            *told = Arc::downgrade(player);
+        }
+        tracing::info!("the TV plays this cast in its own player");
+        lock(&self.cast).note =
+            Some(kaeri_model::Msg::NoticeCastFallback { name: player.device().name.clone() });
     }
 
     /// Keep the note of the receiver a cast plays on, a cast begun from Play on TV included, so a
