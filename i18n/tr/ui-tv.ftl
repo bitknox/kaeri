@@ -41,6 +41,7 @@ tv-show-remote = { $name } için kumandayı göster
 tv-status-playing = { $name } üzerinde oynatılıyor
 tv-status-connecting = { $name } ile bağlanılıyor
 tv-status-reconnecting = { $name } ile yeniden bağlanılıyor
+tv-waiting-for = { $name } yanıtı bekleniyor
 tv-status-connected = Bağlı
 tv-search-on-tv = TV'de ara
 tv-type-search = Arama yazın

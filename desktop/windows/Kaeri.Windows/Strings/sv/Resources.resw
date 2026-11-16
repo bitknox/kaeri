@@ -2519,9 +2519,6 @@
   <data name="TvWaiting" xml:space="preserve">
     <value>Väntar på TV:n</value>
   </data>
-  <data name="TvWaitingFor" xml:space="preserve">
-    <value>Väntar på {name}</value>
-  </data>
   <data name="TvRowName" xml:space="preserve">
     <value>{name}, {detail}</value>
   </data>
@@ -11938,6 +11935,9 @@
   </data>
   <data name="TvStatusReconnecting" xml:space="preserve">
     <value>Ansluter om till {name}</value>
+  </data>
+  <data name="TvWaitingFor" xml:space="preserve">
+    <value>Väntar på {name}</value>
   </data>
   <data name="TvStatusConnected" xml:space="preserve">
     <value>Ansluten</value>

@@ -3545,10 +3545,6 @@
     <value>Waiting for the TV</value>
     <comment>While pairing, until the TV answers and before its name is known.</comment>
   </data>
-  <data name="TvWaitingFor" xml:space="preserve">
-    <value>Waiting for {name}</value>
-    <comment>While pairing, until the named TV answers.</comment>
-  </data>
   <data name="TvRowName" xml:space="preserve">
     <value>{name}, {detail}</value>
     <comment>Name read by a screen reader for a TV in the picker: its name, then the line under it.</comment>
@@ -16646,6 +16642,10 @@
   <data name="TvStatusReconnecting" xml:space="preserve">
     <value>Reconnecting to {name}</value>
     <comment>Status on the remote: connection lost, trying again.</comment>
+  </data>
+  <data name="TvWaitingFor" xml:space="preserve">
+    <value>Waiting for {name}</value>
+    <comment>Status on the remote and the cast mini player while the TV waits: for the stream, or while the app learns why the TV stopped the cast. On Windows also while pairing, until the named TV answers.</comment>
   </data>
   <data name="TvStatusConnected" xml:space="preserve">
     <value>Connected</value>

@@ -2381,9 +2381,6 @@
   <data name="TvWaiting" xml:space="preserve">
     <value>Menunggu TV</value>
   </data>
-  <data name="TvWaitingFor" xml:space="preserve">
-    <value>Menunggu {name}</value>
-  </data>
   <data name="TvRowName" xml:space="preserve">
     <value>{name}, {detail}</value>
   </data>
@@ -11503,6 +11500,9 @@
   </data>
   <data name="TvStatusReconnecting" xml:space="preserve">
     <value>Menghubungkan ulang ke {name}</value>
+  </data>
+  <data name="TvWaitingFor" xml:space="preserve">
+    <value>Menunggu {name}</value>
   </data>
   <data name="TvStatusConnected" xml:space="preserve">
     <value>Terhubung</value>
