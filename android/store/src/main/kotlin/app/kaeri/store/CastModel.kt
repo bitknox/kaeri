@@ -419,12 +419,7 @@ class CastModel(
         sessionAt = clock()
         _session.value = view
         recast()
-        view.note?.let {
-            if (it != was.note) {
-                _notes.tryEmit(it)
-                kept?.invoke(it)
-            }
-        }
+        view.note?.let { if (it != was.note) tellNote(it) }
         if (view.reconnecting && !was.reconnecting) sessionFrozen = itemPlayhead(sessionAt, was, wasAt)
         if (!view.reconnecting) sessionFrozen = null
         view.item?.let { _lastItem.value = it }
@@ -449,6 +444,12 @@ class CastModel(
                 }
             }
         }
+    }
+
+    /** Say [note] as a toast and keep it in the notice log. */
+    private fun tellNote(note: Msg) {
+        _notes.tryEmit(note)
+        kept?.invoke(note)
     }
 
     /** The live card [shown] turns into one that says why the cast stopped: [notice]. */
@@ -667,6 +668,8 @@ class CastModel(
         _shown.value = next.copy(frozen = frozen)
         recast()
         if (held.stage != _shown.value?.stage) refreshButton()
+        // A cast from Play on TV holds no session, so its card carries the note; a held session says it itself.
+        card.note?.let { if (it != held.cast.note && !sessionNotes) tellNote(it) }
         if (!card.card.over) return
         val notice = card.notice
         val now = card.card.now
@@ -696,6 +699,10 @@ class CastModel(
             }
         }
     }
+
+    /** The session's view carries the note, as it does while it plays or is connected. */
+    private val sessionNotes: Boolean
+        get() = _session.value.state.let { it == CastSessionState.Playing || it == CastSessionState.Connected }
 
     /** Let the cast and its card go. */
     private fun end() {

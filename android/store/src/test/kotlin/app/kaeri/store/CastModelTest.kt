@@ -91,6 +91,7 @@ class CastModelTest {
         position: Double = 120.0,
         reconnecting: Boolean = false,
         waiting: UInt? = null,
+        note: Msg? = null,
     ) = FfiCastCard(
         card = FfiRemoteCard(
             tvName = "Living room",
@@ -111,6 +112,7 @@ class CastModelTest {
         notice = notice,
         waiting = waiting,
         reconnecting = reconnecting,
+        note = note,
     )
 
     private fun TestScope.model(link: ScriptedLink): CastModel {
@@ -510,6 +512,46 @@ class CastModelTest {
         advanceUntilIdle()
         assertEquals(listOf<Msg>(fallback), notes)
         assertEquals(listOf<Msg>(fallback), kept)
+    }
+
+    @Test
+    fun a_play_on_tv_casts_fallback_note_is_said_and_kept_once_each_time_it_happens() = runTest {
+        val link = ScriptedLink(card(loading = true))
+        val cast = model(link)
+        val kept = mutableListOf<Msg>()
+        cast.kept = { kept += it }
+        val notes = mutableListOf<Msg>()
+        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { cast.notes.collect { notes += it } }
+        val fallback = Msg.NoticeCastFallback("Living room")
+        cast.cast(row, request)
+        // The fallback comes as the TV connects, and the card keeps it while it plays.
+        link.cards.trySend(card(loading = true, note = fallback))
+        link.cards.trySend(card(loading = false, note = fallback))
+        link.cards.trySend(card(loading = false, position = 130.0, note = fallback))
+        advanceUntilIdle()
+        assertEquals(listOf<Msg>(fallback), notes)
+        assertEquals(listOf<Msg>(fallback), kept)
+        // It happens again on the next cast: said again.
+        val again = ScriptedLink(card(loading = true))
+        cast.starter = { _, _ -> again }
+        cast.cast(row, request)
+        again.cards.trySend(card(loading = false, note = fallback))
+        advanceUntilIdle()
+        assertEquals(listOf<Msg>(fallback, fallback), notes)
+        assertEquals(listOf<Msg>(fallback, fallback), kept)
+    }
+
+    @Test
+    fun a_held_sessions_card_leaves_the_fallback_note_to_the_session() = runTest {
+        val link = ScriptedLink(card(loading = false))
+        val (cast, sessions) = playingOnAHeldTv(link)
+        val notes = mutableListOf<Msg>()
+        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { cast.notes.collect { notes += it } }
+        val fallback = Msg.NoticeCastFallback("Living room")
+        sessions.views.trySend(view(CastSessionState.Playing).copy(note = fallback, rev = 3u))
+        link.cards.trySend(card(loading = false, note = fallback))
+        advanceUntilIdle()
+        assertEquals(listOf<Msg>(fallback), notes)
     }
 
     @Test
