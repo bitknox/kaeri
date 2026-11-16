@@ -345,6 +345,24 @@ async fn a_resume_point_opens_the_file_there_unless_the_viewer_asked_to_begin_at
 }
 
 #[tokio::test]
+async fn a_file_that_ends_before_it_plays_keeps_where_the_episode_was_left() {
+    // A cast stopped on the TV while its file loaded: the player says it ended, never having
+    // said a position. Where the episode was left stays the resume point.
+    let id = AnilistId::new(900_001);
+    let rig = Rig::new(vec![vec![PlaybackEvent::Ended { complete: false }]]);
+    let kept = kaeri_store::WatchEvent {
+        duration_secs: Some(1_435.0),
+        ..kaeri_store::WatchEvent::new(id, "1", 606.0)
+    };
+    rig.store.record_event(&kept).unwrap();
+    let resuming = PlaybackContext { resume_at: Some(606.0), ..context("1", None) };
+    let events = rig.play(stream(StreamKind::Mp4), resuming, settings()).await;
+    assert_eq!(ending(&events), Some(Ending::Failed), "{events:?}");
+    assert_eq!(rig.store.resume_position(id, "1").unwrap(), Some(606.0));
+    assert!(rig.store.completed_episodes(id).unwrap().is_empty());
+}
+
+#[tokio::test]
 async fn a_playback_without_tracking_plays_to_its_end_and_writes_nothing_down() {
     let rig = Rig::new(vec![file(&[("Opening", 0.0), ("Part A", 30.0)], (1920, 1080))]);
     let settings =
