@@ -113,7 +113,15 @@ export class TsParser {
 		return p;
 	}
 
-	/** Forgets partial packets and the clock's anchor, for a seek. */
+	/**
+	 * The next segment of the same stream starts: PES packets and audio frames left open carry on
+	 * into it, and so does the clock. Only a partial TS packet at the end of the last one goes.
+	 */
+	nextSegment() {
+		this.rest = null;
+	}
+
+		/** Forgets partial packets and the clock's anchor, for a seek. */
 	reset() {
 		this.rest = null;
 		this.last = -1;
