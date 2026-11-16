@@ -88,6 +88,9 @@ class CastModelTest {
         over: Boolean = false,
         notice: Msg? = null,
         control: FfiVolumeControl = FfiVolumeControl.LEVEL,
+        position: Double = 120.0,
+        reconnecting: Boolean = false,
+        waiting: UInt? = null,
     ) = FfiCastCard(
         card = FfiRemoteCard(
             tvName = "Living room",
@@ -96,7 +99,7 @@ class CastModelTest {
             screen = FfiScreen.Player,
             now = FfiNowCard(
                 id = 900001u, title = "The Lantern Road", episode = "7", episodeLine = "Episode 7", loading = loading,
-                position = 120.0, duration = 1420.0, paused = false, speed = 1.0, volume = volume, audio = emptyList(),
+                position = position, duration = 1420.0, paused = false, speed = 1.0, volume = volume, audio = emptyList(),
                 subtitles = emptyList(), subtitlesOff = false, skip = null,
             ),
             rev = 1u,
@@ -106,6 +109,8 @@ class CastModelTest {
         volumeControl = control,
         muted = false,
         notice = notice,
+        waiting = waiting,
+        reconnecting = reconnecting,
     )
 
     private fun TestScope.model(link: ScriptedLink): CastModel {
@@ -415,5 +420,110 @@ class CastModelTest {
         assertNull(CastModel.joining(view(CastSessionState.Playing), row.key, rows))
         assertNull(CastModel.joining(view(CastSessionState.Idle), row.key, emptyList()))
         assertNull(CastModel.joining(view(CastSessionState.Idle), null, rows))
+    }
+
+    @Test
+    fun a_reconnecting_tv_holds_the_playhead_until_it_answers_again() = runTest {
+        val link = ScriptedLink(card(loading = false))
+        val cast = model(link)
+        cast.cast(row, request)
+        link.cards.send(card(loading = false))
+        advanceUntilIdle()
+        time = 10_000
+        assertEquals(130.0, cast.playhead()!!, 0.001)
+        link.cards.send(card(loading = false, reconnecting = true))
+        advanceUntilIdle()
+        assertTrue(cast.shown.value!!.reconnecting)
+        assertEquals(CastStage.Playing, cast.shown.value?.stage)
+        time = 25_000
+        assertEquals("the clock stops where it was as the connection closed", 130.0, cast.playhead()!!, 0.001)
+        // The TV played on meanwhile: it answers ahead of where the playhead held.
+        link.cards.send(card(loading = false, position = 145.0))
+        advanceUntilIdle()
+        assertFalse(cast.shown.value!!.reconnecting)
+        assertNull(cast.shown.value!!.frozen)
+        assertEquals(145.0, cast.playhead()!!, 0.001)
+        time = 27_000
+        assertEquals(147.0, cast.playhead()!!, 0.001)
+    }
+
+    @Test
+    fun a_tv_waiting_while_its_stop_is_learned_holds_the_playhead() = runTest {
+        val link = ScriptedLink(card(loading = false))
+        val cast = model(link)
+        cast.cast(row, request)
+        link.cards.send(card(loading = false))
+        advanceUntilIdle()
+        time = 4_000
+        link.cards.send(card(loading = false, waiting = 0u))
+        advanceUntilIdle()
+        time = 7_000
+        assertEquals(124.0, cast.playhead()!!, 0.001)
+    }
+
+    @Test
+    fun a_cast_stopped_on_the_tv_with_the_controller_down_says_so_with_play_here_and_keeps_it() = runTest {
+        val link = ScriptedLink(card(loading = false))
+        val cast = model(link)
+        val kept = mutableListOf<Msg>()
+        cast.kept = { kept += it }
+        cast.cast(row, request)
+        cast.closeCard()
+        val said = mutableListOf<CastEnded>()
+        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { cast.ended.collect { said += it } }
+        runCurrent()
+        link.cards.send(card(loading = false))
+        link.cards.send(card(loading = false, over = true, notice = Msg.NoticeCastStoppedElsewhere("Living room")))
+        advanceUntilIdle()
+        assertNull(cast.shown.value)
+        assertEquals(listOf(Msg.NoticeCastStoppedElsewhere("Living room")), said.map { it.notice })
+        assertEquals("7", said.single().episode)
+        assertEquals(listOf<Msg>(Msg.NoticeCastStoppedElsewhere("Living room")), kept)
+    }
+
+    @Test
+    fun a_cast_stopped_on_the_tv_with_the_controller_up_reads_casting_stopped() = runTest {
+        val link = ScriptedLink(card(loading = false))
+        val cast = model(link)
+        cast.cast(row, request)
+        link.cards.send(card(loading = false))
+        link.cards.send(card(loading = false, over = true, notice = Msg.NoticeCastStoppedElsewhere("Living room")))
+        advanceUntilIdle()
+        assertEquals(CastStage.Lost, cast.shown.value?.stage)
+        assertFalse(cast.shown.value!!.reconnecting)
+    }
+
+    @Test
+    fun a_fallback_note_is_said_and_kept_once_each_time_it_happens() = runTest {
+        val link = ScriptedLink(card(loading = false))
+        val cast = model(link)
+        val sessions = ScriptedSessions(link)
+        cast.sessions = sessions
+        val kept = mutableListOf<Msg>()
+        cast.kept = { kept += it }
+        val notes = mutableListOf<Msg>()
+        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { cast.notes.collect { notes += it } }
+        val fallback = Msg.NoticeCastFallback("Living room")
+        // The fallback usually comes at connect, while nothing plays yet.
+        sessions.views.trySend(view(CastSessionState.Connected).copy(note = fallback))
+        sessions.views.trySend(view(CastSessionState.Connected).copy(note = fallback, rev = 2u))
+        advanceUntilIdle()
+        assertEquals(listOf<Msg>(fallback), notes)
+        assertEquals(listOf<Msg>(fallback), kept)
+    }
+
+    @Test
+    fun a_reconnecting_session_holds_its_item_playhead() = runTest {
+        val link = ScriptedLink(card(loading = false))
+        val cast = model(link)
+        val sessions = ScriptedSessions(link)
+        cast.sessions = sessions
+        sessions.views.trySend(view(CastSessionState.Playing))
+        advanceUntilIdle()
+        time = 3_000
+        sessions.views.trySend(view(CastSessionState.Playing).copy(reconnecting = true))
+        advanceUntilIdle()
+        time = 13_000
+        assertEquals(24.4, cast.itemPlayhead()!!, 0.001)
     }
 }
