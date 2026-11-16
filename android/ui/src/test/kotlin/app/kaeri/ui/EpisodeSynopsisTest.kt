@@ -37,11 +37,28 @@ class EpisodeSynopsisTest {
     }
 
     @Test
-    fun rows_are_172_dp_tall_and_100_short_at_the_default_text_size() {
+    fun rows_are_182_dp_tall_and_114_short_at_the_default_text_size_rule_included() {
         val header = RowDims.StillHeight
         val band = 60.dp
-        assertEquals(172.dp, rowHeight(RowForm.TALL, header, band))
-        assertEquals(100.dp, rowHeight(RowForm.SHORT, header, band))
+        assertEquals(182.dp, rowHeight(RowForm.TALL, header, band))
+        assertEquals(114.dp, rowHeight(RowForm.SHORT, header, band))
+    }
+
+    @Test
+    fun a_row_fits_its_details_once_they_are_known() {
+        val lines = { text: String -> text.length / 10 }
+        // Text may still come: the whole room.
+        assertEquals(3, bandLines(null, pending = true, cap = 3, measured = lines))
+        // Known, with none: no room, and the short form.
+        assertEquals(0, bandLines(null, pending = false, cap = 3, measured = lines))
+        assertTrue(textless(row(1)))
+        assertFalse(textless(row(1, pending = true)))
+        assertEquals(RowForm.SHORT, rowForm(EpisodeText.PRESENT, protectedRow = false, textless = true))
+        assertEquals(RowForm.TALL, rowForm(EpisodeText.EXPECTED, protectedRow = false, textless = false))
+        // Its own lines, at least one and up to the cap.
+        assertEquals(1, bandLines("Short.", pending = false, cap = 3, measured = lines))
+        assertEquals(2, bandLines("x".repeat(20), pending = false, cap = 3, measured = lines))
+        assertEquals(3, bandLines("x".repeat(90), pending = false, cap = 3, measured = lines))
     }
 
     @Test

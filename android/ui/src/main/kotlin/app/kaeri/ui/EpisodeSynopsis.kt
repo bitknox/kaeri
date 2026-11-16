@@ -1,7 +1,9 @@
 // The Netflix-style episode row on a phone's title page (the synopsis board, section 3): a still,
-// title and facts, with up to three lines of synopsis under them. A row's height comes from its
-// kind and the text's outlook, never from whether this row's text has arrived, so late text fades
-// into room that was already there. Spoiler protection shows facts and a blurred still in a short
+// title and facts, with up to three lines of synopsis under them, and a faint rule ending each row
+// (the phone episodes board, direction A), so every episode reads as one unit. While a row's text
+// may still come it keeps the tall room, so nothing jumps; once its details are known it fits them:
+// short with no synopsis, else the synopsis's own lines up to three, resized in the same fade the
+// text arrives in. Spoiler protection shows facts and a blurred still in a short
 // row; a reveal covers the still and the text together for the visit. Long press opens a bottom
 // sheet with the whole synopsis above the actions. Shows of more than 100 episodes split into
 // ranges of 100 (the engine's `episodeRanges`).
@@ -19,6 +21,7 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -37,6 +40,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -61,6 +65,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
@@ -90,6 +97,7 @@ import app.kaeri.design.rememberTagged
 import app.kaeri.design.tabular
 import app.kaeri.engine.ffi.episodeRanges
 import app.kaeri.engine.model.Entry
+import app.kaeri.engine.model.EpisodeKind
 import app.kaeri.engine.model.EpisodeRange
 import app.kaeri.engine.model.EpisodeRow
 import app.kaeri.engine.model.EpisodeText
@@ -107,15 +115,20 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
-/** The measures of the phone row, in dp, from the board. */
+/** The measures of the phone row, in dp, from the boards. */
 internal object RowDims {
     val StillWidth = 144.dp
     val StillHeight = 81.dp
-    val Top = 10.dp
+    val Top = 16.dp
     val Gap = 12.dp
     val BandGap = 8.dp
-    val BottomTall = 13.dp
-    val BottomShort = 9.dp
+    val Bottom = 16.dp
+
+    /** The faint rule that ends each row, inset 16 dp each side with the row's content. */
+    val Rule = 1.dp
+
+    /** How far in from the still's top end corner a follower's picture sits. */
+    val MarkInset = 6.dp
     val TitleLine = 22.sp
     val FactsLine = 16.sp
     val BodyLine = 20.sp
@@ -145,16 +158,44 @@ internal object BesideDims {
 internal enum class RowForm { TALL, SHORT }
 
 /**
- * The form of a row, decided at first layout from the table's text outlook: short for a protected
- * row and for a show with no text coming, tall otherwise.
+ * The form of a row, from the table's text outlook decided at first layout: short for a protected
+ * row, for a show with no text coming, and for a row whose details are known and have no synopsis
+ * ([textless]); tall otherwise, so a row whose text may still come keeps the room for it.
  */
-internal fun rowForm(text: EpisodeText, protectedRow: Boolean, unaired: Boolean = false): RowForm =
-    if (protectedRow || unaired || text == EpisodeText.NONE) RowForm.SHORT else RowForm.TALL
+internal fun rowForm(text: EpisodeText, protectedRow: Boolean, unaired: Boolean = false, textless: Boolean = false): RowForm =
+    if (protectedRow || unaired || textless || text == EpisodeText.NONE) RowForm.SHORT else RowForm.TALL
 
-/** A row's fixed height from the header's and the text band's heights. 172 dp tall and 100 dp short at scale 1. */
+/** Whether [row]'s details are known and have no synopsis: no text, and no lookup running that may bring one. */
+internal fun textless(row: EpisodeRow): Boolean = row.description.isNullOrBlank() && !row.synopsisPending
+
+/**
+ * How many lines of synopsis a tall row makes room for: [cap] while its text may still come, the
+ * text's own lines up to [cap] once it is here ([measured] counts them at the row's width), and
+ * none for a row with neither.
+ */
+internal fun bandLines(text: String?, pending: Boolean, cap: Int, measured: (String) -> Int): Int = when {
+    !text.isNullOrBlank() -> measured(text).coerceIn(1, cap)
+    pending -> cap
+    else -> 0
+}
+
+/**
+ * A row's fixed height from the header's and the text band's heights, its rule included: 182 dp
+ * tall and 114 dp short at scale 1.
+ */
 internal fun rowHeight(form: RowForm, header: Dp, band: Dp): Dp = when (form) {
-    RowForm.TALL -> RowDims.Top + header + RowDims.BandGap + band + RowDims.BottomTall
-    RowForm.SHORT -> RowDims.Top + header + RowDims.BottomShort
+    RowForm.TALL -> RowDims.Top + header + RowDims.BandGap + band + RowDims.Bottom + RowDims.Rule
+    RowForm.SHORT -> RowDims.Top + header + RowDims.Bottom + RowDims.Rule
+}
+
+/**
+ * A faint rule along the bottom of what it is on, [RowDims.Rule] thick and [inset] in from each
+ * side: the end of an episode's row, and of the lines over the rows.
+ */
+internal fun Modifier.endRule(inset: Dp = 0.dp, color: Color = app.kaeri.design.ObiSilk.FaintRule): Modifier = drawBehind {
+    val thick = RowDims.Rule.toPx()
+    val side = inset.toPx()
+    drawRect(color, topLeft = Offset(side, size.height - thick), size = Size(size.width - side * 2, thick))
 }
 
 /** Whether spoiler protection hides [row]: it is on, the engine says the row is ahead, and the row has aired. */
@@ -191,11 +232,19 @@ internal fun airedDate(context: Context, airsAt: Long): String =
 
 /**
  * The facts under an episode's title, as its row and its sheet both say them: "E7 · 14 min left",
- * "E6 · Watched" or "E8 · 24 min", then "Aired 21 May 2014" once it has. One that aired and no
- * source lists yet says so in the second line: "Aired 25 min ago · Not in your sources yet",
- * with the time since airing at [now].
+ * "E6 · Watched" or "E8 · 24 min", with "Filler" after them for a filler episode, then "Aired 21
+ * May 2014" once it has. One that aired and no source lists yet says so in the second line: "Aired
+ * 25 min ago · Not in your sources yet", with the time since airing at [now].
  */
 internal fun rowFacts(context: Context, entry: Entry, row: EpisodeRow, current: Boolean, unaired: Boolean, withNumber: Boolean = true, now: Long = AppClock.now().epochSecond): Pair<String, String?> {
+    val (first, second) = rowFactsOnly(context, entry, row, current, unaired, withNumber, now)
+    if (row.kind != EpisodeKind.FILLER) return first to second
+    val filler = Strings.episodeFiller(context)
+    return (if (first.isEmpty()) filler else Strings.episodeFactsJoin(context, first, filler)) to second
+}
+
+/** [rowFacts] without the episode's kind. */
+private fun rowFactsOnly(context: Context, entry: Entry, row: EpisodeRow, current: Boolean, unaired: Boolean, withNumber: Boolean, now: Long): Pair<String, String?> {
     val number = row.number.toDoubleOrNull()?.toInt() ?: 0
     val resume = entry.resume?.takeIf { current && !row.completed }
     val missing = row.takeIf { it.unsourced && !unaired }?.let { app.kaeri.store.MissingWords.unsourcedLine(context, it.airsAt, now) }
@@ -251,10 +300,16 @@ internal fun EpisodeCard(
     /** The tablet's beside row: 192 × 108 still, title, facts and three lines of text beside it. */
     beside: Boolean = false,
     /**
-     * The people followed who stopped at this episode, in a column at the row's end; `null` when
-     * no row of the table has any, so the column takes no room.
+     * The people followed who stopped at this episode: on the still's top end corner on a phone,
+     * in a column at the row's end beside the still on a tablet; `null` when no row of the table
+     * has any, so the tablet's column takes no room.
      */
     followed: List<app.kaeri.engine.model.FollowedMark>? = null,
+    /**
+     * Whether the phone row ends in its faint rule; one with a discussion line under it leaves the
+     * rule to that line, so the rule still ends the episode.
+     */
+    ruled: Boolean = true,
 ) {
     val colors = MaterialTheme.colorScheme
     val context = LocalContext.current
@@ -289,7 +344,6 @@ internal fun EpisodeCard(
     val showWord = stringResource(R.string.episode_synopsis_show)
     val stacked = density.fontScale >= RowDims.StackScale
     val header = with(density) { maxOf(RowDims.StillHeight, ((RowDims.TitleLine * 2).toDp() + (RowDims.FactsLine * 2).toDp() + 4.dp)) }
-    val band = with(density) { (RowDims.BodyLine * RowDims.SynopsisLines).toDp() }
     val title = row.title?.takeIf { it.isNotBlank() } ?: app.kaeri.store.episodeName(LocalContext.current, row.number)
     // A watched row keeps a silk title; the check and the dimmed still say watched.
     val titleColor = if (unaired) colors.onSurfaceVariant else colors.onSurface
@@ -365,42 +419,71 @@ internal fun EpisodeCard(
         }
         return
     }
-    val fixed = if (stacked) Modifier else Modifier.height(rowHeight(form, header, band))
-    Column(
-        Modifier
-            .fillMaxWidth()
-            .then(grows)
-            .then(fixed)
-            .graphicsLayer { alpha = strength }
-            .then(clickable)
-            .padding(start = 16.dp, end = 16.dp, top = RowDims.Top),
-    ) {
-        if (stacked) {
-            Box(Modifier.fillMaxWidth().aspectRatio(16f / 9f)) {
-                Box(Modifier.fillMaxSize().alpha(1f - 0.3f * marks.dim.value)) {
-                    StillWithMark(entry, row, hidden, unaired, 360.dp, marks, fraction)
+    BoxWithConstraints(Modifier.fillMaxWidth()) {
+        // The text runs the row's width less its sides: its own lines once it is here, up to the cap.
+        val measurer = androidx.compose.ui.text.rememberTextMeasurer()
+        val bodyStyle = MaterialTheme.typography.bodyMedium
+        val cap = if (stacked) RowDims.StackedLines else RowDims.SynopsisLines
+        val across = with(density) { (maxWidth - 32.dp).roundToPx().coerceAtLeast(1) }
+        val lines = remember(row.description, row.synopsisPending, cap, across, bodyStyle) {
+            bandLines(row.description, row.synopsisPending, cap) { text ->
+                measurer.measure(text, bodyStyle, maxLines = cap, constraints = androidx.compose.ui.unit.Constraints(maxWidth = across)).lineCount
+            }
+        }
+        val band = with(density) { (RowDims.BodyLine * lines).toDp() }
+        // The details landing resize the row on the fade-in token, the one the text fades in on, so
+        // the two are one change; a reveal grows it on the standard spring before its text comes.
+        var wasHidden by remember { mutableStateOf(hidden) }
+        val spec: androidx.compose.animation.core.FiniteAnimationSpec<Dp> = if (hidden != wasHidden) Motion.standard() else Motion.fadeIn()
+        androidx.compose.runtime.SideEffect { wasHidden = hidden }
+        val target = rowHeight(form, header, band) - if (ruled) 0.dp else RowDims.Rule
+        val height by androidx.compose.animation.core.animateDpAsState(target, spec, label = "row-height") { if (tall) settled = true } // i18n-skip
+        val fixed = if (stacked) Modifier else Modifier.height(height)
+        Column(
+            Modifier
+                .fillMaxWidth()
+                .then(if (stacked) grows else Modifier)
+                .then(fixed)
+                .graphicsLayer { alpha = strength }
+                .then(clickable)
+                .padding(start = 16.dp, end = 16.dp)
+                .then(if (ruled) Modifier.endRule() else Modifier)
+                .padding(top = RowDims.Top),
+        ) {
+            if (stacked) {
+                Box(Modifier.fillMaxWidth().aspectRatio(16f / 9f)) {
+                    Box(Modifier.fillMaxSize().alpha(1f - 0.3f * marks.dim.value)) {
+                        StillWithMark(entry, row, hidden, unaired, 360.dp, marks, fraction)
+                    }
+                    // At this text size the column would squeeze the title: the marks sit on the still, as on the TV.
+                    if (followed != null) Box(Modifier.align(Alignment.BottomEnd).padding(8.dp).then(spokenMarks(followed))) { MarksFading(followed) { FollowedStack(it, MarkPicture, MaterialTheme.colorScheme.surface) } }
                 }
-                // At this text size the column would squeeze the title: the marks sit on the still, as on the TV.
-                if (followed != null) Box(Modifier.align(Alignment.BottomEnd).padding(8.dp).then(spokenMarks(followed))) { MarksFading(followed) { FollowedStack(it, MarkPicture, MaterialTheme.colorScheme.surface) } }
-            }
-            Spacer(Modifier.height(8.dp))
-            RowHeader(title, titleColor, first, second, marks, titleLines = 2, modifier = Modifier.fillMaxWidth(), opensService = opensService)
-            if (tall) {
-                // Four lines of room whether the text is here yet or not, so late text grows nothing.
-                val room = with(density) { (RowDims.BodyLine * RowDims.StackedLines).toDp() }
-                SynopsisBand(text, Modifier.padding(top = RowDims.BandGap).fillMaxWidth().height(room), maxLines = RowDims.StackedLines)
-            }
-            Spacer(Modifier.height(8.dp))
-        } else {
-            Row(horizontalArrangement = Arrangement.spacedBy(RowDims.Gap)) {
-                Box(Modifier.size(RowDims.StillWidth, RowDims.StillHeight).alpha(1f - 0.3f * marks.dim.value)) {
-                    StillWithMark(entry, row, hidden, unaired, RowDims.StillWidth, marks, fraction)
+                Spacer(Modifier.height(8.dp))
+                RowHeader(title, titleColor, first, second, marks, titleLines = 2, modifier = Modifier.fillMaxWidth(), opensService = opensService)
+                if (tall) {
+                    // Four lines of room while the text may still come, then its own lines.
+                    SynopsisBand(text, Modifier.padding(top = RowDims.BandGap).fillMaxWidth().height(band), maxLines = RowDims.StackedLines)
                 }
-                RowHeader(title, titleColor, first, second, marks, titleLines = titleLines, modifier = Modifier.weight(1f).padding(top = 2.dp), opensService = opensService)
-                if (followed != null) Box(Modifier.height(RowDims.StillHeight), contentAlignment = Alignment.Center) { MarkSlot(followed) }
-            }
-            if (tall) {
-                SynopsisBand(text, Modifier.padding(top = RowDims.BandGap).fillMaxWidth().height(band), maxLines = RowDims.SynopsisLines)
+                Spacer(Modifier.height(RowDims.Bottom + if (ruled) RowDims.Rule else 0.dp))
+            } else {
+                Row(horizontalArrangement = Arrangement.spacedBy(RowDims.Gap)) {
+                    Box(Modifier.size(RowDims.StillWidth, RowDims.StillHeight)) {
+                        Box(Modifier.fillMaxSize().alpha(1f - 0.3f * marks.dim.value)) {
+                            StillWithMark(entry, row, hidden, unaired, RowDims.StillWidth, marks, fraction)
+                        }
+                        // The follower's picture on the still's corner, as the stacked row has it, so
+                        // the title keeps the row's whole width.
+                        if (followed != null) {
+                            Box(Modifier.align(Alignment.TopEnd).padding(top = RowDims.MarkInset, end = RowDims.MarkInset).then(spokenMarks(followed))) {
+                                MarksFading(followed) { FollowedStack(it, MarkPicture, MaterialTheme.colorScheme.surface) }
+                            }
+                        }
+                    }
+                    RowHeader(title, titleColor, first, second, marks, titleLines = titleLines, modifier = Modifier.weight(1f).padding(top = 2.dp), opensService = opensService)
+                }
+                if (tall) {
+                    SynopsisBand(text, Modifier.padding(top = RowDims.BandGap).fillMaxWidth().height(band), maxLines = RowDims.SynopsisLines)
+                }
             }
         }
     }
@@ -484,7 +567,14 @@ private fun SynopsisBand(text: String?, modifier: Modifier, maxLines: Int) {
     Box(modifier) {
         Crossfade(text, animationSpec = Motion.fadeIn(), label = "synopsis") { shown -> // i18n-skip
             if (shown != null) {
-                SynopsisText(shown, MaterialTheme.colorScheme.onSurfaceVariant, maxLines = maxLines)
+                // The band is its lines' height; the font's own ascent and descent can run a hair
+                // past it, so the text lays out unbounded and only its line cap ends it.
+                SynopsisText(
+                    shown,
+                    MaterialTheme.colorScheme.onSurfaceVariant,
+                    Modifier.wrapContentHeight(Alignment.Top, unbounded = true),
+                    maxLines = maxLines,
+                )
             }
         }
     }
@@ -498,12 +588,21 @@ private fun SynopsisBand(text: String?, modifier: Modifier, maxLines: Int) {
  * crossfade on the reveal token, so nothing under the line moves.
  */
 @Composable
-internal fun ProtectionLine(episode: Int, showing: Boolean, onShow: () -> Unit, onHide: () -> Unit, modifier: Modifier = Modifier) {
+internal fun ProtectionLine(
+    episode: Int,
+    showing: Boolean,
+    onShow: () -> Unit,
+    onHide: () -> Unit,
+    modifier: Modifier = Modifier,
+    /** The phone's line ends in the rows' faint rule. */
+    ruled: Boolean = false,
+) {
     val colors = MaterialTheme.colorScheme
     val context = LocalContext.current
     val showLabel = stringResource(R.string.episode_synopsis_show)
     val hideLabel = stringResource(R.string.episode_protection_hide)
-    Crossfade(showing, modifier, animationSpec = Motion.reveal(), label = "protection-line") { shown -> // i18n-skip
+    val rule = if (ruled) Modifier.endRule(inset = 16.dp).padding(bottom = RowDims.Rule) else Modifier
+    Crossfade(showing, modifier.then(rule), animationSpec = Motion.reveal(), label = "protection-line") { shown -> // i18n-skip
         Row(
             Modifier.fillMaxWidth().height(44.dp).padding(start = 16.dp),
             horizontalArrangement = Arrangement.spacedBy(8.dp),
