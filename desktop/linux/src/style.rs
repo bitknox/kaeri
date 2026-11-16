@@ -100,33 +100,38 @@ const CAST_CONNECTED: &str = r##"<svg xmlns="http://www.w3.org/2000/svg" width="
 const DICE: &str = r##"<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16"><path fill="#222" fill-rule="evenodd" d="M4 1.5h8A2.5 2.5 0 0 1 14.5 4v8a2.5 2.5 0 0 1-2.5 2.5H4A2.5 2.5 0 0 1 1.5 12V4A2.5 2.5 0 0 1 4 1.5zm0 1.25A1.25 1.25 0 0 0 2.75 4v8A1.25 1.25 0 0 0 4 13.25h8A1.25 1.25 0 0 0 13.25 12V4A1.25 1.25 0 0 0 12 2.75z"/><g fill="#222"><circle cx="5.25" cy="5.25" r="1.1"/><circle cx="10.75" cy="5.25" r="1.1"/><circle cx="8" cy="8" r="1.1"/><circle cx="5.25" cy="10.75" r="1.1"/><circle cx="10.75" cy="10.75" r="1.1"/></g></svg>"##; // i18n-skip
 
 /// The reader's Chapters button: lines of a contents page, the last one short, as the reader board
-/// draws it.
-const CHAPTERS: &str = r##"<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="#222" stroke-width="1.5" stroke-linecap="round"><path d="M2 4h12M2 8h12M2 12h7"/></svg>"##; // i18n-skip
+/// draws it. Each line is the filled outline of a 1.5 wide line with round ends.
+const CHAPTERS: &str = r##"<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16" fill="#222"><path d="M2 3.25H14A.75 .75 0 0 1 14 4.75H2A.75 .75 0 0 1 2 3.25zM2 7.25H14A.75 .75 0 0 1 14 8.75H2A.75 .75 0 0 1 2 7.25zM2 11.25H9A.75 .75 0 0 1 9 12.75H2A.75 .75 0 0 1 2 11.25z"/></svg>"##; // i18n-skip
 
-/// A large A and a small a: the reader's Aa, its settings for the page and the text.
-const TEXT_LOOK: &str = r##"<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="#222" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M1.5 13.5 5.25 2.5 9 13.5M2.9 9.6h4.7"/><circle cx="12" cy="11" r="2.3"/><path d="M14.3 8.4v5.1"/></svg>"##; // i18n-skip
+/// A large A and a small a: the reader's Aa, its settings for the page and the text. The letters
+/// are the filled outlines of 1.4 wide lines with round ends and joins; the a's bowl is a ring.
+const TEXT_LOOK: &str = r##"<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16" fill="#222"><path d="M.837 13.274L4.587 2.274A.7 .7 0 0 1 5.913 2.274L9.663 13.274A.7 .7 0 0 1 8.337 13.726L5.25 4.669L2.163 13.726A.7 .7 0 0 1 .837 13.274zM2.9 8.9H7.6A.7 .7 0 0 1 7.6 10.3H2.9A.7 .7 0 0 1 2.9 8.9zM9 11A3 3 0 0 1 15 11A3 3 0 0 1 9 11zM10.4 11A1.6 1.6 0 0 0 13.6 11A1.6 1.6 0 0 0 10.4 11zM13.6 8.4A.7 .7 0 0 1 15 8.4V13.5A.7 .7 0 0 1 13.6 13.5z"/></svg>"##; // i18n-skip
 
-/// An open book in outline: the foot of a cover plate for a work with no cover.
-const BOOK: &str = r##"<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="#222" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M8 4.2C6.6 3 4.6 2.6 1.75 2.75v9.5C4.6 12.1 6.6 12.5 8 13.6c1.4-1.1 3.4-1.5 6.25-1.35v-9.5C11.4 2.6 9.4 3 8 4.2zM8 4.2v9.4"/></svg>"##; // i18n-skip
+/// An open book in outline: the foot of a cover plate for a work with no cover. The covers and
+/// the spine are the filled outline of a 1.4 wide line with round joins, the two pages cut out
+/// of it as holes wound the other way.
+const BOOK: &str = r##"<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16" fill="#222"><path d="M8 3.316C7.216 2.769 6.304 2.418 5.26 2.221C4.22 2.026 3.041 1.981 1.713 2.051A.7 .7 0 0 0 1.05 2.75V12.25A.7 .7 0 0 0 1.787 12.949C3.174 12.876 4.322 12.939 5.273 13.141C6.22 13.342 6.967 13.678 7.568 14.15A.7 .7 0 0 0 8 14.3A.7 .7 0 0 0 8.432 14.15C9.033 13.678 9.78 13.342 10.727 13.141C11.678 12.939 12.826 12.876 14.213 12.949A.7 .7 0 0 0 14.95 12.25V2.75A.7 .7 0 0 0 14.287 2.051C12.959 1.981 11.78 2.026 10.74 2.221C9.696 2.418 8.784 2.769 8 3.316zM7.3 12.348C6.647 12.035 5.919 11.82 5.114 11.687C4.31 11.555 3.424 11.504 2.45 11.524V3.424C3.568 3.4 4.512 3.478 5.312 3.662C6.109 3.846 6.759 4.136 7.3 4.537zM8.7 4.537C9.241 4.136 9.891 3.846 10.688 3.662C11.488 3.478 12.432 3.4 13.55 3.424V11.524C12.576 11.504 11.69 11.555 10.886 11.687C10.081 11.82 9.353 12.035 8.7 12.348z"/></svg>"##; // i18n-skip
 
-/// The icons the app draws itself, in the cache's own theme folder: the mini player's, the
-/// people button's, the cast screen's (outline and held), the die, the reader's Aa and its
-/// Chapters, and the book.
+/// The icons the app draws itself: the mini player's, the people button's, the cast screen's
+/// (outline and held), the die, the reader's Aa and its Chapters, and the book. GTK recolours a
+/// symbolic icon by forcing the fill of every shape and ignores strokes, so each one is drawn in
+/// filled shapes only, a line as the outline of its stroke.
+const ACTION_ICONS: [(&str, &str); 8] = [
+    ("kaeri-mini-player-symbolic", MINI_PLAYER),
+    ("kaeri-party-symbolic", PARTY),
+    ("kaeri-cast-symbolic", CAST),
+    ("kaeri-cast-connected-symbolic", CAST_CONNECTED),
+    ("kaeri-dice-symbolic", DICE),
+    ("kaeri-text-look-symbolic", TEXT_LOOK),
+    ("kaeri-chapters-symbolic", CHAPTERS),
+    ("kaeri-book-symbolic", BOOK),
+];
+
+/// Writes [`ACTION_ICONS`] into the cache's own theme folder and adds it to the theme's path.
 pub fn action_icons(display: &gtk::gdk::Display, cache: &std::path::Path) {
     let root = cache.join("icons");
     let dir = root.join("hicolor/scalable/actions");
-    let written = [
-        ("kaeri-mini-player-symbolic", MINI_PLAYER),
-        ("kaeri-party-symbolic", PARTY),
-        ("kaeri-cast-symbolic", CAST),
-        ("kaeri-cast-connected-symbolic", CAST_CONNECTED),
-        ("kaeri-dice-symbolic", DICE),
-        ("kaeri-text-look-symbolic", TEXT_LOOK),
-        ("kaeri-chapters-symbolic", CHAPTERS),
-        ("kaeri-book-symbolic", BOOK),
-    ]
-    .iter()
-    .all(|(name, svg)| {
+    let written = ACTION_ICONS.iter().all(|(name, svg)| {
         let file = dir.join(format!("{name}.svg"));
         std::fs::read_to_string(&file).is_ok_and(|s| s == *svg)
             || std::fs::create_dir_all(&dir).and_then(|()| std::fs::write(&file, svg)).is_ok()
@@ -152,5 +157,18 @@ pub fn app_icon(display: &gtk::gdk::Display, name: &str, cache: &std::path::Path
         theme.add_search_path(&root);
     } else {
         tracing::warn!(path = %root.display(), "the app icon could not be written");
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::ACTION_ICONS;
+
+    #[test]
+    fn every_drawn_icon_is_filled_shapes_only() {
+        for (name, svg) in ACTION_ICONS {
+            assert!(!svg.contains("stroke"), "{name} draws a stroke, which GTK fills");
+            assert!(!svg.contains("fill=\"none\""), "{name} leaves a shape unfilled");
+        }
     }
 }
