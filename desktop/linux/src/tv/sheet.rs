@@ -26,7 +26,7 @@ use kaeri_model::{command::Command, hosted::TrackKind};
 
 use super::{
     Sheet as Shown, Tv,
-    cast::{CastView, Offer, Stage},
+    cast::{CastView, Offer, Stage, playing_line},
 };
 use crate::{
     say, widgets,
@@ -1784,7 +1784,7 @@ impl Remote {
         self.title.set_title(&t::tv_play_on());
         let (line, mark) = match view.stage {
             Stage::Starting => (view.starting.clone(), "haze"),
-            Stage::Playing => (t::tv_status_playing(&view.name), "water"),
+            Stage::Playing => playing_line(view, || t::tv_status_playing(&view.name)),
             Stage::Failed => (t::tv_cast_couldnt_start(&view.name), "vermilion"),
             Stage::Lost => (t::tv_cast_stopped(), "vermilion"),
         };

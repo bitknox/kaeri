@@ -2461,18 +2461,23 @@ impl Page {
         // table) draws the list again; the same table changes its rows where they stand.
         let rows = self.rows.borrow();
         let on = self.protection_on();
-        if let Some(drawn) = self.drawn.borrow().as_ref() {
+        // Compared in a statement of its own: drawing again replaces `drawn`, so its borrow
+        // ends before that can happen.
+        let checked = self.drawn.borrow().as_ref().map(|drawn| {
             let (_, plan) = self.plan(&rows);
             let shown = &rows[plan.start + plan.fold..plan.end];
             let numbers_same = drawn.numbers.len() == rows.len()
                 && drawn.numbers.iter().zip(rows.iter()).all(|(a, b)| *a == b.number);
             let at = synopsis::protection_start(shown, on).map(|(at, _)| at);
             let column = following::on(&self.ctx.hub);
-            if !numbers_same
+            let changed = !numbers_same
                 || drawn.fold != plan.fold
                 || drawn.protection_at != at
-                || drawn.column != column
-            {
+                || drawn.column != column;
+            (changed, plan)
+        });
+        if let Some((changed, plan)) = checked {
+            if changed {
                 drop(rows);
                 self.draw_episodes();
                 return;
@@ -3242,5 +3247,100 @@ mod stack_tests {
             Reach::PopTo
         );
         assert_eq!(reach(&[], &tag(id)), Reach::Push);
+    }
+}
+
+#[cfg(test)]
+mod marks_tests {
+    use kaeri_model::progress::EpisodeProgress;
+
+    use super::*;
+    use crate::gtk_test::run;
+
+    fn row(number: u32, completed: bool) -> EpisodeRow {
+        EpisodeRow {
+            number: number.to_string(),
+            title: None,
+            thumbnail: None,
+            description: None,
+            duration_secs: Some(24 * 60),
+            watched: if completed { 1.0 } else { 0.0 },
+            completed,
+            kind: None,
+            skippable: false,
+            airs_at: None,
+            delayed_from: None,
+            metadata_only: false,
+            past_progress: false,
+            spoiler_ahead: false,
+            synopsis_pending: false,
+            followed: Vec::new(),
+            unsourced: false,
+            source: None,
+        }
+    }
+
+    fn episode_list(widget: &gtk::Widget) -> Option<gtk::ListBox> {
+        if let Some(list) = widget.downcast_ref::<gtk::ListBox>()
+            && list.has_css_class("episode-list")
+        {
+            return Some(list.clone());
+        }
+        let mut child = widget.first_child();
+        while let Some(at) = child {
+            if let Some(found) = episode_list(&at) {
+                return Some(found);
+            }
+            child = at.next_sibling();
+        }
+        None
+    }
+
+    fn rows_in(list: &gtk::ListBox) -> usize {
+        let mut count = 0;
+        let mut child = list.first_child();
+        while let Some(at) = child {
+            count += 1;
+            child = at.next_sibling();
+        }
+        count
+    }
+
+    /// A mark that grows the watched fold, as Next episode does during a cast, draws the list
+    /// again: the comparison with what was drawn lets go of it before the list is replaced.
+    #[test]
+    fn a_mark_that_grows_the_fold_draws_the_list_again() {
+        run(|| {
+            let runtime = tokio::runtime::Runtime::new().expect("a runtime");
+            let dir = tempfile::tempdir().expect("a scratch directory");
+            let ctx = Ctx::for_tests(runtime.handle(), dir.path());
+            let id = AnilistId::new(910_002);
+            let navigation = page(&ctx, id);
+            let rows: Vec<_> = (1..=12).map(|n| row(n, n <= 6)).collect();
+            ctx.hub.take(vec![Event::Episodes { id, rows, failed: None }]);
+            let list = episode_list(navigation.upcast_ref()).expect("the episode list");
+            // The fold of episodes 1 to 6, then 7 to 12.
+            let before = rows_in(&list);
+            assert!(before >= 7, "{before} rows");
+
+            let marked = |number: &str| Event::Progress {
+                id,
+                progress: None,
+                resume: None,
+                episodes: vec![EpisodeProgress {
+                    number: number.into(),
+                    watched: 1.0,
+                    completed: true,
+                    spoiler_ahead: false,
+                }],
+                private: None,
+                kept: false,
+            };
+            ctx.hub.take(vec![marked("7")]);
+            // A panic in the listener would leave the list cleared.
+            assert_eq!(rows_in(&list), before - 1, "the fold of 1 to 7, then 8 to 12");
+            ctx.hub.take(vec![marked("8")]);
+            assert_eq!(rows_in(&list), before - 2, "the fold of 1 to 8, then 9 to 12");
+        });
     }
 }

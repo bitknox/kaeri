@@ -80,6 +80,9 @@ pub struct CastView {
     pub up_next: Option<CastUpNext>,
     /// An automatic skip, while it can be undone.
     pub undo: Option<CastUndo>,
+    /// Whole seconds the TV has waited, while it plays: for the stream, or for word of why the
+    /// receiver left.
+    pub waiting: Option<u32>,
 }
 
 /// The cast running now, and what it last said.
@@ -112,6 +115,21 @@ pub fn stage_of(card: &CastCard) -> Stage {
         Some(_) => Stage::Failed,
         None if playing(card) => Stage::Playing,
         None => Stage::Starting,
+    }
+}
+
+/// The line and dot of a cast that plays, as it stands: waiting on the TV, paused, or playing,
+/// which reads as `playing` says where the line shows.
+pub fn playing_line(
+    view: &CastView,
+    playing: impl FnOnce() -> String,
+) -> (String, &'static str) {
+    match view.waiting {
+        Some(seconds) => (t::cast_phase_waiting(&view.name, i64::from(seconds)), "haze"),
+        None if view.now.as_ref().is_some_and(|now| now.paused) => {
+            (t::cast_status_paused(&view.name), "haze")
+        }
+        None => (playing(), "water"),
     }
 }
 
@@ -186,6 +204,7 @@ impl Tv {
             muted: run.card.muted.unwrap_or(false),
             up_next: run.card.up_next.clone().filter(|_| !stage.ended()),
             undo: run.card.undo.filter(|_| stage == Stage::Playing),
+            waiting: run.card.waiting.filter(|_| stage == Stage::Playing),
         })
     }
 
@@ -216,7 +235,8 @@ impl Tv {
         let cast = self.cast.borrow();
         let run = cast.as_ref()?;
         let now = run.card.card.now.as_ref()?;
-        if stage_of(&run.card) != Stage::Playing {
+        // The clock stops while the TV waits.
+        if stage_of(&run.card) != Stage::Playing || run.card.waiting.is_some() {
             return Some(now.position);
         }
         Some(now.position_after(run.card_at.elapsed().as_secs_f64()))
@@ -287,7 +307,10 @@ impl Tv {
         let view = self.cast_view()?;
         Some(match view.stage {
             Stage::Starting => (view.starting, "haze", false),
-            Stage::Playing => (t::tv_status_playing(&view.name), "water", false),
+            Stage::Playing => {
+                let (line, mark) = playing_line(&view, || t::tv_status_playing(&view.name));
+                (line, mark, false)
+            }
             Stage::Failed => (t::tv_cast_couldnt_start(&view.name), "vermilion", true),
             Stage::Lost => (t::tv_cast_stopped(), "vermilion", true),
         })
@@ -674,6 +697,45 @@ mod tests {
             route: None,
             waiting: None,
         }
+    }
+
+    fn view(paused: bool, waiting: Option<u32>) -> CastView {
+        CastView {
+            name: "Living room".into(),
+            stage: Stage::Playing,
+            starting: String::new(),
+            now: card(false, Some(1440.0), paused).card.now,
+            notice: None,
+            offers: Vec::new(),
+            volume: VolumeControl::Level,
+            muted: false,
+            up_next: None,
+            undo: None,
+            waiting,
+        }
+    }
+
+    #[test]
+    fn a_paused_cast_reads_as_paused() {
+        let playing = || t::tv_status_playing("Living room");
+        assert_eq!(playing_line(&view(false, None), playing), (playing(), "water"));
+        assert_eq!(
+            playing_line(&view(true, None), playing),
+            (t::cast_status_paused("Living room"), "haze")
+        );
+        // The bottom bar's own words while it plays: only the name.
+        assert_eq!(
+            playing_line(&view(true, None), || "Living room".into()),
+            (t::cast_status_paused("Living room"), "haze")
+        );
+    }
+
+    #[test]
+    fn a_cast_waiting_on_the_tv_says_so_with_its_seconds() {
+        // As after a stop on the TV, while the engine hears why the receiver left.
+        let line = playing_line(&view(false, Some(3)), || t::tv_status_playing("Living room"));
+        assert_eq!(line, (t::cast_phase_waiting("Living room", 3), "haze"));
+        assert_ne!(line.0, t::tv_status_playing("Living room"));
     }
 
     #[test]
