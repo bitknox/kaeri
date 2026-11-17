@@ -336,7 +336,7 @@ final class FixtureCastLink: CastSessionLink, @unchecked Sendable {
             level: card?.volume.map { $0 / 100 }, muted: card?.muted,
             volumeControl: card?.volumeControl ?? .fixed, ownReceiver: held.note == nil,
             reconnecting: held.state == .playing && (card?.reconnecting ?? false),
-            canMute: card?.canMute ?? false)
+            canMute: card?.volumeControl == .level)
     }
 
     /// The TV plays this cast in its own player, as the engine's note says.
