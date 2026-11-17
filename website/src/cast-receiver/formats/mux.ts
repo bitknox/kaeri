@@ -34,21 +34,35 @@ export function mimeFor(t: Track, first?: Sample): { container: 'mp4' | 'webm'; 
 /**
  * The MIME types to offer MediaSource for a track, best first. HE-AAC (object type 5 or 29) is
  * also offered as AAC-LC: its core is AAC-LC and the AudioSpecificConfig still names the SBR and
- * PS parts, so a TV that refuses the HE-AAC codec string plays it under the AAC-LC one.
+ * PS parts, so a TV that refuses the HE-AAC codec string plays it under the AAC-LC one. AAC Main
+ * (object type 1) is also offered as AAC-LC, with the config rewritten to say so (asLc).
  */
 export function mimeChoices(t: Track, first?: Sample): string[] {
 	const m = mimeFor(t, first);
 	if (!m) return [];
 	const out = [m.mime];
-	if (t.codec === 'aac' && /mp4a\.40\.(5|29)"/.test(m.mime)) out.push(m.mime.replace(/mp4a\.40\.\d+/, 'mp4a.40.2'));
+	if (t.codec === 'aac' && /mp4a\.40\.(1|5|29)"/.test(m.mime)) out.push(m.mime.replace(/mp4a\.40\.\d+/, 'mp4a.40.2'));
 	return out;
+}
+
+/**
+ * An AAC Main config as AAC-LC. ADTS from some muxers says Main (profile 0) for streams that are
+ * AAC-LC, often with implicit SBR and PS (24 kHz mono), and TVs refuse AAC Main.
+ */
+function asLc(t: Track): Track {
+	const c = t.config;
+	if (!c || c.length < 2 || c[0] >> 3 !== 1) return t;
+	const config = c.slice();
+	config[0] = (2 << 3) | (c[0] & 7);
+	return { ...t, config };
 }
 
 /** The muxer for a track, under `mime` when given (one of mimeChoices). Null when there is none. */
 export function createMuxer(t: Track, first?: Sample, mime?: string): Muxer | null {
 	const m = mimeFor(t, first);
 	if (!m) return null;
-	return m.container === 'webm' ? new WebmMuxer(t, mime ?? m.mime) : new Mp4Muxer(t, mime ?? m.mime);
+	if (m.container === 'webm') return new WebmMuxer(t, mime ?? m.mime);
+	return new Mp4Muxer(mime && /mp4a\.40\.2"/.test(mime) ? asLc(t) : t, mime ?? m.mime);
 }
 
 /**

@@ -110,10 +110,10 @@ const aac = (config?: number[], more: Partial<Track> = {}): Track => ({
 });
 
 /** A raw AAC frame with a 7-byte ADTS header: profile LC, rate index, channel config. */
-function adtsFrame(sri: number, channels: number, payload = 16) {
+function adtsFrame(sri: number, channels: number, payload = 16, profile = 1) {
 	const size = 7 + payload;
 	const f = new Uint8Array(size);
-	f.set([0xff, 0xf1, (1 << 6) | (sri << 2) | (channels >> 2), ((channels & 3) << 6) | (size >> 11), (size >> 3) & 0xff, ((size & 7) << 5) | 0x1f, 0xfc]);
+	f.set([0xff, 0xf1, (profile << 6) | (sri << 2) | (channels >> 2), ((channels & 3) << 6) | (size >> 11), (size >> 3) & 0xff, ((size & 7) << 5) | 0x1f, 0xfc]);
 	for (let i = 7; i < size; i++) f[i] = i;
 	return f;
 }
@@ -135,7 +135,7 @@ describe('AAC for MediaSource', () => {
 		expect(m(LC_48K_STEREO)).toEqual(['audio/mp4; codecs="mp4a.40.2"']);
 		expect(m(HE_V1)).toEqual(['audio/mp4; codecs="mp4a.40.5"', 'audio/mp4; codecs="mp4a.40.2"']);
 		expect(m(HE_V2)).toEqual(['audio/mp4; codecs="mp4a.40.29"', 'audio/mp4; codecs="mp4a.40.2"']);
-		expect(m(MAIN_48K_STEREO)).toEqual(['audio/mp4; codecs="mp4a.40.1"']);
+		expect(m(MAIN_48K_STEREO)).toEqual(['audio/mp4; codecs="mp4a.40.1"', 'audio/mp4; codecs="mp4a.40.2"']);
 	});
 
 	test('a track with no config gets one from its rate and channels', () => {
@@ -158,6 +158,25 @@ describe('AAC for MediaSource', () => {
 		expect([...t.config!]).toEqual(LC_48K_51);
 		expect(t.channels).toBe(6);
 		expect(t.sampleRate).toBe(48000);
+	});
+
+	test('ADTS that says AAC Main (24 kHz mono, as HE-AAC v2 streams from some muxers) is offered as AAC-LC', () => {
+		const t = aac();
+		const first: Sample = { track: 2, pts: 0, dts: 0, duration: 0, key: true, data: adtsFrame(6, 1, 16, 0) };
+		expect(mimeChoices(t, first)).toEqual(['audio/mp4; codecs="mp4a.40.1"', 'audio/mp4; codecs="mp4a.40.2"']);
+		expect([...t.config!]).toEqual([0x0b, 0x08]);
+		const add = (mime: string) => {
+			if (/40\.1"/.test(mime)) throw new DOMException('not supported', 'NotSupportedError');
+			return {} as SourceBuffer;
+		};
+		const got = audioBuffer(t, first, add, new Set());
+		expect(got.muxer?.mime).toBe('audio/mp4; codecs="mp4a.40.2"');
+		// The init segment's config says AAC-LC, 24 kHz, mono; the track keeps what the file said.
+		const init = got.muxer!.init();
+		const esds = findBox(init, 'esds');
+		const body = init.subarray(esds);
+		expect(body.findIndex((b, i) => b === 5 && body[i + 1] === 2 && body[i + 2] === 0x13 && body[i + 3] === 0x08)).toBeGreaterThan(0);
+		expect([...t.config!]).toEqual([0x0b, 0x08]);
 	});
 
 	test('ADTS headers are left out of the MP4 samples', () => {
