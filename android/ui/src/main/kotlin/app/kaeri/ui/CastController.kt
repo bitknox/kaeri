@@ -577,7 +577,7 @@ private fun castNow(cast: CastModel): CastNow? {
  * read Reconnecting, and the mini takes no tap or drag.
  */
 @Composable
-private fun castReconnecting(cast: CastModel): Boolean {
+internal fun castReconnecting(cast: CastModel): Boolean {
     val shown by cast.shown.collectAsStateWithLifecycle()
     val session by cast.session.collectAsStateWithLifecycle()
     val joining by cast.joining.collectAsStateWithLifecycle()
@@ -614,7 +614,6 @@ private fun CastMini(cast: CastModel, scope: AnimatedVisibilityScope, morph: Cas
     val session by cast.session.collectAsStateWithLifecycle()
     val joining by cast.joining.collectAsStateWithLifecycle()
     val colors = MaterialTheme.colorScheme
-    val context = LocalContext.current
     val name = joining ?: session.deviceName ?: shown?.tvName.orEmpty()
     val reconnecting = castReconnecting(cast)
     val held = shown
@@ -695,10 +694,20 @@ private fun CastMini(cast: CastModel, scope: AnimatedVisibilityScope, morph: Cas
                     enabled = usable,
                 ) { cast.send(FfiTvCommand.TogglePause) }
             }
-            IconButton(onClick = cast::pressButton, modifier = Modifier.size(48.dp).semantics { contentDescription = context.getString(R.string.cast_button_connected, name) }) {
-                CastGlyph(CastGlyphState.Filled, size = 22.dp, tint = colors.onSurface)
-            }
+            CastHeldButton(name, reconnecting, cast::pressButton)
         }
+    }
+}
+
+/**
+ * The filled cast glyph in the mini and the controller's header, which opens the TV's dialog. Its
+ * name says Connected, or Reconnecting as the line beside it does while the TV comes back.
+ */
+@Composable
+internal fun CastHeldButton(name: String, reconnecting: Boolean, onClick: () -> Unit) {
+    val label = stringResource(if (reconnecting) R.string.tv_status_reconnecting else R.string.cast_button_connected, name)
+    IconButton(onClick = onClick, modifier = Modifier.size(48.dp).semantics { contentDescription = label }) {
+        CastGlyph(CastGlyphState.Filled, size = 22.dp, tint = MaterialTheme.colorScheme.onSurface)
     }
 }
 
@@ -800,9 +809,7 @@ private fun CastController(cast: CastModel, shown: CastShown, scope: AnimatedVis
         Row(Modifier.fillMaxWidth().height(56.dp).padding(horizontal = 4.dp), verticalAlignment = Alignment.CenterVertically) {
             TvGlyph(Icons.Down, stringResource(R.string.cast_controller_close)) { cast.closeCard() }
             Box(Modifier.weight(1f), contentAlignment = Alignment.Center) { CastStatus(status) }
-            IconButton(onClick = cast::pressButton, modifier = Modifier.size(48.dp).semantics { contentDescription = context.getString(R.string.cast_button_connected, name) }) {
-                CastGlyph(CastGlyphState.Filled, size = 22.dp, tint = colors.onSurface)
-            }
+            CastHeldButton(name, reconnecting, cast::pressButton)
         }
         Column(Modifier.padding(horizontal = 24.dp)) {
             Spacer(Modifier.height(8.dp))
