@@ -20,7 +20,7 @@ import Synchronization
 ///     counting   the same card six seconds on: Waiting for Living room · 6 s
 ///     preparing  the card six seconds on, this device preparing the stream
 ///     playing    Living room playing episode 3, its volume set on the TV
-///     muted      the playing scene, muted
+///     muted      the playing scene on a TV that takes a level, muted
 ///     level      Kitchen display playing, with a volume level and the skip offer
 ///     upnext     Living room near the end: Up next, plays in 6 s, with Cancel and Play now
 ///     skipped    Kitchen display after an automatic skip: Skipped opening, Undo
@@ -567,6 +567,11 @@ extension TVRemoteModel {
                 state.skip = FfiSkipCard(to: 88, label: L.playerSkipOpening)
             }
             state.muted = scene == .muted
+            if scene == .muted {
+                // A fixed TV offers no mute; this one takes a level.
+                state.volumeControl = .level
+                state.volume = 30
+            }
             state.paused = scene == .paused
             if scene == .waiting { state.waiting = 6 }
             if scene == .waitingtv || scene == .waitingbar { state.waiting = 2 }

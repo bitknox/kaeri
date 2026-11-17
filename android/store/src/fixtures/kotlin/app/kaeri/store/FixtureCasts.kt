@@ -44,7 +44,7 @@ import app.kaeri.i18n.Strings
  *     blocked    the picker with Android 17's local network permission turned down
  *     starting   Living room's card, 6 s into starting: "Waiting for Living room · 6 s"
  *     preparing  Living room's card, 6 s in, this device converting: "Preparing the stream · 6 s"
- *     fixed      Living room's card playing, its volume fixed: Mute alone
+ *     fixed      Living room's card playing, its volume set on the TV, with no Mute
  *     level      Kitchen display's card in the opening, with a volume level and the skip offer
  *     failed     Living room's card once every stream was refused
  *     never      Living room's card after the TV never read the stream: Try again and Play here
