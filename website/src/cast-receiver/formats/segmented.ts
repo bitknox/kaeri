@@ -105,6 +105,11 @@ export class SegmentedStream implements Demuxer {
 		this.duration = duration;
 	}
 
+	get container(): string {
+		const own = this.audio.length ? ` + audio rendition ${this.audio[0].format}` : '';
+		return `${this.video?.format ?? 'no video'}${own}`;
+	}
+
 	async open() {
 		if (this.video) {
 			const c = this.cursor(this.video, VIDEO_ID);

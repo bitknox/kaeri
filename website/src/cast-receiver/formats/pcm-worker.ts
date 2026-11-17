@@ -4,6 +4,8 @@
 
 /// <reference lib="webworker" />
 
+import { MAX_BLOCK, encodeFrame } from './flac-encode';
+
 interface DecoderModule {
 	HEAPU8: Uint8Array;
 	HEAPF32: Float32Array;
@@ -28,7 +30,9 @@ export interface OpenMessage {
 	rate: number;
 	channels: number;
 	unframed: boolean;
-	port: MessagePort;
+	/** Where the sound goes: PCM to the worklet through `port`, or FLAC frames back to the main thread. */
+	out?: 'worklet' | 'flac';
+	port?: MessagePort;
 }
 
 interface Packet {
@@ -54,6 +58,11 @@ let clock: number | null = null;
 let inBuf = 0;
 let inCap = 0;
 let busy = false;
+let flac = false;
+/** Sample number of the next FLAC frame (the frame headers count samples). */
+let flacSamples = 0;
+/** ms spent encoding FLAC. */
+let encodeCpu = 0;
 let cpu = 0;
 let decodedSeconds = 0;
 
@@ -92,23 +101,87 @@ function decode(p: Packet) {
 	cpu += performance.now() - t0;
 	decodedSeconds += n / rate;
 	decodedTo = pts + n / rate;
-	port!.postMessage({ type: 'pcm', gen, pts, rate, channels: m._kd_channels(handle), data: pcm }, [pcm.buffer]);
+	if (flac) toFlac(pcm, n, rate, pts);
+	else port!.postMessage({ type: 'pcm', gen, pts, rate, channels: m._kd_channels(handle), data: pcm }, [pcm.buffer]);
+}
+
+type FlacOut = { pts: number; samples: number; data: Uint8Array };
+/** FLAC frames encoded in this pump, sent together at its end (one append on the main thread). */
+let flacOut: { rate: number; frames: FlacOut[] } | null = null;
+
+/** Encodes decoded stereo PCM as FLAC frames of at most MAX_BLOCK samples for the main thread. */
+function toFlac(pcm: Float32Array, n: number, rate: number, pts: number) {
+	const t0 = performance.now();
+	if (flacOut && flacOut.rate !== rate) sendFlac();
+	flacOut ??= { rate, frames: [] };
+	const frames = flacOut.frames;
+	for (let at = 0; at < n; at += MAX_BLOCK) {
+		const count = Math.min(MAX_BLOCK, n - at);
+		frames.push({ pts: pts + at / rate, samples: count, data: encodeFrame(pcm.subarray(at * 2, (at + count) * 2), count, 2, flacSamples) });
+		flacSamples += count;
+	}
+	encodeCpu += performance.now() - t0;
+}
+
+function sendFlac() {
+	const out = flacOut;
+	flacOut = null;
+	if (out?.frames.length) scope.postMessage({ type: 'flac', gen, rate: out.rate, frames: out.frames }, out.frames.map((f) => f.data.buffer as ArrayBuffer));
 }
 
 function pump() {
 	if (busy || !mod || handle < 0) return;
 	busy = true;
 	try {
-		while (queue.length && decodedTo < playhead + AHEAD) decode(queue.shift()!);
+		// Into MediaSource, everything the engine sends is decoded at once: it paces its reading.
+		while (queue.length && (flac || decodedTo < playhead + AHEAD)) decode(queue.shift()!);
 	} finally {
 		busy = false;
+		sendFlac();
+	}
+}
+
+type Factory = (o: object) => Promise<DecoderModule>;
+
+/** Decoder families fetched and compiled ahead of use: the receiver starts this worker before a load needs it. */
+const prepared = new Map<string, Promise<{ factory: Factory; wasm: WebAssembly.Module }>>();
+
+function prepare(base: string, family: string) {
+	let p = prepared.get(family);
+	if (!p) {
+		p = Promise.all([
+			import(/* @vite-ignore */ new URL(`pcm/${family}.js`, base).href).then((x) => x.default as Factory),
+			compile(new URL(`pcm/${family}.wasm`, base).href),
+		]).then(([factory, wasm]) => ({ factory, wasm }));
+		// A failure shows when the family is opened.
+		p.catch(() => {});
+		prepared.set(family, p);
+	}
+	return p;
+}
+
+async function compile(url: string): Promise<WebAssembly.Module> {
+	try {
+		return await WebAssembly.compileStreaming(fetch(url));
+	} catch {
+		// Served without the application/wasm type.
+		const r = await fetch(url);
+		if (!r.ok) throw new Error(`${url}: ${r.status}`);
+		return WebAssembly.compile(await r.arrayBuffer());
 	}
 }
 
 async function open(m: OpenMessage) {
-	const url = new URL(`pcm/${m.family}.js`, m.base).href;
-	const factory = (await import(/* @vite-ignore */ url)).default as (o: object) => Promise<DecoderModule>;
-	mod = await factory({ locateFile: (f: string) => new URL(`pcm/${f}`, m.base).href });
+	const { factory, wasm } = await prepare(m.base, m.family);
+	mod = await new Promise<DecoderModule>((resolve, reject) => {
+		factory({
+			locateFile: (f: string) => new URL(`pcm/${f}`, m.base).href,
+			instantiateWasm: (imports: WebAssembly.Imports, done: (i: WebAssembly.Instance, w: WebAssembly.Module) => void) => {
+				WebAssembly.instantiate(wasm, imports).then((i) => done(i, wasm), reject);
+				return {};
+			},
+		}).then(resolve, reject);
+	});
 	const name = mod.stringToNewUTF8(m.decoder);
 	let extra = 0;
 	let extraLen = 0;
@@ -122,7 +195,9 @@ async function open(m: OpenMessage) {
 	if (extra) mod._free(extra);
 	if (handle < 0) throw new Error(`decoder ${m.decoder} didn't open (${handle})`);
 	unframed = m.unframed;
-	port = m.port;
+	flac = m.out === 'flac';
+	if (flac) return;
+	port = m.port!;
 	port.onmessage = (e) => {
 		if (e.data?.type === 'position' && e.data.gen === gen) {
 			playhead = e.data.time;
@@ -142,6 +217,9 @@ scope.onmessage = async (e: MessageEvent) => {
 				scope.postMessage({ type: 'error', detail: String((err as Error)?.message ?? err) });
 			}
 			break;
+		case 'prepare':
+			void prepare(m.base, m.family);
+			break;
 		case 'packets':
 			if (m.gen !== gen) break;
 			for (const p of m.packets as Packet[]) queue.push(p);
@@ -150,13 +228,19 @@ scope.onmessage = async (e: MessageEvent) => {
 		case 'flush':
 			gen = m.gen;
 			queue = [];
+			flacOut = null;
 			playhead = m.time;
 			decodedTo = -Infinity;
 			clock = null;
 			if (mod && handle >= 0) mod._kd_flush(handle);
 			break;
+		case 'drain':
+			// The end of the stream: everything sent is decoded by now.
+			pump();
+			scope.postMessage({ type: 'drained', gen: m.gen });
+			break;
 		case 'stats':
-			scope.postMessage({ type: 'stats', cpu, decoded: decodedSeconds, queued: queue.length, heap: mod?.HEAPU8.length ?? 0 });
+			scope.postMessage({ type: 'stats', cpu, encode: encodeCpu, decoded: decodedSeconds, queued: queue.length, heap: mod?.HEAPU8.length ?? 0 });
 			break;
 		case 'close':
 			if (mod && handle >= 0) mod._kd_close(handle);

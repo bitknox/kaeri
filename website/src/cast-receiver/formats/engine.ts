@@ -3,8 +3,9 @@
 // bytes through. Video goes to the TV's own decoders as it is. Audio goes to MediaSource when the
 // TV takes it, else to the WebAssembly decoders (pcm.ts). Subtitles inside the file go to subs.ts.
 //
-// Nothing is checked before playing: MediaSource is asked for each track, and an audio track it
-// refuses, or fails on, plays through WebAssembly from then on for this session.
+// Nothing is checked before playing: MediaSource is asked for each audio track in each form it
+// has (HE-AAC also as AAC-LC). A form it refuses is skipped for the rest of the session; a track
+// it refuses in every form, or fails on while playing, plays through WebAssembly.
 
 import type { Report } from '../errors';
 import { codecString } from './codecs';
@@ -12,22 +13,84 @@ import { openDash } from './dash';
 import { openHls } from './hls';
 import { Matroska } from './mkv';
 import { Mp4File } from './mp4';
-import { createMuxer, type Muxer } from './mux';
-import { PcmAudio, decoderFor } from './pcm';
+import { streamInfo } from './flac-encode';
+import { Mp4Muxer, createMuxer, mimeChoices, type Muxer } from './mux';
+import { FLAC_MIME, FlacAudio, PRIMED, PcmAudio, decoderFor, flacSupported, type FlacFrame } from './pcm';
 import { FetchError, LeaveToCaf, RangeSource, bytesOf } from './source';
 import { Subtitles, type TypesetSink } from './subs';
 import { TsFile } from './ts';
 import type { Demuxer, Sample, Track } from './types';
 
+/** The track number of the FLAC that decoded sound goes back to MediaSource as. */
+const FLAC_ID = 1;
+
+/** The FLAC track decoded sound goes back to MediaSource as: 16-bit stereo at `rate`. */
+function flacTrack(rate: number): Track {
+	return { id: FLAC_ID, kind: 'audio', codec: 'flac', config: streamInfo(rate, 2), sampleRate: rate, channels: 2, bitDepth: 16 };
+}
+
 /** Seconds read ahead of the playhead. */
 const AHEAD = 30;
+/**
+ * Seconds read ahead while WebAssembly sound starts (until PACED ms after playing begins). On the
+ * Chromecast TV, reading the whole 30 s at once while sound and picture start starves the audio
+ * output: the context's clock fell 300 to 400 ms behind in the first second, and the sound with it.
+ */
+const START_AHEAD = 5;
+const PACED = 2500;
+/**
+ * Seconds of FLAC sound buffered past the first picture before the picture goes in, after a start
+ * or a seek, and the most ms the picture waits for it. The element plays as soon as both buffers
+ * cover the playhead: with a few ms of sound it plays them, runs dry and waits, a short burst then a
+ * gap before the sound continues.
+ */
+const FLAC_LEAD = 0.5;
+const FLAC_WAIT = 2000;
+/**
+ * Milliseconds the element's sound fades in over whenever playing begins. The Chromecast TV's audio
+ * output stops for 40 to 90 ms about 50 to 250 ms after it starts (AAC and FLAC alike, the media
+ * clock with it): a short burst, a gap, then the sound. Under the fade the burst is near silent.
+ */
+const FADE_IN = 300;
 /** Seconds kept behind the playhead. */
 const BEHIND = 30;
 /** Frames held to work out Matroska video decode times. */
 const REORDER = 8;
 
-/** Audio codecs MediaSource failed on in this session: they go to WebAssembly at once. */
+/**
+ * Audio MIME types addSourceBuffer refused in this session, and those of codecs outside the
+ * common four that failed while playing: they are not asked for again.
+ */
 const refusedAudio = new Set<string>();
+
+/**
+ * The SourceBuffer for an audio track: each of its MIME types in turn, less those refused before.
+ * A refusal is remembered in `refused`. No buffer: `why` says what was refused and the config.
+ */
+export function audioBuffer(
+	t: Track,
+	first: Sample | undefined,
+	add: (mime: string) => SourceBuffer,
+	refused: Set<string> = refusedAudio,
+): { sb: SourceBuffer | null; muxer: Muxer | null; why: string | null } {
+	const choices = mimeChoices(t, first);
+	if (!choices.length) return { sb: null, muxer: null, why: `muxer: none for ${trackSetup(t)}` };
+	const said: string[] = [];
+	for (const mime of choices) {
+		if (refused.has(mime)) {
+			said.push(`${mime} refused earlier`);
+			continue;
+		}
+		try {
+			const sb = add(mime);
+			return { sb, muxer: createMuxer(t, first, mime), why: null };
+		} catch (e) {
+			refused.add(mime);
+			said.push(`${mime} refused: ${errText(e)}`);
+		}
+	}
+	return { sb: null, muxer: null, why: `MediaSource ${said.join('; ')} (${trackSetup(t)})` };
+}
 
 export type Format = 'mkv' | 'mp4' | 'ts' | 'hls' | 'dash';
 
@@ -281,7 +344,8 @@ export interface UnpackerStats {
 	format: Format;
 	video: string | null;
 	audio: string | null;
-	audioPath: 'mse' | 'wasm' | null;
+	/** wasm: decoded here and played by the worklet; flac: decoded here and played by MediaSource as FLAC. */
+	audioPath: 'mse' | 'wasm' | 'flac' | null;
 	text: string | null;
 	readTo: number;
 	buffered: [number, number][];
@@ -289,6 +353,23 @@ export interface UnpackerStats {
 	/** Spans stepped over because their segments never came. */
 	skipped: [number, number][];
 	pcm: PcmAudio['stats'] | null;
+	/** The audio track as the receiver read it, for the dev log. */
+	audioSetup: string | null;
+	/** Why the audio plays through WebAssembly, when it does. */
+	audioWhy: string | null;
+	/** How long the last start held the picture for WebAssembly sound, and what let it go. */
+	audioGate: string | null;
+	/** Milliseconds from the start of the load to its steps, once the first frame is up. */
+	timing: string | null;
+	/** The WebAssembly sound's clock readings in the first seconds after a start. */
+	clockTrace: string[] | null;
+}
+
+/** A track's setup in one line: codec string, MIME, rate, channels and config bytes. */
+export function trackSetup(t: Track, mime?: string | null): string {
+	const hex = t.config ? Array.from(t.config.subarray(0, 48), (b) => b.toString(16).padStart(2, '0')).join('') : 'none';
+	const more = t.config && t.config.length > 48 ? `+${t.config.length - 48}` : '';
+	return `${t.codec} ${codecString(t) ?? '?'} mime ${mime ?? '?'} rate ${t.sampleRate ?? '?'} ch ${t.channels ?? '?'}${t.unframed ? ' unframed' : ''} config ${hex}${more}`;
 }
 
 /** One load, unpacked into a MediaSource whose object URL CAF plays. */
@@ -299,6 +380,18 @@ export class Unpacker {
 	private vout: Output | null = null;
 	private aout: Output | null = null;
 	private pcm: PcmAudio | null = null;
+	/** WebAssembly sound started before the first samples, for a track MediaSource won't take. */
+	private early: { id: number; made: Promise<PcmAudio | FlacAudio> } | null = null;
+	/** Sound decoded in WebAssembly that goes back to MediaSource as FLAC, through `aout`. */
+	private flac: FlacAudio | null = null;
+	/** The sample rate of the FLAC init segment appended, null before the first one. */
+	private flacRate: number | null = null;
+	/** FLAC appends, one after another. */
+	private flacChain: Promise<void> = Promise.resolve();
+	/** FLAC frames from the decoder not appended yet: appended together, one segment per rate. */
+	private flacQueue: { rate: number; frames: FlacFrame[]; g: number }[] = [];
+	/** After a start or a seek, the picture held until FLAC sound leads it (FLAC_LEAD). */
+	private flacHold: { video: Sample[]; since: number } | null = null;
 	private fixer: DecodeTimes | null = null;
 	private readonly subs: Subtitles;
 	private videoTrack: Track | null;
@@ -308,6 +401,8 @@ export class Unpacker {
 	private held: Sample[] | null = [];
 	private gen = 0;
 	private seekTo: number | null = null;
+	/** Where the engine last stepped the video over a gap itself (tick). */
+	private stepTo: number | null = null;
 	/** The read loop runs; one per Unpacker. */
 	private started = false;
 	/** The last seek's target and where reading started for it. */
@@ -323,7 +418,25 @@ export class Unpacker {
 	private wake: (() => void) | null = null;
 	private timer = 0;
 	private swapping = false;
+	private audioWhy: string | null = null;
+	private audioGate: string | null = null;
+	/** performance.now() at the start of the load, and when its steps happened. */
+	private t0 = performance.now();
+	private setupAt: number | null = null;
+	private gateAt: number | null = null;
+	private frameAt: number | null = null;
+	private playingAt: number | null = null;
+	/** When playing began after the last start or seek, for the paced read-ahead (see lead()). */
+	private pacedFrom: number | null = null;
+	/** The WebAssembly sound was started before the first samples (see startEarly). */
+	private pcmEarly = false;
+	private flacEarly = false;
+	/** An audio switch is changing the SourceBuffer: reading waits. */
+	private switching = false;
 	private listeners: [EventTarget, string, EventListener, boolean][] = [];
+	/** The first seconds of a start through MediaSource, step by step, for the dev log (see note()). */
+	private startTrace: string[] | null = null;
+	private traceTimer = 0;
 
 	private constructor(
 		private readonly demux: Demuxer,
@@ -351,6 +464,7 @@ export class Unpacker {
 	 * LeaveToCaf, FetchError or a parse error (the caller hands the load to CAF).
 	 */
 	static async open(video: HTMLVideoElement, o: UnpackerOptions): Promise<Unpacker> {
+		const t0 = performance.now();
 		const { demux, format } = await openDemuxer(o.url, o.contentType, o.container);
 		if (!demux.tracks.some((t) => t.kind === 'video' || t.kind === 'audio')) {
 			demux.close();
@@ -363,7 +477,9 @@ export class Unpacker {
 			throw new Refused(refused);
 		}
 		const u = new Unpacker(demux, format, video, o);
+		u.t0 = t0;
 		await u.selectTracks();
+		u.startEarly();
 		u.begin();
 		return u;
 	}
@@ -381,14 +497,33 @@ export class Unpacker {
 			format: this.format,
 			video: this.videoTrack ? codecName(this.videoTrack) : null,
 			audio: this.audioTrack?.codec ?? null,
-			audioPath: this.pcm ? 'wasm' : this.aout ? 'mse' : null,
+			audioPath: this.flac ? 'flac' : this.pcm ? 'wasm' : this.aout ? 'mse' : null,
 			text: this.textTrack?.codec ?? null,
 			readTo: this.readTo,
 			buffered: this.vout?.ranges() ?? this.aout?.ranges() ?? [],
 			seeks: this.seeks,
 			skipped: this.demux.skipped ?? [],
 			pcm: this.pcm ? this.pcm.stats : null,
+			audioSetup: this.audioTrack ? `${this.format}/${this.demux.container ?? this.format} ${trackSetup(this.audioTrack, this.aout?.muxer.mime)}` : null,
+			audioWhy: this.pcm ? this.audioWhy : null,
+			audioGate: this.pcm || this.flac ? this.audioGate : null,
+			timing: this.timing(),
+			clockTrace: this.pcm ? this.pcm.trace : this.startTrace,
 		};
+	}
+
+	private timing(): string | null {
+		if (this.frameAt == null) return null;
+		const ms = (t: number | null | undefined) => (t == null ? '-' : `${Math.round(t - this.t0)}`);
+		let line = `load to setup ${ms(this.setupAt)} ms, first frame ${ms(this.frameAt)} ms, playing ${ms(this.playingAt)} ms`;
+		if (this.flac) line += `, first FLAC frames ${ms(this.flac.firstFrames)} ms, picture let go ${ms(this.gateAt)} ms (${this.audioGate ?? '-'}); audio setup ${this.flacEarly ? 'early' : 'after video'}: ${this.flac.setup}`;
+		if (this.pcm) {
+			const t = this.pcm.timing;
+			const l = this.pcm.latency;
+			const sound = t.sound != null && this.playingAt != null ? `${Math.round(t.sound - this.playingAt)}` : '-';
+			line += `, sound decoded ${ms(t.decoded)} ms, ${Math.round(PRIMED * 1000)} ms queued ${ms(t.primed)} ms, picture let go ${ms(this.gateAt)} ms; playing to first sound ${sound} ms; latency output ${Math.round(l.output * 1000)} base ${Math.round(l.base * 1000)} ms; audio setup ${this.pcmEarly ? 'early' : 'after video'}: ${this.pcm.setup}`;
+		}
+		return line;
 	}
 
 	/** The WebAssembly audio's level tap, for the testing build. Null when MSE plays the sound. */
@@ -399,6 +534,11 @@ export class Unpacker {
 	/** Decoder CPU time, for measuring. */
 	pcmCpu() {
 		return this.pcm?.cpu() ?? null;
+	}
+
+	/** Decoder and FLAC encoder CPU time, for measuring. Null unless sound goes to MediaSource as FLAC. */
+	flacCpu() {
+		return this.flac?.cpu() ?? null;
 	}
 
 	private async selectTracks() {
@@ -416,10 +556,24 @@ export class Unpacker {
 	}
 
 	private begin() {
+		// The first frame on screen, for the load timing.
+		const v = this.video as HTMLVideoElement & { requestVideoFrameCallback?: (cb: (now: number) => void) => number };
+		if (v.requestVideoFrameCallback) v.requestVideoFrameCallback((now) => (this.frameAt ??= now));
+		this.on(this.video, 'playing', () => {
+			this.fadeIn();
+			this.playingAt ??= performance.now();
+			this.pacedFrom ??= performance.now();
+			if (!v.requestVideoFrameCallback) this.frameAt ??= this.playingAt;
+		});
+		for (const type of ['loadedmetadata', 'canplay', 'playing', 'waiting', 'seeking', 'seeked', 'pause', 'stalled'])
+			this.on(this.video, type, () => this.note(type));
 		this.on(this.ms, 'sourceopen', () => this.opened(), false);
 		// CAF unloaded the element (a stop, or another load).
 		this.on(this.ms, 'sourceclose', () => !this.swapping && this.destroy(), false);
 		this.on(this.video, 'seeking', () => this.onSeeking());
+		// A seek restarts the TV's audio output as a start does, without saying 'playing' when the
+		// element never stopped.
+		this.on(this.video, 'seeked', () => !this.video.paused && this.fadeIn());
 		// Before CAF hears a media error: an audio failure goes to WebAssembly instead.
 		this.on(window, 'error', (e) => this.onMediaError(e), true);
 		for (const type of ['emptied', 'abort', 'loadstart', 'pause', 'waiting', 'stalled', 'suspend'])
@@ -493,9 +647,13 @@ export class Unpacker {
 				}
 				continue;
 			}
+			if (this.switching) {
+				await this.nap();
+				continue;
+			}
 			const g = this.gen;
 			const playhead = this.video.currentTime;
-			if (this.atEnd || (this.held == null && this.readTo - Math.max(playhead, this.target) > AHEAD)) {
+			if (this.atEnd || (this.held == null && this.readTo - Math.max(playhead, this.target) > this.lead())) {
 				await this.nap();
 				continue;
 			}
@@ -519,8 +677,19 @@ export class Unpacker {
 		}
 	}
 
+	/** Seconds to read ahead now: less while WebAssembly sound starts. */
+	private lead(): number {
+		if (!this.pcm && !this.early) return AHEAD;
+		return this.pacedFrom != null && performance.now() - this.pacedFrom > PACED ? AHEAD : START_AHEAD;
+	}
+
 	private async seekNow(t: number) {
 		const g = ++this.gen;
+		// FLAC frames of the old position still on their way are dropped from here on.
+		this.flac?.seek(t);
+		this.flacQueue = [];
+		this.flacHold = this.flac ? { video: [], since: performance.now() } : null;
+		this.pacedFrom = null;
 		this.seeks++;
 		this.target = t;
 		const start = await this.demux.seek(t);
@@ -582,31 +751,153 @@ export class Unpacker {
 			}
 		}
 		if (at) await this.makeAudio(at, held.find((s) => s.track === at.id));
+		this.setupAt ??= performance.now();
 		this.held = null;
 		this.setDuration();
 		if (this.vout) await this.vout.append(this.vout.muxer.init());
-		if (this.aout) await this.aout.append(this.aout.muxer.init());
+		if (this.aout && !this.flac) await this.aout.append(this.aout.muxer.init());
 		if (g !== this.gen) return;
 		await this.feed(held, g);
 	}
 
-	private async makeAudio(t: Track, first: Sample | undefined) {
-		if (!refusedAudio.has(t.codec)) {
-			const muxer = createMuxer(t, first);
-			if (muxer) {
-				try {
-					this.aout = new Output(this.ms.addSourceBuffer(muxer.mime), muxer, t);
-					return;
-				} catch (e) {
-					console.info('audio to WebAssembly:', muxer.mime, errText(e));
-				}
-			}
+	/**
+	 * Starts the WebAssembly sound while the first samples are read, when no MediaSource form of the
+	 * track is supported: its setup then runs alongside the video's instead of after it. AAC waits for
+	 * its first frame, which can change its setup.
+	 */
+	private startEarly() {
+		const t = this.audioTrack;
+		if (!t || t.codec === 'aac' || !decoderFor(t)) return;
+		const supported = (mime: string) => !refusedAudio.has(mime) && (globalThis.MediaSource?.isTypeSupported?.(mime) ?? false);
+		if (mimeChoices(t).some(supported)) return;
+		const made: Promise<PcmAudio | FlacAudio> = this.canFlac()
+			? FlacAudio.create(this.o.base, t, this.target, (rate, frames) => this.onFlac(rate, frames))
+			: PcmAudio.create(this.o.base, t, this.video, this.target);
+		made.catch(() => {});
+		this.early = { id: t.id, made };
+	}
+
+	/** The early WebAssembly sound for `t`, when there is one. */
+	private takeEarly(t: Track): Promise<PcmAudio | FlacAudio> | null {
+		const e = this.early;
+		this.early = null;
+		if (!e) return null;
+		if (e.id === t.id) return e.made;
+		void e.made.then((p) => p.destroy(), () => {});
+		return null;
+	}
+
+	/** Whether decoded sound can go back to MediaSource as FLAC. */
+	private canFlac() {
+		return !refusedAudio.has(FLAC_MIME) && flacSupported();
+	}
+
+	/**
+	 * Decodes `t` in WebAssembly into an audio SourceBuffer as FLAC. False when MediaSource refuses
+	 * the FLAC SourceBuffer (the worklet plays the sound then).
+	 */
+	private async startFlac(t: Track): Promise<boolean> {
+		let sb: SourceBuffer;
+		try {
+			sb = this.ms.addSourceBuffer(FLAC_MIME);
+		} catch (e) {
+			refusedAudio.add(FLAC_MIME);
+			this.audioWhy = `${this.audioWhy ?? ''}; ${FLAC_MIME} refused: ${errText(e)}`;
+			return false;
 		}
+		const rate = t.sampleRate || 48000;
+		this.aout = new Output(sb, new Mp4Muxer(flacTrack(rate), FLAC_MIME), flacTrack(rate));
+		this.flacRate = null;
+		const early = this.takeEarly(t);
+		let made: FlacAudio | null = null;
+		if (early) {
+			const e = await early.catch(() => null);
+			if (e instanceof FlacAudio) {
+				made = e;
+				this.flacEarly = true;
+			} else e?.destroy();
+		}
+		try {
+			made ??= await FlacAudio.create(this.o.base, t, this.target, (r, frames) => this.onFlac(r, frames));
+		} catch (e) {
+			throw new Refused(report('audio', `WebAssembly ${t.codec}: ${errText(e)}`, { codec: t.codec }));
+		}
+		if (this.closed) {
+			made.destroy();
+			return true;
+		}
+		this.flac = made;
+		this.flac.seek(this.target);
+		this.flacHold = { video: [], since: performance.now() };
+		return true;
+	}
+
+	/** FLAC frames from the decoder: appended in order, after the init segment for their rate. */
+	private onFlac(rate: number, frames: FlacFrame[]) {
+		const g = this.gen;
+		this.flacQueue.push({ rate, frames, g });
+		this.flacChain = this.flacChain
+			.then(() => this.putQueued())
+			.catch((e) => {
+				if (g === this.gen && !this.closed) this.fail(e);
+			});
+	}
+
+	/** Appends every queued FLAC frame of this start, in as few appends as the rates allow. */
+	private async putQueued() {
+		while (this.flacQueue.length) {
+			const g = this.flacQueue[0].g;
+			const rate = this.flacQueue[0].rate;
+			let n = 1;
+			while (n < this.flacQueue.length && this.flacQueue[n].g === g && this.flacQueue[n].rate === rate) n++;
+			const frames = this.flacQueue.splice(0, n).flatMap((q) => q.frames);
+			await this.putFlac(rate, frames, g);
+		}
+	}
+
+	private async putFlac(rate: number, frames: FlacFrame[], g: number) {
+		const o = this.aout;
+		if (!o || g !== this.gen || this.closed) return;
+		if (this.flacRate !== rate) {
+			const t = flacTrack(rate);
+			o.muxer = new Mp4Muxer(t, FLAC_MIME);
+			await o.append(o.muxer.init());
+			this.flacRate = rate;
+		}
+		const samples: Sample[] = frames.map((f) => ({ track: FLAC_ID, pts: f.pts, dts: f.pts, duration: f.samples / rate, key: true, data: f.data }));
+		await this.put(o, o.muxer.segment(samples), g);
+	}
+
+	private async makeAudio(t: Track, first: Sample | undefined) {
+		const got = audioBuffer(t, first, (mime) => this.ms.addSourceBuffer(mime));
+		if (got.sb && got.muxer) {
+			this.aout = new Output(got.sb, got.muxer, t);
+			const early = this.takeEarly(t);
+			if (early) void early.then((p) => p.destroy(), () => {});
+			return;
+		}
+		this.audioWhy = got.why;
+		console.info('audio to WebAssembly:', this.audioWhy);
+		if (this.canFlac() && (await this.startFlac(t))) return;
 		await this.startPcm(t);
 	}
 
 	private async startPcm(t: Track) {
 		if (!decoderFor(t)) throw new Refused(report('audio', `no decoder for ${t.codec}`, { codec: t.codec }));
+		const early = this.takeEarly(t);
+		if (early) {
+			try {
+				const pcm = await early;
+				if (this.closed) return pcm.destroy();
+				if (!(pcm instanceof PcmAudio)) throw pcm.destroy();
+				this.pcm = pcm;
+				this.pcm.seek(this.target);
+				this.pcmEarly = true;
+				return;
+			} catch {
+				// Made again below, where a failure counts.
+			}
+		}
 		try {
 			this.pcm = await PcmAudio.create(this.o.base, t, this.video, this.target);
 		} catch (e) {
@@ -625,12 +916,55 @@ export class Unpacker {
 			if (k >= 0) this.needKey = false;
 		}
 		if (this.fixer && video.length) video = this.fixer.push(video);
+		let pushed = false;
+		// WebAssembly sound: the first picture after a start or a seek waits for decoded sound, so
+		// both begin together instead of the sound starting late and skipping to catch up.
+		if (this.pcm && audio.length && video.length && !this.pcm.isPrimed) {
+			this.pcm.push(audio);
+			pushed = true;
+			const since = performance.now();
+			const how = await this.pcm.ready();
+			this.audioGate = `${Math.round(performance.now() - since)} ms ${how}`;
+			this.gateAt ??= performance.now();
+			if (g !== this.gen) return;
+		}
+		// FLAC sound: the first picture after a start or a seek waits until the sound leads it.
+		const hold = this.flacHold;
+		if (this.flac && hold && this.vout) {
+			if (audio.length) this.flac.push(audio);
+			pushed = true;
+			hold.video.push(...video);
+			video = [];
+			const first = hold.video[0]?.pts;
+			const late = performance.now() - hold.since > FLAC_WAIT;
+			if (first != null && (late || this.flac.bufferedTo >= first + FLAC_LEAD)) {
+				const since = performance.now();
+				const how = await this.flacReaches(first + FLAC_LEAD, Math.max(0, hold.since + FLAC_WAIT - since));
+				if (g !== this.gen || hold !== this.flacHold) return;
+				this.audioGate = `${Math.round(performance.now() - hold.since)} ms ${how}`;
+				this.gateAt ??= performance.now();
+				this.note(`gate ${how}`);
+				this.flacHold = null;
+				video = hold.video;
+			}
+		}
 		if (video.length && this.vout) await this.put(this.vout, this.vout.muxer.segment(video), g);
-		if (audio.length) {
-			if (this.pcm) this.pcm.push(audio);
+		if (audio.length && !pushed) {
+			if (this.flac) this.flac.push(audio);
+			else if (this.pcm) this.pcm.push(audio);
 			else if (this.aout) await this.put(this.aout, this.aout.muxer.segment(audio), g);
 		}
 		await this.evict();
+	}
+
+	/** Waits until FLAC sound is buffered from the playhead's range to `t`, or `ms` passed. */
+	private async flacReaches(t: number, ms: number): Promise<'sound' | 'timeout'> {
+		const until = performance.now() + ms;
+		for (;;) {
+			if (this.aout?.rangeAt(t - 0.03)) return 'sound';
+			if (performance.now() >= until || this.closed) return 'timeout';
+			await new Promise((r) => setTimeout(r, 20));
+		}
 	}
 
 	private async put(o: Output, data: Uint8Array | null, g: number) {
@@ -638,6 +972,7 @@ export class Unpacker {
 		for (let attempt = 0; ; attempt++) {
 			try {
 				await o.append(data);
+				this.note(o === this.aout ? `A${data.length}` : `V${data.length}`);
 				return;
 			} catch (e) {
 				if ((e as DOMException)?.name !== 'QuotaExceededError' || attempt > 20 || g !== this.gen) throw e;
@@ -664,8 +999,19 @@ export class Unpacker {
 	private async finish(g: number) {
 		if (this.held) await this.outputs(g);
 		if (g !== this.gen) return;
+		// A stream shorter than the FLAC lead: its held picture goes in with the sound there is.
+		const hold = this.flacHold;
+		if (hold?.video.length && this.vout) {
+			this.flacHold = null;
+			await this.put(this.vout, this.vout.muxer.segment(hold.video), g);
+		}
 		if (this.fixer && this.vout) await this.put(this.vout, this.vout.muxer.segment(this.fixer.flush()), g);
 		if (this.vout) await this.put(this.vout, this.vout.muxer.flush(), g);
+		if (this.flac) {
+			await this.flac.drain();
+			await this.flacChain;
+			if (g !== this.gen) return;
+		}
 		if (this.aout) await this.put(this.aout, this.aout.muxer.flush(), g);
 		if (g !== this.gen) return;
 		this.atEnd = true;
@@ -698,11 +1044,67 @@ export class Unpacker {
 		const t = this.video.currentTime;
 		// The start position CAF sets once the metadata is in.
 		if (Math.abs(t - this.target) < 0.05 && this.seeks <= 1 && this.video.played.length === 0) return;
+		// The engine's own step over a gap lands on buffered media: no new read. For WebAssembly
+		// sound a new read would also flush the sound already decoded, and start with a gap.
+		const step = this.stepTo;
+		this.stepTo = null;
+		if (step != null && Math.abs(t - step) < 0.02) return;
 		if (this.covered(t)) return;
 		this.seekTo = t;
 		this.gen++;
 		this.demux.interrupt?.();
 		this.poke();
+	}
+
+	/**
+	 * Notes a step of a start through MediaSource for the dev log: ms since the load, what happened,
+	 * the playhead, readyState, the element's audio bytes decoded, and the video and audio buffered
+	 * ranges. Runs until 3 s after playing begins; a 50 ms sampler adds lines when anything changed.
+	 */
+	private note(what: string) {
+		if (this.pcm) return;
+		if (this.startTrace == null) {
+			this.startTrace = [];
+			this.traceTimer = window.setInterval(() => this.note('.'), 50);
+		}
+		const tr = this.startTrace;
+		if (this.playingAt != null && performance.now() - this.playingAt > 3000 || tr.length > 400) {
+			window.clearInterval(this.traceTimer);
+			return;
+		}
+		const v = this.video as HTMLVideoElement & { webkitAudioDecodedByteCount?: number };
+		const r = (o: Output | null) => (o ? o.ranges().map(([a, b]) => `${a.toFixed(3)}-${b.toFixed(3)}`).join(',') || '-' : 'none');
+		const state = `t${v.currentTime.toFixed(3)} r${v.readyState}${v.paused ? 'p' : ''}${v.volume < 1 ? ` vol${v.volume.toFixed(2)}` : ''} ab${v.webkitAudioDecodedByteCount ?? '?'} v${r(this.vout)} a${r(this.aout)}`;
+		if (what === '.' && this.lastNote === state) return;
+		this.lastNote = state;
+		tr.push(`${Math.round(performance.now() - this.t0)}:${what} ${state}`);
+	}
+
+	private lastNote = '';
+	/** The fade-in running: its timer and the volume it rises to. */
+	private fade: { timer: number; to: number } | null = null;
+
+	/** Fades the element's sound in over FADE_IN ms, from silence, on a square curve. */
+	private fadeIn() {
+		const v = this.video;
+		if (this.pcm || !this.audioTrack || this.closed) return;
+		const to = this.fade?.to ?? v.volume;
+		if (this.fade) window.clearInterval(this.fade.timer);
+		const from = performance.now();
+		const step = () => {
+			const x = Math.min(1, (performance.now() - from) / FADE_IN);
+			v.volume = to * x * x;
+			if (x >= 1) this.stopFade();
+		};
+		this.fade = { timer: window.setInterval(step, 15), to };
+		step();
+	}
+
+	private stopFade() {
+		if (!this.fade) return;
+		window.clearInterval(this.fade.timer);
+		this.video.volume = this.fade.to;
+		this.fade = null;
 	}
 
 	private tick() {
@@ -720,7 +1122,11 @@ export class Unpacker {
 					.map(([s]) => s + 0.01)
 					.filter((s) => s > t && s - t < reach && this.buffered(s))
 					.sort((a, b) => a - b)[0];
-				if (next != null) v.currentTime = next;
+				if (next != null) {
+					this.note(`step>${next.toFixed(3)}`);
+					this.stepTo = next;
+					v.currentTime = next;
+				}
 			}
 		}
 		if (this.atEnd && this.ms.readyState === 'open' && !this.vout?.sb.updating && !this.aout?.sb.updating) {
@@ -730,6 +1136,8 @@ export class Unpacker {
 				// next tick
 			}
 		}
+		// A seek that never stopped playing says no 'playing' again.
+		if (this.pacedFrom == null && !v.paused && !v.seeking && v.readyState >= 3) this.pacedFrom = performance.now();
 		if (this.readTo - v.currentTime < AHEAD) this.poke();
 	}
 
@@ -747,7 +1155,10 @@ export class Unpacker {
 		const exotic = !!at && !/^(aac|opus|mp3|vorbis)$/.test(at.codec);
 		if (this.aout && at && (audioSaid || (!videoSaid && exotic))) {
 			e.stopPropagation();
-			refusedAudio.add(at.codec);
+			// The common four play through MediaSource on every TV, so one stream's failure moves
+			// only that stream; another codec's failure says the TV can't decode it.
+			if (exotic) refusedAudio.add(this.aout.muxer.mime);
+			this.audioWhy = `media error on ${this.aout.muxer.mime}: ${message || 'no message'}`;
 			console.info('audio to WebAssembly after', message);
 			void this.toPcm().catch((err) => this.fail(err));
 			return;
@@ -775,6 +1186,8 @@ export class Unpacker {
 		await open;
 		this.aout = null;
 		this.vout = null;
+		this.flac?.destroy();
+		this.flac = null;
 		this.setDuration();
 		if (vt) {
 			const muxer = createMuxer(vt);
@@ -800,6 +1213,24 @@ export class Unpacker {
 		const pick = list.find((t) => t.language === language && (!name || t.name === name)) ?? list.find((t) => t.language === language);
 		if (!pick) return false;
 		if (pick === this.audioTrack || pick.id === this.audioTrack?.id) return true;
+		// Reading stops and what is on its way is dropped, so nothing of either track reaches the
+		// SourceBuffer while it changes.
+		this.switching = true;
+		this.gen++;
+		try {
+			await this.flacChain;
+			await this.aout?.idle();
+			await this.changeAudio(pick);
+		} finally {
+			this.switching = false;
+		}
+		this.seekTo = this.video.currentTime;
+		this.gen++;
+		this.poke();
+		return true;
+	}
+
+	private async changeAudio(pick: Track) {
 		this.audioTrack = pick;
 		await this.selectTracks();
 		const t = this.audioTrack!;
@@ -808,35 +1239,61 @@ export class Unpacker {
 			this.pcm = null;
 			await this.startPcm(t);
 		} else if (this.aout) {
-			const muxer = refusedAudio.has(t.codec) ? null : createMuxer(t);
+			const o = this.aout;
+			const wasFlac = this.flac != null;
+			this.flac?.destroy();
+			this.flac = null;
 			let changed = false;
-			if (muxer && 'changeType' in this.aout.sb) {
-				try {
-					await this.aout.idle();
-					this.aout.sb.abort();
-					this.aout.sb.changeType(muxer.mime);
-					this.aout.muxer = muxer;
-					await this.aout.append(muxer.init());
-					changed = true;
-				} catch (e) {
-					console.info('audio switch to WebAssembly:', errText(e));
+			const said: string[] = [];
+			// A MediaSource whose file was read to the end is 'ended': abort() throws there, and the
+			// first append opens it again.
+			const abort = () => this.ms.readyState === 'open' && o.sb.abort();
+			if ('changeType' in o.sb) {
+				for (const mime of mimeChoices(t)) {
+					if (refusedAudio.has(mime)) continue;
+					const muxer = createMuxer(t, undefined, mime)!;
+					try {
+						await o.idle();
+						abort();
+						o.sb.changeType(mime);
+						o.muxer = muxer;
+						await o.append(muxer.init());
+						changed = true;
+						break;
+					} catch (e) {
+						// Only the TV saying no to the form rules it out for later loads.
+						if ((e as DOMException)?.name !== 'InvalidStateError') refusedAudio.add(mime);
+						said.push(`${mime} refused: ${errText(e)}`);
+					}
 				}
-			}
+				// No MediaSource form: decoded here and back into the same SourceBuffer as FLAC.
+				if (!changed && decoderFor(t) && this.canFlac()) {
+					try {
+						await o.idle();
+						abort();
+						if (!wasFlac) o.sb.changeType(FLAC_MIME);
+						o.muxer = new Mp4Muxer(flacTrack(t.sampleRate || 48000), FLAC_MIME);
+						this.flacRate = null;
+						this.flac = await FlacAudio.create(this.o.base, t, this.video.currentTime, (r, frames) => this.onFlac(r, frames));
+					} catch (e) {
+						said.push(`${FLAC_MIME}: ${errText(e)}`);
+					}
+				}
+			} else said.push('no changeType');
 			if (!changed) {
-				const sb = this.aout.sb;
+				this.audioWhy = `audio switch: ${said.join('; ') || 'no MediaSource form'} (${trackSetup(t)})`;
+				console.info('audio switch to WebAssembly:', this.audioWhy);
+			}
+			if (!changed && !this.flac) {
+				const sb = o.sb;
 				this.aout = null;
 				await new Promise((r) => (sb.updating ? sb.addEventListener('updateend', r, { once: true }) : r(null)));
 				this.ms.removeSourceBuffer(sb);
 				await this.startPcm(t);
 			} else {
-				const sb = this.aout!;
-				for (const [s, e] of sb.ranges()) await sb.remove(s, e);
+				for (const [s, e] of o.ranges()) await o.remove(s, e);
 			}
 		}
-		this.seekTo = this.video.currentTime;
-		this.gen++;
-		this.poke();
-		return true;
 	}
 
 	/** Shows the file's subtitle track `index` (counted in its subtitle tracks), or none. */
@@ -893,10 +1350,17 @@ export class Unpacker {
 		this.gen++;
 		this.poke();
 		clearInterval(this.timer);
+		clearInterval(this.traceTimer);
+		this.stopFade();
 		for (const [target, type, fn, capture] of this.listeners) target.removeEventListener(type, fn, capture);
 		this.listeners = [];
 		this.pcm?.destroy();
 		this.pcm = null;
+		this.flac?.destroy();
+		this.flac = null;
+		const early = this.early;
+		this.early = null;
+		if (early) void early.made.then((p) => p.destroy(), () => {});
 		this.subs.destroy();
 		this.demux.close();
 		URL.revokeObjectURL(this.url);

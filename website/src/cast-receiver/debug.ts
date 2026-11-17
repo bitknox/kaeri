@@ -30,9 +30,48 @@ export function forwardErrors(loc: Location = location) {
 	addEventListener('unhandledrejection', (e) => devLog(`unhandled ${String((e.reason as Error)?.message ?? e.reason)}`, loc));
 }
 
+/** Audio forms the decoded sound could be handed to MediaSource in, for the dev log. */
+const FORMS = [
+	'audio/mp4; codecs="flac"',
+	'audio/mp4; codecs="fLaC"',
+	'audio/webm; codecs="pcm"',
+	'audio/x-matroska; codecs="pcm"',
+	'audio/mp4; codecs="ipcm"',
+	'audio/mp4; codecs="lpcm"',
+	'audio/mp4; codecs="opus"',
+	'audio/mp4; codecs="Opus"',
+	'audio/webm; codecs="opus"',
+	'audio/webm; codecs="vorbis"',
+	'audio/mp4; codecs="mp3"',
+	'audio/mp4; codecs="mp4a.6B"',
+	'audio/mpeg',
+	'audio/aac',
+	'audio/mp4; codecs="mp4a.40.2"',
+	'audio/mp4; codecs="ac-3"',
+	'audio/mp4; codecs="ec-3"',
+];
+
+/**
+ * On the dev receiver's host, which of FORMS the TV's MediaSource says it takes (and the media
+ * element's canPlayType), once at start.
+ */
+export function logSupport(loc: Location = location) {
+	if (!/^cast-dev\./.test(loc.hostname)) return;
+	const ms = (m: string) => {
+		try {
+			return globalThis.MediaSource?.isTypeSupported(m) ? 'yes' : 'no';
+		} catch {
+			return 'error';
+		}
+	};
+	const el = document.createElement('audio');
+	const can = (m: string) => el.canPlayType(m) || 'no';
+	devLog(`support ${FORMS.map((m) => `${m} mse ${ms(m)} play ${can(m)}`).join('; ')}`, loc);
+}
+
 export interface DebugStatus {
 	/** Who decodes the sound: the receiver's WebAssembly, MediaSource, or CAF's player. */
-	audioPath: 'wasm' | 'mse' | 'caf' | 'none';
+	audioPath: 'wasm' | 'flac' | 'mse' | 'caf' | 'none';
 	/** WebAssembly: seconds of sound decoded. MSE and CAF: bytes the element decoded. */
 	audioDecoded: number | null;
 	audioUnit: 's' | 'bytes' | null;
@@ -55,7 +94,12 @@ export class DebugStatusLine {
 	private loudest = 0;
 	private buf = new Float32Array(2048);
 	private decodedSeconds: number | null = null;
+	private flacCpu: { cpu: number; encode: number; decoded: number; heap: number } | null = null;
 	private shownBase = 0;
+	private lastSetup = '';
+	private lastTiming = '';
+	private lastEvent = 0;
+	private traced = 0;
 
 	constructor(
 		private readonly video: HTMLVideoElement,
@@ -82,6 +126,7 @@ export class DebugStatusLine {
 		video.addEventListener('loadstart', () => {
 			this.shownBase = this.shown() ?? 0;
 			this.decodedSeconds = null;
+			this.flacCpu = null;
 		});
 		setInterval(() => this.meter(), 100);
 		setInterval(() => this.report(), 1000);
@@ -111,6 +156,7 @@ export class DebugStatusLine {
 		const stats = u?.stats();
 		const path: DebugStatus['audioPath'] = stats ? (stats.audioPath ?? 'none') : this.video.currentSrc ? 'caf' : 'none';
 		if (path === 'wasm') void u?.pcmCpu()?.then((c) => (this.decodedSeconds = c.decoded));
+		if (path === 'flac') void u?.flacCpu()?.then((c) => (this.flacCpu = c));
 		const v = this.video as CountingVideo;
 		const quality = typeof v.getVideoPlaybackQuality === 'function' ? v.getVideoPlaybackQuality() : null;
 		const heard = this.analyser() != null;
@@ -127,9 +173,57 @@ export class DebugStatusLine {
 		const s = this.status;
 		const decoded = s.audioDecoded == null ? '?' : s.audioUnit === 's' ? `${s.audioDecoded.toFixed(1)} s` : `${s.audioDecoded} bytes`;
 		const level = s.level == null ? '?' : s.level <= -120 ? 'silent' : `${s.level.toFixed(1)} dBFS`;
-		const line = `audio ${s.audioPath} ${stats?.audio ?? ''} decoded ${decoded} level ${level}\nvideo ${stats?.video ?? ''} decoded ${s.videoDecoded ?? '?'} shown ${s.videoShown ?? '?'} at ${s.time} s`;
-		this.el.textContent = line;
-		console.info('[debug]', line.replace('\n', ' | '));
-		devLog(`status ${line.replace('\n', ' | ')}`);
+		const p = stats?.pcm;
+		const pcm = p
+			? `\npcm queued ${p.queued.toFixed(2)} s drift ${ms(p.drift)} worst ${ms(p.worst)} jumps ${p.jumps} waits ${p.waits ?? 0} starved ${p.starved} jitter ${ms(p.jitter ?? 0)}${p.clock ? ` clock video spread ${ms(p.clock.video)} high ${ms(p.clock.videoHigh)} ctx spread ${ms(p.clock.ctx)} ts spread ${ms(p.clock.ts ?? 0)} latency ${ms(p.clock.latency ?? 0)}` : ''}${stats?.audioGate ? ` gate ${stats.audioGate}` : ''}${p.context && p.context !== 'running' ? ` context ${p.context}` : ''}`
+			: '';
+		// FLAC: the worker's CPU for each second of sound, decoding and encoding.
+		const c = path === 'flac' ? this.flacCpu : null;
+		let flac = c && c.decoded > 0 ? `\nflac ${c.decoded.toFixed(1)} s decode ${(c.cpu / c.decoded).toFixed(1)} ms/s encode ${(c.encode / c.decoded).toFixed(1)} ms/s heap ${(c.heap / 1048576).toFixed(0)} MB` : '';
+		if (flac) {
+			// Picture and sound buffered ahead of the playhead, and the page's JS heap.
+			let ahead = 0;
+			for (let i = 0; i < v.buffered.length; i++) if (v.buffered.start(i) <= v.currentTime + 0.05 && v.buffered.end(i) > v.currentTime) ahead = v.buffered.end(i) - v.currentTime;
+			const mem = (performance as Performance & { memory?: { usedJSHeapSize: number } }).memory;
+			flac += ` ahead ${ahead.toFixed(1)} s${mem ? ` page heap ${(mem.usedJSHeapSize / 1048576).toFixed(0)} MB` : ''}`;
+		}
+		const line = `audio ${s.audioPath} ${stats?.audio ?? ''} decoded ${decoded} level ${level}\nvideo ${stats?.video ?? ''} decoded ${s.videoDecoded ?? '?'} shown ${s.videoShown ?? '?'} at ${s.time} s${pcm}${flac}`;
+		const why = stats?.audioWhy ? `\nwhy ${stats.audioWhy}` : '';
+		this.el.textContent = line + why;
+		console.info('[debug]', line.replaceAll('\n', ' | '));
+		devLog(`status ${line.replaceAll('\n', ' | ')}`);
+		// The audio's setup, and why it plays through WebAssembly, once per change.
+		const setup = stats ? `setup ${stats.format} audio ${stats.audioPath ?? 'none'} ${stats.audioSetup ?? 'no audio track'}${stats.audioWhy ? ` | why ${stats.audioWhy}` : ''}` : '';
+		if (setup && setup !== this.lastSetup) {
+			this.lastSetup = setup;
+			console.info('[debug]', setup);
+			devLog(setup);
+		}
+		const timing = stats?.timing;
+		if (timing && timing !== this.lastTiming) {
+			this.lastTiming = timing;
+			devLog(`timing ${timing}`);
+		}
+		// The clock readings after a start, ten to a line, each once.
+		const trace = stats?.clockTrace ?? [];
+		if (trace.length < this.traced) this.traced = 0;
+		while (trace.length - this.traced >= 10 || (trace.length > this.traced && trace.length >= 40)) {
+			const n = Math.min(10, trace.length - this.traced);
+			devLog(`clock ${trace.slice(this.traced, this.traced + n).join(' ')}`);
+			this.traced += n;
+		}
+		// Each correction the WebAssembly sound made, once: kind, where, by how much, which rule.
+		for (const e of p?.events ?? []) {
+			if (e.seq <= this.lastEvent) continue;
+			this.lastEvent = e.seq;
+			const run = e.kind === 'wait' ? ` (${e.n} quanta so far)` : '';
+			devLog(`pcm ${e.kind} at ${e.at.toFixed(3)} s by ${ms(e.by)} ${e.why}${run}`);
+		}
 	}
+}
+
+/** Seconds as signed milliseconds. */
+function ms(seconds: number): string {
+	const v = Math.round(seconds * 1000);
+	return `${v > 0 ? '+' : ''}${v} ms`;
 }

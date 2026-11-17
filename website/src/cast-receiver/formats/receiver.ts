@@ -5,6 +5,7 @@
 import type { Report } from '../errors';
 import { readExtras, type SubtitleFile } from '../protocol';
 import { Refused, Unpacker } from './engine';
+import { warmPcm } from './pcm';
 import { Subtitles, supSamples, type TypesetSink } from './subs';
 import { bytesOf } from './source';
 
@@ -38,7 +39,10 @@ export class Formats {
 		private readonly base: string,
 		private readonly sink: () => TypesetSink | null,
 		private readonly report: (r: Report) => void,
-	) {}
+	) {
+		// The WebAssembly sound's parts, ready before a load needs them.
+		warmPcm(base);
+	}
 
 	get active() {
 		return this.unpacker != null;

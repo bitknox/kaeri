@@ -265,6 +265,14 @@ export function codecString(t: Track): string | null {
 
 const AAC_RATES = [96000, 88200, 64000, 48000, 44100, 32000, 24000, 22050, 16000, 12000, 11025, 8000, 7350];
 
+/** A two-byte AudioSpecificConfig: AAC-LC (or `objectType`) at `rate` with `channels`. */
+export function aacConfig(rate: number, channels: number, objectType = 2): Uint8Array {
+	const i = AAC_RATES.indexOf(Math.round(rate));
+	const sri = i < 0 ? 3 : i;
+	const ch = channels >= 1 && channels <= 6 ? channels : channels === 8 ? 7 : 2;
+	return new Uint8Array([(objectType << 3) | (sri >> 1), ((sri & 1) << 7) | (ch << 3)]);
+}
+
 export interface Frame {
 	/** Offset of the frame (its header) in the buffer. */
 	at: number;
