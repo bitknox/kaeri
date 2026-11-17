@@ -528,17 +528,25 @@ class CastModel(
     }
 
     /**
-     * The cast button: the chooser, the held TV's dialog, or the card of a cast from Play on TV. A
-     * Kaeri TV opens its own remote.
+     * The cast button, in the top bars, the mini and the remote: the held TV's dialog, also for a
+     * cast from Play on TV, which holds its TV without a session. A Kaeri TV opens its own remote,
+     * and with no TV held the chooser opens.
      */
     fun pressButton() {
         val tv = tv
         when {
-            _session.value.held -> _dialog.value = CastDialog.Connected
-            link != null && _shown.value != null -> _open.value = true
+            _session.value.held || linked -> _dialog.value = CastDialog.Connected
             tv?.connected?.value != null -> tv.openRemote()
             else -> _dialog.value = CastDialog.Chooser
         }
+    }
+
+    /** A cast from Play on TV starts or plays: it holds its TV with no session. */
+    private val linked: Boolean get() = link != null && _shown.value?.live == true
+
+    /** The held TV's dialog goes once nothing holds the TV any more. */
+    private fun letDialogGo() {
+        if (_dialog.value == CastDialog.Connected && !_session.value.held && !linked) _dialog.value = null
     }
 
     fun closeDialog() {
@@ -709,6 +717,7 @@ class CastModel(
                 over = link
                 link = null
                 refreshButton()
+                letDialogGo()
             }
         }
     }
@@ -729,6 +738,7 @@ class CastModel(
         recast()
         _open.value = false
         refreshButton()
+        letDialogGo()
     }
 
     // The card
