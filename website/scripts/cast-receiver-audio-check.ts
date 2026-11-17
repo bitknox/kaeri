@@ -46,8 +46,13 @@ const castDev = option('--cast-dev') ?? 'cargo run -q -p kaeri-cast --example ca
 /** Where cast_dev finds the HLS clips: a server of this checkout's media (cast_dev's default otherwise). */
 const mediaBase = option('--media-base');
 
-/** Steady playback starts this many status lines (seconds) after the setup line. */
-const SETTLE_LINES = 6;
+/**
+ * Steady playback starts at this video time (seconds): the clock filter needs its window first,
+ * and the start's corrections are reported apart. The last status lines are left out too, since
+ * a clip shorter than --seconds runs out of sound to queue there.
+ */
+const STEADY_FROM = 10;
+const END_LINES = 2;
 
 interface Clip {
 	id: string;
@@ -237,7 +242,8 @@ function parseStatus(line: string): Status | null {
 function judge(c: Clip, lines: string[]): { verdict: string | null; summary: string } {
 	const setups = lines.filter((l) => / receiver setup /.test(l)).map((l) => l.replace(/^\d\d:\d\d:\d\d receiver setup /, ''));
 	const statuses = lines.map(parseStatus).filter((s): s is Status => !!s && s.time > 0);
-	const setup = setups.at(-1) ?? 'no setup line';
+	// The stop writes an "audio none" setup line last; the one before it says what played.
+	const setup = setups.findLast((l) => !/ audio none /.test(l)) ?? setups.at(-1) ?? 'no setup line';
 	if (!statuses.length) return { verdict: 'no status lines (is the receiver build the one with debug.ts setup lines, and the log the tunnel server\'s?)', summary: setup };
 	const path = statuses.at(-1)!.path;
 	const summary = `${setup}`;
@@ -246,8 +252,12 @@ function judge(c: Clip, lines: string[]): { verdict: string | null; summary: str
 	const moved = statuses.at(-1)!.time - statuses[0].time;
 	if (moved < seconds * 0.5) return { verdict: `video moved ${moved.toFixed(1)} s in ${seconds} s`, summary };
 	if (path !== 'wasm') return { verdict: null, summary };
-	const steady = statuses.slice(SETTLE_LINES).filter((s) => s.pcm);
+	const pcm = statuses.filter((s) => s.pcm);
+	const steady = pcm.slice(0, -END_LINES).filter((s) => s.time >= STEADY_FROM);
 	if (steady.length < 5) return { verdict: `only ${steady.length} steady status lines with PCM stats`, summary };
+	const s0 = pcm[0].pcm!;
+	const s1 = steady[0].pcm!;
+	const start = `start to ${steady[0].time.toFixed(0)} s: jumps ${s1.jumps - s0.jumps}, waits ${s1.waits - s0.waits}`;
 	const a = steady[0].pcm!;
 	const b = steady.at(-1)!.pcm!;
 	const span = steady.at(-1)!.time - steady[0].time;
@@ -255,7 +265,7 @@ function judge(c: Clip, lines: string[]): { verdict: string | null; summary: str
 	const worstDrift = Math.max(...steady.map((s) => Math.abs(s.pcm!.drift)));
 	const jitter = Math.max(...steady.map((s) => s.pcm!.jitter));
 	const queued = Math.min(...steady.map((s) => s.pcm!.queued));
-	const stats = `over ${span.toFixed(0)} s steady: jumps +${d.jumps}, waits +${d.waits}, starved +${d.starved}, |drift| up to ${worstDrift} ms, jitter up to ${jitter} ms, queued at least ${queued.toFixed(1)} s`;
+	const stats = `over ${span.toFixed(0)} s steady: jumps +${d.jumps}, waits +${d.waits}, starved +${d.starved}, |drift| up to ${worstDrift} ms, jitter up to ${jitter} ms, queued at least ${queued.toFixed(1)} s; ${start}`;
 	const bad: string[] = [];
 	// One correction is allowed (a hiccup); climbing counts are the chop.
 	if (d.jumps > 1) bad.push('jumps climb');
