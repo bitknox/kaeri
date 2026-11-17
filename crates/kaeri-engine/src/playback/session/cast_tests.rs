@@ -546,7 +546,7 @@ async fn a_cast_left_running_is_joined_quietly_at_the_next_launch() {
 
     // Stopping the cast drops the record.
     assert!(later.disconnect());
-    record_until(&rig, Option::is_none).await;
+    record_until(&rig, |r| r.is_none()).await;
 }
 
 #[tokio::test(flavor = "multi_thread", worker_threads = 4)]
@@ -570,7 +570,7 @@ async fn a_tv_playing_something_else_at_launch_drops_the_record_and_is_left_alon
 
         let later = relaunched(&rig);
         assert!(later.resume_left());
-        record_until(&rig, Option::is_none).await;
+        record_until(&rig, |r| r.is_none()).await;
         tokio::time::sleep(Duration::from_millis(300)).await;
         let view = later.session();
         assert_eq!(view.state, SessionState::Idle, "other app {other_app}: {view:?}");
