@@ -323,8 +323,19 @@ struct Current {
     /// A note while it plays, said once: the TV shows plain subtitles, or plays this cast in its
     /// own player.
     note: Option<kaeri_model::Msg>,
+    /// The episode that started on the TV first since the note was said: the note is that
+    /// episode's, and another's start lets it go.
+    note_for: Option<(AnilistId, String)>,
     /// Kaeri's receiver was told to show Up Next's card.
     told_next: bool,
+}
+
+impl Current {
+    /// Say `note`: it stays through the start of the file it was said for.
+    fn say(&mut self, note: kaeri_model::Msg) {
+        self.note = Some(note);
+        self.note_for = None;
+    }
 }
 
 /// The cast as the card reads it.
@@ -1053,10 +1064,9 @@ impl CastHub {
                 if said == FromReceiver::SubtitlesPlain {
                     match hub.memory().told_subtitles_plain(&tv.id) {
                         Ok(true) => {
-                            lock(&hub.cast).note =
-                                Some(kaeri_model::Msg::NoticeCastSubtitlesPlain {
-                                    name: tv.name.clone(),
-                                });
+                            lock(&hub.cast).say(kaeri_model::Msg::NoticeCastSubtitlesPlain {
+                                name: tv.name.clone(),
+                            });
                             hub.bump();
                         }
                         Ok(false) => {}
@@ -1246,8 +1256,8 @@ impl CastHub {
             *told = Arc::downgrade(player);
         }
         tracing::info!("the TV plays this cast in its own player");
-        lock(&self.cast).note =
-            Some(kaeri_model::Msg::NoticeCastFallback { name: player.device().name.clone() });
+        lock(&self.cast)
+            .say(kaeri_model::Msg::NoticeCastFallback { name: player.device().name.clone() });
     }
 
     /// Keep the note of the receiver a cast plays on, a cast begun from Play on TV included, so a
@@ -1403,7 +1413,14 @@ impl CastHub {
                     }
                     cast.skip = None;
                     cast.undo = None;
-                    cast.note = None;
+                    // A note said as the cast came up is its first episode's, and stays while
+                    // that episode starts, another stream of it included; the next episode's
+                    // start lets it go.
+                    match &cast.note_for {
+                        None => cast.note_for = Some((*id, episode.clone())),
+                        Some((was, of)) if was != id || of != episode => cast.note = None,
+                        Some(_) => {}
+                    }
                     starting = true;
                 }
                 _ => return,

@@ -2,7 +2,13 @@
 //! window, the next episode plays on the TV already showing it, and a stream the TV can't play
 //! says why in the cast's own words.
 
-use std::{sync::Arc, time::Duration};
+use std::{
+    sync::{
+        Arc,
+        atomic::{AtomicUsize, Ordering},
+    },
+    time::Duration,
+};
 
 use kaeri_cast::{
     CastDevice, CastFailure, CastPlayer, CastSetup, DEFAULT_MEDIA_RECEIVER, PlainHttp, Timings,
@@ -874,6 +880,72 @@ async fn each_fall_back_to_the_tvs_own_player_is_said_and_the_next_connect_tries
     assert_eq!(launched.len(), 4, "{launched:?}");
     assert_ne!(launched[2], DEFAULT_MEDIA_RECEIVER, "the second connect tries Kaeri's first");
     assert_eq!(launched[3], DEFAULT_MEDIA_RECEIVER);
+}
+
+/// How many times the cast's note came to read `note`, from nothing or another note, as an
+/// app's watch reads the hub: each is one notice. A watch can miss a moment between two
+/// changes, so this never counts more than were said, and may count fewer.
+fn notes_said(
+    hub: &Arc<CastHub>,
+    note: Msg,
+) -> (Arc<AtomicUsize>, tokio::task::JoinHandle<()>) {
+    let said = Arc::new(AtomicUsize::new(0));
+    let mut changes = hub.changes();
+    let (hub, count) = (Arc::clone(hub), Arc::clone(&said));
+    let watch = tokio::spawn(async move {
+        let mut was = None;
+        loop {
+            let now = hub.view().note;
+            if now.as_ref() == Some(&note) && was.as_ref() != Some(&note) {
+                count.fetch_add(1, Ordering::SeqCst);
+            }
+            was = now;
+            if changes.changed().await.is_err() {
+                return;
+            }
+        }
+    });
+    (said, watch)
+}
+
+/// Play on TV to a TV that can't run Kaeri's receiver, as the apps start it: the TV is
+/// connected to, and the episode plays there once it is up. Every cast that falls back says so
+/// once, the first of an app run and each one after it, and the episode's start keeps the note.
+#[tokio::test(flavor = "multi_thread", worker_threads = 4)]
+async fn each_play_on_tv_that_falls_back_says_so_once() {
+    let options =
+        FakeOptions { speed: 8.0, custom: CustomReceiver::Unknown, ..FakeOptions::default() };
+    let rig = Rig::with(true, options).await;
+    let fallback = Msg::NoticeCastFallback { name: "Living room".into() };
+    let (said, watch) = notes_said(&rig.hub, fallback.clone());
+    for cast in 1..=3 {
+        rig.hub.connect(rig.device());
+        if cast < 3 {
+            // Play on TV: the play's cast begins as the TV connects.
+            rig.hub.begin(rig.device());
+            rig.hub.asked(AnilistId::new(900_002), "1".into());
+        }
+        let file = rig.file(&format!("{cast}.mkv"), &Fixture::default());
+        let events = rig.play(vec![file], context("1", None)).await;
+        assert_eq!(ending(&events), Some(Ending::Complete { next: None }), "cast {cast}");
+        assert_eq!(rig.hub.view().note.as_ref(), Some(&fallback), "cast {cast} keeps it");
+        assert!(said.load(Ordering::SeqCst) <= cast, "cast {cast} says it once");
+        assert!(rig.hub.disconnect());
+    }
+
+    // A TV connected to with nothing playing says it as it connects, and the play that
+    // follows on it doesn't say it again.
+    rig.hub.connect(rig.device());
+    let view = session_until(&rig.hub, |v| v.state == SessionState::Connected).await;
+    assert_eq!(view.note.as_ref(), Some(&fallback));
+    let file = rig.file("4.mkv", &Fixture::default());
+    let before = said.load(Ordering::SeqCst);
+    let events = rig.play(vec![file], context("1", None)).await;
+    assert_eq!(ending(&events), Some(Ending::Complete { next: None }));
+    assert_eq!(rig.hub.view().note.as_ref(), Some(&fallback), "kept, not said again");
+    assert_eq!(said.load(Ordering::SeqCst), before, "said once for the held TV");
+    assert!(rig.hub.disconnect());
+    watch.abort();
 }
 
 #[tokio::test(flavor = "multi_thread", worker_threads = 4)]
