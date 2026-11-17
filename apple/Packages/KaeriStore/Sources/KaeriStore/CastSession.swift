@@ -126,7 +126,9 @@ extension CastModel {
             rejoining = false
             asked = false
         }
-        if view.state == .playing, before != .playing || !active, let card = link?.card() {
+        // A cast another device started opens its card only once it says what plays: another
+        // app's cast, or an older Kaeri's, is driven from the mini alone.
+        if view.state == .playing, before != .playing || !active, view.item?.id != nil, let card = link?.card() {
             // The card of what plays, for its tracks, Up next and the reason a play failed.
             follow(card, request: nil)
         }
@@ -216,6 +218,13 @@ extension CastModel {
 
     /// The mini shows: something is loaded on the TV, a play on it failed, or the app joins a
     /// session that played.
+    /// Whether the mini opens the remote: not for a cast another device started that doesn't
+    /// say what it plays.
+    public var opensRemote: Bool {
+        guard !active, let held, held.state == .playing, let item = held.item else { return true }
+        return item.id != nil
+    }
+
     public var miniShown: Bool {
         guard let held else { return false }
         switch held.state {

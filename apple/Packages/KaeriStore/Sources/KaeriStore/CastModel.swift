@@ -109,7 +109,14 @@ public final class CastModel {
     public var chooserShown = false
     public var dialogShown = false
     public var expanded = false {
-        didSet { if oldValue, !expanded { controllerClosed() } }
+        didSet {
+            // A cast that doesn't say what it plays has no remote: the mini's controls drive it.
+            if expanded, !opensRemote {
+                expanded = false
+                return
+            }
+            if oldValue, !expanded { controllerClosed() }
+        }
     }
     /// The TV has waited 600 ms for the stream, or while a stop on the TV is heard: the line says
     /// Waiting for, and the controls dim. A shorter wait shows nothing.

@@ -573,11 +573,36 @@ extension CastTests {
         #expect(tv.cast.card?.card.now?.id == 900_001)
         #expect(tv.cast.card?.card.now?.episode == "3")
     }
+
+    /// Another app's cast, or an older Kaeri's, says nothing of what it plays: the mini's
+    /// controls drive it, its line says it plays, and the remote doesn't open.
+    @Test func aJoinedCastThatDoesNotSayWhatItPlaysKeepsToTheMini() {
+        let tv = TVRemoteModel()
+        let session = FixtureCastSession(name: "Living room", request: request, episodeLine: "Episode 3")
+        play(session)
+        let link = JoinedLink(session: session)
+        tv.cast.link = link
+        var theirs = Self.item(at: 120)
+        theirs.id = nil
+        theirs.episode = nil
+        tv.cast.take(view: Self.view(.playing, item: theirs))
+        #expect(tv.cast.miniShown)
+        #expect(!tv.cast.active, "no card follows it")
+        #expect(tv.cast.sessionLine == L.tvStatusPlaying(name: "Living room"))
+
+        tv.openRemote()
+        #expect(!tv.cast.expanded)
+        tv.cast.expanded = true
+        #expect(!tv.cast.expanded, "the mini's tap opens nothing either")
+        tv.cast.command(.togglePause)
+        #expect(link.commands.count == 1, "the pause went to the TV")
+    }
 }
 
 /// A held session another device started, whose card the engine reads from the TV.
 private final class JoinedLink: CastSessionLink, @unchecked Sendable {
     let session: FixtureCastSession
+    var commands: [FfiTvCommand] = []
 
     init(session: FixtureCastSession) {
         self.session = session
@@ -588,7 +613,7 @@ private final class JoinedLink: CastSessionLink, @unchecked Sendable {
     func connect(key: String, from: FfiCastFrom?) throws {}
     func disconnect() {}
     func playHere() -> FfiCastFrom? { nil }
-    func command(_ command: FfiTvCommand) {}
+    func command(_ command: FfiTvCommand) { commands.append(command) }
     func card() -> (any FfiCastSessionProtocol)? { session }
     func away(_ away: Bool) {}
     func played(_ request: TVPlayRequest) {}
