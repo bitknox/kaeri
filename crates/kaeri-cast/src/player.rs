@@ -2763,6 +2763,10 @@ fn receive(inner: &Arc<Inner>, message: &Incoming) {
         } else if receiver.app.is_some() {
             // Another app runs where this one did: another sender took the TV.
             end_cast(inner, &mut state, CastFailure::TakenOver);
+        } else if state.loaded.is_some() && state.load.is_none() {
+            // What played was another sender's, joined here, and nothing runs now: that sender
+            // stopped casting, or the TV stopped it. Nothing of this device's is heard out.
+            end_cast(inner, &mut state, CastFailure::StoppedElsewhere);
         } else if let Some(gone) = state.gone.as_mut() {
             gone.listed = Some(false);
         } else {

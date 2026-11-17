@@ -2160,6 +2160,55 @@ async fn a_receiver_another_sender_plays_on_takes_this_ones_controls() {
     assert!(stops.iter().any(|m| m["mediaSessionId"].is_i64()), "{stops:?}");
 }
 
+/// The sender that started what a joined receiver plays stops casting: the cast this sender
+/// joined ends at once as stopped there, with no wait on the TV and nothing read as starting
+/// between.
+#[tokio::test(flavor = "multi_thread", worker_threads = 4)]
+async fn a_joined_cast_ends_at_once_when_the_sender_that_started_it_stops_casting() {
+    let receiver = FakeReceiver::start(FakeOptions {
+        duration: 600.0,
+        remembers: true,
+        ..FakeOptions::default()
+    })
+    .await
+    .unwrap();
+    let (theirs, _events) = playing(&receiver).await;
+    drop(theirs);
+    let (player, _events) = connect_standard(setup(
+        &receiver,
+        Arc::new(CastMemory::memory()),
+        Arc::new(FakeEncoder::default()),
+    ))
+    .await
+    .unwrap();
+    player.launch().await.unwrap();
+    let mut status = player.status();
+    tokio::time::timeout(
+        Duration::from_secs(5),
+        status.wait_for(|s| s.state == CastState::Playing),
+    )
+    .await
+    .expect("the receiver says what plays")
+    .unwrap();
+
+    receiver.stop_elsewhere();
+    let mut seen = Vec::new();
+    let ended = tokio::time::timeout(Duration::from_millis(500), async {
+        loop {
+            let now = status.borrow_and_update().clone();
+            if now.state == CastState::Ended {
+                return now;
+            }
+            seen.push((now.state, now.waiting_since.is_some()));
+            status.changed().await.unwrap();
+        }
+    })
+    .await
+    .unwrap_or_else(|_| panic!("ended at once, not after {seen:?}"));
+    assert_eq!(ended.failure, Some(CastFailure::StoppedElsewhere));
+    assert!(!seen.iter().any(|(_, waiting)| *waiting), "never waits on the TV: {seen:?}");
+}
+
 fn card_of(episode: &str) -> JoinCard {
     JoinCard {
         id: 900_002,

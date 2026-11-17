@@ -207,6 +207,8 @@ enum Control {
     Close,
     /// The receiver app is stopped on the TV.
     StopApp,
+    /// Another sender stops casting: what plays stops, then the app.
+    StopElsewhere,
     /// Another sender loads its own file on the same receiver session, with this `customData`
     /// beside the media.
     LoadElsewhere(Value),
@@ -395,6 +397,12 @@ impl FakeReceiver {
         let _ = self.control.send(Control::LoadElsewhere(Value::Null));
     }
 
+    /// Another sender stops casting, as the sender that started what plays does with Stop
+    /// casting: the media ends as cancelled, then the receiver app is stopped and nothing runs.
+    pub fn stop_elsewhere(&self) {
+        let _ = self.control.send(Control::StopElsewhere);
+    }
+
     /// Another sender loads its own file on the receiver session this one plays on, with
     /// `custom` as the media's `customData`: another Kaeri device casting its next episode.
     pub fn load_elsewhere_with(&self, custom: Value) {
@@ -548,6 +556,16 @@ async fn serve(
                         send(&transport, &sender, NS_CONNECTION, json!({"type": "CLOSE"}));
                     }
                     playing = None;
+                    send("receiver-0", "*", NS_RECEIVER, receiver_status(&app, 0, level, muted));
+                }
+                Control::StopElsewhere => {
+                    if let Some(old) = playing.take() {
+                        send(&transport, "*", NS_MEDIA, json!({"type": "MEDIA_STATUS", "requestId": 0,
+                            "status": [old.status(Some("CANCELLED"), &stream)]}));
+                    }
+                    if app.take().is_some() {
+                        send(&transport, &sender, NS_CONNECTION, json!({"type": "CLOSE"}));
+                    }
                     send("receiver-0", "*", NS_RECEIVER, receiver_status(&app, 0, level, muted));
                 }
                 Control::LoadElsewhere(custom) => {
