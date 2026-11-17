@@ -477,6 +477,62 @@ async fn the_next_episode_plays_in_the_window_the_last_one_left() {
     assert_eq!(calls.last(), Some(&Call::Shutdown));
 }
 
+/// An ending early in the episode, such as an ending theme over a first episode's cold open,
+/// is only a segment to skip. Up Next waits for the ending in the last part of the episode, and
+/// so does the look-ahead for the next one, here and on a TV, which takes the same card.
+#[tokio::test]
+async fn an_early_ending_neither_starts_up_next_nor_finds_the_next_episode() {
+    const LENGTH: f64 = 1541.0;
+    // The early interval as aniskip's types would say it, and the closing one as the other.
+    for (early, late) in [("ed", "mixed-ed"), ("mixed-ed", "ed")] {
+        let mut events = opening(&[]);
+        events.extend((0..=300).map(|s| PlaybackEvent::Progress {
+            position: f64::from(s),
+            duration: Some(LENGTH),
+        }));
+        events.push(PlaybackEvent::Ended { complete: false });
+        let rig = Rig::new(vec![events]);
+        let mark = |kind: &str, start_ms, end_ms| kaeri_store::SkipMark {
+            anilist_id: AnilistId::new(900_001),
+            episode: "1".into(),
+            kind: kind.into(),
+            start_ms,
+            end_ms,
+            length_ms: 1_541_000,
+            marked_at: 1,
+            skip_id: None,
+        };
+        for (kind, start_ms, end_ms) in [
+            ("recap", 0, 20_000),
+            ("op", 20_800, 137_400),
+            (early, 24_000, 137_000),
+            (late, 1_400_000, 1_490_000),
+        ] {
+            rig.store.put_skip_mark(&mark(kind, start_ms, end_ms)).unwrap();
+        }
+        let said = rig.play(stream(StreamKind::Mp4), context("1", Some("2")), settings()).await;
+
+        let placed: Vec<Option<f64>> = rig
+            .opener
+            .calls()
+            .iter()
+            .filter_map(|call| match call {
+                Call::Overlay(Overlay::Next { card: Some(card), .. }) => Some(card.at),
+                _ => None,
+            })
+            .collect();
+        assert!(
+            placed.iter().flatten().all(|at| *at == 1400.0),
+            "{early}: Up Next only at the closing ending: {placed:?}"
+        );
+        assert_eq!(placed.last(), Some(&Some(1400.0)), "{early}: {placed:?}");
+        assert!(
+            !said.iter().any(|event| matches!(event, Event::PrefetchNext { .. })),
+            "{early}: nothing found ahead 300 s into a 1541 s episode"
+        );
+    }
+}
+
 #[tokio::test]
 async fn a_licensed_stream_is_handed_to_the_host_and_no_window_opens() {
     let rig = Rig::new(Vec::new());

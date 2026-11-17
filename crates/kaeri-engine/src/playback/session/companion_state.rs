@@ -5,9 +5,9 @@
 use kaeri_core::{media::Translation, stream::Stream};
 use kaeri_model::{event::Event, playback::stream_label};
 use kaeri_net::HttpClient;
-use kaeri_playback::{SkipKind, companion};
+use kaeri_playback::companion;
 
-use super::{EpisodeEntry, NextEpisode, Run};
+use super::{EpisodeEntry, NextEpisode, Run, skips};
 use crate::playback::{
     PlaybackContext,
     link::{Overlay, PlayerLink},
@@ -91,8 +91,7 @@ impl Run<'_> {
             return;
         }
         let Some(next) = &self.next else { return };
-        let ending = self.skips.iter().find(|s| s.kind == SkipKind::Ending).map(|s| s.start);
-        let at = ending.or_else(|| {
+        let at = self.closing_ending().or_else(|| {
             duration.filter(|d| *d > 2.0 * PREFETCH_LEAD).map(|d| d - PREFETCH_LEAD)
         });
         if at.is_some_and(|at| position >= at) {
@@ -103,6 +102,24 @@ impl Run<'_> {
                 episode: next.number.clone(),
             });
         }
+    }
+
+    /// Where this episode's own ending starts, by the file's length or, until the player says
+    /// it, the runtime the show lists: see [`skips::closing_ending`].
+    pub(super) fn closing_ending(&self) -> Option<f64> {
+        let length = self.length.or_else(|| self.context.runtime_secs.map(f64::from));
+        skips::closing_ending(&self.skips, length)
+    }
+
+    /// Take the file's length as the player reports it. Returns the Up Next card to show again
+    /// when the length moved where the episode's own ending starts.
+    pub(super) fn learn_length(&mut self, length: f64) -> Option<Overlay> {
+        if self.length == Some(length) {
+            return None;
+        }
+        let before = self.closing_ending();
+        self.length = Some(length);
+        (self.closing_ending() != before).then(|| self.up_next()).flatten()
     }
 
     /// Take an episode list that arrived after playback started.
@@ -157,7 +174,7 @@ impl Run<'_> {
 
     /// What the Up Next card shows, as it stands now.
     pub(super) fn next_up(&self) -> Option<companion::NextUp> {
-        let ending = self.skips.iter().find(|s| s.kind == SkipKind::Ending).map(|s| s.start);
+        let ending = self.closing_ending();
         self.next.as_ref().map(|next| companion::NextUp {
             number: next.number.clone(),
             label: next.label(),

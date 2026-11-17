@@ -716,6 +716,9 @@ impl Run<'_> {
                 // Our own `loadfile` ending the file it replaced; nothing to record.
                 PlaybackEvent::Replaced => continue,
                 PlaybackEvent::Progress { position, duration } => {
+                    if let Some(next) = duration.and_then(|length| self.learn_length(length)) {
+                        let _ = link.overlay(next).await;
+                    }
                     self.maybe_prefetch(*position, *duration);
                     if let Some(length) = *duration {
                         // The tail is tapped once the length places it.
