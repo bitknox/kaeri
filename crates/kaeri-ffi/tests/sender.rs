@@ -54,7 +54,14 @@ struct Started {
 
 fn start() -> Started {
     let root = tempfile::tempdir().expect("a temporary directory");
-    let dir = |name: &str| root.path().join(name).display().to_string();
+    let started = start_in(root.path());
+    Started { _root: root, ..started }
+}
+
+/// A testing engine over the folders in `root`, which outlive it: what an app opened again
+/// finds.
+fn start_in(root: &std::path::Path) -> Started {
+    let dir = |name: &str| root.join(name).display().to_string();
     let dirs = FfiDirs { config: dir("config"), data: dir("data"), cache: dir("cache") };
     let engine =
         FfiEngine::start_testing(dirs, Arc::new(Keychain::default()), FfiStart::default())
@@ -74,7 +81,7 @@ fn start() -> Started {
             }
         }
     });
-    Started { engine, events, _root: root }
+    Started { engine, events, _root: tempfile::tempdir().expect("a temporary directory") }
 }
 
 impl Started {
@@ -375,4 +382,51 @@ fn a_fixtures_cast_plays_on_a_fake_tv_and_one_that_refuses_says_why() {
     living.stop();
     kitchen.stop();
     phone.engine.shutdown();
+}
+
+/// The cast an app leaves running is joined again when it is opened: the testing engine keeps
+/// the record in its data folder as the app's engine does, and the next launch over that folder
+/// joins the TV quietly, never as connecting.
+#[test]
+fn a_cast_left_running_is_joined_again_by_the_next_launch_over_the_same_folders() {
+    let tv = start();
+    let living = tv
+        .engine
+        .start_fake_cast(
+            "Living room".into(),
+            kaeri_ffi::FfiFakeCastOptions { remembers: true, ..fake_cast_options() },
+        )
+        .unwrap();
+    let root = tempfile::tempdir().expect("a temporary directory");
+    let phone = start_in(root.path());
+    let sender = phone.engine.tv_sender("Mika's laptop".into(), "kaeri-test/0".into()).unwrap();
+    sender.browse_cast(Arc::new(CastBrowse(vec![living.clone()])));
+    let rows =
+        until("the TV listed", || Some(sender.cast_rows()).filter(|rows| rows.len() == 1));
+    let cast = sender.cast(rows[0].key.clone(), fixtures::FINISHED, "3".into(), None).unwrap();
+    until("the cast playing", || {
+        Some(cast.card()).filter(|c| c.card.now.as_ref().is_some_and(|n| !n.loading))
+    });
+    let path = root.path().join("data").join("remote").join("cast-session.json");
+    let record = until("the record kept", || std::fs::read(&path).ok());
+
+    // The app is ended with the TV playing: what an ending process leaves on disk is the record
+    // as it stood.
+    drop(cast);
+    drop(sender);
+    phone.engine.shutdown();
+    drop(phone);
+    std::fs::write(&path, record).unwrap();
+
+    let again = start_in(root.path());
+    let sender = again.engine.tv_sender("Mika's laptop".into(), "kaeri-test/0".into()).unwrap();
+    let view = until("joined at launch", || {
+        let view = sender.cast_state();
+        assert_ne!(view.state, kaeri_ffi::FfiCastSessionState::Connecting, "{view:?}");
+        Some(view).filter(|v| v.state == kaeri_ffi::FfiCastSessionState::Playing)
+    });
+    assert_eq!(view.device_name.as_deref(), Some("Living room"));
+    living.stop();
+    again.engine.shutdown();
+    tv.engine.shutdown();
 }
