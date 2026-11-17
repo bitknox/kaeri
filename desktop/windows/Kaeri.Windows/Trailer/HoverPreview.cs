@@ -6,6 +6,7 @@ using Kaeri.Windows.Pages;
 using Microsoft.UI.Dispatching;
 using Microsoft.UI.Input;
 using Microsoft.UI.Xaml;
+using Microsoft.UI.Xaml.Automation;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Controls.Primitives;
 using Microsoft.UI.Xaml.Input;
@@ -458,12 +459,14 @@ static class HoverPreview
             {
                 var play = new Button
                 {
-                    Content = label,
+                    // While a TV is held the play goes there: the cast glyph leads, as on the title page.
+                    Content = ctx.Tv.SessionHeld ? Casting.CastGlyph.PlayLabel(label) : label,
                     Style = (Style)Application.Current.Resources["PrimaryActionStyle"],
                     Margin = new Thickness(0, 14, 0, 0),
                     HorizontalAlignment = HorizontalAlignment.Left,
                     IsEnabled = queue.Playable,
                 };
+                AutomationProperties.SetName(play, label);
                 play.Click += (_, _) =>
                 {
                     Close();

@@ -86,6 +86,17 @@ sealed class CastGlyph : Grid
     }
 
     /// <summary>Draws the glyph for the button's state; the same state again changes nothing.</summary>
+    /// <summary>
+    /// A Play button's words led by the held glyph, for a play that goes to the held TV: Home's
+    /// spotlight and the hover card, drawn as the title page's main button.
+    /// </summary>
+    public static StackPanel PlayLabel(string words)
+    {
+        var glyph = new CastGlyph(16, (Brush)Application.Current.Resources["AccentButtonForeground"]);
+        glyph.Show(CastButtonState.Connected);
+        return new StackPanel { Orientation = Orientation.Horizontal, Spacing = 8, Children = { glyph, new TextBlock { Text = words } } };
+    }
+
     public void Show(CastButtonState state)
     {
         if (drawn == state)
