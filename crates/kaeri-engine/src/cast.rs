@@ -86,6 +86,8 @@ pub struct CastHub {
     opening: Arc<std::sync::atomic::AtomicUsize>,
     /// The launch's look for the cast left running is under way.
     resuming: Arc<AtomicBool>,
+    /// Disconnects telling their TV to close, for the app's exit to wait on.
+    quits: Mutex<Vec<tokio::task::JoinHandle<()>>>,
 }
 
 /// A cast connecting to a TV outside the session: the hub joins nothing meanwhile.
@@ -523,6 +525,7 @@ impl CastHub {
             runtime: tokio::runtime::Handle::try_current().ok(),
             opening: Arc::default(),
             resuming: Arc::default(),
+            quits: Mutex::default(),
         }
     }
 
@@ -790,17 +793,34 @@ impl CastHub {
             (player, held)
         };
         if let Some(player) = player {
-            self.spawn(async move {
+            let quit = async move {
                 if let Err(e) = player.quit().await {
                     tracing::debug!(error = %e, "the TV didn't take the disconnect");
                 }
-            });
+            };
+            match tokio::runtime::Handle::try_current().ok().or_else(|| self.runtime.clone()) {
+                Some(runtime) => {
+                    let mut quits = lock(&self.quits);
+                    quits.retain(|q| !q.is_finished());
+                    quits.push(runtime.spawn(quit));
+                }
+                None => tracing::warn!("no runtime to run casting's work on"),
+            }
         }
         if held {
             self.forget_left();
             self.bump();
         }
         held
+    }
+
+    /// Wait for the disconnects under way to reach their TV: an app quitting after Stop
+    /// casting closes the TV before it goes.
+    pub(crate) async fn quits_sent(&self) {
+        let quits = std::mem::take(&mut *lock(&self.quits));
+        for quit in quits {
+            let _ = quit.await;
+        }
     }
 
     /// The held player, when it is for the TV with this TXT `id` and still up.

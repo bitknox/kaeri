@@ -386,11 +386,13 @@ fn a_fixtures_cast_plays_on_a_fake_tv_and_one_that_refuses_says_why() {
     phone.engine.shutdown();
 }
 
-/// The cast an app leaves running is joined again when it is opened: the testing engine keeps
-/// the record in its data folder as the app's engine does, and the next launch over that folder
-/// joins the TV quietly, never as connecting.
-#[test]
-fn a_cast_left_running_is_joined_again_by_the_next_launch_over_the_same_folders() {
+/// A phone casting episode 3 to a fake "Living room" from an engine over `root`, once the
+/// record of the cast names it: the TV's engine, the TV, the phone's engine, its sender and
+/// where the record is.
+fn casting_from(
+    root: &std::path::Path,
+) -> (Started, Arc<kaeri_ffi::FfiFakeCast>, Started, Arc<kaeri_ffi::FfiTvSender>, std::path::PathBuf)
+{
     let tv = start();
     let living = tv
         .engine
@@ -399,8 +401,7 @@ fn a_cast_left_running_is_joined_again_by_the_next_launch_over_the_same_folders(
             kaeri_ffi::FfiFakeCastOptions { remembers: true, ..fake_cast_options() },
         )
         .unwrap();
-    let root = tempfile::tempdir().expect("a temporary directory");
-    let phone = start_in(root.path());
+    let phone = start_in(root);
     let sender = phone.engine.tv_sender("Mika's laptop".into(), "kaeri-test/0".into()).unwrap();
     sender.browse_cast(Arc::new(CastBrowse(vec![living.clone()])));
     let rows =
@@ -409,8 +410,7 @@ fn a_cast_left_running_is_joined_again_by_the_next_launch_over_the_same_folders(
     until("the cast playing", || {
         Some(cast.card()).filter(|c| c.card.now.as_ref().is_some_and(|n| !n.loading))
     });
-    let path = root.path().join("data").join("remote").join("cast-session.json");
-    let record = until("the record kept", || std::fs::read(&path).ok());
+    let path = root.join("data").join("remote").join("cast-session.json");
     // Kept with the episode on the TV once it plays.
     let record = until("the record names the episode", || {
         std::fs::read(&path).ok().filter(|bytes| {
@@ -418,17 +418,15 @@ fn a_cast_left_running_is_joined_again_by_the_next_launch_over_the_same_folders(
                 .is_ok_and(|r| r["card"] == serde_json::json!([fixtures::FINISHED.get(), "3"]))
         })
     });
-
     let record: serde_json::Value = serde_json::from_slice(&record).unwrap();
     assert!(record["tv"]["address"].is_string(), "{record}");
-
-    // The system ends the app with the TV playing.
     drop(cast);
-    drop(sender);
-    phone.engine.end_abruptly();
-    drop(phone);
+    (tv, living, phone, sender, path)
+}
 
-    let again = start_in(root.path());
+/// The app opened again over `root` joins the TV quietly, never as connecting.
+fn joined_again(root: &std::path::Path) -> Started {
+    let again = start_in(root);
     let sender = again.engine.tv_sender("Mika's laptop".into(), "kaeri-test/0".into()).unwrap();
     let view = until("joined at launch", || {
         let view = sender.cast_state();
@@ -436,7 +434,58 @@ fn a_cast_left_running_is_joined_again_by_the_next_launch_over_the_same_folders(
         Some(view).filter(|v| v.state == kaeri_ffi::FfiCastSessionState::Playing)
     });
     assert_eq!(view.device_name.as_deref(), Some("Living room"));
+    again
+}
+
+/// The cast an app leaves running is joined again when it is opened: the testing engine keeps
+/// the record in its data folder as the app's engine does, and the next launch over that folder
+/// joins the TV quietly. Here the system ends the app, with no winding down.
+#[test]
+fn a_cast_left_running_is_joined_again_by_the_next_launch_over_the_same_folders() {
+    let root = tempfile::tempdir().expect("a temporary directory");
+    let (tv, living, phone, sender, _) = casting_from(root.path());
+    drop(sender);
+    phone.engine.end_abruptly();
+    drop(phone);
+
+    let again = joined_again(root.path());
     living.stop();
     again.engine.shutdown();
+    tv.engine.shutdown();
+}
+
+/// Quitting the app, as an iPhone swiped away or a desktop app closed with no question, leaves
+/// the TV playing and its record kept: the next launch joins it.
+#[test]
+fn quitting_the_app_leaves_the_cast_playing_for_the_next_launch_to_join() {
+    let root = tempfile::tempdir().expect("a temporary directory");
+    let (tv, living, phone, sender, path) = casting_from(root.path());
+    let stops = living.heard("STOP");
+    drop(sender);
+    phone.engine.shutdown();
+    drop(phone);
+    assert_eq!(living.heard("STOP"), stops, "the TV was told nothing");
+    assert!(path.exists(), "the record stays");
+
+    let again = joined_again(root.path());
+    living.stop();
+    again.engine.shutdown();
+    tv.engine.shutdown();
+}
+
+/// Stop casting sent just ahead of the quit, as a desktop's quit question does, stops the TV
+/// before the app goes, and leaves nothing for the next launch to join.
+#[test]
+fn stop_casting_then_quitting_stops_the_tv_before_the_app_goes() {
+    let root = tempfile::tempdir().expect("a temporary directory");
+    let (tv, living, phone, sender, path) = casting_from(root.path());
+    let stops = living.heard("STOP");
+    sender.cast_disconnect();
+    phone.engine.shutdown();
+    drop(sender);
+    drop(phone);
+    assert!(living.heard("STOP") > stops, "the TV was told to stop");
+    assert!(!path.exists(), "no record is left");
+    living.stop();
     tv.engine.shutdown();
 }

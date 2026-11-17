@@ -1054,6 +1054,12 @@ mod fake_cast {
     }
 
     impl FfiFakeCast {
+        /// How many messages of `kind` (`"STOP"`, `"LOAD"`, ...) the TV was sent: for tests,
+        /// not in the bindings.
+        pub fn heard(&self, kind: &str) -> usize {
+            self.with(|r| r.heard(kind).len()).unwrap_or(0)
+        }
+
         fn with<T>(&self, read: impl FnOnce(&FakeReceiver) -> T) -> Option<T> {
             self.receiver.lock().unwrap_or_else(PoisonError::into_inner).as_ref().map(read)
         }

@@ -1446,11 +1446,52 @@ impl Actor {
 
     /// Everything the app does on its way out: the playback's last record, then the commands
     /// queued before the quit for [`EXIT_DRAIN`], then the torrents.
+    ///
+    /// A cast plays on without the app: its TV is not told to stop, and the record of it stays
+    /// for the next launch to join. Only a Stop casting the viewer asked for, as a desktop's
+    /// quit question sends ahead of the quit, ends it, and that is waited on as a stop here is.
     async fn stop(&mut self) {
         let playing = self.under_way();
-        self.flush_playback(playing).await;
+        let on_tv = self.on_tv();
+        if !on_tv {
+            self.flush_playback(playing).await;
+        }
         self.drain_commands();
+        if on_tv {
+            self.stopped_casting(playing).await;
+        }
         self.close_torrents().await;
+    }
+
+    /// Whether a TV is held or what plays is cast: what the exit leaves running.
+    fn on_tv(&self) -> bool {
+        #[cfg(feature = "cast")]
+        return self.state.casting.is_some() || self.services.casts.casting();
+        #[cfg(not(feature = "cast"))]
+        false
+    }
+
+    /// The cast the queue stopped on the way out, waited on within [`EXIT_FLUSH`]: its
+    /// playback recording where it ended, and the receiver told to close.
+    async fn stopped_casting(&mut self, playing: bool) {
+        #[cfg(feature = "cast")]
+        {
+            if self.on_tv() {
+                return;
+            }
+            let casts = Arc::clone(&self.services.casts);
+            let wait = async {
+                if playing {
+                    self.playback_ended().await;
+                }
+                casts.quits_sent().await;
+            };
+            if tokio::time::timeout(EXIT_FLUSH, wait).await.is_err() {
+                tracing::warn!("the TV did not take the stop in time");
+            }
+        }
+        #[cfg(not(feature = "cast"))]
+        let _ = playing;
     }
 
     /// Route what is queued, in order, until the queue is empty or [`EXIT_DRAIN`] is up. A
@@ -1488,22 +1529,25 @@ impl Actor {
         if controls.send(PlayerCommand::Stop).is_err() {
             return;
         }
-        let ended = async {
-            while let Some(envelope) = self.inbox.recv().await {
-                let (Envelope::Event(event) | Envelope::Played(_, event)) = envelope else {
-                    continue;
-                };
-                match event {
-                    Event::PlaybackEnded { .. } => break,
-                    Event::PlayerOps { .. } | Event::PlayerUi { .. } => {
-                        let _ = self.out.send(Out::Event(event));
-                    }
-                    _ => {}
-                }
-            }
-        };
-        if tokio::time::timeout(EXIT_FLUSH, ended).await.is_err() {
+        if tokio::time::timeout(EXIT_FLUSH, self.playback_ended()).await.is_err() {
             tracing::warn!("the player did not stop in time; its last position may be lost");
+        }
+    }
+
+    /// Read the inbox until the playback says it ended, letting the rest go but what a hosted
+    /// player is told.
+    async fn playback_ended(&mut self) {
+        while let Some(envelope) = self.inbox.recv().await {
+            let (Envelope::Event(event) | Envelope::Played(_, event)) = envelope else {
+                continue;
+            };
+            match event {
+                Event::PlaybackEnded { .. } => break,
+                Event::PlayerOps { .. } | Event::PlayerUi { .. } => {
+                    let _ = self.out.send(Out::Event(event));
+                }
+                _ => {}
+            }
         }
     }
 }
