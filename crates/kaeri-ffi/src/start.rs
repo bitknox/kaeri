@@ -57,6 +57,10 @@ pub struct FfiBackground {
     /// viewer moves on. Off for a background task's engine, which has seconds to do its work.
     #[uniffi(default = true)]
     pub keep_next: bool,
+    /// Join the cast the last run left running on a TV, quietly. Off for a background task's
+    /// engine, which then neither reaches for the TV nor touches the record of the cast.
+    #[uniffi(default = true)]
+    pub rejoin_cast: bool,
 }
 
 impl Default for FfiBackground {
@@ -77,6 +81,7 @@ impl From<Background> for FfiBackground {
             store_refresh,
             player_check,
             keep_next,
+            rejoin_cast,
         } = background;
         Self {
             prune,
@@ -87,6 +92,7 @@ impl From<Background> for FfiBackground {
             store_refresh,
             player_check,
             keep_next,
+            rejoin_cast,
         }
     }
 }
@@ -102,6 +108,7 @@ impl From<FfiBackground> for Background {
             store_refresh,
             player_check,
             keep_next,
+            rejoin_cast,
         } = background;
         Self {
             prune,
@@ -112,6 +119,7 @@ impl From<FfiBackground> for Background {
             store_refresh,
             player_check,
             keep_next,
+            rejoin_cast,
         }
     }
 }
@@ -557,6 +565,7 @@ mod tests {
                 store_refresh: false,
                 player_check: false,
                 keep_next: false,
+                rejoin_cast: false,
             }
         );
     }

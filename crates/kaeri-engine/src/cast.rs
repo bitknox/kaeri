@@ -11,7 +11,8 @@
 //! launches the receiver and holds it, every play goes to the TV while it lasts, a playback that
 //! ends leaves the receiver up for the next one, and only a disconnect, the TV or the network
 //! ends it. [`CastHub::session`] is what the apps draw of it. A session this device left running
-//! is joined again when the browse finds its TV ([`CastHub::rejoin`]).
+//! is joined again when the browse finds its TV ([`CastHub::rejoin`]), and at launch, quietly,
+//! from the record the run before kept of it ([`CastHub::resume_left`]).
 //!
 //! [`CastLink`]: crate::playback::link::cast::CastLink
 //! [`Command::CastTo`]: kaeri_model::command::Command::CastTo
@@ -83,6 +84,10 @@ pub struct CastHub {
     runtime: Option<tokio::runtime::Handle>,
     /// Casts connecting to a TV outside the session, until their player is attached.
     opening: Arc<std::sync::atomic::AtomicUsize>,
+    /// The launch's look for the cast left running is under way.
+    resuming: Arc<AtomicBool>,
+    /// Disconnects telling their TV to close, for the app's exit to wait on.
+    quits: Mutex<Vec<tokio::task::JoinHandle<()>>>,
 }
 
 /// A cast connecting to a TV outside the session: the hub joins nothing meanwhile.
@@ -108,6 +113,8 @@ struct Session {
     link: u64,
     /// What played when the TV or the network ended the session, for Play here.
     ended: Option<SessionItem>,
+    /// A cast left running, joined at launch: never shown as connecting.
+    quiet: bool,
 }
 
 /// A session this device left running on a TV: its TXT `id` and the receiver app's session.
@@ -123,6 +130,16 @@ struct Left {
     /// as it was known to play. A cast of it again that finds nothing to join loads from here.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     at: Option<f64>,
+    /// The TV as it was found, with its address: a later launch reaches it without a browse.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    tv: Option<CastDevice>,
+    /// The title and episode on the TV, as its receiver says them. None while nothing plays.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    card: Option<(AnilistId, String)>,
+    /// Unix seconds until which the receiver may still run without this device: a record past
+    /// it, or without it, is dropped when it is read at launch.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    until: Option<i64>,
 }
 
 /// What a cast that was lost mid-episode had left playing, for a cast of it again.
@@ -133,6 +150,65 @@ pub(crate) struct LeftPlaying {
 }
 
 const LEFT_FILE: &str = "cast-session.json";
+
+/// How long a receiver left with nothing playing, or paused, may still run: Kaeri's receiver
+/// closes after 10 minutes of that, and the 5 over cover the time between the record's updates.
+const LEFT_IDLE: i64 = 15 * 60;
+
+/// The most of an episode still to play that a record counts on, for a duration that is wrong.
+const LEFT_LONGEST: f64 = 4.0 * 3600.0;
+
+/// How far the record's `until` may move before it is written again.
+const LEFT_REWRITE: i64 = 60;
+
+/// How long a launch tries the TV a cast was left running on.
+const RESUME_WINDOW: Duration = Duration::from_secs(10);
+
+/// Between tries at the TV while a launch looks for it.
+const RESUME_RETRY: Duration = Duration::from_secs(1);
+
+fn unix_now() -> i64 {
+    std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .map_or(0, |since| i64::try_from(since.as_secs()).unwrap_or(i64::MAX))
+}
+
+/// The title and episode the receiver says it plays or holds, from the card sent with it.
+fn card_of(status: &CastStatus) -> Option<(AnilistId, String)> {
+    status
+        .card
+        .as_ref()
+        .filter(|_| {
+            matches!(
+                status.state,
+                CastState::Playing | CastState::Paused | CastState::Buffering
+            )
+        })
+        .map(|card| (AnilistId::new(card.id), card.episode.clone()))
+}
+
+/// Until when a receiver last heard as `status` says may run on without this device: to the
+/// end of what plays, then the receiver's own idle close.
+fn until_of(status: &CastStatus) -> i64 {
+    let remaining = match (status.state, status.duration) {
+        (CastState::Playing | CastState::Buffering, Some(duration)) => {
+            (duration - status.position).clamp(0.0, LEFT_LONGEST)
+        }
+        _ => 0.0,
+    };
+    #[allow(clippy::cast_possible_truncation)]
+    let remaining = remaining.ceil() as i64;
+    unix_now() + LEFT_IDLE + remaining
+}
+
+/// Clears the hub's look at launch when it ends, however it ends.
+struct Resuming(Arc<AtomicBool>);
+
+impl Drop for Resuming {
+    fn drop(&mut self) {
+        self.0.store(false, Ordering::Relaxed);
+    }
+}
 
 /// What an attached cast last noted of its receiver.
 #[derive(Default)]
@@ -448,6 +524,8 @@ impl CastHub {
             told_fallback: Mutex::new(Weak::new()),
             runtime: tokio::runtime::Handle::try_current().ok(),
             opening: Arc::default(),
+            resuming: Arc::default(),
+            quits: Mutex::default(),
         }
     }
 
@@ -715,17 +793,34 @@ impl CastHub {
             (player, held)
         };
         if let Some(player) = player {
-            self.spawn(async move {
+            let quit = async move {
                 if let Err(e) = player.quit().await {
                     tracing::debug!(error = %e, "the TV didn't take the disconnect");
                 }
-            });
+            };
+            match tokio::runtime::Handle::try_current().ok().or_else(|| self.runtime.clone()) {
+                Some(runtime) => {
+                    let mut quits = lock(&self.quits);
+                    quits.retain(|q| !q.is_finished());
+                    quits.push(runtime.spawn(quit));
+                }
+                None => tracing::warn!("no runtime to run casting's work on"),
+            }
         }
         if held {
             self.forget_left();
             self.bump();
         }
         held
+    }
+
+    /// Wait for the disconnects under way to reach their TV: an app quitting after Stop
+    /// casting closes the TV before it goes.
+    pub(crate) async fn quits_sent(&self) {
+        let quits = std::mem::take(&mut *lock(&self.quits));
+        for quit in quits {
+            let _ = quit.await;
+        }
     }
 
     /// The held player, when it is for the TV with this TXT `id` and still up.
@@ -798,7 +893,8 @@ impl CastHub {
             (
                 session.device.clone(),
                 session.player.clone(),
-                session.connecting,
+                // A cast joined quietly at launch reads as what it plays from the start.
+                session.connecting && !session.quiet,
                 session.failure.clone(),
             )
         };
@@ -942,10 +1038,32 @@ impl CastHub {
             .left()
             .filter(|left| left.device == device && left.session == app.session_id)
             .map_or((None, None), |left| (left.playing, left.at));
-        self.write_left(Some(Left { device, session: app.session_id, playing, at }));
+        let status = player.current();
+        self.write_left(Some(Left {
+            device,
+            session: app.session_id,
+            playing,
+            at,
+            tv: Some(player.device().clone()),
+            card: card_of(&status),
+            until: Some(until_of(&status)),
+        }));
     }
 
-    fn forget_left(&self) {
+    /// The record follows the receiver the note names as it moves on: the episode it plays,
+    /// and how long it may run on without this device.
+    fn follow_left(&self, session: &str, status: &CastStatus) {
+        let Some(left) = self.left().filter(|left| left.session == session) else { return };
+        // While the next episode loads, the record keeps the one before.
+        let card = if status.step.is_some() { left.card.clone() } else { card_of(status) };
+        let until = until_of(status);
+        let moved = left.until.is_none_or(|was| (until - was).abs() > LEFT_REWRITE);
+        if card != left.card || moved {
+            self.write_left(Some(Left { card, until: Some(until), ..left }));
+        }
+    }
+
+    pub(crate) fn forget_left(&self) {
         self.write_left(None);
     }
 
@@ -995,12 +1113,22 @@ impl CastHub {
         *lock(&self.left) = Some(left);
     }
 
-    /// The session left running, read the first time it is needed.
+    /// The session left running, read the first time it is needed. A record past its `until`,
+    /// or one without it, can name no receiver still running, and is deleted.
     fn left(&self) -> Option<Left> {
         let mut left = lock(&self.left);
         left.get_or_insert_with(|| {
             let path = self.dir.as_ref()?.join(LEFT_FILE);
-            serde_json::from_slice(&std::fs::read(path).ok()?).ok()
+            let bytes = std::fs::read(&path).ok()?;
+            let read = serde_json::from_slice::<Left>(&bytes)
+                .ok()
+                .filter(|left| left.until.is_some_and(|until| until > unix_now()));
+            if read.is_none()
+                && let Err(e) = std::fs::remove_file(&path)
+            {
+                tracing::debug!(error = %e, "couldn't drop the stale cast record");
+            }
+            read
         })
         .clone()
     }
@@ -1008,7 +1136,11 @@ impl CastHub {
     /// The TXT `id` of the TV a session was left running on, for the app to browse for at
     /// launch: once found, the session is joined again. Nothing while a cast connects or plays:
     /// the note is then that cast's own, kept for a later run, and nothing waits to be joined.
+    /// Nothing while the launch looks for it itself.
     pub fn left_on(&self) -> Option<String> {
+        if self.resuming.load(Ordering::Relaxed) {
+            return None;
+        }
         self.left().filter(|_| !self.casting_now()).map(|left| left.device)
     }
 
@@ -1036,7 +1168,7 @@ impl CastHub {
     /// TV holds no session, and joining beside it would start its card over and hold the TV twice.
     pub fn rejoin(self: &Arc<Self>, device: &CastDevice) {
         let Some(left) = self.left().filter(|left| left.device == device.id) else { return };
-        if self.casting_now() {
+        if self.casting_now() || self.resuming.load(Ordering::Relaxed) {
             return;
         }
         let generation = {
@@ -1087,6 +1219,96 @@ impl CastHub {
                 }
             }
         });
+    }
+
+    /// At launch: join the cast the run before this one left running, quietly, when its record
+    /// still counts and the TV's receiver still runs that session with the same episode. The TV
+    /// is tried at its last address for a few seconds; no browse runs. Anything else drops the
+    /// record with nothing said. Whether the TV is being tried.
+    pub fn resume_left(self: &Arc<Self>) -> bool {
+        self.resume_within(RESUME_WINDOW)
+    }
+
+    /// [`Self::resume_left`], trying the TV for `window`.
+    pub(crate) fn resume_within(self: &Arc<Self>, window: Duration) -> bool {
+        let Some(left) = self.left() else { return false };
+        let tv = left.tv.clone().filter(|tv| tv.id == left.device && self.shows_tvs());
+        let Some(tv) = tv else {
+            self.forget_left();
+            return false;
+        };
+        if self.casting_now() || lock(&self.session).device.is_some() {
+            return false;
+        }
+        if self.resuming.swap(true, Ordering::Relaxed) {
+            return false;
+        }
+        let guard = Resuming(Arc::clone(&self.resuming));
+        let hub = Arc::clone(self);
+        self.spawn(async move {
+            let _guard = guard;
+            let deadline = tokio::time::Instant::now() + window;
+            let joined = loop {
+                let setup = hub.setup(tv.clone());
+                match tokio::time::timeout_at(deadline, CastPlayer::join(setup, &left.session))
+                    .await
+                {
+                    Ok(Ok(joined)) => break joined.map(|(player, _events)| player),
+                    Ok(Err(e)) => {
+                        tracing::debug!(error = %e, "the TV a cast was left on didn't answer");
+                        if tokio::time::Instant::now() + RESUME_RETRY >= deadline {
+                            break None;
+                        }
+                        tokio::time::sleep(RESUME_RETRY).await;
+                    }
+                    Err(_) => break None,
+                }
+            };
+            // The same episode, or nothing playing when nothing did: the cast as it was left.
+            let same = joined.filter(|player| card_of(&player.current()) == left.card);
+            if let Some(player) = same {
+                player.use_receiver(hub.receiver());
+                if hub.adopt(&tv, Arc::new(player)) {
+                    tracing::info!("joined the cast left running at launch");
+                }
+                return;
+            }
+            // Another episode, another app, no session or no answer: dropped, with nothing said,
+            // unless a cast begun meanwhile holds the record now. A joined player is let go
+            // without a word to the TV, so what plays there plays on.
+            let ours = hub.left().is_some_and(|now| now.session == left.session);
+            if ours && !hub.casting_now() && lock(&hub.session).device.is_none() {
+                tracing::info!("the cast left running is gone; its record is dropped");
+                hub.forget_left();
+            }
+        });
+        true
+    }
+
+    /// Hold `player`, joined at launch on the receiver a cast was left running on, as the
+    /// session, with no connecting state. Not when anything else began meanwhile.
+    fn adopt(self: &Arc<Self>, device: &CastDevice, player: Arc<CastPlayer>) -> bool {
+        if self.casting_now() {
+            return false;
+        }
+        let generation = {
+            let mut session = lock(&self.session);
+            if session.device.is_some() || session.connecting || session.player.is_some() {
+                return false;
+            }
+            let generation = session.generation + 1;
+            *session = Session {
+                device: Some(device.clone()),
+                player: Some(Arc::clone(&player)),
+                connecting: true,
+                quiet: true,
+                generation,
+                ..Session::default()
+            };
+            generation
+        };
+        *lock(&self.cast) = Current { device: Some(device.clone()), ..Current::default() };
+        self.connected(generation, Ok(player))
     }
 
     /// Whether the TV picker lists TVs with Chromecast built in, from Settings.
@@ -1406,6 +1628,8 @@ impl CastHub {
         {
             self.leave(player);
             noted.session = Some(app.session_id);
+        } else if let Some(session) = &noted.session {
+            self.follow_left(session, status);
         }
     }
 

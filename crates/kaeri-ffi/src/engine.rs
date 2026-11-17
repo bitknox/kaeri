@@ -174,6 +174,20 @@ impl FfiEngine {
     }
 }
 
+#[cfg(feature = "testing")]
+impl FfiEngine {
+    /// End the engine as the system ends an app: its runtime and every task and connection on
+    /// it go at once, with none of [`FfiEngine::shutdown`]'s winding down, which stops what
+    /// plays. What it wrote to disk stays. Not in the bindings.
+    pub fn end_abruptly(&self) {
+        let _one = lock(&self.stopping);
+        if let Some(runtime) = lock(&self.runtime).take() {
+            runtime.shutdown_background();
+        }
+        std::mem::forget(lock(&self.engine).take());
+    }
+}
+
 impl FfiEngine {
     /// Start the engine from `options` on the app's `host`, on the runtime this is polled in.
     pub(crate) async fn launch(
