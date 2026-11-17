@@ -361,6 +361,7 @@ pub async fn play(
         night_applied: false,
         night: settings.night_mode,
         prefetch_sent: false,
+        length: None,
         look: settings.look,
         tone_mapping: settings.tone_mapping.clone(),
         hdr: None,
@@ -1139,6 +1140,9 @@ struct Run<'a> {
     night_applied: bool,
     /// Whether the next episode has been asked to be found ahead.
     prefetch_sent: bool,
+    /// The file's length, once the player has said it: where the episode's own ending can
+    /// start goes by it.
+    length: Option<f64>,
     /// The upscaling look and HDR curve as the viewer last chose them in the player.
     look: Look,
     tone_mapping: String,
