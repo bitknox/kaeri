@@ -105,17 +105,28 @@ function decode(p: Packet) {
 	else port!.postMessage({ type: 'pcm', gen, pts, rate, channels: m._kd_channels(handle), data: pcm }, [pcm.buffer]);
 }
 
+type FlacOut = { pts: number; samples: number; data: Uint8Array };
+/** FLAC frames encoded in this pump, sent together at its end (one append on the main thread). */
+let flacOut: { rate: number; frames: FlacOut[] } | null = null;
+
 /** Encodes decoded stereo PCM as FLAC frames of at most MAX_BLOCK samples for the main thread. */
 function toFlac(pcm: Float32Array, n: number, rate: number, pts: number) {
 	const t0 = performance.now();
-	const frames: { pts: number; samples: number; data: Uint8Array }[] = [];
+	if (flacOut && flacOut.rate !== rate) sendFlac();
+	flacOut ??= { rate, frames: [] };
+	const frames = flacOut.frames;
 	for (let at = 0; at < n; at += MAX_BLOCK) {
 		const count = Math.min(MAX_BLOCK, n - at);
 		frames.push({ pts: pts + at / rate, samples: count, data: encodeFrame(pcm.subarray(at * 2, (at + count) * 2), count, 2, flacSamples) });
 		flacSamples += count;
 	}
 	encodeCpu += performance.now() - t0;
-	scope.postMessage({ type: 'flac', gen, rate, frames }, frames.map((f) => f.data.buffer as ArrayBuffer));
+}
+
+function sendFlac() {
+	const out = flacOut;
+	flacOut = null;
+	if (out?.frames.length) scope.postMessage({ type: 'flac', gen, rate: out.rate, frames: out.frames }, out.frames.map((f) => f.data.buffer as ArrayBuffer));
 }
 
 function pump() {
@@ -126,6 +137,7 @@ function pump() {
 		while (queue.length && (flac || decodedTo < playhead + AHEAD)) decode(queue.shift()!);
 	} finally {
 		busy = false;
+		sendFlac();
 	}
 }
 
@@ -216,6 +228,7 @@ scope.onmessage = async (e: MessageEvent) => {
 		case 'flush':
 			gen = m.gen;
 			queue = [];
+			flacOut = null;
 			playhead = m.time;
 			decodedTo = -Infinity;
 			clock = null;

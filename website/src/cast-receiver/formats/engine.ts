@@ -38,6 +38,14 @@ const AHEAD = 30;
  */
 const START_AHEAD = 5;
 const PACED = 2500;
+/**
+ * Seconds of FLAC sound buffered past the first picture before the picture goes in, after a start
+ * or a seek, and the most ms the picture waits for it. The element plays as soon as both buffers
+ * cover the playhead: with a few ms of sound it plays them, runs dry and waits, a short burst then a
+ * gap before the sound continues.
+ */
+const FLAC_LEAD = 0.5;
+const FLAC_WAIT = 2000;
 /** Seconds kept behind the playhead. */
 const BEHIND = 30;
 /** Frames held to work out Matroska video decode times. */
@@ -374,6 +382,10 @@ export class Unpacker {
 	private flacRate: number | null = null;
 	/** FLAC appends, one after another. */
 	private flacChain: Promise<void> = Promise.resolve();
+	/** FLAC frames from the decoder not appended yet: appended together, one segment per rate. */
+	private flacQueue: { rate: number; frames: FlacFrame[]; g: number }[] = [];
+	/** After a start or a seek, the picture held until FLAC sound leads it (FLAC_LEAD). */
+	private flacHold: { video: Sample[]; since: number } | null = null;
 	private fixer: DecodeTimes | null = null;
 	private readonly subs: Subtitles;
 	private videoTrack: Track | null;
@@ -416,6 +428,9 @@ export class Unpacker {
 	/** An audio switch is changing the SourceBuffer: reading waits. */
 	private switching = false;
 	private listeners: [EventTarget, string, EventListener, boolean][] = [];
+	/** The first seconds of a FLAC start, step by step, for the dev log (see note()). */
+	private startTrace: string[] | null = null;
+	private traceTimer = 0;
 
 	private constructor(
 		private readonly demux: Demuxer,
@@ -485,9 +500,9 @@ export class Unpacker {
 			pcm: this.pcm ? this.pcm.stats : null,
 			audioSetup: this.audioTrack ? `${this.format}/${this.demux.container ?? this.format} ${trackSetup(this.audioTrack, this.aout?.muxer.mime)}` : null,
 			audioWhy: this.pcm ? this.audioWhy : null,
-			audioGate: this.pcm ? this.audioGate : null,
+			audioGate: this.pcm || this.flac ? this.audioGate : null,
 			timing: this.timing(),
-			clockTrace: this.pcm ? this.pcm.trace : null,
+			clockTrace: this.pcm ? this.pcm.trace : this.startTrace,
 		};
 	}
 
@@ -495,7 +510,7 @@ export class Unpacker {
 		if (this.frameAt == null) return null;
 		const ms = (t: number | null | undefined) => (t == null ? '-' : `${Math.round(t - this.t0)}`);
 		let line = `load to setup ${ms(this.setupAt)} ms, first frame ${ms(this.frameAt)} ms, playing ${ms(this.playingAt)} ms`;
-		if (this.flac) line += `, first FLAC frames ${ms(this.flac.firstFrames)} ms; audio setup ${this.flacEarly ? 'early' : 'after video'}: ${this.flac.setup}`;
+		if (this.flac) line += `, first FLAC frames ${ms(this.flac.firstFrames)} ms, picture let go ${ms(this.gateAt)} ms (${this.audioGate ?? '-'}); audio setup ${this.flacEarly ? 'early' : 'after video'}: ${this.flac.setup}`;
 		if (this.pcm) {
 			const t = this.pcm.timing;
 			const l = this.pcm.latency;
@@ -543,6 +558,8 @@ export class Unpacker {
 			this.pacedFrom ??= performance.now();
 			if (!v.requestVideoFrameCallback) this.frameAt ??= this.playingAt;
 		});
+		for (const type of ['loadedmetadata', 'canplay', 'playing', 'waiting', 'seeking', 'seeked', 'pause', 'stalled'])
+			this.on(this.video, type, () => this.note(type));
 		this.on(this.ms, 'sourceopen', () => this.opened(), false);
 		// CAF unloaded the element (a stop, or another load).
 		this.on(this.ms, 'sourceclose', () => !this.swapping && this.destroy(), false);
@@ -660,6 +677,8 @@ export class Unpacker {
 		const g = ++this.gen;
 		// FLAC frames of the old position still on their way are dropped from here on.
 		this.flac?.seek(t);
+		this.flacQueue = [];
+		this.flacHold = this.flac ? { video: [], since: performance.now() } : null;
 		this.pacedFrom = null;
 		this.seeks++;
 		this.target = t;
@@ -799,17 +818,31 @@ export class Unpacker {
 		}
 		this.flac = made;
 		this.flac.seek(this.target);
+		this.flacHold = { video: [], since: performance.now() };
 		return true;
 	}
 
 	/** FLAC frames from the decoder: appended in order, after the init segment for their rate. */
 	private onFlac(rate: number, frames: FlacFrame[]) {
 		const g = this.gen;
+		this.flacQueue.push({ rate, frames, g });
 		this.flacChain = this.flacChain
-			.then(() => this.putFlac(rate, frames, g))
+			.then(() => this.putQueued())
 			.catch((e) => {
 				if (g === this.gen && !this.closed) this.fail(e);
 			});
+	}
+
+	/** Appends every queued FLAC frame of this start, in as few appends as the rates allow. */
+	private async putQueued() {
+		while (this.flacQueue.length) {
+			const g = this.flacQueue[0].g;
+			const rate = this.flacQueue[0].rate;
+			let n = 1;
+			while (n < this.flacQueue.length && this.flacQueue[n].g === g && this.flacQueue[n].rate === rate) n++;
+			const frames = this.flacQueue.splice(0, n).flatMap((q) => q.frames);
+			await this.putFlac(rate, frames, g);
+		}
 	}
 
 	private async putFlac(rate: number, frames: FlacFrame[], g: number) {
@@ -885,6 +918,26 @@ export class Unpacker {
 			this.gateAt ??= performance.now();
 			if (g !== this.gen) return;
 		}
+		// FLAC sound: the first picture after a start or a seek waits until the sound leads it.
+		const hold = this.flacHold;
+		if (this.flac && hold && this.vout) {
+			if (audio.length) this.flac.push(audio);
+			pushed = true;
+			hold.video.push(...video);
+			video = [];
+			const first = hold.video[0]?.pts;
+			const late = performance.now() - hold.since > FLAC_WAIT;
+			if (first != null && (late || this.flac.bufferedTo >= first + FLAC_LEAD)) {
+				const since = performance.now();
+				const how = await this.flacReaches(first + FLAC_LEAD, Math.max(0, hold.since + FLAC_WAIT - since));
+				if (g !== this.gen || hold !== this.flacHold) return;
+				this.audioGate = `${Math.round(performance.now() - hold.since)} ms ${how}`;
+				this.gateAt ??= performance.now();
+				this.note(`gate ${how}`);
+				this.flacHold = null;
+				video = hold.video;
+			}
+		}
 		if (video.length && this.vout) await this.put(this.vout, this.vout.muxer.segment(video), g);
 		if (audio.length && !pushed) {
 			if (this.flac) this.flac.push(audio);
@@ -894,11 +947,22 @@ export class Unpacker {
 		await this.evict();
 	}
 
+	/** Waits until FLAC sound is buffered from the playhead's range to `t`, or `ms` passed. */
+	private async flacReaches(t: number, ms: number): Promise<'sound' | 'timeout'> {
+		const until = performance.now() + ms;
+		for (;;) {
+			if (this.aout?.rangeAt(t - 0.03)) return 'sound';
+			if (performance.now() >= until || this.closed) return 'timeout';
+			await new Promise((r) => setTimeout(r, 20));
+		}
+	}
+
 	private async put(o: Output, data: Uint8Array | null, g: number) {
 		if (!data || g !== this.gen) return;
 		for (let attempt = 0; ; attempt++) {
 			try {
 				await o.append(data);
+				this.note(o === this.aout ? `A${data.length}` : `V${data.length}`);
 				return;
 			} catch (e) {
 				if ((e as DOMException)?.name !== 'QuotaExceededError' || attempt > 20 || g !== this.gen) throw e;
@@ -925,6 +989,12 @@ export class Unpacker {
 	private async finish(g: number) {
 		if (this.held) await this.outputs(g);
 		if (g !== this.gen) return;
+		// A stream shorter than the FLAC lead: its held picture goes in with the sound there is.
+		const hold = this.flacHold;
+		if (hold?.video.length && this.vout) {
+			this.flacHold = null;
+			await this.put(this.vout, this.vout.muxer.segment(hold.video), g);
+		}
 		if (this.fixer && this.vout) await this.put(this.vout, this.vout.muxer.segment(this.fixer.flush()), g);
 		if (this.vout) await this.put(this.vout, this.vout.muxer.flush(), g);
 		if (this.flac) {
@@ -976,6 +1046,32 @@ export class Unpacker {
 		this.poke();
 	}
 
+	/**
+	 * Notes a step of a FLAC start for the dev log: ms since the load, what happened, the playhead,
+	 * readyState, the element's audio bytes decoded, and the video and audio buffered ranges. Runs
+	 * until 3 s after playing begins; a 50 ms sampler adds lines when anything changed.
+	 */
+	private note(what: string) {
+		if (!this.flac && !this.early && !this.startTrace) return;
+		if (this.startTrace == null) {
+			this.startTrace = [];
+			this.traceTimer = window.setInterval(() => this.note('.'), 50);
+		}
+		const tr = this.startTrace;
+		if (this.playingAt != null && performance.now() - this.playingAt > 3000 || tr.length > 400) {
+			window.clearInterval(this.traceTimer);
+			return;
+		}
+		const v = this.video as HTMLVideoElement & { webkitAudioDecodedByteCount?: number };
+		const r = (o: Output | null) => (o ? o.ranges().map(([a, b]) => `${a.toFixed(3)}-${b.toFixed(3)}`).join(',') || '-' : 'none');
+		const state = `t${v.currentTime.toFixed(3)} r${v.readyState}${v.paused ? 'p' : ''} ab${v.webkitAudioDecodedByteCount ?? '?'} v${r(this.vout)} a${r(this.aout)}`;
+		if (what === '.' && this.lastNote === state) return;
+		this.lastNote = state;
+		tr.push(`${Math.round(performance.now() - this.t0)}:${what} ${state}`);
+	}
+
+	private lastNote = '';
+
 	private tick() {
 		if (this.closed) return;
 		const v = this.video;
@@ -992,6 +1088,7 @@ export class Unpacker {
 					.filter((s) => s > t && s - t < reach && this.buffered(s))
 					.sort((a, b) => a - b)[0];
 				if (next != null) {
+					this.note(`step>${next.toFixed(3)}`);
 					this.stepTo = next;
 					v.currentTime = next;
 				}
@@ -1218,6 +1315,7 @@ export class Unpacker {
 		this.gen++;
 		this.poke();
 		clearInterval(this.timer);
+		clearInterval(this.traceTimer);
 		for (const [target, type, fn, capture] of this.listeners) target.removeEventListener(type, fn, capture);
 		this.listeners = [];
 		this.pcm?.destroy();

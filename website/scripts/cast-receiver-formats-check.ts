@@ -457,6 +457,27 @@ async function syncCase() {
 	expect((await errors()).length === 0, `${label}: no error sent`);
 }
 
+/**
+ * The start of FLAC sound: when the element starts playing, the sound must lead the playhead by
+ * the FLAC lead, and it must not run dry and wait in the first seconds (a burst, a gap, then sound).
+ */
+async function flacStartCase() {
+	for (const name of ['ts h264 mp2', 'mkv h264 mp2']) {
+		const label = `flac start, ${name}`;
+		const c = cases.find((x) => x.name === name)!;
+		await js('window.__kaeriWorklet = false');
+		await js(`__caf.load(${JSON.stringify(request(c))})`);
+		expect(await until(`document.getElementById('video').currentTime > 3.5`, 15_000), `${label}: plays`);
+		const trace = (await js<string[]>(`__receiver.formats.current?.stats().clockTrace ?? []`)) ?? [];
+		const at = trace.findIndex((l) => /^\d+:playing /.test(l));
+		const m = trace[at]?.match(/ t([\d.]+) .* a([\d.]+)-([\d.]+)/);
+		const ahead = m ? Number(m[3]) - Number(m[1]) : -1;
+		expect(ahead >= 0.45, `${label}: sound leads the playhead by 0.45 s or more when playing begins (${ahead.toFixed(3)} s: ${trace[at] ?? 'no playing line'})`);
+		const dry = trace.slice(at + 1).filter((l) => /^\d+:waiting /.test(l));
+		expect(at >= 0 && dry.length === 0, `${label}: no wait after playing begins (${dry.join(' | ') || 'none'})`);
+	}
+}
+
 /** Seek, pause, rate and play on with AC-3 decoded into MediaSource as FLAC, over 40 s of media. */
 async function flacSyncCase() {
 	const label = 'sync ac3 (WebAssembly into FLAC)';
@@ -618,6 +639,7 @@ try {
 	for (const c of cases) if (!only || c.name.includes(only)) await playCase(c);
 	await js('window.__kaeriWorklet = false');
 	if (!only || 'sync'.includes(only)) await syncCase();
+	if (!only || 'flac start'.includes(only)) await flacStartCase();
 	if (!only || 'flac sync'.includes(only)) await flacSyncCase();
 	await js('window.__kaeriWorklet = false');
 	if (!only || 'switch'.includes(only)) await switchCase();

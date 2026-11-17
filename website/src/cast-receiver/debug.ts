@@ -179,7 +179,14 @@ export class DebugStatusLine {
 			: '';
 		// FLAC: the worker's CPU for each second of sound, decoding and encoding.
 		const c = path === 'flac' ? this.flacCpu : null;
-		const flac = c && c.decoded > 0 ? `\nflac ${c.decoded.toFixed(1)} s decode ${(c.cpu / c.decoded).toFixed(1)} ms/s encode ${(c.encode / c.decoded).toFixed(1)} ms/s heap ${(c.heap / 1048576).toFixed(0)} MB` : '';
+		let flac = c && c.decoded > 0 ? `\nflac ${c.decoded.toFixed(1)} s decode ${(c.cpu / c.decoded).toFixed(1)} ms/s encode ${(c.encode / c.decoded).toFixed(1)} ms/s heap ${(c.heap / 1048576).toFixed(0)} MB` : '';
+		if (flac) {
+			// Picture and sound buffered ahead of the playhead, and the page's JS heap.
+			let ahead = 0;
+			for (let i = 0; i < v.buffered.length; i++) if (v.buffered.start(i) <= v.currentTime + 0.05 && v.buffered.end(i) > v.currentTime) ahead = v.buffered.end(i) - v.currentTime;
+			const mem = (performance as Performance & { memory?: { usedJSHeapSize: number } }).memory;
+			flac += ` ahead ${ahead.toFixed(1)} s${mem ? ` page heap ${(mem.usedJSHeapSize / 1048576).toFixed(0)} MB` : ''}`;
+		}
 		const line = `audio ${s.audioPath} ${stats?.audio ?? ''} decoded ${decoded} level ${level}\nvideo ${stats?.video ?? ''} decoded ${s.videoDecoded ?? '?'} shown ${s.videoShown ?? '?'} at ${s.time} s${pcm}${flac}`;
 		const why = stats?.audioWhy ? `\nwhy ${stats.audioWhy}` : '';
 		this.el.textContent = line + why;
