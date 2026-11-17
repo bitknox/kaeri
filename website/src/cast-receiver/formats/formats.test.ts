@@ -1,11 +1,12 @@
 import { describe, expect, test } from 'bun:test';
 import { existsSync } from 'node:fs';
 import { join } from 'node:path';
-import { DecodeTimes, formatOf, sniff, videoRefusal } from './engine';
+import { codecString } from './codecs';
+import { DecodeTimes, audioBuffer, formatOf, sniff, videoRefusal } from './engine';
 import { FileSource } from './file-source.test-helper';
 import { Matroska } from './mkv';
 import { Mp4File } from './mp4';
-import { createMuxer } from './mux';
+import { createMuxer, mimeChoices, mimeFor } from './mux';
 import { decoderFor } from './pcm';
 import { supSamples } from './subs';
 import { TsFile } from './ts';
@@ -83,6 +84,123 @@ describe('audio routes', () => {
 		expect(at).toBeGreaterThan(0);
 		// Box header (8), SampleEntry (8), reserved (8), channels (2): then the sample size
 		expect((init[at + 26] << 8) | init[at + 27]).toBe(24);
+	});
+});
+
+// AudioSpecificConfig: object type (5 bits), rate index (4), channel config (4), then more.
+const LC_48K_STEREO = [0x11, 0x90];
+const LC_44K_STEREO = [0x12, 0x10];
+const LC_48K_51 = [0x11, 0xb0];
+const MAIN_48K_STEREO = [0x09, 0x90];
+// Explicit HE-AAC: object type 5, core 24 kHz, stereo, SBR at 48 kHz, then AAC-LC.
+const HE_V1 = [0x2b, 0x11, 0x88, 0x00];
+// Explicit HE-AAC v2: object type 29, core 24 kHz, mono, SBR at 48 kHz, then AAC-LC.
+const HE_V2 = [0xeb, 0x09, 0x88, 0x00];
+// Backward-compatible SBR: AAC-LC 24 kHz stereo, then sync extension 0x2b7 with SBR at 48 kHz.
+const LC_SBR_EXT = [0x13, 0x10, 0x56, 0xe5, 0x98];
+// Escaped object type 31 + 11 = 42 (xHE-AAC, USAC).
+const USAC = [0xf9, 0x46, 0x43, 0x00];
+
+const aac = (config?: number[], more: Partial<Track> = {}): Track => ({
+	id: 2,
+	kind: 'audio',
+	codec: 'aac',
+	...(config ? { config: new Uint8Array(config) } : {}),
+	...more,
+});
+
+/** A raw AAC frame with a 7-byte ADTS header: profile LC, rate index, channel config. */
+function adtsFrame(sri: number, channels: number, payload = 16) {
+	const size = 7 + payload;
+	const f = new Uint8Array(size);
+	f.set([0xff, 0xf1, (1 << 6) | (sri << 2) | (channels >> 2), ((channels & 3) << 6) | (size >> 11), (size >> 3) & 0xff, ((size & 7) << 5) | 0x1f, 0xfc]);
+	for (let i = 7; i < size; i++) f[i] = i;
+	return f;
+}
+
+describe('AAC for MediaSource', () => {
+	test('the codec string follows the AudioSpecificConfig object type', () => {
+		expect(codecString(aac(LC_48K_STEREO))).toBe('mp4a.40.2');
+		expect(codecString(aac(LC_48K_51))).toBe('mp4a.40.2');
+		expect(codecString(aac(MAIN_48K_STEREO))).toBe('mp4a.40.1');
+		expect(codecString(aac(HE_V1))).toBe('mp4a.40.5');
+		expect(codecString(aac(HE_V2))).toBe('mp4a.40.29');
+		expect(codecString(aac(LC_SBR_EXT))).toBe('mp4a.40.2');
+		expect(codecString(aac(USAC))).toBe('mp4a.40.42');
+		expect(codecString(aac())).toBe('mp4a.40.2');
+	});
+
+	test('HE-AAC also offers the AAC-LC form, which every AAC decoder reads', () => {
+		const m = (c: number[]) => mimeChoices(aac(c));
+		expect(m(LC_48K_STEREO)).toEqual(['audio/mp4; codecs="mp4a.40.2"']);
+		expect(m(HE_V1)).toEqual(['audio/mp4; codecs="mp4a.40.5"', 'audio/mp4; codecs="mp4a.40.2"']);
+		expect(m(HE_V2)).toEqual(['audio/mp4; codecs="mp4a.40.29"', 'audio/mp4; codecs="mp4a.40.2"']);
+		expect(m(MAIN_48K_STEREO)).toEqual(['audio/mp4; codecs="mp4a.40.1"']);
+	});
+
+	test('a track with no config gets one from its rate and channels', () => {
+		const t = aac(undefined, { sampleRate: 44100, channels: 2 });
+		expect(mimeFor(t)?.mime).toBe('audio/mp4; codecs="mp4a.40.2"');
+		expect([...t.config!]).toEqual(LC_44K_STEREO);
+		const init = createMuxer(t)!.init();
+		const esds = findBox(init, 'esds');
+		expect(esds).toBeGreaterThan(0);
+		// The DecoderSpecificInfo (tag 5) carries the config.
+		const body = init.subarray(esds, esds + ((init[esds] << 24) | (init[esds + 1] << 16) | (init[esds + 2] << 8) | init[esds + 3]));
+		const tag5 = body.findIndex((b, i) => b === 5 && body[i + 1] === 2 && body[i + 2] === 0x12 && body[i + 3] === 0x10);
+		expect(tag5).toBeGreaterThan(0);
+	});
+
+	test('a track with no config and ADTS frames takes the config from the first header', () => {
+		const t = aac();
+		const first: Sample = { track: 2, pts: 0, dts: 0, duration: 0, key: true, data: adtsFrame(3, 6) };
+		expect(mimeFor(t, first)?.mime).toBe('audio/mp4; codecs="mp4a.40.2"');
+		expect([...t.config!]).toEqual(LC_48K_51);
+		expect(t.channels).toBe(6);
+		expect(t.sampleRate).toBe(48000);
+	});
+
+	test('ADTS headers are left out of the MP4 samples', () => {
+		const t = aac(LC_48K_STEREO, { sampleRate: 48000, channels: 2 });
+		const m = createMuxer(t)!;
+		const frames = [0, 1, 2].map((i): Sample => ({ track: 2, pts: i * 0.021, dts: i * 0.021, duration: 1024 / 48000, key: true, data: adtsFrame(3, 2) }));
+		const seg = m.segment(frames)!;
+		const mdat = findBox(seg, 'mdat');
+		const size = (seg[mdat] << 24) | (seg[mdat + 1] << 16) | (seg[mdat + 2] << 8) | seg[mdat + 3];
+		// Two samples written (the last is held), 16 bytes each without their 7-byte headers.
+		expect(size - 8).toBe(32);
+		expect(seg[mdat + 8]).toBe(7);
+	});
+
+	test('MediaSource is asked for each form in turn, and a refusal of one form is remembered', () => {
+		const refused = new Set<string>();
+		const asked: string[] = [];
+		const add = (mime: string) => {
+			asked.push(mime);
+			if (/40\.29/.test(mime)) throw new DOMException('not supported', 'NotSupportedError');
+			return { mime } as unknown as SourceBuffer;
+		};
+		const got = audioBuffer(aac(HE_V2), undefined, add, refused);
+		expect(got.muxer?.mime).toBe('audio/mp4; codecs="mp4a.40.2"');
+		expect(asked).toEqual(['audio/mp4; codecs="mp4a.40.29"', 'audio/mp4; codecs="mp4a.40.2"']);
+		expect([...refused]).toEqual(['audio/mp4; codecs="mp4a.40.29"']);
+		// The next stream skips the refused form, and AAC-LC streams are untouched by it.
+		asked.length = 0;
+		audioBuffer(aac(HE_V2), undefined, add, refused);
+		expect(asked).toEqual(['audio/mp4; codecs="mp4a.40.2"']);
+		asked.length = 0;
+		expect(audioBuffer(aac(LC_48K_STEREO), undefined, add, refused).muxer?.mime).toBe('audio/mp4; codecs="mp4a.40.2"');
+	});
+
+	test('when every form is refused, the reason names the forms and the config', () => {
+		const add = () => {
+			throw new DOMException('not supported', 'NotSupportedError');
+		};
+		const got = audioBuffer(aac(HE_V1), undefined, add, new Set());
+		expect(got.sb).toBeNull();
+		expect(got.why).toContain('mp4a.40.5');
+		expect(got.why).toContain('mp4a.40.2');
+		expect(got.why).toContain('NotSupportedError');
 	});
 });
 

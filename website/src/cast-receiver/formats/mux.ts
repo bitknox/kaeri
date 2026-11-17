@@ -2,7 +2,7 @@
 // VP8 and Vorbis (which MediaSource takes in WebM only). One muxer per SourceBuffer.
 
 import { Writer } from './bytes';
-import { ac3Box, codecString } from './codecs';
+import { aacConfig, ac3Box, adts, codecString } from './codecs';
 import type { Sample, Track } from './types';
 
 export interface Muxer {
@@ -24,16 +24,55 @@ export function mimeFor(t: Track, first?: Sample): { container: 'mp4' | 'webm'; 
 		return { container: 'webm', mime: `${t.kind}/webm; codecs="${t.codec}"` };
 	}
 	if (t.kind === 'audio' && (t.codec === 'ac3' || t.codec === 'eac3') && !t.config && first) t.config = ac3Box(first.data, 0);
+	if (t.kind === 'audio' && t.codec === 'aac' && !t.config?.length) aacSetup(t, first);
 	if (t.kind === 'video' && t.codec === 'vp9' && first) vp9Config(t, first.data);
 	const codec = codecString(t);
 	if (!codec) return null;
 	return { container: 'mp4', mime: `${t.kind}/mp4; codecs="${codec}"` };
 }
 
-export function createMuxer(t: Track, first?: Sample): Muxer | null {
+/**
+ * The MIME types to offer MediaSource for a track, best first. HE-AAC (object type 5 or 29) is
+ * also offered as AAC-LC: its core is AAC-LC and the AudioSpecificConfig still names the SBR and
+ * PS parts, so a TV that refuses the HE-AAC codec string plays it under the AAC-LC one.
+ */
+export function mimeChoices(t: Track, first?: Sample): string[] {
+	const m = mimeFor(t, first);
+	if (!m) return [];
+	const out = [m.mime];
+	if (t.codec === 'aac' && /mp4a\.40\.(5|29)"/.test(m.mime)) out.push(m.mime.replace(/mp4a\.40\.\d+/, 'mp4a.40.2'));
+	return out;
+}
+
+/** The muxer for a track, under `mime` when given (one of mimeChoices). Null when there is none. */
+export function createMuxer(t: Track, first?: Sample, mime?: string): Muxer | null {
 	const m = mimeFor(t, first);
 	if (!m) return null;
-	return m.container === 'webm' ? new WebmMuxer(t, m.mime) : new Mp4Muxer(t, m.mime);
+	return m.container === 'webm' ? new WebmMuxer(t, mime ?? m.mime) : new Mp4Muxer(t, mime ?? m.mime);
+}
+
+/**
+ * An AAC track that came with no AudioSpecificConfig: the first frame's ADTS header gives it, or
+ * else the track's rate and channels as AAC-LC. MediaSource and the decoder both need one.
+ */
+function aacSetup(t: Track, first?: Sample) {
+	const h = first ? adts(first.data, 0) : null;
+	if (h) {
+		t.config = h.config;
+		t.sampleRate ??= h.rate;
+		if (h.channels) t.channels ??= h.channels;
+		return;
+	}
+	t.config = aacConfig(t.sampleRate ?? 48000, t.channels ?? 2);
+}
+
+/** An AAC frame without its ADTS header, when it has one; MP4 samples carry raw frames. */
+function rawAac(s: Sample): Sample {
+	const d = s.data;
+	if (d.length < 7 || d[0] !== 0xff || (d[1] & 0xf6) !== 0xf0) return s;
+	const h = adts(d, 0);
+	if (!h || h.size !== d.length) return s;
+	return { ...s, data: d.subarray(h.header) };
 }
 
 /** Fills a VP9 track's profile and bit depth from a keyframe when Matroska didn't say. */
@@ -253,6 +292,7 @@ export class Mp4Muxer implements Muxer {
 
 	segment(input: Sample[]): Uint8Array | null {
 		if (!input.length) return null;
+		if (this.t.codec === 'aac') input = input.map(rawAac);
 		const all = this.held ? [this.held, ...input] : input.slice();
 		this.held = all.pop()!;
 		return this.write(all, this.held);

@@ -3,8 +3,9 @@
 // bytes through. Video goes to the TV's own decoders as it is. Audio goes to MediaSource when the
 // TV takes it, else to the WebAssembly decoders (pcm.ts). Subtitles inside the file go to subs.ts.
 //
-// Nothing is checked before playing: MediaSource is asked for each track, and an audio track it
-// refuses, or fails on, plays through WebAssembly from then on for this session.
+// Nothing is checked before playing: MediaSource is asked for each audio track in each form it
+// has (HE-AAC also as AAC-LC). A form it refuses is skipped for the rest of the session; a track
+// it refuses in every form, or fails on while playing, plays through WebAssembly.
 
 import type { Report } from '../errors';
 import { codecString } from './codecs';
@@ -12,7 +13,7 @@ import { openDash } from './dash';
 import { openHls } from './hls';
 import { Matroska } from './mkv';
 import { Mp4File } from './mp4';
-import { createMuxer, type Muxer } from './mux';
+import { createMuxer, mimeChoices, type Muxer } from './mux';
 import { PcmAudio, decoderFor } from './pcm';
 import { FetchError, LeaveToCaf, RangeSource, bytesOf } from './source';
 import { Subtitles, type TypesetSink } from './subs';
@@ -26,8 +27,40 @@ const BEHIND = 30;
 /** Frames held to work out Matroska video decode times. */
 const REORDER = 8;
 
-/** Audio codecs MediaSource failed on in this session: they go to WebAssembly at once. */
+/**
+ * Audio MIME types addSourceBuffer refused in this session, and those of codecs outside the
+ * common four that failed while playing: they are not asked for again.
+ */
 const refusedAudio = new Set<string>();
+
+/**
+ * The SourceBuffer for an audio track: each of its MIME types in turn, less those refused before.
+ * A refusal is remembered in `refused`. No buffer: `why` says what was refused and the config.
+ */
+export function audioBuffer(
+	t: Track,
+	first: Sample | undefined,
+	add: (mime: string) => SourceBuffer,
+	refused: Set<string> = refusedAudio,
+): { sb: SourceBuffer | null; muxer: Muxer | null; why: string | null } {
+	const choices = mimeChoices(t, first);
+	if (!choices.length) return { sb: null, muxer: null, why: `muxer: none for ${trackSetup(t)}` };
+	const said: string[] = [];
+	for (const mime of choices) {
+		if (refused.has(mime)) {
+			said.push(`${mime} refused earlier`);
+			continue;
+		}
+		try {
+			const sb = add(mime);
+			return { sb, muxer: createMuxer(t, first, mime), why: null };
+		} catch (e) {
+			refused.add(mime);
+			said.push(`${mime} refused: ${errText(e)}`);
+		}
+	}
+	return { sb: null, muxer: null, why: `MediaSource ${said.join('; ')} (${trackSetup(t)})` };
+}
 
 export type Format = 'mkv' | 'mp4' | 'ts' | 'hls' | 'dash';
 
@@ -605,17 +638,12 @@ export class Unpacker {
 	}
 
 	private async makeAudio(t: Track, first: Sample | undefined) {
-		if (!refusedAudio.has(t.codec)) {
-			const muxer = createMuxer(t, first);
-			if (muxer) {
-				try {
-					this.aout = new Output(this.ms.addSourceBuffer(muxer.mime), muxer, t);
-					return;
-				} catch (e) {
-					this.audioWhy = `MediaSource refused ${muxer.mime}: ${errText(e)}`;
-				}
-			} else this.audioWhy = 'muxer: none';
-		} else this.audioWhy = `${t.codec} failed in MediaSource earlier in this session`;
+		const got = audioBuffer(t, first, (mime) => this.ms.addSourceBuffer(mime));
+		if (got.sb && got.muxer) {
+			this.aout = new Output(got.sb, got.muxer, t);
+			return;
+		}
+		this.audioWhy = got.why;
 		console.info('audio to WebAssembly:', this.audioWhy);
 		await this.startPcm(t);
 	}
@@ -762,8 +790,10 @@ export class Unpacker {
 		const exotic = !!at && !/^(aac|opus|mp3|vorbis)$/.test(at.codec);
 		if (this.aout && at && (audioSaid || (!videoSaid && exotic))) {
 			e.stopPropagation();
-			refusedAudio.add(at.codec);
-			this.audioWhy = `media error: ${message || 'no message'}`;
+			// The common four play through MediaSource on every TV, so one stream's failure moves
+			// only that stream; another codec's failure says the TV can't decode it.
+			if (exotic) refusedAudio.add(this.aout.muxer.mime);
+			this.audioWhy = `media error on ${this.aout.muxer.mime}: ${message || 'no message'}`;
 			console.info('audio to WebAssembly after', message);
 			void this.toPcm().catch((err) => this.fail(err));
 			return;
@@ -824,19 +854,29 @@ export class Unpacker {
 			this.pcm = null;
 			await this.startPcm(t);
 		} else if (this.aout) {
-			const muxer = refusedAudio.has(t.codec) ? null : createMuxer(t);
 			let changed = false;
-			if (muxer && 'changeType' in this.aout.sb) {
-				try {
-					await this.aout.idle();
-					this.aout.sb.abort();
-					this.aout.sb.changeType(muxer.mime);
-					this.aout.muxer = muxer;
-					await this.aout.append(muxer.init());
-					changed = true;
-				} catch (e) {
-					console.info('audio switch to WebAssembly:', errText(e));
+			const said: string[] = [];
+			if ('changeType' in this.aout.sb) {
+				for (const mime of mimeChoices(t)) {
+					if (refusedAudio.has(mime)) continue;
+					const muxer = createMuxer(t, undefined, mime)!;
+					try {
+						await this.aout.idle();
+						this.aout.sb.abort();
+						this.aout.sb.changeType(mime);
+						this.aout.muxer = muxer;
+						await this.aout.append(muxer.init());
+						changed = true;
+						break;
+					} catch (e) {
+						refusedAudio.add(mime);
+						said.push(`${mime} refused: ${errText(e)}`);
+					}
 				}
+			} else said.push('no changeType');
+			if (!changed) {
+				this.audioWhy = `audio switch: ${said.join('; ') || 'no MediaSource form'} (${trackSetup(t)})`;
+				console.info('audio switch to WebAssembly:', this.audioWhy);
 			}
 			if (!changed) {
 				const sb = this.aout.sb;
