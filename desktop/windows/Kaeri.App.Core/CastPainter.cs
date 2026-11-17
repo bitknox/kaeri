@@ -217,6 +217,18 @@ public sealed class CastPainter(Func<DateTimeOffset>? clock = null)
     };
 
     /// <summary>
+    /// The cast button's name: Connecting, Connected, or while the TV comes back Reconnecting,
+    /// as the mini's line says then.
+    /// </summary>
+    public static string ButtonName(CastButtonState state, string name, bool reconnecting) => state switch
+    {
+        CastButtonState.Connecting => T.CastButtonConnecting(name),
+        CastButtonState.Connected when reconnecting => T.TvStatusReconnecting(name),
+        CastButtonState.Connected => T.CastButtonConnected(name),
+        _ => T.TvPlayOn,
+    };
+
+    /// <summary>
     /// The cast button from the session: the engine's state, waving while a left session is
     /// joined again, filled while a TV running Kaeri is driven, and there while any TV was found.
     /// </summary>

@@ -269,4 +269,17 @@ public class CastPainterTests
         Assert.DoesNotContain(CastAction.StopCasting, idle.More);
         Assert.Equal("Disconnect", CastFooter.Words(CastAction.Disconnect));
     }
+
+    [Fact]
+    public void TheButtonSaysReconnectingWhileTheTvComesBack()
+    {
+        var painter = Painter();
+        painter.Take(View(Item(), reconnecting: true));
+        var state = CastPainter.Button(painter.View, tvsFound: true, rejoining: false, driving: false);
+        Assert.Equal(CastButtonState.Connected, state);
+        Assert.Equal("Reconnecting to Living room", CastPainter.ButtonName(state, "Living room", painter.Reconnecting));
+        painter.Take(View(Item()));
+        Assert.Equal("Connected to Living room", CastPainter.ButtonName(state, "Living room", painter.Reconnecting));
+        Assert.Equal("Connecting to Living room", CastPainter.ButtonName(CastButtonState.Connecting, "Living room", true));
+    }
 }
