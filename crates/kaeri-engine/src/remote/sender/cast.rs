@@ -44,6 +44,9 @@ const CARRY_FROM: f64 = 5.0;
 /// engine's line, with the seconds counted.
 const QUIET_START: Duration = Duration::from_secs(4);
 
+/// How long a cast of the episode a TV was left playing waits for a join under way.
+const JOINING: Duration = Duration::from_secs(30);
+
 /// How long the Undo note stays at most, played or not.
 const UNDO_LONGEST: Duration = Duration::from_secs(15);
 
@@ -259,7 +262,12 @@ impl TvSender {
         let device = hub.device(device_id).ok_or(Problem::Gone)?;
         // The cast is the hub's from the tap, so the engine still finds the TV when the picker
         // closes, and forgets what the browse found, before it takes the command.
+        let played_on = hub.take_left_playing(&device.id, id, &episode);
         hub.begin(device.clone());
+        if played_on {
+            carry_on_from_the_tv(&hub, &engine, device.clone(), id, episode, position);
+            return Ok(Arc::new(CastSession { hub, engine, device }));
+        }
         let command = Command::CastTo { device: device.id.clone(), id, episode, position };
         if engine.send(command).is_none() {
             hub.end();
@@ -275,6 +283,14 @@ impl TvSender {
         let (hub, engine) = self.hub().ok_or(Problem::Other)?;
         let device = hub.device(key.strip_prefix(CAST).unwrap_or(key)).ok_or(Problem::Gone)?;
         let id = device.id.clone();
+        if let Some(from) = from.as_ref()
+            && hub.take_left_playing(&id, from.id, &from.episode)
+        {
+            let position = Some(from.position).filter(|p| *p >= CARRY_FROM);
+            let CastFrom { id: title, episode, .. } = from.clone();
+            carry_on_from_the_tv(&hub, &engine, device, title, episode, position);
+            return Ok(());
+        }
         hub.connect(device);
         if let Some(from) = from {
             let command = Command::CastTo {
@@ -454,6 +470,49 @@ impl TvSender {
         let device = view.device.filter(|_| !view.over)?;
         Some(Arc::new(CastSession { hub, engine, device }))
     }
+}
+
+/// Cast `episode` of `id` to `device`, which was left playing that episode when the connection
+/// to it was lost mid-way. The receiver played on without this device, so the session joins it
+/// and the episode carries on from where the TV is, not from `position`, where this device last
+/// saw it. A receiver that has closed meanwhile launches anew, and the episode plays from
+/// `position`.
+fn carry_on_from_the_tv(
+    hub: &Arc<CastHub>,
+    engine: &RemoteSender,
+    device: CastDevice,
+    id: AnilistId,
+    episode: String,
+    position: Option<f64>,
+) {
+    let target = device.id.clone();
+    let send = {
+        let engine = engine.clone();
+        move |at: Option<f64>| {
+            let position = at.or(position);
+            let _ = engine.send(Command::CastTo { device: target, id, episode, position });
+        }
+    };
+    // The browse found the TV and joined it, or is joining it.
+    if hub.session_device().is_some_and(|held| held.id == device.id) {
+        let hub = Arc::clone(hub);
+        let spawner = Arc::clone(&hub);
+        spawner.spawn(async move {
+            hub.connecting(JOINING).await;
+            send(hub.held(&device.id).as_deref().and_then(playing_at));
+        });
+        return;
+    }
+    hub.connect_then(device, move |player, joined| {
+        send(if joined { playing_at(player) } else { None });
+    });
+}
+
+/// Where the TV is in what it plays, when it plays something.
+fn playing_at(player: &kaeri_cast::CastPlayer) -> Option<f64> {
+    let now = player.current();
+    matches!(now.state, CastState::Playing | CastState::Paused | CastState::Buffering)
+        .then_some(now.position)
 }
 
 /// The card's source for a cast, read as [`RemoteCard`] is for Play on TV.

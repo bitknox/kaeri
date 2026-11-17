@@ -2133,6 +2133,55 @@ async fn a_session_left_running_is_joined_with_what_it_plays() {
     assert!(gone.is_none(), "a session that ended isn't joined");
 }
 
+/// A second sender connects to a TV another one casts to, and launching the receiver joins the
+/// one that runs: its controls drive what the other sender plays there.
+#[tokio::test(flavor = "multi_thread", worker_threads = 4)]
+async fn a_receiver_another_sender_plays_on_takes_this_ones_controls() {
+    let receiver = FakeReceiver::start(FakeOptions {
+        duration: 600.0,
+        remembers: true,
+        ..FakeOptions::default()
+    })
+    .await
+    .unwrap();
+    let (theirs, _events) = playing(&receiver).await;
+    let session = theirs.receiver().unwrap().session_id;
+    let launches = receiver.heard("LAUNCH").len();
+    // The fake serves one sender at a time: the other one's connection goes as this one comes.
+    drop(theirs);
+
+    let (player, _events) = connect_standard(setup(
+        &receiver,
+        Arc::new(CastMemory::memory()),
+        Arc::new(FakeEncoder::default()),
+    ))
+    .await
+    .unwrap();
+    player.launch().await.unwrap();
+    assert_eq!(player.receiver().map(|app| app.session_id), Some(session), "the same receiver");
+    let mut status = player.status();
+    let now = tokio::time::timeout(
+        Duration::from_secs(5),
+        status.wait_for(|s| s.state == CastState::Playing),
+    )
+    .await
+    .expect("the receiver says what plays")
+    .unwrap()
+    .clone();
+    assert_eq!(now.metadata.map(|m| m.title).as_deref(), Some("Episode 1"));
+    assert_eq!(receiver.heard("LAUNCH").len(), launches + 1);
+    assert_eq!(receiver.heard("LOAD").len(), 1, "nothing loaded again");
+
+    player.set_paused(true).await.unwrap();
+    receiver_heard_soon(&receiver, "PAUSE", 1).await;
+    player.seek(300.0, true).await.unwrap();
+    let seek = receiver_heard_soon(&receiver, "SEEK", 1).await;
+    assert_eq!(seek[0]["currentTime"].as_f64(), Some(300.0));
+    player.stop().await.unwrap();
+    let stops = receiver.heard("STOP");
+    assert!(stops.iter().any(|m| m["mediaSessionId"].is_i64()), "{stops:?}");
+}
+
 /// An HLS master with the original and a dub as audio renditions beside one picture, the
 /// original the default, behind headers so the relay serves it.
 async fn hls_with_a_dub() -> CastLoad {

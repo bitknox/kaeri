@@ -115,6 +115,10 @@ struct Session {
 struct Left {
     device: String,
     session: String,
+    /// The title and episode the receiver played when the connection to it was lost mid-way:
+    /// it may have played on, so a cast of that episode again carries on from where the TV is.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    playing: Option<(AnilistId, String)>,
 }
 
 const LEFT_FILE: &str = "cast-session.json";
@@ -832,14 +836,34 @@ impl CastHub {
     /// Note the receiver `player` launched, so a later run joins it again.
     fn leave(&self, player: &CastPlayer) {
         let Some(app) = player.receiver() else { return };
-        self.write_left(Some(Left {
-            device: player.device().id.clone(),
-            session: app.session_id,
-        }));
+        let device = player.device().id.clone();
+        // The same receiver joined again keeps what it was left playing.
+        let playing = self
+            .left()
+            .filter(|left| left.device == device && left.session == app.session_id)
+            .and_then(|left| left.playing);
+        self.write_left(Some(Left { device, session: app.session_id, playing }));
     }
 
     fn forget_left(&self) {
         self.write_left(None);
+    }
+
+    /// Whether the TV `device` was left playing `episode` of `id` when the connection to it was
+    /// lost mid-way, so its receiver may have played on: a cast of that episode carries on from
+    /// where the TV is. Asked as such a cast starts, and the note of the episode goes with it.
+    pub(crate) fn take_left_playing(&self, device: &str, id: AnilistId, episode: &str) -> bool {
+        let Some(left) = self.left().filter(|left| left.device == device) else { return false };
+        let Some((was, number)) = left.playing.clone() else { return false };
+        self.write_left(Some(Left { playing: None, ..left }));
+        was == id && number == episode
+    }
+
+    /// An episode starts on the TV: what it was left playing no longer stands.
+    fn forget_left_playing(&self) {
+        if let Some(left) = self.left().filter(|left| left.playing.is_some()) {
+            self.write_left(Some(Left { playing: None, ..left }));
+        }
     }
 
     fn write_left(&self, left: Option<Left>) {
@@ -1217,11 +1241,27 @@ impl CastHub {
     fn note_left(&self, player: &CastPlayer, status: &CastStatus, noted: &mut Noted) {
         if status.state == CastState::Ended {
             let lost = matches!(status.failure, Some(CastFailure::Lost(_)));
-            if let Some(session) = noted.session.take()
-                && !(lost && noted.busy)
-                && self.left().is_some_and(|left| left.session == session)
-            {
+            let Some(left) = noted
+                .session
+                .take()
+                .and_then(|session| self.left().filter(|left| left.session == session))
+            else {
+                return;
+            };
+            if !(lost && noted.busy) {
                 self.forget_left();
+                return;
+            }
+            // Lost mid-episode: the receiver may play it on, and a cast of it again carries on
+            // from where the TV is.
+            let playing = {
+                let cast = lock(&self.cast);
+                cast.asked.clone().filter(|_| {
+                    cast.device.as_ref().is_some_and(|d| d.id == player.device().id)
+                })
+            };
+            if playing.is_some() {
+                self.write_left(Some(Left { playing, ..left }));
             }
             return;
         }
@@ -1303,6 +1343,7 @@ impl CastHub {
         use crate::playback::{link::Overlay, offered};
         use kaeri_model::playback::SkipKind;
         let mut skipped = None;
+        let mut starting = false;
         {
             let mut cast = lock(&self.cast);
             match overlay {
@@ -1348,9 +1389,13 @@ impl CastHub {
                     cast.skip = None;
                     cast.undo = None;
                     cast.note = None;
+                    starting = true;
                 }
                 _ => return,
             }
+        }
+        if starting {
+            self.forget_left_playing();
         }
         if let Some(part) = skipped
             && let Some(player) = self.player()
