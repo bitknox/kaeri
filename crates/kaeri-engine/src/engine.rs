@@ -292,8 +292,13 @@ impl Engine {
         let services = match parts {
             Some(parts) => {
                 let (power, hosted) = crate::services::players(&paths);
+                // In the data folder as the app's engine keeps it, so what a cast leaves for
+                // the next launch to join is there for the Fixtures apps too.
                 #[cfg(feature = "cast")]
-                let casts = Arc::new(crate::cast::CastHub::in_memory(http.clone()));
+                let casts = Arc::new(crate::cast::CastHub::new(
+                    paths.data_dir.join("remote"),
+                    http.clone(),
+                ));
                 let servers = crate::servers::Servers::new(
                     kaeri_track::TokenStore::over(crate::host::file_secrets(&paths)),
                     store.clone(),
