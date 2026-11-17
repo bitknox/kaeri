@@ -190,6 +190,8 @@ export class PcmAudio {
 	/** Clock readings in the first seconds after a start (see clock()), for the dev log. */
 	trace: string[] = [];
 	private traceFrom: number | null = null;
+	private trace0: { v: number; c: number } | null = null;
+	private readonly created = performance.now();
 
 	/** The output latency the browser reports (outputLatency + baseLatency), in seconds. */
 	get latency() {
@@ -348,10 +350,18 @@ export class PcmAudio {
 		// The first 4 s of readings after a start, for the dev log: when, the raw offsets (video
 		// time less heard context time, and the output timestamp's), and the one steered by.
 		if (playing && running) {
-			this.traceFrom ??= now;
+			if (this.traceFrom == null) {
+				this.traceFrom = now;
+				this.trace0 = { v: v.currentTime - now / 1000, c: heard - now / 1000 };
+				this.trace.push(`context ${Math.round(now - this.created)} ms old, at ${this.ctx.currentTime.toFixed(3)} s`);
+			}
+			// ms since playing: video offset / context offset / output timestamp offset, each against
+			// its first value, > the video-to-context offset steered by.
+			const z = this.trace0!;
+			const d = (x: number) => Math.round(x * 1000);
 			if (now - this.traceFrom < 4000)
 				this.trace.push(
-					`${Math.round(now - this.traceFrom)}:${Math.round((v.currentTime - heard) * 1000)}/${ts == null ? '-' : Math.round((v.currentTime - ts) * 1000)}>${Math.round((k.media - k.ctx) * 1000)}${k.settling ? 's' : ''}`,
+					`${Math.round(now - this.traceFrom)}:${d(v.currentTime - now / 1000 - z.v)}/${d(heard - now / 1000 - z.c)}/${ts == null ? '-' : d(ts - now / 1000 - z.c)}>${d(k.media - k.ctx)}${k.settling ? 's' : ''}`,
 				);
 		}
 		this.node.port.postMessage({ type: 'clock', media: k.media, ctx: k.ctx, rate: v.playbackRate, playing, settling: k.settling });
