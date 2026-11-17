@@ -187,6 +187,9 @@ export class PcmAudio {
 	private waiting: ((how: Primed) => void)[] = [];
 	/** performance.now() when the current start's first sound was decoded, and when it was heard. */
 	timing: { decoded: number | null; sound: number | null } = { decoded: null, sound: null };
+	/** Clock readings in the first seconds after a start (see clock()), for the dev log. */
+	trace: string[] = [];
+	private traceFrom: number | null = null;
 
 	/** The output latency the browser reports (outputLatency + baseLatency), in seconds. */
 	get latency() {
@@ -319,6 +322,8 @@ export class PcmAudio {
 		this.prime('seek');
 		this.primed = false;
 		this.timing = { decoded: null, sound: null };
+		this.trace = [];
+		this.traceFrom = null;
 		this.gen++;
 		this.lastPts = -Infinity;
 		this.worker.postMessage({ type: 'flush', gen: this.gen, time });
@@ -340,6 +345,15 @@ export class PcmAudio {
 		// A context that isn't running yet has a clock standing still: no reading of it counts.
 		const running = this.ctx.state === 'running';
 		const k = this.filter.read(now / 1000, v.currentTime, heard, v.playbackRate, playing && running, ts);
+		// The first 4 s of readings after a start, for the dev log: when, the raw offsets (video
+		// time less heard context time, and the output timestamp's), and the one steered by.
+		if (playing && running) {
+			this.traceFrom ??= now;
+			if (now - this.traceFrom < 4000)
+				this.trace.push(
+					`${Math.round(now - this.traceFrom)}:${Math.round((v.currentTime - heard) * 1000)}/${ts == null ? '-' : Math.round((v.currentTime - ts) * 1000)}>${Math.round((k.media - k.ctx) * 1000)}${k.settling ? 's' : ''}`,
+				);
+		}
 		this.node.port.postMessage({ type: 'clock', media: k.media, ctx: k.ctx, rate: v.playbackRate, playing, settling: k.settling });
 		if (playing && this.ctx.state === 'suspended') void this.ctx.resume().catch(() => {});
 	}

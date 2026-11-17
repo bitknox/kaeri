@@ -59,6 +59,7 @@ export class DebugStatusLine {
 	private lastSetup = '';
 	private lastTiming = '';
 	private lastEvent = 0;
+	private traced = 0;
 
 	constructor(
 		private readonly video: HTMLVideoElement,
@@ -150,6 +151,14 @@ export class DebugStatusLine {
 		if (timing && timing !== this.lastTiming) {
 			this.lastTiming = timing;
 			devLog(`timing ${timing}`);
+		}
+		// The clock readings after a start, ten to a line, each once.
+		const trace = stats?.clockTrace ?? [];
+		if (trace.length < this.traced) this.traced = 0;
+		while (trace.length - this.traced >= 10 || (trace.length > this.traced && trace.length >= 40)) {
+			const n = Math.min(10, trace.length - this.traced);
+			devLog(`clock ${trace.slice(this.traced, this.traced + n).join(' ')}`);
+			this.traced += n;
 		}
 		// Each correction the WebAssembly sound made, once: kind, where, by how much, which rule.
 		for (const e of p?.events ?? []) {

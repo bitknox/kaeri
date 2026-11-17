@@ -330,6 +330,8 @@ export interface UnpackerStats {
 	audioGate: string | null;
 	/** Milliseconds from the start of the load to its steps, once the first frame is up. */
 	timing: string | null;
+	/** The WebAssembly sound's clock readings in the first seconds after a start. */
+	clockTrace: string[] | null;
 }
 
 /** A track's setup in one line: codec string, MIME, rate, channels and config bytes. */
@@ -452,6 +454,7 @@ export class Unpacker {
 			audioWhy: this.pcm ? this.audioWhy : null,
 			audioGate: this.pcm ? this.audioGate : null,
 			timing: this.timing(),
+			clockTrace: this.pcm ? this.pcm.trace : null,
 		};
 	}
 
