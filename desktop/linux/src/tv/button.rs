@@ -69,6 +69,17 @@ fn icon_of(look: Look) -> &'static str {
     }
 }
 
+/// The button's tooltip and name: Connecting, Connected, or while the TV comes back
+/// Reconnecting, as the bar's line says then.
+fn tip_of(look: Look, name: Option<String>, reconnecting: bool) -> String {
+    match (look, name) {
+        (Look::Connecting, Some(name)) => t::cast_button_connecting(&name),
+        (Look::Connected, Some(name)) if reconnecting => t::tv_status_reconnecting(&name),
+        (Look::Connected, Some(name)) => t::cast_button_connected(&name),
+        _ => t::tv_play_on(),
+    }
+}
+
 /// The name of the TV held, for the tooltip and the popover's heading.
 fn held_name(tv: &Tv) -> Option<String> {
     if let Some(view) = tv.cast_view() {
@@ -132,12 +143,7 @@ pub fn cast_button(ctx: &Rc<Ctx>) -> gtk::MenuButton {
                     popover.set_child(Some(&content(&ctx, &popover)));
                 }
             }
-            let name = held_name(&tv);
-            let tip = match (look, name) {
-                (Look::Connecting, Some(name)) => t::cast_button_connecting(&name),
-                (Look::Connected, Some(name)) => t::cast_button_connected(&name),
-                _ => t::tv_play_on(),
-            };
+            let tip = tip_of(look, held_name(&tv), tv.cast_reconnecting());
             button.set_tooltip_text(Some(&tip));
             button.update_property(&[gtk::accessible::Property::Label(&tip)]);
         }
@@ -369,6 +375,24 @@ mod tests {
         for look in [Look::Hidden, Look::Available, Look::Connecting] {
             assert_eq!(icon_of(look), "kaeri-cast-symbolic");
         }
+    }
+
+    #[test]
+    fn while_the_tv_comes_back_the_button_says_reconnecting() {
+        let name = || Some("Living room".to_owned());
+        assert_eq!(
+            tip_of(Look::Connected, name(), true),
+            t::tv_status_reconnecting("Living room")
+        );
+        assert_eq!(
+            tip_of(Look::Connected, name(), false),
+            t::cast_button_connected("Living room")
+        );
+        assert_eq!(
+            tip_of(Look::Connecting, name(), true),
+            t::cast_button_connecting("Living room")
+        );
+        assert_eq!(tip_of(Look::Available, None, false), t::tv_play_on());
     }
 
     #[test]
