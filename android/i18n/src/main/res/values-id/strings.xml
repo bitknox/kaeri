@@ -4389,6 +4389,7 @@
     <string name="tv_status_playing">Memutar di %1$s</string>
     <string name="tv_status_connecting">Menghubungkan ke %1$s</string>
     <string name="tv_status_reconnecting">Menghubungkan ulang ke %1$s</string>
+    <string name="tv_waiting_for">Menunggu %1$s</string>
     <string name="tv_status_connected">Terhubung</string>
     <string name="tv_search_on_tv">Cari di TV</string>
     <string name="tv_type_search">Ketik pencarian</string>

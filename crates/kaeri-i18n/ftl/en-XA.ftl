@@ -15859,6 +15859,9 @@ tv-status-connecting = [Çöññéçţîñĝ ţö { $name }~~~~~~]
 # Status on the remote: connection lost, trying again.
 tv-status-reconnecting = [Ŕéçöññéçţîñĝ ţö { $name }~~~~~~]
 
+# Status on the remote and the cast mini player while the TV waits: for the stream, or while the app learns why the TV stopped the cast. On Windows also while pairing, until the named TV answers.
+tv-waiting-for = [Ŵàîţîñĝ ƒöŕ { $name }~~~~~]
+
 # Status on the remote: connected.
 tv-status-connected = [Çöññéçţéð~~~]
 

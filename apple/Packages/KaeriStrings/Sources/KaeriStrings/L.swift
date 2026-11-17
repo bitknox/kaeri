@@ -15711,6 +15711,11 @@ public enum L {
         Self.format("tv-status-reconnecting", fallback: "Reconnecting to %1$@", name)
     }
 
+    /// Status on the remote and the cast mini player while the TV waits: for the stream, or while the app learns why the TV stopped the cast. On Windows also while pairing, until the named TV answers.
+    public static func tvWaitingFor(name: String) -> String {
+        Self.format("tv-waiting-for", fallback: "Waiting for %1$@", name)
+    }
+
     /// Status on the remote: connected.
     public static var tvStatusConnected: String { string("tv-status-connected", fallback: "Connected") }
 

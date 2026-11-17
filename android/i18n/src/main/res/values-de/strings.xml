@@ -4551,6 +4551,7 @@
     <string name="tv_status_playing">Wird auf %1$s abgespielt</string>
     <string name="tv_status_connecting">Verbindung zu %1$s wird aufgebaut</string>
     <string name="tv_status_reconnecting">Verbindung zu %1$s wird wiederhergestellt</string>
+    <string name="tv_waiting_for">Warte auf %1$s</string>
     <string name="tv_status_connected">Verbunden</string>
     <string name="tv_search_on_tv">Auf dem Fernseher suchen</string>
     <string name="tv_type_search">Suche eingeben</string>

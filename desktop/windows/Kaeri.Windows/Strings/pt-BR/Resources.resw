@@ -2657,9 +2657,6 @@
   <data name="TvWaiting" xml:space="preserve">
     <value>Aguardando a TV</value>
   </data>
-  <data name="TvWaitingFor" xml:space="preserve">
-    <value>Aguardando {name}</value>
-  </data>
   <data name="TvRowName" xml:space="preserve">
     <value>{name}, {detail}</value>
   </data>
@@ -12370,6 +12367,9 @@
   </data>
   <data name="TvStatusReconnecting" xml:space="preserve">
     <value>Reconectando a {name}</value>
+  </data>
+  <data name="TvWaitingFor" xml:space="preserve">
+    <value>Aguardando {name}</value>
   </data>
   <data name="TvStatusConnected" xml:space="preserve">
     <value>Conectado</value>

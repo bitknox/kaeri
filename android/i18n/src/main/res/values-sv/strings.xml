@@ -4551,6 +4551,7 @@
     <string name="tv_status_playing">Spelar på %1$s</string>
     <string name="tv_status_connecting">Ansluter till %1$s</string>
     <string name="tv_status_reconnecting">Ansluter om till %1$s</string>
+    <string name="tv_waiting_for">Väntar på %1$s</string>
     <string name="tv_status_connected">Ansluten</string>
     <string name="tv_search_on_tv">Sök på TV:n</string>
     <string name="tv_type_search">Skriv en sökning</string>

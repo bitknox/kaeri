@@ -17519,6 +17519,10 @@ object Strings {
     fun tvStatusReconnecting(context: Context, name: String): String =
         context.getString(R.string.tv_status_reconnecting, name)
 
+    /** Status on the remote and the cast mini player while the TV waits: for the stream, or while the app learns why the TV stopped the cast. On Windows also while pairing, until the named TV answers. */
+    fun tvWaitingFor(context: Context, name: String): String =
+        context.getString(R.string.tv_waiting_for, name)
+
     /** Status on the remote: connected. */
     fun tvStatusConnected(context: Context): String =
         context.getString(R.string.tv_status_connected)

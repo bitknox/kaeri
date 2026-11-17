@@ -6,7 +6,6 @@ tv-unnamed = TV
 tv-another-short = Annan TV…
 tv-volume-label = TV:ns volym
 tv-waiting = Väntar på TV:n
-tv-waiting-for = Väntar på { $name }
 tv-row-name = { $name }, { $detail }
 tv-row-name-connected = { $name }, { $detail }, ansluten
 tv-row-pair-help = Parkopplas med den här TV:n

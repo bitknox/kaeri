@@ -4713,6 +4713,7 @@
     <string name="tv_status_playing">Reproduzindo em %1$s</string>
     <string name="tv_status_connecting">Conectando a %1$s</string>
     <string name="tv_status_reconnecting">Reconectando a %1$s</string>
+    <string name="tv_waiting_for">Aguardando %1$s</string>
     <string name="tv_status_connected">Conectado</string>
     <string name="tv_search_on_tv">Pesquisar na TV</string>
     <string name="tv_type_search">Digite uma pesquisa</string>

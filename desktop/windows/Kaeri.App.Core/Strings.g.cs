@@ -2502,9 +2502,6 @@ public static partial class T
     /// <summary>While pairing, until the TV answers and before its name is known.</summary>
     public static string TvWaiting => Get("TvWaiting");
 
-    /// <summary>While pairing, until the named TV answers.</summary>
-    public static string TvWaitingFor(string name) => Fill(Get("TvWaitingFor"), ("name", name));
-
     /// <summary>Name read by a screen reader for a TV in the picker: its name, then the line under it.</summary>
     public static string TvRowName(string name, string detail) => Fill(Get("TvRowName"), ("name", name), ("detail", detail));
 
@@ -12053,6 +12050,9 @@ public static partial class T
     /// <summary>Status on the remote: connection lost, trying again.</summary>
     public static string TvStatusReconnecting(string name) => Fill(Get("TvStatusReconnecting"), ("name", name));
 
+    /// <summary>Status on the remote and the cast mini player while the TV waits: for the stream, or while the app learns why the TV stopped the cast. On Windows also while pairing, until the named TV answers.</summary>
+    public static string TvWaitingFor(string name) => Fill(Get("TvWaitingFor"), ("name", name));
+
     /// <summary>Status on the remote: connected.</summary>
     public static string TvStatusConnected => Get("TvStatusConnected");
 
@@ -13249,7 +13249,6 @@ public static partial class T
         ["TvAnotherShort"] = "Another TV…",
         ["TvVolumeLabel"] = "TV volume",
         ["TvWaiting"] = "Waiting for the TV",
-        ["TvWaitingFor"] = "Waiting for {name}",
         ["TvRowName"] = "{name}, {detail}",
         ["TvRowNameConnected"] = "{name}, {detail}, connected",
         ["TvRowPairHelp"] = "Pairs with this TV",
@@ -16553,6 +16552,7 @@ public static partial class T
         ["TvStatusPlaying"] = "Playing on {name}",
         ["TvStatusConnecting"] = "Connecting to {name}",
         ["TvStatusReconnecting"] = "Reconnecting to {name}",
+        ["TvWaitingFor"] = "Waiting for {name}",
         ["TvStatusConnected"] = "Connected",
         ["TvSearchOnTv"] = "Search on the TV",
         ["TvTypeSearch"] = "Type a search",

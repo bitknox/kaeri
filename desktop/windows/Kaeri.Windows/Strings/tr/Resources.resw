@@ -2519,9 +2519,6 @@
   <data name="TvWaiting" xml:space="preserve">
     <value>TV yanıtı bekleniyor</value>
   </data>
-  <data name="TvWaitingFor" xml:space="preserve">
-    <value>{name} yanıtı bekleniyor</value>
-  </data>
   <data name="TvRowName" xml:space="preserve">
     <value>{name}, {detail}</value>
   </data>
@@ -11935,6 +11932,9 @@
   </data>
   <data name="TvStatusReconnecting" xml:space="preserve">
     <value>{name} ile yeniden bağlanılıyor</value>
+  </data>
+  <data name="TvWaitingFor" xml:space="preserve">
+    <value>{name} yanıtı bekleniyor</value>
   </data>
   <data name="TvStatusConnected" xml:space="preserve">
     <value>Bağlı</value>

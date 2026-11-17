@@ -41,6 +41,7 @@ tv-show-remote = Mostrar el control remoto de { $name }
 tv-status-playing = Reproduciendo en { $name }
 tv-status-connecting = Conectando con { $name }
 tv-status-reconnecting = Reconectando con { $name }
+tv-waiting-for = Esperando a { $name }
 tv-status-connected = Conectado
 tv-search-on-tv = Buscar en el televisor
 tv-type-search = Escribe una búsqueda

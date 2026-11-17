@@ -2381,9 +2381,6 @@
   <data name="TvWaiting" xml:space="preserve">
     <value>テレビの応答を待っています</value>
   </data>
-  <data name="TvWaitingFor" xml:space="preserve">
-    <value>{name}の応答を待っています</value>
-  </data>
   <data name="TvRowName" xml:space="preserve">
     <value>{name}、{detail}</value>
   </data>
@@ -11500,6 +11497,9 @@
   </data>
   <data name="TvStatusReconnecting" xml:space="preserve">
     <value>{name}に再接続中</value>
+  </data>
+  <data name="TvWaitingFor" xml:space="preserve">
+    <value>{name}の応答を待っています</value>
   </data>
   <data name="TvStatusConnected" xml:space="preserve">
     <value>接続済み</value>
