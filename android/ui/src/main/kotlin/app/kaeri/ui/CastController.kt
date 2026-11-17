@@ -105,10 +105,14 @@ import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.ProgressBarRangeInfo
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.disabled
+import androidx.compose.ui.semantics.progressBarRangeInfo
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.setProgress
 import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.IntOffset
@@ -1048,6 +1052,7 @@ internal fun CastSeekLine(cast: CastModel, now: FfiNowCard, shown: CastShown, us
     Column(Modifier.padding(top = 12.dp).alpha(dim)) {
         val range = 0f..maxOf(duration.toFloat(), 1f)
         val slider = remember(range) { SliderState(at.toFloat(), 0, range) }
+        val seekable = usable && duration > 0
         if (dragging == null && slider.value != at.toFloat()) slider.value = at.toFloat()
         Slider(
             state = slider,
@@ -1062,14 +1067,30 @@ internal fun CastSeekLine(cast: CastModel, now: FfiNowCard, shown: CastShown, us
                 }
                 dragging = null
             },
-            enabled = usable && duration > 0,
+            enabled = seekable,
             thumb = {
                 if (times) Box(Modifier.size(4.dp, 44.dp).background(colors.onSurface, RoundedCornerShape(2.dp)))
             },
             track = { CastSeekTrack(it.coercedValueAsFraction, thumb = times) },
-            modifier = Modifier.fillMaxWidth().height(44.dp).keepsVerticalDrags().semantics {
+            // The slider's semantics are set here whole, with nothing under them: with nodes under
+            // it, the slider hands a screen reader its name on a node of its own, and that one
+            // reads as on while the slider is off.
+            modifier = Modifier.fillMaxWidth().height(44.dp).keepsVerticalDrags().clearAndSetSemantics {
                 contentDescription = label
                 if (times) stateDescription = state
+                progressBarRangeInfo = ProgressBarRangeInfo(slider.value, range)
+                if (seekable) {
+                    setProgress { asked ->
+                        val to = asked.coerceIn(range)
+                        if (to == slider.value) return@setProgress false
+                        slider.value = to
+                        cast.send(FfiTvCommand.SeekTo(to.toDouble()))
+                        sent = to to rev
+                        true
+                    }
+                } else {
+                    disabled()
+                }
             },
         )
         Box(Modifier.fillMaxWidth().heightIn(min = 20.dp)) {

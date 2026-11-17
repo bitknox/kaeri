@@ -33,7 +33,6 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
-import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -67,6 +66,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawWithCache
 import androidx.compose.foundation.layout.ime
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.relocation.bringIntoViewRequester
@@ -85,6 +85,8 @@ import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.drawText
+import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
@@ -95,6 +97,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import java.util.Locale
 import kotlinx.coroutines.delay
+import kotlin.math.roundToInt
 import app.kaeri.design.Motion
 import app.kaeri.design.ObiSilk
 import app.kaeri.design.ShowTitle
@@ -763,19 +766,32 @@ internal fun TvGlyph(icon: ImageVector, label: String, size: androidx.compose.ui
     }
 }
 
-/** Back or forward 10 s: the turning arrow at 28 with its 10 inside, as the player's. */
+/**
+ * Back or forward 10 s: the turning arrow at 28 with its 10 inside, as the player's. The 10 is
+ * drawn, not a text node: with a node under it, the button hands a screen reader its name on a
+ * node of its own, and that one reads as on while the button is off.
+ */
 @Composable
 internal fun TvStep(icon: ImageVector, label: String, enabled: Boolean, onClick: () -> Unit) {
     val silk = MaterialTheme.colorScheme.onSurface
+    val measurer = rememberTextMeasurer()
+    val style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold, color = silk)
     IconButton(onClick = onClick, enabled = enabled, modifier = Modifier.size(48.dp).semantics { contentDescription = label }) {
-        Box(Modifier.size(28.dp)) {
+        Box(
+            Modifier.size(28.dp).drawWithCache {
+                val ten = measurer.measure("10", style) // i18n-skip
+                // Centred as a laid-out 10 is, then 2 dp down.
+                val at = androidx.compose.ui.geometry.Offset(
+                    ((size.width - ten.size.width) / 2f).roundToInt().toFloat(),
+                    ((size.height - ten.size.height) / 2f).roundToInt().toFloat() + 2.dp.roundToPx(),
+                )
+                onDrawWithContent {
+                    drawContent()
+                    drawText(ten, topLeft = at)
+                }
+            },
+        ) {
             Icon(icon, contentDescription = null, tint = silk, modifier = Modifier.size(28.dp))
-            Text(
-                "10",
-                style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
-                color = silk,
-                modifier = Modifier.align(Alignment.Center).offset(y = 2.dp).offWith(enabled),
-            )
         }
     }
 }
