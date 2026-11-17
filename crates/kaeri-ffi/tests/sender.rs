@@ -386,13 +386,19 @@ fn a_fixtures_cast_plays_on_a_fake_tv_and_one_that_refuses_says_why() {
     phone.engine.shutdown();
 }
 
+/// A phone casting to a fake TV: the TV's engine, the TV, the phone's engine, its sender and
+/// where the record of the cast is.
+struct Casting {
+    tv: Started,
+    living: Arc<kaeri_ffi::FfiFakeCast>,
+    phone: Started,
+    sender: Arc<kaeri_ffi::FfiTvSender>,
+    path: std::path::PathBuf,
+}
+
 /// A phone casting episode 3 to a fake "Living room" from an engine over `root`, once the
-/// record of the cast names it: the TV's engine, the TV, the phone's engine, its sender and
-/// where the record is.
-fn casting_from(
-    root: &std::path::Path,
-) -> (Started, Arc<kaeri_ffi::FfiFakeCast>, Started, Arc<kaeri_ffi::FfiTvSender>, std::path::PathBuf)
-{
+/// record of the cast names it.
+fn casting_from(root: &std::path::Path) -> Casting {
     let tv = start();
     let living = tv
         .engine
@@ -421,7 +427,7 @@ fn casting_from(
     let record: serde_json::Value = serde_json::from_slice(&record).unwrap();
     assert!(record["tv"]["address"].is_string(), "{record}");
     drop(cast);
-    (tv, living, phone, sender, path)
+    Casting { tv, living, phone, sender, path }
 }
 
 /// The app opened again over `root` joins the TV quietly, never as connecting.
@@ -443,7 +449,7 @@ fn joined_again(root: &std::path::Path) -> Started {
 #[test]
 fn a_cast_left_running_is_joined_again_by_the_next_launch_over_the_same_folders() {
     let root = tempfile::tempdir().expect("a temporary directory");
-    let (tv, living, phone, sender, _) = casting_from(root.path());
+    let Casting { tv, living, phone, sender, .. } = casting_from(root.path());
     drop(sender);
     phone.engine.end_abruptly();
     drop(phone);
@@ -459,7 +465,7 @@ fn a_cast_left_running_is_joined_again_by_the_next_launch_over_the_same_folders(
 #[test]
 fn quitting_the_app_leaves_the_cast_playing_for_the_next_launch_to_join() {
     let root = tempfile::tempdir().expect("a temporary directory");
-    let (tv, living, phone, sender, path) = casting_from(root.path());
+    let Casting { tv, living, phone, sender, path } = casting_from(root.path());
     let stops = living.heard("STOP");
     drop(sender);
     phone.engine.shutdown();
@@ -478,7 +484,7 @@ fn quitting_the_app_leaves_the_cast_playing_for_the_next_launch_to_join() {
 #[test]
 fn stop_casting_then_quitting_stops_the_tv_before_the_app_goes() {
     let root = tempfile::tempdir().expect("a temporary directory");
-    let (tv, living, phone, sender, path) = casting_from(root.path());
+    let Casting { tv, living, phone, sender, path } = casting_from(root.path());
     let stops = living.heard("STOP");
     sender.cast_disconnect();
     phone.engine.shutdown();
