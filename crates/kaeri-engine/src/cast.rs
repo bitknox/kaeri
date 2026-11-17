@@ -177,9 +177,12 @@ fn card_of(status: &CastStatus) -> Option<(AnilistId, String)> {
         .card
         .as_ref()
         .filter(|_| {
-            matches!(status.state, CastState::Playing | CastState::Paused | CastState::Buffering)
+            matches!(
+                status.state,
+                CastState::Playing | CastState::Paused | CastState::Buffering
+            )
         })
-        .map(|card| (AnilistId::new(u64::from(card.id)), card.episode.clone()))
+        .map(|card| (AnilistId::new(card.id), card.episode.clone()))
 }
 
 /// Until when a receiver last heard as `status` says may run on without this device: to the

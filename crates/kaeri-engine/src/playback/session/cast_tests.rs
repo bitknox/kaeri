@@ -488,7 +488,11 @@ fn records_episode_one(record: Option<&serde_json::Value>) -> bool {
 
 /// A new run of the app over the rig's files: what a launch after the app was ended has.
 fn relaunched(rig: &Rig) -> Arc<CastHub> {
-    Arc::new(CastHub::with(Some(rig.dir.path().to_owned()), Arc::new(PlainHttp), lost_at_once()))
+    Arc::new(CastHub::with(
+        Some(rig.dir.path().to_owned()),
+        Arc::new(PlainHttp),
+        lost_at_once(),
+    ))
 }
 
 /// Every state `hub`'s session reads as from now on.
