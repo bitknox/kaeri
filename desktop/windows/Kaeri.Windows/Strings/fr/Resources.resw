@@ -5831,9 +5831,6 @@
   <data name="PlayerStartMissSkipped" xml:space="preserve">
     <value>Vous avez ignoré {name}</value>
   </data>
-  <data name="PlayerStartResting" xml:space="preserve">
-    <value>Ignorée après des échecs récents</value>
-  </data>
   <data name="PlayerStartFrom" xml:space="preserve">
     <value>Depuis {name}</value>
   </data>

@@ -290,6 +290,8 @@ struct PartySourceState {
             }
         case .looking?: return .play
         case .listed(let found)?: return found.isEmpty ? .providers : .play
+        // A source that failed or was held back may answer when asked again.
+        case .missed(let missed)?: return missed.contains { PartyWords.unreached($0.miss) } ? .again : .providers
         case .failed?: return .again
         }
     }
@@ -312,6 +314,7 @@ struct PartySourceState {
             found.isEmpty
                 ? (L.partyNoSourceLists(episode: ask.episode), false, false)
                 : (PartyWords.found(found.count), false, false)
+        case .missed(let missed)?: (PartyWords.noneLists(missed, episode: ask.episode), false, false)
         case .failed(let why)?: (why, false, true)
         }
     }
@@ -320,6 +323,15 @@ struct PartySourceState {
         if case .listed(let found)? = party.choice { return found }
         return []
     }
+
+    /// With nothing listed, what each source said, one line each.
+    var reasons: [String] {
+        if case .missed(let missed)? = party.choice { return missed.map { PartyWords.missed($0, episode: ask.episode) } }
+        return []
+    }
+
+    /// The release picked as the list arrives: the only one, so Play works at once.
+    var preselected: String? { PartyWords.preselected(candidates)?.partyKey }
 }
 
 extension SourceCandidate {
@@ -593,6 +605,13 @@ struct MacPartySource: View {
             } else {
                 PartySourceLine(line: state.line)
                     .padding(.top, 12)
+                ForEach(state.reasons, id: \.self) { reason in
+                    Text(reason)
+                        .font(.mac(13))
+                        .foregroundStyle(.silk)
+                        .fixedSize(horizontal: false, vertical: true)
+                        .padding(.top, 6)
+                }
                 List(state.candidates, id: \.partyKey, selection: $picked) { candidate in
                     VStack(alignment: .leading, spacing: 2) {
                         Text(candidate.title).font(.mac(13)).foregroundStyle(.silk).lineLimit(1)
@@ -634,6 +653,9 @@ struct MacPartySource: View {
         .sheetWidth(520)
         .background(.raised)
         .animation(.quick, value: party.choice == nil)
+        .onChange(of: state.preselected, initial: true) { _, only in
+            if let only { picked = only }
+        }
     }
 
     private func primary(_ state: PartySourceState) {
@@ -862,6 +884,9 @@ struct PhonePartySource: View {
                     .listRowBackground(Palette.raised)
                 } else {
                     Section {
+                        ForEach(state.reasons, id: \.self) { reason in
+                            Text(reason).foregroundStyle(.silk)
+                        }
                         ForEach(state.candidates, id: \.partyKey) { candidate in
                             Button {
                                 picked = candidate.partyKey
@@ -915,6 +940,9 @@ struct PhonePartySource: View {
         }
         .tint(.silk)
         .preferredColorScheme(.dark)
+        .onChange(of: PartySourceState(store: store, ask: ask).preselected, initial: true) { _, only in
+            if let only { picked = only }
+        }
     }
 
     private func primary(_ state: PartySourceState) {

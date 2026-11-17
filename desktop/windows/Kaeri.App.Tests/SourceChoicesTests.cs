@@ -19,7 +19,7 @@ public class SourceChoicesTests
     }
 
     static SourceCandidate Release(string id, string title, uint? quality = null, string? label = null, string? size = null) =>
-        new(id, "torrent", title, quality, Label: label, Size: size);
+        new(id, "torrent", title, Quality: quality, Label: label, Size: size);
 
     static SourceOption Option(string id, uint covered, SourceNote? note = null, bool pinned = false,
         SourceCandidate[]? releases = null, string? pinnedRelease = null) =>
@@ -251,5 +251,50 @@ public class SourceChoicesTests
         Assert.False(item.Playable);
         Assert.Null(item.Button);
         Assert.Equal("No source has this episode", item.Waiting);
+    }
+
+    static SourceCandidate NamedRelease(string id, string name) =>
+        new(Id: id, ProviderId: "sample-source", ProviderName: name, Title: $"Stardust Wayfarer - 07 ({id})", Quality: 1080u, Label: "12 seeders", Size: "1.4 GiB");
+
+    [Fact]
+    public void AReleaseNamesItsSourceAsItGoesByNotByItsId()
+    {
+        Assert.Equal("Sample Source · 1080p · 1.4 GiB · 12 seeders", ReleasePicker.Detail(NamedRelease("a", "Sample Source")));
+        Assert.StartsWith("sample-source ·", ReleasePicker.Detail(NamedRelease("a", "")));
+    }
+
+    [Fact]
+    public void EachSourceThatListedNothingSaysWhyOnceByName()
+    {
+        Assert.Equal("Alpha didn't answer", ReleasePicker.Missed(new MissedListing("Alpha", new ListingMiss.Failed()), "7"));
+        Assert.Equal("Alpha took too long", ReleasePicker.Missed(new MissedListing("Alpha", new ListingMiss.TimedOut()), "7"));
+        Assert.Equal("Brook doesn't have episode 7", ReleasePicker.Missed(new MissedListing("Brook", new ListingMiss.NoEpisode()), "7"));
+        Assert.Equal(
+            "Harbor isn't asked while torrent playback is off",
+            ReleasePicker.Missed(new MissedListing("Harbor", new ListingMiss.HeldBack(SourceHold.TorrentsOff)), "7"));
+        Assert.True(ReleasePicker.Unreached(new ListingMiss.Failed()));
+        Assert.True(ReleasePicker.Unreached(new ListingMiss.HeldBack(SourceHold.ProxyCheck)));
+        Assert.False(ReleasePicker.Unreached(new ListingMiss.NoEpisode()));
+    }
+
+    [Fact]
+    public void TheLineOverTheReasonsClaimsOnlyWhatTheSourcesThatAnsweredSaid()
+    {
+        Assert.Equal(
+            "No source lists episode 7.",
+            ReleasePicker.NoneLists([new MissedListing("Brook", new ListingMiss.NoEpisode()), new MissedListing("Kumo", new ListingMiss.NoMatch())], "7"));
+        Assert.Equal(
+            "No source that answered lists episode 7.",
+            ReleasePicker.NoneLists([new MissedListing("Alpha", new ListingMiss.Failed()), new MissedListing("Brook", new ListingMiss.NoEpisode())], "7"));
+        Assert.Equal(
+            "No source that answered lists episode 7.",
+            ReleasePicker.NoneLists([new MissedListing("Harbor", new ListingMiss.HeldBack(SourceHold.TorrentsOff))], "7"));
+    }
+
+    [Fact]
+    public void TheOnlyReleaseIsPickedSoPlayWorksAtOnce()
+    {
+        Assert.Equal(0, ReleasePicker.Preselected([NamedRelease("a", "Sample Source")]));
+        Assert.Equal(-1, ReleasePicker.Preselected([NamedRelease("a", "Sample Source"), NamedRelease("b", "Sample Source")]));
     }
 }

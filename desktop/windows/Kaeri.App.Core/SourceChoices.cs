@@ -253,3 +253,50 @@ public static class EpisodeSources
     /// <summary>The episodes a download can queue, in table order; a range skips the unsourced.</summary>
     public static string[] Downloadable(IEnumerable<EpisodeRow> rows) => [.. rows.Where(Playable).Select(r => r.Number)];
 }
+
+/// <summary>How the list of an episode's releases words its sources and what each one said.</summary>
+public static class ReleasePicker
+{
+    /// <summary>The name a release's source goes by, and its id when the engine gave none.</summary>
+    public static string SourceName(SourceCandidate c) => c.ProviderName is { Length: > 0 } name ? name : c.ProviderId;
+
+    /// <summary>"Sample Source · 1080p · 1.4 GiB · 12 seeders", the last being the source's own label.</summary>
+    public static string Detail(SourceCandidate c)
+    {
+        var parts = new List<string> { SourceName(c) };
+        if (c.Quality is { } q)
+            parts.Add($"{q}p");
+        if (c.Size is { Length: > 0 } size)
+            parts.Add(size);
+        if (c.Label is { Length: > 0 } label)
+            parts.Add(label);
+        return string.Join(" · ", parts);
+    }
+
+    /// <summary>Why one source listed no release: its name once, as it goes by.</summary>
+    public static string Missed(MissedListing m, string episode) => m.Miss switch
+    {
+        ListingMiss.NoMatch => T.PlayerStartMissNoMatch(m.Name),
+        ListingMiss.NoEpisode => T.PlayerStartMissNoEpisode(m.Name, episode),
+        ListingMiss.Failed => T.PlayerStartMissFailed(m.Name),
+        ListingMiss.TimedOut => T.PlayerStartMissTimedOut(m.Name),
+        ListingMiss.HeldBack { Why: SourceHold.TorrentsOff } => T.SourcePickerHeldTorrentsOff(m.Name),
+        ListingMiss.HeldBack { Why: SourceHold.ProxyCheck } => T.SourcePickerHeldProxy(m.Name),
+        ListingMiss.HeldBack { Why: SourceHold.Cellular } => T.SourcePickerHeldCellular(m.Name),
+        _ => T.SourcePickerHeldOther(m.Name),
+    };
+
+    /// <summary>Whether a source gave no real answer (it failed, took too long or was held back), so Try again may reach it.</summary>
+    public static bool Unreached(ListingMiss miss) => miss is ListingMiss.Failed or ListingMiss.TimedOut or ListingMiss.HeldBack;
+
+    /// <summary>
+    /// The line over the reasons when no source lists the episode: that none lists it only when
+    /// every source answered, and that none that answered lists it when any failed, took too long
+    /// or wasn't asked.
+    /// </summary>
+    public static string NoneLists(IReadOnlyList<MissedListing> missed, string episode) =>
+        missed.Any(m => Unreached(m.Miss)) ? T.SourcePickerNoneAnsweredLists(episode) : T.SourcePickerNoneLists(episode);
+
+    /// <summary>The release to start on: the only one, so Play works at once; none when there are several.</summary>
+    public static int Preselected(IReadOnlyList<SourceCandidate> found) => found.Count == 1 ? 0 : -1;
+}

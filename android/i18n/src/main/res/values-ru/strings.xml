@@ -2467,7 +2467,6 @@
     <string name="player_start_miss_failed">%1$s не ответил</string>
     <string name="player_start_miss_timed_out">%1$s отвечал слишком долго</string>
     <string name="player_start_miss_skipped">Вы пропустили %1$s</string>
-    <string name="player_start_resting">Пропущены после недавних сбоев</string>
     <string name="player_start_from">Из %1$s</string>
     <string name="player_start_no_video">Первый не показал видео</string>
     <string name="player_start_stream_place">Поток %1$,d из %2$,d</string>

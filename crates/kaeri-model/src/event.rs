@@ -272,10 +272,15 @@ pub enum Event {
     },
     /// The selectable releases for the episode the user asked about, named so an answer for
     /// an episode whose picker has since closed is not offered against the next one.
+    ///
+    /// With no candidates, `missed` says what each source answered instead, in the viewer's
+    /// order: the picker's "No source lists episode 5" and one line for each source under it.
     Sources {
         id: AnilistId,
         episode: String,
         candidates: Vec<SourceCandidate>,
+        #[cfg_attr(feature = "ffi", uniffi(default))]
+        missed: Vec<crate::starting::MissedListing>,
     },
     /// The sources that could serve a title, each with how much of the title's episodes it has,
     /// in the order they are tried, for a source picker: the answer to

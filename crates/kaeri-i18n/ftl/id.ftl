@@ -8590,9 +8590,6 @@ player-start-miss-timed-out = { $name } terlalu lama
 # Detail line after the viewer skipped the source being asked.
 player-start-miss-skipped = Kamu melewati { $name }
 
-# Details row for sources passed over because they failed lately. The name goes before it.
-player-start-resting = Dilewati karena gagal baru-baru ini
-
 # Detail line once the streams are found and the player opens one. The name is the source's.
 player-start-from = Dari { $name }
 

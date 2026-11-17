@@ -5,7 +5,7 @@ use kaeri_core::ids::AnilistId;
 use kaeri_model::{
     Msg,
     event::Event,
-    starting::{SourceMiss, StartStep},
+    starting::{HeldSources, SourceHold, SourceMiss, StartStep},
 };
 use kaeri_providers::walk::{self, Miss, Walk};
 use std::sync::{Arc, Mutex};
@@ -24,6 +24,56 @@ pub struct Starting {
     skip: Option<watch::Receiver<u64>>,
     /// The sources asked so far, in order, shared by every clone: what a failure names.
     asked: Arc<Mutex<Vec<String>>>,
+    /// The sources held back so far, by reason: what a failure says was not asked.
+    held: Arc<Mutex<Vec<HeldSources>>>,
+}
+
+/// The sources the last failed start couldn't reach, kept so a new start of the same episode
+/// (Try again) gives them a fresh chance: a source resting after failures in that start is asked
+/// in its place in the order again, rather than last.
+#[derive(Clone, Default)]
+pub struct Unreached(Arc<Mutex<Option<UnreachedEpisode>>>);
+
+/// The title and episode a start failed on, and the ids of the sources it couldn't reach.
+type UnreachedEpisode = (AnilistId, String, Vec<String>);
+
+impl std::fmt::Debug for Unreached {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str("Unreached")
+    }
+}
+
+impl Unreached {
+    /// Keep the ids of the sources a failed start of `episode` of `id` couldn't reach, in place
+    /// of any kept before.
+    pub fn note(&self, id: AnilistId, episode: &str, ids: Vec<String>) {
+        if let Ok(mut kept) = self.0.lock() {
+            *kept = (!ids.is_empty()).then(|| (id, episode.to_owned(), ids));
+        }
+    }
+
+    /// A start of `episode` of `id` begins: the sources the last failed start of it couldn't
+    /// reach get a fresh chance in `registry`. A start of anything else lets them be.
+    pub fn retry(
+        &self,
+        id: AnilistId,
+        episode: &str,
+        registry: &kaeri_providers::ProviderRegistry,
+    ) {
+        let Ok(mut kept) = self.0.lock() else { return };
+        if !kept.as_ref().is_some_and(|(at, of, _)| *at == id && of == episode) {
+            return;
+        }
+        if let Some((_, _, ids)) = kept.take() {
+            tracing::info!(
+                ?ids,
+                "a new start of the episode; its unreached sources get another chance"
+            );
+            for provider_id in ids {
+                registry.health().reset(&provider_id);
+            }
+        }
+    }
 }
 
 /// How long a start that finds the device offline waits for a connection before it fails.
@@ -42,7 +92,13 @@ impl Starting {
             episode: episode.to_owned(),
             skip,
             asked: Default::default(),
+            held: Default::default(),
         }
+    }
+
+    /// The sources held back so far, by reason, in the order the walk said them.
+    pub fn held_back(&self) -> Vec<HeldSources> {
+        self.held.lock().map(|held| held.clone()).unwrap_or_default()
     }
 
     /// The names of the sources asked so far, in the order they were asked.
@@ -132,6 +188,14 @@ impl Starting {
                 asked.push(name.clone());
             }
             let (step, line) = told(step);
+            if let StartStep::SourcesHeldBack { names, why } = &step
+                && let Ok(mut held) = this.held.lock()
+            {
+                match held.iter_mut().find(|group| group.why == *why) {
+                    Some(group) => group.names.extend(names.iter().cloned()),
+                    None => held.push(HeldSources { names: names.clone(), why: *why }),
+                }
+            }
             this.step(step, line);
         })
         .pinned(pinned);
@@ -197,7 +261,9 @@ pub fn say(tx: &Outbox, id: AnilistId, episode: &str, step: StartStep, line: Opt
 /// A step of the walk as the screen is told it.
 pub fn told(step: walk::Step) -> (StartStep, Option<Msg>) {
     match step {
-        walk::Step::Resting { names } => (StartStep::SourcesResting { names }, None),
+        walk::Step::HeldBack { names, reason } => {
+            (StartStep::SourcesHeldBack { names, why: hold_of(&reason) }, None)
+        }
         walk::Step::Asking { name, place, total, pinned } => {
             let line = Msg::StartAskingSource { name: name.clone() };
             let step = StartStep::AskingSource {
@@ -214,6 +280,19 @@ pub fn told(step: walk::Step) -> (StartStep, Option<Msg>) {
         walk::Step::FindingPeers { name } => {
             (StartStep::FindingPeers { name }, Some(Msg::StartFindingPeers))
         }
+    }
+}
+
+/// Why a source is held back, from the hold's own words.
+pub fn hold_of(reason: &str) -> SourceHold {
+    if reason == kaeri_providers::torrent::bridge::PLAYBACK_OFF {
+        SourceHold::TorrentsOff
+    } else if reason == kaeri_providers::proxy::CHECK_PENDING {
+        SourceHold::ProxyCheck
+    } else if reason == crate::phases::CELLULAR {
+        SourceHold::Cellular
+    } else {
+        SourceHold::Other
     }
 }
 
@@ -287,13 +366,27 @@ pub fn fixture(
         )
     };
     let opening = |attempt, total| step(StartStep::OpeningStream { attempt, total }, None);
-    let failed = |why: NoSourceWhy, cause: Cause, asked: &[&str]| {
+    let names =
+        |names: &[&str]| names.iter().map(|name| (*name).to_owned()).collect::<Vec<_>>();
+    let failed_with = |why: NoSourceWhy,
+                       cause: Cause,
+                       asked: &[&str],
+                       unreached: &[&str],
+                       held_back: Vec<HeldSources>| {
         let text = crate::playback::resolve::explained(cause);
-        let asked = asked.iter().map(|name| (*name).to_owned()).collect();
         [
             Event::Toast(Notice::alert(text.clone())),
-            Event::playback_failed(StartFailure { why, text, asked }),
+            Event::playback_failed(StartFailure {
+                why,
+                text,
+                asked: names(asked),
+                unreached: names(unreached),
+                held_back,
+            }),
         ]
+    };
+    let failed = |why: NoSourceWhy, cause: Cause, asked: &[&str]| {
+        failed_with(why, cause, asked, &[], Vec::new())
     };
     let resume = Some(606.0);
     let mut events: Vec<(u64, Event)> = vec![(0, staged(resume))];
@@ -324,9 +417,11 @@ pub fn fixture(
             at(6_000, missed(ALPHA, walk::Miss::TimedOut));
             at(6_000, asking(BROOK, 2, 3, false));
         }
+        // Kumo is resting after failures, so it is asked last, once Alpha has missed.
         State::SourcesResting => {
-            at(700, walk(walk::Step::Resting { names: vec!["Kumo".into()] }));
             at(700, asking(ALPHA, 1, 2, false));
+            at(2_600, missed(ALPHA, walk::Miss::NoEpisode));
+            at(2_600, asking("Kumo", 2, 2, false));
         }
         State::Slow => {
             at(700, asking(ALPHA, 1, 3, false));
@@ -428,6 +523,27 @@ pub fn fixture(
                 at(1_600, event);
             }
         }
+        // Alpha fails, Brook has no episode 7, and Harbor is held back while torrent playback
+        // is off: the start says it couldn't reach Alpha, that Brook lacks the episode and that
+        // Harbor isn't asked. Harbor was never asked, so it is not one unreached.
+        State::FailedUnreached => {
+            let reason = kaeri_providers::torrent::bridge::PLAYBACK_OFF.to_owned();
+            at(700, walk(walk::Step::HeldBack { names: vec![HARBOR.into()], reason }));
+            at(700, asking(ALPHA, 1, 2, false));
+            at(1_700, missed(ALPHA, walk::Miss::Failed));
+            at(1_700, asking(BROOK, 2, 2, false));
+            at(2_300, missed(BROOK, walk::Miss::NoEpisode));
+            let held = HeldSources { names: vec![HARBOR.into()], why: SourceHold::TorrentsOff };
+            for event in failed_with(
+                NoSourceWhy::NotFound,
+                Cause::SourcesUnreached { names: ALPHA.into() },
+                &[ALPHA, BROOK],
+                &[ALPHA],
+                vec![held],
+            ) {
+                at(2_400, event);
+            }
+        }
         State::FailedNoSources => {
             for event in failed(NoSourceWhy::NoSources, Cause::NoSources, &[]) {
                 at(100, event);
@@ -446,6 +562,8 @@ pub fn fixture(
                     why: NoSourceWhy::NotAired,
                     text,
                     asked: Vec::new(),
+                    unreached: Vec::new(),
+                    held_back: Vec::new(),
                 }),
             );
         }
@@ -497,6 +615,78 @@ mod tests {
     }
 
     #[test]
+    fn a_new_start_of_the_same_episode_gives_its_unreached_sources_another_chance() {
+        use kaeri_core::error::ProviderError;
+        use kaeri_providers::{MockProvider, ProviderRegistry};
+        let registry = ProviderRegistry::new(vec![
+            MockProvider::new("alpha").arc(),
+            MockProvider::new("beta").arc(),
+        ]);
+        let rest = || {
+            for _ in 0..3 {
+                registry.health().record_failure(
+                    "alpha",
+                    &ProviderError::Transport("reset".into()),
+                    0,
+                );
+            }
+        };
+        rest();
+        assert_eq!(registry.usable_ids(), ["beta"], "alpha rests");
+        let unreached = Unreached::default();
+        unreached.note(AnilistId::new(7), "6", vec!["alpha".into()]);
+        // Another episode starting leaves it resting.
+        unreached.retry(AnilistId::new(7), "5", &registry);
+        assert_eq!(registry.usable_ids(), ["beta"]);
+        // Try again: the same episode.
+        unreached.retry(AnilistId::new(7), "6", &registry);
+        assert_eq!(registry.usable_ids(), ["alpha", "beta"], "alpha is asked first again");
+        // Once only.
+        rest();
+        unreached.retry(AnilistId::new(7), "6", &registry);
+        assert_eq!(registry.usable_ids(), ["beta"]);
+    }
+
+    #[test]
+    fn a_hold_is_told_by_its_cause() {
+        assert_eq!(
+            hold_of(kaeri_providers::torrent::bridge::PLAYBACK_OFF),
+            SourceHold::TorrentsOff
+        );
+        assert_eq!(hold_of(kaeri_providers::proxy::CHECK_PENDING), SourceHold::ProxyCheck);
+        assert_eq!(hold_of(crate::phases::CELLULAR), SourceHold::Cellular);
+        assert_eq!(hold_of("signed out"), SourceHold::Other);
+    }
+
+    #[tokio::test]
+    async fn a_source_held_back_is_kept_by_its_cause_and_never_counts_as_asked() {
+        let (starting, mut rx) = heard();
+        let walk = starting.walk(None);
+        let said = |step| walk.say(step);
+        said(walk::Step::HeldBack {
+            names: vec!["Harbor".into()],
+            reason: kaeri_providers::torrent::bridge::PLAYBACK_OFF.into(),
+        });
+        said(walk::Step::Asking { name: "Alpha".into(), place: 1, total: 1, pinned: false });
+        assert_eq!(starting.asked(), ["Alpha"]);
+        assert_eq!(
+            starting.held_back(),
+            [HeldSources { names: vec!["Harbor".into()], why: SourceHold::TorrentsOff }]
+        );
+        let Some(Event::StartingStep { step, line, .. }) = rx.recv().await else {
+            panic!("a step is told")
+        };
+        assert_eq!(
+            step,
+            StartStep::SourcesHeldBack {
+                names: vec!["Harbor".into()],
+                why: SourceHold::TorrentsOff
+            }
+        );
+        assert_eq!(line, None, "a hold changes no step line");
+    }
+
+    #[test]
     fn every_fixture_stages_first_and_stays_in_order() {
         use kaeri_model::starting::StartingFixture as F;
         for state in [
@@ -519,6 +709,7 @@ mod tests {
             F::OfflineTimedOut,
             F::FailedNoEpisode,
             F::FailedNoMatch,
+            F::FailedUnreached,
             F::FailedNoSources,
             F::FailedNotAired,
         ] {

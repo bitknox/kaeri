@@ -277,6 +277,16 @@ cause-release-failed = Couldn't start that release: { $detail }
 # Reason: a play waited too long for its sources to give it a stream, and gave up.
 cause-sources-timed-out = The sources took too long to answer. Try again, or choose another source.
 
+# Reason: some sources asked gave no real answer for the episode: they failed, took too long or were skipped, and the rest don't have it. The names are joined with commas.
+cause-sources-unreached = Couldn't reach { $names }. Try again, or choose another source.
+
+# Reason: every source asked lacks the episode, and some sources weren't asked while local settings hold them back. The names are joined with commas. The episode is its label.
+cause-sources-not-asked =
+    { $count ->
+        [one] No source that was asked has episode { $episode }. { $names } wasn't asked.
+       *[other] No source that was asked has episode { $episode }. { $names } weren't asked.
+    }
+
 # Reason: every source matched the title but none has the episode. The detail is what each said.
 cause-no-source-has-episode = No source has episode { $episode }: { $detail }
 
@@ -8982,8 +8992,17 @@ player-start-miss-timed-out = { $name } took too long
 # Detail line after the viewer skipped the source being asked.
 player-start-miss-skipped = You skipped { $name }
 
-# Details row for sources passed over because they failed lately. The name goes before it.
-player-start-resting = Skipped after recent failures
+# Details row for a source not asked while torrent playback is off. The name goes before it.
+player-start-row-held-torrents-off = Not asked · Torrent playback is off
+
+# Details row for a source not asked while the proxy check for torrents hasn't passed. The name goes before it.
+player-start-row-held-proxy = Not asked · Waiting for the proxy check
+
+# Details row for a source not asked on cellular, where torrents are off. The name goes before it.
+player-start-row-held-cellular = Not asked · Torrents are off on cellular
+
+# Details row for a source not asked because it says it can't be used right now. The name goes before it.
+player-start-row-held-other = Not asked · Not available right now
 
 # Detail line once the streams are found and the player opens one. The name is the source's.
 player-start-from = From { $name }
@@ -9078,6 +9097,44 @@ player-start-row-skipped = Skipped
 
 # Second clause of a failure: the sources that were asked, joined as a list by the app.
 player-start-asked = { $names } were asked.
+
+# Sentence of a failure naming the sources asked that answered without the episode, while others couldn't be reached or weren't asked. The names are joined as a list by the app. The episode is its label.
+player-start-lacking =
+    { $count ->
+        [one] { $names } doesn't have episode { $episode }.
+       *[other] { $names } don't have episode { $episode }.
+    }
+
+# First sentence of a failure when some sources asked gave no real answer: they failed, took too long or were skipped. A source not asked is never among them. The names are joined as a list by the app.
+player-start-unreached = Couldn't reach { $names }.
+
+# Sentence of a failure naming the sources not asked while torrent playback is off, joined as a list by the app.
+player-start-not-asked-torrents-off =
+    { $count ->
+        [one] { $names } isn't asked while torrent playback is off.
+       *[other] { $names } aren't asked while torrent playback is off.
+    }
+
+# Sentence of a failure naming the sources not asked while the proxy check for torrents hasn't passed, joined as a list by the app.
+player-start-not-asked-proxy =
+    { $count ->
+        [one] { $names } isn't asked until the proxy check passes.
+       *[other] { $names } aren't asked until the proxy check passes.
+    }
+
+# Sentence of a failure naming the sources not asked on cellular, where torrents are off, joined as a list by the app.
+player-start-not-asked-cellular =
+    { $count ->
+        [one] { $names } isn't asked on cellular.
+       *[other] { $names } aren't asked on cellular.
+    }
+
+# Sentence of a failure naming the sources not asked because they say they can't be used right now, joined as a list by the app.
+player-start-not-asked-other =
+    { $count ->
+        [one] { $names } isn't available right now.
+       *[other] { $names } aren't available right now.
+    }
 
 # Label of the switch in the Details list that plays the episode with its subtitles.
 player-start-subtitled = Subtitled
@@ -9467,6 +9524,24 @@ source-picker-finding = Finding sources…
 
 # Line when the picker found no stream for the episode.
 source-picker-empty = No source has a stream for this episode.
+
+# Line over the reasons when no source lists a release of the episode. The episode is its label.
+source-picker-none-lists = No source lists episode { $episode }.
+
+# Line over the reasons when no source lists a release of the episode and some sources failed or weren't asked. The episode is its label.
+source-picker-none-answered-lists = No source that answered lists episode { $episode }.
+
+# Line of the picker for a source not asked while torrent playback is off.
+source-picker-held-torrents-off = { $name } isn't asked while torrent playback is off
+
+# Line of the picker for a source not asked while the proxy check for torrents hasn't passed.
+source-picker-held-proxy = { $name } isn't asked until the proxy check passes
+
+# Line of the picker for a source not asked on cellular, where torrents are off.
+source-picker-held-cellular = { $name } isn't asked on cellular
+
+# Line of the picker for a source that says it can't be used right now.
+source-picker-held-other = { $name } isn't available right now
 
 # Title of the picker sheet in the player.
 player-sources = Sources

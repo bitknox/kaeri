@@ -559,6 +559,8 @@ public static class MsgText
         Cause.SourceGone x => T.CauseSourceGone(x.Source),
         Cause.ReleaseFailed x => T.CauseReleaseFailed(x.Detail),
         Cause.SourcesTimedOut => T.CauseSourcesTimedOut,
+        Cause.SourcesUnreached x => T.CauseSourcesUnreached(x.Names),
+        Cause.SourcesNotAsked x => T.CauseSourcesNotAsked(x.Count, x.Names, x.Episode),
         Cause.NoSourceHasEpisode x => T.CauseNoSourceHasEpisode(x.Episode, x.Detail),
         Cause.SourceCannotDownload => T.CauseSourceCannotDownload,
         Cause.NoSourceCouldListShow => T.CauseNoSourceCouldListShow,

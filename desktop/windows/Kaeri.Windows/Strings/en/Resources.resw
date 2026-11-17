@@ -403,6 +403,18 @@
     <value>The sources took too long to answer. Try again, or choose another source.</value>
     <comment>Reason: a play waited too long for its sources to give it a stream, and gave up.</comment>
   </data>
+  <data name="CauseSourcesUnreached" xml:space="preserve">
+    <value>Couldn't reach {names}. Try again, or choose another source.</value>
+    <comment>Reason: some sources asked gave no real answer for the episode: they failed, took too long or were skipped, and the rest don't have it. The names are joined with commas.</comment>
+  </data>
+  <data name="CauseSourcesNotAsked_one" xml:space="preserve">
+    <value>No source that was asked has episode {episode}. {names} wasn't asked.</value>
+    <comment>Reason: every source asked lacks the episode, and some sources weren't asked while local settings hold them back. The names are joined with commas. The episode is its label.</comment>
+  </data>
+  <data name="CauseSourcesNotAsked_other" xml:space="preserve">
+    <value>No source that was asked has episode {episode}. {names} weren't asked.</value>
+    <comment>Reason: every source asked lacks the episode, and some sources weren't asked while local settings hold them back. The names are joined with commas. The episode is its label.</comment>
+  </data>
   <data name="CauseNoSourceHasEpisode" xml:space="preserve">
     <value>No source has episode {episode}: {detail}</value>
     <comment>Reason: every source matched the title but none has the episode. The detail is what each said.</comment>
@@ -7677,9 +7689,21 @@
     <value>You skipped {name}</value>
     <comment>Detail line after the viewer skipped the source being asked.</comment>
   </data>
-  <data name="PlayerStartResting" xml:space="preserve">
-    <value>Skipped after recent failures</value>
-    <comment>Details row for sources passed over because they failed lately. The name goes before it.</comment>
+  <data name="PlayerStartRowHeldTorrentsOff" xml:space="preserve">
+    <value>Not asked · Torrent playback is off</value>
+    <comment>Details row for a source not asked while torrent playback is off. The name goes before it.</comment>
+  </data>
+  <data name="PlayerStartRowHeldProxy" xml:space="preserve">
+    <value>Not asked · Waiting for the proxy check</value>
+    <comment>Details row for a source not asked while the proxy check for torrents hasn't passed. The name goes before it.</comment>
+  </data>
+  <data name="PlayerStartRowHeldCellular" xml:space="preserve">
+    <value>Not asked · Torrents are off on cellular</value>
+    <comment>Details row for a source not asked on cellular, where torrents are off. The name goes before it.</comment>
+  </data>
+  <data name="PlayerStartRowHeldOther" xml:space="preserve">
+    <value>Not asked · Not available right now</value>
+    <comment>Details row for a source not asked because it says it can't be used right now. The name goes before it.</comment>
   </data>
   <data name="PlayerStartFrom" xml:space="preserve">
     <value>From {name}</value>
@@ -7804,6 +7828,50 @@
   <data name="PlayerStartAsked" xml:space="preserve">
     <value>{names} were asked.</value>
     <comment>Second clause of a failure: the sources that were asked, joined as a list by the app.</comment>
+  </data>
+  <data name="PlayerStartLacking_one" xml:space="preserve">
+    <value>{names} doesn't have episode {episode}.</value>
+    <comment>Sentence of a failure naming the sources asked that answered without the episode, while others couldn't be reached or weren't asked. The names are joined as a list by the app. The episode is its label.</comment>
+  </data>
+  <data name="PlayerStartLacking_other" xml:space="preserve">
+    <value>{names} don't have episode {episode}.</value>
+    <comment>Sentence of a failure naming the sources asked that answered without the episode, while others couldn't be reached or weren't asked. The names are joined as a list by the app. The episode is its label.</comment>
+  </data>
+  <data name="PlayerStartUnreached" xml:space="preserve">
+    <value>Couldn't reach {names}.</value>
+    <comment>First sentence of a failure when some sources asked gave no real answer: they failed, took too long or were skipped. A source not asked is never among them. The names are joined as a list by the app.</comment>
+  </data>
+  <data name="PlayerStartNotAskedTorrentsOff_one" xml:space="preserve">
+    <value>{names} isn't asked while torrent playback is off.</value>
+    <comment>Sentence of a failure naming the sources not asked while torrent playback is off, joined as a list by the app.</comment>
+  </data>
+  <data name="PlayerStartNotAskedTorrentsOff_other" xml:space="preserve">
+    <value>{names} aren't asked while torrent playback is off.</value>
+    <comment>Sentence of a failure naming the sources not asked while torrent playback is off, joined as a list by the app.</comment>
+  </data>
+  <data name="PlayerStartNotAskedProxy_one" xml:space="preserve">
+    <value>{names} isn't asked until the proxy check passes.</value>
+    <comment>Sentence of a failure naming the sources not asked while the proxy check for torrents hasn't passed, joined as a list by the app.</comment>
+  </data>
+  <data name="PlayerStartNotAskedProxy_other" xml:space="preserve">
+    <value>{names} aren't asked until the proxy check passes.</value>
+    <comment>Sentence of a failure naming the sources not asked while the proxy check for torrents hasn't passed, joined as a list by the app.</comment>
+  </data>
+  <data name="PlayerStartNotAskedCellular_one" xml:space="preserve">
+    <value>{names} isn't asked on cellular.</value>
+    <comment>Sentence of a failure naming the sources not asked on cellular, where torrents are off, joined as a list by the app.</comment>
+  </data>
+  <data name="PlayerStartNotAskedCellular_other" xml:space="preserve">
+    <value>{names} aren't asked on cellular.</value>
+    <comment>Sentence of a failure naming the sources not asked on cellular, where torrents are off, joined as a list by the app.</comment>
+  </data>
+  <data name="PlayerStartNotAskedOther_one" xml:space="preserve">
+    <value>{names} isn't available right now.</value>
+    <comment>Sentence of a failure naming the sources not asked because they say they can't be used right now, joined as a list by the app.</comment>
+  </data>
+  <data name="PlayerStartNotAskedOther_other" xml:space="preserve">
+    <value>{names} aren't available right now.</value>
+    <comment>Sentence of a failure naming the sources not asked because they say they can't be used right now, joined as a list by the app.</comment>
   </data>
   <data name="PlayerStartSubtitled" xml:space="preserve">
     <value>Subtitled</value>
@@ -8329,6 +8397,30 @@
   <data name="SourcePickerEmpty" xml:space="preserve">
     <value>No source has a stream for this episode.</value>
     <comment>Line when the picker found no stream for the episode.</comment>
+  </data>
+  <data name="SourcePickerNoneLists" xml:space="preserve">
+    <value>No source lists episode {episode}.</value>
+    <comment>Line over the reasons when no source lists a release of the episode. The episode is its label.</comment>
+  </data>
+  <data name="SourcePickerNoneAnsweredLists" xml:space="preserve">
+    <value>No source that answered lists episode {episode}.</value>
+    <comment>Line over the reasons when no source lists a release of the episode and some sources failed or weren't asked. The episode is its label.</comment>
+  </data>
+  <data name="SourcePickerHeldTorrentsOff" xml:space="preserve">
+    <value>{name} isn't asked while torrent playback is off</value>
+    <comment>Line of the picker for a source not asked while torrent playback is off.</comment>
+  </data>
+  <data name="SourcePickerHeldProxy" xml:space="preserve">
+    <value>{name} isn't asked until the proxy check passes</value>
+    <comment>Line of the picker for a source not asked while the proxy check for torrents hasn't passed.</comment>
+  </data>
+  <data name="SourcePickerHeldCellular" xml:space="preserve">
+    <value>{name} isn't asked on cellular</value>
+    <comment>Line of the picker for a source not asked on cellular, where torrents are off.</comment>
+  </data>
+  <data name="SourcePickerHeldOther" xml:space="preserve">
+    <value>{name} isn't available right now</value>
+    <comment>Line of the picker for a source that says it can't be used right now.</comment>
   </data>
   <data name="PlayerSources" xml:space="preserve">
     <value>Sources</value>

@@ -18,7 +18,6 @@ player-start-pin-missed = { $name } belum punya episode { $episode }. Diputar da
 player-start-miss-failed = { $name } tidak merespons
 player-start-miss-timed-out = { $name } terlalu lama
 player-start-miss-skipped = Kamu melewati { $name }
-player-start-resting = Dilewati karena gagal baru-baru ini
 player-start-from = Dari { $name }
 player-start-no-video = Yang pertama tidak menampilkan video
 player-start-stream-place = Stream { $next } dari { $total }

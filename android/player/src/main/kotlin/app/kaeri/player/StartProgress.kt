@@ -13,6 +13,7 @@ import android.icu.util.MeasureUnit
 import app.kaeri.engine.core.AnilistId
 import app.kaeri.engine.core.Translation
 import app.kaeri.engine.model.Msg
+import app.kaeri.engine.model.SourceHold
 import app.kaeri.engine.model.SourceMiss
 import app.kaeri.engine.model.StartStep
 import app.kaeri.i18n.Strings
@@ -257,10 +258,12 @@ data class StartProgress(
             rows += if (first != null) DetailRow(RowKind.Done, Strings.playerStartLookedUp(context), seconds(start.at, first.at))
             else DetailRow(RowKind.Now, Strings.startLookingUpTitle(context), seconds(start.at, now))
         }
+        // Held back by a setting or a check, so never asked: after the asked ones, hollow, with no seconds.
+        val held = mutableListOf<DetailRow>()
         total.forEachIndexed { index, told ->
-            val next = total.drop(index + 1).firstOrNull { it.step !is StartStep.SourcesResting }?.at ?: now
+            val next = total.drop(index + 1).firstOrNull { it.step !is StartStep.SourcesHeldBack }?.at ?: now
             when (val step = told.step) {
-                is StartStep.SourcesResting -> for (name in step.names) rows += DetailRow(RowKind.Rest, "$name · ${Strings.playerStartResting(context)}", null)
+                is StartStep.SourcesHeldBack -> for (name in step.names) held += DetailRow(RowKind.Rest, "$name · ${heldNote(context, step.why)}", null)
                 is StartStep.AskingSource -> {
                     val missed = total.drop(index + 1).firstOrNull { it.step is StartStep.SourceMissed && (it.step as StartStep.SourceMissed).name == step.name }
                     val gone = total.drop(index + 1).firstOrNull { it.step is StartStep.Found }
@@ -282,7 +285,7 @@ data class StartProgress(
                 else -> {}
             }
         }
-        return rows
+        return rows + held
     }
 
     private companion object {
@@ -327,6 +330,9 @@ fun startActions(progress: StartProgress?, failure: PlaybackFailure?, offline: B
             failure.notAired -> listOf(StartAction.Close)
             failure.noSources -> listOf(StartAction.AddStore, StartAction.Close)
             failure.noConnection -> listOf(StartAction.TryAgain, StartAction.Close)
+            // A source failed or was held back: asking again may reach it, so that leads.
+            failure.unreached.isNotEmpty() || failure.heldBack.isNotEmpty() ->
+                listOf(StartAction.TryAgain, StartAction.Choose, StartAction.Details, StartAction.Close)
             failure.noMatch && failure.id != null && canFix ->
                 listOf(StartAction.FixMatch, StartAction.Choose, StartAction.Details, StartAction.Close)
             failure.cause is app.kaeri.engine.model.Cause.SourcesTimedOut ->
@@ -371,15 +377,76 @@ data class Said(val step: String, val facts: String, val seconds: String?, val f
 fun PlayerModel.startWaiting(progress: StartProgress? = this.progress): Boolean =
     progress?.waiting == true || (offline && progress?.trail.isNullOrEmpty())
 
-/** The failure's reason and who was asked, as one sentence or two. */
-private fun failureDetail(context: Context, failure: PlaybackFailure): String {
-    val reason = when {
-        failure.noSources -> Strings.playerFailedNoSources(context)
-        else -> failure.reasonText(context)?.let { "$it." } ?: Strings.playerFailedDetail(context)
+/** Why one source listed no release for [episode]: its name once, as it goes by. */
+/**
+ * The line over the reasons when no source lists the episode: that none lists it only when every
+ * source answered, and that none that answered lists it when any failed, took too long or wasn't asked.
+ */
+fun noneListsText(context: Context, missed: List<app.kaeri.engine.model.MissedListing>, episode: String): String =
+    if (missed.any { it.miss !is app.kaeri.engine.model.ListingMiss.NoMatch && it.miss !is app.kaeri.engine.model.ListingMiss.NoEpisode }) {
+        Strings.sourcePickerNoneAnsweredLists(context, episode)
+    } else {
+        Strings.sourcePickerNoneLists(context, episode)
     }
-    if (failure.asked.isEmpty()) return reason
-    val names = android.icu.text.ListFormatter.getInstance().format(failure.asked)
-    return reason + " " + Strings.playerStartAsked(context, names)
+
+fun missedText(context: Context, missed: app.kaeri.engine.model.MissedListing, episode: String): String {
+    val name = missed.name
+    return when (val miss = missed.miss) {
+        is app.kaeri.engine.model.ListingMiss.NoMatch -> Strings.playerStartMissNoMatch(context, name)
+        is app.kaeri.engine.model.ListingMiss.NoEpisode -> Strings.playerStartMissNoEpisode(context, name, episode)
+        is app.kaeri.engine.model.ListingMiss.Failed -> Strings.playerStartMissFailed(context, name)
+        is app.kaeri.engine.model.ListingMiss.TimedOut -> Strings.playerStartMissTimedOut(context, name)
+        is app.kaeri.engine.model.ListingMiss.HeldBack -> when (miss.why) {
+            SourceHold.TORRENTS_OFF -> Strings.sourcePickerHeldTorrentsOff(context, name)
+            SourceHold.PROXY_CHECK -> Strings.sourcePickerHeldProxy(context, name)
+            SourceHold.CELLULAR -> Strings.sourcePickerHeldCellular(context, name)
+            SourceHold.OTHER -> Strings.sourcePickerHeldOther(context, name)
+        }
+    }
+}
+
+/** A held-back source's row note: not asked, and why. */
+fun heldNote(context: Context, why: SourceHold): String = when (why) {
+    SourceHold.TORRENTS_OFF -> Strings.playerStartRowHeldTorrentsOff(context)
+    SourceHold.PROXY_CHECK -> Strings.playerStartRowHeldProxy(context)
+    SourceHold.CELLULAR -> Strings.playerStartRowHeldCellular(context)
+    SourceHold.OTHER -> Strings.playerStartRowHeldOther(context)
+}
+
+/**
+ * A failure's second line. When every source asked lacks the episode: why, and who was asked.
+ * Otherwise, source by source as the rows say it: the ones asked that couldn't be reached, the ones
+ * asked that don't have the episode, and the ones held back and why. A source held back was never
+ * asked, so it is never one the start couldn't reach.
+ */
+internal fun failureDetail(context: Context, failure: PlaybackFailure): String {
+    val list = android.icu.text.ListFormatter.getInstance(context.resources.configuration.locales[0])
+    val held = failure.heldBack.any { it.names.isNotEmpty() }
+    if (failure.noSources || (failure.unreached.isEmpty() && !held)) {
+        val reason = when {
+            failure.noSources -> Strings.playerFailedNoSources(context)
+            else -> failure.reasonText(context)?.let { "$it." } ?: Strings.playerFailedDetail(context)
+        }
+        val line = mutableListOf(reason)
+        if (failure.asked.isNotEmpty()) line += Strings.playerStartAsked(context, list.format(failure.asked))
+        return line.joinToString(" ")
+    }
+    val line = mutableListOf<String>()
+    if (failure.unreached.isNotEmpty()) line += Strings.playerStartUnreached(context, list.format(failure.unreached))
+    val lacking = failure.asked.filter { it !in failure.unreached }
+    if (lacking.isNotEmpty()) line += Strings.playerStartLacking(context, lacking.size, list.format(lacking), failure.episode)
+    for (group in failure.heldBack) {
+        if (group.names.isEmpty()) continue
+        val names = list.format(group.names)
+        val count = group.names.size
+        line += when (group.why) {
+            SourceHold.TORRENTS_OFF -> Strings.playerStartNotAskedTorrentsOff(context, count, names)
+            SourceHold.PROXY_CHECK -> Strings.playerStartNotAskedProxy(context, count, names)
+            SourceHold.CELLULAR -> Strings.playerStartNotAskedCellular(context, count, names)
+            SourceHold.OTHER -> Strings.playerStartNotAskedOther(context, count, names)
+        }
+    }
+    return line.joinToString(" ")
 }
 
 /** The lines the starting screen shows at [now]: the failure, the wait for a connection, or the start's own. */

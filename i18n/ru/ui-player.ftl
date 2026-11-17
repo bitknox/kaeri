@@ -18,7 +18,6 @@ player-start-pin-missed = У { $name } пока нет серии { $episode }. 
 player-start-miss-failed = { $name } не ответил
 player-start-miss-timed-out = { $name } отвечал слишком долго
 player-start-miss-skipped = Вы пропустили { $name }
-player-start-resting = Пропущены после недавних сбоев
 player-start-from = Из { $name }
 player-start-no-video = Первый не показал видео
 player-start-stream-place = Поток { $next } из { $total }

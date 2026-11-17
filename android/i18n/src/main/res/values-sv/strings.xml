@@ -2293,7 +2293,6 @@
     <string name="player_start_miss_failed">%1$s svarade inte</string>
     <string name="player_start_miss_timed_out">%1$s tog för lång tid</string>
     <string name="player_start_miss_skipped">Du hoppade över %1$s</string>
-    <string name="player_start_resting">Hoppades över efter senaste fel</string>
     <string name="player_start_from">Från %1$s</string>
     <string name="player_start_no_video">Den första visade ingen video</string>
     <string name="player_start_stream_place">Ström %1$,d av %2$,d</string>

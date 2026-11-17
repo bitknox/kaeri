@@ -5621,9 +5621,6 @@
   <data name="PlayerStartMissSkipped" xml:space="preserve">
     <value>Du hoppade över {name}</value>
   </data>
-  <data name="PlayerStartResting" xml:space="preserve">
-    <value>Hoppades över efter senaste fel</value>
-  </data>
   <data name="PlayerStartFrom" xml:space="preserve">
     <value>Från {name}</value>
   </data>

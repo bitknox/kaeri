@@ -48,8 +48,10 @@ pub enum Resolution {
     Resolved { provider_id: String, key: ProviderKey, confidence: f64, rung: ResolutionRung },
     /// Candidates exist but none was confident enough to use. Rung 5.
     Ambiguous { provider_id: String, candidates: Vec<Candidate> },
-    /// Nothing usable was found. Rung 6 — offer a manual query.
-    NotFound { reason: String },
+    /// Nothing usable was found. Rung 6 — offer a manual query. `miss` says whether the source
+    /// answered that it has no such title ([`Miss::NoMatch`]) or could not be searched: it
+    /// failed, or took too long.
+    NotFound { reason: String, miss: Miss },
 }
 
 impl Resolution {
@@ -78,7 +80,7 @@ impl Resolution {
             Self::Ambiguous { candidates, .. } => {
                 format!("{} possible matches", candidates.len())
             }
-            Self::NotFound { reason } => reason.clone(),
+            Self::NotFound { reason, .. } => reason.clone(),
         }
     }
 }
@@ -104,7 +106,10 @@ pub async fn resolve(
     now: i64,
 ) -> Resolution {
     let Some(provider_id) = registry.ids().first().cloned() else {
-        return Resolution::NotFound { reason: "no providers configured".into() };
+        return Resolution::NotFound {
+            reason: "no providers configured".into(),
+            miss: Miss::NoMatch,
+        };
     };
 
     // Rungs 1 and 2: the store answers both, and an override always shadows a cache.
@@ -120,7 +125,10 @@ pub async fn resolve(
     // Rung 4. (Rung 3, dataset id lookup, is handled by the callers that are actually
     // id-keyed — aniskip and the trackers — because no web or torrent source is.)
     let Some(query) = target.titles.first() else {
-        return Resolution::NotFound { reason: "no title to search for".into() };
+        return Resolution::NotFound {
+            reason: "no title to search for".into(),
+            miss: Miss::NoMatch,
+        };
     };
 
     // The first title is the query. The id and every other known name go along as hints, so a
@@ -128,17 +136,25 @@ pub async fn resolve(
     let hints = hints_for(anilist_id, target);
     let attempt = registry.search(query, translation, &hints, now).await;
     let Some(hits) = attempt.value else {
-        let reason = if attempt.failures.is_empty() {
-            "no providers available".to_owned()
+        // A search that failed says nothing about whether the source has the title.
+        let (reason, miss) = if attempt.failures.is_empty() {
+            ("no providers available".to_owned(), Miss::NoMatch)
         } else {
-            attempt.summary()
+            let miss = match miss_of(&attempt) {
+                Miss::NoEpisode => Miss::NoMatch,
+                miss => miss,
+            };
+            (attempt.summary(), miss)
         };
-        return Resolution::NotFound { reason };
+        return Resolution::NotFound { reason, miss };
     };
     let provider_id = attempt.provider.unwrap_or(provider_id);
 
     if hits.is_empty() {
-        return Resolution::NotFound { reason: format!("{provider_id} found no matches") };
+        return Resolution::NotFound {
+            reason: format!("{provider_id} found no matches"),
+            miss: Miss::NoMatch,
+        };
     }
 
     let ranked = rank(target, &hits);
@@ -185,7 +201,16 @@ pub enum Answer<T> {
     Ambiguous { provider_id: String, candidates: Vec<Candidate> },
     /// No source answered. What each one said, in order, and whether any of them matched the
     /// title at all — a title no source has is a different answer from an episode none has.
-    Unanswered { reasons: Vec<String>, matched: bool },
+    /// `unreached` are the ids of the sources asked that gave no real answer, in order: they
+    /// failed, took too long or were skipped. `held` are the ids of the sources local policy held
+    /// back, which were never asked, so never unreached. Both are empty when every source said it
+    /// lacks the title or the episode, the only case in which none has it.
+    Unanswered {
+        reasons: Vec<String>,
+        matched: bool,
+        unreached: Vec<String>,
+        held: Vec<String>,
+    },
 }
 
 impl<T> Answer<T> {
@@ -237,7 +262,10 @@ where
     F: Fn(ProviderRegistry, ProviderKey, TitleHints) -> Fut,
     Fut: std::future::Future<Output = Attempt<T>>,
 {
-    let Some(source) = registry.pinned(provider_id) else { return Outcome::Skipped };
+    // A source resting after failures is asked here only when a walk comes to it last.
+    let Some(source) = registry.pinned(provider_id).map(ProviderRegistry::even_resting) else {
+        return Outcome::Skipped;
+    };
     let began = std::time::Instant::now();
     let ms = |began: std::time::Instant| began.elapsed().as_millis() as u64;
     match resolve(store, &source, anilist_id, target, translation, now).await {
@@ -267,14 +295,14 @@ where
             Outcome::Ambiguous { provider_id, candidates }
         }
         // Named once: a reason that already names its source keeps its own wording.
-        Resolution::NotFound { reason } => {
-            tracing::info!(provider = %provider_id, %reason, elapsed_ms = ms(began), "no match");
+        Resolution::NotFound { reason, miss } => {
+            tracing::info!(provider = %provider_id, %reason, ?miss, elapsed_ms = ms(began), "no match");
             let reason = if reason.starts_with(provider_id) {
                 reason
             } else {
                 format!("{provider_id}: {reason}")
             };
-            Outcome::Failed { reason, matched: false, miss: Miss::NoMatch }
+            Outcome::Failed { reason, matched: false, miss }
         }
     }
 }
@@ -357,18 +385,46 @@ where
 {
     let mut reasons = Vec::new();
     let mut matched = false;
+    let mut unreached = Vec::new();
+    let mut held_ids = Vec::new();
     let mut ambiguous: Option<(String, Vec<Candidate>)> = None;
-    let usable = registry.usable_ids();
-    let skipped: Vec<_> =
-        registry.ids().into_iter().filter(|id| !usable.contains(id)).collect();
-    if !skipped.is_empty() {
-        tracing::info!(?skipped, "sources resting after failures, not asked");
-        walk.say(Step::Resting {
-            names: skipped.iter().map(|id| display_name(registry, id)).collect(),
-        });
+    // A source resting after failures is asked last rather than left out: one that is down for
+    // a moment must not make an episode it has look missing.
+    let resting = registry.resting_ids();
+    if !resting.is_empty() {
+        tracing::info!(?resting, "sources resting after failures, asked last");
+    }
+    // A source local policy holds back is not asked at all, and says why once, up front.
+    let mut usable = Vec::new();
+    let mut held: Vec<(String, Vec<String>)> = Vec::new();
+    for provider_id in registry.usable_ids().into_iter().chain(resting) {
+        match registry.hold(&provider_id, now) {
+            Some(reason) => {
+                let reason = match reason {
+                    kaeri_core::error::ProviderError::Unavailable(reason) => reason,
+                    other => other.to_string(),
+                };
+                tracing::info!(provider = %provider_id, %reason, "held back, not asked");
+                let name = display_name(registry, &provider_id);
+                match held.iter_mut().find(|(said, _)| *said == reason) {
+                    Some((_, names)) => names.push(name),
+                    None => held.push((reason, vec![name])),
+                }
+                reasons.push(format!("{provider_id}: held back"));
+                held_ids.push(provider_id);
+            }
+            None => usable.push(provider_id),
+        }
+    }
+    for (reason, names) in held {
+        walk.say(Step::HeldBack { names, reason });
     }
     let total = usable.len();
     for (index, provider_id) in usable.into_iter().enumerate() {
+        // Switched off since the walk began: not asked, so not said as asked.
+        if registry.is_disabled(&provider_id) {
+            continue;
+        }
         let name = display_name(registry, &provider_id);
         walk.say(Step::Asking {
             name: name.clone(),
@@ -434,6 +490,9 @@ where
             Outcome::Failed { reason, matched: found, miss } => {
                 matched |= found;
                 reasons.push(reason);
+                if !matches!(miss, Miss::NoMatch | Miss::NoEpisode) {
+                    unreached.push(provider_id);
+                }
                 walk.say(Step::Missed { name, miss });
             }
             Outcome::Skipped => {}
@@ -442,7 +501,11 @@ where
     if let Some((provider_id, candidates)) = ambiguous {
         return Answer::Ambiguous { provider_id, candidates };
     }
-    Answer::Unanswered { reasons, matched }
+    // In the viewer's order.
+    let order = registry.ids();
+    unreached.sort_by_key(|id| order.iter().position(|of| of == id));
+    held_ids.sort_by_key(|id| order.iter().position(|of| of == id));
+    Answer::Unanswered { reasons, matched, unreached, held: held_ids }
 }
 
 /// A source by the name it goes by on screen, and by its id when it is not in the registry.
@@ -878,7 +941,10 @@ mod tests {
         let registry = registry_with(vec![]);
         let r = resolve(&store, &registry, HOSHIKUZU, &target(), Translation::Sub, 0).await;
         match &r {
-            Resolution::NotFound { reason } => assert!(reason.contains("no matches")),
+            Resolution::NotFound { reason, miss } => {
+                assert!(reason.contains("no matches"));
+                assert_eq!(*miss, Miss::NoMatch);
+            }
             other => panic!("expected not-found, got {other:?}"),
         }
         assert!(r.needs_user_input(), "the user must get a way forward");
@@ -895,8 +961,9 @@ mod tests {
         ]);
         let r = resolve(&store, &registry, HOSHIKUZU, &target(), Translation::Sub, 0).await;
         match r {
-            Resolution::NotFound { reason } => {
-                assert!(reason.contains("blocked"), "got {reason}")
+            Resolution::NotFound { reason, miss } => {
+                assert!(reason.contains("blocked"), "got {reason}");
+                assert_eq!(miss, Miss::Failed, "a failed search is not a missing show");
             }
             other => panic!("expected a reported failure, got {other:?}"),
         }
@@ -1414,5 +1481,151 @@ mod tests {
         let answer = ask_for_streams(&store, &registry).await;
         assert_eq!(answer.explain(), "alpha found no matches, beta: timed out");
         assert!(matches!(answer, Answer::Unanswered { matched: false, .. }));
+    }
+
+    /// What `walk` heard of a walk for episode 1's streams, said short: "held Alpha: why",
+    /// "ask Beta 1/2", "miss Beta NoMatch".
+    async fn walked(
+        store: &Store,
+        registry: &ProviderRegistry,
+    ) -> (Answer<Vec<kaeri_core::stream::Stream>>, Vec<String>) {
+        use crate::walk::{Step, Walk};
+        use std::sync::{Arc, Mutex};
+        let seen = Arc::new(Mutex::new(Vec::new()));
+        let sink = seen.clone();
+        let walk = Walk::observed(move |step| {
+            let said = match step {
+                Step::HeldBack { names, reason } => {
+                    format!("held {}: {reason}", names.join("+"))
+                }
+                Step::Asking { name, place, total, .. } => {
+                    format!("ask {name} {place}/{total}")
+                }
+                Step::Missed { name, miss } => format!("miss {name} {miss:?}"),
+                Step::FindingPeers { .. } => "peers".into(),
+            };
+            sink.lock().unwrap().push(said);
+        });
+        let answer = first_answer_with(
+            store,
+            registry,
+            WANDERER,
+            &wanderer(),
+            Translation::Sub,
+            0,
+            &walk,
+            |source, key, hints| async move {
+                source.resolve(&key, "1", Translation::Sub, &hints, 0).await
+            },
+        )
+        .await;
+        let seen = seen.lock().unwrap().clone();
+        (answer, seen)
+    }
+
+    #[tokio::test]
+    async fn a_held_back_source_is_not_asked_and_says_why_once() {
+        let store = Store::open_in_memory().unwrap();
+        let held = MockProvider::new("alpha")
+            .named("Alpha")
+            .with_hits(vec![wanderer_hit("alpha-1")])
+            .unavailable("torrent playback is off");
+        let calls = held.call_count();
+        let registry = ProviderRegistry::new(vec![
+            held.arc(),
+            MockProvider::new("beta").named("Beta").with_hits(vec![]).arc(),
+        ]);
+        let (answer, seen) = walked(&store, &registry).await;
+        assert_eq!(
+            seen,
+            ["held Alpha: torrent playback is off", "ask Beta 1/1", "miss Beta NoMatch"],
+            "a held-back source is never said as asked"
+        );
+        assert_eq!(calls.load(std::sync::atomic::Ordering::SeqCst), 0, "no request went out");
+        match answer {
+            Answer::Unanswered { unreached, held, .. } => {
+                assert!(unreached.is_empty(), "a source never asked is not one unreached");
+                assert_eq!(held, ["alpha"]);
+            }
+            other => panic!("expected no answer, got {other:?}"),
+        }
+    }
+
+    #[tokio::test]
+    async fn a_search_that_fails_reads_failed_not_a_missing_show() {
+        let store = Store::open_in_memory().unwrap();
+        let registry = ProviderRegistry::new(vec![
+            MockProvider::new("alpha")
+                .named("Alpha")
+                .failing(ProviderError::Transport("connection reset".into()))
+                .arc(),
+            MockProvider::new("beta")
+                .named("Beta")
+                .failing(ProviderError::Blocked("operation timed out".into()))
+                .arc(),
+            MockProvider::new("gamma").named("Gamma").with_hits(vec![]).arc(),
+        ]);
+        let (answer, seen) = walked(&store, &registry).await;
+        assert_eq!(
+            seen,
+            [
+                "ask Alpha 1/3",
+                "miss Alpha Failed",
+                "ask Beta 2/3",
+                "miss Beta TimedOut",
+                "ask Gamma 3/3",
+                "miss Gamma NoMatch",
+            ]
+        );
+        match answer {
+            Answer::Unanswered { unreached, matched, .. } => {
+                assert_eq!(unreached, ["alpha", "beta"], "only gamma said it lacks the show");
+                assert!(!matched);
+            }
+            other => panic!("expected no answer, got {other:?}"),
+        }
+    }
+
+    #[tokio::test]
+    async fn a_resting_source_is_asked_last_rather_than_left_out() {
+        let store = Store::open_in_memory().unwrap();
+        let registry = ProviderRegistry::new(vec![
+            MockProvider::new("alpha")
+                .named("Alpha")
+                .with_hits(vec![wanderer_hit("alpha-1")])
+                .with_streams(vec![stream("https://alpha.example/1.m3u8")])
+                .arc(),
+            MockProvider::new("beta").named("Beta").with_hits(vec![]).arc(),
+        ]);
+        for _ in 0..3 {
+            registry.health().record_failure(
+                "alpha",
+                &ProviderError::Transport("reset".into()),
+                0,
+            );
+        }
+        assert_eq!(registry.usable_ids(), ["beta"], "alpha is resting");
+        let (answer, seen) = walked(&store, &registry).await;
+        assert_eq!(seen, ["ask Beta 1/2", "miss Beta NoMatch", "ask Alpha 2/2"]);
+        match answer {
+            Answer::Answered { provider_id, .. } => assert_eq!(provider_id, "alpha"),
+            other => panic!("expected the resting source to answer, got {other:?}"),
+        }
+    }
+
+    #[tokio::test]
+    async fn every_source_missing_leaves_nothing_unreached() {
+        let store = Store::open_in_memory().unwrap();
+        let registry = ProviderRegistry::new(vec![
+            MockProvider::new("alpha").with_hits(vec![wanderer_hit("alpha-1")]).arc(),
+            MockProvider::new("beta").with_hits(vec![]).arc(),
+        ]);
+        match walked(&store, &registry).await.0 {
+            Answer::Unanswered { unreached, matched, .. } => {
+                assert!(unreached.is_empty(), "every source asked said no");
+                assert!(matched);
+            }
+            other => panic!("expected no answer, got {other:?}"),
+        }
     }
 }

@@ -2258,6 +2258,7 @@ fn sources(s: &mut Screen) {
         SourceCandidate {
             id: title.to_lowercase(),
             provider_id: provider.into(),
+            provider_name: String::new(),
             title: title.into(),
             quality: Some(1080),
             label: label.map(Into::into),

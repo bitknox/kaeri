@@ -2378,7 +2378,6 @@
     <string name="player_start_miss_failed">%1$s non ha risposto</string>
     <string name="player_start_miss_timed_out">%1$s ha impiegato troppo tempo</string>
     <string name="player_start_miss_skipped">Hai saltato %1$s</string>
-    <string name="player_start_resting">Saltata dopo errori recenti</string>
     <string name="player_start_from">Da %1$s</string>
     <string name="player_start_no_video">Il primo non mostrava alcun video</string>
     <string name="player_start_stream_place">Stream %1$,d di %2$,d</string>

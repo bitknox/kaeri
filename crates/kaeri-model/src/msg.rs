@@ -2185,6 +2185,10 @@ pub enum Cause {
     ReleaseFailed { detail: String },
     /// Reason: a play waited too long for its sources to give it a stream, and gave up.
     SourcesTimedOut,
+    /// Reason: some sources asked gave no real answer for the episode: they failed, took too long or were skipped, and the rest don't have it. The names are joined with commas.
+    SourcesUnreached { names: String },
+    /// Reason: every source asked lacks the episode, and some sources weren't asked while local settings hold them back. The names are joined with commas. The episode is its label.
+    SourcesNotAsked { count: i64, names: String, episode: String },
     /// Reason: every source matched the title but none has the episode. The detail is what each said.
     NoSourceHasEpisode { episode: String, detail: String },
     /// Reason: the source streams episodes but only torrents can be downloaded.
@@ -2222,6 +2226,8 @@ impl Cause {
             Self::SourceGone { .. } => "cause-source-gone",
             Self::ReleaseFailed { .. } => "cause-release-failed",
             Self::SourcesTimedOut => "cause-sources-timed-out",
+            Self::SourcesUnreached { .. } => "cause-sources-unreached",
+            Self::SourcesNotAsked { .. } => "cause-sources-not-asked",
             Self::NoSourceHasEpisode { .. } => "cause-no-source-has-episode",
             Self::SourceCannotDownload => "cause-source-cannot-download",
             Self::NoSourceCouldListShow => "cause-no-source-could-list-show",
@@ -2249,6 +2255,8 @@ impl Cause {
             Self::SourceGone { source } => vec![("source", Value::Text(source.clone()))],
             Self::ReleaseFailed { detail } => vec![("detail", Value::Text(detail.clone()))],
             Self::SourcesTimedOut => Vec::new(),
+            Self::SourcesUnreached { names } => vec![("names", Value::Text(names.clone()))],
+            Self::SourcesNotAsked { count, names, episode } => vec![("count", Value::Int(*count)), ("names", Value::Text(names.clone())), ("episode", Value::Text(episode.clone()))],
             Self::NoSourceHasEpisode { episode, detail } => vec![("episode", Value::Text(episode.clone())), ("detail", Value::Text(detail.clone()))],
             Self::SourceCannotDownload => Vec::new(),
             Self::NoSourceCouldListShow => Vec::new(),

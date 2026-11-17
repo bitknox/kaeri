@@ -17599,12 +17599,6 @@
     "by": "agent",
     "at": "2026-11-03"
   },
-  "player-start-resting": {
-    "source": "49846ec866da",
-    "state": "draft",
-    "by": "agent",
-    "at": "2026-11-03"
-  },
   "player-start-resuming": {
     "source": "38ae4b3ce5ec",
     "state": "draft",

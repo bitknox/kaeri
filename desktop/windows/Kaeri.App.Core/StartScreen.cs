@@ -83,7 +83,8 @@ public sealed class StartScreen(uint id, string episode, double? resume)
     TimeSpan? lookedUpAt;
     Asking? asking;
     readonly List<Seen> seen = [];
-    List<string> resting = [];
+    /// <summary>The sources held back by a setting or a check, never asked, by why.</summary>
+    readonly List<HeldSources> held = [];
     (string Name, SourceMiss Miss)? lastMiss;
     /// <summary>The pinned source that did not have the episode, once another source answered.</summary>
     string? pinMissed;
@@ -185,8 +186,12 @@ public sealed class StartScreen(uint id, string episode, double? resume)
                 CloseAsking(at, m.Miss);
                 lastMiss = (m.Name, m.Miss);
                 break;
-            case StartStep.SourcesResting r:
-                resting = [.. r.Names];
+            case StartStep.SourcesHeldBack h:
+                var index = held.FindIndex(g => g.Why == h.Why);
+                if (index < 0)
+                    held.Add(new HeldSources(Names: [.. h.Names], Why: h.Why));
+                else
+                    held[index] = held[index] with { Names = [.. held[index].Names, .. h.Names] };
                 break;
             case StartStep.PinMissed pm:
                 pinMissed = pm.Name;
@@ -368,6 +373,9 @@ public sealed class StartScreen(uint id, string episode, double? resume)
             NoSourceWhy.NoSources => [new(StartAction.AddStore, T.StoresAddTitle, StartLook.Primary), close],
             NoSourceWhy.NoConnection =>
                 [Again(StartLook.Primary), new(StartAction.ShowDownloads, T.StateOfflineShowDownloads, StartLook.Tonal), close],
+            // A source failed or was held back: asking again may reach it, so that leads.
+            _ when f.Unreached.Length > 0 || f.HeldBack.Length > 0 =>
+                [Again(StartLook.Primary), Another(StartLook.Tonal), details, close],
             _ => f.Text switch
             {
                 Msg.NoticeReason { Reason: Cause.TitleNoMatch } =>
@@ -398,8 +406,10 @@ public sealed class StartScreen(uint id, string episode, double? resume)
                 T.PlayerStartRowAsking,
                 SecondsText(Since(at, rungAt)),
                 a.Place < a.Total && Since(at, rungAt) >= SkipAfter ? T.PlayerStartSkipSource(a.Name) : null));
-        foreach (var name in resting)
-            rows.Add(new(StartMark.Rest, name, T.PlayerStartResting, "", null));
+        // Held back, so never asked: after the asked ones, hollow, with no seconds.
+        foreach (var group in held)
+            foreach (var name in group.Names)
+                rows.Add(new(StartMark.Rest, name, HeldNote(group.Why), "", null));
         return rows;
     }
 
@@ -409,8 +419,7 @@ public sealed class StartScreen(uint id, string episode, double? resume)
         (string, string)? failed = null;
         if (failure is { } f)
         {
-            var reason = FailureReason(f.Text);
-            failed = (T.PlayerFailedTitleText(Episode), Names(f.Asked) is { } names ? $"{reason} {T.PlayerStartAsked(names)}" : reason);
+            failed = (T.PlayerFailedTitleText(Episode), FailureLine(f, Episode));
         }
         var lead = failed is not null || (at < DetailAt && !Offline) ? "" : Lead();
         long? seconds = at >= ToolsAt && failed is null && !Offline ? (long)at.TotalSeconds : null;
@@ -473,6 +482,53 @@ public sealed class StartScreen(uint id, string episode, double? resume)
             sentence += ".";
         return sentence;
     }
+
+    /// <summary>
+    /// A failure's second line. When every source asked lacks the episode: why, and who was asked.
+    /// Otherwise, source by source as the rows say it: the ones asked that couldn't be reached,
+    /// the ones asked that don't have the episode, and the ones held back and why. A source held
+    /// back was never asked, so it is never one the start couldn't reach.
+    /// </summary>
+    public static string FailureLine(StartFailure f, string episode)
+    {
+        List<string> line = [];
+        var held = f.HeldBack.Any(group => group.Names.Length > 0);
+        if (f.Unreached.Length == 0 && !held)
+        {
+            line.Add(FailureReason(f.Text));
+            if (Names(f.Asked) is { } asked)
+                line.Add(T.PlayerStartAsked(asked));
+            return string.Join(" ", line);
+        }
+        if (Names(f.Unreached) is { } unreached)
+            line.Add(T.PlayerStartUnreached(unreached));
+        string[] lacking = [.. f.Asked.Where(name => !f.Unreached.Contains(name))];
+        if (Names(lacking) is { } answered)
+            line.Add(T.PlayerStartLacking(lacking.Length, answered, episode));
+        foreach (var group in f.HeldBack)
+        {
+            if (Names(group.Names) is not { } names)
+                continue;
+            long count = group.Names.Length;
+            line.Add(group.Why switch
+            {
+                SourceHold.TorrentsOff => T.PlayerStartNotAskedTorrentsOff(count, names),
+                SourceHold.ProxyCheck => T.PlayerStartNotAskedProxy(count, names),
+                SourceHold.Cellular => T.PlayerStartNotAskedCellular(count, names),
+                _ => T.PlayerStartNotAskedOther(count, names),
+            });
+        }
+        return string.Join(" ", line);
+    }
+
+    /// <summary>A held-back source's row note: not asked, and why.</summary>
+    public static string HeldNote(SourceHold why) => why switch
+    {
+        SourceHold.TorrentsOff => T.PlayerStartRowHeldTorrentsOff,
+        SourceHold.ProxyCheck => T.PlayerStartRowHeldProxy,
+        SourceHold.Cellular => T.PlayerStartRowHeldCellular,
+        _ => T.PlayerStartRowHeldOther,
+    };
 
     /// <summary>Names as a sentence lists them: "Alpha", "Alpha and Brook", "Alpha, Brook and Harbor".</summary>
     public static string? Names(IReadOnlyList<string> list) => list.Count switch

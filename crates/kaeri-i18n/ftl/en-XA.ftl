@@ -277,6 +277,16 @@ cause-release-failed = [Çöüļðñ'ţ šţàŕţ ţĥàţ ŕéļéàšé: { $d
 # Reason: a play waited too long for its sources to give it a stream, and gave up.
 cause-sources-timed-out = [Ţĥé šöüŕçéš ţööķ ţöö ļöñĝ ţö àñšŵéŕ. Ţŕý àĝàîñ, öŕ çĥööšé àñöţĥéŕ šöüŕçé.~~~~~~~~~~~~~~~~~~~~~~]
 
+# Reason: some sources asked gave no real answer for the episode: they failed, took too long or were skipped, and the rest don't have it. The names are joined with commas.
+cause-sources-unreached = [Çöüļðñ'ţ ŕéàçĥ { $names }. Ţŕý àĝàîñ, öŕ çĥööšé àñöţĥéŕ šöüŕçé.~~~~~~~~~~~~~~~~~]
+
+# Reason: every source asked lacks the episode, and some sources weren't asked while local settings hold them back. The names are joined with commas. The episode is its label.
+cause-sources-not-asked =
+    { $count ->
+        [one] [Ñö šöüŕçé ţĥàţ ŵàš àšķéð ĥàš éþîšöðé { $episode }. { $names } ŵàšñ'ţ àšķéð.~~~~~~~~~~~~~~~~~~]
+       *[other] [Ñö šöüŕçé ţĥàţ ŵàš àšķéð ĥàš éþîšöðé { $episode }. { $names } ŵéŕéñ'ţ àšķéð.~~~~~~~~~~~~~~~~~~]
+    }
+
 # Reason: every source matched the title but none has the episode. The detail is what each said.
 cause-no-source-has-episode = [Ñö šöüŕçé ĥàš éþîšöðé { $episode }: { $detail }~~~~~~~~~]
 
@@ -8982,8 +8992,17 @@ player-start-miss-timed-out = [{ $name } ţööķ ţöö ļöñĝ~~~~~~]
 # Detail line after the viewer skipped the source being asked.
 player-start-miss-skipped = [Ýöü šķîþþéð { $name }~~~~~]
 
-# Details row for sources passed over because they failed lately. The name goes before it.
-player-start-resting = [Šķîþþéð àƒţéŕ ŕéçéñţ ƒàîļüŕéš~~~~~~~~~]
+# Details row for a source not asked while torrent playback is off. The name goes before it.
+player-start-row-held-torrents-off = [Ñöţ àšķéð · Ţöŕŕéñţ þļàýƀàçķ îš öƒƒ~~~~~~~~~~~]
+
+# Details row for a source not asked while the proxy check for torrents hasn't passed. The name goes before it.
+player-start-row-held-proxy = [Ñöţ àšķéð · Ŵàîţîñĝ ƒöŕ ţĥé þŕöẋý çĥéçķ~~~~~~~~~~~~]
+
+# Details row for a source not asked on cellular, where torrents are off. The name goes before it.
+player-start-row-held-cellular = [Ñöţ àšķéð · Ţöŕŕéñţš àŕé öƒƒ öñ çéļļüļàŕ~~~~~~~~~~~~]
+
+# Details row for a source not asked because it says it can't be used right now. The name goes before it.
+player-start-row-held-other = [Ñöţ àšķéð · Ñöţ àṽàîļàƀļé ŕîĝĥţ ñöŵ~~~~~~~~~~~]
 
 # Detail line once the streams are found and the player opens one. The name is the source's.
 player-start-from = [Ƒŕöɱ { $name }~~~]
@@ -9078,6 +9097,44 @@ player-start-row-skipped = [Šķîþþéð~~~]
 
 # Second clause of a failure: the sources that were asked, joined as a list by the app.
 player-start-asked = [{ $names } ŵéŕé àšķéð.~~~~~]
+
+# Sentence of a failure naming the sources asked that answered without the episode, while others couldn't be reached or weren't asked. The names are joined as a list by the app. The episode is its label.
+player-start-lacking =
+    { $count ->
+        [one] [{ $names } ðöéšñ'ţ ĥàṽé éþîšöðé { $episode }.~~~~~~~~~]
+       *[other] [{ $names } ðöñ'ţ ĥàṽé éþîšöðé { $episode }.~~~~~~~~~]
+    }
+
+# First sentence of a failure when some sources asked gave no real answer: they failed, took too long or were skipped. A source not asked is never among them. The names are joined as a list by the app.
+player-start-unreached = [Çöüļðñ'ţ ŕéàçĥ { $names }.~~~~~~]
+
+# Sentence of a failure naming the sources not asked while torrent playback is off, joined as a list by the app.
+player-start-not-asked-torrents-off =
+    { $count ->
+        [one] [{ $names } îšñ'ţ àšķéð ŵĥîļé ţöŕŕéñţ þļàýƀàçķ îš öƒƒ.~~~~~~~~~~~~~~]
+       *[other] [{ $names } àŕéñ'ţ àšķéð ŵĥîļé ţöŕŕéñţ þļàýƀàçķ îš öƒƒ.~~~~~~~~~~~~~~~]
+    }
+
+# Sentence of a failure naming the sources not asked while the proxy check for torrents hasn't passed, joined as a list by the app.
+player-start-not-asked-proxy =
+    { $count ->
+        [one] [{ $names } îšñ'ţ àšķéð üñţîļ ţĥé þŕöẋý çĥéçķ þàššéš.~~~~~~~~~~~~~~]
+       *[other] [{ $names } àŕéñ'ţ àšķéð üñţîļ ţĥé þŕöẋý çĥéçķ þàššéš.~~~~~~~~~~~~~~]
+    }
+
+# Sentence of a failure naming the sources not asked on cellular, where torrents are off, joined as a list by the app.
+player-start-not-asked-cellular =
+    { $count ->
+        [one] [{ $names } îšñ'ţ àšķéð öñ çéļļüļàŕ.~~~~~~~~~]
+       *[other] [{ $names } àŕéñ'ţ àšķéð öñ çéļļüļàŕ.~~~~~~~~~]
+    }
+
+# Sentence of a failure naming the sources not asked because they say they can't be used right now, joined as a list by the app.
+player-start-not-asked-other =
+    { $count ->
+        [one] [{ $names } îšñ'ţ àṽàîļàƀļé ŕîĝĥţ ñöŵ.~~~~~~~~~]
+       *[other] [{ $names } àŕéñ'ţ àṽàîļàƀļé ŕîĝĥţ ñöŵ.~~~~~~~~~~]
+    }
 
 # Label of the switch in the Details list that plays the episode with its subtitles.
 player-start-subtitled = [Šüƀţîţļéð~~~]
@@ -9467,6 +9524,24 @@ source-picker-finding = [Ƒîñðîñĝ šöüŕçéš…~~~~~]
 
 # Line when the picker found no stream for the episode.
 source-picker-empty = [Ñö šöüŕçé ĥàš à šţŕéàɱ ƒöŕ ţĥîš éþîšöðé.~~~~~~~~~~~~]
+
+# Line over the reasons when no source lists a release of the episode. The episode is its label.
+source-picker-none-lists = [Ñö šöüŕçé ļîšţš éþîšöðé { $episode }.~~~~~~~~~]
+
+# Line over the reasons when no source lists a release of the episode and some sources failed or weren't asked. The episode is its label.
+source-picker-none-answered-lists = [Ñö šöüŕçé ţĥàţ àñšŵéŕéð ļîšţš éþîšöðé { $episode }.~~~~~~~~~~~~~]
+
+# Line of the picker for a source not asked while torrent playback is off.
+source-picker-held-torrents-off = [{ $name } îšñ'ţ àšķéð ŵĥîļé ţöŕŕéñţ þļàýƀàçķ îš öƒƒ~~~~~~~~~~~~~~]
+
+# Line of the picker for a source not asked while the proxy check for torrents hasn't passed.
+source-picker-held-proxy = [{ $name } îšñ'ţ àšķéð üñţîļ ţĥé þŕöẋý çĥéçķ þàššéš~~~~~~~~~~~~~~]
+
+# Line of the picker for a source not asked on cellular, where torrents are off.
+source-picker-held-cellular = [{ $name } îšñ'ţ àšķéð öñ çéļļüļàŕ~~~~~~~~~]
+
+# Line of the picker for a source that says it can't be used right now.
+source-picker-held-other = [{ $name } îšñ'ţ àṽàîļàƀļé ŕîĝĥţ ñöŵ~~~~~~~~~]
 
 # Title of the picker sheet in the player.
 player-sources = [Šöüŕçéš~~~]

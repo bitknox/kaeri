@@ -2467,7 +2467,6 @@
     <string name="player_start_miss_failed">%1$s nie odpowiedziało</string>
     <string name="player_start_miss_timed_out">%1$s odpowiadało zbyt długo</string>
     <string name="player_start_miss_skipped">Pominięto: %1$s</string>
-    <string name="player_start_resting">Pominięte po niedawnych błędach</string>
     <string name="player_start_from">Z: %1$s</string>
     <string name="player_start_no_video">Pierwszy nie pokazał obrazu</string>
     <string name="player_start_stream_place">Strumień %1$,d z %2$,d</string>

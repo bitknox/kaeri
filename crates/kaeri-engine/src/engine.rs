@@ -329,6 +329,7 @@ impl Engine {
                     offline: Default::default(),
                     connection: Arc::new(tokio::sync::watch::channel(false).0),
                     prefetch: Default::default(),
+                    unreached: Default::default(),
                     artwork: Default::default(),
                     player_theme,
                     app_clients: Default::default(),

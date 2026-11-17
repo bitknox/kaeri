@@ -18,7 +18,6 @@ player-start-pin-missed = { $name }にはまだエピソード { $episode } が�
 player-start-miss-failed = { $name }から応答がありませんでした
 player-start-miss-timed-out = { $name }の応答に時間がかかりすぎました
 player-start-miss-skipped = { $name }をスキップしました
-player-start-resting = 最近の失敗によりスキップ
 player-start-from = { $name }から
 player-start-no-video = 最初のストリームは映像が表示されませんでした
 player-start-stream-place = ストリーム { $total } 件中 { $next } 件目

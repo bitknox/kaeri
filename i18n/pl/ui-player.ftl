@@ -18,7 +18,6 @@ player-start-pin-missed = { $name } nie ma jeszcze odcinka { $episode }. Odtwarz
 player-start-miss-failed = { $name } nie odpowiedziało
 player-start-miss-timed-out = { $name } odpowiadało zbyt długo
 player-start-miss-skipped = Pominięto: { $name }
-player-start-resting = Pominięte po niedawnych błędach
 player-start-from = Z: { $name }
 player-start-no-video = Pierwszy nie pokazał obrazu
 player-start-stream-place = Strumień { $next } z { $total }

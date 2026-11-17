@@ -2206,7 +2206,6 @@
     <string name="player_start_miss_failed">%1$s không phản hồi</string>
     <string name="player_start_miss_timed_out">%1$s mất quá nhiều thời gian</string>
     <string name="player_start_miss_skipped">Bạn đã bỏ qua %1$s</string>
-    <string name="player_start_resting">Đã bỏ qua do lỗi gần đây</string>
     <string name="player_start_from">Từ %1$s</string>
     <string name="player_start_no_video">Luồng đầu tiên không có hình</string>
     <string name="player_start_stream_place">Luồng %1$,d trên %2$,d</string>

@@ -2380,7 +2380,6 @@
     <string name="player_start_miss_failed">%1$s no respondió</string>
     <string name="player_start_miss_timed_out">%1$s tardó demasiado</string>
     <string name="player_start_miss_skipped">Omitiste %1$s</string>
-    <string name="player_start_resting">Omitida por fallas recientes</string>
     <string name="player_start_from">De %1$s</string>
     <string name="player_start_no_video">El primero no mostró video</string>
     <string name="player_start_stream_place">Transmisión %1$,d de %2$,d</string>

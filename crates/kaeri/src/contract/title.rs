@@ -518,6 +518,7 @@ async fn an_episodes_releases_are_listed_for_the_picker() {
     let release = SourceCandidate {
         id: "release-1".into(),
         provider_id: sources::PROVIDER_ID.into(),
+        provider_name: String::new(),
         title: "Stardust Wayfarer - 01 (1080p)".into(),
         quality: Some(1080),
         label: None,
@@ -532,7 +533,10 @@ async fn an_episodes_releases_are_listed_for_the_picker() {
     let updates = h.settle().await;
 
     assert_eq!(names(&updates), ["Sources", "JobDone"]);
-    let Event::Sources { id, episode, candidates } = &updates[0] else { unreachable!() };
+    let Event::Sources { id, episode, candidates, missed } = &updates[0] else {
+        unreachable!()
+    };
+    assert!(missed.is_empty(), "with releases listed, no source's miss is said");
     assert_eq!((*id, episode.as_str()), (FINISHED, "1"));
     let listed: Vec<_> = candidates.iter().map(|c| c.id.as_str()).collect();
     assert_eq!(listed, ["release-1"]);
@@ -540,7 +544,7 @@ async fn an_episodes_releases_are_listed_for_the_picker() {
 }
 
 #[tokio::test]
-async fn releases_that_cannot_be_listed_are_a_toast() {
+async fn releases_that_cannot_be_listed_say_why() {
     let mut h = harness(ProviderRegistry::new(Vec::new())).await;
     let job = h.send(Command::LoadSources { id: FINISHED, episode: "1".into() });
     let updates = h.settle().await;
@@ -551,11 +555,16 @@ async fn releases_that_cannot_be_listed_are_a_toast() {
     );
     ends(&updates, job);
 
+    // A source that can't tell which title it is lists nothing, and the picker says so by its
+    // name rather than as an alert.
     let mut h = harness(unsure()).await;
     let job = h.send(Command::LoadSources { id: FINISHED, episode: "1".into() });
     let updates = h.settle().await;
-    assert_eq!(names(&updates), ["Toast", "JobDone"]);
-    assert!(toasts(&updates)[0].starts_with("alert: Couldn't match this title: "));
+    assert_eq!(names(&updates), ["Sources", "JobDone"]);
+    let Event::Sources { candidates, missed, .. } = &updates[0] else { unreachable!() };
+    assert!(candidates.is_empty());
+    let said: Vec<_> = missed.iter().map(|m| (m.name.as_str(), m.miss)).collect();
+    assert_eq!(said, [(sources::PROVIDER_ID, kaeri_model::starting::ListingMiss::NoMatch)]);
     ends(&updates, job);
 }
 

@@ -383,8 +383,12 @@ pub(crate) async fn dub_answer(
     crate::sources::arrived(registry, || ()).await;
     // A title that has not started has no dub to speak of yet, and no source is asked.
     if coverage::unstarted(media, now) {
-        let answer =
-            kaeri_providers::Answer::Unanswered { reasons: Vec::new(), matched: false };
+        let answer = kaeri_providers::Answer::Unanswered {
+            reasons: Vec::new(),
+            matched: false,
+            unreached: Vec::new(),
+            held: Vec::new(),
+        };
         return DubAnswer { answer, none: false };
     }
     let registry = &chain_for(store, registry, id);
@@ -427,7 +431,7 @@ pub(crate) async fn dub_answer(
     .await;
     let none = match &answer {
         // One reason for each source tried: each was matched and listed, and found nothing.
-        kaeri_providers::Answer::Unanswered { reasons, matched: true } => {
+        kaeri_providers::Answer::Unanswered { reasons, matched: true, .. } => {
             !reasons.is_empty()
                 && asked.load(Ordering::SeqCst) == reasons.len()
                 && nothing.load(Ordering::SeqCst)

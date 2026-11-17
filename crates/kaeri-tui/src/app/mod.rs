@@ -797,8 +797,8 @@ impl App {
             Event::PinUnavailable { name, .. } => {
                 self.push_toast(info(t::pin_unavailable(&name)))
             }
-            Event::Sources { id, episode, candidates } => {
-                self.apply_sources(id, episode, candidates)
+            Event::Sources { id, episode, candidates, missed } => {
+                self.apply_sources(id, episode, candidates, &missed)
             }
             Event::MatchChoices { id, provider_id, candidates, answers, .. } => {
                 self.apply_match_choices(id, provider_id, candidates, answers)

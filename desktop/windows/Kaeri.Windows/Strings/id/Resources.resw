@@ -5411,9 +5411,6 @@
   <data name="PlayerStartMissSkipped" xml:space="preserve">
     <value>Kamu melewati {name}</value>
   </data>
-  <data name="PlayerStartResting" xml:space="preserve">
-    <value>Dilewati karena gagal baru-baru ini</value>
-  </data>
   <data name="PlayerStartFrom" xml:space="preserve">
     <value>Dari {name}</value>
   </data>

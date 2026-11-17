@@ -1007,6 +1007,7 @@ public sealed partial class PlayerView
             "offline-timed-out" => StartingFixture.OfflineTimedOut,
             "failed-no-episode" => StartingFixture.FailedNoEpisode,
             "failed-no-match" => StartingFixture.FailedNoMatch,
+            "failed-unreached" => StartingFixture.FailedUnreached,
             "failed-no-sources" => StartingFixture.FailedNoSources,
             "failed-not-aired" => StartingFixture.FailedNotAired,
             _ => null,

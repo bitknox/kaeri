@@ -5621,9 +5621,6 @@
   <data name="PlayerStartMissSkipped" xml:space="preserve">
     <value>{name} atlandı</value>
   </data>
-  <data name="PlayerStartResting" xml:space="preserve">
-    <value>Son hatalar nedeniyle atlandı</value>
-  </data>
   <data name="PlayerStartFrom" xml:space="preserve">
     <value>Kaynak: {name}</value>
   </data>

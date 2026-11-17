@@ -460,6 +460,16 @@ pub fn cause_sources_timed_out() -> String {
     text("cause-sources-timed-out", &[])
 }
 
+/// Reason: some sources asked gave no real answer for the episode: they failed, took too long or were skipped, and the rest don't have it. The names are joined with commas.
+pub fn cause_sources_unreached(names: &str) -> String {
+    text("cause-sources-unreached", &[("names", Arg::Text(names))])
+}
+
+/// Reason: every source asked lacks the episode, and some sources weren't asked while local settings hold them back. The names are joined with commas. The episode is its label.
+pub fn cause_sources_not_asked(count: i64, names: &str, episode: &str) -> String {
+    text("cause-sources-not-asked", &[("count", Arg::Int(count)), ("names", Arg::Text(names)), ("episode", Arg::Text(episode))])
+}
+
 /// Reason: every source matched the title but none has the episode. The detail is what each said.
 pub fn cause_no_source_has_episode(episode: &str, detail: &str) -> String {
     text("cause-no-source-has-episode", &[("episode", Arg::Text(episode)), ("detail", Arg::Text(detail))])
@@ -14315,9 +14325,24 @@ pub fn player_start_miss_skipped(name: &str) -> String {
     text("player-start-miss-skipped", &[("name", Arg::Text(name))])
 }
 
-/// Details row for sources passed over because they failed lately. The name goes before it.
-pub fn player_start_resting() -> String {
-    text("player-start-resting", &[])
+/// Details row for a source not asked while torrent playback is off. The name goes before it.
+pub fn player_start_row_held_torrents_off() -> String {
+    text("player-start-row-held-torrents-off", &[])
+}
+
+/// Details row for a source not asked while the proxy check for torrents hasn't passed. The name goes before it.
+pub fn player_start_row_held_proxy() -> String {
+    text("player-start-row-held-proxy", &[])
+}
+
+/// Details row for a source not asked on cellular, where torrents are off. The name goes before it.
+pub fn player_start_row_held_cellular() -> String {
+    text("player-start-row-held-cellular", &[])
+}
+
+/// Details row for a source not asked because it says it can't be used right now. The name goes before it.
+pub fn player_start_row_held_other() -> String {
+    text("player-start-row-held-other", &[])
 }
 
 /// Detail line once the streams are found and the player opens one. The name is the source's.
@@ -14468,6 +14493,36 @@ pub fn player_start_row_skipped() -> String {
 /// Second clause of a failure: the sources that were asked, joined as a list by the app.
 pub fn player_start_asked(names: &str) -> String {
     text("player-start-asked", &[("names", Arg::Text(names))])
+}
+
+/// Sentence of a failure naming the sources asked that answered without the episode, while others couldn't be reached or weren't asked. The names are joined as a list by the app. The episode is its label.
+pub fn player_start_lacking(count: i64, names: &str, episode: &str) -> String {
+    text("player-start-lacking", &[("count", Arg::Int(count)), ("names", Arg::Text(names)), ("episode", Arg::Text(episode))])
+}
+
+/// First sentence of a failure when some sources asked gave no real answer: they failed, took too long or were skipped. A source not asked is never among them. The names are joined as a list by the app.
+pub fn player_start_unreached(names: &str) -> String {
+    text("player-start-unreached", &[("names", Arg::Text(names))])
+}
+
+/// Sentence of a failure naming the sources not asked while torrent playback is off, joined as a list by the app.
+pub fn player_start_not_asked_torrents_off(count: i64, names: &str) -> String {
+    text("player-start-not-asked-torrents-off", &[("count", Arg::Int(count)), ("names", Arg::Text(names))])
+}
+
+/// Sentence of a failure naming the sources not asked while the proxy check for torrents hasn't passed, joined as a list by the app.
+pub fn player_start_not_asked_proxy(count: i64, names: &str) -> String {
+    text("player-start-not-asked-proxy", &[("count", Arg::Int(count)), ("names", Arg::Text(names))])
+}
+
+/// Sentence of a failure naming the sources not asked on cellular, where torrents are off, joined as a list by the app.
+pub fn player_start_not_asked_cellular(count: i64, names: &str) -> String {
+    text("player-start-not-asked-cellular", &[("count", Arg::Int(count)), ("names", Arg::Text(names))])
+}
+
+/// Sentence of a failure naming the sources not asked because they say they can't be used right now, joined as a list by the app.
+pub fn player_start_not_asked_other(count: i64, names: &str) -> String {
+    text("player-start-not-asked-other", &[("count", Arg::Int(count)), ("names", Arg::Text(names))])
 }
 
 /// Label of the switch in the Details list that plays the episode with its subtitles.
@@ -15125,6 +15180,36 @@ pub fn source_picker_finding() -> String {
 /// Line when the picker found no stream for the episode.
 pub fn source_picker_empty() -> String {
     text("source-picker-empty", &[])
+}
+
+/// Line over the reasons when no source lists a release of the episode. The episode is its label.
+pub fn source_picker_none_lists(episode: &str) -> String {
+    text("source-picker-none-lists", &[("episode", Arg::Text(episode))])
+}
+
+/// Line over the reasons when no source lists a release of the episode and some sources failed or weren't asked. The episode is its label.
+pub fn source_picker_none_answered_lists(episode: &str) -> String {
+    text("source-picker-none-answered-lists", &[("episode", Arg::Text(episode))])
+}
+
+/// Line of the picker for a source not asked while torrent playback is off.
+pub fn source_picker_held_torrents_off(name: &str) -> String {
+    text("source-picker-held-torrents-off", &[("name", Arg::Text(name))])
+}
+
+/// Line of the picker for a source not asked while the proxy check for torrents hasn't passed.
+pub fn source_picker_held_proxy(name: &str) -> String {
+    text("source-picker-held-proxy", &[("name", Arg::Text(name))])
+}
+
+/// Line of the picker for a source not asked on cellular, where torrents are off.
+pub fn source_picker_held_cellular(name: &str) -> String {
+    text("source-picker-held-cellular", &[("name", Arg::Text(name))])
+}
+
+/// Line of the picker for a source that says it can't be used right now.
+pub fn source_picker_held_other(name: &str) -> String {
+    text("source-picker-held-other", &[("name", Arg::Text(name))])
 }
 
 /// Title of the picker sheet in the player.

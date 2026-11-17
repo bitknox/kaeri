@@ -18,7 +18,6 @@ player-start-pin-missed = { $name } non ha ancora l'episodio { $episode }. Ripro
 player-start-miss-failed = { $name } non ha risposto
 player-start-miss-timed-out = { $name } ha impiegato troppo tempo
 player-start-miss-skipped = Hai saltato { $name }
-player-start-resting = Saltata dopo errori recenti
 player-start-from = Da { $name }
 player-start-no-video = Il primo non mostrava alcun video
 player-start-stream-place = Stream { $next } di { $total }

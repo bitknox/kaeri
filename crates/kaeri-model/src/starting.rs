@@ -24,6 +24,53 @@ pub enum SourceMiss {
     Skipped,
 }
 
+/// Why local policy keeps a source from being asked right now.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[cfg_attr(feature = "ffi", derive(uniffi::Enum))]
+pub enum SourceHold {
+    /// Torrent playback is switched off, so a source that names torrents is not asked.
+    TorrentsOff,
+    /// A proxy is set for torrents and its check has not passed yet.
+    ProxyCheck,
+    /// The device is on cellular and torrents don't run on cellular.
+    Cellular,
+    /// The source says it can't be used right now, for a reason of its own.
+    Other,
+}
+
+/// Sources held back for the same reason, in the viewer's order.
+#[derive(Debug, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "ffi", derive(uniffi::Record))]
+pub struct HeldSources {
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub names: Vec<String>,
+    pub why: SourceHold,
+}
+
+/// Why a source listed no release of an episode, for a source picker.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[cfg_attr(feature = "ffi", derive(uniffi::Enum))]
+pub enum ListingMiss {
+    /// The source has no such title.
+    NoMatch,
+    /// The source has the title and lists nothing for this episode.
+    NoEpisode,
+    /// The source answered with an error.
+    Failed,
+    /// The source did not answer in time.
+    TimedOut,
+    /// The source was not asked: local policy holds it back.
+    HeldBack { why: SourceHold },
+}
+
+/// A source that listed nothing for an episode, by the name it goes by, and why.
+#[derive(Debug, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "ffi", derive(uniffi::Record))]
+pub struct MissedListing {
+    pub name: String,
+    pub miss: ListingMiss,
+}
+
 /// One step of a start. See the module docs.
 #[derive(Debug, Clone, PartialEq)]
 #[cfg_attr(feature = "ffi", derive(uniffi::Enum))]
@@ -38,9 +85,11 @@ pub enum StartStep {
     AskingSource { name: String, place: u32, total: u32, pinned: bool },
     /// A source came up empty or failed, and the next is asked, if one is left.
     SourceMissed { name: String, miss: SourceMiss },
-    /// Sources passed over because they are resting after recent failures. Said once, before
-    /// the first is asked, and only when there are any.
-    SourcesResting { names: Vec<String> },
+    /// Sources not asked because local policy holds them back right now, all for `why`. Said
+    /// before the first source is asked, once for each reason, and only when there are any. A
+    /// source held back is never said as [`StartStep::AskingSource`]. Sources resting after
+    /// recent failures are not held back: they are asked last, after every other source.
+    SourcesHeldBack { names: Vec<String>, why: SourceHold },
     /// A torrent from this source is looking for peers that can send its metadata (no `name`
     /// for a link the viewer opened, which has no source). The wait is at most 90 seconds. The
     /// peer count is not known until the metadata arrives, so the screen counts the time
@@ -84,10 +133,22 @@ pub enum StartStep {
 pub struct StartFailure {
     pub why: crate::party::NoSourceWhy,
     pub text: crate::Msg,
-    /// The names of the sources that were asked, in the order they were asked: what a failure
-    /// says as "Alpha and Brook were asked." Empty when none was asked.
+    /// The names of the sources that were asked, in the order they were asked. Those not
+    /// unreached answered without the episode, said as "Brook doesn't have episode 7." Empty when
+    /// none was asked. A source held back is
+    /// never among them.
     #[cfg_attr(feature = "ffi", uniffi(default))]
     pub asked: Vec<String>,
+    /// The names of the sources asked that gave no real answer, in the viewer's order: they
+    /// failed, took too long or were skipped. When there are any, the failure says "Couldn't
+    /// reach" them first and offers Try again first, since none of them said it lacks the
+    /// episode. A source held back was never asked and is never among them. Empty when every
+    /// source asked said it lacks the show or the episode.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub unreached: Vec<String>,
+    /// The sources held back and why, said as "Harbor isn't asked while torrent playback is off."
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub held_back: Vec<HeldSources>,
 }
 
 /// A made-up start, for an app's previews, screenshots and tests: the events the engine says
@@ -108,7 +169,7 @@ pub enum StartingFixture {
     SourceMissed,
     /// The first source did not answer and the second is asked.
     SourceFailed,
-    /// A resting source is passed over and the first of two is asked.
+    /// The first source has no such episode, and a source resting after failures is asked last.
     SourcesResting,
     /// The second of three sources is still asked 24 seconds in.
     Slow,
@@ -135,6 +196,9 @@ pub enum StartingFixture {
     FailedNoEpisode,
     /// No source matched the show.
     FailedNoMatch,
+    /// One source failed, one has no such episode, and one is held back while torrent playback
+    /// is off: the start fails saying which it couldn't reach.
+    FailedUnreached,
     /// No source is set up.
     FailedNoSources,
     /// The episode has not aired yet.

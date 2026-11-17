@@ -18,7 +18,6 @@ player-start-pin-missed = { $name } hat Folge { $episode } noch nicht. Es läuft
 player-start-miss-failed = { $name } hat nicht geantwortet
 player-start-miss-timed-out = { $name } hat zu lange gebraucht
 player-start-miss-skipped = Du hast { $name } übersprungen
-player-start-resting = Nach jüngsten Fehlern übersprungen
 player-start-from = Von { $name }
 player-start-no-video = Der erste zeigte kein Video
 player-start-stream-place = Stream { $next } von { $total }

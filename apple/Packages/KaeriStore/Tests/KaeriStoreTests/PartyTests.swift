@@ -73,6 +73,34 @@ struct PartyTests {
         #expect(PartyWords.roomOK("tuesday"))
     }
 
+    @Test func eachSourceThatListedNothingSaysWhyOnceByName() {
+        #expect(PartyWords.missed(MissedListing(name: "Alpha", miss: .failed), episode: "7") == "Alpha didn't answer")
+        #expect(PartyWords.missed(MissedListing(name: "Alpha", miss: .timedOut), episode: "7") == "Alpha took too long")
+        #expect(PartyWords.missed(MissedListing(name: "Brook", miss: .noEpisode), episode: "7") == "Brook doesn't have episode 7")
+        #expect(PartyWords.missed(MissedListing(name: "Harbor", miss: .heldBack(why: .torrentsOff)), episode: "7")
+            == "Harbor isn't asked while torrent playback is off")
+        #expect(PartyWords.unreached(.failed) && PartyWords.unreached(.heldBack(why: .proxyCheck)))
+        #expect(!PartyWords.unreached(.noEpisode))
+    }
+
+    @Test func theLineOverTheReasonsClaimsOnlyWhatTheSourcesThatAnsweredSaid() {
+        let answered = [MissedListing(name: "Brook", miss: .noEpisode), MissedListing(name: "Kumo", miss: .noMatch)]
+        #expect(PartyWords.noneLists(answered, episode: "7") == "No source lists episode 7.")
+        let failed = [MissedListing(name: "Alpha", miss: .failed), MissedListing(name: "Brook", miss: .noEpisode)]
+        #expect(PartyWords.noneLists(failed, episode: "7") == "No source that answered lists episode 7.")
+        let held = [MissedListing(name: "Harbor", miss: .heldBack(why: .torrentsOff))]
+        #expect(PartyWords.noneLists(held, episode: "7") == "No source that answered lists episode 7.")
+    }
+
+    @Test func aReleaseNamesItsSourceAndTheOnlyOneIsPicked() {
+        let one = SourceCandidate(
+            id: "a", providerId: "sample-source", providerName: "Sample Source", title: "Stardust Wayfarer 07", quality: 1080, // i18n-skip
+            label: nil, size: "1.2 GiB", dualAudio: false, dubbed: false, autoPick: true)
+        #expect(PartyWords.detail(one) == "Sample Source · 1080p · 1.2 GiB")
+        #expect(PartyWords.preselected([one]) == one)
+        #expect(PartyWords.preselected([one, one]) == nil)
+    }
+
     @Test func noSourceSaysWhyAndWhatComesNext() {
         let what = "Episode 7 of Stardust Wayfarer"
         let found = PartyWords.noSource(why: .notFound, reason: .noticeSourceSearchEmpty(query: "sample"), episode: "7", what: what)

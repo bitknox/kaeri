@@ -773,6 +773,7 @@ fn spawn_playback(
     let privacy = services.privacy.clone();
     let mut link = services.connection.subscribe();
     let torrents = services.registry.torrents().clone();
+    let unreached = services.unreached.clone();
     let (config, meta, store, registry, http, machine, slot, tx) = (
         config.clone(),
         services.meta.clone(),
@@ -789,6 +790,8 @@ fn spawn_playback(
         // The skip as the playback hears it once its streams are found, beside the walk's.
         let skips = skip.clone();
         let starting = Starting::new(&tx, id, &episode, Some(skip));
+        // Try again: what the last failed start of this episode couldn't reach is asked anew.
+        unreached.retry(id, &episode, &registry);
         // A torrent looked up ahead on a limited network starts now, as it would have had it
         // been found now. One that does not start sends the play looking again.
         let prefetched = match prefetched {
@@ -873,7 +876,11 @@ fn spawn_playback(
                 return;
             }
         };
-        let context = match resolved {
+        // Try again gives what this start couldn't reach another chance.
+        let context = resolved.inspect_err(|reason| {
+            unreached.note(id, &episode, reason.unreached.clone());
+        });
+        let context = match context {
             Ok(pair) => pair,
             // The episode being watched carries on, and the window with it: only the lookup
             // failed, and closing what was playing over it would punish the viewer for asking.
@@ -904,6 +911,14 @@ fn spawn_playback(
                     why: reason.why,
                     text: reason.text.clone(),
                     asked: starting.asked(),
+                    unreached: reason
+                        .unreached
+                        .iter()
+                        .map(|provider_id| {
+                            crate::playback::resolve::display_name(&registry, provider_id)
+                        })
+                        .collect(),
+                    held_back: starting.held_back(),
                 };
                 if party {
                     let _ = tx.send(Event::PartyNoSource {
@@ -1098,11 +1113,21 @@ impl Lookup for Onward {
                 why: kaeri_model::party::NoSourceWhy::NotFound,
                 text: crate::playback::resolve::explained(kaeri_model::Cause::NoSources),
                 asked: self.starting.asked(),
+                unreached: Vec::new(),
+                held_back: self.starting.held_back(),
             }),
             Err(reason) => Err(kaeri_model::starting::StartFailure {
                 why: reason.why,
                 text: reason.text,
                 asked: self.starting.asked(),
+                unreached: reason
+                    .unreached
+                    .iter()
+                    .map(|provider_id| {
+                        crate::playback::resolve::display_name(&self.registry, provider_id)
+                    })
+                    .collect(),
+                held_back: self.starting.held_back(),
             }),
         }
     }

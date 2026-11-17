@@ -563,6 +563,8 @@ pub async fn play(
                         why: NoSourceWhy::NotFound,
                         text: notice,
                         asked: Vec::new(),
+                        unreached: Vec::new(),
+                        held_back: Vec::new(),
                     }));
                     return;
                 }
@@ -954,6 +956,8 @@ pub async fn play(
                         why: NoSourceWhy::NotFound,
                         text: message,
                         asked: Vec::new(),
+                        unreached: Vec::new(),
+                        held_back: Vec::new(),
                     });
                 }
 
@@ -1040,6 +1044,8 @@ async fn onward(
                         why: NoSourceWhy::NotFound,
                         text: Msg::NoticeReason { reason: kaeri_model::Cause::NoSources },
                         asked: Vec::new(),
+                        unreached: Vec::new(),
+                        held_back: Vec::new(),
                     }),
                     Err(failure) => Onward::Failed(failure),
                 };

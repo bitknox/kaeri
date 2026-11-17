@@ -208,6 +208,8 @@ public final class PlayerModel {
     /// The viewer asked for the episode's releases; `sourceChoices` is nil until they come.
     public private(set) var choosingSource = false
     public private(set) var sourceChoices: [SourceCandidate]?
+    /// With no release listed, what each source said, by the name it goes by.
+    public private(set) var sourceMisses: [MissedListing] = []
     /// The player closed before a frame: waiting for the engine to say whether it failed.
     @ObservationIgnored private var verdictPending = false
     /// A party play found no source: the party's sheet says so, and the player closes.
@@ -436,7 +438,7 @@ public final class PlayerModel {
                 // It never played: no stream was found, or none showed a frame. Say so where the
                 // viewer is looking, with another source to choose, rather than vanish.
                 verdictPending = false
-                failure = PlaybackFailure(id: staged?.id, episode: episode, view: said.map { StartFailureView(why: $0.why, text: $0.text, asked: $0.asked) } ?? StartFailureView())
+                failure = PlaybackFailure(id: staged?.id, episode: episode, view: said.map { StartFailureView(why: $0.why, text: $0.text, episode: episode, asked: $0.asked, unreached: $0.unreached, heldBack: $0.heldBack) } ?? StartFailureView())
                 Self.note(.warn, "couldn't play episode \(episode)")
             } else if backend == nil {
                 // Nothing was opened for it, or it played elsewhere, or it is simply over.
@@ -447,10 +449,11 @@ public final class PlayerModel {
             // The party's own sheet says why nothing plays and offers its sources: the player's
             // failure would say it twice, under it.
             partySaysWhy = true
-        case .sources(let id, let episode, let candidates):
+        case .sources(let id, let episode, let candidates, let missed):
             guard choosingSource else { return }
             Self.note(.info, "\(candidates.count) sources for \(id) episode \(episode)")
             sourceChoices = candidates
+            sourceMisses = missed
         case .playbackKept:
             // The playback staged found nothing; the one before plays on.
             starting = nil
