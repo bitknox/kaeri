@@ -168,8 +168,10 @@ const CARRY_FROM: f64 = 5.0;
 /// open on this device again.
 #[cfg(feature = "cast")]
 pub fn stop_casting(engine: &mut EngineState, services: &Services) {
-    // A cast session ends with it: the receiver closes.
+    // A cast session ends with it: the receiver closes, and nothing is left for a later launch
+    // to join, after a lost or taken-over cast too.
     let held = services.casts.disconnect();
+    services.casts.forget_left();
     if engine.casting.take().is_none() && !services.casts.casting() && !held {
         return;
     }

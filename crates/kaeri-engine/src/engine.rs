@@ -438,6 +438,9 @@ impl Engine {
             casts.set_language(language);
             casts.set_show_tvs(state.config.effective().cast.show_tvs);
             casts.set_receiver(state.config.effective().cast.receiver.clone());
+            // A cast the last run left running on a TV is joined again, quietly. Without a
+            // record of one, nothing on the network is looked at.
+            casts.resume_left();
         }
         #[cfg(not(feature = "cast"))]
         let _ = language;
