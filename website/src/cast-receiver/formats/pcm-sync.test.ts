@@ -186,6 +186,17 @@ describe('WebAssembly audio against the video clock', () => {
 		expect(r.breaks).toBe(0);
 	});
 
+	// The TV on 17 Nov: the context offset spread 311 ms in the first seconds (the context starting),
+	// then 70 to 90 ms. Readings from a context that isn't running are left out on the main thread;
+	// one that runs but reads 300 ms off at first costs one skip when it settles, and no more.
+	test('a context time that settles 300 ms later in the first 0.4 s costs one skip at most', () => {
+		const r = play(30, () => 0, { ctxJitter: (t) => (t < 0.4 ? 0.3 : 0) - (t % 0.085), tsJitter: (_, rnd) => (rnd() - 0.5) * 2, filter: true, settle: 0.5 });
+		console.info('context starting', r);
+		expect(r.jumps).toBeLessThanOrEqual(1);
+		expect(r.waits).toBe(0);
+		expect(r.breaks).toBeLessThanOrEqual(2);
+	});
+
 	test('latency the browser does not report (60 ms) is taken up by resampling, without a gap', () => {
 		const r = play(60, () => 0, { unreported: 0.06, ctxJitter: (t) => -(t % 0.085), tsJitter: (_, rnd) => (rnd() - 0.5) * 0.04, filter: true, settle: 0.5 });
 		console.info('unreported latency', r);

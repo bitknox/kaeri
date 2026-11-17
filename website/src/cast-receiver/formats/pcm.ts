@@ -67,7 +67,7 @@ export class ClockFilter {
 		const vo = media - now * rate;
 		const co = ctx - now;
 		if (this.v.length >= 3 && Math.abs(vo - median(this.v)) > JUMP) this.v = [];
-		if (this.c.length >= 3 && Math.abs(co - median(this.c)) > JUMP) this.c = [];
+		if (this.c.length >= 3 && Math.abs(co - median(this.c)) > CTX_JUMP) this.c = [];
 		// A new window (start, seek, rate change, a real jump) starts both lists together.
 		if (!this.v.length || !this.c.length) {
 			this.v = [];
@@ -111,6 +111,11 @@ const MAX_LATENCY = 0.3;
 
 /** A clock reading this far from the median is a real jump (a seek, a stall caught up). */
 const JUMP = 0.4;
+/**
+ * The same for the context offset, which strays only by the output buffer (under 90 ms on the
+ * Chromecast TV): further off, the context has just started or stalled, and the window starts again.
+ */
+const CTX_JUMP = 0.15;
 
 function push(list: number[], v: number, keep: number) {
 	list.push(v);
@@ -163,6 +168,8 @@ export interface PcmStats {
 	time: number;
 	/** The main thread's clock readings: spread of the video and context offsets (seconds). */
 	clock?: ClockFilter['spread'];
+	/** The AudioContext's state when the worklet last reported. */
+	context?: string;
 }
 
 export class PcmAudio {
@@ -187,7 +194,7 @@ export class PcmAudio {
 		node.connect(this.gain).connect(ctx.destination);
 		node.port.onmessage = (e) => {
 			if (e.data?.type !== 'position' || e.data.gen !== this.gen) return;
-			this.stats = { ...e.data, clock: this.filter.spread };
+			this.stats = { ...e.data, clock: this.filter.spread, context: this.ctx.state };
 			if (!this.primed && this.stats.queued >= PRIMED) this.prime();
 		};
 		const clock = () => this.clock();
@@ -310,7 +317,9 @@ export class PcmAudio {
 			out && out.contextTime != null && out.performanceTime != null && out.performanceTime > 0
 				? out.contextTime + (now - out.performanceTime) / 1000
 				: null;
-		const k = this.filter.read(now / 1000, v.currentTime, heard, v.playbackRate, playing, ts);
+		// A context that isn't running yet has a clock standing still: no reading of it counts.
+		const running = this.ctx.state === 'running';
+		const k = this.filter.read(now / 1000, v.currentTime, heard, v.playbackRate, playing && running, ts);
 		this.node.port.postMessage({ type: 'clock', media: k.media, ctx: k.ctx, rate: v.playbackRate, playing, settling: k.settling });
 		if (playing && this.ctx.state === 'suspended') void this.ctx.resume().catch(() => {});
 	}
