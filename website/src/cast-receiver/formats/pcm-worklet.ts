@@ -2,6 +2,11 @@
 // sends the clock (video time at a context time, rate, playing); every render quantum works out
 // the media time it should be playing and steers towards it: small drift by resampling up to
 // 0.5 % faster or slower, which can't be heard, and large jumps (a seek, a stall) at once.
+//
+// A TV reports the video time coarsely: in whole frames, and late by however long the main
+// thread took to read it, tens of milliseconds either way. Steering towards each reading as it
+// comes skips and pauses the sound all the time. So the readings are averaged: each one moves the
+// clock a little, and only a jump beyond JUMP (a seek, a stall caught up) moves it at once.
 
 interface Chunk {
 	pts: number;
@@ -25,7 +30,13 @@ const MAX_TRIM = 0.005;
 /** Drift beyond this that lasts half a second is fixed by jumping. */
 const SOFT = 0.025;
 /** Seconds after a start or a seek in which drift is fixed by jumping at once. */
-const SETTLE = 1;
+const SETTLE = 0.5;
+/** The jump threshold while settling. */
+const SETTLE_HARD = 0.02;
+/** A clock reading this far from the clock is a real jump, taken at once. */
+const JUMP = 0.25;
+/** The least weight a clock reading gets (about the last 20 readings, 2 s, count). */
+const WEIGHT = 0.05;
 
 class KaeriPcm extends AudioWorkletProcessor {
 	private chunks: Chunk[] = [];
@@ -33,6 +44,10 @@ class KaeriPcm extends AudioWorkletProcessor {
 	private offset = 0;
 	private gen = 0;
 	private clock = { media: 0, ctx: 0, rate: 1, playing: false };
+	/** Readings averaged into the clock since it last moved at once. */
+	private readings = 0;
+	/** Mean square of the readings' error against the clock, for the stats. */
+	private noise = 0;
 	private decoder: MessagePort | null = null;
 	private lastReport = 0;
 	private drift = 0;
@@ -52,7 +67,7 @@ class KaeriPcm extends AudioWorkletProcessor {
 		this.port.onmessage = (e) => {
 			const m = e.data;
 			if (m.type === 'clock') {
-				this.clock = { media: m.media, ctx: m.ctx, rate: m.rate, playing: m.playing };
+				this.onClock(m);
 			} else if (m.type === 'flush') {
 				if (m.gen > this.gen) this.reset(m.gen);
 			} else if (m.type === 'decoder') {
@@ -60,6 +75,28 @@ class KaeriPcm extends AudioWorkletProcessor {
 				this.decoder.onmessage = (d) => this.onPcm(d.data);
 			}
 		};
+	}
+
+	/** A clock reading: averaged in while playing steadily, else taken as it is. */
+	private onClock(m: { media: number; ctx: number; rate: number; playing: boolean }) {
+		const k = this.clock;
+		const now = { media: m.media, ctx: m.ctx, rate: m.rate, playing: m.playing };
+		if (!m.playing || !k.playing || m.rate !== k.rate || m.ctx < k.ctx) {
+			this.clock = now;
+			this.readings = 0;
+			return;
+		}
+		const predicted = k.media + (m.ctx - k.ctx) * k.rate;
+		const error = m.media - predicted;
+		if (Math.abs(error) > JUMP) {
+			this.clock = now;
+			this.readings = 0;
+			return;
+		}
+		this.readings++;
+		this.noise += (error * error - this.noise) * 0.05;
+		const weight = Math.max(WEIGHT, 1 / (this.readings + 1));
+		this.clock = { ...now, media: predicted + error * weight };
 	}
 
 	/** A new start (a seek): what is queued goes, and the next audio lines up exactly. */
@@ -123,7 +160,7 @@ class KaeriPcm extends AudioWorkletProcessor {
 		if (Math.abs(diff) > SOFT) this.overSince ??= currentTime;
 		else this.overSince = null;
 		const stuck = this.overSince != null && currentTime - this.overSince > 0.5;
-		const hard = currentTime < this.settleUntil ? DEAD * 2 : stuck ? SOFT : HARD;
+		const hard = currentTime < this.settleUntil ? SETTLE_HARD : stuck ? SOFT : HARD;
 		if (diff > hard) {
 			// Behind: catch up at once.
 			this.skipTo(expected);
@@ -164,9 +201,11 @@ class KaeriPcm extends AudioWorkletProcessor {
 			const j = Math.floor(this.offset);
 			const f = this.offset - j;
 			const a = j * 2;
-			const b = j + 1 < c.frames ? a + 2 : a;
-			left[i] = c.data[a] + (c.data[b] - c.data[a]) * f;
-			if (right !== left) right[i] = c.data[a + 1] + (c.data[b + 1] - c.data[a + 1]) * f;
+			// The last frame of a chunk leans towards the first of the next one.
+			const after = j + 1 < c.frames ? c : (this.chunks[1] ?? c);
+			const b = after === c ? Math.min(a + 2, c.data.length - 2) : 0;
+			left[i] = c.data[a] + (after.data[b] - c.data[a]) * f;
+			if (right !== left) right[i] = c.data[a + 1] + (after.data[b + 1] - c.data[a + 1]) * f;
 			this.offset += (c.rate / sampleRate) * k.rate * (1 + trim);
 		}
 		return true;
@@ -179,7 +218,7 @@ class KaeriPcm extends AudioWorkletProcessor {
 		let queued = 0;
 		for (const c of this.chunks) queued += c.frames / c.rate;
 		queued -= this.chunks[0] ? this.offset / this.chunks[0].rate : 0;
-		const status = { type: 'position', gen: this.gen, time: pos ?? expected, expected, drift: this.drift, worst: this.worst, jumps: this.jumps, waits: this.waits, starved: this.starved, queued, at: currentTime };
+		const status = { type: 'position', gen: this.gen, time: pos ?? expected, expected, drift: this.drift, worst: this.worst, jumps: this.jumps, waits: this.waits, starved: this.starved, jitter: Math.sqrt(this.noise), queued, at: currentTime };
 		this.decoder?.postMessage(status);
 		this.port.postMessage(status);
 	}

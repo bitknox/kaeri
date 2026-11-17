@@ -1,0 +1,145 @@
+// The WebAssembly audio's worklet (pcm-worklet.ts) run against a simulated TV: a video clock read
+// on the main thread with the jitter a TV's currentTime has, PCM sent the way the decoder worker
+// sends it, and render quanta at 48 kHz. Steady playback must neither skip nor wait.
+
+import { beforeAll, describe, expect, test } from 'bun:test';
+
+const RATE = 48000;
+const QUANTUM = 128;
+const FRAME = 1024;
+
+type Processor = {
+	port: { onmessage: ((e: { data: unknown }) => void) | null; postMessage: (m: unknown) => void };
+	process(inputs: Float32Array[][], outputs: Float32Array[][]): boolean;
+};
+let Ctor: new () => Processor;
+
+const g = globalThis as unknown as Record<string, unknown>;
+
+beforeAll(async () => {
+	g.sampleRate = RATE;
+	g.currentTime = 0;
+	g.AudioWorkletProcessor = class {
+		port = { onmessage: null, postMessage: () => {} };
+	};
+	g.registerProcessor = (_: string, c: new () => Processor) => (Ctor = c);
+	await import('./pcm-worklet');
+});
+
+/** Counts after the first second. */
+interface Run {
+	jumps: number;
+	waits: number;
+	starved: number;
+	/** Output samples that break the tone (a skip, a repeat or silence), after the first second. */
+	breaks: number;
+	worst: number;
+}
+
+/** Plays `seconds` of a 440 Hz tone; `jitter(t)` is the error in the video time read at `t`. */
+function play(seconds: number, jitter: (t: number, rnd: () => number) => number, seed = 7): Run {
+	let s = seed;
+	const rnd = () => ((s = (s * 16807) % 2147483647) / 2147483647);
+	const p = new Ctor();
+	const decoder = { onmessage: null as ((e: { data: unknown }) => void) | null, postMessage: (m: { type: string; time: number }) => (playhead = m.time) };
+	let playhead = 0;
+	let decodedTo = 0;
+	p.port.onmessage!({ data: { type: 'decoder', port: decoder } });
+	p.port.onmessage!({ data: { type: 'flush', gen: 1 } });
+	// The worker: whole AAC frames, up to 4 s ahead of the worklet's position.
+	const feed = () => {
+		while (decodedTo < playhead + 4) {
+			const data = new Float32Array(FRAME * 2);
+			const first = Math.round(decodedTo * RATE);
+			for (let i = 0; i < FRAME; i++) data[i * 2] = data[i * 2 + 1] = Math.sin((2 * Math.PI * 440 * (first + i)) / RATE);
+			// Matroska times are whole milliseconds.
+			decoder.onmessage!({ data: { type: 'pcm', gen: 1, pts: Math.round(decodedTo * 1000) / 1000, rate: RATE, data } });
+			decodedTo = (first + FRAME) / RATE;
+		}
+	};
+	feed();
+	const left = new Float32Array(QUANTUM);
+	const right = new Float32Array(QUANTUM);
+	let last: number | null = null;
+	let prev: number | null = null;
+	let breaks = 0;
+	// The counts at the end of the first second, when the start has lined up.
+	let settled = { jumps: 0, waits: 0, starved: 0 };
+	let nextClock = 0;
+	const quanta = Math.round((seconds * RATE) / QUANTUM);
+	// Output runs 50 ms ahead of what is heard; the main thread maps heard context time to video time.
+	const latency = 0.05;
+	for (let q = 0; q < quanta; q++) {
+		const ctx = (q * QUANTUM) / RATE;
+		g.currentTime = ctx;
+		if (ctx >= nextClock) {
+			const heard = Math.max(0, ctx - latency);
+			p.port.onmessage!({ data: { type: 'clock', media: heard + jitter(heard, rnd), ctx: heard, rate: 1, playing: true } });
+			nextClock += 0.1;
+		}
+		p.process([], [[left, right]]);
+		feed();
+		if (ctx <= 1) {
+			const st = p as unknown as Record<string, number>;
+			settled = { jumps: st.jumps, waits: st.waits, starved: st.starved };
+		}
+		const step = Math.cos((2 * Math.PI * 440) / RATE);
+		for (let i = 0; i < QUANTUM; i++) {
+			const v = left[i];
+			// A continuous sine: x[n] = 2 cos(w) x[n-1] - x[n-2], within interpolation error.
+				if (ctx > 1 && last != null && prev != null && Math.abs(v - (2 * step * last - prev)) > 0.02) breaks++;
+			prev = last;
+			last = v;
+		}
+	}
+	const st = p as unknown as Record<string, number>;
+	return { jumps: st.jumps - settled.jumps, waits: st.waits - settled.waits, starved: st.starved - settled.starved, breaks, worst: st.worst };
+}
+
+describe('WebAssembly audio against the video clock', () => {
+	test('a steady clock plays straight through', () => {
+		const r = play(20, () => 0);
+		console.info('steady', r);
+		expect(r.jumps).toBe(0);
+		expect(r.waits).toBe(0);
+		expect(r.breaks).toBe(0);
+	});
+
+	test('a video time read in whole frames (24 fps) and late by up to 30 ms plays straight through', () => {
+		const r = play(30, (t, rnd) => Math.floor(t * 24) / 24 - t - rnd() * 0.03);
+		console.info('frame steps', r);
+		expect(r.jumps).toBe(0);
+		expect(r.waits).toBe(0);
+		expect(r.breaks).toBe(0);
+	});
+
+	test('a video time with 60 ms of random error plays straight through', () => {
+		const r = play(30, (_, rnd) => (rnd() - 0.5) * 0.06);
+		console.info('random 60 ms', r);
+		expect(r.jumps).toBe(0);
+		expect(r.waits).toBe(0);
+		expect(r.breaks).toBe(0);
+	});
+
+	test('a clock that swings 80 ms either way, as the failing TV stream showed, plays straight through', () => {
+		const r = play(30, (t, rnd) => (rnd() - 0.5) * 0.16 + 0.04 * Math.sin(t * 3));
+		console.info('swing 80 ms', r);
+		expect(r.jumps).toBe(0);
+		expect(r.waits).toBe(0);
+		expect(r.breaks).toBe(0);
+	});
+
+	test('a context time that moves in 85 ms steps plays straight through', () => {
+		const r = play(30, (t) => t - Math.floor(t / 0.085) * 0.085);
+		console.info('85 ms steps', r);
+		expect(r.jumps).toBe(0);
+		expect(r.waits).toBe(0);
+		expect(r.breaks).toBe(0);
+	});
+
+	test('a real jump in the video (a stall caught up) is followed at once', () => {
+		const r = play(20, (t) => (t > 10 ? 0.5 : 0));
+		console.info('jump', r);
+		expect(r.jumps).toBe(1);
+	});
+});

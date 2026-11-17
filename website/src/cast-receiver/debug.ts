@@ -130,7 +130,7 @@ export class DebugStatusLine {
 		const level = s.level == null ? '?' : s.level <= -120 ? 'silent' : `${s.level.toFixed(1)} dBFS`;
 		const p = stats?.pcm;
 		const pcm = p
-			? `\npcm queued ${p.queued.toFixed(2)} s drift ${ms(p.drift)} worst ${ms(p.worst)} jumps ${p.jumps} waits ${p.waits ?? 0} starved ${p.starved}`
+			? `\npcm queued ${p.queued.toFixed(2)} s drift ${ms(p.drift)} worst ${ms(p.worst)} jumps ${p.jumps} waits ${p.waits ?? 0} starved ${p.starved} jitter ${ms(p.jitter ?? 0)}`
 			: '';
 		const line = `audio ${s.audioPath} ${stats?.audio ?? ''} decoded ${decoded} level ${level}\nvideo ${stats?.video ?? ''} decoded ${s.videoDecoded ?? '?'} shown ${s.videoShown ?? '?'} at ${s.time} s${pcm}`;
 		const why = stats?.audioWhy ? `\nwhy ${stats.audioWhy}` : '';

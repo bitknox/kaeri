@@ -36,13 +36,15 @@ export interface PcmStats {
 	waits: number;
 	/** Render quanta with nothing decoded to play. */
 	starved: number;
+	/** How far the video time readings stray from the averaged clock (RMS, seconds). */
+	jitter: number;
 	/** Seconds of PCM waiting in the worklet. */
 	queued: number;
 	time: number;
 }
 
 export class PcmAudio {
-	stats: PcmStats = { drift: 0, worst: 0, jumps: 0, waits: 0, starved: 0, queued: 0, time: 0 };
+	stats: PcmStats = { drift: 0, worst: 0, jumps: 0, waits: 0, starved: 0, jitter: 0, queued: 0, time: 0 };
 	private gen = 0;
 	private timer = 0;
 	private gain: GainNode;
