@@ -201,7 +201,8 @@ class BackgroundEngine(
     companion object {
         /**
          * Every background switch off: the work's engine answers what it is sent and nothing
-         * else, no sync loops, update check, digest or keep next of its own.
+         * else, no sync loops, update check, digest or keep next of its own, and leaves a TV a
+         * cast was left running on alone.
          */
         val QUIET = FfiBackground(
             prune = false,
@@ -212,6 +213,7 @@ class BackgroundEngine(
             storeRefresh = false,
             playerCheck = false,
             keepNext = false,
+            rejoinCast = false,
         )
     }
 }

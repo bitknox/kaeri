@@ -225,6 +225,10 @@ pub struct Background {
     /// or finishes, as many as the show or Settings keeps. See
     /// [`crate::downloads::ahead`].
     pub keep_next: bool,
+    /// Join the cast the last run left running on a TV, quietly, and keep its record: the
+    /// foreground app's alone. An engine started for a background task, a widget or a scheduled
+    /// refresh turns it off, and then neither reaches for the TV nor touches the record.
+    pub rejoin_cast: bool,
 }
 
 impl Background {
@@ -239,6 +243,7 @@ impl Background {
             store_refresh: false,
             player_check: false,
             keep_next: false,
+            rejoin_cast: false,
         }
     }
 }
@@ -255,6 +260,7 @@ impl Default for Background {
             store_refresh: true,
             player_check: true,
             keep_next: true,
+            rejoin_cast: true,
         }
     }
 }
@@ -303,6 +309,7 @@ mod tests {
             on.store_refresh,
             on.player_check,
             on.keep_next,
+            on.rejoin_cast,
         ];
         assert!(all.iter().all(|on| *on), "{on:?}");
         assert_eq!(
@@ -316,6 +323,7 @@ mod tests {
                 store_refresh: false,
                 player_check: false,
                 keep_next: false,
+                rejoin_cast: false,
             }
         );
     }

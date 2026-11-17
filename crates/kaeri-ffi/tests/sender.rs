@@ -460,6 +460,46 @@ fn a_cast_left_running_is_joined_again_by_the_next_launch_over_the_same_folders(
     tv.engine.shutdown();
 }
 
+/// An engine started for a background task over the app's folders, as a scheduled refresh or a
+/// notification's action starts one with every switch off, neither reaches for the TV a cast
+/// was left running on nor touches its record. The app opened after it still joins the cast.
+#[test]
+fn a_background_engine_leaves_the_cast_and_its_record_alone() {
+    let root = tempfile::tempdir().expect("a temporary directory");
+    let Casting { tv, living, phone, sender, path } = casting_from(root.path());
+    drop(sender);
+    phone.engine.end_abruptly();
+    drop(phone);
+    let record = std::fs::read(&path).unwrap();
+    let connects = living.heard("CONNECT");
+
+    let dir = |name: &str| root.path().join(name).display().to_string();
+    let dirs = FfiDirs { config: dir("config"), data: dir("data"), cache: dir("cache") };
+    let quiet = kaeri_ffi::FfiBackground {
+        prune: false,
+        update_check: false,
+        digest: false,
+        datasets: false,
+        sync_loops: false,
+        store_refresh: false,
+        player_check: false,
+        keep_next: false,
+        rejoin_cast: false,
+    };
+    let background =
+        FfiEngine::start_testing_in_background(dirs, Arc::new(Keychain::default()), quiet)
+            .expect("the engine starts");
+    thread::sleep(Duration::from_secs(2));
+    background.shutdown();
+    assert_eq!(living.heard("CONNECT"), connects, "the TV was not reached");
+    assert_eq!(std::fs::read(&path).ok(), Some(record), "the record is untouched");
+
+    let again = joined_again(root.path());
+    living.stop();
+    again.engine.shutdown();
+    tv.engine.shutdown();
+}
+
 /// Quitting the app, as an iPhone swiped away or a desktop app closed with no question, leaves
 /// the TV playing and its record kept: the next launch joins it.
 #[test]
