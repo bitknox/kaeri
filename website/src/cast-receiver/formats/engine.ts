@@ -328,6 +328,8 @@ export interface UnpackerStats {
 	audioWhy: string | null;
 	/** How long the last start held the picture for WebAssembly sound, and what let it go. */
 	audioGate: string | null;
+	/** Milliseconds from the start of the load to its steps, once the first frame is up. */
+	timing: string | null;
 }
 
 /** A track's setup in one line: codec string, MIME, rate, channels and config bytes. */
@@ -373,6 +375,12 @@ export class Unpacker {
 	private swapping = false;
 	private audioWhy: string | null = null;
 	private audioGate: string | null = null;
+	/** performance.now() at the start of the load, and when its steps happened. */
+	private t0 = performance.now();
+	private setupAt: number | null = null;
+	private gateAt: number | null = null;
+	private frameAt: number | null = null;
+	private playingAt: number | null = null;
 	private listeners: [EventTarget, string, EventListener, boolean][] = [];
 
 	private constructor(
@@ -401,6 +409,7 @@ export class Unpacker {
 	 * LeaveToCaf, FetchError or a parse error (the caller hands the load to CAF).
 	 */
 	static async open(video: HTMLVideoElement, o: UnpackerOptions): Promise<Unpacker> {
+		const t0 = performance.now();
 		const { demux, format } = await openDemuxer(o.url, o.contentType, o.container);
 		if (!demux.tracks.some((t) => t.kind === 'video' || t.kind === 'audio')) {
 			demux.close();
@@ -413,6 +422,7 @@ export class Unpacker {
 			throw new Refused(refused);
 		}
 		const u = new Unpacker(demux, format, video, o);
+		u.t0 = t0;
 		await u.selectTracks();
 		u.begin();
 		return u;
@@ -441,7 +451,21 @@ export class Unpacker {
 			audioSetup: this.audioTrack ? `${this.format}/${this.demux.container ?? this.format} ${trackSetup(this.audioTrack, this.aout?.muxer.mime)}` : null,
 			audioWhy: this.pcm ? this.audioWhy : null,
 			audioGate: this.pcm ? this.audioGate : null,
+			timing: this.timing(),
 		};
+	}
+
+	private timing(): string | null {
+		if (this.frameAt == null) return null;
+		const ms = (t: number | null | undefined) => (t == null ? '-' : `${Math.round(t - this.t0)}`);
+		let line = `load to setup ${ms(this.setupAt)} ms, first frame ${ms(this.frameAt)} ms, playing ${ms(this.playingAt)} ms`;
+		if (this.pcm) {
+			const t = this.pcm.timing;
+			const l = this.pcm.latency;
+			const sound = t.sound != null && this.playingAt != null ? `${Math.round(t.sound - this.playingAt)}` : '-';
+			line += `, sound decoded ${ms(t.decoded)} ms, picture let go ${ms(this.gateAt)} ms; playing to first sound ${sound} ms; latency output ${Math.round(l.output * 1000)} base ${Math.round(l.base * 1000)} ms`;
+		}
+		return line;
 	}
 
 	/** The WebAssembly audio's level tap, for the testing build. Null when MSE plays the sound. */
@@ -469,6 +493,13 @@ export class Unpacker {
 	}
 
 	private begin() {
+		// The first frame on screen, for the load timing.
+		const v = this.video as HTMLVideoElement & { requestVideoFrameCallback?: (cb: (now: number) => void) => number };
+		if (v.requestVideoFrameCallback) v.requestVideoFrameCallback((now) => (this.frameAt ??= now));
+		this.on(this.video, 'playing', () => {
+			this.playingAt ??= performance.now();
+			if (!v.requestVideoFrameCallback) this.frameAt ??= this.playingAt;
+		});
 		this.on(this.ms, 'sourceopen', () => this.opened(), false);
 		// CAF unloaded the element (a stop, or another load).
 		this.on(this.ms, 'sourceclose', () => !this.swapping && this.destroy(), false);
@@ -635,6 +666,7 @@ export class Unpacker {
 			}
 		}
 		if (at) await this.makeAudio(at, held.find((s) => s.track === at.id));
+		this.setupAt ??= performance.now();
 		this.held = null;
 		this.setDuration();
 		if (this.vout) await this.vout.append(this.vout.muxer.init());
@@ -683,6 +715,7 @@ export class Unpacker {
 			const since = performance.now();
 			const how = await this.pcm.ready();
 			this.audioGate = `${Math.round(performance.now() - since)} ms ${how}`;
+			this.gateAt ??= performance.now();
 			if (g !== this.gen) return;
 		}
 		if (video.length && this.vout) await this.put(this.vout, this.vout.muxer.segment(video), g);

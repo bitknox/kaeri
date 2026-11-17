@@ -57,6 +57,8 @@ export class DebugStatusLine {
 	private decodedSeconds: number | null = null;
 	private shownBase = 0;
 	private lastSetup = '';
+	private lastTiming = '';
+	private lastEvent = 0;
 
 	constructor(
 		private readonly video: HTMLVideoElement,
@@ -143,6 +145,18 @@ export class DebugStatusLine {
 			this.lastSetup = setup;
 			console.info('[debug]', setup);
 			devLog(setup);
+		}
+		const timing = stats?.timing;
+		if (timing && timing !== this.lastTiming) {
+			this.lastTiming = timing;
+			devLog(`timing ${timing}`);
+		}
+		// Each correction the WebAssembly sound made, once: kind, where, by how much, which rule.
+		for (const e of p?.events ?? []) {
+			if (e.seq <= this.lastEvent) continue;
+			this.lastEvent = e.seq;
+			const run = e.kind === 'wait' ? ` (${e.n} quanta so far)` : '';
+			devLog(`pcm ${e.kind} at ${e.at.toFixed(3)} s by ${ms(e.by)} ${e.why}${run}`);
 		}
 	}
 }

@@ -8,6 +8,17 @@
 // comes skips and pauses the sound all the time. So the readings are averaged: each one moves the
 // clock a little, and only a jump beyond JUMP (a seek, a stall caught up) moves it at once.
 
+/** A correction the worklet made: where (media time), by how much (seconds) and which rule. */
+interface SyncEvent {
+	seq: number;
+	kind: 'start' | 'jump' | 'wait';
+	at: number;
+	by: number;
+	why: string;
+	/** Quanta in a wait run. */
+	n: number;
+}
+
 interface Chunk {
 	pts: number;
 	rate: number;
@@ -59,6 +70,13 @@ class KaeriPcm extends AudioWorkletProcessor {
 	private jumps = 0;
 	private starved = 0;
 	private waits = 0;
+	/** Jumps and runs of waits since the last start, with their size and the rule behind them. */
+	private events: SyncEvent[] = [];
+	private seq = 0;
+	/** The wait run going on now, extended while the next quanta wait too. */
+	private waitRun: SyncEvent | null = null;
+	/** Sound has played since the last start. */
+	private sounded = false;
 	/** Nothing has played since a seek or a stall: line up exactly rather than steering. */
 	private fresh = true;
 	/** Until this context time after a start, drift is fixed by jumping at a small threshold. */
@@ -111,6 +129,21 @@ class KaeriPcm extends AudioWorkletProcessor {
 		this.offset = 0;
 		this.worst = 0;
 		this.fresh = true;
+		this.sounded = false;
+		this.waitRun = null;
+	}
+
+	private queued(): number {
+		let queued = 0;
+		for (const c of this.chunks) queued += c.frames / c.rate;
+		return queued - (this.chunks[0] ? this.offset / this.chunks[0].rate : 0);
+	}
+
+	private event(kind: SyncEvent['kind'], at: number, by: number, why: string) {
+		const e = { seq: ++this.seq, kind, at, by, why, n: 1 };
+		this.events.push(e);
+		if (this.events.length > 16) this.events.shift();
+		return e;
 	}
 
 	private onPcm(m: { type: string; gen: number; pts: number; rate: number; data: Float32Array }) {
@@ -118,6 +151,8 @@ class KaeriPcm extends AudioWorkletProcessor {
 		if (m.type !== 'pcm' || m.gen < this.gen) return;
 		if (m.gen > this.gen) this.reset(m.gen);
 		this.chunks.push({ pts: m.pts, rate: m.rate, data: m.data, frames: m.data.length / 2 });
+		// Until the sound starts, the main thread waits for it (the start gate): tell it at once.
+		if (!this.sounded) this.port.postMessage({ type: 'queued', gen: this.gen, queued: this.queued() });
 	}
 
 	/** The media time of the next frame to play. */
@@ -159,6 +194,7 @@ class KaeriPcm extends AudioWorkletProcessor {
 			return true;
 		}
 		let diff = expected - pos;
+		const first = !this.sounded;
 		if (this.fresh) this.settleUntil = currentTime + SETTLE;
 		this.fresh = false;
 		// Drift that resampling doesn't fix within a moment is fixed by jumping too.
@@ -170,9 +206,13 @@ class KaeriPcm extends AudioWorkletProcessor {
 		const stuck = this.overSince != null && currentTime - this.overSince > 0.5;
 		const hard = currentTime < this.settleUntil ? SETTLE_HARD : young ? WIDE : stuck ? SOFT : HARD;
 		if (diff > hard) {
-			// Behind: catch up at once.
+			// Behind: catch up at once. Before any sound has played this only picks where it starts.
 			this.skipTo(expected);
-			this.jumps++;
+			if (first) this.event('start', expected, diff, 'line-up');
+			else {
+				this.jumps++;
+				this.event('jump', expected, diff, currentTime < this.settleUntil ? 'settle' : young ? 'young' : stuck ? 'stuck' : 'hard');
+			}
 			this.overSince = null;
 			pos = this.position();
 			if (pos == null) return true;
@@ -181,9 +221,12 @@ class KaeriPcm extends AudioWorkletProcessor {
 			// Ahead (the video stalled or went back a little): wait in silence.
 			if (-diff > n / sampleRate) {
 				this.waits++;
+				if (this.waitRun && this.waitRun.seq === this.seq) this.waitRun.n++;
+				else this.waitRun = this.event('wait', expected, diff, currentTime < this.settleUntil ? 'settle' : young ? 'young' : stuck ? 'stuck' : 'hard');
 				return true;
 			}
 		}
+		this.waitRun = null;
 		this.drift = diff;
 		this.worst = Math.max(this.worst, Math.abs(diff));
 		const trim = Math.abs(diff) < DEAD ? 0 : Math.max(-MAX_TRIM, Math.min(MAX_TRIM, diff * 0.5));
@@ -216,6 +259,10 @@ class KaeriPcm extends AudioWorkletProcessor {
 			if (right !== left) right[i] = c.data[a + 1] + (after.data[b + 1] - c.data[a + 1]) * f;
 			this.offset += (c.rate / sampleRate) * k.rate * (1 + trim);
 		}
+		if (!this.sounded) {
+			this.sounded = true;
+			this.port.postMessage({ type: 'sounding', gen: this.gen, ctx: currentTime });
+		}
 		return true;
 	}
 
@@ -223,10 +270,9 @@ class KaeriPcm extends AudioWorkletProcessor {
 		if (currentTime - this.lastReport < 0.1) return;
 		this.lastReport = currentTime;
 		const pos = this.position();
-		let queued = 0;
-		for (const c of this.chunks) queued += c.frames / c.rate;
-		queued -= this.chunks[0] ? this.offset / this.chunks[0].rate : 0;
-		const status = { type: 'position', gen: this.gen, time: pos ?? expected, expected, drift: this.drift, worst: this.worst, jumps: this.jumps, waits: this.waits, starved: this.starved, jitter: Math.sqrt(this.noise), queued, at: currentTime };
+		const queued = this.queued();
+		const events = this.events.map((e) => ({ ...e }));
+		const status = { type: 'position', gen: this.gen, time: pos ?? expected, expected, drift: this.drift, worst: this.worst, jumps: this.jumps, waits: this.waits, starved: this.starved, jitter: Math.sqrt(this.noise), queued, at: currentTime, events };
 		this.decoder?.postMessage(status);
 		this.port.postMessage(status);
 	}

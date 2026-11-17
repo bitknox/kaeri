@@ -170,6 +170,8 @@ export interface PcmStats {
 	clock?: ClockFilter['spread'];
 	/** The AudioContext's state when the worklet last reported. */
 	context?: string;
+	/** The worklet's corrections since the start: jumps, runs of waits, and the start's line-up. */
+	events?: { seq: number; kind: 'start' | 'jump' | 'wait'; at: number; by: number; why: string; n: number }[];
 }
 
 export class PcmAudio {
@@ -183,6 +185,13 @@ export class PcmAudio {
 	/** Sound is queued for the current start; until then, `ready()` callers wait. */
 	private primed = false;
 	private waiting: ((how: Primed) => void)[] = [];
+	/** performance.now() when the current start's first sound was decoded, and when it was heard. */
+	timing: { decoded: number | null; sound: number | null } = { decoded: null, sound: null };
+
+	/** The output latency the browser reports (outputLatency + baseLatency), in seconds. */
+	get latency() {
+		return { output: this.ctx.outputLatency || 0, base: this.ctx.baseLatency || 0 };
+	}
 
 	private constructor(
 		private readonly ctx: AudioContext,
@@ -193,9 +202,19 @@ export class PcmAudio {
 		this.gain = ctx.createGain();
 		node.connect(this.gain).connect(ctx.destination);
 		node.port.onmessage = (e) => {
-			if (e.data?.type !== 'position' || e.data.gen !== this.gen) return;
-			this.stats = { ...e.data, clock: this.filter.spread, context: this.ctx.state };
-			if (!this.primed && this.stats.queued >= PRIMED) this.prime();
+			const m = e.data;
+			if (m?.gen !== this.gen) return;
+			if (m.type === 'queued') {
+				this.timing.decoded ??= performance.now();
+				if (!this.primed && m.queued >= PRIMED) this.prime();
+			} else if (m.type === 'sounding') {
+				// When the first sound is heard: rendered at context time `ctx`, out after the latency.
+				const l = this.latency;
+				this.timing.sound = performance.now() + (m.ctx + l.output + l.base - this.ctx.currentTime) * 1000;
+			} else if (m.type === 'position') {
+				this.stats = { ...m, clock: this.filter.spread, context: this.ctx.state };
+				if (!this.primed && this.stats.queued >= PRIMED) this.prime();
+			}
 		};
 		const clock = () => this.clock();
 		for (const ev of ['play', 'playing', 'pause', 'seeking', 'seeked', 'ratechange', 'waiting', 'timeupdate', 'ended', 'stalled'])
@@ -299,6 +318,7 @@ export class PcmAudio {
 		// Whoever waits for the old start gives up: the packets it pushed are flushed.
 		this.prime('seek');
 		this.primed = false;
+		this.timing = { decoded: null, sound: null };
 		this.gen++;
 		this.lastPts = -Infinity;
 		this.worker.postMessage({ type: 'flush', gen: this.gen, time });
