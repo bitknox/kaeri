@@ -39,6 +39,7 @@ class KaeriPcm extends AudioWorkletProcessor {
 	private worst = 0;
 	private jumps = 0;
 	private starved = 0;
+	private waits = 0;
 	/** Nothing has played since a seek or a stall: line up exactly rather than steering. */
 	private fresh = true;
 	/** Until this context time after a start, drift is fixed by jumping at a small threshold. */
@@ -133,7 +134,10 @@ class KaeriPcm extends AudioWorkletProcessor {
 			diff = expected - pos;
 		} else if (diff < -hard) {
 			// Ahead (the video stalled or went back a little): wait in silence.
-			if (-diff > n / sampleRate) return true;
+			if (-diff > n / sampleRate) {
+				this.waits++;
+				return true;
+			}
 		}
 		this.drift = diff;
 		this.worst = Math.max(this.worst, Math.abs(diff));
@@ -175,7 +179,7 @@ class KaeriPcm extends AudioWorkletProcessor {
 		let queued = 0;
 		for (const c of this.chunks) queued += c.frames / c.rate;
 		queued -= this.chunks[0] ? this.offset / this.chunks[0].rate : 0;
-		const status = { type: 'position', gen: this.gen, time: pos ?? expected, expected, drift: this.drift, worst: this.worst, jumps: this.jumps, starved: this.starved, queued, at: currentTime };
+		const status = { type: 'position', gen: this.gen, time: pos ?? expected, expected, drift: this.drift, worst: this.worst, jumps: this.jumps, waits: this.waits, starved: this.starved, queued, at: currentTime };
 		this.decoder?.postMessage(status);
 		this.port.postMessage(status);
 	}

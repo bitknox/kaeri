@@ -289,6 +289,17 @@ export interface UnpackerStats {
 	/** Spans stepped over because their segments never came. */
 	skipped: [number, number][];
 	pcm: PcmAudio['stats'] | null;
+	/** The audio track as the receiver read it, for the dev log. */
+	audioSetup: string | null;
+	/** Why the audio plays through WebAssembly, when it does. */
+	audioWhy: string | null;
+}
+
+/** A track's setup in one line: codec string, MIME, rate, channels and config bytes. */
+export function trackSetup(t: Track, mime?: string | null): string {
+	const hex = t.config ? Array.from(t.config.subarray(0, 48), (b) => b.toString(16).padStart(2, '0')).join('') : 'none';
+	const more = t.config && t.config.length > 48 ? `+${t.config.length - 48}` : '';
+	return `${t.codec} ${codecString(t) ?? '?'} mime ${mime ?? '?'} rate ${t.sampleRate ?? '?'} ch ${t.channels ?? '?'}${t.unframed ? ' unframed' : ''} config ${hex}${more}`;
 }
 
 /** One load, unpacked into a MediaSource whose object URL CAF plays. */
@@ -323,6 +334,7 @@ export class Unpacker {
 	private wake: (() => void) | null = null;
 	private timer = 0;
 	private swapping = false;
+	private audioWhy: string | null = null;
 	private listeners: [EventTarget, string, EventListener, boolean][] = [];
 
 	private constructor(
@@ -388,6 +400,8 @@ export class Unpacker {
 			seeks: this.seeks,
 			skipped: this.demux.skipped ?? [],
 			pcm: this.pcm ? this.pcm.stats : null,
+			audioSetup: this.audioTrack ? `${this.format}/${this.demux.container ?? this.format} ${trackSetup(this.audioTrack, this.aout?.muxer.mime)}` : null,
+			audioWhy: this.pcm ? this.audioWhy : null,
 		};
 	}
 
@@ -598,10 +612,11 @@ export class Unpacker {
 					this.aout = new Output(this.ms.addSourceBuffer(muxer.mime), muxer, t);
 					return;
 				} catch (e) {
-					console.info('audio to WebAssembly:', muxer.mime, errText(e));
+					this.audioWhy = `MediaSource refused ${muxer.mime}: ${errText(e)}`;
 				}
-			}
-		}
+			} else this.audioWhy = 'muxer: none';
+		} else this.audioWhy = `${t.codec} failed in MediaSource earlier in this session`;
+		console.info('audio to WebAssembly:', this.audioWhy);
 		await this.startPcm(t);
 	}
 
@@ -748,6 +763,7 @@ export class Unpacker {
 		if (this.aout && at && (audioSaid || (!videoSaid && exotic))) {
 			e.stopPropagation();
 			refusedAudio.add(at.codec);
+			this.audioWhy = `media error: ${message || 'no message'}`;
 			console.info('audio to WebAssembly after', message);
 			void this.toPcm().catch((err) => this.fail(err));
 			return;

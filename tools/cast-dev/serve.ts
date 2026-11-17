@@ -1,9 +1,11 @@
 // The Cast receiver's local test server: bun tools/cast-dev/serve.ts [--port 8787] [--no-watch]
 //
-// Serves two things and nothing else, on the loopback interface only, for a tunnel to put in
-// front of it (the dev receiver app's URL):
+// Serves two things and takes one, on the loopback interface only, for a tunnel to put in front
+// of it (the dev receiver app's URL):
 //   /           the receiver build, website/public/cast/receiver/ (index.html at /)
 //   /media/     the test media tools/cast-dev/media.sh writes, with CORS and byte ranges
+//   POST /log   a line from the dev receiver (status, audio setup, page errors), written to this
+//               server's log as "receiver <line>"
 // Any other path is 404. Directories are never listed. Nothing is cached, so a TV reloading the
 // receiver gets the build that is on disk now.
 //
@@ -107,6 +109,13 @@ function serve(request: Request, file: string, media: boolean): Response {
 	return new Response(request.method === 'HEAD' ? null : body, { status: 200, headers });
 }
 
+/** Logs a line the receiver posted: at most 2000 characters, control characters as spaces. */
+async function receiverLine(request: Request): Promise<Response> {
+	const text = (await request.text().catch(() => '')).slice(0, 2000).replace(/[\x00-\x1f\x7f]+/g, ' ').trim();
+	if (text) log(`receiver ${text}`);
+	return new Response(null, { status: 204, headers: { 'cache-control': 'no-store' } });
+}
+
 const server = Bun.serve({
 	hostname: '127.0.0.1',
 	port,
@@ -115,6 +124,8 @@ const server = Bun.serve({
 		const path = url.pathname;
 		const media = path.startsWith('/media/');
 		if (request.method === 'OPTIONS' && media) return new Response(null, { status: 204, headers: cors });
+		// The dev receiver's status and error lines (debug.ts devLog), one log line each.
+		if (path === '/log' && request.method === 'POST') return receiverLine(request);
 		if (request.method !== 'GET' && request.method !== 'HEAD') return new Response(null, { status: 405 });
 		const file = media
 			? inside(mediaDir, path.slice('/media/'.length))

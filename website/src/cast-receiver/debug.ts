@@ -56,6 +56,7 @@ export class DebugStatusLine {
 	private buf = new Float32Array(2048);
 	private decodedSeconds: number | null = null;
 	private shownBase = 0;
+	private lastSetup = '';
 
 	constructor(
 		private readonly video: HTMLVideoElement,
@@ -127,9 +128,27 @@ export class DebugStatusLine {
 		const s = this.status;
 		const decoded = s.audioDecoded == null ? '?' : s.audioUnit === 's' ? `${s.audioDecoded.toFixed(1)} s` : `${s.audioDecoded} bytes`;
 		const level = s.level == null ? '?' : s.level <= -120 ? 'silent' : `${s.level.toFixed(1)} dBFS`;
-		const line = `audio ${s.audioPath} ${stats?.audio ?? ''} decoded ${decoded} level ${level}\nvideo ${stats?.video ?? ''} decoded ${s.videoDecoded ?? '?'} shown ${s.videoShown ?? '?'} at ${s.time} s`;
-		this.el.textContent = line;
-		console.info('[debug]', line.replace('\n', ' | '));
-		devLog(`status ${line.replace('\n', ' | ')}`);
+		const p = stats?.pcm;
+		const pcm = p
+			? `\npcm queued ${p.queued.toFixed(2)} s drift ${ms(p.drift)} worst ${ms(p.worst)} jumps ${p.jumps} waits ${p.waits ?? 0} starved ${p.starved}`
+			: '';
+		const line = `audio ${s.audioPath} ${stats?.audio ?? ''} decoded ${decoded} level ${level}\nvideo ${stats?.video ?? ''} decoded ${s.videoDecoded ?? '?'} shown ${s.videoShown ?? '?'} at ${s.time} s${pcm}`;
+		const why = stats?.audioWhy ? `\nwhy ${stats.audioWhy}` : '';
+		this.el.textContent = line + why;
+		console.info('[debug]', line.replaceAll('\n', ' | '));
+		devLog(`status ${line.replaceAll('\n', ' | ')}`);
+		// The audio's setup, and why it plays through WebAssembly, once per change.
+		const setup = stats ? `setup ${stats.format} audio ${stats.audioPath ?? 'none'} ${stats.audioSetup ?? 'no audio track'}${stats.audioWhy ? ` | why ${stats.audioWhy}` : ''}` : '';
+		if (setup && setup !== this.lastSetup) {
+			this.lastSetup = setup;
+			console.info('[debug]', setup);
+			devLog(setup);
+		}
 	}
+}
+
+/** Seconds as signed milliseconds. */
+function ms(seconds: number): string {
+	const v = Math.round(seconds * 1000);
+	return `${v > 0 ? '+' : ''}${v} ms`;
 }

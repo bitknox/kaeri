@@ -72,6 +72,8 @@ export interface Demuxer {
 	select?(ids: number[]): void;
 	/** Spans skipped because their segments never came, for playback to step over. */
 	readonly skipped?: [number, number][];
+	/** Segmented streams: the segments' container (ts or mp4), for the dev log. */
+	readonly container?: string;
 	/** Stops a read that waits on the network, for a seek elsewhere. */
 	interrupt?(): void;
 	close(): void;

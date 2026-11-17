@@ -30,7 +30,11 @@ export interface PcmStats {
 	drift: number;
 	/** The largest drift since the last seek. */
 	worst: number;
+	/** Times the audio was behind and skipped forward. */
 	jumps: number;
+	/** Render quanta left silent because the audio was ahead of the video. */
+	waits: number;
+	/** Render quanta with nothing decoded to play. */
 	starved: number;
 	/** Seconds of PCM waiting in the worklet. */
 	queued: number;
@@ -38,7 +42,7 @@ export interface PcmStats {
 }
 
 export class PcmAudio {
-	stats: PcmStats = { drift: 0, worst: 0, jumps: 0, starved: 0, queued: 0, time: 0 };
+	stats: PcmStats = { drift: 0, worst: 0, jumps: 0, waits: 0, starved: 0, queued: 0, time: 0 };
 	private gen = 0;
 	private timer = 0;
 	private gain: GainNode;
