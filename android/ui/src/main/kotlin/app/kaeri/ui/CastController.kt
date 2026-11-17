@@ -31,7 +31,6 @@ import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.SeekableTransitionState
 import androidx.compose.animation.core.Transition
 import androidx.compose.animation.core.VisibilityThreshold
-import androidx.compose.animation.core.animateDp
 import androidx.compose.animation.core.rememberTransition
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
@@ -95,13 +94,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.clipToBounds
+import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.geometry.RoundRect
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Path
-import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
@@ -115,7 +115,9 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.setProgress
 import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.IntOffset
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -424,20 +426,58 @@ fun CastMiniSlot() {
                     onDragStopped = { drag.release(it) },
                 ),
         ) {
-            with(morph.layout) {
-                morph.transition.AnimatedVisibility(
-                    visible = { !it },
-                    enter = if (morph.still) fadeIn(Motion.reveal()) else fadeIn(tween(200, delayMillis = 100)),
-                    exit = if (morph.still) fadeOut(Motion.reveal()) else fadeOut(tween(100)),
+            CastMiniSurface(morph) { CastMini(cast, this, morph) }
+        }
+    }
+}
+
+/**
+ * The mini's half of the morph's surface, which lies over the controller's half. As the controller
+ * closes into it, it fades in over the controller's half at the start while that half's words fade
+ * out, fills the surface's bounds, and its words and buttons fade in over the last part. As it
+ * opens into the controller, it fades out at the start, uncovering the controller's half. The
+ * cover flies on its own, above both.
+ */
+@OptIn(ExperimentalSharedTransitionApi::class)
+@Composable
+internal fun CastMiniSurface(morph: CastMorph, content: @Composable AnimatedVisibilityScope.() -> Unit) {
+    with(morph.layout) {
+        morph.transition.AnimatedVisibility(
+            visible = { !it },
+            enter = if (morph.still) fadeIn(Motion.reveal()) else EnterTransition.None,
+            exit = if (morph.still) fadeOut(Motion.reveal()) else ExitTransition.None,
+        ) {
+            Box(
+                Modifier
+                    .fillMaxSize()
+                    .then(
+                        if (morph.still) {
+                            Modifier
+                        } else {
+                            Modifier.sharedBounds(
+                                rememberSharedContentState(SURFACE),
+                                this,
+                                enter = fadeIn(tween(HANDOVER)),
+                                exit = fadeOut(tween(HANDOVER)),
+                                boundsTransform = morph.bounds,
+                                resizeMode = SharedTransitionScope.ResizeMode.RemeasureToBounds,
+                                clipInOverlayDuringTransition = Unclipped,
+                                zIndexInOverlay = MINI_LAYER,
+                            ).clipToBounds()
+                        },
+                    )
+                    .background(MaterialTheme.colorScheme.surfaceContainerHigh),
+            ) {
+                Box(
+                    Modifier
+                        .fillMaxSize()
+                        .then(if (morph.still) Modifier else Modifier.skipToLookaheadSize())
+                        .animateEnterExit(
+                            enter = if (morph.still) EnterTransition.None else fadeIn(tween(200, delayMillis = 100)),
+                            exit = if (morph.still) ExitTransition.None else fadeOut(tween(100)),
+                        ),
                 ) {
-                    Box(
-                        Modifier
-                            .fillMaxSize()
-                            .then(if (morph.still) Modifier else Modifier.sharedBounds(rememberSharedContentState(SURFACE), this, fadeIn(tween(1)), fadeOut(tween(300, delayMillis = 150)), morph.bounds, clipInOverlayDuringTransition = OverlayClip(RectangleShape)))
-                            .background(MaterialTheme.colorScheme.surfaceContainerHigh),
-                    ) {
-                        CastMini(cast, this@AnimatedVisibility, morph)
-                    }
+                    content()
                 }
             }
         }
@@ -468,12 +508,29 @@ private fun CastExpandedLayer(morph: CastMorph) {
                 }
             }
         }
+        CastControllerSurface(morph, Modifier.nestedScroll(morph.drag.connection)) { CastControllerContent(this, morph) }
+    }
+}
+
+/**
+ * The controller's half of the morph's surface, under the mini's half, whose background never
+ * fades: whichever way the surface flies or turns, one half covers it. Opening, it fills the
+ * surface's bounds and its words fade in over the last part. Closing, its words fade out over the
+ * first part, under the mini's half.
+ */
+@OptIn(ExperimentalSharedTransitionApi::class)
+@Composable
+internal fun CastControllerSurface(morph: CastMorph, modifier: Modifier = Modifier, content: @Composable AnimatedVisibilityScope.() -> Unit) {
+    with(morph.layout) {
         morph.transition.AnimatedVisibility(
             visible = { it },
             enter = if (morph.still) fadeIn(Motion.reveal()) else EnterTransition.None,
             exit = if (morph.still) fadeOut(Motion.reveal()) else ExitTransition.None,
         ) {
             val scope = this
+            val surface = MaterialTheme.colorScheme.surfaceContainerHigh
+            // Closed, the surface is the mini's: the controller's frame left after the flight shows nothing.
+            val flying = { morph.transition.targetState || morph.transition.currentState != morph.transition.targetState }
             Box(
                 Modifier
                     .fillMaxSize()
@@ -484,17 +541,18 @@ private fun CastExpandedLayer(morph: CastMorph) {
                             Modifier.sharedBounds(
                                 rememberSharedContentState(SURFACE),
                                 scope,
-                                enter = fadeIn(tween(150)),
-                                exit = fadeOut(tween(300, delayMillis = 150)),
+                                enter = EnterTransition.None,
+                                exit = ExitTransition.None,
                                 boundsTransform = morph.bounds,
                                 resizeMode = SharedTransitionScope.ResizeMode.RemeasureToBounds,
-                                clipInOverlayDuringTransition = OverlayClip(RectangleShape),
-                            )
+                                clipInOverlayDuringTransition = Unclipped,
+                                zIndexInOverlay = CONTROLLER_LAYER,
+                            ).clipToBounds()
                         },
                     )
-                    .background(MaterialTheme.colorScheme.surfaceContainerHigh)
+                    .then(if (morph.still) Modifier.background(surface) else Modifier.drawBehind { if (flying()) drawRect(surface) })
                     // Down on the controller, with its list at the top, closes it into the mini.
-                    .nestedScroll(morph.drag.connection),
+                    .then(modifier),
             ) {
                 Box(
                     Modifier
@@ -505,22 +563,59 @@ private fun CastExpandedLayer(morph: CastMorph) {
                             exit = if (morph.still) ExitTransition.None else fadeOut(tween(100)),
                         ),
                 ) {
-                    CastControllerContent(scope, morph)
+                    scope.content()
                 }
             }
         }
     }
 }
 
-/** The cover, which flies between the mini and the controller with its radius going from 8 to 16. */
+/**
+ * The overlay's order while the surface flies: the controller's half under the mini's, which fades
+ * in over it as the controller closes and out of it as it opens, and the cover over both.
+ */
+private const val CONTROLLER_LAYER = 0f
+private const val MINI_LAYER = 1f
+private const val COVER_LAYER = 2f
+
+/** How long the mini's half takes to fade in over the controller's, or out of it, at the start of a flight. */
+private const val HANDOVER = 150
+
+/**
+ * The cover, which flies between the mini and the controller above both halves of the surface,
+ * whole even where a turned back flight carries it past the surface's edge. Its corners stay 16
+ * the whole way, so the clip shrinks with the bounds, on their curve: a rounded banner in the
+ * controller, a rounded square in the mini, whichever way it goes or wherever a drag catches it.
+ */
 @OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
-private fun Modifier.castCover(scope: AnimatedVisibilityScope, morph: CastMorph): Modifier {
-    val radius by morph.transition.animateDp(label = "cover radius") { if (it) 16.dp else 8.dp } // i18n-skip
+internal fun Modifier.castCover(scope: AnimatedVisibilityScope, morph: CastMorph): Modifier {
     val shaped = if (morph.still) this else with(morph.layout) {
-        this@castCover.sharedElement(rememberSharedContentState(COVER), scope, boundsTransform = morph.bounds)
+        this@castCover.sharedElement(
+            rememberSharedContentState(COVER),
+            scope,
+            boundsTransform = morph.bounds,
+            zIndexInOverlay = COVER_LAYER,
+            clipInOverlayDuringTransition = Unclipped,
+        )
     }
-    return shaped.clip(RoundedCornerShape(radius))
+    return shaped.clip(COVER_SHAPE)
+}
+
+private val COVER_SHAPE = RoundedCornerShape(16.dp)
+
+/**
+ * No clip from the overlay: the cover flies unclipped by the surface it crosses, and each half of
+ * the surface clips itself to its own bounds as they are this frame.
+ */
+@OptIn(ExperimentalSharedTransitionApi::class)
+private object Unclipped : SharedTransitionScope.OverlayClip {
+    override fun getClipPath(
+        sharedContentState: SharedTransitionScope.SharedContentState,
+        bounds: Rect,
+        layoutDirection: LayoutDirection,
+        density: Density,
+    ): Path? = null
 }
 
 /** The show's art: the banner, else the still the engine sent, else its cover. */
