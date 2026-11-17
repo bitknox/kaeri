@@ -30,6 +30,45 @@ export function forwardErrors(loc: Location = location) {
 	addEventListener('unhandledrejection', (e) => devLog(`unhandled ${String((e.reason as Error)?.message ?? e.reason)}`, loc));
 }
 
+/** Audio forms the decoded sound could be handed to MediaSource in, for the dev log. */
+const FORMS = [
+	'audio/mp4; codecs="flac"',
+	'audio/mp4; codecs="fLaC"',
+	'audio/webm; codecs="pcm"',
+	'audio/x-matroska; codecs="pcm"',
+	'audio/mp4; codecs="ipcm"',
+	'audio/mp4; codecs="lpcm"',
+	'audio/mp4; codecs="opus"',
+	'audio/mp4; codecs="Opus"',
+	'audio/webm; codecs="opus"',
+	'audio/webm; codecs="vorbis"',
+	'audio/mp4; codecs="mp3"',
+	'audio/mp4; codecs="mp4a.6B"',
+	'audio/mpeg',
+	'audio/aac',
+	'audio/mp4; codecs="mp4a.40.2"',
+	'audio/mp4; codecs="ac-3"',
+	'audio/mp4; codecs="ec-3"',
+];
+
+/**
+ * On the dev receiver's host, which of FORMS the TV's MediaSource says it takes (and the media
+ * element's canPlayType), once at start.
+ */
+export function logSupport(loc: Location = location) {
+	if (!/^cast-dev\./.test(loc.hostname)) return;
+	const ms = (m: string) => {
+		try {
+			return globalThis.MediaSource?.isTypeSupported(m) ? 'yes' : 'no';
+		} catch {
+			return 'error';
+		}
+	};
+	const el = document.createElement('audio');
+	const can = (m: string) => el.canPlayType(m) || 'no';
+	devLog(`support ${FORMS.map((m) => `${m} mse ${ms(m)} play ${can(m)}`).join('; ')}`, loc);
+}
+
 export interface DebugStatus {
 	/** Who decodes the sound: the receiver's WebAssembly, MediaSource, or CAF's player. */
 	audioPath: 'wasm' | 'mse' | 'caf' | 'none';

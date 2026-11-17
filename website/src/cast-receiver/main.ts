@@ -18,7 +18,7 @@ import {
 	type LoadExtras,
 } from './protocol';
 import { Formats } from './formats/receiver';
-import { DebugStatusLine, debugOn, devLog, forwardErrors } from './debug';
+import { DebugStatusLine, debugOn, devLog, forwardErrors, logSupport } from './debug';
 import { ShownFrames, SilentPicture } from './silent';
 import { Typeset, canTypeset, type Failure } from './typeset';
 
@@ -752,6 +752,7 @@ async function start() {
 	shown = new ShownFrames(video);
 	if (debugOn()) {
 		forwardErrors();
+		logSupport();
 		debug = new DebugStatusLine(video, formats, () => shown?.count ?? null);
 		(window as unknown as Record<string, unknown>).__kaeriDebug = () => debug?.status ?? null;
 	}
