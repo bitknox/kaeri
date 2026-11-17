@@ -606,6 +606,7 @@ pub async fn play(
         current.link.prepare(&FileFacts {
             source: streams[index].clone(),
             played: stream.clone(),
+            id: context.anilist_id,
             title: context.title.clone(),
             episode: context.episode.clone(),
             episode_title: run

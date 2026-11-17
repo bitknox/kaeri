@@ -547,6 +547,13 @@ public sealed partial class TvRemote(Func<DateTimeOffset>? clock = null)
     public bool CastRelaying => cast is not null && CastCard is { Card.Over: false, Route: FfiCastRouteHint.ThroughThisDevice };
 
     /// <summary>
+    /// The cast's note for its notice: the held TV's session says it, and a cast from Play on TV,
+    /// which holds no session, says it on its card while it runs.
+    /// </summary>
+    public Msg? CastNote =>
+        (SessionHeld ? Session?.Note : null) ?? (CastCard is { Card.Over: false } card ? card.Note : null);
+
+    /// <summary>
     /// A Chromecast row chosen: cast what was asked to it, and show its card at once. A player
     /// that asked closes once the TV plays it.
     /// </summary>
@@ -610,6 +617,8 @@ public sealed partial class TvRemote(Func<DateTimeOffset>? clock = null)
         if (was is null || now is null || was.Position != now.Position || was.Paused != now.Paused || was.Loading != now.Loading)
             CastCardAt = clock();
         CastCard = next;
+        // A cast from Play on TV holds no session: as it connects, no cast is left running.
+        ReadLeftOn();
         // Up next played on the TV: the card, Play here and Try again follow the episode it plays.
         if (castPlayed && now is { Loading: false } && CastPlay is { } asked && (now.Id != asked.Id || now.Episode != asked.Episode))
             CastPlay = asked with { Id = now.Id, Title = now.Title, Episode = now.Episode, From = null };
@@ -899,7 +908,7 @@ public static class TvWords
     public static CastStage StageOf(FfiCastCard? card) => card switch
     {
         null => CastStage.Starting,
-        { Notice: Msg.NoticeCastLost } => CastStage.Lost,
+        { Notice: Msg.NoticeCastLost or Msg.NoticeCastStoppedElsewhere } => CastStage.Lost,
         { Notice: not null } => CastStage.Failed,
         { Card: { Phase: FfiLinkPhase.Connected, Now: { Loading: false, Duration: not null } } } => CastStage.Playing,
         _ => CastStage.Starting,
@@ -911,7 +920,7 @@ public static class TvWords
     /// </summary>
     public static bool OnCastCard(Msg? notice) => notice is Msg.NoticeCastVideoCodec or Msg.NoticeCastAudioCodec
         or Msg.NoticeCastContainer or Msg.NoticeCastDeepLink or Msg.NoticeCastNeverFetches or Msg.NoticeCastRefused
-        or Msg.NoticeCastTakenOver or Msg.NoticeCastNotSameNetwork or Msg.NoticeCastLost;
+        or Msg.NoticeCastTakenOver or Msg.NoticeCastNotSameNetwork or Msg.NoticeCastLost or Msg.NoticeCastStoppedElsewhere;
 
     /// <summary>What a card that ended offers, by the engine's reason.</summary>
     public static CastOffer[] OffersFor(Msg? notice) => notice switch

@@ -121,6 +121,11 @@ data class CastShown(
     val played: Boolean = false,
     /** The picker row of the TV it plays on, when the cast started from one. */
     val key: String? = null,
+    /**
+     * Where the playhead stopped as the TV went quiet: reconnecting, or waiting while the engine
+     * learns why the receiver left. The clock holds it until the TV says where it is again.
+     */
+    val frozen: Double? = null,
 ) {
     val stage: CastStage
         get() {
@@ -140,6 +145,15 @@ data class CastShown(
 
     /** The cast starts or plays: not a card that says why it stopped. */
     val live: Boolean get() = stage == CastStage.Starting || stage == CastStage.Playing
+
+    /** The connection to the TV closed and the engine makes it again: everything but Stop casting waits. */
+    val reconnecting: Boolean get() = live && cast.reconnecting
+
+    /** Seconds the TV has waited, for the stream or while the engine learns why it stopped; `null` while it plays. */
+    val waiting: UInt? get() = cast.waiting.takeIf { live }
+
+    /** The TV went quiet: its clock holds still. */
+    val quiet: Boolean get() = reconnecting || waiting != null
 }
 
 /**
@@ -191,6 +205,9 @@ class CastModel(
     /** A note while a TV plays, once as it first reads differently: a toast. */
     val notes: SharedFlow<Msg> = _notes.asSharedFlow()
 
+    /** Each cast notice, also kept in the notice log: notes, and why a cast ended. */
+    var kept: ((Msg) -> Unit)? = null
+
     private val _problem = MutableStateFlow<String?>(null)
 
     /** The engine's words for a cast that could not even be asked for, as the TV left the network. */
@@ -211,6 +228,7 @@ class CastModel(
     /** Kept with the card and the session as they change, with no coroutine of its own. */
     private fun recast() {
         _casting.value = _shown.value?.live == true || _session.value.state == CastSessionState.Playing
+        if (_shown.value?.live == true) _joining.value = null
     }
 
     private val _button = MutableStateFlow(CastButtonState.Hidden)
@@ -279,6 +297,9 @@ class CastModel(
     /** The last ending the snackbar said, so the card's end and the session's end say it once. */
     private var told: CastEnded? = null
 
+    /** Where the session's item stopped as its connection closed, while it is made again. */
+    private var sessionFrozen: Double? = null
+
     /** Whether casting is there: the engine's sender came with a Cast browse to give it. */
     val available: Boolean get() = tv?.attachedSender != null && browser != null
 
@@ -317,14 +338,19 @@ class CastModel(
 
     internal fun refresh() {
         val sender = tv?.attachedSender ?: return
-        _rows.value = if (browsing) sender.castRows() else emptyList()
+        takeRows(if (browsing) sender.castRows() else emptyList())
+    }
+
+    /** The TVs the browse found now. */
+    internal fun takeRows(rows: List<FfiCastRow>) {
+        _rows.value = rows
         refreshJoining()
         refreshButton()
     }
 
     /** A session left running is joined again once its TV is found: the mini says so meanwhile. */
     private fun refreshJoining() {
-        _joining.value = joining(_session.value, sessions?.leftOn(), _rows.value)
+        _joining.value = joining(_session.value, sessions?.leftOn(), _rows.value, _shown.value?.live == true)
     }
 
     /**
@@ -395,12 +421,15 @@ class CastModel(
     /** A view of the session: the button, the mini and the controller's card follow it. */
     internal fun takeSession(view: CastSession) {
         val was = _session.value
+        val wasAt = sessionAt
         sessionAt = clock()
         _session.value = view
         recast()
-        view.note?.let { if (it != was.note) _notes.tryEmit(it) }
+        view.note?.let { if (it != was.note) tellNote(it) }
+        if (view.reconnecting && !was.reconnecting) sessionFrozen = itemPlayhead(sessionAt, was, wasAt)
+        if (!view.reconnecting) sessionFrozen = null
         view.item?.let { _lastItem.value = it }
-        if (view.state != CastSessionState.Idle) _joining.value = null
+        refreshJoining()
         refreshButton()
         when {
             view.state == CastSessionState.Playing && link == null && _shown.value?.stage.let { it == null || it == CastStage.Starting } -> attachCard(view)
@@ -423,6 +452,12 @@ class CastModel(
         }
     }
 
+    /** Say [note] as a toast and keep it in the notice log. */
+    private fun tellNote(note: Msg) {
+        _notes.tryEmit(note)
+        kept?.invoke(note)
+    }
+
     /** The live card [shown] turns into one that says why the cast stopped: [notice]. */
     private fun stopsWith(shown: CastShown, notice: Msg) {
         pendingGuard?.cancel()
@@ -431,8 +466,9 @@ class CastModel(
         cards = null
         over = link
         link = null
-        _shown.value = shown.copy(cast = shown.cast.copy(card = shown.cast.card.copy(over = true), notice = notice))
+        _shown.value = shown.copy(cast = shown.cast.copy(card = shown.cast.card.copy(over = true), notice = notice, reconnecting = false, waiting = null))
         recast()
+        kept?.invoke(notice)
     }
 
     /** The cast ended with [ended] to say once its card has gone: the snackbar, said once. */
@@ -440,6 +476,7 @@ class CastModel(
         if (ended == told) return
         told = ended
         _ended.tryEmit(ended)
+        kept?.invoke(ended.notice)
     }
 
     /** The controller's card for what the held TV plays, from the engine's cast. */
@@ -627,9 +664,25 @@ class CastModel(
         val held = _shown.value ?: return
         val same = held.cast.card.now?.position == card.card.now?.position && held.cast.card.now?.paused == card.card.now?.paused
         val playing = card.notice == null && card.card.now?.loading == false
-        _shown.value = held.copy(cast = card, at = if (same) held.at else clock(), played = held.played || playing)
+        // The TV went on to another episode, as a joined cast does when the device that started it casts the next.
+        val tvNow = card.card.now
+        val request = if (tvNow != null && (tvNow.id != held.request.id || tvNow.episode != held.request.episode)) {
+            held.request.copy(id = tvNow.id, title = tvNow.title, episode = tvNow.episode, from = null)
+        } else {
+            held.request
+        }
+        val next = held.copy(cast = card, at = if (same) held.at else clock(), played = held.played || playing, request = request)
+        // The clock stops where it was the moment the TV went quiet, and runs again once it speaks.
+        val frozen = when {
+            !next.quiet -> null
+            held.frozen != null -> held.frozen
+            else -> playhead(clock(), held)
+        }
+        _shown.value = next.copy(frozen = frozen)
         recast()
         if (held.stage != _shown.value?.stage) refreshButton()
+        // A cast from Play on TV holds no session, so its card carries the note; a held session says it itself.
+        card.note?.let { if (it != held.cast.note && !sessionNotes) tellNote(it) }
         if (!card.card.over) return
         val notice = card.notice
         val now = card.card.now
@@ -649,6 +702,7 @@ class CastModel(
             // Failed or lost: the card says so until it is dismissed. The TV may have moved, which
             // a browse below Android 14 finds only by resolving it again.
             else -> {
+                kept?.invoke(notice)
                 (browser as? NsdRelook)?.relook()
                 cards?.cancel()
                 cards = null
@@ -658,6 +712,10 @@ class CastModel(
             }
         }
     }
+
+    /** The session's view carries the note, as it does while it plays or is connected. */
+    private val sessionNotes: Boolean
+        get() = _session.value.state.let { it == CastSessionState.Playing || it == CastSessionState.Connected }
 
     /** Let the cast and its card go. */
     private fun end() {
@@ -786,18 +844,23 @@ class CastModel(
     }
 
     /** Where the TV's playhead is now: moved on from the card on this device's clock while it plays. */
-    fun playhead(at: Long = clock()): Double? {
-        val shown = _shown.value ?: return null
+    fun playhead(at: Long = clock()): Double? = playhead(at, _shown.value)
+
+    private fun playhead(at: Long, shown: CastShown?): Double? {
+        shown ?: return null
         val now = shown.cast.card.now ?: return null
-        if (shown.stage != CastStage.Playing) return now.position
+        shown.frozen?.let { return it }
+        if (shown.stage != CastStage.Playing || shown.quiet) return now.position
         return tvPlayhead(now, ((at - shown.at).coerceAtLeast(0)) / 1000.0)
     }
 
     /** Where the session's item is now, moved on from its view on this device's clock while it plays. */
-    fun itemPlayhead(at: Long = clock()): Double? {
-        val item = _session.value.item ?: return null
-        if (item.paused || item.loading || item.waiting != null) return item.position
-        val moved = item.position + (at - sessionAt).coerceAtLeast(0) / 1000.0
+    fun itemPlayhead(at: Long = clock()): Double? = sessionFrozen ?: itemPlayhead(at, _session.value, sessionAt)
+
+    private fun itemPlayhead(at: Long, view: CastSession, since: Long): Double? {
+        val item = view.item ?: return null
+        if (item.paused || item.loading || item.waiting != null || view.reconnecting) return item.position
+        val moved = item.position + (at - since).coerceAtLeast(0) / 1000.0
         return item.duration?.let { moved.coerceAtMost(it) } ?: moved
     }
 
@@ -810,11 +873,12 @@ class CastModel(
     companion object {
         /**
          * The TV a session was left running on, by name, while it is joined again: only with no
-         * session at all. One that ended with a notice says so, and is looked for again once the
+         * session at all and no cast of this device's [live] outside it, which is what plays on
+         * that TV then. One that ended with a notice says so, and is looked for again once the
          * browse finds its TV anew, never as a Reconnecting that waits on nothing.
          */
-        internal fun joining(session: CastSession, leftOn: String?, rows: List<FfiCastRow>): String? {
-            if (session.state != CastSessionState.Idle) return null
+        internal fun joining(session: CastSession, leftOn: String?, rows: List<FfiCastRow>, live: Boolean = false): String? {
+            if (session.state != CastSessionState.Idle || live) return null
             return leftOn?.let { left -> rows.firstOrNull { it.key == left }?.name }
         }
 

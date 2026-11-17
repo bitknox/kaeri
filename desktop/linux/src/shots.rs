@@ -404,6 +404,10 @@ fn stage(shell: &Rc<Shell>, shot: &str) -> f64 {
     if let Some(settle) = crate::shots_private::stage(shell, shot) {
         return settle;
     }
+    #[cfg(feature = "fixtures")]
+    if let Some(settle) = crate::shots_cast_states::stage(shell, shot) {
+        return settle;
+    }
     let window = &shell.ctx.window;
     match shot {
         "home" => {
@@ -1445,6 +1449,8 @@ fn unstage(shell: &Rc<Shell>, shot: &str) {
     crate::shots_missing::unstage(shell, shot);
     #[cfg(feature = "fixtures")]
     crate::shots_private::unstage(shell, shot);
+    #[cfg(feature = "fixtures")]
+    crate::shots_cast_states::unstage(shell, shot);
     if shot.starts_with("start-") {
         shell.player.close();
     }
@@ -2051,16 +2057,15 @@ thread_local! {
 /// A motion as frames: the window drawn on each frame it paints, `count` of them, into
 /// `<shots>/<name>/<ms>.png` by the frame clock's time since the first.
 #[cfg(feature = "fixtures")]
-fn frames(window: &adw::ApplicationWindow, name: &'static str, count: u32) {
+pub(crate) fn frames(window: &adw::ApplicationWindow, name: &'static str, count: u32) {
     let Some(dir) = FRAMES.with(|f| f.borrow().clone()) else { return };
     let taken = std::cell::Cell::new(0u32);
     let held = std::cell::RefCell::new(Vec::<(i64, gtk::gdk::Texture)>::new());
-    let first = std::cell::Cell::new(None::<i64>);
-    window.add_tick_callback(move |window, clock| {
-        let now = clock.frame_time();
-        let start = *first.get().get_or_insert(now);
-        first.set(Some(start));
-        let ms = (now - start) / 1000;
+    // Named by the wall clock from the call: an idle window's first tick can carry a stale
+    // frame time.
+    let start = glib::monotonic_time();
+    window.add_tick_callback(move |window, _clock| {
+        let ms = (glib::monotonic_time() - start) / 1000;
         // Drawn now and saved once the motion is over, so saving never holds a frame up.
         if let Some(texture) = render(window) {
             held.borrow_mut().push((ms, texture));
@@ -2091,7 +2096,7 @@ fn render(window: &adw::ApplicationWindow) -> Option<gtk::gdk::Texture> {
     Some(window.renderer()?.render_texture(&node, Some(&bounds)))
 }
 
-fn close_dialogs(window: &adw::ApplicationWindow) {
+pub(crate) fn close_dialogs(window: &adw::ApplicationWindow) {
     if let Some(dialog) = window.visible_dialog() {
         dialog.force_close();
     }
@@ -2198,6 +2203,10 @@ async fn painted(shell: &Rc<Shell>, path: &std::path::Path, shot: &str) -> Resul
                     open_popover(&window)
                 }
                 #[cfg(feature = "fixtures")]
+                cast if crate::shots_cast_states::POPOVERS.contains(&cast) => {
+                    open_popover(&window)
+                }
+                #[cfg(feature = "fixtures")]
                 "read-disc-poster-menu" | "read-disc-poster-menu-own" => context_menu(&window),
                 #[cfg(feature = "fixtures")]
                 "read-series-group-picker" => {
@@ -2254,6 +2263,14 @@ pub fn named(list: Option<&str>) -> Vec<String> {
                 "stats" => STATS.iter().map(|p| (*p).to_owned()).collect(),
                 "tv" => TV.iter().map(|p| (*p).to_owned()).collect(),
                 "cast" => CAST.iter().map(|p| (*p).to_owned()).collect(),
+                #[cfg(feature = "fixtures")]
+                "cast-states" => {
+                    crate::shots_cast_states::STILLS.iter().map(|p| (*p).to_owned()).collect()
+                }
+                #[cfg(feature = "fixtures")]
+                "cast-states-clips" => {
+                    crate::shots_cast_states::CLIPS.iter().map(|p| (*p).to_owned()).collect()
+                }
                 #[cfg(feature = "fixtures")]
                 "sync" => crate::sync::shots::NAMES.iter().map(|p| (*p).to_owned()).collect(),
                 #[cfg(feature = "fixtures")]

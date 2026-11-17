@@ -417,10 +417,11 @@ public final class AppStore {
         tv.attach(sender, browser: BonjourTVBrowser(access: access), castBrowser: BonjourCastBrowser(access: access))
     }
 
-    /// What a cast hands back to the app: the notice that someone else took the TV, and Play
-    /// here, from where the TV was.
+    /// What a cast hands back to the app: the notice that it ended by itself, kept in Messages
+    /// alone while the controller says it, and Play here, from where the TV was.
     private func attachCast() {
         tv.cast.say = { [weak self] notice in self?.notices.post(notice) }
+        tv.cast.keep = { [weak self] notice in self?.notices.record(notice) }
         tv.cast.unsay = { [weak self] notice in self?.notices.withdraw(notice) }
         tv.cast.playLocally = { [weak self] id, episode, position in
             guard let self else { return }

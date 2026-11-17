@@ -38,6 +38,8 @@ mod reading;
 mod say;
 mod shots;
 #[cfg(feature = "fixtures")]
+mod shots_cast_states;
+#[cfg(feature = "fixtures")]
 mod shots_following;
 #[cfg(feature = "fixtures")]
 mod shots_missing;

@@ -158,6 +158,7 @@ fn torrent(url: String) -> CastLoad {
         audio_language: Some("ja".into()),
         audio_track: None,
         audio_memory: None,
+        card: None,
     }
 }
 
@@ -1284,6 +1285,7 @@ fn media_status(state: &str, position: f64) -> MediaStatus {
         content: None,
         metadata: None,
         has_media: false,
+        card: None,
     }
 }
 
@@ -2180,6 +2182,186 @@ async fn a_receiver_another_sender_plays_on_takes_this_ones_controls() {
     player.stop().await.unwrap();
     let stops = receiver.heard("STOP");
     assert!(stops.iter().any(|m| m["mediaSessionId"].is_i64()), "{stops:?}");
+}
+
+/// The sender that started what a joined receiver plays stops casting: the cast this sender
+/// joined ends at once as stopped there, with no wait on the TV and nothing read as starting
+/// between.
+#[tokio::test(flavor = "multi_thread", worker_threads = 4)]
+async fn a_joined_cast_ends_at_once_when_the_sender_that_started_it_stops_casting() {
+    let receiver = FakeReceiver::start(FakeOptions {
+        duration: 600.0,
+        remembers: true,
+        ..FakeOptions::default()
+    })
+    .await
+    .unwrap();
+    let (theirs, _events) = playing(&receiver).await;
+    drop(theirs);
+    let (player, _events) = connect_standard(setup(
+        &receiver,
+        Arc::new(CastMemory::memory()),
+        Arc::new(FakeEncoder::default()),
+    ))
+    .await
+    .unwrap();
+    player.launch().await.unwrap();
+    let mut status = player.status();
+    tokio::time::timeout(
+        Duration::from_secs(5),
+        status.wait_for(|s| s.state == CastState::Playing),
+    )
+    .await
+    .expect("the receiver says what plays")
+    .unwrap();
+
+    receiver.stop_elsewhere();
+    let mut seen = Vec::new();
+    let ended = tokio::time::timeout(Duration::from_millis(500), async {
+        loop {
+            let now = status.borrow_and_update().clone();
+            if now.state == CastState::Ended {
+                return now;
+            }
+            seen.push((now.state, now.waiting_since.is_some()));
+            status.changed().await.unwrap();
+        }
+    })
+    .await
+    .unwrap_or_else(|_| panic!("ended at once, not after {seen:?}"));
+    assert_eq!(ended.failure, Some(CastFailure::StoppedElsewhere));
+    assert!(!seen.iter().any(|(_, waiting)| *waiting), "never waits on the TV: {seen:?}");
+}
+
+fn card_of(episode: &str) -> JoinCard {
+    JoinCard {
+        id: 900_002,
+        episode: episode.into(),
+        title: "A Made-up Show".into(),
+        episode_title: None,
+    }
+}
+
+/// A load says its card beside the media, and the TV says it back with the media's status: on
+/// the Default Media Receiver and on Kaeri's own.
+#[tokio::test(flavor = "multi_thread", worker_threads = 4)]
+async fn a_load_carries_its_card_and_the_tv_says_it_back() {
+    for standard in [true, false] {
+        let file = matroska(&Fixture::default());
+        let base = serve(HashMap::from([("/episode.mkv".to_owned(), file)])).await;
+        let receiver = FakeReceiver::start(FakeOptions::default()).await.unwrap();
+        let setup =
+            setup(&receiver, Arc::new(CastMemory::memory()), Arc::new(FakeEncoder::default()));
+        let (player, mut events) = if standard {
+            connect_standard(setup).await.unwrap()
+        } else {
+            CastPlayer::connect(setup).await.unwrap()
+        };
+        let load =
+            CastLoad { card: Some(card_of("1")), ..torrent(format!("{base}/episode.mkv")) };
+        player.load(load);
+        next(&mut events, |e| *e == PlaybackEvent::Loaded).await;
+        let loads = receiver.heard("LOAD");
+        assert_eq!(
+            loads[0]["media"]["customData"]["kaeriCard"],
+            json!({"id": 900_002, "episode": "1", "title": "A Made-up Show"}),
+            "standard: {standard}"
+        );
+        assert_eq!(
+            loads[0]["media"]["customData"]["kaeri"].is_object(),
+            !standard,
+            "Kaeri's part only for Kaeri's receiver"
+        );
+        assert_eq!(player.current().card, Some(card_of("1")), "standard: {standard}");
+        player.quit().await.unwrap();
+    }
+}
+
+/// A phone joined to the cast another device started on a TV that keeps its receiver: the other
+/// device's load of episode 1, with or without its card, and the phone's player that joined it.
+async fn joined_to(receiver: &FakeReceiver, card: Option<JoinCard>) -> CastPlayer {
+    let file = matroska(&Fixture::default());
+    let base = serve(HashMap::from([("/episode.mkv".to_owned(), file)])).await;
+    let (theirs, mut events) = connect_standard(setup(
+        receiver,
+        Arc::new(CastMemory::memory()),
+        Arc::new(FakeEncoder::default()),
+    ))
+    .await
+    .unwrap();
+    theirs.load(CastLoad { card, ..torrent(format!("{base}/episode.mkv")) });
+    next(&mut events, |e| *e == PlaybackEvent::Loaded).await;
+    // The fake serves one sender at a time: the other one's connection goes as this one comes.
+    drop(theirs);
+    let (player, _events) = connect_standard(setup(
+        receiver,
+        Arc::new(CastMemory::memory()),
+        Arc::new(FakeEncoder::default()),
+    ))
+    .await
+    .unwrap();
+    player.launch().await.unwrap();
+    status_until(&player, |s| s.state == CastState::Playing).await;
+    player
+}
+
+fn tv_that_keeps_its_receiver() -> FakeOptions {
+    FakeOptions { duration: 600.0, remembers: true, ..FakeOptions::default() }
+}
+
+/// The other Kaeri device casts its next episode to the TV: the phone that joined follows it,
+/// with the new card, and its controls go to the new episode.
+#[tokio::test(flavor = "multi_thread", worker_threads = 4)]
+async fn a_joined_player_follows_the_next_episode_another_kaeri_device_casts() {
+    let receiver = FakeReceiver::start(tv_that_keeps_its_receiver()).await.unwrap();
+    let player = joined_to(&receiver, Some(card_of("1"))).await;
+    assert_eq!(player.current().card, Some(card_of("1")));
+
+    receiver.load_elsewhere_with(json!({"kaeriCard": card_of("2")}));
+    let now = status_until(&player, |s| {
+        s.card.as_ref().is_some_and(|c| c.episode == "2") && s.state == CastState::Playing
+    })
+    .await;
+    assert_eq!(now.failure, None);
+    tokio::time::sleep(Duration::from_millis(300)).await;
+    assert!(player.is_alive(), "never taken over: {:?}", player.failure());
+
+    player.set_paused(true).await.unwrap();
+    let pauses = receiver_heard_soon(&receiver, "PAUSE", 1).await;
+    assert_eq!(pauses[0]["mediaSessionId"], 2, "the controls go to the new episode");
+}
+
+/// Another app's load on the TV, or a Kaeri without the card, still takes it from a phone
+/// that joined.
+#[tokio::test(flavor = "multi_thread", worker_threads = 4)]
+async fn a_joined_player_is_taken_over_by_a_load_without_a_card() {
+    let receiver = FakeReceiver::start(tv_that_keeps_its_receiver()).await.unwrap();
+    let player = joined_to(&receiver, Some(card_of("1"))).await;
+    receiver.load_elsewhere();
+    status_until(&player, |s| s.state == CastState::Ended).await;
+    assert_eq!(player.failure(), Some(CastFailure::TakenOver));
+}
+
+/// The phone's own cast is taken over by another Kaeri device's load as before: only a phone
+/// that joined follows.
+#[tokio::test(flavor = "multi_thread", worker_threads = 4)]
+async fn a_cast_of_this_device_is_taken_over_by_another_kaeri_devices_load() {
+    let receiver = FakeReceiver::start(tv_that_keeps_its_receiver()).await.unwrap();
+    let (player, _events) = playing(&receiver).await;
+    receiver.load_elsewhere_with(json!({"kaeriCard": card_of("2")}));
+    status_until(&player, |s| s.state == CastState::Ended).await;
+    assert_eq!(player.failure(), Some(CastFailure::TakenOver));
+}
+
+/// A cast loaded without a card, by another app or an older Kaeri: the phone that joins it
+/// drives it and reads no card.
+#[tokio::test(flavor = "multi_thread", worker_threads = 4)]
+async fn a_joined_cast_without_a_card_has_none_and_takes_the_controls() {
+    let receiver = FakeReceiver::start(tv_that_keeps_its_receiver()).await.unwrap();
+    let player = joined_to(&receiver, None).await;
+    assert_eq!(player.current().card, None);
+    player.set_paused(true).await.unwrap();
+    receiver_heard_soon(&receiver, "PAUSE", 1).await;
 }
 
 /// An HLS master with the original and a dub as audio renditions beside one picture, the

@@ -69,8 +69,9 @@ static class Dialogs
         }
         catch (Exception e)
         {
-            // A dialog opened outside this helper is up. Every dialog comes through here, so this is a slip.
-            KaeriFfiMethods.LogLine(FfiLogLevel.Warn, "windows", $"a dialog was refused: {e.Message}");
+            // A dialog opened outside this helper is up, or this one has no XamlRoot yet. Either is a
+            // slip, so the log names the dialog.
+            KaeriFfiMethods.LogLine(FfiLogLevel.Warn, "windows", $"a dialog was refused ({dialog.Title as string ?? dialog.GetType().Name}): {e.Message}");
             return ContentDialogResult.None;
         }
         finally

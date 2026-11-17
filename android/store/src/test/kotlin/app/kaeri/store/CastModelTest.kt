@@ -88,6 +88,11 @@ class CastModelTest {
         over: Boolean = false,
         notice: Msg? = null,
         control: FfiVolumeControl = FfiVolumeControl.LEVEL,
+        position: Double = 120.0,
+        reconnecting: Boolean = false,
+        waiting: UInt? = null,
+        note: Msg? = null,
+        episode: String = "7",
     ) = FfiCastCard(
         card = FfiRemoteCard(
             tvName = "Living room",
@@ -95,8 +100,8 @@ class CastModelTest {
             phaseLine = null,
             screen = FfiScreen.Player,
             now = FfiNowCard(
-                id = 900001u, title = "The Lantern Road", episode = "7", episodeLine = "Episode 7", loading = loading,
-                position = 120.0, duration = 1420.0, paused = false, speed = 1.0, volume = volume, audio = emptyList(),
+                id = 900001u, title = "The Lantern Road", episode = episode, episodeLine = "Episode $episode", loading = loading,
+                position = position, duration = 1420.0, paused = false, speed = 1.0, volume = volume, audio = emptyList(),
                 subtitles = emptyList(), subtitlesOff = false, skip = null,
             ),
             rev = 1u,
@@ -106,6 +111,9 @@ class CastModelTest {
         volumeControl = control,
         muted = false,
         notice = notice,
+        waiting = waiting,
+        reconnecting = reconnecting,
+        note = note,
     )
 
     private fun TestScope.model(link: ScriptedLink): CastModel {
@@ -415,5 +423,227 @@ class CastModelTest {
         assertNull(CastModel.joining(view(CastSessionState.Playing), row.key, rows))
         assertNull(CastModel.joining(view(CastSessionState.Idle), row.key, emptyList()))
         assertNull(CastModel.joining(view(CastSessionState.Idle), null, rows))
+        assertNull(CastModel.joining(view(CastSessionState.Idle), row.key, rows, live = true))
+    }
+
+    @Test
+    fun a_tv_picked_again_after_a_lost_cast_plays_without_reading_reconnecting() = runTest {
+        val link = ScriptedLink(card(loading = true))
+        val cast = model(link)
+        val sessions = ScriptedSessions(link)
+        cast.sessions = sessions
+        runCurrent()
+        // The session ended lost and the TV is found again: its left session is joined meanwhile.
+        cast.takeRows(listOf(row))
+        assertEquals("Living room", cast.joining.value)
+
+        // Choose another TV: the play goes to the TV on its own, the session stays idle.
+        cast.cast(row, request)
+        sessions.views.trySend(view(CastSessionState.Idle))
+        link.cards.send(card(loading = false))
+        advanceUntilIdle()
+        assertEquals(CastStage.Playing, cast.shown.value?.stage)
+        assertNull("the TV plays the new cast, never Reconnecting", cast.joining.value)
+        cast.takeRows(listOf(row))
+        assertNull(cast.joining.value)
+    }
+
+    @Test
+    fun a_reconnecting_tv_holds_the_playhead_until_it_answers_again() = runTest {
+        val link = ScriptedLink(card(loading = false))
+        val cast = model(link)
+        cast.cast(row, request)
+        link.cards.send(card(loading = false))
+        advanceUntilIdle()
+        time = 10_000
+        assertEquals(130.0, cast.playhead()!!, 0.001)
+        link.cards.send(card(loading = false, reconnecting = true))
+        advanceUntilIdle()
+        assertTrue(cast.shown.value!!.reconnecting)
+        assertEquals(CastStage.Playing, cast.shown.value?.stage)
+        time = 25_000
+        assertEquals("the clock stops where it was as the connection closed", 130.0, cast.playhead()!!, 0.001)
+        // The TV played on meanwhile: it answers ahead of where the playhead held.
+        link.cards.send(card(loading = false, position = 145.0))
+        advanceUntilIdle()
+        assertFalse(cast.shown.value!!.reconnecting)
+        assertNull(cast.shown.value!!.frozen)
+        assertEquals(145.0, cast.playhead()!!, 0.001)
+        time = 27_000
+        assertEquals(147.0, cast.playhead()!!, 0.001)
+    }
+
+    @Test
+    fun a_tv_waiting_while_its_stop_is_learned_holds_the_playhead() = runTest {
+        val link = ScriptedLink(card(loading = false))
+        val cast = model(link)
+        cast.cast(row, request)
+        link.cards.send(card(loading = false))
+        advanceUntilIdle()
+        time = 4_000
+        link.cards.send(card(loading = false, waiting = 0u))
+        advanceUntilIdle()
+        time = 7_000
+        assertEquals(124.0, cast.playhead()!!, 0.001)
+    }
+
+    @Test
+    fun a_cast_stopped_on_the_tv_with_the_controller_down_says_so_with_play_here_and_keeps_it() = runTest {
+        val link = ScriptedLink(card(loading = false))
+        val cast = model(link)
+        val kept = mutableListOf<Msg>()
+        cast.kept = { kept += it }
+        cast.cast(row, request)
+        cast.closeCard()
+        val said = mutableListOf<CastEnded>()
+        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { cast.ended.collect { said += it } }
+        runCurrent()
+        link.cards.send(card(loading = false))
+        link.cards.send(card(loading = false, over = true, notice = Msg.NoticeCastStoppedElsewhere("Living room")))
+        advanceUntilIdle()
+        assertNull(cast.shown.value)
+        assertEquals(listOf(Msg.NoticeCastStoppedElsewhere("Living room")), said.map { it.notice })
+        assertEquals("7", said.single().episode)
+        assertEquals(listOf<Msg>(Msg.NoticeCastStoppedElsewhere("Living room")), kept)
+    }
+
+    @Test
+    fun a_cast_stopped_on_the_tv_with_the_controller_up_reads_casting_stopped() = runTest {
+        val link = ScriptedLink(card(loading = false))
+        val cast = model(link)
+        cast.cast(row, request)
+        link.cards.send(card(loading = false))
+        link.cards.send(card(loading = false, over = true, notice = Msg.NoticeCastStoppedElsewhere("Living room")))
+        advanceUntilIdle()
+        assertEquals(CastStage.Lost, cast.shown.value?.stage)
+        assertFalse(cast.shown.value!!.reconnecting)
+    }
+
+    @Test
+    fun a_fallback_note_is_said_and_kept_once_each_time_it_happens() = runTest {
+        val link = ScriptedLink(card(loading = false))
+        val cast = model(link)
+        val sessions = ScriptedSessions(link)
+        cast.sessions = sessions
+        val kept = mutableListOf<Msg>()
+        cast.kept = { kept += it }
+        val notes = mutableListOf<Msg>()
+        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { cast.notes.collect { notes += it } }
+        val fallback = Msg.NoticeCastFallback("Living room")
+        // The fallback usually comes at connect, while nothing plays yet.
+        sessions.views.trySend(view(CastSessionState.Connected).copy(note = fallback))
+        sessions.views.trySend(view(CastSessionState.Connected).copy(note = fallback, rev = 2u))
+        advanceUntilIdle()
+        assertEquals(listOf<Msg>(fallback), notes)
+        assertEquals(listOf<Msg>(fallback), kept)
+    }
+
+    @Test
+    fun a_play_on_tv_casts_fallback_note_is_said_and_kept_once_each_time_it_happens() = runTest {
+        val link = ScriptedLink(card(loading = true))
+        val cast = model(link)
+        val kept = mutableListOf<Msg>()
+        cast.kept = { kept += it }
+        val notes = mutableListOf<Msg>()
+        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { cast.notes.collect { notes += it } }
+        val fallback = Msg.NoticeCastFallback("Living room")
+        cast.cast(row, request)
+        // The fallback comes as the TV connects, and the card keeps it while it plays.
+        link.cards.trySend(card(loading = true, note = fallback))
+        link.cards.trySend(card(loading = false, note = fallback))
+        link.cards.trySend(card(loading = false, position = 130.0, note = fallback))
+        advanceUntilIdle()
+        assertEquals(listOf<Msg>(fallback), notes)
+        assertEquals(listOf<Msg>(fallback), kept)
+        // It happens again on the next cast: said again.
+        val again = ScriptedLink(card(loading = true))
+        cast.starter = { _, _ -> again }
+        cast.cast(row, request)
+        again.cards.trySend(card(loading = false, note = fallback))
+        advanceUntilIdle()
+        assertEquals(listOf<Msg>(fallback, fallback), notes)
+        assertEquals(listOf<Msg>(fallback, fallback), kept)
+    }
+
+    @Test
+    fun a_held_sessions_card_leaves_the_fallback_note_to_the_session() = runTest {
+        val link = ScriptedLink(card(loading = false))
+        val (cast, sessions) = playingOnAHeldTv(link)
+        val notes = mutableListOf<Msg>()
+        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { cast.notes.collect { notes += it } }
+        val fallback = Msg.NoticeCastFallback("Living room")
+        sessions.views.trySend(view(CastSessionState.Playing).copy(note = fallback, rev = 3u))
+        link.cards.trySend(card(loading = false, note = fallback))
+        advanceUntilIdle()
+        assertEquals(listOf<Msg>(fallback), notes)
+    }
+
+    @Test
+    fun a_reconnecting_session_holds_its_item_playhead() = runTest {
+        val link = ScriptedLink(card(loading = false))
+        val cast = model(link)
+        val sessions = ScriptedSessions(link)
+        cast.sessions = sessions
+        sessions.views.trySend(view(CastSessionState.Playing))
+        advanceUntilIdle()
+        time = 3_000
+        sessions.views.trySend(view(CastSessionState.Playing).copy(reconnecting = true))
+        advanceUntilIdle()
+        time = 13_000
+        assertEquals(24.4, cast.itemPlayhead()!!, 0.001)
+    }
+
+    /** A phone that joins a cast another device started: no play of its own, the session's item alone. */
+    private fun TestScope.joined(link: ScriptedLink, item: CastItem?): Pair<CastModel, ScriptedSessions> {
+        val cast = model(link)
+        val sessions = ScriptedSessions(link)
+        cast.sessions = sessions
+        sessions.views.trySend(view(CastSessionState.Connected))
+        runCurrent()
+        sessions.views.trySend(view(CastSessionState.Playing).copy(item = item))
+        runCurrent()
+        return cast to sessions
+    }
+
+    @Test
+    fun a_cast_another_device_started_opens_the_remote_on_a_phone_that_joins_it() = runTest {
+        val link = ScriptedLink(card(loading = false))
+        val (cast, _) = joined(link, item)
+        assertEquals(CastStage.Playing, cast.shown.value?.stage)
+        assertEquals("7", cast.shown.value?.request?.episode)
+        cast.openCard()
+        assertTrue("the remote opens", cast.open.value)
+    }
+
+    @Test
+    fun a_joined_cast_that_does_not_say_what_it_plays_opens_no_remote() = runTest {
+        val link = ScriptedLink(card(loading = false))
+        val (cast, _) = joined(link, item.copy(id = null, episode = null))
+        assertNull("no card to open", cast.shown.value)
+        cast.openCard()
+        assertFalse(cast.open.value)
+    }
+
+    @Test
+    fun a_joined_cast_follows_the_next_episode_the_other_device_casts() = runTest {
+        val link = ScriptedLink(card(loading = false))
+        val (cast, sessions) = joined(link, item)
+        cast.openCard()
+        // The engine's card and the session's item both move to the episode the TV plays.
+        link.cards.send(card(loading = false, episode = "8"))
+        sessions.views.trySend(view(CastSessionState.Playing).copy(item = item.copy(episode = "8")))
+        advanceUntilIdle()
+        val shown = cast.shown.value
+        assertEquals(CastStage.Playing, shown?.stage)
+        assertEquals("8", shown?.cast?.card?.now?.episode)
+        assertEquals("8", shown?.request?.episode)
+        assertTrue(cast.open.value)
+        // Ended later, it says the episode the TV was on.
+        val ended = backgroundScope.async { cast.ended.first() }
+        runCurrent()
+        cast.closeCard()
+        sessions.views.trySend(view(CastSessionState.Error, Msg.NoticeCastLost("Living room")).copy(item = null))
+        advanceUntilIdle()
+        assertEquals("8", ended.await().episode)
     }
 }

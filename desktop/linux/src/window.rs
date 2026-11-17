@@ -200,6 +200,12 @@ impl Ctx {
         self.show_notice(text, false, None, None);
     }
 
+    /// A notice of the app's own for `seconds`, twice that while a screen reader runs: a cast's
+    /// information notice, timed by its board.
+    pub fn toast_for(&self, text: &str, seconds: u32) -> adw::Toast {
+        self.show_notice(text, false, None, Some(seconds))
+    }
+
     /// A notice of the app's own that something went wrong: it stays 8 s.
     pub fn alert(&self, text: &str) {
         self.show_notice(text, true, None, None);
@@ -977,12 +983,12 @@ impl Shell {
         add("tv-remote", None, Box::new(|s, _| s.ctx.tv.open_remote()));
         // The session button's menu: the cast ends and Play on TV opens on the same episode.
         add("tv-choose-another", None, Box::new(|s, _| s.ctx.tv.cast_choose_another()));
-        // The notice for a TV someone else took: carry on here.
+        // The notice of a cast that ended from afar: carry on here.
         add(
             "tv-play-here",
             None,
             Box::new(|s, _| {
-                if let Some((id, episode)) = s.ctx.tv.take_taken() {
+                if let Some((id, episode)) = s.ctx.tv.take_ended() {
                     s.ctx.hub.send(Command::play(id, episode));
                 }
             }),

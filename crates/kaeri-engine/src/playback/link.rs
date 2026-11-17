@@ -69,6 +69,8 @@ pub struct FileFacts {
     pub source: kaeri_core::stream::Stream,
     /// The stream as the player opens it, with its subtitles on disk.
     pub played: kaeri_core::stream::Stream,
+    /// The show, for a phone that joins the cast to open its card by.
+    pub id: AnilistId,
     pub title: String,
     pub episode: String,
     pub episode_title: Option<String>,

@@ -19,7 +19,9 @@ namespace Kaeri.Windows.Player;
 ///
 /// While a TV plays (Play on TV) and the player is closed, the same controls show what the TV
 /// plays and drive it: play or pause, the next episode and the timeline. The TV has no previous
-/// episode, so Previous is off then. The player opening takes them back.
+/// episode, so Previous is off then. A cast shows as video too, and its Previous and Next play the
+/// previous and next episode, as the Mac's media keys do; the remote keeps its 10 s steps. The
+/// player opening takes them back.
 /// </summary>
 sealed partial class MediaControls
 {
@@ -105,7 +107,7 @@ sealed partial class MediaControls
 
     void Pressed(SystemMediaTransportControlsButton button)
     {
-        // The cast: back and forward are 10 s on the TV, as the mini's are.
+        // The cast: Previous and Next are the previous and next episode, as on the Mac.
         if (OnCast)
         {
             switch (button)
@@ -115,10 +117,10 @@ sealed partial class MediaControls
                     toCast?.Invoke(new FfiTvCommand.TogglePause());
                     break;
                 case SystemMediaTransportControlsButton.Next:
-                    toCast?.Invoke(new FfiTvCommand.Seek(10));
+                    toCast?.Invoke(new FfiTvCommand.Next());
                     break;
                 case SystemMediaTransportControlsButton.Previous:
-                    toCast?.Invoke(new FfiTvCommand.Seek(-10));
+                    toCast?.Invoke(new FfiTvCommand.Previous());
                     break;
             }
             return;
@@ -319,7 +321,8 @@ sealed partial class MediaControls
         }
         Now(drawn.Title, drawn.EpisodeLine, castPicture, castLine);
         var wasPaused = paused;
-        Timeline(drawn.Paused || drawn.Dim, drawn.Position, drawn.Duration);
+        // While the connection is made again the TV's clock is not known to run: it holds.
+        Timeline(drawn.Paused || drawn.Dim || drawn.Line == CastLine.Reconnecting, drawn.Position, drawn.Duration);
         if (!wasOnTv || wasPaused != paused)
             Buttons();
     }
@@ -372,18 +375,16 @@ sealed partial class MediaControls
         neutralWritten = neutral;
         var display = smtc.DisplayUpdater;
         var (title, subtitle, pictured) = Privately.NowPlaying(show, episode, neutral);
+        display.Type = MediaPlaybackType.Video;
         if (casting is not null)
         {
-            // A cast: the show, its episode line, and the TV it plays on, as three lines. Private,
+            // A cast, as video: the episode line, then the show and the TV it plays on. Private,
             // only the neutral line and the TV.
-            display.Type = MediaPlaybackType.Music;
-            display.MusicProperties.Title = neutral ? title : show;
-            display.MusicProperties.Artist = neutral ? "" : episode;
-            display.MusicProperties.AlbumTitle = casting;
+            display.VideoProperties.Title = neutral ? title : episode.Length > 0 ? episode : show;
+            display.VideoProperties.Subtitle = neutral || episode.Length == 0 ? casting : $"{subtitle} · {casting}";
         }
         else
         {
-            display.Type = MediaPlaybackType.Video;
             display.VideoProperties.Title = title;
             display.VideoProperties.Subtitle = subtitle;
         }
@@ -508,14 +509,14 @@ sealed partial class MediaControls
             Tip = tip,
             State = hidden ? Taskbar.ThumbButton.Hidden : Taskbar.ThumbButton.Enabled,
         };
-        var previous = Button(PreviousId, Glyph.Previous, OnCast ? T.PlayerBack10 : T.PlayerPreviousEpisode);
+        var previous = Button(PreviousId, Glyph.Previous, T.PlayerPreviousEpisode);
         if (OnTv && !OnCast)
             previous.State = Taskbar.ThumbButton.Hidden;
         return
         [
             previous,
             paused ? Button(PlayPauseId, Glyph.Play, T.ActionPlay) : Button(PlayPauseId, Glyph.Pause, T.ActionPause),
-            Button(NextId, Glyph.Next, OnCast ? T.PlayerForward10 : T.PlayerNextEpisode),
+            Button(NextId, Glyph.Next, T.PlayerNextEpisode),
         ];
     }
 
@@ -538,7 +539,7 @@ sealed partial class MediaControls
                     if (button == PlayPauseId)
                         controls.toCast?.Invoke(new FfiTvCommand.TogglePause());
                     else
-                        controls.toCast?.Invoke(new FfiTvCommand.Seek(button == NextId ? 10 : -10));
+                        controls.toCast?.Invoke(button == NextId ? new FfiTvCommand.Next() : new FfiTvCommand.Previous());
                     return 0;
                 }
                 if (controls.OnTv)

@@ -2,7 +2,13 @@
 //! window, the next episode plays on the TV already showing it, and a stream the TV can't play
 //! says why in the cast's own words.
 
-use std::{sync::Arc, time::Duration};
+use std::{
+    sync::{
+        Arc,
+        atomic::{AtomicUsize, Ordering},
+    },
+    time::Duration,
+};
 
 use kaeri_cast::{
     CastDevice, CastFailure, CastPlayer, CastSetup, DEFAULT_MEDIA_RECEIVER, PlainHttp, Timings,
@@ -710,7 +716,15 @@ async fn playing_on_a_tv_that_plays_on() -> (Arc<Rig>, tokio::task::JoinHandle<V
 
 /// [`playing_on_a_tv_that_plays_on`], on a TV set up with `options`.
 async fn playing_on(options: FakeOptions) -> (Arc<Rig>, tokio::task::JoinHandle<Vec<Event>>) {
-    let rig = Arc::new(Rig::on(true, options, false, lost_at_once()).await);
+    playing_with(options, lost_at_once()).await
+}
+
+/// [`playing_on`], with the hub's `timings`.
+async fn playing_with(
+    options: FakeOptions,
+    timings: Timings,
+) -> (Arc<Rig>, tokio::task::JoinHandle<Vec<Event>>) {
+    let rig = Arc::new(Rig::on(true, options, false, timings).await);
     rig.hub.found(rig.device());
     rig.hub.connect(rig.device());
     session_until(&rig.hub, |v| v.state == SessionState::Connected).await;
@@ -876,6 +890,72 @@ async fn each_fall_back_to_the_tvs_own_player_is_said_and_the_next_connect_tries
     assert_eq!(launched[3], DEFAULT_MEDIA_RECEIVER);
 }
 
+/// How many times the cast's note came to read `note`, from nothing or another note, as an
+/// app's watch reads the hub: each is one notice. A watch can miss a moment between two
+/// changes, so this never counts more than were said, and may count fewer.
+fn notes_said(
+    hub: &Arc<CastHub>,
+    note: Msg,
+) -> (Arc<AtomicUsize>, tokio::task::JoinHandle<()>) {
+    let said = Arc::new(AtomicUsize::new(0));
+    let mut changes = hub.changes();
+    let (hub, count) = (Arc::clone(hub), Arc::clone(&said));
+    let watch = tokio::spawn(async move {
+        let mut was = None;
+        loop {
+            let now = hub.view().note;
+            if now.as_ref() == Some(&note) && was.as_ref() != Some(&note) {
+                count.fetch_add(1, Ordering::SeqCst);
+            }
+            was = now;
+            if changes.changed().await.is_err() {
+                return;
+            }
+        }
+    });
+    (said, watch)
+}
+
+/// Play on TV to a TV that can't run Kaeri's receiver, as the apps start it: the TV is
+/// connected to, and the episode plays there once it is up. Every cast that falls back says so
+/// once, the first of an app run and each one after it, and the episode's start keeps the note.
+#[tokio::test(flavor = "multi_thread", worker_threads = 4)]
+async fn each_play_on_tv_that_falls_back_says_so_once() {
+    let options =
+        FakeOptions { speed: 8.0, custom: CustomReceiver::Unknown, ..FakeOptions::default() };
+    let rig = Rig::with(true, options).await;
+    let fallback = Msg::NoticeCastFallback { name: "Living room".into() };
+    let (said, watch) = notes_said(&rig.hub, fallback.clone());
+    for cast in 1..=3 {
+        rig.hub.connect(rig.device());
+        if cast < 3 {
+            // Play on TV: the play's cast begins as the TV connects.
+            rig.hub.begin(rig.device());
+            rig.hub.asked(AnilistId::new(900_002), "1".into());
+        }
+        let file = rig.file(&format!("{cast}.mkv"), &Fixture::default());
+        let events = rig.play(vec![file], context("1", None)).await;
+        assert_eq!(ending(&events), Some(Ending::Complete { next: None }), "cast {cast}");
+        assert_eq!(rig.hub.view().note.as_ref(), Some(&fallback), "cast {cast} keeps it");
+        assert!(said.load(Ordering::SeqCst) <= cast, "cast {cast} says it once");
+        assert!(rig.hub.disconnect());
+    }
+
+    // A TV connected to with nothing playing says it as it connects, and the play that
+    // follows on it doesn't say it again.
+    rig.hub.connect(rig.device());
+    let view = session_until(&rig.hub, |v| v.state == SessionState::Connected).await;
+    assert_eq!(view.note.as_ref(), Some(&fallback));
+    let file = rig.file("4.mkv", &Fixture::default());
+    let before = said.load(Ordering::SeqCst);
+    let events = rig.play(vec![file], context("1", None)).await;
+    assert_eq!(ending(&events), Some(Ending::Complete { next: None }));
+    assert_eq!(rig.hub.view().note.as_ref(), Some(&fallback), "kept, not said again");
+    assert_eq!(said.load(Ordering::SeqCst), before, "said once for the held TV");
+    assert!(rig.hub.disconnect());
+    watch.abort();
+}
+
 #[tokio::test(flavor = "multi_thread", worker_threads = 4)]
 async fn a_held_tv_reads_as_reconnecting_while_its_connection_is_made_again() {
     let options = FakeOptions { remembers: true, ..FakeOptions::default() };
@@ -937,16 +1017,27 @@ async fn a_cast_another_device_started_takes_the_controls_of_a_phone_that_joins_
         v.state == SessionState::Playing && v.item.as_ref().is_some_and(|i| !i.paused)
     })
     .await;
-    assert_eq!(view.item.and_then(|i| i.id), None, "the other device's cast");
+    // The other device's cast says what it plays, so its card opens here.
+    let item = view.item.unwrap();
+    assert_eq!(item.id, Some(AnilistId::new(900_002)), "the other device's show");
+    assert_eq!(item.episode.as_deref(), Some("1"));
+    assert_eq!(item.title, "Stardust Wayfarer");
     assert_eq!(rig.receiver.heard("LAUNCH").len(), launches + 1);
     assert_eq!(rig.receiver.heard("LOAD").len(), 1, "nothing loaded again");
     // The first phone's connection went as this one came.
     playing.await.unwrap();
+    let session = sender.cast_session().expect("a remote for the joined cast");
+    let now = session.card().card.now.expect("the card of what the TV plays");
+    assert_eq!((now.id, now.episode.as_str()), (AnilistId::new(900_002), "1"));
+    assert_eq!(now.title, "Stardust Wayfarer");
+    assert_eq!(now.episode_line, "Episode 1");
 
+    // The remote's controls drive the TV, as the mini player's do.
     let pauses = rig.receiver.heard("PAUSE").len();
-    sender.cast_command(RemoteCommand::TogglePause);
+    session.command(RemoteCommand::TogglePause);
     session_until(&phone, |v| v.item.as_ref().is_some_and(|i| i.paused)).await;
     assert_eq!(rig.receiver.heard("PAUSE").len(), pauses + 1, "the TV paused");
+    assert!(session.card().card.now.is_some_and(|now| now.paused));
     sender.cast_command(RemoteCommand::TogglePause);
     session_until(&phone, |v| v.item.as_ref().is_some_and(|i| !i.paused)).await;
     sender.cast_command(RemoteCommand::SeekTo { position: 300.0 });
@@ -960,6 +1051,99 @@ async fn a_cast_another_device_started_takes_the_controls_of_a_phone_that_joins_
         assert!(tokio::time::Instant::now() < deadline, "the TV stopped the episode");
         tokio::time::sleep(Duration::from_millis(50)).await;
     }
+    assert!(phone.disconnect());
+}
+
+/// A phone joined to another device's cast, the cast as the other device leaves it.
+async fn joined_from_another_phone(
+    rig: &Rig,
+) -> (Arc<CastHub>, crate::remote::sender::TvSender, tempfile::TempDir) {
+    let dir = tempfile::tempdir().unwrap();
+    let phone =
+        Arc::new(CastHub::with(Some(dir.path().to_owned()), Arc::new(PlainHttp), timings()));
+    let (sender, _sent) = sender_for(&phone);
+    phone.connect(rig.device());
+    session_until(&phone, |v| v.state == SessionState::Playing && v.item.is_some()).await;
+    (phone, sender, dir)
+}
+
+/// The device that started the cast casts its next episode: the phone that joined follows it,
+/// its card on the new episode and its controls on what plays now.
+#[tokio::test(flavor = "multi_thread", worker_threads = 4)]
+async fn a_joined_phone_follows_the_next_episode_the_other_device_casts() {
+    let (rig, playing) = playing_on_a_tv_that_plays_on().await;
+    let (phone, sender, _dir) = joined_from_another_phone(&rig).await;
+    playing.await.unwrap();
+
+    rig.receiver.load_elsewhere_with(serde_json::json!({
+        "kaeriCard": {"id": 900_002, "episode": "2", "title": "Stardust Wayfarer",
+            "episodeTitle": "Low Tide"},
+    }));
+    let view = session_until(&phone, |v| {
+        v.item.as_ref().is_some_and(|i| i.episode.as_deref() == Some("2"))
+    })
+    .await;
+    assert_eq!(view.state, SessionState::Playing, "followed, not taken over");
+    assert_eq!(view.notice, None);
+    let item = view.item.unwrap();
+    assert_eq!(item.id, Some(AnilistId::new(900_002)));
+    assert_eq!(item.episode_title.as_deref(), Some("Low Tide"));
+    let session = sender.cast_session().expect("the remote stays open");
+    let now = session.card().card.now.expect("the new episode's card");
+    assert_eq!(now.episode, "2");
+    assert_eq!(now.episode_line, "Episode 2 · Low Tide");
+
+    session.command(RemoteCommand::TogglePause);
+    session_until(&phone, |v| v.item.as_ref().is_some_and(|i| i.paused)).await;
+    let pause = rig.receiver.heard("PAUSE").pop().expect("a pause");
+    assert_eq!(pause["mediaSessionId"], 2, "the new episode's media session");
+    assert!(phone.disconnect());
+}
+
+/// Another app casts over what the joined phone followed: the TV is theirs, and the phone
+/// says so.
+#[tokio::test(flavor = "multi_thread", worker_threads = 4)]
+async fn another_apps_cast_over_a_joined_phone_is_a_takeover() {
+    let (rig, playing) = playing_on_a_tv_that_plays_on().await;
+    let (phone, _sender, _dir) = joined_from_another_phone(&rig).await;
+    playing.await.unwrap();
+
+    rig.receiver.load_elsewhere();
+    let view = session_until(&phone, |v| v.state == SessionState::Error).await;
+    let said = crate::playback::link::cast::notice(&CastFailure::TakenOver, "Living room");
+    assert_eq!(view.notice, Some(said));
+    assert!(phone.session_device().is_none(), "plays open here again");
+}
+
+/// A cast that doesn't say what it plays, another app's or an older Kaeri's: the mini player's
+/// controls work, and there is no card to open.
+#[tokio::test(flavor = "multi_thread", worker_threads = 4)]
+async fn a_joined_cast_that_does_not_say_what_it_plays_has_controls_and_no_card() {
+    let (rig, playing) = playing_on_a_tv_that_plays_on().await;
+    let (phone, _first, _dir) = joined_from_another_phone(&rig).await;
+    playing.await.unwrap();
+    // An older Kaeri's next episode, with no card: a takeover, so join it afresh.
+    rig.receiver.load_elsewhere();
+    session_until(&phone, |v| v.state == SessionState::Error).await;
+    drop(phone);
+    let dir = tempfile::tempdir().unwrap();
+    let phone =
+        Arc::new(CastHub::with(Some(dir.path().to_owned()), Arc::new(PlainHttp), timings()));
+    let (sender, _sent) = sender_for(&phone);
+    phone.connect(rig.device());
+    let view = session_until(&phone, |v| {
+        v.state == SessionState::Playing && v.item.as_ref().is_some_and(|i| !i.paused)
+    })
+    .await;
+    let item = view.item.unwrap();
+    assert_eq!((item.id, item.episode), (None, None), "nothing to open a card by");
+    let session = sender.cast_session().expect("a cast to control");
+    assert_eq!(session.card().card.now, None, "no card");
+
+    let pauses = rig.receiver.heard("PAUSE").len();
+    sender.cast_command(RemoteCommand::TogglePause);
+    session_until(&phone, |v| v.item.as_ref().is_some_and(|i| i.paused)).await;
+    assert_eq!(rig.receiver.heard("PAUSE").len(), pauses + 1, "the TV paused");
     assert!(phone.disconnect());
 }
 
@@ -1002,6 +1186,103 @@ async fn the_tv_picked_again_after_a_lost_connection_carries_on_from_where_it_is
     assert_eq!(rig.hub.session().state, SessionState::Playing);
 
     // Asked once: a later cast of it goes from where it is asked to.
+    assert!(rig.hub.disconnect());
+}
+
+/// A TV playing ten seconds a second, out of this device's reach for longer than it tries to
+/// connect again: the cast reads Reconnecting all that time, then lost. The browse finds the TV
+/// while it is still out of reach, so the session it was left running can't be joined yet.
+/// Returns the playback's last place on it, once the TV can be reached again.
+async fn lost_out_of_reach(
+    options: FakeOptions,
+) -> (Arc<Rig>, crate::remote::sender::TvSender, impl FnMut() -> Vec<Command>, f64) {
+    let timings = Timings {
+        silence: Duration::from_secs(1),
+        reconnect: Duration::from_secs(3),
+        retry: Duration::from_millis(500),
+        ..timings()
+    };
+    let (rig, playing) = playing_with(options, timings).await;
+    let (sender, mut sent) = sender_for(&rig.hub);
+    let view =
+        session_until(&rig.hub, |v| v.item.as_ref().is_some_and(|i| i.position >= 10.0)).await;
+    let seen = view.item.unwrap().position;
+    let away = Duration::from_secs(5);
+    let back = tokio::time::Instant::now() + away;
+    rig.receiver.unreachable_for(away);
+    rig.receiver.drop_connection();
+    let view = session_until(&rig.hub, |v| v.state == SessionState::Error).await;
+    assert_eq!(view.notice, Some(Msg::NoticeCastLost { name: "Living room".into() }));
+    playing.await.unwrap();
+    let deadline = tokio::time::Instant::now() + Duration::from_secs(2);
+    while rig.hub.noted_playing().is_none() && tokio::time::Instant::now() < deadline {
+        tokio::time::sleep(Duration::from_millis(20)).await;
+    }
+    assert_eq!(
+        rig.hub.noted_playing(),
+        Some((AnilistId::new(900_002), "1".into())),
+        "noted as left playing it"
+    );
+
+    // Choose another TV opens the picker, and the browse finds the TV still out of reach.
+    rig.hub.rejoin(&rig.device());
+    session_until(&rig.hub, |v| v.state == SessionState::Idle).await;
+    tokio::time::sleep_until(back + Duration::from_millis(300)).await;
+    sent();
+    (rig, sender, sent, seen)
+}
+
+/// The episode the card sends with Choose another TV, once the cast picks it up again.
+async fn cast_again_from(
+    sender: &crate::remote::sender::TvSender,
+    sent: &mut impl FnMut() -> Vec<Command>,
+    position: f64,
+) -> f64 {
+    sender.cast("cast:tv-1", AnilistId::new(900_002), "1".into(), Some(position)).unwrap();
+    let deadline = tokio::time::Instant::now() + Duration::from_secs(10);
+    loop {
+        if let Some(position) = sent().into_iter().find_map(|c| match c {
+            Command::CastTo { position, .. } => Some(position),
+            _ => None,
+        }) {
+            return position.expect("a position to play from");
+        }
+        assert!(tokio::time::Instant::now() < deadline, "the episode is cast again");
+        tokio::time::sleep(Duration::from_millis(50)).await;
+    }
+}
+
+/// Choose another TV after a long loss, with the browse having found the TV while it was still
+/// out of reach: the receiver played on, and is joined, not loaded again from where this device
+/// last saw it.
+#[tokio::test(flavor = "multi_thread", worker_threads = 4)]
+async fn the_tv_picked_after_a_long_loss_is_joined_where_it_played_on_to() {
+    let options =
+        FakeOptions { remembers: true, duration: 600.0, speed: 10.0, ..FakeOptions::default() };
+    let (rig, sender, mut sent, seen) = lost_out_of_reach(options).await;
+    let launches = rig.receiver.heard("LAUNCH").len();
+
+    let position = cast_again_from(&sender, &mut sent, seen).await;
+    assert!(position > seen + 30.0, "from the TV's {position} s, not this device's {seen} s");
+    assert_eq!(rig.receiver.heard("LAUNCH").len(), launches, "joined, never launched again");
+    assert!(rig.hub.disconnect());
+}
+
+/// Another phone stopped the receiver once the TV was back: nothing is left to join, and the
+/// episode loads from where the engine last knew the TV to be, not from an older place the app
+/// saved.
+#[tokio::test(flavor = "multi_thread", worker_threads = 4)]
+async fn the_tv_picked_after_a_long_loss_with_nothing_to_join_loads_where_it_was_last_known() {
+    let options =
+        FakeOptions { remembers: true, duration: 600.0, speed: 10.0, ..FakeOptions::default() };
+    let (rig, sender, mut sent, seen) = lost_out_of_reach(options).await;
+    let (other, _events) = CastPlayer::connect(rig.hub.setup(rig.device())).await.unwrap();
+    other.launch().await.unwrap();
+    other.quit().await.unwrap();
+
+    let position = cast_again_from(&sender, &mut sent, 2.0).await;
+    assert!(position >= seen, "from {position} s, where the TV was last known, {seen} s");
+    assert!(position < seen + 30.0, "not run on past what was known: {position} s");
     assert!(rig.hub.disconnect());
 }
 

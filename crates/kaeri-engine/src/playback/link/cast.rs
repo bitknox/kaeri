@@ -19,7 +19,7 @@ use std::{
 use async_trait::async_trait;
 use kaeri_cast::{
     CastDevice, CastFailure, CastLoad, CastPlayer, CastSetup, CastSource, CastSubtitle,
-    Metadata, SourceKind, Uncastable,
+    JoinCard, Metadata, SourceKind, Uncastable,
 };
 use kaeri_core::{
     stream::{Stream, StreamKind},
@@ -239,6 +239,18 @@ fn episode_line(file: &FileFacts, language: Option<&str>) -> String {
     }
 }
 
+/// What a phone that joins this cast opens its card by: the show and the episode, never the
+/// source. A show of the person's own making has an id only this device knows, so it goes
+/// without.
+fn join_card(file: &FileFacts) -> Option<JoinCard> {
+    (!file.id.is_own() && !file.episode.is_empty()).then(|| JoinCard {
+        id: file.id.get(),
+        episode: file.episode.clone(),
+        title: file.title.clone(),
+        episode_title: file.episode_title.clone().filter(|t| !t.is_empty()),
+    })
+}
+
 /// The resume point from mpv's per-file options.
 fn start_of(options: &[(String, String)]) -> Option<f64> {
     options.iter().find(|(k, _)| k == "start").and_then(|(_, v)| v.parse().ok())
@@ -293,6 +305,7 @@ impl PlayerLink for CastLink {
                     },
                     audio_track: None,
                     audio_memory: file.audio_memory.clone(),
+                    card: join_card(&file),
                 }
             }
             // Not told what it is: played as a stream from its address alone.
@@ -307,6 +320,7 @@ impl PlayerLink for CastLink {
                 audio_language: None,
                 audio_track: None,
                 audio_memory: None,
+                card: None,
             },
         };
         self.player.load(load);
@@ -560,6 +574,7 @@ mod tests {
         let mut file = FileFacts {
             source: stream.clone(),
             played: stream,
+            id: kaeri_core::ids::AnilistId::new(900_001),
             title: "Harbour Lights".into(),
             episode: "4".into(),
             episode_title: None,
@@ -793,6 +808,7 @@ mod tests {
         let file = FileFacts {
             source: Stream::new("https://cdn.example/1.m3u8", StreamKind::Hls),
             played: Stream::new("https://cdn.example/1.m3u8", StreamKind::Hls),
+            id: kaeri_core::ids::AnilistId::new(900_002),
             title: "Stardust Wayfarer".into(),
             episode: "3".into(),
             episode_title: Some("Low Tide".into()),
@@ -804,5 +820,32 @@ mod tests {
         assert_eq!(episode_line(&file, None), "Episode 3 · Low Tide");
         // A language the build lacks reads as English rather than failing.
         assert_eq!(episode_line(&file, Some("xx")), "Episode 3 · Low Tide");
+    }
+
+    #[test]
+    fn the_card_a_joined_phone_opens_names_the_show_and_never_one_of_its_own() {
+        let mut file = FileFacts {
+            source: Stream::new("https://cdn.example/1.m3u8", StreamKind::Hls),
+            played: Stream::new("https://cdn.example/1.m3u8", StreamKind::Hls),
+            id: kaeri_core::ids::AnilistId::new(900_002),
+            title: "Stardust Wayfarer".into(),
+            episode: "3".into(),
+            episode_title: Some(String::new()),
+            image: None,
+            subtitle_language: None,
+            dub: false,
+            audio_memory: None,
+        };
+        let card = join_card(&file).expect("a card");
+        assert_eq!((card.id, card.episode.as_str()), (900_002, "3"));
+        assert_eq!(card.title, "Stardust Wayfarer");
+        assert_eq!(card.episode_title, None, "an empty title is none");
+        let sent = serde_json::to_value(&card).unwrap();
+        let mut keys: Vec<_> = sent.as_object().unwrap().keys().cloned().collect();
+        keys.sort();
+        assert_eq!(keys, ["episode", "id", "title"], "nothing of the source or the person");
+        // A show of the person's own making is known only on this device.
+        file.id = kaeri_core::ids::AnilistId::own(4);
+        assert_eq!(join_card(&file), None);
     }
 }

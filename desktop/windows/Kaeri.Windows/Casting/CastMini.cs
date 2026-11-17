@@ -14,8 +14,10 @@ namespace Kaeri.Windows.Casting;
 /// The mini across the foot of the page pane while something is on the TV, on every page: the
 /// show's art and title with the TV's line (or a ring and the starting or joining line), the
 /// transport in the middle over the seek line with its times, and the chevron up. A click
-/// anywhere but a control opens the controller. Widgets change in place, for what the view
-/// changed only.
+/// anywhere but a control opens the controller. While the connection is made again the line
+/// says so with the ring, the transport and the seek line dim and take no input, and a click
+/// on the mini does nothing; the chevron still opens the controller, for Stop casting. Widgets
+/// change in place, for what the view changed only.
 /// </summary>
 sealed class CastMini : Grid
 {
@@ -34,6 +36,8 @@ sealed class CastMini : Grid
     public readonly Button Chevron;
     /// <summary>The art and the lines: a button of their own, so the keyboard can open the controller too.</summary>
     public readonly Button Opener;
+    CastLine? lineDrawn;
+    double? positionDrawn;
 
     public CastMini(Ctx ctx, TvRemote tv, Action expand)
     {
@@ -73,7 +77,11 @@ sealed class CastMini : Grid
             BorderThickness = new Thickness(0),
             VerticalAlignment = VerticalAlignment.Center,
         };
-        Opener.Click += (_, _) => expand();
+        Opener.Click += (_, _) =>
+        {
+            if (lineDrawn != CastLine.Reconnecting)
+                expand();
+        };
         Children.Add(Opener);
 
         // Back 10, play or pause in its round, forward 10, over the seek line.
@@ -88,6 +96,7 @@ sealed class CastMini : Grid
         transport.Children.Add(play);
         transport.Children.Add(forward);
         Motion.QuickOpacity(transport);
+        Motion.QuickOpacity(seek.Root);
         var middle = new StackPanel { Spacing = 0, VerticalAlignment = VerticalAlignment.Center, HorizontalAlignment = HorizontalAlignment.Stretch };
         middle.Children.Add(transport);
         seek.Root.MaxWidth = 440;
@@ -108,7 +117,8 @@ sealed class CastMini : Grid
             if (Within<ButtonBase>(e.OriginalSource as DependencyObject) || Within<Slider>(e.OriginalSource as DependencyObject))
                 return;
             e.Handled = true;
-            expand();
+            if (lineDrawn != CastLine.Reconnecting)
+                expand();
         };
     }
 
@@ -127,7 +137,47 @@ sealed class CastMini : Grid
         var name = tv.SessionName;
         if (title.Text != drawn.Title)
             title.Text = drawn.Title;
-        var busy = drawn.Line is CastLine.Starting or CastLine.Rejoining;
+        var was = lineDrawn;
+        var from = positionDrawn;
+        lineDrawn = drawn.Line;
+        positionDrawn = drawn.Position;
+        var reconnecting = drawn.Line == CastLine.Reconnecting;
+        var busy = drawn.Line is CastLine.Starting or CastLine.Rejoining or CastLine.Reconnecting;
+        var words = busy || drawn.Line == CastLine.Failed ? drawn.Status : name;
+        // Into and out of a reconnect the lead and the words crossfade; a start changes in place.
+        if (was is { } before && before != drawn.Line && (before == CastLine.Reconnecting || reconnecting) && Opener.ActualWidth > 0)
+            Crossfade.Swap(Opener, () => Line(busy, words));
+        else
+            Line(busy, words);
+        CastParts.PlayGlyph(play, playGlyph, drawn.Paused);
+        var live = drawn.Line is CastLine.Playing or CastLine.Paused;
+        var opacity = drawn.Dim || reconnecting ? 0.38 : 1;
+        if (transport.Opacity != opacity)
+            transport.Opacity = opacity;
+        foreach (var child in transport.Children.OfType<Control>())
+            child.IsEnabled = live;
+        var seekOpacity = reconnecting ? 0.38 : 1;
+        if (seek.Root.Opacity != seekOpacity)
+            seek.Root.Opacity = seekOpacity;
+        if (was == CastLine.Reconnecting && live && from is { } at && Math.Abs(at - drawn.Position) >= 1)
+            seek.Glide(at, drawn);
+        seek.Show(drawn);
+        var tip = T.TvShowRemote(name);
+        if (ToolTipService.GetToolTip(Chevron) as string != tip)
+            CastParts.Name(Chevron, tip);
+        // While it reconnects the name says so, and the mini opens nothing: no hint, no actions.
+        var label = reconnecting ? $"{drawn.Title}, {drawn.Status}"
+            : string.IsNullOrEmpty(drawn.EpisodeLine) ? drawn.Title : $"{drawn.Title}, {drawn.EpisodeLine}";
+        if (AutomationProperties.GetName(Opener) != label)
+            AutomationProperties.SetName(Opener, label);
+        Opener.IsTabStop = !reconnecting;
+        // Said once as the connection goes, and once as it comes back.
+        if (was is not null && was != drawn.Line && (reconnecting || was == CastLine.Reconnecting && live))
+            Announce(reconnecting ? drawn.Status : T.TvStatusPlaying(name));
+    }
+
+    void Line(bool busy, string words)
+    {
         if (ring.IsActive != busy)
         {
             ring.IsActive = busy;
@@ -135,20 +185,18 @@ sealed class CastMini : Grid
             lead.Visibility = busy ? Visibility.Collapsed : Visibility.Visible;
         }
         lead.Show(CastButtonState.Connected);
-        var words = busy || drawn.Line == CastLine.Failed ? drawn.Status : name;
         if (line.Text != words)
             line.Text = words;
-        CastParts.PlayGlyph(play, playGlyph, drawn.Paused);
-        var opacity = drawn.Dim ? 0.38 : 1;
-        if (transport.Opacity != opacity)
-            transport.Opacity = opacity;
-        foreach (var child in transport.Children.OfType<Control>())
-            child.IsEnabled = !drawn.Dim && drawn.Line != CastLine.Failed;
-        seek.Show(drawn);
-        var tip = T.TvShowRemote(name);
-        if (ToolTipService.GetToolTip(Chevron) as string != tip)
-            CastParts.Name(Chevron, tip);
-        AutomationProperties.SetName(Opener, string.IsNullOrEmpty(drawn.EpisodeLine) ? drawn.Title : $"{drawn.Title}, {drawn.EpisodeLine}");
+    }
+
+    /// <summary>A polite word to a screen reader, once.</summary>
+    void Announce(string words)
+    {
+        // Open, the controller's status line says it.
+        if (Opacity <= 0 || Visibility != Visibility.Visible)
+            return;
+        var peer = FrameworkElementAutomationPeer.FromElement(this) ?? FrameworkElementAutomationPeer.CreatePeerForElement(this);
+        peer?.RaiseNotificationEvent(AutomationNotificationKind.ActionCompleted, AutomationNotificationProcessing.MostRecent, words, "kaeri-cast-reconnect"); // i18n-skip
     }
 
     /// <summary>The playhead moved on, on this PC's clock.</summary>
@@ -171,6 +219,8 @@ sealed class SeekLine
     readonly TextBlock waitingText = new();
     readonly Microsoft.UI.Dispatching.DispatcherQueueTimer rest;
     bool quiet, dragging;
+    /// <summary>Until when a glide moves the slider, rather than the frames.</summary>
+    DateTimeOffset glideUntil;
 
     /// <summary>A seek the drag settled on.</summary>
     public Action<double>? Seek { get; set; }
@@ -249,7 +299,7 @@ sealed class SeekLine
         var starting = drawn.Dim;
         slider.Visibility = starting ? Visibility.Collapsed : Visibility.Visible;
         track.Visibility = starting ? Visibility.Visible : Visibility.Collapsed;
-        slider.IsEnabled = drawn.Duration is not null && drawn.Line != CastLine.Failed;
+        slider.IsEnabled = drawn.Duration is not null && drawn.Line is CastLine.Playing or CastLine.Paused;
         if (!dragging)
         {
             quiet = true;
@@ -257,7 +307,7 @@ sealed class SeekLine
             if (slider.Maximum != length)
                 slider.Maximum = length;
             var at = Math.Min(drawn.Position, length);
-            if (Math.Abs(slider.Value - at) >= 0.5)
+            if (Math.Abs(slider.Value - at) >= 0.5 && DateTimeOffset.Now >= glideUntil)
                 slider.Value = at;
             quiet = false;
             Times(drawn.Position, drawn.Duration, drawn);
@@ -267,7 +317,26 @@ sealed class SeekLine
             waitingText.Text = drawn.Waiting!;
         if ((waiting.Visibility == Visibility.Visible) != wait)
             waiting.Visibility = wait ? Visibility.Visible : Visibility.Collapsed;
-        elapsed.Opacity = end.Opacity = starting ? 0 : 1;
+        // While it starts the times wait; with nothing playing there are none.
+        elapsed.Opacity = end.Opacity = starting || drawn.Line == CastLine.Idle ? 0 : 1;
+    }
+
+    /// <summary>
+    /// Joined again: the playhead moves from where it held to where the TV is, on the standard
+    /// spring; with animation effects off it jumps.
+    /// </summary>
+    public void Glide(double from, CastDrawn drawn)
+    {
+        if (dragging || !Motion.Enabled)
+            return;
+        var to = Math.Min(drawn.Position, Math.Max(drawn.Duration ?? 0, 1));
+        glideUntil = DateTimeOffset.Now + Motion.Standard;
+        Motion.Ease(this, from, to, value =>
+        {
+            quiet = true;
+            slider.Value = value;
+            quiet = false;
+        });
     }
 
     void Times(double position, double? length, CastDrawn? drawn = null)

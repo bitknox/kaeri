@@ -109,17 +109,19 @@ class FixtureCastSession(
         following = scope.launch {
             tv.changed.collect {
                 val card = tv.card()
+                val notice = card.notice
                 when {
-                    card.card.over && card.notice != null && card.notice !is Msg.NoticeCastLost -> publish(current.copy(item = item(card)))
-                    card.card.over && card.notice is Msg.NoticeCastLost -> {
+                    card.card.over && notice != null && !notice.endsCasting() -> publish(current.copy(item = item(card), reconnecting = false))
+                    // As the engine: casting ends, and Play here still has the item from where the TV was.
+                    card.card.over && notice != null -> {
                         playing = null
-                        publish(CastSession.IDLE.copy(state = CastSessionState.Error, notice = card.notice))
+                        publish(CastSession.IDLE.copy(state = CastSessionState.Error, notice = notice, item = item(card)))
                     }
                     card.card.over -> {
                         playing = null
                         publish(current.copy(state = CastSessionState.Connected, item = null))
                     }
-                    else -> publish(current.copy(item = item(card), muted = card.muted ?: current.muted))
+                    else -> publish(current.copy(item = item(card), muted = card.muted ?: current.muted, reconnecting = card.reconnecting))
                 }
             }
         }
@@ -137,8 +139,16 @@ class FixtureCastSession(
             duration = now.duration,
             paused = now.paused,
             loading = now.loading,
-            waiting = waiting,
+            waiting = waiting ?: card.waiting?.toLong(),
         )
+    }
+
+    /** The TV lost, or stopped from outside: the engine ends casting with these. */
+    private fun Msg.endsCasting() = this is Msg.NoticeCastLost || this is Msg.NoticeCastStoppedElsewhere
+
+    /** A note on the held TV, such as its own player taking the cast, as the engine publishes one. */
+    fun note(msg: Msg) {
+        publish(current.copy(note = msg))
     }
 
     override fun playNext(id: AnilistId, episode: String): Boolean {

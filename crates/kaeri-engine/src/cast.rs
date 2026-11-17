@@ -111,7 +111,7 @@ struct Session {
 }
 
 /// A session this device left running on a TV: its TXT `id` and the receiver app's session.
-#[derive(Debug, Clone, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
 struct Left {
     device: String,
     session: String,
@@ -119,6 +119,17 @@ struct Left {
     /// it may have played on, so a cast of that episode again carries on from where the TV is.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     playing: Option<(AnilistId, String)>,
+    /// Where in it the engine last knew the receiver to be: its last time, run on for as long
+    /// as it was known to play. A cast of it again that finds nothing to join loads from here.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    at: Option<f64>,
+}
+
+/// What a cast that was lost mid-episode had left playing, for a cast of it again.
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub(crate) struct LeftPlaying {
+    /// Where the engine last knew the TV to be in it.
+    pub at: Option<f64>,
 }
 
 const LEFT_FILE: &str = "cast-session.json";
@@ -130,6 +141,48 @@ struct Noted {
     session: Option<String>,
     /// Whether something played or loaded at the last status before it ended.
     busy: bool,
+    /// The receiver's last time, while it played or held still: when it was heard while
+    /// playing, and how long the file runs.
+    heard: Option<(f64, Option<Instant>, Option<f64>)>,
+    /// When the connection to the receiver dropped: it is not known to play on from then.
+    dropped: Option<Instant>,
+}
+
+impl Noted {
+    /// Where the receiver was last known to be, run on while it was known to play.
+    fn known_at(&self) -> Option<f64> {
+        let (position, since, duration) = self.heard?;
+        let ran = since.map_or(0.0, |since| {
+            self.dropped
+                .unwrap_or_else(Instant::now)
+                .saturating_duration_since(since)
+                .as_secs_f64()
+        });
+        let at = position + ran;
+        Some(duration.map_or(at, |duration| at.min(duration)))
+    }
+
+    /// Follow where the receiver is from a status before it ended.
+    fn hear(&mut self, status: &CastStatus) {
+        if status.reconnecting {
+            self.dropped.get_or_insert_with(Instant::now);
+            return;
+        }
+        self.dropped = None;
+        self.heard = match status.state {
+            CastState::Playing => {
+                let since = match self.heard {
+                    Some((position, Some(since), _)) if position == status.position => since,
+                    _ => Instant::now(),
+                };
+                Some((status.position, Some(since), status.duration))
+            }
+            CastState::Paused | CastState::Buffering => {
+                Some((status.position, None, status.duration))
+            }
+            _ => None,
+        };
+    }
 }
 
 /// Where a cast session is, as the apps' cast button and its sheet draw it.
@@ -323,8 +376,19 @@ struct Current {
     /// A note while it plays, said once: the TV shows plain subtitles, or plays this cast in its
     /// own player.
     note: Option<kaeri_model::Msg>,
+    /// The episode that started on the TV first since the note was said: the note is that
+    /// episode's, and another's start lets it go.
+    note_for: Option<(AnilistId, String)>,
     /// Kaeri's receiver was told to show Up Next's card.
     told_next: bool,
+}
+
+impl Current {
+    /// Say `note`: it stays through the start of the file it was said for.
+    fn say(&mut self, note: kaeri_model::Msg) {
+        self.note = Some(note);
+        self.note_for = None;
+    }
 }
 
 /// The cast as the card reads it.
@@ -517,10 +581,14 @@ impl CastHub {
                 }
                 return false;
             }
-            session.connecting = false;
             match &connected {
+                // Still connecting until the receiver is noted, so a run that reads the session
+                // as connected finds the note.
                 Ok(player) => session.player = Some(Arc::clone(player)),
-                Err(failure) => session.failure = Some(failure.clone()),
+                Err(failure) => {
+                    session.connecting = false;
+                    session.failure = Some(failure.clone());
+                }
             }
         }
         match connected {
@@ -529,6 +597,23 @@ impl CastHub {
                 self.attach(&player);
                 self.follow(&player);
                 self.leave(&player);
+                let held = {
+                    let mut session = lock(&self.session);
+                    let held = session.generation == generation;
+                    if held {
+                        session.connecting = false;
+                    }
+                    held
+                };
+                if !held {
+                    // Let go meanwhile: the note just written goes too.
+                    let receiver = player.receiver().map(|app| app.session_id);
+                    if self.left().is_some_and(|left| Some(left.session) == receiver) {
+                        self.forget_left();
+                    }
+                    self.bump();
+                    return false;
+                }
             }
             Err(failure) => {
                 tracing::warn!(%failure, "couldn't connect to the TV");
@@ -811,6 +896,21 @@ impl CastHub {
                     CastState::Playing | CastState::Paused | CastState::Buffering
                 ) =>
             {
+                // Another Kaeri device's cast says what it plays, so its card can open here.
+                if let Some(card) = &status.card {
+                    return Some(SessionItem {
+                        id: Some(AnilistId::new(card.id)),
+                        title: card.title.clone(),
+                        episode: Some(card.episode.clone()),
+                        episode_title: card.episode_title.clone(),
+                        image: status.metadata.as_ref().and_then(|m| m.image.clone()),
+                        position: status.position,
+                        duration: status.duration,
+                        paused: status.state == CastState::Paused,
+                        waiting: waited(status),
+                        loading: false,
+                    });
+                }
                 status.metadata.as_ref().map(|metadata| SessionItem {
                     id: None,
                     title: metadata.series.clone(),
@@ -838,11 +938,11 @@ impl CastHub {
         let Some(app) = player.receiver() else { return };
         let device = player.device().id.clone();
         // The same receiver joined again keeps what it was left playing.
-        let playing = self
+        let (playing, at) = self
             .left()
             .filter(|left| left.device == device && left.session == app.session_id)
-            .and_then(|left| left.playing);
-        self.write_left(Some(Left { device, session: app.session_id, playing }));
+            .map_or((None, None), |left| (left.playing, left.at));
+        self.write_left(Some(Left { device, session: app.session_id, playing, at }));
     }
 
     fn forget_left(&self) {
@@ -852,27 +952,37 @@ impl CastHub {
     /// Whether the TV `device` was left playing `episode` of `id` when the connection to it was
     /// lost mid-way, so its receiver may have played on: a cast of that episode carries on from
     /// where the TV is. Asked as such a cast starts, and the note of the episode goes with it.
-    pub(crate) fn take_left_playing(&self, device: &str, id: AnilistId, episode: &str) -> bool {
-        let Some(left) = self.left().filter(|left| left.device == device) else { return false };
-        let Some((was, number)) = left.playing.clone() else { return false };
-        self.write_left(Some(Left { playing: None, ..left }));
-        was == id && number == episode
+    pub(crate) fn take_left_playing(
+        &self,
+        device: &str,
+        id: AnilistId,
+        episode: &str,
+    ) -> Option<LeftPlaying> {
+        let left = self.left().filter(|left| left.device == device)?;
+        let (was, number) = left.playing.clone()?;
+        let at = left.at;
+        self.write_left(Some(Left { playing: None, at: None, ..left }));
+        (was == id && number == episode).then_some(LeftPlaying { at })
     }
 
     /// An episode starts on the TV: what it was left playing no longer stands.
     fn forget_left_playing(&self) {
         if let Some(left) = self.left().filter(|left| left.playing.is_some()) {
-            self.write_left(Some(Left { playing: None, ..left }));
+            self.write_left(Some(Left { playing: None, at: None, ..left }));
         }
     }
 
     fn write_left(&self, left: Option<Left>) {
         if let Some(dir) = &self.dir {
             let path = dir.join(LEFT_FILE);
+            // Written beside it and moved into place, so a run reading it at the same moment
+            // finds the old note or the new one, never an empty file.
+            let temp = dir.join(format!("{LEFT_FILE}.tmp"));
             let written = match &left {
                 Some(left) => serde_json::to_vec(left)
                     .map_err(io::Error::other)
-                    .and_then(|bytes| std::fs::write(&path, bytes)),
+                    .and_then(|bytes| std::fs::write(&temp, bytes))
+                    .and_then(|()| std::fs::rename(&temp, &path)),
                 None => match std::fs::remove_file(&path) {
                     Err(e) if e.kind() == io::ErrorKind::NotFound => Ok(()),
                     other => other,
@@ -906,6 +1016,12 @@ impl CastHub {
     #[cfg(test)]
     pub(crate) fn noted_on(&self) -> Option<String> {
         self.left().map(|left| left.device)
+    }
+
+    /// The episode the note says the TV was left playing, whatever casts now.
+    #[cfg(test)]
+    pub(crate) fn noted_playing(&self) -> Option<(AnilistId, String)> {
+        self.left().and_then(|left| left.playing)
     }
 
     /// A cast connects outside the session, or the card follows a player that is up.
@@ -950,9 +1066,12 @@ impl CastHub {
                     hub.connected(generation, Ok(Arc::new(player)));
                 }
                 // The receiver closed meanwhile, or the TV can't be reached: nothing to join,
-                // and nothing to say.
-                Ok(None) | Err(_) => {
-                    hub.forget_left();
+                // and nothing to say. One out of reach may still play it, so its note stays for
+                // the next time the TV is found or cast to.
+                unjoined => {
+                    if matches!(unjoined, Ok(None)) {
+                        hub.forget_left();
+                    }
                     let ours = {
                         let mut session = lock(&hub.session);
                         let ours = session.generation == generation;
@@ -1038,10 +1157,9 @@ impl CastHub {
                 if said == FromReceiver::SubtitlesPlain {
                     match hub.memory().told_subtitles_plain(&tv.id) {
                         Ok(true) => {
-                            lock(&hub.cast).note =
-                                Some(kaeri_model::Msg::NoticeCastSubtitlesPlain {
-                                    name: tv.name.clone(),
-                                });
+                            lock(&hub.cast).say(kaeri_model::Msg::NoticeCastSubtitlesPlain {
+                                name: tv.name.clone(),
+                            });
                             hub.bump();
                         }
                         Ok(false) => {}
@@ -1200,17 +1318,22 @@ impl CastHub {
         let mut status = player.status();
         lock(&self.cast).player = Arc::downgrade(player);
         let mut noted = Noted::default();
+        let device = player.device().id.clone();
         let now = status.borrow_and_update().clone();
-        self.note_left(player, &now, &mut noted);
+        self.note_left(&device, Some(player), &now, &mut noted);
         self.note_fallback(player, &now);
         self.set_status(now);
         let hub = Arc::downgrade(self);
         let held = Arc::downgrade(player);
         tokio::spawn(async move {
             while status.changed().await.is_ok() {
-                let (Some(hub), Some(player)) = (hub.upgrade(), held.upgrade()) else { return };
+                let Some(hub) = hub.upgrade() else { return };
+                // Read before the player: one let go as its cast ended still says how it ended,
+                // so a lost one is noted as left playing.
                 let now = status.borrow_and_update().clone();
-                hub.note_left(&player, &now, &mut noted);
+                let player = held.upgrade();
+                hub.note_left(&device, player.as_deref(), &now, &mut noted);
+                let Some(player) = player else { return };
                 hub.note_fallback(&player, &now);
                 hub.set_status(now);
             }
@@ -1231,14 +1354,20 @@ impl CastHub {
             *told = Arc::downgrade(player);
         }
         tracing::info!("the TV plays this cast in its own player");
-        lock(&self.cast).note =
-            Some(kaeri_model::Msg::NoticeCastFallback { name: player.device().name.clone() });
+        lock(&self.cast)
+            .say(kaeri_model::Msg::NoticeCastFallback { name: player.device().name.clone() });
     }
 
     /// Keep the note of the receiver a cast plays on, a cast begun from Play on TV included, so a
     /// run the system ended joins it again once the TV is found: noted as the receiver comes up,
     /// let go as the cast ends, unless the connection was lost mid-episode.
-    fn note_left(&self, player: &CastPlayer, status: &CastStatus, noted: &mut Noted) {
+    fn note_left(
+        &self,
+        device: &str,
+        player: Option<&CastPlayer>,
+        status: &CastStatus,
+        noted: &mut Noted,
+    ) {
         if status.state == CastState::Ended {
             let lost = matches!(status.failure, Some(CastFailure::Lost(_)));
             let Some(left) = noted
@@ -1256,15 +1385,17 @@ impl CastHub {
             // from where the TV is.
             let playing = {
                 let cast = lock(&self.cast);
-                cast.asked.clone().filter(|_| {
-                    cast.device.as_ref().is_some_and(|d| d.id == player.device().id)
-                })
+                cast.asked
+                    .clone()
+                    .filter(|_| cast.device.as_ref().is_some_and(|d| d.id == device))
             };
             if playing.is_some() {
-                self.write_left(Some(Left { playing, ..left }));
+                self.write_left(Some(Left { playing, at: noted.known_at(), ..left }));
             }
             return;
         }
+        noted.hear(status);
+        let Some(player) = player else { return };
         noted.busy = status.step.is_some()
             || matches!(
                 status.state,
@@ -1388,7 +1519,14 @@ impl CastHub {
                     }
                     cast.skip = None;
                     cast.undo = None;
-                    cast.note = None;
+                    // A note said as the cast came up is its first episode's, and stays while
+                    // that episode starts, another stream of it included; the next episode's
+                    // start lets it go.
+                    match &cast.note_for {
+                        None => cast.note_for = Some((*id, episode.clone())),
+                        Some((was, of)) if was != id || of != episode => cast.note = None,
+                        Some(_) => {}
+                    }
                     starting = true;
                 }
                 _ => return,

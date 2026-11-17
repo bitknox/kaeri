@@ -137,8 +137,11 @@ struct MacShell: View {
                 PaletteOverlay()
             }
         }
+        // With the cast's panel open, in the room beside it.
         .overlay(alignment: .bottom) {
-            NoticeCapsule().padding(.bottom, 16)
+            NoticeCapsule()
+                .padding(.leading, MacCastMetrics.panelOpen(store.tv.cast) ? MacCastMetrics.panelLeading + MacCastMetrics.panelWidth : 0)
+                .padding(.bottom, 16)
         }
         // Messages, the show's settings, More about and the source picker lose nothing to a click
         // outside, so they are cards over the window (Light dismiss).

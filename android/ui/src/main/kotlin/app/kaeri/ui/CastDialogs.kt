@@ -44,6 +44,7 @@ import app.kaeri.i18n.Strings
 import app.kaeri.store.CastDialog
 import app.kaeri.store.CastItem
 import app.kaeri.store.CastModel
+import app.kaeri.store.CastSessionState
 
 /** The cast button's dialog, while it is up. */
 @Composable
@@ -147,7 +148,9 @@ private fun CastChooser(cast: CastModel) {
 }
 
 /**
- * The held TV's dialog: what plays there, or "Nothing playing yet", its volume, and Stop casting.
+ * The held TV's dialog: "Connected to Living room", what plays there, which opens the remote, or
+ * "Nothing playing yet", its volume, and Stop casting while something plays or Disconnect while
+ * nothing does. Both let the TV go.
  */
 @Composable
 private fun CastConnectedDialog(cast: CastModel) {
@@ -158,14 +161,30 @@ private fun CastConnectedDialog(cast: CastModel) {
     val colors = MaterialTheme.colorScheme
     val name = session.deviceName ?: joining.orEmpty()
     val item = session.item
+    val playing = session.state == CastSessionState.Playing && item != null
+    val opens = shown != null && item != null
+    val openLabel = stringResource(R.string.cast_mini_opens)
     CastDialogFrame(
-        name,
+        stringResource(R.string.cast_button_connected, name),
         onDismiss = cast::closeDialog,
-        buttons = { TextButton(onClick = cast::disconnect) { Text(stringResource(R.string.cast_stop)) } },
+        buttons = { TextButton(onClick = cast::disconnect) { Text(stringResource(if (playing) R.string.cast_stop else R.string.action_disconnect)) } },
     ) {
         Column(Modifier.padding(horizontal = 24.dp)) {
             Row(
-                Modifier.fillMaxWidth().heightIn(min = 56.dp).semantics(mergeDescendants = true) {},
+                Modifier
+                    .fillMaxWidth()
+                    .heightIn(min = 56.dp)
+                    .then(
+                        if (opens) {
+                            Modifier.clickable(onClickLabel = openLabel) {
+                                cast.closeDialog()
+                                cast.openCard()
+                            }
+                        } else {
+                            Modifier
+                        },
+                    )
+                    .semantics(mergeDescendants = true) {},
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(12.dp),
             ) {
@@ -175,6 +194,7 @@ private fun CastConnectedDialog(cast: CastModel) {
                         Text(item.title, style = MaterialTheme.typography.bodyLarge, color = colors.onSurface, maxLines = 1, overflow = TextOverflow.Ellipsis)
                         Text(castEpisodeLine(context, item), style = MaterialTheme.typography.bodyMedium, color = colors.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis)
                     }
+                    if (opens) Icon(Icons.Chevron, contentDescription = null, tint = colors.onSurfaceVariant, modifier = Modifier.size(20.dp))
                 } else {
                     CastGlyph(CastGlyphState.Filled, size = 18.dp, tint = colors.onSurfaceVariant)
                     Text(stringResource(R.string.cast_idle), style = MaterialTheme.typography.bodyLarge, color = colors.onSurface)

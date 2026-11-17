@@ -7,6 +7,17 @@
 package app.kaeri.ui
 
 import androidx.activity.compose.PredictiveBackHandler
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.SizeTransform
+import androidx.compose.animation.togetherWith
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.snap
+import androidx.compose.ui.graphics.Color
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.runtime.key
+import androidx.compose.material3.SnackbarHost
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.AnimatedVisibilityScope
 import androidx.compose.animation.BoundsTransform
@@ -96,6 +107,7 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.disabled
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.style.TextOverflow
@@ -351,6 +363,13 @@ fun CastMorphHost(hidden: Boolean, content: @Composable () -> Unit) {
             Box(Modifier.fillMaxSize().onGloballyPositioned { drag.height = it.size.height.toFloat() }) {
                 content()
                 if (!hidden) CastExpandedLayer(morph)
+                // A notice while the remote is up sits over the remote's foot, not under the remote.
+                if (!hidden && open) {
+                    SnackbarHost(
+                        LocalSnackbars.current.host,
+                        Modifier.align(Alignment.BottomCenter).windowInsetsPadding(WindowInsets.navigationBars),
+                    ) { NoticeSnackbar(it) }
+                }
             }
         }
     }
@@ -385,7 +404,7 @@ fun CastMiniSlot() {
         exit = shrinkVertically(Motion.standard(), shrinkTowards = Alignment.Top) + fadeOut(Motion.fadeOut()),
     ) {
         val shown by cast.shown.collectAsStateWithLifecycle()
-        val joining by cast.joining.collectAsStateWithLifecycle()
+        val reconnecting = castReconnecting(cast)
         val drag = morph.drag
         Box(
             Modifier
@@ -396,7 +415,7 @@ fun CastMiniSlot() {
                 .draggable(
                     rememberDraggableState { drag.drag(it) },
                     Orientation.Vertical,
-                    enabled = shown != null && joining == null,
+                    enabled = shown != null && !reconnecting,
                     onDragStarted = { drag.start() },
                     onDragStopped = { drag.release(it) },
                 ),
@@ -550,8 +569,39 @@ private fun castNow(cast: CastModel): CastNow? {
 }
 
 /**
+ * The TV's connection is made again, or a session left running is joined: the mini and the remote
+ * read Reconnecting, and the mini takes no tap or drag.
+ */
+@Composable
+private fun castReconnecting(cast: CastModel): Boolean {
+    val shown by cast.shown.collectAsStateWithLifecycle()
+    val session by cast.session.collectAsStateWithLifecycle()
+    val joining by cast.joining.collectAsStateWithLifecycle()
+    val held = shown
+    return joining != null || held?.reconnecting == true || ((held == null || held.live) && session.reconnecting)
+}
+
+/** Whether [waits] has held for the 600 ms a loading state stays quiet: a short wait says nothing. */
+@Composable
+private fun rememberQuietWait(waits: Boolean): Boolean {
+    var past by remember { mutableStateOf(false) }
+    LaunchedEffect(waits) {
+        past = false
+        if (waits) {
+            delay(QUIET_FOR)
+            past = true
+        }
+    }
+    return waits && past
+}
+
+/** What the mini's second line says: the TV's name beside the glyph, or a wait beside a spinner. */
+private enum class MiniLine { Name, Reconnecting, Waiting }
+
+/**
  * The mini: a 2 dp playhead along its top, the cover, the title over the TV's name, pause or play,
- * and the filled cast glyph for the TV's dialog. A tap anywhere else opens the controller.
+ * and the filled cast glyph for the TV's dialog. A tap anywhere else opens the controller. While
+ * the TV reconnects or waits, the line says so beside a spinner and play or pause dims.
  */
 @Composable
 private fun CastMini(cast: CastModel, scope: AnimatedVisibilityScope, morph: CastMorph) {
@@ -562,8 +612,16 @@ private fun CastMini(cast: CastModel, scope: AnimatedVisibilityScope, morph: Cas
     val colors = MaterialTheme.colorScheme
     val context = LocalContext.current
     val name = joining ?: session.deviceName ?: shown?.tvName.orEmpty()
-    val rejoining = joining != null
-    val usable = !now.starting && !rejoining
+    val reconnecting = castReconnecting(cast)
+    val held = shown
+    val waits = !reconnecting && (held?.waiting != null || ((held == null || held.stage == CastStage.Playing) && session.item?.waiting != null))
+    val waiting = rememberQuietWait(waits)
+    val usable = !now.starting && !reconnecting && !waiting
+    val line = when {
+        reconnecting -> MiniLine.Reconnecting
+        waiting -> MiniLine.Waiting
+        else -> MiniLine.Name
+    }
     val position by produceState(now.position, now, usable) {
         while (true) {
             value = cast.playhead() ?: cast.itemPlayhead() ?: now.position
@@ -572,17 +630,22 @@ private fun CastMini(cast: CastModel, scope: AnimatedVisibilityScope, morph: Cas
         }
     }
     val opens = stringResource(R.string.cast_mini_opens)
-    val status = if (rejoining) stringResource(R.string.tv_status_reconnecting, name) else stringResource(if (now.paused) R.string.cast_status_paused else R.string.tv_status_playing, name)
+    val status = when (line) {
+        MiniLine.Reconnecting -> stringResource(R.string.tv_status_reconnecting, name)
+        MiniLine.Waiting -> stringResource(R.string.tv_waiting_for, name)
+        MiniLine.Name -> stringResource(if (now.paused) R.string.cast_status_paused else R.string.tv_status_playing, name)
+    }
+    val dim by animateFloatAsState(if (usable) 1f else 0.38f, Motion.quick(), label = "mini dim") // i18n-skip
     Column(
         Modifier
             .fillMaxSize()
-            .clickable(onClickLabel = opens, enabled = !rejoining) { cast.openCard() }
+            .clickable(onClickLabel = opens, enabled = !reconnecting) { cast.openCard() }
             .semantics(mergeDescendants = false) { contentDescription = "${now.title}, $status" }, // i18n-skip
     ) {
         val duration = now.duration?.takeIf { it > 0 }
         Box(Modifier.fillMaxWidth().height(2.dp).background(ObiSilk.Edge)) {
             if (duration != null && !now.starting) {
-                Box(Modifier.fillMaxWidth((position / duration).toFloat().coerceIn(0f, 1f)).height(2.dp).background(colors.primary))
+                Box(Modifier.fillMaxWidth((position / duration).toFloat().coerceIn(0f, 1f)).height(2.dp).background(colors.onSurface))
             }
         }
         Row(
@@ -593,22 +656,34 @@ private fun CastMini(cast: CastModel, scope: AnimatedVisibilityScope, morph: Cas
             CastArt(now.id, now.image, Modifier.size(40.dp).castCover(scope, morph))
             Column(Modifier.weight(1f)) {
                 Text(now.title, style = ShowTitle.caption, color = colors.onSurface, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                    if (rejoining) {
-                        CircularProgressIndicator(Modifier.size(12.dp), strokeWidth = 1.5.dp, color = colors.onSurfaceVariant)
-                    } else {
-                        CastGlyph(CastGlyphState.Filled, size = 16.dp, tint = colors.onSurfaceVariant)
+                // The glyph and the name crossfade with the spinner and the wait's words.
+                AnimatedContent(
+                    line,
+                    transitionSpec = { fadeIn(Motion.fadeIn()) togetherWith fadeOut(Motion.fadeOut()) },
+                    contentAlignment = Alignment.CenterStart,
+                    label = "mini line", // i18n-skip
+                ) { kind ->
+                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                        if (kind == MiniLine.Name) {
+                            CastGlyph(CastGlyphState.Filled, size = 16.dp, tint = colors.onSurfaceVariant)
+                        } else {
+                            CircularProgressIndicator(Modifier.size(12.dp), strokeWidth = 1.5.dp, color = colors.onSurfaceVariant)
+                        }
+                        Text(
+                            when (kind) {
+                                MiniLine.Name -> name
+                                MiniLine.Reconnecting -> stringResource(R.string.tv_status_reconnecting, name)
+                                MiniLine.Waiting -> stringResource(R.string.tv_waiting_for, name)
+                            },
+                            style = MaterialTheme.typography.bodySmall.copy(fontSize = 13.sp),
+                            color = colors.onSurfaceVariant,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                        )
                     }
-                    Text(
-                        if (rejoining) status else name,
-                        style = MaterialTheme.typography.bodySmall.copy(fontSize = 13.sp),
-                        color = colors.onSurfaceVariant,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                    )
                 }
             }
-            Box(Modifier.alpha(if (usable) 1f else 0.38f)) {
+            Box(Modifier.alpha(dim)) {
                 TvGlyph(
                     if (now.paused) Icons.PlayRow else Icons.Pause,
                     stringResource(if (now.paused) R.string.action_play else R.string.action_pause),
@@ -638,18 +713,34 @@ private fun CastControllerContent(scope: AnimatedVisibilityScope, morph: CastMor
     }
 }
 
-/** The status line's dot: water while it plays or pauses, vermilion once it failed, a spinner as it starts. */
+/** What the status line says, and with which mark: a spinner, the water dot or the vermilion dot. */
+private enum class CastLineKind { Blank, Starting, Playing, Reconnecting, Waiting, Ended }
+
+private data class CastLine(val kind: CastLineKind, val text: String)
+
+/**
+ * The status line: a spinner while it starts, reconnects or waits, water while it plays or
+ * pauses, vermilion once it ended. A change of kind crossfades the mark and the words together.
+ */
 @Composable
-private fun CastStatus(text: String?, stage: CastStage) {
+private fun CastStatus(line: CastLine) {
     val colors = MaterialTheme.colorScheme
-    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-        if (text != null) {
-            when (stage) {
-                CastStage.Starting -> CircularProgressIndicator(Modifier.size(12.dp), strokeWidth = 1.5.dp, color = colors.onSurfaceVariant)
-                CastStage.Playing -> StateDot(ObiSilk.Water)
-                CastStage.Failed, CastStage.Lost -> StateDot(ObiSilk.Vermilion)
+    AnimatedContent(
+        line,
+        contentKey = { it.kind },
+        transitionSpec = { fadeIn(Motion.fadeIn()) togetherWith fadeOut(Motion.fadeOut()) },
+        contentAlignment = Alignment.Center,
+        label = "cast status", // i18n-skip
+    ) { shownLine ->
+        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            if (shownLine.kind != CastLineKind.Blank) {
+                when (shownLine.kind) {
+                    CastLineKind.Playing -> StateDot(ObiSilk.Water)
+                    CastLineKind.Ended -> StateDot(ObiSilk.Vermilion)
+                    else -> CircularProgressIndicator(Modifier.size(12.dp), strokeWidth = 1.5.dp, color = colors.onSurfaceVariant)
+                }
+                Text(shownLine.text, style = MaterialTheme.typography.bodyMedium.copy(fontSize = 14.sp), color = colors.onSurface, maxLines = 1, overflow = TextOverflow.Ellipsis)
             }
-            Text(text, style = MaterialTheme.typography.bodyMedium.copy(fontSize = 14.sp), color = colors.onSurface, maxLines = 1, overflow = TextOverflow.Ellipsis)
         }
     }
 }
@@ -675,11 +766,23 @@ private fun CastController(cast: CastModel, shown: CastShown, scope: AnimatedVis
         delay((QUIET_FOR - (System.nanoTime() / 1_000_000 - shown.startedAt)).coerceIn(0, QUIET_FOR))
         quiet = false
     }
-    val status = when (stage) {
-        CastStage.Starting -> if (quiet) null else shown.cast.phaseLine?.text(context) ?: Strings.tvSessionStarting(context, name)
-        CastStage.Playing -> if (now.paused) stringResource(R.string.cast_status_paused, name) else Strings.tvStatusPlaying(context, name)
-        CastStage.Failed -> Strings.castCardFailed(context, name)
-        CastStage.Lost -> Strings.castCardStopped(context)
+    // Reconnecting shows at once, as the silence before the close has passed already. A wait,
+    // for the stream or while the engine learns why the TV stopped, shows after 600 ms.
+    val reconnecting = shown.reconnecting || (shown.live && session.reconnecting)
+    val waitingFor = if (playing && !reconnecting) shown.waiting?.toLong() ?: session.item?.waiting else null
+    val waiting = rememberQuietWait(waitingFor != null) && waitingFor != null
+    // The TV went quiet: everything but Stop casting dims and takes no input, in place.
+    val still = reconnecting || waiting
+    val status = when {
+        reconnecting -> CastLine(CastLineKind.Reconnecting, context.getString(R.string.tv_status_reconnecting, name))
+        stage == CastStage.Starting -> if (quiet) CastLine(CastLineKind.Blank, "") else CastLine(CastLineKind.Starting, shown.cast.phaseLine?.text(context) ?: Strings.tvSessionStarting(context, name))
+        waiting && waitingFor != null -> CastLine(
+            CastLineKind.Waiting,
+            if (waitingFor >= CastModel.COUNT_FROM_SECONDS) Msg.CastPhaseWaiting(name, waitingFor).text(context) else context.getString(R.string.tv_waiting_for, name),
+        )
+        stage == CastStage.Playing -> CastLine(CastLineKind.Playing, if (now.paused) context.getString(R.string.cast_status_paused, name) else Strings.tvStatusPlaying(context, name))
+        stage == CastStage.Failed -> CastLine(CastLineKind.Ended, Strings.castCardFailed(context, name))
+        else -> CastLine(CastLineKind.Ended, Strings.castCardStopped(context))
     }
     val upNext = shown.cast.upNext
     Column(
@@ -692,7 +795,7 @@ private fun CastController(cast: CastModel, shown: CastShown, scope: AnimatedVis
         // The header: close, the status line, the TV's dialog.
         Row(Modifier.fillMaxWidth().height(56.dp).padding(horizontal = 4.dp), verticalAlignment = Alignment.CenterVertically) {
             TvGlyph(Icons.Down, stringResource(R.string.cast_controller_close)) { cast.closeCard() }
-            Box(Modifier.weight(1f), contentAlignment = Alignment.Center) { CastStatus(status, stage) }
+            Box(Modifier.weight(1f), contentAlignment = Alignment.Center) { CastStatus(status) }
             IconButton(onClick = cast::pressButton, modifier = Modifier.size(48.dp).semantics { contentDescription = context.getString(R.string.cast_button_connected, name) }) {
                 CastGlyph(CastGlyphState.Filled, size = 22.dp, tint = colors.onSurface)
             }
@@ -729,17 +832,32 @@ private fun CastController(cast: CastModel, shown: CastShown, scope: AnimatedVis
                 maxLines = 2,
                 overflow = TextOverflow.Ellipsis,
             )
-            if (over) {
-                shown.cast.notice?.let { ProblemLine(it.text(context)) }
-            } else {
+            val usable = playing && !still
+            if (!over) {
                 if (playing) {
                     now.skip?.let { skip ->
-                        OutlinedButton(onClick = { cast.send(FfiTvCommand.Skip) }, modifier = Modifier.padding(top = 8.dp)) { Text(skip.label, color = colors.onSurface) }
+                        OutlinedButton(onClick = { cast.send(FfiTvCommand.Skip) }, enabled = usable, modifier = Modifier.padding(top = 8.dp)) { Text(skip.label, color = colors.onSurface) }
                     }
                 }
                 shown.cast.undo?.let { CastUndoNote(cast, it.kind) }
-                CastSeekLine(cast, now, shown, waiting = session.item?.waiting)
-                CastTransport(cast, now, usable = playing)
+            }
+            // The seek line stays, dimmed with its times, while the TV is quiet and once the cast ended.
+            CastSeekLine(cast, now, shown, usable = usable, dimmed = still || over)
+            // Once the cast ended, the reason takes the transport's row.
+            AnimatedContent(
+                over,
+                transitionSpec = { fadeIn(Motion.fadeIn()) togetherWith fadeOut(Motion.fadeOut()) },
+                label = "transport or reason", // i18n-skip
+            ) { ended ->
+                if (ended) {
+                    Box(Modifier.fillMaxWidth().padding(top = 12.dp).heightIn(min = 64.dp), contentAlignment = Alignment.CenterStart) {
+                        shown.cast.notice?.let { ProblemLine(it.text(context)) }
+                    }
+                } else {
+                    CastTransport(cast, now, usable = usable)
+                }
+            }
+            if (!over) {
                 AnimatedVisibility(upNext != null, enter = expandVertically(Motion.standard()) + fadeIn(Motion.fadeIn()), exit = shrinkVertically(Motion.standard()) + fadeOut(Motion.fadeOut())) {
                     val last = remember { LastUpNext() }
                     upNext?.let { last.value = it }
@@ -747,8 +865,7 @@ private fun CastController(cast: CastModel, shown: CastShown, scope: AnimatedVis
                 }
             }
             Spacer(Modifier.height(8.dp))
-            // The TV's tracks and volume, dimmed while it starts or once it failed.
-            val usable = playing
+            // The TV's tracks and volume, dimmed while it starts, while it is quiet, or once it ended.
             CastTrackRow(stringResource(R.string.player_subtitles), FfiTvTrackKind.SUBTITLE, now.subtitles, now.subtitlesOff, cast, enabled = usable)
             TvDivider()
             // The engine lists audio only when there is a choice: one track has no row, as on iOS.
@@ -757,29 +874,31 @@ private fun CastController(cast: CastModel, shown: CastShown, scope: AnimatedVis
                 TvDivider()
             }
             CastVolumeRow(cast, shown.level, shown.cast.muted == true || session.muted == true, now.volume, enabled = usable)
-            // The footer: what each state offers, then More.
+            // The footer: what each state offers in two places that keep their order, then More.
             val notice = shown.cast.notice
+            val playHere = stringResource(R.string.cast_play_here)
+            val stop = stringResource(R.string.cast_stop)
+            val another = stringResource(R.string.tv_choose_another)
+            val actions = when {
+                // Play here waits for Casting stopped while the TV reconnects; Stop casting stays.
+                notice == null -> listOf(CastAction(playHere, primary = false, enabled = !reconnecting, cast::playHere), CastAction(stop, primary = false, enabled = true, cast::disconnect))
+                notice is Msg.NoticeCastNeverFetches -> listOf(
+                    CastAction(stringResource(R.string.action_try_again), primary = true, enabled = true, cast::tryAgain),
+                    CastAction(playHere, primary = false, enabled = true, cast::playHere),
+                )
+                notice is Msg.NoticeCastNotSameNetwork || notice is Msg.NoticeCastLost || notice is Msg.NoticeCastNoDevice || notice is Msg.NoticeCastStoppedElsewhere -> listOf(
+                    CastAction(playHere, primary = true, enabled = true, cast::playHere),
+                    CastAction(another, primary = false, enabled = true, cast::chooseAnother),
+                )
+                else -> listOfNotNull(
+                    entry?.let { CastAction(stringResource(R.string.player_choose_source), primary = true, enabled = true) { choosingSource = true } },
+                    CastAction(playHere, primary = false, enabled = true, cast::playHere).takeIf { notice !is Msg.NoticeCastDeepLink },
+                )
+            }
+            val reduced = app.kaeri.design.rememberAnimationsRemoved()
             Row(Modifier.fillMaxWidth().padding(top = 16.dp, bottom = 16.dp), verticalAlignment = Alignment.CenterVertically) {
                 FlowRow(Modifier.weight(1f), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    val playHere = @Composable { CastPill(stringResource(R.string.cast_play_here), cast::playHere) }
-                    when {
-                        notice == null -> {
-                            playHere()
-                            CastPill(stringResource(R.string.cast_stop), cast::disconnect)
-                        }
-                        notice is Msg.NoticeCastNeverFetches -> {
-                            Button(onClick = cast::tryAgain) { Text(stringResource(R.string.action_try_again)) }
-                            playHere()
-                        }
-                        notice is Msg.NoticeCastNotSameNetwork || notice is Msg.NoticeCastLost || notice is Msg.NoticeCastNoDevice -> {
-                            playHere()
-                            CastPill(stringResource(R.string.tv_choose_another), cast::chooseAnother)
-                        }
-                        else -> {
-                            if (entry != null) Button(onClick = { choosingSource = true }) { Text(stringResource(R.string.player_choose_source)) }
-                            if (notice !is Msg.NoticeCastDeepLink) playHere()
-                        }
-                    }
+                    actions.forEachIndexed { place, action -> key(place) { CastFooterButton(action, reduced) } }
                 }
                 var more by remember { mutableStateOf(false) }
                 Box {
@@ -788,7 +907,8 @@ private fun CastController(cast: CastModel, shown: CastShown, scope: AnimatedVis
                     }
                     Menu(expanded = more, onDismissRequest = { more = false }) {
                         DropdownMenuItem(
-                            text = { Text(stringResource(R.string.tv_choose_another), style = MaterialTheme.typography.labelLarge) },
+                            text = { Text(another, style = MaterialTheme.typography.labelLarge, modifier = Modifier.offWith(!reconnecting)) },
+                            enabled = !reconnecting,
                             modifier = Modifier.heightIn(min = 48.dp),
                             onClick = {
                                 more = false
@@ -796,8 +916,10 @@ private fun CastController(cast: CastModel, shown: CastShown, scope: AnimatedVis
                             },
                         )
                         if (notice == null) {
+                            // Disconnect while the held TV plays nothing, Stop casting while something plays.
+                            val idle = session.held && session.state == CastSessionState.Connected
                             DropdownMenuItem(
-                                text = { Text(stringResource(R.string.cast_stop), style = MaterialTheme.typography.labelLarge) },
+                                text = { Text(stringResource(if (idle) R.string.action_disconnect else R.string.cast_stop), style = MaterialTheme.typography.labelLarge) },
                                 modifier = Modifier.heightIn(min = 48.dp),
                                 onClick = {
                                     more = false
@@ -808,6 +930,8 @@ private fun CastController(cast: CastModel, shown: CastShown, scope: AnimatedVis
                     }
                 }
             }
+            // A notice over the remote's foot leaves room to scroll the footer clear of it.
+            if (LocalSnackbars.current.host.currentSnackbarData != null) Spacer(Modifier.height(80.dp))
         }
     }
     if (choosingSource && entry != null) SourcePickerSheet(entry) { choosingSource = false }
@@ -818,10 +942,39 @@ private class LastUpNext {
     var value: FfiCastUpNext? = null
 }
 
-/** An outlined pill in silk, never amber. */
+/** A footer action: amber when it is the view's primary one, else an outlined pill in silk. */
+internal data class CastAction(val text: String, val primary: Boolean, val enabled: Boolean, val onClick: () -> Unit)
+
+/**
+ * A control's words are off while the control is. Compose lists them as a node of their own
+ * under the control's, and without this one that reads the screen finds them enabled while the
+ * control they name is dimmed and off.
+ */
+internal fun Modifier.offWith(enabled: Boolean): Modifier = if (enabled) this else semantics { disabled() }
+
+/**
+ * One of the footer's two places. As the state changes, its fill crossfades between outlined and
+ * amber, its words crossfade, and its width follows on standard, or at once with motion reduced.
+ */
 @Composable
-private fun CastPill(text: String, onClick: () -> Unit) {
-    OutlinedButton(onClick = onClick) { Text(text, color = MaterialTheme.colorScheme.onSurface) }
+internal fun CastFooterButton(action: CastAction, reduced: Boolean) {
+    val colors = MaterialTheme.colorScheme
+    val container by animateColorAsState(if (action.primary) colors.primary else Color.Transparent, Motion.fadeIn(), label = "footer fill") // i18n-skip
+    val content by animateColorAsState(if (action.primary) colors.onPrimary else colors.onSurface, Motion.fadeIn(), label = "footer words") // i18n-skip
+    OutlinedButton(
+        onClick = action.onClick,
+        enabled = action.enabled,
+        colors = ButtonDefaults.outlinedButtonColors(containerColor = container, contentColor = content),
+        border = if (action.primary) null else ButtonDefaults.outlinedButtonBorder(action.enabled),
+    ) {
+        AnimatedContent(
+            action.text,
+            transitionSpec = {
+                (fadeIn(Motion.fadeIn()) togetherWith fadeOut(Motion.fadeOut())) using SizeTransform(clip = false) { _, _ -> if (reduced) snap() else Motion.standard() }
+            },
+            label = "footer action", // i18n-skip
+        ) { Text(it, Modifier.offWith(action.enabled)) }
+    }
 }
 
 /** After an automatic skip: what it did, and Undo. */
@@ -844,23 +997,24 @@ private fun CastUndoNote(cast: CastModel, kind: SkipKind) {
 }
 
 /**
- * The seek bar: a 16 dp amber track up to a 4 by 44 thumb, a 6 dp gap each side of it, and a
+ * The seek bar: a 16 dp silk track up to a 4 by 44 thumb, a 6 dp gap each side of it, and a
  * 4 dp track on after it; the position and the time left in tabular figures under it. While the
  * episode starts there is no thumb and no times. Dragged, it seeks on release and holds there
  * until a card with a higher `rev` arrives: the engine holds the asked value meanwhile.
- * Mid-file waiting shows under the bar after 4 s, and never dims anything.
+ * [dimmed] while the TV is quiet or the cast ended: 38%, with its times, taking no input. When the
+ * TV answers again, the playhead moves on standard to where the TV is now.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun CastSeekLine(cast: CastModel, now: FfiNowCard, shown: CastShown, waiting: Long?) {
+private fun CastSeekLine(cast: CastModel, now: FfiNowCard, shown: CastShown, usable: Boolean, dimmed: Boolean) {
     val colors = MaterialTheme.colorScheme
-    val context = LocalContext.current
     val playing = shown.stage == CastStage.Playing
     val duration = now.duration?.takeIf { it > 0 } ?: 0.0
-    val position by produceState(cast.playhead() ?: now.position, now, playing) {
+    val ticks = playing && !shown.quiet
+    val position by produceState(cast.playhead() ?: now.position, now, ticks, shown.frozen) {
         while (true) {
             value = cast.playhead() ?: now.position
-            if (now.paused || !playing) break
+            if (now.paused || !ticks) break
             delay(1000)
         }
     }
@@ -869,12 +1023,29 @@ private fun CastSeekLine(cast: CastModel, now: FfiNowCard, shown: CastShown, wai
     val rev = shown.cast.card.rev
     // Let go once the engine has drawn the cast again since the seek was sent.
     sent?.let { (_, at) -> if (rev > at) sent = null }
-    val at = ((dragging ?: sent?.first)?.toDouble() ?: position).coerceIn(0.0, maxOf(duration, 0.0))
-    val usable = playing && duration > 0
+    val target = ((dragging ?: sent?.first)?.toDouble() ?: position).coerceIn(0.0, maxOf(duration, 0.0))
+    // The playhead glides to the TV's position once after it was quiet, and steps every other time.
+    val reduced = app.kaeri.design.rememberAnimationsRemoved()
+    val head = remember(now.id, now.episode) { Animatable(target.toFloat()) }
+    val rejoin = remember(now.id, now.episode) { CastRejoin(shown.quiet) }
+    if (rejoin.quiet && !shown.quiet && shown.live) rejoin.glide = true
+    rejoin.quiet = shown.quiet
+    LaunchedEffect(target) {
+        if (rejoin.glide && !reduced && dragging == null) {
+            rejoin.glide = false
+            head.animateTo(target.toFloat(), Motion.standard())
+        } else {
+            rejoin.glide = false
+            head.snapTo(target.toFloat())
+        }
+    }
+    val at = if (dragging != null) target else head.value.toDouble()
+    val times = (playing || shown.played) && duration > 0
+    val dim by animateFloatAsState(if (dimmed) 0.38f else 1f, Motion.quick(), label = "seek dim") // i18n-skip
     val label = stringResource(R.string.tv_sheet_position)
     val state = stringResource(R.string.tv_sheet_position_state, TvWords.clock(at), TvWords.clock(duration))
     val time = MaterialTheme.typography.labelMedium.tabular()
-    Column(Modifier.padding(top = 12.dp)) {
+    Column(Modifier.padding(top = 12.dp).alpha(dim)) {
         val range = 0f..maxOf(duration.toFloat(), 1f)
         val slider = remember(range) { SliderState(at.toFloat(), 0, range) }
         if (dragging == null && slider.value != at.toFloat()) slider.value = at.toFloat()
@@ -891,46 +1062,34 @@ private fun CastSeekLine(cast: CastModel, now: FfiNowCard, shown: CastShown, wai
                 }
                 dragging = null
             },
-            enabled = usable,
+            enabled = usable && duration > 0,
             thumb = {
-                if (usable) Box(Modifier.size(4.dp, 44.dp).background(colors.primary, RoundedCornerShape(2.dp)))
+                if (times) Box(Modifier.size(4.dp, 44.dp).background(colors.onSurface, RoundedCornerShape(2.dp)))
             },
-            track = { CastSeekTrack(it.coercedValueAsFraction, thumb = usable) },
+            track = { CastSeekTrack(it.coercedValueAsFraction, thumb = times) },
             modifier = Modifier.fillMaxWidth().height(44.dp).keepsVerticalDrags().semantics {
                 contentDescription = label
-                if (playing) stateDescription = state
+                if (times) stateDescription = state
             },
         )
         Box(Modifier.fillMaxWidth().heightIn(min = 20.dp)) {
-            if (playing && duration > 0) {
+            if (times) {
                 Text(TvWords.clock(at), style = time, color = colors.onSurfaceVariant, modifier = Modifier.align(Alignment.CenterStart))
                 Text("−" + TvWords.clock(duration - at), style = time, color = colors.onSurfaceVariant, modifier = Modifier.align(Alignment.CenterEnd)) // i18n-skip
-            }
-            // Waiting for the stream mid-file: a spinner after 600 ms on this device's clock, the words from 4 s.
-            var spinning by remember { mutableStateOf(false) }
-            LaunchedEffect(waiting != null) {
-                spinning = false
-                if (waiting != null) {
-                    delay(QUIET_FOR)
-                    spinning = true
-                }
-            }
-            if (playing && waiting != null && spinning) {
-                Row(Modifier.align(Alignment.Center), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                    CircularProgressIndicator(Modifier.size(10.dp), strokeWidth = 1.5.dp, color = colors.onSurfaceVariant)
-                    if (waiting >= CastModel.COUNT_FROM_SECONDS) {
-                        Text(Msg.CastPhaseWaiting(shown.tvName, waiting).text(context), style = MaterialTheme.typography.labelMedium, color = colors.onSurfaceVariant, maxLines = 1)
-                    }
-                }
             }
         }
     }
 }
 
-/** The seek bar's track: amber 16 high up to the thumb's gap, 4 high in RaisedSelected after it. */
+/** Whether the TV was quiet at the last look, and whether its next position glides there. */
+private class CastRejoin(var quiet: Boolean) {
+    var glide = false
+}
+
+/** The seek bar's track: silk 16 high up to the thumb's gap, 4 high in RaisedSelected after it. */
 @Composable
 private fun CastSeekTrack(fraction: Float, thumb: Boolean) {
-    val amber = MaterialTheme.colorScheme.primary
+    val silk = MaterialTheme.colorScheme.onSurface
     Canvas(Modifier.fillMaxWidth().height(16.dp)) {
         val gap = if (thumb) 6.dp.toPx() + 2.dp.toPx() else 0f
         val x = size.width * fraction
@@ -950,16 +1109,17 @@ private fun CastSeekTrack(fraction: Float, thumb: Boolean) {
                     ),
                 )
             }
-            drawPath(path, amber)
+            drawPath(path, silk)
         }
     }
 }
 
-/** Back 10, pause in its 64 tonal square, forward 10 and next, 18 apart; at 0.38 while the TV starts. */
+/** Back 10, pause in its 64 tonal square, forward 10 and next, 18 apart; at 0.38 while the TV starts or is quiet. */
 @Composable
 private fun CastTransport(cast: CastModel, now: FfiNowCard, usable: Boolean) {
+    val dim by animateFloatAsState(if (usable) 1f else 0.38f, Motion.quick(), label = "transport dim") // i18n-skip
     Row(
-        Modifier.fillMaxWidth().padding(top = 12.dp).alpha(if (usable) 1f else 0.38f),
+        Modifier.fillMaxWidth().padding(top = 12.dp).alpha(dim),
         horizontalArrangement = Arrangement.spacedBy(18.dp, Alignment.CenterHorizontally),
         verticalAlignment = Alignment.CenterVertically,
     ) {
@@ -1020,18 +1180,19 @@ internal fun CastTrackRow(title: String, kind: FfiTvTrackKind, tracks: List<FfiT
     val colors = MaterialTheme.colorScheme
     val context = LocalContext.current
     val value = if (choosable) TvWords.chosen(context, tracks, off) else Strings.valueNone(context)
+    val dim by animateFloatAsState(if (enabled) 1f else 0.38f, Motion.quick(), label = "track dim") // i18n-skip
     Box {
         Row(
             Modifier
                 .fillMaxWidth()
                 .heightIn(min = 56.dp)
                 .then(if (choosable) Modifier.clickable(enabled = enabled, role = Role.DropdownList) { open = true } else Modifier)
-                .alpha(if (enabled) 1f else 0.38f)
+                .alpha(dim)
                 .semantics(mergeDescendants = true) {},
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            Text(title, style = MaterialTheme.typography.bodyLarge, color = colors.onSurface, modifier = Modifier.weight(1f))
-            Text(value, style = MaterialTheme.typography.bodyMedium, color = colors.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.widthIn(max = 200.dp))
+            Text(title, style = MaterialTheme.typography.bodyLarge, color = colors.onSurface, modifier = Modifier.weight(1f).offWith(enabled))
+            Text(value, style = MaterialTheme.typography.bodyMedium, color = colors.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.widthIn(max = 200.dp).offWith(enabled))
             if (choosable) Icon(Icons.DropDown, contentDescription = null, tint = colors.onSurfaceVariant, modifier = Modifier.size(18.dp))
         }
         Menu(expanded = open, onDismissRequest = { open = false }) {
@@ -1070,23 +1231,27 @@ internal fun CastVolumeRow(cast: CastModel, level: Boolean, muted: Boolean, volu
     val colors = MaterialTheme.colorScheme
     val label = stringResource(R.string.tv_sheet_volume)
     val muteLabel = stringResource(if (muted) R.string.cast_card_unmute else R.string.cast_card_mute)
+    val dim by animateFloatAsState(if (enabled) 1f else 0.38f, Motion.quick(), label = "volume dim") // i18n-skip
     Row(
-        Modifier.fillMaxWidth().heightIn(min = 56.dp).alpha(if (enabled) 1f else 0.38f),
+        Modifier.fillMaxWidth().heightIn(min = 56.dp).alpha(dim),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(8.dp),
     ) {
-        Text(label, style = MaterialTheme.typography.bodyLarge, color = colors.onSurface)
+        Text(label, style = MaterialTheme.typography.bodyLarge, color = colors.onSurface, modifier = Modifier.offWith(enabled))
         if (!level) {
             Spacer(Modifier.weight(1f))
-            Text(stringResource(R.string.cast_volume_fixed), style = MaterialTheme.typography.bodyMedium, color = colors.onSurfaceVariant, maxLines = 1)
+            Text(stringResource(R.string.cast_volume_fixed), style = MaterialTheme.typography.bodyMedium, color = colors.onSurfaceVariant, maxLines = 1, modifier = Modifier.offWith(enabled))
+            // Off while the row is dimmed; the row's dim alone draws it, so its outline stays.
             OutlinedButton(
-                onClick = { if (enabled) cast.toggleMute() },
+                onClick = cast::toggleMute,
+                enabled = enabled,
+                border = ButtonDefaults.outlinedButtonBorder(enabled = true),
                 contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 14.dp),
                 modifier = Modifier.heightIn(min = 40.dp),
             ) {
                 Icon(if (muted) Icons.SoundOff else Icons.VolumeDown, contentDescription = null, tint = colors.onSurface, modifier = Modifier.size(16.dp))
                 Spacer(Modifier.width(6.dp))
-                Text(muteLabel, color = colors.onSurface)
+                Text(muteLabel, color = colors.onSurface, modifier = Modifier.offWith(enabled))
             }
             return@Row
         }

@@ -25,17 +25,17 @@ struct CastMini: View {
     var body: some View {
         let cast = store.tv.cast
         let inline = placement == .inline
-        let joining = cast.rejoining
         let shown = CastShown(cast)
+        let reconnecting = shown == .reconnecting
         HStack(spacing: 10) {
             if !inline { CastThumb(width: 32).clipShape(.circle) }
             VStack(alignment: .leading, spacing: 1) {
                 Text(cast.showTitle).font(.ui(15, weight: .semibold)).foregroundStyle(.silk).lineLimit(1)
                 if !inline {
                     HStack(spacing: 5) {
-                        if joining {
-                            ProgressView().controlSize(.mini).tint(.haze)
-                            Text(L.tvStatusReconnecting(name: cast.heldName))
+                        if shown == .reconnecting || shown == .waiting {
+                            ProgressView().controlSize(.mini).tint(.haze).transition(CastShown.markFade)
+                            Text(cast.sessionLine)
                         } else if shown == .failed {
                             Circle().fill(.vermilion).frame(width: 6, height: 6)
                             Text(cast.sessionLine)
@@ -47,6 +47,7 @@ struct CastMini: View {
                     .font(.ui(12))
                     .foregroundStyle(.haze)
                     .lineLimit(1)
+                    .animation(.fadeIn, value: shown.mark)
                 }
             }
             .frame(maxWidth: .infinity, alignment: .leading)
@@ -63,7 +64,7 @@ struct CastMini: View {
                 }
                 .buttonStyle(.plain)
                 .disabled(shown != .playing)
-                .opacity(shown == .playing ? 1 : 0.4)
+                .opacity(shown.dimmed(starting: 0.4))
                 .accessibilityLabel(cast.itemPaused ? L.actionPlay : L.actionPause)
                 if !inline {
                     Button {
@@ -77,7 +78,7 @@ struct CastMini: View {
                     }
                     .buttonStyle(.plain)
                     .disabled(shown != .playing)
-                    .opacity(shown == .playing ? 1 : 0.4)
+                    .opacity(shown.dimmed(starting: 0.4))
                     .accessibilityLabel(L.playerNextEpisode)
                 }
             }
@@ -86,19 +87,28 @@ struct CastMini: View {
         .padding(.trailing, 8)
         .frame(maxHeight: .infinity)
         .overlay(alignment: .bottom) {
-            if !inline { CastMiniProgress().padding(.horizontal, 22) }
+            if !inline {
+                CastMiniProgress().padding(.horizontal, 22).opacity(shown.dims ? 0.38 : 1)
+            }
         }
+        .animation(.quick, value: shown)
         .contentShape(.rect)
-        .onTapGesture { cast.expanded = true }
-        .simultaneousGesture(rise, isEnabled: drawer != nil)
+        // While the connection is made again, a tap or a drag does nothing.
+        .onTapGesture { if !reconnecting { cast.expanded = true } }
+        .simultaneousGesture(rise, isEnabled: drawer != nil && !reconnecting)
         .onChange(of: dragging) { _, on in
             // The system took the drag: no release came.
             if !on, let drawer { settle(drawer, speed: 0) }
         }
         .accessibilityElement(children: .contain)
         .accessibilityLabel(cast.showTitle)
-        .accessibilityHint(L.tvRemoteAction)
-        .accessibilityAction(named: L.tvRemoteAction) { cast.expanded = true }
+        .accessibilityValue(cast.sessionLine)
+        .accessibilityHint(reconnecting ? "" : L.castMiniOpens)
+        .accessibilityActions {
+            if !reconnecting {
+                Button(L.tvRemoteAction) { cast.expanded = true }
+            }
+        }
     }
 
     /// A drag up opens the controller with the finger: the box's top travels from the mini's top
@@ -199,6 +209,8 @@ struct CastController: View {
                 }
                 .scrollBounceBehavior(.basedOnSize)
                 .scrollIndicators(.hidden)
+                // The footer clears a notice over the controller's foot.
+                .contentMargins(.bottom, 48, for: .scrollContent)
                 // At the top, a drag down closes the drawer rather than scrolling; while the
                 // drawer has the finger, the scroll stays where it is.
                 .onScrollGeometryChange(for: Bool.self) { geometry in
@@ -257,20 +269,12 @@ struct CastController: View {
     @ViewBuilder
     private func controls(_ shown: CastShown) -> some View {
         let cast = store.tv.cast
-        if shown == .failed, let reason = cast.reason {
-            HStack(alignment: .firstTextBaseline, spacing: 8) {
-                Circle().fill(.vermilion).frame(width: 7, height: 7).alignmentGuide(.firstTextBaseline) { $0[.bottom] - 1 }
-                Text(reason).font(.ui(15)).foregroundStyle(.silk).fixedSize(horizontal: false, vertical: true)
-            }
-            .transition(.opacity)
-        } else {
-            CastSessionSeek(touch: true)
-            CastSessionTransport(touch: true).padding(.vertical, 4)
-            if let next = cast.card?.upNext, shown == .playing {
-                CastUpNextRow(next: next, touch: true).transition(.opacity)
-            } else if let undo = cast.card?.undo, shown == .playing {
-                CastUndoNote(undo: undo, touch: true).transition(.opacity)
-            }
+        CastSessionSeek(touch: true)
+        CastSessionTransport(touch: true)
+        if let next = cast.card?.upNext, shown == .playing {
+            CastUpNextRow(next: next, touch: true).transition(.opacity)
+        } else if let undo = cast.card?.undo, shown == .playing {
+            CastUndoNote(undo: undo, touch: true).transition(.opacity)
         }
         CastSessionRows(touch: true)
         CastSessionFooter(touch: true) { cast.expanded = false }
@@ -379,40 +383,50 @@ private struct CastMorph: View {
 
     var body: some View {
         let cast = store.tv.cast
-        GeometryReader { proxy in
-            let origin = proxy.frame(in: .global).origin
-            let full = CGRect(origin: .zero, size: proxy.size)
-            let mini = reduceMotion ? nil : from.map { $0.offsetBy(dx: -origin.x, dy: -origin.y) }
-            let p = drawer.progress
-            let box = mini.map { Self.box(from: $0, to: full, at: p) } ?? full
-            let scale = box.width / max(full.width, 1)
-            let radius = mini.map { Self.radius(mini: $0.height / 2, at: p) } ?? 0
-            ZStack(alignment: .topLeading) {
-                // The box spans the whole screen, so the controller gets the safe area back.
-                CastController()
-                    .safeAreaPadding(insets ?? proxy.safeAreaInsets)
-                    .frame(width: full.width, height: full.height)
-                    .scaleEffect(scale, anchor: .topLeading)
-                    .offset(x: box.minX, y: box.minY)
-                if let mini {
-                    CastMini()
-                        .frame(width: box.width, height: mini.height)
+        // The screen's safe area, read before the box spans the whole screen: opened with no
+        // mini to grow from (a TV held with nothing playing), there are no insets kept from it.
+        GeometryReader { screen in
+            GeometryReader { proxy in
+                let origin = proxy.frame(in: .global).origin
+                let full = CGRect(origin: .zero, size: proxy.size)
+                let mini = reduceMotion ? nil : from.map { $0.offsetBy(dx: -origin.x, dy: -origin.y) }
+                let p = drawer.progress
+                let box = mini.map { Self.box(from: $0, to: full, at: p) } ?? full
+                let scale = box.width / max(full.width, 1)
+                let radius = mini.map { Self.radius(mini: $0.height / 2, at: p) } ?? 0
+                ZStack(alignment: .topLeading) {
+                    // The box spans the whole screen, so the controller gets the safe area back.
+                    CastController()
+                        .safeAreaPadding(insets ?? screen.safeAreaInsets)
+                        .frame(width: full.width, height: full.height)
+                        .scaleEffect(scale, anchor: .topLeading)
                         .offset(x: box.minX, y: box.minY)
-                        .opacity(max(0, 1 - p / 0.25))
-                        .allowsHitTesting(false)
-                        .accessibilityHidden(true)
+                    if let mini {
+                        CastMini()
+                            .frame(width: box.width, height: mini.height)
+                            .offset(x: box.minX, y: box.minY)
+                            .opacity(max(0, 1 - p / 0.25))
+                            .allowsHitTesting(false)
+                            .accessibilityHidden(true)
+                    }
+                }
+                .frame(width: full.width, height: full.height, alignment: .topLeading)
+                .mask(alignment: .topLeading) {
+                    RoundedRectangle(cornerRadius: radius, style: .continuous)
+                        .frame(width: box.width, height: box.height)
+                        .offset(x: box.minX, y: box.minY)
+                }
+                .opacity(mini == nil ? p : 1)
+                .simultaneousGesture(close(travel: mini?.minY ?? full.height / 2))
+                // A notice while it is open sits over its foot, above the controller.
+                .overlay(alignment: .bottom) {
+                    NoticeCapsule(here: cast.expanded)
+                        .padding(.horizontal, 16)
+                        .padding(.bottom, 50)
                 }
             }
-            .frame(width: full.width, height: full.height, alignment: .topLeading)
-            .mask(alignment: .topLeading) {
-                RoundedRectangle(cornerRadius: radius, style: .continuous)
-                    .frame(width: box.width, height: box.height)
-                    .offset(x: box.minX, y: box.minY)
-            }
-            .opacity(mini == nil ? p : 1)
-            .simultaneousGesture(close(travel: mini?.minY ?? full.height / 2))
+            .ignoresSafeArea()
         }
-        .ignoresSafeArea()
         .accessibilityAction(.escape) { cast.expanded = false }
         .onAppear {
             // One frame on the mini first, then the box grows. A finger already holding it (a
