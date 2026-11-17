@@ -153,6 +153,32 @@ export type Primed = 'sound' | 'timeout' | 'seek';
 /** Seconds of decoded sound the worklet holds before the picture may start. */
 export const PRIMED = 0.3;
 
+/**
+ * How the context's clock must keep pace with performance.now() before the picture goes: over the
+ * last PACE_WINDOW ms, its highest offset (it moves in steps of the output buffer) no more than
+ * PACE_SLIP below the highest in the PACE_WINDOW ms before. A context starved of time falls
+ * behind, and its sound with it.
+ */
+const PACE_WINDOW = 250;
+const PACE_SLIP = 0.015;
+/** How often the context's clock is sampled while the start waits for it, ms. */
+const PACE_EVERY = 20;
+
+/** Whether the context kept pace, from [performance.now() ms, currentTime s] samples, oldest first. */
+export function keptPace(samples: [number, number][], window = PACE_WINDOW, slip = PACE_SLIP): boolean {
+	if (samples.length < 2) return false;
+	const end = samples[samples.length - 1][0];
+	if (end - samples[0][0] < window * 2) return false;
+	let recent = -Infinity;
+	let before = -Infinity;
+	for (const [now, ctx] of samples) {
+		const off = ctx - now / 1000;
+		if (now > end - window) recent = Math.max(recent, off);
+		else if (now > end - window * 2) before = Math.max(before, off);
+	}
+	return before > -Infinity && recent - before > -slip;
+}
+
 /** Readings in a window before the worklet steers by it (about 1.5 s). */
 const SETTLED = 20;
 /** Differences kept for the latency left over (about 15 s). */
@@ -241,7 +267,7 @@ export class PcmAudio {
 	private primed = false;
 	private waiting: ((how: Primed) => void)[] = [];
 	/** performance.now() when the current start's first sound was decoded, and when it was heard. */
-	timing: { decoded: number | null; primed: number | null; sound: number | null } = { decoded: null, primed: null, sound: null };
+	timing: { decoded: number | null; primed: number | null; paced: number | null; sound: number | null } = { decoded: null, primed: null, paced: null, sound: null };
 	/** How the setup went: how old the ready-made parts were, and ms to the worklet and the open decoder. */
 	setup = '';
 	/** Clock readings in the first seconds after a start (see clock()), for the dev log. */
@@ -271,14 +297,14 @@ export class PcmAudio {
 			if (m.type === 'queued') {
 				this.timing.decoded ??= performance.now();
 				if (m.queued >= PRIMED) this.timing.primed ??= performance.now();
-				if (!this.primed && m.queued >= PRIMED) this.prime();
+				if (!this.primed && m.queued >= PRIMED) this.primeWhenPaced();
 			} else if (m.type === 'sounding') {
 				// When the first sound is heard: rendered at context time `ctx`, out after the latency.
 				const l = this.latency;
 				this.timing.sound = performance.now() + (m.ctx + l.output + l.base - this.ctx.currentTime) * 1000;
 			} else if (m.type === 'position') {
 				this.stats = { ...m, clock: this.filter.spread, context: this.ctx.state };
-				if (!this.primed && this.stats.queued >= PRIMED) this.prime();
+				if (!this.primed && this.stats.queued >= PRIMED) this.primeWhenPaced();
 			}
 		};
 		const clock = () => this.clock();
@@ -378,6 +404,33 @@ export class PcmAudio {
 		return this.primed;
 	}
 
+	/** Samples of the context's clock while the start waits for it. */
+	private pace: [number, number][] = [];
+	private paceTimer = 0;
+
+	/** Sound is queued: the picture goes once the context's clock keeps pace (see keptPace). */
+	private primeWhenPaced() {
+		if (this.paceTimer) return;
+		const check = () => {
+			if (this.primed) return this.stopPace();
+			const now = performance.now();
+			if (this.ctx.state === 'running') this.pace.push([now, this.ctx.currentTime]);
+			while (this.pace.length && this.pace[0][0] < now - PACE_WINDOW * 3) this.pace.shift();
+			if (this.ctx.state === 'running' && keptPace(this.pace)) {
+				this.timing.paced = now;
+				this.stopPace();
+				this.prime();
+			}
+		};
+		this.paceTimer = window.setInterval(check, PACE_EVERY);
+		check();
+	}
+
+	private stopPace() {
+		clearInterval(this.paceTimer);
+		this.paceTimer = 0;
+	}
+
 	private prime(how: Primed = 'sound') {
 		if (how !== 'seek') this.primed = true;
 		const waiting = this.waiting;
@@ -390,7 +443,8 @@ export class PcmAudio {
 		// Whoever waits for the old start gives up: the packets it pushed are flushed.
 		this.prime('seek');
 		this.primed = false;
-		this.timing = { decoded: null, primed: null, sound: null };
+		this.timing = { decoded: null, primed: null, paced: null, sound: null };
+		this.stopPace();
 		this.trace = [];
 		this.traceFrom = null;
 		this.dropped0 = null;

@@ -22,6 +22,13 @@ import type { Demuxer, Sample, Track } from './types';
 
 /** Seconds read ahead of the playhead. */
 const AHEAD = 30;
+/**
+ * Seconds read ahead while WebAssembly sound starts (until PACED ms after playing begins). On the
+ * Chromecast TV, reading the whole 30 s at once while sound and picture start starves the audio
+ * output: the context's clock fell 300 to 400 ms behind in the first second, and the sound with it.
+ */
+const START_AHEAD = 5;
+const PACED = 2500;
 /** Seconds kept behind the playhead. */
 const BEHIND = 30;
 /** Frames held to work out Matroska video decode times. */
@@ -385,6 +392,8 @@ export class Unpacker {
 	private gateAt: number | null = null;
 	private frameAt: number | null = null;
 	private playingAt: number | null = null;
+	/** When playing began after the last start or seek, for the paced read-ahead (see lead()). */
+	private pacedFrom: number | null = null;
 	/** The WebAssembly sound was started before the first samples (see startEarly). */
 	private pcmEarly = false;
 	private listeners: [EventTarget, string, EventListener, boolean][] = [];
@@ -506,6 +515,7 @@ export class Unpacker {
 		if (v.requestVideoFrameCallback) v.requestVideoFrameCallback((now) => (this.frameAt ??= now));
 		this.on(this.video, 'playing', () => {
 			this.playingAt ??= performance.now();
+			this.pacedFrom ??= performance.now();
 			if (!v.requestVideoFrameCallback) this.frameAt ??= this.playingAt;
 		});
 		this.on(this.ms, 'sourceopen', () => this.opened(), false);
@@ -587,7 +597,7 @@ export class Unpacker {
 			}
 			const g = this.gen;
 			const playhead = this.video.currentTime;
-			if (this.atEnd || (this.held == null && this.readTo - Math.max(playhead, this.target) > AHEAD)) {
+			if (this.atEnd || (this.held == null && this.readTo - Math.max(playhead, this.target) > this.lead())) {
 				await this.nap();
 				continue;
 			}
@@ -611,8 +621,15 @@ export class Unpacker {
 		}
 	}
 
+	/** Seconds to read ahead now: less while WebAssembly sound starts. */
+	private lead(): number {
+		if (!this.pcm && !this.early) return AHEAD;
+		return this.pacedFrom != null && performance.now() - this.pacedFrom > PACED ? AHEAD : START_AHEAD;
+	}
+
 	private async seekNow(t: number) {
 		const g = ++this.gen;
+		this.pacedFrom = null;
 		this.seeks++;
 		this.target = t;
 		const start = await this.demux.seek(t);
@@ -879,6 +896,8 @@ export class Unpacker {
 				// next tick
 			}
 		}
+		// A seek that never stopped playing says no 'playing' again.
+		if (this.pacedFrom == null && !v.paused && !v.seeking && v.readyState >= 3) this.pacedFrom = performance.now();
 		if (this.readTo - v.currentTime < AHEAD) this.poke();
 	}
 
