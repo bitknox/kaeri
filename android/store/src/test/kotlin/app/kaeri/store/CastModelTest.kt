@@ -209,11 +209,12 @@ class CastModelTest {
         link.cards.send(card(loading = false))
         advanceUntilIdle()
         assertEquals(CastButtonState.Connected, cast.button.value)
-        // The button opens the cast's card, not the chooser.
+        // The button opens the TV's dialog, not the chooser.
         cast.closeCard()
         cast.pressButton()
-        assertTrue(cast.open.value)
-        assertNull(cast.dialog.value)
+        assertEquals(CastDialog.Connected, cast.dialog.value)
+        cast.closeDialog()
+        cast.openCard()
 
         // Lost: the card stays to say so, and the button and the row let go.
         link.cards.send(card(loading = false, over = true, notice = Msg.NoticeCastLost("Living room")))
@@ -221,6 +222,47 @@ class CastModelTest {
         assertEquals(CastStage.Lost, cast.shown.value?.stage)
         assertEquals(CastButtonState.Hidden, cast.button.value)
         assertNull(CastModel.playingKey(cast.shown.value, cast.session.value))
+    }
+
+    @Test
+    fun the_cast_button_during_a_cast_from_play_on_tv_opens_the_tvs_dialog() = runTest {
+        val link = ScriptedLink(card(loading = false))
+        val cast = model(link)
+        cast.cast(row, request)
+        link.cards.send(card(loading = false))
+        advanceUntilIdle()
+        // From the mini player, with the remote closed.
+        cast.closeCard()
+        cast.pressButton()
+        assertEquals(CastDialog.Connected, cast.dialog.value)
+        assertFalse(cast.open.value)
+        // From the remote's own header: the remote closes under the dialog.
+        cast.closeDialog()
+        cast.openCard()
+        cast.pressButton()
+        assertEquals(CastDialog.Connected, cast.dialog.value)
+        assertFalse(cast.open.value)
+        // Stop casting there lets the TV go, and the dialog with it.
+        cast.disconnect()
+        assertTrue(link.stopped)
+        assertNull(cast.dialog.value)
+        assertNull(cast.shown.value)
+    }
+
+    @Test
+    fun the_tvs_dialog_goes_when_a_cast_from_play_on_tv_ends_under_it() = runTest {
+        val link = ScriptedLink(card(loading = false))
+        val cast = model(link)
+        cast.cast(row, request)
+        link.cards.send(card(loading = false))
+        advanceUntilIdle()
+        cast.closeCard()
+        cast.pressButton()
+        assertEquals(CastDialog.Connected, cast.dialog.value)
+        link.cards.send(card(loading = false, over = true, notice = Msg.NoticeCastTakenOver("Living room")))
+        advanceUntilIdle()
+        assertNull(cast.shown.value)
+        assertNull(cast.dialog.value)
     }
 
     @Test
