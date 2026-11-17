@@ -87,6 +87,15 @@
       }
      },
      {
+      "key": "PRELOAD_METERED",
+      "value": "off",
+      "change": {
+       "@type": "Steps",
+       "back": false,
+       "forward": true
+      }
+     },
+     {
       "key": "SKIP_OPENING",
       "value": "on",
       "change": {
@@ -489,6 +498,15 @@
       }
      },
      {
+      "key": "PICTURE_IN_PICTURE_ON_LEAVE",
+      "value": "on",
+      "change": {
+       "@type": "Steps",
+       "back": true,
+       "forward": false
+      }
+     },
+     {
       "key": "DOWNLOAD_QUALITY",
       "value": "standard",
       "change": {
@@ -786,6 +804,10 @@
     },
     "skipFindPaused": null
    }
+  },
+  {
+   "@type": "Private",
+   "v1": false
   },
   {
    "@type": "Autoplay",
@@ -8744,7 +8766,8 @@
      }
     ],
     "remembered": [],
-    "source": null
+    "source": null,
+    "alwaysPrivate": false
    }
   },
   {
@@ -9285,7 +9308,8 @@
      }
     ],
     "remembered": [],
-    "source": null
+    "source": null,
+    "alwaysPrivate": false
    }
   },
   {
@@ -9568,7 +9592,8 @@
      }
     ],
     "remembered": [],
-    "source": null
+    "source": null,
+    "alwaysPrivate": false
    }
   },
   {
@@ -10353,7 +10378,8 @@
      }
     ],
     "remembered": [],
-    "source": null
+    "source": null,
+    "alwaysPrivate": false
    }
   },
   {
@@ -10789,7 +10815,8 @@
      }
     ],
     "remembered": [],
-    "source": null
+    "source": null,
+    "alwaysPrivate": false
    }
   },
   {
@@ -11207,7 +11234,8 @@
      }
     ],
     "remembered": [],
-    "source": null
+    "source": null,
+    "alwaysPrivate": false
    }
   },
   {

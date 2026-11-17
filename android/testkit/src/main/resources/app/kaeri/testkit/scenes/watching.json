@@ -87,6 +87,15 @@
       }
      },
      {
+      "key": "PRELOAD_METERED",
+      "value": "off",
+      "change": {
+       "@type": "Steps",
+       "back": false,
+       "forward": true
+      }
+     },
+     {
       "key": "SKIP_OPENING",
       "value": "on",
       "change": {
@@ -906,7 +915,9 @@
        "Drama",
        "Fantasy"
       ],
-      "availableOn": [],
+      "availableOn": [
+       "Lantern Library"
+      ],
       "availableAt": null,
       "progress": {
        "done": "6",
@@ -1029,7 +1040,9 @@
           "Drama",
           "Fantasy"
          ],
-         "availableOn": [],
+         "availableOn": [
+          "Lantern Library"
+         ],
          "availableAt": null,
          "progress": {
           "done": "6",
@@ -1266,7 +1279,9 @@
           "Mystery",
           "Slice of Life"
          ],
-         "availableOn": [],
+         "availableOn": [
+          "Lantern Library"
+         ],
          "availableAt": null,
          "progress": {
           "done": "3",
@@ -1481,7 +1496,9 @@
           "Mystery",
           "Slice of Life"
          ],
-         "availableOn": [],
+         "availableOn": [
+          "Lantern Library"
+         ],
          "availableAt": null,
          "progress": {
           "done": "3",
@@ -2096,7 +2113,9 @@
        "Drama",
        "Fantasy"
       ],
-      "availableOn": [],
+      "availableOn": [
+       "Lantern Library"
+      ],
       "availableAt": null,
       "progress": {
        "done": "6",
@@ -2289,7 +2308,9 @@
        "Mystery",
        "Slice of Life"
       ],
-      "availableOn": [],
+      "availableOn": [
+       "Lantern Library"
+      ],
       "availableAt": null,
       "progress": {
        "done": "3",
@@ -3445,7 +3466,9 @@
         "Drama",
         "Fantasy"
        ],
-       "availableOn": [],
+       "availableOn": [
+        "Lantern Library"
+       ],
        "availableAt": null,
        "progress": {
         "done": "6",
@@ -4239,7 +4262,9 @@
         "Drama",
         "Fantasy"
        ],
-       "availableOn": [],
+       "availableOn": [
+        "Lantern Library"
+       ],
        "availableAt": null,
        "progress": {
         "done": "6",
@@ -5010,7 +5035,9 @@
         "Drama",
         "Fantasy"
        ],
-       "availableOn": [],
+       "availableOn": [
+        "Lantern Library"
+       ],
        "availableAt": null,
        "progress": {
         "done": "6",

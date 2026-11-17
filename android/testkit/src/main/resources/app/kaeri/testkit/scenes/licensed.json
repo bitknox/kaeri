@@ -87,6 +87,15 @@
       }
      },
      {
+      "key": "PRELOAD_METERED",
+      "value": "off",
+      "change": {
+       "@type": "Steps",
+       "back": false,
+       "forward": true
+      }
+     },
+     {
       "key": "SKIP_OPENING",
       "value": "on",
       "change": {
