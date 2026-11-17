@@ -236,12 +236,12 @@ class CastModelTest {
         cast.pressButton()
         assertEquals(CastDialog.Connected, cast.dialog.value)
         assertFalse(cast.open.value)
-        // From the remote's own header: the remote closes under the dialog.
+        // From the remote's own header: the dialog comes up over the remote.
         cast.closeDialog()
         cast.openCard()
         cast.pressButton()
         assertEquals(CastDialog.Connected, cast.dialog.value)
-        assertFalse(cast.open.value)
+        assertTrue(cast.open.value)
         // Stop casting there lets the TV go, and the dialog with it.
         cast.disconnect()
         assertTrue(link.stopped)

@@ -150,7 +150,8 @@ private fun CastChooser(cast: CastModel) {
 /**
  * The held TV's dialog: "Connected to Living room", what plays there, which opens the remote, or
  * "Nothing playing yet", its volume, and Stop casting while something plays or Disconnect while
- * nothing does. Both let the TV go.
+ * nothing does. Both let the TV go. A cast from Play on TV holds no session: its card says what
+ * plays and where.
  */
 @Composable
 private fun CastConnectedDialog(cast: CastModel) {
@@ -159,10 +160,12 @@ private fun CastConnectedDialog(cast: CastModel) {
     val joining by cast.joining.collectAsStateWithLifecycle()
     val context = LocalContext.current
     val colors = MaterialTheme.colorScheme
-    val name = session.deviceName ?: joining.orEmpty()
+    val linked = shown?.takeIf { !session.held && it.live }
+    val name = linked?.tvName ?: session.deviceName ?: joining.orEmpty()
     val item = session.item
-    val playing = session.state == CastSessionState.Playing && item != null
-    val opens = shown != null && item != null
+    val linkedNow = linked?.let { CastModel.now(it) }
+    val playing = linkedNow != null || (session.state == CastSessionState.Playing && item != null)
+    val opens = shown != null && (item != null || linkedNow != null)
     val openLabel = stringResource(R.string.cast_mini_opens)
     CastDialogFrame(
         stringResource(R.string.cast_button_connected, name),
@@ -188,11 +191,13 @@ private fun CastConnectedDialog(cast: CastModel) {
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(12.dp),
             ) {
-                if (item != null) {
-                    CastArt(item.id, item.image, Modifier.size(64.dp, 36.dp).clip(RoundedCornerShape(6.dp)))
+                val title = linkedNow?.title ?: item?.title
+                val line = linkedNow?.let { it.episodeLine.ifEmpty { Strings.castEpisode(context, it.episode) } } ?: item?.let { castEpisodeLine(context, it) }
+                if (title != null) {
+                    CastArt(linkedNow?.id ?: item?.id, item?.image, Modifier.size(64.dp, 36.dp).clip(RoundedCornerShape(6.dp)))
                     Column(Modifier.weight(1f)) {
-                        Text(item.title, style = MaterialTheme.typography.bodyLarge, color = colors.onSurface, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                        Text(castEpisodeLine(context, item), style = MaterialTheme.typography.bodyMedium, color = colors.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                        Text(title, style = MaterialTheme.typography.bodyLarge, color = colors.onSurface, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                        Text(line.orEmpty(), style = MaterialTheme.typography.bodyMedium, color = colors.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis)
                     }
                     if (opens) Icon(Icons.Chevron, contentDescription = null, tint = colors.onSurfaceVariant, modifier = Modifier.size(20.dp))
                 } else {
@@ -201,7 +206,11 @@ private fun CastConnectedDialog(cast: CastModel) {
                 }
             }
             Spacer(Modifier.height(4.dp))
-            CastVolumeRow(cast, session.levelControl, session.muted == true, session.level?.let { it * 100 } ?: shown?.cast?.card?.now?.volume, enabled = session.held)
+            if (linked != null) {
+                CastVolumeRow(cast, linked.level, linked.cast.muted == true, linkedNow?.volume, enabled = !linked.quiet)
+            } else {
+                CastVolumeRow(cast, session.levelControl, session.muted == true, session.level?.let { it * 100 } ?: shown?.cast?.card?.now?.volume, enabled = session.held)
+            }
         }
     }
 }
