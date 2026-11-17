@@ -1458,7 +1458,8 @@ impl Remote {
         let volume_up = glyph("audio-volume-high-symbolic", &t::tv_volume_up());
         volume.add_suffix(&volume_down);
         volume.add_suffix(&volume_up);
-        // A cast's TV that takes a level has a scale; one with its own volume in charge has Mute.
+        // A cast's TV that takes a level has a scale, and Mute where a mute reaches its sound; one
+        // with its own volume in charge has neither.
         let volume_scale =
             gtk::Scale::with_range(gtk::Orientation::Horizontal, 0.0, 100.0, 1.0);
         volume_scale.set_draw_value(false);
@@ -2068,14 +2069,14 @@ impl Remote {
         }
     }
 
-    /// TV volume: a scale for a TV that takes a level, Mute for one whose own volume is in
-    /// charge.
+    /// TV volume: a scale for a TV that takes a level, and Mute where a mute reaches its sound.
+    /// A TV whose own volume is in charge has neither and reads "Set on the TV".
     fn draw_cast_volume(&self, view: &CastView, playing: bool) {
         let level = matches!(view.volume, VolumeControl::Level);
         self.volume_down.set_visible(false);
         self.volume_up.set_visible(false);
         self.volume_scale.set_visible(level);
-        self.mute.set_visible(!level);
+        self.mute.set_visible(view.can_mute);
         self.mute.set_label(&if view.muted { t::tv_cast_unmute() } else { t::tv_cast_mute() });
         self.mute.set_sensitive(playing);
         self.volume_scale.set_sensitive(playing);

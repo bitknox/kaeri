@@ -1030,7 +1030,7 @@ async fn a_tv_that_never_answers_again_ends_the_cast_once_the_tries_run_out() {
 }
 
 #[tokio::test(flavor = "multi_thread", worker_threads = 4)]
-async fn a_tv_with_fixed_volume_only_mutes_and_a_long_pause_ends_the_cast() {
+async fn a_tv_with_fixed_volume_is_sent_no_volume_and_a_long_pause_ends_the_cast() {
     let file = matroska(&Fixture { audio: Some(FixtureAudio::aac()), ..Fixture::default() });
     let base = serve(HashMap::from([("/episode.mkv".to_owned(), file)])).await;
     let receiver =
@@ -1040,14 +1040,18 @@ async fn a_tv_with_fixed_volume_only_mutes_and_a_long_pause_ends_the_cast() {
     let mut setup = setup(&receiver, Arc::new(CastMemory::memory()), Arc::new(NoEncoder));
     setup.timings.idle_close = Duration::from_millis(800);
     let (player, mut events) = connect_standard(setup).await.unwrap();
-    assert_eq!(player.volume_control(), VolumeControl::MuteOnly);
+    assert_eq!(player.volume_control(), VolumeControl::Fixed);
+    assert!(!player.can_mute());
     player.load(torrent(format!("{base}/episode.mkv")));
     next(&mut events, |e| *e == PlaybackEvent::Loaded).await;
+    assert_eq!(player.current().volume, VolumeControl::Fixed);
+    assert!(!player.current().can_mute, "the card offers no mute");
 
+    // A fixed TV says it took a level or a mute, but its sound stays where the TV has it.
     player.set_volume(30.0).await.unwrap();
-    assert!(receiver.heard("SET_VOLUME").is_empty(), "the TV's own volume is in charge");
     player.set_muted(true).await.unwrap();
-    assert_eq!(receiver.heard("SET_VOLUME")[0]["volume"]["muted"], true);
+    assert!(receiver.heard("SET_VOLUME").is_empty(), "the TV's own volume is in charge");
+    assert!(!player.muted());
 
     player.set_paused(true).await.unwrap();
     next(&mut events, |e| *e == PlaybackEvent::Paused(true)).await;
@@ -1067,10 +1071,7 @@ async fn a_tv_with_fixed_volume_only_mutes_and_a_long_pause_ends_the_cast() {
 async fn a_tv_muted_at_the_receiver_stays_muted_through_media_statuses() {
     let file = matroska(&Fixture { audio: Some(FixtureAudio::aac()), ..Fixture::default() });
     let base = serve(HashMap::from([("/episode.mkv".to_owned(), file)])).await;
-    let receiver =
-        FakeReceiver::start(FakeOptions { control: "fixed", ..FakeOptions::default() })
-            .await
-            .unwrap();
+    let receiver = FakeReceiver::start(FakeOptions::default()).await.unwrap();
     let (player, mut events) =
         connect_standard(setup(&receiver, Arc::new(CastMemory::memory()), Arc::new(NoEncoder)))
             .await
@@ -1095,7 +1096,40 @@ async fn a_tv_muted_at_the_receiver_stays_muted_through_media_statuses() {
     let status = player.current();
     assert_eq!(status.muted, Some(true));
     assert_eq!(status.level, level, "the level stays the receiver's");
-    assert_eq!(status.volume, VolumeControl::MuteOnly);
+    assert_eq!(status.volume, VolumeControl::Level);
+    assert!(status.can_mute);
+    player.quit().await.unwrap();
+}
+
+#[tokio::test(flavor = "multi_thread", worker_threads = 4)]
+async fn a_tv_that_refuses_a_mute_or_a_level_is_no_longer_offered_it() {
+    let receiver = FakeReceiver::start(FakeOptions {
+        refuses_level: true,
+        refuses_mute: true,
+        ..FakeOptions::default()
+    })
+    .await
+    .unwrap();
+    let (player, _events) =
+        connect_standard(setup(&receiver, Arc::new(CastMemory::memory()), Arc::new(NoEncoder)))
+            .await
+            .unwrap();
+    assert_eq!(player.volume_control(), VolumeControl::Level);
+    assert!(player.can_mute(), "an attenuation TV offers both until it refuses one");
+    let mut status = player.status();
+
+    assert!(player.set_muted(true).await.is_err());
+    assert!(!player.can_mute());
+    assert!(!player.muted(), "the refused mute isn't shown");
+    assert!(!status.borrow_and_update().can_mute, "the card hears it at once");
+    assert!(player.set_volume(30.0).await.is_err());
+    assert_eq!(player.volume_control(), VolumeControl::Fixed);
+    assert_eq!(status.borrow_and_update().volume, VolumeControl::Fixed);
+
+    // Neither is sent again.
+    player.set_muted(true).await.unwrap();
+    player.set_volume(40.0).await.unwrap();
+    assert_eq!(receiver.heard("SET_VOLUME").len(), 2);
     player.quit().await.unwrap();
 }
 

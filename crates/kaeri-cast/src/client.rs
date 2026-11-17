@@ -43,11 +43,21 @@ pub struct App {
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default, serde::Serialize, serde::Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum VolumeControl {
-    /// `attenuation` or `master`: the level can be set.
+    /// `attenuation` or `master`: the level can be set, and mute works.
     #[default]
     Level,
-    /// `fixed`: the TV's own volume is in charge, and only mute works.
-    MuteOnly,
+    /// `fixed`: the TV's own volume is in charge, often over HDMI-CEC. Such a receiver takes a
+    /// `SET_VOLUME` and says the new level and mute in its status, but the sound stays as the TV
+    /// has it, so neither is offered.
+    #[serde(alias = "mute_only")]
+    Fixed,
+}
+
+impl VolumeControl {
+    /// Whether a mute sent to the receiver silences the TV.
+    pub fn mutes(self) -> bool {
+        self == Self::Level
+    }
 }
 
 /// The parts of a `RECEIVER_STATUS` a sender needs.
@@ -66,7 +76,7 @@ impl ReceiverStatus {
         let volume = &status["volume"];
         Some(Self {
             volume: match volume["controlType"].as_str() {
-                Some("fixed") => VolumeControl::MuteOnly,
+                Some("fixed") => VolumeControl::Fixed,
                 _ => VolumeControl::Level,
             },
             level: volume["level"].as_f64(),
@@ -671,15 +681,17 @@ mod tests {
     }
 
     #[test]
-    fn a_fixed_volume_receiver_offers_mute_alone() {
+    fn a_fixed_volume_receiver_offers_neither_a_level_nor_mute() {
         let payload = json!({"type": "RECEIVER_STATUS", "status": {
             "volume": {"controlType": "fixed", "level": 1.0, "muted": false},
             "applications": [{"appId": "E8C28D3C", "isIdleScreen": true, "sessionId": "a",
                               "transportId": "a"}]}});
         let status = ReceiverStatus::read(&payload).unwrap();
-        assert_eq!(status.volume, VolumeControl::MuteOnly);
+        assert_eq!(status.volume, VolumeControl::Fixed);
+        assert!(!status.volume.mutes(), "the TV's own volume and mute are in charge");
         assert_eq!(status.app, None, "the idle screen is not an app");
         let master = json!({"status": {"volume": {"controlType": "master", "level": 0.3}}});
         assert_eq!(ReceiverStatus::read(&master).unwrap().volume, VolumeControl::Level);
+        assert!(VolumeControl::Level.mutes());
     }
 }

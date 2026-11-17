@@ -258,7 +258,11 @@ pub struct SessionView {
     /// The receiver's volume, 0 to 1.
     pub level: Option<f64>,
     pub muted: Option<bool>,
+    /// Whether a level can be set: not where the TV's own volume is in charge.
     pub volume: VolumeControl,
+    /// Whether Mute is offered: not where the TV's own volume is in charge, or the TV refused a
+    /// mute.
+    pub can_mute: bool,
     /// Kaeri's own receiver runs, rather than the Default Media Receiver.
     pub own_receiver: bool,
     /// The connection to the TV closed and is being made again: `state` stays what it was until
@@ -861,6 +865,7 @@ impl CastHub {
             level: status.as_ref().and_then(|s| s.level),
             muted: status.as_ref().and_then(|s| s.muted),
             volume: status.as_ref().map_or(VolumeControl::Level, |s| s.volume),
+            can_mute: status.as_ref().is_none_or(|s| s.can_mute),
             own_receiver: status
                 .as_ref()
                 .and_then(|s| s.receiver.as_deref())

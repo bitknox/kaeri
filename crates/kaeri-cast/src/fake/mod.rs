@@ -122,8 +122,14 @@ pub struct FakeOptions {
     /// Every file's length unless its HLS playlist says.
     pub duration: f64,
     pub refuse: Refuse,
-    /// The volume's `controlType`: `attenuation` or `fixed`.
+    /// The volume's `controlType`: `attenuation` or `fixed`. A `fixed` TV, like a Chromecast
+    /// with Google TV that leaves the volume to the TV over HDMI-CEC, takes `SET_VOLUME` and says
+    /// the new level and mute in its status, but its sound doesn't change.
     pub control: &'static str,
+    /// Answers a `SET_VOLUME` with a level by `INVALID_REQUEST`.
+    pub refuses_level: bool,
+    /// Answers a `SET_VOLUME` with a mute by `INVALID_REQUEST`.
+    pub refuses_mute: bool,
     /// Whether it fetches at all: a TV behind a firewall doesn't, and a `LOAD` then hangs.
     pub fetches: bool,
     /// How long the receiver app takes to come up after `LAUNCH`: 3 to 6.5 s on a real TV.
@@ -159,6 +165,8 @@ impl Default for FakeOptions {
             duration: 20.0,
             refuse: Refuse::default(),
             control: "attenuation",
+            refuses_level: false,
+            refuses_mute: false,
             fetches: true,
             launch: Duration::ZERO,
             plays_unfetched: false,
@@ -612,10 +620,17 @@ async fn serve(
                         send("receiver-0", &sender, NS_RECEIVER, receiver_status(&app, request, level, muted));
                     }
                     (NS_RECEIVER, "SET_VOLUME") => {
-                        if options.control != "fixed" && let Some(l) = payload["volume"]["level"].as_f64() {
+                        let asked = &payload["volume"];
+                        if (options.refuses_level && asked.get("level").is_some())
+                            || (options.refuses_mute && asked.get("muted").is_some())
+                        {
+                            send("receiver-0", &sender, NS_RECEIVER, json!({"type": "INVALID_REQUEST", "requestId": request, "reason": "INVALID_COMMAND"}));
+                            continue;
+                        }
+                        if let Some(l) = asked["level"].as_f64() {
                             level = l;
                         }
-                        if let Some(m) = payload["volume"]["muted"].as_bool() {
+                        if let Some(m) = asked["muted"].as_bool() {
                             muted = m;
                         }
                         send("receiver-0", &sender, NS_RECEIVER, receiver_status(&app, request, level, muted));

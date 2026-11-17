@@ -358,10 +358,11 @@ fn a_fixtures_cast_plays_on_a_fake_tv_and_one_that_refuses_says_why() {
     let card = until("the cast playing", || {
         Some(cast.card()).filter(|c| c.card.now.as_ref().is_some_and(|n| !n.loading))
     });
-    assert_eq!(card.volume_control, kaeri_ffi::FfiVolumeControl::MuteOnly);
+    // The fake TV's volume is fixed: the TV's own remote sets it, so the card offers no mute.
+    assert_eq!(card.volume_control, kaeri_ffi::FfiVolumeControl::Fixed);
+    assert!(!card.can_mute);
+    assert!(!sender.cast_state().can_mute);
     assert!(card.notice.is_none());
-    cast.command(FfiTvCommand::Mute { muted: true });
-    until("muted", || Some(cast.card()).filter(|c| c.muted == Some(true)));
     cast.stop();
     until("stopped", || Some(cast.card()).filter(|c| c.card.over));
 

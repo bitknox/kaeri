@@ -1304,12 +1304,13 @@ impl From<CastUndo> for FfiCastUndo {
     }
 }
 
-/// Whether a cast's TV takes a volume level, or only mute.
+/// Whether a cast's TV takes a volume level.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, uniffi::Enum)]
 pub enum FfiVolumeControl {
     Level,
-    /// The TV's own volume is in charge: the card shows mute alone.
-    MuteOnly,
+    /// The TV's own volume is in charge, often over HDMI-CEC, or the TV refused a level: the
+    /// card shows no slider and no steps, and the volume keys leave the TV alone.
+    Fixed,
 }
 
 /// The card for a cast: the card Play on TV draws, and what only a cast has.
@@ -1352,6 +1353,10 @@ pub struct FfiCastCard {
     /// session's note never shows it.
     #[uniffi(default)]
     pub note: Option<Msg>,
+    /// Whether the card offers Mute: not where the TV's own volume is in charge, or the TV
+    /// refused a mute.
+    #[uniffi(default = true)]
+    pub can_mute: bool,
 }
 
 impl From<CastCard> for FfiCastCard {
@@ -1360,8 +1365,9 @@ impl From<CastCard> for FfiCastCard {
             card: FfiRemoteCard::from(&card.card),
             volume_control: match card.volume_control {
                 VolumeControl::Level => FfiVolumeControl::Level,
-                VolumeControl::MuteOnly => FfiVolumeControl::MuteOnly,
+                VolumeControl::Fixed => FfiVolumeControl::Fixed,
             },
+            can_mute: card.can_mute,
             muted: card.muted,
             notice: card.notice,
             phase_line: card.phase_line,
@@ -1746,6 +1752,10 @@ pub struct FfiCastSessionView {
     /// session ends with `notice`.
     #[uniffi(default)]
     pub reconnecting: bool,
+    /// Whether Mute is offered: not where the TV's own volume is in charge, or the TV refused a
+    /// mute.
+    #[uniffi(default = true)]
+    pub can_mute: bool,
 }
 
 impl From<SessionView> for FfiCastSessionView {
@@ -1769,8 +1779,9 @@ impl From<SessionView> for FfiCastSessionView {
             muted: view.muted,
             volume_control: match view.volume {
                 VolumeControl::Level => FfiVolumeControl::Level,
-                VolumeControl::MuteOnly => FfiVolumeControl::MuteOnly,
+                VolumeControl::Fixed => FfiVolumeControl::Fixed,
             },
+            can_mute: view.can_mute,
             own_receiver: view.own_receiver,
             reconnecting: view.reconnecting,
         }
@@ -1922,6 +1933,7 @@ mod tests {
                 reached: true,
             },
             volume_control: VolumeControl::Level,
+            can_mute: true,
             muted: None,
             notice: None,
             phase_line: None,

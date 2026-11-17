@@ -15,8 +15,9 @@
 //!
 //! Safety: it casts to one TV only. The TV at `--ip` must answer to the name `--tv` (default
 //! "Chromecast TV"); a Nest device, a speaker group or anything named "Stue" is refused. The
-//! TV's volume is set low (`--volume`, or muted where the level is fixed) and put back at the
-//! end. Nothing is written outside the media folder and `--out`: what the TV refused is kept in
+//! TV's volume is set low (`--volume`) and put back at the end. Where the TV's own volume is in
+//! charge (fixed), neither a level nor a mute reaches its sound, so it is left alone: turn the TV
+//! down with its own remote. Nothing is written outside the media folder and `--out`: what the TV refused is kept in
 //! memory only. Run it under the HOME guard all the same.
 
 use std::{
@@ -321,23 +322,19 @@ fn status_line(s: &CastStatus) -> String {
 #[derive(Clone, Copy)]
 struct Volume {
     level: f64,
-    muted: bool,
     fixed: bool,
 }
 
 async fn quiet(player: &CastPlayer, level: f64) -> Volume {
     let was = Volume {
         level: player.volume() / 100.0,
-        muted: player.muted(),
-        fixed: player.volume_control() == VolumeControl::MuteOnly,
+        fixed: player.volume_control() == VolumeControl::Fixed,
     };
-    let done = if was.fixed {
-        player.set_muted(true).await
-    } else {
-        player.set_volume(level * 100.0).await
-    };
-    match done {
-        Ok(()) if was.fixed => say!("volume is fixed on this TV: muted for the test"),
+    if was.fixed {
+        say!("volume is fixed on this TV: left as the TV has it");
+        return was;
+    }
+    match player.set_volume(level * 100.0).await {
         Ok(()) => say!("volume {:.2} -> {level:.2} for the test", was.level),
         Err(e) => say!("couldn't lower the volume: {e}"),
     }
@@ -345,13 +342,10 @@ async fn quiet(player: &CastPlayer, level: f64) -> Volume {
 }
 
 async fn restore(player: &CastPlayer, was: Volume) {
-    let done = if was.fixed {
-        player.set_muted(was.muted).await
-    } else {
-        player.set_volume(was.level * 100.0).await
-    };
-    match done {
-        Ok(()) if was.fixed => say!("volume is fixed on this TV: mute put back"),
+    if was.fixed {
+        return;
+    }
+    match player.set_volume(was.level * 100.0).await {
         Ok(()) => say!("volume put back to {:.2}", was.level),
         Err(e) => say!("couldn't put the volume back ({:.2}): {e}", was.level),
     }
