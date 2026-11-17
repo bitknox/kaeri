@@ -464,22 +464,19 @@ fun TitleScreen(id: AnilistId, actions: AppActions) {
     val onLift = remember(id) { { lifts.value() } }
     val onAbout = remember(id) { { aboutOpen = true } }
     val onScreenPage = base.longValue.toUInt()
-    // The top bar fills as the page on top scrolls its head under it, read as the bar draws, so
-    // a scroll recomposes nothing.
-    val barStarts = remember(id) { TitleBarStarts() }
+    // The top bar fills as the page on top scrolls its banner out from under it, read as the bar
+    // draws, so a scroll recomposes nothing.
+    val barRanges = remember(id) { TitleBarRanges() }
     val instantBar = app.kaeri.design.rememberAnimationsRemoved()
     val density = LocalDensity.current
     val barFill: () -> Float = remember(id, instantBar, density) {
         {
             val list = lists[top.longValue.toUInt()]
-            if (list == null) 0f else with(density) {
-                titleBarFill(
-                    list.firstVisibleItemIndex,
-                    list.firstVisibleItemScrollOffset.toFloat(),
-                    (barStarts[list] ?: PhoneHeaderTop - TitleBarHeight).toPx(),
-                    TitleBarFillSpan.toPx(),
-                    instantBar,
-                )
+            if (list == null) {
+                0f
+            } else {
+                (barRanges[list] ?: TitleBarFillRange.overBanner(PhoneBannerHeight, PhoneBannerParallax))
+                    .fill(list.firstVisibleItemIndex, list.firstVisibleItemScrollOffset.toFloat(), density, instantBar)
             }
         }
     }
@@ -494,14 +491,14 @@ fun TitleScreen(id: AnilistId, actions: AppActions) {
                         lists.remove(season)
                         ready.remove(season)
                         grown.remove(season)
-                        barStarts.remove(list)
+                        barRanges.remove(list)
                     }
                 }
                 LaunchedEffect(list) {
                     kotlinx.coroutines.delay(COMPOSE_AHEAD)
                     grown += season
                 }
-                androidx.compose.runtime.CompositionLocalProvider(LocalTitleBarStarts provides barStarts) {
+                androidx.compose.runtime.CompositionLocalProvider(LocalTitleBarRanges provides barRanges) {
                 PageSlot(
                     season = season,
                     opened = id,
@@ -1083,9 +1080,12 @@ private fun artWaited(id: UInt): Boolean {
 private fun TitleHead(entry: Entry, episodes: List<EpisodeRow>?, list: LazyListState, inset: Dp, shared: Boolean) {
     val art = HeroArt.of(entry, episodes, artWaited(entry.id))
     val headerTop = if (art == HeroArt.Compact) 64.dp else PhoneHeaderTop
-    // The top bar starts to fill as the header reaches it: over the art until then.
-    val barStarts = LocalTitleBarStarts.current
-    SideEffect { barStarts?.set(list, headerTop - TitleBarHeight) }
+    // The top bar is solid once the banner has gone up from under it, or with no banner, once the
+    // header has passed under it.
+    val barRanges = LocalTitleBarRanges.current
+    SideEffect {
+        barRanges?.set(list, if (art == HeroArt.Compact) TitleBarFillRange.compact(headerTop) else TitleBarFillRange.overBanner(PhoneBannerHeight, PhoneBannerParallax))
+    }
     Box {
         if (art != HeroArt.Compact) {
             ArtworkImage(
@@ -1094,11 +1094,11 @@ private fun TitleHead(entry: Entry, episodes: List<EpisodeRow>?, list: LazyListS
                 maxPixelSize = pixels(412.dp),
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(inset + 156.dp)
+                    .height(inset + PhoneBannerHeight)
                     // The banner scrolls at half the page's speed (T1's parallax), read as the
                     // layer draws, so a scroll never recomposes the head.
                     .graphicsLayer {
-                        translationY = (if (list.firstVisibleItemIndex == 0) list.firstVisibleItemScrollOffset else 0) * 0.5f
+                        translationY = (if (list.firstVisibleItemIndex == 0) list.firstVisibleItemScrollOffset else 0) * PhoneBannerParallax
                     }
                     // The player grows out of the banner and closes back into it (T2, T3); only
                     // the page on screen takes part, not one waiting off screen.
@@ -1108,9 +1108,9 @@ private fun TitleHead(entry: Entry, episodes: List<EpisodeRow>?, list: LazyListS
             BannerScrim(
                 Modifier
                     .fillMaxWidth()
-                    .height(inset + 156.dp)
+                    .height(inset + PhoneBannerHeight)
                     .graphicsLayer {
-                        translationY = (if (list.firstVisibleItemIndex == 0) list.firstVisibleItemScrollOffset else 0) * 0.5f
+                        translationY = (if (list.firstVisibleItemIndex == 0) list.firstVisibleItemScrollOffset else 0) * PhoneBannerParallax
                     },
             )
         }
@@ -2362,16 +2362,14 @@ private fun TabletTitle(
     val unfolded by store.episodeFolds.unfolded.collectAsStateWithLifecycle()
     val grid = androidx.compose.foundation.lazy.grid.rememberLazyGridState()
     val fold = rememberEpisodeFold(entry.id, grid)
-    // The top bar fills as the banner leaves it, solid once the banner is under it; a head with
-    // no banner starts at once.
-    val barStart = remember { androidx.compose.runtime.mutableStateOf(TabletBannerHeight - TitleBarHeight - TitleBarFillSpan) }
+    // The top bar fills as the banner leaves it, solid once the banner has gone up from under it;
+    // a head with no banner starts at once.
+    val barRange = remember { androidx.compose.runtime.mutableStateOf(TitleBarFillRange.overBanner(TabletBannerHeight)) }
     val instantBar = app.kaeri.design.rememberAnimationsRemoved()
     val density = LocalDensity.current
     val barFill: () -> Float = remember(grid, instantBar, density) {
         {
-            with(density) {
-                titleBarFill(grid.firstVisibleItemIndex, grid.firstVisibleItemScrollOffset.toFloat(), barStart.value.toPx(), TitleBarFillSpan.toPx(), instantBar)
-            }
+            barRange.value.fill(grid.firstVisibleItemIndex, grid.firstVisibleItemScrollOffset.toFloat(), density, instantBar)
         }
     }
     // As on a phone (SeasonPage): what only the page brings (Also on, the tags, people you follow,
@@ -2400,7 +2398,7 @@ private fun TabletTitle(
                 fullWidth("head") {
                   SeasonFade(entry) { entry ->
                     val art = HeroArt.of(entry, allEpisodes[entry.id], artWaited(entry.id))
-                    SideEffect { barStart.value = if (art == HeroArt.Compact) 0.dp else TabletBannerHeight - TitleBarHeight - TitleBarFillSpan }
+                    SideEffect { barRange.value = if (art == HeroArt.Compact) TitleBarFillRange.compact(64.dp) else TitleBarFillRange.overBanner(TabletBannerHeight) }
                     Box {
                         if (art != HeroArt.Compact) {
                             ArtworkImage(
