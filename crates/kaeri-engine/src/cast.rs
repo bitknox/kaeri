@@ -528,10 +528,14 @@ impl CastHub {
                 }
                 return false;
             }
-            session.connecting = false;
             match &connected {
+                // Still connecting until the receiver is noted, so a run that reads the session
+                // as connected finds the note.
                 Ok(player) => session.player = Some(Arc::clone(player)),
-                Err(failure) => session.failure = Some(failure.clone()),
+                Err(failure) => {
+                    session.connecting = false;
+                    session.failure = Some(failure.clone());
+                }
             }
         }
         match connected {
@@ -540,6 +544,23 @@ impl CastHub {
                 self.attach(&player);
                 self.follow(&player);
                 self.leave(&player);
+                let held = {
+                    let mut session = lock(&self.session);
+                    let held = session.generation == generation;
+                    if held {
+                        session.connecting = false;
+                    }
+                    held
+                };
+                if !held {
+                    // Let go meanwhile: the note just written goes too.
+                    let receiver = player.receiver().map(|app| app.session_id);
+                    if self.left().is_some_and(|left| Some(left.session) == receiver) {
+                        self.forget_left();
+                    }
+                    self.bump();
+                    return false;
+                }
             }
             Err(failure) => {
                 tracing::warn!(%failure, "couldn't connect to the TV");
@@ -895,10 +916,14 @@ impl CastHub {
     fn write_left(&self, left: Option<Left>) {
         if let Some(dir) = &self.dir {
             let path = dir.join(LEFT_FILE);
+            // Written beside it and moved into place, so a run reading it at the same moment
+            // finds the old note or the new one, never an empty file.
+            let temp = dir.join(format!("{LEFT_FILE}.tmp"));
             let written = match &left {
                 Some(left) => serde_json::to_vec(left)
                     .map_err(io::Error::other)
-                    .and_then(|bytes| std::fs::write(&path, bytes)),
+                    .and_then(|bytes| std::fs::write(&temp, bytes))
+                    .and_then(|()| std::fs::rename(&temp, &path)),
                 None => match std::fs::remove_file(&path) {
                     Err(e) if e.kind() == io::ErrorKind::NotFound => Ok(()),
                     other => other,
