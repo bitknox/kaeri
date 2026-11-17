@@ -25,6 +25,74 @@ export function decoderFor(t: Track): { family: string; decoder: string } | null
 	return null;
 }
 
+/**
+ * The video's clock and the audio context's clock as offsets from performance.now(), each the
+ * mean of the middle half of the last 40 readings (about 3 s). On a TV both readings stray by tens of milliseconds
+ * (the video time moves in steps, the context's output timestamp wanders), while the offsets
+ * themselves stay put during steady playback. A reading far off the median (a seek, a stall caught
+ * up) starts the window again.
+ */
+export class ClockFilter {
+	private v: number[] = [];
+	private c: number[] = [];
+	private rate = 1;
+	private playing = false;
+	/** Spread of the video readings (max - min), and how far the highest sits above the median. */
+	spread = { video: 0, videoHigh: 0, ctx: 0 };
+
+	constructor(private readonly keep = 40) {}
+
+	/** One reading at performance time `now` (seconds); returns the clock to steer by. */
+	read(now: number, media: number, ctx: number, rate: number, playing: boolean): { media: number; ctx: number } {
+		if (!playing || rate !== this.rate || !this.playing) {
+			this.v = [];
+			this.c = [];
+		}
+		this.rate = rate;
+		this.playing = playing;
+		const vo = media - now * rate;
+		const co = ctx - now;
+		if (this.v.length >= 3 && Math.abs(vo - median(this.v)) > JUMP) this.v = [];
+		if (this.c.length >= 3 && Math.abs(co - median(this.c)) > JUMP) this.c = [];
+		push(this.v, vo, this.keep);
+		push(this.c, co, this.keep);
+		const mv = middle(this.v);
+		const mc = middle(this.c);
+		this.spread = { video: spread(this.v), videoHigh: Math.max(...this.v) - mv, ctx: spread(this.c) };
+		return { media: mv + now * rate, ctx: mc + now };
+	}
+}
+
+/** A clock reading this far from the median is a real jump (a seek, a stall caught up). */
+const JUMP = 0.4;
+
+function push(list: number[], v: number, keep: number) {
+	list.push(v);
+	if (list.length > keep) list.shift();
+}
+
+function median(list: number[]): number {
+	const s = [...list].sort((a, b) => a - b);
+	const m = s.length >> 1;
+	return s.length % 2 ? s[m] : (s[m - 1] + s[m]) / 2;
+}
+
+/**
+ * The mean of the middle half. A median of readings that fall on a few steps (a video time that
+ * moves a frame or a decode batch at a time) hops between steps as the window slides; this moves
+ * smoothly and still leaves out the stray readings at both ends.
+ */
+function middle(list: number[]): number {
+	const s = [...list].sort((a, b) => a - b);
+	const cut = s.length >> 2;
+	const kept = s.slice(cut, s.length - cut);
+	return kept.reduce((a, b) => a + b, 0) / kept.length;
+}
+
+function spread(list: number[]): number {
+	return list.length ? Math.max(...list) - Math.min(...list) : 0;
+}
+
 export interface PcmStats {
 	/** Audio minus video position at the last report, seconds (positive: audio behind). */
 	drift: number;
@@ -41,6 +109,8 @@ export interface PcmStats {
 	/** Seconds of PCM waiting in the worklet. */
 	queued: number;
 	time: number;
+	/** The main thread's clock readings: spread of the video and context offsets (seconds). */
+	clock?: ClockFilter['spread'];
 }
 
 export class PcmAudio {
@@ -50,6 +120,7 @@ export class PcmAudio {
 	private gain: GainNode;
 	private listeners: [string, () => void][] = [];
 	private lastPts = -Infinity;
+	private filter = new ClockFilter();
 
 	private constructor(
 		private readonly ctx: AudioContext,
@@ -60,7 +131,7 @@ export class PcmAudio {
 		this.gain = ctx.createGain();
 		node.connect(this.gain).connect(ctx.destination);
 		node.port.onmessage = (e) => {
-			if (e.data?.type === 'position' && e.data.gen === this.gen) this.stats = e.data;
+			if (e.data?.type === 'position' && e.data.gen === this.gen) this.stats = { ...e.data, clock: this.filter.spread };
 		};
 		const clock = () => this.clock();
 		for (const ev of ['play', 'playing', 'pause', 'seeking', 'seeked', 'ratechange', 'waiting', 'timeupdate', 'ended', 'stalled'])
@@ -148,7 +219,8 @@ export class PcmAudio {
 		const ts = this.ctx.getOutputTimestamp?.();
 		if (ts && ts.contextTime != null && ts.performanceTime != null && ts.performanceTime > 0)
 			ctxNow = ts.contextTime + (performance.now() - ts.performanceTime) / 1000;
-		this.node.port.postMessage({ type: 'clock', media: v.currentTime, ctx: ctxNow, rate: v.playbackRate, playing });
+		const k = this.filter.read(performance.now() / 1000, v.currentTime, ctxNow, v.playbackRate, playing);
+		this.node.port.postMessage({ type: 'clock', media: k.media, ctx: k.ctx, rate: v.playbackRate, playing });
 		if (playing && this.ctx.state === 'suspended') void this.ctx.resume().catch(() => {});
 	}
 

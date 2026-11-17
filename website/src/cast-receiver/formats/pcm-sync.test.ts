@@ -3,6 +3,7 @@
 // sends it, and render quanta at 48 kHz. Steady playback must neither skip nor wait.
 
 import { beforeAll, describe, expect, test } from 'bun:test';
+import { ClockFilter } from './pcm';
 
 const RATE = 48000;
 const QUANTUM = 128;
@@ -26,7 +27,7 @@ beforeAll(async () => {
 	await import('./pcm-worklet');
 });
 
-/** Counts after the first second. */
+/** Counts after the start has lined up (the first second, or `settle`). */
 interface Run {
 	jumps: number;
 	waits: number;
@@ -36,8 +37,18 @@ interface Run {
 	worst: number;
 }
 
-/** Plays `seconds` of a 440 Hz tone; `jitter(t)` is the error in the video time read at `t`. */
-function play(seconds: number, jitter: (t: number, rnd: () => number) => number, seed = 7): Run {
+type Jitter = (t: number, rnd: () => number) => number;
+
+/**
+ * Plays `seconds` of a 440 Hz tone. `jitter(t)` is the error in the video time read at `t`,
+ * `ctxJitter(t)` the error in the context time the main thread works out; with `filter`, the
+ * readings go through the main thread's ClockFilter first, as PcmAudio sends them. `settle` is
+ * when counting starts (1 s by default).
+ */
+function play(seconds: number, jitter: Jitter, o: { ctxJitter?: Jitter; filter?: boolean; seed?: number; settle?: number } = {}): Run {
+	const seed = o.seed ?? 7;
+	const settle = o.settle ?? 1;
+	const filter = o.filter ? new ClockFilter() : null;
 	let s = seed;
 	const rnd = () => ((s = (s * 16807) % 2147483647) / 2147483647);
 	const p = new Ctor();
@@ -63,7 +74,7 @@ function play(seconds: number, jitter: (t: number, rnd: () => number) => number,
 	let last: number | null = null;
 	let prev: number | null = null;
 	let breaks = 0;
-	// The counts at the end of the first second, when the start has lined up.
+	// The counts when the start has lined up.
 	let settled = { jumps: 0, waits: 0, starved: 0 };
 	let nextClock = 0;
 	const quanta = Math.round((seconds * RATE) / QUANTUM);
@@ -74,12 +85,15 @@ function play(seconds: number, jitter: (t: number, rnd: () => number) => number,
 		g.currentTime = ctx;
 		if (ctx >= nextClock) {
 			const heard = Math.max(0, ctx - latency);
-			p.port.onmessage!({ data: { type: 'clock', media: heard + jitter(heard, rnd), ctx: heard, rate: 1, playing: true } });
+			const media = heard + jitter(heard, rnd);
+			const at = heard + (o.ctxJitter?.(heard, rnd) ?? 0);
+			const k = filter ? filter.read(heard, media, at, 1, true) : { media, ctx: at };
+			p.port.onmessage!({ data: { type: 'clock', media: k.media, ctx: k.ctx, rate: 1, playing: true } });
 			nextClock += 0.1;
 		}
 		p.process([], [[left, right]]);
 		feed();
-		if (ctx <= 1) {
+		if (ctx <= settle) {
 			const st = p as unknown as Record<string, number>;
 			settled = { jumps: st.jumps, waits: st.waits, starved: st.starved };
 		}
@@ -87,7 +101,7 @@ function play(seconds: number, jitter: (t: number, rnd: () => number) => number,
 		for (let i = 0; i < QUANTUM; i++) {
 			const v = left[i];
 			// A continuous sine: x[n] = 2 cos(w) x[n-1] - x[n-2], within interpolation error.
-				if (ctx > 1 && last != null && prev != null && Math.abs(v - (2 * step * last - prev)) > 0.02) breaks++;
+			if (ctx > settle && last != null && prev != null && Math.abs(v - (2 * step * last - prev)) > 0.02) breaks++;
 			prev = last;
 			last = v;
 		}
@@ -135,6 +149,35 @@ describe('WebAssembly audio against the video clock', () => {
 		expect(r.jumps).toBe(0);
 		expect(r.waits).toBe(0);
 		expect(r.breaks).toBe(0);
+	});
+
+	// The filter needs its window (40 readings) before the estimate stops moving; for the first seconds the
+	// worklet lines up in a few short corrections.
+	test('the TV: video time in 300 ms steps and a context time off by up to 100 ms, through the main thread filter', () => {
+		const r = play(40, (t) => -(t % 0.3), { ctxJitter: (_, rnd) => (rnd() - 0.5) * 0.2, filter: true, settle: 6 });
+		console.info('tv-like, filtered', r);
+		expect(r.jumps).toBe(0);
+		expect(r.waits).toBe(0);
+		expect(r.breaks).toBe(0);
+	});
+
+	test('the same clocks without the filter chop, as the TV did', () => {
+		const r = play(40, (t) => -(t % 0.3), { ctxJitter: (_, rnd) => (rnd() - 0.5) * 0.2, settle: 6 });
+		console.info('tv-like, unfiltered', r);
+		expect(r.breaks).toBeGreaterThan(0);
+	});
+
+	test('a video clock that runs 0.2 % slow is followed without chops', () => {
+		const r = play(40, (t) => -t * 0.002, { ctxJitter: (_, rnd) => (rnd() - 0.5) * 0.2, filter: true, settle: 6 });
+		console.info('slow video, filtered', r);
+		expect(r.jumps).toBe(0);
+		expect(r.waits).toBe(0);
+		expect(r.breaks).toBe(0);
+	});
+
+	test('a seek-sized jump goes through the main thread filter at once', () => {
+		const r = play(20, (t) => (t > 10 ? 0.6 : 0), { filter: true });
+		expect(r.jumps).toBe(1);
 	});
 
 	test('a real jump in the video (a stall caught up) is followed at once', () => {
