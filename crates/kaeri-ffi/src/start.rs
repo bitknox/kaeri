@@ -565,6 +565,7 @@ mod tests {
                 store_refresh: false,
                 player_check: false,
                 keep_next: false,
+                rejoin_cast: false,
             }
         );
     }
