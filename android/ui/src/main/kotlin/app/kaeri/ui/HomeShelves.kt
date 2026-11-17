@@ -249,7 +249,7 @@ private fun ContinueCard(item: HomeItem, width: Dp, h: HomeHandlers) {
             }
         }
         Menu(expanded = menu, onDismissRequest = { menu = false }) {
-            DropdownMenuItem(text = { Text(playLabel) }, leadingIcon = { Icon(Icons.Play, null) }, enabled = play != null, onClick = { menu = false; play?.invoke() })
+            DropdownMenuItem(text = { Text(playLabel) }, leadingIcon = { CastPlayIcon() }, enabled = play != null, onClick = { menu = false; play?.invoke() })
             DropdownMenuItem(text = { Text(markLabel) }, leadingIcon = { Icon(Icons.Check, null) }, onClick = { menu = false; mark() })
             DropdownMenuItem(text = { Text(Strings.homeDetails(context)) }, leadingIcon = { Icon(Icons.External, null) }, onClick = { menu = false; open() })
             HorizontalDivider(Modifier.padding(vertical = 8.dp), color = colors.outlineVariant)

@@ -368,6 +368,7 @@ Words used here: the cast button is the toolbar button with the cast glyph. The 
 - A tap opens the picker with no TV held, the connected dialog with one held, and a Kaeri TV's own remote when that is what is held.
 - The spoken label is “Play on TV”, “Connecting to Living room” or “Connected to Living room” (`tv-play-on`, `cast-button-connecting`, `cast-button-connected`). Connecting and Connected are announced once each.
 - While a TV is held, the title page's main button carries the cast glyph with “Plays on Living room” under it (`cast-plays-on`), Play plays there, and the separate Play on TV button hides.
+- Every other Play button that would play on the held TV carries the same cast glyph in place of its play glyph, at the same size: Home's spotlight, a hover card's Play, and Play in a Continue menu where the menu shows glyphs. The “Plays on” line stays on the title page.
 - Kaeri differs from Google here: Google keeps the button on screen whenever the device is on Wi-Fi. Kaeri hides it with no TV, as an empty picker helps nobody, and Play on TV on a title or an episode still reaches the picker and its local network row.
 - There is no first-time hint or overlay on the cast button.
 
