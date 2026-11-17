@@ -177,7 +177,7 @@ Transitions are cited here by id: T1 to T9 on iPhone and iPad, M1 to M5 on Mac.
 
 - Springs for anything spatial, always with zero bounce. Fades for anything that only appears or leaves.
 - Depth comes from planes moving at different speeds, such as the banner scrolling at half speed behind the title page (T1). Never from shadows, glow or scale pops.
-- On Android, nothing on a scrolled title page runs under the status bar: as the banner leaves, a top bar in the page's ground fills in behind the status bar and the buttons with the show's name on one line, in step with the scroll, and at once with reduced motion. iPhone keeps its floating buttons over the page with no bar.
+- On Android, nothing on a scrolled title page runs under the status bar: a top bar in the page's ground fills in behind the status bar and the buttons with the show's name on one line, in step with the scroll, over the last stretch before the banner has gone up from under it, and solid just as it has. With reduced motion it switches at once, at that point. A head with no banner fills as the title passes under the bar. iPhone keeps its floating buttons over the page with no bar.
 - The player's controls fade and never slide (T4, M5).
 - Every spring is interruptible and input is never blocked during a transition. A gesture moves its view one to one and hands its velocity to the spring on release.
 - No staggered list entrances, no shimmer, no bounce or overshoot.

@@ -609,7 +609,7 @@ class BoardShots {
     fun tablet_title_episodes_unfolded() = shoot("tablet-title-episodes-unfolded", WATCHING, title = 900001u) { unfoldInPlace() }
 
     // The top bar over the title page: clear over the banner at the top, filled with the page's
-    // ground and the show's name once the head has scrolled under it.
+    // ground and the show's name once the banner has gone up from under it.
 
     @Test
     @Config(qualifiers = PHONE)
