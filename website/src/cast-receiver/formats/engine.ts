@@ -354,6 +354,8 @@ export class Unpacker {
 	private held: Sample[] | null = [];
 	private gen = 0;
 	private seekTo: number | null = null;
+	/** Where the engine last stepped the video over a gap itself (tick). */
+	private stepTo: number | null = null;
 	/** The read loop runs; one per Unpacker. */
 	private started = false;
 	/** The last seek's target and where reading started for it. */
@@ -756,6 +758,11 @@ export class Unpacker {
 		const t = this.video.currentTime;
 		// The start position CAF sets once the metadata is in.
 		if (Math.abs(t - this.target) < 0.05 && this.seeks <= 1 && this.video.played.length === 0) return;
+		// The engine's own step over a gap lands on buffered media: no new read. For WebAssembly
+		// sound a new read would also flush the sound already decoded, and start with a gap.
+		const step = this.stepTo;
+		this.stepTo = null;
+		if (step != null && Math.abs(t - step) < 0.02) return;
 		if (this.covered(t)) return;
 		this.seekTo = t;
 		this.gen++;
@@ -778,7 +785,10 @@ export class Unpacker {
 					.map(([s]) => s + 0.01)
 					.filter((s) => s > t && s - t < reach && this.buffered(s))
 					.sort((a, b) => a - b)[0];
-				if (next != null) v.currentTime = next;
+				if (next != null) {
+					this.stepTo = next;
+					v.currentTime = next;
+				}
 			}
 		}
 		if (this.atEnd && this.ms.readyState === 'open' && !this.vout?.sb.updating && !this.aout?.sb.updating) {
