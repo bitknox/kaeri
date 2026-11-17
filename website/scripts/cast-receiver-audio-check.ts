@@ -47,11 +47,12 @@ const castDev = option('--cast-dev') ?? 'cargo run -q -p kaeri-cast --example ca
 const mediaBase = option('--media-base');
 
 /**
- * Steady playback starts at this video time (seconds): the clock filter needs its window first,
- * and the start's corrections are reported apart. The last status lines are left out too, since
- * a clip shorter than --seconds runs out of sound to queue there.
+ * Steady playback starts at this video time (seconds): the sound lines up in its first half
+ * second, and nothing may chop after that. What happens before it is reported apart. The last
+ * status lines are left out too, since a clip shorter than --seconds runs out of sound to queue
+ * there.
  */
-const STEADY_FROM = 10;
+const STEADY_FROM = 1;
 const END_LINES = 2;
 
 interface Clip {
