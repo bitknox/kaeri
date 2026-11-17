@@ -1089,6 +1089,15 @@ impl CastHub {
         });
     }
 
+    /// At launch: look for the cast a run before this one left running. Not built yet.
+    pub fn resume_left(self: &Arc<Self>) -> bool {
+        self.resume_within(Duration::from_secs(10))
+    }
+
+    pub(crate) fn resume_within(self: &Arc<Self>, _window: Duration) -> bool {
+        false
+    }
+
     /// Whether the TV picker lists TVs with Chromecast built in, from Settings.
     pub fn set_show_tvs(&self, show: bool) {
         if self.show_tvs.swap(show, Ordering::Relaxed) != show {

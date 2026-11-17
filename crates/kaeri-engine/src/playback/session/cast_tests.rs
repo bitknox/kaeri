@@ -455,6 +455,197 @@ async fn a_session_left_running_is_joined_again_once_its_tv_is_found() {
     assert_eq!(again.left_on(), None);
 }
 
+/// The record of the cast left running, as the engine keeps it on disk.
+fn record(rig: &Rig) -> Option<serde_json::Value> {
+    let bytes = std::fs::read(rig.dir.path().join("cast-session.json")).ok()?;
+    serde_json::from_slice(&bytes).ok()
+}
+
+fn write_record(rig: &Rig, record: &serde_json::Value) {
+    std::fs::write(rig.dir.path().join("cast-session.json"), record.to_string()).unwrap();
+}
+
+/// Wait for the record on disk to read as `want` says.
+async fn record_until(
+    rig: &Rig,
+    want: impl Fn(Option<&serde_json::Value>) -> bool,
+) -> Option<serde_json::Value> {
+    let deadline = tokio::time::Instant::now() + Duration::from_secs(10);
+    loop {
+        let now = record(rig);
+        if want(now.as_ref()) {
+            return now;
+        }
+        assert!(tokio::time::Instant::now() < deadline, "the record as it stood: {now:?}");
+        tokio::time::sleep(Duration::from_millis(50)).await;
+    }
+}
+
+/// The record names episode 1 of the rig's title.
+fn records_episode_one(record: Option<&serde_json::Value>) -> bool {
+    record.is_some_and(|r| r["card"] == serde_json::json!([900_002, "1"]))
+}
+
+/// A new run of the app over the rig's files: what a launch after the app was ended has.
+fn relaunched(rig: &Rig) -> Arc<CastHub> {
+    Arc::new(CastHub::with(Some(rig.dir.path().to_owned()), Arc::new(PlainHttp), lost_at_once()))
+}
+
+/// Every state `hub`'s session reads as from now on.
+fn states_of(hub: &Arc<CastHub>) -> Arc<std::sync::Mutex<Vec<SessionState>>> {
+    let states = Arc::new(std::sync::Mutex::new(vec![hub.session().state]));
+    let (hub, seen) = (Arc::downgrade(hub), Arc::clone(&states));
+    let mut changes = hub.upgrade().unwrap().changes();
+    tokio::spawn(async move {
+        while changes.changed().await.is_ok() {
+            let Some(hub) = hub.upgrade() else { return };
+            seen.lock().unwrap().push(hub.session().state);
+        }
+    });
+    states
+}
+
+fn unix_now() -> i64 {
+    std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .unwrap()
+        .as_secs()
+        .try_into()
+        .unwrap()
+}
+
+#[tokio::test(flavor = "multi_thread", worker_threads = 4)]
+async fn a_cast_left_running_is_joined_quietly_at_the_next_launch() {
+    let (rig, playing) = playing_on_a_tv_that_plays_on().await;
+    // The record follows the cast: the TV at its address, its receiver session and the episode.
+    let noted = record_until(&rig, records_episode_one).await.unwrap();
+    assert_eq!(noted["tv"]["address"], rig.receiver.address.to_string());
+    assert!(noted["until"].as_i64().unwrap() > unix_now() + 600, "{noted}");
+    tokio::time::sleep(Duration::from_millis(500)).await;
+
+    // The app is ended mid-episode and opened again, with no picker and no browse.
+    let later = relaunched(&rig);
+    let states = states_of(&later);
+    assert!(later.resume_left(), "a record that counts is looked for");
+    assert_eq!(later.session().state, SessionState::Idle, "nothing shows while it looks");
+    let view =
+        session_until(&later, |v| v.state == SessionState::Playing && v.item.is_some()).await;
+    assert_eq!(view.device.map(|d| d.name).as_deref(), Some("Living room"));
+    let item = view.item.unwrap();
+    assert_eq!(item.id, Some(AnilistId::new(900_002)));
+    assert_eq!(item.episode.as_deref(), Some("1"));
+    assert!(item.position > 0.0, "at the TV's position: {item:?}");
+    assert!(
+        !states.lock().unwrap().contains(&SessionState::Connecting),
+        "never read as connecting: {:?}",
+        states.lock().unwrap()
+    );
+    assert_eq!(rig.receiver.heard("LAUNCH").len(), 1, "joined, not launched again");
+    assert_eq!(rig.receiver.heard("LOAD").len(), 1, "the episode never started over");
+    playing.abort();
+
+    // Stopping the cast drops the record.
+    assert!(later.disconnect());
+    record_until(&rig, Option::is_none).await;
+}
+
+#[tokio::test(flavor = "multi_thread", worker_threads = 4)]
+async fn a_tv_playing_something_else_at_launch_drops_the_record_and_is_left_alone() {
+    // Another Kaeri device's episode on the same receiver session, then another app.
+    for other_app in [false, true] {
+        let (rig, playing) = playing_on_a_tv_that_plays_on().await;
+        let noted = record_until(&rig, records_episode_one).await.unwrap();
+        if other_app {
+            rig.receiver.take_over();
+        } else {
+            rig.receiver.load_elsewhere_with(serde_json::json!({
+                "kaeriCard": {"id": 900_002, "episode": "2", "title": "Stardust Wayfarer"},
+            }));
+        }
+        session_until(&rig.hub, |v| v.state == SessionState::Error).await;
+        let _ = playing.await;
+        // The app was ended before it heard: its record still names episode 1.
+        write_record(&rig, &noted);
+        let stops = rig.receiver.heard("STOP").len();
+
+        let later = relaunched(&rig);
+        assert!(later.resume_left());
+        record_until(&rig, Option::is_none).await;
+        tokio::time::sleep(Duration::from_millis(300)).await;
+        let view = later.session();
+        assert_eq!(view.state, SessionState::Idle, "other app {other_app}: {view:?}");
+        assert_eq!(view.notice, None);
+        assert_eq!(later.left_on(), None);
+        assert_eq!(rig.receiver.heard("STOP").len(), stops, "what plays there is left alone");
+    }
+}
+
+#[tokio::test(flavor = "multi_thread", worker_threads = 4)]
+async fn a_stale_record_is_dropped_at_launch_without_reaching_the_tv() {
+    let (rig, playing) = playing_on_a_tv_that_plays_on().await;
+    let mut noted = record_until(&rig, records_episode_one).await.unwrap();
+    playing.abort();
+    let connects = rig.receiver.heard("CONNECT").len();
+
+    // With TVs hidden in Settings, nothing is tried and the record goes.
+    write_record(&rig, &noted);
+    let hidden = relaunched(&rig);
+    hidden.set_show_tvs(false);
+    assert!(!hidden.resume_left());
+    assert_eq!(record(&rig), None);
+
+    noted["until"] = serde_json::json!(unix_now() - 60);
+    write_record(&rig, &noted);
+    let later = relaunched(&rig);
+    assert!(!later.resume_left(), "a stale record is not looked for");
+    assert_eq!(record(&rig), None, "and it goes");
+    tokio::time::sleep(Duration::from_millis(500)).await;
+    assert_eq!(rig.receiver.heard("CONNECT").len(), connects, "the TV was never reached");
+    assert_eq!(later.session().state, SessionState::Idle);
+}
+
+#[tokio::test(flavor = "multi_thread", worker_threads = 4)]
+async fn a_launch_without_a_record_looks_for_no_tv() {
+    let receiver = FakeReceiver::start(FakeOptions::default()).await.unwrap();
+    let dir = tempfile::tempdir().unwrap();
+    let hub =
+        Arc::new(CastHub::with(Some(dir.path().to_owned()), Arc::new(PlainHttp), timings()));
+    assert!(!hub.resume_left(), "nothing to look for");
+    tokio::time::sleep(Duration::from_millis(300)).await;
+    assert!(receiver.heard.lock().unwrap().is_empty(), "the TV was never reached");
+    assert_eq!(hub.session().state, SessionState::Idle);
+}
+
+#[tokio::test(flavor = "multi_thread", worker_threads = 4)]
+async fn a_tv_out_of_reach_at_launch_drops_the_record_quietly() {
+    // A record naming a TV whose address answers nothing any more.
+    let closed = std::net::TcpListener::bind("127.0.0.1:0").unwrap().local_addr().unwrap();
+    let dir = tempfile::tempdir().unwrap();
+    let record = serde_json::json!({
+        "device": "tv-1",
+        "session": "session-1",
+        "tv": {
+            "instance": "Chromecast-test", "id": "tv-1", "name": "Living room",
+            "model": "Chromecast", "address": closed.to_string(), "video": true, "group": false,
+        },
+        "card": [900_002, "1"],
+        "until": unix_now() + 600,
+    });
+    let path = dir.path().join("cast-session.json");
+    std::fs::write(&path, record.to_string()).unwrap();
+    let hub =
+        Arc::new(CastHub::with(Some(dir.path().to_owned()), Arc::new(PlainHttp), timings()));
+    assert!(hub.resume_within(Duration::from_secs(1)));
+    let deadline = tokio::time::Instant::now() + Duration::from_secs(10);
+    while path.exists() {
+        assert!(tokio::time::Instant::now() < deadline, "the record was dropped");
+        tokio::time::sleep(Duration::from_millis(50)).await;
+    }
+    let view = hub.session();
+    assert_eq!(view.state, SessionState::Idle);
+    assert_eq!(view.notice, None);
+}
+
 /// Wait for `want` of the TV a session was left on, as the hub's note says.
 async fn left_until(hub: &CastHub, want: Option<&str>) {
     let deadline = tokio::time::Instant::now() + Duration::from_secs(10);

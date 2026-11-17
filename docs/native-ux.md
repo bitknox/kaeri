@@ -512,8 +512,14 @@ A TV that fetches the stream itself needs nothing from the device once it plays.
 ### Leaving and coming back
 
 - Back in front, the app joins the receiver session that runs, never launching the receiver again. The cast button shows Connected and the mini player is back within 1 s, at the TV's position.
-- After the system ended the app, opening it finds the cast it left and joins it the same way. On Android the notification comes back. A stream that went through the ended app is loaded again on the TV where it stopped.
-- While it joins, the mini player and the remote read “Reconnecting to Living room” with a small spinner.
+- After the system ended the app, or after it was closed or force quit mid-cast, opening it finds the cast it left and joins it the same way. On Android the notification comes back. A stream that went through the ended app is loaded again on the TV where it stopped.
+- While a cast runs, the engine keeps a small record of it in its data folder (`remote/cast-session.json`): the TV with its last address, the receiver's session and the episode on the TV. The record follows the cast from episode to episode, and goes when the cast ends, is stopped, is taken over, or Play here runs.
+- The record counts for 15 minutes after the TV was last heard, plus what was left of the episode then. Kaeri's receiver plays the episode to its end on its own and closes 10 minutes after it has nothing playing or stays paused, so past that there is nothing left to join. The 5 minutes over cover the time between the record's updates.
+- At launch, and only when a record that still counts is there, the engine tries that TV at its last address for up to 10 s. Without a record, a launch looks for no TV on the network. With Show TVs with Chromecast built in turned off, nothing is tried and the record goes.
+- When the TV's receiver still runs that session with the same episode, or with nothing playing when the record has none, the app joins it quietly. There is no Connecting state: the cast button shows Connected, and the mini player and the remote are back at the TV's position, as if the app had never left.
+- When the TV runs another episode or another app, has closed the session, or doesn't answer within those 10 s, the record is dropped with no notice and no error, and the app opens as if no cast had run.
+- This lives in the engine, so every platform resumes the same way with no step of its own.
+- While a backgrounded app joins again, the mini player and the remote read “Reconnecting to Living room” with a small spinner.
 - A silence that spans a suspension, such as an iPhone frozen in the background, is a reconnect and not a loss: “Casting stopped” never flashes on the way back.
 
 ### Dropped connection
@@ -575,7 +581,7 @@ The remote's line says whether the cast ever played: “Couldn't start on Living
 
 - The mini player is one element. Its label is the show and the line (“Hoshikuzu no Tabibito, Playing on Living room”), its hint “Opens the controls” (`cast-mini-opens`), and play or pause and Next are its custom actions.
 - The remote's seek line adjusts in 10 s steps and reads as in the player. The volume slider reads its level. An empty track row reads None.
-- Connecting and Connected are announced once. An end is announced with its notice, a failure at high priority. Up next is announced when it appears and once at “Plays in 8 seconds”, as in the player.
+- Connecting and Connected are announced once. A cast joined quietly at launch announces Connected at most once, and never Connecting. An end is announced with its notice, a failure at high priority. Up next is announced when it appears and once at “Plays in 8 seconds”, as in the player.
 - On Mac, Windows and Linux, focus goes to play or pause when the remote opens and back to what opened it when it closes.
 - Reduced motion: the drawer and the morphs become a crossfade in place (standard), a drag on touch no longer follows the finger and opens or closes past a fifth of the way or on a flick, and the connecting glyph holds still. Linux follows libadwaita, which cuts at once. The app tells Kaeri's receiver, and the TV's moving scene stands still too.
 - Haptics follow the Haptics table: Skip, Undo and Play now on the remote get the light impact, nothing else.
