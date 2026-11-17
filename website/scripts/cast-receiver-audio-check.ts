@@ -54,8 +54,8 @@ interface Clip {
 	what: string;
 	how: 'url' | 'file';
 	path: string;
-	/** Where the sound must play. */
-	expect: 'mse' | 'wasm';
+	/** Where the sound must play; `any` for a codec the TV may or may not decode itself. */
+	expect: 'mse' | 'wasm' | 'any';
 	make: () => void;
 }
 
@@ -204,7 +204,10 @@ const clips: Clip[] = [
 		expect: 'mse',
 		make: () => existsSync(join(out, 'aac-lc.mkv')) || ff(['-i', picture, '-i', tone, '-map', '0:v', '-map', '1:a', '-c:v', 'copy', '-c:a', 'aac', '-b:a', '128k', '-shortest', join(out, 'aac-lc.mkv')]),
 	},
-	{ id: 'ac3-hls-ts', what: 'HLS MPEG-TS, AC-3 stereo (WebAssembly)', how: 'url', path: 'audio/ac3-ts/index.m3u8', expect: 'wasm', make: () => hls('ac3-ts', 'mpegts', { codec: ['-c:a', 'ac3', '-b:a', '192k'] }) },
+	// The Chromecast TV takes AC-3 itself (it passes it to the TV over HDMI); others don't.
+	{ id: 'ac3-hls-ts', what: 'HLS MPEG-TS, AC-3 stereo (MediaSource or WebAssembly)', how: 'url', path: 'audio/ac3-ts/index.m3u8', expect: 'any', make: () => hls('ac3-ts', 'mpegts', { codec: ['-c:a', 'ac3', '-b:a', '192k'] }) },
+	// MPEG-1 Layer II has no MediaSource form: always WebAssembly.
+	{ id: 'mp2-hls-ts', what: 'HLS MPEG-TS, MP2 stereo (WebAssembly)', how: 'url', path: 'audio/mp2-ts/index.m3u8', expect: 'wasm', make: () => hls('mp2-ts', 'mpegts', { codec: ['-c:a', 'mp2', '-b:a', '192k'] }) },
 ];
 
 // ---------- Reading the log ----------
