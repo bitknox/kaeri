@@ -330,12 +330,13 @@ public final class CastModel {
     }
 
     /// The card's line: while an episode starts, the engine's phase line, which counts the
-    /// seconds from four on; playing; or why it ended.
+    /// seconds from four on; playing or paused, as the mini's line says; or why it ended.
     public var line: String {
         switch stage {
         case .playing:
             if card?.reconnecting == true { return L.tvStatusReconnecting(name: tvName) }
-            return L.tvStatusPlaying(name: tvName)
+            let paused = item.map(\.paused) ?? card?.card.now?.paused ?? false
+            return paused ? L.castStatusPaused(name: tvName) : L.tvStatusPlaying(name: tvName)
         case .failed:
             return L.castCouldntStart(name: tvName)
         case .stopped:
