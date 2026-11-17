@@ -86,6 +86,16 @@ impl Device {
         Ok((Self { channel }, events))
     }
 
+    /// [`Self::connect`], giving up on a TCP connection or TLS handshake not made `within`.
+    pub async fn connect_within(
+        address: SocketAddr,
+        silence: Duration,
+        within: Duration,
+    ) -> Result<(Self, mpsc::UnboundedReceiver<Incoming>), CastError> {
+        let (channel, events) = Channel::connect_within(address, silence, within).await?;
+        Ok((Self { channel }, events))
+    }
+
     /// The receiver's `RECEIVER_STATUS`: volume, and the app running, if any.
     pub async fn status(&self) -> Result<ReceiverStatus, CastError> {
         let reply =

@@ -1401,6 +1401,21 @@ impl CastHub {
         lock(&self.cast).player.upgrade()
     }
 
+    /// The device moved to another network, or back to one: a connection to the TV being made
+    /// again tries at once on the new one.
+    pub fn network_changed(&self) {
+        let held = lock(&self.session).player.clone();
+        let casting = self.player();
+        if let Some(player) = &held {
+            player.network_changed();
+        }
+        if let Some(player) =
+            casting.filter(|p| !held.as_ref().is_some_and(|h| Arc::ptr_eq(h, p)))
+        {
+            player.network_changed();
+        }
+    }
+
     /// An engine event on its way to the front end, for the card's title, episode and skips.
     pub fn observe(&self, event: &Event) {
         let changed = {

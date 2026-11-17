@@ -8,6 +8,7 @@ import { Strings, loadStrings, pickLanguage, type Index, type Pack } from './i18
 import { asDevice, deviceFromAgent, message, readExtras, typesetFiles } from './protocol';
 import { debugOn } from './debug';
 import { SilentPicture } from './silent';
+import { staysWithoutSenders } from './player';
 
 const names = { 104: 'LOAD_FAILED', 301: 'MEDIA_SRC_NOT_SUPPORTED', 311: 'HLS_NETWORK_MASTER_PLAYLIST', 315: 'HLS_NETWORK_KEY_LOAD', 905: 'SEGMENT_NETWORK', 102: 'MEDIA_DECODE' };
 
@@ -287,5 +288,12 @@ describe('city at dusk', () => {
 		expect(CLEAR.x0).toBeLessThanOrEqual(96 - 36);
 		expect(CLEAR.y0).toBeLessThanOrEqual(84 - 36);
 		expect(CLEAR.y1).toBeGreaterThanOrEqual(84 + 80 + 18 + 34 + 18);
+	});
+});
+
+describe('senders', () => {
+	test('an episode on screen stays up when the last sender leaves; Ready and an error close', () => {
+		for (const phase of ['loading', 'playing', 'gone', 'finished']) expect(staysWithoutSenders(phase)).toBe(true);
+		for (const phase of ['idle', 'error']) expect(staysWithoutSenders(phase)).toBe(false);
 	});
 });

@@ -729,6 +729,31 @@ async fn playing_on_a_tv_that_plays_on() -> (Arc<Rig>, tokio::task::JoinHandle<V
     (rig, playing)
 }
 
+/// A cast keeps the episode's place in the watch history as it plays, as a window does, so an
+/// app the system ends mid-cast still resumes near where the TV was.
+#[tokio::test(flavor = "multi_thread", worker_threads = 4)]
+async fn a_cast_saves_its_place_while_it_plays() {
+    // The TV plays the file for ten minutes, ten seconds a second.
+    let options = FakeOptions { duration: 600.0, speed: 10.0, ..FakeOptions::default() };
+    let rig = Arc::new(Rig::on(true, options, false, timings()).await);
+    let file = rig.file("1.mkv", &Fixture::default());
+    let playing = {
+        let rig = Arc::clone(&rig);
+        tokio::spawn(async move { rig.play_seen(vec![file], context("1", None)).await })
+    };
+    let deadline = tokio::time::Instant::now() + Duration::from_secs(15);
+    let saved = loop {
+        let saved = rig.store.resume_position(AnilistId::new(900_002), "1").unwrap();
+        if saved.is_some_and(|at| at >= 30.0) {
+            break saved;
+        }
+        assert!(tokio::time::Instant::now() < deadline, "a place saved mid-cast: {saved:?}");
+        tokio::time::sleep(Duration::from_millis(100)).await;
+    };
+    assert!(!playing.is_finished(), "still casting when {saved:?} was saved");
+    playing.abort();
+}
+
 /// A TvSender on the rig's hub, and the commands it sends the engine.
 fn sender_on(rig: &Rig) -> (crate::remote::sender::TvSender, impl FnMut() -> Vec<Command>) {
     let sender = crate::remote::sender::TvSender::new(
