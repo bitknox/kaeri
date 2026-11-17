@@ -290,6 +290,10 @@ struct HomeMain {
         }
     }
 
+    /// Whether the button leads with the cast glyph: it plays, and a TV is held, so the play
+    /// goes there.
+    func casts(held: Bool) -> Bool { held && (action == .resume || action == .play) }
+
     var symbol: String? {
         switch action {
         case .addToPlanning: "plus"
@@ -328,6 +332,10 @@ struct HomeMainButton: View {
             HStack(spacing: 8) {
                 if adding {
                     ProgressView().controlSize(.small).tint(Palette.ground)
+                } else if main.casts(held: store.tv.cast.connected) {
+                    // While a TV is held the play goes there: the cast glyph in place of play, as
+                    // on the title page.
+                    CastButtonGlyph(look: .connected, size: layout.button.font, color: Palette.ground)
                 } else if let symbol = main.symbol {
                     Image(systemName: symbol).font(.ui(layout.button.font < 15 ? 11 : 14))
                 }

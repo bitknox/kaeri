@@ -355,7 +355,12 @@ private struct HoverCardContent: View {
             action.play(entry.id, store: store, navigator: navigator)
         } label: {
             HStack(spacing: 8) {
-                Image(systemName: "play.fill").font(.mac(10))
+                // While a TV is held the play goes there: the cast glyph in place of play.
+                if store.tv.cast.connected {
+                    CastButtonGlyph(look: .connected, size: 13, color: Palette.ground)
+                } else {
+                    Image(systemName: "play.fill").font(.mac(10))
+                }
                 Text(action.cardTitle)
             }
         }
