@@ -33,6 +33,9 @@ notice-cast-not-same-network = [Ţĥîš ðéṽîçé îšñ'ţ öñ ţĥé ñ�
 # The TV stopped answering mid-cast. The name is the TV's own.
 notice-cast-lost = [Ļöšţ { $name }, šö çàšţîñĝ šţöþþéð.~~~~~~~~~]
 
+# The cast was stopped on the TV while it still answered: with the TV's own remote, another phone's cast controls or the system's. The card closes and this shows for 8 seconds with Play here. The name is the TV's own.
+notice-cast-stopped-elsewhere = [{ $name } šţöþþéð ţĥé çàšţ.~~~~~~~]
+
 # Kaeri's receiver on the TV couldn't get part of the episode from the source mid-play, so the cast stopped. The card offers Choose source and Play here. The name is the TV's own.
 notice-cast-segment = [{ $name } šţöþþéð ĝéţţîñĝ ţĥé šţŕéàɱ: ţĥé šöüŕçé ðîðñ'ţ àñšŵéŕ ƒöŕ þàŕţ öƒ ţĥé éþîšöðé. Ţŕý àñöţĥéŕ šöüŕçé.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]
 
@@ -41,6 +44,9 @@ notice-cast-lost-stream = [{ $name } ļöšţ ţĥé šţŕéàɱ ƒŕöɱ ţĥ�
 
 # Shown once per TV, the first time it can't keep up with styled subtitles and switches to plain ones. Nothing else changes and the episode plays on. The name is the TV's own.
 notice-cast-subtitles-plain = [Šüƀţîţļéš öñ { $name } šĥöŵ àš þļàîñ ţéẋţ. Ţýþéšéţ šüƀţîţļéš ŵéŕé ţöö ɱüçĥ ƒöŕ îţ.~~~~~~~~~~~~~~~~~~~~~~~]
+
+# Kaeri's receiver on the TV didn't start for this cast, so the TV's own player plays the episode instead. Shown each time it happens; the episode plays on. The name is the TV's own.
+notice-cast-fallback = [{ $name } þļàýš ţĥîš îñ îţš öŵñ þļàýéŕ. Šüƀţîţļéš šĥöŵ àš þļàîñ ţéẋţ.~~~~~~~~~~~~~~~~~~~]
 
 # The TV picked to cast to has left the network.
 notice-cast-no-device = [Ţĥàţ ŢṼ îš ñö ļöñĝéŕ öñ ţĥé ñéţŵöŕķ.~~~~~~~~~~~]

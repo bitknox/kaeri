@@ -98,6 +98,7 @@ impl PlayerOpener for CastOpener {
             encoder: self.hub.encoder(),
             timings: self.hub.timings(),
         };
+        let opening = self.hub.opening();
         let (player, events) = match CastPlayer::connect(setup).await {
             Ok(opened) => opened,
             Err(failure) => {
@@ -112,6 +113,7 @@ impl PlayerOpener for CastOpener {
         player.use_receiver(self.hub.receiver());
         let player = Arc::new(player);
         self.hub.attach(&player);
+        drop(opening);
         if let Some(speed) = request.speed.filter(|s| (*s - 1.0).abs() > f64::EPSILON) {
             let _ = player.set_rate(speed).await;
         }
@@ -183,6 +185,7 @@ pub fn notice(failure: &CastFailure, name: &str) -> Msg {
         CastFailure::TakenOver => Msg::NoticeCastTakenOver { name },
         CastFailure::NotSameNetwork => Msg::NoticeCastNotSameNetwork { name },
         CastFailure::Lost(_) => Msg::NoticeCastLost { name },
+        CastFailure::StoppedElsewhere => Msg::NoticeCastStoppedElsewhere { name },
         CastFailure::Segment => Msg::NoticeCastSegment { name },
         CastFailure::LostStream => Msg::NoticeCastLostStream { name },
     }
@@ -479,7 +482,10 @@ impl PlayerLink for CastLink {
         if self.player.failure().is_some_and(|f| {
             matches!(
                 f,
-                CastFailure::TakenOver | CastFailure::Lost(_) | CastFailure::NotSameNetwork
+                CastFailure::TakenOver
+                    | CastFailure::Lost(_)
+                    | CastFailure::StoppedElsewhere
+                    | CastFailure::NotSameNetwork
             )
         }) {
             self.hub.end();
@@ -761,6 +767,10 @@ mod tests {
         assert_eq!(
             notice(&CastFailure::Lost("reset".into()), "Living room").english(),
             "Lost Living room, so casting stopped."
+        );
+        assert_eq!(
+            notice(&CastFailure::StoppedElsewhere, "Living room").english(),
+            "Living room stopped the cast."
         );
         assert_eq!(
             notice(&CastFailure::NeverFetches, "Living room").english(),

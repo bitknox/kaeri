@@ -1312,6 +1312,16 @@ pub struct FfiCastCard {
     /// again each second while it waits.
     #[uniffi(default)]
     pub waiting: Option<u32>,
+    /// The connection to the TV closed and is being made again, for up to 20 seconds:
+    /// "Reconnecting to Living room" (`tv-status-reconnecting`) with a small spinner. The rest of
+    /// the card reads as it did until it joins again, or the cast ends with its notice.
+    #[uniffi(default)]
+    pub reconnecting: bool,
+    /// A note on this cast, for a notice when it first reads differently: the TV plays it in
+    /// its own player (`notice-cast-fallback`). A cast from Play on TV holds no session, so the
+    /// session's note never shows it.
+    #[uniffi(default)]
+    pub note: Option<Msg>,
 }
 
 impl From<CastCard> for FfiCastCard {
@@ -1329,6 +1339,8 @@ impl From<CastCard> for FfiCastCard {
             undo: card.undo.map(FfiCastUndo::from),
             route: card.route.map(route_hint),
             waiting: card.waiting,
+            reconnecting: card.reconnecting,
+            note: card.note,
         }
     }
 }
@@ -1684,8 +1696,9 @@ pub struct FfiCastSessionView {
     /// Why the session ended, for the app to say in its own words.
     #[uniffi(default)]
     pub notice: Option<Msg>,
-    /// A note while it plays, for a toast when it first reads differently: the TV shows
-    /// subtitles as plain text.
+    /// A note while a TV is held, for a toast when it first reads differently: the TV shows
+    /// subtitles as plain text (`NoticeCastSubtitlesPlain`), or plays this cast in its own player
+    /// because Kaeri's receiver didn't start (`NoticeCastFallback`, said each time it happens).
     #[uniffi(default)]
     pub note: Option<Msg>,
     /// The TV's volume, 0 to 1.
@@ -1697,6 +1710,12 @@ pub struct FfiCastSessionView {
     /// Kaeri's own receiver runs on the TV, rather than the Default Media Receiver.
     #[uniffi(default)]
     pub own_receiver: bool,
+    /// The connection to the TV closed and is being made again, for up to 20 seconds: the mini
+    /// player and the remote read "Reconnecting to Living room" (`tv-status-reconnecting`).
+    /// `state` and `item` stay what they were until it joins again; when the tries run out the
+    /// session ends with `notice`.
+    #[uniffi(default)]
+    pub reconnecting: bool,
 }
 
 impl From<SessionView> for FfiCastSessionView {
@@ -1723,6 +1742,7 @@ impl From<SessionView> for FfiCastSessionView {
                 VolumeControl::MuteOnly => FfiVolumeControl::MuteOnly,
             },
             own_receiver: view.own_receiver,
+            reconnecting: view.reconnecting,
         }
     }
 }
@@ -1850,5 +1870,43 @@ impl FfiCastSessionWatch {
             *last = Some(view.clone());
             return Some(view);
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn a_play_on_tv_cards_note_reaches_the_app() {
+        let card = CastCard {
+            card: RemoteCard {
+                tv_name: "Living room".into(),
+                phase: LinkPhase::Connected,
+                phase_line: None,
+                screen: Screen::Player,
+                now: None,
+                party: None,
+                rev: 1,
+                over: false,
+                reached: true,
+            },
+            volume_control: VolumeControl::Level,
+            muted: None,
+            notice: None,
+            phase_line: None,
+            up_next: None,
+            undo: None,
+            route: None,
+            waiting: None,
+            reconnecting: false,
+            note: Some(Msg::NoticeCastFallback { name: "Living room".into() }),
+        };
+        let quiet = CastCard { note: None, ..card.clone() };
+        assert_eq!(
+            FfiCastCard::from(card).note,
+            Some(Msg::NoticeCastFallback { name: "Living room".into() })
+        );
+        assert_eq!(FfiCastCard::from(quiet).note, None);
     }
 }

@@ -4,10 +4,11 @@
 //! change one part of the next plan in the same session, and the next connect tries the stream
 //! as it is again. What is kept across launches, in `cast-tv-notes.json` in the engine's data
 //! directory, is small: the TV's name, model, firmware and volume control, the route of its last
-//! cast for the picker's hint, whether Kaeri's receiver failed on it in the last day, and
-//! whether the viewer heard about its plain subtitles. The file is written whole to a temporary
-//! file and renamed over the old one. `cast-tvs.json`, which kept refusals for 30 days, is
-//! deleted when the memory is first opened.
+//! cast for the picker's hint, and whether the viewer heard about its plain subtitles. Whether
+//! Kaeri's receiver failed on a TV is never kept: every cast tries it first. A file written when
+//! that was kept still reads, and the old field is dropped at the next write. The file is written
+//! whole to a temporary file and renamed over the old one. `cast-tvs.json`, which kept refusals
+//! for 30 days, is deleted when the memory is first opened.
 
 use std::{
     collections::BTreeMap,
@@ -23,10 +24,6 @@ use crate::{client::VolumeControl, formats::CastPlan};
 pub const FILE: &str = "cast-tv-notes.json";
 /// The file that kept refusals for 30 days, deleted on open.
 const OLD_FILE: &str = "cast-tvs.json";
-
-/// How long a TV starts with the Default Media Receiver after Kaeri's own failed on it, in
-/// seconds: a day, or until its firmware changes.
-pub const OWN_RECEIVER_SKIPPED: i64 = 24 * 60 * 60;
 
 /// What happened when a TV was handed one format part, and when.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
@@ -55,10 +52,6 @@ pub struct CastCaps {
     /// The last cast to it went through this device: the picker's hint for the next.
     #[serde(default)]
     pub relayed_last: bool,
-    /// When Kaeri's receiver last failed to come up on it, in Unix seconds: casts start with
-    /// the Default Media Receiver for [`OWN_RECEIVER_SKIPPED`].
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub own_receiver_failed: Option<i64>,
     /// The viewer was told that Kaeri's receiver shows plain subtitles on it: once per TV.
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
     pub told_subtitles_plain: bool,
@@ -119,18 +112,6 @@ impl CastCaps {
         let part = plan.audio_part().filter(|part| !self.played(part))?;
         self.remember(&part, false, at);
         Some(part)
-    }
-
-    /// Drop a day-old failure of Kaeri's receiver.
-    fn expire(&mut self, now: i64) {
-        self.own_receiver_failed =
-            self.own_receiver_failed.filter(|at| now - at < OWN_RECEIVER_SKIPPED);
-    }
-
-    /// Whether casts to it start with the Default Media Receiver, Kaeri's own having failed on
-    /// it lately.
-    pub fn skips_own_receiver(&self) -> bool {
-        self.own_receiver_failed.is_some()
     }
 }
 
@@ -219,19 +200,11 @@ impl CastMemory {
 
     /// What is known of the TV `id`; a blank record for a TV never cast to.
     pub fn caps(&self, id: &str) -> CastCaps {
-        let now = (self.clock)();
-        let mut tvs = self.lock();
-        match tvs.get_mut(id) {
-            Some(caps) => {
-                caps.expire(now);
-                caps.clone()
-            }
-            None => CastCaps::blank(id),
-        }
+        self.lock().get(id).cloned().unwrap_or_else(|| CastCaps::blank(id))
     }
 
     /// The TV `id` was reached, calling itself `name`, a `model`, with `firmware` when it said,
-    /// and its volume works as `volume`. A changed firmware drops every refusal.
+    /// and its volume works as `volume`.
     pub fn seen(
         &self,
         id: &str,
@@ -244,10 +217,6 @@ impl CastMemory {
             let mut tvs = self.lock();
             let caps = tvs.entry(id.to_owned()).or_insert_with(|| CastCaps::blank(id));
             if let Some(firmware) = firmware {
-                if caps.firmware.as_deref().is_some_and(|known| known != firmware) {
-                    tracing::info!(tv = %caps.name, "new firmware; trying Kaeri's receiver again");
-                    caps.own_receiver_failed = None;
-                }
                 caps.firmware = Some(firmware.to_owned());
             }
             name.clone_into(&mut caps.name);
@@ -283,17 +252,6 @@ impl CastMemory {
             self.save()?;
         }
         Ok(blamed)
-    }
-
-    /// Kaeri's receiver didn't come up on the TV `id`: the next day's casts start with the
-    /// Default Media Receiver.
-    pub fn own_receiver_failed(&self, id: &str) -> Result<(), MemoryError> {
-        let now = (self.clock)();
-        self.lock()
-            .entry(id.to_owned())
-            .or_insert_with(|| CastCaps::blank(id))
-            .own_receiver_failed = Some(now);
-        self.save()
     }
 
     /// Note that the viewer heard TV `id` shows subtitles as plain text. `true` the first time.
@@ -332,8 +290,6 @@ impl CastMemory {
 
 #[cfg(test)]
 mod tests {
-    use std::sync::atomic::{AtomicI64, Ordering};
-
     use super::*;
     use crate::formats::{AudioCodec, AudioPlan, CastRoute, Delivery, VideoFormat};
 
@@ -381,29 +337,21 @@ mod tests {
     }
 
     #[test]
-    fn a_tv_kaeris_receiver_failed_on_starts_with_the_default_one_for_a_day() {
+    fn a_failure_of_kaeris_receiver_kept_by_an_older_version_is_read_and_dropped() {
         let dir = tempfile::tempdir().unwrap();
-        let now = Arc::new(AtomicI64::new(1_000));
-        let clock: Clock = {
-            let now = Arc::clone(&now);
-            Arc::new(move || now.load(Ordering::Relaxed))
-        };
-        let memory = CastMemory::open(dir.path()).unwrap().with_clock(Arc::clone(&clock));
+        let old = r#"[{"id":"tv","name":"Living room","model":"Chromecast","firmware":"1.0",
+            "volume":"level","own_receiver_failed":1000,"relayed_last":true}]"#;
+        std::fs::write(dir.path().join(FILE), old).unwrap();
+        let memory = CastMemory::open(dir.path()).unwrap();
+        let caps = memory.caps("tv");
+        assert_eq!(caps.name, "Living room");
+        assert!(caps.relayed_last);
+        assert!(!dir.path().join(FILE).with_extension("json.unreadable").exists());
         memory
             .seen("tv", "Living room", "Chromecast", Some("1.0"), VolumeControl::Level)
             .unwrap();
-        memory.own_receiver_failed("tv").unwrap();
-        let again = CastMemory::open(dir.path()).unwrap().with_clock(Arc::clone(&clock));
-        assert!(again.caps("tv").skips_own_receiver());
-        now.store(1_000 + OWN_RECEIVER_SKIPPED, Ordering::Relaxed);
-        assert!(!again.caps("tv").skips_own_receiver(), "a day on");
-
-        now.store(1_000, Ordering::Relaxed);
-        memory.own_receiver_failed("tv").unwrap();
-        memory
-            .seen("tv", "Living room", "Chromecast", Some("1.1"), VolumeControl::Level)
-            .unwrap();
-        assert!(!memory.caps("tv").skips_own_receiver(), "a new firmware tries it again");
+        let written = std::fs::read_to_string(dir.path().join(FILE)).unwrap();
+        assert!(!written.contains("own_receiver_failed"), "{written}");
     }
 
     #[test]
