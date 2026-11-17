@@ -14,6 +14,7 @@ import androidx.compose.ui.test.assert
 import androidx.compose.ui.test.getUnclippedBoundsInRoot
 import androidx.compose.ui.test.hasAnyDescendant
 import androidx.compose.ui.test.hasClickAction
+import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.hasScrollToKeyAction
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
@@ -53,6 +54,7 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import org.junit.Assume.assumeTrue
 import org.junit.Before
 import org.junit.Rule
@@ -237,6 +239,15 @@ class BoardShots {
     @Test
     @Config(qualifiers = PHONE)
     fun phone_home_fresh() = shoot("phone-home-fresh", FRESH)
+
+    /** With a TV held, Home's Play leads with the cast glyph, as the title page's does: it plays there. */
+    @Test
+    @Config(qualifiers = PHONE)
+    fun phone_home_cast_held() {
+        shoot("phone-home-cast-held", HOME_WATCHING, before = { it.cast.sessions = HeldTv })
+        val play = compose.onAllNodes(hasClickAction() and hasAnyDescendant(hasTestTag(CAST_PLAY_GLYPH)), useUnmergedTree = true)
+        assertTrue("Home's Play carries the cast glyph", play.fetchSemanticsNodes().isNotEmpty())
+    }
 
     @Test
     @Config(qualifiers = TABLET)
@@ -1461,6 +1472,27 @@ class BoardShots {
         // The compose view the rule set the content in, which reads the insets it is handed.
         val content = activity.findViewById<ViewGroup>(android.R.id.content).getChildAt(0)
         ViewCompat.dispatchApplyWindowInsets(content, insets)
+    }
+
+    /** A TV with Chromecast built in, held with nothing playing on it, as the cast button's Connected. */
+    private object HeldTv : app.kaeri.store.CastSessionSource {
+        private val held = app.kaeri.store.CastSession.IDLE.copy(
+            state = app.kaeri.store.CastSessionState.Connected,
+            button = app.kaeri.store.CastButtonState.Connected,
+            deviceKey = "living-room", // i18n-skip
+            deviceName = "Living room", // i18n-skip
+        )
+        override fun state() = held
+        override suspend fun next(): app.kaeri.store.CastSession? = kotlinx.coroutines.awaitCancellation()
+        override fun connect(key: String, from: app.kaeri.store.CastFrom?) = Unit
+        override fun disconnect() = Unit
+        override fun command(command: app.kaeri.engine.ffi.FfiTvCommand) = Unit
+        override fun play(request: app.kaeri.store.TvPlayRequest) = Unit
+        override val queues = false
+        override fun playNext(id: AnilistId, episode: String) = false
+        override fun playHere(): app.kaeri.store.CastFrom? = null
+        override fun leftOn(): String? = null
+        override fun card(): app.kaeri.store.CastLink? = null
     }
 
     private companion object {

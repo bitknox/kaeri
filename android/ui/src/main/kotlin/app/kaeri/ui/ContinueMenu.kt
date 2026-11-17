@@ -76,7 +76,7 @@ internal fun ContinueMenu(menu: ContinueMenuActions, expanded: Boolean, onDismis
     Menu(expanded = expanded, onDismissRequest = onDismiss) {
         DropdownMenuItem(
             text = { Text(menu.playLabel) },
-            leadingIcon = { Icon(Icons.Play, contentDescription = null) },
+            leadingIcon = { CastPlayIcon() },
             enabled = menu.play != null,
             onClick = { onDismiss(); menu.play?.invoke() },
         )

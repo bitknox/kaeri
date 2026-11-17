@@ -27,7 +27,25 @@ public sealed partial class HomeSpotlight : Grid
     public HomeSpotlight()
     {
         Visibility = Visibility.Collapsed;
+        // A TV held or let go: the main action's glyph follows, while Home is up.
+        Loaded += (_, _) =>
+        {
+            if (hearing)
+                return;
+            hearing = true;
+            Ctx.Current.Tv.Changed += Refresh;
+            Refresh();
+        };
+        Unloaded += (_, _) =>
+        {
+            if (!hearing)
+                return;
+            hearing = false;
+            Ctx.Current.Tv.Changed -= Refresh;
+        };
     }
+
+    bool hearing;
 
     /// <summary>The page whose actions the buttons run.</summary>
     internal void Use(HomePage owner) => page = owner;
@@ -337,11 +355,13 @@ public sealed partial class HomeSpotlight : Grid
             if (action == HomeAction.AddToPlanning && planned)
                 label = null;
             main.Visibility = label is null ? Visibility.Collapsed : Visibility.Visible;
-            if (label is not null && main.Tag as string != $"{action}|{label}")
+            // While a TV is held the play goes there: the cast glyph leads, as on the title page.
+            var casts = HomeWording.Casts(action, Ctx.Current.Tv.SessionHeld);
+            if (label is not null && main.Tag as string != $"{action}|{label}|{casts}")
             {
-                main.Tag = $"{action}|{label}";
+                main.Tag = $"{action}|{label}|{casts}";
                 var icon = action == HomeAction.AddToPlanning ? "" : "";
-                main.Content = action == HomeAction.Details ? label : Button(icon, label);
+                main.Content = action == HomeAction.Details ? label : casts ? Casting.CastGlyph.PlayLabel(label) : Button(icon, label);
                 AutomationProperties.SetName(main, label);
             }
             var s = Secondary();

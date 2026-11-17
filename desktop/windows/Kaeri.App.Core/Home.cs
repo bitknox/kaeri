@@ -102,6 +102,12 @@ public static class HomeWording
         };
     }
 
+    /// <summary>
+    /// Whether the main action leads with the cast glyph: it plays, and a TV is held, so the play
+    /// goes there, as the title page's does.
+    /// </summary>
+    public static bool Casts(HomeAction effective, bool held) => held && effective is HomeAction.Resume or HomeAction.Play;
+
     /// <summary>What the main action does once playability is known: not found turns a play into Add to Planning,
     /// or into Details for a title on the list or in Continue (the engine's home_checked_action).</summary>
     public static HomeAction Effective(HomeAction action, Playable playable, bool listed = false) =>

@@ -40,6 +40,7 @@ import androidx.compose.ui.graphics.vector.PathParser
 import androidx.compose.ui.layout.boundsInRoot
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalView
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -170,13 +171,16 @@ fun CastButton(circle: Boolean = false, circleAlpha: () -> Float = { 1f }) {
     }
 }
 
-// The title page's main button while a TV is held
+// A Play button while a TV is held: the title page's, Home's, and Play in Continue's menus
 
-/** The main button's leading glyph: the cast glyph while a TV is held, Play otherwise. */
+/** The cast glyph in a Play button, for a test to find. */
+internal const val CAST_PLAY_GLYPH = "cast-play-glyph" // i18n-skip
+
+/** A Play button's leading glyph: the cast glyph while a TV is held, as the play goes there; Play otherwise. */
 @Composable
 internal fun CastPlayIcon() {
     val session by LocalAppStore.current.cast.session.collectAsStateWithLifecycle()
-    if (session.held) CastGlyph(CastGlyphState.Filled, size = 24.dp) else androidx.compose.material3.Icon(Icons.Play, contentDescription = null, modifier = Modifier.size(24.dp))
+    if (session.held) CastGlyph(CastGlyphState.Filled, Modifier.testTag(CAST_PLAY_GLYPH), size = 24.dp) else androidx.compose.material3.Icon(Icons.Play, contentDescription = null, modifier = Modifier.size(24.dp))
 }
 
 /** Under the main button while a TV is held: the water dot and "Plays on Living room". */
