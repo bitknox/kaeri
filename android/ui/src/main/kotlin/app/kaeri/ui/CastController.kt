@@ -21,6 +21,7 @@ import androidx.compose.material3.SnackbarHost
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.AnimatedVisibilityScope
 import androidx.compose.animation.BoundsTransform
+import androidx.compose.animation.EnterExitState
 import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.ExitTransition
 import androidx.compose.animation.ExperimentalSharedTransitionApi
@@ -529,8 +530,9 @@ internal fun CastControllerSurface(morph: CastMorph, modifier: Modifier = Modifi
         ) {
             val scope = this
             val surface = MaterialTheme.colorScheme.surfaceContainerHigh
-            // Closed, the surface is the mini's: the controller's frame left after the flight shows nothing.
-            val flying = { morph.transition.targetState || morph.transition.currentState != morph.transition.targetState }
+            // Once the controller has gone, the surface is the mini's: the frame it is still drawn in
+            // after the flight shows nothing. Turned back on its way out, it shows again.
+            val flying = { scope.transition.currentState != EnterExitState.PostExit || scope.transition.targetState != EnterExitState.PostExit }
             Box(
                 Modifier
                     .fillMaxSize()
