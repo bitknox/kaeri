@@ -428,7 +428,7 @@ export class Unpacker {
 	/** An audio switch is changing the SourceBuffer: reading waits. */
 	private switching = false;
 	private listeners: [EventTarget, string, EventListener, boolean][] = [];
-	/** The first seconds of a FLAC start, step by step, for the dev log (see note()). */
+	/** The first seconds of a start through MediaSource, step by step, for the dev log (see note()). */
 	private startTrace: string[] | null = null;
 	private traceTimer = 0;
 
@@ -1047,12 +1047,12 @@ export class Unpacker {
 	}
 
 	/**
-	 * Notes a step of a FLAC start for the dev log: ms since the load, what happened, the playhead,
-	 * readyState, the element's audio bytes decoded, and the video and audio buffered ranges. Runs
-	 * until 3 s after playing begins; a 50 ms sampler adds lines when anything changed.
+	 * Notes a step of a start through MediaSource for the dev log: ms since the load, what happened,
+	 * the playhead, readyState, the element's audio bytes decoded, and the video and audio buffered
+	 * ranges. Runs until 3 s after playing begins; a 50 ms sampler adds lines when anything changed.
 	 */
 	private note(what: string) {
-		if (!this.flac && !this.early && !this.startTrace) return;
+		if (this.pcm) return;
 		if (this.startTrace == null) {
 			this.startTrace = [];
 			this.traceTimer = window.setInterval(() => this.note('.'), 50);
