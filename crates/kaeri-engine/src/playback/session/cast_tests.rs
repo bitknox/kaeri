@@ -716,7 +716,15 @@ async fn playing_on_a_tv_that_plays_on() -> (Arc<Rig>, tokio::task::JoinHandle<V
 
 /// [`playing_on_a_tv_that_plays_on`], on a TV set up with `options`.
 async fn playing_on(options: FakeOptions) -> (Arc<Rig>, tokio::task::JoinHandle<Vec<Event>>) {
-    let rig = Arc::new(Rig::on(true, options, false, lost_at_once()).await);
+    playing_with(options, lost_at_once()).await
+}
+
+/// [`playing_on`], with the hub's `timings`.
+async fn playing_with(
+    options: FakeOptions,
+    timings: Timings,
+) -> (Arc<Rig>, tokio::task::JoinHandle<Vec<Event>>) {
+    let rig = Arc::new(Rig::on(true, options, false, timings).await);
     rig.hub.found(rig.device());
     rig.hub.connect(rig.device());
     session_until(&rig.hub, |v| v.state == SessionState::Connected).await;
@@ -1178,6 +1186,103 @@ async fn the_tv_picked_again_after_a_lost_connection_carries_on_from_where_it_is
     assert_eq!(rig.hub.session().state, SessionState::Playing);
 
     // Asked once: a later cast of it goes from where it is asked to.
+    assert!(rig.hub.disconnect());
+}
+
+/// A TV playing ten seconds a second, out of this device's reach for longer than it tries to
+/// connect again: the cast reads Reconnecting all that time, then lost. The browse finds the TV
+/// while it is still out of reach, so the session it was left running can't be joined yet.
+/// Returns the playback's last place on it, once the TV can be reached again.
+async fn lost_out_of_reach(
+    options: FakeOptions,
+) -> (Arc<Rig>, crate::remote::sender::TvSender, impl FnMut() -> Vec<Command>, f64) {
+    let timings = Timings {
+        silence: Duration::from_secs(1),
+        reconnect: Duration::from_secs(3),
+        retry: Duration::from_millis(500),
+        ..timings()
+    };
+    let (rig, playing) = playing_with(options, timings).await;
+    let (sender, mut sent) = sender_for(&rig.hub);
+    let view =
+        session_until(&rig.hub, |v| v.item.as_ref().is_some_and(|i| i.position >= 10.0)).await;
+    let seen = view.item.unwrap().position;
+    let away = Duration::from_secs(5);
+    let back = tokio::time::Instant::now() + away;
+    rig.receiver.unreachable_for(away);
+    rig.receiver.drop_connection();
+    let view = session_until(&rig.hub, |v| v.state == SessionState::Error).await;
+    assert_eq!(view.notice, Some(Msg::NoticeCastLost { name: "Living room".into() }));
+    playing.await.unwrap();
+    let deadline = tokio::time::Instant::now() + Duration::from_secs(2);
+    while rig.hub.noted_playing().is_none() && tokio::time::Instant::now() < deadline {
+        tokio::time::sleep(Duration::from_millis(20)).await;
+    }
+    assert_eq!(
+        rig.hub.noted_playing(),
+        Some((AnilistId::new(900_002), "1".into())),
+        "noted as left playing it"
+    );
+
+    // Choose another TV opens the picker, and the browse finds the TV still out of reach.
+    rig.hub.rejoin(&rig.device());
+    session_until(&rig.hub, |v| v.state == SessionState::Idle).await;
+    tokio::time::sleep_until(back + Duration::from_millis(300)).await;
+    sent();
+    (rig, sender, sent, seen)
+}
+
+/// The episode the card sends with Choose another TV, once the cast picks it up again.
+async fn cast_again_from(
+    sender: &crate::remote::sender::TvSender,
+    sent: &mut impl FnMut() -> Vec<Command>,
+    position: f64,
+) -> f64 {
+    sender.cast("cast:tv-1", AnilistId::new(900_002), "1".into(), Some(position)).unwrap();
+    let deadline = tokio::time::Instant::now() + Duration::from_secs(10);
+    loop {
+        if let Some(position) = sent().into_iter().find_map(|c| match c {
+            Command::CastTo { position, .. } => Some(position),
+            _ => None,
+        }) {
+            return position.expect("a position to play from");
+        }
+        assert!(tokio::time::Instant::now() < deadline, "the episode is cast again");
+        tokio::time::sleep(Duration::from_millis(50)).await;
+    }
+}
+
+/// Choose another TV after a long loss, with the browse having found the TV while it was still
+/// out of reach: the receiver played on, and is joined, not loaded again from where this device
+/// last saw it.
+#[tokio::test(flavor = "multi_thread", worker_threads = 4)]
+async fn the_tv_picked_after_a_long_loss_is_joined_where_it_played_on_to() {
+    let options =
+        FakeOptions { remembers: true, duration: 600.0, speed: 10.0, ..FakeOptions::default() };
+    let (rig, sender, mut sent, seen) = lost_out_of_reach(options).await;
+    let launches = rig.receiver.heard("LAUNCH").len();
+
+    let position = cast_again_from(&sender, &mut sent, seen).await;
+    assert!(position > seen + 30.0, "from the TV's {position} s, not this device's {seen} s");
+    assert_eq!(rig.receiver.heard("LAUNCH").len(), launches, "joined, never launched again");
+    assert!(rig.hub.disconnect());
+}
+
+/// Another phone stopped the receiver once the TV was back: nothing is left to join, and the
+/// episode loads from where the engine last knew the TV to be, not from an older place the app
+/// saved.
+#[tokio::test(flavor = "multi_thread", worker_threads = 4)]
+async fn the_tv_picked_after_a_long_loss_with_nothing_to_join_loads_where_it_was_last_known() {
+    let options =
+        FakeOptions { remembers: true, duration: 600.0, speed: 10.0, ..FakeOptions::default() };
+    let (rig, sender, mut sent, seen) = lost_out_of_reach(options).await;
+    let (other, _events) = CastPlayer::connect(rig.hub.setup(rig.device())).await.unwrap();
+    other.launch().await.unwrap();
+    other.quit().await.unwrap();
+
+    let position = cast_again_from(&sender, &mut sent, 2.0).await;
+    assert!(position >= seen, "from {position} s, where the TV was last known, {seen} s");
+    assert!(position < seen + 30.0, "not run on past what was known: {position} s");
     assert!(rig.hub.disconnect());
 }
 

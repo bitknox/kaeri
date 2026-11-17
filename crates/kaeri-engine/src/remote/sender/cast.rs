@@ -264,7 +264,9 @@ impl TvSender {
         // closes, and forgets what the browse found, before it takes the command.
         let played_on = hub.take_left_playing(&device.id, id, &episode);
         hub.begin(device.clone());
-        if played_on {
+        if let Some(left) = played_on {
+            // With nothing to join, from where the engine last knew the TV to be.
+            let position = left.at.or(position);
             carry_on_from_the_tv(&hub, &engine, device.clone(), id, episode, position);
             return Ok(Arc::new(CastSession { hub, engine, device }));
         }
@@ -284,9 +286,9 @@ impl TvSender {
         let device = hub.device(key.strip_prefix(CAST).unwrap_or(key)).ok_or(Problem::Gone)?;
         let id = device.id.clone();
         if let Some(from) = from.as_ref()
-            && hub.take_left_playing(&id, from.id, &from.episode)
+            && let Some(left) = hub.take_left_playing(&id, from.id, &from.episode)
         {
-            let position = Some(from.position).filter(|p| *p >= CARRY_FROM);
+            let position = left.at.or(Some(from.position)).filter(|p| *p >= CARRY_FROM);
             let CastFrom { id: title, episode, .. } = from.clone();
             carry_on_from_the_tv(&hub, &engine, device, title, episode, position);
             return Ok(());
