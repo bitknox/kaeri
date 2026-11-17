@@ -411,14 +411,22 @@ fn a_cast_left_running_is_joined_again_by_the_next_launch_over_the_same_folders(
     });
     let path = root.path().join("data").join("remote").join("cast-session.json");
     let record = until("the record kept", || std::fs::read(&path).ok());
+    // Kept with the episode on the TV once it plays.
+    let record = until("the record names the episode", || {
+        std::fs::read(&path).ok().filter(|bytes| {
+            serde_json::from_slice::<serde_json::Value>(bytes)
+                .is_ok_and(|r| r["card"] == serde_json::json!([fixtures::FINISHED.get(), "3"]))
+        })
+    });
 
-    // The app is ended with the TV playing: what an ending process leaves on disk is the record
-    // as it stood.
+    let record: serde_json::Value = serde_json::from_slice(&record).unwrap();
+    assert!(record["tv"]["address"].is_string(), "{record}");
+
+    // The system ends the app with the TV playing.
     drop(cast);
     drop(sender);
-    phone.engine.shutdown();
+    phone.engine.end_abruptly();
     drop(phone);
-    std::fs::write(&path, record).unwrap();
 
     let again = start_in(root.path());
     let sender = again.engine.tv_sender("Mika's laptop".into(), "kaeri-test/0".into()).unwrap();
