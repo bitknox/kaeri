@@ -46,6 +46,8 @@ const SETTLE = 0.5;
 const SETTLE_HARD = 0.02;
 /** The jump threshold while the main thread's clock filter fills its window after the start. */
 const WIDE = 0.12;
+/** Seconds over which sound fades in after silence (a start, a seek, a stall), so it never clicks. */
+const FADE = 0.025;
 /** A clock reading this far from the clock is a real jump, taken at once. */
 const JUMP = 0.25;
 /** The least weight a clock reading gets (about the last 20 readings, 2 s, count). */
@@ -81,6 +83,10 @@ class KaeriPcm extends AudioWorkletProcessor {
 	private fresh = true;
 	/** Until this context time after a start, drift is fixed by jumping at a small threshold. */
 	private settleUntil = 0;
+	/** Nothing has played since a start, a stall or a wait: the next sound fades in. */
+	private silent = true;
+	/** Frames of the fade-in left. */
+	private fading = 0;
 	/** Since when drift has stayed beyond SOFT. */
 	private overSince: number | null = null;
 
@@ -131,6 +137,7 @@ class KaeriPcm extends AudioWorkletProcessor {
 		this.fresh = true;
 		this.sounded = false;
 		this.waitRun = null;
+		this.silent = true;
 	}
 
 	private queued(): number {
@@ -186,11 +193,15 @@ class KaeriPcm extends AudioWorkletProcessor {
 		const k = this.clock;
 		const expected = k.media + (currentTime - k.ctx) * k.rate;
 		this.report(expected);
-		if (!k.playing) return true;
+		if (!k.playing) {
+			this.silent = true;
+			return true;
+		}
 		let pos = this.position();
 		if (pos == null) {
 			this.starved++;
 			this.fresh = true;
+			this.silent = true;
 			return true;
 		}
 		let diff = expected - pos;
@@ -223,6 +234,7 @@ class KaeriPcm extends AudioWorkletProcessor {
 				this.waits++;
 				if (this.waitRun && this.waitRun.seq === this.seq) this.waitRun.n++;
 				else this.waitRun = this.event('wait', expected, diff, currentTime < this.settleUntil ? 'settle' : young ? 'young' : stuck ? 'stuck' : 'hard');
+				this.silent = true;
 				return true;
 			}
 		}
@@ -230,11 +242,15 @@ class KaeriPcm extends AudioWorkletProcessor {
 		this.drift = diff;
 		this.worst = Math.max(this.worst, Math.abs(diff));
 		const trim = Math.abs(diff) < DEAD ? 0 : Math.max(-MAX_TRIM, Math.min(MAX_TRIM, diff * 0.5));
+		const fadeFrames = Math.max(1, Math.round(FADE * sampleRate));
+		if (this.silent) this.fading = fadeFrames;
+		this.silent = false;
 		for (let i = 0; i < n; i++) {
 			let c = this.chunks[0];
 			if (!c) {
 				this.starved++;
 				this.fresh = true;
+				this.silent = true;
 				break;
 			}
 			while (this.offset >= c.frames) {
@@ -257,6 +273,12 @@ class KaeriPcm extends AudioWorkletProcessor {
 			const b = after === c ? Math.min(a + 2, c.data.length - 2) : 0;
 			left[i] = c.data[a] + (after.data[b] - c.data[a]) * f;
 			if (right !== left) right[i] = c.data[a + 1] + (after.data[b + 1] - c.data[a + 1]) * f;
+			if (this.fading > 0) {
+				const g = 1 - this.fading / fadeFrames;
+				left[i] *= g;
+				if (right !== left) right[i] *= g;
+				this.fading--;
+			}
 			this.offset += (c.rate / sampleRate) * k.rate * (1 + trim);
 		}
 		if (!this.sounded) {

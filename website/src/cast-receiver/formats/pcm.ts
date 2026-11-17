@@ -92,11 +92,66 @@ export class ClockFilter {
 	}
 }
 
+/** The parts of the WebAssembly sound that don't depend on the stream. */
+interface Parts {
+	base: string;
+	ctx: AudioContext;
+	worklet: Promise<void>;
+	worker: Worker;
+	made: number;
+}
+
+/** Parts made ahead, for the next load that needs them. */
+let spare: Parts | null = null;
+/** The decoder families made ready ahead: MPEG audio, AAC and the rest ('more'), and AC-3. */
+const AHEAD = ['more', 'ac3'];
+
+function makeParts(base: string, families: string[]): Parts {
+	const ctx = new AudioContext({ latencyHint: 'playback' });
+	const worklet = ctx.audioWorklet.addModule(new URL('pcm/worklet.js', base).href);
+	worklet.catch(() => {});
+	const worker = new Worker(new URL('pcm/worker.js', base).href, { type: 'module' });
+	for (const family of families) worker.postMessage({ type: 'prepare', base, family });
+	return { base, ctx, worklet, worker, made: performance.now() };
+}
+
+function dropParts(p: Parts) {
+	p.worker.terminate();
+	void p.ctx.close().catch(() => {});
+}
+
+/**
+ * Makes what the WebAssembly sound needs before a load does: the audio context (running, so its
+ * clock is steady by the time sound starts), the worklet, and a decoder worker that has fetched and
+ * compiled the common decoder families. The receiver calls it when it starts, and again after each
+ * use.
+ */
+export function warmPcm(base: string) {
+	if (spare || typeof AudioContext === 'undefined' || typeof Worker === 'undefined') return;
+	try {
+		spare = makeParts(base, AHEAD);
+	} catch {
+		spare = null;
+	}
+}
+
+function takeParts(base: string, family: string): Parts {
+	let p = spare;
+	spare = null;
+	if (p && p.base !== base) {
+		dropParts(p);
+		p = null;
+	}
+	p ??= makeParts(base, []);
+	p.worker.postMessage({ type: 'prepare', base, family });
+	return p;
+}
+
 /** Why `ready()` resolved. */
 export type Primed = 'sound' | 'timeout' | 'seek';
 
 /** Seconds of decoded sound the worklet holds before the picture may start. */
-const PRIMED = 0.3;
+export const PRIMED = 0.3;
 
 /** Readings in a window before the worklet steers by it (about 1.5 s). */
 const SETTLED = 20;
@@ -186,12 +241,16 @@ export class PcmAudio {
 	private primed = false;
 	private waiting: ((how: Primed) => void)[] = [];
 	/** performance.now() when the current start's first sound was decoded, and when it was heard. */
-	timing: { decoded: number | null; sound: number | null } = { decoded: null, sound: null };
+	timing: { decoded: number | null; primed: number | null; sound: number | null } = { decoded: null, primed: null, sound: null };
+	/** How the setup went: how old the ready-made parts were, and ms to the worklet and the open decoder. */
+	setup = '';
 	/** Clock readings in the first seconds after a start (see clock()), for the dev log. */
 	trace: string[] = [];
 	private traceFrom: number | null = null;
 	private trace0: { v: number; c: number } | null = null;
-	private readonly created = performance.now();
+	private dropped0: number | null = null;
+	private created = performance.now();
+	private base = '';
 
 	/** The output latency the browser reports (outputLatency + baseLatency), in seconds. */
 	get latency() {
@@ -211,6 +270,7 @@ export class PcmAudio {
 			if (m?.gen !== this.gen) return;
 			if (m.type === 'queued') {
 				this.timing.decoded ??= performance.now();
+				if (m.queued >= PRIMED) this.timing.primed ??= performance.now();
 				if (!this.primed && m.queued >= PRIMED) this.prime();
 			} else if (m.type === 'sounding') {
 				// When the first sound is heard: rendered at context time `ctx`, out after the latency.
@@ -239,10 +299,15 @@ export class PcmAudio {
 	static async create(base: string, track: Track, video: HTMLVideoElement, start: number): Promise<PcmAudio> {
 		const d = decoderFor(track);
 		if (!d) throw new Error(`no decoder for ${track.codec}`);
-		const ctx = new AudioContext({ latencyHint: 'playback' });
-		const worker = new Worker(new URL('pcm/worker.js', base).href, { type: 'module' });
+		const t0 = performance.now();
+		const parts = takeParts(base, d.family);
+		const { ctx, worker } = parts;
+		const ms = () => Math.round(performance.now() - t0);
+		const age = Math.round(t0 - parts.made);
 		try {
-			await ctx.audioWorklet.addModule(new URL('pcm/worklet.js', base).href);
+			if (ctx.state !== 'running') void ctx.resume().catch(() => {});
+			await parts.worklet;
+			const worklet = ms();
 			const node = new AudioWorkletNode(ctx, 'kaeri-pcm', { numberOfInputs: 0, outputChannelCount: [2] });
 			const channel = new MessageChannel();
 			node.port.postMessage({ type: 'decoder', port: channel.port2 }, [channel.port2]);
@@ -269,12 +334,14 @@ export class PcmAudio {
 			});
 			worker.onmessage = null;
 			const pcm = new PcmAudio(ctx, node, worker, video);
+			pcm.created = parts.made;
+			pcm.base = base;
+			pcm.setup = `parts ${age ? `${age} ms old` : 'new'} ${ctx.state}, worklet ${worklet} ms, decoder ${ms()} ms`;
 			pcm.seek(start);
 			if (ctx.state !== 'running') void ctx.resume().catch(() => {});
 			return pcm;
 		} catch (e) {
-			worker.terminate();
-			void ctx.close();
+			dropParts(parts);
 			throw e;
 		}
 	}
@@ -323,9 +390,10 @@ export class PcmAudio {
 		// Whoever waits for the old start gives up: the packets it pushed are flushed.
 		this.prime('seek');
 		this.primed = false;
-		this.timing = { decoded: null, sound: null };
+		this.timing = { decoded: null, primed: null, sound: null };
 		this.trace = [];
 		this.traceFrom = null;
+		this.dropped0 = null;
 		this.gen++;
 		this.lastPts = -Infinity;
 		this.worker.postMessage({ type: 'flush', gen: this.gen, time });
@@ -359,10 +427,17 @@ export class PcmAudio {
 			// its first value, > the video-to-context offset steered by.
 			const z = this.trace0!;
 			const d = (x: number) => Math.round(x * 1000);
-			if (now - this.traceFrom < 4000)
+			// Then the video buffered ahead (ms) and the frames dropped since playing began.
+			if (now - this.traceFrom < 4000) {
+				let ahead = 0;
+				for (let i = 0; i < v.buffered.length; i++)
+					if (v.buffered.start(i) <= v.currentTime + 0.05 && v.buffered.end(i) > v.currentTime) ahead = v.buffered.end(i) - v.currentTime;
+				const dropped = v.getVideoPlaybackQuality?.().droppedVideoFrames ?? 0;
+				this.dropped0 ??= dropped;
 				this.trace.push(
-					`${Math.round(now - this.traceFrom)}:${d(v.currentTime - now / 1000 - z.v)}/${d(heard - now / 1000 - z.c)}/${ts == null ? '-' : d(ts - now / 1000 - z.c)}>${d(k.media - k.ctx)}${k.settling ? 's' : ''}`,
+					`${Math.round(now - this.traceFrom)}:${d(v.currentTime - now / 1000 - z.v)}/${d(heard - now / 1000 - z.c)}/${ts == null ? '-' : d(ts - now / 1000 - z.c)}>${d(k.media - k.ctx)}${k.settling ? 's' : ''} b${d(ahead)} d${dropped - this.dropped0}`,
 				);
+			}
 		}
 		this.node.port.postMessage({ type: 'clock', media: k.media, ctx: k.ctx, rate: v.playbackRate, playing, settling: k.settling });
 		if (playing && this.ctx.state === 'suspended') void this.ctx.resume().catch(() => {});
@@ -405,6 +480,9 @@ export class PcmAudio {
 		setTimeout(() => this.worker.terminate(), 1000);
 		this.node.disconnect();
 		void this.ctx.close();
+		// Ready for the next load that needs it.
+		const base = this.base;
+		if (base) setTimeout(() => warmPcm(base), 0);
 	}
 }
 

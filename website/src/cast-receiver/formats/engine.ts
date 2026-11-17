@@ -14,7 +14,7 @@ import { openHls } from './hls';
 import { Matroska } from './mkv';
 import { Mp4File } from './mp4';
 import { createMuxer, mimeChoices, type Muxer } from './mux';
-import { PcmAudio, decoderFor } from './pcm';
+import { PRIMED, PcmAudio, decoderFor } from './pcm';
 import { FetchError, LeaveToCaf, RangeSource, bytesOf } from './source';
 import { Subtitles, type TypesetSink } from './subs';
 import { TsFile } from './ts';
@@ -349,6 +349,8 @@ export class Unpacker {
 	private vout: Output | null = null;
 	private aout: Output | null = null;
 	private pcm: PcmAudio | null = null;
+	/** WebAssembly sound started before the first samples, for a track MediaSource won't take. */
+	private early: { id: number; pcm: Promise<PcmAudio> } | null = null;
 	private fixer: DecodeTimes | null = null;
 	private readonly subs: Subtitles;
 	private videoTrack: Track | null;
@@ -383,6 +385,8 @@ export class Unpacker {
 	private gateAt: number | null = null;
 	private frameAt: number | null = null;
 	private playingAt: number | null = null;
+	/** The WebAssembly sound was started before the first samples (see startEarly). */
+	private pcmEarly = false;
 	private listeners: [EventTarget, string, EventListener, boolean][] = [];
 
 	private constructor(
@@ -426,6 +430,7 @@ export class Unpacker {
 		const u = new Unpacker(demux, format, video, o);
 		u.t0 = t0;
 		await u.selectTracks();
+		u.startEarly();
 		u.begin();
 		return u;
 	}
@@ -466,7 +471,7 @@ export class Unpacker {
 			const t = this.pcm.timing;
 			const l = this.pcm.latency;
 			const sound = t.sound != null && this.playingAt != null ? `${Math.round(t.sound - this.playingAt)}` : '-';
-			line += `, sound decoded ${ms(t.decoded)} ms, picture let go ${ms(this.gateAt)} ms; playing to first sound ${sound} ms; latency output ${Math.round(l.output * 1000)} base ${Math.round(l.base * 1000)} ms`;
+			line += `, sound decoded ${ms(t.decoded)} ms, ${Math.round(PRIMED * 1000)} ms queued ${ms(t.primed)} ms, picture let go ${ms(this.gateAt)} ms; playing to first sound ${sound} ms; latency output ${Math.round(l.output * 1000)} base ${Math.round(l.base * 1000)} ms; audio setup ${this.pcmEarly ? 'early' : 'after video'}: ${this.pcm.setup}`;
 		}
 		return line;
 	}
@@ -678,10 +683,37 @@ export class Unpacker {
 		await this.feed(held, g);
 	}
 
+	/**
+	 * Starts the WebAssembly sound while the first samples are read, when no MediaSource form of the
+	 * track is supported: its setup then runs alongside the video's instead of after it. AAC waits for
+	 * its first frame, which can change its setup.
+	 */
+	private startEarly() {
+		const t = this.audioTrack;
+		if (!t || t.codec === 'aac' || !decoderFor(t)) return;
+		const supported = (mime: string) => !refusedAudio.has(mime) && (globalThis.MediaSource?.isTypeSupported?.(mime) ?? false);
+		if (mimeChoices(t).some(supported)) return;
+		const pcm = PcmAudio.create(this.o.base, t, this.video, this.target);
+		pcm.catch(() => {});
+		this.early = { id: t.id, pcm };
+	}
+
+	/** The early WebAssembly sound for `t`, when there is one. */
+	private takeEarly(t: Track): Promise<PcmAudio> | null {
+		const e = this.early;
+		this.early = null;
+		if (!e) return null;
+		if (e.id === t.id) return e.pcm;
+		void e.pcm.then((p) => p.destroy(), () => {});
+		return null;
+	}
+
 	private async makeAudio(t: Track, first: Sample | undefined) {
 		const got = audioBuffer(t, first, (mime) => this.ms.addSourceBuffer(mime));
 		if (got.sb && got.muxer) {
 			this.aout = new Output(got.sb, got.muxer, t);
+			const early = this.takeEarly(t);
+			if (early) void early.then((p) => p.destroy(), () => {});
 			return;
 		}
 		this.audioWhy = got.why;
@@ -691,6 +723,19 @@ export class Unpacker {
 
 	private async startPcm(t: Track) {
 		if (!decoderFor(t)) throw new Refused(report('audio', `no decoder for ${t.codec}`, { codec: t.codec }));
+		const early = this.takeEarly(t);
+		if (early) {
+			try {
+				const pcm = await early;
+				if (this.closed) return pcm.destroy();
+				this.pcm = pcm;
+				this.pcm.seek(this.target);
+				this.pcmEarly = true;
+				return;
+			} catch {
+				// Made again below, where a failure counts.
+			}
+		}
 		try {
 			this.pcm = await PcmAudio.create(this.o.base, t, this.video, this.target);
 		} catch (e) {
@@ -1014,6 +1059,9 @@ export class Unpacker {
 		this.listeners = [];
 		this.pcm?.destroy();
 		this.pcm = null;
+		const early = this.early;
+		this.early = null;
+		if (early) void early.pcm.then((p) => p.destroy(), () => {});
 		this.subs.destroy();
 		this.demux.close();
 		URL.revokeObjectURL(this.url);

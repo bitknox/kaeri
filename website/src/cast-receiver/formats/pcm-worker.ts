@@ -105,10 +105,47 @@ function pump() {
 	}
 }
 
+type Factory = (o: object) => Promise<DecoderModule>;
+
+/** Decoder families fetched and compiled ahead of use: the receiver starts this worker before a load needs it. */
+const prepared = new Map<string, Promise<{ factory: Factory; wasm: WebAssembly.Module }>>();
+
+function prepare(base: string, family: string) {
+	let p = prepared.get(family);
+	if (!p) {
+		p = Promise.all([
+			import(/* @vite-ignore */ new URL(`pcm/${family}.js`, base).href).then((x) => x.default as Factory),
+			compile(new URL(`pcm/${family}.wasm`, base).href),
+		]).then(([factory, wasm]) => ({ factory, wasm }));
+		// A failure shows when the family is opened.
+		p.catch(() => {});
+		prepared.set(family, p);
+	}
+	return p;
+}
+
+async function compile(url: string): Promise<WebAssembly.Module> {
+	try {
+		return await WebAssembly.compileStreaming(fetch(url));
+	} catch {
+		// Served without the application/wasm type.
+		const r = await fetch(url);
+		if (!r.ok) throw new Error(`${url}: ${r.status}`);
+		return WebAssembly.compile(await r.arrayBuffer());
+	}
+}
+
 async function open(m: OpenMessage) {
-	const url = new URL(`pcm/${m.family}.js`, m.base).href;
-	const factory = (await import(/* @vite-ignore */ url)).default as (o: object) => Promise<DecoderModule>;
-	mod = await factory({ locateFile: (f: string) => new URL(`pcm/${f}`, m.base).href });
+	const { factory, wasm } = await prepare(m.base, m.family);
+	mod = await new Promise<DecoderModule>((resolve, reject) => {
+		factory({
+			locateFile: (f: string) => new URL(`pcm/${f}`, m.base).href,
+			instantiateWasm: (imports: WebAssembly.Imports, done: (i: WebAssembly.Instance, w: WebAssembly.Module) => void) => {
+				WebAssembly.instantiate(wasm, imports).then((i) => done(i, wasm), reject);
+				return {};
+			},
+		}).then(resolve, reject);
+	});
 	const name = mod.stringToNewUTF8(m.decoder);
 	let extra = 0;
 	let extraLen = 0;
@@ -141,6 +178,9 @@ scope.onmessage = async (e: MessageEvent) => {
 			} catch (err) {
 				scope.postMessage({ type: 'error', detail: String((err as Error)?.message ?? err) });
 			}
+			break;
+		case 'prepare':
+			void prepare(m.base, m.family);
 			break;
 		case 'packets':
 			if (m.gen !== gen) break;
