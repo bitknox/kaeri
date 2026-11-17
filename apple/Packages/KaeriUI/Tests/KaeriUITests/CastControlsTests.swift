@@ -54,7 +54,9 @@ struct CastControlsTests {
             guard depth < 40 else { return }
             let label = read("accessibilityLabel") as? String ?? ""
             let title = read("accessibilityTitle") as? String ?? ""
-            let name = label.isEmpty ? title : label
+            // A static text carries its words as its value.
+            let value = read("accessibilityValue") as? String ?? ""
+            let name = [label, title, value].first { !$0.isEmpty } ?? ""
             if !name.isEmpty {
                 // The getter of `accessibilityEnabled` is `isAccessibilityEnabled`.
                 let enabled = (node as? NSObject).map {
