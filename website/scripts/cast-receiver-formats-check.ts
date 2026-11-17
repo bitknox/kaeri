@@ -203,7 +203,7 @@ interface Stats {
 	format: string;
 	video: string | null;
 	audio: string | null;
-	audioPath: 'mse' | 'wasm' | null;
+	audioPath: 'mse' | 'wasm' | 'flac' | null;
 	text: string | null;
 	readTo: number;
 	seeks: number;
@@ -224,7 +224,8 @@ interface Case {
 	format: string;
 	video?: string;
 	codec?: string;
-	path?: 'mse' | 'wasm';
+	/** mse: MediaSource takes the track; flac: decoded in WebAssembly, back to MediaSource as FLAC; wasm: decoded and played by the worklet. */
+	path?: 'mse' | 'wasm' | 'flac';
 	text?: 'cues' | 'image' | 'typeset';
 	/** Seek here once playing and check it plays on from there. */
 	seek?: number;
@@ -235,18 +236,18 @@ interface Case {
 const cases: Case[] = [
 	// Matroska, every audio codec
 	{ name: 'mkv h264 aac', file: 'mkv-h264-aac.mkv', format: 'mkv', video: 'avc1', codec: 'aac', path: 'mse', seek: 5 },
-	{ name: 'mkv h264 ac3', file: 'mkv-h264-ac3.mkv', format: 'mkv', video: 'avc1', codec: 'ac3', path: 'wasm', seek: 5 },
-	{ name: 'mkv h264 eac3', file: 'mkv-h264-eac3.mkv', format: 'mkv', video: 'avc1', codec: 'eac3', path: 'wasm' },
-	{ name: 'mkv h264 dts', file: 'mkv-h264-dts.mkv', format: 'mkv', video: 'avc1', codec: 'dts', path: 'wasm' },
-	{ name: 'mkv h264 truehd', file: 'mkv-h264-truehd.mkv', format: 'mkv', video: 'avc1', codec: 'truehd', path: 'wasm' },
+	{ name: 'mkv h264 ac3', file: 'mkv-h264-ac3.mkv', format: 'mkv', video: 'avc1', codec: 'ac3', path: 'flac', seek: 5 },
+	{ name: 'mkv h264 eac3', file: 'mkv-h264-eac3.mkv', format: 'mkv', video: 'avc1', codec: 'eac3', path: 'flac' },
+	{ name: 'mkv h264 dts', file: 'mkv-h264-dts.mkv', format: 'mkv', video: 'avc1', codec: 'dts', path: 'flac' },
+	{ name: 'mkv h264 truehd', file: 'mkv-h264-truehd.mkv', format: 'mkv', video: 'avc1', codec: 'truehd', path: 'flac' },
 	{ name: 'mkv h264 flac', file: 'mkv-h264-flac.mkv', format: 'mkv', video: 'avc1', codec: 'flac', path: 'mse' },
-	{ name: 'mkv h264 mp3', file: 'mkv-h264-mp3.mkv', format: 'mkv', video: 'avc1', codec: 'mp3', path: 'wasm' },
-	{ name: 'mkv h264 mp2', file: 'mkv-h264-mp2.mkv', format: 'mkv', video: 'avc1', codec: 'mp2', path: 'wasm' },
+	{ name: 'mkv h264 mp3', file: 'mkv-h264-mp3.mkv', format: 'mkv', video: 'avc1', codec: 'mp3', path: 'flac' },
+	{ name: 'mkv h264 mp2', file: 'mkv-h264-mp2.mkv', format: 'mkv', video: 'avc1', codec: 'mp2', path: 'flac' },
 	{ name: 'mkv h264 opus', file: 'mkv-h264-opus.mkv', format: 'mkv', video: 'avc1', codec: 'opus', path: 'mse' },
-	{ name: 'mkv h264 pcm', file: 'mkv-h264-pcm.mkv', format: 'mkv', video: 'avc1', path: 'wasm' },
-	{ name: 'mkv hevc ac3', file: 'mkv-hevc-ac3.mkv', format: 'mkv', video: 'hvc1', codec: 'ac3', path: 'wasm' },
+	{ name: 'mkv h264 pcm', file: 'mkv-h264-pcm.mkv', format: 'mkv', video: 'avc1', path: 'flac' },
+	{ name: 'mkv hevc ac3', file: 'mkv-hevc-ac3.mkv', format: 'mkv', video: 'hvc1', codec: 'ac3', path: 'flac' },
 	{ name: 'mkv av1 opus', file: 'mkv-av1-opus.mkv', format: 'mkv', video: 'av01', codec: 'opus', path: 'mse' },
-	{ name: 'mkv second audio track (ac3)', file: 'mkv-two-audio.mkv', audio: 1, format: 'mkv', video: 'avc1', codec: 'ac3', path: 'wasm' },
+	{ name: 'mkv second audio track (ac3)', file: 'mkv-two-audio.mkv', audio: 1, format: 'mkv', video: 'avc1', codec: 'ac3', path: 'flac' },
 	// WebM
 	{ name: 'webm vp9 opus', file: 'webm-vp9-opus.webm', format: 'mkv', video: 'vp09', codec: 'opus', path: 'mse', seek: 5 },
 	{ name: 'webm vp8 vorbis', file: 'webm-vp8-vorbis.webm', format: 'mkv', video: 'vp8', codec: 'vorbis', path: 'mse' },
@@ -256,23 +257,30 @@ const cases: Case[] = [
 	{ name: 'mp4 faststart', file: 'mp4-h264-aac-faststart.mp4', format: 'mp4', video: 'avc1', codec: 'aac', path: 'mse' },
 	{ name: 'mp4 fragmented', file: 'mp4-frag-h264-aac.mp4', format: 'mp4', video: 'avc1', codec: 'aac', path: 'mse', seek: 5 },
 	{ name: 'mp4 720p plays on', file: 'mp4-720p.mp4', format: 'mp4', video: 'avc1', codec: 'aac', path: 'mse', playOn: 8 },
-	{ name: 'mp4 h264 ac3', file: 'mp4-h264-ac3.mp4', format: 'mp4', video: 'avc1', codec: 'ac3', path: 'wasm' },
+	{ name: 'mp4 h264 ac3', file: 'mp4-h264-ac3.mp4', format: 'mp4', video: 'avc1', codec: 'ac3', path: 'flac' },
 	{ name: 'mp4 h264 flac', file: 'mp4-h264-flac.mp4', format: 'mp4', video: 'avc1', codec: 'flac', path: 'mse' },
 	{ name: 'mp4 h264 opus', file: 'mp4-h264-opus.mp4', format: 'mp4', video: 'avc1', codec: 'opus', path: 'mse' },
-	{ name: 'mp4 hevc eac3', file: 'mp4-hevc-eac3.mp4', format: 'mp4', video: 'hvc1', codec: 'eac3', path: 'wasm' },
+	{ name: 'mp4 hevc eac3', file: 'mp4-hevc-eac3.mp4', format: 'mp4', video: 'hvc1', codec: 'eac3', path: 'flac' },
 	// MPEG-TS
 	{ name: 'ts h264 aac', file: 'ts-h264-aac.ts', format: 'ts', video: 'avc1', codec: 'aac', path: 'mse', seek: 5 },
-	{ name: 'ts h264 ac3', file: 'ts-h264-ac3.ts', format: 'ts', video: 'avc1', codec: 'ac3', path: 'wasm', seek: 5 },
-	{ name: 'ts h264 mp2', file: 'ts-h264-mp2.ts', format: 'ts', video: 'avc1', codec: 'mp2', path: 'wasm' },
-	{ name: 'ts h264 dts', file: 'ts-h264-dts.ts', format: 'ts', video: 'avc1', codec: 'dts', path: 'wasm' },
-	{ name: 'ts h264 mp3', file: 'ts-h264-mp3.ts', format: 'ts', video: 'avc1', codec: 'mp3', path: 'wasm' },
-	{ name: 'ts hevc eac3', file: 'ts-hevc-eac3.ts', format: 'ts', video: 'hvc1', codec: 'eac3', path: 'wasm' },
+	{ name: 'ts h264 ac3', file: 'ts-h264-ac3.ts', format: 'ts', video: 'avc1', codec: 'ac3', path: 'flac', seek: 5 },
+	{ name: 'ts h264 mp2', file: 'ts-h264-mp2.ts', format: 'ts', video: 'avc1', codec: 'mp2', path: 'flac' },
+	{ name: 'ts h264 dts', file: 'ts-h264-dts.ts', format: 'ts', video: 'avc1', codec: 'dts', path: 'flac' },
+	{ name: 'ts h264 mp3', file: 'ts-h264-mp3.ts', format: 'ts', video: 'avc1', codec: 'mp3', path: 'flac' },
+	{ name: 'ts hevc eac3', file: 'ts-hevc-eac3.ts', format: 'ts', video: 'hvc1', codec: 'eac3', path: 'flac' },
 	// Playlists
 	{ name: 'hls ts', file: 'hls-ts/index.m3u8', format: 'hls', video: 'avc1', codec: 'aac', path: 'mse', seek: 6 },
-	{ name: 'hls fmp4 with ac3 rendition', file: 'hls-fmp4/master.m3u8', format: 'hls', video: 'avc1', codec: 'ac3', path: 'wasm', seek: 6 },
+	{ name: 'hls fmp4 with ac3 rendition', file: 'hls-fmp4/master.m3u8', format: 'hls', video: 'avc1', codec: 'ac3', path: 'flac', seek: 6 },
 	{ name: 'dash timeline', file: 'dash/manifest.mpd', format: 'dash', video: 'avc1', codec: 'aac', path: 'mse', seek: 6 },
 	{ name: 'dash named hls by the sender', file: 'dash/manifest.mpd', type: 'application/x-mpegurl', format: 'dash', video: 'avc1', codec: 'aac', path: 'mse' },
-	{ name: 'dash numbered eac3', file: 'dash-eac3/manifest.mpd', format: 'dash', video: 'avc1', codec: 'eac3', path: 'wasm' },
+	{ name: 'dash numbered eac3', file: 'dash-eac3/manifest.mpd', format: 'dash', video: 'avc1', codec: 'eac3', path: 'flac' },
+	// The same decoded sound through the worklet, for TVs whose MediaSource refuses FLAC
+	{ name: 'mkv h264 ac3 (worklet)', file: 'mkv-h264-ac3.mkv', format: 'mkv', video: 'avc1', codec: 'ac3', path: 'wasm', seek: 5 },
+	{ name: 'mkv h264 mp2 (worklet)', file: 'mkv-h264-mp2.mkv', format: 'mkv', video: 'avc1', codec: 'mp2', path: 'wasm' },
+	{ name: 'ts h264 mp2 (worklet)', file: 'ts-h264-mp2.ts', format: 'ts', video: 'avc1', codec: 'mp2', path: 'wasm' },
+	{ name: 'ts h264 ac3 (worklet)', file: 'ts-h264-ac3.ts', format: 'ts', video: 'avc1', codec: 'ac3', path: 'wasm', seek: 5 },
+	{ name: 'hls fmp4 with ac3 rendition (worklet)', file: 'hls-fmp4/master.m3u8', format: 'hls', video: 'avc1', codec: 'ac3', path: 'wasm', seek: 6 },
+	{ name: 'dash numbered eac3 (worklet)', file: 'dash-eac3/manifest.mpd', format: 'dash', video: 'avc1', codec: 'eac3', path: 'wasm' },
 	// A file with no extension or type: read from its bytes
 	{ name: 'sniffed matroska', file: 'stream', type: 'application/octet-stream', format: 'mkv', video: 'avc1', codec: 'aac', path: 'mse' },
 	// Subtitles inside the file, and a side PGS file
@@ -321,9 +329,18 @@ const imagePixels = () =>
 
 const results: string[] = [];
 
+/** The element's buffered ranges (picture and sound together) as text. */
+const bufferedText = () =>
+	js<string>(`(() => { const v = document.getElementById('video'); return [...Array(v.buffered.length).keys()].map((i) => v.buffered.start(i).toFixed(2) + '-' + v.buffered.end(i).toFixed(2)).join(' ') + ' at ' + v.currentTime.toFixed(2); })()`);
+
+/** Picture and sound are both buffered from the playhead to at least a second on. */
+const soundAhead = () =>
+	until(`(() => { const v = document.getElementById('video'); for (let i = 0; i < v.buffered.length; i++) if (v.buffered.start(i) <= v.currentTime + 0.05 && v.buffered.end(i) > v.currentTime + 1) return true; return false; })()`, 4000);
+
 async function playCase(c: Case) {
 	await js('__caf.sent.length = 0');
 	logs.length = 0;
+	await js(`window.__kaeriWorklet = ${c.path === 'wasm'}`);
 	await js(`__caf.load(${JSON.stringify(request(c))})`);
 	const playing = await until(`document.getElementById('video').currentTime > 1.2`, 15_000);
 	const s = await stats();
@@ -333,9 +350,10 @@ async function playCase(c: Case) {
 	expect(!!s && s.format === c.format, `${label}: unpacked as ${c.format} (${s?.format ?? 'not unpacked'})`);
 	if (c.video) expect(s?.video === c.video, `${label}: video ${c.video} (${s?.video})`);
 	if (c.codec) expect(s?.audio === c.codec, `${label}: audio ${c.codec} (${s?.audio})`);
-	if (c.path) expect(s?.audioPath === c.path, `${label}: audio through ${c.path === 'mse' ? 'MediaSource' : 'WebAssembly'} (${s?.audioPath})`);
+	if (c.path) expect(s?.audioPath === c.path, `${label}: audio through ${{ mse: 'MediaSource', flac: 'WebAssembly into MediaSource as FLAC', wasm: 'WebAssembly and the worklet' }[c.path]} (${s?.audioPath})`);
 	expect(await js<boolean>('document.getElementById("video").videoWidth > 0'), `${label}: a picture`);
-	if (c.path === 'mse') expect(await until('document.getElementById("video").webkitAudioDecodedByteCount > 0', 3000), `${label}: MediaSource decodes the audio`);
+	if (c.path === 'mse' || c.path === 'flac') expect(await until('document.getElementById("video").webkitAudioDecodedByteCount > 0', 3000), `${label}: MediaSource decodes the audio`);
+	if (c.path === 'flac') expect(await soundAhead(), `${label}: the FLAC sound is buffered ahead of the playhead (${await bufferedText()})`);
 	if (c.path === 'wasm') {
 		if (process.env.FORMATS_DEBUG)
 			for (let i = 0; i < 12; i++) {
@@ -371,6 +389,7 @@ async function playCase(c: Case) {
 		await js(`document.getElementById('video').currentTime = ${c.seek}`);
 		const on = await until(`document.getElementById('video').currentTime > ${c.seek + 0.8} && !document.getElementById('video').seeking`, 10_000);
 		expect(on, `${label}: plays on after a seek to ${c.seek} s`);
+		if (c.path === 'flac') expect(await soundAhead(), `${label}: the FLAC sound is buffered ahead after the seek (${await bufferedText()})`);
 		if (c.path === 'wasm') {
 			await sleep(600);
 			const p = (await stats())?.pcm;
@@ -385,7 +404,8 @@ async function playCase(c: Case) {
 
 /** Seek, pause, rate and drift with AC-3 in WebAssembly, over 40 s of media. */
 async function syncCase() {
-	const label = 'sync ac3 (WebAssembly)';
+	const label = 'sync ac3 (WebAssembly, worklet)';
+	await js('window.__kaeriWorklet = true');
 	await js('__caf.sent.length = 0');
 	await js(`__caf.load(${JSON.stringify(request({ name: label, file: 'sync-h264-ac3.mkv', format: 'mkv' }))})`);
 	expect(await until(`document.getElementById('video').currentTime > 3`, 15_000), `${label}: plays`);
@@ -437,9 +457,50 @@ async function syncCase() {
 	expect((await errors()).length === 0, `${label}: no error sent`);
 }
 
+/** Seek, pause, rate and play on with AC-3 decoded into MediaSource as FLAC, over 40 s of media. */
+async function flacSyncCase() {
+	const label = 'sync ac3 (WebAssembly into FLAC)';
+	await js('window.__kaeriWorklet = false');
+	await js('__caf.sent.length = 0');
+	await js(`__caf.load(${JSON.stringify(request({ name: label, file: 'sync-h264-ac3.mkv', format: 'mkv' }))})`);
+	expect(await until(`document.getElementById('video').currentTime > 3`, 15_000), `${label}: plays`);
+	expect((await stats())?.audioPath === 'flac', `${label}: through FLAC (${(await stats())?.audioPath})`);
+	expect(await soundAhead(), `${label}: sound buffered ahead (${await bufferedText()})`);
+	const bytes = () => js<number>('document.getElementById("video").webkitAudioDecodedByteCount');
+	await js('document.getElementById("video").pause()');
+	await sleep(300);
+	const at = await time();
+	await sleep(1200);
+	expect(Math.abs((await time()) - at) < 0.01, `${label}: holds while paused`);
+	await js('document.getElementById("video").play()');
+	expect(await until(`document.getElementById('video').currentTime > ${at + 1}`, 4000), `${label}: plays on after resuming`);
+	await js('document.getElementById("video").playbackRate = 1.5');
+	const fast = await time();
+	await sleep(2000);
+	expect((await time()) - fast > 2.4, `${label}: plays at 1.5x`);
+	await js('document.getElementById("video").playbackRate = 1');
+	const seeksBefore = (await stats())?.seeks ?? 0;
+	for (const target of [30, 4, 22]) {
+		await js(`document.getElementById("video").currentTime = ${target}`);
+		const on = await until(`document.getElementById('video').currentTime > ${target + 0.8} && !document.getElementById('video').seeking`, 10_000);
+		const b0 = await bytes();
+		await sleep(600);
+		expect(on && (await soundAhead()) && (await bytes()) > b0, `${label}: plays on with sound after a seek to ${target} s (${await bufferedText()})`);
+	}
+	// The sound stays buffered in MediaSource, so a seek inside what is buffered reads nothing.
+	const seeks = ((await stats())?.seeks ?? 0) - seeksBefore;
+	expect(seeks <= 3, `${label}: at most one read per seek (${seeks} for 3)`);
+	const cpu = await js<{ cpu: number; encode: number; decoded: number; heap: number } | null>('__receiver.formats.current?.flacCpu() ?? null');
+	const line = `flac sync: decode ${cpu ? (cpu.cpu / Math.max(1, cpu.decoded)).toFixed(1) : '?'} ms and encode ${cpu ? (cpu.encode / Math.max(1, cpu.decoded)).toFixed(1) : '?'} ms per second of sound (${cpu?.decoded.toFixed(1)} s), decoder heap ${cpu ? (cpu.heap / 1048576).toFixed(0) : '?'} MB`;
+	console.log(`     ${line}`);
+	results.push(line);
+	expect((await errors()).length === 0, `${label}: no error sent`);
+}
+
 /** Switching audio in place: from AC-3 (WebAssembly) to AAC. */
 async function switchCase() {
 	const label = 'audio switch';
+	await js('window.__kaeriWorklet = false');
 	await js('__caf.sent.length = 0');
 	await js(`__caf.load(${JSON.stringify(request({ name: label, file: 'mkv-two-audio.mkv', format: 'mkv', audio: 1 }))})`);
 	expect(await until(`document.getElementById('video').currentTime > 1.5`, 15_000), `${label}: plays`);
@@ -529,8 +590,9 @@ async function missedCase() {
 }
 
 async function debugCase() {
-	for (const c of cases.filter((x) => x.name === 'mkv h264 aac' || x.name === 'mkv h264 ac3')) {
+	for (const c of cases.filter((x) => x.name === 'mkv h264 aac' || x.name === 'mkv h264 ac3' || x.name === 'mkv h264 ac3 (worklet)')) {
 		const label = `debug status, ${c.name}`;
+		await js(`window.__kaeriWorklet = ${c.path === 'wasm'}`);
 		await js(`__caf.load(${JSON.stringify(request(c))})`);
 		await until(`document.getElementById('video').currentTime > 2.5`, 10_000);
 		await sleep(1200);
@@ -551,7 +613,10 @@ try {
 	if (!(await until('!!window.__receiver?.formats'))) throw new Error('the receiver did not start');
 	await js(`__caf.connect('sender-1', 'Mozilla/5.0 (iPhone)')`);
 	for (const c of cases) if (!only || c.name.includes(only)) await playCase(c);
+	await js('window.__kaeriWorklet = false');
 	if (!only || 'sync'.includes(only)) await syncCase();
+	if (!only || 'flac sync'.includes(only)) await flacSyncCase();
+	await js('window.__kaeriWorklet = false');
 	if (!only || 'switch'.includes(only)) await switchCase();
 	if (!only || 'refused'.includes(only)) await refusedVideoCase();
 	if (!only || 'silent'.includes(only)) await silentPictureCase();

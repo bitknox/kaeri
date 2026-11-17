@@ -71,7 +71,7 @@ export function logSupport(loc: Location = location) {
 
 export interface DebugStatus {
 	/** Who decodes the sound: the receiver's WebAssembly, MediaSource, or CAF's player. */
-	audioPath: 'wasm' | 'mse' | 'caf' | 'none';
+	audioPath: 'wasm' | 'flac' | 'mse' | 'caf' | 'none';
 	/** WebAssembly: seconds of sound decoded. MSE and CAF: bytes the element decoded. */
 	audioDecoded: number | null;
 	audioUnit: 's' | 'bytes' | null;
@@ -94,6 +94,7 @@ export class DebugStatusLine {
 	private loudest = 0;
 	private buf = new Float32Array(2048);
 	private decodedSeconds: number | null = null;
+	private flacCpu: { cpu: number; encode: number; decoded: number; heap: number } | null = null;
 	private shownBase = 0;
 	private lastSetup = '';
 	private lastTiming = '';
@@ -125,6 +126,7 @@ export class DebugStatusLine {
 		video.addEventListener('loadstart', () => {
 			this.shownBase = this.shown() ?? 0;
 			this.decodedSeconds = null;
+			this.flacCpu = null;
 		});
 		setInterval(() => this.meter(), 100);
 		setInterval(() => this.report(), 1000);
@@ -154,6 +156,7 @@ export class DebugStatusLine {
 		const stats = u?.stats();
 		const path: DebugStatus['audioPath'] = stats ? (stats.audioPath ?? 'none') : this.video.currentSrc ? 'caf' : 'none';
 		if (path === 'wasm') void u?.pcmCpu()?.then((c) => (this.decodedSeconds = c.decoded));
+		if (path === 'flac') void u?.flacCpu()?.then((c) => (this.flacCpu = c));
 		const v = this.video as CountingVideo;
 		const quality = typeof v.getVideoPlaybackQuality === 'function' ? v.getVideoPlaybackQuality() : null;
 		const heard = this.analyser() != null;
@@ -174,7 +177,10 @@ export class DebugStatusLine {
 		const pcm = p
 			? `\npcm queued ${p.queued.toFixed(2)} s drift ${ms(p.drift)} worst ${ms(p.worst)} jumps ${p.jumps} waits ${p.waits ?? 0} starved ${p.starved} jitter ${ms(p.jitter ?? 0)}${p.clock ? ` clock video spread ${ms(p.clock.video)} high ${ms(p.clock.videoHigh)} ctx spread ${ms(p.clock.ctx)} ts spread ${ms(p.clock.ts ?? 0)} latency ${ms(p.clock.latency ?? 0)}` : ''}${stats?.audioGate ? ` gate ${stats.audioGate}` : ''}${p.context && p.context !== 'running' ? ` context ${p.context}` : ''}`
 			: '';
-		const line = `audio ${s.audioPath} ${stats?.audio ?? ''} decoded ${decoded} level ${level}\nvideo ${stats?.video ?? ''} decoded ${s.videoDecoded ?? '?'} shown ${s.videoShown ?? '?'} at ${s.time} s${pcm}`;
+		// FLAC: the worker's CPU for each second of sound, decoding and encoding.
+		const c = path === 'flac' ? this.flacCpu : null;
+		const flac = c && c.decoded > 0 ? `\nflac ${c.decoded.toFixed(1)} s decode ${(c.cpu / c.decoded).toFixed(1)} ms/s encode ${(c.encode / c.decoded).toFixed(1)} ms/s heap ${(c.heap / 1048576).toFixed(0)} MB` : '';
+		const line = `audio ${s.audioPath} ${stats?.audio ?? ''} decoded ${decoded} level ${level}\nvideo ${stats?.video ?? ''} decoded ${s.videoDecoded ?? '?'} shown ${s.videoShown ?? '?'} at ${s.time} s${pcm}${flac}`;
 		const why = stats?.audioWhy ? `\nwhy ${stats.audioWhy}` : '';
 		this.el.textContent = line + why;
 		console.info('[debug]', line.replaceAll('\n', ' | '));

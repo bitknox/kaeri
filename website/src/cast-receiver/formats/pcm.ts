@@ -92,59 +92,246 @@ export class ClockFilter {
 	}
 }
 
-/** The parts of the WebAssembly sound that don't depend on the stream. */
-interface Parts {
+/** The FLAC form decoded sound goes to the TV's MediaSource in, when the TV takes it. */
+export const FLAC_MIME = 'audio/mp4; codecs="flac"';
+
+/** Whether this TV's MediaSource takes FLAC in MP4. */
+export function flacSupported(): boolean {
+	// The checks set this to play decoded sound through the worklet on a browser that takes FLAC.
+	if ((globalThis as { __kaeriWorklet?: boolean }).__kaeriWorklet) return false;
+	try {
+		return !!globalThis.MediaSource?.isTypeSupported?.(FLAC_MIME);
+	} catch {
+		return false;
+	}
+}
+
+/** A decoder worker made ahead of use, with some decoder families fetched and compiled. */
+interface SpareWorker {
 	base: string;
-	ctx: AudioContext;
-	worklet: Promise<void>;
 	worker: Worker;
 	made: number;
 }
 
-/** Parts made ahead, for the next load that needs them. */
-let spare: Parts | null = null;
-/** The decoder families made ready ahead: MPEG audio, AAC and the rest ('more'), and AC-3. */
-const AHEAD = ['more', 'ac3'];
+/** An audio context (running) with the worklet loaded, made ahead of use. */
+interface SpareAudio {
+	base: string;
+	ctx: AudioContext;
+	worklet: Promise<void>;
+	made: number;
+}
 
-function makeParts(base: string, families: string[]): Parts {
+let spareWorker: SpareWorker | null = null;
+let spareAudio: SpareAudio | null = null;
+
+function makeWorker(base: string, families: string[]): SpareWorker {
+	const worker = new Worker(new URL('pcm/worker.js', base).href, { type: 'module' });
+	for (const family of families) worker.postMessage({ type: 'prepare', base, family });
+	return { base, worker, made: performance.now() };
+}
+
+function makeAudio(base: string): SpareAudio {
 	const ctx = new AudioContext({ latencyHint: 'playback' });
 	const worklet = ctx.audioWorklet.addModule(new URL('pcm/worklet.js', base).href);
 	worklet.catch(() => {});
-	const worker = new Worker(new URL('pcm/worker.js', base).href, { type: 'module' });
-	for (const family of families) worker.postMessage({ type: 'prepare', base, family });
-	return { base, ctx, worklet, worker, made: performance.now() };
-}
-
-function dropParts(p: Parts) {
-	p.worker.terminate();
-	void p.ctx.close().catch(() => {});
+	return { base, ctx, worklet, made: performance.now() };
 }
 
 /**
- * Makes what the WebAssembly sound needs before a load does: the audio context (running, so its
- * clock is steady by the time sound starts), the worklet, and a decoder worker that has fetched and
- * compiled the common decoder families. The receiver calls it when it starts, and again after each
- * use.
+ * The decoder families made ready ahead: MPEG audio, AAC and the rest ('more', which MP2 always
+ * needs), and AC-3 only on a TV whose MediaSource refuses it.
+ */
+function familiesAhead(): string[] {
+	const out = ['more'];
+	try {
+		if (!globalThis.MediaSource?.isTypeSupported?.('audio/mp4; codecs="ac-3"')) out.push('ac3');
+	} catch {
+		out.push('ac3');
+	}
+	return out;
+}
+
+/**
+ * Makes what decoded sound needs before a load does: a decoder worker that has fetched and compiled
+ * the common decoder families, and, on a TV whose MediaSource doesn't take FLAC, the audio context
+ * (running, so its clock is steady by the time sound starts) with the worklet. The receiver calls it
+ * when it starts, and again after each use.
  */
 export function warmPcm(base: string) {
-	if (spare || typeof AudioContext === 'undefined' || typeof Worker === 'undefined') return;
+	if (typeof Worker === 'undefined') return;
 	try {
-		spare = makeParts(base, AHEAD);
+		spareWorker ??= makeWorker(base, familiesAhead());
+		if (!flacSupported() && typeof AudioContext !== 'undefined') spareAudio ??= makeAudio(base);
 	} catch {
-		spare = null;
+		// made when a load needs it
 	}
 }
 
-function takeParts(base: string, family: string): Parts {
-	let p = spare;
-	spare = null;
+function takeWorker(base: string, family: string): SpareWorker {
+	let p = spareWorker;
+	spareWorker = null;
 	if (p && p.base !== base) {
-		dropParts(p);
+		p.worker.terminate();
 		p = null;
 	}
-	p ??= makeParts(base, []);
+	p ??= makeWorker(base, []);
 	p.worker.postMessage({ type: 'prepare', base, family });
 	return p;
+}
+
+function takeAudio(base: string): SpareAudio {
+	let p = spareAudio;
+	spareAudio = null;
+	if (p && p.base !== base) {
+		void p.ctx.close().catch(() => {});
+		p = null;
+	}
+	return p ?? makeAudio(base);
+}
+
+/** Opens the decoder for `track` in `worker`, its sound going to `out`. */
+function openDecoder(worker: Worker, base: string, track: Track, out: 'worklet' | 'flac', port?: MessagePort): Promise<void> {
+	const d = decoderFor(track);
+	if (!d) return Promise.reject(new Error(`no decoder for ${track.codec}`));
+	return new Promise<void>((resolve, reject) => {
+		worker.onmessage = (e) => {
+			if (e.data?.type === 'open') resolve();
+			else if (e.data?.type === 'error') reject(new Error(e.data.detail));
+		};
+		worker.onerror = (e) => reject(new Error(e.message || 'decoder worker failed'));
+		worker.postMessage(
+			{
+				type: 'open',
+				base,
+				family: d.family,
+				decoder: d.decoder,
+				config: track.config,
+				rate: track.sampleRate ?? 0,
+				channels: track.channels ?? 0,
+				unframed: !!track.unframed,
+				out,
+				port,
+			},
+			port ? [port] : [],
+		);
+	}).finally(() => {
+		worker.onmessage = null;
+	});
+}
+
+/** FLAC frames from the decoder: where each starts (media seconds), its samples, and the frame. */
+export interface FlacFrame {
+	pts: number;
+	samples: number;
+	data: Uint8Array;
+}
+
+/**
+ * Sound decoded in WebAssembly and handed back as FLAC, for an audio SourceBuffer next to the
+ * video's: the TV's own pipeline then keeps sound and picture together, as for any other stream.
+ */
+export class FlacAudio {
+	private gen = 0;
+	private lastPts = -Infinity;
+	private draining: { gen: number; done: () => void }[] = [];
+	/** How the setup went, for the timing line. */
+	setup = '';
+	/** performance.now() when the current start's first frames came back. */
+	firstFrames: number | null = null;
+
+	private constructor(
+		private readonly worker: Worker,
+		private readonly base: string,
+		private readonly onFrames: (rate: number, frames: FlacFrame[]) => void,
+	) {
+		worker.onmessage = (e) => this.onMessage(e.data);
+	}
+
+	/** Loads the decoder for `track`. `onFrames` gets the FLAC frames of the current start, in order. */
+	static async create(base: string, track: Track, start: number, onFrames: (rate: number, frames: FlacFrame[]) => void): Promise<FlacAudio> {
+		const d = decoderFor(track);
+		if (!d) throw new Error(`no decoder for ${track.codec}`);
+		const t0 = performance.now();
+		const spare = takeWorker(base, d.family);
+		const age = Math.round(t0 - spare.made);
+		try {
+			await openDecoder(spare.worker, base, track, 'flac');
+		} catch (e) {
+			spare.worker.terminate();
+			throw e;
+		}
+		const a = new FlacAudio(spare.worker, base, onFrames);
+		a.setup = `worker ${age ? `${age} ms old` : 'new'}, decoder ${Math.round(performance.now() - t0)} ms`;
+		a.seek(start);
+		return a;
+	}
+
+	private onMessage(m: { type: string; gen: number; rate: number; frames: FlacFrame[] }) {
+		if (m?.gen !== this.gen) return;
+		if (m.type === 'flac') {
+			if (!m.frames.length) return;
+			this.firstFrames ??= performance.now();
+			this.onFrames(m.rate, m.frames);
+		} else if (m.type === 'drained') {
+			const done = this.draining.filter((d) => d.gen === m.gen);
+			this.draining = this.draining.filter((d) => d.gen !== m.gen);
+			for (const d of done) d.done();
+		}
+	}
+
+	/** The media time the compressed audio reaches. */
+	get bufferedTo() {
+		return this.lastPts;
+	}
+
+	push(samples: Sample[]) {
+		if (!samples.length) return;
+		const packets = samples.map((s) => ({ pts: s.pts, data: s.data }));
+		this.lastPts = samples[samples.length - 1].pts;
+		this.worker.postMessage({ type: 'packets', gen: this.gen, packets }, packets.map((p) => p.data.buffer as ArrayBuffer).filter(unique()));
+	}
+
+	/** Starts again at `time`: frames of the old start that are still on their way are dropped. */
+	seek(time: number) {
+		this.gen++;
+		this.lastPts = -Infinity;
+		this.firstFrames = null;
+		for (const d of this.draining) d.done();
+		this.draining = [];
+		this.worker.postMessage({ type: 'flush', gen: this.gen, time });
+	}
+
+	/** Resolves once every packet pushed so far came back as frames (the end of the stream). */
+	drain(): Promise<void> {
+		return new Promise((done) => {
+			this.draining.push({ gen: this.gen, done });
+			this.worker.postMessage({ type: 'drain', gen: this.gen });
+		});
+	}
+
+	/** Decoder and encoder CPU time so far (ms) and seconds decoded, from the worker. */
+	cpu(): Promise<{ cpu: number; encode: number; decoded: number; heap: number }> {
+		return new Promise((resolve) => {
+			const prev = this.worker.onmessage;
+			this.worker.onmessage = (e) => {
+				if (e.data?.type !== 'stats') return prev?.call(this.worker, e);
+				this.worker.onmessage = prev;
+				resolve(e.data);
+			};
+			this.worker.postMessage({ type: 'stats' });
+		});
+	}
+
+	destroy() {
+		this.gen++;
+		for (const d of this.draining) d.done();
+		this.draining = [];
+		this.worker.postMessage({ type: 'close' });
+		const w = this.worker;
+		setTimeout(() => w.terminate(), 1000);
+		const base = this.base;
+		setTimeout(() => warmPcm(base), 0);
+	}
 }
 
 /** Why `ready()` resolved. */
@@ -326,48 +513,30 @@ export class PcmAudio {
 		const d = decoderFor(track);
 		if (!d) throw new Error(`no decoder for ${track.codec}`);
 		const t0 = performance.now();
-		const parts = takeParts(base, d.family);
-		const { ctx, worker } = parts;
+		const spare = takeWorker(base, d.family);
+		const audio = takeAudio(base);
+		const { ctx } = audio;
+		const worker = spare.worker;
 		const ms = () => Math.round(performance.now() - t0);
-		const age = Math.round(t0 - parts.made);
+		const age = Math.round(t0 - Math.max(spare.made, audio.made));
 		try {
 			if (ctx.state !== 'running') void ctx.resume().catch(() => {});
-			await parts.worklet;
+			await audio.worklet;
 			const worklet = ms();
 			const node = new AudioWorkletNode(ctx, 'kaeri-pcm', { numberOfInputs: 0, outputChannelCount: [2] });
 			const channel = new MessageChannel();
 			node.port.postMessage({ type: 'decoder', port: channel.port2 }, [channel.port2]);
-			await new Promise<void>((resolve, reject) => {
-				worker.onmessage = (e) => {
-					if (e.data?.type === 'open') resolve();
-					else if (e.data?.type === 'error') reject(new Error(e.data.detail));
-				};
-				worker.onerror = (e) => reject(new Error(e.message || 'decoder worker failed'));
-				worker.postMessage(
-					{
-						type: 'open',
-						base,
-						family: d.family,
-						decoder: d.decoder,
-						config: track.config,
-						rate: track.sampleRate ?? 0,
-						channels: track.channels ?? 0,
-						unframed: !!track.unframed,
-						port: channel.port1,
-					},
-					[channel.port1],
-				);
-			});
-			worker.onmessage = null;
+			await openDecoder(worker, base, track, 'worklet', channel.port1);
 			const pcm = new PcmAudio(ctx, node, worker, video);
-			pcm.created = parts.made;
+			pcm.created = audio.made;
 			pcm.base = base;
 			pcm.setup = `parts ${age ? `${age} ms old` : 'new'} ${ctx.state}, worklet ${worklet} ms, decoder ${ms()} ms`;
 			pcm.seek(start);
 			if (ctx.state !== 'running') void ctx.resume().catch(() => {});
 			return pcm;
 		} catch (e) {
-			dropParts(parts);
+			worker.terminate();
+			void ctx.close().catch(() => {});
 			throw e;
 		}
 	}

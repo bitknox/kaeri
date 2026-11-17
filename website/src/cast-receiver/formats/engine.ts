@@ -13,12 +13,21 @@ import { openDash } from './dash';
 import { openHls } from './hls';
 import { Matroska } from './mkv';
 import { Mp4File } from './mp4';
-import { createMuxer, mimeChoices, type Muxer } from './mux';
-import { PRIMED, PcmAudio, decoderFor } from './pcm';
+import { streamInfo } from './flac-encode';
+import { Mp4Muxer, createMuxer, mimeChoices, type Muxer } from './mux';
+import { FLAC_MIME, FlacAudio, PRIMED, PcmAudio, decoderFor, flacSupported, type FlacFrame } from './pcm';
 import { FetchError, LeaveToCaf, RangeSource, bytesOf } from './source';
 import { Subtitles, type TypesetSink } from './subs';
 import { TsFile } from './ts';
 import type { Demuxer, Sample, Track } from './types';
+
+/** The track number of the FLAC that decoded sound goes back to MediaSource as. */
+const FLAC_ID = 1;
+
+/** The FLAC track decoded sound goes back to MediaSource as: 16-bit stereo at `rate`. */
+function flacTrack(rate: number): Track {
+	return { id: FLAC_ID, kind: 'audio', codec: 'flac', config: streamInfo(rate, 2), sampleRate: rate, channels: 2, bitDepth: 16 };
+}
 
 /** Seconds read ahead of the playhead. */
 const AHEAD = 30;
@@ -321,7 +330,8 @@ export interface UnpackerStats {
 	format: Format;
 	video: string | null;
 	audio: string | null;
-	audioPath: 'mse' | 'wasm' | null;
+	/** wasm: decoded here and played by the worklet; flac: decoded here and played by MediaSource as FLAC. */
+	audioPath: 'mse' | 'wasm' | 'flac' | null;
 	text: string | null;
 	readTo: number;
 	buffered: [number, number][];
@@ -357,7 +367,13 @@ export class Unpacker {
 	private aout: Output | null = null;
 	private pcm: PcmAudio | null = null;
 	/** WebAssembly sound started before the first samples, for a track MediaSource won't take. */
-	private early: { id: number; pcm: Promise<PcmAudio> } | null = null;
+	private early: { id: number; made: Promise<PcmAudio | FlacAudio> } | null = null;
+	/** Sound decoded in WebAssembly that goes back to MediaSource as FLAC, through `aout`. */
+	private flac: FlacAudio | null = null;
+	/** The sample rate of the FLAC init segment appended, null before the first one. */
+	private flacRate: number | null = null;
+	/** FLAC appends, one after another. */
+	private flacChain: Promise<void> = Promise.resolve();
 	private fixer: DecodeTimes | null = null;
 	private readonly subs: Subtitles;
 	private videoTrack: Track | null;
@@ -396,6 +412,9 @@ export class Unpacker {
 	private pacedFrom: number | null = null;
 	/** The WebAssembly sound was started before the first samples (see startEarly). */
 	private pcmEarly = false;
+	private flacEarly = false;
+	/** An audio switch is changing the SourceBuffer: reading waits. */
+	private switching = false;
 	private listeners: [EventTarget, string, EventListener, boolean][] = [];
 
 	private constructor(
@@ -457,7 +476,7 @@ export class Unpacker {
 			format: this.format,
 			video: this.videoTrack ? codecName(this.videoTrack) : null,
 			audio: this.audioTrack?.codec ?? null,
-			audioPath: this.pcm ? 'wasm' : this.aout ? 'mse' : null,
+			audioPath: this.flac ? 'flac' : this.pcm ? 'wasm' : this.aout ? 'mse' : null,
 			text: this.textTrack?.codec ?? null,
 			readTo: this.readTo,
 			buffered: this.vout?.ranges() ?? this.aout?.ranges() ?? [],
@@ -476,6 +495,7 @@ export class Unpacker {
 		if (this.frameAt == null) return null;
 		const ms = (t: number | null | undefined) => (t == null ? '-' : `${Math.round(t - this.t0)}`);
 		let line = `load to setup ${ms(this.setupAt)} ms, first frame ${ms(this.frameAt)} ms, playing ${ms(this.playingAt)} ms`;
+		if (this.flac) line += `, first FLAC frames ${ms(this.flac.firstFrames)} ms; audio setup ${this.flacEarly ? 'early' : 'after video'}: ${this.flac.setup}`;
 		if (this.pcm) {
 			const t = this.pcm.timing;
 			const l = this.pcm.latency;
@@ -493,6 +513,11 @@ export class Unpacker {
 	/** Decoder CPU time, for measuring. */
 	pcmCpu() {
 		return this.pcm?.cpu() ?? null;
+	}
+
+	/** Decoder and FLAC encoder CPU time, for measuring. Null unless sound goes to MediaSource as FLAC. */
+	flacCpu() {
+		return this.flac?.cpu() ?? null;
 	}
 
 	private async selectTracks() {
@@ -595,6 +620,10 @@ export class Unpacker {
 				}
 				continue;
 			}
+			if (this.switching) {
+				await this.nap();
+				continue;
+			}
 			const g = this.gen;
 			const playhead = this.video.currentTime;
 			if (this.atEnd || (this.held == null && this.readTo - Math.max(playhead, this.target) > this.lead())) {
@@ -629,6 +658,8 @@ export class Unpacker {
 
 	private async seekNow(t: number) {
 		const g = ++this.gen;
+		// FLAC frames of the old position still on their way are dropped from here on.
+		this.flac?.seek(t);
 		this.pacedFrom = null;
 		this.seeks++;
 		this.target = t;
@@ -695,7 +726,7 @@ export class Unpacker {
 		this.held = null;
 		this.setDuration();
 		if (this.vout) await this.vout.append(this.vout.muxer.init());
-		if (this.aout) await this.aout.append(this.aout.muxer.init());
+		if (this.aout && !this.flac) await this.aout.append(this.aout.muxer.init());
 		if (g !== this.gen) return;
 		await this.feed(held, g);
 	}
@@ -710,19 +741,88 @@ export class Unpacker {
 		if (!t || t.codec === 'aac' || !decoderFor(t)) return;
 		const supported = (mime: string) => !refusedAudio.has(mime) && (globalThis.MediaSource?.isTypeSupported?.(mime) ?? false);
 		if (mimeChoices(t).some(supported)) return;
-		const pcm = PcmAudio.create(this.o.base, t, this.video, this.target);
-		pcm.catch(() => {});
-		this.early = { id: t.id, pcm };
+		const made: Promise<PcmAudio | FlacAudio> = this.canFlac()
+			? FlacAudio.create(this.o.base, t, this.target, (rate, frames) => this.onFlac(rate, frames))
+			: PcmAudio.create(this.o.base, t, this.video, this.target);
+		made.catch(() => {});
+		this.early = { id: t.id, made };
 	}
 
 	/** The early WebAssembly sound for `t`, when there is one. */
-	private takeEarly(t: Track): Promise<PcmAudio> | null {
+	private takeEarly(t: Track): Promise<PcmAudio | FlacAudio> | null {
 		const e = this.early;
 		this.early = null;
 		if (!e) return null;
-		if (e.id === t.id) return e.pcm;
-		void e.pcm.then((p) => p.destroy(), () => {});
+		if (e.id === t.id) return e.made;
+		void e.made.then((p) => p.destroy(), () => {});
 		return null;
+	}
+
+	/** Whether decoded sound can go back to MediaSource as FLAC. */
+	private canFlac() {
+		return !refusedAudio.has(FLAC_MIME) && flacSupported();
+	}
+
+	/**
+	 * Decodes `t` in WebAssembly into an audio SourceBuffer as FLAC. False when MediaSource refuses
+	 * the FLAC SourceBuffer (the worklet plays the sound then).
+	 */
+	private async startFlac(t: Track): Promise<boolean> {
+		let sb: SourceBuffer;
+		try {
+			sb = this.ms.addSourceBuffer(FLAC_MIME);
+		} catch (e) {
+			refusedAudio.add(FLAC_MIME);
+			this.audioWhy = `${this.audioWhy ?? ''}; ${FLAC_MIME} refused: ${errText(e)}`;
+			return false;
+		}
+		const rate = t.sampleRate || 48000;
+		this.aout = new Output(sb, new Mp4Muxer(flacTrack(rate), FLAC_MIME), flacTrack(rate));
+		this.flacRate = null;
+		const early = this.takeEarly(t);
+		let made: FlacAudio | null = null;
+		if (early) {
+			const e = await early.catch(() => null);
+			if (e instanceof FlacAudio) {
+				made = e;
+				this.flacEarly = true;
+			} else e?.destroy();
+		}
+		try {
+			made ??= await FlacAudio.create(this.o.base, t, this.target, (r, frames) => this.onFlac(r, frames));
+		} catch (e) {
+			throw new Refused(report('audio', `WebAssembly ${t.codec}: ${errText(e)}`, { codec: t.codec }));
+		}
+		if (this.closed) {
+			made.destroy();
+			return true;
+		}
+		this.flac = made;
+		this.flac.seek(this.target);
+		return true;
+	}
+
+	/** FLAC frames from the decoder: appended in order, after the init segment for their rate. */
+	private onFlac(rate: number, frames: FlacFrame[]) {
+		const g = this.gen;
+		this.flacChain = this.flacChain
+			.then(() => this.putFlac(rate, frames, g))
+			.catch((e) => {
+				if (g === this.gen && !this.closed) this.fail(e);
+			});
+	}
+
+	private async putFlac(rate: number, frames: FlacFrame[], g: number) {
+		const o = this.aout;
+		if (!o || g !== this.gen || this.closed) return;
+		if (this.flacRate !== rate) {
+			const t = flacTrack(rate);
+			o.muxer = new Mp4Muxer(t, FLAC_MIME);
+			await o.append(o.muxer.init());
+			this.flacRate = rate;
+		}
+		const samples: Sample[] = frames.map((f) => ({ track: FLAC_ID, pts: f.pts, dts: f.pts, duration: f.samples / rate, key: true, data: f.data }));
+		await this.put(o, o.muxer.segment(samples), g);
 	}
 
 	private async makeAudio(t: Track, first: Sample | undefined) {
@@ -735,6 +835,7 @@ export class Unpacker {
 		}
 		this.audioWhy = got.why;
 		console.info('audio to WebAssembly:', this.audioWhy);
+		if (this.canFlac() && (await this.startFlac(t))) return;
 		await this.startPcm(t);
 	}
 
@@ -745,6 +846,7 @@ export class Unpacker {
 			try {
 				const pcm = await early;
 				if (this.closed) return pcm.destroy();
+				if (!(pcm instanceof PcmAudio)) throw pcm.destroy();
 				this.pcm = pcm;
 				this.pcm.seek(this.target);
 				this.pcmEarly = true;
@@ -785,7 +887,8 @@ export class Unpacker {
 		}
 		if (video.length && this.vout) await this.put(this.vout, this.vout.muxer.segment(video), g);
 		if (audio.length && !pushed) {
-			if (this.pcm) this.pcm.push(audio);
+			if (this.flac) this.flac.push(audio);
+			else if (this.pcm) this.pcm.push(audio);
 			else if (this.aout) await this.put(this.aout, this.aout.muxer.segment(audio), g);
 		}
 		await this.evict();
@@ -824,6 +927,11 @@ export class Unpacker {
 		if (g !== this.gen) return;
 		if (this.fixer && this.vout) await this.put(this.vout, this.vout.muxer.segment(this.fixer.flush()), g);
 		if (this.vout) await this.put(this.vout, this.vout.muxer.flush(), g);
+		if (this.flac) {
+			await this.flac.drain();
+			await this.flacChain;
+			if (g !== this.gen) return;
+		}
 		if (this.aout) await this.put(this.aout, this.aout.muxer.flush(), g);
 		if (g !== this.gen) return;
 		this.atEnd = true;
@@ -946,6 +1054,8 @@ export class Unpacker {
 		await open;
 		this.aout = null;
 		this.vout = null;
+		this.flac?.destroy();
+		this.flac = null;
 		this.setDuration();
 		if (vt) {
 			const muxer = createMuxer(vt);
@@ -971,6 +1081,24 @@ export class Unpacker {
 		const pick = list.find((t) => t.language === language && (!name || t.name === name)) ?? list.find((t) => t.language === language);
 		if (!pick) return false;
 		if (pick === this.audioTrack || pick.id === this.audioTrack?.id) return true;
+		// Reading stops and what is on its way is dropped, so nothing of either track reaches the
+		// SourceBuffer while it changes.
+		this.switching = true;
+		this.gen++;
+		try {
+			await this.flacChain;
+			await this.aout?.idle();
+			await this.changeAudio(pick);
+		} finally {
+			this.switching = false;
+		}
+		this.seekTo = this.video.currentTime;
+		this.gen++;
+		this.poke();
+		return true;
+	}
+
+	private async changeAudio(pick: Track) {
 		this.audioTrack = pick;
 		await this.selectTracks();
 		const t = this.audioTrack!;
@@ -979,18 +1107,22 @@ export class Unpacker {
 			this.pcm = null;
 			await this.startPcm(t);
 		} else if (this.aout) {
+			const o = this.aout;
+			const wasFlac = this.flac != null;
+			this.flac?.destroy();
+			this.flac = null;
 			let changed = false;
 			const said: string[] = [];
-			if ('changeType' in this.aout.sb) {
+			if ('changeType' in o.sb) {
 				for (const mime of mimeChoices(t)) {
 					if (refusedAudio.has(mime)) continue;
 					const muxer = createMuxer(t, undefined, mime)!;
 					try {
-						await this.aout.idle();
-						this.aout.sb.abort();
-						this.aout.sb.changeType(mime);
-						this.aout.muxer = muxer;
-						await this.aout.append(muxer.init());
+						await o.idle();
+						o.sb.abort();
+						o.sb.changeType(mime);
+						o.muxer = muxer;
+						await o.append(muxer.init());
 						changed = true;
 						break;
 					} catch (e) {
@@ -998,26 +1130,34 @@ export class Unpacker {
 						said.push(`${mime} refused: ${errText(e)}`);
 					}
 				}
+				// No MediaSource form: decoded here and back into the same SourceBuffer as FLAC.
+				if (!changed && decoderFor(t) && this.canFlac()) {
+					try {
+						await o.idle();
+						o.sb.abort();
+						if (!wasFlac) o.sb.changeType(FLAC_MIME);
+						o.muxer = new Mp4Muxer(flacTrack(t.sampleRate || 48000), FLAC_MIME);
+						this.flacRate = null;
+						this.flac = await FlacAudio.create(this.o.base, t, this.video.currentTime, (r, frames) => this.onFlac(r, frames));
+					} catch (e) {
+						said.push(`${FLAC_MIME}: ${errText(e)}`);
+					}
+				}
 			} else said.push('no changeType');
 			if (!changed) {
 				this.audioWhy = `audio switch: ${said.join('; ') || 'no MediaSource form'} (${trackSetup(t)})`;
 				console.info('audio switch to WebAssembly:', this.audioWhy);
 			}
-			if (!changed) {
-				const sb = this.aout.sb;
+			if (!changed && !this.flac) {
+				const sb = o.sb;
 				this.aout = null;
 				await new Promise((r) => (sb.updating ? sb.addEventListener('updateend', r, { once: true }) : r(null)));
 				this.ms.removeSourceBuffer(sb);
 				await this.startPcm(t);
 			} else {
-				const sb = this.aout!;
-				for (const [s, e] of sb.ranges()) await sb.remove(s, e);
+				for (const [s, e] of o.ranges()) await o.remove(s, e);
 			}
 		}
-		this.seekTo = this.video.currentTime;
-		this.gen++;
-		this.poke();
-		return true;
 	}
 
 	/** Shows the file's subtitle track `index` (counted in its subtitle tracks), or none. */
@@ -1078,9 +1218,11 @@ export class Unpacker {
 		this.listeners = [];
 		this.pcm?.destroy();
 		this.pcm = null;
+		this.flac?.destroy();
+		this.flac = null;
 		const early = this.early;
 		this.early = null;
-		if (early) void early.pcm.then((p) => p.destroy(), () => {});
+		if (early) void early.made.then((p) => p.destroy(), () => {});
 		this.subs.destroy();
 		this.demux.close();
 		URL.revokeObjectURL(this.url);

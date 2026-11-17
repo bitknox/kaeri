@@ -4,6 +4,8 @@
 
 /// <reference lib="webworker" />
 
+import { MAX_BLOCK, encodeFrame } from './flac-encode';
+
 interface DecoderModule {
 	HEAPU8: Uint8Array;
 	HEAPF32: Float32Array;
@@ -28,7 +30,9 @@ export interface OpenMessage {
 	rate: number;
 	channels: number;
 	unframed: boolean;
-	port: MessagePort;
+	/** Where the sound goes: PCM to the worklet through `port`, or FLAC frames back to the main thread. */
+	out?: 'worklet' | 'flac';
+	port?: MessagePort;
 }
 
 interface Packet {
@@ -54,6 +58,11 @@ let clock: number | null = null;
 let inBuf = 0;
 let inCap = 0;
 let busy = false;
+let flac = false;
+/** Sample number of the next FLAC frame (the frame headers count samples). */
+let flacSamples = 0;
+/** ms spent encoding FLAC. */
+let encodeCpu = 0;
 let cpu = 0;
 let decodedSeconds = 0;
 
@@ -92,14 +101,29 @@ function decode(p: Packet) {
 	cpu += performance.now() - t0;
 	decodedSeconds += n / rate;
 	decodedTo = pts + n / rate;
-	port!.postMessage({ type: 'pcm', gen, pts, rate, channels: m._kd_channels(handle), data: pcm }, [pcm.buffer]);
+	if (flac) toFlac(pcm, n, rate, pts);
+	else port!.postMessage({ type: 'pcm', gen, pts, rate, channels: m._kd_channels(handle), data: pcm }, [pcm.buffer]);
+}
+
+/** Encodes decoded stereo PCM as FLAC frames of at most MAX_BLOCK samples for the main thread. */
+function toFlac(pcm: Float32Array, n: number, rate: number, pts: number) {
+	const t0 = performance.now();
+	const frames: { pts: number; samples: number; data: Uint8Array }[] = [];
+	for (let at = 0; at < n; at += MAX_BLOCK) {
+		const count = Math.min(MAX_BLOCK, n - at);
+		frames.push({ pts: pts + at / rate, samples: count, data: encodeFrame(pcm.subarray(at * 2, (at + count) * 2), count, 2, flacSamples) });
+		flacSamples += count;
+	}
+	encodeCpu += performance.now() - t0;
+	scope.postMessage({ type: 'flac', gen, rate, frames }, frames.map((f) => f.data.buffer as ArrayBuffer));
 }
 
 function pump() {
 	if (busy || !mod || handle < 0) return;
 	busy = true;
 	try {
-		while (queue.length && decodedTo < playhead + AHEAD) decode(queue.shift()!);
+		// Into MediaSource, everything the engine sends is decoded at once: it paces its reading.
+		while (queue.length && (flac || decodedTo < playhead + AHEAD)) decode(queue.shift()!);
 	} finally {
 		busy = false;
 	}
@@ -159,7 +183,9 @@ async function open(m: OpenMessage) {
 	if (extra) mod._free(extra);
 	if (handle < 0) throw new Error(`decoder ${m.decoder} didn't open (${handle})`);
 	unframed = m.unframed;
-	port = m.port;
+	flac = m.out === 'flac';
+	if (flac) return;
+	port = m.port!;
 	port.onmessage = (e) => {
 		if (e.data?.type === 'position' && e.data.gen === gen) {
 			playhead = e.data.time;
@@ -195,8 +221,13 @@ scope.onmessage = async (e: MessageEvent) => {
 			clock = null;
 			if (mod && handle >= 0) mod._kd_flush(handle);
 			break;
+		case 'drain':
+			// The end of the stream: everything sent is decoded by now.
+			pump();
+			scope.postMessage({ type: 'drained', gen: m.gen });
+			break;
 		case 'stats':
-			scope.postMessage({ type: 'stats', cpu, decoded: decodedSeconds, queued: queue.length, heap: mod?.HEAPU8.length ?? 0 });
+			scope.postMessage({ type: 'stats', cpu, encode: encodeCpu, decoded: decodedSeconds, queued: queue.length, heap: mod?.HEAPU8.length ?? 0 });
 			break;
 		case 'close':
 			if (mod && handle >= 0) mod._kd_close(handle);

@@ -61,7 +61,7 @@ interface Clip {
 	how: 'url' | 'file';
 	path: string;
 	/** Where the sound must play; `any` for a codec the TV may or may not decode itself. */
-	expect: 'mse' | 'wasm' | 'any';
+	expect: 'mse' | 'wasm' | 'flac' | 'any';
 	make: () => void;
 }
 
@@ -213,7 +213,7 @@ const clips: Clip[] = [
 	// The Chromecast TV takes AC-3 itself (it passes it to the TV over HDMI); others don't.
 	{ id: 'ac3-hls-ts', what: 'HLS MPEG-TS, AC-3 stereo (MediaSource or WebAssembly)', how: 'url', path: 'audio/ac3-ts/index.m3u8', expect: 'any', make: () => hls('ac3-ts', 'mpegts', { codec: ['-c:a', 'ac3', '-b:a', '192k'] }) },
 	// MPEG-1 Layer II has no MediaSource form: always WebAssembly.
-	{ id: 'mp2-hls-ts', what: 'HLS MPEG-TS, MP2 stereo (WebAssembly)', how: 'url', path: 'audio/mp2-ts/index.m3u8', expect: 'wasm', make: () => hls('mp2-ts', 'mpegts', { codec: ['-c:a', 'mp2', '-b:a', '192k'] }) },
+	{ id: 'mp2-hls-ts', what: 'HLS MPEG-TS, MP2 stereo (WebAssembly into FLAC)', how: 'url', path: 'audio/mp2-ts/index.m3u8', expect: 'flac', make: () => hls('mp2-ts', 'mpegts', { codec: ['-c:a', 'mp2', '-b:a', '192k'] }) },
 ];
 
 // ---------- Reading the log ----------
@@ -224,11 +224,16 @@ interface Status {
 	codec: string;
 	time: number;
 	pcm: { queued: number; drift: number; jumps: number; waits: number; starved: number; jitter: number } | null;
+	/** Bytes of sound the element decoded (MediaSource and FLAC). */
+	bytes: number | null;
+	/** FLAC: seconds decoded, and the worker's decode and encode CPU per second of sound. */
+	flac: { seconds: number; decode: number; encode: number; heap: number } | null;
 }
 
 function parseStatus(line: string): Status | null {
 	const m = line.match(/^(\d\d:\d\d:\d\d) receiver status audio (\S+) (\S*) .*? at ([\d.]+) s(.*)$/);
 	if (!m) return null;
+	const f = m[5].match(/flac ([\d.]+) s decode ([\d.]+) ms\/s encode ([\d.]+) ms\/s heap (\d+) MB/);
 	const p = m[5].match(/pcm queued ([\d.]+) s drift ([-+\d]+) ms worst [-+\d]+ ms jumps (\d+) waits (\d+) starved (\d+)(?: jitter ([-+\d]+) ms)?/);
 	return {
 		at: m[1],
@@ -236,6 +241,8 @@ function parseStatus(line: string): Status | null {
 		codec: m[3],
 		time: Number(m[4]),
 		pcm: p ? { queued: Number(p[1]), drift: Number(p[2]), jumps: Number(p[3]), waits: Number(p[4]), starved: Number(p[5]), jitter: Number(p[6] ?? 0) } : null,
+		bytes: Number(line.match(/ decoded (\d+) bytes/)?.[1] ?? NaN) || null,
+		flac: f ? { seconds: Number(f[1]), decode: Number(f[2]), encode: Number(f[3]), heap: Number(f[4]) } : null,
 	};
 }
 
@@ -250,8 +257,18 @@ function judge(c: Clip, lines: string[]): { verdict: string | null; summary: str
 	const summary = `${setup}`;
 	if (c.expect === 'mse' && path !== 'mse') return { verdict: `audio went to ${path}, expected MediaSource`, summary };
 	if (c.expect === 'wasm' && path !== 'wasm') return { verdict: `audio went to ${path}, expected WebAssembly`, summary };
+	if (c.expect === 'flac' && path !== 'flac') return { verdict: `audio went to ${path}, expected WebAssembly into FLAC`, summary };
 	const moved = statuses.at(-1)!.time - statuses[0].time;
 	if (moved < seconds * 0.5) return { verdict: `video moved ${moved.toFixed(1)} s in ${seconds} s`, summary };
+	if (path === 'flac') {
+		// The TV's own pipeline plays the sound: it must decode more of it as the picture moves.
+		const bytes = statuses.map((s) => s.bytes).filter((b): b is number => b != null);
+		const grew = bytes.length >= 2 && bytes.at(-1)! > bytes[0];
+		const f = statuses.map((s) => s.flac).filter(Boolean).at(-1);
+		const cpu = f ? `; worker ${f.decode} ms decode + ${f.encode} ms encode per s of sound over ${f.seconds} s, heap ${f.heap} MB` : '';
+		const timing = lines.map((l) => l.match(/ receiver timing (.*)$/)?.[1]).filter(Boolean).at(-1) ?? '';
+		return { verdict: grew ? null : 'the element decoded no more sound', summary: `${summary}${cpu}${timing ? ` | ${timing}` : ''}` };
+	}
 	if (path !== 'wasm') return { verdict: null, summary };
 	const pcm = statuses.filter((s) => s.pcm);
 	const steady = pcm.slice(0, -END_LINES).filter((s) => s.time >= STEADY_FROM);
@@ -310,7 +327,7 @@ let current: string | null = null;
 const collect = () => {
 	const r = readFrom(logPath, offset);
 	offset = r.to;
-	if (current) for (const l of r.text.split('\n')) if (/ receiver (setup|status) /.test(l)) windows.get(current)!.push(l);
+	if (current) for (const l of r.text.split('\n')) if (/ receiver (setup|status|timing) /.test(l)) windows.get(current)!.push(l);
 };
 const poll = setInterval(collect, 500);
 
