@@ -254,8 +254,13 @@ pub struct CastStatus {
     pub duration: Option<f64>,
     /// The receiver's volume, 0 to 1.
     pub level: Option<f64>,
+    /// The receiver's mute, while a mute works on the TV.
     pub muted: Option<bool>,
+    /// Whether a level can be set: [`VolumeControl::Fixed`] for a `fixed` TV, or one that
+    /// refused a level.
     pub volume: VolumeControl,
+    /// Whether mute can be offered: not for a `fixed` TV, or one that refused a mute.
+    pub can_mute: bool,
     /// The plan playing, once one does.
     pub plan: Option<CastPlan>,
     pub failure: Option<CastFailure>,
@@ -424,6 +429,10 @@ struct State {
     level: Option<f64>,
     muted: Option<bool>,
     control: VolumeControl,
+    /// The TV refused a level, so none is sent again on this cast.
+    level_refused: bool,
+    /// The TV refused a mute, so none is sent again on this cast.
+    mute_refused: bool,
     ended: bool,
     /// The connection to the TV dropped and is being made again: the session waits on it.
     reconnecting: bool,
@@ -479,6 +488,16 @@ struct Gone {
 }
 
 impl State {
+    /// How the TV's level can be changed, after what it refused.
+    fn volume_control(&self) -> VolumeControl {
+        if self.level_refused { VolumeControl::Fixed } else { self.control }
+    }
+
+    /// Whether a mute reaches the TV's sound, after what it refused.
+    fn can_mute(&self) -> bool {
+        self.control.mutes() && !self.mute_refused
+    }
+
     /// Where the TV is in the file: where it was asked to seek to and hasn't said yet, else
     /// where it said. Until the file loaded has played, where its load starts: a cast stopped
     /// before the TV played it is still where the episode was left, and goes to another TV from
@@ -538,8 +557,9 @@ impl State {
             position: self.at().unwrap_or(0.0),
             duration: self.last.as_ref().and_then(|s| s.duration),
             level: self.want.level.map(|(l, _)| l).or(self.level),
-            muted: self.want.muted.map(|(m, _)| m).or(self.muted),
-            volume: self.control,
+            muted: self.want.muted.map(|(m, _)| m).or(self.muted).filter(|_| self.can_mute()),
+            volume: self.volume_control(),
+            can_mute: self.can_mute(),
             plan: self.plan.clone(),
             failure: self.failure.clone(),
             step: self.step.filter(|_| self.trying),
@@ -614,6 +634,13 @@ impl Inner {
     }
 
     /// Note what the viewer asked of the TV, shown until the TV confirms it.
+    /// Note what the TV refused of its volume, and say so to the card.
+    fn refused(&self, change: impl FnOnce(&mut State)) {
+        let mut state = lock(&self.state);
+        change(&mut state);
+        self.publish_locked(&state);
+    }
+
     fn want(&self, change: impl FnOnce(&mut Wanted)) {
         change(&mut lock(&self.state).want);
         self.publish();
@@ -1294,15 +1321,25 @@ impl CastPlayer {
         lock(&self.inner.state).rate.unwrap_or(1.0)
     }
 
-    /// The receiver's volume, 0 to 100. Nothing on a TV whose volume is its own.
+    /// The receiver's volume, 0 to 100. Nothing on a TV whose volume is its own, or one that
+    /// refused a level.
     pub async fn set_volume(&self, level: f64) -> Result<(), CastError> {
-        if lock(&self.inner.state).control == VolumeControl::MuteOnly {
+        if lock(&self.inner.state).volume_control() == VolumeControl::Fixed {
             return Ok(());
         }
         let device = self.inner.device();
         let level = (level / 100.0).clamp(0.0, 1.0);
         self.inner.want(|want| want.level = Some((level, Instant::now())));
-        let result = answered(async move { device.set_volume(Some(level), None).await }).await;
+        let inner = Arc::clone(&self.inner);
+        let result = answered(async move {
+            let result = device.set_volume(Some(level), None).await;
+            if let Err(CastError::Refused(reply)) = &result {
+                tracing::info!(%reply, "the TV refused a level; it is no longer offered");
+                inner.refused(|state| state.level_refused = true);
+            }
+            result
+        })
+        .await;
         if result.is_err() {
             self.inner.want(|want| want.level = None);
         }
@@ -1315,13 +1352,32 @@ impl CastPlayer {
     }
 
     pub fn volume_control(&self) -> VolumeControl {
-        lock(&self.inner.state).control
+        lock(&self.inner.state).volume_control()
     }
 
+    /// Whether a mute reaches the TV's sound: not on a TV whose volume is its own, or one that
+    /// refused a mute.
+    pub fn can_mute(&self) -> bool {
+        lock(&self.inner.state).can_mute()
+    }
+
+    /// Mute the TV or bring its sound back. Nothing on a TV where mute doesn't work.
     pub async fn set_muted(&self, muted: bool) -> Result<(), CastError> {
+        if !self.can_mute() {
+            return Ok(());
+        }
         let device = self.inner.device();
         self.inner.want(|want| want.muted = Some((muted, Instant::now())));
-        let result = answered(async move { device.set_volume(None, Some(muted)).await }).await;
+        let inner = Arc::clone(&self.inner);
+        let result = answered(async move {
+            let result = device.set_volume(None, Some(muted)).await;
+            if let Err(CastError::Refused(reply)) = &result {
+                tracing::info!(%reply, "the TV refused a mute; it is no longer offered");
+                inner.refused(|state| state.mute_refused = true);
+            }
+            result
+        })
+        .await;
         if result.is_err() {
             self.inner.want(|want| want.muted = None);
         }
@@ -1330,7 +1386,7 @@ impl CastPlayer {
 
     pub fn muted(&self) -> bool {
         let state = lock(&self.inner.state);
-        state.want.muted.map(|(m, _)| m).or(state.muted).unwrap_or(false)
+        state.can_mute() && state.want.muted.map(|(m, _)| m).or(state.muted).unwrap_or(false)
     }
 
     /// Show the text track `id` (1-based, as loaded), or none.

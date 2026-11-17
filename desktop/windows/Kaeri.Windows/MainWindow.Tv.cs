@@ -275,8 +275,8 @@ public sealed partial class MainWindow
     }
 
     /// <summary>
-    /// The keyboard's volume keys while a TV is held: the TV's volume moves too. Windows still
-    /// moves this PC's own, as it does for every app.
+    /// The keyboard's volume keys while a TV is held: the TV's volume moves too, where the TV takes
+    /// a level or a mute. Windows still moves this PC's own, as it does for every app.
     /// </summary>
     // The keyboard's volume keys, which VirtualKey has no names for.
     const global::Windows.System.VirtualKey VolumeMuteKey = (global::Windows.System.VirtualKey)0xAD,
@@ -286,15 +286,16 @@ public sealed partial class MainWindow
     {
         if (!tv.SessionHeld)
             return;
+        var settable = tv.Session?.VolumeControl == FfiVolumeControl.Level;
         switch (e.Key)
         {
-            case VolumeUpKey:
+            case VolumeUpKey when settable:
                 tv.SessionCommand(new FfiTvCommand.Volume(5));
                 break;
-            case VolumeDownKey:
+            case VolumeDownKey when settable:
                 tv.SessionCommand(new FfiTvCommand.Volume(-5));
                 break;
-            case VolumeMuteKey:
+            case VolumeMuteKey when tv.Session?.CanMute == true:
                 tv.SessionCommand(new FfiTvCommand.Mute(!(tv.Session?.Muted ?? false)));
                 break;
         }
@@ -460,7 +461,7 @@ public sealed partial class MainWindow
     ///     cast-menu            the title bar's cast menu: Chromecast, then the TVs on this network
     ///     cast-starting        Living room picked, while it opens the receiver: the mini starting
     ///     cast-counting        the same, the controller open
-    ///     cast-playing-fixed   Living room playing, the controller open: fixed volume, so Mute only
+    ///     cast-playing-fixed   Living room playing, the controller open: volume set on the TV, no Mute
     ///     cast-playing-level   Kitchen display playing, the controller open: a level, so a slider
     ///     cast-refused         Living room refuses every stream: the controller says why
     ///     cast-never-reads     Living room never reads the stream, after a minute

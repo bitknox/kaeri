@@ -479,12 +479,14 @@ These show while a cast plays or is paused and the local player is down, and go 
 
 ### Volume
 
-- The remote and the connected dialog hold the TV volume row. A TV that takes a level gets a slider, sent when the finger or pointer lets go, and a Mute button. A TV whose volume only its own remote sets (fixed volume) reads “Set on the TV” (`cast-volume-fixed`) with Mute or Unmute.
+- The remote and the connected dialog hold the TV volume row. A TV that takes a level gets a slider, sent when the finger or pointer lets go, and a Mute button. A TV whose volume only its own remote sets (fixed volume, often over HDMI-CEC) reads “Set on the TV” (`cast-volume-fixed`) with no slider and no Mute: such a TV says it took a level or a mute, but its sound stays where the TV has it.
+- A TV that refuses a level or a mute loses that control for the rest of the cast. The engine reports both from the TV's receiver status and its answers (`volume_control`, `can_mute`), and the apps show only what it reports.
+- With a fixed-volume TV, no key, button or system control sends the TV a level or a mute, and the volume keys keep the platform's own behaviour: Android shows the TV's fixed row and changes nothing, iPhone, iPad and the Mac change only the device, and Windows and Linux change only the computer.
 - Mute shows the TV's own mute, read from the TV's receiver status, never from the stream's volume. A change made with the TV's remote or another sender shows within a second.
 - Kaeri never sets a level of its own. Only the viewer's changes are sent.
 - Android: the volume keys step the TV by 5% while it takes a level, in the app and, through the media session, with the screen locked or the app in the background. The system's volume panel shows the TV's row.
 - iPhone and iPad: the volume buttons change only the phone. The TV's volume is set from the remote's slider and Mute. iOS gives apps no dependable way to take the buttons in the background or on the lock screen, and Google's own iOS guide no longer supports it either. The lock screen's volume slider is the phone's.
-- Android with a fixed-volume TV: the volume keys show the system's volume panel with the TV's fixed row and change nothing, in the app and through the media session alike. Mute stays on the remote.
+- Android with a fixed-volume TV: the volume keys show the system's volume panel with the TV's fixed row and change nothing, in the app and through the media session alike. The remote has no Mute.
 - Windows and Linux: the keyboard's volume keys stay the computer's. The remote's slider sets the TV.
 
 ### Next episode and the end of a show

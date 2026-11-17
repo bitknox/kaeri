@@ -88,6 +88,7 @@ struct CastTests {
         #expect(model.live)
         #expect(model.line == L.tvStatusPlaying(name: "Living room"))
         #expect(model.fixedVolume)
+        #expect(!model.canMute, "a TV whose own volume is in charge offers no mute")
         #expect(model.actions.isEmpty)
     }
 
@@ -219,6 +220,8 @@ struct CastTests {
         let (model, session) = casting()
         play(session)
         try await waitFor { model.stage == .playing }
+        session.change { $0.volumeControl = .level }
+        try await waitFor { model.canMute }
         model.send(.mute(muted: true))
         try await waitFor { model.muted }
         model.send(.togglePause)
@@ -238,7 +241,7 @@ struct CastTests {
         FfiCastSessionView(
             state: state, button: .connected, rev: 1, deviceKey: "cast:living", deviceName: "Living room",
             item: item, queue: [], notice: nil, note: nil, level: nil, muted: nil,
-            volumeControl: .muteOnly, ownReceiver: true)
+            volumeControl: .fixed, ownReceiver: true, canMute: false)
     }
 
     nonisolated static func item(at position: Double) -> FfiCastItem {

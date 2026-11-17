@@ -512,8 +512,11 @@ pub struct CastFrom {
 #[derive(Debug, Clone, PartialEq)]
 pub struct CastCard {
     pub card: RemoteCard,
-    /// Whether the TV's volume can be set, or only muted.
+    /// Whether the TV's volume can be set: not where the TV's own volume is in charge.
     pub volume_control: VolumeControl,
+    /// Whether the card offers Mute: not where the TV's own volume is in charge, or the TV
+    /// refused a mute.
+    pub can_mute: bool,
     pub muted: Option<bool>,
     /// Why the cast stopped, or why nothing played, in the engine's words.
     pub notice: Option<Msg>,
@@ -723,6 +726,7 @@ impl CastSession {
                 reached: view.connected || status.is_some(),
             },
             volume_control: status.as_ref().map_or(VolumeControl::Level, |s| s.volume),
+            can_mute: status.as_ref().is_none_or(|s| s.can_mute),
             muted: status.as_ref().and_then(|s| s.muted),
             notice: failure.as_ref().map(|failure| notice(failure, &self.device.name)),
             phase_line,
@@ -791,7 +795,7 @@ impl CastSession {
             }
             RemoteCommand::Volume { step } => {
                 let Some(player) = self.hub.player() else { return };
-                if player.volume_control() == VolumeControl::MuteOnly {
+                if player.volume_control() == VolumeControl::Fixed {
                     return;
                 }
                 // The step and the player's volume are both 0 to 100.
@@ -804,6 +808,9 @@ impl CastSession {
             }
             RemoteCommand::Mute { muted } => {
                 let Some(player) = self.hub.player() else { return };
+                if !player.can_mute() {
+                    return;
+                }
                 tokio::spawn(async move {
                     if let Err(e) = player.set_muted(muted).await {
                         tracing::debug!(error = %e, "the TV didn't take the mute");
@@ -1114,7 +1121,7 @@ mod tests {
     }
 
     #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
-    async fn a_tv_with_fixed_volume_takes_mute_and_not_steps() {
+    async fn a_tv_with_fixed_volume_is_sent_neither_steps_nor_mute() {
         let receiver =
             FakeReceiver::start(FakeOptions { control: "fixed", ..FakeOptions::default() })
                 .await
@@ -1144,23 +1151,18 @@ mod tests {
         let player = Arc::new(player);
         hub.attach(&player);
         let card = session.card();
-        assert_eq!(card.volume_control, VolumeControl::MuteOnly);
+        assert_eq!(card.volume_control, VolumeControl::Fixed);
+        assert!(!card.can_mute, "a fixed TV's sound doesn't follow a mute sent to it");
         assert!(card.card.phase == LinkPhase::Connected);
 
         session.command(RemoteCommand::Volume { step: 10.0 });
         session.command(RemoteCommand::Mute { muted: true });
-        let deadline = tokio::time::Instant::now() + Duration::from_secs(5);
-        // The card says the mute as it is asked, before the TV has heard it.
-        while session.card().muted != Some(true) || receiver.heard("SET_VOLUME").is_empty() {
-            assert!(tokio::time::Instant::now() < deadline, "the mute reached the TV");
-            tokio::time::sleep(Duration::from_millis(20)).await;
-        }
-        let volumes = receiver.heard("SET_VOLUME");
-        assert_eq!(volumes.len(), 1, "{volumes:?}");
-        assert_eq!(volumes[0]["volume"]["muted"], true);
-        assert!(volumes[0]["volume"].get("level").is_none());
+        // Long enough for either to have reached the TV, had it been sent.
+        tokio::time::sleep(Duration::from_millis(300)).await;
+        assert!(receiver.heard("SET_VOLUME").is_empty(), "the TV's own volume is in charge");
+        assert_eq!(session.card().muted, None);
         let status: CastStatus = player.status().borrow().clone();
-        assert_eq!(status.muted, Some(true));
+        assert!(!status.can_mute);
     }
 
     fn living_room() -> CastDevice {

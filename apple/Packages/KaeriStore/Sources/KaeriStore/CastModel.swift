@@ -384,9 +384,12 @@ public final class CastModel {
     /// The card's controls reach the TV: it plays this cast.
     public var live: Bool { stage == .playing }
 
-    /// Whether the TV's volume is its own, with mute alone here.
-    public var fixedVolume: Bool { card?.volumeControl == .muteOnly }
-    public var muted: Bool { card?.muted ?? false }
+    /// Whether the TV's volume is its own: no level is set from here.
+    public var fixedVolume: Bool { card?.volumeControl == .fixed }
+    /// Whether a mute reaches the TV's sound: not where the TV's own volume is in charge, nor once
+    /// the TV refused one.
+    public var canMute: Bool { card?.canMute ?? true }
+    public var muted: Bool { canMute && card?.muted == true }
 
     /// Where the TV's playhead is now: moved on from the card on this device's clock while it
     /// plays.

@@ -88,6 +88,7 @@ class CastModelTest {
         over: Boolean = false,
         notice: Msg? = null,
         control: FfiVolumeControl = FfiVolumeControl.LEVEL,
+        canMute: Boolean = control == FfiVolumeControl.LEVEL,
         position: Double = 120.0,
         reconnecting: Boolean = false,
         waiting: UInt? = null,
@@ -114,6 +115,7 @@ class CastModelTest {
         waiting = waiting,
         reconnecting = reconnecting,
         note = note,
+        canMute = canMute,
     )
 
     private fun TestScope.model(link: ScriptedLink): CastModel {
@@ -169,20 +171,30 @@ class CastModelTest {
     }
 
     @Test
-    fun the_volume_keys_step_5_only_on_a_tv_that_takes_a_level() = runTest {
+    fun the_volume_keys_step_5_and_mute_only_on_a_tv_that_takes_a_level() = runTest {
         val level = ScriptedLink(card(loading = false))
         val cast = model(level)
         cast.cast(row, request)
         cast.stepVolume(up = true)
         cast.setVolume(55.0)
-        assertEquals(listOf(FfiTvCommand.Volume(5.0), FfiTvCommand.Volume(15.0)), level.sent)
+        cast.toggleMute()
+        assertEquals(listOf(FfiTvCommand.Volume(5.0), FfiTvCommand.Volume(15.0), FfiTvCommand.Mute(true)), level.sent)
 
-        val fixed = ScriptedLink(card(loading = false, volume = null, control = FfiVolumeControl.MUTE_ONLY))
+        // A TV whose own volume is in charge takes neither: its sound stays where the TV has it.
+        val fixed = ScriptedLink(card(loading = false, volume = null, control = FfiVolumeControl.FIXED))
         val other = model(fixed)
         other.cast(row, request)
         other.stepVolume(up = true)
         other.toggleMute()
-        assertEquals(listOf(FfiTvCommand.Mute(true)), fixed.sent)
+        assertEquals(emptyList<FfiTvCommand>(), fixed.sent)
+
+        // One that refused a mute is not sent another.
+        val refused = ScriptedLink(card(loading = false, canMute = false))
+        val third = model(refused)
+        third.cast(row, request)
+        third.toggleMute()
+        third.stepVolume(up = false)
+        assertEquals(listOf(FfiTvCommand.Volume(-5.0)), refused.sent)
     }
 
     @Test

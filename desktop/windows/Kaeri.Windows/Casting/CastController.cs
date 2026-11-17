@@ -67,6 +67,7 @@ sealed class CastController : Grid
     bool quietVolume, wide = true;
     double? volumeAsked;
     bool? settableSeen;
+    bool mutesSeen;
 
     public CastController(Ctx ctx, TvRemote tv, CastActions act)
     {
@@ -487,19 +488,27 @@ sealed class CastController : Grid
     }
 
     /// <summary>
-    /// A slider for a TV with a level; "Set on the TV" and Mute for one whose volume is fixed. While
-    /// it takes no input the row keeps the shape the TV last reported, so a dim changes nothing else.
+    /// A slider for a TV with a level, and Mute where a mute reaches the TV's sound; "Set on the TV"
+    /// alone for one whose own volume is in charge. While it takes no input the row keeps the shape
+    /// the TV last reported, so a dim changes nothing else.
     /// </summary>
     void Volume(FfiCastSessionView? view, bool live)
     {
         var settable = view?.VolumeControl == FfiVolumeControl.Level;
+        var mutes = view?.CanMute == true;
         if (live || view is null || settableSeen is null)
+        {
             settableSeen = view is null ? null : settable;
+            mutesSeen = mutes;
+        }
         else
+        {
             settable = settableSeen.Value;
+            mutes = mutesSeen;
+        }
         Set(level, settable);
         Set(fixedVolume, !settable);
-        Set(mute, !settable);
+        Set(mute, mutes);
         level.IsEnabled = mute.IsEnabled = view is not null && live;
         var word = TvWords.MuteWord(view?.Muted == true);
         if (mute.Content as string != word)

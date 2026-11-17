@@ -54,7 +54,9 @@ struct CastControlsTests {
             guard depth < 40 else { return }
             let label = read("accessibilityLabel") as? String ?? ""
             let title = read("accessibilityTitle") as? String ?? ""
-            let name = label.isEmpty ? title : label
+            // A static text carries its words as its value.
+            let value = read("accessibilityValue") as? String ?? ""
+            let name = [label, title, value].first { !$0.isEmpty } ?? ""
             if !name.isEmpty {
                 // The getter of `accessibilityEnabled` is `isAccessibilityEnabled`.
                 let enabled = (node as? NSObject).map {
@@ -73,7 +75,7 @@ struct CastControlsTests {
     }
 
     /// The cast held on Living room, playing episode 3 at 600 s, with the TV muted.
-    func hold(volume: FfiVolumeControl, reconnecting: Bool = false) {
+    func hold(volume: FfiVolumeControl, canMute: Bool = true, reconnecting: Bool = false) {
         let cast = store.tv.cast
         cast.link = StillLink()
         var view = FfiCastSessionView(
@@ -82,7 +84,7 @@ struct CastControlsTests {
                 id: 900_001, title: "Lanterns", episode: "3", episodeTitle: nil, image: nil, // i18n-skip
                 position: 600, duration: 1420, paused: false, waiting: nil, loading: false),
             queue: [], notice: nil, note: nil, level: volume == .level ? 0.4 : nil, muted: true,
-            volumeControl: volume, ownReceiver: true)
+            volumeControl: volume, ownReceiver: true, canMute: canMute)
         view.reconnecting = reconnecting
         cast.take(view: view)
     }
@@ -110,7 +112,8 @@ struct CastControlsTests {
         // The pill alone, at its own width, read the same way.
         let alone = elements(CastMuteButton(muted: true, touch: false) {}.fixedSize(), size: NSSize(width: 400, height: 60))
         let ideal = try #require(alone.first { $0.name == L.playerUnmute }?.frame.width)
-        for volume in [FfiVolumeControl.muteOnly, .level] {
+        // A TV that refused a level but takes a mute, and one that takes both.
+        for volume in [FfiVolumeControl.fixed, .level] {
             hold(volume: volume)
             let all = elements(CastConnectedDialog(), size: NSSize(width: CastMetrics.popoverWidth ?? 280, height: 240))
             let unmute = try #require(all.first { $0.name == L.playerUnmute && $0.role == NSAccessibility.Role.button.rawValue },
@@ -119,6 +122,15 @@ struct CastControlsTests {
                     "\(volume): Unmute is \(unmute.frame.width) wide of its \(ideal): \(all.map { "\($0.name) \($0.frame.width)" })")
         }
     }
+
+    @Test func aTvWhoseOwnVolumeIsInChargeOffersNoMute() {
+        hold(volume: .fixed, canMute: false)
+        let all = elements(CastConnectedDialog(), size: NSSize(width: CastMetrics.popoverWidth ?? 280, height: 240))
+        let names = all.map(\.name)
+        #expect(names.contains(L.castVolumeFixed), "\(names)")
+        #expect(!names.contains(L.playerUnmute) && !names.contains(L.playerMute), "\(names)")
+        #expect(!names.contains(L.playerMuted), "the TV's muted flag means nothing here: \(names)")
+    }
 }
 
 /// A session link that tells the engine nothing and hears nothing back.
@@ -126,7 +138,7 @@ private final class StillLink: CastSessionLink, @unchecked Sendable {
     func state() -> FfiCastSessionView {
         FfiCastSessionView(
             state: .idle, button: .connected, rev: 0, deviceKey: "", deviceName: "", item: nil, queue: [],
-            notice: nil, note: nil, level: nil, muted: nil, volumeControl: .muteOnly, ownReceiver: true)
+            notice: nil, note: nil, level: nil, muted: nil, volumeControl: .fixed, ownReceiver: true, canMute: false)
     }
     func next() async -> FfiCastSessionView? { nil }
     func connect(key: String, from: FfiCastFrom?) throws {}

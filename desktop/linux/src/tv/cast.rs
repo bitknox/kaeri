@@ -77,7 +77,10 @@ pub struct CastView {
     /// The engine's words for why it ended.
     pub notice: Option<Msg>,
     pub offers: Vec<Offer>,
+    /// Whether the TV takes a level: not where its own volume is in charge.
     pub volume: VolumeControl,
+    /// Whether Mute is offered: not where the TV's own volume is in charge, or it refused one.
+    pub can_mute: bool,
     pub muted: bool,
     /// Up next, while the engine counts down to it.
     pub up_next: Option<CastUpNext>,
@@ -246,6 +249,7 @@ impl Tv {
             notice: run.card.notice.clone(),
             offers: run.card.notice.as_ref().map(offers_for).unwrap_or_default(),
             volume: run.card.volume_control,
+            can_mute: run.card.can_mute,
             muted: run.card.muted.unwrap_or(false),
             up_next: run.card.up_next.clone().filter(|_| !stage.ended()),
             undo: run.card.undo.filter(|_| stage == Stage::Playing),
@@ -825,6 +829,7 @@ mod tests {
                 reached: true,
             },
             volume_control: VolumeControl::Level,
+            can_mute: true,
             muted: None,
             notice: None,
             phase_line: None,
@@ -846,6 +851,7 @@ mod tests {
             notice: None,
             offers: Vec::new(),
             volume: VolumeControl::Level,
+            can_mute: true,
             muted: false,
             up_next: None,
             undo: None,

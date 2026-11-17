@@ -358,7 +358,9 @@ sealed class CastButton : Grid
         {
             var settable = view?.VolumeControl == FfiVolumeControl.Level;
             slider.Visibility = settable ? Visibility.Visible : Visibility.Collapsed;
-            fixedLine.Visibility = mute.Visibility = settable ? Visibility.Collapsed : Visibility.Visible;
+            fixedLine.Visibility = settable ? Visibility.Collapsed : Visibility.Visible;
+            // Mute only where it reaches the TV's sound: never where the TV's own volume is in charge.
+            mute.Visibility = view?.CanMute == true ? Visibility.Visible : Visibility.Collapsed;
             var word = TvWords.MuteWord(view?.Muted == true);
             if (mute.Content as string != word)
             {

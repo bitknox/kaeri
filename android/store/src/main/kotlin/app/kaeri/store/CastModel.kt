@@ -140,8 +140,11 @@ data class CastShown(
             }
         }
 
-    /** The TV takes a volume level; otherwise its own volume is in charge and the card has Mute alone. */
+    /** The TV takes a volume level; otherwise its own volume is in charge and the card reads "Set on the TV". */
     val level: Boolean get() = cast.volumeControl == FfiVolumeControl.LEVEL
+
+    /** A mute reaches the TV's sound, so the card offers Mute: not where the TV's own volume is in charge. */
+    val canMute: Boolean get() = cast.canMute
 
     /** The cast starts or plays: not a card that says why it stopped. */
     val live: Boolean get() = stage == CastStage.Starting || stage == CastStage.Playing
@@ -596,7 +599,7 @@ class CastModel(
         over = null
         told = null
         val now = clock()
-        _shown.value = CastShown(starting(name, _session.value.levelControl), now, name, request, now)
+        _shown.value = CastShown(starting(name, _session.value.levelControl, _session.value.canMute), now, name, request, now)
         recast()
         _open.value = true
         source.play(request)
@@ -757,8 +760,9 @@ class CastModel(
         if (source != null && _session.value.held) source.command(command) else link?.command(command)
     }
 
-    /** Mute the TV, or bring its sound back. */
+    /** Mute the TV, or bring its sound back: nothing on a TV where a mute doesn't reach its sound. */
     fun toggleMute() {
+        if (_shown.value?.canMute != true && !(_session.value.held && _session.value.canMute)) return
         val muted = _shown.value?.cast?.muted ?: _session.value.muted ?: false
         send(FfiTvCommand.Mute(!muted))
     }
@@ -902,7 +906,7 @@ class CastModel(
         const val PENDING_FOR = 45_000L
 
         /** The controller's card before the engine's: the TV starting what was asked. */
-        fun starting(tvName: String, level: Boolean) = FfiCastCard(
+        fun starting(tvName: String, level: Boolean, canMute: Boolean = level) = FfiCastCard(
             card = FfiRemoteCard(
                 tvName = tvName,
                 phase = FfiLinkPhase.CONNECTED,
@@ -913,13 +917,14 @@ class CastModel(
                 over = false,
                 reached = true,
             ),
-            volumeControl = if (level) FfiVolumeControl.LEVEL else FfiVolumeControl.MUTE_ONLY,
+            volumeControl = if (level) FfiVolumeControl.LEVEL else FfiVolumeControl.FIXED,
             muted = null,
             notice = null,
             phaseLine = null,
             upNext = null,
             undo = null,
             route = null,
+            canMute = canMute,
         )
 
         /** The picker row of the TV that plays now: the held session's, or that of a cast started from the picker. */

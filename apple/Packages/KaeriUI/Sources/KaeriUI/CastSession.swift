@@ -833,8 +833,8 @@ struct CastSessionRows: View {
     }
 }
 
-/// The TV's volume: Set on the TV with Mute for a TV that keeps its own, a slider for one that
-/// takes a level.
+/// The TV's volume: a slider for a TV that takes a level, with Mute where a mute reaches its
+/// sound; Set on the TV alone for one that keeps its own.
 struct CastSessionVolumeRow: View {
     @Environment(AppStore.self) private var store
     @Environment(\.castSliding) private var sliding
@@ -843,7 +843,8 @@ struct CastSessionVolumeRow: View {
     var body: some View {
         let cast = store.tv.cast
         let touch = CastMetrics.touch
-        let muted = cast.held?.muted ?? cast.muted
+        let canMute = cast.held?.canMute ?? cast.canMute
+        let muted = canMute && (cast.held?.muted ?? cast.muted)
         HStack(spacing: 10) {
             Text(L.tvVolume).font(touch ? .ui(17) : .mac(12)).foregroundStyle(.silk)
             Spacer(minLength: 8)
@@ -869,8 +870,10 @@ struct CastSessionVolumeRow: View {
                     .contentTransition(.opacity)
             }
             // Mute or Unmute keeps its whole label: the line or the slider beside it gives way.
-            CastMuteButton(muted: muted, touch: touch) { cast.command(.mute(muted: !muted)) }
-                .layoutPriority(1)
+            if canMute {
+                CastMuteButton(muted: muted, touch: touch) { cast.command(.mute(muted: !muted)) }
+                    .layoutPriority(1)
+            }
         }
         .padding(.horizontal, CastMetrics.rowInset)
         .frame(minHeight: touch ? 52 : 32)

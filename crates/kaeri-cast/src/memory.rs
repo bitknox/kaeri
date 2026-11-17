@@ -355,6 +355,16 @@ mod tests {
     }
 
     #[test]
+    fn a_fixed_volume_kept_as_mute_only_reads_as_fixed() {
+        let dir = tempfile::tempdir().unwrap();
+        let old =
+            r#"[{"id":"tv","name":"Living room","model":"Chromecast","volume":"mute_only"}]"#;
+        std::fs::write(dir.path().join(FILE), old).unwrap();
+        let memory = CastMemory::open(dir.path()).unwrap();
+        assert_eq!(memory.caps("tv").volume, VolumeControl::Fixed);
+    }
+
+    #[test]
     fn a_refusal_never_outlives_the_session() {
         let dir = tempfile::tempdir().unwrap();
         let memory = CastMemory::open(dir.path()).unwrap();

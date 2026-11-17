@@ -44,7 +44,7 @@ import app.kaeri.i18n.Strings
  *     blocked    the picker with Android 17's local network permission turned down
  *     starting   Living room's card, 6 s into starting: "Waiting for Living room · 6 s"
  *     preparing  Living room's card, 6 s in, this device converting: "Preparing the stream · 6 s"
- *     fixed      Living room's card playing, its volume fixed: Mute alone
+ *     fixed      Living room's card playing, its volume set on the TV, with no Mute
  *     level      Kitchen display's card in the opening, with a volume level and the skip offer
  *     failed     Living room's card once every stream was refused
  *     never      Living room's card after the TV never read the stream: Try again and Play here
@@ -276,6 +276,7 @@ class FixtureCastLink(
             route = if (loading) null else FfiCastRouteHint.THROUGH_THIS_DEVICE,
             waiting = waitingSince?.takeIf { !over }?.let { ((System.nanoTime() - it) / 1_000_000_000L).toUInt() },
             reconnecting = reconnecting && !over,
+            canMute = control == FfiVolumeControl.LEVEL,
         )
     }
 
@@ -306,7 +307,7 @@ class FixtureCastLink(
                 from = 85.0
                 since = System.nanoTime()
             }
-            is FfiTvCommand.Mute -> muted = command.muted
+            is FfiTvCommand.Mute -> if (control == FfiVolumeControl.LEVEL) muted = command.muted
             is FfiTvCommand.Volume -> if (control == FfiVolumeControl.LEVEL) volume = (volume + command.step).coerceIn(0.0, 100.0)
             is FfiTvCommand.Track -> when (command.kind) {
                 FfiTvTrackKind.SUBTITLE -> {
@@ -398,7 +399,7 @@ object FixtureCasts {
                         episodeLine = line, loading = true, position = 0.0, duration = 1440.0, paused = false, speed = 1.0, volume = null,
                         audio = emptyList(), subtitles = emptyList(), subtitlesOff = false, skip = null,
                     ),
-                    control = if (level) FfiVolumeControl.LEVEL else FfiVolumeControl.MUTE_ONLY,
+                    control = if (level) FfiVolumeControl.LEVEL else FfiVolumeControl.FIXED,
                     startsAfter = sessionStartsAfter,
                     from = asked.from?.takeIf { it > 0 } ?: sessionFrom,
                     skipLabel = null,
@@ -566,7 +567,7 @@ object FixtureCasts {
                 tvName = name,
                 scope = scope,
                 now = now.copy(title = asked.title.ifEmpty { title }),
-                control = if (kitchen) FfiVolumeControl.LEVEL else FfiVolumeControl.MUTE_ONLY,
+                control = if (kitchen) FfiVolumeControl.LEVEL else FfiVolumeControl.FIXED,
                 startsAfter = startsAfter,
                 from = from,
                 skipLabel = Strings.playerSkipOpening(context),
