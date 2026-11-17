@@ -458,14 +458,17 @@ async function syncCase() {
 }
 
 /**
- * The start of FLAC sound: when the element starts playing, the sound must lead the playhead by
- * the FLAC lead, and it must not run dry and wait in the first seconds (a burst, a gap, then sound).
+ * The start of sound through MediaSource: when the element starts playing, FLAC sound must lead
+ * the playhead by the FLAC lead and not run dry in the first seconds, and the sound fades in over
+ * the TV's audio output start (a burst, a gap, then sound).
  */
 async function flacStartCase() {
-	for (const name of ['ts h264 mp2', 'mkv h264 mp2']) {
-		const label = `flac start, ${name}`;
+	for (const name of ['ts h264 mp2', 'mkv h264 mp2', 'mkv h264 aac']) {
+		const label = `start, ${name}`;
 		const c = cases.find((x) => x.name === name)!;
 		await js('window.__kaeriWorklet = false');
+		// The element's volume just after playing begins: the engine fades the sound in.
+		await js(`window.__vol = []; document.getElementById('video').addEventListener('playing', () => { const v = document.getElementById('video'); for (const ms of [0, 150, 450]) setTimeout(() => window.__vol.length < 3 && window.__vol.push(Math.round(v.volume * 1000) / 1000), ms); }, { once: true })`);
 		await js(`__caf.load(${JSON.stringify(request(c))})`);
 		expect(await until(`document.getElementById('video').currentTime > 3.5`, 15_000), `${label}: plays`);
 		const trace = (await js<string[]>(`__receiver.formats.current?.stats().clockTrace ?? []`)) ?? [];
@@ -474,6 +477,8 @@ async function flacStartCase() {
 		const ahead = m ? Number(m[3]) - Number(m[1]) : -1;
 		expect(ahead >= 0.45, `${label}: sound leads the playhead by 0.45 s or more when playing begins (${ahead.toFixed(3)} s: ${trace[at] ?? 'no playing line'})`);
 		const dry = trace.slice(at + 1).filter((l) => /^\d+:waiting /.test(l));
+		const vol = await js<number[]>('window.__vol');
+		expect(vol?.length === 3 && vol[0] < 0.05 && vol[1] > 0.02 && vol[1] < 0.9 && vol[2] === 1, `${label}: the sound fades in when playing begins (volume ${JSON.stringify(vol)} at 0, 150 and 450 ms)`);
 		expect(at >= 0 && dry.length === 0, `${label}: no wait after playing begins (${dry.join(' | ') || 'none'})`);
 	}
 }

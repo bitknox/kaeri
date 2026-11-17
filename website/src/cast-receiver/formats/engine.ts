@@ -46,6 +46,12 @@ const PACED = 2500;
  */
 const FLAC_LEAD = 0.5;
 const FLAC_WAIT = 2000;
+/**
+ * Milliseconds the element's sound fades in over whenever playing begins. The Chromecast TV's audio
+ * output stops for 40 to 90 ms about 50 to 250 ms after it starts (AAC and FLAC alike, the media
+ * clock with it): a short burst, a gap, then the sound. Under the fade the burst is near silent.
+ */
+const FADE_IN = 300;
 /** Seconds kept behind the playhead. */
 const BEHIND = 30;
 /** Frames held to work out Matroska video decode times. */
@@ -554,6 +560,7 @@ export class Unpacker {
 		const v = this.video as HTMLVideoElement & { requestVideoFrameCallback?: (cb: (now: number) => void) => number };
 		if (v.requestVideoFrameCallback) v.requestVideoFrameCallback((now) => (this.frameAt ??= now));
 		this.on(this.video, 'playing', () => {
+			this.fadeIn();
 			this.playingAt ??= performance.now();
 			this.pacedFrom ??= performance.now();
 			if (!v.requestVideoFrameCallback) this.frameAt ??= this.playingAt;
@@ -564,6 +571,9 @@ export class Unpacker {
 		// CAF unloaded the element (a stop, or another load).
 		this.on(this.ms, 'sourceclose', () => !this.swapping && this.destroy(), false);
 		this.on(this.video, 'seeking', () => this.onSeeking());
+		// A seek restarts the TV's audio output as a start does, without saying 'playing' when the
+		// element never stopped.
+		this.on(this.video, 'seeked', () => !this.video.paused && this.fadeIn());
 		// Before CAF hears a media error: an audio failure goes to WebAssembly instead.
 		this.on(window, 'error', (e) => this.onMediaError(e), true);
 		for (const type of ['emptied', 'abort', 'loadstart', 'pause', 'waiting', 'stalled', 'suspend'])
@@ -1064,13 +1074,38 @@ export class Unpacker {
 		}
 		const v = this.video as HTMLVideoElement & { webkitAudioDecodedByteCount?: number };
 		const r = (o: Output | null) => (o ? o.ranges().map(([a, b]) => `${a.toFixed(3)}-${b.toFixed(3)}`).join(',') || '-' : 'none');
-		const state = `t${v.currentTime.toFixed(3)} r${v.readyState}${v.paused ? 'p' : ''} ab${v.webkitAudioDecodedByteCount ?? '?'} v${r(this.vout)} a${r(this.aout)}`;
+		const state = `t${v.currentTime.toFixed(3)} r${v.readyState}${v.paused ? 'p' : ''}${v.volume < 1 ? ` vol${v.volume.toFixed(2)}` : ''} ab${v.webkitAudioDecodedByteCount ?? '?'} v${r(this.vout)} a${r(this.aout)}`;
 		if (what === '.' && this.lastNote === state) return;
 		this.lastNote = state;
 		tr.push(`${Math.round(performance.now() - this.t0)}:${what} ${state}`);
 	}
 
 	private lastNote = '';
+	/** The fade-in running: its timer and the volume it rises to. */
+	private fade: { timer: number; to: number } | null = null;
+
+	/** Fades the element's sound in over FADE_IN ms, from silence, on a square curve. */
+	private fadeIn() {
+		const v = this.video;
+		if (this.pcm || !this.audioTrack || this.closed) return;
+		const to = this.fade?.to ?? v.volume;
+		if (this.fade) window.clearInterval(this.fade.timer);
+		const from = performance.now();
+		const step = () => {
+			const x = Math.min(1, (performance.now() - from) / FADE_IN);
+			v.volume = to * x * x;
+			if (x >= 1) this.stopFade();
+		};
+		this.fade = { timer: window.setInterval(step, 15), to };
+		step();
+	}
+
+	private stopFade() {
+		if (!this.fade) return;
+		window.clearInterval(this.fade.timer);
+		this.video.volume = this.fade.to;
+		this.fade = null;
+	}
 
 	private tick() {
 		if (this.closed) return;
@@ -1316,6 +1351,7 @@ export class Unpacker {
 		this.poke();
 		clearInterval(this.timer);
 		clearInterval(this.traceTimer);
+		this.stopFade();
 		for (const [target, type, fn, capture] of this.listeners) target.removeEventListener(type, fn, capture);
 		this.listeners = [];
 		this.pcm?.destroy();
