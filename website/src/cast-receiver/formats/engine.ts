@@ -668,8 +668,17 @@ export class Unpacker {
 			if (k >= 0) this.needKey = false;
 		}
 		if (this.fixer && video.length) video = this.fixer.push(video);
+		let pushed = false;
+		// WebAssembly sound: the first picture after a start or a seek waits for decoded sound, so
+		// both begin together instead of the sound starting late and skipping to catch up.
+		if (this.pcm && audio.length && video.length && !this.pcm.isPrimed) {
+			this.pcm.push(audio);
+			pushed = true;
+			await this.pcm.ready();
+			if (g !== this.gen) return;
+		}
 		if (video.length && this.vout) await this.put(this.vout, this.vout.muxer.segment(video), g);
-		if (audio.length) {
+		if (audio.length && !pushed) {
 			if (this.pcm) this.pcm.push(audio);
 			else if (this.aout) await this.put(this.aout, this.aout.muxer.segment(audio), g);
 		}

@@ -35,17 +35,25 @@ interface Run {
 	/** Output samples that break the tone (a skip, a repeat or silence), after the first second. */
 	breaks: number;
 	worst: number;
+	/** Drift at the end, and the leftover latency the filter settled on. */
+	drift: number;
+	latency: number;
 }
 
 type Jitter = (t: number, rnd: () => number) => number;
 
 /**
  * Plays `seconds` of a 440 Hz tone. `jitter(t)` is the error in the video time read at `t`,
- * `ctxJitter(t)` the error in the context time the main thread works out; with `filter`, the
- * readings go through the main thread's ClockFilter first, as PcmAudio sends them. `settle` is
- * when counting starts (1 s by default).
+ * `ctxJitter(t)` the error in the context time from currentTime (with `unreported` latency the
+ * browser doesn't report on top), `tsJitter(t)` the error in the one from getOutputTimestamp();
+ * with `filter`, the readings go through the main thread's ClockFilter first, as PcmAudio sends
+ * them. `settle` is when counting starts (1 s by default).
  */
-function play(seconds: number, jitter: Jitter, o: { ctxJitter?: Jitter; filter?: boolean; seed?: number; settle?: number } = {}): Run {
+function play(
+	seconds: number,
+	jitter: Jitter,
+	o: { ctxJitter?: Jitter; tsJitter?: Jitter; unreported?: number; filter?: boolean; seed?: number; settle?: number } = {},
+): Run {
 	const seed = o.seed ?? 7;
 	const settle = o.settle ?? 1;
 	const filter = o.filter ? new ClockFilter() : null;
@@ -86,9 +94,10 @@ function play(seconds: number, jitter: Jitter, o: { ctxJitter?: Jitter; filter?:
 		if (ctx >= nextClock) {
 			const heard = Math.max(0, ctx - latency);
 			const media = heard + jitter(heard, rnd);
-			const at = heard + (o.ctxJitter?.(heard, rnd) ?? 0);
-			const k = filter ? filter.read(heard, media, at, 1, true) : { media, ctx: at };
-			p.port.onmessage!({ data: { type: 'clock', media: k.media, ctx: k.ctx, rate: 1, playing: true } });
+			const at = heard + (o.unreported ?? 0) + (o.ctxJitter?.(heard, rnd) ?? 0);
+			const ts = o.tsJitter ? heard + o.tsJitter(heard, rnd) : null;
+			const k = filter ? filter.read(heard, media, at, 1, true, ts) : { media, ctx: at, settling: false };
+			p.port.onmessage!({ data: { type: 'clock', media: k.media, ctx: k.ctx, rate: 1, playing: true, settling: k.settling } });
 			nextClock += 0.1;
 		}
 		p.process([], [[left, right]]);
@@ -107,7 +116,7 @@ function play(seconds: number, jitter: Jitter, o: { ctxJitter?: Jitter; filter?:
 		}
 	}
 	const st = p as unknown as Record<string, number>;
-	return { jumps: st.jumps - settled.jumps, waits: st.waits - settled.waits, starved: st.starved - settled.starved, breaks, worst: st.worst };
+	return { jumps: st.jumps - settled.jumps, waits: st.waits - settled.waits, starved: st.starved - settled.starved, breaks, worst: st.worst, drift: st.drift, latency: filter?.spread.latency ?? 0 };
 }
 
 describe('WebAssembly audio against the video clock', () => {
@@ -165,6 +174,35 @@ describe('WebAssembly audio against the video clock', () => {
 		const r = play(40, (t) => -(t % 0.3), { ctxJitter: (_, rnd) => (rnd() - 0.5) * 0.2, settle: 6 });
 		console.info('tv-like, unfiltered', r);
 		expect(r.breaks).toBeGreaterThan(0);
+	});
+
+	// What the Chromecast TV showed on 17 Nov: the video offset steady, the output timestamp's
+	// context time off by up to 350 ms either way. currentTime moves in steps of the output buffer.
+	test('the TV from 0.5 s: currentTime in 85 ms steps and an output timestamp off by 200 ms either way', () => {
+		const r = play(40, () => 0, { ctxJitter: (t) => -(t % 0.085), tsJitter: (_, rnd) => (rnd() - 0.5) * 0.4, filter: true, settle: 0.5 });
+		console.info('tv from the start', r);
+		expect(r.jumps).toBe(0);
+		expect(r.waits).toBe(0);
+		expect(r.breaks).toBe(0);
+	});
+
+	test('latency the browser does not report (60 ms) is taken up by resampling, without a gap', () => {
+		const r = play(60, () => 0, { unreported: 0.06, ctxJitter: (t) => -(t % 0.085), tsJitter: (_, rnd) => (rnd() - 0.5) * 0.4, filter: true, settle: 0.5 });
+		console.info('unreported latency', r);
+		expect(r.jumps).toBe(0);
+		expect(r.waits).toBe(0);
+		expect(r.breaks).toBe(0);
+		// currentTime in 85 ms steps reads 42 ms early on average, so 60 ms less that is left over.
+		expect(Math.abs(r.latency - (0.06 - 0.085 / 2))).toBeLessThan(0.025);
+		expect(Math.abs(r.drift)).toBeLessThan(0.015);
+	});
+
+	test('a currentTime that strays 60 ms too makes at most one correction after 0.5 s', () => {
+		const r = play(40, () => 0, { ctxJitter: (_, rnd) => (rnd() - 0.5) * 0.12, tsJitter: (_, rnd) => (rnd() - 0.5) * 0.4, filter: true, settle: 0.5 });
+		console.info('noisy currentTime', r);
+		expect(r.jumps + Math.min(r.waits, 1)).toBeLessThanOrEqual(1);
+		// One gap: its start and its end, each two samples off the tone.
+		expect(r.breaks).toBeLessThanOrEqual(4);
 	});
 
 	test('a video clock that runs 0.2 % slow is followed without chops', () => {

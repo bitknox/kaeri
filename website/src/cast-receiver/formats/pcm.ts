@@ -27,41 +27,81 @@ export function decoderFor(t: Track): { family: string; decoder: string } | null
 
 /**
  * The video's clock and the audio context's clock as offsets from performance.now(), each the
- * mean of the middle half of the last 40 readings (about 3 s). On a TV both readings stray by tens of milliseconds
- * (the video time moves in steps, the context's output timestamp wanders), while the offsets
- * themselves stay put during steady playback. A reading far off the median (a seek, a stall caught
- * up) starts the window again.
+ * mean of the middle half of the last 40 readings (about 3 s), with the video and context clocks
+ * read on the main thread.
+ *
+ * The context time steered by is AudioContext.currentTime less the reported output latency. It
+ * moves in steps of the output buffer but never strays further. getOutputTimestamp() would also
+ * count the latency the browser doesn't report, but on the Chromecast TV it strays by up to 700 ms,
+ * so it only calibrates: the mean of the middle half of the last 200 differences between the two
+ * is the latency left over, and the clock moves towards it by at most RAMP (3 ms a second), which
+ * the worklet follows by resampling without a gap or a skip.
+ *
+ * A reading far off the median (a seek, a stall caught up) starts the window again. Until a window
+ * holds SETTLED readings, `settling` tells the worklet to leave drift under 120 ms alone, so the
+ * start never steers by an estimate made from a handful of readings.
  */
 export class ClockFilter {
 	private v: number[] = [];
 	private c: number[] = [];
+	/** currentTime-based context time minus the output timestamp's, for the latency left over. */
+	private d: number[] = [];
 	private rate = 1;
 	private playing = false;
-	/** Spread of the video readings (max - min), and how far the highest sits above the median. */
-	spread = { video: 0, videoHigh: 0, ctx: 0 };
+	/** The extra latency applied so far (seconds), and when it was last moved. */
+	private lat = 0;
+	private latAt = 0;
+	/** Spreads (max - min) of the video and context offsets and of the output timestamp's, the highest video offset above the estimate, and the extra latency applied. */
+	spread = { video: 0, videoHigh: 0, ctx: 0, ts: 0, latency: 0 };
 
 	constructor(private readonly keep = 40) {}
 
-	/** One reading at performance time `now` (seconds); returns the clock to steer by. */
-	read(now: number, media: number, ctx: number, rate: number, playing: boolean): { media: number; ctx: number } {
-		if (!playing || rate !== this.rate || !this.playing) {
-			this.v = [];
-			this.c = [];
-		}
+	/**
+	 * One reading at performance time `now` (seconds): the video time, the context time from
+	 * currentTime less the reported latency, and the one from getOutputTimestamp() when there is one.
+	 */
+	read(now: number, media: number, ctx: number, rate: number, playing: boolean, ts: number | null = null): { media: number; ctx: number; settling: boolean } {
+		if (!playing || rate !== this.rate || !this.playing) this.v = [];
 		this.rate = rate;
 		this.playing = playing;
 		const vo = media - now * rate;
 		const co = ctx - now;
 		if (this.v.length >= 3 && Math.abs(vo - median(this.v)) > JUMP) this.v = [];
 		if (this.c.length >= 3 && Math.abs(co - median(this.c)) > JUMP) this.c = [];
+		// A new window (start, seek, rate change, a real jump) starts both lists together.
+		if (!this.v.length || !this.c.length) {
+			this.v = [];
+			this.c = [];
+		}
 		push(this.v, vo, this.keep);
 		push(this.c, co, this.keep);
+		if (ts != null && Number.isFinite(ts)) push(this.d, ctx - ts, CALIBRATE);
+		const settling = this.v.length < SETTLED;
+		// The leftover latency moves only in steady play, and slowly.
+		if (!settling && this.d.length >= SETTLED) {
+			const want = Math.max(-MAX_LATENCY, Math.min(MAX_LATENCY, middle(this.d)));
+			const step = RAMP * Math.max(0, Math.min(1, now - this.latAt));
+			this.lat += Math.max(-step, Math.min(step, want - this.lat));
+		}
+		this.latAt = now;
 		const mv = middle(this.v);
 		const mc = middle(this.c);
-		this.spread = { video: spread(this.v), videoHigh: Math.max(...this.v) - mv, ctx: spread(this.c) };
-		return { media: mv + now * rate, ctx: mc + now };
+		this.spread = { video: spread(this.v), videoHigh: Math.max(...this.v) - mv, ctx: spread(this.c), ts: spread(this.d), latency: this.lat };
+		return { media: mv + now * rate, ctx: mc + now - this.lat, settling };
 	}
 }
+
+/** Seconds of decoded sound the worklet holds before the picture may start. */
+const PRIMED = 0.3;
+
+/** Readings in a window before the worklet steers by it (about 1.5 s). */
+const SETTLED = 20;
+/** Differences kept for the latency left over (about 15 s). */
+const CALIBRATE = 200;
+/** The most the leftover latency moves the clock, in seconds a second. */
+const RAMP = 0.003;
+/** The largest leftover latency believed. */
+const MAX_LATENCY = 0.3;
 
 /** A clock reading this far from the median is a real jump (a seek, a stall caught up). */
 const JUMP = 0.4;
@@ -121,6 +161,9 @@ export class PcmAudio {
 	private listeners: [string, () => void][] = [];
 	private lastPts = -Infinity;
 	private filter = new ClockFilter();
+	/** Sound is queued for the current start; until then, `ready()` callers wait. */
+	private primed = false;
+	private waiting: (() => void)[] = [];
 
 	private constructor(
 		private readonly ctx: AudioContext,
@@ -131,7 +174,9 @@ export class PcmAudio {
 		this.gain = ctx.createGain();
 		node.connect(this.gain).connect(ctx.destination);
 		node.port.onmessage = (e) => {
-			if (e.data?.type === 'position' && e.data.gen === this.gen) this.stats = { ...e.data, clock: this.filter.spread };
+			if (e.data?.type !== 'position' || e.data.gen !== this.gen) return;
+			this.stats = { ...e.data, clock: this.filter.spread };
+			if (!this.primed && this.stats.queued >= PRIMED) this.prime();
 		};
 		const clock = () => this.clock();
 		for (const ev of ['play', 'playing', 'pause', 'seeking', 'seeked', 'ratechange', 'waiting', 'timeupdate', 'ended', 'stalled'])
@@ -203,8 +248,36 @@ export class PcmAudio {
 		this.worker.postMessage({ type: 'packets', gen: this.gen, packets }, packets.map((p) => p.data.buffer as ArrayBuffer).filter(unique()));
 	}
 
+	/**
+	 * Resolves once the worklet holds PRIMED seconds of sound for the current start, or after
+	 * `timeout` ms. The engine holds the first video back until then: on a slow TV the decoder
+	 * starts later than the picture, and the sound would begin with a gap and then skip to catch up.
+	 */
+	ready(timeout = 2500): Promise<void> {
+		if (this.primed) return Promise.resolve();
+		return new Promise((resolve) => {
+			const timer = setTimeout(() => this.prime(), timeout);
+			this.waiting.push(() => {
+				clearTimeout(timer);
+				resolve();
+			});
+		});
+	}
+
+	get isPrimed() {
+		return this.primed;
+	}
+
+	private prime() {
+		this.primed = true;
+		const waiting = this.waiting;
+		this.waiting = [];
+		for (const w of waiting) w();
+	}
+
 	/** Starts again at `time` (a seek, or a new load position). */
 	seek(time: number) {
+		this.primed = false;
 		this.gen++;
 		this.lastPts = -Infinity;
 		this.worker.postMessage({ type: 'flush', gen: this.gen, time });
@@ -215,12 +288,16 @@ export class PcmAudio {
 	private clock() {
 		const v = this.video;
 		const playing = !v.paused && !v.seeking && !v.ended && v.readyState >= 3;
-		let ctxNow = this.ctx.currentTime;
-		const ts = this.ctx.getOutputTimestamp?.();
-		if (ts && ts.contextTime != null && ts.performanceTime != null && ts.performanceTime > 0)
-			ctxNow = ts.contextTime + (performance.now() - ts.performanceTime) / 1000;
-		const k = this.filter.read(performance.now() / 1000, v.currentTime, ctxNow, v.playbackRate, playing);
-		this.node.port.postMessage({ type: 'clock', media: k.media, ctx: k.ctx, rate: v.playbackRate, playing });
+		const now = performance.now();
+		const latency = (this.ctx.outputLatency || 0) + (this.ctx.baseLatency || 0);
+		const heard = this.ctx.currentTime - latency;
+		const out = this.ctx.getOutputTimestamp?.();
+		const ts =
+			out && out.contextTime != null && out.performanceTime != null && out.performanceTime > 0
+				? out.contextTime + (now - out.performanceTime) / 1000
+				: null;
+		const k = this.filter.read(now / 1000, v.currentTime, heard, v.playbackRate, playing, ts);
+		this.node.port.postMessage({ type: 'clock', media: k.media, ctx: k.ctx, rate: v.playbackRate, playing, settling: k.settling });
 		if (playing && this.ctx.state === 'suspended') void this.ctx.resume().catch(() => {});
 	}
 
@@ -254,6 +331,7 @@ export class PcmAudio {
 	}
 
 	destroy() {
+		this.prime();
 		clearInterval(this.timer);
 		for (const [ev, fn] of this.listeners) this.video.removeEventListener(ev, fn);
 		this.worker.postMessage({ type: 'close' });

@@ -33,6 +33,8 @@ const SOFT = 0.025;
 const SETTLE = 0.5;
 /** The jump threshold while settling. */
 const SETTLE_HARD = 0.02;
+/** The jump threshold while the main thread's clock filter fills its window after the start. */
+const WIDE = 0.12;
 /** A clock reading this far from the clock is a real jump, taken at once. */
 const JUMP = 0.25;
 /** The least weight a clock reading gets (about the last 20 readings, 2 s, count). */
@@ -44,6 +46,8 @@ class KaeriPcm extends AudioWorkletProcessor {
 	private offset = 0;
 	private gen = 0;
 	private clock = { media: 0, ctx: 0, rate: 1, playing: false };
+	/** The main thread's clock estimate is still young: leave moderate drift alone. */
+	private settling = false;
 	/** Readings averaged into the clock since it last moved at once. */
 	private readings = 0;
 	/** Mean square of the readings' error against the clock, for the stats. */
@@ -78,7 +82,8 @@ class KaeriPcm extends AudioWorkletProcessor {
 	}
 
 	/** A clock reading: averaged in while playing steadily, else taken as it is. */
-	private onClock(m: { media: number; ctx: number; rate: number; playing: boolean }) {
+	private onClock(m: { media: number; ctx: number; rate: number; playing: boolean; settling?: boolean }) {
+		this.settling = !!m.settling;
 		const k = this.clock;
 		const now = { media: m.media, ctx: m.ctx, rate: m.rate, playing: m.playing };
 		if (!m.playing || !k.playing || m.rate !== k.rate || m.ctx < k.ctx) {
@@ -157,10 +162,13 @@ class KaeriPcm extends AudioWorkletProcessor {
 		if (this.fresh) this.settleUntil = currentTime + SETTLE;
 		this.fresh = false;
 		// Drift that resampling doesn't fix within a moment is fixed by jumping too.
-		if (Math.abs(diff) > SOFT) this.overSince ??= currentTime;
+		// While the main thread's estimate is young, only a wide drift counts: the start keeps the
+		// line-up it made in its first SETTLE seconds.
+		const young = this.settling && currentTime >= this.settleUntil;
+		if (Math.abs(diff) > SOFT && !young) this.overSince ??= currentTime;
 		else this.overSince = null;
 		const stuck = this.overSince != null && currentTime - this.overSince > 0.5;
-		const hard = currentTime < this.settleUntil ? SETTLE_HARD : stuck ? SOFT : HARD;
+		const hard = currentTime < this.settleUntil ? SETTLE_HARD : young ? WIDE : stuck ? SOFT : HARD;
 		if (diff > hard) {
 			// Behind: catch up at once.
 			this.skipTo(expected);
