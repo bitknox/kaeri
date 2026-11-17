@@ -46,12 +46,6 @@ const PACED = 2500;
  */
 const FLAC_LEAD = 0.5;
 const FLAC_WAIT = 2000;
-/**
- * The most bytes of media in one append. The TV parses an append while holding its demuxer, so the
- * sound playing waits for it: one 4 s HLS segment of picture (1 MB at 2 Mbit/s) appended right after
- * playing began stopped the media clock for 70 ms, a burst of sound and a gap.
- */
-const APPEND_BYTES = 128 * 1024;
 /** Seconds kept behind the playhead. */
 const BEHIND = 30;
 /** Frames held to work out Matroska video decode times. */
@@ -861,7 +855,7 @@ export class Unpacker {
 			this.flacRate = rate;
 		}
 		const samples: Sample[] = frames.map((f) => ({ track: FLAC_ID, pts: f.pts, dts: f.pts, duration: f.samples / rate, key: true, data: f.data }));
-		await this.putSamples(o, samples, g);
+		await this.put(o, o.muxer.segment(samples), g);
 	}
 
 	private async makeAudio(t: Track, first: Sample | undefined) {
@@ -944,11 +938,11 @@ export class Unpacker {
 				video = hold.video;
 			}
 		}
-		if (video.length && this.vout) await this.putSamples(this.vout, video, g);
+		if (video.length && this.vout) await this.put(this.vout, this.vout.muxer.segment(video), g);
 		if (audio.length && !pushed) {
 			if (this.flac) this.flac.push(audio);
 			else if (this.pcm) this.pcm.push(audio);
-			else if (this.aout) await this.putSamples(this.aout, audio, g);
+			else if (this.aout) await this.put(this.aout, this.aout.muxer.segment(audio), g);
 		}
 		await this.evict();
 	}
@@ -960,17 +954,6 @@ export class Unpacker {
 			if (this.aout?.rangeAt(t - 0.03)) return 'sound';
 			if (performance.now() >= until || this.closed) return 'timeout';
 			await new Promise((r) => setTimeout(r, 20));
-		}
-	}
-
-	/** Appends `samples` in segments of at most APPEND_BYTES (a larger sample goes alone). */
-	private async putSamples(o: Output, samples: Sample[], g: number) {
-		for (let from = 0; from < samples.length && g === this.gen; ) {
-			let to = from + 1;
-			let bytes = samples[from].data.length;
-			while (to < samples.length && bytes + samples[to].data.length <= APPEND_BYTES) bytes += samples[to++].data.length;
-			await this.put(o, o.muxer.segment(samples.slice(from, to)), g);
-			from = to;
 		}
 	}
 
@@ -1010,9 +993,9 @@ export class Unpacker {
 		const hold = this.flacHold;
 		if (hold?.video.length && this.vout) {
 			this.flacHold = null;
-			await this.putSamples(this.vout, hold.video, g);
+			await this.put(this.vout, this.vout.muxer.segment(hold.video), g);
 		}
-		if (this.fixer && this.vout) await this.putSamples(this.vout, this.fixer.flush(), g);
+		if (this.fixer && this.vout) await this.put(this.vout, this.vout.muxer.segment(this.fixer.flush()), g);
 		if (this.vout) await this.put(this.vout, this.vout.muxer.flush(), g);
 		if (this.flac) {
 			await this.flac.drain();

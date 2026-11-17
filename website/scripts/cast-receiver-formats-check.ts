@@ -473,9 +473,6 @@ async function flacStartCase() {
 		const m = trace[at]?.match(/ t([\d.]+) .* a([\d.]+)-([\d.]+)/);
 		const ahead = m ? Number(m[3]) - Number(m[1]) : -1;
 		expect(ahead >= 0.45, `${label}: sound leads the playhead by 0.45 s or more when playing begins (${ahead.toFixed(3)} s: ${trace[at] ?? 'no playing line'})`);
-		// A long append holds the TV's demuxer while it parses, and the sound playing waits for it.
-		const big = trace.map((l) => l.match(/^\d+:([AV])(\d+) /)).filter((x) => x && Number(x[2]) > 140_000).map((x) => x![1] + x![2]);
-		expect(big.length === 0, `${label}: no append over 140 kB (${big.join(' ') || 'none'})`);
 		const dry = trace.slice(at + 1).filter((l) => /^\d+:waiting /.test(l));
 		expect(at >= 0 && dry.length === 0, `${label}: no wait after playing begins (${dry.join(' | ') || 'none'})`);
 	}
