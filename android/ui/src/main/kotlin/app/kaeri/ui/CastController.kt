@@ -1006,7 +1006,7 @@ private fun CastUndoNote(cast: CastModel, kind: SkipKind) {
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun CastSeekLine(cast: CastModel, now: FfiNowCard, shown: CastShown, usable: Boolean, dimmed: Boolean) {
+internal fun CastSeekLine(cast: CastModel, now: FfiNowCard, shown: CastShown, usable: Boolean, dimmed: Boolean) {
     val colors = MaterialTheme.colorScheme
     val playing = shown.stage == CastStage.Playing
     val duration = now.duration?.takeIf { it > 0 } ?: 0.0
