@@ -1113,20 +1113,24 @@ export class Unpacker {
 			this.flac = null;
 			let changed = false;
 			const said: string[] = [];
+			// A MediaSource whose file was read to the end is 'ended': abort() throws there, and the
+			// first append opens it again.
+			const abort = () => this.ms.readyState === 'open' && o.sb.abort();
 			if ('changeType' in o.sb) {
 				for (const mime of mimeChoices(t)) {
 					if (refusedAudio.has(mime)) continue;
 					const muxer = createMuxer(t, undefined, mime)!;
 					try {
 						await o.idle();
-						o.sb.abort();
+						abort();
 						o.sb.changeType(mime);
 						o.muxer = muxer;
 						await o.append(muxer.init());
 						changed = true;
 						break;
 					} catch (e) {
-						refusedAudio.add(mime);
+						// Only the TV saying no to the form rules it out for later loads.
+						if ((e as DOMException)?.name !== 'InvalidStateError') refusedAudio.add(mime);
 						said.push(`${mime} refused: ${errText(e)}`);
 					}
 				}
@@ -1134,7 +1138,7 @@ export class Unpacker {
 				if (!changed && decoderFor(t) && this.canFlac()) {
 					try {
 						await o.idle();
-						o.sb.abort();
+						abort();
 						if (!wasFlac) o.sb.changeType(FLAC_MIME);
 						o.muxer = new Mp4Muxer(flacTrack(t.sampleRate || 48000), FLAC_MIME);
 						this.flacRate = null;

@@ -507,6 +507,9 @@ async function switchCase() {
 	expect((await stats())?.audio === 'ac3', `${label}: starts on the second track`);
 	await js(`__caf.message({ type: 'audio', version: 1, language: 'jpn' })`);
 	expect(await until(`__receiver.formats.current?.stats().audio === 'aac'`, 5000), `${label}: switches to the first track`);
+	// The file is read to the end by now (its MediaSource 'ended'): AAC still goes to MediaSource.
+	const path = await js<string>(`__receiver.formats.current?.stats().audioPath`);
+	expect(path === 'mse', `${label}: the first track plays through MediaSource (${path}, ${await js<string>(`__receiver.formats.current?.stats().audioWhy ?? ''`)})`);
 	const t = await time();
 	expect(await until(`document.getElementById('video').currentTime > ${t + 1}`, 6000), `${label}: plays on`);
 }
