@@ -468,9 +468,9 @@ class BoardShots {
         SourceOption(
             "torrents", "Torrent playback", 12u, 13u, pinned, null,
             listOf(
-                SourceCandidate("batch-1080", "torrents", "Stardust Wayfarer complete batch", 1080u, "From a trusted uploader", "14.2 GiB", true, false, true),
-                SourceCandidate("single-1080", "torrents", "Stardust Wayfarer 01", 1080u, null, "1.1 GiB", false, false, false),
-                SourceCandidate("single-720", "torrents", "Stardust Wayfarer 01", 720u, null, "480 MiB", false, false, false),
+                SourceCandidate("batch-1080", "torrents", "", "Stardust Wayfarer complete batch", 1080u, "From a trusted uploader", "14.2 GiB", true, false, true),
+                SourceCandidate("single-1080", "torrents", "", "Stardust Wayfarer 01", 1080u, null, "1.1 GiB", false, false, false),
+                SourceCandidate("single-720", "torrents", "", "Stardust Wayfarer 01", 720u, null, "480 MiB", false, false, false),
             ),
             "batch-1080".takeIf { pinned },
         ),

@@ -16,7 +16,7 @@ import app.kaeri.engine.model.TorrentProxy
 
 /** An episode's releases, listed for the title page's Choose source and the player's. */
 class SourcesTest {
-    private val release = SourceCandidate("r1", "fixture", "Release one", 1080u, null, "1.2 GiB", false, false, true)
+    private val release = SourceCandidate("r1", "fixture", "", "Release one", 1080u, null, "1.2 GiB", false, false, true)
 
     @Test
     fun the_releases_listed_reach_the_choice_for_their_episode_and_the_player() {
