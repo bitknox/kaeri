@@ -366,6 +366,7 @@ Words used here: the cast button is the toolbar button with the cast glyph. The 
 - Connected: the screen filled inside its outline frame. Playing looks the same; the mini player says what plays.
 - There is no searching state. The apps look for TVs while they are in front, and the button appears once one answers.
 - A tap opens the picker with no TV held, the connected dialog with one held, and a Kaeri TV's own remote when that is what is held.
+- A cast started from Play on TV holds its TV too, so the button opens the connected dialog while it plays, never the remote.
 - The spoken label is “Play on TV”, “Connecting to Living room” or “Connected to Living room” (`tv-play-on`, `cast-button-connecting`, `cast-button-connected`). Connecting and Connected are announced once each.
 - While a TV is held, the title page's main button carries the cast glyph with “Plays on Living room” under it (`cast-plays-on`), Play plays there, and the separate Play on TV button hides.
 - Kaeri differs from Google here: Google keeps the button on screen whenever the device is on Wi-Fi. Kaeri hides it with no TV, as an empty picker helps nobody, and Play on TV on a title or an episode still reaches the picker and its local network row.
@@ -421,6 +422,7 @@ Words used here: the cast button is the toolbar button with the cast glyph. The 
 - It holds the art, the show, a line with the TV's name or its state (“Paused on Living room”, “Reconnecting to Living room” beside a small spinner), play or pause, Next, and a 2 pt line of the position along its edge.
 - It shows on every screen while a cast plays or is paused, except while the local player or the remote is up. With a TV held and nothing playing it hides, and the cast button stays Connected.
 - A tap anywhere outside its buttons opens the remote, and on touch a drag up opens it too. While it reconnects, tap and drag do nothing.
+- On Android the mini ends with the filled cast glyph. A tap on it opens the connected dialog, with Stop casting, as the cast button does, and the same holds for the glyph in the remote's header.
 
 ### Remote
 
