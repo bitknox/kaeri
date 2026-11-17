@@ -201,7 +201,7 @@ private fun CastConnectedDialog(cast: CastModel) {
                 }
             }
             Spacer(Modifier.height(4.dp))
-            CastVolumeRow(cast, session.levelControl, session.muted == true, session.level?.let { it * 100 } ?: shown?.cast?.card?.now?.volume, enabled = session.held)
+            CastVolumeRow(cast, session.levelControl, session.canMute, session.muted == true, session.level?.let { it * 100 } ?: shown?.cast?.card?.now?.volume, enabled = session.held)
         }
     }
 }

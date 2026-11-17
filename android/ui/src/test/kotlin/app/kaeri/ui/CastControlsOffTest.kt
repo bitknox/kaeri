@@ -101,9 +101,20 @@ class CastControlsOffTest {
     fun aDimmedVolumeRowsUnmuteIsOff() {
         val cast = CastModel(CoroutineScope(Dispatchers.Unconfined))
         compose.setContent {
-            KaeriTheme { CastVolumeRow(cast, level = false, muted = true, volume = null, enabled = false) }
+            KaeriTheme { CastVolumeRow(cast, level = false, canMute = true, muted = true, volume = null, enabled = false) }
         }
         assertOff(text(R.string.cast_card_unmute), off = true)
+    }
+
+    @Test
+    fun aTvWhoseOwnVolumeIsInChargeOffersNoMute() {
+        val cast = CastModel(CoroutineScope(Dispatchers.Unconfined))
+        compose.setContent {
+            KaeriTheme { CastVolumeRow(cast, level = false, canMute = false, muted = true, volume = null, enabled = true) }
+        }
+        compose.onNodeWithText(text(R.string.cast_volume_fixed)).assertExists()
+        compose.onNodeWithText(text(R.string.cast_card_unmute)).assertDoesNotExist()
+        compose.onNodeWithText(text(R.string.cast_card_mute)).assertDoesNotExist()
     }
 
     @Test

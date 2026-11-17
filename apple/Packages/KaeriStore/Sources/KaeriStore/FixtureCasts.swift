@@ -150,7 +150,7 @@ final class FixtureCastSession: FfiCastSessionProtocol, @unchecked Sendable {
         var duration: Double?
         var paused = false
         var volume: Double?
-        var volumeControl: FfiVolumeControl = .muteOnly
+        var volumeControl: FfiVolumeControl = .fixed
         var muted = false
         var audio: [FfiTvTrack] = []
         var subtitles: [FfiTvTrack] = []
@@ -215,7 +215,8 @@ final class FixtureCastSession: FfiCastSessionProtocol, @unchecked Sendable {
         return FfiCastCard(
             card: card, volumeControl: state.volumeControl, muted: state.muted, notice: state.notice,
             phaseLine: state.phaseLine, upNext: state.upNext, undo: state.undo, waiting: state.waiting,
-            reconnecting: state.reconnecting && !state.over, note: state.note)
+            reconnecting: state.reconnecting && !state.over, note: state.note,
+            canMute: state.volumeControl == .level)
     }
 
     func nextCard() async -> FfiCastCard? {
@@ -234,7 +235,7 @@ final class FixtureCastSession: FfiCastSessionProtocol, @unchecked Sendable {
             case .togglePause: state.paused.toggle()
             case .seek(let by): state.position = max(0, state.position + by)
             case .seekTo(let position): state.position = position
-            case .mute(let muted): state.muted = muted
+            case .mute(let muted) where state.volumeControl == .level: state.muted = muted
             case .volume(let step): state.volume = state.volume.map { min(100, max(0, $0 + step)) }
             case .track(let kind, let id):
                 if kind == .subtitle {
@@ -333,8 +334,9 @@ final class FixtureCastLink: CastSessionLink, @unchecked Sendable {
             deviceKey: held.device.map { "cast:\($0.id)" }, deviceName: held.device?.name, // i18n-skip
             item: item, queue: [], notice: held.notice, note: held.note,
             level: card?.volume.map { $0 / 100 }, muted: card?.muted,
-            volumeControl: card?.volumeControl ?? .muteOnly, ownReceiver: held.note == nil,
-            reconnecting: held.state == .playing && (card?.reconnecting ?? false))
+            volumeControl: card?.volumeControl ?? .fixed, ownReceiver: held.note == nil,
+            reconnecting: held.state == .playing && (card?.reconnecting ?? false),
+            canMute: card?.canMute ?? false)
     }
 
     /// The TV plays this cast in its own player, as the engine's note says.

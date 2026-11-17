@@ -302,8 +302,9 @@ struct CastUndoNote: View {
     }
 }
 
-/// The TV's volume: on a TV that keeps its own, the line saying so and Mute; on one that takes
-/// a level, a slider sending steps as it moves, set again by each of the TV's reports.
+/// The TV's volume: on a TV that keeps its own, the line saying so, with Mute only where a mute
+/// reaches its sound; on one that takes a level, a slider sending steps as it moves, set again by
+/// each of the TV's reports.
 struct CastVolumeRow: View {
     @Environment(AppStore.self) private var store
     let touch: Bool
@@ -362,16 +363,18 @@ struct CastVolumeRow: View {
                             .contentTransition(.opacity)
                     }
                     Spacer(minLength: 8)
-                    Button {
-                        cast.send(.mute(muted: !cast.muted))
-                    } label: {
-                        if cast.muted {
-                            Text(L.playerUnmute)
-                        } else {
-                            Label(L.playerMute, systemImage: "speaker.slash")
+                    if cast.canMute {
+                        Button {
+                            cast.send(.mute(muted: !cast.muted))
+                        } label: {
+                            if cast.muted {
+                                Text(L.playerUnmute)
+                            } else {
+                                Label(L.playerMute, systemImage: "speaker.slash")
+                            }
                         }
+                        .buttonStyle(SecondaryCapsuleStyle(height: touch ? 34 : 24, fontSize: touch ? 15 : 12))
                     }
-                    .buttonStyle(SecondaryCapsuleStyle(height: touch ? 34 : 24, fontSize: touch ? 15 : 12))
                 }
                 .padding(.leading, touch ? 16 : 14)
                 .padding(.trailing, touch ? 12 : 10)

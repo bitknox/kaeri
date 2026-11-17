@@ -975,7 +975,7 @@ public static class TvWords
     public static string CastSkipped(FfiCastUndo undo) => undo.Kind switch { SkipKind.Ending => T.PlayerSkippedEnding, SkipKind.Recap => T.PlayerSkippedRecap, _ => T.PlayerSkippedOpening };
 
     /// <summary>The TV volume row's value: the level for a TV that has one, "Set on the TV" for one that doesn't.</summary>
-    public static string CastVolume(FfiCastCard card) => card.VolumeControl == FfiVolumeControl.MuteOnly || card.Card.Now?.Volume is null
+    public static string CastVolume(FfiCastCard card) => card.VolumeControl == FfiVolumeControl.Fixed || card.Card.Now?.Volume is null
         ? T.TvCastVolumeOnTv
         : T.TvVolumeOf((long)Math.Round(card.Card.Now.Volume.Value));
 

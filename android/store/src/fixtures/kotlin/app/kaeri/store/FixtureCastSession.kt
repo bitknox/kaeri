@@ -69,7 +69,7 @@ class FixtureCastSession(
         val name = if (kitchen) "Kitchen display" else "Living room"
         connecting?.cancel()
         left = null
-        publish(CastSession.IDLE.copy(state = CastSessionState.Connecting, deviceKey = key, deviceName = name, levelControl = kitchen, level = if (kitchen) 0.45 else null, muted = false))
+        publish(CastSession.IDLE.copy(state = CastSessionState.Connecting, deviceKey = key, deviceName = name, levelControl = kitchen, canMute = kitchen, level = if (kitchen) 0.45 else null, muted = false))
         val after = connectAfter ?: return
         connecting = scope.launch {
             delay(after)
@@ -93,7 +93,7 @@ class FixtureCastSession(
             return
         }
         when (command) {
-            is FfiTvCommand.Mute -> publish(current.copy(muted = command.muted))
+            is FfiTvCommand.Mute -> if (current.canMute) publish(current.copy(muted = command.muted))
             is FfiTvCommand.Volume -> if (current.levelControl) publish(current.copy(level = ((current.level ?: 0.0) + command.step / 100).coerceIn(0.0, 1.0)))
             else -> Unit
         }

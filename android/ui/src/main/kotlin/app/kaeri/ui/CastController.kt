@@ -877,7 +877,7 @@ private fun CastController(cast: CastModel, shown: CastShown, scope: AnimatedVis
                 CastTrackRow(stringResource(R.string.player_audio), FfiTvTrackKind.AUDIO, now.audio, off = false, cast, enabled = usable)
                 TvDivider()
             }
-            CastVolumeRow(cast, shown.level, shown.cast.muted == true || session.muted == true, now.volume, enabled = usable)
+            CastVolumeRow(cast, shown.level, shown.canMute, shown.cast.muted == true || session.muted == true, now.volume, enabled = usable)
             // The footer: what each state offers in two places that keep their order, then More.
             val notice = shown.cast.notice
             val playHere = stringResource(R.string.cast_play_here)
@@ -1243,12 +1243,13 @@ internal fun CastTrackRow(title: String, kind: FfiTvTrackKind, tracks: List<FfiT
 }
 
 /**
- * TV volume: "Set on the TV" with the outlined Mute pill for a TV whose volume is fixed, or a
- * slider for one that takes a level, sending the difference on release.
+ * TV volume: a slider for a TV that takes a level, sending the difference on release, or "Set on
+ * the TV" for one whose own volume is in charge. Mute shows only where a mute reaches the TV's
+ * sound ([canMute]), so a fixed TV has neither.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-internal fun CastVolumeRow(cast: CastModel, level: Boolean, muted: Boolean, volume: Double?, enabled: Boolean) {
+internal fun CastVolumeRow(cast: CastModel, level: Boolean, canMute: Boolean, muted: Boolean, volume: Double?, enabled: Boolean) {
     val colors = MaterialTheme.colorScheme
     val label = stringResource(R.string.tv_sheet_volume)
     val muteLabel = stringResource(if (muted) R.string.cast_card_unmute else R.string.cast_card_mute)
@@ -1262,6 +1263,7 @@ internal fun CastVolumeRow(cast: CastModel, level: Boolean, muted: Boolean, volu
         if (!level) {
             Spacer(Modifier.weight(1f))
             Text(stringResource(R.string.cast_volume_fixed), style = MaterialTheme.typography.bodyMedium, color = colors.onSurfaceVariant, maxLines = 1, modifier = Modifier.offWith(enabled))
+            if (!canMute) return@Row
             // Off while the row is dimmed; the row's dim alone draws it, so its outline stays.
             OutlinedButton(
                 onClick = cast::toggleMute,
@@ -1279,7 +1281,7 @@ internal fun CastVolumeRow(cast: CastModel, level: Boolean, muted: Boolean, volu
         var dragging by remember { mutableStateOf<Float?>(null) }
         val at = dragging ?: (volume ?: 0.0).toFloat()
         val volumeWords = Strings.tvSheetVolumeValue(LocalContext.current, at.toInt())
-        TvGlyph(if (muted) Icons.SoundOff else Icons.VolumeDown, muteLabel, enabled = enabled, onClick = cast::toggleMute)
+        if (canMute) TvGlyph(if (muted) Icons.SoundOff else Icons.VolumeDown, muteLabel, enabled = enabled, onClick = cast::toggleMute)
         Slider(
             value = at,
             valueRange = 0f..100f,

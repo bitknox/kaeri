@@ -72,7 +72,7 @@ public class TvWordsTests
 
     internal static FfiCastCard Cast(FfiLinkPhase phase, FfiNowCard? now, Msg? notice = null, string? phaseLine = null) =>
         new(new FfiRemoteCard("Living room", phase, phaseLine, new FfiScreen.Home(), now, 1, Over: notice is not null, Reached: false),
-            FfiVolumeControl.MuteOnly, false, notice);
+            FfiVolumeControl.Fixed, false, notice);
 
     internal static FfiNowCard Now(bool loading) => new(900_001, "The Lantern Road", "7", "Episode 7 · The Lantern Road", loading,
         492, loading ? null : 1420, false, 1, null, [], [], false, null);
@@ -365,10 +365,9 @@ public class TvRemoteTests
             Assert.Equal(1, served);
             Assert.True(remote.CastServed);
             Assert.Equal(1, handedOff);
-            Assert.Equal(FfiVolumeControl.MuteOnly, remote.CastCard!.VolumeControl);
-
-            remote.SendCast(new FfiTvCommand.Mute(true));
-            await Until(() => remote.CastCard?.Muted == true, "the TV muted");
+            // The fake TV's own volume is in charge, so the card offers neither a level nor Mute.
+            Assert.Equal(FfiVolumeControl.Fixed, remote.CastCard!.VolumeControl);
+            Assert.False(remote.CastCard!.CanMute);
 
             // Play here ends the cast and hands back what it played.
             var here = remote.PlayHere();
