@@ -1,7 +1,8 @@
 // The mini and the controller morph into each other as one surface. Frame by frame through a
-// close, an open, and flights turned back early and late: the surface stays whole and shrinks or
-// grows without a jump, the cover keeps its 16 corners as it flies, the side that leaves fades its
-// words out over the first part and the side that arrives fades its words in over the last part.
+// close, an open, and flights turned back early, late and by Back: the surface stays whole and
+// shrinks or grows without a jump, the cover keeps its 16 corners as it flies, the side that
+// leaves fades its words out over the first part and the side that arrives fades its words in
+// over the last part.
 
 package app.kaeri.ui
 
@@ -279,6 +280,25 @@ class CastCoverMorphTest {
         scope.launch { state.animateTo(true) }
         val seen = follow(12)
         scope.launch { state.animateTo(false) }
+        follow(FLIGHT, seen)
+        compose.mainClock.advanceTimeBy(1000)
+        val end = frame()
+        assertEquals(MINI, end.coverHeight, 1f)
+        assertEquals(16f, end.radius, TOLERANCE)
+        assertEquals(1f, end.miniWords, 0.05f)
+        assertEquals(0f, end.controllerWords, 0.05f)
+    }
+
+    @Test
+    fun openingTurnedBackByBackTheSurfaceStaysWhole() {
+        show(open = false)
+        scope.launch { state.animateTo(true) }
+        val seen = follow(6)
+        // As the back handler does: a seek towards closed, then the rest of the way.
+        scope.launch {
+            state.seekTo(0f, targetState = false)
+            state.animateTo(false)
+        }
         follow(FLIGHT, seen)
         compose.mainClock.advanceTimeBy(1000)
         val end = frame()
