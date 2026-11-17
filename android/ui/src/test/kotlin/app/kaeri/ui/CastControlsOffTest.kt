@@ -2,7 +2,8 @@
 // them: Compose lists a control's words as a node of their own, and a dimmed Play here read as
 // enabled there. A screen reader is handed a control's name on a node of its own when the control
 // has nodes under it, and that node can't be off, so Back 10, Forward 10 and the seek line keep
-// their name on the control's own node. Stop casting stays live.
+// their name on the control's own node. Stop casting stays live. The TV's button says
+// Reconnecting then, as the line beside it does.
 
 package app.kaeri.ui
 
@@ -11,11 +12,15 @@ import android.view.ViewGroup
 import android.view.accessibility.AccessibilityNodeInfo
 import androidx.activity.ComponentActivity
 import androidx.compose.foundation.layout.Column
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertIsEnabled
 import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.platform.ViewRootForTest
 import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
+import androidx.compose.ui.test.onAllNodesWithContentDescription
+import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import app.kaeri.design.KaeriTheme
@@ -139,5 +144,21 @@ class CastControlsOffTest {
             KaeriTheme { CastSeekLine(cast, now, shown, usable = false, dimmed = true) }
         }
         assertSpokenOff(text(R.string.tv_sheet_position))
+    }
+
+    @Test
+    fun whileItReconnectsTheTvsButtonSaysReconnecting() {
+        val name = "Living room" // i18n-skip
+        val reconnecting = mutableStateOf(true)
+        compose.setContent {
+            KaeriTheme { CastHeldButton(name, reconnecting.value) {} }
+        }
+        val again = compose.activity.getString(R.string.tv_status_reconnecting, name)
+        val held = compose.activity.getString(R.string.cast_button_connected, name)
+        compose.onNodeWithContentDescription(again).assertExists()
+        compose.onAllNodesWithContentDescription(held).assertCountEquals(0)
+        reconnecting.value = false
+        compose.onNodeWithContentDescription(held).assertExists()
+        compose.onAllNodesWithContentDescription(again).assertCountEquals(0)
     }
 }

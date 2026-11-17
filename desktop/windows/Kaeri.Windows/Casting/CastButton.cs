@@ -84,13 +84,8 @@ sealed class CastButton : Grid
             if (state is CastButtonState.Connecting or CastButtonState.Connected && was is not null)
                 Announce();
         }
-        var name = state switch
-        {
-            CastButtonState.Connecting => T.CastButtonConnecting(tv.SessionName),
-            CastButtonState.Connected when tv.SessionHeld => T.CastButtonConnected(tv.SessionName),
-            CastButtonState.Connected => T.CastButtonConnected(tv.ConnectedTv?.Name ?? ""),
-            _ => T.TvPlayOn,
-        };
+        var who = state == CastButtonState.Connected && !tv.SessionHeld ? tv.ConnectedTv?.Name ?? "" : tv.SessionName;
+        var name = CastPainter.ButtonName(state, who, tv.SessionHeld && (tv.Rejoining || tv.Painter.Reconnecting));
         if (ToolTipService.GetToolTip(button) as string != name)
             CastParts.Name(button, name);
         if (open)

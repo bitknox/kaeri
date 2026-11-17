@@ -53,7 +53,7 @@ enum CastWords {
     @MainActor static func barLine(_ cast: CastModel) -> String {
         switch cast.stage {
         case .starting: L.tvStartingOn(name: cast.tvName)
-        case .playing: L.tvStatusPlaying(name: cast.tvName)
+        case .playing: cast.line
         case .failed: L.castCouldntStart(name: cast.tvName)
         case .stopped: L.castStopped
         }

@@ -358,6 +358,27 @@ extension CastTests {
         #expect(model.itemPosition(at: model.heldAt) == 615)
     }
 
+    /// A pause from anywhere, another phone included, shows on the card's line as on the mini's.
+    @Test func theCardsLineSaysPausedWhileTheCastIsPaused() async throws {
+        let (model, session) = casting()
+        play(session)
+        try await waitFor { model.stage == .playing }
+        model.take(view: Self.view(.playing, item: Self.item(at: 492)))
+        #expect(model.line == L.tvStatusPlaying(name: "Living room"))
+
+        var paused = Self.view(.playing, item: Self.item(at: 500))
+        paused.rev = 2
+        paused.item?.paused = true
+        model.take(view: paused)
+        #expect(model.sessionLine == L.castStatusPaused(name: "Living room"))
+        #expect(model.line == L.castStatusPaused(name: "Living room"))
+
+        var playing = Self.view(.playing, item: Self.item(at: 500))
+        playing.rev = 3
+        model.take(view: playing)
+        #expect(model.line == L.tvStatusPlaying(name: "Living room"))
+    }
+
     @Test func aTvLostWithTheControllerClosedSaysSoAndOffersPlayHere() async throws {
         let (model, session) = casting()
         var said: [Notice] = []

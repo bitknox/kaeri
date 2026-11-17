@@ -142,9 +142,11 @@ fun CastButton(circle: Boolean = false, circleAlpha: () -> Float = { 1f }) {
     val tvName by LocalAppStore.current.tv.connected.collectAsStateWithLifecycle()
     val shown by cast.shown.collectAsStateWithLifecycle()
     val name = session.deviceName ?: joining ?: shown?.tvName ?: tvName?.let { LocalAppStore.current.tv.card.value?.card?.tvName }.orEmpty()
+    // While the TV comes back, the name says Reconnecting, as the mini's line does.
+    val reconnecting = castReconnecting(cast)
     val label = when (state) {
         CastButtonState.Connecting -> stringResource(R.string.cast_button_connecting, name)
-        CastButtonState.Connected -> stringResource(R.string.cast_button_connected, name)
+        CastButtonState.Connected -> stringResource(if (reconnecting) R.string.tv_status_reconnecting else R.string.cast_button_connected, name)
         else -> stringResource(R.string.tv_play_on)
     }
     // Said once as it changes, never as a screen with the button opens.
