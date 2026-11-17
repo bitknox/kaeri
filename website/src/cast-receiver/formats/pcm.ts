@@ -33,9 +33,9 @@ export function decoderFor(t: Track): { family: string; decoder: string } | null
  * The context time steered by is AudioContext.currentTime less the reported output latency. It
  * moves in steps of the output buffer but never strays further. getOutputTimestamp() would also
  * count the latency the browser doesn't report, but on the Chromecast TV it strays by up to 700 ms,
- * so it only calibrates: the mean of the middle half of the last 200 differences between the two
- * is the latency left over, and the clock moves towards it by at most RAMP (3 ms a second), which
- * the worklet follows by resampling without a gap or a skip.
+ * so it only calibrates, and only when the middle half of the last 200 differences between the two
+ * lies within TRUSTED: their mean is the latency left over, and the clock moves towards it by at
+ * most RAMP (3 ms a second), which the worklet follows by resampling without a gap or a skip.
  *
  * A reading far off the median (a seek, a stall caught up) starts the window again. Until a window
  * holds SETTLED readings, `settling` tells the worklet to leave drift under 120 ms alone, so the
@@ -79,7 +79,8 @@ export class ClockFilter {
 		const settling = this.v.length < SETTLED;
 		// The leftover latency moves only in steady play, and slowly.
 		if (!settling && this.d.length >= SETTLED) {
-			const want = Math.max(-MAX_LATENCY, Math.min(MAX_LATENCY, middle(this.d)));
+			// An output timestamp that strays more than this tells nothing: ease back to none.
+			const want = quartiles(this.d) < TRUSTED ? Math.max(-MAX_LATENCY, Math.min(MAX_LATENCY, middle(this.d))) : 0;
 			const step = RAMP * Math.max(0, Math.min(1, now - this.latAt));
 			this.lat += Math.max(-step, Math.min(step, want - this.lat));
 		}
@@ -91,6 +92,9 @@ export class ClockFilter {
 	}
 }
 
+/** Why `ready()` resolved. */
+export type Primed = 'sound' | 'timeout' | 'seek';
+
 /** Seconds of decoded sound the worklet holds before the picture may start. */
 const PRIMED = 0.3;
 
@@ -100,6 +104,8 @@ const SETTLED = 20;
 const CALIBRATE = 200;
 /** The most the leftover latency moves the clock, in seconds a second. */
 const RAMP = 0.003;
+/** The widest middle half of output timestamp differences that still calibrates. */
+const TRUSTED = 0.05;
 /** The largest leftover latency believed. */
 const MAX_LATENCY = 0.3;
 
@@ -127,6 +133,12 @@ function middle(list: number[]): number {
 	const cut = s.length >> 2;
 	const kept = s.slice(cut, s.length - cut);
 	return kept.reduce((a, b) => a + b, 0) / kept.length;
+}
+
+/** The range of the middle half. */
+function quartiles(list: number[]): number {
+	const s = [...list].sort((a, b) => a - b);
+	return s[Math.floor((s.length * 3) / 4)] - s[Math.floor(s.length / 4)];
 }
 
 function spread(list: number[]): number {
@@ -163,7 +175,7 @@ export class PcmAudio {
 	private filter = new ClockFilter();
 	/** Sound is queued for the current start; until then, `ready()` callers wait. */
 	private primed = false;
-	private waiting: (() => void)[] = [];
+	private waiting: ((how: Primed) => void)[] = [];
 
 	private constructor(
 		private readonly ctx: AudioContext,
@@ -253,13 +265,13 @@ export class PcmAudio {
 	 * `timeout` ms. The engine holds the first video back until then: on a slow TV the decoder
 	 * starts later than the picture, and the sound would begin with a gap and then skip to catch up.
 	 */
-	ready(timeout = 2500): Promise<void> {
-		if (this.primed) return Promise.resolve();
+	ready(timeout = 2500): Promise<Primed> {
+		if (this.primed) return Promise.resolve('sound');
 		return new Promise((resolve) => {
-			const timer = setTimeout(() => this.prime(), timeout);
-			this.waiting.push(() => {
+			const timer = setTimeout(() => this.prime('timeout'), timeout);
+			this.waiting.push((how) => {
 				clearTimeout(timer);
-				resolve();
+				resolve(how);
 			});
 		});
 	}
@@ -268,15 +280,17 @@ export class PcmAudio {
 		return this.primed;
 	}
 
-	private prime() {
-		this.primed = true;
+	private prime(how: Primed = 'sound') {
+		if (how !== 'seek') this.primed = true;
 		const waiting = this.waiting;
 		this.waiting = [];
-		for (const w of waiting) w();
+		for (const w of waiting) w(how);
 	}
 
 	/** Starts again at `time` (a seek, or a new load position). */
 	seek(time: number) {
+		// Whoever waits for the old start gives up: the packets it pushed are flushed.
+		this.prime('seek');
 		this.primed = false;
 		this.gen++;
 		this.lastPts = -Infinity;
@@ -331,7 +345,7 @@ export class PcmAudio {
 	}
 
 	destroy() {
-		this.prime();
+		this.prime('seek');
 		clearInterval(this.timer);
 		for (const [ev, fn] of this.listeners) this.video.removeEventListener(ev, fn);
 		this.worker.postMessage({ type: 'close' });

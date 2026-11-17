@@ -187,7 +187,7 @@ describe('WebAssembly audio against the video clock', () => {
 	});
 
 	test('latency the browser does not report (60 ms) is taken up by resampling, without a gap', () => {
-		const r = play(60, () => 0, { unreported: 0.06, ctxJitter: (t) => -(t % 0.085), tsJitter: (_, rnd) => (rnd() - 0.5) * 0.4, filter: true, settle: 0.5 });
+		const r = play(60, () => 0, { unreported: 0.06, ctxJitter: (t) => -(t % 0.085), tsJitter: (_, rnd) => (rnd() - 0.5) * 0.04, filter: true, settle: 0.5 });
 		console.info('unreported latency', r);
 		expect(r.jumps).toBe(0);
 		expect(r.waits).toBe(0);
@@ -195,6 +195,14 @@ describe('WebAssembly audio against the video clock', () => {
 		// currentTime in 85 ms steps reads 42 ms early on average, so 60 ms less that is left over.
 		expect(Math.abs(r.latency - (0.06 - 0.085 / 2))).toBeLessThan(0.025);
 		expect(Math.abs(r.drift)).toBeLessThan(0.015);
+	});
+
+	// On the Chromecast TV the output timestamp spread over a second: it must not move the clock.
+	test('an output timestamp that strays by a second calibrates nothing', () => {
+		const r = play(40, () => 0, { ctxJitter: (t) => -(t % 0.085), tsJitter: (_, rnd) => (rnd() - 0.3) * 1.2, filter: true, settle: 0.5 });
+		console.info('wild output timestamp', r);
+		expect(r.latency).toBe(0);
+		expect(r.jumps + r.waits + r.breaks).toBe(0);
 	});
 
 	test('a currentTime that strays 60 ms too makes at most one correction after 0.5 s', () => {

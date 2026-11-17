@@ -257,8 +257,10 @@ function judge(c: Clip, lines: string[]): { verdict: string | null; summary: str
 	const steady = pcm.slice(0, -END_LINES).filter((s) => s.time >= STEADY_FROM);
 	if (steady.length < 5) return { verdict: `only ${steady.length} steady status lines with PCM stats`, summary };
 	const s0 = pcm[0].pcm!;
+	// How long the first picture waited for decoded sound, and what let it go.
+	const gate = lines.map((l) => l.match(/ gate (\d+ ms \w+)/)?.[1]).find(Boolean);
 	const s1 = steady[0].pcm!;
-	const start = `start to ${steady[0].time.toFixed(0)} s: jumps ${s1.jumps - s0.jumps}, waits ${s1.waits - s0.waits}`;
+	const start = `start to ${steady[0].time.toFixed(0)} s: jumps ${s1.jumps - s0.jumps}, waits ${s1.waits - s0.waits}, starved ${s1.starved - s0.starved}${gate ? `, picture held ${gate}` : ''}`;
 	const a = steady[0].pcm!;
 	const b = steady.at(-1)!.pcm!;
 	const span = steady.at(-1)!.time - steady[0].time;

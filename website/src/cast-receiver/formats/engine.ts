@@ -326,6 +326,8 @@ export interface UnpackerStats {
 	audioSetup: string | null;
 	/** Why the audio plays through WebAssembly, when it does. */
 	audioWhy: string | null;
+	/** How long the last start held the picture for WebAssembly sound, and what let it go. */
+	audioGate: string | null;
 }
 
 /** A track's setup in one line: codec string, MIME, rate, channels and config bytes. */
@@ -368,6 +370,7 @@ export class Unpacker {
 	private timer = 0;
 	private swapping = false;
 	private audioWhy: string | null = null;
+	private audioGate: string | null = null;
 	private listeners: [EventTarget, string, EventListener, boolean][] = [];
 
 	private constructor(
@@ -435,6 +438,7 @@ export class Unpacker {
 			pcm: this.pcm ? this.pcm.stats : null,
 			audioSetup: this.audioTrack ? `${this.format}/${this.demux.container ?? this.format} ${trackSetup(this.audioTrack, this.aout?.muxer.mime)}` : null,
 			audioWhy: this.pcm ? this.audioWhy : null,
+			audioGate: this.pcm ? this.audioGate : null,
 		};
 	}
 
@@ -674,7 +678,9 @@ export class Unpacker {
 		if (this.pcm && audio.length && video.length && !this.pcm.isPrimed) {
 			this.pcm.push(audio);
 			pushed = true;
-			await this.pcm.ready();
+			const since = performance.now();
+			const how = await this.pcm.ready();
+			this.audioGate = `${Math.round(performance.now() - since)} ms ${how}`;
 			if (g !== this.gen) return;
 		}
 		if (video.length && this.vout) await this.put(this.vout, this.vout.muxer.segment(video), g);
