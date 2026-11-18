@@ -499,9 +499,9 @@ class TvShots {
         SourceOption(
             "torrents", "Torrent playback", 12u, 13u, pinned, null,
             listOf(
-                SourceCandidate("batch-1080", "torrents", "Stardust Wayfarer complete batch", 1080u, "From a trusted uploader", "14.2 GiB", true, false, true),
-                SourceCandidate("single-1080", "torrents", "Stardust Wayfarer 01", 1080u, null, "1.1 GiB", false, false, false),
-                SourceCandidate("single-720", "torrents", "Stardust Wayfarer 01", 720u, null, "480 MiB", false, false, false),
+                SourceCandidate(id = "batch-1080", providerId = "torrents", title = "Stardust Wayfarer complete batch", quality = 1080u, label = "From a trusted uploader", size = "14.2 GiB", dualAudio = true, dubbed = false, autoPick = true),
+                SourceCandidate(id = "single-1080", providerId = "torrents", title = "Stardust Wayfarer 01", quality = 1080u, size = "1.1 GiB", dualAudio = false, dubbed = false, autoPick = false),
+                SourceCandidate(id = "single-720", providerId = "torrents", title = "Stardust Wayfarer 01", quality = 720u, size = "480 MiB", dualAudio = false, dubbed = false, autoPick = false),
             ),
             "single-1080".takeIf { pinned },
         ),
