@@ -17,6 +17,9 @@ struct StartingCurtain: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     let model: PlayerModel
     let metrics: PlayerMetrics
+    /// Whether the curtain is up. The Mac keeps it in place at no opacity while the episode
+    /// plays, and its buttons are then out of reach of the pointer and of VoiceOver alike.
+    var shown = true
     /// How deep the ground sits over each piece of art, measured once when it has loaded.
     @State private var depths: [String: Double] = [:]
     /// The heights of the column and of what opens under it, for sliding the column up by any
@@ -54,7 +57,7 @@ struct StartingCurtain: View {
                 .compositingGroup()
                 .opacity(model.startingQuiet ? 0 : 1)
                 .animation(.fadeIn, value: model.startingQuiet)
-                .accessibilityHidden(model.startingQuiet)
+                .accessibilityHidden(model.startingQuiet || !shown)
             }
         }
         .animation(.fadeIn, value: image != nil && ground != nil)

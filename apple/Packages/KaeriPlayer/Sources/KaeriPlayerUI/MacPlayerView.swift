@@ -88,7 +88,7 @@ public struct MacPlayerView: View {
                     TapGesture(count: 2).onEnded { model.fullScreen.toggle() }
                         .exclusively(before: TapGesture().onEnded { model.togglePause() })
                 )
-            StartingCurtain(model: model, metrics: metrics)
+            StartingCurtain(model: model, metrics: metrics, shown: curtain)
                 .opacity(curtain ? 1 : 0)
                 .animation(curtain ? .easeIn(duration: 0.25) : .fadeIn, value: curtain)
                 .allowsHitTesting(curtain)
