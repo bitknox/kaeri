@@ -91,6 +91,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.staticCompositionLocalOf
+import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
@@ -350,7 +351,7 @@ fun CastMorphHost(hidden: Boolean, content: @Composable () -> Unit) {
     val drag = remember(state, scope, cast, still, flick) { CastDrag(state, scope, cast, still, flick) }
     LaunchedEffect(open) {
         // A drag's release settles the morph itself, at the finger's speed.
-        if (!drag.active && (state.targetState != open || state.currentState != open)) state.animateTo(open)
+        if (!drag.active && (state.targetState != open || state.currentState != open)) if (still) state.animateTo(open) else state.fly(open)
     }
     // A Play button's place serves the one open it started.
     LaunchedEffect(transition.currentState) { if (transition.currentState) origin.rect = null }
@@ -394,6 +395,19 @@ fun CastMorphHost(hidden: Boolean, content: @Composable () -> Unit) {
             throw e
         }
     }
+}
+
+/**
+ * Flies the morph to [open]. From rest, the side it flies to is first composed at the start of the
+ * flight, and the flight starts on the frame after, so a slow first composition holds the start
+ * instead of using up the flight.
+ */
+internal suspend fun SeekableTransitionState<Boolean>.fly(open: Boolean) {
+    if (currentState == targetState && currentState != open) {
+        seekTo(0f, targetState = open)
+        withFrameNanos { }
+    }
+    animateTo(open)
 }
 
 /**
